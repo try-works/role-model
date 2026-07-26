@@ -1084,6 +1084,166 @@ describe("Track B operations APIs", () => {
     ).rejects.toThrow(/mode|illegal|invalid/i);
   });
 
+  test("run84 keeps knowledge-worker production activation durable and separate from Set mode", async () => {
+    const root = path.join(os.tmpdir(), `track-b-run84-activation-${Date.now()}`);
+    roots.push(root);
+    const statePath = path.join(root, "track-b-production-bridge.json");
+    const catalog = [
+      {
+        id: "knowledge-worker",
+        packageClass: "canonical_extension",
+        routingDependency: false,
+      },
+      {
+        id: "event-log",
+        packageClass: "canonical_extension",
+        routingDependency: false,
+      },
+    ];
+    await seedTrackBExtensionBridgeState({ statePath, catalog });
+    const ops = createTrackBOperations({ statePath, catalog });
+    const receipt = {
+      payload: {
+        kind: "knowledge_validation",
+        reviewed: true,
+        safetyReviewed: true,
+        redacted: true,
+        holdoutPassed: true,
+      },
+      signature: "a".repeat(64),
+    };
+
+    await expect(
+      ops.mutateExtension({
+        id: "knowledge-worker",
+        action: "activate_production",
+        activationPolicyVersion: 1,
+        operatorAttestation: "activate-production",
+      }),
+    ).rejects.toThrow(/refused|ceremony/i);
+
+    await expect(
+      ops.mutateExtension({
+        id: "event-log",
+        action: "activate_production",
+        activationPolicyVersion: 1,
+        operatorAttestation: "activate-production",
+        receipt,
+      }),
+    ).rejects.toThrow(/knowledge-worker/i);
+
+    await ops.mutateExtension({
+      id: "knowledge-worker",
+      action: "bootstrap_shadow_ready",
+      receipt,
+      groupDigest: "b".repeat(64),
+    });
+    const activated = (await ops.mutateExtension({
+      id: "knowledge-worker",
+      action: "activate_production",
+      activationPolicyVersion: 1,
+      operatorAttestation: "activate-production",
+    })) as {
+      extensions: readonly {
+        id: string;
+        enabledMode: string;
+        productionActivation?: boolean;
+        health: {
+          productionActivation?: boolean;
+          knowledgeWorkerBootstrap?: { groupDigest: string };
+        };
+      }[];
+      receipts: readonly { action: string }[];
+    };
+    expect(activated.extensions.find((row) => row.id === "knowledge-worker")).toMatchObject({
+      enabledMode: "active",
+      productionActivation: true,
+      health: {
+        productionActivation: true,
+        knowledgeWorkerBootstrap: { groupDigest: "b".repeat(64) },
+      },
+    });
+    expect(activated.receipts.at(-1)).toMatchObject({ action: "activate_production" });
+
+    const listed = (await ops.listExtensions()) as readonly {
+      id: string;
+      productionActivation?: boolean;
+      health: { productionActivation?: boolean };
+    }[];
+    expect(listed.find((row) => row.id === "knowledge-worker")).toMatchObject({
+      productionActivation: true,
+      health: { productionActivation: true },
+    });
+
+    const deactivated = (await ops.mutateExtension({
+      id: "knowledge-worker",
+      action: "deactivate_production",
+    })) as {
+      extensions: readonly {
+        id: string;
+        enabled: boolean;
+        enabledMode: string;
+        productionActivation?: boolean;
+      }[];
+    };
+    expect(deactivated.extensions.find((row) => row.id === "knowledge-worker")).toMatchObject({
+      enabled: true,
+      enabledMode: "active",
+      productionActivation: false,
+    });
+  });
+
+  test("run84 structurally validates direct knowledge-worker activation ceremony", async () => {
+    const root = path.join(os.tmpdir(), `track-b-run84-ceremony-${Date.now()}`);
+    roots.push(root);
+    const statePath = path.join(root, "track-b-production-bridge.json");
+    const catalog = [{ id: "knowledge-worker", packageClass: "canonical_extension" }];
+    await seedTrackBExtensionBridgeState({ statePath, catalog });
+    const ops = createTrackBOperations({ statePath, catalog });
+    const receipt = {
+      payload: {
+        kind: "knowledge_validation",
+        reviewed: true,
+        safetyReviewed: true,
+        redacted: true,
+        holdoutPassed: true,
+      },
+      signature: "c".repeat(64),
+    };
+
+    await expect(
+      ops.mutateExtension({
+        id: "knowledge-worker",
+        action: "activate_production",
+        activationPolicyVersion: 2,
+        operatorAttestation: "activate-production",
+        receipt,
+      }),
+    ).rejects.toThrow(/refused|ceremony/i);
+    await expect(
+      ops.mutateExtension({
+        id: "knowledge-worker",
+        action: "activate_production",
+        activationPolicyVersion: 1,
+        operatorAttestation: "activate-production",
+        receipt: { ...receipt, signature: "not-a-signature" },
+      }),
+    ).rejects.toThrow(/refused|ceremony/i);
+
+    const activated = (await ops.mutateExtension({
+      id: "knowledge-worker",
+      action: "activate_production",
+      activationPolicyVersion: 1,
+      operatorAttestation: "activate-production",
+      receipt,
+    })) as {
+      extensions: readonly { id: string; productionActivation?: boolean }[];
+    };
+    expect(activated.extensions.find((row) => row.id === "knowledge-worker")).toMatchObject({
+      productionActivation: true,
+    });
+  });
+
   test("run79 dismissRecommendation marks row dismissed without applying pack", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `track-b-run79-dismiss-${Date.now()}`);
     roots.push(runtimeStateRoot);

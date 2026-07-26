@@ -1,0 +1,91 @@
+{
+  "runId": "84-kw-ui-toggle-gated-retrieve-eval",
+  "verifiedAt": "2026-07-26T05:35:00.000Z",
+  "secretsOmitted": true,
+  "privateBaseline": "7a85d560a30a49b33fe309d5a88f4fbbe86a14c0",
+  "publicBaseline": "f52f8e301f8e84b04f7103403207e4ebcf29271e",
+  "privateWorktree": "D:/DEV/role-model-internal/.worktrees/84-kw-ui-toggle-gated-retrieve-eval",
+  "publicWorktree": "D:/DEV/role-model/.worktrees/84-kw-ui-toggle-gated-retrieve-eval",
+  "privateProductTip": "working-tree (uncommitted product + evidence)",
+  "publicProductTip": "working-tree (uncommitted product + e2e spec)",
+  "productPinPrivate": "3d6c4f74a6198287277471f0afc7e8950a6123d8",
+  "productPinPublic": "b03d82a2fe8adc317c9fdaecad838beac3ed74a8",
+  "tddMode": "strict",
+  "serverChange": "not-required",
+  "publicChange": "required",
+  "kwUiToggle": {
+    "prepare": "bootstrap_shadow_ready",
+    "on": "activate_production",
+    "browserLog": "evidence/logs/phase5/kw-ui-playwright-34572.log",
+    "screenshot": "evidence/other/screenshots/kw-ui-toggle-pass.png",
+    "packagedProbeLog": "evidence/logs/phase5/kw-packaged-probe.log",
+    "softOff": "deactivate_production",
+    "browserSpec": "role-model-router/apps/runtime-ui/e2e/recursive-84-kw-ui-toggle-gated-retrieve-eval.spec.ts"
+  },
+  "retrieveGate": {
+    "greenLog": "evidence/logs/green/sp-kw-retrieve-gate.log",
+    "plane": "shadow|production",
+    "consumer": "evaluateWithProductionKnowledge"
+  },
+  "freeze": {
+    "tb11AfterAssembleLog": "evidence/logs/phase4/tb11-after-assemble-pass.log",
+    "systemProofAfterAssembleLog": "evidence/logs/phase4/system-proof-after-assemble-pass.log",
+    "pinFreezeLog": "evidence/logs/phase4/pin-freeze.log",
+    "assembleVerdict": "PASS",
+    "assemblePassLog": "evidence/logs/phase4/assemble-run00-live-e2e-pass.log",
+    "assembleInitialDiagnosticLog": "evidence/logs/phase4/assemble-run00-live-e2e.log",
+    "note": "Initial disabled-control assemble diagnostic was repaired; full assemble PASS with Playwright exit 0, post-assemble TB11/system-proof PASS, and pin-freeze PASS."
+  },
+  "rebuild": {
+    "scopeId": "run84-dev",
+    "track": "dev",
+    "seaSha256": "aeb2204310e1675e3559fc72176423e46c0891ebff8dcf7ecf26dc238ffc457e",
+    "listenUrlBrowser": "http://127.0.0.1:34572",
+    "listenUrlPi": "http://127.0.0.1:34573",
+    "receipt": "evidence/other/rebuild-receipt.json"
+  },
+  "recommendationHop": {
+    "scopeId": "run84-dev",
+    "verdict": "PASS",
+    "log": "evidence/logs/phase5/api-recommendation-lifecycle-after-seed.log",
+    "summary": "evidence/logs/live-dev-lifecycle-pass.json",
+    "track": "dev"
+  },
+  "cloudE2e": {
+    "receipt": "evidence/other/cloud-track-dev.json",
+    "log": "evidence/logs/phase5/cloud-track-e2e-dev.log",
+    "track": "dev"
+  },
+  "piStorage": {
+    "cliLog": "evidence/logs/phase5/pi-cli-print-34573.log",
+    "receipt": "evidence/other/pi-storage-correctness.json"
+  },
+  "decisions": {
+    "public": "evidence/other/public-change-decision.json",
+    "server": "evidence/other/server-change-decision.json"
+  },
+  "requirements": {
+    "R13": "retrieveGate",
+    "R20": "freeze",
+    "R8": "retrieveGate",
+    "R14": "kwUiToggle",
+    "R22": "paired-delivery-pending-ship",
+    "R10": "retrieveGate",
+    "R21": "binder",
+    "R4": "kwUiToggle",
+    "R1": "kwUiToggle",
+    "R5": "kwUiToggle",
+    "R12": "retrieveGate",
+    "R18": "recommendationHop",
+    "R15": "tddMode",
+    "R6": "retrieveGate",
+    "R2": "retrieveGate",
+    "R17": "kwUiToggle",
+    "R3": "kwUiToggle",
+    "R11": "retrieveGate",
+    "R16": "rebuild",
+    "R7": "retrieveGate",
+    "R9": "retrieveGate",
+    "R19": "piStorage"
+  }
+}

@@ -50,13 +50,30 @@ test("operates the packaged Track B runtime and cloud-backed recommendation flow
   await expect(page.getByText(/active · epoch/)).toBeVisible();
 
   const signatureStatus = page.getByText(/Signature valid · Local policy allows apply/).first();
-  if (!(await signatureStatus.isVisible()))
+  if (!(await signatureStatus.isVisible())) {
     await page.getByRole("button", { name: "Download & validate latest" }).click();
-  await expect(signatureStatus).toBeVisible();
-  const apply = page.getByRole("button", { name: "Validate & apply" }).first();
-  if (await apply.isVisible()) {
-    await apply.click();
   }
+  await expect(signatureStatus).toBeVisible({ timeout: 30_000 });
+
+  // Dismissed rows keep the "Validate & apply" label but stay disabled. Prefer an enabled control.
+  let apply = page.getByRole("button", { name: "Validate & apply", disabled: false }).first();
+  if (!(await apply.isVisible().catch(() => false))) {
+    await page.getByRole("button", { name: "Download & validate latest" }).click();
+    await expect(signatureStatus).toBeVisible({ timeout: 30_000 });
+    apply = page.getByRole("button", { name: "Validate & apply", disabled: false }).first();
+  }
+  await expect(apply).toBeVisible({ timeout: 30_000 });
+  await expect(apply).toBeEnabled();
+  await apply.scrollIntoViewIfNeeded();
+  const [applyResponse] = await Promise.all([
+    page.waitForResponse(
+      (candidate) =>
+        candidate.url().includes("/api/role-model/recommendations/apply") &&
+        candidate.request().method() === "POST",
+    ),
+    apply.click(),
+  ]);
+  expect(applyResponse.ok()).toBeTruthy();
   await expect(page.getByText("applied", { exact: true })).toBeVisible();
   await expect(page.getByText("Endpoint").first()).toBeVisible();
   // Seeded packs use candidate-* model ids on permanent-dev; older captures used deepseek.

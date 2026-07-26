@@ -61,6 +61,15 @@ describe("ExtensionsRoute", () => {
     expect(routeSource).toContain("lifecyclePillTone");
     expect(routeSource).toContain("Mode draft is");
     expect(routeSource).toContain("applyMode");
+    expect(routeSource).toContain("prepareKnowledgeWorkerShadowReady");
+    expect(routeSource).toContain("activateKnowledgeWorkerProduction");
+    expect(routeSource).toContain("deactivateKnowledgeWorkerProduction");
+    expect(routeSource).toContain("Prepare shadow-ready");
+    expect(routeSource).toContain("Production ON");
+    expect(routeSource).toContain("Soft OFF");
+    expect(routeSource).toContain("productionActivation");
+    expect(routeSource).toContain("Production retrieve is gated");
+    expect(routeSource).toContain("separate from Set mode");
   });
   test("renders the existing design-system loading shell before operational state arrives", () => {
     const html = renderToStaticMarkup(<ExtensionsRouteView />);

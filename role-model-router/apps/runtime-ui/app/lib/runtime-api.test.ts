@@ -2947,6 +2947,24 @@ describe("role assignment helpers", () => {
       { id: "event-log", action: "set_mode", mode: "advisory" },
       fetcher,
     );
+    await runtimeApiModule.prepareKnowledgeWorkerShadowReady(
+      {
+        receipt: {
+          payload: {
+            kind: "knowledge_validation",
+            reviewed: true,
+            safetyReviewed: true,
+            redacted: true,
+            holdoutPassed: true,
+          },
+          signature: "a".repeat(64),
+        },
+        groupDigest: "b".repeat(64),
+      },
+      fetcher,
+    );
+    await runtimeApiModule.activateKnowledgeWorkerProduction(fetcher);
+    await runtimeApiModule.deactivateKnowledgeWorkerProduction(fetcher);
     await runtimeApiModule.dismissRecommendation("pack-dismiss", fetcher);
     expect(requests).toEqual([
       {
@@ -2963,6 +2981,40 @@ describe("role assignment helpers", () => {
         url: "/api/role-model/extensions/mutate",
         method: "POST",
         body: { id: "event-log", action: "set_mode", mode: "advisory" },
+      },
+      {
+        url: "/api/role-model/extensions/mutate",
+        method: "POST",
+        body: {
+          id: "knowledge-worker",
+          action: "bootstrap_shadow_ready",
+          receipt: {
+            payload: {
+              kind: "knowledge_validation",
+              reviewed: true,
+              safetyReviewed: true,
+              redacted: true,
+              holdoutPassed: true,
+            },
+            signature: "a".repeat(64),
+          },
+          groupDigest: "b".repeat(64),
+        },
+      },
+      {
+        url: "/api/role-model/extensions/mutate",
+        method: "POST",
+        body: {
+          id: "knowledge-worker",
+          action: "activate_production",
+          activationPolicyVersion: 1,
+          operatorAttestation: "activate-production",
+        },
+      },
+      {
+        url: "/api/role-model/extensions/mutate",
+        method: "POST",
+        body: { id: "knowledge-worker", action: "deactivate_production" },
       },
       {
         url: "/api/role-model/recommendations/dismiss",
