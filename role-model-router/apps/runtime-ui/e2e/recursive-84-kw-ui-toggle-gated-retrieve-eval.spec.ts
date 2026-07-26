@@ -22,19 +22,33 @@ test.describe("@recursive:84-kw-ui-toggle-gated-retrieve-eval @kw-ui-toggle", ()
     test.skip(!process.env.RUNTIME_LIVE_BASE_URL, "live packaged runtime URL required");
 
     await page.goto("/app/system/extensions");
-    await expect(page.getByRole("main").getByText(/knowledge-worker/i).first()).toBeVisible({
+    await expect(
+      page
+        .getByRole("main")
+        .getByText(/knowledge-worker/i)
+        .first(),
+    ).toBeVisible({
       timeout: 60_000,
     });
     await expect(page.getByText(/Production retrieve is gated/i).first()).toBeVisible();
 
-    const kwCard = page.locator("article").filter({ hasText: /knowledge-worker/i }).first();
+    const kwCard = page
+      .locator("article")
+      .filter({ hasText: /knowledge-worker/i })
+      .first();
     await expect(kwCard).toBeVisible();
 
     // Production ON requires installed+enabled; packaged state may start disabled.
     // SelectField is a custom listbox (not a native <select>).
-    const modeTrigger = kwCard.getByRole("button", { name: /Disabled|Active|Shadow|Advisory|Bounded/i });
+    const modeTrigger = kwCard.getByRole("button", {
+      name: /Disabled|Active|Shadow|Advisory|Bounded/i,
+    });
     const setMode = kwCard.getByRole("button", { name: "Set mode" });
-    const enabledModeText = (await kwCard.getByText(/Enabled mode/i).locator("..").textContent()) ?? "";
+    const enabledModeText =
+      (await kwCard
+        .getByText(/Enabled mode/i)
+        .locator("..")
+        .textContent()) ?? "";
     if (/disabled/i.test(enabledModeText)) {
       await modeTrigger.click();
       await page.getByRole("option", { name: /^Active$/i }).click();
