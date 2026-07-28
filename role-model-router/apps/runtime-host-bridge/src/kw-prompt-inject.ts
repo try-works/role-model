@@ -105,7 +105,10 @@ export type ApplyKwPromptInjectResult = {
   readonly receipt: KwPromptInjectReceipt;
 };
 
-function refuseReceipt(code: string, extra: Partial<KwPromptInjectReceipt> = {}): KwPromptInjectReceipt {
+function refuseReceipt(
+  code: string,
+  extra: Partial<KwPromptInjectReceipt> = {},
+): KwPromptInjectReceipt {
   return {
     injected: false,
     code,
@@ -124,8 +127,7 @@ export function applyKwPromptInjectToMessagesSync(
     };
   }
   const worker =
-    input.worker ??
-    (input.sessionId ? getKwPromptInjectSession(input.sessionId) : undefined);
+    input.worker ?? (input.sessionId ? getKwPromptInjectSession(input.sessionId) : undefined);
   if (!worker || !input.sessionId) {
     return {
       messages: input.messages,

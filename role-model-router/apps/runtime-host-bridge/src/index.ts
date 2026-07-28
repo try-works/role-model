@@ -22,7 +22,6 @@ import type {
   PricingHints,
 } from "@role-model-router/catalog";
 import { assembleContextEnvelope } from "@role-model-router/context-envelope";
-import { applyKwPromptInjectToMessagesSync } from "./kw-prompt-inject.ts";
 import { canonicalTaxonomy, taxonomyManifest } from "@role-model-router/core";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 import { type RegistrySources, buildEndpointRegistry } from "@role-model-router/endpoint-registry";
@@ -119,6 +118,7 @@ import {
   parseAndSanitizeControllerRoutingGuidance,
 } from "./controller-routing-contract.js";
 import { createDownstreamOpenAIDiscovery } from "./downstream-openai-discovery.js";
+import { applyKwPromptInjectToMessagesSync } from "./kw-prompt-inject.js";
 import { resolveModelCapabilityProfile } from "./model-capability-resolver.js";
 import {
   filterEndpointsByCapabilityRequirements,

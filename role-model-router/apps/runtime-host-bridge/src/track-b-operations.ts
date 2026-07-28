@@ -2,15 +2,13 @@ import { createHash, createHmac, createPublicKey, timingSafeEqual, verify } from
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
+  type KwSessionWorker,
   clearKwPromptInjectSessionsForTests,
   registerKwPromptInjectSession,
   syncPrivateKnowledgeActivation,
-  type KwSessionWorker,
-} from "./kw-prompt-inject.ts";
+} from "./kw-prompt-inject.js";
 
-let kwJoinWorkerFactory:
-  | ((sessionId: string) => Promise<KwSessionWorker | undefined>)
-  | undefined;
+let kwJoinWorkerFactory: ((sessionId: string) => Promise<KwSessionWorker | undefined>) | undefined;
 
 export function setKwJoinWorkerFactoryForTests(
   factory: ((sessionId: string) => Promise<KwSessionWorker | undefined>) | undefined,
@@ -730,9 +728,7 @@ export function createTrackBOperations({
         productionActivation = true;
       } else if (action === "deactivate_production") {
         const sessionId = String(input.sessionId ?? state.revision ?? "runtime-default");
-        const registered = kwJoinWorkerFactory
-          ? await kwJoinWorkerFactory(sessionId)
-          : undefined;
+        const registered = kwJoinWorkerFactory ? await kwJoinWorkerFactory(sessionId) : undefined;
         if (registered) {
           await syncPrivateKnowledgeActivation({
             sessionId,

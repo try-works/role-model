@@ -1,0 +1,395 @@
+
+> role-model@0.0.0 ci:check D:\DEV\role-model\.worktrees\85-kw-gated-router-prompt-inject
+> corepack pnpm run lint && corepack pnpm run schemas:validate && corepack pnpm run build && corepack pnpm run test && corepack pnpm run runtime:test-critical && corepack pnpm run test:rust && corepack pnpm run smoke
+
+
+> role-model@0.0.0 lint D:\DEV\role-model\.worktrees\85-kw-gated-router-prompt-inject
+> biome check . && corepack pnpm run lint:rust
+
+.\role-model-router\apps\runtime-host-bridge\src\kw-prompt-inject.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+      1     Γöé - export┬╖type┬╖KwPromptInjectReceipt┬╖=┬╖{ΓÉì
+      2     Γöé - ┬╖┬╖readonly┬╖injected:┬╖boolean;ΓÉì
+      3     Γöé - ┬╖┬╖readonly┬╖code?:┬╖string;ΓÉì
+      4     Γöé - ┬╖┬╖readonly┬╖systemMessage?:┬╖string;ΓÉì
+      5     Γöé - ┬╖┬╖readonly┬╖surface?:┬╖string;ΓÉì
+      6     Γöé - ┬╖┬╖readonly┬╖plane?:┬╖string;ΓÉì
+      7     Γöé - ┬╖┬╖readonly┬╖productionPromptInjection?:┬╖boolean;ΓÉì
+      8     Γöé - ┬╖┬╖readonly┬╖truncated?:┬╖boolean;ΓÉì
+      9     Γöé - ┬╖┬╖readonly┬╖payload?:┬╖unknown;ΓÉì
+     10     Γöé - };ΓÉì
+     11     Γöé - ΓÉì
+     12     Γöé - export┬╖type┬╖KwSessionWorker┬╖=┬╖{ΓÉì
+     13     Γöé - ┬╖┬╖readonly┬╖promptInject:┬╖(input:┬╖Record<string,┬╖unknown>)┬╖=>┬╖KwPromptInjectReceipt;ΓÉì
+     14     Γöé - ┬╖┬╖readonly┬╖activate?:┬╖(policy:┬╖unknown)┬╖=>┬╖unknown;ΓÉì
+     15     Γöé - ┬╖┬╖readonly┬╖deactivate?:┬╖(policy:┬╖unknown)┬╖=>┬╖unknown;ΓÉì
+     16     Γöé - };ΓÉì
+     17     Γöé - ΓÉì
+     18     Γöé - const┬╖kwSessions┬╖=┬╖new┬╖Map<string,┬╖KwSessionWorker>();ΓÉì
+     19     Γöé - ΓÉì
+     20     Γöé - export┬╖function┬╖registerKwPromptInjectSession(sessionId:┬╖string,┬╖worker:┬╖KwSessionWorker):┬╖void┬╖{ΓÉì
+     21     Γöé - ┬╖┬╖kwSessions.set(String(sessionId),┬╖worker);ΓÉì
+     22     Γöé - }ΓÉì
+     23     Γöé - ΓÉì
+     24     Γöé - export┬╖function┬╖unregisterKwPromptInjectSession(sessionId:┬╖string):┬╖void┬╖{ΓÉì
+     25     Γöé - ┬╖┬╖kwSessions.delete(String(sessionId));ΓÉì
+     26     Γöé - }ΓÉì
+     27     Γöé - ΓÉì
+     28     Γöé - export┬╖function┬╖getKwPromptInjectSession(sessionId:┬╖string):┬╖KwSessionWorker┬╖|┬╖undefined┬╖{ΓÉì
+     29     Γöé - ┬╖┬╖return┬╖kwSessions.get(String(sessionId));ΓÉì
+     30     Γöé - }ΓÉì
+     31     Γöé - ΓÉì
+     32     Γöé - export┬╖function┬╖clearKwPromptInjectSessionsForTests():┬╖void┬╖{ΓÉì
+     33     Γöé - ┬╖┬╖kwSessions.clear();ΓÉì
+     34     Γöé - }ΓÉì
+     35     Γöé - ΓÉì
+     36     Γöé - export┬╖type┬╖KwPrivateRunner┬╖=┬╖(envelope:┬╖Record<string,┬╖unknown>)┬╖=>┬╖Promise<unknown>;ΓÉì
+     37     Γöé - ΓÉì
+     38     Γöé - export┬╖type┬╖KwPromptInjectJoinInput┬╖=┬╖{ΓÉì
+     39     Γöé - ┬╖┬╖readonly┬╖sessionId:┬╖string;ΓÉì
+     40     Γöé - ┬╖┬╖readonly┬╖action:┬╖"activate"┬╖|┬╖"deactivate";ΓÉì
+     41     Γöé - ┬╖┬╖readonly┬╖authority?:┬╖unknown;ΓÉì
+     42     Γöé - ┬╖┬╖readonly┬╖value?:┬╖unknown;ΓÉì
+     43     Γöé - ┬╖┬╖readonly┬╖policy?:┬╖unknown;ΓÉì
+     44     Γöé - ┬╖┬╖readonly┬╖activatePolicy?:┬╖unknown;ΓÉì
+     45     Γöé - ┬╖┬╖readonly┬╖run?:┬╖KwPrivateRunner;ΓÉì
+     46     Γöé - ┬╖┬╖readonly┬╖worker?:┬╖KwSessionWorker;ΓÉì
+     47     Γöé - };ΓÉì
+     48     Γöé - ΓÉì
+     49     Γöé - export┬╖async┬╖function┬╖syncPrivateKnowledgeActivation(ΓÉì
+     50     Γöé - ┬╖┬╖input:┬╖KwPromptInjectJoinInput,ΓÉì
+     51     Γöé - ):┬╖Promise<{┬╖readonly┬╖ok:┬╖boolean;┬╖readonly┬╖code?:┬╖string;┬╖readonly┬╖result?:┬╖unknown┬╖}>┬╖{ΓÉì
+     52     Γöé - ┬╖┬╖if┬╖(input.worker)┬╖{ΓÉì
+     53     Γöé - ┬╖┬╖┬╖┬╖try┬╖{ΓÉì
+     54     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖const┬╖result┬╖=ΓÉì
+     55     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖input.action┬╖===┬╖"activate"ΓÉì
+     56     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖?┬╖input.worker.activate?.(input.policy)ΓÉì
+     57     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖:┬╖input.worker.deactivate?.(input.policy);ΓÉì
+     58     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖registerKwPromptInjectSession(input.sessionId,┬╖input.worker);ΓÉì
+     59     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖if┬╖(input.action┬╖===┬╖"deactivate")┬╖{ΓÉì
+     60     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖//┬╖keep┬╖session┬╖registered┬╖until┬╖explicit┬╖unregister;┬╖soft┬╖OFF┬╖still┬╖needs┬╖refuse┬╖pathΓÉì
+     61     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}ΓÉì
+     62     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖return┬╖{┬╖ok:┬╖true,┬╖result┬╖};ΓÉì
+     63     Γöé - ┬╖┬╖┬╖┬╖}┬╖catch┬╖(error)┬╖{ΓÉì
+     64     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖return┬╖{ΓÉì
+     65     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖ok:┬╖false,ΓÉì
+     66     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖code:┬╖"kw_prompt_inject_join_unsatisfied",ΓÉì
+     67     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖result:┬╖String((error┬╖as┬╖Error)?.message┬╖??┬╖error),ΓÉì
+     68     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖};ΓÉì
+     69     Γöé - ┬╖┬╖┬╖┬╖}ΓÉì
+     70     Γöé - ┬╖┬╖}ΓÉì
+     71     Γöé - ┬╖┬╖if┬╖(!input.run)┬╖{ΓÉì
+     72     Γöé - ┬╖┬╖┬╖┬╖return┬╖{┬╖ok:┬╖false,┬╖code:┬╖"kw_prompt_inject_join_unsatisfied"┬╖};ΓÉì
+     73     Γöé - ┬╖┬╖}ΓÉì
+     74     Γöé - ┬╖┬╖try┬╖{ΓÉì
+     75     Γöé - ┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖await┬╖input.run({ΓÉì
+     76     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖capability:┬╖input.action┬╖===┬╖"activate"┬╖?┬╖"knowledge:activate"┬╖:┬╖"knowledge:deactivate",ΓÉì
+     77     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖sessionId:┬╖input.sessionId,ΓÉì
+     78     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖...(input.authority┬╖?┬╖{┬╖authority:┬╖input.authority┬╖}┬╖:┬╖{}),ΓÉì
+     79     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖...(input.value┬╖?┬╖{┬╖value:┬╖input.value┬╖}┬╖:┬╖{}),ΓÉì
+     80     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖...(input.policy┬╖?┬╖{┬╖policy:┬╖input.policy┬╖}┬╖:┬╖{}),ΓÉì
+     81     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖...(input.activatePolicy┬╖?┬╖{┬╖activatePolicy:┬╖input.activatePolicy┬╖}┬╖:┬╖{}),ΓÉì
+     82     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     83     Γöé - ┬╖┬╖┬╖┬╖return┬╖{┬╖ok:┬╖true,┬╖result┬╖};ΓÉì
+     84     Γöé - ┬╖┬╖}┬╖catch┬╖(error)┬╖{ΓÉì
+     85     Γöé - ┬╖┬╖┬╖┬╖return┬╖{ΓÉì
+     86     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖ok:┬╖false,ΓÉì
+     87     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖code:┬╖"kw_prompt_inject_join_unsatisfied",ΓÉì
+     88     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖result:┬╖String((error┬╖as┬╖Error)?.message┬╖??┬╖error),ΓÉì
+     89     Γöé - ┬╖┬╖┬╖┬╖};ΓÉì
+     90     Γöé - ┬╖┬╖}ΓÉì
+     91     Γöé - }ΓÉì
+     92     Γöé - ΓÉì
+     93     Γöé - export┬╖type┬╖ApplyKwPromptInjectInput┬╖=┬╖{ΓÉì
+     94     Γöé - ┬╖┬╖readonly┬╖messages:┬╖readonly┬╖{┬╖readonly┬╖role:┬╖string;┬╖readonly┬╖content?:┬╖unknown┬╖}[];ΓÉì
+     95     Γöé - ┬╖┬╖readonly┬╖hostProductionActivation:┬╖boolean;ΓÉì
+     96     Γöé - ┬╖┬╖readonly┬╖sessionId?:┬╖string;ΓÉì
+     97     Γöé - ┬╖┬╖readonly┬╖requestId?:┬╖string;ΓÉì
+     98     Γöé - ┬╖┬╖readonly┬╖query?:┬╖Record<string,┬╖unknown>;ΓÉì
+     99     Γöé - ┬╖┬╖readonly┬╖run?:┬╖KwPrivateRunner;ΓÉì
+    100     Γöé - ┬╖┬╖readonly┬╖worker?:┬╖KwSessionWorker;ΓÉì
+    101     Γöé - };ΓÉì
+    102     Γöé - ΓÉì
+    103     Γöé - export┬╖type┬╖ApplyKwPromptInjectResult┬╖=┬╖{ΓÉì
+    104     Γöé - ┬╖┬╖readonly┬╖messages:┬╖readonly┬╖{┬╖readonly┬╖role:┬╖string;┬╖readonly┬╖content?:┬╖unknown┬╖}[];ΓÉì
+    105     Γöé - ┬╖┬╖readonly┬╖receipt:┬╖KwPromptInjectReceipt;ΓÉì
+    106     Γöé - };ΓÉì
+    107     Γöé - ΓÉì
+    108     Γöé - function┬╖refuseReceipt(code:┬╖string,┬╖extra:┬╖Partial<KwPromptInjectReceipt>┬╖=┬╖{}):┬╖KwPromptInjectReceipt┬╖{ΓÉì
+    109     Γöé - ┬╖┬╖return┬╖{ΓÉì
+    110     Γöé - ┬╖┬╖┬╖┬╖injected:┬╖false,ΓÉì
+    111     Γöé - ┬╖┬╖┬╖┬╖code,ΓÉì
+    112     Γöé - ┬╖┬╖┬╖┬╖surface:┬╖"applyRequestedRoleExecutionPolicy",ΓÉì
+    113     Γöé - ┬╖┬╖┬╖┬╖...extra,ΓÉì
+    114     Γöé - ┬╖┬╖};ΓÉì
+    115     Γöé - }ΓÉì
+    116     Γöé - ΓÉì
+    117     Γöé - export┬╖function┬╖applyKwPromptInjectToMessagesSync(ΓÉì
+    118     Γöé - ┬╖┬╖input:┬╖ApplyKwPromptInjectInput,ΓÉì
+    119     Γöé - ):┬╖ApplyKwPromptInjectResult┬╖{ΓÉì
+    120     Γöé - ┬╖┬╖if┬╖(!input.hostProductionActivation)┬╖{ΓÉì
+    121     Γöé - ┬╖┬╖┬╖┬╖return┬╖{ΓÉì
+    122     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖messages:┬╖input.messages,ΓÉì
+    123     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖receipt:┬╖refuseReceipt("kw_prompt_inject_requires_activation"),ΓÉì
+    124     Γöé - ┬╖┬╖┬╖┬╖};ΓÉì
+    125     Γöé - ┬╖┬╖}ΓÉì
+    126     Γöé - ┬╖┬╖const┬╖worker┬╖=ΓÉì
+    127     Γöé - ┬╖┬╖┬╖┬╖input.worker┬╖??ΓÉì
+    128     Γöé - ┬╖┬╖┬╖┬╖(input.sessionId┬╖?┬╖getKwPromptInjectSession(input.sessionId)┬╖:┬╖undefined);ΓÉì
+    129     Γöé - ┬╖┬╖if┬╖(!worker┬╖||┬╖!input.sessionId)┬╖{ΓÉì
+    130     Γöé - ┬╖┬╖┬╖┬╖return┬╖{ΓÉì
+    131     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖messages:┬╖input.messages,ΓÉì
+    132     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖receipt:┬╖refuseReceipt("kw_prompt_inject_join_unsatisfied"),ΓÉì
+    133     Γöé - ┬╖┬╖┬╖┬╖};ΓÉì
+    134     Γöé - ┬╖┬╖}ΓÉì
+    135     Γöé - ┬╖┬╖const┬╖receipt┬╖=┬╖worker.promptInject({ΓÉì
+    136     Γöé - ┬╖┬╖┬╖┬╖injectContractVersion:┬╖1,ΓÉì
+    137     Γöé - ┬╖┬╖┬╖┬╖sessionId:┬╖input.sessionId,ΓÉì
+    138     Γöé - ┬╖┬╖┬╖┬╖requestId:┬╖input.requestId,ΓÉì
+    139     Γöé - ┬╖┬╖┬╖┬╖query:┬╖input.query,ΓÉì
+    140     Γöé - ┬╖┬╖});ΓÉì
+    141     Γöé - ┬╖┬╖if┬╖(!receipt?.injected┬╖||┬╖typeof┬╖receipt.systemMessage┬╖!==┬╖"string"┬╖||┬╖!receipt.systemMessage)┬╖{ΓÉì
+    142     Γöé - ┬╖┬╖┬╖┬╖return┬╖{ΓÉì
+    143     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖messages:┬╖input.messages,ΓÉì
+    144     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖receipt:┬╖refuseReceipt(ΓÉì
+    145     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖receipt?.code┬╖??┬╖"kw_prompt_inject_requires_production_retrieve",ΓÉì
+    146     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖receipt┬╖??┬╖{},ΓÉì
+    147     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖),ΓÉì
+    148     Γöé - ┬╖┬╖┬╖┬╖};ΓÉì
+    149     Γöé - ┬╖┬╖}ΓÉì
+    150     Γöé - ┬╖┬╖return┬╖{ΓÉì
+  273 more lines truncated
+  
+
+.\role-model-router\apps\runtime-host-bridge\src\track-b-operations.ts organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+       3    3 Γöé   import path from "node:path";
+       4    4 Γöé   import {
+       5      Γöé - ┬╖┬╖clearKwPromptInjectSessionsForTests,
+            5 Γöé + ┬╖┬╖type┬╖KwSessionWorker,
+            6 Γöé + ┬╖┬╖clearKwPromptInjectSessionsForTests,
+       6    7 Γöé     registerKwPromptInjectSession,
+       7      Γöé - ┬╖┬╖syncPrivateKnowledgeActivation,
+       8      Γöé - ┬╖┬╖type┬╖KwSessionWorker,
+            8 Γöé + ┬╖┬╖syncPrivateKnowledgeActivation,
+       9    9 Γöé   } from "./kw-prompt-inject.ts";
+      10   10 Γöé   
+  
+
+.\role-model-router\apps\runtime-host-bridge\src\track-b-operations.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+       9    9 Γöé   } from "./kw-prompt-inject.ts";
+      10   10 Γöé   
+      11      Γöé - let┬╖kwJoinWorkerFactory:
+      12      Γöé - ┬╖┬╖|┬╖((sessionId:┬╖string)┬╖=>┬╖Promise<KwSessionWorker┬╖|┬╖undefined>)
+      13      Γöé - ┬╖┬╖|┬╖undefined;
+           11 Γöé + let┬╖kwJoinWorkerFactory:┬╖((sessionId:┬╖string)┬╖=>┬╖Promise<KwSessionWorker┬╖|┬╖undefined>)┬╖|┬╖undefined;
+      14   12 Γöé   
+      15   13 Γöé   export function setKwJoinWorkerFactoryForTests(
+    ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖ Γöé 
+     731  729 Γöé         } else if (action === "deactivate_production") {
+     732  730 Γöé           const sessionId = String(input.sessionId ?? state.revision ?? "runtime-default");
+     733      Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖const┬╖registered┬╖=┬╖kwJoinWorkerFactory
+     734      Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖?┬╖await┬╖kwJoinWorkerFactory(sessionId)
+     735      Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖:┬╖undefined;
+          731 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖const┬╖registered┬╖=┬╖kwJoinWorkerFactory┬╖?┬╖await┬╖kwJoinWorkerFactory(sessionId)┬╖:┬╖undefined;
+     736  732 Γöé           if (registered) {
+     737  733 Γöé             await syncPrivateKnowledgeActivation({
+  
+
+.\role-model-router\apps\runtime-host-bridge\test\kw-prompt-inject.test.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+      1     Γöé - import┬╖{┬╖describe,┬╖expect,┬╖test┬╖}┬╖from┬╖"vitest";ΓÉì
+      2     Γöé - import┬╖{ΓÉì
+      3     Γöé - ┬╖┬╖applyKwPromptInjectToMessages,ΓÉì
+      4     Γöé - ┬╖┬╖applyKwPromptInjectToMessagesSync,ΓÉì
+      5     Γöé - ┬╖┬╖clearKwPromptInjectSessionsForTests,ΓÉì
+      6     Γöé - ┬╖┬╖registerKwPromptInjectSession,ΓÉì
+      7     Γöé - ┬╖┬╖syncPrivateKnowledgeActivation,ΓÉì
+      8     Γöé - }┬╖from┬╖"../src/kw-prompt-inject.ts";ΓÉì
+      9     Γöé - ΓÉì
+     10     Γöé - describe("kw-prompt-inject┬╖join┬╖and┬╖insertion┬╖helpers",┬╖()┬╖=>┬╖{ΓÉì
+     11     Γöé - ┬╖┬╖test("refuses┬╖inject┬╖when┬╖host┬╖production┬╖activation┬╖is┬╖off",┬╖async┬╖()┬╖=>┬╖{ΓÉì
+     12     Γöé - ┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖await┬╖applyKwPromptInjectToMessages({ΓÉì
+     13     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖messages:┬╖[{┬╖role:┬╖"user",┬╖content:┬╖"hello"┬╖}],ΓÉì
+     14     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖hostProductionActivation:┬╖false,ΓÉì
+     15     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖sessionId:┬╖"s1",ΓÉì
+     16     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖run:┬╖async┬╖()┬╖=>┬╖({┬╖injected:┬╖true,┬╖systemMessage:┬╖"should-not-run"┬╖}),ΓÉì
+     17     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     18     Γöé - ┬╖┬╖┬╖┬╖expect(result.receipt.injected).toBe(false);ΓÉì
+     19     Γöé - ┬╖┬╖┬╖┬╖expect(result.receipt.code).toBe("kw_prompt_inject_requires_activation");ΓÉì
+     20     Γöé - ┬╖┬╖┬╖┬╖expect(result.messages).toEqual([{┬╖role:┬╖"user",┬╖content:┬╖"hello"┬╖}]);ΓÉì
+     21     Γöé - ┬╖┬╖});ΓÉì
+     22     Γöé - ΓÉì
+     23     Γöé - ┬╖┬╖test("refuses┬╖inject┬╖when┬╖private┬╖join┬╖runner┬╖is┬╖missing",┬╖async┬╖()┬╖=>┬╖{ΓÉì
+     24     Γöé - ┬╖┬╖┬╖┬╖clearKwPromptInjectSessionsForTests();ΓÉì
+     25     Γöé - ┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖await┬╖applyKwPromptInjectToMessages({ΓÉì
+     26     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖messages:┬╖[{┬╖role:┬╖"user",┬╖content:┬╖"hello"┬╖}],ΓÉì
+     27     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖hostProductionActivation:┬╖true,ΓÉì
+     28     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖sessionId:┬╖"s1",ΓÉì
+     29     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     30     Γöé - ┬╖┬╖┬╖┬╖expect(result.receipt.injected).toBe(false);ΓÉì
+     31     Γöé - ┬╖┬╖┬╖┬╖expect(result.receipt.code).toBe("kw_prompt_inject_join_unsatisfied");ΓÉì
+     32     Γöé - ┬╖┬╖});ΓÉì
+     33     Γöé - ΓÉì
+     34     Γöé - ┬╖┬╖test("prepends┬╖system┬╖message┬╖on┬╖successful┬╖private┬╖prompt-inject",┬╖async┬╖()┬╖=>┬╖{ΓÉì
+     35     Γöé - ┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖await┬╖applyKwPromptInjectToMessages({ΓÉì
+     36     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖messages:┬╖[{┬╖role:┬╖"user",┬╖content:┬╖"hello"┬╖}],ΓÉì
+     37     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖hostProductionActivation:┬╖true,ΓÉì
+     38     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖sessionId:┬╖"s1",ΓÉì
+     39     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖requestId:┬╖"r1",ΓÉì
+     40     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖run:┬╖async┬╖(envelope)┬╖=>┬╖{ΓÉì
+     41     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖expect(envelope.capability).toBe("knowledge:prompt-inject");ΓÉì
+     42     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖expect(envelope.sessionId).toBe("s1");ΓÉì
+     43     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖return┬╖{ΓÉì
+     44     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖injected:┬╖true,ΓÉì
+     45     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖plane:┬╖"production",ΓÉì
+     46     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖systemMessage:┬╖"ROLE_MODEL_KW_PROMPT_INJECT_V1\ntip:┬╖prefer┬╖verified┬╖evidence",ΓÉì
+     47     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖};ΓÉì
+     48     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖},ΓÉì
+     49     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     50     Γöé - ┬╖┬╖┬╖┬╖expect(result.receipt.injected).toBe(true);ΓÉì
+     51     Γöé - ┬╖┬╖┬╖┬╖expect(result.receipt.surface).toBe("applyRequestedRoleExecutionPolicy");ΓÉì
+     52     Γöé - ┬╖┬╖┬╖┬╖expect(result.messages[0]).toEqual({ΓÉì
+     53     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖role:┬╖"system",ΓÉì
+     54     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖content:┬╖"ROLE_MODEL_KW_PROMPT_INJECT_V1\ntip:┬╖prefer┬╖verified┬╖evidence",ΓÉì
+     55     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     56     Γöé - ┬╖┬╖┬╖┬╖expect(result.messages[1]).toEqual({┬╖role:┬╖"user",┬╖content:┬╖"hello"┬╖});ΓÉì
+     57     Γöé - ┬╖┬╖});ΓÉì
+     58     Γöé - ΓÉì
+     59     Γöé - ┬╖┬╖test("sync┬╖path┬╖uses┬╖registered┬╖session┬╖worker",┬╖()┬╖=>┬╖{ΓÉì
+     60     Γöé - ┬╖┬╖┬╖┬╖clearKwPromptInjectSessionsForTests();ΓÉì
+     61     Γöé - ┬╖┬╖┬╖┬╖registerKwPromptInjectSession("sync-1",┬╖{ΓÉì
+     62     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖promptInject:┬╖()┬╖=>┬╖({ΓÉì
+     63     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖injected:┬╖true,ΓÉì
+     64     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖systemMessage:┬╖"ROLE_MODEL_KW_PROMPT_INJECT_V1\ntip:┬╖sync",ΓÉì
+     65     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖}),ΓÉì
+     66     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     67     Γöé - ┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖applyKwPromptInjectToMessagesSync({ΓÉì
+     68     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖messages:┬╖[{┬╖role:┬╖"user",┬╖content:┬╖"hello"┬╖}],ΓÉì
+     69     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖hostProductionActivation:┬╖true,ΓÉì
+     70     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖sessionId:┬╖"sync-1",ΓÉì
+     71     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     72     Γöé - ┬╖┬╖┬╖┬╖expect(result.receipt.injected).toBe(true);ΓÉì
+     73     Γöé - ┬╖┬╖┬╖┬╖expect(result.messages[0]?.content).toContain("tip:┬╖sync");ΓÉì
+     74     Γöé - ┬╖┬╖┬╖┬╖clearKwPromptInjectSessionsForTests();ΓÉì
+     75     Γöé - ┬╖┬╖});ΓÉì
+     76     Γöé - ΓÉì
+     77     Γöé - ┬╖┬╖test("syncPrivateKnowledgeActivation┬╖calls┬╖private┬╖activate/deactivate",┬╖async┬╖()┬╖=>┬╖{ΓÉì
+     78     Γöé - ┬╖┬╖┬╖┬╖const┬╖calls:┬╖string[]┬╖=┬╖[];ΓÉì
+     79     Γöé - ┬╖┬╖┬╖┬╖const┬╖activated┬╖=┬╖await┬╖syncPrivateKnowledgeActivation({ΓÉì
+     80     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖sessionId:┬╖"join-1",ΓÉì
+     81     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖action:┬╖"activate",ΓÉì
+     82     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖policy:┬╖{┬╖activationPolicyVersion:┬╖1┬╖},ΓÉì
+     83     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖run:┬╖async┬╖(envelope)┬╖=>┬╖{ΓÉì
+     84     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖calls.push(String(envelope.capability));ΓÉì
+     85     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖return┬╖{┬╖productionActivation:┬╖true┬╖};ΓÉì
+     86     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖},ΓÉì
+     87     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     88     Γöé - ┬╖┬╖┬╖┬╖expect(activated.ok).toBe(true);ΓÉì
+     89     Γöé - ┬╖┬╖┬╖┬╖const┬╖deactivated┬╖=┬╖await┬╖syncPrivateKnowledgeActivation({ΓÉì
+     90     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖sessionId:┬╖"join-1",ΓÉì
+     91     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖action:┬╖"deactivate",ΓÉì
+     92     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖policy:┬╖{┬╖deactivationPolicyVersion:┬╖1,┬╖operatorAttestation:┬╖"deactivate-production"┬╖},ΓÉì
+     93     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖run:┬╖async┬╖(envelope)┬╖=>┬╖{ΓÉì
+     94     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖calls.push(String(envelope.capability));ΓÉì
+     95     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖return┬╖{┬╖productionActivation:┬╖false┬╖};ΓÉì
+     96     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖},ΓÉì
+     97     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+     98     Γöé - ┬╖┬╖┬╖┬╖expect(deactivated.ok).toBe(true);ΓÉì
+     99     Γöé - ┬╖┬╖┬╖┬╖expect(calls).toEqual(["knowledge:activate",┬╖"knowledge:deactivate"]);ΓÉì
+    100     Γöé - ┬╖┬╖});ΓÉì
+    101     Γöé - ΓÉì
+    102     Γöé - ┬╖┬╖test("syncPrivateKnowledgeActivation┬╖refuses┬╖when┬╖runner┬╖missing",┬╖async┬╖()┬╖=>┬╖{ΓÉì
+    103     Γöé - ┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖await┬╖syncPrivateKnowledgeActivation({ΓÉì
+    104     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖sessionId:┬╖"join-2",ΓÉì
+    105     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖action:┬╖"activate",ΓÉì
+    106     Γöé - ┬╖┬╖┬╖┬╖});ΓÉì
+    107     Γöé - ┬╖┬╖┬╖┬╖expect(result.ok).toBe(false);ΓÉì
+    108     Γöé - ┬╖┬╖┬╖┬╖expect(result.code).toBe("kw_prompt_inject_join_unsatisfied");ΓÉì
+    109     Γöé - ┬╖┬╖});ΓÉì
+    110     Γöé - });ΓÉì
+          1 Γöé + import┬╖{┬╖describe,┬╖expect,┬╖test┬╖}┬╖from┬╖"vitest";
+          2 Γöé + import┬╖{
+          3 Γöé + ┬╖┬╖applyKwPromptInjectToMessages,
+          4 Γöé + ┬╖┬╖applyKwPromptInjectToMessagesSync,
+          5 Γöé + ┬╖┬╖clearKwPromptInjectSessionsForTests,
+          6 Γöé + ┬╖┬╖registerKwPromptInjectSession,
+          7 Γöé + ┬╖┬╖syncPrivateKnowledgeActivation,
+          8 Γöé + }┬╖from┬╖"../src/kw-prompt-inject.ts";
+          9 Γöé + 
+         10 Γöé + describe("kw-prompt-inject┬╖join┬╖and┬╖insertion┬╖helpers",┬╖()┬╖=>┬╖{
+         11 Γöé + ┬╖┬╖test("refuses┬╖inject┬╖when┬╖host┬╖production┬╖activation┬╖is┬╖off",┬╖async┬╖()┬╖=>┬╖{
+         12 Γöé + ┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖await┬╖applyKwPromptInjectToMessages({
+         13 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖messages:┬╖[{┬╖role:┬╖"user",┬╖content:┬╖"hello"┬╖}],
+         14 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖hostProductionActivation:┬╖false,
+         15 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖sessionId:┬╖"s1",
+         16 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖run:┬╖async┬╖()┬╖=>┬╖({┬╖injected:┬╖true,┬╖systemMessage:┬╖"should-not-run"┬╖}),
+         17 Γöé + ┬╖┬╖┬╖┬╖});
+         18 Γöé + ┬╖┬╖┬╖┬╖expect(result.receipt.injected).toBe(false);
+         19 Γöé + ┬╖┬╖┬╖┬╖expect(result.receipt.code).toBe("kw_prompt_inject_requires_activation");
+         20 Γöé + ┬╖┬╖┬╖┬╖expect(result.messages).toEqual([{┬╖role:┬╖"user",┬╖content:┬╖"hello"┬╖}]);
+         21 Γöé + ┬╖┬╖});
+         22 Γöé + 
+         23 Γöé + ┬╖┬╖test("refuses┬╖inject┬╖when┬╖private┬╖join┬╖runner┬╖is┬╖missing",┬╖async┬╖()┬╖=>┬╖{
+         24 Γöé + ┬╖┬╖┬╖┬╖clearKwPromptInjectSessionsForTests();
+         25 Γöé + ┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖await┬╖applyKwPromptInjectToMessages({
+         26 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖messages:┬╖[{┬╖role:┬╖"user",┬╖content:┬╖"hello"┬╖}],
+         27 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖hostProductionActivation:┬╖true,
+         28 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖sessionId:┬╖"s1",
+         29 Γöé + ┬╖┬╖┬╖┬╖});
+         30 Γöé + ┬╖┬╖┬╖┬╖expect(result.receipt.injected).toBe(false);
+         31 Γöé + ┬╖┬╖┬╖┬╖expect(result.receipt.code).toBe("kw_prompt_inject_join_unsatisfied");
+         32 Γöé + ┬╖┬╖});
+         33 Γöé + 
+         34 Γöé + ┬╖┬╖test("prepends┬╖system┬╖message┬╖on┬╖successful┬╖private┬╖prompt-inject",┬╖async┬╖()┬╖=>┬╖{
+         35 Γöé + ┬╖┬╖┬╖┬╖const┬╖result┬╖=┬╖await┬╖applyKwPromptInjectToMessages({
+         36 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖messages:┬╖[{┬╖role:┬╖"user",┬╖content:┬╖"hello"┬╖}],
+         37 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖hostProductionActivation:┬╖true,
+         38 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖sessionId:┬╖"s1",
+         39 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖requestId:┬╖"r1",
+         40 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖run:┬╖async┬╖(envelope)┬╖=>┬╖{
+  71 more lines truncated
+  
+
+.\role-model-router\apps\runtime-host-bridge\src\index.ts organizeImports ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Import statements could be sorted:
+  
+       23    23 Γöé   } from "@role-model-router/catalog";
+       24    24 Γöé   import { assembleContextEnvelope } from "@role-model-router/context-envelope";
+       25       Γöé - import┬╖{┬╖applyKwPromptInjectToMessagesSync┬╖}┬╖from┬╖"./kw-prompt-inject.ts";
+       26       Γöé - import┬╖{┬╖canonicalTaxonomy,┬╖taxonomyManifest┬╖}┬╖from┬╖"@role-model-router/core";
+             25 Γöé + import┬╖{┬╖canonicalTaxonomy,┬╖taxonomyManifest┬╖}┬╖from┬╖"@role-model-router/core";
+       27    26 Γöé   import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
+       28    27 Γöé   import { type RegistrySources, buildEndpointRegistry } from "@role-model-router/endpoint-registry";
+    ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖ Γöé 
+      120   119 Γöé   } from "./controller-routing-contract.js";
+      121   120 Γöé   import { createDownstreamOpenAIDiscovery } from "./downstream-openai-discovery.js";
+      122       Γöé - import┬╖{┬╖resolveModelCapabilityProfile┬╖}┬╖from┬╖"./model-capability-resolver.js";
+            121 Γöé + import┬╖{┬╖applyKwPromptInjectToMessagesSync┬╖}┬╖from┬╖"./kw-prompt-inject.ts";
+            122 Γöé + import┬╖{┬╖resolveModelCapabilityProfile┬╖}┬╖from┬╖"./model-capability-resolver.js";
+      123   123 Γöé   import {
+      124   124 Γöé     filterEndpointsByCapabilityRequirements,
+  
+
+Skipped 2 suggested fixes.
+If you wish to apply the suggested (unsafe) fixes, use the command biome check --fix --unsafe
+
+Checked 790 files in 2s. No fixes applied.
+Found 5 errors.
+check ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Some errors were emitted while running checks.
+  
+
+ΓÇëELIFECYCLEΓÇë Command failed with exit code 1.
+ΓÇëELIFECYCLEΓÇë Command failed with exit code 1.

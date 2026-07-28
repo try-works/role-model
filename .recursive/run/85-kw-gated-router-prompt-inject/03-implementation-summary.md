@@ -1,10 +1,10 @@
 Run: `/.recursive/run/85-kw-gated-router-prompt-inject/`
 Phase: `03 IMPLEMENTATION`
 Status: `LOCKED`
-LockedAt: `2026-07-28T11:53:15Z`
-LockHash: `52982c0149c059746a2cd4ef0285b08a4370de799507711b8bca346711e6436a`
+LockedAt: `2026-07-28T21:29:47Z`
+LockHash: `e3094b548e2ca61239d242b1f9f3637d85118214cb153bdab568801a3679990b`
 CapturedAt: `2026-07-28T19:50:00+08:00`
-RevisedAt: `2026-07-28T20:00:00+08:00`
+RevisedAt: `2026-07-29T05:25:00+08:00`
 Workflow version: `recursive-mode-audit-v2`
 TDD Mode: `strict`
 Inputs:
@@ -24,7 +24,7 @@ Scope note: Records SP1–SP5 product implementation for gated live-router promp
 - [x] SP5 honesty/UI unlock copy
 - [x] Record RED/GREEN evidence and paired diffs
 - [x] Complete RCS for `R1`–`R26` appropriate to Phase 3
-- [x] SP6 rebuild/freeze — deferred to Phase 4/5 (not Phase 3 scope)
+- [x] SP6 rebuild/freeze — private pin/assemble freeze advanced with Phase 4 evidence (R23); SEA rebuild remains Phase 5
 - [x] SP7 Phase 5 runtime+`pi` — deferred to Phase 5 (not Phase 3 scope)
 
 ## Changes Applied
@@ -143,15 +143,15 @@ Audit Inputs Provided:
 
 ## Gaps Found
 
-- None unresolved for Phase 3 SP1–SP5 after RCS private-diff-scope repair.
-- Later-phase work (SEA distribution-root auto-join loader, product-contracts generate refresh if CI requires, Phase 5 runtime/`pi`) remains blocked/deferred in RCS and is not an unresolved Phase 3 authoring gap.
+- None.
+- Phase 5 SEA/`pi`/binder items remain deferred by design outside this phase.
 
 ## Repair Work Performed
 
 - Implemented SP1–SP5 under strict TDD with RED then GREEN for private inject.
 - Added host join/insert helpers and wired locked insertion surface.
 - Updated honesty copy and probe matrix.
-- Reopened Phase 3 after invalid lock; RCS `Changed Files` now cite only private-diff-scoped paths; paired public product paths are recorded under Worktree Diff Audit and RCS `Audit Note` (dual-repo lint cannot see public git scope from the private controller root).
+- Reopened after Phase 4 freeze files entered the private diff; RCS `R23` now cites the coherent pin/live-e2e/TB11 refresh so Phase 3 diff accounting stays valid alongside Phase 4.
 
 ## Requirement Completion Status
 
@@ -177,7 +177,7 @@ Audit Inputs Provided:
 - `R20 | Status: blocked | Rationale: Rebuilt SEA inject hop is Phase 5; unit surface wiring is not a substitute. | Blocking Evidence: .recursive/run/85-kw-gated-router-prompt-inject/00-requirements.md`
 - `R21 | Status: blocked | Rationale: Live --track=dev hop is Phase 5. | Blocking Evidence: .recursive/run/85-kw-gated-router-prompt-inject/00-requirements.md`
 - `R22 | Status: blocked | Rationale: Live pi CLI+storage is Phase 5. | Blocking Evidence: .recursive/run/85-kw-gated-router-prompt-inject/00-requirements.md`
-- `R23 | Status: blocked | Rationale: Pin/freeze measurement after tip is Phase 4/5. | Blocking Evidence: .recursive/run/85-kw-gated-router-prompt-inject/00-requirements.md`
+- `R23 | Status: verified | Changed Files: evidence/source-set/tb00-release-source-lock.json, evidence/live-e2e/run00-live-e2e-manifest.json, evidence/live-e2e/build-and-test.json, evidence/live-e2e/clean-checkout-reconstruction.json, evidence/live-e2e/cloud-path.json, evidence/live-e2e/local-runtime-and-pi.json, evidence/live-e2e/negative-retention-browser.json, evidence/tb11-system-proof.json, evidence/paired-release-manifest.json, evidence/capacity-results.json, evidence/capacity-results-system.json, evidence/system-scenarios/manifest.json, evidence/system-scenarios/rollback.json, evidence/system-scenarios/disaster-recovery.json, evidence/system-scenarios/DTB-SCENARIO-BASELINE-AND-CONTRACT-PARITY.json, evidence/system-scenarios/DTB-SCENARIO-CAPTURE-DEGRADATION-ROUTER-CONTINUITY.json, evidence/system-scenarios/DTB-SCENARIO-CLEAN-ROOM-CUMULATIVE-SYSTEM-PROOF.json, evidence/system-scenarios/DTB-SCENARIO-CLOUD-INGESTION-REBUILD-DR-AND-ROLLBACK.json, evidence/system-scenarios/DTB-SCENARIO-DEFAULT-CONTRIBUTION-AUTHORIZATION-AND-REVOCATION.json, evidence/system-scenarios/DTB-SCENARIO-EXTENSION-BOUNDARY-CHANNEL-ISOLATION.json, evidence/system-scenarios/DTB-SCENARIO-GRAPH-SHARED-PREFIX-AND-RECOVERY.json, evidence/system-scenarios/DTB-SCENARIO-LEGACY-MIGRATION-PARITY-AND-ROLLBACK.json, evidence/system-scenarios/DTB-SCENARIO-PROJECTION-READINESS-AND-PRUNE-INVALIDATION.json, evidence/system-scenarios/DTB-SCENARIO-RETENTION-PRUNE-ARCHIVE-RESTORE.json, evidence/system-scenarios/DTB-SCENARIO-ROUTING-LEARNING-SHADOW-NO-ACTIVATION.json, evidence/system-scenarios/DTB-SCENARIO-VERIFIERS-ROUNDTRIP-TOKEN-FIDELITY-AND-REVOCATION.json, .recursive/run/00-direct-track-b-v1-1-implementation/evidence/remediation-proposal-2026-07-23/invalidate-stale-pass.json, .recursive/run/00-direct-track-b-v1-1-implementation/evidence/remediation-proposal-2026-07-23/pin-freeze/gate-status.json | Implementation Evidence: evidence/source-set/tb00-release-source-lock.json | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/evidence/logs/phase4/pin-freeze.log, .recursive/run/85-kw-gated-router-prompt-inject/evidence/logs/phase4/assemble-run00-live-e2e-pass.log, .recursive/run/85-kw-gated-router-prompt-inject/evidence/logs/phase4/tb11-after-assemble-pass.log | Audit Note: freeze refresh executed under Phase 4 ownership; cited here for product-diff accounting shared by Phases 3–4`
 - `R24 | Status: blocked | Rationale: Binder is Phase 5 closeout. | Blocking Evidence: .recursive/run/85-kw-gated-router-prompt-inject/00-requirements.md`
 - `R25 | Status: blocked | Rationale: Phase 6 DECISIONS soft-close. | Blocking Evidence: .recursive/run/85-kw-gated-router-prompt-inject/00-requirements.md`
 - `R26 | Status: blocked | Rationale: Phases 6–8 paired closeout. | Blocking Evidence: .recursive/run/85-kw-gated-router-prompt-inject/00-worktree.md`
@@ -219,7 +219,7 @@ Audit Inputs Provided:
 - `R20` -> Phase 5 SEA hop | Evidence: blocked RCS
 - `R21` -> Phase 5 live recs | Evidence: blocked RCS
 - `R22` -> Phase 5 pi | Evidence: blocked RCS
-- `R23` -> Phase 4/5 freeze | Evidence: blocked RCS
+- `R23` -> SP6 freeze pin/assemble | Evidence: phase4 pin/assemble/tb11 logs
 - `R24` -> Phase 5 binder | Evidence: blocked RCS
 - `R25` -> Phase 6 DECISIONS | Evidence: blocked RCS
 - `R26` -> Phases 6–8 closeout | Evidence: blocked RCS

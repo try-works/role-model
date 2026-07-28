@@ -5,7 +5,7 @@ import {
   clearKwPromptInjectSessionsForTests,
   registerKwPromptInjectSession,
   syncPrivateKnowledgeActivation,
-} from "../src/kw-prompt-inject.ts";
+} from "../src/kw-prompt-inject.js";
 
 describe("kw-prompt-inject join and insertion helpers", () => {
   test("refuses inject when host production activation is off", async () => {
