@@ -22,6 +22,7 @@ import type {
   PricingHints,
 } from "@role-model-router/catalog";
 import { assembleContextEnvelope } from "@role-model-router/context-envelope";
+import { applyKwPromptInjectToMessagesSync } from "./kw-prompt-inject.ts";
 import { canonicalTaxonomy, taxonomyManifest } from "@role-model-router/core";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 import { type RegistrySources, buildEndpointRegistry } from "@role-model-router/endpoint-registry";
@@ -3246,6 +3247,8 @@ export interface BridgeExecutionRequestOptions {
   readonly transportPreference?: RuntimeExecutionRequest["transportPreference"];
   readonly ignoreExecutionFailureCooldowns?: boolean;
   readonly abortSignal?: AbortSignal;
+  readonly kwProductionActivation?: boolean;
+  readonly kwPromptInjectQuery?: Record<string, unknown>;
 }
 
 class BridgeHttpError extends Error {
@@ -6751,10 +6754,18 @@ function applyRequestedRoleExecutionPolicy(input: {
   }
 
   const rolePolicyMessages = buildRolePolicySystemMessages(roleDefinition);
-  const messages =
+  const withRolePolicy =
     rolePolicyMessages.length > 0
       ? ([...rolePolicyMessages, ...input.messages] as const)
       : input.messages;
+  const kwInject = applyKwPromptInjectToMessagesSync({
+    messages: withRolePolicy,
+    hostProductionActivation: input.requestOptions?.kwProductionActivation === true,
+    sessionId: input.requestOptions?.sessionId,
+    requestId: input.requestOptions?.clientRequestId,
+    query: input.requestOptions?.kwPromptInjectQuery,
+  });
+  const messages = kwInject.messages as typeof input.messages;
   const toolPolicyMode = roleDefinition?.tool_policy?.mode ?? "allowed";
   const allowedTools = roleDefinition?.tool_policy?.allowed_tools ?? [];
   const tools =

@@ -1,0 +1,16 @@
+(node:21156) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö TB10-TEST-PROMPT-INJECT-OFF-REFUSE (5.7206ms)
+Γ£ö TB10-TEST-PROMPT-INJECT-CONTRACT (4.6731ms)
+Γ£ö TB10-TEST-PROMPT-INJECT-ON-APPLY-EXPORT-AND-OFF (4.946ms)
+Γ£ö TB10-TEST-PROMPT-INJECT-REQUIRES-PRODUCTION-RETRIEVE (1.9652ms)
+Γ£ö TB10-TEST-PROMPT-INJECT-BOUNDS (23.1921ms)
+Γ£ö TB10-TEST-PROMPT-INJECT-CAPABILITY (2.3889ms)
+Γä╣ tests 6
+Γä╣ suites 0
+Γä╣ pass 6
+Γä╣ fail 0
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 290.9067

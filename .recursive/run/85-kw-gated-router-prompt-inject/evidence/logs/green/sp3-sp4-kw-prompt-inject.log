@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/85-kw-gated-router-prompt-inject/role-model-router/apps/runtime-host-bridge
+
+ Γ£ô test/kw-prompt-inject.test.ts (5 tests) 9ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  19:43:59
+   Duration  1.21s (transform 83ms, setup 0ms, collect 85ms, tests 9ms, environment 0ms, prepare 465ms)
+

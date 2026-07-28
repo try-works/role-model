@@ -41,6 +41,9 @@ describe("ExtensionsRoute", () => {
     expect(routeSource).toContain("is not productionActivation");
     expect(routeSource).not.toContain("productionActivation stays hard-off");
     expect(routeSource).toContain("production prompt injection");
+    expect(routeSource).not.toContain("Production prompt injection remains locked");
+    expect(routeSource).toContain("requires ceremony ON plus gated production");
+    expect(routeSource).toContain("cleared on soft OFF");
     expect(routeSource).not.toContain("do not expose a public enable/disable mutation API");
     expect(routeSource).toContain("mutateExtension");
     expect(routeSource).toContain("dismissRecommendation");

@@ -1,6 +1,23 @@
 import { createHash, createHmac, createPublicKey, timingSafeEqual, verify } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
+import {
+  clearKwPromptInjectSessionsForTests,
+  registerKwPromptInjectSession,
+  syncPrivateKnowledgeActivation,
+  type KwSessionWorker,
+} from "./kw-prompt-inject.ts";
+
+let kwJoinWorkerFactory:
+  | ((sessionId: string) => Promise<KwSessionWorker | undefined>)
+  | undefined;
+
+export function setKwJoinWorkerFactoryForTests(
+  factory: ((sessionId: string) => Promise<KwSessionWorker | undefined>) | undefined,
+): void {
+  kwJoinWorkerFactory = factory;
+  if (!factory) clearKwPromptInjectSessionsForTests();
+}
 
 type LifecycleRecord = {
   readonly id: string;
@@ -690,8 +707,43 @@ export function createTrackBOperations({
             "knowledge-worker production activation refused: v1 ceremony policy and operator attestation are required",
           );
         asKnowledgeValidationReceipt(input.receipt ?? knowledgeWorkerBootstrap?.receipt);
+        const sessionId = String(input.sessionId ?? state.revision ?? "runtime-default");
+        const worker = kwJoinWorkerFactory ? await kwJoinWorkerFactory(sessionId) : undefined;
+        if (worker) {
+          const join = await syncPrivateKnowledgeActivation({
+            sessionId,
+            action: "activate",
+            policy: {
+              activationPolicyVersion: 1,
+              operatorAttestation: "activate-production",
+              receipt: input.receipt ?? knowledgeWorkerBootstrap?.receipt,
+            },
+            worker,
+          });
+          if (!join.ok) {
+            throw new Error(
+              `knowledge-worker production activation refused: ${join.code ?? "kw_prompt_inject_join_unsatisfied"}`,
+            );
+          }
+          registerKwPromptInjectSession(sessionId, worker);
+        }
         productionActivation = true;
       } else if (action === "deactivate_production") {
+        const sessionId = String(input.sessionId ?? state.revision ?? "runtime-default");
+        const registered = kwJoinWorkerFactory
+          ? await kwJoinWorkerFactory(sessionId)
+          : undefined;
+        if (registered) {
+          await syncPrivateKnowledgeActivation({
+            sessionId,
+            action: "deactivate",
+            policy: {
+              deactivationPolicyVersion: 1,
+              operatorAttestation: "deactivate-production",
+            },
+            worker: registered,
+          });
+        }
         productionActivation = false;
       }
       const lifecycle: LifecycleRecord["lifecycle"] = enabled
