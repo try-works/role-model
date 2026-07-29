@@ -1,0 +1,12 @@
+Γ£ö packaged launch scope defaults to packaged-run00 (1.8635ms)
+Γ£ö packaged launch scope accepts explicit --scope-id (0.3011ms)
+Γ£ö packaged launch scope accepts env override when flag omitted (0.2261ms)
+Γ£ö packaged launch scope prefers CLI over env (0.3205ms)
+Γä╣ tests 4
+Γä╣ suites 0
+Γä╣ pass 4
+Γä╣ fail 0
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 147.5964

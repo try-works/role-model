@@ -1,0 +1,103 @@
+(node:22260) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ TB10-TEST-UNIT replays deterministically (6.2881ms)
+✔ TB10-TEST-CONTRACT binds evaluation group provenance (6.7359ms)
+✔ TB10-TEST-INTEGRATION derives shadow candidates (3.073ms)
+✔ TB10-TEST-REGRESSION never activates production (2.0117ms)
+✔ TB10-TEST-MUTATION activation guard is immutable (1.4063ms)
+✔ TB10-TEST-ACTIVATION-POLICY activates only with valid v1 policy (4.0987ms)
+✔ TB10-TEST-ACTIVATION-CAPABILITY forwards policy through run() (3.6323ms)
+✔ TB10-TEST-ACTIVATION-DIGEST-BIND requires receipt digest match to shadow candidate (2.2098ms)
+✔ TB10-TEST-SHADOW-READY-BOOTSTRAP seeds shadow candidate without production (2.1686ms)
+✔ TB10-TEST-SOFT-DEACTIVATE returns to shadow-ready (2.5242ms)
+✔ TB10-TEST-DEACTIVATE-CAPABILITY soft-offs through run() (2.0508ms)
+✔ TB10-TEST-FALSE-SUCCESS rejects holdout failure (1.7509ms)
+✔ TB10-TEST-ROLLBACK discards derived candidates (1.68ms)
+✔ TB10-TEST-HEALTH operates without Verifiers (1.2942ms)
+✔ TB10-TEST-REPLAY-CORE-PACKAGE checkpoints cancellation (0.4712ms)
+✔ TB10-TEST-EVALUATION-RUNNER-PACKAGE enforces no egress (1.2666ms)
+✔ TB10-TEST-TRAJECTORY-SIGNALS-PACKAGE emits bounded diagnostics (2.8022ms)
+✔ TB10-TEST-PROFILE-LEARNER-PACKAGE keeps attribution dimensions separate (3.2236ms)
+✔ TB10-TEST-KNOWLEDGE-WORKER-PACKAGE requires review and redaction (1.2461ms)
+✔ TB10-TEST-TRACK-A-EXCLUSION packages are reference-only learners (0.3278ms)
+✔ TB10-REVIEW-REPLAY shares immutable prefixes and binds source decision provenance (20.8318ms)
+✔ TB10-REVIEW-REPLAY cancellation resumes from a hash-bound checkpoint (1.4242ms)
+✔ TB10-REVIEW-EVAL runs through Evaluation Core with no external environment (2.9407ms)
+✔ TB10-REVIEW-SIGNALS are provenance-bound uncertain diagnostics, never labels (0.462ms)
+✔ TB10-REVIEW-PROFILE preserves propensity, bias, confidence, promotion and rollback evidence (1.5163ms)
+✔ TB10-REVIEW-KNOWLEDGE requires comparable positive/negative groups and disjoint validation (4.203ms)
+✔ TB10-REVIEW-SAFETY rejects caller-asserted knowledge and missing diagnostic provenance (1.2505ms)
+✔ TB10-REVIEW-SAFETY executes only trusted registered scorers (1.7586ms)
+✔ TB10-REVIEW-BOUNDARY accepts only finite declarative scorers and complete execution provenance (2.6453ms)
+✔ TB10-REVIEW-RECEIPTS rejects forged profile and knowledge promotion gates (2.3914ms)
+✔ TB10-REVIEW-RECEIPTS bind nested evidence and model fields (0.5624ms)
+✔ TB10-REVIEW-REPLAY uses collision-safe prefix hashes and durable restart checkpoints (43.8691ms)
+✖ TB10-TEST-PRODUCTION-RETRIEVE-GATE (5.0598ms)
+✖ TB10-TEST-EVAL-CONSUMER-USEFULNESS (1.9656ms)
+✖ TB10-TEST-DURABLE-RUN-SESSION (3.5167ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 32
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 365.2145
+
+✖ failing tests:
+
+test at tests\track-b\tb10.test.mjs:101:1
+✖ TB10-TEST-PRODUCTION-RETRIEVE-GATE (5.0598ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///D:/DEV/.wt/84-kw/tests/track-b/tb10.test.mjs:106:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /unknown knowledge retrieve plane/i,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tests\track-b\tb10.test.mjs:118:1
+✖ TB10-TEST-EVAL-CONSUMER-USEFULNESS (1.9656ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /kw_consumer_requires_production_retrieve|consumer requires production/i. Input:
+  
+  'TypeError: w.evaluateWithProductionKnowledge is not a function'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/.wt/84-kw/tests/track-b/tb10.test.mjs:122:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: TypeError: w.evaluateWithProductionKnowledge is not a function
+        at file:///D:/DEV/.wt/84-kw/tests/track-b/tb10.test.mjs:122:23
+        at getActual (node:assert:611:5)
+        at strict.throws (node:assert:759:24)
+        at TestContext.<anonymous> (file:///D:/DEV/.wt/84-kw/tests/track-b/tb10.test.mjs:122:10)
+        at async Test.run (node:internal/test_runner/test:1113:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:788:7),
+    expected: /kw_consumer_requires_production_retrieve|consumer requires production/i,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at tests\track-b\tb10.test.mjs:133:1
+✖ TB10-TEST-DURABLE-RUN-SESSION (3.5167ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - 'production'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/.wt/84-kw/tests/track-b/tb10.test.mjs:138:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'production',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

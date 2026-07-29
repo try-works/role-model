@@ -1,0 +1,30 @@
+Γ£û PCR8 pin-freeze gate tracks dual HEADs and TB11 rewrite eligibility from Phase 3 state (693.861ms)
+Γä╣ tests 1
+Γä╣ suites 0
+Γä╣ pass 0
+Γä╣ fail 1
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 841.9291
+
+Γ£û failing tests:
+
+test at tests\track-b\pin-freeze-gate.test.mjs:59:1
+Γ£û PCR8 pin-freeze gate tracks dual HEADs and TB11 rewrite eligibility from Phase 3 state (693.861ms)
+  AssertionError [ERR_ASSERTION]: frozen product pins must still hold (evidence-only commits allowed)
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///D:/DEV/.wt/82-tb00/tests/track-b/pin-freeze-gate.test.mjs:126:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.start (node:internal/test_runner/test:1003:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

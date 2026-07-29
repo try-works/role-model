@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "role-model.sqlite-migration-registry.v1",
+  "entries": [
+    {
+      "migrationId": "tb04-legacy-graph-performance-v1",
+      "sqlFile": "0001_tb04_legacy_graph_performance.sql",
+      "owner": "runtime-storage",
+      "sha256": "375da274ec8d594afec3286d1a9d0e9eea96993f82d659d0e82290659e675e71",
+      "transactionMode": "idempotent_guarded",
+      "idempotencyStrategy": "create-if-not-exists-and-source-id-primary-key",
+      "rollbackClass": "reversible",
+      "postconditionQuery": "SELECT COUNT(*) = 3 AS valid FROM sqlite_master WHERE type = 'table' AND name IN ('legacy_migration_journal','legacy_graph_migration_refs','normalized_performance_samples_v2')"
+    }
+  ]
+}

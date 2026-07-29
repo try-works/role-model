@@ -1,0 +1,10 @@
+seaPath=D:\DEV\role-model\.worktrees\82-tb00-pin-refreeze-kw-digest-bind-launch-scope\role-model-router\dist\release\win32-x64\role-model-dev.exe
+onDiskSha256=825f9b4f2e17f5102605b24943b974efa435133452f0cfa5867b389c14927f84
+receiptSha256=825f9b4f2e17f5102605b24943b974efa435133452f0cfa5867b389c14927f84
+seaMatch=True
+scopeId=run82-dev
+listenUrl=http://127.0.0.1:34568
+track=dev
+channel=development
+serviceUrl=https://recommendations-dev.role-model.dev
+checkedAt=2026-07-24T23:28:17.3579176Z

@@ -1,0 +1,19 @@
+Γ£ö packaged launch scope defaults to packaged-run00 (3.3662ms)
+Γ£ö packaged launch scope accepts explicit --scope-id (0.3584ms)
+Γ£ö packaged launch scope accepts env override when flag omitted (0.2769ms)
+Γ£ö packaged launch scope prefers CLI over env (0.302ms)
+Γ£ö packaged launch scope accepts equals-form --scope-id= (0.378ms)
+Γ£ö packaged launch scope equals-form prefers CLI over env (0.2775ms)
+Γ£ö resolveFlagValue binds equals-form --track= (0.2795ms)
+Γ£ö resolveFlagValue binds discrete --track (0.3033ms)
+Γ£ö resolvePackagedLaunchEvidenceRoot refuses run80 default for non-run80 scope (2.0719ms)
+Γ£ö resolvePackagedLaunchEvidenceRoot accepts explicit run-owned evidence root (1.1174ms)
+Γ£ö resolvePackagedLaunchEvidenceRoot allows run80 default for packaged-run00 (0.5095ms)
+Γä╣ tests 11
+Γä╣ suites 0
+Γä╣ pass 11
+Γä╣ fail 0
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 199.1947

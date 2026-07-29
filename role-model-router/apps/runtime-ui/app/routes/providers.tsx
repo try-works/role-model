@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 
+import { DeviceAuthorizationCard } from "../components/device-authorization-card";
 import { DeviceAuthorizationModal } from "../components/device-authorization-modal";
 import { LocalModelRolePicker } from "../components/local-model-role-picker";
 import {
@@ -559,7 +560,12 @@ export default function ProvidersRoute() {
       }
 
       try {
-        window.open(verificationUrl, "_blank", "noopener,noreferrer");
+        const opened = window.open(verificationUrl, "_blank", "noopener,noreferrer");
+        if (!opened) {
+          setError(
+            "Could not open the verification page automatically. Use the Verification URL link below (or paste it into your browser).",
+          );
+        }
       } catch {
         setError("Could not open the verification page. Copy the URL manually and continue.");
       }
@@ -1118,6 +1124,14 @@ export default function ProvidersRoute() {
                   View in Connect registry
                 </Link>
               </div>
+              {oauthState ? (
+                <DeviceAuthorizationCard
+                  session={oauthState}
+                  copyCodeLabel={copiedUserCode ? "Copied" : "Copy code"}
+                  onCopyCode={() => void onCopyUserCode()}
+                  onOpenVerificationUrl={() => void openVerificationUrl(oauthState)}
+                />
+              ) : null}
               {actionFeedback ? (
                 <output className="rounded-[var(--rm-radius-field)] border border-[var(--rm-pill-success-bg)] bg-[var(--rm-pill-success-bg)] px-4 py-3 text-sm text-[var(--rm-pill-success-ink)]">
                   {actionFeedback}

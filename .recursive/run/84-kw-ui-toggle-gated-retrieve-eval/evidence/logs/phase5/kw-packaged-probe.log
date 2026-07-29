@@ -1,0 +1,20 @@
+{
+  "ok": true,
+  "defaultOff": true,
+  "shadowReady": true,
+  "refuseWithoutPolicy": true,
+  "mismatchRefuse": true,
+  "productionRetrieveRefusedOff": true,
+  "consumerRefusedOff": true,
+  "activated": true,
+  "productionRetrieveOk": true,
+  "consumerOk": true,
+  "softDeactivated": true,
+  "softOffShadowReady": true,
+  "productionRetrieveRefusedAfterSoftOff": true,
+  "rolledBack": true,
+  "staticUngatedOff": true,
+  "distributionRootSet": true,
+  "module": "D:\\DEV\\.wt\\84-kw\\dist\\run00-dev\\extensions\\knowledge-worker.mjs",
+  "probe": "run84_kw_activation_retrieve_gate"
+}

@@ -1224,9 +1224,34 @@ async function fetchJson<TValue>(
 }
 
 const RUNTIME_SUMMARY_RETRY_DELAYS_MS = [150, 300] as const;
+const RUNTIME_INITIALIZING_RETRY_DELAYS_MS = [200, 500, 1000, 2000] as const;
 
 async function sleep(delayMs: number): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, delayMs));
+}
+
+function isRuntimeInitializingError(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("runtime_initializing");
+}
+
+async function withRuntimeInitializingRetry<TValue>(
+  operation: () => Promise<TValue>,
+): Promise<TValue> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= RUNTIME_INITIALIZING_RETRY_DELAYS_MS.length; attempt += 1) {
+    if (attempt > 0) {
+      await sleep(RUNTIME_INITIALIZING_RETRY_DELAYS_MS[attempt - 1]);
+    }
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (!isRuntimeInitializingError(error)) {
+        throw error;
+      }
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("Runtime API is still initializing.");
 }
 
 async function fetchRuntimeSummaryWithRetry(fetcher: RuntimeFetcher): Promise<RuntimeSummary> {
@@ -1315,13 +1340,17 @@ export async function fetchRuntimeDeviceAuthorizations(
 export async function fetchRuntimeEndpoints(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<readonly RuntimeEndpoint[]> {
-  return fetchJson<RuntimeEndpoint[]>("/api/role-model/endpoints", fetcher);
+  return withRuntimeInitializingRetry(() =>
+    fetchJson<RuntimeEndpoint[]>("/api/role-model/endpoints", fetcher),
+  );
 }
 
 export async function fetchRuntimeRoles(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<readonly RuntimeRoleDefinition[]> {
-  return fetchJson<RuntimeRoleDefinition[]>("/api/role-model/roles", fetcher);
+  return withRuntimeInitializingRetry(() =>
+    fetchJson<RuntimeRoleDefinition[]>("/api/role-model/roles", fetcher),
+  );
 }
 
 export async function fetchRuntimeRequests(
@@ -1339,6 +1368,344 @@ export async function fetchRuntimeModels(
     const modelsResponse = await fetchJson<{ data: RuntimeModelRecord[] }>("/v1/models", fetcher);
     return modelsResponse.data;
   }
+}
+
+export interface RuntimeExtensionStatus {
+  readonly id: string;
+  readonly packageClass: "canonical_extension" | "fixture_worker" | "interop_adapter";
+  readonly lifecycle:
+    | "installed_disabled"
+    | "installed_active_pending_disclosure"
+    | "starting"
+    | "ready"
+    | "degraded"
+    | "stopping"
+    | "stopped";
+  readonly installed: boolean;
+  readonly enabled: boolean;
+  readonly enabledMode?: "disabled" | "shadow" | "advisory" | "bounded" | "active";
+  readonly channel: string;
+  readonly scope: string;
+  readonly authorizationEpoch: number;
+  readonly productionActivation?: boolean;
+  readonly health: {
+    readonly available: boolean;
+    readonly routingDependency: boolean;
+    readonly probe?: string;
+    readonly summary?: string;
+    readonly reason?: string;
+    readonly productionActivation?: boolean;
+    readonly knowledgeWorkerBootstrap?: {
+      readonly receipt: KnowledgeValidationReceipt;
+      readonly groupDigest: string;
+    };
+  };
+  readonly permissions: readonly string[];
+  readonly dataClasses: readonly string[];
+  readonly retention: string;
+  readonly degradation: string;
+  readonly compatibility: readonly string[];
+}
+
+export async function fetchExtensions(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<readonly RuntimeExtensionStatus[]> {
+  return fetchJson<RuntimeExtensionStatus[]>("/api/role-model/extensions", fetcher);
+}
+
+export type RuntimeExtensionMode = "disabled" | "shadow" | "advisory" | "bounded" | "active";
+export interface KnowledgeValidationReceipt {
+  readonly payload: {
+    readonly kind: "knowledge_validation";
+    readonly reviewed: true;
+    readonly safetyReviewed: true;
+    readonly redacted: true;
+    readonly holdoutPassed: true;
+    readonly [key: string]: unknown;
+  };
+  readonly signature: string;
+  readonly [key: string]: unknown;
+}
+
+export async function mutateExtension(
+  input: {
+    readonly id: string;
+    readonly action:
+      | "enable"
+      | "disable"
+      | "set_mode"
+      | "bootstrap_shadow_ready"
+      | "activate_production"
+      | "deactivate_production";
+    readonly mode?: RuntimeExtensionMode;
+    readonly activationPolicyVersion?: 1;
+    readonly operatorAttestation?: "activate-production";
+    readonly receipt?: KnowledgeValidationReceipt;
+    readonly groupDigest?: string;
+  },
+  fetcher: RuntimeFetcher = fetch,
+): Promise<{
+  readonly extensions: readonly RuntimeExtensionStatus[];
+  readonly extension?: RuntimeExtensionStatus;
+  readonly receipts?: readonly unknown[];
+}> {
+  return fetchJson("/api/role-model/extensions/mutate", fetcher, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
+}
+
+type ExtensionMutationResult = Awaited<ReturnType<typeof mutateExtension>>;
+
+export async function prepareKnowledgeWorkerShadowReady(
+  bootstrap: {
+    readonly receipt: KnowledgeValidationReceipt;
+    readonly groupDigest: string;
+  },
+  fetcher: RuntimeFetcher = fetch,
+): Promise<ExtensionMutationResult> {
+  return mutateExtension(
+    {
+      id: "knowledge-worker",
+      action: "bootstrap_shadow_ready",
+      receipt: bootstrap.receipt,
+      groupDigest: bootstrap.groupDigest,
+    },
+    fetcher,
+  );
+}
+
+export async function activateKnowledgeWorkerProduction(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<ExtensionMutationResult> {
+  return mutateExtension(
+    {
+      id: "knowledge-worker",
+      action: "activate_production",
+      activationPolicyVersion: 1,
+      operatorAttestation: "activate-production",
+    },
+    fetcher,
+  );
+}
+
+export async function deactivateKnowledgeWorkerProduction(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<ExtensionMutationResult> {
+  return mutateExtension({ id: "knowledge-worker", action: "deactivate_production" }, fetcher);
+}
+
+export interface RuntimeStorageRetentionSummary {
+  readonly revision: number;
+  readonly totalBytes: number;
+  readonly categories: readonly {
+    readonly id: string;
+    readonly tier: string;
+    readonly scope: string;
+    readonly bytes: number;
+    readonly count: number;
+  }[];
+  readonly managedPolicy: boolean;
+  readonly conflicts: readonly {
+    readonly serviceId?: string;
+    readonly reason: string;
+    readonly count?: number;
+  }[];
+  readonly policies: readonly {
+    readonly policyId: string;
+    readonly scope: string;
+    readonly maxBytes: number;
+    readonly maxAgeDays: number;
+  }[];
+  readonly receipts: readonly {
+    readonly id: string;
+    readonly status: string;
+    readonly affectedCount: number;
+    readonly rollbackAvailable: boolean;
+    readonly manifestHash?: string;
+  }[];
+  readonly activeJob: {
+    readonly id: string;
+    readonly status: string;
+    readonly progress: number;
+    readonly manifestHash: string;
+    readonly scope: string;
+  } | null;
+  readonly currentPlan: {
+    readonly manifestHash: string;
+    readonly affectedCount: number;
+    readonly estimatedBytes: number;
+    readonly rollbackAvailable: boolean;
+    readonly lostCapabilities: readonly string[];
+    readonly retainedCapabilities: readonly string[];
+    readonly blocks: readonly string[];
+  } | null;
+}
+
+export async function fetchStorageRetention(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeStorageRetentionSummary> {
+  return fetchJson<RuntimeStorageRetentionSummary>("/api/role-model/storage-retention", fetcher);
+}
+
+export async function requestRetentionDryRun(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeStorageRetentionSummary> {
+  return fetchJson<RuntimeStorageRetentionSummary>(
+    "/api/role-model/storage-retention/dry-run",
+    fetcher,
+    { method: "POST" },
+  );
+}
+
+export async function updateRetentionPolicy(
+  policy: {
+    readonly policyId: string;
+    readonly scope: string;
+    readonly maxBytes: number;
+    readonly maxAgeDays: number;
+  },
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeStorageRetentionSummary> {
+  return fetchJson<RuntimeStorageRetentionSummary>(
+    "/api/role-model/storage-retention/policy",
+    fetcher,
+    {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(policy),
+    },
+  );
+}
+export async function executeRetentionPlan(
+  manifestHash: string,
+  scope: string,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeStorageRetentionSummary> {
+  return fetchJson<RuntimeStorageRetentionSummary>(
+    "/api/role-model/storage-retention/execute",
+    fetcher,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ manifestHash, scope }),
+    },
+  );
+}
+export async function cancelRetentionJob(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeStorageRetentionSummary> {
+  return fetchJson<RuntimeStorageRetentionSummary>(
+    "/api/role-model/storage-retention/cancel",
+    fetcher,
+    { method: "POST" },
+  );
+}
+export async function rollbackRetentionReceipt(
+  receiptId: string,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeStorageRetentionSummary> {
+  return fetchJson<RuntimeStorageRetentionSummary>(
+    "/api/role-model/storage-retention/rollback",
+    fetcher,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ receiptId }),
+    },
+  );
+}
+export interface RuntimeContributionState {
+  readonly mode: "disabled" | "consumer" | "contributor";
+  readonly contributionTier: string;
+  readonly recommendationTier: string;
+  readonly recommendationAccess: string;
+  readonly allowCloudUpload: boolean;
+  readonly authorizationState: string;
+  readonly revocationEpoch: number;
+  readonly queuedCount: number;
+  readonly managed: boolean;
+}
+export async function fetchContributionState(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeContributionState> {
+  return fetchJson<RuntimeContributionState>("/api/role-model/contribution", fetcher);
+}
+export async function updateContributionState(
+  action: "opt_out" | "reenable" | "complete_disclosure",
+  disclosureId?: string,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeContributionState> {
+  return fetchJson<RuntimeContributionState>("/api/role-model/contribution", fetcher, {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ action, disclosureId }),
+  });
+}
+export interface RuntimeRecommendation {
+  readonly id: string;
+  readonly version: string;
+  readonly status: string;
+  readonly signatureValid: boolean;
+  readonly policyAllowed: boolean;
+  readonly provenance: string;
+  readonly endpointId?: string;
+  readonly modelId?: string;
+  readonly preferredFor?: readonly string[];
+  readonly action?: string;
+  readonly confidence?: number;
+}
+export interface RuntimeActivePack {
+  readonly id: string;
+  readonly version: string;
+  readonly appliedAt: string;
+}
+export async function fetchRecommendations(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<readonly RuntimeRecommendation[]> {
+  return fetchJson<RuntimeRecommendation[]>("/api/role-model/recommendations", fetcher);
+}
+export async function downloadRecommendations(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<readonly RuntimeRecommendation[]> {
+  return fetchJson<RuntimeRecommendation[]>("/api/role-model/recommendations/download", fetcher, {
+    method: "POST",
+  });
+}
+export async function applyRecommendation(
+  id: string,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<{
+  readonly recommendations: readonly RuntimeRecommendation[];
+  readonly activePack: RuntimeActivePack;
+}> {
+  return fetchJson("/api/role-model/recommendations/apply", fetcher, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ id }),
+  });
+}
+export async function dismissRecommendation(
+  id: string,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<{
+  readonly recommendations: readonly RuntimeRecommendation[];
+  readonly activePack: RuntimeActivePack | null;
+}> {
+  return fetchJson("/api/role-model/recommendations/dismiss", fetcher, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ id }),
+  });
+}
+export async function fetchActivePack(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeActivePack | null> {
+  return fetchJson<RuntimeActivePack | null>(
+    "/api/role-model/recommendations/active-pack",
+    fetcher,
+  );
 }
 
 export async function fetchRuntimeSnapshot(

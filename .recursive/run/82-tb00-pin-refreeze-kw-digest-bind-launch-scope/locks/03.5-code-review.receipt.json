@@ -1,0 +1,15 @@
+{
+  "artifact": "03.5-code-review.md",
+  "artifact_hash": "5855021d78af11685b4715fb819719e8ce28b2b2fdd96497bd749f19572ea8e2",
+  "artifact_path": "D:\\DEV\\.wt\\82-tb00\\.recursive\\run\\82-tb00-pin-refreeze-kw-digest-bind-launch-scope\\03.5-code-review.md",
+  "locked_at": "2026-07-24T23:02:36Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "6ea874319a4140bd69247e63a5b1386cd4c87299a4a83e4037b832f8588be2c9",
+    "00-worktree.md": "690d5fa7d5bad56322839f291f0eeb7dfcecdfe584f2ab3dd512a98e7f6712c0",
+    "01-as-is.md": "c139ae20f3bf2242677b5d7b197efe75314ca1d65064609d0445dc88b65de381",
+    "02-to-be-plan.md": "a68e88ccd30241c4310e1435feba107f21be06590afa8bcf17ed3cf159601148",
+    "03-implementation-summary.md": "107a37c694099630eb995cb2daff5621a8670363eb00f84684a7f0582529e216"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "b3b2a38ca904a54c6d3c4ac2db06956bbfec8a999f5e0785ab399a2e5eefbcc3"
+}

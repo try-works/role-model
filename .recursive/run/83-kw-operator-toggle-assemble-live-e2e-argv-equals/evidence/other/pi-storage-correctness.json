@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "role-model.run83.pi-storage-correctness.v1",
+  "status": "PASS",
+  "capturedAt": "2026-07-25T01:56:56.443Z",
+  "secretsOmitted": true,
+  "u5": {
+    "provider": "role-model-run00",
+    "model": "deepseek-chat",
+    "sanitizedCommand": "pi --provider role-model-run00 --model deepseek-chat --print <sanitized>",
+    "packagedArtifactSha256": "825f9b4f2e17f5102605b24943b974efa435133452f0cfa5867b389c14927f84",
+    "listenUrl": "http://127.0.0.1:34568",
+    "responseStatus": 200,
+    "correlationId": "req-0c6c7b78-09ab-43b2-918b-fd1c80f0cd05"
+  },
+  "u6": {
+    "localPlane": {
+      "graphSharedPrefixDeduplicated": true,
+      "id": "local_graph_storage",
+      "status": "PASS",
+      "restartRehydrated": true,
+      "evidenceRef": "evidence/live-e2e/local-runtime-and-pi.json",
+      "contentAddressed": true
+    },
+    "cloudPlane": {
+      "payloadHash": "6a5741b579b5a52df57f18ecfe46f970ff0754ab8c32e486a8f19c7fe0fbc63b",
+      "id": "aggregate_upload",
+      "historyMatch": 1,
+      "status": "PASS",
+      "resolveStatus": "available",
+      "evidenceRef": "evidence/live-e2e/cloud-track-dev.json",
+      "objectKey": "history/development/tenant%3Adev-e2e-1784944559959/0/0-agg-dev-1784944559959.parquet"
+    }
+  }
+}

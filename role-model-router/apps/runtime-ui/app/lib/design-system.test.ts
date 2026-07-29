@@ -375,6 +375,8 @@ describe("runtime design system", () => {
           "/app/system/runtime",
           "/app/system/runtime-config",
           "/app/system/peers",
+          "/app/system/extensions",
+          "/app/system/storage-retention",
         ],
       },
     ]);
@@ -1674,7 +1676,7 @@ describe("runtime design system", () => {
     );
   });
 
-  test("requests and request detail stay telemetry-first while exposing raw-host handoffs", () => {
+  test("requests and request detail stay telemetry-first without redundant raw-host handoff cards", () => {
     expect(requestsRouteSource).toContain("fetchTelemetryAnalytics");
     expect(requestsRouteSource).toContain("buildObserveRequestsChartDefinitions");
     expect(requestsRouteSource).toContain("Analytics controls");
@@ -1685,14 +1687,20 @@ describe("runtime design system", () => {
     expect(requestsRouteSource).toContain("Taxonomy group id");
     expect(requestsRouteSource).toContain("Taxonomy capability ids");
     expect(requestsRouteSource).not.toContain("?preview=mock");
-    expect(requestsRouteSource).toContain("/app/observe/activity");
-    expect(requestsRouteSource).toContain("/app/observe/logs");
+    expect(requestsRouteSource).not.toContain("Adjacent raw-host tools");
+    expect(requestsRouteSource).not.toContain("/app/observe/activity");
+    expect(requestsRouteSource).not.toContain("/app/observe/logs");
     expect(requestDetailRouteSource).not.toContain('previewMode === "mock"');
     expect(requestDetailRouteSource).not.toContain("buildMockObserveRequestDetail");
-    expect(requestDetailRouteSource).toContain("/app/observe/activity");
-    expect(requestDetailRouteSource).toContain("/app/observe/logs");
+    expect(requestDetailRouteSource).not.toContain("Adjacent raw-host tools");
+    expect(requestDetailRouteSource).not.toContain("/app/observe/activity");
+    expect(requestDetailRouteSource).not.toContain("/app/observe/logs");
     expect(routerDecisionDetailRouteSource).not.toContain('previewMode === "mock"');
     expect(routerDecisionDetailRouteSource).not.toContain("buildMockRouterDecisionDetail");
+    expect(designSystemDocSource).toContain("Must not embed Activity/Logs");
+    expect(designSystemDocSource).toContain(
+      "must not embed a redundant “Adjacent raw-host tools” panel",
+    );
   });
 
   test("routing analytics controls expose richer taxonomy pivots for observe charts", () => {

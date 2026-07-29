@@ -20,9 +20,6 @@ Keep this file concise. Link to child docs instead of duplicating them.
 - If the run may use delegated review, subagents, or review bundles:
   - read this router
   - read only the most relevant skill-memory docs that are actually present for the current environment and workflow
-- If the task is about how recursive-mode itself should be used in this repo:
-  - read `/.recursive/memory/skills/usage/recursive-mode-skill-and-subskills.md`
-  - then reread the installed skill and the repo-local `/.recursive/RECURSIVE.md`
 - If the run may need specialized external capability:
   - prefer the `find-skills` skill when available
   - otherwise use the Skills CLI directly and treat discovered packages as candidates until quality is checked
@@ -42,10 +39,16 @@ Keep this file concise. Link to child docs instead of duplicating them.
 
 ## Current Docs
 
-- `/.recursive/memory/skills/usage/recursive-mode-skill-and-subskills.md`
+- `/.recursive/memory/skills/usage/direct-track-b-closeout.md`
+- `/.recursive/memory/skills/usage/direct-track-b-closeout-self-audit.md`
+- `/.recursive/memory/skills/usage/review-bundle-citation-requirements.md`
+- `/.recursive/memory/skills/issues/anticipatory-phase-docs.md`
+- `/.recursive/memory/skills/issues/launch-packaged-runtime-argv-equals.md` (equals-form binds; foreign scopes require `--evidence-root`; Source-Runs include run 83)
+- `/.recursive/memory/skills/issues/worktree-must-be-in-parent.md` (private feature worktrees stay under parent `.worktrees/`; Source-Runs include run 84)
+- `/.recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md` (SEA inject unlock needs host join/auto-arm + matching seed scope + live query/bridge/join alignment; Source-Runs include run 85)
+- `/.recursive/memory/skills/issues/kw-inject-live-host-wiring.md` (Live KW inject host wiring: default query, bridge path, revision join, host-owned session; Source-Runs include run 85)
+
 - `/.recursive/memory/skills/usage/skill-discovery-and-evaluation.md`
-- `/.recursive/memory/skills/patterns/browser-proof-with-edge-cdp.md`
-- `/.recursive/memory/skills/patterns/biome-ci-parity-and-clean-checkouts.md`
 - `/.recursive/memory/skills/patterns/delegated-verification-and-refresh.md`
 - `/.recursive/memory/skills/patterns/phase8-skill-memory-promotion.md`
 - Add child docs here only when they are intentionally promoted as reusable repository guidance.

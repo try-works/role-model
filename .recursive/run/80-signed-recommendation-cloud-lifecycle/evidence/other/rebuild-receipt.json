@@ -1,0 +1,10 @@
+{
+  "privateBuildExit": 0,
+  "publicSeaExit": 0,
+  "artifactPath": "D:/DEV/role-model/.worktrees/80-signed-recommendation-cloud-lifecycle/role-model-router/dist/release/win32-x64/role-model-dev.exe",
+  "artifactSha256": "825f9b4f2e17f5102605b24943b974efa435133452f0cfa5867b389c14927f84",
+  "trackBDistributionRoot": "D:/DEV/role-model-internal/.worktrees/80-signed-recommendation-cloud-lifecycle/dist/run00-dev",
+  "listenUrlUsed": "http://127.0.0.1:34582",
+  "scopeId": "run80-dev",
+  "channel": "development"
+}

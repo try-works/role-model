@@ -1,0 +1,23 @@
+{
+  "revision": 3,
+  "records": [],
+  "receipts": [],
+  "activeJob": null,
+  "currentPlan": null,
+  "policies": [],
+  "contribution": {
+    "mode": "contributor",
+    "contributionTier": "advanced",
+    "recommendationTier": "advanced",
+    "recommendationAccess": "preview_and_apply",
+    "allowCloudUpload": true,
+    "authorizationState": "active",
+    "revocationEpoch": 2,
+    "queuedCount": 0,
+    "managed": false,
+    "disclosureId": "ui-1785272445681",
+    "nextSequence": 0,
+    "contributorSeed": "553f15f0-d3d2-4377-80f5-fdffdfa19628"
+  },
+  "captures": []
+}

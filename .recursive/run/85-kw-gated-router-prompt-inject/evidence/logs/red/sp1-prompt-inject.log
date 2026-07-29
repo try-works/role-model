@@ -1,0 +1,85 @@
+(node:5732) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£û TB10-TEST-PROMPT-INJECT-OFF-REFUSE (6.2842ms)
+Γ£û TB10-TEST-PROMPT-INJECT-CONTRACT (4.6634ms)
+Γ£û TB10-TEST-PROMPT-INJECT-ON-APPLY-EXPORT-AND-OFF (3.0146ms)
+Γ£û TB10-TEST-PROMPT-INJECT-REQUIRES-PRODUCTION-RETRIEVE (2.0965ms)
+Γ£û TB10-TEST-PROMPT-INJECT-BOUNDS (23.2603ms)
+Γ£û TB10-TEST-PROMPT-INJECT-CAPABILITY (1.6367ms)
+Γä╣ tests 6
+Γä╣ suites 0
+Γä╣ pass 0
+Γä╣ fail 6
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 215.957
+
+Γ£û failing tests:
+
+test at tests\track-b\tb10.test.mjs:146:1
+Γ£û TB10-TEST-PROMPT-INJECT-OFF-REFUSE (6.2842ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - false
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/85-kw-gated-router-prompt-inject/tests/track-b/tb10.test.mjs:150:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\tb10.test.mjs:157:1
+Γ£û TB10-TEST-PROMPT-INJECT-CONTRACT (4.6634ms)
+  TypeError: w.promptInject is not a function
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/85-kw-gated-router-prompt-inject/tests/track-b/tb10.test.mjs:163:23)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7)
+
+test at tests\track-b\tb10.test.mjs:171:1
+Γ£û TB10-TEST-PROMPT-INJECT-ON-APPLY-EXPORT-AND-OFF (3.0146ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - false
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/85-kw-gated-router-prompt-inject/tests/track-b/tb10.test.mjs:177:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\tb10.test.mjs:196:1
+Γ£û TB10-TEST-PROMPT-INJECT-REQUIRES-PRODUCTION-RETRIEVE (2.0965ms)
+  TypeError: w.promptInject is not a function
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/85-kw-gated-router-prompt-inject/tests/track-b/tb10.test.mjs:201:19)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7)
+
+test at tests\track-b\tb10.test.mjs:207:1
+Γ£û TB10-TEST-PROMPT-INJECT-BOUNDS (23.2603ms)
+  TypeError: w.promptInject is not a function
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/85-kw-gated-router-prompt-inject/tests/track-b/tb10.test.mjs:216:19)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7)
+
+test at tests\track-b\tb10.test.mjs:224:1
+Γ£û TB10-TEST-PROMPT-INJECT-CAPABILITY (1.6367ms)
+  Error: unsupported knowledge-worker capability: knowledge:prompt-inject
+      at Module.run (file:///D:/DEV/role-model-internal/.worktrees/85-kw-gated-router-prompt-inject/extensions/knowledge-worker/index.mjs:137:11)
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/85-kw-gated-router-prompt-inject/tests/track-b/tb10.test.mjs:227:26)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7)

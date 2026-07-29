@@ -1,0 +1,12 @@
+{
+  "packagedAt": "2026-07-25T01:24:55.3348442Z",
+  "scopeId": "run83-dev",
+  "privateBuildLog": "evidence/logs/phase5/rebuild-private-dist.log",
+  "artifactPath": "D:\\DEV\\role-model\\.worktrees\\83-kw-operator-toggle-assemble-live-e2e-argv-equals\\role-model-router\\dist\\release\\win32-x64\\role-model-dev.exe",
+  "track": "dev",
+  "trackBDistributionRoot": "D:\\DEV\\.wt\\83-kw\\dist\\run00-dev",
+  "packageLog": "evidence/logs/phase5/rebuild-public-sea.log",
+  "note": "Fresh rebuild for run 83; launch prefers equals-form --track=dev --scope-id=run83-dev",
+  "privateSidecarSha256": "a7793a22b0cd8c1a05478b7e0650a105a104b0f47343903dc02c0066edf5da6b",
+  "sha256": "825f9b4f2e17f5102605b24943b974efa435133452f0cfa5867b389c14927f84"
+}

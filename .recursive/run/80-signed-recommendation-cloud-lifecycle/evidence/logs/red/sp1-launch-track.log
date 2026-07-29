@@ -1,0 +1,124 @@
+Γ£û run80 RED/GREEN: --track=dev maps channel to development (not production) (3.2269ms)
+Γ£û run80: explicit channel wins over track mapping (1.7846ms)
+Γ£û run80: production track is refused for live lifecycle (0.6775ms)
+Γ£û run80: public root required and prefers explicit arg (0.4696ms)
+Γ£û run80: track=dev defaults recommendation service URL to permanent-dev host (0.4481ms)
+Γä╣ tests 5
+Γä╣ suites 0
+Γä╣ pass 0
+Γä╣ fail 5
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 160.3454
+
+Γ£û failing tests:
+
+test at ..\..\..\role-model-internal\.worktrees\80-signed-recommendation-cloud-lifecycle\tests\track-b\run80-recommendation-bindings.test.mjs:10:1
+Γ£û run80 RED/GREEN: --track=dev maps channel to development (not production) (3.2269ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'production'
+  - 'development'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/80-signed-recommendation-cloud-lifecycle/tests/track-b/run80-recommendation-bindings.test.mjs:11:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.start (node:internal/test_runner/test:1003:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'production',
+    expected: 'development',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ..\..\..\role-model-internal\.worktrees\80-signed-recommendation-cloud-lifecycle\tests\track-b\run80-recommendation-bindings.test.mjs:16:1
+Γ£û run80: explicit channel wins over track mapping (1.7846ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'production'
+  - 'development'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/80-signed-recommendation-cloud-lifecycle/tests/track-b/run80-recommendation-bindings.test.mjs:17:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'production',
+    expected: 'development',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ..\..\..\role-model-internal\.worktrees\80-signed-recommendation-cloud-lifecycle\tests\track-b\run80-recommendation-bindings.test.mjs:23:1
+Γ£û run80: production track is refused for live lifecycle (0.6775ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/80-signed-recommendation-cloud-lifecycle/tests/track-b/run80-recommendation-bindings.test.mjs:24:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /refuse|production/i,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at ..\..\..\role-model-internal\.worktrees\80-signed-recommendation-cloud-lifecycle\tests\track-b\run80-recommendation-bindings.test.mjs:28:1
+Γ£û run80: public root required and prefers explicit arg (0.4696ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + ''
+  - 'D:/DEV/role-model/.worktrees/80-signed-recommendation-cloud-lifecycle'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/80-signed-recommendation-cloud-lifecycle/tests/track-b/run80-recommendation-bindings.test.mjs:29:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: 'D:/DEV/role-model/.worktrees/80-signed-recommendation-cloud-lifecycle',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ..\..\..\role-model-internal\.worktrees\80-signed-recommendation-cloud-lifecycle\tests\track-b\run80-recommendation-bindings.test.mjs:39:1
+Γ£û run80: track=dev defaults recommendation service URL to permanent-dev host (0.4481ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'http://127.0.0.1:8787'
+  - 'https://recommendations-dev.role-model.dev'
+         ^
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/80-signed-recommendation-cloud-lifecycle/tests/track-b/run80-recommendation-bindings.test.mjs:40:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'http://127.0.0.1:8787',
+    expected: 'https://recommendations-dev.role-model.dev',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,79 @@
+{
+  "runId": "81-kw-activation-browser-recommendation-evidence",
+  "verifiedAt": "2026-07-24T20:57:00Z",
+  "privateBaseline": "cf3da6bb4f93c86adae562c6fbaa4903066bf2ef",
+  "publicBaseline": "9a94a5a187974941045dda732bfc8d2ba6eac327",
+  "privateWorktree": "D:/DEV/.wt/81-kw",
+  "publicWorktree": "D:/DEV/role-model/.worktrees/81-kw-activation-browser-recommendation-evidence",
+  "tddMode": "strict",
+  "serverChange": "not-required",
+  "kwActivation": {
+    "policyVersion": 1,
+    "staticUngatedOff": true,
+    "instanceGatedUnlock": true,
+    "redLog": "evidence/logs/red/sp1-kw-activation.log",
+    "greenLog": "evidence/logs/green/sp1-kw-activation.log",
+    "probe": "evidence/other/kw-packaged-activation-probe.json",
+    "policyDoc": "evidence/other/activation-policy.md"
+  },
+  "tddEvidence": {
+    "sp1": {
+      "red": "evidence/logs/red/sp1-kw-activation.log",
+      "green": "evidence/logs/green/sp1-kw-activation.log"
+    },
+    "sp2": {
+      "red": "evidence/logs/red/sp2-ui-honesty.log",
+      "green": "evidence/logs/green/sp2-ui-honesty.log"
+    },
+    "sp3": {
+      "red": "evidence/logs/red/sp3-kw-probe.log",
+      "green": "evidence/logs/green/sp3-kw-probe.log"
+    }
+  },
+  "rebuild": {
+    "receipt": "evidence/other/rebuild-receipt.json",
+    "seaSha256": "825f9b4f2e17f5102605b24943b974efa435133452f0cfa5867b389c14927f84",
+    "listenUrl": "http://127.0.0.1:34568",
+    "trackBDistributionRoot": "ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT (private dist/run00-dev)",
+    "packageLog": "evidence/logs/rebuild-public-sea.log"
+  },
+  "browserRecommendations": {
+    "track": "dev",
+    "channel": "development",
+    "serviceHost": "https://recommendations-dev.role-model.dev",
+    "scopeId": "packaged-run00",
+    "scopeSource": "scripts/track-b/launch-packaged-runtime.mjs hardcodes the packaged SEA launch scope to packaged-run00",
+    "seedLog": "evidence/logs/live-dev-seed-packaged-run00-retry.log",
+    "finalSeedLog": "evidence/logs/live-dev-seed-before-browser-final.log",
+    "playwrightLog": "evidence/logs/browser-dev-lifecycle.log",
+    "playwrightPassed": true,
+    "playwrightResult": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "dismissMandatory": true
+    },
+    "spec": "role-model-router/apps/runtime-ui/e2e/recursive-81-kw-activation-browser-recommendation-evidence.spec.ts",
+    "recommendationIds": [
+      "recommendation-48995d6cd634d01719c013783e073d82"
+    ],
+    "recommendationRows": "evidence/other/browser-recommendation-rows.json",
+    "screenshotPaths": [
+      "evidence/screenshots/browser-dev-dismiss-pass.png"
+    ],
+    "tracePaths": [],
+    "run80ApiOnlyNotSubstituted": true
+  },
+  "uiHonesty": {
+    "redLog": "evidence/logs/red/sp2-ui-honesty.log",
+    "greenLog": "evidence/logs/green/sp2-ui-honesty.log",
+    "copy": "fail-closed by default; gated separately from Set mode"
+  },
+  "secretsOmitted": true,
+  "notes": [
+    "Private worktree uses short path D:/DEV/.wt/81-kw due to Windows MAX_PATH on long .worktrees/<run-id> checkout.",
+    "Launch helper hardcodes SEA --scope-id packaged-run00; packaged-run00 is the effective browser-verification scope, while the earlier run81-dev seed is additive and is not claimed as the launched SEA scope.",
+    "The durable screenshot and recommendation-row receipt prove the mandatory dismiss branch executed; no trace archive was produced or claimed.",
+    "Ungated always-on productionActivation is not claimed; static remains false."
+  ]
+}

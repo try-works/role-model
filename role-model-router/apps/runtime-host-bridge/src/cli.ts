@@ -1,4 +1,6 @@
 import { spawn } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { parseArgs } from "node:util";
@@ -13,8 +15,16 @@ import {
   resolveBridgeServerOptions,
   startBridgeServer,
 } from "./index.js";
+import { createPrivateKwJoinWorkerFactory } from "./kw-private-loader.js";
+import { configureKwPromptInjectHost } from "./kw-prompt-inject-host.js";
 import { readPackagedRuntimeProfile } from "./runtime-channel.js";
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
+import { setKwJoinWorkerFactory } from "./track-b-operations.js";
+import {
+  createOwnedTrackBSidecarSpec,
+  createPackagedProductionRuntime,
+  createProductionExtensionRuntime,
+} from "./track-b-runtime.js";
 
 type CliBackend = Pick<
   RuntimeBridgeBackend,
@@ -35,6 +45,21 @@ type CliBackend = Pick<
   | "subscribeTelemetry"
   | "listProviders"
   | "listModels"
+  | "listExtensions"
+  | "mutateExtension"
+  | "readStorageRetention"
+  | "dryRunStorageRetention"
+  | "updateStorageRetentionPolicy"
+  | "executeStorageRetention"
+  | "cancelStorageRetentionJob"
+  | "rollbackStorageRetention"
+  | "readContributionState"
+  | "updateContributionState"
+  | "listRecommendations"
+  | "downloadRecommendations"
+  | "applyRecommendation"
+  | "dismissRecommendation"
+  | "readActivePack"
   | "listRoles"
   | "listAccounts"
   | "listProviderDeviceAuthorizations"
@@ -273,6 +298,51 @@ export function createCliServerOptions(
     ) as StartBridgeServerOptions["subscribeTelemetry"],
     listProviders: bindBackendMethod("listProviders") as StartBridgeServerOptions["listProviders"],
     listModels: bindBackendMethod("listModels") as StartBridgeServerOptions["listModels"],
+    listExtensions: bindBackendMethod(
+      "listExtensions",
+    ) as StartBridgeServerOptions["listExtensions"],
+    mutateExtension: bindBackendMethod(
+      "mutateExtension",
+    ) as StartBridgeServerOptions["mutateExtension"],
+    readStorageRetention: bindBackendMethod(
+      "readStorageRetention",
+    ) as StartBridgeServerOptions["readStorageRetention"],
+    dryRunStorageRetention: bindBackendMethod(
+      "dryRunStorageRetention",
+    ) as StartBridgeServerOptions["dryRunStorageRetention"],
+    updateStorageRetentionPolicy: bindBackendMethod(
+      "updateStorageRetentionPolicy",
+    ) as StartBridgeServerOptions["updateStorageRetentionPolicy"],
+    executeStorageRetention: bindBackendMethod(
+      "executeStorageRetention",
+    ) as StartBridgeServerOptions["executeStorageRetention"],
+    cancelStorageRetentionJob: bindBackendMethod(
+      "cancelStorageRetentionJob",
+    ) as StartBridgeServerOptions["cancelStorageRetentionJob"],
+    rollbackStorageRetention: bindBackendMethod(
+      "rollbackStorageRetention",
+    ) as StartBridgeServerOptions["rollbackStorageRetention"],
+    readContributionState: bindBackendMethod(
+      "readContributionState",
+    ) as StartBridgeServerOptions["readContributionState"],
+    updateContributionState: bindBackendMethod(
+      "updateContributionState",
+    ) as StartBridgeServerOptions["updateContributionState"],
+    listRecommendations: bindBackendMethod(
+      "listRecommendations",
+    ) as StartBridgeServerOptions["listRecommendations"],
+    downloadRecommendations: bindBackendMethod(
+      "downloadRecommendations",
+    ) as StartBridgeServerOptions["downloadRecommendations"],
+    applyRecommendation: bindBackendMethod(
+      "applyRecommendation",
+    ) as StartBridgeServerOptions["applyRecommendation"],
+    dismissRecommendation: bindBackendMethod(
+      "dismissRecommendation",
+    ) as StartBridgeServerOptions["dismissRecommendation"],
+    readActivePack: bindBackendMethod(
+      "readActivePack",
+    ) as StartBridgeServerOptions["readActivePack"],
     listRoles: bindBackendMethod("listRoles") as StartBridgeServerOptions["listRoles"],
     listAccounts: bindBackendMethod("listAccounts") as StartBridgeServerOptions["listAccounts"],
     listProviderDeviceAuthorizations: bindBackendMethod(
@@ -456,6 +526,54 @@ function openBrowser(url: string): void {
   child.unref();
 }
 
+type LauncherConfigValues = Record<string, string | boolean | undefined>;
+
+function readLauncherString(values: LauncherConfigValues, key: string): string | undefined {
+  const value = values[key];
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+export function applyRecommendationServiceLauncherConfig(values: LauncherConfigValues): void {
+  const serviceUrl = readLauncherString(values, "recommendation-service-url");
+  const channel = readLauncherString(values, "recommendation-channel");
+  const verificationKey = readLauncherString(values, "recommendation-verification-key");
+  const serviceToken = readLauncherString(values, "recommendation-service-token");
+  const materialFile = readLauncherString(values, "recommendation-material-file");
+
+  if (serviceUrl) {
+    process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_URL = serviceUrl;
+  }
+  if (channel) {
+    process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL = channel;
+  }
+  if (verificationKey) {
+    process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY = verificationKey;
+  }
+  if (serviceToken) {
+    process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN = serviceToken;
+  }
+  if (!materialFile) {
+    return;
+  }
+
+  const material = JSON.parse(readFileSync(materialFile, "utf8")) as {
+    readonly recommendationPublicSpkiBase64?: unknown;
+    readonly internalServiceToken?: unknown;
+  };
+  if (
+    typeof material.recommendationPublicSpkiBase64 !== "string" ||
+    !material.recommendationPublicSpkiBase64.trim()
+  ) {
+    throw new Error("recommendation material file is missing recommendationPublicSpkiBase64");
+  }
+  if (typeof material.internalServiceToken !== "string" || !material.internalServiceToken.trim()) {
+    throw new Error("recommendation material file is missing internalServiceToken");
+  }
+  process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY =
+    material.recommendationPublicSpkiBase64.trim();
+  process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN = material.internalServiceToken.trim();
+}
+
 export async function main(): Promise<void> {
   const args = parseArgs({
     options: {
@@ -483,8 +601,45 @@ export async function main(): Promise<void> {
       "static-root": {
         type: "string",
       },
+      "track-b-runtime-manifest": {
+        type: "string",
+      },
+      "artifact-digest-key-file": {
+        type: "string",
+      },
+      "artifact-encryption-key-file": {
+        type: "string",
+      },
+      "destination-trust-material-file": {
+        type: "string",
+      },
+      "destination-material-file": {
+        type: "string",
+      },
+      "aggregate-ingestion-url": {
+        type: "string",
+      },
+      "aggregate-scope": {
+        type: "string",
+      },
+      "recommendation-service-url": {
+        type: "string",
+      },
+      "recommendation-material-file": {
+        type: "string",
+      },
+      "recommendation-verification-key": {
+        type: "string",
+      },
+      "recommendation-service-token": {
+        type: "string",
+      },
+      "recommendation-channel": {
+        type: "string",
+      },
     },
   });
+  applyRecommendationServiceLauncherConfig(args.values);
 
   const launchedWithoutRuntimeArgs =
     !args.values["repo-root"] && !args.values["runtime-state-root"];
@@ -517,6 +672,13 @@ export async function main(): Promise<void> {
   const staticRoot = args.values["static-root"]?.trim() || options.staticRoot;
   let server: Awaited<ReturnType<typeof startBridgeServer>> | null = null;
   let backend: RuntimeBridgeBackend | null = null;
+  let packagedRuntime: Awaited<
+    ReturnType<typeof createPackagedProductionRuntime<RuntimeBridgeBackend>>
+  > | null = null;
+  let extensionRuntime: Awaited<ReturnType<typeof createProductionExtensionRuntime>> | null = null;
+  const extensionRuntimeRef: {
+    current: Awaited<ReturnType<typeof createProductionExtensionRuntime>> | null;
+  } = { current: null };
   const bootstrapState: CliBootstrapState = { status: "pending" };
   let shutdownPromise: Promise<void> | null = null;
   const shutdown = async (): Promise<void> => {
@@ -526,7 +688,9 @@ export async function main(): Promise<void> {
 
     shutdownPromise = (async () => {
       await server?.close();
-      await backend?.shutdown();
+      if (packagedRuntime) await packagedRuntime.close();
+      else await backend?.shutdown();
+      await extensionRuntime?.close();
       process.exit(0);
     })();
 
@@ -573,19 +737,137 @@ export async function main(): Promise<void> {
   });
 
   try {
-    backend = await createRuntimeBridgeBackend({
-      fixtureRoot: resolveCliFixtureRoot(options.repoRoot, args.values["fixture-root"]),
-      repoRoot: options.repoRoot,
-      runtimeStateRoot: options.runtimeStateRoot,
-      scopeId: options.scopeId,
-      unifiedRuntimeConfigPath: options.unifiedRuntimeConfigPath,
-    });
-    bootstrapState.status = "ready";
-    delete bootstrapState.message;
+    const explicitManifest =
+      args.values["track-b-runtime-manifest"]?.trim() ||
+      process.env.ROLE_MODEL_TRACK_B_RUNTIME_MANIFEST?.trim();
+    const packagedManifest = path.join(
+      path.dirname(process.execPath),
+      "track-b-runtime",
+      "track-b-runtime-manifest.json",
+    );
+    const trackBManifestPath = explicitManifest || (packagedProfile ? packagedManifest : null);
+    const trackBManifestText = trackBManifestPath
+      ? await readFile(trackBManifestPath, "utf8").catch((error: unknown) => {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+          throw error;
+        })
+      : null;
+    if (packagedProfile?.channel === "production" && !trackBManifestText) {
+      throw new Error("packaged production runtime is missing its Track B distribution");
+    }
+    const createBackend = (trackBOperationsEndpoint?: string, trackBOperationsToken?: string) =>
+      createRuntimeBridgeBackend({
+        fixtureRoot: resolveCliFixtureRoot(options.repoRoot, args.values["fixture-root"]),
+        repoRoot: options.repoRoot,
+        runtimeStateRoot: options.runtimeStateRoot,
+        scopeId: options.scopeId,
+        unifiedRuntimeConfigPath: options.unifiedRuntimeConfigPath,
+        ...(trackBOperationsEndpoint ? { trackBOperationsEndpoint } : {}),
+        ...(trackBOperationsToken ? { trackBOperationsToken } : {}),
+        trackBExtensionHealth: () => {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) {
+            return {
+              host: { extensions: [] as const },
+              supervisor: {},
+            };
+          }
+          const health = runtime.health();
+          return {
+            host: health.host as { readonly extensions?: readonly string[] },
+            supervisor: health.supervisor,
+          };
+        },
+      });
+    if (trackBManifestText && trackBManifestPath) {
+      const manifest = JSON.parse(trackBManifestText) as {
+        readonly schemaVersion: string;
+        readonly sidecar: { readonly modulePath: string; readonly artifactSha256: string };
+        readonly extensions: readonly {
+          readonly descriptor: {
+            readonly id: string;
+            readonly protocolVersion: string;
+            readonly capabilities: readonly string[];
+          };
+          readonly modulePath: string;
+          readonly artifactSha256: string;
+        }[];
+      };
+      if (manifest.schemaVersion !== "role-model.track-b-runtime-distribution.v1") {
+        throw new Error("unsupported packaged Track B distribution");
+      }
+      const distributionRoot = path.dirname(trackBManifestPath);
+      const trackBStateRoot = path.join(options.runtimeStateRoot, options.scopeId, "track-b");
+      // Must match createTrackBOperations statePath (scope root), not trackBStateRoot/extensions.
+      configureKwPromptInjectHost({
+        bridgeStatePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+      });
+      setKwJoinWorkerFactory(
+        createPrivateKwJoinWorkerFactory({
+          distributionRoot,
+        }),
+      );
+      // Start extension-host registration in parallel with sidecar/backend bring-up, but
+      // mark core APIs ready as soon as the packaged backend exists. Waiting on all
+      // packaged extensions previously kept /api/role-model/* at 503 runtime_initializing.
+      const extensionRuntimePromise = createProductionExtensionRuntime({
+        stateRoot: path.join(trackBStateRoot, "extensions"),
+        authorizationEpoch: 1,
+        repoRoot: options.repoRoot,
+        extensions: manifest.extensions.map((extension) => ({
+          ...extension,
+          modulePath: path.resolve(distributionRoot, extension.modulePath),
+        })),
+      });
+      packagedRuntime = await createPackagedProductionRuntime({
+        stateRoot: trackBStateRoot,
+        sidecar: createOwnedTrackBSidecarSpec({
+          artifactPath: path.resolve(distributionRoot, manifest.sidecar.modulePath),
+          artifactSha256: manifest.sidecar.artifactSha256,
+          stateRoot: trackBStateRoot,
+          channel: packagedProfile?.channel ?? "development",
+          artifactDigestKeyFile:
+            args.values["artifact-digest-key-file"] ??
+            process.env.ROLE_MODEL_ARTIFACT_DIGEST_KEY_FILE,
+          artifactEncryptionKeyFile:
+            args.values["artifact-encryption-key-file"] ??
+            process.env.ROLE_MODEL_ARTIFACT_ENCRYPTION_KEY_FILE,
+          trustMaterialFile:
+            args.values["destination-material-file"] ??
+            args.values["destination-trust-material-file"] ??
+            process.env.ROLE_MODEL_DESTINATION_AUTH_SECRET_FILE,
+          aggregateEndpoint:
+            args.values["aggregate-ingestion-url"] ??
+            process.env.ROLE_MODEL_AGGREGATE_INGESTION_URL,
+          aggregateScope: args.values["aggregate-scope"] ?? process.env.ROLE_MODEL_AGGREGATE_SCOPE,
+        }),
+        createBackend: ({ trackBOperationsEndpoint, trackBOperationsToken }) =>
+          createBackend(trackBOperationsEndpoint, trackBOperationsToken),
+      });
+      backend = packagedRuntime.backend;
+      bootstrapState.status = "ready";
+      delete bootstrapState.message;
+      try {
+        extensionRuntime = await extensionRuntimePromise;
+        extensionRuntimeRef.current = extensionRuntime;
+      } catch (error) {
+        console.error("[role-model] extension host failed after core runtime was ready:", error);
+      }
+    } else {
+      backend = await createBackend();
+      bootstrapState.status = "ready";
+      delete bootstrapState.message;
+    }
   } catch (error) {
-    bootstrapState.status = "failed";
-    bootstrapState.message =
-      error instanceof Error ? error.message : "runtime backend initialization failed";
+    if (bootstrapState.status !== "ready") {
+      bootstrapState.status = "failed";
+      bootstrapState.message =
+        error instanceof Error ? error.message : "runtime backend initialization failed";
+    }
     console.error("runtime backend initialization failed", error);
   }
 }

@@ -1,0 +1,18 @@
+{
+  "track": "dev",
+  "channel": "development",
+  "serviceUrl": "https://recommendations-dev.role-model.dev",
+  "baseUrl": "http://127.0.0.1:34583",
+  "scopeId": "run80-dev",
+  "recommendationIds": [
+    "recommendation-7f764e25a078716f1d3935f35d58ca1b"
+  ],
+  "downloadStatus": 200,
+  "applyStatus": 200,
+  "dismissStatus": 200,
+  "dismissId": "recommendation-aec9c8596b18bebbe231be7dbe396be0",
+  "activePackId": "recommendation-7f764e25a078716f1d3935f35d58ca1b",
+  "activePackPresent": true,
+  "verdict": "PASS",
+  "finishedAt": "2026-07-24T11:44:10.542Z"
+}
