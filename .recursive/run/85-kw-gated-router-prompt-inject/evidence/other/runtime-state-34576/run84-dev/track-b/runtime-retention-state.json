@@ -1,0 +1,39 @@
+{
+  "revision": 4,
+  "records": [],
+  "receipts": [],
+  "activeJob": null,
+  "currentPlan": {
+    "schemaVersion": "role-model.retention-dry-run.v1",
+    "channel": "development",
+    "affectedCount": 0,
+    "estimatedBytes": 0,
+    "conflicts": [],
+    "lostCapabilities": [],
+    "retainedCapabilities": [
+      "routing_history",
+      "aggregate_metrics"
+    ],
+    "blocks": [],
+    "manifestHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "rollbackAvailable": false,
+    "eligibleIds": [],
+    "sourceRevision": 4
+  },
+  "policies": [],
+  "contribution": {
+    "mode": "contributor",
+    "contributionTier": "advanced",
+    "recommendationTier": "advanced",
+    "recommendationAccess": "preview_and_apply",
+    "allowCloudUpload": true,
+    "authorizationState": "active",
+    "revocationEpoch": 2,
+    "queuedCount": 0,
+    "managed": false,
+    "disclosureId": "ui-1785272553052",
+    "nextSequence": 0,
+    "contributorSeed": "0f422ec6-5a1d-422a-a595-4edaf6c1fcb5"
+  },
+  "captures": []
+}

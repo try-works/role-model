@@ -119,6 +119,10 @@ import {
 } from "./controller-routing-contract.js";
 import { createDownstreamOpenAIDiscovery } from "./downstream-openai-discovery.js";
 import { applyKwPromptInjectToMessagesSync } from "./kw-prompt-inject.js";
+import {
+  deriveDefaultKwPromptInjectQuery,
+  withKwProductionAutoArm,
+} from "./kw-prompt-inject-host.js";
 import { resolveModelCapabilityProfile } from "./model-capability-resolver.js";
 import {
   filterEndpointsByCapabilityRequirements,
@@ -4614,30 +4618,34 @@ function readBridgeExecutionRequestOptions(
   const requestedRoleIdHeader = request.headers["x-role-model-requested-role-id"]
     ?.toString()
     .trim();
-  if (
+  const baseOptions: BridgeExecutionRequestOptions | undefined =
     !clientRequestId &&
     !sessionId &&
     !transportPreferenceHeader &&
     !routingModeOverrideHeader &&
     !endpointIdHeader &&
     !requestedRoleIdHeader
-  ) {
-    return undefined;
-  }
-  return {
-    ...(sessionId ? { sessionId } : {}),
-    ...(clientRequestId ? { clientRequestId } : {}),
-    ...(transportPreferenceHeader
-      ? {
-          transportPreference: parseRuntimeTransportPreferenceHeader(transportPreferenceHeader),
-        }
-      : {}),
-    ...(routingModeOverrideHeader
-      ? { routingModeOverride: parseRuntimeRoutingModeOverride(routingModeOverrideHeader) }
-      : {}),
-    ...(endpointIdHeader ? { endpointId: endpointIdHeader } : {}),
-    ...(requestedRoleIdHeader ? { requestedRoleId: requestedRoleIdHeader } : {}),
-  };
+      ? undefined
+      : {
+          ...(sessionId ? { sessionId } : {}),
+          ...(clientRequestId ? { clientRequestId } : {}),
+          ...(transportPreferenceHeader
+            ? {
+                transportPreference: parseRuntimeTransportPreferenceHeader(
+                  transportPreferenceHeader,
+                ),
+              }
+            : {}),
+          ...(routingModeOverrideHeader
+            ? {
+                routingModeOverride: parseRuntimeRoutingModeOverride(routingModeOverrideHeader),
+              }
+            : {}),
+          ...(endpointIdHeader ? { endpointId: endpointIdHeader } : {}),
+          ...(requestedRoleIdHeader ? { requestedRoleId: requestedRoleIdHeader } : {}),
+        };
+  // Durable KW ON auto-arms inject (FD8); never trust client headers for activation.
+  return withKwProductionAutoArm(baseOptions);
 }
 
 function buildBridgeExecutionSessionAffinity(
@@ -6763,7 +6771,11 @@ function applyRequestedRoleExecutionPolicy(input: {
     hostProductionActivation: input.requestOptions?.kwProductionActivation === true,
     sessionId: input.requestOptions?.sessionId,
     requestId: input.requestOptions?.clientRequestId,
-    query: input.requestOptions?.kwPromptInjectQuery,
+    query:
+      input.requestOptions?.kwPromptInjectQuery ??
+      (input.requestOptions?.kwProductionActivation === true
+        ? deriveDefaultKwPromptInjectQuery(input.messages)
+        : undefined),
   });
   const messages = kwInject.messages as typeof input.messages;
   const toolPolicyMode = roleDefinition?.tool_policy?.mode ?? "allowed";

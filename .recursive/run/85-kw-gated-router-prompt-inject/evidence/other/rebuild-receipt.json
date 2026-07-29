@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "role-model.run85.rebuild-receipt.v1",
+  "packagedAt": "2026-07-28T22:05:51.505Z",
+  "scopeId": "run85-dev",
+  "sea": {
+    "path": "role-model-router/dist/release/win32-x64/role-model-dev.exe",
+    "sha256": "caa7c9e7a8a0c3ef57a0aaf801d97cd1021817db1443d4d8d7e5e4f97806b424",
+    "sizeBytes": 100244992,
+    "target": "win32-x64"
+  },
+  "privateDistribution": {
+    "root": "dist/run00-dev",
+    "sidecar": {
+      "modulePath": "runtime-operations-server.mjs",
+      "artifactSha256": "a7793a22b0cd8c1a05478b7e0650a105a104b0f47343903dc02c0066edf5da6b"
+    },
+    "knowledgeWorker": {
+      "modulePath": "extensions/knowledge-worker.mjs",
+      "artifactSha256": "830ee5a18ac887057d2cab62856555037bbe84dee7f7f3fb3323c81c3ba32519"
+    }
+  },
+  "notes": [
+    "Phase 5 SEA after kw-private-loader, setKwJoinWorkerFactory, and durable auto-arm wiring."
+  ]
+}

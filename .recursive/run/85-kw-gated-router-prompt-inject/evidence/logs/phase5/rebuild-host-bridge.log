@@ -1,0 +1,10 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 build D:\DEV\role-model\.worktrees\85-kw-gated-router-prompt-inject\role-model-router\apps\runtime-host-bridge
+> tsc -p tsconfig.json
+
+src/index.ts(4645,34): error TS2345: Argument of type 'BridgeExecutionRequestOptions | undefined' is not assignable to parameter of type 'KwAutoArmRequestOptions | undefined'.
+  Type 'BridgeExecutionRequestOptions' is not assignable to type 'KwAutoArmRequestOptions'.
+    Index signature for type 'string' is missing in type 'BridgeExecutionRequestOptions'.
+D:\DEV\role-model\.worktrees\85-kw-gated-router-prompt-inject\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/runtime-host-bridge@0.0.0 build: `tsc -p tsconfig.json`
+Exit status 2

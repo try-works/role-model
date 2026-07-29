@@ -1,0 +1,31 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="color-scheme" content="light dark"/><meta name="theme-color" content="#010102"/><meta name="theme-color" content="#010102" media="(prefers-color-scheme: dark)"/><link rel="preload" href="/assets/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin="anonymous"/><link rel="preload" href="/assets/fonts/inter-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin="anonymous"/><link rel="preload" href="/assets/fonts/ibm-plex-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin="anonymous"/><link rel="modulepreload" href="/assets/manifest-4aca18f8.js"/><link rel="modulepreload" href="/assets/entry.client-CUjFWg5_.js"/><link rel="modulepreload" href="/assets/chunk-EVOBXE3Y-CbLStoMq.js"/><link rel="modulepreload" href="/assets/root-BqlB7hul.js"/><link rel="modulepreload" href="/assets/theme-CxtVguy4.js"/><link rel="modulepreload" href="/assets/not-found-DVAt_zDx.js"/><link rel="modulepreload" href="/assets/page-primitives-C7s5jnMZ.js"/><link rel="modulepreload" href="/assets/cn-B5V-leUE.js"/><link rel="modulepreload" href="/assets/design-system-B3_USdMT.js"/><script>
+(() => {
+  try {
+    const palettes = {"dark":{"accent":"#5e6ad2","bg":"#010102","border":"#23252a","fg":"#f7f8f8","secondary":"#d0d6e0","surface":"#0f1011"},"light":{"accent":"#5e6ad2","bg":"#ffffff","border":"#e3e6ec","fg":"#0f1115","secondary":"#3a4150","surface":"#f7f8f8"}};
+    const key = "role-model-runtime-theme";
+    const stored = window.localStorage.getItem(key);
+    const theme =
+      stored === "light" || stored === "dark"
+        ? stored
+        : "dark";
+    const palette = palettes[theme] ?? palettes.dark;
+    const root = document.documentElement;
+    root.dataset.theme = theme;
+    root.style.colorScheme = theme;
+    root.style.backgroundColor = palette.bg;
+    root.style.color = palette.fg;
+    for (const [token, value] of Object.entries(palette)) {
+      root.style.setProperty(`--rm-${token}`, value);
+    }
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute("content", palette.bg);
+    }
+  } catch {}
+})();
+</script><link rel="stylesheet" href="/assets/root-DylgEXsQ.css"/></head><body style="background:var(--rm-bg, #010102);color:var(--rm-fg, #f7f8f8);margin:0"><main style="align-items:center;background:var(--rm-bg, #010102);color:var(--rm-fg, #f7f8f8);display:flex;font-family:var(--rm-font-display, Inter, Segoe UI, sans-serif);min-height:100vh;padding:24px"><section style="border:1px solid var(--rm-border, #23252a);border-radius:16px;background:var(--rm-surface, #0f1011);box-shadow:0 24px 80px rgba(0, 0, 0, 0.25);margin:0 auto;max-width:560px;padding:28px;width:100%"><p style="color:var(--rm-accent, #5e6ad2);font-size:12px;font-weight:600;letter-spacing:0.16em;margin:0 0 14px;text-transform:uppercase">Runtime UI</p><h1 style="font-size:22px;font-weight:400;letter-spacing:-0.018em;line-height:28px;margin:0">Loading role-model runtime</h1><p style="color:var(--rm-secondary, #d0d6e0);font-size:14px;line-height:22px;margin:12px 0 0">Loading the local runtime interface and bundled design-system assets.</p></section></main><script>window.__reactRouterContext = {"basename":"/","future":{"unstable_optimizeDeps":false,"unstable_passThroughRequests":false,"unstable_subResourceIntegrity":false,"unstable_trailingSlashAwareDataRequests":false,"unstable_previewServerPrerendering":false,"v8_middleware":true,"v8_splitRouteModules":false,"v8_viteEnvironmentApi":false},"routeDiscovery":{"mode":"initial"},"ssr":false,"isSpaMode":true};window.__reactRouterContext.stream = new ReadableStream({start(controller){window.__reactRouterContext.streamController = controller;}}).pipeThrough(new TextEncoderStream());</script><script type="module" async="">import "/assets/manifest-4aca18f8.js";
+import * as route0 from "/assets/root-BqlB7hul.js";
+  
+  window.__reactRouterRouteModules = {"root":route0};
+
+import("/assets/entry.client-CUjFWg5_.js");</script><!--$--><script>window.__reactRouterContext.streamController.enqueue("[{\"_1\":2,\"_3\":-5,\"_4\":-5},\"loaderData\",{},\"actionData\",\"errors\"]\n");</script><!--$--><script>window.__reactRouterContext.streamController.close();</script><!--/$--><!--/$--></body></html>

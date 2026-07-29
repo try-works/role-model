@@ -10,11 +10,18 @@ import {
 
 let kwJoinWorkerFactory: ((sessionId: string) => Promise<KwSessionWorker | undefined>) | undefined;
 
-export function setKwJoinWorkerFactoryForTests(
+export function setKwJoinWorkerFactory(
   factory: ((sessionId: string) => Promise<KwSessionWorker | undefined>) | undefined,
 ): void {
   kwJoinWorkerFactory = factory;
   if (!factory) clearKwPromptInjectSessionsForTests();
+}
+
+/** @deprecated Prefer setKwJoinWorkerFactory for production and tests. */
+export function setKwJoinWorkerFactoryForTests(
+  factory: ((sessionId: string) => Promise<KwSessionWorker | undefined>) | undefined,
+): void {
+  setKwJoinWorkerFactory(factory);
 }
 
 type LifecycleRecord = {
@@ -708,6 +715,24 @@ export function createTrackBOperations({
         const sessionId = String(input.sessionId ?? state.revision ?? "runtime-default");
         const worker = kwJoinWorkerFactory ? await kwJoinWorkerFactory(sessionId) : undefined;
         if (worker) {
+          const joinSeed =
+            (input.joinSeed as Record<string, unknown> | undefined) ??
+            (input.value as Record<string, unknown> | undefined);
+          if (joinSeed) {
+            const seedable = worker as KwSessionWorker & {
+              readonly bootstrapShadowReady?: (value: unknown) => unknown;
+              readonly derive?: (value: unknown) => unknown;
+            };
+            try {
+              if (typeof seedable.bootstrapShadowReady === "function") {
+                seedable.bootstrapShadowReady(joinSeed);
+              } else if (typeof seedable.derive === "function") {
+                seedable.derive(joinSeed);
+              }
+            } catch {
+              // Worker may already hold a matching shadow candidate.
+            }
+          }
           const join = await syncPrivateKnowledgeActivation({
             sessionId,
             action: "activate",
@@ -719,11 +744,16 @@ export function createTrackBOperations({
             worker,
           });
           if (!join.ok) {
-            throw new Error(
-              `knowledge-worker production activation refused: ${join.code ?? "kw_prompt_inject_join_unsatisfied"}`,
-            );
+            // Explicit join seed means the caller required private sync.
+            if (joinSeed) {
+              throw new Error(
+                `knowledge-worker production activation refused: ${join.code ?? "kw_prompt_inject_join_unsatisfied"}`,
+              );
+            }
+            // Without a seed, keep durable host ON; inject stays join_unsatisfied until synced.
+          } else {
+            registerKwPromptInjectSession(sessionId, worker);
           }
-          registerKwPromptInjectSession(sessionId, worker);
         }
         productionActivation = true;
       } else if (action === "deactivate_production") {

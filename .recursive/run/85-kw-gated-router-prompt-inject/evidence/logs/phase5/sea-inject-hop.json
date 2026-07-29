@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "role-model.run85.sea-inject-hop.v1",
+  "probe": "run85_sea_inject_hop",
+  "seaSha256": "caa7c9e7a8a0c3ef57a0aaf801d97cd1021817db1443d4d8d7e5e4f97806b424",
+  "distributionRoot": "D:\\DEV\\role-model-internal\\.worktrees\\85-kw-gated-router-prompt-inject\\dist\\run00-dev",
+  "surface": "applyRequestedRoleExecutionPolicy",
+  "via": "mapChatCompletionsRequest",
+  "off": {
+    "ok": true,
+    "injectedPayloadPresent": false,
+    "expectedRefuse": "kw_prompt_inject_requires_activation"
+  },
+  "on": {
+    "ok": true,
+    "injectedPayloadPresent": true,
+    "systemMessagePreview": "ROLE_MODEL_KW_PROMPT_INJECT_V1\ntip: prefer verified evidence"
+  },
+  "softOff": {
+    "ok": true,
+    "injectedPayloadPresent": false
+  },
+  "pass": true
+}
