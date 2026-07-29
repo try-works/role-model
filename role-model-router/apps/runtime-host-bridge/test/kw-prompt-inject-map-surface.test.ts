@@ -13,17 +13,13 @@ import {
 } from "../src/kw-prompt-inject.js";
 import { setKwJoinWorkerFactory } from "../src/track-b-operations.js";
 
-const distributionRoot =
-  process.env.ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT?.trim() ||
-  "D:/DEV/role-model-internal/.worktrees/85-kw-gated-router-prompt-inject/dist/run00-dev";
-
-const evidenceRoot =
-  process.env.ROLE_MODEL_EVIDENCE_ROOT?.trim() ||
-  "D:/DEV/role-model-internal/.worktrees/85-kw-gated-router-prompt-inject/.recursive/run/85-kw-gated-router-prompt-inject/evidence";
-
-const seaPath =
-  process.env.ROLE_MODEL_SEA_PATH?.trim() ||
-  "D:/DEV/role-model/.worktrees/85-kw-gated-router-prompt-inject/role-model-router/dist/release/win32-x64/role-model-dev.exe";
+const distributionRoot = process.env.ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT?.trim() ?? "";
+const evidenceRoot = process.env.ROLE_MODEL_EVIDENCE_ROOT?.trim() ?? "";
+const seaPath = process.env.ROLE_MODEL_SEA_PATH?.trim() ?? "";
+const hasPackagedSurface =
+  Boolean(distributionRoot && existsSync(distributionRoot)) &&
+  Boolean(evidenceRoot && existsSync(path.join(evidenceRoot, "other/rebuild-receipt.json"))) &&
+  Boolean(seaPath && existsSync(seaPath));
 
 const registry = {
   endpoints: [
@@ -94,7 +90,7 @@ function hasInjectPayload(messages: readonly { content?: unknown }[] | undefined
   );
 }
 
-describe("mapChatCompletionsRequest KW inject locked surface", () => {
+describe.skipIf(!hasPackagedSurface)("mapChatCompletionsRequest KW inject locked surface", () => {
   test("OFF refuses without KW payload; ON prepends via applyRequestedRoleExecutionPolicy", async () => {
     clearKwPromptInjectSessionsForTests();
     setKwJoinWorkerFactory(undefined);

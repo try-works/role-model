@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+
 import { describe, expect, test } from "vitest";
 
 import {
@@ -5,11 +7,10 @@ import {
   resolvePrivateKnowledgeWorkerModulePath,
 } from "../src/kw-private-loader.js";
 
-const distributionRoot =
-  process.env.ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT?.trim() ||
-  "D:/DEV/role-model-internal/.worktrees/85-kw-gated-router-prompt-inject/dist/run00-dev";
+const distributionRoot = process.env.ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT?.trim() ?? "";
+const hasDistribution = Boolean(distributionRoot && existsSync(distributionRoot));
 
-describe("kw-private-loader", () => {
+describe.skipIf(!hasDistribution)("kw-private-loader", () => {
   test("resolves packaged knowledge-worker module path", () => {
     const modulePath = resolvePrivateKnowledgeWorkerModulePath(distributionRoot);
     expect(modulePath).toBeTruthy();
