@@ -1,0 +1,54 @@
+(node:24316) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö run85 KW probe proves toggle, retrieve gate, eval consumer, and prompt inject (23.5166ms)
+(node:25624) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö TB10-TEST-UNIT replays deterministically (6.3403ms)
+Γ£ö TB10-TEST-CONTRACT binds evaluation group provenance (4.8759ms)
+Γ£ö TB10-TEST-INTEGRATION derives shadow candidates (3.1089ms)
+Γ£ö TB10-TEST-REGRESSION never activates production (1.8454ms)
+Γ£ö TB10-TEST-MUTATION activation guard is immutable (1.4806ms)
+Γ£ö TB10-TEST-ACTIVATION-POLICY activates only with valid v1 policy (3.9005ms)
+Γ£ö TB10-TEST-ACTIVATION-CAPABILITY forwards policy through run() (3.2975ms)
+Γ£ö TB10-TEST-ACTIVATION-DIGEST-BIND requires receipt digest match to shadow candidate (2.0909ms)
+Γ£ö TB10-TEST-SHADOW-READY-BOOTSTRAP seeds shadow candidate without production (1.7875ms)
+Γ£ö TB10-TEST-SOFT-DEACTIVATE returns to shadow-ready (2.2983ms)
+Γ£ö TB10-TEST-DEACTIVATE-CAPABILITY soft-offs through run() (1.9301ms)
+Γ£ö TB10-TEST-FALSE-SUCCESS rejects holdout failure (1.6842ms)
+Γ£ö TB10-TEST-ROLLBACK discards derived candidates (1.3975ms)
+Γ£ö TB10-TEST-HEALTH operates without Verifiers (1.1051ms)
+Γ£ö TB10-TEST-REPLAY-CORE-PACKAGE checkpoints cancellation (0.4944ms)
+Γ£ö TB10-TEST-EVALUATION-RUNNER-PACKAGE enforces no egress (1.1867ms)
+Γ£ö TB10-TEST-TRAJECTORY-SIGNALS-PACKAGE emits bounded diagnostics (1.5314ms)
+Γ£ö TB10-TEST-PROFILE-LEARNER-PACKAGE keeps attribution dimensions separate (2.1291ms)
+Γ£ö TB10-TEST-KNOWLEDGE-WORKER-PACKAGE requires review and redaction (1.3369ms)
+Γ£ö TB10-TEST-TRACK-A-EXCLUSION packages are reference-only learners (0.2918ms)
+Γ£ö TB10-REVIEW-REPLAY shares immutable prefixes and binds source decision provenance (20.2216ms)
+Γ£ö TB10-REVIEW-REPLAY cancellation resumes from a hash-bound checkpoint (0.9153ms)
+Γ£ö TB10-REVIEW-EVAL runs through Evaluation Core with no external environment (2.2552ms)
+Γ£ö TB10-REVIEW-SIGNALS are provenance-bound uncertain diagnostics, never labels (2.1401ms)
+Γ£ö TB10-REVIEW-PROFILE preserves propensity, bias, confidence, promotion and rollback evidence (1.124ms)
+Γ£ö TB10-REVIEW-KNOWLEDGE requires comparable positive/negative groups and disjoint validation (2.0756ms)
+Γ£ö TB10-REVIEW-SAFETY rejects caller-asserted knowledge and missing diagnostic provenance (1.2225ms)
+Γ£ö TB10-REVIEW-SAFETY executes only trusted registered scorers (1.169ms)
+Γ£ö TB10-REVIEW-BOUNDARY accepts only finite declarative scorers and complete execution provenance (2.0296ms)
+Γ£ö TB10-REVIEW-RECEIPTS rejects forged profile and knowledge promotion gates (1.9059ms)
+Γ£ö TB10-REVIEW-RECEIPTS bind nested evidence and model fields (0.6035ms)
+Γ£ö TB10-REVIEW-REPLAY uses collision-safe prefix hashes and durable restart checkpoints (44.9633ms)
+Γ£ö TB10-TEST-PRODUCTION-RETRIEVE-GATE (6.0297ms)
+Γ£ö TB10-TEST-EVAL-CONSUMER-USEFULNESS (3.9395ms)
+Γ£ö TB10-TEST-DURABLE-RUN-SESSION (4.0219ms)
+Γ£ö TB10-TEST-PROMPT-INJECT-OFF-REFUSE (3.5431ms)
+Γ£ö TB10-TEST-PROMPT-INJECT-CONTRACT (2.8155ms)
+Γ£ö TB10-TEST-PROMPT-INJECT-ON-APPLY-EXPORT-AND-OFF (3.8638ms)
+Γ£ö TB10-TEST-PROMPT-INJECT-REQUIRES-PRODUCTION-RETRIEVE (1.7173ms)
+Γ£ö TB10-TEST-PROMPT-INJECT-BOUNDS (3.3495ms)
+Γ£ö TB10-TEST-PROMPT-INJECT-CAPABILITY (2.8384ms)
+Γä╣ tests 42
+Γä╣ suites 0
+Γä╣ pass 42
+Γä╣ fail 0
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 340.0788

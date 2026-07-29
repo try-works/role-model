@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/85-kw-gated-router-prompt-inject/role-model-router/apps/runtime-ui
+
+ Γ£ô app/routes/extensions.test.tsx (2 tests) 38ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  18:01:21
+   Duration  1.78s (transform 362ms, setup 0ms, collect 696ms, tests 38ms, environment 0ms, prepare 349ms)
+

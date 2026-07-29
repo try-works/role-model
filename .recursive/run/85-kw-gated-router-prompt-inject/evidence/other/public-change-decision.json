@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "role-model.run85.change-decision.v1",
+  "publicChange": "required",
+  "rationale": "Host insertion surface, join factory/auto-arm, honesty/UI wiring, and SEA packaging live in the public worktree.",
+  "surfaces": [
+    "role-model-router/apps/runtime-host-bridge/src/kw-private-loader.ts",
+    "role-model-router/apps/runtime-host-bridge/src/kw-prompt-inject-host.ts",
+    "role-model-router/apps/runtime-host-bridge/src/track-b-operations.ts",
+    "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+    "role-model-router/apps/runtime-host-bridge/src/index.ts"
+  ]
+}

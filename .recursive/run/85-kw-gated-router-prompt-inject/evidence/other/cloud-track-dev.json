@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "role-model.cloud-track-dev.sanitized.v1",
+  "track": "dev",
+  "startedAt": "2026-07-28T22:24:18.871Z",
+  "hosts": {
+    "ingest": "https://ingest-dev.role-model.dev/",
+    "history": "https://history-dev.role-model.dev/history",
+    "recommendations": "https://recommendations-dev.role-model.dev",
+    "channel": "development",
+    "keyId": "role-model-recommendations-dev-v1"
+  },
+  "scope": "tenant:dev-e2e-1785277458871",
+  "steps": {
+    "ingest": {
+      "status": 202,
+      "statusText": "accepted"
+    },
+    "duplicate": {
+      "status": 200,
+      "statusText": "duplicate"
+    },
+    "history": {
+      "status": 200,
+      "matchingCount": 1
+    },
+    "publish": {
+      "status": 202,
+      "publishStatus": "published"
+    },
+    "resolve": {
+      "status": 200,
+      "resolveStatus": "available"
+    }
+  },
+  "secretsOmitted": true
+}

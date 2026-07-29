@@ -96,10 +96,10 @@ const LIFECYCLE_COPY: Record<
 
 const operatorBoundaryNote = (extensionId: string): string | null => {
   if (extensionId === "knowledge-worker") {
-    return "Default posture is shadow-ready by default while productionActivation stays off. Production retrieve is gated and useful only after ceremony-bound ON; KW works when on. Enabling this extension is not productionActivation and does not enable production prompt injection. Soft OFF returns to shadow-ready. Production activation is separate from Set mode and recommendation apply, gated separately from Set mode.";
+    return "Default posture is shadow-ready by default while productionActivation stays off. Production retrieve is gated and useful only after ceremony-bound ON; KW works when on. Enabling this extension is not productionActivation. Gated production prompt injection requires ceremony ON plus successful production retrieve and is not enabled by Set mode or recommendation apply alone. Soft OFF returns to shadow-ready and clears inject. Production activation is separate from Set mode and recommendation apply, gated separately from Set mode.";
   }
   if (extensionId === "knowledge-store") {
-    return "Serves last-ready knowledge references. Production activation of knowledge into prompts remains locked off in v1.1.";
+    return "Serves last-ready knowledge references. Production prompt injection requires ceremony-backed KW ON and gated production retrieve; it is not ambient-on.";
   }
   return null;
 };
@@ -560,7 +560,9 @@ export function ExtensionsRouteView() {
                           <p className={compactTitleClassName}>Production retrieve gate</p>
                           <p className={`mt-1 ${supportingTextClassName}`}>
                             Ceremony-backed production activation is separate from Set mode.
-                            Production prompt injection remains locked.
+                            Production prompt injection requires ceremony ON plus gated production
+                            retrieve success; it is cleared on soft OFF and is not Set mode or
+                            recommendation apply.
                           </p>
                         </div>
                         <StatusPill tone={productionActivation ? "success" : "neutral"}>

@@ -1,0 +1,5 @@
+
+> @role-model/internal@1.1.0 build:run00-runtime D:\DEV\role-model-internal\.worktrees\85-kw-gated-router-prompt-inject
+> node scripts/track-b/build-runtime-distribution.mjs
+
+{"status":"PASS","extensionCount":13,"sidecarSha256":"a7793a22b0cd8c1a05478b7e0650a105a104b0f47343903dc02c0066edf5da6b"}

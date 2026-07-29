@@ -15,8 +15,11 @@ import {
   resolveBridgeServerOptions,
   startBridgeServer,
 } from "./index.js";
+import { createPrivateKwJoinWorkerFactory } from "./kw-private-loader.js";
+import { configureKwPromptInjectHost } from "./kw-prompt-inject-host.js";
 import { readPackagedRuntimeProfile } from "./runtime-channel.js";
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
+import { setKwJoinWorkerFactory } from "./track-b-operations.js";
 import {
   createOwnedTrackBSidecarSpec,
   createPackagedProductionRuntime,
@@ -795,6 +798,19 @@ export async function main(): Promise<void> {
       }
       const distributionRoot = path.dirname(trackBManifestPath);
       const trackBStateRoot = path.join(options.runtimeStateRoot, options.scopeId, "track-b");
+      // Must match createTrackBOperations statePath (scope root), not trackBStateRoot/extensions.
+      configureKwPromptInjectHost({
+        bridgeStatePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+      });
+      setKwJoinWorkerFactory(
+        createPrivateKwJoinWorkerFactory({
+          distributionRoot,
+        }),
+      );
       // Start extension-host registration in parallel with sidecar/backend bring-up, but
       // mark core APIs ready as soon as the packaged backend exists. Waiting on all
       // packaged extensions previously kept /api/role-model/* at 503 runtime_initializing.

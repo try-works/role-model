@@ -1,0 +1,12 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/85-kw-gated-router-prompt-inject/role-model-router/apps/runtime-host-bridge
+
+(node:7628) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ Γ£ô test/kw-prompt-inject-map-surface.test.ts > mapChatCompletionsRequest KW inject locked surface > OFF refuses without KW payload; ON prepends via applyRequestedRoleExecutionPolicy 33ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  06:11:17
+   Duration  3.23s (transform 1.63s, setup 0ms, collect 2.25s, tests 35ms, environment 0ms, prepare 349ms)
+
