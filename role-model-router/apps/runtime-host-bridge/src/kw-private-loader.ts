@@ -51,9 +51,7 @@ export async function loadPrivateKnowledgeWorkerModule(
   return { module, modulePath };
 }
 
-export type KwJoinWorkerFactory = (
-  sessionId: string,
-) => Promise<KwSessionWorker | undefined>;
+export type KwJoinWorkerFactory = (sessionId: string) => Promise<KwSessionWorker | undefined>;
 
 export function createPrivateKwJoinWorkerFactory(options: {
   readonly distributionRoot: string;

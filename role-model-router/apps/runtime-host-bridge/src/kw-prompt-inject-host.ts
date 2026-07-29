@@ -26,9 +26,7 @@ export function readDurableKwProductionActivation(
       readonly revision?: string | number;
     };
     const kw = state.extensions?.find((row) => row.id === "knowledge-worker");
-    return (
-      kw?.productionActivation === true || kw?.health?.productionActivation === true
-    );
+    return kw?.productionActivation === true || kw?.health?.productionActivation === true;
   } catch {
     return false;
   }

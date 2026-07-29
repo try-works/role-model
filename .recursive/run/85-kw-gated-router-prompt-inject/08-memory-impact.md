@@ -1,14 +1,16 @@
 Run: `/.recursive/run/85-kw-gated-router-prompt-inject/`
 Phase: `08 Memory Impact`
 Status: `LOCKED`
-LockedAt: `2026-07-28T23:33:02Z`
-LockHash: `62ab38a33a4ba08c1cfabe6e10938f8fe44e511665e62d873c398d4b7d83e8bb`
+LockedAt: `2026-07-29T10:50:39Z`
+LockHash: `d3ad7139e07f0d65daa4a122a7124d37dc2b2169f9887d84ca501bba4b4207d2`
 Workflow version: `recursive-mode-audit-v2`
-CapturedAt: `2026-07-29T07:55:00+08:00`
+CapturedAt: `2026-07-29T19:00:00+08:00`
 Inputs:
 - `/.recursive/run/85-kw-gated-router-prompt-inject/00-requirements.md`
 - `/.recursive/run/85-kw-gated-router-prompt-inject/00-worktree.md`
 - `/.recursive/run/85-kw-gated-router-prompt-inject/05-manual-qa.md`
+- `/.recursive/run/85-kw-gated-router-prompt-inject/addenda/05-manual-qa.pi-kw-inject-e2e.addendum-01.md`
+- `/.recursive/run/85-kw-gated-router-prompt-inject/evidence/other/pi-kw-inject-e2e.json`
 - `/.recursive/run/85-kw-gated-router-prompt-inject/06-decisions-update.md`
 - `/.recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
 - `/.recursive/DECISIONS.md`
@@ -22,8 +24,9 @@ Outputs:
 - `/.recursive/memory/domains/direct-track-b.md`
 - `/.recursive/memory/skills/issues/anticipatory-phase-docs.md`
 - `/.recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md`
+- `/.recursive/memory/skills/issues/kw-inject-live-host-wiring.md`
 - `/.recursive/memory/skills/SKILLS.md`
-Scope note: Compact memory-plane delta for run 85 gated live-router prompt inject unlock, host join/auto-arm, honesty unlock, and Phase 5 SEA hop operational lessons.
+Scope note: Compact memory-plane delta for run 85 gated live-router prompt inject unlock, host join/auto-arm, honesty unlock, Phase 5 SEA hop lessons, and post-lock live `pi` inject host-wiring remediations.
 
 ## TODO
 
@@ -33,6 +36,7 @@ Scope note: Compact memory-plane delta for run 85 gated live-router prompt injec
 - [x] Refresh domain memory for gated inject + host join + pin/SEA
 - [x] Promote SEA inject host-join/seed-scope issue; reinforce anticipatory-phase-docs
 - [x] Complete the audited memory-impact gates before locking
+- [x] Reopen after post-lock Phase 5 addendum; promote live inject host-wiring lessons
 
 ## Diff Basis
 
@@ -53,19 +57,22 @@ Scope note: Compact memory-plane delta for run 85 gated live-router prompt injec
 - `.recursive/memory/domains/direct-track-b.md`
   - Prior status: CURRENT (run-84)
   - Final status: CURRENT
-  - Change summary: records run-85 gated prompt inject, host join/auto-arm, honesty unlock, pin `726df64…`, SEA `caa7c9e7…`; Source-Runs includes run 85
+  - Change summary: records run-85 gated prompt inject, host join/auto-arm, honesty unlock, pin `726df64…`, SEA `caa7c9e7…` + post-lock SEA `1a3ff1ea…` + live inject remediations; Source-Runs includes run 85
 - `.recursive/memory/skills/issues/anticipatory-phase-docs.md`
   - Final status: CURRENT
-  - Change summary: Source-Runs includes run 85; adds no-invented-SEA-inject-unlock guidance
+  - Change summary: Source-Runs includes run 85; adds no-invented-SEA-inject-unlock + reopen-6/7/8-for-post-lock-addenda guidance
 - `.recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md`
-  - Final status: CURRENT (new)
-  - Change summary: host join + matching seed scope/verification key required for Phase 5 inject unlock claims
+  - Final status: CURRENT
+  - Change summary: host join + matching seed scope/verification key + live query/bridge/join alignment required for inject unlock claims
+- `.recursive/memory/skills/issues/kw-inject-live-host-wiring.md`
+  - Final status: CURRENT (new on reopen)
+  - Change summary: default query + bridge path + revision join + host-owned session for live `pi` inject
 - `.recursive/memory/MEMORY.md`
   - Final status: CURRENT router
-  - Change summary: registry blurbs include run 85 + sea-inject issue
+  - Change summary: registry blurbs include run 85 + sea-inject + live-host-wiring issues
 - `.recursive/memory/skills/SKILLS.md`
   - Final status: CURRENT router
-  - Change summary: lists sea-inject-host-join issue under Current Docs
+  - Change summary: lists sea-inject-host-join + kw-inject-live-host-wiring issues under Current Docs
 
 ## Run-Local Skill Usage Capture
 
@@ -75,13 +82,13 @@ Scope note: Compact memory-plane delta for run 85 gated live-router prompt injec
 - Skills Attempted: recursive-mode; recursive-tdd; recursive-lock; recursive-closeout scaffolds; controller self-audit for Phase 5–8
 - Skills Used: recursive-mode; recursive-tdd; recursive-lock; recursive-closeout
 - Worked Well: re-package SEA after host wiring; prove inject on locked map surface; match seed `--scope-id` to launch; serial Phase 6–8 after Phase 5 lock; binder secretsOmitted
-- Issues Encountered: cloud seed alone wrong scope (`not_eligible`); fresh packaged scope lacked endpoints until selective account copy; tsx pathToFileURL friction on Windows for hop helper (vitest path worked)
-- Future Guidance: always wire join/auto-arm before SEA inject claims; seed with matching scope + verification key; prefer map-surface hop evidence; never invent Phase 5 unlock from units alone
-- Promotion Candidates: sea-inject-host-join-and-seed-scope issue (promoted); anticipatory SEA-hop honesty (promoted); domain run-85 inject notes (promoted)
+- Issues Encountered: cloud seed alone wrong scope (`not_eligible`); fresh packaged scope lacked endpoints until selective account copy; tsx pathToFileURL friction on Windows for hop helper (vitest path worked); map hop PASS while live `pi` inject absent until default query / bridge path / revision join / host-owned session remediations
+- Future Guidance: always wire join/auto-arm before SEA inject claims; seed with matching scope + verification key; prove live provider-capture inject after map hop; reopen Phases 6–8 when post-lock Phase 5 remediations land; never invent Phase 5 unlock from units alone
+- Promotion Candidates: sea-inject-host-join-and-seed-scope issue (promoted); kw-inject-live-host-wiring issue (promoted); anticipatory SEA-hop honesty (promoted); domain run-85 inject notes (promoted)
 
 ## Skill Memory Promotion Review
 
-- Durable Skill Lessons Promoted: sea-inject-host-join-and-seed-scope; anticipatory-phase-docs SEA unlock honesty; domain run-85 inject/join/pin notes
+- Durable Skill Lessons Promoted: sea-inject-host-join-and-seed-scope; kw-inject-live-host-wiring; anticipatory-phase-docs SEA unlock honesty + reopen-for-post-lock-addenda; domain run-85 inject/join/pin notes
 - Generalized Guidance Updated: `.recursive/memory/MEMORY.md`; `domains/direct-track-b.md`; `skills/SKILLS.md`
 - Run-Local Observations Left Unpromoted: SEA sha256 strings, recommendation ids, listen ports, TEMP credential copy paths (cite run evidence)
 - Promotion Decision Rationale: packaging/join/seed hygiene is durable; hop-specific ids are run evidence only
@@ -92,13 +99,13 @@ Scope note: Compact memory-plane delta for run 85 gated live-router prompt injec
 
 ## Router and Parent Refresh
 
-- `.recursive/memory/MEMORY.md`: domain blurb + anticipatory + sea-inject issue registry refreshed for run 85
-- `.recursive/memory/skills/SKILLS.md`: sea-inject-host-join issue listed under Current Docs
+- `.recursive/memory/MEMORY.md`: domain blurb + anticipatory + sea-inject + live-host-wiring issue registry refreshed for run 85
+- `.recursive/memory/skills/SKILLS.md`: sea-inject-host-join + kw-inject-live-host-wiring issues listed under Current Docs
 
 ## Final Status Summary
 
-- Domain memory CURRENT with runs 79–85 closeouts including run-85 gated live-router prompt inject.
-- Anticipatory-phase-docs and sea-inject-host-join issue shards CURRENT.
+- Domain memory CURRENT with runs 79–85 closeouts including run-85 gated live-router prompt inject + post-lock live `pi` remediations.
+- Anticipatory-phase-docs, sea-inject-host-join, and kw-inject-live-host-wiring issue shards CURRENT.
 - No uncovered product paths for this closeout.
 
 ## Traceability
@@ -146,7 +153,7 @@ Reviewed Subagent Action Records: none
 
 - Locked `07-state-update.md`, `06-decisions-update.md`, `05-manual-qa.md`
 - `.recursive/DECISIONS.md`, `.recursive/STATE.md`, `.recursive/memory/MEMORY.md`
-- No Phase 8 addenda
+- Phase 5 post-lock addendum `addenda/05-manual-qa.pi-kw-inject-e2e.addendum-01.md`
 
 ## Earlier Phase Reconciliation
 
@@ -184,40 +191,40 @@ Reviewed Subagent Action Records: none
 
 ## Repair Work Performed
 
-None in Phase 8 beyond memory-plane refresh.
+Reopened Phase 8 after post-lock Phase 5 addendum; refreshed domain + anticipatory shards; expanded sea-inject issue; promoted `kw-inject-live-host-wiring` issue; refreshed MEMORY/SKILLS routers.
 
 ## Requirement Completion Status
 
-- `R1 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
-- `R2 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
-- `R3 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
-- `R4 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
-- `R5 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
-- `R6 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
-- `R7 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
-- `R8 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
-- `R9 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
-- `R10 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
-- `R11 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
-- `R12 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
-- `R13 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
-- `R14 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
-- `R15 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
-- `R16 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
-- `R17 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
-- `R18 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
-- `R19 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
-- `R20 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
-- `R21 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
-- `R22 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
-- `R23 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/04-test-summary.md`
-- `R24 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/evidence/binder.json`
-- `R25 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/06-decisions-update.md`
+- `R1 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
+- `R2 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
+- `R3 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
+- `R4 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
+- `R5 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
+- `R6 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
+- `R7 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
+- `R8 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
+- `R9 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
+- `R10 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
+- `R11 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
+- `R12 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
+- `R13 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
+- `R14 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
+- `R15 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
+- `R16 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
+- `R17 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
+- `R18 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
+- `R19 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
+- `R20 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
+- `R21 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
+- `R22 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md; .recursive/run/85-kw-gated-router-prompt-inject/addenda/05-manual-qa.pi-kw-inject-e2e.addendum-01.md; .recursive/run/85-kw-gated-router-prompt-inject/evidence/other/pi-kw-inject-e2e.json`
+- `R23 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/04-test-summary.md`
+- `R24 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/evidence/binder.json`
+- `R25 | Status: verified | Changed Files: .recursive/memory/MEMORY.md, .recursive/memory/domains/direct-track-b.md, .recursive/memory/skills/issues/anticipatory-phase-docs.md, .recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md, .recursive/memory/skills/issues/kw-inject-live-host-wiring.md, .recursive/memory/skills/SKILLS.md | Implementation Evidence: .recursive/memory/domains/direct-track-b.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/06-decisions-update.md`
 - `R26 | Status: deferred | Rationale: paired dual-repo ship/PR merge remains operator-requested; control-plane Phases 6–8 complete | Deferred By: .recursive/run/85-kw-gated-router-prompt-inject/00-requirements.md`
 
 ## Audit Verdict
 
-- Summary: Memory plane refreshed for run 85; durable SEA inject host-join/seed-scope and anticipatory honesty lessons promoted. Ready to lock Phase 8.
+- Summary: Memory plane refreshed for run 85 including post-lock live `pi` inject host-wiring lessons. Ready to re-lock Phase 8.
 - Audit: PASS
 
 ## Coverage Gate

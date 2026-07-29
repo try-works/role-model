@@ -712,7 +712,7 @@ export function createTrackBOperations({
             "knowledge-worker production activation refused: v1 ceremony policy and operator attestation are required",
           );
         asKnowledgeValidationReceipt(input.receipt ?? knowledgeWorkerBootstrap?.receipt);
-        const sessionId = String(input.sessionId ?? state.revision ?? "runtime-default");
+        const sessionId = String(input.sessionId ?? state.revision + 1);
         const worker = kwJoinWorkerFactory ? await kwJoinWorkerFactory(sessionId) : undefined;
         if (worker) {
           const joinSeed =
@@ -757,7 +757,7 @@ export function createTrackBOperations({
         }
         productionActivation = true;
       } else if (action === "deactivate_production") {
-        const sessionId = String(input.sessionId ?? state.revision ?? "runtime-default");
+        const sessionId = String(input.sessionId ?? state.revision + 1);
         const registered = kwJoinWorkerFactory ? await kwJoinWorkerFactory(sessionId) : undefined;
         if (registered) {
           await syncPrivateKnowledgeActivation({

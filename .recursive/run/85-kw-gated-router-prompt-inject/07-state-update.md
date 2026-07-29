@@ -1,20 +1,22 @@
 Run: `/.recursive/run/85-kw-gated-router-prompt-inject/`
 Phase: `07 State Update`
 Status: `LOCKED`
-LockedAt: `2026-07-28T23:31:23Z`
-LockHash: `bb2d8aa9aba3ef27422271c1953ae82ac5f3783b680e8e3c852f7f23586e4044`
+LockedAt: `2026-07-29T10:50:38Z`
+LockHash: `dea84b9594db3363ed6f9d392a758bac485618fd8dd4e9edd4627930f63d88e4`
 Workflow version: `recursive-mode-audit-v2`
-CapturedAt: `2026-07-29T07:45:00+08:00`
+CapturedAt: `2026-07-29T18:55:00+08:00`
 Inputs:
 - `/.recursive/run/85-kw-gated-router-prompt-inject/06-decisions-update.md`
 - `/.recursive/run/85-kw-gated-router-prompt-inject/05-manual-qa.md`
+- `/.recursive/run/85-kw-gated-router-prompt-inject/addenda/05-manual-qa.pi-kw-inject-e2e.addendum-01.md`
+- `/.recursive/run/85-kw-gated-router-prompt-inject/evidence/other/pi-kw-inject-e2e.json`
 - `/.recursive/run/85-kw-gated-router-prompt-inject/00-worktree.md`
 - `/.recursive/DECISIONS.md`
 - `/.recursive/STATE.md`
 Outputs:
 - `/.recursive/run/85-kw-gated-router-prompt-inject/07-state-update.md`
 - `/.recursive/STATE.md`
-Scope note: Compact delta receipt for global STATE after run-85 gated live-router prompt inject unlock, host join/auto-arm, honesty unlock, private pin `726df64…`, and Phase 5 `run85-dev` hops. Does not author Phase 8 or edit memory.
+Scope note: Compact delta receipt for global STATE after run-85 gated live-router prompt inject unlock, host join/auto-arm, honesty unlock, private pin `726df64…`, Phase 5 `run85-dev` hops, and post-lock live `pi` inject remediations (default query / bridge path / revision join / host-owned session). Does not author Phase 8 or edit memory.
 
 ## TODO
 
@@ -24,14 +26,15 @@ Scope note: Compact delta receipt for global STATE after run-85 gated live-route
 - [x] Keep no stage/main auto-promotion and merge-operator-requested
 - [x] Complete audited state-update gates before locking
 - [x] Do not author Phase 8 or edit memory in this phase
+- [x] Reopen after post-lock Phase 5 addendum; fold live inject host wiring truths + SEA `1a3ff1ea…` into STATE
 
 ## State Changes Applied
 
 - Updated Current State narrative for run 85 gated prompt inject, host join/auto-arm, honesty/export unlock, private pin advance, Phase 5 `run85-dev`.
 - Pointed active worktrees/diff basis to run-85 feature branches and in-parent paths.
-- Product truths record SEA `caa7c9e7…`, private pin `726df64…`, public freeze pin leave-as-is, `publicChange: required`.
+- Product truths record initial Phase 5 SEA `caa7c9e7…`, post-lock pi-inject SEA `1a3ff1ea…`, private pin `726df64…`, public freeze pin leave-as-is, `publicChange: required`, and four live-inject host wiring truths.
 - Known limitations soft-close run-84 inject residual for gated inject; retain training/ambient/ceremony/stage-main OOS and operator-requested merge (`R26`).
-- Operational notes prefer run-85 evidence; retain prior-run pointers; reinforce join-factory packaging and evidence-root hygiene.
+- Operational notes prefer run-85 evidence including `pi-kw-inject-e2e.json`; retain prior-run pointers; reinforce join-factory packaging, evidence-root hygiene, and re-prove live inject after host wiring changes.
 
 ## Rationale
 
@@ -40,7 +43,7 @@ Scope note: Compact delta receipt for global STATE after run-85 gated live-route
 ## Resulting State Summary
 
 - Final state path: `.recursive/STATE.md`
-- Current substrate: Direct Track B v1.1 + runs 79–84 + run-85 gated live-router prompt inject / host join / honesty unlock / `run85-dev` hops
+- Current substrate: Direct Track B v1.1 + runs 79–84 + run-85 gated live-router prompt inject / host join / honesty unlock / `run85-dev` hops / post-lock live `pi` inject E2E
 - Cleared limitations: run-84 deferred full live-router inject (`OOS3`/`E6`) for gated inject only
 - Retained limits: no stage/main auto-promotion; training unlock OOS; merge operator-requested (`R26`)
 
@@ -93,7 +96,7 @@ Reviewed Subagent Action Records: none
 
 - Locked `06-decisions-update.md`, `05-manual-qa.md`, `00-worktree.md`
 - `.recursive/DECISIONS.md`, `.recursive/STATE.md`
-- No Phase 7 addenda
+- Phase 5 post-lock addendum `addenda/05-manual-qa.pi-kw-inject-e2e.addendum-01.md`
 
 ## Earlier Phase Reconciliation
 
@@ -131,7 +134,7 @@ Reviewed Subagent Action Records: none
 
 ## Repair Work Performed
 
-None in Phase 7.
+Reopened Phase 7 after post-lock Phase 5 addendum; rewrote STATE product truths for live inject host wiring + SEA `1a3ff1ea…`; no product code in this phase.
 
 ## Requirement Completion Status
 
@@ -156,7 +159,7 @@ None in Phase 7.
 - `R19 | Status: verified | Changed Files: .recursive/STATE.md | Implementation Evidence: .recursive/STATE.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/06-decisions-update.md`
 - `R20 | Status: verified | Changed Files: .recursive/STATE.md | Implementation Evidence: .recursive/STATE.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/06-decisions-update.md`
 - `R21 | Status: verified | Changed Files: .recursive/STATE.md | Implementation Evidence: .recursive/STATE.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/06-decisions-update.md`
-- `R22 | Status: verified | Changed Files: .recursive/STATE.md | Implementation Evidence: .recursive/STATE.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/06-decisions-update.md`
+- `R22 | Status: verified | Changed Files: .recursive/STATE.md | Implementation Evidence: .recursive/STATE.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/06-decisions-update.md; .recursive/run/85-kw-gated-router-prompt-inject/addenda/05-manual-qa.pi-kw-inject-e2e.addendum-01.md; .recursive/run/85-kw-gated-router-prompt-inject/evidence/other/pi-kw-inject-e2e.json`
 - `R23 | Status: verified | Changed Files: .recursive/STATE.md | Implementation Evidence: .recursive/STATE.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/04-test-summary.md`
 - `R24 | Status: verified | Changed Files: .recursive/STATE.md | Implementation Evidence: .recursive/STATE.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/evidence/binder.json`
 - `R25 | Status: verified | Changed Files: .recursive/STATE.md | Implementation Evidence: .recursive/STATE.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/06-decisions-update.md`
@@ -164,7 +167,7 @@ None in Phase 7.
 
 ## Audit Verdict
 
-- Summary: STATE.md rewritten for run 85 truths. Ready to lock Phase 7.
+- Summary: STATE.md rewritten for run 85 truths including post-lock live `pi` inject remediations. Ready to re-lock Phase 7.
 - Audit: PASS
 
 ## Coverage Gate

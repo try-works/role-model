@@ -1,21 +1,23 @@
 Run: `/.recursive/run/85-kw-gated-router-prompt-inject/`
 Phase: `06 Decisions Update`
 Status: `LOCKED`
-LockedAt: `2026-07-28T23:30:09Z`
-LockHash: `5c2cd8aa98b3cf475a9c28c298f2431e970e42351fa2b659ac0b1ba76b2d2c2a`
+LockedAt: `2026-07-29T10:50:38Z`
+LockHash: `afd69b155f092038e9a4e80f4bc00315260871e14548ccd266e9417299354a05`
 Workflow version: `recursive-mode-audit-v2`
-CapturedAt: `2026-07-29T07:40:00+08:00`
+CapturedAt: `2026-07-29T18:50:00+08:00`
 Inputs:
 - `/.recursive/run/85-kw-gated-router-prompt-inject/00-requirements.md`
 - `/.recursive/run/85-kw-gated-router-prompt-inject/00-worktree.md`
 - `/.recursive/run/85-kw-gated-router-prompt-inject/05-manual-qa.md`
+- `/.recursive/run/85-kw-gated-router-prompt-inject/addenda/05-manual-qa.pi-kw-inject-e2e.addendum-01.md`
+- `/.recursive/run/85-kw-gated-router-prompt-inject/evidence/other/pi-kw-inject-e2e.json`
 - `/.recursive/run/85-kw-gated-router-prompt-inject/04-test-summary.md`
 - `/.recursive/run/85-kw-gated-router-prompt-inject/03-implementation-summary.md`
 - `/.recursive/DECISIONS.md`
 Outputs:
 - `/.recursive/run/85-kw-gated-router-prompt-inject/06-decisions-update.md`
 - `/.recursive/DECISIONS.md`
-Scope note: Compact delta receipt for the global decisions ledger after run-85 gated live-router prompt inject unlock, host join/auto-arm, honesty unlock, Phase 5 SEA inject hop on `run85-dev`, and soft-close of run-84 inject residual. Does not author Phase 7–8 or edit STATE/memory.
+Scope note: Compact delta receipt for the global decisions ledger after run-85 gated live-router prompt inject unlock, host join/auto-arm, honesty unlock, Phase 5 SEA inject hop on `run85-dev`, soft-close of run-84 inject residual, and post-lock live `pi`→KW inject remediations/addendum folded into DECISIONS. Does not author Phase 7–8 or edit STATE/memory.
 
 ## TODO
 
@@ -23,16 +25,18 @@ Scope note: Compact delta receipt for the global decisions ledger after run-85 g
 - [x] Soft-close run-84 deferred inject residual (`OOS3`/`E6` / honesty locked)
 - [x] Complete audited decision-update gates before locking
 - [x] Do not author Phase 7–8 or edit STATE/memory in this phase
+- [x] Reopen after post-lock Phase 5 addendum; fold live `pi` inject E2E + host wiring remediations into DECISIONS
 
 ## Decisions Changes Applied
 
 - Added Recursive Run Index bullet for `85-kw-gated-router-prompt-inject`.
-- Appended dated run section: gated inject contract, host join/auto-arm, honesty/export unlock, private pin `726df64…`, SEA `caa7c9e7…`, Phase 5 hops on `run85-dev`, `publicChange: required`, server not-required, in-parent worktrees.
+- Appended dated run section: gated inject contract, host join/auto-arm, honesty/export unlock, private pin `726df64…`, initial Phase 5 SEA `caa7c9e7…`, Phase 5 hops on `run85-dev`, `publicChange: required`, server not-required, in-parent worktrees.
+- Reopen amend: recorded post-lock addendum `05-manual-qa.pi-kw-inject-e2e.addendum-01.md`, live `pi` inject E2E PASS, SEA `1a3ff1ea…`, and four host remediations (default query, bridge path, revision+1 join, host-owned session).
 - Updated run-84 Known issues / OOS notes to mark deferred full live-router inject soft-closed by run 85 (training unlock remains OOS).
 
 ## Rationale
 
-- Phase 6 owns `/.recursive/DECISIONS.md`. Run 85 soft-closes run-84 inject lock residual for gated unlock only and records unlock without ambient ON, ceremony removal, training unlock, or stage/main promotion.
+- Phase 6 owns `/.recursive/DECISIONS.md`. Run 85 soft-closes run-84 inject lock residual for gated unlock only and records unlock without ambient ON, ceremony removal, training unlock, or stage/main promotion. Reopen ensures post-lock Phase 5 product truths enter the ledger before Phase 7–8.
 
 ## Resulting Decision Entry
 
@@ -75,7 +79,7 @@ Audit Execution Mode: self-audit
 Subagent Availability: available
 Subagent Capability Probe: available; controller owns DECISIONS delta
 Delegation Decision Basis: self-audit selected
-Delegation Override Reason: factual ledger update from locked Phases 0–5; controller applies DECISIONS delta after Phase 5 lock without anticipatory Phase 7–8 docs
+Delegation Override Reason: factual ledger update from locked Phases 0–5 plus post-lock Phase 5 addendum; controller applies DECISIONS delta without anticipatory Phase 7–8 docs
 Audit Inputs Provided:
 - Locked `05-manual-qa.md`, `04-test-summary.md`, `03-implementation-summary.md`, `00-worktree.md`, `00-requirements.md`
 - `.recursive/DECISIONS.md`
@@ -85,12 +89,12 @@ Reviewed Subagent Action Records: none
 
 - Locked `05-manual-qa.md`, `04-test-summary.md`, `03-implementation-summary.md`, `00-worktree.md`, `00-requirements.md`
 - `.recursive/DECISIONS.md`
-- No Phase 6 addenda
+- Phase 5 post-lock addendum `addenda/05-manual-qa.pi-kw-inject-e2e.addendum-01.md` (authoritative for live `pi` inject)
 
 ## Earlier Phase Reconciliation
 
 - Diff basis unchanged from locked `00-worktree.md` (private baseline `b34691c376f7b267b2dcdf048ea5b5b17e06115b`)
-- Phase 5 M1–M8 PASS preserved; Phase 6 records soft-closes in the ledger only
+- Phase 5 M1–M8 PASS preserved; post-lock live `pi` inject E2E PASS folded into DECISIONS; Phase 6 records soft-closes + remediations in the ledger only
 - STATE.md and memory intentionally untouched (Phase 7/8 ownership)
 
 ## Prior Recursive Evidence Reviewed
@@ -122,7 +126,7 @@ Reviewed Subagent Action Records: none
 
 ## Repair Work Performed
 
-None in Phase 6.
+Reopened Phase 6 after post-lock Phase 5 addendum; amended DECISIONS run-85 entry for live `pi` inject E2E + host wiring remediations; no product code in this phase.
 
 ## Requirement Completion Status
 
@@ -147,7 +151,7 @@ None in Phase 6.
 - `R19 | Status: verified | Changed Files: .recursive/DECISIONS.md | Implementation Evidence: .recursive/DECISIONS.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/05-manual-qa.md`
 - `R20 | Status: verified | Changed Files: .recursive/DECISIONS.md | Implementation Evidence: .recursive/DECISIONS.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/05-manual-qa.md`
 - `R21 | Status: verified | Changed Files: .recursive/DECISIONS.md | Implementation Evidence: .recursive/DECISIONS.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/05-manual-qa.md`
-- `R22 | Status: verified | Changed Files: .recursive/DECISIONS.md | Implementation Evidence: .recursive/DECISIONS.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/05-manual-qa.md`
+- `R22 | Status: verified | Changed Files: .recursive/DECISIONS.md | Implementation Evidence: .recursive/DECISIONS.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/05-manual-qa.md; .recursive/run/85-kw-gated-router-prompt-inject/addenda/05-manual-qa.pi-kw-inject-e2e.addendum-01.md; .recursive/run/85-kw-gated-router-prompt-inject/evidence/other/pi-kw-inject-e2e.json`
 - `R23 | Status: verified | Changed Files: .recursive/DECISIONS.md | Implementation Evidence: .recursive/DECISIONS.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/04-test-summary.md`
 - `R24 | Status: verified | Changed Files: .recursive/DECISIONS.md | Implementation Evidence: .recursive/DECISIONS.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/evidence/binder.json`
 - `R25 | Status: verified | Changed Files: .recursive/DECISIONS.md | Implementation Evidence: .recursive/DECISIONS.md | Verification Evidence: .recursive/run/85-kw-gated-router-prompt-inject/06-decisions-update.md`
@@ -155,7 +159,7 @@ None in Phase 6.
 
 ## Audit Verdict
 
-- Summary: DECISIONS ledger updated with run 85 entry and run-84 inject soft-close. Ready to lock Phase 6.
+- Summary: DECISIONS ledger updated with run 85 entry, run-84 inject soft-close, and post-lock live `pi` inject remediations/addendum. Ready to re-lock Phase 6.
 - Audit: PASS
 
 ## Coverage Gate

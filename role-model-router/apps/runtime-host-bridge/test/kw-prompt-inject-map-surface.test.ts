@@ -6,11 +6,11 @@ import type { EndpointRegistryResult } from "@role-model-router/endpoint-registr
 import { describe, expect, test } from "vitest";
 
 import { mapChatCompletionsRequest } from "../src/index.js";
+import { createPrivateKwJoinWorkerFactory } from "../src/kw-private-loader.js";
 import {
   clearKwPromptInjectSessionsForTests,
   registerKwPromptInjectSession,
 } from "../src/kw-prompt-inject.js";
-import { createPrivateKwJoinWorkerFactory } from "../src/kw-private-loader.js";
 import { setKwJoinWorkerFactory } from "../src/track-b-operations.js";
 
 const distributionRoot =
@@ -145,7 +145,8 @@ describe("mapChatCompletionsRequest KW inject locked surface", () => {
       },
     });
     const worker = await factory("map-85");
-    registerKwPromptInjectSession("map-85", worker!);
+    if (!worker) throw new Error("expected KW join worker for map-85");
+    registerKwPromptInjectSession("map-85", worker);
 
     const on = mapChatCompletionsRequest(
       registry,
@@ -173,7 +174,7 @@ describe("mapChatCompletionsRequest KW inject locked surface", () => {
     expect(String(onMessages[0]?.content)).toContain("ROLE_MODEL_KW_PROMPT_INJECT_V1");
     expect(String(onMessages[0]?.content)).toContain("prefer verified evidence");
 
-    worker!.deactivate?.({
+    worker.deactivate?.({
       deactivationPolicyVersion: 1,
       operatorAttestation: "deactivate-production",
     });

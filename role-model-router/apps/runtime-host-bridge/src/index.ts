@@ -118,11 +118,11 @@ import {
   parseAndSanitizeControllerRoutingGuidance,
 } from "./controller-routing-contract.js";
 import { createDownstreamOpenAIDiscovery } from "./downstream-openai-discovery.js";
-import { applyKwPromptInjectToMessagesSync } from "./kw-prompt-inject.js";
 import {
   deriveDefaultKwPromptInjectQuery,
   withKwProductionAutoArm,
 } from "./kw-prompt-inject-host.js";
+import { applyKwPromptInjectToMessagesSync } from "./kw-prompt-inject.js";
 import { resolveModelCapabilityProfile } from "./model-capability-resolver.js";
 import {
   filterEndpointsByCapabilityRequirements,
@@ -4631,9 +4631,8 @@ function readBridgeExecutionRequestOptions(
           ...(clientRequestId ? { clientRequestId } : {}),
           ...(transportPreferenceHeader
             ? {
-                transportPreference: parseRuntimeTransportPreferenceHeader(
-                  transportPreferenceHeader,
-                ),
+                transportPreference:
+                  parseRuntimeTransportPreferenceHeader(transportPreferenceHeader),
               }
             : {}),
           ...(routingModeOverrideHeader

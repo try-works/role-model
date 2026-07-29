@@ -15,12 +15,10 @@ import {
   resolveBridgeServerOptions,
   startBridgeServer,
 } from "./index.js";
+import { createPrivateKwJoinWorkerFactory } from "./kw-private-loader.js";
+import { configureKwPromptInjectHost } from "./kw-prompt-inject-host.js";
 import { readPackagedRuntimeProfile } from "./runtime-channel.js";
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
-import {
-  createPrivateKwJoinWorkerFactory,
-} from "./kw-private-loader.js";
-import { configureKwPromptInjectHost } from "./kw-prompt-inject-host.js";
 import { setKwJoinWorkerFactory } from "./track-b-operations.js";
 import {
   createOwnedTrackBSidecarSpec,
@@ -800,8 +798,13 @@ export async function main(): Promise<void> {
       }
       const distributionRoot = path.dirname(trackBManifestPath);
       const trackBStateRoot = path.join(options.runtimeStateRoot, options.scopeId, "track-b");
+      // Must match createTrackBOperations statePath (scope root), not trackBStateRoot/extensions.
       configureKwPromptInjectHost({
-        bridgeStatePath: path.join(trackBStateRoot, "track-b-production-bridge.json"),
+        bridgeStatePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
       });
       setKwJoinWorkerFactory(
         createPrivateKwJoinWorkerFactory({

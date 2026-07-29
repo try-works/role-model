@@ -9,7 +9,7 @@
 - `82-tb00-pin-refreeze-kw-digest-bind-launch-scope` - TB00 private pin re-freeze + live-e2e coherence, digest-bound KW activation, parameterized packaged launch `--scope-id`, Phase 5 rebuilt-runtime API hop on `run82-dev` (Phases 0-8). Folder: `.recursive/run/82-tb00-pin-refreeze-kw-digest-bind-launch-scope/`. Soft-closes run 81 residuals F1 (digest bind) and F3 (launch scope hardcode), and restores pin-freeze/TB11 CI honesty.
 - `83-kw-operator-toggle-assemble-live-e2e-argv-equals` - KW shadow-ready default + soft OFF + ceremony-retained ON, equals-form launch argv, evidence-root fail-closed, full Playwright assemble + private pin tip `3d6c4f7`, Phase 5 hops on `run83-dev` (Phases 0-8). Folder: `.recursive/run/83-kw-operator-toggle-assemble-live-e2e-argv-equals/`. Soft-closes run 82 equals-form argv residual and optional full Playwright assemble follow-up.
 - `84-kw-ui-toggle-gated-retrieve-eval` - Extensions UI Prepare/ON/Soft OFF + host mutate actions, production retrieve gate + first-party eval consumer, durable session activation, repaired full Playwright assemble, Phase 5 hops on `run84-dev` (Phases 0-8). Folder: `.recursive/run/84-kw-ui-toggle-gated-retrieve-eval/`. Soft-closes run 83 deferred Extensions UI control gap and records gated production retrieve usefulness.
-- `85-kw-gated-router-prompt-inject` - Gated live-router production prompt inject when KW ceremony ON + production retrieve PASS; host join/auto-arm; honesty/export unlock; Phase 5 SEA inject hop + live `--track=dev` + live `pi` (Phases 0-8). Folder: `.recursive/run/85-kw-gated-router-prompt-inject/`. Soft-closes run 84 deferred full live-router inject (`OOS3`/`E6`) and honesty “remains locked” for gated inject only.
+- `85-kw-gated-router-prompt-inject` - Gated live-router production prompt inject when KW ceremony ON + production retrieve PASS; host join/auto-arm; honesty/export unlock; Phase 5 SEA inject hop + live `--track=dev` + live `pi`; post-lock live `pi`→KW inject→storage E2E + host wiring remediations (Phases 0-8). Folder: `.recursive/run/85-kw-gated-router-prompt-inject/`. Soft-closes run 84 deferred full live-router inject (`OOS3`/`E6`) and honesty "remains locked" for gated inject only.
 
 ## Run: `85-kw-gated-router-prompt-inject`
 
@@ -20,19 +20,22 @@ Date: `2026-07-29`
 - Unlocks **gated** live-router production prompt injection under ceremony-backed KW ON + successful gated production retrieve; OFF / soft-OFF and join/retrieve failures refuse with FD31 codes; soft OFF clears inject idempotently.
 - Private KW: inject contract v1, bounded payload, receipts, `productionPromptInjection` export unlock when contract satisfied, capability `knowledge:prompt-inject`, tip-safety retention, axis independence vs retrieve/eval.
 - Public host: join factory loads packaged private KW; durable auto-arm from Track B production bridge; insertion only via `applyRequestedRoleExecutionPolicy` / `mapChatCompletionsRequest` (never client-trusted activation).
-- Honesty/UI/status/probe/contracts updated so inject is no longer claimed “remains locked” / hard-false forever after unlock.
-- Private pin advanced to `726df64d241ba03eb34eed35f1785a3963ba0057`; public freeze pin leave-as-is `b03d82a2fe8adc317c9fdaecad838beac3ed74a8`; full Playwright assemble + TB11/system-proof PASS.
-- Phase 5 agent-operated on rebuilt SEA sha `caa7c9e7a8a0c3ef57a0aaf801d97cd1021817db1443d4d8d7e5e4f97806b424` (`run85-dev`): SEA inject OFF→ON→soft-OFF hop, packaged probe, live `--track=dev` recommendation apply/dismiss, live `pi` storage correctness; binder `secretsOmitted: true`.
+- Honesty/UI/status/probe/contracts updated so inject is no longer claimed "remains locked" / hard-false forever after unlock.
+- Private pin advanced to `726df64d241ba03eb34eed35f1785a3963ba0057`, then ship-rebound to `39b56d41d60f703f766f71397ba7c76cd68c8254` for closeout scripts + live-e2e revision honesty; public freeze pin leave-as-is `b03d82a2fe8adc317c9fdaecad838beac3ed74a8`; full Playwright assemble + TB11/system-proof PASS.
+- Phase 5 agent-operated on initial rebuilt SEA sha `caa7c9e7a8a0c3ef57a0aaf801d97cd1021817db1443d4d8d7e5e4f97806b424` (`run85-dev`): SEA inject OFF→ON→soft-OFF hop, packaged probe, live `--track=dev` recommendation apply/dismiss, live `pi` storage correctness; binder `secretsOmitted: true`.
+- **Post-lock Phase 5 addendum** (`addenda/05-manual-qa.pi-kw-inject-e2e.addendum-01.md`): live `pi` → KW ON → inject on provider capture → storage PASS on SEA sha `1a3ff1ea09cb03b446a31473e261bf89ec51bdf3f1ff0eea770b7f0f05c93795`; evidence `evidence/other/pi-kw-inject-e2e.json`.
+- **Post-lock host remediations required for live inject** (public `runtime-host-bridge`, uncommitted until ship): (1) default bounded retrieve query from latest user message when durable KW ON; (2) auto-arm reads the same bridge path mutate writes (`{stateRoot}/{scopeId}/track-b-production-bridge.json`); (3) KW join session id uses next bridge revision (`state.revision + 1`) so activate registration matches auto-arm lookup; (4) auto-arm uses host-owned durable join session (not client `x-session-id`).
 - Server change `not-required`; `publicChange: required`.
 - Dual in-parent worktrees under `.worktrees/` on branch `recursive/85-kw-gated-router-prompt-inject`.
 
 ### Why
 
-- Soft-close run-84 deferred full live-router production prompt-injection residual (`OOS3`/`E6`) and the honesty/export “remains locked” claim for the gated inject contract defined here—without ambient ON, ceremony removal, or training unlock.
+- Soft-close run-84 deferred full live-router production prompt-injection residual (`OOS3`/`E6`) and the honesty/export "remains locked" claim for the gated inject contract defined here—without ambient ON, ceremony removal, or training unlock.
+- Closeout Phases 6–8 reopened after post-lock live `pi` inject E2E so decisions/state/memory record the host wiring fixes that made the full chain true.
 
 ### How
 
-- Strict TDD (private TB10/probe + public host map/join/auto-arm); rebuilt SEA with Track B distribution; agent-operated Phase 5; serial Phase 6–8 after real work; dual-repo feature branches `recursive/85-kw-gated-router-prompt-inject`.
+- Strict TDD (private TB10/probe + public host map/join/auto-arm); rebuilt SEA with Track B distribution; agent-operated Phase 5; post-lock live `pi` inject E2E + host wiring TDD; reopen/re-lock Phases 6–8 with addendum folded in; dual-repo feature branches `recursive/85-kw-gated-router-prompt-inject`.
 
 ### What was not done (OOS)
 
@@ -45,12 +48,12 @@ Date: `2026-07-29`
 ### Soft-close of prior decision
 
 - Soft-closes run `84-kw-ui-toggle-gated-retrieve-eval` deferred full live-router production prompt injection (`OOS3`/`E6`) **for gated inject only**.
-- Soft-closes honesty/export residual that production prompt injection “remains locked” / hard-false forever **after** gated unlock proven.
+- Soft-closes honesty/export residual that production prompt injection "remains locked" / hard-false forever **after** gated unlock proven.
 - Does **not** soft-close training unlock, ambient on, ceremony removal, or stage/main promotion.
 
 ### Known issues / follow-ups
 
-- Feature-branch merge to origin `dev` is operator-requested (`R26` ship/merge).
+- Feature-branch merge to origin `dev` is operator-requested (`R26` ship/merge); public host wiring remediations for live inject remain on the feature branch until that ship.
 - Training/GRPO unlock and ambient ON remain explicit future runs.
 
 ### Artifact references
@@ -62,6 +65,8 @@ Date: `2026-07-29`
 - `.recursive/run/85-kw-gated-router-prompt-inject/03-implementation-summary.md`
 - `.recursive/run/85-kw-gated-router-prompt-inject/04-test-summary.md`
 - `.recursive/run/85-kw-gated-router-prompt-inject/05-manual-qa.md`
+- `.recursive/run/85-kw-gated-router-prompt-inject/addenda/05-manual-qa.pi-kw-inject-e2e.addendum-01.md`
+- `.recursive/run/85-kw-gated-router-prompt-inject/evidence/other/pi-kw-inject-e2e.json`
 - `.recursive/run/85-kw-gated-router-prompt-inject/evidence/binder.json`
 
 ## Run: `84-kw-ui-toggle-gated-retrieve-eval`

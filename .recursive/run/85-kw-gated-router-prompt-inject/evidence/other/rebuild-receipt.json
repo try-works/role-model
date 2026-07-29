@@ -1,11 +1,11 @@
 {
   "schemaVersion": "role-model.run85.rebuild-receipt.v1",
-  "packagedAt": "2026-07-28T22:05:51.505Z",
+  "packagedAt": "2026-07-29T11:55:06.0991922Z",
   "scopeId": "run85-dev",
   "sea": {
     "path": "role-model-router/dist/release/win32-x64/role-model-dev.exe",
-    "sha256": "caa7c9e7a8a0c3ef57a0aaf801d97cd1021817db1443d4d8d7e5e4f97806b424",
-    "sizeBytes": 100244992,
+    "sha256": "7102a77b815c4a273dcb984743317c24a0cd16153ec5fbd077ae5553fdc96e09",
+    "sizeBytes": 100246016,
     "target": "win32-x64"
   },
   "privateDistribution": {
@@ -20,6 +20,10 @@
     }
   },
   "notes": [
-    "Phase 5 SEA after kw-private-loader, setKwJoinWorkerFactory, and durable auto-arm wiring."
+    "Phase 5 SEA after kw-private-loader, setKwJoinWorkerFactory, and durable auto-arm wiring.",
+    "Post-lock E2E: host default inject query derivation for live pi path",
+    "Post-lock E2E rebuild: default inject query + host-owned KW join session",
+    "Post-lock E2E: bridge path align + KW join session uses next revision",
+    "Pre-ship: refresh SEA sha after biome format of host inject remediations"
   ]
 }

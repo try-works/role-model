@@ -45,7 +45,8 @@ Keep this file concise. Link to child docs instead of duplicating them.
 - `/.recursive/memory/skills/issues/anticipatory-phase-docs.md`
 - `/.recursive/memory/skills/issues/launch-packaged-runtime-argv-equals.md` (equals-form binds; foreign scopes require `--evidence-root`; Source-Runs include run 83)
 - `/.recursive/memory/skills/issues/worktree-must-be-in-parent.md` (private feature worktrees stay under parent `.worktrees/`; Source-Runs include run 84)
-- `/.recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md` (SEA inject unlock needs host join/auto-arm + matching seed scope; Source-Runs include run 85)
+- `/.recursive/memory/skills/issues/sea-inject-host-join-and-seed-scope.md` (SEA inject unlock needs host join/auto-arm + matching seed scope + live query/bridge/join alignment; Source-Runs include run 85)
+- `/.recursive/memory/skills/issues/kw-inject-live-host-wiring.md` (Live KW inject host wiring: default query, bridge path, revision join, host-owned session; Source-Runs include run 85)
 
 - `/.recursive/memory/skills/usage/skill-discovery-and-evaluation.md`
 - `/.recursive/memory/skills/patterns/delegated-verification-and-refresh.md`

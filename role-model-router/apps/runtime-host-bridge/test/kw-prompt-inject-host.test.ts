@@ -27,7 +27,9 @@ describe("kw-prompt-inject-host default inject query", () => {
   });
 
   test("returns undefined when no searchable user terms exist", () => {
-    expect(deriveDefaultKwPromptInjectQuery([{ role: "assistant", content: "hi" }])).toBeUndefined();
+    expect(
+      deriveDefaultKwPromptInjectQuery([{ role: "assistant", content: "hi" }]),
+    ).toBeUndefined();
     expect(deriveDefaultKwPromptInjectQuery([{ role: "user", content: "!!!" }])).toBeUndefined();
   });
 });

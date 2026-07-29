@@ -1,6 +1,6 @@
 {
   "status": "PASS",
-  "pid": 28140,
+  "pid": 27428,
   "identity": {
     "runtimeKind": "packaged-track-b-distribution",
     "packagedArtifactsExecuted": true,
@@ -22,8 +22,8 @@
     "trustFile": "D:\\DEV\\role-model-internal\\.worktrees\\85-kw-gated-router-prompt-inject\\.recursive\\run\\00-direct-track-b-v1-1-implementation\\evidence\\remediation-proposal-2026-07-23\\cloud-local\\destination-auth-secret.json",
     "publicRoot": "D:\\DEV\\role-model\\.worktrees\\85-kw-gated-router-prompt-inject",
     "privateRoot": "D:\\DEV\\role-model-internal\\.worktrees\\85-kw-gated-router-prompt-inject",
-    "startedAt": "2026-07-28T23:18:23.936Z"
+    "startedAt": "2026-07-29T00:58:33.994Z"
   },
   "stdoutTail": "{\n  \"status\": \"listening\",\n  \"host\": \"127.0.0.1\",\n  \"port\": 34585\n}\n",
-  "stderrTail": "(node:1044) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\n"
+  "stderrTail": "(node:12532) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\n"
 }
