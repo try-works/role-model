@@ -1,0 +1,11 @@
+{
+  "artifact": "00-worktree.md",
+  "artifact_hash": "eef086a945b020b34a79095813b49670e6cc8c30901f02a1131efcbe1eb2c752",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\86-runtime-ui-rm3-design-system-frontend\\.recursive\\run\\86-runtime-ui-rm3-design-system-frontend\\00-worktree.md",
+  "locked_at": "2026-07-30T13:07:13Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "ceaec347c5a39c239e39efeb1ff321cacf219d9993686857e974b1beb46fe03d"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "adf328f5ce6079c287adbd33edf89c089adaace2abf7de7528078f9a58ba2f3f"
+}
