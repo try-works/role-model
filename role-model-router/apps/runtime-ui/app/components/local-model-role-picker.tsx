@@ -1,10 +1,9 @@
-import { type MouseEvent, useCallback, useId } from "react";
+import { type MouseEvent, useEffect, useId, useState } from "react";
 import { Link } from "react-router";
 
 import {
   bodyStrongTextClassName,
   bodyTextClassName,
-  inlineLinkClassName,
   modalEyebrowClassName,
   mutedPanelClassName,
   navLabelClassName,
@@ -14,7 +13,8 @@ import type {
   RuntimeRolePolicy,
   RuntimeRolePolicyRole,
 } from "../lib/runtime-api";
-import { StatusPill } from "./page-primitives";
+import { CheckboxControl } from "./checkbox-control";
+import { Badge } from "./page-primitives";
 
 export function getLocalModelRolePickerState({
   roleIds,
@@ -88,6 +88,29 @@ export function getNextRoleSelectionForGroup({
   return allRoleIds.filter((roleId) => next.has(roleId));
 }
 
+/** Snapshot which groups start expanded from explicit selection (mount only). */
+export function getInitiallyExpandedRoleGroups({
+  roles,
+  selectedRoleIds,
+  expandSelectedGroupsByDefault,
+}: {
+  readonly roles: readonly RuntimeRolePolicyRole[];
+  readonly selectedRoleIds: readonly string[];
+  readonly expandSelectedGroupsByDefault: boolean;
+}): Record<string, boolean> {
+  if (!expandSelectedGroupsByDefault || selectedRoleIds.length === 0) {
+    return {};
+  }
+  const selected = new Set(selectedRoleIds);
+  const open: Record<string, boolean> = {};
+  for (const role of roles) {
+    if (!selected.has(role.role_id)) continue;
+    const groupId = role.primaryGroupId ?? "ungrouped";
+    open[groupId] = true;
+  }
+  return open;
+}
+
 function MixedStateCheckbox({
   id,
   checked,
@@ -103,27 +126,16 @@ function MixedStateCheckbox({
   readonly mixed?: boolean;
   readonly ariaLabel?: string;
   readonly onChange?: () => void;
-  readonly onClick?: (event: MouseEvent<HTMLInputElement>) => void;
+  readonly onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
 }) {
-  const setMixedRef = useCallback(
-    (node: HTMLInputElement | null) => {
-      if (node) {
-        node.indeterminate = mixed;
-      }
-    },
-    [mixed],
-  );
-
   return (
-    <input
+    <CheckboxControl
       id={id}
-      ref={setMixedRef}
-      type="checkbox"
-      className="mt-0"
       checked={checked}
-      aria-checked={mixed ? "mixed" : checked}
-      aria-label={ariaLabel}
+      mixed={mixed}
       disabled={disabled}
+      aria-label={ariaLabel}
+      className="mt-0"
       onChange={onChange}
       onClick={onClick}
     />
@@ -147,16 +159,31 @@ export function LocalModelRolePicker({
   expandSelectedGroupsByDefault?: boolean;
   benchmarkCapability?: BenchmarkCapability | null;
 }) {
+  const [clearedDefaultAll, setClearedDefaultAll] = useState(false);
   const roles = rolePolicy?.roleDefinitions ?? [];
+  const [openByGroupId, setOpenByGroupId] = useState<Record<string, boolean>>(() =>
+    getInitiallyExpandedRoleGroups({
+      roles,
+      selectedRoleIds,
+      expandSelectedGroupsByDefault,
+    }),
+  );
   const allRoleIds = roles.map((role) => role.role_id);
-  const explicitlySelectedRoleIds = new Set(selectedRoleIds);
+  // Empty + defaultAllRoles means "all" until the operator clears All roles once.
+  const effectiveDefaultAllRoles = defaultAllRoles && !clearedDefaultAll;
   const pickerState = getLocalModelRolePickerState({
     roleIds: allRoleIds,
     selectedRoleIds,
-    defaultAllRoles,
+    defaultAllRoles: effectiveDefaultAllRoles,
   });
   const selected = new Set(pickerState.selectedRoleIds);
   const allSelected = pickerState.allSelected;
+
+  useEffect(() => {
+    if (selectedRoleIds.length > 0) {
+      setClearedDefaultAll(false);
+    }
+  }, [selectedRoleIds]);
 
   const groupLabel = (groupId: string): string =>
     groupId
@@ -202,25 +229,39 @@ export function LocalModelRolePicker({
           allRoleIds,
           groupRoleIds,
           selectedRoleIds,
-          defaultAllRoles,
+          defaultAllRoles: effectiveDefaultAllRoles,
         }),
       ),
     );
   };
 
   const toggleAllRoles = () => {
-    onChange(allSelected ? [] : allRoleIds);
+    if (allSelected) {
+      setClearedDefaultAll(true);
+      onChange([]);
+      return;
+    }
+    setClearedDefaultAll(false);
+    onChange(allRoleIds);
   };
 
   return (
-    <div className={`${mutedPanelClassName} space-y-3 p-4`}>
+    <div className={`${mutedPanelClassName} space-y-3 rounded-[var(--rm-radius-field)] p-4`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className={modalEyebrowClassName}>Runtime roles</p>
-        <Link to="/app/models/roles" className={inlineLinkClassName}>
+        <p className="font-sans text-xs uppercase leading-4 tracking-[0.04em] text-foreground">
+          Runtime roles
+        </p>
+        <Link
+          to="/app/models/roles"
+          className="font-sans text-xs leading-4 text-foreground underline-offset-2"
+          style={{ textDecoration: "underline" }}
+        >
           Manage role definitions
         </Link>
       </div>
-      <p className={bodyTextClassName}>Roles control which routing tasks can select this model.</p>
+      <p className="font-sans text-xs font-normal leading-4 text-foreground">
+        All roles are selected by default. Deselect any roles this model should not serve.
+      </p>
       {roles.length === 0 ? (
         <p className={bodyTextClassName}>No runtime roles are defined yet.</p>
       ) : (
@@ -247,36 +288,34 @@ export function LocalModelRolePicker({
                 selectedRoleIds: pickerState.selectedRoleIds,
               });
               const selectedCount = groupState.selectedRoleIds.length;
-              const explicitSelectionCount = groupRoles.filter((role) =>
-                explicitlySelectedRoleIds.has(role.role_id),
-              ).length;
-              const defaultOpen = expandSelectedGroupsByDefault && explicitSelectionCount > 0;
               const label = groupLabel(groupId);
+              const isOpen = openByGroupId[groupId] === true;
 
               return (
                 <details
                   key={groupId}
-                  open={defaultOpen}
+                  open={isOpen}
+                  onToggle={(event) => {
+                    const nextOpen = event.currentTarget.open;
+                    setOpenByGroupId((current) => ({ ...current, [groupId]: nextOpen }));
+                  }}
                   className="overflow-hidden rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)]"
                 >
                   <summary className="group flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2 [&::-webkit-details-marker]:hidden">
                     <span className="flex min-w-0 items-center gap-2.5">
-                      <input
-                        readOnly
-                        type="checkbox"
-                        className="mt-0 shrink-0"
+                      <CheckboxControl
                         checked={groupState.allSelected}
-                        ref={(node) => {
-                          if (node) {
-                            node.indeterminate = groupState.partiallySelected;
-                          }
-                        }}
-                        aria-checked={
-                          groupState.partiallySelected ? "mixed" : groupState.allSelected
-                        }
+                        mixed={groupState.partiallySelected}
                         aria-label={`Select ${label} roles`}
                         disabled={disabled}
+                        className="mt-0"
+                        onPointerDown={(event) => {
+                          // Some browsers toggle <details> on pointerdown before click.
+                          event.preventDefault();
+                          event.stopPropagation();
+                        }}
                         onClick={(event) => {
+                          // Keep summary from toggling expand/collapse on checkbox hit.
                           event.preventDefault();
                           event.stopPropagation();
                           toggleRoleGroup(groupRoleIds);
@@ -304,42 +343,38 @@ export function LocalModelRolePicker({
                         <label
                           className={`flex cursor-pointer items-start gap-2.5 ${bodyTextClassName} text-[var(--rm-fg)]`}
                         >
-                          <input
-                            type="checkbox"
-                            className="mt-1"
+                          <CheckboxControl
                             checked={selected.has(role.role_id)}
                             disabled={disabled}
+                            className="mt-1"
+                            aria-label={role.name}
                             onChange={() => toggleRole(role.role_id)}
                           />
                           <span>
                             <span className="flex flex-wrap items-center gap-2">
                               <span className={bodyStrongTextClassName}>{role.name}</span>
-                              {isHighRiskRole(role) ? (
-                                <StatusPill className={modalEyebrowClassName} tone="warning">
-                                  High risk
-                                </StatusPill>
-                              ) : null}
+                              {isHighRiskRole(role) ? <Badge tone="error">High risk</Badge> : null}
                               {typeof benchmarkCapability?.eligibleRoleScores?.[role.role_id] ===
                               "number" ? (
-                                <StatusPill className={modalEyebrowClassName} tone="accent">
+                                <Badge className={modalEyebrowClassName} tone="accent">
                                   Benchmarked{" "}
                                   {formatBenchmarkPercent(
                                     benchmarkCapability.eligibleRoleScores[role.role_id] ?? 0,
                                   )}
-                                </StatusPill>
+                                </Badge>
                               ) : typeof benchmarkCapability?.roleScores?.[role.role_id] ===
                                 "number" ? (
-                                <StatusPill className={modalEyebrowClassName} tone="neutral">
+                                <Badge className={modalEyebrowClassName} tone="neutral">
                                   Unassigned evidence{" "}
                                   {formatBenchmarkPercent(
                                     benchmarkCapability.roleScores[role.role_id] ?? 0,
                                   )}
-                                </StatusPill>
+                                </Badge>
                               ) : null}
                               {lowCoverageRoleIds.has(role.role_id) ? (
-                                <StatusPill className={modalEyebrowClassName} tone="warning">
+                                <Badge className={modalEyebrowClassName} tone="warning">
                                   Low coverage
-                                </StatusPill>
+                                </Badge>
                               ) : null}
                             </span>
                             {role.secondaryGroupIds && role.secondaryGroupIds.length > 0 ? (
@@ -367,6 +402,141 @@ export function LocalModelRolePicker({
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * Compact role toggle pills for Local register/load rows (Paper Local specimens).
+ * Selected roles render as pills; unselected stay behind an Add control so the
+ * row never becomes a full role-chip wall. Full accordion `LocalModelRolePicker`
+ * remains for Remote CardStack expanders.
+ */
+export function CompactRolePills({
+  rolePolicy,
+  selectedRoleIds,
+  onChange,
+  disabled = false,
+  defaultAllRoles = true,
+}: {
+  rolePolicy: RuntimeRolePolicy | null;
+  selectedRoleIds: readonly string[];
+  onChange: (roleIds: readonly string[]) => void;
+  disabled?: boolean;
+  defaultAllRoles?: boolean;
+}) {
+  const [clearedDefaultAll, setClearedDefaultAll] = useState(false);
+  const roles = rolePolicy?.roleDefinitions ?? [];
+  const allRoleIds = roles.map((role) => role.role_id);
+  const effectiveDefaultAllRoles = defaultAllRoles && !clearedDefaultAll;
+  const pickerState = getLocalModelRolePickerState({
+    roleIds: allRoleIds,
+    selectedRoleIds,
+    defaultAllRoles: effectiveDefaultAllRoles,
+  });
+  const selected = new Set(pickerState.selectedRoleIds);
+  const selectedRoles = roles.filter((role) => selected.has(role.role_id));
+  const unselectedRoles = roles.filter((role) => !selected.has(role.role_id));
+
+  useEffect(() => {
+    if (selectedRoleIds.length > 0) {
+      setClearedDefaultAll(false);
+    }
+  }, [selectedRoleIds]);
+
+  const toggleRole = (roleId: string) => {
+    const next = new Set(selected);
+    if (next.has(roleId)) {
+      next.delete(roleId);
+    } else {
+      next.add(roleId);
+    }
+    onChange([...next].sort((left, right) => left.localeCompare(right, "en")));
+  };
+
+  if (roles.length === 0) {
+    return <p className={bodyTextClassName}>No runtime roles are defined yet.</p>;
+  }
+
+  if (pickerState.allSelected) {
+    return (
+      <div className="flex flex-wrap items-center gap-1.5">
+        <button
+          type="button"
+          disabled={disabled}
+          aria-pressed
+          onClick={() => {
+            setClearedDefaultAll(true);
+            onChange([]);
+          }}
+          className="inline-flex h-7 items-center rounded-md border border-[var(--rm-border-strong)] bg-[var(--rm-panel)] px-2.5 font-mono text-[11px] leading-4 text-[var(--rm-fg)] transition"
+        >
+          All roles
+        </button>
+        <span className={`${navLabelClassName} text-[var(--rm-muted)]`}>
+          {roles.length} selected · click to clear
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {selectedRoles.map((role) => (
+        <button
+          key={role.role_id}
+          type="button"
+          disabled={disabled}
+          aria-pressed
+          onClick={() => toggleRole(role.role_id)}
+          className="inline-flex h-7 items-center rounded-md border border-[var(--rm-border-strong)] bg-[var(--rm-panel)] px-2.5 font-mono text-[11px] leading-4 text-[var(--rm-fg)] transition"
+        >
+          {role.role_id}
+        </button>
+      ))}
+      {unselectedRoles.length > 0 ? (
+        <details className="relative">
+          <summary
+            className={[
+              "inline-flex h-7 list-none cursor-pointer items-center rounded-md border border-dashed border-[var(--rm-border)] px-2.5 font-mono text-[11px] leading-4 text-[var(--rm-muted)] transition marker:content-none hover:text-[var(--rm-fg)]",
+              disabled ? "pointer-events-none opacity-50" : "",
+            ].join(" ")}
+          >
+            + Add role
+          </summary>
+          <div
+            className={`${mutedPanelClassName} absolute left-0 z-20 mt-1 flex max-h-48 min-w-[12rem] flex-col gap-1 overflow-y-auto p-2`}
+          >
+            {unselectedRoles.map((role) => (
+              <button
+                key={role.role_id}
+                type="button"
+                disabled={disabled}
+                onClick={() => {
+                  setClearedDefaultAll(false);
+                  toggleRole(role.role_id);
+                }}
+                className="rounded-sm px-2 py-1.5 text-left font-mono text-[11px] leading-4 text-[var(--rm-fg)] hover:bg-[var(--rm-panel)]"
+              >
+                {role.role_id}
+              </button>
+            ))}
+          </div>
+        </details>
+      ) : null}
+      {pickerState.noneSelected ? (
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => {
+            setClearedDefaultAll(false);
+            onChange(allRoleIds);
+          }}
+          className="inline-flex h-7 items-center rounded-md border border-dashed border-[var(--rm-border)] px-2.5 font-mono text-[11px] leading-4 text-[var(--rm-muted)] transition hover:text-[var(--rm-fg)]"
+        >
+          Select all roles
+        </button>
+      ) : null}
     </div>
   );
 }

@@ -1,21 +1,22 @@
+import { MetricStrip } from "@role-model/ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
+  Badge,
   EmptyState,
   ErrorState,
-  FactCard,
   LoadingState,
   SectionCard,
-  StatusPill,
 } from "../components/page-primitives";
 import {
   compactTitleClassName,
   fieldClassName,
+  fieldLabelClassName,
+  monoEyebrowClassName,
   mutedPanelClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
   supportingTextClassName,
-  utilityLabelClassName,
 } from "../lib/design-system";
 import {
   type RuntimeStorageRetentionSummary,
@@ -27,16 +28,46 @@ import {
   updateRetentionPolicy,
 } from "../lib/runtime-api";
 
+/** 1 GB = 10⁹ bytes. UI edits GB; API still stores maxBytes. */
+export const BYTES_PER_GB = 1_000_000_000;
+export const DEFAULT_MAX_GB = "1";
+
+export function bytesToGbInput(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes < 0) {
+    return DEFAULT_MAX_GB;
+  }
+  const gb = bytes / BYTES_PER_GB;
+  if (Number.isInteger(gb)) {
+    return String(gb);
+  }
+  return String(Number(gb.toFixed(6)));
+}
+
+export function gbInputToBytes(value: string): number | null {
+  const gb = Number(value);
+  if (!Number.isFinite(gb) || gb < 0) {
+    return null;
+  }
+  return Math.round(gb * BYTES_PER_GB);
+}
+
 export function StorageRetentionRouteView() {
   const [summary, setSummary] = useState<RuntimeStorageRetentionSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [maxBytes, setMaxBytes] = useState("104857600");
+  const [maxGb, setMaxGb] = useState(DEFAULT_MAX_GB);
   const [maxAgeDays, setMaxAgeDays] = useState("30");
   const load = useCallback(
     () =>
       fetchStorageRetention()
-        .then(setSummary)
+        .then((next) => {
+          setSummary(next);
+          const policy = next.policies[0];
+          if (policy) {
+            setMaxGb(bytesToGbInput(policy.maxBytes));
+            setMaxAgeDays(String(policy.maxAgeDays));
+          }
+        })
         .catch((value: unknown) => setError(message(value))),
     [],
   );
@@ -48,7 +79,13 @@ export function StorageRetentionRouteView() {
     setBusy(true);
     setError(null);
     try {
-      setSummary(await operation());
+      const next = await operation();
+      setSummary(next);
+      const policy = next.policies[0];
+      if (policy) {
+        setMaxGb(bytesToGbInput(policy.maxBytes));
+        setMaxAgeDays(String(policy.maxAgeDays));
+      }
     } catch (value) {
       setError(message(value));
     } finally {
@@ -59,78 +96,91 @@ export function StorageRetentionRouteView() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <FactCard
-          label="Tracked usage"
-          value={formatBytes(summary?.totalBytes ?? 0)}
-          detail="Graph content, compact ledgers, derived views, and archives."
-          emphasis
-        />
-        <FactCard
-          label="Data classes"
-          value={summary?.categories.length ?? 0}
-          detail="Category, tier, and scope remain independently visible."
-        />
-        <FactCard
-          label="Conflicts"
-          value={conflictCount}
-          detail="Legal holds, leases, and Managed policy blocks."
-        />
-        <FactCard
-          label="Maintenance"
-          value={summary?.activeJob?.status ?? "Idle"}
-          detail="Background-only compaction; routing is never interrupted."
-        />
-      </div>
+      <MetricStrip
+        aria-label="Storage retention summary"
+        variant="panel"
+        items={[
+          {
+            id: "usage",
+            label: "Tracked",
+            value: String(formatBytes(summary?.totalBytes ?? 0)),
+          },
+          {
+            id: "classes",
+            label: "Classes",
+            value: String(summary?.categories.length ?? 0),
+          },
+          { id: "conflicts", label: "Conflicts", value: String(conflictCount) },
+          {
+            id: "maintenance",
+            label: "Maintenance",
+            value: String(summary?.activeJob?.status ?? "Idle"),
+          },
+        ]}
+      />
       {error ? <ErrorState label={error} /> : null}
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]">
         <SectionCard
-          title="Usage by category, tier, and scope"
-          description="Policies downgrade capabilities explicitly before content becomes delete-eligible."
+          title="Usage by category"
+          description="Category, tier, and scope stay independently visible. Policies downgrade capabilities before content becomes delete-eligible."
         >
           {summary === null ? (
             <LoadingState label="Loading storage inventory…" />
           ) : summary.categories.length === 0 ? (
             <EmptyState label="No managed storage is present." />
           ) : (
-            <div className="space-y-3">
-              {summary.categories.map((row) => (
-                <div
-                  className={`${mutedPanelClassName} flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between`}
-                  key={`${row.id}:${row.scope}`}
-                >
-                  <div>
-                    <p className={compactTitleClassName}>{row.id}</p>
-                    <p className={`mt-1 ${supportingTextClassName}`}>
-                      {row.scope} · {row.count} records
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <StatusPill tone="neutral">{row.tier}</StatusPill>
-                    <StatusPill tone="info">{formatBytes(row.bytes)}</StatusPill>
-                  </div>
-                </div>
-              ))}
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead>
+                  <tr>
+                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Category</th>
+                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Scope</th>
+                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Tier</th>
+                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Records</th>
+                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Bytes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {summary.categories.map((row) => (
+                    <tr
+                      key={`${row.id}:${row.scope}`}
+                      className="border-t border-[var(--rm-border)]"
+                    >
+                      <td className={`py-3 ${compactTitleClassName}`}>{row.id}</td>
+                      <td className={`py-3 ${supportingTextClassName}`}>{row.scope}</td>
+                      <td className="py-3">
+                        <Badge tone="neutral">{row.tier}</Badge>
+                      </td>
+                      <td className={`py-3 ${supportingTextClassName}`}>{row.count}</td>
+                      <td className={`py-3 ${supportingTextClassName}`}>
+                        {formatBytes(row.bytes)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </SectionCard>
         <div className="space-y-4">
           <SectionCard
-            title="Retention policy editor"
-            description="Set scoped byte and age budgets. Managed policy remains authoritative."
+            title="Retention policy"
+            description="Scoped size and age budgets. Managed policy stays authoritative."
           >
             <div className="grid gap-3">
-              <label className={utilityLabelClassName}>
-                Maximum bytes
+              <label className={fieldLabelClassName}>
+                Maximum size (GB)
                 <input
                   className={`${fieldClassName} mt-1`}
+                  inputMode="decimal"
                   min="0"
-                  onChange={(event) => setMaxBytes(event.target.value)}
+                  onChange={(event) => setMaxGb(event.target.value)}
+                  step="any"
                   type="number"
-                  value={maxBytes}
+                  value={maxGb}
                 />
               </label>
-              <label className={utilityLabelClassName}>
+              <label className={fieldLabelClassName}>
                 Maximum age (days)
                 <input
                   className={`${fieldClassName} mt-1`}
@@ -143,16 +193,21 @@ export function StorageRetentionRouteView() {
               <button
                 className={secondaryButtonClassName}
                 disabled={busy || summary?.managedPolicy}
-                onClick={() =>
+                onClick={() => {
+                  const maxBytes = gbInputToBytes(maxGb);
+                  if (maxBytes === null) {
+                    setError("Maximum size must be a non-negative number of GB.");
+                    return;
+                  }
                   void act(() =>
                     updateRetentionPolicy({
                       policyId: "runtime-custom",
                       scope: "global",
-                      maxBytes: Number(maxBytes),
+                      maxBytes,
                       maxAgeDays: Number(maxAgeDays),
                     }),
-                  )
-                }
+                  );
+                }}
                 type="button"
               >
                 Save policy
@@ -193,45 +248,45 @@ export function StorageRetentionRouteView() {
                 </button>
               ) : null}
             </div>
-            {summary?.activeJob ? (
-              <div className={`${mutedPanelClassName} mt-3 p-3`}>
-                <p className={utilityLabelClassName}>Background progress</p>
-                <p className={`mt-1 ${supportingTextClassName}`}>
-                  {summary.activeJob.status} · {summary.activeJob.progress}%
-                </p>
-              </div>
-            ) : null}
+            <div className={`${mutedPanelClassName} mt-3 p-3`}>
+              <p className={fieldLabelClassName}>Background progress</p>
+              <p className={`mt-1 ${supportingTextClassName}`}>
+                {summary?.activeJob
+                  ? `${summary.activeJob.status} · ${summary.activeJob.progress}%`
+                  : "Idle · no active retention job"}
+              </p>
+            </div>
             {plan ? (
               <p className={`mt-3 ${supportingTextClassName}`}>
                 {plan.affectedCount} affected · {formatBytes(plan.estimatedBytes)} ·{" "}
                 {plan.rollbackAvailable ? "Rollback-safe" : "Rollback unavailable"}
               </p>
             ) : null}
-          </SectionCard>
-          <SectionCard
-            title="Conflicts and receipts"
-            description="Hash-bound manifests preserve deletion and privacy provenance without inline ID lists."
-          >
             {summary?.conflicts.length ? (
-              <div className="mb-3 space-y-2">
+              <div className="mt-3 space-y-2">
                 {summary.conflicts.map((row) => (
                   <div
                     className={`${mutedPanelClassName} p-3`}
                     key={`${row.serviceId ?? "global"}:${row.reason}`}
                   >
-                    <StatusPill tone="warning">Conflict</StatusPill>
+                    <Badge tone="warning">Conflict</Badge>
                     <p className={`mt-2 ${supportingTextClassName}`}>{row.reason}</p>
                   </div>
                 ))}
               </div>
-            ) : null}
+            ) : (
+              <p className={`mt-3 ${supportingTextClassName}`}>
+                No legal holds or Managed policy conflicts.
+              </p>
+            )}
             {summary?.receipts.length ? (
-              <div className="space-y-3">
+              <div className="mt-3 space-y-3">
+                <p className={fieldLabelClassName}>Conflicts and receipts</p>
                 {summary.receipts.map((receipt) => (
                   <div className={`${mutedPanelClassName} p-3`} key={receipt.id}>
                     <div className="flex items-center justify-between gap-3">
-                      <p className={utilityLabelClassName}>{receipt.id}</p>
-                      <StatusPill
+                      <p className={fieldLabelClassName}>{receipt.id}</p>
+                      <Badge
                         tone={
                           receipt.status === "completed" || receipt.status === "rolled_back"
                             ? "success"
@@ -239,7 +294,7 @@ export function StorageRetentionRouteView() {
                         }
                       >
                         {receipt.status}
-                      </StatusPill>
+                      </Badge>
                     </div>
                     <p className={`mt-2 ${supportingTextClassName}`}>
                       {receipt.affectedCount} affected ·{" "}
@@ -258,9 +313,7 @@ export function StorageRetentionRouteView() {
                   </div>
                 ))}
               </div>
-            ) : (
-              <EmptyState label="No pruning receipts yet." />
-            )}
+            ) : null}
           </SectionCard>
         </div>
       </div>

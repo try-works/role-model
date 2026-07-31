@@ -10,6 +10,68 @@
 - `83-kw-operator-toggle-assemble-live-e2e-argv-equals` - KW shadow-ready default + soft OFF + ceremony-retained ON, equals-form launch argv, evidence-root fail-closed, full Playwright assemble + private pin tip `3d6c4f7`, Phase 5 hops on `run83-dev` (Phases 0-8). Folder: `.recursive/run/83-kw-operator-toggle-assemble-live-e2e-argv-equals/`. Soft-closes run 82 equals-form argv residual and optional full Playwright assemble follow-up.
 - `84-kw-ui-toggle-gated-retrieve-eval` - Extensions UI Prepare/ON/Soft OFF + host mutate actions, production retrieve gate + first-party eval consumer, durable session activation, repaired full Playwright assemble, Phase 5 hops on `run84-dev` (Phases 0-8). Folder: `.recursive/run/84-kw-ui-toggle-gated-retrieve-eval/`. Soft-closes run 83 deferred Extensions UI control gap and records gated production retrieve usefulness.
 - `85-kw-gated-router-prompt-inject` - Gated live-router production prompt inject when KW ceremony ON + production retrieve PASS; host join/auto-arm; honesty/export unlock; Phase 5 SEA inject hop + live `--track=dev` + live `pi`; post-lock live `pi`→KW inject→storage E2E + host wiring remediations (Phases 0-8). Folder: `.recursive/run/85-kw-gated-router-prompt-inject/`. Soft-closes run 84 deferred full live-router inject (`OOS3`/`E6`) and honesty "remains locked" for gated inject only.
+- `86-runtime-ui-rm3-design-system-frontend` - RM v3 design system + `@role-model/ui` kit migration for router runtime-ui; Paper `4-0`/`5-0`/`6-0`/`7-0` IA; FD#15 config→strategy; SP8 floor green; hybrid Phase 5 QA on rebuilt `:3470` with human Paper sign-off; operator polish P1–P8 (Phases 0-8). Folder: `.recursive/run/86-runtime-ui-rm3-design-system-frontend/`. Soft-closes run `60-runtime-ui-paper-linear-review-alignment` as live styling authority for migrated surfaces (Linear/Paper-Linear historical).
+
+## Run: `86-runtime-ui-rm3-design-system-frontend`
+
+Date: `2026-08-01`
+
+### What changed
+
+- Ports RM v3 into `role-model-router`: repo-owned `@role-model/ui` kit at `role-model-router/packages/ui`, rewritten `DESIGN_SYSTEM.md` + authority twins, fullscreen AppShell with kit Sidebar/PageFilters/SegmentedControl/MetricStrip/chart primitives.
+- Migrates §B runtime pages to Paper 5-0 IA on approved artboards; retires happy-path FactCard/StatusPill walls; Geist typography; 34px form controls; chart semantics on `--rm3-chart-*` only.
+- **Fixed Decision #15:** `/app/router/config` legacy redirect → `/app/router/strategy`; Router SegmentedControl has no Config segment; runtime JSON editing remains `/app/system/runtime-config`.
+- Wave 4 verification floor green: kit 30 tests · runtime-ui 394 tests · build · validate-ui · Playwright (`sp8-playwright-final2.log`).
+- Phase 5 hybrid QA on rebuilt `start-for-qa` at `:3470` (agent scenarios 1–9 PASS; screenshot evidence under `evidence/screenshots/`); human Paper visual sign-off by operator on `2026-08-01` against Paper pages `4-0`/`5-0`/`6-0`/`7-0`.
+- Operator polish P1–P8 shipped via locked addenda (`03-implementation-summary.addendum-01.md`, `05-manual-qa.upstream-gap.00-requirements.addendum-01.md`): roles banner removal, high-risk Badge tone, retention GB UI, ranking/time-series chart alignment, role-group expand behavior, non-amber warning pill ink (charts keep amber).
+- Pragmatic TDD with SP8/Phase 5 compensating evidence (no per-slice RED/GREEN log archive).
+- Worktree: `D:\DEV\role-model\.worktrees\86-runtime-ui-rm3-design-system-frontend` on branch `recursive/86-runtime-ui-rm3-design-system-frontend`; diff basis vs `origin/dev` @ `b633056aa52252eaa40a7324ac7018b84d1ea0d9`.
+- Server change `not-required`; `publicChange: required` (runtime-ui + kit package).
+
+### Why
+
+- Replace Linear/Apple-era and run-60 Paper-Linear live styling authority with approved RM3 Paper + repo-owned kit without inventing FactCards/Config artboards or coupling production to an external executor checkout.
+
+### How
+
+- Design-system-first Waves 1→4 (SP1–SP8); pragmatic TDD with consolidated SP8 floor; hybrid Phase 5 on rebuilt runtime; serial Phases 6–8 closeout after human sign-off; feature branch `recursive/86-runtime-ui-rm3-design-system-frontend`.
+
+### What was not done (OOS)
+
+- Paper file edits (`OOS1`).
+- Backend routing/provider/benchmark changes unrelated to UI consumption (`OOS2`).
+- npm publish or live executor checkout coupling (`OOS4`).
+- Explore/Catalog shell specimens as product routes (`OOS7`).
+- Invented Router Config artboard (`OOS9`; FD#15 redirect instead).
+- Origin/`dev` merge remains operator-requested unless authorized separately.
+
+### Soft-close of prior decision
+
+- Soft-closes run `60-runtime-ui-paper-linear-review-alignment` as **live** styling authority for migrated runtime-ui surfaces. RM3 Paper `4-0`/`5-0`/`6-0`/`7-0` + repo `DESIGN_SYSTEM.md` + `@role-model/ui` are now the shipped styling authority; run-60 Linear/Paper-Linear baseline remains historical audit context only.
+
+### Known issues / follow-ups
+
+- Feature-branch merge to origin `dev` is operator-requested.
+- Optional residual: rename legacy `--rm-*` call sites to `--rm3-*` where drift remains (non-blocking).
+- Local Matrix route remains a `<Navigate>` stub to models `?view=grid` (documented R5 exception).
+- Studio Chat/Advanced models-only startup bounded fetch documented in `addenda/03-studio-startup-bounded-fetch.md` (R7).
+
+### Artifact references
+
+- `.recursive/run/86-runtime-ui-rm3-design-system-frontend/00-requirements.md`
+- `.recursive/run/86-runtime-ui-rm3-design-system-frontend/00-worktree.md`
+- `.recursive/run/86-runtime-ui-rm3-design-system-frontend/01-as-is.md`
+- `.recursive/run/86-runtime-ui-rm3-design-system-frontend/02-to-be-plan.md`
+- `.recursive/run/86-runtime-ui-rm3-design-system-frontend/03-implementation-summary.md`
+- `.recursive/run/86-runtime-ui-rm3-design-system-frontend/04-test-summary.md`
+- `.recursive/run/86-runtime-ui-rm3-design-system-frontend/05-manual-qa.md`
+- `.recursive/run/86-runtime-ui-rm3-design-system-frontend/addenda/03-implementation-summary.addendum-01.md`
+- `.recursive/run/86-runtime-ui-rm3-design-system-frontend/addenda/05-manual-qa.upstream-gap.00-requirements.addendum-01.md`
+- `.recursive/run/86-runtime-ui-rm3-design-system-frontend/evidence/logs/sp8-playwright-final2.log`
+- `.recursive/run/86-runtime-ui-rm3-design-system-frontend/evidence/logs/phase5-start-for-qa-3470.log`
+- `.recursive/run/86-runtime-ui-rm3-design-system-frontend/evidence/screenshots/`
+
+---
 
 ## Run: `85-kw-gated-router-prompt-inject`
 

@@ -1,37 +1,32 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router";
+
+import { MetricStrip } from "@role-model/ui";
 
 import {
+  Badge,
   ErrorState,
   LoadingState,
   SectionCard,
   SelectField,
-  StatusPill,
 } from "../components/page-primitives";
 import {
   bodyStrongTextClassName,
-  compactTitleClassName,
   fieldClassName,
-  getSelectablePanelClassName,
-  mutedPanelClassName,
+  fieldLabelClassName,
+  monoEyebrowClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
   supportingTextClassName,
-  utilityLabelClassName,
 } from "../lib/design-system";
 import {
   ROUTING_MODE_OPTIONS,
   type RuntimeRoutingMode,
-  formatRoutingModeLabel,
+  formatDraftRoutingAlias,
   normalizeRoutingModeValue,
 } from "../lib/routing-mode";
 import {
-  type RouterCandidate,
   type RuntimeConfig,
   type RuntimeConfigRecord,
-  type RuntimeControllerAssignment,
-  fetchControllerAssignment,
-  fetchRouterCandidates,
   fetchRuntimeConfig,
   updateRuntimeConfig,
 } from "../lib/runtime-api";
@@ -39,8 +34,7 @@ import {
 type RoutingStrategyChoice = RuntimeRoutingMode | "unset" | "custom";
 type RuntimeExecutionMode = NonNullable<RuntimeConfig["executionMode"]>;
 
-const formFieldLabelClassName = `${utilityLabelClassName} text-[var(--rm-fg)]`;
-const panelDetailClassName = `${supportingTextClassName} leading-6`;
+const formFieldLabelClassName = fieldLabelClassName;
 
 const EXECUTION_MODE_OPTIONS: ReadonlyArray<{
   readonly value: RuntimeExecutionMode;
@@ -69,6 +63,45 @@ const EXECUTION_MODE_OPTIONS: ReadonlyArray<{
   },
 ] as const;
 
+const STRATEGY_CHOICES: ReadonlyArray<{
+  readonly value: RoutingStrategyChoice;
+  readonly label: string;
+  readonly detail: string;
+  readonly modeId: string;
+  readonly guidance: string;
+  readonly bestFor: string;
+  readonly needsController: boolean;
+}> = [
+  {
+    value: "unset",
+    label: "Use runtime default",
+    detail: "Leave the persisted routing mode unset.",
+    modeId: "—",
+    guidance: "runtime default",
+    bestFor: "host-owned default alias",
+    needsController: false,
+  },
+  ...ROUTING_MODE_OPTIONS.map((option) => ({
+    value: option.value as RoutingStrategyChoice,
+    label: option.label,
+    detail: option.detail,
+    modeId: option.value,
+    guidance: option.guidance,
+    bestFor: option.bestFor,
+    needsController: option.needsController,
+  })),
+  {
+    value: "custom",
+    label: "Custom strategy",
+    detail:
+      "Preserve a repo-specific routing mode string exactly as typed for advanced or transitional configurations.",
+    modeId: "custom",
+    guidance: "exact string",
+    bestFor: "advanced / transitional configs",
+    needsController: false,
+  },
+];
+
 function createEmptyProcessConfig() {
   return {
     command: null,
@@ -95,37 +128,6 @@ function createDefaultRuntimeConfig(): RuntimeConfig {
       process: createEmptyProcessConfig(),
     },
   };
-}
-
-function RoutingStrategyOptionCard({
-  checked,
-  description,
-  label,
-  name,
-  onChange,
-  value,
-}: {
-  readonly checked: boolean;
-  readonly description: string;
-  readonly label: string;
-  readonly name: string;
-  readonly onChange: (value: RoutingStrategyChoice) => void;
-  readonly value: RoutingStrategyChoice;
-}) {
-  return (
-    <label className={getSelectablePanelClassName(checked)}>
-      <input
-        checked={checked}
-        className="sr-only"
-        name={name}
-        type="radio"
-        value={value}
-        onChange={() => onChange(value)}
-      />
-      <span className={`block ${bodyStrongTextClassName}`}>{label}</span>
-      <span className={`mt-2 block ${supportingTextClassName}`}>{description}</span>
-    </label>
-  );
 }
 
 function toRoutingStrategyDraft(strategy: string | null | undefined): {
@@ -182,7 +184,6 @@ function applyExecutionMode(
 
 export default function ControlRoutingStrategyRoute() {
   const [configRecord, setConfigRecord] = useState<RuntimeConfigRecord | null>(null);
-  const [controller, setController] = useState<RuntimeControllerAssignment | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -191,7 +192,6 @@ export default function ControlRoutingStrategyRoute() {
   const [customRoutingStrategy, setCustomRoutingStrategy] = useState("");
   const [selectedExecutionMode, setSelectedExecutionMode] =
     useState<RuntimeExecutionMode>("hybrid");
-  const [candidates, setCandidates] = useState<readonly RouterCandidate[]>([]);
 
   const syncDrafts = useCallback((nextRecord: RuntimeConfigRecord) => {
     const nextConfig = nextRecord.config ?? createDefaultRuntimeConfig();
@@ -203,14 +203,8 @@ export default function ControlRoutingStrategyRoute() {
 
   const loadState = useCallback(async () => {
     try {
-      const [nextConfigRecord, nextController, nextCandidates] = await Promise.all([
-        fetchRuntimeConfig(),
-        fetchControllerAssignment(),
-        fetchRouterCandidates(),
-      ]);
+      const nextConfigRecord = await fetchRuntimeConfig();
       setConfigRecord(nextConfigRecord);
-      setController(nextController);
-      setCandidates(nextCandidates);
       syncDrafts(nextConfigRecord);
       setError(null);
     } catch (value) {
@@ -240,28 +234,13 @@ export default function ControlRoutingStrategyRoute() {
   const hasUnsavedChanges =
     selectedRoutingStrategyValue !== persistedRoutingStrategy ||
     selectedExecutionMode !== persistedExecutionMode;
-  const selectedStrategyDetails = (() => {
-    if (selectedRoutingStrategy === "unset") {
-      return {
-        label: "Use runtime default",
-        detail: "Leave the persisted routing mode unset.",
-      };
-    }
-    if (selectedRoutingStrategy === "custom") {
-      return {
-        label: "Custom strategy",
-        detail:
-          "Preserve a repo-specific routing mode string exactly as typed for advanced or transitional configurations.",
-      };
-    }
-    return (
-      ROUTING_MODE_OPTIONS.find((option) => option.value === selectedRoutingStrategy) ??
-      ROUTING_MODE_OPTIONS[0]
-    );
-  })();
+  const selectedStrategyDetails =
+    STRATEGY_CHOICES.find((option) => option.value === selectedRoutingStrategy) ??
+    STRATEGY_CHOICES[0];
   const selectedExecutionModeDetails =
     EXECUTION_MODE_OPTIONS.find((option) => option.value === selectedExecutionMode) ??
     EXECUTION_MODE_OPTIONS[0];
+  const draftAlias = formatDraftRoutingAlias(selectedRoutingStrategyValue, selectedExecutionMode);
 
   const save = async () => {
     const nextStrategy = resolveRoutingStrategyChoice(
@@ -296,56 +275,100 @@ export default function ControlRoutingStrategyRoute() {
   return (
     <div className="space-y-6">
       <SectionCard
-        title="Persisted routing posture"
-        description="Change the saved routing strategy and the effective execution mode here; both write through the runtime config control-plane record instead of living as placeholder UI state."
+        title="Routing strategy"
+        description="Choose how the runtime picks models for each request."
       >
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,372px)]">
-          <div className="space-y-6">
-            <div className="space-y-3" role="radiogroup" aria-label="Routing strategy">
-              <p className={formFieldLabelClassName}>Routing strategy</p>
-              <div className="grid gap-3 md:grid-cols-2">
-                <RoutingStrategyOptionCard
-                  checked={selectedRoutingStrategy === "unset"}
-                  description="Leave the persisted routing mode unset."
-                  label="Use runtime default"
-                  name="routing-strategy"
-                  value="unset"
-                  onChange={setSelectedRoutingStrategy}
-                />
-                {ROUTING_MODE_OPTIONS.map((option) => (
-                  <RoutingStrategyOptionCard
-                    key={option.value}
-                    checked={selectedRoutingStrategy === option.value}
-                    description={option.detail}
-                    label={option.label}
-                    name="routing-strategy"
-                    value={option.value}
-                    onChange={setSelectedRoutingStrategy}
-                  />
-                ))}
-                <RoutingStrategyOptionCard
-                  checked={selectedRoutingStrategy === "custom"}
-                  description="Preserve a custom persisted routing mode string."
-                  label="Custom strategy"
-                  name="routing-strategy"
-                  value="custom"
-                  onChange={setSelectedRoutingStrategy}
-                />
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
+          <div className="min-w-0 space-y-5">
+            <div className="-mx-5 border-b border-[var(--rm-border)]">
+              <div className="flex min-h-0">
+                <div
+                  className="w-[240px] shrink-0 space-y-0.5 border-r border-[var(--rm-border)] p-2"
+                  role="listbox"
+                  aria-label="Routing strategy"
+                >
+                  {STRATEGY_CHOICES.map((option) => {
+                    const selected = selectedRoutingStrategy === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        role="option"
+                        aria-selected={selected}
+                        className={`flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left transition-colors ${
+                          selected
+                            ? "bg-[var(--rm-panel-muted)]"
+                            : "hover:bg-[var(--rm-panel-muted)]"
+                        }`}
+                        onClick={() => setSelectedRoutingStrategy(option.value)}
+                      >
+                        <span
+                          aria-hidden
+                          className={`h-[14px] w-[3px] shrink-0 rounded-[1px] ${
+                            selected ? "bg-[var(--rm-fg)]" : "bg-transparent"
+                          }`}
+                        />
+                        <span className={`${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
+                          {option.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="min-w-0 flex-1 space-y-3.5 p-5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-[18px] font-semibold leading-6 text-[var(--rm-fg)]">
+                      {selectedStrategyDetails.label}
+                    </h3>
+                    <Badge tone="accent">selected</Badge>
+                    {hasUnsavedChanges ? <Badge tone="warning">unsaved</Badge> : null}
+                  </div>
+                  <p className={supportingTextClassName}>{selectedStrategyDetails.detail}</p>
+
+                  {selectedRoutingStrategy === "custom" ? (
+                    <label className="grid gap-2">
+                      <span className={formFieldLabelClassName}>Custom strategy</span>
+                      <input
+                        className={fieldClassName}
+                        value={customRoutingStrategy}
+                        onChange={(event) => setCustomRoutingStrategy(event.target.value)}
+                        placeholder="org.routing.v2"
+                      />
+                      <span className={supportingTextClassName}>
+                        Persisted exactly as typed — not remapped to a named mode.
+                      </span>
+                    </label>
+                  ) : (
+                    <MetricStrip
+                      aria-label="Strategy details"
+                      variant="inventory"
+                      className="max-w-none"
+                      items={[
+                        { id: "mode-id", label: "Mode id", value: selectedStrategyDetails.modeId },
+                        {
+                          id: "guidance",
+                          label: "Guidance",
+                          value: selectedStrategyDetails.guidance,
+                        },
+                        {
+                          id: "best-for",
+                          label: "Best for",
+                          value: selectedStrategyDetails.bestFor,
+                        },
+                        {
+                          id: "needs-controller",
+                          label: "Needs controller",
+                          value: selectedStrategyDetails.needsController ? "yes" : "no",
+                        },
+                      ]}
+                    />
+                  )}
+                </div>
               </div>
-              {selectedRoutingStrategy === "custom" ? (
-                <label className="grid gap-2">
-                  <span className={formFieldLabelClassName}>Custom strategy</span>
-                  <input
-                    className={fieldClassName}
-                    value={customRoutingStrategy}
-                    onChange={(event) => setCustomRoutingStrategy(event.target.value)}
-                    placeholder="baseline"
-                  />
-                </label>
-              ) : null}
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               <SelectField
                 label="Execution mode"
                 value={selectedExecutionMode}
@@ -385,138 +408,29 @@ export default function ControlRoutingStrategyRoute() {
             {statusMessage ? <p className={supportingTextClassName}>{statusMessage}</p> : null}
           </div>
 
-          <div className="space-y-3">
-            <div className={`${mutedPanelClassName} p-4`}>
-              <p className={compactTitleClassName}>Saved routing settings</p>
-              <p className={`mt-3 ${panelDetailClassName}`}>
-                These are the persisted settings returned by the runtime config control plane.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <StatusPill tone={configRecord.applied ? "success" : "warning"}>
-                  {configRecord.applied ? "config applied" : "config pending"}
-                </StatusPill>
-                <StatusPill tone="neutral">
-                  {formatRoutingModeLabel(persistedRoutingStrategy)}
-                </StatusPill>
-                <StatusPill tone="neutral">{persistedExecutionMode}</StatusPill>
+          <aside className="space-y-3 rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-5">
+            <p className={monoEyebrowClassName}>Active posture</p>
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <p className="font-sans text-xs leading-4 text-[var(--rm-secondary)]">Strategy</p>
+                <p className="text-sm font-semibold leading-[18px] text-[var(--rm-fg)]">
+                  {selectedStrategyDetails.label}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <p className="font-sans text-xs leading-4 text-[var(--rm-secondary)]">Execution</p>
+                <p className="text-sm font-semibold leading-[18px] text-[var(--rm-fg)]">
+                  {selectedExecutionModeDetails.label}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <p className="font-sans text-xs leading-4 text-[var(--rm-secondary)]">Alias</p>
+                <p className="font-mono text-sm font-semibold leading-[18px] text-[var(--rm-fg)]">
+                  {draftAlias}
+                </p>
               </div>
             </div>
-
-            <div className={`${mutedPanelClassName} p-4`}>
-              <p className={compactTitleClassName}>Draft selection</p>
-              <p className={`mt-2 ${bodyStrongTextClassName}`}>{selectedStrategyDetails.label}</p>
-              <p className={`mt-3 ${panelDetailClassName}`}>{selectedStrategyDetails.detail}</p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <StatusPill tone={hasUnsavedChanges ? "warning" : "success"}>
-                  {hasUnsavedChanges ? "unsaved changes" : "matches saved"}
-                </StatusPill>
-                <StatusPill tone={selectedRoutingStrategy === "custom" ? "accent" : "neutral"}>
-                  {selectedRoutingStrategy === "unset"
-                    ? "default strategy"
-                    : selectedRoutingStrategy === "custom"
-                      ? "custom"
-                      : formatRoutingModeLabel(selectedRoutingStrategy)}
-                </StatusPill>
-                <StatusPill tone="neutral">{selectedExecutionMode}</StatusPill>
-              </div>
-            </div>
-
-            <div className={`${mutedPanelClassName} p-4`}>
-              <p className={compactTitleClassName}>Current controller</p>
-              <p className={`mt-3 break-all ${bodyStrongTextClassName}`}>
-                {controller?.endpointId ?? "No controller assigned"}
-              </p>
-              <p className={`mt-2 ${panelDetailClassName}`}>
-                {controller
-                  ? `${controller.modelId} (${controller.sourceType})`
-                  : "Assign a controller when you want controller-guided routing posture to be explicit."}
-              </p>
-            </div>
-
-            <div className={`${mutedPanelClassName} p-4`}>
-              <p className={compactTitleClassName}>Applied config record</p>
-              <p className={`mt-3 break-all ${panelDetailClassName}`}>
-                {configRecord.path ?? "not configured"}
-              </p>
-            </div>
-          </div>
-        </div>
-      </SectionCard>
-
-      <SectionCard
-        title="Benchmark-informed difficulty advisory"
-        description="When Strategy C (difficulty) is active, per-endpoint quality scores from Models → Benchmark inform the recommended max difficulty ceiling."
-      >
-        {candidates.length === 0 ? (
-          <p className={supportingTextClassName}>No routing candidates are available.</p>
-        ) : (
-          <div className="grid gap-3 xl:grid-cols-3">
-            {candidates.map((candidate) => {
-              const advisory =
-                typeof candidate.advisoryMaxDifficultyRecommendation === "object" &&
-                candidate.advisoryMaxDifficultyRecommendation !== null
-                  ? (candidate.advisoryMaxDifficultyRecommendation as Record<string, unknown>)
-                  : null;
-              const latestProfile =
-                typeof candidate.latestProfile === "object" && candidate.latestProfile !== null
-                  ? (candidate.latestProfile as Record<string, unknown>)
-                  : null;
-              const sources =
-                typeof latestProfile?.sources === "object" && latestProfile.sources !== null
-                  ? (latestProfile.sources as Record<string, unknown>)
-                  : null;
-              const benchmarkSamples =
-                typeof sources?.benchmark_samples === "number" ? sources.benchmark_samples : 0;
-              const qualityScore =
-                typeof latestProfile?.quality_score === "number"
-                  ? latestProfile.quality_score
-                  : typeof latestProfile?.judge_score === "number"
-                    ? latestProfile.judge_score
-                    : null;
-              const minQualityScore =
-                typeof advisory?.min_quality_score === "number"
-                  ? advisory.min_quality_score
-                  : typeof advisory?.minQualityScore === "number"
-                    ? advisory.minQualityScore
-                    : null;
-              const recommended =
-                typeof advisory?.recommended_max_difficulty === "string"
-                  ? advisory.recommended_max_difficulty
-                  : typeof advisory?.recommendedMaxDifficulty === "string"
-                    ? advisory.recommendedMaxDifficulty
-                    : "n/a";
-
-              return (
-                <div key={candidate.endpointId} className={`${mutedPanelClassName} p-4`}>
-                  <p className={compactTitleClassName}>
-                    {candidate.modelId} • {candidate.endpointId}
-                  </p>
-                  <p className={`mt-2 ${supportingTextClassName}`}>
-                    Recommended max difficulty:{" "}
-                    <span className={bodyStrongTextClassName}>{recommended}</span>
-                  </p>
-                  <p className={`mt-1 ${supportingTextClassName}`}>
-                    Quality score{" "}
-                    {qualityScore !== null ? `${Math.round(qualityScore * 100)}%` : "n/a"}
-                    {minQualityScore !== null
-                      ? ` vs threshold ${Math.round(minQualityScore * 100)}%`
-                      : ""}
-                  </p>
-                  <p className={`mt-1 ${supportingTextClassName}`}>
-                    Score source:{" "}
-                    {benchmarkSamples > 0
-                      ? `Models → Benchmark (${benchmarkSamples} benchmark sample${benchmarkSamples === 1 ? "" : "s"})`
-                      : "live requests only"}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        )}
-        <div className="mt-4">
-          <Link className={secondaryButtonClassName} to="/app/models/benchmark">
-            Open Models → Benchmark
-          </Link>
+          </aside>
         </div>
       </SectionCard>
     </div>

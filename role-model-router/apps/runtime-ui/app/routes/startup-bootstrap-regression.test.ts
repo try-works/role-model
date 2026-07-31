@@ -25,12 +25,9 @@ const p0BootstrapExpectations = [
   {
     routePath: "/app/studio/chat",
     fileName: "workbench.tsx",
-    expectedHelpers: [
-      "fetchRuntimeSummary",
-      "fetchRuntimeAccounts",
-      "fetchRuntimeEndpoints",
-      "fetchRuntimeModels",
-    ],
+    // RM3 Studio Chat is Model · Prompt · Run only (no Endpoint / Routing mode).
+    // Bounded startup is models inventory — see addenda/03-studio-startup-bounded-fetch.md.
+    expectedHelpers: ["fetchRuntimeModels"],
   },
   {
     routePath: "/app/studio/images",
@@ -50,7 +47,8 @@ const p0BootstrapExpectations = [
   {
     routePath: "/app/studio/advanced",
     fileName: "studio-advanced.tsx",
-    expectedHelpers: ["fetchRuntimeSummary", "fetchRuntimeModels"],
+    // RM3 Studio Advanced is Family · Model · JSON · Submit — models inventory only.
+    expectedHelpers: ["fetchRuntimeModels"],
   },
   {
     routePath: "/app/connect",

@@ -1,0 +1,19 @@
+
+> @role-model/ui@0.0.0 test D:\DEV\role-model\.worktrees\86-runtime-ui-rm3-design-system-frontend\role-model-router\packages\ui
+> vitest run
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/86-runtime-ui-rm3-design-system-frontend/role-model-router/packages/ui
+
+ Γ£ô src/chart-grid.test.ts (1 test) 6ms
+ Γ£ô src/sidebar.test.ts (3 tests) 48ms
+ Γ£ô src/chart.test.ts (9 tests) 11ms
+ Γ£ô src/chart-composition.test.ts (3 tests) 6ms
+ Γ£ô src/runtime-overview.test.ts (3 tests) 6ms
+ Γ£ô src/observe.test.ts (5 tests) 11ms
+
+ Test Files  6 passed (6)
+      Tests  24 passed (24)
+   Start at  05:46:20
+   Duration  2.86s (transform 800ms, setup 0ms, collect 7.34s, tests 88ms, environment 2ms, prepare 1.84s)
+

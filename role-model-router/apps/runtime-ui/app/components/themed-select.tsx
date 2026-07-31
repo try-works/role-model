@@ -126,7 +126,7 @@ export function ThemedSelect({
         aria-labelledby={ariaLabelledBy}
         className={[
           fieldClassName,
-          "flex min-h-[44px] items-center justify-between gap-3 pr-[20px] text-left",
+          "flex h-[34px] min-h-[34px] items-center justify-between gap-3 pr-[20px] text-left",
           open ? "border-[var(--rm-accent-focus)] ring-2 ring-[var(--rm-accent-subtle)]" : "",
         ].join(" ")}
         disabled={disabled}
@@ -165,7 +165,7 @@ export function ThemedSelect({
       {open ? (
         <div
           aria-labelledby={ariaLabelledBy}
-          className="absolute inset-x-0 top-[calc(100%+8px)] z-30 max-h-80 overflow-y-auto rounded-[var(--rm-radius-panel)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface-strong)] p-2 shadow-[var(--rm-shadow-ui)]"
+          className="absolute inset-x-0 top-[calc(100%+4px)] z-30 max-h-80 overflow-y-auto rounded-[var(--rm3-radius-md)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-1 text-[var(--rm-fg)] shadow-md"
           id={listboxId}
           role="listbox"
           tabIndex={-1}
@@ -180,10 +180,10 @@ export function ThemedSelect({
                 }}
                 aria-selected={selected}
                 className={[
-                  "flex w-full items-start justify-between gap-3 rounded-[var(--rm-radius-md)] px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--rm-accent-subtle)]",
+                  "relative flex w-full cursor-default items-start gap-2 rounded-[var(--rm3-radius-sm)] py-1.5 pr-8 pl-2 text-left text-sm outline-hidden select-none transition focus-visible:bg-[var(--rm-panel)] focus-visible:outline-none",
                   selected
-                    ? "bg-[var(--rm-accent)] text-[color:var(--rm-on-primary)]"
-                    : "text-[var(--rm-secondary)] hover:bg-[var(--rm-panel)] hover:text-[var(--rm-fg)]",
+                    ? "bg-[var(--rm-panel)] text-[var(--rm-fg)]"
+                    : "text-[var(--rm-fg)] hover:bg-[var(--rm-panel)]",
                 ].join(" ")}
                 role="option"
                 type="button"
@@ -212,23 +212,23 @@ export function ThemedSelect({
                   }
                 }}
               >
-                <span className="min-w-0">
+                <span className="min-w-0 flex-1">
                   <span className={`block ${navLabelClassName}`}>{option.label}</span>
                   {option.description ? (
-                    <span
-                      className={`block ${bodyTextClassName} ${selected ? "text-[color:var(--rm-on-primary)] opacity-80" : "text-[var(--rm-muted)]"}`}
-                    >
+                    <span className={`block ${bodyTextClassName} text-[var(--rm-muted)]`}>
                       {option.description}
                     </span>
                   ) : null}
                 </span>
-                <Check
-                  aria-hidden="true"
-                  className={[
-                    "mt-0.5 h-4 w-4 shrink-0 transition-opacity",
-                    selected ? "opacity-100 text-[color:var(--rm-on-primary)]" : "opacity-0",
-                  ].join(" ")}
-                />
+                <span className="pointer-events-none absolute top-1.5 right-2 flex size-3.5 items-center justify-center">
+                  <Check
+                    aria-hidden="true"
+                    className={[
+                      "size-4 text-[var(--rm-fg)] transition-opacity",
+                      selected ? "opacity-100" : "opacity-0",
+                    ].join(" ")}
+                  />
+                </span>
               </button>
             );
           })}

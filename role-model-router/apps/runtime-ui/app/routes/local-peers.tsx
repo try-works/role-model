@@ -1,21 +1,19 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router";
 
 import {
+  Badge,
   EmptyState,
   ErrorState,
   LoadingState,
   SectionCard,
-  StatusPill,
 } from "../components/page-primitives";
 import {
-  codeBlockClassName,
   fieldClassName,
-  mutedPanelClassName,
+  fieldLabelClassName,
+  monoEyebrowClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
   supportingTextClassName,
-  utilityLabelClassName,
 } from "../lib/design-system";
 import { checkPeerHealth, fetchPeers, updatePeers } from "../lib/runtime-api";
 
@@ -123,68 +121,75 @@ export default function LocalPeersRoute() {
         {loading && peers.length === 0 ? (
           <LoadingState label="Loading local endpoints…" />
         ) : peers.length === 0 ? (
-          <div className="space-y-3">
-            <EmptyState label="No peer endpoints configured. Add a server URL below to use peer-backed local models." />
-            <div
-              className={`${mutedPanelClassName} flex flex-wrap items-center justify-between gap-3 p-4`}
-            >
-              <p className={supportingTextClassName}>
-                Registering endpoints here is the prerequisite for the peer-model inventory on the
-                next route.
-              </p>
-              <Link className={secondaryButtonClassName} to="/app/local/peer-models">
-                Open peer models
-              </Link>
-            </div>
-          </div>
+          <EmptyState label="No peer endpoints configured. Add a server URL below to use peer-backed local models." />
         ) : (
-          <div className="space-y-3">
-            {peers.map((peer) => (
-              <div
-                key={peer.id}
-                className={`${mutedPanelClassName} flex flex-wrap items-start justify-between gap-3 p-4`}
-              >
-                <div className="space-y-1">
-                  <div className={codeBlockClassName}>{peer.url}</div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <StatusPill
-                      tone={
-                        healthStatus[peer.id] === null || healthStatus[peer.id] === undefined
-                          ? "neutral"
-                          : healthStatus[peer.id]
-                            ? "success"
-                            : "warning"
-                      }
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] border-collapse text-left text-sm">
+              <thead>
+                <tr className="border-b border-[var(--rm-border)]">
+                  <th className={`${monoEyebrowClassName} px-3 py-2.5`}>Endpoint</th>
+                  <th className={`${monoEyebrowClassName} px-3 py-2.5`}>Status</th>
+                  <th className={`${monoEyebrowClassName} px-3 py-2.5`}>Type</th>
+                  <th className={`${monoEyebrowClassName} px-3 py-2.5`}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {peers.map((peer) => {
+                  const status =
+                    healthStatus[peer.id] === null || healthStatus[peer.id] === undefined
+                      ? "unknown"
+                      : healthStatus[peer.id]
+                        ? "healthy"
+                        : "unhealthy";
+                  return (
+                    <tr
+                      key={peer.id}
+                      className="border-b border-[var(--rm-border)] last:border-b-0"
                     >
-                      {healthStatus[peer.id] === null || healthStatus[peer.id] === undefined
-                        ? "unknown"
-                        : healthStatus[peer.id]
-                          ? "healthy"
-                          : "unhealthy"}
-                    </StatusPill>
-                    <span className={supportingTextClassName}>OpenAI-compatible peer endpoint</span>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleCheckHealth(peer)}
-                    disabled={checkingHealth[peer.id]}
-                    className={secondaryButtonClassName}
-                  >
-                    {checkingHealth[peer.id] ? "Checking…" : "Check health"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleRemove(peer.id)}
-                    disabled={saving}
-                    className={`${secondaryButtonClassName} text-[var(--rm-error)]`}
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
-            ))}
+                      <td className="px-3 py-3 font-mono text-[13px] text-[var(--rm-fg)]">
+                        {peer.url}
+                      </td>
+                      <td className="px-3 py-3">
+                        <Badge
+                          tone={
+                            status === "healthy"
+                              ? "success"
+                              : status === "unknown"
+                                ? "neutral"
+                                : "warning"
+                          }
+                        >
+                          {status}
+                        </Badge>
+                      </td>
+                      <td className={`px-3 py-3 ${supportingTextClassName}`}>
+                        OpenAI-compatible peer
+                      </td>
+                      <td className="px-3 py-3">
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleCheckHealth(peer)}
+                            disabled={checkingHealth[peer.id]}
+                            className={secondaryButtonClassName}
+                          >
+                            {checkingHealth[peer.id] ? "Checking…" : "Check health"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRemove(peer.id)}
+                            disabled={saving}
+                            className={`${secondaryButtonClassName} text-[var(--rm-error)]`}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </SectionCard>
@@ -194,31 +199,33 @@ export default function LocalPeersRoute() {
         description="Base URL of your OpenAI-compatible API (with or without /v1). Optional bearer token if the server requires auth."
       >
         <div className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="peer-url" className={utilityLabelClassName}>
-              Endpoint URL
-            </label>
-            <input
-              id="peer-url"
-              type="url"
-              value={newUrl}
-              onChange={(e) => setNewUrl(e.target.value)}
-              placeholder="http://127.0.0.1:1234"
-              className={fieldClassName}
-            />
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="peer-auth-token" className={utilityLabelClassName}>
-              Auth token (optional)
-            </label>
-            <input
-              id="peer-auth-token"
-              type="password"
-              value={newToken}
-              onChange={(e) => setNewToken(e.target.value)}
-              placeholder="Bearer token (optional)"
-              className={fieldClassName}
-            />
+          <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="space-y-2">
+              <label htmlFor="peer-url" className={fieldLabelClassName}>
+                Endpoint URL
+              </label>
+              <input
+                id="peer-url"
+                type="url"
+                value={newUrl}
+                onChange={(e) => setNewUrl(e.target.value)}
+                placeholder="http://127.0.0.1:1234"
+                className={fieldClassName}
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="peer-auth-token" className={fieldLabelClassName}>
+                Auth token (optional)
+              </label>
+              <input
+                id="peer-auth-token"
+                type="password"
+                value={newToken}
+                onChange={(e) => setNewToken(e.target.value)}
+                placeholder="Bearer token (optional)"
+                className={fieldClassName}
+              />
+            </div>
           </div>
           <button
             type="button"
@@ -228,10 +235,6 @@ export default function LocalPeersRoute() {
           >
             {saving ? "Saving…" : "Add endpoint"}
           </button>
-          <p className={supportingTextClassName}>
-            role-model normalizes the URL and probes the endpoint before peer-model registration
-            uses it as a runtime source.
-          </p>
         </div>
       </SectionCard>
     </div>

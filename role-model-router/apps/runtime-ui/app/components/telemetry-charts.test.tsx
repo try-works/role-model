@@ -103,7 +103,7 @@ describe("TelemetryChartCard", () => {
   test("keeps populated chart content visible while a background refresh is in progress", () => {
     const markup = renderToStaticMarkup(
       <TelemetryChartCard
-        title="Latency Trend"
+        title="Latency trend"
         description="Average and p95 latency for the selected slice."
         refreshing
       >
@@ -111,7 +111,7 @@ describe("TelemetryChartCard", () => {
       </TelemetryChartCard>,
     );
 
-    expect(markup).toContain("Latency Trend");
+    expect(markup).toContain("Latency trend");
     expect(markup).toContain('data-testid="telemetry-chart-card-latency-trend"');
     expect(markup).toContain("Average and p95 latency for the selected slice.");
     expect(markup).toContain("Rendered chart body");
@@ -122,11 +122,11 @@ describe("TelemetryChartCard", () => {
 
   test("renders stable loading and empty states without fake chart data", () => {
     const loadingMarkup = renderToStaticMarkup(
-      <TelemetryChartCard title="Token Usage Over Time" loading />,
+      <TelemetryChartCard title="Token usage over time" loading />,
     );
     const emptyMarkup = renderToStaticMarkup(
       <TelemetryChartCard
-        title="Cost Avoided Over Time"
+        title="Cost avoided over time"
         emptyMessage="No request-time routing savings have been recorded yet."
       />,
     );
@@ -140,7 +140,7 @@ describe("TelemetryChartCard", () => {
   test("keeps empty chart states compact instead of reserving full plot height", () => {
     const markup = renderToStaticMarkup(
       <TelemetryChartCard
-        title="Latency Trend"
+        title="Latency trend"
         emptyMessage="No telemetry rows match the current filters."
       />,
     );
@@ -152,21 +152,24 @@ describe("TelemetryChartCard", () => {
   test("uses tighter empty-state padding so compact analytics cards do not create oversized blank panels", () => {
     const markup = renderToStaticMarkup(
       <TelemetryChartCard
-        title="Cache Efficiency"
+        title="Cache efficiency"
         emptyMessage="No cache activity has been recorded for this slice yet."
       />,
     );
 
     expect(markup).toContain("No cache activity has been recorded for this slice yet.");
-    expect(markup).toContain("px-5");
-    expect(markup).toContain("py-4");
+    expect(markup).toContain("border-dashed");
+    expect(markup).toContain("text-muted-foreground");
+    expect(markup).toContain("px-4");
+    expect(markup).toContain("py-3");
     expect(markup).not.toContain("border-dashed p-6");
+    expect(markup).not.toContain("rm-warning");
   });
 
   test("keeps populated chart content visible for partial telemetry warnings", () => {
     const markup = renderToStaticMarkup(
       <TelemetryChartCard
-        title="Request Volume Over Time"
+        title="Request volume over time"
         state={{
           kind: "partial",
           message: "Some matching rows do not carry the selected metric or dimension.",
@@ -179,12 +182,14 @@ describe("TelemetryChartCard", () => {
     expect(markup).toContain("Partial");
     expect(markup).toContain("Some matching rows do not carry the selected metric or dimension.");
     expect(markup).toContain("Rendered chart body");
+    expect(markup).toContain("text-muted-foreground");
+    expect(markup).not.toContain("rm-warning");
   });
 
   test("replaces the chart body for blocking unsupported states", () => {
     const markup = renderToStaticMarkup(
       <TelemetryChartCard
-        title="Latency Trend"
+        title="Latency trend"
         state={{
           kind: "unsupported",
           message: "The selected metric or dimension is not supported by this telemetry slice.",
@@ -199,6 +204,9 @@ describe("TelemetryChartCard", () => {
       "The selected metric or dimension is not supported by this telemetry slice.",
     );
     expect(markup).not.toContain("Rendered chart body");
+    expect(markup).toContain("border-dashed");
+    expect(markup).toContain("text-muted-foreground");
+    expect(markup).not.toContain("rm-warning");
   });
 });
 
@@ -207,7 +215,7 @@ describe("TelemetryAnalyticsChartCard", () => {
     const markup = renderToStaticMarkup(
       <TelemetryAnalyticsChartCard
         definition={{
-          title: "Latency Trend",
+          title: "Latency trend",
           description: "Average and p95 latency across the selected telemetry window.",
           kind: "line",
           metrics: ["averageLatencyMs", "p95LatencyMs"],
@@ -217,12 +225,12 @@ describe("TelemetryAnalyticsChartCard", () => {
           },
           emptyMessage: "Latency telemetry has not been recorded for this slice yet.",
         }}
-        errorMessage="Latency Trend: upstream query timed out."
+        errorMessage="Latency trend: upstream query timed out."
       />,
     );
 
     expect(markup).toContain("Error");
-    expect(markup).toContain("Latency Trend: upstream query timed out.");
+    expect(markup).toContain("Latency trend: upstream query timed out.");
   });
 });
 
@@ -232,7 +240,7 @@ describe("TelemetryLineTimeSeriesChart", () => {
       <TelemetryLineTimeSeriesChart
         model={
           {
-            title: "Cache Efficiency",
+            title: "Cache efficiency",
             isEmpty: false,
             data: [
               {
@@ -286,7 +294,7 @@ describe("TelemetryLineTimeSeriesChart", () => {
       <TelemetryLineTimeSeriesChart
         model={
           {
-            title: "Latency Trend",
+            title: "Latency trend",
             isEmpty: false,
             data: [
               {
@@ -381,7 +389,7 @@ describe("TelemetryRankingBarChart", () => {
     const markup = renderToStaticMarkup(
       <TelemetryRankingBarChart
         model={{
-          title: "Ranked Comparison",
+          title: "Ranked comparison",
           metric: "requestCount",
           rows: [
             {
@@ -394,7 +402,7 @@ describe("TelemetryRankingBarChart", () => {
               key: "anthropic-claude-haiku",
               label: "anthropic-claude-haiku",
               value: 585,
-              colorToken: "var(--rm-chart-link-blue)",
+              colorToken: "var(--rm3-chart-1)",
             },
           ],
           isEmpty: false,

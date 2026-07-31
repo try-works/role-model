@@ -1,7 +1,13 @@
 import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
-import { StorageRetentionRouteView } from "./storage-retention";
+import {
+  BYTES_PER_GB,
+  DEFAULT_MAX_GB,
+  StorageRetentionRouteView,
+  bytesToGbInput,
+  gbInputToBytes,
+} from "./storage-retention";
 
 describe("StorageRetentionRoute", () => {
   test("uses existing page primitives for dry-run, conflicts, receipts, and rollback", () => {
@@ -12,8 +18,8 @@ describe("StorageRetentionRoute", () => {
     );
     for (const token of [
       "SectionCard",
-      "FactCard",
-      "StatusPill",
+      "MetricStrip",
+      "Badge",
       "fetchStorageRetention",
       "updateRetentionPolicy",
       "executeRetentionPlan",
@@ -24,16 +30,35 @@ describe("StorageRetentionRoute", () => {
       "Rollback-safe",
       "Conflicts and receipts",
       "fieldClassName",
+      "Maximum size (GB)",
+      "gbInputToBytes",
     ])
       expect(source).toContain(token);
+    expect(source).not.toContain("Maximum bytes");
+    expect(source).not.toContain("StatusPill");
+    expect(source).not.toContain("FactCard");
   });
+
+  test("converts GB form values to backend maxBytes", () => {
+    expect(DEFAULT_MAX_GB).toBe("1");
+    expect(gbInputToBytes("1")).toBe(BYTES_PER_GB);
+    expect(gbInputToBytes("2")).toBe(2 * BYTES_PER_GB);
+    expect(gbInputToBytes("0.1")).toBe(100_000_000);
+    expect(bytesToGbInput(BYTES_PER_GB)).toBe("1");
+    expect(bytesToGbInput(100_000_000)).toBe("0.1");
+    expect(gbInputToBytes("-1")).toBeNull();
+  });
+
   test("renders the existing design-system loading and manual pruning controls", () => {
     const html = renderToStaticMarkup(<StorageRetentionRouteView />);
-    expect(html).toContain("Tracked usage");
+    expect(html).toContain("Tracked");
     expect(html).toContain("Loading storage inventory");
-    expect(html).toContain("Retention policy editor");
+    expect(html).toContain("Retention policy");
+    expect(html).toContain("Maximum size (GB)");
+    expect(html).toContain(`value="${DEFAULT_MAX_GB}"`);
     expect(html).toContain("Manual pruning");
     expect(html).toContain(">Dry-run<");
     expect(html).toContain(">Execute plan<");
+    expect(html).toContain("No legal holds or Managed policy conflicts.");
   });
 });

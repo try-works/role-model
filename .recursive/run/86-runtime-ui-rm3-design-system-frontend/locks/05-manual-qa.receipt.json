@@ -1,0 +1,16 @@
+{
+  "artifact": "05-manual-qa.md",
+  "artifact_hash": "d6302c93e1024836c8e53447a471bad8906d3d0f058aa9770fae36aa6323b542",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\86-runtime-ui-rm3-design-system-frontend\\.recursive\\run\\86-runtime-ui-rm3-design-system-frontend\\05-manual-qa.md",
+  "locked_at": "2026-07-31T22:56:05Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "ceaec347c5a39c239e39efeb1ff321cacf219d9993686857e974b1beb46fe03d",
+    "00-worktree.md": "5e6ad3855c8f7351a051f4211d1ce54c509afad5cb77cb39dd91cb6ac43a06cb",
+    "01-as-is.md": "7d0ce7308178b2c942852ab2c9951396a40f95eb2de9dac6b52fa450f7e6e1f1",
+    "02-to-be-plan.md": "7f6cae4b67fce69ce553bd8b714d1d69f3cc020e8e7686e5449da77ac334e78c",
+    "03-implementation-summary.md": "525fc500e00be033997a032e4fd0212bea6df7063f2819b2747edd56373480f3",
+    "04-test-summary.md": "793911a4b580098f9ce16952e8084f0733d7e6870aaf7e6c8e1f5c18a03e3211"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "8636962f02a07f9996f6e1b9564a585ff7e872ed2beaad3df6e5831f1e38d752"
+}

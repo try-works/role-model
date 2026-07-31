@@ -1,16 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router";
 
-import { LocalModelRolePicker } from "../components/local-model-role-picker";
-import { ErrorState, LoadingState, SectionCard, StatusPill } from "../components/page-primitives";
+import { CompactRolePills } from "../components/local-model-role-picker";
+import { Badge, ErrorState, LoadingState, SectionCard } from "../components/page-primitives";
 import {
   fieldClassName,
+  fieldLabelClassName,
   inlineTitleClassName,
+  monoEyebrowClassName,
   mutedPanelClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
   supportingTextClassName,
-  utilityLabelClassName,
 } from "../lib/design-system";
 import {
   type RuntimeLocalModel,
@@ -117,65 +118,62 @@ export default function LocalPeerModelsRoute() {
         title="Register model"
         description="Model ID must appear in the peer server catalog. Registration creates a router-visible endpoint without pretending the runtime owns the model process itself."
       >
-        {peersReady ? (
-          <div className="space-y-3">
-            <div className="grid gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_auto]">
-              <div className="space-y-2">
-                <label htmlFor="peer-model-id" className={utilityLabelClassName}>
-                  Model ID
-                </label>
-                <input
-                  id="peer-model-id"
-                  type="text"
-                  value={loadModelId}
-                  onChange={(event) => setLoadModelId(event.target.value)}
-                  placeholder="openai/gpt-4.1"
-                  className={fieldClassName}
-                />
-              </div>
-              <div className="space-y-2">
-                <p className={utilityLabelClassName}>Roles</p>
-                <LocalModelRolePicker
-                  rolePolicy={rolePolicy}
-                  selectedRoleIds={loadRoleIds}
-                  onChange={setLoadRoleIds}
-                  disabled={actioning.__register__}
-                />
-              </div>
-              <div className="flex items-end">
-                <button
-                  type="button"
-                  onClick={handleRegister}
-                  disabled={registerDisabled}
-                  className={primaryButtonClassName}
-                >
-                  {actioning.__register__ ? "Registering…" : "Register model"}
-                </button>
-              </div>
+        <div className="space-y-3">
+          <div className="grid gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_auto]">
+            <div className="space-y-2">
+              <label htmlFor="peer-model-id" className={fieldLabelClassName}>
+                Model ID
+              </label>
+              <input
+                id="peer-model-id"
+                type="text"
+                value={loadModelId}
+                onChange={(event) => setLoadModelId(event.target.value)}
+                placeholder="openai/gpt-4.1"
+                disabled={!peersReady || actioning.__register__}
+                className={fieldClassName}
+              />
             </div>
+            <div className="space-y-2">
+              <p className={fieldLabelClassName}>Roles</p>
+              <CompactRolePills
+                rolePolicy={rolePolicy}
+                selectedRoleIds={loadRoleIds}
+                onChange={setLoadRoleIds}
+                defaultAllRoles={false}
+                disabled={!peersReady || actioning.__register__}
+              />
+            </div>
+            <div className="flex items-end">
+              <button
+                type="button"
+                onClick={handleRegister}
+                disabled={registerDisabled}
+                className={primaryButtonClassName}
+              >
+                {actioning.__register__ ? "Registering…" : "Register model"}
+              </button>
+            </div>
+          </div>
+          {peersReady ? (
             <p className={supportingTextClassName}>
               Roles determine which tasks and aliases may prefer this endpoint. Leave the role list
               empty to register the model without role coverage.
             </p>
-          </div>
-        ) : (
-          <div
-            className={`${mutedPanelClassName} flex flex-wrap items-center justify-between gap-4 p-4`}
-          >
-            <div className="space-y-1">
-              <p className={inlineTitleClassName}>
-                Open endpoints to start registering peer-backed models.
-              </p>
+          ) : (
+            <div
+              className={`${mutedPanelClassName} flex flex-wrap items-center justify-between gap-4 p-3`}
+            >
               <p className={supportingTextClassName}>
                 Configure at least one peer endpoint first, then register a model id from that peer
                 catalog.
               </p>
+              <Link to="/app/local/endpoints" className={secondaryButtonClassName}>
+                Open endpoints
+              </Link>
             </div>
-            <Link to="/app/local/endpoints" className={primaryButtonClassName}>
-              Open endpoints
-            </Link>
-          </div>
-        )}
+          )}
+        </div>
       </SectionCard>
 
       <SectionCard
@@ -210,7 +208,7 @@ export default function LocalPeerModelsRoute() {
                 <section key={model.modelId} className={`${mutedPanelClassName} space-y-4 p-4`}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0 space-y-1">
-                      <p className={utilityLabelClassName}>
+                      <p className={monoEyebrowClassName}>
                         {model.localModelSource === "peer-backed" ? "Peer-backed" : "Registered"}
                       </p>
                       <p className="break-words font-mono text-[13px] leading-[18px] text-[var(--rm-fg)]">
@@ -221,28 +219,29 @@ export default function LocalPeerModelsRoute() {
                       </p>
                     </div>
                     <div className="flex shrink-0 flex-wrap justify-end gap-2">
-                      <StatusPill tone="accent">Registered</StatusPill>
+                      <Badge tone="accent">Registered</Badge>
                       {roleIds.length > 0 ? (
-                        <StatusPill tone="neutral">{roleIds[0]}</StatusPill>
+                        <Badge tone="neutral">{roleIds[0]}</Badge>
                       ) : (
-                        <StatusPill tone="warning">No roles</StatusPill>
+                        <Badge tone="warning">No roles</Badge>
                       )}
                     </div>
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <StatusPill tone="neutral">{model.engine}</StatusPill>
+                    <Badge tone="neutral">{model.engine}</Badge>
                     {roleIds.length > 1 ? (
-                      <StatusPill tone="neutral">{`${roleIds.length - 1} more roles`}</StatusPill>
+                      <Badge tone="neutral">{`${roleIds.length - 1} more roles`}</Badge>
                     ) : null}
                   </div>
 
                   <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
                     <div className="space-y-2">
-                      <p className={utilityLabelClassName}>Assigned roles</p>
-                      <LocalModelRolePicker
+                      <p className={fieldLabelClassName}>Assigned roles</p>
+                      <CompactRolePills
                         rolePolicy={rolePolicy}
                         selectedRoleIds={roleIds}
+                        defaultAllRoles={false}
                         onChange={(nextRoleIds) =>
                           setDraftRolesByModelId((current) => ({
                             ...current,

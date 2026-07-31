@@ -81,7 +81,7 @@ test("operates the packaged Track B runtime and cloud-backed recommendation flow
   await expect(page.getByText("Preferred for").first()).toBeVisible();
 
   await page.goto("/app/system/storage-retention");
-  await expect(page.getByRole("heading", { name: "Retention policy editor" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Retention policy" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Dry-run" })).toBeVisible();
   const richTrace = page.getByText("rich_trace").first();
   const hasRichTrace = await richTrace.isVisible().catch(() => false);
@@ -125,7 +125,7 @@ test("operates the packaged Track B runtime and cloud-backed recommendation flow
   if (hasRichTrace) {
     await expect(page.getByText("rich_trace").first()).toBeVisible();
   } else {
-    await expect(page.getByRole("heading", { name: "Retention policy editor" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Retention policy" })).toBeVisible();
   }
   await test.info().attach("run00-live-final", {
     body: await page.screenshot({ fullPage: true }),

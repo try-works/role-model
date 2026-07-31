@@ -2,17 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
 import {
+  Badge,
   EmptyState,
   ErrorState,
   LoadingState,
   SectionCard,
-  StatusPill,
 } from "../components/page-primitives";
 import {
-  accentActionTextClassName,
   bodyStrongTextClassName,
-  metaTextClassName,
-  mutedPanelClassName,
+  monoEyebrowClassName,
   secondaryButtonClassName,
   supportingTextClassName,
 } from "../lib/design-system";
@@ -23,11 +21,7 @@ import {
   fetchRuntimeEndpoints,
   fetchRuntimeSummary,
 } from "../lib/runtime-api";
-import {
-  buildConfiguredProviderRows,
-  buildCredentialReadinessRows,
-  buildEndpointCatalogRows,
-} from "../lib/view-models";
+import { buildConfiguredProviderRows, buildEndpointCatalogRows } from "../lib/view-models";
 
 type ProviderRow = ReturnType<typeof buildConfiguredProviderRows>[number];
 type EndpointRow = ReturnType<typeof buildEndpointCatalogRows>[number];
@@ -184,11 +178,6 @@ export default function EndpointsRoute() {
     () => (snapshot ? buildEndpointCatalogRows(snapshot.endpoints) : []),
     [snapshot],
   );
-  const readinessRows = useMemo(
-    () =>
-      snapshot ? buildCredentialReadinessRows(snapshot.summary).filter((row) => row.value > 0) : [],
-    [snapshot],
-  );
   const connectionRows = useMemo(
     () => buildRuntimeConnectionRows({ providerRows, endpointRows }),
     [providerRows, endpointRows],
@@ -204,31 +193,6 @@ export default function EndpointsRoute() {
 
   return (
     <div className="space-y-6">
-      {readinessRows.length > 0 ? (
-        <div
-          className={`${mutedPanelClassName} flex flex-wrap items-center gap-3 p-4 ${supportingTextClassName}`}
-        >
-          <span className={bodyStrongTextClassName}>Provider onboarding pending:</span>
-          {readinessRows.map((row) => (
-            <StatusPill key={row.key} tone={row.tone}>
-              {row.label} {row.value}
-            </StatusPill>
-          ))}
-          <Link className={accentActionTextClassName} to="/app/remote/providers">
-            Remote → Providers
-          </Link>
-          <Link className={accentActionTextClassName} to="/app/system/runtime">
-            System → Runtime
-          </Link>
-        </div>
-      ) : null}
-
-      <div className="flex flex-wrap gap-3">
-        <Link className={secondaryButtonClassName} to="/app/router">
-          View alias posture → Router
-        </Link>
-      </div>
-
       {connectionRows.length === 0 ? (
         <SectionCard title="No configured endpoints yet">
           <EmptyState label="No providers or endpoints are configured yet." />
@@ -247,19 +211,19 @@ export default function EndpointsRoute() {
       ) : (
         <SectionCard
           title="Runtime connections"
-          description="Provider, model, and endpoint state are merged into one registry view so operators can see what is usable without comparing duplicate tables."
+          description="Provider, model, and endpoint state merged into one registry view."
         >
           <div className="overflow-x-auto">
             <table className="min-w-full text-left">
-              <thead className={metaTextClassName}>
+              <thead>
                 <tr>
-                  <th className="pb-3 font-normal">Provider</th>
-                  <th className="pb-3 font-normal">Connection</th>
-                  <th className="pb-3 font-normal">Model</th>
-                  <th className="pb-3 font-normal">Endpoint</th>
-                  <th className="pb-3 font-normal">Source</th>
-                  <th className="pb-3 font-normal">Health</th>
-                  <th className="pb-3 font-normal">Readiness</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Provider</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Connection</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Model</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Endpoint</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Source</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Health</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Readiness</th>
                 </tr>
               </thead>
               <tbody>
@@ -271,10 +235,10 @@ export default function EndpointsRoute() {
                     <td className={tableValueCellClassName}>{row.endpointLabel}</td>
                     <td className={tableValueCellClassName}>{row.sourceLabel}</td>
                     <td className="py-3">
-                      <StatusPill tone={row.healthTone}>{row.healthLabel}</StatusPill>
+                      <Badge tone={row.healthTone}>{row.healthLabel}</Badge>
                     </td>
                     <td className="py-3">
-                      <StatusPill tone={row.readinessTone}>{row.readinessLabel}</StatusPill>
+                      <Badge tone={row.readinessTone}>{row.readinessLabel}</Badge>
                     </td>
                   </tr>
                 ))}

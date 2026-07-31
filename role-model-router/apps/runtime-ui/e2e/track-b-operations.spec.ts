@@ -21,13 +21,12 @@ test("operates disclosure, opt-out, retention, recommendations, and failure isol
   await expect(
     page.getByRole("main").getByRole("heading", { name: "Extension boundary" }),
   ).toBeVisible();
-  await expect(page.getByRole("button", { name: "Enable" }).first()).toBeVisible();
-  await expect(page.getByRole("button", { name: "Disable" }).first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Set mode" }).first()).toBeVisible();
+  await expect(page.getByLabel("Mode").first()).toBeVisible();
 
   await page.goto("/app/system/storage-retention");
-  await expect(page.getByRole("heading", { name: "Retention policy editor" })).toBeVisible();
-  await page.getByLabel("Maximum bytes").fill("1024");
+  await expect(page.getByRole("heading", { name: "Retention policy" })).toBeVisible();
+  await page.getByLabel("Maximum size (GB)").fill("1");
   await page.getByLabel("Maximum age (days)").fill("1");
   await page.getByRole("button", { name: "Save policy" }).click();
   await page.getByRole("button", { name: "Dry-run" }).click();

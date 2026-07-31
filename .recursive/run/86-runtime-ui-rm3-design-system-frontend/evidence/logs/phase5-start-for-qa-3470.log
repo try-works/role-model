@@ -1,0 +1,31 @@
+(node:39208) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+[QA] Starting Role Model Runtime Bridge...
+[QA] repoRoot: D:\DEV\role-model\.worktrees\86-runtime-ui-rm3-design-system-frontend
+[QA] runtimeStateRoot: C:\Users\erikb\AppData\Local\Temp\role-model-runtime-qa-phase5-86-fresh
+[QA] scopeId: runtime-qa
+[QA] Seeded placeholder MOONSHOT_API_KEY for local UI QA.
+[QA] Keeping runtime state for observation persistence...
+[QA] Seeded runtime config: C:\Users\erikb\AppData\Local\Temp\role-model-runtime-qa-phase5-86-fresh\runtime-config.yaml
+[QA] Pre-registered DeepSeek account.
+[QA] Seeded deterministic telemetry request: qa-telemetry-measured-001
+[QA] Seeded Track B extension bridge: 13 packages at C:\Users\erikb\AppData\Local\Temp\role-model-runtime-qa-phase5-86-fresh\runtime-qa\track-b-production-bridge.json
+[QA] Bridge server running at http://127.0.0.1:3470
+[QA] API docs:
+  GET http://127.0.0.1:3470/api/role-model/runtime/summary
+  GET http://127.0.0.1:3470/api/role-model/providers
+  GET http://127.0.0.1:3470/api/role-model/accounts
+  GET http://127.0.0.1:3470/api/role-model/endpoints
+  GET http://127.0.0.1:3470/api/role-model/roles
+  GET http://127.0.0.1:3470/api/role-model/runtime/config
+  GET http://127.0.0.1:3470/api/role-model/router/summary
+  GET http://127.0.0.1:3470/api/role-model/router/config
+  GET http://127.0.0.1:3470/api/role-model/router/candidates
+  GET http://127.0.0.1:3470/api/role-model/router/decisions
+  GET http://127.0.0.1:3470/api/role-model/local/models
+  GET http://127.0.0.1:3470/api/role-model/local/policy
+  GET http://127.0.0.1:3470/api/role-model/local/swap
+  GET http://127.0.0.1:3470/api/role-model/local/logs
+  GET http://127.0.0.1:3470/v1/models
+  POST http://127.0.0.1:3470/v1/chat/completions
+[QA] Press Ctrl+C to stop

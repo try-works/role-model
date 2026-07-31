@@ -2,21 +2,21 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 
 import {
+  Badge,
   CodeBlock,
   EmptyState,
   ErrorState,
   LoadingState,
   SectionCard,
-  StatusPill,
 } from "../components/page-primitives";
 import {
   bodyStrongTextClassName,
   cardClassName,
+  fieldLabelClassName,
   foregroundEmphasisClassName,
   mutedPanelClassName,
   secondaryButtonClassName,
   supportingTextClassName,
-  utilityLabelClassName,
 } from "../lib/design-system";
 import { formatRoutingModeLabel } from "../lib/routing-mode";
 import { type RouterDecisionDetail, fetchRouterDecisionDetail } from "../lib/runtime-api";
@@ -92,7 +92,7 @@ export default function RouterDecisionDetailRoute() {
           <div className="space-y-4">
             <div className="grid gap-4 xl:grid-cols-2">
               <div className={`${mutedPanelClassName} space-y-2 p-4`}>
-                <p className={utilityLabelClassName}>Request</p>
+                <p className={fieldLabelClassName}>Request</p>
                 <p className={`${bodyStrongTextClassName} break-all text-[var(--rm-fg)]`}>
                   {detail.requestId}
                 </p>
@@ -101,7 +101,7 @@ export default function RouterDecisionDetailRoute() {
                 </p>
               </div>
               <div className={`${mutedPanelClassName} space-y-2 p-4`}>
-                <p className={utilityLabelClassName}>Decision</p>
+                <p className={fieldLabelClassName}>Decision</p>
                 <p className={`${bodyStrongTextClassName} break-all text-[var(--rm-fg)]`}>
                   {detail.routingDecisionId ?? "n/a"}
                 </p>
@@ -120,13 +120,13 @@ export default function RouterDecisionDetailRoute() {
                 {detail.selectedModelId ?? "unknown model"}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                <StatusPill tone="accent">
+                <Badge tone="accent">
                   {detail.strategyLabel ? formatRoutingModeLabel(detail.strategyLabel) : "n/a"}
-                </StatusPill>
-                <StatusPill tone="neutral">
+                </Badge>
+                <Badge tone="neutral">
                   {detail.fallbackEndpointIds.length} fallback
                   {detail.fallbackEndpointIds.length === 1 ? "" : "s"}
-                </StatusPill>
+                </Badge>
               </div>
             </div>
           </div>
@@ -151,20 +151,20 @@ export default function RouterDecisionDetailRoute() {
                 <>
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     <div>
-                      <p className={utilityLabelClassName}>Judge score</p>
+                      <p className={fieldLabelClassName}>Judge score</p>
                       <p className={`mt-2 ${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
                         {Math.round(judgeScore * 100)}%
                       </p>
                     </div>
                     <div>
-                      <p className={utilityLabelClassName}>Benchmark samples</p>
+                      <p className={fieldLabelClassName}>Benchmark samples</p>
                       <p className={`mt-2 ${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
                         {benchmarkSamples}
                       </p>
                     </div>
                   </div>
                   <div className="mt-4 border-t border-[var(--rm-border)] pt-4">
-                    <p className={utilityLabelClassName}>Profile measured</p>
+                    <p className={fieldLabelClassName}>Profile measured</p>
                     <p className={`mt-2 ${supportingTextClassName}`}>
                       {measuredAtMs !== null ? new Date(measuredAtMs).toLocaleString() : "n/a"}
                     </p>

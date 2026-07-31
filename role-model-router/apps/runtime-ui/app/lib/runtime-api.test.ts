@@ -2810,7 +2810,7 @@ describe("role assignment helpers", () => {
     ).toEqual(["coder"]);
   });
 
-  test("posts default-all assignment metadata for peer and llama-swap model registration", async () => {
+  test("posts explicit empty include for peer and llama-swap load with no roles", async () => {
     const requests: Array<{ url: string; body: unknown }> = [];
     const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
       const url =
@@ -2827,7 +2827,7 @@ describe("role assignment helpers", () => {
         url: "/api/role-model/local/peer/models/local-peer-model/load",
         body: {
           roleIds: [],
-          roleAssignmentMode: "all",
+          roleAssignmentMode: "include",
           enabledRoleIds: [],
           disabledRoleIds: [],
         },
@@ -2836,7 +2836,7 @@ describe("role assignment helpers", () => {
         url: "/api/role-model/local/llama-swap/models/local-llama-model/load",
         body: {
           roleIds: [],
-          roleAssignmentMode: "all",
+          roleAssignmentMode: "include",
           enabledRoleIds: [],
           disabledRoleIds: [],
         },

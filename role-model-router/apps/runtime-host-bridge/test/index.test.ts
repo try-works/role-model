@@ -37,6 +37,7 @@ import {
   createQaRuntimeConfigPath,
   createQaRuntimeConfigText,
   createQaServerOptions,
+  qaChartReviewRequestIds,
   qaTelemetryRequestIds,
   seedQaTelemetry,
   shouldBootstrapQaPlaceholderControlPlane,
@@ -741,10 +742,13 @@ describe("runtime-host-bridge", () => {
       databasePath: resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId }),
       startAtMs: 0,
       endAtMs: Date.now() + 1_000,
-      limit: 20,
+      limit: 40,
     });
     expect(records.map((record) => record.requestId)).toEqual(
       expect.arrayContaining(Object.values(qaTelemetryRequestIds)),
+    );
+    expect(records).toHaveLength(
+      Object.keys(qaTelemetryRequestIds).length + Object.keys(qaChartReviewRequestIds).length,
     );
     expect(records).toEqual(
       expect.arrayContaining([
@@ -755,6 +759,9 @@ describe("runtime-host-bridge", () => {
           inputTokensAvailable: true,
           promptCacheRequestSource: "explicit",
           cacheReadTokens: 90000,
+          selectedStrategy: "quality",
+          taxonomyGroupId: "engineering",
+          routingCostSavingsUsd: 0.021,
         }),
         expect.objectContaining({
           requestId: qaTelemetryRequestIds.estimated,
@@ -768,6 +775,12 @@ describe("runtime-host-bridge", () => {
           inputTokens: 0,
           inputTokensSource: "unavailable",
           inputTokensAvailable: false,
+        }),
+        expect.objectContaining({
+          requestId: qaChartReviewRequestIds.failureTimeout,
+          statusFamily: "failure",
+          difficultyBucket: "medium",
+          selectedStrategy: "latency",
         }),
       ]),
     );

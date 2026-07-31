@@ -51,8 +51,12 @@ describe("role task hierarchy", () => {
     );
 
     expect(markup).toContain("Task detail");
+    expect(markup).toContain("1 task");
+    expect(markup).toContain("engineering · tools allowed");
+    expect(markup).toContain("border-l-[var(--rm-accent)]");
     expect(markup).not.toContain("Generate or patch code while preserving surrounding behavior.");
-    expect(markup).not.toContain(">code.edit<");
+    expect(markup).not.toContain("Select role");
+    expect(markup).not.toContain("xl:grid-cols-2");
   });
 
   test("reveals grouped task detail only for the expanded role", () => {
@@ -68,11 +72,11 @@ describe("role task hierarchy", () => {
     );
 
     expect(markup).toContain("Generate or patch code while preserving surrounding behavior.");
-    expect(markup).toContain(">code.edit<");
+    expect(markup).toContain("code.edit");
     expect(markup).toContain("Hide task detail");
   });
 
-  test("renders role catalog as group-first sections with secondary memberships visible", () => {
+  test("renders a Paper list-select catalog with high-risk badge and no card grid", () => {
     const markup = renderToStaticMarkup(
       <RoleCatalogHierarchy
         roleDefinitions={[
@@ -90,7 +94,7 @@ describe("role task hierarchy", () => {
             required_capabilities: [],
             preferred_capabilities: ["security.analysis"],
             forbidden_capabilities: [],
-            tool_policy: { mode: "allowed", allowed_tools: [] },
+            tool_policy: { mode: "limited", allowed_tools: [] },
             routing_policy_overrides: {},
             output_contracts: [],
             safety_policy_refs: [],
@@ -104,8 +108,12 @@ describe("role task hierarchy", () => {
       />,
     );
 
-    expect(markup).toContain("Engineering");
-    expect(markup).toContain("Secondary: Governance Safety");
     expect(markup).toContain("High risk");
+    expect(markup).toContain('data-tone="error"');
+    expect(markup).not.toContain("bg-[var(--rm-error)]");
+    expect(markup).toContain("tools limited");
+    expect(markup).not.toContain("Secondary: Governance Safety");
+    expect(markup).not.toContain("StatusPill");
+    expect(markup).not.toContain("xl:grid-cols-2");
   });
 });

@@ -1,21 +1,22 @@
 import { useEffect, useState } from "react";
 
-import { ErrorState, LoadingState, SectionCard, StatusPill } from "../components/page-primitives";
+import { Badge, ErrorState, LoadingState, SectionCard } from "../components/page-primitives";
 import {
   codeBlockClassName,
   compactTitleClassName,
-  metaTextClassName,
   monoUtilityStrongTextClassName,
   mutedPanelClassName,
-  secondaryButtonClassName,
   supportingTextClassName,
 } from "../lib/design-system";
 import {
   type RuntimeDownstreamOpenAIProviderConfig,
   fetchDownstreamOpenAIProviderConfig,
 } from "../lib/runtime-api";
-import { usePageActions } from "../lib/shell-header-context";
 import { buildDownstreamProviderGuide } from "../lib/view-models";
+
+/** Paper Connection contract field label — sans 11px uppercase (not mono eyebrow). */
+const contractFieldLabelClassName =
+  "font-sans text-[11px] font-normal uppercase leading-[14px] tracking-[0.04em] text-[var(--rm-muted)]";
 
 export default function IntegrationsDownstreamRoute() {
   const [provider, setProvider] = useState<RuntimeDownstreamOpenAIProviderConfig | null>(null);
@@ -33,13 +34,6 @@ export default function IntegrationsDownstreamRoute() {
       );
   }, []);
 
-  usePageActions(
-    <a className={secondaryButtonClassName} href="/api/role-model/downstream/openai">
-      Provider JSON
-    </a>,
-    [],
-  );
-
   if (error) {
     return <ErrorState label={error} />;
   }
@@ -51,22 +45,28 @@ export default function IntegrationsDownstreamRoute() {
 
   return (
     <div className="space-y-6">
-      <SectionCard title="Connection contract">
+      <SectionCard
+        title="Connection contract"
+        description="OpenAI-compatible base URLs, endpoints, and auth header for clients calling this runtime."
+      >
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {guide.connectionRows.map((row) => (
             <div key={row.label} className={`${mutedPanelClassName} p-4`}>
-              <p className={metaTextClassName}>{row.label}</p>
+              <p className={contractFieldLabelClassName}>{row.label}</p>
               <p className={`mt-2 break-all ${monoUtilityStrongTextClassName}`}>{row.value}</p>
             </div>
           ))}
         </div>
       </SectionCard>
 
-      <SectionCard title="Consumer setup">
+      <SectionCard
+        title="Consumer setup"
+        description="Steps, model inventory, and example requests for OpenAI-compatible clients."
+      >
         <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
           <div className={`${mutedPanelClassName} min-w-0 p-4`}>
             <p className={compactTitleClassName}>Setup steps</p>
-            <ol className={`mt-3 space-y-2 ${supportingTextClassName}`}>
+            <ol className={`mt-3 list-decimal space-y-2 pl-4 ${supportingTextClassName}`}>
               {guide.opencodeSteps.map((step) => (
                 <li key={step}>{step}</li>
               ))}
@@ -74,7 +74,7 @@ export default function IntegrationsDownstreamRoute() {
             <p className={`mt-4 ${supportingTextClassName}`}>{provider.authentication.note}</p>
             <div className="mt-4">
               <p className={compactTitleClassName}>Compatibility notes</p>
-              <ul className={`mt-3 space-y-2 ${supportingTextClassName}`}>
+              <ul className={`mt-3 list-disc space-y-2 pl-4 ${supportingTextClassName}`}>
                 {provider.setup.notes.map((note) => (
                   <li key={note}>{note}</li>
                 ))}
@@ -87,13 +87,13 @@ export default function IntegrationsDownstreamRoute() {
               <p className={compactTitleClassName}>Available models</p>
               <div className="mt-3 flex min-w-0 flex-wrap gap-2">
                 {guide.availableModels.map((modelId) => (
-                  <StatusPill
+                  <Badge
                     key={modelId}
                     className="max-w-full whitespace-normal leading-4"
                     tone={modelId === provider.setup.recommendedModel ? "accent" : "neutral"}
                   >
                     <span className="min-w-0 break-all">{modelId}</span>
-                  </StatusPill>
+                  </Badge>
                 ))}
               </div>
             </div>

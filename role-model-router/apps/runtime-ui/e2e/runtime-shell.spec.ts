@@ -29,22 +29,19 @@ test("keeps provider maintenance absent while showing configured connections", a
   await page.goto("/app/models");
 
   await expect(page.getByRole("heading", { name: "Model inventory" })).toBeVisible();
-  const kimiInventoryCard = page.locator("article").filter({ hasText: "moonshot/kimi-k2.5" });
-  await expect(kimiInventoryCard).toContainText("moonshot/kimi-k2.5");
-  await kimiInventoryCard.getByRole("button", { name: "Inspect" }).click();
-  const selectedModelDetail = page.locator("section").filter({ hasText: "Selected model detail" });
-  await expect(selectedModelDetail.getByText("Backing account role bindings")).toBeVisible();
-  await expect(
-    selectedModelDetail.getByText("moonshot.personal.primary • healthy", { exact: true }),
-  ).toBeVisible();
-  await expect(page.getByRole("button", { name: "Save bindings" })).toBeVisible();
-  await page.getByText("Edit role bindings", { exact: true }).click();
-  await expect(page.getByRole("link", { name: "Manage role definitions" }).first()).toBeVisible();
+  await page
+    .getByRole("button", { name: /moonshot\/kimi-k2\.5/i })
+    .first()
+    .click();
+  await expect(page.getByText("tasks under each role")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Make primary controller" })).toBeVisible();
+  await page.getByRole("link", { name: "Open Roles" }).click();
+  await expect(page.getByRole("heading", { name: "Runtime roles" })).toBeVisible();
 
   await page.goto("/app/system/session-readiness");
 
-  await expect(page.getByText("Bootstrap status")).toBeVisible();
-  await expect(page.getByText("Lifecycle authority")).toBeVisible();
-  await expect(page.getByText("Execution mode")).toBeVisible();
-  await expect(page.getByText("Routable endpoints").first()).toBeVisible();
+  await expect(page.getByText("Bootstrap", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Host health", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Authority", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Endpoints", { exact: true }).first()).toBeVisible();
 });

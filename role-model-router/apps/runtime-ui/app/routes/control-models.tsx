@@ -1,32 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
-import { LocalModelRolePicker } from "../components/local-model-role-picker";
 import {
-  CodeBlock,
-  DisclosureSection,
+  Badge,
   EmptyState,
   ErrorState,
-  FactCard,
   LoadingState,
   SectionCard,
-  StatusPill,
 } from "../components/page-primitives";
 import {
-  bodyStrongTextClassName,
-  bodyTextClassName,
-  cardClassName,
-  compactTitleClassName,
-  foregroundEmphasisClassName,
-  inlineTitleClassName,
-  metaTextClassName,
-  mutedPanelClassName,
-  primaryButtonClassName,
+  compactFieldButtonClassName,
   secondaryButtonClassName,
-  sectionTitleClassName,
   supportingTextClassName,
-  utilityLabelClassName,
 } from "../lib/design-system";
+import { ModelRoleBindingTree } from "../lib/role-task-hierarchy";
 import {
   type ModelTelemetryRollup,
   type RouterCandidate,
@@ -46,9 +33,10 @@ import {
   removeRuntimeAccountModel,
   unloadLocalModel,
   unloadPeerModel,
+  updateControllerAssignment,
   upsertRuntimeAccount,
 } from "../lib/runtime-api";
-import { buildConfiguredModelCards, buildConfiguredModelMetadataRows } from "../lib/view-models";
+import { buildConfiguredModelCards, buildSelectedModelMetaPanel } from "../lib/view-models";
 
 type ConfiguredModelCardLike = {
   readonly modelId: string;
@@ -57,11 +45,11 @@ type ConfiguredModelCardLike = {
   readonly status: string;
 };
 
-type StatusPillTone = "neutral" | "accent" | "warning" | "success" | "error" | "info" | "advisory";
+type BadgeTone = "neutral" | "accent" | "warning" | "success" | "error" | "info" | "advisory";
 
 type ConfiguredModelInventoryPill = {
   readonly label: string;
-  readonly tone: StatusPillTone;
+  readonly tone: BadgeTone;
 };
 
 type SelectedModelPreviewPayloadInput = {
@@ -90,6 +78,15 @@ type EvidencePillInput = {
 
 export type ConfiguredModelsSnapshot = Pick<RuntimeSnapshot, "accounts" | "endpoints" | "models">;
 type RequestEvidenceStatus = "loading" | "ready" | "unavailable";
+
+/** Paper Models inventory — section eyebrows (Runtime / Cost / Benchmark / Models / Roles). */
+const inventoryEyebrowClassName =
+  "font-sans text-[11px] font-semibold uppercase leading-[14px] tracking-[0.04em] text-[var(--rm-muted)]";
+const inventoryFactLabelClassName = "font-sans text-[13px] leading-[18px] text-[var(--rm-muted)]";
+const inventoryFactValueClassName =
+  "text-right font-sans text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)]";
+const inventoryMonoValueClassName =
+  "text-right font-mono text-[12px] font-semibold leading-4 text-[var(--rm-fg)]";
 
 type ConfiguredModelsInitialLoadResult = {
   readonly snapshot: ConfiguredModelsSnapshot;
@@ -188,7 +185,7 @@ function buildObservedRequestFact(input: {
 export function resolveConfiguredModelStatusTone(
   controllerState: ConfiguredModelCardLike["controllerState"],
   status: ConfiguredModelCardLike["status"],
-): StatusPillTone {
+): BadgeTone {
   if (controllerState === "active") {
     return "accent";
   }
@@ -208,7 +205,7 @@ export function buildConfiguredModelInventoryPills(input: {
 }): ConfiguredModelInventoryPill[] {
   return [
     {
-      label: input.toolCallingSupported ? "tool calling" : "no tool calling",
+      label: input.toolCallingSupported ? "tools" : "no tools",
       tone: input.toolCallingSupported ? "info" : "neutral",
     },
     {
@@ -218,7 +215,7 @@ export function buildConfiguredModelInventoryPills(input: {
     ...(typeof input.capabilityScore === "number"
       ? [
           {
-            label: `${Math.round(input.capabilityScore * 100)}% capability`,
+            label: `score ${input.capabilityScore.toFixed(2)}`,
             tone: "advisory" as const,
           },
         ]
@@ -430,6 +427,10 @@ export default function ControlModelsRoute() {
   const [error, setError] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<readonly RouterCandidate[]>([]);
   const [telemetryRollup, setTelemetryRollup] = useState<ModelTelemetryRollup | null>(null);
+  const [pendingControllerEndpointId, setPendingControllerEndpointId] = useState<string | null>(
+    null,
+  );
+  const [expandedBindingRoleId, setExpandedBindingRoleId] = useState<string | null>(null);
 
   useEffect(() => {
     return startDeferredConfiguredModelsBootstrap({
@@ -524,12 +525,6 @@ export default function ControlModelsRoute() {
   const selectedLlamaSwapEndpoints = selectedEndpoints.filter(
     (endpoint) => endpoint.sourceType === "local" && endpoint.localModelSource === "llama-swap",
   );
-  const selectedCapabilities = [
-    ...new Set([
-      ...(selectedCard?.capabilities ?? []),
-      ...selectedEndpoints.flatMap((endpoint) => endpoint.capabilities ?? []),
-    ]),
-  ].sort((left, right) => left.localeCompare(right, "en"));
   const selectedToolStyles = [
     ...new Set(
       selectedEndpoints
@@ -537,7 +532,6 @@ export default function ControlModelsRoute() {
         .map((endpoint) => endpoint.toolCallingStyle ?? "unknown"),
     ),
   ].sort((left, right) => left.localeCompare(right, "en"));
-  const selectedMetadataRows = selectedCard ? buildConfiguredModelMetadataRows(selectedCard) : [];
   const allRuntimeRoleIds = useMemo(
     () => (rolePolicy?.roleDefinitions ?? []).map((role) => role.role_id),
     [rolePolicy],
@@ -578,28 +572,23 @@ export default function ControlModelsRoute() {
     );
   }, [allRuntimeRoleIds, selectedCard, selectedModelAccounts]);
 
-  const saveAccountRoles = async (account: RuntimeAccount) => {
+  const saveAccountRoles = async (account: RuntimeAccount, nextRoleIds?: readonly string[]) => {
     if (!selectedCard || !snapshot) {
       return;
     }
     setSavingAccountId(account.providerAccountId);
     setStatusMessage(null);
     try {
+      const roleIds = nextRoleIds ?? draftRolesByAccountId[account.providerAccountId] ?? [];
       const nextSnapshot = await convergeSavedRuntimeAccount({
         currentSnapshot: snapshot,
         mutate: () =>
           upsertRuntimeAccount(
-            createAccountMutationPayload(
-              account,
-              selectedCard.modelId,
-              draftRolesByAccountId[account.providerAccountId] ?? [],
-              allRuntimeRoleIds,
-            ),
+            createAccountMutationPayload(account, selectedCard.modelId, roleIds, allRuntimeRoleIds),
           ),
       });
       setSnapshot(nextSnapshot);
       setError(null);
-      setStatusMessage(`Updated roles for ${account.providerAccountId}.`);
     } catch (value) {
       setError(value instanceof Error ? value.message : "Could not update model roles.");
     } finally {
@@ -683,15 +672,6 @@ export default function ControlModelsRoute() {
     return <LoadingState label="Loading configured model cards…" />;
   }
 
-  const toolCapableCount = cards.filter((card) => card.toolCallingSupported).length;
-  const activeModelCount = cards.filter(
-    (card) => card.status === "active" || card.status === "healthy",
-  ).length;
-  const observedRequestsFact = buildObservedRequestFact({
-    requests,
-    status: requestEvidenceStatus,
-  });
-
   const capabilityByModelId = new Map<string, number>();
   const benchmarkCapabilityByModelId = new Map<
     string,
@@ -774,594 +754,352 @@ export default function ControlModelsRoute() {
     groupRows: benchmarkGroupRows,
     suggestedRoleRows: benchmarkSuggestedRoleRows,
   });
+  const selectedHealthyEndpointCount = selectedEndpoints.filter(
+    (endpoint) =>
+      endpoint.healthStatus === "healthy" ||
+      (!endpoint.healthStatus && endpoint.status === "active"),
+  ).length;
+  const selectedMeanLatencyMs = (() => {
+    if (!telemetryRollup || telemetryRollup.tasks.length === 0) {
+      return null;
+    }
+    const samples = telemetryRollup.tasks
+      .map((task) => task.avgLatencyMs)
+      .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+    if (samples.length === 0) {
+      return null;
+    }
+    return samples.reduce((sum, value) => sum + value, 0) / samples.length;
+  })();
+  const selectedCandidateProfiles = selectedCard
+    ? candidates.filter((candidate) => candidate.modelId === selectedCard.modelId)
+    : [];
+  const selectedLatencyProfile = (() => {
+    for (const candidate of selectedCandidateProfiles) {
+      const profile =
+        typeof candidate.latestProfile === "object" && candidate.latestProfile !== null
+          ? (candidate.latestProfile as Record<string, unknown>)
+          : null;
+      const p50 = profile?.latency_ms_p50 ?? profile?.latencyMsP50;
+      const p95 = profile?.latency_ms_p95 ?? profile?.latencyMsP95;
+      if (
+        (typeof p50 === "number" && Number.isFinite(p50)) ||
+        (typeof p95 === "number" && Number.isFinite(p95))
+      ) {
+        return {
+          p50: typeof p50 === "number" && Number.isFinite(p50) ? p50 : null,
+          p95: typeof p95 === "number" && Number.isFinite(p95) ? p95 : null,
+        };
+      }
+    }
+    return { p50: null as number | null, p95: null as number | null };
+  })();
+  const selectedDifficultyMix = (() => {
+    for (const candidate of selectedCandidateProfiles) {
+      const buckets = candidate.benchmarkCapability?.scoresByBucket;
+      if (!buckets) {
+        continue;
+      }
+      const easy = buckets.easy?.score;
+      const medium = buckets.medium?.score;
+      const hard = buckets.hard?.score;
+      if (typeof easy === "number" && typeof medium === "number" && typeof hard === "number") {
+        return `${Math.round(easy * 100)} / ${Math.round(medium * 100)} / ${Math.round(hard * 100)}`;
+      }
+    }
+    return null;
+  })();
+  const selectedMetaPanel = selectedCard
+    ? buildSelectedModelMetaPanel({
+        modelId: selectedCard.modelId,
+        sourceSummary: selectedCard.sourceSummary,
+        status: selectedCard.status,
+        controllerState: selectedCard.controllerState,
+        endpointCount: selectedCard.endpointCount,
+        healthyEndpointCount: selectedHealthyEndpointCount,
+        toolCallingSupported: selectedCard.toolCallingSupported,
+        toolStyles: selectedToolStyles,
+        contextWindow: selectedCard.contextWindow,
+        modalities: selectedCard.modalities,
+        pricing: selectedCard.pricing,
+        overallScore: selectedCapabilityScore,
+        latencyP50Ms: selectedLatencyProfile.p50,
+        latencyP95Ms: selectedLatencyProfile.p95,
+        meanLatencyMs: selectedMeanLatencyMs,
+        difficultyMix: selectedDifficultyMix,
+        routingHint: telemetryRollup?.strengths[0] ?? selectedModelEvidencePills[0]?.label ?? null,
+      })
+    : null;
 
   return (
     <div className="space-y-6">
-      {statusMessage ? (
-        <section className={`${mutedPanelClassName} p-4`}>
-          <p className={utilityLabelClassName}>Last model change</p>
-          <p className={`mt-2 ${supportingTextClassName}`}>{statusMessage}</p>
-        </section>
-      ) : null}
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <FactCard
-          label="Configured models"
-          value={cards.length}
-          detail="Every configured model appears once in the merged inventory."
-          emphasis
-        />
-        <FactCard
-          label="Healthy models"
-          value={activeModelCount}
-          detail="Endpoint summaries currently resolve to active."
-        />
-        <FactCard
-          label="Tool-capable"
-          value={toolCapableCount}
-          detail="Models with at least one tool-capable endpoint."
-        />
-        <FactCard
-          label="Observed requests"
-          value={observedRequestsFact.value}
-          detail={observedRequestsFact.detail}
-        />
-      </div>
-
-      {!controller ? (
-        <section className={`${mutedPanelClassName} p-5`}>
-          <p className={foregroundEmphasisClassName}>Controller pending</p>
-          <p className={`mt-2 ${supportingTextClassName}`}>
-            Activate a local or remote endpoint, then assign it from Router &gt; Controller.
-          </p>
-        </section>
-      ) : null}
-
-      <div className="grid gap-4 xl:items-start xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.92fr)] 2xl:grid-cols-[minmax(0,760px)_minmax(0,1fr)]">
-        <section className={`${mutedPanelClassName} min-w-0 p-5`}>
-          <div className="space-y-2">
-            <h2 className={sectionTitleClassName}>Model inventory</h2>
-            <p className={supportingTextClassName}>
-              Every configured model appears once, with local and remote endpoint state merged into
-              a card-based registry.
-            </p>
-          </div>
-
-          {cards.length === 0 ? (
-            <>
-              <div className="mt-4">
-                <EmptyState label="No configured models are available yet." />
-              </div>
-              <div className="mt-4 flex flex-wrap gap-3">
-                <Link className={secondaryButtonClassName} to="/app/local/choose">
-                  Open Local Models
-                </Link>
-                <Link className={secondaryButtonClassName} to="/app/local/endpoints">
-                  Open Local Endpoints
-                </Link>
-                <Link className={secondaryButtonClassName} to="/app/remote/providers">
-                  Open Providers
-                </Link>
-              </div>
-            </>
-          ) : (
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {cards.map((card) => {
-                const capabilityScore = capabilityByModelId.get(card.modelId);
-                const inventoryPills = buildConfiguredModelInventoryPills({
-                  toolCallingSupported: card.toolCallingSupported,
-                  endpointCount: card.endpointCount,
-                  capabilityScore,
-                });
-                return (
-                  <article
-                    key={card.modelId}
-                    className={`${cardClassName} min-w-0 p-4 ${
-                      selectedModelId === card.modelId ? "border-[var(--rm-accent)]" : ""
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className={metaTextClassName}>{card.sourceSummary}</p>
-                        <h3 className={`mt-2 truncate ${inlineTitleClassName}`}>
-                          {card.displayName}
-                        </h3>
-                        <p className={`mt-2 break-all ${supportingTextClassName}`}>
-                          {card.modelId}
-                        </p>
-                      </div>
-                      <StatusPill
-                        tone={resolveConfiguredModelStatusTone(card.controllerState, card.status)}
-                      >
-                        {card.controllerState === "active" ? "controller" : card.status}
-                      </StatusPill>
-                    </div>
-
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {inventoryPills.map((pill) => (
-                        <StatusPill key={pill.label} tone={pill.tone}>
-                          {pill.label}
-                        </StatusPill>
-                      ))}
-                    </div>
-
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <button
-                        className={secondaryButtonClassName}
-                        type="button"
-                        onClick={() => setSelectedModelId(card.modelId)}
-                      >
-                        {selectedModelId === card.modelId ? "Selected" : "Inspect"}
-                      </button>
-                      {typeof capabilityScore === "number" ? (
-                        <Link className={secondaryButtonClassName} to="/app/models/benchmark">
-                          View benchmark
-                        </Link>
-                      ) : null}
-                    </div>
-                  </article>
-                );
-              })}
+      <SectionCard
+        title="Model inventory"
+        description="Select a model to inspect and configure. Controller is the badge — change it from the footer."
+      >
+        {cards.length === 0 ? (
+          <div className="space-y-4">
+            <EmptyState label="No configured models are available yet." />
+            <div className="flex flex-wrap gap-3">
+              <Link className={secondaryButtonClassName} to="/app/local/choose">
+                Open Local Models
+              </Link>
+              <Link className={secondaryButtonClassName} to="/app/local/endpoints">
+                Open Local Endpoints
+              </Link>
+              <Link className={secondaryButtonClassName} to="/app/remote/providers">
+                Open Providers
+              </Link>
             </div>
-          )}
-        </section>
-
-        <section className={`${mutedPanelClassName} min-w-0 p-5`}>
-          {selectedCard ? (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <h2 className={sectionTitleClassName}>Selected model detail</h2>
-                <p className={supportingTextClassName}>
-                  The production page opens role bindings, benchmark evidence, disclosures, and
-                  endpoint ids for the selected model.
-                </p>
-              </div>
-
-              <section className={`${cardClassName} p-4`}>
-                <h3 className={compactTitleClassName}>{selectedCard.displayName}</h3>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {selectedModelEvidencePills.map((pill) => (
-                    <StatusPill key={pill.label} tone={pill.tone}>
-                      {pill.label}
-                    </StatusPill>
-                  ))}
-                </div>
-              </section>
-
-              <section className={`${cardClassName} p-4`}>
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className={foregroundEmphasisClassName}>Backing account role bindings</p>
-                    <p className={`mt-2 ${supportingTextClassName}`}>
-                      {selectedPrimaryAccount
-                        ? `${selectedPrimaryAccount.providerAccountId} • ${
-                            selectedPrimaryAccount.healthStatus ?? "unknown"
-                          }`
-                        : "No backing provider accounts currently expose this model."}
-                    </p>
-                  </div>
-                  {selectedPrimaryAccount ? (
-                    <StatusPill
-                      tone={
-                        selectedPrimaryAccount.healthStatus === "healthy" ? "success" : "warning"
-                      }
-                    >
-                      {selectedPrimaryAccount.healthStatus ?? "unknown"}
-                    </StatusPill>
-                  ) : null}
-                </div>
-
-                {selectedPrimaryAccount ? (
-                  <>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {selectedPrimaryAccountRoleIds.length > 0 ? (
-                        selectedPrimaryAccountRoleIds.map((roleId) => (
-                          <StatusPill key={roleId} tone="neutral">
-                            {roleId}
-                          </StatusPill>
-                        ))
-                      ) : (
-                        <StatusPill tone="warning">No role bindings yet</StatusPill>
-                      )}
-                    </div>
-                    <div className="mt-4 flex flex-wrap gap-3">
-                      <button
-                        className={primaryButtonClassName}
-                        type="button"
-                        disabled={
-                          savingAccountId === selectedPrimaryAccount.providerAccountId ||
-                          removingTargetKey ===
-                            `account:${selectedPrimaryAccount.providerAccountId}`
-                        }
-                        onClick={() => void saveAccountRoles(selectedPrimaryAccount)}
-                      >
-                        {savingAccountId === selectedPrimaryAccount.providerAccountId
-                          ? "Saving…"
-                          : "Save bindings"}
-                      </button>
-                      <button
-                        className={secondaryButtonClassName}
-                        type="button"
-                        disabled={
-                          removingTargetKey ===
-                          `account:${selectedPrimaryAccount.providerAccountId}`
-                        }
-                        onClick={() => void removeConfiguredModel(selectedPrimaryAccount)}
-                      >
-                        {removingTargetKey === `account:${selectedPrimaryAccount.providerAccountId}`
-                          ? "Removing…"
-                          : resolveConfiguredModelEjectLabel(
-                              selectedPrimaryAccountHasLocalPeerEndpoint,
-                            )}
-                      </button>
-                    </div>
-                  </>
-                ) : null}
-              </section>
-
-              <section className={`${cardClassName} p-4`}>
-                <p className={supportingTextClassName}>
-                  Capabilities: {selectedCapabilities.join(", ") || "none"} • Metrics:{" "}
-                  {describeConfiguredModelRequestEvidence(
-                    selectedCard.requestCount,
-                    requestEvidenceStatus,
-                  )}
-                  , {selectedCard.endpointCount} endpoints, {selectedCard.sourceSummary} • Tooling /
-                  MCP: {selectedCard.toolCallingSupported ? "enabled" : "unavailable"}
-                  {selectedCapabilityScore !== null
-                    ? ` • Benchmark: ${Math.round(selectedCapabilityScore * 100)}%`
-                    : ""}
-                </p>
-              </section>
-
-              <div>
-                <CodeBlock className="max-h-[208px] overflow-auto">
-                  {JSON.stringify(
-                    buildSelectedModelPreviewPayload({
-                      modelId: selectedCard.modelId,
-                      endpointIds: selectedCard.endpointIds,
-                    }),
-                    null,
-                    2,
-                  )}
-                </CodeBlock>
-              </div>
-
-              <DisclosureSection summary="Edit role bindings">
-                <div className="space-y-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className={foregroundEmphasisClassName}>Manage role definitions</p>
-                      <p className={`mt-2 ${supportingTextClassName}`}>
-                        Assign live runtime roles per provider account for this model. These
-                        bindings feed router-visible endpoint role coverage directly.
-                      </p>
-                    </div>
-                    <Link className={secondaryButtonClassName} to="/app/models/roles">
-                      Manage role definitions
-                    </Link>
-                  </div>
-
-                  {selectedModelAccounts.length === 0 ? (
-                    <p className={supportingTextClassName}>
-                      No backing provider accounts currently expose this model.
-                    </p>
-                  ) : (
-                    <div className="space-y-4">
-                      {selectedModelAccounts.map((account) => {
-                        const hasLocalPeerEndpoint = selectedEndpoints.some(
-                          (endpoint) =>
-                            endpoint.providerAccountId === account.providerAccountId &&
-                            endpoint.sourceType === "local",
-                        );
-                        return (
-                          <div key={account.providerAccountId} className={`${cardClassName} p-4`}>
-                            <div className="flex flex-wrap items-start justify-between gap-3">
-                              <div>
-                                <p className={foregroundEmphasisClassName}>
-                                  {account.providerAccountId}
-                                </p>
-                                <p className={`mt-1 ${supportingTextClassName}`}>
-                                  {account.providerId} · {account.authMode ?? "unknown auth"}
-                                </p>
-                              </div>
-                              <StatusPill
-                                tone={account.healthStatus === "healthy" ? "success" : "warning"}
-                              >
-                                {account.healthStatus ?? "unknown"}
-                              </StatusPill>
-                            </div>
-                            <div className="mt-4">
-                              <LocalModelRolePicker
-                                rolePolicy={rolePolicy}
-                                selectedRoleIds={
-                                  draftRolesByAccountId[account.providerAccountId] ?? []
-                                }
-                                defaultAllRoles={allRuntimeRoleIds.length > 0}
-                                benchmarkCapability={selectedBenchmarkCapability}
-                                onChange={(roleIds) =>
-                                  setDraftRolesByAccountId((current) => ({
-                                    ...current,
-                                    [account.providerAccountId]: [...roleIds],
-                                  }))
-                                }
-                              />
-                            </div>
-                            <div className="mt-4 flex flex-wrap gap-3">
-                              <button
-                                className={primaryButtonClassName}
-                                type="button"
-                                disabled={
-                                  savingAccountId === account.providerAccountId ||
-                                  removingTargetKey === `account:${account.providerAccountId}`
-                                }
-                                onClick={() => void saveAccountRoles(account)}
-                              >
-                                {savingAccountId === account.providerAccountId
-                                  ? "Saving…"
-                                  : "Save bindings"}
-                              </button>
-                              <button
-                                className={secondaryButtonClassName}
-                                type="button"
-                                disabled={
-                                  removingTargetKey === `account:${account.providerAccountId}`
-                                }
-                                onClick={() => void removeConfiguredModel(account)}
-                              >
-                                {removingTargetKey === `account:${account.providerAccountId}`
-                                  ? "Removing…"
-                                  : resolveConfiguredModelEjectLabel(hasLocalPeerEndpoint)}
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </DisclosureSection>
-
-              <DisclosureSection summary="Model diagnostics">
-                <div className="space-y-4">
-                  {selectedLlamaSwapEndpoints.length > 0 ? (
-                    <div className={`${cardClassName} p-4`}>
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <p className={foregroundEmphasisClassName}>Local runtime pool</p>
-                          <p className={`mt-2 ${supportingTextClassName}`}>
-                            This model is currently loaded through the managed local runtime pool.
-                          </p>
-                        </div>
+          </div>
+        ) : (
+          <div className="space-y-5">
+            {statusMessage ? (
+              <p className={supportingTextClassName} aria-live="polite">
+                {statusMessage}
+              </p>
+            ) : null}
+            {!controller ? (
+              <p className={supportingTextClassName}>
+                Controller pending — activate a local or remote endpoint, then assign it from Router
+                → Controller.
+              </p>
+            ) : null}
+            <div className="grid gap-6 xl:grid-cols-2 xl:items-start">
+              <div className="min-w-0 space-y-4">
+                <div className="space-y-2">
+                  <p className={inventoryEyebrowClassName}>Models</p>
+                  <div className="overflow-hidden rounded-[var(--rm-radius-field)] border border-[var(--rm-border)]">
+                    {cards.map((card) => {
+                      const selected = selectedModelId === card.modelId;
+                      const capabilityScore = capabilityByModelId.get(card.modelId);
+                      const inventoryPills = buildConfiguredModelInventoryPills({
+                        toolCallingSupported: card.toolCallingSupported,
+                        endpointCount: card.endpointCount,
+                        capabilityScore,
+                      });
+                      return (
                         <button
-                          className={secondaryButtonClassName}
+                          key={card.modelId}
                           type="button"
-                          disabled={removingTargetKey === `local:${selectedCard.modelId}`}
-                          onClick={() => void unloadSelectedLocalModel()}
+                          className={`flex w-full items-start gap-2.5 border-b border-[var(--rm-border)] px-3 py-2.5 text-left last:border-b-0 ${
+                            selected
+                              ? "border-l-[3px] border-l-[var(--rm-accent)] bg-[var(--rm-surface-strong)]"
+                              : "border-l-[3px] border-l-transparent hover:bg-[var(--rm-surface-strong)]"
+                          }`}
+                          onClick={() => setSelectedModelId(card.modelId)}
                         >
-                          {removingTargetKey === `local:${selectedCard.modelId}`
-                            ? "Unloading…"
-                            : "Unload local model"}
-                        </button>
-                      </div>
-                    </div>
-                  ) : null}
-
-                  <div className={`${cardClassName} p-4`}>
-                    <p className={foregroundEmphasisClassName}>Capabilities</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {selectedCapabilities.length === 0 ? (
-                        <StatusPill tone="warning">No declared capabilities</StatusPill>
-                      ) : (
-                        selectedCapabilities.map((capability) => (
-                          <StatusPill key={capability} tone="neutral">
-                            {capability}
-                          </StatusPill>
-                        ))
-                      )}
-                    </div>
-                  </div>
-
-                  <div className={`${cardClassName} p-4`}>
-                    <p className={foregroundEmphasisClassName}>Metrics</p>
-                    <div className={`mt-3 grid gap-3 md:grid-cols-2 ${supportingTextClassName}`}>
-                      <p>
-                        <span className={foregroundEmphasisClassName}>Requests observed:</span>{" "}
-                        {describeConfiguredModelRequestEvidence(
-                          selectedCard.requestCount,
-                          requestEvidenceStatus,
-                        )}
-                      </p>
-                      <p>
-                        <span className={foregroundEmphasisClassName}>Configured endpoints:</span>{" "}
-                        {selectedCard.endpointCount}
-                      </p>
-                      <p>
-                        <span className={foregroundEmphasisClassName}>Source mix:</span>{" "}
-                        {selectedCard.sourceSummary}
-                      </p>
-                      <p>
-                        <span className={foregroundEmphasisClassName}>Status:</span>{" "}
-                        {selectedCard.status}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className={`${cardClassName} p-4`}>
-                    <p className={foregroundEmphasisClassName}>Model specifications</p>
-                    <div className={`mt-3 grid gap-3 md:grid-cols-2 ${supportingTextClassName}`}>
-                      {selectedMetadataRows.map((row) => (
-                        <p key={row.label}>
-                          <span className={foregroundEmphasisClassName}>{row.label}:</span>{" "}
-                          {row.value}
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className={`${cardClassName} p-4`}>
-                    <p className={foregroundEmphasisClassName}>Tooling / MCP</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <StatusPill tone={selectedCard.toolCallingSupported ? "accent" : "neutral"}>
-                        {selectedCard.toolCallingSupported
-                          ? "tool calling enabled"
-                          : "tool calling unavailable"}
-                      </StatusPill>
-                      {selectedToolStyles.map((style) => (
-                        <StatusPill key={style} tone="neutral">
-                          {style}
-                        </StatusPill>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className={`${cardClassName} p-4`}>
-                    <p className={foregroundEmphasisClassName}>
-                      Telemetry taxonomy rollup (advisory)
-                    </p>
-                    {telemetryRollup && telemetryRollup.totalRequests > 0 ? (
-                      <div className={`mt-3 space-y-3 ${bodyTextClassName}`}>
-                        <p className={`${supportingTextClassName} text-[var(--rm-muted)]`}>
-                          Based on {telemetryRollup.totalRequests} request
-                          {telemetryRollup.totalRequests === 1 ? "" : "s"} over the last{" "}
-                          {telemetryRollup.windowDays} days.
-                        </p>
-                        <div className="grid gap-4 xl:grid-cols-3">
-                          <div className="space-y-2">
-                            <p className={foregroundEmphasisClassName}>Recent groups</p>
-                            <div className="flex flex-wrap gap-2">
-                              {telemetryRollup.groups.length > 0 ? (
-                                telemetryRollup.groups.map((group) => (
-                                  <StatusPill key={group.groupId} tone="neutral">
-                                    {group.groupId} • {group.requestCount}
-                                  </StatusPill>
-                                ))
-                              ) : (
-                                <StatusPill tone="warning">No recent groups</StatusPill>
-                              )}
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <p className={foregroundEmphasisClassName}>Recent roles</p>
-                            <div className="flex flex-wrap gap-2">
-                              {telemetryRollup.roles.length > 0 ? (
-                                telemetryRollup.roles.map((role) => (
-                                  <StatusPill key={role.roleId} tone="neutral">
-                                    {role.roleId} • {role.requestCount}
-                                  </StatusPill>
-                                ))
-                              ) : (
-                                <StatusPill tone="warning">No recent roles</StatusPill>
-                              )}
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <p className={foregroundEmphasisClassName}>Recent capabilities</p>
-                            <div className="flex flex-wrap gap-2">
-                              {telemetryRollup.capabilities.length > 0 ? (
-                                telemetryRollup.capabilities.map((capability) => (
-                                  <StatusPill key={capability.capabilityId} tone="neutral">
-                                    {capability.capabilityId} • {capability.requestCount}
-                                  </StatusPill>
-                                ))
-                              ) : (
-                                <StatusPill tone="warning">No recent capabilities</StatusPill>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          {telemetryRollup.tasks.map((task) => (
-                            <div
-                              key={task.taskType}
-                              className="flex flex-wrap items-center justify-between gap-2 rounded-[var(--rm-radius-md)] border border-[var(--rm-border)] p-2"
-                            >
-                              <div className="min-w-0">
-                                <p className={bodyStrongTextClassName}>{task.taskType}</p>
-                                <p className={supportingTextClassName}>
-                                  {task.requestCount} req{" "}
-                                  {task.avgLatencyMs !== null ? `• avg ${task.avgLatencyMs}ms` : ""}
-                                </p>
-                              </div>
-                              <StatusPill
-                                tone={
-                                  task.successRate >= 0.95
-                                    ? "success"
-                                    : task.successRate < 0.8
-                                      ? "warning"
-                                      : "neutral"
-                                }
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="min-w-0 truncate font-mono text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)]">
+                                {card.modelId}
+                              </span>
+                              <Badge
+                                tone={resolveConfiguredModelStatusTone(
+                                  card.controllerState,
+                                  card.status,
+                                )}
                               >
-                                {Math.round(task.successRate * 100)}%
-                              </StatusPill>
+                                {card.controllerState === "active" ? "controller" : card.status}
+                              </Badge>
                             </div>
-                          ))}
-                        </div>
-                        <div className="grid gap-4 xl:grid-cols-2">
-                          <div className="space-y-2">
-                            <p className={foregroundEmphasisClassName}>Observed strengths</p>
-                            {telemetryRollup.strengths.length > 0 ? (
-                              telemetryRollup.strengths.map((strength) => (
-                                <p key={strength} className={supportingTextClassName}>
-                                  {strength}
-                                </p>
-                              ))
-                            ) : (
-                              <p className={supportingTextClassName}>
-                                No high-confidence strengths have emerged from recent telemetry yet.
-                              </p>
-                            )}
+                            <p className="text-[12px] leading-4 text-[var(--rm-muted)]">
+                              {[
+                                card.sourceSummary,
+                                ...inventoryPills.map((pill) => pill.label),
+                              ].join(" · ")}
+                            </p>
                           </div>
-                          <div className="space-y-2">
-                            <p className={foregroundEmphasisClassName}>Observed warnings</p>
-                            {telemetryRollup.warnings.length > 0 ? (
-                              telemetryRollup.warnings.map((warning) => (
-                                <p key={warning} className={supportingTextClassName}>
-                                  {warning}
-                                </p>
-                              ))
-                            ) : (
-                              <p className={supportingTextClassName}>
-                                No warning-level patterns are visible in the recent telemetry slice.
-                              </p>
-                            )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {selectedCard && selectedMetaPanel ? (
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <p className={inventoryEyebrowClassName}>{selectedMetaPanel.title}</p>
+                      <dl className="space-y-2">
+                        {selectedMetaPanel.facts.map((row) => (
+                          <div
+                            key={row.label}
+                            className="flex items-baseline justify-between gap-3"
+                          >
+                            <dt className={inventoryFactLabelClassName}>{row.label}</dt>
+                            <dd className={inventoryFactValueClassName}>{row.value}</dd>
                           </div>
+                        ))}
+                      </dl>
+                    </div>
+                    {selectedMetaPanel.cost ? (
+                      <>
+                        <div className="h-px w-full bg-[var(--rm-border)]" />
+                        <div className="space-y-2">
+                          <p className={inventoryEyebrowClassName}>Cost</p>
+                          <dl className="space-y-2">
+                            {selectedMetaPanel.cost.map((row) => (
+                              <div
+                                key={row.label}
+                                className="flex items-baseline justify-between gap-3"
+                              >
+                                <dt className={inventoryFactLabelClassName}>{row.label}</dt>
+                                <dd className={inventoryMonoValueClassName}>{row.value}</dd>
+                              </div>
+                            ))}
+                          </dl>
                         </div>
+                      </>
+                    ) : null}
+                    <div className="h-px w-full bg-[var(--rm-border)]" />
+                    <div className="space-y-2">
+                      <p className={inventoryEyebrowClassName}>Benchmark</p>
+                      <dl className="space-y-2">
+                        {selectedMetaPanel.benchmark.map((row) => (
+                          <div
+                            key={row.label}
+                            className="flex items-baseline justify-between gap-3"
+                          >
+                            <dt className={inventoryFactLabelClassName}>{row.label}</dt>
+                            <dd
+                              className={
+                                row.label === "Overall" || row.label === "Routing"
+                                  ? inventoryFactValueClassName
+                                  : inventoryMonoValueClassName
+                              }
+                            >
+                              {row.value}
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </div>
+                  </div>
+                ) : (
+                  <p
+                    className={`${supportingTextClassName} border-t border-[var(--rm-border)] pt-4`}
+                  >
+                    Select a model from the inventory to inspect bindings, benchmark evidence, and
+                    endpoint ids.
+                  </p>
+                )}
+              </div>
+
+              <div className="min-w-0">
+                {selectedCard ? (
+                  <section className="flex max-h-[min(68vh,720px)] flex-col gap-3">
+                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                      <p className={inventoryEyebrowClassName}>Roles</p>
+                      <p className="text-[12px] leading-4 text-[var(--rm-muted)]">
+                        {selectedCard.modelId} · tasks under each role
+                      </p>
+                    </div>
+                    {rolePolicy && selectedPrimaryAccount ? (
+                      <div className="min-h-0 flex-1 overflow-auto pr-1">
+                        <ModelRoleBindingTree
+                          roleDefinitions={rolePolicy.roleDefinitions}
+                          taskDefinitions={rolePolicy.taskDefinitions}
+                          selectedRoleIds={selectedPrimaryAccountRoleIds}
+                          expandedRoleId={expandedBindingRoleId}
+                          onToggleRole={(roleId, nextChecked) => {
+                            const accountId = selectedPrimaryAccount.providerAccountId;
+                            const existing = new Set(
+                              draftRolesByAccountId[accountId] ?? selectedPrimaryAccountRoleIds,
+                            );
+                            if (nextChecked) {
+                              existing.add(roleId);
+                            } else {
+                              existing.delete(roleId);
+                            }
+                            const nextRoleIds = [...existing].sort((left, right) =>
+                              left.localeCompare(right, "en"),
+                            );
+                            setDraftRolesByAccountId((current) => ({
+                              ...current,
+                              [accountId]: nextRoleIds,
+                            }));
+                            void saveAccountRoles(selectedPrimaryAccount, nextRoleIds);
+                          }}
+                          onToggleExpandedRole={(roleId) =>
+                            setExpandedBindingRoleId((current) =>
+                              current === roleId ? null : roleId,
+                            )
+                          }
+                        />
                       </div>
                     ) : (
-                      <p className={`mt-3 ${supportingTextClassName}`}>
-                        No taxonomy-tagged telemetry data available yet for this model. Send
-                        requests to populate taxonomy rollups, per-task performance, and advisory
-                        warnings.
+                      <p className={supportingTextClassName}>
+                        No backing provider accounts currently expose this model.
                       </p>
                     )}
-                  </div>
+                  </section>
+                ) : (
+                  <p className={supportingTextClassName}>
+                    Roles and task bindings appear when a model is selected.
+                  </p>
+                )}
+              </div>
+            </div>
 
-                  <div className="flex flex-wrap gap-3">
-                    <Link className={secondaryButtonClassName} to="/app/system/runtime-config">
-                      Edit runtime config
-                    </Link>
-                    <Link className={secondaryButtonClassName} to="/app/models/roles">
-                      Edit runtime roles
-                    </Link>
-                    <Link className={secondaryButtonClassName} to="/app/remote/providers">
-                      Review providers
-                    </Link>
-                  </div>
-                </div>
-              </DisclosureSection>
+            <div className="-mx-5 -mb-5 mt-5 flex flex-wrap items-center justify-end gap-2 border-t border-[var(--rm-border)] px-5 py-3">
+              <button
+                type="button"
+                className={compactFieldButtonClassName}
+                disabled={
+                  !selectedCard ||
+                  selectedCard.controllerState === "active" ||
+                  selectedCard.endpointIds.length === 0 ||
+                  pendingControllerEndpointId !== null
+                }
+                onClick={() => {
+                  const endpointId = selectedCard?.endpointIds[0];
+                  if (!endpointId) {
+                    return;
+                  }
+                  setPendingControllerEndpointId(endpointId);
+                  setError(null);
+                  void updateControllerAssignment({ endpointId })
+                    .then(async (nextController) => {
+                      setController(nextController);
+                      await refreshModelState();
+                      setStatusMessage(`Made ${selectedCard.modelId} the primary controller.`);
+                    })
+                    .catch((value: unknown) =>
+                      setError(
+                        value instanceof Error
+                          ? value.message
+                          : "Could not update the controller assignment.",
+                      ),
+                    )
+                    .finally(() => setPendingControllerEndpointId(null));
+                }}
+              >
+                {pendingControllerEndpointId ? "Saving…" : "Make primary controller"}
+              </button>
+              <Link className={compactFieldButtonClassName} to="/app/models/roles">
+                Open Roles
+              </Link>
+              <Link className={compactFieldButtonClassName} to="/app/models/benchmark">
+                Open Benchmark
+              </Link>
+              <button
+                type="button"
+                className={`${compactFieldButtonClassName} text-[var(--rm-error)]`}
+                disabled={
+                  !selectedCard ||
+                  selectedLlamaSwapEndpoints.length === 0 ||
+                  removingTargetKey === `local:${selectedCard.modelId}`
+                }
+                onClick={() => void unloadSelectedLocalModel()}
+              >
+                {selectedCard && removingTargetKey === `local:${selectedCard.modelId}`
+                  ? "Unloading…"
+                  : "Unload"}
+              </button>
             </div>
-          ) : (
-            <div className="space-y-2">
-              <h2 className={sectionTitleClassName}>Selected model detail</h2>
-              <p className={supportingTextClassName}>
-                Select a model from the inventory to inspect bindings, benchmark evidence, and
-                endpoint ids.
-              </p>
-            </div>
-          )}
-        </section>
-      </div>
+          </div>
+        )}
+      </SectionCard>
     </div>
   );
 }

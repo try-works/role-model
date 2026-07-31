@@ -1,28 +1,26 @@
+import { ChartGrid, ChartGridCell, FilterSelect, MetricStrip, PageFilters } from "@role-model/ui";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 
+import { ObserveKitChartBlock } from "../components/observe-chart-block";
 import {
+  Badge,
   DisclosureSection,
   EmptyState,
   ErrorState,
   SectionCard,
 } from "../components/page-primitives";
-import { TelemetryAnalyticsChartCard } from "../components/telemetry-charts";
-import {
-  TelemetrySelectField,
-  TelemetryTextField,
-  TelemetryTimeRangeControl,
-} from "../components/telemetry-controls";
+import { TelemetryTextField } from "../components/telemetry-controls";
 import {
   accentActionTextClassName,
-  bodyTextClassName,
+  bodyStrongTextClassName,
+  cardClassName,
   foregroundEmphasisClassName,
-  listRowClassName,
-  metaTextClassName,
   mutedPanelClassName,
   supportingTextClassName,
 } from "../lib/design-system";
 import { startDeferredLiveRefresh } from "../lib/live-refresh";
+import { adaptObserveChartBlock } from "../lib/observe-chart-adapter";
 import type {
   RuntimeTelemetryAnalyticsDimension,
   RuntimeTelemetryAnalyticsFilters,
@@ -46,6 +44,11 @@ import {
   telemetryMetricOptions,
   telemetryTimeRangeOptions,
 } from "../lib/telemetry-chart-config";
+import {
+  fromPageTimeRange,
+  observePageTimeRangeOptions,
+  toPageTimeRange,
+} from "../lib/telemetry-page-filters";
 import type {
   TelemetryRouteChartDefinition,
   TelemetryTimeRangeValue,
@@ -387,6 +390,17 @@ export default function RequestsRoute() {
     [filters, requests],
   );
   const ledgerRows = useMemo(() => buildTelemetryRequestRows(filteredRequests), [filteredRequests]);
+  const chartBlocks = useMemo(
+    () =>
+      charts.map((chart) =>
+        adaptObserveChartBlock(chart.definition, {
+          response: chart.response,
+          errorMessage: chart.errorMessage,
+          loading: loading && charts.length === 0,
+        }),
+      ),
+    [charts, loading],
+  );
 
   if (error) {
     return <ErrorState label={error} />;
@@ -406,35 +420,20 @@ export default function RequestsRoute() {
           </span>
         </div>
       ) : null}
-      <SectionCard
-        title="Analytics controls"
-        description="Scope the structured telemetry history and comparison target without leaving the canonical request ledger."
-      >
-        <div className="space-y-4">
-          <TelemetryTimeRangeControl
-            onChange={(value) => updateParam("range", value)}
-            value={timeRange}
-          />
-          <div className="grid gap-4 xl:grid-cols-4">
-            <TelemetrySelectField
+
+      <PageFilters
+        timeRange={toPageTimeRange(timeRange)}
+        timeRangeOptions={observePageTimeRangeOptions}
+        onTimeRangeChange={(value) => updateParam("range", fromPageTimeRange(value))}
+        trailing={
+          <div className="flex flex-wrap items-end gap-3">
+            <FilterSelect
               label="Breakdown"
               onChange={(value) => updateParam("breakdown", value)}
               options={requestBreakdownOptions}
               value={breakdownValue}
             />
-            <TelemetrySelectField
-              label="Ranking metric"
-              onChange={(value) => updateParam("metric", value)}
-              options={rankingMetricOptions}
-              value={rankingMetric}
-            />
-            <TelemetrySelectField
-              label="Ranking target"
-              onChange={(value) => updateParam("rankBy", value)}
-              options={rankingDimensionOptions}
-              value={rankingDimension}
-            />
-            <TelemetrySelectField
+            <FilterSelect
               label="Source"
               onChange={(value) => updateParam("source", value)}
               options={[
@@ -444,141 +443,200 @@ export default function RequestsRoute() {
               ]}
               value={sourceFilter}
             />
-          </div>
-          <DisclosureSection compact defaultOpen={hasAdvancedFilters} summary="Advanced controls">
-            <div className="space-y-4">
-              <div className="grid gap-4 xl:grid-cols-4">
-                <TelemetryTextField
-                  label="Endpoint id"
-                  onChange={(value) => updateParam("endpointId", value)}
-                  placeholder="Filter a specific endpoint id"
-                  value={endpointId}
-                />
-                <TelemetryTextField
-                  label="Model id"
-                  onChange={(value) => updateParam("modelId", value)}
-                  placeholder="Filter a specific model id"
-                  value={modelId}
-                />
-                <TelemetryTextField
-                  label="Provider id"
-                  onChange={(value) => updateParam("providerId", value)}
-                  placeholder="Filter a specific provider id"
-                  value={providerId}
-                />
-                <TelemetrySelectField
-                  label="Status family"
-                  onChange={(value) => updateParam("status", value)}
-                  options={[
-                    { label: "All statuses", value: "all" },
-                    { label: "Success only", value: "success" },
-                    { label: "Failure only", value: "failure" },
-                    { label: "Unknown only", value: "unknown" },
-                  ]}
-                  value={statusFamily}
-                />
-              </div>
-              <div className="grid gap-4 xl:grid-cols-4">
-                <TelemetryTextField
-                  label="Taxonomy group id"
-                  onChange={(value) => updateParam("taxGroup", value)}
-                  placeholder="e.g. engineering"
-                  value={taxonomyGroupId}
-                />
-                <TelemetryTextField
-                  label="Taxonomy role id"
-                  onChange={(value) => updateParam("taxRole", value)}
-                  placeholder="e.g. coder"
-                  value={taxonomyRoleId}
-                />
-                <TelemetryTextField
-                  label="Taxonomy task type"
-                  onChange={(value) => updateParam("taxTask", value)}
-                  placeholder="e.g. coder.review"
-                  value={taxonomyTaskType}
-                />
-                <TelemetryTextField
-                  label="Taxonomy task variant"
-                  onChange={(value) => updateParam("taxVariant", value)}
-                  placeholder="e.g. deep-audit"
-                  value={taxonomyTaskVariant}
-                />
-              </div>
-              <div className="grid gap-4 xl:grid-cols-3">
-                <TelemetryTextField
-                  label="Taxonomy capability ids"
-                  onChange={(value) => updateParam("taxCapability", value)}
-                  placeholder="Comma-separated capability ids"
-                  value={taxonomyCapabilityIds}
-                />
-                <TelemetryTextField
-                  label="Taxonomy modality ids"
-                  onChange={(value) => updateParam("taxModality", value)}
-                  placeholder="Comma-separated modality ids"
-                  value={taxonomyModalityIds}
-                />
-                <TelemetryTextField
-                  label="Taxonomy tool class ids"
-                  onChange={(value) => updateParam("taxTool", value)}
-                  placeholder="Comma-separated tool class ids"
-                  value={taxonomyToolClassIds}
-                />
-              </div>
-            </div>
-          </DisclosureSection>
-        </div>
-      </SectionCard>
-
-      <div className="grid grid-cols-12 gap-4">
-        {charts.map((chart) => (
-          <div key={chart.definition.title} className={chart.definition.className ?? "col-span-12"}>
-            <TelemetryAnalyticsChartCard
-              definition={chart.definition}
-              errorMessage={chart.errorMessage}
-              loading={loading && charts.length === 0}
-              refreshing={refreshing}
-              response={chart.response}
+            <FilterSelect
+              label="Ranking metric"
+              onChange={(value) => updateParam("metric", value)}
+              options={rankingMetricOptions}
+              value={rankingMetric}
+            />
+            <FilterSelect
+              label="Ranking target"
+              onChange={(value) => updateParam("rankBy", value)}
+              options={rankingDimensionOptions}
+              value={rankingDimension}
             />
           </div>
-        ))}
-      </div>
+        }
+      />
 
-      <SectionCard title="Recent telemetry requests">
+      <DisclosureSection compact defaultOpen={hasAdvancedFilters} summary="Advanced controls">
+        <div className="space-y-4">
+          <div className="grid gap-4 xl:grid-cols-4">
+            <TelemetryTextField
+              label="Endpoint id"
+              onChange={(value) => updateParam("endpointId", value)}
+              placeholder="Filter a specific endpoint id"
+              value={endpointId}
+            />
+            <TelemetryTextField
+              label="Model id"
+              onChange={(value) => updateParam("modelId", value)}
+              placeholder="Filter a specific model id"
+              value={modelId}
+            />
+            <TelemetryTextField
+              label="Provider id"
+              onChange={(value) => updateParam("providerId", value)}
+              placeholder="Filter a specific provider id"
+              value={providerId}
+            />
+            <FilterSelect
+              className="w-full min-w-0"
+              label="Status family"
+              onChange={(value) => updateParam("status", value)}
+              options={[
+                { label: "All statuses", value: "all" },
+                { label: "Success only", value: "success" },
+                { label: "Failure only", value: "failure" },
+                { label: "Unknown only", value: "unknown" },
+              ]}
+              value={statusFamily}
+            />
+          </div>
+          <div className="grid gap-4 xl:grid-cols-4">
+            <TelemetryTextField
+              label="Taxonomy group id"
+              onChange={(value) => updateParam("taxGroup", value)}
+              placeholder="e.g. engineering"
+              value={taxonomyGroupId}
+            />
+            <TelemetryTextField
+              label="Taxonomy role id"
+              onChange={(value) => updateParam("taxRole", value)}
+              placeholder="e.g. coder"
+              value={taxonomyRoleId}
+            />
+            <TelemetryTextField
+              label="Taxonomy task type"
+              onChange={(value) => updateParam("taxTask", value)}
+              placeholder="e.g. coder.review"
+              value={taxonomyTaskType}
+            />
+            <TelemetryTextField
+              label="Taxonomy task variant"
+              onChange={(value) => updateParam("taxVariant", value)}
+              placeholder="e.g. deep-audit"
+              value={taxonomyTaskVariant}
+            />
+          </div>
+          <div className="grid gap-4 xl:grid-cols-3">
+            <TelemetryTextField
+              label="Taxonomy capability ids"
+              onChange={(value) => updateParam("taxCapability", value)}
+              placeholder="Comma-separated capability ids"
+              value={taxonomyCapabilityIds}
+            />
+            <TelemetryTextField
+              label="Taxonomy modality ids"
+              onChange={(value) => updateParam("taxModality", value)}
+              placeholder="Comma-separated modality ids"
+              value={taxonomyModalityIds}
+            />
+            <TelemetryTextField
+              label="Taxonomy tool class ids"
+              onChange={(value) => updateParam("taxTool", value)}
+              placeholder="Comma-separated tool class ids"
+              value={taxonomyToolClassIds}
+            />
+          </div>
+        </div>
+      </DisclosureSection>
+
+      <ChartGrid>
+        {chartBlocks.map((block) => (
+          <ChartGridCell key={block.title} span={block.span}>
+            <ObserveKitChartBlock block={block} />
+          </ChartGridCell>
+        ))}
+      </ChartGrid>
+
+      <SectionCard
+        title="Recent telemetry requests"
+        description="Explainable request ledger with endpoint, model, status, and direct Observe/Router drill-in."
+      >
         {loading && charts.length === 0 ? (
           <EmptyState label="Loading the canonical telemetry ledger…" />
         ) : ledgerRows.length === 0 ? (
           <EmptyState label="No requests match the current analytics filters." />
         ) : (
-          <div className="space-y-3">
-            {ledgerRows.map((request) => (
-              <div key={request.requestId} className={`${listRowClassName} md:items-center`}>
-                <div>
-                  <p className={foregroundEmphasisClassName}>{request.requestId}</p>
-                  {request.clientRequestId && request.clientRequestId !== request.requestId ? (
-                    <p className={supportingTextClassName}>
-                      Correlation • {request.clientRequestId}
-                    </p>
-                  ) : null}
-                  <p className={supportingTextClassName}>{request.endpointId}</p>
-                  <p className={`mt-2 ${supportingTextClassName}`}>
-                    Routing decision • {request.routingDecisionLabel}
-                  </p>
-                  <p className={`mt-2 ${supportingTextClassName}`}>
-                    {request.sourceLabel} • {request.statusLabel} • {request.latencyLabel} •{" "}
-                    {request.tokenLabel} • {request.costLabel}
-                  </p>
+          <div className="space-y-4">
+            {ledgerRows.map((request) => {
+              const sourceKey = request.sourceLabel.toLowerCase();
+              return (
+                <div key={request.requestId} className={`${cardClassName} space-y-4 p-4`}>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0 border-l-2 border-[var(--rm-accent)] pl-3">
+                      <p className={`break-all ${bodyStrongTextClassName}`}>{request.requestId}</p>
+                    </div>
+                    <Badge tone={sourceKey === "local" ? "accent" : "neutral"}>
+                      {sourceKey === "local" || sourceKey === "remote"
+                        ? sourceKey
+                        : request.sourceLabel}
+                    </Badge>
+                  </div>
+
+                  <MetricStrip
+                    aria-label={`${request.requestId} telemetry request`}
+                    variant="inventory"
+                    className="max-w-none"
+                    items={[
+                      {
+                        id: "model",
+                        label: "Model",
+                        value: request.modelId ?? "—",
+                      },
+                      {
+                        id: "endpoint",
+                        label: "Endpoint",
+                        value: request.endpointId,
+                      },
+                      {
+                        id: "status",
+                        label: "Status",
+                        value: request.statusLabel,
+                      },
+                      {
+                        id: "latency",
+                        label: "Latency",
+                        value: request.latencyLabel,
+                      },
+                      {
+                        id: "tokens",
+                        label: "Tokens",
+                        value: request.tokenLabel,
+                      },
+                      {
+                        id: "cost",
+                        label: "Cost",
+                        value: request.costLabel,
+                      },
+                      {
+                        id: "decided",
+                        label: "Seen",
+                        value: request.createdAtLabel,
+                      },
+                    ]}
+                  />
+
+                  <div className="flex flex-wrap gap-4">
+                    <Link
+                      className={accentActionTextClassName}
+                      to={`/app/observe/requests/${request.requestId}`}
+                    >
+                      Observe · Open detail
+                    </Link>
+                    {request.routingDecisionLabel !== "n/a" ? (
+                      <Link
+                        className={supportingTextClassName}
+                        to={`/app/router/decisions/${request.requestId}`}
+                      >
+                        Router · Open detail
+                      </Link>
+                    ) : null}
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className={metaTextClassName}>{request.createdAtLabel}</p>
-                  <Link
-                    className={`mt-2 inline-block ${accentActionTextClassName}`}
-                    to={`/app/observe/requests/${request.requestId}`}
-                  >
-                    Inspect
-                  </Link>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </SectionCard>

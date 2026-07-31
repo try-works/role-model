@@ -1,0 +1,87 @@
+
+> @role-model-router/runtime-ui@ build D:\DEV\role-model\.worktrees\86-runtime-ui-rm3-design-system-frontend\role-model-router\apps\runtime-ui
+> react-router build && tsc --noEmit
+
+vite v7.3.2 building client environment for production...
+transforming...
+Γ£ô 2376 modules transformed.
+rendering chunks...
+computing gzip size...
+build/client/.vite/manifest.json                           24.79 kB Γöé gzip:   2.26 kB
+build/client/assets/root-DylgEXsQ.css                      54.28 kB Γöé gzip:  10.32 kB
+build/client/assets/index-CgUeC-Zx.js                       0.15 kB Γöé gzip:   0.15 kB
+build/client/assets/live-refresh-DcaagJbF.js                0.16 kB Γöé gzip:   0.14 kB
+build/client/assets/local-models-DEleTGZf.js                0.16 kB Γöé gzip:   0.16 kB
+build/client/assets/router-candidate-labels-DZOqVj1T.js     0.67 kB Γöé gzip:   0.41 kB
+build/client/assets/theme-CxtVguy4.js                       0.77 kB Γöé gzip:   0.45 kB
+build/client/assets/shell-header-context-BBtNcHzJ.js        0.78 kB Γöé gzip:   0.40 kB
+build/client/assets/not-found-DVAt_zDx.js                   1.03 kB Γöé gzip:   0.55 kB
+build/client/assets/routing-mode-0L6xYTH_.js                1.04 kB Γöé gzip:   0.48 kB
+build/client/assets/legacy-redirect-Bh8_0Ivo.js             1.19 kB Γöé gzip:   0.43 kB
+build/client/assets/local-matrix-uNjEOV5I.js                1.29 kB Γöé gzip:   0.52 kB
+build/client/assets/llama-swap-setup-DjrOlpYQ.js            1.50 kB Γöé gzip:   0.74 kB
+build/client/assets/local-choose-BDwuaAfl.js                1.98 kB Γöé gzip:   0.84 kB
+build/client/assets/integrations-downstream-Bm_604s1.js     2.52 kB Γöé gzip:   1.02 kB
+build/client/assets/local-swap-CGhvj7ox.js                  3.39 kB Γöé gzip:   1.38 kB
+build/client/assets/control-runtime-config-Cfp2GsjG.js      3.45 kB Γöé gzip:   1.54 kB
+build/client/assets/router-decisions-xgAFA6gJ.js            3.62 kB Γöé gzip:   1.43 kB
+build/client/assets/local-policy-Dx-qjj9p.js                3.74 kB Γöé gzip:   1.61 kB
+build/client/assets/root-BqlB7hul.js                        3.80 kB Γöé gzip:   1.68 kB
+build/client/assets/local-peers-BselolQW.js                 4.03 kB Γöé gzip:   1.65 kB
+build/client/assets/integrations-upstream-DR8Gin5p.js       4.09 kB Γöé gzip:   1.59 kB
+build/client/assets/app-layout-CGrDREC9.js                  4.15 kB Γöé gzip:   1.75 kB
+build/client/assets/local-logs-Cqj2YBz0.js                  4.27 kB Γöé gzip:   1.68 kB
+build/client/assets/system-peers-B6wnSFLY.js                4.32 kB Γöé gzip:   1.70 kB
+build/client/assets/studio-rerank-B8JMDDqB.js               4.34 kB Γöé gzip:   1.88 kB
+build/client/assets/observe-activity-8_ECQkyw.js            4.52 kB Γöé gzip:   1.76 kB
+build/client/assets/runtime-yffB7gQN.js                     4.57 kB Γöé gzip:   1.66 kB
+build/client/assets/studio-images-BMr_okQc.js               4.80 kB Γöé gzip:   1.95 kB
+build/client/assets/observe-logs-mrl1fJD-.js                4.84 kB Γöé gzip:   1.86 kB
+build/client/assets/session-readiness-D7dhaH-e.js           4.85 kB Γöé gzip:   1.71 kB
+build/client/assets/storage-retention-BEatYCls.js           5.38 kB Γöé gzip:   2.10 kB
+build/client/assets/llama-swap-setup-hint-Byh_jBEi.js       5.42 kB Γöé gzip:   1.96 kB
+build/client/assets/endpoints-C_ImqQjZ.js                   5.55 kB Γöé gzip:   1.95 kB
+build/client/assets/studio-advanced-Cg77o5uG.js             5.58 kB Γöé gzip:   2.22 kB
+build/client/assets/control-controller-BJVviSYq.js          5.66 kB Γöé gzip:   1.94 kB
+build/client/assets/router-candidates-DlI24JyZ.js           5.67 kB Γöé gzip:   2.03 kB
+build/client/assets/local-peer-models-DTnElcZq.js           5.80 kB Γöé gzip:   2.05 kB
+build/client/assets/local-model-role-picker-TooQ-ee4.js     5.84 kB Γöé gzip:   2.20 kB
+build/client/assets/router-decision-detail-m64q9DqW.js      5.93 kB Γöé gzip:   1.97 kB
+build/client/assets/studio-audio-BmtzA2pW.js                6.25 kB Γöé gzip:   2.45 kB
+build/client/assets/workbench-Cw-2-TWp.js                   7.03 kB Γöé gzip:   2.61 kB
+build/client/assets/local-llama-swap-models-BVGeULcl.js     7.17 kB Γöé gzip:   2.44 kB
+build/client/assets/page-primitives-C7s5jnMZ.js             7.59 kB Γöé gzip:   2.80 kB
+build/client/assets/dashboard-SflL36N_.js                   7.89 kB Γöé gzip:   2.95 kB
+build/client/assets/observe-routing-B1gK90-m.js             8.17 kB Γöé gzip:   3.06 kB
+build/client/assets/control-routing-strategy-DC3woqta.js    8.67 kB Γöé gzip:   3.03 kB
+build/client/assets/router-config-BSnc7o3q.js               8.94 kB Γöé gzip:   2.34 kB
+build/client/assets/requests-zwHP0kP2.js                    9.01 kB Γöé gzip:   3.26 kB
+build/client/assets/router-DvU1kND3.js                      9.55 kB Γöé gzip:   2.79 kB
+build/client/assets/extensions-CcVMG2Ry.js                 14.78 kB Γöé gzip:   4.86 kB
+build/client/assets/control-roles-D2enIy8E.js              16.17 kB Γöé gzip:   4.39 kB
+build/client/assets/runtime-api-DdUBgY0z.js                17.14 kB Γöé gzip:   4.26 kB
+build/client/assets/request-detail-D48rpop0.js             19.96 kB Γöé gzip:   5.97 kB
+build/client/assets/view-models-C-Gvp3gS.js                21.07 kB Γöé gzip:   6.79 kB
+build/client/assets/control-models-9XcNCc18.js             22.49 kB Γöé gzip:   6.31 kB
+build/client/assets/providers-BIEO0AV2.js                  24.22 kB Γöé gzip:   7.30 kB
+build/client/assets/cn-B5V-leUE.js                         26.34 kB Γöé gzip:   8.26 kB
+build/client/assets/design-system-B3_USdMT.js              28.10 kB Γöé gzip:   8.74 kB
+build/client/assets/control-benchmark-DtktFpxa.js          29.39 kB Γöé gzip:   8.74 kB
+build/client/assets/chunk-EVOBXE3Y-CbLStoMq.js            128.07 kB Γöé gzip:  43.13 kB
+build/client/assets/entry.client-CUjFWg5_.js              190.57 kB Γöé gzip:  60.05 kB
+build/client/assets/telemetry-route-models-nDQjTyNv.js    434.22 kB Γöé gzip: 116.75 kB
+Γ£ô built in 14.00s
+vite v7.3.2 building ssr environment for production...
+transforming...
+Γ£ô 10 modules transformed.
+rendering chunks...
+build/server/.vite/manifest.json                0.23 kB
+build/server/assets/server-build-DylgEXsQ.css  54.28 kB
+build/server/index.js                          71.23 kB
+
+Γ£ô 1 asset cleaned from React Router server build.
+build\server\assets\server-build-DylgEXsQ.css
+
+SPA Mode: Generated build\client\index.html
+Removing the server build in D:\DEV\role-model\.worktrees\86-runtime-ui-rm3-design-system-frontend\role-model-router\apps\runtime-ui\build\server due to ssr:false
+Γ£ô built in 660ms
