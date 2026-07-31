@@ -1,6 +1,5 @@
 import { Link } from "react-router";
 
-import { LlamaSwapSetupHint, useLlamaSwapConfigStatus } from "../components/llama-swap-setup-hint";
 import {
   bodyTextClassName,
   cardClassName,
@@ -11,10 +10,8 @@ import {
 } from "../lib/design-system";
 
 export default function LocalChooseRoute() {
-  const { status: llamaSwapStatus, loading: llamaSwapStatusLoading } = useLlamaSwapConfigStatus();
-
   return (
-    <div className="grid gap-5 xl:grid-cols-2">
+    <div className="grid gap-5 xl:grid-cols-[minmax(0,6fr)_minmax(0,6fr)]">
       <section className={`${cardClassName} flex min-h-[280px] flex-col gap-3 p-5`}>
         <p className={utilityLabelClassName}>External server</p>
         <h2 className={inlineTitleClassName}>Peer-backed models</h2>
@@ -49,11 +46,6 @@ export default function LocalChooseRoute() {
             Edit runtime config
           </Link>
         </div>
-        {!llamaSwapStatusLoading && llamaSwapStatus && !llamaSwapStatus.operational ? (
-          <div className="pt-2">
-            <LlamaSwapSetupHint variant="compact" status={llamaSwapStatus} />
-          </div>
-        ) : null}
       </section>
     </div>
   );

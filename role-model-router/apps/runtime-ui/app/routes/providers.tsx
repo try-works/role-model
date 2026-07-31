@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { useSearchParams } from "react-router";
 
 import { DeviceAuthorizationCard } from "../components/device-authorization-card";
 import { DeviceAuthorizationModal } from "../components/device-authorization-modal";
@@ -384,6 +384,11 @@ export default function ProvidersRoute() {
   const [submitting, setSubmitting] = useState(false);
   const [authorizing, setAuthorizing] = useState(false);
   const [polling, setPolling] = useState(false);
+  const [expandedEndpointId, setExpandedEndpointId] = useState<string | null>(null);
+  const [draftRolesByEndpointId, setDraftRolesByEndpointId] = useState<Record<string, string[]>>(
+    {},
+  );
+  const [savingRolesEndpointId, setSavingRolesEndpointId] = useState<string | null>(null);
 
   const applyProviderSelection = useCallback(
     (
@@ -927,7 +932,7 @@ export default function ProvidersRoute() {
         <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
           <SectionCard
             title="Choose provider and models"
-            description="Select the provider, connection method, model set, and role bindings that should flow into the runtime registry."
+            description="Select the provider, connection method, and model. New models default to all roles selected."
           >
             <form className="space-y-4" onSubmit={onSubmit}>
               <SelectField
@@ -993,98 +998,17 @@ export default function ProvidersRoute() {
                 ))}
               </SelectField>
 
-              {selectedModel !== "" ? (
-                <div className="space-y-3 text-sm">
-                  <div>
-                    <p className={foregroundEmphasisClassName}>Model roles</p>
-                    <p className="text-[var(--rm-secondary)]">
-                      Assign runtime roles to the selected model so the resulting endpoint registry
-                      preserves operator intent.
-                    </p>
-                  </div>
-                  <div className={`${mutedPanelClassName} space-y-3 p-4`}>
-                    <p className={foregroundEmphasisClassName}>{selectedModel}</p>
-                    {availableRoleIds.length > 0 ? (
-                      <LocalModelRolePicker
-                        rolePolicy={rolePolicy}
-                        selectedRoleIds={selectedModelRoles[selectedModel] ?? availableRoleIds}
-                        expandSelectedGroupsByDefault={false}
-                        onChange={(nextRoleIds) =>
-                          setSelectedModelRoles((current) => ({
-                            ...current,
-                            [selectedModel]: [...nextRoleIds],
-                          }))
-                        }
-                      />
-                    ) : (
-                      <div className={insetPanelClassName}>
-                        <p className="text-[var(--rm-secondary)]">
-                          No runtime roles are available from the host bridge yet.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : null}
-
-              {selectedVariant ? (
-                <div className={insetPanelClassName}>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className={foregroundEmphasisClassName}>{selectedVariant.label}</p>
-                    <StatusPill
-                      tone={selectedVariant.availability === "ready" ? "success" : "warning"}
-                    >
-                      {selectedVariant.availability}
-                    </StatusPill>
-                    <StatusPill tone="neutral">{selectedVariant.authMode}</StatusPill>
-                  </div>
-                  <p className="mt-2">{selectedVariant.description}</p>
+              {selectedVariant?.oauth ? (
+                <div className={`${raisedPanelClassName} p-3`}>
+                  <p className={foregroundEmphasisClassName}>OAuth metadata</p>
                   <p className="mt-2">
-                    Models.dev metadata enriches provider and model readback while the runtime keeps
-                    LiteLLM as the live connection path.
+                    <span className={foregroundEmphasisClassName}>Client id:</span>{" "}
+                    {selectedVariant.oauth.clientId}
                   </p>
-                  <div className="mt-3 grid gap-2 md:grid-cols-2">
-                    <p>
-                      <span className={foregroundEmphasisClassName}>Catalog models:</span>{" "}
-                      {availableModels.length}
-                    </p>
-                    <p>
-                      <span className={foregroundEmphasisClassName}>API base:</span>{" "}
-                      {selectedVariant.baseUrl ?? selectedProvider?.apiBase}
-                    </p>
-                    <p>
-                      <span className={foregroundEmphasisClassName}>SDK package:</span>{" "}
-                      {selectedProvider?.npmPackage ?? "Not cataloged"}
-                    </p>
-                    <p>
-                      <span className={foregroundEmphasisClassName}>Docs:</span>{" "}
-                      {selectedProvider?.docsUrl ? (
-                        <a
-                          className="underline decoration-[var(--rm-border-strong)] underline-offset-4"
-                          href={selectedProvider.docsUrl}
-                          rel="noreferrer"
-                          target="_blank"
-                        >
-                          {selectedProvider.docsUrl}
-                        </a>
-                      ) : (
-                        "Not cataloged"
-                      )}
-                    </p>
-                  </div>
-                  {selectedVariant.oauth ? (
-                    <div className={`mt-3 ${raisedPanelClassName} p-3`}>
-                      <p className={foregroundEmphasisClassName}>OAuth metadata</p>
-                      <p className="mt-2">
-                        <span className={foregroundEmphasisClassName}>Client id:</span>{" "}
-                        {selectedVariant.oauth.clientId}
-                      </p>
-                      <p>
-                        <span className={foregroundEmphasisClassName}>Device endpoint:</span>{" "}
-                        {selectedVariant.oauth.deviceAuthorizationEndpoint}
-                      </p>
-                    </div>
-                  ) : null}
+                  <p>
+                    <span className={foregroundEmphasisClassName}>Device endpoint:</span>{" "}
+                    {selectedVariant.oauth.deviceAuthorizationEndpoint}
+                  </p>
                 </div>
               ) : null}
 
@@ -1119,10 +1043,6 @@ export default function ProvidersRoute() {
                     </button>
                   </>
                 ) : null}
-
-                <Link className={secondaryButtonClassName} to="/app/connect">
-                  View in Connect registry
-                </Link>
               </div>
               {oauthState ? (
                 <DeviceAuthorizationCard
@@ -1142,7 +1062,7 @@ export default function ProvidersRoute() {
 
           <SectionCard
             title="Configured provider connections"
-            description="Configured remote endpoints stay visible here with their live model and readiness posture, grouped by the saved account that owns each connection."
+            description="Endpoints stay grouped by account. Expand a model’s roles control to edit bindings."
           >
             <div className="space-y-4">
               {configuredRemoteConnectionRows.length === 0 ? (
@@ -1162,86 +1082,130 @@ export default function ProvidersRoute() {
                           {row.endpointCount} endpoint{row.endpointCount === 1 ? "" : "s"}
                         </StatusPill>
                       </div>
-                      <div className="mt-3 grid gap-1 text-sm text-[var(--rm-secondary)]">
-                        <p>
-                          <span className={foregroundEmphasisClassName}>Connection method:</span>{" "}
-                          {row.authMode}
-                        </p>
-                        <p>
-                          <span className={foregroundEmphasisClassName}>Base URL:</span>{" "}
-                          {row.baseUrlOverride ?? "Provider default"}
-                        </p>
-                      </div>
                       <div className="mt-3 space-y-3">
                         {row.endpoints.map((endpoint) => {
-                          const effectiveRoleIds = [...endpoint.roleIds];
+                          const effectiveRoleIds =
+                            draftRolesByEndpointId[endpoint.endpointId] ?? [...endpoint.roleIds];
                           const healthTone =
                             endpoint.healthStatus === "healthy"
                               ? "success"
                               : endpoint.healthStatus === "offline"
                                 ? "warning"
                                 : "neutral";
-                          const roleCoverageSummary = buildProviderModelRoleCoverageSummary({
-                            selectedRoleIds: effectiveRoleIds,
-                            allRoleIds: availableRoleIds,
-                            rolePolicy,
-                          });
+                          const expanded = expandedEndpointId === endpoint.endpointId;
+                          const roleCountLabel =
+                            effectiveRoleIds.length === 0
+                              ? "0 roles"
+                              : `${effectiveRoleIds.length} roles`;
                           return (
                             <div
                               key={endpoint.endpointId}
                               className={`${raisedPanelClassName} p-3`}
                             >
-                              <div className="flex flex-wrap items-center gap-2">
-                                <StatusPill tone="accent">{endpoint.displayName}</StatusPill>
-                                <StatusPill tone="neutral">{endpoint.modelId}</StatusPill>
+                              <button
+                                type="button"
+                                className="flex w-full flex-wrap items-center gap-2 text-left"
+                                aria-expanded={expanded}
+                                onClick={() => {
+                                  setExpandedEndpointId((current) =>
+                                    current === endpoint.endpointId ? null : endpoint.endpointId,
+                                  );
+                                  setDraftRolesByEndpointId((current) => ({
+                                    ...current,
+                                    [endpoint.endpointId]:
+                                      current[endpoint.endpointId] ?? [...endpoint.roleIds],
+                                  }));
+                                }}
+                              >
+                                <span className={foregroundEmphasisClassName}>
+                                  {endpoint.displayName}
+                                </span>
                                 <StatusPill tone={healthTone}>{endpoint.healthStatus}</StatusPill>
-                                <StatusPill tone={endpoint.routingEligible ? "success" : "neutral"}>
-                                  {endpoint.routingEligible
-                                    ? "routing eligible"
-                                    : "routing blocked"}
-                                </StatusPill>
-                                <StatusPill
-                                  tone={endpoint.benchmarkEligible ? "success" : "neutral"}
-                                >
-                                  {endpoint.benchmarkEligible
-                                    ? "benchmark eligible"
-                                    : "benchmark blocked"}
-                                </StatusPill>
-                              </div>
-                              <p className={`mt-2 ${supportingTextClassName}`}>
-                                <span className={foregroundEmphasisClassName}>Endpoint:</span>{" "}
-                                {endpoint.endpointId}
-                              </p>
-                              {effectiveRoleIds.length > 0 ? (
-                                <div className="mt-2 space-y-2">
-                                  <p className={supportingTextClassName}>
-                                    {roleCoverageSummary.allRolesSelected
-                                      ? "All runtime roles assigned."
-                                      : `${roleCoverageSummary.totalSelectedCount} of ${roleCoverageSummary.totalRoleCount} runtime roles assigned.`}
-                                  </p>
-                                  {roleCoverageSummary.groupPreviewLabels.length > 0 ? (
-                                    <div className="flex flex-wrap items-center gap-2">
-                                      {roleCoverageSummary.groupPreviewLabels.map((label) => (
-                                        <StatusPill
-                                          key={`${endpoint.endpointId}:${label}`}
-                                          tone="neutral"
-                                        >
-                                          {label}
-                                        </StatusPill>
-                                      ))}
-                                      {roleCoverageSummary.hiddenGroupCount > 0 ? (
-                                        <StatusPill tone="neutral">
-                                          +{roleCoverageSummary.hiddenGroupCount} more groups
-                                        </StatusPill>
-                                      ) : null}
+                                <StatusPill tone="neutral">{roleCountLabel}</StatusPill>
+                                <span className={`ml-auto ${supportingTextClassName}`}>
+                                  {expanded ? "Hide roles" : "Edit roles"}
+                                </span>
+                              </button>
+                              {expanded ? (
+                                <div className="mt-3 space-y-3">
+                                  {availableRoleIds.length > 0 ? (
+                                    <LocalModelRolePicker
+                                      rolePolicy={rolePolicy}
+                                      selectedRoleIds={effectiveRoleIds}
+                                      expandSelectedGroupsByDefault={false}
+                                      onChange={(nextRoleIds) =>
+                                        setDraftRolesByEndpointId((current) => ({
+                                          ...current,
+                                          [endpoint.endpointId]: [...nextRoleIds],
+                                        }))
+                                      }
+                                    />
+                                  ) : (
+                                    <div className={insetPanelClassName}>
+                                      <p className="text-[var(--rm-secondary)]">
+                                        No runtime roles are available from the host bridge yet.
+                                      </p>
                                     </div>
-                                  ) : null}
+                                  )}
+                                  <button
+                                    type="button"
+                                    className={primaryButtonClassName}
+                                    disabled={
+                                      !row.account || savingRolesEndpointId === endpoint.endpointId
+                                    }
+                                    onClick={() => {
+                                      if (!row.account) {
+                                        return;
+                                      }
+                                      const account = row.account;
+                                      void (async () => {
+                                        setSavingRolesEndpointId(endpoint.endpointId);
+                                        setError(null);
+                                        try {
+                                          const modelIds = row.endpoints.map(
+                                            (entry) => entry.modelId,
+                                          );
+                                          const selection = Object.fromEntries(
+                                            row.endpoints.map((entry) => [
+                                              entry.modelId,
+                                              entry.endpointId === endpoint.endpointId
+                                                ? (draftRolesByEndpointId[entry.endpointId] ?? [
+                                                    ...entry.roleIds,
+                                                  ])
+                                                : [...entry.roleIds],
+                                            ]),
+                                          );
+                                          await upsertRuntimeAccount({
+                                            ...account,
+                                            allowedModels: modelIds,
+                                            modelRoleBindings: buildModelRoleBindings(
+                                              modelIds,
+                                              selection,
+                                              availableRoleIds,
+                                            ),
+                                          });
+                                          await load();
+                                          setActionFeedback(
+                                            `Saved roles for ${endpoint.displayName}.`,
+                                          );
+                                        } catch (value) {
+                                          setError(
+                                            value instanceof Error
+                                              ? value.message
+                                              : "Could not save model roles.",
+                                          );
+                                        } finally {
+                                          setSavingRolesEndpointId(null);
+                                        }
+                                      })();
+                                    }}
+                                  >
+                                    {savingRolesEndpointId === endpoint.endpointId
+                                      ? "Saving…"
+                                      : "Save roles"}
+                                  </button>
                                 </div>
-                              ) : (
-                                <p className={`mt-2 ${supportingTextClassName}`}>
-                                  No roles assigned
-                                </p>
-                              )}
+                              ) : null}
                             </div>
                           );
                         })}

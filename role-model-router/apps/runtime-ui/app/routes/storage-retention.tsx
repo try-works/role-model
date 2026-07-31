@@ -1,9 +1,9 @@
+import { MetricStrip } from "@role-model/ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   EmptyState,
   ErrorState,
-  FactCard,
   LoadingState,
   SectionCard,
   StatusPill,
@@ -59,65 +59,71 @@ export function StorageRetentionRouteView() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <FactCard
-          label="Tracked usage"
-          value={formatBytes(summary?.totalBytes ?? 0)}
-          detail="Graph content, compact ledgers, derived views, and archives."
-          emphasis
-        />
-        <FactCard
-          label="Data classes"
-          value={summary?.categories.length ?? 0}
-          detail="Category, tier, and scope remain independently visible."
-        />
-        <FactCard
-          label="Conflicts"
-          value={conflictCount}
-          detail="Legal holds, leases, and Managed policy blocks."
-        />
-        <FactCard
-          label="Maintenance"
-          value={summary?.activeJob?.status ?? "Idle"}
-          detail="Background-only compaction; routing is never interrupted."
-        />
-      </div>
+      <MetricStrip
+        aria-label="Storage retention summary"
+        variant="panel"
+        items={[
+          {
+            id: "usage",
+            label: "Tracked",
+            value: String(formatBytes(summary?.totalBytes ?? 0)),
+          },
+          {
+            id: "classes",
+            label: "Classes",
+            value: String(summary?.categories.length ?? 0),
+          },
+          { id: "conflicts", label: "Conflicts", value: String(conflictCount) },
+          {
+            id: "maintenance",
+            label: "Maintenance",
+            value: String(summary?.activeJob?.status ?? "Idle"),
+          },
+        ]}
+      />
       {error ? <ErrorState label={error} /> : null}
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]">
         <SectionCard
-          title="Usage by category, tier, and scope"
-          description="Policies downgrade capabilities explicitly before content becomes delete-eligible."
+          title="Usage by category"
+          description="Category, tier, and scope stay independently visible. Policies downgrade capabilities before content becomes delete-eligible."
         >
           {summary === null ? (
             <LoadingState label="Loading storage inventory…" />
           ) : summary.categories.length === 0 ? (
             <EmptyState label="No managed storage is present." />
           ) : (
-            <div className="space-y-3">
-              {summary.categories.map((row) => (
-                <div
-                  className={`${mutedPanelClassName} flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between`}
-                  key={`${row.id}:${row.scope}`}
-                >
-                  <div>
-                    <p className={compactTitleClassName}>{row.id}</p>
-                    <p className={`mt-1 ${supportingTextClassName}`}>
-                      {row.scope} · {row.count} records
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <StatusPill tone="neutral">{row.tier}</StatusPill>
-                    <StatusPill tone="info">{formatBytes(row.bytes)}</StatusPill>
-                  </div>
-                </div>
-              ))}
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead className="text-[var(--rm-muted)]">
+                  <tr>
+                    <th className="pb-3 font-semibold">Category</th>
+                    <th className="pb-3 font-semibold">Scope</th>
+                    <th className="pb-3 font-semibold">Tier</th>
+                    <th className="pb-3 font-semibold">Records</th>
+                    <th className="pb-3 font-semibold">Bytes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {summary.categories.map((row) => (
+                    <tr key={`${row.id}:${row.scope}`} className="border-t border-[var(--rm-border)]">
+                      <td className={`py-3 ${compactTitleClassName}`}>{row.id}</td>
+                      <td className={`py-3 ${supportingTextClassName}`}>{row.scope}</td>
+                      <td className="py-3">
+                        <StatusPill tone="neutral">{row.tier}</StatusPill>
+                      </td>
+                      <td className={`py-3 ${supportingTextClassName}`}>{row.count}</td>
+                      <td className={`py-3 ${supportingTextClassName}`}>{formatBytes(row.bytes)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </SectionCard>
         <div className="space-y-4">
           <SectionCard
-            title="Retention policy editor"
-            description="Set scoped byte and age budgets. Managed policy remains authoritative."
+            title="Retention policy"
+            description="Scoped byte and age budgets. Managed policy stays authoritative."
           >
             <div className="grid gap-3">
               <label className={utilityLabelClassName}>
@@ -193,27 +199,22 @@ export function StorageRetentionRouteView() {
                 </button>
               ) : null}
             </div>
-            {summary?.activeJob ? (
-              <div className={`${mutedPanelClassName} mt-3 p-3`}>
-                <p className={utilityLabelClassName}>Background progress</p>
-                <p className={`mt-1 ${supportingTextClassName}`}>
-                  {summary.activeJob.status} · {summary.activeJob.progress}%
-                </p>
-              </div>
-            ) : null}
+            <div className={`${mutedPanelClassName} mt-3 p-3`}>
+              <p className={utilityLabelClassName}>Background progress</p>
+              <p className={`mt-1 ${supportingTextClassName}`}>
+                {summary?.activeJob
+                  ? `${summary.activeJob.status} · ${summary.activeJob.progress}%`
+                  : "Idle · no active retention job"}
+              </p>
+            </div>
             {plan ? (
               <p className={`mt-3 ${supportingTextClassName}`}>
                 {plan.affectedCount} affected · {formatBytes(plan.estimatedBytes)} ·{" "}
                 {plan.rollbackAvailable ? "Rollback-safe" : "Rollback unavailable"}
               </p>
             ) : null}
-          </SectionCard>
-          <SectionCard
-            title="Conflicts and receipts"
-            description="Hash-bound manifests preserve deletion and privacy provenance without inline ID lists."
-          >
             {summary?.conflicts.length ? (
-              <div className="mb-3 space-y-2">
+              <div className="mt-3 space-y-2">
                 {summary.conflicts.map((row) => (
                   <div
                     className={`${mutedPanelClassName} p-3`}
@@ -224,9 +225,14 @@ export function StorageRetentionRouteView() {
                   </div>
                 ))}
               </div>
-            ) : null}
+            ) : (
+              <p className={`mt-3 ${supportingTextClassName}`}>
+                No legal holds or Managed policy conflicts.
+              </p>
+            )}
             {summary?.receipts.length ? (
-              <div className="space-y-3">
+              <div className="mt-3 space-y-3">
+                <p className={utilityLabelClassName}>Conflicts and receipts</p>
                 {summary.receipts.map((receipt) => (
                   <div className={`${mutedPanelClassName} p-3`} key={receipt.id}>
                     <div className="flex items-center justify-between gap-3">
@@ -258,9 +264,7 @@ export function StorageRetentionRouteView() {
                   </div>
                 ))}
               </div>
-            ) : (
-              <EmptyState label="No pruning receipts yet." />
-            )}
+            ) : null}
           </SectionCard>
         </div>
       </div>

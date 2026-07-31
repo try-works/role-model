@@ -1,13 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
-import { LocalModelRolePicker } from "../components/local-model-role-picker";
 import {
-  CodeBlock,
   DisclosureSection,
   EmptyState,
   ErrorState,
-  FactCard,
   LoadingState,
   SectionCard,
   StatusPill,
@@ -28,6 +25,10 @@ import {
   utilityLabelClassName,
 } from "../lib/design-system";
 import {
+  buildRoleTaskHierarchy,
+  ModelRoleBindingTree,
+} from "../lib/role-task-hierarchy";
+import {
   type ModelTelemetryRollup,
   type RouterCandidate,
   type RuntimeAccount,
@@ -46,9 +47,10 @@ import {
   removeRuntimeAccountModel,
   unloadLocalModel,
   unloadPeerModel,
+  updateControllerAssignment,
   upsertRuntimeAccount,
 } from "../lib/runtime-api";
-import { buildConfiguredModelCards, buildConfiguredModelMetadataRows } from "../lib/view-models";
+import { buildConfiguredModelCards, buildConfiguredModelMetadataRows, buildSelectedModelMetaPanel } from "../lib/view-models";
 
 type ConfiguredModelCardLike = {
   readonly modelId: string;
@@ -430,6 +432,10 @@ export default function ControlModelsRoute() {
   const [error, setError] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<readonly RouterCandidate[]>([]);
   const [telemetryRollup, setTelemetryRollup] = useState<ModelTelemetryRollup | null>(null);
+  const [pendingControllerEndpointId, setPendingControllerEndpointId] = useState<string | null>(
+    null,
+  );
+  const [expandedBindingRoleId, setExpandedBindingRoleId] = useState<string | null>(null);
 
   useEffect(() => {
     return startDeferredConfiguredModelsBootstrap({
@@ -683,15 +689,6 @@ export default function ControlModelsRoute() {
     return <LoadingState label="Loading configured model cards…" />;
   }
 
-  const toolCapableCount = cards.filter((card) => card.toolCallingSupported).length;
-  const activeModelCount = cards.filter(
-    (card) => card.status === "active" || card.status === "healthy",
-  ).length;
-  const observedRequestsFact = buildObservedRequestFact({
-    requests,
-    status: requestEvidenceStatus,
-  });
-
   const capabilityByModelId = new Map<string, number>();
   const benchmarkCapabilityByModelId = new Map<
     string,
@@ -774,6 +771,41 @@ export default function ControlModelsRoute() {
     groupRows: benchmarkGroupRows,
     suggestedRoleRows: benchmarkSuggestedRoleRows,
   });
+  const selectedHealthyEndpointCount = selectedEndpoints.filter(
+    (endpoint) =>
+      endpoint.healthStatus === "healthy" ||
+      (!endpoint.healthStatus && endpoint.status === "active"),
+  ).length;
+  const selectedMeanLatencyMs = (() => {
+    if (!telemetryRollup || telemetryRollup.tasks.length === 0) {
+      return null;
+    }
+    const samples = telemetryRollup.tasks
+      .map((task) => task.avgLatencyMs)
+      .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+    if (samples.length === 0) {
+      return null;
+    }
+    return samples.reduce((sum, value) => sum + value, 0) / samples.length;
+  })();
+  const selectedMetaPanel = selectedCard
+    ? buildSelectedModelMetaPanel({
+        modelId: selectedCard.modelId,
+        sourceSummary: selectedCard.sourceSummary,
+        status: selectedCard.status,
+        controllerState: selectedCard.controllerState,
+        endpointCount: selectedCard.endpointCount,
+        healthyEndpointCount: selectedHealthyEndpointCount,
+        toolCallingSupported: selectedCard.toolCallingSupported,
+        toolStyles: selectedToolStyles,
+        contextWindow: selectedCard.contextWindow,
+        modalities: selectedCard.modalities,
+        pricing: selectedCard.pricing,
+        overallScore: selectedCapabilityScore,
+        meanLatencyMs: selectedMeanLatencyMs,
+        routingHint: telemetryRollup?.strengths[0] ?? selectedModelEvidencePills[0]?.label ?? null,
+      })
+    : null;
 
   return (
     <div className="space-y-6">
@@ -784,30 +816,6 @@ export default function ControlModelsRoute() {
         </section>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <FactCard
-          label="Configured models"
-          value={cards.length}
-          detail="Every configured model appears once in the merged inventory."
-          emphasis
-        />
-        <FactCard
-          label="Healthy models"
-          value={activeModelCount}
-          detail="Endpoint summaries currently resolve to active."
-        />
-        <FactCard
-          label="Tool-capable"
-          value={toolCapableCount}
-          detail="Models with at least one tool-capable endpoint."
-        />
-        <FactCard
-          label="Observed requests"
-          value={observedRequestsFact.value}
-          detail={observedRequestsFact.detail}
-        />
-      </div>
-
       {!controller ? (
         <section className={`${mutedPanelClassName} p-5`}>
           <p className={foregroundEmphasisClassName}>Controller pending</p>
@@ -817,313 +825,254 @@ export default function ControlModelsRoute() {
         </section>
       ) : null}
 
-      <div className="grid gap-4 xl:items-start xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.92fr)] 2xl:grid-cols-[minmax(0,760px)_minmax(0,1fr)]">
-        <section className={`${mutedPanelClassName} min-w-0 p-5`}>
-          <div className="space-y-2">
-            <h2 className={sectionTitleClassName}>Model inventory</h2>
-            <p className={supportingTextClassName}>
-              Every configured model appears once, with local and remote endpoint state merged into
-              a card-based registry.
-            </p>
-          </div>
-
-          {cards.length === 0 ? (
-            <>
-              <div className="mt-4">
-                <EmptyState label="No configured models are available yet." />
-              </div>
-              <div className="mt-4 flex flex-wrap gap-3">
-                <Link className={secondaryButtonClassName} to="/app/local/choose">
-                  Open Local Models
-                </Link>
-                <Link className={secondaryButtonClassName} to="/app/local/endpoints">
-                  Open Local Endpoints
-                </Link>
-                <Link className={secondaryButtonClassName} to="/app/remote/providers">
-                  Open Providers
-                </Link>
-              </div>
-            </>
-          ) : (
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {cards.map((card) => {
-                const capabilityScore = capabilityByModelId.get(card.modelId);
-                const inventoryPills = buildConfiguredModelInventoryPills({
-                  toolCallingSupported: card.toolCallingSupported,
-                  endpointCount: card.endpointCount,
-                  capabilityScore,
-                });
-                return (
-                  <article
-                    key={card.modelId}
-                    className={`${cardClassName} min-w-0 p-4 ${
-                      selectedModelId === card.modelId ? "border-[var(--rm-accent)]" : ""
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className={metaTextClassName}>{card.sourceSummary}</p>
-                        <h3 className={`mt-2 truncate ${inlineTitleClassName}`}>
-                          {card.displayName}
-                        </h3>
-                        <p className={`mt-2 break-all ${supportingTextClassName}`}>
-                          {card.modelId}
-                        </p>
-                      </div>
-                      <StatusPill
-                        tone={resolveConfiguredModelStatusTone(card.controllerState, card.status)}
-                      >
-                        {card.controllerState === "active" ? "controller" : card.status}
-                      </StatusPill>
-                    </div>
-
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {inventoryPills.map((pill) => (
-                        <StatusPill key={pill.label} tone={pill.tone}>
-                          {pill.label}
-                        </StatusPill>
-                      ))}
-                    </div>
-
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <button
-                        className={secondaryButtonClassName}
-                        type="button"
-                        onClick={() => setSelectedModelId(card.modelId)}
-                      >
-                        {selectedModelId === card.modelId ? "Selected" : "Inspect"}
-                      </button>
-                      {typeof capabilityScore === "number" ? (
-                        <Link className={secondaryButtonClassName} to="/app/models/benchmark">
-                          View benchmark
-                        </Link>
-                      ) : null}
-                    </div>
-                  </article>
-                );
-              })}
+      <SectionCard
+        title="Model inventory"
+        description="Select a model to inspect and configure. Controller is the badge only — use Make primary controller to change it."
+      >
+        {cards.length === 0 ? (
+          <div className="space-y-4">
+            <EmptyState label="No configured models are available yet." />
+            <div className="flex flex-wrap gap-3">
+              <Link className={secondaryButtonClassName} to="/app/local/choose">
+                Open Local Models
+              </Link>
+              <Link className={secondaryButtonClassName} to="/app/local/endpoints">
+                Open Local Endpoints
+              </Link>
+              <Link className={secondaryButtonClassName} to="/app/remote/providers">
+                Open Providers
+              </Link>
             </div>
-          )}
-        </section>
-
-        <section className={`${mutedPanelClassName} min-w-0 p-5`}>
-          {selectedCard ? (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <h2 className={sectionTitleClassName}>Selected model detail</h2>
-                <p className={supportingTextClassName}>
-                  The production page opens role bindings, benchmark evidence, disclosures, and
-                  endpoint ids for the selected model.
-                </p>
-              </div>
-
-              <section className={`${cardClassName} p-4`}>
-                <h3 className={compactTitleClassName}>{selectedCard.displayName}</h3>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {selectedModelEvidencePills.map((pill) => (
-                    <StatusPill key={pill.label} tone={pill.tone}>
-                      {pill.label}
-                    </StatusPill>
-                  ))}
-                </div>
-              </section>
-
-              <section className={`${cardClassName} p-4`}>
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className={foregroundEmphasisClassName}>Backing account role bindings</p>
-                    <p className={`mt-2 ${supportingTextClassName}`}>
-                      {selectedPrimaryAccount
-                        ? `${selectedPrimaryAccount.providerAccountId} • ${
-                            selectedPrimaryAccount.healthStatus ?? "unknown"
-                          }`
-                        : "No backing provider accounts currently expose this model."}
-                    </p>
-                  </div>
-                  {selectedPrimaryAccount ? (
-                    <StatusPill
-                      tone={
-                        selectedPrimaryAccount.healthStatus === "healthy" ? "success" : "warning"
-                      }
-                    >
-                      {selectedPrimaryAccount.healthStatus ?? "unknown"}
-                    </StatusPill>
-                  ) : null}
-                </div>
-
-                {selectedPrimaryAccount ? (
-                  <>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {selectedPrimaryAccountRoleIds.length > 0 ? (
-                        selectedPrimaryAccountRoleIds.map((roleId) => (
-                          <StatusPill key={roleId} tone="neutral">
-                            {roleId}
-                          </StatusPill>
-                        ))
-                      ) : (
-                        <StatusPill tone="warning">No role bindings yet</StatusPill>
-                      )}
-                    </div>
-                    <div className="mt-4 flex flex-wrap gap-3">
-                      <button
-                        className={primaryButtonClassName}
-                        type="button"
-                        disabled={
-                          savingAccountId === selectedPrimaryAccount.providerAccountId ||
-                          removingTargetKey ===
-                            `account:${selectedPrimaryAccount.providerAccountId}`
-                        }
-                        onClick={() => void saveAccountRoles(selectedPrimaryAccount)}
-                      >
-                        {savingAccountId === selectedPrimaryAccount.providerAccountId
-                          ? "Saving…"
-                          : "Save bindings"}
-                      </button>
-                      <button
-                        className={secondaryButtonClassName}
-                        type="button"
-                        disabled={
-                          removingTargetKey ===
-                          `account:${selectedPrimaryAccount.providerAccountId}`
-                        }
-                        onClick={() => void removeConfiguredModel(selectedPrimaryAccount)}
-                      >
-                        {removingTargetKey === `account:${selectedPrimaryAccount.providerAccountId}`
-                          ? "Removing…"
-                          : resolveConfiguredModelEjectLabel(
-                              selectedPrimaryAccountHasLocalPeerEndpoint,
-                            )}
-                      </button>
-                    </div>
-                  </>
-                ) : null}
-              </section>
-
-              <section className={`${cardClassName} p-4`}>
-                <p className={supportingTextClassName}>
-                  Capabilities: {selectedCapabilities.join(", ") || "none"} • Metrics:{" "}
-                  {describeConfiguredModelRequestEvidence(
-                    selectedCard.requestCount,
-                    requestEvidenceStatus,
-                  )}
-                  , {selectedCard.endpointCount} endpoints, {selectedCard.sourceSummary} • Tooling /
-                  MCP: {selectedCard.toolCallingSupported ? "enabled" : "unavailable"}
-                  {selectedCapabilityScore !== null
-                    ? ` • Benchmark: ${Math.round(selectedCapabilityScore * 100)}%`
-                    : ""}
-                </p>
-              </section>
-
-              <div>
-                <CodeBlock className="max-h-[208px] overflow-auto">
-                  {JSON.stringify(
-                    buildSelectedModelPreviewPayload({
-                      modelId: selectedCard.modelId,
-                      endpointIds: selectedCard.endpointIds,
-                    }),
-                    null,
-                    2,
-                  )}
-                </CodeBlock>
-              </div>
-
-              <DisclosureSection summary="Edit role bindings">
-                <div className="space-y-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className={foregroundEmphasisClassName}>Manage role definitions</p>
-                      <p className={`mt-2 ${supportingTextClassName}`}>
-                        Assign live runtime roles per provider account for this model. These
-                        bindings feed router-visible endpoint role coverage directly.
-                      </p>
-                    </div>
-                    <Link className={secondaryButtonClassName} to="/app/models/roles">
-                      Manage role definitions
-                    </Link>
-                  </div>
-
-                  {selectedModelAccounts.length === 0 ? (
-                    <p className={supportingTextClassName}>
-                      No backing provider accounts currently expose this model.
-                    </p>
-                  ) : (
-                    <div className="space-y-4">
-                      {selectedModelAccounts.map((account) => {
-                        const hasLocalPeerEndpoint = selectedEndpoints.some(
-                          (endpoint) =>
-                            endpoint.providerAccountId === account.providerAccountId &&
-                            endpoint.sourceType === "local",
-                        );
-                        return (
-                          <div key={account.providerAccountId} className={`${cardClassName} p-4`}>
-                            <div className="flex flex-wrap items-start justify-between gap-3">
-                              <div>
-                                <p className={foregroundEmphasisClassName}>
-                                  {account.providerAccountId}
-                                </p>
-                                <p className={`mt-1 ${supportingTextClassName}`}>
-                                  {account.providerId} · {account.authMode ?? "unknown auth"}
-                                </p>
-                              </div>
+          </div>
+        ) : (
+          <div className="space-y-5">
+            <div className="grid gap-6 xl:grid-cols-2">
+              <div className="min-w-0 space-y-5">
+                <div className="space-y-1">
+                  <p className={utilityLabelClassName}>Models</p>
+                  <div className="space-y-1">
+                    {cards.map((card) => {
+                      const selected = selectedModelId === card.modelId;
+                      const capabilityScore = capabilityByModelId.get(card.modelId);
+                      const inventoryPills = buildConfiguredModelInventoryPills({
+                        toolCallingSupported: card.toolCallingSupported,
+                        endpointCount: card.endpointCount,
+                        capabilityScore,
+                      });
+                      return (
+                        <button
+                          key={card.modelId}
+                          type="button"
+                          className={`flex w-full items-start gap-3 rounded-[var(--rm-radius-field)] px-3 py-3 text-left transition-colors ${
+                            selected
+                              ? "border-l-2 border-[var(--rm-accent)] bg-[var(--rm-surface-strong)]"
+                              : "border-l-2 border-transparent hover:bg-[var(--rm-surface-strong)]"
+                          }`}
+                          onClick={() => setSelectedModelId(card.modelId)}
+                        >
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className={inlineTitleClassName}>{card.displayName}</span>
                               <StatusPill
-                                tone={account.healthStatus === "healthy" ? "success" : "warning"}
+                                tone={resolveConfiguredModelStatusTone(
+                                  card.controllerState,
+                                  card.status,
+                                )}
                               >
-                                {account.healthStatus ?? "unknown"}
+                                {card.controllerState === "active" ? "controller" : card.status}
                               </StatusPill>
                             </div>
-                            <div className="mt-4">
-                              <LocalModelRolePicker
-                                rolePolicy={rolePolicy}
-                                selectedRoleIds={
-                                  draftRolesByAccountId[account.providerAccountId] ?? []
-                                }
-                                defaultAllRoles={allRuntimeRoleIds.length > 0}
-                                benchmarkCapability={selectedBenchmarkCapability}
-                                onChange={(roleIds) =>
-                                  setDraftRolesByAccountId((current) => ({
-                                    ...current,
-                                    [account.providerAccountId]: [...roleIds],
-                                  }))
-                                }
-                              />
-                            </div>
-                            <div className="mt-4 flex flex-wrap gap-3">
-                              <button
-                                className={primaryButtonClassName}
-                                type="button"
-                                disabled={
-                                  savingAccountId === account.providerAccountId ||
-                                  removingTargetKey === `account:${account.providerAccountId}`
-                                }
-                                onClick={() => void saveAccountRoles(account)}
-                              >
-                                {savingAccountId === account.providerAccountId
-                                  ? "Saving…"
-                                  : "Save bindings"}
-                              </button>
-                              <button
-                                className={secondaryButtonClassName}
-                                type="button"
-                                disabled={
-                                  removingTargetKey === `account:${account.providerAccountId}`
-                                }
-                                onClick={() => void removeConfiguredModel(account)}
-                              >
-                                {removingTargetKey === `account:${account.providerAccountId}`
-                                  ? "Removing…"
-                                  : resolveConfiguredModelEjectLabel(hasLocalPeerEndpoint)}
-                              </button>
-                            </div>
+                            <p className={supportingTextClassName}>
+                              {[
+                                card.sourceSummary,
+                                ...inventoryPills.map((pill) => pill.label),
+                              ].join(" · ")}
+                            </p>
                           </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </DisclosureSection>
 
+                {selectedCard && selectedMetaPanel ? (
+                  <div className="space-y-4 border-t border-[var(--rm-border)] pt-4">
+                    <h3 className={compactTitleClassName}>{selectedMetaPanel.title}</h3>
+                    <dl className="space-y-2">
+                      {selectedMetaPanel.facts.map((row) => (
+                        <div
+                          key={row.label}
+                          className="flex items-baseline justify-between gap-3"
+                        >
+                          <dt className={utilityLabelClassName}>{row.label}</dt>
+                          <dd className={`text-right ${supportingTextClassName}`}>{row.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                    {selectedMetaPanel.cost ? (
+                      <div className="space-y-2 border-t border-[var(--rm-border)] pt-3">
+                        <p className={foregroundEmphasisClassName}>Cost</p>
+                        <dl className="space-y-2">
+                          {selectedMetaPanel.cost.map((row) => (
+                            <div
+                              key={row.label}
+                              className="flex items-baseline justify-between gap-3"
+                            >
+                              <dt className={utilityLabelClassName}>{row.label}</dt>
+                              <dd className={`text-right ${supportingTextClassName}`}>{row.value}</dd>
+                            </div>
+                          ))}
+                        </dl>
+                      </div>
+                    ) : null}
+                    <div className="space-y-2 border-t border-[var(--rm-border)] pt-3">
+                      <p className={foregroundEmphasisClassName}>Benchmark</p>
+                      <dl className="space-y-2">
+                        {selectedMetaPanel.benchmark.map((row) => (
+                          <div
+                            key={row.label}
+                            className="flex items-baseline justify-between gap-3"
+                          >
+                            <dt className={utilityLabelClassName}>{row.label}</dt>
+                            <dd className={`text-right ${supportingTextClassName}`}>{row.value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </div>
+                  </div>
+                ) : (
+                  <p className={`${supportingTextClassName} border-t border-[var(--rm-border)] pt-4`}>
+                    Select a model from the inventory to inspect bindings, benchmark evidence, and
+                    endpoint ids.
+                  </p>
+                )}
+              </div>
+
+              <div className="min-w-0">
+                {selectedCard ? (
+                  <section className="space-y-3">
+                    <div className="space-y-1">
+                      <p className={utilityLabelClassName}>Roles</p>
+                      <p className={supportingTextClassName}>
+                        {selectedCard.modelId} · tasks under each role
+                      </p>
+                    </div>
+                    {rolePolicy && selectedPrimaryAccount ? (
+                      <>
+                        <ModelRoleBindingTree
+                          roleDefinitions={rolePolicy.roleDefinitions}
+                          taskDefinitions={rolePolicy.taskDefinitions}
+                          selectedRoleIds={selectedPrimaryAccountRoleIds}
+                          expandedRoleId={expandedBindingRoleId}
+                          onToggleRole={(roleId, nextChecked) => {
+                            setDraftRolesByAccountId((current) => {
+                              const accountId = selectedPrimaryAccount.providerAccountId;
+                              const existing = new Set(current[accountId] ?? []);
+                              if (nextChecked) {
+                                existing.add(roleId);
+                              } else {
+                                existing.delete(roleId);
+                              }
+                              return {
+                                ...current,
+                                [accountId]: [...existing].sort((left, right) =>
+                                  left.localeCompare(right, "en"),
+                                ),
+                              };
+                            });
+                          }}
+                          onToggleExpandedRole={(roleId) =>
+                            setExpandedBindingRoleId((current) =>
+                              current === roleId ? null : roleId,
+                            )
+                          }
+                        />
+                        <div className="flex flex-wrap gap-3 pt-1">
+                          <button
+                            className={primaryButtonClassName}
+                            type="button"
+                            disabled={
+                              savingAccountId === selectedPrimaryAccount.providerAccountId ||
+                              removingTargetKey ===
+                                `account:${selectedPrimaryAccount.providerAccountId}`
+                            }
+                            onClick={() => void saveAccountRoles(selectedPrimaryAccount)}
+                          >
+                            {savingAccountId === selectedPrimaryAccount.providerAccountId
+                              ? "Saving…"
+                              : "Save bindings"}
+                          </button>
+                          <button
+                            className={secondaryButtonClassName}
+                            type="button"
+                            disabled={
+                              removingTargetKey ===
+                              `account:${selectedPrimaryAccount.providerAccountId}`
+                            }
+                            onClick={() => void removeConfiguredModel(selectedPrimaryAccount)}
+                          >
+                            {removingTargetKey ===
+                            `account:${selectedPrimaryAccount.providerAccountId}`
+                              ? "Removing…"
+                              : resolveConfiguredModelEjectLabel(
+                                  selectedPrimaryAccountHasLocalPeerEndpoint,
+                                )}
+                          </button>
+                          <Link className={secondaryButtonClassName} to="/app/models/roles">
+                            Open Roles
+                          </Link>
+                        </div>
+                      </>
+                    ) : (
+                      <p className={supportingTextClassName}>
+                        No backing provider accounts currently expose this model.
+                      </p>
+                    )}
+                  </section>
+                ) : (
+                  <p className={supportingTextClassName}>
+                    Roles and task bindings appear when a model is selected.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {selectedCard ? (
               <DisclosureSection summary="Model diagnostics">
                 <div className="space-y-4">
+                  <div className="flex flex-wrap gap-2">
+                    {selectedModelEvidencePills.map((pill) => (
+                      <StatusPill key={pill.label} tone={pill.tone}>
+                        {pill.label}
+                      </StatusPill>
+                    ))}
+                  </div>
+                  <p className={supportingTextClassName}>
+                    Capabilities: {selectedCapabilities.join(", ") || "none"} • Metrics:{" "}
+                    {describeConfiguredModelRequestEvidence(
+                      selectedCard.requestCount,
+                      requestEvidenceStatus,
+                    )}
+                    , {selectedCard.endpointCount} endpoints, {selectedCard.sourceSummary} • Tooling
+                    / MCP: {selectedCard.toolCallingSupported ? "enabled" : "unavailable"}
+                    {selectedCapabilityScore !== null
+                      ? ` • Benchmark: ${Math.round(selectedCapabilityScore * 100)}%`
+                      : ""}
+                  </p>
+                  {selectedPrimaryAccount ? (
+                    <p className={supportingTextClassName}>
+                      Backing account: {selectedPrimaryAccount.providerAccountId} •{" "}
+                      {selectedPrimaryAccount.healthStatus ?? "unknown"}
+                    </p>
+                  ) : null}
+                  {buildRoleTaskHierarchy(
+                    rolePolicy?.roleDefinitions ?? [],
+                    rolePolicy?.taskDefinitions ?? [],
+                  ).length === 0 ? (
+                    <p className={supportingTextClassName}>
+                      Role policy has not loaded task definitions for this model yet.
+                    </p>
+                  ) : null}
                   {selectedLlamaSwapEndpoints.length > 0 ? (
                     <div className={`${cardClassName} p-4`}>
                       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -1350,18 +1299,69 @@ export default function ControlModelsRoute() {
                   </div>
                 </div>
               </DisclosureSection>
+            ) : null}
+
+            <div className="flex flex-wrap gap-3 border-t border-[var(--rm-border)] pt-4">
+              <button
+                type="button"
+                className={primaryButtonClassName}
+                disabled={
+                  !selectedCard ||
+                  selectedCard.controllerState === "active" ||
+                  selectedCard.endpointIds.length === 0 ||
+                  pendingControllerEndpointId !== null
+                }
+                onClick={() => {
+                  const endpointId = selectedCard?.endpointIds[0];
+                  if (!endpointId) {
+                    return;
+                  }
+                  setPendingControllerEndpointId(endpointId);
+                  setError(null);
+                  void updateControllerAssignment({ endpointId })
+                    .then(async (nextController) => {
+                      setController(nextController);
+                      await refreshModelState();
+                      setStatusMessage(`Made ${selectedCard.modelId} the primary controller.`);
+                    })
+                    .catch((value: unknown) =>
+                      setError(
+                        value instanceof Error
+                          ? value.message
+                          : "Could not update the controller assignment.",
+                      ),
+                    )
+                    .finally(() => setPendingControllerEndpointId(null));
+                }}
+              >
+                {pendingControllerEndpointId
+                  ? "Saving…"
+                  : selectedCard?.controllerState === "active"
+                    ? "Primary controller"
+                    : "Make primary controller"}
+              </button>
+              <Link className={secondaryButtonClassName} to="/app/models/roles">
+                Open Roles
+              </Link>
+              <Link className={secondaryButtonClassName} to="/app/models/benchmark">
+                Open Benchmark
+              </Link>
+              {selectedLlamaSwapEndpoints.length > 0 ? (
+                <button
+                  type="button"
+                  className={secondaryButtonClassName}
+                  disabled={!selectedCard || removingTargetKey === `local:${selectedCard.modelId}`}
+                  onClick={() => void unloadSelectedLocalModel()}
+                >
+                  {selectedCard && removingTargetKey === `local:${selectedCard.modelId}`
+                    ? "Unloading…"
+                    : "Unload"}
+                </button>
+              ) : null}
             </div>
-          ) : (
-            <div className="space-y-2">
-              <h2 className={sectionTitleClassName}>Selected model detail</h2>
-              <p className={supportingTextClassName}>
-                Select a model from the inventory to inspect bindings, benchmark evidence, and
-                endpoint ids.
-              </p>
-            </div>
-          )}
-        </section>
-      </div>
+          </div>
+        )}
+      </SectionCard>
     </div>
   );
 }

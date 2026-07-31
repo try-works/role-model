@@ -223,12 +223,6 @@ export default function EndpointsRoute() {
         </div>
       ) : null}
 
-      <div className="flex flex-wrap gap-3">
-        <Link className={secondaryButtonClassName} to="/app/router">
-          View alias posture → Router
-        </Link>
-      </div>
-
       {connectionRows.length === 0 ? (
         <SectionCard title="No configured endpoints yet">
           <EmptyState label="No providers or endpoints are configured yet." />

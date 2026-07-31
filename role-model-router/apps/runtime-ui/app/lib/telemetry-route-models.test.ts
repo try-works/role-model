@@ -18,12 +18,12 @@ describe("telemetry route chart definitions", () => {
     });
 
     expect(charts.map((chart) => chart.title)).toEqual([
-      "Token Usage Over Time",
-      "Effective Cost Over Time",
-      "Cost Avoided Over Time",
-      "Latency Trend",
-      "Cache Efficiency",
-      "Success vs Failure",
+      "Token usage over time",
+      "Cache efficiency trend",
+      "Effective cost over time",
+      "Cost avoided over time",
+      "Latency trend",
+      "Success vs failure volume",
     ]);
     expect(charts[0]).toEqual(
       expect.objectContaining({
@@ -40,15 +40,9 @@ describe("telemetry route chart definitions", () => {
         }),
       }),
     );
-    expect(charts[2]).toEqual(
+    expect(charts[1]).toEqual(
       expect.objectContaining({
-        kind: "area",
-        metrics: ["routingCostSavingsUsd", "cacheCostSavingsUsd", "totalAvoidedCostUsd"],
-      }),
-    );
-    expect(charts[4]).toEqual(
-      expect.objectContaining({
-        title: "Cache Efficiency",
+        title: "Cache efficiency trend",
         kind: "line",
         metrics: ["cacheHitTokens", "cacheHitTokenRate"],
         metricAxisIds: {
@@ -57,7 +51,13 @@ describe("telemetry route chart definitions", () => {
         },
       }),
     );
-    expect(charts[3]).not.toHaveProperty("metricAxisIds");
+    expect(charts[3]).toEqual(
+      expect.objectContaining({
+        kind: "area",
+        metrics: ["routingCostSavingsUsd", "cacheCostSavingsUsd", "totalAvoidedCostUsd"],
+      }),
+    );
+    expect(charts[4]).not.toHaveProperty("metricAxisIds");
   });
 
   test("builds observe requests charts from shared filters and ranked-comparison selectors", () => {

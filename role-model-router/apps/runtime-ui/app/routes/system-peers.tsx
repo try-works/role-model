@@ -1,9 +1,9 @@
+import { MetricStrip } from "@role-model/ui";
 import { useEffect, useMemo, useState } from "react";
 
 import {
   EmptyState,
   ErrorState,
-  FactCard,
   LoadingState,
   SectionCard,
   StatusPill,
@@ -74,63 +74,71 @@ export default function SystemPeersRoute() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <FactCard
-          label="Configured peers"
-          value={peerGroups.length}
-          detail="Peer groups observed in the current runtime model list."
-          emphasis
-        />
-        <FactCard
-          label="Peer models"
-          value={peerModelCount}
-          detail="Models currently attributed to a peer source in the runtime listing."
-        />
-        <FactCard
-          label="Runtime models"
-          value={snapshot?.models.length ?? 0}
-          detail="Total runtime-visible model count used as context for peer posture."
-        />
-      </div>
+      <MetricStrip
+        aria-label="Peers summary"
+        variant="panel"
+        items={[
+          { id: "peers", label: "Configured peers", value: String(peerGroups.length)},
+          { id: "peer-models", label: "Peer models", value: String(peerModelCount)},
+          {
+            id: "runtime-models",
+            label: "Runtime models",
+            value: String(snapshot?.models.length ?? 0),
+          },
+        ]}
+      />
 
       {error ? <ErrorState label={error} /> : null}
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.68fr)]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]">
         <SectionCard
           title="Peer inventory"
-          description="Inventory first: show explicit peer-backed model groups when they exist, otherwise keep the empty state explicit."
+          description="Peer-backed model groups observed in the current runtime list."
         >
           {!snapshot || peers === null ? (
             <LoadingState label="Loading peer inventory…" />
           ) : peerGroups.length === 0 ? (
             <EmptyState label="No peers configured in the current host config." />
           ) : (
-            <div className="space-y-4">
-              {peerGroups.map((group) => (
-                <div key={group.peerId} className={`${mutedPanelClassName} p-4`}>
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className={compactTitleClassName}>{group.peerId}</p>
-                    <StatusPill tone="accent">
-                      {group.modelIds.length} model{group.modelIds.length === 1 ? "" : "s"}
-                    </StatusPill>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {group.modelIds.map((modelId) => (
-                      <StatusPill key={modelId} tone="neutral">
-                        {modelId}
-                      </StatusPill>
-                    ))}
-                  </div>
-                </div>
-              ))}
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead className="text-[var(--rm-muted)]">
+                  <tr>
+                    <th className="pb-3 font-semibold">Peer</th>
+                    <th className="pb-3 font-semibold">Models</th>
+                    <th className="pb-3 font-semibold">Count</th>
+                    <th className="pb-3 font-semibold">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {peerGroups.map((group) => (
+                    <tr key={group.peerId} className="border-t border-[var(--rm-border)]">
+                      <td className={`py-3 ${compactTitleClassName}`}>{group.peerId}</td>
+                      <td className="py-3">
+                        <div className="flex flex-wrap gap-2">
+                          {group.modelIds.map((modelId) => (
+                            <StatusPill key={modelId} tone="neutral">
+                              {modelId}
+                            </StatusPill>
+                          ))}
+                        </div>
+                      </td>
+                      <td className={`py-3 ${supportingTextClassName}`}>{group.modelIds.length}</td>
+                      <td className="py-3">
+                        <StatusPill tone="accent">observed</StatusPill>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </SectionCard>
 
         <div className="space-y-4">
           <SectionCard
-            title="Peer config inventory"
-            description="System owns peer source posture: configured proxy targets, auth state, and whether each peer currently contributes runtime-visible models."
+            title="Peer config"
+            description="Proxy targets, auth state, and live model match."
           >
             {!snapshot || peers === null ? (
               <LoadingState label="Loading peer config inventory…" />
@@ -162,16 +170,13 @@ export default function SystemPeersRoute() {
           </SectionCard>
 
           <SectionCard
-            title="Peer contract fields"
-            description="These fields come from the vendored host contract and define how a peer is wired into the runtime boundary."
+            title="Contract fields"
+            description="Host contract fields that wire a peer into the runtime boundary."
           >
             <div className="space-y-3">
               {peerContractFields.map(([label, description]) => (
                 <div key={label} className={`${mutedPanelClassName} p-3`}>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <StatusPill tone="neutral">{label}</StatusPill>
-                    <p className={utilityLabelClassName}>Peer contract field</p>
-                  </div>
+                  <p className={utilityLabelClassName}>{label}</p>
                   <p className={`mt-2 ${supportingTextClassName}`}>{description}</p>
                 </div>
               ))}

@@ -20,6 +20,7 @@ import {
   buildModelCatalogRows,
   buildProviderCards,
   buildProviderMaintenanceRows,
+  buildSelectedModelMetaPanel,
   buildSessionBootstrapRows,
   buildStructuredLogRows,
   buildTelemetryComparisonCards,
@@ -796,6 +797,52 @@ describe("buildConfiguredModelMetadataRows", () => {
       { label: "Max output", value: "32,768 tokens" },
       { label: "Pricing", value: "$0.4 / 1M input • $1.6 / 1M output" },
     ]);
+  });
+});
+
+describe("buildSelectedModelMetaPanel", () => {
+  test("builds Paper selected-meta facts, cost, and benchmark rows", () => {
+    expect(
+      buildSelectedModelMetaPanel({
+        modelId: "claude-sonnet-4",
+        sourceSummary: "remote",
+        status: "healthy",
+        controllerState: "eligible",
+        endpointCount: 1,
+        healthyEndpointCount: 1,
+        toolCallingSupported: true,
+        toolStyles: ["parallel"],
+        contextWindow: 200000,
+        modalities: ["chat"],
+        pricing: {
+          inputPer1M: 3,
+          outputPer1M: 15,
+          currency: "USD",
+        },
+        overallScore: 0.9,
+        meanLatencyMs: 910,
+        routingHint: "Fallback for refactor tasks",
+      }),
+    ).toEqual({
+      title: "Runtime · claude-sonnet-4",
+      facts: [
+        { label: "Source", value: "Remote" },
+        { label: "Status", value: "Healthy · not controller" },
+        { label: "Endpoints", value: "1 healthy" },
+        { label: "Tool use", value: "Enabled · parallel" },
+        { label: "Context", value: "200k tokens" },
+        { label: "Mode", value: "chat" },
+      ],
+      cost: [
+        { label: "Input", value: "$3.00 / 1M" },
+        { label: "Output", value: "$15.00 / 1M" },
+      ],
+      benchmark: [
+        { label: "Overall", value: "0.90" },
+        { label: "Mean latency", value: "910 ms" },
+        { label: "Routing", value: "Fallback for refactor tasks" },
+      ],
+    });
   });
 });
 

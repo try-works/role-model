@@ -11,7 +11,6 @@ import {
   DisclosureSection,
   EmptyState,
   ErrorState,
-  FactCard,
   LoadingState,
   SectionCard,
   SelectField,
@@ -461,10 +460,6 @@ export default function ControlRolesRoute() {
     setEditDraft(selectedRole ? toRoleDraft(selectedRole) : null);
   }, [selectedRole]);
 
-  const limitedRoleCount = useMemo(
-    () => policy?.roleDefinitions.filter((role) => role.tool_policy.mode !== "allowed").length ?? 0,
-    [policy],
-  );
   const selectedRoleTaskPreview = useMemo(() => {
     if (!selectedRole) {
       return "none";
@@ -561,30 +556,6 @@ export default function ControlRolesRoute() {
 
       {policy ? (
         <>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <FactCard
-              label="Roles"
-              value={policy.roleDefinitions.length}
-              detail="Router-visible role definitions."
-              emphasis
-            />
-            <FactCard
-              label="Tasks"
-              value={policy.taskDefinitions.length}
-              detail="Task contracts in active allowlists."
-            />
-            <FactCard
-              label="Restricted tool policy"
-              value={limitedRoleCount}
-              detail="Roles with limited or disabled tool access."
-            />
-            <FactCard
-              label="Selected role"
-              value={selectedRole?.role_id ?? "None"}
-              detail="Currently loaded into the role editor."
-            />
-          </div>
-
           <div className="space-y-6">
             <SectionCard
               title="Create role"

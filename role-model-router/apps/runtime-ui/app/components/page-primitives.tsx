@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { Badge, type BadgeTone } from "@role-model/ui";
 
 import { cn } from "../lib/cn";
 import {
@@ -101,37 +102,20 @@ export function StatusPill({
   children,
   className,
 }: {
-  tone: "neutral" | "accent" | "warning" | "success" | "error" | "info" | "advisory";
+  tone: BadgeTone;
   children: ReactNode;
   className?: string;
 }) {
-  const toneClass =
-    tone === "accent"
-      ? "border-transparent bg-[var(--rm-pill-accent-bg)] text-[var(--rm-pill-accent-ink)]"
-      : tone === "info"
-        ? "border-transparent bg-[var(--rm-pill-info-bg)] text-[var(--rm-pill-info-ink)]"
-        : tone === "advisory"
-          ? "border-transparent bg-[var(--rm-pill-advisory-bg)] text-[var(--rm-pill-advisory-ink)]"
-          : tone === "warning"
-            ? "border-transparent bg-[var(--rm-pill-warning-bg)] text-[var(--rm-pill-warning-ink)]"
-            : tone === "error"
-              ? "border-transparent bg-[var(--rm-pill-error-bg)] text-[var(--rm-pill-error-ink)]"
-              : tone === "success"
-                ? "border-transparent bg-[var(--rm-pill-success-bg)] text-[var(--rm-pill-success-ink)]"
-                : "border-transparent bg-[var(--rm-pill-neutral-bg)] text-[var(--rm-pill-neutral-ink)]";
-
+  // Happy-path status chips use kit Badge; StatusPill remains a thin alias for call-site stability.
   return (
-    <span
-      className={cn(
-        `inline-flex items-center rounded-[var(--rm-radius-pill)] border px-2.5 py-1 ${pillLabelClassName}`,
-        toneClass,
-        className,
-      )}
-    >
+    <Badge tone={tone} className={cn(pillLabelClassName, className)}>
       {children}
-    </span>
+    </Badge>
   );
 }
+
+export { Badge };
+export type { BadgeTone };
 
 export type SelectOptionModel = {
   readonly value: string;

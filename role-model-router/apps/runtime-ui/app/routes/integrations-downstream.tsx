@@ -7,14 +7,12 @@ import {
   metaTextClassName,
   monoUtilityStrongTextClassName,
   mutedPanelClassName,
-  secondaryButtonClassName,
   supportingTextClassName,
 } from "../lib/design-system";
 import {
   type RuntimeDownstreamOpenAIProviderConfig,
   fetchDownstreamOpenAIProviderConfig,
 } from "../lib/runtime-api";
-import { usePageActions } from "../lib/shell-header-context";
 import { buildDownstreamProviderGuide } from "../lib/view-models";
 
 export default function IntegrationsDownstreamRoute() {
@@ -32,13 +30,6 @@ export default function IntegrationsDownstreamRoute() {
         ),
       );
   }, []);
-
-  usePageActions(
-    <a className={secondaryButtonClassName} href="/api/role-model/downstream/openai">
-      Provider JSON
-    </a>,
-    [],
-  );
 
   if (error) {
     return <ErrorState label={error} />;

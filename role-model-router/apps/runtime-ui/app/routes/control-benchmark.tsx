@@ -4,7 +4,6 @@ import {
   DisclosureSection,
   EmptyState,
   ErrorState,
-  FactCard,
   LoadingState,
   SectionCard,
   SelectField,
@@ -997,35 +996,9 @@ export default function ControlBenchmarkRoute() {
   const quickSummary = summariesByMode?.quick ?? EMPTY_BENCHMARK_SUMMARY;
   const fullJudgeLabel = fullSummary.runId ? resolveJudgeLabel(fullSummary, candidates) : null;
   const quickJudgeLabel = quickSummary.runId ? resolveJudgeLabel(quickSummary, candidates) : null;
-  const selectedJudgeCandidate =
-    candidates.find((candidate) => candidate.endpointId === judgeEndpointId) ?? null;
-  const selectedJudgeModelLabel =
-    selectedJudgeCandidate?.modelId.split("/").at(-1) ?? "not selected";
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 xl:grid-cols-3">
-        <FactCard
-          label="Suite"
-          value={suite.cases.filter((item) => item.benchmark_eligible).length}
-          detail={`${suite.suite_id} v${suite.suite_version}`}
-          emphasis
-        />
-        <FactCard
-          label="Run size"
-          value={eligibleCaseCount}
-          detail={mode === "quick" ? "Quick mode hard subset." : "Full eligible benchmark set."}
-          emphasis
-        />
-        <FactCard
-          label="Judge"
-          value={selectedJudgeModelLabel}
-          detail={selectedJudgeCandidate ? "grading-only endpoint" : "judge not selected"}
-          emphasis
-          valueClassName={`${inlineTitleClassName} md:text-[20px] md:leading-[30px]`}
-        />
-      </div>
-
       <div className="space-y-6">
         <SectionCard
           title="Run capability benchmark"

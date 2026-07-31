@@ -1,144 +1,96 @@
+import { MetricStrip, type MetricItem } from "@role-model/ui";
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation } from "react-router";
 
 import {
   CodeBlock,
   EmptyState,
   ErrorState,
-  FactCard,
   LoadingState,
   SectionCard,
   SelectField,
-  StatusPill,
 } from "../components/page-primitives";
 import {
-  accentActionTextClassName,
-  bodyStrongTextClassName,
   bodyTextClassName,
-  compactTitleClassName,
   fieldClassName,
   metaTextClassName,
-  mutedPanelClassName,
   primaryButtonClassName,
   supportingTextClassName,
   utilityLabelClassName,
 } from "../lib/design-system";
 import {
   type RuntimeSnapshot,
-  type WorkbenchChatInput,
-  fetchRuntimeAccounts,
-  fetchRuntimeEndpoints,
   fetchRuntimeModels,
-  fetchRuntimeSummary,
   submitWorkbenchChat,
 } from "../lib/runtime-api";
-import {
-  buildCredentialLifecycleBanner,
-  buildWorkbenchEndpointOptions,
-  buildWorkbenchModelOptions,
-  summarizeWorkbenchResult,
-} from "../lib/view-models";
-
-const routingModeOptions: Array<{
-  label: string;
-  value: "" | NonNullable<WorkbenchChatInput["routingModeOverride"]>;
-}> = [
-  { label: "Alias default (use configured strategy)", value: "" },
-  { label: "Baseline", value: "baseline" },
-  { label: "Difficulty", value: "difficulty" },
-  { label: "Controller", value: "controller" },
-  { label: "Hybrid", value: "hybrid" },
-];
-
-function formatRoutingModeLabel(
-  value: "" | NonNullable<WorkbenchChatInput["routingModeOverride"]>,
-): string {
-  if (!value) {
-    return "Alias default";
-  }
-
-  return value.slice(0, 1).toUpperCase() + value.slice(1);
-}
-
-function readLocationRoutingModeOverride(
-  value: unknown,
-): "" | NonNullable<WorkbenchChatInput["routingModeOverride"]> {
-  if (
-    value === "baseline" ||
-    value === "difficulty" ||
-    value === "controller" ||
-    value === "hybrid"
-  ) {
-    return value;
-  }
-
-  return "";
-}
+import { buildWorkbenchModelOptions, summarizeWorkbenchResult } from "../lib/view-models";
 
 const formFieldLabelClassName = utilityLabelClassName;
 
+function buildChatUsageMetrics(
+  usageRows: Array<{ label: string; value: string }>,
+  result: Record<string, unknown>,
+): MetricItem[] {
+  const items: MetricItem[] = [];
+  const input = usageRows.find((row) => row.label === "Input tokens");
+  const output = usageRows.find((row) => row.label === "Output tokens");
+
+  if (input) {
+    items.push({
+      id: "input",
+      label: "Input tokens",
+      shortLabel: "Input",
+      value: input.value,
+    });
+  }
+  if (output) {
+    items.push({
+      id: "output",
+      label: "Output tokens",
+      shortLabel: "Output",
+      value: output.value,
+    });
+  }
+
+  const latencyMs =
+    typeof result.latencyMs === "number"
+      ? result.latencyMs
+      : typeof result.durationMs === "number"
+        ? result.durationMs
+        : null;
+  if (latencyMs !== null) {
+    items.push({
+      id: "latency",
+      label: "Latency",
+      shortLabel: "Latency",
+      value: latencyMs >= 1000 ? `${(latencyMs / 1000).toFixed(1)}s` : `${latencyMs} ms`,
+    });
+  }
+
+  return items;
+}
+
 export default function WorkbenchRoute() {
-  const location = useLocation();
-  const locationRoutingModeOverride = readLocationRoutingModeOverride(
-    typeof location.state === "object" && location.state !== null
-      ? (location.state as { routingModeOverride?: unknown }).routingModeOverride
-      : undefined,
-  );
-  const [snapshot, setSnapshot] = useState<Pick<
-    RuntimeSnapshot,
-    "summary" | "accounts" | "endpoints" | "models"
-  > | null>(null);
+  const [snapshot, setSnapshot] = useState<Pick<RuntimeSnapshot, "models"> | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [model, setModel] = useState("");
-  const [endpointId, setEndpointId] = useState("");
-  const [routingModeOverride, setRoutingModeOverride] = useState<
-    "" | NonNullable<WorkbenchChatInput["routingModeOverride"]>
-  >(locationRoutingModeOverride);
   const [prompt, setPrompt] = useState("Summarize the chosen endpoint.");
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    void Promise.all([
-      fetchRuntimeSummary(),
-      fetchRuntimeAccounts(),
-      fetchRuntimeEndpoints(),
-      fetchRuntimeModels(),
-    ])
-      .then(([summary, accounts, endpoints, models]) => {
-        setSnapshot({
-          summary,
-          accounts,
-          endpoints,
-          models,
-        });
+    void fetchRuntimeModels()
+      .then((models) => {
+        setSnapshot({ models });
       })
       .catch((value: unknown) =>
         setLoadError(value instanceof Error ? value.message : "Could not load workbench."),
       );
   }, []);
 
-  useEffect(() => {
-    if (locationRoutingModeOverride) {
-      setRoutingModeOverride(locationRoutingModeOverride);
-    }
-  }, [locationRoutingModeOverride]);
   const modelOptions = useMemo(
     () => buildWorkbenchModelOptions(snapshot?.models ?? []),
     [snapshot?.models],
-  );
-  const endpointOptions = useMemo(
-    () =>
-      snapshot
-        ? buildWorkbenchEndpointOptions({
-            modelId: model,
-            models: snapshot.models,
-            endpoints: snapshot.endpoints,
-            accounts: snapshot.accounts,
-          })
-        : [],
-    [model, snapshot],
   );
 
   useEffect(() => {
@@ -149,14 +101,6 @@ export default function WorkbenchRoute() {
       setModel(snapshot.models[0]?.id ?? "");
     }
   }, [model, snapshot]);
-
-  useEffect(() => {
-    setEndpointId((current) =>
-      endpointOptions.some((option) => option.value === current)
-        ? current
-        : (endpointOptions[0]?.value ?? ""),
-    );
-  }, [endpointOptions]);
 
   if (loadError) {
     return <ErrorState label={loadError} />;
@@ -173,9 +117,7 @@ export default function WorkbenchRoute() {
     try {
       const response = await submitWorkbenchChat({
         model,
-        endpointId: endpointId || undefined,
         messages: [{ role: "user", content: prompt }],
-        routingModeOverride: routingModeOverride || undefined,
       });
       setResult(response);
     } catch (value) {
@@ -186,232 +128,110 @@ export default function WorkbenchRoute() {
   };
 
   const resultSummary = result ? summarizeWorkbenchResult(result) : null;
-  const toolCapableEndpoints = snapshot.endpoints.filter(
-    (endpoint) => endpoint.toolCallingSupported,
-  ).length;
-  const lifecycleBanner = buildCredentialLifecycleBanner(snapshot.summary);
-  const blockingReadinessRows = lifecycleBanner?.blockingRows ?? [];
+  const usageMetrics =
+    result && resultSummary ? buildChatUsageMetrics(resultSummary.usageRows, result) : [];
   const hasModels = modelOptions.length > 0;
-  const routingModeLabel = formatRoutingModeLabel(routingModeOverride);
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <FactCard label="Models" value={snapshot.models.length} emphasis />
-        <FactCard label="Tool-capable endpoints" value={toolCapableEndpoints} />
-        <FactCard label="Selected model" value={model || "—"} />
-        <FactCard label="Routing mode" value={routingModeLabel} />
-      </div>
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
+      <SectionCard title="Request">
+        {hasModels ? (
+          <form className="space-y-4" onSubmit={onSubmit}>
+            <SelectField label="Model" value={model} onChange={setModel}>
+              {modelOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </SelectField>
+            <label className="grid gap-2">
+              <span className={formFieldLabelClassName}>Prompt</span>
+              <textarea
+                className={`${fieldClassName} min-h-40`}
+                value={prompt}
+                onChange={(event) => setPrompt(event.target.value)}
+              />
+            </label>
+            <button
+              className={primaryButtonClassName}
+              disabled={submitting || model.trim().length === 0}
+              type="submit"
+            >
+              {submitting ? "Running…" : "Run request"}
+            </button>
+          </form>
+        ) : (
+          <EmptyState label="No execution-ready models are currently available." />
+        )}
+      </SectionCard>
 
-      {lifecycleBanner &&
-      (blockingReadinessRows.length > 0 ||
-        lifecycleBanner.archivedStaleCount > 0 ||
-        lifecycleBanner.authorityTone === "accent") ? (
-        <div
-          className={`${mutedPanelClassName} flex flex-wrap items-center gap-3 p-4 ${supportingTextClassName}`}
-        >
-          <StatusPill tone={lifecycleBanner.authorityTone}>
-            {lifecycleBanner.authorityLabel}
-          </StatusPill>
-          <span className={bodyStrongTextClassName}>{lifecycleBanner.detail}</span>
-          {blockingReadinessRows.map((row) => (
-            <StatusPill key={row.key} tone={row.tone}>
-              {row.label} {row.value}
-            </StatusPill>
-          ))}
-          {lifecycleBanner.archivedStaleCount > 0 ? (
-            <StatusPill tone="neutral">
-              Archived stale {lifecycleBanner.archivedStaleCount}
-            </StatusPill>
-          ) : null}
-          <Link className={accentActionTextClassName} to="/app/remote/providers">
-            Remote → Providers
-          </Link>
-          <Link className={accentActionTextClassName} to="/app/system/session-readiness">
-            System → Session readiness
-          </Link>
-        </div>
-      ) : null}
+      <SectionCard title="Result workspace">
+        {submitError ? (
+          <ErrorState label={submitError} />
+        ) : !resultSummary ? (
+          <EmptyState label="No result yet." />
+        ) : (
+          <div className="space-y-4">
+            <div className="space-y-3">
+              <p className={metaTextClassName}>Assistant</p>
+              {usageMetrics.length > 0 ? (
+                <MetricStrip aria-label="Usage metrics" items={usageMetrics} variant="inline" />
+              ) : null}
+              <p className={`whitespace-pre-wrap ${bodyTextClassName}`}>
+                {resultSummary.outputText || "No assistant text was returned."}
+              </p>
+            </div>
 
-      <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
-        <SectionCard
-          title="Composer"
-          description="This form posts directly to the runtime-host `/v1/chat/completions` route."
-        >
-          {hasModels ? (
-            <form className="space-y-4" onSubmit={onSubmit}>
-              <SelectField label="Model" value={model} onChange={setModel}>
-                {modelOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </SelectField>
-              <SelectField label="Endpoint" value={endpointId} onChange={setEndpointId}>
-                {endpointOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </SelectField>
-              <SelectField
-                label="Routing mode"
-                value={routingModeOverride}
-                onChange={(value) =>
-                  setRoutingModeOverride(
-                    value as "" | NonNullable<WorkbenchChatInput["routingModeOverride"]>,
-                  )
-                }
-              >
-                {routingModeOptions.map((option) => (
-                  <option key={option.label} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </SelectField>
-              <label className="grid gap-2">
-                <span className={formFieldLabelClassName}>Prompt</span>
-                <textarea
-                  className={`${fieldClassName} min-h-40`}
-                  value={prompt}
-                  onChange={(event) => setPrompt(event.target.value)}
-                />
-              </label>
-              <button
-                className={primaryButtonClassName}
-                disabled={submitting || model.trim().length === 0}
-                type="submit"
-              >
-                {submitting ? "Running…" : "Run request"}
-              </button>
-            </form>
-          ) : (
-            <EmptyState
-              label={
-                blockingReadinessRows.length > 0
-                  ? "No execution-ready models yet. Complete OAuth, fix credentials, or activate an endpoint from Providers."
-                  : "No execution-ready models are currently available."
-              }
-            />
-          )}
-        </SectionCard>
-
-        <SectionCard
-          title="Result workspace"
-          description="Tooling-aware response summary aligned with the runtime host payload."
-        >
-          {submitError ? (
-            <ErrorState label={submitError} />
-          ) : !resultSummary ? (
-            <EmptyState label="No result yet." />
-          ) : (
-            <div className="space-y-4">
-              <div className={`${mutedPanelClassName} p-4`}>
-                <p className={metaTextClassName}>Routing receipt handoff</p>
-                <p className={`mt-3 ${bodyTextClassName}`}>
-                  Requested mode:{" "}
-                  <span className={bodyStrongTextClassName}>{routingModeLabel}</span>. Verify the
-                  persisted routing receipt in{" "}
-                  <Link className={accentActionTextClassName} to="/app/observe/requests">
-                    Telemetry ledger
-                  </Link>{" "}
-                  after the request completes.
-                </p>
-              </div>
-
-              <div className={`${mutedPanelClassName} p-4`}>
-                <p className={metaTextClassName}>Assistant output</p>
-                <p className={`mt-3 whitespace-pre-wrap ${bodyTextClassName}`}>
-                  {resultSummary.outputText || "No assistant text was returned."}
-                </p>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className={`${mutedPanelClassName} p-4`}>
-                  <div className="flex items-center justify-between">
-                    <p className={compactTitleClassName}>Tool calls</p>
-                    <StatusPill tone={resultSummary.toolCalls.length > 0 ? "accent" : "neutral"}>
-                      {resultSummary.toolCalls.length}
-                    </StatusPill>
-                  </div>
-                  <div className="mt-3 space-y-3">
-                    {resultSummary.toolCalls.length === 0 ? (
-                      <p className={supportingTextClassName}>
-                        No tool calls were surfaced for this response.
-                      </p>
-                    ) : (
-                      resultSummary.toolCalls.map((toolCall) => (
-                        <div
-                          key={toolCall.id ?? `${toolCall.name}-${toolCall.arguments}`}
-                          className={`${mutedPanelClassName} p-3`}
-                        >
-                          <p className={compactTitleClassName}>{toolCall.name}</p>
-                          <CodeBlock className="mt-3">{toolCall.arguments}</CodeBlock>
-                        </div>
-                      ))
-                    )}
-                  </div>
+            <div className="space-y-3">
+              <p className={metaTextClassName}>Tool calls</p>
+              {resultSummary.toolCalls.length === 0 ? (
+                <p className={supportingTextClassName}>No tool calls were surfaced for this response.</p>
+              ) : (
+                <div className="space-y-1">
+                  {resultSummary.toolCalls.map((toolCall, index) => {
+                    const execution =
+                      resultSummary.toolExecutions.find(
+                        (entry) => entry.toolName === toolCall.name,
+                      ) ?? resultSummary.toolExecutions[index];
+                    const status = execution?.status?.toLowerCase() ?? "ok";
+                    const ok = status === "ok" || status === "success" || status === "completed";
+                    const latencyMs =
+                      typeof execution?.durationMs === "number" ? execution.durationMs : null;
+                    return (
+                      <div
+                        key={toolCall.id ?? `${toolCall.name}-${toolCall.arguments}`}
+                        className="flex items-center gap-3 py-1.5"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`size-2 shrink-0 rounded-full ${
+                            ok
+                              ? "bg-[var(--rm-chart-cache,var(--rm-accent))]"
+                              : "bg-[var(--status-warning,var(--rm-chart-warning))]"
+                          }`}
+                        />
+                        <span className="min-w-0 flex-1 truncate font-mono text-[13px] text-[var(--rm-fg)]">
+                          {toolCall.name}
+                        </span>
+                        {latencyMs !== null ? (
+                          <span className={`shrink-0 tabular-nums ${supportingTextClassName}`}>
+                            {latencyMs}ms
+                          </span>
+                        ) : null}
+                      </div>
+                    );
+                  })}
                 </div>
+              )}
+            </div>
 
-                <div className={`${mutedPanelClassName} p-4`}>
-                  <div className="flex items-center justify-between">
-                    <p className={compactTitleClassName}>Execution receipts</p>
-                    <StatusPill
-                      tone={resultSummary.toolExecutions.length > 0 ? "success" : "neutral"}
-                    >
-                      {resultSummary.toolExecutions.length}
-                    </StatusPill>
-                  </div>
-                  <div className="mt-3 space-y-3">
-                    {resultSummary.toolExecutions.length === 0 ? (
-                      <p className={supportingTextClassName}>
-                        No runtime tool execution receipts were recorded.
-                      </p>
-                    ) : (
-                      resultSummary.toolExecutions.map((execution, index) => (
-                        <div
-                          key={`${execution.connectorId ?? "connector"}-${execution.toolName ?? index}`}
-                          className={`${mutedPanelClassName} p-3`}
-                        >
-                          <div className="flex flex-wrap items-center gap-2">
-                            <p className={compactTitleClassName}>
-                              {execution.toolName ?? "Unnamed tool"}
-                            </p>
-                            {execution.status ? (
-                              <StatusPill
-                                tone={execution.status === "success" ? "success" : "warning"}
-                              >
-                                {execution.status}
-                              </StatusPill>
-                            ) : null}
-                          </div>
-                          <p className={`mt-2 ${supportingTextClassName}`}>
-                            {execution.connectorId ?? "Unknown connector"}
-                            {typeof execution.durationMs === "number"
-                              ? ` • ${execution.durationMs} ms`
-                              : ""}
-                          </p>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid gap-3 md:grid-cols-2">
-                {resultSummary.usageRows.map((row) => (
-                  <div key={row.label} className={`${mutedPanelClassName} p-4`}>
-                    <p className={metaTextClassName}>{row.label}</p>
-                    <p className={`mt-2 ${compactTitleClassName}`}>{row.value}</p>
-                  </div>
-                ))}
-              </div>
-
+            <div className="space-y-2">
+              <p className={metaTextClassName}>Raw response</p>
               <CodeBlock className="min-h-72">{resultSummary.rawPayload}</CodeBlock>
             </div>
-          )}
-        </SectionCard>
-      </div>
+          </div>
+        )}
+      </SectionCard>
     </div>
   );
 }

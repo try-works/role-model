@@ -1,8 +1,8 @@
 Run: `/.recursive/run/86-runtime-ui-rm3-design-system-frontend/`
 Phase: `00 Worktree`
 Status: `LOCKED`
-LockedAt: `2026-07-30T13:07:13Z`
-LockHash: `eef086a945b020b34a79095813b49670e6cc8c30901f02a1131efcbe1eb2c752`
+LockedAt: `2026-07-30T13:10:29Z`
+LockHash: `5e6ad3855c8f7351a051f4211d1ce54c509afad5cb77cb39dd91cb6ac43a06cb`
 Inputs:
 - `/.recursive/run/86-runtime-ui-rm3-design-system-frontend/00-requirements.md` (LOCKED)
 - Current git repository state
@@ -29,7 +29,7 @@ Scope note: This document records the Phase 0 worktree context and the executabl
 
 ## Safety Verification
 
-- Base repository branch for the run: `dev` (`origin/dev` @ `5424564d1471559b75506f7c14ea9f12240d0751`)
+- Base repository branch for the run: `dev` (`origin/dev` @ `b633056aa52252eaa40a7324ac7018b84d1ea0d9`)
 - Worktree branch: `recursive/86-runtime-ui-rm3-design-system-frontend`
 - `.gitignore` ignores `.worktrees/`, so the project-local worktree directory remains outside tracked source
 - Worktree-local router policy file present at `/.recursive/config/recursive-router.json` (synced from controller)
@@ -38,7 +38,7 @@ Scope note: This document records the Phase 0 worktree context and the executabl
 ## Worktree Creation
 
 - Creation command: `git worktree add .worktrees/86-runtime-ui-rm3-design-system-frontend -b recursive/86-runtime-ui-rm3-design-system-frontend origin/dev`
-- Result: isolated branch/worktree created successfully; HEAD `5424564d1471559b75506f7c14ea9f12240d0751`
+- Result: isolated branch/worktree created successfully; HEAD `b633056aa52252eaa40a7324ac7018b84d1ea0d9`
 - Run artifacts copied from controller into the worktree `.recursive/run/86-runtime-ui-rm3-design-system-frontend/` (including locked `00-requirements.md`)
 - User instruction `implement the run in a worktree` confirmed this isolated workspace as the execution surface
 
@@ -71,19 +71,19 @@ Scope note: This document records the Phase 0 worktree context and the executabl
 
 - Base branch: `dev`
 - Worktree branch: `recursive/86-runtime-ui-rm3-design-system-frontend`
-- Base commit: `5424564d1471559b75506f7c14ea9f12240d0751`
+- Base commit: `b633056aa52252eaa40a7324ac7018b84d1ea0d9`
 
 ## Diff Basis For Later Audits
 
 - Baseline type: `local commit`
-- Baseline reference: `5424564d1471559b75506f7c14ea9f12240d0751`
+- Baseline reference: `b633056aa52252eaa40a7324ac7018b84d1ea0d9`
 - Comparison reference: `working-tree`
-- Normalized baseline: `5424564d1471559b75506f7c14ea9f12240d0751`
+- Normalized baseline: `b633056aa52252eaa40a7324ac7018b84d1ea0d9`
 - Normalized comparison: `working-tree`
-- Normalized diff command: `git diff --name-only 5424564d1471559b75506f7c14ea9f12240d0751`
+- Normalized diff command: `git diff --name-only b633056aa52252eaa40a7324ac7018b84d1ea0d9`
 - Base branch: `dev`
 - Worktree branch: `recursive/86-runtime-ui-rm3-design-system-frontend`
-- Diff basis notes: prefilled from `origin/dev` tip at worktree creation; later audited phases must reuse this basis unless an addendum records a rebase/retarget
+- Diff basis notes: after worktree creation, `move_agent_to_root` attempted a `dev` checkout and created local commit `checkpoint before checking out dev` containing Phase 0 recursive artifacts; baseline advanced to that commit. Original  prefilled from `origin/dev` tip at worktree creation; later audited phases must reuse this basis unless an addendum records a rebase/retarget
 
 ## Traceability
 

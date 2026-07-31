@@ -48,9 +48,10 @@ describe("SelectField rendering", () => {
 });
 
 describe("StatusPill rendering", () => {
-  test("renders solid token-backed pills with contrasting text", () => {
+  test("renders solid token-backed pills with contrasting text via kit Badge", () => {
     const markup = renderToStaticMarkup(<StatusPill tone="accent">Selected</StatusPill>);
 
+    expect(markup).toContain('data-slot="badge"');
     expect(markup).toContain("bg-[var(--rm-pill-accent-bg)]");
     expect(markup).toContain("text-[var(--rm-pill-accent-ink)]");
     expect(markup).toContain("border-transparent");

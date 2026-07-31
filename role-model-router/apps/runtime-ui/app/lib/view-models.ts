@@ -1735,6 +1735,123 @@ export function buildConfiguredModelMetadataRows(model: {
   ];
 }
 
+function formatCompactTokenCount(value: number | null | undefined): string {
+  if (typeof value !== "number" || value <= 0) {
+    return "Unknown";
+  }
+  if (value >= 1000) {
+    const compact = value / 1000;
+    const rounded = Number.isInteger(compact) ? String(compact) : compact.toFixed(1).replace(/\.0$/, "");
+    return `${rounded}k tokens`;
+  }
+  return `${value} tokens`;
+}
+
+function formatUnitPrice(value: number | null | undefined): string {
+  if (typeof value !== "number") {
+    return "Unknown";
+  }
+  return `$${value.toFixed(2)} / 1M`;
+}
+
+function formatLatencyMs(value: number | null | undefined): string {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+    return "—";
+  }
+  if (value >= 1000) {
+    return `${(value / 1000).toFixed(2).replace(/\.?0+$/, "")} s`;
+  }
+  return `${Math.round(value)} ms`;
+}
+
+function titleCaseSource(sourceSummary: string): string {
+  if (sourceSummary === "local + remote") {
+    return "Local + remote";
+  }
+  if (sourceSummary.length === 0) {
+    return "Unknown";
+  }
+  return `${sourceSummary.charAt(0).toUpperCase()}${sourceSummary.slice(1)}`;
+}
+
+export function buildSelectedModelMetaPanel(input: {
+  readonly modelId: string;
+  readonly sourceSummary: string;
+  readonly status: string;
+  readonly controllerState: "active" | "eligible" | "inactive";
+  readonly endpointCount: number;
+  readonly healthyEndpointCount: number;
+  readonly toolCallingSupported: boolean;
+  readonly toolStyles?: readonly string[];
+  readonly contextWindow?: number | null;
+  readonly modalities?: readonly string[];
+  readonly pricing?: RuntimeModelRecord["pricing"];
+  readonly overallScore?: number | null;
+  readonly meanLatencyMs?: number | null;
+  readonly routingHint?: string | null;
+}): {
+  title: string;
+  facts: Array<{ label: string; value: string }>;
+  cost: Array<{ label: string; value: string }> | null;
+  benchmark: Array<{ label: string; value: string }>;
+} {
+  const toolStyles = (input.toolStyles ?? []).filter((style) => style.trim().length > 0);
+  const toolUse = input.toolCallingSupported
+    ? toolStyles.length > 0
+      ? `Enabled · ${toolStyles.join(" · ")}`
+      : "Enabled"
+    : "Unavailable";
+  const mode =
+    input.modalities && input.modalities.length > 0
+      ? input.modalities.join(", ")
+      : "Unknown";
+  const endpointValue =
+    input.endpointCount === 0
+      ? "None"
+      : `${input.healthyEndpointCount} healthy${
+          input.healthyEndpointCount === input.endpointCount
+            ? ""
+            : ` / ${input.endpointCount}`
+        }`;
+  const cost =
+    input.pricing != null
+      ? [
+          { label: "Input", value: formatUnitPrice(input.pricing.inputPer1M) },
+          { label: "Output", value: formatUnitPrice(input.pricing.outputPer1M) },
+        ]
+      : null;
+  const overall =
+    typeof input.overallScore === "number"
+      ? input.overallScore.toFixed(2)
+      : "No evidence yet";
+  return {
+    title: `Runtime · ${input.modelId}`,
+    facts: [
+      { label: "Source", value: titleCaseSource(input.sourceSummary) },
+      {
+        label: "Status",
+        value:
+          input.controllerState === "active"
+            ? `${titleCaseSource(input.status)} · controller`
+            : `${titleCaseSource(input.status)} · not controller`,
+      },
+      { label: "Endpoints", value: endpointValue },
+      { label: "Tool use", value: toolUse },
+      { label: "Context", value: formatCompactTokenCount(input.contextWindow) },
+      { label: "Mode", value: mode },
+    ],
+    cost,
+    benchmark: [
+      { label: "Overall", value: overall },
+      { label: "Mean latency", value: formatLatencyMs(input.meanLatencyMs) },
+      {
+        label: "Routing",
+        value: input.routingHint?.trim() || "No routing evidence yet",
+      },
+    ],
+  };
+}
+
 export function summarizeWorkbenchResult(result: Record<string, unknown>): {
   outputText: string;
   toolCalls: Array<{ id?: string; name: string; arguments: string }>;

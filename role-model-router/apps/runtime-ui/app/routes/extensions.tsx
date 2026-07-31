@@ -1,9 +1,10 @@
+import { MetricStrip } from "@role-model/ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
+  DisclosureSection,
   EmptyState,
   ErrorState,
-  FactCard,
   LoadingState,
   SectionCard,
   SelectField,
@@ -303,31 +304,29 @@ export function ExtensionsRouteView() {
     }
   };
 
+  const openRecs = useMemo(
+    () =>
+      recommendations.filter((row) => row.status !== "applied" && row.status !== "dismissed")
+        .length,
+    [recommendations],
+  );
+  const knowledgeWorker = useMemo(
+    () => extensions?.find((row) => row.id === "knowledge-worker") ?? null,
+    [extensions],
+  );
+
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <FactCard
-          label="Installed extensions"
-          value={facts.installed}
-          detail="Canonical packages present in this release pair."
-          emphasis
-        />
-        <FactCard
-          label="Ready workers"
-          value={facts.ready}
-          detail="Workers that passed lifecycle and health gates."
-        />
-        <FactCard
-          label="Degraded"
-          value={facts.degraded}
-          detail="Bounded failures that do not interrupt routing."
-        />
-        <FactCard
-          label="Active pack"
-          value={activePack?.id ?? "None"}
-          detail="Locally validated recommendation authority."
-        />
-      </div>
+      <MetricStrip
+        aria-label="Extensions summary"
+        variant="panel"
+        items={[
+          { id: "installed", label: "Installed", value: String(facts.installed) },
+          { id: "ready", label: "Ready", value: String(facts.ready) },
+          { id: "degraded", label: "Degraded", value: String(facts.degraded) },
+          { id: "open-recs", label: "Open recs", value: String(openRecs) },
+        ]}
+      />
       {error ? <ErrorState label={error} /> : null}
       {notice ? (
         <output
@@ -336,155 +335,263 @@ export function ExtensionsRouteView() {
           {notice}
         </output>
       ) : null}
-      <SectionCard
-        title="Contribution, disclosure, and opt-out"
-        description="Aggregate upload is independent from local recommendation use, training, external RL, and rich capture. Contribution policy is not extension enablement."
-      >
-        {contribution === null ? (
-          <LoadingState label="Loading contribution policy…" />
-        ) : (
-          <div className="grid gap-4 lg:grid-cols-[1fr_auto]">
-            <dl className="grid gap-3 sm:grid-cols-3">
-              <Detail
-                label="Mode / tier"
-                value={`${contribution.mode} · ${contribution.contributionTier}`}
-              />
-              <Detail
-                label="Authorization"
-                value={`${contribution.authorizationState} · epoch ${contribution.revocationEpoch}`}
-              />
-              <Detail label="Queued aggregates" value={String(contribution.queuedCount)} />
-              <Detail
-                label="Cloud upload"
-                value={contribution.allowCloudUpload ? "Aggregate-only allowed" : "Disabled"}
-              />
-              <Detail
-                label="Recommendations"
-                value={`${contribution.recommendationTier} · ${contribution.recommendationAccess}`}
-              />
-              <Detail label="Policy" value={contribution.managed ? "Managed" : "Local/default"} />
-            </dl>
-            <div className="flex flex-wrap items-start gap-2">
-              {contribution.authorizationState === "pending_disclosure" ? (
-                <button
-                  className={primaryButtonClassName}
-                  disabled={busy || contribution.managed}
-                  onClick={() => void transition("complete_disclosure")}
-                  type="button"
-                >
-                  Review disclosure & authorize
-                </button>
-              ) : null}
-              {contribution.mode === "contributor" ? (
-                <button
-                  className={secondaryButtonClassName}
-                  disabled={busy || contribution.managed}
-                  onClick={() => void transition("opt_out")}
-                  type="button"
-                >
-                  Opt out & clear queue
-                </button>
-              ) : (
-                <button
-                  className={secondaryButtonClassName}
-                  disabled={busy || contribution.managed}
-                  onClick={() => void transition("reenable")}
-                  type="button"
-                >
-                  Re-enable contribution
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-      </SectionCard>
-      <SectionCard
-        title="Signed recommendations"
-        description="Download visibility is separate from local signature validation and explicit application policy."
-      >
-        <button
-          className={`${primaryButtonClassName} mb-4`}
-          disabled={busy || contribution?.recommendationAccess === "disabled"}
-          onClick={() => void download()}
-          type="button"
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]">
+        <SectionCard
+          title="Contribution posture"
+          description="Aggregate upload is independent from local recommendation use, training, external RL, and rich capture. Contribution policy is not extension enablement."
         >
-          Download & validate latest
-        </button>
-        {recommendations.length === 0 ? (
-          <EmptyState label="No recommendation bundles downloaded." />
-        ) : (
-          <div className="grid gap-3 lg:grid-cols-2">
-            {recommendations.map((row) => (
-              <article className={`${mutedPanelClassName} p-4`} key={row.id}>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className={compactTitleClassName}>{row.id}</p>
-                    <p className={`mt-1 ${supportingTextClassName}`}>
-                      v{row.version} · {row.provenance}
-                    </p>
-                  </div>
-                  <StatusPill
-                    tone={row.signatureValid && row.policyAllowed ? "success" : "warning"}
+          {contribution === null ? (
+            <LoadingState label="Loading contribution policy…" />
+          ) : (
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                <StatusPill tone="accent">{contribution.mode}</StatusPill>
+                <StatusPill tone="neutral">{contribution.authorizationState}</StatusPill>
+                <StatusPill tone="neutral">tier {contribution.contributionTier}</StatusPill>
+              </div>
+              <dl className="grid gap-3 sm:grid-cols-3">
+                <Detail
+                  label="Cloud upload"
+                  value={contribution.allowCloudUpload ? "Aggregate-only allowed" : "Disabled"}
+                />
+                <Detail label="Queued aggregates" value={String(contribution.queuedCount)} />
+                <Detail
+                  label="Recommendation access"
+                  value={`${contribution.recommendationTier} · ${contribution.recommendationAccess}`}
+                />
+                <Detail label="Policy" value={contribution.managed ? "Managed" : "Local/default"} />
+                <Detail
+                  label="Authorization"
+                  value={`${contribution.authorizationState} · epoch ${contribution.revocationEpoch}`}
+                />
+              </dl>
+              <div className="flex flex-wrap gap-2">
+                {contribution.authorizationState === "pending_disclosure" ? (
+                  <button
+                    className={primaryButtonClassName}
+                    disabled={busy || contribution.managed}
+                    onClick={() => void transition("complete_disclosure")}
+                    type="button"
                   >
-                    {row.status}
-                  </StatusPill>
-                </div>
-                <p className={`mt-3 ${supportingTextClassName}`}>
-                  {row.signatureValid ? "Signature valid" : "Signature invalid"} ·{" "}
-                  {row.policyAllowed ? "Local policy allows apply" : "Blocked by local policy"}
-                </p>
-                {row.endpointId || row.modelId || row.preferredFor?.length || row.confidence ? (
-                  <dl className="mt-3 grid gap-x-4 gap-y-2 sm:grid-cols-2">
-                    {row.endpointId ? <Detail label="Endpoint" value={row.endpointId} /> : null}
-                    {row.modelId ? <Detail label="Model" value={row.modelId} /> : null}
-                    {row.preferredFor?.length ? (
-                      <Detail label="Preferred for" value={row.preferredFor.join(", ")} />
-                    ) : null}
-                    {row.action ? <Detail label="Action" value={row.action} /> : null}
-                    {typeof row.confidence === "number" ? (
-                      <Detail label="Confidence" value={row.confidence.toFixed(2)} />
-                    ) : null}
-                  </dl>
+                    Review disclosure & authorize
+                  </button>
                 ) : null}
-                <div className="mt-3 flex flex-wrap gap-2">
+                {contribution.mode === "contributor" ? (
                   <button
                     className={secondaryButtonClassName}
-                    disabled={
-                      busy ||
-                      row.status === "applied" ||
-                      row.status === "dismissed" ||
-                      !row.signatureValid ||
-                      !row.policyAllowed ||
-                      contribution?.recommendationAccess !== "preview_and_apply"
-                    }
-                    onClick={() => void apply(row.id)}
+                    disabled={busy || contribution.managed}
+                    onClick={() => void transition("opt_out")}
                     type="button"
                   >
-                    {row.status === "applied" ? "Applied" : "Validate & apply"}
+                    Opt out & clear queue
                   </button>
+                ) : (
                   <button
                     className={secondaryButtonClassName}
-                    disabled={busy || row.status === "applied" || row.status === "dismissed"}
-                    onClick={() => void dismiss(row.id)}
+                    disabled={busy || contribution.managed}
+                    onClick={() => void transition("reenable")}
                     type="button"
                   >
-                    {row.status === "dismissed" ? "Dismissed" : "Dismiss"}
+                    Re-enable contribution
                   </button>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
-      </SectionCard>
+                )}
+              </div>
+            </div>
+          )}
+        </SectionCard>
+        <SectionCard
+          title="Recommendation ledger"
+          description="Signed bundles validated locally before apply."
+        >
+          <button
+            className={`${primaryButtonClassName} mb-4`}
+            disabled={busy || contribution?.recommendationAccess === "disabled"}
+            onClick={() => void download()}
+            type="button"
+          >
+            Download & validate latest
+          </button>
+          {activePack ? (
+            <p className={`mb-3 ${supportingTextClassName}`}>Active pack · {activePack.id}</p>
+          ) : null}
+          {recommendations.length === 0 ? (
+            <EmptyState label="No recommendation bundles downloaded." />
+          ) : (
+            <div className="space-y-3">
+              {recommendations.map((row) => (
+                <article className={`${mutedPanelClassName} p-4`} key={row.id}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className={compactTitleClassName}>{row.id}</p>
+                      <p className={`mt-1 ${supportingTextClassName}`}>
+                        v{row.version} · {row.provenance}
+                      </p>
+                    </div>
+                    <StatusPill
+                      tone={row.signatureValid && row.policyAllowed ? "success" : "warning"}
+                    >
+                      {row.status}
+                    </StatusPill>
+                  </div>
+                  <p className={`mt-3 ${supportingTextClassName}`}>
+                    {[
+                      row.endpointId ? `Endpoint ${row.endpointId}` : null,
+                      typeof row.confidence === "number"
+                        ? `confidence ${row.confidence.toFixed(2)}`
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ") ||
+                      (row.signatureValid ? "Signature valid" : "Signature invalid")}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      className={secondaryButtonClassName}
+                      disabled={
+                        busy ||
+                        row.status === "applied" ||
+                        row.status === "dismissed" ||
+                        !row.signatureValid ||
+                        !row.policyAllowed ||
+                        contribution?.recommendationAccess !== "preview_and_apply"
+                      }
+                      onClick={() => void apply(row.id)}
+                      type="button"
+                    >
+                      {row.status === "applied" ? "Applied" : "Validate & apply"}
+                    </button>
+                    <button
+                      className={secondaryButtonClassName}
+                      disabled={busy || row.status === "applied" || row.status === "dismissed"}
+                      onClick={() => void dismiss(row.id)}
+                      type="button"
+                    >
+                      {row.status === "dismissed" ? "Dismissed" : "Dismiss"}
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </SectionCard>
+      </div>
       <SectionCard
-        title="Extension boundary"
-        description="Install, enablement, lifecycle, health, and contribution/recommendation policy are separate. Choose a mode (including disabled) and click Set mode; Knowledge Worker is shadow-ready by default, uses ceremony-bound ON, soft OFF returns to shadow-ready, and KW works when on — gated separately from Set mode."
+        title="Extension inventory"
+        description="Canonical packages on this host. Modes change the extension boundary without becoming contribution policy."
       >
         {extensions === null ? (
           <LoadingState label="Loading extension lifecycle…" />
         ) : extensions.length === 0 ? (
           <EmptyState label="No extension packages are installed." />
         ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left text-sm">
+              <thead className="text-[var(--rm-muted)]">
+                <tr>
+                  <th className="pb-3 font-semibold">Extension</th>
+                  <th className="pb-3 font-semibold">Lifecycle</th>
+                  <th className="pb-3 font-semibold">Mode</th>
+                  <th className="pb-3 font-semibold">Health</th>
+                  <th className="pb-3 font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {extensions.map((extension) => {
+                  const lifecycleKey = String(extension.lifecycle);
+                  const lifecycle =
+                    LIFECYCLE_COPY[lifecycleKey as keyof typeof LIFECYCLE_COPY] ??
+                    ({
+                      label: lifecycleKey.replaceAll("_", " "),
+                      routingMeaning:
+                        "Lifecycle reported by the host. Core routing continuity is independent of this worker unless marked as a routing dependency.",
+                    } as const);
+                  const operatorDisabled = isOperatorDisabled(extension);
+                  const currentMode = appliedMode(extension);
+                  const draftMode = modeDraft[extension.id] ?? currentMode;
+                  const modeDirty = draftMode !== currentMode;
+                  const caption =
+                    extension.id === "knowledge-worker"
+                      ? "Shadow-ready by default"
+                      : extension.id === "knowledge-store"
+                        ? "Last-ready references"
+                        : extension.packageClass.replaceAll("_", " ");
+                  return (
+                    <tr key={extension.id} className="border-t border-[var(--rm-border)] align-top">
+                      <td className="py-3 pr-3">
+                        <p className={compactTitleClassName}>{extension.id}</p>
+                        <p className={`mt-1 ${supportingTextClassName}`}>{caption}</p>
+                      </td>
+                      <td className="py-3 pr-3">
+                        <StatusPill tone={lifecyclePillTone(lifecycleKey, operatorDisabled)}>
+                          {lifecycle.label}
+                        </StatusPill>
+                      </td>
+                      <td className="py-3 pr-3">
+                        <SelectField
+                          className={busy ? "pointer-events-none opacity-60" : undefined}
+                          label="Mode"
+                          onChange={(value) => {
+                            if (busy) return;
+                            setModeDraft((current) => ({
+                              ...current,
+                              [extension.id]: value as RuntimeExtensionMode,
+                            }));
+                          }}
+                          value={draftMode}
+                        >
+                          {EXTENSION_MODES.map((mode) => (
+                            <option key={mode} value={mode}>
+                              {formatModeLabel(mode)}
+                            </option>
+                          ))}
+                        </SelectField>
+                      </td>
+                      <td className={`py-3 pr-3 ${supportingTextClassName}`}>
+                        {healthSummary(extension)}
+                      </td>
+                      <td className="py-3">
+                        <button
+                          className={
+                            modeDirty
+                              ? compactFieldButtonEmphasisClassName
+                              : compactFieldButtonClassName
+                          }
+                          disabled={busy || !modeDirty}
+                          onClick={() => void applyMode(extension.id, draftMode)}
+                          type="button"
+                        >
+                          Set mode
+                        </button>
+                        {modeDirty ? (
+                          <p className={`mt-2 ${supportingTextClassName}`}>
+                            Mode draft is {draftMode}; applied mode is {currentMode}. Click Set mode
+                            to apply.
+                          </p>
+                        ) : null}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </SectionCard>
+      {knowledgeWorker ? (
+        <KnowledgeWorkerGate
+          busy={busy}
+          bootstrapGroupDigest={bootstrapGroupDigest}
+          bootstrapReceiptJson={bootstrapReceiptJson}
+          extension={knowledgeWorker}
+          onBootstrapGroupDigest={setBootstrapGroupDigest}
+          onBootstrapReceiptJson={setBootstrapReceiptJson}
+          onPrepare={() => void prepareKnowledgeWorker()}
+          onProductionOff={() => void setKnowledgeWorkerProduction(false)}
+          onProductionOn={() => void setKnowledgeWorkerProduction(true)}
+        />
+      ) : null}
+      {extensions && extensions.length > 0 ? (
+        <DisclosureSection summary="Extension diagnostics">
           <div className="grid gap-4 lg:grid-cols-2">
             {extensions.map((extension) => {
               const lifecycleKey = String(extension.lifecycle);
@@ -502,43 +609,12 @@ export function ExtensionsRouteView() {
                 (extension.lifecycle === "degraded" ||
                   !extension.health.available ||
                   lifecycleKey === "unavailable");
-              const currentMode = appliedMode(extension);
-              const draftMode = modeDraft[extension.id] ?? currentMode;
-              const modeDirty = draftMode !== currentMode;
-              const isKnowledgeWorker = extension.id === "knowledge-worker";
-              const productionActivation =
-                extension.productionActivation ?? extension.health.productionActivation ?? false;
-              const bootstrapReady = Boolean(extension.health.knowledgeWorkerBootstrap);
               return (
-                <article className={`${mutedPanelClassName} min-w-0 p-4 md:p-5`} key={extension.id}>
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className={compactTitleClassName}>{extension.id}</p>
-                      <p className={`mt-1 ${utilityLabelClassName} text-[var(--rm-muted)]`}>
-                        {extension.packageClass.replaceAll("_", " ")}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap items-center justify-end gap-2">
-                      <StatusPill tone={extension.installed ? "success" : "neutral"}>
-                        {extension.installed ? "installed" : "not installed"}
-                      </StatusPill>
-                      <StatusPill tone={extension.enabled ? "success" : "neutral"}>
-                        {extension.enabled ? "enabled" : "disabled"}
-                      </StatusPill>
-                      <StatusPill tone={lifecyclePillTone(lifecycleKey, operatorDisabled)}>
-                        {lifecycle.label}
-                      </StatusPill>
-                    </div>
-                  </div>
-                  <p className={`mt-3 ${supportingTextClassName}`}>{lifecycle.routingMeaning}</p>
+                <article className={`${mutedPanelClassName} min-w-0 p-4`} key={extension.id}>
+                  <p className={compactTitleClassName}>{extension.id}</p>
+                  <p className={`mt-2 ${supportingTextClassName}`}>{lifecycle.routingMeaning}</p>
                   {boundaryNote ? (
                     <p className={`mt-2 ${supportingTextClassName}`}>{boundaryNote}</p>
-                  ) : null}
-                  {operatorDisabled ? (
-                    <p className={`mt-3 ${supportingTextClassName}`}>
-                      {extension.health.summary?.trim() ||
-                        "Extension is disabled by the operator. Core routing continues independently."}
-                    </p>
                   ) : null}
                   {unexpectedWorkerIssue ? (
                     <div className="mt-3">
@@ -551,128 +627,7 @@ export function ExtensionsRouteView() {
                       />
                     </div>
                   ) : null}
-                  {isKnowledgeWorker ? (
-                    <div
-                      className={`${mutedPanelClassName} mt-4 border-[var(--rm-border-strong)] p-4`}
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <p className={compactTitleClassName}>Production retrieve gate</p>
-                          <p className={`mt-1 ${supportingTextClassName}`}>
-                            Ceremony-backed production activation is separate from Set mode.
-                            Production prompt injection requires ceremony ON plus gated production
-                            retrieve success; it is cleared on soft OFF and is not Set mode or
-                            recommendation apply.
-                          </p>
-                        </div>
-                        <StatusPill tone={productionActivation ? "success" : "neutral"}>
-                          {productionActivation ? "Production ON" : "Production OFF"}
-                        </StatusPill>
-                      </div>
-                      {!bootstrapReady && !productionActivation ? (
-                        <div className="mt-4 grid gap-3">
-                          <label className={utilityLabelClassName}>
-                            Knowledge validation receipt JSON
-                            <textarea
-                              className={`${fieldClassName} mt-1 min-h-24 font-mono`}
-                              onChange={(event) => setBootstrapReceiptJson(event.target.value)}
-                              placeholder='{"payload":{"kind":"knowledge_validation",…},"signature":"…"}'
-                              value={bootstrapReceiptJson}
-                            />
-                          </label>
-                          <label className={utilityLabelClassName}>
-                            Shadow group digest
-                            <input
-                              className={`${fieldClassName} mt-1 font-mono`}
-                              onChange={(event) => setBootstrapGroupDigest(event.target.value)}
-                              placeholder="64-hex digest"
-                              value={bootstrapGroupDigest}
-                            />
-                          </label>
-                          <button
-                            className={secondaryButtonClassName}
-                            disabled={
-                              busy ||
-                              !extension.installed ||
-                              bootstrapReceiptJson.trim().length === 0 ||
-                              !/^[a-f0-9]{64}$/.test(bootstrapGroupDigest.trim())
-                            }
-                            onClick={() => void prepareKnowledgeWorker()}
-                            type="button"
-                          >
-                            Prepare shadow-ready
-                          </button>
-                        </div>
-                      ) : null}
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <button
-                          className={primaryButtonClassName}
-                          disabled={
-                            busy ||
-                            productionActivation ||
-                            !extension.installed ||
-                            !extension.enabled ||
-                            !bootstrapReady
-                          }
-                          onClick={() => void setKnowledgeWorkerProduction(true)}
-                          type="button"
-                        >
-                          Production ON
-                        </button>
-                        <button
-                          className={secondaryButtonClassName}
-                          disabled={busy || !productionActivation}
-                          onClick={() => void setKnowledgeWorkerProduction(false)}
-                          type="button"
-                        >
-                          Soft OFF
-                        </button>
-                      </div>
-                    </div>
-                  ) : null}
-                  <div className="mt-4 flex flex-wrap items-end gap-3">
-                    <div className="min-w-[12rem] flex-1 sm:max-w-[16rem]">
-                      <SelectField
-                        className={busy ? "pointer-events-none opacity-60" : undefined}
-                        label="Mode"
-                        onChange={(value) => {
-                          if (busy) {
-                            return;
-                          }
-                          setModeDraft((current) => ({
-                            ...current,
-                            [extension.id]: value as RuntimeExtensionMode,
-                          }));
-                        }}
-                        value={draftMode}
-                      >
-                        {EXTENSION_MODES.map((mode) => (
-                          <option key={mode} value={mode}>
-                            {formatModeLabel(mode)}
-                          </option>
-                        ))}
-                      </SelectField>
-                    </div>
-                    <button
-                      className={
-                        modeDirty
-                          ? compactFieldButtonEmphasisClassName
-                          : compactFieldButtonClassName
-                      }
-                      disabled={busy || !modeDirty}
-                      onClick={() => void applyMode(extension.id, draftMode)}
-                      type="button"
-                    >
-                      Set mode
-                    </button>
-                  </div>
-                  {modeDirty ? (
-                    <p className={`mt-2 ${supportingTextClassName}`}>
-                      Mode draft is {draftMode}; applied mode is {currentMode}. Click Set mode to
-                      apply.
-                    </p>
-                  ) : null}
-                  <dl className="mt-5 grid gap-x-4 gap-y-3 sm:grid-cols-2">
+                  <dl className="mt-4 grid gap-x-4 gap-y-3 sm:grid-cols-2">
                     <Detail
                       label="Channel / scope"
                       value={`${extension.channel} · ${extension.scope}`}
@@ -722,11 +677,117 @@ export function ExtensionsRouteView() {
               );
             })}
           </div>
-        )}
-      </SectionCard>
+        </DisclosureSection>
+      ) : null}
     </div>
   );
 }
+
+function KnowledgeWorkerGate({
+  busy,
+  bootstrapGroupDigest,
+  bootstrapReceiptJson,
+  extension,
+  onBootstrapGroupDigest,
+  onBootstrapReceiptJson,
+  onPrepare,
+  onProductionOff,
+  onProductionOn,
+}: {
+  busy: boolean;
+  bootstrapGroupDigest: string;
+  bootstrapReceiptJson: string;
+  extension: RuntimeExtensionStatus;
+  onBootstrapGroupDigest: (value: string) => void;
+  onBootstrapReceiptJson: (value: string) => void;
+  onPrepare: () => void;
+  onProductionOff: () => void;
+  onProductionOn: () => void;
+}) {
+  const productionActivation =
+    extension.productionActivation ?? extension.health.productionActivation ?? false;
+  const bootstrapReady = Boolean(extension.health.knowledgeWorkerBootstrap);
+  return (
+    <DisclosureSection summary="Knowledge Worker production gate">
+      <div className={`${mutedPanelClassName} border-[var(--rm-border-strong)] p-4`}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className={compactTitleClassName}>Production retrieve gate</p>
+            <p className={`mt-1 ${supportingTextClassName}`}>
+              Ceremony-backed production activation is separate from Set mode. Production prompt
+              injection requires ceremony ON plus gated production retrieve success; it is cleared on soft OFF
+              and is not Set mode or recommendation apply. Production retrieve is gated and useful
+              only after ceremony-bound ON; KW works when on.
+            </p>
+          </div>
+          <StatusPill tone={productionActivation ? "success" : "neutral"}>
+            {productionActivation ? "Production ON" : "Production OFF"}
+          </StatusPill>
+        </div>
+        {!bootstrapReady && !productionActivation ? (
+          <div className="mt-4 grid gap-3">
+            <label className={utilityLabelClassName}>
+              Knowledge validation receipt JSON
+              <textarea
+                className={`${fieldClassName} mt-1 min-h-24 font-mono`}
+                onChange={(event) => onBootstrapReceiptJson(event.target.value)}
+                placeholder='{"payload":{"kind":"knowledge_validation",…},"signature":"…"}'
+                value={bootstrapReceiptJson}
+              />
+            </label>
+            <label className={utilityLabelClassName}>
+              Shadow group digest
+              <input
+                className={`${fieldClassName} mt-1 font-mono`}
+                onChange={(event) => onBootstrapGroupDigest(event.target.value)}
+                placeholder="64-hex digest"
+                value={bootstrapGroupDigest}
+              />
+            </label>
+            <button
+              className={secondaryButtonClassName}
+              disabled={
+                busy ||
+                !extension.installed ||
+                bootstrapReceiptJson.trim().length === 0 ||
+                !/^[a-f0-9]{64}$/.test(bootstrapGroupDigest.trim())
+              }
+              onClick={onPrepare}
+              type="button"
+            >
+              Prepare shadow-ready
+            </button>
+          </div>
+        ) : null}
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            className={primaryButtonClassName}
+            disabled={
+              busy ||
+              productionActivation ||
+              !extension.installed ||
+              !extension.enabled ||
+              !bootstrapReady
+            }
+            onClick={onProductionOn}
+            type="button"
+          >
+            Production ON
+          </button>
+          <button
+            className={secondaryButtonClassName}
+            disabled={busy || !productionActivation}
+            onClick={onProductionOff}
+            type="button"
+          >
+            Soft OFF
+          </button>
+        </div>
+      </div>
+    </DisclosureSection>
+  );
+}
+
 export default ExtensionsRouteView;
 const message = (value: unknown) =>
   value instanceof Error ? value.message : "Could not load the extension boundary.";

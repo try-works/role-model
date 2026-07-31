@@ -176,3 +176,103 @@ export function RoleCatalogHierarchy({
     </div>
   );
 }
+
+const roleTreeChevronPath = {
+  expanded: "M4 6l4 4 4-4",
+  collapsed: "M6 4l4 4-4 4",
+} as const;
+
+/** Compact Paper Models-inventory roles→tasks binder (checkbox rows + expand). */
+export function ModelRoleBindingTree({
+  roleDefinitions,
+  taskDefinitions,
+  selectedRoleIds,
+  expandedRoleId,
+  onToggleRole,
+  onToggleExpandedRole,
+}: {
+  readonly roleDefinitions: readonly RuntimeRolePolicyRole[];
+  readonly taskDefinitions: readonly RuntimeTaskDefinition[];
+  readonly selectedRoleIds: readonly string[];
+  readonly expandedRoleId: string | null;
+  readonly onToggleRole: (roleId: string, nextChecked: boolean) => void;
+  readonly onToggleExpandedRole: (roleId: string) => void;
+}) {
+  const hierarchy = buildRoleTaskHierarchy(roleDefinitions, taskDefinitions);
+  const selected = new Set(selectedRoleIds);
+
+  return (
+    <div className="space-y-1">
+      {hierarchy.map((role) => {
+        const isChecked = selected.has(role.roleId);
+        const isExpanded = expandedRoleId === role.roleId;
+        return (
+          <div key={role.roleId} className="rounded-[var(--rm-radius-field)]">
+            <div className="flex items-center gap-2 px-1 py-2">
+              <input
+                type="checkbox"
+                className="h-4 w-4 shrink-0 rounded-[var(--rm-radius-sm)] border-[var(--rm-border-strong)] accent-[var(--rm-accent)]"
+                checked={isChecked}
+                onChange={(event) => onToggleRole(role.roleId, event.target.checked)}
+                aria-label={`Bind role ${role.roleId}`}
+              />
+              <button
+                type="button"
+                className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                onClick={() => onToggleExpandedRole(role.roleId)}
+                aria-expanded={isExpanded}
+              >
+                <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-[var(--rm-fg)]">
+                  {role.roleId}
+                </span>
+                <span className="shrink-0 text-[12px] text-[var(--rm-muted)]">
+                  {role.tasks.length} task{role.tasks.length === 1 ? "" : "s"}
+                </span>
+                <svg
+                  aria-hidden="true"
+                  className="h-3.5 w-3.5 shrink-0 text-[var(--rm-muted)]"
+                  fill="none"
+                  viewBox="0 0 14 14"
+                >
+                  <path
+                    d={isExpanded ? roleTreeChevronPath.expanded : roleTreeChevronPath.collapsed}
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.5"
+                  />
+                </svg>
+              </button>
+            </div>
+            {isExpanded ? (
+              <div className="space-y-1 border-l border-[var(--rm-border)] pb-2 pl-5 ml-2">
+                {role.tasks.length === 0 ? (
+                  <p className="px-1 py-1 text-[12px] text-[var(--rm-secondary)]">
+                    No tasks under this role.
+                  </p>
+                ) : (
+                  role.tasks.map((task) => (
+                    <label
+                      key={task.taskType}
+                      className="flex items-center gap-2 px-1 py-1.5 text-[13px] text-[var(--rm-fg)]"
+                    >
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 shrink-0 rounded-[var(--rm-radius-sm)] border-[var(--rm-border-strong)] accent-[var(--rm-accent)]"
+                        checked={isChecked}
+                        disabled={!isChecked}
+                        readOnly
+                        aria-label={`Task ${task.taskType}`}
+                      />
+                      <span className="truncate font-mono text-[12px]">{task.taskType}</span>
+                    </label>
+                  ))
+                )}
+              </div>
+            ) : null}
+          </div>
+        );
+      })}
+    </div>
+  );
+}

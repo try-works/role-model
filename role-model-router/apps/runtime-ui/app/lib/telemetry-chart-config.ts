@@ -41,23 +41,23 @@ export const telemetryBreakdownOptions: ReadonlyArray<{
 ];
 
 export const telemetryChartColorTokens = {
-  local: "var(--rm-chart-local)",
-  remote: "var(--rm-chart-remote)",
-  cost: "var(--rm-chart-cost)",
-  latency: "var(--rm-chart-latency)",
-  cacheHit: "var(--rm-chart-cache-hit)",
-  accent: "var(--rm-chart-link-blue)",
-  warningSoft: "var(--rm-chart-warning-soft)",
+  local: "var(--rm3-chart-local)",
+  remote: "var(--rm3-chart-remote)",
+  cost: "var(--rm3-chart-cost)",
+  latency: "var(--rm3-chart-latency)",
+  cacheHit: "var(--rm3-chart-cache)",
+  accent: "var(--rm3-chart-1)",
+  warningSoft: "var(--rm3-di-serria-50)",
 } as const;
 
 const categoricalTokens = [
-  "var(--rm-chart-link-blue)",
-  "var(--rm-chart-cyan)",
-  "var(--rm-chart-highlight-pink)",
-  "var(--rm-chart-violet)",
-  "var(--rm-chart-link-deep)",
-  "var(--rm-chart-warning)",
-  "var(--rm-chart-error)",
+  "var(--rm3-chart-1)",
+  "var(--rm3-chart-2)",
+  "var(--rm3-chart-3)",
+  "var(--rm3-chart-4)",
+  "var(--rm3-chart-5)",
+  "var(--rm3-chart-6)",
+  "var(--rm3-chart-7)",
 ] as const;
 
 function pickCategoricalToken(key: string): string {

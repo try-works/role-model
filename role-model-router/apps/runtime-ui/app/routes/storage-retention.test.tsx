@@ -12,7 +12,7 @@ describe("StorageRetentionRoute", () => {
     );
     for (const token of [
       "SectionCard",
-      "FactCard",
+      "MetricStrip",
       "StatusPill",
       "fetchStorageRetention",
       "updateRetentionPolicy",
@@ -26,14 +26,16 @@ describe("StorageRetentionRoute", () => {
       "fieldClassName",
     ])
       expect(source).toContain(token);
+    expect(source).not.toContain("FactCard");
   });
   test("renders the existing design-system loading and manual pruning controls", () => {
     const html = renderToStaticMarkup(<StorageRetentionRouteView />);
-    expect(html).toContain("Tracked usage");
+    expect(html).toContain("Tracked");
     expect(html).toContain("Loading storage inventory");
-    expect(html).toContain("Retention policy editor");
+    expect(html).toContain("Retention policy");
     expect(html).toContain("Manual pruning");
     expect(html).toContain(">Dry-run<");
     expect(html).toContain(">Execute plan<");
+    expect(html).toContain("No legal holds or Managed policy conflicts.");
   });
 });

@@ -1,21 +1,22 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 
 import {
   CodeBlock,
   DisclosureSection,
   EmptyState,
   ErrorState,
-  FactCard,
   LoadingState,
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
 import {
+  accentActionTextClassName,
   bodyStrongTextClassName,
   compactTitleClassName,
   inlineTitleClassName,
   metaTextClassName,
+  mutedPanelClassName,
   supportingTextClassName,
   utilityLabelClassName,
 } from "../lib/design-system";
@@ -488,87 +489,102 @@ export default function RequestDetailRoute() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <FactCard
-          label="Endpoint"
-          value={endpointId}
-          className="xl:col-span-2"
-          detail="Endpoint id currently associated with the captured request."
-          emphasis
-          valueClassName={inlineTitleClassName}
-        />
-        <FactCard
-          label="Correlation"
-          value={renderMetricValue(clientRequestId)}
-          className="xl:col-span-2"
-          detail="Caller-supplied correlation id preserved alongside the canonical request ledger id."
-          valueClassName={inlineTitleClassName}
-        />
-        <FactCard
-          label="Source"
-          value={renderMetricValue(sourceType)}
-          detail="Canonical source family used by the telemetry ledger."
-        />
-        <FactCard
-          label="Provider"
-          value={renderMetricValue(providerId)}
-          detail="Actual provider identity for the selected endpoint."
-        />
-        <FactCard
-          label="Provider family"
-          value={renderMetricValue(providerFamily)}
-          detail="Provider semantic family preserved in the canonical telemetry contract."
-        />
-        <FactCard
-          label="Vendor"
-          value={renderMetricValue(vendorId)}
-          detail="Optional intermediary execution vendor such as LiteLLM."
-        />
-        <FactCard
-          label="Execution path"
-          value={renderMetricValue(executionFamily)}
-          detail="High-level routed execution family selected for this request."
-        />
-        <FactCard
-          label="Adapter"
-          value={renderMetricValue(adapterFamily)}
-          detail="Concrete adapter implementation used to shape and execute the provider request."
-        />
-        <FactCard
-          label="Latency"
-          value={latencyMs === null ? "n/a" : `${latencyMs} ms`}
-          detail="Observed request latency from the persisted usage event."
-        />
-        <FactCard
-          label="Tokens"
-          value={renderMetricValue(totalTokens)}
-          detail={
-            inputTokenTruth.available && outputTokenTruth.available
-              ? `Input ${inputTokenTruth.source}; output ${outputTokenTruth.source}.`
-              : "Token usage is unavailable; numeric placeholders are not treated as measured usage."
-          }
-        />
-        <FactCard
-          label="Cost"
-          value={formatUsd(effectiveCostUsd)}
-          detail={
-            costCalculationBasis || costCalculationVersion
-              ? `Stored effective cost • ${costCalculationBasis ?? "unknown basis"} • ${
-                  costCalculationVersion ?? "unknown version"
-                }`
-              : "Stored authoritative per-request effective cost."
-          }
-        />
-        <FactCard
-          label="Cache"
-          value={renderMetricValue(cacheStatus)}
-          detail={
-            promptCacheRequestSource
-              ? `Captured cache posture; request key source: ${promptCacheRequestSource}.`
-              : "Captured cache posture using explicit support semantics rather than zero-only inference."
-          }
-        />
-      </div>
+      <Link to="/app/observe/requests" className={accentActionTextClassName}>
+        Back to request ledger
+      </Link>
+      <SectionCard
+        title="Request summary"
+        description="Top-line telemetry facts for the captured request without compressing identifiers into a KPI wall."
+      >
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className={`${mutedPanelClassName} space-y-2 p-4 xl:col-span-2`}>
+            <p className={utilityLabelClassName}>Endpoint</p>
+            <p className={`${inlineTitleClassName} break-all`}>{endpointId}</p>
+            <p className={supportingTextClassName}>
+              Endpoint id currently associated with the captured request.
+            </p>
+          </div>
+          <div className={`${mutedPanelClassName} space-y-2 p-4 xl:col-span-2`}>
+            <p className={utilityLabelClassName}>Correlation</p>
+            <p className={`${inlineTitleClassName} break-all`}>
+              {renderMetricValue(clientRequestId)}
+            </p>
+            <p className={supportingTextClassName}>
+              Caller-supplied correlation id preserved alongside the canonical request ledger id.
+            </p>
+          </div>
+          {[
+            {
+              label: "Source",
+              value: renderMetricValue(sourceType),
+              detail: "Canonical source family used by the telemetry ledger.",
+            },
+            {
+              label: "Provider",
+              value: renderMetricValue(providerId),
+              detail: "Actual provider identity for the selected endpoint.",
+            },
+            {
+              label: "Provider family",
+              value: renderMetricValue(providerFamily),
+              detail: "Provider semantic family preserved in the canonical telemetry contract.",
+            },
+            {
+              label: "Vendor",
+              value: renderMetricValue(vendorId),
+              detail: "Optional intermediary execution vendor such as LiteLLM.",
+            },
+            {
+              label: "Execution path",
+              value: renderMetricValue(executionFamily),
+              detail: "High-level routed execution family selected for this request.",
+            },
+            {
+              label: "Adapter",
+              value: renderMetricValue(adapterFamily),
+              detail: "Concrete adapter implementation used to shape and execute the provider request.",
+            },
+            {
+              label: "Latency",
+              value: latencyMs === null ? "n/a" : `${latencyMs} ms`,
+              detail: "Observed request latency from the persisted usage event.",
+            },
+            {
+              label: "Tokens",
+              value: renderMetricValue(totalTokens),
+              detail:
+                inputTokenTruth.available && outputTokenTruth.available
+                  ? `Input ${inputTokenTruth.source}; output ${outputTokenTruth.source}.`
+                  : "Token usage is unavailable; numeric placeholders are not treated as measured usage.",
+            },
+            {
+              label: "Cost",
+              value: formatUsd(effectiveCostUsd),
+              detail:
+                costCalculationBasis || costCalculationVersion
+                  ? `Stored effective cost • ${costCalculationBasis ?? "unknown basis"} • ${
+                      costCalculationVersion ?? "unknown version"
+                    }`
+                  : "Stored authoritative per-request effective cost.",
+            },
+            {
+              label: "Cache",
+              value: renderMetricValue(cacheStatus),
+              detail: promptCacheRequestSource
+                ? `Captured cache posture; request key source: ${promptCacheRequestSource}.`
+                : "Captured cache posture using explicit support semantics rather than zero-only inference.",
+            },
+          ].map((item) => (
+            <div key={item.label} className={`${mutedPanelClassName} space-y-2 p-4`}>
+              <p className={utilityLabelClassName}>{item.label}</p>
+              <p className={`${bodyStrongTextClassName} break-all text-[var(--rm-fg)]`}>
+                {item.value}
+              </p>
+              <p className={supportingTextClassName}>{item.detail}</p>
+            </div>
+          ))}
+        </div>
+      </SectionCard>
 
       <SectionCard
         title="Taxonomy classification"

@@ -4,23 +4,20 @@ import {
   CodeBlock,
   EmptyState,
   ErrorState,
-  FactCard,
   LoadingState,
   SectionCard,
   SelectField,
-  StatusPill,
 } from "../components/page-primitives";
 import {
   compactTitleClassName,
   fieldClassName,
   listRowClassName,
+  metaTextClassName,
   primaryButtonClassName,
-  secondaryButtonClassName,
   supportingTextClassName,
   utilityLabelClassName,
 } from "../lib/design-system";
 import { type RuntimeSnapshot, fetchRuntimeModels, submitRerankRequest } from "../lib/runtime-api";
-import { usePageActions } from "../lib/shell-header-context";
 import { buildWorkbenchModelOptions } from "../lib/view-models";
 
 const formFieldLabelClassName = utilityLabelClassName;
@@ -103,41 +100,13 @@ export default function StudioRerankRoute() {
     }
   }
 
-  usePageActions(
-    <a className={secondaryButtonClassName} href="/v1/models">
-      Model list
-    </a>,
-    [],
-  );
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <FactCard
-          label="Available models"
-          value={snapshot?.models.length ?? 0}
-          detail="The runtime model listing drives the rerank model selector."
-          emphasis
-        />
-        <FactCard
-          label="Candidate documents"
-          value={documents.length}
-          detail="Each non-empty line in the request rail becomes a rerank candidate."
-        />
-        <FactCard
-          label="Active contract"
-          value={path}
-          detail="Switch between the two vendor-backed rerank route families without leaving the page."
-        />
-      </div>
-
       {error ? <ErrorState label={error} /> : null}
 
-      <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
-        <SectionCard
-          title="Rerank request"
-          description="Use a compact request rail for the query, contract path, and candidate set."
-        >
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
+        <SectionCard title="Rerank request">
           {!snapshot ? (
             <LoadingState label="Loading rerank request context…" />
           ) : (
@@ -180,23 +149,25 @@ export default function StudioRerankRoute() {
           )}
         </SectionCard>
 
-        <div className="space-y-4">
-          <SectionCard
-            title="Ranked results"
-            description="The dominant workspace is an ordered ledger, not a wall of raw JSON."
-          >
+        <SectionCard title="Ranked results">
+          <div className="space-y-4">
             {!result ? (
               <EmptyState label="Submit a rerank request to populate ordered scores." />
             ) : result.rows.length === 0 ? (
               <EmptyState label="The runtime returned no ranked candidates." />
             ) : (
               <div className="space-y-3">
+                <p className={metaTextClassName}>Ordered ledger</p>
                 {result.rows.map((row) => (
                   <div key={`${row.index}-${row.score}`} className={listRowClassName}>
                     <div className="space-y-2">
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex flex-wrap items-baseline justify-between gap-3">
                         <p className={compactTitleClassName}>Document {row.index + 1}</p>
-                        <StatusPill tone="accent">{row.score.toFixed(4)}</StatusPill>
+                        <p
+                          className={`font-mono text-[13px] tabular-nums ${supportingTextClassName}`}
+                        >
+                          {row.score.toFixed(4)}
+                        </p>
                       </div>
                       <p className={supportingTextClassName}>{row.text}</p>
                     </div>
@@ -204,17 +175,14 @@ export default function StudioRerankRoute() {
                 ))}
               </div>
             )}
-          </SectionCard>
-
-          <SectionCard
-            title="Contract details"
-            description="Keep raw transport artifacts adjacent so the request contract remains operator-readable."
-          >
+            <div className="space-y-2">
+              <p className={metaTextClassName}>Contract details</p>
             <CodeBlock className="min-h-60">
               {result?.rawPayload ?? '{\n  "status": "No rerank request yet"\n}'}
             </CodeBlock>
-          </SectionCard>
-        </div>
+            </div>
+          </div>
+        </SectionCard>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router";
 
-import { LlamaSwapSetupHint, useLlamaSwapConfigStatus } from "../components/llama-swap-setup-hint";
+import { useLlamaSwapConfigStatus } from "../components/llama-swap-setup-hint";
 import { LocalModelRolePicker } from "../components/local-model-role-picker";
 import { ErrorState, LoadingState, SectionCard, StatusPill } from "../components/page-primitives";
 import {
@@ -126,9 +126,6 @@ export default function LocalLlamaSwapModelsRoute() {
   return (
     <div className="space-y-5">
       {error ? <ErrorState label={error} /> : null}
-      {!llamaSwapStatusLoading && llamaSwapStatus && !llamaSwapStatus.operational ? (
-        <LlamaSwapSetupHint variant="prominent" status={llamaSwapStatus} />
-      ) : null}
 
       <section className={`${mutedPanelClassName} space-y-2 p-5`}>
         <h2 className={inlineTitleClassName}>Llama-swap models</h2>
@@ -169,7 +166,12 @@ export default function LocalLlamaSwapModelsRoute() {
               <button
                 type="button"
                 onClick={handleLoadDraftModel}
-                disabled={!loadModelId.trim() || actioning.__load__ || !llamaSwapOperational}
+                disabled={
+                  !loadModelId.trim() ||
+                  actioning.__load__ ||
+                  llamaSwapStatusLoading ||
+                  !llamaSwapOperational
+                }
                 className={primaryButtonClassName}
               >
                 {actioning.__load__ ? "Loading…" : "Load model"}
@@ -187,19 +189,8 @@ export default function LocalLlamaSwapModelsRoute() {
             rolePolicy={rolePolicy}
             selectedRoleIds={loadRoleIds}
             onChange={setLoadRoleIds}
-            disabled={actioning.__load__ || !llamaSwapOperational}
+            disabled={actioning.__load__ || llamaSwapStatusLoading || !llamaSwapOperational}
           />
-
-          <p className={supportingTextClassName}>
-            Assign roles before loading so routing can prefer this endpoint for matching tasks.
-          </p>
-
-          {!llamaSwapOperational ? (
-            <p className={supportingTextClassName}>
-              Load model stays disabled until runtime config declares a llama-swap model with a
-              valid GGUF path. Open the setup guide above to copy the required scaffold.
-            </p>
-          ) : null}
 
           <div className="flex flex-wrap gap-2">
             <Link className={secondaryButtonClassName} to="/app/system/runtime-config">

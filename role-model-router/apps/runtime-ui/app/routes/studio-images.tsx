@@ -4,7 +4,6 @@ import {
   CodeBlock,
   EmptyState,
   ErrorState,
-  FactCard,
   LoadingState,
   SectionCard,
   SelectField,
@@ -13,7 +12,6 @@ import {
   fieldClassName,
   mutedPanelClassName,
   primaryButtonClassName,
-  secondaryButtonClassName,
   utilityLabelClassName,
 } from "../lib/design-system";
 import {
@@ -22,7 +20,6 @@ import {
   submitImageGeneration,
   submitSdApiTxt2Img,
 } from "../lib/runtime-api";
-import { usePageActions } from "../lib/shell-header-context";
 import { buildWorkbenchModelOptions } from "../lib/view-models";
 
 type ImageResult =
@@ -119,46 +116,12 @@ export default function StudioImagesRoute() {
     }
   }
 
-  usePageActions(
-    <>
-      <a className={secondaryButtonClassName} href="/v1/models">
-        Model list
-      </a>
-      <a className={secondaryButtonClassName} href="/sdapi/v1/loras">
-        SDAPI LoRAs
-      </a>
-    </>,
-    [],
-  );
-
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <FactCard
-          label="Available models"
-          value={snapshot?.models.length ?? 0}
-          detail="The current runtime model listing drives the request rail."
-          emphasis
-        />
-        <FactCard
-          label="Request mode"
-          value={mode === "openai" ? "OpenAI" : "SDAPI"}
-          detail="Switch request families without leaving the studio section."
-        />
-        <FactCard
-          label="Returned images"
-          value={result?.images.length ?? 0}
-          detail="Generated images remain in the dominant result stage with raw response details adjacent."
-        />
-      </div>
-
       {error ? <ErrorState label={error} /> : null}
 
-      <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
-        <SectionCard
-          title="Image request modes"
-          description="Choose an OpenAI-style or SDAPI-style request and keep the parameter rail compact."
-        >
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
+        <SectionCard title="Image request modes">
           {!snapshot ? (
             <LoadingState label="Loading image request context…" />
           ) : (
@@ -221,39 +184,36 @@ export default function StudioImagesRoute() {
           )}
         </SectionCard>
 
-        <div className="space-y-4">
-          <SectionCard
-            title="Image result stage"
-            description="The dominant pane belongs to generated images first, not the request form."
-          >
-            {!result ? (
-              <EmptyState label="Run an image request to populate the result stage." />
-            ) : result.images.length === 0 ? (
-              <EmptyState label="The runtime returned no image payloads for this request." />
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2">
-                {result.images.map((image, index) => (
-                  <div key={`${result.mode}-${index}`} className={`${mutedPanelClassName} p-3`}>
-                    <img
-                      alt={`Generated result ${index + 1}`}
-                      className="aspect-square w-full object-cover"
-                      src={image}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </SectionCard>
-
-          <SectionCard
-            title="Raw response"
-            description="Payloads stay adjacent to the stage so operators can compare visual output and transport details together."
-          >
-            <CodeBlock className="min-h-60">
-              {result?.rawPayload ?? '{\n  "status": "No image request yet"\n}'}
-            </CodeBlock>
-          </SectionCard>
-        </div>
+        <SectionCard title="Image result stage">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <p className={utilityLabelClassName}>Generated images</p>
+              {!result ? (
+                <EmptyState label="Run an image request to populate the result stage." />
+              ) : result.images.length === 0 ? (
+                <EmptyState label="The runtime returned no image payloads for this request." />
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {result.images.map((image, index) => (
+                    <div key={`${result.mode}-${index}`} className={`${mutedPanelClassName} p-3`}>
+                      <img
+                        alt={`Generated result ${index + 1}`}
+                        className="aspect-square w-full object-cover"
+                        src={image}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="space-y-2">
+              <p className={utilityLabelClassName}>Raw response</p>
+              <CodeBlock className="min-h-60">
+                {result?.rawPayload ?? '{\n  "status": "No image request yet"\n}'}
+              </CodeBlock>
+            </div>
+          </div>
+        </SectionCard>
       </div>
     </div>
   );

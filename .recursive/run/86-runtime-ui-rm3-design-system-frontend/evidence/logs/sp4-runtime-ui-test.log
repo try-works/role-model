@@ -1,0 +1,501 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/86-runtime-ui-rm3-design-system-frontend/role-model-router/apps/runtime-ui
+
+ Γ¥» app/lib/design-system.test.ts (92 tests | 2 failed) 185ms
+   Γ£ô runtime design system > defines navigation groups and layout templates for every runtime route 6ms
+   Γ£ô runtime design system > uses analytics charts as the primary Observe entry point 2ms
+   Γ£ô runtime design system > keeps the shell on the RM3 baseline with explicit chart tokens 1ms
+   Γ£ô runtime design system > chart tokens used together resolve to distinct visual colors in each theme 1ms
+   Γ£ô runtime design system > global shell chrome keeps legacy vendor ui out of the main runtime contract 56ms
+   Γ£ô runtime design system > studio implementation targets render repo-owned workspace sections instead of placeholder blueprints 14ms
+   Γ£ô runtime design system > studio workspace routes use shared form-label and payload typography tokens 1ms
+   Γ£ô runtime design system > integration and system implementation targets render live upstream and peer surfaces 9ms
+   Γ£ô runtime design system > router implementation targets render repo-owned routing explanation surfaces 0ms
+   Γ£ô runtime design system > router, connect registry, and remote surfaces expose alias/readiness ownership instead of generic filler 1ms
+   Γ£ô runtime design system > providers surface omits saved-provider maintenance and archived diagnostics 1ms
+   Γ£ô runtime design system > runtime, session readiness, workbench, and advanced surfaces use canonical lifecycle diagnostics 0ms
+   Γ£ô runtime design system > router routes preserve empty-state and observe-link affordances 0ms
+   Γ£ô runtime design system > merged router overview stays observational while routing strategy owns editing controls 1ms
+   Γ£ô runtime design system > router overview presents runtime-config posture as source of truth 1ms
+   Γ£ô runtime design system > router overview lists the concrete candidate endpoints behind routing posture 1ms
+   Γ£ô runtime design system > routing decision detail stays in-page and follows the compact Paper detail layout 0ms
+   Γ£ô runtime design system > routing strategy benchmark advisory does not leak JSX control flow as page text 0ms
+   Γ£ô runtime design system > routing strategy settings separate saved posture from draft edits and refresh derived state after save 0ms
+   Γ£ô runtime design system > routing strategy follows the Paper in-page rail layout without shell action buttons 0ms
+   Γ£ô runtime design system > routing controller uses the tokenized registry-detail split instead of generic summary strips 0ms
+   Γ£ô runtime design system > routing candidates use a ledger-style inventory rail instead of detached fact cards 0ms
+   Γ£ô runtime design system > routing decisions use a ledger rail instead of a KPI strip 0ms
+   Γ£ô runtime design system > router config is catalog redirect-only (Fixed Decision #15), not a live Router route 1ms
+   Γ£ô runtime design system > meta-guidance panels stay removed from overview and observe routes 0ms
+   Γ£ô runtime design system > design system doc marks the converted pages as live routes 1ms
+   Γ£ô runtime design system > control routes tolerate an unassigned controller before endpoint activation 0ms
+   Γ£ô runtime design system > applies the RM3 palette + Geist contract in live CSS and DESIGN_SYSTEM 2ms
+   Γ£ô runtime design system > shared panels and provider selectors are owned by Apple-theme primitives 1ms
+   Γ£ô runtime design system > router strategy execution mode uses the themed select primitive 0ms
+   Γ£ô runtime design system > production UI dropdowns use themed select primitives instead of native selects 2ms
+   Γ£ô runtime design system > shared route effects avoid action identity loops and peer refresh feedback 0ms
+   Γ£ô runtime design system > keeps shared states on solid token-backed pills and no section divider chrome 0ms
+   Γ£ô runtime design system > configured model chips follow the Paper tone map instead of generic success pills 0ms
+   Γ£ô runtime design system > configured models keeps the selected detail compact and moves deep diagnostics behind a disclosure 0ms
+   Γ£ô runtime design system > benchmark score badges use a dedicated centered circular badge instead of loose pill text 0ms
+   Γ£ô runtime design system > benchmark page keeps controls and scores in a single runtime column 1ms
+   Γ£ô runtime design system > benchmark page shows populated preview content when runtime data is empty 1ms
+   Γ£ô runtime design system > benchmark page uses shared text tokens instead of route-local hardcoded typography 1ms
+   Γ£ô runtime design system > remaining system boards follow the Paper runtime-page layout contracts 1ms
+   Γ£ô runtime design system > remote, models, router, and system runtime config routes are first-class pages in the retained taxonomy 14ms
+   Γ£ô runtime design system > routing analytics exposes the Paper-style current-slice summary rail 0ms
+   Γ£ô runtime design system > connect and system routes rely on shared secondary-text tokens instead of route-local color overrides 0ms
+   Γ£ô runtime design system > upstream passthrough overview counts configured providers in scope, not the full provider catalog 0ms
+   Γ£ô runtime design system > connect contract-reference routes expose live compatibility and passthrough guidance 0ms
+   Γ£ô runtime design system > runtime roles route preserves role-first drill-down language for task detail 1ms
+   Γ£ô runtime design system > models routes use shared supporting and field tokens instead of route-local secondary text overrides 0ms
+   Γ£ô runtime design system > routing strategy route uses shared text and field tokens instead of route-local small-text styling 0ms
+   Γ£ô runtime design system > router routes use shared supporting and emphasis tokens instead of route-local secondary text overrides 1ms
+   Γ£ô runtime design system > observe routes use shared supporting, utility, and title tokens instead of route-local telemetry typography overrides 1ms
+   Γ£ô runtime design system > local routes use shared supporting, meta, code, and button tokens instead of route-local typography drift 1ms
+   Γ£ô runtime design system > local chooser uses two backend option cards with in-card actions instead of detached fact strips 0ms
+   Γ£ô runtime design system > peer models keeps the register surface visible and uses stacked registry rows 0ms
+   Γ£ô runtime design system > llama-swap models stays single-column and uses stacked loaded-model rows 0ms
+   Γ£ô runtime design system > llama-swap matrix renders an explanatory matrix entry page instead of a bare redirect 0ms
+   Γ£ô runtime design system > local setup surfaces stay discoverable from navigation and empty registry states 0ms
+   Γ£ô runtime design system > local host policy, endpoint, and swap surfaces keep low-data states actionable 0ms
+   Γ£ô runtime design system > observe and local log surfaces render structured ledgers rather than raw iframe placeholders 0ms
+   Γ£ô runtime design system > observe ownership keeps requests canonical and raw-host surfaces adjacent 0ms
+   Γ£ô runtime design system > requests and request detail stay telemetry-first without redundant raw-host handoff cards 1ms
+   Γ£ô runtime design system > routing analytics controls expose richer taxonomy pivots for observe charts 0ms
+   Γ£ô runtime design system > activity route frames raw-host metrics as adjacent to canonical telemetry 0ms
+   Γ£ô runtime design system > logs route exposes request-detail handoffs while preserving raw-host framing 0ms
+   Γ£ô runtime design system > registry and system layouts avoid redundant KPI strips and placeholder note panels 0ms
+   Γ£ô runtime design system > dashboard is chart-led and keeps routing analytics as a first-class handoff 0ms
+   Γ£ô runtime design system > overview metadata and design doc describe a telemetry-first summary with an interaction rail 2ms
+   Γ£ô runtime design system > workbench and observe routes expose routing controls and receipts in repo-owned UI surfaces 0ms
+   Γ£ô runtime design system > request detail and model detail expose structured taxonomy evidence rather than raw-only telemetry 0ms
+   Γ£ô runtime design system > request detail route renders authoritative stored cost metadata 0ms
+   Γ£ô runtime design system > request detail keeps top-line telemetry facts readable instead of compressing them into a six-column strip 0ms
+   ├ù runtime design system > shell header owns route metadata without duplicate page headers 24ms
+     ΓåÆ expected 'import { PageContent, SegmentedControΓÇª' to contain 'getPrimarySectionLinkClassName'
+   Γ£ô runtime design system > shell headers do not render section eyebrow labels 0ms
+   Γ£ô runtime design system > routes do not register refresh controls as shell header actions 0ms
+   Γ£ô runtime design system > long fact-card values use compact text roles instead of display value typography 0ms
+   Γ£ô runtime design system > production UI sources do not bypass Apple theme token primitives 2ms
+   Γ£ô runtime design system > app css derives runtime tokens from RM3 token families with transitional linear aliases 1ms
+   Γ£ô runtime design system > shell chrome does not render separate card surfaces for the sidebar and header 0ms
+   ├ù runtime design system > shell keeps chrome fixed while only the page-content frame scrolls 5ms
+     ΓåÆ expected 'import { PageContent, SegmentedControΓÇª' to contain 'max-w-[1216px]'
+   Γ£ô runtime design system > shell navigation follows the text-first Paper runtime shell without route icons 0ms
+   Γ£ô runtime design system > design system doc records the Paper text-only shell and compact evidence preview rules 0ms
+   Γ£ô runtime design system > design artifacts clearly separate the current runtime authority from the historical Apple reference 0ms
+   Γ£ô runtime design system > design system doc includes page-by-page layout and content contracts for live runtime pages 5ms
+   Γ£ô runtime design system > shell typography and pill navigation follow the Paper runtime shell scale 0ms
+   Γ£ô runtime design system > shared form controls and telemetry filter pills stay at sidebar-scale typography 0ms
+   Γ£ô runtime design system > content-frame headings step down below the shell page title scale 0ms
+   Γ£ô runtime design system > accent-filled actions keep a light foreground for stronger token contrast 0ms
+   Γ£ô runtime design system > production UI sources keep the approved Apple radius grammar 0ms
+   Γ£ô runtime design system > production UI sources avoid unsupported Apple typography weight 500 1ms
+   Γ£ô runtime design system > chart primitives use shared design-system geometry and type tokens 1ms
+   Γ£ô runtime design system > telemetry chart states are shared design-system vocabulary 1ms
+   Γ£ô runtime design system > runtime route definitions stay slim and future scaffolds avoid duplicate header props 1ms
+   Γ£ô runtime design system > disclosure summaries use compact body tokens instead of section-heading scale 0ms
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 2 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > shell header owns route metadata without duplicate page headers
+AssertionError: expected 'import { PageContent, SegmentedControΓÇª' to contain 'getPrimarySectionLinkClassName'
+
+- Expected
++ Received
+
+- getPrimarySectionLinkClassName
++ import { PageContent, SegmentedControl, Sidebar } from "@role-model/ui";
++ import { type ReactNode, useEffect, useMemo, useRef } from "react";
++ import { useLocation, useNavigate } from "react-router";
++
++ import {
++   getRuntimeRouteDefinition,
++   runtimeNavigationSections,
++   type RuntimeNavigationSection,
++ } from "../lib/design-system";
++ import { useShellHeaderState } from "../lib/shell-header-context";
++ import { ThemeToggle } from "./theme-toggle";
++
++ const SIDEBAR_FOOTER_STUB = {
++   models: [] as const,
++   cacheHitRate: 0,
++   routerEndpoint: "127.0.0.1:3458/v1",
++   routerAlias: "ΓÇö",
++ };
++
++ function resolveSecondaryPath(
++   pathname: string,
++   section: RuntimeNavigationSection,
++ ): string {
++   const match = [...section.items]
++     .sort((left, right) => right.to.length - left.to.length)
++     .find(
++       (item) =>
++         pathname === item.to ||
++         (item.to !== "/app" && pathname.startsWith(`${item.to}/`)),
++     );
++   return match?.to ?? section.items[0]?.to ?? "/app";
++ }
++
++ export function AppShell({ children }: { children: ReactNode }) {
++   const location = useLocation();
++   const navigate = useNavigate();
++   const contentScrollRef = useRef<HTMLDivElement | null>(null);
++   const { actions, override } = useShellHeaderState();
++   const route = getRuntimeRouteDefinition(location.pathname) ?? getRuntimeRouteDefinition("/app");
++   const activeSection =
++     runtimeNavigationSections.find((section) => section.title === route?.section) ??
++     runtimeNavigationSections[0];
++   const title = override?.title ?? route?.title ?? "Runtime overview";
++   const hasSecondaryNavigation = activeSection.items.length > 1;
++   const pathname = location.pathname;
++
++   const navItems = useMemo(
++     () =>
++       runtimeNavigationSections.map((section) => ({
++         id: section.title,
++         label: section.title,
++         active: route?.section === section.title,
++         onSelect: () => navigate(section.items[0]?.to ?? "/app"),
++       })),
++     [navigate, route?.section],
++   );
++
++   const secondaryOptions = useMemo(
++     () =>
++       activeSection.items.map((item) => ({
++         value: item.to,
++         label: item.label,
++       })),
++     [activeSection.items],
++   );
++
++   const secondaryValue = resolveSecondaryPath(pathname, activeSection);
++
++   useEffect(() => {
++     if (pathname) {
++       contentScrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
++     }
++   }, [pathname]);
++
++   return (
++     <div className="flex h-screen overflow-hidden bg-background text-foreground">
++       <Sidebar {...SIDEBAR_FOOTER_STUB} navItems={navItems} className="h-full shrink-0" />
++       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
++         <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-border px-4">
++           <h1 className="min-w-0 truncate font-sans text-sm font-medium leading-5 tracking-tight text-foreground">
++             {title}
++           </h1>
++           <div className="flex shrink-0 items-center gap-2">
++             {actions}
++             <ThemeToggle />
++           </div>
++         </header>
++         {hasSecondaryNavigation ? (
++           <div className="shrink-0 px-4 py-2">
++             <SegmentedControl
++               aria-label={`${activeSection.title} pages`}
++               options={secondaryOptions}
++               value={secondaryValue}
++               onChange={(to) => navigate(to)}
++             />
++           </div>
++         ) : null}
++         <PageContent ref={contentScrollRef} className="runtime-shell-content-scroll">
++           {children}
++         </PageContent>
++       </div>
++     </div>
++   );
++ }
++
+
+ Γ¥» app/lib/design-system.test.ts:1829:28
+    1827|     expect(appLayoutSource).toContain("ShellHeaderProvider");
+    1828|     expect(appShellSource).toContain("useShellHeaderState");
+    1829|     expect(appShellSource).toContain("getPrimarySectionLinkClassName");
+       |                            ^
+    1830|     expect(appShellSource).toContain("getSecondaryNavigationLinkClassNΓÇª
+    1831|     expect(appShellSource).toContain('color: "var(--rm-on-primary)"');
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/2]ΓÄ»
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > shell keeps chrome fixed while only the page-content frame scrolls
+AssertionError: expected 'import { PageContent, SegmentedControΓÇª' to contain 'max-w-[1216px]'
+
+- Expected
++ Received
+
+- max-w-[1216px]
++ import { PageContent, SegmentedControl, Sidebar } from "@role-model/ui";
++ import { type ReactNode, useEffect, useMemo, useRef } from "react";
++ import { useLocation, useNavigate } from "react-router";
++
++ import {
++   getRuntimeRouteDefinition,
++   runtimeNavigationSections,
++   type RuntimeNavigationSection,
++ } from "../lib/design-system";
++ import { useShellHeaderState } from "../lib/shell-header-context";
++ import { ThemeToggle } from "./theme-toggle";
++
++ const SIDEBAR_FOOTER_STUB = {
++   models: [] as const,
++   cacheHitRate: 0,
++   routerEndpoint: "127.0.0.1:3458/v1",
++   routerAlias: "ΓÇö",
++ };
++
++ function resolveSecondaryPath(
++   pathname: string,
++   section: RuntimeNavigationSection,
++ ): string {
++   const match = [...section.items]
++     .sort((left, right) => right.to.length - left.to.length)
++     .find(
++       (item) =>
++         pathname === item.to ||
++         (item.to !== "/app" && pathname.startsWith(`${item.to}/`)),
++     );
++   return match?.to ?? section.items[0]?.to ?? "/app";
++ }
++
++ export function AppShell({ children }: { children: ReactNode }) {
++   const location = useLocation();
++   const navigate = useNavigate();
++   const contentScrollRef = useRef<HTMLDivElement | null>(null);
++   const { actions, override } = useShellHeaderState();
++   const route = getRuntimeRouteDefinition(location.pathname) ?? getRuntimeRouteDefinition("/app");
++   const activeSection =
++     runtimeNavigationSections.find((section) => section.title === route?.section) ??
++     runtimeNavigationSections[0];
++   const title = override?.title ?? route?.title ?? "Runtime overview";
++   const hasSecondaryNavigation = activeSection.items.length > 1;
++   const pathname = location.pathname;
++
++   const navItems = useMemo(
++     () =>
++       runtimeNavigationSections.map((section) => ({
++         id: section.title,
++         label: section.title,
++         active: route?.section === section.title,
++         onSelect: () => navigate(section.items[0]?.to ?? "/app"),
++       })),
++     [navigate, route?.section],
++   );
++
++   const secondaryOptions = useMemo(
++     () =>
++       activeSection.items.map((item) => ({
++         value: item.to,
++         label: item.label,
++       })),
++     [activeSection.items],
++   );
++
++   const secondaryValue = resolveSecondaryPath(pathname, activeSection);
++
++   useEffect(() => {
++     if (pathname) {
++       contentScrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
++     }
++   }, [pathname]);
++
++   return (
++     <div className="flex h-screen overflow-hidden bg-background text-foreground">
++       <Sidebar {...SIDEBAR_FOOTER_STUB} navItems={navItems} className="h-full shrink-0" />
++       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
++         <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-border px-4">
++           <h1 className="min-w-0 truncate font-sans text-sm font-medium leading-5 tracking-tight text-foreground">
++             {title}
++           </h1>
++           <div className="flex shrink-0 items-center gap-2">
++             {actions}
++             <ThemeToggle />
++           </div>
++         </header>
++         {hasSecondaryNavigation ? (
++           <div className="shrink-0 px-4 py-2">
++             <SegmentedControl
++               aria-label={`${activeSection.title} pages`}
++               options={secondaryOptions}
++               value={secondaryValue}
++               onChange={(to) => navigate(to)}
++             />
++           </div>
++         ) : null}
++         <PageContent ref={contentScrollRef} className="runtime-shell-content-scroll">
++           {children}
++         </PageContent>
++       </div>
++     </div>
++   );
++ }
++
+
+ Γ¥» app/lib/design-system.test.ts:1957:28
+    1955|     expect(appShellSource).toContain("<PageContent");
+    1956|     expect(appShellSource).toContain('className="runtime-shell-contentΓÇª
+    1957|     expect(appShellSource).toContain("max-w-[1216px]");
+       |                            ^
+    1958|     expect(appCss).toContain(".runtime-shell-content-scroll");
+    1959|     expect(appCss).toContain("scrollbar-width: none;");
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/2]ΓÄ»
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 90 passed (92)
+   Start at  03:59:47
+   Duration  2.46s (transform 927ms, setup 0ms, collect 1.39s, tests 185ms, environment 0ms, prepare 287ms)
+
+undefined
+D:\DEV\role-model\.worktrees\86-runtime-ui-rm3-design-system-frontend\role-model-router\apps\runtime-ui:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run app/lib/design-system.test.ts
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/86-runtime-ui-rm3-design-system-frontend/role-model-router/apps/runtime-ui
+
+ Γ£ô app/lib/design-system.test.ts (92 tests) 154ms
+
+ Test Files  1 passed (1)
+      Tests  92 passed (92)
+   Start at  04:00:18
+   Duration  2.34s (transform 887ms, setup 0ms, collect 1.35s, tests 154ms, environment 0ms, prepare 248ms)
+
+--- FULL SUITE ---
+
+> @role-model-router/runtime-ui@ test D:\DEV\role-model\.worktrees\86-runtime-ui-rm3-design-system-frontend\role-model-router\apps\runtime-ui
+> vitest run
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/86-runtime-ui-rm3-design-system-frontend/role-model-router/apps/runtime-ui
+
+ Γ£ô app/lib/live-refresh.test.ts (2 tests) 68ms
+ Γ£ô app/lib/router-candidate-labels.test.ts (5 tests) 25ms
+ Γ£ô app/lib/view-models.test.ts (38 tests) 111ms
+ Γ£ô app/lib/runtime-api.test.ts (58 tests) 135ms
+ Γ£ô app/components/page-primitives.test.tsx (6 tests) 62ms
+ Γ£ô app/routes/extensions.test.tsx (2 tests) 55ms
+ Γ£ô app/routes/storage-retention.test.tsx (2 tests) 52ms
+ Γ£ô app/components/device-authorization-card.test.tsx (2 tests) 48ms
+ Γ£ô app/components/local-model-role-picker.test.tsx (7 tests) 98ms
+ Γ£ô app/lib/role-task-hierarchy.test.tsx (3 tests) 69ms
+ Γ£ô app/routes/control-benchmark.test.ts (1 test) 67ms
+ Γ£ô app/routes/control-models.test.ts (18 tests) 166ms
+ Γ£ô app/components/telemetry-charts.test.tsx (13 tests) 80ms
+ Γ£ô app/routes/providers.test.ts (11 tests) 220ms
+ Γ£ô app/lib/build-sync.test.ts (3 tests) 40ms
+stderr | app/lib/stale-refresh-diagnostics.test.ts > stale-refresh-diagnostics > emit and flush diagnostics > batches diagnostics until flushed
+[telemetry] Background analytics refresh reused stale data {
+  routeId: 'dashboard',
+  staleChartCount: 2,
+  charts: [
+    {
+      title: 'Chart A',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart B',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    }
+  ]
+}
+
+stderr | app/lib/stale-refresh-diagnostics.test.ts > stale-refresh-diagnostics > emit and flush diagnostics > auto-flushes at max batch size
+[telemetry] Background analytics refresh reused stale data {
+  routeId: 'dashboard',
+  staleChartCount: 10,
+  charts: [
+    {
+      title: 'Chart 0',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 1',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 2',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 3',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 4',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 5',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 6',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 7',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 8',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 9',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    }
+  ]
+}
+
+ Γ£ô app/lib/stale-refresh-diagnostics.test.ts (14 tests) 38ms
+ Γ£ô app/lib/device-authorization.test.ts (19 tests) 23ms
+ Γ£ô app/components/device-authorization-modal.test.tsx (1 test) 30ms
+ Γ£ô app/lib/telemetry-analytics.test.ts (11 tests) 23ms
+ Γ£ô app/lib/telemetry-chart-config.test.ts (2 tests) 12ms
+ Γ£ô app/lib/benchmark-model-cards.test.ts (5 tests) 11ms
+ Γ£ô app/routes/startup-bootstrap-regression.test.ts (11 tests) 15ms
+ Γ£ô app/lib/llama-swap-setup.test.ts (6 tests) 15ms
+ Γ£ô app/lib/format-score.test.ts (3 tests) 8ms
+ Γ£ô app/root.test.tsx (3 tests) 9ms
+ Γ£ô app/lib/telemetry-route-models.test.ts (3 tests) 15ms
+ Γ£ô app/lib/theme.test.ts (6 tests) 18ms
+ Γ£ô app/lib/provider-account-state.test.ts (2 tests) 9ms
+ Γ£ô app/routes/index.test.tsx (1 test) 7ms
+ Γ£ô app/lib/design-system.test.ts (92 tests) 337ms
+ Γ£ô app/lib/benchmark-latency.test.ts (2 tests) 8ms
+ Γ£ô app/routes/request-detail.test.tsx (6 tests) 11ms
+ Γ£ô app/routes/studio-audio.test.ts (2 tests) 4ms
+
+ Test Files  33 passed (33)
+      Tests  360 passed (360)
+   Start at  04:00:24
+   Duration  4.95s (transform 7.64s, setup 0ms, collect 27.55s, tests 1.89s, environment 15ms, prepare 12.67s)
+

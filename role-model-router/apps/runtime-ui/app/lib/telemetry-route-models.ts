@@ -60,7 +60,7 @@ export function buildOverviewChartDefinitions(input: {
 }): readonly TelemetryRouteChartDefinition[] {
   return [
     {
-      title: "Token Usage Over Time",
+      title: "Token usage over time",
       description: "Input, output, and total token flow across the selected telemetry window.",
       kind: "area",
       metrics: ["inputTokens", "outputTokens", "totalTokens"],
@@ -73,8 +73,28 @@ export function buildOverviewChartDefinitions(input: {
       className: "col-span-12",
     },
     {
-      title: "Effective Cost Over Time",
-      description: "Stored request-time pricing facts across the current slice.",
+      title: "Cache efficiency trend",
+      description: "Cache-hit token volume and cache-hit rate.",
+      kind: "line",
+      metrics: ["cacheHitTokens", "cacheHitTokenRate"],
+      metricAxisIds: cacheEfficiencyMetricAxisIds,
+      query: buildBaseQuery({
+        timeRange: input.timeRange,
+        metrics: ["cacheHitTokens", "cacheHitTokenRate"],
+        breakdown:
+          input.breakdown === "sourceType" ||
+          input.breakdown === null ||
+          input.breakdown === undefined
+            ? (input.breakdown ?? null)
+            : null,
+        filters: input.filters,
+      }),
+      emptyMessage: "No cache activity has been recorded for this slice yet.",
+      className: "col-span-12",
+    },
+    {
+      title: "Effective cost over time",
+      description: "Authoritative effective cost based on stored request-time pricing facts.",
       kind: "line",
       metrics: ["actualCostUsd", "estimatedCostUsd", "effectiveCostUsd"],
       query: buildBaseQuery({
@@ -87,7 +107,7 @@ export function buildOverviewChartDefinitions(input: {
       className: "col-span-12 xl:col-span-6",
     },
     {
-      title: "Cost Avoided Over Time",
+      title: "Cost avoided over time",
       description:
         "Routing-avoided cost, cache-avoided cost, and total avoided spend from persisted request-time economics snapshots.",
       kind: "area",
@@ -102,8 +122,8 @@ export function buildOverviewChartDefinitions(input: {
       className: "col-span-12 xl:col-span-6",
     },
     {
-      title: "Latency Trend",
-      description: "Average and p95 latency across the selected telemetry window.",
+      title: "Latency trend",
+      description: "Average and p95 latency across the selected window.",
       kind: "line",
       metrics: ["averageLatencyMs", "p95LatencyMs"],
       query: buildBaseQuery({
@@ -121,28 +141,8 @@ export function buildOverviewChartDefinitions(input: {
       className: "col-span-12 xl:col-span-6",
     },
     {
-      title: "Cache Efficiency",
-      description: "cache-hit tokens / hit rate",
-      kind: "line",
-      metrics: ["cacheHitTokens", "cacheHitTokenRate"],
-      metricAxisIds: cacheEfficiencyMetricAxisIds,
-      query: buildBaseQuery({
-        timeRange: input.timeRange,
-        metrics: ["cacheHitTokens", "cacheHitTokenRate"],
-        breakdown:
-          input.breakdown === "sourceType" ||
-          input.breakdown === null ||
-          input.breakdown === undefined
-            ? (input.breakdown ?? null)
-            : null,
-        filters: input.filters,
-      }),
-      emptyMessage: "No cache activity has been recorded for this slice yet.",
-      className: "col-span-12 xl:col-span-6",
-    },
-    {
-      title: "Success vs Failure",
-      description: "success / failure",
+      title: "Success vs failure volume",
+      description: "Successful and failed request volume by time bucket.",
       kind: "bar",
       metrics: ["successCount", "failureCount"],
       query: buildBaseQuery({

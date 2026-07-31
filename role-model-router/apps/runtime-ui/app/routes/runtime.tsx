@@ -1,5 +1,5 @@
+import { MetricStrip } from "@role-model/ui";
 import { useEffect, useState } from "react";
-import { Link } from "react-router";
 
 import {
   EmptyState,
@@ -11,7 +11,6 @@ import {
 import {
   bodyStrongTextClassName,
   mutedPanelClassName,
-  secondaryButtonClassName,
   supportingTextClassName,
   utilityLabelClassName,
 } from "../lib/design-system";
@@ -58,11 +57,6 @@ export default function RuntimeRoute() {
       (count, provider) => count + provider.modelMappings.length,
       0,
     ) ?? 0;
-  const lifecycleSummaryRows = [
-    { label: "active endpoints", value: summary.lifecycleSummary?.active ?? 0 },
-    { label: "degraded routes", value: summary.lifecycleSummary?.degraded ?? 0 },
-    { label: "offline records", value: summary.lifecycleSummary?.offline ?? 0 },
-  ];
   const appliedPolicyRows = [
     ["Config path", configRecord.path ?? "not configured"],
     ["Execution mode", currentConfig?.executionMode ?? summary.executionMode ?? "pending"],
@@ -77,25 +71,37 @@ export default function RuntimeRoute() {
         ["Source", controller.sourceType],
       ] as const)
     : [];
-  const versionRows = [
-    ["Vendor host", version.version],
-    ["Commit", version.commit],
-    ["Build date", version.build_date],
-    ["Runtime state root", summary.runtimeStateRoot ?? "unavailable"],
-    ["Summary endpoint", "/api/role-model/runtime/summary"],
-  ] as const;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap gap-3">
-        <StatusPill tone="success">Active {summary.lifecycleSummary?.active ?? 0}</StatusPill>
-        <StatusPill tone="warning">Degraded {summary.lifecycleSummary?.degraded ?? 0}</StatusPill>
-        <StatusPill tone="neutral">Offline {summary.lifecycleSummary?.offline ?? 0}</StatusPill>
-      </div>
+      <MetricStrip
+        aria-label="Runtime lifecycle"
+        variant="panel"
+        items={[
+          {
+            id: "active",
+            label: "Active",
+            value: String(summary.lifecycleSummary?.active ?? 0),
+          },
+          {
+            id: "degraded",
+            label: "Degraded",
+            value: String(summary.lifecycleSummary?.degraded ?? 0),
+          },
+          {
+            id: "offline",
+            label: "Offline",
+            value: String(summary.lifecycleSummary?.offline ?? 0),
+          },
+        ]}
+      />
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.08fr)_minmax(280px,0.72fr)]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]">
         <div className="space-y-4">
-          <SectionCard title="Applied runtime policy">
+          <SectionCard
+            title="Applied runtime policy"
+            description="Runtime config remains the authority for execution mode, routing strategy, and the current local plus remote model inventory."
+          >
             <div className={`${mutedPanelClassName} space-y-3 p-4`}>
               {appliedPolicyRows.map(([label, value]) => (
                 <div key={label} className="flex flex-wrap items-start justify-between gap-3">
@@ -105,18 +111,6 @@ export default function RuntimeRoute() {
                   </p>
                 </div>
               ))}
-            </div>
-            <p className={`mt-4 ${supportingTextClassName}`}>
-              Runtime config remains the authority for execution mode, routing strategy, and the
-              current local plus remote model inventory.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <Link className={secondaryButtonClassName} to="/app/system/runtime-config">
-                Runtime config
-              </Link>
-              <Link className={secondaryButtonClassName} to="/app/system/session-readiness">
-                Readiness diagnostics
-              </Link>
             </div>
           </SectionCard>
 
@@ -152,40 +146,12 @@ export default function RuntimeRoute() {
               )}
             </div>
           </SectionCard>
-
-          <SectionCard title="Controller posture">
-            {controller ? (
-              <div className={`${mutedPanelClassName} space-y-3 p-4`}>
-                {controllerRows.map(([label, value]) => (
-                  <div key={label} className="flex flex-wrap items-start justify-between gap-3">
-                    <p className={utilityLabelClassName}>{label}</p>
-                    <p className={`${bodyStrongTextClassName} max-w-[70%] break-all text-right`}>
-                      {value}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <EmptyState label="No controller assigned yet. Activate a local or remote endpoint before pinning a controller." />
-            )}
-          </SectionCard>
         </div>
 
-        <div className="space-y-4">
-          <SectionCard title="Lifecycle summary">
-            <div className="space-y-3">
-              {lifecycleSummaryRows.map((row) => (
-                <div key={row.label} className="flex items-center justify-between gap-3">
-                  <p className={supportingTextClassName}>{row.label}</p>
-                  <p className={bodyStrongTextClassName}>{row.value}</p>
-                </div>
-              ))}
-            </div>
-          </SectionCard>
-
-          <SectionCard title="Version facts">
-            <div className="space-y-3">
-              {versionRows.map(([label, value]) => (
+        <SectionCard title="Controller posture">
+          {controller ? (
+            <div className={`${mutedPanelClassName} space-y-3 p-4`}>
+              {controllerRows.map(([label, value]) => (
                 <div key={label} className="flex flex-wrap items-start justify-between gap-3">
                   <p className={utilityLabelClassName}>{label}</p>
                   <p className={`${bodyStrongTextClassName} max-w-[70%] break-all text-right`}>
@@ -194,8 +160,10 @@ export default function RuntimeRoute() {
                 </div>
               ))}
             </div>
-          </SectionCard>
-        </div>
+          ) : (
+            <EmptyState label="No controller assigned yet. Activate a local or remote endpoint before pinning a controller." />
+          )}
+        </SectionCard>
       </div>
     </div>
   );

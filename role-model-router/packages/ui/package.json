@@ -1,0 +1,32 @@
+{
+  "name": "@role-model/ui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Role-model RM3 design system — React UI kit (shell, filters, charts, pages).",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.tsx",
+    "./use-prefers-reduced-motion": "./src/use-prefers-reduced-motion.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "recharts": "^2.15.4",
+    "tailwind-merge": "^3.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}

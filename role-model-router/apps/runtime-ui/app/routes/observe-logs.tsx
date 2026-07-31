@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
+import { MetricStrip, SegmentedControl } from "@role-model/ui";
 
 import {
   EmptyState,
   ErrorState,
-  FactCard,
   LoadingState,
   SectionCard,
   StatusPill,
@@ -12,11 +12,10 @@ import {
 import {
   accentActionTextClassName,
   metaTextClassName,
-  secondaryButtonClassName,
   supportingTextClassName,
+  utilityLabelClassName,
 } from "../lib/design-system";
 import { fetchTextLogs } from "../lib/runtime-api";
-import { usePageActions } from "../lib/shell-header-context";
 import { buildStructuredLogRows } from "../lib/view-models";
 
 export default function ObserveLogsRoute() {
@@ -47,21 +46,6 @@ export default function ObserveLogsRoute() {
   const correlatedCount = rows.filter((row) => row.requestId).length;
   const sourceCount = new Set(rows.map((row) => row.sourceClass)).size;
 
-  usePageActions(
-    <>
-      <a className={secondaryButtonClassName} href="/logs">
-        Combined log
-      </a>
-      <a className={secondaryButtonClassName} href="/logs/stream/proxy">
-        Proxy stream
-      </a>
-      <a className={secondaryButtonClassName} href="/logs/stream/upstream">
-        Upstream stream
-      </a>
-    </>,
-    [],
-  );
-
   if (error) {
     return <ErrorState label={error} />;
   }
@@ -71,57 +55,39 @@ export default function ObserveLogsRoute() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-3">
-        <FactCard
-          label="Structured log history"
-          value={String(filteredRows.length)}
-          detail={`Parsed rows currently visible from the combined host log${sourceFilter === "all" ? "." : ` for source ${sourceFilter}.`}`}
-          emphasis
-        />
-        <FactCard
-          label="Sources"
-          value={String(sourceCount)}
-          detail="Distinct source labels detected in the combined log."
-        />
-        <FactCard
-          label="Correlated requests"
-          value={String(correlatedCount)}
-          detail="Rows that include a request identifier you can match to Observe receipts."
+      <MetricStrip
+        variant="panel"
+        items={[
+          {
+            id: "structured-log-history",
+            label: "Structured log history",
+            value: String(filteredRows.length),
+          },
+          {
+            id: "sources",
+            label: "Sources",
+            value: String(sourceCount),
+          },
+          {
+            id: "correlated-requests",
+            label: "Correlated requests",
+            value: String(correlatedCount),
+          },
+        ]}
+      />
+
+      <div className="space-y-2">
+        <p className={utilityLabelClassName}>Source filter</p>
+        <SegmentedControl
+          aria-label="Log source filter"
+          value={sourceFilter}
+          onChange={setSourceFilter}
+          options={sourceOptions.map((option) => ({
+            value: option,
+            label: option === "all" ? "All sources" : option,
+          }))}
         />
       </div>
-
-      <SectionCard
-        title="Canonical telemetry handoff"
-        description="Preserved raw-host logs stay adjacent to canonical telemetry; use correlated request ids to jump into the request-detail inspector when you need structured interpretation."
-      >
-        <div className="flex flex-wrap gap-3">
-          <Link className={secondaryButtonClassName} to="/app/observe/requests">
-            Open canonical request ledger
-          </Link>
-        </div>
-      </SectionCard>
-
-      <SectionCard
-        title="Source filter"
-        description="Filter preserved-host log lines by source class before drilling into raw lines or correlated request entries."
-      >
-        <div className="flex flex-wrap gap-3">
-          {sourceOptions.map((option) => {
-            const active = sourceFilter === option;
-            return (
-              <button
-                key={option}
-                type="button"
-                className={secondaryButtonClassName}
-                aria-pressed={active}
-                onClick={() => setSourceFilter(option)}
-              >
-                {option === "all" ? "All sources" : option}
-              </button>
-            );
-          })}
-        </div>
-      </SectionCard>
 
       <SectionCard
         title="Structured log history"
@@ -197,20 +163,6 @@ export default function ObserveLogsRoute() {
             {filteredRows.map((row) => row.rawLine).join("\n")}
           </pre>
         )}
-      </SectionCard>
-
-      <SectionCard
-        title="Raw stream endpoints"
-        description="Use the preserved raw stream endpoints when you need unparsed tail output for proxy or upstream processes."
-      >
-        <div className="flex flex-wrap gap-3">
-          <a className={secondaryButtonClassName} href="/logs/stream/proxy">
-            Open raw proxy stream
-          </a>
-          <a className={secondaryButtonClassName} href="/logs/stream/upstream">
-            Open raw upstream stream
-          </a>
-        </div>
       </SectionCard>
     </div>
   );

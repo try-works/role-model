@@ -4,7 +4,6 @@ import {
   CodeBlock,
   EmptyState,
   ErrorState,
-  FactCard,
   LoadingState,
   SectionCard,
   SelectField,
@@ -13,18 +12,14 @@ import {
   fieldClassName,
   metaTextClassName,
   primaryButtonClassName,
-  secondaryButtonClassName,
-  supportingTextClassName,
   utilityLabelClassName,
 } from "../lib/design-system";
 import {
   type RuntimeSnapshot,
   fetchRuntimeModels,
-  fetchRuntimeSummary,
   submitAdvancedRequest,
 } from "../lib/runtime-api";
-import { usePageActions } from "../lib/shell-header-context";
-import { buildCredentialLifecycleBanner, buildWorkbenchModelOptions } from "../lib/view-models";
+import { buildWorkbenchModelOptions } from "../lib/view-models";
 
 const advancedFamilies = [
   {
@@ -101,9 +96,7 @@ function buildDefaultPayload(path: AdvancedPath, model: string): Record<string, 
 }
 
 export default function StudioAdvancedRoute() {
-  const [snapshot, setSnapshot] = useState<Pick<RuntimeSnapshot, "summary" | "models"> | null>(
-    null,
-  );
+  const [snapshot, setSnapshot] = useState<Pick<RuntimeSnapshot, "models"> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [model, setModel] = useState("");
   const [path, setPath] = useState<AdvancedPath>("/v1/responses");
@@ -112,12 +105,9 @@ export default function StudioAdvancedRoute() {
   const [responsePayload, setResponsePayload] = useState<string | null>(null);
 
   useEffect(() => {
-    void Promise.all([fetchRuntimeSummary(), fetchRuntimeModels()])
-      .then(([summary, models]) => {
-        setSnapshot({
-          summary,
-          models,
-        });
+    void fetchRuntimeModels()
+      .then((models) => {
+        setSnapshot({ models });
         const defaultModel = models[0]?.id || "";
         setModel((current) => current || defaultModel);
       })
@@ -137,11 +127,12 @@ export default function StudioAdvancedRoute() {
     () => buildWorkbenchModelOptions(snapshot?.models ?? []),
     [snapshot?.models],
   );
-  const selectedFamily =
-    advancedFamilies.find((entry) => entry.path === path) ?? advancedFamilies[0];
-  const lifecycleBanner = snapshot ? buildCredentialLifecycleBanner(snapshot.summary) : null;
-  const blockingReadinessRows = lifecycleBanner?.blockingRows ?? [];
   const hasModels = modelOptions.length > 0;
+  const requestTemplate = JSON.stringify(
+    buildDefaultPayload(path, model || snapshot?.models[0]?.id || ""),
+    null,
+    2,
+  );
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -158,87 +149,16 @@ export default function StudioAdvancedRoute() {
     }
   }
 
-  usePageActions(
-    <a className={secondaryButtonClassName} href="/v1/models">
-      Model list
-    </a>,
-    [],
-  );
-
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <FactCard
-          label="Endpoint families"
-          value={advancedFamilies.length}
-          detail="Only advanced families with real runtime backing belong here."
-          emphasis
-        />
-        <FactCard
-          label="Selected family"
-          value={selectedFamily.label}
-          detail={selectedFamily.description}
-        />
-        <FactCard
-          label="Available models"
-          value={snapshot?.models.length ?? 0}
-          detail="The same runtime model listing feeds the advanced request templates."
-        />
-      </div>
-
       {error ? <ErrorState label={error} /> : null}
 
-      {lifecycleBanner &&
-      (blockingReadinessRows.length > 0 ||
-        lifecycleBanner.archivedStaleCount > 0 ||
-        lifecycleBanner.authorityTone === "accent") ? (
-        <SectionCard
-          title="Execution readiness"
-          description="Advanced request families use the same execution-ready model inventory as Workbench and the OpenAI-compatible bridge surfaces."
-        >
-          <div className="mb-4 flex flex-wrap gap-3">
-            <span
-              className={`inline-flex items-center rounded-full border border-[var(--rm-border)] px-3 py-1 ${metaTextClassName}`}
-            >
-              {lifecycleBanner.authorityLabel}
-            </span>
-            {lifecycleBanner.archivedStaleCount > 0 ? (
-              <span
-                className={`inline-flex items-center rounded-full border border-[var(--rm-border)] px-3 py-1 ${metaTextClassName}`}
-              >
-                Archived stale {lifecycleBanner.archivedStaleCount}
-              </span>
-            ) : null}
-          </div>
-          <p className={`mb-4 ${supportingTextClassName}`}>{lifecycleBanner.detail}</p>
-          <div className="flex flex-wrap gap-3">
-            {blockingReadinessRows.map((row) => (
-              <span
-                key={row.key}
-                className={`inline-flex items-center rounded-full border border-[var(--rm-border)] px-3 py-1 ${metaTextClassName}`}
-              >
-                {row.label} {row.value}
-              </span>
-            ))}
-          </div>
-        </SectionCard>
-      ) : null}
-
-      <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
-        <SectionCard
-          title="Endpoint family"
-          description="Choose the contract family first, then edit the request template for that endpoint."
-        >
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
+        <SectionCard title="Endpoint family">
           {!snapshot ? (
             <LoadingState label="Loading advanced request context…" />
           ) : !hasModels ? (
-            <EmptyState
-              label={
-                blockingReadinessRows.length > 0
-                  ? "No execution-ready models yet. Complete provider setup or activate an endpoint before using Advanced APIs."
-                  : "No execution-ready models are currently available."
-              }
-            />
+            <EmptyState label="No execution-ready models are currently available." />
           ) : (
             <form className="space-y-4" onSubmit={onSubmit}>
               <SelectField
@@ -278,29 +198,17 @@ export default function StudioAdvancedRoute() {
           )}
         </SectionCard>
 
-        <div className="space-y-4">
-          <SectionCard
-            title="Response workspace"
-            description="The dominant stage belongs to the response payload, not to explanatory placeholder copy."
-          >
+        <SectionCard title="Response workspace">
+          <div className="space-y-4">
             <CodeBlock className="min-h-72">
               {responsePayload ?? '{\n  "status": "No advanced request yet"\n}'}
             </CodeBlock>
-          </SectionCard>
-
-          <SectionCard
-            title="Request template"
-            description="Keep one live example for the selected family adjacent to the response workspace."
-          >
-            <CodeBlock className="min-h-52">
-              {JSON.stringify(
-                buildDefaultPayload(path, model || snapshot?.models[0]?.id || ""),
-                null,
-                2,
-              )}
-            </CodeBlock>
-          </SectionCard>
-        </div>
+            <div className="space-y-2">
+              <p className={metaTextClassName}>Request template</p>
+              <CodeBlock className="min-h-52">{requestTemplate}</CodeBlock>
+            </div>
+          </div>
+        </SectionCard>
       </div>
     </div>
   );

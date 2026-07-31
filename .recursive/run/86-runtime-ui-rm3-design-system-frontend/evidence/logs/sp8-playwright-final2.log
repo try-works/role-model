@@ -1,0 +1,55 @@
+
+> @role-model-router/runtime-ui@ test:browser D:\DEV\role-model\.worktrees\86-runtime-ui-rm3-design-system-frontend\role-model-router\apps\runtime-ui
+> playwright test
+
+[WebServer] ../../packages/ui/src/sidebar.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/segmented-control.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/page-filters.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/observe-activity.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/observe-shared.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/observe-logs.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/page-shell.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/observe-requests.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/runtime-overview.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/chart-ranking.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/observe-routing.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/metric-strip.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/chart-composition.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] (node:39884) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 13 tests using 8 workers
+
+(node:34320) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:16020) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:35660) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:36592) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:31840) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:35748) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:30224) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:7648) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  -   1 e2e\recursive-81-kw-activation-browser-recommendation-evidence.spec.ts:4:3 ΓÇ║ @recursive:81-kw-activation-browser-recommendation-evidence @browser-recommendations ΓÇ║ downloads, previews, applies, and dismisses recommendations in the Extensions UI
+  -   7 e2e\recursive-79-extension-control-and-recommendations-qa.sp4.spec.ts:4:3 ΓÇ║ @recursive:79-extension-control-and-recommendations-qa @sp4 ΓÇ║ mutates extension enablement and can dismiss recommendations against live runtime
+  -   5 e2e\recursive-84-kw-ui-toggle-gated-retrieve-eval.spec.ts:19:3 ΓÇ║ @recursive:84-kw-ui-toggle-gated-retrieve-eval @kw-ui-toggle ΓÇ║ prepares shadow-ready, turns production ON, then soft OFFs Knowledge Worker
+  -   9 e2e\track-b-pcr7-operator.spec.ts:8:1 ΓÇ║ PCR7 contribution disclosure and retention operator surfaces
+  -   8 e2e\track-b-live.spec.ts:3:1 ΓÇ║ operates the packaged Track B runtime and cloud-backed recommendation flow
+{"modelsEssentialMs":5058,"candidatePayloadBytes":5186,"mutationResponseMs":510,"buttonPendingMs":540,"convergenceAfterResponseMs":30,"mutationModelPaths":["/api/role-model/accounts"],"healthMs":540,"summaryMs":535,"benchmarkEssentialMs":1252,"malformedModelStatus":400}
+  ok  2 e2e\recursive-77-catalog-json-size-and-ui-freeze.sp8.runtime-responsiveness.spec.ts:4:1 ΓÇ║ @smoke @recursive:77-catalog-json-size-and-ui-freeze @sp8 keeps Models and Benchmark responsive without the rich request route (7.4s)
+  ok  6 e2e\runtime-shell.spec.ts:3:1 ΓÇ║ keeps provider maintenance absent while showing configured connections (6.5s)
+  ok  4 e2e\track-b-operations.spec.ts:3:1 ΓÇ║ operates disclosure, opt-out, retention, recommendations, and failure isolation (8.1s)
+  ok  3 e2e\shared-surface-regression.spec.ts:58:1 ΓÇ║ keeps shared typography and tokenized controls aligned on seeded QA routes (8.2s)
+  ok 10 e2e\shared-surface-regression.spec.ts:93:1 ΓÇ║ supports filter changes, query-param restoration, and request-list narrowing on the request analytics surface (1.5s)
+  ok 11 e2e\shared-surface-regression.spec.ts:126:1 ΓÇ║ supports request inspection drill-in from request analytics (1.3s)
+  ok 12 e2e\shared-surface-regression.spec.ts:143:1 ΓÇ║ renders shared time-series charts without clipped axes and with inset legends (1.8s)
+  ok 13 e2e\shared-surface-regression.spec.ts:160:1 ΓÇ║ renders deterministic request-detail token and cache provenance (1.2s)
+
+  5 skipped
+  8 passed (50.7s)

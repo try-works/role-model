@@ -1,9 +1,9 @@
+import { MetricStrip } from "@role-model/ui";
 import { useEffect, useMemo, useState } from "react";
 
 import {
   EmptyState,
   ErrorState,
-  FactCard,
   LoadingState,
   SectionCard,
   StatusPill,
@@ -64,24 +64,19 @@ export default function IntegrationsUpstreamRoute() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <FactCard
-          label="Providers"
-          value={providerCards.length}
-          detail="Provider and account posture stays visible here without duplicating the editable Control pages."
-          emphasis
-        />
-        <FactCard
-          label="Accounts"
-          value={snapshot?.accounts.length ?? 0}
-          detail="Configured provider accounts that feed current upstream model access."
-        />
-        <FactCard
-          label="Upstream targets"
-          value={modelTargets.length}
-          detail="Each target keeps a contextual `/upstream/<model>/` doorway instead of a global legacy-ui link."
-        />
-      </div>
+      <MetricStrip
+        aria-label="Upstream summary"
+        variant="panel"
+        items={[
+          { id: "providers", label: "Providers", value: String(providerCards.length)},
+          {
+            id: "accounts",
+            label: "Accounts",
+            value: String(snapshot?.accounts.length ?? 0),
+          },
+          { id: "targets", label: "Upstream targets", value: String(modelTargets.length)},
+        ]}
+      />
 
       {error ? <ErrorState label={error} /> : null}
 
@@ -118,66 +113,36 @@ export default function IntegrationsUpstreamRoute() {
           )}
         </SectionCard>
 
-        <div className="space-y-4">
-          <SectionCard title="Boundary guidance">
+        <SectionCard title="Upstream model targets">
+          {!snapshot ? (
+            <LoadingState label="Loading upstream targets…" />
+          ) : modelTargets.length === 0 ? (
+            <EmptyState label="No upstream-capable models are currently exposed through the runtime model list." />
+          ) : (
             <div className="space-y-3">
-              <div className={`${mutedPanelClassName} p-4`}>
-                <p className={compactTitleClassName}>Raw passthrough only</p>
-                <p className={`mt-2 ${supportingTextClassName}`}>
-                  Use the contextual `/upstream/&lt;model&gt;/` doorway when you need direct
-                  provider-native behavior for a runtime-visible model instead of routed alias
-                  execution.
-                </p>
-              </div>
-              <div className={`${mutedPanelClassName} p-4`}>
-                <p className={compactTitleClassName}>Live inventory</p>
-                <p className={supportingTextClassName}>
-                  {modelTargets.length} upstream target{modelTargets.length === 1 ? "" : "s"} are
-                  currently exposed from {providerCards.length} configured provider
-                  {providerCards.length === 1 ? "" : "s"}.
-                </p>
-              </div>
-              <div className={`${mutedPanelClassName} p-4`}>
-                <p className={compactTitleClassName}>Runtime boundary</p>
-                <p className={supportingTextClassName}>
-                  Alias routing and telemetry stay on the runtime shell; this page preserves the raw
-                  escape hatch without replacing Router or Observe ownership.
-                </p>
-              </div>
+              {modelTargets.map((target) => (
+                <a
+                  key={target.modelId}
+                  className={`${mutedPanelClassName} block p-4`}
+                  href={target.upstreamHref}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className={`break-all ${compactTitleClassName}`}>{target.modelId}</p>
+                    <StatusPill tone="accent">
+                      {target.endpointCount} endpoint{target.endpointCount === 1 ? "" : "s"}
+                    </StatusPill>
+                  </div>
+                  <p className={`mt-2 ${supportingTextClassName}`}>Owner {target.owner}</p>
+                  <p className={`mt-2 break-all ${supportingTextClassName} font-mono`}>
+                    {target.upstreamHref}
+                  </p>
+                </a>
+              ))}
             </div>
-          </SectionCard>
-
-          <SectionCard title="Upstream target inventory">
-            {!snapshot ? (
-              <LoadingState label="Loading upstream targets…" />
-            ) : modelTargets.length === 0 ? (
-              <EmptyState label="No upstream-capable models are currently exposed through the runtime model list." />
-            ) : (
-              <div className="space-y-3">
-                {modelTargets.map((target) => (
-                  <a
-                    key={target.modelId}
-                    className={`${mutedPanelClassName} block p-4`}
-                    href={target.upstreamHref}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className={`break-all ${compactTitleClassName}`}>{target.modelId}</p>
-                      <StatusPill tone="accent">
-                        {target.endpointCount} endpoint{target.endpointCount === 1 ? "" : "s"}
-                      </StatusPill>
-                    </div>
-                    <p className={`mt-2 ${supportingTextClassName}`}>Owner {target.owner}</p>
-                    <p className={`mt-2 break-all ${supportingTextClassName} font-mono`}>
-                      {target.upstreamHref}
-                    </p>
-                  </a>
-                ))}
-              </div>
-            )}
-          </SectionCard>
-        </div>
+          )}
+        </SectionCard>
       </div>
     </div>
   );

@@ -10,7 +10,6 @@ import {
 } from "../components/page-primitives";
 import {
   bodyStrongTextClassName,
-  foregroundEmphasisClassName,
   mutedPanelClassName,
   supportingTextClassName,
   utilityLabelClassName,
@@ -158,41 +157,9 @@ export default function RouterOverviewRoute() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        {[
-          {
-            label: "Strategy",
-            value: configuredStrategy ?? "unset",
-          },
-          {
-            label: "Execution mode",
-            value: configuredExecutionMode ?? "decision_only",
-          },
-          {
-            label: "Controller",
-            value: summary.controller?.modelId ?? "unassigned",
-          },
-          {
-            label: "Alias pools",
-            value: String(configuredAliasRows.length),
-          },
-          {
-            label: "Active alias",
-            value: activeAliasLabel,
-          },
-        ].map((item) => (
-          <div key={item.label} className={`${mutedPanelClassName} space-y-2 p-4`}>
-            <p className={utilityLabelClassName}>{item.label}</p>
-            <p className={`${bodyStrongTextClassName} break-words text-[var(--rm-fg)]`}>
-              {item.value}
-            </p>
-          </div>
-        ))}
-      </div>
-
       <SectionCard
         title="Alias inventory"
-        description="Keep the current alias posture visible in-page, then expand into the full alias registry only when you need the complete inventory."
+        description="Keep the current alias posture visible, then expand the registry only when you need every pool."
       >
         {configuredAliasRows.length === 0 ? (
           <EmptyState label="No model aliases are configured yet." />
@@ -373,30 +340,6 @@ export default function RouterOverviewRoute() {
           </div>
         )}
       </SectionCard>
-
-      <div className={`${mutedPanelClassName} grid gap-4 p-4 xl:grid-cols-3`}>
-        <div className="space-y-2">
-          <p className={foregroundEmphasisClassName}>Config-owned posture</p>
-          <p className={supportingTextClassName}>
-            Routing overview stays observational. Strategy and controller edits live on their
-            dedicated Router pages.
-          </p>
-        </div>
-        <div className="space-y-2">
-          <p className={foregroundEmphasisClassName}>Alias source of truth</p>
-          <p className={supportingTextClassName}>
-            Effective models and expansion counts are derived from runtime config plus the current
-            endpoint snapshot instead of placeholder overview state.
-          </p>
-        </div>
-        <div className="space-y-2">
-          <p className={foregroundEmphasisClassName}>Candidate visibility</p>
-          <p className={supportingTextClassName}>
-            The overview orders routing-eligible candidates first so the visible list matches the
-            runtime posture the router can actually use.
-          </p>
-        </div>
-      </div>
     </div>
   );
 }

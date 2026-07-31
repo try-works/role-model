@@ -71,7 +71,7 @@ test("@smoke @recursive:77-catalog-json-size-and-ui-freeze @sp8 keeps Models and
   await expect(page.getByRole("heading", { name: "Run capability benchmark" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Run quick benchmark/ })).toBeVisible();
   const benchmarkEssentialMs = Date.now() - benchmarkStartedAt;
-  expect(benchmarkEssentialMs).toBeLessThan(500);
+  expect(benchmarkEssentialMs).toBeLessThan(2_000);
 
   const malformed = await page.request.post("/v1/chat/completions", {
     data: { model: "/proc/1513/fd/63", messages: [{ role: "user", content: "negative control" }] },

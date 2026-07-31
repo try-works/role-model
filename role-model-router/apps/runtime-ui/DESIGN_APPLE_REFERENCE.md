@@ -280,7 +280,7 @@ This document is historical reference only.
 
 - It is **not** the active authority for the runtime UI.
 - The active repo-owned authority is [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md).
-- The current runtime shell follows the Paper Linear review system, not this Apple analysis.
+- The current runtime shell follows the Paper RM3 design system, not this Apple analysis.
 - Keep this file only as a superseded visual reference for earlier exploration work.
 
 ## Overview

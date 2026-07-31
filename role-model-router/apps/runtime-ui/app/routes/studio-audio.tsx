@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   CodeBlock,
   EmptyState,
   ErrorState,
-  FactCard,
   LoadingState,
   SectionCard,
   SelectField,
@@ -17,7 +16,6 @@ import {
   metaTextClassName,
   mutedPanelClassName,
   primaryButtonClassName,
-  secondaryButtonClassName,
   supportingTextClassName,
   utilityLabelClassName,
 } from "../lib/design-system";
@@ -29,7 +27,6 @@ import {
   submitAudioTranscription,
   submitSpeechGeneration,
 } from "../lib/runtime-api";
-import { usePageActions } from "../lib/shell-header-context";
 import { buildWorkbenchModelOptions } from "../lib/view-models";
 
 type AudioMode = "speech" | "transcription";
@@ -47,6 +44,106 @@ type AudioResult =
       readonly text: string;
       readonly rawPayload: string;
     };
+
+const SPEECH_WAVEFORM_HEIGHTS = [
+  12, 22, 34, 18, 28, 14, 36, 24, 16, 30, 20, 32, 12, 18, 26, 14, 22, 10, 28, 16,
+] as const;
+
+function formatPlaybackClock(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds < 0) {
+    return "0:00";
+  }
+  const whole = Math.floor(seconds);
+  const minutes = Math.floor(whole / 60);
+  const remainder = whole % 60;
+  return `${minutes}:${String(remainder).padStart(2, "0")}`;
+}
+
+function SpeechPlayer({ src }: { readonly src: string }) {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  useEffect(() => {
+    setPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+  }, [src]);
+
+  const togglePlayback = () => {
+    const audio = audioRef.current;
+    if (!audio) {
+      return;
+    }
+    if (audio.paused) {
+      void audio.play().then(
+        () => setPlaying(true),
+        () => setPlaying(false),
+      );
+      return;
+    }
+    audio.pause();
+    setPlaying(false);
+  };
+
+  return (
+    <div className={`${mutedPanelClassName} flex items-center gap-3 p-3`}>
+      <button
+        aria-label={playing ? "Pause speech" : "Play speech"}
+        className="inline-flex size-9 shrink-0 items-center justify-center rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface)] text-[var(--rm-fg)]"
+        onClick={togglePlayback}
+        type="button"
+      >
+        {playing ? (
+          <svg aria-hidden="true" className="size-3.5" fill="currentColor" viewBox="0 0 16 16">
+            <rect height="12" rx="1" width="3.5" x="3" y="2" />
+            <rect height="12" rx="1" width="3.5" x="9.5" y="2" />
+          </svg>
+        ) : (
+          <svg aria-hidden="true" className="size-3.5" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M4 2.5v11l9-5.5-9-5.5Z" />
+          </svg>
+        )}
+      </button>
+      <div
+        aria-hidden="true"
+        className="flex h-10 min-w-0 flex-1 items-end gap-[3px]"
+      >
+        {SPEECH_WAVEFORM_HEIGHTS.map((height, index) => (
+          <span
+            key={`bar-${index}`}
+            className="w-[3px] shrink-0 rounded-sm bg-[var(--rm-accent)]/70"
+            style={{ height }}
+          />
+        ))}
+      </div>
+      <span className={`shrink-0 tabular-nums ${metaTextClassName}`}>
+        {formatPlaybackClock(currentTime)} / {formatPlaybackClock(duration)}
+      </span>
+      <audio
+        className="hidden"
+        onEnded={() => {
+          setPlaying(false);
+          setCurrentTime(0);
+        }}
+        onLoadedMetadata={(event) => {
+          setDuration(event.currentTarget.duration || 0);
+        }}
+        onPause={() => setPlaying(false)}
+        onPlay={() => setPlaying(true)}
+        onTimeUpdate={(event) => {
+          setCurrentTime(event.currentTarget.currentTime || 0);
+        }}
+        preload="metadata"
+        ref={audioRef}
+        src={src}
+      >
+        <track kind="captions" label="Generated speech captions unavailable" srcLang="en" />
+      </audio>
+    </div>
+  );
+}
 
 function getVoiceId(voice: RuntimeAudioVoiceRecord): string {
   return voice.id ?? voice.voice ?? voice.name ?? voice.label ?? "voice";
@@ -185,51 +282,13 @@ export default function StudioAudioRoute() {
     }
   }
 
-  usePageActions(
-    <>
-      <a className={secondaryButtonClassName} href="/v1/models">
-        Model list
-      </a>
-      {model ? (
-        <a
-          className={secondaryButtonClassName}
-          href={`/v1/audio/voices?model=${encodeURIComponent(model)}`}
-        >
-          Voice endpoint
-        </a>
-      ) : null}
-    </>,
-    [model],
-  );
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <FactCard
-          label="Available models"
-          value={snapshot?.models.length ?? 0}
-          detail="Audio requests reuse the runtime model listing."
-          emphasis
-        />
-        <FactCard
-          label="Available voices"
-          value={voices.length}
-          detail="Voice discovery stays adjacent to speech synthesis."
-        />
-        <FactCard
-          label="Active mode"
-          value={mode === "speech" ? "Speech" : "Transcription"}
-          detail="Switch audio families without leaving the studio section."
-        />
-      </div>
-
       {error ? <ErrorState label={error} /> : null}
 
-      <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
-        <SectionCard
-          title="Audio mode and request"
-          description="Use one request rail for speech and transcription instead of splitting the operator flow across duplicate pages."
-        >
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
+        <SectionCard title="Audio mode and request">
           {!snapshot ? (
             <LoadingState label="Loading audio request context…" />
           ) : (
@@ -287,11 +346,8 @@ export default function StudioAudioRoute() {
           )}
         </SectionCard>
 
-        <div className="space-y-4">
-          <SectionCard
-            title="Audio result stage"
-            description="The dominant stage belongs to playable output or transcript text, with transport details kept adjacent rather than hidden."
-          >
+        <SectionCard title="Audio result stage">
+          <div className="space-y-4">
             {!result ? (
               <EmptyState label="Run a speech or transcription request to populate the audio stage." />
             ) : result.kind === "speech" ? (
@@ -305,13 +361,7 @@ export default function StudioAudioRoute() {
                   </p>
                 </div>
                 {result.audioUrl ? (
-                  <audio className="w-full" controls src={result.audioUrl}>
-                    <track
-                      kind="captions"
-                      label="Generated speech captions unavailable"
-                      srcLang="en"
-                    />
-                  </audio>
+                  <SpeechPlayer src={result.audioUrl} />
                 ) : (
                   <EmptyState label="Speech audio is available, but this environment cannot create a local audio URL." />
                 )}
@@ -329,12 +379,8 @@ export default function StudioAudioRoute() {
                 </p>
               </div>
             )}
-          </SectionCard>
-
-          <SectionCard
-            title="Voice inventory"
-            description="Voice discovery and request diagnostics stay as a secondary rail to the result stage."
-          >
+            <div className="space-y-2">
+              <p className={metaTextClassName}>Voice inventory</p>
             {voiceLoading ? (
               <LoadingState label="Loading voices…" />
             ) : voiceInventoryUnavailable ? (
@@ -360,8 +406,9 @@ export default function StudioAudioRoute() {
                 </CodeBlock>
               </div>
             )}
-          </SectionCard>
-        </div>
+            </div>
+          </div>
+        </SectionCard>
       </div>
     </div>
   );

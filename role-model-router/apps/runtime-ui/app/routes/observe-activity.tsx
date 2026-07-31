@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router";
+import { MetricStrip } from "@role-model/ui";
 
 import {
   CodeBlock,
   EmptyState,
   ErrorState,
-  FactCard,
   LoadingState,
   SectionCard,
   StatusPill,
@@ -17,7 +16,6 @@ import {
   listRowClassName,
   metaTextClassName,
   mutedPanelClassName,
-  secondaryButtonClassName,
   supportingTextClassName,
 } from "../lib/design-system";
 import { startDeferredLiveRefresh } from "../lib/live-refresh";
@@ -28,7 +26,6 @@ import {
   fetchActivityMetrics,
   subscribeTelemetryStream,
 } from "../lib/runtime-api";
-import { usePageActions } from "../lib/shell-header-context";
 import { buildActivitySummary } from "../lib/view-models";
 
 function decodeCaptureBody(encoded: string): string {
@@ -105,18 +102,6 @@ export default function ObserveActivityRoute() {
       .finally(() => setCaptureLoading(false));
   }, [selectedCaptureId]);
 
-  usePageActions(
-    <>
-      <a className={secondaryButtonClassName} href="/api/metrics">
-        Raw metrics
-      </a>
-      <a className={secondaryButtonClassName} href="/api/events">
-        Event stream
-      </a>
-    </>,
-    [],
-  );
-
   if (error) {
     return <ErrorState label={error} />;
   }
@@ -128,31 +113,17 @@ export default function ObserveActivityRoute() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {summary.facts.map((fact) => (
-          <FactCard
-            key={fact.label}
-            label={fact.label}
-            value={fact.value}
-            detail={fact.detail}
-            emphasis={fact.label === "Entries"}
-          />
-        ))}
-      </div>
+      <MetricStrip
+        variant="panel"
+        items={summary.facts.map((fact) => ({
+          id: fact.label,
+          label: fact.label,
+          value: fact.value,
+        }))}
+      />
 
-      <SectionCard
-        title="Canonical structured telemetry"
-        description="This preserved raw-host ledger is adjacent to the canonical structured telemetry flow rather than the primary request interpretation surface."
-      >
-        <div className="flex flex-wrap gap-3">
-          <Link className={secondaryButtonClassName} to="/app/observe/requests">
-            Open canonical request ledger
-          </Link>
-        </div>
-      </SectionCard>
-
-      <div className="grid grid-cols-12 gap-4">
-        <SectionCard className="col-span-12 xl:col-span-8" title="Recent host activity">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]">
+        <SectionCard title="Recent host activity">
           {summary.rows.length === 0 ? (
             <EmptyState label="No host activity is available yet." />
           ) : (
@@ -195,7 +166,7 @@ export default function ObserveActivityRoute() {
           )}
         </SectionCard>
 
-        <SectionCard className="col-span-12 xl:col-span-4" title="Capture inspector">
+        <SectionCard title="Capture inspector">
           <div className="space-y-3">
             {selectedCaptureId === null ? (
               <EmptyState label="Choose a ledger row with a capture to inspect raw request and response bodies." />

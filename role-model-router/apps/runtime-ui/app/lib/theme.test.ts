@@ -52,9 +52,9 @@ describe("runtime theme helpers", () => {
     expect(resolveInitialTheme({ storedTheme: null, systemPrefersDark: false })).toBe("dark");
   });
 
-  test("maps active themes to the browser chrome colors used by the Linear review shell", () => {
+  test("maps active themes to the RM3 browser chrome colors used by the runtime shell", () => {
     expect(getThemeColor("light")).toBe("#ffffff");
-    expect(getThemeColor("dark")).toBe("#010102");
+    expect(getThemeColor("dark")).toBe("#0a0a0a");
   });
 
   test("applyDocumentThemeStyles rewrites FOUC inline tokens when switching themes", () => {
