@@ -75,6 +75,8 @@ export function applyDocumentThemeStyles(
   const palette = getBootThemePalette(theme);
   const rm3Tokens = BOOT_RM3_TOKEN_KEYS[theme];
   target.dataset.theme = theme;
+  target.classList.toggle("dark", theme === "dark");
+  target.classList.toggle("light", theme === "light");
   target.style.colorScheme = theme;
   target.style.backgroundColor = palette.bg;
   target.style.color = palette.fg;

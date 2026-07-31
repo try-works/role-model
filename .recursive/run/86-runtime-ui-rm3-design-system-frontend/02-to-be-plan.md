@@ -1,7 +1,7 @@
 Run: `/.recursive/run/86-runtime-ui-rm3-design-system-frontend/`
 Phase: `02 TO-BE Plan`
 Status: `LOCKED`
-LockedAt: `2026-07-30T13:35:00Z`
+LockedAt: `2026-07-31T22:55:06Z`
 Workflow version: `recursive-mode-audit-v2`
 TDD Mode: `strict`
 QA Execution Mode: `hybrid`
@@ -572,4 +572,4 @@ Coverage: PASS
 - [x] No unresolved in-scope planning gaps
 
 Approval: PASS
-LockHash: `5316239e9b37a47305e092b0d6a0ce4f8bd4bc0b0e9e640642c3a2e64fb4ed2c`
+LockHash: `7f6cae4b67fce69ce553bd8b714d1d69f3cc020e8e7686e5449da77ac334e78c`

@@ -1,15 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  type RuntimeOverviewChartBlock,
   groupChartRows,
   groupOverviewChartRows,
-  type RuntimeOverviewChartBlock,
 } from "./runtime-overview";
 
-const stub = (
-  title: string,
-  span: 6 | 12,
-): RuntimeOverviewChartBlock => ({
+const stub = (title: string, span: 6 | 12): RuntimeOverviewChartBlock => ({
   title,
   data: [],
   series: [],

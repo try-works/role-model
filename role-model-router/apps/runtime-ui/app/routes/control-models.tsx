@@ -2,32 +2,18 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
 import {
-  DisclosureSection,
+  Badge,
   EmptyState,
   ErrorState,
   LoadingState,
   SectionCard,
-  StatusPill,
 } from "../components/page-primitives";
 import {
-  bodyStrongTextClassName,
-  bodyTextClassName,
-  cardClassName,
-  compactTitleClassName,
-  foregroundEmphasisClassName,
-  inlineTitleClassName,
-  metaTextClassName,
-  mutedPanelClassName,
-  primaryButtonClassName,
+  compactFieldButtonClassName,
   secondaryButtonClassName,
-  sectionTitleClassName,
   supportingTextClassName,
-  utilityLabelClassName,
 } from "../lib/design-system";
-import {
-  buildRoleTaskHierarchy,
-  ModelRoleBindingTree,
-} from "../lib/role-task-hierarchy";
+import { ModelRoleBindingTree } from "../lib/role-task-hierarchy";
 import {
   type ModelTelemetryRollup,
   type RouterCandidate,
@@ -50,7 +36,7 @@ import {
   updateControllerAssignment,
   upsertRuntimeAccount,
 } from "../lib/runtime-api";
-import { buildConfiguredModelCards, buildConfiguredModelMetadataRows, buildSelectedModelMetaPanel } from "../lib/view-models";
+import { buildConfiguredModelCards, buildSelectedModelMetaPanel } from "../lib/view-models";
 
 type ConfiguredModelCardLike = {
   readonly modelId: string;
@@ -59,11 +45,11 @@ type ConfiguredModelCardLike = {
   readonly status: string;
 };
 
-type StatusPillTone = "neutral" | "accent" | "warning" | "success" | "error" | "info" | "advisory";
+type BadgeTone = "neutral" | "accent" | "warning" | "success" | "error" | "info" | "advisory";
 
 type ConfiguredModelInventoryPill = {
   readonly label: string;
-  readonly tone: StatusPillTone;
+  readonly tone: BadgeTone;
 };
 
 type SelectedModelPreviewPayloadInput = {
@@ -92,6 +78,15 @@ type EvidencePillInput = {
 
 export type ConfiguredModelsSnapshot = Pick<RuntimeSnapshot, "accounts" | "endpoints" | "models">;
 type RequestEvidenceStatus = "loading" | "ready" | "unavailable";
+
+/** Paper Models inventory — section eyebrows (Runtime / Cost / Benchmark / Models / Roles). */
+const inventoryEyebrowClassName =
+  "font-sans text-[11px] font-semibold uppercase leading-[14px] tracking-[0.04em] text-[var(--rm-muted)]";
+const inventoryFactLabelClassName = "font-sans text-[13px] leading-[18px] text-[var(--rm-muted)]";
+const inventoryFactValueClassName =
+  "text-right font-sans text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)]";
+const inventoryMonoValueClassName =
+  "text-right font-mono text-[12px] font-semibold leading-4 text-[var(--rm-fg)]";
 
 type ConfiguredModelsInitialLoadResult = {
   readonly snapshot: ConfiguredModelsSnapshot;
@@ -190,7 +185,7 @@ function buildObservedRequestFact(input: {
 export function resolveConfiguredModelStatusTone(
   controllerState: ConfiguredModelCardLike["controllerState"],
   status: ConfiguredModelCardLike["status"],
-): StatusPillTone {
+): BadgeTone {
   if (controllerState === "active") {
     return "accent";
   }
@@ -210,7 +205,7 @@ export function buildConfiguredModelInventoryPills(input: {
 }): ConfiguredModelInventoryPill[] {
   return [
     {
-      label: input.toolCallingSupported ? "tool calling" : "no tool calling",
+      label: input.toolCallingSupported ? "tools" : "no tools",
       tone: input.toolCallingSupported ? "info" : "neutral",
     },
     {
@@ -220,7 +215,7 @@ export function buildConfiguredModelInventoryPills(input: {
     ...(typeof input.capabilityScore === "number"
       ? [
           {
-            label: `${Math.round(input.capabilityScore * 100)}% capability`,
+            label: `score ${input.capabilityScore.toFixed(2)}`,
             tone: "advisory" as const,
           },
         ]
@@ -530,12 +525,6 @@ export default function ControlModelsRoute() {
   const selectedLlamaSwapEndpoints = selectedEndpoints.filter(
     (endpoint) => endpoint.sourceType === "local" && endpoint.localModelSource === "llama-swap",
   );
-  const selectedCapabilities = [
-    ...new Set([
-      ...(selectedCard?.capabilities ?? []),
-      ...selectedEndpoints.flatMap((endpoint) => endpoint.capabilities ?? []),
-    ]),
-  ].sort((left, right) => left.localeCompare(right, "en"));
   const selectedToolStyles = [
     ...new Set(
       selectedEndpoints
@@ -543,7 +532,6 @@ export default function ControlModelsRoute() {
         .map((endpoint) => endpoint.toolCallingStyle ?? "unknown"),
     ),
   ].sort((left, right) => left.localeCompare(right, "en"));
-  const selectedMetadataRows = selectedCard ? buildConfiguredModelMetadataRows(selectedCard) : [];
   const allRuntimeRoleIds = useMemo(
     () => (rolePolicy?.roleDefinitions ?? []).map((role) => role.role_id),
     [rolePolicy],
@@ -584,28 +572,23 @@ export default function ControlModelsRoute() {
     );
   }, [allRuntimeRoleIds, selectedCard, selectedModelAccounts]);
 
-  const saveAccountRoles = async (account: RuntimeAccount) => {
+  const saveAccountRoles = async (account: RuntimeAccount, nextRoleIds?: readonly string[]) => {
     if (!selectedCard || !snapshot) {
       return;
     }
     setSavingAccountId(account.providerAccountId);
     setStatusMessage(null);
     try {
+      const roleIds = nextRoleIds ?? draftRolesByAccountId[account.providerAccountId] ?? [];
       const nextSnapshot = await convergeSavedRuntimeAccount({
         currentSnapshot: snapshot,
         mutate: () =>
           upsertRuntimeAccount(
-            createAccountMutationPayload(
-              account,
-              selectedCard.modelId,
-              draftRolesByAccountId[account.providerAccountId] ?? [],
-              allRuntimeRoleIds,
-            ),
+            createAccountMutationPayload(account, selectedCard.modelId, roleIds, allRuntimeRoleIds),
           ),
       });
       setSnapshot(nextSnapshot);
       setError(null);
-      setStatusMessage(`Updated roles for ${account.providerAccountId}.`);
     } catch (value) {
       setError(value instanceof Error ? value.message : "Could not update model roles.");
     } finally {
@@ -788,6 +771,44 @@ export default function ControlModelsRoute() {
     }
     return samples.reduce((sum, value) => sum + value, 0) / samples.length;
   })();
+  const selectedCandidateProfiles = selectedCard
+    ? candidates.filter((candidate) => candidate.modelId === selectedCard.modelId)
+    : [];
+  const selectedLatencyProfile = (() => {
+    for (const candidate of selectedCandidateProfiles) {
+      const profile =
+        typeof candidate.latestProfile === "object" && candidate.latestProfile !== null
+          ? (candidate.latestProfile as Record<string, unknown>)
+          : null;
+      const p50 = profile?.latency_ms_p50 ?? profile?.latencyMsP50;
+      const p95 = profile?.latency_ms_p95 ?? profile?.latencyMsP95;
+      if (
+        (typeof p50 === "number" && Number.isFinite(p50)) ||
+        (typeof p95 === "number" && Number.isFinite(p95))
+      ) {
+        return {
+          p50: typeof p50 === "number" && Number.isFinite(p50) ? p50 : null,
+          p95: typeof p95 === "number" && Number.isFinite(p95) ? p95 : null,
+        };
+      }
+    }
+    return { p50: null as number | null, p95: null as number | null };
+  })();
+  const selectedDifficultyMix = (() => {
+    for (const candidate of selectedCandidateProfiles) {
+      const buckets = candidate.benchmarkCapability?.scoresByBucket;
+      if (!buckets) {
+        continue;
+      }
+      const easy = buckets.easy?.score;
+      const medium = buckets.medium?.score;
+      const hard = buckets.hard?.score;
+      if (typeof easy === "number" && typeof medium === "number" && typeof hard === "number") {
+        return `${Math.round(easy * 100)} / ${Math.round(medium * 100)} / ${Math.round(hard * 100)}`;
+      }
+    }
+    return null;
+  })();
   const selectedMetaPanel = selectedCard
     ? buildSelectedModelMetaPanel({
         modelId: selectedCard.modelId,
@@ -802,32 +823,19 @@ export default function ControlModelsRoute() {
         modalities: selectedCard.modalities,
         pricing: selectedCard.pricing,
         overallScore: selectedCapabilityScore,
+        latencyP50Ms: selectedLatencyProfile.p50,
+        latencyP95Ms: selectedLatencyProfile.p95,
         meanLatencyMs: selectedMeanLatencyMs,
+        difficultyMix: selectedDifficultyMix,
         routingHint: telemetryRollup?.strengths[0] ?? selectedModelEvidencePills[0]?.label ?? null,
       })
     : null;
 
   return (
     <div className="space-y-6">
-      {statusMessage ? (
-        <section className={`${mutedPanelClassName} p-4`}>
-          <p className={utilityLabelClassName}>Last model change</p>
-          <p className={`mt-2 ${supportingTextClassName}`}>{statusMessage}</p>
-        </section>
-      ) : null}
-
-      {!controller ? (
-        <section className={`${mutedPanelClassName} p-5`}>
-          <p className={foregroundEmphasisClassName}>Controller pending</p>
-          <p className={`mt-2 ${supportingTextClassName}`}>
-            Activate a local or remote endpoint, then assign it from Router &gt; Controller.
-          </p>
-        </section>
-      ) : null}
-
       <SectionCard
         title="Model inventory"
-        description="Select a model to inspect and configure. Controller is the badge only — use Make primary controller to change it."
+        description="Select a model to inspect and configure. Controller is the badge — change it from the footer."
       >
         {cards.length === 0 ? (
           <div className="space-y-4">
@@ -846,11 +854,22 @@ export default function ControlModelsRoute() {
           </div>
         ) : (
           <div className="space-y-5">
-            <div className="grid gap-6 xl:grid-cols-2">
-              <div className="min-w-0 space-y-5">
-                <div className="space-y-1">
-                  <p className={utilityLabelClassName}>Models</p>
-                  <div className="space-y-1">
+            {statusMessage ? (
+              <p className={supportingTextClassName} aria-live="polite">
+                {statusMessage}
+              </p>
+            ) : null}
+            {!controller ? (
+              <p className={supportingTextClassName}>
+                Controller pending — activate a local or remote endpoint, then assign it from Router
+                → Controller.
+              </p>
+            ) : null}
+            <div className="grid gap-6 xl:grid-cols-2 xl:items-start">
+              <div className="min-w-0 space-y-4">
+                <div className="space-y-2">
+                  <p className={inventoryEyebrowClassName}>Models</p>
+                  <div className="overflow-hidden rounded-[var(--rm-radius-field)] border border-[var(--rm-border)]">
                     {cards.map((card) => {
                       const selected = selectedModelId === card.modelId;
                       const capabilityScore = capabilityByModelId.get(card.modelId);
@@ -863,26 +882,28 @@ export default function ControlModelsRoute() {
                         <button
                           key={card.modelId}
                           type="button"
-                          className={`flex w-full items-start gap-3 rounded-[var(--rm-radius-field)] px-3 py-3 text-left transition-colors ${
+                          className={`flex w-full items-start gap-2.5 border-b border-[var(--rm-border)] px-3 py-2.5 text-left last:border-b-0 ${
                             selected
-                              ? "border-l-2 border-[var(--rm-accent)] bg-[var(--rm-surface-strong)]"
-                              : "border-l-2 border-transparent hover:bg-[var(--rm-surface-strong)]"
+                              ? "border-l-[3px] border-l-[var(--rm-accent)] bg-[var(--rm-surface-strong)]"
+                              : "border-l-[3px] border-l-transparent hover:bg-[var(--rm-surface-strong)]"
                           }`}
                           onClick={() => setSelectedModelId(card.modelId)}
                         >
                           <div className="min-w-0 flex-1 space-y-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className={inlineTitleClassName}>{card.displayName}</span>
-                              <StatusPill
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="min-w-0 truncate font-mono text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)]">
+                                {card.modelId}
+                              </span>
+                              <Badge
                                 tone={resolveConfiguredModelStatusTone(
                                   card.controllerState,
                                   card.status,
                                 )}
                               >
                                 {card.controllerState === "active" ? "controller" : card.status}
-                              </StatusPill>
+                              </Badge>
                             </div>
-                            <p className={supportingTextClassName}>
+                            <p className="text-[12px] leading-4 text-[var(--rm-muted)]">
                               {[
                                 card.sourceSummary,
                                 ...inventoryPills.map((pill) => pill.label),
@@ -896,52 +917,68 @@ export default function ControlModelsRoute() {
                 </div>
 
                 {selectedCard && selectedMetaPanel ? (
-                  <div className="space-y-4 border-t border-[var(--rm-border)] pt-4">
-                    <h3 className={compactTitleClassName}>{selectedMetaPanel.title}</h3>
-                    <dl className="space-y-2">
-                      {selectedMetaPanel.facts.map((row) => (
-                        <div
-                          key={row.label}
-                          className="flex items-baseline justify-between gap-3"
-                        >
-                          <dt className={utilityLabelClassName}>{row.label}</dt>
-                          <dd className={`text-right ${supportingTextClassName}`}>{row.value}</dd>
-                        </div>
-                      ))}
-                    </dl>
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <p className={inventoryEyebrowClassName}>{selectedMetaPanel.title}</p>
+                      <dl className="space-y-2">
+                        {selectedMetaPanel.facts.map((row) => (
+                          <div
+                            key={row.label}
+                            className="flex items-baseline justify-between gap-3"
+                          >
+                            <dt className={inventoryFactLabelClassName}>{row.label}</dt>
+                            <dd className={inventoryFactValueClassName}>{row.value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </div>
                     {selectedMetaPanel.cost ? (
-                      <div className="space-y-2 border-t border-[var(--rm-border)] pt-3">
-                        <p className={foregroundEmphasisClassName}>Cost</p>
-                        <dl className="space-y-2">
-                          {selectedMetaPanel.cost.map((row) => (
-                            <div
-                              key={row.label}
-                              className="flex items-baseline justify-between gap-3"
-                            >
-                              <dt className={utilityLabelClassName}>{row.label}</dt>
-                              <dd className={`text-right ${supportingTextClassName}`}>{row.value}</dd>
-                            </div>
-                          ))}
-                        </dl>
-                      </div>
+                      <>
+                        <div className="h-px w-full bg-[var(--rm-border)]" />
+                        <div className="space-y-2">
+                          <p className={inventoryEyebrowClassName}>Cost</p>
+                          <dl className="space-y-2">
+                            {selectedMetaPanel.cost.map((row) => (
+                              <div
+                                key={row.label}
+                                className="flex items-baseline justify-between gap-3"
+                              >
+                                <dt className={inventoryFactLabelClassName}>{row.label}</dt>
+                                <dd className={inventoryMonoValueClassName}>{row.value}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        </div>
+                      </>
                     ) : null}
-                    <div className="space-y-2 border-t border-[var(--rm-border)] pt-3">
-                      <p className={foregroundEmphasisClassName}>Benchmark</p>
+                    <div className="h-px w-full bg-[var(--rm-border)]" />
+                    <div className="space-y-2">
+                      <p className={inventoryEyebrowClassName}>Benchmark</p>
                       <dl className="space-y-2">
                         {selectedMetaPanel.benchmark.map((row) => (
                           <div
                             key={row.label}
                             className="flex items-baseline justify-between gap-3"
                           >
-                            <dt className={utilityLabelClassName}>{row.label}</dt>
-                            <dd className={`text-right ${supportingTextClassName}`}>{row.value}</dd>
+                            <dt className={inventoryFactLabelClassName}>{row.label}</dt>
+                            <dd
+                              className={
+                                row.label === "Overall" || row.label === "Routing"
+                                  ? inventoryFactValueClassName
+                                  : inventoryMonoValueClassName
+                              }
+                            >
+                              {row.value}
+                            </dd>
                           </div>
                         ))}
                       </dl>
                     </div>
                   </div>
                 ) : (
-                  <p className={`${supportingTextClassName} border-t border-[var(--rm-border)] pt-4`}>
+                  <p
+                    className={`${supportingTextClassName} border-t border-[var(--rm-border)] pt-4`}
+                  >
                     Select a model from the inventory to inspect bindings, benchmark evidence, and
                     endpoint ids.
                   </p>
@@ -950,36 +987,38 @@ export default function ControlModelsRoute() {
 
               <div className="min-w-0">
                 {selectedCard ? (
-                  <section className="space-y-3">
-                    <div className="space-y-1">
-                      <p className={utilityLabelClassName}>Roles</p>
-                      <p className={supportingTextClassName}>
+                  <section className="flex max-h-[min(68vh,720px)] flex-col gap-3">
+                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                      <p className={inventoryEyebrowClassName}>Roles</p>
+                      <p className="text-[12px] leading-4 text-[var(--rm-muted)]">
                         {selectedCard.modelId} · tasks under each role
                       </p>
                     </div>
                     {rolePolicy && selectedPrimaryAccount ? (
-                      <>
+                      <div className="min-h-0 flex-1 overflow-auto pr-1">
                         <ModelRoleBindingTree
                           roleDefinitions={rolePolicy.roleDefinitions}
                           taskDefinitions={rolePolicy.taskDefinitions}
                           selectedRoleIds={selectedPrimaryAccountRoleIds}
                           expandedRoleId={expandedBindingRoleId}
                           onToggleRole={(roleId, nextChecked) => {
-                            setDraftRolesByAccountId((current) => {
-                              const accountId = selectedPrimaryAccount.providerAccountId;
-                              const existing = new Set(current[accountId] ?? []);
-                              if (nextChecked) {
-                                existing.add(roleId);
-                              } else {
-                                existing.delete(roleId);
-                              }
-                              return {
-                                ...current,
-                                [accountId]: [...existing].sort((left, right) =>
-                                  left.localeCompare(right, "en"),
-                                ),
-                              };
-                            });
+                            const accountId = selectedPrimaryAccount.providerAccountId;
+                            const existing = new Set(
+                              draftRolesByAccountId[accountId] ?? selectedPrimaryAccountRoleIds,
+                            );
+                            if (nextChecked) {
+                              existing.add(roleId);
+                            } else {
+                              existing.delete(roleId);
+                            }
+                            const nextRoleIds = [...existing].sort((left, right) =>
+                              left.localeCompare(right, "en"),
+                            );
+                            setDraftRolesByAccountId((current) => ({
+                              ...current,
+                              [accountId]: nextRoleIds,
+                            }));
+                            void saveAccountRoles(selectedPrimaryAccount, nextRoleIds);
                           }}
                           onToggleExpandedRole={(roleId) =>
                             setExpandedBindingRoleId((current) =>
@@ -987,42 +1026,7 @@ export default function ControlModelsRoute() {
                             )
                           }
                         />
-                        <div className="flex flex-wrap gap-3 pt-1">
-                          <button
-                            className={primaryButtonClassName}
-                            type="button"
-                            disabled={
-                              savingAccountId === selectedPrimaryAccount.providerAccountId ||
-                              removingTargetKey ===
-                                `account:${selectedPrimaryAccount.providerAccountId}`
-                            }
-                            onClick={() => void saveAccountRoles(selectedPrimaryAccount)}
-                          >
-                            {savingAccountId === selectedPrimaryAccount.providerAccountId
-                              ? "Saving…"
-                              : "Save bindings"}
-                          </button>
-                          <button
-                            className={secondaryButtonClassName}
-                            type="button"
-                            disabled={
-                              removingTargetKey ===
-                              `account:${selectedPrimaryAccount.providerAccountId}`
-                            }
-                            onClick={() => void removeConfiguredModel(selectedPrimaryAccount)}
-                          >
-                            {removingTargetKey ===
-                            `account:${selectedPrimaryAccount.providerAccountId}`
-                              ? "Removing…"
-                              : resolveConfiguredModelEjectLabel(
-                                  selectedPrimaryAccountHasLocalPeerEndpoint,
-                                )}
-                          </button>
-                          <Link className={secondaryButtonClassName} to="/app/models/roles">
-                            Open Roles
-                          </Link>
-                        </div>
-                      </>
+                      </div>
                     ) : (
                       <p className={supportingTextClassName}>
                         No backing provider accounts currently expose this model.
@@ -1037,274 +1041,10 @@ export default function ControlModelsRoute() {
               </div>
             </div>
 
-            {selectedCard ? (
-              <DisclosureSection summary="Model diagnostics">
-                <div className="space-y-4">
-                  <div className="flex flex-wrap gap-2">
-                    {selectedModelEvidencePills.map((pill) => (
-                      <StatusPill key={pill.label} tone={pill.tone}>
-                        {pill.label}
-                      </StatusPill>
-                    ))}
-                  </div>
-                  <p className={supportingTextClassName}>
-                    Capabilities: {selectedCapabilities.join(", ") || "none"} • Metrics:{" "}
-                    {describeConfiguredModelRequestEvidence(
-                      selectedCard.requestCount,
-                      requestEvidenceStatus,
-                    )}
-                    , {selectedCard.endpointCount} endpoints, {selectedCard.sourceSummary} • Tooling
-                    / MCP: {selectedCard.toolCallingSupported ? "enabled" : "unavailable"}
-                    {selectedCapabilityScore !== null
-                      ? ` • Benchmark: ${Math.round(selectedCapabilityScore * 100)}%`
-                      : ""}
-                  </p>
-                  {selectedPrimaryAccount ? (
-                    <p className={supportingTextClassName}>
-                      Backing account: {selectedPrimaryAccount.providerAccountId} •{" "}
-                      {selectedPrimaryAccount.healthStatus ?? "unknown"}
-                    </p>
-                  ) : null}
-                  {buildRoleTaskHierarchy(
-                    rolePolicy?.roleDefinitions ?? [],
-                    rolePolicy?.taskDefinitions ?? [],
-                  ).length === 0 ? (
-                    <p className={supportingTextClassName}>
-                      Role policy has not loaded task definitions for this model yet.
-                    </p>
-                  ) : null}
-                  {selectedLlamaSwapEndpoints.length > 0 ? (
-                    <div className={`${cardClassName} p-4`}>
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <p className={foregroundEmphasisClassName}>Local runtime pool</p>
-                          <p className={`mt-2 ${supportingTextClassName}`}>
-                            This model is currently loaded through the managed local runtime pool.
-                          </p>
-                        </div>
-                        <button
-                          className={secondaryButtonClassName}
-                          type="button"
-                          disabled={removingTargetKey === `local:${selectedCard.modelId}`}
-                          onClick={() => void unloadSelectedLocalModel()}
-                        >
-                          {removingTargetKey === `local:${selectedCard.modelId}`
-                            ? "Unloading…"
-                            : "Unload local model"}
-                        </button>
-                      </div>
-                    </div>
-                  ) : null}
-
-                  <div className={`${cardClassName} p-4`}>
-                    <p className={foregroundEmphasisClassName}>Capabilities</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {selectedCapabilities.length === 0 ? (
-                        <StatusPill tone="warning">No declared capabilities</StatusPill>
-                      ) : (
-                        selectedCapabilities.map((capability) => (
-                          <StatusPill key={capability} tone="neutral">
-                            {capability}
-                          </StatusPill>
-                        ))
-                      )}
-                    </div>
-                  </div>
-
-                  <div className={`${cardClassName} p-4`}>
-                    <p className={foregroundEmphasisClassName}>Metrics</p>
-                    <div className={`mt-3 grid gap-3 md:grid-cols-2 ${supportingTextClassName}`}>
-                      <p>
-                        <span className={foregroundEmphasisClassName}>Requests observed:</span>{" "}
-                        {describeConfiguredModelRequestEvidence(
-                          selectedCard.requestCount,
-                          requestEvidenceStatus,
-                        )}
-                      </p>
-                      <p>
-                        <span className={foregroundEmphasisClassName}>Configured endpoints:</span>{" "}
-                        {selectedCard.endpointCount}
-                      </p>
-                      <p>
-                        <span className={foregroundEmphasisClassName}>Source mix:</span>{" "}
-                        {selectedCard.sourceSummary}
-                      </p>
-                      <p>
-                        <span className={foregroundEmphasisClassName}>Status:</span>{" "}
-                        {selectedCard.status}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className={`${cardClassName} p-4`}>
-                    <p className={foregroundEmphasisClassName}>Model specifications</p>
-                    <div className={`mt-3 grid gap-3 md:grid-cols-2 ${supportingTextClassName}`}>
-                      {selectedMetadataRows.map((row) => (
-                        <p key={row.label}>
-                          <span className={foregroundEmphasisClassName}>{row.label}:</span>{" "}
-                          {row.value}
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className={`${cardClassName} p-4`}>
-                    <p className={foregroundEmphasisClassName}>Tooling / MCP</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <StatusPill tone={selectedCard.toolCallingSupported ? "accent" : "neutral"}>
-                        {selectedCard.toolCallingSupported
-                          ? "tool calling enabled"
-                          : "tool calling unavailable"}
-                      </StatusPill>
-                      {selectedToolStyles.map((style) => (
-                        <StatusPill key={style} tone="neutral">
-                          {style}
-                        </StatusPill>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className={`${cardClassName} p-4`}>
-                    <p className={foregroundEmphasisClassName}>
-                      Telemetry taxonomy rollup (advisory)
-                    </p>
-                    {telemetryRollup && telemetryRollup.totalRequests > 0 ? (
-                      <div className={`mt-3 space-y-3 ${bodyTextClassName}`}>
-                        <p className={`${supportingTextClassName} text-[var(--rm-muted)]`}>
-                          Based on {telemetryRollup.totalRequests} request
-                          {telemetryRollup.totalRequests === 1 ? "" : "s"} over the last{" "}
-                          {telemetryRollup.windowDays} days.
-                        </p>
-                        <div className="grid gap-4 xl:grid-cols-3">
-                          <div className="space-y-2">
-                            <p className={foregroundEmphasisClassName}>Recent groups</p>
-                            <div className="flex flex-wrap gap-2">
-                              {telemetryRollup.groups.length > 0 ? (
-                                telemetryRollup.groups.map((group) => (
-                                  <StatusPill key={group.groupId} tone="neutral">
-                                    {group.groupId} • {group.requestCount}
-                                  </StatusPill>
-                                ))
-                              ) : (
-                                <StatusPill tone="warning">No recent groups</StatusPill>
-                              )}
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <p className={foregroundEmphasisClassName}>Recent roles</p>
-                            <div className="flex flex-wrap gap-2">
-                              {telemetryRollup.roles.length > 0 ? (
-                                telemetryRollup.roles.map((role) => (
-                                  <StatusPill key={role.roleId} tone="neutral">
-                                    {role.roleId} • {role.requestCount}
-                                  </StatusPill>
-                                ))
-                              ) : (
-                                <StatusPill tone="warning">No recent roles</StatusPill>
-                              )}
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <p className={foregroundEmphasisClassName}>Recent capabilities</p>
-                            <div className="flex flex-wrap gap-2">
-                              {telemetryRollup.capabilities.length > 0 ? (
-                                telemetryRollup.capabilities.map((capability) => (
-                                  <StatusPill key={capability.capabilityId} tone="neutral">
-                                    {capability.capabilityId} • {capability.requestCount}
-                                  </StatusPill>
-                                ))
-                              ) : (
-                                <StatusPill tone="warning">No recent capabilities</StatusPill>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          {telemetryRollup.tasks.map((task) => (
-                            <div
-                              key={task.taskType}
-                              className="flex flex-wrap items-center justify-between gap-2 rounded-[var(--rm-radius-md)] border border-[var(--rm-border)] p-2"
-                            >
-                              <div className="min-w-0">
-                                <p className={bodyStrongTextClassName}>{task.taskType}</p>
-                                <p className={supportingTextClassName}>
-                                  {task.requestCount} req{" "}
-                                  {task.avgLatencyMs !== null ? `• avg ${task.avgLatencyMs}ms` : ""}
-                                </p>
-                              </div>
-                              <StatusPill
-                                tone={
-                                  task.successRate >= 0.95
-                                    ? "success"
-                                    : task.successRate < 0.8
-                                      ? "warning"
-                                      : "neutral"
-                                }
-                              >
-                                {Math.round(task.successRate * 100)}%
-                              </StatusPill>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="grid gap-4 xl:grid-cols-2">
-                          <div className="space-y-2">
-                            <p className={foregroundEmphasisClassName}>Observed strengths</p>
-                            {telemetryRollup.strengths.length > 0 ? (
-                              telemetryRollup.strengths.map((strength) => (
-                                <p key={strength} className={supportingTextClassName}>
-                                  {strength}
-                                </p>
-                              ))
-                            ) : (
-                              <p className={supportingTextClassName}>
-                                No high-confidence strengths have emerged from recent telemetry yet.
-                              </p>
-                            )}
-                          </div>
-                          <div className="space-y-2">
-                            <p className={foregroundEmphasisClassName}>Observed warnings</p>
-                            {telemetryRollup.warnings.length > 0 ? (
-                              telemetryRollup.warnings.map((warning) => (
-                                <p key={warning} className={supportingTextClassName}>
-                                  {warning}
-                                </p>
-                              ))
-                            ) : (
-                              <p className={supportingTextClassName}>
-                                No warning-level patterns are visible in the recent telemetry slice.
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <p className={`mt-3 ${supportingTextClassName}`}>
-                        No taxonomy-tagged telemetry data available yet for this model. Send
-                        requests to populate taxonomy rollups, per-task performance, and advisory
-                        warnings.
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex flex-wrap gap-3">
-                    <Link className={secondaryButtonClassName} to="/app/system/runtime-config">
-                      Edit runtime config
-                    </Link>
-                    <Link className={secondaryButtonClassName} to="/app/models/roles">
-                      Edit runtime roles
-                    </Link>
-                    <Link className={secondaryButtonClassName} to="/app/remote/providers">
-                      Review providers
-                    </Link>
-                  </div>
-                </div>
-              </DisclosureSection>
-            ) : null}
-
-            <div className="flex flex-wrap gap-3 border-t border-[var(--rm-border)] pt-4">
+            <div className="-mx-5 -mb-5 mt-5 flex flex-wrap items-center justify-end gap-2 border-t border-[var(--rm-border)] px-5 py-3">
               <button
                 type="button"
-                className={primaryButtonClassName}
+                className={compactFieldButtonClassName}
                 disabled={
                   !selectedCard ||
                   selectedCard.controllerState === "active" ||
@@ -1334,30 +1074,28 @@ export default function ControlModelsRoute() {
                     .finally(() => setPendingControllerEndpointId(null));
                 }}
               >
-                {pendingControllerEndpointId
-                  ? "Saving…"
-                  : selectedCard?.controllerState === "active"
-                    ? "Primary controller"
-                    : "Make primary controller"}
+                {pendingControllerEndpointId ? "Saving…" : "Make primary controller"}
               </button>
-              <Link className={secondaryButtonClassName} to="/app/models/roles">
+              <Link className={compactFieldButtonClassName} to="/app/models/roles">
                 Open Roles
               </Link>
-              <Link className={secondaryButtonClassName} to="/app/models/benchmark">
+              <Link className={compactFieldButtonClassName} to="/app/models/benchmark">
                 Open Benchmark
               </Link>
-              {selectedLlamaSwapEndpoints.length > 0 ? (
-                <button
-                  type="button"
-                  className={secondaryButtonClassName}
-                  disabled={!selectedCard || removingTargetKey === `local:${selectedCard.modelId}`}
-                  onClick={() => void unloadSelectedLocalModel()}
-                >
-                  {selectedCard && removingTargetKey === `local:${selectedCard.modelId}`
-                    ? "Unloading…"
-                    : "Unload"}
-                </button>
-              ) : null}
+              <button
+                type="button"
+                className={`${compactFieldButtonClassName} text-[var(--rm-error)]`}
+                disabled={
+                  !selectedCard ||
+                  selectedLlamaSwapEndpoints.length === 0 ||
+                  removingTargetKey === `local:${selectedCard.modelId}`
+                }
+                onClick={() => void unloadSelectedLocalModel()}
+              >
+                {selectedCard && removingTargetKey === `local:${selectedCard.modelId}`
+                  ? "Unloading…"
+                  : "Unload"}
+              </button>
             </div>
           </div>
         )}

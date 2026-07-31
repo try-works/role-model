@@ -6,11 +6,11 @@ import { ErrorState, LoadingState, SectionCard } from "../components/page-primit
 import {
   bodyStrongTextClassName,
   fieldClassName,
+  monoEyebrowClassName,
   mutedPanelClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
   supportingTextClassName,
-  utilityLabelClassName,
 } from "../lib/design-system";
 import { applyLlamaSwapScaffold } from "../lib/llama-swap-setup";
 import {
@@ -150,7 +150,8 @@ export default function ControlRuntimeConfigRoute() {
           <div className="space-y-4">
             {!configRecord ? <LoadingState label="Loading runtime config…" /> : null}
             <textarea
-              className={`${fieldClassName} min-h-96 font-mono text-xs leading-6`}
+              className={`${fieldClassName} !min-h-[28rem] font-mono text-xs leading-6`}
+              rows={24}
               spellCheck={false}
               value={editorText}
               onChange={(event) => setEditorText(event.target.value)}
@@ -207,7 +208,7 @@ export default function ControlRuntimeConfigRoute() {
             <div className={`${mutedPanelClassName} space-y-3 p-4`}>
               {snapshotRows.map(([label, value]) => (
                 <div key={label} className="flex flex-wrap items-start justify-between gap-3">
-                  <p className={utilityLabelClassName}>{label}</p>
+                  <p className={monoEyebrowClassName}>{label}</p>
                   <p className={`${bodyStrongTextClassName} max-w-[70%] break-all text-right`}>
                     {value}
                   </p>

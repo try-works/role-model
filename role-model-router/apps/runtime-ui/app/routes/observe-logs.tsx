@@ -1,19 +1,18 @@
+import { MetricStrip, SegmentedControl } from "@role-model/ui";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
-import { MetricStrip, SegmentedControl } from "@role-model/ui";
 
 import {
+  Badge,
   EmptyState,
   ErrorState,
   LoadingState,
   SectionCard,
-  StatusPill,
 } from "../components/page-primitives";
 import {
   accentActionTextClassName,
-  metaTextClassName,
+  monoEyebrowClassName,
   supportingTextClassName,
-  utilityLabelClassName,
 } from "../lib/design-system";
 import { fetchTextLogs } from "../lib/runtime-api";
 import { buildStructuredLogRows } from "../lib/view-models";
@@ -60,7 +59,7 @@ export default function ObserveLogsRoute() {
         items={[
           {
             id: "structured-log-history",
-            label: "Structured log history",
+            label: "Structured rows",
             value: String(filteredRows.length),
           },
           {
@@ -76,12 +75,15 @@ export default function ObserveLogsRoute() {
         ]}
       />
 
-      <div className="space-y-2">
-        <p className={utilityLabelClassName}>Source filter</p>
+      <div className="flex flex-col gap-1.5">
+        <p className="font-sans text-[13px] font-semibold leading-[18px] text-foreground">
+          Source filter
+        </p>
         <SegmentedControl
           aria-label="Log source filter"
           value={sourceFilter}
           onChange={setSourceFilter}
+          size="md"
           options={sourceOptions.map((option) => ({
             value: option,
             label: option === "all" ? "All sources" : option,
@@ -90,31 +92,37 @@ export default function ObserveLogsRoute() {
       </div>
 
       <SectionCard
-        title="Structured log history"
-        description="Rows are parsed into Timestamp, Source, Severity, Request, and message fields so they can be scanned without leaving the shell."
+        title="Structured log rows"
+        description="Rows are parsed into Time, Source, Level, Message, and Request fields so they can be scanned without leaving the shell."
       >
         {filteredRows.length === 0 ? (
           <EmptyState label="No logs recorded yet." />
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-left">
-              <thead className={metaTextClassName}>
+              <thead>
                 <tr>
-                  <th className="pb-3 font-normal">Timestamp</th>
-                  <th className="pb-3 font-normal">Source</th>
-                  <th className="pb-3 font-normal">Severity</th>
-                  <th className="pb-3 font-normal">Request</th>
-                  <th className="pb-3 font-normal">Entry</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Time</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Source</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Level</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Message</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Request</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredRows.map((row) => (
                   <tr key={row.key} className="border-t border-[var(--rm-border)] align-top">
-                    <td className={`py-3 ${supportingTextClassName}`}>{row.timestamp ?? "—"}</td>
-                    <td className={`py-3 ${supportingTextClassName}`}>{row.sourceClass}</td>
+                    <td
+                      className={`py-3 font-mono text-[12px] tabular-nums ${supportingTextClassName}`}
+                    >
+                      {row.timestamp ?? "—"}
+                    </td>
+                    <td className="py-3 font-mono text-[12px] text-[var(--rm-fg)]">
+                      {row.sourceClass}
+                    </td>
                     <td className="py-3">
                       {row.severity ? (
-                        <StatusPill
+                        <Badge
                           tone={
                             row.severity === "error"
                               ? "warning"
@@ -126,12 +134,13 @@ export default function ObserveLogsRoute() {
                           }
                         >
                           {row.severity}
-                        </StatusPill>
+                        </Badge>
                       ) : (
                         <span className="text-[var(--rm-muted)]">—</span>
                       )}
                     </td>
-                    <td className={`py-3 ${supportingTextClassName}`}>
+                    <td className="py-3 text-[13px] text-[var(--rm-fg)]">{row.message}</td>
+                    <td className={`py-3 font-mono text-[12px] ${supportingTextClassName}`}>
                       {row.requestId ? (
                         <Link
                           className={accentActionTextClassName}
@@ -143,7 +152,6 @@ export default function ObserveLogsRoute() {
                         "—"
                       )}
                     </td>
-                    <td className={`py-3 ${supportingTextClassName}`}>{row.message}</td>
                   </tr>
                 ))}
               </tbody>
@@ -152,14 +160,11 @@ export default function ObserveLogsRoute() {
         )}
       </SectionCard>
 
-      <SectionCard
-        title="Raw lines"
-        description="Preserved-host output stays visible as raw lines so operators can compare the filtered ledger against the original capture."
-      >
+      <SectionCard title="Raw lines">
         {filteredRows.length === 0 ? (
           <EmptyState label="No raw lines match the current source filter." />
         ) : (
-          <pre className="max-h-96 overflow-auto whitespace-pre-wrap border border-[var(--rm-border)] bg-[var(--rm-panel)] p-4 font-mono text-xs text-[var(--rm-secondary)]">
+          <pre className="max-h-[280px] overflow-auto whitespace-pre-wrap font-mono text-[11px] leading-4 text-[var(--rm-fg)]">
             {filteredRows.map((row) => row.rawLine).join("\n")}
           </pre>
         )}

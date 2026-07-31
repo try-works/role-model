@@ -1,17 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { CheckboxControl } from "../components/checkbox-control";
 import {
+  Badge,
   EmptyState,
   ErrorState,
   LoadingState,
   SectionCard,
-  StatusPill,
 } from "../components/page-primitives";
 import {
   bodyTextClassName,
   codeBlockClassName,
   compactTitleClassName,
-  metaTextClassName,
+  monoEyebrowClassName,
   mutedPanelClassName,
   secondaryButtonClassName,
   supportingTextClassName,
@@ -75,16 +76,15 @@ export default function LocalLogsRoute() {
             {loading ? "Refreshing…" : "Refresh"}
           </button>
           <label htmlFor="autoRefresh" className={`flex items-center gap-2 ${bodyTextClassName}`}>
-            <input
-              type="checkbox"
+            <CheckboxControl
               id="autoRefresh"
               checked={autoRefresh}
-              onChange={(event) => setAutoRefresh(event.target.checked)}
-              className="h-4 w-4 rounded-[var(--rm-radius-sm)] border-[var(--rm-border-strong)] accent-[var(--rm-accent)]"
+              aria-label="Auto-refresh logs every 3 seconds"
+              onChange={() => setAutoRefresh((current) => !current)}
             />
             <span>Auto-refresh (3s)</span>
           </label>
-          <span className={`ml-auto ${metaTextClassName}`}>{logRows.length} rows</span>
+          <span className={`ml-auto ${supportingTextClassName}`}>{logRows.length} rows</span>
         </div>
 
         {loading && logRows.length === 0 ? (
@@ -102,13 +102,13 @@ export default function LocalLogsRoute() {
         ) : (
           <div className="overflow-x-auto">
             <table className={`min-w-full text-left ${bodyTextClassName}`}>
-              <thead className={metaTextClassName}>
+              <thead>
                 <tr>
-                  <th className="pb-3 font-semibold">Timestamp</th>
-                  <th className="pb-3 font-semibold">Source</th>
-                  <th className="pb-3 font-semibold">Severity</th>
-                  <th className="pb-3 font-semibold">Request</th>
-                  <th className="pb-3 font-semibold">Entry</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Time</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Source</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Level</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Message</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Request</th>
                 </tr>
               </thead>
               <tbody>
@@ -118,7 +118,7 @@ export default function LocalLogsRoute() {
                     <td className={`py-3 ${supportingTextClassName}`}>{row.sourceClass}</td>
                     <td className="py-3">
                       {row.severity ? (
-                        <StatusPill
+                        <Badge
                           tone={
                             row.severity === "error"
                               ? "warning"
@@ -130,13 +130,13 @@ export default function LocalLogsRoute() {
                           }
                         >
                           {row.severity}
-                        </StatusPill>
+                        </Badge>
                       ) : (
                         <span className="text-[var(--rm-muted)]">—</span>
                       )}
                     </td>
-                    <td className={`py-3 ${supportingTextClassName}`}>{row.requestId ?? "—"}</td>
                     <td className={`py-3 ${supportingTextClassName}`}>{row.message}</td>
+                    <td className={`py-3 ${supportingTextClassName}`}>{row.requestId ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>

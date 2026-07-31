@@ -1,14 +1,10 @@
+import { ChartGrid, ChartGridCell, FilterSelect, MetricStrip, PageFilters } from "@role-model/ui";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
-import {
-  ChartGrid,
-  ChartGridCell,
-  FilterSelect,
-  PageFilters,
-} from "@role-model/ui";
 
 import { ObserveKitChartBlock } from "../components/observe-chart-block";
 import {
+  Badge,
   DisclosureSection,
   EmptyState,
   ErrorState,
@@ -17,9 +13,9 @@ import {
 import { TelemetryTextField } from "../components/telemetry-controls";
 import {
   accentActionTextClassName,
+  bodyStrongTextClassName,
+  cardClassName,
   foregroundEmphasisClassName,
-  listRowClassName,
-  metaTextClassName,
   mutedPanelClassName,
   supportingTextClassName,
 } from "../lib/design-system";
@@ -485,6 +481,7 @@ export default function RequestsRoute() {
               value={providerId}
             />
             <FilterSelect
+              className="w-full min-w-0"
               label="Status family"
               onChange={(value) => updateParam("status", value)}
               options={[
@@ -553,42 +550,93 @@ export default function RequestsRoute() {
         ))}
       </ChartGrid>
 
-      <SectionCard title="Recent telemetry requests">
+      <SectionCard
+        title="Recent telemetry requests"
+        description="Explainable request ledger with endpoint, model, status, and direct Observe/Router drill-in."
+      >
         {loading && charts.length === 0 ? (
           <EmptyState label="Loading the canonical telemetry ledger…" />
         ) : ledgerRows.length === 0 ? (
           <EmptyState label="No requests match the current analytics filters." />
         ) : (
-          <div className="space-y-3">
-            {ledgerRows.map((request) => (
-              <div key={request.requestId} className={`${listRowClassName} md:items-center`}>
-                <div>
-                  <p className={foregroundEmphasisClassName}>{request.requestId}</p>
-                  {request.clientRequestId && request.clientRequestId !== request.requestId ? (
-                    <p className={supportingTextClassName}>
-                      Correlation • {request.clientRequestId}
-                    </p>
-                  ) : null}
-                  <p className={supportingTextClassName}>{request.endpointId}</p>
-                  <p className={`mt-2 ${supportingTextClassName}`}>
-                    Routing decision • {request.routingDecisionLabel}
-                  </p>
-                  <p className={`mt-2 ${supportingTextClassName}`}>
-                    {request.sourceLabel} • {request.statusLabel} • {request.latencyLabel} •{" "}
-                    {request.tokenLabel} • {request.costLabel}
-                  </p>
+          <div className="space-y-4">
+            {ledgerRows.map((request) => {
+              const sourceKey = request.sourceLabel.toLowerCase();
+              return (
+                <div key={request.requestId} className={`${cardClassName} space-y-4 p-4`}>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0 border-l-2 border-[var(--rm-accent)] pl-3">
+                      <p className={`break-all ${bodyStrongTextClassName}`}>{request.requestId}</p>
+                    </div>
+                    <Badge tone={sourceKey === "local" ? "accent" : "neutral"}>
+                      {sourceKey === "local" || sourceKey === "remote"
+                        ? sourceKey
+                        : request.sourceLabel}
+                    </Badge>
+                  </div>
+
+                  <MetricStrip
+                    aria-label={`${request.requestId} telemetry request`}
+                    variant="inventory"
+                    className="max-w-none"
+                    items={[
+                      {
+                        id: "model",
+                        label: "Model",
+                        value: request.modelId ?? "—",
+                      },
+                      {
+                        id: "endpoint",
+                        label: "Endpoint",
+                        value: request.endpointId,
+                      },
+                      {
+                        id: "status",
+                        label: "Status",
+                        value: request.statusLabel,
+                      },
+                      {
+                        id: "latency",
+                        label: "Latency",
+                        value: request.latencyLabel,
+                      },
+                      {
+                        id: "tokens",
+                        label: "Tokens",
+                        value: request.tokenLabel,
+                      },
+                      {
+                        id: "cost",
+                        label: "Cost",
+                        value: request.costLabel,
+                      },
+                      {
+                        id: "decided",
+                        label: "Seen",
+                        value: request.createdAtLabel,
+                      },
+                    ]}
+                  />
+
+                  <div className="flex flex-wrap gap-4">
+                    <Link
+                      className={accentActionTextClassName}
+                      to={`/app/observe/requests/${request.requestId}`}
+                    >
+                      Observe · Open detail
+                    </Link>
+                    {request.routingDecisionLabel !== "n/a" ? (
+                      <Link
+                        className={supportingTextClassName}
+                        to={`/app/router/decisions/${request.requestId}`}
+                      >
+                        Router · Open detail
+                      </Link>
+                    ) : null}
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className={metaTextClassName}>{request.createdAtLabel}</p>
-                  <Link
-                    className={`mt-2 inline-block ${accentActionTextClassName}`}
-                    to={`/app/observe/requests/${request.requestId}`}
-                  >
-                    Inspect
-                  </Link>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </SectionCard>

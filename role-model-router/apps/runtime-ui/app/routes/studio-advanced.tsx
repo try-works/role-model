@@ -10,9 +10,9 @@ import {
 } from "../components/page-primitives";
 import {
   fieldClassName,
-  metaTextClassName,
-  primaryButtonClassName,
-  utilityLabelClassName,
+  fieldLabelClassName,
+  monoEyebrowClassName,
+  primaryButtonBlockClassName,
 } from "../lib/design-system";
 import {
   type RuntimeSnapshot,
@@ -56,7 +56,7 @@ const advancedFamilies = [
 
 type AdvancedPath = (typeof advancedFamilies)[number]["path"];
 
-const formFieldLabelClassName = utilityLabelClassName;
+const formFieldLabelClassName = fieldLabelClassName;
 
 function buildDefaultPayload(path: AdvancedPath, model: string): Record<string, unknown> {
   switch (path) {
@@ -153,7 +153,7 @@ export default function StudioAdvancedRoute() {
     <div className="space-y-6">
       {error ? <ErrorState label={error} /> : null}
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
         <SectionCard title="Endpoint family">
           {!snapshot ? (
             <LoadingState label="Loading advanced request context…" />
@@ -179,7 +179,7 @@ export default function StudioAdvancedRoute() {
                   </option>
                 ))}
               </SelectField>
-              <label className="grid gap-2">
+              <label className="grid gap-1.5">
                 <span className={formFieldLabelClassName}>JSON payload</span>
                 <textarea
                   className={`${fieldClassName} min-h-72 font-mono`}
@@ -188,7 +188,7 @@ export default function StudioAdvancedRoute() {
                 />
               </label>
               <button
-                className={primaryButtonClassName}
+                className={primaryButtonBlockClassName}
                 disabled={submitting || model.trim().length === 0}
                 type="submit"
               >
@@ -204,7 +204,7 @@ export default function StudioAdvancedRoute() {
               {responsePayload ?? '{\n  "status": "No advanced request yet"\n}'}
             </CodeBlock>
             <div className="space-y-2">
-              <p className={metaTextClassName}>Request template</p>
+              <p className={monoEyebrowClassName}>Request template</p>
               <CodeBlock className="min-h-52">{requestTemplate}</CodeBlock>
             </div>
           </div>

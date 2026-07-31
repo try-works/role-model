@@ -3,21 +3,20 @@ import { useCallback, useEffect, useState } from "react";
 import { MetricStrip } from "@role-model/ui";
 
 import {
+  Badge,
   ErrorState,
   LoadingState,
   SectionCard,
   SelectField,
-  StatusPill,
 } from "../components/page-primitives";
 import {
   bodyStrongTextClassName,
-  compactTitleClassName,
   fieldClassName,
-  foregroundEmphasisClassName,
+  fieldLabelClassName,
+  monoEyebrowClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
   supportingTextClassName,
-  utilityLabelClassName,
 } from "../lib/design-system";
 import {
   ROUTING_MODE_OPTIONS,
@@ -35,7 +34,7 @@ import {
 type RoutingStrategyChoice = RuntimeRoutingMode | "unset" | "custom";
 type RuntimeExecutionMode = NonNullable<RuntimeConfig["executionMode"]>;
 
-const formFieldLabelClassName = `${utilityLabelClassName} text-[var(--rm-fg)]`;
+const formFieldLabelClassName = fieldLabelClassName;
 
 const EXECUTION_MODE_OPTIONS: ReadonlyArray<{
   readonly value: RuntimeExecutionMode;
@@ -241,10 +240,7 @@ export default function ControlRoutingStrategyRoute() {
   const selectedExecutionModeDetails =
     EXECUTION_MODE_OPTIONS.find((option) => option.value === selectedExecutionMode) ??
     EXECUTION_MODE_OPTIONS[0];
-  const draftAlias = formatDraftRoutingAlias(
-    selectedRoutingStrategyValue,
-    selectedExecutionMode,
-  );
+  const draftAlias = formatDraftRoutingAlias(selectedRoutingStrategyValue, selectedExecutionMode);
 
   const save = async () => {
     const nextStrategy = resolveRoutingStrategyChoice(
@@ -283,74 +279,92 @@ export default function ControlRoutingStrategyRoute() {
         description="Choose how the runtime picks models for each request."
       >
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
-          <div className="space-y-6">
-            <div className="grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)]">
-              <div className="space-y-1" role="listbox" aria-label="Routing strategy">
-                {STRATEGY_CHOICES.map((option) => {
-                  const selected = selectedRoutingStrategy === option.value;
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      role="option"
-                      aria-selected={selected}
-                      className={`flex w-full items-center gap-2 rounded-[var(--rm-radius-field)] px-3 py-2.5 text-left transition-colors ${
-                        selected
-                          ? "border-l-2 border-[var(--rm-accent)] bg-[var(--rm-surface-strong)]"
-                          : "border-l-2 border-transparent hover:bg-[var(--rm-surface-strong)]"
-                      }`}
-                      onClick={() => setSelectedRoutingStrategy(option.value)}
-                    >
-                      <span className={`${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
-                        {option.label}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="min-w-0 space-y-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className={compactTitleClassName}>{selectedStrategyDetails.label}</h3>
-                  <StatusPill tone="accent">selected</StatusPill>
-                  {hasUnsavedChanges ? <StatusPill tone="warning">unsaved</StatusPill> : null}
+          <div className="min-w-0 space-y-5">
+            <div className="-mx-5 border-b border-[var(--rm-border)]">
+              <div className="flex min-h-0">
+                <div
+                  className="w-[240px] shrink-0 space-y-0.5 border-r border-[var(--rm-border)] p-2"
+                  role="listbox"
+                  aria-label="Routing strategy"
+                >
+                  {STRATEGY_CHOICES.map((option) => {
+                    const selected = selectedRoutingStrategy === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        role="option"
+                        aria-selected={selected}
+                        className={`flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left transition-colors ${
+                          selected
+                            ? "bg-[var(--rm-panel-muted)]"
+                            : "hover:bg-[var(--rm-panel-muted)]"
+                        }`}
+                        onClick={() => setSelectedRoutingStrategy(option.value)}
+                      >
+                        <span
+                          aria-hidden
+                          className={`h-[14px] w-[3px] shrink-0 rounded-[1px] ${
+                            selected ? "bg-[var(--rm-fg)]" : "bg-transparent"
+                          }`}
+                        />
+                        <span className={`${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
+                          {option.label}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
-                <p className={supportingTextClassName}>{selectedStrategyDetails.detail}</p>
 
-                {selectedRoutingStrategy === "custom" ? (
-                  <label className="grid gap-2">
-                    <span className={formFieldLabelClassName}>Custom strategy</span>
-                    <input
-                      className={fieldClassName}
-                      value={customRoutingStrategy}
-                      onChange={(event) => setCustomRoutingStrategy(event.target.value)}
-                      placeholder="org.routing.v2"
+                <div className="min-w-0 flex-1 space-y-3.5 p-5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-[18px] font-semibold leading-6 text-[var(--rm-fg)]">
+                      {selectedStrategyDetails.label}
+                    </h3>
+                    <Badge tone="accent">selected</Badge>
+                    {hasUnsavedChanges ? <Badge tone="warning">unsaved</Badge> : null}
+                  </div>
+                  <p className={supportingTextClassName}>{selectedStrategyDetails.detail}</p>
+
+                  {selectedRoutingStrategy === "custom" ? (
+                    <label className="grid gap-2">
+                      <span className={formFieldLabelClassName}>Custom strategy</span>
+                      <input
+                        className={fieldClassName}
+                        value={customRoutingStrategy}
+                        onChange={(event) => setCustomRoutingStrategy(event.target.value)}
+                        placeholder="org.routing.v2"
+                      />
+                      <span className={supportingTextClassName}>
+                        Persisted exactly as typed — not remapped to a named mode.
+                      </span>
+                    </label>
+                  ) : (
+                    <MetricStrip
+                      aria-label="Strategy details"
+                      variant="inventory"
+                      className="max-w-none"
+                      items={[
+                        { id: "mode-id", label: "Mode id", value: selectedStrategyDetails.modeId },
+                        {
+                          id: "guidance",
+                          label: "Guidance",
+                          value: selectedStrategyDetails.guidance,
+                        },
+                        {
+                          id: "best-for",
+                          label: "Best for",
+                          value: selectedStrategyDetails.bestFor,
+                        },
+                        {
+                          id: "needs-controller",
+                          label: "Needs controller",
+                          value: selectedStrategyDetails.needsController ? "yes" : "no",
+                        },
+                      ]}
                     />
-                    <span className={supportingTextClassName}>
-                      Persisted exactly as typed — not remapped to a named mode.
-                    </span>
-                  </label>
-                ) : (
-                  <MetricStrip
-                    aria-label="Strategy details"
-                    variant="inventory"
-                    className="max-w-none"
-                    items={[
-                      { id: "mode-id", label: "Mode id", value: selectedStrategyDetails.modeId },
-                      {
-                        id: "guidance",
-                        label: "Guidance",
-                        value: selectedStrategyDetails.guidance,
-                      },
-                      { id: "best-for", label: "Best for", value: selectedStrategyDetails.bestFor },
-                      {
-                        id: "needs-controller",
-                        label: "Needs controller",
-                        value: selectedStrategyDetails.needsController ? "yes" : "no",
-                      },
-                    ]}
-                  />
-                )}
+                  )}
+                </div>
               </div>
             </div>
 
@@ -394,30 +408,28 @@ export default function ControlRoutingStrategyRoute() {
             {statusMessage ? <p className={supportingTextClassName}>{statusMessage}</p> : null}
           </div>
 
-          <aside className="space-y-4 rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4">
-            <p className={foregroundEmphasisClassName}>Active posture</p>
-            <MetricStrip
-              aria-label="Active posture"
-              variant="inventory"
-              className="max-w-none"
-              items={[
-                {
-                  id: "strategy",
-                  label: "Strategy",
-                  value: selectedStrategyDetails.label,
-                },
-                {
-                  id: "execution",
-                  label: "Execution",
-                  value: selectedExecutionModeDetails.label,
-                },
-                {
-                  id: "alias",
-                  label: "Alias",
-                  value: draftAlias,
-                },
-              ]}
-            />
+          <aside className="space-y-3 rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-5">
+            <p className={monoEyebrowClassName}>Active posture</p>
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <p className="font-sans text-xs leading-4 text-[var(--rm-secondary)]">Strategy</p>
+                <p className="text-sm font-semibold leading-[18px] text-[var(--rm-fg)]">
+                  {selectedStrategyDetails.label}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <p className="font-sans text-xs leading-4 text-[var(--rm-secondary)]">Execution</p>
+                <p className="text-sm font-semibold leading-[18px] text-[var(--rm-fg)]">
+                  {selectedExecutionModeDetails.label}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <p className="font-sans text-xs leading-4 text-[var(--rm-secondary)]">Alias</p>
+                <p className="font-mono text-sm font-semibold leading-[18px] text-[var(--rm-fg)]">
+                  {draftAlias}
+                </p>
+              </div>
+            </div>
           </aside>
         </div>
       </SectionCard>

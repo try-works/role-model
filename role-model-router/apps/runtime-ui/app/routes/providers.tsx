@@ -5,22 +5,20 @@ import { DeviceAuthorizationCard } from "../components/device-authorization-card
 import { DeviceAuthorizationModal } from "../components/device-authorization-modal";
 import { LocalModelRolePicker } from "../components/local-model-role-picker";
 import {
+  Badge,
   EmptyState,
   ErrorState,
   LoadingState,
   SectionCard,
   SelectField,
-  StatusPill,
 } from "../components/page-primitives";
 import {
+  compactFieldButtonEmphasisClassName,
   fieldClassName,
-  foregroundEmphasisClassName,
+  fieldLabelClassName,
   insetPanelClassName,
   mutedPanelClassName,
-  primaryButtonClassName,
-  raisedPanelClassName,
   secondaryButtonClassName,
-  supportingTextClassName,
 } from "../lib/design-system";
 import {
   getDeviceAuthorizationPollDelayMs,
@@ -56,7 +54,7 @@ import {
 } from "../lib/view-models";
 
 const inputClass = fieldClassName;
-const buttonClass = primaryButtonClassName;
+const buttonClass = compactFieldButtonEmphasisClassName;
 
 type ModelRoleSelection = Record<string, string[]>;
 
@@ -204,6 +202,21 @@ function formatRuntimeRoleGroupLabel(groupId: string): string {
     .filter(Boolean)
     .map((part) => `${part.slice(0, 1).toUpperCase()}${part.slice(1)}`)
     .join(" ");
+}
+
+export function resolveConfiguredEndpointRoleIds(input: {
+  readonly endpointRoleIds: readonly string[];
+  readonly draftRoleIds?: readonly string[];
+  readonly availableRoleIds: readonly string[];
+}): string[] {
+  if (input.draftRoleIds !== undefined) {
+    return [...input.draftRoleIds];
+  }
+  // Missing/empty assignment means all roles for configured Remote endpoints.
+  if (input.endpointRoleIds.length === 0) {
+    return [...input.availableRoleIds];
+  }
+  return [...input.endpointRoleIds];
 }
 
 export function buildModelRoleSelection(
@@ -929,10 +942,10 @@ export default function ProvidersRoute() {
   return (
     <>
       <div className="space-y-6">
-        <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+        <div className="grid items-start gap-4 xl:grid-cols-[0.95fr_1.05fr]">
           <SectionCard
             title="Choose provider and models"
-            description="Select the provider, connection method, and model. New models default to all roles selected."
+            description="Select the provider, connection method, and model. New models start with all roles selected — edit roles on the configured connection."
           >
             <form className="space-y-4" onSubmit={onSubmit}>
               <SelectField
@@ -959,8 +972,8 @@ export default function ProvidersRoute() {
                 ))}
               </SelectField>
 
-              <label className="grid gap-2 text-sm">
-                <span className={foregroundEmphasisClassName}>Provider connection id</span>
+              <label className="grid gap-1.5">
+                <span className={fieldLabelClassName}>Provider connection id</span>
                 <input
                   className={inputClass}
                   value={providerAccountId}
@@ -969,8 +982,8 @@ export default function ProvidersRoute() {
               </label>
 
               {selectedVariant?.authMode === "api-key-static" ? (
-                <label className="grid gap-2 text-sm">
-                  <span className={foregroundEmphasisClassName}>Credential reference</span>
+                <label className="grid gap-1.5">
+                  <span className={fieldLabelClassName}>Credential reference</span>
                   <input
                     className={inputClass}
                     value={credentialRef}
@@ -979,10 +992,10 @@ export default function ProvidersRoute() {
                 </label>
               ) : (
                 <div className={insetPanelClassName}>
-                  <p className={foregroundEmphasisClassName}>
+                  <p className="text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)]">
                     Runtime-managed credential reference
                   </p>
-                  <p className="mt-2">
+                  <p className="mt-2 text-[13px] font-normal leading-[18px] text-[var(--rm-secondary)]">
                     OAuth-backed providers store the resulting token locally and expose only the
                     generated credential reference back to the control plane.
                   </p>
@@ -999,20 +1012,22 @@ export default function ProvidersRoute() {
               </SelectField>
 
               {selectedVariant?.oauth ? (
-                <div className={`${raisedPanelClassName} p-3`}>
-                  <p className={foregroundEmphasisClassName}>OAuth metadata</p>
-                  <p className="mt-2">
-                    <span className={foregroundEmphasisClassName}>Client id:</span>{" "}
+                <div className={`${mutedPanelClassName} p-3`}>
+                  <p className="text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)]">
+                    OAuth metadata
+                  </p>
+                  <p className="mt-2 text-[13px] font-normal leading-[18px] text-[var(--rm-secondary)]">
+                    <span className="font-semibold text-[var(--rm-fg)]">Client id:</span>{" "}
                     {selectedVariant.oauth.clientId}
                   </p>
-                  <p>
-                    <span className={foregroundEmphasisClassName}>Device endpoint:</span>{" "}
+                  <p className="text-[13px] font-normal leading-[18px] text-[var(--rm-secondary)]">
+                    <span className="font-semibold text-[var(--rm-fg)]">Device endpoint:</span>{" "}
                     {selectedVariant.oauth.deviceAuthorizationEndpoint}
                   </p>
                 </div>
               ) : null}
 
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   className={buttonClass}
                   disabled={
@@ -1062,7 +1077,7 @@ export default function ProvidersRoute() {
 
           <SectionCard
             title="Configured provider connections"
-            description="Endpoints stay grouped by account. Expand a model’s roles control to edit bindings."
+            description="Endpoints stay grouped by account. Expand a model’s roles count to edit which routing roles it can serve."
           >
             <div className="space-y-4">
               {configuredRemoteConnectionRows.length === 0 ? (
@@ -1072,20 +1087,31 @@ export default function ProvidersRoute() {
                   {configuredRemoteConnectionRows.map((row) => (
                     <div
                       key={row.providerAccountId}
-                      className={`${mutedPanelClassName} p-4`}
+                      className={`${mutedPanelClassName} overflow-hidden`}
                       data-testid={`provider-connection-${row.providerAccountId}`}
                     >
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className={foregroundEmphasisClassName}>{row.providerAccountId}</h3>
-                        <StatusPill tone="neutral">{row.providerId}</StatusPill>
-                        <StatusPill tone="success">
+                      <div className="flex flex-wrap items-center gap-2 px-4 py-3">
+                        <p className="min-w-0 break-all font-mono text-sm font-semibold leading-5 text-[var(--rm-fg)]">
+                          {row.providerAccountId}
+                        </p>
+                        <Badge tone="neutral">{row.providerId}</Badge>
+                        <Badge tone="success">
                           {row.endpointCount} endpoint{row.endpointCount === 1 ? "" : "s"}
-                        </StatusPill>
+                        </Badge>
                       </div>
-                      <div className="mt-3 space-y-3">
+                      <div className="border-t border-[var(--rm-border)]">
                         {row.endpoints.map((endpoint) => {
-                          const effectiveRoleIds =
-                            draftRolesByEndpointId[endpoint.endpointId] ?? [...endpoint.roleIds];
+                          const hasRoleDraft = Object.hasOwn(
+                            draftRolesByEndpointId,
+                            endpoint.endpointId,
+                          );
+                          const effectiveRoleIds = resolveConfiguredEndpointRoleIds({
+                            endpointRoleIds: endpoint.roleIds,
+                            draftRoleIds: hasRoleDraft
+                              ? draftRolesByEndpointId[endpoint.endpointId]
+                              : undefined,
+                            availableRoleIds,
+                          });
                           const healthTone =
                             endpoint.healthStatus === "healthy"
                               ? "success"
@@ -1100,11 +1126,11 @@ export default function ProvidersRoute() {
                           return (
                             <div
                               key={endpoint.endpointId}
-                              className={`${raisedPanelClassName} p-3`}
+                              className="space-y-3 border-b border-[var(--rm-border)] px-4 py-3.5 last:border-b-0"
                             >
                               <button
                                 type="button"
-                                className="flex w-full flex-wrap items-center gap-2 text-left"
+                                className="flex w-full items-center gap-3 text-left"
                                 aria-expanded={expanded}
                                 onClick={() => {
                                   setExpandedEndpointId((current) =>
@@ -1113,26 +1139,45 @@ export default function ProvidersRoute() {
                                   setDraftRolesByEndpointId((current) => ({
                                     ...current,
                                     [endpoint.endpointId]:
-                                      current[endpoint.endpointId] ?? [...endpoint.roleIds],
+                                      current[endpoint.endpointId] ??
+                                      resolveConfiguredEndpointRoleIds({
+                                        endpointRoleIds: endpoint.roleIds,
+                                        availableRoleIds,
+                                      }),
                                   }));
                                 }}
                               >
-                                <span className={foregroundEmphasisClassName}>
+                                <span className="min-w-0 flex-1 truncate text-sm font-semibold leading-5 text-[var(--rm-fg)]">
                                   {endpoint.displayName}
                                 </span>
-                                <StatusPill tone={healthTone}>{endpoint.healthStatus}</StatusPill>
-                                <StatusPill tone="neutral">{roleCountLabel}</StatusPill>
-                                <span className={`ml-auto ${supportingTextClassName}`}>
-                                  {expanded ? "Hide roles" : "Edit roles"}
-                                </span>
+                                <Badge tone={healthTone}>{endpoint.healthStatus}</Badge>
+                                <Badge tone="neutral">{roleCountLabel}</Badge>
+                                <svg
+                                  aria-hidden
+                                  className={`size-4 shrink-0 text-[var(--rm-muted)] transition-transform ${
+                                    expanded ? "rotate-180" : ""
+                                  }`}
+                                  fill="none"
+                                  viewBox="0 0 16 16"
+                                >
+                                  <path
+                                    d="M4 6l4 4 4-4"
+                                    stroke="currentColor"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="1.5"
+                                  />
+                                </svg>
                               </button>
                               {expanded ? (
-                                <div className="mt-3 space-y-3">
+                                <div className="space-y-3">
                                   {availableRoleIds.length > 0 ? (
                                     <LocalModelRolePicker
                                       rolePolicy={rolePolicy}
                                       selectedRoleIds={effectiveRoleIds}
-                                      expandSelectedGroupsByDefault={false}
+                                      // Explicit drafts: empty means none, not default-all.
+                                      defaultAllRoles={false}
+                                      expandSelectedGroupsByDefault
                                       onChange={(nextRoleIds) =>
                                         setDraftRolesByEndpointId((current) => ({
                                           ...current,
@@ -1149,7 +1194,7 @@ export default function ProvidersRoute() {
                                   )}
                                   <button
                                     type="button"
-                                    className={primaryButtonClassName}
+                                    className={compactFieldButtonEmphasisClassName}
                                     disabled={
                                       !row.account || savingRolesEndpointId === endpoint.endpointId
                                     }
@@ -1169,10 +1214,21 @@ export default function ProvidersRoute() {
                                             row.endpoints.map((entry) => [
                                               entry.modelId,
                                               entry.endpointId === endpoint.endpointId
-                                                ? (draftRolesByEndpointId[entry.endpointId] ?? [
-                                                    ...entry.roleIds,
-                                                  ])
-                                                : [...entry.roleIds],
+                                                ? (draftRolesByEndpointId[entry.endpointId] ??
+                                                  resolveConfiguredEndpointRoleIds({
+                                                    endpointRoleIds: entry.roleIds,
+                                                    availableRoleIds,
+                                                  }))
+                                                : resolveConfiguredEndpointRoleIds({
+                                                    endpointRoleIds: entry.roleIds,
+                                                    draftRoleIds: Object.hasOwn(
+                                                      draftRolesByEndpointId,
+                                                      entry.endpointId,
+                                                    )
+                                                      ? draftRolesByEndpointId[entry.endpointId]
+                                                      : undefined,
+                                                    availableRoleIds,
+                                                  }),
                                             ]),
                                           );
                                           await upsertRuntimeAccount({

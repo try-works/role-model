@@ -1,15 +1,15 @@
 import type { ChartSeries, RankingChartRow } from "@role-model/ui";
 
-import type { RuntimeTelemetryAnalyticsResponse } from "./runtime-api";
 import {
-  adaptOverviewChartBlock,
-  resolveOverviewChartFormatters,
   type OverviewChartBlockModel,
   type OverviewChartBlockStatus,
+  adaptOverviewChartBlock,
+  resolveOverviewChartFormatters,
 } from "./overview-chart-adapter";
+import type { RuntimeTelemetryAnalyticsResponse } from "./runtime-api";
 import {
-  buildTelemetryRankingChartModel,
   type TelemetryRankingChartModel,
+  buildTelemetryRankingChartModel,
 } from "./telemetry-analytics";
 import type { TelemetryRouteChartDefinition } from "./telemetry-route-models";
 
@@ -29,6 +29,11 @@ export type ObserveChartBlockModel = {
   readonly series?: ChartSeries[];
   readonly rows?: RankingChartRow[];
   readonly valueLabel?: string;
+  readonly xKey?: string;
+  readonly xAxisMode?: OverviewChartBlockModel["xAxisMode"];
+  readonly xDomain?: [number, number];
+  readonly xTicks?: readonly number[];
+  readonly xTickFormatter?: (value: number) => string;
   readonly leftTickFormatter?: (value: number) => string;
   readonly rightTickFormatter?: (value: number) => string;
   readonly valueFormatter?: (value: number) => string;
@@ -164,6 +169,11 @@ export function adaptObserveChartBlock(
     statusMessage: overviewBlock.statusMessage,
     data: overviewBlock.data,
     series: overviewBlock.series,
+    xKey: overviewBlock.xKey,
+    xAxisMode: overviewBlock.xAxisMode,
+    xDomain: overviewBlock.xDomain,
+    xTicks: overviewBlock.xTicks,
+    xTickFormatter: overviewBlock.xTickFormatter,
     leftTickFormatter: overviewBlock.leftTickFormatter,
     rightTickFormatter: overviewBlock.rightTickFormatter,
     valueFormatter: overviewBlock.valueFormatter,

@@ -1,45 +1,39 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { CheckboxControl } from "../components/checkbox-control";
 import {
+  Badge,
   DisclosureSection,
   EmptyState,
   ErrorState,
   LoadingState,
   SectionCard,
   SelectField,
-  StatusPill,
 } from "../components/page-primitives";
 import { computeLatencyPercentiles } from "../lib/benchmark-latency";
 import {
-  describeHardBlend,
   filterBenchmarkRunnableCandidates,
   isBenchmarkRunnableCandidate,
-  resolveSubjectFromSummary,
 } from "../lib/benchmark-model-cards";
 import {
   bodyStrongTextClassName,
   bodyTextClassName,
   compactTitleClassName,
-  foregroundEmphasisClassName,
-  inlineTitleClassName,
   listRowClassName,
-  metaTextClassName,
+  monoEyebrowClassName,
   mutedPanelClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
   supportingTextClassName,
-  utilityStrongTextClassName,
 } from "../lib/design-system";
-import { formatScore, formatScoreFraction } from "../lib/format-score";
+import { formatScore } from "../lib/format-score";
 import {
   type BenchmarkCaseAuditEntry,
-  type BenchmarkCaseComparison,
   type BenchmarkEndpointGrade,
   type BenchmarkRunListEntry,
   type BenchmarkRunProgress,
   type BenchmarkRunResult,
   type BenchmarkSuite,
-  type BenchmarkSummariesByMode,
   type BenchmarkSummary,
   type BenchmarkSummarySubject,
   type RouterCandidate,
@@ -51,7 +45,6 @@ import {
   fetchBenchmarkRunProgress,
   fetchBenchmarkRuns,
   fetchBenchmarkSuite,
-  fetchBenchmarkSummariesByMode,
   fetchBenchmarkSummary,
   fetchRouterCandidates,
   fetchRuntimeSummary,
@@ -62,132 +55,12 @@ import {
 const BENCHMARK_POLL_MS = 1500;
 const BENCHMARK_STALL_MS = 90_000;
 const ACTIVE_BENCHMARK_RUN_KEY = "role-model.benchmark.activeRunId";
-const benchmarkScoreBadgeClassName =
-  "flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-center [font-family:var(--rm-font-display)] text-[15px] font-semibold leading-none tracking-[-0.01em] [font-variant-numeric:tabular-nums]";
-const benchmarkScoreRailClassName =
-  "flex flex-col items-end gap-3 md:w-[120px] md:shrink-0 md:self-start";
-const benchmarkScoreBadgeClusterClassName = "flex flex-col items-end gap-2";
-const benchmarkScoreActionClassName =
-  "inline-flex min-h-[36px] self-end whitespace-nowrap rounded-[var(--rm-radius-pill)] border border-[var(--rm-border-strong)] bg-[var(--rm-panel)] px-4 py-2 text-[13px] font-semibold leading-4 tracking-[-0.01em] text-[var(--rm-accent-ink)] transition hover:border-[var(--rm-accent)] hover:bg-[var(--rm-accent-ghost)] hover:text-[var(--rm-accent-ink)] active:scale-95 disabled:opacity-60";
-
-const EMPTY_BENCHMARK_SUMMARY: BenchmarkSummary = {
-  runId: null,
-  completedAtMs: null,
-  mode: null,
-  suiteId: null,
-  suiteVersion: null,
-  judgeEndpointId: null,
-  judgeModelId: null,
-  artifactRoot: null,
-  subjects: [],
-  caseComparisons: [],
-  caseAudits: [],
-  manifest: null,
-};
-
-const benchmarkScorePreviewRows = [
-  {
-    endpointId: "openai.personal.default/gpt-4o-mini",
-    modelId: "gpt-4o-mini",
-    sourceType: "remote" as const,
-    overallScore: 0.93,
-    profileQualityScore: 0.94,
-    benchmarkSamplesLabel: "24 benchmark samples",
-    latencyLabel: "p50 520 ms • p95 840 ms",
-    difficultyLabel: "easy 95% • medium 94% • hard 88%",
-    routingImpact:
-      "Preferred general-purpose controller candidate with strong code-hard coverage and stable latency.",
-  },
-  {
-    endpointId: "anthropic.personal.default/claude-3-5-sonnet",
-    modelId: "claude-3-5-sonnet",
-    sourceType: "remote" as const,
-    overallScore: 0.9,
-    profileQualityScore: 0.91,
-    benchmarkSamplesLabel: "24 benchmark samples",
-    latencyLabel: "p50 880 ms • p95 1260 ms",
-    difficultyLabel: "easy 93% • medium 91% • hard 86%",
-    routingImpact:
-      "High-quality fallback for long-form reasoning with slightly slower completion time than the controller.",
-  },
-  {
-    endpointId: "llama-swap.local.pool/qwen2.5-coder-32b",
-    modelId: "qwen2.5-coder-32b",
-    sourceType: "local" as const,
-    overallScore: 0.82,
-    profileQualityScore: 0.84,
-    benchmarkSamplesLabel: "24 benchmark samples",
-    latencyLabel: "p50 640 ms • p95 1010 ms",
-    difficultyLabel: "easy 86% • medium 84% • hard 71%",
-    routingImpact:
-      "Efficient local benchmark candidate for medium-complexity coding requests with lower hard-case ceiling.",
-  },
-];
-
-const benchmarkTaxonomyPreviewGroups = [
-  {
-    label: "Role: role.planner",
-    tone: "accent" as const,
-    rows: [
-      { modelId: "gpt-4o-mini", endpointId: "openai.personal.default/gpt-4o-mini", score: "0.95" },
-      {
-        modelId: "claude-3-5-sonnet",
-        endpointId: "anthropic.personal.default/claude-3-5-sonnet",
-        score: "0.92",
-      },
-    ],
-  },
-  {
-    label: "Task: task.route-selection",
-    tone: "neutral" as const,
-    rows: [
-      { modelId: "gpt-4o-mini", endpointId: "openai.personal.default/gpt-4o-mini", score: "0.94" },
-      {
-        modelId: "qwen2.5-coder-32b",
-        endpointId: "llama-swap.local.pool/qwen2.5-coder-32b",
-        score: "0.83",
-      },
-    ],
-  },
-  {
-    label: "Capability: capability.tool-use",
-    tone: "success" as const,
-    rows: [
-      { modelId: "gpt-4o-mini", endpointId: "openai.personal.default/gpt-4o-mini", score: "0.93" },
-      {
-        modelId: "claude-3-5-sonnet",
-        endpointId: "anthropic.personal.default/claude-3-5-sonnet",
-        score: "0.9",
-      },
-    ],
-  },
-];
-
-const benchmarkHistoryPreviewRows = [
-  {
-    runId: "bench-2026-07-04-full",
-    mode: "full",
-    caseCountLabel: "55 cases",
-    modelCountLabel: "3 models",
-    completedAtLabel: "2026-07-04 14:12",
-    suiteId: "routing-capability-v2",
-  },
-  {
-    runId: "bench-2026-07-04-quick",
-    mode: "quick",
-    caseCountLabel: "12 cases",
-    modelCountLabel: "3 models",
-    completedAtLabel: "2026-07-04 11:48",
-    suiteId: "routing-capability-v2",
-  },
-];
-
-function formatElapsed(ms: number): string {
-  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
-}
+const benchmarkDenseHeaderCellClassName =
+  "font-mono text-[11px] font-normal uppercase tracking-[0.08em] text-[var(--rm-muted)]";
+const benchmarkDenseCellClassName =
+  "font-mono text-[13px] font-semibold tabular-nums leading-[18px] text-[var(--rm-fg)]";
+const benchmarkDenseActionClassName =
+  "inline-flex h-[34px] min-h-[34px] items-center rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-panel)] px-3 text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)] transition hover:border-[var(--rm-accent)] disabled:opacity-60";
 
 function describeBenchmarkProgress(progress: BenchmarkRunProgress): {
   readonly phaseLabel: string;
@@ -267,17 +140,15 @@ function formatLatencyMs(value: number | null | undefined): string {
   return `${Math.round(value)} ms`;
 }
 
-function getBenchmarkScoreBadgeToneClass(score: number | null | undefined): string {
+function formatDifficultyPercent(score: number | null | undefined): string {
   if (typeof score !== "number" || !Number.isFinite(score)) {
-    return "bg-[var(--rm-pill-neutral-bg)] text-[var(--rm-pill-neutral-ink)]";
+    return "—";
   }
-  if (score >= 0.9) {
-    return "bg-[var(--rm-pill-success-bg)] text-[var(--rm-pill-success-ink)]";
-  }
-  if (score >= 0.8) {
-    return "bg-[var(--rm-pill-warning-bg)] text-[var(--rm-pill-warning-ink)]";
-  }
-  return "bg-[var(--rm-pill-error-bg)] text-[var(--rm-pill-error-ink)]";
+  return `${Math.round(score * 100)}%`;
+}
+
+function shortModelLeaf(modelId: string): string {
+  return modelId.includes("/") ? (modelId.split("/").at(-1) ?? modelId) : modelId;
 }
 
 function resolveJudgeLabel(
@@ -309,110 +180,6 @@ function collectEndpointLatencies(input: {
     .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
 }
 
-function EndpointModeRunSnapshot({
-  title,
-  summary,
-  endpointId,
-  judgeLabel,
-}: {
-  readonly title: string;
-  readonly summary: BenchmarkSummary;
-  readonly endpointId: string;
-  readonly judgeLabel: string | null;
-}) {
-  if (!summary.runId) {
-    return (
-      <div className={`${mutedPanelClassName} p-3`}>
-        <p className={utilityStrongTextClassName}>{title}</p>
-        <p className={`mt-2 ${supportingTextClassName}`}>No completed run yet.</p>
-      </div>
-    );
-  }
-
-  const subject = resolveSubjectFromSummary(summary, endpointId);
-  const completedAtLabel = summary.completedAtMs
-    ? new Date(summary.completedAtMs).toLocaleString()
-    : "unknown";
-
-  return (
-    <div className={`${mutedPanelClassName} p-3`}>
-      <p className={utilityStrongTextClassName}>{title}</p>
-      <p className={`mt-1 text-xs leading-[18px] ${supportingTextClassName}`}>
-        Completed {completedAtLabel}
-        {judgeLabel ? ` • judge: ${judgeLabel}` : ""}
-      </p>
-      {subject ? (
-        <>
-          <p className={`mt-2 ${bodyStrongTextClassName}`}>
-            {formatScore(subject.overallScore)} overall
-          </p>
-          <p className={`mt-1 ${supportingTextClassName}`}>
-            easy {formatScore(subject.scoresByBucket.easy.score)} • medium{" "}
-            {formatScore(subject.scoresByBucket.medium.score)} • hard{" "}
-            {formatScore(subject.scoresByBucket.hard.score)}
-          </p>
-        </>
-      ) : (
-        <p className={`mt-2 ${supportingTextClassName}`}>
-          This endpoint was not graded in the last {summary.mode ?? "benchmark"} run.
-        </p>
-      )}
-    </div>
-  );
-}
-
-function describeRoutingImpact(candidate: RouterCandidate): string {
-  const profile = asRecord(candidate.latestProfile);
-  const sources = asRecord(profile?.sources);
-  const advisory = asRecord(candidate.advisoryMaxDifficultyRecommendation);
-  const qualityScore = pickNumber(
-    profile,
-    "judge_score",
-    "quality_score",
-    "judgeScore",
-    "qualityScore",
-  );
-  const benchmarkSamples = pickNumber(sources, "benchmark_samples", "benchmarkSamples") ?? 0;
-  const recommended =
-    typeof advisory?.recommended_max_difficulty === "string"
-      ? advisory.recommended_max_difficulty
-      : typeof advisory?.recommendedMaxDifficulty === "string"
-        ? advisory.recommendedMaxDifficulty
-        : null;
-  const minQuality =
-    pickNumber(advisory, "min_quality_score", "minQualityScore") ??
-    pickNumber(asRecord(advisory?.thresholds), "min_quality_score", "minQualityScore");
-
-  const parts: string[] = [];
-  if (qualityScore !== null) {
-    parts.push(
-      `Router ranks this candidate using a ${formatScore(qualityScore)} quality score (from benchmark judge grades).`,
-    );
-  }
-  if (recommended) {
-    parts.push(
-      `Difficulty routing treats ${recommended} as the recommended max prompt difficulty for this endpoint.`,
-    );
-    if (minQuality !== null) {
-      parts.push(
-        `Per-bucket quality must stay above ${formatScore(minQuality)} to raise that ceiling.`,
-      );
-    }
-  }
-  if (benchmarkSamples > 0) {
-    parts.push(
-      `${benchmarkSamples} benchmark sample${benchmarkSamples === 1 ? "" : "s"} are merged into the observed profile used on future routing decisions.`,
-    );
-  }
-  const hardBlendDetail = describeHardBlend(candidate);
-  if (hardBlendDetail) {
-    parts.push(hardBlendDetail);
-  }
-  return parts.length > 0
-    ? parts.join(" ")
-    : "Run a benchmark to write judge scores into this endpoint's observed routing profile.";
-}
-
 interface ModelScoreRow {
   readonly endpointId: string;
   readonly modelId: string;
@@ -423,8 +190,6 @@ interface ModelScoreRow {
   readonly benchmarkSamples: number;
   readonly latencyP50: number | null;
   readonly latencyP95: number | null;
-  readonly caseResults: BenchmarkEndpointGrade["caseResults"] | null;
-  readonly candidate: RouterCandidate;
 }
 
 function buildModelScoreRows(
@@ -504,8 +269,6 @@ function buildModelScoreRows(
       benchmarkSamples,
       latencyP50,
       latencyP95,
-      caseResults,
-      candidate,
     });
   }
 
@@ -566,7 +329,6 @@ export default function ControlBenchmarkRoute() {
   const [progress, setProgress] = useState<BenchmarkRunProgress | null>(null);
   const [result, setResult] = useState<BenchmarkRunResult | null>(null);
   const [lastSummary, setLastSummary] = useState<BenchmarkSummary | null>(null);
-  const [summariesByMode, setSummariesByMode] = useState<BenchmarkSummariesByMode | null>(null);
   const [runHistory, setRunHistory] = useState<readonly BenchmarkRunListEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [runtimeSummary, setRuntimeSummary] = useState<RuntimeSummary | null>(null);
@@ -596,17 +358,15 @@ export default function ControlBenchmarkRoute() {
   );
 
   const refreshBenchmarkState = useCallback(async () => {
-    const [summary, byMode, runs, candidateValue] = await Promise.all([
+    const [summary, runs, candidateValue] = await Promise.all([
       fetchBenchmarkSummary(),
-      fetchBenchmarkSummariesByMode(),
       fetchBenchmarkRuns(),
       fetchRouterCandidates(),
     ]);
     setLastSummary(summary);
-    setSummariesByMode(byMode);
     setRunHistory(runs);
     setCandidates(candidateValue);
-    return { summary, byMode, runs, candidateValue };
+    return { summary, runs, candidateValue };
   }, []);
 
   useEffect(() => {
@@ -628,10 +388,6 @@ export default function ControlBenchmarkRoute() {
         {
           load: fetchBenchmarkSummary,
           onData: (value) => setLastSummary(value as BenchmarkSummary),
-        },
-        {
-          load: fetchBenchmarkSummariesByMode,
-          onData: (value) => setSummariesByMode(value as BenchmarkSummariesByMode),
         },
         {
           load: fetchBenchmarkRuns,
@@ -750,14 +506,6 @@ export default function ControlBenchmarkRoute() {
     () => (candidates ? buildModelScoreRows(candidates, result, lastSummary) : []),
     [candidates, lastSummary, result],
   );
-
-  const compareByCaseId = useMemo(() => {
-    const map = new Map<string, BenchmarkCaseComparison>();
-    for (const entry of lastSummary?.caseComparisons ?? []) {
-      map.set(entry.caseId, entry);
-    }
-    return map;
-  }, [lastSummary]);
 
   const taxonomyDimensionInventory = useMemo(() => {
     const roleIds = new Set<string>();
@@ -992,34 +740,22 @@ export default function ControlBenchmarkRoute() {
     ? new Date(lastSummary.completedAtMs).toLocaleString()
     : null;
   const judgeLabel = lastSummary ? resolveJudgeLabel(lastSummary, candidates) : null;
-  const fullSummary = summariesByMode?.full ?? EMPTY_BENCHMARK_SUMMARY;
-  const quickSummary = summariesByMode?.quick ?? EMPTY_BENCHMARK_SUMMARY;
-  const fullJudgeLabel = fullSummary.runId ? resolveJudgeLabel(fullSummary, candidates) : null;
-  const quickJudgeLabel = quickSummary.runId ? resolveJudgeLabel(quickSummary, candidates) : null;
 
   return (
     <div className="space-y-6">
       <div className="space-y-6">
         <SectionCard
           title="Run capability benchmark"
-          description="Production page exposes benchmark mode, judge endpoint, endpoint checklist, and run progress in a single operator surface."
+          description="Select mode and judge, then grade runnable endpoints."
         >
-          {runtimeSummary ? (
-            <p className={`mb-4 ${supportingTextClassName}`}>
-              Runtime scope: {runtimeSummary.scopeId ?? "unknown"} • {runtimeSummary.endpointCount}{" "}
-              endpoint
-              {runtimeSummary.endpointCount === 1 ? "" : "s"} available
-              {runtimeSummary.runtimeStateRoot ? " • state root connected" : ""}
-            </p>
-          ) : null}
           {judgeSubjectOverlap ? (
-            <p className={`mb-4 ${bodyTextClassName} text-[var(--rm-warning)]`}>
+            <p className={`mb-4 ${supportingTextClassName}`}>
               Judge endpoint is also a benchmark subject. Expect slower grading and higher judge
               failure risk — prefer a dedicated judge when available.
             </p>
           ) : null}
 
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             <SelectField
               label="Benchmark mode"
               value={mode}
@@ -1028,60 +764,100 @@ export default function ControlBenchmarkRoute() {
               <option value="quick">Quick (12 hard cases)</option>
               <option value="full">Full (all eligible cases)</option>
             </SelectField>
-            <SelectField
-              label="Judge endpoint (grading only)"
-              value={judgeEndpointId}
-              onChange={(value) => {
-                setJudgeEndpointId(value);
-                void updateBenchmarkPreferences({ judgeEndpointId: value }).catch(() => undefined);
-              }}
-            >
-              {runnableCandidates.map((candidate) => (
-                <option key={candidate.endpointId} value={candidate.endpointId}>
-                  {candidate.modelId} ({candidate.sourceType})
-                </option>
-              ))}
-            </SelectField>
+            <div className="space-y-1.5">
+              <SelectField
+                label="Judge endpoint"
+                value={judgeEndpointId}
+                onChange={(value) => {
+                  setJudgeEndpointId(value);
+                  void updateBenchmarkPreferences({ judgeEndpointId: value }).catch(
+                    () => undefined,
+                  );
+                }}
+              >
+                {runnableCandidates.map((candidate) => (
+                  <option key={candidate.endpointId} value={candidate.endpointId}>
+                    {candidate.modelId} ({candidate.sourceType})
+                  </option>
+                ))}
+              </SelectField>
+              <p className={supportingTextClassName}>
+                Used for grading only — not a benchmark subject.
+              </p>
+            </div>
           </div>
 
           <div className="mt-4 space-y-2">
+            <div className="overflow-x-auto rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)]">
+              <table className="min-w-full text-left">
+                <thead>
+                  <tr className="border-b border-[var(--rm-border)]">
+                    <th className="w-4 px-3.5 py-2.5" aria-label="Selected" />
+                    <th
+                      className={`${benchmarkDenseHeaderCellClassName} w-40 px-1 py-2.5 normal-case tracking-normal`}
+                    >
+                      Model
+                    </th>
+                    <th
+                      className={`${benchmarkDenseHeaderCellClassName} px-1 py-2.5 normal-case tracking-normal`}
+                    >
+                      Path
+                    </th>
+                    <th
+                      className={`${benchmarkDenseHeaderCellClassName} w-[72px] px-1 py-2.5 normal-case tracking-normal`}
+                    >
+                      Scope
+                    </th>
+                    <th
+                      className={`${benchmarkDenseHeaderCellClassName} w-[72px] px-3.5 py-2.5 normal-case tracking-normal`}
+                    >
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {runnableCandidates.map((candidate) => {
+                    const selected = selectedEndpointIds.includes(candidate.endpointId);
+                    return (
+                      <tr
+                        key={candidate.endpointId}
+                        className="border-b border-[var(--rm-border)] last:border-b-0"
+                      >
+                        <td className="px-3.5 py-3">
+                          <CheckboxControl
+                            checked={selected}
+                            aria-label={`${selected ? "Deselect" : "Select"} ${candidate.modelId}`}
+                            onChange={() => toggleEndpoint(candidate.endpointId)}
+                          />
+                        </td>
+                        <td className="w-40 shrink-0 px-1 py-3 text-[14px] font-semibold leading-[18px] text-[var(--rm-fg)]">
+                          {shortModelLeaf(candidate.modelId)}
+                        </td>
+                        <td className="min-w-0 truncate px-1 py-3 font-mono text-[12px] leading-4 text-[var(--rm-muted)]">
+                          {candidate.endpointId}
+                        </td>
+                        <td className="w-[72px] px-1 py-3 text-[13px] leading-[18px] text-[var(--rm-fg)]">
+                          {candidate.sourceType}
+                        </td>
+                        <td className="w-[72px] px-3.5 py-3 text-[13px] leading-[18px] text-[var(--rm-fg)]">
+                          {candidate.healthStatus ?? "unknown"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className={utilityStrongTextClassName}>Endpoints to grade</p>
-              <p className={`text-xs leading-[18px] ${supportingTextClassName}`}>
-                {gradedEndpointCount} selected • {runnableCandidates.length} runnable
-              </p>
-            </div>
-            <p className={supportingTextClassName}>
-              Only benchmark-runnable endpoints appear in the active checklist.
-            </p>
-            <div className="grid gap-3">
-              {runnableCandidates.map((candidate) => (
-                <label
-                  key={candidate.endpointId}
-                  className={`${mutedPanelClassName} flex cursor-pointer items-start gap-3 p-3`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedEndpointIds.includes(candidate.endpointId)}
-                    onChange={() => toggleEndpoint(candidate.endpointId)}
-                  />
-                  <span className="space-y-1">
-                    <span className={`block ${bodyStrongTextClassName}`}>{candidate.modelId}</span>
-                    <span className={`block ${supportingTextClassName}`}>
-                      {candidate.endpointId}
-                    </span>
-                    <span className={`block text-xs leading-[18px] ${supportingTextClassName}`}>
-                      {candidate.sourceType} • {candidate.healthStatus}
-                    </span>
-                  </span>
-                </label>
-              ))}
-            </div>
-            {gradedEndpointCount < 2 ? (
               <p className={supportingTextClassName}>
-                Select at least two runnable endpoints to compare benchmark results head to head.
+                {gradedEndpointCount} of {runnableCandidates.length} selected
               </p>
-            ) : null}
+              {gradedEndpointCount < 2 ? (
+                <p className={supportingTextClassName}>
+                  Select at least two runnable endpoints to compare head to head.
+                </p>
+              ) : null}
+            </div>
             {excludedCandidates.length > 0 ? (
               <DisclosureSection summary="Excluded by current execution mode">
                 <div className="space-y-3">
@@ -1099,7 +875,7 @@ export default function ControlBenchmarkRoute() {
                           <p className={bodyStrongTextClassName}>{candidate.modelId}</p>
                           <p className={supportingTextClassName}>{candidate.endpointId}</p>
                         </div>
-                        <StatusPill tone="neutral">excluded</StatusPill>
+                        <Badge tone="neutral">excluded</Badge>
                       </div>
                     ))}
                   </div>
@@ -1108,7 +884,7 @@ export default function ControlBenchmarkRoute() {
             ) : null}
           </div>
 
-          <div className="mt-6">
+          <div className="mt-6 flex flex-wrap items-center gap-3">
             <button
               type="button"
               className={primaryButtonClassName}
@@ -1119,38 +895,42 @@ export default function ControlBenchmarkRoute() {
                 ? "Running benchmark…"
                 : `Run ${mode} benchmark (${gradedEndpointCount} model${gradedEndpointCount === 1 ? "" : "s"}, ${eligibleCaseCount} cases)`}
             </button>
+            <p className={supportingTextClassName}>
+              {gradedEndpointCount} of {runnableCandidates.length} selected
+            </p>
           </div>
 
           {running ? (
-            <div className={`${mutedPanelClassName} mt-4 space-y-3 p-4`}>
+            <div className="mt-4 space-y-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className={bodyStrongTextClassName}>
                   {progressDescription?.phaseLabel ?? "Benchmark in progress"}
                 </p>
-                <StatusPill tone={progressStalled ? "warning" : "accent"}>
-                  {progressStalled ? "No recent updates" : "Running"}
-                </StatusPill>
+                <p className="font-mono text-[12px] tabular-nums text-[var(--rm-fg)]">
+                  {progressPercent}%
+                </p>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-[var(--rm-border)]">
+              <div className="h-1.5 overflow-hidden rounded-sm bg-[var(--rm-border)]">
                 <div
-                  className="h-full rounded-full bg-[var(--rm-accent)] transition-all duration-500"
+                  className="h-full bg-[var(--rm-accent)] transition-all duration-500"
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
-              <p className={supportingTextClassName}>
-                {progress
-                  ? `${progress.completedSteps} / ${progress.totalSteps} steps (${progressPercent}%) • elapsed ${formatElapsed(nowMs - progress.startedAtMs)}`
-                  : "Starting benchmark run…"}
-              </p>
-              {progressDescription ? (
-                <p className={bodyTextClassName}>{progressDescription.detail}</p>
-              ) : null}
-              {progressStalled ? (
-                <p className={`${bodyTextClassName} text-[var(--rm-warning)]`}>
-                  No progress update in the last 90 seconds. The run may still be waiting on a slow
-                  model response.
+              <div className="flex flex-wrap gap-x-4 gap-y-1">
+                <p className={supportingTextClassName}>
+                  {progress
+                    ? `${progress.completedSteps} / ${progress.totalSteps} steps`
+                    : "Starting…"}
                 </p>
-              ) : null}
+                {progressDescription ? (
+                  <p className={supportingTextClassName}>{progressDescription.detail}</p>
+                ) : null}
+                {progressStalled ? (
+                  <p className={`${supportingTextClassName} text-[var(--rm-warning)]`}>
+                    No progress update in the last 90 seconds.
+                  </p>
+                ) : null}
+              </div>
             </div>
           ) : null}
 
@@ -1161,221 +941,132 @@ export default function ControlBenchmarkRoute() {
 
         <SectionCard
           title="Benchmark scores"
-          description="Scores above are written into each endpoint's observed profile for future routing."
+          description="Compare endpoints after the last completed run."
         >
-          {lastRunLabel ? (
-            <p className={`mb-4 ${supportingTextClassName}`}>
-              Last completed run: {lastRunLabel}
-              {lastSummary?.mode ? ` • ${lastSummary.mode} suite` : ""}
-              {judgeLabel ? ` • judge: ${judgeLabel}` : ""}
-            </p>
-          ) : null}
-
           {modelScoreRows.length === 0 ? (
-            <div className="space-y-4">
-              <p className={supportingTextClassName}>
-                Preview routing profile inventory until this runtime records its first completed
-                benchmark run.
-              </p>
-              {benchmarkScorePreviewRows.map((row) => (
-                <div key={row.endpointId} className={listRowClassName}>
-                  <div className="space-y-3">
-                    <div>
-                      <p className={inlineTitleClassName}>{row.modelId}</p>
-                      <p className={supportingTextClassName}>{row.endpointId}</p>
-                    </div>
-
-                    <div className={`grid gap-2 md:grid-cols-2 ${supportingTextClassName}`}>
-                      <p>
-                        <span className={foregroundEmphasisClassName}>Benchmark overall:</span>{" "}
-                        {formatScore(row.overallScore)}
-                      </p>
-                      <p>
-                        <span className={foregroundEmphasisClassName}>Profile quality score:</span>{" "}
-                        {formatScore(row.profileQualityScore)} ({row.benchmarkSamplesLabel})
-                      </p>
-                      <p>
-                        <span className={foregroundEmphasisClassName}>Benchmark latency:</span>{" "}
-                        {row.latencyLabel}
-                      </p>
-                    </div>
-
-                    <p className={supportingTextClassName}>
-                      <span className={foregroundEmphasisClassName}>By difficulty:</span>{" "}
-                      {row.difficultyLabel}
-                    </p>
-
-                    <p className={`${supportingTextClassName} leading-6`}>
-                      <span className={foregroundEmphasisClassName}>Routing impact:</span>{" "}
-                      {row.routingImpact}
-                    </p>
-                  </div>
-
-                  <div className={benchmarkScoreRailClassName}>
-                    <div className={benchmarkScoreBadgeClusterClassName}>
-                      <span
-                        aria-label={`Benchmark score ${formatScore(row.overallScore)}`}
-                        className={`${benchmarkScoreBadgeClassName} ${getBenchmarkScoreBadgeToneClass(row.overallScore)}`}
-                      >
-                        {formatScore(row.overallScore)}
-                      </span>
-                      <StatusPill tone={row.sourceType === "remote" ? "accent" : "neutral"}>
-                        {row.sourceType}
-                      </StatusPill>
-                    </div>
-                    <button type="button" className={benchmarkScoreActionClassName}>
-                      Clear routing profile
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <EmptyState label="No benchmark scores are in routing profiles yet. Run the benchmark to grade each configured model and update observed routing profiles." />
           ) : (
-            <div className="space-y-4">
-              {modelScoreRows.map((row) => (
-                <div key={row.endpointId} className={listRowClassName}>
-                  <div className="space-y-3">
-                    <div>
-                      <p className={inlineTitleClassName}>{row.modelId}</p>
-                      <p className={supportingTextClassName}>{row.endpointId}</p>
-                    </div>
-
-                    <div className={`grid gap-2 md:grid-cols-2 ${supportingTextClassName}`}>
-                      <p>
-                        <span className={foregroundEmphasisClassName}>Benchmark overall:</span>{" "}
-                        {row.caseResults?.length
-                          ? formatScoreFraction(row.overallScore, row.caseResults.length)
-                          : formatScore(row.overallScore)}
-                      </p>
-                      <p>
-                        <span className={foregroundEmphasisClassName}>Profile quality score:</span>{" "}
-                        {formatScore(row.profileQualityScore)}
-                        {row.benchmarkSamples > 0
-                          ? ` (${row.benchmarkSamples} benchmark sample${row.benchmarkSamples === 1 ? "" : "s"})`
-                          : ""}
-                      </p>
-                      <p>
-                        <span className={foregroundEmphasisClassName}>Benchmark latency:</span> p50{" "}
-                        {formatLatencyMs(row.latencyP50)} • p95 {formatLatencyMs(row.latencyP95)}
-                      </p>
-                    </div>
-
-                    {row.scoresByBucket ? (
-                      <p className={supportingTextClassName}>
-                        <span className={foregroundEmphasisClassName}>By difficulty:</span> easy{" "}
-                        {formatScore(row.scoresByBucket.easy.score)} • medium{" "}
-                        {formatScore(row.scoresByBucket.medium.score)} • hard{" "}
-                        {formatScore(row.scoresByBucket.hard.score)}
-                      </p>
-                    ) : null}
-
-                    <p className={`${supportingTextClassName} leading-6`}>
-                      <span className={foregroundEmphasisClassName}>Routing impact:</span>{" "}
-                      {describeRoutingImpact(row.candidate)}
-                    </p>
-
-                    <div className="grid gap-3 md:grid-cols-2">
-                      <EndpointModeRunSnapshot
-                        title="Last full run"
-                        summary={fullSummary}
-                        endpointId={row.endpointId}
-                        judgeLabel={fullJudgeLabel}
-                      />
-                      <EndpointModeRunSnapshot
-                        title="Last quick run (12 hard)"
-                        summary={quickSummary}
-                        endpointId={row.endpointId}
-                        judgeLabel={quickJudgeLabel}
-                      />
-                    </div>
-
-                    {row.caseResults && row.caseResults.length > 0 ? (
-                      <details className={supportingTextClassName}>
-                        <summary className={`cursor-pointer ${utilityStrongTextClassName}`}>
-                          Per-case benchmark results
-                        </summary>
-                        <div className="mt-3 space-y-2">
-                          {row.caseResults.map((caseResult) => {
-                            const compareResult = compareByCaseId.get(caseResult.caseId);
-                            return (
-                              <div
-                                key={caseResult.caseId}
-                                className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] p-3"
-                              >
-                                <p className={bodyStrongTextClassName}>
-                                  {caseResult.caseId} • {formatScore(caseResult.score)} •{" "}
-                                  {caseResult.difficultyBucket} •{" "}
-                                  {formatLatencyMs(caseResult.latencyMs)}
-                                </p>
-                                <div className="mt-1 flex flex-wrap gap-2 text-xs">
-                                  {caseResult.gradingMethod ? (
-                                    <StatusPill tone="neutral">
-                                      {caseResult.gradingMethod}
-                                    </StatusPill>
-                                  ) : null}
-                                  {caseResult.judgeUnavailable ? (
-                                    <StatusPill tone="warning">judge unavailable</StatusPill>
-                                  ) : null}
-                                  {caseResult.parseSuccess === false ? (
-                                    <StatusPill tone="warning">parse failed</StatusPill>
-                                  ) : null}
-                                  {caseResult.cappedByValidator ? (
-                                    <StatusPill tone="warning">validator cap</StatusPill>
-                                  ) : null}
-                                </div>
-                                <p className={bodyTextClassName}>{caseResult.rationale}</p>
-                                {compareResult ? (
-                                  <p
-                                    className={`mt-2 text-xs leading-[18px] ${supportingTextClassName}`}
-                                  >
-                                    <span className={foregroundEmphasisClassName}>
-                                      Head-to-head ranking:
-                                    </span>{" "}
-                                    {compareResult.relativeRanking.join(" › ")}
-                                    {" — "}
-                                    {compareResult.rationale}
-                                  </p>
-                                ) : null}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </details>
-                    ) : null}
-                  </div>
-
-                  <div className={benchmarkScoreRailClassName}>
-                    <div className={benchmarkScoreBadgeClusterClassName}>
-                      <span
-                        aria-label={`Benchmark score ${formatScore(row.overallScore)}`}
-                        className={`${benchmarkScoreBadgeClassName} ${getBenchmarkScoreBadgeToneClass(row.overallScore)}`}
-                      >
-                        {formatScore(row.overallScore)}
-                      </span>
-                      <StatusPill tone={row.sourceType === "remote" ? "accent" : "neutral"}>
-                        {row.sourceType}
-                      </StatusPill>
-                    </div>
-                    <button
-                      type="button"
-                      className={benchmarkScoreActionClassName}
-                      disabled={running || clearingEndpointId === row.endpointId}
-                      onClick={() => void clearEndpointRoutingProfile(row.endpointId)}
-                    >
-                      {clearingEndpointId === row.endpointId
-                        ? "Clearing routing profile…"
-                        : "Clear routing profile"}
-                    </button>
-                  </div>
+            <>
+              <div className="mb-4 flex flex-wrap items-center gap-4">
+                <div className="space-y-0.5">
+                  <p className={benchmarkDenseHeaderCellClassName}>Last run</p>
+                  <p className="font-mono text-[12px] leading-4 text-[var(--rm-fg)]">
+                    {lastRunLabel ?? "—"}
+                  </p>
                 </div>
-              ))}
-            </div>
+                <div className="hidden h-7 w-px shrink-0 bg-[var(--rm-border)] sm:block" />
+                <div className="space-y-0.5">
+                  <p className={benchmarkDenseHeaderCellClassName}>Suite</p>
+                  <p className="text-[12px] font-semibold leading-4 text-[var(--rm-fg)]">
+                    {lastSummary?.mode
+                      ? `${lastSummary.mode.charAt(0).toUpperCase()}${lastSummary.mode.slice(1)}`
+                      : "—"}
+                  </p>
+                </div>
+                <div className="hidden h-7 w-px shrink-0 bg-[var(--rm-border)] sm:block" />
+                <div className="space-y-0.5">
+                  <p className={benchmarkDenseHeaderCellClassName}>Judge</p>
+                  <p className="font-mono text-[12px] leading-4 text-[var(--rm-fg)]">
+                    {judgeLabel ?? "—"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)]">
+                <table className="min-w-full text-left">
+                  <thead className="bg-[var(--rm-surface-strong)]">
+                    <tr className="border-b border-[var(--rm-border)]">
+                      <th
+                        className={`${benchmarkDenseHeaderCellClassName} w-[132px] px-3.5 py-2.5`}
+                      >
+                        Model
+                      </th>
+                      <th className={`${benchmarkDenseHeaderCellClassName} w-14 px-1 py-2.5`}>
+                        Overall
+                      </th>
+                      <th className={`${benchmarkDenseHeaderCellClassName} w-14 px-1 py-2.5`}>
+                        Profile
+                      </th>
+                      <th className={`${benchmarkDenseHeaderCellClassName} w-12 px-1 py-2.5`}>
+                        Easy
+                      </th>
+                      <th className={`${benchmarkDenseHeaderCellClassName} w-14 px-1 py-2.5`}>
+                        Medium
+                      </th>
+                      <th className={`${benchmarkDenseHeaderCellClassName} w-12 px-1 py-2.5`}>
+                        Hard
+                      </th>
+                      <th className={`${benchmarkDenseHeaderCellClassName} w-16 px-1 py-2.5`}>
+                        p50
+                      </th>
+                      <th className={`${benchmarkDenseHeaderCellClassName} w-16 px-1 py-2.5`}>
+                        p95
+                      </th>
+                      <th className={`${benchmarkDenseHeaderCellClassName} w-14 px-1 py-2.5`}>
+                        Scope
+                      </th>
+                      <th
+                        className={`${benchmarkDenseHeaderCellClassName} px-3.5 py-2.5 text-right`}
+                      >
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {modelScoreRows.map((row) => (
+                      <tr
+                        key={row.endpointId}
+                        className="border-b border-[var(--rm-border)] last:border-b-0"
+                      >
+                        <td className="px-3.5 py-3 text-[14px] font-semibold leading-[18px] text-[var(--rm-fg)]">
+                          {shortModelLeaf(row.modelId)}
+                        </td>
+                        <td className={`${benchmarkDenseCellClassName} px-1 py-3`}>
+                          {formatScore(row.overallScore)}
+                        </td>
+                        <td className={`${benchmarkDenseCellClassName} px-1 py-3`}>
+                          {formatScore(row.profileQualityScore)}
+                        </td>
+                        <td className={`${benchmarkDenseCellClassName} px-1 py-3 font-normal`}>
+                          {formatDifficultyPercent(row.scoresByBucket?.easy.score)}
+                        </td>
+                        <td className={`${benchmarkDenseCellClassName} px-1 py-3 font-normal`}>
+                          {formatDifficultyPercent(row.scoresByBucket?.medium.score)}
+                        </td>
+                        <td className={`${benchmarkDenseCellClassName} px-1 py-3 font-normal`}>
+                          {formatDifficultyPercent(row.scoresByBucket?.hard.score)}
+                        </td>
+                        <td className={`${benchmarkDenseCellClassName} px-1 py-3 font-normal`}>
+                          {formatLatencyMs(row.latencyP50)}
+                        </td>
+                        <td className={`${benchmarkDenseCellClassName} px-1 py-3 font-normal`}>
+                          {formatLatencyMs(row.latencyP95)}
+                        </td>
+                        <td className="px-1 py-3 text-[13px] leading-[18px] text-[var(--rm-muted)]">
+                          {row.sourceType}
+                        </td>
+                        <td className="px-3.5 py-3 text-right">
+                          <button
+                            type="button"
+                            className={benchmarkDenseActionClassName}
+                            disabled={running || clearingEndpointId === row.endpointId}
+                            onClick={() => void clearEndpointRoutingProfile(row.endpointId)}
+                          >
+                            {clearingEndpointId === row.endpointId ? "Clearing…" : "Clear"}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </SectionCard>
 
         <SectionCard
           title="Taxonomy dimensions"
-          description="The runtime exposes advisory benchmark scores by role, task, and capability. Filters switch which dimension is active."
+          description="Filters switch which dimension is active."
         >
           {taxonomyHasData ? (
             <div className="space-y-4">
@@ -1447,22 +1138,26 @@ export default function ControlBenchmarkRoute() {
                         : null;
 
                 return activeScores ? (
-                  <div className="space-y-2">
-                    <p className={metaTextClassName}>{activeScores.label}</p>
-                    {activeScores.scores.map((entry) => (
-                      <div
-                        key={entry.endpointId}
-                        className="flex items-center justify-between rounded-lg border border-[var(--rm-border)] p-3"
-                      >
-                        <div>
-                          <p className={compactTitleClassName}>{entry.modelId}</p>
-                          <p className={`text-xs leading-[18px] ${supportingTextClassName}`}>
-                            {entry.endpointId}
-                          </p>
+                  <div className="space-y-3">
+                    <p className={monoEyebrowClassName}>{activeScores.label}</p>
+                    <div className="-mx-5 divide-y divide-[var(--rm-border)] border-t border-[var(--rm-border)]">
+                      {activeScores.scores.map((entry) => (
+                        <div
+                          key={entry.endpointId}
+                          className="flex items-baseline justify-between gap-3 px-5 py-3"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate font-mono text-[13px] font-semibold text-[var(--rm-fg)]">
+                              {entry.modelId}
+                            </p>
+                            <p className="truncate font-mono text-[11px] text-[var(--rm-muted)]">
+                              {entry.endpointId}
+                            </p>
+                          </div>
+                          <p className={benchmarkDenseCellClassName}>{formatScore(entry.score)}</p>
                         </div>
-                        <StatusPill tone="success">{formatScore(entry.score)}</StatusPill>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 ) : taxonomyFilterRole || taxonomyFilterTask || taxonomyFilterCapability ? (
                   <EmptyState label="No benchmark data for the selected taxonomy dimension." />
@@ -1472,40 +1167,7 @@ export default function ControlBenchmarkRoute() {
               })()}
             </div>
           ) : (
-            <div className="space-y-4">
-              <p className={supportingTextClassName}>
-                Preview taxonomy score slices until runtime benchmark results populate role, task,
-                and capability dimensions.
-              </p>
-              <div className="grid gap-4 md:grid-cols-3">
-                {benchmarkTaxonomyPreviewGroups.map((group) => (
-                  <div key={group.label} className={`${mutedPanelClassName} space-y-3 p-4`}>
-                    <div className="flex items-center justify-between gap-3">
-                      <p className={metaTextClassName}>{group.label}</p>
-                      <StatusPill tone={group.tone}>preview</StatusPill>
-                    </div>
-                    <div className="space-y-2">
-                      {group.rows.map((row) => (
-                        <div
-                          key={`${group.label}-${row.endpointId}`}
-                          className="flex items-center justify-between gap-3 rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] px-3 py-2"
-                        >
-                          <div className="min-w-0">
-                            <p className={compactTitleClassName}>{row.modelId}</p>
-                            <p
-                              className={`truncate text-xs leading-[18px] ${supportingTextClassName}`}
-                            >
-                              {row.endpointId}
-                            </p>
-                          </div>
-                          <StatusPill tone={group.tone}>{row.score}</StatusPill>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <EmptyState label="No taxonomy dimension data is available yet. Benchmark results with taxonomy-tagged cases will appear here." />
           )}
         </SectionCard>
 
@@ -1514,30 +1176,7 @@ export default function ControlBenchmarkRoute() {
           description="Completed benchmark runs stored on this runtime."
         >
           {runHistory.length === 0 ? (
-            <div className="space-y-4">
-              <p className={supportingTextClassName}>
-                Preview recent run ledger until benchmark executions have been saved on this
-                runtime.
-              </p>
-              <div className="space-y-3">
-                {benchmarkHistoryPreviewRows.map((run) => (
-                  <div key={run.runId} className={listRowClassName}>
-                    <div>
-                      <p className={compactTitleClassName}>{run.runId}</p>
-                      <p className={supportingTextClassName}>
-                        {run.mode} • {run.caseCountLabel} • {run.modelCountLabel}
-                      </p>
-                      <p className={supportingTextClassName}>
-                        {run.completedAtLabel} • {run.suiteId}
-                      </p>
-                    </div>
-                    <StatusPill tone={run.mode === "quick" ? "accent" : "neutral"}>
-                      {run.mode}
-                    </StatusPill>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <EmptyState label="No completed benchmark runs yet." />
           ) : (
             <div className="space-y-3">
               {runHistory.map((run) => (
@@ -1552,9 +1191,7 @@ export default function ControlBenchmarkRoute() {
                       {new Date(run.completedAtMs).toLocaleString()} • {run.suiteId}
                     </p>
                   </div>
-                  <StatusPill tone={run.mode === "quick" ? "accent" : "neutral"}>
-                    {run.mode}
-                  </StatusPill>
+                  <Badge tone={run.mode === "quick" ? "accent" : "neutral"}>{run.mode}</Badge>
                 </div>
               ))}
             </div>

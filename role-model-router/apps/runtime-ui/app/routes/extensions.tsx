@@ -1,25 +1,25 @@
-import { MetricStrip } from "@role-model/ui";
+import { FilterSelect, MetricStrip } from "@role-model/ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
+  Badge,
   DisclosureSection,
   EmptyState,
   ErrorState,
   LoadingState,
   SectionCard,
-  SelectField,
-  StatusPill,
 } from "../components/page-primitives";
 import {
   compactFieldButtonClassName,
   compactFieldButtonEmphasisClassName,
   compactTitleClassName,
   fieldClassName,
+  fieldLabelClassName,
+  monoEyebrowClassName,
   mutedPanelClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
   supportingTextClassName,
-  utilityLabelClassName,
 } from "../lib/design-system";
 import {
   type KnowledgeValidationReceipt,
@@ -52,6 +52,11 @@ const EXTENSION_MODES: readonly RuntimeExtensionMode[] = [
 
 const formatModeLabel = (mode: RuntimeExtensionMode): string =>
   `${mode.charAt(0).toUpperCase()}${mode.slice(1)}`;
+
+const EXTENSION_MODE_OPTIONS = EXTENSION_MODES.map((mode) => ({
+  value: mode,
+  label: formatModeLabel(mode),
+}));
 
 const LIFECYCLE_COPY: Record<
   RuntimeExtensionStatus["lifecycle"] | "unavailable",
@@ -345,9 +350,9 @@ export function ExtensionsRouteView() {
           ) : (
             <div className="space-y-4">
               <div className="flex flex-wrap gap-2">
-                <StatusPill tone="accent">{contribution.mode}</StatusPill>
-                <StatusPill tone="neutral">{contribution.authorizationState}</StatusPill>
-                <StatusPill tone="neutral">tier {contribution.contributionTier}</StatusPill>
+                <Badge tone="accent">{contribution.mode}</Badge>
+                <Badge tone="neutral">{contribution.authorizationState}</Badge>
+                <Badge tone="neutral">tier {contribution.contributionTier}</Badge>
               </div>
               <dl className="grid gap-3 sm:grid-cols-3">
                 <Detail
@@ -427,11 +432,9 @@ export function ExtensionsRouteView() {
                         v{row.version} · {row.provenance}
                       </p>
                     </div>
-                    <StatusPill
-                      tone={row.signatureValid && row.policyAllowed ? "success" : "warning"}
-                    >
+                    <Badge tone={row.signatureValid && row.policyAllowed ? "success" : "warning"}>
                       {row.status}
-                    </StatusPill>
+                    </Badge>
                   </div>
                   <p className={`mt-3 ${supportingTextClassName}`}>
                     {[
@@ -486,13 +489,13 @@ export function ExtensionsRouteView() {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="text-[var(--rm-muted)]">
+              <thead>
                 <tr>
-                  <th className="pb-3 font-semibold">Extension</th>
-                  <th className="pb-3 font-semibold">Lifecycle</th>
-                  <th className="pb-3 font-semibold">Mode</th>
-                  <th className="pb-3 font-semibold">Health</th>
-                  <th className="pb-3 font-semibold">Actions</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Extension</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Lifecycle</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Mode</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Health</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -522,13 +525,14 @@ export function ExtensionsRouteView() {
                         <p className={`mt-1 ${supportingTextClassName}`}>{caption}</p>
                       </td>
                       <td className="py-3 pr-3">
-                        <StatusPill tone={lifecyclePillTone(lifecycleKey, operatorDisabled)}>
+                        <Badge tone={lifecyclePillTone(lifecycleKey, operatorDisabled)}>
                           {lifecycle.label}
-                        </StatusPill>
+                        </Badge>
                       </td>
                       <td className="py-3 pr-3">
-                        <SelectField
+                        <FilterSelect
                           className={busy ? "pointer-events-none opacity-60" : undefined}
+                          hideLabel
                           label="Mode"
                           onChange={(value) => {
                             if (busy) return;
@@ -537,14 +541,9 @@ export function ExtensionsRouteView() {
                               [extension.id]: value as RuntimeExtensionMode,
                             }));
                           }}
+                          options={EXTENSION_MODE_OPTIONS}
                           value={draftMode}
-                        >
-                          {EXTENSION_MODES.map((mode) => (
-                            <option key={mode} value={mode}>
-                              {formatModeLabel(mode)}
-                            </option>
-                          ))}
-                        </SelectField>
+                        />
                       </td>
                       <td className={`py-3 pr-3 ${supportingTextClassName}`}>
                         {healthSummary(extension)}
@@ -715,18 +714,18 @@ function KnowledgeWorkerGate({
             <p className={compactTitleClassName}>Production retrieve gate</p>
             <p className={`mt-1 ${supportingTextClassName}`}>
               Ceremony-backed production activation is separate from Set mode. Production prompt
-              injection requires ceremony ON plus gated production retrieve success; it is cleared on soft OFF
-              and is not Set mode or recommendation apply. Production retrieve is gated and useful
-              only after ceremony-bound ON; KW works when on.
+              injection requires ceremony ON plus gated production retrieve success; it is cleared
+              on soft OFF and is not Set mode or recommendation apply. Production retrieve is gated
+              and useful only after ceremony-bound ON; KW works when on.
             </p>
           </div>
-          <StatusPill tone={productionActivation ? "success" : "neutral"}>
+          <Badge tone={productionActivation ? "success" : "neutral"}>
             {productionActivation ? "Production ON" : "Production OFF"}
-          </StatusPill>
+          </Badge>
         </div>
         {!bootstrapReady && !productionActivation ? (
           <div className="mt-4 grid gap-3">
-            <label className={utilityLabelClassName}>
+            <label className={fieldLabelClassName}>
               Knowledge validation receipt JSON
               <textarea
                 className={`${fieldClassName} mt-1 min-h-24 font-mono`}
@@ -735,7 +734,7 @@ function KnowledgeWorkerGate({
                 value={bootstrapReceiptJson}
               />
             </label>
-            <label className={utilityLabelClassName}>
+            <label className={fieldLabelClassName}>
               Shadow group digest
               <input
                 className={`${fieldClassName} mt-1 font-mono`}
@@ -794,7 +793,7 @@ const message = (value: unknown) =>
 function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <dt className={`${utilityLabelClassName} text-[var(--rm-muted)]`}>{label}</dt>
+      <dt className={fieldLabelClassName}>{label}</dt>
       <dd className={`mt-1 break-words ${supportingTextClassName}`}>{value}</dd>
     </div>
   );

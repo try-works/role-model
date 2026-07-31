@@ -2,7 +2,13 @@ import { MetricStrip } from "@role-model/ui";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 
-import { EmptyState, ErrorState, LoadingState, SectionCard, StatusPill } from "../components/page-primitives";
+import {
+  Badge,
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  SectionCard,
+} from "../components/page-primitives";
 import {
   accentActionTextClassName,
   bodyStrongTextClassName,
@@ -74,9 +80,9 @@ export default function RouterDecisionsRoute() {
                   <div className="min-w-0 border-l-2 border-[var(--rm-accent)] pl-3">
                     <p className={bodyStrongTextClassName}>{decision.requestId}</p>
                   </div>
-                  <StatusPill tone={decision.sourceType === "local" ? "accent" : "neutral"}>
+                  <Badge tone={decision.sourceType === "local" ? "accent" : "neutral"}>
                     {decision.sourceType ?? "unknown"}
-                  </StatusPill>
+                  </Badge>
                 </div>
 
                 <MetricStrip

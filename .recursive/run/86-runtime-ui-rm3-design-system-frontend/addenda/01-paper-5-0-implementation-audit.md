@@ -1,10 +1,17 @@
 # Paper 5-0 · Implementation audit addenda
 
-**Run:** 86-runtime-ui-rm3-design-system-frontend  
+Run: `/.recursive/run/86-runtime-ui-rm3-design-system-frontend/`
+Phase: `03 Implementation Summary` (stage-local)
+Status: `LOCKED`
+LockedAt: `2026-07-31T22:56:04Z`
+LockHash: `3892606fce58e7bf8a5007746770202a3d54ec66a2ced13aba3b06bd365c3bdb`
+
 **Paper:** https://app.paper.design/file/01KW9C35N2G5PZRS4SBJ5678Q6/5-0  
 **Scope:** Product runtime pages vs Paper `role-model v3 runtime pages` (happy-path light/dark).  
 **Method:** One page family at a time; kit specimens only when clarifying IA.  
-**Updated:** 2026-07-31 07:55 UTC+8
+**Updated:** 2026-07-31 11:35 UTC+8  
+**G16:** Studio / Local Choose verdicts + cross-cutting Studio notes synced to Fixed (no stale open-gap narrative).  
+**MR-5:** Roles Edit/allowlist Paper copy + Kind Select + mono outline capability pills (false Med residuals closed).
 
 ---
 
@@ -13,7 +20,7 @@
 | ID | Status | Evidence |
 |----|--------|----------|
 | OV-2 / OV-3 | **Fixed** | `overview-chart-adapter` order/spans; vitest green; live `/app` DOM title order Token→Cache→Effective→Avoided→Latency→Success |
-| OV-1 | **Fixed (placeholder)** | Leading `ChartCard` “Candidate space” + legend from endpoints; not full 3D scatter yet |
+| OV-1 | **Fixed** | Isometric Cost×Quality×Speed scatter + C/Q/S legend from `fetchRouterCandidates` (`candidate-space` + `CandidateSpaceChart`) |
 | OV-4 | **Fixed** | Sentence-case overview titles in adapter + `buildOverviewChartDefinitions` |
 | OV-5 | **Fixed** | Overview filters = Breakdown / Source / Status / Difficulty only via `PageFilters` |
 | OV-6 | **Fixed** | Removed Latest requests + Current endpoint inventory from overview |
@@ -27,7 +34,7 @@
 | AU/RR panel descriptions | **Fixed** | Title-only SectionCards |
 | LM/LP/LS banners | **Fixed** | Removed `LlamaSwapSetupHint`/`Banner` from Models / Policy / Swap / Logs |
 | RP-1 / RP-2 / RP-3 / RP-4 | **Fixed** | Remote: no Choose RolePicker; no Models.dev catalog; no Connect link; collapsed `N roles` + expand RolePicker |
-| MM-1 / MM-2 / MM-3 | **Fixed (partial)** | Models: removed MetricStrip fact strip; list-select 6+6 inventory; Make primary controller footer |
+| MM-1 / MM-2 / MM-3 | **Fixed** | Models: no MetricStrip; list-select 6+6 inventory; Make primary controller footer + Unload |
 | MM-5 | **Fixed** | Selected meta denser rows (Source/Status/Endpoints/Tool/Context/Mode + Cost + Benchmark); meta under list |
 | Studio 4+8 | **Fixed** | Chat/Images/Audio/Rerank/Advanced use `4fr+8fr` kit track (was `360px`) |
 | CH-4 / CH-5 | **Fixed** | Chat tool rows = status dot + name + latency; Assistant MetricStrip+prose |
@@ -36,6 +43,7 @@
 | Studio IM/AU/RR/AD gap table | **Synced** | Marked Fixed for titles, nested results, grids, no page actions |
 | MM-4 | **Fixed** | Models inventory uses `ModelRoleBindingTree` (checkbox roles + expand tasks) instead of RolePicker disclosure |
 | MR-1 / MB-1 | **Fixed** | Roles + Benchmark: removed MetricStrip fact strips |
+| MR-5 | **Fixed** | Roles Edit summary / allowlist context / Kind Select / capability Badge chrome vs Paper `17H3-0` |
 | RO-1 | **Fixed** | Router overview: removed 5-col fact strip + bottom guidance band; Alias inventory + Routing candidates only |
 | RS/RC/RD/RCtl | **Fixed** | Strategy master–detail + Active posture; Controller/Candidates/Decisions MetricStrip cards |
 | ORQ/OR/OL | **Fixed** | Requests/Routing PageFilters in content; Routing no side rail; Logs no handoff/stream chrome |
@@ -47,7 +55,18 @@
 | SY-Ext | **Fixed** | Extensions: Contribution posture + Recommendation ledger 8+4; inventory table; KW gate disclosure |
 | SY-Stor | **Fixed** | Storage: 8+4 usage + Retention/Manual pruning; conflicts folded into pruning |
 | OV-filters | **Fixed** | Overview `PageFilters` in page content (no header `usePageActions`) |
-| Focused tests | **Green** | `design-system` 93 + extensions + storage-retention |
+| Focused tests | **Green** | `design-system` 93 + `view-models` + `candidate-space` |
+| MB-2 | **Fixed** | Benchmark scores = Paper dense table (Overall/Profile/Easy/Medium/Hard/p50/p95/Scope/Clear) |
+| MB-3 | **Fixed** | Run subjects = ☐/Model/Path/Scope/Status table + SVG check; compact progress |
+| MB-4 | **Fixed** | Removed score/taxonomy/history fixture previews → honest EmptyState |
+| MM-diag | **Fixed** | Model diagnostics disclosure trimmed to prose (no StatusPill card walls) |
+| MR-2 | **Fixed** | Roles catalog = Paper list-select (leading bar + muted; Task detail); detail row `6+6` |
+| MR-3 | **Fixed** | Roles Create/Edit: primary fields always open; Advanced disclosure only for extras |
+| MR-4 | **Fixed** | Roles Edit: no Advanced disclosure (Paper Edit primary-only; Create keeps Advanced) |
+| MB-5 | **Fixed** | Benchmark Scores = dense table only (no per-model routing-detail disclosures) |
+| MB-6 | **Fixed** | Taxonomy scores = mono tabular + listRow (no success StatusPill) |
+| MM-5+ | **Fixed** | Selected meta adds Latency p50/p95 + Difficulty mix |
+| LP-2 | **Fixed** | Peer models always shows Register form; Open endpoints helper when no peers |
 
 ---
 
@@ -63,7 +82,7 @@
 | 6 | Studio · Advanced | `Z4Q-0` / `Z8I-0` | `/app/studio/advanced` `studio-advanced.tsx` | Audited + fixed |
 | 7 | Local · Choose | `13RE-0` / `13UX-0` | `/app/local/choose` `local-choose.tsx` | Audited + fixed |
 | 8 | Local · Endpoints | `10IG-0` / `114E-0` | `/app/local/endpoints` `local-peers.tsx` | Audited + fixed |
-| 9 | Local · Peer models | `10LX-0` / `1183-0` | `/app/local/peer-models` `local-peer-models.tsx` | Audited |
+| 9 | Local · Peer models | `10LX-0` / `1183-0` | `/app/local/peer-models` `local-peer-models.tsx` | Audited + fixed |
 | 10 | Local · Models | `10PE-0` / `588` | `/app/local/llama-swap/models` | Audited + fixed |
 | 11 | Local · Host policy | `10SV-0` | `/app/local/llama-swap/policy` | Audited + fixed |
 | 12 | Local · Swap history | `11K8-0` | `/app/local/llama-swap/swap` | Audited + fixed |
@@ -71,7 +90,7 @@
 | 14 | Local · Matrix | `11RM-0` | `/app/local/llama-swap/matrix` | Audited (stub matches Paper) |
 | 15 | Remote · Providers | `142I-0` / `148K-0` | `/app/remote/providers` | Audited + fixed |
 | 16 | Models · Models | `17D7-0` | `/app/models` `control-models.tsx` | Audited + fixed |
-| 17 | Models · Roles / Benchmark | `17H3-0` / `17KZ-0` | roles + benchmark | Audited + fact strips fixed |
+| 17 | Models · Roles / Benchmark | `17H3-0` / `17KZ-0` | roles + benchmark | Audited + fixed |
 | 18 | Router · Overview | `1E7M-0` | `/app/router` | Audited + fixed |
 | 19 | Observe · Activity | `1IYO-0` | observe-activity | Audited + fixed |
 | 20 | Connect · Downstream | `1TQ2-0` | integrations-downstream | Audited + fixed |
@@ -109,7 +128,7 @@
 
 | ID | Gap | Paper | Implementation | Severity |
 |----|-----|--------|----------------|----------|
-| OV-1 | Candidate space | Full-width 3D scatter + legend | **Fixed (placeholder)** — Candidate space ChartCard + live legend | High → **Fixed (placeholder)** |
+| OV-1 | Candidate space | Full-width 3D scatter + legend | **Fixed** — isometric scatter + C/Q/S legend from router candidates | High → **Fixed** |
 | OV-2 | Chart order | Token → Cache → Effective+Avoided → Latency+Success | **Fixed** | High → **Fixed** |
 | OV-3 | Chart spans | Cache **12**; Success **6** | **Fixed** | High → **Fixed** |
 | OV-4 | Chart titles | Sentence case | **Fixed** | Med → **Fixed** |
@@ -118,7 +137,7 @@
 
 ### Verdict
 
-Shell and filter chrome are mostly on-spec; the chart stack and Candidate space diverge materially from the Paper happy path. Product does not compose kit `RuntimeOverview` — it hand-wires filters + charts.
+Shell, filters, chart stack, and Candidate space match the Paper happy path. Product does not compose kit `RuntimeOverview` — it hand-wires filters + charts (including `CandidateSpaceChart`).
 
 ---
 
@@ -149,7 +168,7 @@ Shell and filter chrome are mostly on-spec; the chart stack and Candidate space 
 
 ### Verdict
 
-Chrome and IA shell match; Chat composer still exposes Endpoint/Routing mode, and the result side invents routing/execution-receipt layouts Paper omits.
+**Aligned (post-fix).** Chat composer is Model · Prompt · Run only; no Endpoint/Routing invents; MetricStrip + prose under Assistant; tool rows use status dots; `4fr+8fr` kit track. Residual visual polish (if any) is Phase 5 hybrid QA, not open High/Med IA gaps.
 
 ---
 
@@ -178,7 +197,7 @@ Chrome and IA shell match; Chat composer still exposes Endpoint/Routing mode, an
 
 ### Verdict
 
-Closest Studio page so far. Field set and panel names match Paper; main misses are page title, split raw-JSON card, and header action chrome.
+**Aligned (post-fix).** Titles (`* workspace`), nested result chrome, title-only panels, no `usePageActions`, and `4fr+8fr` track match Paper. Phase 5 hybrid QA owns remaining pixel polish.
 
 ---
 
@@ -207,7 +226,7 @@ Closest Studio page so far. Field set and panel names match Paper; main misses a
 
 ### Verdict
 
-Field IA matches Paper closely; same structural pattern as Images — page title mismatch, split secondary card, extra header actions.
+**Aligned (post-fix).** Audio workspace title, nested Speech/Voice inventory, `SpeechPlayer`, and `4fr+8fr` track match Paper. Phase 5 hybrid QA owns remaining pixel polish.
 
 ---
 
@@ -236,7 +255,7 @@ Field IA matches Paper closely; same structural pattern as Images — page title
 
 ### Verdict
 
-Strong field/IA match; same Studio pattern gaps (title, split JSON card, header actions).
+**Aligned (post-fix).** Rerank workspace title, nested ledger + contract JSON, mono scores, and `4fr+8fr` track match Paper. Phase 5 hybrid QA owns remaining pixel polish.
 
 ---
 
@@ -265,19 +284,21 @@ Strong field/IA match; same Studio pattern gaps (title, split JSON card, header 
 
 ### Verdict
 
-Composer fields match; Advanced reintroduces readiness chrome Paper omits, and splits Request template out of the result panel (same Studio pattern).
+**Aligned (post-fix).** Advanced workspace title, nested Request template, no Execution readiness strip, and `4fr+8fr` track match Paper. Phase 5 hybrid QA owns remaining pixel polish.
 
 ---
 
 ## Cross-cutting Studio notes
 
-Shared gaps across Studio pages (except Chat’s unique Endpoint/Routing / receipt invents):
+**Historical (pre-fix).** The following shared gaps were open at first audit and are now **Fixed** (see Fix status table + per-page gap rows):
 
-1. **Page titles** often use product “workflows / APIs” names instead of Paper `* workspace`.
-2. **Result secondary content** (raw JSON / voice inventory / contract / request template) is a **separate SectionCard** in code; Paper nests it inside one result panel.
-3. **`usePageActions`** injects Model list / endpoint shortcuts; Paper header is title + theme toggle only.
-4. Grid uses `360px` rail instead of strict 12-col **4+8** (384+784).
-5. **Chat** is the outlier with High severity IA invents (Endpoint, Routing mode, routing receipt, execution receipts, lifecycle banner).
+1. ~~Page titles~~ → `* workspace`
+2. ~~Result secondary content as separate SectionCard~~ → nested in one result panel
+3. ~~`usePageActions` header shortcuts~~ → theme toggle only
+4. ~~`360px` rail~~ → `4fr+8fr` kit track
+5. ~~Chat Endpoint/Routing / receipt invents~~ → Model · Prompt · Run; no receipt invents
+
+Remaining Studio work is **Phase 5 hybrid Paper visual sign-off** (`05-manual-qa.md`), not open High/Med IA.
 
 ---
 
@@ -304,7 +325,7 @@ Shared gaps across Studio pages (except Chat’s unique Endpoint/Routing / recei
 
 ### Verdict
 
-Content IA matches Paper well; shell wiring incorrectly attaches Local SegmentedControl to the Choose hub.
+**Aligned (post-fix).** Choose hub omits Local SegmentedControl; `6fr+6fr` option cards; no setup banner. Phase 5 hybrid QA owns remaining pixel polish.
 
 ---
 
@@ -318,7 +339,7 @@ Content IA matches Paper well; shell wiring incorrectly attaches Local Segmented
 - Title **Local endpoints**; SegmentedControl Local nav (Endpoints active)
 - Stacked SectionCards: **Endpoint inventory** + **Add peer endpoint**
 - Field labels / CTA: Endpoint URL · Auth token · **Add endpoint**
-- Status via Badge/StatusPill (`healthy` / `unknown`)
+- Status via kit `Badge` (`healthy` / `unknown`)
 
 ### Gaps
 
@@ -330,7 +351,7 @@ Content IA matches Paper well; shell wiring incorrectly attaches Local Segmented
 
 ### Verdict
 
-IA/titles match; inventory must become a Table to match Paper/DS.
+IA/titles match; Endpoint inventory is a Table per Paper/DS.
 
 ---
 
@@ -351,7 +372,7 @@ IA/titles match; inventory must become a Table to match Paper/DS.
 | ID | Gap | Paper | Implementation | Severity |
 |----|-----|--------|----------------|----------|
 | LP-1 | Register helper copy | Panel description + roles helper (matches Paper tree) | **Aligned** | Low → **Aligned** |
-| LP-2 | Empty / blocked states | Happy-path specimen assumes peers exist | Extra “Open endpoints” gated empty states (acceptable product) | Low |
+| LP-2 | Empty / blocked states | Happy-path specimen assumes peers exist | **Fixed** — register form always visible; Open endpoints helper when gated | Low → **Fixed** |
 
 ### Verdict
 
@@ -393,7 +414,7 @@ IA matches Paper after removing setup banner and extra helper copy.
 - Host policy: Policy configuration (TTL · Max concurrency · Auto-unload · Save/Reset/Open models) + Raw policy
 - Swap: Event ledger with timestamp · reason · model transition rows
 - Logs: Structured local log history table + Raw log streams
-- Matrix: explanatory stub (Redirect target · Shared inventory) — matches Paper; DS allows stub
+- Matrix: stub `<Navigate>` → `/app/local/llama-swap/models?view=grid` — no invented capability matrix (R5 / DS)
 
 ### Gaps (pre-fix)
 
@@ -450,11 +471,11 @@ Remote Providers now matches CardStack collapsed-roles IA and Choose field set.
 
 | ID | Gap | Paper | Implementation | Severity |
 |----|-----|--------|----------------|----------|
-| MM-5 | Selected meta fields | Source/Status/Endpoints/Tool/Cost/Benchmark labeled rows | **Fixed** — `buildSelectedModelMetaPanel` + left-column Selected meta under inventory list | Low → **Fixed** |
+| MM-5 | Selected meta fields | Source/Status/Endpoints/Tool/Cost/Benchmark labeled rows | **Fixed** — denser panel incl. Latency p50/p95 + Difficulty mix | Low → **Fixed** |
 
 ### Verdict
 
-Inventory list-select + roles→tasks binder match Paper; remaining polish is selected-meta density.
+Inventory list-select + roles→tasks binder + selected-meta density match Paper.
 
 ---
 
@@ -468,11 +489,22 @@ Inventory list-select + roles→tasks binder match Paper; remaining polish is se
 | ID | Gap | Severity | Status |
 |----|-----|----------|--------|
 | MR-1 | MetricStrip fact strip on Roles | Med | **Fixed** |
+| MR-2 | Role catalog list-select IA | Med | **Fixed** |
+| MR-3 | Create/Edit primary fields always open (Paper) | Med | **Fixed** |
+| MR-4 | Edit Advanced disclosure (Paper Edit has none) | Low | **Fixed** |
+| MR-5 | Edit summary / allowlist copy + Kind select + capability pill chrome | Low | **Fixed** — Paper `tool policy … · supported tasks …`; `Role id · N tasks`; Kind Select; mono outline capability Badges |
 | MB-1 | MetricStrip fact strip on Benchmark | Med | **Fixed** |
+| MB-2 | Scores B dense table | Med | **Fixed** |
+| MB-3 | Run C subjects table | High | **Fixed** |
+| MB-4 | Fixture empty-state previews | Med | **Fixed** |
+| MB-5 | Per-model routing-detail disclosures under Scores | Low | **Fixed** |
+| MB-6 | Taxonomy score StatusPills | Low | **Fixed** — mono tabular + listRow |
 
 ### Verdict
 
-Happy-path pages no longer lead with invented summary strips; Run/Scores/Taxonomy stack remains.
+Create: primary fields always open + Advanced for extras. Edit: Paper primary-only (no Advanced; routing JSON stays on Edit primary — MR-4). Scores = dense table only. Taxonomy scores = mono tabular list rows (Pattern A). Run/History stack remains.
+
+**Post-audit note (2026-07-31):** Later Med claims (nest Edit routing under Advanced; remove capability pills; taxonomy success pills) were **rejected vs Paper SoT** (`17H3-0` Edit / task cards; `1CL7-0` Taxonomy A). Capability pills and Edit routing are intentional in Paper.
 
 ---
 

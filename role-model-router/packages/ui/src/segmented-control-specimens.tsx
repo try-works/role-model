@@ -22,16 +22,17 @@ export function SegmentedControlSpecimensDemo() {
   return (
     <div className="flex flex-col gap-8 p-6">
       <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-medium">SegmentedControl · Studio page nav</h2>
+        <h2 className="text-sm font-semibold">SegmentedControl · Studio page nav</h2>
         <SegmentedControl
           value={studio}
           options={STUDIO_NAV}
+          size="md"
           onChange={setStudio}
           aria-label="Studio page"
         />
       </section>
       <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-medium">SegmentedControl · short options</h2>
+        <h2 className="text-sm font-semibold">SegmentedControl · filter / time range</h2>
         <SegmentedControl
           value={range}
           options={[
@@ -39,6 +40,7 @@ export function SegmentedControlSpecimensDemo() {
             { value: "week", label: "Week" },
             { value: "month", label: "Month" },
           ]}
+          size="md"
           onChange={setRange}
           aria-label="Range"
         />

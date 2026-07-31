@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import type * as React from "react";
 
 import { cn } from "./lib/utils";
 
@@ -18,14 +18,7 @@ export type SubPageHeaderBarProps = {
 
 function SunIcon({ className }: { className?: string }) {
   return (
-    <svg
-      aria-hidden
-      viewBox="0 0 24 24"
-      fill="none"
-      className={className}
-      width={16}
-      height={16}
-    >
+    <svg aria-hidden viewBox="0 0 24 24" fill="none" className={className} width={16} height={16}>
       <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5" />
       <path
         d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
@@ -39,14 +32,7 @@ function SunIcon({ className }: { className?: string }) {
 
 function MoonIcon({ className }: { className?: string }) {
   return (
-    <svg
-      aria-hidden
-      viewBox="0 0 24 24"
-      fill="none"
-      className={className}
-      width={16}
-      height={16}
-    >
+    <svg aria-hidden viewBox="0 0 24 24" fill="none" className={className} width={16} height={16}>
       <path
         d="M21 14.3A9 9 0 1 1 9.7 3 7 7 0 0 0 21 14.3z"
         stroke="currentColor"
@@ -75,11 +61,11 @@ function SubPageHeaderBar({
     <header
       data-slot="role-model-sub-page-header"
       className={cn(
-        "flex h-12 shrink-0 items-center justify-between gap-3 border-b border-border px-4",
+        "flex h-12 shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-4",
         className,
       )}
     >
-      <h1 className="min-w-0 truncate font-sans text-sm leading-5 font-medium tracking-tight text-foreground">
+      <h1 className="min-w-0 truncate font-sans text-sm leading-[18px] font-medium tracking-tight text-foreground">
         {title}
       </h1>
       <div className="flex shrink-0 items-center gap-2">
@@ -123,12 +109,7 @@ function PageContent({
       className={cn("flex min-h-0 flex-1 flex-col overflow-auto", className)}
       {...props}
     >
-      <div
-        className={cn(
-          "mx-auto flex w-full flex-col gap-6 px-4 py-5",
-          maxWidthClassName,
-        )}
-      >
+      <div className={cn("mx-auto flex w-full flex-col gap-6 px-4 py-5", maxWidthClassName)}>
         {children}
       </div>
     </main>
@@ -171,7 +152,7 @@ function PageShell({
       className={cn("flex min-h-screen w-full bg-background text-foreground", className)}
     >
       {sidebar}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-background">
         <SubPageHeaderBar
           title={title}
           className={headerClassName}

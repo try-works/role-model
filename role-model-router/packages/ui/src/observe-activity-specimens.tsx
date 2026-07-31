@@ -69,8 +69,7 @@ export const OBSERVE_ACTIVITY_CAPTURES: Record<string, ObserveActivityCapture> =
 export function ObserveActivitySpecimensDemo() {
   const [selectedId, setSelectedId] = React.useState<string>("act-1");
   const entry = OBSERVE_ACTIVITY_ENTRIES.find((e) => e.id === selectedId);
-  const capture =
-    entry?.hasCapture ? (OBSERVE_ACTIVITY_CAPTURES[selectedId] ?? null) : null;
+  const capture = entry?.hasCapture ? (OBSERVE_ACTIVITY_CAPTURES[selectedId] ?? null) : null;
 
   return (
     <ObserveActivity

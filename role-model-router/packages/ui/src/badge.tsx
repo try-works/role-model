@@ -1,4 +1,4 @@
-import * as React from "react";
+import type * as React from "react";
 
 import { cn } from "./lib/utils";
 
@@ -15,18 +15,24 @@ export type BadgeProps = React.ComponentProps<"span"> & {
   readonly tone?: BadgeTone;
 };
 
+/**
+ * Paper RM3 Badge (System Readiness / Connections):
+ * height 22 · padding-inline 8 · rounded-full · mono 11/14 regular.
+ *
+ * Soft tones = muted fill + semantic ink (healthy = chart-cache).
+ * Accent = solid primary fill + contrast ink (e.g. "selected").
+ */
+const BASE_CLASS =
+  "inline-flex h-[22px] shrink-0 items-center rounded-full px-2 font-mono text-[11px] font-normal leading-[14px] tracking-normal";
+
 const TONE_CLASS: Record<BadgeTone, string> = {
-  accent: "border-transparent bg-[var(--rm-pill-accent-bg)] text-[var(--rm-pill-accent-ink)]",
-  info: "border-transparent bg-[var(--rm-pill-info-bg)] text-[var(--rm-pill-info-ink)]",
-  advisory:
-    "border-transparent bg-[var(--rm-pill-advisory-bg)] text-[var(--rm-pill-advisory-ink)]",
-  warning:
-    "border-transparent bg-[var(--rm-pill-warning-bg)] text-[var(--rm-pill-warning-ink)]",
-  error: "border-transparent bg-[var(--rm-pill-error-bg)] text-[var(--rm-pill-error-ink)]",
-  success:
-    "border-transparent bg-[var(--rm-pill-success-bg)] text-[var(--rm-pill-success-ink)]",
-  neutral:
-    "border-transparent bg-[var(--rm-pill-neutral-bg)] text-[var(--rm-pill-neutral-ink)]",
+  accent: "bg-[var(--rm-pill-accent-bg)] !text-[var(--rm-pill-accent-ink)]",
+  neutral: "bg-[var(--rm-pill-soft-bg)] text-[var(--rm-pill-neutral-ink)]",
+  success: "bg-[var(--rm-pill-soft-bg)] text-[var(--rm-pill-success-ink)]",
+  warning: "bg-[var(--rm-pill-soft-bg)] text-[var(--rm-pill-warning-ink)]",
+  error: "bg-[var(--rm-pill-soft-bg)] text-[var(--rm-pill-error-ink)]",
+  info: "bg-[var(--rm-pill-soft-bg)] text-[var(--rm-pill-info-ink)]",
+  advisory: "bg-[var(--rm-pill-soft-bg)] text-[var(--rm-pill-advisory-ink)]",
 };
 
 /**
@@ -38,11 +44,7 @@ function Badge({ tone = "neutral", className, ...props }: BadgeProps) {
     <span
       data-slot="badge"
       data-tone={tone}
-      className={cn(
-        "inline-flex items-center rounded-full border px-2.5 py-1 font-sans text-[11px] leading-4 font-medium tracking-[0.01em]",
-        TONE_CLASS[tone],
-        className,
-      )}
+      className={cn(BASE_CLASS, TONE_CLASS[tone], className)}
       {...props}
     />
   );

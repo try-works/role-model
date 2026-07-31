@@ -59,10 +59,7 @@ function totalValue(segments: readonly CompositionSegment[]): number {
   return segments.reduce((sum, s) => sum + Math.max(0, s.value), 0);
 }
 
-function defaultRanks(
-  segments: readonly CompositionSegment[],
-  topN: number,
-): CompositionRankRow[] {
+function defaultRanks(segments: readonly CompositionSegment[], topN: number): CompositionRankRow[] {
   const flat: CompositionRankRow[] = [];
   for (const [i, seg] of segments.entries()) {
     if (seg.children && seg.children.length > 0) {
@@ -97,12 +94,7 @@ function CompositionStrip({
 }) {
   const total = totalValue(segments.map((s) => ({ ...s, label: s.key, key: s.key })));
   if (total <= 0) {
-    return (
-      <div
-        className="w-full bg-muted"
-        style={{ height, borderRadius: radius }}
-      />
-    );
+    return <div className="w-full bg-muted" style={{ height, borderRadius: radius }} />;
   }
 
   return (
@@ -149,8 +141,7 @@ function CompositionChart({
     label: seg.label,
   }));
 
-  const hasChildren =
-    showChildren && segments.some((s) => (s.children?.length ?? 0) > 0);
+  const hasChildren = showChildren && segments.some((s) => (s.children?.length ?? 0) > 0);
 
   const childSegs = hasChildren
     ? segments.flatMap((seg, i) => {
@@ -193,19 +184,13 @@ function CompositionChart({
       <ChartCardPlot className="flex flex-col gap-3">
         <div className="flex w-full flex-col gap-0.5">
           <CompositionStrip segments={parentSegs} height={22} radius={5} />
-          {hasChildren ? (
-            <CompositionStrip segments={childSegs} height={12} radius={3} />
-          ) : null}
+          {hasChildren ? <CompositionStrip segments={childSegs} height={12} radius={3} /> : null}
         </div>
-        {parentTotal > 0 ? (
-          <ChartCardLegend items={legendItems} className="pl-0" />
-        ) : null}
+        {parentTotal > 0 ? <ChartCardLegend items={legendItems} className="pl-0" /> : null}
         {ranks.length > 0 ? (
           <div className="flex w-full flex-col border-t border-border">
             {ranks.map((row, i) => {
-              const color =
-                row.color ??
-                resolveSeriesColor({ key: row.key, label: row.label }, i);
+              const color = row.color ?? resolveSeriesColor({ key: row.key, label: row.label }, i);
               return (
                 <div
                   key={row.key}
@@ -238,9 +223,7 @@ function CompositionChart({
             })}
           </div>
         ) : null}
-        {ranks.length === 0 && valueLabel ? (
-          <div className="sr-only">{valueLabel}</div>
-        ) : null}
+        {ranks.length === 0 && valueLabel ? <div className="sr-only">{valueLabel}</div> : null}
       </ChartCardPlot>
     </ChartCard>
   );

@@ -476,6 +476,7 @@ export interface RuntimeTelemetryRequestRecord {
   readonly conversationId?: string;
   readonly createdAtMs: number;
   readonly modelId?: string | null;
+  readonly selectedModelId?: string | null;
   readonly providerKind?: string | null;
   readonly providerFamily?: string | null;
   readonly vendorId?: string | null;
@@ -2532,7 +2533,8 @@ export async function loadPeerModel(
 ): Promise<{ success: boolean }> {
   return postJson<{ success: boolean }>(
     `/api/role-model/local/peer/models/${encodeURIComponent(modelId)}/load`,
-    roleIds !== undefined ? roleIdsToAssignmentPayload(roleIds, true) : {},
+    // Empty roleIds must stay explicit none — not default-all.
+    roleIds !== undefined ? roleIdsToAssignmentPayload(roleIds, false) : {},
     fetcher,
   );
 }
@@ -2544,7 +2546,7 @@ export async function loadLlamaSwapModel(
 ): Promise<{ success: boolean }> {
   return postJson<{ success: boolean }>(
     `/api/role-model/local/llama-swap/models/${encodeURIComponent(modelId)}/load`,
-    roleIds !== undefined ? roleIdsToAssignmentPayload(roleIds, true) : {},
+    roleIds !== undefined ? roleIdsToAssignmentPayload(roleIds, false) : {},
     fetcher,
   );
 }

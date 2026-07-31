@@ -31,11 +31,14 @@ function formatUsd(value: number): string {
   return `$${value.toFixed(2)}`;
 }
 
+const costAvoidedRoutingRamp = ramp(0.4, 0.22);
+const costAvoidedCacheRamp = ramp(0.15, 0.12);
+const costAvoidedTotalRamp = ramp(0.6, 0.32);
 export const COST_AVOIDED_DATA = HOURS.map((hour, i) => ({
   hour,
-  routingCostSavingsUsd: ramp(0.4, 0.22)[i]!,
-  cacheCostSavingsUsd: ramp(0.15, 0.12)[i]!,
-  totalAvoidedCostUsd: ramp(0.6, 0.32)[i]!,
+  routingCostSavingsUsd: costAvoidedRoutingRamp[i] ?? 0,
+  cacheCostSavingsUsd: costAvoidedCacheRamp[i] ?? 0,
+  totalAvoidedCostUsd: costAvoidedTotalRamp[i] ?? 0,
 }));
 
 export const COST_AVOIDED_SERIES: ChartSeries[] = [
@@ -56,20 +59,24 @@ export const COST_AVOIDED_SERIES: ChartSeries[] = [
   },
 ];
 
+const routingVolumeRamp = ramp(50, 40, 6);
 export const ROUTING_VOLUME_DATA = [0, 4, 8, 12, 16, 20].map((hour, i) => ({
   hour,
-  requestCount: ramp(50, 40, 6)[i]!,
+  requestCount: routingVolumeRamp[i] ?? 0,
 }));
 
 export const ROUTING_VOLUME_SERIES: ChartSeries[] = [
   { key: "requestCount", label: "requestCount", color: "var(--chart-1)" },
 ];
 
+const strategyBaselineRamp = ramp(30, 20, 6);
+const strategyCostAwareRamp = ramp(18, 14, 6);
+const strategyLatencyFirstRamp = ramp(12, 10, 6);
 export const STRATEGY_TREND_DATA = [0, 4, 8, 12, 16, 20].map((hour, i) => ({
   hour,
-  baseline: ramp(30, 20, 6)[i]!,
-  "cost-aware": ramp(18, 14, 6)[i]!,
-  "latency-first": ramp(12, 10, 6)[i]!,
+  baseline: strategyBaselineRamp[i] ?? 0,
+  "cost-aware": strategyCostAwareRamp[i] ?? 0,
+  "latency-first": strategyLatencyFirstRamp[i] ?? 0,
 }));
 
 export const STRATEGY_TREND_SERIES: ChartSeries[] = [

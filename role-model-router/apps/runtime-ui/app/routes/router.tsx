@@ -1,18 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 
 import {
+  Badge,
   DisclosureSection,
   EmptyState,
   ErrorState,
   LoadingState,
   SectionCard,
-  StatusPill,
 } from "../components/page-primitives";
 import {
   bodyStrongTextClassName,
+  monoEyebrowClassName,
   mutedPanelClassName,
   supportingTextClassName,
-  utilityLabelClassName,
 } from "../lib/design-system";
 import { selectOverviewRouterCandidates } from "../lib/router-candidate-labels";
 import {
@@ -167,12 +167,12 @@ export default function RouterOverviewRoute() {
           <div className="space-y-4">
             <div className="grid gap-4 xl:grid-cols-3">
               <div className={`${mutedPanelClassName} space-y-2 p-4`}>
-                <p className={utilityLabelClassName}>Current active alias</p>
+                <p className={monoEyebrowClassName}>Current active alias</p>
                 <div className="flex flex-wrap items-center gap-2">
                   <p className={`${bodyStrongTextClassName} break-words text-[var(--rm-fg)]`}>
                     {activeAliasLabel}
                   </p>
-                  {activeAliasRow ? <StatusPill tone="accent">active</StatusPill> : null}
+                  {activeAliasRow ? <Badge tone="accent">active</Badge> : null}
                 </div>
                 <p className={supportingTextClassName}>
                   {activeAliasRow
@@ -181,13 +181,11 @@ export default function RouterOverviewRoute() {
                 </p>
               </div>
               <div className={`${mutedPanelClassName} space-y-2 p-4`}>
-                <p className={utilityLabelClassName}>Alias readiness</p>
+                <p className={monoEyebrowClassName}>Alias readiness</p>
                 <div className="mt-1 flex flex-wrap gap-2">
-                  <StatusPill tone="success">{aliasReadinessSummary.ready} ready</StatusPill>
-                  <StatusPill tone="warning">{aliasReadinessSummary.degraded} degraded</StatusPill>
-                  <StatusPill tone="neutral">
-                    {aliasReadinessSummary.unavailable} unavailable
-                  </StatusPill>
+                  <Badge tone="success">{aliasReadinessSummary.ready} ready</Badge>
+                  <Badge tone="warning">{aliasReadinessSummary.degraded} degraded</Badge>
+                  <Badge tone="neutral">{aliasReadinessSummary.unavailable} unavailable</Badge>
                 </div>
                 <p className={supportingTextClassName}>
                   Readiness is derived from matching endpoint availability, active state, and health
@@ -195,7 +193,7 @@ export default function RouterOverviewRoute() {
                 </p>
               </div>
               <div className={`${mutedPanelClassName} space-y-2 p-4`}>
-                <p className={utilityLabelClassName}>Alias modes</p>
+                <p className={monoEyebrowClassName}>Alias modes</p>
                 <p className={`${bodyStrongTextClassName} break-words text-[var(--rm-fg)]`}>
                   {aliasModeSummaryLabel}
                 </p>
@@ -208,13 +206,17 @@ export default function RouterOverviewRoute() {
             <DisclosureSection summary={`Browse all alias pools (${configuredAliasRows.length})`}>
               <div className="overflow-x-auto">
                 <table className="min-w-full text-left text-sm">
-                  <thead className="text-[var(--rm-muted)]">
+                  <thead>
                     <tr>
-                      <th className="pb-3 font-semibold">Alias</th>
-                      <th className="pb-3 font-semibold">Mode</th>
-                      <th className="pb-3 font-semibold">Effective models</th>
-                      <th className="pb-3 font-semibold">Candidate expansion</th>
-                      <th className="pb-3 font-semibold">Readiness</th>
+                      <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Alias</th>
+                      <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Mode</th>
+                      <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>
+                        Effective models
+                      </th>
+                      <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>
+                        Candidate expansion
+                      </th>
+                      <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Readiness</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -224,7 +226,7 @@ export default function RouterOverviewRoute() {
                           <div className="flex flex-wrap items-center gap-2">
                             <span className={bodyStrongTextClassName}>{row.aliasId}</span>
                             {activeAliasRow?.aliasId === row.aliasId ? (
-                              <StatusPill tone="accent">active</StatusPill>
+                              <Badge tone="accent">active</Badge>
                             ) : null}
                           </div>
                         </td>
@@ -237,7 +239,7 @@ export default function RouterOverviewRoute() {
                         </td>
                         <td className="py-3">
                           <div className="space-y-1">
-                            <StatusPill
+                            <Badge
                               tone={
                                 row.readinessLabel === "ready"
                                   ? "success"
@@ -247,7 +249,7 @@ export default function RouterOverviewRoute() {
                               }
                             >
                               {row.readinessLabel}
-                            </StatusPill>
+                            </Badge>
                             {"driftWarnings" in row && row.driftWarnings.length > 0 ? (
                               <div className="text-xs text-[var(--rm-muted)]">
                                 {row.driftWarnings.length} drift warning
@@ -281,13 +283,13 @@ export default function RouterOverviewRoute() {
         ) : (
           <div className="space-y-3 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="text-[var(--rm-muted)]">
+              <thead>
                 <tr>
-                  <th className="pb-3 font-semibold">Model</th>
-                  <th className="pb-3 font-semibold">Endpoint</th>
-                  <th className="pb-3 font-semibold">Source</th>
-                  <th className="pb-3 font-semibold">Health</th>
-                  <th className="pb-3 font-semibold">Routing</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Model</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Endpoint</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Source</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Health</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Routing</th>
                 </tr>
               </thead>
               <tbody>
@@ -299,7 +301,7 @@ export default function RouterOverviewRoute() {
                     </td>
                     <td className="py-3 text-[var(--rm-secondary)]">{candidate.sourceType}</td>
                     <td className="py-3">
-                      <StatusPill
+                      <Badge
                         tone={
                           candidate.healthStatus === "healthy"
                             ? "success"
@@ -311,19 +313,17 @@ export default function RouterOverviewRoute() {
                         }
                       >
                         {candidate.healthStatus ?? candidate.status ?? "unknown"}
-                      </StatusPill>
+                      </Badge>
                     </td>
                     <td className="py-3">
                       <div className="flex flex-wrap gap-2">
                         {candidate.controllerEligible ? (
-                          <StatusPill tone="accent">controller</StatusPill>
+                          <Badge tone="accent">controller</Badge>
                         ) : null}
-                        {candidate.preferred ? (
-                          <StatusPill tone="accent">preferred</StatusPill>
-                        ) : null}
-                        {candidate.ignored ? <StatusPill tone="neutral">ignored</StatusPill> : null}
+                        {candidate.preferred ? <Badge tone="accent">preferred</Badge> : null}
+                        {candidate.ignored ? <Badge tone="neutral">ignored</Badge> : null}
                         {candidate.executionModeEligible === false ? (
-                          <StatusPill tone="neutral">excluded by mode</StatusPill>
+                          <Badge tone="neutral">excluded by mode</Badge>
                         ) : null}
                         {!candidate.controllerEligible &&
                         !candidate.preferred &&

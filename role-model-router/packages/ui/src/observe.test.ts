@@ -5,14 +5,14 @@ import {
   OBSERVE_ACTIVITY_ENTRIES,
   OBSERVE_ACTIVITY_METRICS,
 } from "./observe-activity-specimens";
-import {
-  OBSERVE_PAGE_OPTIONS,
-  groupObserveChartRows,
-  observeNavItems,
-  type ObserveChartBlock,
-} from "./observe-shared";
 import { buildObserveRequestsCharts } from "./observe-requests-specimens";
 import { buildObserveRoutingCharts } from "./observe-routing-specimens";
+import {
+  OBSERVE_PAGE_OPTIONS,
+  type ObserveChartBlock,
+  groupObserveChartRows,
+  observeNavItems,
+} from "./observe-shared";
 
 describe("observe activity", () => {
   it("keeps Activity in page nav with Observe sidebar active", () => {
@@ -22,9 +22,7 @@ describe("observe activity", () => {
       "activity",
       "logs",
     ]);
-    expect(observeNavItems("activity").find((item) => item.id === "observe")?.active).toBe(
-      true,
-    );
+    expect(observeNavItems("activity").find((item) => item.id === "observe")?.active).toBe(true);
   });
 
   it("exposes panel MetricStrip facts and 8+4 ledger/capture fixtures", () => {
@@ -44,9 +42,9 @@ describe("observe activity", () => {
 });
 
 describe("observe chart stacks", () => {
-  it("builds ten requests charts with expected kinds and spans", () => {
+  it("builds nine requests charts with expected kinds and spans", () => {
     const charts = buildObserveRequestsCharts();
-    expect(charts).toHaveLength(10);
+    expect(charts).toHaveLength(9);
     expect(charts.map((c) => c.kind)).toEqual([
       "line",
       "composition",
@@ -55,7 +53,6 @@ describe("observe chart stacks", () => {
       "line",
       "line",
       "line",
-      "bar",
       "composition",
       "ranking",
     ]);
@@ -68,7 +65,7 @@ describe("observe chart stacks", () => {
       "anthropic.sonnet",
     ]);
     // Capability leaders legend subject = capabilities, not roles
-    expect(charts[8]?.segments?.map((s) => s.label)).toEqual([
+    expect(charts[7]?.segments?.map((s) => s.label)).toEqual([
       "code.edit",
       "chat.general",
       "rag.retrieve",
@@ -79,12 +76,7 @@ describe("observe chart stacks", () => {
       "vision",
     ]);
     // Taxonomy demand legend subject = groups
-    expect(charts[1]?.segments?.map((s) => s.label)).toEqual([
-      "coding",
-      "research",
-      "ops",
-      "chat",
-    ]);
+    expect(charts[1]?.segments?.map((s) => s.label)).toEqual(["coding", "research", "ops", "chat"]);
   });
 
   it("builds nine routing charts with ranking for flat mixes", () => {

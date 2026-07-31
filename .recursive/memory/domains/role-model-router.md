@@ -4,7 +4,7 @@ Status: CURRENT
 Scope: role-model-router
 Owns-Paths: track-b-runtime.ts, 02-to-be-plan.md, node --test tests/track-b/tb10.test.mjs, extensions.tsx, role-model-router/apps/runtime-host-bridge/test/track-b-runtime-composition.test.ts, role-model-router/apps/runtime-ui/app/lib/runtime-api.test.ts, role-model-router/apps/runtime-host-bridge/test/track-b-operations-api.test.ts, track-b-operations.ts, role-model/.worktrees/81-kw-activation-browser-recommendation-evidence/role-model-router/apps/runtime-ui/app/routes/extensions.tsx, role-model-router/apps/runtime-ui/e2e/track-b-operations.spec.ts
 Watch-Paths:
-Source-Runs: 81-kw-activation-browser-recommendation-evidence, 79-extension-control-and-recommendations-qa
+Source-Runs: 81-kw-activation-browser-recommendation-evidence, 79-extension-control-and-recommendations-qa, 86-runtime-ui-rm3-design-system-frontend
 Validated-At-Commit:
 Last-Validated: 2026-07-24T23:06:57.809909+00:00
 Tags: reasoningbank, training-free-grpo
@@ -131,3 +131,6 @@ status: active
 created_at: "2026-07-24T23:06:57.809909+00:00"
 ```
 
+## RM3 runtime-ui styling authority (run 86)
+
+Run `86-runtime-ui-rm3-design-system-frontend` closed out the RM3 migration. Live styling authority for router runtime-ui is RM3 Paper pages `4-0`/`5-0`/`6-0`/`7-0` plus repo `role-model-router/apps/runtime-ui/DESIGN_SYSTEM.md` and `@role-model/ui` at `role-model-router/packages/ui`. Run `60-runtime-ui-paper-linear-review-alignment` Linear/Paper-Linear baseline is historical only. Warning pill chrome ink must not use amber (charts keep amber — see `skills/issues/rm3-pill-no-amber.md`).

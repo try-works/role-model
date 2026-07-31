@@ -45,11 +45,13 @@ describe("ExtensionsRoute", () => {
     expect(routeSource).toContain("production prompt injection");
     expect(routeSource).not.toContain("Production prompt injection remains locked");
     expect(routeSource).toContain("requires ceremony ON plus gated production");
-    expect(routeSource).toContain("cleared on soft OFF");
+    expect(routeSource).toMatch(/cleared\s+on soft OFF/);
     expect(routeSource).not.toContain("do not expose a public enable/disable mutation API");
     expect(routeSource).toContain("mutateExtension");
     expect(routeSource).toContain("dismissRecommendation");
-    expect(routeSource).toContain("SelectField");
+    expect(routeSource).toContain("FilterSelect");
+    expect(routeSource).toContain("hideLabel");
+    expect(routeSource).not.toContain("SelectField");
     expect(routeSource).toContain("Set mode");
     expect(routeSource).toContain("compactFieldButtonClassName");
     expect(routeSource).toContain("compactFieldButtonEmphasisClassName");

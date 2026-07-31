@@ -2,6 +2,8 @@
 
 import * as React from "react";
 
+import type { CompositionSegment } from "./chart-composition";
+import type { RankingChartRow } from "./chart-ranking";
 import {
   CACHE_DATA,
   CACHE_SERIES,
@@ -10,12 +12,10 @@ import {
   TOKEN_USAGE_DATA,
   TOKEN_USAGE_SERIES,
 } from "./chart-specimens";
-import type { CompositionSegment } from "./chart-composition";
-import type { RankingChartRow } from "./chart-ranking";
 import type { ChartSeries } from "./chart-time-series";
 import {
-  ObserveRequests,
   type ObserveRequestLedgerRow,
+  ObserveRequests,
   type ObserveRequestsFiltersState,
 } from "./observe-requests";
 import type { ObserveChartBlock } from "./observe-shared";
@@ -49,11 +49,14 @@ function formatUsd(value: number): string {
 }
 
 /** Request volume broken down by endpoint/model-id (legend keys = those ids). */
+const requestVolumeCliRamp = ramp(28, 18);
+const requestVolumeOpenAiRamp = ramp(22, 14);
+const requestVolumeAnthropicRamp = ramp(14, 10);
 export const REQUEST_VOLUME_DATA = HOURS.map((hour, i) => ({
   hour,
-  cli_local_coder: ramp(28, 18)[i]!,
-  openai_gpt_5_4: ramp(22, 14)[i]!,
-  anthropic_sonnet: ramp(14, 10)[i]!,
+  cli_local_coder: requestVolumeCliRamp[i] ?? 0,
+  openai_gpt_5_4: requestVolumeOpenAiRamp[i] ?? 0,
+  anthropic_sonnet: requestVolumeAnthropicRamp[i] ?? 0,
 }));
 
 export const REQUEST_VOLUME_SERIES: ChartSeries[] = [
@@ -128,26 +131,20 @@ export const TASK_SUCCESS_SERIES: ChartSeries[] = [
   { key: "failureCount", label: "failureCount", color: "var(--chart-error)" },
 ];
 
+const effectiveCostActualRamp = ramp(0.9, 0.4);
+const effectiveCostEstimatedRamp = ramp(1.1, 0.35);
+const effectiveCostEffectiveRamp = ramp(0.85, 0.38);
 export const EFFECTIVE_COST_DATA = HOURS.map((hour, i) => ({
   hour,
-  actualCostUsd: ramp(0.9, 0.4)[i]!,
-  estimatedCostUsd: ramp(1.1, 0.35)[i]!,
-  effectiveCostUsd: ramp(0.85, 0.38)[i]!,
+  actualCostUsd: effectiveCostActualRamp[i] ?? 0,
+  estimatedCostUsd: effectiveCostEstimatedRamp[i] ?? 0,
+  effectiveCostUsd: effectiveCostEffectiveRamp[i] ?? 0,
 }));
 
 export const EFFECTIVE_COST_SERIES: ChartSeries[] = [
   { key: "actualCostUsd", label: "actualCostUsd", color: "var(--chart-cost)" },
   { key: "estimatedCostUsd", label: "estimatedCostUsd", color: "var(--chart-5)" },
   { key: "effectiveCostUsd", label: "effectiveCostUsd", color: "var(--chart-6)" },
-];
-
-export const FAILURE_TREND_DATA = BUCKETS.map((hour, i) => ({
-  hour,
-  failureCount: ramp(6, 5, BUCKETS.length)[i]!,
-}));
-
-export const FAILURE_TREND_SERIES: ChartSeries[] = [
-  { key: "failureCount", label: "failureCount", color: "var(--chart-error)" },
 ];
 
 /** Flat capability mix — legend must list capabilities, not roles. */
@@ -290,6 +287,17 @@ export function buildObserveRequestsCharts(): ObserveChartBlock[] {
       valueFormatter: formatK,
     },
     {
+      title: "Cache efficiency trend",
+      description: "Cache-hit token volume and cache-hit rate for the filtered slice.",
+      kind: "line",
+      span: 12,
+      data: CACHE_DATA,
+      series: CACHE_SERIES,
+      leftTickFormatter: formatK,
+      rightTickFormatter: formatPct,
+      valueFormatter: formatK,
+    },
+    {
       title: "Effective cost over time",
       description: "Stored per-request cost rolled up through the selected historical slice.",
       kind: "line",
@@ -310,30 +318,10 @@ export function buildObserveRequestsCharts(): ObserveChartBlock[] {
       valueFormatter: formatMs,
     },
     {
-      title: "Cache efficiency trend",
-      description: "Cache-hit token volume and cache-hit rate for the filtered slice.",
-      kind: "line",
-      span: 6,
-      data: CACHE_DATA,
-      series: CACHE_SERIES,
-      leftTickFormatter: formatK,
-      rightTickFormatter: formatPct,
-      valueFormatter: formatK,
-    },
-    {
-      title: "Failure trend",
-      description: "Failed request volume across the filtered slice.",
-      kind: "bar",
-      span: 6,
-      data: FAILURE_TREND_DATA,
-      series: FAILURE_TREND_SERIES,
-      leftTickFormatter: formatK,
-    },
-    {
       title: "Capability leaders",
       description: "Rank the most active taxonomy capabilities in the selected window.",
       kind: "composition",
-      span: 6,
+      span: 12,
       segments: CAPABILITY_LEADERS_SEGMENTS,
       valueLabel: "requestCount",
       valueFormatter: formatK,
@@ -346,7 +334,6 @@ export function buildObserveRequestsCharts(): ObserveChartBlock[] {
       rows: RANKED_COMPARISON_ROWS,
       valueLabel: "averageLatencyMs",
       valueFormatter: formatMs,
-      categoryWidth: 160,
     },
   ];
 }

@@ -1,4 +1,4 @@
-import { MetricStrip, type MetricItem } from "@role-model/ui";
+import { type MetricItem, MetricStrip } from "@role-model/ui";
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -12,19 +12,15 @@ import {
 import {
   bodyTextClassName,
   fieldClassName,
-  metaTextClassName,
-  primaryButtonClassName,
+  fieldLabelClassName,
+  monoEyebrowClassName,
+  primaryButtonBlockClassName,
   supportingTextClassName,
-  utilityLabelClassName,
 } from "../lib/design-system";
-import {
-  type RuntimeSnapshot,
-  fetchRuntimeModels,
-  submitWorkbenchChat,
-} from "../lib/runtime-api";
+import { type RuntimeSnapshot, fetchRuntimeModels, submitWorkbenchChat } from "../lib/runtime-api";
 import { buildWorkbenchModelOptions, summarizeWorkbenchResult } from "../lib/view-models";
 
-const formFieldLabelClassName = utilityLabelClassName;
+const formFieldLabelClassName = fieldLabelClassName;
 
 function buildChatUsageMetrics(
   usageRows: Array<{ label: string; value: string }>,
@@ -133,7 +129,7 @@ export default function WorkbenchRoute() {
   const hasModels = modelOptions.length > 0;
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
+    <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
       <SectionCard title="Request">
         {hasModels ? (
           <form className="space-y-4" onSubmit={onSubmit}>
@@ -144,7 +140,7 @@ export default function WorkbenchRoute() {
                 </option>
               ))}
             </SelectField>
-            <label className="grid gap-2">
+            <label className="grid gap-1.5">
               <span className={formFieldLabelClassName}>Prompt</span>
               <textarea
                 className={`${fieldClassName} min-h-40`}
@@ -153,7 +149,7 @@ export default function WorkbenchRoute() {
               />
             </label>
             <button
-              className={primaryButtonClassName}
+              className={primaryButtonBlockClassName}
               disabled={submitting || model.trim().length === 0}
               type="submit"
             >
@@ -173,7 +169,7 @@ export default function WorkbenchRoute() {
         ) : (
           <div className="space-y-4">
             <div className="space-y-3">
-              <p className={metaTextClassName}>Assistant</p>
+              <p className={monoEyebrowClassName}>Assistant</p>
               {usageMetrics.length > 0 ? (
                 <MetricStrip aria-label="Usage metrics" items={usageMetrics} variant="inline" />
               ) : null}
@@ -183,9 +179,11 @@ export default function WorkbenchRoute() {
             </div>
 
             <div className="space-y-3">
-              <p className={metaTextClassName}>Tool calls</p>
+              <p className={monoEyebrowClassName}>Tool calls</p>
               {resultSummary.toolCalls.length === 0 ? (
-                <p className={supportingTextClassName}>No tool calls were surfaced for this response.</p>
+                <p className={supportingTextClassName}>
+                  No tool calls were surfaced for this response.
+                </p>
               ) : (
                 <div className="space-y-1">
                   {resultSummary.toolCalls.map((toolCall, index) => {
@@ -226,7 +224,7 @@ export default function WorkbenchRoute() {
             </div>
 
             <div className="space-y-2">
-              <p className={metaTextClassName}>Raw response</p>
+              <p className={monoEyebrowClassName}>Raw response</p>
               <CodeBlock className="min-h-72">{resultSummary.rawPayload}</CodeBlock>
             </div>
           </div>

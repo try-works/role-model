@@ -2,20 +2,21 @@ import { MetricStrip } from "@role-model/ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
+  Badge,
   EmptyState,
   ErrorState,
   LoadingState,
   SectionCard,
-  StatusPill,
 } from "../components/page-primitives";
 import {
   compactTitleClassName,
   fieldClassName,
+  fieldLabelClassName,
+  monoEyebrowClassName,
   mutedPanelClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
   supportingTextClassName,
-  utilityLabelClassName,
 } from "../lib/design-system";
 import {
   type RuntimeStorageRetentionSummary,
@@ -27,16 +28,46 @@ import {
   updateRetentionPolicy,
 } from "../lib/runtime-api";
 
+/** 1 GB = 10⁹ bytes. UI edits GB; API still stores maxBytes. */
+export const BYTES_PER_GB = 1_000_000_000;
+export const DEFAULT_MAX_GB = "1";
+
+export function bytesToGbInput(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes < 0) {
+    return DEFAULT_MAX_GB;
+  }
+  const gb = bytes / BYTES_PER_GB;
+  if (Number.isInteger(gb)) {
+    return String(gb);
+  }
+  return String(Number(gb.toFixed(6)));
+}
+
+export function gbInputToBytes(value: string): number | null {
+  const gb = Number(value);
+  if (!Number.isFinite(gb) || gb < 0) {
+    return null;
+  }
+  return Math.round(gb * BYTES_PER_GB);
+}
+
 export function StorageRetentionRouteView() {
   const [summary, setSummary] = useState<RuntimeStorageRetentionSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [maxBytes, setMaxBytes] = useState("104857600");
+  const [maxGb, setMaxGb] = useState(DEFAULT_MAX_GB);
   const [maxAgeDays, setMaxAgeDays] = useState("30");
   const load = useCallback(
     () =>
       fetchStorageRetention()
-        .then(setSummary)
+        .then((next) => {
+          setSummary(next);
+          const policy = next.policies[0];
+          if (policy) {
+            setMaxGb(bytesToGbInput(policy.maxBytes));
+            setMaxAgeDays(String(policy.maxAgeDays));
+          }
+        })
         .catch((value: unknown) => setError(message(value))),
     [],
   );
@@ -48,7 +79,13 @@ export function StorageRetentionRouteView() {
     setBusy(true);
     setError(null);
     try {
-      setSummary(await operation());
+      const next = await operation();
+      setSummary(next);
+      const policy = next.policies[0];
+      if (policy) {
+        setMaxGb(bytesToGbInput(policy.maxBytes));
+        setMaxAgeDays(String(policy.maxAgeDays));
+      }
     } catch (value) {
       setError(message(value));
     } finally {
@@ -94,25 +131,30 @@ export function StorageRetentionRouteView() {
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
-                <thead className="text-[var(--rm-muted)]">
+                <thead>
                   <tr>
-                    <th className="pb-3 font-semibold">Category</th>
-                    <th className="pb-3 font-semibold">Scope</th>
-                    <th className="pb-3 font-semibold">Tier</th>
-                    <th className="pb-3 font-semibold">Records</th>
-                    <th className="pb-3 font-semibold">Bytes</th>
+                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Category</th>
+                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Scope</th>
+                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Tier</th>
+                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Records</th>
+                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Bytes</th>
                   </tr>
                 </thead>
                 <tbody>
                   {summary.categories.map((row) => (
-                    <tr key={`${row.id}:${row.scope}`} className="border-t border-[var(--rm-border)]">
+                    <tr
+                      key={`${row.id}:${row.scope}`}
+                      className="border-t border-[var(--rm-border)]"
+                    >
                       <td className={`py-3 ${compactTitleClassName}`}>{row.id}</td>
                       <td className={`py-3 ${supportingTextClassName}`}>{row.scope}</td>
                       <td className="py-3">
-                        <StatusPill tone="neutral">{row.tier}</StatusPill>
+                        <Badge tone="neutral">{row.tier}</Badge>
                       </td>
                       <td className={`py-3 ${supportingTextClassName}`}>{row.count}</td>
-                      <td className={`py-3 ${supportingTextClassName}`}>{formatBytes(row.bytes)}</td>
+                      <td className={`py-3 ${supportingTextClassName}`}>
+                        {formatBytes(row.bytes)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -123,20 +165,22 @@ export function StorageRetentionRouteView() {
         <div className="space-y-4">
           <SectionCard
             title="Retention policy"
-            description="Scoped byte and age budgets. Managed policy stays authoritative."
+            description="Scoped size and age budgets. Managed policy stays authoritative."
           >
             <div className="grid gap-3">
-              <label className={utilityLabelClassName}>
-                Maximum bytes
+              <label className={fieldLabelClassName}>
+                Maximum size (GB)
                 <input
                   className={`${fieldClassName} mt-1`}
+                  inputMode="decimal"
                   min="0"
-                  onChange={(event) => setMaxBytes(event.target.value)}
+                  onChange={(event) => setMaxGb(event.target.value)}
+                  step="any"
                   type="number"
-                  value={maxBytes}
+                  value={maxGb}
                 />
               </label>
-              <label className={utilityLabelClassName}>
+              <label className={fieldLabelClassName}>
                 Maximum age (days)
                 <input
                   className={`${fieldClassName} mt-1`}
@@ -149,16 +193,21 @@ export function StorageRetentionRouteView() {
               <button
                 className={secondaryButtonClassName}
                 disabled={busy || summary?.managedPolicy}
-                onClick={() =>
+                onClick={() => {
+                  const maxBytes = gbInputToBytes(maxGb);
+                  if (maxBytes === null) {
+                    setError("Maximum size must be a non-negative number of GB.");
+                    return;
+                  }
                   void act(() =>
                     updateRetentionPolicy({
                       policyId: "runtime-custom",
                       scope: "global",
-                      maxBytes: Number(maxBytes),
+                      maxBytes,
                       maxAgeDays: Number(maxAgeDays),
                     }),
-                  )
-                }
+                  );
+                }}
                 type="button"
               >
                 Save policy
@@ -200,7 +249,7 @@ export function StorageRetentionRouteView() {
               ) : null}
             </div>
             <div className={`${mutedPanelClassName} mt-3 p-3`}>
-              <p className={utilityLabelClassName}>Background progress</p>
+              <p className={fieldLabelClassName}>Background progress</p>
               <p className={`mt-1 ${supportingTextClassName}`}>
                 {summary?.activeJob
                   ? `${summary.activeJob.status} · ${summary.activeJob.progress}%`
@@ -220,7 +269,7 @@ export function StorageRetentionRouteView() {
                     className={`${mutedPanelClassName} p-3`}
                     key={`${row.serviceId ?? "global"}:${row.reason}`}
                   >
-                    <StatusPill tone="warning">Conflict</StatusPill>
+                    <Badge tone="warning">Conflict</Badge>
                     <p className={`mt-2 ${supportingTextClassName}`}>{row.reason}</p>
                   </div>
                 ))}
@@ -232,12 +281,12 @@ export function StorageRetentionRouteView() {
             )}
             {summary?.receipts.length ? (
               <div className="mt-3 space-y-3">
-                <p className={utilityLabelClassName}>Conflicts and receipts</p>
+                <p className={fieldLabelClassName}>Conflicts and receipts</p>
                 {summary.receipts.map((receipt) => (
                   <div className={`${mutedPanelClassName} p-3`} key={receipt.id}>
                     <div className="flex items-center justify-between gap-3">
-                      <p className={utilityLabelClassName}>{receipt.id}</p>
-                      <StatusPill
+                      <p className={fieldLabelClassName}>{receipt.id}</p>
+                      <Badge
                         tone={
                           receipt.status === "completed" || receipt.status === "rolled_back"
                             ? "success"
@@ -245,7 +294,7 @@ export function StorageRetentionRouteView() {
                         }
                       >
                         {receipt.status}
-                      </StatusPill>
+                      </Badge>
                     </div>
                     <p className={`mt-2 ${supportingTextClassName}`}>
                       {receipt.affectedCount} affected ·{" "}

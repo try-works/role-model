@@ -26,9 +26,31 @@ function createStyleMock() {
 }
 
 function createRootMock() {
+  const classSet = new Set<string>();
   return {
     dataset: {} as Record<string, string>,
     style: createStyleMock(),
+    classList: {
+      toggle(name: string, force?: boolean) {
+        if (force === true) {
+          classSet.add(name);
+          return true;
+        }
+        if (force === false) {
+          classSet.delete(name);
+          return false;
+        }
+        if (classSet.has(name)) {
+          classSet.delete(name);
+          return false;
+        }
+        classSet.add(name);
+        return true;
+      },
+      contains(name: string) {
+        return classSet.has(name);
+      },
+    },
   };
 }
 
@@ -61,11 +83,15 @@ describe("runtime theme helpers", () => {
     const root = createRootMock();
     applyDocumentThemeStyles("dark", root as unknown as HTMLElement);
     expect(root.dataset.theme).toBe("dark");
+    expect(root.classList.contains("dark")).toBe(true);
+    expect(root.classList.contains("light")).toBe(false);
     expect(root.style.getPropertyValue("--rm-bg")).toBe(BOOT_THEME_PALETTES.dark.bg);
     expect(root.style.getPropertyValue("--rm-fg")).toBe(BOOT_THEME_PALETTES.dark.fg);
 
     applyDocumentThemeStyles("light", root as unknown as HTMLElement);
     expect(root.dataset.theme).toBe("light");
+    expect(root.classList.contains("light")).toBe(true);
+    expect(root.classList.contains("dark")).toBe(false);
     expect(root.style.colorScheme).toBe("light");
     expect(root.style.backgroundColor).toBe(BOOT_THEME_PALETTES.light.bg);
     expect(root.style.color).toBe(BOOT_THEME_PALETTES.light.fg);

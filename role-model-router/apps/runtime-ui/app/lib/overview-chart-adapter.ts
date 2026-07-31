@@ -1,10 +1,11 @@
-import type { ChartSeries } from "@role-model/ui";
+import type { ChartSeries, ChartTimeAxisMode } from "@role-model/ui";
+import { CHART_TIME_TICKS, chartWindowTickIndices } from "@role-model/ui";
 
 import type { RuntimeTelemetryAnalyticsResponse } from "./runtime-api";
 import {
-  buildTelemetryTimeSeriesChartModel,
   type TelemetryChartSeriesModel,
   type TelemetryTimeSeriesChartModel,
+  buildTelemetryTimeSeriesChartModel,
 } from "./telemetry-analytics";
 import type { TelemetryRouteChartDefinition } from "./telemetry-route-models";
 
@@ -46,6 +47,11 @@ export type OverviewChartBlockModel = {
   readonly statusMessage?: string;
   readonly data?: Record<string, string | number>[];
   readonly series?: ChartSeries[];
+  readonly xKey?: string;
+  readonly xAxisMode?: ChartTimeAxisMode;
+  readonly xDomain?: [number, number];
+  readonly xTicks?: readonly number[];
+  readonly xTickFormatter?: (value: number) => string;
   readonly leftTickFormatter?: (value: number) => string;
   readonly rightTickFormatter?: (value: number) => string;
   readonly valueFormatter?: (value: number) => string;
@@ -97,14 +103,9 @@ function formatCount(value: number): string {
 
 export function resolveOverviewChartFormatters(
   metrics: TelemetryRouteChartDefinition["metrics"],
-): Pick<
-  OverviewChartBlockModel,
-  "leftTickFormatter" | "rightTickFormatter" | "valueFormatter"
-> {
+): Pick<OverviewChartBlockModel, "leftTickFormatter" | "rightTickFormatter" | "valueFormatter"> {
   const hasRate = metrics.includes("cacheHitTokenRate");
-  const hasLatency = metrics.some(
-    (metric) => metric.includes("Latency") || metric.endsWith("Ms"),
-  );
+  const hasLatency = metrics.some((metric) => metric.includes("Latency") || metric.endsWith("Ms"));
   const hasCost = metrics.some(
     (metric) =>
       metric.includes("Cost") ||
@@ -161,6 +162,19 @@ function bucketIndexToHour(index: number, count: number): number {
   return (index / (count - 1)) * 24;
 }
 
+/** Snap a continuous hour onto the Paper 4h tick rails (0…24). */
+function snapToChartTimeTick(hour: number): number {
+  const clamped = Math.max(0, Math.min(24, hour));
+  const nearest = CHART_TIME_TICKS.reduce((best, tick) =>
+    Math.abs(tick - clamped) < Math.abs(best - clamped) ? tick : best,
+  );
+  return nearest;
+}
+
+function shouldAverageMetric(dataKey: string): boolean {
+  return dataKey.includes("Rate") || dataKey.includes("Latency") || dataKey.endsWith("Ms");
+}
+
 export function mapTelemetrySeriesToKit(
   series: readonly TelemetryChartSeriesModel[],
 ): ChartSeries[] {
@@ -172,20 +186,90 @@ export function mapTelemetrySeriesToKit(
   }));
 }
 
+/**
+ * Roll live telemetry buckets onto Paper's 7-tick 24h domain (0,4,…,24).
+ * Volume metrics sum within a slot; rates/latency average.
+ */
 export function mapTelemetryDataToKitHours(
   model: TelemetryTimeSeriesChartModel,
   series: readonly TelemetryChartSeriesModel[],
 ): Record<string, string | number>[] {
   const count = model.data.length;
-  return model.data.map((row, index) => {
-    const hour = bucketIndexToHour(index, count);
+  if (count === 0) {
+    return [];
+  }
+
+  const slots = new Map<number, { sums: Record<string, number>; counts: Record<string, number> }>();
+  for (const hour of CHART_TIME_TICKS) {
+    slots.set(hour, { sums: {}, counts: {} });
+  }
+
+  model.data.forEach((row, index) => {
+    const hour = snapToChartTimeTick(bucketIndexToHour(index, count));
+    const slot = slots.get(hour);
+    if (!slot) {
+      return;
+    }
+    for (const entry of series) {
+      const value = row[entry.dataKey];
+      if (typeof value !== "number" || !Number.isFinite(value)) {
+        continue;
+      }
+      slot.sums[entry.dataKey] = (slot.sums[entry.dataKey] ?? 0) + value;
+      slot.counts[entry.dataKey] = (slot.counts[entry.dataKey] ?? 0) + 1;
+    }
+  });
+
+  return CHART_TIME_TICKS.map((hour) => {
+    const slot = slots.get(hour) ?? { sums: {}, counts: {} };
     const mapped: Record<string, string | number> = { hour };
+    for (const entry of series) {
+      const n = slot.counts[entry.dataKey] ?? 0;
+      const sum = slot.sums[entry.dataKey] ?? 0;
+      mapped[entry.dataKey] = n === 0 ? 0 : shouldAverageMetric(entry.dataKey) ? sum / n : sum;
+    }
+    return mapped;
+  });
+}
+
+/**
+ * Keep one point per telemetry bucket for Week / Month / 90d windows.
+ * Domain `[0, n-1]` with values on integer bucket indices; labels and grid share those rails.
+ */
+export function mapTelemetryDataToKitWindow(
+  model: TelemetryTimeSeriesChartModel,
+  series: readonly TelemetryChartSeriesModel[],
+): {
+  readonly data: Record<string, string | number>[];
+  readonly xDomain: [number, number];
+  readonly xTicks: readonly number[];
+  readonly xTickFormatter: (value: number) => string;
+} {
+  const labels: string[] = [];
+  const data = model.data.map((row, index) => {
+    const label =
+      typeof row.bucketLabel === "string" && row.bucketLabel.length > 0
+        ? row.bucketLabel
+        : String(index);
+    labels.push(label);
+    const mapped: Record<string, string | number> = {
+      t: index,
+      bucketLabel: label,
+    };
     for (const entry of series) {
       const value = row[entry.dataKey];
       mapped[entry.dataKey] = typeof value === "number" && Number.isFinite(value) ? value : 0;
     }
     return mapped;
   });
+
+  const n = data.length;
+  return {
+    data,
+    xDomain: [0, Math.max(n - 1, 0)],
+    xTicks: chartWindowTickIndices(n),
+    xTickFormatter: (value) => labels[Math.round(value)] ?? "",
+  };
 }
 
 function resolveChartStatus(
@@ -269,14 +353,35 @@ export function adaptOverviewChartBlock(
     };
   }
 
+  if (input.response.granularity === "hour") {
+    return {
+      title: definition.title,
+      description: definition.description,
+      kind: definition.kind,
+      span,
+      ...status,
+      data: mapTelemetryDataToKitHours(model, model.series),
+      series: kitSeries,
+      xKey: "hour",
+      xAxisMode: "day-24h",
+      ...formatters,
+    };
+  }
+
+  const windowed = mapTelemetryDataToKitWindow(model, model.series);
   return {
     title: definition.title,
     description: definition.description,
     kind: definition.kind,
     span,
     ...status,
-    data: mapTelemetryDataToKitHours(model, model.series),
+    data: windowed.data,
     series: kitSeries,
+    xKey: "t",
+    xAxisMode: "window",
+    xDomain: windowed.xDomain,
+    xTicks: windowed.xTicks,
+    xTickFormatter: windowed.xTickFormatter,
     ...formatters,
   };
 }

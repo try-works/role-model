@@ -2,10 +2,10 @@ import * as React from "react";
 
 import { ChartGrid, ChartGridCell } from "./chart-grid";
 import {
+  type ChartSeries,
   TimeSeriesAreaChart,
   TimeSeriesBarChart,
   TimeSeriesLineChart,
-  type ChartSeries,
 } from "./chart-time-series";
 
 /** Fixture hours matching Paper TimeAxis ticks (bucket starts + 24:00). */
@@ -16,11 +16,14 @@ function ramp(base: number, step: number, n = HOURS.length) {
 }
 
 /** Paper specimen: Token usage over time (area, single Y). */
+const tokenUsageTotalRamp = ramp(60_000, 25_000);
+const tokenUsageInputRamp = ramp(35_000, 14_000);
+const tokenUsageOutputRamp = ramp(18_000, 8_000);
 export const TOKEN_USAGE_DATA = HOURS.map((hour, i) => ({
   hour,
-  totalTokens: ramp(60_000, 25_000)[i]!,
-  inputTokens: ramp(35_000, 14_000)[i]!,
-  outputTokens: ramp(18_000, 8_000)[i]!,
+  totalTokens: tokenUsageTotalRamp[i] ?? 0,
+  inputTokens: tokenUsageInputRamp[i] ?? 0,
+  outputTokens: tokenUsageOutputRamp[i] ?? 0,
 }));
 
 export const TOKEN_USAGE_SERIES: ChartSeries[] = [
@@ -30,10 +33,12 @@ export const TOKEN_USAGE_SERIES: ChartSeries[] = [
 ];
 
 /** Paper specimen: Latency trend (line, single Y). */
+const latencyAverageRamp = ramp(120, 80);
+const latencyP95Ramp = ramp(280, 90);
 export const LATENCY_DATA = HOURS.map((hour, i) => ({
   hour,
-  averageLatencyMs: ramp(120, 80)[i]!,
-  p95LatencyMs: ramp(280, 90)[i]!,
+  averageLatencyMs: latencyAverageRamp[i] ?? 0,
+  p95LatencyMs: latencyP95Ramp[i] ?? 0,
 }));
 
 export const LATENCY_SERIES: ChartSeries[] = [
@@ -42,9 +47,10 @@ export const LATENCY_SERIES: ChartSeries[] = [
 ];
 
 /** Paper specimen: Cache efficiency (line, dual Y). */
+const cacheHitTokensRamp = ramp(12_000, 16_000);
 export const CACHE_DATA = HOURS.map((hour, i) => ({
   hour,
-  cacheHitTokens: ramp(12_000, 16_000)[i]!,
+  cacheHitTokens: cacheHitTokensRamp[i] ?? 0,
   cacheHitTokenRate: Math.min(100, 28 + i * 10),
 }));
 

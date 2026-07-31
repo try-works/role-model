@@ -10,9 +10,10 @@ import {
 } from "../components/page-primitives";
 import {
   fieldClassName,
+  fieldLabelClassName,
+  monoEyebrowClassName,
   mutedPanelClassName,
-  primaryButtonClassName,
-  utilityLabelClassName,
+  primaryButtonBlockClassName,
 } from "../lib/design-system";
 import {
   type RuntimeSnapshot,
@@ -34,7 +35,7 @@ type ImageResult =
       readonly rawPayload: string;
     };
 
-const formFieldLabelClassName = utilityLabelClassName;
+const formFieldLabelClassName = fieldLabelClassName;
 
 export default function StudioImagesRoute() {
   const [snapshot, setSnapshot] = useState<Pick<RuntimeSnapshot, "models"> | null>(null);
@@ -120,7 +121,7 @@ export default function StudioImagesRoute() {
     <div className="space-y-6">
       {error ? <ErrorState label={error} /> : null}
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
         <SectionCard title="Image request modes">
           {!snapshot ? (
             <LoadingState label="Loading image request context…" />
@@ -141,7 +142,7 @@ export default function StudioImagesRoute() {
                   </option>
                 ))}
               </SelectField>
-              <label className="grid gap-2">
+              <label className="grid gap-1.5">
                 <span className={formFieldLabelClassName}>Prompt</span>
                 <textarea
                   className={`${fieldClassName} min-h-36`}
@@ -157,7 +158,7 @@ export default function StudioImagesRoute() {
                 </SelectField>
               ) : (
                 <div className="grid gap-4 md:grid-cols-2">
-                  <label className="grid gap-2">
+                  <label className="grid gap-1.5">
                     <span className={formFieldLabelClassName}>Width</span>
                     <input
                       className={fieldClassName}
@@ -166,7 +167,7 @@ export default function StudioImagesRoute() {
                       onChange={(event) => setWidth(event.target.value)}
                     />
                   </label>
-                  <label className="grid gap-2">
+                  <label className="grid gap-1.5">
                     <span className={formFieldLabelClassName}>Height</span>
                     <input
                       className={fieldClassName}
@@ -177,7 +178,7 @@ export default function StudioImagesRoute() {
                   </label>
                 </div>
               )}
-              <button className={primaryButtonClassName} disabled={submitting} type="submit">
+              <button className={primaryButtonBlockClassName} disabled={submitting} type="submit">
                 {submitting ? "Running…" : "Run image request"}
               </button>
             </form>
@@ -187,7 +188,7 @@ export default function StudioImagesRoute() {
         <SectionCard title="Image result stage">
           <div className="space-y-4">
             <div className="space-y-2">
-              <p className={utilityLabelClassName}>Generated images</p>
+              <p className={monoEyebrowClassName}>Generated images</p>
               {!result ? (
                 <EmptyState label="Run an image request to populate the result stage." />
               ) : result.images.length === 0 ? (
@@ -207,7 +208,7 @@ export default function StudioImagesRoute() {
               )}
             </div>
             <div className="space-y-2">
-              <p className={utilityLabelClassName}>Raw response</p>
+              <p className={monoEyebrowClassName}>Raw response</p>
               <CodeBlock className="min-h-60">
                 {result?.rawPayload ?? '{\n  "status": "No image request yet"\n}'}
               </CodeBlock>

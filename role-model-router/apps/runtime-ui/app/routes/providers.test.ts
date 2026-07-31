@@ -5,10 +5,35 @@ import {
   buildModelRoleBindings,
   buildModelRoleSelection,
   buildProviderModelRoleCoverageSummary,
+  resolveConfiguredEndpointRoleIds,
 } from "./providers";
 
 describe("provider model role assignment helpers", () => {
   const allRoleIds = ["coder", "security", "writer"];
+
+  test("expands missing endpoint role ids to all available roles for Remote drafts", () => {
+    expect(
+      resolveConfiguredEndpointRoleIds({
+        endpointRoleIds: [],
+        availableRoleIds: allRoleIds,
+      }),
+    ).toEqual(allRoleIds);
+
+    expect(
+      resolveConfiguredEndpointRoleIds({
+        endpointRoleIds: [],
+        draftRoleIds: [],
+        availableRoleIds: allRoleIds,
+      }),
+    ).toEqual([]);
+
+    expect(
+      resolveConfiguredEndpointRoleIds({
+        endpointRoleIds: ["coder"],
+        availableRoleIds: allRoleIds,
+      }),
+    ).toEqual(["coder"]);
+  });
   const rolePolicy = {
     roleDefinitions: [
       {

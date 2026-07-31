@@ -9,6 +9,7 @@ import type {
 import {
   buildSidebarModels,
   cacheHitRateFromRequest,
+  createEmptySidebarFooter,
   formatRouterEndpointHost,
   mapEndpointHealthToSidebarStatus,
   resolveActiveRouterAlias,
@@ -135,5 +136,14 @@ describe("sidebar-footer", () => {
       "127.0.0.1:8091/v1",
     );
     expect(formatRouterEndpointHost(null, "127.0.0.1:3456")).toBe("127.0.0.1:3456/v1");
+  });
+
+  test("empty footer uses the provided host until live data loads", () => {
+    expect(createEmptySidebarFooter("127.0.0.1:3470")).toEqual({
+      models: [],
+      cacheHitRate: 0,
+      routerEndpoint: "127.0.0.1:3470/v1",
+      routerAlias: "—",
+    });
   });
 });

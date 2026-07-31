@@ -2,11 +2,11 @@ import { MetricStrip } from "@role-model/ui";
 import { useEffect, useMemo, useState } from "react";
 
 import {
+  Badge,
   EmptyState,
   ErrorState,
   LoadingState,
   SectionCard,
-  StatusPill,
 } from "../components/page-primitives";
 import {
   bodyStrongTextClassName,
@@ -108,10 +108,7 @@ export default function ControlControllerRoute() {
           <div className="grid gap-4 xl:grid-cols-2">
             {candidates.map((endpoint) => {
               const roleCoverage = summarizeRoleCoverage(endpoint.roleIds);
-              const sourceLabel = [
-                endpoint.sourceType ?? "unknown",
-                endpoint.servingSource ?? null,
-              ]
+              const sourceLabel = [endpoint.sourceType ?? "unknown", endpoint.servingSource ?? null]
                 .filter(Boolean)
                 .join(" · ");
 
@@ -127,7 +124,7 @@ export default function ControlControllerRoute() {
                     >
                       <p className={bodyStrongTextClassName}>{toDisplayLabel(endpoint.modelId)}</p>
                     </div>
-                    <StatusPill
+                    <Badge
                       tone={
                         endpoint.isActiveController
                           ? "accent"
@@ -139,7 +136,7 @@ export default function ControlControllerRoute() {
                       {endpoint.isActiveController
                         ? "controller"
                         : (endpoint.status ?? "candidate")}
-                    </StatusPill>
+                    </Badge>
                   </div>
 
                   <MetricStrip

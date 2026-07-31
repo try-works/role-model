@@ -1,4 +1,4 @@
-import * as React from "react";
+import type * as React from "react";
 
 import { useChartGridChrome } from "./chart-grid";
 import { cn } from "./lib/utils";
@@ -14,7 +14,7 @@ export type ChartCardProps = React.ComponentProps<"div"> & {
   chrome?: ChartCardChrome;
 };
 
-/** Shared ChartCard shell — Header → plot → legend (RM3 rule #5). */
+/** Shared ChartCard shell — Header → plot (+ axes) → legend (RM3 rule #5). */
 function ChartCard({ className, chrome, ...props }: ChartCardProps) {
   const gridChrome = useChartGridChrome();
   const resolved = chrome ?? gridChrome;
@@ -37,10 +37,7 @@ function ChartCardHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="chart-card-header"
-      className={cn(
-        "-mx-4 flex flex-col gap-1 border-b border-border px-4 pb-3",
-        className,
-      )}
+      className={cn("-mx-4 flex flex-col gap-1 border-b border-border px-4 pb-3", className)}
       {...props}
     />
   );
@@ -84,7 +81,7 @@ export type ChartLegendItem = {
   color: string;
 };
 
-/** Left-aligned with plot/X-axis (matches YAxis width={40}). RM3 rule #2. */
+/** Left-aligned with plot/X-axis. Default inset 56 (= Y width 40 + gutter 16); callers may widen. */
 function ChartCardLegend({
   items,
   className,
@@ -99,7 +96,7 @@ function ChartCardLegend({
   return (
     <div
       data-slot="chart-card-legend"
-      className={cn("flex flex-wrap items-center gap-x-4 gap-y-1 pl-10", className)}
+      className={cn("flex flex-wrap items-center gap-x-4 gap-y-1 pl-14", className)}
       {...props}
     >
       {items.map((item) => (
@@ -109,7 +106,9 @@ function ChartCardLegend({
             style={{ backgroundColor: item.color }}
             aria-hidden
           />
-          <span className="font-mono text-[11px] leading-4 text-muted-foreground">{item.label}</span>
+          <span className="font-mono text-[11px] leading-4 text-muted-foreground">
+            {item.label}
+          </span>
         </div>
       ))}
     </div>

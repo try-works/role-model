@@ -1,14 +1,15 @@
-import { PageContent, SegmentedControl, Sidebar } from "@role-model/ui";
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { PageContent, SegmentedControl, Sidebar, SubPageHeaderBar } from "@role-model/ui";
+import { type ReactNode, startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 
 import {
+  type RuntimeNavigationSection,
   getRuntimeRouteDefinition,
   runtimeNavigationSections,
-  type RuntimeNavigationSection,
 } from "../lib/design-system";
 import { startDeferredLiveRefresh } from "../lib/live-refresh";
 import {
+  type RuntimeTelemetryStreamEvent,
   fetchDownstreamOpenAIProviderConfig,
   fetchRouterSummary,
   fetchRuntimeConfig,
@@ -17,39 +18,45 @@ import {
   fetchTelemetryDashboard,
   fetchTelemetryRequests,
   subscribeTelemetryStream,
-  type RuntimeTelemetryStreamEvent,
 } from "../lib/runtime-api";
+import { useShellHeaderState } from "../lib/shell-header-context";
 import {
-  EMPTY_SIDEBAR_FOOTER,
+  type SidebarFooterState,
   buildSidebarModels,
   cacheHitRateFromRequest,
+  createEmptySidebarFooter,
   formatRouterEndpointHost,
   resolveActiveRouterAlias,
-  type SidebarFooterState,
 } from "../lib/sidebar-footer";
-import { useShellHeaderState } from "../lib/shell-header-context";
-import { ThemeToggle } from "./theme-toggle";
+import {
+  type RuntimeTheme,
+  THEME_STORAGE_KEY,
+  normalizeStoredTheme,
+  resolveInitialTheme,
+  syncDocumentTheme,
+} from "../lib/theme";
 
-function resolveSecondaryPath(
-  pathname: string,
-  section: RuntimeNavigationSection,
-): string {
+function resolveSecondaryPath(pathname: string, section: RuntimeNavigationSection): string {
   const match = [...section.items]
     .sort((left, right) => right.to.length - left.to.length)
     .find(
-      (item) =>
-        pathname === item.to ||
-        (item.to !== "/app" && pathname.startsWith(`${item.to}/`)),
+      (item) => pathname === item.to || (item.to !== "/app" && pathname.startsWith(`${item.to}/`)),
     );
   return match?.to ?? section.items[0]?.to ?? "/app";
 }
 
 function isSecondaryNavPath(pathname: string, section: RuntimeNavigationSection): boolean {
   return section.items.some(
-    (item) =>
-      pathname === item.to ||
-      (item.to !== "/app" && pathname.startsWith(`${item.to}/`)),
+    (item) => pathname === item.to || (item.to !== "/app" && pathname.startsWith(`${item.to}/`)),
   );
+}
+
+function readResolvedTheme(): RuntimeTheme {
+  const storedTheme = normalizeStoredTheme(window.localStorage.getItem(THEME_STORAGE_KEY));
+  return resolveInitialTheme({
+    storedTheme,
+    systemPrefersDark: window.matchMedia("(prefers-color-scheme: dark)").matches,
+  });
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -57,7 +64,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const contentScrollRef = useRef<HTMLElement | null>(null);
   const { actions, override } = useShellHeaderState();
-  const [footer, setFooter] = useState<SidebarFooterState>(EMPTY_SIDEBAR_FOOTER);
+  const [footer, setFooter] = useState<SidebarFooterState>(() => createEmptySidebarFooter());
+  const [theme, setTheme] = useState<RuntimeTheme>("dark");
   const route = getRuntimeRouteDefinition(location.pathname) ?? getRuntimeRouteDefinition("/app");
   const activeSection =
     runtimeNavigationSections.find((section) => section.title === route?.section) ??
@@ -90,6 +98,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const secondaryValue = resolveSecondaryPath(pathname, activeSection);
 
   useEffect(() => {
+    const initialTheme = readResolvedTheme();
+    setTheme(initialTheme);
+    syncDocumentTheme(initialTheme);
+  }, []);
+
+  useEffect(() => {
     if (pathname) {
       contentScrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
     }
@@ -100,16 +114,23 @@ export function AppShell({ children }: { children: ReactNode }) {
 
     const load = async () => {
       try {
-        const [models, endpoints, dashboard, latestRequests, downstream, routerSummary, configRecord] =
-          await Promise.all([
-            fetchRuntimeModels(),
-            fetchRuntimeEndpoints(),
-            fetchTelemetryDashboard(),
-            fetchTelemetryRequests({ limit: 1 }),
-            fetchDownstreamOpenAIProviderConfig().catch(() => null),
-            fetchRouterSummary().catch(() => null),
-            fetchRuntimeConfig().catch(() => null),
-          ]);
+        const [
+          models,
+          endpoints,
+          dashboard,
+          latestRequests,
+          downstream,
+          routerSummary,
+          configRecord,
+        ] = await Promise.all([
+          fetchRuntimeModels(),
+          fetchRuntimeEndpoints(),
+          fetchTelemetryDashboard(),
+          fetchTelemetryRequests({ limit: 1 }),
+          fetchDownstreamOpenAIProviderConfig().catch(() => null),
+          fetchRouterSummary().catch(() => null),
+          fetchRuntimeConfig().catch(() => null),
+        ]);
         if (disposed) {
           return;
         }
@@ -128,7 +149,16 @@ export function AppShell({ children }: { children: ReactNode }) {
         });
       } catch {
         if (!disposed) {
-          setFooter((current) => current);
+          // Keep any previously loaded inventory; only repair the router host on first-load failure.
+          setFooter((current) =>
+            current.models.length > 0
+              ? current
+              : {
+                  ...createEmptySidebarFooter(),
+                  cacheHitRate: current.cacheHitRate,
+                  routerAlias: current.routerAlias,
+                },
+          );
         }
       }
     };
@@ -153,30 +183,35 @@ export function AppShell({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  function handleThemeChange(nextTheme: RuntimeTheme): void {
+    startTransition(() => {
+      setTheme(nextTheme);
+    });
+    syncDocumentTheme(nextTheme);
+    window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+  }
+
   return (
-    <div className="flex h-screen overflow-hidden bg-background text-foreground">
+    <div
+      data-slot="role-model-page-shell"
+      className="flex h-screen w-full overflow-hidden bg-background text-foreground"
+    >
       <Sidebar {...footer} navItems={navItems} className="h-full shrink-0" />
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-border px-4">
-          <h1 className="min-w-0 truncate font-sans text-sm font-medium leading-5 tracking-tight text-foreground">
-            {title}
-          </h1>
-          <div className="flex shrink-0 items-center gap-2">
-            {actions}
-            <ThemeToggle />
-          </div>
-        </header>
-        {hasSecondaryNavigation ? (
-          <div className="shrink-0 px-4 py-2">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-background">
+        <SubPageHeaderBar title={title} theme={theme} onThemeChange={handleThemeChange}>
+          {actions}
+        </SubPageHeaderBar>
+        <PageContent ref={contentScrollRef} className="runtime-shell-content-scroll">
+          {hasSecondaryNavigation ? (
             <SegmentedControl
               aria-label={`${activeSection.title} secondary navigation`}
               options={secondaryOptions}
+              // Match Overview PageFilters SegmentedControl text (14px / size md).
+              size="md"
               value={secondaryValue}
               onChange={(to) => navigate(to)}
             />
-          </div>
-        ) : null}
-        <PageContent ref={contentScrollRef} className="runtime-shell-content-scroll">
+          ) : null}
           {children}
         </PageContent>
       </div>

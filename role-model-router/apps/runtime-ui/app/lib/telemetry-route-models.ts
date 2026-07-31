@@ -108,8 +108,7 @@ export function buildOverviewChartDefinitions(input: {
     },
     {
       title: "Cost avoided over time",
-      description:
-        "Routing-avoided cost, cache-avoided cost, and total avoided spend from persisted request-time economics snapshots.",
+      description: "Routing-avoided cost, cache-avoided cost, and total avoided spend.",
       kind: "area",
       metrics: ["routingCostSavingsUsd", "cacheCostSavingsUsd", "totalAvoidedCostUsd"],
       query: buildBaseQuery({
@@ -169,7 +168,7 @@ export function buildObserveRequestsChartDefinitions(input: {
 }): readonly TelemetryRouteChartDefinition[] {
   return [
     {
-      title: "Request Volume Over Time",
+      title: "Request volume over time",
       description: "Historical request volume across the selected structured telemetry slice.",
       kind: "bar",
       metrics: ["requestCount"],
@@ -183,7 +182,7 @@ export function buildObserveRequestsChartDefinitions(input: {
       className: "col-span-12",
     },
     {
-      title: "Taxonomy Demand By Group",
+      title: "Taxonomy demand by group",
       description: "Track which top-level taxonomy groups are driving request volume over time.",
       kind: "bar",
       metrics: ["requestCount"],
@@ -197,7 +196,7 @@ export function buildObserveRequestsChartDefinitions(input: {
       className: "col-span-12 xl:col-span-6",
     },
     {
-      title: "Task Success vs Failure",
+      title: "Task success vs failure",
       description: "Compare successful and failed requests by normalized taxonomy task.",
       kind: "bar",
       metrics: ["successCount", "failureCount"],
@@ -211,7 +210,7 @@ export function buildObserveRequestsChartDefinitions(input: {
       className: "col-span-12 xl:col-span-6",
     },
     {
-      title: "Token Usage Over Time",
+      title: "Token usage over time",
       description: "Token flow for the selected slice.",
       kind: "area",
       metrics: ["inputTokens", "outputTokens", "totalTokens"],
@@ -225,7 +224,22 @@ export function buildObserveRequestsChartDefinitions(input: {
       className: "col-span-12",
     },
     {
-      title: "Effective Cost Over Time",
+      title: "Cache efficiency trend",
+      description: "Cache-hit token volume and cache-hit rate for the filtered slice.",
+      kind: "line",
+      metrics: ["cacheHitTokens", "cacheHitTokenRate"],
+      metricAxisIds: cacheEfficiencyMetricAxisIds,
+      query: buildBaseQuery({
+        timeRange: input.timeRange,
+        metrics: ["cacheHitTokens", "cacheHitTokenRate"],
+        breakdown: input.breakdown,
+        filters: input.filters,
+      }),
+      emptyMessage: "No cache-backed requests match the current analytics filters.",
+      className: "col-span-12",
+    },
+    {
+      title: "Effective cost over time",
       description: "Stored per-request cost rolled up through the selected historical slice.",
       kind: "line",
       metrics: ["actualCostUsd", "estimatedCostUsd", "effectiveCostUsd"],
@@ -239,7 +253,7 @@ export function buildObserveRequestsChartDefinitions(input: {
       className: "col-span-12 xl:col-span-6",
     },
     {
-      title: "Latency Trend",
+      title: "Latency trend",
       description: "Average and p95 latency for the filtered request slice.",
       kind: "line",
       metrics: ["averageLatencyMs", "p95LatencyMs"],
@@ -253,36 +267,7 @@ export function buildObserveRequestsChartDefinitions(input: {
       className: "col-span-12 xl:col-span-6",
     },
     {
-      title: "Cache Efficiency Trend",
-      description: "Cache-hit token volume and cache-hit rate for the filtered slice.",
-      kind: "line",
-      metrics: ["cacheHitTokens", "cacheHitTokenRate"],
-      metricAxisIds: cacheEfficiencyMetricAxisIds,
-      query: buildBaseQuery({
-        timeRange: input.timeRange,
-        metrics: ["cacheHitTokens", "cacheHitTokenRate"],
-        breakdown: input.breakdown,
-        filters: input.filters,
-      }),
-      emptyMessage: "No cache-backed requests match the current analytics filters.",
-      className: "col-span-12 xl:col-span-6",
-    },
-    {
-      title: "Failure Trend",
-      description: "Failed request volume across the filtered slice.",
-      kind: "bar",
-      metrics: ["failureCount"],
-      query: buildBaseQuery({
-        timeRange: input.timeRange,
-        metrics: ["failureCount"],
-        breakdown: input.breakdown,
-        filters: input.filters,
-      }),
-      emptyMessage: "No failures match the current analytics filters.",
-      className: "col-span-12 xl:col-span-6",
-    },
-    {
-      title: "Capability Leaders",
+      title: "Capability leaders",
       description: "Rank the most active taxonomy capabilities in the selected window.",
       kind: "ranking",
       metrics: ["requestCount"],
@@ -297,10 +282,10 @@ export function buildObserveRequestsChartDefinitions(input: {
         },
       }),
       emptyMessage: "No capability-tagged telemetry is available for the current slice.",
-      className: "col-span-12 xl:col-span-6",
+      className: "col-span-12",
     },
     {
-      title: "Ranked Comparison",
+      title: "Ranked comparison",
       description: "Top contributors or outliers for the selected metric and ranking target.",
       kind: "ranking",
       metrics: [input.rankingMetric],
@@ -327,7 +312,7 @@ export function buildObserveRoutingChartDefinitions(input: {
 }): readonly TelemetryRouteChartDefinition[] {
   return [
     {
-      title: "Cost Avoided By Routing",
+      title: "Cost avoided by routing",
       description:
         "Avoided spend based on the selected route versus the highest-cost eligible configured candidate, plus cache savings.",
       kind: "area",
@@ -342,7 +327,7 @@ export function buildObserveRoutingChartDefinitions(input: {
       className: "col-span-12",
     },
     {
-      title: "Routing Decision Volume",
+      title: "Routing decision volume",
       description: "Historical routed decision volume across the filtered slice.",
       kind: "bar",
       metrics: ["requestCount"],
@@ -356,7 +341,7 @@ export function buildObserveRoutingChartDefinitions(input: {
       className: "col-span-12",
     },
     {
-      title: "Routing Volume By Taxonomy Role",
+      title: "Routing volume by taxonomy role",
       description: "Observe which taxonomy roles are driving routing decisions over time.",
       kind: "bar",
       metrics: ["requestCount"],
@@ -370,7 +355,7 @@ export function buildObserveRoutingChartDefinitions(input: {
       className: "col-span-12 xl:col-span-6",
     },
     {
-      title: "Avoided Cost By Taxonomy Task",
+      title: "Avoided cost by taxonomy task",
       description: "Compare routing-driven avoided cost across normalized taxonomy tasks.",
       kind: "ranking",
       metrics: ["totalAvoidedCostUsd"],
@@ -388,7 +373,7 @@ export function buildObserveRoutingChartDefinitions(input: {
       className: "col-span-12 xl:col-span-6",
     },
     {
-      title: "Difficulty Distribution",
+      title: "Difficulty distribution",
       description: "Easy, medium, and hard demand mix for the selected historical slice.",
       kind: "ranking",
       metrics: ["requestCount"],
@@ -406,7 +391,7 @@ export function buildObserveRoutingChartDefinitions(input: {
       className: "col-span-12 xl:col-span-6",
     },
     {
-      title: "Strategy Selection Trend",
+      title: "Strategy selection trend",
       description: "Which routing strategies are being selected over time.",
       kind: "bar",
       metrics: ["requestCount"],
@@ -420,25 +405,7 @@ export function buildObserveRoutingChartDefinitions(input: {
       className: "col-span-12 xl:col-span-6",
     },
     {
-      title: "Role Demand",
-      description: "Requested role distribution across the selected routing slice.",
-      kind: "ranking",
-      metrics: ["requestCount"],
-      query: buildBaseQuery({
-        timeRange: input.timeRange,
-        metrics: ["requestCount"],
-        filters: input.filters,
-        ranking: {
-          dimension: "requestedRoleId",
-          metric: "requestCount",
-          limit: 8,
-        },
-      }),
-      emptyMessage: "No requested-role demand is available for the current slice.",
-      className: "col-span-12 xl:col-span-6",
-    },
-    {
-      title: "Capability Routing Mix",
+      title: "Capability routing mix",
       description: "Rank the taxonomy capabilities currently driving routed traffic.",
       kind: "ranking",
       metrics: ["requestCount"],
@@ -456,7 +423,7 @@ export function buildObserveRoutingChartDefinitions(input: {
       className: "col-span-12 xl:col-span-6",
     },
     {
-      title: "Tool Class Routing Mix",
+      title: "Tool class routing mix",
       description: "See which tool-class patterns are most associated with routed requests.",
       kind: "ranking",
       metrics: ["requestCount"],
@@ -474,7 +441,7 @@ export function buildObserveRoutingChartDefinitions(input: {
       className: "col-span-12 xl:col-span-6",
     },
     {
-      title: "Model Selection",
+      title: "Model selection",
       description: "Selected model distribution across the filtered routing slice.",
       kind: "ranking",
       metrics: ["requestCount"],

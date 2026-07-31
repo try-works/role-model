@@ -15,8 +15,8 @@ import {
 import type { ChartSeries } from "./chart-time-series";
 import {
   DEFAULT_OVERVIEW_NAV,
-  RuntimeOverview,
   type OverviewFiltersState,
+  RuntimeOverview,
   type RuntimeOverviewChartBlock,
 } from "./runtime-overview";
 import { SIDEBAR_FIXTURE_MODELS } from "./sidebar-specimens";
@@ -48,10 +48,12 @@ function formatUsd(value: number): string {
 }
 
 /** Paper specimen: Effective cost over time (line, single Y). */
+const overviewEffectiveCostRamp = ramp(1.0, 0.45);
+const overviewEstimatedCostRamp = ramp(0.35, 0.28);
 export const EFFECTIVE_COST_DATA = HOURS.map((hour, i) => ({
   hour,
-  effectiveCostUsd: ramp(1.0, 0.45)[i]!,
-  estimatedCostUsd: ramp(0.35, 0.28)[i]!,
+  effectiveCostUsd: overviewEffectiveCostRamp[i] ?? 0,
+  estimatedCostUsd: overviewEstimatedCostRamp[i] ?? 0,
 }));
 
 export const EFFECTIVE_COST_SERIES: ChartSeries[] = [
@@ -60,10 +62,12 @@ export const EFFECTIVE_COST_SERIES: ChartSeries[] = [
 ];
 
 /** Paper specimen: Cost avoided over time (area, single Y). */
+const overviewAvoidedTotalRamp = ramp(0.8, 0.35);
+const overviewAvoidedRoutingRamp = ramp(0.25, 0.18);
 export const AVOIDED_COST_DATA = HOURS.map((hour, i) => ({
   hour,
-  totalAvoidedCostUsd: ramp(0.8, 0.35)[i]!,
-  routingCostSavingsUsd: ramp(0.25, 0.18)[i]!,
+  totalAvoidedCostUsd: overviewAvoidedTotalRamp[i] ?? 0,
+  routingCostSavingsUsd: overviewAvoidedRoutingRamp[i] ?? 0,
 }));
 
 export const AVOIDED_COST_SERIES: ChartSeries[] = [

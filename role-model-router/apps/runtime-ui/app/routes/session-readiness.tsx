@@ -2,11 +2,11 @@ import { MetricStrip } from "@role-model/ui";
 import { useEffect, useState } from "react";
 
 import {
+  Badge,
   EmptyState,
   ErrorState,
   LoadingState,
   SectionCard,
-  StatusPill,
 } from "../components/page-primitives";
 import {
   bodyStrongTextClassName,
@@ -29,6 +29,31 @@ import {
   buildSessionBootstrapRows,
   summarizeSessionBootstrapStatus,
 } from "../lib/view-models";
+
+const monoPathClassName =
+  "break-all font-mono text-[12px] font-normal leading-4 text-[var(--rm-fg)]";
+
+const inventoryValueClassName =
+  "font-mono text-[12px] font-normal leading-4 tabular-nums text-[var(--rm-fg)]";
+
+function hostHealthLabel(status: RuntimeHealthStatus["status"]): string {
+  return status === "healthy" ? "ok" : status;
+}
+
+function operatorIntentBadgeLabel(
+  status: NonNullable<RuntimeSummary["operatorIntent"]>["status"] | undefined,
+): string {
+  switch (status) {
+    case "ok":
+      return "applied";
+    case "missing":
+      return "missing";
+    case "corrupt":
+      return "corrupt";
+    default:
+      return "unknown";
+  }
+}
 
 export default function SessionReadinessRoute() {
   const [summary, setSummary] = useState<RuntimeSummary | null>(null);
@@ -71,6 +96,7 @@ export default function SessionReadinessRoute() {
   const primaryLifecycleRow = lifecycleAccountRows[0] ?? null;
   const primaryDriftRow = driftRows[0] ?? null;
   const routableCount = summary.inventorySummary?.endpointIdCount ?? summary.endpointCount;
+  const blockingReadinessRows = readinessRows.filter((row) => row.key !== "ready");
 
   return (
     <div className="space-y-6">
@@ -81,13 +107,13 @@ export default function SessionReadinessRoute() {
           {
             id: "bootstrap",
             label: "Bootstrap",
-            value: bootstrapStatus?.label ?? "Unavailable",
+            value: bootstrapStatus?.label ?? "unavailable",
           },
-          { id: "health", label: "Host health", value: health.status },
+          { id: "health", label: "Host health", value: hostHealthLabel(health.status) },
           {
             id: "authority",
             label: "Authority",
-            value: lifecycleBanner?.authorityLabel ?? "Unavailable",
+            value: lifecycleBanner?.authorityLabel ?? "unavailable",
           },
           {
             id: "routable",
@@ -105,13 +131,11 @@ export default function SessionReadinessRoute() {
           >
             <div className="mb-4 flex flex-wrap items-center gap-3">
               {bootstrapStatus ? (
-                <StatusPill tone={bootstrapStatus.tone}>{bootstrapStatus.label}</StatusPill>
+                <Badge tone={bootstrapStatus.tone}>{bootstrapStatus.label}</Badge>
               ) : (
-                <StatusPill tone="neutral">Bootstrap receipts unavailable</StatusPill>
+                <Badge tone="neutral">unavailable</Badge>
               )}
-              {summary.sessionBootstrap?.finishedAt ? (
-                <StatusPill tone="neutral">finished</StatusPill>
-              ) : null}
+              {summary.sessionBootstrap?.finishedAt ? <Badge tone="neutral">finished</Badge> : null}
             </div>
             <p className={supportingTextClassName}>{bootstrapSummary}</p>
           </SectionCard>
@@ -123,17 +147,17 @@ export default function SessionReadinessRoute() {
             <div className="mb-4 flex flex-wrap items-center gap-3">
               {lifecycleBanner ? (
                 <>
-                  <StatusPill tone={lifecycleBanner.authorityTone}>
+                  <Badge tone={lifecycleBanner.authorityTone}>
                     {lifecycleBanner.authorityLabel}
-                  </StatusPill>
+                  </Badge>
                   {lifecycleBanner.archivedStaleCount > 0 ? (
-                    <StatusPill tone="neutral">
+                    <Badge tone="neutral">
                       archived stale {lifecycleBanner.archivedStaleCount}
-                    </StatusPill>
+                    </Badge>
                   ) : null}
                 </>
               ) : (
-                <StatusPill tone="neutral">Lifecycle contract unavailable</StatusPill>
+                <Badge tone="neutral">unavailable</Badge>
               )}
             </div>
             {lifecycleBanner ? (
@@ -146,9 +170,9 @@ export default function SessionReadinessRoute() {
                     <p className={bodyStrongTextClassName}>
                       {primaryLifecycleRow.providerAccountId}
                     </p>
-                    <StatusPill tone={primaryLifecycleRow.tone}>
-                      {primaryLifecycleRow.lifecycleLabel}
-                    </StatusPill>
+                    <Badge tone={primaryLifecycleRow.tone}>
+                      {primaryLifecycleRow.lifecycleLabel.toLowerCase()}
+                    </Badge>
                   </div>
                   <div className={`space-y-2 ${supportingTextClassName}`}>
                     <p>providerAccountId {primaryLifecycleRow.providerAccountId}</p>
@@ -168,12 +192,12 @@ export default function SessionReadinessRoute() {
           >
             {operatorIntentSummary ? (
               <div className="space-y-4">
-                <StatusPill tone={operatorIntentSummary.tone}>
-                  {summary.operatorIntent?.status ?? "unknown"}
-                </StatusPill>
+                <Badge tone={operatorIntentSummary.tone}>
+                  {operatorIntentBadgeLabel(summary.operatorIntent?.status)}
+                </Badge>
                 <p className={supportingTextClassName}>{operatorIntentSummary.detail}</p>
                 {summary.operatorIntent?.path ? (
-                  <p className={supportingTextClassName}>{summary.operatorIntent.path}</p>
+                  <p className={monoPathClassName}>{summary.operatorIntent.path}</p>
                 ) : null}
               </div>
             ) : (
@@ -187,16 +211,23 @@ export default function SessionReadinessRoute() {
             title="Credential readiness"
             description="Blocking credential counts by class."
           >
-            <div className="flex flex-wrap gap-3">
-              {readinessRows.length === 0 ? (
-                <StatusPill tone="neutral">No credential blockers reported</StatusPill>
-              ) : (
-                readinessRows.map((row) => (
-                  <StatusPill key={row.key} tone={row.tone}>
-                    {row.label} {row.value}
-                  </StatusPill>
-                ))
-              )}
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-3">
+                {blockingReadinessRows.length === 0 ? (
+                  <Badge tone="neutral">no blockers</Badge>
+                ) : (
+                  blockingReadinessRows.map((row) => (
+                    <Badge key={row.key} tone={row.tone}>
+                      {row.label.toLowerCase()} {row.value}
+                    </Badge>
+                  ))
+                )}
+              </div>
+              {blockingReadinessRows.length === 0 ? (
+                <p className={supportingTextClassName}>
+                  No credential blockers reported for the current session.
+                </p>
+              ) : null}
             </div>
           </SectionCard>
 
@@ -211,7 +242,7 @@ export default function SessionReadinessRoute() {
                 {inventoryStats.map((stat) => (
                   <div key={stat.label} className="flex items-center justify-between gap-3">
                     <p className={supportingTextClassName}>{stat.label}</p>
-                    <p className={bodyStrongTextClassName}>{stat.value}</p>
+                    <p className={inventoryValueClassName}>{stat.value}</p>
                   </div>
                 ))}
               </div>

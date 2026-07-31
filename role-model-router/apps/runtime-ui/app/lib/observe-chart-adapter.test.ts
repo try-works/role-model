@@ -1,12 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  adaptObserveChartBlock,
-  resolveObserveChartSpan,
-} from "./observe-chart-adapter";
+import { adaptObserveChartBlock, resolveObserveChartSpan } from "./observe-chart-adapter";
 import type { RuntimeTelemetryAnalyticsResponse } from "./runtime-api";
-import { buildObserveRequestsChartDefinitions } from "./telemetry-route-models";
 import { fromPageTimeRange, toPageTimeRange } from "./telemetry-page-filters";
+import { buildObserveRequestsChartDefinitions } from "./telemetry-route-models";
 
 describe("observe-chart-adapter", () => {
   it("maps legacy tailwind spans to ChartGrid spans", () => {
@@ -28,9 +25,7 @@ describe("observe-chart-adapter", () => {
       filters: {},
     }).filter((definition) => definition.kind === "ranking");
 
-    expect(
-      adaptObserveChartBlock(rankingDefinition, { loading: true }).status,
-    ).toBe("loading");
+    expect(adaptObserveChartBlock(rankingDefinition, { loading: true }).status).toBe("loading");
   });
 
   it("maps ranking responses to kit rows", () => {
@@ -62,8 +57,6 @@ describe("observe-chart-adapter", () => {
     const block = adaptObserveChartBlock(rankingDefinition, { response });
     expect(block.kind).toBe("ranking");
     expect(block.status).toBe("ready");
-    expect(block.rows).toEqual([
-      expect.objectContaining({ key: "endpoint-a", value: 12 }),
-    ]);
+    expect(block.rows).toEqual([expect.objectContaining({ key: "endpoint-a", value: 12 })]);
   });
 });

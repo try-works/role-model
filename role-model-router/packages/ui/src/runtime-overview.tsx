@@ -1,27 +1,24 @@
 "use client";
 
-import * as React from "react";
+import type * as React from "react";
 
 import { ChartGrid, ChartGridCell } from "./chart-grid";
 import {
+  type ChartSeries,
+  type ChartTimeAxisMode,
   TimeSeriesAreaChart,
   TimeSeriesBarChart,
   TimeSeriesLineChart,
-  type ChartSeries,
 } from "./chart-time-series";
 import {
   DEFAULT_PAGE_TIME_RANGES,
-  PageFilters,
   type PageFilterField,
   type PageFilterOption,
+  PageFilters,
   type PageTimeRange,
 } from "./page-filters";
 import { PageShell } from "./page-shell";
-import {
-  Sidebar,
-  type SidebarModel,
-  type SidebarNavItem,
-} from "./sidebar";
+import { Sidebar, type SidebarModel, type SidebarNavItem } from "./sidebar";
 
 export type OverviewTimeRange = PageTimeRange;
 export type OverviewFilterOption = PageFilterOption;
@@ -40,6 +37,11 @@ export type RuntimeOverviewChartBlock = {
   readonly data: Record<string, string | number>[];
   readonly series: ChartSeries[];
   readonly kind: "area" | "line" | "bar";
+  readonly xKey?: string;
+  readonly xAxisMode?: ChartTimeAxisMode;
+  readonly xDomain?: [number, number];
+  readonly xTicks?: readonly number[];
+  readonly xTickFormatter?: (value: number) => string;
   readonly leftTickFormatter?: (value: number) => string;
   readonly rightTickFormatter?: (value: number) => string;
   readonly valueFormatter?: (value: number) => string;
@@ -62,7 +64,7 @@ export type RuntimeOverviewProps = {
   /** Charts in display order. Pair consecutive `span: 6` into one row. */
   readonly charts: readonly RuntimeOverviewChartBlock[];
   /**
-   * Optional first full-width grid cell (e.g. Candidate space).
+   * Optional first full-width grid cell (e.g. Model pool).
    * Renders inside the shared-border ChartGrid above chart cells.
    */
   readonly leading?: React.ReactNode;
@@ -150,12 +152,7 @@ function OverviewFilters({
         difficultyOptions,
       )}
       onFieldChange={(id, value) => {
-        if (
-          id === "breakdown" ||
-          id === "source" ||
-          id === "status" ||
-          id === "difficulty"
-        ) {
+        if (id === "breakdown" || id === "source" || id === "status" || id === "difficulty") {
           onFiltersChange?.({ ...filters, [id]: value });
         }
       }}
@@ -169,6 +166,11 @@ function ChartBlock({ block }: { block: RuntimeOverviewChartBlock }) {
     description: block.description,
     data: block.data,
     series: block.series,
+    xKey: block.xKey,
+    xAxisMode: block.xAxisMode,
+    xDomain: block.xDomain,
+    xTicks: block.xTicks,
+    xTickFormatter: block.xTickFormatter,
     leftTickFormatter: block.leftTickFormatter,
     rightTickFormatter: block.rightTickFormatter,
     valueFormatter: block.valueFormatter,
@@ -191,7 +193,10 @@ export function groupChartRows(
   const rows: RuntimeOverviewChartBlock[][] = [];
   let i = 0;
   while (i < charts.length) {
-    const cur = charts[i]!;
+    const cur = charts[i];
+    if (!cur) {
+      break;
+    }
     const span = cur.span ?? 12;
     if (span === 6) {
       const next = charts[i + 1];

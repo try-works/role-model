@@ -4,8 +4,8 @@ import * as React from "react";
 
 import {
   DEFAULT_PAGE_TIME_RANGES,
-  PageFilters,
   type PageFilterField,
+  PageFilters,
   type PageTimeRange,
 } from "./page-filters";
 

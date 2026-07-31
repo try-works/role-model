@@ -3,17 +3,18 @@
 import * as React from "react";
 
 import { cn } from "./lib/utils";
+import { MetricStrip } from "./metric-strip";
 import {
+  type ObserveChartBlock,
   ObserveChartGrid,
+  type ObservePageId,
   ObservePageNav,
   observeNavItems,
-  type ObserveChartBlock,
-  type ObservePageId,
 } from "./observe-shared";
 import {
-  PageFilters,
   type PageFilterField,
   type PageFilterOption,
+  PageFilters,
   type PageTimeRange,
 } from "./page-filters";
 import { PageShell } from "./page-shell";
@@ -103,50 +104,72 @@ function ObserveRequestsLedger({
   return (
     <section
       data-slot="observe-requests-ledger"
-      className={cn(
-        "flex w-full flex-col overflow-hidden rounded-lg border border-border bg-card",
-        className,
-      )}
+      className={cn("flex w-full flex-col gap-4", className)}
     >
-      <div className="-mx-0 flex flex-col gap-1 border-b border-border px-4 py-3">
-        <h2 className="text-sm font-medium leading-5 tracking-tight text-foreground">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-sm font-semibold leading-5 tracking-tight text-foreground">
           Recent telemetry requests
         </h2>
         <p className="text-xs leading-4 text-muted-foreground">
-          Canonical structured rows — open a request to inspect captures and receipts.
+          Explainable request ledger with endpoint, model, status, and direct Observe drill-in.
         </p>
       </div>
-      <div className="divide-y divide-border">
-        {rows.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-muted-foreground">
-            No requests match the current analytics filters.
-          </p>
-        ) : (
-          rows.map((row) => (
-            <div
-              key={row.requestId}
-              className="flex flex-wrap items-baseline gap-x-4 gap-y-1 px-4 py-3"
-            >
-              <span className="min-w-0 flex-1 truncate font-mono text-[13px] font-medium tabular-nums text-foreground">
-                {row.requestId}
-              </span>
-              <span className="font-mono text-[12px] text-muted-foreground">{row.endpointId}</span>
-              <span className="font-mono text-[12px] text-muted-foreground">{row.modelId}</span>
-              <span className="text-[12px] text-muted-foreground">{row.source}</span>
-              <span className="text-[12px] text-muted-foreground">{row.status}</span>
-              <span className="font-mono text-[12px] tabular-nums text-muted-foreground">
-                {row.latencyMs}ms
-              </span>
-              <span className="font-mono text-[12px] tabular-nums text-muted-foreground">
-                {row.tokens}
-              </span>
-              <span className="font-mono text-[12px] tabular-nums text-muted-foreground">
-                ${row.costUsd.toFixed(3)}
-              </span>
-            </div>
-          ))
-        )}
-      </div>
+      {rows.length === 0 ? (
+        <p className="rounded-lg border border-border bg-card px-4 py-6 text-sm text-muted-foreground">
+          No requests match the current analytics filters.
+        </p>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {rows.map((row) => {
+            const sourceKey = row.source.toLowerCase();
+            return (
+              <div
+                key={row.requestId}
+                className="space-y-4 rounded-lg border border-border bg-card p-4"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 border-l-2 border-primary pl-3">
+                    <p className="break-all text-sm font-semibold leading-5 text-foreground">
+                      {row.requestId}
+                    </p>
+                  </div>
+                  <span className="inline-flex h-6 items-center rounded-full border border-border bg-secondary px-2.5 font-mono text-[11px] leading-[14px] text-muted-foreground">
+                    {sourceKey}
+                  </span>
+                </div>
+
+                <MetricStrip
+                  aria-label={`${row.requestId} telemetry request`}
+                  variant="inventory"
+                  className="max-w-none"
+                  items={[
+                    { id: "model", label: "Model", value: row.modelId },
+                    { id: "endpoint", label: "Endpoint", value: row.endpointId },
+                    { id: "status", label: "Status", value: row.status },
+                    {
+                      id: "latency",
+                      label: "Latency",
+                      value: `${row.latencyMs} ms`,
+                    },
+                    {
+                      id: "tokens",
+                      label: "Tokens",
+                      value: String(row.tokens),
+                    },
+                    {
+                      id: "cost",
+                      label: "Cost",
+                      value: `$${row.costUsd.toFixed(4)}`,
+                    },
+                  ]}
+                />
+
+                <div className="text-sm font-semibold text-primary">Observe · Open detail</div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }

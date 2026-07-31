@@ -2,11 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router";
 
 import {
+  Badge,
   EmptyState,
   ErrorState,
   LoadingState,
   SectionCard,
-  StatusPill,
 } from "../components/page-primitives";
 import {
   bodyStrongTextClassName,
@@ -87,7 +87,7 @@ export default function LocalSwapRoute() {
                     <span className={metaTextClassName}>
                       {new Date(event.timestamp).toLocaleString()}
                     </span>
-                    <StatusPill tone="neutral">{event.reason}</StatusPill>
+                    <Badge tone="neutral">{event.reason}</Badge>
                   </div>
                   <div className="flex items-center gap-3">
                     {event.oldModel ? (

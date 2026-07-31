@@ -118,7 +118,7 @@ const studioRerankRoute = createRoute({
 const studioAdvancedRoute = createRoute({
   id: "studio-advanced",
   to: "/app/studio/advanced",
-  label: "Advanced",
+  label: "Advanced APIs",
   section: "Studio",
   icon: Telescope,
   template: "studio-workspace",
@@ -233,7 +233,7 @@ const controlProvidersRoute = createRoute({
 const controlRoutingStrategyRoute = createRoute({
   id: "router-strategy",
   to: "/app/router/strategy",
-  label: "Routing Strategy",
+  label: "Routing strategy",
   section: "Router",
   icon: GitBranch,
   template: "registry-detail",
@@ -245,7 +245,7 @@ const controlRoutingStrategyRoute = createRoute({
 const controlRuntimeConfigRoute = createRoute({
   id: "system-runtime-config",
   to: "/app/system/runtime-config",
-  label: "Runtime Config",
+  label: "Config",
   section: "System",
   icon: SlidersHorizontal,
   template: "registry-detail",
@@ -470,7 +470,8 @@ const systemRuntimeRoute = createRoute({
 const systemSessionReadinessRoute = createRoute({
   id: "system-session-readiness",
   to: "/app/system/session-readiness",
-  label: "Session readiness",
+  // Paper System page nav: short segment labels; page title stays long.
+  label: "Readiness",
   section: "System",
   icon: ListChecks,
   template: "system-topology",
@@ -486,7 +487,7 @@ const systemPeersRoute = createRoute({
   section: "System",
   icon: Waypoints,
   template: "system-topology",
-  title: "Peers",
+  title: "Peer topology",
   description:
     "Peer inventory and policy page for remote model sources, auth posture, timeouts, filters, and peer-backed topology decisions.",
 });
@@ -506,7 +507,7 @@ const systemExtensionsRoute = createRoute({
 const systemStorageRetentionRoute = createRoute({
   id: "system-storage-retention",
   to: "/app/system/storage-retention",
-  label: "Storage & retention",
+  label: "Storage",
   section: "System",
   icon: LayoutGrid,
   template: "system-topology",
@@ -914,11 +915,22 @@ export const mutedPanelClassName =
 
 export const insetPanelClassName = `${mutedPanelClassName} p-4 text-[14px] font-normal leading-[21px] tracking-[0em] text-[var(--rm-secondary)]`;
 
+/** RM3 chart empty / unsupported body — dashed muted panel, never warning amber. */
+export const chartEmptyStateClassName =
+  "w-full rounded-md border border-dashed border-border bg-transparent px-4 py-3 text-sm font-normal leading-5 text-muted-foreground";
+
+export const chartErrorStateClassName =
+  "w-full rounded-md border border-[color-mix(in_srgb,var(--rm-error)_30%,transparent)] bg-[color-mix(in_srgb,var(--rm-error)_6%,transparent)] px-4 py-3 text-sm font-normal leading-5 text-[var(--rm-error)]";
+
 export const errorNoticeClassName =
   "rounded-[var(--rm-radius-panel)] border border-[var(--rm-error)] bg-[var(--rm-error-ghost)] p-6 text-[14px] font-normal leading-[21px] tracking-[0em] text-[var(--rm-error)]";
 
 export const eyebrowClassName =
   "text-[12px] font-normal uppercase leading-4 tracking-[0.08em] text-[var(--rm-muted)]";
+
+/** Mono uppercase eyebrow — table headers, MetricStrip keys, source labels (Paper DS). */
+export const monoEyebrowClassName =
+  "font-mono text-[11px] font-normal uppercase leading-4 tracking-[0.08em] text-[var(--rm-muted)]";
 
 export const navLabelClassName = "text-[13px] font-normal leading-[18px] tracking-[0em]";
 export const navLabelTextStyle = {
@@ -931,7 +943,7 @@ export const pillLabelClassName = navLabelClassName;
 
 export function getPrimarySectionLinkClassName(isActive: boolean): string {
   return [
-    `flex min-h-[41px] items-center rounded-[var(--linear-radius-8)] px-3 py-2.5 transition-colors ${navLabelClassName}`,
+    `flex min-h-[41px] items-center rounded-[var(--rm3-radius-lg)] px-3 py-2.5 transition-colors ${navLabelClassName}`,
     isActive
       ? "bg-[var(--rm-surface-strong)] text-[var(--rm-fg)]"
       : "text-[var(--rm-secondary)] hover:bg-[var(--rm-surface-strong)] hover:text-[var(--rm-fg)]",
@@ -942,7 +954,7 @@ export function getSecondaryNavigationLinkClassName(isActive: boolean): string {
   return [
     `inline-flex min-h-[31px] items-center rounded-[var(--rm-radius-pill)] px-3.5 py-1.5 ${navLabelClassName} transition-colors`,
     isActive
-      ? "bg-[var(--rm-accent)] text-[color:var(--rm-on-primary)]"
+      ? "bg-primary !text-primary-foreground"
       : "bg-[var(--rm-panel-muted)] text-[var(--rm-secondary)] hover:text-[var(--rm-fg)]",
   ].join(" ");
 }
@@ -950,7 +962,13 @@ export function getSecondaryNavigationLinkClassName(isActive: boolean): string {
 export const utilityLabelClassName =
   "text-[12px] font-normal uppercase leading-4 tracking-[0.08em]";
 
-export const supportingTextClassName = "text-[14px] leading-[21px] text-[var(--rm-secondary)]";
+/** RM3 form field labels — Paper Remote/Studio: sans 12/16 foreground.
+ * PageFilters use the same voice muted (`pageFilterLabelClassName` in `@role-model/ui`).
+ */
+export const fieldLabelClassName = "font-sans text-xs leading-4 text-foreground";
+
+export const supportingTextClassName =
+  "font-sans text-[13px] font-normal leading-[18px] text-[var(--rm-secondary)]";
 
 export const rightAlignedSupportingTextClassName =
   "text-right text-[14px] leading-[21px] text-[var(--rm-secondary)]";
@@ -966,7 +984,9 @@ export const compactTitleClassName = "text-[15px] font-semibold leading-5 text-[
 
 export const metaTextClassName = "text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]";
 
-export const accentActionTextClassName = "text-sm font-semibold text-[var(--rm-accent)]";
+/** Text-link / inline action — RM3 has no colored accent; underline is the affordance. */
+export const accentActionTextClassName =
+  "text-[13px] font-normal leading-[18px] text-foreground underline underline-offset-2";
 
 export const bodyTextClassName = "text-[14px] font-normal leading-[21px] tracking-[0em]";
 
@@ -978,7 +998,7 @@ export const displayTitleClassName =
   "[font-family:var(--rm-font-display)] text-[22px] font-normal leading-[28px] tracking-[-0.018em]";
 
 export const sectionTitleClassName =
-  "[font-family:var(--rm-font-display)] text-[18px] font-normal leading-6 tracking-[-0.016em]";
+  "text-sm font-semibold leading-5 tracking-tight text-foreground";
 
 export const largeValueClassName =
   "[font-family:var(--rm-font-display)] text-[22px] font-semibold leading-[28px] tracking-[-0.018em]";
@@ -998,13 +1018,14 @@ export const monoMetaTextClassName =
   "break-all font-mono text-[13px] font-normal leading-[18px] text-[var(--rm-muted)]";
 
 export const inlineLinkClassName =
-  "text-[13px] font-normal leading-[18px] text-[var(--rm-accent)] underline-offset-2 hover:underline";
+  "text-[13px] font-normal leading-[18px] text-foreground underline underline-offset-2";
 
+/** RM3 form fields — Paper Remote/Forms: bg-background · border-input · 34px · 13px/18px. */
 export const fieldClassName =
-  "w-full rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface)] px-[20px] py-3 !text-[13px] !font-normal !leading-[18px] !tracking-[0em] text-[var(--rm-fg)] outline-none transition placeholder:text-[var(--rm-muted)] focus:border-[var(--rm-accent-focus)] focus:ring-2 focus:ring-[var(--rm-accent-subtle)]";
+  "w-full min-h-[34px] rounded-md border border-input bg-background px-3 py-1.5 font-sans !text-[13px] !font-normal !leading-[18px] !tracking-[0em] text-foreground shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
 
 export const selectFieldClassName =
-  "w-full min-h-[40px] rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface)] py-2 pl-[20px] pr-10 !text-[13px] !font-normal !leading-[18px] !tracking-[0em] text-[var(--rm-fg)] outline-none transition focus:border-[var(--rm-accent-focus)] focus:ring-2 focus:ring-[var(--rm-accent-subtle)]";
+  "w-full h-[34px] min-h-[34px] rounded-md border border-input bg-background py-0 pl-3 pr-9 text-left font-sans !text-[13px] !font-normal !leading-[18px] !tracking-[0em] text-foreground shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
 
 export const selectChevronStyle = {
   appearance: "none",
@@ -1014,21 +1035,25 @@ export const selectChevronStyle = {
   backgroundSize: "12px 8px",
 } as const;
 
+/** Primary CTA — Paper Studio/Forms: 36px · radius-md · 13px (not 44px pill). */
 export const primaryButtonClassName =
-  "inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-pill)] border border-[var(--rm-accent)] bg-[var(--rm-accent)] px-[22px] py-[11px] text-[15px] font-semibold leading-5 tracking-[-0.01em] text-[color:var(--rm-on-primary)] transition hover:border-[var(--rm-accent-focus)] hover:bg-[var(--rm-accent-focus)] active:scale-95 disabled:opacity-60";
+  "inline-flex h-[36px] min-h-[36px] items-center justify-center rounded-[var(--rm-radius-field)] border border-primary bg-primary px-3.5 text-[13px] font-semibold leading-[18px] tracking-[-0.01em] !text-primary-foreground transition hover:border-[var(--rm-accent-focus)] hover:bg-[var(--rm-accent-focus)] active:scale-95 disabled:opacity-60";
+
+/** Studio composer CTA — Paper Run request is full rail width. */
+export const primaryButtonBlockClassName = `${primaryButtonClassName} w-full`;
 
 export const secondaryButtonClassName =
-  "inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-pill)] border border-[var(--rm-border-strong)] bg-[var(--rm-panel)] px-[22px] py-[11px] text-[15px] font-semibold leading-5 tracking-[-0.01em] text-[var(--rm-accent-ink)] transition hover:border-[var(--rm-accent)] hover:bg-[var(--rm-accent-ghost)] hover:text-[var(--rm-accent-ink)] active:scale-95 disabled:opacity-60";
+  "inline-flex h-[36px] min-h-[36px] items-center justify-center rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface)] px-4 text-[13px] font-semibold leading-[18px] tracking-[-0.01em] text-[var(--rm-fg)] transition hover:border-[var(--rm-accent)] hover:bg-[var(--rm-accent-ghost)] hover:text-[var(--rm-fg)] active:scale-95 disabled:opacity-60";
 
 /** Companion control beside SelectField — match select trigger height/radius, not pill CTAs. */
 export const compactFieldButtonClassName =
-  "inline-flex h-10 min-h-[40px] items-center justify-center rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-panel)] px-4 text-[13px] font-semibold leading-[18px] tracking-[-0.01em] text-[var(--rm-accent-ink)] transition hover:border-[var(--rm-accent)] hover:bg-[var(--rm-accent-ghost)] hover:text-[var(--rm-accent-ink)] active:scale-95 disabled:opacity-60";
+  "inline-flex h-[34px] min-h-[34px] items-center justify-center rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-panel)] px-4 text-[13px] font-semibold leading-[18px] tracking-[-0.01em] text-[var(--rm-accent-ink)] transition hover:border-[var(--rm-accent)] hover:bg-[var(--rm-accent-ghost)] hover:text-[var(--rm-accent-ink)] active:scale-95 disabled:opacity-60";
 
 export const compactFieldButtonEmphasisClassName =
-  "inline-flex h-10 min-h-[40px] items-center justify-center rounded-[var(--rm-radius-field)] border border-[var(--rm-accent)] bg-[var(--rm-accent)] px-4 text-[13px] font-semibold leading-[18px] tracking-[-0.01em] text-[color:var(--rm-on-primary)] transition hover:border-[var(--rm-accent-focus)] hover:bg-[var(--rm-accent-focus)] active:scale-95 disabled:opacity-60";
+  "inline-flex h-[34px] min-h-[34px] items-center justify-center rounded-[var(--rm-radius-field)] border border-primary bg-primary px-4 text-[13px] font-semibold leading-[18px] tracking-[-0.01em] !text-primary-foreground transition hover:border-[var(--rm-accent-focus)] hover:bg-[var(--rm-accent-focus)] active:scale-95 disabled:opacity-60";
 
 export const utilityButtonClassName =
-  "inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-md)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-[15px] py-2 text-[13px] font-semibold leading-4 tracking-[-0.01em] text-[var(--rm-fg)] transition hover:border-[var(--rm-border-strong)] hover:bg-[var(--rm-panel)]";
+  "inline-flex h-[36px] min-h-[36px] items-center justify-center rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-3.5 text-[13px] font-semibold leading-[18px] tracking-[-0.01em] text-[var(--rm-fg)] transition hover:border-[var(--rm-border-strong)] hover:bg-[var(--rm-panel)]";
 
 export function getSelectablePanelClassName(selected: boolean): string {
   return [

@@ -75,17 +75,19 @@ describe("telemetry route chart definitions", () => {
     });
 
     expect(charts.map((chart) => chart.title)).toEqual([
-      "Request Volume Over Time",
-      "Taxonomy Demand By Group",
-      "Task Success vs Failure",
-      "Token Usage Over Time",
-      "Effective Cost Over Time",
-      "Latency Trend",
-      "Cache Efficiency Trend",
-      "Failure Trend",
-      "Capability Leaders",
-      "Ranked Comparison",
+      "Request volume over time",
+      "Taxonomy demand by group",
+      "Task success vs failure",
+      "Token usage over time",
+      "Cache efficiency trend",
+      "Effective cost over time",
+      "Latency trend",
+      "Capability leaders",
+      "Ranked comparison",
     ]);
+    for (const title of charts.map((chart) => chart.title)) {
+      expect(title).not.toMatch(/\b[A-Z][a-z]+\s+[A-Z]/);
+    }
     expect(charts[0]?.query).toEqual(
       expect.objectContaining({
         breakdown: "providerId",
@@ -115,7 +117,7 @@ describe("telemetry route chart definitions", () => {
         }),
       }),
     );
-    expect(charts[8]).toEqual(
+    expect(charts[7]).toEqual(
       expect.objectContaining({
         kind: "ranking",
         query: expect.objectContaining({
@@ -127,7 +129,7 @@ describe("telemetry route chart definitions", () => {
         }),
       }),
     );
-    expect(charts[9]).toEqual(
+    expect(charts[8]).toEqual(
       expect.objectContaining({
         kind: "ranking",
         query: expect.objectContaining({
@@ -139,11 +141,12 @@ describe("telemetry route chart definitions", () => {
         }),
       }),
     );
-    expect(charts[6]).toEqual(
+    expect(charts[4]).toEqual(
       expect.objectContaining({
-        title: "Cache Efficiency Trend",
+        title: "Cache efficiency trend",
         kind: "line",
         metrics: ["cacheHitTokens", "cacheHitTokenRate"],
+        className: "col-span-12",
         metricAxisIds: {
           cacheHitTokens: "left",
           cacheHitTokenRate: "right",
@@ -166,16 +169,15 @@ describe("telemetry route chart definitions", () => {
     });
 
     expect(charts.map((chart) => chart.title)).toEqual([
-      "Cost Avoided By Routing",
-      "Routing Decision Volume",
-      "Routing Volume By Taxonomy Role",
-      "Avoided Cost By Taxonomy Task",
-      "Difficulty Distribution",
-      "Strategy Selection Trend",
-      "Role Demand",
-      "Capability Routing Mix",
-      "Tool Class Routing Mix",
-      "Model Selection",
+      "Cost avoided by routing",
+      "Routing decision volume",
+      "Routing volume by taxonomy role",
+      "Avoided cost by taxonomy task",
+      "Difficulty distribution",
+      "Strategy selection trend",
+      "Capability routing mix",
+      "Tool class routing mix",
+      "Model selection",
     ]);
     expect(charts[0]).toEqual(
       expect.objectContaining({
@@ -224,7 +226,7 @@ describe("telemetry route chart definitions", () => {
         }),
       }),
     );
-    expect(charts[7]).toEqual(
+    expect(charts[6]).toEqual(
       expect.objectContaining({
         kind: "ranking",
         query: expect.objectContaining({

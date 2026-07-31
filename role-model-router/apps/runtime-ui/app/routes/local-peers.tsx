@@ -1,18 +1,19 @@
 import { useCallback, useEffect, useState } from "react";
 
 import {
+  Badge,
   EmptyState,
   ErrorState,
   LoadingState,
   SectionCard,
-  StatusPill,
 } from "../components/page-primitives";
 import {
   fieldClassName,
+  fieldLabelClassName,
+  monoEyebrowClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
   supportingTextClassName,
-  utilityLabelClassName,
 } from "../lib/design-system";
 import { checkPeerHealth, fetchPeers, updatePeers } from "../lib/runtime-api";
 
@@ -126,10 +127,10 @@ export default function LocalPeersRoute() {
             <table className="w-full min-w-[640px] border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b border-[var(--rm-border)]">
-                  <th className={`${utilityLabelClassName} px-3 py-2.5 font-medium`}>Endpoint</th>
-                  <th className={`${utilityLabelClassName} px-3 py-2.5 font-medium`}>Status</th>
-                  <th className={`${utilityLabelClassName} px-3 py-2.5 font-medium`}>Type</th>
-                  <th className={`${utilityLabelClassName} px-3 py-2.5 font-medium`}>Actions</th>
+                  <th className={`${monoEyebrowClassName} px-3 py-2.5`}>Endpoint</th>
+                  <th className={`${monoEyebrowClassName} px-3 py-2.5`}>Status</th>
+                  <th className={`${monoEyebrowClassName} px-3 py-2.5`}>Type</th>
+                  <th className={`${monoEyebrowClassName} px-3 py-2.5`}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -141,12 +142,15 @@ export default function LocalPeersRoute() {
                         ? "healthy"
                         : "unhealthy";
                   return (
-                    <tr key={peer.id} className="border-b border-[var(--rm-border)] last:border-b-0">
+                    <tr
+                      key={peer.id}
+                      className="border-b border-[var(--rm-border)] last:border-b-0"
+                    >
                       <td className="px-3 py-3 font-mono text-[13px] text-[var(--rm-fg)]">
                         {peer.url}
                       </td>
                       <td className="px-3 py-3">
-                        <StatusPill
+                        <Badge
                           tone={
                             status === "healthy"
                               ? "success"
@@ -156,7 +160,7 @@ export default function LocalPeersRoute() {
                           }
                         >
                           {status}
-                        </StatusPill>
+                        </Badge>
                       </td>
                       <td className={`px-3 py-3 ${supportingTextClassName}`}>
                         OpenAI-compatible peer
@@ -190,11 +194,14 @@ export default function LocalPeersRoute() {
         )}
       </SectionCard>
 
-      <SectionCard title="Add peer endpoint">
+      <SectionCard
+        title="Add peer endpoint"
+        description="Base URL of your OpenAI-compatible API (with or without /v1). Optional bearer token if the server requires auth."
+      >
         <div className="space-y-4">
           <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px]">
             <div className="space-y-2">
-              <label htmlFor="peer-url" className={utilityLabelClassName}>
+              <label htmlFor="peer-url" className={fieldLabelClassName}>
                 Endpoint URL
               </label>
               <input
@@ -207,7 +214,7 @@ export default function LocalPeersRoute() {
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="peer-auth-token" className={utilityLabelClassName}>
+              <label htmlFor="peer-auth-token" className={fieldLabelClassName}>
                 Auth token (optional)
               </label>
               <input

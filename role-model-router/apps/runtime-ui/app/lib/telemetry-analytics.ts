@@ -98,18 +98,18 @@ const metricLabels: Record<RuntimeTelemetryAnalyticsMetric, string> = {
 };
 
 const distinctSeriesColorTokens = [
-  "var(--rm-chart-link-blue)",
-  "var(--rm-chart-cyan)",
-  "var(--rm-chart-highlight-pink)",
-  "var(--rm-chart-violet)",
-  "var(--rm-chart-link-deep)",
-  "var(--rm-chart-warning)",
-  "var(--rm-chart-error)",
-  "var(--rm-chart-cache-hit)",
-  "var(--rm-chart-cache-rate)",
-  "var(--rm-chart-latency)",
-  "var(--rm-chart-cost)",
-  "var(--rm-chart-success)",
+  "var(--rm3-chart-1)",
+  "var(--rm3-chart-azure)",
+  "var(--rm3-chart-pink)",
+  "var(--rm3-chart-violet)",
+  "var(--rm3-chart-remote)",
+  "var(--rm3-chart-amber)",
+  "var(--rm3-chart-error)",
+  "var(--rm3-chart-cache)",
+  "var(--rm3-chart-throughput)",
+  "var(--rm3-chart-latency)",
+  "var(--rm3-chart-cost)",
+  "var(--rm3-chart-green)",
 ] as const;
 
 function pickDistinctSeriesColorToken(preferredColorToken: string, usedColorTokens: Set<string>) {
@@ -127,37 +127,37 @@ function pickDistinctSeriesColorToken(preferredColorToken: string, usedColorToke
 function resolveMetricColorToken(metric: RuntimeTelemetryAnalyticsMetric): string {
   switch (metric) {
     case "inputTokens":
-      return "var(--rm-chart-link-blue)";
+      return "var(--rm3-chart-1)";
     case "outputTokens":
-      return "var(--rm-chart-cyan)";
+      return "var(--rm3-chart-azure)";
     case "totalTokens":
-      return "var(--rm-chart-tokens)";
+      return "var(--rm3-chart-throughput)";
     case "actualCostUsd":
     case "estimatedCostUsd":
     case "effectiveCostUsd":
     case "selectedUncachedCostUsd":
     case "baselineMaxEligibleCostUsd":
-      return "var(--rm-chart-cost)";
+      return "var(--rm3-chart-cost)";
     case "routingCostSavingsUsd":
     case "cacheCostSavingsUsd":
     case "totalAvoidedCostUsd":
-      return "var(--rm-chart-violet)";
+      return "var(--rm3-chart-violet)";
     case "averageLatencyMs":
-      return "var(--rm-chart-latency)";
+      return "var(--rm3-chart-latency)";
     case "p95LatencyMs":
-      return "var(--rm-chart-warning)";
+      return "var(--rm3-chart-amber)";
     case "successCount":
-      return "var(--rm-chart-success)";
+      return "var(--rm3-chart-green)";
     case "failureCount":
-      return "var(--rm-chart-failure)";
+      return "var(--rm3-chart-error)";
     case "cacheHitTokens":
     case "cacheReadTokens":
-      return "var(--rm-chart-cache-hit)";
+      return "var(--rm3-chart-cache)";
     case "cacheBackedRequestRate":
     case "cacheHitTokenRate":
-      return "var(--rm-chart-cache-rate)";
+      return "var(--rm3-chart-throughput)";
     default:
-      return "var(--rm-chart-link-blue)";
+      return "var(--rm3-chart-1)";
   }
 }
 
@@ -389,7 +389,7 @@ export function buildTelemetryTimeSeriesChartModel(
     series.push({
       key: "other",
       label: "Other",
-      colorToken: "var(--rm-chart-neutral-2)",
+      colorToken: "var(--rm3-chart-nodata)",
       dataKey: "series:other",
       strokeOpacity: 1,
       fillOpacity: 0.12,

@@ -16,21 +16,21 @@ export const links = () => [
   // Keep the packaged runtime shell self-contained so first paint never waits on remote assets.
   {
     rel: "preload",
-    href: "/assets/fonts/inter-latin-400-normal.woff2",
+    href: "/assets/fonts/geist-latin-400-normal.woff2",
     as: "font",
     type: "font/woff2",
     crossOrigin: "anonymous",
   },
   {
     rel: "preload",
-    href: "/assets/fonts/inter-latin-600-normal.woff2",
+    href: "/assets/fonts/geist-latin-600-normal.woff2",
     as: "font",
     type: "font/woff2",
     crossOrigin: "anonymous",
   },
   {
     rel: "preload",
-    href: "/assets/fonts/ibm-plex-mono-latin-400-normal.woff2",
+    href: "/assets/fonts/geist-mono-latin-400-normal.woff2",
     as: "font",
     type: "font/woff2",
     crossOrigin: "anonymous",
@@ -51,6 +51,8 @@ const themeBootstrapScript = `
     const palette = palettes[theme] ?? palettes.dark;
     const root = document.documentElement;
     root.dataset.theme = theme;
+    root.classList.toggle("dark", theme === "dark");
+    root.classList.toggle("light", theme === "light");
     root.style.colorScheme = theme;
     root.style.backgroundColor = palette.bg;
     root.style.color = palette.fg;

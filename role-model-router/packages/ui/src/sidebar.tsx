@@ -132,9 +132,7 @@ function PulsingMetric({
   className?: string;
 }) {
   const flash = useFlashOnChange(value, 150);
-  return (
-    <span className={cn(className, flash && "rm3-metric-pulse")}>{children}</span>
-  );
+  return <span className={cn(className, flash && "rm3-metric-pulse")}>{children}</span>;
 }
 
 function ModelInventory({ models }: { models: readonly SidebarModel[] }) {
@@ -148,10 +146,7 @@ function ModelInventory({ models }: { models: readonly SidebarModel[] }) {
         <SidebarEyebrow className="text-right">Requests</SidebarEyebrow>
       </div>
       {models.map((model) => (
-        <div
-          key={model.id}
-          className="flex h-8 shrink-0 items-center gap-2 rounded-md px-2.5"
-        >
+        <div key={model.id} className="flex h-8 shrink-0 items-center gap-2 rounded-md px-2.5">
           <ModelStatusDot status={model.status} />
           <div className="min-w-0 flex-1 truncate font-mono text-xs leading-4 text-foreground">
             {model.id}
@@ -261,12 +256,12 @@ function Sidebar({
           <button
             type="button"
             onClick={onHomeSelect}
-            className="font-mono text-sm leading-[18px] font-medium tracking-[-0.02em] text-foreground"
+            className="font-sans text-sm leading-[18px] font-semibold tracking-[-0.02em] text-foreground"
           >
             role-model
           </button>
         ) : (
-          <div className="font-mono text-sm leading-[18px] font-medium tracking-[-0.02em] text-foreground">
+          <div className="font-sans text-sm leading-[18px] font-semibold tracking-[-0.02em] text-foreground">
             role-model
           </div>
         )}
@@ -280,10 +275,10 @@ function Sidebar({
             onClick={item.onSelect}
             data-active={item.active ? "true" : undefined}
             className={cn(
-              "flex items-center rounded-md px-2.5 py-1.5 text-left font-sans text-sm leading-[18px]",
+              "flex items-center rounded-md px-2.5 py-1.5 text-left font-sans text-sm leading-5",
               item.active
                 ? "bg-sidebar-active font-medium text-foreground"
-                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                : "font-normal text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
             )}
           >
             {item.label}
@@ -302,10 +297,7 @@ function Sidebar({
                 onClick={item.onSelect}
                 className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               >
-                <span
-                  aria-hidden
-                  className="size-3.5 shrink-0 rounded-[3px] bg-accent"
-                />
+                <span aria-hidden className="size-3.5 shrink-0 rounded-[3px] bg-accent" />
                 <span className="font-sans text-xs leading-4">{item.label}</span>
               </button>
             ))}

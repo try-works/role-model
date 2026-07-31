@@ -3,12 +3,8 @@
 import * as React from "react";
 
 import { cn } from "./lib/utils";
-import { MetricStrip, type MetricItem } from "./metric-strip";
-import {
-  ObservePageNav,
-  observeNavItems,
-  type ObservePageId,
-} from "./observe-shared";
+import { type MetricItem, MetricStrip } from "./metric-strip";
+import { type ObservePageId, ObservePageNav, observeNavItems } from "./observe-shared";
 import { PageShell } from "./page-shell";
 import { SegmentedControl } from "./segmented-control";
 import { Sidebar, type SidebarModel, type SidebarNavItem } from "./sidebar";
@@ -85,6 +81,7 @@ function ObserveLogs({
         <SegmentedControl
           aria-label="Log source filter"
           value={sourceFilter}
+          size="md"
           options={sourceOptions.map((o) => ({ value: o.value, label: o.label }))}
           onChange={onSourceFilterChange}
         />

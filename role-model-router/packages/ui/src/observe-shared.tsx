@@ -10,10 +10,11 @@ import {
 import { ChartGrid, ChartGridCell } from "./chart-grid";
 import { RankingBarChart, type RankingChartRow } from "./chart-ranking";
 import {
+  type ChartSeries,
+  type ChartTimeAxisMode,
   TimeSeriesAreaChart,
   TimeSeriesBarChart,
   TimeSeriesLineChart,
-  type ChartSeries,
 } from "./chart-time-series";
 import { SegmentedControl, type SegmentedControlOption } from "./segmented-control";
 import type { SidebarNavItem } from "./sidebar";
@@ -46,7 +47,7 @@ export type ObserveChartBlock = {
   readonly description?: string;
   readonly kind: "area" | "line" | "bar" | "ranking" | "composition";
   readonly span?: 6 | 12;
-  /** Time-series rows (`hour` + metric keys). */
+  /** Time-series rows (`hour` / `t` + metric keys). */
   readonly data?: Record<string, string | number>[];
   readonly series?: ChartSeries[];
   /** Ranking rows (horizontal bars). */
@@ -56,6 +57,11 @@ export type ObserveChartBlock = {
   /** Optional composition ranking rows under the nest. */
   readonly compositionRanks?: readonly CompositionRankRow[];
   readonly valueLabel?: string;
+  readonly xKey?: string;
+  readonly xAxisMode?: ChartTimeAxisMode;
+  readonly xDomain?: [number, number];
+  readonly xTicks?: readonly number[];
+  readonly xTickFormatter?: (value: number) => string;
   readonly leftTickFormatter?: (value: number) => string;
   readonly rightTickFormatter?: (value: number) => string;
   readonly valueFormatter?: (value: number) => string;
@@ -66,13 +72,14 @@ export type ObserveChartBlock = {
 };
 
 /** Group charts into full-width (12) or half-width (6+6) rows. */
-export function groupObserveChartRows(
-  charts: readonly ObserveChartBlock[],
-): ObserveChartBlock[][] {
+export function groupObserveChartRows(charts: readonly ObserveChartBlock[]): ObserveChartBlock[][] {
   const rows: ObserveChartBlock[][] = [];
   let i = 0;
   while (i < charts.length) {
-    const cur = charts[i]!;
+    const cur = charts[i];
+    if (!cur) {
+      break;
+    }
     const span = cur.span ?? 12;
     if (span === 6) {
       const next = charts[i + 1];
@@ -123,6 +130,11 @@ function ObserveChartBlockView({ block }: { block: ObserveChartBlock }) {
     description: block.description,
     data: block.data ?? [],
     series: block.series ?? [],
+    xKey: block.xKey,
+    xAxisMode: block.xAxisMode,
+    xDomain: block.xDomain,
+    xTicks: block.xTicks,
+    xTickFormatter: block.xTickFormatter,
     leftTickFormatter: block.leftTickFormatter,
     rightTickFormatter: block.rightTickFormatter,
     valueFormatter: block.valueFormatter,
@@ -171,6 +183,7 @@ function ObservePageNav({
     <SegmentedControl
       className={className}
       aria-label="Observe pages"
+      size="md"
       value={value}
       options={OBSERVE_PAGE_OPTIONS}
       onChange={onChange}

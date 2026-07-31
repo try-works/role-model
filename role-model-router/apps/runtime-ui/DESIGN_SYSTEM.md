@@ -35,6 +35,7 @@ This shell must not clone the vendored llama-swap UI, and it must not treat Swis
 
 - Sidebar navigation is text-only. Section links never render route icons inside the rail.
 - No visible divider separates the sidebar from the content column; both live on the same shell surface.
+- Sidebar brandmark (`role-model`) uses Geist **sans** `14/18` semibold with `-0.02em` tracking — never mono.
 - Sidebar footer (pinned, shrink-0): **Model inventory → Cache → Router endpoint** with reduced-motion-safe live-update motion.
 - Cache / healthy status greens use chart-cache / deep emerald — not neon emerald-50/100.
 - The light/dark toggle sits on the right edge of the 48px page header strip.
@@ -42,7 +43,7 @@ This shell must not clone the vendored llama-swap UI, and it must not treat Swis
 - Configured-model detail code blocks show the compact preview payload (`modelId` plus `endpointIds`) instead of dumping full endpoint records into the first screen.
 - Compact advanced-filter rows use `DisclosureSection` in compact mode.
 - Role / category selectors use grouped category rows with a leading checkbox.
-- Status pills use solid token-backed backgrounds when a specimen still requires a pill-equivalent Badge (happy-path pages prefer Badge / MetricStrip, not StatusPill walls). Documented migration aliases during Wave 2: `--rm-pill-info-bg`, `--rm-pill-advisory-bg` (historical Linear) → RM3 muted/info badge tokens.
+- Soft-fill Badges (muted surface + hairline + semantic ink) when a specimen still requires a pill-equivalent chip (happy-path pages prefer Badge / MetricStrip, not StatusPill walls). Documented migration aliases during Wave 2: `--rm-pill-info-bg`, `--rm-pill-advisory-bg` (historical Linear) → RM3 soft badge tokens.
 
 ## Theme contract
 
@@ -128,11 +129,18 @@ Live CSS may still expose transitional `--rm-chart-*` aliases until Wave 2/SP5 f
 3. **Width** — plot fills the card content width (or the span between Y axes when present); TimeAxis aligns to plot width; no centered stubs.
 4. **Color** — `--rm3-chart-*` / `--rm3-light-chart-*` only on plots; prefer semantic series tokens; never on chrome.
 5. **ChartCard** — shared shell (`padding 16` / `height auto`): Header (full-bleed title band + `border-b`) → YAxisLeft + Plot (+ optional YAxisRight) → TimeAxis → Legend. Default plot height **192**.
-6. **Y gutter** — left Y `width 40` + `tickMargin 6`. Plot / TimeAxis / Legend left **56**. Dual-Y: plot width = rightAxis.left − 56.
-7. **Bars** — `barCategoryGap` **2%**, `maxBarSize` **96**.
+6. **Y gutter** — left Y default `width 40` + `tickMargin 6`; widen up to **88** when formatted ticks need it (e.g. `$0.10`). Legend inset = Y width + **16** (56 at default). Dual-Y: plot width = rightAxis.left − left inset.
+7. **Bars** — width matches the time-grid column exactly (day: `plotWidth · 4/24`; window: `plotWidth / n`). No `maxBarSize` cap; `barCategoryGap` / `barGap` **0**.
 8. **Time axis** — mono X labels at 7 ticks on a 24h domain: `00:00`…`20:00` plus end `24:00`. Required on every time-series chart.
 9. **Grid** — solid horizontals ≈5% ink + baseline ≈8%; verticals at those 7 time ticks. Never dashed. `vector-effect: non-scaling-stroke`.
 10. **Value axes / Y domain** — every chart has at least one Y axis (left). Same unit → left only; incompatible units → dual-Y. Y domain always includes **0** at the plot baseline.
+
+### Voice · component titles
+
+- **Sentence case** for page titles, SectionCard / panel titles, chart titles, and tabs (`Runtime overview`, `Request volume over time`).
+- **PageFilters field labels** are sentence-case sans (`Breakdown`, `Time range`) — Geist Sans 12/16 muted — not mono uppercase eyebrows.
+- Never Title Case component titles (`Request Volume Over Time`).
+- Chart composition rule 1 is the same contract for plot headers.
 
 ### Chart behavior rules (operations)
 
@@ -172,11 +180,12 @@ Exports map to Paper inventory §A in run requirements. Kit README points at thi
 ### Shared composites (Wave 2 owners)
 
 - `PageShell` / `SubPageHeaderBar` / `PageContent`
-- `PageFilters` / `TimeRangeControl` / `FilterSelect` (time range left; labeled selects right; trigger height `34px`)
-- `SegmentedControl`
-- `MetricStrip` variants: `inline` · `inventory` · `badge` · `panel`
+- `PageFilters` / `TimeRangeControl` / `FilterSelect` (time range left; labeled selects right; trigger `h-[34px]` · `w-[150px]` (or `w-full` in Advanced grids) · `bg-secondary` · `px-2.5`; value `14px` / `leading 18` / Geist Sans; labels sentence-case sans `12/16` muted — match Paper **Runtime overview**; secondary fill so selects still read on card/surface panels; `hideLabel` when a table/column header already names the field — e.g. Extensions Mode)
+- `SegmentedControl` (`size="md"` / `14px` for Studio · Local · Models · Observe · System · Router page nav **and** Overview PageFilters time range — same text size on every route; `size="sm"` / `13px` is compact-only and must not be used for shell page nav; same bordered secondary track in the 12-col content lane)
+- `MetricStrip` variants: `inline` · `inventory` · `badge` · `panel` (`panel` = card fill · `h-54` · mono uppercase labels · sans `18/22` semibold values — Paper System · Readiness)
 - `ChartCard` / `ChartGrid` / time-series / ranking / composition charts
-- SectionCard + PanelHeader (full-bleed title band + `border-b`)
+- SectionCard + PanelHeader (`px-5 py-4` title band + `border-b`; description `12px` muted; body `p-5`)
+- Form fields (`fieldClassName` / `SelectField`): `bg-background` · `34px` · `13px` / `18px`; labels `12px` medium foreground; Remote Save uses compact `34px` primary (not Studio full-width `36px`)
 
 ### Rollout order
 
@@ -214,7 +223,7 @@ Router SegmentedControl (Paper): **Overview · Strategy · Controller · Candida
 
 | Route | Status | Template | Purpose |
 | --- | --- | --- | --- |
-| `/app` | live | `summary-board` | Lead with shared telemetry controls, Candidate space, then the chart-led runtime overview stack (token → cache → cost → latency/success). |
+| `/app` | live | `summary-board` | Lead with shared telemetry controls, Model pool, then the chart-led runtime overview stack (token → cache → cost → latency/success). |
 | `/app/studio/chat` | live | `studio-workspace` | Routed chat workspace with assistant output, tool calls, execution receipts, usage, and raw payload inspection. |
 | `/app/studio/images` | live | `studio-workspace` | Image workspace with two first-slice request modes in one page: OpenAI-style generation over `/v1/images/generations` and SDAPI generation over `/sdapi/v1/txt2img`; editing and img2img stay backlog-visible rather than first-slice requirements. |
 | `/app/studio/audio` | live | `studio-workspace` | Unified audio workspace over `/v1/audio/speech`, `/v1/audio/voices`, and `/v1/audio/transcriptions` so voice discovery, speech generation, and transcript workflows remain one operator surface. |
@@ -267,7 +276,7 @@ All templates assume the shell header is already visible. Page content begins di
 
 | Template | Layout definition |
 | --- | --- |
-| `summary-board` | Content starts under the shell header. Shared analytics controls, Candidate space, then the chart-led posture stack. |
+| `summary-board` | Content starts under the shell header. Shared analytics controls, Model pool, then the chart-led posture stack. |
 | `studio-workspace` | Content starts under the shell header. Left composition rail, dominant result surface, and secondary inspection region for payload, captures, or contracts. |
 | `registry-detail` | Content starts under the shell header. Dense registry/editor split: compact editing or selection on one side, operational state ledger on the other. |
 | `model-inventory` | Content starts under the shell header. Mobile-first card grid with modal drill-in; cards are the default object representation, not rows. |
@@ -283,7 +292,7 @@ No current runtime route may rely on `FutureSurface`, fixture rows, or other pla
 
 | Template | Implemented reading order |
 | --- | --- |
-| `summary-board` | `/app` leads with telemetry controls plus Candidate space and a chart-led posture band for tokens, cache, cost, latency, and success/failure volume. |
+| `summary-board` | `/app` leads with telemetry controls plus Model pool and a chart-led posture band for tokens, cache, cost, latency, and success/failure volume. |
 | `studio-workspace` | `/app/studio/chat` uses a compact composer, dominant response stage, and adjacent usage/tooling/payload inspection. |
 | `registry-detail` | Provider, runtime-config, controller, and endpoint pages keep the primary editor/ledger split and use summary chrome only when it changes the operator decision. |
 | `model-inventory` | `/app/models` uses MetricStrip / inventory summary before a responsive configured-model card grid and an inspect-only modal (no FactCard strip). |
@@ -301,7 +310,7 @@ Redirect-only routes inherit the contract of their live destination and do not d
 
 | Route | Layout contract | Required content contract |
 | --- | --- | --- |
-| `/app` | Telemetry controls first, Candidate space second, then the chart band. | Must show time-range controls, primary telemetry filters (Breakdown / Source / Status / Difficulty), Candidate space, and token/cache/cost/latency/success charts. |
+| `/app` | Telemetry controls first, Model pool second, then the chart band. | Must show time-range controls, primary telemetry filters (Breakdown / Source / Status / Difficulty), Model pool, and token/cache/cost/latency/success charts. |
 | `/app/studio/chat` | Two-column studio workspace with composer rail left and result workspace right; secondary receipts may stack below result. | Must show model/endpoint/routing controls, prompt entry, request submission, result summary, tooling receipts, usage, and raw payload inspection. |
 | `/app/studio/images` | Studio workspace with request-mode controls first, composition controls next, output gallery/result stage beside or below controls depending on width. | Must show OpenAI-style and SDAPI generation modes, model selection, generation controls, output/result stage, and payload/response detail. |
 | `/app/studio/audio` | Studio workspace with speech/transcription controls leading, result stage adjacent, and secondary receipts below. | Must show provider/model/voice or transcription controls, audio or transcript result surfaces, and request/response detail. |
@@ -385,10 +394,11 @@ Redirect-only routes inherit the contract of their live destination and do not d
 
 ### Badges and status pills
 
-- Shared semantic status pills for `healthy`, `degraded`, `offline`, and similar runtime states use solid token-backed backgrounds
-- semantic meaning is carried by token choice plus contrasting text
-- transparent semantic-outline pills are not part of the active runtime grammar
-- pill fill, pill text, and pill emphasis come from shared theme tokens, never route-local hardcoded colors
+- Paper RM3 Badge geometry is fixed: height `22px`, padding-inline `8px`, `rounded-full`, mono `11px / 14px` regular (System Readiness SoT)
+- Soft tones (`neutral` / `success` / `warning` / `error` / `info` / `advisory`) use muted fill + **semantic ink** (e.g. healthy = chart-cache green text — never a solid green capsule); no hairline on soft chips
+- Accent tone (`selected`) keeps solid primary fill + contrast ink
+- Transparent outline-only semantic pills are not the grammar
+- pill fill / ink come from shared `--rm-pill-*` theme tokens, never route-local hardcoded colors
 
 ### Role and category selectors
 

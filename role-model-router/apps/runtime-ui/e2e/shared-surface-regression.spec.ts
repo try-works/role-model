@@ -75,13 +75,14 @@ test("keeps shared typography and tokenized controls aligned on seeded QA routes
 
   await page.goto("/app/models");
   await expect(page.getByRole("heading", { name: "Model inventory" })).toBeVisible();
-  const kimiInventoryCard = page.locator("article").filter({ hasText: "moonshot/kimi-k2.5" });
-  await expect(kimiInventoryCard).toContainText("moonshot/kimi-k2.5");
-  await kimiInventoryCard.getByRole("button", { name: "Inspect" }).click();
-  await page.getByText("Edit role bindings", { exact: true }).click();
-  await expect(page.getByRole("link", { name: "Manage role definitions" }).first()).toBeVisible();
-  await expect(page.getByText("Runtime roles", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Save bindings" }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: /moonshot\/kimi-k2\.5/i }).first()).toBeVisible();
+  await page
+    .getByRole("button", { name: /moonshot\/kimi-k2\.5/i })
+    .first()
+    .click();
+  await expect(page.getByText("tasks under each role")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Make primary controller" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Open Roles" })).toBeVisible();
   await capture(page, "qa-shared-models-role-bindings.png", true);
 
   await page.goto("/app/connect");

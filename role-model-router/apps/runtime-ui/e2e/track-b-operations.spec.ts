@@ -26,7 +26,7 @@ test("operates disclosure, opt-out, retention, recommendations, and failure isol
 
   await page.goto("/app/system/storage-retention");
   await expect(page.getByRole("heading", { name: "Retention policy" })).toBeVisible();
-  await page.getByLabel("Maximum bytes").fill("1024");
+  await page.getByLabel("Maximum size (GB)").fill("1");
   await page.getByLabel("Maximum age (days)").fill("1");
   await page.getByRole("button", { name: "Save policy" }).click();
   await page.getByRole("button", { name: "Dry-run" }).click();

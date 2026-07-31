@@ -2,11 +2,11 @@ import { MetricStrip } from "@role-model/ui";
 import { useEffect, useState } from "react";
 
 import {
+  Badge,
   EmptyState,
   ErrorState,
   LoadingState,
   SectionCard,
-  StatusPill,
 } from "../components/page-primitives";
 import { bodyStrongTextClassName, cardClassName } from "../lib/design-system";
 import { type RouterCandidate, fetchRouterCandidates } from "../lib/runtime-api";
@@ -134,9 +134,9 @@ export default function RouterCandidatesRoute() {
                     >
                       <p className={bodyStrongTextClassName}>{candidate.modelId}</p>
                     </div>
-                    <StatusPill tone={candidateStatusTone(candidate)}>
+                    <Badge tone={candidateStatusTone(candidate)}>
                       {candidateStatusLabel(candidate)}
-                    </StatusPill>
+                    </Badge>
                   </div>
 
                   <MetricStrip

@@ -1,7 +1,10 @@
 @import "tailwindcss";
 @import "./rm3-tokens.css";
 
-@source "../../packages/ui/src/**/*.{ts,tsx}";
+@source "../../../packages/ui/src/**/*.{ts,tsx}";
+
+/* App theme uses html[data-theme], not the default .dark class / prefers-color-scheme. */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 @theme inline {
   --color-background: var(--rm-bg);
@@ -52,6 +55,9 @@
   --color-chart-error: var(--rm-chart-failure);
   --color-chart-green: var(--rm-chart-success);
   --color-status-warning: var(--rm-warning);
+
+  --font-sans: var(--rm3-font-sans);
+  --font-mono: var(--rm3-font-mono);
 }
 
 @font-face {
@@ -119,192 +125,49 @@
 }
 
 :root {
-  --linear-font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
-  --linear-font-display: "Geist", ui-sans-serif, system-ui, sans-serif;
-  --linear-font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  /*
+   * Historical Linear names — thin stubs only (tests / FD#9). Not live styling authority.
+   * Live geometry and chrome use --rm-* → --rm3-* (or literals). Do not re-expand this block.
+   */
+  --linear-bg-canvas: var(--rm3-background);
+  --linear-accent-primary: var(--rm3-primary);
+  --linear-accent-focus: var(--rm3-ring);
 
-  --linear-text-caption: 12px;
-  --linear-text-body: 16px;
-  --linear-text-body-sm: 14px;
-  --linear-text-card-title: 22px;
-  --linear-text-headline: 28px;
-  --linear-text-display-md: 40px;
-  --linear-text-display-lg: 56px;
-  --linear-text-display-xl: 80px;
-  --linear-text-detail: 13px;
-  --linear-text-detail-sm: 13px;
-  --linear-text-label: 12px;
-  --linear-text-pill: var(--linear-text-label);
-  --linear-text-nav: 14px;
-  --linear-text-action: 14px;
-  --linear-text-item-title: 15px;
-  --linear-text-panel-title: 16px;
-  --linear-text-section-title: 18px;
-  --linear-text-subhead: 20px;
-  --linear-text-body-lg: 18px;
-
-  --linear-font-weight-regular: 400;
-  --linear-font-weight-medium: 500;
-  --linear-font-weight-semibold: 600;
-  --linear-font-weight-bold: 700;
-
-  --linear-tracking-caption: 0em;
-  --linear-tracking-body: -0.003em;
-  --linear-tracking-body-sm: 0em;
-  --linear-tracking-card-title: -0.018em;
-  --linear-tracking-headline: -0.021em;
-  --linear-tracking-display-md: -0.025em;
-  --linear-tracking-display-lg: -0.032em;
-  --linear-tracking-display-xl: -0.0375em;
-  --linear-tracking-label: 0em;
-  --linear-tracking-detail: 0em;
-  --linear-tracking-detail-sm: 0em;
-  --linear-tracking-nav: 0em;
-  --linear-tracking-action: 0em;
-  --linear-tracking-item-title: 0em;
-  --linear-tracking-panel-title: -0.01em;
-  --linear-tracking-section-title: -0.012em;
-  --linear-tracking-subhead: -0.015em;
-  --linear-tracking-pill: 0em;
-  --linear-tracking-eyebrow: 0.08em;
-
-  --linear-leading-caption: 17px;
-  --linear-leading-body: 24px;
-  --linear-leading-body-sm: 21px;
-  --linear-leading-card-title: 28px;
-  --linear-leading-headline: 34px;
-  --linear-leading-display-md: 46px;
-  --linear-leading-display-lg: 62px;
-  --linear-leading-display-xl: 84px;
-  --linear-leading-label: 16px;
-  --linear-leading-pill: var(--linear-leading-label);
-  --linear-leading-detail: 20px;
-  --linear-leading-detail-sm: 18px;
-  --linear-leading-nav: 21px;
-  --linear-leading-action: 20px;
-  --linear-leading-item-title: 20px;
-  --linear-leading-panel-title: 22px;
-  --linear-leading-section-title: 24px;
-  --linear-leading-subhead: 28px;
-  --linear-leading-body-lg: 27px;
-
-  --linear-space-4: 4px;
-  --linear-space-8: 8px;
-  --linear-space-12: 12px;
-  --linear-space-16: 16px;
-  --linear-space-24: 24px;
-  --linear-space-32: 32px;
-  --linear-space-48: 48px;
-  --linear-space-96: 96px;
-
-  --linear-radius-4: 4px;
-  --linear-radius-6: 6px;
-  --linear-radius-8: 8px;
-  --linear-radius-12: 12px;
-  --linear-radius-16: 16px;
-  --linear-radius-pill: 9999px;
-
-  --linear-light-canvas: #ffffff;
-  --linear-light-surface-1: #f7f8f8;
-  --linear-light-surface-2: #f3f4f6;
-  --linear-light-surface-3: #eceef2;
-  --linear-light-ink: #0f1115;
-  --linear-light-ink-muted: #3a4150;
-  --linear-light-ink-subtle: #69707d;
-  --linear-light-ink-tertiary: #8f95a1;
-  --linear-light-hairline: #e3e6ec;
-  --linear-light-hairline-strong: #ced3de;
-
-  --linear-bg-canvas: #010102;
-  --linear-surface-1: #0f1011;
-  --linear-surface-2: #141516;
-  --linear-surface-3: #18191a;
-  --linear-surface-4: #191a1b;
-  --linear-ink: #f7f8f8;
-  --linear-ink-muted: #d0d6e0;
-  --linear-ink-subtle: #8a8f98;
-  --linear-ink-tertiary: #62666d;
-  --linear-hairline: #23252a;
-  --linear-hairline-strong: #34343a;
-  --linear-hairline-tertiary: #3e3e44;
-
-  --linear-accent-primary: #5e6ad2;
-  --linear-accent-focus: #5e69d1;
-  --linear-accent-hover: #828fff;
-  --linear-accent-fill-light: rgb(94 106 210 / 8%);
-  --linear-accent-soft-light: rgb(94 106 210 / 14%);
-  --linear-accent-fill-dark: rgb(94 106 210 / 12%);
-  --linear-accent-soft-dark: rgb(94 106 210 / 20%);
-  --linear-accent-secure: #7a7fad;
-
-  --linear-success: #27a644;
-  --rm-success-light: #27a644;
-  --linear-warning: #d9a441;
-  --linear-error: #e06c89;
-  --linear-info: #6ea8ff;
-  --linear-advisory: #b479ff;
-
-  --linear-light-warning: #b67a11;
-  --linear-light-error: #d84f6a;
-  --linear-light-info: #3f87f5;
-  --linear-light-advisory: #9664e8;
-
-  --linear-telemetry-local: var(--rm-chart-cyan);
-  --linear-telemetry-remote: var(--linear-accent-primary);
-  --linear-telemetry-throughput: #4aa7c8;
-  --linear-telemetry-latency: #8c6cff;
-  --linear-telemetry-cache: #43b98e;
-  --linear-telemetry-queue: var(--linear-warning);
-  --linear-telemetry-cost: #2fa9a1;
-  --linear-telemetry-anomaly: #ff7da6;
-
-  --linear-light-telemetry-local: #5c667c;
-  --linear-light-telemetry-remote: var(--linear-accent-primary);
-  --linear-light-telemetry-throughput: #0f8fb2;
-  --linear-light-telemetry-latency: #7d5af5;
-  --linear-light-telemetry-cache: #1f8f5f;
-  --linear-light-telemetry-queue: var(--linear-light-warning);
-  --linear-light-telemetry-cost: #0f8a88;
-  --linear-light-telemetry-anomaly: #d54b8c;
-
-  --linear-anomaly-soft-dark: rgb(255 125 166 / 10%);
-  --linear-warning-soft-dark: rgb(217 164 65 / 12%);
-  --linear-light-anomaly-soft: rgb(216 79 106 / 10%);
-  --linear-success-soft-light: rgb(39 166 68 / 10%);
-  --linear-success-soft-dark: rgb(39 166 68 / 14%);
+  --rm-success-light: var(--rm3-chart-cache);
 
   --rm-font-display: var(--rm3-font-display);
   --rm-font-body: var(--rm3-font-sans);
   --rm-font-mono: var(--rm3-font-mono);
 
-  --rm-radius-sm: var(--linear-radius-8);
-  --rm-radius-md: 12px;
-  --rm-radius-lg: 16px;
-  --rm-radius-pill: var(--linear-radius-pill);
+  --rm-radius-sm: var(--rm3-radius-lg);
+  --rm-radius-md: var(--rm3-radius-xl);
+  --rm-radius-lg: var(--rm3-radius-lg);
+  --rm-radius-pill: 9999px;
   --rm-radius-shell: 28px;
-  --rm-radius-panel: 16px;
-  --rm-radius-field: 12px;
-  --rm-radius-badge: var(--linear-radius-pill);
+  /* Paper SectionCard / Studio panels use --rm3-radius-lg (8px), not 16px. */
+  --rm-radius-panel: var(--rm3-radius-lg);
+  /* Form triggers match PageFilters / FilterSelect (`rounded-md` = 6px), not card xl. */
+  --rm-radius-field: var(--rm3-radius-md);
+  --rm-radius-badge: 9999px;
 
   --rm-shadow-card: none;
   --rm-shadow-ui: none;
   --rm-shadow-product: 0 3px 5px 30px rgb(0 0 0 / 22%);
-  --rm-shell-width: 1840px;
 
-  --rm-space-xxs: var(--linear-space-4);
-  --rm-space-xs: var(--linear-space-8);
-  --rm-space-sm: var(--linear-space-12);
+  --rm-space-xxs: 4px;
+  --rm-space-xs: 8px;
+  --rm-space-sm: 12px;
   --rm-space-md: 17px;
-  --rm-space-lg: var(--linear-space-24);
-  --rm-space-xl: var(--linear-space-32);
-  --rm-space-xxl: var(--linear-space-48);
+  --rm-space-lg: 24px;
+  --rm-space-xl: 32px;
+  --rm-space-xxl: 48px;
   --rm-space-section: 80px;
 
-  --rm-nav-height-global: 44px;
-  --rm-nav-height-sub: 52px;
+  --rm-nav-height-global: 48px;
+  --rm-nav-height-sub: 48px;
   --rm-sticky-bar-height: 64px;
-  --rm-field-height: 44px;
-  --rm-icon-button-size: 44px;
+  --rm-field-height: 34px;
+  --rm-icon-button-size: 34px;
   --rm-button-pill-padding: 11px 22px;
   --rm-button-utility-padding: 8px 15px;
   --rm-button-hero-padding: 14px 28px;
@@ -330,7 +193,8 @@
 
 html {
   color-scheme: light dark;
-  scrollbar-gutter: stable;
+  /* Shell scrolls internally with a hidden scrollbar — do not reserve a
+     document gutter (it insets the header border and theme toggle). */
   background: var(--rm-bg);
 }
 
@@ -427,7 +291,7 @@ html[data-theme="light"] {
 
   --rm-chart-local: var(--rm3-light-chart-local);
   --rm-chart-remote: var(--rm3-light-chart-remote);
-  --rm-chart-tokens: var(--rm3-light-chart-anomaly);
+  --rm-chart-tokens: var(--rm3-light-chart-throughput);
   --rm-chart-cache-hit: var(--rm3-light-chart-cache);
   --rm-chart-cache-rate: var(--rm3-light-chart-throughput);
   --rm-chart-latency: var(--rm3-light-chart-latency);
@@ -451,20 +315,23 @@ html[data-theme="light"] {
   --rm-sidebar-primary: var(--rm3-light-sidebar-primary);
   --rm-sidebar-primary-foreground: var(--rm3-light-sidebar-primary-foreground);
   --rm-sidebar-ring: var(--rm3-light-sidebar-ring);
-  --rm-pill-neutral-bg: var(--rm3-light-border);
-  --rm-pill-neutral-ink: var(--rm3-light-foreground);
+  --rm-pill-soft-bg: var(--rm3-light-secondary);
+  --rm-pill-border: var(--rm3-light-border);
+  --rm-pill-neutral-bg: var(--rm3-light-secondary);
+  --rm-pill-neutral-ink: var(--rm3-light-muted-foreground);
   --rm-pill-accent-bg: var(--rm3-light-primary);
   --rm-pill-accent-ink: var(--rm3-light-primary-foreground);
-  --rm-pill-success-bg: #166534;
-  --rm-pill-success-ink: var(--rm3-light-primary-foreground);
-  --rm-pill-warning-bg: #b67a11;
-  --rm-pill-warning-ink: var(--rm3-light-primary-foreground);
-  --rm-pill-error-bg: var(--rm3-light-destructive);
-  --rm-pill-error-ink: var(--rm3-light-primary-foreground);
-  --rm-pill-info-bg: var(--rm3-light-muted-foreground);
-  --rm-pill-info-ink: var(--rm3-light-primary-foreground);
-  --rm-pill-advisory-bg: var(--rm3-light-ring);
-  --rm-pill-advisory-ink: var(--rm3-light-primary-foreground);
+  --rm-pill-success-bg: var(--rm3-light-secondary);
+  --rm-pill-success-ink: var(--rm3-light-chart-cache);
+  --rm-pill-warning-bg: var(--rm3-light-secondary);
+  /* Soft pills stay grayscale; amber stays on charts / status dots, not Badge ink. */
+  --rm-pill-warning-ink: var(--rm3-light-muted-foreground);
+  --rm-pill-error-bg: var(--rm3-light-secondary);
+  --rm-pill-error-ink: var(--rm3-light-destructive);
+  --rm-pill-info-bg: var(--rm3-light-secondary);
+  --rm-pill-info-ink: var(--rm3-light-muted-foreground);
+  --rm-pill-advisory-bg: var(--rm3-light-secondary);
+  --rm-pill-advisory-ink: var(--rm3-light-muted-foreground);
 
   --rm-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' stroke='%23666666' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
@@ -526,7 +393,7 @@ html[data-theme="dark"] {
 
   --rm-chart-local: var(--rm3-chart-local);
   --rm-chart-remote: var(--rm3-chart-remote);
-  --rm-chart-tokens: var(--rm3-chart-anomaly);
+  --rm-chart-tokens: var(--rm3-chart-throughput);
   --rm-chart-cache-hit: var(--rm3-chart-cache);
   --rm-chart-cache-rate: var(--rm3-chart-throughput);
   --rm-chart-latency: var(--rm3-chart-latency);
@@ -540,20 +407,23 @@ html[data-theme="dark"] {
   --rm-chart-tooltip-border: rgb(237 237 237 / 8%);
   --rm-chart-skeleton: rgb(237 237 237 / 6%);
 
-  --rm-pill-neutral-bg: var(--rm3-border);
+  --rm-pill-soft-bg: var(--rm3-secondary);
+  --rm-pill-border: var(--rm3-border);
+  --rm-pill-neutral-bg: var(--rm3-secondary);
   --rm-pill-neutral-ink: var(--rm3-muted-foreground);
   --rm-pill-accent-bg: var(--rm3-primary);
   --rm-pill-accent-ink: var(--rm3-primary-foreground);
-  --rm-pill-success-bg: #059669;
-  --rm-pill-success-ink: var(--rm3-primary-foreground);
-  --rm-pill-warning-bg: #d9a441;
-  --rm-pill-warning-ink: var(--rm3-primary-foreground);
-  --rm-pill-error-bg: var(--rm3-destructive);
-  --rm-pill-error-ink: var(--rm3-primary-foreground);
-  --rm-pill-info-bg: var(--rm3-muted-foreground);
-  --rm-pill-info-ink: var(--rm3-primary-foreground);
-  --rm-pill-advisory-bg: var(--rm3-ring);
-  --rm-pill-advisory-ink: var(--rm3-primary-foreground);
+  --rm-pill-success-bg: var(--rm3-secondary);
+  --rm-pill-success-ink: var(--rm3-chart-cache);
+  --rm-pill-warning-bg: var(--rm3-secondary);
+  /* Soft pills stay grayscale; amber stays on charts / status dots, not Badge ink. */
+  --rm-pill-warning-ink: var(--rm3-muted-foreground);
+  --rm-pill-error-bg: var(--rm3-secondary);
+  --rm-pill-error-ink: var(--rm3-destructive);
+  --rm-pill-info-bg: var(--rm3-secondary);
+  --rm-pill-info-ink: var(--rm3-muted-foreground);
+  --rm-pill-advisory-bg: var(--rm3-secondary);
+  --rm-pill-advisory-ink: var(--rm3-muted-foreground);
 
   --rm-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' stroke='%239a9a9a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
@@ -587,16 +457,25 @@ pre {
   font-family: var(--rm-font-mono);
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+/*
+ * Prefer font-family only on form controls. Unlayered `font: inherit` resets
+ * size/weight and beats Tailwind @layer utilities on Sidebar nav /
+ * SegmentedControl buttons.
+ *
+ * Do not set `a { color: inherit }` here — even in @layer base it fights
+ * primary Link CTAs; leave color to utilities / parent text classes.
+ */
+@layer base {
+  a {
+    text-decoration: none;
+  }
 
-button,
-input,
-select,
-textarea {
-  font: inherit;
+  button,
+  input,
+  select,
+  textarea {
+    font-family: inherit;
+  }
 }
 
 select {

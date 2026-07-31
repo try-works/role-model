@@ -1,22 +1,11 @@
+import { ChartGrid, ChartGridCell, FilterSelect, PageFilters } from "@role-model/ui";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
-import {
-  ChartGrid,
-  ChartGridCell,
-  FilterSelect,
-  PageFilters,
-} from "@role-model/ui";
 
 import { ObserveKitChartBlock } from "../components/observe-chart-block";
-import {
-  DisclosureSection,
-  ErrorState,
-} from "../components/page-primitives";
+import { DisclosureSection, ErrorState } from "../components/page-primitives";
 import { TelemetryTextField } from "../components/telemetry-controls";
-import {
-  foregroundEmphasisClassName,
-  mutedPanelClassName,
-} from "../lib/design-system";
+import { foregroundEmphasisClassName, mutedPanelClassName } from "../lib/design-system";
 import { startDeferredLiveRefresh } from "../lib/live-refresh";
 import { adaptObserveChartBlock } from "../lib/observe-chart-adapter";
 import type {

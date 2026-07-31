@@ -1,37 +1,31 @@
-import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ChartCard,
   ChartCardDescription,
   ChartCardHeader,
+  ChartCardPlot,
   ChartCardTitle,
   ChartGrid,
   ChartGridCell,
   PageFilters,
 } from "@role-model/ui";
+import { useEffect, useMemo, useRef, useState } from "react";
 
+import { CandidateSpaceChart } from "../components/candidate-space-chart";
 import { OverviewKitChartBlock } from "../components/overview-chart-block";
-import {
-  EmptyState,
-  ErrorState,
-  LoadingState,
-  StatusPill,
-} from "../components/page-primitives";
-import {
-  foregroundEmphasisClassName,
-  mutedPanelClassName,
-} from "../lib/design-system";
+import { ErrorState, LoadingState } from "../components/page-primitives";
+import { buildCandidateSpacePoints } from "../lib/candidate-space";
+import { supportingTextClassName } from "../lib/design-system";
 import { startDeferredLiveRefresh } from "../lib/live-refresh";
-import {
-  adaptOverviewChartBlock,
-  sortOverviewChartBlocks,
-} from "../lib/overview-chart-adapter";
+import { adaptOverviewChartBlock, sortOverviewChartBlocks } from "../lib/overview-chart-adapter";
 import type {
+  RouterCandidate,
   RuntimeDashboardSnapshot,
   RuntimeTelemetryAnalyticsDimension,
   RuntimeTelemetryAnalyticsFilters,
   RuntimeTelemetryRequestRecord,
 } from "../lib/runtime-api";
 import {
+  fetchRouterCandidates,
   fetchRuntimeDashboardSnapshot,
   fetchTelemetryAnalytics,
   fetchTelemetryRequests,
@@ -89,6 +83,7 @@ function getChartLoadErrorMessage(title: string, value: unknown): string {
 
 export default function DashboardRoute() {
   const [snapshot, setSnapshot] = useState<RuntimeDashboardSnapshot | null>(null);
+  const [candidates, setCandidates] = useState<readonly RouterCandidate[]>([]);
   const [requests, setRequests] = useState<readonly RuntimeTelemetryRequestRecord[]>([]);
   const [charts, setCharts] = useState<readonly OverviewChartRecord[]>([]);
   const chartsRef = useRef<readonly OverviewChartRecord[]>([]);
@@ -135,8 +130,9 @@ export default function DashboardRoute() {
           filters,
           breakdown,
         });
-        const [nextSnapshot, nextRequests, chartResults] = await Promise.all([
+        const [nextSnapshot, nextCandidates, nextRequests, chartResults] = await Promise.all([
           fetchRuntimeDashboardSnapshot(),
+          fetchRouterCandidates().catch(() => [] as RouterCandidate[]),
           fetchTelemetryRequests({
             limit: 60,
             filters,
@@ -152,6 +148,7 @@ export default function DashboardRoute() {
         }
 
         setSnapshot(nextSnapshot);
+        setCandidates(nextCandidates);
         setRequests(nextRequests);
         const resolvedCharts = resolveTelemetryChartRefresh({
           background,
@@ -209,22 +206,14 @@ export default function DashboardRoute() {
     [charts, loading],
   );
 
-  const candidateLegend = useMemo(() => {
-    const endpoints = snapshot?.endpoints ?? [];
-    return endpoints.slice(0, 5).map((endpoint, index) => ({
-      id: endpoint.endpointId,
-      label: endpoint.modelId,
-      detail: endpoint.status,
-      selected: index === 0,
-    }));
-  }, [snapshot]);
+  const candidatePoints = useMemo(() => buildCandidateSpacePoints(candidates, 5), [candidates]);
 
   if (error) {
     return <ErrorState label={error} />;
   }
 
   return (
-    <div className="space-y-4">
+    <>
       <PageFilters
         timeRange={timeRange}
         timeRangeOptions={overviewTimeRangeOptions}
@@ -287,62 +276,35 @@ export default function DashboardRoute() {
       ) : null}
 
       {staleCharts.length > 0 ? (
-        <div
-          className={`${mutedPanelClassName} flex items-center gap-2 border-l-4 border-[var(--rm-chart-warning)] p-3 text-sm`}
-        >
-          <span className={foregroundEmphasisClassName}>
-            Some charts may be using cached data from a previous refresh.
-          </span>
-          <span className="text-[var(--rm-secondary)]">
-            ({staleCharts.length} chart{staleCharts.length !== 1 ? "s" : ""})
-          </span>
-        </div>
+        <p className={`${supportingTextClassName} text-[var(--rm-warning-fg)]`}>
+          Some charts may be using cached data from a previous refresh ({staleCharts.length} chart
+          {staleCharts.length !== 1 ? "s" : ""}).
+        </p>
       ) : null}
 
       {!(loading && !snapshot && charts.length === 0) ? (
-      <ChartGrid>
-        <ChartGridCell span={12}>
-          <ChartCard chrome="cell">
-            <ChartCardHeader>
-              <ChartCardTitle>Candidate space</ChartCardTitle>
-              <ChartCardDescription>
-                Route candidates by quality, cost, and speed. Marker size is proportional to route
-                score. Cost axis is inverted: higher is cheaper.
-              </ChartCardDescription>
-            </ChartCardHeader>
-            <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_280px]">
-              <div className="flex min-h-[280px] items-center justify-center rounded-md border border-dashed border-border bg-muted/20 px-4 text-center text-sm text-muted-foreground">
-                {candidateLegend.length === 0
-                  ? "No routable candidates in the current inventory."
-                  : "Candidate scatter uses live endpoint inventory for the legend. Full quality/cost/speed axes land with router candidate telemetry."}
-              </div>
-              <div className="space-y-2">
-                {candidateLegend.length === 0 ? (
-                  <EmptyState label="No candidates to list." />
-                ) : (
-                  candidateLegend.map((entry) => (
-                    <div
-                      key={entry.id}
-                      className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2 text-sm"
-                    >
-                      <span className="truncate font-mono text-[13px]">{entry.label}</span>
-                      <StatusPill tone={entry.selected ? "accent" : "neutral"}>
-                        {entry.selected ? "Selected" : entry.detail}
-                      </StatusPill>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </ChartCard>
-        </ChartGridCell>
-        {chartBlocks.map((block) => (
-          <ChartGridCell key={block.title} span={block.span}>
-            <OverviewKitChartBlock block={block} />
+        <ChartGrid>
+          <ChartGridCell span={12}>
+            <ChartCard chrome="cell">
+              <ChartCardHeader>
+                <ChartCardTitle>Model pool</ChartCardTitle>
+                <ChartCardDescription>
+                  Route candidates by quality, cost, and speed. Marker size is proportional to route
+                  score. Cost axis is inverted: higher is cheaper.
+                </ChartCardDescription>
+              </ChartCardHeader>
+              <ChartCardPlot>
+                <CandidateSpaceChart points={candidatePoints} />
+              </ChartCardPlot>
+            </ChartCard>
           </ChartGridCell>
-        ))}
-      </ChartGrid>
+          {chartBlocks.map((block) => (
+            <ChartGridCell key={block.title} span={block.span}>
+              <OverviewKitChartBlock block={block} />
+            </ChartGridCell>
+          ))}
+        </ChartGrid>
       ) : null}
-    </div>
+    </>
   );
 }

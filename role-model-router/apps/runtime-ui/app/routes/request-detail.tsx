@@ -2,23 +2,23 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 
 import {
+  Badge,
   CodeBlock,
   DisclosureSection,
   EmptyState,
   ErrorState,
   LoadingState,
   SectionCard,
-  StatusPill,
 } from "../components/page-primitives";
 import {
   accentActionTextClassName,
   bodyStrongTextClassName,
   compactTitleClassName,
+  fieldLabelClassName,
   inlineTitleClassName,
   metaTextClassName,
   mutedPanelClassName,
   supportingTextClassName,
-  utilityLabelClassName,
 } from "../lib/design-system";
 import { formatRoutingModeLabel } from "../lib/routing-mode";
 import { fetchRequestDetail } from "../lib/runtime-api";
@@ -498,14 +498,14 @@ export default function RequestDetailRoute() {
       >
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <div className={`${mutedPanelClassName} space-y-2 p-4 xl:col-span-2`}>
-            <p className={utilityLabelClassName}>Endpoint</p>
+            <p className={fieldLabelClassName}>Endpoint</p>
             <p className={`${inlineTitleClassName} break-all`}>{endpointId}</p>
             <p className={supportingTextClassName}>
               Endpoint id currently associated with the captured request.
             </p>
           </div>
           <div className={`${mutedPanelClassName} space-y-2 p-4 xl:col-span-2`}>
-            <p className={utilityLabelClassName}>Correlation</p>
+            <p className={fieldLabelClassName}>Correlation</p>
             <p className={`${inlineTitleClassName} break-all`}>
               {renderMetricValue(clientRequestId)}
             </p>
@@ -542,7 +542,8 @@ export default function RequestDetailRoute() {
             {
               label: "Adapter",
               value: renderMetricValue(adapterFamily),
-              detail: "Concrete adapter implementation used to shape and execute the provider request.",
+              detail:
+                "Concrete adapter implementation used to shape and execute the provider request.",
             },
             {
               label: "Latency",
@@ -576,7 +577,7 @@ export default function RequestDetailRoute() {
             },
           ].map((item) => (
             <div key={item.label} className={`${mutedPanelClassName} space-y-2 p-4`}>
-              <p className={utilityLabelClassName}>{item.label}</p>
+              <p className={fieldLabelClassName}>{item.label}</p>
               <p className={`${bodyStrongTextClassName} break-all text-[var(--rm-fg)]`}>
                 {item.value}
               </p>
@@ -597,13 +598,13 @@ export default function RequestDetailRoute() {
                 <p className={compactTitleClassName}>Original request hints</p>
                 <dl className="mt-3 space-y-3 text-sm">
                   <div>
-                    <dt className={utilityLabelClassName}>Original role hint</dt>
+                    <dt className={fieldLabelClassName}>Original role hint</dt>
                     <dd className={`mt-1 ${supportingTextClassName}`}>
                       {renderMetricValue(originalRoleHint)}
                     </dd>
                   </div>
                   <div>
-                    <dt className={utilityLabelClassName}>Original task type</dt>
+                    <dt className={fieldLabelClassName}>Original task type</dt>
                     <dd className={`mt-1 ${supportingTextClassName}`}>
                       {renderMetricValue(originalTaskType)}
                     </dd>
@@ -620,7 +621,7 @@ export default function RequestDetailRoute() {
                     ["Task variant", taxonomyTaskVariant],
                   ].map(([label, value]) => (
                     <div key={label}>
-                      <dt className={utilityLabelClassName}>{label}</dt>
+                      <dt className={fieldLabelClassName}>{label}</dt>
                       <dd className={`mt-1 ${supportingTextClassName}`}>
                         {renderMetricValue(value)}
                       </dd>
@@ -646,7 +647,7 @@ export default function RequestDetailRoute() {
                     ],
                   ].map(([label, value]) => (
                     <div key={label}>
-                      <dt className={utilityLabelClassName}>{label}</dt>
+                      <dt className={fieldLabelClassName}>{label}</dt>
                       <dd className={`mt-1 ${supportingTextClassName}`}>
                         {renderMetricValue(value)}
                       </dd>
@@ -685,7 +686,7 @@ export default function RequestDetailRoute() {
                   key={label}
                   className="rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
                 >
-                  <dt className={utilityLabelClassName}>{label}</dt>
+                  <dt className={fieldLabelClassName}>{label}</dt>
                   <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
                 </div>
               ))}
@@ -725,7 +726,7 @@ export default function RequestDetailRoute() {
               key={label}
               className="rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel-muted)] p-3"
             >
-              <dt className={utilityLabelClassName}>{label}</dt>
+              <dt className={fieldLabelClassName}>{label}</dt>
               <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
             </div>
           ))}
@@ -738,17 +739,17 @@ export default function RequestDetailRoute() {
       >
         <div className="space-y-4">
           <div className="flex flex-wrap gap-2">
-            <StatusPill tone={rawObservationAvailable ? "success" : "warning"}>
+            <Badge tone={rawObservationAvailable ? "success" : "warning"}>
               {rawObservationAvailable ? "Raw observation retained" : "Ledger fallback only"}
-            </StatusPill>
-            <StatusPill tone={structuredInspectionAvailable ? "accent" : "neutral"}>
+            </Badge>
+            <Badge tone={structuredInspectionAvailable ? "accent" : "neutral"}>
               {structuredInspectionAvailable
                 ? "Structured inspection available"
                 : "No structured inspection"}
-            </StatusPill>
-            <StatusPill tone={rawCaptureAvailable ? "accent" : "neutral"}>
+            </Badge>
+            <Badge tone={rawCaptureAvailable ? "accent" : "neutral"}>
               {rawCaptureAvailable ? "Raw capture allowed" : "Raw capture unavailable"}
-            </StatusPill>
+            </Badge>
           </div>
           <dl className="grid gap-3 text-sm md:grid-cols-2 xl:grid-cols-4">
             {[
@@ -778,7 +779,7 @@ export default function RequestDetailRoute() {
                 key={label}
                 className="rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
               >
-                <dt className={utilityLabelClassName}>{label}</dt>
+                <dt className={fieldLabelClassName}>{label}</dt>
                 <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
               </div>
             ))}
@@ -809,7 +810,7 @@ export default function RequestDetailRoute() {
               ["Stream deltas", streamSummary.length > 0 ? streamSummary : null],
             ].map(([label, value]) => (
               <div key={label} className="rounded-[var(--rm-radius-md)] bg-[var(--rm-panel)] p-3">
-                <dt className={utilityLabelClassName}>{label}</dt>
+                <dt className={fieldLabelClassName}>{label}</dt>
                 <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
               </div>
             ))}
@@ -836,7 +837,7 @@ export default function RequestDetailRoute() {
               ],
             ].map(([label, value]) => (
               <div key={label} className="rounded-[var(--rm-radius-md)] bg-[var(--rm-panel)] p-3">
-                <dt className={utilityLabelClassName}>{label}</dt>
+                <dt className={fieldLabelClassName}>{label}</dt>
                 <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
               </div>
             ))}
@@ -876,7 +877,7 @@ export default function RequestDetailRoute() {
               ["Rubric signals", rubricSignalSummary],
             ].map(([label, value]) => (
               <div key={label} className="rounded-[var(--rm-radius-md)] bg-[var(--rm-panel)] p-3">
-                <dt className={utilityLabelClassName}>{label}</dt>
+                <dt className={fieldLabelClassName}>{label}</dt>
                 <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
               </div>
             ))}
@@ -895,9 +896,7 @@ export default function RequestDetailRoute() {
           <div>
             <div className="flex items-center justify-between">
               <p className={compactTitleClassName}>Tool calls</p>
-              <StatusPill tone={toolCalls.length > 0 ? "accent" : "neutral"}>
-                {toolCalls.length}
-              </StatusPill>
+              <Badge tone={toolCalls.length > 0 ? "accent" : "neutral"}>{toolCalls.length}</Badge>
             </div>
             <div className="mt-3 space-y-3">
               {toolCalls.length === 0 ? (
@@ -923,9 +922,9 @@ export default function RequestDetailRoute() {
           <div>
             <div className="flex items-center justify-between">
               <p className={compactTitleClassName}>Execution receipts</p>
-              <StatusPill tone={toolExecutions.length > 0 ? "success" : "neutral"}>
+              <Badge tone={toolExecutions.length > 0 ? "success" : "neutral"}>
                 {toolExecutions.length}
-              </StatusPill>
+              </Badge>
             </div>
             <div className="mt-3 space-y-3">
               {toolExecutions.length === 0 ? (
@@ -943,11 +942,11 @@ export default function RequestDetailRoute() {
                           {String(executionRecord.toolName ?? "Unnamed tool")}
                         </p>
                         {executionRecord.status ? (
-                          <StatusPill
+                          <Badge
                             tone={executionRecord.status === "success" ? "success" : "warning"}
                           >
                             {String(executionRecord.status)}
-                          </StatusPill>
+                          </Badge>
                         ) : null}
                       </div>
                       <p className={`mt-2 ${supportingTextClassName}`}>

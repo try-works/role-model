@@ -4,7 +4,8 @@ import * as RechartsPrimitive from "recharts";
 import { cn } from "./lib/utils";
 
 // Format: { THEME_NAME: CSS_SELECTOR }
-const THEMES = { light: "", dark: ".dark" } as const;
+// Runtime UI uses html[data-theme], not a .dark class.
+const THEMES = { light: '[data-theme="light"]', dark: '[data-theme="dark"]' } as const;
 
 const INITIAL_DIMENSION = { width: 320, height: 200 } as const;
 type ChartTooltipPayloadItem = {
@@ -113,7 +114,7 @@ function ChartContainer({
         data-chart={chartId}
         className={cn(
           // Full-bleed plot host (RM3 rule #3) — no aspect-video letterbox.
-          "flex h-full w-full justify-center text-[10px] font-mono [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line]:stroke-border/50 [&_.recharts-cartesian-grid_line]:[stroke-dasharray:none] [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector]:outline-hidden [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-surface]:outline-hidden",
+          "flex h-full w-full justify-center text-[10px] font-mono [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line]:[stroke-dasharray:none] [&_.recharts-cartesian-grid_line]:[vector-effect:non-scaling-stroke] [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector]:outline-hidden [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-surface]:outline-hidden",
           className,
         )}
         {...props}
@@ -140,6 +141,7 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
 
   return (
     <style
+      // biome-ignore lint/security/noDangerouslySetInnerHtml: shadcn ChartStyle injects theme CSS variables
       dangerouslySetInnerHTML={{
         __html: Object.entries(THEMES)
           .map(
@@ -183,10 +185,7 @@ function ChartTooltipContent({
   active?: boolean;
   payload?: ChartTooltipPayloadItem[];
   label?: string | number;
-  labelFormatter?: (
-    value: React.ReactNode,
-    payload: ChartTooltipPayloadItem[],
-  ) => React.ReactNode;
+  labelFormatter?: (value: React.ReactNode, payload: ChartTooltipPayloadItem[]) => React.ReactNode;
   formatter?: (
     value: number | string,
     name: string,
@@ -252,6 +251,7 @@ function ChartTooltipContent({
 
             return (
               <div
+                // biome-ignore lint/suspicious/noArrayIndexKey: recharts tooltip payload items lack stable ids
                 key={index}
                 className={cn(
                   "flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-muted-foreground",
@@ -352,6 +352,7 @@ function ChartLegendContent({
 
           return (
             <div
+              // biome-ignore lint/suspicious/noArrayIndexKey: recharts legend payload items lack stable ids
               key={index}
               className={cn(
                 "flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground",

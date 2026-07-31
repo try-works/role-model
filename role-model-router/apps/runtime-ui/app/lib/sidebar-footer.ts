@@ -105,7 +105,10 @@ export function buildSidebarModels(input: {
 export function cacheHitRateFromRequest(
   request: RuntimeTelemetryRequestRecord | null | undefined,
 ): number {
-  if (!request?.promptCacheSupported) {
+  if (!request) {
+    return 0;
+  }
+  if (!request.promptCacheSupported) {
     return 0;
   }
   if (request.cacheReadTokensSupported) {
@@ -162,9 +165,16 @@ export type SidebarFooterState = {
   readonly routerAlias: string;
 };
 
-export const EMPTY_SIDEBAR_FOOTER: SidebarFooterState = {
-  models: [],
-  cacheHitRate: 0,
-  routerEndpoint: "127.0.0.1:3456/v1",
-  routerAlias: "—",
-};
+/** Empty footer before the first successful load (host from the current origin when available). */
+export function createEmptySidebarFooter(
+  fallbackHost = typeof window !== "undefined" ? window.location.host : "127.0.0.1:3456",
+): SidebarFooterState {
+  return {
+    models: [],
+    cacheHitRate: 0,
+    routerEndpoint: formatRouterEndpointHost(null, fallbackHost),
+    routerAlias: "—",
+  };
+}
+
+export const EMPTY_SIDEBAR_FOOTER: SidebarFooterState = createEmptySidebarFooter("127.0.0.1:3456");

@@ -4,16 +4,16 @@ import * as React from "react";
 
 import { cn } from "./lib/utils";
 import {
+  type ObserveChartBlock,
   ObserveChartGrid,
+  type ObservePageId,
   ObservePageNav,
   observeNavItems,
-  type ObserveChartBlock,
-  type ObservePageId,
 } from "./observe-shared";
 import {
-  PageFilters,
   type PageFilterField,
   type PageFilterOption,
+  PageFilters,
   type PageTimeRange,
 } from "./page-filters";
 import { PageShell } from "./page-shell";
@@ -204,12 +204,7 @@ function ObserveRouting({
       <PageFilters
         timeRange={filters.timeRange}
         onTimeRangeChange={(timeRange) => onFiltersChange?.({ ...filters, timeRange })}
-        fields={routingFilterFields(
-          filters,
-          breakdownOptions,
-          sourceOptions,
-          difficultyOptions,
-        )}
+        fields={routingFilterFields(filters, breakdownOptions, sourceOptions, difficultyOptions)}
         onFieldChange={(id, value) => {
           if (id === "breakdown" || id === "source" || id === "difficulty") {
             onFiltersChange?.({ ...filters, [id]: value });

@@ -1,16 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router";
 
+import { CheckboxControl } from "../components/checkbox-control";
 import { EmptyState, ErrorState, LoadingState, SectionCard } from "../components/page-primitives";
 import {
   codeBlockClassName,
   compactTitleClassName,
   fieldClassName,
+  fieldLabelClassName,
   mutedPanelClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
   supportingTextClassName,
-  utilityLabelClassName,
 } from "../lib/design-system";
 import { fetchLocalPolicy, updateLocalPolicy } from "../lib/runtime-api";
 
@@ -83,7 +84,7 @@ export default function LocalPolicyRoute() {
           <div className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
-                <label htmlFor={ttlFieldId} className={utilityLabelClassName}>
+                <label htmlFor={ttlFieldId} className={fieldLabelClassName}>
                   TTL (seconds)
                 </label>
                 <input
@@ -100,7 +101,7 @@ export default function LocalPolicyRoute() {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor={maxConcurrencyFieldId} className={utilityLabelClassName}>
+                <label htmlFor={maxConcurrencyFieldId} className={fieldLabelClassName}>
                   Max concurrency
                 </label>
                 <input
@@ -130,12 +131,12 @@ export default function LocalPolicyRoute() {
                   keep inactive weights pinned indefinitely.
                 </span>
               </span>
-              <input
-                type="checkbox"
+              <CheckboxControl
                 id="autoUnload"
                 checked={autoUnload}
-                onChange={(e) => setField("autoUnload", e.target.checked)}
-                className="mt-0.5 h-4 w-4 shrink-0 rounded-[var(--rm-radius-sm)] border-[var(--rm-border-strong)] accent-[var(--rm-accent)]"
+                aria-label="Auto-unload idle models"
+                className="mt-0.5"
+                onChange={() => setField("autoUnload", !autoUnload)}
               />
             </label>
 

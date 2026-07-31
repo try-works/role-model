@@ -11,16 +11,16 @@ import {
 import {
   compactTitleClassName,
   fieldClassName,
+  fieldLabelClassName,
   listRowClassName,
-  metaTextClassName,
-  primaryButtonClassName,
+  monoEyebrowClassName,
+  primaryButtonBlockClassName,
   supportingTextClassName,
-  utilityLabelClassName,
 } from "../lib/design-system";
 import { type RuntimeSnapshot, fetchRuntimeModels, submitRerankRequest } from "../lib/runtime-api";
 import { buildWorkbenchModelOptions } from "../lib/view-models";
 
-const formFieldLabelClassName = utilityLabelClassName;
+const formFieldLabelClassName = fieldLabelClassName;
 
 export default function StudioRerankRoute() {
   const [snapshot, setSnapshot] = useState<Pick<RuntimeSnapshot, "models"> | null>(null);
@@ -100,12 +100,11 @@ export default function StudioRerankRoute() {
     }
   }
 
-
   return (
     <div className="space-y-6">
       {error ? <ErrorState label={error} /> : null}
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
         <SectionCard title="Rerank request">
           {!snapshot ? (
             <LoadingState label="Loading rerank request context…" />
@@ -126,7 +125,7 @@ export default function StudioRerankRoute() {
                   </option>
                 ))}
               </SelectField>
-              <label className="grid gap-2">
+              <label className="grid gap-1.5">
                 <span className={formFieldLabelClassName}>Query</span>
                 <textarea
                   className={`${fieldClassName} min-h-28`}
@@ -134,7 +133,7 @@ export default function StudioRerankRoute() {
                   onChange={(event) => setQuery(event.target.value)}
                 />
               </label>
-              <label className="grid gap-2">
+              <label className="grid gap-1.5">
                 <span className={formFieldLabelClassName}>Candidate documents</span>
                 <textarea
                   className={`${fieldClassName} min-h-40`}
@@ -142,7 +141,7 @@ export default function StudioRerankRoute() {
                   onChange={(event) => setDocumentsText(event.target.value)}
                 />
               </label>
-              <button className={primaryButtonClassName} disabled={submitting} type="submit">
+              <button className={primaryButtonBlockClassName} disabled={submitting} type="submit">
                 {submitting ? "Running…" : "Submit rerank request"}
               </button>
             </form>
@@ -157,7 +156,7 @@ export default function StudioRerankRoute() {
               <EmptyState label="The runtime returned no ranked candidates." />
             ) : (
               <div className="space-y-3">
-                <p className={metaTextClassName}>Ordered ledger</p>
+                <p className={monoEyebrowClassName}>Ordered ledger</p>
                 {result.rows.map((row) => (
                   <div key={`${row.index}-${row.score}`} className={listRowClassName}>
                     <div className="space-y-2">
@@ -176,10 +175,10 @@ export default function StudioRerankRoute() {
               </div>
             )}
             <div className="space-y-2">
-              <p className={metaTextClassName}>Contract details</p>
-            <CodeBlock className="min-h-60">
-              {result?.rawPayload ?? '{\n  "status": "No rerank request yet"\n}'}
-            </CodeBlock>
+              <p className={monoEyebrowClassName}>Contract details</p>
+              <CodeBlock className="min-h-60">
+                {result?.rawPayload ?? '{\n  "status": "No rerank request yet"\n}'}
+              </CodeBlock>
             </div>
           </div>
         </SectionCard>

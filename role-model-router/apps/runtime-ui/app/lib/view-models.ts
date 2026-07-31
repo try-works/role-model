@@ -338,7 +338,7 @@ export function buildCredentialLifecycleBanner(
       return null;
     }
     return {
-      authorityLabel: "Compatibility readiness summary",
+      authorityLabel: "compatibility",
       authorityTone: "neutral",
       detail:
         "Blocking counts are coming from the legacy readiness alias until the canonical lifecycle payload is available.",
@@ -349,7 +349,7 @@ export function buildCredentialLifecycleBanner(
 
   if (lifecycle.authority.state === "provisional") {
     return {
-      authorityLabel: "Provisional lifecycle snapshot",
+      authorityLabel: "provisional",
       authorityTone: "accent",
       detail: "Bootstrap is still reconciling credentials, activations, and archived stale state.",
       archivedStaleCount: lifecycle.counts.archivedStale,
@@ -358,7 +358,7 @@ export function buildCredentialLifecycleBanner(
   }
 
   return {
-    authorityLabel: "Authoritative lifecycle snapshot",
+    authorityLabel: "authoritative",
     authorityTone: readinessRows.length > 0 ? "warning" : "success",
     detail:
       readinessRows.length > 0
@@ -661,15 +661,15 @@ export function summarizeSessionBootstrapStatus(
 
   switch (status) {
     case "ready":
-      return { label: "Ready", tone: "success" };
+      return { label: "complete", tone: "success" };
     case "running":
-      return { label: "Running", tone: "accent" };
+      return { label: "running", tone: "accent" };
     case "degraded":
-      return { label: "Degraded", tone: "warning" };
+      return { label: "degraded", tone: "warning" };
     case "blocked":
-      return { label: "Blocked", tone: "warning" };
+      return { label: "blocked", tone: "warning" };
     default:
-      return { label: "Pending", tone: "neutral" };
+      return { label: "pending", tone: "neutral" };
   }
 }
 
@@ -682,13 +682,11 @@ export function buildInventorySummaryStats(
   }
 
   return [
-    { label: "Routable models", value: String(inventory.modelIdCount) },
-    { label: "Routable endpoints", value: String(inventory.endpointIdCount) },
-    { label: "Local endpoints", value: String(inventory.localEndpointCount) },
-    { label: "Remote endpoints", value: String(inventory.remoteEndpointCount) },
+    { label: "Endpoints", value: String(inventory.endpointIdCount) },
+    { label: "Models", value: String(inventory.modelIdCount) },
     {
-      label: "Empty alias pools",
-      value: inventory.emptyAliasIds.length > 0 ? inventory.emptyAliasIds.join(", ") : "none",
+      label: "Empty aliases",
+      value: String(inventory.emptyAliasIds.length),
     },
   ];
 }
@@ -1741,7 +1739,9 @@ function formatCompactTokenCount(value: number | null | undefined): string {
   }
   if (value >= 1000) {
     const compact = value / 1000;
-    const rounded = Number.isInteger(compact) ? String(compact) : compact.toFixed(1).replace(/\.0$/, "");
+    const rounded = Number.isInteger(compact)
+      ? String(compact)
+      : compact.toFixed(1).replace(/\.0$/, "");
     return `${rounded}k tokens`;
   }
   return `${value} tokens`;
@@ -1787,7 +1787,10 @@ export function buildSelectedModelMetaPanel(input: {
   readonly modalities?: readonly string[];
   readonly pricing?: RuntimeModelRecord["pricing"];
   readonly overallScore?: number | null;
+  readonly latencyP50Ms?: number | null;
+  readonly latencyP95Ms?: number | null;
   readonly meanLatencyMs?: number | null;
+  readonly difficultyMix?: string | null;
   readonly routingHint?: string | null;
 }): {
   title: string;
@@ -1802,16 +1805,12 @@ export function buildSelectedModelMetaPanel(input: {
       : "Enabled"
     : "Unavailable";
   const mode =
-    input.modalities && input.modalities.length > 0
-      ? input.modalities.join(", ")
-      : "Unknown";
+    input.modalities && input.modalities.length > 0 ? input.modalities.join(", ") : "Unknown";
   const endpointValue =
     input.endpointCount === 0
       ? "None"
       : `${input.healthyEndpointCount} healthy${
-          input.healthyEndpointCount === input.endpointCount
-            ? ""
-            : ` / ${input.endpointCount}`
+          input.healthyEndpointCount === input.endpointCount ? "" : ` / ${input.endpointCount}`
         }`;
   const cost =
     input.pricing != null
@@ -1821,9 +1820,7 @@ export function buildSelectedModelMetaPanel(input: {
         ]
       : null;
   const overall =
-    typeof input.overallScore === "number"
-      ? input.overallScore.toFixed(2)
-      : "No evidence yet";
+    typeof input.overallScore === "number" ? input.overallScore.toFixed(2) : "No evidence yet";
   return {
     title: `Runtime · ${input.modelId}`,
     facts: [
@@ -1843,7 +1840,13 @@ export function buildSelectedModelMetaPanel(input: {
     cost,
     benchmark: [
       { label: "Overall", value: overall },
+      { label: "Latency p50", value: formatLatencyMs(input.latencyP50Ms) },
+      { label: "Latency p95", value: formatLatencyMs(input.latencyP95Ms) },
       { label: "Mean latency", value: formatLatencyMs(input.meanLatencyMs) },
+      {
+        label: "Difficulty mix",
+        value: input.difficultyMix?.trim() || "No difficulty mix yet",
+      },
       {
         label: "Routing",
         value: input.routingHint?.trim() || "No routing evidence yet",
@@ -1977,11 +1980,11 @@ export function buildActivitySummary(entries: readonly RuntimeActivityLogEntry[]
       {
         label: "Prompt tokens",
         value: String(inputTokens),
-        detail: `${outputTokens} output tokens recorded`,
+        detail: `${cacheTokens} cached tokens recorded`,
       },
       {
-        label: "Cached tokens",
-        value: String(cacheTokens),
+        label: "Completion tokens",
+        value: String(outputTokens),
         detail: "Across the current in-memory metrics window",
       },
     ],

@@ -102,7 +102,8 @@ function MetricStrip({
         role="group"
         aria-label={ariaLabel}
         className={cn(
-          "flex w-full overflow-hidden rounded-md border border-border",
+          // Paper System · Readiness: card fill · h-54 · internal hairlines
+          "flex h-[54px] w-full overflow-hidden rounded-md border border-border bg-card",
           className,
         )}
       >
@@ -111,11 +112,18 @@ function MetricStrip({
             {index > 0 ? (
               <div aria-hidden className="w-px shrink-0 self-stretch bg-border" />
             ) : null}
-            <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 px-3.5 py-2.5">
+            <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 px-3.5">
               <div className="font-mono text-[11px] leading-[14px] tracking-[0.08em] text-muted-foreground uppercase">
                 {item.label}
               </div>
-              <div className="font-mono text-base leading-[22px] font-medium tabular-nums text-foreground">
+              <div
+                className={cn(
+                  // Panel values: regular weight keeps status words even (semibold looked
+                  // blotchy on long strings). Tabular nums only for numeric values.
+                  "min-w-0 truncate font-sans text-[18px] leading-[22px] font-normal text-foreground",
+                  /^[\d.,\s]+%?$/.test(item.value.trim()) && "tabular-nums",
+                )}
+              >
                 {item.value}
               </div>
             </div>
@@ -136,9 +144,7 @@ function MetricStrip({
     >
       {items.map((item, index) => (
         <React.Fragment key={item.id}>
-          {index > 0 ? (
-            <div aria-hidden className="h-3.5 w-px shrink-0 bg-border" />
-          ) : null}
+          {index > 0 ? <div aria-hidden className="h-3.5 w-px shrink-0 bg-border" /> : null}
           <div className="flex shrink-0 items-baseline gap-2">
             <span className="font-mono text-[11px] leading-[14px] tracking-[0.06em] text-muted-foreground uppercase">
               {item.shortLabel ?? item.label}

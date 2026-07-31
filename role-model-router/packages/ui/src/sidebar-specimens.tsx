@@ -56,9 +56,7 @@ function SidebarSpecimensDemo({ className }: { className?: string }) {
 
   const bumpRequests = () => {
     setModels((prev) =>
-      prev.map((m, i) =>
-        i === 0 ? { ...m, requestCount: m.requestCount + 1 } : m,
-      ),
+      prev.map((m, i) => (i === 0 ? { ...m, requestCount: m.requestCount + 1 } : m)),
     );
   };
 
@@ -67,7 +65,8 @@ function SidebarSpecimensDemo({ className }: { className?: string }) {
     setModels((prev) =>
       prev.map((m, i) => {
         if (i !== 2) return m;
-        const next = order[(order.indexOf(m.status) + 1) % order.length]!;
+        const currentIndex = order.indexOf(m.status);
+        const next = order[(currentIndex + 1) % order.length] ?? "active";
         return { ...m, status: next };
       }),
     );
@@ -92,8 +91,8 @@ function SidebarSpecimensDemo({ className }: { className?: string }) {
       <div className="flex max-w-sm flex-col gap-3 pt-2">
         <h1 className="text-lg font-semibold tracking-tight">RM3 sidebar</h1>
         <p className="text-sm text-muted-foreground">
-          Production sidebar matching Paper App shell: model inventory, cache hit rate, and
-          router endpoint with live-update motion.
+          Production sidebar matching Paper App shell: model inventory, cache hit rate, and router
+          endpoint with live-update motion.
         </p>
         <div className="flex flex-wrap gap-2">
           <button

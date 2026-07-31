@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import type { MetricItem } from "./metric-strip";
-import { ObserveLogs, type ObserveLogRow } from "./observe-logs";
+import { type ObserveLogRow, ObserveLogs } from "./observe-logs";
 import { SIDEBAR_FIXTURE_MODELS } from "./sidebar-specimens";
 
 export const OBSERVE_LOGS_METRICS: MetricItem[] = [

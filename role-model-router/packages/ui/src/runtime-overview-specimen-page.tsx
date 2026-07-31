@@ -1,4 +1,4 @@
-import * as React from "react";
+import type * as React from "react";
 
 import { cn } from "./lib/utils";
 import { RuntimeOverviewSpecimensDemo } from "./runtime-overview-specimens";
@@ -72,10 +72,7 @@ function RuntimeOverviewSpecimenPage({
       )}
 
       <div
-        className={cn(
-          "mx-auto",
-          capture ? "w-[1440px]" : "flex justify-center overflow-auto p-6",
-        )}
+        className={cn("mx-auto", capture ? "w-[1440px]" : "flex justify-center overflow-auto p-6")}
       >
         <div
           data-rm3-specimen-frame

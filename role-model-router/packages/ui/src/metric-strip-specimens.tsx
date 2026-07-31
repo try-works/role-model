@@ -4,9 +4,9 @@ import * as React from "react";
 
 import {
   MetricStrip,
+  type MetricStripVariant,
   STUDIO_USAGE_METRICS,
   STUDIO_USAGE_METRICS_BADGE,
-  type MetricStripVariant,
 } from "./metric-strip";
 
 const VARIANTS: readonly {
@@ -50,11 +50,7 @@ export function MetricStripSpecimensDemo() {
             </h2>
             <p className="text-xs text-muted-foreground">{note}</p>
           </div>
-          <MetricStrip
-            variant={variant}
-            items={items ?? STUDIO_USAGE_METRICS}
-            aria-label="Usage"
-          />
+          <MetricStrip variant={variant} items={items ?? STUDIO_USAGE_METRICS} aria-label="Usage" />
         </section>
       ))}
     </div>

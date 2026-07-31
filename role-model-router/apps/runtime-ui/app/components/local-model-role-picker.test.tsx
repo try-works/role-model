@@ -5,6 +5,7 @@ import { describe, expect, test } from "vitest";
 import type { BenchmarkCapability, RuntimeRolePolicy } from "../lib/runtime-api";
 import {
   LocalModelRolePicker,
+  getInitiallyExpandedRoleGroups,
   getLocalModelRolePickerGroupState,
   getLocalModelRolePickerState,
   getNextRoleSelectionForGroup,
@@ -99,7 +100,7 @@ describe("LocalModelRolePicker", () => {
     expect(markup).toContain("All roles");
     expect(markup).toContain("Engineering");
     expect(markup).toContain("Communication");
-    expect(markup).toContain('checked=""');
+    expect(markup).toContain('aria-checked="true"');
     expect(markup).toContain("Coder");
     expect(markup).toContain("Security");
     expect(markup).toContain("High risk");
@@ -123,15 +124,15 @@ describe("LocalModelRolePicker", () => {
     expect(markup).toContain("Benchmarked 91%");
     expect(markup).toContain("Unassigned evidence 88%");
     expect(markup).toContain("Low coverage");
-    expect(markup).toContain("bg-[var(--rm-pill-warning-bg)]");
-    expect(markup).toContain("bg-[var(--rm-pill-accent-bg)]");
-    expect(markup).toContain("bg-[var(--rm-pill-neutral-bg)]");
+    expect(markup).toContain('data-tone="warning"');
+    expect(markup).toContain('data-tone="accent"');
+    expect(markup).toContain('data-tone="neutral"');
     expect(markup).not.toContain("border-[var(--rm-warning)]");
     expect(markup).not.toContain("border-[var(--rm-accent)]");
     expect(markup).not.toContain(
       "rounded-[var(--rm-radius-pill)] border border-[var(--rm-border)] px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-[var(--rm-secondary)]",
     );
-    expect(markup).not.toContain('value="security" checked=""');
+    expect(markup).not.toContain('aria-label="Security" aria-checked="true"');
   });
 
   test("renders grouped roles as collapsible sections and only pre-opens explicitly selected groups", () => {
@@ -158,8 +159,27 @@ describe("LocalModelRolePicker", () => {
       </MemoryRouter>,
     );
 
+    // Controlled expand state is seeded once from selection; group checkboxes must not re-open it.
     expect(expandedMarkup).toContain('open=""');
     expect(expandedMarkup).toContain("1 selected");
+  });
+
+  test("seeds initially expanded groups from explicit selection only", () => {
+    expect(
+      getInitiallyExpandedRoleGroups({
+        roles: rolePolicy.roleDefinitions,
+        selectedRoleIds: ["writer"],
+        expandSelectedGroupsByDefault: true,
+      }),
+    ).toEqual({ communication: true });
+
+    expect(
+      getInitiallyExpandedRoleGroups({
+        roles: rolePolicy.roleDefinitions,
+        selectedRoleIds: ["coder", "writer"],
+        expandSelectedGroupsByDefault: false,
+      }),
+    ).toEqual({});
   });
 
   test("can keep selected groups collapsed by default when a route requests it", () => {
@@ -229,6 +249,34 @@ describe("LocalModelRolePicker", () => {
         defaultAllRoles: false,
       }),
     ).toMatchObject({ allSelected: false, noneSelected: false, partiallySelected: true });
+  });
+
+  test("All roles uncheck requires defaultAllRoles=false once empty is explicit", () => {
+    // Reproduces the Remote bug: empty + defaultAllRoles stays "all", so toggle is a no-op.
+    const before = getLocalModelRolePickerState({
+      roleIds: ["coder", "writer"],
+      selectedRoleIds: [],
+      defaultAllRoles: true,
+    });
+    expect(before.allSelected).toBe(true);
+
+    const afterClearWithDefault = getLocalModelRolePickerState({
+      roleIds: ["coder", "writer"],
+      selectedRoleIds: [],
+      defaultAllRoles: true,
+    });
+    expect(afterClearWithDefault.allSelected).toBe(true);
+
+    const afterClearExplicit = getLocalModelRolePickerState({
+      roleIds: ["coder", "writer"],
+      selectedRoleIds: [],
+      defaultAllRoles: false,
+    });
+    expect(afterClearExplicit).toMatchObject({
+      allSelected: false,
+      noneSelected: true,
+      selectedRoleIds: [],
+    });
   });
 
   test("toggles a single group without mutating neighboring groups", () => {

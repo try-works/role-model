@@ -22,7 +22,7 @@ const replacements = [
     expect(dashboardRouteSource).toContain('label: "Difficulty"');
     expect(dashboardRouteSource).not.toContain('label="Provider"');
     expect(dashboardRouteSource).not.toContain('label="Requested role"');
-    expect(dashboardRouteSource).toContain("Candidate space");
+    expect(dashboardRouteSource).toContain("Model pool");
     expect(dashboardRouteSource).toContain("onFieldChange");`,
   ],
   [

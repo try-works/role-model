@@ -1,4 +1,10 @@
 import type { ReactNode } from "react";
+/**
+ * @deprecated Production Observe/Overview charts use `@role-model/ui` kit primitives
+ * via `observe-chart-adapter` / `overview-chart-adapter`. This module is retained
+ * only for legacy unit coverage (`telemetry-charts.test.tsx`) and must not be
+ * imported by route modules.
+ */
 import {
   Area,
   AreaChart,
@@ -15,18 +21,17 @@ import {
   YAxis,
 } from "recharts";
 
-import { StatusPill } from "../components/page-primitives";
 import { cn } from "../lib/cn";
 import {
   chartAxisTickStyle,
   chartBarRadius,
+  chartEmptyStateClassName,
+  chartErrorStateClassName,
   chartHorizontalRankingLegend,
   chartRankingBarRadius,
   eyebrowClassName,
   formatTelemetryChartTick,
-  getTelemetryChartStatePillTone,
   inlineTitleClassName,
-  mutedPanelClassName,
   resolveTelemetryChartLayout,
   supportingTextClassName,
   telemetryChartLayoutContract,
@@ -140,63 +145,30 @@ function TelemetryChartStateBadge({
   readonly state: TelemetryChartCardState;
 }) {
   return (
-    <StatusPill tone={getTelemetryChartStatePillTone(state.kind)}>
+    <span
+      className={cn(
+        "inline-flex h-6 items-center rounded-[var(--rm-radius-badge)] border border-[var(--rm-border)] bg-[var(--rm-panel-muted)] px-2",
+        utilityLabelClassName,
+        "text-[var(--rm-secondary)]",
+      )}
+    >
       {telemetryChartStates[state.kind].label}
-    </StatusPill>
+    </span>
   );
 }
 
 function TelemetryChartStateMessage({ state }: { readonly state: TelemetryChartCardState }) {
   const message = state.message ?? telemetryChartStates[state.kind].copy;
   if (state.kind === "partial" || state.kind === "truncated") {
-    return (
-      <div
-        className={cn(
-          "rounded-[var(--rm-radius-md)] border border-[var(--rm-warning)] px-4 py-3",
-          `${utilityLabelClassName} text-[var(--rm-warning)]`,
-        )}
-      >
-        {message}
-      </div>
-    );
+    return <p className="text-xs leading-4 text-muted-foreground">{message}</p>;
   }
 
   if (state.kind === "error") {
-    return (
-      <div
-        className={cn(
-          "rounded-[var(--rm-radius-panel)] border border-[var(--rm-error)] bg-[var(--rm-error-ghost)] p-6",
-          `${utilityLabelClassName} text-[var(--rm-error)]`,
-        )}
-      >
-        {message}
-      </div>
-    );
+    return <div className={chartErrorStateClassName}>{message}</div>;
   }
 
-  if (state.kind === "unsupported") {
-    return (
-      <div
-        className={cn(
-          "rounded-[var(--rm-radius-panel)] border border-[var(--rm-warning)] p-6",
-          `${utilityLabelClassName} text-[var(--rm-warning)]`,
-        )}
-      >
-        {message}
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className={cn(
-        mutedPanelClassName,
-        `${utilityLabelClassName} border-dashed px-5 py-4 text-[var(--rm-secondary)]`,
-      )}
-    >
-      {message}
-    </div>
-  );
+  // empty · unsupported · loading-adjacent blocking copy — RM3 dashed muted empty
+  return <div className={chartEmptyStateClassName}>{message}</div>;
 }
 
 function getTelemetryChartCardState(

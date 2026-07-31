@@ -160,9 +160,9 @@ describe("control model role assignment helpers", () => {
         capabilityScore: 0.93,
       }),
     ).toEqual([
-      { label: "tool calling", tone: "info" },
+      { label: "tools", tone: "info" },
       { label: "2 endpoints", tone: "neutral" },
-      { label: "93% capability", tone: "advisory" },
+      { label: "score 0.93", tone: "advisory" },
     ]);
 
     expect(
@@ -172,7 +172,7 @@ describe("control model role assignment helpers", () => {
         capabilityScore: null,
       }),
     ).toEqual([
-      { label: "no tool calling", tone: "neutral" },
+      { label: "no tools", tone: "neutral" },
       { label: "1 endpoint", tone: "neutral" },
     ]);
   });
@@ -324,7 +324,7 @@ describe("startDeferredConfiguredModelsBootstrap", () => {
 });
 
 describe("configured model mutation convergence", () => {
-  test("converges Save bindings from the returned account without advisory reloads", async () => {
+  test("converges role binding saves from the returned account without advisory reloads", async () => {
     const convergeSavedRuntimeAccount = (
       controlModelsModule as { convergeSavedRuntimeAccount?: unknown }
     ).convergeSavedRuntimeAccount;

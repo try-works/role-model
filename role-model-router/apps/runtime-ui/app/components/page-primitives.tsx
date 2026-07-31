@@ -1,3 +1,4 @@
+import { Badge, type BadgeTone } from "@role-model/ui";
 import {
   Children,
   type ReactElement,
@@ -9,7 +10,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { Badge, type BadgeTone } from "@role-model/ui";
 
 import { cn } from "../lib/cn";
 import {
@@ -19,17 +19,15 @@ import {
   codeBlockClassName,
   errorNoticeClassName,
   eyebrowClassName,
+  fieldLabelClassName,
   insetPanelClassName,
   largeValueClassName,
   mutedPanelClassName,
   navLabelClassName,
-  navLabelTextStyle,
-  pillLabelClassName,
   raisedPanelClassName,
   sectionTitleClassName,
-  selectChevronStyle,
   selectFieldClassName,
-  utilityLabelClassName,
+  supportingTextClassName,
 } from "../lib/design-system";
 
 export function SectionCard({
@@ -44,16 +42,16 @@ export function SectionCard({
   className?: string;
 }) {
   return (
-    <section className={cn(`${cardClassName} min-w-0 px-5 py-5 md:px-6 md:py-6`, className)}>
-      <div className="mb-5">
+    <section className={cn(`${cardClassName} min-w-0 overflow-hidden`, className)}>
+      <div className="flex flex-col gap-1.5 border-b border-[var(--rm-border)] px-5 py-4">
         <h2 className={`text-[var(--rm-fg)] ${sectionTitleClassName}`}>{title}</h2>
         {description ? (
-          <p className={`mt-2 max-w-[60ch] ${bodyTextClassName} text-[var(--rm-secondary)]`}>
+          <p className="max-w-[60ch] font-sans text-xs font-normal leading-4 text-muted-foreground">
             {description}
           </p>
         ) : null}
       </div>
-      {children}
+      <div className="p-5">{children}</div>
     </section>
   );
 }
@@ -97,6 +95,7 @@ export function FactCard({
   );
 }
 
+/** @deprecated Prefer kit `Badge` on Paper happy-path pages. Thin alias retained for residual routes. */
 export function StatusPill({
   tone,
   children,
@@ -106,9 +105,8 @@ export function StatusPill({
   children: ReactNode;
   className?: string;
 }) {
-  // Happy-path status chips use kit Badge; StatusPill remains a thin alias for call-site stability.
   return (
-    <Badge tone={tone} className={cn(pillLabelClassName, className)}>
+    <Badge tone={tone} className={className}>
       {children}
     </Badge>
   );
@@ -311,8 +309,8 @@ export function SelectField({
   };
 
   return (
-    <div className="relative grid min-w-0 gap-2" ref={rootRef}>
-      <span className={`${utilityLabelClassName} text-[var(--rm-fg)]`} id={labelId}>
+    <div className="relative flex min-w-0 flex-col gap-1.5" ref={rootRef}>
+      <span className={fieldLabelClassName} id={labelId}>
         {label}
       </span>
       <button
@@ -321,7 +319,7 @@ export function SelectField({
         aria-haspopup="listbox"
         aria-labelledby={labelId}
         className={cn(
-          `${selectFieldClassName} flex min-w-0 items-center justify-between gap-3 text-left`,
+          `${selectFieldClassName} relative flex min-w-0 items-center justify-between gap-2 text-left`,
           className,
         )}
         onClick={() => setOpen((current) => !current)}
@@ -335,24 +333,27 @@ export function SelectField({
             setActiveIndex(selectedIndex >= 0 ? selectedIndex : firstEnabledIndex);
           }
         }}
-        style={selectChevronStyle}
         title={selectedOption?.label ?? "Select…"}
         type="button"
       >
         <span
           className={
             selectedOption
-              ? "min-w-0 flex-1 truncate"
-              : "min-w-0 flex-1 truncate text-[var(--rm-muted)]"
+              ? "min-w-0 flex-1 truncate text-left"
+              : "min-w-0 flex-1 truncate text-left text-muted-foreground"
           }
         >
           {selectedOption?.label ?? "Select…"}
         </span>
+        <span
+          aria-hidden
+          className="mt-[-3px] size-2 shrink-0 origin-center rotate-45 border-b-[1.5px] border-r-[1.5px] border-muted-foreground"
+        />
       </button>
       {open ? (
         <div
           aria-labelledby={labelId}
-          className="absolute left-0 top-full z-50 mt-2 max-h-[320px] w-full overflow-y-auto rounded-[var(--rm-radius-panel)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface)] p-1 shadow-[0_18px_48px_rgba(0,0,0,0.18)]"
+          className="absolute left-0 top-full z-50 mt-1 max-h-[320px] w-full overflow-y-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md"
           id={listboxId}
           role="listbox"
           tabIndex={-1}
@@ -365,13 +366,11 @@ export function SelectField({
                 aria-disabled={option.disabled || undefined}
                 aria-selected={selected}
                 className={cn(
-                  `flex min-h-[32px] w-full items-center rounded-[var(--rm-radius-md)] px-3 py-2 text-left ${navLabelClassName} transition`,
-                  selected
-                    ? "bg-[var(--rm-accent)] text-[color:var(--rm-on-primary)]"
-                    : active
-                      ? "bg-[var(--rm-accent-ghost)] text-[var(--rm-fg)]"
-                      : "bg-transparent text-[var(--rm-secondary)] hover:bg-[var(--rm-panel)] hover:text-[var(--rm-fg)]",
-                  option.disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
+                  "relative flex min-h-[32px] w-full items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-left text-sm outline-none select-none",
+                  selected || active
+                    ? "bg-accent text-accent-foreground"
+                    : "text-foreground hover:bg-accent hover:text-accent-foreground",
+                  option.disabled ? "pointer-events-none opacity-50" : "cursor-pointer",
                 )}
                 key={`${option.value}:${option.label}`}
                 onClick={() => chooseOption(option)}
@@ -394,11 +393,26 @@ export function SelectField({
                   optionRefs.current[index] = node;
                 }}
                 role="option"
-                style={navLabelTextStyle}
                 tabIndex={active ? 0 : -1}
                 type="button"
               >
                 <span className="truncate">{option.label}</span>
+                {selected ? (
+                  <span className="absolute right-2 flex size-3.5 items-center justify-center">
+                    <svg
+                      aria-hidden
+                      className="size-3.5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      viewBox="0 0 16 16"
+                    >
+                      <path d="M3.5 8.5 6.5 11.5 12.5 4.5" />
+                    </svg>
+                  </span>
+                ) : null}
               </button>
             );
           })}
@@ -413,7 +427,7 @@ export function LoadingState({ label }: { label: string }) {
 }
 
 export function EmptyState({ label }: { label: string }) {
-  return <p className={`${insetPanelClassName} border-dashed p-6`}>{label}</p>;
+  return <p className={supportingTextClassName}>{label}</p>;
 }
 
 export function ErrorState({ label }: { label: string }) {

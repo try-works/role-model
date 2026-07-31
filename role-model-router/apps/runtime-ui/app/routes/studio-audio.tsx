@@ -1,23 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
+  Badge,
   CodeBlock,
   EmptyState,
   ErrorState,
   LoadingState,
   SectionCard,
   SelectField,
-  StatusPill,
 } from "../components/page-primitives";
 import {
   bodyStrongTextClassName,
   bodyTextClassName,
   fieldClassName,
-  metaTextClassName,
+  fieldLabelClassName,
+  monoEyebrowClassName,
   mutedPanelClassName,
-  primaryButtonClassName,
+  primaryButtonBlockClassName,
   supportingTextClassName,
-  utilityLabelClassName,
 } from "../lib/design-system";
 import {
   type RuntimeAudioVoiceRecord,
@@ -59,17 +59,16 @@ function formatPlaybackClock(seconds: number): string {
   return `${minutes}:${String(remainder).padStart(2, "0")}`;
 }
 
+const SPEECH_WAVEFORM_BARS = SPEECH_WAVEFORM_HEIGHTS.map((height, index) => ({
+  id: `speech-wave-${index}`,
+  height,
+}));
+
 function SpeechPlayer({ src }: { readonly src: string }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-
-  useEffect(() => {
-    setPlaying(false);
-    setCurrentTime(0);
-    setDuration(0);
-  }, [src]);
 
   const togglePlayback = () => {
     const audio = audioRef.current;
@@ -106,19 +105,16 @@ function SpeechPlayer({ src }: { readonly src: string }) {
           </svg>
         )}
       </button>
-      <div
-        aria-hidden="true"
-        className="flex h-10 min-w-0 flex-1 items-end gap-[3px]"
-      >
-        {SPEECH_WAVEFORM_HEIGHTS.map((height, index) => (
+      <div aria-hidden="true" className="flex h-10 min-w-0 flex-1 items-end gap-[3px]">
+        {SPEECH_WAVEFORM_BARS.map((bar) => (
           <span
-            key={`bar-${index}`}
+            key={bar.id}
             className="w-[3px] shrink-0 rounded-sm bg-[var(--rm-accent)]/70"
-            style={{ height }}
+            style={{ height: bar.height }}
           />
         ))}
       </div>
-      <span className={`shrink-0 tabular-nums ${metaTextClassName}`}>
+      <span className={`shrink-0 tabular-nums ${supportingTextClassName}`}>
         {formatPlaybackClock(currentTime)} / {formatPlaybackClock(duration)}
       </span>
       <audio
@@ -153,7 +149,7 @@ function getVoiceLabel(voice: RuntimeAudioVoiceRecord): string {
   return voice.label ?? voice.name ?? voice.voice ?? voice.id ?? "Unnamed voice";
 }
 
-const formFieldLabelClassName = utilityLabelClassName;
+const formFieldLabelClassName = fieldLabelClassName;
 
 export function isVoiceInventoryUnavailableError(message: string | null): boolean {
   return Boolean(message?.includes("returned HTML instead of JSON"));
@@ -282,12 +278,11 @@ export default function StudioAudioRoute() {
     }
   }
 
-
   return (
     <div className="space-y-6">
       {error ? <ErrorState label={error} /> : null}
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
         <SectionCard title="Audio mode and request">
           {!snapshot ? (
             <LoadingState label="Loading audio request context…" />
@@ -320,7 +315,7 @@ export default function StudioAudioRoute() {
                       );
                     })}
                   </SelectField>
-                  <label className="grid gap-2">
+                  <label className="grid gap-1.5">
                     <span className={formFieldLabelClassName}>Input</span>
                     <textarea
                       className={`${fieldClassName} min-h-32`}
@@ -330,7 +325,7 @@ export default function StudioAudioRoute() {
                   </label>
                 </>
               ) : (
-                <label className="grid gap-2">
+                <label className="grid gap-1.5">
                   <span className={formFieldLabelClassName}>Audio file</span>
                   <input
                     className={fieldClassName}
@@ -339,7 +334,7 @@ export default function StudioAudioRoute() {
                   />
                 </label>
               )}
-              <button className={primaryButtonClassName} disabled={submitting} type="submit">
+              <button className={primaryButtonBlockClassName} disabled={submitting} type="submit">
                 {submitting ? "Running…" : "Run audio request"}
               </button>
             </form>
@@ -353,7 +348,7 @@ export default function StudioAudioRoute() {
             ) : result.kind === "speech" ? (
               <div className="space-y-4">
                 <div className={`${mutedPanelClassName} p-4`}>
-                  <p className={metaTextClassName}>Speech output</p>
+                  <p className={monoEyebrowClassName}>Speech output</p>
                   <p className={`mt-2 ${supportingTextClassName}`}>
                     Voice{" "}
                     <span className={bodyStrongTextClassName}>{result.voice || "unspecified"}</span>{" "}
@@ -361,51 +356,51 @@ export default function StudioAudioRoute() {
                   </p>
                 </div>
                 {result.audioUrl ? (
-                  <SpeechPlayer src={result.audioUrl} />
+                  <SpeechPlayer key={result.audioUrl} src={result.audioUrl} />
                 ) : (
                   <EmptyState label="Speech audio is available, but this environment cannot create a local audio URL." />
                 )}
                 {result.audioUrl ? (
-                  <p className={metaTextClassName}>
+                  <p className={monoEyebrowClassName}>
                     Captions are not available for generated speech playback in this preview.
                   </p>
                 ) : null}
               </div>
             ) : (
               <div className={`${mutedPanelClassName} p-4`}>
-                <p className={metaTextClassName}>Transcript</p>
+                <p className={monoEyebrowClassName}>Transcript</p>
                 <p className={`mt-3 whitespace-pre-wrap ${bodyTextClassName}`}>
                   {result.text || "No transcript text was returned."}
                 </p>
               </div>
             )}
             <div className="space-y-2">
-              <p className={metaTextClassName}>Voice inventory</p>
-            {voiceLoading ? (
-              <LoadingState label="Loading voices…" />
-            ) : voiceInventoryUnavailable ? (
-              <EmptyState label="Voice inventory is unavailable on this runtime host." />
-            ) : voiceError ? (
-              <ErrorState label={voiceError} />
-            ) : voices.length === 0 ? (
-              <EmptyState label="Choose a model to inspect available voices." />
-            ) : (
-              <div className="space-y-3">
-                <div className="flex flex-wrap gap-2">
-                  {voices.map((entry) => {
-                    const id = getVoiceId(entry);
-                    return (
-                      <StatusPill key={id} tone={id === voice ? "accent" : "neutral"}>
-                        {getVoiceLabel(entry)}
-                      </StatusPill>
-                    );
-                  })}
+              <p className={monoEyebrowClassName}>Voice inventory</p>
+              {voiceLoading ? (
+                <LoadingState label="Loading voices…" />
+              ) : voiceInventoryUnavailable ? (
+                <EmptyState label="Voice inventory is unavailable on this runtime host." />
+              ) : voiceError ? (
+                <ErrorState label={voiceError} />
+              ) : voices.length === 0 ? (
+                <EmptyState label="Choose a model to inspect available voices." />
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex flex-wrap gap-2">
+                    {voices.map((entry) => {
+                      const id = getVoiceId(entry);
+                      return (
+                        <Badge key={id} tone={id === voice ? "accent" : "neutral"}>
+                          {getVoiceLabel(entry)}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                  <CodeBlock className="min-h-44">
+                    {result?.rawPayload ?? JSON.stringify(voices, null, 2)}
+                  </CodeBlock>
                 </div>
-                <CodeBlock className="min-h-44">
-                  {result?.rawPayload ?? JSON.stringify(voices, null, 2)}
-                </CodeBlock>
-              </div>
-            )}
+              )}
             </div>
           </div>
         </SectionCard>

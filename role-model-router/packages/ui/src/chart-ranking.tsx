@@ -1,8 +1,9 @@
 "use client";
 
-import * as React from "react";
+import type * as React from "react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
 
+import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "./chart";
 import {
   ChartCard,
   ChartCardDescription,
@@ -11,12 +12,6 @@ import {
   ChartCardPlot,
   ChartCardTitle,
 } from "./chart-card";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "./chart";
 import { chartValueDomain, resolveSeriesColor } from "./chart-time-series";
 import { cn } from "./lib/utils";
 
@@ -39,14 +34,17 @@ export type RankingBarChartProps = {
   plotClassName?: string;
   /** Plot height in px. Default scales with row count (min 160). */
   plotHeight?: number;
-  /** Y-axis category gutter width. Default 120. */
+  /**
+   * Reserved left gutter for the category axis. Default `0` — category labels
+   * live in the bottom legend only (no left-hand bar labels).
+   */
   categoryWidth?: number;
   valueFormatter?: (value: number) => string;
   /** Override ChartCard chrome; omit to inherit `ChartGrid` context. */
   chrome?: "standalone" | "cell";
 };
 
-const DEFAULT_CATEGORY_WIDTH = 120;
+const DEFAULT_CATEGORY_WIDTH = 0;
 const DEFAULT_VALUE_LABEL = "value";
 
 function rankingPlotHeight(rowCount: number, explicit?: number): number {
@@ -58,10 +56,7 @@ function resolveRowColor(row: RankingChartRow, index: number): string {
   return resolveSeriesColor({ key: row.key, label: row.label, color: row.color }, index);
 }
 
-function rankingChartConfig(
-  rows: readonly RankingChartRow[],
-  valueLabel: string,
-): ChartConfig {
+function rankingChartConfig(rows: readonly RankingChartRow[], valueLabel: string): ChartConfig {
   // Single dataKey `value`; colors applied per Cell.
   return {
     value: {
@@ -73,7 +68,7 @@ function rankingChartConfig(
 
 /**
  * Horizontal ranking bars (Observe capability leaders, model selection, …).
- * ChartCard chrome + category Y + value X; legend lists each ranked label.
+ * ChartCard chrome + value X; category labels live in the bottom legend only.
  */
 function RankingBarChart({
   title,
@@ -141,10 +136,9 @@ function RankingBarChart({
               type="category"
               dataKey="label"
               width={categoryWidth}
+              tick={false}
               tickLine={false}
               axisLine={false}
-              tick={{ fill: "currentColor", fontSize: 11, fontFamily: "var(--font-mono)" }}
-              className="text-muted-foreground"
             />
             <ChartTooltip
               cursor={{ fill: "currentColor", fillOpacity: 0.04 }}
