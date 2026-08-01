@@ -39,6 +39,13 @@ test("Track B CI is always-on, explicit, and runs the tagged browser contract", 
   assert.match(workflow, /repository:\s*try-works\/role-model-internal/);
   assert.match(workflow, /PRIVATE_PAIRED_SHA/);
   assert.match(workflow, /ROLE_MODEL_PUBLIC_WORKTREE/);
+  const trackBJob = workflow.slice(workflow.indexOf("  track-b-runtime:"));
+  const publicBuild = trackBJob.indexOf("run: pnpm run build");
+  assert.notEqual(publicBuild, -1, "the paired Track B job must build the public workspace");
+  assert.ok(
+    publicBuild < trackBJob.indexOf("corepack pnpm build:run00-runtime"),
+    "the public workspace must be built before private paired tests import public dist files",
+  );
 });
 
 test("promotion guard encodes dev to stage to main with a hotfix exception", () => {

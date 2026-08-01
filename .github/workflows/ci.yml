@@ -172,6 +172,8 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Build public workspace for paired private imports
+        run: pnpm run build
       - name: Install private paired checkout
         working-directory: _private
         run: corepack pnpm install --frozen-lockfile
