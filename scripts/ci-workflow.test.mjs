@@ -52,7 +52,11 @@ test("Track B CI is always-on, explicit, and runs the tagged browser contract", 
     "--fixture-root",
     "--recommendation-material-file",
   ]) {
-    assert.match(trackBJob, new RegExp(required.replaceAll("-", "\\-")), `paired browser gate missing ${required}`);
+    assert.match(
+      trackBJob,
+      new RegExp(required.replaceAll("-", "\\-")),
+      `paired browser gate missing ${required}`,
+    );
   }
 });
 
