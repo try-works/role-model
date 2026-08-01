@@ -46,6 +46,14 @@ test("Track B CI is always-on, explicit, and runs the tagged browser contract", 
     publicBuild < trackBJob.indexOf("corepack pnpm build:run00-runtime"),
     "the public workspace must be built before private paired tests import public dist files",
   );
+  for (const required of [
+    "run87-recommendation-fixture-server.mjs",
+    "--qa-extension-manifest",
+    "--fixture-root",
+    "--recommendation-material-file",
+  ]) {
+    assert.match(trackBJob, new RegExp(required.replaceAll("-", "\\-")), `paired browser gate missing ${required}`);
+  }
 });
 
 test("promotion guard encodes dev to stage to main with a hotfix exception", () => {

@@ -196,17 +196,32 @@ jobs:
           RUNTIME_LIVE_BASE_URL: http://127.0.0.1:3462
         shell: bash
         run: |
+          recommendation_material="$RUNNER_TEMP/run87-recommendation-material.json"
+          node _private/scripts/track-b/run87-recommendation-fixture-server.mjs \
+            --port 3471 \
+            --material-file "$recommendation_material" \
+            > run87-recommendation-service.log 2>&1 &
+          recommendation_pid=$!
+          for attempt in {1..30}; do
+            test -s "$recommendation_material" && break
+            sleep 1
+          done
+          test -s "$recommendation_material"
           node _private/scripts/track-b/launch-packaged-runtime.mjs \
             --public-root "$GITHUB_WORKSPACE" \
             --manifest "$GITHUB_WORKSPACE/_private/dist/run00-dev/track-b-runtime-manifest.json" \
+            --qa-extension-manifest "$GITHUB_WORKSPACE/role-model-router/apps/runtime-host-bridge/test/fixtures/recursive-87-synthetic-extension.manifest.json" \
+            --fixture-root "$GITHUB_WORKSPACE/role-model-router/apps/runtime-host-bridge/test/fixtures" \
             --port 3462 \
             --track dev \
+            --recommendation-service-url http://127.0.0.1:3471 \
+            --recommendation-material-file "$recommendation_material" \
             --scope-id run87-ci \
             --state-root "$RUNNER_TEMP/run87-packaged-state" \
             --evidence-root "$RUNNER_TEMP/run87-packaged-evidence" \
             > track-b-runtime.log 2>&1 &
           runtime_pid=$!
-          trap 'kill "$runtime_pid" 2>/dev/null || true' EXIT
+          trap 'kill "$runtime_pid" "$recommendation_pid" 2>/dev/null || true' EXIT
           for attempt in {1..120}; do
             curl --fail --silent http://127.0.0.1:3462/healthz >/dev/null && break
             sleep 1
