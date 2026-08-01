@@ -376,9 +376,10 @@ html[data-theme="dark"] {
   --rm-error-subtle: rgb(224 114 106 / 20%);
   --rm-error-ghost: rgb(224 114 106 / 10%);
 
-  --rm-success: #059669;
-  --rm-success-muted: rgb(5 150 105 / 82%);
-  --rm-success-subtle: rgb(5 150 105 / 14%);
+  /* Deep emerald (chart-cache), not neon emerald-50/100 — matches status/cache greens. */
+  --rm-success: var(--rm3-chart-cache);
+  --rm-success-muted: color-mix(in srgb, var(--rm3-chart-cache) 82%, transparent);
+  --rm-success-subtle: color-mix(in srgb, var(--rm3-chart-cache) 14%, transparent);
 
   --rm-warning: #d9a441;
   --rm-warning-fg: #d9a441;
@@ -387,7 +388,7 @@ html[data-theme="dark"] {
 
   --rm-telemetry-local: var(--rm3-foreground);
   --rm-telemetry-remote: var(--rm3-muted-foreground);
-  --rm-telemetry-healthy: #059669;
+  --rm-telemetry-healthy: var(--rm3-chart-cache);
   --rm-telemetry-degraded: #d9a441;
   --rm-telemetry-raw: var(--rm3-muted-foreground);
 

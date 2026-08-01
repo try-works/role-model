@@ -854,6 +854,23 @@ describe("buildSelectedModelMetaPanel", () => {
       ],
     });
   });
+
+  test("always renders Cost rows, using Unknown when pricing is missing", () => {
+    expect(
+      buildSelectedModelMetaPanel({
+        modelId: "vendor/unpriced",
+        sourceSummary: "remote",
+        status: "healthy",
+        controllerState: "eligible",
+        endpointCount: 1,
+        healthyEndpointCount: 1,
+        toolCallingSupported: false,
+      }).cost,
+    ).toEqual([
+      { label: "Input", value: "Unknown" },
+      { label: "Output", value: "Unknown" },
+    ]);
+  });
 });
 
 describe("buildModelCatalogRows", () => {

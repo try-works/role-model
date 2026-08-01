@@ -20,6 +20,7 @@ import { adaptOverviewChartBlock, sortOverviewChartBlocks } from "../lib/overvie
 import type {
   RouterCandidate,
   RuntimeDashboardSnapshot,
+  RuntimeModelRecord,
   RuntimeTelemetryAnalyticsDimension,
   RuntimeTelemetryAnalyticsFilters,
   RuntimeTelemetryRequestRecord,
@@ -27,6 +28,7 @@ import type {
 import {
   fetchRouterCandidates,
   fetchRuntimeDashboardSnapshot,
+  fetchRuntimeModels,
   fetchTelemetryAnalytics,
   fetchTelemetryRequests,
   subscribeTelemetryStream,
@@ -84,6 +86,7 @@ function getChartLoadErrorMessage(title: string, value: unknown): string {
 export default function DashboardRoute() {
   const [snapshot, setSnapshot] = useState<RuntimeDashboardSnapshot | null>(null);
   const [candidates, setCandidates] = useState<readonly RouterCandidate[]>([]);
+  const [models, setModels] = useState<readonly RuntimeModelRecord[]>([]);
   const [requests, setRequests] = useState<readonly RuntimeTelemetryRequestRecord[]>([]);
   const [charts, setCharts] = useState<readonly OverviewChartRecord[]>([]);
   const chartsRef = useRef<readonly OverviewChartRecord[]>([]);
@@ -130,18 +133,20 @@ export default function DashboardRoute() {
           filters,
           breakdown,
         });
-        const [nextSnapshot, nextCandidates, nextRequests, chartResults] = await Promise.all([
-          fetchRuntimeDashboardSnapshot(),
-          fetchRouterCandidates().catch(() => [] as RouterCandidate[]),
-          fetchTelemetryRequests({
-            limit: 60,
-            filters,
-            windowMs: getWindowMs(timeRange),
-          }),
-          Promise.allSettled(
-            definitions.map((definition) => fetchTelemetryAnalytics(definition.query)),
-          ),
-        ]);
+        const [nextSnapshot, nextCandidates, nextModels, nextRequests, chartResults] =
+          await Promise.all([
+            fetchRuntimeDashboardSnapshot(),
+            fetchRouterCandidates().catch(() => [] as RouterCandidate[]),
+            fetchRuntimeModels().catch(() => [] as RuntimeModelRecord[]),
+            fetchTelemetryRequests({
+              limit: 60,
+              filters,
+              windowMs: getWindowMs(timeRange),
+            }),
+            Promise.allSettled(
+              definitions.map((definition) => fetchTelemetryAnalytics(definition.query)),
+            ),
+          ]);
 
         if (disposed) {
           return;
@@ -149,6 +154,7 @@ export default function DashboardRoute() {
 
         setSnapshot(nextSnapshot);
         setCandidates(nextCandidates);
+        setModels(nextModels);
         setRequests(nextRequests);
         const resolvedCharts = resolveTelemetryChartRefresh({
           background,
@@ -206,7 +212,16 @@ export default function DashboardRoute() {
     [charts, loading],
   );
 
-  const candidatePoints = useMemo(() => buildCandidateSpacePoints(candidates, 5), [candidates]);
+  const candidatePoints = useMemo(() => {
+    const pricingByModelId = new Map<string, number>();
+    for (const model of models) {
+      const inputPer1M = model.pricing?.inputPer1M;
+      if (typeof inputPer1M === "number" && Number.isFinite(inputPer1M) && inputPer1M >= 0) {
+        pricingByModelId.set(model.id, inputPer1M);
+      }
+    }
+    return buildCandidateSpacePoints(candidates, 5, pricingByModelId);
+  }, [candidates, models]);
 
   if (error) {
     return <ErrorState label={error} />;

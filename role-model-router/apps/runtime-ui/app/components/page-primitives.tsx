@@ -42,8 +42,8 @@ export function SectionCard({
   className?: string;
 }) {
   return (
-    <section className={cn(`${cardClassName} min-w-0 overflow-hidden`, className)}>
-      <div className="flex flex-col gap-1.5 border-b border-[var(--rm-border)] px-5 py-4">
+    <section className={cn(`${cardClassName} relative min-w-0`, className)}>
+      <div className="flex flex-col gap-1.5 overflow-hidden rounded-t-[inherit] border-b border-[var(--rm-border)] px-5 py-4">
         <h2 className={`text-[var(--rm-fg)] ${sectionTitleClassName}`}>{title}</h2>
         {description ? (
           <p className="max-w-[60ch] font-sans text-xs font-normal leading-4 text-muted-foreground">
@@ -51,7 +51,8 @@ export function SectionCard({
           </p>
         ) : null}
       </div>
-      <div className="p-5">{children}</div>
+      {/* overflow-visible so absolute SelectField listboxes are not clipped */}
+      <div className="overflow-visible p-5">{children}</div>
     </section>
   );
 }

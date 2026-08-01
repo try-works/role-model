@@ -110,23 +110,33 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [pathname]);
 
   useEffect(() => {
+    // pathname dep: refresh footer inventory after navigating from Models/Remote.
+    void pathname;
     let disposed = false;
 
     const load = async () => {
       try {
+        // Inventory (models/endpoints) must not be gated on telemetry — newly configured
+        // models should appear in the sidebar even before any requests are routed.
         const [
           models,
           endpoints,
-          dashboard,
-          latestRequests,
+          dashboardResult,
+          latestRequestsResult,
           downstream,
           routerSummary,
           configRecord,
         ] = await Promise.all([
           fetchRuntimeModels(),
           fetchRuntimeEndpoints(),
-          fetchTelemetryDashboard(),
-          fetchTelemetryRequests({ limit: 1 }),
+          fetchTelemetryDashboard().then(
+            (dashboard) => ({ ok: true as const, dashboard }),
+            () => ({ ok: false as const, dashboard: null }),
+          ),
+          fetchTelemetryRequests({ limit: 1 }).then(
+            (requests) => ({ ok: true as const, requests }),
+            () => ({ ok: false as const, requests: [] as const }),
+          ),
           fetchDownstreamOpenAIProviderConfig().catch(() => null),
           fetchRouterSummary().catch(() => null),
           fetchRuntimeConfig().catch(() => null),
@@ -134,13 +144,16 @@ export function AppShell({ children }: { children: ReactNode }) {
         if (disposed) {
           return;
         }
+        const telemetryRows = dashboardResult.dashboard?.rows ?? [];
+        const latestRequest =
+          latestRequestsResult.requests[0] ?? dashboardResult.dashboard?.requests[0];
         setFooter({
           models: buildSidebarModels({
             models,
             endpoints,
-            telemetryRows: dashboard.rows,
+            telemetryRows,
           }),
-          cacheHitRate: cacheHitRateFromRequest(latestRequests[0] ?? dashboard.requests[0]),
+          cacheHitRate: cacheHitRateFromRequest(latestRequest),
           routerEndpoint: formatRouterEndpointHost(downstream),
           routerAlias: resolveActiveRouterAlias({
             config: configRecord?.config,
@@ -177,11 +190,17 @@ export function AppShell({ children }: { children: ReactNode }) {
         }),
     });
 
+    // Poll inventory so Models/Remote configuration shows up without waiting for SSE traffic.
+    const pollId = window.setInterval(() => {
+      void load();
+    }, 10_000);
+
     return () => {
       disposed = true;
+      window.clearInterval(pollId);
       dispose();
     };
-  }, []);
+  }, [pathname]);
 
   function handleThemeChange(nextTheme: RuntimeTheme): void {
     startTransition(() => {

@@ -204,6 +204,17 @@ export function createQaRuntimeBridgeBackendOptions(
 }
 
 export function createQaRuntimeConfigText(): string {
+  if (process.env.RUNTIME_QA_NO_MODEL_FIXTURES === "1") {
+    return `version: "1.1"
+routing:
+  strategy: baseline
+model_aliases: {}
+llama_swap:
+  models: {}
+litellm_proxy:
+  providers: {}
+`;
+  }
   return `version: "1.1"
 routing:
   strategy: baseline
@@ -1082,7 +1093,7 @@ export async function main(): Promise<void> {
   console.log(`[QA] Seeded runtime config: ${unifiedRuntimeConfigPath}`);
 
   // Pre-register deepseek.litellm account so LiteLLM endpoint validation passes
-  if (process.env.DEEPSEEK_API_KEY) {
+  if (process.env.DEEPSEEK_API_KEY && process.env.RUNTIME_QA_NO_MODEL_FIXTURES !== "1") {
     const { DatabaseSync } = await import("node:sqlite");
     const dbPath = path.join(runtimeStateRoot, scopeId, "memory", "memory.sqlite");
     await mkdir(path.dirname(dbPath), { recursive: true });
@@ -1135,10 +1146,14 @@ export async function main(): Promise<void> {
     console.log("[QA] Pre-registered DeepSeek account.");
   }
 
-  await seedQaTelemetry(repoRoot, runtimeStateRoot, scopeId);
-  console.log(
-    `[QA] Seeded chart-review telemetry (${Object.keys(qaTelemetryRequestIds).length + Object.keys(qaChartReviewRequestIds).length} requests)`,
-  );
+  if (process.env.RUNTIME_QA_NO_MODEL_FIXTURES !== "1") {
+    await seedQaTelemetry(repoRoot, runtimeStateRoot, scopeId);
+    console.log(
+      `[QA] Seeded chart-review telemetry (${Object.keys(qaTelemetryRequestIds).length + Object.keys(qaChartReviewRequestIds).length} requests)`,
+    );
+  } else {
+    console.log("[QA] Skipping chart-review telemetry seed (RUNTIME_QA_NO_MODEL_FIXTURES=1).");
+  }
 
   const productContractsPath = path.join(
     repoRoot,
@@ -1165,7 +1180,7 @@ export async function main(): Promise<void> {
   const backend = await createRuntimeBridgeBackend(
     createQaRuntimeBridgeBackendOptions(repoRoot, runtimeStateRoot, scopeId),
   );
-  if (!process.env.RUNTIME_QA_NO_PLACEHOLDERS) {
+  if (!process.env.RUNTIME_QA_NO_PLACEHOLDERS && process.env.RUNTIME_QA_NO_MODEL_FIXTURES !== "1") {
     await bootstrapQaControlPlane(backend);
   }
 

@@ -95,7 +95,7 @@ function scoreQuality(candidate: RouterCandidate): number {
   return 0.55;
 }
 
-function scoreSpeed(candidate: RouterCandidate, latencyCeilingMs: number): number {
+function scoreSpeed(candidate: RouterCandidate, fastestLatencyMs: number): number {
   const profile = asRecord(candidate.latestProfile);
   const latencyP50 = pickNumber(
     profile,
@@ -105,26 +105,52 @@ function scoreSpeed(candidate: RouterCandidate, latencyCeilingMs: number): numbe
     "latencyMs",
   );
   if (latencyP50 !== null && latencyP50 >= 0) {
-    const ceiling = Math.max(latencyCeilingMs, 1);
-    return clamp01(1 - latencyP50 / ceiling);
+    // Ratio to the cohort’s fastest p50 — higher = faster.
+    // Avoids pinning the slowest model to S0 (reads as “no latency data”).
+    const fastest = Math.max(fastestLatencyMs, 1);
+    return clamp01(fastest / Math.max(latencyP50, 1));
   }
   return candidate.sourceType === "local" ? 0.78 : 0.55;
 }
 
-function scoreCost(candidate: RouterCandidate, costCeiling: number): number {
+function readInputCostPer1M(
+  candidate: RouterCandidate,
+  pricingByModelId?: ReadonlyMap<string, number>,
+): number | null {
   const profile = asRecord(candidate.latestProfile);
   const pricing = asRecord(profile?.pricing);
-  const inputCost = pickNumber(
+  const fromProfile = pickNumber(
     pricing ?? profile,
     "inputPer1M",
     "input_per_1m",
     "cost_per_1m_input",
     "inputCostPer1M",
   );
-  if (inputCost !== null && inputCost >= 0) {
-    const ceiling = Math.max(costCeiling, 0.01);
-    // Higher score = cheaper (Paper: cost axis inverted).
-    return clamp01(1 - inputCost / ceiling);
+  if (fromProfile !== null && fromProfile >= 0) {
+    return fromProfile;
+  }
+  const fromModels = pricingByModelId?.get(candidate.modelId);
+  if (typeof fromModels === "number" && Number.isFinite(fromModels) && fromModels >= 0) {
+    return fromModels;
+  }
+  return null;
+}
+
+function scoreCost(
+  candidate: RouterCandidate,
+  cheapestInputPer1M: number,
+  pricingByModelId?: ReadonlyMap<string, number>,
+): number {
+  const inputCost = readInputCostPer1M(candidate, pricingByModelId);
+  if (inputCost !== null) {
+    // Free / zero-priced models sit at the cost axis tip.
+    if (inputCost <= 0) {
+      return 1;
+    }
+    // Ratio to the cohort’s cheapest input $/1M — higher = cheaper (axis inverted).
+    // Avoids pinning the priciest model to C0 (reads as “no pricing”).
+    const cheapest = Math.max(cheapestInputPer1M, 0.0001);
+    return clamp01(cheapest / inputCost);
   }
   if (candidate.sourceType === "local") {
     return 0.88;
@@ -156,11 +182,13 @@ function isExcluded(candidate: RouterCandidate): boolean {
 
 /**
  * Build plottable candidate-space points from router candidates.
- * Scores are cohort-normalized when latency/cost samples exist.
+ * Cost/speed use ratio-to-best within the cohort when samples exist (not 1−value/max).
+ * Optional `pricingByModelId` supplies models.dev input $/1M when profiles omit pricing.
  */
 export function buildCandidateSpacePoints(
   candidates: readonly RouterCandidate[],
   limit = 5,
+  pricingByModelId?: ReadonlyMap<string, number>,
 ): readonly CandidateSpacePoint[] {
   const eligible = candidates.filter((candidate) => !isExcluded(candidate));
   const pool = (eligible.length > 0 ? eligible : candidates).slice();
@@ -170,28 +198,20 @@ export function buildCandidateSpacePoints(
       pickNumber(asRecord(candidate.latestProfile), "latency_ms_p50", "latencyMsP50", "latency_ms"),
     )
     .filter((value): value is number => value !== null && value >= 0);
-  const latencyCeiling = latencies.length > 0 ? Math.max(...latencies, 1) : 2_000;
+  const fastestLatencyMs =
+    latencies.length > 0 ? Math.min(...latencies.map((value) => Math.max(value, 1))) : 1_000;
 
   const costs = pool
-    .map((candidate) => {
-      const profile = asRecord(candidate.latestProfile);
-      const pricing = asRecord(profile?.pricing);
-      return pickNumber(
-        pricing ?? profile,
-        "inputPer1M",
-        "input_per_1m",
-        "cost_per_1m_input",
-        "inputCostPer1M",
-      );
-    })
-    .filter((value): value is number => value !== null && value >= 0);
-  const costCeiling = costs.length > 0 ? Math.max(...costs, 0.01) : 10;
+    .map((candidate) => readInputCostPer1M(candidate, pricingByModelId))
+    .filter((value): value is number => value !== null);
+  const positiveCosts = costs.filter((value) => value > 0);
+  const cheapestInputPer1M = positiveCosts.length > 0 ? Math.min(...positiveCosts) : 1;
 
   const ranked = pool
     .map((candidate) => {
-      const cost = scoreCost(candidate, costCeiling);
+      const cost = scoreCost(candidate, cheapestInputPer1M, pricingByModelId);
       const quality = scoreQuality(candidate);
-      const speed = scoreSpeed(candidate, latencyCeiling);
+      const speed = scoreSpeed(candidate, fastestLatencyMs);
       const routeScore = scoreRoute(cost, quality, speed);
       return { candidate, cost, quality, speed, routeScore };
     })

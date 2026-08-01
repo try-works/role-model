@@ -932,25 +932,21 @@ export default function ControlModelsRoute() {
                         ))}
                       </dl>
                     </div>
-                    {selectedMetaPanel.cost ? (
-                      <>
-                        <div className="h-px w-full bg-[var(--rm-border)]" />
-                        <div className="space-y-2">
-                          <p className={inventoryEyebrowClassName}>Cost</p>
-                          <dl className="space-y-2">
-                            {selectedMetaPanel.cost.map((row) => (
-                              <div
-                                key={row.label}
-                                className="flex items-baseline justify-between gap-3"
-                              >
-                                <dt className={inventoryFactLabelClassName}>{row.label}</dt>
-                                <dd className={inventoryMonoValueClassName}>{row.value}</dd>
-                              </div>
-                            ))}
-                          </dl>
-                        </div>
-                      </>
-                    ) : null}
+                    <div className="h-px w-full bg-[var(--rm-border)]" />
+                    <div className="space-y-2">
+                      <p className={inventoryEyebrowClassName}>Cost</p>
+                      <dl className="space-y-2">
+                        {selectedMetaPanel.cost.map((row) => (
+                          <div
+                            key={row.label}
+                            className="flex items-baseline justify-between gap-3"
+                          >
+                            <dt className={inventoryFactLabelClassName}>{row.label}</dt>
+                            <dd className={inventoryMonoValueClassName}>{row.value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </div>
                     <div className="h-px w-full bg-[var(--rm-border)]" />
                     <div className="space-y-2">
                       <p className={inventoryEyebrowClassName}>Benchmark</p>

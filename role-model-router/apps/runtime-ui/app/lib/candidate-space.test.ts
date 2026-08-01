@@ -64,6 +64,70 @@ describe("buildCandidateSpacePoints", () => {
     expect(cheap?.cost).toBeGreaterThan(pricey?.cost ?? 0);
   });
 
+  test("uses models.dev pricing map when candidate profiles omit pricing", () => {
+    const points = buildCandidateSpacePoints(
+      [
+        candidate({
+          endpointId: "deepseek",
+          modelId: "deepseek/deepseek-v4-flash",
+          latestProfile: { latency_ms_p50: 1000 },
+        }),
+        candidate({
+          endpointId: "kimi",
+          modelId: "moonshot/kimi-k3",
+          latestProfile: { latency_ms_p50: 2000 },
+        }),
+      ],
+      5,
+      new Map([
+        ["deepseek/deepseek-v4-flash", 0.14],
+        ["moonshot/kimi-k3", 3],
+      ]),
+    );
+
+    const deepseek = points.find((point) => point.endpointId === "deepseek");
+    const kimi = points.find((point) => point.endpointId === "kimi");
+    expect(deepseek?.cost).toBeGreaterThan(kimi?.cost ?? 0);
+    // Ratio to cheapest: deepseek = 1.0, kimi = 0.14/3 ≈ 0.047 — not pinned to C0.
+    expect(Math.round((deepseek?.cost ?? 0) * 100)).toBe(100);
+    expect(Math.round((kimi?.cost ?? 0) * 100)).toBe(5);
+    // Ratio to fastest: deepseek = 1.0, kimi = 1000/2000 = 0.5 — not pinned to S0.
+    expect(Math.round((deepseek?.speed ?? 0) * 100)).toBe(100);
+    expect(Math.round((kimi?.speed ?? 0) * 100)).toBe(50);
+  });
+
+  test("does not pin the slowest or priciest cohort member to zero after benchmarks", () => {
+    const points = buildCandidateSpacePoints(
+      [
+        candidate({
+          endpointId: "deepseek",
+          modelId: "deepseek/deepseek-v4-flash",
+          routingQualityScore: 0.88,
+          latestProfile: {
+            latency_ms_p50: 7127.5,
+            pricing: { inputPer1M: 0.14 },
+          },
+        }),
+        candidate({
+          endpointId: "kimi",
+          modelId: "moonshot/kimi-k3",
+          routingQualityScore: 0.85,
+          latestProfile: {
+            latency_ms_p50: 18582,
+            pricing: { inputPer1M: 3 },
+          },
+        }),
+      ],
+      5,
+    );
+
+    const kimi = points.find((point) => point.endpointId === "kimi");
+    expect(kimi?.cost ?? 0).toBeGreaterThan(0);
+    expect(kimi?.speed ?? 0).toBeGreaterThan(0);
+    expect(Math.round((kimi?.speed ?? 0) * 100)).toBe(38);
+    expect(Math.round((kimi?.cost ?? 0) * 100)).toBe(5);
+  });
+
   test("marks ignored candidates excluded and formats C/Q/S legend lines", () => {
     const points = buildCandidateSpacePoints([
       candidate({

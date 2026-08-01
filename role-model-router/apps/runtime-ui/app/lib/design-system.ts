@@ -710,16 +710,16 @@ export const runtimeTheme = {
       onPrimary: "#0A0A0A",
       telemetryLocal: "#EDEDED",
       telemetryRemote: "#9A9A9A",
-      telemetryHealthy: "#059669",
+      telemetryHealthy: "#159D5A",
       telemetryDegraded: "#D9A441",
       telemetryRaw: "#9A9A9A",
       error: "#E0726A",
       errorMuted: "rgba(224, 114, 106, 0.82)",
       errorSubtle: "rgba(224, 114, 106, 0.20)",
       errorGhost: "rgba(224, 114, 106, 0.10)",
-      success: "#059669",
-      successMuted: "rgba(5, 150, 105, 0.82)",
-      successSubtle: "rgba(5, 150, 105, 0.14)",
+      success: "#159D5A",
+      successMuted: "rgba(21, 157, 90, 0.82)",
+      successSubtle: "rgba(21, 157, 90, 0.14)",
       warning: "#D9A441",
       warningMuted: "rgba(217, 164, 65, 0.82)",
       warningSubtle: "rgba(217, 164, 65, 0.12)",
@@ -924,6 +924,10 @@ export const chartErrorStateClassName =
 
 export const errorNoticeClassName =
   "rounded-[var(--rm-radius-panel)] border border-[var(--rm-error)] bg-[var(--rm-error-ghost)] p-6 text-[14px] font-normal leading-[21px] tracking-[0em] text-[var(--rm-error)]";
+
+/** Compact inline success / status notice — form feedback, never pill badge tokens. */
+export const successNoticeClassName =
+  "block w-full min-w-0 rounded-[var(--rm-radius-field)] border border-[color-mix(in_srgb,var(--rm-success)_35%,transparent)] bg-[var(--rm-success-subtle)] px-4 py-3 text-[13px] font-normal leading-[18px] tracking-[0em] text-[var(--rm-success)]";
 
 export const eyebrowClassName =
   "text-[12px] font-normal uppercase leading-4 tracking-[0.08em] text-[var(--rm-muted)]";
