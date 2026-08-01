@@ -654,6 +654,7 @@ describe("runCatalogExportCli", () => {
         contextWindow: number;
         maxOutputTokens: number;
         capabilities: string[];
+        pricing: { inputPer1M: number; outputPer1M: number; currency: string } | null;
       }>;
     };
     const k3 = catalog.models.find((model) => model.modelId === "moonshot/kimi-k3");
@@ -661,6 +662,11 @@ describe("runCatalogExportCli", () => {
     expect(k3?.contextWindow).toBe(1048576);
     expect(k3?.maxOutputTokens).toBe(131072);
     expect(k3?.capabilities).toEqual(expect.arrayContaining(["code.edit"]));
+    expect(k3?.pricing).toEqual({
+      inputPer1M: 3,
+      outputPer1M: 15,
+      currency: "USD",
+    });
   });
 
   test("rewrites tracked package-data catalog artifacts alongside the runtime-output export", async () => {

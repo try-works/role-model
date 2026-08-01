@@ -241,6 +241,10 @@ const dashboardRouteSource = readFileSync(
   new URL("../routes/dashboard.tsx", import.meta.url),
   "utf8",
 );
+const candidateSpaceChartSource = readFileSync(
+  new URL("../components/candidate-space-chart.tsx", import.meta.url),
+  "utf8",
+);
 const observeActivityRouteSource = readFileSync(
   new URL("../routes/observe-activity.tsx", import.meta.url),
   "utf8",
@@ -625,16 +629,16 @@ describe("runtime design system", () => {
       onPrimary: "#0A0A0A",
       telemetryLocal: "#EDEDED",
       telemetryRemote: "#9A9A9A",
-      telemetryHealthy: "#059669",
+      telemetryHealthy: "#159D5A",
       telemetryDegraded: "#D9A441",
       telemetryRaw: "#9A9A9A",
       error: "#E0726A",
       errorMuted: "rgba(224, 114, 106, 0.82)",
       errorSubtle: "rgba(224, 114, 106, 0.20)",
       errorGhost: "rgba(224, 114, 106, 0.10)",
-      success: "#059669",
-      successMuted: "rgba(5, 150, 105, 0.82)",
-      successSubtle: "rgba(5, 150, 105, 0.14)",
+      success: "#159D5A",
+      successMuted: "rgba(21, 157, 90, 0.82)",
+      successSubtle: "rgba(21, 157, 90, 0.14)",
       warning: "#D9A441",
       warningMuted: "rgba(217, 164, 65, 0.82)",
       warningSubtle: "rgba(217, 164, 65, 0.12)",
@@ -1229,11 +1233,12 @@ describe("runtime design system", () => {
     expect(badgeSource).not.toContain("font-medium");
     expect(pagePrimitivesSource).not.toContain("bg-transparent text-[var(--rm-accent)]");
     expect(pagePrimitivesSource).toContain(
-      "flex flex-col gap-1.5 border-b border-[var(--rm-border)] px-5 py-4",
+      "flex flex-col gap-1.5 overflow-hidden rounded-t-[inherit] border-b border-[var(--rm-border)] px-5 py-4",
     );
-    expect(pagePrimitivesSource).toContain('className="p-5"');
+    expect(pagePrimitivesSource).toContain('className="overflow-visible p-5"');
     expect(pagePrimitivesSource).not.toContain("border-t border-[var(--rm-border)] pt-4");
-    expect(pagePrimitivesSource).toContain("min-w-0 overflow-hidden");
+    expect(pagePrimitivesSource).toContain("relative min-w-0");
+    expect(pagePrimitivesSource).not.toContain("min-w-0 overflow-hidden");
     expect(pagePrimitivesSource).not.toContain("min-w-0 p-4");
     expect(appShellSource).not.toContain("border-b border-[var(--rm-border)] pb-5");
     expect(appShellSource).not.toContain("border-t border-[var(--rm-border)] pt-4");
@@ -1957,10 +1962,17 @@ describe("runtime design system", () => {
     expect(dashboardRouteSource).toContain("Model pool");
     expect(dashboardRouteSource).toContain("CandidateSpaceChart");
     expect(dashboardRouteSource).toContain("fetchRouterCandidates");
+    expect(dashboardRouteSource).toContain("fetchRuntimeModels");
     expect(dashboardRouteSource).toContain("buildCandidateSpacePoints");
     expect(dashboardRouteSource).not.toContain(
       "Full quality/cost/speed axes land with router candidate telemetry",
     );
+    // Paper Model pool empty: keep axes, candidates rail = title + CTA to Remote/Local.
+    expect(candidateSpaceChartSource).toContain("No models configured");
+    expect(candidateSpaceChartSource).toContain("/app/remote/providers");
+    expect(candidateSpaceChartSource).toContain("/app/local/choose");
+    expect(candidateSpaceChartSource).not.toContain("No routable candidates");
+    expect(candidateSpaceChartSource).not.toContain("No candidates to list.");
   });
 
   test("chart empty and unsupported states use RM3 dashed muted panels on every graph page", () => {
@@ -2434,6 +2446,15 @@ describe("runtime design system", () => {
     expect(appCss).not.toMatch(/@layer base\s*\{[\s\S]*?a\s*\{[\s\S]*?color:\s*inherit/);
     expect(designSystemSource).toContain("primaryButtonClassName =");
     expect(designSystemSource).toContain("!text-primary-foreground");
+  });
+
+  test("remote provider action feedback uses a block success notice, not pill badge tokens", () => {
+    expect(designSystemSource).toContain("successNoticeClassName");
+    expect(designSystemSource).toContain("bg-[var(--rm-success-subtle)]");
+    expect(designSystemSource).toContain("text-[var(--rm-success)]");
+    expect(providersRouteSource).toContain("successNoticeClassName");
+    expect(providersRouteSource).not.toContain("rm-pill-success-bg");
+    expect(appCss).toContain("--rm-success: var(--rm3-chart-cache);");
   });
 
   test("production UI sources keep the approved Apple radius grammar", () => {

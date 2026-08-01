@@ -1795,7 +1795,7 @@ export function buildSelectedModelMetaPanel(input: {
 }): {
   title: string;
   facts: Array<{ label: string; value: string }>;
-  cost: Array<{ label: string; value: string }> | null;
+  cost: Array<{ label: string; value: string }>;
   benchmark: Array<{ label: string; value: string }>;
 } {
   const toolStyles = (input.toolStyles ?? []).filter((style) => style.trim().length > 0);
@@ -1812,13 +1812,17 @@ export function buildSelectedModelMetaPanel(input: {
       : `${input.healthyEndpointCount} healthy${
           input.healthyEndpointCount === input.endpointCount ? "" : ` / ${input.endpointCount}`
         }`;
+  // Always show Cost — models.dev prices when present, otherwise explicit Unknown.
   const cost =
     input.pricing != null
       ? [
           { label: "Input", value: formatUnitPrice(input.pricing.inputPer1M) },
           { label: "Output", value: formatUnitPrice(input.pricing.outputPer1M) },
         ]
-      : null;
+      : [
+          { label: "Input", value: "Unknown" },
+          { label: "Output", value: "Unknown" },
+        ];
   const overall =
     typeof input.overallScore === "number" ? input.overallScore.toFixed(2) : "No evidence yet";
   return {

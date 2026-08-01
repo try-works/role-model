@@ -19,6 +19,7 @@ import {
   insetPanelClassName,
   mutedPanelClassName,
   secondaryButtonClassName,
+  successNoticeClassName,
 } from "../lib/design-system";
 import {
   getDeviceAuthorizationPollDelayMs,
@@ -1068,9 +1069,9 @@ export default function ProvidersRoute() {
                 />
               ) : null}
               {actionFeedback ? (
-                <output className="rounded-[var(--rm-radius-field)] border border-[var(--rm-pill-success-bg)] bg-[var(--rm-pill-success-bg)] px-4 py-3 text-sm text-[var(--rm-pill-success-ink)]">
+                <p className={successNoticeClassName} role="status" aria-live="polite">
                   {actionFeedback}
-                </output>
+                </p>
               ) : null}
             </form>
           </SectionCard>

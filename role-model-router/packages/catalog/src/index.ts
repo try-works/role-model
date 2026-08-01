@@ -455,7 +455,8 @@ export function normalizeCatalogSnapshot(
     catalogVersion: "1",
     source: snapshot.source,
     providers,
-    models,
+    // Copy models.dev pricing onto operator aliases (moonshot/kimi-* ← moonshotai/*).
+    models: applyAliasedCatalogPricing(models),
   };
 }
 
@@ -491,6 +492,8 @@ export async function exportCatalogArtifacts(
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import { applyAliasedCatalogPricing } from "./token-economics.js";
+
 export {
   deriveLiteLLMProviders,
   extractLiteLLMModelIds,
@@ -501,9 +504,12 @@ export {
 export {
   CANONICAL_MODEL_ID_ALIASES,
   OPERATOR_HIDDEN_CATALOG_PROVIDER_IDS,
+  applyAliasedCatalogPricing,
+  collectPricingLookupIds,
   estimateCostPer1kTokens,
   estimateRequestCostUsd,
   resolveCanonicalModelId,
+  resolveCatalogPricingHints,
   resolveRoutingCostEstimate,
   resolveTokenEconomics,
   type TokenEconomics,

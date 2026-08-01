@@ -222,6 +222,7 @@ import {
 import {
   type LiteLLMProviderInfo,
   OPERATOR_HIDDEN_CATALOG_PROVIDER_IDS,
+  applyAliasedCatalogPricing,
   deriveLiteLLMProviders,
   extractLiteLLMModelIds,
   loadLiteLLMModelPrices,
@@ -5516,7 +5517,7 @@ function withRuntimeEndpointFallbackModels(
 
   return {
     ...catalog,
-    models: [...catalog.models, ...synthesizedModels],
+    models: applyAliasedCatalogPricing([...catalog.models, ...synthesizedModels]),
   };
 }
 
@@ -15783,11 +15784,15 @@ export async function createRuntimeBridgeBackend(
   );
   const fixtureAccountIds = new Set(fixtureAccounts.map((account) => account.providerAccountId));
   let runtimeConfigProviderAccountIds = new Set<string>();
-  let currentNormalizedCatalog = applyUnifiedLiteLLMAdapterFamilyOverrides(
+  const catalogWithAdapterOverrides = applyUnifiedLiteLLMAdapterFamilyOverrides(
     catalogWithFixtureModels,
     currentUnifiedRuntimeConfig,
     liteLLMProviders,
   );
+  let currentNormalizedCatalog: NormalizedCatalog = {
+    ...catalogWithAdapterOverrides,
+    models: applyAliasedCatalogPricing(catalogWithAdapterOverrides.models),
+  };
   let currentModelsById = new Map(
     currentNormalizedCatalog.models.map((model) => [model.modelId, model]),
   );
@@ -17502,9 +17507,11 @@ export async function createRuntimeBridgeBackend(
       };
       currentNormalizedCatalog = {
         ...currentNormalizedCatalog,
-        models: [...currentNormalizedCatalog.models, model],
+        models: applyAliasedCatalogPricing([...currentNormalizedCatalog.models, model]),
       };
-      currentModelsById.set(modelId, model);
+      currentModelsById = new Map(
+        currentNormalizedCatalog.models.map((entry) => [entry.modelId, entry]),
+      );
     }
 
     const endpointId =
@@ -17757,7 +17764,10 @@ export async function createRuntimeBridgeBackend(
     }
 
     currentUnifiedRuntimeConfig = nextConfig;
-    currentNormalizedCatalog = nextNormalizedCatalog;
+    currentNormalizedCatalog = {
+      ...nextNormalizedCatalog,
+      models: applyAliasedCatalogPricing(nextNormalizedCatalog.models),
+    };
     const liteLLMProviderIds = new Set(
       nextConfig?.liteLLM.providers.map((p) => p.providerId) ?? [],
     );
@@ -19597,6 +19607,26 @@ export async function createRuntimeBridgeBackend(
       const benchmarkCapability = benchmarkCapabilitiesByEndpointId[endpointId] ?? null;
       const routingQualityScore =
         profile.latestProfile?.quality_score ?? profile.latestProfile?.judge_score ?? null;
+      const catalogPricing = resolveModelCapabilityProfile({
+        modelId: endpoint.identity.model_id,
+        catalog: currentNormalizedCatalog,
+      }).pricing;
+      const latestProfile = (() => {
+        const existing = profile.latestProfile as unknown as Record<string, unknown> | null;
+        if (!catalogPricing) {
+          return profile.latestProfile;
+        }
+        if (!existing) {
+          return { pricing: catalogPricing };
+        }
+        if (existing.pricing != null) {
+          return profile.latestProfile;
+        }
+        return {
+          ...existing,
+          pricing: catalogPricing,
+        };
+      })();
       return {
         endpointId,
         modelId: endpoint.identity.model_id,
@@ -19620,7 +19650,7 @@ export async function createRuntimeBridgeBackend(
         controllerEligible: controller?.endpointId === endpointId,
         preferred: guidance.preferredEndpointIds.includes(endpointId),
         ignored: guidance.ignoredEndpointIds.includes(endpointId),
-        latestProfile: profile.latestProfile,
+        latestProfile,
         recentSamples: profile.recentSamples,
         difficultyProfiles: profile.difficultyProfiles,
         advisoryMaxDifficultyRecommendation: profile.advisoryMaxDifficultyRecommendation,
