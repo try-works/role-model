@@ -32,6 +32,10 @@ describe("StorageRetentionRoute", () => {
       "fieldClassName",
       "Maximum size (GB)",
       "gbInputToBytes",
+      "Physical storage inventory",
+      "row.physicalBytes",
+      "row.heldItems",
+      "row.retentionState",
     ])
       expect(source).toContain(token);
     expect(source).not.toContain("Maximum bytes");
@@ -52,6 +56,8 @@ describe("StorageRetentionRoute", () => {
   test("renders the existing design-system loading and manual pruning controls", () => {
     const html = renderToStaticMarkup(<StorageRetentionRouteView />);
     expect(html).toContain("Tracked");
+    expect(html).toContain("Physical stores");
+    expect(html).toContain("Legal holds");
     expect(html).toContain("Loading storage inventory");
     expect(html).toContain("Retention policy");
     expect(html).toContain("Maximum size (GB)");

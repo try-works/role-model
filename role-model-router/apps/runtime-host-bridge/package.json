@@ -31,6 +31,7 @@
     "@role-model-router/runtime-observability": "workspace:*",
     "@role-model-router/sqlite-memory": "workspace:*",
     "@role-model-router/tool-registry": "workspace:*",
+    "@role-model-router/trace": "workspace:*",
     "@role-model-router/vendor-abstraction": "workspace:*",
     "@role-model-router/vendor-llama-swap": "workspace:*",
     "@role-model-router/vendor-litellm": "workspace:*",

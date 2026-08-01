@@ -24,9 +24,21 @@ test("CI is scoped to long-lived branches with stable cancellable lanes", () => 
     "runtime-router",
     "rust",
     "smoke",
+    "track-b-runtime",
   ]) {
     assert.match(workflow, new RegExp(`^  ${job}:`, "m"));
   }
+});
+
+test("Track B CI is always-on, explicit, and runs the tagged browser contract", () => {
+  assert.match(workflow, /^ {2}track-b-runtime:/m);
+  assert.doesNotMatch(workflow, /track-b-runtime:[\s\S]*?if:\s*\$\{\{\s*false\s*\}\}/);
+  assert.match(workflow, /recursive-87-ci-contract\.test\.ts/);
+  assert.match(workflow, /@recursive:87-direct-track-b-semantic-completion/);
+  assert.match(workflow, /playwright install --with-deps chromium/);
+  assert.match(workflow, /repository:\s*try-works\/role-model-internal/);
+  assert.match(workflow, /PRIVATE_PAIRED_SHA/);
+  assert.match(workflow, /ROLE_MODEL_PUBLIC_WORKTREE/);
 });
 
 test("promotion guard encodes dev to stage to main with a hotfix exception", () => {

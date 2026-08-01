@@ -35,17 +35,13 @@ describe("ExtensionsRoute", () => {
     expect(routeSource).toContain("Health probe");
     expect(routeSource).toContain("LIFECYCLE_COPY");
     expect(routeSource).toContain("operatorBoundaryNote");
-    expect(routeSource).toContain("shadow-ready by default");
-    expect(routeSource).toContain("ceremony-bound ON");
-    expect(routeSource).toContain("Soft OFF returns to shadow-ready");
-    expect(routeSource).toContain("KW works when on");
-    expect(routeSource).toContain("gated separately from Set mode");
-    expect(routeSource).toContain("is not productionActivation");
-    expect(routeSource).not.toContain("productionActivation stays hard-off");
-    expect(routeSource).toContain("production prompt injection");
-    expect(routeSource).not.toContain("Production prompt injection remains locked");
-    expect(routeSource).toContain("requires ceremony ON plus gated production");
-    expect(routeSource).toMatch(/cleared\s+on soft OFF/);
+    expect(routeSource).toContain("shadow-only");
+    expect(routeSource).toContain("Direct Track B v1.1");
+    expect(routeSource).toContain(
+      "cannot change production prompts, routes, weights, or active profiles",
+    );
+    expect(routeSource).not.toContain("ceremony-bound ON");
+    expect(routeSource).not.toContain("production prompt injection");
     expect(routeSource).not.toContain("do not expose a public enable/disable mutation API");
     expect(routeSource).toContain("mutateExtension");
     expect(routeSource).toContain("dismissRecommendation");
@@ -69,14 +65,11 @@ describe("ExtensionsRoute", () => {
     expect(routeSource).toContain("Mode draft is");
     expect(routeSource).toContain("applyMode");
     expect(routeSource).toContain("prepareKnowledgeWorkerShadowReady");
-    expect(routeSource).toContain("activateKnowledgeWorkerProduction");
-    expect(routeSource).toContain("deactivateKnowledgeWorkerProduction");
     expect(routeSource).toContain("Prepare shadow-ready");
-    expect(routeSource).toContain("Production ON");
-    expect(routeSource).toContain("Soft OFF");
-    expect(routeSource).toContain("productionActivation");
-    expect(routeSource).toContain("Production retrieve is gated");
-    expect(routeSource).toContain("separate from Set mode");
+    expect(routeSource).not.toContain("activateKnowledgeWorkerProduction");
+    expect(routeSource).not.toContain("deactivateKnowledgeWorkerProduction");
+    expect(routeSource).not.toContain("Production ON");
+    expect(routeSource).not.toContain("Soft OFF");
     expect(routeSource).toContain("xl:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]");
   });
   test("renders the existing design-system loading shell before operational state arrives", () => {

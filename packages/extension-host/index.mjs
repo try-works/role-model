@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { appendFile, mkdir, readFile } from "node:fs/promises";
-import { basename, dirname } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   defineExtension,
@@ -21,22 +21,36 @@ const resolveNodeWorkerExecutable = (configured = process.env.ROLE_MODEL_EXTENSI
 };
 
 class ProcessWorker {
-  constructor(moduleUrl, onExit, startupTimeoutMs, workerExecPath) {
+  constructor(moduleUrl, onExit, startupTimeoutMs, workerExecPath, extensionId, stateRoot) {
     this.moduleUrl = normalizeModuleUrl(moduleUrl);
     this.onExit = onExit;
     this.startupTimeoutMs = startupTimeoutMs;
     this.workerExecPath = workerExecPath;
+    this.extensionId = extensionId;
+    this.stateRoot = stateRoot;
     this.pending = new Map();
     this.child = null;
+    this.stderr = "";
     this.exited = true;
     this.stopping = false;
   }
   async start() {
     if (this.child && !this.exited) return;
+    if (this.stateRoot) await mkdir(this.stateRoot, { recursive: true });
+    this.stopping = false;
     this.exited = false;
     this.child = spawn(this.workerExecPath, [runtimePath, this.moduleUrl], {
       stdio: ["pipe", "pipe", "pipe"],
       windowsHide: true,
+      env: {
+        ...process.env,
+        ROLE_MODEL_EXTENSION_ID: this.extensionId,
+        ...(this.stateRoot ? { ROLE_MODEL_EXTENSION_STATE_ROOT: this.stateRoot } : {}),
+      },
+    });
+    this.stderr = "";
+    this.child.stderr.on("data", (chunk) => {
+      this.stderr = `${this.stderr}${chunk.toString("utf8")}`.slice(-4096);
     });
     let bytes = Buffer.alloc(0);
     let settled = false;
@@ -68,9 +82,16 @@ class ProcessWorker {
     this.child.once("exit", (code, signal) => {
       const expected = this.stopping;
       this.exited = true;
-      for (const item of this.pending.values()) item.reject(new Error("worker exited"));
+      const detail = this.stderr.trim();
+      for (const item of this.pending.values())
+        item.reject(new Error(detail ? `worker exited: ${detail}` : "worker exited"));
       this.pending.clear();
-      if (!settled) rejectReady(new Error(`worker exited during startup (${code ?? signal})`));
+      if (!settled)
+        rejectReady(
+          new Error(
+            `worker exited during startup (${code ?? signal})${detail ? `: ${detail}` : ""}`,
+          ),
+        );
       if (!expected) this.onExit?.(code, signal);
     });
     let timer;
@@ -121,6 +142,12 @@ class ProcessWorker {
       });
     });
     this.child = null;
+  }
+  state() {
+    return {
+      pid: this.exited ? null : (this.pid ?? null),
+      exited: this.exited,
+    };
   }
 }
 
@@ -174,6 +201,49 @@ export class ExtensionHost {
       "utf8",
     );
   }
+  #recoverExitedProcess(record) {
+    if (record.kind !== "process" || !record.autoRestart || !record.worker.exited) return null;
+    if (record.restartPromise) return record.restartPromise;
+    record.restartPromise = (async () => {
+      while (record.autoRestart && record.worker.exited) {
+        if (record.restarts >= this.maxRestarts) {
+          record.lifecycle = "degraded";
+          await this.#journal({
+            type: "restart_exhausted",
+            extensionId: record.descriptor.id,
+            restart: record.restarts,
+          });
+          return;
+        }
+        await delay(this.restartBackoffMs * 2 ** record.restarts);
+        if (!record.autoRestart || !record.worker.exited) return;
+        record.restarts += 1;
+        this.#restartCount += 1;
+        record.lifecycle = "starting";
+        try {
+          await record.worker.start();
+          record.lifecycle = "ready";
+          await this.#journal({
+            type: "restarted",
+            extensionId: record.descriptor.id,
+            restart: record.restarts,
+          });
+          return;
+        } catch (error) {
+          record.lifecycle = "exited";
+          await this.#journal({
+            type: "restart_failed",
+            extensionId: record.descriptor.id,
+            restart: record.restarts,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+    })().finally(() => {
+      record.restartPromise = null;
+    });
+    return record.restartPromise;
+  }
   register(descriptor, worker) {
     const validated = this.#validateDescriptor(descriptor);
     if (typeof worker !== "function") throw new Error("worker function required");
@@ -193,20 +263,27 @@ export class ExtensionHost {
       kind: "process",
       lifecycle: "starting",
       restarts: 0,
+      autoRestart: false,
+      restartPromise: null,
     };
     record.worker = new ProcessWorker(
       normalized,
       () => {
         record.lifecycle = "exited";
+        if (record.autoRestart) void this.#recoverExitedProcess(record);
       },
       this.startupTimeoutMs,
       this.workerExecPath,
+      validated.id,
+      this.journalPath ? join(dirname(this.journalPath), "workers", validated.id) : null,
     );
     this.#workers.set(validated.id, record);
     try {
       await record.worker.start();
       record.lifecycle = "ready";
+      record.autoRestart = true;
     } catch (error) {
+      record.autoRestart = false;
       this.#workers.delete(validated.id);
       throw error;
     }
@@ -234,14 +311,84 @@ export class ExtensionHost {
     const latest = new Map();
     for (const line of content.split(/\r?\n/).filter(Boolean)) {
       const row = JSON.parse(line);
-      if (row.type === "installed") latest.set(row.descriptor.id, row);
+      if (row.type === "installed") {
+        latest.set(row.descriptor.id, { ...row, desiredState: "ready" });
+        continue;
+      }
+      const extensionId = row.extensionId;
+      if (!extensionId || !latest.has(extensionId)) continue;
+      if (row.type === "removed") latest.delete(extensionId);
+      else if (row.type === "stopped")
+        latest.set(extensionId, { ...latest.get(extensionId), desiredState: "stopped" });
+      else if (row.type === "started" || row.type === "restarted")
+        latest.set(extensionId, { ...latest.get(extensionId), desiredState: "ready" });
     }
-    for (const row of latest.values())
-      if (!this.#workers.has(row.descriptor.id))
+    for (const row of latest.values()) {
+      if (!this.#workers.has(row.descriptor.id)) {
         await this.registerProcess(row.descriptor, row.moduleUrl, { journal: false });
+        if (row.desiredState === "stopped") {
+          const record = this.#workers.get(row.descriptor.id);
+          record.lifecycle = "stopping";
+          await record.worker.stop();
+          record.lifecycle = "stopped";
+        }
+      }
+    }
   }
   disable() {
     this.#enabled = false;
+  }
+  extensionState(id) {
+    const record = this.#workers.get(id);
+    if (!record) throw new Error(`unknown extension ${id}`);
+    return {
+      id,
+      lifecycle: record.lifecycle,
+      pid: record.kind === "process" ? record.worker.state().pid : null,
+      restarts: record.restarts ?? 0,
+    };
+  }
+  listExtensionStates() {
+    return [...this.#workers.keys()].sort().map((id) => this.extensionState(id));
+  }
+  async stopProcess(id) {
+    const record = this.#workers.get(id);
+    if (!record || record.kind !== "process") throw new Error(`unknown process extension ${id}`);
+    record.lifecycle = "stopping";
+    record.autoRestart = false;
+    await record.worker.stop();
+    record.lifecycle = "stopped";
+    await this.#journal({ type: "stopped", extensionId: id, pid: null });
+    return this.extensionState(id);
+  }
+  async startProcess(id) {
+    const record = this.#workers.get(id);
+    if (!record || record.kind !== "process") throw new Error(`unknown process extension ${id}`);
+    if (record.lifecycle === "ready" && !record.worker.exited) return this.extensionState(id);
+    record.lifecycle = "starting";
+    await record.worker.start();
+    record.lifecycle = "ready";
+    record.autoRestart = true;
+    await this.#journal({ type: "started", extensionId: id, pid: record.worker.state().pid });
+    return this.extensionState(id);
+  }
+  async restartProcess(id) {
+    const record = this.#workers.get(id);
+    if (!record || record.kind !== "process") throw new Error(`unknown process extension ${id}`);
+    await this.stopProcess(id);
+    record.restarts = (record.restarts ?? 0) + 1;
+    this.#restartCount += 1;
+    const state = await this.startProcess(id);
+    await this.#journal({ type: "restarted", extensionId: id, restart: record.restarts });
+    return state;
+  }
+  async removeProcess(id) {
+    const record = this.#workers.get(id);
+    if (!record || record.kind !== "process") throw new Error(`unknown process extension ${id}`);
+    await this.stopProcess(id);
+    record.autoRestart = false;
+    this.#workers.delete(id);
+    await this.#journal({ type: "removed", extensionId: id });
   }
   rotateAuthorizationEpoch(epoch) {
     if (!Number.isInteger(epoch) || epoch <= this.authorizationEpoch)
@@ -292,23 +439,15 @@ export class ExtensionHost {
   }
   async #ensureProcess(record) {
     if (record.kind !== "process" || !record.worker.exited) return;
-    if (record.restarts >= this.maxRestarts) throw new Error("worker restart budget exhausted");
-    await delay(this.restartBackoffMs * 2 ** record.restarts);
-    record.restarts += 1;
-    this.#restartCount += 1;
-    record.worker.stopping = false;
-    await record.worker.start();
-    record.lifecycle = "ready";
-    await this.#journal({
-      type: "restarted",
-      extensionId: record.descriptor.id,
-      restart: record.restarts,
-    });
+    await this.#recoverExitedProcess(record);
+    if (record.worker.exited) throw new Error("worker restart budget exhausted");
   }
   invoke(id, envelope) {
     if (!this.#enabled) return Promise.reject(new Error("extension discovery disabled"));
     const registered = this.#workers.get(id);
     if (!registered) return Promise.reject(new Error(`unknown extension ${id}`));
+    if (registered.lifecycle === "stopped" || registered.lifecycle === "stopping")
+      return Promise.reject(new Error(`extension ${id} is disabled or stopped`));
     if (
       !envelope?.requestId ||
       !this.protocolVersions.has(envelope.protocolVersion) ||
@@ -385,7 +524,10 @@ export class ExtensionHost {
   }
   async shutdown() {
     for (const record of this.#workers.values())
-      if (record.kind === "process") await record.worker.stop();
+      if (record.kind === "process") {
+        record.autoRestart = false;
+        await record.worker.stop();
+      }
     await this.#journal({ type: "shutdown" });
   }
   health() {
@@ -402,6 +544,7 @@ export class ExtensionHost {
         0,
       ),
       restartCount: this.#restartCount,
+      workerStates: this.listExtensionStates(),
     };
   }
 }

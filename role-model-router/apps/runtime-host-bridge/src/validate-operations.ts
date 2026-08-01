@@ -99,6 +99,7 @@ async function prepareObservedScope(input: {
 
   persistRuntimeObservationBundle({
     databasePath: validation.databasePath,
+    channel: "development",
     observation,
   });
 

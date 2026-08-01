@@ -1,5 +1,13 @@
-import { randomUUID } from "node:crypto";
-import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { createHash, randomUUID } from "node:crypto";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
@@ -10,11 +18,26 @@ import {
 import type { ProviderAccountRecord } from "@role-model-router/provider-account";
 import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
 import {
-  mirrorShadowRuntimeObservation,
+  PERFORMANCE_HISTORY_POLICY_MAX_ARCHIVES,
+  PERFORMANCE_HISTORY_POLICY_MAX_ARCHIVE_BYTES,
+  PERFORMANCE_HISTORY_POLICY_MAX_ARCHIVE_ROWS,
+  type PerformanceHistoryPolicy,
+  type PerformanceHistoryPolicyReceipt,
+  enforcePerformanceHistoryPolicy,
+  ensurePerformanceHistorySchema,
+  readPerformanceHistoryPolicy,
+  validatePerformanceHistoryPolicy,
+  writePerformanceHistoryPolicy,
+} from "./history-policy.js";
+import {
+  hydrateRuntimeObservationGraphPointer,
+  readRuntimeObservationStorageState,
+  recordRuntimeObservationGraphReference,
   resolveRuntimeObservationStoragePayload,
 } from "./legacy-migration.js";
 
 export * from "./legacy-migration.js";
+export * from "./history-policy.js";
 
 const INITIAL_MIGRATION_ID = "run06-v1-initial-schema";
 const OBSERVATION_METADATA_BACKFILL_MIGRATION_ID = "run62-observation-metadata-backfill-v1";
@@ -275,6 +298,13 @@ CREATE TABLE IF NOT EXISTS schema_version (
   migration_id TEXT NOT NULL,
   applied_at_ms INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS storage_write_authority (
+  storage_class TEXT PRIMARY KEY,
+  registry_version TEXT NOT NULL,
+  owner TEXT NOT NULL,
+  channel TEXT NOT NULL,
+  authorized_at_ms INTEGER NOT NULL
+);
 CREATE TABLE IF NOT EXISTS migration_receipts (
   migration_id TEXT PRIMARY KEY,
   schema_version INTEGER NOT NULL,
@@ -336,6 +366,26 @@ CREATE TABLE IF NOT EXISTS observed_throughput_penalties (
   expires_at_ms INTEGER NOT NULL,
   last_observation_measured_at_ms INTEGER NOT NULL,
   updated_at_ms INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS performance_history_policy (
+  singleton_id INTEGER PRIMARY KEY CHECK (singleton_id = 1),
+  policy_json TEXT NOT NULL,
+  updated_at_ms INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS performance_history_rollups (
+  endpoint_id TEXT NOT NULL,
+  difficulty_bucket TEXT NOT NULL,
+  raw_sample_count INTEGER NOT NULL,
+  raw_bytes INTEGER NOT NULL,
+  last_rebuild_scanned_samples INTEGER NOT NULL,
+  newest_timestamp_ms INTEGER,
+  updated_at_ms INTEGER NOT NULL,
+  PRIMARY KEY (endpoint_id, difficulty_bucket)
+);
+CREATE TABLE IF NOT EXISTS runtime_retention_receipts (
+  receipt_id TEXT PRIMARY KEY,
+  created_at_ms INTEGER NOT NULL,
+  receipt_json TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS runtime_telemetry_records (
   request_id TEXT PRIMARY KEY,
@@ -612,13 +662,73 @@ export interface RetrievalReceiptRecord {
 
 export interface PersistRuntimeObservationBundleInput {
   readonly databasePath: string;
+  readonly channel: "development" | "stage" | "production";
   readonly observation: PersistedRuntimeObservationBundle;
+  readonly nowMs?: number;
   readonly artifactRef?: import("./legacy-migration.js").GraphArtifactReference;
+  readonly graphStore?: import("./legacy-migration.js").RuntimeObservationGraphStore;
 }
+
+export const SQLITE_STORAGE_REGISTRY = Object.freeze({
+  schemaVersion: "role-model.storage-registry.v1",
+  entries: Object.freeze(
+    [
+      "sqlite_migration_journal",
+      "sqlite_performance_history",
+      "sqlite_profiles",
+      "sqlite_runtime_observations",
+      "sqlite_telemetry",
+    ].map((id) =>
+      Object.freeze({
+        id,
+        owner: "sqlite-memory",
+        channels: Object.freeze(["development", "stage", "production"] as const),
+      }),
+    ),
+  ),
+});
+
+const assertSqliteStorageWriteAllowed = (
+  databasePath: string,
+  channel: unknown,
+  storageClasses: readonly string[],
+): void => {
+  if (
+    !SQLITE_STORAGE_REGISTRY.entries.every((entry) => entry.channels.includes(channel as never))
+  ) {
+    throw new Error(`SQLite storage classes are not writable in ${String(channel ?? "unknown")}`);
+  }
+  const database = new DatabaseSync(databasePath, { open: true });
+  try {
+    const table = database
+      .prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='storage_write_authority'")
+      .get();
+    if (!table) throw new Error("SQLite storage registry authority is missing");
+    for (const storageClass of storageClasses) {
+      const row = database
+        .prepare(
+          "SELECT registry_version,owner,channel FROM storage_write_authority WHERE storage_class=?",
+        )
+        .get(storageClass) as
+        | { registry_version?: string; owner?: string; channel?: string }
+        | undefined;
+      if (
+        row?.registry_version !== SQLITE_STORAGE_REGISTRY.schemaVersion ||
+        row.owner !== "sqlite-memory" ||
+        row.channel !== channel
+      ) {
+        throw new Error(`SQLite storage class is not registered for write: ${storageClass}`);
+      }
+    }
+  } finally {
+    database.close();
+  }
+};
 
 export interface ReadRuntimeObservationBundleInput {
   readonly databasePath: string;
   readonly requestId: string;
+  readonly graphStore?: Pick<import("./legacy-migration.js").RuntimeObservationGraphStore, "read">;
 }
 
 export interface ReadObservedPerformanceSamplesInput {
@@ -1209,6 +1319,7 @@ export function resolveSqliteMemoryLocation(input: SqliteMemoryLocationInput): s
 
 function initializeSchema(database: DatabaseSync): void {
   database.exec(SCHEMA_SQL);
+  ensurePerformanceHistorySchema(database);
   const providerAccountColumns = new Set(
     (
       database.prepare("PRAGMA table_info(provider_accounts)").all() as Array<{
@@ -1654,18 +1765,41 @@ function mapObservedThroughputPenaltyStateRow(row: {
 }
 
 export function initializeSqliteMemory(
-  input: SqliteMemoryLocationInput,
+  input: SqliteMemoryLocationInput & {
+    readonly channel: "development" | "stage" | "production";
+  },
 ): SqliteMemoryInitializationResult {
+  if (!SQLITE_STORAGE_REGISTRY.entries.every((entry) => entry.channels.includes(input.channel))) {
+    throw new Error(
+      `SQLite storage classes are not writable in ${String(input.channel ?? "unknown")}`,
+    );
+  }
   const databasePath = resolveSqliteMemoryLocation(input);
   mkdirSync(path.dirname(databasePath), { recursive: true });
+  const isNewDatabase = !existsSync(databasePath) || statSync(databasePath).size === 0;
   const database = new DatabaseSync(databasePath);
   const nowMs = Date.now();
 
+  if (isNewDatabase) {
+    database.exec("PRAGMA auto_vacuum = INCREMENTAL");
+  }
   const journalModeRow = database.prepare("PRAGMA journal_mode = WAL").get() as
     | { journal_mode?: string }
     | undefined;
   initializeSchema(database);
   seedMaintenanceDefaults(database, nowMs);
+  const authorize = database.prepare(
+    "INSERT OR REPLACE INTO storage_write_authority(storage_class,registry_version,owner,channel,authorized_at_ms) VALUES (?,?,?,?,?)",
+  );
+  for (const entry of SQLITE_STORAGE_REGISTRY.entries) {
+    authorize.run(
+      entry.id,
+      SQLITE_STORAGE_REGISTRY.schemaVersion,
+      entry.owner,
+      input.channel,
+      nowMs,
+    );
+  }
 
   const currentVersionRow = database
     .prepare("SELECT schema_version FROM schema_version ORDER BY schema_version DESC LIMIT 1")
@@ -3301,6 +3435,335 @@ export function readObservedThroughputPenaltyState(
 export interface PersistObservedBenchmarkSampleInput {
   readonly databasePath: string;
   readonly sample: ObservedPerformanceSample;
+  readonly nowMs?: number;
+}
+
+export function configurePerformanceHistoryPolicy(input: {
+  readonly databasePath: string;
+  readonly policy: PerformanceHistoryPolicy;
+  readonly nowMs?: number;
+}): PerformanceHistoryPolicyReceipt {
+  return withSqliteBusyRetry(input.databasePath, (database) => {
+    database.exec("BEGIN IMMEDIATE");
+    try {
+      const receipt = writePerformanceHistoryPolicy(
+        database,
+        validatePerformanceHistoryPolicy(input.policy),
+      );
+      const archiveTables = [
+        "observed_performance_samples",
+        "observed_performance_samples_by_difficulty",
+        "observed_profile_snapshots",
+        "observed_profile_snapshots_by_difficulty",
+        "performance_history_rollups",
+      ] as const;
+      const archiveRowCount = archiveTables.reduce(
+        (total, table) =>
+          total +
+          Number(
+            (database.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get() as { count: number })
+              .count,
+          ),
+        0,
+      );
+      if (archiveRowCount > PERFORMANCE_HISTORY_POLICY_MAX_ARCHIVE_ROWS) {
+        throw new Error(
+          "performance history policy rollback archive exceeds the bounded row limit",
+        );
+      }
+      const archive = Object.fromEntries(
+        archiveTables.map((table) => [table, database.prepare(`SELECT * FROM ${table}`).all()]),
+      );
+      const archiveJson = JSON.stringify(archive);
+      if (Buffer.byteLength(archiveJson) > PERFORMANCE_HISTORY_POLICY_MAX_ARCHIVE_BYTES) {
+        throw new Error(
+          "performance history policy rollback archive exceeds the bounded byte limit",
+        );
+      }
+      database
+        .prepare(
+          "INSERT INTO performance_history_policy_archives (receipt_id,archive_json,created_at_ms) VALUES (?,?,?)",
+        )
+        .run(receipt.receiptId, archiveJson, input.nowMs ?? Date.now());
+      database
+        .prepare(
+          "DELETE FROM performance_history_policy_archives WHERE receipt_id NOT IN (SELECT receipt_id FROM performance_history_policy_archives ORDER BY created_at_ms DESC,receipt_id DESC LIMIT ?)",
+        )
+        .run(PERFORMANCE_HISTORY_POLICY_MAX_ARCHIVES);
+      const enforcementNowMs = input.nowMs ?? Date.now();
+      const endpoints = database
+        .prepare(
+          "SELECT endpoint_id,MAX(timestamp_ms) AS newest FROM observed_performance_samples GROUP BY endpoint_id",
+        )
+        .all() as Array<{ endpoint_id: string; newest: number }>;
+      for (const endpoint of endpoints) {
+        enforcePerformanceHistoryPolicy(database, {
+          endpointId: endpoint.endpoint_id,
+          nowMs: enforcementNowMs,
+        });
+        const buckets = database
+          .prepare(
+            "SELECT difficulty_bucket,MAX(timestamp_ms) AS newest FROM observed_performance_samples_by_difficulty WHERE endpoint_id=? GROUP BY difficulty_bucket",
+          )
+          .all(endpoint.endpoint_id) as Array<{ difficulty_bucket: string; newest: number }>;
+        for (const bucket of buckets) {
+          enforcePerformanceHistoryPolicy(database, {
+            endpointId: endpoint.endpoint_id,
+            difficultyBucket: bucket.difficulty_bucket,
+            nowMs: enforcementNowMs,
+          });
+        }
+        rebuildObservedProfilesForEndpoint(database, endpoint.endpoint_id, enforcementNowMs);
+      }
+      database.exec("COMMIT");
+      return receipt;
+    } catch (error) {
+      database.exec("ROLLBACK");
+      throw error;
+    }
+  });
+}
+
+export function rollbackPerformanceHistoryPolicy(input: {
+  readonly databasePath: string;
+  readonly receipt: PerformanceHistoryPolicyReceipt;
+}): PerformanceHistoryPolicyReceipt {
+  return withSqliteBusyRetry(input.databasePath, (database) => {
+    database.exec("BEGIN IMMEDIATE");
+    try {
+      const current = readPerformanceHistoryPolicy(database);
+      if (JSON.stringify(current) !== JSON.stringify(input.receipt.appliedPolicy)) {
+        throw new Error("performance history policy changed after the rollback receipt");
+      }
+      const archived = database
+        .prepare("SELECT archive_json FROM performance_history_policy_archives WHERE receipt_id=?")
+        .get(input.receipt.receiptId) as { archive_json: string } | undefined;
+      if (!archived) throw new Error("performance history rollback archive is unavailable");
+      const archive = JSON.parse(archived.archive_json) as Record<
+        string,
+        Array<Record<string, string | number | null>>
+      >;
+      for (const [table, rows] of Object.entries(archive)) {
+        if (
+          ![
+            "observed_performance_samples",
+            "observed_performance_samples_by_difficulty",
+            "observed_profile_snapshots",
+            "observed_profile_snapshots_by_difficulty",
+            "performance_history_rollups",
+          ].includes(table)
+        ) {
+          throw new Error("performance history rollback archive contains an unknown table");
+        }
+        database.exec(`DELETE FROM ${table}`);
+        for (const row of rows) {
+          const columns = Object.keys(row);
+          database
+            .prepare(
+              `INSERT INTO ${table} (${columns.join(",")}) VALUES (${columns.map(() => "?").join(",")})`,
+            )
+            .run(...columns.map((column) => row[column]));
+        }
+      }
+      const rollbackReceipt = writePerformanceHistoryPolicy(database, input.receipt.previousPolicy);
+      database
+        .prepare("DELETE FROM performance_history_policy_archives WHERE receipt_id=?")
+        .run(input.receipt.receiptId);
+      database.exec("COMMIT");
+      return rollbackReceipt;
+    } catch (error) {
+      database.exec("ROLLBACK");
+      throw error;
+    }
+  });
+}
+
+export function readPerformanceHistoryStatus(input: {
+  readonly databasePath: string;
+  readonly endpointId: string;
+  readonly difficultyBucket?: string;
+}) {
+  const database = openSqliteDatabase(input.databasePath);
+  try {
+    const policy = readPerformanceHistoryPolicy(database);
+    const table = input.difficultyBucket
+      ? "observed_performance_samples_by_difficulty"
+      : "observed_performance_samples";
+    const bucketClause = input.difficultyBucket ? " AND difficulty_bucket=?" : "";
+    const parameters = input.difficultyBucket
+      ? [input.endpointId, input.difficultyBucket]
+      : [input.endpointId];
+    const raw = database
+      .prepare(
+        `SELECT COUNT(*) AS count,COALESCE(SUM(length(CAST(sample_json AS BLOB))),0) AS bytes
+         FROM ${table} WHERE endpoint_id=?${bucketClause}`,
+      )
+      .get(...parameters) as { count: number; bytes: number };
+    const rollup = database
+      .prepare(
+        `SELECT last_rebuild_scanned_samples,newest_timestamp_ms FROM performance_history_rollups
+         WHERE endpoint_id=? AND difficulty_bucket=?`,
+      )
+      .get(input.endpointId, input.difficultyBucket ?? "") as
+      | { last_rebuild_scanned_samples: number; newest_timestamp_ms: number | null }
+      | undefined;
+    return {
+      endpointId: input.endpointId,
+      difficultyBucket: input.difficultyBucket ?? null,
+      rawSampleCount: Number(raw.count),
+      rawBytes: Number(raw.bytes),
+      lastRebuildScannedSamples: Number(rollup?.last_rebuild_scanned_samples ?? 0),
+      newestTimestampMs: rollup?.newest_timestamp_ms ?? null,
+      maxSamplesPerEndpoint: policy.maxSamplesPerEndpoint,
+      maxAgeMs: policy.maxAgeMs,
+      maxBytesPerEndpoint: policy.maxBytesPerEndpoint,
+      maxRebuildSamples: policy.maxRebuildSamples,
+      bounded:
+        Number(raw.count) <= policy.maxSamplesPerEndpoint &&
+        Number(raw.count) <= policy.maxRebuildSamples &&
+        Number(raw.bytes) <= policy.maxBytesPerEndpoint,
+    };
+  } finally {
+    database.close();
+  }
+}
+
+export function runSqliteRetentionMaintenance(input: {
+  readonly databasePath: string;
+  readonly nowMs: number;
+  readonly maxDeleteRows: number;
+  readonly holdRequestIds: readonly string[];
+  readonly idle: boolean;
+  readonly lockRisk: "low" | "unknown" | "high";
+}) {
+  if (!input.idle || input.lockRisk !== "low") {
+    throw new Error("SQLite retention maintenance requires an idle window and low lock risk");
+  }
+  if (
+    !Number.isSafeInteger(input.maxDeleteRows) ||
+    input.maxDeleteRows < 1 ||
+    input.maxDeleteRows > 10_000
+  ) {
+    throw new Error("SQLite retention maintenance requires a bounded delete limit");
+  }
+  const holds = [...new Set(input.holdRequestIds.map(String))].sort();
+  const physicalBytesBefore = statSync(input.databasePath).size;
+  const database = openSqliteDatabase(input.databasePath);
+  let receipt: {
+    receiptId: string;
+    deletedRows: number;
+    heldRows: number;
+    bounded: true;
+    routingInterrupted: false;
+    physicalBytesBefore: number;
+    physicalBytesAfter: number;
+    reclaimedBytes: number;
+    vacuumedPages: number;
+  };
+  try {
+    const heldRows = holds.length
+      ? Number(
+          (
+            database
+              .prepare(
+                `SELECT COUNT(*) AS count FROM runtime_observations
+                 WHERE retain_until_ms IS NOT NULL AND retain_until_ms<=?
+                   AND request_id IN (${holds.map(() => "?").join(",")})`,
+              )
+              .get(input.nowMs, ...holds) as { count: number }
+          ).count,
+        )
+      : 0;
+    const exclusion = holds.length
+      ? ` AND request_id NOT IN (${holds.map(() => "?").join(",")})`
+      : "";
+    const expired = database
+      .prepare(
+        `SELECT request_id,endpoint_id FROM runtime_observations
+         WHERE retain_until_ms IS NOT NULL AND retain_until_ms<=?${exclusion}
+         ORDER BY retain_until_ms ASC,request_id ASC LIMIT ?`,
+      )
+      .all(input.nowMs, ...holds, input.maxDeleteRows) as Array<{
+      request_id: string;
+      endpoint_id: string;
+    }>;
+    database.exec("BEGIN IMMEDIATE");
+    try {
+      const deleteObservation = database.prepare(
+        "DELETE FROM runtime_observations WHERE request_id=?",
+      );
+      const deleteSamples = database.prepare(
+        "DELETE FROM observed_performance_samples WHERE request_id=?",
+      );
+      const deleteBucketSamples = database.prepare(
+        "DELETE FROM observed_performance_samples_by_difficulty WHERE request_id=?",
+      );
+      const deleteTelemetry = database.prepare(
+        "DELETE FROM runtime_telemetry_records WHERE request_id=?",
+      );
+      for (const row of expired) {
+        deleteSamples.run(row.request_id);
+        deleteBucketSamples.run(row.request_id);
+        deleteTelemetry.run(row.request_id);
+        deleteObservation.run(row.request_id);
+      }
+      for (const endpointId of new Set(expired.map((row) => row.endpoint_id))) {
+        rebuildObservedProfilesForEndpoint(database, endpointId, input.nowMs);
+      }
+      const receiptId = randomUUID();
+      const body = {
+        receiptId,
+        deletedRows: expired.length,
+        heldRows,
+        bounded: true as const,
+        routingInterrupted: false as const,
+        physicalBytesBefore,
+        physicalBytesAfter: physicalBytesBefore,
+        reclaimedBytes: 0,
+        vacuumedPages: 0,
+      };
+      database
+        .prepare(
+          "INSERT INTO runtime_retention_receipts (receipt_id,created_at_ms,receipt_json) VALUES (?,?,?)",
+        )
+        .run(receiptId, input.nowMs, JSON.stringify(body));
+      database.exec("COMMIT");
+      receipt = body;
+    } catch (error) {
+      database.exec("ROLLBACK");
+      throw error;
+    }
+    database.exec("PRAGMA wal_checkpoint(TRUNCATE)");
+    const pageCountBefore = Number(
+      (database.prepare("PRAGMA page_count").get() as { page_count: number }).page_count,
+    );
+    database.exec(`PRAGMA incremental_vacuum(${input.maxDeleteRows})`);
+    database.exec("PRAGMA wal_checkpoint(TRUNCATE)");
+    const pageCountAfter = Number(
+      (database.prepare("PRAGMA page_count").get() as { page_count: number }).page_count,
+    );
+    const pageSize = Number(
+      (database.prepare("PRAGMA page_size").get() as { page_size: number }).page_size,
+    );
+    receipt = {
+      ...receipt,
+      physicalBytesAfter: pageCountAfter * pageSize,
+      reclaimedBytes: Math.max(0, (pageCountBefore - pageCountAfter) * pageSize),
+      vacuumedPages: Math.max(0, pageCountBefore - pageCountAfter),
+    };
+    database
+      .prepare("UPDATE runtime_retention_receipts SET receipt_json=? WHERE receipt_id=?")
+      .run(JSON.stringify(receipt), receipt.receiptId);
+    database.exec("PRAGMA wal_checkpoint(TRUNCATE)");
+  } finally {
+    database.close();
+  }
+  const physicalBytesAfter = statSync(input.databasePath).size;
+  return {
+    ...receipt,
+    physicalBytesAfter,
+    reclaimedBytes: Math.max(0, receipt.physicalBytesBefore - physicalBytesAfter),
+  };
 }
 
 export interface ClearObservedBenchmarkDataForEndpointInput {
@@ -3334,6 +3797,7 @@ function rebuildObservedProfilesForEndpoint(
       (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
     );
     const profile = aggregateObservedPerformanceSamples(samples, { nowMs });
+    database.prepare("DELETE FROM observed_profile_snapshots WHERE endpoint_id=?").run(endpointId);
     database
       .prepare(
         "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
@@ -3364,6 +3828,11 @@ function rebuildObservedProfilesForEndpoint(
         (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
       );
       const bucketProfile = aggregateObservedPerformanceSamples(bucketSamples, { nowMs });
+      database
+        .prepare(
+          "DELETE FROM observed_profile_snapshots_by_difficulty WHERE endpoint_id=? AND difficulty_bucket=?",
+        )
+        .run(endpointId, difficultyBucket);
       database
         .prepare(
           "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
@@ -3488,6 +3957,7 @@ export function persistObservedBenchmarkSample(input: PersistObservedBenchmarkSa
     ...input.sample,
     source_type: "benchmark" as const,
   };
+  const historyNowMs = input.nowMs ?? Date.now();
   for (let attempt = 1; ; attempt += 1) {
     const database = openSqliteDatabase(input.databasePath);
     try {
@@ -3520,17 +3990,22 @@ export function persistObservedBenchmarkSample(input: PersistObservedBenchmarkSa
             sample.timestamp_ms,
             JSON.stringify(sample),
           );
-        const priorBucketRows = database
-          .prepare(
-            "SELECT sample_json FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY timestamp_ms ASC, sample_id ASC",
-          )
-          .all(sample.endpoint_id, difficultyBucket) as Array<{ sample_json: string }>;
-        const bucketSamples = priorBucketRows.map(
-          (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
+        const boundedBucket = enforcePerformanceHistoryPolicy(database, {
+          endpointId: sample.endpoint_id,
+          difficultyBucket,
+          nowMs: historyNowMs,
+        });
+        const bucketSamples = boundedBucket.sampleJson.map(
+          (value) => JSON.parse(value) as ObservedPerformanceSample,
         );
         const bucketProfile = aggregateObservedPerformanceSamples(bucketSamples, {
           nowMs: sample.timestamp_ms,
         });
+        database
+          .prepare(
+            "DELETE FROM observed_profile_snapshots_by_difficulty WHERE endpoint_id=? AND difficulty_bucket=?",
+          )
+          .run(sample.endpoint_id, difficultyBucket);
         database
           .prepare(
             "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
@@ -3543,17 +4018,21 @@ export function persistObservedBenchmarkSample(input: PersistObservedBenchmarkSa
             JSON.stringify(bucketProfile),
           );
       }
-      const priorRows = database
-        .prepare(
-          "SELECT sample_json FROM observed_performance_samples WHERE endpoint_id = ? ORDER BY timestamp_ms ASC, sample_id ASC",
-        )
-        .all(sample.endpoint_id) as Array<{ sample_json: string }>;
-      const allSamples = priorRows.map(
-        (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
+      const bounded = enforcePerformanceHistoryPolicy(database, {
+        endpointId: sample.endpoint_id,
+        nowMs: historyNowMs,
+      });
+      const allSamples = bounded.sampleJson.map(
+        (value) => JSON.parse(value) as ObservedPerformanceSample,
       );
+      if (allSamples.length === 0)
+        throw new Error("performance history policy rejected every sample");
       const profile = aggregateObservedPerformanceSamples(allSamples, {
         nowMs: sample.timestamp_ms,
       });
+      database
+        .prepare("DELETE FROM observed_profile_snapshots WHERE endpoint_id=?")
+        .run(sample.endpoint_id);
       database
         .prepare(
           "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
@@ -3577,112 +4056,263 @@ export function persistObservedBenchmarkSample(input: PersistObservedBenchmarkSa
 }
 
 export function persistRuntimeObservationBundle(input: PersistRuntimeObservationBundleInput): void {
+  assertSqliteStorageWriteAllowed(input.databasePath, input.channel, [
+    "sqlite_migration_journal",
+    "sqlite_performance_history",
+    "sqlite_profiles",
+    "sqlite_runtime_observations",
+    "sqlite_telemetry",
+  ]);
   const observation = input.observation;
+  const historyNowMs = input.nowMs ?? Date.now();
   const telemetryRecord = toRuntimeTelemetryRecord(observation);
-  withSqliteBusyRetry(input.databasePath, (database) => {
-    database
-      .prepare(
-        "INSERT OR REPLACE INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, retain_until_ms, taxonomy_role_id, taxonomy_task_type, client_request_id, request_class, observation_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      )
-      .run(
-        observation.requestId,
-        observation.routingDecisionId,
-        observation.endpointId,
-        observation.conversationId,
-        observation.usageEvent.timestamp_ms,
-        observation.privacyReceipt?.retainUntil ?? null,
-        typeof observation.taxonomyDimensions?.taxonomy_role_id === "string"
-          ? observation.taxonomyDimensions.taxonomy_role_id
-          : null,
-        typeof observation.taxonomyDimensions?.taxonomy_task_type === "string"
-          ? observation.taxonomyDimensions.taxonomy_task_type
-          : null,
-        observation.clientRequestId ?? null,
-        observation.observedPerformance?.sample?.source_type === "benchmark"
-          ? "benchmark"
-          : observation.observedPerformance?.sample?.source_type === "live_request"
-            ? "live_request"
-            : null,
-        resolveRuntimeObservationStoragePayload({
-          databasePath: input.databasePath,
-          observation: observation as unknown as Readonly<Record<string, unknown>>,
-          ...(input.artifactRef ? { artifactRef: input.artifactRef } : {}),
-        }),
-      );
-    mirrorShadowRuntimeObservation(database, {
-      observation: observation as unknown as Readonly<Record<string, unknown>>,
-      ...(input.artifactRef ? { artifactRef: input.artifactRef } : {}),
-    });
-    database
-      .prepare(
-        "INSERT OR REPLACE INTO observed_performance_samples (sample_id, endpoint_id, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      )
-      .run(
-        sampleIdFor(observation.observedPerformance.sample),
-        observation.endpointId,
-        observation.observedPerformance.sample.request_id ?? null,
-        observation.observedPerformance.sample.routing_decision_id ?? null,
-        observation.observedPerformance.sample.source_type,
-        observation.observedPerformance.sample.timestamp_ms,
-        JSON.stringify(observation.observedPerformance.sample),
-      );
-    if (observation.observedPerformance.sample.difficulty_bucket) {
-      const difficultyBucket = observation.observedPerformance.sample.difficulty_bucket;
-      database
+  const storageState = readRuntimeObservationStorageState(input.databasePath);
+  let artifactRef = input.artifactRef;
+  let createdArtifact: import("./legacy-migration.js").LegacyArtifactWriteResult | undefined;
+  const intentId = `runtime-observation:${observation.requestId}`;
+  if (input.graphStore?.remove) {
+    withSqliteBusyRetry(input.databasePath, (database) => {
+      database.exec(`CREATE TABLE IF NOT EXISTS runtime_observation_graph_write_intents (
+        intent_id TEXT PRIMARY KEY,
+        scope_id TEXT NOT NULL,
+        source_id TEXT NOT NULL,
+        content TEXT NOT NULL,
+        content_hash TEXT NOT NULL,
+        artifact_json TEXT,
+        created_at_ms INTEGER NOT NULL
+      )`);
+      const pending = database
         .prepare(
-          "INSERT OR REPLACE INTO observed_performance_samples_by_difficulty (sample_id, endpoint_id, difficulty_bucket, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          "SELECT * FROM runtime_observation_graph_write_intents ORDER BY created_at_ms,intent_id",
         )
-        .run(
-          segmentedSampleIdFor(observation.observedPerformance.sample),
-          observation.endpointId,
-          difficultyBucket,
-          observation.observedPerformance.sample.request_id ?? null,
-          observation.observedPerformance.sample.routing_decision_id ?? null,
-          observation.observedPerformance.sample.source_type,
-          observation.observedPerformance.sample.timestamp_ms,
-          JSON.stringify(observation.observedPerformance.sample),
-        );
-      const priorBucketRows = database
-        .prepare(
-          "SELECT sample_json FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY timestamp_ms ASC, sample_id ASC",
-        )
-        .all(observation.endpointId, difficultyBucket) as Array<{
-        sample_json: string;
+        .all() as Array<{
+        intent_id: string;
+        scope_id: string;
+        source_id: string;
+        content: string;
+        content_hash: string;
+        artifact_json: string | null;
       }>;
-      const bucketSamples = priorBucketRows.map(
-        (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
-      );
-      const bucketProfile = aggregateObservedPerformanceSamples(bucketSamples, {
-        nowMs: observation.observedPerformance.sample.timestamp_ms,
-      });
+      for (const row of pending) {
+        if (row.scope_id !== input.graphStore?.scopeId) continue;
+        const artifact = row.artifact_json
+          ? (JSON.parse(row.artifact_json) as {
+              artifactId: string;
+              artifactPath: string;
+              contentHash: string;
+            })
+          : input.graphStore.write({
+              scopeId: row.scope_id,
+              sourceId: row.source_id,
+              content: row.content,
+              contentHash: row.content_hash,
+            });
+        input.graphStore.remove?.(artifact);
+        database
+          .prepare("DELETE FROM runtime_observation_graph_write_intents WHERE intent_id=?")
+          .run(row.intent_id);
+      }
+    });
+  }
+  if (
+    !artifactRef &&
+    [
+      "shadow_mirror",
+      "parity_verified",
+      "graph_primary",
+      "legacy_read_hold",
+      "legacy_retired",
+    ].includes(storageState)
+  ) {
+    const graphStore = input.graphStore;
+    if (!graphStore) throw new Error("graph artifact writer required during graph migration");
+    const content = JSON.stringify(observation);
+    const contentHash = createHash("sha256").update(content).digest("hex");
+    if (!graphStore.remove)
+      throw new Error("graph artifact compensation authority required during graph migration");
+    withSqliteBusyRetry(input.databasePath, (database) => {
       database
         .prepare(
-          "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+          "INSERT OR REPLACE INTO runtime_observation_graph_write_intents VALUES (?,?,?,?,?,?,?)",
         )
         .run(
-          `${observation.endpointId}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
-          observation.endpointId,
-          difficultyBucket,
-          bucketProfile.measured_at_ms,
-          JSON.stringify(bucketProfile),
+          intentId,
+          graphStore.scopeId,
+          observation.requestId,
+          content,
+          contentHash,
+          null,
+          Date.now(),
         );
+    });
+    createdArtifact = graphStore.write({
+      scopeId: graphStore.scopeId,
+      sourceId: observation.requestId,
+      content,
+      contentHash,
+    });
+    if (createdArtifact.contentHash !== contentHash) {
+      graphStore.remove(createdArtifact);
+      withSqliteBusyRetry(input.databasePath, (database) => {
+        if (createdArtifact) {
+          database
+            .prepare("DELETE FROM runtime_observation_graph_write_intents WHERE intent_id=?")
+            .run(intentId);
+        }
+      });
+      throw new Error("graph observation artifact content hash mismatch");
     }
-    database
-      .prepare(
-        "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
-      )
-      .run(
-        `${observation.endpointId}:${observation.observedPerformance.profile.measured_at_ms}`,
-        observation.endpointId,
-        observation.observedPerformance.profile.measured_at_ms,
-        JSON.stringify(observation.observedPerformance.profile),
-      );
-    database
-      .prepare(
-        `INSERT OR REPLACE INTO runtime_telemetry_records (${RUNTIME_TELEMETRY_INSERT_COLUMNS.join(", ")}) VALUES (${RUNTIME_TELEMETRY_INSERT_COLUMNS.map(() => "?").join(", ")})`,
-      )
-      .run(...runtimeTelemetryInsertValues(telemetryRecord));
-  });
+    withSqliteBusyRetry(input.databasePath, (database) => {
+      database
+        .prepare(
+          "UPDATE runtime_observation_graph_write_intents SET artifact_json=? WHERE intent_id=?",
+        )
+        .run(JSON.stringify(createdArtifact), intentId);
+    });
+    artifactRef = { scopeId: graphStore.scopeId, ...createdArtifact };
+  }
+  try {
+    withSqliteBusyRetry(input.databasePath, (database) => {
+      database.exec("BEGIN IMMEDIATE");
+      try {
+        database
+          .prepare(
+            "INSERT OR REPLACE INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, retain_until_ms, taxonomy_role_id, taxonomy_task_type, client_request_id, request_class, observation_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          )
+          .run(
+            observation.requestId,
+            observation.routingDecisionId,
+            observation.endpointId,
+            observation.conversationId,
+            observation.usageEvent.timestamp_ms,
+            observation.privacyReceipt?.retainUntil ?? null,
+            typeof observation.taxonomyDimensions?.taxonomy_role_id === "string"
+              ? observation.taxonomyDimensions.taxonomy_role_id
+              : null,
+            typeof observation.taxonomyDimensions?.taxonomy_task_type === "string"
+              ? observation.taxonomyDimensions.taxonomy_task_type
+              : null,
+            observation.clientRequestId ?? null,
+            observation.observedPerformance?.sample?.source_type === "benchmark"
+              ? "benchmark"
+              : observation.observedPerformance?.sample?.source_type === "live_request"
+                ? "live_request"
+                : null,
+            resolveRuntimeObservationStoragePayload({
+              databasePath: input.databasePath,
+              observation: observation as unknown as Readonly<Record<string, unknown>>,
+              ...(artifactRef ? { artifactRef } : {}),
+            }),
+          );
+        recordRuntimeObservationGraphReference(database, {
+          observation: observation as unknown as Readonly<Record<string, unknown>>,
+          ...(artifactRef ? { artifactRef } : {}),
+        });
+        database
+          .prepare(
+            "INSERT OR REPLACE INTO observed_performance_samples (sample_id, endpoint_id, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          )
+          .run(
+            sampleIdFor(observation.observedPerformance.sample),
+            observation.endpointId,
+            observation.observedPerformance.sample.request_id ?? null,
+            observation.observedPerformance.sample.routing_decision_id ?? null,
+            observation.observedPerformance.sample.source_type,
+            observation.observedPerformance.sample.timestamp_ms,
+            JSON.stringify(observation.observedPerformance.sample),
+          );
+        if (observation.observedPerformance.sample.difficulty_bucket) {
+          const difficultyBucket = observation.observedPerformance.sample.difficulty_bucket;
+          database
+            .prepare(
+              "INSERT OR REPLACE INTO observed_performance_samples_by_difficulty (sample_id, endpoint_id, difficulty_bucket, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            )
+            .run(
+              segmentedSampleIdFor(observation.observedPerformance.sample),
+              observation.endpointId,
+              difficultyBucket,
+              observation.observedPerformance.sample.request_id ?? null,
+              observation.observedPerformance.sample.routing_decision_id ?? null,
+              observation.observedPerformance.sample.source_type,
+              observation.observedPerformance.sample.timestamp_ms,
+              JSON.stringify(observation.observedPerformance.sample),
+            );
+          const boundedBucket = enforcePerformanceHistoryPolicy(database, {
+            endpointId: observation.endpointId,
+            difficultyBucket,
+            nowMs: historyNowMs,
+          });
+          const bucketSamples = boundedBucket.sampleJson.map(
+            (value) => JSON.parse(value) as ObservedPerformanceSample,
+          );
+          const bucketProfile = aggregateObservedPerformanceSamples(bucketSamples, {
+            nowMs: observation.observedPerformance.sample.timestamp_ms,
+          });
+          database
+            .prepare(
+              "DELETE FROM observed_profile_snapshots_by_difficulty WHERE endpoint_id=? AND difficulty_bucket=?",
+            )
+            .run(observation.endpointId, difficultyBucket);
+          database
+            .prepare(
+              "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+            )
+            .run(
+              `${observation.endpointId}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
+              observation.endpointId,
+              difficultyBucket,
+              bucketProfile.measured_at_ms,
+              JSON.stringify(bucketProfile),
+            );
+        }
+        enforcePerformanceHistoryPolicy(database, {
+          endpointId: observation.endpointId,
+          nowMs: historyNowMs,
+        });
+        database
+          .prepare("DELETE FROM observed_profile_snapshots WHERE endpoint_id=?")
+          .run(observation.endpointId);
+        database
+          .prepare(
+            "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
+          )
+          .run(
+            `${observation.endpointId}:${observation.observedPerformance.profile.measured_at_ms}`,
+            observation.endpointId,
+            observation.observedPerformance.profile.measured_at_ms,
+            JSON.stringify(observation.observedPerformance.profile),
+          );
+        database
+          .prepare(
+            `INSERT OR REPLACE INTO runtime_telemetry_records (${RUNTIME_TELEMETRY_INSERT_COLUMNS.join(", ")}) VALUES (${RUNTIME_TELEMETRY_INSERT_COLUMNS.map(() => "?").join(", ")})`,
+          )
+          .run(...runtimeTelemetryInsertValues(telemetryRecord));
+        if (createdArtifact) {
+          database
+            .prepare("DELETE FROM runtime_observation_graph_write_intents WHERE intent_id=?")
+            .run(intentId);
+        }
+        database.exec("COMMIT");
+      } catch (error) {
+        database.exec("ROLLBACK");
+        throw error;
+      }
+    });
+  } catch (error) {
+    if (createdArtifact) {
+      try {
+        input.graphStore?.remove?.(createdArtifact);
+        withSqliteBusyRetry(input.databasePath, (database) => {
+          database
+            .prepare("DELETE FROM runtime_observation_graph_write_intents WHERE intent_id=?")
+            .run(intentId);
+        });
+      } catch {
+        // Leave the durable intent for deterministic cleanup on the next write.
+      }
+    }
+    throw error;
+  }
 }
 
 export interface PersistRuntimeTelemetryFailureInput {
@@ -3802,6 +4432,24 @@ export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFai
 export function readRuntimeObservationBundle(
   input: ReadRuntimeObservationBundleInput,
 ): PersistedRuntimeObservationBundle | null {
+  const parsed = readRuntimeObservationStorageRecord(input);
+  if (parsed === null) return null;
+  const hydrated = hydrateRuntimeObservationGraphPointer({
+    databasePath: input.databasePath,
+    pointer: parsed,
+    ...(input.graphStore ? { graphStore: input.graphStore } : {}),
+  });
+  return (hydrated ?? parsed) as unknown as PersistedRuntimeObservationBundle;
+}
+
+/**
+ * Administrative storage inspection. This intentionally returns the persisted
+ * graph pointer without dereferencing rich bytes and must not be used as a
+ * normal observation read path.
+ */
+export function readRuntimeObservationStorageRecord(
+  input: Pick<ReadRuntimeObservationBundleInput, "databasePath" | "requestId">,
+): Readonly<Record<string, unknown>> | null {
   const database = openSqliteDatabase(input.databasePath);
   const row = database
     .prepare("SELECT observation_json FROM runtime_observations WHERE request_id = ?")
@@ -3812,7 +4460,12 @@ export function readRuntimeObservationBundle(
     | undefined;
   database.close();
 
-  return row ? (JSON.parse(row.observation_json) as PersistedRuntimeObservationBundle) : null;
+  if (!row) return null;
+  const parsed = JSON.parse(row.observation_json) as unknown;
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error("runtime observation storage record is malformed");
+  }
+  return parsed as Readonly<Record<string, unknown>>;
 }
 
 export interface ReadObservationTelemetryColumnsInput {

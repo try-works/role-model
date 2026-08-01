@@ -109,6 +109,7 @@ type QaBridgeBackend = Pick<
   | "listRoles"
   | "listModels"
   | "listExtensions"
+  | "mutateExtension"
   | "readStorageRetention"
   | "dryRunStorageRetention"
   | "updateStorageRetentionPolicy"
@@ -759,6 +760,7 @@ export async function seedQaTelemetry(
 
     persistRuntimeObservationBundle({
       databasePath,
+      channel: "development",
       observation: {
         ...baseBundle,
         requestId: fixture.requestId,
@@ -993,6 +995,7 @@ export function createQaServerOptions(
     listRoles: backend.listRoles,
     listModels: backend.listModels,
     listExtensions: backend.listExtensions,
+    mutateExtension: backend.mutateExtension,
     readStorageRetention: backend.readStorageRetention,
     dryRunStorageRetention: backend.dryRunStorageRetention,
     updateStorageRetentionPolicy: backend.updateStorageRetentionPolicy,

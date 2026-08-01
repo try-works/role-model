@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "role-model.track-b-qa-extension-manifest.v1",
+  "extensions": [
+    {
+      "descriptor": {
+        "id": "run87-browser-future-extension",
+        "protocolVersion": "1.1.0",
+        "capabilities": ["health:probe", "fixture:echo"]
+      },
+      "modulePath": "recursive-87-synthetic-extension.mjs",
+      "artifactSha256": "70f10f59a7f140da65bb78cd1e1334a6c565caf5bf3ae6f60f1687c086f978b1"
+    }
+  ]
+}
