@@ -107,10 +107,16 @@ export function StorageRetentionRouteView() {
           },
           {
             id: "classes",
-            label: "Classes",
-            value: String(summary?.categories.length ?? 0),
+            label: "Physical stores",
+            value: String(summary?.storageInventory?.entries.length ?? 0),
           },
-          { id: "conflicts", label: "Conflicts", value: String(conflictCount) },
+          {
+            id: "holds",
+            label: "Legal holds",
+            value: String(
+              summary?.storageInventory?.entries.reduce((sum, row) => sum + row.heldItems, 0) ?? 0,
+            ),
+          },
           {
             id: "maintenance",
             label: "Maintenance",
@@ -119,6 +125,46 @@ export function StorageRetentionRouteView() {
         ]}
       />
       {error ? <ErrorState label={error} /> : null}
+      {summary?.storageInventory ? (
+        <SectionCard
+          title="Physical storage inventory"
+          description="Registry ownership, health, physical size, legal holds, and current retention enforcement for every writable store."
+        >
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left text-sm">
+              <thead>
+                <tr>
+                  {["Store", "Owner", "Health", "Physical bytes", "Legal holds", "Enforcement"].map(
+                    (heading) => (
+                      <th className={`pb-3 font-normal ${monoEyebrowClassName}`} key={heading}>
+                        {heading}
+                      </th>
+                    ),
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {summary.storageInventory.entries.map((row) => (
+                  <tr className="border-t border-[var(--rm-border)]" key={row.id}>
+                    <td className={`py-3 ${compactTitleClassName}`}>{row.id}</td>
+                    <td className={`py-3 ${supportingTextClassName}`}>{row.owner}</td>
+                    <td className="py-3">
+                      <Badge tone={row.health === "healthy" ? "success" : "warning"}>
+                        {row.health}
+                      </Badge>
+                    </td>
+                    <td className={`py-3 ${supportingTextClassName}`}>
+                      {row.physicalBytes === null ? "Unavailable" : formatBytes(row.physicalBytes)}
+                    </td>
+                    <td className={`py-3 ${supportingTextClassName}`}>{row.heldItems}</td>
+                    <td className={`py-3 ${supportingTextClassName}`}>{row.retentionState}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </SectionCard>
+      ) : null}
       <div className="grid gap-4 xl:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]">
         <SectionCard
           title="Usage by category"

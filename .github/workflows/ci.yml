@@ -14,6 +14,7 @@ on:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  PRIVATE_PAIRED_SHA: ${{ vars.ROLE_MODEL_PAIRED_PRIVATE_SHA }}
 
 permissions:
   contents: read
@@ -142,3 +143,88 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run smoke
+
+  track-b-runtime:
+    name: track-b-runtime
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate exact private paired revision
+        shell: bash
+        run: |
+          if [[ ! "$PRIVATE_PAIRED_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "ROLE_MODEL_PAIRED_PRIVATE_SHA must be an exact 40-character commit."
+            exit 1
+          fi
+      - name: Checkout exact private paired repository
+        uses: actions/checkout@v4
+        with:
+          repository: try-works/role-model-internal
+          ref: ${{ env.PRIVATE_PAIRED_SHA }}
+          token: ${{ secrets.ROLE_MODEL_INTERNAL_READ_TOKEN }}
+          path: _private
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.6.5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build public workspace for paired private imports
+        run: pnpm run build
+      - name: Install private paired checkout
+        working-directory: _private
+        run: corepack pnpm install --frozen-lockfile
+      - name: Build and verify exact paired private runtime
+        working-directory: _private
+        env:
+          ROLE_MODEL_PUBLIC_WORKTREE: ${{ github.workspace }}
+          NODE_OPTIONS: --conditions=runtime
+        run: |
+          corepack pnpm build:run00-runtime
+          node --test tests/track-b/run87-*.test.mjs tests/track-b/runtime-distribution.test.mjs
+      - name: Run Track B host CI contract
+        run: pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/recursive-87-ci-contract.test.ts
+      - name: Install Chromium
+        run: pnpm --filter @role-model-router/runtime-ui exec playwright install --with-deps chromium
+      - name: Build live runtime UI
+        run: pnpm --filter @role-model-router/runtime-ui build
+      - name: Run tagged Track B browser gate against the packaged paired runtime
+        env:
+          RUNTIME_LIVE_BASE_URL: http://127.0.0.1:3462
+        shell: bash
+        run: |
+          recommendation_material="$RUNNER_TEMP/run87-recommendation-material.json"
+          node _private/scripts/track-b/run87-recommendation-fixture-server.mjs \
+            --port 3471 \
+            --material-file "$recommendation_material" \
+            > run87-recommendation-service.log 2>&1 &
+          recommendation_pid=$!
+          for attempt in {1..30}; do
+            test -s "$recommendation_material" && break
+            sleep 1
+          done
+          test -s "$recommendation_material"
+          node _private/scripts/track-b/launch-packaged-runtime.mjs \
+            --public-root "$GITHUB_WORKSPACE" \
+            --manifest "$GITHUB_WORKSPACE/_private/dist/run00-dev/track-b-runtime-manifest.json" \
+            --qa-extension-manifest "$GITHUB_WORKSPACE/role-model-router/apps/runtime-host-bridge/test/fixtures/recursive-87-synthetic-extension.manifest.json" \
+            --fixture-root "$GITHUB_WORKSPACE/role-model-router/apps/runtime-host-bridge/test/fixtures" \
+            --port 3462 \
+            --track dev \
+            --recommendation-service-url http://127.0.0.1:3471 \
+            --recommendation-material-file "$recommendation_material" \
+            --scope-id run87-ci \
+            --state-root "$RUNNER_TEMP/run87-packaged-state" \
+            --evidence-root "$RUNNER_TEMP/run87-packaged-evidence" \
+            > track-b-runtime.log 2>&1 &
+          runtime_pid=$!
+          trap 'kill "$runtime_pid" "$recommendation_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..120}; do
+            curl --fail --silent http://127.0.0.1:3462/healthz >/dev/null && break
+            sleep 1
+          done
+          curl --fail http://127.0.0.1:3462/healthz
+          pnpm --filter @role-model-router/runtime-ui exec playwright test --grep @recursive:87-direct-track-b-semantic-completion

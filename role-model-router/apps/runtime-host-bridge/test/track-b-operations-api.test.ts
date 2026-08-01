@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 
 import {
-  readRuntimeObservationBundle,
+  readRuntimeObservationStorageRecord,
   resolveSqliteMemoryLocation,
 } from "@role-model-router/sqlite-memory";
 import { afterEach, describe, expect, test, vi } from "vitest";
@@ -98,6 +98,14 @@ describe("Track B operations APIs", () => {
       activeJob: null,
     };
     let dryRunCount = 0;
+    const graphMutationCallbacks = {
+      advanceGraphMigration: async (body: Record<string, unknown>) => ({
+        action: "advance",
+        state: "shadow_mirror",
+        verified: body,
+      }),
+      rollbackGraphMigration: async () => ({ action: "rollback", state: "legacy_primary" }),
+    };
     const server = await startBridgeServer({
       host: "127.0.0.1",
       port: 0,
@@ -106,6 +114,11 @@ describe("Track B operations APIs", () => {
       executeChatCompletions: backend.executeChatCompletions,
       executeResponses: backend.executeResponses,
       listExtensions: async () => extensions,
+      readGraphMigration: async () => ({
+        state: "graph_primary",
+        migrationId: "tb04-legacy-graph-performance-v1",
+      }),
+      ...graphMutationCallbacks,
       readStorageRetention: async () => summary,
       dryRunStorageRetention: async () => ({
         ...summary,
@@ -146,6 +159,26 @@ describe("Track B operations APIs", () => {
     try {
       const base = `http://127.0.0.1:${server.port}`;
       expect(await (await fetch(`${base}/api/role-model/extensions`)).json()).toEqual(extensions);
+      expect(await (await fetch(`${base}/api/role-model/graph-migration`)).json()).toEqual({
+        state: "graph_primary",
+        migrationId: "tb04-legacy-graph-performance-v1",
+      });
+      const advanced = await fetch(`${base}/api/role-model/graph-migration/advance`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          backupVerified: true,
+          restoreVerified: true,
+          consumersVerified: true,
+        }),
+      });
+      expect(advanced.status).toBe(200);
+      expect(await advanced.json()).toMatchObject({ action: "advance", state: "shadow_mirror" });
+      const rolledBack = await fetch(`${base}/api/role-model/graph-migration/rollback`, {
+        method: "POST",
+      });
+      expect(rolledBack.status).toBe(200);
+      expect(await rolledBack.json()).toEqual({ action: "rollback", state: "legacy_primary" });
       expect(await (await fetch(`${base}/api/role-model/storage-retention`)).json()).toEqual(
         summary,
       );
@@ -470,7 +503,10 @@ describe("Track B operations APIs", () => {
         },
       });
       expect(
-        readRuntimeObservationBundle({ databasePath, requestId: "req-track-b-upload-001" }),
+        readRuntimeObservationStorageRecord({
+          databasePath,
+          requestId: "req-track-b-upload-001",
+        }),
       ).toMatchObject({
         graphPrimary: true,
         artifactRef: {
@@ -610,7 +646,7 @@ describe("Track B operations APIs", () => {
         },
       });
       expect(
-        readRuntimeObservationBundle({
+        readRuntimeObservationStorageRecord({
           databasePath,
           requestId: "req-track-b-responses-upload-001",
         }),
@@ -1036,11 +1072,11 @@ describe("Track B operations APIs", () => {
     });
     await ops.mutateExtension({ id: "event-log", action: "disable" });
     await expect(
-      ops.mutateExtension({ id: "knowledge-worker", action: "enable", mode: "active" }),
+      ops.mutateExtension({ id: "knowledge-worker", action: "enable", mode: "shadow" }),
     ).rejects.toThrow(/dependenc/i);
     await ops.mutateExtension({ id: "event-log", action: "enable", mode: "shadow" });
     await expect(
-      ops.mutateExtension({ id: "knowledge-worker", action: "enable", mode: "active" }),
+      ops.mutateExtension({ id: "knowledge-worker", action: "enable", mode: "shadow" }),
     ).rejects.toThrow(/mode dependency/i);
     await ops.mutateExtension({ id: "event-log", action: "set_mode", mode: "active" });
     const enabled = (await ops.mutateExtension({
@@ -1084,7 +1120,7 @@ describe("Track B operations APIs", () => {
     ).rejects.toThrow(/mode|illegal|invalid/i);
   });
 
-  test("run84 keeps knowledge-worker production activation durable and separate from Set mode", async () => {
+  test("run87 rejects obsolete knowledge-worker production activation while retaining shadow bootstrap", async () => {
     const root = path.join(os.tmpdir(), `track-b-run84-activation-${Date.now()}`);
     roots.push(root);
     const statePath = path.join(root, "track-b-production-bridge.json");
@@ -1120,7 +1156,7 @@ describe("Track B operations APIs", () => {
         activationPolicyVersion: 1,
         operatorAttestation: "activate-production",
       }),
-    ).rejects.toThrow(/refused|ceremony/i);
+    ).rejects.toThrow(/shadow-only|prohibited/i);
 
     await expect(
       ops.mutateExtension({
@@ -1132,17 +1168,11 @@ describe("Track B operations APIs", () => {
       }),
     ).rejects.toThrow(/knowledge-worker/i);
 
-    await ops.mutateExtension({
+    const bootstrapped = (await ops.mutateExtension({
       id: "knowledge-worker",
       action: "bootstrap_shadow_ready",
       receipt,
       groupDigest: "b".repeat(64),
-    });
-    const activated = (await ops.mutateExtension({
-      id: "knowledge-worker",
-      action: "activate_production",
-      activationPolicyVersion: 1,
-      operatorAttestation: "activate-production",
     })) as {
       extensions: readonly {
         id: string;
@@ -1155,15 +1185,15 @@ describe("Track B operations APIs", () => {
       }[];
       receipts: readonly { action: string }[];
     };
-    expect(activated.extensions.find((row) => row.id === "knowledge-worker")).toMatchObject({
-      enabledMode: "active",
-      productionActivation: true,
+    expect(bootstrapped.extensions.find((row) => row.id === "knowledge-worker")).toMatchObject({
+      enabledMode: "shadow",
+      productionActivation: false,
       health: {
-        productionActivation: true,
+        productionActivation: false,
         knowledgeWorkerBootstrap: { groupDigest: "b".repeat(64) },
       },
     });
-    expect(activated.receipts.at(-1)).toMatchObject({ action: "activate_production" });
+    expect(bootstrapped.receipts.at(-1)).toMatchObject({ action: "bootstrap_shadow_ready" });
 
     const listed = (await ops.listExtensions()) as readonly {
       id: string;
@@ -1171,29 +1201,15 @@ describe("Track B operations APIs", () => {
       health: { productionActivation?: boolean };
     }[];
     expect(listed.find((row) => row.id === "knowledge-worker")).toMatchObject({
-      productionActivation: true,
-      health: { productionActivation: true },
-    });
-
-    const deactivated = (await ops.mutateExtension({
-      id: "knowledge-worker",
-      action: "deactivate_production",
-    })) as {
-      extensions: readonly {
-        id: string;
-        enabled: boolean;
-        enabledMode: string;
-        productionActivation?: boolean;
-      }[];
-    };
-    expect(deactivated.extensions.find((row) => row.id === "knowledge-worker")).toMatchObject({
-      enabled: true,
-      enabledMode: "active",
       productionActivation: false,
+      health: { productionActivation: false },
     });
+    await expect(
+      ops.mutateExtension({ id: "knowledge-worker", action: "deactivate_production" }),
+    ).rejects.toThrow(/shadow-only|prohibited/i);
   });
 
-  test("run84 structurally validates direct knowledge-worker activation ceremony", async () => {
+  test("run87 rejects every direct knowledge-worker activation ceremony", async () => {
     const root = path.join(os.tmpdir(), `track-b-run84-ceremony-${Date.now()}`);
     roots.push(root);
     const statePath = path.join(root, "track-b-production-bridge.json");
@@ -1219,7 +1235,7 @@ describe("Track B operations APIs", () => {
         operatorAttestation: "activate-production",
         receipt,
       }),
-    ).rejects.toThrow(/refused|ceremony/i);
+    ).rejects.toThrow(/shadow-only|prohibited/i);
     await expect(
       ops.mutateExtension({
         id: "knowledge-worker",
@@ -1228,20 +1244,16 @@ describe("Track B operations APIs", () => {
         operatorAttestation: "activate-production",
         receipt: { ...receipt, signature: "not-a-signature" },
       }),
-    ).rejects.toThrow(/refused|ceremony/i);
-
-    const activated = (await ops.mutateExtension({
-      id: "knowledge-worker",
-      action: "activate_production",
-      activationPolicyVersion: 1,
-      operatorAttestation: "activate-production",
-      receipt,
-    })) as {
-      extensions: readonly { id: string; productionActivation?: boolean }[];
-    };
-    expect(activated.extensions.find((row) => row.id === "knowledge-worker")).toMatchObject({
-      productionActivation: true,
-    });
+    ).rejects.toThrow(/shadow-only|prohibited/i);
+    await expect(
+      ops.mutateExtension({
+        id: "knowledge-worker",
+        action: "activate_production",
+        activationPolicyVersion: 1,
+        operatorAttestation: "activate-production",
+        receipt,
+      }),
+    ).rejects.toThrow(/shadow-only|prohibited/i);
   });
 
   test("run79 dismissRecommendation marks row dismissed without applying pack", async () => {

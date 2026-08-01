@@ -378,6 +378,9 @@ describe("production Track B composition", () => {
       "rollbackStorageRetention",
       "readContributionState",
       "updateContributionState",
+      "readGraphMigration",
+      "advanceGraphMigration",
+      "rollbackGraphMigration",
       "listRecommendations",
       "downloadRecommendations",
       "applyRecommendation",
@@ -397,7 +400,15 @@ describe("production Track B composition", () => {
     const releaseDir = path.join(root, "release");
     await mkdir(path.join(sourceRoot, "extensions"), { recursive: true });
     const sidecar = 'console.log("sidecar")\n';
+    const publicRuntimeAdapter = 'export const adapter="sqlite"\n';
+    const migrationSql = "CREATE TABLE packaged_track_b_test(id TEXT);\n";
     await writeFile(path.join(sourceRoot, "runtime-operations-server.mjs"), sidecar);
+    await writeFile(path.join(sourceRoot, "public-runtime-adapter.mjs"), publicRuntimeAdapter);
+    await mkdir(path.join(sourceRoot, "public-router", "migrations"), { recursive: true });
+    await writeFile(
+      path.join(sourceRoot, "public-router", "migrations", "0001_test.sql"),
+      migrationSql,
+    );
     const extensions = await Promise.all(
       Array.from({ length: 13 }, async (_, index) => {
         const id = `extension-${index + 1}`;
@@ -418,6 +429,17 @@ describe("production Track B composition", () => {
         modulePath: "runtime-operations-server.mjs",
         artifactSha256: createHash("sha256").update(sidecar).digest("hex"),
       },
+      publicRuntimeAdapter: {
+        modulePath: "public-runtime-adapter.mjs",
+        artifactSha256: createHash("sha256").update(publicRuntimeAdapter).digest("hex"),
+        routerRoot: "public-router",
+        routerAssets: [
+          {
+            modulePath: "public-router/migrations/0001_test.sql",
+            artifactSha256: createHash("sha256").update(migrationSql).digest("hex"),
+          },
+        ],
+      },
       extensions,
     };
     await writeFile(
@@ -428,6 +450,12 @@ describe("production Track B composition", () => {
     const staged = await stageTrackBRuntimeDistribution({ sourceRoot, releaseDir });
     expect(staged.extensionCount).toBe(13);
     expect(JSON.parse(await readFile(staged.manifestPath, "utf8"))).toEqual(manifest);
+    expect(await readFile(path.join(releaseDir, "public-runtime-adapter.mjs"), "utf8")).toBe(
+      publicRuntimeAdapter,
+    );
+    expect(
+      await readFile(path.join(releaseDir, "public-router", "migrations", "0001_test.sql"), "utf8"),
+    ).toBe(migrationSql);
     await writeFile(path.join(sourceRoot, extensions[0].modulePath), "tampered");
     await expect(
       stageTrackBRuntimeDistribution({ sourceRoot, releaseDir: path.join(root, "bad") }),

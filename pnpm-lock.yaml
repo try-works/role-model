@@ -247,6 +247,9 @@ importers:
       '@role-model-router/tool-registry':
         specifier: workspace:*
         version: link:../../packages/tool-registry
+      '@role-model-router/trace':
+        specifier: workspace:*
+        version: link:../../packages/trace
       '@role-model-router/vendor-abstraction':
         specifier: workspace:*
         version: link:../../packages/vendor-abstraction

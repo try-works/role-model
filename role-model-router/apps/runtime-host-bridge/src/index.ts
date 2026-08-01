@@ -118,11 +118,6 @@ import {
   parseAndSanitizeControllerRoutingGuidance,
 } from "./controller-routing-contract.js";
 import { createDownstreamOpenAIDiscovery } from "./downstream-openai-discovery.js";
-import {
-  deriveDefaultKwPromptInjectQuery,
-  withKwProductionAutoArm,
-} from "./kw-prompt-inject-host.js";
-import { applyKwPromptInjectToMessagesSync } from "./kw-prompt-inject.js";
 import { resolveModelCapabilityProfile } from "./model-capability-resolver.js";
 import {
   filterEndpointsByCapabilityRequirements,
@@ -2567,6 +2562,7 @@ export interface StartBridgeServerOptions {
   readonly host: string;
   readonly port: number;
   readonly runtimeStateRoot?: string;
+  readonly runtimeChannel?: "development" | "stage" | "production";
   readonly registry: EndpointRegistryResult;
   readonly getRegistry?: () => EndpointRegistryResult;
   readonly getExecutionCatalog?: () => NormalizedCatalog;
@@ -2602,6 +2598,11 @@ export interface StartBridgeServerOptions {
   readonly listModels?: () => Promise<readonly unknown[]>;
   readonly listExtensions?: () => Promise<readonly unknown[]>;
   readonly mutateExtension?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly readTrackBQaExtensions?: () => Promise<readonly unknown[]>;
+  readonly readTrackBShadowReceipts?: () => Promise<unknown>;
+  readonly readGraphMigration?: () => Promise<unknown>;
+  readonly advanceGraphMigration?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly rollbackGraphMigration?: () => Promise<unknown>;
   readonly readStorageRetention?: () => Promise<unknown>;
   readonly dryRunStorageRetention?: () => Promise<unknown>;
   readonly updateStorageRetentionPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
@@ -2802,6 +2803,11 @@ export interface RuntimeBridgeBackend {
   listModels(): Promise<readonly BridgeRuntimeModelRecord[]>;
   listExtensions(): Promise<readonly unknown[]>;
   mutateExtension(body: Record<string, unknown>): Promise<unknown>;
+  readTrackBQaExtensions(): Promise<readonly unknown[]>;
+  readTrackBShadowReceipts(): Promise<unknown>;
+  readGraphMigration(): Promise<unknown>;
+  advanceGraphMigration(body: Record<string, unknown>): Promise<unknown>;
+  rollbackGraphMigration(): Promise<unknown>;
   readStorageRetention(): Promise<unknown>;
   dryRunStorageRetention(): Promise<unknown>;
   updateStorageRetentionPolicy(body: Record<string, unknown>): Promise<unknown>;
@@ -3121,6 +3127,8 @@ export interface CreateRuntimeBridgeBackendOptions {
   readonly repoRoot: string;
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
+  /** Runtime deployment channel used by every durable storage authority check. */
+  readonly runtimeChannel?: "development" | "stage" | "production";
   readonly unifiedRuntimeConfigPath?: string;
   readonly networkFetcher?: typeof fetch;
   readonly fixtureRoot?: string;
@@ -3131,6 +3139,15 @@ export interface CreateRuntimeBridgeBackendOptions {
     readonly host?: { readonly extensions?: readonly string[] };
     readonly supervisor?: Readonly<Record<string, unknown>>;
   };
+  readonly trackBExtensionRuntime?: () => {
+    listExtensions(): readonly unknown[] | Promise<readonly unknown[]>;
+    mutateExtension(input: Record<string, unknown>): unknown | Promise<unknown>;
+  } | null;
+  readonly trackBQaExtensionCatalog?: () => readonly Record<string, unknown>[];
+  readonly trackBPostObservation?: (
+    observation: Readonly<Record<string, unknown>>,
+  ) => Promise<unknown>;
+  readonly trackBPostObservationReceipts?: () => Promise<unknown>;
   readonly codexAuthAdapter?: CodexAuthAdapter;
   readonly codexExecutionAdapter?: CodexExecutionAdapter;
 }
@@ -3252,8 +3269,6 @@ export interface BridgeExecutionRequestOptions {
   readonly transportPreference?: RuntimeExecutionRequest["transportPreference"];
   readonly ignoreExecutionFailureCooldowns?: boolean;
   readonly abortSignal?: AbortSignal;
-  readonly kwProductionActivation?: boolean;
-  readonly kwPromptInjectQuery?: Record<string, unknown>;
 }
 
 class BridgeHttpError extends Error {
@@ -4644,8 +4659,7 @@ function readBridgeExecutionRequestOptions(
           ...(endpointIdHeader ? { endpointId: endpointIdHeader } : {}),
           ...(requestedRoleIdHeader ? { requestedRoleId: requestedRoleIdHeader } : {}),
         };
-  // Durable KW ON auto-arms inject (FD8); never trust client headers for activation.
-  return withKwProductionAutoArm(baseOptions);
+  return baseOptions;
 }
 
 function buildBridgeExecutionSessionAffinity(
@@ -6766,18 +6780,7 @@ function applyRequestedRoleExecutionPolicy(input: {
     rolePolicyMessages.length > 0
       ? ([...rolePolicyMessages, ...input.messages] as const)
       : input.messages;
-  const kwInject = applyKwPromptInjectToMessagesSync({
-    messages: withRolePolicy,
-    hostProductionActivation: input.requestOptions?.kwProductionActivation === true,
-    sessionId: input.requestOptions?.sessionId,
-    requestId: input.requestOptions?.clientRequestId,
-    query:
-      input.requestOptions?.kwPromptInjectQuery ??
-      (input.requestOptions?.kwProductionActivation === true
-        ? deriveDefaultKwPromptInjectQuery(input.messages)
-        : undefined),
-  });
-  const messages = kwInject.messages as typeof input.messages;
+  const messages = withRolePolicy;
   const toolPolicyMode = roleDefinition?.tool_policy?.mode ?? "allowed";
   const allowedTools = roleDefinition?.tool_policy?.allowed_tools ?? [];
   const tools =
@@ -14031,6 +14034,33 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/api/role-model/extensions/qa") {
+      if (!options.readTrackBQaExtensions) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readTrackBQaExtensions());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/track-b/shadow-receipts") {
+      if (!options.readTrackBShadowReceipts) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readTrackBShadowReceipts());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/graph-migration") {
+      if (!options.readGraphMigration) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readGraphMigration());
+      return;
+    }
+
     if (request.method === "GET" && url.pathname === "/api/role-model/storage-retention") {
       if (!options.readStorageRetention) {
         writeJson(response, 404, { error: "not found" });
@@ -14063,6 +14093,16 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         method: "PUT",
         callback: options.updateStorageRetentionPolicy,
         body: true,
+      },
+      "/api/role-model/graph-migration/advance": {
+        method: "POST",
+        callback: options.advanceGraphMigration,
+        body: true,
+      },
+      "/api/role-model/graph-migration/rollback": {
+        method: "POST",
+        callback: options.rollbackGraphMigration,
+        body: false,
       },
       "/api/role-model/storage-retention/execute": {
         method: "POST",
@@ -15422,8 +15462,37 @@ function listen(server: Server, host: string, port: number): Promise<number> {
   });
 }
 
-function appendRuntimeHttpTrace(runtimeStateRoot: string, message: string): void {
+export const RUNTIME_HOST_STORAGE_REGISTRY = Object.freeze({
+  schemaVersion: "role-model.storage-registry.v1",
+  entries: Object.freeze([
+    Object.freeze({
+      id: "runtime_logs",
+      owner: "runtime-host",
+      channels: Object.freeze(["development", "stage", "production"] as const),
+    }),
+  ]),
+});
+
+export function assertRuntimeHostStorageWriteAllowed(storageClass: string, channel: string): void {
+  const registration = RUNTIME_HOST_STORAGE_REGISTRY.entries.find(
+    (entry) => entry.id === storageClass,
+  );
+  const normalizedChannel = channel === "staging" ? "stage" : channel;
+  if (!registration) throw new Error(`unregistered storage class: ${storageClass}`);
+  if (
+    !registration.channels.includes(normalizedChannel as "development" | "stage" | "production")
+  ) {
+    throw new Error(`storage class ${storageClass} is not writable in ${channel || "unknown"}`);
+  }
+}
+
+function appendRuntimeHttpTrace(
+  runtimeStateRoot: string,
+  runtimeChannel: string,
+  message: string,
+): void {
   try {
+    assertRuntimeHostStorageWriteAllowed("runtime_logs", runtimeChannel);
     const logPath = path.join(runtimeStateRoot, "logs", "runtime-http.log");
     mkdirSync(path.dirname(logPath), { recursive: true });
     appendFileSync(logPath, `${new Date().toISOString()} ${message}\n`, "utf8");
@@ -15437,6 +15506,7 @@ export async function startBridgeServer(options: StartBridgeServerOptions): Prom
     const requestStart = Date.now();
     const requestPath = new URL(request.url ?? "/", "http://127.0.0.1").pathname;
     const runtimeStateRoot = options.runtimeStateRoot;
+    const runtimeChannel = options.runtimeChannel ?? "development";
     const shouldTraceRequest =
       typeof runtimeStateRoot === "string" &&
       runtimeStateRoot.length > 0 &&
@@ -15448,11 +15518,13 @@ export async function startBridgeServer(options: StartBridgeServerOptions): Prom
     if (shouldTraceRequest) {
       appendRuntimeHttpTrace(
         runtimeStateRoot,
+        runtimeChannel,
         `request-start method=${request.method} path=${requestPath}`,
       );
       response.on("finish", () => {
         appendRuntimeHttpTrace(
           runtimeStateRoot,
+          runtimeChannel,
           `request-finish method=${request.method} path=${requestPath} status=${response.statusCode} duration_ms=${Date.now() - requestStart}`,
         );
       });
@@ -15460,6 +15532,7 @@ export async function startBridgeServer(options: StartBridgeServerOptions): Prom
         if (!response.writableEnded) {
           appendRuntimeHttpTrace(
             runtimeStateRoot,
+            runtimeChannel,
             `request-close method=${request.method} path=${requestPath} duration_ms=${Date.now() - requestStart}`,
           );
         }
@@ -15492,6 +15565,7 @@ export async function startBridgeServer(options: StartBridgeServerOptions): Prom
 export async function createRuntimeBridgeBackend(
   options: CreateRuntimeBridgeBackendOptions,
 ): Promise<RuntimeBridgeBackend> {
+  const runtimeChannel = options.runtimeChannel ?? "development";
   const createTrackBOperations = (input: Parameters<typeof createTrackBOperationsFromState>[0]) =>
     createTrackBOperationsFromState({
       ...input,
@@ -15664,6 +15738,7 @@ export async function createRuntimeBridgeBackend(
   const initialization = initializeSqliteMemory({
     runtimeStateRoot: options.runtimeStateRoot,
     scopeId: options.scopeId,
+    channel: runtimeChannel,
   });
   const operatorIntentLocation = {
     runtimeStateRoot: options.runtimeStateRoot,
@@ -21270,9 +21345,19 @@ export async function createRuntimeBridgeBackend(
       }
       persistRuntimeObservationBundle({
         databasePath: initialization.databasePath,
+        channel: runtimeChannel,
         observation: bundle,
         ...(artifactRef ? { artifactRef } : {}),
       });
+      if (options.trackBPostObservation) {
+        try {
+          await options.trackBPostObservation(
+            bundle as unknown as Readonly<Record<string, unknown>>,
+          );
+        } catch (error) {
+          console.error("Track B shadow post-observation processing failed", error);
+        }
+      }
       emitTelemetryUpdate(bundle.requestId);
     }
 
@@ -22515,7 +22600,9 @@ export async function createRuntimeBridgeBackend(
           "track-b-production-bridge.json",
         ),
         catalog: contract.extensions ?? [],
+        extensionRuntime: options.trackBExtensionRuntime?.() ?? undefined,
       }).listExtensions();
+      if (options.trackBExtensionRuntime?.()) return rows;
       const hostedIds = new Set(options.trackBExtensionHealth?.().host?.extensions ?? []);
       return (rows as readonly Record<string, unknown>[]).map((row) => {
         if (!hostedIds.has(String(row.id))) return row;
@@ -22575,6 +22662,20 @@ export async function createRuntimeBridgeBackend(
         };
       });
     },
+    async readTrackBQaExtensions(): Promise<readonly unknown[]> {
+      const catalog = options.trackBQaExtensionCatalog?.() ?? [];
+      const extensionRuntime = options.trackBExtensionRuntime?.() ?? undefined;
+      if (!extensionRuntime || catalog.length === 0) return [];
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog,
+        extensionRuntime,
+      }).listExtensions();
+    },
     async mutateExtension(body: Record<string, unknown>): Promise<unknown> {
       const contract = JSON.parse(
         await readFile(
@@ -22595,7 +22696,44 @@ export async function createRuntimeBridgeBackend(
           "track-b-production-bridge.json",
         ),
         catalog: contract.extensions ?? [],
+        extensionRuntime: options.trackBExtensionRuntime?.() ?? undefined,
       }).mutateExtension(body);
+    },
+    async readTrackBShadowReceipts(): Promise<unknown> {
+      if (!options.trackBPostObservationReceipts) {
+        return { pendingCount: 0, receiptCount: 0, receipts: [] };
+      }
+      return options.trackBPostObservationReceipts();
+    },
+    async readGraphMigration(): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).readGraphMigration();
+    },
+    async advanceGraphMigration(body: Record<string, unknown>): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).advanceGraphMigration(body);
+    },
+    async rollbackGraphMigration(): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).rollbackGraphMigration();
     },
     async readStorageRetention(): Promise<unknown> {
       return createTrackBOperations({

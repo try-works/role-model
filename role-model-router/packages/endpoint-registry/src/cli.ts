@@ -115,6 +115,7 @@ export async function runRuntimeRegistryValidation(
   const initialization = initializeSqliteMemory({
     runtimeStateRoot: options.runtimeStateRoot,
     scopeId: options.scopeId,
+    channel: "development",
   });
   persistProviderAccounts({
     databasePath: initialization.databasePath,

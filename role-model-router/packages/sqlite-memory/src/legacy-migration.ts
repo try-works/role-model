@@ -58,6 +58,39 @@ export interface GraphArtifactReference {
   readonly artifactPath?: string;
 }
 
+export interface RuntimeObservationGraphStore {
+  readonly scopeId: string;
+  write(input: LegacyArtifactWriteInput): LegacyArtifactWriteResult;
+  read(reference: GraphArtifactReference): string;
+  remove?(artifact: LegacyArtifactWriteResult): void;
+}
+
+function isGraphObservationPointer(value: unknown): value is {
+  readonly requestId: string;
+  readonly artifactRef: GraphArtifactReference | string;
+  readonly graphPrimary?: boolean;
+  readonly migrated?: boolean;
+} {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.requestId === "string" &&
+    (typeof candidate.artifactRef === "string" ||
+      (Boolean(candidate.artifactRef) && typeof candidate.artifactRef === "object")) &&
+    (candidate.graphPrimary === true || candidate.migrated === true)
+  );
+}
+
+function stateRequiresGraphWrite(state: LegacyMigrationState): boolean {
+  return (
+    state === "shadow_mirror" ||
+    state === "parity_verified" ||
+    state === "graph_primary" ||
+    state === "legacy_read_hold" ||
+    state === "legacy_retired"
+  );
+}
+
 /** Records a live production write in the migration target while shadow mirroring is active. */
 export function mirrorShadowRuntimeObservation(
   database: DatabaseSync,
@@ -67,9 +100,21 @@ export function mirrorShadowRuntimeObservation(
   },
 ): boolean {
   if (currentState(database) !== "shadow_mirror") return false;
+  return recordRuntimeObservationGraphReference(database, input);
+}
+
+/** Records the authoritative graph reference for live writes throughout cutover and read hold. */
+export function recordRuntimeObservationGraphReference(
+  database: DatabaseSync,
+  input: {
+    readonly observation: Readonly<Record<string, unknown>>;
+    readonly artifactRef?: GraphArtifactReference;
+  },
+): boolean {
+  if (!stateRequiresGraphWrite(currentState(database))) return false;
   const requestId = input.observation.requestId;
   if (typeof requestId !== "string" || requestId.length === 0 || !input.artifactRef) {
-    throw new Error("shadow mirror requires a graph artifact reference for every live observation");
+    throw new Error("graph storage requires an artifact reference for every live observation");
   }
   const source = JSON.stringify(input.observation);
   const sourceHash = sha256(source);
@@ -176,17 +221,39 @@ function sourceProof(database: DatabaseSync, pageSize = 1_000): { count: number;
   let cursor = "";
   let count = 0;
   const page = database.prepare(
-    "SELECT request_id,observation_json FROM runtime_observations WHERE request_id>? ORDER BY request_id ASC LIMIT ?",
+    tableExists(database, "legacy_graph_migration_refs")
+      ? `SELECT observations.request_id, observations.observation_json, refs.source_hash
+         FROM runtime_observations AS observations
+         LEFT JOIN legacy_graph_migration_refs AS refs
+           ON refs.source_table='runtime_observations' AND refs.source_id=observations.request_id
+         WHERE observations.request_id>? ORDER BY observations.request_id ASC LIMIT ?`
+      : `SELECT request_id,observation_json,NULL AS source_hash FROM runtime_observations
+         WHERE request_id>? ORDER BY request_id ASC LIMIT ?`,
   );
   for (;;) {
     const rows = page.all(cursor, pageSize) as Array<{
       request_id: string;
       observation_json: string;
+      source_hash: string | null;
     }>;
     if (!rows.length) break;
     for (const row of rows) {
       if (count) digest.update("\n");
-      digest.update(`${row.request_id}\0${sha256(row.observation_json)}`);
+      let rowHash = sha256(row.observation_json);
+      try {
+        if (isGraphObservationPointer(JSON.parse(row.observation_json))) {
+          if (!row.source_hash)
+            throw new Error("graph observation pointer is missing its source hash");
+          rowHash = row.source_hash;
+        }
+      } catch (error) {
+        if (error instanceof SyntaxError) {
+          // Legacy payloads may not be JSON; their byte hash remains authoritative.
+        } else {
+          throw error;
+        }
+      }
+      digest.update(`${row.request_id}\0${rowHash}`);
       count += 1;
     }
     const last = rows[rows.length - 1];
@@ -290,6 +357,65 @@ export function resolveRuntimeObservationStoragePayload(input: {
   return JSON.stringify(input.observation);
 }
 
+export function readRuntimeObservationStorageState(databasePath: string): LegacyMigrationState {
+  const database = open(databasePath, true);
+  try {
+    return currentState(database);
+  } finally {
+    database.close();
+  }
+}
+
+export function hydrateRuntimeObservationGraphPointer(input: {
+  readonly databasePath: string;
+  readonly pointer: unknown;
+  readonly graphStore?: Pick<RuntimeObservationGraphStore, "read">;
+}): Readonly<Record<string, unknown>> | null {
+  if (!isGraphObservationPointer(input.pointer)) return null;
+  if (!input.graphStore) throw new Error("graph artifact reader required after cutover");
+  let reference: GraphArtifactReference;
+  if (typeof input.pointer.artifactRef === "string") {
+    const database = open(input.databasePath, true);
+    try {
+      const row = database
+        .prepare(
+          `SELECT scope_id,artifact_id,artifact_path,artifact_content_hash
+           FROM legacy_graph_migration_refs WHERE source_table=? AND source_id=?`,
+        )
+        .get("runtime_observations", input.pointer.requestId) as
+        | {
+            scope_id: string;
+            artifact_id: string;
+            artifact_path: string;
+            artifact_content_hash: string;
+          }
+        | undefined;
+      if (!row || row.artifact_id !== input.pointer.artifactRef) {
+        throw new Error("graph observation pointer reference is missing or inconsistent");
+      }
+      reference = {
+        scopeId: row.scope_id,
+        artifactId: row.artifact_id,
+        artifactPath: row.artifact_path,
+        contentHash: row.artifact_content_hash,
+      };
+    } finally {
+      database.close();
+    }
+  } else {
+    reference = input.pointer.artifactRef;
+  }
+  const content = input.graphStore.read(reference);
+  if (sha256(content) !== reference.contentHash) {
+    throw new Error("graph observation artifact content hash mismatch");
+  }
+  const observation = JSON.parse(content) as Readonly<Record<string, unknown>>;
+  if (observation.requestId !== input.pointer.requestId) {
+    throw new Error("graph observation artifact request ID mismatch");
+  }
+  return observation;
+}
+
 export class LegacySqliteMigration {
   readonly #databasePath: string;
   readonly #backupPath: string;
@@ -338,8 +464,9 @@ export class LegacySqliteMigration {
     }
   }
 
-  #ensureBackup(): void {
-    if (existsSync(this.#backupPath)) return;
+  #ensureBackup(options: { readonly refresh?: boolean } = {}): void {
+    if (existsSync(this.#backupPath) && !options.refresh) return;
+    if (options.refresh) rmSync(this.#backupPath, { force: true });
     mkdirSync(path.dirname(this.#backupPath), { recursive: true });
     const database = open(this.#databasePath);
     try {
@@ -376,7 +503,8 @@ export class LegacySqliteMigration {
     if (!input.scopeId || !Number.isInteger(input.batchSize) || input.batchSize < 1) {
       throw new Error("bounded scoped backfill input required");
     }
-    this.#ensureBackup();
+    const before = readLegacyMigrationJournal(this.#databasePath);
+    this.#ensureBackup({ refresh: before.state === "legacy_primary" });
     const database = open(this.#databasePath);
     try {
       const registry = loadMigrationRegistry({ routerRoot: this.#routerRoot });

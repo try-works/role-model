@@ -28,9 +28,7 @@ import {
   type RuntimeExtensionMode,
   type RuntimeExtensionStatus,
   type RuntimeRecommendation,
-  activateKnowledgeWorkerProduction,
   applyRecommendation,
-  deactivateKnowledgeWorkerProduction,
   dismissRecommendation,
   downloadRecommendations,
   fetchActivePack,
@@ -102,10 +100,10 @@ const LIFECYCLE_COPY: Record<
 
 const operatorBoundaryNote = (extensionId: string): string | null => {
   if (extensionId === "knowledge-worker") {
-    return "Default posture is shadow-ready by default while productionActivation stays off. Production retrieve is gated and useful only after ceremony-bound ON; KW works when on. Enabling this extension is not productionActivation. Gated production prompt injection requires ceremony ON plus successful production retrieve and is not enabled by Set mode or recommendation apply alone. Soft OFF returns to shadow-ready and clears inject. Production activation is separate from Set mode and recommendation apply, gated separately from Set mode.";
+    return "Direct Track B v1.1 keeps Knowledge Worker shadow-only. Evidence-backed candidates support evaluation and route-package attribution but cannot change production prompts, routes, weights, or active profiles.";
   }
   if (extensionId === "knowledge-store") {
-    return "Serves last-ready knowledge references. Production prompt injection requires ceremony-backed KW ON and gated production retrieve; it is not ambient-on.";
+    return "Serves bounded knowledge references to shadow evaluation consumers; it does not authorize production behavior changes.";
   }
   return null;
 };
@@ -280,7 +278,7 @@ export function ExtensionsRouteView() {
       });
       setExtensions(next.extensions);
       setNotice(
-        "Knowledge Worker shadow-ready ceremony material stored. Production remains OFF until explicit activation.",
+        "Knowledge Worker shadow-ready evidence stored. Direct Track B v1.1 remains shadow-only.",
       );
     } catch (value) {
       setError(message(value));
@@ -288,27 +286,6 @@ export function ExtensionsRouteView() {
       setBusy(false);
     }
   };
-  const setKnowledgeWorkerProduction = async (active: boolean) => {
-    setBusy(true);
-    setError(null);
-    setNotice(null);
-    try {
-      const next = active
-        ? await activateKnowledgeWorkerProduction()
-        : await deactivateKnowledgeWorkerProduction();
-      setExtensions(next.extensions);
-      setNotice(
-        active
-          ? "Knowledge Worker production activation is ON. Gated production retrieve is available."
-          : "Knowledge Worker production activation is OFF. Shadow-ready material is retained.",
-      );
-    } catch (value) {
-      setError(message(value));
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const openRecs = useMemo(
     () =>
       recommendations.filter((row) => row.status !== "applied" && row.status !== "dismissed")
@@ -541,7 +518,13 @@ export function ExtensionsRouteView() {
                               [extension.id]: value as RuntimeExtensionMode,
                             }));
                           }}
-                          options={EXTENSION_MODE_OPTIONS}
+                          options={
+                            extension.id === "knowledge-worker"
+                              ? EXTENSION_MODE_OPTIONS.filter(({ value }) =>
+                                  ["disabled", "shadow"].includes(value),
+                                )
+                              : EXTENSION_MODE_OPTIONS
+                          }
                           value={draftMode}
                         />
                       </td>
@@ -585,8 +568,6 @@ export function ExtensionsRouteView() {
           onBootstrapGroupDigest={setBootstrapGroupDigest}
           onBootstrapReceiptJson={setBootstrapReceiptJson}
           onPrepare={() => void prepareKnowledgeWorker()}
-          onProductionOff={() => void setKnowledgeWorkerProduction(false)}
-          onProductionOn={() => void setKnowledgeWorkerProduction(true)}
         />
       ) : null}
       {extensions && extensions.length > 0 ? (
@@ -690,8 +671,6 @@ function KnowledgeWorkerGate({
   onBootstrapGroupDigest,
   onBootstrapReceiptJson,
   onPrepare,
-  onProductionOff,
-  onProductionOn,
 }: {
   busy: boolean;
   bootstrapGroupDigest: string;
@@ -700,30 +679,22 @@ function KnowledgeWorkerGate({
   onBootstrapGroupDigest: (value: string) => void;
   onBootstrapReceiptJson: (value: string) => void;
   onPrepare: () => void;
-  onProductionOff: () => void;
-  onProductionOn: () => void;
 }) {
-  const productionActivation =
-    extension.productionActivation ?? extension.health.productionActivation ?? false;
   const bootstrapReady = Boolean(extension.health.knowledgeWorkerBootstrap);
   return (
-    <DisclosureSection summary="Knowledge Worker production gate">
+    <DisclosureSection summary="Knowledge Worker shadow pipeline">
       <div className={`${mutedPanelClassName} border-[var(--rm-border-strong)] p-4`}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className={compactTitleClassName}>Production retrieve gate</p>
+            <p className={compactTitleClassName}>Shadow-only evaluation boundary</p>
             <p className={`mt-1 ${supportingTextClassName}`}>
-              Ceremony-backed production activation is separate from Set mode. Production prompt
-              injection requires ceremony ON plus gated production retrieve success; it is cleared
-              on soft OFF and is not Set mode or recommendation apply. Production retrieve is gated
-              and useful only after ceremony-bound ON; KW works when on.
+              Direct Track B v1.1 uses reviewed evidence for shadow evaluation and attribution. It
+              cannot change production prompts, routes, weights, or active profiles.
             </p>
           </div>
-          <Badge tone={productionActivation ? "success" : "neutral"}>
-            {productionActivation ? "Production ON" : "Production OFF"}
-          </Badge>
+          <Badge tone="neutral">Shadow-only</Badge>
         </div>
-        {!bootstrapReady && !productionActivation ? (
+        {!bootstrapReady ? (
           <div className="mt-4 grid gap-3">
             <label className={fieldLabelClassName}>
               Knowledge validation receipt JSON
@@ -758,30 +729,6 @@ function KnowledgeWorkerGate({
             </button>
           </div>
         ) : null}
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button
-            className={primaryButtonClassName}
-            disabled={
-              busy ||
-              productionActivation ||
-              !extension.installed ||
-              !extension.enabled ||
-              !bootstrapReady
-            }
-            onClick={onProductionOn}
-            type="button"
-          >
-            Production ON
-          </button>
-          <button
-            className={secondaryButtonClassName}
-            disabled={busy || !productionActivation}
-            onClick={onProductionOff}
-            type="button"
-          >
-            Soft OFF
-          </button>
-        </div>
       </div>
     </DisclosureSection>
   );

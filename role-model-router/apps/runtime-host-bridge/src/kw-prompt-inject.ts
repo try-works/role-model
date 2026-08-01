@@ -49,6 +49,12 @@ export type KwPromptInjectJoinInput = {
 export async function syncPrivateKnowledgeActivation(
   input: KwPromptInjectJoinInput,
 ): Promise<{ readonly ok: boolean; readonly code?: string; readonly result?: unknown }> {
+  return {
+    ok: false,
+    code: "kw_prompt_inject_prohibited_shadow_only",
+    result: "production Knowledge Worker activation is prohibited by Direct Track B v1.1",
+  };
+  /* Legacy join implementation is intentionally unreachable during the v1.1 shadow-only contract.
   if (input.worker) {
     try {
       const result =
@@ -88,6 +94,7 @@ export async function syncPrivateKnowledgeActivation(
       result: String((error as Error)?.message ?? error),
     };
   }
+  */
 }
 
 export type ApplyKwPromptInjectInput = {
@@ -120,6 +127,11 @@ function refuseReceipt(
 export function applyKwPromptInjectToMessagesSync(
   input: ApplyKwPromptInjectInput,
 ): ApplyKwPromptInjectResult {
+  return {
+    messages: input.messages,
+    receipt: refuseReceipt("kw_prompt_inject_prohibited_shadow_only"),
+  };
+  /* Legacy production insertion is retained only for N-1 source compatibility and is unreachable.
   if (!input.hostProductionActivation) {
     return {
       messages: input.messages,
@@ -156,11 +168,17 @@ export function applyKwPromptInjectToMessagesSync(
       surface: "applyRequestedRoleExecutionPolicy",
     },
   };
+  */
 }
 
 export async function applyKwPromptInjectToMessages(
   input: ApplyKwPromptInjectInput,
 ): Promise<ApplyKwPromptInjectResult> {
+  return {
+    messages: input.messages,
+    receipt: refuseReceipt("kw_prompt_inject_prohibited_shadow_only"),
+  };
+  /* Legacy production insertion is retained only for N-1 source compatibility and is unreachable.
   if (input.worker || (input.sessionId && getKwPromptInjectSession(input.sessionId))) {
     return applyKwPromptInjectToMessagesSync(input);
   }
@@ -209,4 +227,5 @@ export async function applyKwPromptInjectToMessages(
       surface: "applyRequestedRoleExecutionPolicy",
     },
   };
+  */
 }

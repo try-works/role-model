@@ -74,6 +74,7 @@ describe("assembleContextEnvelope", () => {
     const initialized = initializeSqliteMemory({
       runtimeStateRoot,
       scopeId: "workspace-dev",
+      channel: "development",
     });
 
     persistContinuitySnapshot({

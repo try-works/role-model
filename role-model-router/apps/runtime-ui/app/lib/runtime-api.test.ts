@@ -2963,8 +2963,8 @@ describe("role assignment helpers", () => {
       },
       fetcher,
     );
-    await runtimeApiModule.activateKnowledgeWorkerProduction(fetcher);
-    await runtimeApiModule.deactivateKnowledgeWorkerProduction(fetcher);
+    expect("activateKnowledgeWorkerProduction" in runtimeApiModule).toBe(false);
+    expect("deactivateKnowledgeWorkerProduction" in runtimeApiModule).toBe(false);
     await runtimeApiModule.dismissRecommendation("pack-dismiss", fetcher);
     expect(requests).toEqual([
       {
@@ -3000,21 +3000,6 @@ describe("role assignment helpers", () => {
           },
           groupDigest: "b".repeat(64),
         },
-      },
-      {
-        url: "/api/role-model/extensions/mutate",
-        method: "POST",
-        body: {
-          id: "knowledge-worker",
-          action: "activate_production",
-          activationPolicyVersion: 1,
-          operatorAttestation: "activate-production",
-        },
-      },
-      {
-        url: "/api/role-model/extensions/mutate",
-        method: "POST",
-        body: { id: "knowledge-worker", action: "deactivate_production" },
       },
       {
         url: "/api/role-model/recommendations/dismiss",
