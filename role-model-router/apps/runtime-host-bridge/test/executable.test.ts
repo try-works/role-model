@@ -348,6 +348,18 @@ describe("runtime-host-bridge executable packaging", () => {
     expect(cliText).toContain('"readVersionInfo"');
   });
 
+  test("RUN88-I-PUB-R8-AC04 wires packaged candidate identity into the runtime backend", async () => {
+    const cliText = await readFile(
+      path.join(repoRoot, "role-model-router", "apps", "runtime-host-bridge", "src", "cli.ts"),
+      "utf8",
+    );
+    const createBackendBody = cliText.match(
+      /const createBackend = async \([\s\S]*?const created = await createRuntimeBridgeBackend\(\{([\s\S]*?)\n\s*\}\);/,
+    )?.[1];
+    expect(createBackendBody).toBeDefined();
+    expect(createBackendBody).toContain("run88StageIdentity");
+  });
+
   test("wires latest-request-id startup parity into every non-QA runtime launch path", async () => {
     const cliPath = path.join(
       repoRoot,
