@@ -598,6 +598,13 @@ export async function packageSeaRuntime(): Promise<{
     throw new Error("Unable to resolve source_tree for packaged runtime");
   }
   const sourceTree = sourceTreeResult.stdout.trim();
+  const run88ReleaseId = process.env.RUN88_RELEASE_ID?.trim();
+  if (
+    profile.channel === "stage" &&
+    (!/^sha256:[0-9a-f]{64}$/.test(run88ReleaseId ?? "") || !trackBRuntime)
+  ) {
+    throw new Error("Stage packaging requires an exact RUN88_RELEASE_ID and private distribution");
+  }
   await writeFile(
     path.join(releaseDir, "manifest.json"),
     JSON.stringify(
@@ -615,11 +622,19 @@ export async function packageSeaRuntime(): Promise<{
         build_date: versionInfo.build_date,
         ...profile,
         endpoint: `http://${profile.host}:${profile.port}`,
+        ...(profile.channel === "stage"
+          ? {
+              release_id: run88ReleaseId,
+              private_distribution_sha256: trackBRuntime?.manifestSha256,
+            }
+          : {}),
         track_b_runtime: trackBRuntime
           ? {
               manifest: "track-b-runtime/track-b-runtime-manifest.json",
               sidecar: path.relative(releaseDir, trackBRuntime.sidecarPath).replaceAll("\\", "/"),
               sidecar_sha256: trackBRuntime.sidecarSha256,
+              manifest_sha256: trackBRuntime.manifestSha256,
+              compatibility_generation: trackBRuntime.compatibilityGeneration,
               extension_count: trackBRuntime.extensionCount,
             }
           : null,

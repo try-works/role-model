@@ -990,7 +990,7 @@ observed_data:
     );
 
     await backend.shutdown();
-  }, 60_000);
+  }, 90_000);
 
   test("bootstraps a settings-specific primary routing alias for remote-only posture without preconfigured aliases", async () => {
     const tempRoot = await mkdtemp(

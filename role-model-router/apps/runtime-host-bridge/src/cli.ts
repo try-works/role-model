@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import os from "node:os";
@@ -15,15 +16,19 @@ import {
   resolveBridgeServerOptions,
   startBridgeServer,
 } from "./index.js";
+import { validateRun88PrivateDistributionIdentity } from "./kw-private-loader.js";
 import { readPackagedRuntimeProfile } from "./runtime-channel.js";
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
+import { validateRun88PackagedStageIdentity } from "./runtime-version.js";
 import {
   createOwnedTrackBSidecarSpec,
   createPackagedProductionRuntime,
   createProductionExtensionRuntime,
+  createRun88RuntimeCorrelation,
   createTrackBPostObservationOutbox,
   runTrackBPostObservation,
   trackBDistributionRequiresSQLiteMaintenance,
+  validateRun88ProviderResponseObservation,
 } from "./track-b-runtime.js";
 
 type CliBackend = Pick<
@@ -130,6 +135,80 @@ type CliBackend = Pick<
   | "getEffectiveRoutableInventory"
   | "shutdown"
 >;
+
+type Run88PiInvocationProvenance = Readonly<{
+  source: "routed-execution-callback";
+  piInvocationProof: Readonly<Record<string, unknown>>;
+  trustedAuthorityPublicKey: string;
+  expectedReleaseId: string;
+}>;
+
+function readRun88PiInvocationProvenance(
+  env: NodeJS.ProcessEnv,
+  expectedReleaseId: string | undefined,
+): Run88PiInvocationProvenance | null {
+  const proofPath = env.RUN88_PI_INVOCATION_PROOF_PATH;
+  const authorityPath = env.RUN88_PI_PROOF_AUTHORITY_PUBLIC_KEY_PATH;
+  if (!proofPath && !authorityPath) return null;
+  if (
+    !proofPath ||
+    !authorityPath ||
+    !path.isAbsolute(proofPath) ||
+    !path.isAbsolute(authorityPath)
+  )
+    throw new Error("Run 88 Pi proof and authority paths must both be absolute");
+  if (!/^sha256:[0-9a-f]{64}$/.test(expectedReleaseId ?? ""))
+    throw new Error("Run 88 Pi proof requires the packaged release identity");
+  let piInvocationProof: Readonly<Record<string, unknown>>;
+  try {
+    piInvocationProof = JSON.parse(readFileSync(proofPath, "utf8")) as Readonly<
+      Record<string, unknown>
+    >;
+  } catch {
+    throw new Error("Run 88 Pi invocation proof file is unreadable or malformed");
+  }
+  const trustedAuthorityPublicKey = readFileSync(authorityPath, "utf8").trim();
+  if (!trustedAuthorityPublicKey) throw new Error("Run 88 Pi proof authority public key is empty");
+  return Object.freeze({
+    source: "routed-execution-callback",
+    piInvocationProof,
+    trustedAuthorityPublicKey,
+    expectedReleaseId: expectedReleaseId as string,
+  });
+}
+
+export function createRun88StagePostObservation(input: {
+  readonly observation: Readonly<Record<string, unknown>>;
+  readonly piInvocationProvenance: Run88PiInvocationProvenance | null;
+  readonly proofRequired: boolean;
+  readonly releaseId: string;
+  readonly sourceId: string;
+  readonly executableSha256: string;
+  readonly scope: string;
+}): Readonly<Record<string, unknown>> {
+  if (input.proofRequired && !input.piInvocationProvenance)
+    throw new Error("Run 88 Phase 5 provider observation requires signed Pi CLI provenance");
+  return Object.freeze({
+    ...input.observation,
+    ...(input.piInvocationProvenance
+      ? {
+          run88ProviderResponse: validateRun88ProviderResponseObservation(
+            input.observation,
+            input.piInvocationProvenance,
+          ),
+        }
+      : {}),
+    run88Correlation: createRun88RuntimeCorrelation({
+      requestId: String(input.observation.requestId ?? ""),
+      routingDecisionId: String(input.observation.routingDecisionId ?? ""),
+      endpointId: String(input.observation.endpointId ?? ""),
+      releaseId: input.releaseId,
+      sourceId: input.sourceId,
+      deploymentId: `local-stage:${input.executableSha256}`,
+      scope: input.scope,
+    }),
+  });
+}
 
 interface CliBootstrapState {
   status: "pending" | "ready" | "failed";
@@ -679,6 +758,22 @@ export async function main(): Promise<void> {
     unifiedRuntimeConfigPath: args.values["unified-runtime-config"],
   });
   const packagedProfile = readPackagedRuntimeProfile(process.execPath);
+  const packagedManifestRecord = packagedProfile
+    ? (JSON.parse(
+        readFileSync(path.join(path.dirname(process.execPath), "manifest.json"), "utf8"),
+      ) as Record<string, unknown>)
+    : null;
+  const packagedReleaseId =
+    typeof packagedManifestRecord?.release_id === "string"
+      ? packagedManifestRecord.release_id
+      : undefined;
+  const loadRun88PiInvocationProvenance =
+    packagedProfile?.channel === "stage"
+      ? () => readRun88PiInvocationProvenance(process.env, packagedReleaseId)
+      : null;
+  if (packagedProfile?.channel === "stage") {
+    validateRun88PackagedStageIdentity(packagedManifestRecord ?? {});
+  }
   if (packagedProfile?.channel === "production" && !args.values["runtime-state-root"]) {
     const migration = await migrateLegacyProductionState({
       legacyRoot: path.join(process.env.LOCALAPPDATA || os.tmpdir(), "Role Model Runtime"),
@@ -827,6 +922,12 @@ export async function main(): Promise<void> {
           scope: options.scopeId,
           channel: packagedProfile?.channel ?? "development",
           authorizationEpoch: 1,
+          ...(packagedReleaseId
+            ? {
+                expectedReleaseId: packagedReleaseId,
+                run88Correlation: observation.run88Correlation as Record<string, unknown>,
+              }
+            : {}),
         }),
       );
     const createBackend = async (
@@ -875,7 +976,23 @@ export async function main(): Promise<void> {
         ...(trackBManifestText
           ? {
               trackBPostObservation: async (observation: Readonly<Record<string, unknown>>) => {
-                await postObservationOutbox.enqueue(observation);
+                const run88PiInvocationProvenance = loadRun88PiInvocationProvenance?.() ?? null;
+                const correlatedObservation =
+                  packagedProfile?.channel === "stage"
+                    ? createRun88StagePostObservation({
+                        observation,
+                        piInvocationProvenance: run88PiInvocationProvenance,
+                        proofRequired: Boolean(
+                          process.env.RUN88_PI_INVOCATION_PROOF_PATH ||
+                            process.env.RUN88_PI_PROOF_AUTHORITY_PUBLIC_KEY_PATH,
+                        ),
+                        releaseId: String(packagedManifestRecord?.release_id ?? ""),
+                        sourceId: String(packagedManifestRecord?.source_tree ?? ""),
+                        executableSha256: String(packagedManifestRecord?.executable_sha256 ?? ""),
+                        scope: options.scopeId,
+                      })
+                    : observation;
+                await postObservationOutbox.enqueue(correlatedObservation);
                 const runtime = extensionRuntimeRef.current;
                 if (!runtime) return { status: "queued_for_extension_runtime" };
                 await drainPostObservationOutbox(runtime);
@@ -936,6 +1053,21 @@ export async function main(): Promise<void> {
         throw new Error("v2 Track B distribution is missing its public runtime adapter");
       }
       const distributionRoot = path.dirname(trackBManifestPath);
+      if (packagedReleaseId) {
+        validateRun88PrivateDistributionIdentity(
+          {
+            generation:
+              manifest.schemaVersion === "role-model.track-b-runtime-distribution.v2" ? "N" : "N-1",
+            manifestSha256: createHash("sha256").update(trackBManifestText).digest("hex"),
+            channel: packagedProfile?.channel ?? "development",
+          },
+          {
+            channel: "stage",
+            manifestSha256: String(packagedManifestRecord?.private_distribution_sha256 ?? ""),
+            publicGeneration: "N",
+          },
+        );
+      }
       const trackBStateRoot = path.join(options.runtimeStateRoot, options.scopeId, "track-b");
       // Start extension-host registration in parallel with sidecar/backend bring-up, but
       // mark core APIs ready as soon as the packaged backend exists. Waiting on all

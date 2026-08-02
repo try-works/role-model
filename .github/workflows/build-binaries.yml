@@ -12,6 +12,14 @@ on:
           - development
           - stage
           - production
+      private_sha:
+        description: Exact private role-model-internal commit embedded in a stage candidate
+        required: false
+        type: string
+      release_id:
+        description: Exact sha256-prefixed Run 88 candidate identity to bind into a stage package
+        required: false
+        type: string
   push:
     branches:
       - stage
@@ -21,6 +29,8 @@ on:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   ROLE_MODEL_BUILD_CHANNEL: ${{ github.ref_type == 'tag' && 'production' || (github.ref_name == 'stage' && 'stage' || inputs.channel || 'development') }}
+  PRIVATE_PAIRED_SHA: ${{ inputs.private_sha || vars.ROLE_MODEL_PAIRED_PRIVATE_SHA }}
+  RUN88_RELEASE_ID: ${{ inputs.release_id || vars.RUN88_RELEASE_ID }}
 
 concurrency:
   group: runtime-build-${{ github.ref }}-${{ inputs.channel || 'automatic' }}
@@ -51,6 +61,25 @@ jobs:
             target: win32-x64
 
     steps:
+      - name: Validate Run 88 stage identity inputs
+        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage'
+        shell: bash
+        env:
+          PUBLIC_PAIRED_SHA: ${{ github.sha }}
+        run: |
+          if [[ ! "$PUBLIC_PAIRED_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Stage public revision must be an exact 40-character commit."
+            exit 1
+          fi
+          if [[ ! "$PRIVATE_PAIRED_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Stage private revision must be an exact 40-character commit."
+            exit 1
+          fi
+          if [[ ! "$RUN88_RELEASE_ID" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+            echo "RUN88_RELEASE_ID must be an exact sha256-prefixed candidate identity."
+            exit 1
+          fi
+
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
@@ -79,8 +108,43 @@ jobs:
       - name: Build UI
         run: pnpm --filter @role-model-router/runtime-ui run build
 
+      - name: Validate exact private stage revision
+        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage'
+        shell: bash
+        run: |
+          if [[ ! "$PRIVATE_PAIRED_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "ROLE_MODEL_PAIRED_PRIVATE_SHA (or private_sha) must be an exact 40-character commit."
+            exit 1
+          fi
+
+      - name: Checkout exact private stage revision
+        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage'
+        uses: actions/checkout@v4
+        with:
+          repository: try-works/role-model-internal
+          ref: ${{ env.PRIVATE_PAIRED_SHA }}
+          token: ${{ secrets.ROLE_MODEL_INTERNAL_READ_TOKEN }}
+          path: _private
+
+      - name: Build exact private stage distribution
+        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage'
+        working-directory: _private
+        env:
+          ROLE_MODEL_PUBLIC_WORKTREE: ${{ github.workspace }}
+          NODE_OPTIONS: --conditions=runtime
+        run: |
+          corepack pnpm install --frozen-lockfile
+          corepack pnpm build:run00-runtime
+
       - name: Package SEA runtime
+        env:
+          ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT: ${{ env.ROLE_MODEL_BUILD_CHANNEL == 'stage' && format('{0}/_private/dist/run00-dev', github.workspace) || '' }}
         run: pnpm run runtime:package-sea
+
+      - name: Bind canonical Run 88 identity into stage package
+        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage'
+        shell: pwsh
+        run: node scripts/run88-stage-release.mjs --manifest "${{ github.workspace }}/role-model-router/dist/release/${{ matrix.target }}/manifest.json" --release-id "$env:RUN88_RELEASE_ID"
 
       - name: Verify channel manifest identity
         id: runtime_identity
@@ -102,6 +166,15 @@ jobs:
           if ($manifest.name -ne $expectedName) {
             throw "Manifest name '$($manifest.name)' does not match '$expectedName'"
           }
+          if ($env:ROLE_MODEL_BUILD_CHANNEL -eq "stage") {
+            if (-not $manifest.track_b_runtime.manifest_sha256) { throw "Missing stage private_distribution_sha256" }
+            if ($manifest.track_b_runtime.compatibility_generation -notin @("N", "N-1")) { throw "Invalid stage private distribution generation" }
+            "private_distribution_sha256=$($manifest.track_b_runtime.manifest_sha256)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            if ($manifest.release_id -ne $env:RUN88_RELEASE_ID) { throw "Stage manifest release_id mismatch" }
+            if ($manifest.private_distribution_sha256 -ne $manifest.track_b_runtime.manifest_sha256) { throw "Stage manifest private distribution binding mismatch" }
+          }
+          $manifestSha256 = (Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash.ToLowerInvariant()
+          "manifest_sha256=$manifestSha256" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           "source_tree=$($manifest.source_tree)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           "core_payload_sha256=$($manifest.core_payload_sha256)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
