@@ -97,6 +97,25 @@ export function validateRun88PackagedStageIdentity(
   return Object.freeze({ ...manifest });
 }
 
+export interface Run88StageRuntimeIdentity {
+  readonly releaseId: string;
+  readonly sourceId: string;
+  readonly executableSha256: string;
+}
+
+export function resolveRun88StageRuntimeIdentity(
+  channel: "development" | "stage" | "production",
+  manifest: Readonly<Record<string, unknown>> | null,
+): Run88StageRuntimeIdentity | undefined {
+  if (channel !== "stage") return undefined;
+  const validated = validateRun88PackagedStageIdentity(manifest ?? {});
+  return Object.freeze({
+    releaseId: validated.release_id as string,
+    sourceId: validated.source_tree as string,
+    executableSha256: validated.executable_sha256 as string,
+  });
+}
+
 function normalizeTaggedVersion(value: string | null | undefined): string | null {
   const trimmed = readNonEmptyString(value);
   if (!trimmed) {
