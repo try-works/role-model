@@ -11,7 +11,11 @@ import {
 } from "./run88-public-runtime-probes.js";
 
 const { resolveRuntimeVersionInfo } = runtimeVersion;
-const { createTrackBPostObservationOutbox, normalizeRun88RuntimeCorrelation } = trackBRuntime;
+const {
+  createRun88RuntimeCorrelation,
+  createTrackBPostObservationOutbox,
+  normalizeRun88RuntimeCorrelation,
+} = trackBRuntime;
 
 const roots: string[] = [];
 afterEach(async () =>
@@ -217,6 +221,28 @@ describe("Run 88 stage release boundary", () => {
         new RegExp(field, "i"),
       );
     }
+  });
+
+  it("RUN88-U-PUB-R8-AC04 constructs recommendation-specific stage correlation", () => {
+    expect(
+      createRun88RuntimeCorrelation({
+        requestId: "recommendation-request-1",
+        routingDecisionId: "recommendation-resolve-1",
+        releaseId: `sha256:${"a".repeat(64)}`,
+        sourceId: "b".repeat(40),
+        deploymentId: `local-stage:${"c".repeat(64)}`,
+        scope: "run88-stage-scope",
+        timestamp: "2026-08-02T00:00:00.000Z",
+        operation: "recommendation.resolve",
+        outcome: "requested",
+      }),
+    ).toMatchObject({
+      schemaVersion: "run88-correlation.v1",
+      service: "runtime-host-bridge",
+      operation: "recommendation.resolve",
+      runtimeChannel: "staging",
+      outcome: "requested",
+    });
   });
 
   it("stage runtime constructs correlation at actual ingress and the durable outbox preserves it", async () => {

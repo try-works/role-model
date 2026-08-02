@@ -825,6 +825,15 @@ export async function main(): Promise<void> {
         staticRoot,
         runtimeStateRoot: options.runtimeStateRoot,
         runtimeChannel: packagedProfile?.channel ?? "development",
+        ...(packagedProfile?.channel === "stage"
+          ? {
+              run88StageIdentity: {
+                releaseId: String(packagedManifestRecord?.release_id ?? ""),
+                sourceId: String(packagedManifestRecord?.source_tree ?? ""),
+                executableSha256: String(packagedManifestRecord?.executable_sha256 ?? ""),
+              },
+            }
+          : {}),
       },
       {
         getBackend: () => backend,
