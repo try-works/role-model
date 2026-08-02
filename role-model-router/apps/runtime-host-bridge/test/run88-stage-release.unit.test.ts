@@ -158,6 +158,41 @@ describe("Run 88 stage release boundary", () => {
     }
   });
 
+  it("RUN88-U-PUB-R8-AC04 derives one immutable backend identity from the validated package", () => {
+    const manifest = {
+      channel: "stage",
+      name: "role-model-stage",
+      host: "127.0.0.1",
+      port: 3457,
+      endpoint: "http://127.0.0.1:3457",
+      state_root_name: "role-model-runtime-stage",
+      scope_id: "standalone-runtime-stage",
+      source_tree: "1".repeat(40),
+      executable_sha256: "2".repeat(64),
+      core_payload_sha256: "3".repeat(64),
+      release_id: `sha256:${"4".repeat(64)}`,
+      private_distribution_sha256: "5".repeat(64),
+      track_b_runtime: { manifest_sha256: "5".repeat(64) },
+    };
+    const identity = runtimeVersion.resolveRun88StageRuntimeIdentity("stage", manifest);
+    expect(identity).toEqual({
+      releaseId: manifest.release_id,
+      sourceId: manifest.source_tree,
+      executableSha256: manifest.executable_sha256,
+    });
+    expect(Object.isFrozen(identity)).toBe(true);
+    expect(runtimeVersion.resolveRun88StageRuntimeIdentity("production", manifest)).toBeUndefined();
+  });
+
+  it("RUN88-R-PUB-R8-AC04 refuses to derive a stage backend identity from incomplete metadata", () => {
+    expect(() =>
+      runtimeVersion.resolveRun88StageRuntimeIdentity("stage", {
+        channel: "stage",
+        release_id: `sha256:${"4".repeat(64)}`,
+      }),
+    ).toThrow(/stage|identity|endpoint|state|scope/i);
+  });
+
   it("RUN88-U-PUB-R7-AC03 refuses provider success without signed Pi CLI process proof", () => {
     const validate = (
       trackBRuntime as unknown as {
