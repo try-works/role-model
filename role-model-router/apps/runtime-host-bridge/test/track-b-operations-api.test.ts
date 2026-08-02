@@ -998,6 +998,98 @@ describe("Track B operations APIs", () => {
     expect(process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN).toBe("service-token-fixture");
   });
 
+  test("RUN88-I-PUB-R8-AC04 stage recommendation downloads propagate candidate correlation", async () => {
+    const runtimeStateRoot = path.join(
+      os.tmpdir(),
+      `run88-stage-recommendation-correlation-${Date.now()}`,
+    );
+    roots.push(runtimeStateRoot);
+    const releaseId = `sha256:${"a".repeat(64)}`;
+    const sourceId = "b".repeat(40);
+    const executableSha256 = "c".repeat(64);
+    const scopeId = "run88-stage-1pct";
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+      runtimeChannel: "stage",
+      run88StageIdentity: { releaseId, sourceId, executableSha256 },
+    });
+    process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_URL = "https://recommendations-stage.example";
+    process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY = "verification-key-fixture";
+    process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL = "staging";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input, init) => {
+        expect(String(input)).toBe(
+          "https://recommendations-stage.example/api/role-model/recommendations/resolve",
+        );
+        const encoded = new Headers(init?.headers).get("x-role-model-correlation");
+        expect(encoded).not.toBeNull();
+        expect(JSON.parse(encoded ?? "null")).toMatchObject({
+          schemaVersion: "run88-correlation.v1",
+          service: "runtime-host-bridge",
+          operation: "recommendation.resolve",
+          runtimeChannel: "staging",
+          releaseId,
+          sourceId,
+          deploymentId: `local-stage:${executableSha256}`,
+          outcome: "requested",
+        });
+        return new Response(
+          JSON.stringify({
+            contract: "RecommendationResolveResponseV1",
+            channel: "staging",
+            status: "not_eligible",
+            channelSequence: 0,
+            runtimeChannel: "staging",
+            scopeId,
+            boundaryProtocolVersion: "1.1",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }),
+    );
+    try {
+      await expect(backend.downloadRecommendations()).resolves.toEqual([]);
+    } finally {
+      await backend.shutdown();
+    }
+  });
+
+  test("RUN88-R-PUB-R8-AC04 stage recommendation downloads fail closed without candidate identity", async () => {
+    const runtimeStateRoot = path.join(
+      os.tmpdir(),
+      `run88-stage-recommendation-missing-identity-${Date.now()}`,
+    );
+    roots.push(runtimeStateRoot);
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot,
+      runtimeStateRoot,
+      scopeId: "run88-stage-1pct",
+      runtimeChannel: "stage",
+    });
+    process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_URL = "https://recommendations-stage.example";
+    process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY = "verification-key-fixture";
+    process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL = "staging";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        throw new Error("network must not be called without candidate identity");
+      }),
+    );
+    try {
+      await expect(backend.downloadRecommendations()).rejects.toThrow(
+        /stage recommendation correlation identity/i,
+      );
+      expect(fetch).not.toHaveBeenCalled();
+    } finally {
+      await backend.shutdown();
+    }
+  });
+
   test("run79 mutateExtension upserts catalog rows absent from bridge state", async () => {
     const root = path.join(os.tmpdir(), `track-b-mutate-upsert-${Date.now()}`);
     roots.push(root);

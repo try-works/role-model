@@ -356,6 +356,9 @@ export function createRun88RuntimeCorrelation(input: {
   readonly scope: string;
   readonly endpointId?: string;
   readonly timestamp?: string;
+  readonly service?: string;
+  readonly operation?: string;
+  readonly outcome?: string;
 }): Record<string, unknown> {
   for (const field of [
     "requestId",
@@ -382,8 +385,8 @@ export function createRun88RuntimeCorrelation(input: {
       traceId: hex("trace", 32),
       spanId: hex("span", 16),
       causalParentId: input.routingDecisionId,
-      service: "runtime-host-bridge",
-      operation: "track-b.post-observation",
+      service: input.service ?? "runtime-host-bridge",
+      operation: input.operation ?? "track-b.post-observation",
       runtimeChannel: "staging",
       scopeHash: `sha256:${createHash("sha256").update(input.scope).digest("hex")}`,
       cohort: "stage-1pct",
@@ -391,7 +394,7 @@ export function createRun88RuntimeCorrelation(input: {
       sourceId: input.sourceId,
       deploymentId: input.deploymentId,
       attempt: 1,
-      outcome: "observed",
+      outcome: input.outcome ?? "observed",
       timestamp,
       durationMs: 0,
     },
