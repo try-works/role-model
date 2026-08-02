@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 
 import { afterEach, describe, expect, test } from "vitest";
 
+import { initializeSqliteMemory, upsertProviderAccount } from "@role-model-router/sqlite-memory";
+
 import * as bridge from "../src/index.js";
 import { createRuntimeBridgeBackend } from "../src/index.js";
 
@@ -16,6 +18,45 @@ const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
 const testFixtureRoot = path.join(__dirname, "fixtures");
 
 const tempRoots: string[] = [];
+
+function persistConfigTestProviderAccount(input: {
+  readonly runtimeStateRoot: string;
+  readonly scopeId: string;
+  readonly providerId: string;
+  readonly modelIds: readonly string[];
+}): void {
+  const { databasePath } = initializeSqliteMemory({
+    runtimeStateRoot: input.runtimeStateRoot,
+    scopeId: input.scopeId,
+    channel: "development",
+  });
+  upsertProviderAccount({
+    databasePath,
+    account: {
+      providerAccountId: `${input.providerId}.litellm`,
+      providerId: input.providerId,
+      providerKind: "provider-openai",
+      orgScope: "personal",
+      accountScope: "workspace-default",
+      credentialRef: {
+        backend: "local-file",
+        ref: `test-only/${input.providerId}.json`,
+      },
+      authMode: "api-key-static",
+      regionPolicy: { mode: "prefer", regions: ["global"] },
+      baseUrlOverride: "http://127.0.0.1:1/v1",
+      allowedModels: [...input.modelIds],
+      modelRoleBindings: [],
+      deniedModels: [],
+      entitlementTags: ["chat"],
+      budgetPolicyRef: "budget.test",
+      quotaPolicyRef: "quota.test",
+      status: "active",
+      healthStatus: "healthy",
+      rotationState: "stable",
+    },
+  });
+}
 
 afterEach(async () => {
   await Promise.all(
@@ -711,7 +752,7 @@ observed_data:
         '      - "lfm2.5-1.2b-instruct"',
         '      - "moonshot/kimi-k2.6"',
         "litellm_proxy:",
-        '  command: "node"',
+        '  command: "role-model-test-vendor-must-not-start"',
         "  args:",
         '    - "-e"',
         `    - 'const http=require("node:http");const port=Number(process.env.PORT);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);'`,
@@ -728,12 +769,19 @@ observed_data:
       "utf8",
     );
 
+    persistConfigTestProviderAccount({
+      runtimeStateRoot,
+      scopeId: "runtime-host-alias-drift-clear",
+      providerId: "moonshot",
+      modelIds: ["moonshot/kimi-k2.5"],
+    });
     const backend = await createRuntimeBridgeBackend({
       repoRoot,
       fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       scopeId: "runtime-host-alias-drift-clear",
       unifiedRuntimeConfigPath,
+      runtimeVendorStartup: "disabled",
     });
 
     await expect(backend.readRuntimeConfig()).resolves.toEqual(
@@ -944,12 +992,19 @@ observed_data:
       "utf8",
     );
 
+    persistConfigTestProviderAccount({
+      runtimeStateRoot,
+      scopeId: "runtime-host-routing-bootstrap",
+      providerId: "moonshot",
+      modelIds: ["moonshot/kimi-k2.7-code"],
+    });
     const backend = await createRuntimeBridgeBackend({
       repoRoot,
       fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       scopeId: "runtime-host-routing-bootstrap",
       unifiedRuntimeConfigPath,
+      runtimeVendorStartup: "disabled",
     });
 
     const updated = await backend.updateRuntimeConfig({
@@ -1026,12 +1081,19 @@ observed_data:
       "utf8",
     );
 
+    persistConfigTestProviderAccount({
+      runtimeStateRoot,
+      scopeId: "runtime-host-routing-bootstrap-remote-only",
+      providerId: "moonshot",
+      modelIds: ["moonshot/kimi-k2.7-code"],
+    });
     const backend = await createRuntimeBridgeBackend({
       repoRoot,
       fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       scopeId: "runtime-host-routing-bootstrap-remote-only",
       unifiedRuntimeConfigPath,
+      runtimeVendorStartup: "disabled",
     });
 
     const updated = await backend.updateRuntimeConfig({
@@ -1102,12 +1164,19 @@ observed_data:
       "utf8",
     );
 
+    persistConfigTestProviderAccount({
+      runtimeStateRoot,
+      scopeId: "runtime-host-routing-matrix",
+      providerId: "moonshot",
+      modelIds: ["moonshot/kimi-k2.7-code"],
+    });
     const backend = await createRuntimeBridgeBackend({
       repoRoot,
       fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       scopeId: "runtime-host-routing-matrix",
       unifiedRuntimeConfigPath,
+      runtimeVendorStartup: "disabled",
     });
 
     const strategyCases = [
@@ -1211,12 +1280,19 @@ observed_data:
       "utf8",
     );
 
+    persistConfigTestProviderAccount({
+      runtimeStateRoot,
+      scopeId: "runtime-host-full-routing-matrix",
+      providerId: "moonshot",
+      modelIds: ["moonshot/kimi-k2.7-code"],
+    });
     const backend = await createRuntimeBridgeBackend({
       repoRoot,
       fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       scopeId: "runtime-host-full-routing-matrix",
       unifiedRuntimeConfigPath,
+      runtimeVendorStartup: "disabled",
     });
 
     const updated = await backend.updateRuntimeConfig({
@@ -1361,12 +1437,19 @@ observed_data:
       "utf8",
     );
 
+    persistConfigTestProviderAccount({
+      runtimeStateRoot,
+      scopeId: "runtime-host-legacy-craft-ask-aliases",
+      providerId: "openai",
+      modelIds: ["chatgpt/gpt-5.4"],
+    });
     const backend = await createRuntimeBridgeBackend({
       repoRoot,
       fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       scopeId: "runtime-host-legacy-craft-ask-aliases",
       unifiedRuntimeConfigPath,
+      runtimeVendorStartup: "disabled",
     });
 
     await expect(backend.readRuntimeConfig()).resolves.toEqual(
@@ -1502,12 +1585,19 @@ observed_data:
       "utf8",
     );
 
+    persistConfigTestProviderAccount({
+      runtimeStateRoot,
+      scopeId: "runtime-host-legacy-craft-ask-matrix",
+      providerId: "openai",
+      modelIds: ["chatgpt/gpt-5.4"],
+    });
     const backend = await createRuntimeBridgeBackend({
       repoRoot,
       fixtureRoot: testFixtureRoot,
       runtimeStateRoot,
       scopeId: "runtime-host-legacy-craft-ask-matrix",
       unifiedRuntimeConfigPath,
+      runtimeVendorStartup: "disabled",
     });
 
     const rendered = await readFile(unifiedRuntimeConfigPath, "utf8");
