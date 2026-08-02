@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, randomBytes, verify as verifySignature } from "node:crypto";
 import { existsSync } from "node:fs";
 import { copyFile, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -18,6 +18,26 @@ import {
 import { createProjectionV2 } from "@role-model-router/trace";
 
 import { consumeTrackBProjection } from "./track-b-projections.js";
+
+const RUN88_PI_PROOF_VALIDITY_MS = 90 * 60 * 1000;
+const isSuppressedRun88Capture = (value: unknown): boolean =>
+  Boolean(
+    value &&
+      typeof value === "object" &&
+      !Array.isArray(value) &&
+      (value as Record<string, unknown>).suppressed === true,
+  );
+
+function canonicalizeRun88Proof(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalizeRun88Proof);
+  if (value && typeof value === "object")
+    return Object.fromEntries(
+      Object.keys(value as Record<string, unknown>)
+        .sort()
+        .map((key) => [key, canonicalizeRun88Proof((value as Record<string, unknown>)[key])]),
+    );
+  return value;
+}
 
 export { consumeTrackBProjection } from "./track-b-projections.js";
 
@@ -254,12 +274,292 @@ export function createTrackBBridgeServerOptions<
   ) as Pick<Backend, (typeof trackBServerOperationNames)[number]>;
 }
 
+const run88CorrelationFields = new Set([
+  "schemaVersion",
+  "eventId",
+  "correlationId",
+  "traceId",
+  "spanId",
+  "causalParentId",
+  "service",
+  "operation",
+  "runtimeChannel",
+  "scopeHash",
+  "cohort",
+  "releaseId",
+  "sourceId",
+  "deploymentId",
+  "attempt",
+  "outcome",
+  "timestamp",
+  "durationMs",
+]);
+
+export function normalizeRun88RuntimeCorrelation(
+  value: Record<string, unknown>,
+  expectedReleaseId: string,
+): Record<string, unknown> {
+  if (!value || value.schemaVersion !== "run88-correlation.v1")
+    throw new Error("unsupported Run 88 correlation schema");
+  for (const field of Object.keys(value)) {
+    if (!run88CorrelationFields.has(field))
+      throw new Error(`unknown Run 88 correlation field ${field}`);
+  }
+  if (value.releaseId !== expectedReleaseId)
+    throw new Error("Run 88 correlation release identity mismatch");
+  if (value.runtimeChannel !== "staging")
+    throw new Error("Run 88 correlation requires staging runtime channel");
+  for (const field of [
+    "eventId",
+    "correlationId",
+    "causalParentId",
+    "service",
+    "operation",
+    "cohort",
+    "sourceId",
+    "deploymentId",
+    "outcome",
+  ] as const) {
+    if (typeof value[field] !== "string" || !String(value[field]).trim())
+      throw new Error(`Run 88 correlation ${field} is incomplete`);
+  }
+  if (
+    !/^sha256:[a-f0-9]{64}$/.test(String(value.scopeHash)) ||
+    !/^sha256:[a-f0-9]{64}$/.test(String(value.releaseId))
+  ) {
+    throw new Error("Run 88 correlation scopeHash or releaseId is invalid");
+  }
+  if (
+    !/^[a-f0-9]{32}$/.test(String(value.traceId)) ||
+    !/^[a-f0-9]{16}$/.test(String(value.spanId))
+  ) {
+    throw new Error("Run 88 correlation identity is incomplete");
+  }
+  if (!Number.isSafeInteger(value.attempt) || Number(value.attempt) < 1)
+    throw new Error("Run 88 correlation attempt is invalid");
+  if (!Number.isFinite(value.durationMs) || Number(value.durationMs) < 0)
+    throw new Error("Run 88 correlation durationMs is invalid");
+  if (
+    typeof value.timestamp !== "string" ||
+    new Date(value.timestamp).toISOString() !== value.timestamp
+  )
+    throw new Error("Run 88 correlation timestamp is invalid");
+  return Object.freeze({ ...value });
+}
+
+export function createRun88RuntimeCorrelation(input: {
+  readonly requestId: string;
+  readonly routingDecisionId: string;
+  readonly releaseId: string;
+  readonly sourceId: string;
+  readonly deploymentId: string;
+  readonly scope: string;
+  readonly endpointId?: string;
+  readonly timestamp?: string;
+}): Record<string, unknown> {
+  for (const field of [
+    "requestId",
+    "routingDecisionId",
+    "sourceId",
+    "deploymentId",
+    "scope",
+  ] as const) {
+    if (!input[field]?.trim()) throw new Error(`Run 88 correlation ${field} is required`);
+  }
+  if (!/^sha256:[0-9a-f]{64}$/.test(input.releaseId))
+    throw new Error("Run 88 correlation releaseId is invalid");
+  if (!/^[0-9a-f]{40}$/.test(input.sourceId))
+    throw new Error("Run 88 correlation sourceId is invalid");
+  const timestamp = input.timestamp ?? new Date().toISOString();
+  const seed = `${input.releaseId}\0${input.requestId}\0${input.routingDecisionId}`;
+  const hex = (label: string, length: number) =>
+    createHash("sha256").update(`${label}\0${seed}`).digest("hex").slice(0, length);
+  return normalizeRun88RuntimeCorrelation(
+    {
+      schemaVersion: "run88-correlation.v1",
+      eventId: `evt-${hex("event", 24)}`,
+      correlationId: `corr-${hex("correlation", 24)}`,
+      traceId: hex("trace", 32),
+      spanId: hex("span", 16),
+      causalParentId: input.routingDecisionId,
+      service: "runtime-host-bridge",
+      operation: "track-b.post-observation",
+      runtimeChannel: "staging",
+      scopeHash: `sha256:${createHash("sha256").update(input.scope).digest("hex")}`,
+      cohort: "stage-1pct",
+      releaseId: input.releaseId,
+      sourceId: input.sourceId,
+      deploymentId: input.deploymentId,
+      attempt: 1,
+      outcome: "observed",
+      timestamp,
+      durationMs: 0,
+    },
+    input.releaseId,
+  );
+}
+
+export function validateRun88ProviderResponseObservation(
+  observation: Readonly<Record<string, unknown>>,
+  provenance:
+    | Readonly<{
+        source: "routed-execution-callback";
+        piInvocationProof: Readonly<Record<string, unknown>>;
+        trustedAuthorityPublicKey: string;
+        expectedReleaseId: string;
+      }>
+    | undefined,
+): Readonly<{
+  requestId: string;
+  clientRequestId: string;
+  routingDecisionId: string;
+  endpointId: string;
+  statusCode: number;
+  responseSha256: string;
+  piInvocationProofSha256: string;
+  outcome: "provider-success";
+}> {
+  const requestId = typeof observation.requestId === "string" ? observation.requestId.trim() : "";
+  const clientRequestId =
+    typeof observation.clientRequestId === "string" ? observation.clientRequestId.trim() : "";
+  const routingDecisionId =
+    typeof observation.routingDecisionId === "string" ? observation.routingDecisionId.trim() : "";
+  const endpointId =
+    typeof observation.endpointId === "string" ? observation.endpointId.trim() : "";
+  const inspection = observation.inspection as Record<string, unknown> | null | undefined;
+  const inspectedRequest = inspection?.request as Record<string, unknown> | null | undefined;
+  const inspectedEndpoint = inspection?.endpoint as Record<string, unknown> | null | undefined;
+  const requestCapture = inspectedRequest?.requestCapture as
+    | Record<string, unknown>
+    | null
+    | undefined;
+  const responseCapture = inspectedRequest?.responseCapture as
+    | Record<string, unknown>
+    | null
+    | undefined;
+  const executionTelemetry = observation.executionTelemetry as
+    | Record<string, unknown>
+    | null
+    | undefined;
+  const providerFamily =
+    typeof executionTelemetry?.providerFamily === "string"
+      ? executionTelemetry.providerFamily.trim()
+      : "";
+  const statusCode = responseCapture?.statusCode;
+  const requestBody = requestCapture?.body as Record<string, unknown> | null | undefined;
+  const responseBody = responseCapture?.body;
+  if (provenance?.source !== "routed-execution-callback")
+    throw new Error("Run 88 provider response requires trusted routed-execution provenance");
+  const proof = provenance.piInvocationProof;
+  const proofKeys = new Set([
+    "schemaVersion",
+    "executionClass",
+    "clientRequestId",
+    "releaseId",
+    "processId",
+    "executableSha256",
+    "issuedAt",
+    "expiresAt",
+    "signature",
+  ]);
+  if (
+    !proof ||
+    Object.keys(proof).some((key) => !proofKeys.has(key)) ||
+    [...proofKeys].some((key) => !Object.hasOwn(proof, key))
+  )
+    throw new Error("Run 88 provider response requires a complete signed Pi invocation proof");
+  const { signature, ...claim } = proof;
+  const issuedAt = Date.parse(String(claim.issuedAt ?? ""));
+  const expiresAt = Date.parse(String(claim.expiresAt ?? ""));
+  const canonicalIso = (value: unknown, parsed: number) =>
+    typeof value === "string" &&
+    Number.isFinite(parsed) &&
+    new Date(parsed).toISOString() === value;
+  if (
+    claim.schemaVersion !== "run88-pi-invocation-proof.v1" ||
+    claim.executionClass !== "actual-pi-cli" ||
+    claim.clientRequestId !== clientRequestId ||
+    claim.releaseId !== provenance.expectedReleaseId ||
+    !/^sha256:[0-9a-f]{64}$/.test(provenance.expectedReleaseId) ||
+    !Number.isInteger(claim.processId) ||
+    Number(claim.processId) < 1 ||
+    !/^[0-9a-f]{64}$/.test(String(claim.executableSha256 ?? "")) ||
+    !canonicalIso(claim.issuedAt, issuedAt) ||
+    !canonicalIso(claim.expiresAt, expiresAt) ||
+    expiresAt <= issuedAt ||
+    expiresAt - issuedAt > RUN88_PI_PROOF_VALIDITY_MS ||
+    Date.now() < issuedAt ||
+    Date.now() >= expiresAt
+  )
+    throw new Error("Run 88 Pi invocation proof identity or validity window is invalid");
+  let signatureValid = false;
+  try {
+    signatureValid = verifySignature(
+      null,
+      Buffer.from(JSON.stringify(canonicalizeRun88Proof(claim))),
+      provenance.trustedAuthorityPublicKey,
+      Buffer.from(String(signature ?? ""), "base64"),
+    );
+  } catch {
+    signatureValid = false;
+  }
+  if (!signatureValid)
+    throw new Error("Run 88 Pi invocation proof signature or trusted authority is invalid");
+  for (const value of [observation, inspectedRequest]) {
+    if (
+      value?.mocked === true ||
+      value?.fixture === true ||
+      value?.directHostCall === true ||
+      value?.apiOnly === true
+    )
+      throw new Error(
+        "Run 88 mocked, fixture, direct-host, or API-only provider proof is forbidden",
+      );
+  }
+  if (!requestId || !clientRequestId || !routingDecisionId || !endpointId)
+    throw new Error("Run 88 provider response observation or Pi client identity is incomplete");
+  if (
+    inspectedRequest?.requestId !== requestId ||
+    inspectedRequest.clientRequestId !== clientRequestId ||
+    inspectedRequest.routingDecisionId !== routingDecisionId ||
+    inspectedEndpoint?.endpointId !== endpointId
+  )
+    throw new Error("Run 88 provider response inspection identity is incomplete or mixed");
+  if (!Number.isInteger(statusCode) || Number(statusCode) < 200 || Number(statusCode) >= 300)
+    throw new Error("Run 88 provider response observation is not successful");
+  if (
+    !providerFamily ||
+    !requestBody ||
+    isSuppressedRun88Capture(requestBody) ||
+    Object.keys(requestBody).length === 0
+  )
+    throw new Error("Run 88 provider response observation has no configured provider request");
+  if (responseBody === undefined || responseBody === null || isSuppressedRun88Capture(responseBody))
+    throw new Error("Run 88 provider response observation has no real provider output");
+  const responseBytes = JSON.stringify(canonicalizeRun88Proof(responseBody));
+  if (!responseBytes || responseBytes === "{}" || responseBytes === "[]" || responseBytes === '""')
+    throw new Error("Run 88 provider response observation has no real provider output");
+  return Object.freeze({
+    requestId,
+    clientRequestId,
+    routingDecisionId,
+    endpointId,
+    statusCode: Number(statusCode),
+    responseSha256: createHash("sha256").update(responseBytes).digest("hex"),
+    piInvocationProofSha256: createHash("sha256")
+      .update(JSON.stringify(canonicalizeRun88Proof(proof)))
+      .digest("hex"),
+    outcome: "provider-success",
+  });
+}
+
 export async function stageTrackBRuntimeDistribution(options: {
   readonly sourceRoot: string;
   readonly releaseDir: string;
 }) {
   const manifestPath = path.join(options.sourceRoot, "track-b-runtime-manifest.json");
   const manifestBytes = await readFile(manifestPath);
+  const manifestSha256 = createHash("sha256").update(manifestBytes).digest("hex");
   const manifest = JSON.parse(manifestBytes.toString("utf8")) as {
     readonly schemaVersion: string;
     readonly sidecar: { readonly modulePath: string; readonly artifactSha256: string };
@@ -339,6 +639,7 @@ export async function stageTrackBRuntimeDistribution(options: {
     sidecarSha256: manifest.sidecar.artifactSha256,
     extensionCount: manifest.extensions.length,
     compatibilityGeneration,
+    manifestSha256,
   };
 }
 
@@ -418,6 +719,7 @@ export interface TrackBPostObservationWorkItem extends Readonly<Record<string, u
   readonly requestId: string;
   readonly routingDecisionId: string;
   readonly endpointId: string;
+  readonly run88Correlation?: Readonly<Record<string, unknown>>;
 }
 
 export interface TrackBPostObservationReceipt {
@@ -466,6 +768,14 @@ export function createTrackBPostObservationOutbox({
         requestId: String(row.requestId),
         routingDecisionId: String(row.routingDecisionId),
         endpointId: String(row.endpointId),
+        ...(row.run88Correlation && typeof row.run88Correlation === "object"
+          ? {
+              run88Correlation: normalizeRun88RuntimeCorrelation(
+                row.run88Correlation as Record<string, unknown>,
+                String((row.run88Correlation as Record<string, unknown>).releaseId ?? ""),
+              ),
+            }
+          : {}),
       };
     });
     const normalizedReceipts = receipts.map((item) => {
@@ -503,6 +813,14 @@ export function createTrackBPostObservationOutbox({
           requestId: String(observation.requestId ?? ""),
           routingDecisionId: String(observation.routingDecisionId ?? ""),
           endpointId: String(observation.endpointId ?? ""),
+          ...(observation.run88Correlation && typeof observation.run88Correlation === "object"
+            ? {
+                run88Correlation: normalizeRun88RuntimeCorrelation(
+                  observation.run88Correlation as Record<string, unknown>,
+                  String((observation.run88Correlation as Record<string, unknown>).releaseId ?? ""),
+                ),
+              }
+            : {}),
         };
         if (!item.requestId || !item.routingDecisionId || !item.endpointId) {
           throw new Error("complete Track B post-observation identity required");
@@ -732,6 +1050,8 @@ export async function runTrackBPostObservation(
     readonly scope: string;
     readonly channel: "development" | "stage" | "production";
     readonly authorizationEpoch: number;
+    readonly expectedReleaseId?: string;
+    readonly run88Correlation?: Record<string, unknown>;
   },
 ) {
   const requestId = String(observation.requestId ?? "");
@@ -740,6 +1060,9 @@ export async function runTrackBPostObservation(
   if (!requestId || !sourceDecisionId || !routePackage || !input.scope) {
     throw new Error("persisted observation identity is required for Track B shadow processing");
   }
+  const run88Correlation = input.expectedReleaseId
+    ? normalizeRun88RuntimeCorrelation(input.run88Correlation ?? {}, input.expectedReleaseId)
+    : null;
   const businessEnvelope = (
     capability: string,
     extra: Readonly<Record<string, unknown>> = {},
@@ -751,6 +1074,7 @@ export async function runTrackBPostObservation(
     scope: input.scope,
     authorizationEpoch: input.authorizationEpoch,
     capability,
+    ...(run88Correlation ? { run88Correlation } : {}),
     ...extra,
   });
   const artifact = await runtime.invoke(

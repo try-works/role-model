@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
@@ -62,6 +62,11 @@ test("SP7 stages N and N-1 distributions and refuses unsupported future versions
         releaseDir: path.join(root, `release-${expectedGeneration}`),
       });
       expect(staged.compatibilityGeneration).toBe(expectedGeneration);
+      expect(staged.manifestSha256).toBe(
+        createHash("sha256")
+          .update(await readFile(path.join(root, "track-b-runtime-manifest.json")))
+          .digest("hex"),
+      );
     }
     await writeFile(
       path.join(root, "track-b-runtime-manifest.json"),
