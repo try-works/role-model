@@ -19,6 +19,19 @@ const testFixtureRoot = path.join(__dirname, "fixtures");
 
 const tempRoots: string[] = [];
 
+async function waitForSessionBootstrap(
+  backend: Awaited<ReturnType<typeof createRuntimeBridgeBackend>>,
+): Promise<void> {
+  for (let attempt = 0; attempt < 400; attempt += 1) {
+    const { status } = (await backend.readRuntimeSummary()).sessionBootstrap;
+    if (status !== "pending" && status !== "running") {
+      return;
+    }
+    await delay(25);
+  }
+  throw new Error("runtime session bootstrap did not reach a terminal state");
+}
+
 function persistConfigTestProviderAccount(input: {
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
@@ -912,6 +925,7 @@ observed_data:
       unifiedRuntimeConfigPath,
       runtimeVendorStartup: "disabled",
     });
+    await waitForSessionBootstrap(backend);
 
     const updated = await backend.updateRuntimeConfig({
       version: "1.1",
@@ -1006,6 +1020,7 @@ observed_data:
       unifiedRuntimeConfigPath,
       runtimeVendorStartup: "disabled",
     });
+    await waitForSessionBootstrap(backend);
 
     const updated = await backend.updateRuntimeConfig({
       routingStrategy: "controller",
@@ -1095,6 +1110,7 @@ observed_data:
       unifiedRuntimeConfigPath,
       runtimeVendorStartup: "disabled",
     });
+    await waitForSessionBootstrap(backend);
 
     const updated = await backend.updateRuntimeConfig({
       routingStrategy: "difficulty",
@@ -1178,6 +1194,7 @@ observed_data:
       unifiedRuntimeConfigPath,
       runtimeVendorStartup: "disabled",
     });
+    await waitForSessionBootstrap(backend);
 
     const strategyCases = [
       { routingStrategy: null, aliasPrefix: "default", aliasMode: "basic" },
@@ -1294,6 +1311,7 @@ observed_data:
       unifiedRuntimeConfigPath,
       runtimeVendorStartup: "disabled",
     });
+    await waitForSessionBootstrap(backend);
 
     const updated = await backend.updateRuntimeConfig({
       routingStrategy: "controller",
@@ -1451,6 +1469,7 @@ observed_data:
       unifiedRuntimeConfigPath,
       runtimeVendorStartup: "disabled",
     });
+    await waitForSessionBootstrap(backend);
 
     await expect(backend.readRuntimeConfig()).resolves.toEqual(
       expect.objectContaining({
@@ -1599,6 +1618,7 @@ observed_data:
       unifiedRuntimeConfigPath,
       runtimeVendorStartup: "disabled",
     });
+    await waitForSessionBootstrap(backend);
 
     const rendered = await readFile(unifiedRuntimeConfigPath, "utf8");
     expect(rendered).toContain("default.remote-only:");
