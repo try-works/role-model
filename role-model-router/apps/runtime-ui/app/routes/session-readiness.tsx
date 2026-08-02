@@ -1,16 +1,15 @@
+import { MetricStrip } from "@role-model/ui";
 import { useEffect, useState } from "react";
 
 import {
+  Badge,
   EmptyState,
   ErrorState,
-  FactCard,
   LoadingState,
   SectionCard,
-  StatusPill,
 } from "../components/page-primitives";
 import {
   bodyStrongTextClassName,
-  bodyTextClassName,
   mutedPanelClassName,
   supportingTextClassName,
 } from "../lib/design-system";
@@ -22,7 +21,6 @@ import {
 } from "../lib/runtime-api";
 import {
   buildAliasDriftRows,
-  buildArchivedArtifactRows,
   buildCredentialLifecycleAccountRows,
   buildCredentialLifecycleBanner,
   buildCredentialReadinessRows,
@@ -31,6 +29,31 @@ import {
   buildSessionBootstrapRows,
   summarizeSessionBootstrapStatus,
 } from "../lib/view-models";
+
+const monoPathClassName =
+  "break-all font-mono text-[12px] font-normal leading-4 text-[var(--rm-fg)]";
+
+const inventoryValueClassName =
+  "font-mono text-[12px] font-normal leading-4 tabular-nums text-[var(--rm-fg)]";
+
+function hostHealthLabel(status: RuntimeHealthStatus["status"]): string {
+  return status === "healthy" ? "ok" : status;
+}
+
+function operatorIntentBadgeLabel(
+  status: NonNullable<RuntimeSummary["operatorIntent"]>["status"] | undefined,
+): string {
+  switch (status) {
+    case "ok":
+      return "applied";
+    case "missing":
+      return "missing";
+    case "corrupt":
+      return "corrupt";
+    default:
+      return "unknown";
+  }
+}
 
 export default function SessionReadinessRoute() {
   const [summary, setSummary] = useState<RuntimeSummary | null>(null);
@@ -63,7 +86,6 @@ export default function SessionReadinessRoute() {
   const lifecycleAccountRows = buildCredentialLifecycleAccountRows(summary).filter(
     (row) => row.blocking,
   );
-  const archivedRows = buildArchivedArtifactRows(summary);
   const inventoryStats = buildInventorySummaryStats(summary);
   const driftRows = buildAliasDriftRows(summary);
   const operatorIntentSummary = buildOperatorIntentSummary(summary);
@@ -72,71 +94,70 @@ export default function SessionReadinessRoute() {
       ? `${bootstrapRows.map((row) => row.label.toLowerCase()).join(", ")} were all persisted in the current session.`
       : "Bootstrap stages have not been recorded yet.";
   const primaryLifecycleRow = lifecycleAccountRows[0] ?? null;
-  const primaryArchivedRow = archivedRows[0] ?? null;
   const primaryDriftRow = driftRows[0] ?? null;
+  const routableCount = summary.inventorySummary?.endpointIdCount ?? summary.endpointCount;
+  const blockingReadinessRows = readinessRows.filter((row) => row.key !== "ready");
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <FactCard
-          label="Bootstrap status"
-          value={bootstrapStatus?.label ?? "Unavailable"}
-          valueClassName={bodyStrongTextClassName}
-          emphasis
-        />
-        <FactCard
-          label="Host health"
-          value={health.status}
-          valueClassName={bodyStrongTextClassName}
-        />
-        <FactCard
-          label="Lifecycle authority"
-          value={lifecycleBanner?.authorityLabel ?? "Unavailable"}
-          valueClassName={bodyStrongTextClassName}
-        />
-        <FactCard
-          label="Execution mode"
-          value={summary.executionMode ?? "unknown"}
-          valueClassName={bodyStrongTextClassName}
-        />
-        <FactCard
-          label="Routable endpoints"
-          value={String(summary.inventorySummary?.endpointIdCount ?? summary.endpointCount)}
-          valueClassName={bodyStrongTextClassName}
-        />
-      </div>
+      <MetricStrip
+        aria-label="Session readiness summary"
+        variant="panel"
+        items={[
+          {
+            id: "bootstrap",
+            label: "Bootstrap",
+            value: bootstrapStatus?.label ?? "unavailable",
+          },
+          { id: "health", label: "Host health", value: hostHealthLabel(health.status) },
+          {
+            id: "authority",
+            label: "Authority",
+            value: lifecycleBanner?.authorityLabel ?? "unavailable",
+          },
+          {
+            id: "routable",
+            label: "Routable",
+            value: String(routableCount),
+          },
+        ]}
+      />
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.72fr)]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]">
         <div className="space-y-4">
-          <SectionCard title="Session bootstrap">
+          <SectionCard
+            title="Session bootstrap"
+            description="Persisted bootstrap ladder for the current host session."
+          >
             <div className="mb-4 flex flex-wrap items-center gap-3">
               {bootstrapStatus ? (
-                <StatusPill tone={bootstrapStatus.tone}>{bootstrapStatus.label}</StatusPill>
+                <Badge tone={bootstrapStatus.tone}>{bootstrapStatus.label}</Badge>
               ) : (
-                <StatusPill tone="neutral">Bootstrap receipts unavailable</StatusPill>
+                <Badge tone="neutral">unavailable</Badge>
               )}
-              {summary.sessionBootstrap?.finishedAt ? (
-                <StatusPill tone="neutral">finished</StatusPill>
-              ) : null}
+              {summary.sessionBootstrap?.finishedAt ? <Badge tone="neutral">finished</Badge> : null}
             </div>
             <p className={supportingTextClassName}>{bootstrapSummary}</p>
           </SectionCard>
 
-          <SectionCard title="Canonical lifecycle">
+          <SectionCard
+            title="Canonical lifecycle"
+            description="Authority posture and blocking credential accounts."
+          >
             <div className="mb-4 flex flex-wrap items-center gap-3">
               {lifecycleBanner ? (
                 <>
-                  <StatusPill tone={lifecycleBanner.authorityTone}>
+                  <Badge tone={lifecycleBanner.authorityTone}>
                     {lifecycleBanner.authorityLabel}
-                  </StatusPill>
+                  </Badge>
                   {lifecycleBanner.archivedStaleCount > 0 ? (
-                    <StatusPill tone="neutral">
+                    <Badge tone="neutral">
                       archived stale {lifecycleBanner.archivedStaleCount}
-                    </StatusPill>
+                    </Badge>
                   ) : null}
                 </>
               ) : (
-                <StatusPill tone="neutral">Lifecycle contract unavailable</StatusPill>
+                <Badge tone="neutral">unavailable</Badge>
               )}
             </div>
             {lifecycleBanner ? (
@@ -149,9 +170,9 @@ export default function SessionReadinessRoute() {
                     <p className={bodyStrongTextClassName}>
                       {primaryLifecycleRow.providerAccountId}
                     </p>
-                    <StatusPill tone={primaryLifecycleRow.tone}>
-                      {primaryLifecycleRow.lifecycleLabel}
-                    </StatusPill>
+                    <Badge tone={primaryLifecycleRow.tone}>
+                      {primaryLifecycleRow.lifecycleLabel.toLowerCase()}
+                    </Badge>
                   </div>
                   <div className={`space-y-2 ${supportingTextClassName}`}>
                     <p>providerAccountId {primaryLifecycleRow.providerAccountId}</p>
@@ -165,15 +186,18 @@ export default function SessionReadinessRoute() {
             </div>
           </SectionCard>
 
-          <SectionCard title="Operator intent manifest">
+          <SectionCard
+            title="Operator intent manifest"
+            description="Declared operator intent for this runtime session."
+          >
             {operatorIntentSummary ? (
               <div className="space-y-4">
-                <StatusPill tone={operatorIntentSummary.tone}>
-                  {summary.operatorIntent?.status ?? "unknown"}
-                </StatusPill>
+                <Badge tone={operatorIntentSummary.tone}>
+                  {operatorIntentBadgeLabel(summary.operatorIntent?.status)}
+                </Badge>
                 <p className={supportingTextClassName}>{operatorIntentSummary.detail}</p>
                 {summary.operatorIntent?.path ? (
-                  <p className={supportingTextClassName}>{summary.operatorIntent.path}</p>
+                  <p className={monoPathClassName}>{summary.operatorIntent.path}</p>
                 ) : null}
               </div>
             ) : (
@@ -183,32 +207,34 @@ export default function SessionReadinessRoute() {
         </div>
 
         <div className="space-y-4">
-          <SectionCard title="Credential readiness">
-            <div className="flex flex-wrap gap-3">
-              {readinessRows.length === 0 ? (
-                <StatusPill tone="neutral">No credential blockers reported</StatusPill>
-              ) : (
-                readinessRows.map((row) => (
-                  <StatusPill key={row.key} tone={row.tone}>
-                    {row.label} {row.value}
-                  </StatusPill>
-                ))
-              )}
+          <SectionCard
+            title="Credential readiness"
+            description="Blocking credential counts by class."
+          >
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-3">
+                {blockingReadinessRows.length === 0 ? (
+                  <Badge tone="neutral">no blockers</Badge>
+                ) : (
+                  blockingReadinessRows.map((row) => (
+                    <Badge key={row.key} tone={row.tone}>
+                      {row.label.toLowerCase()} {row.value}
+                    </Badge>
+                  ))
+                )}
+              </div>
+              {blockingReadinessRows.length === 0 ? (
+                <p className={supportingTextClassName}>
+                  No credential blockers reported for the current session.
+                </p>
+              ) : null}
             </div>
           </SectionCard>
 
-          <SectionCard title="Archived stale diagnostics">
-            {primaryArchivedRow ? (
-              <div className="space-y-3">
-                <p className={bodyStrongTextClassName}>{primaryArchivedRow.providerAccountId}</p>
-                <p className={supportingTextClassName}>{primaryArchivedRow.detail}</p>
-              </div>
-            ) : (
-              <EmptyState label="No archived stale lifecycle artifacts." />
-            )}
-          </SectionCard>
-
-          <SectionCard title="Routable inventory">
+          <SectionCard
+            title="Routable inventory"
+            description="Endpoints and models available to routing."
+          >
             {inventoryStats.length === 0 ? (
               <EmptyState label="Inventory summary is not available yet." />
             ) : (
@@ -216,14 +242,17 @@ export default function SessionReadinessRoute() {
                 {inventoryStats.map((stat) => (
                   <div key={stat.label} className="flex items-center justify-between gap-3">
                     <p className={supportingTextClassName}>{stat.label}</p>
-                    <p className={bodyStrongTextClassName}>{stat.value}</p>
+                    <p className={inventoryValueClassName}>{stat.value}</p>
                   </div>
                 ))}
               </div>
             )}
           </SectionCard>
 
-          <SectionCard title="Alias drift warnings">
+          <SectionCard
+            title="Alias drift warnings"
+            description="Hint models that no longer resolve live."
+          >
             {primaryDriftRow ? (
               <div className="space-y-3">
                 <p className={bodyStrongTextClassName}>

@@ -1,9 +1,13 @@
+import { MetricStrip } from "@role-model/ui";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
-import { CodeBlock, ErrorState, LoadingState, SectionCard } from "../components/page-primitives";
+import { ErrorState, LoadingState, SectionCard } from "../components/page-primitives";
 import {
+  bodyStrongTextClassName,
   fieldClassName,
+  monoEyebrowClassName,
+  mutedPanelClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
   supportingTextClassName,
@@ -99,27 +103,55 @@ export default function ControlRuntimeConfigRoute() {
     }
   };
 
-  const appliedSnapshot = [
-    `path: ${configRecord?.path ?? "not configured"}`,
-    `execution mode: ${currentConfig.executionMode ?? "pending"}`,
-    `routing strategy: ${currentConfig.routingStrategy ?? "pending"}`,
-    `local models: ${currentConfig.llamaSwap.models.length}`,
-    `remote mappings: ${remoteMappingCount}`,
-  ].join("\n");
+  const snapshotRows = [
+    ["Path", configRecord?.path ?? "not configured"],
+    ["Execution", currentConfig.executionMode ?? "pending"],
+    ["Strategy", currentConfig.routingStrategy ?? "pending"],
+    ["Local models", String(currentConfig.llamaSwap.models.length)],
+    ["Remote maps", String(remoteMappingCount)],
+  ] as const;
 
   return (
     <div className="space-y-6">
       {error ? <ErrorState label={error} /> : null}
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(240px,0.28fr)]">
+      <MetricStrip
+        aria-label="Runtime config summary"
+        variant="panel"
+        items={[
+          {
+            id: "execution",
+            label: "Execution",
+            value: currentConfig.executionMode ?? "pending",
+          },
+          {
+            id: "strategy",
+            label: "Strategy",
+            value: currentConfig.routingStrategy ?? "pending",
+          },
+          {
+            id: "local-models",
+            label: "Local models",
+            value: String(currentConfig.llamaSwap.models.length),
+          },
+          {
+            id: "remote-maps",
+            label: "Remote maps",
+            value: String(remoteMappingCount),
+          },
+        ]}
+      />
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]">
         <SectionCard
           title="Config editor"
-          description={`Edit the canonical JSON payload directly, then save and apply it through the role-model runtime control plane. Current scope: ${currentConfig.llamaSwap.models.length} local models, ${remoteMappingCount} remote mappings, execution mode ${currentConfig.executionMode ?? "pending"}.`}
+          description="Edit the canonical JSON payload, then save and apply through the role-model runtime control plane."
         >
           <div className="space-y-4">
             {!configRecord ? <LoadingState label="Loading runtime config…" /> : null}
             <textarea
-              className={`${fieldClassName} min-h-96 font-mono text-xs leading-6`}
+              className={`${fieldClassName} !min-h-[28rem] font-mono text-xs leading-6`}
+              rows={24}
               spellCheck={false}
               value={editorText}
               onChange={(event) => setEditorText(event.target.value)}
@@ -128,7 +160,7 @@ export default function ControlRuntimeConfigRoute() {
               <button
                 className={primaryButtonClassName}
                 type="button"
-                disabled={saving}
+                disabled={saving || !configRecord}
                 onClick={() => void save()}
               >
                 {saving ? "Applying…" : "Save and apply"}
@@ -168,27 +200,41 @@ export default function ControlRuntimeConfigRoute() {
           </div>
         </SectionCard>
 
-        <SectionCard className="h-fit" title="Page actions">
-          <div className="flex flex-col gap-3">
-            <Link className={secondaryButtonClassName} to="/app/router/strategy">
-              Routing strategy
-            </Link>
-            <Link className={secondaryButtonClassName} to="/app/models">
-              Inspect models
-            </Link>
-            <a className={secondaryButtonClassName} href="/api/role-model/runtime/config">
-              Runtime config JSON
-            </a>
-          </div>
-        </SectionCard>
-      </div>
+        <div className="space-y-4">
+          <SectionCard
+            title="Applied snapshot"
+            description="Active config file and local-plus-remote payload in force."
+          >
+            <div className={`${mutedPanelClassName} space-y-3 p-4`}>
+              {snapshotRows.map(([label, value]) => (
+                <div key={label} className="flex flex-wrap items-start justify-between gap-3">
+                  <p className={monoEyebrowClassName}>{label}</p>
+                  <p className={`${bodyStrongTextClassName} max-w-[70%] break-all text-right`}>
+                    {value}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
 
-      <SectionCard
-        title="Applied config snapshot"
-        description={`Use this snapshot to confirm the active config file (${configRecord?.path ?? "not configured"}) and the exact local-plus-remote runtime payload in force.`}
-      >
-        <CodeBlock>{appliedSnapshot}</CodeBlock>
-      </SectionCard>
+          <SectionCard
+            title="Page actions"
+            description="Related control-plane surfaces for this config."
+          >
+            <div className="flex flex-col gap-3">
+              <Link className={secondaryButtonClassName} to="/app/router/strategy">
+                Routing strategy
+              </Link>
+              <Link className={secondaryButtonClassName} to="/app/models">
+                Inspect models
+              </Link>
+              <a className={secondaryButtonClassName} href="/api/role-model/runtime/config">
+                Runtime config JSON
+              </a>
+            </div>
+          </SectionCard>
+        </div>
+      </div>
     </div>
   );
 }

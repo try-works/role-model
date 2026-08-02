@@ -1,7 +1,9 @@
-import { Moon, Sun } from "lucide-react";
+/**
+ * @deprecated Prefer kit `SubPageHeaderBar` theme control via `AppShell`.
+ * Kept as a thin compatibility shim for any residual imports.
+ */
 import { startTransition, useEffect, useState } from "react";
 
-import { cn } from "../lib/cn";
 import {
   type RuntimeTheme,
   THEME_STORAGE_KEY,
@@ -18,6 +20,7 @@ function readResolvedTheme(): RuntimeTheme {
   });
 }
 
+/** @deprecated Use `SubPageHeaderBar` `onThemeChange` instead of the legacy dual-pill. */
 export function ThemeToggle() {
   const [theme, setTheme] = useState<RuntimeTheme>("dark");
 
@@ -27,7 +30,8 @@ export function ThemeToggle() {
     syncDocumentTheme(initialTheme);
   }, []);
 
-  function handleThemeChange(nextTheme: RuntimeTheme): void {
+  function handleThemeChange(): void {
+    const nextTheme: RuntimeTheme = theme === "dark" ? "light" : "dark";
     startTransition(() => {
       setTheme(nextTheme);
     });
@@ -36,31 +40,33 @@ export function ThemeToggle() {
   }
 
   return (
-    <fieldset
-      aria-label="Theme toggle"
-      className="ml-auto inline-flex h-[44px] w-[104px] items-center gap-1 rounded-[var(--rm-radius-pill)] border border-[var(--rm-border)] bg-[var(--rm-panel-muted)] p-1"
+    <button
+      type="button"
+      aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+      className="inline-flex size-8 items-center justify-center rounded-md border border-border bg-background text-foreground outline-none hover:bg-accent focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+      onClick={handleThemeChange}
     >
-      {(["dark", "light"] as const).map((option) => (
-        <button
-          key={option}
-          aria-label={option === "light" ? "Switch to light theme" : "Switch to dark theme"}
-          aria-pressed={theme === option}
-          className={cn(
-            "inline-flex h-[36px] w-[46px] items-center justify-center rounded-[var(--rm-radius-pill)] transition active:scale-95",
-            theme === option
-              ? "bg-[var(--rm-accent)] text-[color:var(--rm-on-primary)]"
-              : "bg-transparent text-[var(--rm-secondary)] hover:text-[var(--rm-fg)]",
-          )}
-          onClick={() => handleThemeChange(option)}
-          type="button"
-        >
-          {option === "light" ? (
-            <Sun size={16} strokeWidth={2} />
-          ) : (
-            <Moon size={16} strokeWidth={2} />
-          )}
-        </button>
-      ))}
-    </fieldset>
+      {theme === "dark" ? (
+        <svg aria-hidden viewBox="0 0 24 24" fill="none" width={16} height={16}>
+          <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5" />
+          <path
+            d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+        </svg>
+      ) : (
+        <svg aria-hidden viewBox="0 0 24 24" fill="none" width={16} height={16}>
+          <path
+            d="M21 14.3A9 9 0 1 1 9.7 3 7 7 0 0 0 21 14.3z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
+    </button>
   );
 }

@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import os from "node:os";
@@ -15,15 +16,19 @@ import {
   resolveBridgeServerOptions,
   startBridgeServer,
 } from "./index.js";
-import { createPrivateKwJoinWorkerFactory } from "./kw-private-loader.js";
-import { configureKwPromptInjectHost } from "./kw-prompt-inject-host.js";
+import { validateRun88PrivateDistributionIdentity } from "./kw-private-loader.js";
 import { readPackagedRuntimeProfile } from "./runtime-channel.js";
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
-import { setKwJoinWorkerFactory } from "./track-b-operations.js";
+import { validateRun88PackagedStageIdentity } from "./runtime-version.js";
 import {
   createOwnedTrackBSidecarSpec,
   createPackagedProductionRuntime,
   createProductionExtensionRuntime,
+  createRun88RuntimeCorrelation,
+  createTrackBPostObservationOutbox,
+  runTrackBPostObservation,
+  trackBDistributionRequiresSQLiteMaintenance,
+  validateRun88ProviderResponseObservation,
 } from "./track-b-runtime.js";
 
 type CliBackend = Pick<
@@ -47,6 +52,11 @@ type CliBackend = Pick<
   | "listModels"
   | "listExtensions"
   | "mutateExtension"
+  | "readTrackBQaExtensions"
+  | "readTrackBShadowReceipts"
+  | "readGraphMigration"
+  | "advanceGraphMigration"
+  | "rollbackGraphMigration"
   | "readStorageRetention"
   | "dryRunStorageRetention"
   | "updateStorageRetentionPolicy"
@@ -126,6 +136,80 @@ type CliBackend = Pick<
   | "shutdown"
 >;
 
+type Run88PiInvocationProvenance = Readonly<{
+  source: "routed-execution-callback";
+  piInvocationProof: Readonly<Record<string, unknown>>;
+  trustedAuthorityPublicKey: string;
+  expectedReleaseId: string;
+}>;
+
+function readRun88PiInvocationProvenance(
+  env: NodeJS.ProcessEnv,
+  expectedReleaseId: string | undefined,
+): Run88PiInvocationProvenance | null {
+  const proofPath = env.RUN88_PI_INVOCATION_PROOF_PATH;
+  const authorityPath = env.RUN88_PI_PROOF_AUTHORITY_PUBLIC_KEY_PATH;
+  if (!proofPath && !authorityPath) return null;
+  if (
+    !proofPath ||
+    !authorityPath ||
+    !path.isAbsolute(proofPath) ||
+    !path.isAbsolute(authorityPath)
+  )
+    throw new Error("Run 88 Pi proof and authority paths must both be absolute");
+  if (!/^sha256:[0-9a-f]{64}$/.test(expectedReleaseId ?? ""))
+    throw new Error("Run 88 Pi proof requires the packaged release identity");
+  let piInvocationProof: Readonly<Record<string, unknown>>;
+  try {
+    piInvocationProof = JSON.parse(readFileSync(proofPath, "utf8")) as Readonly<
+      Record<string, unknown>
+    >;
+  } catch {
+    throw new Error("Run 88 Pi invocation proof file is unreadable or malformed");
+  }
+  const trustedAuthorityPublicKey = readFileSync(authorityPath, "utf8").trim();
+  if (!trustedAuthorityPublicKey) throw new Error("Run 88 Pi proof authority public key is empty");
+  return Object.freeze({
+    source: "routed-execution-callback",
+    piInvocationProof,
+    trustedAuthorityPublicKey,
+    expectedReleaseId: expectedReleaseId as string,
+  });
+}
+
+export function createRun88StagePostObservation(input: {
+  readonly observation: Readonly<Record<string, unknown>>;
+  readonly piInvocationProvenance: Run88PiInvocationProvenance | null;
+  readonly proofRequired: boolean;
+  readonly releaseId: string;
+  readonly sourceId: string;
+  readonly executableSha256: string;
+  readonly scope: string;
+}): Readonly<Record<string, unknown>> {
+  if (input.proofRequired && !input.piInvocationProvenance)
+    throw new Error("Run 88 Phase 5 provider observation requires signed Pi CLI provenance");
+  return Object.freeze({
+    ...input.observation,
+    ...(input.piInvocationProvenance
+      ? {
+          run88ProviderResponse: validateRun88ProviderResponseObservation(
+            input.observation,
+            input.piInvocationProvenance,
+          ),
+        }
+      : {}),
+    run88Correlation: createRun88RuntimeCorrelation({
+      requestId: String(input.observation.requestId ?? ""),
+      routingDecisionId: String(input.observation.routingDecisionId ?? ""),
+      endpointId: String(input.observation.endpointId ?? ""),
+      releaseId: input.releaseId,
+      sourceId: input.sourceId,
+      deploymentId: `local-stage:${input.executableSha256}`,
+      scope: input.scope,
+    }),
+  });
+}
+
 interface CliBootstrapState {
   status: "pending" | "ready" | "failed";
   message?: string;
@@ -200,6 +284,7 @@ export function createCliServerOptions(
     port: number;
     staticRoot?: string;
     runtimeStateRoot?: string;
+    runtimeChannel?: "development" | "stage" | "production";
   },
   backendOrResolver: CliBackend | CliBackendResolver,
   shutdown?: () => Promise<void>,
@@ -232,6 +317,7 @@ export function createCliServerOptions(
     port: options.port,
     staticRoot: options.staticRoot,
     runtimeStateRoot: options.runtimeStateRoot,
+    runtimeChannel: options.runtimeChannel,
     shutdown,
     registry: resolveBackend()?.effectiveRegistry ?? EMPTY_REGISTRY,
     getRegistry: () => resolveBackend()?.effectiveRegistry ?? EMPTY_REGISTRY,
@@ -304,6 +390,21 @@ export function createCliServerOptions(
     mutateExtension: bindBackendMethod(
       "mutateExtension",
     ) as StartBridgeServerOptions["mutateExtension"],
+    readTrackBQaExtensions: bindBackendMethod(
+      "readTrackBQaExtensions",
+    ) as StartBridgeServerOptions["readTrackBQaExtensions"],
+    readTrackBShadowReceipts: bindBackendMethod(
+      "readTrackBShadowReceipts",
+    ) as StartBridgeServerOptions["readTrackBShadowReceipts"],
+    readGraphMigration: bindBackendMethod(
+      "readGraphMigration",
+    ) as StartBridgeServerOptions["readGraphMigration"],
+    advanceGraphMigration: bindBackendMethod(
+      "advanceGraphMigration",
+    ) as StartBridgeServerOptions["advanceGraphMigration"],
+    rollbackGraphMigration: bindBackendMethod(
+      "rollbackGraphMigration",
+    ) as StartBridgeServerOptions["rollbackGraphMigration"],
     readStorageRetention: bindBackendMethod(
       "readStorageRetention",
     ) as StartBridgeServerOptions["readStorageRetention"],
@@ -604,6 +705,9 @@ export async function main(): Promise<void> {
       "track-b-runtime-manifest": {
         type: "string",
       },
+      "track-b-qa-extension-manifest": {
+        type: "string",
+      },
       "artifact-digest-key-file": {
         type: "string",
       },
@@ -654,6 +758,22 @@ export async function main(): Promise<void> {
     unifiedRuntimeConfigPath: args.values["unified-runtime-config"],
   });
   const packagedProfile = readPackagedRuntimeProfile(process.execPath);
+  const packagedManifestRecord = packagedProfile
+    ? (JSON.parse(
+        readFileSync(path.join(path.dirname(process.execPath), "manifest.json"), "utf8"),
+      ) as Record<string, unknown>)
+    : null;
+  const packagedReleaseId =
+    typeof packagedManifestRecord?.release_id === "string"
+      ? packagedManifestRecord.release_id
+      : undefined;
+  const loadRun88PiInvocationProvenance =
+    packagedProfile?.channel === "stage"
+      ? () => readRun88PiInvocationProvenance(process.env, packagedReleaseId)
+      : null;
+  if (packagedProfile?.channel === "stage") {
+    validateRun88PackagedStageIdentity(packagedManifestRecord ?? {});
+  }
   if (packagedProfile?.channel === "production" && !args.values["runtime-state-root"]) {
     const migration = await migrateLegacyProductionState({
       legacyRoot: path.join(process.env.LOCALAPPDATA || os.tmpdir(), "Role Model Runtime"),
@@ -704,6 +824,7 @@ export async function main(): Promise<void> {
         port: options.port,
         staticRoot,
         runtimeStateRoot: options.runtimeStateRoot,
+        runtimeChannel: packagedProfile?.channel ?? "development",
       },
       {
         getBackend: () => backend,
@@ -752,15 +873,74 @@ export async function main(): Promise<void> {
           throw error;
         })
       : null;
+    const qaManifestPath =
+      args.values["track-b-qa-extension-manifest"]?.trim() ||
+      process.env.ROLE_MODEL_TRACK_B_QA_EXTENSION_MANIFEST?.trim() ||
+      null;
+    const qaManifest = qaManifestPath
+      ? (JSON.parse(await readFile(qaManifestPath, "utf8")) as {
+          readonly schemaVersion: string;
+          readonly extensions?: readonly {
+            readonly descriptor: {
+              readonly id: string;
+              readonly protocolVersion: string;
+              readonly capabilities: readonly string[];
+            };
+            readonly modulePath: string;
+            readonly artifactSha256: string;
+          }[];
+        })
+      : null;
+    if (
+      qaManifest &&
+      (qaManifest.schemaVersion !== "role-model.track-b-qa-extension-manifest.v1" ||
+        !qaManifest.extensions?.length)
+    ) {
+      throw new Error("invalid explicit Track B QA extension manifest");
+    }
+    const qaExtensions = (qaManifest?.extensions ?? []).map((extension) => ({
+      ...extension,
+      modulePath: path.resolve(path.dirname(qaManifestPath as string), extension.modulePath),
+    }));
+    const qaStartupReceipts = new Map<string, Record<string, unknown>>();
     if (packagedProfile?.channel === "production" && !trackBManifestText) {
       throw new Error("packaged production runtime is missing its Track B distribution");
     }
-    const createBackend = (trackBOperationsEndpoint?: string, trackBOperationsToken?: string) =>
-      createRuntimeBridgeBackend({
+    const postObservationOutbox = createTrackBPostObservationOutbox({
+      filePath: path.join(
+        options.runtimeStateRoot,
+        options.scopeId,
+        "track-b",
+        "post-observation-outbox.json",
+      ),
+    });
+    const drainPostObservationOutbox = async (
+      runtime: Awaited<ReturnType<typeof createProductionExtensionRuntime>>,
+    ) =>
+      postObservationOutbox.drain((observation) =>
+        runTrackBPostObservation(runtime, observation, {
+          scope: options.scopeId,
+          channel: packagedProfile?.channel ?? "development",
+          authorizationEpoch: 1,
+          ...(packagedReleaseId
+            ? {
+                expectedReleaseId: packagedReleaseId,
+                run88Correlation: observation.run88Correlation as Record<string, unknown>,
+              }
+            : {}),
+        }),
+      );
+    const createBackend = async (
+      trackBOperationsEndpoint?: string,
+      trackBOperationsToken?: string,
+      runStartupSQLiteMaintenance = true,
+    ) => {
+      const created = await createRuntimeBridgeBackend({
         fixtureRoot: resolveCliFixtureRoot(options.repoRoot, args.values["fixture-root"]),
         repoRoot: options.repoRoot,
         runtimeStateRoot: options.runtimeStateRoot,
         scopeId: options.scopeId,
+        runtimeChannel: packagedProfile?.channel ?? "development",
         unifiedRuntimeConfigPath: options.unifiedRuntimeConfigPath,
         ...(trackBOperationsEndpoint ? { trackBOperationsEndpoint } : {}),
         ...(trackBOperationsToken ? { trackBOperationsToken } : {}),
@@ -778,11 +958,78 @@ export async function main(): Promise<void> {
             supervisor: health.supervisor,
           };
         },
+        trackBExtensionRuntime: () => extensionRuntimeRef.current,
+        trackBQaExtensionCatalog: () =>
+          qaExtensions.map((extension) => ({
+            id: extension.descriptor.id,
+            name: extension.descriptor.id,
+            description: "Explicit test-only packaged-runtime extension.",
+            routingDependency: false,
+            testOnly: true,
+            protocolVersion: extension.descriptor.protocolVersion,
+            capabilities: extension.descriptor.capabilities,
+            ...(qaStartupReceipts.has(extension.descriptor.id)
+              ? { qaStartupReceipt: qaStartupReceipts.get(extension.descriptor.id) }
+              : {}),
+          })),
+        trackBPostObservationReceipts: () => postObservationOutbox.read(),
+        ...(trackBManifestText
+          ? {
+              trackBPostObservation: async (observation: Readonly<Record<string, unknown>>) => {
+                const run88PiInvocationProvenance = loadRun88PiInvocationProvenance?.() ?? null;
+                const correlatedObservation =
+                  packagedProfile?.channel === "stage"
+                    ? createRun88StagePostObservation({
+                        observation,
+                        piInvocationProvenance: run88PiInvocationProvenance,
+                        proofRequired: Boolean(
+                          process.env.RUN88_PI_INVOCATION_PROOF_PATH ||
+                            process.env.RUN88_PI_PROOF_AUTHORITY_PUBLIC_KEY_PATH,
+                        ),
+                        releaseId: String(packagedManifestRecord?.release_id ?? ""),
+                        sourceId: String(packagedManifestRecord?.source_tree ?? ""),
+                        executableSha256: String(packagedManifestRecord?.executable_sha256 ?? ""),
+                        scope: options.scopeId,
+                      })
+                    : observation;
+                await postObservationOutbox.enqueue(correlatedObservation);
+                const runtime = extensionRuntimeRef.current;
+                if (!runtime) return { status: "queued_for_extension_runtime" };
+                await drainPostObservationOutbox(runtime);
+                return { status: "processed" };
+              },
+            }
+          : {}),
       });
+      if (trackBOperationsEndpoint && trackBOperationsToken && runStartupSQLiteMaintenance) {
+        const response = await fetch(`${trackBOperationsEndpoint}/sqlite-maintenance`, {
+          method: "POST",
+          headers: {
+            authorization: `Bearer ${trackBOperationsToken}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            nowMs: Date.now(),
+            maxDeleteRows: 256,
+            idle: true,
+            lockRisk: "low",
+          }),
+        });
+        if (!response.ok) {
+          throw new Error(`Track B startup SQLite maintenance failed with ${response.status}`);
+        }
+      }
+      return created;
+    };
     if (trackBManifestText && trackBManifestPath) {
       const manifest = JSON.parse(trackBManifestText) as {
         readonly schemaVersion: string;
         readonly sidecar: { readonly modulePath: string; readonly artifactSha256: string };
+        readonly publicRuntimeAdapter?: {
+          readonly modulePath: string;
+          readonly artifactSha256: string;
+          readonly routerRoot: string;
+        };
         readonly extensions: readonly {
           readonly descriptor: {
             readonly id: string;
@@ -793,24 +1040,35 @@ export async function main(): Promise<void> {
           readonly artifactSha256: string;
         }[];
       };
-      if (manifest.schemaVersion !== "role-model.track-b-runtime-distribution.v1") {
+      if (
+        manifest.schemaVersion !== "role-model.track-b-runtime-distribution.v1" &&
+        manifest.schemaVersion !== "role-model.track-b-runtime-distribution.v2"
+      ) {
         throw new Error("unsupported packaged Track B distribution");
       }
+      if (
+        manifest.schemaVersion === "role-model.track-b-runtime-distribution.v2" &&
+        !manifest.publicRuntimeAdapter
+      ) {
+        throw new Error("v2 Track B distribution is missing its public runtime adapter");
+      }
       const distributionRoot = path.dirname(trackBManifestPath);
+      if (packagedReleaseId) {
+        validateRun88PrivateDistributionIdentity(
+          {
+            generation:
+              manifest.schemaVersion === "role-model.track-b-runtime-distribution.v2" ? "N" : "N-1",
+            manifestSha256: createHash("sha256").update(trackBManifestText).digest("hex"),
+            channel: packagedProfile?.channel ?? "development",
+          },
+          {
+            channel: "stage",
+            manifestSha256: String(packagedManifestRecord?.private_distribution_sha256 ?? ""),
+            publicGeneration: "N",
+          },
+        );
+      }
       const trackBStateRoot = path.join(options.runtimeStateRoot, options.scopeId, "track-b");
-      // Must match createTrackBOperations statePath (scope root), not trackBStateRoot/extensions.
-      configureKwPromptInjectHost({
-        bridgeStatePath: path.join(
-          options.runtimeStateRoot,
-          options.scopeId,
-          "track-b-production-bridge.json",
-        ),
-      });
-      setKwJoinWorkerFactory(
-        createPrivateKwJoinWorkerFactory({
-          distributionRoot,
-        }),
-      );
       // Start extension-host registration in parallel with sidecar/backend bring-up, but
       // mark core APIs ready as soon as the packaged backend exists. Waiting on all
       // packaged extensions previously kept /api/role-model/* at 503 runtime_initializing.
@@ -822,6 +1080,7 @@ export async function main(): Promise<void> {
           ...extension,
           modulePath: path.resolve(distributionRoot, extension.modulePath),
         })),
+        qaExtensions,
       });
       packagedRuntime = await createPackagedProductionRuntime({
         stateRoot: trackBStateRoot,
@@ -844,9 +1103,32 @@ export async function main(): Promise<void> {
             args.values["aggregate-ingestion-url"] ??
             process.env.ROLE_MODEL_AGGREGATE_INGESTION_URL,
           aggregateScope: args.values["aggregate-scope"] ?? process.env.ROLE_MODEL_AGGREGATE_SCOPE,
+          ...(manifest.publicRuntimeAdapter
+            ? {
+                sqliteDatabasePath: path.join(
+                  options.runtimeStateRoot,
+                  options.scopeId,
+                  "memory",
+                  "memory.sqlite",
+                ),
+                publicRuntimeAdapterPath: path.resolve(
+                  distributionRoot,
+                  manifest.publicRuntimeAdapter.modulePath,
+                ),
+                publicRouterRoot: path.resolve(
+                  distributionRoot,
+                  manifest.publicRuntimeAdapter.routerRoot,
+                ),
+                migrationScope: options.scopeId,
+              }
+            : {}),
         }),
         createBackend: ({ trackBOperationsEndpoint, trackBOperationsToken }) =>
-          createBackend(trackBOperationsEndpoint, trackBOperationsToken),
+          createBackend(
+            trackBOperationsEndpoint,
+            trackBOperationsToken,
+            trackBDistributionRequiresSQLiteMaintenance(manifest),
+          ),
       });
       backend = packagedRuntime.backend;
       bootstrapState.status = "ready";
@@ -854,6 +1136,25 @@ export async function main(): Promise<void> {
       try {
         extensionRuntime = await extensionRuntimePromise;
         extensionRuntimeRef.current = extensionRuntime;
+        for (const extension of qaExtensions) {
+          const capability = extension.descriptor.capabilities.find(
+            (candidate) => candidate !== "health:probe",
+          );
+          if (!capability)
+            throw new Error(`QA extension has no business capability: ${extension.descriptor.id}`);
+          const requestId = `run87:packaged-qa:${extension.descriptor.id}`;
+          const receipt = await extensionRuntime.invoke(extension.descriptor.id, {
+            requestId,
+            protocolVersion: extension.descriptor.protocolVersion,
+            channel: packagedProfile?.channel ?? "development",
+            scope: options.scopeId,
+            authorizationEpoch: 1,
+            capability,
+            payload: { packagedQa: true },
+          });
+          qaStartupReceipts.set(extension.descriptor.id, { ...receipt, requestId });
+        }
+        await drainPostObservationOutbox(extensionRuntime);
       } catch (error) {
         console.error("[role-model] extension host failed after core runtime was ready:", error);
       }

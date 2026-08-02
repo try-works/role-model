@@ -328,7 +328,7 @@ export async function seedTrackBExtensionBridgeState(options: {
       id,
       lifecycle: "ready",
       enabled: true,
-      enabledMode: "active",
+      enabledMode: id === "knowledge-worker" ? "shadow" : "active",
       channel,
       scope,
       authorizationEpoch,
@@ -524,7 +524,7 @@ const privateRetentionRequest = async (
     throw new Error(
       typeof result.error === "string"
         ? result.error
-        : `private retention operation failed with ${response.status}`,
+        : `private Track B operation failed with ${response.status}`,
     );
   return result;
 };
@@ -534,18 +534,88 @@ export function createTrackBOperations({
   catalog,
   operationsEndpoint = process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL?.trim(),
   operationsToken = process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TOKEN,
+  extensionRuntime,
 }: {
   readonly statePath: string;
   readonly catalog: readonly Record<string, unknown>[];
   readonly operationsEndpoint?: string;
   readonly operationsToken?: string;
+  readonly extensionRuntime?: {
+    listExtensions(): readonly unknown[] | Promise<readonly unknown[]>;
+    mutateExtension(input: Record<string, unknown>): unknown | Promise<unknown>;
+  };
 }) {
   const requestPrivate = (
     route: string,
     init?: { readonly method?: string; readonly body?: Record<string, unknown> },
   ) => privateRetentionRequest(operationsEndpoint, operationsToken, route, init);
   return {
+    async readGraphMigration(): Promise<unknown> {
+      const remote = await requestPrivate("graph-migration");
+      if (remote) return remote;
+      throw new Error("private operations endpoint is required for graph migration status");
+    },
+    async advanceGraphMigration(input: Record<string, unknown>): Promise<unknown> {
+      const remote = await requestPrivate("graph-migration/advance", {
+        method: "POST",
+        body: input,
+      });
+      if (remote) return remote;
+      throw new Error("private operations endpoint is required for graph migration advance");
+    },
+    async rollbackGraphMigration(): Promise<unknown> {
+      const remote = await requestPrivate("graph-migration/rollback", { method: "POST" });
+      if (remote) return remote;
+      throw new Error("private operations endpoint is required for graph migration rollback");
+    },
     async listExtensions(): Promise<readonly unknown[]> {
+      if (extensionRuntime) {
+        const runtimeRows = (await extensionRuntime.listExtensions()) as Array<{
+          readonly id: string;
+          readonly desiredState: "enabled" | "disabled";
+          readonly lifecycle: string;
+          readonly pid?: number;
+          readonly revision: number;
+        }>;
+        const runtimeById = new Map(runtimeRows.map((row) => [row.id, row]));
+        return catalog.map((entry) => {
+          const id = String(entry.id ?? "");
+          const actual = runtimeById.get(id);
+          if (!actual) {
+            return {
+              ...entry,
+              installed: false,
+              enabled: false,
+              enabledMode: "disabled",
+              lifecycle: "unavailable",
+              revision: 0,
+              health: {
+                available: false,
+                routingDependency: Boolean(entry.routingDependency),
+                reason: "not_registered_with_private_supervisor",
+              },
+            };
+          }
+          const enabled = actual.desiredState === "enabled";
+          return {
+            ...entry,
+            ...actual,
+            installed: true,
+            enabled,
+            enabledMode: enabled ? (id === "knowledge-worker" ? "shadow" : "active") : "disabled",
+            channel: "development",
+            scope: "global",
+            authorizationEpoch: 1,
+            health: {
+              available: actual.lifecycle === "ready",
+              routingDependency: Boolean(entry.routingDependency),
+              ...(actual.lifecycle === "ready"
+                ? {}
+                : { reason: `private_supervisor_${actual.lifecycle}` }),
+            },
+          };
+        });
+      }
       const state = await readState(statePath);
       const byId = new Map(state.extensions.map((row) => [row.id, row]));
       return catalog.map((entry) => {
@@ -588,9 +658,29 @@ export function createTrackBOperations({
       });
     },
     async mutateExtension(input: Record<string, unknown>): Promise<unknown> {
+      if (extensionRuntime) return extensionRuntime.mutateExtension(input);
       const id = String(input.id ?? "");
       const action = String(input.action ?? "");
       if (!id) throw new Error("extension id is required");
+      if (
+        id === "knowledge-worker" &&
+        ["activate_production", "deactivate_production"].includes(action)
+      ) {
+        throw new Error(
+          "production Knowledge Worker controls are prohibited by Direct Track B v1.1; shadow-only execution required",
+        );
+      }
+      if (
+        id === "knowledge-worker" &&
+        ["enable", "set_mode"].includes(action) &&
+        !["shadow", "disabled"].includes(
+          String(input.mode ?? (action === "enable" ? "active" : "")),
+        )
+      ) {
+        throw new Error(
+          "Knowledge Worker is shadow-only under Direct Track B v1.1; active, advisory, and bounded modes are prohibited",
+        );
+      }
       if (
         ![
           "enable",
@@ -932,6 +1022,18 @@ export function createTrackBOperations({
         revision: state.revision,
         totalBytes: categories.reduce((sum, row) => sum + row.bytes, 0),
         categories,
+        storageInventory: {
+          schemaVersion: "role-model.storage-registry.v1",
+          entries: state.storageServices.map((row) => ({
+            id: row.id,
+            owner: row.id,
+            health: "unavailable",
+            measurement: "unavailable",
+            physicalBytes: null,
+            heldItems: row.holds ?? 0,
+            retentionState: row.conflicts?.length ? "blocked" : "not_configured",
+          })),
+        },
         managedPolicy: state.retention.managedPolicy,
         conflicts: state.storageServices.flatMap((row) =>
           (row.conflicts ?? []).map((reason) => ({ serviceId: row.id, reason })),

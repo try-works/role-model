@@ -64,6 +64,38 @@ const catalog: NormalizedCatalog = {
       contextWindow: 262_144,
       maxOutputTokens: 262_144,
     }),
+    model({
+      modelId: "moonshot/kimi-k3",
+      providerId: "moonshot",
+      capabilities: ["text.chat", "tools.function_calling", "reasoning", "structured.output"],
+      modalities: ["text", "image", "video"],
+      contextWindow: 1_048_576,
+      maxOutputTokens: 131_072,
+      pricing: null,
+    }),
+    model({
+      modelId: "moonshotai/kimi-k3",
+      providerId: "moonshotai",
+      displayName: "Kimi K3",
+      capabilities: ["text.chat", "tools.function_calling", "reasoning", "structured.output"],
+      modalities: ["text", "image", "video"],
+      contextWindow: 1_048_576,
+      maxOutputTokens: 131_072,
+      pricing: {
+        inputPer1M: 3,
+        outputPer1M: 15,
+        currency: "USD",
+      },
+    }),
+    model({
+      modelId: "moonshotai/kimi-k2.7-code",
+      providerId: "moonshotai",
+      pricing: {
+        inputPer1M: 0.95,
+        outputPer1M: 4,
+        currency: "USD",
+      },
+    }),
   ],
 };
 
@@ -121,5 +153,27 @@ describe("resolveModelCapabilityProfile", () => {
     expect(profile.unknown).toEqual(
       expect.arrayContaining(["limits", "modalities", "capabilities"]),
     );
+  });
+
+  test("fills moonshot/kimi pricing from models.dev moonshotai rows", () => {
+    const kimiK3 = resolveModelCapabilityProfile({
+      modelId: "moonshot/kimi-k3",
+      catalog,
+    });
+    const kimiCode = resolveModelCapabilityProfile({
+      modelId: "moonshot/kimi-k2.7-code",
+      catalog,
+    });
+
+    expect(kimiK3.pricing).toEqual({
+      inputPer1M: 3,
+      outputPer1M: 15,
+      currency: "USD",
+    });
+    expect(kimiCode.pricing).toEqual({
+      inputPer1M: 0.95,
+      outputPer1M: 4,
+      currency: "USD",
+    });
   });
 });

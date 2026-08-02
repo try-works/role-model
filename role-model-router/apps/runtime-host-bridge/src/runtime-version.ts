@@ -15,6 +15,8 @@ export interface RuntimeVersionInfoRecord {
   readonly source_tree?: string;
   readonly executable_sha256?: string;
   readonly core_payload_sha256?: string;
+  readonly release_id?: string;
+  readonly private_distribution_sha256?: string;
 }
 
 interface RuntimeVersionManifest {
@@ -27,6 +29,8 @@ interface RuntimeVersionManifest {
   readonly source_tree?: unknown;
   readonly executable_sha256?: unknown;
   readonly core_payload_sha256?: unknown;
+  readonly release_id?: unknown;
+  readonly private_distribution_sha256?: unknown;
 }
 
 function readManifestIdentity(
@@ -39,6 +43,8 @@ function readManifestIdentity(
     "source_tree",
     "executable_sha256",
     "core_payload_sha256",
+    "release_id",
+    "private_distribution_sha256",
   ] as const;
   return Object.fromEntries(
     fields.flatMap((field) => {
@@ -57,6 +63,38 @@ export interface ResolveRuntimeVersionInfoOptions {
 
 function readNonEmptyString(value: unknown): string | null {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+}
+
+export function validateRun88PackagedStageIdentity(
+  manifest: Readonly<Record<string, unknown>>,
+): Readonly<Record<string, unknown>> {
+  if (manifest.channel !== "stage")
+    throw new Error("Run 88 packaged stage identity requires the stage channel");
+  if (
+    manifest.name !== "role-model-stage" ||
+    manifest.host !== "127.0.0.1" ||
+    manifest.port !== 3457 ||
+    manifest.endpoint !== "http://127.0.0.1:3457" ||
+    manifest.state_root_name !== "role-model-runtime-stage" ||
+    manifest.scope_id !== "standalone-runtime-stage"
+  )
+    throw new Error("Run 88 stage package endpoint, state root, scope, name, or port is invalid");
+  if (!/^sha256:[0-9a-f]{64}$/.test(String(manifest.release_id ?? "")))
+    throw new Error("Run 88 stage release identity is missing or invalid");
+  for (const field of [
+    "private_distribution_sha256",
+    "executable_sha256",
+    "core_payload_sha256",
+  ] as const) {
+    if (!/^[0-9a-f]{64}$/.test(String(manifest[field] ?? "")))
+      throw new Error(`Run 88 stage ${field} is missing or invalid`);
+  }
+  if (!/^[0-9a-f]{40}$/.test(String(manifest.source_tree ?? "")))
+    throw new Error("Run 88 stage source tree identity is missing or invalid");
+  const trackB = manifest.track_b_runtime as Record<string, unknown> | null | undefined;
+  if (!trackB || trackB.manifest_sha256 !== manifest.private_distribution_sha256)
+    throw new Error("Run 88 stage private distribution identity mismatch");
+  return Object.freeze({ ...manifest });
 }
 
 function normalizeTaggedVersion(value: string | null | undefined): string | null {

@@ -476,6 +476,7 @@ export interface RuntimeTelemetryRequestRecord {
   readonly conversationId?: string;
   readonly createdAtMs: number;
   readonly modelId?: string | null;
+  readonly selectedModelId?: string | null;
   readonly providerKind?: string | null;
   readonly providerFamily?: string | null;
   readonly vendorId?: string | null;
@@ -1387,14 +1388,12 @@ export interface RuntimeExtensionStatus {
   readonly channel: string;
   readonly scope: string;
   readonly authorizationEpoch: number;
-  readonly productionActivation?: boolean;
   readonly health: {
     readonly available: boolean;
     readonly routingDependency: boolean;
     readonly probe?: string;
     readonly summary?: string;
     readonly reason?: string;
-    readonly productionActivation?: boolean;
     readonly knowledgeWorkerBootstrap?: {
       readonly receipt: KnowledgeValidationReceipt;
       readonly groupDigest: string;
@@ -1430,16 +1429,8 @@ export interface KnowledgeValidationReceipt {
 export async function mutateExtension(
   input: {
     readonly id: string;
-    readonly action:
-      | "enable"
-      | "disable"
-      | "set_mode"
-      | "bootstrap_shadow_ready"
-      | "activate_production"
-      | "deactivate_production";
+    readonly action: "enable" | "disable" | "set_mode" | "bootstrap_shadow_ready";
     readonly mode?: RuntimeExtensionMode;
-    readonly activationPolicyVersion?: 1;
-    readonly operatorAttestation?: "activate-production";
     readonly receipt?: KnowledgeValidationReceipt;
     readonly groupDigest?: string;
   },
@@ -1474,26 +1465,6 @@ export async function prepareKnowledgeWorkerShadowReady(
     },
     fetcher,
   );
-}
-
-export async function activateKnowledgeWorkerProduction(
-  fetcher: RuntimeFetcher = fetch,
-): Promise<ExtensionMutationResult> {
-  return mutateExtension(
-    {
-      id: "knowledge-worker",
-      action: "activate_production",
-      activationPolicyVersion: 1,
-      operatorAttestation: "activate-production",
-    },
-    fetcher,
-  );
-}
-
-export async function deactivateKnowledgeWorkerProduction(
-  fetcher: RuntimeFetcher = fetch,
-): Promise<ExtensionMutationResult> {
-  return mutateExtension({ id: "knowledge-worker", action: "deactivate_production" }, fetcher);
 }
 
 export interface RuntimeStorageRetentionSummary {
@@ -1541,6 +1512,19 @@ export interface RuntimeStorageRetentionSummary {
     readonly retainedCapabilities: readonly string[];
     readonly blocks: readonly string[];
   } | null;
+  readonly storageInventory?: {
+    readonly schemaVersion: "role-model.storage-registry.v1";
+    readonly complete: boolean;
+    readonly entries: readonly {
+      readonly id: string;
+      readonly owner: string;
+      readonly health: string;
+      readonly measurement: "measured" | "unavailable";
+      readonly physicalBytes: number | null;
+      readonly heldItems: number;
+      readonly retentionState: string;
+    }[];
+  };
 }
 
 export async function fetchStorageRetention(
@@ -2532,7 +2516,8 @@ export async function loadPeerModel(
 ): Promise<{ success: boolean }> {
   return postJson<{ success: boolean }>(
     `/api/role-model/local/peer/models/${encodeURIComponent(modelId)}/load`,
-    roleIds !== undefined ? roleIdsToAssignmentPayload(roleIds, true) : {},
+    // Empty roleIds must stay explicit none — not default-all.
+    roleIds !== undefined ? roleIdsToAssignmentPayload(roleIds, false) : {},
     fetcher,
   );
 }
@@ -2544,7 +2529,7 @@ export async function loadLlamaSwapModel(
 ): Promise<{ success: boolean }> {
   return postJson<{ success: boolean }>(
     `/api/role-model/local/llama-swap/models/${encodeURIComponent(modelId)}/load`,
-    roleIds !== undefined ? roleIdsToAssignmentPayload(roleIds, true) : {},
+    roleIds !== undefined ? roleIdsToAssignmentPayload(roleIds, false) : {},
     fetcher,
   );
 }

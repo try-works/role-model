@@ -22,6 +22,37 @@ export type PrivateKnowledgeWorkerModule = {
   };
 };
 
+export interface Run88PrivateDistributionIdentity {
+  readonly generation: "N" | "N-1" | string;
+  readonly manifestSha256: string;
+  readonly channel: string;
+}
+
+export function validateRun88PrivateDistributionIdentity(
+  identity: Run88PrivateDistributionIdentity | null,
+  expected: {
+    readonly channel: "stage";
+    readonly manifestSha256: string;
+    readonly publicGeneration: "N";
+  },
+) {
+  if (!identity) {
+    return { available: false, compatible: false, degradation: "public-routing-only" } as const;
+  }
+  if (identity.channel !== expected.channel)
+    throw new Error("private distribution channel mismatch");
+  if (
+    !/^[a-f0-9]{64}$/.test(identity.manifestSha256) ||
+    identity.manifestSha256 !== expected.manifestSha256
+  ) {
+    throw new Error("private distribution manifest identity mismatch");
+  }
+  if (expected.publicGeneration !== "N" || !new Set(["N", "N-1"]).has(identity.generation)) {
+    throw new Error("private distribution generation is incompatible");
+  }
+  return { available: true, compatible: true, generation: identity.generation } as const;
+}
+
 export function resolvePrivateKnowledgeWorkerModulePath(
   distributionRoot?: string,
 ): string | undefined {

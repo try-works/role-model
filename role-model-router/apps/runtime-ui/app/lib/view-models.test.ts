@@ -20,6 +20,7 @@ import {
   buildModelCatalogRows,
   buildProviderCards,
   buildProviderMaintenanceRows,
+  buildSelectedModelMetaPanel,
   buildSessionBootstrapRows,
   buildStructuredLogRows,
   buildTelemetryComparisonCards,
@@ -139,7 +140,7 @@ describe("session readiness view models", () => {
     };
 
     expect(summarizeSessionBootstrapStatus(summary)).toEqual({
-      label: "Ready",
+      label: "complete",
       tone: "success",
     });
     expect(buildSessionBootstrapRows(summary)).toEqual([
@@ -151,7 +152,11 @@ describe("session readiness view models", () => {
       }),
     ]);
     expect(buildInventorySummaryStats(summary)).toEqual(
-      expect.arrayContaining([{ label: "Routable endpoints", value: "2" }]),
+      expect.arrayContaining([
+        { label: "Endpoints", value: "2" },
+        { label: "Models", value: "2" },
+        { label: "Empty aliases", value: "0" },
+      ]),
     );
     expect(buildAliasDriftRows(summary)).toHaveLength(1);
   });
@@ -284,7 +289,7 @@ describe("buildCredentialLifecycleBanner", () => {
         },
       } as never),
     ).toEqual({
-      authorityLabel: "Provisional lifecycle snapshot",
+      authorityLabel: "provisional",
       authorityTone: "accent",
       detail: "Bootstrap is still reconciling credentials, activations, and archived stale state.",
       archivedStaleCount: 2,
@@ -795,6 +800,75 @@ describe("buildConfiguredModelMetadataRows", () => {
       { label: "Context window", value: "1,047,576 tokens" },
       { label: "Max output", value: "32,768 tokens" },
       { label: "Pricing", value: "$0.4 / 1M input • $1.6 / 1M output" },
+    ]);
+  });
+});
+
+describe("buildSelectedModelMetaPanel", () => {
+  test("builds Paper selected-meta facts, cost, and benchmark rows", () => {
+    expect(
+      buildSelectedModelMetaPanel({
+        modelId: "claude-sonnet-4",
+        sourceSummary: "remote",
+        status: "healthy",
+        controllerState: "eligible",
+        endpointCount: 1,
+        healthyEndpointCount: 1,
+        toolCallingSupported: true,
+        toolStyles: ["parallel"],
+        contextWindow: 200000,
+        modalities: ["chat"],
+        pricing: {
+          inputPer1M: 3,
+          outputPer1M: 15,
+          currency: "USD",
+        },
+        overallScore: 0.9,
+        latencyP50Ms: 710,
+        latencyP95Ms: 1680,
+        meanLatencyMs: 910,
+        difficultyMix: "40 / 40 / 20",
+        routingHint: "Fallback for refactor tasks",
+      }),
+    ).toEqual({
+      title: "Runtime · claude-sonnet-4",
+      facts: [
+        { label: "Source", value: "Remote" },
+        { label: "Status", value: "Healthy · not controller" },
+        { label: "Endpoints", value: "1 healthy" },
+        { label: "Tool use", value: "Enabled · parallel" },
+        { label: "Context", value: "200k tokens" },
+        { label: "Mode", value: "chat" },
+      ],
+      cost: [
+        { label: "Input", value: "$3.00 / 1M" },
+        { label: "Output", value: "$15.00 / 1M" },
+      ],
+      benchmark: [
+        { label: "Overall", value: "0.90" },
+        { label: "Latency p50", value: "710 ms" },
+        { label: "Latency p95", value: "1.68 s" },
+        { label: "Mean latency", value: "910 ms" },
+        { label: "Difficulty mix", value: "40 / 40 / 20" },
+        { label: "Routing", value: "Fallback for refactor tasks" },
+      ],
+    });
+  });
+
+  test("always renders Cost rows, using Unknown when pricing is missing", () => {
+    expect(
+      buildSelectedModelMetaPanel({
+        modelId: "vendor/unpriced",
+        sourceSummary: "remote",
+        status: "healthy",
+        controllerState: "eligible",
+        endpointCount: 1,
+        healthyEndpointCount: 1,
+        toolCallingSupported: false,
+      }).cost,
+    ).toEqual([
+      { label: "Input", value: "Unknown" },
+      { label: "Output", value: "Unknown" },
     ]);
   });
 });
@@ -1695,10 +1769,10 @@ describe("buildActivitySummary", () => {
       facts: [
         { label: "Entries", value: "2", detail: "1 with captures" },
         { label: "Errors", value: "1", detail: "Most recent status: 200" },
-        { label: "Prompt tokens", value: "54", detail: "19 output tokens recorded" },
+        { label: "Prompt tokens", value: "54", detail: "12 cached tokens recorded" },
         {
-          label: "Cached tokens",
-          value: "12",
+          label: "Completion tokens",
+          value: "19",
           detail: "Across the current in-memory metrics window",
         },
       ],

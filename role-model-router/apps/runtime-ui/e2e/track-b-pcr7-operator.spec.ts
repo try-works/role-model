@@ -54,7 +54,7 @@ test("PCR7 contribution disclosure and retention operator surfaces", async ({ pa
   await testInfo.attach("contribution", { path: contributionShot, contentType: "image/png" });
 
   await page.goto("/app/system/storage-retention");
-  await expect(page.getByRole("heading", { name: "Retention policy editor" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Retention policy" })).toBeVisible();
   await page.getByRole("button", { name: "Dry-run" }).click();
   await expect(page.getByText(/\d+ affected · [\d.]+ (?:B|KiB|MiB)/).first()).toBeVisible({
     timeout: 15_000,

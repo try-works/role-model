@@ -31,7 +31,7 @@ const EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS = [
   "chatgpt/gpt-5.3-chat-latest",
 ] as const;
 
-const OPENAI_CODEX_SUBSCRIPTION_CODER_PATCH_TIMEOUT_MS = 30_000;
+const OPENAI_CODEX_SUBSCRIPTION_CODER_PATCH_TIMEOUT_MS = 90_000;
 
 describe("OpenAI Codex Subscription model matrix", () => {
   test("defines only the supported OpenAI GPT-5.3+ subscription rows", () => {

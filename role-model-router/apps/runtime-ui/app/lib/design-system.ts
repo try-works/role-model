@@ -46,6 +46,8 @@ export interface RuntimeRouteDefinition {
 export interface RuntimeNavigationSection {
   readonly title: string;
   readonly icon: LucideIcon;
+  /** Optional hub path for the section sidebar entry (e.g. Local → Choose). */
+  readonly hubTo?: string;
   readonly items: readonly RuntimeRouteDefinition[];
 }
 
@@ -84,7 +86,7 @@ const studioImagesRoute = createRoute({
   section: "Studio",
   icon: Image,
   template: "studio-workspace",
-  title: "Image workflows",
+  title: "Images workspace",
   description:
     "Image generation workspace for OpenAI-style and SDAPI-style request modes inside one repo-owned studio surface.",
 });
@@ -96,7 +98,7 @@ const studioAudioRoute = createRoute({
   section: "Studio",
   icon: Mic,
   template: "studio-workspace",
-  title: "Audio workflows",
+  title: "Audio workspace",
   description:
     "Speech generation, voice discovery, and transcription share one audio workspace so the operator flow does not split into duplicate pages.",
 });
@@ -108,7 +110,7 @@ const studioRerankRoute = createRoute({
   section: "Studio",
   icon: SlidersHorizontal,
   template: "studio-workspace",
-  title: "Rerank",
+  title: "Rerank workspace",
   description:
     "Ranked-input evaluation workspace for query, candidate, and ordered-score inspection without leaving the studio section.",
 });
@@ -120,7 +122,7 @@ const studioAdvancedRoute = createRoute({
   section: "Studio",
   icon: Telescope,
   template: "studio-workspace",
-  title: "Advanced APIs",
+  title: "Advanced workspace",
   description:
     "Contract-and-request workspace for responses, messages, token counting, embeddings, completion, and infill families that stay under Studio.",
 });
@@ -231,7 +233,7 @@ const controlProvidersRoute = createRoute({
 const controlRoutingStrategyRoute = createRoute({
   id: "router-strategy",
   to: "/app/router/strategy",
-  label: "Routing Strategy",
+  label: "Routing strategy",
   section: "Router",
   icon: GitBranch,
   template: "registry-detail",
@@ -243,7 +245,7 @@ const controlRoutingStrategyRoute = createRoute({
 const controlRuntimeConfigRoute = createRoute({
   id: "system-runtime-config",
   to: "/app/system/runtime-config",
-  label: "Runtime Config",
+  label: "Config",
   section: "System",
   icon: SlidersHorizontal,
   template: "registry-detail",
@@ -324,17 +326,14 @@ const routerOverviewRoute = createRoute({
     "First-class operator summary for routing posture, decision flow, and the live handoff between config, candidates, and request outcomes.",
 });
 
-const routerConfigRoute = createRoute({
-  id: "router-config",
-  to: "/app/router/config",
-  label: "Config",
-  section: "Router",
-  icon: SlidersHorizontal,
-  template: "registry-detail",
-  title: "Routing config",
-  description:
-    "Read-only routing provenance surface spanning persisted posture, controller context, guidance, and policy-source inputs.",
-});
+/** Fixed Decision #15 — not a live Router catalog/SegmentedControl route. */
+export const runtimeLegacyRedirectRoutes = [
+  {
+    from: "/app/router/config",
+    to: "/app/router/strategy",
+    reason: "RM3 Router IA has no Config segment; legacy deep links redirect to Strategy.",
+  },
+] as const;
 
 const routerCandidatesRoute = createRoute({
   id: "router-candidates",
@@ -471,7 +470,8 @@ const systemRuntimeRoute = createRoute({
 const systemSessionReadinessRoute = createRoute({
   id: "system-session-readiness",
   to: "/app/system/session-readiness",
-  label: "Session readiness",
+  // Paper System page nav: short segment labels; page title stays long.
+  label: "Readiness",
   section: "System",
   icon: ListChecks,
   template: "system-topology",
@@ -487,7 +487,7 @@ const systemPeersRoute = createRoute({
   section: "System",
   icon: Waypoints,
   template: "system-topology",
-  title: "Peers",
+  title: "Peer topology",
   description:
     "Peer inventory and policy page for remote model sources, auth posture, timeouts, filters, and peer-backed topology decisions.",
 });
@@ -507,7 +507,7 @@ const systemExtensionsRoute = createRoute({
 const systemStorageRetentionRoute = createRoute({
   id: "system-storage-retention",
   to: "/app/system/storage-retention",
-  label: "Storage & retention",
+  label: "Storage",
   section: "System",
   icon: LayoutGrid,
   template: "system-topology",
@@ -540,7 +540,6 @@ const runtimeRouteDefinitions = [
   controlModelsRoute,
   controlBenchmarkRoute,
   routerOverviewRoute,
-  routerConfigRoute,
   routerCandidatesRoute,
   routerDecisionsRoute,
   routerDecisionDetailRoute,
@@ -577,6 +576,7 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
   {
     title: "Local",
     icon: Cpu,
+    hubTo: "/app/local/choose",
     items: [
       localPeersRoute,
       localPeerModelsRoute,
@@ -632,127 +632,128 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
   },
 ] as const;
 
+/** Wave 1 RM3 authority twin. Live CSS may still use transitional `--rm-*` until Wave 2. */
 export const runtimeTheme = {
-  maxContentWidth: "1840px",
+  maxContentWidth: "1216px",
   radii: {
-    sm: "8px",
-    md: "12px",
-    lg: "16px",
+    sm: "5px",
+    md: "6px",
+    lg: "8px",
     pill: "9999px",
-    shell: "28px",
-    panel: "16px",
-    field: "12px",
+    shell: "0px",
+    panel: "8px",
+    field: "6px",
     badge: "9999px",
   },
   colors: {
     light: {
       bg: "#FFFFFF",
-      panelMuted: "#ECEEF2",
-      surface: "#F7F8F8",
+      panelMuted: "#FAFAFA",
+      surface: "#FFFFFF",
       surfaceStrong: "#FFFFFF",
-      panel: "#F3F4F6",
-      fg: "#0F1115",
-      secondary: "#3A4150",
-      muted: "#69707D",
-      border: "#E3E6EC",
-      borderStrong: "#CED3DE",
-      accent: "#5E6AD2",
-      accentInk: "#5E6AD2",
-      accentFocus: "#828FFF",
-      accentOnDark: "#828FFF",
-      accentMuted: "rgba(94, 106, 210, 0.78)",
-      accentSubtle: "rgba(94, 106, 210, 0.14)",
-      accentGhost: "rgba(94, 106, 210, 0.08)",
-      dividerSoft: "#E3E6EC",
-      hairline: "#E3E6EC",
-      chipTranslucent: "rgba(9, 11, 17, 0.06)",
+      panel: "#FAFAFA",
+      fg: "#111111",
+      secondary: "#666666",
+      muted: "#888888",
+      border: "#EAEAEA",
+      borderStrong: "#D4D4D4",
+      accent: "#0A0A0A",
+      accentInk: "#0A0A0A",
+      accentFocus: "#888888",
+      accentOnDark: "#FFFFFF",
+      accentMuted: "rgba(10, 10, 10, 0.72)",
+      accentSubtle: "rgba(10, 10, 10, 0.08)",
+      accentGhost: "rgba(10, 10, 10, 0.04)",
+      dividerSoft: "#EAEAEA",
+      hairline: "#EAEAEA",
+      chipTranslucent: "rgba(17, 17, 17, 0.06)",
       onPrimary: "#FFFFFF",
-      telemetryLocal: "#0F1115",
-      telemetryRemote: "#5E6AD2",
-      telemetryHealthy: "#27A644",
+      telemetryLocal: "#111111",
+      telemetryRemote: "#666666",
+      telemetryHealthy: "#166534",
       telemetryDegraded: "#B67A11",
-      telemetryRaw: "#69707D",
-      error: "#D84F6A",
-      errorMuted: "rgba(216, 79, 106, 0.76)",
-      errorSubtle: "rgba(216, 79, 106, 0.14)",
-      errorGhost: "rgba(216, 79, 106, 0.10)",
-      success: "#27A644",
-      successMuted: "rgba(39, 166, 68, 0.76)",
-      successSubtle: "rgba(39, 166, 68, 0.10)",
+      telemetryRaw: "#666666",
+      error: "#B4261A",
+      errorMuted: "rgba(180, 38, 26, 0.76)",
+      errorSubtle: "rgba(180, 38, 26, 0.14)",
+      errorGhost: "rgba(180, 38, 26, 0.10)",
+      success: "#166534",
+      successMuted: "rgba(22, 101, 52, 0.76)",
+      successSubtle: "rgba(22, 101, 52, 0.10)",
       warning: "#B67A11",
       warningMuted: "rgba(182, 122, 17, 0.78)",
       warningSubtle: "rgba(182, 122, 17, 0.14)",
-      info: "#3F87F5",
-      advisory: "#9664E8",
+      info: "#666666",
+      advisory: "#888888",
     },
     dark: {
-      bg: "#010102",
-      surface: "#0F1011",
-      surfaceStrong: "#141516",
-      panel: "#18191A",
-      panelMuted: "#191A1B",
-      fg: "#F7F8F8",
-      secondary: "#D0D6E0",
-      muted: "#8A8F98",
-      border: "#23252A",
-      borderStrong: "#34343A",
-      accent: "#5E6AD2",
-      accentInk: "#F7F8F8",
-      accentFocus: "#828FFF",
-      accentOnDark: "#828FFF",
-      accentMuted: "rgba(130, 143, 255, 0.86)",
-      accentSubtle: "rgba(94, 106, 210, 0.20)",
-      accentGhost: "rgba(94, 106, 210, 0.12)",
-      dividerSoft: "rgba(247, 248, 248, 0.06)",
-      hairline: "#23252A",
-      chipTranslucent: "rgba(247, 248, 248, 0.08)",
-      onPrimary: "#FFFFFF",
-      telemetryLocal: "#9DA8C8",
-      telemetryRemote: "#5E6AD2",
-      telemetryHealthy: "#27A644",
+      bg: "#0A0A0A",
+      surface: "#0F0F0F",
+      surfaceStrong: "#141414",
+      panel: "#141414",
+      panelMuted: "#141414",
+      fg: "#EDEDED",
+      secondary: "#9A9A9A",
+      muted: "#9A9A9A",
+      border: "#1F1F1F",
+      borderStrong: "#333333",
+      accent: "#FFFFFF",
+      accentInk: "#EDEDED",
+      accentFocus: "#777777",
+      accentOnDark: "#FFFFFF",
+      accentMuted: "rgba(237, 237, 237, 0.72)",
+      accentSubtle: "rgba(255, 255, 255, 0.08)",
+      accentGhost: "rgba(255, 255, 255, 0.04)",
+      dividerSoft: "rgba(237, 237, 237, 0.08)",
+      hairline: "#1F1F1F",
+      chipTranslucent: "rgba(237, 237, 237, 0.08)",
+      onPrimary: "#0A0A0A",
+      telemetryLocal: "#EDEDED",
+      telemetryRemote: "#9A9A9A",
+      telemetryHealthy: "#159D5A",
       telemetryDegraded: "#D9A441",
-      telemetryRaw: "#62666D",
-      error: "#E06C89",
-      errorMuted: "rgba(224, 108, 137, 0.82)",
-      errorSubtle: "rgba(224, 108, 137, 0.20)",
-      errorGhost: "rgba(255, 125, 166, 0.10)",
-      success: "#27A644",
-      successMuted: "rgba(39, 166, 68, 0.82)",
-      successSubtle: "rgba(39, 166, 68, 0.14)",
+      telemetryRaw: "#9A9A9A",
+      error: "#E0726A",
+      errorMuted: "rgba(224, 114, 106, 0.82)",
+      errorSubtle: "rgba(224, 114, 106, 0.20)",
+      errorGhost: "rgba(224, 114, 106, 0.10)",
+      success: "#159D5A",
+      successMuted: "rgba(21, 157, 90, 0.82)",
+      successSubtle: "rgba(21, 157, 90, 0.14)",
       warning: "#D9A441",
       warningMuted: "rgba(217, 164, 65, 0.82)",
       warningSubtle: "rgba(217, 164, 65, 0.12)",
-      info: "#6EA8FF",
-      advisory: "#B479FF",
+      info: "#9A9A9A",
+      advisory: "#9A9A9A",
     },
   },
 } as const;
 
 export const chartColors = {
-  local: "var(--rm-chart-local)",
-  remote: "var(--rm-chart-remote)",
-  tokens: "var(--rm-chart-tokens)",
-  cacheHit: "var(--rm-chart-cache-hit)",
-  cacheRate: "var(--rm-chart-cache-rate)",
-  latency: "var(--rm-chart-latency)",
-  cost: "var(--rm-chart-cost)",
-  failure: "var(--rm-chart-failure)",
-  success: "var(--rm-chart-success)",
-  neutral1: "var(--rm-chart-neutral-1)",
-  neutral2: "var(--rm-chart-neutral-2)",
-  ink: "var(--rm-chart-ink)",
-  cyan: "var(--rm-chart-cyan)",
-  highlightPink: "var(--rm-chart-highlight-pink)",
-  violet: "var(--rm-chart-violet)",
-  linkBlue: "var(--rm-chart-link-blue)",
-  linkDeep: "var(--rm-chart-link-deep)",
-  linkSoft: "var(--rm-chart-link-soft)",
-  error: "var(--rm-chart-error)",
-  errorDeep: "var(--rm-chart-error-deep)",
-  errorSoft: "var(--rm-chart-error-soft)",
-  warning: "var(--rm-chart-warning)",
-  warningDeep: "var(--rm-chart-warning-deep)",
-  warningSoft: "var(--rm-chart-warning-soft)",
+  local: "var(--rm3-chart-local)",
+  remote: "var(--rm3-chart-remote)",
+  tokens: "var(--rm3-chart-throughput)",
+  cacheHit: "var(--rm3-chart-cache)",
+  cacheRate: "var(--rm3-chart-throughput)",
+  latency: "var(--rm3-chart-latency)",
+  cost: "var(--rm3-chart-cost)",
+  failure: "var(--rm3-chart-error)",
+  success: "var(--rm3-chart-green)",
+  neutral1: "var(--rm3-chart-4)",
+  neutral2: "var(--rm3-chart-nodata)",
+  ink: "var(--rm3-chart-local)",
+  cyan: "var(--rm3-chart-azure)",
+  highlightPink: "var(--rm3-chart-pink)",
+  violet: "var(--rm3-chart-violet)",
+  linkBlue: "var(--rm3-chart-1)",
+  linkDeep: "var(--rm3-chart-remote)",
+  linkSoft: "var(--rm3-royal-blue-100)",
+  error: "var(--rm3-chart-error)",
+  errorDeep: "var(--rm3-chart-error)",
+  errorSoft: "var(--rm3-coral)",
+  warning: "var(--rm3-chart-amber)",
+  warningDeep: "var(--rm3-di-serria-700)",
+  warningSoft: "var(--rm3-di-serria-50)",
 } as const;
 
 export const chartAxisTickStyle = {
@@ -914,11 +915,26 @@ export const mutedPanelClassName =
 
 export const insetPanelClassName = `${mutedPanelClassName} p-4 text-[14px] font-normal leading-[21px] tracking-[0em] text-[var(--rm-secondary)]`;
 
+/** RM3 chart empty / unsupported body — dashed muted panel, never warning amber. */
+export const chartEmptyStateClassName =
+  "w-full rounded-md border border-dashed border-border bg-transparent px-4 py-3 text-sm font-normal leading-5 text-muted-foreground";
+
+export const chartErrorStateClassName =
+  "w-full rounded-md border border-[color-mix(in_srgb,var(--rm-error)_30%,transparent)] bg-[color-mix(in_srgb,var(--rm-error)_6%,transparent)] px-4 py-3 text-sm font-normal leading-5 text-[var(--rm-error)]";
+
 export const errorNoticeClassName =
   "rounded-[var(--rm-radius-panel)] border border-[var(--rm-error)] bg-[var(--rm-error-ghost)] p-6 text-[14px] font-normal leading-[21px] tracking-[0em] text-[var(--rm-error)]";
 
+/** Compact inline success / status notice — form feedback, never pill badge tokens. */
+export const successNoticeClassName =
+  "block w-full min-w-0 rounded-[var(--rm-radius-field)] border border-[color-mix(in_srgb,var(--rm-success)_35%,transparent)] bg-[var(--rm-success-subtle)] px-4 py-3 text-[13px] font-normal leading-[18px] tracking-[0em] text-[var(--rm-success)]";
+
 export const eyebrowClassName =
   "text-[12px] font-normal uppercase leading-4 tracking-[0.08em] text-[var(--rm-muted)]";
+
+/** Mono uppercase eyebrow — table headers, MetricStrip keys, source labels (Paper DS). */
+export const monoEyebrowClassName =
+  "font-mono text-[11px] font-normal uppercase leading-4 tracking-[0.08em] text-[var(--rm-muted)]";
 
 export const navLabelClassName = "text-[13px] font-normal leading-[18px] tracking-[0em]";
 export const navLabelTextStyle = {
@@ -931,7 +947,7 @@ export const pillLabelClassName = navLabelClassName;
 
 export function getPrimarySectionLinkClassName(isActive: boolean): string {
   return [
-    `flex min-h-[41px] items-center rounded-[var(--linear-radius-8)] px-3 py-2.5 transition-colors ${navLabelClassName}`,
+    `flex min-h-[41px] items-center rounded-[var(--rm3-radius-lg)] px-3 py-2.5 transition-colors ${navLabelClassName}`,
     isActive
       ? "bg-[var(--rm-surface-strong)] text-[var(--rm-fg)]"
       : "text-[var(--rm-secondary)] hover:bg-[var(--rm-surface-strong)] hover:text-[var(--rm-fg)]",
@@ -942,7 +958,7 @@ export function getSecondaryNavigationLinkClassName(isActive: boolean): string {
   return [
     `inline-flex min-h-[31px] items-center rounded-[var(--rm-radius-pill)] px-3.5 py-1.5 ${navLabelClassName} transition-colors`,
     isActive
-      ? "bg-[var(--rm-accent)] text-[color:var(--rm-on-primary)]"
+      ? "bg-primary !text-primary-foreground"
       : "bg-[var(--rm-panel-muted)] text-[var(--rm-secondary)] hover:text-[var(--rm-fg)]",
   ].join(" ");
 }
@@ -950,7 +966,13 @@ export function getSecondaryNavigationLinkClassName(isActive: boolean): string {
 export const utilityLabelClassName =
   "text-[12px] font-normal uppercase leading-4 tracking-[0.08em]";
 
-export const supportingTextClassName = "text-[14px] leading-[21px] text-[var(--rm-secondary)]";
+/** RM3 form field labels — Paper Remote/Studio: sans 12/16 foreground.
+ * PageFilters use the same voice muted (`pageFilterLabelClassName` in `@role-model/ui`).
+ */
+export const fieldLabelClassName = "font-sans text-xs leading-4 text-foreground";
+
+export const supportingTextClassName =
+  "font-sans text-[13px] font-normal leading-[18px] text-[var(--rm-secondary)]";
 
 export const rightAlignedSupportingTextClassName =
   "text-right text-[14px] leading-[21px] text-[var(--rm-secondary)]";
@@ -966,7 +988,9 @@ export const compactTitleClassName = "text-[15px] font-semibold leading-5 text-[
 
 export const metaTextClassName = "text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]";
 
-export const accentActionTextClassName = "text-sm font-semibold text-[var(--rm-accent)]";
+/** Text-link / inline action — RM3 has no colored accent; underline is the affordance. */
+export const accentActionTextClassName =
+  "text-[13px] font-normal leading-[18px] text-foreground underline underline-offset-2";
 
 export const bodyTextClassName = "text-[14px] font-normal leading-[21px] tracking-[0em]";
 
@@ -978,7 +1002,7 @@ export const displayTitleClassName =
   "[font-family:var(--rm-font-display)] text-[22px] font-normal leading-[28px] tracking-[-0.018em]";
 
 export const sectionTitleClassName =
-  "[font-family:var(--rm-font-display)] text-[18px] font-normal leading-6 tracking-[-0.016em]";
+  "text-sm font-semibold leading-5 tracking-tight text-foreground";
 
 export const largeValueClassName =
   "[font-family:var(--rm-font-display)] text-[22px] font-semibold leading-[28px] tracking-[-0.018em]";
@@ -998,13 +1022,14 @@ export const monoMetaTextClassName =
   "break-all font-mono text-[13px] font-normal leading-[18px] text-[var(--rm-muted)]";
 
 export const inlineLinkClassName =
-  "text-[13px] font-normal leading-[18px] text-[var(--rm-accent)] underline-offset-2 hover:underline";
+  "text-[13px] font-normal leading-[18px] text-foreground underline underline-offset-2";
 
+/** RM3 form fields — Paper Remote/Forms: bg-background · border-input · 34px · 13px/18px. */
 export const fieldClassName =
-  "w-full rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface)] px-[20px] py-3 !text-[13px] !font-normal !leading-[18px] !tracking-[0em] text-[var(--rm-fg)] outline-none transition placeholder:text-[var(--rm-muted)] focus:border-[var(--rm-accent-focus)] focus:ring-2 focus:ring-[var(--rm-accent-subtle)]";
+  "w-full min-h-[34px] rounded-md border border-input bg-background px-3 py-1.5 font-sans !text-[13px] !font-normal !leading-[18px] !tracking-[0em] text-foreground shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
 
 export const selectFieldClassName =
-  "w-full min-h-[40px] rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface)] py-2 pl-[20px] pr-10 !text-[13px] !font-normal !leading-[18px] !tracking-[0em] text-[var(--rm-fg)] outline-none transition focus:border-[var(--rm-accent-focus)] focus:ring-2 focus:ring-[var(--rm-accent-subtle)]";
+  "w-full h-[34px] min-h-[34px] rounded-md border border-input bg-background py-0 pl-3 pr-9 text-left font-sans !text-[13px] !font-normal !leading-[18px] !tracking-[0em] text-foreground shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
 
 export const selectChevronStyle = {
   appearance: "none",
@@ -1014,21 +1039,25 @@ export const selectChevronStyle = {
   backgroundSize: "12px 8px",
 } as const;
 
+/** Primary CTA — Paper Studio/Forms: 36px · radius-md · 13px (not 44px pill). */
 export const primaryButtonClassName =
-  "inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-pill)] border border-[var(--rm-accent)] bg-[var(--rm-accent)] px-[22px] py-[11px] text-[15px] font-semibold leading-5 tracking-[-0.01em] text-[color:var(--rm-on-primary)] transition hover:border-[var(--rm-accent-focus)] hover:bg-[var(--rm-accent-focus)] active:scale-95 disabled:opacity-60";
+  "inline-flex h-[36px] min-h-[36px] items-center justify-center rounded-[var(--rm-radius-field)] border border-primary bg-primary px-3.5 text-[13px] font-semibold leading-[18px] tracking-[-0.01em] !text-primary-foreground transition hover:border-[var(--rm-accent-focus)] hover:bg-[var(--rm-accent-focus)] active:scale-95 disabled:opacity-60";
+
+/** Studio composer CTA — Paper Run request is full rail width. */
+export const primaryButtonBlockClassName = `${primaryButtonClassName} w-full`;
 
 export const secondaryButtonClassName =
-  "inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-pill)] border border-[var(--rm-border-strong)] bg-[var(--rm-panel)] px-[22px] py-[11px] text-[15px] font-semibold leading-5 tracking-[-0.01em] text-[var(--rm-accent-ink)] transition hover:border-[var(--rm-accent)] hover:bg-[var(--rm-accent-ghost)] hover:text-[var(--rm-accent-ink)] active:scale-95 disabled:opacity-60";
+  "inline-flex h-[36px] min-h-[36px] items-center justify-center rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface)] px-4 text-[13px] font-semibold leading-[18px] tracking-[-0.01em] text-[var(--rm-fg)] transition hover:border-[var(--rm-accent)] hover:bg-[var(--rm-accent-ghost)] hover:text-[var(--rm-fg)] active:scale-95 disabled:opacity-60";
 
 /** Companion control beside SelectField — match select trigger height/radius, not pill CTAs. */
 export const compactFieldButtonClassName =
-  "inline-flex h-10 min-h-[40px] items-center justify-center rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-panel)] px-4 text-[13px] font-semibold leading-[18px] tracking-[-0.01em] text-[var(--rm-accent-ink)] transition hover:border-[var(--rm-accent)] hover:bg-[var(--rm-accent-ghost)] hover:text-[var(--rm-accent-ink)] active:scale-95 disabled:opacity-60";
+  "inline-flex h-[34px] min-h-[34px] items-center justify-center rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-panel)] px-4 text-[13px] font-semibold leading-[18px] tracking-[-0.01em] text-[var(--rm-accent-ink)] transition hover:border-[var(--rm-accent)] hover:bg-[var(--rm-accent-ghost)] hover:text-[var(--rm-accent-ink)] active:scale-95 disabled:opacity-60";
 
 export const compactFieldButtonEmphasisClassName =
-  "inline-flex h-10 min-h-[40px] items-center justify-center rounded-[var(--rm-radius-field)] border border-[var(--rm-accent)] bg-[var(--rm-accent)] px-4 text-[13px] font-semibold leading-[18px] tracking-[-0.01em] text-[color:var(--rm-on-primary)] transition hover:border-[var(--rm-accent-focus)] hover:bg-[var(--rm-accent-focus)] active:scale-95 disabled:opacity-60";
+  "inline-flex h-[34px] min-h-[34px] items-center justify-center rounded-[var(--rm-radius-field)] border border-primary bg-primary px-4 text-[13px] font-semibold leading-[18px] tracking-[-0.01em] !text-primary-foreground transition hover:border-[var(--rm-accent-focus)] hover:bg-[var(--rm-accent-focus)] active:scale-95 disabled:opacity-60";
 
 export const utilityButtonClassName =
-  "inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-md)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-[15px] py-2 text-[13px] font-semibold leading-4 tracking-[-0.01em] text-[var(--rm-fg)] transition hover:border-[var(--rm-border-strong)] hover:bg-[var(--rm-panel)]";
+  "inline-flex h-[36px] min-h-[36px] items-center justify-center rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-3.5 text-[13px] font-semibold leading-[18px] tracking-[-0.01em] text-[var(--rm-fg)] transition hover:border-[var(--rm-border-strong)] hover:bg-[var(--rm-panel)]";
 
 export function getSelectablePanelClassName(selected: boolean): string {
   return [

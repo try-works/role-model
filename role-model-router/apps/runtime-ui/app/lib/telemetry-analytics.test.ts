@@ -38,11 +38,11 @@ describe("telemetry analytics view models", () => {
 
     expect(
       buildTelemetryTimeSeriesChartModel(response, {
-        title: "Token Usage Over Time",
+        title: "Token usage over time",
         metrics: ["inputTokens", "outputTokens", "totalTokens"],
       }),
     ).toEqual({
-      title: "Token Usage Over Time",
+      title: "Token usage over time",
       isEmpty: false,
       data: [
         {
@@ -58,19 +58,19 @@ describe("telemetry analytics view models", () => {
         expect.objectContaining({
           key: "inputTokens",
           label: "Input tokens",
-          colorToken: "var(--rm-chart-link-blue)",
+          colorToken: "var(--rm3-chart-1)",
           dataKey: "inputTokens",
         }),
         expect.objectContaining({
           key: "outputTokens",
           label: "Output tokens",
-          colorToken: "var(--rm-chart-cyan)",
+          colorToken: "var(--rm3-chart-azure)",
           dataKey: "outputTokens",
         }),
         expect.objectContaining({
           key: "totalTokens",
           label: "Total tokens",
-          colorToken: "var(--rm-chart-tokens)",
+          colorToken: "var(--rm3-chart-throughput)",
           dataKey: "totalTokens",
         }),
       ],
@@ -114,7 +114,7 @@ describe("telemetry analytics view models", () => {
     };
 
     const model = buildTelemetryTimeSeriesChartModel(response, {
-      title: "Effective Cost Over Time",
+      title: "Effective cost over time",
       metrics: ["actualCostUsd", "estimatedCostUsd", "effectiveCostUsd"],
       breakdown: "providerId",
     });
@@ -165,7 +165,7 @@ describe("telemetry analytics view models", () => {
     };
 
     const model = buildTelemetryTimeSeriesChartModel(response, {
-      title: "Cache Efficiency",
+      title: "Cache efficiency",
       metrics: ["cacheHitTokens", "cacheHitTokenRate"],
       metricAxisIds: {
         cacheHitTokens: "left",
@@ -216,7 +216,7 @@ describe("telemetry analytics view models", () => {
     };
 
     const model = buildTelemetryTimeSeriesChartModel(response, {
-      title: "Effective Cost Over Time",
+      title: "Effective cost over time",
       metrics: ["routingCostSavingsUsd", "cacheCostSavingsUsd", "totalAvoidedCostUsd"],
     });
 
@@ -268,13 +268,13 @@ describe("telemetry analytics view models", () => {
 
     expect(
       buildTelemetryTimeSeriesChartModel(response, {
-        title: "Request Volume Over Time",
+        title: "Request volume over time",
         metrics: ["requestCount"],
         breakdown: "providerId",
         maxSeries: 3,
       }),
     ).toEqual({
-      title: "Request Volume Over Time",
+      title: "Request volume over time",
       isEmpty: false,
       data: [
         expect.objectContaining({
@@ -305,7 +305,7 @@ describe("telemetry analytics view models", () => {
           key: "other",
           label: "Other",
           dataKey: "series:other",
-          colorToken: "var(--rm-chart-neutral-2)",
+          colorToken: "var(--rm3-chart-nodata)",
         }),
       ],
     });
@@ -342,11 +342,11 @@ describe("telemetry analytics view models", () => {
 
     expect(
       buildTelemetryRankingChartModel(response, {
-        title: "Cost Avoided By Routing",
+        title: "Cost avoided by routing",
         metric: "totalAvoidedCostUsd",
       }),
     ).toEqual({
-      title: "Cost Avoided By Routing",
+      title: "Cost avoided by routing",
       metric: "totalAvoidedCostUsd",
       isEmpty: false,
       rows: [
@@ -401,7 +401,7 @@ describe("telemetry analytics view models", () => {
     } as unknown as RuntimeTelemetryAnalyticsResponse;
 
     const model = buildTelemetryTimeSeriesChartModel(response, {
-      title: "Cache Efficiency",
+      title: "Cache efficiency",
       metrics: ["cacheHitTokenRate"],
     });
 
@@ -469,7 +469,7 @@ describe("telemetry analytics view models", () => {
     } as unknown as RuntimeTelemetryAnalyticsResponse;
 
     const model = buildTelemetryTimeSeriesChartModel(response, {
-      title: "Strategy Selection Trend",
+      title: "Strategy selection trend",
       metrics: ["requestCount"],
       breakdown: "selectedStrategy",
     });
@@ -547,7 +547,7 @@ describe("telemetry analytics view models", () => {
     } as unknown as RuntimeTelemetryAnalyticsResponse;
 
     const model = buildTelemetryTimeSeriesChartModel(response, {
-      title: "Request Volume By Task",
+      title: "Request volume by task",
       metrics: ["requestCount"],
       breakdown: "taxonomyTaskType",
     });
@@ -602,7 +602,7 @@ describe("telemetry analytics view models", () => {
     } as unknown as RuntimeTelemetryAnalyticsResponse;
 
     const model = buildTelemetryRankingChartModel(response, {
-      title: "Requests By Endpoint",
+      title: "Requests by endpoint",
       metric: "requestCount",
     });
 

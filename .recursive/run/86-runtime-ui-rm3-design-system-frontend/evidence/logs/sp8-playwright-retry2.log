@@ -1,0 +1,115 @@
+[WebServer] ../../packages/ui/src/sidebar.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/page-filters.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/segmented-control.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/page-shell.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/observe-requests.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/observe-logs.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/metric-strip.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/observe-activity.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/chart-ranking.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/runtime-overview.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/observe-routing.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/observe-shared.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/chart-composition.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] (node:5460) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 8 tests using 4 workers
+
+(node:44012) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:41396) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:16948) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:31392) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"modelsEssentialMs":2837,"candidatePayloadBytes":5186,"mutationResponseMs":506,"buttonPendingMs":551,"convergenceAfterResponseMs":45,"mutationModelPaths":["/api/role-model/accounts"],"healthMs":551,"summaryMs":546,"benchmarkEssentialMs":716,"malformedModelStatus":400}
+  ok 1 e2e\recursive-77-catalog-json-size-and-ui-freeze.sp8.runtime-responsiveness.spec.ts:4:1 ΓÇ║ @smoke @recursive:77-catalog-json-size-and-ui-freeze @sp8 keeps Models and Benchmark responsive without the rich request route (3.9s)
+  ok 4 e2e\shared-surface-regression.spec.ts:68:1 ΓÇ║ keeps shared typography and tokenized controls aligned on seeded QA routes (4.4s)
+  ok 2 e2e\runtime-shell.spec.ts:3:1 ΓÇ║ keeps provider maintenance absent while showing configured connections (4.7s)
+  ok 5 e2e\shared-surface-regression.spec.ts:103:1 ΓÇ║ supports filter changes, query-param restoration, and request-list narrowing on the request analytics surface (1.5s)
+  ok 6 e2e\shared-surface-regression.spec.ts:136:1 ΓÇ║ supports request inspection drill-in from request analytics (1.7s)
+  x  3 e2e\track-b-operations.spec.ts:3:1 ΓÇ║ operates disclosure, opt-out, retention, recommendations, and failure isolation (15.2s)
+  x  7 e2e\shared-surface-regression.spec.ts:153:1 ΓÇ║ renders shared time-series charts without clipped axes and with inset legends (11.8s)
+(node:42760) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 8 e2e\shared-surface-regression.spec.ts:170:1 ΓÇ║ renders deterministic request-detail token and cache provenance (1.3s)
+
+
+  1) e2e\shared-surface-regression.spec.ts:153:1 ΓÇ║ renders shared time-series charts without clipped axes and with inset legends 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('[data-slot="chart-card"]').filter({ has: locator('[data-slot="chart-card-title"]').filter({ hasText: 'Latency Trend' }) }).locator('[data-slot="chart-card-plot"]').locator('.recharts-yAxis')
+    Expected: 1
+    Received: 0
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toHaveCount" with timeout 10000ms
+      - waiting for locator('[data-slot="chart-card"]').filter({ has: locator('[data-slot="chart-card-title"]').filter({ hasText: 'Latency Trend' }) }).locator('[data-slot="chart-card-plot"]').locator('.recharts-yAxis')
+        23 ├ù locator resolved to 0 elements
+           - unexpected value "0"
+
+
+      22 |   await expect(legend).toBeVisible();
+      23 |   await expect(firstLegendItem).toBeVisible();
+    > 24 |   await expect(plot.locator(".recharts-yAxis")).toHaveCount(expectedAxisCount);
+         |                                                 ^
+      25 |
+      26 |   const cardBox = await card.boundingBox();
+      27 |   const plotBox = await plot.boundingBox();
+        at assertTimeSeriesGeometry (D:\DEV\role-model\.worktrees\86-runtime-ui-rm3-design-system-frontend\role-model-router\apps\runtime-ui\e2e\shared-surface-regression.spec.ts:24:49)
+        at D:\DEV\role-model\.worktrees\86-runtime-ui-rm3-design-system-frontend\role-model-router\apps\runtime-ui\e2e\shared-surface-regression.spec.ts:158:3
+
+    attachment #1: screenshot (image/png) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\shared-surface-regression--7707a-axes-and-with-inset-legends\test-failed-1.png
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    attachment #2: video (video/webm) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\shared-surface-regression--7707a-axes-and-with-inset-legends\video.webm
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    Error Context: test-results\shared-surface-regression--7707a-axes-and-with-inset-legends\error-context.md
+
+  2) e2e\track-b-operations.spec.ts:3:1 ΓÇ║ operates disclosure, opt-out, retention, recommendations, and failure isolation 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('button', { name: 'Enable' }).first()
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for getByRole('button', { name: 'Enable' }).first()
+
+
+      22 |     page.getByRole("main").getByRole("heading", { name: "Extension boundary" }),
+      23 |   ).toBeVisible();
+    > 24 |   await expect(page.getByRole("button", { name: "Enable" }).first()).toBeVisible();
+         |                                                                      ^
+      25 |   await expect(page.getByRole("button", { name: "Disable" }).first()).toBeVisible();
+      26 |   await expect(page.getByRole("button", { name: "Set mode" }).first()).toBeVisible();
+      27 |
+        at D:\DEV\role-model\.worktrees\86-runtime-ui-rm3-design-system-frontend\role-model-router\apps\runtime-ui\e2e\track-b-operations.spec.ts:24:70
+
+    attachment #1: screenshot (image/png) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\track-b-operations-operate-3fcbc-tions-and-failure-isolation\test-failed-1.png
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    attachment #2: video (video/webm) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\track-b-operations-operate-3fcbc-tions-and-failure-isolation\video.webm
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    Error Context: test-results\track-b-operations-operate-3fcbc-tions-and-failure-isolation\error-context.md
+
+  2 failed
+    e2e\shared-surface-regression.spec.ts:153:1 ΓÇ║ renders shared time-series charts without clipped axes and with inset legends 
+    e2e\track-b-operations.spec.ts:3:1 ΓÇ║ operates disclosure, opt-out, retention, recommendations, and failure isolation 
+  6 passed (57.5s)
+undefined
+D:\DEV\role-model\.worktrees\86-runtime-ui-rm3-design-system-frontend\role-model-router\apps\runtime-ui:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command "playwright" not found

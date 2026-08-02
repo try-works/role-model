@@ -1,17 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router";
 
-import { LlamaSwapSetupHint, useLlamaSwapConfigStatus } from "../components/llama-swap-setup-hint";
-import { LocalModelRolePicker } from "../components/local-model-role-picker";
-import { ErrorState, LoadingState, SectionCard, StatusPill } from "../components/page-primitives";
+import { useLlamaSwapConfigStatus } from "../components/llama-swap-setup-hint";
+import { CompactRolePills } from "../components/local-model-role-picker";
+import { Badge, ErrorState, LoadingState, SectionCard } from "../components/page-primitives";
 import {
   fieldClassName,
+  fieldLabelClassName,
   inlineTitleClassName,
+  monoEyebrowClassName,
   mutedPanelClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
   supportingTextClassName,
-  utilityLabelClassName,
 } from "../lib/design-system";
 import {
   type ModelOverride,
@@ -42,7 +43,7 @@ export default function LocalLlamaSwapModelsRoute() {
   const declaredModelIds = llamaSwapStatus?.declaredModelIds ?? [];
   const loadPlaceholder =
     declaredModelIds.length > 0 ? declaredModelIds.join(", ") : "lfm2.5-8b-a1b";
-  const loadRoleSummary = loadRoleIds.length > 0 ? loadRoleIds.join(", ") : "all roles";
+  const loadRoleSummary = loadRoleIds.length > 0 ? loadRoleIds.join(", ") : "no roles";
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -59,6 +60,10 @@ export default function LocalLlamaSwapModelsRoute() {
       setEditingOverrides({ ...overrideData });
       setDraftRolesByModelId(
         Object.fromEntries(modelData.map((model) => [model.modelId, [...(model.roleIds ?? [])]])),
+      );
+      // Default load draft to all roles once (explicit IDs — empty means none).
+      setLoadRoleIds((current) =>
+        current.length > 0 ? current : (policy?.roleDefinitions ?? []).map((role) => role.role_id),
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load llama-swap models");
@@ -102,7 +107,7 @@ export default function LocalLlamaSwapModelsRoute() {
     try {
       await loadLlamaSwapModel(modelId, loadRoleIds);
       setLoadModelId("");
-      setLoadRoleIds([]);
+      setLoadRoleIds((rolePolicy?.roleDefinitions ?? []).map((role) => role.role_id));
       await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : `Failed to load ${modelId}`);
@@ -126,17 +131,11 @@ export default function LocalLlamaSwapModelsRoute() {
   return (
     <div className="space-y-5">
       {error ? <ErrorState label={error} /> : null}
-      {!llamaSwapStatusLoading && llamaSwapStatus && !llamaSwapStatus.operational ? (
-        <LlamaSwapSetupHint variant="prominent" status={llamaSwapStatus} />
-      ) : null}
 
-      <section className={`${mutedPanelClassName} space-y-2 p-5`}>
-        <h2 className={inlineTitleClassName}>Llama-swap models</h2>
-        <p className={supportingTextClassName}>
-          Load a runtime-config-declared model, assign route roles, and manage the in-memory
-          llama-swap inventory from this page.
-        </p>
-      </section>
+      <p className={supportingTextClassName}>
+        Load a runtime-config-declared model, assign route roles, and manage the in-memory
+        llama-swap inventory from this page.
+      </p>
 
       <SectionCard
         title="Load model"
@@ -145,7 +144,7 @@ export default function LocalLlamaSwapModelsRoute() {
         <div className="space-y-3">
           <div className="grid gap-3 xl:grid-cols-[minmax(0,1.2fr)_220px_auto]">
             <div className="space-y-2">
-              <label htmlFor="llama-swap-model-id" className={utilityLabelClassName}>
+              <label htmlFor="llama-swap-model-id" className={fieldLabelClassName}>
                 Model ID
               </label>
               <input
@@ -158,8 +157,8 @@ export default function LocalLlamaSwapModelsRoute() {
               />
             </div>
             <div className="space-y-2">
-              <p className={utilityLabelClassName}>Role summary</p>
-              <div className={`${mutedPanelClassName} flex min-h-[44px] items-center px-4 py-3`}>
+              <p className={fieldLabelClassName}>Role summary</p>
+              <div className={`${mutedPanelClassName} flex min-h-[34px] items-center px-3 py-2`}>
                 <p className="break-words font-mono text-[13px] leading-[18px] text-[var(--rm-fg)]">
                   {`roles: ${loadRoleSummary}`}
                 </p>
@@ -169,7 +168,12 @@ export default function LocalLlamaSwapModelsRoute() {
               <button
                 type="button"
                 onClick={handleLoadDraftModel}
-                disabled={!loadModelId.trim() || actioning.__load__ || !llamaSwapOperational}
+                disabled={
+                  !loadModelId.trim() ||
+                  actioning.__load__ ||
+                  llamaSwapStatusLoading ||
+                  !llamaSwapOperational
+                }
                 className={primaryButtonClassName}
               >
                 {actioning.__load__ ? "Loading…" : "Load model"}
@@ -183,23 +187,13 @@ export default function LocalLlamaSwapModelsRoute() {
             </p>
           ) : null}
 
-          <LocalModelRolePicker
+          <CompactRolePills
             rolePolicy={rolePolicy}
             selectedRoleIds={loadRoleIds}
             onChange={setLoadRoleIds}
-            disabled={actioning.__load__ || !llamaSwapOperational}
+            defaultAllRoles={false}
+            disabled={actioning.__load__ || llamaSwapStatusLoading || !llamaSwapOperational}
           />
-
-          <p className={supportingTextClassName}>
-            Assign roles before loading so routing can prefer this endpoint for matching tasks.
-          </p>
-
-          {!llamaSwapOperational ? (
-            <p className={supportingTextClassName}>
-              Load model stays disabled until runtime config declares a llama-swap model with a
-              valid GGUF path. Open the setup guide above to copy the required scaffold.
-            </p>
-          ) : null}
 
           <div className="flex flex-wrap gap-2">
             <Link className={secondaryButtonClassName} to="/app/system/runtime-config">
@@ -232,7 +226,7 @@ export default function LocalLlamaSwapModelsRoute() {
                 <section key={model.modelId} className={`${mutedPanelClassName} space-y-4 p-4`}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0 space-y-1">
-                      <p className={utilityLabelClassName}>Llama-swap</p>
+                      <p className={monoEyebrowClassName}>Llama-swap</p>
                       <p className="break-words font-mono text-[13px] leading-[18px] text-[var(--rm-fg)]">
                         {model.modelId}
                       </p>
@@ -241,31 +235,32 @@ export default function LocalLlamaSwapModelsRoute() {
                       </p>
                     </div>
                     <div className="flex shrink-0 flex-wrap justify-end gap-2">
-                      <StatusPill tone="accent">Loaded</StatusPill>
-                      <StatusPill tone="neutral">
+                      <Badge tone="accent">Loaded</Badge>
+                      <Badge tone="neutral">
                         {roleIds.length === 0 ? "No roles" : `${roleIds.length} roles`}
-                      </StatusPill>
+                      </Badge>
                     </div>
                   </div>
 
                   <div className="flex flex-wrap gap-2">
                     {roleIds.length === 0 ? (
-                      <StatusPill tone="neutral">No roles</StatusPill>
+                      <Badge tone="neutral">No roles</Badge>
                     ) : (
                       roleIds.map((roleId) => (
-                        <StatusPill key={roleId} tone="neutral">
+                        <Badge key={roleId} tone="neutral">
                           {roleId}
-                        </StatusPill>
+                        </Badge>
                       ))
                     )}
                   </div>
 
                   <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
                     <div className="space-y-2">
-                      <p className={utilityLabelClassName}>Assigned roles</p>
-                      <LocalModelRolePicker
+                      <p className={fieldLabelClassName}>Assigned roles</p>
+                      <CompactRolePills
                         rolePolicy={rolePolicy}
                         selectedRoleIds={roleIds}
+                        defaultAllRoles={false}
                         onChange={(nextRoleIds) =>
                           setDraftRolesByModelId((current) => ({
                             ...current,
@@ -308,7 +303,7 @@ export default function LocalLlamaSwapModelsRoute() {
                     <div
                       className={`${mutedPanelClassName} space-y-3 border border-[var(--rm-border)] p-4`}
                     >
-                      <p className={utilityLabelClassName}>Overrides</p>
+                      <p className={fieldLabelClassName}>Overrides</p>
                       <div className="grid gap-2 sm:grid-cols-3">
                         <input
                           type="number"

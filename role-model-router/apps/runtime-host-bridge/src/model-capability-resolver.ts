@@ -1,4 +1,9 @@
-import type { NormalizedCatalog, NormalizedCatalogModel } from "@role-model-router/catalog";
+import {
+  type NormalizedCatalog,
+  type NormalizedCatalogModel,
+  collectPricingLookupIds,
+  resolveCatalogPricingHints,
+} from "@role-model-router/catalog";
 
 export interface ModelCapabilityProfile {
   readonly modelId: string;
@@ -86,15 +91,21 @@ function resolveCanonicalCatalogModel(input: {
   readonly modelId: string;
   readonly catalog: NormalizedCatalog;
 }): NormalizedCatalogModel | null {
+  // Prefer the exact operator row for capability/modality metadata.
   const exact = findCatalogModel(input.catalog, input.modelId);
   if (exact) {
     return exact;
   }
-
-  if (input.modelId.startsWith("chatgpt/")) {
-    return findCatalogModel(input.catalog, `openai/${input.modelId.slice("chatgpt/".length)}`);
+  // Fall back through pricing aliases (chatgpt→openai, moonshot→moonshotai, gateways).
+  for (const lookupId of collectPricingLookupIds(input.modelId)) {
+    if (lookupId === input.modelId) {
+      continue;
+    }
+    const match = findCatalogModel(input.catalog, lookupId);
+    if (match) {
+      return match;
+    }
   }
-
   return null;
 }
 
@@ -124,6 +135,10 @@ export function resolveModelCapabilityProfile(input: {
   readonly catalog: NormalizedCatalog;
 }): ModelCapabilityProfile {
   const model = resolveCanonicalCatalogModel(input);
+  const pricing = resolveCatalogPricingHints({
+    modelId: input.modelId,
+    catalog: input.catalog,
+  });
   if (!model) {
     return {
       modelId: input.modelId,
@@ -152,7 +167,7 @@ export function resolveModelCapabilityProfile(input: {
         promptWrite: null,
         source: "unknown",
       },
-      pricing: null,
+      pricing,
       sources: {
         limits: null,
         modalities: null,
@@ -192,7 +207,7 @@ export function resolveModelCapabilityProfile(input: {
       promptWrite: capabilitySupported(capabilities, "cache.prompt_write"),
       source: "catalog",
     },
-    pricing: model.pricing,
+    pricing: model.pricing ?? pricing,
     sources: {
       limits: source,
       modalities: source,

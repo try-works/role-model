@@ -42,6 +42,53 @@ export const qaTelemetryRequestIds = {
   measuredSecondary: "qa-telemetry-measured-002",
 } as const;
 
+/** Extra chart-review fixtures (cost / taxonomy / strategy / difficulty mix). */
+export const qaChartReviewRequestIds = {
+  strategyCost: "qa-chart-strategy-cost-001",
+  strategyLatency: "qa-chart-strategy-latency-001",
+  strategyBalanced: "qa-chart-strategy-balanced-001",
+  taxonomySecurity: "qa-chart-taxonomy-security-001",
+  taxonomyAnalyst: "qa-chart-taxonomy-analyst-001",
+  difficultyHard: "qa-chart-difficulty-hard-001",
+  failureTimeout: "qa-chart-failure-timeout-001",
+  localEstimate: "qa-chart-local-estimate-001",
+} as const;
+
+type QaTelemetrySeedFixture = {
+  readonly requestId: string;
+  readonly source: "measured" | "estimated" | "unavailable" | "normalized";
+  readonly available: boolean;
+  readonly inputTokens: number;
+  readonly outputTokens: number;
+  readonly cacheReadTokens: number;
+  readonly promptCacheRequestSource: "explicit" | "synthesized" | null;
+  readonly hoursAgo: number;
+  readonly latencyMs: number;
+  readonly costActualUsd?: number;
+  readonly costEstimateUsd?: number;
+  readonly routingSavingsUsd?: number;
+  readonly cacheSavingsUsd?: number;
+  readonly strategy?: "cost" | "quality" | "latency" | "balanced";
+  readonly difficulty?: "easy" | "medium" | "hard";
+  readonly routingMode?: "hybrid" | "local_only" | "remote_only";
+  readonly requestedRoleId?: string;
+  readonly appliedRoleId?: string;
+  readonly taxonomy?: {
+    readonly groupId: string;
+    readonly roleId: string;
+    readonly taskType: string;
+    readonly taskVariant: string;
+    readonly capabilityIds: readonly string[];
+    readonly modalityIds: readonly string[];
+    readonly toolClassIds: readonly string[];
+  };
+  readonly errorClass?: string;
+  readonly statusCode?: number;
+  readonly sourceType?: "remote" | "local";
+  readonly modelId?: string;
+  readonly endpointId?: string;
+};
+
 type QaBridgeBackend = Pick<
   RuntimeBridgeBackend,
   | "registry"
@@ -62,6 +109,7 @@ type QaBridgeBackend = Pick<
   | "listRoles"
   | "listModels"
   | "listExtensions"
+  | "mutateExtension"
   | "readStorageRetention"
   | "dryRunStorageRetention"
   | "updateStorageRetentionPolicy"
@@ -157,6 +205,17 @@ export function createQaRuntimeBridgeBackendOptions(
 }
 
 export function createQaRuntimeConfigText(): string {
+  if (process.env.RUNTIME_QA_NO_MODEL_FIXTURES === "1") {
+    return `version: "1.1"
+routing:
+  strategy: baseline
+model_aliases: {}
+llama_swap:
+  models: {}
+litellm_proxy:
+  providers: {}
+`;
+  }
   return `version: "1.1"
 routing:
   strategy: baseline
@@ -284,56 +343,398 @@ export async function seedQaTelemetry(
     },
   });
   const now = Date.now();
-  const fixtures = [
+  const defaultEndpointId = baseBundle.endpointId;
+  const fixtures: readonly QaTelemetrySeedFixture[] = [
     {
       requestId: qaTelemetryRequestIds.measured,
-      source: "measured" as const,
+      source: "measured",
       available: true,
       inputTokens: 120000,
       outputTokens: 4000,
       cacheReadTokens: 90000,
-      promptCacheRequestSource: "explicit" as const,
+      promptCacheRequestSource: "explicit",
       hoursAgo: 5,
+      latencyMs: 920,
+      costActualUsd: 0.084,
+      costEstimateUsd: 0.084,
+      routingSavingsUsd: 0.021,
+      cacheSavingsUsd: 0.012,
+      strategy: "quality",
+      difficulty: "easy",
+      routingMode: "hybrid",
+      requestedRoleId: "coder.patch",
+      appliedRoleId: "coder.patch",
+      taxonomy: {
+        groupId: "engineering",
+        roleId: "coder",
+        taskType: "coder.review",
+        taskVariant: "security",
+        capabilityIds: ["code.read", "security.analysis"],
+        modalityIds: ["json", "text"],
+        toolClassIds: ["filesystem.read", "shell.execute"],
+      },
+      statusCode: 200,
     },
     {
       requestId: qaTelemetryRequestIds.estimated,
-      source: "estimated" as const,
+      source: "estimated",
       available: true,
       inputTokens: 107,
       outputTokens: 32,
       cacheReadTokens: 0,
-      promptCacheRequestSource: "synthesized" as const,
+      promptCacheRequestSource: "synthesized",
       hoursAgo: 4,
+      latencyMs: 640,
+      costEstimateUsd: 0.0042,
+      routingSavingsUsd: 0.0054,
+      cacheSavingsUsd: 0,
+      strategy: "cost",
+      difficulty: "medium",
+      routingMode: "hybrid",
+      requestedRoleId: "general.chat",
+      appliedRoleId: "general.chat",
+      taxonomy: {
+        groupId: "engineering",
+        roleId: "coder",
+        taskType: "coder.implement",
+        taskVariant: "default",
+        capabilityIds: ["code.write"],
+        modalityIds: ["text"],
+        toolClassIds: ["shell.execute"],
+      },
+      statusCode: 200,
     },
     {
       requestId: qaTelemetryRequestIds.unavailable,
-      source: "unavailable" as const,
+      source: "unavailable",
       available: false,
       inputTokens: 0,
       outputTokens: 0,
       cacheReadTokens: 0,
       promptCacheRequestSource: null,
       hoursAgo: 3,
+      latencyMs: 480,
+      costActualUsd: 0.0031,
+      costEstimateUsd: 0.0031,
+      routingSavingsUsd: 0.001,
+      cacheSavingsUsd: 0,
+      strategy: "balanced",
+      difficulty: "easy",
+      routingMode: "remote_only",
+      requestedRoleId: "analyst",
+      appliedRoleId: "analyst",
+      taxonomy: {
+        groupId: "research",
+        roleId: "analyst",
+        taskType: "analyst.summarize",
+        taskVariant: "brief",
+        capabilityIds: ["text.summarize"],
+        modalityIds: ["text"],
+        toolClassIds: ["web.fetch"],
+      },
+      statusCode: 200,
     },
     {
       requestId: qaTelemetryRequestIds.zero,
-      source: "measured" as const,
+      source: "measured",
       available: true,
       inputTokens: 0,
       outputTokens: 0,
       cacheReadTokens: 0,
-      promptCacheRequestSource: "synthesized" as const,
+      promptCacheRequestSource: "synthesized",
       hoursAgo: 2,
+      latencyMs: 210,
+      costActualUsd: 0,
+      costEstimateUsd: 0,
+      routingSavingsUsd: 0,
+      cacheSavingsUsd: 0,
+      strategy: "latency",
+      difficulty: "easy",
+      routingMode: "hybrid",
+      requestedRoleId: "general.chat",
+      appliedRoleId: "general.chat",
+      taxonomy: {
+        groupId: "engineering",
+        roleId: "coder",
+        taskType: "coder.review",
+        taskVariant: "lite",
+        capabilityIds: ["code.read"],
+        modalityIds: ["text"],
+        toolClassIds: ["filesystem.read"],
+      },
+      statusCode: 200,
     },
     {
       requestId: qaTelemetryRequestIds.measuredSecondary,
-      source: "normalized" as const,
+      source: "normalized",
       available: true,
       inputTokens: 400,
       outputTokens: 80,
       cacheReadTokens: 100,
-      promptCacheRequestSource: "synthesized" as const,
+      promptCacheRequestSource: "synthesized",
       hoursAgo: 1,
+      latencyMs: 710,
+      costActualUsd: 0.0068,
+      costEstimateUsd: 0.0068,
+      routingSavingsUsd: 0.0032,
+      cacheSavingsUsd: 0.0011,
+      strategy: "quality",
+      difficulty: "medium",
+      routingMode: "hybrid",
+      requestedRoleId: "coder.patch",
+      appliedRoleId: "coder.patch",
+      taxonomy: {
+        groupId: "engineering",
+        roleId: "coder",
+        taskType: "coder.review",
+        taskVariant: "security",
+        capabilityIds: ["code.read", "security.analysis"],
+        modalityIds: ["json", "text"],
+        toolClassIds: ["filesystem.read"],
+      },
+      statusCode: 200,
+    },
+    {
+      requestId: qaChartReviewRequestIds.strategyCost,
+      source: "measured",
+      available: true,
+      inputTokens: 2400,
+      outputTokens: 320,
+      cacheReadTokens: 800,
+      promptCacheRequestSource: "explicit",
+      hoursAgo: 22,
+      latencyMs: 1100,
+      costActualUsd: 0.012,
+      costEstimateUsd: 0.012,
+      routingSavingsUsd: 0.008,
+      cacheSavingsUsd: 0.0025,
+      strategy: "cost",
+      difficulty: "easy",
+      routingMode: "hybrid",
+      requestedRoleId: "general.chat",
+      appliedRoleId: "general.chat",
+      taxonomy: {
+        groupId: "engineering",
+        roleId: "coder",
+        taskType: "coder.implement",
+        taskVariant: "default",
+        capabilityIds: ["code.write", "code.read"],
+        modalityIds: ["text"],
+        toolClassIds: ["shell.execute"],
+      },
+      statusCode: 200,
+    },
+    {
+      requestId: qaChartReviewRequestIds.strategyLatency,
+      source: "measured",
+      available: true,
+      inputTokens: 900,
+      outputTokens: 140,
+      cacheReadTokens: 0,
+      promptCacheRequestSource: "synthesized",
+      hoursAgo: 34,
+      latencyMs: 340,
+      costActualUsd: 0.0095,
+      costEstimateUsd: 0.0095,
+      routingSavingsUsd: 0.004,
+      cacheSavingsUsd: 0,
+      strategy: "latency",
+      difficulty: "medium",
+      routingMode: "remote_only",
+      requestedRoleId: "analyst",
+      appliedRoleId: "analyst",
+      taxonomy: {
+        groupId: "research",
+        roleId: "analyst",
+        taskType: "analyst.summarize",
+        taskVariant: "brief",
+        capabilityIds: ["text.summarize"],
+        modalityIds: ["text"],
+        toolClassIds: ["web.fetch"],
+      },
+      statusCode: 200,
+    },
+    {
+      requestId: qaChartReviewRequestIds.strategyBalanced,
+      source: "measured",
+      available: true,
+      inputTokens: 1600,
+      outputTokens: 220,
+      cacheReadTokens: 400,
+      promptCacheRequestSource: "explicit",
+      hoursAgo: 46,
+      latencyMs: 760,
+      costActualUsd: 0.011,
+      costEstimateUsd: 0.011,
+      routingSavingsUsd: 0.006,
+      cacheSavingsUsd: 0.0018,
+      strategy: "balanced",
+      difficulty: "medium",
+      routingMode: "hybrid",
+      requestedRoleId: "coder.patch",
+      appliedRoleId: "coder.patch",
+      taxonomy: {
+        groupId: "engineering",
+        roleId: "coder",
+        taskType: "coder.review",
+        taskVariant: "default",
+        capabilityIds: ["code.read"],
+        modalityIds: ["text"],
+        toolClassIds: ["filesystem.read", "shell.execute"],
+      },
+      statusCode: 200,
+    },
+    {
+      requestId: qaChartReviewRequestIds.taxonomySecurity,
+      source: "measured",
+      available: true,
+      inputTokens: 3200,
+      outputTokens: 480,
+      cacheReadTokens: 1200,
+      promptCacheRequestSource: "explicit",
+      hoursAgo: 58,
+      latencyMs: 980,
+      costActualUsd: 0.018,
+      costEstimateUsd: 0.018,
+      routingSavingsUsd: 0.009,
+      cacheSavingsUsd: 0.003,
+      strategy: "quality",
+      difficulty: "hard",
+      routingMode: "hybrid",
+      requestedRoleId: "security.audit",
+      appliedRoleId: "security.audit",
+      taxonomy: {
+        groupId: "governance_safety",
+        roleId: "security",
+        taskType: "security.audit",
+        taskVariant: "deep",
+        capabilityIds: ["security.analysis"],
+        modalityIds: ["text"],
+        toolClassIds: ["filesystem.read"],
+      },
+      statusCode: 200,
+    },
+    {
+      requestId: qaChartReviewRequestIds.taxonomyAnalyst,
+      source: "estimated",
+      available: true,
+      inputTokens: 1800,
+      outputTokens: 260,
+      cacheReadTokens: 0,
+      promptCacheRequestSource: "synthesized",
+      hoursAgo: 70,
+      latencyMs: 870,
+      costEstimateUsd: 0.0075,
+      routingSavingsUsd: 0.0045,
+      cacheSavingsUsd: 0,
+      strategy: "cost",
+      difficulty: "easy",
+      routingMode: "hybrid",
+      requestedRoleId: "analyst",
+      appliedRoleId: "analyst",
+      taxonomy: {
+        groupId: "research",
+        roleId: "analyst",
+        taskType: "analyst.extract",
+        taskVariant: "tables",
+        capabilityIds: ["text.extract", "text.summarize"],
+        modalityIds: ["json", "text"],
+        toolClassIds: ["web.fetch"],
+      },
+      statusCode: 200,
+    },
+    {
+      requestId: qaChartReviewRequestIds.difficultyHard,
+      source: "measured",
+      available: true,
+      inputTokens: 5400,
+      outputTokens: 900,
+      cacheReadTokens: 2200,
+      promptCacheRequestSource: "explicit",
+      hoursAgo: 82,
+      latencyMs: 1540,
+      costActualUsd: 0.031,
+      costEstimateUsd: 0.031,
+      routingSavingsUsd: 0.014,
+      cacheSavingsUsd: 0.005,
+      strategy: "quality",
+      difficulty: "hard",
+      routingMode: "hybrid",
+      requestedRoleId: "coder.patch",
+      appliedRoleId: "coder.patch",
+      taxonomy: {
+        groupId: "engineering",
+        roleId: "coder",
+        taskType: "coder.implement",
+        taskVariant: "complex",
+        capabilityIds: ["code.write", "code.read", "security.analysis"],
+        modalityIds: ["json", "text"],
+        toolClassIds: ["filesystem.read", "shell.execute"],
+      },
+      statusCode: 200,
+    },
+    {
+      requestId: qaChartReviewRequestIds.failureTimeout,
+      source: "unavailable",
+      available: false,
+      inputTokens: 0,
+      outputTokens: 0,
+      cacheReadTokens: 0,
+      promptCacheRequestSource: null,
+      hoursAgo: 16,
+      latencyMs: 1200,
+      costEstimateUsd: 0.0011,
+      routingSavingsUsd: 0,
+      cacheSavingsUsd: 0,
+      strategy: "latency",
+      difficulty: "medium",
+      routingMode: "local_only",
+      requestedRoleId: "general.chat",
+      appliedRoleId: "general.chat",
+      taxonomy: {
+        groupId: "governance_safety",
+        roleId: "security",
+        taskType: "security.audit",
+        taskVariant: "deep",
+        capabilityIds: ["security.analysis"],
+        modalityIds: ["text"],
+        toolClassIds: ["filesystem.read"],
+      },
+      errorClass: "upstream_timeout",
+      statusCode: 504,
+      sourceType: "local",
+      modelId: "local/mock-llama",
+    },
+    {
+      requestId: qaChartReviewRequestIds.localEstimate,
+      source: "estimated",
+      available: true,
+      inputTokens: 640,
+      outputTokens: 120,
+      cacheReadTokens: 0,
+      promptCacheRequestSource: null,
+      hoursAgo: 94,
+      latencyMs: 1320,
+      costEstimateUsd: 0.0022,
+      routingSavingsUsd: 0.0015,
+      cacheSavingsUsd: 0,
+      strategy: "cost",
+      difficulty: "easy",
+      routingMode: "local_only",
+      requestedRoleId: "general.chat",
+      appliedRoleId: "general.chat",
+      taxonomy: {
+        groupId: "engineering",
+        roleId: "coder",
+        taskType: "coder.implement",
+        taskVariant: "default",
+        capabilityIds: ["code.write"],
+        modalityIds: ["text"],
+        toolClassIds: ["shell.execute"],
+      },
+      statusCode: 200,
+      sourceType: "local",
+      modelId: "local/mock-llama",
     },
   ];
   const databasePath = resolveSqliteMemoryLocation({
@@ -344,22 +745,107 @@ export async function seedQaTelemetry(
   for (const fixture of fixtures) {
     const timestampMs = now - fixture.hoursAgo * 60 * 60 * 1000;
     const routingDecisionId = `decision-${fixture.requestId}`;
+    const endpointId = fixture.endpointId ?? defaultEndpointId;
+    const modelId = fixture.modelId ?? qaActivatedModelId;
+    const sourceType = fixture.sourceType ?? "remote";
+    const strategy = fixture.strategy ?? "balanced";
+    const difficulty = fixture.difficulty ?? "easy";
+    const routingMode = fixture.routingMode ?? "hybrid";
+    const routingSavings = fixture.routingSavingsUsd ?? 0;
+    const cacheSavings = fixture.cacheSavingsUsd ?? 0;
+    const estimatedCost = fixture.costEstimateUsd ?? fixture.costActualUsd ?? 0;
+    const selectedUncached = estimatedCost + routingSavings;
+    const baselineMax = selectedUncached + Math.max(routingSavings, 0.002);
+    const isFailure = Boolean(fixture.errorClass) || (fixture.statusCode ?? 200) >= 400;
+
     persistRuntimeObservationBundle({
       databasePath,
+      channel: "development",
       observation: {
         ...baseBundle,
         requestId: fixture.requestId,
         routingDecisionId,
+        endpointId,
+        ...(fixture.taxonomy
+          ? {
+              taxonomyDimensions: {
+                taxonomy_group_id: fixture.taxonomy.groupId,
+                taxonomy_role_id: fixture.taxonomy.roleId,
+                taxonomy_task_type: fixture.taxonomy.taskType,
+                taxonomy_task_variant: fixture.taxonomy.taskVariant,
+                taxonomy_capability_ids: [...fixture.taxonomy.capabilityIds],
+                taxonomy_modality_ids: [...fixture.taxonomy.modalityIds],
+                taxonomy_tool_class_ids: [...fixture.taxonomy.toolClassIds],
+              },
+            }
+          : {}),
+        routingDiagnostics: {
+          ...baseBundle.routingDiagnostics,
+          routingMode: {
+            source: "alias-default",
+            aliasMode: routingMode,
+            effectiveMode: routingMode,
+          },
+          difficultyRouting: {
+            difficulty,
+            strategy,
+            fallbackApplied: false,
+            rubricSignals: {
+              contextTokens: fixture.inputTokens,
+              toolCount: fixture.taxonomy?.toolClassIds.length ?? 0,
+              historyTurnCount: 1,
+              instructionConstraintCount: 0,
+              decompositionKeywordCount: 0,
+              codeOrSchemaBurden: difficulty === "hard",
+            },
+          },
+          controllerRouting: {
+            active: true,
+            acceptedDirectives: {
+              requestedRoleId: fixture.requestedRoleId ?? "general.chat",
+              strategy,
+              preferLocal: sourceType === "local",
+            },
+          },
+          hybridArbitration: {
+            active: routingMode === "hybrid",
+            difficultyStrategy: strategy,
+            finalStrategy: strategy,
+            controllerChangedPlan: false,
+            dominantSignal: "difficulty",
+          },
+          rolePolicy: {
+            requestedRoleId: fixture.requestedRoleId ?? "general.chat",
+            appliedRoleId: fixture.appliedRoleId ?? fixture.requestedRoleId ?? "general.chat",
+            defaultSystemInstructionsApplied: true,
+            toolPolicyMode: "limited",
+            allowedTools: [],
+            outputContracts: [],
+            safetyPolicyRefs: [],
+          },
+        },
         usageEvent: {
           ...baseBundle.usageEvent,
           request_id: fixture.requestId,
           routing_decision_id: routingDecisionId,
+          endpoint_id: endpointId,
+          model_id: modelId,
+          provider_kind: sourceType === "local" ? "local_openai_compat" : "remote_openai_compat",
           tokens_in: fixture.inputTokens,
           tokens_in_source: fixture.source,
           tokens_in_available: fixture.available,
           tokens_out: fixture.outputTokens,
           tokens_out_source: fixture.source,
           tokens_out_available: fixture.available,
+          latency_ms: fixture.latencyMs,
+          ...(typeof fixture.costActualUsd === "number"
+            ? { cost_actual: fixture.costActualUsd }
+            : {}),
+          ...(typeof fixture.costEstimateUsd === "number"
+            ? { cost_estimate: fixture.costEstimateUsd }
+            : {}),
+          currency: "USD",
+          ...(fixture.errorClass ? { error_class: fixture.errorClass } : {}),
           timestamp_ms: timestampMs,
         },
         observedPerformance: {
@@ -368,10 +854,22 @@ export async function seedQaTelemetry(
             ...baseBundle.observedPerformance.sample,
             request_id: fixture.requestId,
             routing_decision_id: routingDecisionId,
+            endpoint_id: endpointId,
             timestamp_ms: timestampMs,
+            latency_ms: fixture.latencyMs,
+            latency_ms_p95: fixture.latencyMs,
+            source_type: "live_request",
+            difficulty_bucket: difficulty,
+            ...(isFailure
+              ? {
+                  failure: true,
+                  ...(fixture.errorClass ? { error_class: fixture.errorClass } : {}),
+                }
+              : {}),
           },
           profile: {
             ...baseBundle.observedPerformance.profile,
+            endpoint_id: endpointId,
             measured_at_ms: timestampMs,
           },
         },
@@ -384,10 +882,13 @@ export async function seedQaTelemetry(
           promptCacheUsed: fixture.cacheReadTokens > 0,
           cacheReadTokens: fixture.cacheReadTokens,
           cacheWriteTokens: 0,
+          routingCacheAffinity: fixture.cacheReadTokens > 0,
         },
         executionTelemetry: {
           ...baseBundle.executionTelemetry,
-          promptCaching: { supported: true },
+          providerFamily: sourceType === "local" ? "llama-swap" : "ai-sdk-openai",
+          finishReason: isFailure ? "error" : "stop",
+          promptCaching: { supported: sourceType !== "local" },
           usageSupport: {
             ...baseBundle.executionTelemetry.usageSupport,
             inputTokens: true,
@@ -395,32 +896,63 @@ export async function seedQaTelemetry(
             cacheReadTokens: true,
             cacheWriteTokens: true,
           },
+          costProvenance:
+            typeof fixture.costActualUsd === "number"
+              ? "actual"
+              : typeof fixture.costEstimateUsd === "number"
+                ? "estimated"
+                : "unavailable",
         },
         telemetrySnapshot: {
-          providerId: "moonshot",
-          providerAccountId: qaProviderAccountId,
-          sourceType: "remote",
-          endpointKind: "remote_api",
-          servingSource: "remote-service",
-          region: "global",
+          providerId: sourceType === "local" ? "llama-swap" : "moonshot",
+          providerAccountId: sourceType === "local" ? null : qaProviderAccountId,
+          sourceType,
+          endpointKind: sourceType === "local" ? "local_engine" : "remote_api",
+          servingSource: sourceType === "local" ? "local-process" : "remote-service",
+          region: sourceType === "local" ? "local" : "global",
           lifecycleStateAtRequest: "active",
           healthStatusAtRequest: "healthy",
-          requestedModelId: qaActivatedModelId,
+          requestedModelId: modelId,
           requestOperation: "chat",
-          roleIds: ["general.chat"],
-          toolingUsed: false,
-          cacheState: fixture.cacheReadTokens > 0 ? "hit" : "miss",
-          eligibleEndpointIds: [baseBundle.endpointId],
-          eligibleModelIds: [qaActivatedModelId],
-          candidateCostSnapshot: null,
-          selectedPricingSnapshot: null,
-          selectedUncachedCostUsd: null,
-          baselineMaxEligibleCostUsd: null,
-          routingCostSavingsUsd: 0,
-          cacheCostSavingsUsd: 0,
-          totalAvoidedCostUsd: 0,
-          costBaselineSource: null,
-          costSavingsSupport: null,
+          roleIds: [fixture.appliedRoleId ?? fixture.requestedRoleId ?? "general.chat"],
+          toolingUsed: (fixture.taxonomy?.toolClassIds.length ?? 0) > 0,
+          cacheState:
+            fixture.cacheReadTokens > 0 ? "hit" : sourceType === "local" ? "unsupported" : "miss",
+          eligibleEndpointIds: [endpointId],
+          eligibleModelIds: [modelId],
+          candidateCostSnapshot: {
+            [endpointId]: {
+              modelId,
+              providerId: sourceType === "local" ? "llama-swap" : "moonshot",
+              sourceType,
+              estimatedRequestUsd: selectedUncached,
+            },
+          },
+          selectedPricingSnapshot: {
+            modelId,
+            providerId: sourceType === "local" ? "llama-swap" : "moonshot",
+            sourceType,
+            estimatedRequestUsd: selectedUncached,
+          },
+          selectedUncachedCostUsd: selectedUncached,
+          baselineMaxEligibleCostUsd: baselineMax,
+          routingCostSavingsUsd: routingSavings,
+          cacheCostSavingsUsd: cacheSavings,
+          totalAvoidedCostUsd: routingSavings + cacheSavings,
+          costBaselineSource: "eligible_candidate_max",
+          costSavingsSupport: routingSavings > 0 || cacheSavings > 0 ? "full" : "partial",
+        },
+        inspection: {
+          ...baseBundle.inspection,
+          request: {
+            ...baseBundle.inspection.request,
+            requestId: fixture.requestId,
+            routingDecisionId,
+            responseCapture: {
+              ...baseBundle.inspection.request.responseCapture,
+              statusCode: fixture.statusCode ?? 200,
+            },
+          },
         },
       },
     });
@@ -463,6 +995,7 @@ export function createQaServerOptions(
     listRoles: backend.listRoles,
     listModels: backend.listModels,
     listExtensions: backend.listExtensions,
+    mutateExtension: backend.mutateExtension,
     readStorageRetention: backend.readStorageRetention,
     dryRunStorageRetention: backend.dryRunStorageRetention,
     updateStorageRetentionPolicy: backend.updateStorageRetentionPolicy,
@@ -563,7 +1096,7 @@ export async function main(): Promise<void> {
   console.log(`[QA] Seeded runtime config: ${unifiedRuntimeConfigPath}`);
 
   // Pre-register deepseek.litellm account so LiteLLM endpoint validation passes
-  if (process.env.DEEPSEEK_API_KEY) {
+  if (process.env.DEEPSEEK_API_KEY && process.env.RUNTIME_QA_NO_MODEL_FIXTURES !== "1") {
     const { DatabaseSync } = await import("node:sqlite");
     const dbPath = path.join(runtimeStateRoot, scopeId, "memory", "memory.sqlite");
     await mkdir(path.dirname(dbPath), { recursive: true });
@@ -616,8 +1149,14 @@ export async function main(): Promise<void> {
     console.log("[QA] Pre-registered DeepSeek account.");
   }
 
-  await seedQaTelemetry(repoRoot, runtimeStateRoot, scopeId);
-  console.log(`[QA] Seeded deterministic telemetry request: ${qaTelemetryRequestIds.measured}`);
+  if (process.env.RUNTIME_QA_NO_MODEL_FIXTURES !== "1") {
+    await seedQaTelemetry(repoRoot, runtimeStateRoot, scopeId);
+    console.log(
+      `[QA] Seeded chart-review telemetry (${Object.keys(qaTelemetryRequestIds).length + Object.keys(qaChartReviewRequestIds).length} requests)`,
+    );
+  } else {
+    console.log("[QA] Skipping chart-review telemetry seed (RUNTIME_QA_NO_MODEL_FIXTURES=1).");
+  }
 
   const productContractsPath = path.join(
     repoRoot,
@@ -644,7 +1183,7 @@ export async function main(): Promise<void> {
   const backend = await createRuntimeBridgeBackend(
     createQaRuntimeBridgeBackendOptions(repoRoot, runtimeStateRoot, scopeId),
   );
-  if (!process.env.RUNTIME_QA_NO_PLACEHOLDERS) {
+  if (!process.env.RUNTIME_QA_NO_PLACEHOLDERS && process.env.RUNTIME_QA_NO_MODEL_FIXTURES !== "1") {
     await bootstrapQaControlPlane(backend);
   }
 

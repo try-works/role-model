@@ -5,20 +5,38 @@ export type RuntimeTheme = "light" | "dark";
 /** Inline FOUC palette; must stay aligned with `html[data-theme]` tokens in app.css. */
 export const BOOT_THEME_PALETTES = {
   dark: {
-    accent: "#5e6ad2",
-    bg: "#010102",
-    border: "#23252a",
-    fg: "#f7f8f8",
-    secondary: "#d0d6e0",
-    surface: "#0f1011",
+    accent: "#ffffff",
+    bg: "#0a0a0a",
+    border: "#1f1f1f",
+    fg: "#ededed",
+    secondary: "#9a9a9a",
+    surface: "#0f0f0f",
   },
   light: {
-    accent: "#5e6ad2",
+    accent: "#0a0a0a",
     bg: "#ffffff",
-    border: "#e3e6ec",
-    fg: "#0f1115",
-    secondary: "#3a4150",
-    surface: "#f7f8f8",
+    border: "#eaeaea",
+    fg: "#111111",
+    secondary: "#666666",
+    surface: "#ffffff",
+  },
+} as const;
+
+/** RM3 token keys mirrored during FOUC bootstrap alongside transitional `--rm-*`. */
+export const BOOT_RM3_TOKEN_KEYS = {
+  dark: {
+    background: "#0a0a0a",
+    foreground: "#ededed",
+    primary: "#ffffff",
+    border: "#1f1f1f",
+    card: "#0f0f0f",
+  },
+  light: {
+    background: "#ffffff",
+    foreground: "#111111",
+    primary: "#0a0a0a",
+    border: "#eaeaea",
+    card: "#ffffff",
   },
 } as const;
 
@@ -55,12 +73,18 @@ export function applyDocumentThemeStyles(
   target: HTMLElement = document.documentElement,
 ): void {
   const palette = getBootThemePalette(theme);
+  const rm3Tokens = BOOT_RM3_TOKEN_KEYS[theme];
   target.dataset.theme = theme;
+  target.classList.toggle("dark", theme === "dark");
+  target.classList.toggle("light", theme === "light");
   target.style.colorScheme = theme;
   target.style.backgroundColor = palette.bg;
   target.style.color = palette.fg;
   for (const [token, value] of Object.entries(palette)) {
     target.style.setProperty(`--rm-${token}`, value);
+  }
+  for (const [token, value] of Object.entries(rm3Tokens)) {
+    target.style.setProperty(`--rm3-${token}`, value);
   }
 }
 

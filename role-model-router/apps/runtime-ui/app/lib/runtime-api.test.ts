@@ -2810,7 +2810,7 @@ describe("role assignment helpers", () => {
     ).toEqual(["coder"]);
   });
 
-  test("posts default-all assignment metadata for peer and llama-swap model registration", async () => {
+  test("posts explicit empty include for peer and llama-swap load with no roles", async () => {
     const requests: Array<{ url: string; body: unknown }> = [];
     const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
       const url =
@@ -2827,7 +2827,7 @@ describe("role assignment helpers", () => {
         url: "/api/role-model/local/peer/models/local-peer-model/load",
         body: {
           roleIds: [],
-          roleAssignmentMode: "all",
+          roleAssignmentMode: "include",
           enabledRoleIds: [],
           disabledRoleIds: [],
         },
@@ -2836,7 +2836,7 @@ describe("role assignment helpers", () => {
         url: "/api/role-model/local/llama-swap/models/local-llama-model/load",
         body: {
           roleIds: [],
-          roleAssignmentMode: "all",
+          roleAssignmentMode: "include",
           enabledRoleIds: [],
           disabledRoleIds: [],
         },
@@ -2963,8 +2963,8 @@ describe("role assignment helpers", () => {
       },
       fetcher,
     );
-    await runtimeApiModule.activateKnowledgeWorkerProduction(fetcher);
-    await runtimeApiModule.deactivateKnowledgeWorkerProduction(fetcher);
+    expect("activateKnowledgeWorkerProduction" in runtimeApiModule).toBe(false);
+    expect("deactivateKnowledgeWorkerProduction" in runtimeApiModule).toBe(false);
     await runtimeApiModule.dismissRecommendation("pack-dismiss", fetcher);
     expect(requests).toEqual([
       {
@@ -3000,21 +3000,6 @@ describe("role assignment helpers", () => {
           },
           groupDigest: "b".repeat(64),
         },
-      },
-      {
-        url: "/api/role-model/extensions/mutate",
-        method: "POST",
-        body: {
-          id: "knowledge-worker",
-          action: "activate_production",
-          activationPolicyVersion: 1,
-          operatorAttestation: "activate-production",
-        },
-      },
-      {
-        url: "/api/role-model/extensions/mutate",
-        method: "POST",
-        body: { id: "knowledge-worker", action: "deactivate_production" },
       },
       {
         url: "/api/role-model/recommendations/dismiss",

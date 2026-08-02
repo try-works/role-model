@@ -21,7 +21,11 @@ function fixture() {
   const root = mkdtempSync(
     path.join(process.env.RUN00_TEMP_ROOT ?? process.cwd(), ".tmp-role-model-tb04-"),
   );
-  const initialized = initializeSqliteMemory({ runtimeStateRoot: root, scopeId: "dev" });
+  const initialized = initializeSqliteMemory({
+    runtimeStateRoot: root,
+    scopeId: "dev",
+    channel: "development",
+  });
   const backupPath = path.join(root, "backup.sqlite");
   const database = new DatabaseSync(initialized.databasePath);
   const rich = JSON.stringify({
