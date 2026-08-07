@@ -1,0 +1,6 @@
+refresh-catalog: ok
+catalog: C:\Users\erikb\.codex\role-model\models.json
+native_aliases: C:\Users\erikb\.codex\role-model\native-aliases.json
+model: gpt-5.6-sol -> baseline.remote-only
+picker_listed: baseline.remote-only, deepseek/deepseek-v4-flash, deepseek/deepseek-v4-pro
+Restart Codex Desktop/CLI to reload model_catalog_json.

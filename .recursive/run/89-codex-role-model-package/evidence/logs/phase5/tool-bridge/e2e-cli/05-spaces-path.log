@@ -1,0 +1,6 @@
+error: unexpected argument 'dir (note the space). Write file bridge-cases/sub' found
+
+Usage: codex exec [OPTIONS] [PROMPT]
+       codex exec [OPTIONS] <COMMAND> [ARGS]
+
+For more information, try '--help'.

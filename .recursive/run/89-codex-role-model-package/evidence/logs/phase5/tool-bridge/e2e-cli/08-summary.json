@@ -1,0 +1,9 @@
+{
+  "id": "08-mcp-tool-search",
+  "pass": true,
+  "exit": 0,
+  "seconds": 42.5,
+  "evidence": "08-mcp-tool-search-v3.log",
+  "session": "C:\\Users\\erikb\\.codex\\sessions\\2026\\08\\05\\rollout-2026-08-05T21-01-35-019fd203-da07-7eb3-b941-1c1802bdc9b5.jsonl",
+  "note": "tool_search + namespaced mcp__codex_apps__github/_get_user_login → {\"login\":\"try-works\",\"id\":262919414}; unsupported=0; harvest outbound 19→27"
+}

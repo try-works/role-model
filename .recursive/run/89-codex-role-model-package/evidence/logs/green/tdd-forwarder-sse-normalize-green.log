@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/89-codex-role-model-package/packages/codex-role-model
+
+ Γ£ô test/forwarder.test.ts (8 tests) 206ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  02:07:34
+   Duration  1.39s (transform 167ms, setup 0ms, collect 216ms, tests 206ms, environment 0ms, prepare 263ms)
+

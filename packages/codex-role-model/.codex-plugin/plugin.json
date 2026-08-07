@@ -1,0 +1,26 @@
+{
+  "name": "role-model",
+  "version": "0.1.1",
+  "description": "Connect Codex to a local role-model runtime via a Responses adapter (setup/start CLI + skills).",
+  "author": {
+    "name": "try-works",
+    "url": "https://github.com/try-works"
+  },
+  "homepage": "https://github.com/try-works/role-model/tree/dev/packages/codex-role-model",
+  "repository": "https://github.com/try-works/role-model",
+  "license": "BUSL-1.1",
+  "keywords": ["codex", "role-model", "routing", "adapter"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "role-model",
+    "shortDescription": "Route Codex through a local role-model runtime",
+    "longDescription": "Installs the role-model Codex skill and points you at the @try-works/codex-role-model adapter CLI. Start your role-model runtime, run setup/start, then pick a role-model model id in Codex.",
+    "developerName": "try-works",
+    "category": "Development & Workflow",
+    "capabilities": ["Read", "Write"],
+    "websiteURL": "https://github.com/try-works/role-model",
+    "defaultPrompt": [
+      "Help me connect Codex to my local role-model runtime with codex-role-model setup and start."
+    ]
+  }
+}

@@ -1,0 +1,113 @@
+Reading additional input from stdin...
+OpenAI Codex v0.146.0
+--------
+workdir: C:\Users\erikb\AppData\Local\Temp\codex-e2e-04-fail-recover-202059
+model: baseline.remote-only
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: low
+reasoning summaries: none
+session id: 019fd1de-bd0f-73b3-a00f-b61efee27aea
+--------
+user
+Run a shell command that is expected to fail reading .\definitely-missing-bridge.txt. Then create that file with content recovered, read it, and quote the contents. Do not ask questions.
+2026-08-05T12:21:10.018255Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+2026-08-05T12:21:16.779264Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+2026-08-05T12:21:16.997968Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 2/5
+2026-08-05T12:21:17.404498Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 3/5
+2026-08-05T12:21:18.228973Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 4/5
+2026-08-05T12:21:19.701322Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 5/5
+2026-08-05T12:21:22.844210Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+warning: Falling back from WebSockets to HTTPS transport. unexpected status 404 Not Found: Not found, url: ws://127.0.0.1:3460/v1/responses
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -LiteralPath .\\definitely-missing-bridge.txt" in C:\Users\erikb\AppData\Local\Temp\codex-e2e-04-fail-recover-202059
+2026-08-05T12:21:38.210533Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 5.9 seconds
+Output:
+Get-Content: 
+Line |
+   2 |  Get-Content -LiteralPath .\definitely-missing-bridge.txt
+     |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | Cannot find path '.\definitely-missing-bridge.txt' because it does not exist.
+
+ exited 1 in 5902ms:
+Get-Content: 
+Line |
+   2 |  Get-Content -LiteralPath .\definitely-missing-bridge.txt
+     |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | Cannot find path '.\definitely-missing-bridge.txt' because it does not exist.
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Set-Content -LiteralPath .\\definitely-missing-bridge.txt -Value 'recovered'; Get-Content -LiteralPath .\\definitely-missing-bridge.txt" in C:\Users\erikb\AppData\Local\Temp\codex-e2e-04-fail-recover-202059
+ succeeded in 5756ms:
+recovered
+
+2026-08-05T12:21:49.115665Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.141218Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.141282Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.141296Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.141307Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.165601Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.165648Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.165659Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.477684Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.477730Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.477742Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.477751Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.477831Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.477849Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.477859Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.477868Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.477878Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.477886Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.477894Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.477903Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.503481Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.503530Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.503541Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.503550Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.503802Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.503836Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.503847Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.503856Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.503866Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.503874Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.608907Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.608952Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.609111Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.609142Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.609425Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.609459Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.609471Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.609481Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.609489Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.609742Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.609774Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.609785Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.609794Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.609803Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.610020Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.610049Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.610061Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.610070Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.610079Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.610088Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:21:49.610528Z ERROR codex_core::util: OutputTextDelta without active item
+codex
+Done. The command to read `.\definitely-missing-bridge.txt` failed as expected (file did not exist), then I created the file with the content **recovered** and read it back.
+
+The contents of the file are:
+
+> recovered
+tokens used
+22,738
+Done. The command to read `.\definitely-missing-bridge.txt` failed as expected (file did not exist), then I created the file with the content **recovered** and read it back.
+
+The contents of the file are:
+
+> recovered

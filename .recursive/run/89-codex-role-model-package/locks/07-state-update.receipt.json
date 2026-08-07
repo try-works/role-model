@@ -1,0 +1,18 @@
+{
+  "artifact": "07-state-update.md",
+  "artifact_hash": "10a37935d4c289d2e232e6b3a0e67c105688bfde3a17132ad61884b2a08d37ff",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\89-codex-role-model-package\\.recursive\\run\\89-codex-role-model-package\\07-state-update.md",
+  "locked_at": "2026-08-07T09:52:09Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "46620023d0f52aa8284af1d7ebd61d3627a5f2bafe7cf04a901aa2ab33dcf869",
+    "00-worktree.md": "d1f9304b1608f3547f8bd119bcb9b3926524acb670e6f41b0f057fae3e484a08",
+    "01-as-is.md": "c056f517483c66a8f7aee1186412d00126e56e2b71af5a660a1122e8e6b92202",
+    "02-to-be-plan.md": "901a61f56f03d156186b9db226ed49659a5dd02be301b68bc9d39151f193f9d1",
+    "03-implementation-summary.md": "e9a2c70608c03db3906c49a7eb8e1c78823b1caac356859692d228718444cdfd",
+    "04-test-summary.md": "cfdc7b37dc6457f5552b7588226a8cb4b7741de05d76160ef05bdf6b301ed138",
+    "05-manual-qa.md": "78910f463679e024792535a11e716cc1e5d330a214132250a0e5b7145b95bcca",
+    "06-decisions-update.md": "5ebf2126657831b3a7e93d1654b63369dcdc8423d7492f28e674b78cd40700c9"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "a16e7ecacb53927ad241b4c2f2411bf724be1c4923cf8382cc3f794aa3c63c25"
+}

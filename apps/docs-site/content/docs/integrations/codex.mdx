@@ -1,0 +1,97 @@
+---
+title: Codex integration
+description: Install the Codex adapter package, connect it to a running role-model runtime, and select role-model aliases from Codex Desktop, CLI, or IDE.
+---
+
+# Codex integration
+
+The `@try-works/codex-role-model` package connects Codex to an already-running **role-model** runtime through a local Responses forwarder.
+
+It does not install, start, stop, update, or own the runtime process. Start `role-model-router` first, then configure Codex.
+
+## Quick start
+
+```bash
+# 1) Role-model runtime already listening (example: http://127.0.0.1:3456)
+# 2) Wire Codex + start the local adapter
+npx --yes @try-works/codex-role-model@latest setup
+npx --yes @try-works/codex-role-model@latest start
+# 3) Fully quit and reopen Codex, then select a role-model model id
+```
+
+Optional:
+
+```bash
+export ROLE_MODEL_ENDPOINT=http://127.0.0.1:3456
+export ROLE_MODEL_CODEX_ADAPTER_PORT=3460
+```
+
+## Codex plugin (optional skill surface)
+
+Public marketplace catalog: `.agents/plugins/marketplace.json` (npm source → `@try-works/codex-role-model`).
+
+Codex expects a **repo-shaped** marketplace root containing `.agents/plugins/marketplace.json`.
+
+```bash
+codex plugin marketplace add try-works/role-model --ref dev
+codex plugin add role-model@role-model
+```
+
+Without waiting for a git ref:
+
+```bash
+mkdir -p ~/role-model-marketplace/.agents/plugins
+# copy packages/codex-role-model/marketplace.npm.json into that path as marketplace.json
+codex plugin marketplace add ~/role-model-marketplace
+codex plugin add role-model@role-model
+```
+
+The plugin installs the skill / marketplace entry. You still need `setup` + `start` for the Responses adapter.
+## What setup writes (signed-in — keeps ChatGPT history)
+
+Default setup uses the **signed-in** `openai_base_url` + merged-catalog pattern (same idea as [codex-router](https://github.com/duolahypercho/codex-router)).
+
+User `$CODEX_HOME/config.toml` only:
+
+- `openai_base_url = "http://127.0.0.1:3460/v1"`
+- `model_catalog_json` → absolute merged catalog (native GPT models **plus** role-model strategy/model ids)
+- Does **not** set `forced_login_method` / `preferred_auth_method` (those switch to the API session group and hide ChatGPT histories)
+
+### Monorepo developers
+
+```bash
+node packages/codex-role-model/bin/codex-role-model.js setup
+node packages/codex-role-model/bin/codex-role-model.js start
+```
+
+## Shared config (Desktop / CLI / IDE)
+
+Codex shares one user-level config surface (`$CODEX_HOME/config.toml`, default `~/.codex/config.toml`) across Desktop, CLI, and IDE.
+
+Provider keys must be written there. Project `.codex/config.toml` **cannot** set those keys for Codex.
+
+ChatGPT vs API login methods split session groups. This package’s default signed-in path stays on ChatGPT auth so histories remain visible. Switching to a DeepSeek-style API-login custom provider will hide the ChatGPT thread group until you switch back.
+
+## Adapter path
+
+Supported path:
+
+`Codex → http://127.0.0.1:3460/v1 → (dispatch)`
+
+- Role-model alias/model ids → role-model runtime (with `role_model.intent` inject)
+- Native GPT models → ChatGPT Codex backend (`https://chatgpt.com/backend-api/codex` by default)
+
+## Compaction
+
+Compaction is **Codex-managed**. This adapter does not implement `/v1/responses/compact` and does not mint OpenAI encrypted Compaction capsules.
+
+## Diagnostics
+
+```bash
+npx --yes @try-works/codex-role-model doctor
+npx --yes @try-works/codex-role-model status
+npx --yes @try-works/codex-role-model alias list
+npx --yes @try-works/codex-role-model explain latest
+```
+
+Never paste secrets into chat. `ROLE_MODEL_CODEX_API_KEY` is unused in signed-in mode (ChatGPT auth is forwarded); keep it unset unless you deliberately use login-free/API-provider mode.

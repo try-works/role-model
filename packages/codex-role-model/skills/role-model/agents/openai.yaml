@@ -1,0 +1,4 @@
+interface:
+  display_name: "role-model"
+  short_description: "Connect Codex to a local role-model runtime"
+  default_prompt: "Help me set up Codex with role-model using codex-role-model setup/doctor/start. Do not ask me to paste secrets."

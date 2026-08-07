@@ -45,8 +45,10 @@ Control-plane docs are not memory docs:
 - `training/test-validation.md` — Training Memory: test-validation (Source-Runs: 79-extension-control-and-recommendations-qa, 80-signed-recommendation-cloud-lifecycle)
 <!-- RECURSIVE-TRAINING-REGISTRY:END -->
 
+- `domains/codex-role-model-package.md` — Codex adapter package `@try-works/codex-role-model` (Source-Runs: `89-codex-role-model-package`); public npm `0.1.1`, Responses adapter, tool bridge, marketplace
 - `domains/direct-track-b.md` — Direct Track B v1.1 surfaces through run-85 gated live-router prompt inject + host join/auto-arm + post-lock live `pi` inject remediations (Source-Runs: `00-direct-track-b-v1-1-implementation`, `79-extension-control-and-recommendations-qa`, `80-signed-recommendation-cloud-lifecycle`, `81-kw-activation-browser-recommendation-evidence`, `82-tb00-pin-refreeze-kw-digest-bind-launch-scope`, `83-kw-operator-toggle-assemble-live-e2e-argv-equals`, `84-kw-ui-toggle-gated-retrieve-eval`, `85-kw-gated-router-prompt-inject`)
 - `domains/role-model-router.md` — role-model-router (Source-Runs: 79-extension-control-and-recommendations-qa, 81-kw-activation-browser-recommendation-evidence, 86-runtime-ui-rm3-design-system-frontend); RM3 `@role-model/ui` + `DESIGN_SYSTEM.md` live styling authority for runtime-ui (run 86)
+- `domains/pi-role-model-package.md` — Pi consumer package (parity source for Codex adapter discovery/intent patterns; run 89 sibling)
 - `episodes/00-direct-track-b-v1-1-implementation.md` — closeout episode for `00-direct-track-b-v1-1-implementation`
 - `skills/usage/review-bundle-citation-requirements.md` — Phase 3.5 review-bundle citation expectations (Source-Runs: `79-extension-control-and-recommendations-qa`, `80-signed-recommendation-cloud-lifecycle`)
 - `skills/issues/anticipatory-phase-docs.md` — Do not author Phase 3–8 docs before that phase’s real work; do not invent assemble PASS or SEA inject unlock without sha-bound hop (Source-Runs: `80`–`85`)
@@ -55,6 +57,7 @@ Control-plane docs are not memory docs:
 - `skills/issues/sea-inject-host-join-and-seed-scope.md` — SEA inject unlock needs host join/auto-arm + matching seed scope/verification key + live query/bridge/join alignment (Source-Runs: `85`)
 - `skills/issues/kw-inject-live-host-wiring.md` — Live KW inject needs default query + bridge path + revision join + host-owned session (Source-Runs: `85`)
 - `skills/issues/rm3-pill-no-amber.md` — RM3 warning pill ink must not use amber; charts keep amber semantics (Source-Runs: `86`)
+- `skills/issues/codex-adapter-protocol-only-no-narration-detectors.md` — Codex adapter must stay protocol-only; no narration phrase-matchers / anti-narration coaching (Source-Runs: `89`)
 
 - `domains/` - stable functional-area knowledge with `Owns-Paths`
 - `patterns/` - reusable playbooks and solution patterns

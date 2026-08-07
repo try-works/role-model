@@ -1,0 +1,6 @@
+# TDD slice: forwarder + intent (forwarder.test.ts, responses-intent.test.ts)
+
+ FAIL  test/forwarder.test.ts
+   expected 502 to be 200 (taxonomy reader .load() missing)
+
+Command: pnpm test test/forwarder.test.ts

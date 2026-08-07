@@ -1,0 +1,12 @@
+{
+  "artifact": "01-as-is.md",
+  "artifact_hash": "c056f517483c66a8f7aee1186412d00126e56e2b71af5a660a1122e8e6b92202",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\89-codex-role-model-package\\.recursive\\run\\89-codex-role-model-package\\01-as-is.md",
+  "locked_at": "2026-08-04T12:06:04Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "46620023d0f52aa8284af1d7ebd61d3627a5f2bafe7cf04a901aa2ab33dcf869",
+    "00-worktree.md": "d1f9304b1608f3547f8bd119bcb9b3926524acb670e6f41b0f057fae3e484a08"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "7bd364d18adccdff6f0ca2d5f06741c58eb91c93befeac3c6ac107e18ef3a780"
+}

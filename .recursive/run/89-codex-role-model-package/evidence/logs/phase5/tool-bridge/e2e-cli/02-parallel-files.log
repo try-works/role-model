@@ -1,0 +1,74 @@
+Reading additional input from stdin...
+OpenAI Codex v0.146.0
+--------
+workdir: C:\Users\erikb\AppData\Local\Temp\codex-e2e-02-parallel-files-201910
+model: baseline.remote-only
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: low
+reasoning summaries: none
+session id: 019fd1dd-1f30-7df3-acdb-70585566616d
+--------
+user
+Create a.txt with content one and b.txt with content two. Then list *.txt sorted by name and quote the listing. Do not ask questions.
+2026-08-05T12:19:24.302736Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+2026-08-05T12:19:32.138895Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+2026-08-05T12:19:32.403047Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 2/5
+2026-08-05T12:19:32.854992Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 3/5
+2026-08-05T12:19:33.644712Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 4/5
+2026-08-05T12:19:35.132378Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 5/5
+2026-08-05T12:19:38.606942Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+warning: Falling back from WebSockets to HTTPS transport. unexpected status 404 Not Found: Not found, url: ws://127.0.0.1:3460/v1/responses
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'Set-Content -Path a.txt -Value "one"; Set-Content -Path b.txt -Value "two"; Get-ChildItem -Filter *.txt | Sort-Object Name | ForEach-Object { $_.Name }' in C:\Users\erikb\AppData\Local\Temp\codex-e2e-02-parallel-files-201910
+ succeeded in 5832ms:
+a.txt
+b.txt
+
+2026-08-05T12:19:56.461624Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.486851Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.486900Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.486912Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.509693Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.509738Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.509750Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.509759Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.509768Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.509776Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.541200Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.541244Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.541256Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.564181Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.564231Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.585838Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.656353Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.656402Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.656413Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.656423Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.656432Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.663132Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.663178Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.693077Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.693124Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.693136Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.693145Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.693154Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:56.717025Z ERROR codex_core::util: OutputTextDelta without active item
+codex
+Created a.txt with "one" and b.txt with "two".
+
+Listing of *.txt sorted by name:
+"a.txt
+b.txt"
+tokens used
+14,954
+Created a.txt with "one" and b.txt with "two".
+
+Listing of *.txt sorted by name:
+"a.txt
+b.txt"

@@ -1,0 +1,28 @@
+{
+  "models": [
+    {
+      "slug": "baseline.remote-only",
+      "display_name": "baseline.remote-only",
+      "description": "baseline.remote-only",
+      "shell_type": "shell_command",
+      "visibility": "list",
+      "prefer_websockets": false,
+      "support_verbosity": true,
+      "default_verbosity": "low",
+      "truncation_policy": { "mode": "tokens", "limit": 10000 },
+      "context_window": 128000,
+      "max_context_window": 128000,
+      "effective_context_window_percent": 95,
+      "model_messages": {},
+      "default_reasoning_level": "high",
+      "supported_reasoning_levels": [
+        { "effort": "low", "description": "Fast responses with lighter reasoning" },
+        { "effort": "high", "description": "Extra high reasoning depth for complex problems" },
+        { "effort": "max", "description": "Maximum reasoning depth for the hardest problems" }
+      ],
+      "supported_in_api": true,
+      "minimal_client_version": "0.144.0",
+      "priority": 1
+    }
+  ]
+}
