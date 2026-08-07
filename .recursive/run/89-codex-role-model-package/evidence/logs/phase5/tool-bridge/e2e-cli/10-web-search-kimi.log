@@ -1,0 +1,37 @@
+Reading prompt from stdin...
+OpenAI Codex v0.147.0-alpha.1.2
+--------
+workdir: C:\Users\erikb\AppData\Local\Temp\codex-e2e-kimi-ws-051210
+model: moonshot/kimi-k3
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: low
+reasoning summaries: none
+session id: 019fd3c4-fda7-7582-bcb0-cd79d6a17fe8
+--------
+user
+What is Cloudflare NET current share price? Prefer web_search and cite a recent figure.
+
+2026-08-05T21:12:13.963955Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+2026-08-05T21:12:18.165243Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+2026-08-05T21:12:18.387126Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 2/5
+2026-08-05T21:12:18.778378Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 3/5
+2026-08-05T21:12:19.658926Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 4/5
+2026-08-05T21:12:21.127818Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 5/5
+2026-08-05T21:12:24.090902Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+warning: Falling back from WebSockets to HTTPS transport. unexpected status 404 Not Found: Not found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: data: {"type":"response.created","response":{"id":"resp_adapter","status":"in_progress","output":[]}}
+
+data: {"type":"response.completed","response":{"error":{"type":"routing_error","code":"no_eligible_target","message":"All eligible endpoints for model moonshot/kimi-k3 are temporarily unavailable after recent execution failures.","requestedModel":"moonshot/kimi-k3","deniedEndpointIds":["moonshot.personal.moonshot-oauth.global.kimi-k3"],"executionCooldowns":[{"endpointId":"moonshot.personal.moonshot-oauth.global.kimi-k3","active":true,"failureCount":937,"cooldownUntilMs":1786026468386,"lastFailureAtMs":1785954468386,"lastErrorClass":"quota_exhausted","sourceAttemptId":"bench-judge-compare-e02-single-word-85b1580e-fbe7-456e-ab03-b1e1afcefa7a:attempt:1","sourceRequestId":"bench-judge-compare-e02-single-word-85b1580e-fbe7-456e-ab03-b1e1afcefa7a","sourceRoutingDecisionId":"decision-bench-judge-compare-e02-single-word-85b1580e-fbe7-456e-ab03-b1e1afcefa7a","errorPreview":{"message":"You've reached your usage limit for this billing cycle. Your quota will be refreshed in the next cycle. To continue now, purchase extra usage or upgrade your plan: https://www.kimi.com/code/#pricing","statusCode":403,"type":"access_terminated_error"}}]}}}
+
+
+ERROR: data: {"type":"response.created","response":{"id":"resp_adapter","status":"in_progress","output":[]}}
+
+data: {"type":"response.completed","response":{"error":{"type":"routing_error","code":"no_eligible_target","message":"All eligible endpoints for model moonshot/kimi-k3 are temporarily unavailable after recent execution failures.","requestedModel":"moonshot/kimi-k3","deniedEndpointIds":["moonshot.personal.moonshot-oauth.global.kimi-k3"],"executionCooldowns":[{"endpointId":"moonshot.personal.moonshot-oauth.global.kimi-k3","active":true,"failureCount":937,"cooldownUntilMs":1786026468386,"lastFailureAtMs":1785954468386,"lastErrorClass":"quota_exhausted","sourceAttemptId":"bench-judge-compare-e02-single-word-85b1580e-fbe7-456e-ab03-b1e1afcefa7a:attempt:1","sourceRequestId":"bench-judge-compare-e02-single-word-85b1580e-fbe7-456e-ab03-b1e1afcefa7a","sourceRoutingDecisionId":"decision-bench-judge-compare-e02-single-word-85b1580e-fbe7-456e-ab03-b1e1afcefa7a","errorPreview":{"message":"You've reached your usage limit for this billing cycle. Your quota will be refreshed in the next cycle. To continue now, purchase extra usage or upgrade your plan: https://www.kimi.com/code/#pricing","statusCode":403,"type":"access_terminated_error"}}]}}}
+
+

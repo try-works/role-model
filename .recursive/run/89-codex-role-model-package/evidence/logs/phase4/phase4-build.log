@@ -1,0 +1,5 @@
+
+> @try-works/codex-role-model@0.1.0 build D:\DEV\role-model\.worktrees\89-codex-role-model-package\packages\codex-role-model
+> tsc -p tsconfig.build.json
+
+EXIT_CODE=0

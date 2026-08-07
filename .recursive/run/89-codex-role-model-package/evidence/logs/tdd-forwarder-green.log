@@ -1,0 +1,6 @@
+# TDD slice: forwarder + intent (forwarder.test.ts, responses-intent.test.ts)
+
+ ✓ test/forwarder.test.ts (3 tests)
+ ✓ test/responses-intent.test.ts (3 tests)
+
+Command: pnpm test test/forwarder.test.ts test/responses-intent.test.ts

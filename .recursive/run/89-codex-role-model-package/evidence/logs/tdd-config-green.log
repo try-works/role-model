@@ -1,0 +1,5 @@
+# TDD slice: codex config manager (codex-config.test.ts)
+
+ ✓ test/codex-config.test.ts (3 tests)
+
+Command: pnpm test test/codex-config.test.ts

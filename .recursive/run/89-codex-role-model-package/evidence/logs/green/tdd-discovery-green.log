@@ -1,0 +1,11 @@
+# TDD slice: discovery/trust (runtime-discovery.test.ts)
+# RED recorded before implementation adapted from pi-role-model
+
+ FAIL  test/runtime-discovery.test.ts
+   blocks remote endpoints before issuing network calls
+
+# GREEN after config.ts + runtime-discovery.ts
+
+ ✓ test/runtime-discovery.test.ts (4 tests)
+
+Command: pnpm --filter @try-works/codex-role-model test test/runtime-discovery.test.ts

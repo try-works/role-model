@@ -1,0 +1,479 @@
+Reading prompt from stdin...
+OpenAI Codex v0.146.0
+--------
+workdir: C:\Users\erikb\AppData\Local\Temp\codex-e2e-08-mcp-v3-210131
+model: baseline.remote-only
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: low
+reasoning summaries: none
+session id: 019fd203-da07-7eb3-b941-1c1802bdc9b5
+--------
+user
+Task: MCP connector smoke test.
+1) Use tool_search to find GitHub connector tools.
+2) Call the deferred GitHub tool _get_user_login (or _list_recent_issues) via the MCP/app tool ΓÇö NOT via shell, NOT via gh CLI.
+3) List the connectors you can see and summarize the tool result in one sentence.
+Do not ask questions. Do not use shell_command for the GitHub action.
+
+
+2026-08-05T13:01:44.813229Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+2026-08-05T13:01:48.566291Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+2026-08-05T13:01:48.780323Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 2/5
+2026-08-05T13:01:49.188429Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 3/5
+2026-08-05T13:01:50.050286Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 4/5
+2026-08-05T13:01:51.542930Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 5/5
+2026-08-05T13:01:54.683788Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+warning: Falling back from WebSockets to HTTPS transport. unexpected status 404 Not Found: Not found, url: ws://127.0.0.1:3460/v1/responses
+2026-08-05T13:01:59.846236Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:01:59.871294Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:01:59.871329Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:01:59.900262Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:01:59.900299Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:01:59.900307Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:00.207703Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:00.207738Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:00.207745Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:00.207751Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:00.207755Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:00.207760Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:00.208055Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:00.208083Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:00.208090Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:00.208095Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:00.208100Z ERROR codex_core::util: OutputTextDelta without active item
+codex
+The GitHub connector tools are now available. Let me call `_get_user_login`.
+mcp: codex_apps/github.get_user_login started
+mcp: codex_apps/github.get_user_login (completed)
+2026-08-05T13:02:03.604390Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.604427Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.604435Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.604440Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.616320Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.616355Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.616362Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.616367Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.616374Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.617012Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.617041Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.617050Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.617059Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.617066Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.617072Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.617079Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.617085Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.617093Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.617100Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.809011Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.809067Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.809081Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.809457Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.809496Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.809507Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.809515Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.835084Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.835121Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.835129Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.835465Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.835492Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.835500Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.835505Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.835510Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.835515Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.835520Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.835524Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.835529Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.835534Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.835685Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.835709Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.835716Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.835721Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.835726Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.950593Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.950635Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.950648Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.950657Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.950664Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.951328Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.951364Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.951377Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.951383Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.951388Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.951392Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.951397Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.951402Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.951407Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.951412Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.951417Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.951422Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.952194Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.952221Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.952228Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.952233Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.952238Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.952242Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.952247Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.952252Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.952257Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.952261Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:03.952269Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.136257Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.136293Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.136300Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.136570Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.136596Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.136608Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.136617Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.136624Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.182670Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.182706Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.182714Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.182719Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.182724Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.182729Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.183070Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.183095Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.183103Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.183108Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.183113Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.183118Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.183122Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.183127Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.183133Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.329093Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.329524Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.329552Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.329560Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.329565Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.329570Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.329575Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.329580Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.329584Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.329589Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.329598Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.329603Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330119Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330152Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330163Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330172Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330180Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330188Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330196Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330205Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330213Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330221Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330228Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330237Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330285Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330314Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330324Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330333Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330341Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330349Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330829Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330856Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330864Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330872Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330877Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330882Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330887Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.330891Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.514462Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.514505Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.514518Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.514526Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.514931Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.514953Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.514959Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.514964Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.514969Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.514974Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.514979Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.514984Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.514989Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.515248Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.515275Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.515283Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.515288Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.515293Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.515298Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.515534Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.515559Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.515566Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.515571Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.515575Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.515580Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.670864Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.670896Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.670903Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.670908Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.670913Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.670917Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.758188Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.758224Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.758231Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.758236Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.758241Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.774262Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.774298Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.774667Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.774695Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.774703Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.774708Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.774713Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.774718Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.774722Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.774892Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.774917Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.774925Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.774930Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.774935Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.775224Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.775251Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.775259Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.775264Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.775269Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.775274Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.775279Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.775552Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.775576Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.775583Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.775588Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.775593Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.775598Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.775699Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.775713Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.815315Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.815586Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.815611Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.843286Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.843321Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.843517Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.843543Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.843552Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:04.843557Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.557766Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.557799Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.557807Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.557812Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.557817Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558085Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558111Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558119Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558124Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558129Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558134Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558138Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558143Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558148Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558457Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558478Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558485Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558490Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558494Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558499Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558504Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558509Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558514Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558519Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558713Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558728Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558734Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558739Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558743Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558748Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558753Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558761Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558766Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558771Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558918Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558943Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558954Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.558963Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.559335Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.559357Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.559365Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.559370Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.559375Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.559380Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.559728Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.559751Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.559758Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.559764Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.559768Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.559773Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.559778Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.559783Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.559788Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.560164Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.560188Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.560196Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.560201Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.560206Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.560211Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.560216Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.560220Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.560229Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.560455Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.560479Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.560486Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.560491Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.560498Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.560503Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.560509Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.560514Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.560520Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.930586Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.930638Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.930654Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.930664Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.931010Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.931049Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.931063Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.931072Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.931081Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.931089Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.931097Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.931281Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.931312Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.931326Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.931893Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.931924Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.931937Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.931945Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.931953Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.931960Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.931968Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.931976Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:05.931985Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.117375Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.117419Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.117433Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.117443Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.117452Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.117845Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.117872Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.117881Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.117886Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.117891Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.117896Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.117901Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.117908Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.117913Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.118066Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.118090Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.118098Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.118103Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.118108Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.118113Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.230179Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.230216Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.230224Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.230229Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.230234Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.230326Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.230353Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.230365Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.230688Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.230725Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.230738Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.230747Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.231177Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.231215Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.231229Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.231238Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.231660Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.231694Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.231705Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.231713Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.231721Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.231730Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.232102Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.232135Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.232146Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.494132Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.494166Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.494174Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.494179Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.494184Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.494467Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.494484Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.494490Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.494495Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.494499Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.494504Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.494509Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.494513Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.494749Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.494776Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.494784Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.494790Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.494938Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.494965Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.494977Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.495163Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.495193Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.495462Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.495489Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.495501Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.495509Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.495731Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.495756Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.495763Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.495768Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.495773Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.808345Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.808382Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.808389Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.808395Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.808766Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.808795Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.808804Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.808808Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.808814Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.808818Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.808823Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.808828Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.809144Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.809172Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.809183Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.809191Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.809820Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T13:02:06.809847Z ERROR codex_core::util: OutputTextDelta without active item
+codex
+## MCP Connector Smoke Test ΓÇö Results
+
+**1) GitHub connector tools found via `tool_search`:**
+The search returned the `mcp__codex_apps__github` namespace with 8 deferred tools, including `_get_user_login`, `_list_recent_issues`, `_get_users_recent_prs_in_repo`, `_mark_pull_request_ready_for_review`, `_list_pull_request_reviews`, `_convert_pull_request_to_draft`, `_compare_commits`, and `_update_pull_request`.
+
+**2) Deferred tool called via MCP/app (not shell, not gh CLI):**
+Called `_get_user_login` successfully ΓåÆ returned `{"login":"try-works","id":262919414}`.
+
+**3) Connectors visible & summary:**
+
+- **GitHub** (plugin `GitHub`, namespace `mcp__codex_apps__github`) ΓÇö the connector I used, covering repos, issues, and PRs.
+- Also visible in this environment: Airtable, Apollo.io, Asana, Atlassian Rovo, Base44, Box, Canva, Cloudflare, Gmail, Google Calendar, Google Drive, Granola, HeyGen, HubSpot, HyperFrames, Lovable, Monday.com, Neon Postgres, Notion, OpenAI Developers, Outlook Calendar/Email, PostHog, Remotion, Replit, Semrush, Sentry, SharePoint, Slack, Stripe, Supabase, Teams, Vercel, Wix, Zotero, plus the skill/plugin tools (imagegen, openai-docs, browser, computer-use, sites, visualize).
+
+**One-sentence summary:** The GitHub MCP connector is functional and authenticated, returning the login `try-works` (id `262919414`) via `_get_user_login` when invoked through the app tool.
+tokens used
+28,809
+## MCP Connector Smoke Test ΓÇö Results
+
+**1) GitHub connector tools found via `tool_search`:**
+The search returned the `mcp__codex_apps__github` namespace with 8 deferred tools, including `_get_user_login`, `_list_recent_issues`, `_get_users_recent_prs_in_repo`, `_mark_pull_request_ready_for_review`, `_list_pull_request_reviews`, `_convert_pull_request_to_draft`, `_compare_commits`, and `_update_pull_request`.
+
+**2) Deferred tool called via MCP/app (not shell, not gh CLI):**
+Called `_get_user_login` successfully ΓåÆ returned `{"login":"try-works","id":262919414}`.
+
+**3) Connectors visible & summary:**
+
+- **GitHub** (plugin `GitHub`, namespace `mcp__codex_apps__github`) ΓÇö the connector I used, covering repos, issues, and PRs.
+- Also visible in this environment: Airtable, Apollo.io, Asana, Atlassian Rovo, Base44, Box, Canva, Cloudflare, Gmail, Google Calendar, Google Drive, Granola, HeyGen, HubSpot, HyperFrames, Lovable, Monday.com, Neon Postgres, Notion, OpenAI Developers, Outlook Calendar/Email, PostHog, Remotion, Replit, Semrush, Sentry, SharePoint, Slack, Stripe, Supabase, Teams, Vercel, Wix, Zotero, plus the skill/plugin tools (imagegen, openai-docs, browser, computer-use, sites, visualize).
+
+**One-sentence summary:** The GitHub MCP connector is functional and authenticated, returning the login `try-works` (id `262919414`) via `_get_user_login` when invoked through the app tool.

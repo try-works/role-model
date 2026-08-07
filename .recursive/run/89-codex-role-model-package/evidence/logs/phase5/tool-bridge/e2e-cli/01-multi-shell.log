@@ -1,0 +1,73 @@
+Reading additional input from stdin...
+OpenAI Codex v0.146.0
+--------
+workdir: C:\Users\erikb\AppData\Local\Temp\codex-e2e-01-multi-shell-201803
+model: baseline.remote-only
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: low
+reasoning summaries: none
+session id: 019fd1dc-0f6a-7002-992c-82ba1c1c7eab
+--------
+user
+Create bridge-multi.txt with three lines: alpha, beta, gamma. Then append delta, then print the full file contents and quote them. Do not ask questions.
+2026-08-05T12:18:16.109739Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+2026-08-05T12:18:42.672624Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+2026-08-05T12:18:42.896060Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 2/5
+2026-08-05T12:18:43.294764Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 3/5
+2026-08-05T12:18:44.201500Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 4/5
+2026-08-05T12:18:45.658821Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 5/5
+2026-08-05T12:18:48.923299Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+warning: Falling back from WebSockets to HTTPS transport. unexpected status 404 Not Found: Not found, url: ws://127.0.0.1:3460/v1/responses
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'Set-Content -Path bridge-multi.txt -Value @("alpha","beta","gamma"); Add-Content -Path bridge-multi.txt -Value "delta"; Get-Content -Path bridge-multi.txt' in C:\Users\erikb\AppData\Local\Temp\codex-e2e-01-multi-shell-201803
+ succeeded in 5684ms:
+alpha
+beta
+gamma
+delta
+
+2026-08-05T12:19:06.873227Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:06.900143Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:06.900192Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:06.926437Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:06.926482Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:06.926493Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:06.926503Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:06.926511Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:06.926520Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:07.262567Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:07.262697Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:07.262750Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:07.262779Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:07.262801Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:07.264681Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:07.264786Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:07.264840Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:07.264878Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:07.264913Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:19:07.264944Z ERROR codex_core::util: OutputTextDelta without active item
+codex
+Done. `bridge-multi.txt` contains:
+
+```
+alpha
+beta
+gamma
+delta
+```
+tokens used
+14,782
+Done. `bridge-multi.txt` contains:
+
+```
+alpha
+beta
+gamma
+delta
+```

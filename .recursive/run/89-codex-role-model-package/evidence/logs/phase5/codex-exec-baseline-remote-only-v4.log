@@ -1,0 +1,19 @@
+2026-08-04T18:08:29.741059Z ERROR codex_models_manager::manager: failed to refresh available models: unexpected status 404 Not Found: Not found, url: http://127.0.0.1:3460/v1/models?client_version=0.146.0
+2026-08-04T18:08:29.745733Z ERROR codex_models_manager::manager: failed to refresh available models: unexpected status 404 Not Found: Not found, url: http://127.0.0.1:3460/v1/models?client_version=0.146.0
+OpenAI Codex v0.146.0
+--------
+workdir: D:\DEV\role-model\.worktrees\89-codex-role-model-package
+model: baseline.remote-only
+provider: role-model
+approval: never
+sandbox: read-only
+reasoning effort: none
+reasoning summaries: none
+session id: 019fcdf6-7832-7f90-8b01-d74edeef9192
+--------
+user
+Reply with exactly the three characters: OK. Do not use tools.
+
+warning: Model metadata for `baseline.remote-only` not found. Defaulting to fallback metadata; this can degrade performance and cause issues.
+tokens used
+8,739

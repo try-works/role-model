@@ -1,0 +1,162 @@
+[
+  {
+    "id": "designer.ui.review",
+    "label": "UI Review",
+    "description": "Review interface layout, hierarchy, visual polish, accessibility, or usability.",
+    "primaryRole": "designer",
+    "compatibleRoles": ["designer", "product", "writer"],
+    "requiredCapabilities": ["vision.input", "text.chat"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks whether an interface looks or feels right.",
+      "doNotUseWhen": "User asks for backend debugging."
+    },
+    "variants": ["review"]
+  },
+  {
+    "id": "designer.interaction",
+    "label": "Interaction Design",
+    "description": "Design states, flows, controls, and interaction behavior.",
+    "primaryRole": "designer",
+    "compatibleRoles": ["designer", "product", "architect"],
+    "requiredCapabilities": ["text.chat"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks how a UI should behave across workflows.",
+      "doNotUseWhen": "User asks for legal/compliance interpretation."
+    },
+    "variants": []
+  },
+  {
+    "id": "designer.visual_direction",
+    "label": "Visual Direction",
+    "description": "Define visual style, hierarchy, mood, layout direction, or asset guidance.",
+    "primaryRole": "designer",
+    "compatibleRoles": ["designer", "creative", "product"],
+    "requiredCapabilities": ["vision.input", "text.chat"],
+    "preferredCapabilities": ["vision.output"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for visual direction, composition, design polish, or creative UI treatment.",
+      "doNotUseWhen": "User asks for code-level bug diagnosis."
+    },
+    "variants": []
+  },
+  {
+    "id": "designer.prototype",
+    "label": "Prototype Design",
+    "description": "Design prototype structure, screens, or flows.",
+    "primaryRole": "designer",
+    "compatibleRoles": ["designer", "product", "creative"],
+    "requiredCapabilities": ["text.chat", "vision.output"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for a prototype or mock flow.",
+      "doNotUseWhen": "User asks for backend architecture only."
+    },
+    "variants": []
+  },
+  {
+    "id": "designer.design_system",
+    "label": "Design System Work",
+    "description": "Define or review components, tokens, states, and visual rules.",
+    "primaryRole": "designer",
+    "compatibleRoles": ["designer", "architect", "product"],
+    "requiredCapabilities": ["text.chat", "vision.input"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for design system guidance.",
+      "doNotUseWhen": "User asks for database schema only."
+    },
+    "variants": []
+  },
+  {
+    "id": "designer.accessibility.review",
+    "label": "Accessibility Review",
+    "description": "Review UI accessibility, contrast, semantics, and interaction clarity.",
+    "primaryRole": "designer",
+    "compatibleRoles": ["designer", "tester", "product"],
+    "requiredCapabilities": ["vision.input", "text.chat"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks whether UI is accessible.",
+      "doNotUseWhen": "User asks for legal accessibility compliance only."
+    },
+    "variants": ["review"]
+  },
+  {
+    "id": "designer.content.layout",
+    "label": "Content Layout",
+    "description": "Design page structure, information hierarchy, and content placement.",
+    "primaryRole": "designer",
+    "compatibleRoles": ["designer", "writer", "product"],
+    "requiredCapabilities": ["vision.input", "text.chat"],
+    "preferredCapabilities": ["vision.output"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks how to lay out content.",
+      "doNotUseWhen": "User asks for copywriting only."
+    },
+    "variants": ["layout"]
+  },
+  {
+    "id": "designer.usability.test",
+    "label": "Usability Test Planning",
+    "description": "Plan usability tests, tasks, observations, and evaluation criteria.",
+    "primaryRole": "designer",
+    "compatibleRoles": ["designer", "tester", "product"],
+    "requiredCapabilities": ["text.chat", "reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks how to test usability.",
+      "doNotUseWhen": "User asks for automated unit tests."
+    },
+    "variants": ["test"]
+  },
+  {
+    "id": "designer.mobile.responsive",
+    "label": "Responsive Design",
+    "description": "Review or design responsive and mobile UI behavior.",
+    "primaryRole": "designer",
+    "compatibleRoles": ["designer", "coder", "product"],
+    "requiredCapabilities": ["vision.input", "text.chat"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks how UI should adapt to screen sizes.",
+      "doNotUseWhen": "User asks for server scaling review."
+    },
+    "variants": ["responsive"]
+  },
+  {
+    "id": "designer.visual.qa",
+    "label": "Visual QA",
+    "description": "Inspect visual implementation for polish, overlap, spacing, and hierarchy.",
+    "primaryRole": "designer",
+    "compatibleRoles": ["designer", "tester", "coder"],
+    "requiredCapabilities": ["vision.input", "text.chat"],
+    "preferredCapabilities": ["tools.browser_control"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks whether UI rendering looks correct.",
+      "doNotUseWhen": "User asks for product-market fit."
+    },
+    "variants": ["qa"]
+  }
+]

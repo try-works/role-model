@@ -1,0 +1,7 @@
+# TDD slice: codex config manager (codex-config.test.ts)
+
+ FAIL  test/codex-config.test.ts
+   setup backs up and uninstall restores managed block removal
+   InvalidTomlAbortError: windows path backslashes in model_catalog_json
+
+Command: pnpm test test/codex-config.test.ts

@@ -1,0 +1,8 @@
+data: {"type":"response.created","response":{"id":"resp_req-0bcf3183-6e95-424d-8ddc-e6449cf0450f","created_at":1785930330,"model":"deepseek-v4-flash"}}
+
+data: {"type":"response.output_item.added","output_index":0,"item":{"type":"message","id":"msg_resp_req-0bcf3183-6e95-424d-8ddc-e6449cf0450f"}}
+
+data: {"type":"response.output_item.added","output_index":1,"item":{"type":"function_call","id":"call_00_qGZfAXBb7s60Ii8TP8AW3667","call_id":"call_00_qGZfAXBb7s60Ii8TP8AW3667","name":"shell_command","arguments":""}}
+data: {"type":"response.function_call_arguments.delta","item_id":"call_00_qGZfAXBb7s60Ii8TP8AW3667","output_index":1,"delta":"{\"command\":\"echo \\\"tool-bridge-ok\\\" > bridge-smoke.txt\"}"}
+data: {"type":"response.function_call_arguments.done","item_id":"call_00_qGZfAXBb7s60Ii8TP8AW3667","output_index":1,"arguments":"{\"command\":\"echo \\\"tool-bridge-ok\\\" > bridge-smoke.txt\"}"}
+data: {"type":"response.output_item.done","output_index":1,"item":{"type":"function_call","id":"call_00_qGZfAXBb7s60Ii8TP8AW3667","call_id":"call_00_qGZfAXBb7s60Ii8TP8AW3667","name":"shell_command","arguments":"{\"command\":\"echo \\\"tool-bridge-ok\\\" > bridge-smoke.txt\"}","status":"completed"}}data: {"type":"response.completed","response":{"id":"resp_req-0bcf3183-6e95-424d-8ddc-e6449cf0450f","usage":{"input_tokens":399,"output_tokens":55,"total_tokens":454},"status":"completed","output":[{"type":"function_call","id":"call_00_qGZfAXBb7s60Ii8TP8AW3667","call_id":"call_00_qGZfAXBb7s60Ii8TP8AW3667","name":"shell_command","arguments":"{\"command\":\"echo \\\"tool-bridge-ok\\\" > bridge-smoke.txt\"}","status":"completed"}]}}

@@ -1,0 +1,6 @@
+# TDD slice: CLI + secret safety
+
+ ✓ test/commands.test.ts (3 tests)
+ ✓ test/secret-safety.test.ts (1 test)
+
+Command: pnpm test test/commands.test.ts test/secret-safety.test.ts

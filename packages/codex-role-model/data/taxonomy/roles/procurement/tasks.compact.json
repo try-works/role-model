@@ -1,0 +1,162 @@
+[
+  {
+    "id": "procurement.vendor.compare",
+    "label": "Vendor Comparison",
+    "description": "Compare vendors against requirements, cost, risk, security, and operational fit.",
+    "primaryRole": "procurement",
+    "compatibleRoles": ["procurement", "finance", "security", "analyst"],
+    "requiredCapabilities": ["procurement.analysis", "finance.analysis"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks which vendor/tool/provider is a better fit.",
+      "doNotUseWhen": "User asks for pure product marketing copy."
+    },
+    "variants": ["compare"]
+  },
+  {
+    "id": "procurement.rfp.write",
+    "label": "RFP Writing",
+    "description": "Draft request-for-proposal questions, scoring criteria, and response templates.",
+    "primaryRole": "procurement",
+    "compatibleRoles": ["procurement", "legal", "security", "writer"],
+    "requiredCapabilities": ["procurement.analysis"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to create an RFP, vendor questionnaire, or procurement checklist.",
+      "doNotUseWhen": "User asks for implementation code."
+    },
+    "variants": ["write"]
+  },
+  {
+    "id": "procurement.requirements",
+    "label": "Purchasing Requirements",
+    "description": "Define purchasing, security, legal, operational, and commercial requirements.",
+    "primaryRole": "procurement",
+    "compatibleRoles": ["procurement", "security", "finance", "operator"],
+    "requiredCapabilities": ["procurement.analysis"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks what requirements to give vendors or evaluate against.",
+      "doNotUseWhen": "User asks for a sales pitch."
+    },
+    "variants": []
+  },
+  {
+    "id": "procurement.contract.commercial",
+    "label": "Commercial Contract Review",
+    "description": "Review commercial contract terms such as pricing, renewal, SLA, and termination from a business perspective.",
+    "primaryRole": "procurement",
+    "compatibleRoles": ["procurement", "legal", "finance"],
+    "requiredCapabilities": ["procurement.analysis", "finance.analysis"],
+    "preferredCapabilities": ["legal.analysis"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks about commercial terms or vendor contract tradeoffs.",
+      "doNotUseWhen": "User asks for binding legal advice."
+    },
+    "variants": ["commercial"]
+  },
+  {
+    "id": "procurement.security.questionnaire",
+    "label": "Security Questionnaire",
+    "description": "Draft or review vendor security questionnaire content.",
+    "primaryRole": "procurement",
+    "compatibleRoles": ["procurement", "security"],
+    "requiredCapabilities": ["procurement.analysis", "security.analysis"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for security questionnaire support.",
+      "doNotUseWhen": "User asks for internal security incident response."
+    },
+    "variants": ["questionnaire"]
+  },
+  {
+    "id": "procurement.vendor.scorecard",
+    "label": "Vendor Scorecard",
+    "description": "Build vendor scoring criteria, weights, and summaries.",
+    "primaryRole": "procurement",
+    "compatibleRoles": ["procurement", "analyst", "finance"],
+    "requiredCapabilities": ["procurement.analysis"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for vendor scorecard.",
+      "doNotUseWhen": "User asks for marketing comparison."
+    },
+    "variants": ["scorecard"]
+  },
+  {
+    "id": "procurement.renewal.review",
+    "label": "Renewal Review",
+    "description": "Review renewal timing, pricing, usage, risk, and negotiation points.",
+    "primaryRole": "procurement",
+    "compatibleRoles": ["procurement", "finance", "legal"],
+    "requiredCapabilities": ["procurement.analysis", "finance.analysis"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks whether to renew a vendor.",
+      "doNotUseWhen": "User asks for legal final approval."
+    },
+    "variants": ["review"]
+  },
+  {
+    "id": "procurement.sla.review",
+    "label": "SLA Review",
+    "description": "Review service levels, support terms, penalties, and operational fit.",
+    "primaryRole": "procurement",
+    "compatibleRoles": ["procurement", "operator", "legal"],
+    "requiredCapabilities": ["procurement.analysis", "legal.analysis"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks about SLA implications.",
+      "doNotUseWhen": "User asks for uptime incident triage."
+    },
+    "variants": ["review"]
+  },
+  {
+    "id": "procurement.negotiation.plan",
+    "label": "Negotiation Plan",
+    "description": "Prepare vendor negotiation strategy, asks, and fallback positions.",
+    "primaryRole": "procurement",
+    "compatibleRoles": ["procurement", "finance", "seller"],
+    "requiredCapabilities": ["procurement.analysis", "finance.analysis"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks how to negotiate vendor terms.",
+      "doNotUseWhen": "User asks for sales objection handling."
+    },
+    "variants": ["plan"]
+  },
+  {
+    "id": "procurement.purchase.justification",
+    "label": "Purchase Justification",
+    "description": "Draft justification for purchase, renewal, or vendor selection.",
+    "primaryRole": "procurement",
+    "compatibleRoles": ["procurement", "finance", "writer"],
+    "requiredCapabilities": ["procurement.analysis", "communication.user_facing"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to justify buying something.",
+      "doNotUseWhen": "User asks for implementation code."
+    },
+    "variants": ["justification"]
+  }
+]

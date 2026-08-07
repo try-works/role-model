@@ -1,0 +1,115 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/89-codex-role-model-package/packages/codex-role-model
+
+ Γ¥» test/codex-tool-bridge.test.ts (17 tests | 1 failed | 16 skipped) 14ms
+   Γåô CodexToolBridge request flatten > flattens namespace tools to canonical mcp__ function names
+   Γåô CodexToolBridge request flatten > hosted mode passes through type web_search
+   Γåô CodexToolBridge request flatten > shim mode still flattens hosted web_search to a function
+   Γåô CodexToolBridge request flatten > injects web_search preference guidance once when shimmed
+   ├ù CodexToolBridge request flatten > injects anti-narration guidance once when callable tools are present 12ms
+     ΓåÆ injectToolNarrationGuidance is not a function
+   Γåô CodexToolBridge request flatten > histogram counts inbound tool types
+   Γåô CodexToolBridge response restore > restores flat function_call names to namespace + tool_search_call
+   Γåô CodexToolBridge response restore > restores tool_search with client execution so Codex dispatches MCP discovery
+   Γåô CodexToolBridge response restore > restores leftover web_search function_call to Codex web_search_call
+   Γåô CodexToolBridge response restore > forces completed hosted web_search_call back to client in_progress
+   Γåô CodexToolBridge response restore > restores stray web_search as web_search_call not a local function
+   Γåô CodexToolBridge response restore > harvests deferred tools from tool_search_output into reverseMap
+   Γåô CodexToolBridge response restore > restores harvested and inferred mcp__ flat names to namespaced calls
+   Γåô CodexToolBridge response restore > restores apply_patch function_call to custom_tool_call with freeform input
+   Γåô CodexToolBridge response restore > restores mapped names inside SSE data frames
+   Γåô CodexToolBridge response restore > preserves SSE blank-line framing when restoring multiple data events
+   Γåô CodexToolBridge tracing helpers > createBridgeTraceId returns non-empty id
+stderr | test/forwarder.test.ts > tool-narration premature stop > auto-continues after tool-narration stop until a function_call is emitted
+{"event":"bridge.hop.start","bridgeTraceId":"016eb5f7-3a82-437e-898e-a212d236d559","route":"role-model","model":"baseline.remote-only","histogram":{"function":1,"namespace":0,"tool_search":0,"custom":0,"web_search":0,"other":0},"ts":"2026-08-05T23:30:31.995Z"}
+{"event":"bridge.transform.request","bridgeTraceId":"016eb5f7-3a82-437e-898e-a212d236d559","inboundToolCount":1,"outboundToolCount":1,"flattenedNamespaceCount":0,"harvestedFromSearch":0,"shimCounts":{"tool_search":0,"apply_patch":0,"web_search":0},"unknownDroppedCount":0,"reverseMapSize":0,"histogram":{"function":1,"namespace":0,"tool_search":0,"custom":0,"web_search":0,"other":0},"ts":"2026-08-05T23:30:31.997Z"}
+{"event":"bridge.upstream.forward","bridgeTraceId":"016eb5f7-3a82-437e-898e-a212d236d559","upstream":"http://upstream.test/v1/responses","intentPresent":true,"ts":"2026-08-05T23:30:31.997Z"}
+
+stderr | test/forwarder.test.ts > tool-narration premature stop > auto-continues after tool-narration stop until a function_call is emitted
+{"event":"bridge.upstream.response","bridgeTraceId":"016eb5f7-3a82-437e-898e-a212d236d559","status":200,"contentType":"application/json","ts":"2026-08-05T23:30:32.000Z"}
+
+stderr | test/forwarder.test.ts > tool-narration premature stop > auto-continues after tool-narration stop until a function_call is emitted
+{"event":"bridge.transform.response","bridgeTraceId":"016eb5f7-3a82-437e-898e-a212d236d559","restoredByKind":{"namespace":0,"tool_search":0,"web_search":0,"custom":0,"function":0,"passthrough":0},"reverseMapHits":0,"reverseMapMisses":0,"ts":"2026-08-05T23:30:32.006Z"}
+{"event":"bridge.hop.end","bridgeTraceId":"016eb5f7-3a82-437e-898e-a212d236d559","outcome":"ok","durationMs":22,"ts":"2026-08-05T23:30:32.008Z"}
+
+ Γ¥» test/forwarder.test.ts (30 tests | 2 failed | 28 skipped) 122ms
+   Γåô web_search fallback formatting > strips [wordlim] chrome and never returns raw SERP as fallback text
+   ├ù tool-narration premature stop > detects audit phrases and rejects completed markers 13ms
+     ΓåÆ isToolNarrationPrematureStop is not a function
+   ├ù tool-narration premature stop > auto-continues after tool-narration stop until a function_call is emitted 107ms
+     ΓåÆ expected 1 to be greater than or equal to 2
+   Γåô Responses forwarder > remaps native picker slugs to role-model ids before upstream
+   Γåô Responses forwarder > proxies native GPT models to ChatGPT Codex backend
+   Γåô Responses forwarder > injects intent before proxying POST /v1/responses
+   Γåô Responses forwarder > flattens Codex hosted tools but preserves input and reasoning passthrough
+   Γåô Responses forwarder > fulfills web_search via ChatGPT alpha/search and continues the model turn
+   Γåô Responses forwarder > exhausted web_search continues never dump raw [wordlim] SERP as the answer
+   Γåô Responses forwarder > duplicate web_search queries are not re-fetched via alpha/search
+   Γåô Responses forwarder > alpha/search relays to ChatGPT Codex backend with caller auth
+   Γåô Responses forwarder > alpha/search falls back to DuckDuckGo when ChatGPT auth is missing
+   Γåô Responses forwarder > synthesizes output_item.added before orphan text deltas and always completes
+   Γåô Responses forwarder > converts custom_tool_call history to function_call pairs for upstream
+   Γåô Responses forwarder > repairs misordered tool call input before forwarding upstream
+   Γåô Responses forwarder > orders completed.output by output_index so messages precede tool calls
+   Γåô Responses forwarder > pairs web_search_call history with function_call_output for DeepSeek
+   Γåô Responses forwarder > stubs unpaired function_call history so DeepSeek never sees orphan tool_calls
+   Γåô Responses forwarder > repairs function_call before commentary so tool outputs stay adjacent
+   Γåô Responses forwarder > converts response.incomplete tool_calls into response.completed for Codex
+   Γåô Responses forwarder > ensures response.completed always has response.id for Codex Desktop
+   Γåô Responses forwarder > streamed web_search fulfill SSE response.completed includes id
+   Γåô Responses forwarder > normalizes SSE done frames and completed.output for Codex Desktop
+   Γåô Responses forwarder > flush emits each synthesized data line as its own SSE event
+   Γåô Responses forwarder > accepts gzip-compressed JSON request bodies
+   Γåô Responses forwarder > accepts zstd-compressed JSON request bodies like Codex Desktop
+   Γåô Responses forwarder > flattens Codex hosted tools on role-model hops and restores namespace calls
+   Γåô Responses forwarder > does not flatten tools on native GPT hops
+   Γåô Responses forwarder > returns 404 for compact endpoint
+   Γåô Responses forwarder > responses intent helper preserves explicit intent
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 3 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/codex-tool-bridge.test.ts > CodexToolBridge request flatten > injects anti-narration guidance once when callable tools are present
+TypeError: injectToolNarrationGuidance is not a function
+ Γ¥» test/codex-tool-bridge.test.ts:130:18
+    128|       "../src/codex-tool-bridge.js"
+    129|     );
+    130|     const once = injectToolNarrationGuidance(
+       |                  ^
+    131|       {
+    132|         model: "baseline.remote-only",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/3]ΓÄ»
+
+ FAIL  test/forwarder.test.ts > tool-narration premature stop > detects audit phrases and rejects completed markers
+TypeError: isToolNarrationPrematureStop is not a function
+ Γ¥» test/forwarder.test.ts:59:7
+     57|     };
+     58|     expect(
+     59|       isToolNarrationPrematureStop(narrate, { hasCallableTools: true }ΓÇª
+       |       ^
+     60|     ).toBe(true);
+     61|     expect(
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/3]ΓÄ»
+
+ FAIL  test/forwarder.test.ts > tool-narration premature stop > auto-continues after tool-narration stop until a function_call is emitted
+AssertionError: expected 1 to be greater than or equal to 2
+ Γ¥» test/forwarder.test.ts:164:27
+    162|     });
+    163|     expect(response.status).toBe(200);
+    164|     expect(responsesHops).toBeGreaterThanOrEqual(2);
+       |                           ^
+    165|     const body = (await response.json()) as {
+    166|       output?: Array<{ type?: string; name?: string }>;
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[3/3]ΓÄ»
+
+
+ Test Files  2 failed (2)
+      Tests  3 failed | 44 skipped (47)
+   Start at  07:30:30
+   Duration  1.42s (transform 461ms, setup 0ms, collect 678ms, tests 136ms, environment 1ms, prepare 631ms)
+
+undefined
+D:\DEV\role-model\.worktrees\89-codex-role-model-package\packages\codex-role-model:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/forwarder.test.ts test/codex-tool-bridge.test.ts -t tool-narration|anti-narration|detects audit

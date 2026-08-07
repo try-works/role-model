@@ -1,0 +1,162 @@
+[
+  {
+    "id": "operator.debug.startup",
+    "label": "Startup Debugging",
+    "description": "Diagnose runtime, launch, environment, or process startup failures.",
+    "primaryRole": "operator",
+    "compatibleRoles": ["operator", "coder"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["tools.command_execution"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User reports service launch, install, process, port, auth, or environment failures.",
+      "doNotUseWhen": "User asks to design a new feature."
+    },
+    "variants": ["startup"]
+  },
+  {
+    "id": "operator.debug.ui",
+    "label": "UI Runtime Debugging",
+    "description": "Diagnose UI runtime, rendering, browser, interaction, or frontend workflow failures.",
+    "primaryRole": "operator",
+    "compatibleRoles": ["operator", "tester", "coder", "designer"],
+    "requiredCapabilities": ["tools.browser_control", "reasoning.multi_step"],
+    "preferredCapabilities": ["tools.command_execution"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User reports broken UI behavior, rendering issues, browser errors, or failed UI workflows.",
+      "doNotUseWhen": "User asks only for visual design critique."
+    },
+    "variants": ["ui"]
+  },
+  {
+    "id": "operator.debug.api",
+    "label": "API Runtime Debugging",
+    "description": "Diagnose API, HTTP, webhook, auth, integration, or service response failures.",
+    "primaryRole": "operator",
+    "compatibleRoles": ["operator", "coder", "architect", "support"],
+    "requiredCapabilities": ["tools.function_calling", "reasoning.multi_step"],
+    "preferredCapabilities": ["tools.command_execution"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User reports failed API calls, bad responses, webhook failures, request/response mismatches, or endpoint integration issues.",
+      "doNotUseWhen": "User asks to design a new API contract from scratch."
+    },
+    "variants": ["api"]
+  },
+  {
+    "id": "operator.deploy.review",
+    "label": "Deployment Review",
+    "description": "Review deployment configuration, release readiness, or rollout risk.",
+    "primaryRole": "operator",
+    "compatibleRoles": ["operator", "security", "architect"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["tools.command_execution"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks whether a deployment/release is ready.",
+      "doNotUseWhen": "User asks to write unrelated prose."
+    },
+    "variants": ["review"]
+  },
+  {
+    "id": "operator.incident_triage",
+    "label": "Incident Triage",
+    "description": "Triage outages, regressions, alerts, logs, or production symptoms.",
+    "primaryRole": "operator",
+    "compatibleRoles": ["operator", "coder", "security"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["tools.command_execution"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User reports an incident or asks for operational triage.",
+      "doNotUseWhen": "User asks for normal feature planning."
+    },
+    "variants": []
+  },
+  {
+    "id": "operator.config",
+    "label": "Runtime Configuration",
+    "description": "Configure services, endpoints, environments, or runtime settings.",
+    "primaryRole": "operator",
+    "compatibleRoles": ["operator", "coder"],
+    "requiredCapabilities": ["tools.function_calling"],
+    "preferredCapabilities": ["tools.command_execution"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to set up or change runtime configuration.",
+      "doNotUseWhen": "User asks for conceptual explanation only."
+    },
+    "variants": []
+  },
+  {
+    "id": "operator.install",
+    "label": "Installation",
+    "description": "Install, configure, and verify software on a local or managed environment.",
+    "primaryRole": "operator",
+    "compatibleRoles": ["operator", "coder", "support"],
+    "requiredCapabilities": ["tools.function_calling"],
+    "preferredCapabilities": ["tools.command_execution"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["package.install", "shell.execute"],
+    "classifier": {
+      "useWhen": "User asks to install a package, set up a runtime, configure endpoints, or verify local integration.",
+      "doNotUseWhen": "User asks only for written installation instructions."
+    },
+    "variants": []
+  },
+  {
+    "id": "operator.monitor",
+    "label": "Monitoring Setup",
+    "description": "Plan or configure monitoring, alerts, health checks, and runtime signals.",
+    "primaryRole": "operator",
+    "compatibleRoles": ["operator", "architect"],
+    "requiredCapabilities": ["tools.function_calling", "reasoning.multi_step"],
+    "preferredCapabilities": ["tools.command_execution"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to monitor a service or runtime.",
+      "doNotUseWhen": "User asks for product positioning."
+    },
+    "variants": []
+  },
+  {
+    "id": "operator.backup.restore",
+    "label": "Backup And Restore",
+    "description": "Plan or execute backup, restore, recovery, or state verification work.",
+    "primaryRole": "operator",
+    "compatibleRoles": ["operator", "data", "security"],
+    "requiredCapabilities": ["tools.command_execution", "reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks about backup/restore or recovery procedures.",
+      "doNotUseWhen": "User asks for code refactoring only."
+    },
+    "variants": ["restore"]
+  },
+  {
+    "id": "operator.release.execute",
+    "label": "Release Execution",
+    "description": "Execute or coordinate release steps, validation, rollback, and post-release checks.",
+    "primaryRole": "operator",
+    "compatibleRoles": ["operator", "planner", "coder"],
+    "requiredCapabilities": ["tools.command_execution"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to run or coordinate a release.",
+      "doNotUseWhen": "User asks for release announcement copy only."
+    },
+    "variants": ["execute"]
+  }
+]
