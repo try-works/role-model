@@ -60,6 +60,25 @@ test("Track B CI is always-on, explicit, and runs the tagged browser contract", 
   }
 });
 
+test("Track B browser gate waits for semantic readiness without weakening exact private pairing", () => {
+  const trackBJob = workflow.slice(workflow.indexOf("  track-b-runtime:"));
+  const privateValidation = trackBJob.indexOf("Validate exact private paired revision");
+  const privateCheckout = trackBJob.indexOf("Checkout exact private paired repository");
+  const readinessGate = trackBJob.indexOf("wait-for-runtime-readiness.mjs");
+  const browserGate = trackBJob.indexOf(
+    "playwright test --grep @recursive:87-direct-track-b-semantic-completion",
+  );
+
+  assert.match(trackBJob, /if \[\[ ! "\$PRIVATE_PAIRED_SHA" =~ \^\[0-9a-f\]\{40\}\$ \]\]/);
+  assert.match(trackBJob, /ref: \$\{\{ env\.PRIVATE_PAIRED_SHA \}\}/);
+  assert.ok(privateValidation >= 0, "the exact private SHA validation must remain present");
+  assert.ok(privateCheckout > privateValidation, "the private checkout must follow SHA validation");
+  assert.ok(readinessGate > privateCheckout, "semantic readiness must run after paired checkout");
+  assert.ok(browserGate > readinessGate, "Playwright must run only after semantic readiness");
+  assert.match(trackBJob, /--timeout-ms\s+120000/);
+  assert.match(trackBJob, /--poll-interval-ms\s+1000/);
+});
+
 test("promotion guard encodes dev to stage to main with a hotfix exception", () => {
   assert.match(workflow, /BASE_REF.*stage[\s\S]*HEAD_REF.*dev/);
   assert.match(workflow, /BASE_REF.*main[\s\S]*HEAD_REF.*stage/);
