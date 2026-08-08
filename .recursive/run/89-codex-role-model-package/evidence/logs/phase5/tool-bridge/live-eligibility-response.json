@@ -1,0 +1,1 @@
+{"id":"2d76ac87-e266-403c-8c6b-a2fb7e2e8afa","object":"response","created_at":1785929054,"status":"completed","model":"deepseek/deepseek-v4-flash","output":[{"type":"message","id":"msg_2d76ac87-e266-403c-8c6b-a2fb7e2e8afa","role":"assistant","content":[{"type":"output_text","text":"pong"}]}],"usage":{"input_tokens":583,"output_tokens":14,"total_tokens":597}}

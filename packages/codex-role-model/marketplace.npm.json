@@ -1,0 +1,24 @@
+{
+  "name": "role-model",
+  "interface": {
+    "displayName": "role-model (npm)"
+  },
+  "plugins": [
+    {
+      "name": "role-model",
+      "displayName": "role-model",
+      "description": "Connect Codex to a local role-model runtime. After enabling, run: npx --yes @try-works/codex-role-model@latest setup && npx --yes @try-works/codex-role-model@latest start",
+      "source": {
+        "source": "npm",
+        "package": "@try-works/codex-role-model",
+        "version": "^0.1.1",
+        "registry": "https://registry.npmjs.org"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Development & Workflow"
+    }
+  ]
+}

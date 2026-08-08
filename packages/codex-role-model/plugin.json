@@ -1,0 +1,16 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "role-model",
+  "version": "0.1.1",
+  "description": "Connect Codex (and other clients) to a local role-model runtime via the codex-role-model adapter CLI.",
+  "license": "BUSL-1.1",
+  "keywords": ["codex", "role-model", "routing", "llm-gateway", "adapter"],
+  "homepage": "https://github.com/try-works/role-model",
+  "repository": "https://github.com/try-works/role-model",
+  "extensions": {
+    "com.tryworks.rolemodel": {
+      "adapterCli": "./bin/codex-role-model.js",
+      "codexPluginManifest": "./.codex-plugin/plugin.json"
+    }
+  }
+}

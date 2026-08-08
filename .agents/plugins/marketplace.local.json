@@ -1,0 +1,22 @@
+{
+  "name": "role-model-local",
+  "interface": {
+    "displayName": "role-model (local checkout)"
+  },
+  "plugins": [
+    {
+      "name": "role-model",
+      "displayName": "role-model",
+      "description": "Local checkout of packages/codex-role-model (monorepo contributors). Pair with the package CLI setup/start.",
+      "source": {
+        "source": "local",
+        "path": "./packages/codex-role-model"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Development & Workflow"
+    }
+  ]
+}

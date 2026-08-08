@@ -1,0 +1,9 @@
+doctor: ok
+endpoint: http://127.0.0.1:3458
+discovery: ready
+aliases: 3
+recommended: claude-3.7-sonnet
+adapter: http://127.0.0.1:3460/v1
+catalog: C:\Users\erikb\.codex\role-model\models.json
+managed_block: missing
+auth_required: false

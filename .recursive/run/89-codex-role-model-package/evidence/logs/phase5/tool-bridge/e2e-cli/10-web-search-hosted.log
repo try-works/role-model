@@ -1,0 +1,31 @@
+Reading prompt from stdin...
+OpenAI Codex v0.147.0-alpha.1.2
+--------
+workdir: C:\Users\erikb\AppData\Local\Temp\codex-e2e-ws-real-051019
+model: baseline.remote-only
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: low
+reasoning summaries: none
+session id: 019fd3c3-4ce6-77d0-b9e6-83790cb765ed
+--------
+user
+tell me the current share price of Cloudflare (NYSE: NET). Prefer web_search. Quote a recent number with source/as-of if available.
+
+2026-08-05T21:10:22.955251Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+2026-08-05T21:10:24.611217Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+2026-08-05T21:10:24.843615Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 2/5
+2026-08-05T21:10:25.272340Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 3/5
+2026-08-05T21:10:26.182915Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 4/5
+2026-08-05T21:10:27.649554Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 5/5
+2026-08-05T21:10:30.970571Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+warning: Falling back from WebSockets to HTTPS transport. unexpected status 404 Not Found: Not found, url: ws://127.0.0.1:3460/v1/responses
+web search: 
+web search: Cloudflare NET stock price today NYSE
+tokens used
+7,478

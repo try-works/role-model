@@ -1,0 +1,27 @@
+{
+  "id": "db308353-e559-4255-a877-ec81298e48d8",
+  "object": "response",
+  "created_at": 1785961344,
+  "status": "incomplete",
+  "model": "deepseek/deepseek-v4-flash",
+  "output": [
+    {
+      "type": "message",
+      "id": "msg_db308353-e559-4255-a877-ec81298e48d8",
+      "role": "assistant",
+      "content": []
+    },
+    {
+      "type": "function_call",
+      "id": "call_00_ET_SzofhXDinTgZSD6G6TZd4352",
+      "call_id": "call_00_ET_SzofhXDinTgZSD6G6TZd4352",
+      "name": "shell_command",
+      "arguments": "{\"command\":\"Set-Content -LiteralPath 'date-check.txt' -Value 'Wednesday' -NoNewline; Get-Content -LiteralPath 'date-check.txt'\"}"
+    }
+  ],
+  "usage": {
+    "input_tokens": 7475,
+    "output_tokens": 75,
+    "total_tokens": 7550
+  }
+}

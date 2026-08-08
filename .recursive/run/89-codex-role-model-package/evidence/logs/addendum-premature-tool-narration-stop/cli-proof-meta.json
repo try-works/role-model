@@ -1,0 +1,125 @@
+{
+  "runtime": "http://127.0.0.1:3458",
+  "doctor": "ok",
+  "files": {
+    "cli-premature-stop-proof.txt": "PROOF_MARKER_A",
+    "cli-premature-stop-proof-2.txt": "PROOF_MARKER_B"
+  },
+  "recentRequests": [
+    {
+      "t": "07:35:04",
+      "fin": "stop",
+      "tools": false,
+      "n": 0,
+      "tout": 24,
+      "client": "2771305a",
+      "req": "req-283bdc0f-3c7f-4b37-937c-95740bb3f62f"
+    },
+    {
+      "t": "07:34:45",
+      "fin": "tool_calls",
+      "tools": true,
+      "n": 2,
+      "tout": 550,
+      "client": "2d8402b2",
+      "req": "req-a96b3a1a-ab0b-42cb-afb0-5cb859f3c319"
+    },
+    {
+      "t": "07:15:02",
+      "fin": "stop",
+      "tools": false,
+      "n": 0,
+      "tout": 43,
+      "client": "714e27e3",
+      "req": "req-9474d117-aef7-4dc4-8fec-c46208efda4e"
+    },
+    {
+      "t": "07:14:58",
+      "fin": "tool_calls",
+      "tools": true,
+      "n": 1,
+      "tout": 86,
+      "client": "d71340ab",
+      "req": "req-ac87cea4-166a-4990-9ad4-7ad52cdac1ae"
+    },
+    {
+      "t": "07:14:54",
+      "fin": "tool_calls",
+      "tools": true,
+      "n": 2,
+      "tout": 546,
+      "client": "534e0feb",
+      "req": "req-13b3edc5-e616-49be-a309-509150eda4d8"
+    },
+    {
+      "t": "07:14:49",
+      "fin": "tool_calls",
+      "tools": true,
+      "n": 1,
+      "tout": 271,
+      "client": "ac01df1d",
+      "req": "req-2e04e116-7414-42a1-b82e-c898d0bb62eb"
+    },
+    {
+      "t": "07:14:45",
+      "fin": "tool_calls",
+      "tools": true,
+      "n": 1,
+      "tout": 2673,
+      "client": "cb4e0153",
+      "req": "req-5b11da2f-6674-4bbe-acbb-e102bb903702"
+    },
+    {
+      "t": "07:14:15",
+      "fin": "tool_calls",
+      "tools": true,
+      "n": 1,
+      "tout": 552,
+      "client": "cb4e0153",
+      "req": "req-8560e6ce-d371-4561-aaac-1c59ce8e9bce"
+    },
+    {
+      "t": "07:14:06",
+      "fin": "tool_calls",
+      "tools": true,
+      "n": 1,
+      "tout": 454,
+      "client": "354f0176",
+      "req": "req-d825776f-1720-4bf0-a8e4-a025f71dcdb5"
+    },
+    {
+      "t": "07:08:42",
+      "fin": "stop",
+      "tools": false,
+      "n": 0,
+      "tout": 48,
+      "client": "9dcca203",
+      "req": "req-6eb9670a-d07c-429f-8e5b-798dce05072f"
+    },
+    {
+      "t": "07:08:39",
+      "fin": "tool_calls",
+      "tools": true,
+      "n": 1,
+      "tout": 1183,
+      "client": "402b6a3f",
+      "req": "req-90970955-b327-4870-9774-fca7a8121047"
+    },
+    {
+      "t": "07:08:25",
+      "fin": "tool_calls",
+      "tools": true,
+      "n": 1,
+      "tout": 57,
+      "client": "402b6a3f",
+      "req": "req-91ea5880-b838-4ef3-9b0d-f766f7970119"
+    }
+  ],
+  "codexCli": "C:\\\\Users\\\\erikb\\\\AppData\\\\Local\\\\OpenAI\\\\Codex\\\\bin\\\\68de26ad08be95cd\\\\codex.exe",
+  "tests": "47 passed",
+  "lastMessageContains": "CLI_PROOF_COMPLETE",
+  "adapter": "http://127.0.0.1:3460/v1",
+  "websocketNote": "CLI attempted ws://127.0.0.1:3460/v1/responses (404), fell back to HTTPS — expected (adapter supports_websockets=false)",
+  "diagnosedAt": "2026-08-06T07:35+08:00",
+  "proofWorkdir": "evidence/logs/addendum-premature-tool-narration-stop/cli-proof-workdir"
+}

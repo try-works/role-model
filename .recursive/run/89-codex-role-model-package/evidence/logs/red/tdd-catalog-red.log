@@ -1,0 +1,6 @@
+# TDD slice: catalog generation (catalog.test.ts)
+
+ FAIL  test/catalog.test.ts
+   TypeError: (0 , createDiscoveryResult) is not a function
+
+Command: pnpm test test/catalog.test.ts

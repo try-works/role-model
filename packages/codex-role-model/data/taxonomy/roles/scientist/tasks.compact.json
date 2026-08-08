@@ -1,0 +1,162 @@
+[
+  {
+    "id": "scientist.experiment.design",
+    "label": "Experimental Design",
+    "description": "Design experiments, controls, variables, measurements, and interpretation plans.",
+    "primaryRole": "scientist",
+    "compatibleRoles": ["scientist", "analyst", "planner"],
+    "requiredCapabilities": ["science.method", "reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks how to test a scientific or empirical hypothesis.",
+      "doNotUseWhen": "User asks for product A/B test logistics only."
+    },
+    "variants": ["design"]
+  },
+  {
+    "id": "scientist.evidence.review",
+    "label": "Scientific Evidence Review",
+    "description": "Review scientific claims, evidence quality, limitations, and uncertainty.",
+    "primaryRole": "scientist",
+    "compatibleRoles": ["scientist", "researcher", "analyst"],
+    "requiredCapabilities": ["science.analysis", "citation.synthesis"],
+    "preferredCapabilities": ["web.search"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks whether a claim is scientifically supported.",
+      "doNotUseWhen": "User asks for current product pricing."
+    },
+    "variants": ["review"]
+  },
+  {
+    "id": "scientist.method.critique",
+    "label": "Method Critique",
+    "description": "Critique study design, methodology, bias, confounds, and validity.",
+    "primaryRole": "scientist",
+    "compatibleRoles": ["scientist", "researcher", "analyst"],
+    "requiredCapabilities": ["science.method", "reasoning.multi_step"],
+    "preferredCapabilities": ["long_context"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User provides a method, paper, or experiment and asks for critique.",
+      "doNotUseWhen": "User asks to write marketing copy."
+    },
+    "variants": ["critique"]
+  },
+  {
+    "id": "scientist.literature.synthesize",
+    "label": "Scientific Literature Synthesis",
+    "description": "Synthesize findings across scientific or technical literature.",
+    "primaryRole": "scientist",
+    "compatibleRoles": ["scientist", "researcher", "writer"],
+    "requiredCapabilities": ["science.analysis", "long_context"],
+    "preferredCapabilities": ["citation.synthesis"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to synthesize papers, studies, standards, or evidence.",
+      "doNotUseWhen": "User asks for unsupported speculation."
+    },
+    "variants": ["synthesize"]
+  },
+  {
+    "id": "scientist.hypothesis.formulate",
+    "label": "Hypothesis Formulation",
+    "description": "Formulate testable hypotheses and expected observations.",
+    "primaryRole": "scientist",
+    "compatibleRoles": ["scientist", "educator", "analyst"],
+    "requiredCapabilities": ["science.method", "reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks how to turn an idea into a hypothesis.",
+      "doNotUseWhen": "User asks for business OKRs."
+    },
+    "variants": ["formulate"]
+  },
+  {
+    "id": "scientist.protocol.write",
+    "label": "Protocol Writing",
+    "description": "Write experimental protocols, materials, steps, and measurements.",
+    "primaryRole": "scientist",
+    "compatibleRoles": ["scientist", "planner"],
+    "requiredCapabilities": ["science.method", "text.chat"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for experiment protocol structure.",
+      "doNotUseWhen": "User asks for clinical treatment plan."
+    },
+    "variants": ["write"]
+  },
+  {
+    "id": "scientist.data.interpret",
+    "label": "Scientific Data Interpretation",
+    "description": "Interpret scientific data, results, uncertainty, and limitations.",
+    "primaryRole": "scientist",
+    "compatibleRoles": ["scientist", "data", "analyst"],
+    "requiredCapabilities": ["science.analysis", "reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks what scientific results mean.",
+      "doNotUseWhen": "User asks for legal compliance review."
+    },
+    "variants": ["interpret"]
+  },
+  {
+    "id": "scientist.peer_review",
+    "label": "Peer Review Support",
+    "description": "Review scientific writing, claims, methods, and evidence quality.",
+    "primaryRole": "scientist",
+    "compatibleRoles": ["scientist", "researcher", "writer"],
+    "requiredCapabilities": ["science.analysis", "long_context"],
+    "preferredCapabilities": ["citation.synthesis"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to peer review a paper or report.",
+      "doNotUseWhen": "User asks for marketing copy."
+    },
+    "variants": []
+  },
+  {
+    "id": "scientist.safety.review",
+    "label": "Scientific Safety Review",
+    "description": "Review safety considerations for experiments or technical methods.",
+    "primaryRole": "scientist",
+    "compatibleRoles": ["scientist", "security", "health"],
+    "requiredCapabilities": ["science.method", "reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks about experiment safety considerations.",
+      "doNotUseWhen": "User asks for medical diagnosis."
+    },
+    "variants": ["review"]
+  },
+  {
+    "id": "scientist.technical.explain",
+    "label": "Scientific Explanation",
+    "description": "Explain scientific concepts, mechanisms, or findings clearly.",
+    "primaryRole": "scientist",
+    "compatibleRoles": ["scientist", "educator", "writer"],
+    "requiredCapabilities": ["science.analysis", "text.chat"],
+    "preferredCapabilities": ["communication.user_facing"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to understand a scientific topic.",
+      "doNotUseWhen": "User asks for current legal policy."
+    },
+    "variants": ["explain"]
+  }
+]

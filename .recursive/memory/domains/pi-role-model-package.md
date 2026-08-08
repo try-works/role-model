@@ -102,3 +102,8 @@ Two-tier progressive classifier in `classify-with-progressive-disclosure.ts`:
 - Multi-turn Pi verification must reuse a real Pi session when testing Codex Subscription history conversion. Single-turn or `--no-session` probes can miss assistant-history replay bugs, such as invalid Responses `input_text` content parts for previous assistant output.
 - When an alias proof includes an image-bearing pivot turn, reuse the logical Pi `session-id` but refresh local Pi session storage before the return-to-`A` leg if the image turn carries image modality into later alias requests.
 - If noninteractive Pi CLI verification hangs while Role-Model telemetry shows successful requests, treat the runtime request rows as useful reachability evidence but do not claim a clean Pi CLI pass. Clean Pi verification requires both a real Pi request and a terminating Pi command transcript.
+
+## Sibling Codex adapter (run 89)
+
+- Behavioral parity source for discovery/intent/inspection patterns reused by `@try-works/codex-role-model` (`packages/codex-role-model`).
+- Run `89-codex-role-model-package` must not edit this Pi package; Codex tool-bridge and Responses adapter stay Codex-adapter-only.

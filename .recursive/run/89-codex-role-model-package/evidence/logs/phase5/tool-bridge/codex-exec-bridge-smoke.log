@@ -1,0 +1,68 @@
+Reading additional input from stdin...
+OpenAI Codex v0.146.0
+--------
+workdir: C:\Users\erikb\AppData\Local\Temp\codex-bridge-smoke-194920
+model: baseline.remote-only
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: low
+reasoning summaries: none
+session id: 019fd1c1-c435-7a21-869b-33bb7d88fdfa
+--------
+user
+Create a file named bridge-smoke.txt containing the text 'tool-bridge-ok', then read it back and quote its contents. Do not ask questions.
+2026-08-05T11:49:31.601925Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+2026-08-05T11:49:37.950607Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+2026-08-05T11:49:38.183020Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 2/5
+2026-08-05T11:49:38.624739Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 3/5
+2026-08-05T11:49:39.506077Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 4/5
+2026-08-05T11:49:41.118810Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 5/5
+2026-08-05T11:49:44.456927Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+warning: Falling back from WebSockets to HTTPS transport. unexpected status 404 Not Found: Not found, url: ws://127.0.0.1:3460/v1/responses
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Set-Content -Path 'bridge-smoke.txt' -Value 'tool-bridge-ok' -NoNewline; Get-Content -Path 'bridge-smoke.txt'" in C:\Users\erikb\AppData\Local\Temp\codex-bridge-smoke-194920
+ succeeded in 5658ms:
+tool-bridge-ok
+
+2026-08-05T11:50:03.188766Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T11:50:03.212618Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T11:50:03.247808Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T11:50:03.247861Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T11:50:03.247873Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T11:50:03.247883Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T11:50:03.247892Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T11:50:03.247902Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T11:50:03.276684Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T11:50:03.276738Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T11:50:03.298897Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T11:50:03.298946Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T11:50:03.298959Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T11:50:03.298969Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T11:50:03.330773Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T11:50:03.330825Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T11:50:03.330837Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T11:50:03.330847Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T11:50:03.330857Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T11:50:03.330866Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T11:50:03.358619Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T11:50:03.358673Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T11:50:03.358774Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T11:50:03.358795Z ERROR codex_core::util: OutputTextDelta without active item
+codex
+Created `bridge-smoke.txt` and read it back. Its contents are:
+
+```
+tool-bridge-ok
+```
+tokens used
+14,895
+Created `bridge-smoke.txt` and read it back. Its contents are:
+
+```
+tool-bridge-ok
+```

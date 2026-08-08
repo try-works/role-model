@@ -2,6 +2,7 @@
 
 ## Recursive Run Index
 
+- `89-codex-role-model-package` - Codex Desktop/CLI/IDE adapter package `@try-works/codex-role-model` (Responses forwarder, signed-in catalog merge, adapter-only tool bridge, public npm `0.1.1`, Codex marketplace npm catalog); hybrid Phase 5 sign-off 2026-08-07 (Phases 0–8). Folder: `.recursive/run/89-codex-role-model-package/`. Soft-closes Phase 0 `OOS5` private-only publish gate for this run via addendum-04.
 - `00-direct-track-b-v1-1-implementation` - Direct Track B v1.1 implementation closeout (Phases 0-8). Folder: `.recursive/run/00-direct-track-b-v1-1-implementation/`.
 - `79-extension-control-and-recommendations-qa` - Public extension enable/disable mutation API, Extensions UI wiring, recommendation dismiss, packaged-runtime QA (Phases 0-8). Folder: `.recursive/run/79-extension-control-and-recommendations-qa/`. Soft-closes the prior “blocked mutation API / diagnostics-only UI” limitation from run `00`.
 - `80-signed-recommendation-cloud-lifecycle` - Live `--track=dev` signed recommendation download/apply/dismiss on rebuilt packaged SEA (Phases 0-8). Folder: `.recursive/run/80-signed-recommendation-cloud-lifecycle/`. Soft-closes run 79’s deferred live signed-material follow-up.
@@ -11,6 +12,48 @@
 - `84-kw-ui-toggle-gated-retrieve-eval` - Extensions UI Prepare/ON/Soft OFF + host mutate actions, production retrieve gate + first-party eval consumer, durable session activation, repaired full Playwright assemble, Phase 5 hops on `run84-dev` (Phases 0-8). Folder: `.recursive/run/84-kw-ui-toggle-gated-retrieve-eval/`. Soft-closes run 83 deferred Extensions UI control gap and records gated production retrieve usefulness.
 - `85-kw-gated-router-prompt-inject` - Gated live-router production prompt inject when KW ceremony ON + production retrieve PASS; host join/auto-arm; honesty/export unlock; Phase 5 SEA inject hop + live `--track=dev` + live `pi`; post-lock live `pi`→KW inject→storage E2E + host wiring remediations (Phases 0-8). Folder: `.recursive/run/85-kw-gated-router-prompt-inject/`. Soft-closes run 84 deferred full live-router inject (`OOS3`/`E6`) and honesty "remains locked" for gated inject only.
 - `86-runtime-ui-rm3-design-system-frontend` - RM v3 design system + `@role-model/ui` kit migration for router runtime-ui; Paper `4-0`/`5-0`/`6-0`/`7-0` IA; FD#15 config→strategy; SP8 floor green; hybrid Phase 5 QA on rebuilt `:3470` with human Paper sign-off; operator polish P1–P8 (Phases 0-8). Folder: `.recursive/run/86-runtime-ui-rm3-design-system-frontend/`. Soft-closes run `60-runtime-ui-paper-linear-review-alignment` as live styling authority for migrated surfaces (Linear/Paper-Linear historical).
+
+## Run: `89-codex-role-model-package`
+
+Date: `2026-08-07`
+
+### What changed
+
+- Shipped workspace package `packages/codex-role-model` as public npm `@try-works/codex-role-model@0.1.1` (bin `codex-role-model`: `setup` / `start` / `doctor` / inspection commands).
+- Local Responses adapter (default `:3460`) proxies Codex → already-running role-model runtime; injects `role_model.intent`; does **not** own the runtime process.
+- Signed-in Codex path: root `openai_base_url` → adapter + merged `model_catalog_json` (native GPT models + role-model aliases) so ChatGPT history remains visible (addendum-02; supersedes narrow login-free-only addendum-01 for preferred path).
+- Adapter-only bidirectional tool bridge (addendum-03 / `R12`): flatten/restore Codex tool shapes; `web_search` fulfill via ChatGPT alpha/search or DDG; mixed-hop fulfill-in-place; WS/SSE/id repairs. **Protocol-only** — no phrase-matching narration detectors or anti-narration coaching injections.
+- Compaction remains Codex-owned; adapter does not implement Remote Compact endpoints.
+- Agent Plugins 1.0 + Codex-native plugin manifests + skill; repo Codex marketplace `.agents/plugins/marketplace.json` (npm source) verified with `codex plugin add role-model@role-model` → cache `0.1.1`.
+- Hybrid Phase 5: real runtime + real Codex CLI routing proof; iterate-until-green TDD; operator sign-off `2026-08-07`.
+- Worktree: `D:\DEV\role-model\.worktrees\89-codex-role-model-package` on branch `recursive/89-codex-role-model-package`; diff basis vs `origin/dev` tip at creation `@6cf19bf033c23246c173a1bf634d13b2c822b2d8`.
+- Server change `not-required`; `publicChange: required` (new public package + docs + marketplace catalog).
+
+### Why
+
+- Codex lacked a first-class role-model consumer package. Pi/OpenCode paths existed; Codex needed a DeepSeek-like config/catalog + local Responses edge that still forwards every role-model hop through the main runtime router for routing + telemetry.
+
+### How
+
+- Strict TDD for package-owned logic; hybrid Phase 5 iterate-until-green against live stack; Phase 5 upstream-gap addenda for Desktop picker / signed-in path / tool bridge / publish; serial Phases 6–8 closeout after human sign-off.
+
+### What was not done (OOS / residuals)
+
+- Land marketplace catalog on published `dev` so GitHub `codex plugin marketplace add try-works/role-model --ref dev` works without a personal marketplace copy (post-merge follow-up).
+- Optional Desktop UI visual reconfirm after full quit/reopen.
+- Optional Codex Stop-hook auto-continue for narrate-and-stop model behavior (client-side; not adapter regex).
+- Shared `role-model-consumer-core` extraction (`OOS10`).
+- Editing `role-model-router` for tool bridge (`R12` hard boundary).
+- Origin/`dev` merge remains operator-requested unless authorized separately.
+
+### Soft-close of prior decision
+
+- Soft-closes / supersedes run-89 Phase 0 Fixed Decision #16 + `OOS5` (private-only / no public npm publish) via locked addendum `05-manual-qa.upstream-gap.00-requirements.addendum-04.md`. Public npm publish and Codex marketplace catalog are in-scope and completed for this run.
+
+### Follow-ups
+
+- Merge feature branch so `.agents/plugins/marketplace.json` is reachable on `dev`.
+- Optional credentialed Desktop polish / Stop-hook auto-continue experiments outside adapter phrase-matching.
 
 ## Run: `86-runtime-ui-rm3-design-system-frontend`
 

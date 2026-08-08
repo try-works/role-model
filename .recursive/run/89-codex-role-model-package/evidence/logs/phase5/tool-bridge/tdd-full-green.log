@@ -1,0 +1,27 @@
+
+> @try-works/codex-role-model@0.1.0 test
+> vitest run --run
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/89-codex-role-model-package/packages/codex-role-model
+
+ Γ£ô test/package-manifest.test.ts (2 tests) 9ms
+ Γ£ô test/docs-and-safety.test.ts (1 test) 9ms
+ Γ£ô test/codex-tool-bridge.test.ts (5 tests) 17ms
+ Γ£ô test/config.test.ts (3 tests) 10ms
+ Γ£ô test/catalog.test.ts (2 tests) 22ms
+ Γ£ô test/codex-config.test.ts (5 tests) 19ms
+ Γ£ô test/native-alias.test.ts (4 tests) 31ms
+ Γ£ô test/signed-in-integration.test.ts (2 tests) 19ms
+ Γ£ô test/request-intent.test.ts (3 tests) 23ms
+ Γ£ô test/responses-intent.test.ts (3 tests) 23ms
+ Γ£ô test/runtime-discovery.test.ts (4 tests) 37ms
+ Γ£ô test/secret-safety.test.ts (1 test) 16ms
+ Γ£ô test/commands.test.ts (3 tests) 18ms
+ Γ£ô test/forwarder.test.ts (12 tests) 382ms
+
+ Test Files  14 passed (14)
+      Tests  50 passed (50)
+   Start at  19:22:35
+   Duration  1.76s (transform 1.44s, setup 0ms, collect 4.51s, tests 637ms, environment 7ms, prepare 5.44s)
+
