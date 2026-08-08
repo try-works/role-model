@@ -7,8 +7,7 @@ const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = join(packageRoot, "..", "..");
 
 const AGENT_PLUGINS_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json";
-const AGENT_PLUGINS_NAME_RE =
-  /^(?!.*(?:--|\\.\\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/;
+const AGENT_PLUGINS_NAME_RE = /^(?!.*(?:--|\\.\\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/;
 
 describe("Codex docs, skill, plugin, and safety guardrails", () => {
   test("ships skill, plugin manifest, and docs with compaction ownership", async () => {
@@ -27,7 +26,7 @@ describe("Codex docs, skill, plugin, and safety guardrails", () => {
     expect(plugin).toContain("role-model");
     expect(docs).toContain("role-model");
     expect(docs).toContain("Compaction is **Codex-managed**");
-    expect(docs).toContain("npx --yes @try-works/codex-role-model setup");
+    expect(docs).toContain("npx --yes @try-works/codex-role-model@latest setup");
     expect(docs).toContain("ROLE_MODEL_CODEX_API_KEY");
   });
 
@@ -71,10 +70,7 @@ describe("Codex docs, skill, plugin, and safety guardrails", () => {
       }
     }
 
-    const skillMd = await readFile(
-      join(packageRoot, "skills", "role-model", "SKILL.md"),
-      "utf8",
-    );
+    const skillMd = await readFile(join(packageRoot, "skills", "role-model", "SKILL.md"), "utf8");
     expect(skillMd.startsWith("---")).toBe(true);
   });
 

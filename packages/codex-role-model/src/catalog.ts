@@ -1,13 +1,13 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { DiscoveryResult } from "./types.js";
 import {
+  type NativeListSlot,
   buildNativeAliasAssignments,
   buildPickerExternalModels,
   loadDefaultNativeListSlots,
-  type NativeListSlot,
 } from "./native-alias.js";
+import type { DiscoveryResult } from "./types.js";
 
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -25,7 +25,11 @@ export function loadNativeCatalogModels(): NativeListSlot[] {
   ) as { models?: unknown };
   if (!Array.isArray(raw.models)) return loadDefaultNativeListSlots();
   return raw.models.filter((entry): entry is NativeListSlot => {
-    return typeof entry === "object" && entry !== null && typeof (entry as { slug?: unknown }).slug === "string";
+    return (
+      typeof entry === "object" &&
+      entry !== null &&
+      typeof (entry as { slug?: unknown }).slug === "string"
+    );
   });
 }
 
@@ -77,7 +81,9 @@ export function normalizeSupportedReasoningLevels(value: unknown): unknown[] {
 
 function baseTemplate(nativeSlots: readonly NativeListSlot[]): Record<string, unknown> {
   const golden = loadGoldenModelsResponse();
-  const templateModels = Array.isArray(golden.models) ? (golden.models as Record<string, unknown>[]) : [];
+  const templateModels = Array.isArray(golden.models)
+    ? (golden.models as Record<string, unknown>[])
+    : [];
   const goldenTemplate = templateModels[0];
   const nativeTemplate = nativeSlots[0] as Record<string, unknown> | undefined;
   return {
@@ -150,7 +156,8 @@ function buildLoginFreeCatalog(
   const allModels = discovery.discovery.models.filter(
     (model) => model.type === "alias" || model.type === "model",
   );
-  if (allModels.length === 0) {
+  const firstModel = allModels[0];
+  if (!firstModel) {
     throw new Error("Cannot write empty Codex model catalog; discovery returned no aliases.");
   }
 
@@ -158,7 +165,7 @@ function buildLoginFreeCatalog(
     options.selectedModelId ??
     discovery.discovery.setup.recommendedModel ??
     allModels.find((model) => model.type === "alias")?.id ??
-    allModels[0]?.id ??
+    firstModel.id ??
     null;
 
   const pickerModels = buildPickerExternalModels(discovery.discovery, selectedModelId);
@@ -193,7 +200,7 @@ function buildLoginFreeCatalog(
       Object.keys(aliases).find((nativeSlug) => aliases[nativeSlug] === selectedModelId)) ||
     selectedModelId ||
     listedEntries[0]?.slug ||
-    allModels[0]!.id;
+    firstModel.id;
 
   return {
     catalog: { ...golden, models: [...listedEntries, ...hiddenEntries] },
@@ -209,7 +216,9 @@ function buildSignedInMergedCatalog(
 ): BuiltModelsCatalog {
   const golden = loadGoldenModelsResponse();
   const nativeModels = options.nativeCatalogModels ?? loadNativeCatalogModels();
-  const template = baseTemplate(nativeModels.length > 0 ? nativeModels : loadDefaultNativeListSlots());
+  const template = baseTemplate(
+    nativeModels.length > 0 ? nativeModels : loadDefaultNativeListSlots(),
+  );
   if (typeof template.base_instructions !== "string" || template.base_instructions.length === 0) {
     throw new Error(
       "Codex model catalog template is missing base_instructions; capture native catalog via fixtures/native-catalog.golden.json.",
@@ -219,7 +228,8 @@ function buildSignedInMergedCatalog(
   const allModels = discovery.discovery.models.filter(
     (model) => model.type === "alias" || model.type === "model",
   );
-  if (allModels.length === 0) {
+  const firstModel = allModels[0];
+  if (!firstModel) {
     throw new Error("Cannot write empty Codex model catalog; discovery returned no aliases.");
   }
 
@@ -227,7 +237,7 @@ function buildSignedInMergedCatalog(
     options.selectedModelId ??
     discovery.discovery.setup.recommendedModel ??
     allModels.find((model) => model.type === "alias")?.id ??
-    allModels[0]?.id ??
+    firstModel.id ??
     null;
 
   const pickerModels = buildPickerExternalModels(discovery.discovery, selectedModelId);
@@ -272,7 +282,7 @@ function buildSignedInMergedCatalog(
     },
     aliases: {},
     listedExternalIds,
-    configModelId: selectedModelId ?? listedExternalIds[0] ?? allModels[0]!.id,
+    configModelId: selectedModelId ?? listedExternalIds[0] ?? firstModel.id,
   };
 }
 

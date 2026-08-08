@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
 import {
+  createBridgeTraceId,
   flattenCodexToolsForUpstream,
   restoreCodexToolCallsInPayload,
   restoreCodexToolCallsInSseChunk,
-  createBridgeTraceId,
   summarizeToolTypeHistogram,
 } from "../src/codex-tool-bridge.js";
 
@@ -75,7 +75,10 @@ describe("CodexToolBridge request flatten", () => {
   test("hosted mode passes through type web_search", () => {
     const { payload, reverseMap, stats } = flattenCodexToolsForUpstream(
       {
-        tools: [{ type: "web_search" }, { type: "function", name: "shell_command", parameters: {} }],
+        tools: [
+          { type: "web_search" },
+          { type: "function", name: "shell_command", parameters: {} },
+        ],
       },
       { webSearchMode: "hosted" },
     );
@@ -88,13 +91,18 @@ describe("CodexToolBridge request flatten", () => {
   test("shim mode still flattens hosted web_search to a function", () => {
     const { payload, reverseMap, stats } = flattenCodexToolsForUpstream(
       {
-        tools: [{ type: "web_search" }, { type: "function", name: "shell_command", parameters: {} }],
+        tools: [
+          { type: "web_search" },
+          { type: "function", name: "shell_command", parameters: {} },
+        ],
       },
       { webSearchMode: "shim" },
     );
     const tools = payload.tools as Array<Record<string, unknown>>;
     expect(tools.every((t) => t.type === "function")).toBe(true);
-    expect(tools.map((t) => t.name)).toEqual(expect.arrayContaining(["web_search", "shell_command"]));
+    expect(tools.map((t) => t.name)).toEqual(
+      expect.arrayContaining(["web_search", "shell_command"]),
+    );
     expect(stats.shimCounts.web_search).toBe(1);
     expect(reverseMap.get("web_search")).toEqual({ kind: "web_search" });
     const web = tools.find((t) => t.name === "web_search");
@@ -137,13 +145,13 @@ describe("CodexToolBridge response restore", () => {
             type: "function_call",
             name: "mcp__demo__search",
             call_id: "c1",
-            arguments: "{\"q\":\"hi\"}",
+            arguments: '{"q":"hi"}',
           },
           {
             type: "function_call",
             name: "tool_search",
             call_id: "c2",
-            arguments: "{\"query\":\"x\"}",
+            arguments: '{"query":"x"}',
           },
           {
             type: "function_call",
@@ -187,7 +195,7 @@ describe("CodexToolBridge response restore", () => {
             type: "function_call",
             name: "tool_search",
             call_id: "call_ts_1",
-            arguments: "{\"query\":\"browser\"}",
+            arguments: '{"query":"browser"}',
             status: "completed",
           },
         ],
@@ -214,7 +222,7 @@ describe("CodexToolBridge response restore", () => {
             type: "function_call",
             name: "web_search",
             call_id: "call_ws_1",
-            arguments: "{\"query\":\"what day is 2026-08-05\"}",
+            arguments: '{"query":"what day is 2026-08-05"}',
             status: "completed",
           },
         ],
@@ -263,7 +271,7 @@ describe("CodexToolBridge response restore", () => {
             type: "function_call",
             name: "web_search",
             call_id: "call_ws_1",
-            arguments: "{\"query\":\"day of week\"}",
+            arguments: '{"query":"day of week"}',
           },
         ],
       },
@@ -343,7 +351,7 @@ describe("CodexToolBridge response restore", () => {
             type: "function_call",
             name: "mcp__codex_apps__github__list_recent_issues",
             call_id: "c1",
-            arguments: "{\"top_k\":5}",
+            arguments: '{"top_k":5}',
           },
           {
             type: "function_call",
@@ -355,7 +363,7 @@ describe("CodexToolBridge response restore", () => {
             type: "function_call",
             name: "mcp__node_repl__js",
             call_id: "c3",
-            arguments: "{\"code\":\"1+1\"}",
+            arguments: '{"code":"1+1"}',
           },
         ],
       },
@@ -386,9 +394,7 @@ describe("CodexToolBridge response restore", () => {
   });
 
   test("restores apply_patch function_call to custom_tool_call with freeform input", () => {
-    const reverseMap = new Map([
-      ["apply_patch", { kind: "custom" as const, name: "apply_patch" }],
-    ]);
+    const reverseMap = new Map([["apply_patch", { kind: "custom" as const, name: "apply_patch" }]]);
     const patch = "*** Begin Patch\n*** Update File: a.ts\n@@\n- old\n+ new\n*** End Patch";
     const restored = restoreCodexToolCallsInPayload(
       {

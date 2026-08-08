@@ -58,8 +58,7 @@ interface ClassificationContext {
 }
 
 function extractClassificationContext(payload: Record<string, unknown>): ClassificationContext {
-  const prompt =
-    promptFromMessages(payload.messages) || promptFromResponsesInput(payload.input);
+  const prompt = promptFromMessages(payload.messages) || promptFromResponsesInput(payload.input);
 
   const tools = Array.isArray(payload.tools) ? payload.tools : [];
   const hasTools = tools.length > 0;

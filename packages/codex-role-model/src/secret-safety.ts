@@ -25,7 +25,10 @@ export function assertNoSecretLeak(text: string, secrets: readonly string[]): vo
   }
 }
 
-export function sanitizeDiagnosticLines(lines: readonly string[], secrets: readonly string[]): string[] {
+export function sanitizeDiagnosticLines(
+  lines: readonly string[],
+  secrets: readonly string[],
+): string[] {
   return lines.map((line) => {
     assertNoSecretLeak(line, secrets);
     return redactSecrets(line);

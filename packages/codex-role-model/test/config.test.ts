@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
 import {
+  DEFAULT_CODEX_ADAPTER_PORT,
   adapterBaseUrl,
   assessEndpointTrust,
   createRoleModelConfig,
-  DEFAULT_CODEX_ADAPTER_PORT,
 } from "../src/config.js";
 
 describe("codex-role-model configuration and endpoint trust", () => {
@@ -15,9 +15,9 @@ describe("codex-role-model configuration and endpoint trust", () => {
   });
 
   test("reads ROLE_MODEL_CODEX_ADAPTER_PORT override", () => {
-    expect(
-      createRoleModelConfig({}, { ROLE_MODEL_CODEX_ADAPTER_PORT: "3471" }).adapterPort,
-    ).toBe(3471);
+    expect(createRoleModelConfig({}, { ROLE_MODEL_CODEX_ADAPTER_PORT: "3471" }).adapterPort).toBe(
+      3471,
+    );
   });
 
   test("allows loopback and blocks remote without allow-remote", () => {

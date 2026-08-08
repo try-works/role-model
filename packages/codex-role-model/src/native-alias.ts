@@ -26,7 +26,11 @@ export function loadDefaultNativeListSlots(): NativeListSlot[] {
   if (!Array.isArray(raw)) return [];
   return raw
     .filter((entry): entry is NativeListSlot => {
-      return typeof entry === "object" && entry !== null && typeof (entry as { slug?: unknown }).slug === "string";
+      return (
+        typeof entry === "object" &&
+        entry !== null &&
+        typeof (entry as { slug?: unknown }).slug === "string"
+      );
     })
     .filter((entry) => entry.visibility === "list" || entry.visibility === undefined)
     .sort((left, right) => {
@@ -73,11 +77,17 @@ export function buildNativeAliasAssignments(
       return priority || String(left.slug).localeCompare(String(right.slug));
     });
 
-  return externalModels.slice(0, slots.length).map((external, index) => ({
-    nativeModel: slots[index]!,
-    externalId: external.id,
-    external,
-  }));
+  return externalModels.slice(0, slots.length).map((external, index) => {
+    const nativeModel = slots[index];
+    if (!nativeModel) {
+      throw new Error(`Missing native model slot for external model at index ${index}.`);
+    }
+    return {
+      nativeModel,
+      externalId: external.id,
+      external,
+    };
+  });
 }
 
 export function nativeAliasesPath(codexHome: string): string {
@@ -99,7 +109,12 @@ export function readNativeAliases(path: string): Record<string, string> {
       version?: unknown;
       aliases?: unknown;
     };
-    if (parsed.version !== 1 || !parsed.aliases || typeof parsed.aliases !== "object" || Array.isArray(parsed.aliases)) {
+    if (
+      parsed.version !== 1 ||
+      !parsed.aliases ||
+      typeof parsed.aliases !== "object" ||
+      Array.isArray(parsed.aliases)
+    ) {
       return {};
     }
     return Object.fromEntries(

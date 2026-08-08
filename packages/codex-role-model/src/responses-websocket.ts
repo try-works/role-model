@@ -141,8 +141,8 @@ class WsConnection {
 
   private readFrame(): { opcode: number; payload: Buffer } | null {
     if (this.buffer.length < 2) return null;
-    const b0 = this.buffer[0]!;
-    const b1 = this.buffer[1]!;
+    const b0 = this.buffer.readUInt8(0);
+    const b1 = this.buffer.readUInt8(1);
     const opcode = b0 & 0x0f;
     const masked = (b1 & 0x80) !== 0;
     let len = b1 & 0x7f;
@@ -169,7 +169,7 @@ class WsConnection {
       const mask = this.buffer.subarray(offset, offset + 4);
       const unmasked = Buffer.alloc(len);
       for (let i = 0; i < len; i += 1) {
-        unmasked[i] = payload[i]! ^ mask[i % 4]!;
+        unmasked[i] = payload.readUInt8(i) ^ mask.readUInt8(i % 4);
       }
       payload = unmasked;
     }
@@ -183,7 +183,8 @@ class WsConnection {
     this.busy = true;
     try {
       while (this.queue.length > 0 && !this.closed) {
-        const next = this.queue.shift()!;
+        const next = this.queue.shift();
+        if (next === undefined) continue;
         await this.handleMessage(next);
       }
     } finally {
@@ -283,7 +284,9 @@ class WsConnection {
       return { ok: true, payload: createBody };
     }
 
-    const cached = this.cache.get(prevId) ?? (this.latestId === prevId ? this.cache.get(this.latestId) : undefined);
+    const cached =
+      this.cache.get(prevId) ??
+      (this.latestId === prevId ? this.cache.get(this.latestId) : undefined);
     if (!cached) {
       return {
         ok: false,
@@ -338,7 +341,9 @@ class WsConnection {
     this.latestId = id;
   }
 
-  private async forwardCreate(payload: Record<string, unknown>): Promise<Record<string, unknown> | null> {
+  private async forwardCreate(
+    payload: Record<string, unknown>,
+  ): Promise<Record<string, unknown> | null> {
     const body = Buffer.from(JSON.stringify(payload), "utf8");
     let completed: Record<string, unknown> | null = null;
     let sseBuffer = "";
@@ -349,7 +354,9 @@ class WsConnection {
       url: "/v1/responses",
       headers: {
         ...Object.fromEntries(
-          Object.entries(this.req.headers).filter(([key]) => key.toLowerCase() !== "content-encoding"),
+          Object.entries(this.req.headers).filter(
+            ([key]) => key.toLowerCase() !== "content-encoding",
+          ),
         ),
         "content-type": "application/json",
         "content-length": String(body.length),
@@ -400,8 +407,7 @@ class WsConnection {
             completed = event.response;
           }
           if (event.type === "response.failed" && isRecord(event.response)) {
-            const failedId =
-              typeof event.response.id === "string" ? event.response.id : undefined;
+            const failedId = typeof event.response.id === "string" ? event.response.id : undefined;
             if (failedId) connection.cache.delete(failedId);
             if (connection.latestId === failedId) connection.latestId = undefined;
           }
@@ -446,11 +452,7 @@ class WsConnection {
     try {
       await handleResponsesProxy(mockReq, mockRes as unknown as ServerResponse, this.options);
     } catch (error) {
-      this.sendError(
-        error instanceof Error ? error.message : String(error),
-        "server_error",
-        502,
-      );
+      this.sendError(error instanceof Error ? error.message : String(error), "server_error", 502);
       return null;
     }
     return completed;
@@ -489,7 +491,9 @@ export function attachResponsesWebSocket(server: Server, options: ForwarderOptio
   server.on("upgrade", (req, socket, head) => {
     const path = urlPath(req);
     if (path !== "/v1/responses" && path !== "/responses") {
-      socket.write("HTTP/1.1 404 Not Found\r\nConnection: close\r\nContent-Length: 9\r\n\r\nNot found");
+      socket.write(
+        "HTTP/1.1 404 Not Found\r\nConnection: close\r\nContent-Length: 9\r\n\r\nNot found",
+      );
       socket.destroy();
       return;
     }
@@ -503,11 +507,7 @@ export function attachResponsesWebSocket(server: Server, options: ForwarderOptio
 
     const accept = acceptKey(key);
     socket.write(
-      "HTTP/1.1 101 Switching Protocols\r\n" +
-        "Upgrade: websocket\r\n" +
-        "Connection: Upgrade\r\n" +
-        `Sec-WebSocket-Accept: ${accept}\r\n` +
-        "\r\n",
+      `HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ${accept}\r\n\r\n`,
     );
     if (head.length > 0) {
       socket.unshift(head);

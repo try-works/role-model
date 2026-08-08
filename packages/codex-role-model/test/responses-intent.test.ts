@@ -5,7 +5,13 @@ describe("Responses API intent injection", () => {
   test("injects role_model.intent for discovered alias with Responses input", () => {
     const payload = {
       model: "baseline.remote-only",
-      input: [{ type: "message", role: "user", content: [{ type: "input_text", text: "Fix this bug and add a test." }] }],
+      input: [
+        {
+          type: "message",
+          role: "user",
+          content: [{ type: "input_text", text: "Fix this bug and add a test." }],
+        },
+      ],
     };
     const result = injectRoleModelIntentIntoResponsesPayload(
       payload,
@@ -28,8 +34,8 @@ describe("Responses API intent injection", () => {
 
   test("skips non role-model aliases", () => {
     const payload = { model: "gpt-4o", input: "hello" };
-    expect(injectRoleModelIntentIntoResponsesPayload(payload, new Set(["baseline.remote-only"]))).toBe(
-      payload,
-    );
+    expect(
+      injectRoleModelIntentIntoResponsesPayload(payload, new Set(["baseline.remote-only"])),
+    ).toBe(payload);
   });
 });

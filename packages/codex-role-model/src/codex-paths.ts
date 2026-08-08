@@ -54,7 +54,10 @@ export function resolveBackupRoot(codexHome: string): string {
   return join(codexHome, "backup-role-model");
 }
 
-export function formatCatalogConfigPath(codexHome: string, env: NodeJS.ProcessEnv = process.env): string {
+export function formatCatalogConfigPath(
+  codexHome: string,
+  env: NodeJS.ProcessEnv = process.env,
+): string {
   const defaultHome = join(homedir(), ".codex").replace(/\\/g, "/");
   const normalizedHome = codexHome.replace(/\\/g, "/");
   if (normalizedHome === defaultHome) {

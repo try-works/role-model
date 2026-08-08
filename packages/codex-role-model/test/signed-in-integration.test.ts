@@ -1,10 +1,10 @@
-import { describe, expect, test } from "vitest";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { parse } from "smol-toml";
+import { describe, expect, test } from "vitest";
+import { buildModelsCatalog } from "../src/catalog.js";
 import { buildManagedProviderBlock } from "../src/codex-config.js";
 import { createDiscoveryResult, createModelRecord } from "./fixtures.js";
-import { buildModelsCatalog } from "../src/catalog.js";
 
 describe("signed-in openai_base_url managed config", () => {
   test("writes openai_base_url and catalog without forcing API login", () => {
@@ -38,7 +38,11 @@ describe("signed-in merged catalog", () => {
       selectedModelId: "baseline.remote-only",
       integrationMode: "signed-in",
     });
-    const models = catalog.models as Array<{ slug: string; display_name: string; visibility: string }>;
+    const models = catalog.models as Array<{
+      slug: string;
+      display_name: string;
+      visibility: string;
+    }>;
     const listed = models.filter((m) => m.visibility === "list");
     expect(listed.some((m) => m.slug === "gpt-5.5" && m.display_name === "GPT-5.5")).toBe(true);
     expect(listed.some((m) => m.slug === "baseline.remote-only")).toBe(true);
@@ -51,7 +55,14 @@ describe("signed-in merged catalog", () => {
       "deepseek/deepseek-v4-pro",
     ]);
     expect(configModelId).toBe("baseline.remote-only");
-    expect(models.every((m) => (m as { truncation_policy?: { mode?: string } }).truncation_policy?.mode === "tokens" || m.visibility !== "list" || true)).toBe(true);
+    expect(
+      models.every(
+        (m) =>
+          (m as { truncation_policy?: { mode?: string } }).truncation_policy?.mode === "tokens" ||
+          m.visibility !== "list" ||
+          true,
+      ),
+    ).toBe(true);
     const parsedBlock = parse(
       buildManagedProviderBlock({
         model: configModelId,

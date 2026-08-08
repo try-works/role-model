@@ -1,17 +1,17 @@
-import { describe, expect, test } from "vitest";
 import { mkdtemp } from "node:fs/promises";
+import { type IncomingMessage, type ServerResponse, createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { describe, expect, test } from "vitest";
 import {
-  handleResponsesProxy,
-  startForwarder,
-  normalizeCodexResponsesSseEvent,
   createCodexSseNormalizeState,
   formatWebSearchFallbackAssistantText,
+  handleResponsesProxy,
+  normalizeCodexResponsesSseEvent,
   sanitizeSearchSnippetForFallback,
+  startForwarder,
 } from "../src/forwarder.js";
 import { injectRoleModelIntentIntoResponsesPayload } from "../src/responses-intent.js";
-import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 
 function jsonResponse(body: unknown, status = 200, headers: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(body), {
@@ -38,7 +38,7 @@ describe("web_search mixed client tools gate", () => {
               type: "function_call",
               name: "web_search",
               call_id: "c1",
-              arguments: "{\"query\":\"SNDK\"}",
+              arguments: '{"query":"SNDK"}',
             },
           ],
         },
@@ -53,7 +53,7 @@ describe("web_search mixed client tools gate", () => {
               type: "function_call",
               name: "web_search",
               call_id: "c1",
-              arguments: "{\"query\":\"SNDK\"}",
+              arguments: '{"query":"SNDK"}',
             },
           ],
         },
@@ -106,19 +106,19 @@ describe("web_search mixed client tools gate", () => {
               type: "function_call",
               name: "update_plan",
               call_id: "call_plan_1",
-              arguments: "{\"explanation\":\"phase A\",\"plan\":[]}",
+              arguments: '{"explanation":"phase A","plan":[]}',
             },
             {
               type: "function_call",
               name: "web_search",
               call_id: "call_ws_1",
-              arguments: "{\"query\":\"Singapore weather\"}",
+              arguments: '{"query":"Singapore weather"}',
             },
             {
               type: "function_call",
               name: "web_search",
               call_id: "call_ws_2",
-              arguments: "{\"query\":\"Node.js LTS version\"}",
+              arguments: '{"query":"Node.js LTS version"}',
             },
           ],
         });
@@ -176,14 +176,19 @@ describe("web_search fallback formatting", () => {
     const { normalizeWebSearchQuery, webSearchQueriesNearDuplicate } = await import(
       "../src/forwarder.js"
     );
-    expect(webSearchQueriesNearDuplicate("Alpha Beta current status today", "Alpha Beta status August 2026")).toBe(
-      true,
-    );
+    expect(
+      webSearchQueriesNearDuplicate(
+        "Alpha Beta current status today",
+        "Alpha Beta status August 2026",
+      ),
+    ).toBe(true);
     expect(
       webSearchQueriesNearDuplicate("Project Orion release notes", "Unrelated Topic Zeta weather"),
     ).toBe(false);
     // Temporal chrome alone should not create a distinct normalize key subject.
-    expect(normalizeWebSearchQuery("Alpha Beta today")).toBe(normalizeWebSearchQuery("Alpha Beta August 2026"));
+    expect(normalizeWebSearchQuery("Alpha Beta today")).toBe(
+      normalizeWebSearchQuery("Alpha Beta August 2026"),
+    );
   });
 
   test("strips [wordlim] chrome and never returns raw SERP as fallback text", () => {
@@ -385,7 +390,9 @@ describe("Responses forwarder", () => {
         if (href.includes("/alpha/search")) {
           return jsonResponse({
             output: "NET last traded near $81 (ChatGPT search).",
-            results: [{ type: "text_result", ref_id: "turn0search0", title: "NET", snippet: "$81" }],
+            results: [
+              { type: "text_result", ref_id: "turn0search0", title: "NET", snippet: "$81" },
+            ],
           });
         }
         const body = JSON.parse(String(init?.body ?? "{}")) as {
@@ -407,7 +414,7 @@ describe("Responses forwarder", () => {
                 type: "function_call",
                 name: "web_search",
                 call_id: "call_ws_1",
-                arguments: "{\"query\":\"Cloudflare NET share price\"}",
+                arguments: '{"query":"Cloudflare NET share price"}',
               },
             ],
           });
@@ -422,7 +429,7 @@ describe("Responses forwarder", () => {
               type: "function_call",
               name: "web_search",
               call_id: "call_ws_2",
-              arguments: "{\"query\":\"NET after hours\"}",
+              arguments: '{"query":"NET after hours"}',
             },
           ],
         });
@@ -440,7 +447,9 @@ describe("Responses forwarder", () => {
       body: JSON.stringify({
         model: "baseline.remote-only",
         stream: true,
-        input: [{ type: "message", role: "user", content: [{ type: "input_text", text: "price?" }] }],
+        input: [
+          { type: "message", role: "user", content: [{ type: "input_text", text: "price?" }] },
+        ],
         tools: [
           { type: "web_search" },
           {
@@ -458,9 +467,9 @@ describe("Responses forwarder", () => {
     // Exhausted continues must not dump raw SERP; structured fallback or synthesize ok.
     expect(text).not.toContain("[wordlim:");
     expect(text).not.toContain("web_search_call");
-    expect(
-      text.includes("could not synthesize") || text.includes("NET last traded near $81"),
-    ).toBe(true);
+    expect(text.includes("could not synthesize") || text.includes("NET last traded near $81")).toBe(
+      true,
+    );
     await new Promise<void>((resolve) => server.close(() => resolve()));
   });
 
@@ -519,7 +528,7 @@ describe("Responses forwarder", () => {
               type: "function_call",
               name: "web_search",
               call_id: `call_ws_${alphaSearches + 1}`,
-              arguments: "{\"query\":\"Cloudflare NET share price\"}",
+              arguments: '{"query":"Cloudflare NET share price"}',
             },
           ],
         });
@@ -550,7 +559,11 @@ describe("Responses forwarder", () => {
     const body = (await response.json()) as {
       output?: Array<{ content?: Array<{ text?: string }> }>;
     };
-    const text = body.output?.flatMap((o) => o.content ?? []).map((c) => c.text ?? "").join("\n") ?? "";
+    const text =
+      body.output
+        ?.flatMap((o) => o.content ?? [])
+        .map((c) => c.text ?? "")
+        .join("\n") ?? "";
     expect(text).not.toContain("[wordlim:");
     expect(text.length).toBeGreaterThan(20);
     expect(text).not.toMatch(/Published: 6\.0 years ago/);
@@ -574,8 +587,7 @@ describe("Responses forwarder", () => {
         if (href.includes("/alpha/search")) {
           alphaSearches += 1;
           return jsonResponse({
-            output:
-              "Example City weather is partly cloudy, high 30C. Source: example-weather.",
+            output: "Example City weather is partly cloudy, high 30C. Source: example-weather.",
           });
         }
         responsesHops += 1;
@@ -746,7 +758,7 @@ describe("Responses forwarder", () => {
               type: "function_call",
               name: "web_search",
               call_id: `call_dup_${responsesHops}`,
-              arguments: "{\"query\":\"SNDK stock price today\"}",
+              arguments: '{"query":"SNDK stock price today"}',
             },
           ],
         });
@@ -999,7 +1011,8 @@ describe("Responses forwarder", () => {
     out.push(...finalizeCodexResponsesSse(state));
     const completedLine = out.find((line) => line.includes('"type":"response.completed"'));
     expect(completedLine).toBeTruthy();
-    const completed = JSON.parse(completedLine!.slice("data:".length).trim()) as {
+    if (!completedLine) throw new Error("Expected a response.completed SSE line.");
+    const completed = JSON.parse(completedLine.slice("data:".length).trim()) as {
       response: { output: Array<{ type: string }> };
     };
     expect(completed.response.output.map((item) => item.type)).toEqual([
@@ -1052,7 +1065,7 @@ describe("Responses forwarder", () => {
         type: "function_call",
         call_id: "orphan_1",
         name: "web_search",
-        arguments: "{\"query\":\"x\"}",
+        arguments: '{"query":"x"}',
       },
     ]);
     expect(
@@ -1192,7 +1205,7 @@ describe("Responses forwarder", () => {
               type: "function_call",
               name: "web_search",
               call_id: "call_ws_id",
-              arguments: "{\"query\":\"SNDK stock price today\"}",
+              arguments: '{"query":"SNDK stock price today"}',
             },
           ],
         });
@@ -1268,9 +1281,12 @@ describe("Responses forwarder", () => {
     expect(events.some((e) => e.includes("response.output_item.done"))).toBe(true);
     const completed = events.find((e) => e.includes("response.completed"));
     expect(completed).toBeTruthy();
+    if (!completed) throw new Error("Expected a response.completed SSE line.");
     // Must be a single JSON object per event — not concatenated payloads.
-    expect(() => JSON.parse(completed!.slice("data:".length).trim())).not.toThrow();
-    expect(completed).not.toMatch(/response\.completed.*response\.output_item\.done|response\.output_item\.done.*response\.completed/);
+    expect(() => JSON.parse(completed.slice("data:".length).trim())).not.toThrow();
+    expect(completed).not.toMatch(
+      /response\.completed.*response\.output_item\.done|response\.output_item\.done.*response\.completed/,
+    );
   });
 
   test("accepts gzip-compressed JSON request bodies", async () => {
@@ -1352,7 +1368,8 @@ describe("Responses forwarder", () => {
       fetchImpl: async (_url, init) => {
         upstreamBody = String(init?.body ?? "");
         const headers = init?.headers as Record<string, string>;
-        requestIdHeader = headers?.["x-client-request-id"] ?? headers?.["x-role-model-request-id"] ?? "";
+        requestIdHeader =
+          headers?.["x-client-request-id"] ?? headers?.["x-role-model-request-id"] ?? "";
         return jsonResponse({
           id: "resp_tools",
           output: [
@@ -1360,7 +1377,7 @@ describe("Responses forwarder", () => {
               type: "function_call",
               name: "mcp__demo__search",
               call_id: "call_1",
-              arguments: "{\"q\":\"hi\"}",
+              arguments: '{"q":"hi"}',
             },
           ],
         });
@@ -1468,7 +1485,9 @@ describe("Responses forwarder", () => {
     });
     const address = server.address();
     const port = typeof address === "object" && address ? address.port : 0;
-    const response = await fetch(`http://127.0.0.1:${port}/v1/responses/compact`, { method: "POST" });
+    const response = await fetch(`http://127.0.0.1:${port}/v1/responses/compact`, {
+      method: "POST",
+    });
     expect(response.status).toBe(404);
     await new Promise<void>((resolve) => server.close(() => resolve()));
   });

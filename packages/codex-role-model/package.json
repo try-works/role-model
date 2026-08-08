@@ -4,13 +4,7 @@
   "type": "module",
   "description": "Codex Desktop/CLI/IDE adapter for connecting to an externally running role-model runtime.",
   "license": "BUSL-1.1",
-  "keywords": [
-    "codex",
-    "role-model",
-    "routing",
-    "llm-gateway",
-    "codex-plugin"
-  ],
+  "keywords": ["codex", "role-model", "routing", "llm-gateway", "codex-plugin"],
   "homepage": "https://github.com/try-works/role-model#readme",
   "bugs": {
     "url": "https://github.com/try-works/role-model/issues"

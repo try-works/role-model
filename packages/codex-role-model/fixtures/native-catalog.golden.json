@@ -35,9 +35,7 @@
       "visibility": "list",
       "supported_in_api": true,
       "priority": 1,
-      "additional_speed_tiers": [
-        "fast"
-      ],
+      "additional_speed_tiers": ["fast"],
       "service_tiers": [
         {
           "id": "priority",
@@ -78,10 +76,7 @@
       "comp_hash": "3000",
       "effective_context_window_percent": 95,
       "experimental_supported_tools": [],
-      "input_modalities": [
-        "text",
-        "image"
-      ],
+      "input_modalities": ["text", "image"],
       "supports_search_tool": true,
       "use_responses_lite": true,
       "tool_mode": "code_mode_only",
@@ -122,9 +117,7 @@
       "visibility": "list",
       "supported_in_api": true,
       "priority": 2,
-      "additional_speed_tiers": [
-        "fast"
-      ],
+      "additional_speed_tiers": ["fast"],
       "service_tiers": [
         {
           "id": "priority",
@@ -163,10 +156,7 @@
       "comp_hash": "3000",
       "effective_context_window_percent": 95,
       "experimental_supported_tools": [],
-      "input_modalities": [
-        "text",
-        "image"
-      ],
+      "input_modalities": ["text", "image"],
       "supports_search_tool": true,
       "use_responses_lite": true,
       "tool_mode": "code_mode_only",
@@ -203,9 +193,7 @@
       "visibility": "list",
       "supported_in_api": true,
       "priority": 3,
-      "additional_speed_tiers": [
-        "fast"
-      ],
+      "additional_speed_tiers": ["fast"],
       "service_tiers": [
         {
           "id": "priority",
@@ -244,10 +232,7 @@
       "comp_hash": "3000",
       "effective_context_window_percent": 95,
       "experimental_supported_tools": [],
-      "input_modalities": [
-        "text",
-        "image"
-      ],
+      "input_modalities": ["text", "image"],
       "supports_search_tool": true,
       "use_responses_lite": true,
       "tool_mode": "code_mode_only",
@@ -280,9 +265,7 @@
       "visibility": "list",
       "supported_in_api": true,
       "priority": 7,
-      "additional_speed_tiers": [
-        "fast"
-      ],
+      "additional_speed_tiers": ["fast"],
       "service_tiers": [
         {
           "id": "priority",
@@ -323,10 +306,7 @@
       "comp_hash": "2911",
       "effective_context_window_percent": 95,
       "experimental_supported_tools": [],
-      "input_modalities": [
-        "text",
-        "image"
-      ],
+      "input_modalities": ["text", "image"],
       "supports_search_tool": true,
       "use_responses_lite": false
     },
@@ -357,9 +337,7 @@
       "visibility": "hide",
       "supported_in_api": true,
       "priority": 16,
-      "additional_speed_tiers": [
-        "fast"
-      ],
+      "additional_speed_tiers": ["fast"],
       "service_tiers": [
         {
           "id": "priority",
@@ -401,10 +379,7 @@
       "comp_hash": "2911",
       "effective_context_window_percent": 95,
       "experimental_supported_tools": [],
-      "input_modalities": [
-        "text",
-        "image"
-      ],
+      "input_modalities": ["text", "image"],
       "supports_search_tool": true,
       "use_responses_lite": false
     },
@@ -471,10 +446,7 @@
       "comp_hash": "2911",
       "effective_context_window_percent": 95,
       "experimental_supported_tools": [],
-      "input_modalities": [
-        "text",
-        "image"
-      ],
+      "input_modalities": ["text", "image"],
       "supports_search_tool": true,
       "use_responses_lite": false
     },
@@ -537,10 +509,7 @@
       "max_context_window": 272000,
       "effective_context_window_percent": 95,
       "experimental_supported_tools": [],
-      "input_modalities": [
-        "text",
-        "image"
-      ],
+      "input_modalities": ["text", "image"],
       "supports_search_tool": true,
       "use_responses_lite": false
     },
@@ -615,10 +584,7 @@
       "max_context_window": 1000000,
       "effective_context_window_percent": 95,
       "experimental_supported_tools": [],
-      "input_modalities": [
-        "text",
-        "image"
-      ],
+      "input_modalities": ["text", "image"],
       "supports_search_tool": true,
       "use_responses_lite": false
     }

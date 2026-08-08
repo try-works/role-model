@@ -17,10 +17,7 @@ export function adapterPidPath(stateDir: string): string {
   return join(stateDir, "adapter.pid");
 }
 
-export async function writeAdapterState(
-  stateDir: string,
-  state: AdapterState,
-): Promise<void> {
+export async function writeAdapterState(stateDir: string, state: AdapterState): Promise<void> {
   await mkdir(stateDir, { recursive: true });
   await writeFile(adapterLockPath(stateDir), `${JSON.stringify(state, null, 2)}\n`, "utf8");
   await writeFile(adapterPidPath(stateDir), `${state.pid}\n`, "utf8");
