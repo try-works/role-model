@@ -59,23 +59,31 @@ async function inspectHealth(url, requestTimeoutMs, fetchFn) {
       signal: AbortSignal.timeout(requestTimeoutMs),
     });
     if (!response.ok) {
-      return { diagnostic: `HTTP ${response.status}`, ready: false };
+      return { diagnostic: `HTTP ${response.status}`, diagnosticPriority: 2, ready: false };
     }
 
     let health;
     try {
       health = await response.json();
     } catch (error) {
-      return { diagnostic: `malformed JSON: ${errorMessage(error)}`, ready: false };
+      return {
+        diagnostic: `malformed JSON: ${errorMessage(error)}`,
+        diagnosticPriority: 2,
+        ready: false,
+      };
     }
 
     if (isSemanticRuntimeReady(health)) {
       return { health, ready: true };
     }
 
-    return { diagnostic: describeRuntimeHealth(health), ready: false };
+    return { diagnostic: describeRuntimeHealth(health), diagnosticPriority: 3, ready: false };
   } catch (error) {
-    return { diagnostic: `request failed: ${errorMessage(error)}`, ready: false };
+    return {
+      diagnostic: `request failed: ${errorMessage(error)}`,
+      diagnosticPriority: 1,
+      ready: false,
+    };
   }
 }
 
@@ -89,6 +97,7 @@ export async function waitForSemanticRuntimeReadiness({
 } = {}) {
   const deadline = now() + timeoutMs;
   let lastDiagnostic = "no health response received";
+  let lastDiagnosticPriority = 0;
 
   while (true) {
     const remainingBeforeRequest = deadline - now();
@@ -104,7 +113,10 @@ export async function waitForSemanticRuntimeReadiness({
     if (observation.ready) {
       return observation.health;
     }
-    lastDiagnostic = observation.diagnostic;
+    if (observation.diagnosticPriority >= lastDiagnosticPriority) {
+      lastDiagnostic = observation.diagnostic;
+      lastDiagnosticPriority = observation.diagnosticPriority;
+    }
 
     const remainingBeforeSleep = deadline - now();
     if (remainingBeforeSleep <= 0) {
