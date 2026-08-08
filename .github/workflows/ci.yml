@@ -224,9 +224,8 @@ jobs:
             > track-b-runtime.log 2>&1 &
           runtime_pid=$!
           trap 'kill "$runtime_pid" "$recommendation_pid" 2>/dev/null || true' EXIT
-          for attempt in {1..120}; do
-            curl --fail --silent http://127.0.0.1:3462/healthz >/dev/null && break
-            sleep 1
-          done
-          curl --fail http://127.0.0.1:3462/healthz
+          node scripts/track-b/wait-for-runtime-readiness.mjs \
+            --url http://127.0.0.1:3462/healthz \
+            --timeout-ms 120000 \
+            --poll-interval-ms 1000
           pnpm --filter @role-model-router/runtime-ui exec playwright test --grep @recursive:87-direct-track-b-semantic-completion
