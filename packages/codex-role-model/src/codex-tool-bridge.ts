@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { writeFileSync, mkdirSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
 export type BridgeReverseEntry =
@@ -98,13 +98,15 @@ export function summarizeToolTypeHistogram(tools: unknown[]): ToolTypeHistogram 
 }
 
 function normalizeNamePart(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9_]+/g, "_").replace(/^_+|_+$/g, "") || "x";
+  return (
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9_]+/g, "_")
+      .replace(/^_+|_+$/g, "") || "x"
+  );
 }
 
-function allocateFlatName(
-  preferred: string,
-  used: Set<string>,
-): string {
+function allocateFlatName(preferred: string, used: Set<string>): string {
   let name = preferred;
   let i = 2;
   while (used.has(name)) {
@@ -140,10 +142,11 @@ function registerNamespaceChildInReverseMap(
   options?: { allocateOutboundName?: boolean },
 ): string | undefined {
   const preferredNames = flatNamesForNamespaceChild(namespace, childName);
-  if (preferredNames.length === 0) return undefined;
+  const preferredName = preferredNames[0];
+  if (!preferredName) return undefined;
   const primary = options?.allocateOutboundName
-    ? allocateFlatName(preferredNames[0]!, usedNames)
-    : preferredNames[0]!;
+    ? allocateFlatName(preferredName, usedNames)
+    : preferredName;
   const entry: BridgeReverseEntry = { kind: "namespace", namespace, name: childName };
   reverseMap.set(primary, entry);
   for (const alias of preferredNames) {
@@ -224,11 +227,7 @@ function inferMcpNamespaceEntry(flatName: string): BridgeReverseEntry | null {
     toolName = `_${toolName}`;
   }
   // App connector tools are conventionally underscore-prefixed.
-  if (
-    nsBody.startsWith("codex_apps__") &&
-    toolName.length > 0 &&
-    !toolName.startsWith("_")
-  ) {
+  if (nsBody.startsWith("codex_apps__") && toolName.length > 0 && !toolName.startsWith("_")) {
     toolName = `_${toolName}`;
   }
   if (!nsBody || !toolName) return null;
@@ -318,11 +317,7 @@ export function flattenCodexToolsForUpstream(
   if (!isRecord(payload) || !Array.isArray(payload.tools)) {
     const emptyPayload = isRecord(payload) ? { ...payload } : {};
     const reverseMap = new Map<string, BridgeReverseEntry>();
-    const harvestedFromSearch = harvestDeferredToolsFromInput(
-      emptyPayload,
-      reverseMap,
-      new Set(),
-    );
+    const harvestedFromSearch = harvestDeferredToolsFromInput(emptyPayload, reverseMap, new Set());
     return {
       payload: emptyPayload,
       reverseMap,
@@ -545,11 +540,7 @@ export function reverseMapHasWebSearch(reverseMap: Map<string, BridgeReverseEntr
 function toWebSearchCallItem(item: Record<string, unknown>): Record<string, unknown> {
   const query = extractWebSearchQuery(item);
   const callId =
-    typeof item.call_id === "string"
-      ? item.call_id
-      : typeof item.id === "string"
-        ? item.id
-        : null;
+    typeof item.call_id === "string" ? item.call_id : typeof item.id === "string" ? item.id : null;
   return {
     type: "web_search_call",
     ...(callId ? { call_id: callId, id: callId } : {}),
@@ -636,7 +627,11 @@ function restoreCallItem(
   return item;
 }
 
-function walkRestore(value: unknown, reverseMap: Map<string, BridgeReverseEntry>, stats: RestoreStats): unknown {
+function walkRestore(
+  value: unknown,
+  reverseMap: Map<string, BridgeReverseEntry>,
+  stats: RestoreStats,
+): unknown {
   if (Array.isArray(value)) {
     return value.map((entry) => walkRestore(entry, reverseMap, stats));
   }
@@ -706,23 +701,23 @@ export function restoreCodexToolCallsInSseChunk(
 ): string {
   // Always rewrite when the chunk mentions tools we may restore — including
   // stray `web_search` function_calls even if reverseMap is empty.
-  if (
-    !chunk.includes("function_call") &&
-    !chunk.includes("web_search")
-  ) {
+  if (!chunk.includes("function_call") && !chunk.includes("web_search")) {
     return chunk;
   }
   // Use horizontal whitespace only — `\s*` would eat SSE `\n\n` separators via `$`
   // matching before newlines (Codex then sees `}}data:` and never gets completed).
-  return chunk.replace(/^(data:[^\S\r\n]*)(\{.*\})([^\S\r\n]*)$/gm, (full, _prefix, jsonText: string, trail: string) => {
-    try {
-      const parsed = JSON.parse(jsonText) as unknown;
-      const { payload } = restoreCodexToolCallsInPayload(parsed, reverseMap);
-      return `data: ${JSON.stringify(payload)}${trail}`;
-    } catch {
-      return full;
-    }
-  });
+  return chunk.replace(
+    /^(data:[^\S\r\n]*)(\{.*\})([^\S\r\n]*)$/gm,
+    (full, _prefix, jsonText: string, trail: string) => {
+      try {
+        const parsed = JSON.parse(jsonText) as unknown;
+        const { payload } = restoreCodexToolCallsInPayload(parsed, reverseMap);
+        return `data: ${JSON.stringify(payload)}${trail}`;
+      } catch {
+        return full;
+      }
+    },
+  );
 }
 
 export interface BridgeHopSummary {

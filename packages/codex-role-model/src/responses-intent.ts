@@ -1,6 +1,6 @@
+import { injectRoleModelIntentIntoPayload } from "./request-intent.js";
 import { classifyWithProgressiveDisclosure } from "./taxonomy/classify-with-progressive-disclosure.js";
 import type { CompactTaxonomy } from "./taxonomy/compact-data.js";
-import { injectRoleModelIntentIntoPayload } from "./request-intent.js";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);

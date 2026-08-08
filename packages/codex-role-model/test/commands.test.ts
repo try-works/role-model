@@ -3,7 +3,10 @@ import { runCommand } from "../src/commands.js";
 import { createDiscovery } from "./fixtures.js";
 
 function jsonResponse(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "content-type": "application/json" },
+  });
 }
 
 describe("codex-role-model CLI routing", () => {

@@ -1,9 +1,16 @@
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  writeFileSync,
+} from "node:fs";
 import { cp, mkdir, readFile, writeFile } from "node:fs/promises";
-import { mkdirSync, readFileSync, renameSync, writeFileSync, existsSync, copyFileSync } from "node:fs";
-import { dirname, join } from "node:path";
 import { homedir } from "node:os";
+import { basename, dirname, join } from "node:path";
 import { parse } from "smol-toml";
-import { adapterBaseUrl, DEFAULT_CODEX_ADAPTER_PORT } from "./config.js";
+import { DEFAULT_CODEX_ADAPTER_PORT, adapterBaseUrl } from "./config.js";
 
 export const MANAGED_BLOCK_BEGIN = "# BEGIN role-model-provider-managed";
 export const MANAGED_BLOCK_END = "# END role-model-provider-managed";
@@ -11,7 +18,9 @@ export const MANAGED_BEGIN = MANAGED_BLOCK_BEGIN;
 export const MANAGED_END = MANAGED_BLOCK_END;
 export const PROVIDER_ID = "role-model";
 
-export function resolveCodexHome(env: Partial<Record<string, string | undefined>> = process.env): string {
+export function resolveCodexHome(
+  env: Partial<Record<string, string | undefined>> = process.env,
+): string {
   return env.CODEX_HOME?.trim() || join(homedir(), ".codex");
 }
 
@@ -70,7 +79,10 @@ export function renderManagedBlock(input: ManagedConfigInput): string {
   const catalogPath = input.catalogConfigPath ?? catalogPathForHome(input.codexHome);
   return buildManagedProviderBlock({
     model: input.model,
-    adapterPort: Number.parseInt(adapter.match(/:(\d+)/)?.[1] ?? String(DEFAULT_CODEX_ADAPTER_PORT), 10),
+    adapterPort: Number.parseInt(
+      adapter.match(/:(\d+)/)?.[1] ?? String(DEFAULT_CODEX_ADAPTER_PORT),
+      10,
+    ),
     catalogPath,
   }).trimEnd();
 }
@@ -106,12 +118,12 @@ export function buildManagedProviderBlock(options: {
     `forced_login_method = "api"`,
     `model_catalog_json = ${tomlString(options.catalogPath)}`,
     "",
-    `[model_providers.role-model]`,
+    "[model_providers.role-model]",
     `name = "role-model"`,
     `base_url = ${tomlString(baseUrl)}`,
     `wire_api = "responses"`,
-    `supports_websockets = true`,
-    `requires_openai_auth = false`,
+    "supports_websockets = true",
+    "requires_openai_auth = false",
     `env_key = "ROLE_MODEL_CODEX_API_KEY"`,
     MANAGED_BLOCK_END,
     "",
@@ -132,7 +144,7 @@ export function removeManagedBlock(existing: string): string {
   const end = existing.indexOf(MANAGED_BLOCK_END);
   if (begin < 0 || end < begin) return existing;
   const afterEnd = end + MANAGED_BLOCK_END.length;
-  return `${existing.slice(0, begin).replace(/\s+$/, "")}\n${existing.slice(afterEnd).replace(/^\s+/, "")}`.trim() + "\n";
+  return `${`${existing.slice(0, begin).replace(/\s+$/, "")}\n${existing.slice(afterEnd).replace(/^\s+/, "")}`.trim()}\n`;
 }
 
 export function validateTomlOrThrow(content: string): void {
@@ -155,7 +167,7 @@ export function backupCodexFiles(codexHome: string, files: string[]): string {
   mkdirSync(backupDir, { recursive: true });
   for (const file of files) {
     if (!existsSync(file)) continue;
-    copyFileSync(file, join(backupDir, file.split(/[/\\]/).pop()!));
+    copyFileSync(file, join(backupDir, basename(file)));
   }
   return backupDir;
 }
@@ -232,7 +244,8 @@ export function readSelectedModelFromToml(content: string): string | null {
 }
 
 export function updateSelectedModelInToml(content: string, model: string): string {
-  if (!hasManagedBlock(content)) throw new Error("Managed role-model block is missing from Codex config.");
+  if (!hasManagedBlock(content))
+    throw new Error("Managed role-model block is missing from Codex config.");
   const next = content.replace(/^model\s*=\s*"[^"]*"/m, `model = ${tomlString(model)}`);
   validateTomlOrThrow(next);
   return next;

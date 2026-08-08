@@ -1,7 +1,7 @@
-import { describe, expect, test } from "vitest";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { describe, expect, test } from "vitest";
 import { startForwarder } from "../src/forwarder.js";
 
 function waitForOpen(ws: WebSocket, timeoutMs = 5000): Promise<void> {
@@ -19,10 +19,17 @@ function waitForOpen(ws: WebSocket, timeoutMs = 5000): Promise<void> {
   });
 }
 
-function collectEvents(ws: WebSocket, untilType: string, timeoutMs = 15_000): Promise<Array<Record<string, unknown>>> {
+function collectEvents(
+  ws: WebSocket,
+  untilType: string,
+  timeoutMs = 15_000,
+): Promise<Array<Record<string, unknown>>> {
   return new Promise((resolve, reject) => {
     const events: Array<Record<string, unknown>> = [];
-    const timer = setTimeout(() => reject(new Error(`timeout waiting for ${untilType}`)), timeoutMs);
+    const timer = setTimeout(
+      () => reject(new Error(`timeout waiting for ${untilType}`)),
+      timeoutMs,
+    );
     const onMessage = (event: MessageEvent) => {
       const raw = typeof event.data === "string" ? event.data : String(event.data);
       let parsed: Record<string, unknown>;
@@ -154,7 +161,7 @@ describe("responses websocket bridge", () => {
                   id: "fc_1",
                   call_id: "call_1",
                   name: "shell_command",
-                  arguments: "{\"command\":\"echo hi\"}",
+                  arguments: '{"command":"echo hi"}',
                 },
               ],
             }),

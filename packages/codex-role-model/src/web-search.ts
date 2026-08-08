@@ -29,10 +29,7 @@ export interface WebSearchResponse {
 /** Pluggable enricher: return null to skip (e.g. missing API key). */
 export type SearchEnricher = {
   readonly name: string;
-  search(
-    query: string,
-    fetchImpl: typeof fetch,
-  ): Promise<WebSearchResponse | null>;
+  search(query: string, fetchImpl: typeof fetch): Promise<WebSearchResponse | null>;
 };
 
 function decodeHtmlEntities(value: string): string {
@@ -50,23 +47,26 @@ function decodeHtmlEntities(value: string): string {
 }
 
 function stripTags(value: string): string {
-  return decodeHtmlEntities(value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim());
+  return decodeHtmlEntities(
+    value
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim(),
+  );
 }
 
 function parseDuckDuckGoHtml(html: string): WebSearchResultItem[] {
   const results: WebSearchResultItem[] = [];
-  const anchorRe =
-    /<a[^>]*class="[^"]*result__a[^"]*"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
-  let match: RegExpExecArray | null;
+  const anchorRe = /<a[^>]*class="[^"]*result__a[^"]*"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
   let index = 0;
-  while ((match = anchorRe.exec(html)) !== null && index < 8) {
+  while (index < 8) {
+    const match = anchorRe.exec(html);
+    if (match === null) break;
     const href = match[1] ?? "";
     const title = stripTags(match[2] ?? "");
     if (!title) continue;
     const after = html.slice(match.index, match.index + 1200);
-    const snippetMatch = /class="[^"]*result__snippet[^"]*"[^>]*>([\s\S]*?)<\//i.exec(
-      after,
-    );
+    const snippetMatch = /class="[^"]*result__snippet[^"]*"[^>]*>([\s\S]*?)<\//i.exec(after);
     const snippet = snippetMatch ? stripTags(snippetMatch[1] ?? "") : "";
     const uddg = /uddg=([^&"]+)/.exec(href);
     const url = uddg ? decodeURIComponent(uddg[1]) : href.startsWith("http") ? href : undefined;
@@ -108,7 +108,11 @@ const SERP_CHROME_RE =
   /\[wordlim:\s*\d+\][^\n]*|Published:\s*[\d.]+\s*years?\s*ago[^\n]*|Crawled:\s*[^\n]*/gi;
 
 function stripSerpChrome(text: string): string {
-  return text.replace(SERP_CHROME_RE, " ").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+  return text
+    .replace(SERP_CHROME_RE, " ")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 function lineLooksLikeUrl(line: string): boolean {
@@ -157,7 +161,14 @@ export function assessSearchEvidence(text: string): SearchEvidenceAssessment {
   const raw = text.trim();
   const reasons: string[] = [];
   if (!raw) {
-    return { weak: true, reasons: ["empty"], bodyChars: 0, urlCount: 0, titleOnlyLines: 0, bodyLines: 0 };
+    return {
+      weak: true,
+      reasons: ["empty"],
+      bodyChars: 0,
+      urlCount: 0,
+      titleOnlyLines: 0,
+      bodyLines: 0,
+    };
   }
   if (/chatgpt alpha\/search (failed|error)/i.test(raw)) {
     return {
@@ -180,7 +191,8 @@ export function assessSearchEvidence(text: string): SearchEvidenceAssessment {
     };
   }
 
-  const hasChrome = /\[wordlim:\s*\d+\]/i.test(raw) || /Published:\s*[\d.]+\s*years?\s*ago/i.test(raw);
+  const hasChrome =
+    /\[wordlim:\s*\d+\]/i.test(raw) || /Published:\s*[\d.]+\s*years?\s*ago/i.test(raw);
   const cleaned = stripSerpChrome(raw);
   if (!cleaned) {
     return {
@@ -200,23 +212,46 @@ export function assessSearchEvidence(text: string): SearchEvidenceAssessment {
     .filter(Boolean);
   const titleOnlyLines = lines.filter(lineLooksLikeTitleOnly).length;
   const bodyLines = lines.filter(lineLooksLikeBody).length;
-  const bodyChars = lines.filter((l) => lineLooksLikeBody(l) || lineLooksLikeUrl(l)).join(" ").length;
+  const bodyChars = lines
+    .filter((l) => lineLooksLikeBody(l) || lineLooksLikeUrl(l))
+    .join(" ").length;
 
   // Explicit answer summaries from structured providers are strong signals.
   if (/^answer summary:/im.test(cleaned) && cleaned.length >= 80) {
-    return { weak: false, reasons: ["has_answer_summary"], bodyChars, urlCount, titleOnlyLines, bodyLines };
+    return {
+      weak: false,
+      reasons: ["has_answer_summary"],
+      bodyChars,
+      urlCount,
+      titleOnlyLines,
+      bodyLines,
+    };
   }
 
   // Structured results with URLs + body are strong.
   if (urlCount >= 2 && bodyChars >= 120) {
-    return { weak: false, reasons: ["structured_urls_body"], bodyChars, urlCount, titleOnlyLines, bodyLines };
+    return {
+      weak: false,
+      reasons: ["structured_urls_body"],
+      bodyChars,
+      urlCount,
+      titleOnlyLines,
+      bodyLines,
+    };
   }
   if (bodyLines >= 2 && bodyChars >= 100) {
     return { weak: false, reasons: ["multi_body"], bodyChars, urlCount, titleOnlyLines, bodyLines };
   }
   // Single substantial paragraph without chrome.
   if (!hasChrome && bodyChars >= 120) {
-    return { weak: false, reasons: ["substantial_body"], bodyChars, urlCount, titleOnlyLines, bodyLines };
+    return {
+      weak: false,
+      reasons: ["substantial_body"],
+      bodyChars,
+      urlCount,
+      titleOnlyLines,
+      bodyLines,
+    };
   }
 
   if (hasChrome && bodyChars < 160) reasons.push("chrome_thin_body");
@@ -375,7 +410,9 @@ export async function enrichWeakSearchEvidence(input: {
 }
 
 function sanitizeForMerge(text: string, maxChars: number): string {
-  const cleaned = stripSerpChrome(text).replace(/\n{3,}/g, "\n\n").trim();
+  const cleaned = stripSerpChrome(text)
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
   if (cleaned.length <= maxChars) return cleaned;
   return `${cleaned.slice(0, Math.max(0, maxChars - 1)).trimEnd()}…`;
 }

@@ -1,8 +1,8 @@
-import { describe, expect, test } from "vitest";
-import { mkdtempSync, readFileSync, mkdirSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createDiscoveryResult, createModelRecord } from "./fixtures.js";
+import { describe, expect, test } from "vitest";
+import { buildModelsCatalog } from "../src/catalog.js";
 import {
   buildNativeAliasAssignments,
   buildPickerExternalModels,
@@ -11,7 +11,7 @@ import {
   resolveNativeAliasedModelId,
   writeNativeAliases,
 } from "../src/native-alias.js";
-import { buildModelsCatalog } from "../src/catalog.js";
+import { createDiscoveryResult, createModelRecord } from "./fixtures.js";
 
 describe("native-alias picker assignments", () => {
   test("picker order is selected strategy then configured model ids", () => {
@@ -71,7 +71,10 @@ describe("native-alias picker assignments", () => {
       "deepseek/deepseek-v4-pro",
     ]);
     expect(listed.every((m) => m.slug.startsWith("gpt-"))).toBe(true);
-    expect(aliases[listed[0]!.slug]).toBe("baseline.remote-only");
+    const firstListed = listed[0];
+    expect(firstListed).toBeDefined();
+    if (!firstListed) throw new Error("Expected at least one listed native alias.");
+    expect(aliases[firstListed.slug]).toBe("baseline.remote-only");
     expect(models.every((m) => m.truncation_policy?.mode === "tokens")).toBe(true);
     expect(models.every((m) => m.truncation_policy?.type === undefined)).toBe(true);
 

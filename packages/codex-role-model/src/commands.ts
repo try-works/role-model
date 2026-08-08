@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import { aliasStatePath, readAliasState, writeAliasState } from "./alias-store.js";
 import { buildModelsCatalog } from "./catalog.js";
 import {
   absoluteCatalogPath,
@@ -12,17 +13,16 @@ import {
   upsertManagedBlock,
   writeTextFileAtomic,
 } from "./codex-config.js";
-import { createRoleModelConfig, adapterBaseUrl } from "./config.js";
+import { adapterBaseUrl, createRoleModelConfig } from "./config.js";
 import { startForwarder, stopForwarder } from "./forwarder.js";
 import { formatInvalidRoleModelModelId, recommendedRoleModelModelId } from "./model-guidance.js";
-import { RoleModelDiscoveryError, discoverRoleModelRuntime } from "./runtime-discovery.js";
-import { inspectRequest, listRecentRequests } from "./runtime-inspection.js";
-import { readAliasState, writeAliasState, aliasStatePath } from "./alias-store.js";
 import {
   nativeAliasesPath,
   resolveNativeAliasedModelId,
   writeNativeAliases,
 } from "./native-alias.js";
+import { RoleModelDiscoveryError, discoverRoleModelRuntime } from "./runtime-discovery.js";
+import { inspectRequest, listRecentRequests } from "./runtime-inspection.js";
 import type { DiscoveryResult, RoleModelCommandResult } from "./types.js";
 
 function ok(text: string): RoleModelCommandResult {
@@ -57,9 +57,13 @@ function formatDiscoveryFailure(error: unknown): RoleModelCommandResult {
   if (error instanceof RoleModelDiscoveryError) {
     return fail(
       redactSecrets(
-        [`doctor: fail`, `check: ${error.state}`, `endpoint: ${error.endpoint}`, error.message, error.remediation].join(
-          "\n",
-        ),
+        [
+          "doctor: fail",
+          `check: ${error.state}`,
+          `endpoint: ${error.endpoint}`,
+          error.message,
+          error.remediation,
+        ].join("\n"),
       ),
     );
   }
@@ -192,7 +196,7 @@ export async function runCommand(argv: string[]): Promise<RoleModelCommandResult
             `catalog: ${catalogAbs}`,
             `native_aliases: ${nativeAliasesPath(codexHome)}`,
             `adapter_base_url: ${adapterBaseUrl(config.adapterPort)}`,
-            `integration: signed-in (openai_base_url; ChatGPT history preserved)`,
+            "integration: signed-in (openai_base_url; ChatGPT history preserved)",
             `model: ${built.configModelId}`,
             `picker_listed: ${built.listedExternalIds.join(", ")}`,
             "Restart Codex after setup. Compaction is Codex-managed (local /v1/responses).",
@@ -206,7 +210,9 @@ export async function runCommand(argv: string[]): Promise<RoleModelCommandResult
         const backupDir = backupCodexFiles(codexHome, [userConfigPath]);
         writeTextFileAtomic(userConfigPath, removeManagedBlock(existing));
         stopForwarder(forwarderStatePath(codexHome));
-        return ok(`uninstall: ok\nbackup: ${backupDir}\nRemoved managed role-model provider block.`);
+        return ok(
+          `uninstall: ok\nbackup: ${backupDir}\nRemoved managed role-model provider block.`,
+        );
       }
 
       case "refresh-catalog": {
@@ -292,7 +298,9 @@ export async function runCommand(argv: string[]): Promise<RoleModelCommandResult
         }
         if (sub === "current") {
           const state = readAliasState(aliasStatePath());
-          return ok(state.selectedAlias ?? recommendedRoleModelModelId(discovery.discovery) ?? "(none)");
+          return ok(
+            state.selectedAlias ?? recommendedRoleModelModelId(discovery.discovery) ?? "(none)",
+          );
         }
         if (sub === "use") {
           const wanted = rest[1];
@@ -315,8 +323,9 @@ export async function runCommand(argv: string[]): Promise<RoleModelCommandResult
         const limit = Number.parseInt(rest[0] ?? "10", 10) || 10;
         const rows = await listRecentRequests({ endpoint: config.endpoint, limit });
         return ok(
-          rows.map((r) => `- ${r.requestId} [${r.status ?? "unknown"}] model=${r.modelId ?? "?"}`).join("\n") ||
-            "(none)",
+          rows
+            .map((r) => `- ${r.requestId} [${r.status ?? "unknown"}] model=${r.modelId ?? "?"}`)
+            .join("\n") || "(none)",
         );
       }
 

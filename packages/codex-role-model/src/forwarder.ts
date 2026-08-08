@@ -1,20 +1,12 @@
-import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
-import { writeFileSync, readFileSync, existsSync, unlinkSync, mkdirSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { homedir } from "node:os";
 import { randomUUID } from "node:crypto";
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import { type IncomingMessage, type Server, type ServerResponse, createServer } from "node:http";
+import { homedir } from "node:os";
+import { dirname, join } from "node:path";
+import { brotliDecompressSync, gunzipSync, inflateSync, zstdDecompressSync } from "node:zlib";
 import {
-  brotliDecompressSync,
-  gunzipSync,
-  inflateSync,
-  zstdDecompressSync,
-} from "node:zlib";
-import { injectRoleModelIntentIntoResponsesPayload } from "./responses-intent.js";
-import { injectRoleModelIntentIntoPayload } from "./request-intent.js";
-import { createStagedCompactTaxonomyReader } from "./taxonomy/staged-compact-taxonomy.js";
-import { normalizeEndpoint } from "./config.js";
-import { readNativeAliases, resolveNativeAliasedModelId } from "./native-alias.js";
-import {
+  type BridgeReverseEntry,
+  type RestoreStats,
   createBridgeTraceId,
   extractWebSearchQuery,
   flattenCodexToolsForUpstream,
@@ -25,9 +17,12 @@ import {
   restoreCodexToolCallsInSseChunk,
   reverseMapHasWebSearch,
   writeLastBridgeHop,
-  type BridgeReverseEntry,
-  type RestoreStats,
 } from "./codex-tool-bridge.js";
+import { normalizeEndpoint } from "./config.js";
+import { readNativeAliases, resolveNativeAliasedModelId } from "./native-alias.js";
+import { injectRoleModelIntentIntoPayload } from "./request-intent.js";
+import { injectRoleModelIntentIntoResponsesPayload } from "./responses-intent.js";
+import { createStagedCompactTaxonomyReader } from "./taxonomy/staged-compact-taxonomy.js";
 import { enrichWeakSearchEvidence, searchWebLive } from "./web-search.js";
 
 export const DEFAULT_CODEX_NATIVE_BASE_URL = "https://chatgpt.com/backend-api/codex";
@@ -47,10 +42,7 @@ export interface ForwarderOptions {
   nativeBaseUrl?: string;
 }
 
-export function remapPayloadModel(
-  payload: unknown,
-  nativeAliasesPath?: string,
-): unknown {
+export function remapPayloadModel(payload: unknown, nativeAliasesPath?: string): unknown {
   if (!nativeAliasesPath || !isRecord(payload) || typeof payload.model !== "string") {
     return payload;
   }
@@ -88,9 +80,7 @@ export function chatgptAlphaSearchUrl(nativeBaseUrl: string): string {
 /** Default total deadline for one ChatGPT alpha/search relay (non-streaming). */
 export const DEFAULT_CHATGPT_SEARCH_TIMEOUT_MS = 200_000;
 
-export function resolveChatgptSearchTimeoutMs(
-  env: NodeJS.ProcessEnv = process.env,
-): number {
+export function resolveChatgptSearchTimeoutMs(env: NodeJS.ProcessEnv = process.env): number {
   const raw = env.ROLE_MODEL_CODEX_SEARCH_TIMEOUT_MS?.trim();
   if (!raw) return DEFAULT_CHATGPT_SEARCH_TIMEOUT_MS;
   const parsed = Number.parseInt(raw, 10);
@@ -109,17 +99,9 @@ export function resolveChatgptSearchModelId(
   },
 ): string {
   const fallback =
-    options.fallbackModel?.trim() ||
-    process.env.ROLE_MODEL_CODEX_SEARCH_MODEL?.trim() ||
-    "gpt-5.4";
+    options.fallbackModel?.trim() || process.env.ROLE_MODEL_CODEX_SEARCH_MODEL?.trim() || "gpt-5.4";
   if (typeof requestedModel !== "string" || !requestedModel.trim()) return fallback;
-  if (
-    isRoleModelRoutedModel(
-      requestedModel,
-      options.aliasIds,
-      options.nativeAliasesPath,
-    )
-  ) {
+  if (isRoleModelRoutedModel(requestedModel, options.aliasIds, options.nativeAliasesPath)) {
     return fallback;
   }
   return requestedModel.trim();
@@ -164,9 +146,10 @@ export function selectNativeForwardHeaders(
 }
 
 /** Local Codex login tokens — used when the hop request omitted ChatGPT auth. */
-export function loadCodexHomeAuth(
-  env: NodeJS.ProcessEnv = process.env,
-): { authorization?: string; accountId?: string } {
+export function loadCodexHomeAuth(env: NodeJS.ProcessEnv = process.env): {
+  authorization?: string;
+  accountId?: string;
+} {
   try {
     const home = env.CODEX_HOME?.trim() || join(homedir(), ".codex");
     const authPath = join(home, "auth.json");
@@ -178,9 +161,7 @@ export function loadCodexHomeAuth(
     if (typeof token !== "string" || !token.trim()) return {};
     return {
       authorization: `Bearer ${token.trim()}`,
-      ...(typeof accountId === "string" && accountId.trim()
-        ? { accountId: accountId.trim() }
-        : {}),
+      ...(typeof accountId === "string" && accountId.trim() ? { accountId: accountId.trim() } : {}),
     };
   } catch {
     return {};
@@ -213,9 +194,7 @@ export async function searchViaChatgptAlpha(input: {
     const timeoutMs = resolveChatgptSearchTimeoutMs();
     const body = {
       id: `search_${randomUUID()}`,
-      model:
-        process.env.ROLE_MODEL_CODEX_SEARCH_MODEL?.trim() ||
-        "gpt-5.4",
+      model: process.env.ROLE_MODEL_CODEX_SEARCH_MODEL?.trim() || "gpt-5.4",
       commands: { search_query: [{ q: query }] },
     };
     try {
@@ -287,9 +266,7 @@ export function outboundHasNonWebSearchTools(payload: unknown): boolean {
 }
 
 /** Drop web_search from tools so the model can keep shell/apply_patch/etc. */
-export function withoutWebSearchTools(
-  payload: Record<string, unknown>,
-): Record<string, unknown> {
+export function withoutWebSearchTools(payload: Record<string, unknown>): Record<string, unknown> {
   const tools = Array.isArray(payload.tools) ? payload.tools : [];
   return {
     ...payload,
@@ -481,9 +458,7 @@ export function sanitizeSearchSnippetForFallback(text: string, maxChars = 280): 
  * Last-resort assistant text when synthesis hops fail.
  * Must never echo raw ChatGPT `[wordlim:` SERP blobs.
  */
-export function formatWebSearchFallbackAssistantText(
-  hits: readonly CollectedSearchHit[],
-): string {
+export function formatWebSearchFallbackAssistantText(hits: readonly CollectedSearchHit[]): string {
   const queries = [...new Set(hits.map((h) => h.query).filter(Boolean))];
   const sources = [...new Set(hits.map((h) => h.source))];
   const snippets = hits
@@ -529,23 +504,16 @@ function responseHasAssistantText(payload: Record<string, unknown>): boolean {
       return typeof item.content === "string" && item.content.trim().length > 0;
     }
     return item.content.some(
-      (part) =>
-        isRecord(part) &&
-        typeof part.text === "string" &&
-        part.text.trim().length > 0,
+      (part) => isRecord(part) && typeof part.text === "string" && part.text.trim().length > 0,
     );
   });
 }
 
-function extractUserMessagesForSynthesize(
-  outboundPayload: Record<string, unknown>,
-): unknown[] {
+function extractUserMessagesForSynthesize(outboundPayload: Record<string, unknown>): unknown[] {
   const input = Array.isArray(outboundPayload.input) ? outboundPayload.input : [];
   const users = input.filter(
     (item) =>
-      isRecord(item) &&
-      (item.role === "user" ||
-        (item.type === "message" && item.role === "user")),
+      isRecord(item) && (item.role === "user" || (item.type === "message" && item.role === "user")),
   );
   if (users.length > 0) return users.slice(-3);
   return [
@@ -693,9 +661,7 @@ async function finalizeAfterSearchEvidence(input: {
             item.type === "reasoning" ||
             isWebSearchOutputItem(item, input.reverseMap),
         ) &&
-        output.some(
-          (item) => isRecord(item) && isWebSearchOutputItem(item, input.reverseMap),
-        );
+        output.some((item) => isRecord(item) && isWebSearchOutputItem(item, input.reverseMap));
       if (!stillOnlySearch) {
         return continued;
       }
@@ -710,10 +676,7 @@ async function finalizeAfterSearchEvidence(input: {
     headers: input.headers,
   });
   if (synthesized) return synthesized;
-  return assistantMessagePayload(
-    input.current,
-    formatWebSearchFallbackAssistantText(input.hits),
-  );
+  return assistantMessagePayload(input.current, formatWebSearchFallbackAssistantText(input.hits));
 }
 
 /**
@@ -755,10 +718,7 @@ export async function continueRoleModelAfterWebSearch(input: {
     for (const call of searchCalls) {
       const query = queryOfWebSearchItem(call);
       const callId = callIdOf(call);
-      const name =
-        typeof call.name === "string" && call.name
-          ? call.name
-          : "web_search";
+      const name = typeof call.name === "string" && call.name ? call.name : "web_search";
       continuation.push({
         type: "function_call",
         call_id: callId,
@@ -859,9 +819,7 @@ export async function continueRoleModelAfterWebSearch(input: {
   // Exhausted continues while model still requests search — last resort only.
   const finalOutput = Array.isArray(current.output) ? current.output : [];
   if (
-    finalOutput.some(
-      (item) => isRecord(item) && isWebSearchOutputItem(item, input.reverseMap),
-    ) ||
+    finalOutput.some((item) => isRecord(item) && isWebSearchOutputItem(item, input.reverseMap)) ||
     hits.length > 0
   ) {
     return finalizeAfterSearchEvidence({
@@ -892,9 +850,7 @@ export async function fulfillWebSearchAlongsideClientTools(input: {
   readonly options: ForwarderOptions;
   readonly headers: Record<string, string>;
 }): Promise<Record<string, unknown>> {
-  const output = Array.isArray(input.responsePayload.output)
-    ? input.responsePayload.output
-    : [];
+  const output = Array.isArray(input.responsePayload.output) ? input.responsePayload.output : [];
   const kept: unknown[] = [];
   const evidenceBlocks: string[] = [];
   let fulfilled = 0;
@@ -1008,7 +964,8 @@ export function decodeRequestBody(raw: Buffer, contentEncoding?: string): Buffer
     .reverse();
 
   const looksGzip = raw.length >= 2 && raw[0] === 0x1f && raw[1] === 0x8b;
-  const looksZstd = raw.length >= 4 && raw[0] === 0x28 && raw[1] === 0xb5 && raw[2] === 0x2f && raw[3] === 0xfd;
+  const looksZstd =
+    raw.length >= 4 && raw[0] === 0x28 && raw[1] === 0xb5 && raw[2] === 0x2f && raw[3] === 0xfd;
   if (encodings.length === 0) {
     if (looksZstd) encodings = ["zstd"];
     else if (looksGzip) encodings = ["gzip"];
@@ -1061,7 +1018,12 @@ function writeInvalidBodyDump(
           contentLength: req.headers["content-length"] ?? null,
           byteLength: raw.length,
           headHex: raw.subarray(0, 32).toString("hex"),
-          decodeError: decodeError instanceof Error ? decodeError.message : decodeError ? String(decodeError) : null,
+          decodeError:
+            decodeError instanceof Error
+              ? decodeError.message
+              : decodeError
+                ? String(decodeError)
+                : null,
         },
         null,
         2,
@@ -1237,10 +1199,7 @@ export function normalizeCodexInputForRoleModel(payload: unknown): unknown {
       input.push({
         type: "function_call_output",
         call_id: callId,
-        output:
-          typeof item.output === "string"
-            ? item.output
-            : JSON.stringify(item.output ?? ""),
+        output: typeof item.output === "string" ? item.output : JSON.stringify(item.output ?? ""),
       });
       continue;
     }
@@ -1457,11 +1416,7 @@ export function repairCodexToolCallInputOrder(input: readonly unknown[]): unknow
   const deferredOutputs = new Map<string, Record<string, unknown>>();
 
   const callIdOf = (item: Record<string, unknown>): string =>
-    typeof item.call_id === "string"
-      ? item.call_id
-      : typeof item.id === "string"
-        ? item.id
-        : "";
+    typeof item.call_id === "string" ? item.call_id : typeof item.id === "string" ? item.id : "";
 
   const flushCompletePairs = (): void => {
     const stillPending: Record<string, unknown>[] = [];
@@ -1494,7 +1449,8 @@ export function repairCodexToolCallInputOrder(input: readonly unknown[]): unknow
       const idx = pendingCalls.findIndex((call) => callIdOf(call) === id);
       if (idx >= 0) {
         const earlier = pendingCalls.slice(0, idx);
-        const call = pendingCalls[idx]!;
+        const call = pendingCalls[idx];
+        if (!call) continue;
         const later = pendingCalls.slice(idx + 1);
         pendingCalls = earlier;
         flushCompletePairs();
@@ -1805,9 +1761,7 @@ export function flushCodexResponsesSseBuffer(
  */
 export function sanitizeCodexToolsForUpstream(payload: unknown): unknown {
   if (!isRecord(payload) || !Array.isArray(payload.tools)) return payload;
-  const tools = payload.tools.filter(
-    (tool) => isRecord(tool) && tool.type === "function",
-  );
+  const tools = payload.tools.filter((tool) => isRecord(tool) && tool.type === "function");
   return { ...payload, tools };
 }
 
@@ -1902,8 +1856,7 @@ export async function handleAlphaSearch(
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const timedOut =
-        error instanceof Error &&
-        (error.name === "TimeoutError" || error.name === "AbortError");
+        error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
       res.statusCode = timedOut ? 504 : 502;
       res.setHeader("content-type", "application/json");
       res.end(
@@ -1923,9 +1876,7 @@ export async function handleAlphaSearch(
   // No ChatGPT bearer — last-resort DuckDuckGo HTML (not ChatGPT-parity).
   const query =
     searchQuery
-      .map((entry) =>
-        isRecord(entry) && typeof entry.q === "string" ? entry.q.trim() : "",
-      )
+      .map((entry) => (isRecord(entry) && typeof entry.q === "string" ? entry.q.trim() : ""))
       .find((q) => q.length > 0) ?? "";
   try {
     const searched = await searchWebLive(query, fetchImpl);
@@ -1946,8 +1897,7 @@ export async function handleAlphaSearch(
     res.end(
       JSON.stringify({
         error: {
-          message:
-            `Built-in web search needs ChatGPT auth (Authorization header), and DuckDuckGo fallback failed: ${message.slice(0, 300)}`,
+          message: `Built-in web search needs ChatGPT auth (Authorization header), and DuckDuckGo fallback failed: ${message.slice(0, 300)}`,
           code: "alpha_search_auth_required",
         },
       }),
@@ -1961,10 +1911,7 @@ export async function handleResponsesProxy(
   options: ForwarderOptions,
 ): Promise<void> {
   const urlPath = (req.url ?? "").split("?")[0] ?? "";
-  if (
-    req.method === "POST" &&
-    (urlPath === "/v1/alpha/search" || urlPath === "/alpha/search")
-  ) {
+  if (req.method === "POST" && (urlPath === "/v1/alpha/search" || urlPath === "/alpha/search")) {
     await handleAlphaSearch(req, res, options);
     return;
   }
@@ -2004,8 +1951,7 @@ export async function handleResponsesProxy(
   }
 
   const taxonomy = createStagedCompactTaxonomyReader().loadFullTaxonomy();
-  const model =
-    isRecord(payload) && typeof payload.model === "string" ? payload.model : undefined;
+  const model = isRecord(payload) && typeof payload.model === "string" ? payload.model : undefined;
   const routeToRoleModel = isRoleModelRoutedModel(
     model,
     options.aliasIds,
@@ -2029,11 +1975,9 @@ export async function handleResponsesProxy(
       webSearchMode: resolveWebSearchForwardMode(),
     });
     const fulfillWebSearch =
-      flattened.stats.shimCounts.web_search > 0 ||
-      reverseMapHasWebSearch(flattened.reverseMap);
+      flattened.stats.shimCounts.web_search > 0 || reverseMapHasWebSearch(flattened.reverseMap);
     const normalizedRaw = normalizeCodexInputForRoleModel(flattened.payload);
-    const clientRequestedStream =
-      isRecord(normalizedRaw) && normalizedRaw.stream === true;
+    const clientRequestedStream = isRecord(normalizedRaw) && normalizedRaw.stream === true;
     // Adapter fulfills shimmed web_search via ChatGPT alpha/search + continue loop.
     // Force JSON upstream so we can splice function_call_output before Codex sees it
     // (Desktop client web_search_call continue ends the turn with no answer).
@@ -2275,12 +2219,7 @@ async function finalizePayloadForCodex(input: {
       options: input.options,
       headers: input.hopHeaders,
     });
-  } else if (
-    fulfillSearchInPlace &&
-    input.options &&
-    input.hopHeaders &&
-    isRecord(working)
-  ) {
+  } else if (fulfillSearchInPlace && input.options && input.hopHeaders && isRecord(working)) {
     // Mixed hop: fulfill via adapter alpha/search, keep client tools for Desktop.
     // Avoids Codex native web_search_call (subscription quota) and unpaired continues.
     working = await fulfillWebSearchAlongsideClientTools({
@@ -2327,9 +2266,10 @@ function emitCodexJsonOrSse(input: {
 }): void {
   const { res, payload, clientRequestedStream } = input;
   const response = ensureCodexResponseId(
-    ensureCompletedForClientToolCalls(
-      isRecord(payload) ? payload : { output: [] },
-    ) as Record<string, unknown>,
+    ensureCompletedForClientToolCalls(isRecord(payload) ? payload : { output: [] }) as Record<
+      string,
+      unknown
+    >,
   );
   if (clientRequestedStream) {
     res.setHeader("content-type", "text/event-stream");
@@ -2361,9 +2301,7 @@ function emitCodexJsonOrSse(input: {
         })}\n\n`,
       );
     });
-    res.write(
-      `data: ${JSON.stringify({ type: "response.completed", response })}\n\n`,
-    );
+    res.write(`data: ${JSON.stringify({ type: "response.completed", response })}\n\n`);
     res.end();
     return;
   }
@@ -2440,11 +2378,7 @@ async function pipeRoleModelUpstreamResponse(input: {
           const ev = JSON.parse(line.slice(5).trim()) as unknown;
           if (isRecord(ev) && ev.type === "response.completed" && isRecord(ev.response)) {
             parsed = ev.response;
-          } else if (
-            isRecord(ev) &&
-            ev.type === "response.output_item.done" &&
-            isRecord(ev.item)
-          ) {
+          } else if (isRecord(ev) && ev.type === "response.output_item.done" && isRecord(ev.item)) {
             items.push(ev.item);
           }
         } catch {
@@ -2531,7 +2465,11 @@ export async function startForwarder(options: ForwarderOptions): Promise<Server>
     handleResponsesProxy(req, res, options).catch((error) => {
       res.statusCode = 502;
       res.setHeader("content-type", "application/json");
-      res.end(JSON.stringify({ error: { message: error instanceof Error ? error.message : String(error) } }));
+      res.end(
+        JSON.stringify({
+          error: { message: error instanceof Error ? error.message : String(error) },
+        }),
+      );
     });
   });
   attachResponsesWebSocket(server, options);

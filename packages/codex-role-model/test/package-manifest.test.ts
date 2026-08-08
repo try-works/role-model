@@ -27,9 +27,9 @@ describe("codex-role-model package scaffold", () => {
   test("README documents quick start, marketplace, and compaction ownership", async () => {
     const readme = await readFile(join(packageRoot, "README.md"), "utf8");
     expect(readme).toContain("## Quick start");
-    expect(readme).toContain("npx --yes @try-works/codex-role-model setup");
+    expect(readme).toContain("npx --yes @try-works/codex-role-model@latest setup");
     expect(readme).toContain("## Codex plugin");
-    expect(readme).toContain("codex plugin install role-model");
+    expect(readme).toContain("codex plugin add role-model@role-model");
     expect(readme).toContain("ROLE_MODEL_ENDPOINT");
     expect(readme).toContain("ROLE_MODEL_CODEX_ADAPTER_PORT");
     expect(readme).toContain("ROLE_MODEL_CODEX_API_KEY");
@@ -43,13 +43,18 @@ describe("codex-role-model package scaffold", () => {
     const raw = await readFile(join(repoRoot, ".agents", "plugins", "marketplace.json"), "utf8");
     const market = JSON.parse(raw) as {
       name: string;
-      plugins: Array<{ name: string; source: { source: string; path?: string } }>;
+      plugins: Array<{
+        name: string;
+        source: { source: string; package?: string; registry?: string; version?: string };
+      }>;
     };
     expect(market.name).toBe("role-model");
     expect(market.plugins[0]?.name).toBe("role-model");
     expect(market.plugins[0]?.source).toEqual({
-      source: "local",
-      path: "./packages/codex-role-model",
+      source: "npm",
+      package: "@try-works/codex-role-model",
+      registry: "https://registry.npmjs.org",
+      version: "^0.1.1",
     });
   });
 });

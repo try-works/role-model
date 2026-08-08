@@ -1,11 +1,11 @@
 import { describe, expect, test } from "vitest";
 import {
+  type SearchEnricher,
   assessSearchEvidence,
   enrichWeakSearchEvidence,
   formatStructuredSearchOutput,
   isWeakSearchEvidence,
   searchWebLive,
-  type SearchEnricher,
 } from "../src/web-search.js";
 
 describe("searchWebLive", () => {
@@ -45,9 +45,9 @@ describe("structural search evidence quality", () => {
       "Topic Alpha: Overview page - Example Site UK",
     ].join("\n");
     expect(isWeakSearchEvidence(weak)).toBe(true);
-    expect(assessSearchEvidence(weak).reasons.some((r) => r.includes("chrome") || r.includes("title"))).toBe(
-      true,
-    );
+    expect(
+      assessSearchEvidence(weak).reasons.some((r) => r.includes("chrome") || r.includes("title")),
+    ).toBe(true);
 
     const strong =
       "Topic Alpha was last observed at value 42 with supporting context from multiple independent sources.";
@@ -88,7 +88,8 @@ describe("structural search evidence quality", () => {
               type: "text_result",
               ref_id: "1",
               title: "Fixture",
-              snippet: "Fixture body with enough characters to clear the structural quality gate easily.",
+              snippet:
+                "Fixture body with enough characters to clear the structural quality gate easily.",
               url: "https://example.com/fixture",
             },
           ],
@@ -99,7 +100,8 @@ describe("structural search evidence quality", () => {
             type: "text_result",
             ref_id: "1",
             title: "Fixture",
-            snippet: "Fixture body with enough characters to clear the structural quality gate easily.",
+            snippet:
+              "Fixture body with enough characters to clear the structural quality gate easily.",
             url: "https://example.com/fixture",
           },
         ],
@@ -118,7 +120,15 @@ describe("structural search evidence quality", () => {
   test("formatStructuredSearchOutput includes optional answer summary", () => {
     const text = formatStructuredSearchOutput(
       "q",
-      [{ type: "text_result", ref_id: "1", title: "T", snippet: "body text here", url: "https://x" }],
+      [
+        {
+          type: "text_result",
+          ref_id: "1",
+          title: "T",
+          snippet: "body text here",
+          url: "https://x",
+        },
+      ],
       "Summary line.",
     );
     expect(text).toContain("Answer summary:");

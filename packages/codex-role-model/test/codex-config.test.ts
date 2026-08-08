@@ -1,8 +1,8 @@
-import { describe, expect, test } from "vitest";
 import { mkdtempSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { parse } from "smol-toml";
+import { describe, expect, test } from "vitest";
 import {
   assertUserLevelConfigPath,
   buildManagedProviderBlock,
@@ -43,7 +43,9 @@ describe("codex config manager", () => {
     const next = upsertManagedBlock(existing, managed);
     expect(next).toContain("[mcp_servers.demo]");
     expect(next).toContain("# BEGIN role-model-provider-managed");
-    expect(next.indexOf("# BEGIN role-model-provider-managed")).toBeLessThan(next.indexOf("[mcp_servers.demo]"));
+    expect(next.indexOf("# BEGIN role-model-provider-managed")).toBeLessThan(
+      next.indexOf("[mcp_servers.demo]"),
+    );
     const removed = removeManagedBlock(next);
     expect(removed).toContain("[mcp_servers.demo]");
     expect(removed).not.toContain("# BEGIN role-model-provider-managed");
@@ -63,7 +65,9 @@ describe("codex config manager", () => {
       integrationMode: "signed-in",
     });
     const next = upsertManagedBlock(existing, managed);
-    expect(next.indexOf("model_catalog_json")).toBeLessThan(next.indexOf("[shell_environment_policy.set]"));
+    expect(next.indexOf("model_catalog_json")).toBeLessThan(
+      next.indexOf("[shell_environment_policy.set]"),
+    );
     expect(next).toMatch(/^# BEGIN role-model-provider-managed/m);
     const parsed = parse(next) as Record<string, unknown>;
     expect(parsed.model).toBe("baseline.remote-only");
@@ -74,8 +78,8 @@ describe("codex config manager", () => {
 
   test("refuses non-user-level config paths", () => {
     const home = mkdtempSync(join(tmpdir(), "codex-home-"));
-    expect(() => assertUserLevelConfigPath(join(home, "project", ".codex", "config.toml"), home)).toThrow(
-      /Refusing to write role-model provider keys/,
-    );
+    expect(() =>
+      assertUserLevelConfigPath(join(home, "project", ".codex", "config.toml"), home),
+    ).toThrow(/Refusing to write role-model provider keys/);
   });
 });
