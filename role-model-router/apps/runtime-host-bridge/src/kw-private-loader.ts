@@ -33,6 +33,7 @@ export function validateRun88PrivateDistributionIdentity(
   expected: {
     readonly channel: "stage";
     readonly manifestSha256: string;
+    readonly previousManifestSha256?: string;
     readonly publicGeneration: "N";
   },
 ) {
@@ -42,8 +43,20 @@ export function validateRun88PrivateDistributionIdentity(
   if (identity.channel !== expected.channel)
     throw new Error("private distribution channel mismatch");
   if (
+    !/^[a-f0-9]{64}$/.test(expected.manifestSha256) ||
+    (expected.previousManifestSha256 !== undefined &&
+      (!/^[a-f0-9]{64}$/.test(expected.previousManifestSha256) ||
+        expected.previousManifestSha256 === expected.manifestSha256))
+  ) {
+    throw new Error("expected private distribution manifest identity is invalid");
+  }
+  const requiredManifestSha256 =
+    identity.generation === "N-1"
+      ? (expected.previousManifestSha256 ?? expected.manifestSha256)
+      : expected.manifestSha256;
+  if (
     !/^[a-f0-9]{64}$/.test(identity.manifestSha256) ||
-    identity.manifestSha256 !== expected.manifestSha256
+    identity.manifestSha256 !== requiredManifestSha256
   ) {
     throw new Error("private distribution manifest identity mismatch");
   }

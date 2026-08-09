@@ -78,6 +78,7 @@ describe("Run 88 stage release boundary", () => {
     const expected = {
       channel: "stage",
       manifestSha256: "a".repeat(64),
+      previousManifestSha256: "b".repeat(64),
       publicGeneration: "N" as const,
     };
     expect(
@@ -88,7 +89,7 @@ describe("Run 88 stage release boundary", () => {
     ).toBe(true);
     expect(
       validateRun88PrivateDistributionIdentity(
-        { generation: "N-1", manifestSha256: "a".repeat(64), channel: "stage" },
+        { generation: "N-1", manifestSha256: "b".repeat(64), channel: "stage" },
         expected,
       ).compatible,
     ).toBe(true);
@@ -106,6 +107,12 @@ describe("Run 88 stage release boundary", () => {
     expect(() =>
       validateRun88PrivateDistributionIdentity(
         { generation: "N", manifestSha256: "b".repeat(64), channel: "stage" },
+        expected,
+      ),
+    ).toThrow(/manifest/i);
+    expect(() =>
+      validateRun88PrivateDistributionIdentity(
+        { generation: "N-1", manifestSha256: "a".repeat(64), channel: "stage" },
         expected,
       ),
     ).toThrow(/manifest/i);
