@@ -104,6 +104,22 @@ const standaloneReleaseCopies = [
     sourceRelativePath: "role-model-router/packages/core/data/taxonomy",
     destinationRelativePath: "role-model-router/packages/core/data/taxonomy",
   },
+  {
+    sourceRelativePath: "role-model-router/packages/extension-host/index.mjs",
+    destinationRelativePath: "role-model-router/packages/extension-host/index.mjs",
+  },
+  {
+    sourceRelativePath: "packages/extension-host/index.mjs",
+    destinationRelativePath: "packages/extension-host/index.mjs",
+  },
+  {
+    sourceRelativePath: "packages/extension-host/worker-runtime.mjs",
+    destinationRelativePath: "packages/extension-host/worker-runtime.mjs",
+  },
+  {
+    sourceRelativePath: "packages/extension-sdk/index.mjs",
+    destinationRelativePath: "packages/extension-sdk/index.mjs",
+  },
 ] as const satisfies readonly StandaloneReleaseCopy[];
 
 const forbiddenProductionReleasePathFragments = [
