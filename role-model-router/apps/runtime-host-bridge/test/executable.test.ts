@@ -275,6 +275,22 @@ describe("runtime-host-bridge executable packaging", () => {
           destinationRelativePath:
             "role-model-router/packages/catalog/data/normalized-catalog.json",
         },
+        {
+          sourceRelativePath: "role-model-router/packages/extension-host/index.mjs",
+          destinationRelativePath: "role-model-router/packages/extension-host/index.mjs",
+        },
+        {
+          sourceRelativePath: "packages/extension-host/index.mjs",
+          destinationRelativePath: "packages/extension-host/index.mjs",
+        },
+        {
+          sourceRelativePath: "packages/extension-host/worker-runtime.mjs",
+          destinationRelativePath: "packages/extension-host/worker-runtime.mjs",
+        },
+        {
+          sourceRelativePath: "packages/extension-sdk/index.mjs",
+          destinationRelativePath: "packages/extension-sdk/index.mjs",
+        },
       ]),
     );
     expect(copies).not.toEqual(
