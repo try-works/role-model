@@ -342,6 +342,48 @@ describe("production Track B composition", () => {
     ).rejects.toThrow(/integrity/i);
   });
 
+  test("gives production extension workers a bounded startup budget that tolerates host contention", async () => {
+    const stateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-extension-startup-budget-"));
+    roots.push(stateRoot);
+    const extensions = await Promise.all(
+      Array.from({ length: 13 }, async (_, index) => {
+        const id = `startup-budget-${String(index + 1).padStart(2, "0")}`;
+        const modulePath = path.join(stateRoot, `${id}.mjs`);
+        const source = `${index === 0 ? "await new Promise((resolve) => setTimeout(resolve, 2_500));\n" : ""}export async function run(){return {available:true}}\n`;
+        await writeFile(modulePath, source, "utf8");
+        return {
+          descriptor: { id, protocolVersion: "1.1.0", capabilities: ["health:probe"] },
+          modulePath,
+          artifactSha256: createHash("sha256").update(source).digest("hex"),
+        };
+      }),
+    );
+
+    const runtime = await createProductionExtensionRuntime({
+      stateRoot,
+      authorizationEpoch: 9,
+      repoRoot,
+      extensions,
+    });
+    expect(runtime.health().supervisor).toMatchObject({
+      available: true,
+      readyWorkers: 13,
+    });
+    await runtime.close();
+
+    for (const startupTimeoutMs of [99, 120_001, 100.5]) {
+      await expect(
+        createProductionExtensionRuntime({
+          stateRoot,
+          authorizationEpoch: 10,
+          repoRoot,
+          startupTimeoutMs,
+          extensions,
+        }),
+      ).rejects.toThrow(/startup timeout.*100.*120000/i);
+    }
+  });
+
   test("resolves the extension host from repo root when packaged CJS has no import.meta.url", async () => {
     const resolved = resolveExtensionHostModuleUrl({ moduleUrl: "", repoRoot });
     expect(resolved).toBe(
