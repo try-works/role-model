@@ -356,6 +356,9 @@ export function createRun88RuntimeCorrelation(input: {
   readonly scope: string;
   readonly endpointId?: string;
   readonly timestamp?: string;
+  readonly service?: string;
+  readonly operation?: string;
+  readonly outcome?: string;
 }): Record<string, unknown> {
   for (const field of [
     "requestId",
@@ -382,8 +385,8 @@ export function createRun88RuntimeCorrelation(input: {
       traceId: hex("trace", 32),
       spanId: hex("span", 16),
       causalParentId: input.routingDecisionId,
-      service: "runtime-host-bridge",
-      operation: "track-b.post-observation",
+      service: input.service ?? "runtime-host-bridge",
+      operation: input.operation ?? "track-b.post-observation",
       runtimeChannel: "staging",
       scopeHash: `sha256:${createHash("sha256").update(input.scope).digest("hex")}`,
       cohort: "stage-1pct",
@@ -391,7 +394,7 @@ export function createRun88RuntimeCorrelation(input: {
       sourceId: input.sourceId,
       deploymentId: input.deploymentId,
       attempt: 1,
-      outcome: "observed",
+      outcome: input.outcome ?? "observed",
       timestamp,
       durationMs: 0,
     },
@@ -1584,6 +1587,7 @@ export function createOwnedTrackBSidecarSpec(options: {
 
       const operationsToken = randomBytes(32).toString("hex");
       const nodeExecutable = resolveTrackBNodeExecutable();
+      const sidecarChannel = options.channel === "stage" ? "staging" : options.channel;
       const child = spawn(
         nodeExecutable,
         [
@@ -1591,7 +1595,7 @@ export function createOwnedTrackBSidecarSpec(options: {
           "--state-root",
           options.stateRoot,
           "--channel",
-          options.channel,
+          sidecarChannel,
           "--host",
           "127.0.0.1",
           "--port",

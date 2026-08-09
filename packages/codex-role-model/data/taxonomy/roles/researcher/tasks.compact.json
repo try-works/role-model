@@ -1,0 +1,162 @@
+[
+  {
+    "id": "researcher.web_research",
+    "label": "Web Research",
+    "description": "Find and synthesize current external information.",
+    "primaryRole": "researcher",
+    "compatibleRoles": ["researcher", "writer"],
+    "requiredCapabilities": ["web.search", "text.chat"],
+    "preferredCapabilities": ["citation.synthesis"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["web.search", "http.fetch"],
+    "classifier": {
+      "useWhen": "The answer depends on current docs, releases, prices, laws, products, schedules, or web facts.",
+      "doNotUseWhen": "The answer is fully available in local repo context."
+    },
+    "variants": []
+  },
+  {
+    "id": "researcher.web_research.current",
+    "label": "Current Web Research",
+    "description": "Verify the latest state of fast-changing facts, releases, policies, products, or public information.",
+    "primaryRole": "researcher",
+    "compatibleRoles": ["researcher", "analyst", "writer"],
+    "requiredCapabilities": ["web.search", "text.chat"],
+    "preferredCapabilities": ["citation.synthesis"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["web.search", "http.fetch"],
+    "classifier": {
+      "useWhen": "User asks for latest/current/today status or the topic is likely to have changed.",
+      "doNotUseWhen": "User asks for stable background knowledge only."
+    },
+    "variants": ["current"]
+  },
+  {
+    "id": "researcher.compare_sources",
+    "label": "Compare Sources",
+    "description": "Compare multiple sources, claims, or documents.",
+    "primaryRole": "researcher",
+    "compatibleRoles": ["researcher", "writer"],
+    "requiredCapabilities": ["text.chat"],
+    "preferredCapabilities": ["citation.synthesis"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["web.search", "http.fetch"],
+    "classifier": {
+      "useWhen": "User asks for comparison, synthesis, source quality, or tradeoffs across references.",
+      "doNotUseWhen": "User only asks to rewrite one known text."
+    },
+    "variants": []
+  },
+  {
+    "id": "researcher.literature_review",
+    "label": "Literature Review",
+    "description": "Review papers, standards, reports, or long-form technical sources.",
+    "primaryRole": "researcher",
+    "compatibleRoles": ["researcher", "analyst"],
+    "requiredCapabilities": ["text.chat", "long_context"],
+    "preferredCapabilities": ["citation.synthesis"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for academic/technical source synthesis.",
+      "doNotUseWhen": "User asks for current breaking news only."
+    },
+    "variants": []
+  },
+  {
+    "id": "researcher.fact_check",
+    "label": "Fact Check",
+    "description": "Verify a claim against sources or local evidence.",
+    "primaryRole": "researcher",
+    "compatibleRoles": ["researcher", "writer", "analyst"],
+    "requiredCapabilities": ["web.search"],
+    "preferredCapabilities": ["citation.synthesis"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks whether a statement is true, current, or supported.",
+      "doNotUseWhen": "User asks for creative ideation."
+    },
+    "variants": []
+  },
+  {
+    "id": "researcher.source_find",
+    "label": "Source Finding",
+    "description": "Find credible sources, documents, links, or references for a topic.",
+    "primaryRole": "researcher",
+    "compatibleRoles": ["researcher", "writer"],
+    "requiredCapabilities": ["web.search", "text.chat"],
+    "preferredCapabilities": ["citation.synthesis"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["web.search", "http.fetch"],
+    "classifier": {
+      "useWhen": "User asks to find sources or references.",
+      "doNotUseWhen": "User asks to write from known local context only."
+    },
+    "variants": []
+  },
+  {
+    "id": "researcher.timeline.build",
+    "label": "Timeline Building",
+    "description": "Build a chronology of events, releases, decisions, or changes.",
+    "primaryRole": "researcher",
+    "compatibleRoles": ["researcher", "analyst", "writer"],
+    "requiredCapabilities": ["text.chat", "long_context"],
+    "preferredCapabilities": ["citation.synthesis"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for a timeline or history.",
+      "doNotUseWhen": "User asks for mathematical proof."
+    },
+    "variants": ["build"]
+  },
+  {
+    "id": "researcher.market_scan",
+    "label": "Market Scan",
+    "description": "Gather current market, vendor, competitor, or product information.",
+    "primaryRole": "researcher",
+    "compatibleRoles": ["researcher", "strategist", "marketer"],
+    "requiredCapabilities": ["web.search", "text.chat"],
+    "preferredCapabilities": ["citation.synthesis"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for market landscape or vendor scan.",
+      "doNotUseWhen": "User asks for internal-only code changes."
+    },
+    "variants": []
+  },
+  {
+    "id": "researcher.standards_lookup",
+    "label": "Standards Lookup",
+    "description": "Find relevant standards, protocols, policies, or technical references.",
+    "primaryRole": "researcher",
+    "compatibleRoles": ["researcher", "architect", "legal"],
+    "requiredCapabilities": ["web.search", "long_context"],
+    "preferredCapabilities": ["citation.synthesis"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks which standard or spec applies.",
+      "doNotUseWhen": "User asks to draft legal terms."
+    },
+    "variants": []
+  },
+  {
+    "id": "researcher.document_extract",
+    "label": "Document Extraction",
+    "description": "Extract facts, claims, obligations, or details from documents.",
+    "primaryRole": "researcher",
+    "compatibleRoles": ["researcher", "analyst", "legal"],
+    "requiredCapabilities": ["text.chat", "long_context"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User provides docs and asks to pull out key information.",
+      "doNotUseWhen": "User asks for creative ideation."
+    },
+    "variants": []
+  }
+]

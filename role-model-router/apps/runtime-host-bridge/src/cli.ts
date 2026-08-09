@@ -19,7 +19,7 @@ import {
 import { validateRun88PrivateDistributionIdentity } from "./kw-private-loader.js";
 import { readPackagedRuntimeProfile } from "./runtime-channel.js";
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
-import { validateRun88PackagedStageIdentity } from "./runtime-version.js";
+import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
 import {
   createOwnedTrackBSidecarSpec,
   createPackagedProductionRuntime,
@@ -763,17 +763,14 @@ export async function main(): Promise<void> {
         readFileSync(path.join(path.dirname(process.execPath), "manifest.json"), "utf8"),
       ) as Record<string, unknown>)
     : null;
-  const packagedReleaseId =
-    typeof packagedManifestRecord?.release_id === "string"
-      ? packagedManifestRecord.release_id
-      : undefined;
-  const loadRun88PiInvocationProvenance =
-    packagedProfile?.channel === "stage"
-      ? () => readRun88PiInvocationProvenance(process.env, packagedReleaseId)
-      : null;
-  if (packagedProfile?.channel === "stage") {
-    validateRun88PackagedStageIdentity(packagedManifestRecord ?? {});
-  }
+  const run88StageIdentity = resolveRun88StageRuntimeIdentity(
+    packagedProfile?.channel ?? "development",
+    packagedManifestRecord,
+  );
+  const packagedReleaseId = run88StageIdentity?.releaseId;
+  const loadRun88PiInvocationProvenance = run88StageIdentity
+    ? () => readRun88PiInvocationProvenance(process.env, run88StageIdentity.releaseId)
+    : null;
   if (packagedProfile?.channel === "production" && !args.values["runtime-state-root"]) {
     const migration = await migrateLegacyProductionState({
       legacyRoot: path.join(process.env.LOCALAPPDATA || os.tmpdir(), "Role Model Runtime"),
@@ -825,6 +822,7 @@ export async function main(): Promise<void> {
         staticRoot,
         runtimeStateRoot: options.runtimeStateRoot,
         runtimeChannel: packagedProfile?.channel ?? "development",
+        ...(run88StageIdentity ? { run88StageIdentity } : {}),
       },
       {
         getBackend: () => backend,
@@ -941,6 +939,7 @@ export async function main(): Promise<void> {
         runtimeStateRoot: options.runtimeStateRoot,
         scopeId: options.scopeId,
         runtimeChannel: packagedProfile?.channel ?? "development",
+        ...(run88StageIdentity ? { run88StageIdentity } : {}),
         unifiedRuntimeConfigPath: options.unifiedRuntimeConfigPath,
         ...(trackBOperationsEndpoint ? { trackBOperationsEndpoint } : {}),
         ...(trackBOperationsToken ? { trackBOperationsToken } : {}),
@@ -977,21 +976,20 @@ export async function main(): Promise<void> {
           ? {
               trackBPostObservation: async (observation: Readonly<Record<string, unknown>>) => {
                 const run88PiInvocationProvenance = loadRun88PiInvocationProvenance?.() ?? null;
-                const correlatedObservation =
-                  packagedProfile?.channel === "stage"
-                    ? createRun88StagePostObservation({
-                        observation,
-                        piInvocationProvenance: run88PiInvocationProvenance,
-                        proofRequired: Boolean(
-                          process.env.RUN88_PI_INVOCATION_PROOF_PATH ||
-                            process.env.RUN88_PI_PROOF_AUTHORITY_PUBLIC_KEY_PATH,
-                        ),
-                        releaseId: String(packagedManifestRecord?.release_id ?? ""),
-                        sourceId: String(packagedManifestRecord?.source_tree ?? ""),
-                        executableSha256: String(packagedManifestRecord?.executable_sha256 ?? ""),
-                        scope: options.scopeId,
-                      })
-                    : observation;
+                const correlatedObservation = run88StageIdentity
+                  ? createRun88StagePostObservation({
+                      observation,
+                      piInvocationProvenance: run88PiInvocationProvenance,
+                      proofRequired: Boolean(
+                        process.env.RUN88_PI_INVOCATION_PROOF_PATH ||
+                          process.env.RUN88_PI_PROOF_AUTHORITY_PUBLIC_KEY_PATH,
+                      ),
+                      releaseId: run88StageIdentity.releaseId,
+                      sourceId: run88StageIdentity.sourceId,
+                      executableSha256: run88StageIdentity.executableSha256,
+                      scope: options.scopeId,
+                    })
+                  : observation;
                 await postObservationOutbox.enqueue(correlatedObservation);
                 const runtime = extensionRuntimeRef.current;
                 if (!runtime) return { status: "queued_for_extension_runtime" };

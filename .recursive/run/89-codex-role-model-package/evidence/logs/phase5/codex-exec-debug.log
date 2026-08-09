@@ -1,0 +1,21 @@
+2026-08-04T13:01:38.751833Z ERROR codex_models_manager::manager: failed to refresh available models: unexpected status 404 Not Found: Not found, url: http://127.0.0.1:3460/v1/models?client_version=0.146.0
+2026-08-04T13:01:38.757185Z ERROR codex_models_manager::manager: failed to refresh available models: unexpected status 404 Not Found: Not found, url: http://127.0.0.1:3460/v1/models?client_version=0.146.0
+OpenAI Codex v0.146.0
+--------
+workdir: D:\DEV\role-model
+model: claude-3.7-sonnet
+provider: role-model
+approval: never
+sandbox: read-only
+reasoning effort: none
+reasoning summaries: none
+session id: 019fccdd-8a46-7bf0-a5b2-75119b69f86c
+--------
+user
+Reply with exactly: OK
+
+warning: Model metadata for `claude-3.7-sonnet` not found. Defaulting to fallback metadata; this can degrade performance and cause issues.
+ERROR: {"error":{"type":"capability_eligibility_error","code":"no_eligible_target","message":"no_eligible_target: no targets for model claude-3.7-sonnet satisfy the inferred request capabilities.","requestedModel":"claude-3.7-sonnet","requiredInputModalities":["text"],"requiredOutputModalities":["text"],"requiredCapabilities":["text.chat","tools.function_calling"],"excludedTargets":[]}}
+
+ERROR: {"error":{"type":"capability_eligibility_error","code":"no_eligible_target","message":"no_eligible_target: no targets for model claude-3.7-sonnet satisfy the inferred request capabilities.","requestedModel":"claude-3.7-sonnet","requiredInputModalities":["text"],"requiredOutputModalities":["text"],"requiredCapabilities":["text.chat","tools.function_calling"],"excludedTargets":[]}}
+

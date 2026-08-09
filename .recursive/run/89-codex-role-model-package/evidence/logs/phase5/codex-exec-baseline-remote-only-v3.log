@@ -1,0 +1,33 @@
+2026-08-04T18:05:16.722527Z ERROR codex_models_manager::manager: failed to refresh available models: unexpected status 404 Not Found: Not found, url: http://127.0.0.1:3460/v1/models?client_version=0.146.0
+2026-08-04T18:05:16.728744Z ERROR codex_models_manager::manager: failed to refresh available models: unexpected status 404 Not Found: Not found, url: http://127.0.0.1:3460/v1/models?client_version=0.146.0
+OpenAI Codex v0.146.0
+--------
+workdir: D:\DEV\role-model\.worktrees\89-codex-role-model-package
+model: baseline.remote-only
+provider: role-model
+approval: never
+sandbox: read-only
+reasoning effort: none
+reasoning summaries: none
+session id: 019fcdf3-8639-7752-9f20-69b8a9550ab5
+--------
+user
+Reply with exactly the three characters: OK. Do not use tools.
+
+warning: Model metadata for `baseline.remote-only` not found. Defaulting to fallback metadata; this can degrade performance and cause issues.
+2026-08-04T18:05:34.357328Z ERROR codex_core::util: OutputTextDelta without active item
+ERROR: Reconnecting... 1/5
+2026-08-04T18:05:36.805051Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-04T18:05:36.805084Z ERROR codex_core::util: OutputTextDelta without active item
+ERROR: Reconnecting... 2/5
+2026-08-04T18:05:39.077225Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-04T18:05:39.077479Z ERROR codex_core::util: OutputTextDelta without active item
+ERROR: Reconnecting... 3/5
+2026-08-04T18:05:42.007911Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-04T18:05:42.007955Z ERROR codex_core::util: OutputTextDelta without active item
+ERROR: Reconnecting... 4/5
+2026-08-04T18:05:45.613909Z ERROR codex_core::util: OutputTextDelta without active item
+ERROR: Reconnecting... 5/5
+2026-08-04T18:05:50.802027Z ERROR codex_core::util: OutputTextDelta without active item
+ERROR: stream disconnected before completion: failed to parse ResponseCompleted: missing field `total_tokens`
+ERROR: stream disconnected before completion: failed to parse ResponseCompleted: missing field `total_tokens`

@@ -144,6 +144,34 @@ describe("production Track B composition", () => {
     ).toThrow(/managed artifact keys/i);
   });
 
+  test("translates the public stage channel to the sidecar staging protocol", async () => {
+    const stateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-track-b-stage-channel-"));
+    roots.push(stateRoot);
+    const artifactPath = path.join(stateRoot, "fake-stage-sidecar.mjs");
+    const source = [
+      'import http from "node:http";',
+      'const channelIndex=process.argv.indexOf("--channel");',
+      'if(channelIndex<0 || process.argv[channelIndex+1]!=="staging"){console.error("expected staging sidecar channel");process.exit(4)}',
+      'const server=http.createServer((_req,res)=>{res.end("ok")});',
+      'server.listen(0,"127.0.0.1",()=>{',
+      " const address=server.address();",
+      ' process.stdout.write(JSON.stringify({type:"ready",endpoint:`http://127.0.0.1:${address.port}`})+"\\n");',
+      "});",
+      'process.on("SIGTERM",()=>server.close(()=>process.exit(0)));',
+    ].join("\n");
+    await writeFile(artifactPath, source, "utf8");
+
+    const sidecar = createOwnedTrackBSidecarSpec({
+      artifactPath,
+      artifactSha256: createHash("sha256").update(source).digest("hex"),
+      stateRoot,
+      channel: "stage",
+    });
+    const child = await sidecar.launch();
+    expect(child.endpoint).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
+    await child.stop();
+  });
+
   test("passes cloud contribution trust and aggregate destination into the launcher-owned sidecar", async () => {
     const stateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-track-b-sidecar-cloud-"));
     roots.push(stateRoot);

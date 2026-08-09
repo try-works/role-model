@@ -1,0 +1,50 @@
+Reading prompt from stdin...
+OpenAI Codex v0.147.0-alpha.1.2
+--------
+workdir: C:\Users\erikb\AppData\Local\Temp\codex-e2e-ws-live-051514
+model: baseline.remote-only
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: low
+reasoning summaries: none
+session id: 019fd3c7-cf53-7fc3-a034-cf5c41f43c4a
+--------
+user
+tell me the current share price of Cloudflare (NYSE: NET). Prefer web_search. Quote a recent number with source if available.
+
+2026-08-05T21:15:17.668300Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+2026-08-05T21:15:19.190392Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+2026-08-05T21:15:19.401698Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 2/5
+2026-08-05T21:15:19.846199Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 3/5
+2026-08-05T21:15:20.725302Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 4/5
+2026-08-05T21:15:22.305693Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 5/5
+2026-08-05T21:15:25.621696Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+warning: Falling back from WebSockets to HTTPS transport. unexpected status 404 Not Found: Not found, url: ws://127.0.0.1:3460/v1/responses
+2026-08-05T21:15:28.945008Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T21:15:28.967160Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T21:15:28.967197Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T21:15:28.967206Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T21:15:28.967211Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T21:15:28.967216Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T21:15:29.015198Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T21:15:29.015233Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T21:15:29.015241Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T21:15:29.015573Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T21:15:29.015596Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T21:15:29.015604Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T21:15:29.015609Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T21:15:29.015613Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T21:15:29.046323Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T21:15:29.046357Z ERROR codex_core::util: OutputTextDelta without active item
+web search: 
+web search: Cloudflare NET stock price NYSE today
+codex
+I'll look up the current share price of Cloudflare (NYSE: NET).
+I'll look up the current share price of Cloudflare (NYSE: NET).
+tokens used
+7,486

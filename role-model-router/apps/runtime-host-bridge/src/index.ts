@@ -127,6 +127,7 @@ import {
 import { readPackagedRuntimeProfile, resolveRuntimeChannelProfile } from "./runtime-channel.js";
 import { type RuntimeVersionInfoRecord, resolveRuntimeVersionInfo } from "./runtime-version.js";
 import { createTrackBOperations as createTrackBOperationsFromState } from "./track-b-operations.js";
+import { createRun88RuntimeCorrelation } from "./track-b-runtime.js";
 
 import {
   type ProviderRequestCapture,
@@ -3129,6 +3130,11 @@ export interface CreateRuntimeBridgeBackendOptions {
   readonly scopeId: string;
   /** Runtime deployment channel used by every durable storage authority check. */
   readonly runtimeChannel?: "development" | "stage" | "production";
+  readonly run88StageIdentity?: {
+    readonly releaseId: string;
+    readonly sourceId: string;
+    readonly executableSha256: string;
+  };
   readonly unifiedRuntimeConfigPath?: string;
   readonly networkFetcher?: typeof fetch;
   readonly fixtureRoot?: string;
@@ -22844,11 +22850,32 @@ export async function createRuntimeBridgeBackend(
       const contribution = (await operations.readContributionState()) as {
         readonly recommendationTier?: string;
       };
+      let run88CorrelationHeader: Record<string, string> = {};
+      if (runtimeChannel === "stage") {
+        const identity = options.run88StageIdentity;
+        if (!identity)
+          throw new Error("stage recommendation correlation identity is not configured");
+        const requestId = `recommendation-resolve-${randomUUID()}`;
+        const correlation = createRun88RuntimeCorrelation({
+          requestId,
+          routingDecisionId: requestId,
+          releaseId: identity.releaseId,
+          sourceId: identity.sourceId,
+          deploymentId: `local-stage:${identity.executableSha256}`,
+          scope: options.scopeId,
+          operation: "recommendation.resolve",
+          outcome: "requested",
+        });
+        run88CorrelationHeader = {
+          "x-role-model-correlation": JSON.stringify(correlation),
+        };
+      }
       const headers = {
         "content-type": "application/json",
         ...(process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN
           ? { authorization: `Bearer ${process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN}` }
           : {}),
+        ...run88CorrelationHeader,
       };
       const response = await fetch(new URL("api/role-model/recommendations/resolve", baseUrl), {
         method: "POST",

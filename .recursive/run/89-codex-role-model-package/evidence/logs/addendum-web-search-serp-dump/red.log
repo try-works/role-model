@@ -1,0 +1,119 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/89-codex-role-model-package/packages/codex-role-model
+
+stderr | test/forwarder.test.ts > Responses forwarder > fulfills web_search via ChatGPT alpha/search and continues the model turn
+{"event":"bridge.hop.start","bridgeTraceId":"6f9a0123-d540-43b7-8d8e-03988f922b96","route":"role-model","model":"baseline.remote-only","histogram":{"function":1,"namespace":0,"tool_search":0,"custom":0,"web_search":1,"other":0},"ts":"2026-08-05T22:45:09.121Z"}
+{"event":"bridge.transform.request","bridgeTraceId":"6f9a0123-d540-43b7-8d8e-03988f922b96","inboundToolCount":2,"outboundToolCount":2,"flattenedNamespaceCount":0,"harvestedFromSearch":0,"shimCounts":{"tool_search":0,"apply_patch":0,"web_search":1},"unknownDroppedCount":0,"reverseMapSize":1,"histogram":{"function":1,"namespace":0,"tool_search":0,"custom":0,"web_search":1,"other":0},"ts":"2026-08-05T22:45:09.122Z"}
+{"event":"bridge.upstream.forward","bridgeTraceId":"6f9a0123-d540-43b7-8d8e-03988f922b96","upstream":"http://upstream.test/v1/responses","intentPresent":true,"ts":"2026-08-05T22:45:09.123Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > fulfills web_search via ChatGPT alpha/search and continues the model turn
+{"event":"bridge.upstream.response","bridgeTraceId":"6f9a0123-d540-43b7-8d8e-03988f922b96","status":200,"contentType":"application/json","ts":"2026-08-05T22:45:09.126Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > fulfills web_search via ChatGPT alpha/search and continues the model turn
+{"event":"bridge.transform.response","bridgeTraceId":"6f9a0123-d540-43b7-8d8e-03988f922b96","restoredByKind":{"namespace":0,"tool_search":0,"web_search":0,"custom":0,"function":0,"passthrough":0},"reverseMapHits":0,"reverseMapMisses":0,"ts":"2026-08-05T22:45:09.140Z"}
+{"event":"bridge.hop.end","bridgeTraceId":"6f9a0123-d540-43b7-8d8e-03988f922b96","outcome":"ok","durationMs":29,"ts":"2026-08-05T22:45:09.142Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > exhausted web_search continues never dump raw [wordlim] SERP as the answer
+{"event":"bridge.hop.start","bridgeTraceId":"29b6ecb6-6f7a-49c6-b5d5-c45dde3f5ab5","route":"role-model","model":"baseline.remote-only","histogram":{"function":0,"namespace":0,"tool_search":0,"custom":0,"web_search":1,"other":0},"ts":"2026-08-05T22:45:09.177Z"}
+{"event":"bridge.transform.request","bridgeTraceId":"29b6ecb6-6f7a-49c6-b5d5-c45dde3f5ab5","inboundToolCount":1,"outboundToolCount":1,"flattenedNamespaceCount":0,"harvestedFromSearch":0,"shimCounts":{"tool_search":0,"apply_patch":0,"web_search":1},"unknownDroppedCount":0,"reverseMapSize":1,"histogram":{"function":0,"namespace":0,"tool_search":0,"custom":0,"web_search":1,"other":0},"ts":"2026-08-05T22:45:09.177Z"}
+{"event":"bridge.upstream.forward","bridgeTraceId":"29b6ecb6-6f7a-49c6-b5d5-c45dde3f5ab5","upstream":"http://upstream.test/v1/responses","intentPresent":true,"ts":"2026-08-05T22:45:09.177Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > exhausted web_search continues never dump raw [wordlim] SERP as the answer
+{"event":"bridge.upstream.response","bridgeTraceId":"29b6ecb6-6f7a-49c6-b5d5-c45dde3f5ab5","status":200,"contentType":"application/json","ts":"2026-08-05T22:45:09.179Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > exhausted web_search continues never dump raw [wordlim] SERP as the answer
+{"event":"bridge.transform.response","bridgeTraceId":"29b6ecb6-6f7a-49c6-b5d5-c45dde3f5ab5","restoredByKind":{"namespace":0,"tool_search":0,"web_search":0,"custom":0,"function":0,"passthrough":0},"reverseMapHits":0,"reverseMapMisses":0,"ts":"2026-08-05T22:45:09.187Z"}
+{"event":"bridge.hop.end","bridgeTraceId":"29b6ecb6-6f7a-49c6-b5d5-c45dde3f5ab5","outcome":"ok","durationMs":13,"ts":"2026-08-05T22:45:09.188Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > duplicate web_search queries are not re-fetched via alpha/search
+{"event":"bridge.hop.start","bridgeTraceId":"7e1bffe7-eb8b-417e-b209-a2cbb9d79042","route":"role-model","model":"baseline.remote-only","histogram":{"function":0,"namespace":0,"tool_search":0,"custom":0,"web_search":1,"other":0},"ts":"2026-08-05T22:45:09.221Z"}
+{"event":"bridge.transform.request","bridgeTraceId":"7e1bffe7-eb8b-417e-b209-a2cbb9d79042","inboundToolCount":1,"outboundToolCount":1,"flattenedNamespaceCount":0,"harvestedFromSearch":0,"shimCounts":{"tool_search":0,"apply_patch":0,"web_search":1},"unknownDroppedCount":0,"reverseMapSize":1,"histogram":{"function":0,"namespace":0,"tool_search":0,"custom":0,"web_search":1,"other":0},"ts":"2026-08-05T22:45:09.221Z"}
+{"event":"bridge.upstream.forward","bridgeTraceId":"7e1bffe7-eb8b-417e-b209-a2cbb9d79042","upstream":"http://upstream.test/v1/responses","intentPresent":true,"ts":"2026-08-05T22:45:09.221Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > duplicate web_search queries are not re-fetched via alpha/search
+{"event":"bridge.upstream.response","bridgeTraceId":"7e1bffe7-eb8b-417e-b209-a2cbb9d79042","status":200,"contentType":"application/json","ts":"2026-08-05T22:45:09.222Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > duplicate web_search queries are not re-fetched via alpha/search
+{"event":"bridge.transform.response","bridgeTraceId":"7e1bffe7-eb8b-417e-b209-a2cbb9d79042","restoredByKind":{"namespace":0,"tool_search":0,"web_search":0,"custom":0,"function":0,"passthrough":0},"reverseMapHits":0,"reverseMapMisses":0,"ts":"2026-08-05T22:45:09.228Z"}
+{"event":"bridge.hop.end","bridgeTraceId":"7e1bffe7-eb8b-417e-b209-a2cbb9d79042","outcome":"ok","durationMs":9,"ts":"2026-08-05T22:45:09.229Z"}
+
+ Γ¥» test/forwarder.test.ts (25 tests | 2 failed | 22 skipped) 189ms
+   Γåô Responses forwarder > remaps native picker slugs to role-model ids before upstream
+   Γåô Responses forwarder > proxies native GPT models to ChatGPT Codex backend
+   Γåô Responses forwarder > injects intent before proxying POST /v1/responses
+   Γåô Responses forwarder > flattens Codex hosted tools but preserves input and reasoning passthrough
+   Γ£ô Responses forwarder > fulfills web_search via ChatGPT alpha/search and continues the model turn 106ms
+   ├ù Responses forwarder > exhausted web_search continues never dump raw [wordlim] SERP as the answer 50ms
+     ΓåÆ expected 'Cloudflare, Inc (NET) Second Quarter ΓÇª' not to contain '[wordlim:'
+   ├ù Responses forwarder > duplicate web_search queries are not re-fetched via alpha/search 31ms
+     ΓåÆ expected 3 to be 1 // Object.is equality
+   Γåô Responses forwarder > alpha/search relays to ChatGPT Codex backend with caller auth
+   Γåô Responses forwarder > alpha/search falls back to DuckDuckGo when ChatGPT auth is missing
+   Γåô Responses forwarder > synthesizes output_item.added before orphan text deltas and always completes
+   Γåô Responses forwarder > converts custom_tool_call history to function_call pairs for upstream
+   Γåô Responses forwarder > repairs misordered tool call input before forwarding upstream
+   Γåô Responses forwarder > orders completed.output by output_index so messages precede tool calls
+   Γåô Responses forwarder > pairs web_search_call history with function_call_output for DeepSeek
+   Γåô Responses forwarder > stubs unpaired function_call history so DeepSeek never sees orphan tool_calls
+   Γåô Responses forwarder > repairs function_call before commentary so tool outputs stay adjacent
+   Γåô Responses forwarder > converts response.incomplete tool_calls into response.completed for Codex
+   Γåô Responses forwarder > normalizes SSE done frames and completed.output for Codex Desktop
+   Γåô Responses forwarder > flush emits each synthesized data line as its own SSE event
+   Γåô Responses forwarder > accepts gzip-compressed JSON request bodies
+   Γåô Responses forwarder > accepts zstd-compressed JSON request bodies like Codex Desktop
+   Γåô Responses forwarder > flattens Codex hosted tools on role-model hops and restores namespace calls
+   Γåô Responses forwarder > does not flatten tools on native GPT hops
+   Γåô Responses forwarder > returns 404 for compact endpoint
+   Γåô Responses forwarder > responses intent helper preserves explicit intent
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 2 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/forwarder.test.ts > Responses forwarder > exhausted web_search continues never dump raw [wordlim] SERP as the answer
+AssertionError: expected 'Cloudflare, Inc (NET) Second Quarter ΓÇª' not to contain '[wordlim:'
+
+- Expected
++ Received
+
+- [wordlim:
++ Cloudflare, Inc (NET) Second Quarter Fiscal 2020
++ [wordlim: 200] Published: 6.0 years ago
++ Results for the quarter ended June 30, 2020.
+
+ Γ¥» test/forwarder.test.ts:372:22
+    370|     };
+    371|     const text = body.output?.flatMap((o) => o.content ?? []).map((c) ΓÇª
+    372|     expect(text).not.toContain("[wordlim:");
+       |                      ^
+    373|     expect(text.length).toBeGreaterThan(20);
+    374|     expect(text).not.toMatch(/Published: 6\.0 years ago/);
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/2]ΓÄ»
+
+ FAIL  test/forwarder.test.ts > Responses forwarder > duplicate web_search queries are not re-fetched via alpha/search
+AssertionError: expected 3 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 3
+
+ Γ¥» test/forwarder.test.ts:450:27
+    448|     });
+
+    449|     expect(response.status).toBe(200);
+    450|     expect(alphaSearches).toBe(1);
+       |                           ^
+    451|     const body = (await response.json()) as {
+    452|       output?: Array<{ content?: Array<{ text?: string }> }>;
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/2]ΓÄ»
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed | 22 skipped (25)
+   Start at  06:45:07
+   Duration  1.36s (transform 271ms, setup 0ms, collect 355ms, tests 189ms, environment 0ms, prepare 233ms)
+
+undefined
+D:\DEV\role-model\.worktrees\89-codex-role-model-package\packages\codex-role-model:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/forwarder.test.ts -t exhausted web_search|duplicate web_search|fulfills web_search

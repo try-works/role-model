@@ -45,7 +45,7 @@
     "runtime:test-full": "corepack pnpm run runtime:test-critical && corepack pnpm run runtime:test-browser",
     "build": "corepack pnpm run types:generate && corepack pnpm -r --if-present build",
     "test": "corepack pnpm run test:release-workflows && corepack pnpm -r --if-present --filter=./** --filter=!@role-model-router/runtime-host-bridge --filter=!@try-works/pi-role-model test && corepack pnpm --filter @role-model-router/runtime-host-bridge test && corepack pnpm --filter @try-works/pi-role-model test",
-    "test:release-workflows": "node --test scripts/ci-workflow.test.mjs scripts/build-binaries-workflow.test.mjs apps/docs-site/scripts/docs-site-deploy-workflow.test.mjs",
+    "test:release-workflows": "node --test scripts/ci-workflow.test.mjs scripts/build-binaries-workflow.test.mjs scripts/track-b/wait-for-runtime-readiness.test.mjs apps/docs-site/scripts/docs-site-deploy-workflow.test.mjs",
     "test:track-b-product-state": "node scripts/track-b/run-command-test.mjs TB00-CMD-03",
     "test:extension-host-unit": "node scripts/track-b/run-command-test.mjs TB01-CMD-01",
     "test:extension-boundary-contract": "node scripts/track-b/run-command-test.mjs TB01-CMD-02",

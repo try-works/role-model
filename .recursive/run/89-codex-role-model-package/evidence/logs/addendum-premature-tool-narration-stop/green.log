@@ -1,0 +1,155 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/89-codex-role-model-package/packages/codex-role-model
+
+ Γ£ô test/codex-tool-bridge.test.ts (17 tests) 22ms
+stderr | test/forwarder.test.ts > tool-narration premature stop > auto-continues after tool-narration stop until a function_call is emitted
+{"event":"bridge.hop.start","bridgeTraceId":"878d586a-6eaf-418b-9f8c-ae4a465179ee","route":"role-model","model":"baseline.remote-only","histogram":{"function":1,"namespace":0,"tool_search":0,"custom":0,"web_search":0,"other":0},"ts":"2026-08-05T23:32:18.349Z"}
+{"event":"bridge.transform.request","bridgeTraceId":"878d586a-6eaf-418b-9f8c-ae4a465179ee","inboundToolCount":1,"outboundToolCount":1,"flattenedNamespaceCount":0,"harvestedFromSearch":0,"shimCounts":{"tool_search":0,"apply_patch":0,"web_search":0},"unknownDroppedCount":0,"reverseMapSize":0,"histogram":{"function":1,"namespace":0,"tool_search":0,"custom":0,"web_search":0,"other":0},"ts":"2026-08-05T23:32:18.351Z"}
+{"event":"bridge.upstream.forward","bridgeTraceId":"878d586a-6eaf-418b-9f8c-ae4a465179ee","upstream":"http://upstream.test/v1/responses","intentPresent":true,"ts":"2026-08-05T23:32:18.351Z"}
+
+stderr | test/forwarder.test.ts > tool-narration premature stop > auto-continues after tool-narration stop until a function_call is emitted
+{"event":"bridge.upstream.response","bridgeTraceId":"878d586a-6eaf-418b-9f8c-ae4a465179ee","status":200,"contentType":"application/json","ts":"2026-08-05T23:32:18.354Z"}
+
+stderr | test/forwarder.test.ts > tool-narration premature stop > auto-continues after tool-narration stop until a function_call is emitted
+{"event":"bridge.transform.response","bridgeTraceId":"878d586a-6eaf-418b-9f8c-ae4a465179ee","restoredByKind":{"namespace":0,"tool_search":0,"web_search":0,"custom":0,"function":1,"passthrough":0},"reverseMapHits":0,"reverseMapMisses":1,"ts":"2026-08-05T23:32:18.361Z"}
+{"event":"bridge.hop.end","bridgeTraceId":"878d586a-6eaf-418b-9f8c-ae4a465179ee","outcome":"ok","durationMs":21,"ts":"2026-08-05T23:32:18.362Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > remaps native picker slugs to role-model ids before upstream
+{"event":"bridge.hop.start","bridgeTraceId":"4d0f5f49-b7be-463d-841f-ef40f71fee2d","route":"role-model","model":"baseline.remote-only","histogram":{"function":0,"namespace":0,"tool_search":0,"custom":0,"web_search":0,"other":0},"ts":"2026-08-05T23:32:18.408Z"}
+{"event":"bridge.transform.request","bridgeTraceId":"4d0f5f49-b7be-463d-841f-ef40f71fee2d","inboundToolCount":0,"outboundToolCount":0,"flattenedNamespaceCount":0,"harvestedFromSearch":0,"shimCounts":{"tool_search":0,"apply_patch":0,"web_search":0},"unknownDroppedCount":0,"reverseMapSize":0,"histogram":{"function":0,"namespace":0,"tool_search":0,"custom":0,"web_search":0,"other":0},"ts":"2026-08-05T23:32:18.408Z"}
+{"event":"bridge.upstream.forward","bridgeTraceId":"4d0f5f49-b7be-463d-841f-ef40f71fee2d","upstream":"http://upstream.test/v1/responses","intentPresent":true,"ts":"2026-08-05T23:32:18.408Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > remaps native picker slugs to role-model ids before upstream
+{"event":"bridge.upstream.response","bridgeTraceId":"4d0f5f49-b7be-463d-841f-ef40f71fee2d","status":200,"contentType":"application/json","ts":"2026-08-05T23:32:18.410Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > remaps native picker slugs to role-model ids before upstream
+{"event":"bridge.transform.response","bridgeTraceId":"4d0f5f49-b7be-463d-841f-ef40f71fee2d","restoredByKind":{"namespace":0,"tool_search":0,"web_search":0,"custom":0,"function":0,"passthrough":0},"reverseMapHits":0,"reverseMapMisses":0,"ts":"2026-08-05T23:32:18.412Z"}
+{"event":"bridge.hop.end","bridgeTraceId":"4d0f5f49-b7be-463d-841f-ef40f71fee2d","outcome":"ok","durationMs":12,"ts":"2026-08-05T23:32:18.416Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > injects intent before proxying POST /v1/responses
+{"event":"bridge.hop.start","bridgeTraceId":"704784c1-a0c3-4978-b537-89e8a8d01e56","route":"role-model","model":"baseline.remote-only","histogram":{"function":0,"namespace":0,"tool_search":0,"custom":0,"web_search":0,"other":0},"ts":"2026-08-05T23:32:18.460Z"}
+{"event":"bridge.transform.request","bridgeTraceId":"704784c1-a0c3-4978-b537-89e8a8d01e56","inboundToolCount":0,"outboundToolCount":0,"flattenedNamespaceCount":0,"harvestedFromSearch":0,"shimCounts":{"tool_search":0,"apply_patch":0,"web_search":0},"unknownDroppedCount":0,"reverseMapSize":0,"histogram":{"function":0,"namespace":0,"tool_search":0,"custom":0,"web_search":0,"other":0},"ts":"2026-08-05T23:32:18.461Z"}
+{"event":"bridge.upstream.forward","bridgeTraceId":"704784c1-a0c3-4978-b537-89e8a8d01e56","upstream":"http://upstream.test/v1/responses","intentPresent":true,"ts":"2026-08-05T23:32:18.461Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > injects intent before proxying POST /v1/responses
+{"event":"bridge.upstream.response","bridgeTraceId":"704784c1-a0c3-4978-b537-89e8a8d01e56","status":200,"contentType":"text/event-stream","ts":"2026-08-05T23:32:18.462Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > injects intent before proxying POST /v1/responses
+{"event":"bridge.transform.response","bridgeTraceId":"704784c1-a0c3-4978-b537-89e8a8d01e56","restoredByKind":{"namespace":0,"tool_search":0,"web_search":0,"custom":0,"function":0,"passthrough":0},"reverseMapHits":0,"reverseMapMisses":0,"ts":"2026-08-05T23:32:18.463Z"}
+{"event":"bridge.hop.end","bridgeTraceId":"704784c1-a0c3-4978-b537-89e8a8d01e56","outcome":"ok","durationMs":5,"ts":"2026-08-05T23:32:18.465Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > flattens Codex hosted tools but preserves input and reasoning passthrough
+{"event":"bridge.hop.start","bridgeTraceId":"cdd2a4e7-e590-488d-bbbe-7051863d21d9","route":"role-model","model":"baseline.remote-only","histogram":{"function":1,"namespace":1,"tool_search":0,"custom":0,"web_search":1,"other":0},"ts":"2026-08-05T23:32:18.489Z"}
+{"event":"bridge.transform.request","bridgeTraceId":"cdd2a4e7-e590-488d-bbbe-7051863d21d9","inboundToolCount":3,"outboundToolCount":2,"flattenedNamespaceCount":0,"harvestedFromSearch":0,"shimCounts":{"tool_search":0,"apply_patch":0,"web_search":1},"unknownDroppedCount":0,"reverseMapSize":1,"histogram":{"function":1,"namespace":1,"tool_search":0,"custom":0,"web_search":1,"other":0},"ts":"2026-08-05T23:32:18.489Z"}
+{"event":"bridge.upstream.forward","bridgeTraceId":"cdd2a4e7-e590-488d-bbbe-7051863d21d9","upstream":"http://upstream.test/v1/responses","intentPresent":true,"ts":"2026-08-05T23:32:18.489Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > flattens Codex hosted tools but preserves input and reasoning passthrough
+{"event":"bridge.upstream.response","bridgeTraceId":"cdd2a4e7-e590-488d-bbbe-7051863d21d9","status":200,"contentType":"application/json","ts":"2026-08-05T23:32:18.492Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > flattens Codex hosted tools but preserves input and reasoning passthrough
+{"event":"bridge.transform.response","bridgeTraceId":"cdd2a4e7-e590-488d-bbbe-7051863d21d9","restoredByKind":{"namespace":0,"tool_search":0,"web_search":0,"custom":0,"function":0,"passthrough":0},"reverseMapHits":0,"reverseMapMisses":0,"ts":"2026-08-05T23:32:18.493Z"}
+{"event":"bridge.hop.end","bridgeTraceId":"cdd2a4e7-e590-488d-bbbe-7051863d21d9","outcome":"ok","durationMs":8,"ts":"2026-08-05T23:32:18.494Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > fulfills web_search via ChatGPT alpha/search and continues the model turn
+{"event":"bridge.hop.start","bridgeTraceId":"9f21b1dc-514b-4f0c-81be-5eff4f39156a","route":"role-model","model":"baseline.remote-only","histogram":{"function":1,"namespace":0,"tool_search":0,"custom":0,"web_search":1,"other":0},"ts":"2026-08-05T23:32:18.515Z"}
+{"event":"bridge.transform.request","bridgeTraceId":"9f21b1dc-514b-4f0c-81be-5eff4f39156a","inboundToolCount":2,"outboundToolCount":2,"flattenedNamespaceCount":0,"harvestedFromSearch":0,"shimCounts":{"tool_search":0,"apply_patch":0,"web_search":1},"unknownDroppedCount":0,"reverseMapSize":1,"histogram":{"function":1,"namespace":0,"tool_search":0,"custom":0,"web_search":1,"other":0},"ts":"2026-08-05T23:32:18.515Z"}
+{"event":"bridge.upstream.forward","bridgeTraceId":"9f21b1dc-514b-4f0c-81be-5eff4f39156a","upstream":"http://upstream.test/v1/responses","intentPresent":true,"ts":"2026-08-05T23:32:18.515Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > fulfills web_search via ChatGPT alpha/search and continues the model turn
+{"event":"bridge.upstream.response","bridgeTraceId":"9f21b1dc-514b-4f0c-81be-5eff4f39156a","status":200,"contentType":"application/json","ts":"2026-08-05T23:32:18.517Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > fulfills web_search via ChatGPT alpha/search and continues the model turn
+{"event":"bridge.transform.response","bridgeTraceId":"9f21b1dc-514b-4f0c-81be-5eff4f39156a","restoredByKind":{"namespace":0,"tool_search":0,"web_search":0,"custom":0,"function":0,"passthrough":0},"reverseMapHits":0,"reverseMapMisses":0,"ts":"2026-08-05T23:32:18.525Z"}
+{"event":"bridge.hop.end","bridgeTraceId":"9f21b1dc-514b-4f0c-81be-5eff4f39156a","outcome":"ok","durationMs":12,"ts":"2026-08-05T23:32:18.526Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > exhausted web_search continues never dump raw [wordlim] SERP as the answer
+{"event":"bridge.hop.start","bridgeTraceId":"0a3ed8d7-7bb6-45fb-897e-0d6f73e92ae5","route":"role-model","model":"baseline.remote-only","histogram":{"function":0,"namespace":0,"tool_search":0,"custom":0,"web_search":1,"other":0},"ts":"2026-08-05T23:32:18.544Z"}
+{"event":"bridge.transform.request","bridgeTraceId":"0a3ed8d7-7bb6-45fb-897e-0d6f73e92ae5","inboundToolCount":1,"outboundToolCount":1,"flattenedNamespaceCount":0,"harvestedFromSearch":0,"shimCounts":{"tool_search":0,"apply_patch":0,"web_search":1},"unknownDroppedCount":0,"reverseMapSize":1,"histogram":{"function":0,"namespace":0,"tool_search":0,"custom":0,"web_search":1,"other":0},"ts":"2026-08-05T23:32:18.544Z"}
+{"event":"bridge.upstream.forward","bridgeTraceId":"0a3ed8d7-7bb6-45fb-897e-0d6f73e92ae5","upstream":"http://upstream.test/v1/responses","intentPresent":true,"ts":"2026-08-05T23:32:18.544Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > exhausted web_search continues never dump raw [wordlim] SERP as the answer
+{"event":"bridge.upstream.response","bridgeTraceId":"0a3ed8d7-7bb6-45fb-897e-0d6f73e92ae5","status":200,"contentType":"application/json","ts":"2026-08-05T23:32:18.545Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > exhausted web_search continues never dump raw [wordlim] SERP as the answer
+{"event":"bridge.transform.response","bridgeTraceId":"0a3ed8d7-7bb6-45fb-897e-0d6f73e92ae5","restoredByKind":{"namespace":0,"tool_search":0,"web_search":0,"custom":0,"function":0,"passthrough":0},"reverseMapHits":0,"reverseMapMisses":0,"ts":"2026-08-05T23:32:18.548Z"}
+{"event":"bridge.hop.end","bridgeTraceId":"0a3ed8d7-7bb6-45fb-897e-0d6f73e92ae5","outcome":"ok","durationMs":7,"ts":"2026-08-05T23:32:18.550Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > duplicate web_search queries are not re-fetched via alpha/search
+{"event":"bridge.hop.start","bridgeTraceId":"6932b64a-df67-422a-bb03-bffb65279550","route":"role-model","model":"baseline.remote-only","histogram":{"function":0,"namespace":0,"tool_search":0,"custom":0,"web_search":1,"other":0},"ts":"2026-08-05T23:32:18.567Z"}
+{"event":"bridge.transform.request","bridgeTraceId":"6932b64a-df67-422a-bb03-bffb65279550","inboundToolCount":1,"outboundToolCount":1,"flattenedNamespaceCount":0,"harvestedFromSearch":0,"shimCounts":{"tool_search":0,"apply_patch":0,"web_search":1},"unknownDroppedCount":0,"reverseMapSize":1,"histogram":{"function":0,"namespace":0,"tool_search":0,"custom":0,"web_search":1,"other":0},"ts":"2026-08-05T23:32:18.567Z"}
+{"event":"bridge.upstream.forward","bridgeTraceId":"6932b64a-df67-422a-bb03-bffb65279550","upstream":"http://upstream.test/v1/responses","intentPresent":true,"ts":"2026-08-05T23:32:18.567Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > duplicate web_search queries are not re-fetched via alpha/search
+{"event":"bridge.upstream.response","bridgeTraceId":"6932b64a-df67-422a-bb03-bffb65279550","status":200,"contentType":"application/json","ts":"2026-08-05T23:32:18.569Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > duplicate web_search queries are not re-fetched via alpha/search
+{"event":"bridge.transform.response","bridgeTraceId":"6932b64a-df67-422a-bb03-bffb65279550","restoredByKind":{"namespace":0,"tool_search":0,"web_search":0,"custom":0,"function":0,"passthrough":0},"reverseMapHits":0,"reverseMapMisses":0,"ts":"2026-08-05T23:32:18.572Z"}
+{"event":"bridge.hop.end","bridgeTraceId":"6932b64a-df67-422a-bb03-bffb65279550","outcome":"ok","durationMs":7,"ts":"2026-08-05T23:32:18.573Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > repairs misordered tool call input before forwarding upstream
+{"event":"bridge.hop.start","bridgeTraceId":"dbe3f0b8-3f39-4441-84de-7a08bb844202","route":"role-model","model":"baseline.remote-only","histogram":{"function":0,"namespace":0,"tool_search":0,"custom":0,"web_search":0,"other":0},"ts":"2026-08-05T23:32:18.616Z"}
+{"event":"bridge.transform.request","bridgeTraceId":"dbe3f0b8-3f39-4441-84de-7a08bb844202","inboundToolCount":0,"outboundToolCount":0,"flattenedNamespaceCount":0,"harvestedFromSearch":0,"shimCounts":{"tool_search":0,"apply_patch":0,"web_search":0},"unknownDroppedCount":0,"reverseMapSize":0,"histogram":{"function":0,"namespace":0,"tool_search":0,"custom":0,"web_search":0,"other":0},"ts":"2026-08-05T23:32:18.616Z"}
+{"event":"bridge.upstream.forward","bridgeTraceId":"dbe3f0b8-3f39-4441-84de-7a08bb844202","upstream":"http://upstream.test/v1/responses","intentPresent":true,"ts":"2026-08-05T23:32:18.616Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > repairs misordered tool call input before forwarding upstream
+{"event":"bridge.upstream.response","bridgeTraceId":"dbe3f0b8-3f39-4441-84de-7a08bb844202","status":200,"contentType":"application/json","ts":"2026-08-05T23:32:18.617Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > repairs misordered tool call input before forwarding upstream
+{"event":"bridge.transform.response","bridgeTraceId":"dbe3f0b8-3f39-4441-84de-7a08bb844202","restoredByKind":{"namespace":0,"tool_search":0,"web_search":0,"custom":0,"function":0,"passthrough":0},"reverseMapHits":0,"reverseMapMisses":0,"ts":"2026-08-05T23:32:18.618Z"}
+{"event":"bridge.hop.end","bridgeTraceId":"dbe3f0b8-3f39-4441-84de-7a08bb844202","outcome":"ok","durationMs":4,"ts":"2026-08-05T23:32:18.619Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > streamed web_search fulfill SSE response.completed includes id
+{"event":"bridge.hop.start","bridgeTraceId":"453e5b47-c6e9-4595-8830-6395561a84f9","route":"role-model","model":"baseline.remote-only","histogram":{"function":0,"namespace":0,"tool_search":0,"custom":0,"web_search":1,"other":0},"ts":"2026-08-05T23:32:18.642Z"}
+{"event":"bridge.transform.request","bridgeTraceId":"453e5b47-c6e9-4595-8830-6395561a84f9","inboundToolCount":1,"outboundToolCount":1,"flattenedNamespaceCount":0,"harvestedFromSearch":0,"shimCounts":{"tool_search":0,"apply_patch":0,"web_search":1},"unknownDroppedCount":0,"reverseMapSize":1,"histogram":{"function":0,"namespace":0,"tool_search":0,"custom":0,"web_search":1,"other":0},"ts":"2026-08-05T23:32:18.642Z"}
+{"event":"bridge.upstream.forward","bridgeTraceId":"453e5b47-c6e9-4595-8830-6395561a84f9","upstream":"http://upstream.test/v1/responses","intentPresent":true,"ts":"2026-08-05T23:32:18.642Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > streamed web_search fulfill SSE response.completed includes id
+{"event":"bridge.upstream.response","bridgeTraceId":"453e5b47-c6e9-4595-8830-6395561a84f9","status":200,"contentType":"application/json","ts":"2026-08-05T23:32:18.644Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > streamed web_search fulfill SSE response.completed includes id
+{"event":"bridge.transform.response","bridgeTraceId":"453e5b47-c6e9-4595-8830-6395561a84f9","restoredByKind":{"namespace":0,"tool_search":0,"web_search":0,"custom":0,"function":0,"passthrough":0},"reverseMapHits":0,"reverseMapMisses":0,"ts":"2026-08-05T23:32:18.647Z"}
+{"event":"bridge.hop.end","bridgeTraceId":"453e5b47-c6e9-4595-8830-6395561a84f9","outcome":"ok","durationMs":8,"ts":"2026-08-05T23:32:18.649Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > accepts gzip-compressed JSON request bodies
+{"event":"bridge.hop.start","bridgeTraceId":"20a7c6d3-5a0f-4c08-825a-3010bc06e0fd","route":"role-model","model":"baseline.remote-only","histogram":{"function":0,"namespace":0,"tool_search":0,"custom":0,"web_search":0,"other":0},"ts":"2026-08-05T23:32:18.669Z"}
+{"event":"bridge.transform.request","bridgeTraceId":"20a7c6d3-5a0f-4c08-825a-3010bc06e0fd","inboundToolCount":0,"outboundToolCount":0,"flattenedNamespaceCount":0,"harvestedFromSearch":0,"shimCounts":{"tool_search":0,"apply_patch":0,"web_search":0},"unknownDroppedCount":0,"reverseMapSize":0,"histogram":{"function":0,"namespace":0,"tool_search":0,"custom":0,"web_search":0,"other":0},"ts":"2026-08-05T23:32:18.669Z"}
+{"event":"bridge.upstream.forward","bridgeTraceId":"20a7c6d3-5a0f-4c08-825a-3010bc06e0fd","upstream":"http://upstream.test/v1/responses","intentPresent":true,"ts":"2026-08-05T23:32:18.669Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > accepts gzip-compressed JSON request bodies
+{"event":"bridge.upstream.response","bridgeTraceId":"20a7c6d3-5a0f-4c08-825a-3010bc06e0fd","status":200,"contentType":"application/json","ts":"2026-08-05T23:32:18.670Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > accepts gzip-compressed JSON request bodies
+{"event":"bridge.transform.response","bridgeTraceId":"20a7c6d3-5a0f-4c08-825a-3010bc06e0fd","restoredByKind":{"namespace":0,"tool_search":0,"web_search":0,"custom":0,"function":0,"passthrough":0},"reverseMapHits":0,"reverseMapMisses":0,"ts":"2026-08-05T23:32:18.671Z"}
+{"event":"bridge.hop.end","bridgeTraceId":"20a7c6d3-5a0f-4c08-825a-3010bc06e0fd","outcome":"ok","durationMs":4,"ts":"2026-08-05T23:32:18.672Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > accepts zstd-compressed JSON request bodies like Codex Desktop
+{"event":"bridge.hop.start","bridgeTraceId":"16a083e2-990c-4c8c-a00f-de94c1209804","route":"role-model","model":"baseline.remote-only","histogram":{"function":0,"namespace":0,"tool_search":0,"custom":0,"web_search":0,"other":0},"ts":"2026-08-05T23:32:18.689Z"}
+{"event":"bridge.transform.request","bridgeTraceId":"16a083e2-990c-4c8c-a00f-de94c1209804","inboundToolCount":0,"outboundToolCount":0,"flattenedNamespaceCount":0,"harvestedFromSearch":0,"shimCounts":{"tool_search":0,"apply_patch":0,"web_search":0},"unknownDroppedCount":0,"reverseMapSize":0,"histogram":{"function":0,"namespace":0,"tool_search":0,"custom":0,"web_search":0,"other":0},"ts":"2026-08-05T23:32:18.689Z"}
+{"event":"bridge.upstream.forward","bridgeTraceId":"16a083e2-990c-4c8c-a00f-de94c1209804","upstream":"http://upstream.test/v1/responses","intentPresent":true,"ts":"2026-08-05T23:32:18.689Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > accepts zstd-compressed JSON request bodies like Codex Desktop
+{"event":"bridge.upstream.response","bridgeTraceId":"16a083e2-990c-4c8c-a00f-de94c1209804","status":200,"contentType":"application/json","ts":"2026-08-05T23:32:18.690Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > accepts zstd-compressed JSON request bodies like Codex Desktop
+{"event":"bridge.transform.response","bridgeTraceId":"16a083e2-990c-4c8c-a00f-de94c1209804","restoredByKind":{"namespace":0,"tool_search":0,"web_search":0,"custom":0,"function":0,"passthrough":0},"reverseMapHits":0,"reverseMapMisses":0,"ts":"2026-08-05T23:32:18.692Z"}
+{"event":"bridge.hop.end","bridgeTraceId":"16a083e2-990c-4c8c-a00f-de94c1209804","outcome":"ok","durationMs":5,"ts":"2026-08-05T23:32:18.693Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > flattens Codex hosted tools on role-model hops and restores namespace calls
+{"event":"bridge.hop.start","bridgeTraceId":"6b614966-8ed7-4d28-ad74-75e782364543","route":"role-model","model":"baseline.remote-only","histogram":{"function":1,"namespace":1,"tool_search":1,"custom":0,"web_search":1,"other":0},"ts":"2026-08-05T23:32:18.709Z"}
+{"event":"bridge.transform.request","bridgeTraceId":"6b614966-8ed7-4d28-ad74-75e782364543","inboundToolCount":4,"outboundToolCount":4,"flattenedNamespaceCount":1,"harvestedFromSearch":0,"shimCounts":{"tool_search":1,"apply_patch":0,"web_search":1},"unknownDroppedCount":0,"reverseMapSize":3,"histogram":{"function":1,"namespace":1,"tool_search":1,"custom":0,"web_search":1,"other":0},"ts":"2026-08-05T23:32:18.709Z"}
+{"event":"bridge.upstream.forward","bridgeTraceId":"6b614966-8ed7-4d28-ad74-75e782364543","upstream":"http://upstream.test/v1/responses","intentPresent":true,"ts":"2026-08-05T23:32:18.709Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > flattens Codex hosted tools on role-model hops and restores namespace calls
+{"event":"bridge.upstream.response","bridgeTraceId":"6b614966-8ed7-4d28-ad74-75e782364543","status":200,"contentType":"application/json","ts":"2026-08-05T23:32:18.710Z"}
+
+stderr | test/forwarder.test.ts > Responses forwarder > flattens Codex hosted tools on role-model hops and restores namespace calls
+{"event":"bridge.transform.response","bridgeTraceId":"6b614966-8ed7-4d28-ad74-75e782364543","restoredByKind":{"namespace":1,"tool_search":0,"web_search":0,"custom":0,"function":0,"passthrough":0},"reverseMapHits":1,"reverseMapMisses":0,"ts":"2026-08-05T23:32:18.711Z"}
+{"event":"bridge.hop.end","bridgeTraceId":"6b614966-8ed7-4d28-ad74-75e782364543","outcome":"ok","durationMs":4,"ts":"2026-08-05T23:32:18.713Z"}
+
+ Γ£ô test/forwarder.test.ts (30 tests) 467ms
+
+ Test Files  2 passed (2)
+      Tests  47 passed (47)
+   Start at  07:32:17
+   Duration  1.83s (transform 427ms, setup 0ms, collect 625ms, tests 489ms, environment 1ms, prepare 563ms)
+

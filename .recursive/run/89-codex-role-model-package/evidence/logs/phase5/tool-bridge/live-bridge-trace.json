@@ -1,0 +1,47 @@
+{
+  "bridgeTraceId": "3287aea3-ead9-4a4e-9051-5ddd7b594e9d",
+  "route": "role-model",
+  "model": "baseline.remote-only",
+  "histogram": {
+    "function": 1,
+    "namespace": 1,
+    "tool_search": 1,
+    "custom": 1,
+    "web_search": 1,
+    "other": 0
+  },
+  "transformRequest": {
+    "inboundToolCount": 5,
+    "outboundToolCount": 5,
+    "flattenedNamespaceCount": 1,
+    "shimCounts": {
+      "tool_search": 1,
+      "apply_patch": 1,
+      "web_search": 1
+    },
+    "unknownDroppedCount": 0,
+    "reverseMapSize": 4,
+    "histogram": {
+      "function": 1,
+      "namespace": 1,
+      "tool_search": 1,
+      "custom": 1,
+      "web_search": 1,
+      "other": 0
+    }
+  },
+  "restore": {
+    "restoredByKind": {
+      "namespace": 0,
+      "tool_search": 0,
+      "custom": 0,
+      "function": 0,
+      "passthrough": 0
+    },
+    "reverseMapHits": 0,
+    "reverseMapMisses": 0
+  },
+  "upstreamStatus": 200,
+  "outcome": "ok",
+  "durationMs": 1954
+}
