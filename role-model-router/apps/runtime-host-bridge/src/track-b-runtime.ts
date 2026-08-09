@@ -1231,6 +1231,7 @@ export async function createExtensionRuntime(options: {
   readonly stateRoot: string;
   readonly authorizationEpoch: number;
   readonly repoRoot?: string;
+  readonly startupTimeoutMs?: number;
   readonly extensions: readonly {
     readonly descriptor: ProductionExtensionDescriptor;
     readonly modulePath: string;
@@ -1238,6 +1239,14 @@ export async function createExtensionRuntime(options: {
   }[];
 }) {
   if (options.extensions.length < 1) throw new Error("at least one extension is required");
+  if (
+    options.startupTimeoutMs !== undefined &&
+    (!Number.isInteger(options.startupTimeoutMs) ||
+      options.startupTimeoutMs < 100 ||
+      options.startupTimeoutMs > 120_000)
+  ) {
+    throw new Error("extension startup timeout must be an integer from 100 to 120000 milliseconds");
+  }
   const ids = options.extensions.map((row) => row.descriptor.id);
   if (new Set(ids).size !== ids.length) throw new Error("extension ids must be unique");
   for (const extension of options.extensions) {
@@ -1300,6 +1309,9 @@ export async function createExtensionRuntime(options: {
     protocolVersion: "1.1.0",
     compatibleProtocolVersions: ["1.0.0"],
     authorizationEpoch: options.authorizationEpoch,
+    ...(options.startupTimeoutMs !== undefined
+      ? { startupTimeoutMs: options.startupTimeoutMs }
+      : {}),
     journalPath: path.join(options.stateRoot, "extension-host.journal.ndjson"),
   });
   const states = new Map<string, ExtensionRuntimeState>();
@@ -1499,6 +1511,7 @@ export async function createProductionExtensionRuntime(
     stateRoot: options.stateRoot,
     authorizationEpoch: options.authorizationEpoch,
     ...(options.repoRoot ? { repoRoot: options.repoRoot } : {}),
+    startupTimeoutMs: options.startupTimeoutMs ?? 10_000,
     extensions: [...options.extensions, ...qaExtensions],
   });
 }
