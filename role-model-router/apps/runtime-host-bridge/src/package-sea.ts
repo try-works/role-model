@@ -46,6 +46,28 @@ export interface StandaloneReleaseCopy {
   readonly destinationRelativePath: string;
 }
 
+export function validatePairedReleasePackagingInputs<
+  T extends Readonly<{ manifestSha256: string }>,
+>({
+  channel,
+  releaseId,
+  trackBRuntime,
+}: Readonly<{
+  channel: "production" | "stage" | "development";
+  releaseId: string | undefined;
+  trackBRuntime: T | null;
+}>): Readonly<{ releaseId: string | undefined; trackBRuntime: T | null }> {
+  if (channel === "stage" || channel === "production") {
+    if (!/^sha256:[0-9a-f]{64}$/.test(releaseId ?? "")) {
+      throw new Error(`${channel} packaging requires an exact Run 88 release identity`);
+    }
+    if (!trackBRuntime || !/^[0-9a-f]{64}$/.test(trackBRuntime.manifestSha256)) {
+      throw new Error(`${channel} packaging requires the exact private distribution`);
+    }
+  }
+  return Object.freeze({ releaseId, trackBRuntime });
+}
+
 const NODE_SEA_FUSE = "NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -619,12 +641,11 @@ export async function packageSeaRuntime(): Promise<{
   }
   const sourceTree = sourceTreeResult.stdout.trim();
   const run88ReleaseId = process.env.RUN88_RELEASE_ID?.trim();
-  if (
-    profile.channel === "stage" &&
-    (!/^sha256:[0-9a-f]{64}$/.test(run88ReleaseId ?? "") || !trackBRuntime)
-  ) {
-    throw new Error("Stage packaging requires an exact RUN88_RELEASE_ID and private distribution");
-  }
+  validatePairedReleasePackagingInputs({
+    channel: profile.channel,
+    releaseId: run88ReleaseId,
+    trackBRuntime,
+  });
   await writeFile(
     path.join(releaseDir, "manifest.json"),
     JSON.stringify(
@@ -642,7 +663,7 @@ export async function packageSeaRuntime(): Promise<{
         build_date: versionInfo.build_date,
         ...profile,
         endpoint: `http://${profile.host}:${profile.port}`,
-        ...(profile.channel === "stage"
+        ...(profile.channel === "stage" || profile.channel === "production"
           ? {
               release_id: run88ReleaseId,
               private_distribution_sha256: trackBRuntime?.manifestSha256,

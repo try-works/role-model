@@ -61,6 +61,19 @@ jobs:
             target: win32-x64
 
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve public source tree
+        id: public_source
+        shell: bash
+        run: |
+          source_tree="$(git rev-parse HEAD^{tree})"
+          if [[ ! "$source_tree" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Public source tree must be an exact 40-character Git tree."
+            exit 1
+          fi
+          echo "source_tree=$source_tree" >> "$GITHUB_OUTPUT"
+
       - name: Validate Run 88 stage identity inputs
         if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage'
         shell: bash
@@ -80,7 +93,70 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/checkout@v4
+      - name: Resolve tested stage candidate
+        id: stage_candidate
+        if: env.ROLE_MODEL_BUILD_CHANNEL == 'production'
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $artifactName = "role-model-stage-candidate-${{ steps.public_source.outputs.source_tree }}-${{ matrix.target }}"
+          $headers = @{
+            Authorization = "Bearer $env:GITHUB_TOKEN"
+            Accept = "application/vnd.github+json"
+            "X-GitHub-Api-Version" = "2022-11-28"
+          }
+          $listUrl = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/actions/artifacts?name=$artifactName&per_page=20"
+          $artifact = (Invoke-RestMethod -Headers $headers -Uri $listUrl).artifacts |
+            Where-Object { -not $_.expired } |
+            Sort-Object created_at -Descending |
+            Select-Object -First 1
+          if (-not $artifact) { throw "No tested stage candidate found for $artifactName" }
+          $outerZip = Join-Path $env:RUNNER_TEMP "stage-candidate.zip"
+          $outerDir = Join-Path $env:RUNNER_TEMP "stage-candidate"
+          $innerDir = Join-Path $env:RUNNER_TEMP "stage-package"
+          Invoke-WebRequest -Headers $headers -Uri $artifact.archive_download_url -OutFile $outerZip
+          Expand-Archive -LiteralPath $outerZip -DestinationPath $outerDir -Force
+          $archive = Get-ChildItem -LiteralPath $outerDir -File | Select-Object -First 1
+          if (-not $archive) { throw "Stage candidate artifact contains no archive" }
+          New-Item -ItemType Directory -Force -Path $innerDir | Out-Null
+          if ($archive.Extension -eq ".zip") {
+            Expand-Archive -LiteralPath $archive.FullName -DestinationPath $innerDir -Force
+          } else {
+            tar -xzf $archive.FullName -C $innerDir
+            if ($LASTEXITCODE -ne 0) { throw "Failed to extract stage candidate" }
+          }
+          $stageManifestPath = Get-ChildItem -LiteralPath $innerDir -Recurse -Filter manifest.json |
+            Select-Object -First 1 -ExpandProperty FullName
+          if (-not $stageManifestPath) { throw "Stage candidate contains no manifest" }
+          $stage = Get-Content -LiteralPath $stageManifestPath -Raw | ConvertFrom-Json
+          if ($stage.channel -ne "stage" -or $stage.name -ne "role-model-stage") { throw "Artifact is not a stage candidate" }
+          if ($stage.source_tree -ne "${{ steps.public_source.outputs.source_tree }}") { throw "Stage candidate public source tree mismatch" }
+          if ($stage.release_id -notmatch '^sha256:[0-9a-f]{64}$') { throw "Stage candidate release identity is invalid" }
+          if ($stage.private_source_commit -notmatch '^[0-9a-f]{40}$') { throw "Stage candidate private source identity is invalid" }
+          if ($stage.private_distribution_sha256 -ne $stage.track_b_runtime.manifest_sha256) { throw "Stage candidate private distribution binding mismatch" }
+          if ($stage.track_b_runtime.sidecar_sha256 -notmatch '^[0-9a-f]{64}$') { throw "Stage candidate sidecar identity is invalid" }
+          if ($stage.track_b_runtime.extension_count -ne 13) { throw "Stage candidate does not contain all thirteen extensions" }
+          "stage_manifest_path=$stageManifestPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "release_id=$($stage.release_id)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "private_source_commit=$($stage.private_source_commit)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Select exact paired release identity
+        id: release_identity
+        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production'
+        shell: pwsh
+        run: |
+          if ($env:ROLE_MODEL_BUILD_CHANNEL -eq "production") {
+            $privateSource = "${{ steps.stage_candidate.outputs.private_source_commit }}"
+            $releaseId = "${{ steps.stage_candidate.outputs.release_id }}"
+          } else {
+            $privateSource = $env:PRIVATE_PAIRED_SHA
+            $releaseId = $env:RUN88_RELEASE_ID
+          }
+          if ($privateSource -notmatch '^[0-9a-f]{40}$') { throw "Exact private paired commit is invalid" }
+          if ($releaseId -notmatch '^sha256:[0-9a-f]{64}$') { throw "Exact Run 88 release identity is invalid" }
+          "private_source_commit=$privateSource" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "release_id=$releaseId" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - uses: pnpm/action-setup@v4
         with:
@@ -108,26 +184,28 @@ jobs:
       - name: Build UI
         run: pnpm --filter @role-model-router/runtime-ui run build
 
-      - name: Validate exact private stage revision
-        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage'
+      - name: Validate exact private release revision
+        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production'
         shell: bash
+        env:
+          RELEASE_PRIVATE_SHA: ${{ steps.release_identity.outputs.private_source_commit }}
         run: |
-          if [[ ! "$PRIVATE_PAIRED_SHA" =~ ^[0-9a-f]{40}$ ]]; then
-            echo "ROLE_MODEL_PAIRED_PRIVATE_SHA (or private_sha) must be an exact 40-character commit."
+          if [[ ! "$RELEASE_PRIVATE_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Paired private revision must be an exact 40-character commit."
             exit 1
           fi
 
-      - name: Checkout exact private stage revision
-        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage'
+      - name: Checkout exact private release revision
+        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production'
         uses: actions/checkout@v4
         with:
           repository: try-works/role-model-internal
-          ref: ${{ env.PRIVATE_PAIRED_SHA }}
+          ref: ${{ steps.release_identity.outputs.private_source_commit }}
           token: ${{ secrets.ROLE_MODEL_INTERNAL_READ_TOKEN }}
           path: _private
 
-      - name: Build exact private stage distribution
-        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage'
+      - name: Build exact private release distribution
+        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production'
         working-directory: _private
         env:
           ROLE_MODEL_PUBLIC_WORKTREE: ${{ github.workspace }}
@@ -138,13 +216,14 @@ jobs:
 
       - name: Package SEA runtime
         env:
-          ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT: ${{ env.ROLE_MODEL_BUILD_CHANNEL == 'stage' && format('{0}/_private/dist/run00-dev', github.workspace) || '' }}
+          ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT: ${{ (env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production') && format('{0}/_private/dist/run00-dev', github.workspace) || '' }}
+          RUN88_RELEASE_ID: ${{ steps.release_identity.outputs.release_id || env.RUN88_RELEASE_ID }}
         run: pnpm run runtime:package-sea
 
-      - name: Bind canonical Run 88 identity into stage package
-        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage'
+      - name: Bind canonical Run 88 identity into release package
+        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production'
         shell: pwsh
-        run: node scripts/run88-stage-release.mjs --manifest "${{ github.workspace }}/role-model-router/dist/release/${{ matrix.target }}/manifest.json" --release-id "$env:RUN88_RELEASE_ID"
+        run: node scripts/run88-stage-release.mjs --manifest "${{ github.workspace }}/role-model-router/dist/release/${{ matrix.target }}/manifest.json" --release-id "${{ steps.release_identity.outputs.release_id }}" --private-source "${{ steps.release_identity.outputs.private_source_commit }}"
 
       - name: Verify channel manifest identity
         id: runtime_identity
@@ -166,57 +245,25 @@ jobs:
           if ($manifest.name -ne $expectedName) {
             throw "Manifest name '$($manifest.name)' does not match '$expectedName'"
           }
-          if ($env:ROLE_MODEL_BUILD_CHANNEL -eq "stage") {
-            if (-not $manifest.track_b_runtime.manifest_sha256) { throw "Missing stage private_distribution_sha256" }
-            if ($manifest.track_b_runtime.compatibility_generation -notin @("N", "N-1")) { throw "Invalid stage private distribution generation" }
+          if ($env:ROLE_MODEL_BUILD_CHANNEL -in @("stage", "production")) {
+            if (-not $manifest.track_b_runtime.manifest_sha256) { throw "Missing release private_distribution_sha256" }
+            if ($manifest.track_b_runtime.compatibility_generation -notin @("N", "N-1")) { throw "Invalid release private distribution generation" }
+            if ($manifest.track_b_runtime.sidecar_sha256 -notmatch '^[0-9a-f]{64}$') { throw "Invalid release private sidecar identity" }
+            if ($manifest.track_b_runtime.extension_count -ne 13) { throw "Release package does not contain all thirteen extensions" }
             "private_distribution_sha256=$($manifest.track_b_runtime.manifest_sha256)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            if ($manifest.release_id -ne $env:RUN88_RELEASE_ID) { throw "Stage manifest release_id mismatch" }
-            if ($manifest.private_distribution_sha256 -ne $manifest.track_b_runtime.manifest_sha256) { throw "Stage manifest private distribution binding mismatch" }
+            if ($manifest.release_id -ne "${{ steps.release_identity.outputs.release_id }}") { throw "Release manifest release_id mismatch" }
+            if ($manifest.private_source_commit -ne "${{ steps.release_identity.outputs.private_source_commit }}") { throw "Release manifest private source mismatch" }
+            if ($manifest.private_distribution_sha256 -ne $manifest.track_b_runtime.manifest_sha256) { throw "Release manifest private distribution binding mismatch" }
           }
           $manifestSha256 = (Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash.ToLowerInvariant()
           "manifest_sha256=$manifestSha256" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           "source_tree=$($manifest.source_tree)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           "core_payload_sha256=$($manifest.core_payload_sha256)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
-      - name: Verify production core matches the tested stage candidate
+      - name: Verify complete production pair matches the tested stage candidate
         if: env.ROLE_MODEL_BUILD_CHANNEL == 'production'
         shell: pwsh
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          $artifactName = "role-model-stage-candidate-${{ steps.runtime_identity.outputs.source_tree }}-${{ matrix.target }}"
-          $headers = @{
-            Authorization = "Bearer $env:GITHUB_TOKEN"
-            Accept = "application/vnd.github+json"
-            "X-GitHub-Api-Version" = "2022-11-28"
-          }
-          $listUrl = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/actions/artifacts?name=$artifactName&per_page=20"
-          $artifact = (Invoke-RestMethod -Headers $headers -Uri $listUrl).artifacts |
-            Where-Object { -not $_.expired } |
-            Sort-Object created_at -Descending |
-            Select-Object -First 1
-          if (-not $artifact) { throw "No tested stage candidate found for $artifactName" }
-          $outerZip = Join-Path $env:RUNNER_TEMP "stage-candidate.zip"
-          $outerDir = Join-Path $env:RUNNER_TEMP "stage-candidate"
-          $innerDir = Join-Path $env:RUNNER_TEMP "stage-package"
-          Invoke-WebRequest -Headers $headers -Uri $artifact.archive_download_url -OutFile $outerZip
-          Expand-Archive -LiteralPath $outerZip -DestinationPath $outerDir -Force
-          $archive = Get-ChildItem -LiteralPath $outerDir -File | Select-Object -First 1
-          if (-not $archive) { throw "Stage candidate artifact contains no archive" }
-          New-Item -ItemType Directory -Force -Path $innerDir | Out-Null
-          if ($archive.Extension -eq ".zip") {
-            Expand-Archive -LiteralPath $archive.FullName -DestinationPath $innerDir -Force
-          } else {
-            tar -xzf $archive.FullName -C $innerDir
-            if ($LASTEXITCODE -ne 0) { throw "Failed to extract stage candidate" }
-          }
-          $stageManifest = Get-ChildItem -LiteralPath $innerDir -Recurse -Filter manifest.json |
-            Select-Object -First 1 |
-            Get-Content -Raw |
-            ConvertFrom-Json
-          if ($stageManifest.core_payload_sha256 -ne "${{ steps.runtime_identity.outputs.core_payload_sha256 }}") {
-            throw "Production core payload does not match the tested stage candidate"
-          }
+        run: node scripts/run88-stage-release.mjs --stage-manifest "${{ steps.stage_candidate.outputs.stage_manifest_path }}" --verify-production-manifest "${{ github.workspace }}/role-model-router/dist/release/${{ matrix.target }}/manifest.json"
 
       - name: Verify Windows standalone package
         if: matrix.target == 'win32-x64'

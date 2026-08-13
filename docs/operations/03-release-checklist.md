@@ -4,7 +4,8 @@
 
 1. Confirm the intended work is merged into `dev` with all required CI lanes green.
 2. Open and review `dev -> stage`; use a merge commit and do not rewrite stage history.
-3. Confirm the stage binary matrix completed and its artifacts include `role-model-stage`, commit/SHA identity,
+3. Confirm the stage binary matrix completed and its artifacts include `role-model-stage`, public source-tree,
+   exact private source commit, Run 88 release identity, private manifest/sidecar digests, all 13 extensions,
    attestations, and `core_payload_sha256`.
 4. Run the stage package on `3457` beside production on `3456` and development on `3458`; verify isolated state.
 
@@ -13,8 +14,9 @@
 1. Open and review `stage -> main`; do not add untested product changes during promotion.
 2. Confirm all main promotion checks pass and merge with a merge commit.
 3. Create an annotated tag: `git tag -a vX.Y.Z -m "role-model vX.Y.Z"`.
-4. Push the tag. Production packaging must retrieve the matching stage candidate and verify the exact core payload
-   digest before publication.
+4. Push the tag. Production packaging must retrieve the matching stage candidate, rebuild its exact private commit,
+   and verify the complete paired identity (release, public tree/core, private manifest/sidecar, compatibility
+   generation, and 13-extension closure) before publication.
 5. Approve the protected `release` environment when requested.
 
 ## Published assets

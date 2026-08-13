@@ -31,9 +31,11 @@ packages are available by explicit manual dispatch. Only a `v*` tag publishes a 
 | Stage | `role-model-stage` | `http://127.0.0.1:3457` | `role-model-runtime-stage` | `standalone-runtime-stage` |
 | Development | `role-model-dev` | `http://127.0.0.1:3458` | `role-model-runtime-dev` | `standalone-runtime-dev` |
 
-Manifests report channel, endpoint, commit, source tree, executable SHA-256, and channel-neutral core payload
-SHA-256. A production tag must find the matching successful stage candidate and prove the core payload digest is
-identical; source-tree equality alone is insufficient.
+Manifests report channel, endpoint, commit, source tree, executable SHA-256, channel-neutral core payload SHA-256,
+the exact private source commit, Run 88 release identity, private distribution manifest and sidecar digests, and the
+canonical extension count. A production tag must find the matching successful stage candidate, rebuild its exact
+private commit, and prove the complete public/private pair is identical. Source-tree or core-payload equality alone
+is insufficient.
 
 ## Docs site exception
 

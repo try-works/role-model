@@ -28,3 +28,11 @@ test("build-binaries produces stage candidates, manual dev builds, and tag-only 
   assert.match(workflow, /role-model-stage/);
   assert.match(workflow, /role-model-dev/);
 });
+
+test("production artifacts include the exact private runtime tested at stage", () => {
+  assert.match(workflow, /private_source_commit/);
+  assert.match(workflow, /extension_count/);
+  assert.match(workflow, /sidecar_sha256/);
+  assert.match(workflow, /private_distribution_sha256/);
+  assert.match(workflow, /--verify-production-manifest/);
+});
