@@ -276,6 +276,10 @@ describe("runtime-host-bridge executable packaging", () => {
             "role-model-router/packages/catalog/data/normalized-catalog.json",
         },
         {
+          sourceRelativePath: "packages/protocol-types/generated/product-contracts.json",
+          destinationRelativePath: "packages/protocol-types/generated/product-contracts.json",
+        },
+        {
           sourceRelativePath: "role-model-router/packages/extension-host/index.mjs",
           destinationRelativePath: "role-model-router/packages/extension-host/index.mjs",
         },
@@ -458,6 +462,21 @@ describe("runtime-host-bridge executable packaging", () => {
     expect(validatePackagingText).toContain("contentRevision");
     expect(validatePackagingText).toContain("entryCounts");
     expect(validatePackagingText).toContain("security.audit");
+  });
+
+  test("packaged runtime validation exercises the extension catalog from packaged contracts", async () => {
+    const validatePackagingPath = path.join(
+      repoRoot,
+      "role-model-router",
+      "apps",
+      "runtime-host-bridge",
+      "src",
+      "validate-packaging.ts",
+    );
+    const validatePackagingText = await readFile(validatePackagingPath, "utf8");
+
+    expect(validatePackagingText).toContain("/api/role-model/extensions");
+    expect(validatePackagingText).toContain("evaluation-core");
   });
 
   test("packaged runtime validation tears down the packaged process tree before cleaning release artifacts", async () => {

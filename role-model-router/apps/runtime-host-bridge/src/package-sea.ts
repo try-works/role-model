@@ -101,6 +101,10 @@ const standaloneReleaseCopies = [
     destinationRelativePath: "role-model-router/packages/catalog/data/normalized-catalog.json",
   },
   {
+    sourceRelativePath: "packages/protocol-types/generated/product-contracts.json",
+    destinationRelativePath: "packages/protocol-types/generated/product-contracts.json",
+  },
+  {
     sourceRelativePath: "role-model-router/packages/core/data/taxonomy",
     destinationRelativePath: "role-model-router/packages/core/data/taxonomy",
   },
