@@ -1587,7 +1587,6 @@ export function createOwnedTrackBSidecarSpec(options: {
 
       const operationsToken = randomBytes(32).toString("hex");
       const nodeExecutable = resolveTrackBNodeExecutable();
-      const sidecarChannel = options.channel === "stage" ? "staging" : options.channel;
       const child = spawn(
         nodeExecutable,
         [
@@ -1595,7 +1594,7 @@ export function createOwnedTrackBSidecarSpec(options: {
           "--state-root",
           options.stateRoot,
           "--channel",
-          sidecarChannel,
+          options.channel,
           "--host",
           "127.0.0.1",
           "--port",
