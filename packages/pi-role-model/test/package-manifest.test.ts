@@ -36,4 +36,12 @@ describe("pi-role-model package manifest", () => {
     expect(manifest.scripts?.test).toContain("vitest run");
     expect(manifest.scripts?.build).toContain("tsc");
   });
+
+  test("does not reuse the known-stale npm version for endpoint-aware source", async () => {
+    const manifest = JSON.parse(await readFile(join(packageRoot, "package.json"), "utf8")) as {
+      version?: string;
+    };
+
+    expect(manifest.version).not.toBe("0.1.3");
+  });
 });
