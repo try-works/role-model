@@ -62,8 +62,8 @@ export const publicAcceptanceProbes = Object.freeze({
     integration: async () => {
       const { ci, binaries } = await workflowBytes();
       assert.ok(ci.includes("ROLE_MODEL_PAIRED_PRIVATE_SHA"));
-      assert.ok(binaries.includes("Validate exact private stage revision"));
-      assert.ok(binaries.includes("Bind canonical Run 88 identity into stage package"));
+      assert.ok(binaries.includes("Verify private revision passed paired promotion branch"));
+      assert.ok(binaries.includes("Bind canonical Run 88 identity into release package"));
       return {
         acceptanceId: "R1-AC03",
         layer: "integration",
@@ -180,7 +180,7 @@ export const publicAcceptanceProbes = Object.freeze({
     integration: async () => {
       const { ci, binaries } = await workflowBytes();
       assert.ok(ci.includes("promotion-guard"));
-      assert.ok(binaries.includes("Validate exact private stage revision"));
+      assert.ok(binaries.includes("Verify private revision passed paired promotion branch"));
       assert.ok(binaries.includes("ROLE_MODEL_PAIRED_PRIVATE_SHA"));
       return {
         acceptanceId: "R3-AC01",
@@ -471,7 +471,7 @@ export const publicAcceptanceProbes = Object.freeze({
     },
     integration: async () => {
       const { binaries } = await workflowBytes();
-      assert.ok(binaries.includes("Bind canonical Run 88 identity into stage package"));
+      assert.ok(binaries.includes("Bind canonical Run 88 identity into release package"));
       assert.ok(binaries.includes("Verify package contains no QA fixtures or mock data"));
       return {
         acceptanceId: "R9-AC06",
