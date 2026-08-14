@@ -16,6 +16,12 @@ test("build-binaries retries release attestation before failing", () => {
   assert.match(workflow, /steps\.attest_release_archive_attempt_2\.outcome == 'failure'/);
 });
 
+test("build-binaries pins one exact Node patch for reproducible SEA payloads", () => {
+  const exactPins = workflow.match(/node-version: "24\.19\.0"/g) ?? [];
+  assert.equal(exactPins.length, 2);
+  assert.doesNotMatch(workflow, /node-version:\s*24(?:\s|$)/);
+});
+
 test("build-binaries produces stage candidates, manual dev builds, and tag-only releases", () => {
   assert.match(workflow, /branches:\s*\n\s*- stage/);
   assert.match(workflow, /ROLE_MODEL_BUILD_CHANNEL/);
