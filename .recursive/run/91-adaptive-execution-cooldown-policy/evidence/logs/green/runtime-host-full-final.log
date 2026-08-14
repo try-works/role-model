@@ -1,0 +1,445 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/91-adaptive-execution-cooldown-policy/role-model-router/apps/runtime-host-bridge
+
+(node:9124) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26356) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:24624) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:9900) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:30924) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:25096) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:23288) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26060) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26708) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:34688) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:28124) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:32624) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:29596) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:23880) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:31736) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/validate-ui.test.ts (1 test) 15837ms
+   ✓ runRuntimeUiValidation > validates runtime config reads and the main control-plane mutations  15833ms
+ ✓ test/recursive-87-registry-lifecycle.test.ts (6 tests) 17766ms
+   ✓ recursive run 87 SP0 registry and lifecycle authority > a synthetic future extension uses the same generic runtime path as the fixed release set  4351ms
+   ✓ recursive run 87 SP0 registry and lifecycle authority > the production constructor keeps thirteen release extensions while admitting an explicit QA extension  6680ms
+   ✓ recursive run 87 SP0 registry and lifecycle authority > durable lifecycle mutations change observed worker state and are idempotent  5509ms
+   ✓ recursive run 87 SP0 registry and lifecycle authority > Phase 3.5 journal replay preserves stopped state and never resurrects removed extensions  681ms
+   ✓ recursive run 87 SP0 registry and lifecycle authority > Phase 3.5 failed durable mutation is compensated before returning an error  502ms
+ ✓ test/validate-observability.test.ts (1 test) 16291ms
+   ✓ runRuntimeObservabilityValidation > proves structured request, capture, metrics, and otel observability over the real host path  16287ms
+(node:36816) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:25140) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:32364) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/validate-restart-rehydration.test.ts (1 test) 18554ms
+   ✓ runRestartRehydrationValidation > rehydrates activated endpoints and mixed alias model list after backend restart  18550ms
+(node:36040) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/recursive-87-shadow-pipeline.test.ts (8 tests) 4662ms
+   ✓ SP1 runs the useful routing-learning DAG through supervised shadow capabilities  1228ms
+   ✓ Phase 3.5 normal request completion dispatches the persisted observation to Track B  3369ms
+(node:36600) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+role-model-router/apps/runtime-host-bridge/src/index.ts(19956,42): error TS2345: Argument of type 'readonly RuntimeExecutionCooldownReceipt[]' is not assignable to parameter of type 'readonly ExecutionCircuitReceipt[]'.
+  Type 'RuntimeExecutionCooldownReceipt' is not assignable to type 'ExecutionCircuitReceipt'.
+    Types of property 'schemaVersion' are incompatible.
+      Type '2 | undefined' is not assignable to type '2'.
+        Type 'undefined' is not assignable to type '2'.
+ ❯ test/packaged-standalone-restart.test.ts (1 test | 1 failed) 26704ms
+   × packaged runtime repairs stale standalone aliases after env-backed restart bootstrap 26702ms
+     → Command failed with exit code 2: C:\Program Files\nodejs\node.exe D:\DEV\role-model\.worktrees\91-adaptive-execution-cooldown-policy\node_modules\typescript\bin\tsc -p D:\DEV\role-model\.worktrees\91-adaptive-execution-cooldown-policy\role-model-router\apps\runtime-host-bridge\tsconfig.json
+
+cwd: D:\DEV\role-model\.worktrees\91-adaptive-execution-cooldown-policy
+
+stdout:
+role-model-router/apps/runtime-host-bridge/src/index.ts(19956,42): error TS2345: Argument of type 'readonly RuntimeExecutionCooldownReceipt[]' is not assignable to parameter of type 'readonly ExecutionCircuitReceipt[]'.
+  Type 'RuntimeExecutionCooldownReceipt' is not assignable to type 'ExecutionCircuitReceipt'.
+    Types of property 'schemaVersion' are incompatible.
+      Type '2 | undefined' is not assignable to type '2'.
+        Type 'undefined' is not assignable to type '2'.
+ ✓ test/endpoint-rehydration.test.ts (3 tests) 27280ms
+   ✓ endpoint rehydration > rehydrates sqlite runtime endpoints across backend restart without re-activation  10606ms
+   ✓ endpoint rehydration > reconciles missing persisted remote activations even when sqlite already has endpoint rows  6602ms
+   ✓ endpoint rehydration > marks restarted remote endpoints offline and ineligible when startup probes time out  10068ms
+ ✓ test/validate-catalog-economics.test.ts (1 test) 9369ms
+   ✓ runCatalogEconomicsValidation > hides moonshotai, routes easy cost work to local peer, and emits catalogEconomics  9364ms
+ ✓ test/track-b-runtime-composition.test.ts (14 tests) 10544ms
+   ✓ production Track B composition > verifies and supervises the packaged sidecar process over a readiness protocol  431ms
+   ✓ production Track B composition > passes cloud contribution trust and aggregate destination into the launcher-owned sidecar  346ms
+   ✓ production Track B composition > runs all thirteen canonical extensions through the real process host and supervisor  3357ms
+   ✓ production Track B composition > gives production extension workers a bounded startup budget that tolerates host contention  5947ms
+   ✓ production Track B composition > stages the integrity-verified private runtime beside the packaged launcher  323ms
+(node:5460) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:28472) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:37808) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:24668) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/catalog-economics-providers.test.ts (2 tests) 10966ms
+   ✓ catalog economics provider surfaces > hides moonshotai from listProviders while keeping operator moonshot  5777ms
+   ✓ catalog economics provider surfaces > lists Moonshot Kimi coding models on moonshot and kimi-code variants  5155ms
+(node:29260) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/validate-tools.test.ts (1 test) 4101ms
+   ✓ runRuntimeToolsValidation > executes runtime-owned MCP tool calls and persists their observation receipts  4098ms
+ ✓ test/account-repair.test.ts (7 tests) 31335ms
+   ✓ account repair mutations > starting Kimi Code authorization for k3 preserves existing allowed models and active endpoints  5981ms
+   ✓ account repair mutations > reconnect returns the current pending device-authorization session for the same account  5052ms
+   ✓ account repair mutations > reconnect starts a fresh Codex Subscription device-code session instead of reusing a stale pending one  3819ms
+   ✓ account repair mutations > starting Codex Subscription authorization again supersedes the older pending session  3261ms
+   ✓ account repair mutations > update API key preserves account identity, bindings, and endpoint associations  4186ms
+   ✓ account repair mutations > rejects overlapping repair mutations for the same account without partially mutating state  2823ms
+   ✓ account repair mutations > codex subscription start returns a real device-code session and poll connects through managed Codex auth  6203ms
+(node:37480) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/remove-account-model.test.ts (4 tests) 32080ms
+   ✓ removeProviderAccountModel > removes the selected model and stale endpoint rows while preserving sibling models  5832ms
+   ✓ removeProviderAccountModel > deletes the backing account when its last configured model is removed  4819ms
+   ✓ removeProviderAccountModel > reassigns the controller to a surviving manual-account model during eject  11001ms
+   ✓ removeProviderAccountModel > clears the controller when eject removes the last surviving controller-backed manual-account model  10426ms
+(node:18524) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/operator-intent-corrupt-bootstrap.test.ts (1 test) 3289ms
+   ✓ operator intent corrupt manifest > surfaces corrupt operator-intent diagnostics and blocks bootstrap  3286ms
+ ✓ test/session-bootstrap-health.test.ts (1 test) 4251ms
+   ✓ session bootstrap health > exposes bootstrap receipts on /healthz summary after async startup  4247ms
+ ✓ test/benchmark-data-clear.test.ts (3 tests) 3964ms
+   ✓ benchmark global data clear > DELETE /api/role-model/benchmark/data clears sqlite samples and artifact runs  3664ms
+ ✓ test/session-readiness-api.test.ts (1 test) 4056ms
+   ✓ session readiness API > exposes bootstrap, inventory, and readiness fields over HTTP  4052ms
+ ✓ test/remote-health-bootstrap.test.ts (1 test) 2882ms
+   ✓ remote health bootstrap > skips remote-health probes in decision_only mode  2878ms
+ ✓ test/run88-stage-release.integration.test.ts (24 tests) 351ms
+(node:29056) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:31992) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:8236) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:35136) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:30316) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:16632) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:37392) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/recursive-87-compatibility.test.ts (2 tests) 173ms
+ ✓ test/run88-stage-release.regression.test.ts (9 tests) 98ms
+ ✓ test/routable-inventory-bootstrap.test.ts (3 tests) 2996ms
+   ✓ routable inventory bootstrap > exposes inventory summary and inventory bootstrap stage after startup  2946ms
+ ✓ test/run88-stage-release.unit.test.ts (19 tests) 103ms
+(node:32672) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/recursive-87-graph-primary.test.ts (1 test) 1058ms
+   ✓ SP2 host observation persistence delegates rich bytes to graph storage after cutover  1055ms
+ ✓ test/candidate-profile-scaling.test.ts (1 test) 13ms
+(node:26468) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:28000) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:10728) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/validate-operations.test.ts (1 test) 2629ms
+   ✓ runRuntimeOperationsValidation > validates isolated scopes and runtime-state maintenance drills  2624ms
+ ✓ test/benchmark-runner-compare.test.ts (1 test) 780ms
+   ✓ benchmark-runner compare remediation > writes fallback compare artifact when judge compare parse fails  778ms
+ ✓ test/runtime-state-migration.test.ts (2 tests) 145ms
+ ✓ test/recursive-87-bounded-history.test.ts (1 test) 868ms
+   ✓ SP3 the benchmark persistence path enforces its configured history bound  866ms
+ ✓ test/taxonomy-discovery.test.ts (3 tests) 330ms
+ ✓ test/executable.test.ts (22 tests) 443ms
+(node:22452) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:33656) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/benchmark-summary.test.ts (8 tests) 182ms
+ ✓ test/runtime-version.test.ts (4 tests) 57ms
+(node:6168) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/unified-runtime-config.test.ts (27 tests) 151ms
+ ✓ test/benchmark-runner-judge.test.ts (16 tests) 4215ms
+   ✓ benchmark-runner judge remediation > omits judge max_tokens and persists judge artifacts  368ms
+   ✓ benchmark-runner judge remediation > counts executed dynamic tools when the endpoint does not echo assistant tool_calls  308ms
+   ✓ benchmark-runner judge remediation > sends structured response_format for subject json deliverables  1071ms
+   ✓ benchmark-runner judge remediation > marks benchmark subject, judge, and compare executions to bypass cooldown poisoning  374ms
+   ✓ benchmark-runner judge remediation > persists cross-model compare artifacts for multi-endpoint runs  442ms
+   ✓ benchmark-runner judge remediation > compare rankings stay diagnostic and do not rewrite endpoint scores  342ms
+ ✓ test/system-open-url.test.ts (2 tests) 157ms
+ ✓ test/cli-startup-readiness.test.ts (2 tests) 239ms
+ ✓ test/alias-capability-routing.test.ts (8 tests) 67ms
+ ✓ test/litellm-catalog.test.ts (6 tests) 75ms
+ ✓ src/operator-intent.test.ts (8 tests) 63ms
+ ✓ test/runtime-assets.test.ts (5 tests) 84ms
+ ✓ test/downstream-openai-discovery.test.ts (4 tests) 68ms
+ ✓ test/execution-circuit-breaker.test.ts (12 tests) 91ms
+(node:35348) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/observed-data-decay-policy.test.ts (5 tests) 54ms
+ ✓ src/oauth-credential.test.ts (2 tests) 82ms
+ ✓ src/routable-inventory.test.ts (6 tests) 48ms
+ ✓ test/benchmark-artifacts.test.ts (4 tests) 69ms
+ ✓ test/craft-ask-difficulty.test.ts (4 tests) 60ms
+ ✓ test/model-capability-resolver.test.ts (4 tests) 50ms
+ ✓ src/local-model-role-bindings.test.ts (11 tests) 52ms
+ ✓ test/controller-routing-contract.test.ts (8 tests) 72ms
+ ✓ test/request-capability-inference.test.ts (2 tests) 49ms
+ ✓ test/kw-prompt-inject-host.test.ts (4 tests) 27ms
+(node:30772) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ src/remote-health-probe.test.ts (12 tests) 34ms
+ ✓ test/runtime-channel.test.ts (5 tests) 12ms
+(node:23952) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/recursive-87-projection-consumers.test.ts (1 test) 18ms
+ ✓ src/session-bootstrap.test.ts (4 tests) 21ms
+ ✓ test/benchmark-start-guards.test.ts (9 tests) 19ms
+ ✓ test/runtime-channel-options.test.ts (2 tests) 35ms
+(node:13096) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ src/open-external-url.test.ts (4 tests) 13ms
+ ✓ test/kw-prompt-inject.test.ts (3 tests) 16ms
+ ✓ test/credential-ref-env.test.ts (6 tests) 11ms
+ ✓ src/benchmark-reasoning.test.ts (6 tests) 16ms
+ ✓ test/validate-ui-cleanup.test.ts (2 tests) 13ms
+ ✓ test/benchmark-candidates-routing-quality.test.ts (1 test) 12ms
+ ✓ test/runtime-routing-model.test.ts (4 tests) 10ms
+(node:27968) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/recursive-87-retention-inventory.test.ts (1 test) 11ms
+ ✓ test/benchmark-judge-runtime.test.ts (3 tests) 10ms
+ ✓ test/local-policy.test.ts (14 tests) 44009ms
+   ✓ local policy persistence > readLocalPolicy returns defaults when file does not exist  3844ms
+   ✓ local policy persistence > updateLocalPolicy writes merged policy to file  3611ms
+   ✓ local policy persistence > readLocalPolicy reads persisted file  3673ms
+   ✓ local policy persistence > updateLocalPolicy merges with existing policy  3049ms
+   ✓ local swap history > listSwapHistory returns empty array when no events  2905ms
+   ✓ local swap history > listSwapHistory returns events in descending order  2832ms
+   ✓ model overrides > readModelOverrides returns empty object when file does not exist  2634ms
+   ✓ model overrides > updateModelOverrides writes to file  2710ms
+   ✓ model overrides > readModelOverrides reads persisted file  2815ms
+   ✓ peer configuration > readPeers returns empty array when file does not exist  2839ms
+   ✓ peer configuration > updatePeers writes to file  2768ms
+   ✓ peer configuration > readPeers reads persisted file  3144ms
+   ✓ peer configuration > updatePeers replays persisted peer auto-reload entries when peers become available  4270ms
+   ✓ peer configuration > checkPeerHealth returns false for unreachable url  2900ms
+ ✓ test/benchmark-progress.test.ts (2 tests) 9ms
+ ✓ test/recursive-87-ci-contract.test.ts (1 test) 6ms
+ ✓ test/benchmark-validation-metrics.test.ts (2 tests) 8ms
+ ↓ test/kw-private-loader.test.ts (2 tests | 2 skipped)
+ ✓ test/configured-model-membership.test.ts (3 tests) 16ms
+(node:30768) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ↓ test/kw-prompt-inject-map-surface.test.ts (1 test | 1 skipped)
+ ✓ test/track-b-operations-api.test.ts (20 tests) 45736ms
+   ✓ Track B operations APIs > fails closed instead of issuing unauthenticated calls to an owned operations endpoint  4662ms
+   ✓ Track B operations APIs > serves extension lifecycle and storage retention through bounded callbacks  5312ms
+   ✓ Track B operations APIs > fails closed when an operations capability is not wired  4067ms
+   ✓ Track B operations APIs > production backend never infers extension health from the catalog  3123ms
+   ✓ Track B operations APIs > local Track B bridge seed marks catalog extensions ready without ExtensionHost override  3517ms
+   ✓ Track B operations APIs > production backend reports readiness only from the supervised ExtensionHost  2789ms
+   ✓ Track B operations APIs > production backend clean start uses the canonical Advanced aggregate defaults  3023ms
+   ✓ Track B operations APIs > production request completion reports only aggregate metrics to the private operations boundary  4121ms
+   ✓ Track B operations APIs > production Responses requests report aggregate metrics through the same private operations boundary  3438ms
+   ✓ Track B operations APIs > production backend reads and atomically updates real bridge storage state  2896ms
+   ✓ Track B operations APIs > RUN88-I-PUB-R8-AC04 stage recommendation downloads propagate candidate correlation  2868ms
+   ✓ Track B operations APIs > RUN88-R-PUB-R8-AC04 stage recommendation downloads fail closed without candidate identity  3041ms
+   ✓ Track B operations APIs > run79 HTTP exposes extensions mutate and recommendations dismiss routes  2475ms
+ ✓ test/openai-codex-subscription-matrix.test.ts (8 tests) 53798ms
+   ✓ OpenAI Codex Subscription model matrix > listProviders exposes the full Codex Subscription 5.3+ matrix for OpenAI  5528ms
+   ✓ OpenAI Codex Subscription model matrix > rejects pre-5.3 Codex Subscription model ids during device authorization setup  4323ms
+   ✓ OpenAI Codex Subscription model matrix > accepts hosted web search and function-tool request surfaces for every supported OpenAI model id  25471ms
+   ✓ OpenAI Codex Subscription model matrix > keeps every supported OpenAI GPT-5.3+ subscription model coder.patch routable  18365ms
+ ✓ test/restart-rehydration.test.ts (15 tests) 73011ms
+   ✓ restart rehydration > restores activated endpoints and session readiness summary after backend restart  9435ms
+   ✓ restart rehydration > keeps restarted remote endpoints healthy when provider /models returns unprefixed ids  10742ms
+   ✓ restart rehydration > does not count expired pending device authorization as an active readiness blocker after restart  5962ms
+   ✓ restart rehydration > archives orphan pending authorizations and orphan credential files instead of counting them as active readiness  6478ms
+   ✓ restart rehydration > archives invalid persisted provider accounts instead of surfacing them as active lifecycle records  6173ms
+   ✓ restart rehydration > surfaces failed pending authorization polling in bootstrap stage details after restart  6044ms
+   ✓ restart rehydration > classifies failed startup OAuth refresh as expired auth after restart  3569ms
+   ✓ restart rehydration > repairs stale bridge Kimi OAuth credentials from fresher standalone runtime tokens on restart  3618ms
+   ✓ restart rehydration > repairs stale standalone Kimi OAuth credentials from fresher bridge tokens on restart and restores endpoint eligibility  4221ms
+   ✓ restart rehydration > sanitizes stale activation and endpoint evidence without expanding configured membership  3288ms
+   ✓ restart rehydration > refreshes Kimi OAuth after restart by honoring the stored token device id  2616ms
+   ✓ restart rehydration > polls the earliest-expiring pending authorizations first and surfaces deferred count  3544ms
+   ✓ restart rehydration > cleans up a pending Codex Subscription device-code session after restart  2737ms
+   ✓ restart rehydration > normalizes legacy local peer role bindings during restart rehydration  3155ms
+   ✓ restart rehydration > defers persisted peer auto-reload entries during restart bootstrap when peers are not configured  1418ms
+ ✓ test/provider-overlap-metadata.test.ts (45 tests) 73799ms
+   ✓ provider overlap metadata (R1) > upsert validation accepts UI-equivalent payload for overlap provider wandb  323ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for baseten  6435ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for cerebras  6007ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for cohere  5408ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for databricks  4793ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for deepinfra  4565ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for deepseek  5129ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for groq  4978ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for minimax  4504ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for mistral  2446ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for morph  2870ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for nebius  2853ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for openrouter  2496ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for ovhcloud  2447ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for perplexity  1946ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for sarvam  2225ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for v0  2226ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for wandb  2209ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for xai  1994ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for zai  2190ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes one OpenAI provider with API Key and Codex Subscription variants  1972ms
+ ✓ test/backend-unified-runtime-config.test.ts (28 tests) 114238ms
+   ✓ runtime-host-bridge unified runtime backend > ejects config-owned membership durably across config reapply and restart  18335ms
+   ✓ runtime-host-bridge unified runtime backend > reassigns the controller when config-owned eject removes the active controller model  8311ms
+   ✓ runtime-host-bridge unified runtime backend > clears the controller when config-owned eject removes the last controller-backed model  7794ms
+   ✓ runtime-host-bridge unified runtime backend > router candidates expose every configured endpoint and mark current execution-mode eligibility  6048ms
+   ✓ runtime-host-bridge unified runtime backend > rejects benchmark runs that target endpoints excluded by execution mode  5990ms
+   ✓ runtime-host-bridge unified runtime backend > surfaces the derived execution mode in the runtime summary when a unified config file is provided  2323ms
+   ✓ runtime-host-bridge unified runtime backend > reads and updates unified runtime config through the backend  2949ms
+   ✓ runtime-host-bridge unified runtime backend > merges partial runtime config updates without dropping existing routing strategy  2798ms
+   ✓ runtime-host-bridge unified runtime backend > canonicalizes the primary routing alias to the live routing matrix on startup  2158ms
+   ✓ runtime-host-bridge unified runtime backend > creates and updates unified runtime config when the configured path does not exist yet  2037ms
+   ✓ runtime-host-bridge unified runtime backend > persists explicit hybrid execution mode from routing strategy updates  2350ms
+   ✓ runtime-host-bridge unified runtime backend > bootstraps the primary routing alias when routing posture is saved without preconfigured aliases  2367ms
+   ✓ runtime-host-bridge unified runtime backend > bootstraps a settings-specific primary routing alias for remote-only posture without preconfigured aliases  2850ms
+   ✓ runtime-host-bridge unified runtime backend > maintains the routing alias matrix across strategy families and execution modes  15316ms
+   ✓ runtime-host-bridge unified runtime backend > persists the full canonical routing alias matrix instead of a single primary alias  2075ms
+   ✓ runtime-host-bridge unified runtime backend > normalizes legacy craft-ask routing strategy updates to the default alias family  2669ms
+   ✓ runtime-host-bridge unified runtime backend > rewrites persisted craft-ask alias ids out of startup config materialization  1581ms
+   ✓ runtime-host-bridge unified runtime backend > rewrites legacy craft-ask matrix rows from persisted config even when the canonical matrix already exists  1609ms
+   ✓ runtime-host-bridge unified runtime backend > rewrites legacy craft-ask matrix rows from persisted config even when startup does not need to re-materialize aliases  1479ms
+   ✓ runtime-host-bridge unified runtime backend > renames the primary routing alias when routing strategy and execution mode change  1847ms
+   ✓ runtime-host-bridge unified runtime backend > does not mark all candidates ignored when routing guidance has no preferred endpoints  1190ms
+   ✓ runtime-host-bridge unified runtime backend > preserves synthesized activated endpoint models across runtime config updates  2743ms
+   ✓ runtime-host-bridge unified runtime backend > returns no controller assignment when the unified config has no endpoints yet  1729ms
+   ✓ runtime-host-bridge unified runtime backend > surfaces normalized provider docs and npm metadata through listProviders  1770ms
+   ✓ runtime-host-bridge unified runtime backend > uses YAML membership authority while preserving manual metadata on reserved-id collision  3645ms
+   ✓ runtime-host-bridge unified runtime backend > migrates a legacy standalone runtime config into the canonical state path on startup  1952ms
+   ✓ runtime-host-bridge unified runtime backend > repairs stale standalone canonical remote aliases after restart bootstrap rehydrates env-backed persisted endpoints  5990ms
+   ✓ runtime-host-bridge unified runtime backend > surfaces LiteLLM-backed Moonshot models and endpoints from unified runtime config  2329ms
+ ✓ test/index.test.ts (206 tests) 156840ms
+   ✓ runtime-host-bridge > seeds deterministic QA telemetry for chart geometry and token-truth browser checks  2287ms
+   ✓ runtime-host-bridge > suppresses placeholder provider accounts when using the packaged CLI defaults  2949ms
+   ✓ runtime-host-bridge > purges stale runtime-config LiteLLM endpoints when startup has no runtime config  3384ms
+   ✓ runtime-host-bridge > loads placeholder accounts only when fixture-root is explicitly provided  2206ms
+   ✓ runtime-host-bridge > creates a runtime backend that executes chat-completions through the real routing and adapter path  1376ms
+   ✓ runtime-host-bridge > creates a runtime backend that persists structured request and endpoint inspection state  1821ms
+   ✓ runtime-host-bridge > persists routing-mode override and rewrite-skipped diagnostics for exact-model runtime-backed chat requests  2220ms
+   ✓ runtime-host-bridge > persists applied role policy diagnostics and injected system instructions for runtime-backed chat requests  2213ms
+   ✓ runtime-host-bridge > does not seed placeholder Anthropic/OpenAI accounts, endpoints, models, or router guidance in the default runtime bootstrap  1553ms
+   ✓ runtime-host-bridge > upsertProviderAccount replaces existing model role assignments for the same model  1576ms
+   ✓ runtime-host-bridge > persists alias-resolution diagnostics for runtime-backed chat requests  2406ms
+   ✓ runtime-host-bridge > executes every canonical remote alias through the runtime-backed chat path  13769ms
+   ✓ runtime-host-bridge > persists difficulty-routing diagnostics for runtime-backed chat requests  2321ms
+   ✓ runtime-host-bridge > allows an observed max-difficulty override when bucketed performance supports a harder request  2215ms
+   ✓ runtime-host-bridge > routes hard requests using bucketed observed profiles and records the selected difficulty bucket  2397ms
+   ✓ runtime-host-bridge > keeps fresh endpoint-wide metrics when stale hard-bucket quality is present under benchmark-driven routing  2237ms
+   ✓ runtime-host-bridge > uses the configured remote classifier result for difficulty-mode runtime-backed chat requests  2043ms
+   ✓ runtime-host-bridge > uses the configured remote controller result for intelligent runtime-backed chat requests  2369ms
+   ✓ runtime-host-bridge > uses the default controller timeout budget for realistic remote controller latency  5976ms
+   ✓ runtime-host-bridge > records sanitized controller guidance through the live HTTP bridge for intelligent aliases  2295ms
+   ✓ runtime-host-bridge > preserves accepted controller directives for known compatibility strategy aliases  2424ms
+   ✓ runtime-host-bridge > gives controller routing enough output budget to avoid empty truncated guidance  2302ms
+   ✓ runtime-host-bridge > retries controller routing once with a compact prompt when the first controller response is empty  2685ms
+   ✓ runtime-host-bridge > falls back to heuristic controller guidance when the live controller returns prose instead of JSON  2289ms
+   ✓ runtime-host-bridge > serves coherent live role and task policy over the HTTP control plane  1244ms
+   ✓ runtime-host-bridge > rehydrates persisted controller assignment for controller aliases after restart even without a controller block in runtime config  4454ms
+   ✓ runtime-host-bridge > persists alias-default hybrid arbitration and rewrite-applied diagnostics for runtime-backed chat requests  2032ms
+   ✓ runtime-host-bridge > falls back deterministically when the configured classifier times out  2288ms
+   ✓ runtime-host-bridge > reuses cached difficulty classification for repeated requests in the same conversation when invalidation thresholds are not exceeded  2036ms
+   ✓ runtime-host-bridge > reports cache invalidation reasons before reclassifying a repeated request  2376ms
+   ✓ runtime-host-bridge > creates a runtime backend that exposes provider presets, runtime summary, and account upserts  1566ms
+   ✓ runtime-host-bridge > persists runtime-managed role policy and task allowlists across backend restart  2143ms
+   ✓ runtime-host-bridge > executes env-backed api-key accounts through the live provider path when the env credential resolves  1669ms
+   ✓ runtime-host-bridge > retries transient API timeouts once and falls back to a secondary endpoint after quota exhaustion  1553ms
+   ✓ runtime-host-bridge > persists routed provider execution failures with selected endpoint inspection context  1331ms
+   ✓ runtime-host-bridge > preserves the original Codex timeout when exact-model fallback exhausts all eligible endpoints  2377ms
+   ✓ runtime-host-bridge > executes direct exact-model chat requests through the Codex subscription endpoint  1949ms
+   ✓ runtime-host-bridge > Codex Subscription request detail preserves Responses-ingress parameter policy  1811ms
+   ✓ runtime-host-bridge > exact Codex execution repairs stale bridge auth from standalone runtime and clears auth cooldowns  2006ms
+   ✓ runtime-host-bridge > suppresses already-executed Codex dynamic tool calls from the final chat response and de-duplicates executions  1820ms
+   ✓ runtime-host-bridge > does not place Codex subscription endpoints on cooldown for invalid_request failures  1818ms
+   ✓ runtime-host-bridge > keeps Kimi Code and DeepSeek coding endpoints coder-eligible from the tracked catalog  1577ms
+   ✓ runtime-host-bridge > registers configured local OpenAI-compatible peers as execution-ready model endpoints  1891ms
+   ✓ runtime-host-bridge > executes non-controller requested coder review task requests without empty chosen-endpoint failures  1312ms
+   ✓ runtime-host-bridge > exposes llama-swap ownership and config metadata on local model and endpoint readback  2024ms
+   ✓ runtime-host-bridge > rejects local model activation when no configured local endpoint exposes the requested model  1687ms
+   ✓ runtime-host-bridge > rehydrates connected OAuth accounts from stored token files on backend restart  2395ms
+   ✓ runtime-host-bridge > restores pending OAuth device-authorizations from SQLite after backend restart  2441ms
+   ✓ runtime-host-bridge > executes chat-completions through an activated Kimi Code endpoint  1352ms
+   ✓ runtime-host-bridge > executes exact Kimi hosted web-search requests through to a final assistant answer  1359ms
+   ✓ runtime-host-bridge > surfaces exact deepseek/deepseek-v4-flash web-search requests as consumer-managed tool calls  1312ms
+   ✓ runtime-host-bridge > surfaces exact deepseek/deepseek-v4-pro web-search requests as consumer-managed tool calls  1390ms
+   ✓ runtime-host-bridge > normalizes DeepSeek DSML web_search markup into consumer-visible tool calls  1332ms
+   ✓ runtime-host-bridge > normalizes DeepSeek DSML web_open markup into consumer-visible tool calls  1433ms
+   ✓ runtime-host-bridge > normalizes DeepSeek DSML web_browse markup into consumer-visible tool calls  1338ms
+   ✓ runtime-host-bridge > creates a runtime backend that executes responses through the real routing and adapter path  1284ms
+   ✓ runtime-host-bridge > persists applied role policy diagnostics and injected policy messages for runtime-backed responses requests  1466ms
+   ✓ runtime-host-bridge > serves structured request and endpoint inspection routes through the bridge server  1526ms
+   ✓ runtime-host-bridge > aggregates generic telemetry analytics from persisted request-time routing and cost facts  1852ms
+   ✓ runtime-host-bridge > aggregates telemetry analytics over the full requested slice with contract metadata and aligned ledger filters  1961ms
+   ✓ runtime-host-bridge > startup retention cleanup removes expired raw observations while preserving telemetry ledger evidence  1479ms
+   ✓ runtime-host-bridge > keeps duplicate caller request ids as separate canonical telemetry rows  1884ms
+   ✓ runtime-host-bridge > records caller correlation and live request classification for failed chat completions  1509ms
+   ✓ runtime-host-bridge > reads bucketed endpoint profiles with an advisory max-difficulty recommendation  1365ms
+   ✓ runtime-host-bridge > streams canonical telemetry updates over SSE after new requests are persisted  5317ms
+   ✓ runtime-host-bridge > executes chat-completions through a LiteLLM-derived moonshot-oauth endpoint with X-Msh headers  1813ms
+   ✓ runtime-host-bridge > executes chat-completions through an api-key-static provider via environment credential  1761ms
+   ✓ runtime-host-bridge > propagates downstream stream-writer failures during direct provider streaming  1280ms
+   ✓ runtime-host-bridge > forwards reasoning-only upstream SSE chunks when chat-completions opted into reasoning  1323ms
+   ✓ runtime-host-bridge > suppresses reasoning-only upstream SSE chunks until downstream-safe content is available when reasoning is not requested  1361ms
+   ✓ runtime-host-bridge > accepts legacy credentialized endpoint ids when pinning a requested endpoint  1735ms
+ ✓ test/validate-vendors.test.ts (2 tests) 202082ms
+   ✓ runRuntimeVendorValidation > executes decision-only, local-only, remote-only, and hybrid vendor modes end to end  202069ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/packaged-standalone-restart.test.ts > packaged runtime repairs stale standalone aliases after env-backed restart bootstrap
+Error: Command failed with exit code 2: C:\Program Files\nodejs\node.exe D:\DEV\role-model\.worktrees\91-adaptive-execution-cooldown-policy\node_modules\typescript\bin\tsc -p D:\DEV\role-model\.worktrees\91-adaptive-execution-cooldown-policy\role-model-router\apps\runtime-host-bridge\tsconfig.json
+
+cwd: D:\DEV\role-model\.worktrees\91-adaptive-execution-cooldown-policy
+
+stdout:
+role-model-router/apps/runtime-host-bridge/src/index.ts(19956,42): error TS2345: Argument of type 'readonly RuntimeExecutionCooldownReceipt[]' is not assignable to parameter of type 'readonly ExecutionCircuitReceipt[]'.
+  Type 'RuntimeExecutionCooldownReceipt' is not assignable to type 'ExecutionCircuitReceipt'.
+    Types of property 'schemaVersion' are incompatible.
+      Type '2 | undefined' is not assignable to type '2'.
+        Type 'undefined' is not assignable to type '2'.
+ ❯ runOrThrow src/package-sea.ts:309:11
+    307|       .filter((value): value is string => Boolean(value))
+    308|       .join("\n\n");
+    309|     throw new Error(failureDetails);
+       |           ^
+    310|   }
+    311| }
+ ❯ packageSeaRuntime src/package-sea.ts:586:3
+ ❯ test/packaged-standalone-restart.test.ts:358:22
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 79 passed | 2 skipped (82)
+      Tests  1 failed | 706 passed | 3 skipped (710)
+   Start at  17:05:02
+   Duration  208.09s (transform 12.53s, setup 0ms, collect 89.41s, tests 1023.73s, environment 37ms, prepare 32.51s)
+
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run

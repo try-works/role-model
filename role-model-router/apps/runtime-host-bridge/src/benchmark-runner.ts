@@ -87,6 +87,7 @@ export type { BenchmarkChatCompletionsExecutionResult };
 export interface BenchmarkExecutionRequestOptions {
   readonly endpointId?: string;
   readonly ignoreExecutionFailureCooldowns?: boolean;
+  readonly executionTrafficClass?: "live" | "benchmark" | "health" | "synthetic";
 }
 
 function buildBenchmarkExecutionRequestOptions(
@@ -95,6 +96,7 @@ function buildBenchmarkExecutionRequestOptions(
   return {
     endpointId,
     ignoreExecutionFailureCooldowns: true,
+    executionTrafficClass: "benchmark",
   };
 }
 

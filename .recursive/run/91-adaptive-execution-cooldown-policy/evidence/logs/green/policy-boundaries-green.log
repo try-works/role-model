@@ -1,0 +1,14 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/91-adaptive-execution-cooldown-policy/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/execution-circuit-breaker.test.ts (12 tests) 65ms
+(node:28380) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/index.test.ts (206 tests | 203 skipped) 2478ms
+   ✓ runtime-host-bridge > preserves the original Codex timeout when exact-model fallback exhausts all eligible endpoints  2473ms
+
+ Test Files  2 passed (2)
+      Tests  15 passed | 203 skipped (218)
+   Start at  17:03:04
+   Duration  6.25s (transform 2.16s, setup 0ms, collect 3.11s, tests 2.54s, environment 1ms, prepare 588ms)
+

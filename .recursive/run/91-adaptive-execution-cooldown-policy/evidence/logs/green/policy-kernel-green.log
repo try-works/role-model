@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/91-adaptive-execution-cooldown-policy/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/execution-circuit-breaker.test.ts (10 tests) 61ms
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  16:38:05
+   Duration  939ms (transform 102ms, setup 0ms, collect 109ms, tests 61ms, environment 0ms, prepare 291ms)
+
