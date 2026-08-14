@@ -1,0 +1,32 @@
+node:internal/modules/esm/resolve:274
+    throw new ERR_MODULE_NOT_FOUND(
+          ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'D:\DEV\.wt\82-tb00\scripts\track-b\packaged-launch-scope.mjs' imported from D:\DEV\.wt\82-tb00\tests\track-b\packaged-launch-scope.test.mjs
+    at finalizeResolution (node:internal/modules/esm/resolve:274:11)
+    at moduleResolve (node:internal/modules/esm/resolve:864:10)
+    at defaultResolve (node:internal/modules/esm/resolve:990:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:757:20)
+    at ModuleLoader.resolve (node:internal/modules/esm/loader:734:38)
+    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:317:38)
+    at #link (node:internal/modules/esm/module_job:208:49) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///D:/DEV/.wt/82-tb00/scripts/track-b/packaged-launch-scope.mjs'
+}
+
+Node.js v24.11.0
+Γ£û tests\track-b\packaged-launch-scope.test.mjs (103.598ms)
+Γä╣ tests 1
+Γä╣ suites 0
+Γä╣ pass 0
+Γä╣ fail 1
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 119.3501
+
+Γ£û failing tests:
+
+test at tests\track-b\packaged-launch-scope.test.mjs:1:1
+Γ£û tests\track-b\packaged-launch-scope.test.mjs (103.598ms)
+  'test failed'

@@ -1,0 +1,21 @@
+2026-08-04T18:03:27.848950Z ERROR codex_models_manager::manager: failed to refresh available models: unexpected status 404 Not Found: Not found, url: http://127.0.0.1:3460/v1/models?client_version=0.146.0
+2026-08-04T18:03:27.854857Z ERROR codex_models_manager::manager: failed to refresh available models: unexpected status 404 Not Found: Not found, url: http://127.0.0.1:3460/v1/models?client_version=0.146.0
+OpenAI Codex v0.146.0
+--------
+workdir: D:\DEV\role-model\.worktrees\89-codex-role-model-package
+model: baseline.remote-only
+provider: role-model
+approval: never
+sandbox: read-only
+reasoning effort: none
+reasoning summaries: none
+session id: 019fcdf1-dcef-7842-a03e-427353405455
+--------
+user
+Reply with exactly the three characters: OK. Do not use tools.
+
+warning: Model metadata for `baseline.remote-only` not found. Defaulting to fallback metadata; this can degrade performance and cause issues.
+ERROR: {"error":{"message":"Failed to deserialize the JSON body into the target type: messages[0]: unknown variant `input_text`, expected `text` at line 1 column 18777","type":"invalid_request","code":"invalid_request","retryable":false,"fallbackEligible":false,"endpointId":"deepseek.personal.deepseek-api-key.global.deepseek-v4-flash","providerId":"deepseek","providerFamily":"deepseek","executionFamily":"remote-service","adapterFamily":"ai-sdk-openai-compatible","failurePhase":"provider_execution","errorPreview":{"message":"Failed to deserialize the JSON body into the target type: messages[0]: unknown variant `input_text`, expected `text` at line 1 column 18777","statusCode":400,"code":"invalid_request_error","type":"invalid_request_error"},"upstreamBody":{"error":{"message":"Failed to deserialize the JSON body into the target type: messages[0]: unknown variant `input_text`, expected `text` at line 1 column 18777","type":"invalid_request_error","param":null,"code":"invalid_request_error"}}}}
+
+ERROR: {"error":{"message":"Failed to deserialize the JSON body into the target type: messages[0]: unknown variant `input_text`, expected `text` at line 1 column 18777","type":"invalid_request","code":"invalid_request","retryable":false,"fallbackEligible":false,"endpointId":"deepseek.personal.deepseek-api-key.global.deepseek-v4-flash","providerId":"deepseek","providerFamily":"deepseek","executionFamily":"remote-service","adapterFamily":"ai-sdk-openai-compatible","failurePhase":"provider_execution","errorPreview":{"message":"Failed to deserialize the JSON body into the target type: messages[0]: unknown variant `input_text`, expected `text` at line 1 column 18777","statusCode":400,"code":"invalid_request_error","type":"invalid_request_error"},"upstreamBody":{"error":{"message":"Failed to deserialize the JSON body into the target type: messages[0]: unknown variant `input_text`, expected `text` at line 1 column 18777","type":"invalid_request_error","param":null,"code":"invalid_request_error"}}}}
+

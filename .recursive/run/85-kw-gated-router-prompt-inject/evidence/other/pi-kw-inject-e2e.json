@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "role-model.run85.pi-kw-inject-e2e.v1",
+  "status": "PASS",
+  "capturedAt": "2026-07-29T01:00:58.424Z",
+  "secretsOmitted": true,
+  "seaSha256": "1a3ff1ea09cb03b446a31473e261bf89ec51bdf3f1ff0eea770b7f0f05c93795",
+  "baseUrl": "http://127.0.0.1:34585",
+  "distributionRoot": "D:\\DEV\\role-model-internal\\.worktrees\\85-kw-gated-router-prompt-inject\\dist\\run00-dev",
+  "activation": {
+    "productionActivation": true,
+    "bootstrapStatus": 200,
+    "activateStatus": 200
+  },
+  "softOff": {
+    "status": 200
+  },
+  "cases": {
+    "off": {
+      "marker": "run85-http-kw-off-1785286836450",
+      "httpStatus": 200,
+      "injectPresent": false,
+      "injectPreview": [],
+      "requestId": "req-3f9e4e44-beb7-430d-a015-40d527a5ede7",
+      "responseTail": "{\"id\":\"chatcmpl-role-model\",\"object\":\"chat.completion\",\"created\":1785286839,\"model\":\"deepseek/deepseek-v4-pro\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"run85-http-kw-off-1785286836450\"},\"finish_reason\":\"stop\"}],\"usage\""
+    },
+    "on": {
+      "marker": "run85-http-kw-on-1785286840729",
+      "httpStatus": 200,
+      "injectPresent": true,
+      "injectPreview": [
+        "ROLE_MODEL_KW_PROMPT_INJECT_V1\ntip: prefer verified evidence"
+      ],
+      "requestId": "req-1bdaf893-ea28-48e4-9e73-0885271c03d6",
+      "responseTail": "{\"id\":\"chatcmpl-role-model\",\"object\":\"chat.completion\",\"created\":1785286843,\"model\":\"deepseek/deepseek-v4-pro\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"run85-http-kw-on-1785286840729\"},\"finish_reason\":\"stop\"}],\"usage\":"
+    },
+    "pi": {
+      "marker": "run85-pi-kw-on-1785286844294",
+      "cliExitCode": 0,
+      "timedOut": false,
+      "injectPresent": true,
+      "injectPreview": [
+        "ROLE_MODEL_KW_PROMPT_INJECT_V1\ntip: prefer verified evidence"
+      ],
+      "requestId": "req-9e84b764-c218-4dab-aaf5-9f16a917a035",
+      "log": "logs/phase5/pi-kw-e2e-run85-pi-kw-on-1785286844294.log",
+      "stdoutTail": "run85-pi-kw-on-1785286844294\r\n\r\n"
+    },
+    "softOff": {
+      "marker": "run85-http-kw-softoff-1785286854987",
+      "httpStatus": 200,
+      "injectPresent": false,
+      "injectPreview": [],
+      "requestId": "req-d88e1fe2-c8c3-4faf-be00-1e3fdaaa96c6",
+      "responseTail": "{\"id\":\"chatcmpl-role-model\",\"object\":\"chat.completion\",\"created\":1785286857,\"model\":\"deepseek/deepseek-v4-pro\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"run85-http-kw-softoff-1785286854987\"},\"finish_reason\":\"stop\"}],\"us"
+    }
+  },
+  "storage": {
+    "status": "PASS",
+    "databasePath": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-packaged-run85\\run85-dev\\memory\\memory.sqlite",
+    "observations": 308,
+    "telemetry": 308,
+    "secretsOmitted": true
+  },
+  "notes": [
+    "HTTP /v1/chat/completions proves OFF/ON/soft-OFF inject on the live host surface.",
+    "Live pi CLI (ROLE_MODEL_ENDPOINT) proves CLI + storage while KW ON with inject in provider capture.",
+    "Inject detection requires system message starting with ROLE_MODEL_KW_PROMPT_INJECT_V1.",
+    "Host derives default bounded retrieve query; KW join session is host-owned bridge revision."
+  ]
+}

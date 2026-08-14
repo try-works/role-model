@@ -1,19 +1,19 @@
+import { MetricStrip } from "@role-model/ui";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 
 import {
+  Badge,
   EmptyState,
   ErrorState,
   LoadingState,
   SectionCard,
-  StatusPill,
 } from "../components/page-primitives";
 import {
   bodyStrongTextClassName,
-  mutedPanelClassName,
-  secondaryButtonClassName,
+  compactFieldButtonClassName,
+  monoEyebrowClassName,
   supportingTextClassName,
-  utilityLabelClassName,
 } from "../lib/design-system";
 import {
   type RuntimeConfigRecord,
@@ -58,11 +58,6 @@ export default function RuntimeRoute() {
       (count, provider) => count + provider.modelMappings.length,
       0,
     ) ?? 0;
-  const lifecycleSummaryRows = [
-    { label: "active endpoints", value: summary.lifecycleSummary?.active ?? 0 },
-    { label: "degraded routes", value: summary.lifecycleSummary?.degraded ?? 0 },
-    { label: "offline records", value: summary.lifecycleSummary?.offline ?? 0 },
-  ];
   const appliedPolicyRows = [
     ["Config path", configRecord.path ?? "not configured"],
     ["Execution mode", currentConfig?.executionMode ?? summary.executionMode ?? "pending"],
@@ -77,88 +72,110 @@ export default function RuntimeRoute() {
         ["Source", controller.sourceType],
       ] as const)
     : [];
+  const vendorHostLabel = ["role-model", version.release_version ?? version.version]
+    .filter((part) => part && part.length > 0)
+    .join(" ");
   const versionRows = [
-    ["Vendor host", version.version],
+    ["Vendor host", vendorHostLabel],
     ["Commit", version.commit],
     ["Build date", version.build_date],
-    ["Runtime state root", summary.runtimeStateRoot ?? "unavailable"],
-    ["Summary endpoint", "/api/role-model/runtime/summary"],
+    ["State root", summary.runtimeStateRoot ?? "—"],
+    ["Summary API", "/api/role-model/runtime/summary"],
   ] as const;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap gap-3">
-        <StatusPill tone="success">Active {summary.lifecycleSummary?.active ?? 0}</StatusPill>
-        <StatusPill tone="warning">Degraded {summary.lifecycleSummary?.degraded ?? 0}</StatusPill>
-        <StatusPill tone="neutral">Offline {summary.lifecycleSummary?.offline ?? 0}</StatusPill>
-      </div>
+      <MetricStrip
+        aria-label="Runtime lifecycle"
+        variant="panel"
+        items={[
+          {
+            id: "active",
+            label: "Active",
+            value: String(summary.lifecycleSummary?.active ?? 0),
+          },
+          {
+            id: "degraded",
+            label: "Degraded",
+            value: String(summary.lifecycleSummary?.degraded ?? 0),
+          },
+          {
+            id: "offline",
+            label: "Offline",
+            value: String(summary.lifecycleSummary?.offline ?? 0),
+          },
+        ]}
+      />
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.08fr)_minmax(280px,0.72fr)]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]">
         <div className="space-y-4">
-          <SectionCard title="Applied runtime policy">
-            <div className={`${mutedPanelClassName} space-y-3 p-4`}>
+          <SectionCard
+            title="Applied runtime policy"
+            description="Execution mode, routing strategy, and local plus remote inventory."
+          >
+            <div className="space-y-3">
               {appliedPolicyRows.map(([label, value]) => (
                 <div key={label} className="flex flex-wrap items-start justify-between gap-3">
-                  <p className={utilityLabelClassName}>{label}</p>
+                  <p className={monoEyebrowClassName}>{label}</p>
                   <p className={`${bodyStrongTextClassName} max-w-[70%] break-all text-right`}>
                     {value}
                   </p>
                 </div>
               ))}
             </div>
-            <p className={`mt-4 ${supportingTextClassName}`}>
-              Runtime config remains the authority for execution mode, routing strategy, and the
-              current local plus remote model inventory.
-            </p>
             <div className="mt-4 flex flex-wrap gap-3">
-              <Link className={secondaryButtonClassName} to="/app/system/runtime-config">
+              <Link className={compactFieldButtonClassName} to="/app/system/runtime-config">
                 Runtime config
               </Link>
-              <Link className={secondaryButtonClassName} to="/app/system/session-readiness">
-                Readiness diagnostics
+              <Link className={compactFieldButtonClassName} to="/app/system/session-readiness">
+                Session readiness
               </Link>
             </div>
           </SectionCard>
 
-          <SectionCard title="Execution readiness">
+          <SectionCard
+            title="Execution readiness"
+            description="Lifecycle authority and blocking credential rows."
+          >
             <div className="mb-4 flex flex-wrap gap-3">
               {lifecycleBanner ? (
                 <>
-                  <StatusPill tone={lifecycleBanner.authorityTone}>
+                  <Badge tone={lifecycleBanner.authorityTone}>
                     {lifecycleBanner.authorityLabel}
-                  </StatusPill>
+                  </Badge>
                   {lifecycleBanner.archivedStaleCount > 0 ? (
-                    <StatusPill tone="neutral">
+                    <Badge tone="neutral">
                       archived stale {lifecycleBanner.archivedStaleCount}
-                    </StatusPill>
+                    </Badge>
                   ) : null}
                 </>
               ) : (
-                <StatusPill tone="neutral">Lifecycle contract unavailable</StatusPill>
+                <Badge tone="neutral">Lifecycle contract unavailable</Badge>
+              )}
+              {!lifecycleBanner || lifecycleBanner.blockingRows.length === 0 ? (
+                <Badge tone="neutral">no blockers</Badge>
+              ) : (
+                lifecycleBanner.blockingRows.map((row) => (
+                  <Badge key={row.key} tone={row.tone}>
+                    {row.label.toLowerCase()} {row.value}
+                  </Badge>
+                ))
               )}
             </div>
             {lifecycleBanner ? (
               <p className={supportingTextClassName}>{lifecycleBanner.detail}</p>
             ) : null}
-            <div className="mt-4 flex flex-wrap gap-3">
-              {!lifecycleBanner || lifecycleBanner.blockingRows.length === 0 ? (
-                <StatusPill tone="neutral">No blocking credential lifecycle rows</StatusPill>
-              ) : (
-                lifecycleBanner.blockingRows.map((row) => (
-                  <StatusPill key={row.key} tone={row.tone}>
-                    {row.label} {row.value}
-                  </StatusPill>
-                ))
-              )}
-            </div>
           </SectionCard>
 
-          <SectionCard title="Controller posture">
+          <SectionCard
+            title="Controller posture"
+            description="Pinned controller endpoint for routing decisions."
+          >
             {controller ? (
-              <div className={`${mutedPanelClassName} space-y-3 p-4`}>
+              <div className="space-y-3">
                 {controllerRows.map(([label, value]) => (
                   <div key={label} className="flex flex-wrap items-start justify-between gap-3">
-                    <p className={utilityLabelClassName}>{label}</p>
+                    <p className={monoEyebrowClassName}>{label}</p>
                     <p className={`${bodyStrongTextClassName} max-w-[70%] break-all text-right`}>
                       {value}
                     </p>
@@ -171,31 +188,18 @@ export default function RuntimeRoute() {
           </SectionCard>
         </div>
 
-        <div className="space-y-4">
-          <SectionCard title="Lifecycle summary">
-            <div className="space-y-3">
-              {lifecycleSummaryRows.map((row) => (
-                <div key={row.label} className="flex items-center justify-between gap-3">
-                  <p className={supportingTextClassName}>{row.label}</p>
-                  <p className={bodyStrongTextClassName}>{row.value}</p>
-                </div>
-              ))}
-            </div>
-          </SectionCard>
-
-          <SectionCard title="Version facts">
-            <div className="space-y-3">
-              {versionRows.map(([label, value]) => (
-                <div key={label} className="flex flex-wrap items-start justify-between gap-3">
-                  <p className={utilityLabelClassName}>{label}</p>
-                  <p className={`${bodyStrongTextClassName} max-w-[70%] break-all text-right`}>
-                    {value}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </SectionCard>
-        </div>
+        <SectionCard title="Version facts" description="Host provenance and summary contract.">
+          <div className="space-y-3">
+            {versionRows.map(([label, value]) => (
+              <div key={label} className="flex flex-col gap-1">
+                <p className={monoEyebrowClassName}>{label}</p>
+                <p className="break-all font-mono text-[12px] leading-4 text-[var(--rm-fg)]">
+                  {value}
+                </p>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
       </div>
     </div>
   );

@@ -1,0 +1,5 @@
+# TDD slice: catalog generation (catalog.test.ts)
+
+ ✓ test/catalog.test.ts (2 tests)
+
+Command: pnpm test test/catalog.test.ts

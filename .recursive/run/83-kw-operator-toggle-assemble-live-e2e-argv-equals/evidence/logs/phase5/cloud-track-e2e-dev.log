@@ -1,0 +1,19 @@
+
+> @role-model/internal@1.1.0 test:cloud:e2e D:\DEV\.wt\83-kw
+> node scripts/track-b/cloud-track-e2e.mjs "--" "--track=dev" "--write-evidence"
+
+{
+  "track": "dev",
+  "verdict": "PASS",
+  "reportPath": "C:\\Users\\erikb\\AppData\\Local\\Temp\\cloud-track-dev-e2e.json",
+  "ingest": 202,
+  "duplicate": 200,
+  "historyMatch": 1,
+  "publish": 202,
+  "publishStatus": "published",
+  "resolve": 200,
+  "resolveStatus": "available",
+  "keyId": "role-model-recommendations-dev-v1",
+  "crossChannel": 400,
+  "workersDevClosed": true
+}

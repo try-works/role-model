@@ -26,12 +26,14 @@ describe("benchmark global data clear", () => {
     const initialized = initializeSqliteMemory({
       runtimeStateRoot,
       scopeId: "benchmark-clear-sqlite",
+      channel: "development",
     });
     const endpointId = "local.test.model";
 
     try {
       persistObservedBenchmarkSample({
         databasePath: initialized.databasePath,
+        nowMs: 1_000,
         sample: {
           endpoint_id: endpointId,
           endpoint_version: "v1",
@@ -92,6 +94,7 @@ describe("benchmark global data clear", () => {
 
       persistObservedBenchmarkSample({
         databasePath: path.join(runtimeStateRoot, scopeId, "memory", "memory.sqlite"),
+        nowMs: 1_000,
         sample: {
           endpoint_id: firstEndpointId,
           endpoint_version: "v1",

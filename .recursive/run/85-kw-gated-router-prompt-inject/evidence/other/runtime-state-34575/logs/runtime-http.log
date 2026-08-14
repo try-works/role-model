@@ -1,0 +1,36 @@
+2026-07-28T21:00:44.995Z request-start method=GET path=/assets/fonts/inter-latin-400-normal.woff2
+2026-07-28T21:00:44.999Z request-finish method=GET path=/assets/fonts/inter-latin-400-normal.woff2 status=200 duration_ms=5
+2026-07-28T21:00:45.011Z request-start method=GET path=/assets/fonts/inter-latin-600-normal.woff2
+2026-07-28T21:00:45.014Z request-finish method=GET path=/assets/fonts/inter-latin-600-normal.woff2 status=200 duration_ms=4
+2026-07-28T21:00:45.015Z request-start method=GET path=/assets/fonts/ibm-plex-mono-latin-400-normal.woff2
+2026-07-28T21:00:45.018Z request-finish method=GET path=/assets/fonts/ibm-plex-mono-latin-400-normal.woff2 status=200 duration_ms=3
+2026-07-28T21:00:45.020Z request-start method=GET path=/assets/manifest-14db850b.js
+2026-07-28T21:00:45.024Z request-finish method=GET path=/assets/manifest-14db850b.js status=200 duration_ms=4
+2026-07-28T21:00:45.025Z request-start method=GET path=/assets/entry.client-CUjFWg5_.js
+2026-07-28T21:00:45.029Z request-finish method=GET path=/assets/entry.client-CUjFWg5_.js status=200 duration_ms=4
+2026-07-28T21:00:45.030Z request-start method=GET path=/assets/not-found-DVAt_zDx.js
+2026-07-28T21:00:45.034Z request-finish method=GET path=/assets/not-found-DVAt_zDx.js status=200 duration_ms=3
+2026-07-28T21:00:45.035Z request-start method=GET path=/assets/root-DylgEXsQ.css
+2026-07-28T21:00:45.038Z request-finish method=GET path=/assets/root-DylgEXsQ.css status=200 duration_ms=3
+2026-07-28T21:00:45.039Z request-start method=GET path=/assets/page-primitives-C7s5jnMZ.js
+2026-07-28T21:00:45.042Z request-finish method=GET path=/assets/page-primitives-C7s5jnMZ.js status=200 duration_ms=3
+2026-07-28T21:00:45.043Z request-start method=GET path=/assets/chunk-EVOBXE3Y-CbLStoMq.js
+2026-07-28T21:00:45.045Z request-finish method=GET path=/assets/chunk-EVOBXE3Y-CbLStoMq.js status=200 duration_ms=3
+2026-07-28T21:00:45.046Z request-start method=GET path=/assets/cn-B5V-leUE.js
+2026-07-28T21:00:45.049Z request-finish method=GET path=/assets/cn-B5V-leUE.js status=200 duration_ms=3
+2026-07-28T21:00:45.050Z request-start method=GET path=/assets/design-system-B3_USdMT.js
+2026-07-28T21:00:45.053Z request-finish method=GET path=/assets/design-system-B3_USdMT.js status=200 duration_ms=3
+2026-07-28T21:00:45.055Z request-start method=GET path=/assets/root-BqlB7hul.js
+2026-07-28T21:00:45.058Z request-finish method=GET path=/assets/root-BqlB7hul.js status=200 duration_ms=4
+2026-07-28T21:00:45.059Z request-start method=GET path=/assets/theme-CxtVguy4.js
+2026-07-28T21:00:45.062Z request-finish method=GET path=/assets/theme-CxtVguy4.js status=200 duration_ms=3
+2026-07-28T21:00:45.117Z request-start method=GET path=/favicon.ico
+2026-07-28T21:00:45.119Z request-finish method=GET path=/favicon.ico status=200 duration_ms=2
+2026-07-28T21:00:45.147Z request-start method=GET path=/assets/app-layout-CGrDREC9.js
+2026-07-28T21:00:45.150Z request-finish method=GET path=/assets/app-layout-CGrDREC9.js status=200 duration_ms=3
+2026-07-28T21:00:45.151Z request-start method=GET path=/assets/extensions-DgCw7URm.js
+2026-07-28T21:00:45.154Z request-finish method=GET path=/assets/extensions-DgCw7URm.js status=200 duration_ms=3
+2026-07-28T21:00:45.173Z request-start method=GET path=/assets/shell-header-context-BBtNcHzJ.js
+2026-07-28T21:00:45.175Z request-finish method=GET path=/assets/shell-header-context-BBtNcHzJ.js status=200 duration_ms=2
+2026-07-28T21:00:45.176Z request-start method=GET path=/assets/runtime-api-DdUBgY0z.js
+2026-07-28T21:00:45.179Z request-finish method=GET path=/assets/runtime-api-DdUBgY0z.js status=200 duration_ms=3

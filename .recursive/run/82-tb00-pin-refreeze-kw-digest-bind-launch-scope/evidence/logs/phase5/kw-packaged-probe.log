@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "defaultOff": true,
+  "refuseWithoutPolicy": true,
+  "mismatchRefuse": true,
+  "activated": true,
+  "rolledBack": true,
+  "staticUngatedOff": true,
+  "distributionRootSet": true,
+  "probe": "run81_kw_activation"
+}

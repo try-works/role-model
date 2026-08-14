@@ -1,0 +1,27 @@
+(node:25072) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£û TB10-TEST-ACTIVATION-DIGEST-BIND requires receipt digest match to shadow candidate (7.132ms)
+Γä╣ tests 1
+Γä╣ suites 0
+Γä╣ pass 0
+Γä╣ fail 1
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 145.3409
+
+Γ£û failing tests:
+
+test at tests\track-b\tb10.test.mjs:11:1
+Γ£û TB10-TEST-ACTIVATION-DIGEST-BIND requires receipt digest match to shadow candidate (7.132ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///D:/DEV/.wt/82-tb00/tests/track-b/tb10.test.mjs:21:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /refused|prohibited/i,
+    operator: 'throws',
+    diff: 'simple'
+  }

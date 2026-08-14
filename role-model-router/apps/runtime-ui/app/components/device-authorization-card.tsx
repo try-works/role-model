@@ -14,7 +14,7 @@ import {
   shouldAutoPollDeviceAuthorization,
 } from "../lib/device-authorization";
 import type { RuntimeDeviceAuthorization } from "../lib/runtime-api";
-import { StatusPill } from "./page-primitives";
+import { Badge } from "./page-primitives";
 
 export function DeviceAuthorizationCard(input: {
   readonly session: RuntimeDeviceAuthorization;
@@ -29,7 +29,7 @@ export function DeviceAuthorizationCard(input: {
     <div className={`${mutedPanelClassName} p-4 ${panelBodyTextClassName}`}>
       <div className="flex flex-wrap items-center gap-2">
         <p className={bodyStrongTextClassName}>Current provider authorization</p>
-        <StatusPill
+        <Badge
           tone={
             input.session.status === "connected"
               ? "success"
@@ -39,7 +39,7 @@ export function DeviceAuthorizationCard(input: {
           }
         >
           {input.session.status}
-        </StatusPill>
+        </Badge>
       </div>
 
       {isCodexSubscription && input.session.userCode ? (
@@ -82,17 +82,28 @@ export function DeviceAuthorizationCard(input: {
       ) : null}
 
       {verificationUrl && !isCodexSubscription ? (
-        <p className="mt-2 break-all">
-          <span className={bodyStrongTextClassName}>Verification URL:</span>{" "}
-          <a
-            className={inlineLinkClassName}
-            href={verificationUrl}
-            rel="noreferrer"
-            target="_blank"
-          >
-            {verificationUrl}
-          </a>
-        </p>
+        <div className="mt-3 space-y-2">
+          <p className="break-all">
+            <span className={bodyStrongTextClassName}>Verification URL:</span>{" "}
+            <a
+              className={inlineLinkClassName}
+              href={verificationUrl}
+              rel="noreferrer"
+              target="_blank"
+            >
+              {verificationUrl}
+            </a>
+          </p>
+          {input.onOpenVerificationUrl ? (
+            <button
+              className={secondaryButtonClassName}
+              type="button"
+              onClick={input.onOpenVerificationUrl}
+            >
+              Open verification page
+            </button>
+          ) : null}
+        </div>
       ) : null}
 
       {input.session.lastError ? (

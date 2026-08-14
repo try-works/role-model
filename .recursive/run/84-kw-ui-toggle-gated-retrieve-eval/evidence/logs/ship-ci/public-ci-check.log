@@ -1,0 +1,69 @@
+
+> role-model@0.0.0 ci:check D:\DEV\role-model\.worktrees\84-kw-ui-toggle-gated-retrieve-eval
+> corepack pnpm run lint && corepack pnpm run schemas:validate && corepack pnpm run build && corepack pnpm run test && corepack pnpm run runtime:test-critical && corepack pnpm run test:rust && corepack pnpm run smoke
+
+
+> role-model@0.0.0 lint D:\DEV\role-model\.worktrees\84-kw-ui-toggle-gated-retrieve-eval
+> biome check . && corepack pnpm run lint:rust
+
+.\role-model-router\apps\runtime-host-bridge\src\track-b-operations.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+     542  542 Γöé                         ...actual.health,
+     543  543 Γöé                         productionActivation:
+     544      Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖actual.health.productionActivation┬╖??
+     545      Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖actual.productionActivation┬╖??
+     546      Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖false,
+          544 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖actual.health.productionActivation┬╖??┬╖actual.productionActivation┬╖??┬╖false,
+     547  545 Γöé                       },
+     548  546 Γöé                     }
+    ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖ Γöé 
+     795  793 Γöé                         ...actual.health,
+     796  794 Γöé                         productionActivation:
+     797      Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖actual.health.productionActivation┬╖??
+     798      Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖actual.productionActivation┬╖??
+     799      Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖false,
+          795 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖actual.health.productionActivation┬╖??┬╖actual.productionActivation┬╖??┬╖false,
+     800  796 Γöé                       },
+     801  797 Γöé                     }
+  
+
+.\role-model-router\apps\runtime-ui\app\routes\extensions.tsx format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+    508 508 Γöé                 const isKnowledgeWorker = extension.id === "knowledge-worker";
+    509 509 Γöé                 const productionActivation =
+    510     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖extension.productionActivation┬╖??
+    511     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖extension.health.productionActivation┬╖??
+    512     Γöé - ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖false;
+        510 Γöé + ┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖┬╖extension.productionActivation┬╖??┬╖extension.health.productionActivation┬╖??┬╖false;
+    513 511 Γöé                 const bootstrapReady = Boolean(extension.health.knowledgeWorkerBootstrap);
+    514 512 Γöé                 return (
+  
+
+.\role-model-router\apps\runtime-ui\app\lib\runtime-api.ts format ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Formatter would have printed the following content:
+  
+    1494 1494 Γöé     fetcher: RuntimeFetcher = fetch,
+    1495 1495 Γöé   ): Promise<ExtensionMutationResult> {
+    1496      Γöé - ┬╖┬╖return┬╖mutateExtension(
+    1497      Γöé - ┬╖┬╖┬╖┬╖{┬╖id:┬╖"knowledge-worker",┬╖action:┬╖"deactivate_production"┬╖},
+    1498      Γöé - ┬╖┬╖┬╖┬╖fetcher,
+    1499      Γöé - ┬╖┬╖);
+         1496 Γöé + ┬╖┬╖return┬╖mutateExtension({┬╖id:┬╖"knowledge-worker",┬╖action:┬╖"deactivate_production"┬╖},┬╖fetcher);
+    1500 1497 Γöé   }
+    1501 1498 Γöé   
+  
+
+Checked 787 files in 1675ms. No fixes applied.
+Found 3 errors.
+check ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Some errors were emitted while running checks.
+  
+
+ΓÇëELIFECYCLEΓÇë Command failed with exit code 1.
+ΓÇëELIFECYCLEΓÇë Command failed with exit code 1.

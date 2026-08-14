@@ -1,0 +1,18 @@
+{
+  "artifact": "07-state-update.md",
+  "artifact_hash": "bb2d8aa9aba3ef27422271c1953ae82ac5f3783b680e8e3c852f7f23586e4044",
+  "artifact_path": "D:\\DEV\\role-model-internal\\.worktrees\\85-kw-gated-router-prompt-inject\\.recursive\\run\\85-kw-gated-router-prompt-inject\\07-state-update.md",
+  "locked_at": "2026-07-28T23:31:23Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "e99dc0a1f4aba37407cd71fecb15b2696290cebe6a7f90fdcbd00e49a4ac31d2",
+    "00-worktree.md": "a62622fdf04176897904e5e85a2dbb42dab46b75f397ed7a8b86a77576430251",
+    "01-as-is.md": "b92aa220c255f45079bc18e0222b6b0ca9e4ba31f7705029c3680fea14b72440",
+    "02-to-be-plan.md": "2b7c3a5c06ef5522716110b976c48cca6f261683d5dcecac2e0aa1eec228087d",
+    "03-implementation-summary.md": "e3094b548e2ca61239d242b1f9f3637d85118214cb153bdab568801a3679990b",
+    "04-test-summary.md": "ef362908df384caebebe1163025ebb23658dc30e2894840223eacb2d31512fad",
+    "05-manual-qa.md": "f1f4239a432bfb0df7a05e9495d07f428b9e8a212697aaa3df5d4217a28c2cb1",
+    "06-decisions-update.md": "5c2cd8aa98b3cf475a9c28c298f2431e970e42351fa2b659ac0b1ba76b2d2c2a"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "253b399083bdb82921dc8f7a4a48bdb685821d584a162c2c9e73f2f959aa903b"
+}

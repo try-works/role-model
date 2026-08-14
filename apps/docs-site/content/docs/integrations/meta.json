@@ -2,5 +2,5 @@
   "title": "Integrations",
   "description": "Connect role-model to downstream clients and OpenAI-compatible consumers.",
   "defaultOpen": true,
-  "pages": ["pi", "downstream-openai-discovery"]
+  "pages": ["pi", "codex", "downstream-openai-discovery"]
 }

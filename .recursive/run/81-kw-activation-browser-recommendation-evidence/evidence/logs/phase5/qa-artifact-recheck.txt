@@ -1,0 +1,15 @@
+phase5QaCheckAt: 2026-07-25T05:17:40.6105079+08:00
+binderSeaSha256: 825f9b4f2e17f5102605b24943b974efa435133452f0cfa5867b389c14927f84
+seaPath: D:\DEV\role-model\.worktrees\81-kw-activation-browser-recommendation-evidence\role-model-router\dist\release\win32-x64\role-model-dev.exe
+seaFileSha256: 825f9b4f2e17f5102605b24943b974efa435133452f0cfa5867b389c14927f84
+seaMatch: True
+browserLogExists: True
+dismissScreenshotExists: True
+probeExists: True
+serverDecisionExists: True
+phase4Tb10Exists: True
+phase4UiExists: True
+phase4OpsExists: True
+secretsOmitted: True
+scopeId: packaged-run00
+playwrightPassed: True

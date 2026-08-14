@@ -2810,7 +2810,7 @@ describe("role assignment helpers", () => {
     ).toEqual(["coder"]);
   });
 
-  test("posts default-all assignment metadata for peer and llama-swap model registration", async () => {
+  test("posts explicit empty include for peer and llama-swap load with no roles", async () => {
     const requests: Array<{ url: string; body: unknown }> = [];
     const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
       const url =
@@ -2827,7 +2827,7 @@ describe("role assignment helpers", () => {
         url: "/api/role-model/local/peer/models/local-peer-model/load",
         body: {
           roleIds: [],
-          roleAssignmentMode: "all",
+          roleAssignmentMode: "include",
           enabledRoleIds: [],
           disabledRoleIds: [],
         },
@@ -2836,7 +2836,7 @@ describe("role assignment helpers", () => {
         url: "/api/role-model/local/llama-swap/models/local-llama-model/load",
         body: {
           roleIds: [],
-          roleAssignmentMode: "all",
+          roleAssignmentMode: "include",
           enabledRoleIds: [],
           disabledRoleIds: [],
         },
@@ -2874,6 +2874,137 @@ describe("role assignment helpers", () => {
           enabledRoleIds: [],
           disabledRoleIds: [],
         },
+      },
+    ]);
+  });
+
+  test("binds retention, contribution, recommendation, and active-pack operations to production APIs", async () => {
+    const requests: Array<{ url: string; method: string; body: unknown }> = [];
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      requests.push({
+        url,
+        method: init?.method ?? "GET",
+        body: init?.body ? JSON.parse(String(init.body)) : null,
+      });
+      return jsonResponse(url.endsWith("/recommendations") ? [] : {});
+    });
+    await runtimeApiModule.updateRetentionPolicy(
+      { policyId: "strict", scope: "global", maxBytes: 100, maxAgeDays: 7 },
+      fetcher,
+    );
+    await runtimeApiModule.executeRetentionPlan("a".repeat(64), "global", fetcher);
+    await runtimeApiModule.cancelRetentionJob(fetcher);
+    await runtimeApiModule.rollbackRetentionReceipt("receipt-1", fetcher);
+    await runtimeApiModule.updateContributionState("opt_out", undefined, fetcher);
+    await runtimeApiModule.fetchRecommendations(fetcher);
+    await runtimeApiModule.downloadRecommendations(fetcher);
+    await runtimeApiModule.applyRecommendation("pack-1", fetcher);
+    await runtimeApiModule.fetchActivePack(fetcher);
+    expect(requests.map(({ url, method }) => [url, method])).toEqual([
+      ["/api/role-model/storage-retention/policy", "PUT"],
+      ["/api/role-model/storage-retention/execute", "POST"],
+      ["/api/role-model/storage-retention/cancel", "POST"],
+      ["/api/role-model/storage-retention/rollback", "POST"],
+      ["/api/role-model/contribution", "PUT"],
+      ["/api/role-model/recommendations", "GET"],
+      ["/api/role-model/recommendations/download", "POST"],
+      ["/api/role-model/recommendations/apply", "POST"],
+      ["/api/role-model/recommendations/active-pack", "GET"],
+    ]);
+    expect(requests[0]?.body).toEqual({
+      policyId: "strict",
+      scope: "global",
+      maxBytes: 100,
+      maxAgeDays: 7,
+    });
+    expect(requests[4]?.body).toEqual({ action: "opt_out" });
+  });
+
+  test("run79 posts extension mutate and recommendation dismiss bodies", async () => {
+    const requests: Array<{ url: string; method: string; body: unknown }> = [];
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      requests.push({
+        url,
+        method: init?.method ?? "GET",
+        body: init?.body ? JSON.parse(String(init.body)) : null,
+      });
+      return jsonResponse({
+        extensions: [],
+        recommendations: [],
+        activePack: null,
+      });
+    });
+    await runtimeApiModule.mutateExtension(
+      { id: "event-log", action: "enable", mode: "shadow" },
+      fetcher,
+    );
+    await runtimeApiModule.mutateExtension({ id: "event-log", action: "disable" }, fetcher);
+    await runtimeApiModule.mutateExtension(
+      { id: "event-log", action: "set_mode", mode: "advisory" },
+      fetcher,
+    );
+    await runtimeApiModule.prepareKnowledgeWorkerShadowReady(
+      {
+        receipt: {
+          payload: {
+            kind: "knowledge_validation",
+            reviewed: true,
+            safetyReviewed: true,
+            redacted: true,
+            holdoutPassed: true,
+          },
+          signature: "a".repeat(64),
+        },
+        groupDigest: "b".repeat(64),
+      },
+      fetcher,
+    );
+    expect("activateKnowledgeWorkerProduction" in runtimeApiModule).toBe(false);
+    expect("deactivateKnowledgeWorkerProduction" in runtimeApiModule).toBe(false);
+    await runtimeApiModule.dismissRecommendation("pack-dismiss", fetcher);
+    expect(requests).toEqual([
+      {
+        url: "/api/role-model/extensions/mutate",
+        method: "POST",
+        body: { id: "event-log", action: "enable", mode: "shadow" },
+      },
+      {
+        url: "/api/role-model/extensions/mutate",
+        method: "POST",
+        body: { id: "event-log", action: "disable" },
+      },
+      {
+        url: "/api/role-model/extensions/mutate",
+        method: "POST",
+        body: { id: "event-log", action: "set_mode", mode: "advisory" },
+      },
+      {
+        url: "/api/role-model/extensions/mutate",
+        method: "POST",
+        body: {
+          id: "knowledge-worker",
+          action: "bootstrap_shadow_ready",
+          receipt: {
+            payload: {
+              kind: "knowledge_validation",
+              reviewed: true,
+              safetyReviewed: true,
+              redacted: true,
+              holdoutPassed: true,
+            },
+            signature: "a".repeat(64),
+          },
+          groupDigest: "b".repeat(64),
+        },
+      },
+      {
+        url: "/api/role-model/recommendations/dismiss",
+        method: "POST",
+        body: { id: "pack-dismiss" },
       },
     ]);
   });

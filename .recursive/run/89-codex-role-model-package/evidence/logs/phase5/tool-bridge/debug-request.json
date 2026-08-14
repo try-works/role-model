@@ -1,0 +1,112 @@
+{
+  "route": "role-model",
+  "bridgeTraceId": "4a2f261c-6159-4199-9ccd-ead1c567e335",
+  "upstream": "http://127.0.0.1:3458/v1/responses",
+  "body": {
+    "model": "baseline.remote-only",
+    "stream": true,
+    "tool_choice": "auto",
+    "input": [
+      {
+        "type": "message",
+        "role": "user",
+        "content": [
+          {
+            "type": "input_text",
+            "text": "You must use the shell_command tool now. Call it with command: echo bridge-smoke-ok. Do not write a normal assistant message."
+          }
+        ]
+      }
+    ],
+    "tools": [
+      {
+        "type": "function",
+        "name": "shell_command",
+        "description": "Run a shell command",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "command"
+          ]
+        }
+      }
+    ],
+    "role_model": {
+      "contract_version": 1,
+      "intent": {
+        "taxonomy_version": "1.0.0-alpha.1",
+        "content_revision": "taxonomy-v1-alpha.1",
+        "classification_contract_version": "role-model.classification.v1",
+        "classification_version": "role-model.pi-classifier.v1",
+        "source": "heuristic",
+        "confidence": 0.38,
+        "role_hint_id": "writer",
+        "role_source": "heuristic",
+        "task_type": "writer.email.write",
+        "task_action": "email",
+        "task_variant": "write",
+        "task_source": "heuristic",
+        "task_confidence": 0.38,
+        "preferred_capabilities": [
+          "text.chat",
+          "communication.user_facing"
+        ],
+        "required_modalities": [
+          "text"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tool_classes": [
+          "email.write"
+        ],
+        "context_tokens_estimate": 63,
+        "evidence": [
+          "Group-first classification: matched groups [communication, engineering], scored 11 candidate roles.",
+          "Selected writer (score 5, margin 1) from candidate groups.",
+          "Task guidance preferred writer.email.write.",
+          "Confirmed taxonomy task writer.email.write."
+        ],
+        "alternatives": [
+          {
+            "role_hint_id": "coder",
+            "task_type": "coder.edit"
+          },
+          {
+            "role_hint_id": "architect",
+            "task_type": "architect.design"
+          },
+          {
+            "role_hint_id": "security",
+            "task_type": "security.audit"
+          }
+        ]
+      }
+    }
+  },
+  "transform": {
+    "inboundToolCount": 1,
+    "outboundToolCount": 1,
+    "flattenedNamespaceCount": 0,
+    "shimCounts": {
+      "tool_search": 0,
+      "apply_patch": 0,
+      "web_search": 0
+    },
+    "unknownDroppedCount": 0,
+    "reverseMapSize": 0,
+    "histogram": {
+      "function": 1,
+      "namespace": 0,
+      "tool_search": 0,
+      "custom": 0,
+      "web_search": 0,
+      "other": 0
+    }
+  }
+}

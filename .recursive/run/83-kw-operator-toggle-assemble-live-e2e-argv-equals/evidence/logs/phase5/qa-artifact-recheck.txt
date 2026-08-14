@@ -1,0 +1,8 @@
+seaPath=D:\DEV\role-model\.worktrees\83-kw-operator-toggle-assemble-live-e2e-argv-equals\role-model-router\dist\release\win32-x64\role-model-dev.exe
+seaExists=true
+seaSha=825f9b4f2e17f5102605b24943b974efa435133452f0cfa5867b389c14927f84
+receiptSha=825f9b4f2e17f5102605b24943b974efa435133452f0cfa5867b389c14927f84
+seaMatch=true
+scopeId=run83-dev
+track=dev
+productTipNote=private product tip 3d6c4f7 is evidence-root fail-closed after SEA package; SEA/public honesty tip unchanged; launch scripts load from private worktree

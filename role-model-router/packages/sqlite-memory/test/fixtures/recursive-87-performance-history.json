@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "role-model.performance-history-fixture.v1",
+  "policy": {
+    "schemaVersion": "role-model.performance-history-policy.v1",
+    "maxSamplesPerEndpoint": 5,
+    "maxAgeMs": 5000,
+    "maxBytesPerEndpoint": 2048,
+    "maxRebuildSamples": 5
+  },
+  "endpointId": "run87.synthetic.bounded-history",
+  "sampleCount": 20,
+  "timestampStepMs": 1000
+}

@@ -169,6 +169,7 @@ export async function runRuntimeRoutingValidation(
   const initialization = initializeSqliteMemory({
     runtimeStateRoot: options.runtimeStateRoot,
     scopeId: options.scopeId,
+    channel: "development",
   });
 
   persistProviderAccounts({

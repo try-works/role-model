@@ -1,0 +1,39 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/89-codex-role-model-package/packages/codex-role-model
+
+ Γ¥» test/forwarder.test.ts (4 tests | 1 failed | 3 skipped) 100ms
+   Γåô Responses forwarder > injects intent before proxying POST /v1/responses
+   ├ù Responses forwarder > strips none-effort reasoning before proxy so upstream skips reasoning.control 97ms
+     ΓåÆ expected { effort: 'none' } to be undefined
+   Γåô Responses forwarder > returns 404 for compact endpoint
+   Γåô Responses forwarder > responses intent helper preserves explicit intent
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/forwarder.test.ts > Responses forwarder > strips none-effort reasoning before proxy so upstream skips reasoning.control
+AssertionError: expected { effort: 'none' } to be undefined
+
+- Expected: 
+undefined
+
++ Received: 
+{
+  "effort": "none",
+}
+
+ Γ¥» test/forwarder.test.ts:73:30
+     71|     expect(response.status).toBe(200);
+     72|     const parsed = JSON.parse(upstreamBody) as Record<string, unknown>;
+     73|     expect(parsed.reasoning).toBeUndefined();
+       |                              ^
+     74|     expect(parsed.role_model).toBeTruthy();
+     75|     expect(parsed.tools).toBeTruthy();
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 skipped (4)
+   Start at  20:57:16
+   Duration  1.30s (transform 174ms, setup 0ms, collect 234ms, tests 100ms, environment 0ms, prepare 242ms)
+

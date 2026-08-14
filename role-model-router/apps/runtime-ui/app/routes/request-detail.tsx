@@ -2,23 +2,23 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 
 import {
+  Badge,
   CodeBlock,
   DisclosureSection,
   EmptyState,
   ErrorState,
-  FactCard,
   LoadingState,
   SectionCard,
-  StatusPill,
 } from "../components/page-primitives";
 import {
+  accentActionTextClassName,
   bodyStrongTextClassName,
   compactTitleClassName,
+  fieldLabelClassName,
   inlineTitleClassName,
   metaTextClassName,
-  secondaryButtonClassName,
+  mutedPanelClassName,
   supportingTextClassName,
-  utilityLabelClassName,
 } from "../lib/design-system";
 import { formatRoutingModeLabel } from "../lib/routing-mode";
 import { fetchRequestDetail } from "../lib/runtime-api";
@@ -489,102 +489,101 @@ export default function RequestDetailRoute() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <FactCard
-          label="Endpoint"
-          value={endpointId}
-          className="xl:col-span-2"
-          detail="Endpoint id currently associated with the captured request."
-          emphasis
-          valueClassName={inlineTitleClassName}
-        />
-        <FactCard
-          label="Correlation"
-          value={renderMetricValue(clientRequestId)}
-          className="xl:col-span-2"
-          detail="Caller-supplied correlation id preserved alongside the canonical request ledger id."
-          valueClassName={inlineTitleClassName}
-        />
-        <FactCard
-          label="Source"
-          value={renderMetricValue(sourceType)}
-          detail="Canonical source family used by the telemetry ledger."
-        />
-        <FactCard
-          label="Provider"
-          value={renderMetricValue(providerId)}
-          detail="Actual provider identity for the selected endpoint."
-        />
-        <FactCard
-          label="Provider family"
-          value={renderMetricValue(providerFamily)}
-          detail="Provider semantic family preserved in the canonical telemetry contract."
-        />
-        <FactCard
-          label="Vendor"
-          value={renderMetricValue(vendorId)}
-          detail="Optional intermediary execution vendor such as LiteLLM."
-        />
-        <FactCard
-          label="Execution path"
-          value={renderMetricValue(executionFamily)}
-          detail="High-level routed execution family selected for this request."
-        />
-        <FactCard
-          label="Adapter"
-          value={renderMetricValue(adapterFamily)}
-          detail="Concrete adapter implementation used to shape and execute the provider request."
-        />
-        <FactCard
-          label="Latency"
-          value={latencyMs === null ? "n/a" : `${latencyMs} ms`}
-          detail="Observed request latency from the persisted usage event."
-        />
-        <FactCard
-          label="Tokens"
-          value={renderMetricValue(totalTokens)}
-          detail={
-            inputTokenTruth.available && outputTokenTruth.available
-              ? `Input ${inputTokenTruth.source}; output ${outputTokenTruth.source}.`
-              : "Token usage is unavailable; numeric placeholders are not treated as measured usage."
-          }
-        />
-        <FactCard
-          label="Cost"
-          value={formatUsd(effectiveCostUsd)}
-          detail={
-            costCalculationBasis || costCalculationVersion
-              ? `Stored effective cost • ${costCalculationBasis ?? "unknown basis"} • ${
-                  costCalculationVersion ?? "unknown version"
-                }`
-              : "Stored authoritative per-request effective cost."
-          }
-        />
-        <FactCard
-          label="Cache"
-          value={renderMetricValue(cacheStatus)}
-          detail={
-            promptCacheRequestSource
-              ? `Captured cache posture; request key source: ${promptCacheRequestSource}.`
-              : "Captured cache posture using explicit support semantics rather than zero-only inference."
-          }
-        />
-      </div>
-
+      <Link to="/app/observe/requests" className={accentActionTextClassName}>
+        Back to request ledger
+      </Link>
       <SectionCard
-        title="Adjacent raw-host tools"
-        description="Structured telemetry is canonical here; preserved host surfaces are available when you need raw metrics, captures, or combined logs."
+        title="Request summary"
+        description="Top-line telemetry facts for the captured request without compressing identifiers into a KPI wall."
       >
-        <div className="flex flex-wrap gap-3">
-          <Link className={secondaryButtonClassName} to="/app/observe/requests">
-            Back to request ledger
-          </Link>
-          <Link className={secondaryButtonClassName} to="/app/observe/activity">
-            Host activity & captures
-          </Link>
-          <Link className={secondaryButtonClassName} to="/app/observe/logs">
-            Host logs
-          </Link>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className={`${mutedPanelClassName} space-y-2 p-4 xl:col-span-2`}>
+            <p className={fieldLabelClassName}>Endpoint</p>
+            <p className={`${inlineTitleClassName} break-all`}>{endpointId}</p>
+            <p className={supportingTextClassName}>
+              Endpoint id currently associated with the captured request.
+            </p>
+          </div>
+          <div className={`${mutedPanelClassName} space-y-2 p-4 xl:col-span-2`}>
+            <p className={fieldLabelClassName}>Correlation</p>
+            <p className={`${inlineTitleClassName} break-all`}>
+              {renderMetricValue(clientRequestId)}
+            </p>
+            <p className={supportingTextClassName}>
+              Caller-supplied correlation id preserved alongside the canonical request ledger id.
+            </p>
+          </div>
+          {[
+            {
+              label: "Source",
+              value: renderMetricValue(sourceType),
+              detail: "Canonical source family used by the telemetry ledger.",
+            },
+            {
+              label: "Provider",
+              value: renderMetricValue(providerId),
+              detail: "Actual provider identity for the selected endpoint.",
+            },
+            {
+              label: "Provider family",
+              value: renderMetricValue(providerFamily),
+              detail: "Provider semantic family preserved in the canonical telemetry contract.",
+            },
+            {
+              label: "Vendor",
+              value: renderMetricValue(vendorId),
+              detail: "Optional intermediary execution vendor such as LiteLLM.",
+            },
+            {
+              label: "Execution path",
+              value: renderMetricValue(executionFamily),
+              detail: "High-level routed execution family selected for this request.",
+            },
+            {
+              label: "Adapter",
+              value: renderMetricValue(adapterFamily),
+              detail:
+                "Concrete adapter implementation used to shape and execute the provider request.",
+            },
+            {
+              label: "Latency",
+              value: latencyMs === null ? "n/a" : `${latencyMs} ms`,
+              detail: "Observed request latency from the persisted usage event.",
+            },
+            {
+              label: "Tokens",
+              value: renderMetricValue(totalTokens),
+              detail:
+                inputTokenTruth.available && outputTokenTruth.available
+                  ? `Input ${inputTokenTruth.source}; output ${outputTokenTruth.source}.`
+                  : "Token usage is unavailable; numeric placeholders are not treated as measured usage.",
+            },
+            {
+              label: "Cost",
+              value: formatUsd(effectiveCostUsd),
+              detail:
+                costCalculationBasis || costCalculationVersion
+                  ? `Stored effective cost • ${costCalculationBasis ?? "unknown basis"} • ${
+                      costCalculationVersion ?? "unknown version"
+                    }`
+                  : "Stored authoritative per-request effective cost.",
+            },
+            {
+              label: "Cache",
+              value: renderMetricValue(cacheStatus),
+              detail: promptCacheRequestSource
+                ? `Captured cache posture; request key source: ${promptCacheRequestSource}.`
+                : "Captured cache posture using explicit support semantics rather than zero-only inference.",
+            },
+          ].map((item) => (
+            <div key={item.label} className={`${mutedPanelClassName} space-y-2 p-4`}>
+              <p className={fieldLabelClassName}>{item.label}</p>
+              <p className={`${bodyStrongTextClassName} break-all text-[var(--rm-fg)]`}>
+                {item.value}
+              </p>
+              <p className={supportingTextClassName}>{item.detail}</p>
+            </div>
+          ))}
         </div>
       </SectionCard>
 
@@ -599,13 +598,13 @@ export default function RequestDetailRoute() {
                 <p className={compactTitleClassName}>Original request hints</p>
                 <dl className="mt-3 space-y-3 text-sm">
                   <div>
-                    <dt className={utilityLabelClassName}>Original role hint</dt>
+                    <dt className={fieldLabelClassName}>Original role hint</dt>
                     <dd className={`mt-1 ${supportingTextClassName}`}>
                       {renderMetricValue(originalRoleHint)}
                     </dd>
                   </div>
                   <div>
-                    <dt className={utilityLabelClassName}>Original task type</dt>
+                    <dt className={fieldLabelClassName}>Original task type</dt>
                     <dd className={`mt-1 ${supportingTextClassName}`}>
                       {renderMetricValue(originalTaskType)}
                     </dd>
@@ -622,7 +621,7 @@ export default function RequestDetailRoute() {
                     ["Task variant", taxonomyTaskVariant],
                   ].map(([label, value]) => (
                     <div key={label}>
-                      <dt className={utilityLabelClassName}>{label}</dt>
+                      <dt className={fieldLabelClassName}>{label}</dt>
                       <dd className={`mt-1 ${supportingTextClassName}`}>
                         {renderMetricValue(value)}
                       </dd>
@@ -648,7 +647,7 @@ export default function RequestDetailRoute() {
                     ],
                   ].map(([label, value]) => (
                     <div key={label}>
-                      <dt className={utilityLabelClassName}>{label}</dt>
+                      <dt className={fieldLabelClassName}>{label}</dt>
                       <dd className={`mt-1 ${supportingTextClassName}`}>
                         {renderMetricValue(value)}
                       </dd>
@@ -687,7 +686,7 @@ export default function RequestDetailRoute() {
                   key={label}
                   className="rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
                 >
-                  <dt className={utilityLabelClassName}>{label}</dt>
+                  <dt className={fieldLabelClassName}>{label}</dt>
                   <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
                 </div>
               ))}
@@ -727,7 +726,7 @@ export default function RequestDetailRoute() {
               key={label}
               className="rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel-muted)] p-3"
             >
-              <dt className={utilityLabelClassName}>{label}</dt>
+              <dt className={fieldLabelClassName}>{label}</dt>
               <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
             </div>
           ))}
@@ -740,17 +739,17 @@ export default function RequestDetailRoute() {
       >
         <div className="space-y-4">
           <div className="flex flex-wrap gap-2">
-            <StatusPill tone={rawObservationAvailable ? "success" : "warning"}>
+            <Badge tone={rawObservationAvailable ? "success" : "warning"}>
               {rawObservationAvailable ? "Raw observation retained" : "Ledger fallback only"}
-            </StatusPill>
-            <StatusPill tone={structuredInspectionAvailable ? "accent" : "neutral"}>
+            </Badge>
+            <Badge tone={structuredInspectionAvailable ? "accent" : "neutral"}>
               {structuredInspectionAvailable
                 ? "Structured inspection available"
                 : "No structured inspection"}
-            </StatusPill>
-            <StatusPill tone={rawCaptureAvailable ? "accent" : "neutral"}>
+            </Badge>
+            <Badge tone={rawCaptureAvailable ? "accent" : "neutral"}>
               {rawCaptureAvailable ? "Raw capture allowed" : "Raw capture unavailable"}
-            </StatusPill>
+            </Badge>
           </div>
           <dl className="grid gap-3 text-sm md:grid-cols-2 xl:grid-cols-4">
             {[
@@ -780,7 +779,7 @@ export default function RequestDetailRoute() {
                 key={label}
                 className="rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
               >
-                <dt className={utilityLabelClassName}>{label}</dt>
+                <dt className={fieldLabelClassName}>{label}</dt>
                 <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
               </div>
             ))}
@@ -811,7 +810,7 @@ export default function RequestDetailRoute() {
               ["Stream deltas", streamSummary.length > 0 ? streamSummary : null],
             ].map(([label, value]) => (
               <div key={label} className="rounded-[var(--rm-radius-md)] bg-[var(--rm-panel)] p-3">
-                <dt className={utilityLabelClassName}>{label}</dt>
+                <dt className={fieldLabelClassName}>{label}</dt>
                 <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
               </div>
             ))}
@@ -838,7 +837,7 @@ export default function RequestDetailRoute() {
               ],
             ].map(([label, value]) => (
               <div key={label} className="rounded-[var(--rm-radius-md)] bg-[var(--rm-panel)] p-3">
-                <dt className={utilityLabelClassName}>{label}</dt>
+                <dt className={fieldLabelClassName}>{label}</dt>
                 <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
               </div>
             ))}
@@ -878,7 +877,7 @@ export default function RequestDetailRoute() {
               ["Rubric signals", rubricSignalSummary],
             ].map(([label, value]) => (
               <div key={label} className="rounded-[var(--rm-radius-md)] bg-[var(--rm-panel)] p-3">
-                <dt className={utilityLabelClassName}>{label}</dt>
+                <dt className={fieldLabelClassName}>{label}</dt>
                 <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
               </div>
             ))}
@@ -897,9 +896,7 @@ export default function RequestDetailRoute() {
           <div>
             <div className="flex items-center justify-between">
               <p className={compactTitleClassName}>Tool calls</p>
-              <StatusPill tone={toolCalls.length > 0 ? "accent" : "neutral"}>
-                {toolCalls.length}
-              </StatusPill>
+              <Badge tone={toolCalls.length > 0 ? "accent" : "neutral"}>{toolCalls.length}</Badge>
             </div>
             <div className="mt-3 space-y-3">
               {toolCalls.length === 0 ? (
@@ -925,9 +922,9 @@ export default function RequestDetailRoute() {
           <div>
             <div className="flex items-center justify-between">
               <p className={compactTitleClassName}>Execution receipts</p>
-              <StatusPill tone={toolExecutions.length > 0 ? "success" : "neutral"}>
+              <Badge tone={toolExecutions.length > 0 ? "success" : "neutral"}>
                 {toolExecutions.length}
-              </StatusPill>
+              </Badge>
             </div>
             <div className="mt-3 space-y-3">
               {toolExecutions.length === 0 ? (
@@ -945,11 +942,11 @@ export default function RequestDetailRoute() {
                           {String(executionRecord.toolName ?? "Unnamed tool")}
                         </p>
                         {executionRecord.status ? (
-                          <StatusPill
+                          <Badge
                             tone={executionRecord.status === "success" ? "success" : "warning"}
                           >
                             {String(executionRecord.status)}
-                          </StatusPill>
+                          </Badge>
                         ) : null}
                       </div>
                       <p className={`mt-2 ${supportingTextClassName}`}>

@@ -1,4 +1,3 @@
-import { spawn } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import {
   appendFileSync,
@@ -127,6 +126,8 @@ import {
 } from "./request-capability-inference.js";
 import { readPackagedRuntimeProfile, resolveRuntimeChannelProfile } from "./runtime-channel.js";
 import { type RuntimeVersionInfoRecord, resolveRuntimeVersionInfo } from "./runtime-version.js";
+import { createTrackBOperations as createTrackBOperationsFromState } from "./track-b-operations.js";
+import { createRun88RuntimeCorrelation } from "./track-b-runtime.js";
 
 import {
   type ProviderRequestCapture,
@@ -178,6 +179,7 @@ import {
   resolveEndpointRoleIds,
 } from "./local-model-role-bindings.js";
 import { resolveOauthCredentialRef } from "./oauth-credential.js";
+import { openUrlInDefaultBrowser } from "./open-external-url.js";
 import {
   type OperatorIntentDiagnostic,
   type OperatorIntentRemoteActivation,
@@ -216,6 +218,7 @@ import {
 import {
   type LiteLLMProviderInfo,
   OPERATOR_HIDDEN_CATALOG_PROVIDER_IDS,
+  applyAliasedCatalogPricing,
   deriveLiteLLMProviders,
   extractLiteLLMModelIds,
   loadLiteLLMModelPrices,
@@ -2560,6 +2563,7 @@ export interface StartBridgeServerOptions {
   readonly host: string;
   readonly port: number;
   readonly runtimeStateRoot?: string;
+  readonly runtimeChannel?: "development" | "stage" | "production";
   readonly registry: EndpointRegistryResult;
   readonly getRegistry?: () => EndpointRegistryResult;
   readonly getExecutionCatalog?: () => NormalizedCatalog;
@@ -2593,6 +2597,26 @@ export interface StartBridgeServerOptions {
   readonly readHealthStatus?: () => Promise<unknown>;
   readonly listProviders?: () => Promise<readonly unknown[]>;
   readonly listModels?: () => Promise<readonly unknown[]>;
+  readonly listExtensions?: () => Promise<readonly unknown[]>;
+  readonly mutateExtension?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly readTrackBQaExtensions?: () => Promise<readonly unknown[]>;
+  readonly readTrackBShadowReceipts?: () => Promise<unknown>;
+  readonly readGraphMigration?: () => Promise<unknown>;
+  readonly advanceGraphMigration?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly rollbackGraphMigration?: () => Promise<unknown>;
+  readonly readStorageRetention?: () => Promise<unknown>;
+  readonly dryRunStorageRetention?: () => Promise<unknown>;
+  readonly updateStorageRetentionPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly executeStorageRetention?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly cancelStorageRetentionJob?: () => Promise<unknown>;
+  readonly rollbackStorageRetention?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly readContributionState?: () => Promise<unknown>;
+  readonly updateContributionState?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly listRecommendations?: () => Promise<readonly unknown[]>;
+  readonly downloadRecommendations?: () => Promise<readonly unknown[]>;
+  readonly applyRecommendation?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly dismissRecommendation?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly readActivePack?: () => Promise<unknown>;
   readonly listRoles?: () => Promise<readonly unknown[]>;
   readonly listAccounts?: () => Promise<readonly unknown[]>;
   readonly listProviderDeviceAuthorizations?: () => Promise<readonly unknown[]>;
@@ -2778,6 +2802,26 @@ export interface RuntimeBridgeBackend {
     }[]
   >;
   listModels(): Promise<readonly BridgeRuntimeModelRecord[]>;
+  listExtensions(): Promise<readonly unknown[]>;
+  mutateExtension(body: Record<string, unknown>): Promise<unknown>;
+  readTrackBQaExtensions(): Promise<readonly unknown[]>;
+  readTrackBShadowReceipts(): Promise<unknown>;
+  readGraphMigration(): Promise<unknown>;
+  advanceGraphMigration(body: Record<string, unknown>): Promise<unknown>;
+  rollbackGraphMigration(): Promise<unknown>;
+  readStorageRetention(): Promise<unknown>;
+  dryRunStorageRetention(): Promise<unknown>;
+  updateStorageRetentionPolicy(body: Record<string, unknown>): Promise<unknown>;
+  executeStorageRetention(body: Record<string, unknown>): Promise<unknown>;
+  cancelStorageRetentionJob(): Promise<unknown>;
+  rollbackStorageRetention(body: Record<string, unknown>): Promise<unknown>;
+  readContributionState(): Promise<unknown>;
+  updateContributionState(body: Record<string, unknown>): Promise<unknown>;
+  listRecommendations(): Promise<readonly unknown[]>;
+  downloadRecommendations(): Promise<readonly unknown[]>;
+  applyRecommendation(body: Record<string, unknown>): Promise<unknown>;
+  dismissRecommendation(body: Record<string, unknown>): Promise<unknown>;
+  readActivePack(): Promise<unknown>;
   listRoles(): Promise<
     readonly {
       roleId: string;
@@ -3084,10 +3128,32 @@ export interface CreateRuntimeBridgeBackendOptions {
   readonly repoRoot: string;
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
+  /** Runtime deployment channel used by every durable storage authority check. */
+  readonly runtimeChannel?: "development" | "stage" | "production";
+  readonly run88StageIdentity?: {
+    readonly releaseId: string;
+    readonly sourceId: string;
+    readonly executableSha256: string;
+  };
   readonly unifiedRuntimeConfigPath?: string;
   readonly networkFetcher?: typeof fetch;
   readonly fixtureRoot?: string;
   readonly runtimeVendorStartup?: "enabled" | "disabled";
+  readonly trackBOperationsEndpoint?: string;
+  readonly trackBOperationsToken?: string;
+  readonly trackBExtensionHealth?: () => {
+    readonly host?: { readonly extensions?: readonly string[] };
+    readonly supervisor?: Readonly<Record<string, unknown>>;
+  };
+  readonly trackBExtensionRuntime?: () => {
+    listExtensions(): readonly unknown[] | Promise<readonly unknown[]>;
+    mutateExtension(input: Record<string, unknown>): unknown | Promise<unknown>;
+  } | null;
+  readonly trackBQaExtensionCatalog?: () => readonly Record<string, unknown>[];
+  readonly trackBPostObservation?: (
+    observation: Readonly<Record<string, unknown>>,
+  ) => Promise<unknown>;
+  readonly trackBPostObservationReceipts?: () => Promise<unknown>;
   readonly codexAuthAdapter?: CodexAuthAdapter;
   readonly codexExecutionAdapter?: CodexExecutionAdapter;
 }
@@ -4574,30 +4640,32 @@ function readBridgeExecutionRequestOptions(
   const requestedRoleIdHeader = request.headers["x-role-model-requested-role-id"]
     ?.toString()
     .trim();
-  if (
+  const baseOptions: BridgeExecutionRequestOptions | undefined =
     !clientRequestId &&
     !sessionId &&
     !transportPreferenceHeader &&
     !routingModeOverrideHeader &&
     !endpointIdHeader &&
     !requestedRoleIdHeader
-  ) {
-    return undefined;
-  }
-  return {
-    ...(sessionId ? { sessionId } : {}),
-    ...(clientRequestId ? { clientRequestId } : {}),
-    ...(transportPreferenceHeader
-      ? {
-          transportPreference: parseRuntimeTransportPreferenceHeader(transportPreferenceHeader),
-        }
-      : {}),
-    ...(routingModeOverrideHeader
-      ? { routingModeOverride: parseRuntimeRoutingModeOverride(routingModeOverrideHeader) }
-      : {}),
-    ...(endpointIdHeader ? { endpointId: endpointIdHeader } : {}),
-    ...(requestedRoleIdHeader ? { requestedRoleId: requestedRoleIdHeader } : {}),
-  };
+      ? undefined
+      : {
+          ...(sessionId ? { sessionId } : {}),
+          ...(clientRequestId ? { clientRequestId } : {}),
+          ...(transportPreferenceHeader
+            ? {
+                transportPreference:
+                  parseRuntimeTransportPreferenceHeader(transportPreferenceHeader),
+              }
+            : {}),
+          ...(routingModeOverrideHeader
+            ? {
+                routingModeOverride: parseRuntimeRoutingModeOverride(routingModeOverrideHeader),
+              }
+            : {}),
+          ...(endpointIdHeader ? { endpointId: endpointIdHeader } : {}),
+          ...(requestedRoleIdHeader ? { requestedRoleId: requestedRoleIdHeader } : {}),
+        };
+  return baseOptions;
 }
 
 function buildBridgeExecutionSessionAffinity(
@@ -5469,7 +5537,7 @@ function withRuntimeEndpointFallbackModels(
 
   return {
     ...catalog,
-    models: [...catalog.models, ...synthesizedModels],
+    models: applyAliasedCatalogPricing([...catalog.models, ...synthesizedModels]),
   };
 }
 
@@ -6714,10 +6782,11 @@ function applyRequestedRoleExecutionPolicy(input: {
   }
 
   const rolePolicyMessages = buildRolePolicySystemMessages(roleDefinition);
-  const messages =
+  const withRolePolicy =
     rolePolicyMessages.length > 0
       ? ([...rolePolicyMessages, ...input.messages] as const)
       : input.messages;
+  const messages = withRolePolicy;
   const toolPolicyMode = roleDefinition?.tool_policy?.mode ?? "allowed";
   const allowedTools = roleDefinition?.tool_policy?.allowed_tools ?? [];
   const tools =
@@ -9522,31 +9591,6 @@ function validateExternalUrl(value: string): string {
   }
 
   return parsed.toString();
-}
-
-function openUrlInDefaultBrowser(url: string): void {
-  const command =
-    process.platform === "win32"
-      ? {
-          file: "explorer.exe",
-          args: [url],
-        }
-      : process.platform === "darwin"
-        ? {
-            file: "open",
-            args: [url],
-          }
-        : {
-            file: "xdg-open",
-            args: [url],
-          };
-
-  const child = spawn(command.file, command.args, {
-    detached: true,
-    stdio: "ignore",
-    windowsHide: true,
-  });
-  child.unref();
 }
 
 function readStringArray(record: Record<string, unknown>, key: string): string[] | undefined {
@@ -13987,6 +14031,156 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/api/role-model/extensions") {
+      if (!options.listExtensions) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.listExtensions());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/extensions/qa") {
+      if (!options.readTrackBQaExtensions) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readTrackBQaExtensions());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/track-b/shadow-receipts") {
+      if (!options.readTrackBShadowReceipts) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readTrackBShadowReceipts());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/graph-migration") {
+      if (!options.readGraphMigration) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readGraphMigration());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/storage-retention") {
+      if (!options.readStorageRetention) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readStorageRetention());
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/role-model/storage-retention/dry-run") {
+      if (!options.dryRunStorageRetention) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.dryRunStorageRetention());
+      return;
+    }
+
+    const operationRoutes: Readonly<
+      Record<
+        string,
+        {
+          readonly method: string;
+          readonly callback: ((body: Record<string, unknown>) => Promise<unknown>) | undefined;
+          readonly body: boolean;
+        }
+      >
+    > = {
+      "/api/role-model/storage-retention/policy": {
+        method: "PUT",
+        callback: options.updateStorageRetentionPolicy,
+        body: true,
+      },
+      "/api/role-model/graph-migration/advance": {
+        method: "POST",
+        callback: options.advanceGraphMigration,
+        body: true,
+      },
+      "/api/role-model/graph-migration/rollback": {
+        method: "POST",
+        callback: options.rollbackGraphMigration,
+        body: false,
+      },
+      "/api/role-model/storage-retention/execute": {
+        method: "POST",
+        callback: options.executeStorageRetention,
+        body: true,
+      },
+      "/api/role-model/storage-retention/cancel": {
+        method: "POST",
+        callback: options.cancelStorageRetentionJob,
+        body: false,
+      },
+      "/api/role-model/storage-retention/rollback": {
+        method: "POST",
+        callback: options.rollbackStorageRetention,
+        body: true,
+      },
+      "/api/role-model/contribution": {
+        method: request.method === "GET" ? "GET" : "PUT",
+        callback:
+          request.method === "GET"
+            ? options.readContributionState
+            : options.updateContributionState,
+        body: request.method !== "GET",
+      },
+      "/api/role-model/extensions/mutate": {
+        method: "POST",
+        callback: options.mutateExtension,
+        body: true,
+      },
+      "/api/role-model/recommendations": {
+        method: "GET",
+        callback: options.listRecommendations,
+        body: false,
+      },
+      "/api/role-model/recommendations/download": {
+        method: "POST",
+        callback: options.downloadRecommendations,
+        body: false,
+      },
+      "/api/role-model/recommendations/apply": {
+        method: "POST",
+        callback: options.applyRecommendation,
+        body: true,
+      },
+      "/api/role-model/recommendations/dismiss": {
+        method: "POST",
+        callback: options.dismissRecommendation,
+        body: true,
+      },
+      "/api/role-model/recommendations/active-pack": {
+        method: "GET",
+        callback: options.readActivePack,
+        body: false,
+      },
+    };
+    const operationRoute = operationRoutes[url.pathname];
+    if (operationRoute && request.method === operationRoute.method) {
+      if (!operationRoute.callback) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        const body = operationRoute.body ? await readJsonBody(request) : {};
+        writeJson(response, 200, await operationRoute.callback(body));
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "operation failed",
+        });
+      }
+      return;
+    }
+
     if (request.method === "PUT" && url.pathname === "/api/role-model/runtime/config") {
       if (!options.updateRuntimeConfig) {
         writeJson(response, 404, { error: "not found" });
@@ -15274,8 +15468,37 @@ function listen(server: Server, host: string, port: number): Promise<number> {
   });
 }
 
-function appendRuntimeHttpTrace(runtimeStateRoot: string, message: string): void {
+export const RUNTIME_HOST_STORAGE_REGISTRY = Object.freeze({
+  schemaVersion: "role-model.storage-registry.v1",
+  entries: Object.freeze([
+    Object.freeze({
+      id: "runtime_logs",
+      owner: "runtime-host",
+      channels: Object.freeze(["development", "stage", "production"] as const),
+    }),
+  ]),
+});
+
+export function assertRuntimeHostStorageWriteAllowed(storageClass: string, channel: string): void {
+  const registration = RUNTIME_HOST_STORAGE_REGISTRY.entries.find(
+    (entry) => entry.id === storageClass,
+  );
+  const normalizedChannel = channel === "staging" ? "stage" : channel;
+  if (!registration) throw new Error(`unregistered storage class: ${storageClass}`);
+  if (
+    !registration.channels.includes(normalizedChannel as "development" | "stage" | "production")
+  ) {
+    throw new Error(`storage class ${storageClass} is not writable in ${channel || "unknown"}`);
+  }
+}
+
+function appendRuntimeHttpTrace(
+  runtimeStateRoot: string,
+  runtimeChannel: string,
+  message: string,
+): void {
   try {
+    assertRuntimeHostStorageWriteAllowed("runtime_logs", runtimeChannel);
     const logPath = path.join(runtimeStateRoot, "logs", "runtime-http.log");
     mkdirSync(path.dirname(logPath), { recursive: true });
     appendFileSync(logPath, `${new Date().toISOString()} ${message}\n`, "utf8");
@@ -15289,6 +15512,7 @@ export async function startBridgeServer(options: StartBridgeServerOptions): Prom
     const requestStart = Date.now();
     const requestPath = new URL(request.url ?? "/", "http://127.0.0.1").pathname;
     const runtimeStateRoot = options.runtimeStateRoot;
+    const runtimeChannel = options.runtimeChannel ?? "development";
     const shouldTraceRequest =
       typeof runtimeStateRoot === "string" &&
       runtimeStateRoot.length > 0 &&
@@ -15300,11 +15524,13 @@ export async function startBridgeServer(options: StartBridgeServerOptions): Prom
     if (shouldTraceRequest) {
       appendRuntimeHttpTrace(
         runtimeStateRoot,
+        runtimeChannel,
         `request-start method=${request.method} path=${requestPath}`,
       );
       response.on("finish", () => {
         appendRuntimeHttpTrace(
           runtimeStateRoot,
+          runtimeChannel,
           `request-finish method=${request.method} path=${requestPath} status=${response.statusCode} duration_ms=${Date.now() - requestStart}`,
         );
       });
@@ -15312,6 +15538,7 @@ export async function startBridgeServer(options: StartBridgeServerOptions): Prom
         if (!response.writableEnded) {
           appendRuntimeHttpTrace(
             runtimeStateRoot,
+            runtimeChannel,
             `request-close method=${request.method} path=${requestPath} duration_ms=${Date.now() - requestStart}`,
           );
         }
@@ -15344,6 +15571,13 @@ export async function startBridgeServer(options: StartBridgeServerOptions): Prom
 export async function createRuntimeBridgeBackend(
   options: CreateRuntimeBridgeBackendOptions,
 ): Promise<RuntimeBridgeBackend> {
+  const runtimeChannel = options.runtimeChannel ?? "development";
+  const createTrackBOperations = (input: Parameters<typeof createTrackBOperationsFromState>[0]) =>
+    createTrackBOperationsFromState({
+      ...input,
+      operationsEndpoint: options.trackBOperationsEndpoint,
+      operationsToken: options.trackBOperationsToken,
+    });
   const networkFetcher = options.networkFetcher ?? fetch;
   const codexAuthAdapter = options.codexAuthAdapter ?? createSystemCodexAuthAdapter(networkFetcher);
   const codexExecutionAdapter =
@@ -15510,6 +15744,7 @@ export async function createRuntimeBridgeBackend(
   const initialization = initializeSqliteMemory({
     runtimeStateRoot: options.runtimeStateRoot,
     scopeId: options.scopeId,
+    channel: runtimeChannel,
   });
   const operatorIntentLocation = {
     runtimeStateRoot: options.runtimeStateRoot,
@@ -15630,11 +15865,15 @@ export async function createRuntimeBridgeBackend(
   );
   const fixtureAccountIds = new Set(fixtureAccounts.map((account) => account.providerAccountId));
   let runtimeConfigProviderAccountIds = new Set<string>();
-  let currentNormalizedCatalog = applyUnifiedLiteLLMAdapterFamilyOverrides(
+  const catalogWithAdapterOverrides = applyUnifiedLiteLLMAdapterFamilyOverrides(
     catalogWithFixtureModels,
     currentUnifiedRuntimeConfig,
     liteLLMProviders,
   );
+  let currentNormalizedCatalog: NormalizedCatalog = {
+    ...catalogWithAdapterOverrides,
+    models: applyAliasedCatalogPricing(catalogWithAdapterOverrides.models),
+  };
   let currentModelsById = new Map(
     currentNormalizedCatalog.models.map((model) => [model.modelId, model]),
   );
@@ -17349,9 +17588,11 @@ export async function createRuntimeBridgeBackend(
       };
       currentNormalizedCatalog = {
         ...currentNormalizedCatalog,
-        models: [...currentNormalizedCatalog.models, model],
+        models: applyAliasedCatalogPricing([...currentNormalizedCatalog.models, model]),
       };
-      currentModelsById.set(modelId, model);
+      currentModelsById = new Map(
+        currentNormalizedCatalog.models.map((entry) => [entry.modelId, entry]),
+      );
     }
 
     const endpointId =
@@ -17604,7 +17845,10 @@ export async function createRuntimeBridgeBackend(
     }
 
     currentUnifiedRuntimeConfig = nextConfig;
-    currentNormalizedCatalog = nextNormalizedCatalog;
+    currentNormalizedCatalog = {
+      ...nextNormalizedCatalog,
+      models: applyAliasedCatalogPricing(nextNormalizedCatalog.models),
+    };
     const liteLLMProviderIds = new Set(
       nextConfig?.liteLLM.providers.map((p) => p.providerId) ?? [],
     );
@@ -19444,6 +19688,26 @@ export async function createRuntimeBridgeBackend(
       const benchmarkCapability = benchmarkCapabilitiesByEndpointId[endpointId] ?? null;
       const routingQualityScore =
         profile.latestProfile?.quality_score ?? profile.latestProfile?.judge_score ?? null;
+      const catalogPricing = resolveModelCapabilityProfile({
+        modelId: endpoint.identity.model_id,
+        catalog: currentNormalizedCatalog,
+      }).pricing;
+      const latestProfile = (() => {
+        const existing = profile.latestProfile as unknown as Record<string, unknown> | null;
+        if (!catalogPricing) {
+          return profile.latestProfile;
+        }
+        if (!existing) {
+          return { pricing: catalogPricing };
+        }
+        if (existing.pricing != null) {
+          return profile.latestProfile;
+        }
+        return {
+          ...existing,
+          pricing: catalogPricing,
+        };
+      })();
       return {
         endpointId,
         modelId: endpoint.identity.model_id,
@@ -19467,7 +19731,7 @@ export async function createRuntimeBridgeBackend(
         controllerEligible: controller?.endpointId === endpointId,
         preferred: guidance.preferredEndpointIds.includes(endpointId),
         ignored: guidance.ignoredEndpointIds.includes(endpointId),
-        latestProfile: profile.latestProfile,
+        latestProfile,
         recentSamples: profile.recentSamples,
         difficultyProfiles: profile.difficultyProfiles,
         advisoryMaxDifficultyRecommendation: profile.advisoryMaxDifficultyRecommendation,
@@ -21046,10 +21310,60 @@ export async function createRuntimeBridgeBackend(
             }
           : {}),
       });
+      let artifactRef:
+        | { readonly scopeId: string; readonly artifactId: string; readonly contentHash: string }
+        | undefined;
+      try {
+        const requestBody = executionOptions?.requestBody ?? {};
+        const captureInput = Array.isArray(requestBody.messages)
+          ? requestBody.messages
+          : Array.isArray(requestBody.input)
+            ? requestBody.input
+            : [];
+        const capture = (await createTrackBOperations({
+          statePath: path.join(
+            options.runtimeStateRoot,
+            options.scopeId,
+            "track-b-production-bridge.json",
+          ),
+          catalog: [],
+        }).recordLocalRouteCapture({
+          requestId,
+          routingDecisionId,
+          endpointId: execution.target.endpointId,
+          messages: captureInput,
+          outputText: execution.normalized.outputText,
+          toolExecutions: toolExecutionResult.executions,
+        })) as Record<string, unknown>;
+        if (
+          typeof capture.scope === "string" &&
+          typeof capture.rootArtifactId === "string" &&
+          typeof capture.rootArtifactDigest === "string"
+        ) {
+          artifactRef = {
+            scopeId: capture.scope,
+            artifactId: capture.rootArtifactId,
+            contentHash: capture.rootArtifactDigest,
+          };
+        }
+      } catch {
+        // Capture remains non-routing-critical before graph-primary cutover.
+      }
       persistRuntimeObservationBundle({
         databasePath: initialization.databasePath,
+        channel: runtimeChannel,
         observation: bundle,
+        ...(artifactRef ? { artifactRef } : {}),
       });
+      if (options.trackBPostObservation) {
+        try {
+          await options.trackBPostObservation(
+            bundle as unknown as Readonly<Record<string, unknown>>,
+          );
+        } catch (error) {
+          console.error("Track B shadow post-observation processing failed", error);
+        }
+      }
       emitTelemetryUpdate(bundle.requestId);
     }
 
@@ -21631,7 +21945,7 @@ export async function createRuntimeBridgeBackend(
           ? []
           : execution.normalized.toolCalls;
 
-        return {
+        const bridgeResult: BridgeChatCompletionsExecutionResult = {
           model: execution.target.modelId,
           endpointId: execution.target.endpointId,
           adapterFamily: responseAdapterFamily,
@@ -21670,6 +21984,29 @@ export async function createRuntimeBridgeBackend(
               }
             : {}),
         };
+        const trackBOperations = createTrackBOperations({
+          statePath: path.join(
+            options.runtimeStateRoot,
+            options.scopeId,
+            "track-b-production-bridge.json",
+          ),
+          catalog: [],
+        });
+        try {
+          await trackBOperations.recordContributionAggregate({
+            requestId,
+            routingDecisionId,
+            endpointId: execution.target.endpointId,
+            modelId: bridgeResult.model,
+            taskType: "general.chat",
+            inputTokens: execution.normalized.usage.inputTokens,
+            outputTokens: execution.normalized.usage.outputTokens,
+            success: true,
+          });
+        } catch {
+          // Contribution is non-routing-critical; its bounded outbox owns retry.
+        }
+        return bridgeResult;
       } catch (error) {
         if (!hasRuntimeTelemetryPersisted(error)) {
           recordChatCompletionFailure(error);
@@ -21780,7 +22117,7 @@ export async function createRuntimeBridgeBackend(
         ? []
         : execution.normalized.toolCalls;
 
-      return {
+      const bridgeResult: BridgeResponsesExecutionResult = {
         responseId: extractResponseId(execution.responseCapture.body) ?? "resp-role-model",
         model: execution.target.modelId,
         endpointId: execution.target.endpointId,
@@ -21814,6 +22151,29 @@ export async function createRuntimeBridgeBackend(
             }
           : {}),
       };
+      const trackBOperations = createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      });
+      try {
+        await trackBOperations.recordContributionAggregate({
+          requestId,
+          routingDecisionId,
+          endpointId: execution.target.endpointId,
+          modelId: bridgeResult.model,
+          taskType: "general.chat",
+          inputTokens: execution.normalized.usage.inputTokens,
+          outputTokens: execution.normalized.usage.outputTokens,
+          success: true,
+        });
+      } catch {
+        // Contribution is non-routing-critical; its bounded outbox owns retry.
+      }
+      return bridgeResult;
     },
     async readRuntimeSummary(): Promise<RuntimeBridgeSummary> {
       const credentialLifecycle = buildCredentialLifecycleSummary();
@@ -22225,6 +22585,394 @@ export async function createRuntimeBridgeBackend(
     },
     async listModels(): Promise<readonly BridgeRuntimeModelRecord[]> {
       return createRuntimeModelRecords(currentRegistry, currentNormalizedCatalog);
+    },
+    async listExtensions(): Promise<readonly unknown[]> {
+      const contract = JSON.parse(
+        await readFile(
+          path.join(
+            options.repoRoot,
+            "packages",
+            "protocol-types",
+            "generated",
+            "product-contracts.json",
+          ),
+          "utf8",
+        ),
+      ) as { extensions?: readonly Record<string, unknown>[] };
+      const rows = await createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: contract.extensions ?? [],
+        extensionRuntime: options.trackBExtensionRuntime?.() ?? undefined,
+      }).listExtensions();
+      if (options.trackBExtensionRuntime?.()) return rows;
+      const hostedIds = new Set(options.trackBExtensionHealth?.().host?.extensions ?? []);
+      return (rows as readonly Record<string, unknown>[]).map((row) => {
+        if (!hostedIds.has(String(row.id))) return row;
+        const priorHealth =
+          row.health && typeof row.health === "object"
+            ? (row.health as Record<string, unknown>)
+            : {};
+        const routingDependency = Boolean(
+          row.routingDependency ?? priorHealth.routingDependency ?? false,
+        );
+        // Unregistered catalog rows default enabled:false; host overlay still marks them
+        // ready unless an installed bridge row explicitly disables them.
+        const enabled = !(row.installed === true && row.enabled === false);
+        const enabledMode =
+          typeof row.enabledMode === "string" && row.enabledMode.length > 0
+            ? row.enabledMode
+            : enabled
+              ? "active"
+              : "disabled";
+        const reason = enabled
+          ? priorHealth.reason === "operator_disabled"
+            ? "hosted_extension_ready"
+            : typeof priorHealth.reason === "string" && priorHealth.reason.length > 0
+              ? priorHealth.reason
+              : "hosted_extension_ready"
+          : "operator_disabled";
+        const probe = enabled
+          ? priorHealth.probe === "operator_disabled"
+            ? "hosted_extension_ready"
+            : typeof priorHealth.probe === "string" && priorHealth.probe.length > 0
+              ? priorHealth.probe
+              : "hosted_extension_ready"
+          : "operator_disabled";
+        const summary = enabled
+          ? typeof priorHealth.summary === "string" &&
+            priorHealth.summary.length > 0 &&
+            !priorHealth.summary.includes("disabled by operator")
+            ? priorHealth.summary
+            : routingDependency
+              ? "Hosted extension is ready and marked as a routing dependency."
+              : "Hosted extension is ready; core routing continues if this worker degrades."
+          : "Extension disabled by operator; core routing continues independently.";
+        return {
+          ...row,
+          installed: true,
+          enabled,
+          enabledMode,
+          lifecycle: enabled ? "ready" : "stopped",
+          health: {
+            ...priorHealth,
+            available: enabled,
+            routingDependency,
+            probe,
+            summary,
+            reason,
+          },
+        };
+      });
+    },
+    async readTrackBQaExtensions(): Promise<readonly unknown[]> {
+      const catalog = options.trackBQaExtensionCatalog?.() ?? [];
+      const extensionRuntime = options.trackBExtensionRuntime?.() ?? undefined;
+      if (!extensionRuntime || catalog.length === 0) return [];
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog,
+        extensionRuntime,
+      }).listExtensions();
+    },
+    async mutateExtension(body: Record<string, unknown>): Promise<unknown> {
+      const contract = JSON.parse(
+        await readFile(
+          path.join(
+            options.repoRoot,
+            "packages",
+            "protocol-types",
+            "generated",
+            "product-contracts.json",
+          ),
+          "utf8",
+        ),
+      ) as { extensions?: readonly Record<string, unknown>[] };
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: contract.extensions ?? [],
+        extensionRuntime: options.trackBExtensionRuntime?.() ?? undefined,
+      }).mutateExtension(body);
+    },
+    async readTrackBShadowReceipts(): Promise<unknown> {
+      if (!options.trackBPostObservationReceipts) {
+        return { pendingCount: 0, receiptCount: 0, receipts: [] };
+      }
+      return options.trackBPostObservationReceipts();
+    },
+    async readGraphMigration(): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).readGraphMigration();
+    },
+    async advanceGraphMigration(body: Record<string, unknown>): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).advanceGraphMigration(body);
+    },
+    async rollbackGraphMigration(): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).rollbackGraphMigration();
+    },
+    async readStorageRetention(): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).readStorageRetention();
+    },
+    async dryRunStorageRetention(): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).dryRunStorageRetention();
+    },
+    async updateStorageRetentionPolicy(body: Record<string, unknown>): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).updateStorageRetentionPolicy(body);
+    },
+    async executeStorageRetention(body: Record<string, unknown>): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).executeStorageRetention(body);
+    },
+    async cancelStorageRetentionJob(): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).cancelStorageRetentionJob();
+    },
+    async rollbackStorageRetention(body: Record<string, unknown>): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).rollbackStorageRetention(body);
+    },
+    async readContributionState(): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).readContributionState();
+    },
+    async updateContributionState(body: Record<string, unknown>): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).updateContributionState(body);
+    },
+    async listRecommendations(): Promise<readonly unknown[]> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).listRecommendations();
+    },
+    async downloadRecommendations(): Promise<readonly unknown[]> {
+      const serviceUrl = process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_URL;
+      const verificationKey = process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY;
+      if (!serviceUrl || !verificationKey)
+        throw new Error("recommendation service trust is not configured");
+      const baseUrl = serviceUrl.endsWith("/") ? serviceUrl : `${serviceUrl}/`;
+      const channel = process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL ?? "production";
+      const statePath = path.join(
+        options.runtimeStateRoot,
+        options.scopeId,
+        "track-b-production-bridge.json",
+      );
+      const operations = createTrackBOperations({
+        statePath,
+        catalog: [],
+      });
+      const contribution = (await operations.readContributionState()) as {
+        readonly recommendationTier?: string;
+      };
+      let run88CorrelationHeader: Record<string, string> = {};
+      if (runtimeChannel === "stage") {
+        const identity = options.run88StageIdentity;
+        if (!identity)
+          throw new Error("stage recommendation correlation identity is not configured");
+        const requestId = `recommendation-resolve-${randomUUID()}`;
+        const correlation = createRun88RuntimeCorrelation({
+          requestId,
+          routingDecisionId: requestId,
+          releaseId: identity.releaseId,
+          sourceId: identity.sourceId,
+          deploymentId: `local-stage:${identity.executableSha256}`,
+          scope: options.scopeId,
+          operation: "recommendation.resolve",
+          outcome: "requested",
+        });
+        run88CorrelationHeader = {
+          "x-role-model-correlation": JSON.stringify(correlation),
+        };
+      }
+      const headers = {
+        "content-type": "application/json",
+        ...(process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN
+          ? { authorization: `Bearer ${process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN}` }
+          : {}),
+        ...run88CorrelationHeader,
+      };
+      const response = await fetch(new URL("api/role-model/recommendations/resolve", baseUrl), {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          contract: "RecommendationResolveRequestV1",
+          channel,
+          runtimeChannel: channel,
+          releaseTrack: "stable",
+          recommendationTier: contribution.recommendationTier ?? "advanced",
+          clientSchemaVersions: ["1.0.0"],
+          activeChannelSequence: 0,
+          identityKind: "anonymous_public",
+          scopeId: options.scopeId,
+          boundaryProtocolVersion: "1.1",
+        }),
+      });
+      if (!response.ok) throw new Error(`recommendation download failed with ${response.status}`);
+      const resolved = (await response.json()) as Record<string, unknown>;
+      if (resolved.status === "not_eligible" || resolved.status === "not_modified")
+        return operations.listRecommendations();
+      if (
+        resolved.status !== "available" ||
+        typeof resolved.bundleUri !== "string" ||
+        typeof resolved.manifestHash !== "string"
+      )
+        throw new Error("recommendation resolve response did not include an available bundle");
+      const manifestUrl = new URL(resolved.bundleUri);
+      const manifestResponse = await fetch(manifestUrl);
+      if (!manifestResponse.ok)
+        throw new Error(`recommendation manifest download failed with ${manifestResponse.status}`);
+      const manifestText = await manifestResponse.text();
+      const manifest = JSON.parse(manifestText) as Record<string, unknown>;
+      const contents = manifest.contents;
+      if (!Array.isArray(contents)) throw new Error("recommendation bundle contents missing");
+      const recordsByPath: Record<string, string> = {};
+      for (const content of contents) {
+        if (
+          !content ||
+          typeof content !== "object" ||
+          typeof (content as Record<string, unknown>).path !== "string"
+        )
+          throw new Error("recommendation bundle content path missing");
+        const contentPath = (content as Record<string, unknown>).path as string;
+        const recordResponse = await fetch(new URL(contentPath, manifestUrl));
+        if (!recordResponse.ok)
+          throw new Error(`recommendation record download failed with ${recordResponse.status}`);
+        recordsByPath[contentPath] = await recordResponse.text();
+      }
+      if (typeof manifest.signatureRef !== "string")
+        throw new Error("recommendation bundle signature reference missing");
+      const signatureResponse = await fetch(new URL(manifest.signatureRef, manifestUrl));
+      if (!signatureResponse.ok)
+        throw new Error(
+          `recommendation signature download failed with ${signatureResponse.status}`,
+        );
+      const signature = (await signatureResponse.json()) as Record<string, unknown>;
+      return operations.importRecommendationArtifactBundle(
+        {
+          manifest,
+          manifestText,
+          expectedManifestSha256: resolved.manifestHash,
+          recordsByPath,
+          signature,
+        },
+        verificationKey,
+      );
+    },
+    async applyRecommendation(body: Record<string, unknown>): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).applyRecommendation(body);
+    },
+    async dismissRecommendation(body: Record<string, unknown>): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).dismissRecommendation(body);
+    },
+    async readActivePack(): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).readActivePack();
     },
     async listRoles(): Promise<
       readonly {

@@ -2,40 +2,48 @@
 
 ## Intent
 
-The runtime UI is a repo-owned operator shell for the role-model router runtime. The intended visual source of truth for both the design system and the actual runtime page implementations is the Paper Linear review file `01KW9C35N2G5PZRS4SBJ5678Q6`. This document is the repo-owned canonical translation of that Paper source into tokens, shared primitives, route contracts, and implementation receipts.
+The runtime UI is a repo-owned operator shell for the role-model router runtime. The intended visual source of truth for both the design system and the actual runtime page implementations is the **Paper RM3** design file `01KW9C35N2G5PZRS4SBJ5678Q6` (pages `4-0` design system, `5-0` runtime specimens, `6-0` grid templates, `7-0` Production RuntimeOverview). This document is the repo-owned canonical translation of that Paper source into tokens, shared primitives, route contracts, and implementation receipts.
 
-This shell must not clone the vendored llama-swap UI, and it must not treat Swiss-design guidance or the older Apple reference as current runtime UI authority. The runtime information architecture, route ownership, and workflow structure stay repo-owned; the Paper Linear review design-system board informs theme tokens, typography, surface treatment, restraint, and control grammar.
+This shell must not clone the vendored llama-swap UI, and it must not treat Swiss-design guidance, the older Apple reference, or the superseded **Paper Linear review** board as current runtime UI authority. Linear/`--rm-*` and Apple references remain historical only. The runtime information architecture, route ownership, and workflow structure stay repo-owned; Paper RM3 informs theme tokens (`--rm3-*` / `--rm3-light-*`), typography (Geist), shell grammar, charts, and control chrome.
 
 ## Authority and sync policy
 
-1. **Paper is the intended visual source of truth.** The Paper Linear review file is the design authority for shared design-system decisions and for the layout/content of actual runtime pages.
+1. **Paper RM3 is the intended visual source of truth.** Pages `4-0` / `5-0` / `6-0` / `7-0` plus file-level `--rm3-*` tokens are the design authority for shared design-system decisions and for the layout/content of actual runtime pages.
 2. **This document is the repo-owned canonical translation.** `DESIGN_SYSTEM.md` records the exact token values, component rules, and page contracts that engineering implements in the repo.
-3. **Approved runtime implementation may temporarily lead Paper.** When Paper is known to be out of date relative to the latest approved runtime UI, the repo-owned implementation plus this document become the temporary reconciliation source until Paper is updated.
-4. **Paper must be resynced after approved design/code changes.** Any approved runtime-shell, token, component, or page-layout change must be reflected back into Paper so visual authority and repo implementation converge again.
-5. **Apple reference remains historical only.** `DESIGN_APPLE_REFERENCE.md` is not allowed to override Paper, this document, or the live runtime UI.
+3. **In-repo kit `@role-model/ui`** (`role-model-router/packages/ui`) is the shared implementation SoT for shell, filters, SegmentedControl, MetricStrip, and chart primitives once Wave 2 lands.
+4. **Approved runtime implementation may temporarily lead Paper.** When Paper is known to be out of date relative to the latest approved runtime UI, the repo-owned implementation plus this document become the temporary reconciliation source until Paper is updated.
+5. **Paper must be resynced after approved design/code changes.** Any approved runtime-shell, token, component, or page-layout change must be reflected back into Paper so visual authority and repo implementation converge again.
+6. **Apple reference remains historical only.** `DESIGN_APPLE_REFERENCE.md` is not allowed to override Paper, this document, or the live runtime UI.
+7. **Linear review remains historical only.** Prior Paper Linear / `--linear-*` / purple accent contracts are not live authority on migrated surfaces.
+8. **Anti-drift for charts:** production Recharts behavior is SoT once implemented; Paper SVG plots are visual reference only.
 
 ## Core rules
 
 1. **Light and Dark only.** The operator UI exposes exactly `Light` and `Dark`; system preference is initial-default logic only until the operator chooses.
-2. **Quiet chrome, strong content.** Shell, cards, tables, and controls stay restrained so runtime facts, ledgers, and results remain primary.
-3. **Linear accent is the main interactive accent.** Primary actions, active states, links, and focus treatment inherit the current Paper Linear purple-blue family.
-4. **Soft radii follow the Paper runtime shell grammar.** Shared surfaces use `8px`, `12px`, `16px`, and `28px` radii with pill actions where appropriate.
-5. **Typography is Inter-led and startup-safe.** `Inter` is the shared sans family for display and body roles, and `IBM Plex Mono` remains reserved for ids, paths, JSON, and transport artifacts. Packaged runtime startup must not depend on remote font fetches. The runtime ships bundled font assets.
-6. **One shell header.** The shell header is the **only** route-level header. Route files do not duplicate eyebrow, title, or description blocks.
-7. **Analytics routes and evidence routes stay distinct.** `/app` and charted Observe pages lead with analytics bands; raw-host and request-detail pages remain evidence-first.
-8. **Status pills use solid token-backed backgrounds.** Semantic status pills use shared pill background and text tokens with explicit contrast, not transparent borders.
-9. **The shell viewport stays fixed.** Sidebar and shell header remain fixed inside the shell; only the page-content frame scrolls, and that internal scrollbar stays visually hidden.
+2. **Quiet chrome, strong content.** Shell, cards, tables, and controls stay near-neutral grayscale so runtime facts, ledgers, and charts remain primary.
+3. **No brand hue in chrome.** Primary actions use near-black / near-white primary fills (`--rm3-primary` / `--rm3-light-primary`). The only non-grayscale chrome accent is **destructive** red. Chart hues never paint buttons, borders, or shell chrome.
+4. **Radii follow RM3.** Shared surfaces use `--rm3-radius-sm|md|lg|xl` = `5px` / `6px` / `8px` / `11px` (plus pill `9999px` where needed). Soft Linear `12/16/28` shell radii are historical.
+5. **Typography is Geist-led and startup-safe.** `--rm3-font-sans` / `--rm3-font-display` = `"Geist", ui-sans-serif, system-ui, sans-serif`; `--rm3-font-mono` = `"Geist Mono", ui-monospace, "SF Mono", Menlo, monospace`. Packaged runtime startup must not depend on remote font fetches. The runtime ships **bundled font assets**.
+6. **One shell header (48px).** Page title left + theme toggle (sun/moon) top-right. No route-id / mono subtitle. Route files do not duplicate eyebrow, title, or description blocks. The shell header is the **only** route-level header.
+7. **Fullscreen shell.** Sidebar flush left (224px) + main column; no empty outer canvas / inset `1840px` card chrome. Content uses default **12-col** track (`max-w-[1216px]`, pad `16`, gutter `16`).
+8. **Secondary nav is SegmentedControl.** Bordered secondary track + primary fill on the active segment — not Tabs `line`, primary pills, or bare text.
+9. **Happy-path pages omit FactCard / StatusPill walls.** Prefer MetricStrip, SectionCard + PanelHeader, Badge, Button, Table, Select `34px`.
+10. **Analytics routes and evidence routes stay distinct.** `/app` and charted Observe pages lead with analytics bands; raw-host and request-detail pages remain evidence-first. Canonical telemetry pages must not embed a redundant “Adjacent raw-host tools” panel.
+11. **The shell viewport stays fixed.** Sidebar and shell header remain fixed; only the page-content frame scrolls, and that internal scrollbar stays visually hidden.
 
 ### Shell receipts
 
 - Sidebar navigation is text-only. Section links never render route icons inside the rail.
 - No visible divider separates the sidebar from the content column; both live on the same shell surface.
-- The header title and the `role-model` brandmark share the same display token scale.
-- The light/dark toggle sits on the right edge of the visible content frame, not the outer shell edge.
-- The shell viewport is fixed-height. Scrolling happens only inside the main content frame.
-- The content-frame scrollbar is hidden while preserving scroll behavior.
+- Sidebar brandmark (`role-model`) uses Geist **sans** `14/18` semibold with `-0.02em` tracking — never mono.
+- Sidebar footer (pinned, shrink-0): **Model inventory → Cache → Router endpoint** with reduced-motion-safe live-update motion.
+- Cache / healthy status greens use chart-cache / deep emerald — not neon emerald-50/100.
+- The light/dark toggle sits on the right edge of the 48px page header strip.
 - Overview analytics empty states stay compact and never fabricate synthetic chart data to fill space.
 - Configured-model detail code blocks show the compact preview payload (`modelId` plus `endpointIds`) instead of dumping full endpoint records into the first screen.
+- Compact advanced-filter rows use `DisclosureSection` in compact mode.
+- Role / category selectors use grouped category rows with a leading checkbox.
+- Soft-fill Badges (muted surface + hairline + semantic ink) when a specimen still requires a pill-equivalent chip (happy-path pages prefer Badge / MetricStrip, not StatusPill walls). Documented migration aliases during Wave 2: `--rm-pill-info-bg`, `--rm-pill-advisory-bg` (historical Linear) → RM3 soft badge tokens.
 
 ## Theme contract
 
@@ -43,226 +51,151 @@ This shell must not clone the vendored llama-swap UI, and it must not treat Swis
 
 | Token | Value |
 | --- | --- |
-| `--rm-font-display` | `"Inter", "Segoe UI", sans-serif` |
-| `--rm-font-body` | `"Inter", "Segoe UI", sans-serif` |
-| `--rm-font-mono` | `"IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace` |
+| `--rm3-font-display` | `"Geist", ui-sans-serif, system-ui, sans-serif` |
+| `--rm3-font-sans` | `"Geist", ui-sans-serif, system-ui, sans-serif` |
+| `--rm3-font-mono` | `"Geist Mono", ui-monospace, "SF Mono", Menlo, monospace` |
 
-### Typography scale
+### Typography scale (prefer tokens)
 
-| Use | Size | Weight | Line height | Tracking |
-| --- | --- | --- | --- | --- |
-| Hero display | `56px` | `400` | `62px` | `-0.032em` |
-| Display / shell title | `22px` | `400` | `28px` | `-0.018em` |
-| Section heading | `22px` | `600` | `28px` | `-0.018em` |
-| Lead | `20px` | `400` | `28px` | `-0.015em` |
-| Body | `16px` | `400` | `24px` | `-0.003em` |
-| Body strong | `14px` | `600` | `21px` | `0` |
-| Caption | `14px` | `400` | `21px` | `0` |
-| Caption strong | `14px` | `600` | `21px` | `0` |
-| Button large | `15px` | `600` | `20px` | `-0.01em` |
-| Button utility | `13px` | `600` | `16px` | `-0.01em` |
-| Fine print | `12px` | `400` | `17px` | `0` |
-| Nav link | `14px` | `400` | `21px` | `0` |
-| Utility label | `12px` | `400` | `16px` | `0.08em` |
-
-### Surface and text tokens
-
-| Token | Light | Dark |
-| --- | --- | --- |
-| `--rm-bg` | `#ffffff` | `#010102` |
-| `--rm-surface` | `#f7f8f8` | `#0f1011` |
-| `--rm-surface-strong` | `#ffffff` | `#141516` |
-| `--rm-panel` | `#f3f4f6` | `#18191a` |
-| `--rm-panel-muted` | `#eceef2` | `#191a1b` |
-| `--rm-fg` | `#0f1115` | `#f7f8f8` |
-| `--rm-secondary` | `#3a4150` | `#d0d6e0` |
-| `--rm-muted` | `#69707d` | `#8a8f98` |
-| `--rm-border` | `#e3e6ec` | `#23252a` |
-| `--rm-border-strong` | `#ced3de` | `#34343a` |
-
-### Accent tokens
-
-| Token | Light | Dark |
-| --- | --- | --- |
-| `--rm-accent` | `#5e6ad2` | `#5e6ad2` |
-| `--rm-accent-ink` | `#5e6ad2` | `#f7f8f8` |
-| `--rm-accent-focus` | `#828fff` | `#828fff` |
-| `--rm-accent-on-dark` | `#828fff` | `#828fff` |
-| `--rm-accent-muted` | `rgba(94, 106, 210, 0.78)` | `rgba(130, 143, 255, 0.86)` |
-| `--rm-accent-subtle` | `rgba(94, 106, 210, 0.14)` | `rgba(94, 106, 210, 0.20)` |
-| `--rm-accent-ghost` | `rgba(94, 106, 210, 0.08)` | `rgba(94, 106, 210, 0.12)` |
-| `--rm-on-primary` | `#ffffff` | `#ffffff` |
-
-### Semantic status tokens
-
-| Token | Light | Dark |
-| --- | --- | --- |
-| `--rm-success` | `#27a644` | `#27a644` |
-| `--rm-success-muted` | `rgba(39, 166, 68, 0.76)` | `rgba(39, 166, 68, 0.82)` |
-| `--rm-success-subtle` | `rgba(39, 166, 68, 0.10)` | `rgba(39, 166, 68, 0.14)` |
-| `--rm-warning` | `#b67a11` | `#d9a441` |
-| `--rm-warning-muted` | `rgba(182, 122, 17, 0.78)` | `rgba(217, 164, 65, 0.82)` |
-| `--rm-warning-subtle` | `rgba(182, 122, 17, 0.14)` | `rgba(217, 164, 65, 0.12)` |
-| `--rm-error` | `#d84f6a` | `#e06c89` |
-| `--rm-error-muted` | `rgba(216, 79, 106, 0.76)` | `rgba(224, 108, 137, 0.82)` |
-| `--rm-error-subtle` | `rgba(216, 79, 106, 0.14)` | `rgba(224, 108, 137, 0.20)` |
-| `--rm-error-ghost` | `rgba(216, 79, 106, 0.10)` | `rgba(255, 125, 166, 0.10)` |
-| `--rm-info` | `#3f87f5` | `#6ea8ff` |
-| `--rm-advisory` | `#9664e8` | `#b479ff` |
-
-### Telemetry semantic tokens
-
-| Token | Light | Dark |
-| --- | --- | --- |
-| `--rm-telemetry-local` | `#0f1115` | `#9da8c8` |
-| `--rm-telemetry-remote` | `#5e6ad2` | `#5e6ad2` |
-| `--rm-telemetry-healthy` | `#27a644` | `#27a644` |
-| `--rm-telemetry-degraded` | `#b67a11` | `#d9a441` |
-| `--rm-telemetry-raw` | `#69707d` | `#62666d` |
-
-### Radius, shadow, spacing, and shell tokens
-
-| Token | Value |
+| Token / use | Notes |
 | --- | --- |
-| `--rm-radius-sm` | `8px` |
-| `--rm-radius-md` | `12px` |
-| `--rm-radius-lg` | `16px` |
-| `--rm-radius-pill` | `9999px` |
-| `--rm-radius-shell` | `28px` |
-| `--rm-radius-panel` | `16px` |
-| `--rm-radius-field` | `12px` |
-| `--rm-radius-badge` | `9999px` |
-| `--rm-shadow-card` | `none` |
-| `--rm-shadow-ui` | `none` |
-| `--rm-shadow-product` | `0 3px 5px 30px rgba(0, 0, 0, 0.22)` |
-| `--rm-shell-width` | `1840px` |
-| `--rm-space-xxs` | `4px` |
-| `--rm-space-xs` | `8px` |
-| `--rm-space-sm` | `12px` |
-| `--rm-space-md` | `17px` |
-| `--rm-space-lg` | `24px` |
-| `--rm-space-xl` | `32px` |
-| `--rm-space-xxl` | `48px` |
-| `--rm-space-section` | `80px` |
-| `--rm-nav-height-global` | `44px` |
-| `--rm-nav-height-sub` | `52px` |
-| `--rm-sticky-bar-height` | `64px` |
-| `--rm-field-height` | `44px` |
-| `--rm-icon-button-size` | `44px` |
-| `--rm-button-pill-padding` | `11px 22px` |
-| `--rm-button-utility-padding` | `8px 15px` |
-| `--rm-button-pearl-padding` | `8px 14px` |
-| `--rm-button-hero-padding` | `14px 28px` |
-| `--rm-chip-padding` | `12px 16px` |
-| `--rm-search-padding` | `12px 20px` |
-| `--rm-card-padding` | `24px` |
-| `--rm-sticky-bar-padding` | `12px 32px` |
+| `--rm3-text-{xs,sm,md,lg,xl}` | Prefer over ad hoc px |
+| `--rm3-font-weight-{regular,medium,semibold}` | Two weights per view (400/500; 600 headings) |
+| `--rm3-tracking-{tight,mono}` | Tight on display; mono tracking on section labels |
+| `--rm3-leading-{xs,sm,md,lg,xl}` | Prefer tokens |
 
-### Border and utility surface tokens
+### Semantic chrome (dark `--rm3-*` / light `--rm3-light-*`)
 
-| Token | Light | Dark |
+| Role | Dark | Light |
 | --- | --- | --- |
-| `--rm-divider-soft` | `#e3e6ec` | `rgba(247, 248, 248, 0.06)` |
-| `--rm-hairline` | `#e3e6ec` | `#23252a` |
-| `--rm-chip-translucent` | `rgba(9, 11, 17, 0.06)` | `rgba(247, 248, 248, 0.08)` |
+| background | `#0A0A0A` | `#FFFFFF` |
+| foreground | `#EDEDED` | `#111111` |
+| card | `#0F0F0F` | `#FFFFFF` |
+| primary | `#FFFFFF` | `#0A0A0A` |
+| primary-foreground | `#0A0A0A` | `#FFFFFF` |
+| muted-foreground | `#9A9A9A` | `#666666` |
+| border | `#1F1F1F` | `#EAEAEA` |
+| destructive | `#E0726A` | `#B4261A` |
+| sidebar | `#0A0A0A` | (light sidebar family) |
+| sidebar-active | `#141414` | (light sidebar-active) |
 
-### Pill tokens
+Full families (popover, secondary, accent surface, input, ring, scrollbar, sidebar-*) are Paper file tokens on `01KW9C35N2G5PZRS4SBJ5678Q6` and must be implemented in Wave 2 CSS. Route code references tokens — never raw hex for covered roles. Also keep transitional `--rm-on-primary` documented until Wave 2 retires Linear aliases.
 
-Status pills use solid token-backed backgrounds with contrasting text.
+### Spacing and radii
 
-| Token | Light | Dark |
-| --- | --- | --- |
-| `--rm-pill-neutral-bg` | `#e3e6ec` | `#23252a` |
-| `--rm-pill-neutral-ink` | `#0f1115` | `#d0d6e0` |
-| `--rm-pill-accent-bg` | `#5e6ad2` | `#5e6ad2` |
-| `--rm-pill-accent-ink` | `#ffffff` | `#010102` |
-| `--rm-pill-success-bg` | `#27a644` | `#27a644` |
-| `--rm-pill-success-ink` | `#ffffff` | `#010102` |
-| `--rm-pill-warning-bg` | `#b67a11` | `#d9a441` |
-| `--rm-pill-warning-ink` | `#ffffff` | `#010102` |
-| `--rm-pill-error-bg` | `#d84f6a` | `#e06c89` |
-| `--rm-pill-error-ink` | `#ffffff` | `#ffffff` |
-| `--rm-pill-info-bg` | `#3f87f5` | `#6ea8ff` |
-| `--rm-pill-info-ink` | `#ffffff` | `#010102` |
-| `--rm-pill-advisory-bg` | `#9664e8` | `#b479ff` |
-| `--rm-pill-advisory-ink` | `#ffffff` | `#010102` |
+| Family | Values |
+| --- | --- |
+| `--rm3-space-{4,8,12,16,24,32,40}` | 4px base rhythm |
+| `--rm3-radius-sm` | `5px` |
+| `--rm3-radius-md` | `6px` |
+| `--rm3-radius-lg` | `8px` |
+| `--rm3-radius-xl` | `11px` |
+
+### Machine-readable twin (`runtimeTheme`)
+
+Wave 1 authority twin uses:
+
+- `maxContentWidth: "1216px"` (main content track; shell itself is fullscreen)
+- radii sm/md/lg/xl = 5/6/8/11; panel/field follow lg/md; pill/badge `9999px`; shell no longer uses Linear `28px` inset
+- chrome accent fields map to RM3 primary (near-black light / near-white dark) — **not** Linear purple `#5E6AD2`
+
+### Semantic equivalence (Linear → RM3)
+
+| Historical Linear | RM3 |
+| --- | --- |
+| `--linear-accent-primary` / `--rm-accent` purple | `--rm3-primary` / `--rm3-light-primary` (grayscale CTA) |
+| `--rm-font-*` Inter / IBM Plex | `--rm3-font-sans|mono|display` Geist |
+| `--rm-shell-width` `1840px` inset | fullscreen + `1216px` content |
+| `--rm-chart-*` Linear hues | `--rm3-chart-*` / `--rm3-light-chart-*` (Wave 2 CSS; Wave 1 docs name the target) |
 
 ## Chart system contract
 
-Charts inherit the same theme and typography system as the rest of runtime UI. There is no separate chart mini-theme.
+### Palette families (Paper `RM v3 · Graph palette`)
 
-### Semantic chart tokens
+- Scale ramps: `--rm3-royal-blue-*`, `--rm3-emerald-*`, `--rm3-di-serria-*`, `--rm3-black-*` (`50…1900`)
+- Categorical: `--rm3-chart-{1…8}` / `--rm3-light-chart-{1…8}`
+- Semantic metrics: `--rm3-chart-{local,remote,throughput,latency,cache,cost,queue,anomaly}` (+ light mirrors)
+- Superlog: `--rm3-chart-{green,blue,purple,pink,orange,error,nodata}`
+- Failures use **chart-error** (not coral); cache fills use deep emerald / chart-cache
 
-- `--rm-chart-local`
-- `--rm-chart-remote`
-- `--rm-chart-tokens`
-- `--rm-chart-cache-hit`
-- `--rm-chart-cache-rate`
-- `--rm-chart-latency`
-- `--rm-chart-cost`
-- `--rm-chart-failure`
-- `--rm-chart-success`
-- `--rm-chart-neutral-1`
-- `--rm-chart-neutral-2`
+Example semantic stops (dark): `--rm3-chart-local` → `var(--rm3-black-100)`; `--rm3-chart-remote` → `var(--rm3-royal-blue-400)`; `--rm3-chart-cache` → `var(--rm3-emerald-600)`; `--rm3-chart-latency` → `var(--rm3-di-serria-300)`; `--rm3-chart-error` → `#F04646`.
 
-### Categorical chart palette
+Live CSS may still expose transitional `--rm-chart-*` aliases until Wave 2/SP5 flips production bindings; **documented authority is `--rm3-chart-*`**.
 
-| Token | Value |
-| --- | --- |
-| `--rm-chart-ink` | `#171717` |
-| `--rm-chart-cyan` | `#9da8c8` |
-| `--rm-chart-highlight-pink` | `#d95d7b` |
-| `--rm-chart-violet` | `#8a78ff` |
-| `--rm-chart-link-blue` | `#5e6ad2` |
-| `--rm-chart-link-deep` | `#4653c2` |
-| `--rm-chart-link-soft` | `#d7dbff` |
-| `--rm-chart-error` | `#e06c89` |
-| `--rm-chart-error-deep` | `#b84361` |
-| `--rm-chart-error-soft` | `#ffd8e2` |
-| `--rm-chart-warning` | `#e2a93b` |
-| `--rm-chart-warning-deep` | `#b57918` |
-| `--rm-chart-warning-soft` | `#fff1cd` |
+### RM3 chart composition rules
 
-### Chart behavior rules
+1. **Titles** — sentence case only (`Token usage over time`), never Title Case for chart titles.
+2. **Legends** — required on every multi-series chart (swatch + metric key/label); inset to match plot/X (`pl-10` / left **56**).
+3. **Width** — plot fills the card content width (or the span between Y axes when present); TimeAxis aligns to plot width; no centered stubs.
+4. **Color** — `--rm3-chart-*` / `--rm3-light-chart-*` only on plots; prefer semantic series tokens; never on chrome.
+5. **ChartCard** — shared shell (`padding 16` / `height auto`): Header (full-bleed title band + `border-b`) → YAxisLeft + Plot (+ optional YAxisRight) → TimeAxis → Legend. Default plot height **192**.
+6. **Y gutter** — left Y default `width 40` + `tickMargin 6`; widen up to **88** when formatted ticks need it (e.g. `$0.10`). Legend inset = Y width + **16** (56 at default). Dual-Y: plot width = rightAxis.left − left inset.
+7. **Bars** — width matches the time-grid column exactly (day: `plotWidth · 4/24`; window: `plotWidth / n`). No `maxBarSize` cap; `barCategoryGap` / `barGap` **0**.
+8. **Time axis** — mono X labels at 7 ticks on a 24h domain: `00:00`…`20:00` plus end `24:00`. Required on every time-series chart.
+9. **Grid** — solid horizontals ≈5% ink + baseline ≈8%; verticals at those 7 time ticks. Never dashed. `vector-effect: non-scaling-stroke`.
+10. **Value axes / Y domain** — every chart has at least one Y axis (left). Same unit → left only; incompatible units → dual-Y. Y domain always includes **0** at the plot baseline.
 
-- All line, area, bar, and ranking telemetry charts use `telemetryChartLayoutContract`; route-local axis widths, margins, legend offsets, and plot heights are not allowed.
-- `resolveTelemetryChartLayout` sizes the left gutter and optional right reserve from the formatted tick labels using bounded character-width approximation. Wide labels grow the gutter without clipping, while a single-axis chart reserves zero right-axis width.
-- Time-series plot margins are nonnegative and symmetric at the left/right chart boundary. Axis components own their computed label reserve, avoiding the previous combination of a negative left margin and excess fixed right margin.
-- Legends use the shared `12px` inline inset, and every shared chart exposes stable card, plot, axis, and legend test selectors for browser geometry verification.
-- The shared plot height is `280px` and is consumed from the contract by every telemetry chart kind rather than repeated as route or component utility classes.
+### Voice · component titles
+
+- **Sentence case** for page titles, SectionCard / panel titles, chart titles, and tabs (`Runtime overview`, `Request volume over time`).
+- **PageFilters field labels** are sentence-case sans (`Breakdown`, `Time range`) — Geist Sans 12/16 muted — not mono uppercase eyebrows.
+- Never Title Case component titles (`Request Volume Over Time`).
+- Chart composition rule 1 is the same contract for plot headers.
+
+### Chart behavior rules (operations)
+
+- Shared layout contracts own gutters/margins; route-local axis widths are not allowed once ChartCard/ChartGrid land.
 - legends display explicit human-readable labels for endpoint, model, provider, role, strategy, and source series
-- horizontal ranking charts place category labels in a bottom legend, not on the left axis, so long endpoint/model names do not compete with the bar plot area
-- ranked comparisons remain horizontal bars rather than pie charts because ordered bars preserve rank, magnitude, and outlier comparison more clearly for long technical labels
-- color assignment is deterministic where feasible so the same series identity keeps the same token across charts
+- ranked comparisons remain horizontal bars rather than pie charts
+- color assignment is deterministic where feasible
 - a single chart must not reuse the same resolved visual color for different visible metrics or series
-- chart containers define explicit height or minimum-height values to prevent collapse on first render
-- tooltips, legends, axis labels, and helper copy inherit runtime caption/body roles
-- grids, axes, and separators use the runtime hairline family
 - loading, empty, and error states are distinct
-- telemetry chart states are canonical and shared across charted routes: `loading`, `refreshing`, `empty`, `unsupported`, `partial`, `truncated`, `error`, and `populated`
-- `unsupported`, `partial`, and `truncated` states come from backend analytics metadata, not frontend inference from zeroes or missing series
+- telemetry chart states remain canonical: `loading`, `refreshing`, `empty`, `unsupported`, `partial`, `truncated`, `error`, and `populated`
 - background refresh keeps the last populated chart visible and adds a calm refreshing affordance instead of replacing the chart with a loading skeleton
-- `empty`, `unsupported`, and `error` replace the chart body with an explicit state panel
-- `partial` and `truncated` keep the populated chart visible and add a warning notice
 - initial chart-request failures render per-card error states instead of collapsing the entire analytics page
-- `/app` and charted Observe routes keep primary chart containers visible even when there is no data
 - no fake sample series may be rendered in production empty states
 
 ## Shell layout
 
-- Desktop: fixed primary left rail, main content region, and section-local top tabs
-- Mobile: section rail stacks above content and secondary navigation becomes a horizontal scroll row
-- The left rail contains the primary section list plus quiet preserved-host-tools links
+- **Fullscreen:** root `h-screen` / `100dvh`; no outer canvas gutter outside Sidebar + main
+- Sidebar width **224px**, absolute/flush left; MainPane offset `marginLeft: 224px`
+- SidebarNav `flex-grow: 1`; SidebarFooter `flex-shrink: 0` with Model inventory → Cache → Router endpoint
+- Page header strip **48px**: title left, theme toggle right
+- Page content: `max-w-[1216px]`, `px-4 py-5`, `gap-6`; place `PageFilters` then grid rows
+- Default grid: **Template · 12-col · default** (col 84 · gutter 16 · track 1184). Allowed counts: 8 / 9 / 12 / 16 / 18 / 24
+- Mobile: section rail stacks above content; secondary navigation becomes a horizontal SegmentedControl scroll row
 - The shell viewport itself does not scroll; only the content frame under the shell header scrolls
-- The content frame keeps scroll behavior but hides the native scrollbar chrome
-- The shell header contains:
-  - page title (from `RuntimeRouteDefinition.title`, overridable on detail routes)
-  - optional page actions (registered by the active route via `usePageActions()`)
-  - the shared light/dark icon toggle aligned to the visible content width, not the outer shell edge
-- Secondary navigation sits beneath the shell header as section-local page tabs
-- Page content begins immediately in `<main>` with template primitives (`FactCard`, `SectionCard`, …)
+- The content frame keeps scroll behavior but hides the native scrollbar chrome — only the page-content frame scrolls; content-frame scrollbar is hidden
 - Route files must **not** repeat title metadata inside page content
 - Preserve vendor-host escape hatches as contextual page actions or route-local references, not as global shell chrome
+
+### Kit package
+
+| Package | Path | Role |
+| --- | --- | --- |
+| `@role-model/ui` | `role-model-router/packages/ui` | Shared RM3 shell, PageFilters, SegmentedControl, MetricStrip, ChartCard/time-series/ranking/composition, Observe helpers |
+
+Exports map to Paper inventory §A in run requirements. Kit README points at this document + Paper pages as authority.
+
+### Shared composites (Wave 2 owners)
+
+- `PageShell` / `SubPageHeaderBar` / `PageContent`
+- `PageFilters` / `TimeRangeControl` / `FilterSelect` (time range left; labeled selects right; trigger `h-[34px]` · `w-[150px]` (or `w-full` in Advanced grids) · `bg-secondary` · `px-2.5`; value `14px` / `leading 18` / Geist Sans; labels sentence-case sans `12/16` muted — match Paper **Runtime overview**; secondary fill so selects still read on card/surface panels; `hideLabel` when a table/column header already names the field — e.g. Extensions Mode)
+- `SegmentedControl` (`size="md"` / `14px` for Studio · Local · Models · Observe · System · Router page nav **and** Overview PageFilters time range — same text size on every route; `size="sm"` / `13px` is compact-only and must not be used for shell page nav; same bordered secondary track in the 12-col content lane)
+- `MetricStrip` variants: `inline` · `inventory` · `badge` · `panel` (`panel` = card fill · `h-54` · mono uppercase labels · sans `18/22` semibold values — Paper System · Readiness)
+- `ChartCard` / `ChartGrid` / time-series / ranking / composition charts
+- SectionCard + PanelHeader (`px-5 py-4` title band + `border-b`; description `12px` muted; body `p-5`)
+- Form fields (`fieldClassName` / `SelectField`): `bg-background` · `34px` · `13px` / `18px`; labels `12px` medium foreground; Remote Save uses compact `34px` primary (not Studio full-width `36px`)
+
+### Rollout order
+
+1. Wave 1 — this document + `design-system.ts` authority twin + kit README scaffold
+2. Wave 2 — kit port, `--rm3-*` CSS/theme, fullscreen shell, shared primitives, charts
+3. Wave 3 — migrate §B routes; `/app/router/config` becomes redirect → `/app/router/strategy`
+4. Wave 4 — rebuilt-runtime hybrid QA
+
+Router SegmentedControl (Paper): **Overview · Strategy · Controller · Candidates · Decisions** only. `/app/router/config` is **redirect-only** → `/app/router/strategy` (no Paper Config artboard). Runtime JSON editing stays at `/app/system/runtime-config`.
+
 
 ## Navigation model
 
@@ -290,7 +223,7 @@ Charts inherit the same theme and typography system as the rest of runtime UI. T
 
 | Route | Status | Template | Purpose |
 | --- | --- | --- | --- |
-| `/app` | live | `summary-board` | Lead with shared telemetry controls and a chart-led runtime overview, then place a horizontal latest-requests strip above current endpoint inventory so charts retain the dominant width. |
+| `/app` | live | `summary-board` | Lead with shared telemetry controls, Model pool, then the chart-led runtime overview stack (token → cache → cost → latency/success). |
 | `/app/studio/chat` | live | `studio-workspace` | Routed chat workspace with assistant output, tool calls, execution receipts, usage, and raw payload inspection. |
 | `/app/studio/images` | live | `studio-workspace` | Image workspace with two first-slice request modes in one page: OpenAI-style generation over `/v1/images/generations` and SDAPI generation over `/sdapi/v1/txt2img`; editing and img2img stay backlog-visible rather than first-slice requirements. |
 | `/app/studio/audio` | live | `studio-workspace` | Unified audio workspace over `/v1/audio/speech`, `/v1/audio/voices`, and `/v1/audio/transcriptions` so voice discovery, speech generation, and transcript workflows remain one operator surface. |
@@ -300,7 +233,8 @@ Charts inherit the same theme and typography system as the rest of runtime UI. T
 | `/app/models` | live | `model-inventory` | Unified local/remote model inventory with inspect-only card drill-ins, explicit handoff to the runtime-config editor, and a non-error pre-activation state when no controller exists yet. |
 | `/app/models/roles` | live | `registry-detail` | Runtime role policy authoring and task allowlist management over the live router policy surface. |
 | `/app/models/benchmark` | live | `registry-detail` | Capability benchmark for configured models with judge grading, persisted scores, and routing-impact explanation. |
-| `/app/router` | live | `registry-detail` | First-class routing overview that summarizes active posture, recent decisions, and operator handoff into config, candidates, and decision interpretation. |
+| `/app/router` | live | `registry-detail` | First-class routing overview that summarizes active posture, recent decisions, and operator handoff into strategy, candidates, and decision interpretation. |
+| `/app/router/config` | redirect | — | Legacy redirect → `/app/router/strategy` (Fixed Decision #15). No Paper Config artboard; Router SegmentedControl has no Config segment. |
 | `/app/router/strategy` | live | `registry-detail` | Structured routing-strategy posture for execution mode, controller state, and handoff into advanced config plus request verification. |
 | `/app/router/controller` | live | `registry-detail` | Explicit controller assignment with candidate health, source type, role coverage, tooling posture, and an honest empty state before any endpoint is activated. |
 | `/app/router/candidates` | live | `ledger-inspector` | Unified local and remote candidate inventory with health, role coverage, and observed routing-signal posture. |
@@ -338,11 +272,11 @@ Status note:
 
 ## Page templates
 
-All templates assume the shell header is already visible. Page content begins directly with template primitives (`FactCard`, `SectionCard`, …) and never with a duplicate page-title block.
+All templates assume the shell header is already visible. Page content begins directly with template primitives (`SectionCard`, `MetricStrip`, `ChartCard`, …) and never with a duplicate page-title block. Happy-path pages omit FactCard/StatusPill walls.
 
 | Template | Layout definition |
 | --- | --- |
-| `summary-board` | Content starts under the shell header. Shared analytics controls and chart-led posture first, then a horizontal latest-requests strip above current endpoint inventory. |
+| `summary-board` | Content starts under the shell header. Shared analytics controls, Model pool, then the chart-led posture stack. |
 | `studio-workspace` | Content starts under the shell header. Left composition rail, dominant result surface, and secondary inspection region for payload, captures, or contracts. |
 | `registry-detail` | Content starts under the shell header. Dense registry/editor split: compact editing or selection on one side, operational state ledger on the other. |
 | `model-inventory` | Content starts under the shell header. Mobile-first card grid with modal drill-in; cards are the default object representation, not rows. |
@@ -358,11 +292,11 @@ No current runtime route may rely on `FutureSurface`, fixture rows, or other pla
 
 | Template | Implemented reading order |
 | --- | --- |
-| `summary-board` | `/app` leads with telemetry controls plus a chart-led posture band for tokens, cost, avoided cost, latency, cache, and success/failure volume; a horizontal latest-requests strip sits immediately above current endpoint inventory as drill-in context rather than a competing KPI strip. Latest requests is an interaction rail, not a raw canonical request ledger. |
+| `summary-board` | `/app` leads with telemetry controls plus Model pool and a chart-led posture band for tokens, cache, cost, latency, and success/failure volume. |
 | `studio-workspace` | `/app/studio/chat` uses a compact composer, dominant response stage, and adjacent usage/tooling/payload inspection. |
 | `registry-detail` | Provider, runtime-config, controller, and endpoint pages keep the primary editor/ledger split and use summary chrome only when it changes the operator decision. |
-| `model-inventory` | `/app/models` uses fact strips before a responsive configured-model card grid and an inspect-only modal. |
-| `ledger-inspector` | Requests and Observe Routing now lead with shared analytics controls plus chart-led history above their canonical ledgers or comparison bands, while request detail stays telemetry-first and Activity remains the raw-host adjacency surface for metrics, captures, and payload drill-ins. |
+| `model-inventory` | `/app/models` uses MetricStrip / inventory summary before a responsive configured-model card grid and an inspect-only modal (no FactCard strip). |
+| `ledger-inspector` | Requests and Observe Routing now lead with shared analytics controls plus chart-led history above their canonical ledgers or comparison bands, while request detail stays telemetry-first. Activity and Logs remain the dedicated raw-host surfaces; telemetry pages do not duplicate them with an in-page adjacent-tools card. |
 | `dual-console` | `/app/observe/logs` and `/app/local/logs` start with combined history, then split proxy and upstream consoles into mirrored panes. |
 | `contract-reference` | `/app/connect/downstream` keeps connection facts in a narrow reference column and examples/compatibility in the larger contract pane. |
 | `system-topology` | `/app/system/runtime` layers lifecycle, controller posture, live version facts, and preserved host diagnostics without extra note-only panels. |
@@ -370,13 +304,13 @@ No current runtime route may rely on `FutureSurface`, fixture rows, or other pla
 
 ## Per-page layout and content contracts
 
-This section is the repo-owned page-by-page source of truth for live runtime pages. The intended visual authority for these contracts remains the Paper Linear review file, but the contracts below are the canonical implementation record when Paper temporarily lags the latest approved runtime UI. The route/template tables define route ownership; the contracts below define the required reading order, major regions, and content obligations per page.
+This section is the repo-owned page-by-page source of truth for live runtime pages. The intended visual authority for these contracts remains Paper RM3 pages `4-0`/`5-0`/`6-0`/`7-0`, but the contracts below are the canonical implementation record when Paper temporarily lags the latest approved runtime UI. The route/template tables define route ownership; the contracts below define the required reading order, major regions, and content obligations per page.
 
 Redirect-only routes inherit the contract of their live destination and do not define independent page content.
 
 | Route | Layout contract | Required content contract |
 | --- | --- | --- |
-| `/app` | Telemetry controls first, chart band second, horizontal latest-requests strip third, endpoint inventory last. The old right-hand request rail is not allowed. | Must show time-range controls, primary telemetry filters, token/cost/latency/cache/success charts, recent requests with analytics handoffs, and current routable endpoint inventory. |
+| `/app` | Telemetry controls first, Model pool second, then the chart band. | Must show time-range controls, primary telemetry filters (Breakdown / Source / Status / Difficulty), Model pool, and token/cache/cost/latency/success charts. |
 | `/app/studio/chat` | Two-column studio workspace with composer rail left and result workspace right; secondary receipts may stack below result. | Must show model/endpoint/routing controls, prompt entry, request submission, result summary, tooling receipts, usage, and raw payload inspection. |
 | `/app/studio/images` | Studio workspace with request-mode controls first, composition controls next, output gallery/result stage beside or below controls depending on width. | Must show OpenAI-style and SDAPI generation modes, model selection, generation controls, output/result stage, and payload/response detail. |
 | `/app/studio/audio` | Studio workspace with speech/transcription controls leading, result stage adjacent, and secondary receipts below. | Must show provider/model/voice or transcription controls, audio or transcript result surfaces, and request/response detail. |
@@ -402,9 +336,9 @@ Redirect-only routes inherit the contract of their live destination and do not d
 | `/app/local/llama-swap/matrix` | Matrix-grid page with dense loaded-model cells; no unrelated sidebar index or layout-mode widgets. | Must show concurrent model cells, load state, engine/runtime facts, and honest empty-state guidance when nothing is loaded. |
 | `/app/connect` | Registry-detail consumer-facing registry with inventory first and readiness/provider posture adjacent. | Must show models/endpoints available to clients, readiness state, provider rollups, and canonical lifecycle guidance. |
 | `/app/observe/activity` | Ledger-inspector raw-host adjacency page with activity ledger first and capture/metrics drill-in secondary. | Must show preserved host activity, metrics-adjacent entries, capture links, and event/raw observation context. |
-| `/app/observe/requests` | Ledger-inspector page with analytics controls and charts above the canonical request ledger. Advanced controls stay behind a compact expand/collapse row. | Must show time-range/filter controls, structured request analytics, request ledger rows, and request-detail handoffs. |
+| `/app/observe/requests` | Ledger-inspector page with analytics controls and charts above the canonical request ledger. Advanced controls stay behind a compact expand/collapse row. No redundant adjacent raw-host tools card. | Must show time-range/filter controls, structured request analytics, request ledger rows, and request-detail handoffs. Must not embed Activity/Logs/Routing shortcut panels that duplicate shell Observe navigation. |
 | `/app/observe/routing` | Ledger-inspector analytics page with routing controls first, comparison charts second, and current-slice summary adjacent or below. | Must show routing mix, avoided cost, difficulty, strategy/model/role analytics, and compact advanced controls behind disclosure. |
-| `/app/observe/requests/:requestId` | Ledger-inspector detail page with top telemetry facts first, then taxonomy/cost/tooling/capture evidence in readable sections. | Must show request identity, usage, cache, endpoint profile context, routing receipts, taxonomy classification, capture links, and stored cost metadata. |
+| `/app/observe/requests/:requestId` | Ledger-inspector detail page with top telemetry facts first, then taxonomy/cost/tooling/capture evidence in readable sections. No redundant adjacent raw-host tools card. | Must show request identity, usage, cache, endpoint profile context, routing receipts, taxonomy classification, capture links, and stored cost metadata. Must not embed Activity/Logs shortcut panels that duplicate shell Observe navigation. |
 | `/app/observe/logs` | Dual-console preserved-host log surface with history and stream panes. | Must show request-correlated raw logs, split log sources, and Observe detail handoffs when correlation exists. |
 | `/app/connect/downstream` | Contract-reference page with narrow reference facts and broader downstream compatibility/content pane. | Must show auth, endpoint/model discovery, compatibility notes, request examples, and downstream tool-calling expectations. |
 | `/app/connect/upstream` | Contract-reference page with passthrough boundaries first and model/provider specifics second. | Must show upstream targets, auth posture, passthrough limitations, raw escape hatches, and model-specific routing implications. |
@@ -460,10 +394,11 @@ Redirect-only routes inherit the contract of their live destination and do not d
 
 ### Badges and status pills
 
-- Shared semantic status pills for `healthy`, `degraded`, `offline`, and similar runtime states use solid token-backed backgrounds
-- semantic meaning is carried by token choice plus contrasting text
-- transparent semantic-outline pills are not part of the active runtime grammar
-- pill fill, pill text, and pill emphasis come from shared theme tokens, never route-local hardcoded colors
+- Paper RM3 Badge geometry is fixed: height `22px`, padding-inline `8px`, `rounded-full`, mono `11px / 14px` regular (System Readiness SoT)
+- Soft tones (`neutral` / `success` / `warning` / `error` / `info` / `advisory`) use muted fill + **semantic ink** (e.g. healthy = chart-cache green text — never a solid green capsule); no hairline on soft chips
+- Accent tone (`selected`) keeps solid primary fill + contrast ink
+- Transparent outline-only semantic pills are not the grammar
+- pill fill / ink come from shared `--rm-pill-*` theme tokens, never route-local hardcoded colors
 
 ### Role and category selectors
 

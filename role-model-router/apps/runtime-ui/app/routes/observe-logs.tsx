@@ -1,22 +1,20 @@
+import { MetricStrip, SegmentedControl } from "@role-model/ui";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
 import {
+  Badge,
   EmptyState,
   ErrorState,
-  FactCard,
   LoadingState,
   SectionCard,
-  StatusPill,
 } from "../components/page-primitives";
 import {
   accentActionTextClassName,
-  metaTextClassName,
-  secondaryButtonClassName,
+  monoEyebrowClassName,
   supportingTextClassName,
 } from "../lib/design-system";
 import { fetchTextLogs } from "../lib/runtime-api";
-import { usePageActions } from "../lib/shell-header-context";
 import { buildStructuredLogRows } from "../lib/view-models";
 
 export default function ObserveLogsRoute() {
@@ -47,21 +45,6 @@ export default function ObserveLogsRoute() {
   const correlatedCount = rows.filter((row) => row.requestId).length;
   const sourceCount = new Set(rows.map((row) => row.sourceClass)).size;
 
-  usePageActions(
-    <>
-      <a className={secondaryButtonClassName} href="/logs">
-        Combined log
-      </a>
-      <a className={secondaryButtonClassName} href="/logs/stream/proxy">
-        Proxy stream
-      </a>
-      <a className={secondaryButtonClassName} href="/logs/stream/upstream">
-        Upstream stream
-      </a>
-    </>,
-    [],
-  );
-
   if (error) {
     return <ErrorState label={error} />;
   }
@@ -71,84 +54,75 @@ export default function ObserveLogsRoute() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-3">
-        <FactCard
-          label="Structured log history"
-          value={String(filteredRows.length)}
-          detail={`Parsed rows currently visible from the combined host log${sourceFilter === "all" ? "." : ` for source ${sourceFilter}.`}`}
-          emphasis
-        />
-        <FactCard
-          label="Sources"
-          value={String(sourceCount)}
-          detail="Distinct source labels detected in the combined log."
-        />
-        <FactCard
-          label="Correlated requests"
-          value={String(correlatedCount)}
-          detail="Rows that include a request identifier you can match to Observe receipts."
+      <MetricStrip
+        variant="panel"
+        items={[
+          {
+            id: "structured-log-history",
+            label: "Structured rows",
+            value: String(filteredRows.length),
+          },
+          {
+            id: "sources",
+            label: "Sources",
+            value: String(sourceCount),
+          },
+          {
+            id: "correlated-requests",
+            label: "Correlated requests",
+            value: String(correlatedCount),
+          },
+        ]}
+      />
+
+      <div className="flex flex-col gap-1.5">
+        <p className="font-sans text-[13px] font-semibold leading-[18px] text-foreground">
+          Source filter
+        </p>
+        <SegmentedControl
+          aria-label="Log source filter"
+          value={sourceFilter}
+          onChange={setSourceFilter}
+          size="md"
+          options={sourceOptions.map((option) => ({
+            value: option,
+            label: option === "all" ? "All sources" : option,
+          }))}
         />
       </div>
 
       <SectionCard
-        title="Canonical telemetry handoff"
-        description="Preserved raw-host logs stay adjacent to canonical telemetry; use correlated request ids to jump into the request-detail inspector when you need structured interpretation."
-      >
-        <div className="flex flex-wrap gap-3">
-          <Link className={secondaryButtonClassName} to="/app/observe/requests">
-            Open canonical request ledger
-          </Link>
-        </div>
-      </SectionCard>
-
-      <SectionCard
-        title="Source filter"
-        description="Filter preserved-host log lines by source class before drilling into raw lines or correlated request entries."
-      >
-        <div className="flex flex-wrap gap-3">
-          {sourceOptions.map((option) => {
-            const active = sourceFilter === option;
-            return (
-              <button
-                key={option}
-                type="button"
-                className={secondaryButtonClassName}
-                aria-pressed={active}
-                onClick={() => setSourceFilter(option)}
-              >
-                {option === "all" ? "All sources" : option}
-              </button>
-            );
-          })}
-        </div>
-      </SectionCard>
-
-      <SectionCard
-        title="Structured log history"
-        description="Rows are parsed into Timestamp, Source, Severity, Request, and message fields so they can be scanned without leaving the shell."
+        title="Structured log rows"
+        description="Rows are parsed into Time, Source, Level, Message, and Request fields so they can be scanned without leaving the shell."
       >
         {filteredRows.length === 0 ? (
           <EmptyState label="No logs recorded yet." />
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-left">
-              <thead className={metaTextClassName}>
+              <thead>
                 <tr>
-                  <th className="pb-3 font-normal">Timestamp</th>
-                  <th className="pb-3 font-normal">Source</th>
-                  <th className="pb-3 font-normal">Severity</th>
-                  <th className="pb-3 font-normal">Request</th>
-                  <th className="pb-3 font-normal">Entry</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Time</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Source</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Level</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Message</th>
+                  <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Request</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredRows.map((row) => (
                   <tr key={row.key} className="border-t border-[var(--rm-border)] align-top">
-                    <td className={`py-3 ${supportingTextClassName}`}>{row.timestamp ?? "—"}</td>
-                    <td className={`py-3 ${supportingTextClassName}`}>{row.sourceClass}</td>
+                    <td
+                      className={`py-3 font-mono text-[12px] tabular-nums ${supportingTextClassName}`}
+                    >
+                      {row.timestamp ?? "—"}
+                    </td>
+                    <td className="py-3 font-mono text-[12px] text-[var(--rm-fg)]">
+                      {row.sourceClass}
+                    </td>
                     <td className="py-3">
                       {row.severity ? (
-                        <StatusPill
+                        <Badge
                           tone={
                             row.severity === "error"
                               ? "warning"
@@ -160,12 +134,13 @@ export default function ObserveLogsRoute() {
                           }
                         >
                           {row.severity}
-                        </StatusPill>
+                        </Badge>
                       ) : (
                         <span className="text-[var(--rm-muted)]">—</span>
                       )}
                     </td>
-                    <td className={`py-3 ${supportingTextClassName}`}>
+                    <td className="py-3 text-[13px] text-[var(--rm-fg)]">{row.message}</td>
+                    <td className={`py-3 font-mono text-[12px] ${supportingTextClassName}`}>
                       {row.requestId ? (
                         <Link
                           className={accentActionTextClassName}
@@ -177,7 +152,6 @@ export default function ObserveLogsRoute() {
                         "—"
                       )}
                     </td>
-                    <td className={`py-3 ${supportingTextClassName}`}>{row.message}</td>
                   </tr>
                 ))}
               </tbody>
@@ -186,31 +160,14 @@ export default function ObserveLogsRoute() {
         )}
       </SectionCard>
 
-      <SectionCard
-        title="Raw lines"
-        description="Preserved-host output stays visible as raw lines so operators can compare the filtered ledger against the original capture."
-      >
+      <SectionCard title="Raw lines">
         {filteredRows.length === 0 ? (
           <EmptyState label="No raw lines match the current source filter." />
         ) : (
-          <pre className="max-h-96 overflow-auto whitespace-pre-wrap border border-[var(--rm-border)] bg-[var(--rm-panel)] p-4 font-mono text-xs text-[var(--rm-secondary)]">
+          <pre className="max-h-[280px] overflow-auto whitespace-pre-wrap font-mono text-[11px] leading-4 text-[var(--rm-fg)]">
             {filteredRows.map((row) => row.rawLine).join("\n")}
           </pre>
         )}
-      </SectionCard>
-
-      <SectionCard
-        title="Raw stream endpoints"
-        description="Use the preserved raw stream endpoints when you need unparsed tail output for proxy or upstream processes."
-      >
-        <div className="flex flex-wrap gap-3">
-          <a className={secondaryButtonClassName} href="/logs/stream/proxy">
-            Open raw proxy stream
-          </a>
-          <a className={secondaryButtonClassName} href="/logs/stream/upstream">
-            Open raw upstream stream
-          </a>
-        </div>
       </SectionCard>
     </div>
   );

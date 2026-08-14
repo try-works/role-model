@@ -1,0 +1,21 @@
+Reading additional input from stdin...
+2026-08-04T12:54:52.528055Z ERROR codex_models_manager::manager: failed to refresh available models: unexpected status 404 Not Found: Not found, url: http://127.0.0.1:3460/v1/models?client_version=0.146.0
+2026-08-04T12:54:52.541013Z ERROR codex_models_manager::manager: failed to refresh available models: unexpected status 404 Not Found: Not found, url: http://127.0.0.1:3460/v1/models?client_version=0.146.0
+OpenAI Codex v0.146.0
+--------
+workdir: D:\DEV\role-model
+model: openai/gpt-4.1-mini-fast
+provider: role-model
+approval: never
+sandbox: read-only
+reasoning effort: none
+reasoning summaries: none
+session id: 019fccd7-577d-7823-b1fe-d0975e6b2478
+--------
+user
+Reply with exactly: OK
+warning: Model metadata for `openai/gpt-4.1-mini-fast` not found. Defaulting to fallback metadata; this can degrade performance and cause issues.
+ERROR: {"error":{"type":"capability_eligibility_error","code":"no_eligible_target","message":"no_eligible_target: no targets for model openai/gpt-4.1-mini-fast satisfy the inferred request capabilities.","requestedModel":"openai/gpt-4.1-mini-fast","requiredInputModalities":["text"],"requiredOutputModalities":["text"],"requiredCapabilities":["reasoning.control","text.chat","tools.function_calling"],"excludedTargets":[]}}
+
+ERROR: {"error":{"type":"capability_eligibility_error","code":"no_eligible_target","message":"no_eligible_target: no targets for model openai/gpt-4.1-mini-fast satisfy the inferred request capabilities.","requestedModel":"openai/gpt-4.1-mini-fast","requiredInputModalities":["text"],"requiredOutputModalities":["text"],"requiredCapabilities":["reasoning.control","text.chat","tools.function_calling"],"excludedTargets":[]}}
+

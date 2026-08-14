@@ -26,6 +26,13 @@ function benchmarkSample(input: {
 }
 
 describe("resolveRoutingBenchmarkQuality", () => {
+  test("runtime package export resolves the built JavaScript module", async () => {
+    const runtime = await import("@role-model-router/profile-aggregator");
+
+    expect(typeof runtime.aggregateObservedPerformanceSamples).toBe("function");
+    expect(typeof runtime.resolveRoutingBenchmarkQuality).toBe("function");
+  });
+
   test("uses quick hard mean for quick-only runs instead of averaging empty buckets", () => {
     const quality = resolveRoutingBenchmarkQuality(
       Array.from({ length: 12 }, (_, index) =>

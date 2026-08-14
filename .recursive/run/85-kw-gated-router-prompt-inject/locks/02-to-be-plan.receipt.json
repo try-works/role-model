@@ -1,0 +1,13 @@
+{
+  "artifact": "02-to-be-plan.md",
+  "artifact_hash": "2b7c3a5c06ef5522716110b976c48cca6f261683d5dcecac2e0aa1eec228087d",
+  "artifact_path": "D:\\DEV\\role-model-internal\\.worktrees\\85-kw-gated-router-prompt-inject\\.recursive\\run\\85-kw-gated-router-prompt-inject\\02-to-be-plan.md",
+  "locked_at": "2026-07-28T11:04:18Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "e99dc0a1f4aba37407cd71fecb15b2696290cebe6a7f90fdcbd00e49a4ac31d2",
+    "00-worktree.md": "a62622fdf04176897904e5e85a2dbb42dab46b75f397ed7a8b86a77576430251",
+    "01-as-is.md": "b92aa220c255f45079bc18e0222b6b0ca9e4ba31f7705029c3680fea14b72440"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "0399a2078c43887830c0857fff9257ed32e80c5241ac43661bc94506b16f33db"
+}

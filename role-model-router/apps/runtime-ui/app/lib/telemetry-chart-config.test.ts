@@ -9,7 +9,7 @@ import {
 } from "./telemetry-chart-config";
 
 describe("telemetry chart config", () => {
-  test("defines stable Apple-theme chart color tokens and selector options", () => {
+  test("defines stable RM3 chart color tokens and selector options", () => {
     expect(telemetryTimeRangeOptions.map((option) => option.value)).toEqual([
       "day",
       "week",
@@ -43,25 +43,25 @@ describe("telemetry chart config", () => {
     );
     expect(telemetryChartColorTokens).toEqual(
       expect.objectContaining({
-        local: "var(--rm-chart-local)",
-        remote: "var(--rm-chart-remote)",
-        cost: "var(--rm-chart-cost)",
-        latency: "var(--rm-chart-latency)",
-        cacheHit: "var(--rm-chart-cache-hit)",
-        accent: "var(--rm-chart-link-blue)",
-        warningSoft: "var(--rm-chart-warning-soft)",
+        local: "var(--rm3-chart-local)",
+        remote: "var(--rm3-chart-remote)",
+        cost: "var(--rm3-chart-cost)",
+        latency: "var(--rm3-chart-latency)",
+        cacheHit: "var(--rm3-chart-cache)",
+        accent: "var(--rm3-chart-1)",
+        warningSoft: "var(--rm3-di-serria-50)",
       }),
     );
   });
 
   test("assigns deterministic series colors for repeated semantic and categorical keys", () => {
     expect(getTelemetryChartSeriesStyle("sourceType", "local")).toEqual({
-      colorToken: "var(--rm-chart-local)",
+      colorToken: "var(--rm3-chart-local)",
       strokeOpacity: 1,
       fillOpacity: 0.16,
     });
     expect(getTelemetryChartSeriesStyle("sourceType", "remote")).toEqual({
-      colorToken: "var(--rm-chart-remote)",
+      colorToken: "var(--rm3-chart-remote)",
       strokeOpacity: 1,
       fillOpacity: 0.16,
     });

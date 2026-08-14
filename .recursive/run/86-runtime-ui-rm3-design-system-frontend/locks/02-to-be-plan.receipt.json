@@ -1,0 +1,13 @@
+{
+  "receipt_hash": "037c64b1cbe0d104a1dec52513c269177aa140f6aae22b9dd9ebdaa1c230a2b5",
+  "previous_receipt_hash": "0c606964ae50574a6572d53853cf78a8ddb07cdabb7893240080ec14ac7364a4",
+  "prerequisite_hashes": {
+    "01-as-is.md": "7d0ce7308178b2c942852ab2c9951396a40f95eb2de9dac6b52fa450f7e6e1f1",
+    "00-worktree.md": "5e6ad3855c8f7351a051f4211d1ce54c509afad5cb77cb39dd91cb6ac43a06cb",
+    "00-requirements.md": "ceaec347c5a39c239e39efeb1ff321cacf219d9993686857e974b1beb46fe03d"
+  },
+  "artifact_hash": "5316239e9b37a47305e092b0d6a0ce4f8bd4bc0b0e9e640642c3a2e64fb4ed2c",
+  "locked_at": "2026-07-30T13:35:00Z",
+  "artifact": "02-to-be-plan.md",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\86-runtime-ui-rm3-design-system-frontend\\.recursive\\run\\86-runtime-ui-rm3-design-system-frontend\\02-to-be-plan.md"
+}

@@ -1,0 +1,13 @@
+Γ£ö run80 RED/GREEN: --track=dev maps channel to development (not production) (2.6447ms)
+Γ£ö run80: explicit channel wins over track mapping (0.4017ms)
+Γ£ö run80: production track is refused for live lifecycle (1.2069ms)
+Γ£ö run80: public root required and prefers explicit arg (0.8764ms)
+Γ£ö run80: track=dev defaults recommendation service URL to permanent-dev host (0.3439ms)
+Γä╣ tests 5
+Γä╣ suites 0
+Γä╣ pass 5
+Γä╣ fail 0
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 148.5216

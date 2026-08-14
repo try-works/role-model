@@ -1,0 +1,62 @@
+Reading prompt from stdin...
+OpenAI Codex v0.146.0
+--------
+workdir: C:\Users\erikb\AppData\Local\Temp\codex-e2e-05-spaces-path-retry-202322
+model: baseline.remote-only
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: low
+reasoning summaries: none
+session id: 019fd1e0-ff30-78f3-a348-e5a9481941b5
+--------
+user
+Create directory bridge-cases/sub dir (the middle folder name has a space). Write file bridge-cases/sub dir/quote-test.txt containing exactly the text: path with spaces ok. Read it back and quote the contents. Do not ask questions.
+
+
+2026-08-05T12:23:42.961992Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+2026-08-05T12:23:50.891409Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+2026-08-05T12:23:51.098781Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 2/5
+2026-08-05T12:23:51.555599Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 3/5
+2026-08-05T12:23:52.421618Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 4/5
+2026-08-05T12:23:54.172455Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 5/5
+2026-08-05T12:23:57.288446Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+warning: Falling back from WebSockets to HTTPS transport. unexpected status 404 Not Found: Not found, url: ws://127.0.0.1:3460/v1/responses
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'New-Item -ItemType Directory -Force -Path "bridge-cases/sub dir" | Out-Null; Set-Content -LiteralPath "bridge-cases/sub dir/quote-test.txt" -Value "path with spaces ok" -NoNewline; Get-Content -LiteralPath "bridge-cases/sub dir/quote-test.txt"' in C:\Users\erikb\AppData\Local\Temp\codex-e2e-05-spaces-path-retry-202322
+ succeeded in 5703ms:
+path with spaces ok
+
+2026-08-05T12:24:15.009883Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:24:15.031549Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:24:15.031583Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:24:15.031590Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:24:15.370953Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:24:15.370989Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:24:15.370996Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:24:15.371183Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:24:15.371212Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:24:15.371219Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:24:15.371224Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:24:15.401171Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:24:15.401205Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:24:15.401212Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:24:15.401217Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:24:15.401222Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:24:15.461150Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:24:15.461188Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:24:15.461199Z ERROR codex_core::util: OutputTextDelta without active item
+2026-08-05T12:24:15.461205Z ERROR codex_core::util: OutputTextDelta without active item
+codex
+Done. Created the directory and wrote the file, then read it back:
+
+> path with spaces ok
+Done. Created the directory and wrote the file, then read it back:
+
+tokens used
+15,077
+> path with spaces ok

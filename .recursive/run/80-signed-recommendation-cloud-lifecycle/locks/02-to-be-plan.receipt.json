@@ -1,0 +1,13 @@
+{
+  "artifact": "02-to-be-plan.md",
+  "artifact_hash": "df224086abb6d0e6587032da2314420e26e43e4ebe09ea463c888335e2eba1a5",
+  "artifact_path": "D:\\DEV\\role-model-internal\\.worktrees\\80-signed-recommendation-cloud-lifecycle\\.recursive\\run\\80-signed-recommendation-cloud-lifecycle\\02-to-be-plan.md",
+  "locked_at": "2026-07-24T11:05:08Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "efe0dd456210f8a5802c65dad97af9ffd1dd608b6c3334226d08afac723cca3b",
+    "00-worktree.md": "41b0adb1d5ad80745a035932e9e7150cb5784e33974173dc351342d6401976bd",
+    "01-as-is.md": "56dc46a2260006d6dde8b6aa684bcde26f56bfd8dc2b921a37fc689c05d28def"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "a2aa392b36a36f43df31fb8ad8c8e5d17ba62d2890a99eb461b24131359b5366"
+}

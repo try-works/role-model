@@ -1,5 +1,6 @@
-import { StatusPill } from "../components/page-primitives";
-import { mutedPanelClassName, secondaryButtonClassName } from "./design-system";
+import { Badge } from "@role-model/ui";
+
+import { CheckboxControl } from "../components/checkbox-control";
 import type { RuntimeRolePolicyRole, RuntimeTaskDefinition } from "./runtime-api";
 
 type RoleTaskHierarchyTask = {
@@ -87,92 +88,180 @@ export function RoleCatalogHierarchy({
   readonly onSelectRole: (roleId: string) => void;
 }) {
   const hierarchy = buildRoleTaskHierarchy(roleDefinitions, taskDefinitions);
-  const groupedHierarchy = hierarchy.reduce((groups, role) => {
-    const existing = groups.get(role.primaryGroupId) ?? [];
-    existing.push(role);
-    groups.set(role.primaryGroupId, existing);
-    return groups;
-  }, new Map<string, RoleTaskHierarchyItem[]>());
 
   return (
-    <div className="space-y-6">
-      {[...groupedHierarchy.entries()].map(([groupId, roles]) => (
-        <section key={groupId} className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--rm-muted)]">
-            {groupLabel(groupId)}
-          </h2>
-          <div className="grid gap-4 xl:grid-cols-2">
-            {roles.map((role) => {
-              const isExpanded = expandedRoleId === role.roleId;
-              return (
-                <article
-                  key={role.roleId}
-                  className={`${mutedPanelClassName} space-y-4 p-4 ${
-                    selectedRoleId === role.roleId ? "border-[var(--rm-accent)]" : ""
-                  }`}
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-semibold text-[var(--rm-fg)]">{role.label}</p>
-                        {isHighRiskRole(role) ? (
-                          <StatusPill tone="warning">High risk</StatusPill>
-                        ) : null}
-                      </div>
-                      <p className="mt-1 break-all text-xs uppercase tracking-[0.16em] text-[var(--rm-muted)]">
-                        {role.roleId}
+    <div className="flex flex-col">
+      {hierarchy.map((role, index) => {
+        const selected = selectedRoleId === role.roleId;
+        const isExpanded = expandedRoleId === role.roleId;
+        const toolLabel =
+          role.toolPolicyMode === "allowed"
+            ? "tools allowed"
+            : role.toolPolicyMode === "limited"
+              ? "tools limited"
+              : `tools ${role.toolPolicyMode}`;
+        const isLast = index === hierarchy.length - 1;
+
+        return (
+          <div
+            key={role.roleId}
+            className={`${selected ? "border-l-[3px] border-l-[var(--rm-accent)] bg-[var(--rm-surface-strong)]" : "border-l-[3px] border-l-transparent"} ${isLast ? "" : "border-b border-[var(--rm-border)]"}`}
+          >
+            <div className="flex items-center gap-3 px-3.5 py-3">
+              <button
+                type="button"
+                className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                onClick={() => onSelectRole(role.roleId)}
+              >
+                <div className="flex w-40 shrink-0 flex-col gap-0.5">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)]">
+                      {role.label}
+                    </span>
+                    {isHighRiskRole(role) ? <Badge tone="error">High risk</Badge> : null}
+                  </div>
+                  <span className="font-mono text-[11px] leading-[14px] text-[var(--rm-muted)]">
+                    {groupLabel(role.primaryGroupId).toLowerCase()} · {toolLabel}
+                  </span>
+                </div>
+                <span className="min-w-0 flex-1 truncate text-[13px] leading-[18px] text-[var(--rm-muted)]">
+                  {role.description}
+                </span>
+                <span className="w-[72px] shrink-0 text-right text-[12px] font-normal leading-4 text-[var(--rm-muted)]">
+                  {role.tasks.length} task{role.tasks.length === 1 ? "" : "s"}
+                </span>
+              </button>
+              <button
+                type="button"
+                className="inline-flex h-7 shrink-0 items-center rounded-[6px] border border-[var(--rm-border)] bg-[var(--rm-panel)] px-2.5 text-[12px] font-semibold leading-4 text-[var(--rm-fg)]"
+                onClick={() => onToggleTaskDetail(role.roleId)}
+              >
+                {isExpanded ? "Hide task detail" : "Task detail"}
+              </button>
+            </div>
+            {isExpanded ? (
+              <div className="space-y-2 border-t border-[var(--rm-border)] px-3.5 py-3">
+                {role.tasks.length === 0 ? (
+                  <p className="text-sm text-[var(--rm-secondary)]">
+                    No tasks are currently assigned.
+                  </p>
+                ) : (
+                  role.tasks.map((task) => (
+                    <div key={task.taskType} className="space-y-1">
+                      <p className="font-mono text-[12px] font-semibold text-[var(--rm-fg)]">
+                        {task.taskType}
                       </p>
-                      {role.secondaryGroupIds.length > 0 ? (
-                        <p className="mt-1 text-xs text-[var(--rm-muted)]">
-                          Secondary: {role.secondaryGroupIds.map(groupLabel).join(", ")}
-                        </p>
-                      ) : null}
+                      <p className="text-sm text-[var(--rm-secondary)]">{task.description}</p>
                     </div>
-                    <StatusPill tone={role.toolPolicyMode === "allowed" ? "success" : "warning"}>
-                      {role.toolPolicyMode}
-                    </StatusPill>
-                  </div>
-                  <p className="text-sm leading-6 text-[var(--rm-secondary)]">{role.description}</p>
-                  <div className="flex flex-wrap gap-3">
-                    <button
-                      className={secondaryButtonClassName}
-                      type="button"
-                      onClick={() => onSelectRole(role.roleId)}
-                    >
-                      {selectedRoleId === role.roleId ? "Selected" : "Select role"}
-                    </button>
-                    <button
-                      className={secondaryButtonClassName}
-                      type="button"
-                      onClick={() => onToggleTaskDetail(role.roleId)}
-                    >
-                      {isExpanded ? "Hide task detail" : "Task detail"}
-                    </button>
-                  </div>
-                  {isExpanded ? (
-                    <div className="space-y-3 rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] px-4 py-3">
-                      {role.tasks.length === 0 ? (
-                        <p className="text-sm text-[var(--rm-secondary)]">
-                          No tasks are currently assigned.
-                        </p>
-                      ) : (
-                        role.tasks.map((task) => (
-                          <div key={task.taskType} className="space-y-2">
-                            <div className="flex flex-wrap items-start gap-2">
-                              <StatusPill tone="neutral">{task.taskType}</StatusPill>
-                            </div>
-                            <p className="text-sm text-[var(--rm-secondary)]">{task.description}</p>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  ) : null}
-                </article>
-              );
-            })}
+                  ))
+                )}
+              </div>
+            ) : null}
           </div>
-        </section>
-      ))}
+        );
+      })}
+    </div>
+  );
+}
+
+const roleTreeChevronPath = {
+  expanded: "M4 6l4 4 4-4",
+  collapsed: "M6 4l4 4-4 4",
+} as const;
+
+/** Compact Paper Models-inventory roles→tasks binder (checkbox rows + expand). */
+export function ModelRoleBindingTree({
+  roleDefinitions,
+  taskDefinitions,
+  selectedRoleIds,
+  expandedRoleId,
+  onToggleRole,
+  onToggleExpandedRole,
+}: {
+  readonly roleDefinitions: readonly RuntimeRolePolicyRole[];
+  readonly taskDefinitions: readonly RuntimeTaskDefinition[];
+  readonly selectedRoleIds: readonly string[];
+  readonly expandedRoleId: string | null;
+  readonly onToggleRole: (roleId: string, nextChecked: boolean) => void;
+  readonly onToggleExpandedRole: (roleId: string) => void;
+}) {
+  const hierarchy = buildRoleTaskHierarchy(roleDefinitions, taskDefinitions);
+  const selected = new Set(selectedRoleIds);
+
+  return (
+    <div className="space-y-1.5">
+      {hierarchy.map((role) => {
+        const isChecked = selected.has(role.roleId);
+        const isExpanded = expandedRoleId === role.roleId;
+        return (
+          <div
+            key={role.roleId}
+            className={`overflow-hidden rounded-lg ${
+              isExpanded ? "bg-[var(--rm-surface-strong)]" : ""
+            }`}
+          >
+            <div className="flex min-h-8 items-center gap-2.5 px-2.5 py-2">
+              <CheckboxControl
+                checked={isChecked}
+                aria-label={`Bind role ${role.roleId}`}
+                onChange={() => onToggleRole(role.roleId, !isChecked)}
+              />
+              <button
+                type="button"
+                className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
+                onClick={() => onToggleExpandedRole(role.roleId)}
+                aria-expanded={isExpanded}
+              >
+                <span className="min-w-0 flex-1 truncate text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)]">
+                  {role.roleId}
+                </span>
+                <span className="shrink-0 text-[11px] leading-[14px] text-[var(--rm-muted)]">
+                  {role.tasks.length} task{role.tasks.length === 1 ? "" : "s"}
+                </span>
+                <svg
+                  aria-hidden="true"
+                  className="h-3.5 w-3.5 shrink-0 text-[var(--rm-muted)]"
+                  fill="none"
+                  viewBox="0 0 14 14"
+                >
+                  <path
+                    d={isExpanded ? roleTreeChevronPath.expanded : roleTreeChevronPath.collapsed}
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.5"
+                  />
+                </svg>
+              </button>
+            </div>
+            {isExpanded ? (
+              <div className="space-y-0.5 px-2.5 pb-2">
+                {role.tasks.length === 0 ? (
+                  <p className="px-1 py-1 pl-6 text-[12px] text-[var(--rm-secondary)]">
+                    No tasks under this role.
+                  </p>
+                ) : (
+                  role.tasks.map((task) => (
+                    <label
+                      key={task.taskType}
+                      className={`flex min-h-7 items-center gap-2.5 py-1.5 pl-6 text-[12px] leading-4 ${
+                        isChecked ? "text-[var(--rm-fg)]" : "text-[var(--rm-muted)]"
+                      }`}
+                    >
+                      <CheckboxControl
+                        checked={isChecked}
+                        disabled={!isChecked}
+                        aria-label={`Task ${task.taskType}`}
+                      />
+                      <span className="truncate">{task.taskType}</span>
+                    </label>
+                  ))
+                )}
+              </div>
+            ) : null}
+          </div>
+        );
+      })}
     </div>
   );
 }

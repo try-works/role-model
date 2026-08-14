@@ -1,0 +1,57 @@
+(node:30424) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö TB10-TEST-UNIT replays deterministically (5.4627ms)
+Γ£ö TB10-TEST-CONTRACT binds evaluation group provenance (5.0576ms)
+Γ£ö TB10-TEST-INTEGRATION derives shadow candidates (3.1831ms)
+Γ£ö TB10-TEST-REGRESSION never activates production (1.9737ms)
+Γ£ö TB10-TEST-MUTATION activation guard is immutable (1.3649ms)
+Γ£û TB10-TEST-ACTIVATION-POLICY activates only with valid v1 policy (3.1038ms)
+Γ£û TB10-TEST-ACTIVATION-CAPABILITY forwards policy through run() (1.5346ms)
+Γ£ö TB10-TEST-FALSE-SUCCESS rejects holdout failure (1.3493ms)
+Γ£ö TB10-TEST-ROLLBACK discards derived candidates (1.4692ms)
+Γ£ö TB10-TEST-HEALTH operates without Verifiers (1.2507ms)
+Γ£ö TB10-TEST-REPLAY-CORE-PACKAGE checkpoints cancellation (0.5533ms)
+Γ£ö TB10-TEST-EVALUATION-RUNNER-PACKAGE enforces no egress (1.0758ms)
+Γ£ö TB10-TEST-TRAJECTORY-SIGNALS-PACKAGE emits bounded diagnostics (1.5594ms)
+Γ£ö TB10-TEST-PROFILE-LEARNER-PACKAGE keeps attribution dimensions separate (1.9609ms)
+Γ£ö TB10-TEST-KNOWLEDGE-WORKER-PACKAGE requires review and redaction (1.1515ms)
+Γ£ö TB10-TEST-TRACK-A-EXCLUSION packages are reference-only learners (0.3186ms)
+Γ£ö TB10-REVIEW-REPLAY shares immutable prefixes and binds source decision provenance (20.4378ms)
+Γ£ö TB10-REVIEW-REPLAY cancellation resumes from a hash-bound checkpoint (0.813ms)
+Γ£ö TB10-REVIEW-EVAL runs through Evaluation Core with no external environment (1.648ms)
+Γ£ö TB10-REVIEW-SIGNALS are provenance-bound uncertain diagnostics, never labels (0.3294ms)
+Γ£ö TB10-REVIEW-PROFILE preserves propensity, bias, confidence, promotion and rollback evidence (1.0866ms)
+Γ£ö TB10-REVIEW-KNOWLEDGE requires comparable positive/negative groups and disjoint validation (2.4331ms)
+Γ£ö TB10-REVIEW-SAFETY rejects caller-asserted knowledge and missing diagnostic provenance (1.2539ms)
+Γ£ö TB10-REVIEW-SAFETY executes only trusted registered scorers (1.1586ms)
+Γ£ö TB10-REVIEW-BOUNDARY accepts only finite declarative scorers and complete execution provenance (1.6808ms)
+Γ£ö TB10-REVIEW-RECEIPTS rejects forged profile and knowledge promotion gates (2.0356ms)
+Γ£ö TB10-REVIEW-RECEIPTS bind nested evidence and model fields (2.5183ms)
+Γ£ö TB10-REVIEW-REPLAY uses collision-safe prefix hashes and durable restart checkpoints (32.5144ms)
+Γä╣ tests 28
+Γä╣ suites 0
+Γä╣ pass 26
+Γä╣ fail 2
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 391.2137
+
+Γ£û failing tests:
+
+test at tests\track-b\tb10.test.mjs:9:1
+Γ£û TB10-TEST-ACTIVATION-POLICY activates only with valid v1 policy (3.1038ms)
+  Error: production activation prohibited in v1.1
+      at KnowledgeWorker.activate (file:///D:/DEV/.wt/81-kw/extensions/knowledge-worker/index.mjs:46:20)
+      at TestContext.<anonymous> (file:///D:/DEV/.wt/81-kw/tests/track-b/tb10.test.mjs:9:1269)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7)
+
+test at tests\track-b\tb10.test.mjs:10:1
+Γ£û TB10-TEST-ACTIVATION-CAPABILITY forwards policy through run() (1.5346ms)
+  Error: production activation prohibited in v1.1
+      at KnowledgeWorker.activate (file:///D:/DEV/.wt/81-kw/extensions/knowledge-worker/index.mjs:46:20)
+      at Module.run (file:///D:/DEV/.wt/81-kw/extensions/knowledge-worker/index.mjs:56:60)
+      at TestContext.<anonymous> (file:///D:/DEV/.wt/81-kw/tests/track-b/tb10.test.mjs:10:189)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7)

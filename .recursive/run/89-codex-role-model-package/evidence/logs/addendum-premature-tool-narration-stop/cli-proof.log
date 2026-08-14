@@ -1,0 +1,47 @@
+Reading additional input from stdin...
+OpenAI Codex v0.147.0-alpha.1.2
+--------
+workdir: D:\dev\role-model\.recursive\run\89-codex-role-model-package\evidence\logs\addendum-premature-tool-narration-stop\cli-proof-workdir
+model: baseline.remote-only
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: high
+reasoning summaries: none
+session id: 019fd447-4cb3-7f12-9d29-683621006589
+--------
+user
+Multi-step file proof (do not invent; use tools):
+1) Create cli-premature-stop-proof.txt containing exactly the line PROOF_MARKER_A using a tool call (shell or apply_patch). Do not only describe writing it.
+2) Then create cli-premature-stop-proof-2.txt containing exactly the line PROOF_MARKER_B.
+3) End with the string CLI_PROOF_COMPLETE.
+Never narrate the next tool without calling it in the same turn.
+2026-08-05T23:34:32.258692Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+2026-08-05T23:34:33.527293Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+2026-08-05T23:34:33.733654Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 2/5
+2026-08-05T23:34:34.183301Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 3/5
+2026-08-05T23:34:34.989969Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 4/5
+2026-08-05T23:34:36.584767Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 5/5
+2026-08-05T23:34:40.011126Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+warning: Falling back from WebSockets to HTTPS transport. unexpected status 404 Not Found: Not found, url: ws://127.0.0.1:3460/v1/responses
+codex
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Set-Content -LiteralPath 'cli-premature-stop-proof-2.txt' -Value 'PROOF_MARKER_B' -NoNewline; Get-Content -LiteralPath 'cli-premature-stop-proof-2.txt'" in D:\dev\role-model\.recursive\run\89-codex-role-model-package\evidence\logs\addendum-premature-tool-narration-stop\cli-proof-workdir
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Set-Content -LiteralPath 'cli-premature-stop-proof.txt' -Value 'PROOF_MARKER_A' -NoNewline; Get-Content -LiteralPath 'cli-premature-stop-proof.txt'" in D:\dev\role-model\.recursive\run\89-codex-role-model-package\evidence\logs\addendum-premature-tool-narration-stop\cli-proof-workdir
+ succeeded in 5273ms:
+PROOF_MARKER_A
+
+ succeeded in 5254ms:
+PROOF_MARKER_B
+
+codex
+CLI_PROOF_COMPLETE
+CLI_PROOF_COMPLETE
+tokens used
+26,538

@@ -1,0 +1,36 @@
+Γ£ö TB11-TEST-UNIT reconciles every TB00-TB11 phase exactly once (15.6758ms)
+Γ£ö TB11-TEST-CONTRACT binds the complete locked contract closure (5.9695ms)
+Γ£ö TB11-TEST-INTEGRATION covers twelve cumulative cross-repository scenarios (1.9028ms)
+Γ£ö TB11-TEST-REGRESSION proves generated views reproduce immutable sources (2.7124ms)
+Γ£ö TB11-REVIEW-SCENARIO-ROLLBACK binds proof to the registered rollback test and execution (7.0866ms)
+Γ£ö TB11-TEST-E2E proves the paired release is ready only after every gate (33.4116ms)
+Γ£ö TB11-TEST-FALSE-SUCCESS rejects a missing predecessor or skipped command (4.5721ms)
+Γ£ö TB11-TEST-ROLLBACK executes finite rollback and preserves receipts (2.2436ms)
+Γ£ö TB11-TEST-HEALTH meets declared disaster recovery objectives (2.1087ms)
+Γ£ö TB11-TEST-COMMAND-04 validates all phase receipt signatures (2.5113ms)
+Γ£ö TB11-TEST-COMMAND-05 validates proof identity and semantic examples (3.3576ms)
+Γ£ö TB11-TEST-COMMAND-06 records bounded capacity results (2.0937ms)
+Γ£ö TB11-REVIEW-CAPACITY measures bounded local and cloud paths from the pinned contract (78612.7831ms)
+Γ£ö TB11-REVIEW-CAPACITY fails closed on a contradictory pinned-contract constraint (142.6446ms)
+Γ£ö TB11-REVIEW-CAPACITY records local reproducibility limits without unsupported claims (1.8815ms)
+Γ£ö TB11-TEST-PACKAGE-COVERAGE reconciles thirteen extensions and two auxiliaries (1.8827ms)
+Γ£ö TB11-TEST-TRACK-A-EXCLUSION aggregates twelve nonempty zero-finding gates (2.0972ms)
+Γ£ö TB11-REVIEW-FALSE-SUCCESS rejects declared scenarios without executable receipts (3.1115ms)
+Γ£ö TB11-REVIEW-FALSE-SUCCESS rejects shallow dual-platform interoperability receipts (1.0352ms)
+Γ£ö TB11-REVIEW-ROLLBACK requires measured rollback and DR receipts (2.8603ms)
+(node:20680) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö TB11-REVIEW-RUNTIME-BRIDGE publishes executed canonical probes and a real retention plan (76.06ms)
+Γ£ö TB11-REGRESSION release validation requires durable live Pi, local, cloud, correlation, browser, and clean-checkout proof (3.5166ms)
+Γ£ö TB11-REGRESSION live E2E proof is rejected when build and clean-checkout revisions drift from the source lock (17.4683ms)
+Γ£ö TB11-REGRESSION proof-only commits may follow a pinned product revision but product drift is rejected (2677.5038ms)
+Γ£ö TB11-REGRESSION phase receipts accept proof-only commits but reject product drift (2646.9932ms)
+Γ£ö TB11-REGRESSION release source hashes ignore empty directories Git cannot reconstruct (19.3171ms)
+Γä╣ tests 26
+Γä╣ suites 0
+Γä╣ pass 26
+Γä╣ fail 0
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 84451.4493

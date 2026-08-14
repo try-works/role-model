@@ -1,18 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 
 import {
+  Badge,
   EmptyState,
   ErrorState,
-  FactCard,
   LoadingState,
   SectionCard,
-  StatusPill,
 } from "../components/page-primitives";
-import {
-  compactTitleClassName,
-  mutedPanelClassName,
-  supportingTextClassName,
-} from "../lib/design-system";
+import { mutedPanelClassName, supportingTextClassName } from "../lib/design-system";
 import {
   type RuntimeSnapshot,
   fetchRuntimeAccounts,
@@ -64,51 +59,37 @@ export default function IntegrationsUpstreamRoute() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <FactCard
-          label="Providers"
-          value={providerCards.length}
-          detail="Provider and account posture stays visible here without duplicating the editable Control pages."
-          emphasis
-        />
-        <FactCard
-          label="Accounts"
-          value={snapshot?.accounts.length ?? 0}
-          detail="Configured provider accounts that feed current upstream model access."
-        />
-        <FactCard
-          label="Upstream targets"
-          value={modelTargets.length}
-          detail="Each target keeps a contextual `/upstream/<model>/` doorway instead of a global legacy-ui link."
-        />
-      </div>
-
       {error ? <ErrorState label={error} /> : null}
 
       <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-        <SectionCard title="Provider accounts in scope">
+        <SectionCard
+          title="Provider accounts in scope"
+          description="Configured providers with at least one account feeding upstream access."
+        >
           {!snapshot ? (
             <LoadingState label="Loading upstream provider posture…" />
           ) : providerCards.length === 0 ? (
             <EmptyState label="No configured provider accounts are available yet." />
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {providerCards.map((provider) => (
                 <div key={provider.providerId} className={`${mutedPanelClassName} p-4`}>
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className={compactTitleClassName}>{provider.title}</p>
-                    <StatusPill tone={provider.accountCount > 0 ? "accent" : "warning"}>
+                    <p className="text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)]">
+                      {provider.title}
+                    </p>
+                    <Badge tone={provider.accountCount > 0 ? "accent" : "warning"}>
                       {provider.accountCount} account{provider.accountCount === 1 ? "" : "s"}
-                    </StatusPill>
+                    </Badge>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {provider.variants.length === 0 ? (
-                      <StatusPill tone="warning">No variants</StatusPill>
+                      <Badge tone="warning">No variants</Badge>
                     ) : (
                       provider.variants.map((variant) => (
-                        <StatusPill key={variant.variantId} tone="neutral">
+                        <Badge key={variant.variantId} tone="neutral">
                           {variant.label}
-                        </StatusPill>
+                        </Badge>
                       ))
                     )}
                   </div>
@@ -119,26 +100,36 @@ export default function IntegrationsUpstreamRoute() {
         </SectionCard>
 
         <div className="space-y-4">
-          <SectionCard title="Boundary guidance">
+          <SectionCard
+            title="Boundary guidance"
+            description="Raw escape hatch for provider-native behavior — not routed alias execution."
+          >
             <div className="space-y-3">
-              <div className={`${mutedPanelClassName} p-4`}>
-                <p className={compactTitleClassName}>Raw passthrough only</p>
-                <p className={`mt-2 ${supportingTextClassName}`}>
-                  Use the contextual `/upstream/&lt;model&gt;/` doorway when you need direct
-                  provider-native behavior for a runtime-visible model instead of routed alias
-                  execution.
+              <div className={`${mutedPanelClassName} space-y-2 p-4`}>
+                <p className="text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)]">
+                  Raw passthrough only
+                </p>
+                <p className={supportingTextClassName}>
+                  {
+                    "Use the contextual /upstream/<model>/ doorway when you need direct provider-native behavior for a runtime-visible model instead of routed alias execution."
+                  }
                 </p>
               </div>
-              <div className={`${mutedPanelClassName} p-4`}>
-                <p className={compactTitleClassName}>Live inventory</p>
+              <div className={`${mutedPanelClassName} space-y-2 p-4`}>
+                <p className="text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)]">
+                  Live inventory
+                </p>
                 <p className={supportingTextClassName}>
-                  {modelTargets.length} upstream target{modelTargets.length === 1 ? "" : "s"} are
-                  currently exposed from {providerCards.length} configured provider
+                  {modelTargets.length} upstream target{modelTargets.length === 1 ? "" : "s"}{" "}
+                  {modelTargets.length === 1 ? "is" : "are"} currently exposed from{" "}
+                  {providerCards.length} configured provider
                   {providerCards.length === 1 ? "" : "s"}.
                 </p>
               </div>
-              <div className={`${mutedPanelClassName} p-4`}>
-                <p className={compactTitleClassName}>Runtime boundary</p>
+              <div className={`${mutedPanelClassName} space-y-2 p-4`}>
+                <p className="text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)]">
+                  Runtime boundary
+                </p>
                 <p className={supportingTextClassName}>
                   Alias routing and telemetry stay on the runtime shell; this page preserves the raw
                   escape hatch without replacing Router or Observe ownership.
@@ -147,29 +138,36 @@ export default function IntegrationsUpstreamRoute() {
             </div>
           </SectionCard>
 
-          <SectionCard title="Upstream target inventory">
+          <SectionCard
+            title="Upstream target inventory"
+            description="Contextual /upstream/<model>/ doorways for provider-native access."
+          >
             {!snapshot ? (
               <LoadingState label="Loading upstream targets…" />
             ) : modelTargets.length === 0 ? (
               <EmptyState label="No upstream-capable models are currently exposed through the runtime model list." />
             ) : (
-              <div className="space-y-3">
+              <div className="-mx-5 -mb-5 divide-y divide-[var(--rm-border)]">
                 {modelTargets.map((target) => (
                   <a
                     key={target.modelId}
-                    className={`${mutedPanelClassName} block p-4`}
+                    className="block px-5 py-4 transition-colors hover:bg-[var(--rm-surface-strong)]"
                     href={target.upstreamHref}
                     target="_blank"
                     rel="noreferrer"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className={`break-all ${compactTitleClassName}`}>{target.modelId}</p>
-                      <StatusPill tone="accent">
+                      <p className="break-all font-mono text-[13px] font-semibold text-[var(--rm-fg)]">
+                        {target.modelId}
+                      </p>
+                      <Badge tone="accent">
                         {target.endpointCount} endpoint{target.endpointCount === 1 ? "" : "s"}
-                      </StatusPill>
+                      </Badge>
                     </div>
                     <p className={`mt-2 ${supportingTextClassName}`}>Owner {target.owner}</p>
-                    <p className={`mt-2 break-all ${supportingTextClassName} font-mono`}>
+                    <p
+                      className={`mt-1 break-all font-mono text-[12px] ${supportingTextClassName}`}
+                    >
                       {target.upstreamHref}
                     </p>
                   </a>

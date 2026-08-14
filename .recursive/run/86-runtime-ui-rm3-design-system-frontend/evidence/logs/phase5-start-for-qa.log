@@ -1,0 +1,31 @@
+(node:35040) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+[QA] Starting Role Model Runtime Bridge...
+[QA] repoRoot: D:\DEV\role-model\.worktrees\86-runtime-ui-rm3-design-system-frontend
+[QA] runtimeStateRoot: C:\Users\erikb\AppData\Local\Temp\role-model-runtime-qa-phase5-86
+[QA] scopeId: runtime-qa
+[QA] Seeded placeholder MOONSHOT_API_KEY for local UI QA.
+[QA] Keeping runtime state for observation persistence...
+[QA] Seeded runtime config: C:\Users\erikb\AppData\Local\Temp\role-model-runtime-qa-phase5-86\runtime-config.yaml
+[QA] Pre-registered DeepSeek account.
+[QA] Seeded deterministic telemetry request: qa-telemetry-measured-001
+[QA] Seeded Track B extension bridge: 13 packages at C:\Users\erikb\AppData\Local\Temp\role-model-runtime-qa-phase5-86\runtime-qa\track-b-production-bridge.json
+node:net:1940
+    const ex = new UVExceptionWithHostPort(err, 'listen', address, port);
+               ^
+
+Error: listen EADDRINUSE: address already in use 127.0.0.1:3456
+    at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+    at listenInCluster (node:net:1997:12)
+    at node:net:2206:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '127.0.0.1',
+  port: 3456
+}
+
+Node.js v24.11.0
+undefined
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: tsx scripts/start-for-qa.ts

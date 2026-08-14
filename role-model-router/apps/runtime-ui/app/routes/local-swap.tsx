@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router";
 
-import { LlamaSwapSetupBanner } from "../components/llama-swap-setup-hint";
 import {
+  Badge,
   EmptyState,
   ErrorState,
   LoadingState,
   SectionCard,
-  StatusPill,
 } from "../components/page-primitives";
 import {
   bodyStrongTextClassName,
@@ -51,7 +50,6 @@ export default function LocalSwapRoute() {
 
   return (
     <div className="space-y-8">
-      <LlamaSwapSetupBanner />
       {error ? <ErrorState label={error} /> : null}
 
       <SectionCard title="Event ledger" description="Most recent swap events first.">
@@ -89,7 +87,7 @@ export default function LocalSwapRoute() {
                     <span className={metaTextClassName}>
                       {new Date(event.timestamp).toLocaleString()}
                     </span>
-                    <StatusPill tone="neutral">{event.reason}</StatusPill>
+                    <Badge tone="neutral">{event.reason}</Badge>
                   </div>
                   <div className="flex items-center gap-3">
                     {event.oldModel ? (

@@ -5,10 +5,35 @@ import {
   buildModelRoleBindings,
   buildModelRoleSelection,
   buildProviderModelRoleCoverageSummary,
+  resolveConfiguredEndpointRoleIds,
 } from "./providers";
 
 describe("provider model role assignment helpers", () => {
   const allRoleIds = ["coder", "security", "writer"];
+
+  test("expands missing endpoint role ids to all available roles for Remote drafts", () => {
+    expect(
+      resolveConfiguredEndpointRoleIds({
+        endpointRoleIds: [],
+        availableRoleIds: allRoleIds,
+      }),
+    ).toEqual(allRoleIds);
+
+    expect(
+      resolveConfiguredEndpointRoleIds({
+        endpointRoleIds: [],
+        draftRoleIds: [],
+        availableRoleIds: allRoleIds,
+      }),
+    ).toEqual([]);
+
+    expect(
+      resolveConfiguredEndpointRoleIds({
+        endpointRoleIds: ["coder"],
+        availableRoleIds: allRoleIds,
+      }),
+    ).toEqual(["coder"]);
+  });
   const rolePolicy = {
     roleDefinitions: [
       {
@@ -327,5 +352,23 @@ describe("startDeferredProvidersBootstrap", () => {
       expect(recentErrors).toEqual(["latest ids unavailable"]);
     });
     expect(initialErrors).toEqual([]);
+  });
+});
+
+describe("Kimi OAuth verification URL open regression", () => {
+  test("providers route mounts DeviceAuthorizationCard for live oauthState", async () => {
+    // Source-contract guard: pending non-Codex OAuth previously had toast-only UX and no URL card.
+    // Bound by addenda/05-manual-qa.kimi-oauth-verification-url-open.addendum-02.md
+    const source = await import("node:fs/promises").then((fs) =>
+      fs.readFile(new URL("./providers.tsx", import.meta.url), "utf8"),
+    );
+    expect(source).toContain('from "../components/device-authorization-card"');
+    expect(source).toContain("{oauthState ? (");
+    expect(source).toContain("<DeviceAuthorizationCard");
+    expect(source).toContain("onOpenVerificationUrl={() => void openVerificationUrl(oauthState)}");
+    expect(source).toContain(
+      'const opened = window.open(verificationUrl, "_blank", "noopener,noreferrer")',
+    );
+    expect(source).toContain("Use the Verification URL link below");
   });
 });

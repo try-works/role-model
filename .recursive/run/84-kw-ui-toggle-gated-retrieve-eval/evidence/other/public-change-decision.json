@@ -1,0 +1,6 @@
+{
+  "secretsOmitted": true,
+  "rationale": "Extensions UI + host mutate actions for KW productionActivation",
+  "schemaVersion": "role-model.run84.public-change-decision.v1",
+  "publicChange": "required"
+}

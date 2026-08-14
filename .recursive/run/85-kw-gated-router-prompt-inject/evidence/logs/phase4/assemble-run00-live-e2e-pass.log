@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "privatePin": "726df64d241ba03eb34eed35f1785a3963ba0057",
+  "publicPin": "b03d82a2fe8adc317c9fdaecad838beac3ed74a8",
+  "correlations": [
+    "req-0c6c7b78-09ab-43b2-918b-fd1c80f0cd05",
+    "req-11ff4c8b-891c-4f2f-a27b-f778977475e4",
+    "req-4659dbd2-35cc-414d-84f3-a873e16f4c7f"
+  ],
+  "privateArtifactSha": "a7793a22b0cd8c1a05478b7e0650a105a104b0f47343903dc02c0066edf5da6b",
+  "publicArtifactSha": "aeb2204310e1675e3559fc72176423e46c0891ebff8dcf7ecf26dc238ffc457e",
+  "playwrightExit": 0
+}
+(node:20400) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)

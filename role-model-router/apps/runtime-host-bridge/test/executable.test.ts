@@ -275,6 +275,26 @@ describe("runtime-host-bridge executable packaging", () => {
           destinationRelativePath:
             "role-model-router/packages/catalog/data/normalized-catalog.json",
         },
+        {
+          sourceRelativePath: "packages/protocol-types/generated/product-contracts.json",
+          destinationRelativePath: "packages/protocol-types/generated/product-contracts.json",
+        },
+        {
+          sourceRelativePath: "role-model-router/packages/extension-host/index.mjs",
+          destinationRelativePath: "role-model-router/packages/extension-host/index.mjs",
+        },
+        {
+          sourceRelativePath: "packages/extension-host/index.mjs",
+          destinationRelativePath: "packages/extension-host/index.mjs",
+        },
+        {
+          sourceRelativePath: "packages/extension-host/worker-runtime.mjs",
+          destinationRelativePath: "packages/extension-host/worker-runtime.mjs",
+        },
+        {
+          sourceRelativePath: "packages/extension-sdk/index.mjs",
+          destinationRelativePath: "packages/extension-sdk/index.mjs",
+        },
       ]),
     );
     expect(copies).not.toEqual(
@@ -346,6 +366,18 @@ describe("runtime-host-bridge executable packaging", () => {
     expect(cliText).toContain('"listModels"');
     expect(cliText).toContain('"listRecentRequestIds"');
     expect(cliText).toContain('"readVersionInfo"');
+  });
+
+  test("RUN88-I-PUB-R8-AC04 wires packaged candidate identity into the runtime backend", async () => {
+    const cliText = await readFile(
+      path.join(repoRoot, "role-model-router", "apps", "runtime-host-bridge", "src", "cli.ts"),
+      "utf8",
+    );
+    const createBackendBody = cliText.match(
+      /const createBackend = async \([\s\S]*?const created = await createRuntimeBridgeBackend\(\{([\s\S]*?)\n\s*\}\);/,
+    )?.[1];
+    expect(createBackendBody).toBeDefined();
+    expect(createBackendBody).toContain("run88StageIdentity");
   });
 
   test("wires latest-request-id startup parity into every non-QA runtime launch path", async () => {
@@ -430,6 +462,21 @@ describe("runtime-host-bridge executable packaging", () => {
     expect(validatePackagingText).toContain("contentRevision");
     expect(validatePackagingText).toContain("entryCounts");
     expect(validatePackagingText).toContain("security.audit");
+  });
+
+  test("packaged runtime validation exercises the extension catalog from packaged contracts", async () => {
+    const validatePackagingPath = path.join(
+      repoRoot,
+      "role-model-router",
+      "apps",
+      "runtime-host-bridge",
+      "src",
+      "validate-packaging.ts",
+    );
+    const validatePackagingText = await readFile(validatePackagingPath, "utf8");
+
+    expect(validatePackagingText).toContain("/api/role-model/extensions");
+    expect(validatePackagingText).toContain("evaluation-core");
   });
 
   test("packaged runtime validation tears down the packaged process tree before cleaning release artifacts", async () => {

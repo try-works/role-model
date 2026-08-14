@@ -1,0 +1,10 @@
+HTTP/1.1 400 Bad Request
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+Access-Control-Allow-Headers: Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id, X-Role-Model-Requested-Role-Id
+content-type: application/json
+Date: Tue, 28 Jul 2026 23:08:24 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+Content-Length: 376
+

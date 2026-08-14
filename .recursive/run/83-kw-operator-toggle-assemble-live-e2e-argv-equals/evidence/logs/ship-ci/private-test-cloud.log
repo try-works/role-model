@@ -1,0 +1,169 @@
+
+> @role-model/internal@1.1.0 test:cloud D:\DEV\.wt\83-kw
+> node --test cloud/**/*.test.mjs cloud/test/*.test.mjs
+
+{"event":"ingest_accepted","key":"history/development/tenant%3Aa/0/0-agg-1.parquet","level":"info","manifestId":"history-810e103833287e9cb442dcd4e47a290be42a1beda6408d22f1eff4c20c5c078c","runtimeChannel":"development","scope":"tenant:a","service":"aggregate-ingestion"}
+{"channel":"production","event":"ingest_rejected","level":"warn","reason":"invalid_aggregate_shape","runtimeChannel":"development","service":"aggregate-ingestion"}
+Γ£ö validateAggregatePayload rejects raw fields (3.6602ms)
+Γ£ö aggregate worker allows only the configured runtime channel (89.9226ms)
+Γ£ö aggregate worker fails closed on unauthorized envelopes and logs rejection (1.4225ms)
+Γ£ö aggregate worker logs accepted and duplicate decisions (4.7693ms)
+Γ£ö aggregate worker logs binding unavailability (1.2551ms)
+{"event":"history_committed","level":"info","manifestId":"manifest-one","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"coverage_report","event":"history_forwarded","level":"info","manifestId":"manifest-one","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"manifest-two","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"coverage_report","event":"history_forwarded","level":"info","manifestId":"manifest-two","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"manifest-overflow","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":true}
+{"bucketId":"d289a9c7ddaa0b6a208e1106a85498f69d88a12023586ba8f1428ec073f99621","event":"history_suppressed","level":"info","manifestId":"manifest-overflow","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"manifest-concurrent","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"coverage_report","event":"history_forwarded","level":"info","manifestId":"manifest-concurrent","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+(node:4360) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö the Worker executes its cohort SQL against a local SQLite/D1 schema without retry poison or overflow growth (48.0702ms)
+Γ£ö concurrent duplicate deliveries acquire one durable D1 claim and emit one recommendation candidate (7.0645ms)
+{"event":"history_committed","level":"info","manifestId":"manifest-001","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"coverage_report","event":"history_forwarded","level":"info","manifestId":"manifest-001","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"manifest-a","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"coverage_report","event":"history_forwarded","level":"info","manifestId":"manifest-a","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"manifest-b","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"coverage_report","event":"history_forwarded","level":"info","manifestId":"manifest-b","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"manifest-one","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"coverage_report","event":"history_forwarded","level":"info","manifestId":"manifest-one","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"manifest-two","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"coverage_report","event":"history_forwarded","level":"info","manifestId":"manifest-two","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"manifest-three","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"coverage_report","event":"history_forwarded","level":"info","manifestId":"manifest-three","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"manifest-fresh","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"coverage_report","event":"history_forwarded","level":"info","manifestId":"manifest-fresh","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"manifest-first","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"coverage_report","event":"history_forwarded","level":"info","manifestId":"manifest-first","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"manifest-second","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"coverage_report","event":"history_forwarded","level":"info","manifestId":"manifest-second","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"manifest-overflow","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":true}
+{"bucketId":"d289a9c7ddaa0b6a208e1106a85498f69d88a12023586ba8f1428ec073f99621","event":"history_suppressed","level":"info","manifestId":"manifest-overflow","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"manifest-after-overflow","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":true}
+{"bucketId":"d289a9c7ddaa0b6a208e1106a85498f69d88a12023586ba8f1428ec073f99621","event":"history_suppressed","level":"info","manifestId":"manifest-after-overflow","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_provenance_mismatch","key":"history/development/route_outcome/date=2026-07-22/cohort=a/part.parquet","level":"warn","manifestId":"manifest-001","runtimeChannel":"development","service":"history-service"}
+Γ£ö history queue commits bounded D1 provenance then dispatches thin refs to Queue and Workflow exactly once (42.0647ms)
+Γ£ö history queue derives cohort counts from distinct signed contributor pseudonyms (4.4966ms)
+Γ£ö history queue rejects a recommendation-eligible aggregate without a rotating contributor pseudonym (1.7579ms)
+Γ£ö history cohort persists idempotent retries, cumulative source share, and expiry cleanup (5.2446ms)
+Γ£ö history cohort rejects unsafe counts and safely suppresses bounded-state overflow without retry poison (4.909ms)
+Γ£ö history API pages precomputed D1 manifest indexes without listing arbitrary R2 objects (54.0643ms)
+Γ£ö history queue rejects mismatched object provenance and retries without consuming idempotency (1.4053ms)
+Γ£ö scheduled compaction starts the real Workflow with a thin deterministic job reference (2.3611ms)
+Γ£ö scheduled cleanup drains expired cohort backlog in bounded batches (5.3364ms)
+Γ£ö deployment binds the shared bounded D1 R2 Queue and concrete Workflow entrypoint (2.1268ms)
+Γ£ö history queue emits committed forwarded and provenance mismatch logs (1.7194ms)
+Γ£ö parquet encoder emits a bounded Parquet object and logs success (76.8984ms)
+Γ£ö parquet encoder rejects raw payload fields and logs rejection (1.3085ms)
+{"batchSize":1,"configuredChannel":"development","duplicateCount":0,"event":"recommendation_queue_decision","invalidCount":0,"invalidReasons":[],"level":"info","retriedCount":0,"runtimeChannel":"development","selectedCount":1,"service":"recommendation-service","suppressedCount":0,"suppressedReasons":[]}
+{"batchSize":2,"configuredChannel":"development","duplicateCount":0,"event":"recommendation_queue_decision","invalidCount":0,"invalidReasons":[],"level":"info","retriedCount":0,"runtimeChannel":"development","selectedCount":0,"service":"recommendation-service","suppressedCount":2,"suppressedReasons":[{"count":1,"reason":"dominant_source_share"},{"count":1,"reason":"insufficient_contributor_count"}]}
+{"batchSize":1,"configuredChannel":"development","duplicateCount":0,"event":"recommendation_queue_decision","invalidCount":0,"invalidReasons":[],"level":"info","retriedCount":0,"runtimeChannel":"development","selectedCount":1,"service":"recommendation-service","suppressedCount":0,"suppressedReasons":[]}
+{"batchSize":1,"configuredChannel":"development","duplicateCount":1,"event":"recommendation_queue_decision","invalidCount":0,"invalidReasons":[],"level":"info","retriedCount":0,"runtimeChannel":"development","selectedCount":0,"service":"recommendation-service","suppressedCount":0,"suppressedReasons":[]}
+{"batchSize":2,"configuredChannel":"development","duplicateCount":0,"event":"recommendation_queue_decision","invalidCount":0,"invalidReasons":[],"level":"info","retriedCount":0,"runtimeChannel":"development","selectedCount":2,"service":"recommendation-service","suppressedCount":0,"suppressedReasons":[]}
+{"event":"recommendation_resolve","level":"info","runtimeChannel":"development","scopeId":"tenant:run00","service":"recommendation-service","snapshotId":"snapshot-1","status":"not_modified"}
+{"event":"recommendation_publish_http","level":"info","publicationCount":1,"runtimeChannel":"development","selectedCount":1,"service":"recommendation-service","status":"published"}
+{"batchSize":1,"configuredChannel":"development","duplicateCount":0,"event":"recommendation_queue_decision","invalidCount":0,"invalidReasons":[],"level":"info","retriedCount":0,"runtimeChannel":"development","selectedCount":1,"service":"recommendation-service","suppressedCount":0,"suppressedReasons":[]}
+Γ£ö publishes a signed immutable Artifact Bundle before atomically advancing the D1 channel head (51.5598ms)
+Γ£ö duplicate delivery is idempotent and weak rare or dominant-source evidence is suppressed (3.1519ms)
+Γ£ö mixed publishable coverage and endpoint-preference evidence in one queue batch publishes separate bundles (5.9845ms)
+Γ£ö anonymous resolve uses precomputed D1 pointers and returns not_modified for the active signed snapshot (44.8495ms)
+Γ£ö internal HTTP publish endpoint uses the same signed Artifact Bundle publication path (3.9979ms)
+Γ£ö queue publication emits sanitized decision telemetry for live diagnosability (2.0386ms)
+Γ£ö HTTP publish and resolve emit structured decision logs (3.8045ms)
+Γ£ö serves sealed Artifact Bundle objects from the public bundle URI (1.0454ms)
+Γ£ö publication failure leaves the previous D1 head stable and retries the message (1.95ms)
+Γ£ö deployment binds bounded D1 R2 Queue and an Ed25519 signing service (3.0478ms)
+{"event":"sign_ok","keyId":"run00-key","level":"info","payloadBytes":25,"runtimeChannel":"production","service":"recommendation-signer"}
+{"event":"sign_rejected","level":"warn","reason":"signing key id mismatch","runtimeChannel":"production","service":"recommendation-signer"}
+{"event":"sign_rejected","level":"warn","reason":"invalid base64 payload","runtimeChannel":"production","service":"recommendation-signer"}
+{"event":"sign_rejected","level":"warn","reason":"invalid base64 payload","runtimeChannel":"production","service":"recommendation-signer"}
+Γ£ö signer produces an Ed25519 signature from secret-backed PKCS8 key material (104.5429ms)
+Γ£ö signer rejects key confusion malformed base64 and oversized payloads (6.9534ms)
+Γ£ö signer emits sign_ok and sign_rejected structured logs without key material (8.5793ms)
+Γ£ö cloudLog emits canonical JSON with required fields (32.6736ms)
+Γ£ö cloudLog routes warn and error levels (0.6305ms)
+Γ£ö cloudLog requires event and service (2.3738ms)
+{"event":"ingest_accepted","key":"history/development/tenant%3Arun00/0/0-595311441b0f56e4ee554fdf567cd27cefce9aac1fffe1c89e2677bd533bcce7.parquet","level":"info","manifestId":"history-ac7a6787cf523594c7378688338c09450f38a6cfe390527bdcb44240420467a8","runtimeChannel":"development","scope":"tenant:run00","service":"aggregate-ingestion"}
+{"event":"history_committed","level":"info","manifestId":"history-ac7a6787cf523594c7378688338c09450f38a6cfe390527bdcb44240420467a8","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"coverage_report","event":"history_forwarded","level":"info","manifestId":"history-ac7a6787cf523594c7378688338c09450f38a6cfe390527bdcb44240420467a8","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"batchSize":1,"configuredChannel":"development","duplicateCount":0,"event":"recommendation_queue_decision","invalidCount":0,"invalidReasons":[],"level":"info","retriedCount":0,"runtimeChannel":"development","selectedCount":0,"service":"recommendation-service","suppressedCount":1,"suppressedReasons":[{"count":1,"reason":"insufficient_contributor_count"}]}
+Γ£ö actual Worker entrypoints carry immutable provenance from ingestion through history and conservatively suppress a one-contributor recommendation (101.3003ms)
+{"event":"ingest_accepted","key":"history/development/tenant%3Arun00/0/0-75db86f32f81085bccb5f2d7f99ad7a93b9123064e8c2f87047db585573e5936.parquet","level":"info","manifestId":"history-980feacf45bc2c379cc124f3dfba723ee4b6c22a8a269ebeda5bec82068900cc","runtimeChannel":"development","scope":"tenant:run00","service":"aggregate-ingestion"}
+{"event":"history_committed","level":"info","manifestId":"history-980feacf45bc2c379cc124f3dfba723ee4b6c22a8a269ebeda5bec82068900cc","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"coverage_report","event":"history_forwarded","level":"info","manifestId":"history-980feacf45bc2c379cc124f3dfba723ee4b6c22a8a269ebeda5bec82068900cc","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+Γ£ö runtime route aggregates remain eligible for the default advanced recommendation tier (7.005ms)
+{"event":"ingest_accepted","key":"history/development/tenant%3Arun00/0/0-cbc1e5ec6a76d4d62798855e3a29aad0d2ca4308eaa8e6805a828f25b33e8450.parquet","level":"info","manifestId":"history-aef015161198973cbd1184237c713f3998a3238ed32c21a99b345c2d7a71489e","runtimeChannel":"development","scope":"tenant:run00","service":"aggregate-ingestion"}
+{"event":"ingest_accepted","key":"history/development/tenant%3Arun00/0/0-2643ff32b33b7e040c1c1e6e4075f87bc12f46e78a8a32553ddcfc7358285d28.parquet","level":"info","manifestId":"history-2cad10f176c26a5700421fce795b7e4f8dde044244139d86bd24e7c3afbbd04d","runtimeChannel":"development","scope":"tenant:run00","service":"aggregate-ingestion"}
+{"event":"ingest_accepted","key":"history/development/tenant%3Arun00/0/0-339f2c4f6e951df4f312529f14cfeb6c2e3f703de962306871da0af87de17fa7.parquet","level":"info","manifestId":"history-943d99810905033b778518697a9c035feae62a979587006e08c6747d2e8195d3","runtimeChannel":"development","scope":"tenant:run00","service":"aggregate-ingestion"}
+{"event":"ingest_accepted","key":"history/development/tenant%3Arun00/0/0-694e707fb1d720390d3b49e99472ae3af31286b566e1e13a67d7ccab1b811514.parquet","level":"info","manifestId":"history-389af64d81e85bf74240b359e8e86523a63683b13146aa3209b7d023119c8942","runtimeChannel":"development","scope":"tenant:run00","service":"aggregate-ingestion"}
+{"event":"ingest_accepted","key":"history/development/tenant%3Arun00/0/0-f39f5d94569c451fff39ab2f24e9259114b99283e68de1c675ea6a3773a62367.parquet","level":"info","manifestId":"history-b5d1c46fcb9c4c57952e2dd0bcfd053064603a10f68aa269cb8236212792f3dc","runtimeChannel":"development","scope":"tenant:run00","service":"aggregate-ingestion"}
+{"event":"ingest_accepted","key":"history/development/tenant%3Arun00/0/0-f33884f77de8b6031e2b40dd15c894618ec356d26496ce50c8f6cb1d07a01786.parquet","level":"info","manifestId":"history-5d692fd2a5839c71d2685fff681b104ecd39f4e883d8a5a2fff87eedd0bd945e","runtimeChannel":"development","scope":"tenant:run00","service":"aggregate-ingestion"}
+{"event":"ingest_accepted","key":"history/development/tenant%3Arun00/0/0-e77001f84132f5270c4b264c6d60eb5ea269f822feca7baec0dd7b8fa60d78e4.parquet","level":"info","manifestId":"history-d69235e79a30eaa948c03e090638865efdf188e7cb4ca905de382ea2099f5d33","runtimeChannel":"development","scope":"tenant:run00","service":"aggregate-ingestion"}
+{"event":"ingest_accepted","key":"history/development/tenant%3Arun00/0/0-f0e23172e9715d4184c30195f226cf87feb8213fed16692119c381b88664a347.parquet","level":"info","manifestId":"history-6148cca693fe2f13d105a3fe205ba37b83c4c80158166a531725e8bf086a5d1c","runtimeChannel":"development","scope":"tenant:run00","service":"aggregate-ingestion"}
+{"event":"ingest_accepted","key":"history/development/tenant%3Arun00/0/0-894e9732beb98807a16610a0ae8f4c936296b341215906110617201bd9030694.parquet","level":"info","manifestId":"history-bc575bac39ed93d8faed90496618b09359c2a6fa13d983bcc245b1e44648c06a","runtimeChannel":"development","scope":"tenant:run00","service":"aggregate-ingestion"}
+{"event":"ingest_accepted","key":"history/development/tenant%3Arun00/0/0-e87ae126a26f1a047a740314d8470a8cdcb63a03edbd7f96aa886122cee9f35a.parquet","level":"info","manifestId":"history-c10647ef1a4f451224ecb5b33f9748b577a398adadaa7f4ac7959db86d4401b4","runtimeChannel":"development","scope":"tenant:run00","service":"aggregate-ingestion"}
+{"event":"ingest_accepted","key":"history/development/tenant%3Arun00/0/0-01e478d0b69586ba2543d58e7a9127be9b21acdae599d3ae68fea29aa767e7cf.parquet","level":"info","manifestId":"history-684aafdff774c43422bae8981a65e05088bcbfd3784153eef5a32ba1022b1aef","runtimeChannel":"development","scope":"tenant:run00","service":"aggregate-ingestion"}
+{"event":"ingest_accepted","key":"history/development/tenant%3Arun00/0/0-915153a9abb38a96a8d66949bd0c0da22ed5808128c4c83424ba3f17d47d1dd1.parquet","level":"info","manifestId":"history-94e76fcd2b4198ddb4ff27bf7fb15d7d8602878619ba506574d6004446239439","runtimeChannel":"development","scope":"tenant:run00","service":"aggregate-ingestion"}
+{"event":"ingest_accepted","key":"history/development/tenant%3Arun00/0/0-5c1ee9f2e3d9cfd1e7037f8aef815c45bcab3d89dc601e560448ff4f5ca9f4ae.parquet","level":"info","manifestId":"history-b789331be6ec51af81f19586fa0e3f0a5d0d4d912f69e1871f0dbf60311423f0","runtimeChannel":"development","scope":"tenant:run00","service":"aggregate-ingestion"}
+{"event":"ingest_accepted","key":"history/development/tenant%3Arun00/0/0-da37bffffc3b4b3bcf88b80acfa112a65dc8ba34c052a56d66579ab45108a80e.parquet","level":"info","manifestId":"history-9652a8cd0ba9ad2a8a7b14f90885a91bb7d190fba57e0459db17161207223214","runtimeChannel":"development","scope":"tenant:run00","service":"aggregate-ingestion"}
+{"event":"ingest_accepted","key":"history/development/tenant%3Arun00/0/0-839621216d5fce945a399ee68d623b319801c373abc2bc6000e36c9eb9b9ac53.parquet","level":"info","manifestId":"history-6473e77243ca7b9f1d24b953a1d563ff747b26e0279bc8a888f5a08bbc23ffcb","runtimeChannel":"development","scope":"tenant:run00","service":"aggregate-ingestion"}
+{"event":"ingest_accepted","key":"history/development/tenant%3Arun00/0/0-f3ad7e62a074253e8b3fa2fa9f8971c6f6dd2430d2ee03a16fc5e55e2f9d4163.parquet","level":"info","manifestId":"history-69d3867ab651a593c6069b890f1f9559cefb03482949d5c61f66fca9632bf761","runtimeChannel":"development","scope":"tenant:run00","service":"aggregate-ingestion"}
+{"event":"ingest_accepted","key":"history/development/tenant%3Arun00/0/0-9ae01a398c9dba497eb86382039981daf3a35d2e63a479351de1ea2d334c6d58.parquet","level":"info","manifestId":"history-2d3b222ca5df5bf7c156da604c0a8d655461dd4664f58c2ce9fac718333113f8","runtimeChannel":"development","scope":"tenant:run00","service":"aggregate-ingestion"}
+{"event":"ingest_accepted","key":"history/development/tenant%3Arun00/0/0-b9e82767433101480ea985fa62a2cea6033634d14cad1389b59cf160c3290a69.parquet","level":"info","manifestId":"history-e13563628ce52a0eefbc616ddb3771f7ec21e1db33759620b4579e49d70ea861","runtimeChannel":"development","scope":"tenant:run00","service":"aggregate-ingestion"}
+{"event":"ingest_accepted","key":"history/development/tenant%3Arun00/0/0-01c5fab20cee70201dd41895d46bbee200e64c60b9ee1d321563ea89bb602a1e.parquet","level":"info","manifestId":"history-91199343070caa995407ac357469eef8c0821d308eb4c71bdf8712bf189bd04d","runtimeChannel":"development","scope":"tenant:run00","service":"aggregate-ingestion"}
+{"event":"ingest_accepted","key":"history/development/tenant%3Arun00/0/0-6fde61aab5510b23e9d9f301d6224a6d47ab7ed97cab03df0a8eae934ce0c8a6.parquet","level":"info","manifestId":"history-f675aacc2603e6be842be29b317eef3015056b028423f571a95357acea5dd676","runtimeChannel":"development","scope":"tenant:run00","service":"aggregate-ingestion"}
+{"event":"history_committed","level":"info","manifestId":"history-aef015161198973cbd1184237c713f3998a3238ed32c21a99b345c2d7a71489e","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"endpoint_preference","event":"history_forwarded","level":"info","manifestId":"history-aef015161198973cbd1184237c713f3998a3238ed32c21a99b345c2d7a71489e","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"history-2cad10f176c26a5700421fce795b7e4f8dde044244139d86bd24e7c3afbbd04d","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"endpoint_preference","event":"history_forwarded","level":"info","manifestId":"history-2cad10f176c26a5700421fce795b7e4f8dde044244139d86bd24e7c3afbbd04d","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"history-943d99810905033b778518697a9c035feae62a979587006e08c6747d2e8195d3","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"endpoint_preference","event":"history_forwarded","level":"info","manifestId":"history-943d99810905033b778518697a9c035feae62a979587006e08c6747d2e8195d3","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"history-389af64d81e85bf74240b359e8e86523a63683b13146aa3209b7d023119c8942","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"endpoint_preference","event":"history_forwarded","level":"info","manifestId":"history-389af64d81e85bf74240b359e8e86523a63683b13146aa3209b7d023119c8942","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"history-b5d1c46fcb9c4c57952e2dd0bcfd053064603a10f68aa269cb8236212792f3dc","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"endpoint_preference","event":"history_forwarded","level":"info","manifestId":"history-b5d1c46fcb9c4c57952e2dd0bcfd053064603a10f68aa269cb8236212792f3dc","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"history-5d692fd2a5839c71d2685fff681b104ecd39f4e883d8a5a2fff87eedd0bd945e","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"endpoint_preference","event":"history_forwarded","level":"info","manifestId":"history-5d692fd2a5839c71d2685fff681b104ecd39f4e883d8a5a2fff87eedd0bd945e","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"history-d69235e79a30eaa948c03e090638865efdf188e7cb4ca905de382ea2099f5d33","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"endpoint_preference","event":"history_forwarded","level":"info","manifestId":"history-d69235e79a30eaa948c03e090638865efdf188e7cb4ca905de382ea2099f5d33","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"history-6148cca693fe2f13d105a3fe205ba37b83c4c80158166a531725e8bf086a5d1c","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"endpoint_preference","event":"history_forwarded","level":"info","manifestId":"history-6148cca693fe2f13d105a3fe205ba37b83c4c80158166a531725e8bf086a5d1c","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"history-bc575bac39ed93d8faed90496618b09359c2a6fa13d983bcc245b1e44648c06a","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"endpoint_preference","event":"history_forwarded","level":"info","manifestId":"history-bc575bac39ed93d8faed90496618b09359c2a6fa13d983bcc245b1e44648c06a","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"history-c10647ef1a4f451224ecb5b33f9748b577a398adadaa7f4ac7959db86d4401b4","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"endpoint_preference","event":"history_forwarded","level":"info","manifestId":"history-c10647ef1a4f451224ecb5b33f9748b577a398adadaa7f4ac7959db86d4401b4","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"history-684aafdff774c43422bae8981a65e05088bcbfd3784153eef5a32ba1022b1aef","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"endpoint_preference","event":"history_forwarded","level":"info","manifestId":"history-684aafdff774c43422bae8981a65e05088bcbfd3784153eef5a32ba1022b1aef","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"history-94e76fcd2b4198ddb4ff27bf7fb15d7d8602878619ba506574d6004446239439","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"endpoint_preference","event":"history_forwarded","level":"info","manifestId":"history-94e76fcd2b4198ddb4ff27bf7fb15d7d8602878619ba506574d6004446239439","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"history-b789331be6ec51af81f19586fa0e3f0a5d0d4d912f69e1871f0dbf60311423f0","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"endpoint_preference","event":"history_forwarded","level":"info","manifestId":"history-b789331be6ec51af81f19586fa0e3f0a5d0d4d912f69e1871f0dbf60311423f0","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"history-9652a8cd0ba9ad2a8a7b14f90885a91bb7d190fba57e0459db17161207223214","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"endpoint_preference","event":"history_forwarded","level":"info","manifestId":"history-9652a8cd0ba9ad2a8a7b14f90885a91bb7d190fba57e0459db17161207223214","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"history-6473e77243ca7b9f1d24b953a1d563ff747b26e0279bc8a888f5a08bbc23ffcb","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"endpoint_preference","event":"history_forwarded","level":"info","manifestId":"history-6473e77243ca7b9f1d24b953a1d563ff747b26e0279bc8a888f5a08bbc23ffcb","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"history-69d3867ab651a593c6069b890f1f9559cefb03482949d5c61f66fca9632bf761","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"endpoint_preference","event":"history_forwarded","level":"info","manifestId":"history-69d3867ab651a593c6069b890f1f9559cefb03482949d5c61f66fca9632bf761","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"history-2d3b222ca5df5bf7c156da604c0a8d655461dd4664f58c2ce9fac718333113f8","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"endpoint_preference","event":"history_forwarded","level":"info","manifestId":"history-2d3b222ca5df5bf7c156da604c0a8d655461dd4664f58c2ce9fac718333113f8","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"history-e13563628ce52a0eefbc616ddb3771f7ec21e1db33759620b4579e49d70ea861","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"endpoint_preference","event":"history_forwarded","level":"info","manifestId":"history-e13563628ce52a0eefbc616ddb3771f7ec21e1db33759620b4579e49d70ea861","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"history-91199343070caa995407ac357469eef8c0821d308eb4c71bdf8712bf189bd04d","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"endpoint_preference","event":"history_forwarded","level":"info","manifestId":"history-91199343070caa995407ac357469eef8c0821d308eb4c71bdf8712bf189bd04d","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"event":"history_committed","level":"info","manifestId":"history-f675aacc2603e6be842be29b317eef3015056b028423f571a95357acea5dd676","runtimeChannel":"development","scope":"tenant:run00","service":"history-service","suppressed":false}
+{"aggregateKind":"endpoint_preference","event":"history_forwarded","level":"info","manifestId":"history-f675aacc2603e6be842be29b317eef3015056b028423f571a95357acea5dd676","runtimeChannel":"development","scope":"tenant:run00","service":"history-service"}
+{"batchSize":20,"configuredChannel":"development","duplicateCount":0,"event":"recommendation_queue_decision","invalidCount":0,"invalidReasons":[],"level":"info","retriedCount":0,"runtimeChannel":"development","selectedCount":1,"service":"recommendation-service","suppressedCount":19,"suppressedReasons":[{"count":19,"reason":"insufficient_contributor_count"}]}
+Γ£ö actual queue bindings roll up twenty distinct authorized contributors into a signed recommendation (71.0651ms)
+Γ£ö chain rejects cross-channel ingest and logs the configured development channel (1.8194ms)
+Γ£ö chain rejects cross-channel ingest and logs the configured staging channel (1.1714ms)
+Γ£ö chain rejects cross-channel ingest and logs the configured production channel (0.9288ms)
+Γä╣ tests 42
+Γä╣ suites 0
+Γä╣ pass 42
+Γä╣ fail 0
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 523.1902

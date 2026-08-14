@@ -22,9 +22,11 @@ describe("runtime root", () => {
   test("preloads bundled design-system fonts for packaged first paint", () => {
     const source = readFileSync(new URL("./root.tsx", import.meta.url), "utf8");
 
-    expect(source).toContain("/assets/fonts/inter-latin-400-normal.woff2");
-    expect(source).toContain("/assets/fonts/inter-latin-600-normal.woff2");
-    expect(source).toContain("/assets/fonts/ibm-plex-mono-latin-400-normal.woff2");
+    expect(source).toContain("/assets/fonts/geist-latin-400-normal.woff2");
+    expect(source).toContain("/assets/fonts/geist-latin-600-normal.woff2");
+    expect(source).toContain("/assets/fonts/geist-mono-latin-400-normal.woff2");
+    expect(source).not.toContain("/assets/fonts/inter-latin-400-normal.woff2");
+    expect(source).not.toContain("/assets/fonts/ibm-plex-mono-latin-400-normal.woff2");
     expect(source).toContain('as: "font"');
     expect(source).toContain('crossOrigin: "anonymous"');
     expect(source).not.toContain("fonts.googleapis.com");

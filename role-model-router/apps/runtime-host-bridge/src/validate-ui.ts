@@ -535,6 +535,7 @@ export async function runRuntimeUiValidation(
         runtimeStateRoot: options.runtimeStateRoot,
         scopeId: options.scopeId,
       }),
+      channel: "development",
       observation: routedObservation,
     });
     traceValidation("routed-observation:persisted");
@@ -653,6 +654,7 @@ export async function runRuntimeUiValidation(
         runtimeStateRoot: options.runtimeStateRoot,
         scopeId: options.scopeId,
       }),
+      channel: "development",
       observation: mixedAliasObservation,
     });
     traceValidation("mixed-alias-observation:persisted");

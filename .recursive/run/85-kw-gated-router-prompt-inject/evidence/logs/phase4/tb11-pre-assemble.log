@@ -1,0 +1,68 @@
+Γ£ö TB11-TEST-UNIT reconciles every TB00-TB11 phase exactly once (14.7219ms)
+Γ£ö TB11-TEST-CONTRACT binds the complete locked contract closure (4.5545ms)
+Γ£ö TB11-TEST-INTEGRATION covers twelve cumulative cross-repository scenarios (1.6636ms)
+Γ£ö TB11-TEST-REGRESSION proves generated views reproduce immutable sources (1.9354ms)
+Γ£ö TB11-REVIEW-SCENARIO-ROLLBACK binds proof to the registered rollback test and execution (6.3675ms)
+Γ£û TB11-TEST-E2E proves the paired release is ready only after every gate (32.2301ms)
+Γ£ö TB11-TEST-FALSE-SUCCESS rejects a missing predecessor or skipped command (5.9164ms)
+Γ£ö TB11-TEST-ROLLBACK executes finite rollback and preserves receipts (1.382ms)
+Γ£ö TB11-TEST-HEALTH meets declared disaster recovery objectives (1.5636ms)
+Γ£ö TB11-TEST-COMMAND-04 validates all phase receipt signatures (1.7352ms)
+Γ£ö TB11-TEST-COMMAND-05 validates proof identity and semantic examples (2.9464ms)
+Γ£ö TB11-TEST-COMMAND-06 records bounded capacity results (1.7339ms)
+Γ£ö TB11-REVIEW-CAPACITY measures bounded local and cloud paths from the pinned contract (70276.7841ms)
+Γ£ö TB11-REVIEW-CAPACITY fails closed on a contradictory pinned-contract constraint (130.8179ms)
+Γ£ö TB11-REVIEW-CAPACITY records local reproducibility limits without unsupported claims (2.0526ms)
+Γ£ö TB11-TEST-PACKAGE-COVERAGE reconciles thirteen extensions and two auxiliaries (1.5974ms)
+Γ£ö TB11-TEST-TRACK-A-EXCLUSION aggregates twelve nonempty zero-finding gates (1.2742ms)
+Γ£ö TB11-REVIEW-FALSE-SUCCESS rejects declared scenarios without executable receipts (2.561ms)
+Γ£ö TB11-REVIEW-FALSE-SUCCESS rejects shallow dual-platform interoperability receipts (0.8854ms)
+Γ£ö TB11-REVIEW-ROLLBACK requires measured rollback and DR receipts (2.8848ms)
+(node:8932) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö TB11-REVIEW-RUNTIME-BRIDGE publishes executed canonical probes and a real retention plan (109.3098ms)
+Γ£ö TB11-REGRESSION release validation requires durable live Pi, local, cloud, correlation, browser, and clean-checkout proof (2.8207ms)
+Γ£ö TB11-REGRESSION live E2E proof is rejected when build and clean-checkout revisions drift from the source lock (20.4245ms)
+Γ£ö TB11-REGRESSION proof-only commits may follow a pinned product revision but product drift is rejected (1565.9601ms)
+Γ£ö TB11-REGRESSION phase receipts accept proof-only commits but reject product drift (1705.8958ms)
+Γ£ö TB11-REGRESSION release source hashes ignore empty directories Git cannot reconstruct (18.2201ms)
+Γä╣ tests 26
+Γä╣ suites 0
+Γä╣ pass 25
+Γä╣ fail 1
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 74071.1589
+
+Γ£û failing tests:
+
+test at tests\track-b\tb11.test.mjs:82:1
+Γ£û TB11-TEST-E2E proves the paired release is ready only after every gate (32.2301ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   {
+  +     artifact: 'run00-live-e2e',
+  +     kind: 'live_e2e_source_revision_drift',
+  +     message: 'private live E2E build revision 3d6c4f74a6198287277471f0afc7e8950a6123d8 does not match source lock 726df64d241ba03eb34eed35f1785a3963ba0057'
+  +   },
+  +   {
+  +     artifact: 'run00-live-e2e',
+  +     kind: 'clean_checkout_source_revision_drift',
+  +     message: 'private clean-checkout revision 3d6c4f74a6198287277471f0afc7e8950a6123d8 does not match source lock 726df64d241ba03eb34eed35f1785a3963ba0057'
+  +   }
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/85-kw-gated-router-prompt-inject/tests/track-b/tb11.test.mjs:99:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ { artifact: 'run00-live-e2e', kind: 'live_e2e_source_revision_drift', message: 'private live E2E build revision 3d6c4f74a6198287277471f0afc7e8950a6123d8 does not match source lock 726df64d241ba03eb34eed35f1785a3963ba0057' }, { artifact: 'run00-live-e2e', kind: 'clean_checkout_source_revision_drift', message: 'private clean-checkout revision 3d6c4f74a6198287277471f0afc7e8950a6123d8 does not match source lock 726df64d241ba03eb34eed35f1785a3963ba0057' } ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

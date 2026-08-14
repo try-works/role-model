@@ -9,6 +9,8 @@ runtime-output/
 .cache/
 .tmp/
 .codex-tmp/
+.tmp-role-model-tb04-*/
+**/.tmp-role-model-tb04-*/
 tmp-role-model-launch.log
 .cursor/session.md
 role-model-router/apps/runtime-ui/build/

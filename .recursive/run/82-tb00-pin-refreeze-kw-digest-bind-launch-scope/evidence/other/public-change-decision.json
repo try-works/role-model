@@ -1,0 +1,1 @@
+{"schemaVersion":"role-model.run82.public-change-decision.v1","publicChange":"not-required","rationale":"Launch --scope-id and KW digest bind are private-owned; public host CLI already accepted --scope-id. Public product pathset vs baseline remains empty.","secretsOmitted":true}

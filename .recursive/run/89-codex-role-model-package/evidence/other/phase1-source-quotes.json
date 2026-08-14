@@ -1,0 +1,13 @@
+{
+  "R1": "Create `packages/codex-role-model` as a workspace package `@try-works/codex-role-model` with TypeScript build/test scripts, a `codex-role-model` bin entry, README, and `\"private\": true`.",
+  "R2": "Discovery probes, in order: trust assessment → `GET /healthz` → `GET /api/version` (best-effort) → `GET /api/role-model/downstream/openai` → on **404 only**, `GET /v1/models` compact fallback.",
+  "R3": "Writes only under user Codex home `config.toml`. Attempting to target project `.codex/config.toml` for provider keys is refused with a non-zero exit and actionable message.",
+  "R4": "Catalog is a non-empty Codex `ModelsResponse` JSON (not a bare alias string list).",
+  "R5": "Default listen: `127.0.0.1:3460` (or `ROLE_MODEL_CODEX_ADAPTER_PORT`); binds loopback only.",
+  "R6": "Compaction is **Codex-managed**, not role-model/router-managed.",
+  "R7": "Expose a standalone CLI with a command matrix that mirrors pi-role-model ops semantics without claiming Pi slash-command UX.",
+  "R8": "`skills/role-model/SKILL.md` and `agents/openai.yaml` exist and instruct setup/doctor/start/refresh without asking users to paste secrets in chat.",
+  "R9": "Add `apps/docs-site/content/docs/integrations/codex.mdx` following the Pi integration docs pattern.",
+  "R10": "Iron Law holds: for each code-bearing slice, a failing test is written and observed RED before production code that makes it GREEN; both evidence paths are cited in `03-implementation-summary.md`.",
+  "R11": "Supported path exercised: `setup` → `start` → Codex restart/reopen as needed → select role-model alias → at least one live prompt/turn → adapter receives `POST /v1/responses` → upstream runtime receives the proxied turn."
+}

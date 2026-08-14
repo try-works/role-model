@@ -1,0 +1,30 @@
+{
+  "contract": "Run80LiveDevPassReceiptV1",
+  "runId": "80-signed-recommendation-cloud-lifecycle",
+  "sourceBinder": "evidence/binder.json",
+  "track": "dev",
+  "channel": "development",
+  "host": "https://recommendations-dev.role-model.dev",
+  "scopeId": "run80-dev",
+  "runtime": {
+    "listen": "127.0.0.1:34582",
+    "artifact": "role-model-router/dist/release/win32-x64/role-model-dev.exe",
+    "sha256": "825f9b4f2e17f5102605b24943b974efa435133452f0cfa5867b389c14927f84"
+  },
+  "downloadApply": {
+    "downloadStatus": 200,
+    "applyStatus": 200,
+    "activePackId": "recommendation-e020dcaa09c84832e70c85a41d70d963"
+  },
+  "downloadDismiss": {
+    "downloadStatus": 200,
+    "dismissStatus": 200,
+    "dismissId": "recommendation-bb036a21766e5673f975b55e6225f61e"
+  },
+  "notes": [
+    "Initial lifecycle console log captured a pre-reseed stale-bundle 400; Windows-safe scope run80-dev reseed then succeeded.",
+    "Authoritative PASS pins live in binder.json; this receipt mirrors secret-free hop outcomes for Phase 3–5 citations.",
+    "historicalPcrNotSubstituted: true"
+  ],
+  "finishedAt": "2026-07-24T11:22:02.130Z"
+}

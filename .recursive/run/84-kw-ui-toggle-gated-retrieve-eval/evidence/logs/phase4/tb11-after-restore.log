@@ -1,0 +1,63 @@
+Γ£ö TB11-TEST-UNIT reconciles every TB00-TB11 phase exactly once (17.6172ms)
+Γ£ö TB11-TEST-CONTRACT binds the complete locked contract closure (6.0895ms)
+Γ£ö TB11-TEST-INTEGRATION covers twelve cumulative cross-repository scenarios (2.5656ms)
+Γ£ö TB11-TEST-REGRESSION proves generated views reproduce immutable sources (2.9579ms)
+Γ£ö TB11-REVIEW-SCENARIO-ROLLBACK binds proof to the registered rollback test and execution (7.213ms)
+Γ£û TB11-TEST-E2E proves the paired release is ready only after every gate (15.9159ms)
+Γ£ö TB11-TEST-FALSE-SUCCESS rejects a missing predecessor or skipped command (7.1744ms)
+Γ£ö TB11-TEST-ROLLBACK executes finite rollback and preserves receipts (1.8133ms)
+Γ£ö TB11-TEST-HEALTH meets declared disaster recovery objectives (1.8537ms)
+Γ£ö TB11-TEST-COMMAND-04 validates all phase receipt signatures (2.1018ms)
+Γ£ö TB11-TEST-COMMAND-05 validates proof identity and semantic examples (2.2622ms)
+Γ£ö TB11-TEST-COMMAND-06 records bounded capacity results (1.9509ms)
+Γ£ö TB11-REVIEW-CAPACITY measures bounded local and cloud paths from the pinned contract (85715.8903ms)
+Γ£ö TB11-REVIEW-CAPACITY fails closed on a contradictory pinned-contract constraint (155.67ms)
+Γ£ö TB11-REVIEW-CAPACITY records local reproducibility limits without unsupported claims (2.4518ms)
+Γ£ö TB11-TEST-PACKAGE-COVERAGE reconciles thirteen extensions and two auxiliaries (2.2333ms)
+Γ£ö TB11-TEST-TRACK-A-EXCLUSION aggregates twelve nonempty zero-finding gates (1.9924ms)
+Γ£ö TB11-REVIEW-FALSE-SUCCESS rejects declared scenarios without executable receipts (3.4613ms)
+Γ£ö TB11-REVIEW-FALSE-SUCCESS rejects shallow dual-platform interoperability receipts (1.3635ms)
+Γ£ö TB11-REVIEW-ROLLBACK requires measured rollback and DR receipts (3.0494ms)
+(node:2160) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö TB11-REVIEW-RUNTIME-BRIDGE publishes executed canonical probes and a real retention plan (74.6013ms)
+Γ£ö TB11-REGRESSION release validation requires durable live Pi, local, cloud, correlation, browser, and clean-checkout proof (3.0256ms)
+Γ£ö TB11-REGRESSION live E2E proof is rejected when build and clean-checkout revisions drift from the source lock (21.5059ms)
+Γ£ö TB11-REGRESSION proof-only commits may follow a pinned product revision but product drift is rejected (2811.4512ms)
+Γ£ö TB11-REGRESSION phase receipts accept proof-only commits but reject product drift (2976.7409ms)
+Γ£ö TB11-REGRESSION release source hashes ignore empty directories Git cannot reconstruct (17.298ms)
+Γä╣ tests 26
+Γä╣ suites 0
+Γä╣ pass 25
+Γä╣ fail 1
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 92036.8444
+
+Γ£û failing tests:
+
+test at tests\track-b\tb11.test.mjs:82:1
+Γ£û TB11-TEST-E2E proves the paired release is ready only after every gate (15.9159ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   {
+  +     artifact: 'run00-live-e2e',
+  +     kind: 'live_e2e_manifest_invalid',
+  +     message: 'evidence artifact missing or drifted evidence/live-e2e/build-and-test.json'
+  +   }
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///D:/DEV/.wt/84-kw/tests/track-b/tb11.test.mjs:99:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ { artifact: 'run00-live-e2e', kind: 'live_e2e_manifest_invalid', message: 'evidence artifact missing or drifted evidence/live-e2e/build-and-test.json' } ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,8 @@
+data: {"type":"response.created","response":{"id":"resp_req-3ab8f9f0-a45f-4a67-ae62-e8f560814e8a","created_at":1785866782,"model":"deepseek-v4-flash"}}
+
+data: {"type":"response.output_item.added","output_index":0,"item":{"type":"message","id":"msg_resp_req-3ab8f9f0-a45f-4a67-ae62-e8f560814e8a"}}
+
+data: {"type":"response.output_text.delta","item_id":"msg_resp_req-3ab8f9f0-a45f-4a67-ae62-e8f560814e8a","output_index":0,"delta":"OK"}
+
+data: {"type":"response.completed","response":{"id":"resp_req-3ab8f9f0-a45f-4a67-ae62-e8f560814e8a","usage":{"input_tokens":91,"output_tokens":56}}}
+

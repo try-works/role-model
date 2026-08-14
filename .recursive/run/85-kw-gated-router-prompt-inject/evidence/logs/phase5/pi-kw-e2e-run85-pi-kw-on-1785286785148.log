@@ -1,0 +1,8 @@
+{
+  "sanitizedCommand": "pi --provider role-model --model deepseek/deepseek-v4-pro --print <sanitized> --no-session",
+  "marker": "run85-pi-kw-on-1785286785148",
+  "exitCode": 0,
+  "timedOut": false,
+  "stdoutTail": "run85-pi-kw-on-1785286785148\r\n\r\n",
+  "stderrTail": ""
+}

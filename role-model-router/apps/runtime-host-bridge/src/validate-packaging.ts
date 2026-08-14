@@ -502,6 +502,23 @@ async function exercisePackagedTaxonomyValidation(input: {
   };
 }
 
+async function exercisePackagedExtensionCatalogValidation(input: {
+  readonly baseUrl: string;
+}): Promise<{ readonly extensionCount: number }> {
+  const extensions = await fetchJson<
+    readonly {
+      readonly id?: unknown;
+    }[]
+  >(`${input.baseUrl}/api/role-model/extensions`);
+  if (!Array.isArray(extensions)) {
+    throw new Error("packaged extension catalog must be an array");
+  }
+  if (!extensions.some((extension) => extension.id === "evaluation-core")) {
+    throw new Error("packaged extension catalog is missing evaluation-core");
+  }
+  return { extensionCount: extensions.length };
+}
+
 export async function runRuntimePackagingValidation(): Promise<{
   readonly packagedExecutable: string;
   readonly healthStatus: string;
@@ -511,6 +528,7 @@ export async function runRuntimePackagingValidation(): Promise<{
   readonly taxonomyVersion: string;
   readonly contentRevision: string;
   readonly securityTaskCount: number;
+  readonly extensionCount: number;
   readonly endpointId: string;
   readonly chatOutputText: string;
   readonly responsesOutputText: string;
@@ -570,6 +588,7 @@ export async function runRuntimePackagingValidation(): Promise<{
         readonly taxonomyVersion: string;
         readonly contentRevision: string;
         readonly securityTaskCount: number;
+        readonly extensionCount: number;
         readonly endpointId: string;
         readonly chatOutputText: string;
         readonly responsesOutputText: string;
@@ -589,6 +608,9 @@ export async function runRuntimePackagingValidation(): Promise<{
     const packagedTaxonomy = await exercisePackagedTaxonomyValidation({
       baseUrl: `http://127.0.0.1:${port}`,
     });
+    const packagedExtensions = await exercisePackagedExtensionCatalogValidation({
+      baseUrl: `http://127.0.0.1:${port}`,
+    });
     return {
       packagedExecutable: packaged.outputPath,
       healthStatus: healthJson.status,
@@ -598,6 +620,7 @@ export async function runRuntimePackagingValidation(): Promise<{
       taxonomyVersion: packagedTaxonomy.taxonomyVersion,
       contentRevision: packagedTaxonomy.contentRevision,
       securityTaskCount: packagedTaxonomy.securityTaskCount,
+      extensionCount: packagedExtensions.extensionCount,
       endpointId: packagedExecution.endpointId,
       chatOutputText: packagedExecution.chatOutputText,
       responsesOutputText: packagedExecution.responsesOutputText,
