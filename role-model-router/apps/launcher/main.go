@@ -169,16 +169,21 @@ func runtimeShutdownURL(baseURL string) string {
 }
 
 func waitForServerReady(baseURL string, attempts int, interval time.Duration) bool {
-	healthURL := strings.TrimRight(baseURL, "/") + "/health"
+	healthURL := strings.TrimRight(baseURL, "/") + "/healthz"
 	for attempt := 0; attempt < attempts; attempt++ {
 		time.Sleep(interval)
 		resp, err := http.Get(healthURL)
 		if err != nil {
 			continue
 		}
-
-		resp.Body.Close()
-		if resp.StatusCode == http.StatusOK {
+		var health struct {
+			SessionBootstrap struct {
+				Status string `json:"status"`
+			} `json:"sessionBootstrap"`
+		}
+		decodeErr := json.NewDecoder(io.LimitReader(resp.Body, 64*1024)).Decode(&health)
+		_ = resp.Body.Close()
+		if resp.StatusCode == http.StatusOK && decodeErr == nil && health.SessionBootstrap.Status == "ready" {
 			return true
 		}
 	}

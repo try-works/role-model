@@ -26,6 +26,7 @@ import {
   createProductionExtensionRuntime,
   createRun88RuntimeCorrelation,
   createTrackBPostObservationOutbox,
+  resolveManagedArtifactKeyFiles,
   runTrackBPostObservation,
   trackBDistributionRequiresSQLiteMaintenance,
   validateRun88ProviderResponseObservation,
@@ -1067,6 +1068,17 @@ export async function main(): Promise<void> {
         );
       }
       const trackBStateRoot = path.join(options.runtimeStateRoot, options.scopeId, "track-b");
+      const runtimeChannel = packagedProfile?.channel ?? "development";
+      const artifactKeyFiles = await resolveManagedArtifactKeyFiles({
+        channel: runtimeChannel,
+        stateRoot: trackBStateRoot,
+        artifactDigestKeyFile:
+          args.values["artifact-digest-key-file"] ??
+          process.env.ROLE_MODEL_ARTIFACT_DIGEST_KEY_FILE,
+        artifactEncryptionKeyFile:
+          args.values["artifact-encryption-key-file"] ??
+          process.env.ROLE_MODEL_ARTIFACT_ENCRYPTION_KEY_FILE,
+      });
       // Start extension-host registration in parallel with sidecar/backend bring-up, but
       // mark core APIs ready as soon as the packaged backend exists. Waiting on all
       // packaged extensions previously kept /api/role-model/* at 503 runtime_initializing.
@@ -1086,13 +1098,9 @@ export async function main(): Promise<void> {
           artifactPath: path.resolve(distributionRoot, manifest.sidecar.modulePath),
           artifactSha256: manifest.sidecar.artifactSha256,
           stateRoot: trackBStateRoot,
-          channel: packagedProfile?.channel ?? "development",
-          artifactDigestKeyFile:
-            args.values["artifact-digest-key-file"] ??
-            process.env.ROLE_MODEL_ARTIFACT_DIGEST_KEY_FILE,
-          artifactEncryptionKeyFile:
-            args.values["artifact-encryption-key-file"] ??
-            process.env.ROLE_MODEL_ARTIFACT_ENCRYPTION_KEY_FILE,
+          channel: runtimeChannel,
+          artifactDigestKeyFile: artifactKeyFiles.artifactDigestKeyFile,
+          artifactEncryptionKeyFile: artifactKeyFiles.artifactEncryptionKeyFile,
           trustMaterialFile:
             args.values["destination-material-file"] ??
             args.values["destination-trust-material-file"] ??
