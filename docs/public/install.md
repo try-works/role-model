@@ -47,6 +47,22 @@ Before running a manual download, verify its checksum against `SHA256SUMS.txt`.
 When launched without extra runtime arguments, the packaged runtime opens the local UI in your default
 browser.
 
+## Updating an installed runtime
+
+Updates are currently manual. Re-run the installer with a newer version, or extract the newer archive and
+launch it in place of the old package. The Windows installer places each release in its own versioned
+directory and repoints the `role-model.cmd` shim; it does not delete the persistent runtime state.
+
+Runtime state is stored separately from versioned application binaries. For example, the production Windows
+runtime uses `%LOCALAPPDATA%\role-model-runtime`. The Message Graph encryption and scoped-digest keys are
+created once under `standalone-runtime\track-b\managed-keys` and reused by later versions. Merely updating the
+runtime never rotates those keys.
+
+Back up the complete runtime state, including `track-b\managed-keys`, before moving state to another machine
+or performing manual cleanup. Graph data restored without both original key files is intentionally unreadable;
+the runtime fails closed instead of silently generating replacement keys. Intentional key rotation requires a
+future explicit decrypt-and-reencrypt migration and is not performed during an update.
+
 ## Runtime channels
 
 Stable production packages run as `role-model` at `http://127.0.0.1:3456`. Stage candidates run as

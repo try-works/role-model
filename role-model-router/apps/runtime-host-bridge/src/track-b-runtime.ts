@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { createHash, randomBytes, verify as verifySignature } from "node:crypto";
 import { existsSync } from "node:fs";
-import { copyFile, mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { copyFile, lstat, mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createInterface } from "node:readline";
 import { pathToFileURL } from "node:url";
@@ -65,6 +65,112 @@ export interface OwnedTrackBSidecarSpec {
   artifactPath: string;
   artifactSha256: string;
   launch(): Promise<OwnedTrackBSidecarProcess>;
+}
+
+export interface ManagedArtifactKeyFiles {
+  readonly artifactDigestKeyFile?: string;
+  readonly artifactEncryptionKeyFile?: string;
+}
+
+async function pathExists(filePath: string): Promise<boolean> {
+  try {
+    await lstat(filePath);
+    return true;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return false;
+    throw error;
+  }
+}
+
+async function assertManagedArtifactKeyFile(filePath: string): Promise<void> {
+  const resolved = path.resolve(filePath);
+  const status = await lstat(resolved);
+  if (!status.isFile() || status.isSymbolicLink()) {
+    throw new Error("managed artifact key path must be a regular non-symlink file");
+  }
+  const raw = await readFile(resolved);
+  const trimmed = raw.toString("utf8").trim();
+  if (raw.length !== 32 && !/^[a-f0-9]{64}$/i.test(trimmed)) {
+    throw new Error(
+      "managed artifact key must contain exactly 32 bytes or 64 hexadecimal characters",
+    );
+  }
+}
+
+/**
+ * Resolves operator-supplied keys or provisions a runtime-owned production key pair.
+ * The owned pair lives under the stable runtime state root, never the versioned package,
+ * so manual binary updates keep existing Message Graph ciphertext readable.
+ */
+export async function resolveManagedArtifactKeyFiles(options: {
+  readonly channel: "development" | "stage" | "production";
+  readonly stateRoot: string;
+  readonly artifactDigestKeyFile?: string;
+  readonly artifactEncryptionKeyFile?: string;
+}): Promise<ManagedArtifactKeyFiles> {
+  const suppliedDigest = options.artifactDigestKeyFile?.trim();
+  const suppliedEncryption = options.artifactEncryptionKeyFile?.trim();
+  if (suppliedDigest || suppliedEncryption) {
+    if (!suppliedDigest || !suppliedEncryption) {
+      throw new Error("managed artifact digest and encryption key files must be supplied together");
+    }
+    const resolved = {
+      artifactDigestKeyFile: path.resolve(suppliedDigest),
+      artifactEncryptionKeyFile: path.resolve(suppliedEncryption),
+    };
+    await Promise.all([
+      assertManagedArtifactKeyFile(resolved.artifactDigestKeyFile),
+      assertManagedArtifactKeyFile(resolved.artifactEncryptionKeyFile),
+    ]);
+    return resolved;
+  }
+  if (options.channel !== "production") return {};
+
+  const stableStateRoot = path.resolve(options.stateRoot);
+  const keyRoot = path.join(stableStateRoot, "managed-keys");
+  const artifactDigestKeyFile = path.join(keyRoot, "artifact-digest.key");
+  const artifactEncryptionKeyFile = path.join(keyRoot, "artifact-encryption.key");
+  const readPublishedPair = async (): Promise<ManagedArtifactKeyFiles> => {
+    const [digestExists, encryptionExists] = await Promise.all([
+      pathExists(artifactDigestKeyFile),
+      pathExists(artifactEncryptionKeyFile),
+    ]);
+    if (!digestExists || !encryptionExists) {
+      throw new Error(
+        "incomplete managed artifact key set; restore both Message Graph keys from backup",
+      );
+    }
+    await Promise.all([
+      assertManagedArtifactKeyFile(artifactDigestKeyFile),
+      assertManagedArtifactKeyFile(artifactEncryptionKeyFile),
+    ]);
+    return { artifactDigestKeyFile, artifactEncryptionKeyFile };
+  };
+
+  if (await pathExists(keyRoot)) return readPublishedPair();
+
+  await mkdir(stableStateRoot, { recursive: true });
+  const temporaryRoot = await mkdtemp(`${keyRoot}.tmp-`);
+  try {
+    await Promise.all([
+      writeFile(path.join(temporaryRoot, "artifact-digest.key"), randomBytes(32), {
+        flag: "wx",
+        mode: 0o600,
+      }),
+      writeFile(path.join(temporaryRoot, "artifact-encryption.key"), randomBytes(32), {
+        flag: "wx",
+        mode: 0o600,
+      }),
+    ]);
+    try {
+      await rename(temporaryRoot, keyRoot);
+    } catch (error) {
+      if (!(await pathExists(keyRoot))) throw error;
+    }
+  } finally {
+    await rm(temporaryRoot, { recursive: true, force: true });
+  }
+  return readPublishedPair();
 }
 
 export interface TrackBProductionRuntimeOptions {

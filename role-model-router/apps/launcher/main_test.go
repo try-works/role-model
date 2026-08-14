@@ -178,18 +178,38 @@ func TestRequestBackendShutdownUsesLocalRuntimeEndpoint(t *testing.T) {
 	}
 }
 
-func TestWaitForServerReadyReturnsWhenLivenessEndpointBecomesReady(t *testing.T) {
+func TestWaitForServerReadyRequiresBackendBootstrapReadiness(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		if request.URL.Path != "/health" {
+		switch request.URL.Path {
+		case "/health":
+			writer.WriteHeader(http.StatusOK)
+		case "/healthz":
+			writer.Header().Set("content-type", "application/json")
+			_, _ = writer.Write([]byte(`{"status":"degraded","sessionBootstrap":{"status":"blocked"}}`))
+		default:
+			http.NotFound(writer, request)
+		}
+	}))
+	defer server.Close()
+
+	if waitForServerReady(server.URL, 2, 5*time.Millisecond) {
+		t.Fatal("expected shallow liveness to remain unready while backend bootstrap is blocked")
+	}
+}
+
+func TestWaitForServerReadyReturnsWhenBackendBootstrapBecomesReady(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if request.URL.Path != "/healthz" {
 			http.NotFound(writer, request)
 			return
 		}
-		writer.WriteHeader(http.StatusOK)
+		writer.Header().Set("content-type", "application/json")
+		_, _ = writer.Write([]byte(`{"status":"healthy","sessionBootstrap":{"status":"ready"}}`))
 	}))
 	defer server.Close()
 
 	if !waitForServerReady(server.URL, 2, 5*time.Millisecond) {
-		t.Fatal("expected ready server")
+		t.Fatal("expected backend-ready server")
 	}
 }
 
