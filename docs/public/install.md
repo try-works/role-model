@@ -47,6 +47,18 @@ Before running a manual download, verify its checksum against `SHA256SUMS.txt`.
 When launched without extra runtime arguments, the packaged runtime opens the local UI in your default
 browser.
 
+## Testing a stage release candidate
+
+Successful `stage` builds appear in GitHub Releases as prereleases named `stage-rc-<12-character-stage-sha>`. Each
+candidate contains four stage-channel archives plus `SHA256SUMS.txt`. It is deliberately excluded from the stable
+installer path.
+
+To test one, download the archive for your platform, verify its checksum, extract it into a separate application
+directory, and run its launcher. The candidate identifies itself as `role-model-stage`, listens on
+`http://127.0.0.1:3457`, and uses the isolated `role-model-runtime-stage` state root. Do not point it at production
+state. After testing the intended behavior, restarts, and persistence, a maintainer records acceptance for that exact
+candidate before any `stage -> main` promotion or stable tag.
+
 ## Updating an installed runtime
 
 Updates are currently manual. Re-run the installer with a newer version, or extract the newer archive and

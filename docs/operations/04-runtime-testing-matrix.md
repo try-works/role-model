@@ -87,7 +87,8 @@ Packaged-runtime verification is required when:
 - `runtime:test-browser` - Run locally or in a dedicated workflow when UI or operator-facing changes are present.
 - Cross-lifecycle proof surfaces - No named root command exists yet; use a run-specific verification plan grounded in the owning tests plus `runtime:test-router`, `runtime:test-critical`, rebuilt-runtime QA, and `runtime:validate-packaging` as applicable.
 - `runtime:validate-packaging` - Run when packaging-affecting files change.
-- `build-binaries.yml` - Runs on `main` pushes and tags; verifies packaging hygiene.
+- `build-binaries.yml` - Runs on `stage` pushes and stable tags; publishes testable stage prereleases and verifies
+  production packaging against the explicitly accepted stage candidate.
 
 ## Extension Rules
 
