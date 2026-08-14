@@ -1,0 +1,29 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/91-adaptive-execution-cooldown-policy/role-model-router/apps/runtime-host-bridge
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/execution-circuit-breaker.test.ts [ test/execution-circuit-breaker.test.ts ]
+Error: Cannot find module '../src/execution-circuit-breaker.js' imported from 'D:/DEV/role-model/.worktrees/91-adaptive-execution-cooldown-policy/role-model-router/apps/runtime-host-bridge/test/execution-circuit-breaker.test.ts'
+ ❯ test/execution-circuit-breaker.test.ts:3:1
+      1| import { describe, expect, test } from "vitest";
+      2| 
+      3| import {
+       | ^
+      4|   claimExecutionCircuitProbe,
+      5|   clearExecutionCircuitEndpoint,
+
+Caused by: Error: Failed to load url ../src/execution-circuit-breaker.js (resolved id: ../src/execution-circuit-breaker.js) in D:/DEV/role-model/.worktrees/91-adaptive-execution-cooldown-policy/role-model-router/apps/runtime-host-bridge/test/execution-circuit-breaker.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_f7dc1826a0f6bcfe28ab74fd91d23836/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  16:35:51
+   Duration  894ms (transform 92ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 363ms)
+
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/execution-circuit-breaker.test.ts

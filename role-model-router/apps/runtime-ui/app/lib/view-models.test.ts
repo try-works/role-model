@@ -1586,6 +1586,59 @@ describe("buildConfiguredRemoteConnectionRows", () => {
       }),
     ]);
   });
+
+  test("keeps provider health separate from adaptive circuit state and countdown", () => {
+    const nowMs = Date.parse("2026-08-14T08:00:00.000Z");
+    const [row] = buildConfiguredRemoteConnectionRows({
+      nowMs,
+      accounts: [
+        {
+          providerAccountId: "deepseek.personal.primary",
+          providerId: "deepseek",
+          authMode: "api-key-static",
+        },
+      ],
+      endpoints: [
+        {
+          endpointId: "deepseek.personal.primary.global.deepseek-v4-pro",
+          providerAccountId: "deepseek.personal.primary",
+          providerId: "deepseek",
+          modelId: "deepseek/deepseek-v4-pro",
+          sourceType: "remote",
+          status: "active",
+          healthStatus: "healthy",
+          routingEligible: true,
+          benchmarkEligible: true,
+          executionCooldown: {
+            schemaVersion: 2,
+            endpointId: "deepseek.personal.primary.global.deepseek-v4-pro",
+            active: true,
+            failureCount: 2,
+            circuitState: "open",
+            failureCategory: "connection",
+            lastErrorClass: "upstream_connection_error",
+            nextProbeAtMs: nowMs + 5_000,
+            retryAfterMs: 5_000,
+          },
+        },
+      ],
+      models: [
+        {
+          id: "deepseek/deepseek-v4-pro",
+          displayName: "DeepSeek V4 Pro",
+          endpoint_ids: ["deepseek.personal.primary.global.deepseek-v4-pro"],
+        },
+      ],
+    });
+    expect(row?.endpoints[0]).toMatchObject({
+      healthStatus: "healthy",
+      circuitState: "open",
+      circuitLabel: "Circuit open",
+      circuitTone: "warning",
+      circuitDetail: "Retry in 5s",
+      nextProbeAtMs: nowMs + 5_000,
+    });
+  });
 });
 
 describe("summarizeWorkbenchResult", () => {
