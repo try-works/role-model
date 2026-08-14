@@ -183,7 +183,8 @@ func waitForServerReady(baseURL string, attempts int, interval time.Duration) bo
 		}
 		decodeErr := json.NewDecoder(io.LimitReader(resp.Body, 64*1024)).Decode(&health)
 		_ = resp.Body.Close()
-		if resp.StatusCode == http.StatusOK && decodeErr == nil && health.SessionBootstrap.Status == "ready" {
+		bootstrapOperational := health.SessionBootstrap.Status == "ready" || health.SessionBootstrap.Status == "degraded"
+		if resp.StatusCode == http.StatusOK && decodeErr == nil && bootstrapOperational {
 			return true
 		}
 	}

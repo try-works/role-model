@@ -213,6 +213,22 @@ func TestWaitForServerReadyReturnsWhenBackendBootstrapBecomesReady(t *testing.T)
 	}
 }
 
+func TestWaitForServerReadyAllowsOperationalDegradedBootstrap(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if request.URL.Path != "/healthz" {
+			http.NotFound(writer, request)
+			return
+		}
+		writer.Header().Set("content-type", "application/json")
+		_, _ = writer.Write([]byte(`{"status":"degraded","sessionBootstrap":{"status":"degraded"}}`))
+	}))
+	defer server.Close()
+
+	if !waitForServerReady(server.URL, 2, 5*time.Millisecond) {
+		t.Fatal("expected operational degraded backend to be launchable")
+	}
+}
+
 func TestWaitForServerReadyReturnsFalseWhenHealthEndpointNeverResponds(t *testing.T) {
 	start := time.Now()
 	if waitForServerReady("http://127.0.0.1:1", 2, 20*time.Millisecond) {
