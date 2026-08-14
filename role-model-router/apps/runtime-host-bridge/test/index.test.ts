@@ -15830,6 +15830,7 @@ describe("runtime-host-bridge", () => {
             requestOptions?: {
               endpointId?: string;
               ignoreExecutionFailureCooldowns?: boolean;
+              executionTrafficClass?: "live" | "benchmark" | "health" | "synthetic";
             },
           ) => Promise<unknown>;
           executeResponses: (body: Record<string, unknown>, requestId: string) => Promise<unknown>;
@@ -15999,7 +16000,23 @@ describe("runtime-host-bridge", () => {
           }),
         }),
       );
-      let cooldownError: unknown;
+      await expect(backend.listEndpoints()).resolves.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            endpointId: endpoint.endpointId,
+            executionCooldown: expect.objectContaining({
+              schemaVersion: 2,
+              active: false,
+              circuitState: "probation",
+              failureCategory: "timeout",
+              failureCount: 1,
+              lastErrorClass: "upstream_timeout",
+            }),
+          }),
+        ]),
+      );
+
+      let secondFailure: unknown;
       try {
         await backend.executeChatCompletions(
           {
@@ -16009,13 +16026,11 @@ describe("runtime-host-bridge", () => {
           "req-runtime-bridge-codex-timeout-002",
         );
       } catch (error) {
-        cooldownError = error;
+        secondFailure = error;
       }
-      expect(cooldownError).toBeInstanceOf(Error);
-      expect((cooldownError as Error).message).toMatch(
-        /temporarily unavailable|recent execution failures/i,
-      );
-      expect(executeAttempts).toBe(2);
+      expect(secondFailure).toBeInstanceOf(Error);
+      expect((secondFailure as Error).message).toMatch(/could not reach the ai service|timed out/i);
+      expect(executeAttempts).toBe(4);
       await expect(
         backend.executeChatCompletions(
           {
@@ -16032,10 +16047,11 @@ describe("runtime-host-bridge", () => {
           {
             endpointId: endpoint.endpointId,
             ignoreExecutionFailureCooldowns: true,
+            executionTrafficClass: "benchmark",
           },
         ),
       ).rejects.toThrow(/could not reach the ai service|timed out/i);
-      expect(executeAttempts).toBe(4);
+      expect(executeAttempts).toBe(6);
 
       const server = await (
         bridge as {
@@ -16082,26 +16098,31 @@ describe("runtime-host-bridge", () => {
             messages: [{ role: "user", content: "Try the cooling endpoint through HTTP." }],
           }),
         });
-        expect(httpResponse.status).toBe(400);
+        expect(httpResponse.status).toBe(503);
         await expect(httpResponse.json()).resolves.toEqual(
           expect.objectContaining({
             error: expect.objectContaining({
               type: "routing_error",
-              code: "no_eligible_target",
+              code: "endpoint_temporarily_unavailable",
               requestedModel: "chatgpt/gpt-5.4",
+              retryAfterMs: expect.any(Number),
+              nextProbeAtMs: expect.any(Number),
               deniedEndpointIds: [endpoint.endpointId],
               executionCooldowns: [
                 expect.objectContaining({
+                  schemaVersion: 2,
                   endpointId: endpoint.endpointId,
                   active: true,
                   failureCount: 2,
+                  circuitState: "open",
+                  failureCategory: "timeout",
                   lastErrorClass: "upstream_timeout",
                 }),
               ],
             }),
           }),
         );
-        expect(executeAttempts).toBe(4);
+        expect(executeAttempts).toBe(6);
 
         const telemetryResponse = await fetch(
           `http://127.0.0.1:${server.port}/api/role-model/telemetry/requests`,
@@ -16119,9 +16140,9 @@ describe("runtime-host-bridge", () => {
         );
         expect(httpTelemetryRow).toEqual(
           expect.objectContaining({
-            errorClass: "no_eligible_target",
+            errorClass: "endpoint_temporarily_unavailable",
             requestedModelId: "chatgpt/gpt-5.4",
-            statusCode: 400,
+            statusCode: 503,
           }),
         );
         expect(httpTelemetryRow?.requestId).toBeTruthy();
@@ -16135,7 +16156,7 @@ describe("runtime-host-bridge", () => {
             diagnostics: expect.objectContaining({
               execution: expect.arrayContaining([
                 expect.objectContaining({
-                  code: "no_eligible_target",
+                  code: "endpoint_temporarily_unavailable",
                 }),
               ]),
             }),
@@ -16148,6 +16169,8 @@ describe("runtime-host-bridge", () => {
                       endpointId: endpoint.endpointId,
                       active: true,
                       failureCount: 2,
+                      circuitState: "open",
+                      failureCategory: "timeout",
                       lastErrorClass: "upstream_timeout",
                     }),
                   ],
@@ -16170,22 +16193,28 @@ describe("runtime-host-bridge", () => {
           .prepare(
             "SELECT maintenance_value FROM memory_maintenance WHERE maintenance_key = ? LIMIT 1",
           )
-          .get("routing.execution-failure-cooldowns.v1") as
+          .get("routing.execution-circuit-breaker.v2") as
           | {
               maintenance_value: string;
             }
           | undefined;
 
         expect(row).toBeDefined();
-        const cooldowns =
+        const circuitState =
           row && typeof row.maintenance_value === "string"
-            ? (JSON.parse(row.maintenance_value) as Record<string, Record<string, unknown>>)
-            : {};
-        expect(cooldowns).toEqual(
+            ? (JSON.parse(row.maintenance_value) as {
+                schemaVersion?: number;
+                endpoints?: Record<string, Record<string, unknown>>;
+              })
+            : { endpoints: {} };
+        expect(circuitState.schemaVersion).toBe(2);
+        expect(circuitState.endpoints).toEqual(
           expect.objectContaining({
             [endpoint.endpointId]: expect.objectContaining({
               endpointId: endpoint.endpointId,
               failureCount: 2,
+              circuitState: "open",
+              failureCategory: "timeout",
               lastErrorClass: "upstream_timeout",
             }),
           }),
@@ -16202,24 +16231,21 @@ describe("runtime-host-bridge", () => {
           diagnostics: expect.objectContaining({
             execution: expect.arrayContaining([
               expect.objectContaining({
-                code: "no_eligible_target",
+                code: "upstream_timeout",
               }),
             ]),
           }),
-          telemetrySnapshot: expect.objectContaining({
-            dimensions: expect.objectContaining({
-              executionCooldown: expect.objectContaining({
-                deniedEndpointIds: [endpoint.endpointId],
-                entries: [
-                  expect.objectContaining({
-                    endpointId: endpoint.endpointId,
-                    active: true,
-                    failureCount: 1,
-                    lastErrorClass: "upstream_timeout",
-                  }),
-                ],
+          executionSemantics: expect.objectContaining({
+            executionCooldowns: [
+              expect.objectContaining({
+                endpointId: endpoint.endpointId,
+                active: true,
+                failureCount: 2,
+                circuitState: "open",
+                failureCategory: "timeout",
+                lastErrorClass: "upstream_timeout",
               }),
-            }),
+            ],
           }),
         }),
       );
@@ -16230,6 +16256,8 @@ describe("runtime-host-bridge", () => {
             executionCooldown: expect.objectContaining({
               active: true,
               failureCount: 2,
+              circuitState: "open",
+              failureCategory: "timeout",
               lastErrorClass: "upstream_timeout",
             }),
           }),
@@ -17000,7 +17028,7 @@ describe("runtime-host-bridge", () => {
           .prepare(
             "SELECT maintenance_value FROM memory_maintenance WHERE maintenance_key = ? LIMIT 1",
           )
-          .get("routing.execution-failure-cooldowns.v1") as
+          .get("routing.execution-circuit-breaker.v2") as
           | {
               maintenance_value: string;
             }
@@ -17448,25 +17476,52 @@ describe("runtime-host-bridge", () => {
     expect(error.fallbackEligible).toBe(true);
   });
 
-  test("uses an escalating execution-failure cooldown schedule", () => {
+  test("does not expose the legacy endpoint-global cooldown schedule", () => {
     expect(
-      typeof (bridge as { resolveExecutionFailureCooldownDurationMs?: unknown })
+      (bridge as { resolveExecutionFailureCooldownDurationMs?: unknown })
         .resolveExecutionFailureCooldownDurationMs,
+    ).toBeUndefined();
+  });
+
+  test("does not immediately retry a rate-limited endpoint", () => {
+    expect(
+      typeof (bridge as { shouldRetryUpstreamExecutionOnSameEndpoint?: unknown })
+        .shouldRetryUpstreamExecutionOnSameEndpoint,
     ).toBe("function");
-
-    const resolveDuration = (
+    const shouldRetry = (
       bridge as {
-        resolveExecutionFailureCooldownDurationMs: (failureCount: number) => number;
+        shouldRetryUpstreamExecutionOnSameEndpoint: (input: {
+          retryable: boolean;
+          errorClass: string;
+          statusCode: number;
+          alreadyRetried: boolean;
+        }) => boolean;
       }
-    ).resolveExecutionFailureCooldownDurationMs;
-
-    expect(resolveDuration(1)).toBe(10 * 60 * 1000);
-    expect(resolveDuration(2)).toBe(30 * 60 * 1000);
-    expect(resolveDuration(3)).toBe(60 * 60 * 1000);
-    expect(resolveDuration(4)).toBe(5 * 60 * 60 * 1000);
-    expect(resolveDuration(5)).toBe(10 * 60 * 60 * 1000);
-    expect(resolveDuration(6)).toBe(20 * 60 * 60 * 1000);
-    expect(resolveDuration(12)).toBe(20 * 60 * 60 * 1000);
+    ).shouldRetryUpstreamExecutionOnSameEndpoint;
+    expect(
+      shouldRetry({
+        retryable: true,
+        errorClass: "rate_limited",
+        statusCode: 429,
+        alreadyRetried: false,
+      }),
+    ).toBe(false);
+    expect(
+      shouldRetry({
+        retryable: true,
+        errorClass: "upstream_timeout",
+        statusCode: 504,
+        alreadyRetried: false,
+      }),
+    ).toBe(true);
+    expect(
+      shouldRetry({
+        retryable: true,
+        errorClass: "upstream_timeout",
+        statusCode: 504,
+        alreadyRetried: true,
+      }),
+    ).toBe(false);
   });
 
   test("does not place Codex subscription endpoints on cooldown for invalid_request failures", async () => {
@@ -17654,11 +17709,13 @@ describe("runtime-host-bridge", () => {
               maintenance_value: string;
             }
           | undefined;
-        const cooldowns =
+        const circuitState =
           row && typeof row.maintenance_value === "string"
-            ? (JSON.parse(row.maintenance_value) as Record<string, Record<string, unknown>>)
-            : {};
-        expect(cooldowns[endpoint.endpointId]).toBeUndefined();
+            ? (JSON.parse(row.maintenance_value) as {
+                endpoints?: Record<string, Record<string, unknown>>;
+              })
+            : { endpoints: {} };
+        expect(circuitState.endpoints?.[endpoint.endpointId]).toBeUndefined();
       } finally {
         database.close();
       }
