@@ -33,6 +33,23 @@ test("stage package workflow requires and always binds the canonical Run 88 rele
   assert.doesNotMatch(binaries, /Bind canonical Run 88 identity[\s\S]*?RUN88_RELEASE_ID\s*!=\s*''/);
   assert.match(
     binaries,
-    /if \(\$env:ROLE_MODEL_BUILD_CHANNEL -eq "stage"\)[\s\S]*?release_id[\s\S]*?private_distribution_sha256/,
+    /if \(\$env:ROLE_MODEL_BUILD_CHANNEL -in @\("stage", "production"\)\)[\s\S]*?release_id[\s\S]*?private_distribution_sha256/,
   );
+});
+
+test("production packaging rebuilds and verifies the complete tested stage pair", async () => {
+  const binaries = await readFile(
+    new URL("../.github/workflows/build-binaries.yml", import.meta.url),
+    "utf8",
+  );
+  assert.match(binaries, /Resolve tested stage candidate/);
+  assert.match(binaries, /private_source_commit/);
+  assert.match(
+    binaries,
+    /Checkout exact private release revision[\s\S]*?ROLE_MODEL_BUILD_CHANNEL == 'stage' \|\| env\.ROLE_MODEL_BUILD_CHANNEL == 'production'/,
+  );
+  assert.match(binaries, /ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT:[\s\S]*?production/);
+  assert.match(binaries, /Verify complete production pair matches the tested stage candidate/);
+  assert.match(binaries, /validateRun88ProductionPromotion|--verify-production-manifest/);
+  assert.doesNotMatch(binaries, /Verify production core matches the tested stage candidate/);
 });
