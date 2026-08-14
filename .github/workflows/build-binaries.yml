@@ -107,10 +107,26 @@ jobs:
             "X-GitHub-Api-Version" = "2022-11-28"
           }
           $listUrl = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/actions/artifacts?name=$artifactName&per_page=20"
-          $artifact = (Invoke-RestMethod -Headers $headers -Uri $listUrl).artifacts |
+          $artifact = $null
+          $candidates = (Invoke-RestMethod -Headers $headers -Uri $listUrl).artifacts |
             Where-Object { -not $_.expired } |
-            Sort-Object created_at -Descending |
-            Select-Object -First 1
+            Sort-Object created_at -Descending
+          foreach ($candidate in $candidates) {
+            if ($candidate.workflow_run.head_branch -ne "stage") { continue }
+            $runUrl = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/actions/runs/$($candidate.workflow_run.id)"
+            $run = Invoke-RestMethod -Headers $headers -Uri $runUrl
+            if (
+              $run.status -eq "completed" -and
+              $run.conclusion -eq "success" -and
+              $run.event -eq "push" -and
+              $run.head_branch -eq "stage" -and
+              $run.head_sha -eq $candidate.workflow_run.head_sha -and
+              $run.path -eq ".github/workflows/build-binaries.yml"
+            ) {
+              $artifact = $candidate
+              break
+            }
+          }
           if (-not $artifact) { throw "No tested stage candidate found for $artifactName" }
           $outerZip = Join-Path $env:RUNNER_TEMP "stage-candidate.zip"
           $outerDir = Join-Path $env:RUNNER_TEMP "stage-candidate"
@@ -203,6 +219,26 @@ jobs:
           ref: ${{ steps.release_identity.outputs.private_source_commit }}
           token: ${{ secrets.ROLE_MODEL_INTERNAL_READ_TOKEN }}
           path: _private
+          fetch-depth: 0
+
+      - name: Verify private revision passed paired promotion branch
+        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production'
+        working-directory: _private
+        shell: bash
+        env:
+          RELEASE_PRIVATE_SHA: ${{ steps.release_identity.outputs.private_source_commit }}
+          REQUIRED_PRIVATE_BRANCH: ${{ env.ROLE_MODEL_BUILD_CHANNEL == 'production' && 'main' || 'stage' }}
+        run: |
+          actual_private_sha="$(git rev-parse HEAD)"
+          if [[ "$actual_private_sha" != "$RELEASE_PRIVATE_SHA" ]]; then
+            echo "Private checkout does not match the paired release identity."
+            exit 1
+          fi
+          git fetch --no-tags origin "+refs/heads/${REQUIRED_PRIVATE_BRANCH}:refs/remotes/origin/${REQUIRED_PRIVATE_BRANCH}"
+          if ! git merge-base --is-ancestor "$RELEASE_PRIVATE_SHA" "origin/$REQUIRED_PRIVATE_BRANCH"; then
+            echo "Private revision must be promoted through role-model-internal/$REQUIRED_PRIVATE_BRANCH before $ROLE_MODEL_BUILD_CHANNEL packaging."
+            exit 1
+          fi
 
       - name: Build exact private release distribution
         if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production'

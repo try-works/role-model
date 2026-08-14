@@ -36,3 +36,13 @@ test("production artifacts include the exact private runtime tested at stage", (
   assert.match(workflow, /private_distribution_sha256/);
   assert.match(workflow, /--verify-production-manifest/);
 });
+
+test("the public release orchestrator enforces paired private promotion", () => {
+  assert.match(workflow, /workflow_run\.head_branch -ne "stage"/);
+  assert.match(workflow, /run\.conclusion -eq "success"/);
+  assert.match(workflow, /run\.event -eq "push"/);
+  assert.match(workflow, /fetch-depth: 0/);
+  assert.match(workflow, /Verify private revision passed paired promotion branch/);
+  assert.match(workflow, /REQUIRED_PRIVATE_BRANCH:[\s\S]*?'main'[\s\S]*?'stage'/);
+  assert.match(workflow, /git merge-base --is-ancestor/);
+});
