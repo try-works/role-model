@@ -51,6 +51,9 @@ private commit, verify that the artifact came from a successful push build of pu
 commit has subsequently passed through private `main`, and prove the complete public/private pair is identical.
 Source-tree or core-payload equality alone is insufficient.
 
+Run 88's `v0.0.8` release-toolchain recovery and the exact stage/production payload diagnosis are recorded in
+[`run88-v0.0.8-release-toolchain.addendum.md`](run88-v0.0.8-release-toolchain.addendum.md).
+
 ## Docs site exception
 
 The docs site is intentionally simpler than the runtime pipeline. Relevant pull requests build it without deploy
