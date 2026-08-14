@@ -1,0 +1,22 @@
+---
+pid: 28168
+cwd: "D:\\DEV\\.wt\\82-tb00"
+command: "$privWt = \"D:\\DEV\\.wt\\84-kw\"\nPush-Location $privWt\nnode --test tests/track-b/tb11.test.mjs 2>&1 | Select-String -Pattern \"✔|✖|fail |pass |tests \"\nWrite-Host \"TB11=$LASTEXITCODE\"\n# also check capacity/system scenarios status\nnode scripts/track-b/system-proof.mjs 2>&1 | Select-Object -Last 30\nWrite-Host \"SYS=$LASTEXITCODE\"\nPop-Location\n"
+started_at: 2026-07-25T12:04:12.280Z
+running_for_ms: 113907   
+---
+
+ℹ tests 26
+ℹ pass 26
+ℹ fail 0
+TB11=0
+(node:34412) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+direct-track-b-v1.1-system-proof status=passed
+SYS=0
+
+---
+exit_code: 0
+elapsed_ms: 114907
+ended_at: 2026-07-25T12:06:07.187Z
+---

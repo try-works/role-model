@@ -1,0 +1,62 @@
+[
+  {
+    "id": "01-multi-shell",
+    "exit": 0,
+    "seconds": 67.4,
+    "filesOk": true,
+    "validateOk": true,
+    "pass": true,
+    "cwd": "C:\\Users\\erikb\\AppData\\Local\\Temp\\codex-e2e-01-multi-shell-201803",
+    "note": "has alpha-delta"
+  },
+  {
+    "id": "02-parallel-files",
+    "exit": 0,
+    "seconds": 50.8,
+    "filesOk": true,
+    "validateOk": true,
+    "pass": true,
+    "cwd": "C:\\Users\\erikb\\AppData\\Local\\Temp\\codex-e2e-02-parallel-files-201910",
+    "note": "a=one b=two"
+  },
+  {
+    "id": "03-apply-patch",
+    "exit": 0,
+    "seconds": 57.8,
+    "filesOk": true,
+    "validateOk": true,
+    "pass": true,
+    "cwd": "C:\\Users\\erikb\\AppData\\Local\\Temp\\codex-e2e-03-apply-patch-202001",
+    "note": "bang=True apply_patch_mentioned=True shell_fallback_likely=False"
+  },
+  {
+    "id": "04-fail-recover",
+    "exit": 0,
+    "seconds": 53.9,
+    "filesOk": true,
+    "validateOk": true,
+    "pass": true,
+    "cwd": "C:\\Users\\erikb\\AppData\\Local\\Temp\\codex-e2e-04-fail-recover-202059",
+    "note": "content=recovered"
+  },
+  {
+    "id": "05-spaces-path",
+    "exit": 2,
+    "seconds": 4.1,
+    "filesOk": false,
+    "validateOk": false,
+    "pass": false,
+    "cwd": "C:\\Users\\erikb\\AppData\\Local\\Temp\\codex-e2e-05-spaces-path-202153",
+    "note": "You cannot call a method on a null-valued expression."
+  },
+  {
+    "id": "06-two-files-chain",
+    "exit": 0,
+    "seconds": 61.2,
+    "filesOk": true,
+    "validateOk": true,
+    "pass": true,
+    "cwd": "C:\\Users\\erikb\\AppData\\Local\\Temp\\codex-e2e-06-two-files-chain-202157",
+    "note": "t1=first t2=second"
+  }
+]

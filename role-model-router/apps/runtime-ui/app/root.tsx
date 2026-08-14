@@ -9,46 +9,28 @@ import {
 } from "react-router";
 
 import "./app.css";
+import { BOOT_RM3_TOKEN_KEYS, BOOT_THEME_PALETTES } from "./lib/theme";
 import NotFoundRoute from "./routes/not-found";
-
-const bootThemePalettes = {
-  dark: {
-    accent: "#5e6ad2",
-    bg: "#010102",
-    border: "#23252a",
-    fg: "#f7f8f8",
-    secondary: "#d0d6e0",
-    surface: "#0f1011",
-  },
-  light: {
-    accent: "#5e6ad2",
-    bg: "#ffffff",
-    border: "#e3e6ec",
-    fg: "#0f1115",
-    secondary: "#3a4150",
-    surface: "#f7f8f8",
-  },
-} as const;
 
 export const links = () => [
   // Keep the packaged runtime shell self-contained so first paint never waits on remote assets.
   {
     rel: "preload",
-    href: "/assets/fonts/inter-latin-400-normal.woff2",
+    href: "/assets/fonts/geist-latin-400-normal.woff2",
     as: "font",
     type: "font/woff2",
     crossOrigin: "anonymous",
   },
   {
     rel: "preload",
-    href: "/assets/fonts/inter-latin-600-normal.woff2",
+    href: "/assets/fonts/geist-latin-600-normal.woff2",
     as: "font",
     type: "font/woff2",
     crossOrigin: "anonymous",
   },
   {
     rel: "preload",
-    href: "/assets/fonts/ibm-plex-mono-latin-400-normal.woff2",
+    href: "/assets/fonts/geist-mono-latin-400-normal.woff2",
     as: "font",
     type: "font/woff2",
     crossOrigin: "anonymous",
@@ -58,7 +40,8 @@ export const links = () => [
 const themeBootstrapScript = `
 (() => {
   try {
-    const palettes = ${JSON.stringify(bootThemePalettes)};
+    const palettes = ${JSON.stringify(BOOT_THEME_PALETTES)};
+    const rm3Tokens = ${JSON.stringify(BOOT_RM3_TOKEN_KEYS)};
     const key = "role-model-runtime-theme";
     const stored = window.localStorage.getItem(key);
     const theme =
@@ -66,12 +49,19 @@ const themeBootstrapScript = `
         ? stored
         : "dark";
     const palette = palettes[theme] ?? palettes.dark;
-    document.documentElement.dataset.theme = theme;
-    document.documentElement.style.colorScheme = theme;
-    document.documentElement.style.backgroundColor = palette.bg;
-    document.documentElement.style.color = palette.fg;
+    const root = document.documentElement;
+    root.dataset.theme = theme;
+    root.classList.toggle("dark", theme === "dark");
+    root.classList.toggle("light", theme === "light");
+    root.style.colorScheme = theme;
+    root.style.backgroundColor = palette.bg;
+    root.style.color = palette.fg;
     for (const [token, value] of Object.entries(palette)) {
-      document.documentElement.style.setProperty(\`--rm-\${token}\`, value);
+      root.style.setProperty(\`--rm-\${token}\`, value);
+    }
+    const rm3 = rm3Tokens[theme] ?? rm3Tokens.dark;
+    for (const [token, value] of Object.entries(rm3)) {
+      root.style.setProperty(\`--rm3-\${token}\`, value);
     }
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) {
@@ -88,15 +78,15 @@ export function Layout({ children }: { children: ReactNode }) {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="color-scheme" content="light dark" />
-        <meta name="theme-color" content="#010102" />
-        <meta name="theme-color" content="#010102" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#0a0a0a" />
+        <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: Static bootstrap prevents a theme flash before React hydration. */}
         <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
         <Meta />
         <Links />
       </head>
       <body
-        style={{ background: "var(--rm-bg, #010102)", color: "var(--rm-fg, #f7f8f8)", margin: 0 }}
+        style={{ background: "var(--rm-bg, #0a0a0a)", color: "var(--rm-fg, #ededed)", margin: 0 }}
       >
         {children}
         <ScrollRestoration />
@@ -115,19 +105,19 @@ export function HydrateFallback() {
     <main
       style={{
         alignItems: "center",
-        background: "var(--rm-bg, #010102)",
-        color: "var(--rm-fg, #f7f8f8)",
+        background: "var(--rm-bg, #0a0a0a)",
+        color: "var(--rm-fg, #ededed)",
         display: "flex",
-        fontFamily: "var(--rm-font-display, Inter, Segoe UI, sans-serif)",
+        fontFamily: 'var(--rm-font-display, "Geist", ui-sans-serif, system-ui, sans-serif)',
         minHeight: "100vh",
         padding: "24px",
       }}
     >
       <section
         style={{
-          border: "1px solid var(--rm-border, #23252a)",
+          border: "1px solid var(--rm-border, #1f1f1f)",
           borderRadius: "16px",
-          background: "var(--rm-surface, #0f1011)",
+          background: "var(--rm-surface, #0f0f0f)",
           boxShadow: "0 24px 80px rgba(0, 0, 0, 0.25)",
           margin: "0 auto",
           maxWidth: "560px",
@@ -137,7 +127,7 @@ export function HydrateFallback() {
       >
         <p
           style={{
-            color: "var(--rm-accent, #5e6ad2)",
+            color: "var(--rm-accent, #ffffff)",
             fontSize: "12px",
             fontWeight: 600,
             letterSpacing: "0.16em",
@@ -160,7 +150,7 @@ export function HydrateFallback() {
         </h1>
         <p
           style={{
-            color: "var(--rm-secondary, #d0d6e0)",
+            color: "var(--rm-secondary, #9a9a9a)",
             fontSize: "14px",
             lineHeight: "22px",
             margin: "12px 0 0",

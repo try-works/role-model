@@ -1,0 +1,29 @@
+{
+  "status": "PASS",
+  "pid": 27428,
+  "identity": {
+    "runtimeKind": "packaged-track-b-distribution",
+    "packagedArtifactsExecuted": true,
+    "realExtensionHost": true,
+    "realPersistenceBackends": true,
+    "listenUrl": "http://127.0.0.1:34585",
+    "stateRoot": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-packaged-run85",
+    "scopeId": "run85-dev",
+    "manifest": "D:\\DEV\\role-model-internal\\.worktrees\\85-kw-gated-router-prompt-inject\\dist\\run00-dev\\track-b-runtime-manifest.json",
+    "sidecarPath": "D:\\DEV\\role-model-internal\\.worktrees\\85-kw-gated-router-prompt-inject\\dist\\run00-dev\\runtime-operations-server.mjs",
+    "sidecarSha256": "a7793a22b0cd8c1a05478b7e0650a105a104b0f47343903dc02c0066edf5da6b",
+    "extensionCount": 13,
+    "aggregateUrl": "http://127.0.0.1:8787/contribution/aggregate",
+    "recommendationServiceUrl": "https://recommendations-dev.role-model.dev",
+    "recommendationMaterialFile": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-dev-secrets\\secret-material.json",
+    "recommendationChannel": "development",
+    "recommendationVerificationKeyConfigured": true,
+    "track": "dev",
+    "trustFile": "D:\\DEV\\role-model-internal\\.worktrees\\85-kw-gated-router-prompt-inject\\.recursive\\run\\00-direct-track-b-v1-1-implementation\\evidence\\remediation-proposal-2026-07-23\\cloud-local\\destination-auth-secret.json",
+    "publicRoot": "D:\\DEV\\role-model\\.worktrees\\85-kw-gated-router-prompt-inject",
+    "privateRoot": "D:\\DEV\\role-model-internal\\.worktrees\\85-kw-gated-router-prompt-inject",
+    "startedAt": "2026-07-29T00:58:33.994Z"
+  },
+  "stdoutTail": "{\n  \"status\": \"listening\",\n  \"host\": \"127.0.0.1\",\n  \"port\": 34585\n}\n",
+  "stderrTail": "(node:12532) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\n"
+}

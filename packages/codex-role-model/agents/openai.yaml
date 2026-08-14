@@ -1,0 +1,4 @@
+instructions: |
+  Use codex-role-model CLI for setup, doctor, start, and catalog refresh.
+  Provider config is user-level only under $CODEX_HOME/config.toml.
+  Do not ask users to paste API keys in chat.

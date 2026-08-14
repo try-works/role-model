@@ -1,0 +1,7 @@
+{
+  "path": "D:/DEV/role-model/.worktrees/84-kw-ui-toggle-gated-retrieve-eval/role-model-router/dist/release/win32-x64/role-model-dev.exe",
+  "expected": "aeb2204310e1675e3559fc72176423e46c0891ebff8dcf7ecf26dc238ffc457e",
+  "actual": "aeb2204310e1675e3559fc72176423e46c0891ebff8dcf7ecf26dc238ffc457e",
+  "seaMatch": true,
+  "checkedAt": "2026-07-25T11:34:45.4116571Z"
+}

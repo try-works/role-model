@@ -1,0 +1,1926 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/86-runtime-ui-rm3-design-system-frontend/role-model-router/apps/runtime-ui
+
+ Γ£ô app/routes/storage-retention.test.tsx (2 tests) 35ms
+ Γ¥» app/lib/design-system.test.ts (94 tests | 2 failed) 195ms
+   Γ£ô runtime design system > defines navigation groups and layout templates for every runtime route 7ms
+   Γ£ô runtime design system > uses analytics charts as the primary Observe entry point 2ms
+   Γ£ô runtime design system > keeps the shell on the RM3 baseline with explicit chart tokens 1ms
+   Γ£ô runtime design system > chart tokens used together resolve to distinct visual colors in each theme 1ms
+   Γ£ô runtime design system > global shell chrome keeps legacy vendor ui out of the main runtime contract 57ms
+   Γ£ô runtime design system > studio implementation targets render repo-owned workspace sections instead of placeholder blueprints 11ms
+   Γ£ô runtime design system > studio workspace routes use shared form-label and payload typography tokens 1ms
+   Γ£ô runtime design system > integration and system implementation targets render live upstream and peer surfaces 10ms
+   Γ£ô runtime design system > router implementation targets render repo-owned routing explanation surfaces 0ms
+   Γ£ô runtime design system > router, connect registry, and remote surfaces expose alias/readiness ownership instead of generic filler 1ms
+   Γ£ô runtime design system > providers surface omits saved-provider maintenance and archived diagnostics 1ms
+   Γ£ô runtime design system > runtime, session readiness, workbench, and advanced surfaces use canonical lifecycle diagnostics 0ms
+   Γ£ô runtime design system > router routes preserve empty-state and observe-link affordances 0ms
+   Γ£ô runtime design system > merged router overview stays observational while routing strategy owns editing controls 1ms
+   Γ£ô runtime design system > router overview presents runtime-config posture as source of truth 1ms
+   Γ£ô runtime design system > router overview lists the concrete candidate endpoints behind routing posture 1ms
+   Γ£ô runtime design system > routing decision detail stays in-page and follows the compact Paper detail layout 0ms
+   Γ£ô runtime design system > routing strategy benchmark advisory does not leak JSX control flow as page text 1ms
+   Γ£ô runtime design system > routing strategy settings separate saved posture from draft edits and refresh derived state after save 0ms
+   Γ£ô runtime design system > routing strategy follows the Paper in-page rail layout without shell action buttons 0ms
+   Γ£ô runtime design system > routing controller uses the tokenized registry-detail split instead of generic summary strips 0ms
+   Γ£ô runtime design system > routing candidates use a ledger-style inventory rail instead of detached fact cards 0ms
+   Γ£ô runtime design system > routing decisions use a ledger rail instead of a KPI strip 0ms
+   Γ£ô runtime design system > router config is catalog redirect-only (Fixed Decision #15), not a live Router route 0ms
+   Γ£ô runtime design system > meta-guidance panels stay removed from overview and observe routes 0ms
+   Γ£ô runtime design system > design system doc marks the converted pages as live routes 1ms
+   Γ£ô runtime design system > control routes tolerate an unassigned controller before endpoint activation 0ms
+   Γ£ô runtime design system > applies the RM3 palette + Geist contract in live CSS and DESIGN_SYSTEM 2ms
+   Γ£ô runtime design system > shared panels and provider selectors are owned by Apple-theme primitives 1ms
+   Γ£ô runtime design system > router strategy execution mode uses the themed select primitive 0ms
+   Γ£ô runtime design system > production UI dropdowns use themed select primitives instead of native selects 2ms
+   Γ£ô runtime design system > shared route effects avoid action identity loops and peer refresh feedback 0ms
+   Γ£ô runtime design system > keeps shared states on solid token-backed pills and no section divider chrome 0ms
+   Γ£ô runtime design system > configured model chips follow the Paper tone map instead of generic success pills 0ms
+   Γ£ô runtime design system > configured models keeps the selected detail compact and moves deep diagnostics behind a disclosure 0ms
+   Γ£ô runtime design system > benchmark score badges use a dedicated centered circular badge instead of loose pill text 0ms
+   ├ù runtime design system > benchmark page keeps controls and scores in a single runtime column 27ms
+     ΓåÆ expected 'import { MetricStrip } from "@role-moΓÇª' to contain 'className="grid gap-4 xl:grid-cols-3"'
+   Γ£ô runtime design system > benchmark page shows populated preview content when runtime data is empty 1ms
+   Γ£ô runtime design system > benchmark page uses shared text tokens instead of route-local hardcoded typography 1ms
+   Γ£ô runtime design system > remaining system boards follow the Paper runtime-page layout contracts 1ms
+   Γ£ô runtime design system > remote, models, router, and system runtime config routes are first-class pages in the retained taxonomy 15ms
+   Γ£ô runtime design system > routing analytics exposes the Paper-style current-slice summary rail 0ms
+   Γ£ô runtime design system > connect and system routes rely on shared secondary-text tokens instead of route-local color overrides 0ms
+   ├ù runtime design system > upstream passthrough overview counts configured providers in scope, not the full provider catalog 9ms
+     ΓåÆ expected 'import { MetricStrip } from "@role-moΓÇª' to contain 'value={providerCards.length}'
+   Γ£ô runtime design system > connect contract-reference routes expose live compatibility and passthrough guidance 0ms
+   Γ£ô runtime design system > runtime roles route preserves role-first drill-down language for task detail 1ms
+   Γ£ô runtime design system > models routes use shared supporting and field tokens instead of route-local secondary text overrides 1ms
+   Γ£ô runtime design system > routing strategy route uses shared text and field tokens instead of route-local small-text styling 0ms
+   Γ£ô runtime design system > router routes use shared supporting and emphasis tokens instead of route-local secondary text overrides 1ms
+   Γ£ô runtime design system > observe routes use shared supporting, utility, and title tokens instead of route-local telemetry typography overrides 1ms
+   Γ£ô runtime design system > local routes use shared supporting, meta, code, and button tokens instead of route-local typography drift 1ms
+   Γ£ô runtime design system > local chooser uses two backend option cards with in-card actions instead of detached fact strips 0ms
+   Γ£ô runtime design system > peer models keeps the register surface visible and uses stacked registry rows 0ms
+   Γ£ô runtime design system > llama-swap models stays single-column and uses stacked loaded-model rows 0ms
+   Γ£ô runtime design system > llama-swap matrix renders an explanatory matrix entry page instead of a bare redirect 0ms
+   Γ£ô runtime design system > local setup surfaces stay discoverable from navigation and empty registry states 0ms
+   Γ£ô runtime design system > local host policy, endpoint, and swap surfaces keep low-data states actionable 0ms
+   Γ£ô runtime design system > observe and local log surfaces render structured ledgers rather than raw iframe placeholders 1ms
+   Γ£ô runtime design system > observe ownership keeps requests canonical and raw-host surfaces adjacent 0ms
+   Γ£ô runtime design system > requests and request detail stay telemetry-first without redundant raw-host handoff cards 1ms
+   Γ£ô runtime design system > observe chart routes use RM3 ChartGrid and PageFilters instead of legacy telemetry cards 0ms
+   Γ£ô runtime design system > routing analytics controls expose richer taxonomy pivots for observe charts 0ms
+   Γ£ô runtime design system > activity route frames raw-host metrics as adjacent to canonical telemetry 0ms
+   Γ£ô runtime design system > logs route exposes request-detail handoffs while preserving raw-host framing 0ms
+   Γ£ô runtime design system > registry and system layouts avoid redundant KPI strips and placeholder note panels 1ms
+   Γ£ô runtime design system > studio workspace routes omit happy-path FactCard strips 0ms
+   Γ£ô runtime design system > dashboard is chart-led and keeps routing analytics as a first-class handoff 0ms
+   Γ£ô runtime design system > overview metadata and design doc describe a telemetry-first summary with an interaction rail 2ms
+   Γ£ô runtime design system > workbench and observe routes expose routing controls and receipts in repo-owned UI surfaces 0ms
+   Γ£ô runtime design system > request detail and model detail expose structured taxonomy evidence rather than raw-only telemetry 1ms
+   Γ£ô runtime design system > request detail route renders authoritative stored cost metadata 0ms
+   Γ£ô runtime design system > request detail keeps top-line telemetry facts readable instead of compressing them into a six-column strip 0ms
+   Γ£ô runtime design system > shell header owns route metadata without duplicate page headers 1ms
+   Γ£ô runtime design system > shell headers do not render section eyebrow labels 0ms
+   Γ£ô runtime design system > routes do not register refresh controls as shell header actions 0ms
+   Γ£ô runtime design system > session readiness summary uses MetricStrip panel instead of FactCard walls 0ms
+   Γ£ô runtime design system > production UI sources do not bypass Apple theme token primitives 2ms
+   Γ£ô runtime design system > app css derives runtime tokens from RM3 token families with transitional linear aliases 1ms
+   Γ£ô runtime design system > shell chrome does not render separate card surfaces for the sidebar and header 0ms
+   Γ£ô runtime design system > shell keeps chrome fixed while only the page-content frame scrolls 1ms
+   Γ£ô runtime design system > shell navigation follows the text-first Paper runtime shell without route icons 1ms
+   Γ£ô runtime design system > design system doc records the Paper text-only shell and compact evidence preview rules 0ms
+   Γ£ô runtime design system > design artifacts clearly separate the current runtime authority from the historical Apple reference 0ms
+   Γ£ô runtime design system > design system doc includes page-by-page layout and content contracts for live runtime pages 1ms
+   Γ£ô runtime design system > shell typography and pill navigation follow the Paper runtime shell scale 1ms
+   Γ£ô runtime design system > shared form controls and telemetry filter pills stay at sidebar-scale typography 1ms
+   Γ£ô runtime design system > content-frame headings step down below the shell page title scale 0ms
+   Γ£ô runtime design system > accent-filled actions keep a light foreground for stronger token contrast 0ms
+   Γ£ô runtime design system > production UI sources keep the approved Apple radius grammar 1ms
+   Γ£ô runtime design system > production UI sources avoid unsupported Apple typography weight 500 0ms
+   Γ£ô runtime design system > chart primitives use shared design-system geometry and type tokens 1ms
+   Γ£ô runtime design system > telemetry chart states are shared design-system vocabulary 1ms
+   Γ£ô runtime design system > runtime route definitions stay slim and future scaffolds avoid duplicate header props 1ms
+   Γ£ô runtime design system > disclosure summaries use compact body tokens instead of section-heading scale 0ms
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 2 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > benchmark page keeps controls and scores in a single runtime column
+AssertionError: expected 'import { MetricStrip } from "@role-moΓÇª' to contain 'className="grid gap-4 xl:grid-cols-3"'
+
+- Expected
++ Received
+
+- className="grid gap-4 xl:grid-cols-3"
++ import { MetricStrip } from "@role-model/ui";
++ import { useCallback, useEffect, useMemo, useState } from "react";
++
++ import {
++   DisclosureSection,
++   EmptyState,
++   ErrorState,
++   LoadingState,
++   SectionCard,
++   SelectField,
++   StatusPill,
++ } from "../components/page-primitives";
++ import { computeLatencyPercentiles } from "../lib/benchmark-latency";
++ import {
++   describeHardBlend,
++   filterBenchmarkRunnableCandidates,
++   isBenchmarkRunnableCandidate,
++   resolveSubjectFromSummary,
++ } from "../lib/benchmark-model-cards";
++ import {
++   bodyStrongTextClassName,
++   bodyTextClassName,
++   compactTitleClassName,
++   foregroundEmphasisClassName,
++   inlineTitleClassName,
++   listRowClassName,
++   metaTextClassName,
++   mutedPanelClassName,
++   primaryButtonClassName,
++   secondaryButtonClassName,
++   supportingTextClassName,
++   utilityStrongTextClassName,
++ } from "../lib/design-system";
++ import { formatScore, formatScoreFraction } from "../lib/format-score";
++ import {
++   type BenchmarkCaseAuditEntry,
++   type BenchmarkCaseComparison,
++   type BenchmarkEndpointGrade,
++   type BenchmarkRunListEntry,
++   type BenchmarkRunProgress,
++   type BenchmarkRunResult,
++   type BenchmarkSuite,
++   type BenchmarkSummariesByMode,
++   type BenchmarkSummary,
++   type BenchmarkSummarySubject,
++   type RouterCandidate,
++   type RuntimeSummary,
++   clearAllBenchmarkData,
++   clearBenchmarkEndpointData,
++   fetchActiveBenchmarkRun,
++   fetchBenchmarkPreferences,
++   fetchBenchmarkRunProgress,
++   fetchBenchmarkRuns,
++   fetchBenchmarkSuite,
++   fetchBenchmarkSummariesByMode,
++   fetchBenchmarkSummary,
++   fetchRouterCandidates,
++   fetchRuntimeSummary,
++   startCapabilityBenchmark,
++   updateBenchmarkPreferences,
++ } from "../lib/runtime-api";
++
++ const BENCHMARK_POLL_MS = 1500;
++ const BENCHMARK_STALL_MS = 90_000;
++ const ACTIVE_BENCHMARK_RUN_KEY = "role-model.benchmark.activeRunId";
++ const benchmarkScoreBadgeClassName =
++   "flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-center [font-family:var(--rm-font-display)] text-[15px] font-semibold leading-none tracking-[-0.01em] [font-variant-numeric:tabular-nums]";
++ const benchmarkScoreRailClassName =
++   "flex flex-col items-end gap-3 md:w-[120px] md:shrink-0 md:self-start";
++ const benchmarkScoreBadgeClusterClassName = "flex flex-col items-end gap-2";
++ const benchmarkScoreActionClassName =
++   "inline-flex min-h-[36px] self-end whitespace-nowrap rounded-[var(--rm-radius-pill)] border border-[var(--rm-border-strong)] bg-[var(--rm-panel)] px-4 py-2 text-[13px] font-semibold leading-4 tracking-[-0.01em] text-[var(--rm-accent-ink)] transition hover:border-[var(--rm-accent)] hover:bg-[var(--rm-accent-ghost)] hover:text-[var(--rm-accent-ink)] active:scale-95 disabled:opacity-60";
++
++ const EMPTY_BENCHMARK_SUMMARY: BenchmarkSummary = {
++   runId: null,
++   completedAtMs: null,
++   mode: null,
++   suiteId: null,
++   suiteVersion: null,
++   judgeEndpointId: null,
++   judgeModelId: null,
++   artifactRoot: null,
++   subjects: [],
++   caseComparisons: [],
++   caseAudits: [],
++   manifest: null,
++ };
++
++ const benchmarkScorePreviewRows = [
++   {
++     endpointId: "openai.personal.default/gpt-4o-mini",
++     modelId: "gpt-4o-mini",
++     sourceType: "remote" as const,
++     overallScore: 0.93,
++     profileQualityScore: 0.94,
++     benchmarkSamplesLabel: "24 benchmark samples",
++     latencyLabel: "p50 520 ms ΓÇó p95 840 ms",
++     difficultyLabel: "easy 95% ΓÇó medium 94% ΓÇó hard 88%",
++     routingImpact:
++       "Preferred general-purpose controller candidate with strong code-hard coverage and stable latency.",
++   },
++   {
++     endpointId: "anthropic.personal.default/claude-3-5-sonnet",
++     modelId: "claude-3-5-sonnet",
++     sourceType: "remote" as const,
++     overallScore: 0.9,
++     profileQualityScore: 0.91,
++     benchmarkSamplesLabel: "24 benchmark samples",
++     latencyLabel: "p50 880 ms ΓÇó p95 1260 ms",
++     difficultyLabel: "easy 93% ΓÇó medium 91% ΓÇó hard 86%",
++     routingImpact:
++       "High-quality fallback for long-form reasoning with slightly slower completion time than the controller.",
++   },
++   {
++     endpointId: "llama-swap.local.pool/qwen2.5-coder-32b",
++     modelId: "qwen2.5-coder-32b",
++     sourceType: "local" as const,
++     overallScore: 0.82,
++     profileQualityScore: 0.84,
++     benchmarkSamplesLabel: "24 benchmark samples",
++     latencyLabel: "p50 640 ms ΓÇó p95 1010 ms",
++     difficultyLabel: "easy 86% ΓÇó medium 84% ΓÇó hard 71%",
++     routingImpact:
++       "Efficient local benchmark candidate for medium-complexity coding requests with lower hard-case ceiling.",
++   },
++ ];
++
++ const benchmarkTaxonomyPreviewGroups = [
++   {
++     label: "Role: role.planner",
++     tone: "accent" as const,
++     rows: [
++       { modelId: "gpt-4o-mini", endpointId: "openai.personal.default/gpt-4o-mini", score: "0.95" },
++       {
++         modelId: "claude-3-5-sonnet",
++         endpointId: "anthropic.personal.default/claude-3-5-sonnet",
++         score: "0.92",
++       },
++     ],
++   },
++   {
++     label: "Task: task.route-selection",
++     tone: "neutral" as const,
++     rows: [
++       { modelId: "gpt-4o-mini", endpointId: "openai.personal.default/gpt-4o-mini", score: "0.94" },
++       {
++         modelId: "qwen2.5-coder-32b",
++         endpointId: "llama-swap.local.pool/qwen2.5-coder-32b",
++         score: "0.83",
++       },
++     ],
++   },
++   {
++     label: "Capability: capability.tool-use",
++     tone: "success" as const,
++     rows: [
++       { modelId: "gpt-4o-mini", endpointId: "openai.personal.default/gpt-4o-mini", score: "0.93" },
++       {
++         modelId: "claude-3-5-sonnet",
++         endpointId: "anthropic.personal.default/claude-3-5-sonnet",
++         score: "0.9",
++       },
++     ],
++   },
++ ];
++
++ const benchmarkHistoryPreviewRows = [
++   {
++     runId: "bench-2026-07-04-full",
++     mode: "full",
++     caseCountLabel: "55 cases",
++     modelCountLabel: "3 models",
++     completedAtLabel: "2026-07-04 14:12",
++     suiteId: "routing-capability-v2",
++   },
++   {
++     runId: "bench-2026-07-04-quick",
++     mode: "quick",
++     caseCountLabel: "12 cases",
++     modelCountLabel: "3 models",
++     completedAtLabel: "2026-07-04 11:48",
++     suiteId: "routing-capability-v2",
++   },
++ ];
++
++ function formatElapsed(ms: number): string {
++   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
++   const minutes = Math.floor(totalSeconds / 60);
++   const seconds = totalSeconds % 60;
++   return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
++ }
++
++ function describeBenchmarkProgress(progress: BenchmarkRunProgress): {
++   readonly phaseLabel: string;
++   readonly detail: string;
++ } {
++   if (progress.runPhase === "execution") {
++     return {
++       phaseLabel: "Phase 1 of 3 ┬╖ Recording responses",
++       detail: [
++         progress.currentEndpointModelId
++           ? `model ${progress.endpointIndex}/${progress.endpointCount}: ${progress.currentEndpointModelId}`
++           : null,
++         progress.currentCaseId
++           ? `case ${progress.caseIndex}/${progress.caseCount} (${progress.currentCaseId})`
++           : null,
++         progress.currentPhase === "execute"
++           ? "running benchmark cases and saving deliverables"
++           : "preparing execution pass",
++       ]
++         .filter(Boolean)
++         .join(" ΓÇó "),
++     };
++   }
++
++   if (progress.runPhase === "compare") {
++     return {
++       phaseLabel: "Phase 3 of 3 ┬╖ Head-to-head compare",
++       detail: [
++         progress.currentCaseId
++           ? `case ${progress.caseIndex}/${progress.caseCount} (${progress.currentCaseId})`
++           : null,
++         progress.currentPhase === "compare"
++           ? "ranking subjects for this case"
++           : "preparing compare pass",
++       ]
++         .filter(Boolean)
++         .join(" ΓÇó "),
++     };
++   }
++
++   return {
++     phaseLabel: "Phase 2 of 3 ┬╖ Judge grading",
++     detail: [
++       progress.currentEndpointModelId
++         ? `model ${progress.endpointIndex}/${progress.endpointCount}: ${progress.currentEndpointModelId}`
++         : null,
++       progress.currentCaseId
++         ? `case ${progress.caseIndex}/${progress.caseCount} (${progress.currentCaseId})`
++         : null,
++       progress.currentPhase === "judge"
++         ? "scoring recorded deliverables"
++         : "grading saved responses",
++     ]
++       .filter(Boolean)
++       .join(" ΓÇó "),
++   };
++ }
++
++ function asRecord(value: unknown): Record<string, unknown> | null {
++   return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : null;
++ }
++
++ function pickNumber(record: Record<string, unknown> | null, ...keys: string[]): number | null {
++   for (const key of keys) {
++     const value = record?.[key];
++     if (typeof value === "number" && Number.isFinite(value)) {
++       return value;
++     }
++   }
++   return null;
++ }
++
++ function formatLatencyMs(value: number | null | undefined): string {
++   if (typeof value !== "number" || !Number.isFinite(value)) {
++     return "n/a";
++   }
++   return `${Math.round(value)} ms`;
++ }
++
++ function getBenchmarkScoreBadgeToneClass(score: number | null | undefined): string {
++   if (typeof score !== "number" || !Number.isFinite(score)) {
++     return "bg-[var(--rm-pill-neutral-bg)] text-[var(--rm-pill-neutral-ink)]";
++   }
++   if (score >= 0.9) {
++     return "bg-[var(--rm-pill-success-bg)] text-[var(--rm-pill-success-ink)]";
++   }
++   if (score >= 0.8) {
++     return "bg-[var(--rm-pill-warning-bg)] text-[var(--rm-pill-warning-ink)]";
++   }
++   return "bg-[var(--rm-pill-error-bg)] text-[var(--rm-pill-error-ink)]";
++ }
++
++ function resolveJudgeLabel(
++   summary: BenchmarkSummary,
++   candidates: readonly RouterCandidate[],
++ ): string | null {
++   return (
++     summary.judgeModelId ??
++     candidates.find((candidate) => candidate.endpointId === summary.judgeEndpointId)?.modelId ??
++     summary.judgeEndpointId ??
++     null
++   );
++ }
++
++ function collectEndpointLatencies(input: {
++   readonly endpointId: string;
++   readonly caseResults: BenchmarkEndpointGrade["caseResults"] | null;
++   readonly caseAudits: readonly BenchmarkCaseAuditEntry[] | undefined;
++ }): readonly number[] {
++   const fromCaseResults = (input.caseResults ?? [])
++     .map((caseResult) => caseResult.latencyMs)
++     .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
++   if (fromCaseResults.length > 0) {
++     return fromCaseResults;
++   }
++   return (input.caseAudits ?? [])
++     .filter((audit) => audit.endpointId === input.endpointId)
++     .map((audit) => audit.latencyMs)
++     .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
++ }
++
++ function EndpointModeRunSnapshot({
++   title,
++   summary,
++   endpointId,
++   judgeLabel,
++ }: {
++   readonly title: string;
++   readonly summary: BenchmarkSummary;
++   readonly endpointId: string;
++   readonly judgeLabel: string | null;
++ }) {
++   if (!summary.runId) {
++     return (
++       <div className={`${mutedPanelClassName} p-3`}>
++         <p className={utilityStrongTextClassName}>{title}</p>
++         <p className={`mt-2 ${supportingTextClassName}`}>No completed run yet.</p>
++       </div>
++     );
++   }
++
++   const subject = resolveSubjectFromSummary(summary, endpointId);
++   const completedAtLabel = summary.completedAtMs
++     ? new Date(summary.completedAtMs).toLocaleString()
++     : "unknown";
++
++   return (
++     <div className={`${mutedPanelClassName} p-3`}>
++       <p className={utilityStrongTextClassName}>{title}</p>
++       <p className={`mt-1 text-xs leading-[18px] ${supportingTextClassName}`}>
++         Completed {completedAtLabel}
++         {judgeLabel ? ` ΓÇó judge: ${judgeLabel}` : ""}
++       </p>
++       {subject ? (
++         <>
++           <p className={`mt-2 ${bodyStrongTextClassName}`}>
++             {formatScore(subject.overallScore)} overall
++           </p>
++           <p className={`mt-1 ${supportingTextClassName}`}>
++             easy {formatScore(subject.scoresByBucket.easy.score)} ΓÇó medium{" "}
++             {formatScore(subject.scoresByBucket.medium.score)} ΓÇó hard{" "}
++             {formatScore(subject.scoresByBucket.hard.score)}
++           </p>
++         </>
++       ) : (
++         <p className={`mt-2 ${supportingTextClassName}`}>
++           This endpoint was not graded in the last {summary.mode ?? "benchmark"} run.
++         </p>
++       )}
++     </div>
++   );
++ }
++
++ function describeRoutingImpact(candidate: RouterCandidate): string {
++   const profile = asRecord(candidate.latestProfile);
++   const sources = asRecord(profile?.sources);
++   const advisory = asRecord(candidate.advisoryMaxDifficultyRecommendation);
++   const qualityScore = pickNumber(
++     profile,
++     "judge_score",
++     "quality_score",
++     "judgeScore",
++     "qualityScore",
++   );
++   const benchmarkSamples = pickNumber(sources, "benchmark_samples", "benchmarkSamples") ?? 0;
++   const recommended =
++     typeof advisory?.recommended_max_difficulty === "string"
++       ? advisory.recommended_max_difficulty
++       : typeof advisory?.recommendedMaxDifficulty === "string"
++         ? advisory.recommendedMaxDifficulty
++         : null;
++   const minQuality =
++     pickNumber(advisory, "min_quality_score", "minQualityScore") ??
++     pickNumber(asRecord(advisory?.thresholds), "min_quality_score", "minQualityScore");
++
++   const parts: string[] = [];
++   if (qualityScore !== null) {
++     parts.push(
++       `Router ranks this candidate using a ${formatScore(qualityScore)} quality score (from benchmark judge grades).`,
++     );
++   }
++   if (recommended) {
++     parts.push(
++       `Difficulty routing treats ${recommended} as the recommended max prompt difficulty for this endpoint.`,
++     );
++     if (minQuality !== null) {
++       parts.push(
++         `Per-bucket quality must stay above ${formatScore(minQuality)} to raise that ceiling.`,
++       );
++     }
++   }
++   if (benchmarkSamples > 0) {
++     parts.push(
++       `${benchmarkSamples} benchmark sample${benchmarkSamples === 1 ? "" : "s"} are merged into the observed profile used on future routing decisions.`,
++     );
++   }
++   const hardBlendDetail = describeHardBlend(candidate);
++   if (hardBlendDetail) {
++     parts.push(hardBlendDetail);
++   }
++   return parts.length > 0
++     ? parts.join(" ")
++     : "Run a benchmark to write judge scores into this endpoint's observed routing profile.";
++ }
++
++ interface ModelScoreRow {
++   readonly endpointId: string;
++   readonly modelId: string;
++   readonly sourceType: string;
++   readonly overallScore: number | null;
++   readonly scoresByBucket: BenchmarkSummarySubject["scoresByBucket"] | null;
++   readonly profileQualityScore: number | null;
++   readonly benchmarkSamples: number;
++   readonly latencyP50: number | null;
++   readonly latencyP95: number | null;
++   readonly caseResults: BenchmarkEndpointGrade["caseResults"] | null;
++   readonly candidate: RouterCandidate;
++ }
++
++ function buildModelScoreRows(
++   candidates: readonly RouterCandidate[],
++   result: BenchmarkRunResult | null,
++   summary: BenchmarkSummary | null,
++ ): ModelScoreRow[] {
++   const gradeByEndpoint = new Map<
++     string,
++     {
++       overallScore: number;
++       scoresByBucket: BenchmarkSummarySubject["scoresByBucket"];
++       caseResults: BenchmarkEndpointGrade["caseResults"] | null;
++     }
++   >();
++
++   for (const subject of summary?.subjects ?? []) {
++     gradeByEndpoint.set(subject.endpointId, {
++       overallScore: subject.overallScore,
++       scoresByBucket: subject.scoresByBucket,
++       caseResults: null,
++     });
++   }
++   for (const grade of result?.endpointGrades ?? []) {
++     gradeByEndpoint.set(grade.endpointId, {
++       overallScore: grade.overallScore,
++       scoresByBucket: grade.byDifficulty,
++       caseResults: grade.caseResults,
++     });
++   }
++
++   const rows: ModelScoreRow[] = [];
++   for (const candidate of candidates) {
++     const grade = gradeByEndpoint.get(candidate.endpointId);
++     const profile = asRecord(candidate.latestProfile);
++     const sources = asRecord(profile?.sources);
++     const profileQualityScore = pickNumber(profile, "judge_score", "quality_score");
++     const benchmarkSamples = pickNumber(sources, "benchmark_samples") ?? 0;
++     const capability = candidate.benchmarkCapability;
++     const caseResults = grade?.caseResults ?? null;
++     const { p50: latencyP50, p95: latencyP95 } = computeLatencyPercentiles(
++       collectEndpointLatencies({
++         endpointId: candidate.endpointId,
++         caseResults,
++         caseAudits: summary?.caseAudits,
++       }),
++     );
++
++     if (!grade && !capability && benchmarkSamples === 0 && profileQualityScore === null) {
++       continue;
++     }
++
++     rows.push({
++       endpointId: candidate.endpointId,
++       modelId: candidate.modelId,
++       sourceType: candidate.sourceType,
++       overallScore: grade?.overallScore ?? capability?.overallScore ?? profileQualityScore,
++       scoresByBucket:
++         grade?.scoresByBucket ??
++         (capability?.scoresByBucket
++           ? {
++               easy: {
++                 score: capability.scoresByBucket.easy?.score ?? 0,
++                 cases: capability.scoresByBucket.easy?.cases ?? 0,
++               },
++               medium: {
++                 score: capability.scoresByBucket.medium?.score ?? 0,
++                 cases: capability.scoresByBucket.medium?.cases ?? 0,
++               },
++               hard: {
++                 score: capability.scoresByBucket.hard?.score ?? 0,
++                 cases: capability.scoresByBucket.hard?.cases ?? 0,
++               },
++             }
++           : null),
++       profileQualityScore,
++       benchmarkSamples,
++       latencyP50,
++       latencyP95,
++       caseResults,
++       candidate,
++     });
++   }
++
++   return rows.sort((left, right) => right.modelId.localeCompare(left.modelId, "en"));
++ }
++
++ export function startProgressiveBenchmarkBootstrap<TSuite, TCandidates, TPreferences>(input: {
++   readonly loadSuite: () => Promise<TSuite>;
++   readonly loadCandidates: () => Promise<TCandidates>;
++   readonly loadPreferences: () => Promise<TPreferences>;
++   readonly onEssential: (value: {
++     readonly suite: TSuite;
++     readonly candidates: TCandidates;
++     readonly preferences: TPreferences;
++   }) => void;
++   readonly advisoryLoads: readonly {
++     readonly load: () => Promise<unknown>;
++     readonly onData: (value: unknown) => void;
++   }[];
++   readonly onError: (message: string) => void;
++ }): () => void {
++   let disposed = false;
++   const reportError = (value: unknown) => {
++     if (!disposed) {
++       input.onError(value instanceof Error ? value.message : "Could not load benchmark data.");
++     }
++   };
++
++   void Promise.all([input.loadSuite(), input.loadCandidates(), input.loadPreferences()]).then(
++     ([suite, candidates, preferences]) => {
++       if (!disposed) {
++         input.onEssential({ suite, candidates, preferences });
++       }
++     },
++     reportError,
++   );
++   for (const advisoryLoad of input.advisoryLoads) {
++     void advisoryLoad.load().then((value) => {
++       if (!disposed) {
++         advisoryLoad.onData(value);
++       }
++     }, reportError);
++   }
++
++   return () => {
++     disposed = true;
++   };
++ }
++
++ export default function ControlBenchmarkRoute() {
++   const [suite, setSuite] = useState<BenchmarkSuite | null>(null);
++   const [candidates, setCandidates] = useState<readonly RouterCandidate[] | null>(null);
++   const [selectedEndpointIds, setSelectedEndpointIds] = useState<string[]>([]);
++   const [judgeEndpointId, setJudgeEndpointId] = useState<string>("");
++   const [mode, setMode] = useState<"quick" | "full">("quick");
++   const [running, setRunning] = useState(false);
++   const [activeRunId, setActiveRunId] = useState<string | null>(null);
++   const [progress, setProgress] = useState<BenchmarkRunProgress | null>(null);
++   const [result, setResult] = useState<BenchmarkRunResult | null>(null);
++   const [lastSummary, setLastSummary] = useState<BenchmarkSummary | null>(null);
++   const [summariesByMode, setSummariesByMode] = useState<BenchmarkSummariesByMode | null>(null);
++   const [runHistory, setRunHistory] = useState<readonly BenchmarkRunListEntry[]>([]);
++   const [error, setError] = useState<string | null>(null);
++   const [runtimeSummary, setRuntimeSummary] = useState<RuntimeSummary | null>(null);
++   const [clearingEndpointId, setClearingEndpointId] = useState<string | null>(null);
++   const [clearingAll, setClearingAll] = useState(false);
++   const [nowMs, setNowMs] = useState(() => Date.now());
++   const [taxonomyFilterRole, setTaxonomyFilterRole] = useState<string>("");
++   const [taxonomyFilterTask, setTaxonomyFilterTask] = useState<string>("");
++   const [taxonomyFilterCapability, setTaxonomyFilterCapability] = useState<string>("");
++
++   const resolveJudgeEndpointId = useCallback(
++     (candidateValue: readonly RouterCandidate[], savedJudgeEndpointId?: string): string => {
++       const runnable = filterBenchmarkRunnableCandidates(candidateValue);
++       if (
++         savedJudgeEndpointId &&
++         runnable.some((candidate) => candidate.endpointId === savedJudgeEndpointId)
++       ) {
++         return savedJudgeEndpointId;
++       }
++       return (
++         runnable.find((candidate) => candidate.sourceType === "remote")?.endpointId ??
++         runnable[0]?.endpointId ??
++         ""
++       );
++     },
++     [],
++   );
++
++   const refreshBenchmarkState = useCallback(async () => {
++     const [summary, byMode, runs, candidateValue] = await Promise.all([
++       fetchBenchmarkSummary(),
++       fetchBenchmarkSummariesByMode(),
++       fetchBenchmarkRuns(),
++       fetchRouterCandidates(),
++     ]);
++     setLastSummary(summary);
++     setSummariesByMode(byMode);
++     setRunHistory(runs);
++     setCandidates(candidateValue);
++     return { summary, byMode, runs, candidateValue };
++   }, []);
++
++   useEffect(() => {
++     return startProgressiveBenchmarkBootstrap({
++       loadSuite: fetchBenchmarkSuite,
++       loadCandidates: fetchRouterCandidates,
++       loadPreferences: fetchBenchmarkPreferences,
++       onEssential: ({ suite: suiteValue, candidates: candidateValue, preferences }) => {
++         setSuite(suiteValue);
++         setCandidates(candidateValue);
++         const runnable = candidateValue.filter((candidate) =>
++           isBenchmarkRunnableCandidate(candidate),
++         );
++         setSelectedEndpointIds(runnable.map((candidate) => candidate.endpointId));
++         setJudgeEndpointId(resolveJudgeEndpointId(candidateValue, preferences.judgeEndpointId));
++         setError(null);
++       },
++       advisoryLoads: [
++         {
++           load: fetchBenchmarkSummary,
++           onData: (value) => setLastSummary(value as BenchmarkSummary),
++         },
++         {
++           load: fetchBenchmarkSummariesByMode,
++           onData: (value) => setSummariesByMode(value as BenchmarkSummariesByMode),
++         },
++         {
++           load: fetchBenchmarkRuns,
++           onData: (value) => setRunHistory(value as readonly BenchmarkRunListEntry[]),
++         },
++         {
++           load: fetchRuntimeSummary,
++           onData: (value) => setRuntimeSummary(value as RuntimeSummary),
++         },
++       ],
++       onError: setError,
++     });
++   }, [resolveJudgeEndpointId]);
++
++   useEffect(() => {
++     if (!suite || !candidates) {
++       return;
++     }
++
++     let cancelled = false;
++
++     const resumeActiveRun = async () => {
++       try {
++         const activeRun = await fetchActiveBenchmarkRun();
++         const storedRunId = sessionStorage.getItem(ACTIVE_BENCHMARK_RUN_KEY);
++         const runId = activeRun?.runId ?? storedRunId;
++         if (!runId) {
++           return;
++         }
++
++         const snapshot = await fetchBenchmarkRunProgress(runId);
++         if (cancelled) {
++           return;
++         }
++
++         if (snapshot.status === "running") {
++           setActiveRunId(runId);
++           setRunning(true);
++           setProgress(snapshot);
++           sessionStorage.setItem(ACTIVE_BENCHMARK_RUN_KEY, runId);
++           return;
++         }
++
++         sessionStorage.removeItem(ACTIVE_BENCHMARK_RUN_KEY);
++         if (snapshot.status === "completed" && snapshot.result) {
++           setResult(snapshot.result);
++           void refreshBenchmarkState();
++         }
++       } catch {
++         sessionStorage.removeItem(ACTIVE_BENCHMARK_RUN_KEY);
++       }
++     };
++
++     void resumeActiveRun();
++     return () => {
++       cancelled = true;
++     };
++   }, [candidates, refreshBenchmarkState, suite]);
++
++   const eligibleCaseCount = useMemo(() => {
++     if (!suite) {
++       return 0;
++     }
++     if (mode === "quick") {
++       return suite.cases.filter((item) => item.benchmark_eligible && item.quick_benchmark).length;
++     }
++     return suite.cases.filter((item) => item.benchmark_eligible).length;
++   }, [mode, suite]);
++
++   const runnableCandidates = useMemo(
++     () => (candidates ? filterBenchmarkRunnableCandidates(candidates) : []),
++     [candidates],
++   );
++   const excludedCandidates = useMemo(
++     () =>
++       candidates ? candidates.filter((candidate) => !isBenchmarkRunnableCandidate(candidate)) : [],
++     [candidates],
++   );
++
++   const runnableEndpointIds = useMemo(
++     () => new Set(runnableCandidates.map((candidate) => candidate.endpointId)),
++     [runnableCandidates],
++   );
++
++   useEffect(() => {
++     if (!candidates) {
++       return;
++     }
++     setSelectedEndpointIds((current) =>
++       current.filter((endpointId) => runnableEndpointIds.has(endpointId)),
++     );
++     if (judgeEndpointId && !runnableEndpointIds.has(judgeEndpointId)) {
++       setJudgeEndpointId(resolveJudgeEndpointId(runnableCandidates));
++     }
++   }, [
++     candidates,
++     judgeEndpointId,
++     resolveJudgeEndpointId,
++     runnableCandidates,
++     runnableEndpointIds,
++   ]);
++
++   const gradedEndpointCount = selectedEndpointIds.length;
++
++   const judgeSubjectOverlap =
++     judgeEndpointId.length > 0 && selectedEndpointIds.includes(judgeEndpointId);
++
++   const canRunBenchmark =
++     Boolean(suite) &&
++     gradedEndpointCount >= 2 &&
++     judgeEndpointId.length > 0 &&
++     runnableEndpointIds.has(judgeEndpointId) &&
++     !running;
++
++   const modelScoreRows = useMemo(
++     () => (candidates ? buildModelScoreRows(candidates, result, lastSummary) : []),
++     [candidates, lastSummary, result],
++   );
++
++   const compareByCaseId = useMemo(() => {
++     const map = new Map<string, BenchmarkCaseComparison>();
++     for (const entry of lastSummary?.caseComparisons ?? []) {
++       map.set(entry.caseId, entry);
++     }
++     return map;
++   }, [lastSummary]);
++
++   const taxonomyDimensionInventory = useMemo(() => {
++     const roleIds = new Set<string>();
++     const taskIds = new Set<string>();
++     const capabilityIds = new Set<string>();
++
++     for (const row of modelScoreRows) {
++       const subject = lastSummary?.subjects.find((entry) => entry.endpointId === row.endpointId);
++       if (!subject?.taxonomyScores) {
++         continue;
++       }
++       for (const roleId of Object.keys(subject.taxonomyScores.byRole ?? {})) {
++         roleIds.add(roleId);
++       }
++       for (const taskId of Object.keys(subject.taxonomyScores.byTask ?? {})) {
++         taskIds.add(taskId);
++       }
++       for (const capabilityId of Object.keys(subject.taxonomyScores.byCapability ?? {})) {
++         capabilityIds.add(capabilityId);
++       }
++     }
++
++     return {
++       roleIds: [...roleIds].sort((left, right) => left.localeCompare(right)),
++       taskIds: [...taskIds].sort((left, right) => left.localeCompare(right)),
++       capabilityIds: [...capabilityIds].sort((left, right) => left.localeCompare(right)),
++     };
++   }, [lastSummary, modelScoreRows]);
++
++   const taxonomyHasData =
++     taxonomyDimensionInventory.roleIds.length > 0 ||
++     taxonomyDimensionInventory.taskIds.length > 0 ||
++     taxonomyDimensionInventory.capabilityIds.length > 0;
++
++   const getFilteredTaxonomyScores = useCallback(
++     (dimension: "byRole" | "byTask" | "byCapability", filterValue: string) => {
++       if (!filterValue) {
++         return [] as Array<{
++           modelId: string;
++           endpointId: string;
++           score: number;
++         }>;
++       }
++
++       return modelScoreRows
++         .map((row) => {
++           const subject = lastSummary?.subjects.find(
++             (entry) => entry.endpointId === row.endpointId,
++           );
++           const score = subject?.taxonomyScores?.[dimension]?.[filterValue];
++           return score !== undefined
++             ? {
++                 modelId: row.modelId,
++                 endpointId: row.endpointId,
++                 score,
++               }
++             : null;
++         })
++         .filter(
++           (
++             entry,
++           ): entry is {
++             modelId: string;
++             endpointId: string;
++             score: number;
++           } => entry !== null,
++         )
++         .sort((left, right) => right.score - left.score);
++     },
++     [lastSummary, modelScoreRows],
++   );
++
++   const toggleEndpoint = (endpointId: string) => {
++     setSelectedEndpointIds((current) =>
++       current.includes(endpointId)
++         ? current.filter((value) => value !== endpointId)
++         : [...current, endpointId],
++     );
++   };
++
++   const runBenchmark = useCallback(async () => {
++     const runnableSelectedEndpointIds = selectedEndpointIds.filter((endpointId) =>
++       runnableEndpointIds.has(endpointId),
++     );
++     if (runnableSelectedEndpointIds.length < 2) {
++       setError("Select at least two endpoints for compare-capable benchmark runs.");
++       return;
++     }
++     if (!judgeEndpointId || !runnableEndpointIds.has(judgeEndpointId)) {
++       setError("Select a judge endpoint.");
++       return;
++     }
++     setRunning(true);
++     setError(null);
++     setProgress(null);
++     setActiveRunId(null);
++     try {
++       await updateBenchmarkPreferences({ judgeEndpointId });
++       const started = await startCapabilityBenchmark({
++         endpointIds: runnableSelectedEndpointIds,
++         judgeEndpointId,
++         mode,
++         useJudge: true,
++       });
++       sessionStorage.setItem(ACTIVE_BENCHMARK_RUN_KEY, started.runId);
++       setActiveRunId(started.runId);
++     } catch (value: unknown) {
++       setError(value instanceof Error ? value.message : "Benchmark run failed.");
++       setRunning(false);
++       sessionStorage.removeItem(ACTIVE_BENCHMARK_RUN_KEY);
++     }
++   }, [judgeEndpointId, mode, runnableEndpointIds, selectedEndpointIds]);
++
++   const clearEndpointRoutingProfile = useCallback(
++     async (endpointId: string) => {
++       setClearingEndpointId(endpointId);
++       setError(null);
++       try {
++         await clearBenchmarkEndpointData(endpointId);
++         await refreshBenchmarkState();
++         if (result) {
++           setResult({
++             ...result,
++             endpointGrades: result.endpointGrades.filter(
++               (grade) => grade.endpointId !== endpointId,
++             ),
++           });
++         }
++       } catch (value: unknown) {
++         setError(
++           value instanceof Error
++             ? value.message
++             : "Could not clear routing profile for this model.",
++         );
++       } finally {
++         setClearingEndpointId(null);
++       }
++     },
++     [refreshBenchmarkState, result],
++   );
++
++   const handleClearAllBenchmarkData = useCallback(async () => {
++     const confirmed = window.confirm(
++       "Clear all benchmark data? This removes every benchmark run, artifact, and routing profile sample. This cannot be undone.",
++     );
++     if (!confirmed) {
++       return;
++     }
++
++     setClearingAll(true);
++     setError(null);
++     try {
++       await clearAllBenchmarkData();
++       setResult(null);
++       await refreshBenchmarkState();
++     } catch (value: unknown) {
++       setError(value instanceof Error ? value.message : "Could not clear all benchmark data.");
++     } finally {
++       setClearingAll(false);
++     }
++   }, [refreshBenchmarkState]);
++
++   useEffect(() => {
++     if (!running) {
++       return;
++     }
++     const timer = window.setInterval(() => setNowMs(Date.now()), 1000);
++     return () => window.clearInterval(timer);
++   }, [running]);
++
++   useEffect(() => {
++     if (!activeRunId) {
++       return;
++     }
++     let cancelled = false;
++
++     const poll = async () => {
++       try {
++         const snapshot = await fetchBenchmarkRunProgress(activeRunId);
++         if (cancelled) {
++           return;
++         }
++         setProgress(snapshot);
++         if (snapshot.status === "completed" && snapshot.result) {
++           setResult(snapshot.result);
++           void refreshBenchmarkState();
++           setRunning(false);
++           setActiveRunId(null);
++           sessionStorage.removeItem(ACTIVE_BENCHMARK_RUN_KEY);
++         } else if (snapshot.status === "failed") {
++           setError(snapshot.errorMessage ?? "Benchmark run failed.");
++           setRunning(false);
++           setActiveRunId(null);
++           sessionStorage.removeItem(ACTIVE_BENCHMARK_RUN_KEY);
++         }
++       } catch (value: unknown) {
++         if (!cancelled) {
++           setError(value instanceof Error ? value.message : "Could not read benchmark progress.");
++           setRunning(false);
++           setActiveRunId(null);
++           sessionStorage.removeItem(ACTIVE_BENCHMARK_RUN_KEY);
++         }
++       }
++     };
++
++     void poll();
++     const timer = window.setInterval(() => void poll(), BENCHMARK_POLL_MS);
++     return () => {
++       cancelled = true;
++       window.clearInterval(timer);
++     };
++   }, [activeRunId, refreshBenchmarkState]);
++
++   const progressPercent = progress
++     ? progress.totalSteps > 0
++       ? Math.min(100, Math.round((progress.completedSteps / progress.totalSteps) * 100))
++       : 0
++     : 0;
++   const progressStalled = Boolean(
++     progress && progress.status === "running" && nowMs - progress.updatedAtMs >= BENCHMARK_STALL_MS,
++   );
++   const progressDescription = progress ? describeBenchmarkProgress(progress) : null;
++
++   if (error && !suite && !candidates) {
++     return <ErrorState label={error} />;
++   }
++   if (!suite || !candidates) {
++     return <LoadingState label="Loading capability benchmarkΓÇª" />;
++   }
++
++   const lastRunLabel = lastSummary?.completedAtMs
++     ? new Date(lastSummary.completedAtMs).toLocaleString()
++     : null;
++   const judgeLabel = lastSummary ? resolveJudgeLabel(lastSummary, candidates) : null;
++   const fullSummary = summariesByMode?.full ?? EMPTY_BENCHMARK_SUMMARY;
++   const quickSummary = summariesByMode?.quick ?? EMPTY_BENCHMARK_SUMMARY;
++   const fullJudgeLabel = fullSummary.runId ? resolveJudgeLabel(fullSummary, candidates) : null;
++   const quickJudgeLabel = quickSummary.runId ? resolveJudgeLabel(quickSummary, candidates) : null;
++   const selectedJudgeCandidate =
++     candidates.find((candidate) => candidate.endpointId === judgeEndpointId) ?? null;
++   const selectedJudgeModelLabel =
++     selectedJudgeCandidate?.modelId.split("/").at(-1) ?? "not selected";
++
++   return (
++     <div className="space-y-6">
++       <MetricStrip
++         aria-label="Benchmark run summary"
++         variant="panel"
++         items={[
++           {
++             id: "suite",
++             label: "Suite",
++             value: suite.cases.filter((item) => item.benchmark_eligible).length,
++           },
++           { id: "run-size", label: "Run size", value: eligibleCaseCount },
++           { id: "judge", label: "Judge", value: selectedJudgeModelLabel },
++         ]}
++       />
++
++       <div className="space-y-6">
++         <SectionCard
++           title="Run capability benchmark"
++           description="Production page exposes benchmark mode, judge endpoint, endpoint checklist, and run progress in a single operator surface."
++         >
++           {runtimeSummary ? (
++             <p className={`mb-4 ${supportingTextClassName}`}>
++               Runtime scope: {runtimeSummary.scopeId ?? "unknown"} ΓÇó {runtimeSummary.endpointCount}{" "}
++               endpoint
++               {runtimeSummary.endpointCount === 1 ? "" : "s"} available
++               {runtimeSummary.runtimeStateRoot ? " ΓÇó state root connected" : ""}
++             </p>
++           ) : null}
++           {judgeSubjectOverlap ? (
++             <p className={`mb-4 ${bodyTextClassName} text-[var(--rm-warning)]`}>
++               Judge endpoint is also a benchmark subject. Expect slower grading and higher judge
++               failure risk ΓÇö prefer a dedicated judge when available.
++             </p>
++           ) : null}
++
++           <div className="mt-4 grid gap-4 md:grid-cols-2">
++             <SelectField
++               label="Benchmark mode"
++               value={mode}
++               onChange={(value) => setMode(value === "full" ? "full" : "quick")}
++             >
++               <option value="quick">Quick (12 hard cases)</option>
++               <option value="full">Full (all eligible cases)</option>
++             </SelectField>
++             <SelectField
++               label="Judge endpoint (grading only)"
++               value={judgeEndpointId}
++               onChange={(value) => {
++                 setJudgeEndpointId(value);
++                 void updateBenchmarkPreferences({ judgeEndpointId: value }).catch(() => undefined);
++               }}
++             >
++               {runnableCandidates.map((candidate) => (
++                 <option key={candidate.endpointId} value={candidate.endpointId}>
++                   {candidate.modelId} ({candidate.sourceType})
++                 </option>
++               ))}
++             </SelectField>
++           </div>
++
++           <div className="mt-4 space-y-2">
++             <div className="flex flex-wrap items-center justify-between gap-2">
++               <p className={utilityStrongTextClassName}>Endpoints to grade</p>
++               <p className={`text-xs leading-[18px] ${supportingTextClassName}`}>
++                 {gradedEndpointCount} selected ΓÇó {runnableCandidates.length} runnable
++               </p>
++             </div>
++             <p className={supportingTextClassName}>
++               Only benchmark-runnable endpoints appear in the active checklist.
++             </p>
++             <div className="grid gap-3">
++               {runnableCandidates.map((candidate) => (
++                 <label
++                   key={candidate.endpointId}
++                   className={`${mutedPanelClassName} flex cursor-pointer items-start gap-3 p-3`}
++                 >
++                   <input
++                     type="checkbox"
++                     checked={selectedEndpointIds.includes(candidate.endpointId)}
++                     onChange={() => toggleEndpoint(candidate.endpointId)}
++                   />
++                   <span className="space-y-1">
++                     <span className={`block ${bodyStrongTextClassName}`}>{candidate.modelId}</span>
++                     <span className={`block ${supportingTextClassName}`}>
++                       {candidate.endpointId}
++                     </span>
++                     <span className={`block text-xs leading-[18px] ${supportingTextClassName}`}>
++                       {candidate.sourceType} ΓÇó {candidate.healthStatus}
++                     </span>
++                   </span>
++                 </label>
++               ))}
++             </div>
++             {gradedEndpointCount < 2 ? (
++               <p className={supportingTextClassName}>
++                 Select at least two runnable endpoints to compare benchmark results head to head.
++               </p>
++             ) : null}
++             {excludedCandidates.length > 0 ? (
++               <DisclosureSection summary="Excluded by current execution mode">
++                 <div className="space-y-3">
++                   <p className={supportingTextClassName}>
++                     Excluded endpoints stay visible for audit context, but they are removed from the
++                     primary selection flow because the current execution mode cannot benchmark them.
++                   </p>
++                   <div className="space-y-2">
++                     {excludedCandidates.map((candidate) => (
++                       <div
++                         key={candidate.endpointId}
++                         className={`${mutedPanelClassName} flex items-start justify-between gap-3 p-3`}
++                       >
++                         <div className="space-y-1">
++                           <p className={bodyStrongTextClassName}>{candidate.modelId}</p>
++                           <p className={supportingTextClassName}>{candidate.endpointId}</p>
++                         </div>
++                         <StatusPill tone="neutral">excluded</StatusPill>
++                       </div>
++                     ))}
++                   </div>
++                 </div>
++               </DisclosureSection>
++             ) : null}
++           </div>
++
++           <div className="mt-6">
++             <button
++               type="button"
++               className={primaryButtonClassName}
++               disabled={running || !canRunBenchmark}
++               onClick={() => void runBenchmark()}
++             >
++               {running
++                 ? "Running benchmarkΓÇª"
++                 : `Run ${mode} benchmark (${gradedEndpointCount} model${gradedEndpointCount === 1 ? "" : "s"}, ${eligibleCaseCount} cases)`}
++             </button>
++           </div>
++
++           {running ? (
++             <div className={`${mutedPanelClassName} mt-4 space-y-3 p-4`}>
++               <div className="flex flex-wrap items-center justify-between gap-2">
++                 <p className={bodyStrongTextClassName}>
++                   {progressDescription?.phaseLabel ?? "Benchmark in progress"}
++                 </p>
++                 <StatusPill tone={progressStalled ? "warning" : "accent"}>
++                   {progressStalled ? "No recent updates" : "Running"}
++                 </StatusPill>
++               </div>
++               <div className="h-2 overflow-hidden rounded-full bg-[var(--rm-border)]">
++                 <div
++                   className="h-full rounded-full bg-[var(--rm-accent)] transition-all duration-500"
++                   style={{ width: `${progressPercent}%` }}
++                 />
++               </div>
++               <p className={supportingTextClassName}>
++                 {progress
++                   ? `${progress.completedSteps} / ${progress.totalSteps} steps (${progressPercent}%) ΓÇó elapsed ${formatElapsed(nowMs - progress.startedAtMs)}`
++                   : "Starting benchmark runΓÇª"}
++               </p>
++               {progressDescription ? (
++                 <p className={bodyTextClassName}>{progressDescription.detail}</p>
++               ) : null}
++               {progressStalled ? (
++                 <p className={`${bodyTextClassName} text-[var(--rm-warning)]`}>
++                   No progress update in the last 90 seconds. The run may still be waiting on a slow
++                   model response.
++                 </p>
++               ) : null}
++             </div>
++           ) : null}
++
++           {error ? (
++             <p className={`mt-4 ${bodyTextClassName} text-[var(--rm-error)]`}>{error}</p>
++           ) : null}
++         </SectionCard>
++
++         <SectionCard
++           title="Benchmark scores"
++           description="Scores above are written into each endpoint's observed profile for future routing."
++         >
++           {lastRunLabel ? (
++             <p className={`mb-4 ${supportingTextClassName}`}>
++               Last completed run: {lastRunLabel}
++               {lastSummary?.mode ? ` ΓÇó ${lastSummary.mode} suite` : ""}
++               {judgeLabel ? ` ΓÇó judge: ${judgeLabel}` : ""}
++             </p>
++           ) : null}
++
++           {modelScoreRows.length === 0 ? (
++             <div className="space-y-4">
++               <p className={supportingTextClassName}>
++                 Preview routing profile inventory until this runtime records its first completed
++                 benchmark run.
++               </p>
++               {benchmarkScorePreviewRows.map((row) => (
++                 <div key={row.endpointId} className={listRowClassName}>
++                   <div className="space-y-3">
++                     <div>
++                       <p className={inlineTitleClassName}>{row.modelId}</p>
++                       <p className={supportingTextClassName}>{row.endpointId}</p>
++                     </div>
++
++                     <div className={`grid gap-2 md:grid-cols-2 ${supportingTextClassName}`}>
++                       <p>
++                         <span className={foregroundEmphasisClassName}>Benchmark overall:</span>{" "}
++                         {formatScore(row.overallScore)}
++                       </p>
++                       <p>
++                         <span className={foregroundEmphasisClassName}>Profile quality score:</span>{" "}
++                         {formatScore(row.profileQualityScore)} ({row.benchmarkSamplesLabel})
++                       </p>
++                       <p>
++                         <span className={foregroundEmphasisClassName}>Benchmark latency:</span>{" "}
++                         {row.latencyLabel}
++                       </p>
++                     </div>
++
++                     <p className={supportingTextClassName}>
++                       <span className={foregroundEmphasisClassName}>By difficulty:</span>{" "}
++                       {row.difficultyLabel}
++                     </p>
++
++                     <p className={`${supportingTextClassName} leading-6`}>
++                       <span className={foregroundEmphasisClassName}>Routing impact:</span>{" "}
++                       {row.routingImpact}
++                     </p>
++                   </div>
++
++                   <div className={benchmarkScoreRailClassName}>
++                     <div className={benchmarkScoreBadgeClusterClassName}>
++                       <span
++                         aria-label={`Benchmark score ${formatScore(row.overallScore)}`}
++                         className={`${benchmarkScoreBadgeClassName} ${getBenchmarkScoreBadgeToneClass(row.overallScore)}`}
++                       >
++                         {formatScore(row.overallScore)}
++                       </span>
++                       <StatusPill tone={row.sourceType === "remote" ? "accent" : "neutral"}>
++                         {row.sourceType}
++                       </StatusPill>
++                     </div>
++                     <button type="button" className={benchmarkScoreActionClassName}>
++                       Clear routing profile
++                     </button>
++                   </div>
++                 </div>
++               ))}
++             </div>
++           ) : (
++             <div className="space-y-4">
++               {modelScoreRows.map((row) => (
++                 <div key={row.endpointId} className={listRowClassName}>
++                   <div className="space-y-3">
++                     <div>
++                       <p className={inlineTitleClassName}>{row.modelId}</p>
++                       <p className={supportingTextClassName}>{row.endpointId}</p>
++                     </div>
++
++                     <div className={`grid gap-2 md:grid-cols-2 ${supportingTextClassName}`}>
++                       <p>
++                         <span className={foregroundEmphasisClassName}>Benchmark overall:</span>{" "}
++                         {row.caseResults?.length
++                           ? formatScoreFraction(row.overallScore, row.caseResults.length)
++                           : formatScore(row.overallScore)}
++                       </p>
++                       <p>
++                         <span className={foregroundEmphasisClassName}>Profile quality score:</span>{" "}
++                         {formatScore(row.profileQualityScore)}
++                         {row.benchmarkSamples > 0
++                           ? ` (${row.benchmarkSamples} benchmark sample${row.benchmarkSamples === 1 ? "" : "s"})`
++                           : ""}
++                       </p>
++                       <p>
++                         <span className={foregroundEmphasisClassName}>Benchmark latency:</span> p50{" "}
++                         {formatLatencyMs(row.latencyP50)} ΓÇó p95 {formatLatencyMs(row.latencyP95)}
++                       </p>
++                     </div>
++
++                     {row.scoresByBucket ? (
++                       <p className={supportingTextClassName}>
++                         <span className={foregroundEmphasisClassName}>By difficulty:</span> easy{" "}
++                         {formatScore(row.scoresByBucket.easy.score)} ΓÇó medium{" "}
++                         {formatScore(row.scoresByBucket.medium.score)} ΓÇó hard{" "}
++                         {formatScore(row.scoresByBucket.hard.score)}
++                       </p>
++                     ) : null}
++
++                     <p className={`${supportingTextClassName} leading-6`}>
++                       <span className={foregroundEmphasisClassName}>Routing impact:</span>{" "}
++                       {describeRoutingImpact(row.candidate)}
++                     </p>
++
++                     <div className="grid gap-3 md:grid-cols-2">
++                       <EndpointModeRunSnapshot
++                         title="Last full run"
++                         summary={fullSummary}
++                         endpointId={row.endpointId}
++                         judgeLabel={fullJudgeLabel}
++                       />
++                       <EndpointModeRunSnapshot
++                         title="Last quick run (12 hard)"
++                         summary={quickSummary}
++                         endpointId={row.endpointId}
++                         judgeLabel={quickJudgeLabel}
++                       />
++                     </div>
++
++                     {row.caseResults && row.caseResults.length > 0 ? (
++                       <details className={supportingTextClassName}>
++                         <summary className={`cursor-pointer ${utilityStrongTextClassName}`}>
++                           Per-case benchmark results
++                         </summary>
++                         <div className="mt-3 space-y-2">
++                           {row.caseResults.map((caseResult) => {
++                             const compareResult = compareByCaseId.get(caseResult.caseId);
++                             return (
++                               <div
++                                 key={caseResult.caseId}
++                                 className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] p-3"
++                               >
++                                 <p className={bodyStrongTextClassName}>
++                                   {caseResult.caseId} ΓÇó {formatScore(caseResult.score)} ΓÇó{" "}
++                                   {caseResult.difficultyBucket} ΓÇó{" "}
++                                   {formatLatencyMs(caseResult.latencyMs)}
++                                 </p>
++                                 <div className="mt-1 flex flex-wrap gap-2 text-xs">
++                                   {caseResult.gradingMethod ? (
++                                     <StatusPill tone="neutral">
++                                       {caseResult.gradingMethod}
++                                     </StatusPill>
++                                   ) : null}
++                                   {caseResult.judgeUnavailable ? (
++                                     <StatusPill tone="warning">judge unavailable</StatusPill>
++                                   ) : null}
++                                   {caseResult.parseSuccess === false ? (
++                                     <StatusPill tone="warning">parse failed</StatusPill>
++                                   ) : null}
++                                   {caseResult.cappedByValidator ? (
++                                     <StatusPill tone="warning">validator cap</StatusPill>
++                                   ) : null}
++                                 </div>
++                                 <p className={bodyTextClassName}>{caseResult.rationale}</p>
++                                 {compareResult ? (
++                                   <p
++                                     className={`mt-2 text-xs leading-[18px] ${supportingTextClassName}`}
++                                   >
++                                     <span className={foregroundEmphasisClassName}>
++                                       Head-to-head ranking:
++                                     </span>{" "}
++                                     {compareResult.relativeRanking.join(" ΓÇ║ ")}
++                                     {" ΓÇö "}
++                                     {compareResult.rationale}
++                                   </p>
++                                 ) : null}
++                               </div>
++                             );
++                           })}
++                         </div>
++                       </details>
++                     ) : null}
++                   </div>
++
++                   <div className={benchmarkScoreRailClassName}>
++                     <div className={benchmarkScoreBadgeClusterClassName}>
++                       <span
++                         aria-label={`Benchmark score ${formatScore(row.overallScore)}`}
++                         className={`${benchmarkScoreBadgeClassName} ${getBenchmarkScoreBadgeToneClass(row.overallScore)}`}
++                       >
++                         {formatScore(row.overallScore)}
++                       </span>
++                       <StatusPill tone={row.sourceType === "remote" ? "accent" : "neutral"}>
++                         {row.sourceType}
++                       </StatusPill>
++                     </div>
++                     <button
++                       type="button"
++                       className={benchmarkScoreActionClassName}
++                       disabled={running || clearingEndpointId === row.endpointId}
++                       onClick={() => void clearEndpointRoutingProfile(row.endpointId)}
++                     >
++                       {clearingEndpointId === row.endpointId
++                         ? "Clearing routing profileΓÇª"
++                         : "Clear routing profile"}
++                     </button>
++                   </div>
++                 </div>
++               ))}
++             </div>
++           )}
++         </SectionCard>
++
++         <SectionCard
++           title="Taxonomy dimensions"
++           description="The runtime exposes advisory benchmark scores by role, task, and capability. Filters switch which dimension is active."
++         >
++           {taxonomyHasData ? (
++             <div className="space-y-4">
++               <div className="grid gap-3 md:grid-cols-3">
++                 <SelectField
++                   label="Filter by role"
++                   value={taxonomyFilterRole}
++                   onChange={(value) => {
++                     setTaxonomyFilterRole(value);
++                     setTaxonomyFilterTask("");
++                     setTaxonomyFilterCapability("");
++                   }}
++                 >
++                   <option value="">All roles</option>
++                   {taxonomyDimensionInventory.roleIds.map((role) => (
++                     <option key={role} value={role}>
++                       {role}
++                     </option>
++                   ))}
++                 </SelectField>
++                 <SelectField
++                   label="Filter by task"
++                   value={taxonomyFilterTask}
++                   onChange={(value) => {
++                     setTaxonomyFilterTask(value);
++                     setTaxonomyFilterRole("");
++                     setTaxonomyFilterCapability("");
++                   }}
++                 >
++                   <option value="">All tasks</option>
++                   {taxonomyDimensionInventory.taskIds.map((task) => (
++                     <option key={task} value={task}>
++                       {task}
++                     </option>
++                   ))}
++                 </SelectField>
++                 <SelectField
++                   label="Filter by capability"
++                   value={taxonomyFilterCapability}
++                   onChange={(value) => {
++                     setTaxonomyFilterCapability(value);
++                     setTaxonomyFilterRole("");
++                     setTaxonomyFilterTask("");
++                   }}
++                 >
++                   <option value="">All capabilities</option>
++                   {taxonomyDimensionInventory.capabilityIds.map((cap) => (
++                     <option key={cap} value={cap}>
++                       {cap}
++                     </option>
++                   ))}
++                 </SelectField>
++               </div>
++
++               {(() => {
++                 const roleScores = getFilteredTaxonomyScores("byRole", taxonomyFilterRole);
++                 const taskScores = getFilteredTaxonomyScores("byTask", taxonomyFilterTask);
++                 const capScores = getFilteredTaxonomyScores(
++                   "byCapability",
++                   taxonomyFilterCapability,
++                 );
++                 const activeScores =
++                   roleScores.length > 0
++                     ? { label: `Role: ${taxonomyFilterRole}`, scores: roleScores }
++                     : taskScores.length > 0
++                       ? { label: `Task: ${taxonomyFilterTask}`, scores: taskScores }
++                       : capScores.length > 0
++                         ? { label: `Capability: ${taxonomyFilterCapability}`, scores: capScores }
++                         : null;
++
++                 return activeScores ? (
++                   <div className="space-y-2">
++                     <p className={metaTextClassName}>{activeScores.label}</p>
++                     {activeScores.scores.map((entry) => (
++                       <div
++                         key={entry.endpointId}
++                         className="flex items-center justify-between rounded-lg border border-[var(--rm-border)] p-3"
++                       >
++                         <div>
++                           <p className={compactTitleClassName}>{entry.modelId}</p>
++                           <p className={`text-xs leading-[18px] ${supportingTextClassName}`}>
++                             {entry.endpointId}
++                           </p>
++                         </div>
++                         <StatusPill tone="success">{formatScore(entry.score)}</StatusPill>
++                       </div>
++                     ))}
++                   </div>
++                 ) : taxonomyFilterRole || taxonomyFilterTask || taxonomyFilterCapability ? (
++                   <EmptyState label="No benchmark data for the selected taxonomy dimension." />
++                 ) : (
++                   <EmptyState label="Select a taxonomy dimension above to see per-model benchmark scores." />
++                 );
++               })()}
++             </div>
++           ) : (
++             <div className="space-y-4">
++               <p className={supportingTextClassName}>
++                 Preview taxonomy score slices until runtime benchmark results populate role, task,
++                 and capability dimensions.
++               </p>
++               <div className="grid gap-4 md:grid-cols-3">
++                 {benchmarkTaxonomyPreviewGroups.map((group) => (
++                   <div key={group.label} className={`${mutedPanelClassName} space-y-3 p-4`}>
++                     <div className="flex items-center justify-between gap-3">
++                       <p className={metaTextClassName}>{group.label}</p>
++                       <StatusPill tone={group.tone}>preview</StatusPill>
++                     </div>
++                     <div className="space-y-2">
++                       {group.rows.map((row) => (
++                         <div
++                           key={`${group.label}-${row.endpointId}`}
++                           className="flex items-center justify-between gap-3 rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] px-3 py-2"
++                         >
++                           <div className="min-w-0">
++                             <p className={compactTitleClassName}>{row.modelId}</p>
++                             <p
++                               className={`truncate text-xs leading-[18px] ${supportingTextClassName}`}
++                             >
++                               {row.endpointId}
++                             </p>
++                           </div>
++                           <StatusPill tone={group.tone}>{row.score}</StatusPill>
++                         </div>
++                       ))}
++                     </div>
++                   </div>
++                 ))}
++               </div>
++             </div>
++           )}
++         </SectionCard>
++
++         <SectionCard
++           title="Run history"
++           description="Completed benchmark runs stored on this runtime."
++         >
++           {runHistory.length === 0 ? (
++             <div className="space-y-4">
++               <p className={supportingTextClassName}>
++                 Preview recent run ledger until benchmark executions have been saved on this
++                 runtime.
++               </p>
++               <div className="space-y-3">
++                 {benchmarkHistoryPreviewRows.map((run) => (
++                   <div key={run.runId} className={listRowClassName}>
++                     <div>
++                       <p className={compactTitleClassName}>{run.runId}</p>
++                       <p className={supportingTextClassName}>
++                         {run.mode} ΓÇó {run.caseCountLabel} ΓÇó {run.modelCountLabel}
++                       </p>
++                       <p className={supportingTextClassName}>
++                         {run.completedAtLabel} ΓÇó {run.suiteId}
++                       </p>
++                     </div>
++                     <StatusPill tone={run.mode === "quick" ? "accent" : "neutral"}>
++                       {run.mode}
++                     </StatusPill>
++                   </div>
++                 ))}
++               </div>
++             </div>
++           ) : (
++             <div className="space-y-3">
++               {runHistory.map((run) => (
++                 <div key={run.runId} className={listRowClassName}>
++                   <div>
++                     <p className={compactTitleClassName}>{run.runId}</p>
++                     <p className={supportingTextClassName}>
++                       {run.mode} ΓÇó {run.caseCount} cases ΓÇó {run.endpointIds.length} model
++                       {run.endpointIds.length === 1 ? "" : "s"}
++                     </p>
++                     <p className={supportingTextClassName}>
++                       {new Date(run.completedAtMs).toLocaleString()} ΓÇó {run.suiteId}
++                     </p>
++                   </div>
++                   <StatusPill tone={run.mode === "quick" ? "accent" : "neutral"}>
++                     {run.mode}
++                   </StatusPill>
++                 </div>
++               ))}
++             </div>
++           )}
++
++           <div className="mt-6">
++             <button
++               type="button"
++               className={secondaryButtonClassName}
++               disabled={running || clearingAll}
++               onClick={() => void handleClearAllBenchmarkData()}
++             >
++               {clearingAll ? "Clearing all benchmark dataΓÇª" : "Clear all benchmark data"}
++             </button>
++           </div>
++         </SectionCard>
++       </div>
++     </div>
++   );
++ }
++
+
+ Γ¥» app/lib/design-system.test.ts:1211:36
+    1209|     expect(controlBenchmarkSource).toContain('title="Benchmark scores"ΓÇª
+    1210|     expect(controlBenchmarkSource).not.toContain('title="Model scores ΓÇª
+    1211|     expect(controlBenchmarkSource).toContain('className="grid gap-4 xlΓÇª
+       |                                    ^
+    1212|     expect(controlBenchmarkSource).not.toContain(
+    1213|       'className="grid gap-6 xl:items-start xl:grid-cols-[minmax(0,760ΓÇª
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/2]ΓÄ»
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > upstream passthrough overview counts configured providers in scope, not the full provider catalog
+AssertionError: expected 'import { MetricStrip } from "@role-moΓÇª' to contain 'value={providerCards.length}'
+
+- Expected
++ Received
+
+- value={providerCards.length}
++ import { MetricStrip } from "@role-model/ui";
++ import { useEffect, useMemo, useState } from "react";
++
++ import {
++   EmptyState,
++   ErrorState,
++   LoadingState,
++   SectionCard,
++   StatusPill,
++ } from "../components/page-primitives";
++ import {
++   compactTitleClassName,
++   mutedPanelClassName,
++   supportingTextClassName,
++ } from "../lib/design-system";
++ import {
++   type RuntimeSnapshot,
++   fetchRuntimeAccounts,
++   fetchRuntimeModels,
++   fetchRuntimeProviders,
++ } from "../lib/runtime-api";
++ import { buildProviderCards } from "../lib/view-models";
++
++ export default function IntegrationsUpstreamRoute() {
++   const [snapshot, setSnapshot] = useState<Pick<
++     RuntimeSnapshot,
++     "providers" | "accounts" | "models"
++   > | null>(null);
++   const [error, setError] = useState<string | null>(null);
++
++   useEffect(() => {
++     void Promise.all([fetchRuntimeProviders(), fetchRuntimeAccounts(), fetchRuntimeModels()])
++       .then(([providers, accounts, models]) =>
++         setSnapshot({
++           providers,
++           accounts,
++           models,
++         }),
++       )
++       .catch((value: unknown) =>
++         setError(
++           value instanceof Error ? value.message : "Could not load upstream integration details.",
++         ),
++       );
++   }, []);
++
++   const providerCards = useMemo(
++     () =>
++       snapshot
++         ? buildProviderCards(snapshot.providers, snapshot.accounts).filter(
++             (p) => p.accountCount > 0,
++           )
++         : [],
++     [snapshot],
++   );
++
++   const modelTargets =
++     snapshot?.models.map((model) => ({
++       modelId: model.id,
++       owner: model.owned_by ?? "role-model",
++       endpointCount: model.endpoint_ids?.length ?? 0,
++       upstreamHref: `/upstream/${model.id}/`,
++     })) ?? [];
++
++   return (
++     <div className="space-y-6">
++       <MetricStrip
++         aria-label="Upstream summary"
++         variant="panel"
++         items={[
++           { id: "providers", label: "Providers", value: providerCards.length },
++           {
++             id: "accounts",
++             label: "Accounts",
++             value: snapshot?.accounts.length ?? 0,
++           },
++           { id: "targets", label: "Upstream targets", value: modelTargets.length },
++         ]}
++       />
++
++       {error ? <ErrorState label={error} /> : null}
++
++       <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
++         <SectionCard title="Provider accounts in scope">
++           {!snapshot ? (
++             <LoadingState label="Loading upstream provider postureΓÇª" />
++           ) : providerCards.length === 0 ? (
++             <EmptyState label="No configured provider accounts are available yet." />
++           ) : (
++             <div className="space-y-4">
++               {providerCards.map((provider) => (
++                 <div key={provider.providerId} className={`${mutedPanelClassName} p-4`}>
++                   <div className="flex flex-wrap items-center justify-between gap-2">
++                     <p className={compactTitleClassName}>{provider.title}</p>
++                     <StatusPill tone={provider.accountCount > 0 ? "accent" : "warning"}>
++                       {provider.accountCount} account{provider.accountCount === 1 ? "" : "s"}
++                     </StatusPill>
++                   </div>
++                   <div className="mt-3 flex flex-wrap gap-2">
++                     {provider.variants.length === 0 ? (
++                       <StatusPill tone="warning">No variants</StatusPill>
++                     ) : (
++                       provider.variants.map((variant) => (
++                         <StatusPill key={variant.variantId} tone="neutral">
++                           {variant.label}
++                         </StatusPill>
++                       ))
++                     )}
++                   </div>
++                 </div>
++               ))}
++             </div>
++           )}
++         </SectionCard>
++
++         <div className="space-y-4">
++           <SectionCard title="Boundary guidance">
++             <div className="space-y-3">
++               <div className={`${mutedPanelClassName} p-4`}>
++                 <p className={compactTitleClassName}>Raw passthrough only</p>
++                 <p className={`mt-2 ${supportingTextClassName}`}>
++                   Use the contextual `/upstream/&lt;model&gt;/` doorway when you need direct
++                   provider-native behavior for a runtime-visible model instead of routed alias
++                   execution.
++                 </p>
++               </div>
++               <div className={`${mutedPanelClassName} p-4`}>
++                 <p className={compactTitleClassName}>Live inventory</p>
++                 <p className={supportingTextClassName}>
++                   {modelTargets.length} upstream target{modelTargets.length === 1 ? "" : "s"} are
++                   currently exposed from {providerCards.length} configured provider
++                   {providerCards.length === 1 ? "" : "s"}.
++                 </p>
++               </div>
++               <div className={`${mutedPanelClassName} p-4`}>
++                 <p className={compactTitleClassName}>Runtime boundary</p>
++                 <p className={supportingTextClassName}>
++                   Alias routing and telemetry stay on the runtime shell; this page preserves the raw
++                   escape hatch without replacing Router or Observe ownership.
++                 </p>
++               </div>
++             </div>
++           </SectionCard>
++
++           <SectionCard title="Upstream target inventory">
++             {!snapshot ? (
++               <LoadingState label="Loading upstream targetsΓÇª" />
++             ) : modelTargets.length === 0 ? (
++               <EmptyState label="No upstream-capable models are currently exposed through the runtime model list." />
++             ) : (
++               <div className="space-y-3">
++                 {modelTargets.map((target) => (
++                   <a
++                     key={target.modelId}
++                     className={`${mutedPanelClassName} block p-4`}
++                     href={target.upstreamHref}
++                     target="_blank"
++                     rel="noreferrer"
++                   >
++                     <div className="flex flex-wrap items-center justify-between gap-2">
++                       <p className={`break-all ${compactTitleClassName}`}>{target.modelId}</p>
++                       <StatusPill tone="accent">
++                         {target.endpointCount} endpoint{target.endpointCount === 1 ? "" : "s"}
++                       </StatusPill>
++                     </div>
++                     <p className={`mt-2 ${supportingTextClassName}`}>Owner {target.owner}</p>
++                     <p className={`mt-2 break-all ${supportingTextClassName} font-mono`}>
++                       {target.upstreamHref}
++                     </p>
++                   </a>
++                 ))}
++               </div>
++             )}
++           </SectionCard>
++         </div>
++       </div>
++     </div>
++   );
++ }
++
+
+ Γ¥» app/lib/design-system.test.ts:1379:45
+    1377| 
+    1378|   test("upstream passthrough overview counts configured providers in sΓÇª
+    1379|     expect(integrationsUpstreamRouteSource).toContain("value={providerΓÇª
+       |                                             ^
+    1380|     expect(integrationsUpstreamRouteSource).not.toContain(
+    1381|       "value={snapshot?.providers.length ?? 0}",
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/2]ΓÄ»
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  2 failed | 94 passed (96)
+   Start at  05:44:09
+   Duration  4.14s (transform 1.32s, setup 0ms, collect 5.19s, tests 231ms, environment 1ms, prepare 562ms)
+
+undefined
+D:\DEV\role-model\.worktrees\86-runtime-ui-rm3-design-system-frontend\role-model-router\apps\runtime-ui:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run app/lib/design-system.test.ts app/routes/storage-retention.test.tsx

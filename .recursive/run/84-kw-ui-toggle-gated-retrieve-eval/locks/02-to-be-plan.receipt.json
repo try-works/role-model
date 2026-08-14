@@ -1,0 +1,13 @@
+{
+  "artifact": "02-to-be-plan.md",
+  "artifact_hash": "4d9c67ec90dd80dffae05b38d7fc6c77489b3f081540980e390d19dd3a3948e7",
+  "artifact_path": "D:\\DEV\\.wt\\84-kw\\.recursive\\run\\84-kw-ui-toggle-gated-retrieve-eval\\02-to-be-plan.md",
+  "locked_at": "2026-07-25T11:30:03Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "7590782dbf4fe6c39395ee8f294354280a3cddc6e7bb9eb01944a950f5795e83",
+    "00-worktree.md": "9bafe6f5b670abc7532bf88a405f0d39e45a38bfe4ffbd2885fc3d54de7aee73",
+    "01-as-is.md": "24844c8d774692971d6771d14d8525b08a68c34947db65d35d57704831600d2f"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "4213bdc4bbf8225776f4b49740e932f0840facd6157d9610cfedd2a4add125ec"
+}

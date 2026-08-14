@@ -1,0 +1,88 @@
+{
+  "runId": "82-tb00-pin-refreeze-kw-digest-bind-launch-scope",
+  "verifiedAt": "2026-07-24T23:28:17Z",
+  "privateBaseline": "2b74f6d84f5da25ad58cecece279d2e1e1556e13",
+  "publicBaseline": "15a2d8bcc8058f18599b05eb3903025660ffd355",
+  "privateWorktree": "D:/DEV/.wt/82-tb00",
+  "publicWorktree": "D:/DEV/role-model/.worktrees/82-tb00-pin-refreeze-kw-digest-bind-launch-scope",
+  "privateHeadAtQa": "6339a90e4ae3c762a768133efdc54c6a81a31509",
+  "publicHeadAtQa": "15a2d8bcc8058f18599b05eb3903025660ffd355",
+  "productPinPrivate": "05e7729e8d0f55850fc93ee985b0f20d0ee35da2",
+  "productPinPublic": "b03d82a2fe8adc317c9fdaecad838beac3ed74a8",
+  "tddMode": "strict",
+  "serverChange": "not-required",
+  "publicChange": "not-required",
+  "kwDigestBind": {
+    "bindRule": "digest(policy.receipt) === candidate.validationReceiptHash",
+    "redLog": "evidence/logs/red/tb10-digest-bind.log",
+    "greenLog": "evidence/logs/green/tb10-digest-bind.log",
+    "probe": "evidence/other/kw-packaged-activation-probe.json",
+    "distProbe": "evidence/other/kw-dist-digest-probe.json"
+  },
+  "launchScope": {
+    "defaultScopeId": "packaged-run00",
+    "phase5ScopeId": "run82-dev",
+    "helper": "scripts/track-b/packaged-launch-scope.mjs",
+    "launchLog": "evidence/logs/phase5/launch-run82-dev.log",
+    "runtimeIdentity": "evidence/other/runtime-identity.json"
+  },
+  "tddEvidence": {
+    "sp1": {
+      "red": "evidence/logs/red/tb10-digest-bind.log",
+      "green": "evidence/logs/green/tb10-digest-bind.log"
+    },
+    "sp2": {
+      "red": "evidence/logs/red/kw-probe-digest.log",
+      "green": "evidence/logs/green/kw-probe-digest.log"
+    },
+    "sp3": {
+      "red": "evidence/logs/red/launch-scope.log",
+      "green": "evidence/logs/green/launch-scope.log"
+    }
+  },
+  "freeze": {
+    "pinFreezeLog": "evidence/logs/phase4/pin-freeze.log",
+    "tb11Log": "evidence/logs/phase4/tb11.log",
+    "systemProofLog": "evidence/logs/phase4/system-proof.log",
+    "liveE2eValidateLog": "evidence/logs/phase4/live-e2e-validate.log",
+    "rebindHelper": "evidence/other/rebind-live-e2e-source-revisions.mjs"
+  },
+  "rebuild": {
+    "receipt": "evidence/other/rebuild-receipt.json",
+    "seaSha256": "825f9b4f2e17f5102605b24943b974efa435133452f0cfa5867b389c14927f84",
+    "listenUrl": "http://127.0.0.1:34568",
+    "trackBDistributionRoot": "D:/DEV/.wt/82-tb00/dist/run00-dev",
+    "privateSidecarSha256": "a7793a22b0cd8c1a05478b7e0650a105a104b0f47343903dc02c0066edf5da6b",
+    "packageLog": "evidence/logs/phase5/rebuild-public-sea.log",
+    "privateBuildLog": "evidence/logs/phase5/build-run00-runtime.log",
+    "qaRecheck": "evidence/logs/phase5/qa-artifact-recheck.txt"
+  },
+  "recommendationHop": {
+    "track": "dev",
+    "channel": "development",
+    "serviceHost": "https://recommendations-dev.role-model.dev",
+    "scopeId": "run82-dev",
+    "mode": "api-lifecycle",
+    "seedLog": "evidence/logs/phase5/seed-run82-dev.log",
+    "lifecycleLog": "evidence/logs/phase5/api-recommendation-lifecycle.log",
+    "applyStatus": 200,
+    "dismissStatus": 200,
+    "verdict": "PASS",
+    "recommendationIds": [
+      "recommendation-e9f34917a1cd08eaf484c46b167ae82a"
+    ],
+    "dismissId": "recommendation-554d1e67cba02fd29221ba3c50d2be83",
+    "browserContingencyUsed": false
+  },
+  "decisions": {
+    "public": "evidence/other/public-change-decision.json",
+    "server": "evidence/other/server-change-decision.json"
+  },
+  "secretsOmitted": true,
+  "notes": [
+    "Private worktree uses short path D:/DEV/.wt/82-tb00 due to Windows MAX_PATH.",
+    "Phase 5 launched with separate --track / --scope-id argv tokens (equals-form --track=dev is not parsed by launch-packaged-runtime.mjs arg()).",
+    "Public SEA sha matched prior run-81 binary because public product pathset is unchanged; Track B digest-bind is proven via private dist module probe and launch manifest.",
+    "Verification keys / cloud material remain in operator TEMP secrets and are never written to evidence."
+  ]
+}

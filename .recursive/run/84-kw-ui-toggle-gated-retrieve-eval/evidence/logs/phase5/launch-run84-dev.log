@@ -1,0 +1,13 @@
+(node:15984) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:31904) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "status": "listening",
+  "host": "127.0.0.1",
+  "port": 34569
+}
+{"status":"PASS","pid":24572,"listenUrl":"http://127.0.0.1:34569"}
+undefined
+D:\DEV\role-model\.worktrees\84-kw-ui-toggle-gated-retrieve-eval\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 4294967295: tsx src/cli-entry.ts --host 127.0.0.1 --port 34569 --repo-root D:/DEV/role-model/.worktrees/84-kw-ui-toggle-gated-retrieve-eval --runtime-state-root D:/DEV/.wt/84-kw/.recursive/run/84-kw-ui-toggle-gated-retrieve-eval/evidence/other/runtime-state --scope-id run84-dev --track-b-runtime-manifest D:\DEV\.wt\84-kw\dist\run00-dev\track-b-runtime-manifest.json --destination-material-file D:\DEV\.wt\84-kw\.recursive\run\00-direct-track-b-v1-1-implementation\evidence\remediation-proposal-2026-07-23\cloud-local\destination-auth-secret.json --aggregate-ingestion-url http://127.0.0.1:8787/contribution/aggregate --aggregate-scope tenant:run00-remediation --recommendation-service-url https://recommendations-dev.role-model.dev --recommendation-channel development --static-root D:\DEV\role-model\.worktrees\84-kw-ui-toggle-gated-retrieve-eval\role-model-router\apps\runtime-ui\build\client

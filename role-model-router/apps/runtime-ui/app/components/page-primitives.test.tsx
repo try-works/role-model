@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 
 import {
+  Badge,
   FactCard,
   SelectField,
   type SelectOptionModel,
@@ -48,17 +49,20 @@ describe("SelectField rendering", () => {
 });
 
 describe("StatusPill rendering", () => {
-  test("renders solid token-backed pills with contrasting text", () => {
+  test("renders Paper accent Badge geometry via kit Badge", () => {
     const markup = renderToStaticMarkup(<StatusPill tone="accent">Selected</StatusPill>);
 
+    expect(markup).toContain('data-slot="badge"');
     expect(markup).toContain("bg-[var(--rm-pill-accent-bg)]");
-    expect(markup).toContain("text-[var(--rm-pill-accent-ink)]");
-    expect(markup).toContain("border-transparent");
-    expect(markup).toContain("text-[13px]");
+    expect(markup).toContain("!text-[var(--rm-pill-accent-ink)]");
+    expect(markup).toContain("h-[22px]");
+    expect(markup).toContain("font-mono");
+    expect(markup).toContain("text-[11px]");
     expect(markup).not.toContain("bg-transparent");
+    expect(markup).not.toContain("text-[13px]");
   });
 
-  test("supports advisory and info semantic tones through shared tokens", () => {
+  test("supports advisory and info soft-fill tones through shared tokens", () => {
     const advisoryMarkup = renderToStaticMarkup(
       <StatusPill tone={"advisory" as never}>Group evidence</StatusPill>,
     );
@@ -66,10 +70,18 @@ describe("StatusPill rendering", () => {
       <StatusPill tone={"info" as never}>Tool capable</StatusPill>,
     );
 
-    expect(advisoryMarkup).toContain("bg-[var(--rm-pill-advisory-bg)]");
+    expect(advisoryMarkup).toContain("bg-[var(--rm-pill-soft-bg)]");
     expect(advisoryMarkup).toContain("text-[var(--rm-pill-advisory-ink)]");
-    expect(infoMarkup).toContain("bg-[var(--rm-pill-info-bg)]");
+    expect(infoMarkup).toContain("bg-[var(--rm-pill-soft-bg)]");
     expect(infoMarkup).toContain("text-[var(--rm-pill-info-ink)]");
+  });
+
+  test("direct Badge export matches kit slot without StatusPill wrapper markup", () => {
+    const markup = renderToStaticMarkup(<Badge tone="success">healthy</Badge>);
+    expect(markup).toContain('data-slot="badge"');
+    expect(markup).toContain('data-tone="success"');
+    expect(markup).toContain("healthy");
+    expect(markup).toContain("text-[var(--rm-pill-success-ink)]");
   });
 });
 

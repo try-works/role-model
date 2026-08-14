@@ -1,0 +1,10 @@
+{
+  "trackBDistributionRoot": "D:\\DEV\\.wt\\82-tb00\\dist\\run00-dev",
+  "privateBuildLog": "evidence/logs/phase5/build-run00-runtime.log",
+  "note": "Public SEA hash may match prior run when public product is unchanged; Track B KW digest-bind is loaded from private dist via launch-packaged-runtime manifest.",
+  "artifactPath": "D:\\DEV\\role-model\\.worktrees\\82-tb00-pin-refreeze-kw-digest-bind-launch-scope\\role-model-router\\dist\\release\\win32-x64\\role-model-dev.exe",
+  "sha256": "825f9b4f2e17f5102605b24943b974efa435133452f0cfa5867b389c14927f84",
+  "packagedAt": "2026-07-24T23:24:01.5030530Z",
+  "packageLog": "evidence/logs/phase5/rebuild-public-sea.log",
+  "privateSidecarSha256": "a7793a22b0cd8c1a05478b7e0650a105a104b0f47343903dc02c0066edf5da6b"
+}

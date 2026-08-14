@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "role-model.run85.change-decision.v1",
+  "serverChange": "not-required",
+  "rationale": "Fresh permanent-dev cloud-track-e2e --track=dev PASS without worker redeploy; U10 prefers existing permanent-dev workers.",
+  "evidenceRef": "evidence/other/cloud-track-dev.json"
+}

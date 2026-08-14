@@ -1,0 +1,13 @@
+{
+  "status": 200,
+  "ms": 2539,
+  "hasWarning": false,
+  "hasError": false,
+  "outputPreview": "Cloudflare, Inc. - Stock Quote & Chart (https://www.cloudflare.net/stock-information/Stock-Quote--Chart/default.aspx)\nciteturn0search0 [wordlim: 200] Published: last month; Crawled: last week; Today's Change ... NYSE:NET,NYSE:NET historical stock dataStock Date  | Stock Price\n\n## Stock Quote\n\nNYSE: NET 237.24 2026-06-26 4:04 PM ET\n\nToday's Change\n\n+10.59 (4.67%)\n\nToday's Volume\n\n6,243,405\n\nToday's Open\n\n225.88\n\nPrevious Close\n\n226.65\n\nIntraday High\n\n237.34\n\nIntraday Low\n\n220.95\n\n52 Week High\n\n276.81\n\n52 Week Low\n\n158.83\n\nPricing delayed by 20 minutes. Last Updated 2026-06-26 4:04 PM ET\n\n## Stock Chart\n\n[Input][Input]\n\nNYSE:NET,NYSE:NET historical stock data\nStock Date  | Stock Price\n--- | ---\nJune 26, 2026  | $237.24\nJune 25, 2026  | $226.65\nJune 24, 2026  | $223.48\nJune 23, 2026  | $224.94\nJune 22, 2026  | $218.38\nJune 18, 2026  | $224.06\nJune 17, 2026  | $226.87\nJune 16, 2026  | $230.97\nJune 15, 2026  | $235.71\nJune 12, 2026  | $228.48\nJune 11, 2026  | $227.44\nJune 10, 2026  | $219.67\nJune 09, 2026  | $236.13\nJune 08, 2026  | $247.79\nJune 05, 2026  | $250.11\nJune 04, 2026  | $268.64\nJune 03, 2026  | $265.33\nJune 02, 2026  | $272.66\nJune 01, 2026  | $270.82\nMay 29, 2026  | $241",
+  "resultCount": 36,
+  "keys": [
+    "encrypted_output",
+    "output",
+    "results"
+  ]
+}

@@ -1,0 +1,1 @@
+{"error":{"type":"capability_eligibility_error","code":"no_eligible_target","message":"no_eligible_target: no targets for model deepseek/deepseek-v4-flash satisfy the inferred request capabilities.","requestedModel":"deepseek/deepseek-v4-flash","requiredInputModalities":["text"],"requiredOutputModalities":["text"],"requiredCapabilities":["text.chat"],"excludedTargets":[]}}

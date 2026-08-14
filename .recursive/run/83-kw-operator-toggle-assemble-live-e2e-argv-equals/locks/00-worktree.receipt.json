@@ -1,0 +1,11 @@
+{
+  "artifact": "00-worktree.md",
+  "artifact_hash": "b1bb1bbe08b417af63683d42ef06072e6a46d973c4666460c564d01b7e3de230",
+  "artifact_path": "D:\\DEV\\.wt\\83-kw\\.recursive\\run\\83-kw-operator-toggle-assemble-live-e2e-argv-equals\\00-worktree.md",
+  "locked_at": "2026-07-25T01:00:19Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "9c9cbabf404223b3ce1416457ffd9b4cf9f736fe73270efb0e953baec62beebd"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "98691b2e9790c8b33d0d67a9deab872b2bd9a71330d3291dbd27724188ae3008"
+}

@@ -1,0 +1,6 @@
+{
+  "serverChange": "not-required",
+  "rationale": "KW activation policy is local extension-instance authority with KnowledgeEvidenceAuthority receipts. Browser recommendation live hops reuse existing permanent-dev workers and run-80 seed/lifecycle helpers. No additive server/worker contract change required for R1-R9.",
+  "decidedIn": "02-to-be-plan.md",
+  "verifiedAt": "2026-07-24T20:36:00Z"
+}

@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "defaultOff": true,
+  "refuseWithoutPolicy": true,
+  "activated": true,
+  "rolledBack": true,
+  "staticUngatedOff": true,
+  "distributionRootSet": true,
+  "probe": "run81_kw_activation"
+}

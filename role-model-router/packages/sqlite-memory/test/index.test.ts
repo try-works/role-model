@@ -18,13 +18,13 @@ import * as sqliteMemory from "../src/index.ts";
 import {
   clearAllObservedBenchmarkData,
   clearObservedBenchmarkDataForEndpoint,
-  initializeSqliteMemory,
+  initializeSqliteMemory as initializeSqliteMemoryWithChannel,
   listRuntimeTelemetryRecords,
   persistContinuitySnapshot,
   persistObservedBenchmarkSample,
   persistProviderAccounts,
   persistRetrievalReceipt,
-  persistRuntimeObservationBundle,
+  persistRuntimeObservationBundle as persistRuntimeObservationBundleWithChannel,
   persistRuntimeTelemetryFailure,
   readConversationContinuity,
   readLatestObservedProfile,
@@ -34,6 +34,22 @@ import {
   readRuntimeTelemetrySummary,
   resolveSqliteMemoryLocation,
 } from "../src/index.ts";
+
+type TestRuntimeChannel = "development" | "stage" | "production";
+const initializeSqliteMemory = (
+  input: Omit<Parameters<typeof initializeSqliteMemoryWithChannel>[0], "channel"> & {
+    readonly channel?: TestRuntimeChannel;
+  },
+) => initializeSqliteMemoryWithChannel({ ...input, channel: input.channel ?? "development" });
+const persistRuntimeObservationBundle = (
+  input: Omit<Parameters<typeof persistRuntimeObservationBundleWithChannel>[0], "channel"> & {
+    readonly channel?: TestRuntimeChannel;
+  },
+) =>
+  persistRuntimeObservationBundleWithChannel({
+    ...input,
+    channel: input.channel ?? "development",
+  });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1007,11 +1023,13 @@ describe("initializeSqliteMemory", () => {
       sqliteMemory as {
         persistRuntimeObservationBundle(input: {
           databasePath: string;
+          channel: TestRuntimeChannel;
           observation: ReturnType<typeof createRuntimeObservationBundle>;
         }): void;
       }
     ).persistRuntimeObservationBundle({
       databasePath: validation.databasePath,
+      channel: "development",
       observation: bundle,
     });
 
@@ -1079,6 +1097,147 @@ describe("initializeSqliteMemory", () => {
     ).toMatchObject({
       endpoint_id: validation.decision.chosen_endpoint_id,
       sample_size: 2,
+    });
+  });
+
+  test("externalizes and hydrates normal runtime observations across graph-primary cutover", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-shadow-mirror-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "workspace-shadow",
+    });
+    const history = await readJson<{
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
+    }>("testdata/router-runtime/fixtures/observability-history.json");
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
+    const initial = createRuntimeObservationBundle({
+      decision: validation.decision,
+      routingDiagnostics: validation.routingDiagnostics,
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
+      maintenancePolicy: {},
+      capturePolicy: policy,
+    });
+    persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      channel: "development",
+      observation: initial,
+    });
+    const migration = new sqliteMemory.LegacySqliteMigration({
+      databasePath: validation.databasePath,
+      backupPath: path.join(runtimeStateRoot, "shadow-backup.sqlite"),
+      artifactWriter: ({ sourceId, content, contentHash }) => ({
+        artifactId: `artifact-${sourceId}`,
+        artifactPath: `graph/${sourceId}`,
+        contentHash,
+      }),
+    });
+    migration.backfill({ scopeId: "workspace-shadow", batchSize: 100 });
+    migration.enterShadowMirror({ deadlineMs: Date.now() + 60_000 });
+    const artifacts = new Map<string, string>();
+    const graphStore = {
+      scopeId: "workspace-shadow",
+      write: ({
+        sourceId,
+        content,
+        contentHash,
+      }: {
+        sourceId: string;
+        content: string;
+        contentHash: string;
+      }) => {
+        const artifactId = `artifact-${sourceId}`;
+        artifacts.set(artifactId, content);
+        return { artifactId, artifactPath: `graph/${sourceId}`, contentHash };
+      },
+      read: (reference: { artifactId: string }) => {
+        const content = artifacts.get(reference.artifactId);
+        if (!content) throw new Error(`missing graph artifact ${reference.artifactId}`);
+        return content;
+      },
+      remove: (reference: { artifactId: string }) => {
+        artifacts.delete(reference.artifactId);
+      },
+    };
+    const live = structuredClone(initial) as typeof initial;
+    live.requestId = `${initial.requestId}-live`;
+    live.routingDecisionId = `${initial.routingDecisionId}-live`;
+    live.observedPerformance.sample.request_id = live.requestId;
+    live.observedPerformance.sample.routing_decision_id = live.routingDecisionId;
+    persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      channel: "development",
+      observation: live,
+      graphStore,
+    });
+    const database = new DatabaseSync(validation.databasePath);
+    const reference = database
+      .prepare("SELECT source_id,artifact_id FROM legacy_graph_migration_refs WHERE source_id=?")
+      .get(live.requestId) as { source_id?: string; artifact_id?: string } | undefined;
+    database.close();
+    expect(reference).toEqual({
+      source_id: live.requestId,
+      artifact_id: `artifact-${live.requestId}`,
+    });
+
+    migration.verifyParity({
+      backupVerified: true,
+      restoreVerified: true,
+      consumersVerified: true,
+    });
+    migration.cutover();
+    const graphPrimary = structuredClone(initial) as typeof initial;
+    graphPrimary.requestId = `${initial.requestId}-graph-primary`;
+    graphPrimary.routingDecisionId = `${initial.routingDecisionId}-graph-primary`;
+    graphPrimary.observedPerformance.sample.request_id = graphPrimary.requestId;
+    graphPrimary.observedPerformance.sample.routing_decision_id = graphPrimary.routingDecisionId;
+
+    persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      channel: "development",
+      observation: graphPrimary,
+      graphStore,
+    });
+
+    const pointerDatabase = new DatabaseSync(validation.databasePath);
+    const pointer = pointerDatabase
+      .prepare("SELECT observation_json FROM runtime_observations WHERE request_id=?")
+      .get(graphPrimary.requestId) as { observation_json: string };
+    pointerDatabase.close();
+    expect(pointer.observation_json).not.toContain("inspection");
+    expect(JSON.parse(pointer.observation_json)).toMatchObject({
+      requestId: graphPrimary.requestId,
+      graphPrimary: true,
+      artifactRef: { artifactId: `artifact-${graphPrimary.requestId}` },
+    });
+    expect(() =>
+      readRuntimeObservationBundle({
+        databasePath: validation.databasePath,
+        requestId: graphPrimary.requestId,
+      }),
+    ).toThrow(/graph artifact reader required/i);
+    expect(
+      readRuntimeObservationBundle({
+        databasePath: validation.databasePath,
+        requestId: graphPrimary.requestId,
+        graphStore,
+      }),
+    ).toEqual(graphPrimary);
+
+    migration.enterLegacyReadHold({ holdUntilMs: Date.now() + 60_000 });
+    migration.verifySecondParity({ consumersVerified: true });
+    expect(sqliteMemory.readLegacyMigrationJournal(validation.databasePath)).toMatchObject({
+      state: "legacy_read_hold",
+      secondParityVerified: true,
     });
   });
 
@@ -1494,11 +1653,13 @@ describe("initializeSqliteMemory", () => {
       sqliteMemory as {
         persistRuntimeObservationBundle(input: {
           databasePath: string;
+          channel: TestRuntimeChannel;
           observation: ReturnType<typeof createRuntimeObservationBundle>;
         }): void;
       }
     ).persistRuntimeObservationBundle({
       databasePath: validation.databasePath,
+      channel: "development",
       observation: bundle,
     });
 
@@ -1742,11 +1903,13 @@ describe("initializeSqliteMemory", () => {
       sqliteMemory as {
         persistRuntimeObservationBundle(input: {
           databasePath: string;
+          channel: TestRuntimeChannel;
           observation: ReturnType<typeof createRuntimeObservationBundle>;
         }): void;
       }
     ).persistRuntimeObservationBundle({
       databasePath: validation.databasePath,
+      channel: "development",
       observation: bundle,
     });
 
@@ -2183,22 +2346,26 @@ describe("initializeSqliteMemory", () => {
       sqliteMemory as {
         persistRuntimeObservationBundle(input: {
           databasePath: string;
+          channel: TestRuntimeChannel;
           observation: ReturnType<typeof createRuntimeObservationBundle>;
         }): void;
       }
     ).persistRuntimeObservationBundle({
       databasePath: validation.databasePath,
+      channel: "development",
       observation: remoteBundle,
     });
     (
       sqliteMemory as {
         persistRuntimeObservationBundle(input: {
           databasePath: string;
+          channel: TestRuntimeChannel;
           observation: ReturnType<typeof createRuntimeObservationBundle>;
         }): void;
       }
     ).persistRuntimeObservationBundle({
       databasePath: validation.databasePath,
+      channel: "development",
       observation: localBundle,
     });
 
@@ -2445,11 +2612,13 @@ describe("initializeSqliteMemory", () => {
       sqliteMemory as {
         persistRuntimeObservationBundle(input: {
           databasePath: string;
+          channel: TestRuntimeChannel;
           observation: ReturnType<typeof createRuntimeObservationBundle>;
         }): void;
       }
     ).persistRuntimeObservationBundle({
       databasePath: validation.databasePath,
+      channel: "development",
       observation: controllerFallbackBundle,
     });
 
@@ -2549,6 +2718,7 @@ describe("initializeSqliteMemory", () => {
 
     persistRuntimeObservationBundle({
       databasePath: validation.databasePath,
+      channel: "development",
       observation: {
         ...bundle,
         usageEvent: {
@@ -2934,11 +3104,13 @@ describe("initializeSqliteMemory", () => {
       sqliteMemory as {
         persistRuntimeObservationBundle(input: {
           databasePath: string;
+          channel: TestRuntimeChannel;
           observation: ReturnType<typeof createRuntimeObservationBundle>;
         }): void;
       }
     ).persistRuntimeObservationBundle({
       databasePath: validation.databasePath,
+      channel: "development",
       observation: bundle,
     });
 
@@ -3066,11 +3238,13 @@ describe("initializeSqliteMemory", () => {
       sqliteMemory as {
         persistRuntimeObservationBundle(input: {
           databasePath: string;
+          channel: TestRuntimeChannel;
           observation: ReturnType<typeof createRuntimeObservationBundle>;
         }): void;
       }
     ).persistRuntimeObservationBundle({
       databasePath: validation.databasePath,
+      channel: "development",
       observation: bundle,
     });
 
@@ -3182,11 +3356,13 @@ describe("initializeSqliteMemory", () => {
       sqliteMemory as {
         persistRuntimeObservationBundle(input: {
           databasePath: string;
+          channel: TestRuntimeChannel;
           observation: ReturnType<typeof createRuntimeObservationBundle>;
         }): void;
       }
     ).persistRuntimeObservationBundle({
       databasePath: validation.databasePath,
+      channel: "development",
       observation: bundle,
     });
 
@@ -3291,11 +3467,13 @@ describe("initializeSqliteMemory", () => {
       sqliteMemory as {
         persistRuntimeObservationBundle(input: {
           databasePath: string;
+          channel: TestRuntimeChannel;
           observation: ReturnType<typeof createRuntimeObservationBundle>;
         }): void;
       }
     ).persistRuntimeObservationBundle({
       databasePath: validation.databasePath,
+      channel: "development",
       observation: bundle,
     });
 
@@ -3460,6 +3638,7 @@ describe("clearAllObservedBenchmarkData", () => {
 
     persistObservedBenchmarkSample({
       databasePath: initialized.databasePath,
+      nowMs: 1_000,
       sample: {
         endpoint_id: endpointA,
         endpoint_version: "v1",
@@ -3472,6 +3651,7 @@ describe("clearAllObservedBenchmarkData", () => {
     });
     persistObservedBenchmarkSample({
       databasePath: initialized.databasePath,
+      nowMs: 2_000,
       sample: {
         endpoint_id: endpointB,
         endpoint_version: "v1",
@@ -3515,6 +3695,7 @@ describe("persistObservedBenchmarkSample benchmark_mode", () => {
 
     persistObservedBenchmarkSample({
       databasePath: initialized.databasePath,
+      nowMs: 1_000,
       sample: {
         endpoint_id: endpointId,
         endpoint_version: "v1",
@@ -3573,6 +3754,7 @@ describe("persistObservedBenchmarkSample benchmark_mode", () => {
       await once(requireChildStdout(locker), "data");
       persistObservedBenchmarkSample({
         databasePath: initialized.databasePath,
+        nowMs: 3_000,
         sample: {
           endpoint_id: endpointId,
           endpoint_version: "v1",
@@ -3889,6 +4071,7 @@ describe("persistObservedBenchmarkSample benchmark_mode", () => {
     });
     persistRuntimeObservationBundle({
       databasePath: validation.databasePath,
+      channel: "development",
       observation: bundle,
     });
 
@@ -3973,6 +4156,7 @@ describe("persistObservedBenchmarkSample benchmark_mode", () => {
     });
     persistRuntimeObservationBundle({
       databasePath: validation.databasePath,
+      channel: "development",
       observation: bundle,
     });
 
@@ -4042,6 +4226,7 @@ describe("clearObservedBenchmarkDataForEndpoint", () => {
 
     persistObservedBenchmarkSample({
       databasePath: initialized.databasePath,
+      nowMs: 1_000,
       sample: {
         endpoint_id: endpointId,
         endpoint_version: "v1",

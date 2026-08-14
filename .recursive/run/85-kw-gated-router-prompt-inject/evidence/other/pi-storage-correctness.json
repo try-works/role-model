@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "role-model.run85.pi-storage-correctness.v1",
+  "status": "PASS",
+  "capturedAt": "2026-07-28T23:20:58.8604333Z",
+  "secretsOmitted": true,
+  "u5": {
+    "provider": "role-model",
+    "model": "deepseek/deepseek-v4-pro",
+    "sanitizedCommand": "pi --provider role-model --model deepseek/deepseek-v4-pro --print <sanitized> --no-session",
+    "packagedArtifactSha256": "caa7c9e7a8a0c3ef57a0aaf801d97cd1021817db1443d4d8d7e5e4f97806b424",
+    "listenUrl": "http://127.0.0.1:34585",
+    "responseStatus": 200,
+    "correlationId": "req-f4669881-22ed-4eba-ae1e-f41d8aa8bb2f",
+    "routingDecisionId": "decision-req-f4669881-22ed-4eba-ae1e-f41d8aa8bb2f",
+    "cliExitCode": 0,
+    "cliLog": "evidence/logs/phase5/pi-cli-print-34585.log",
+    "marker": "run85-pi-ok"
+  },
+  "u6": {
+    "localPlane": {
+      "id": "local_graph_storage",
+      "status": "PASS",
+      "graphSharedPrefixDeduplicated": true,
+      "contentAddressed": true,
+      "restartRehydrated": true,
+      "storageBytes": 323584,
+      "storageCount": 12,
+      "observationCount": 6,
+      "telemetryCount": 6,
+      "evidenceRef": "evidence/logs/phase5/pi-storage-local.json"
+    },
+    "cloudPlane": {
+      "id": "aggregate_upload",
+      "status": "PASS",
+      "historyMatch": 1,
+      "resolveStatus": "available",
+      "evidenceRef": "evidence/other/cloud-track-dev.json"
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{"schemaVersion":"role-model.run83.server-change-decision.v1","serverChange":"not-required","rationale":"KW toggle, equals-form argv, assemble/freeze, and Phase 5 hops use existing permanent-dev workers; cloud-track-e2e PASS without redeploy (U7).","secretsOmitted":true}

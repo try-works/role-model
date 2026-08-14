@@ -1,22 +1,19 @@
 import { Link } from "react-router";
 
-import { LlamaSwapSetupHint, useLlamaSwapConfigStatus } from "../components/llama-swap-setup-hint";
 import {
   bodyTextClassName,
   cardClassName,
+  eyebrowClassName,
   inlineTitleClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
-  utilityLabelClassName,
 } from "../lib/design-system";
 
 export default function LocalChooseRoute() {
-  const { status: llamaSwapStatus, loading: llamaSwapStatusLoading } = useLlamaSwapConfigStatus();
-
   return (
-    <div className="grid gap-5 xl:grid-cols-2">
+    <div className="grid gap-5 xl:grid-cols-[minmax(0,6fr)_minmax(0,6fr)]">
       <section className={`${cardClassName} flex min-h-[280px] flex-col gap-3 p-5`}>
-        <p className={utilityLabelClassName}>External server</p>
+        <p className={eyebrowClassName}>External server</p>
         <h2 className={inlineTitleClassName}>Peer-backed models</h2>
         <p className={bodyTextClassName}>
           Use this when you already run an OpenAI-compatible server (LM Studio, llama.cpp, vLLM, or
@@ -34,7 +31,7 @@ export default function LocalChooseRoute() {
       </section>
 
       <section className={`${cardClassName} flex min-h-[280px] flex-col gap-3 p-5`}>
-        <p className={utilityLabelClassName}>Managed by role-model</p>
+        <p className={eyebrowClassName}>Managed by role-model</p>
         <h2 className={inlineTitleClassName}>Llama-swap models</h2>
         <p className={bodyTextClassName}>
           Use this when role-model runs the local llama-swap process, swaps models on one GPU, and
@@ -49,11 +46,6 @@ export default function LocalChooseRoute() {
             Edit runtime config
           </Link>
         </div>
-        {!llamaSwapStatusLoading && llamaSwapStatus && !llamaSwapStatus.operational ? (
-          <div className="pt-2">
-            <LlamaSwapSetupHint variant="compact" status={llamaSwapStatus} />
-          </div>
-        ) : null}
       </section>
     </div>
   );

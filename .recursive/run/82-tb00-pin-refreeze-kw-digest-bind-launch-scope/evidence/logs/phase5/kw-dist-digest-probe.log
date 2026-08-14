@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "mismatchRefuse": true,
+  "activated": true,
+  "rolledBack": true,
+  "module": "dist/run00-dev/extensions/knowledge-worker.mjs",
+  "probe": "run82_dist_kw_digest"
+}
+(node:14176) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)

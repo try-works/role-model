@@ -1,0 +1,27 @@
+{
+  "track": "dev",
+  "channel": "development",
+  "serviceUrl": "https://recommendations-dev.role-model.dev",
+  "scopeId": "packaged-run00",
+  "keyId": "role-model-recommendations-dev-v1",
+  "seeds": {
+    "a": {
+      "ingest": 202,
+      "publish": 202,
+      "publishStatus": "published",
+      "resolve": "available",
+      "channelSequence": 3,
+      "bundleUri": "https://recommendations-dev.role-model.dev/snapshots/development/stable/advanced/packaged-run00/sequence-3/manifest.json"
+    },
+    "b": {
+      "ingest": 202,
+      "publish": 202,
+      "publishStatus": "published",
+      "resolve": "available",
+      "channelSequence": 4,
+      "bundleUri": "https://recommendations-dev.role-model.dev/snapshots/development/stable/advanced/packaged-run00/sequence-4/manifest.json"
+    }
+  },
+  "verdict": "PASS",
+  "finishedAt": "2026-07-24T20:51:32.430Z"
+}

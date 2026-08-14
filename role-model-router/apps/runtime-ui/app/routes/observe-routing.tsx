@@ -1,28 +1,13 @@
+import { ChartGrid, ChartGridCell, FilterSelect, PageFilters } from "@role-model/ui";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { useSearchParams } from "react-router";
 
-import {
-  DisclosureSection,
-  ErrorState,
-  SectionCard,
-  StatusPill,
-} from "../components/page-primitives";
-import { TelemetryAnalyticsChartCard } from "../components/telemetry-charts";
-import {
-  TelemetrySelectField,
-  TelemetryTextField,
-  TelemetryTimeRangeControl,
-} from "../components/telemetry-controls";
-import {
-  bodyTextClassName,
-  foregroundEmphasisClassName,
-  metaTextClassName,
-  mutedPanelClassName,
-  secondaryButtonClassName,
-  supportingTextClassName,
-  utilityStrongTextClassName,
-} from "../lib/design-system";
+import { ObserveKitChartBlock } from "../components/observe-chart-block";
+import { DisclosureSection, ErrorState } from "../components/page-primitives";
+import { TelemetryTextField } from "../components/telemetry-controls";
+import { foregroundEmphasisClassName, mutedPanelClassName } from "../lib/design-system";
 import { startDeferredLiveRefresh } from "../lib/live-refresh";
+import { adaptObserveChartBlock } from "../lib/observe-chart-adapter";
 import type {
   RuntimeTelemetryAnalyticsDimension,
   RuntimeTelemetryAnalyticsFilters,
@@ -36,6 +21,11 @@ import {
   resolveTelemetryChartRefresh,
 } from "../lib/stale-refresh-diagnostics";
 import { telemetryBreakdownOptions } from "../lib/telemetry-chart-config";
+import {
+  fromPageTimeRange,
+  observePageTimeRangeOptions,
+  toPageTimeRange,
+} from "../lib/telemetry-page-filters";
 import type {
   TelemetryRouteChartDefinition,
   TelemetryTimeRangeValue,
@@ -62,13 +52,6 @@ const routingBreakdownOptions = [
     )
     .map((option) => ({ label: `By ${option.label.toLowerCase()}`, value: option.value })),
 ];
-
-const routingTimeRangeLabels: Record<TelemetryTimeRangeValue, string> = {
-  day: "24 hours",
-  week: "7 days",
-  month: "30 days",
-  quarter: "90 days",
-};
 
 function normalizeOptionalId(value: string): string | undefined {
   const trimmed = value.trim();
@@ -183,50 +166,6 @@ export default function ObserveRoutingRoute() {
       ? null
       : (breakdownValue as RuntimeTelemetryAnalyticsDimension);
 
-  const currentSliceRows = useMemo(
-    () =>
-      [
-        { label: "Window", value: routingTimeRangeLabels[timeRange] ?? timeRange },
-        {
-          label: "Breakdown",
-          value:
-            routingBreakdownOptions.find((option) => option.value === breakdownValue)?.label ??
-            "Total",
-        },
-        { label: "Source filter", value: sourceFilter === "all" ? "All sources" : sourceFilter },
-        {
-          label: "Difficulty",
-          value: difficulty === "all" ? "All difficulty buckets" : difficulty,
-        },
-        ...(selectedStrategy ? [{ label: "Selected strategy", value: selectedStrategy }] : []),
-        ...(requestedRoleId ? [{ label: "Requested role", value: requestedRoleId }] : []),
-        ...(taxonomyGroupId ? [{ label: "Taxonomy group", value: taxonomyGroupId }] : []),
-        ...(taxonomyRoleId ? [{ label: "Taxonomy role", value: taxonomyRoleId }] : []),
-        ...(taxonomyTaskType ? [{ label: "Task type", value: taxonomyTaskType }] : []),
-        ...(taxonomyTaskVariant ? [{ label: "Task variant", value: taxonomyTaskVariant }] : []),
-        ...(taxonomyCapabilityIds
-          ? [{ label: "Capability ids", value: taxonomyCapabilityIds }]
-          : []),
-        ...(taxonomyModalityIds ? [{ label: "Modality ids", value: taxonomyModalityIds }] : []),
-        ...(taxonomyToolClassIds ? [{ label: "Tool class ids", value: taxonomyToolClassIds }] : []),
-      ] satisfies ReadonlyArray<{ label: string; value: string }>,
-    [
-      breakdownValue,
-      difficulty,
-      requestedRoleId,
-      selectedStrategy,
-      sourceFilter,
-      taxonomyCapabilityIds,
-      taxonomyGroupId,
-      taxonomyModalityIds,
-      taxonomyRoleId,
-      taxonomyTaskType,
-      taxonomyTaskVariant,
-      taxonomyToolClassIds,
-      timeRange,
-    ],
-  );
-
   const hasAdvancedFilters =
     requestedRoleId.trim().length > 0 ||
     selectedStrategy.trim().length > 0 ||
@@ -237,11 +176,6 @@ export default function ObserveRoutingRoute() {
     taxonomyCapabilityIds.trim().length > 0 ||
     taxonomyModalityIds.trim().length > 0 ||
     taxonomyToolClassIds.trim().length > 0;
-
-  const mostActiveRoles = useMemo(() => {
-    const response = charts.find((chart) => chart.definition.title === "Role Demand")?.response;
-    return response?.ranking?.rows.slice(0, 5) ?? [];
-  }, [charts]);
 
   useEffect(() => {
     let disposed = false;
@@ -307,6 +241,18 @@ export default function ObserveRoutingRoute() {
     };
   }, [breakdown, filters, timeRange]);
 
+  const chartBlocks = useMemo(
+    () =>
+      charts.map((chart) =>
+        adaptObserveChartBlock(chart.definition, {
+          response: chart.response,
+          errorMessage: chart.errorMessage,
+          loading: loading && charts.length === 0,
+        }),
+      ),
+    [charts, loading],
+  );
+
   if (error) {
     return <ErrorState label={error} />;
   }
@@ -325,23 +271,20 @@ export default function ObserveRoutingRoute() {
           </span>
         </div>
       ) : null}
-      <SectionCard
-        title="Routing analytics controls"
-        description="Inspect routing mix, difficulty distribution, and avoided cost without leaving the Observe pillar."
-      >
-        <div className="space-y-4">
-          <TelemetryTimeRangeControl
-            onChange={(value) => updateParam("range", value)}
-            value={timeRange}
-          />
-          <div className="grid gap-4 xl:grid-cols-3">
-            <TelemetrySelectField
+
+      <PageFilters
+        timeRange={toPageTimeRange(timeRange)}
+        timeRangeOptions={observePageTimeRangeOptions}
+        onTimeRangeChange={(value) => updateParam("range", fromPageTimeRange(value))}
+        trailing={
+          <div className="flex flex-wrap items-end gap-3">
+            <FilterSelect
               label="Breakdown"
               onChange={(value) => updateParam("breakdown", value)}
               options={routingBreakdownOptions}
               value={breakdownValue}
             />
-            <TelemetrySelectField
+            <FilterSelect
               label="Source"
               onChange={(value) => updateParam("source", value)}
               options={[
@@ -351,7 +294,7 @@ export default function ObserveRoutingRoute() {
               ]}
               value={sourceFilter}
             />
-            <TelemetrySelectField
+            <FilterSelect
               label="Difficulty"
               onChange={(value) => updateParam("difficulty", value)}
               options={[
@@ -363,148 +306,81 @@ export default function ObserveRoutingRoute() {
               value={difficulty}
             />
           </div>
-          <DisclosureSection compact defaultOpen={hasAdvancedFilters} summary="Advanced controls">
-            <div className="space-y-4">
-              <div className="grid gap-4 xl:grid-cols-4">
-                <TelemetryTextField
-                  label="Requested role id"
-                  onChange={(value) => updateParam("roleId", value)}
-                  placeholder="Filter a specific requested role id"
-                  value={requestedRoleId}
-                />
-                <TelemetryTextField
-                  label="Selected strategy"
-                  onChange={(value) => updateParam("strategy", value)}
-                  placeholder="Filter a specific selected strategy"
-                  value={selectedStrategy}
-                />
-                <TelemetryTextField
-                  label="Taxonomy group id"
-                  onChange={(value) => updateParam("taxGroup", value)}
-                  placeholder="e.g. engineering"
-                  value={taxonomyGroupId}
-                />
-                <TelemetryTextField
-                  label="Taxonomy role id"
-                  onChange={(value) => updateParam("taxRole", value)}
-                  placeholder="e.g. coder"
-                  value={taxonomyRoleId}
-                />
-              </div>
-              <div className="grid gap-4 xl:grid-cols-4">
-                <TelemetryTextField
-                  label="Taxonomy task type"
-                  onChange={(value) => updateParam("taxTask", value)}
-                  placeholder="e.g. coder.review"
-                  value={taxonomyTaskType}
-                />
-                <TelemetryTextField
-                  label="Taxonomy task variant"
-                  onChange={(value) => updateParam("taxVariant", value)}
-                  placeholder="e.g. deep-audit"
-                  value={taxonomyTaskVariant}
-                />
-                <TelemetryTextField
-                  label="Taxonomy capability ids"
-                  onChange={(value) => updateParam("taxCapability", value)}
-                  placeholder="Comma-separated capability ids"
-                  value={taxonomyCapabilityIds}
-                />
-                <TelemetryTextField
-                  label="Taxonomy modality ids"
-                  onChange={(value) => updateParam("taxModality", value)}
-                  placeholder="Comma-separated modality ids"
-                  value={taxonomyModalityIds}
-                />
-              </div>
-              <div className="grid gap-4 xl:grid-cols-4">
-                <TelemetryTextField
-                  label="Taxonomy tool class ids"
-                  onChange={(value) => updateParam("taxTool", value)}
-                  placeholder="Comma-separated tool class ids"
-                  value={taxonomyToolClassIds}
-                />
-              </div>
-            </div>
-          </DisclosureSection>
-          <div className="flex flex-wrap gap-3">
-            <Link className={secondaryButtonClassName} to="/app/router">
-              Open router configuration
-            </Link>
-            <Link className={secondaryButtonClassName} to="/app/observe/requests">
-              Open request analytics
-            </Link>
+        }
+      />
+
+      <DisclosureSection compact defaultOpen={hasAdvancedFilters} summary="Advanced controls">
+        <div className="space-y-4">
+          <div className="grid gap-4 xl:grid-cols-4">
+            <TelemetryTextField
+              label="Requested role id"
+              onChange={(value) => updateParam("roleId", value)}
+              placeholder="Filter a specific requested role id"
+              value={requestedRoleId}
+            />
+            <TelemetryTextField
+              label="Selected strategy"
+              onChange={(value) => updateParam("strategy", value)}
+              placeholder="Filter a specific selected strategy"
+              value={selectedStrategy}
+            />
+            <TelemetryTextField
+              label="Taxonomy group id"
+              onChange={(value) => updateParam("taxGroup", value)}
+              placeholder="e.g. engineering"
+              value={taxonomyGroupId}
+            />
+            <TelemetryTextField
+              label="Taxonomy role id"
+              onChange={(value) => updateParam("taxRole", value)}
+              placeholder="e.g. coder"
+              value={taxonomyRoleId}
+            />
+          </div>
+          <div className="grid gap-4 xl:grid-cols-4">
+            <TelemetryTextField
+              label="Taxonomy task type"
+              onChange={(value) => updateParam("taxTask", value)}
+              placeholder="e.g. coder.review"
+              value={taxonomyTaskType}
+            />
+            <TelemetryTextField
+              label="Taxonomy task variant"
+              onChange={(value) => updateParam("taxVariant", value)}
+              placeholder="e.g. deep-audit"
+              value={taxonomyTaskVariant}
+            />
+            <TelemetryTextField
+              label="Taxonomy capability ids"
+              onChange={(value) => updateParam("taxCapability", value)}
+              placeholder="Comma-separated capability ids"
+              value={taxonomyCapabilityIds}
+            />
+            <TelemetryTextField
+              label="Taxonomy modality ids"
+              onChange={(value) => updateParam("taxModality", value)}
+              placeholder="Comma-separated modality ids"
+              value={taxonomyModalityIds}
+            />
+          </div>
+          <div className="grid gap-4 xl:grid-cols-4">
+            <TelemetryTextField
+              label="Taxonomy tool class ids"
+              onChange={(value) => updateParam("taxTool", value)}
+              placeholder="Comma-separated tool class ids"
+              value={taxonomyToolClassIds}
+            />
           </div>
         </div>
-      </SectionCard>
+      </DisclosureSection>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_320px]">
-        <div className="grid grid-cols-12 gap-4">
-          {charts.map((chart) => (
-            <div
-              key={chart.definition.title}
-              className={chart.definition.className ?? "col-span-12"}
-            >
-              <TelemetryAnalyticsChartCard
-                definition={chart.definition}
-                errorMessage={chart.errorMessage}
-                loading={loading && charts.length === 0}
-                refreshing={refreshing}
-                response={chart.response}
-              />
-            </div>
-          ))}
-        </div>
-
-        <div className="space-y-4">
-          <SectionCard
-            title="Current routing slice"
-            description="The right rail mirrors the active analytics scope so comparisons stay readable while you pivot the routing window."
-          >
-            <div className="space-y-2">
-              {currentSliceRows.map((row) => (
-                <div
-                  key={row.label}
-                  className={`${mutedPanelClassName} flex items-center justify-between gap-3 px-4 py-3`}
-                >
-                  <span className={supportingTextClassName}>{row.label}</span>
-                  <span className={`${utilityStrongTextClassName} text-right`}>{row.value}</span>
-                </div>
-              ))}
-            </div>
-          </SectionCard>
-
-          <SectionCard
-            title="Most active roles"
-            description="Top requested runtime roles in the current routing slice, ranked by routed decision volume."
-          >
-            {mostActiveRoles.length === 0 ? (
-              <p className={supportingTextClassName}>
-                No requested-role ranking data is available for the current slice yet.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {mostActiveRoles.map((row) => (
-                  <div
-                    key={row.key}
-                    className={`${mutedPanelClassName} flex items-center justify-between gap-3 px-4 py-3`}
-                  >
-                    <div className="min-w-0">
-                      <p className={`${utilityStrongTextClassName} truncate`}>
-                        {row.label || row.key}
-                      </p>
-                      <p className={metaTextClassName}>{row.key}</p>
-                    </div>
-                    <StatusPill tone="neutral">
-                      {typeof row.value === "number" ? `${row.value} requests` : "n/a"}
-                    </StatusPill>
-                  </div>
-                ))}
-              </div>
-            )}
-          </SectionCard>
-        </div>
-      </div>
+      <ChartGrid>
+        {chartBlocks.map((block) => (
+          <ChartGridCell key={block.title} span={block.span}>
+            <ObserveKitChartBlock block={block} />
+          </ChartGridCell>
+        ))}
+      </ChartGrid>
     </div>
   );
 }

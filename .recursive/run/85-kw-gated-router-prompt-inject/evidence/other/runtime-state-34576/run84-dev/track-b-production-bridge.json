@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "role-model.track-b-production-bridge.v1",
+  "protocolVersion": "1.0",
+  "revision": 2,
+  "generatedAt": "2026-07-28T21:02:38.823Z",
+  "extensions": [],
+  "storageServices": [],
+  "retention": {
+    "managedPolicy": false,
+    "policies": [],
+    "receipts": [],
+    "activeJob": null,
+    "currentPlan": null
+  },
+  "contribution": {
+    "mode": "contributor",
+    "contributionTier": "advanced",
+    "recommendationTier": "advanced",
+    "recommendationAccess": "preview_and_apply",
+    "allowCloudUpload": true,
+    "authorizationState": "pending_disclosure",
+    "revocationEpoch": 0,
+    "queuedCount": 0,
+    "managed": false,
+    "disclosureId": null
+  },
+  "recommendations": [
+    {
+      "id": "recommendation-614d171e91084c442732bf30f7cf0e5a",
+      "version": "8",
+      "provenance": "cloud:82b9a4497db2918991ce3fe7f6dc77694db6f4609d3b62ec9259c12794dbd47c",
+      "status": "applied",
+      "signatureValid": true,
+      "policyAllowed": true,
+      "endpointId": "endpoint:candidate-b",
+      "modelId": "model:candidate-b",
+      "preferredFor": [
+        "coding"
+      ],
+      "action": "prefer",
+      "confidence": 0.8
+    }
+  ],
+  "recommendationRevision": 8,
+  "extensionMutationReceipts": [],
+  "activePack": {
+    "id": "recommendation-614d171e91084c442732bf30f7cf0e5a",
+    "version": "8",
+    "appliedAt": "2026-07-28T21:02:38.822Z"
+  }
+}

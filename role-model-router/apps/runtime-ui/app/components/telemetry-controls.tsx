@@ -1,4 +1,6 @@
-import { fieldClassName, utilityLabelClassName } from "../lib/design-system";
+import { SegmentedControl } from "@role-model/ui";
+
+import { fieldClassName, fieldLabelClassName } from "../lib/design-system";
 import { telemetryTimeRangeOptions } from "../lib/telemetry-chart-config";
 import type { TelemetryTimeRangeValue } from "../lib/telemetry-route-models";
 import { SelectField } from "./page-primitives";
@@ -11,26 +13,17 @@ export function TelemetryTimeRangeControl({
   readonly onChange: (value: TelemetryTimeRangeValue) => void;
 }) {
   return (
-    <div className="flex flex-nowrap gap-2">
-      {telemetryTimeRangeOptions.map((option) => {
-        const selected = option.value === value;
-        return (
-          <button
-            key={option.value}
-            className={[
-              "inline-flex min-h-[32px] items-center justify-center rounded-[var(--rm-radius-pill)] px-4 py-1 !text-[13px] !font-normal !leading-[18px] !tracking-[0em] transition-colors",
-              selected
-                ? "bg-[var(--rm-accent)] text-[color:var(--rm-on-primary)]"
-                : "border border-[var(--rm-border-strong)] bg-[var(--rm-panel)] text-[var(--rm-accent-ink)] hover:border-[var(--rm-accent)] hover:bg-[var(--rm-accent-ghost)] hover:text-[var(--rm-accent-ink)]",
-            ].join(" ")}
-            onClick={() => onChange(option.value)}
-            type="button"
-          >
-            {option.label}
-          </button>
-        );
-      })}
-    </div>
+    <SegmentedControl
+      aria-label="Telemetry time range"
+      value={value}
+      options={telemetryTimeRangeOptions.map((option) => ({
+        value: option.value,
+        label: option.label,
+      }))}
+      onChange={onChange}
+      size="md"
+      className="flex-nowrap"
+    />
   );
 }
 
@@ -73,13 +66,12 @@ export function TelemetryTextField({
   readonly onChange: (value: string) => void;
 }) {
   return (
-    <label className="grid gap-2">
-      <span className={`${utilityLabelClassName} text-[var(--rm-secondary)]`}>{label}</span>
+    <label className="flex flex-col gap-1.5">
+      <span className={fieldLabelClassName}>{label}</span>
       <input
         className={fieldClassName}
         onChange={(event) => onChange(event.currentTarget.value)}
         placeholder={placeholder}
-        type="text"
         value={value}
       />
     </label>

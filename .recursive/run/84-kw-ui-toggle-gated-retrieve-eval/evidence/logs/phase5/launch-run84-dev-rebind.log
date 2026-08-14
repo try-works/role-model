@@ -1,0 +1,71 @@
+(node:35324) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:32860) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+node:net:1940
+    const ex = new UVExceptionWithHostPort(err, 'listen', address, port);
+               ^
+
+Error: listen EADDRINUSE: address already in use 127.0.0.1:34569
+    at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+    at listenInCluster (node:net:1997:12)
+    at node:net:2206:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '127.0.0.1',
+  port: 34569
+}
+
+Node.js v24.11.0
+undefined
+D:\DEV\role-model\.worktrees\84-kw-ui-toggle-gated-retrieve-eval\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: tsx src/cli-entry.ts --host 127.0.0.1 --port 34569 --repo-root D:/DEV/role-model/.worktrees/84-kw-ui-toggle-gated-retrieve-eval --runtime-state-root D:/DEV/.wt/84-kw/.recursive/run/84-kw-ui-toggle-gated-retrieve-eval/evidence/other/runtime-state-rebind --scope-id run84-dev --track-b-runtime-manifest D:\DEV\.wt\84-kw\dist\run00-dev\track-b-runtime-manifest.json --destination-material-file D:\DEV\.wt\84-kw\.recursive\run\00-direct-track-b-v1-1-implementation\evidence\remediation-proposal-2026-07-23\cloud-local\destination-auth-secret.json --aggregate-ingestion-url http://127.0.0.1:8787/contribution/aggregate --aggregate-scope tenant:run00-remediation --recommendation-service-url https://recommendations-dev.role-model.dev --recommendation-channel development --recommendation-material-file C:\Users\erikb\AppData\Local\Temp\role-model-dev-secrets\secret-material.json --static-root D:\DEV\role-model\.worktrees\84-kw-ui-toggle-gated-retrieve-eval\role-model-router\apps\runtime-ui\build\client
+file:///D:/DEV/.wt/84-kw/scripts/track-b/launch-packaged-runtime.mjs:210
+    reject(new Error(`packaged runtime exited ${code}: ${stderr.slice(-4000)}`));
+           ^
+
+Error: packaged runtime exited 1: (node:32860) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+node:net:1940
+
+    const ex = new UVExceptionWithHostPort(err, 'listen', address, port);
+
+               ^
+
+
+
+Error: listen EADDRINUSE: address already in use 127.0.0.1:34569
+
+    at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+
+    at listenInCluster (node:net:1997:12)
+
+    at node:net:2206:7
+
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+
+  code: 'EADDRINUSE',
+
+  errno: -4091,
+
+  syscall: 'listen',
+
+  address: '127.0.0.1',
+
+  port: 34569
+
+}
+
+
+
+Node.js v24.11.0
+
+
+    at ChildProcess.<anonymous> (file:///D:/DEV/.wt/84-kw/scripts/track-b/launch-packaged-runtime.mjs:210:12)
+    at Object.onceWrapper (node:events:623:26)
+    at ChildProcess.emit (node:events:508:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:294:12)
+
+Node.js v24.11.0

@@ -297,6 +297,7 @@ export async function runRuntimeAdapterValidation(
   const initialization = initializeSqliteMemory({
     runtimeStateRoot: options.runtimeStateRoot,
     scopeId: options.scopeId,
+    channel: "development",
   });
 
   persistProviderAccounts({

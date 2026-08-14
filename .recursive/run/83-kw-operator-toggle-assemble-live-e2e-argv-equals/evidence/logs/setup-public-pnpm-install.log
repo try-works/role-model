@@ -1,0 +1,39 @@
+Scope: all 44 workspace projects
+ΓÇëWARNΓÇë There are cyclic workspace dependencies: D:\DEV\role-model\.worktrees\83-kw-operator-toggle-assemble-live-e2e-argv-equals\role-model-router\packages\adapter-execution, D:\DEV\role-model\.worktrees\83-kw-operator-toggle-assemble-live-e2e-argv-equals\role-model-router\packages\provider-anthropic
+(node:24344) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +559
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 559, reused 551, downloaded 0, added 4
+Progress: resolved 559, reused 552, downloaded 0, added 43
+Progress: resolved 559, reused 552, downloaded 0, added 96
+Progress: resolved 559, reused 552, downloaded 0, added 206
+Progress: resolved 559, reused 552, downloaded 0, added 245
+Progress: resolved 559, reused 552, downloaded 0, added 292
+Progress: resolved 559, reused 552, downloaded 0, added 341
+Progress: resolved 559, reused 552, downloaded 0, added 397
+Progress: resolved 559, reused 552, downloaded 0, added 419
+Progress: resolved 559, reused 552, downloaded 0, added 522
+Progress: resolved 559, reused 552, downloaded 0, added 557
+Progress: resolved 559, reused 552, downloaded 0, added 558
+Progress: resolved 559, reused 552, downloaded 0, added 559
+Progress: resolved 559, reused 552, downloaded 0, added 559, done
+
+devDependencies:
++ @biomejs/biome 1.9.4
++ @types/node 22.19.17
++ ajv 8.18.0
++ ajv-formats 3.0.1
++ commander 13.1.0
++ esbuild 0.25.12
++ json-schema-to-typescript 15.0.4
++ postject 1.0.0-alpha.6
++ tsx 4.21.0
++ typescript 5.9.3
++ vitest 3.2.4
+
+Γò¡ Warning ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓò«Γöé                                                                              ΓöéΓöé   Ignored build scripts: @biomejs/biome, esbuild, sharp, workerd.            ΓöéΓöé   Run "pnpm approve-builds" to pick which dependencies should be allowed     ΓöéΓöé   to run scripts.                                                            ΓöéΓöé                                                                              ΓöéΓò░ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓò»
+
+Done in 17s using pnpm v10.6.5

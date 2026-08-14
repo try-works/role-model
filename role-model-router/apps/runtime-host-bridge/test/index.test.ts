@@ -37,6 +37,7 @@ import {
   createQaRuntimeConfigPath,
   createQaRuntimeConfigText,
   createQaServerOptions,
+  qaChartReviewRequestIds,
   qaTelemetryRequestIds,
   seedQaTelemetry,
   shouldBootstrapQaPlaceholderControlPlane,
@@ -149,6 +150,22 @@ function createLlamaSwapRunningModelsVendorScript(input: {
 }
 
 describe("runtime-host-bridge", () => {
+  test("run 87 runtime HTTP logs require registered channel authority", () => {
+    const authority = bridge as typeof bridge & {
+      assertRuntimeHostStorageWriteAllowed?: (storageClass: string, channel: string) => unknown;
+    };
+    expect(typeof authority.assertRuntimeHostStorageWriteAllowed).toBe("function");
+    expect(() =>
+      authority.assertRuntimeHostStorageWriteAllowed?.("runtime_logs", "development"),
+    ).not.toThrow();
+    expect(() =>
+      authority.assertRuntimeHostStorageWriteAllowed?.("runtime_logs", "production"),
+    ).not.toThrow();
+    expect(() =>
+      authority.assertRuntimeHostStorageWriteAllowed?.("runtime_logs", "forged"),
+    ).toThrow(/not writable|storage class/i);
+  });
+
   test("summarizes selection diagnostics when a tie-break chooses the winner inside the score epsilon", () => {
     const selection = bridge.summarizeSelectionDiagnosticsFromDecision({
       routing_decision_id: "decision-test-tie-break",
@@ -741,10 +758,13 @@ describe("runtime-host-bridge", () => {
       databasePath: resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId }),
       startAtMs: 0,
       endAtMs: Date.now() + 1_000,
-      limit: 20,
+      limit: 40,
     });
     expect(records.map((record) => record.requestId)).toEqual(
       expect.arrayContaining(Object.values(qaTelemetryRequestIds)),
+    );
+    expect(records).toHaveLength(
+      Object.keys(qaTelemetryRequestIds).length + Object.keys(qaChartReviewRequestIds).length,
     );
     expect(records).toEqual(
       expect.arrayContaining([
@@ -755,6 +775,9 @@ describe("runtime-host-bridge", () => {
           inputTokensAvailable: true,
           promptCacheRequestSource: "explicit",
           cacheReadTokens: 90000,
+          selectedStrategy: "quality",
+          taxonomyGroupId: "engineering",
+          routingCostSavingsUsd: 0.021,
         }),
         expect.objectContaining({
           requestId: qaTelemetryRequestIds.estimated,
@@ -768,6 +791,12 @@ describe("runtime-host-bridge", () => {
           inputTokens: 0,
           inputTokensSource: "unavailable",
           inputTokensAvailable: false,
+        }),
+        expect.objectContaining({
+          requestId: qaChartReviewRequestIds.failureTimeout,
+          statusFamily: "failure",
+          difficultyBucket: "medium",
+          selectedStrategy: "latency",
         }),
       ]),
     );
@@ -1289,7 +1318,11 @@ describe("runtime-host-bridge", () => {
     const scopeId = "runtime-host-stale-litellm";
 
     try {
-      const { databasePath } = initializeSqliteMemory({ runtimeStateRoot, scopeId });
+      const { databasePath } = initializeSqliteMemory({
+        runtimeStateRoot,
+        scopeId,
+        channel: "development",
+      });
       upsertSqliteProviderAccount({
         databasePath,
         account: {
@@ -6443,6 +6476,7 @@ describe("runtime-host-bridge", () => {
       const { databasePath } = initializeSqliteMemory({
         runtimeStateRoot,
         scopeId: "cache-continuity-test",
+        channel: "development",
       });
       const hostBridge = bridge as {
         readCacheContinuityRouteHints: (input: {
@@ -20391,15 +20425,21 @@ describe("runtime-host-bridge", () => {
 
     persistRuntimeObservationBundle({
       databasePath,
+      channel: "development",
       observation: remoteBundle,
+      nowMs: remoteBundle.usageEvent.timestamp_ms,
     });
     persistRuntimeObservationBundle({
       databasePath,
+      channel: "development",
       observation: localBundle,
+      nowMs: localBundle.usageEvent.timestamp_ms,
     });
     const legacyTimestampMs = localTimestampMs + 1_200;
     persistRuntimeObservationBundle({
       databasePath,
+      channel: "development",
+      nowMs: legacyTimestampMs,
       observation: {
         ...baseBundle,
         requestId: "req-telemetry-analytics-legacy-001",
@@ -20998,6 +21038,7 @@ describe("runtime-host-bridge", () => {
     const initialized = initializeSqliteMemory({
       runtimeStateRoot,
       scopeId,
+      channel: "development",
     });
     const databasePath = resolveSqliteMemoryLocation({
       runtimeStateRoot,
@@ -21035,6 +21076,7 @@ describe("runtime-host-bridge", () => {
 
     persistRuntimeObservationBundle({
       databasePath,
+      channel: "development",
       observation: {
         ...bundle,
         requestId: "req-retention-expired-001",

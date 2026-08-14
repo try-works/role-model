@@ -1,0 +1,5 @@
+STATUS 200
+no no_eligible_target
+upstream model deepseek/deepseek-v4-flash
+assistant: pong
+tools forwarded as function-only (see debug-request.json)

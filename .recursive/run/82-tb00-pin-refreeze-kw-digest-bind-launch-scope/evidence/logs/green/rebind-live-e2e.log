@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "mode": "proof-only-source-revision-rebind",
+  "privatePin": "05e7729e8d0f55850fc93ee985b0f20d0ee35da2",
+  "publicPin": "b03d82a2fe8adc317c9fdaecad838beac3ed74a8",
+  "rewritten": [
+    "evidence/live-e2e/run00-live-e2e-manifest.json",
+    "evidence/live-e2e/build-and-test.json",
+    "evidence/live-e2e/clean-checkout-reconstruction.json"
+  ]
+}

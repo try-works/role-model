@@ -1,0 +1,13 @@
+(node:9336) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö TB10-TEST-ACTIVATION-POLICY activates only with valid v1 policy (11.605ms)
+Γ£ö TB10-TEST-ACTIVATION-CAPABILITY forwards policy through run() (3.5008ms)
+Γ£ö TB10-TEST-ACTIVATION-DIGEST-BIND requires receipt digest match to shadow candidate (2.8703ms)
+Γä╣ tests 3
+Γä╣ suites 0
+Γä╣ pass 3
+Γä╣ fail 0
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 207.6155

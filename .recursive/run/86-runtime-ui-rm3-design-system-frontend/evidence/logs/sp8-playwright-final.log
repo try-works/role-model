@@ -1,0 +1,90 @@
+
+> @role-model-router/runtime-ui@ test:browser D:\DEV\role-model\.worktrees\86-runtime-ui-rm3-design-system-frontend\role-model-router\apps\runtime-ui
+> playwright test
+
+[WebServer] ../../packages/ui/src/segmented-control.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/page-shell.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/observe-routing.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/metric-strip.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/observe-logs.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/page-filters.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/sidebar.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/runtime-overview.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/chart-composition.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/chart-ranking.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/observe-shared.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/observe-requests.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] ../../packages/ui/src/observe-activity.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+[WebServer] (node:34468) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 13 tests using 8 workers
+
+(node:2984) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:14884) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:44844) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:44244) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:28768) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:23376) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:45176) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:33440) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  -   6 e2e\recursive-84-kw-ui-toggle-gated-retrieve-eval.spec.ts:19:3 ΓÇ║ @recursive:84-kw-ui-toggle-gated-retrieve-eval @kw-ui-toggle ΓÇ║ prepares shadow-ready, turns production ON, then soft OFFs Knowledge Worker
+  -   4 e2e\recursive-79-extension-control-and-recommendations-qa.sp4.spec.ts:4:3 ΓÇ║ @recursive:79-extension-control-and-recommendations-qa @sp4 ΓÇ║ mutates extension enablement and can dismiss recommendations against live runtime
+  -   3 e2e\track-b-live.spec.ts:3:1 ΓÇ║ operates the packaged Track B runtime and cloud-backed recommendation flow
+  -   7 e2e\recursive-81-kw-activation-browser-recommendation-evidence.spec.ts:4:3 ΓÇ║ @recursive:81-kw-activation-browser-recommendation-evidence @browser-recommendations ΓÇ║ downloads, previews, applies, and dismisses recommendations in the Extensions UI
+  -   9 e2e\track-b-pcr7-operator.spec.ts:8:1 ΓÇ║ PCR7 contribution disclosure and retention operator surfaces
+{"modelsEssentialMs":4583,"candidatePayloadBytes":5186,"mutationResponseMs":251,"buttonPendingMs":288,"convergenceAfterResponseMs":37,"mutationModelPaths":["/api/role-model/accounts"],"healthMs":288,"summaryMs":285,"benchmarkEssentialMs":760,"malformedModelStatus":400}
+  ok  5 e2e\recursive-77-catalog-json-size-and-ui-freeze.sp8.runtime-responsiveness.spec.ts:4:1 ΓÇ║ @smoke @recursive:77-catalog-json-size-and-ui-freeze @sp8 keeps Models and Benchmark responsive without the rich request route (6.7s)
+  ok  2 e2e\runtime-shell.spec.ts:3:1 ΓÇ║ keeps provider maintenance absent while showing configured connections (7.5s)
+  ok  1 e2e\shared-surface-regression.spec.ts:80:1 ΓÇ║ keeps shared typography and tokenized controls aligned on seeded QA routes (7.7s)
+  ok  8 e2e\track-b-operations.spec.ts:3:1 ΓÇ║ operates disclosure, opt-out, retention, recommendations, and failure isolation (6.0s)
+  ok 10 e2e\shared-surface-regression.spec.ts:115:1 ΓÇ║ supports filter changes, query-param restoration, and request-list narrowing on the request analytics surface (2.2s)
+  ok 11 e2e\shared-surface-regression.spec.ts:148:1 ΓÇ║ supports request inspection drill-in from request analytics (1.3s)
+  x  12 e2e\shared-surface-regression.spec.ts:165:1 ΓÇ║ renders shared time-series charts without clipped axes and with inset legends (1.1s)
+(node:31652) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 13 e2e\shared-surface-regression.spec.ts:182:1 ΓÇ║ renders deterministic request-detail token and cache provenance (1.4s)
+
+
+  1) e2e\shared-surface-regression.spec.ts:165:1 ΓÇ║ renders shared time-series charts without clipped axes and with inset legends 
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 1
+    Received:   0
+
+      35 |   expect(plotBox.height).toBeGreaterThanOrEqual(120);
+      36 |   // Kit time-axis ticks are custom <text> nodes (not recharts tick-value class).
+    > 37 |   expect(await plot.locator("text").count()).toBeGreaterThan(expectedAxisCount);
+         |                                              ^
+      38 |   const tickBoxes = await plot.locator("text").evaluateAll((nodes) =>
+      39 |     nodes.map((node) => {
+      40 |       const box = (node as SVGGraphicsElement).getBBox?.();
+        at assertTimeSeriesGeometry (D:\DEV\role-model\.worktrees\86-runtime-ui-rm3-design-system-frontend\role-model-router\apps\runtime-ui\e2e\shared-surface-regression.spec.ts:37:46)
+        at D:\DEV\role-model\.worktrees\86-runtime-ui-rm3-design-system-frontend\role-model-router\apps\runtime-ui\e2e\shared-surface-regression.spec.ts:170:3
+
+    attachment #1: screenshot (image/png) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\shared-surface-regression--7707a-axes-and-with-inset-legends\test-failed-1.png
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    attachment #2: video (video/webm) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\shared-surface-regression--7707a-axes-and-with-inset-legends\video.webm
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    Error Context: test-results\shared-surface-regression--7707a-axes-and-with-inset-legends\error-context.md
+
+  1 failed
+    e2e\shared-surface-regression.spec.ts:165:1 ΓÇ║ renders shared time-series charts without clipped axes and with inset legends 
+  5 skipped
+  7 passed (50.9s)
+D:\DEV\role-model\.worktrees\86-runtime-ui-rm3-design-system-frontend\role-model-router\apps\runtime-ui:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @role-model-router/runtime-ui@ test:browser: `playwright test`
+Exit status 1

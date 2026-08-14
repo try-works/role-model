@@ -1,0 +1,36 @@
+(node:14032) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+file:///D:/DEV/.wt/84-kw/scripts/track-b/system-proof.mjs:41
+  if(result.status!==0)throw new Error(`scenario command ${commandId} failed: ${stderr||stdout}`);
+                             ^
+
+Error: scenario command TB11-CMD-07 failed: file:///D:/DEV/.wt/84-kw/scripts/track-b/run-command-test.mjs:68
+
+  throw new Error(`${requestedCommandId} assurance closure failed; missing exact passes: ${missing.join(",") || "none"}; unconsumed fixtures: ${unconsumed.join(",") || "none"}; fixtures without post-assertion execution receipts: ${unexecuted.join(",") || "none"}`);
+
+        ^
+
+
+
+Error: TB11-CMD-07 assurance closure failed; missing exact passes: TB11-TEST-E2E; unconsumed fixtures: none; fixtures without post-assertion execution receipts: TB11-TEST-E2E
+
+    at file:///D:/DEV/.wt/84-kw/scripts/track-b/run-command-test.mjs:68:9
+
+    at ModuleJob.run (node:internal/modules/esm/module_job:377:25)
+
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:691:26)
+
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+
+
+Node.js v24.11.0
+
+
+    at executeScenarioCommand (file:///D:/DEV/.wt/84-kw/scripts/track-b/system-proof.mjs:41:30)
+    at Array.map (<anonymous>)
+    at executeScenario (file:///D:/DEV/.wt/84-kw/scripts/track-b/system-proof.mjs:54:59)
+    at buildSystemProof (file:///D:/DEV/.wt/84-kw/scripts/track-b/system-proof.mjs:144:103)
+    at async file:///D:/DEV/.wt/84-kw/scripts/track-b/system-proof.mjs:153:20
+
+Node.js v24.11.0

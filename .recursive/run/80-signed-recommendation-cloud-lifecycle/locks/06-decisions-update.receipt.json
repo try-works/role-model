@@ -1,0 +1,18 @@
+{
+  "artifact": "06-decisions-update.md",
+  "artifact_hash": "47a6ca3096623f0c5a47b2c24c90060b85402d76c6a2340a009581c9541791ec",
+  "artifact_path": "D:\\DEV\\role-model-internal\\.worktrees\\80-signed-recommendation-cloud-lifecycle\\.recursive\\run\\80-signed-recommendation-cloud-lifecycle\\06-decisions-update.md",
+  "locked_at": "2026-07-24T12:06:47Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "efe0dd456210f8a5802c65dad97af9ffd1dd608b6c3334226d08afac723cca3b",
+    "00-worktree.md": "41b0adb1d5ad80745a035932e9e7150cb5784e33974173dc351342d6401976bd",
+    "01-as-is.md": "56dc46a2260006d6dde8b6aa684bcde26f56bfd8dc2b921a37fc689c05d28def",
+    "02-to-be-plan.md": "df224086abb6d0e6587032da2314420e26e43e4ebe09ea463c888335e2eba1a5",
+    "03-implementation-summary.md": "811f77c45c3c2e9e3a8321a6e70249e7814117a008904c08a00c46ec5eaac3f4",
+    "03.5-code-review.md": "fd9adf89255da94bcb492be3f45c6913d409bf56c9c2d2efffca28644d65d197",
+    "04-test-summary.md": "366f4fbd5ed4d0a27d317c302f47bdef1a837d7007aa3954ee4dc242e8fff157",
+    "05-manual-qa.md": "0c62b237693edae1d36b97d714f8e21d0c1e2cfd7e6d5af1a5fb7a43fbedeaab"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "4fbb9c3be49b6b0752eb44b35eeb4eacf7421903498b532eddf9fc2640b109fe"
+}

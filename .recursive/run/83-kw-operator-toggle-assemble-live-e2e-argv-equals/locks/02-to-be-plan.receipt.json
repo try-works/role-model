@@ -1,0 +1,13 @@
+{
+  "artifact": "02-to-be-plan.md",
+  "artifact_hash": "9aa6195572cfe3d80aff503cd7fe682594ffcee295cf7bdd993f582dee22b597",
+  "artifact_path": "D:\\DEV\\.wt\\83-kw\\.recursive\\run\\83-kw-operator-toggle-assemble-live-e2e-argv-equals\\02-to-be-plan.md",
+  "locked_at": "2026-07-25T01:13:34Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "9c9cbabf404223b3ce1416457ffd9b4cf9f736fe73270efb0e953baec62beebd",
+    "00-worktree.md": "b1bb1bbe08b417af63683d42ef06072e6a46d973c4666460c564d01b7e3de230",
+    "01-as-is.md": "9db4c78b1192ccfdbf18ba2e46c374a6c3e8132bec2f42db9e895a02a4a7e12d"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "6341db0243d918c31db228147d7160f1ac4d2e22b47007633d747deccebc7c80"
+}

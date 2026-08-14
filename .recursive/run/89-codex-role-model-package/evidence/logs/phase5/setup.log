@@ -1,0 +1,7 @@
+setup: ok
+backup: C:\Users\erikb\.codex\backup-role-model\2026-08-04T12-51-19-404Z
+config: C:\Users\erikb\.codex\config.toml
+catalog: C:\Users\erikb\.codex\role-model\models.json
+adapter_base_url: http://127.0.0.1:3460/v1
+model: claude-3.7-sonnet
+Restart Codex after setup. Compaction is Codex-managed (local /v1/responses).

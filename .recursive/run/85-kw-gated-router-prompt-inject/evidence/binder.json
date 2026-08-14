@@ -1,0 +1,69 @@
+{
+  "runId": "85-kw-gated-router-prompt-inject",
+  "verifiedAt": "2026-07-28T23:25:00.000Z",
+  "secretsOmitted": true,
+  "privateBaseline": "b34691c376f7b267b2dcdf048ea5b5b17e06115b",
+  "publicBaseline": "de7ed20427a32277a6541fab22517a15238f6e74",
+  "privateWorktree": "D:/DEV/role-model-internal/.worktrees/85-kw-gated-router-prompt-inject",
+  "publicWorktree": "D:/DEV/role-model/.worktrees/85-kw-gated-router-prompt-inject",
+  "privateProductTip": "working-tree (Phase 5 evidence + hop scripts)",
+  "publicProductTip": "working-tree (kw-private-loader + auto-arm + SEA)",
+  "productPinPrivate": "726df64d241ba03eb34eed35f1785a3963ba0057",
+  "productPinPublic": "b03d82a2fe8adc317c9fdaecad838beac3ed74a8",
+  "tddMode": "strict",
+  "qaExecutionMode": "agent-operated",
+  "serverChange": "not-required",
+  "publicChange": "required",
+  "rebuild": {
+    "scopeId": "run85-dev",
+    "track": "dev",
+    "seaSha256": "caa7c9e7a8a0c3ef57a0aaf801d97cd1021817db1443d4d8d7e5e4f97806b424",
+    "listenUrl": "http://127.0.0.1:34585",
+    "receipt": "evidence/other/rebuild-receipt.json",
+    "kwSha256": "830ee5a18ac887057d2cab62856555037bbe84dee7f7f3fb3323c81c3ba32519",
+    "sidecarSha256": "a7793a22b0cd8c1a05478b7e0650a105a104b0f47343903dc02c0066edf5da6b"
+  },
+  "injectUnlock": {
+    "surface": "applyRequestedRoleExecutionPolicy",
+    "via": "mapChatCompletionsRequest",
+    "hop": "evidence/logs/phase5/sea-inject-hop.json",
+    "packagedProbe": "evidence/logs/phase5/packaged-probe-inject.json",
+    "hostWiring": [
+      "role-model-router/apps/runtime-host-bridge/src/kw-private-loader.ts",
+      "role-model-router/apps/runtime-host-bridge/src/kw-prompt-inject-host.ts",
+      "role-model-router/apps/runtime-host-bridge/src/cli.ts"
+    ]
+  },
+  "recommendationHop": {
+    "scopeId": "run85-dev",
+    "track": "dev",
+    "verdict": "PASS",
+    "log": "evidence/logs/phase5/live-recommendation-lifecycle.log",
+    "summary": "evidence/logs/phase5/live-recommendation-lifecycle.json",
+    "axisIndependence": "apply/dismiss does not imply inject unlock"
+  },
+  "cloudE2e": {
+    "track": "dev",
+    "receipt": "evidence/other/cloud-track-dev.json",
+    "note": "permanent-dev workers; serverChange not-required"
+  },
+  "piStorage": {
+    "cliLog": "evidence/logs/phase5/pi-cli-print-34585.log",
+    "receipt": "evidence/other/pi-storage-correctness.json",
+    "localStorage": "evidence/logs/phase5/pi-storage-local.json",
+    "marker": "run85-pi-ok",
+    "correlationId": "req-f4669881-22ed-4eba-ae1e-f41d8aa8bb2f"
+  },
+  "decisions": {
+    "public": "evidence/other/public-change-decision.json",
+    "server": "evidence/other/server-change-decision.json"
+  },
+  "requirements": {
+    "R18": "rebuild",
+    "R19": "injectUnlock.packagedProbe",
+    "R20": "injectUnlock.hop",
+    "R21": "recommendationHop",
+    "R22": "piStorage",
+    "R24": "binder"
+  }
+}

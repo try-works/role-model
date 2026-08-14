@@ -1,0 +1,53 @@
+{
+  "name": "@try-works/codex-role-model",
+  "version": "0.1.1",
+  "type": "module",
+  "description": "Codex Desktop/CLI/IDE adapter for connecting to an externally running role-model runtime.",
+  "license": "BUSL-1.1",
+  "keywords": ["codex", "role-model", "routing", "llm-gateway", "codex-plugin"],
+  "homepage": "https://github.com/try-works/role-model#readme",
+  "bugs": {
+    "url": "https://github.com/try-works/role-model/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/try-works/role-model.git",
+    "directory": "packages/codex-role-model"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "codex-role-model": "bin/codex-role-model.js"
+  },
+  "files": [
+    "bin",
+    "data",
+    "dist",
+    "fixtures",
+    "skills",
+    "agents",
+    ".codex-plugin",
+    "plugin.json",
+    "marketplace.npm.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build",
+    "test": "vitest run",
+    "dev": "tsx src/cli.ts"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "commander": "^13.1.0",
+    "smol-toml": "^1.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.2"
+  }
+}

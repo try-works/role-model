@@ -1,0 +1,12 @@
+{
+  "artifact": "01-as-is.md",
+  "artifact_hash": "b92aa220c255f45079bc18e0222b6b0ca9e4ba31f7705029c3680fea14b72440",
+  "artifact_path": "D:\\DEV\\role-model-internal\\.worktrees\\85-kw-gated-router-prompt-inject\\.recursive\\run\\85-kw-gated-router-prompt-inject\\01-as-is.md",
+  "locked_at": "2026-07-28T10:51:00Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "e99dc0a1f4aba37407cd71fecb15b2696290cebe6a7f90fdcbd00e49a4ac31d2",
+    "00-worktree.md": "a62622fdf04176897904e5e85a2dbb42dab46b75f397ed7a8b86a77576430251"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "71880cd3557c727a7f9d0ce3f6a51ceb3c468beefcfe7697a33aa76818f47c46"
+}

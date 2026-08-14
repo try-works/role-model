@@ -338,7 +338,7 @@ export function buildCredentialLifecycleBanner(
       return null;
     }
     return {
-      authorityLabel: "Compatibility readiness summary",
+      authorityLabel: "compatibility",
       authorityTone: "neutral",
       detail:
         "Blocking counts are coming from the legacy readiness alias until the canonical lifecycle payload is available.",
@@ -349,7 +349,7 @@ export function buildCredentialLifecycleBanner(
 
   if (lifecycle.authority.state === "provisional") {
     return {
-      authorityLabel: "Provisional lifecycle snapshot",
+      authorityLabel: "provisional",
       authorityTone: "accent",
       detail: "Bootstrap is still reconciling credentials, activations, and archived stale state.",
       archivedStaleCount: lifecycle.counts.archivedStale,
@@ -358,7 +358,7 @@ export function buildCredentialLifecycleBanner(
   }
 
   return {
-    authorityLabel: "Authoritative lifecycle snapshot",
+    authorityLabel: "authoritative",
     authorityTone: readinessRows.length > 0 ? "warning" : "success",
     detail:
       readinessRows.length > 0
@@ -661,15 +661,15 @@ export function summarizeSessionBootstrapStatus(
 
   switch (status) {
     case "ready":
-      return { label: "Ready", tone: "success" };
+      return { label: "complete", tone: "success" };
     case "running":
-      return { label: "Running", tone: "accent" };
+      return { label: "running", tone: "accent" };
     case "degraded":
-      return { label: "Degraded", tone: "warning" };
+      return { label: "degraded", tone: "warning" };
     case "blocked":
-      return { label: "Blocked", tone: "warning" };
+      return { label: "blocked", tone: "warning" };
     default:
-      return { label: "Pending", tone: "neutral" };
+      return { label: "pending", tone: "neutral" };
   }
 }
 
@@ -682,13 +682,11 @@ export function buildInventorySummaryStats(
   }
 
   return [
-    { label: "Routable models", value: String(inventory.modelIdCount) },
-    { label: "Routable endpoints", value: String(inventory.endpointIdCount) },
-    { label: "Local endpoints", value: String(inventory.localEndpointCount) },
-    { label: "Remote endpoints", value: String(inventory.remoteEndpointCount) },
+    { label: "Endpoints", value: String(inventory.endpointIdCount) },
+    { label: "Models", value: String(inventory.modelIdCount) },
     {
-      label: "Empty alias pools",
-      value: inventory.emptyAliasIds.length > 0 ? inventory.emptyAliasIds.join(", ") : "none",
+      label: "Empty aliases",
+      value: String(inventory.emptyAliasIds.length),
     },
   ];
 }
@@ -1735,6 +1733,132 @@ export function buildConfiguredModelMetadataRows(model: {
   ];
 }
 
+function formatCompactTokenCount(value: number | null | undefined): string {
+  if (typeof value !== "number" || value <= 0) {
+    return "Unknown";
+  }
+  if (value >= 1000) {
+    const compact = value / 1000;
+    const rounded = Number.isInteger(compact)
+      ? String(compact)
+      : compact.toFixed(1).replace(/\.0$/, "");
+    return `${rounded}k tokens`;
+  }
+  return `${value} tokens`;
+}
+
+function formatUnitPrice(value: number | null | undefined): string {
+  if (typeof value !== "number") {
+    return "Unknown";
+  }
+  return `$${value.toFixed(2)} / 1M`;
+}
+
+function formatLatencyMs(value: number | null | undefined): string {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+    return "—";
+  }
+  if (value >= 1000) {
+    return `${(value / 1000).toFixed(2).replace(/\.?0+$/, "")} s`;
+  }
+  return `${Math.round(value)} ms`;
+}
+
+function titleCaseSource(sourceSummary: string): string {
+  if (sourceSummary === "local + remote") {
+    return "Local + remote";
+  }
+  if (sourceSummary.length === 0) {
+    return "Unknown";
+  }
+  return `${sourceSummary.charAt(0).toUpperCase()}${sourceSummary.slice(1)}`;
+}
+
+export function buildSelectedModelMetaPanel(input: {
+  readonly modelId: string;
+  readonly sourceSummary: string;
+  readonly status: string;
+  readonly controllerState: "active" | "eligible" | "inactive";
+  readonly endpointCount: number;
+  readonly healthyEndpointCount: number;
+  readonly toolCallingSupported: boolean;
+  readonly toolStyles?: readonly string[];
+  readonly contextWindow?: number | null;
+  readonly modalities?: readonly string[];
+  readonly pricing?: RuntimeModelRecord["pricing"];
+  readonly overallScore?: number | null;
+  readonly latencyP50Ms?: number | null;
+  readonly latencyP95Ms?: number | null;
+  readonly meanLatencyMs?: number | null;
+  readonly difficultyMix?: string | null;
+  readonly routingHint?: string | null;
+}): {
+  title: string;
+  facts: Array<{ label: string; value: string }>;
+  cost: Array<{ label: string; value: string }>;
+  benchmark: Array<{ label: string; value: string }>;
+} {
+  const toolStyles = (input.toolStyles ?? []).filter((style) => style.trim().length > 0);
+  const toolUse = input.toolCallingSupported
+    ? toolStyles.length > 0
+      ? `Enabled · ${toolStyles.join(" · ")}`
+      : "Enabled"
+    : "Unavailable";
+  const mode =
+    input.modalities && input.modalities.length > 0 ? input.modalities.join(", ") : "Unknown";
+  const endpointValue =
+    input.endpointCount === 0
+      ? "None"
+      : `${input.healthyEndpointCount} healthy${
+          input.healthyEndpointCount === input.endpointCount ? "" : ` / ${input.endpointCount}`
+        }`;
+  // Always show Cost — models.dev prices when present, otherwise explicit Unknown.
+  const cost =
+    input.pricing != null
+      ? [
+          { label: "Input", value: formatUnitPrice(input.pricing.inputPer1M) },
+          { label: "Output", value: formatUnitPrice(input.pricing.outputPer1M) },
+        ]
+      : [
+          { label: "Input", value: "Unknown" },
+          { label: "Output", value: "Unknown" },
+        ];
+  const overall =
+    typeof input.overallScore === "number" ? input.overallScore.toFixed(2) : "No evidence yet";
+  return {
+    title: `Runtime · ${input.modelId}`,
+    facts: [
+      { label: "Source", value: titleCaseSource(input.sourceSummary) },
+      {
+        label: "Status",
+        value:
+          input.controllerState === "active"
+            ? `${titleCaseSource(input.status)} · controller`
+            : `${titleCaseSource(input.status)} · not controller`,
+      },
+      { label: "Endpoints", value: endpointValue },
+      { label: "Tool use", value: toolUse },
+      { label: "Context", value: formatCompactTokenCount(input.contextWindow) },
+      { label: "Mode", value: mode },
+    ],
+    cost,
+    benchmark: [
+      { label: "Overall", value: overall },
+      { label: "Latency p50", value: formatLatencyMs(input.latencyP50Ms) },
+      { label: "Latency p95", value: formatLatencyMs(input.latencyP95Ms) },
+      { label: "Mean latency", value: formatLatencyMs(input.meanLatencyMs) },
+      {
+        label: "Difficulty mix",
+        value: input.difficultyMix?.trim() || "No difficulty mix yet",
+      },
+      {
+        label: "Routing",
+        value: input.routingHint?.trim() || "No routing evidence yet",
+      },
+    ],
+  };
+}
+
 export function summarizeWorkbenchResult(result: Record<string, unknown>): {
   outputText: string;
   toolCalls: Array<{ id?: string; name: string; arguments: string }>;
@@ -1860,11 +1984,11 @@ export function buildActivitySummary(entries: readonly RuntimeActivityLogEntry[]
       {
         label: "Prompt tokens",
         value: String(inputTokens),
-        detail: `${outputTokens} output tokens recorded`,
+        detail: `${cacheTokens} cached tokens recorded`,
       },
       {
-        label: "Cached tokens",
-        value: String(cacheTokens),
+        label: "Completion tokens",
+        value: String(outputTokens),
         detail: "Across the current in-memory metrics window",
       },
     ],

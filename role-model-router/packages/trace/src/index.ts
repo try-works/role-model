@@ -3,6 +3,8 @@ import path from "node:path";
 
 import type { TraceEvent, TraceSpan } from "@role-model/protocol-types";
 
+export * from "./projections/index.js";
+
 export type TraceSpanRecord = TraceSpan;
 export type TraceEventRecord = TraceEvent;
 

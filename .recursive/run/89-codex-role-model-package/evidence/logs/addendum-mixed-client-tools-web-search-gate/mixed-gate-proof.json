@@ -1,0 +1,14 @@
+{
+  "unit": {
+    "mixedDetected": true,
+    "shouldFulfillMixed": false,
+    "shouldFulfillSearchOnly": true
+  },
+  "httpStatus": 200,
+  "upstreamHops": 1,
+  "alphaSearches": 0,
+  "hasUpdatePlan": true,
+  "hasWebSearchCall": true,
+  "hasCompleted": true,
+  "ok": true
+}

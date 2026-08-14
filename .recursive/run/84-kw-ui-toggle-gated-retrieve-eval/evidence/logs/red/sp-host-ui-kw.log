@@ -1,0 +1,50 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/84-kw-ui-toggle-gated-retrieve-eval/role-model-router/apps/runtime-host-bridge
+
+(node:32696) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ Γ¥» test/track-b-operations-api.test.ts (18 tests | 2 failed) 11191ms
+   Γ£ô Track B operations APIs > fails closed instead of issuing unauthenticated calls to an owned operations endpoint  971ms
+   Γ£ô Track B operations APIs > serves extension lifecycle and storage retention through bounded callbacks  838ms
+   Γ£ô Track B operations APIs > fails closed when an operations capability is not wired  886ms
+   Γ£ô Track B operations APIs > production backend never infers extension health from the catalog  1291ms
+   Γ£ô Track B operations APIs > local Track B bridge seed marks catalog extensions ready without ExtensionHost override  1211ms
+   Γ£ô Track B operations APIs > production backend reports readiness only from the supervised ExtensionHost  866ms
+   Γ£ô Track B operations APIs > production backend clean start uses the canonical Advanced aggregate defaults  932ms
+   Γ£ô Track B operations APIs > production request completion reports only aggregate metrics to the private operations boundary  1296ms
+   Γ£ô Track B operations APIs > production Responses requests report aggregate metrics through the same private operations boundary  1085ms
+   Γ£ô Track B operations APIs > production backend reads and atomically updates real bridge storage state  839ms
+   Γ£ô Track B operations APIs > launcher recommendation material config populates runtime download trust without raw env injection 6ms
+   Γ£ô Track B operations APIs > run79 mutateExtension upserts catalog rows absent from bridge state 7ms
+   Γ£ô Track B operations APIs > run79 mutateExtension enables disables and sets mode with audit receipts 36ms
+   ├ù Track B operations APIs > run84 keeps knowledge-worker production activation durable and separate from Set mode 16ms
+     ΓåÆ expected [Function] to throw error matching /refused|ceremony/i but got 'extension mutation action must be enaΓÇª'
+   ├ù Track B operations APIs > run84 structurally validates direct knowledge-worker activation ceremony 7ms
+     ΓåÆ expected [Function] to throw error matching /refused|ceremony/i but got 'extension mutation action must be enaΓÇª'
+   Γ£ô Track B operations APIs > run79 dismissRecommendation marks row dismissed without applying pack 11ms
+   Γ£ô Track B operations APIs > run80 contribution opt-out does not revoke imported eligible recommendation 9ms
+   Γ£ô Track B operations APIs > run79 HTTP exposes extensions mutate and recommendations dismiss routes  883ms
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 2 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  test/track-b-operations-api.test.ts > Track B operations APIs > run84 keeps knowledge-worker production activation durable and separate from Set mode
+ FAIL  test/track-b-operations-api.test.ts > Track B operations APIs > run84 structurally validates direct knowledge-worker activation ceremony
+AssertionError: expected [Function] to throw error matching /refused|ceremony/i but got 'extension mutation action must be enaΓÇª'
+
+- Expected: 
+/refused|ceremony/i
+
++ Received: 
+"extension mutation action must be enable, disable, or set_mode"
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/2]ΓÄ»
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 16 passed (18)
+   Start at  19:17:58
+   Duration  14.56s (transform 1.75s, setup 0ms, collect 2.45s, tests 11.19s, environment 0ms, prepare 306ms)
+
+undefined
+D:\DEV\role-model\.worktrees\84-kw-ui-toggle-gated-retrieve-eval\role-model-router\apps\runtime-host-bridge:
+ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: vitest run test/track-b-operations-api.test.ts

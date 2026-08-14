@@ -7,7 +7,9 @@ import { type NormalizedCatalog, readNormalizedCatalogFile } from "../src/index.
 import {
   CANONICAL_MODEL_ID_ALIASES,
   OPERATOR_HIDDEN_CATALOG_PROVIDER_IDS,
+  applyAliasedCatalogPricing,
   resolveCanonicalModelId,
+  resolveCatalogPricingHints,
   resolveRoutingCostEstimate,
   resolveTokenEconomics,
 } from "../src/token-economics.js";
@@ -30,7 +32,9 @@ async function loadNormalizedCatalog(): Promise<NormalizedCatalog> {
 describe("token-economics", () => {
   test("maps operator Kimi model id to models.dev pricing row", async () => {
     const catalog = await loadNormalizedCatalog();
+    expect(resolveCanonicalModelId("moonshot/kimi-k2.5")).toBe("moonshotai/kimi-k2.5");
     expect(resolveCanonicalModelId("moonshot/kimi-k2.6")).toBe("moonshotai/kimi-k2.6");
+    expect(CANONICAL_MODEL_ID_ALIASES["moonshot/kimi-k2.5"]).toBe("moonshotai/kimi-k2.5");
     expect(CANONICAL_MODEL_ID_ALIASES["moonshot/kimi-k2.6"]).toBe("moonshotai/kimi-k2.6");
 
     const economics = resolveTokenEconomics({
@@ -42,6 +46,17 @@ describe("token-economics", () => {
     expect(economics.source).toBe("catalog");
     expect(economics.inputPer1M).toBe(0.95);
     expect(economics.outputPer1M).toBe(4);
+
+    expect(
+      resolveCatalogPricingHints({
+        modelId: "moonshot/kimi-k2.5",
+        catalog,
+      }),
+    ).toEqual({
+      inputPer1M: 0.6,
+      outputPer1M: 3,
+      currency: "USD",
+    });
   });
 
   test("maps operator Kimi K3 model id to models.dev pricing row", async () => {
@@ -125,5 +140,79 @@ describe("token-economics", () => {
   test("hides moonshotai from operator provider surfaces", () => {
     expect(OPERATOR_HIDDEN_CATALOG_PROVIDER_IDS.has("moonshotai")).toBe(true);
     expect(OPERATOR_HIDDEN_CATALOG_PROVIDER_IDS.has("moonshot")).toBe(false);
+  });
+
+  test("maps deepseek mirror model ids to models.dev deepseek pricing rows", async () => {
+    const catalog = await loadNormalizedCatalog();
+    expect(resolveCanonicalModelId("digitalocean/deepseek-v4-flash")).toBe(
+      "deepseek/deepseek-v4-flash",
+    );
+    expect(resolveCanonicalModelId("anyapi/deepseek/deepseek-v4-flash")).toBe(
+      "deepseek/deepseek-v4-flash",
+    );
+
+    const economics = resolveTokenEconomics({
+      modelId: "digitalocean/deepseek-v4-flash",
+      catalog,
+      isLocalEndpoint: false,
+    });
+    expect(economics.source).toBe("catalog");
+    expect(economics.inputPer1M).toBe(0.14);
+    expect(economics.outputPer1M).toBe(0.28);
+    expect(
+      resolveCatalogPricingHints({
+        modelId: "deepseek/deepseek-v4-flash",
+        catalog,
+      }),
+    ).toEqual({
+      inputPer1M: 0.14,
+      outputPer1M: 0.28,
+      currency: "USD",
+    });
+  });
+
+  test("resolves gateway-nested and chatgpt model ids to models.dev pricing", async () => {
+    const catalog = await loadNormalizedCatalog();
+    expect(resolveCanonicalModelId("chatgpt/gpt-5.4")).toBe("openai/gpt-5.4");
+
+    const nested = resolveTokenEconomics({
+      modelId: "anyapi/openai/gpt-5.4",
+      catalog,
+      isLocalEndpoint: false,
+    });
+    expect(nested.source).toBe("catalog");
+    expect(nested.canonicalModelId).toBe("openai/gpt-5.4");
+    expect(nested.inputPer1M).toBeTypeOf("number");
+
+    const filled = applyAliasedCatalogPricing(
+      catalog.models.map((model) =>
+        model.modelId === "anyapi/openai/gpt-5.4" ? { ...model, pricing: null } : model,
+      ),
+    );
+    expect(filled.find((model) => model.modelId === "anyapi/openai/gpt-5.4")?.pricing).toEqual(
+      catalog.models.find((model) => model.modelId === "openai/gpt-5.4")?.pricing,
+    );
+  });
+
+  test("copies models.dev pricing onto all operator moonshot/kimi rows", async () => {
+    const catalog = await loadNormalizedCatalog();
+    const operatorKimiIds = catalog.models
+      .filter((model) => model.modelId.startsWith("moonshot/kimi-"))
+      .map((model) => model.modelId);
+    expect(operatorKimiIds.length).toBeGreaterThan(0);
+
+    const withPricing = applyAliasedCatalogPricing(
+      catalog.models.map((model) =>
+        model.modelId.startsWith("moonshot/kimi-") ? { ...model, pricing: null } : model,
+      ),
+    );
+    for (const modelId of operatorKimiIds) {
+      const model = withPricing.find((entry) => entry.modelId === modelId);
+      const canonical = catalog.models.find(
+        (entry) => entry.modelId === resolveCanonicalModelId(modelId),
+      );
+      expect(model?.pricing).toEqual(canonical?.pricing ?? null);
+      expect(model?.pricing).not.toBeNull();
+    }
   });
 });

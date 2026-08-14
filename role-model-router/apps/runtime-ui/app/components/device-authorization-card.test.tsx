@@ -29,7 +29,7 @@ describe("DeviceAuthorizationCard", () => {
     expect(markup).toContain("OpenAI asks for this code after you sign in.");
   });
 
-  test("keeps the existing auto-poll guidance for non-Codex device auth", () => {
+  test("renders verification URL and open control for pending Kimi device auth (OAuth open regression)", () => {
     const markup = renderToStaticMarkup(
       <DeviceAuthorizationCard
         session={{
@@ -44,6 +44,7 @@ describe("DeviceAuthorizationCard", () => {
         }}
         copyCodeLabel="Copy code"
         onCopyCode={vi.fn()}
+        onOpenVerificationUrl={vi.fn()}
       />,
     );
 
@@ -51,6 +52,8 @@ describe("DeviceAuthorizationCard", () => {
     expect(markup).toContain(
       "The verification page opens in a new tab and this screen keeps checking automatically.",
     );
+    expect(markup).toContain("Open verification page");
+    expect(markup).toContain("https://auth.kimi.com/device?user_code=WXYZ-1234");
     expect(markup).not.toContain("Open OpenAI verification page");
   });
 });

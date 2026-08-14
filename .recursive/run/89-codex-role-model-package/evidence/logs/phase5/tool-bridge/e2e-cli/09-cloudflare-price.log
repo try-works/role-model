@@ -1,0 +1,36 @@
+Reading prompt from stdin...
+OpenAI Codex v0.147.0-alpha.1.2
+--------
+workdir: C:\Users\erikb\AppData\Local\Temp\codex-e2e-cf-045546
+model: baseline.remote-only
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: low
+reasoning summaries: none
+session id: 019fd3b5-fa5e-71a3-99ab-a5a6f823e549
+--------
+user
+tell me the share price of cloudflare. Prefer web_search. Answer with a number and caveat; do not stop after saying you will check another tool.
+
+2026-08-05T20:55:48.740142Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+2026-08-05T20:55:50.643419Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+2026-08-05T20:55:50.845903Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 2/5
+2026-08-05T20:55:51.255350Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 3/5
+2026-08-05T20:55:52.052891Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 4/5
+2026-08-05T20:55:53.650250Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+ERROR: Reconnecting... 5/5
+2026-08-05T20:55:56.556066Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 404 Not Found, url: ws://127.0.0.1:3460/v1/responses
+warning: Falling back from WebSockets to HTTPS transport. unexpected status 404 Not Found: Not found, url: ws://127.0.0.1:3460/v1/responses
+codex
+Cloudflare (NYSE: NET) last traded around **$81** per share (as of my most recent data, late January 2025).
+
+**Caveat:** I don't have a live market feed, so this price may be stale and will differ from the current market. Please check your broker or a live quote for the exact level.
+Cloudflare (NYSE: NET) last traded around **$81** per share (as of my most recent data, late January 2025).
+tokens used
+7,619
+
+**Caveat:** I don't have a live market feed, so this price may be stale and will differ from the current market. Please check your broker or a live quote for the exact level.
