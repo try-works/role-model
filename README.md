@@ -68,6 +68,25 @@ If you do not want to use installer scripts, download the matching archive from 
 | macOS arm64 | `role-model-darwin-arm64.tar.gz` | `role-model` |
 | Linux x64 | `role-model-linux-x64.tar.gz` | `role-model` |
 
+### Update an installed runtime
+
+Updates are currently manual. Stop the running runtime, back up its persistent state, and then re-run the
+installer or extract the newer release archive. Installer-based updates keep each application version in a
+versioned directory and repoint the launcher; they do not remove the persistent runtime state.
+
+On Windows, production state is stored under `%LOCALAPPDATA%\role-model-runtime`. This includes the Message
+Graph and its encryption and scoped-digest keys under
+`standalone-runtime\track-b\managed-keys`. Runtime updates reuse these keys and do not rotate them, so the
+Message Graph remains readable after an update.
+
+Do not delete, replace, or copy the Message Graph without both original key files. If either key is missing or
+invalid, the runtime fails closed instead of generating a replacement that would make existing graph data
+unreadable. After updating, start the new runtime against the same state directory and confirm the Message
+Graph opens before removing the old application version.
+
+See [Install the router](docs/public/install.md#updating-an-installed-runtime) for the complete update and
+backup guidance.
+
 ## Installation for Pi
 
 The `pi-role-model` package connects Pi to an externally running role-model runtime.

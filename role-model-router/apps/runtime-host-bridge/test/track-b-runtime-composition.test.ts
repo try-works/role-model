@@ -33,6 +33,62 @@ afterEach(async () => {
 describe("production Track B composition", () => {
   const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
 
+  test("provisions production Message Graph keys once and reuses them across package updates", async () => {
+    const stateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-managed-artifact-keys-"));
+    roots.push(stateRoot);
+    const runtimeModule = await import("../src/track-b-runtime.js");
+    const resolveManagedArtifactKeyFiles = Reflect.get(
+      runtimeModule,
+      "resolveManagedArtifactKeyFiles",
+    ) as (input: { channel: "production"; stateRoot: string }) => Promise<{
+      artifactDigestKeyFile: string;
+      artifactEncryptionKeyFile: string;
+    }>;
+    expect(resolveManagedArtifactKeyFiles).toBeTypeOf("function");
+
+    const first = await resolveManagedArtifactKeyFiles({
+      channel: "production",
+      stateRoot,
+    });
+    const firstDigestKey = await readFile(first.artifactDigestKeyFile);
+    const firstEncryptionKey = await readFile(first.artifactEncryptionKeyFile);
+
+    expect(firstDigestKey).toHaveLength(32);
+    expect(firstEncryptionKey).toHaveLength(32);
+    expect(firstDigestKey.equals(firstEncryptionKey)).toBe(false);
+    expect(first.artifactDigestKeyFile).toContain(path.join(stateRoot, "managed-keys"));
+    expect(first.artifactEncryptionKeyFile).toContain(path.join(stateRoot, "managed-keys"));
+
+    const afterPackageUpdate = await resolveManagedArtifactKeyFiles({
+      channel: "production",
+      stateRoot,
+    });
+
+    expect(afterPackageUpdate).toEqual(first);
+    expect(await readFile(afterPackageUpdate.artifactDigestKeyFile)).toEqual(firstDigestKey);
+    expect(await readFile(afterPackageUpdate.artifactEncryptionKeyFile)).toEqual(
+      firstEncryptionKey,
+    );
+  });
+
+  test("refuses an incomplete managed Message Graph key set instead of rotating unreadable data", async () => {
+    const stateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-incomplete-artifact-keys-"));
+    roots.push(stateRoot);
+    const runtimeModule = await import("../src/track-b-runtime.js");
+    const resolveManagedArtifactKeyFiles = Reflect.get(
+      runtimeModule,
+      "resolveManagedArtifactKeyFiles",
+    ) as (input: { channel: "production"; stateRoot: string }) => Promise<unknown>;
+    expect(resolveManagedArtifactKeyFiles).toBeTypeOf("function");
+    const keyRoot = path.join(stateRoot, "managed-keys");
+    await mkdir(keyRoot, { recursive: true });
+    await writeFile(path.join(keyRoot, "artifact-digest.key"), Buffer.alloc(32, 7));
+
+    await expect(
+      resolveManagedArtifactKeyFiles({ channel: "production", stateRoot }),
+    ).rejects.toThrow(/incomplete.*managed artifact key/i);
+  });
+
   test("owns and supervises the private operations sidecar without URL injection", async () => {
     const stateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-track-b-runtime-"));
     roots.push(stateRoot);
