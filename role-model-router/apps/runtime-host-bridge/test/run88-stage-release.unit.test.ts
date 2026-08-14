@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { validateRun88PrivateDistributionIdentity } from "../src/kw-private-loader.js";
+import { validatePairedReleasePackagingInputs } from "../src/package-sea.js";
 import * as runtimeVersion from "../src/runtime-version.js";
 import * as trackBRuntime from "../src/track-b-runtime.js";
 import {
@@ -23,6 +24,39 @@ afterEach(async () =>
 );
 
 describe("Run 88 stage release boundary", () => {
+  it("requires the private distribution and release identity for stage and production packaging", () => {
+    const trackB = { manifestSha256: "a".repeat(64) };
+    for (const channel of ["stage", "production"] as const) {
+      expect(
+        validatePairedReleasePackagingInputs({
+          channel,
+          releaseId: `sha256:${"b".repeat(64)}`,
+          trackBRuntime: trackB,
+        }),
+      ).toEqual({ releaseId: `sha256:${"b".repeat(64)}`, trackBRuntime: trackB });
+      expect(() =>
+        validatePairedReleasePackagingInputs({
+          channel,
+          releaseId: undefined,
+          trackBRuntime: trackB,
+        }),
+      ).toThrow(/release/i);
+      expect(() =>
+        validatePairedReleasePackagingInputs({
+          channel,
+          releaseId: `sha256:${"b".repeat(64)}`,
+          trackBRuntime: null,
+        }),
+      ).toThrow(/private distribution/i);
+    }
+    expect(
+      validatePairedReleasePackagingInputs({
+        channel: "development",
+        releaseId: undefined,
+        trackBRuntime: null,
+      }),
+    ).toEqual({ releaseId: undefined, trackBRuntime: null });
+  });
   it("public runtime probes are criterion-specific at every required layer", () => {
     const expected = [
       "R2-AC02",

@@ -10,6 +10,19 @@
 forwarded to `stage` and `dev` after merge. Never force-push a promotion branch to resynchronize it; use reviewed
 merge commits and resolve conflicts in the promotion PR.
 
+## Paired private repository
+
+`role-model` remains the release orchestrator and the only repository that publishes runtime archives and version
+tags. `role-model-internal` is nevertheless part of every stage and production package: its exact commit supplies
+the private runtime distribution and all 13 canonical extensions.
+
+Promote the paired private change first. Before a public stage build, the recorded private commit must be reachable
+from `role-model-internal/stage`; before a public production tag, that same tested commit must be reachable from
+`role-model-internal/main`. Set `ROLE_MODEL_PAIRED_PRIVATE_SHA` to the exact reviewed private stage commit before
+promoting public `dev -> stage`. The public workflow checks ancestry itself and fails closed; a raw commit SHA,
+feature branch, or current private branch tip is not sufficient. The private repository does not publish a second
+binary release or an independent version tag.
+
 ## Required CI lanes
 
 `.github/workflows/ci.yml` runs on pull requests and post-merge pushes for `dev`, `stage`, and `main`. Stable check
@@ -31,9 +44,12 @@ packages are available by explicit manual dispatch. Only a `v*` tag publishes a 
 | Stage | `role-model-stage` | `http://127.0.0.1:3457` | `role-model-runtime-stage` | `standalone-runtime-stage` |
 | Development | `role-model-dev` | `http://127.0.0.1:3458` | `role-model-runtime-dev` | `standalone-runtime-dev` |
 
-Manifests report channel, endpoint, commit, source tree, executable SHA-256, and channel-neutral core payload
-SHA-256. A production tag must find the matching successful stage candidate and prove the core payload digest is
-identical; source-tree equality alone is insufficient.
+Manifests report channel, endpoint, commit, source tree, executable SHA-256, channel-neutral core payload SHA-256,
+the exact private source commit, Run 88 release identity, private distribution manifest and sidecar digests, and the
+canonical extension count. A production tag must find the matching successful stage candidate, rebuild its exact
+private commit, verify that the artifact came from a successful push build of public `stage`, verify that the private
+commit has subsequently passed through private `main`, and prove the complete public/private pair is identical.
+Source-tree or core-payload equality alone is insufficient.
 
 ## Docs site exception
 

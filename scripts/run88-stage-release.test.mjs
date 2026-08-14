@@ -76,17 +76,24 @@ test("actual packaged manifest binding writes and verifies the canonical Run 88 
       source_tree: "a".repeat(40),
       executable_sha256: "e".repeat(64),
       core_payload_sha256: "f".repeat(64),
-      track_b_runtime: { manifest_sha256: "c".repeat(64), compatibility_generation: "N" },
+      track_b_runtime: {
+        manifest_sha256: "c".repeat(64),
+        sidecar_sha256: "d".repeat(64),
+        compatibility_generation: "N",
+        extension_count: 13,
+      },
     }),
   );
   const releaseId = `sha256:${"9".repeat(64)}`;
   const result = await module.bindRun88StageManifest({
     manifestPath,
     releaseId,
+    privateSourceCommit: "7".repeat(40),
     privateDistributionSha256: "c".repeat(64),
   });
   const persisted = JSON.parse(await readFile(manifestPath, "utf8"));
   assert.equal(persisted.release_id, releaseId);
+  assert.equal(persisted.private_source_commit, "7".repeat(40));
   assert.equal(persisted.private_distribution_sha256, "c".repeat(64));
   assert.equal(result.releaseId, releaseId);
   await assert.rejects(
@@ -94,9 +101,93 @@ test("actual packaged manifest binding writes and verifies the canonical Run 88 
       module.bindRun88StageManifest({
         manifestPath,
         releaseId: `sha256:${"8".repeat(64)}`,
+        privateSourceCommit: "6".repeat(40),
         privateDistributionSha256: "d".repeat(64),
       }),
     /distribution|mismatch/i,
+  );
+  await rm(root, { recursive: true, force: true });
+});
+
+test("production promotion preserves the complete tested stage pair, not only the public executable", async () => {
+  assert.equal(
+    typeof module.bindRun88ReleaseManifest,
+    "function",
+    "missing stage/production package identity binder",
+  );
+  assert.equal(
+    typeof module.validateRun88ProductionPromotion,
+    "function",
+    "missing full paired production promotion validator",
+  );
+  const root = await mkdtemp(path.join(os.tmpdir(), "run88-production-bind-"));
+  const privateSourceCommit = "7".repeat(40);
+  const releaseId = `sha256:${"9".repeat(64)}`;
+  const privateDistributionSha256 = "c".repeat(64);
+  const base = {
+    host: "127.0.0.1",
+    source_tree: "a".repeat(40),
+    executable_sha256: "e".repeat(64),
+    core_payload_sha256: "f".repeat(64),
+    track_b_runtime: {
+      manifest_sha256: privateDistributionSha256,
+      sidecar_sha256: "d".repeat(64),
+      compatibility_generation: "N",
+      extension_count: 13,
+    },
+  };
+  const manifests = {
+    stage: {
+      ...base,
+      channel: "stage",
+      name: "role-model-stage",
+      port: 3457,
+      endpoint: "http://127.0.0.1:3457",
+      state_root_name: "role-model-runtime-stage",
+      scope_id: "standalone-runtime-stage",
+    },
+    production: {
+      ...base,
+      channel: "production",
+      name: "role-model",
+      port: 3456,
+      endpoint: "http://127.0.0.1:3456",
+      state_root_name: "role-model-runtime",
+      scope_id: "standalone-runtime",
+    },
+  };
+  const persisted = {};
+  for (const [channel, manifest] of Object.entries(manifests)) {
+    const manifestPath = path.join(root, `${channel}.json`);
+    await writeFile(manifestPath, JSON.stringify(manifest));
+    await module.bindRun88ReleaseManifest({
+      manifestPath,
+      releaseId,
+      privateSourceCommit,
+      privateDistributionSha256,
+    });
+    persisted[channel] = JSON.parse(await readFile(manifestPath, "utf8"));
+  }
+  assert.deepEqual(module.validateRun88ProductionPromotion(persisted), {
+    ok: true,
+    releaseId,
+    privateSourceCommit,
+    privateDistributionSha256,
+    extensionCount: 13,
+  });
+  assert.throws(
+    () =>
+      module.validateRun88ProductionPromotion({
+        ...persisted,
+        production: {
+          ...persisted.production,
+          track_b_runtime: {
+            ...persisted.production.track_b_runtime,
+            sidecar_sha256: "0".repeat(64),
+          },
+        },
+      }),
+    /sidecar|tested stage|promotion/i,
   );
   await rm(root, { recursive: true, force: true });
 });
