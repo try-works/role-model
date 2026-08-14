@@ -1152,6 +1152,12 @@ export default function ProvidersRoute() {
                                   {endpoint.displayName}
                                 </span>
                                 <Badge tone={healthTone}>{endpoint.healthStatus}</Badge>
+                                {endpoint.circuitLabel ? (
+                                  <Badge tone={endpoint.circuitTone}>
+                                    {endpoint.circuitLabel}
+                                    {endpoint.circuitDetail ? ` · ${endpoint.circuitDetail}` : ""}
+                                  </Badge>
+                                ) : null}
                                 <Badge tone="neutral">{roleCountLabel}</Badge>
                                 <svg
                                   aria-hidden

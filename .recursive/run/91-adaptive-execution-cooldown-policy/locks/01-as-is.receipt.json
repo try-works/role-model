@@ -1,0 +1,12 @@
+{
+  "artifact": "01-as-is.md",
+  "artifact_hash": "ada77dd42809d317db19e6b216c4fa307ec8a1bd1dd2d96714a073f029b44591",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\91-adaptive-execution-cooldown-policy\\.recursive\\run\\91-adaptive-execution-cooldown-policy\\01-as-is.md",
+  "locked_at": "2026-08-14T08:11:32Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "ea34c9284d4c6e3ae2f2f10f9d064ee823b54d66cbfee098664da50e6edce54c",
+    "00-worktree.md": "ffb17bb4d6049dbf965b9fad92e8404e8bd872ea6f210b18f7057ba715b2f61c"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "406491ff72e0769b3c1d6ce98450ffaf3dc0921e9e90564824aa1920fc5d5448"
+}

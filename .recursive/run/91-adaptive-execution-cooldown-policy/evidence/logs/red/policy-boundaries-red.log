@@ -1,0 +1,66 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/91-adaptive-execution-cooldown-policy/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/execution-circuit-breaker.test.ts (12 tests | 2 failed) 79ms
+   ✓ execution circuit breaker policy > keeps the first connection failure in probation then uses 5s, 15s, 60s, and 5m opens 6ms
+   ✓ execution circuit breaker policy > resets a connection sequence outside 60 seconds and every sequence after five quiet minutes 1ms
+   ✓ execution circuit breaker policy > uses the provider 5xx 2s, 10s, 30s, and 2m capped ladder 1ms
+   ✓ execution circuit breaker policy > honors bounded Retry-After and otherwise uses a 30 second rate-limit open 1ms
+   ✓ execution circuit breaker policy > blocks auth and quota explicitly but ignores invalid and non-live failures 1ms
+   ✓ execution circuit breaker policy > admits exactly one half-open probe and success clears the circuit 1ms
+   ✓ execution circuit breaker policy > recovers an abandoned half-open claim as an immediately probeable open circuit 1ms
+   ✓ execution circuit breaker policy > retires legacy v1 cooldowns without carrying their long bans into v2 1ms
+   ✓ execution circuit breaker policy > bounds persisted input and emits safe receipts with retry metadata 46ms
+   ✓ execution circuit breaker policy > parses Retry-After seconds and HTTP dates with a five-minute cap 2ms
+   × execution circuit breaker policy > resets failure sequences exactly at the quiet-window boundaries 17ms
+     → expected { …(12) } to match object { circuitState: 'probation', …(1) }
+(10 matching properties omitted from actual)
+   × execution circuit breaker policy > uses 503 only for timed cooldowns and reports configuration blocks separately 1ms
+     → (0 , resolveExecutionCircuitRefusal) is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/execution-circuit-breaker.test.ts > execution circuit breaker policy > resets failure sequences exactly at the quiet-window boundaries
+AssertionError: expected { …(12) } to match object { circuitState: 'probation', …(1) }
+(10 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "circuitState": "probation",
+-   "failureCount": 1,
++   "circuitState": "open",
++   "failureCount": 2,
+  }
+
+ ❯ test/execution-circuit-breaker.test.ts:312:7
+    310|         nowMs: START_MS + 60_000,
+    311|       }).endpoints[ENDPOINT_ID],
+    312|     ).toMatchObject({ circuitState: "probation", failureCount: 1 });
+       |       ^
+    313| 
+    314|     const open = fail(createEmptyExecutionCircuitState(), {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/execution-circuit-breaker.test.ts > execution circuit breaker policy > uses 503 only for timed cooldowns and reports configuration blocks separately
+TypeError: (0 , resolveExecutionCircuitRefusal) is not a function
+ ❯ test/execution-circuit-breaker.test.ts:337:12
+    335|       START_MS,
+    336|     );
+    337|     expect(resolveExecutionCircuitRefusal([timedReceipt], START_MS)).t…
+       |            ^
+    338|       statusCode: 503,
+    339|       code: "endpoint_temporarily_unavailable",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 10 passed (12)
+   Start at  17:01:47
+   Duration  952ms (transform 106ms, setup 0ms, collect 120ms, tests 79ms, environment 0ms, prepare 287ms)
+
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/execution-circuit-breaker.test.ts

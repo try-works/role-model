@@ -1,0 +1,84 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/91-adaptive-execution-cooldown-policy/role-model-router/apps/runtime-ui
+
+ ❯ app/lib/view-models.test.ts (41 tests | 1 failed | 40 skipped) 28ms
+   ↓ buildProviderCards > turns provider variants and account state into provider cards for the onboarding page
+   ↓ summarizeRuntimeStats > creates stable dashboard stat cards from the runtime summary counts
+   ↓ session readiness view models > builds bootstrap rows and inventory stats from runtime summary
+   ↓ buildCredentialReadinessRows > turns the runtime readiness summary into operator-facing readiness rows
+   ↓ buildCredentialReadinessRows > prefers canonical credential lifecycle counts when they are present
+   ↓ buildCredentialLifecycleBanner > summarizes authority, blocking rows, and archived stale counts from the canonical lifecycle contract
+   ↓ buildCredentialLifecycleAccountRows > returns canonical lifecycle account diagnostics for blocking and ready accounts
+   ↓ buildCredentialLifecycleAccountRows > treats Codex Subscription as a standard connected account that can activate an endpoint
+   ↓ buildArchivedArtifactRows > returns archived stale diagnostics separately from blocking lifecycle rows
+   ↓ buildWorkbenchModelOptions > sorts and deduplicates model options for the workbench composer
+   ↓ buildWorkbenchEndpointOptions > prefers saved OAuth endpoints over shared LiteLLM endpoints for the selected model
+   ↓ buildConfiguredModelCards > builds unified local and remote model cards with controller and tooling state
+   ↓ buildConfiguredModelCards > keeps request counts unset when request evidence is still deferred
+   ↓ buildConfiguredModelCards > derives model status from endpoint health instead of lifecycle activation state
+   ↓ buildConfiguredModelMetadataRows > formats model specifications and pricing for the inspection panel
+   ↓ buildSelectedModelMetaPanel > builds Paper selected-meta facts, cost, and benchmark rows
+   ↓ buildSelectedModelMetaPanel > always renders Cost rows, using Unknown when pricing is missing
+   ↓ buildModelCatalogRows > turns the runtime model catalog into sorted rows with endpoint ids
+   ↓ buildEndpointCatalogRows > turns the runtime endpoint registry into stable endpoint catalog rows
+   ↓ countActiveEndpointModels > counts distinct active local and remote model ids from registry endpoints
+   ↓ buildAliasReadinessRows > summarizes alias pools across mixed local and remote endpoint candidates
+   ↓ buildDashboardLatestRequestRows > prefers live canonical requests over benchmark telemetry rows in the overview rail
+   ↓ buildDashboardLatestRequestRows > groups repeated alias-routed executions by caller interaction in the overview rail
+   ↓ buildStructuredLogRows > parses raw logs into structured rows with source, severity, and request correlation when available
+   ↓ buildStructuredLogRows > preserves request correlation for packaged runtime log lines without explicit severity tokens
+   ↓ buildAccountModelCatalogIds > prefers provider catalog order while constraining to account-allowed models
+   ↓ buildConfiguredProviderRows > summarizes configured providers and models from saved accounts plus live endpoints
+   ↓ buildConfiguredProviderRows > prefers canonical provider rollups over route-local readiness inference
+   ↓ buildConfiguredProviderRows > preserves env-unresolved and reconnect-required provider lifecycle counts from fallback account inference
+   ↓ buildProviderMaintenanceRows > formats saved-account lifecycle badges and normalized credential posture from the canonical lifecycle contract
+   ↓ buildConfiguredRemoteConnectionRows > shows only configured remote endpoints and their models, excluding maintenance-only and local accounts
+   × buildConfiguredRemoteConnectionRows > keeps provider health separate from adaptive circuit state and countdown 25ms
+     → expected { …(7) } to match object { healthStatus: 'healthy', …(5) }
+(6 matching properties omitted from actual)
+   ↓ summarizeWorkbenchResult > extracts text, tool calls, tool executions, and usage for the studio inspector
+   ↓ summarizeWorkbenchResult > falls back to reasoning_content when chat completion content is empty
+   ↓ buildDownstreamProviderGuide > creates stable connection rows and examples for downstream OpenAI-compatible clients
+   ↓ buildActivitySummary > turns raw activity metrics into operator summary cards and ledger rows
+   ↓ buildActivitySummary > preserves newest-first activity order from the metrics API instead of re-sorting by synthetic ids
+   ↓ telemetry view models > creates stable summary cards from the canonical telemetry summary
+   ↓ telemetry view models > builds telemetry comparison cards for local and remote endpoint rows
+   ↓ telemetry view models > builds telemetry-backed request ledger rows in newest-first order
+   ↓ telemetry view models > prefers descriptive failure summaries over raw error-class slugs for failed request rows
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/view-models.test.ts > buildConfiguredRemoteConnectionRows > keeps provider health separate from adaptive circuit state and countdown
+AssertionError: expected { …(7) } to match object { healthStatus: 'healthy', …(5) }
+(6 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "circuitDetail": "Retry in 5s",
+-   "circuitLabel": "Circuit open",
+-   "circuitState": "open",
+-   "circuitTone": "warning",
+    "healthStatus": "healthy",
+-   "nextProbeAtMs": 1786694405000,
+  }
+
+ ❯ app/lib/view-models.test.ts:1633:31
+    1631|       ],
+    1632|     });
+    1633|     expect(row?.endpoints[0]).toMatchObject({
+       |                               ^
+    1634|       healthStatus: "healthy",
+    1635|       circuitState: "open",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 40 skipped (41)
+   Start at  16:48:44
+   Duration  1.07s (transform 175ms, setup 0ms, collect 213ms, tests 28ms, environment 0ms, prepare 292ms)
+
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/view-models.test.ts -t keeps provider health separate
