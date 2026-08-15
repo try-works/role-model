@@ -1727,6 +1727,49 @@ describe("buildDownstreamProviderGuide", () => {
 });
 
 describe("buildActivitySummary", () => {
+  test("uses the aggregate telemetry summary for totals while retaining only the recent page", () => {
+    const summary = buildActivitySummary(
+      [
+        {
+          id: 1,
+          timestamp: "2026-05-07T04:01:00.000Z",
+          model: "run90-model",
+          req_path: "/v1/chat/completions",
+          resp_content_type: "application/json",
+          resp_status_code: 200,
+          tokens: {
+            cache_tokens: 0,
+            input_tokens: 10,
+            output_tokens: 12,
+            prompt_per_second: 1,
+            tokens_per_second: 1,
+          },
+          duration_ms: 10,
+          has_capture: false,
+        },
+      ],
+      {
+        requestCount: 257,
+        successCount: 250,
+        failureCount: 7,
+        totalInputTokens: 25_700,
+        totalOutputTokens: 12_800,
+      },
+    );
+
+    expect(summary.facts).toEqual([
+      { label: "Entries", value: "257", detail: "0 with captures" },
+      { label: "Errors", value: "7", detail: "Most recent status: 200" },
+      { label: "Prompt tokens", value: "25700", detail: "0 cached tokens recorded" },
+      {
+        label: "Completion tokens",
+        value: "12800",
+        detail: "Across the current in-memory metrics window",
+      },
+    ]);
+    expect(summary.rows).toHaveLength(1);
+  });
+
   test("turns raw activity metrics into operator summary cards and ledger rows", () => {
     expect(
       buildActivitySummary([
@@ -1836,6 +1879,30 @@ describe("buildActivitySummary", () => {
         },
       ]).rows.map((row) => row.id),
     ).toEqual([1, 99]);
+  });
+
+  test("preserves the persisted request identity for stable capture links", () => {
+    const summary = buildActivitySummary([
+      {
+        id: 1,
+        request_id: "run90-stable-request",
+        timestamp: "2026-05-07T04:00:00.000Z",
+        model: "run90-model",
+        req_path: "/v1/chat/completions",
+        resp_content_type: "application/json",
+        resp_status_code: 200,
+        tokens: {
+          cache_tokens: 0,
+          input_tokens: 1,
+          output_tokens: 1,
+          prompt_per_second: 1,
+          tokens_per_second: 1,
+        },
+        duration_ms: 1,
+        has_capture: true,
+      },
+    ]);
+    expect(summary.rows[0]).toMatchObject({ id: 1, requestId: "run90-stable-request" });
   });
 });
 

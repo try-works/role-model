@@ -39,6 +39,7 @@ type CliBackend = Pick<
   | "executeResponses"
   | "readVersionInfo"
   | "listActivityMetrics"
+  | "listActivityMetricsPage"
   | "readActivityCapture"
   | "readRuntimeSummary"
   | "readRuntimeConfig"
@@ -47,6 +48,7 @@ type CliBackend = Pick<
   | "readTelemetrySummary"
   | "listTelemetryComparisonRows"
   | "listTelemetryRequests"
+  | "listTelemetryRequestPage"
   | "queryTelemetryAnalytics"
   | "subscribeTelemetry"
   | "listProviders"
@@ -88,6 +90,7 @@ type CliBackend = Pick<
   | "readRouterConfig"
   | "listRouterCandidates"
   | "listRouterDecisions"
+  | "listRouterDecisionPage"
   | "readRouterDecision"
   | "listEndpoints"
   | "listRecentRequestIds"
@@ -343,6 +346,9 @@ export function createCliServerOptions(
     listActivityMetrics: bindBackendMethod(
       "listActivityMetrics",
     ) as StartBridgeServerOptions["listActivityMetrics"],
+    listActivityMetricsPage: bindBackendMethod(
+      "listActivityMetricsPage",
+    ) as StartBridgeServerOptions["listActivityMetricsPage"],
     readActivityCapture: bindBackendMethod(
       "readActivityCapture",
     ) as StartBridgeServerOptions["readActivityCapture"],
@@ -377,6 +383,9 @@ export function createCliServerOptions(
     listTelemetryRequests: bindBackendMethod(
       "listTelemetryRequests",
     ) as StartBridgeServerOptions["listTelemetryRequests"],
+    listTelemetryRequestPage: bindBackendMethod(
+      "listTelemetryRequestPage",
+    ) as StartBridgeServerOptions["listTelemetryRequestPage"],
     queryTelemetryAnalytics: bindBackendMethod(
       "queryTelemetryAnalytics",
     ) as StartBridgeServerOptions["queryTelemetryAnalytics"],
@@ -492,6 +501,9 @@ export function createCliServerOptions(
     listRouterDecisions: bindBackendMethod(
       "listRouterDecisions",
     ) as StartBridgeServerOptions["listRouterDecisions"],
+    listRouterDecisionPage: bindBackendMethod(
+      "listRouterDecisionPage",
+    ) as StartBridgeServerOptions["listRouterDecisionPage"],
     readRouterDecision: bindBackendMethod(
       "readRouterDecision",
     ) as StartBridgeServerOptions["readRouterDecision"],
