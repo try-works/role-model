@@ -737,6 +737,7 @@ describe("benchmark-runner judge remediation", () => {
       requestOptions?: {
         endpointId?: string;
         ignoreExecutionFailureCooldowns?: boolean;
+        executionTrafficClass?: "live" | "benchmark" | "health" | "synthetic";
       };
     }> = [];
     const responsesRequestOptionsSeen: Array<{
@@ -744,6 +745,7 @@ describe("benchmark-runner judge remediation", () => {
       requestOptions?: {
         endpointId?: string;
         ignoreExecutionFailureCooldowns?: boolean;
+        executionTrafficClass?: "live" | "benchmark" | "health" | "synthetic";
       };
     }> = [];
 
@@ -795,6 +797,7 @@ describe("benchmark-runner judge remediation", () => {
       expect(call.requestOptions).toEqual({
         endpointId: codexEndpoint.endpointId,
         ignoreExecutionFailureCooldowns: true,
+        executionTrafficClass: "benchmark",
       });
     }
 
@@ -807,6 +810,7 @@ describe("benchmark-runner judge remediation", () => {
       expect(call.requestOptions).toEqual({
         endpointId: localEndpoint.endpointId,
         ignoreExecutionFailureCooldowns: true,
+        executionTrafficClass: "benchmark",
       });
     }
 
@@ -818,6 +822,7 @@ describe("benchmark-runner judge remediation", () => {
       expect(call.requestOptions).toEqual({
         endpointId: judgeEndpoint.endpointId,
         ignoreExecutionFailureCooldowns: true,
+        executionTrafficClass: "benchmark",
       });
     }
   });

@@ -294,6 +294,25 @@ export interface RuntimeEndpoint {
   readonly capabilities?: readonly string[];
   readonly toolCallingSupported?: boolean;
   readonly toolCallingStyle?: string;
+  readonly executionCooldown?: {
+    readonly schemaVersion?: 2;
+    readonly endpointId: string;
+    readonly active: boolean;
+    readonly failureCount: number;
+    readonly circuitState?: "probation" | "open" | "half_open" | "blocked_auth" | "blocked_quota";
+    readonly failureCategory?:
+      | "connection"
+      | "timeout"
+      | "provider_5xx"
+      | "rate_limit"
+      | "auth"
+      | "quota";
+    readonly lastErrorClass: string;
+    readonly lastFailureAtMs?: number;
+    readonly nextProbeAtMs?: number;
+    readonly retryAfterMs?: number;
+    readonly cooldownUntilMs?: number;
+  };
   readonly webSearchSupport?: {
     readonly mode: "native" | "runtime-fallback" | "unsupported";
     readonly currentRuntimeContract?: string | null;

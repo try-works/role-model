@@ -303,10 +303,23 @@ export interface RuntimeExecutionFailedAttemptReceipt {
 }
 
 export interface RuntimeExecutionCooldownReceipt {
+  readonly schemaVersion?: 2;
   readonly endpointId: string;
   readonly active: boolean;
   readonly failureCount: number;
-  readonly cooldownUntilMs: number;
+  readonly cooldownUntilMs?: number;
+  readonly circuitState?: "probation" | "open" | "half_open" | "blocked_auth" | "blocked_quota";
+  readonly failureCategory?:
+    | "connection"
+    | "timeout"
+    | "provider_5xx"
+    | "rate_limit"
+    | "auth"
+    | "quota";
+  readonly sequenceStartedAtMs?: number;
+  readonly nextProbeAtMs?: number;
+  readonly retryAfterMs?: number;
+  readonly probeStartedAtMs?: number;
   readonly lastFailureAtMs?: number;
   readonly lastErrorClass: string;
   readonly sourceAttemptId?: string;

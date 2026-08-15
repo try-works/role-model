@@ -1,0 +1,23 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/91-adaptive-execution-cooldown-policy/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/execution-circuit-breaker.test.ts (12 tests) 58ms
+(node:30612) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+
+    ../../packages/sqlite-memory/dist/legacy-migration.js:296:60:
+      296 │ ...nput.routerRoot ?? path.resolve(import.meta.dirname, "../../..");
+          ╵                                    ~~~~~~~~~~~
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+Wrote single executable preparation blob to ./dist/sea-prep.blob
+ ✓ test/packaged-standalone-restart.test.ts (1 test) 37734ms
+   ✓ packaged runtime repairs stale standalone aliases after env-backed restart bootstrap  37732ms
+
+ Test Files  2 passed (2)
+      Tests  13 passed (13)
+   Start at  17:08:43
+   Duration  41.01s (transform 1.82s, setup 0ms, collect 2.66s, tests 37.79s, environment 1ms, prepare 548ms)
+
