@@ -468,6 +468,11 @@ export interface RuntimeTelemetrySummary extends RuntimeTelemetrySourceSummary {
     readonly remote: RuntimeTelemetrySourceSummary;
   };
   readonly totalEffectiveCostUsd: number;
+  readonly window?: {
+    readonly startAtMs: number;
+    readonly endAtMs: number;
+    readonly asOfMs: number;
+  };
 }
 
 export interface RuntimeTelemetryComparisonRow extends RuntimeTelemetrySourceSummary {
@@ -548,6 +553,20 @@ export interface RuntimeTelemetryDashboard {
   readonly summary: RuntimeTelemetrySummary;
   readonly rows: readonly RuntimeTelemetryComparisonRow[];
   readonly requests: readonly RuntimeTelemetryRequestRecord[];
+}
+
+export interface RuntimeTelemetryRequestPage {
+  readonly items: readonly RuntimeTelemetryRequestRecord[];
+  readonly totalMatching: number;
+  readonly returned: number;
+  readonly pageSize: number;
+  readonly truncated: boolean;
+  readonly nextCursor: string | null;
+  readonly window: {
+    readonly startAtMs: number;
+    readonly endAtMs: number;
+    readonly asOfMs: number;
+  };
 }
 
 export interface RuntimeTelemetryStreamEvent {
@@ -791,6 +810,8 @@ export interface RuntimeTokenMetrics {
 
 export interface RuntimeActivityLogEntry {
   readonly id: number;
+  /** Stable persisted identity; `id` remains for legacy clients. */
+  readonly request_id?: string;
   readonly timestamp: string;
   readonly model: string;
   readonly req_path: string;
@@ -801,8 +822,23 @@ export interface RuntimeActivityLogEntry {
   readonly has_capture: boolean;
 }
 
+export interface RuntimeActivityMetricsPage {
+  readonly items: readonly RuntimeActivityLogEntry[];
+  readonly totalMatching: number;
+  readonly returned: number;
+  readonly pageSize: number;
+  readonly truncated: boolean;
+  readonly nextCursor: string | null;
+  readonly window: {
+    readonly startAtMs: number;
+    readonly endAtMs: number;
+    readonly asOfMs: number;
+  };
+}
+
 export interface RuntimeActivityCapture {
   readonly id: number;
+  readonly request_id?: string;
   readonly req_path: string;
   readonly req_headers: Record<string, string>;
   readonly req_body: string;
@@ -1150,6 +1186,20 @@ export interface RouterDecisionListItem {
   readonly sourceType?: "local" | "remote";
   readonly providerId?: string | null;
   readonly finishReason?: string | null;
+}
+
+export interface RouterDecisionPage {
+  readonly items: readonly RouterDecisionListItem[];
+  readonly totalMatching: number;
+  readonly returned: number;
+  readonly pageSize: number;
+  readonly truncated: boolean;
+  readonly nextCursor: string | null;
+  readonly window: {
+    readonly startAtMs: number;
+    readonly endAtMs: number;
+    readonly asOfMs: number;
+  };
 }
 
 export interface RouterDecisionDetail {
@@ -1810,6 +1860,8 @@ function buildTelemetryQueryString(input?: {
   readonly windowMs?: number;
   readonly endAtMs?: number;
   readonly startAtMs?: number;
+  readonly asOfMs?: number;
+  readonly cursor?: string;
   readonly filters?: RuntimeTelemetryAnalyticsFilters;
 }): string {
   const params = new URLSearchParams();
@@ -1824,6 +1876,12 @@ function buildTelemetryQueryString(input?: {
   }
   if (typeof input?.startAtMs === "number") {
     params.set("startAtMs", String(input.startAtMs));
+  }
+  if (typeof input?.asOfMs === "number") {
+    params.set("asOfMs", String(input.asOfMs));
+  }
+  if (input?.cursor) {
+    params.set("cursor", input.cursor);
   }
   const appendFilterValues = (key: string, values?: readonly string[]) => {
     if (values && values.length > 0) {
@@ -1857,10 +1915,15 @@ function buildTelemetryQueryString(input?: {
 export async function fetchTelemetryDashboard(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeTelemetryDashboard> {
+  const asOfMs = Date.now();
+  const query = buildTelemetryQueryString({ asOfMs });
   const [summary, rows, requests] = await Promise.all([
-    fetchJson<RuntimeTelemetrySummary>("/api/role-model/telemetry/summary", fetcher),
-    fetchJson<RuntimeTelemetryComparisonRow[]>("/api/role-model/telemetry/rows", fetcher),
-    fetchJson<RuntimeTelemetryRequestRecord[]>("/api/role-model/telemetry/requests", fetcher),
+    fetchJson<RuntimeTelemetrySummary>(`/api/role-model/telemetry/summary${query}`, fetcher),
+    fetchJson<RuntimeTelemetryComparisonRow[]>(`/api/role-model/telemetry/rows${query}`, fetcher),
+    fetchJson<RuntimeTelemetryRequestRecord[]>(
+      `/api/role-model/telemetry/requests${query}`,
+      fetcher,
+    ),
   ]);
 
   return {
@@ -1876,12 +1939,32 @@ export async function fetchTelemetryRequests(
     readonly windowMs?: number;
     readonly endAtMs?: number;
     readonly startAtMs?: number;
+    readonly asOfMs?: number;
+    readonly cursor?: string;
     readonly filters?: RuntimeTelemetryAnalyticsFilters;
   } = {},
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeTelemetryRequestRecord[]> {
   return fetchJson<RuntimeTelemetryRequestRecord[]>(
     `/api/role-model/telemetry/requests${buildTelemetryQueryString(input)}`,
+    fetcher,
+  );
+}
+
+export async function fetchTelemetryRequestsPage(
+  input: {
+    readonly limit?: number;
+    readonly windowMs?: number;
+    readonly endAtMs?: number;
+    readonly startAtMs?: number;
+    readonly asOfMs?: number;
+    readonly cursor?: string;
+    readonly filters?: RuntimeTelemetryAnalyticsFilters;
+  } = {},
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeTelemetryRequestPage> {
+  return fetchJson<RuntimeTelemetryRequestPage>(
+    `/api/role-model/telemetry/requests/page${buildTelemetryQueryString(input)}`,
     fetcher,
   );
 }
@@ -2230,6 +2313,23 @@ export async function fetchRouterDecisions(
   return fetchJson<RouterDecisionListItem[]>("/api/role-model/router/decisions", fetcher);
 }
 
+export async function fetchRouterDecisionPage(
+  input: {
+    readonly limit?: number;
+    readonly windowMs?: number;
+    readonly endAtMs?: number;
+    readonly startAtMs?: number;
+    readonly asOfMs?: number;
+    readonly cursor?: string;
+  } = {},
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RouterDecisionPage> {
+  return fetchJson<RouterDecisionPage>(
+    `/api/role-model/router/decisions/page${buildTelemetryQueryString(input)}`,
+    fetcher,
+  );
+}
+
 export async function fetchRouterDecisionDetail(
   requestId: string,
   fetcher: RuntimeFetcher = fetch,
@@ -2245,16 +2345,41 @@ export async function fetchActivityMetrics(
   return fetchJson<RuntimeActivityLogEntry[]>("/api/metrics", fetcher);
 }
 
+export async function fetchActivityMetricsPage(
+  input: {
+    readonly limit?: number;
+    readonly windowMs?: number;
+    readonly endAtMs?: number;
+    readonly startAtMs?: number;
+    readonly asOfMs?: number;
+    readonly cursor?: string;
+  } = {},
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeActivityMetricsPage> {
+  return fetchJson<RuntimeActivityMetricsPage>(
+    `/api/metrics/page${buildTelemetryQueryString(input)}`,
+    fetcher,
+  );
+}
+
+/** Aggregate totals are fetched separately from the intentionally bounded activity page. */
+export async function fetchTelemetrySummary(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeTelemetrySummary> {
+  return fetchJson<RuntimeTelemetrySummary>("/api/role-model/telemetry/summary", fetcher);
+}
+
 export async function fetchActivityCapture(
-  id: number,
+  id: number | string,
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeActivityCapture | null> {
-  const response = await fetcher(`/api/captures/${id}`);
+  const capturePath = `/api/captures/${encodeURIComponent(String(id))}`;
+  const response = await fetcher(capturePath);
   if (response.status === 404) {
     return null;
   }
   if (!response.ok) {
-    throw new Error(await extractErrorMessage(response.clone(), `/api/captures/${id}`));
+    throw new Error(await extractErrorMessage(response.clone(), capturePath));
   }
   return (await response.json()) as RuntimeActivityCapture;
 }

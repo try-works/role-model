@@ -92,6 +92,8 @@ import {
   readRuntimeControllerAssignment,
   readRuntimeMaintenancePolicy,
   readRuntimeObservationBundle,
+  readRuntimeTelemetryRecord,
+  readRuntimeTelemetrySourceSummaries,
   readRuntimeTelemetrySummary,
   upsertDifficultyClassificationCache,
   upsertObservedThroughputPenaltyState,
@@ -2131,6 +2133,8 @@ export interface BridgeTelemetryQuery {
   readonly limit?: number;
   readonly endAtMs?: number;
   readonly startAtMs?: number;
+  readonly asOfMs?: number;
+  readonly cursor?: string;
   readonly filters?: BridgeTelemetryAnalyticsFilters;
 }
 
@@ -2483,6 +2487,58 @@ export type BridgeTelemetryRequestRecord = ReturnType<
   readonly taxonomyToolClassIds?: readonly string[];
 };
 
+export interface BridgeTelemetryRequestPage {
+  readonly items: readonly BridgeTelemetryRequestRecord[];
+  readonly totalMatching: number;
+  readonly returned: number;
+  readonly pageSize: number;
+  readonly truncated: boolean;
+  readonly nextCursor: string | null;
+  readonly window: {
+    readonly startAtMs: number;
+    readonly endAtMs: number;
+    readonly asOfMs: number;
+  };
+}
+
+export interface BridgeRouterDecisionPage {
+  readonly items: readonly {
+    readonly requestId: string;
+    readonly routingDecisionId: string | null;
+    readonly selectedEndpointId: string;
+    readonly selectedModelId: string | null;
+    readonly strategyLabel: string | null;
+    readonly decidedAtMs: number;
+    readonly sourceType: string;
+    readonly providerId: string | null;
+    readonly finishReason: string | null;
+  }[];
+  readonly totalMatching: number;
+  readonly returned: number;
+  readonly pageSize: number;
+  readonly truncated: boolean;
+  readonly nextCursor: string | null;
+  readonly window: {
+    readonly startAtMs: number;
+    readonly endAtMs: number;
+    readonly asOfMs: number;
+  };
+}
+
+export interface BridgeActivityMetricsPage {
+  readonly items: readonly unknown[];
+  readonly totalMatching: number;
+  readonly returned: number;
+  readonly pageSize: number;
+  readonly truncated: boolean;
+  readonly nextCursor: string | null;
+  readonly window: {
+    readonly startAtMs: number;
+    readonly endAtMs: number;
+    readonly asOfMs: number;
+  };
+}
+
 export type BridgeTelemetryEndpointMeta = Pick<
   BridgeTelemetryRequestRecord,
   | "sourceType"
@@ -2569,6 +2625,11 @@ export type BridgeTelemetrySummary = ReturnType<typeof readRuntimeTelemetrySumma
     readonly local: ReturnType<typeof readRuntimeTelemetrySummary>;
     readonly remote: ReturnType<typeof readRuntimeTelemetrySummary>;
   };
+  readonly window: {
+    readonly startAtMs: number;
+    readonly endAtMs: number;
+    readonly asOfMs: number;
+  };
 };
 
 export interface RuntimeTelemetryStreamEvent {
@@ -2606,7 +2667,10 @@ export interface StartBridgeServerOptions {
   readonly readVersionInfo?: () => Promise<unknown>;
   readonly shutdown?: () => Promise<void>;
   readonly listActivityMetrics?: () => Promise<unknown>;
-  readonly readActivityCapture?: (captureId: number) => Promise<unknown>;
+  readonly listActivityMetricsPage?: (
+    query?: BridgeTelemetryQuery,
+  ) => Promise<BridgeActivityMetricsPage>;
+  readonly readActivityCapture?: (captureId: number | string) => Promise<unknown>;
   readonly readLogs?: () => Promise<string>;
   readonly proxyVendorLogStream?: (
     pathname: string,
@@ -2661,6 +2725,9 @@ export interface StartBridgeServerOptions {
   readonly readRouterConfig?: () => Promise<unknown>;
   readonly listRouterCandidates?: () => Promise<readonly unknown[]>;
   readonly listRouterDecisions?: () => Promise<readonly unknown[]>;
+  readonly listRouterDecisionPage?: (
+    query?: BridgeTelemetryQuery,
+  ) => Promise<BridgeRouterDecisionPage>;
   readonly readRouterDecision?: (requestId: string) => Promise<unknown>;
   readonly listRecentRequestIds?: (limit?: number) => Promise<readonly string[]>;
   readonly listRecentRequestObservations?: () => Promise<readonly unknown[]>;
@@ -2669,6 +2736,9 @@ export interface StartBridgeServerOptions {
     query?: BridgeTelemetryQuery,
   ) => Promise<readonly unknown[]>;
   readonly listTelemetryRequests?: (query?: BridgeTelemetryQuery) => Promise<readonly unknown[]>;
+  readonly listTelemetryRequestPage?: (
+    query?: BridgeTelemetryQuery,
+  ) => Promise<BridgeTelemetryRequestPage>;
   readonly queryTelemetryAnalytics?: (
     body: Record<string, unknown>,
   ) => Promise<BridgeTelemetryAnalyticsResponse>;
@@ -2774,7 +2844,8 @@ export interface RuntimeBridgeBackend {
   readonly registry: EndpointRegistryResult;
   readonly effectiveRegistry: EndpointRegistryResult;
   listActivityMetrics(): Promise<readonly unknown[]>;
-  readActivityCapture(captureId: number): Promise<unknown | null>;
+  listActivityMetricsPage(query?: BridgeTelemetryQuery): Promise<BridgeActivityMetricsPage>;
+  readActivityCapture(captureId: number | string): Promise<unknown | null>;
   executeChatCompletions: (
     body: OpenAIChatCompletionsBody,
     requestId: string,
@@ -2882,6 +2953,7 @@ export interface RuntimeBridgeBackend {
   readRouterConfig(): Promise<unknown>;
   listRouterCandidates(): Promise<readonly unknown[]>;
   listRouterDecisions(): Promise<readonly unknown[]>;
+  listRouterDecisionPage(query?: BridgeTelemetryQuery): Promise<BridgeRouterDecisionPage>;
   readRouterDecision(requestId: string): Promise<unknown>;
   listEndpoints(): Promise<
     readonly {
@@ -2912,6 +2984,7 @@ export interface RuntimeBridgeBackend {
   listTelemetryRequests(
     query?: BridgeTelemetryQuery,
   ): Promise<readonly BridgeTelemetryRequestRecord[]>;
+  listTelemetryRequestPage(query?: BridgeTelemetryQuery): Promise<BridgeTelemetryRequestPage>;
   queryTelemetryAnalytics(body: Record<string, unknown>): Promise<BridgeTelemetryAnalyticsResponse>;
   subscribeTelemetry(listener: (event: RuntimeTelemetryStreamEvent) => void): () => void;
   readRequestObservation(requestId: string): Promise<BridgeRequestObservation | null>;
@@ -8844,6 +8917,18 @@ function readOptionalPositiveInteger(params: URLSearchParams, key: string): numb
   return value;
 }
 
+function readOptionalNonNegativeInteger(params: URLSearchParams, key: string): number | undefined {
+  const rawValue = params.get(key);
+  if (!rawValue) {
+    return undefined;
+  }
+  const value = Number.parseInt(rawValue, 10);
+  if (!Number.isSafeInteger(value) || value < 0) {
+    throw new Error(`${key} must be a non-negative integer`);
+  }
+  return value;
+}
+
 function readOptionalTelemetryStringList(
   params: URLSearchParams,
   key: string,
@@ -8856,8 +8941,10 @@ function readOptionalTelemetryStringList(
 function readTelemetryQuery(url: URL): BridgeTelemetryQuery {
   const windowMs = readOptionalPositiveInteger(url.searchParams, "windowMs");
   const limit = readOptionalPositiveInteger(url.searchParams, "limit");
-  const endAtMs = readOptionalPositiveInteger(url.searchParams, "endAtMs");
-  const startAtMs = readOptionalPositiveInteger(url.searchParams, "startAtMs");
+  const endAtMs = readOptionalNonNegativeInteger(url.searchParams, "endAtMs");
+  const startAtMs = readOptionalNonNegativeInteger(url.searchParams, "startAtMs");
+  const asOfMs = readOptionalNonNegativeInteger(url.searchParams, "asOfMs");
+  const cursor = url.searchParams.get("cursor")?.trim() || undefined;
   const sourceTypes = readOptionalTelemetryStringList(url.searchParams, "sourceTypes") as
     | readonly ("local" | "remote")[]
     | undefined;
@@ -8906,8 +8993,77 @@ function readTelemetryQuery(url: URL): BridgeTelemetryQuery {
     ...(typeof limit === "number" ? { limit } : {}),
     ...(typeof endAtMs === "number" ? { endAtMs } : {}),
     ...(typeof startAtMs === "number" ? { startAtMs } : {}),
+    ...(typeof asOfMs === "number" ? { asOfMs } : {}),
+    ...(cursor ? { cursor } : {}),
     ...(Object.keys(filters).length > 0 ? { filters } : {}),
   };
+}
+
+interface TelemetryPageCursorPayload {
+  readonly version: 1;
+  readonly startAtMs: number;
+  readonly endAtMs: number;
+  readonly asOfMs: number;
+  readonly filters: BridgeTelemetryAnalyticsFilters | null;
+  readonly lastCreatedAtMs: number;
+  readonly lastRequestId: string;
+}
+
+function stableTelemetryJson(value: unknown): string {
+  if (value === null || typeof value !== "object") {
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map((entry) => stableTelemetryJson(entry)).join(",")}]`;
+  }
+  const record = value as Record<string, unknown>;
+  return `{${Object.keys(record)
+    .sort()
+    .map((key) => `${JSON.stringify(key)}:${stableTelemetryJson(record[key])}`)
+    .join(",")}}`;
+}
+
+function encodeTelemetryPageCursor(payload: TelemetryPageCursorPayload): string {
+  const body = stableTelemetryJson(payload);
+  const digest = createHash("sha256").update(body).digest("hex");
+  return Buffer.from(`${body}.${digest}`, "utf8").toString("base64url");
+}
+
+function decodeTelemetryPageCursor(value: string): TelemetryPageCursorPayload {
+  let decoded: string;
+  try {
+    decoded = Buffer.from(value, "base64url").toString("utf8");
+  } catch {
+    throw new Error("Invalid telemetry cursor.");
+  }
+  const separator = decoded.lastIndexOf(".");
+  if (separator <= 0) {
+    throw new Error("Invalid telemetry cursor.");
+  }
+  const body = decoded.slice(0, separator);
+  const digest = decoded.slice(separator + 1);
+  if (createHash("sha256").update(body).digest("hex") !== digest) {
+    throw new Error("Invalid telemetry cursor checksum.");
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(body);
+  } catch {
+    throw new Error("Invalid telemetry cursor payload.");
+  }
+  const record = parsed as Partial<TelemetryPageCursorPayload>;
+  if (
+    record.version !== 1 ||
+    !Number.isSafeInteger(record.startAtMs) ||
+    !Number.isSafeInteger(record.endAtMs) ||
+    !Number.isSafeInteger(record.asOfMs) ||
+    !Number.isSafeInteger(record.lastCreatedAtMs) ||
+    typeof record.lastRequestId !== "string" ||
+    (record.filters !== null && typeof record.filters !== "object")
+  ) {
+    throw new Error("Invalid telemetry cursor payload.");
+  }
+  return record as TelemetryPageCursorPayload;
 }
 
 async function readJson<TValue>(filePath: string): Promise<TValue> {
@@ -12388,6 +12544,7 @@ function createEndpointId(providerAccountId: string, region: string, modelId: st
 
 const DEFAULT_TELEMETRY_WINDOW_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_TELEMETRY_LIMIT = 50;
+const MAX_TELEMETRY_PAGE_SIZE = 10_000;
 
 function toSourceType(
   endpointKind: "local_engine" | "remote_api" | "browser_engine" | "dispatch_adapter",
@@ -14174,6 +14331,21 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/api/role-model/telemetry/requests/page") {
+      if (!options.listTelemetryRequestPage) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(response, 200, await options.listTelemetryRequestPage(readTelemetryQuery(url)));
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "telemetry page query failed",
+        });
+      }
+      return;
+    }
+
     if (request.method === "POST" && url.pathname === "/api/role-model/telemetry/query") {
       if (!options.queryTelemetryAnalytics) {
         writeJson(response, 404, { error: "not found" });
@@ -14223,6 +14395,21 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/api/metrics/page") {
+      if (!options.listActivityMetricsPage) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(response, 200, await options.listActivityMetricsPage(readTelemetryQuery(url)));
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "activity metrics page query failed",
+        });
+      }
+      return;
+    }
+
     if (request.method === "GET" && url.pathname === "/api/metrics") {
       if (!options.listActivityMetrics) {
         writeJson(response, 404, { error: "not found" });
@@ -14237,10 +14424,16 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         writeJson(response, 404, { error: "not found" });
         return;
       }
-      const captureId = Number.parseInt(url.pathname.slice("/api/captures/".length), 10);
-      const capture = Number.isFinite(captureId)
-        ? await options.readActivityCapture(captureId)
-        : null;
+      const captureToken = decodeURIComponent(url.pathname.slice("/api/captures/".length));
+      const numericCaptureId = Number.parseInt(captureToken, 10);
+      const capture =
+        captureToken.length > 0
+          ? await options.readActivityCapture(
+              /^\d+$/.test(captureToken) && Number.isSafeInteger(numericCaptureId)
+                ? numericCaptureId
+                : captureToken,
+            )
+          : null;
       if (!capture) {
         writeJson(response, 404, { error: "capture not found" });
         return;
@@ -14823,6 +15016,21 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         return;
       }
       writeJson(response, 200, await options.listRouterDecisions());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/router/decisions/page") {
+      if (!options.listRouterDecisionPage) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(response, 200, await options.listRouterDecisionPage(readTelemetryQuery(url)));
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "router decision page query failed",
+        });
+      }
       return;
     }
 
@@ -17929,13 +18137,59 @@ export async function createRuntimeBridgeBackend(
   ): EndpointRegistryResult["endpoints"][number] | undefined =>
     currentRegistry.endpoints.find((endpoint) => endpoint.identity.endpoint_id === endpointId);
   const telemetryListeners = new Set<(event: RuntimeTelemetryStreamEvent) => void>();
-  const normalizeTelemetryQuery = (query?: BridgeTelemetryQuery): BridgeTelemetryQuery => ({
-    windowMs: query?.windowMs ?? DEFAULT_TELEMETRY_WINDOW_MS,
-    limit: query?.limit ?? DEFAULT_TELEMETRY_LIMIT,
-    ...(typeof query?.endAtMs === "number" ? { endAtMs: query.endAtMs } : {}),
-    ...(typeof query?.startAtMs === "number" ? { startAtMs: query.startAtMs } : {}),
-    ...(query?.filters ? { filters: query.filters } : {}),
-  });
+  const normalizeTelemetryQuery = (query?: BridgeTelemetryQuery): BridgeTelemetryQuery => {
+    const hasExplicitLimit =
+      query !== undefined && Object.prototype.hasOwnProperty.call(query, "limit");
+    const requestedLimit = hasExplicitLimit ? query?.limit : DEFAULT_TELEMETRY_LIMIT;
+    if (
+      requestedLimit !== undefined &&
+      (!Number.isSafeInteger(requestedLimit) ||
+        requestedLimit <= 0 ||
+        requestedLimit > MAX_TELEMETRY_PAGE_SIZE)
+    ) {
+      throw new Error(
+        `Telemetry page limit must be an integer from 1 to ${MAX_TELEMETRY_PAGE_SIZE}.`,
+      );
+    }
+    const timeFields = [
+      ["windowMs", query?.windowMs],
+      ["startAtMs", query?.startAtMs],
+      ["endAtMs", query?.endAtMs],
+      ["asOfMs", query?.asOfMs],
+    ] as const;
+    for (const [field, value] of timeFields) {
+      if (value !== undefined && (!Number.isSafeInteger(value) || value < 0)) {
+        throw new Error(`Telemetry ${field} must be a non-negative safe integer.`);
+      }
+    }
+    if (query?.windowMs !== undefined && query.windowMs <= 0) {
+      throw new Error("Telemetry window must be a positive integer.");
+    }
+    const resolvedEndAtMs = query?.asOfMs ?? query?.endAtMs;
+    if (
+      query?.asOfMs !== undefined &&
+      query?.endAtMs !== undefined &&
+      query.asOfMs !== query.endAtMs
+    ) {
+      throw new Error("Telemetry asOfMs and endAtMs must match when both are supplied.");
+    }
+    if (
+      query?.startAtMs !== undefined &&
+      resolvedEndAtMs !== undefined &&
+      query.startAtMs >= resolvedEndAtMs
+    ) {
+      throw new Error("Telemetry window start must be before its exclusive end.");
+    }
+    return {
+      windowMs: query?.windowMs ?? DEFAULT_TELEMETRY_WINDOW_MS,
+      ...(requestedLimit === undefined ? {} : { limit: requestedLimit }),
+      ...(typeof query?.endAtMs === "number" ? { endAtMs: query.endAtMs } : {}),
+      ...(typeof query?.startAtMs === "number" ? { startAtMs: query.startAtMs } : {}),
+      ...(typeof query?.asOfMs === "number" ? { asOfMs: query.asOfMs } : {}),
+      ...(query?.cursor ? { cursor: query.cursor } : {}),
+      ...(query?.filters ? { filters: query.filters } : {}),
+    };
+  };
   const TELEMETRY_ANALYTICS_GRANULARITY_MS: Record<BridgeTelemetryAnalyticsGranularity, number> = {
     hour: 60 * 60 * 1000,
     day: 24 * 60 * 60 * 1000,
@@ -18869,11 +19123,18 @@ export async function createRuntimeBridgeBackend(
     query?: BridgeTelemetryQuery,
   ): readonly BridgeTelemetryRequestRecord[] => {
     const normalizedQuery = normalizeTelemetryQuery(query);
+    const hasFilters = Boolean(
+      normalizedQuery.filters && Object.keys(normalizedQuery.filters).length > 0,
+    );
     const records = listRuntimeTelemetryRecords({
       databasePath: initialization.databasePath,
       ...normalizedQuery,
+      // Filtering must happen before pagination. The storage adapter currently
+      // owns the indexed time/order scan, so filtered pages read the complete
+      // compact record set and apply the presentation limit afterwards.
+      ...(hasFilters ? { limit: undefined } : {}),
     });
-    return filterTelemetryRequestRecords(
+    const filtered = filterTelemetryRequestRecords(
       records.map((record) => {
         const endpointMeta = getTelemetryEndpointMeta(record.endpointId);
         return {
@@ -18899,6 +19160,68 @@ export async function createRuntimeBridgeBackend(
       }),
       normalizedQuery.filters,
     );
+    return filtered.slice(0, normalizedQuery.limit ?? filtered.length);
+  };
+  const listTelemetryRequestPage = (query?: BridgeTelemetryQuery): BridgeTelemetryRequestPage => {
+    const normalizedQuery = normalizeTelemetryQuery(query);
+    const asOfMs = normalizedQuery.asOfMs ?? normalizedQuery.endAtMs ?? Date.now();
+    const startAtMs =
+      normalizedQuery.startAtMs ??
+      asOfMs - (normalizedQuery.windowMs ?? DEFAULT_TELEMETRY_WINDOW_MS);
+    const filters = normalizedQuery.filters ?? null;
+    const cursor = normalizedQuery.cursor
+      ? decodeTelemetryPageCursor(normalizedQuery.cursor)
+      : null;
+    if (cursor) {
+      const sameSnapshot =
+        cursor.startAtMs === startAtMs &&
+        cursor.endAtMs === asOfMs &&
+        cursor.asOfMs === asOfMs &&
+        stableTelemetryJson(cursor.filters) === stableTelemetryJson(filters);
+      if (!sameSnapshot) {
+        throw new Error("Telemetry cursor does not match the requested snapshot or filters.");
+      }
+    }
+    const matching = listTelemetryRequestRecords({
+      ...normalizedQuery,
+      startAtMs,
+      endAtMs: asOfMs,
+      asOfMs,
+      limit: undefined,
+      cursor: undefined,
+    });
+    const afterCursor = cursor
+      ? matching.filter(
+          (record) =>
+            record.createdAtMs < cursor.lastCreatedAtMs ||
+            (record.createdAtMs === cursor.lastCreatedAtMs &&
+              record.requestId < cursor.lastRequestId),
+        )
+      : matching;
+    const pageSize = normalizedQuery.limit ?? DEFAULT_TELEMETRY_LIMIT;
+    const items = afterCursor.slice(0, pageSize);
+    const last = items[items.length - 1];
+    const hasMore = afterCursor.length > items.length;
+    return {
+      items,
+      totalMatching: matching.length,
+      returned: items.length,
+      pageSize,
+      truncated: hasMore,
+      nextCursor:
+        hasMore && last
+          ? encodeTelemetryPageCursor({
+              version: 1,
+              startAtMs,
+              endAtMs: asOfMs,
+              asOfMs,
+              filters,
+              lastCreatedAtMs: last.createdAtMs,
+              lastRequestId: last.requestId,
+            })
+          : null,
+      window: { startAtMs, endAtMs: asOfMs, asOfMs },
+    };
   };
   const enrichTelemetryRequestRecords = (
     records: readonly ReturnType<typeof listRuntimeTelemetryRecords>[number][],
@@ -18929,46 +19252,54 @@ export async function createRuntimeBridgeBackend(
   };
   const readTelemetrySummaryData = (query?: BridgeTelemetryQuery): BridgeTelemetrySummary => {
     const normalizedQuery = normalizeTelemetryQuery(query);
-    const requestRecords = listTelemetryRequestRecords(normalizedQuery);
+    const asOfMs = normalizedQuery.asOfMs ?? normalizedQuery.endAtMs ?? Date.now();
+    const startAtMs =
+      normalizedQuery.startAtMs ??
+      asOfMs - (normalizedQuery.windowMs ?? DEFAULT_TELEMETRY_WINDOW_MS);
+    const aggregateQuery = {
+      ...normalizedQuery,
+      startAtMs,
+      endAtMs: asOfMs,
+      asOfMs,
+      limit: undefined,
+    };
+    const hasFilters = Boolean(
+      normalizedQuery.filters && Object.keys(normalizedQuery.filters).length > 0,
+    );
+    const requestRecords = hasFilters ? listTelemetryRequestRecords(aggregateQuery) : [];
+    const sourceSummaries = hasFilters
+      ? {
+          local: summarizeTelemetryRequestRecords(
+            requestRecords.filter((record) => record.sourceType === "local"),
+          ),
+          remote: summarizeTelemetryRequestRecords(
+            requestRecords.filter((record) => record.sourceType === "remote"),
+          ),
+        }
+      : readRuntimeTelemetrySourceSummaries({
+          databasePath: initialization.databasePath,
+          ...aggregateQuery,
+        });
     return {
       ...readRuntimeTelemetrySummary({
         databasePath: initialization.databasePath,
-        ...normalizedQuery,
+        ...aggregateQuery,
       }),
-      sourceBreakdown: {
-        local: summarizeTelemetryRequestRecords(
-          requestRecords.filter((record) => record.sourceType === "local"),
-        ),
-        remote: summarizeTelemetryRequestRecords(
-          requestRecords.filter((record) => record.sourceType === "remote"),
-        ),
-      },
+      sourceBreakdown: sourceSummaries,
+      window: { startAtMs, endAtMs: asOfMs, asOfMs },
     };
   };
   const listTelemetryComparisonData = (
     query?: BridgeTelemetryQuery,
   ): readonly BridgeTelemetryComparisonRow[] => {
     const normalizedQuery = normalizeTelemetryQuery(query);
-    const requestMetaByEndpointId = new Map(
-      listTelemetryRequestRecords(normalizedQuery).map((record) => [
-        record.endpointId,
-        {
-          sourceType: record.sourceType,
-          providerId: record.providerId,
-          endpointKind: record.endpointKind,
-          servingSource: record.servingSource,
-          healthStatus: record.healthStatusAtRequest ?? record.healthStatus,
-          status: record.lifecycleStateAtRequest ?? record.status,
-          roleIds: record.roleIds,
-        } satisfies BridgeTelemetryEndpointMeta,
-      ]),
-    );
+    const aggregateQuery = { ...normalizedQuery, limit: undefined };
     return listRuntimeTelemetryComparisonRows({
       databasePath: initialization.databasePath,
-      ...normalizedQuery,
+      ...aggregateQuery,
     }).map((row) => ({
       ...row,
-      ...(requestMetaByEndpointId.get(row.endpointId) ?? getTelemetryEndpointMeta(row.endpointId)),
+      ...getTelemetryEndpointMeta(row.endpointId),
     }));
   };
   const queryTelemetryAnalyticsData = (
@@ -19180,16 +19511,19 @@ export async function createRuntimeBridgeBackend(
     };
   };
   const emitTelemetryUpdate = (requestId: string): void => {
-    const request = listTelemetryRequestRecords({ limit: DEFAULT_TELEMETRY_LIMIT }).find(
-      (record) => record.requestId === requestId,
-    );
+    const record = readRuntimeTelemetryRecord({
+      databasePath: initialization.databasePath,
+      requestId,
+    });
+    const request = record ? (enrichTelemetryRequestRecords([record])[0] ?? null) : null;
     if (!request) {
       return;
     }
+    const emittedAtMs = Date.now();
     const event: RuntimeTelemetryStreamEvent = {
       eventName: "telemetry.update",
-      emittedAtMs: Date.now(),
-      summary: readTelemetrySummaryData(),
+      emittedAtMs,
+      summary: readTelemetrySummaryData({ asOfMs: emittedAtMs }),
       request,
     };
     for (const listener of telemetryListeners) {
@@ -19306,11 +19640,48 @@ export async function createRuntimeBridgeBackend(
     }
     return "/v1/chat/completions";
   };
-  const buildObservedActivityEntries = () => {
-    const recent = listRecentRuntimeObservations({
+  const readActivityCaptureByRequestId = (requestId: string): unknown | null => {
+    const observation = readRuntimeObservationBundle({
       databasePath: initialization.databasePath,
-      limit: DEFAULT_TELEMETRY_LIMIT,
-    });
+      requestId,
+    }) as Record<string, unknown> | null;
+    if (!observation) {
+      return null;
+    }
+    const inspection = asObjectRecord(observation.inspection);
+    const inspectionRequest = asObjectRecord(inspection?.request);
+    const requestCapture = asObjectRecord(inspectionRequest?.requestCapture);
+    const responseCapture = asObjectRecord(inspectionRequest?.responseCapture);
+    if (!requestCapture && !responseCapture) {
+      return null;
+    }
+    const requestBody = asObjectRecord(requestCapture?.body);
+    const requestHeaders = asObjectRecord(requestCapture?.headers) ?? {};
+    const responseBody = responseCapture?.body ?? {};
+    const responseHeaders = asObjectRecord(responseCapture?.headers) ?? {};
+    const requestPath = inferActivityRequestPath(requestBody);
+    return {
+      id: 0,
+      request_id: requestId,
+      req_path: requestPath,
+      req_headers: requestHeaders,
+      req_body: encodeCaptureBody(requestCapture?.body ?? {}),
+      resp_headers:
+        Object.keys(responseHeaders).length > 0
+          ? responseHeaders
+          : { "content-type": "application/json" },
+      resp_body: encodeCaptureBody(responseBody),
+    };
+  };
+  const buildObservedActivityEntries = (
+    requestedEntries?: readonly { readonly requestId: string; readonly endpointId: string }[],
+  ) => {
+    const recent =
+      requestedEntries ??
+      listRecentRuntimeObservations({
+        databasePath: initialization.databasePath,
+        limit: DEFAULT_TELEMETRY_LIMIT,
+      });
     return recent
       .map((entry, index) => {
         const observation = readRuntimeObservationBundle({
@@ -19338,11 +19709,13 @@ export async function createRuntimeBridgeBackend(
               ? 500
               : 200;
         const id = index + 1;
+        const requestId = entry.requestId;
         const durationMs = typeof usageEvent?.latency_ms === "number" ? usageEvent.latency_ms : 0;
         return {
           id,
           metric: {
             id,
+            request_id: requestId,
             timestamp: new Date(
               typeof usageEvent?.timestamp_ms === "number" ? usageEvent.timestamp_ms : Date.now(),
             ).toISOString(),
@@ -19373,6 +19746,7 @@ export async function createRuntimeBridgeBackend(
             requestCapture || responseCapture
               ? {
                   id,
+                  request_id: requestId,
                   req_path: requestPath,
                   req_headers: requestHeaders,
                   req_body: encodeCaptureBody(requestCapture?.body ?? {}),
@@ -19491,7 +19865,8 @@ export async function createRuntimeBridgeBackend(
       controller: getCurrentControllerAssignment(),
       guidance: getRouterGuidance(),
       configuredCandidateCount: currentRegistry.endpoints.length,
-      recentDecisionCount: listTelemetryRequestRecords({ limit: DEFAULT_TELEMETRY_LIMIT }).length,
+      // This is a total, not the 50-row recent-decisions page.
+      recentDecisionCount: readTelemetrySummaryData().requestCount,
       aliasInventory,
     };
   };
@@ -19698,29 +20073,37 @@ export async function createRuntimeBridgeBackend(
       };
     });
   };
+  const toRouterDecisionData = (record: BridgeTelemetryRequestRecord) => {
+    const observation = readRuntimeObservationBundle({
+      databasePath: initialization.databasePath,
+      requestId: record.requestId,
+    }) as Record<string, unknown> | null;
+    const routingDiagnostics = asObjectRecord(observation?.routingDiagnostics);
+    const routingMode = asObjectRecord(routingDiagnostics?.routingMode);
+    return {
+      requestId: record.requestId,
+      routingDecisionId: record.routingDecisionId ?? null,
+      selectedEndpointId: record.endpointId,
+      selectedModelId: record.modelId ?? null,
+      strategyLabel:
+        asStringValue(routingMode?.effectiveMode) ??
+        currentUnifiedRuntimeConfig?.routingStrategy ??
+        null,
+      decidedAtMs: record.createdAtMs,
+      sourceType: record.sourceType,
+      providerId: record.providerId ?? null,
+      finishReason: record.finishReason ?? null,
+    };
+  };
   const listRouterDecisionData = () =>
-    listTelemetryRequestRecords({ limit: DEFAULT_TELEMETRY_LIMIT }).map((record) => {
-      const observation = readRuntimeObservationBundle({
-        databasePath: initialization.databasePath,
-        requestId: record.requestId,
-      }) as Record<string, unknown> | null;
-      const routingDiagnostics = asObjectRecord(observation?.routingDiagnostics);
-      const routingMode = asObjectRecord(routingDiagnostics?.routingMode);
-      return {
-        requestId: record.requestId,
-        routingDecisionId: record.routingDecisionId ?? null,
-        selectedEndpointId: record.endpointId,
-        selectedModelId: record.modelId ?? null,
-        strategyLabel:
-          asStringValue(routingMode?.effectiveMode) ??
-          currentUnifiedRuntimeConfig?.routingStrategy ??
-          null,
-        decidedAtMs: record.createdAtMs,
-        sourceType: record.sourceType,
-        providerId: record.providerId ?? null,
-        finishReason: record.finishReason ?? null,
-      };
-    });
+    listTelemetryRequestRecords({ limit: DEFAULT_TELEMETRY_LIMIT }).map(toRouterDecisionData);
+  const listRouterDecisionPageData = (query?: BridgeTelemetryQuery): BridgeRouterDecisionPage => {
+    const page = listTelemetryRequestPage(query);
+    return {
+      ...page,
+      items: page.items.map(toRouterDecisionData),
+    };
+  };
   function toProposalWireContract(
     normalizedIntent: Record<string, unknown> | undefined,
   ): Record<string, unknown> | null {
@@ -19791,9 +20174,13 @@ export async function createRuntimeBridgeBackend(
     const routingDiagnostics = asObjectRecord(observation.routingDiagnostics);
     const routingMode = asObjectRecord(routingDiagnostics?.routingMode);
     const decision = asObjectRecord(observation.decision);
-    const requestRecord = listTelemetryRequestRecords({ limit: DEFAULT_TELEMETRY_LIMIT }).find(
-      (record) => record.requestId === requestId,
-    );
+    const requestRecord = (() => {
+      const record = readRuntimeTelemetryRecord({
+        databasePath: initialization.databasePath,
+        requestId,
+      });
+      return record ? (enrichTelemetryRequestRecords([record])[0] ?? null) : null;
+    })();
     return {
       requestId,
       routingDecisionId:
@@ -21822,7 +22209,23 @@ export async function createRuntimeBridgeBackend(
     async listActivityMetrics(): Promise<readonly unknown[]> {
       return buildObservedActivityEntries().map((entry) => entry.metric);
     },
-    async readActivityCapture(captureId: number): Promise<unknown | null> {
+    async listActivityMetricsPage(
+      query?: BridgeTelemetryQuery,
+    ): Promise<BridgeActivityMetricsPage> {
+      const page = listTelemetryRequestPage(query);
+      const entries = buildObservedActivityEntries(
+        page.items.map((entry) => ({ requestId: entry.requestId, endpointId: entry.endpointId })),
+      );
+      return {
+        ...page,
+        items: entries.map((entry) => entry.metric),
+        returned: entries.length,
+      };
+    },
+    async readActivityCapture(captureId: number | string): Promise<unknown | null> {
+      if (typeof captureId === "string") {
+        return readActivityCaptureByRequestId(captureId);
+      }
       return (
         buildObservedActivityEntries().find((entry) => entry.id === captureId)?.capture ?? null
       );
@@ -24536,6 +24939,9 @@ export async function createRuntimeBridgeBackend(
     async listRouterDecisions(): Promise<readonly unknown[]> {
       return listRouterDecisionData();
     },
+    async listRouterDecisionPage(query?: BridgeTelemetryQuery): Promise<BridgeRouterDecisionPage> {
+      return listRouterDecisionPageData(query);
+    },
     async readRouterDecision(requestId: string): Promise<unknown> {
       return readRouterDecisionData(requestId);
     },
@@ -24552,6 +24958,11 @@ export async function createRuntimeBridgeBackend(
     ): Promise<readonly BridgeTelemetryRequestRecord[]> {
       return listTelemetryRequestRecords(query);
     },
+    async listTelemetryRequestPage(
+      query?: BridgeTelemetryQuery,
+    ): Promise<BridgeTelemetryRequestPage> {
+      return listTelemetryRequestPage(query);
+    },
     async queryTelemetryAnalytics(
       body: Record<string, unknown>,
     ): Promise<BridgeTelemetryAnalyticsResponse> {
@@ -24564,11 +24975,16 @@ export async function createRuntimeBridgeBackend(
       };
     },
     async readRequestObservation(requestId: string): Promise<BridgeRequestObservation | null> {
-      const telemetryRecord = listTelemetryRequestRecords({
-        startAtMs: 0,
-        endAtMs: Date.now() + DEFAULT_TELEMETRY_WINDOW_MS,
-        limit: DEFAULT_TELEMETRY_LIMIT,
-      }).find((record) => record.requestId === requestId);
+      const telemetryRecord = (() => {
+        const record = readRuntimeTelemetryRecord({
+          databasePath: initialization.databasePath,
+          requestId,
+        });
+        if (!record) {
+          return null;
+        }
+        return enrichTelemetryRequestRecords([record])[0] ?? null;
+      })();
       const observation = readRuntimeObservationBundle({
         databasePath: initialization.databasePath,
         requestId,

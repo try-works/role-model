@@ -2023,10 +2023,19 @@ export function summarizeWorkbenchResult(result: Record<string, unknown>): {
   };
 }
 
-export function buildActivitySummary(entries: readonly RuntimeActivityLogEntry[]): {
+export function buildActivitySummary(
+  entries: readonly RuntimeActivityLogEntry[],
+  aggregate?: Pick<
+    RuntimeTelemetrySummary,
+    "requestCount" | "successCount" | "failureCount" | "totalInputTokens" | "totalOutputTokens"
+  > &
+    Partial<Pick<RuntimeTelemetrySummary, "cachedRequestCount">>,
+  options?: { readonly aggregateUnavailable?: boolean },
+): {
   facts: Array<{ label: string; value: string; detail: string }>;
   rows: Array<{
     id: number;
+    requestId?: string;
     timestamp: string;
     model: string;
     path: string;
@@ -2041,6 +2050,7 @@ export function buildActivitySummary(entries: readonly RuntimeActivityLogEntry[]
 } {
   const rows = entries.map((entry) => ({
     id: entry.id,
+    ...(entry.request_id ? { requestId: entry.request_id } : {}),
     timestamp: entry.timestamp,
     model: entry.model,
     path: entry.req_path,
@@ -2062,20 +2072,26 @@ export function buildActivitySummary(entries: readonly RuntimeActivityLogEntry[]
 
   return {
     facts: [
-      { label: "Entries", value: String(entries.length), detail: `${captureCount} with captures` },
+      {
+        label: options?.aggregateUnavailable ? "Recent entries" : "Entries",
+        value: String(aggregate?.requestCount ?? entries.length),
+        detail: options?.aggregateUnavailable
+          ? `${captureCount} with captures; aggregate unavailable`
+          : `${captureCount} with captures`,
+      },
       {
         label: "Errors",
-        value: String(errorCount),
+        value: String(aggregate?.failureCount ?? errorCount),
         detail: `Most recent status: ${mostRecentStatus}`,
       },
       {
         label: "Prompt tokens",
-        value: String(inputTokens),
+        value: String(aggregate?.totalInputTokens ?? inputTokens),
         detail: `${cacheTokens} cached tokens recorded`,
       },
       {
         label: "Completion tokens",
-        value: String(outputTokens),
+        value: String(aggregate?.totalOutputTokens ?? outputTokens),
         detail: "Across the current in-memory metrics window",
       },
     ],

@@ -26,11 +26,12 @@ import type {
   RuntimeTelemetryAnalyticsFilters,
   RuntimeTelemetryAnalyticsMetric,
   RuntimeTelemetryAnalyticsResponse,
+  RuntimeTelemetryRequestPage,
   RuntimeTelemetryRequestRecord,
 } from "../lib/runtime-api";
 import {
   fetchTelemetryAnalytics,
-  fetchTelemetryRequests,
+  fetchTelemetryRequestsPage,
   subscribeTelemetryStream,
 } from "../lib/runtime-api";
 import {
@@ -229,6 +230,7 @@ export default function RequestsRoute() {
   const taxonomyModalityIds = searchParams.get("taxModality") || "";
   const taxonomyToolClassIds = searchParams.get("taxTool") || "";
   const [requests, setRequests] = useState<readonly RuntimeTelemetryRequestRecord[]>([]);
+  const [requestPage, setRequestPage] = useState<RuntimeTelemetryRequestPage | null>(null);
   const [charts, setCharts] = useState<readonly RequestsChartRecord[]>([]);
   const chartsRef = useRef<readonly RequestsChartRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -330,7 +332,7 @@ export default function RequestsRoute() {
           filters,
         });
         const [nextRequests, chartResults] = await Promise.all([
-          fetchTelemetryRequests({
+          fetchTelemetryRequestsPage({
             limit: 200,
             windowMs: getWindowMs(timeRange),
             filters,
@@ -342,7 +344,8 @@ export default function RequestsRoute() {
         if (disposed) {
           return;
         }
-        setRequests(nextRequests);
+        setRequestPage(nextRequests);
+        setRequests(nextRequests.items);
         const resolvedCharts = resolveTelemetryChartRefresh({
           background,
           chartResults,
@@ -552,7 +555,11 @@ export default function RequestsRoute() {
 
       <SectionCard
         title="Recent telemetry requests"
-        description="Explainable request ledger with endpoint, model, status, and direct Observe/Router drill-in."
+        description={
+          requestPage
+            ? `Showing ${requestPage.returned} of ${requestPage.totalMatching} matching requests in the selected window. The 200-row page is bounded; use filters or direct request IDs for older records.`
+            : "Explainable request ledger with endpoint, model, status, and direct Observe/Router drill-in."
+        }
       >
         {loading && charts.length === 0 ? (
           <EmptyState label="Loading the canonical telemetry ledger…" />

@@ -1110,6 +1110,35 @@ export interface RuntimeTelemetryQueryInput {
   readonly limit?: number;
   readonly endAtMs?: number;
   readonly startAtMs?: number;
+  /** A caller-provided snapshot boundary. When present it is the exclusive end of the window. */
+  readonly asOfMs?: number;
+}
+
+/**
+ * Semantic query boundaries for telemetry consumers.  The compatibility
+ * RuntimeTelemetryQueryInput above remains accepted by older callers, but
+ * new aggregate/lookup/list code should select one of these named contracts
+ * rather than passing a generic limit through unrelated operations.
+ */
+export interface RuntimeTelemetryAggregateQueryInput {
+  readonly databasePath: string;
+  readonly windowMs?: number;
+  readonly endAtMs?: number;
+  readonly startAtMs?: number;
+  readonly asOfMs?: number;
+}
+
+export interface RuntimeTelemetryListQueryInput extends RuntimeTelemetryAggregateQueryInput {
+  readonly limit?: number;
+}
+
+export interface RuntimeTelemetryLookupInput {
+  readonly databasePath: string;
+  readonly requestId: string;
+}
+
+export interface RuntimeTelemetryRankingQueryInput extends RuntimeTelemetryAggregateQueryInput {
+  readonly topN?: number;
 }
 
 export interface PersistedRuntimeObservationBundle {
@@ -3213,7 +3242,7 @@ function listRuntimeTelemetryRecordsInternal(
 ): readonly RuntimeTelemetryRecord[] {
   const clauses: string[] = [];
   const parameters: Array<number> = [];
-  const endAtMs = input.endAtMs ?? Date.now();
+  const endAtMs = input.endAtMs ?? input.asOfMs ?? Date.now();
   const startAtMs =
     typeof input.startAtMs === "number"
       ? input.startAtMs
@@ -3224,7 +3253,10 @@ function listRuntimeTelemetryRecordsInternal(
     clauses.push("created_at_ms >= ?");
     parameters.push(startAtMs);
   }
-  clauses.push("created_at_ms <= ?");
+  // Telemetry windows are half-open: [startAtMs, endAtMs). This gives refreshes
+  // one deterministic snapshot boundary and prevents a row exactly at the
+  // boundary from appearing in both adjacent windows.
+  clauses.push("created_at_ms < ?");
   parameters.push(endAtMs);
 
   const limitClause = typeof input.limit === "number" ? " LIMIT ?" : "";
@@ -4820,7 +4852,7 @@ export function listRecentRuntimeRequestIds(
 }
 
 export function listRuntimeTelemetryRecords(
-  input: RuntimeTelemetryQueryInput,
+  input: RuntimeTelemetryListQueryInput,
 ): readonly RuntimeTelemetryRecord[] {
   const database = openSqliteDatabase(input.databasePath);
   const rows = listRuntimeTelemetryRecordsInternal(database, input);
@@ -4828,143 +4860,257 @@ export function listRuntimeTelemetryRecords(
   return rows;
 }
 
+type RuntimeTelemetryAggregateRow = {
+  request_count: number;
+  success_count: number;
+  failure_count: number;
+  total_input_tokens: number | null;
+  total_output_tokens: number | null;
+  total_tokens: number | null;
+  cached_request_count: number;
+  total_actual_cost_usd: number | null;
+  total_estimated_cost_usd: number | null;
+  total_effective_cost_usd: number | null;
+  latency_count: number;
+  total_latency_ms: number | null;
+  last_seen_at_ms: number | null;
+};
+
+function telemetryWindow(input: RuntimeTelemetryAggregateQueryInput): {
+  readonly startAtMs?: number;
+  readonly endAtMs: number;
+} {
+  const endAtMs = input.endAtMs ?? input.asOfMs ?? Date.now();
+  return {
+    startAtMs:
+      typeof input.startAtMs === "number"
+        ? input.startAtMs
+        : typeof input.windowMs === "number"
+          ? endAtMs - input.windowMs
+          : undefined,
+    endAtMs,
+  };
+}
+
+function telemetryWindowWhere(
+  input: RuntimeTelemetryAggregateQueryInput,
+  sourceType?: "local" | "remote",
+): { readonly where: string; readonly parameters: readonly (number | string)[] } {
+  const window = telemetryWindow(input);
+  const clauses = ["created_at_ms < ?"];
+  const parameters: Array<number | string> = [window.endAtMs];
+  if (typeof window.startAtMs === "number") {
+    clauses.unshift("created_at_ms >= ?");
+    parameters.unshift(window.startAtMs);
+  }
+  if (sourceType) {
+    clauses.push("source_type = ?");
+    parameters.push(sourceType);
+  }
+  return { where: clauses.join(" AND "), parameters };
+}
+
+function readRuntimeTelemetryAggregateFromDatabase(
+  database: DatabaseSync,
+  input: RuntimeTelemetryAggregateQueryInput,
+  sourceType?: "local" | "remote",
+): RuntimeTelemetrySummary {
+  const { where, parameters } = telemetryWindowWhere(input, sourceType);
+  const aggregate = database
+    .prepare(
+      `SELECT
+         COUNT(*) AS request_count,
+         SUM(CASE WHEN error_class IS NULL THEN 1 ELSE 0 END) AS success_count,
+         SUM(CASE WHEN error_class IS NULL THEN 0 ELSE 1 END) AS failure_count,
+         COALESCE(SUM(input_tokens), 0) AS total_input_tokens,
+         COALESCE(SUM(output_tokens), 0) AS total_output_tokens,
+         COALESCE(SUM(total_tokens), 0) AS total_tokens,
+         SUM(CASE WHEN prompt_cache_used = 1 THEN 1 ELSE 0 END) AS cached_request_count,
+         COALESCE(SUM(actual_cost_usd), 0) AS total_actual_cost_usd,
+         COALESCE(SUM(estimated_cost_usd), 0) AS total_estimated_cost_usd,
+         COALESCE(SUM(effective_cost_usd), 0) AS total_effective_cost_usd,
+         COUNT(latency_ms) AS latency_count,
+         COALESCE(SUM(latency_ms), 0) AS total_latency_ms,
+         MAX(created_at_ms) AS last_seen_at_ms
+       FROM runtime_telemetry_records
+       WHERE ${where}`,
+    )
+    .get(...parameters) as RuntimeTelemetryAggregateRow;
+  const latencyRows = database
+    .prepare(
+      `SELECT latency_ms
+       FROM runtime_telemetry_records
+       WHERE ${where} AND latency_ms IS NOT NULL
+       ORDER BY latency_ms ASC`,
+    )
+    .all(...parameters) as Array<{ latency_ms: number }>;
+  const latencyValues = latencyRows.map((row) => row.latency_ms);
+  const latencyCount = Number(aggregate.latency_count ?? 0);
+  const totalLatency = Number(aggregate.total_latency_ms ?? 0);
+  return {
+    requestCount: Number(aggregate.request_count ?? 0),
+    successCount: Number(aggregate.success_count ?? 0),
+    failureCount: Number(aggregate.failure_count ?? 0),
+    totalInputTokens: Number(aggregate.total_input_tokens ?? 0),
+    totalOutputTokens: Number(aggregate.total_output_tokens ?? 0),
+    totalTokens: Number(aggregate.total_tokens ?? 0),
+    cachedRequestCount: Number(aggregate.cached_request_count ?? 0),
+    totalActualCostUsd: roundMetric(Number(aggregate.total_actual_cost_usd ?? 0)),
+    totalEstimatedCostUsd: roundMetric(Number(aggregate.total_estimated_cost_usd ?? 0)),
+    totalEffectiveCostUsd: roundMetric(Number(aggregate.total_effective_cost_usd ?? 0)),
+    averageLatencyMs: latencyCount > 0 ? Math.round(totalLatency / latencyCount) : null,
+    p95LatencyMs: percentile95(latencyValues),
+    lastSeenAtMs:
+      aggregate.last_seen_at_ms === null || aggregate.last_seen_at_ms === undefined
+        ? null
+        : Number(aggregate.last_seen_at_ms),
+  };
+}
+
+export function readRuntimeTelemetrySourceSummaries(input: RuntimeTelemetryAggregateQueryInput): {
+  readonly local: RuntimeTelemetrySummary;
+  readonly remote: RuntimeTelemetrySummary;
+} {
+  const database = openSqliteDatabase(input.databasePath);
+  const result = {
+    local: readRuntimeTelemetryAggregateFromDatabase(database, input, "local"),
+    remote: readRuntimeTelemetryAggregateFromDatabase(database, input, "remote"),
+  };
+  database.close();
+  return result;
+}
+
+/**
+ * Read one telemetry row by its persisted primary key. This is deliberately
+ * separate from the recent-page adapter so detail/stream paths never need to
+ * scan or decode a bounded list before resolving an older request.
+ */
+export function readRuntimeTelemetryRecord(
+  input: RuntimeTelemetryLookupInput,
+): RuntimeTelemetryRecord | null {
+  const requestId = input.requestId.trim();
+  if (requestId.length === 0) {
+    return null;
+  }
+  const database = openSqliteDatabase(input.databasePath);
+  const row = database
+    .prepare("SELECT * FROM runtime_telemetry_records WHERE request_id = ? LIMIT 1")
+    .get(requestId) as Parameters<typeof mapRuntimeTelemetryRecord>[0] | undefined;
+  database.close();
+  return row ? mapRuntimeTelemetryRecord(row) : null;
+}
+
 export function readRuntimeTelemetrySummary(
   input: RuntimeTelemetryQueryInput,
 ): RuntimeTelemetrySummary {
   const database = openSqliteDatabase(input.databasePath);
-  const records = listRuntimeTelemetryRecordsInternal(database, input);
+  // Aggregates are compact SQLite queries, never a rich-record page. The
+  // compatibility `limit` field is intentionally ignored for this contract.
+  const summary = readRuntimeTelemetryAggregateFromDatabase(database, input);
   database.close();
-
-  const latencyValues = records
-    .map((record) => record.latencyMs)
-    .filter((value): value is number => typeof value === "number");
-  const totalLatency = latencyValues.reduce((sum, value) => sum + value, 0);
-
-  return {
-    requestCount: records.length,
-    successCount: records.filter((record) => record.errorClass === null).length,
-    failureCount: records.filter((record) => record.errorClass !== null).length,
-    totalInputTokens: records.reduce((sum, record) => sum + record.inputTokens, 0),
-    totalOutputTokens: records.reduce((sum, record) => sum + record.outputTokens, 0),
-    totalTokens: records.reduce((sum, record) => sum + record.totalTokens, 0),
-    cachedRequestCount: records.filter((record) => record.promptCacheUsed).length,
-    totalActualCostUsd: roundMetric(
-      records.reduce((sum, record) => sum + (record.actualCostUsd ?? 0), 0),
-    ),
-    totalEstimatedCostUsd: roundMetric(
-      records.reduce((sum, record) => sum + (record.estimatedCostUsd ?? 0), 0),
-    ),
-    totalEffectiveCostUsd: roundMetric(
-      records.reduce((sum, record) => sum + record.effectiveCostUsd, 0),
-    ),
-    averageLatencyMs:
-      latencyValues.length > 0 ? Math.round(totalLatency / latencyValues.length) : null,
-    p95LatencyMs: percentile95(latencyValues),
-    lastSeenAtMs: records[0]?.createdAtMs ?? null,
-  };
+  return summary;
 }
 
 export function listRuntimeTelemetryComparisonRows(
-  input: RuntimeTelemetryQueryInput,
+  input: RuntimeTelemetryListQueryInput,
 ): readonly RuntimeTelemetryComparisonRow[] {
   const database = openSqliteDatabase(input.databasePath);
-  const records = listRuntimeTelemetryRecordsInternal(database, input);
+  const { where, parameters } = telemetryWindowWhere(input);
+  type ComparisonAggregateRow = {
+    endpoint_id: string;
+    model_id: string | null;
+    provider_kind: string | null;
+    provider_family: string | null;
+    prompt_cache_supported: number | null;
+    request_count: number;
+    success_count: number;
+    failure_count: number;
+    total_input_tokens: number | null;
+    total_output_tokens: number | null;
+    total_tokens: number | null;
+    cached_request_count: number;
+    total_actual_cost_usd: number | null;
+    total_estimated_cost_usd: number | null;
+    latency_count: number;
+    total_latency_ms: number | null;
+    last_seen_at_ms: number;
+  };
+  const aggregates = database
+    .prepare(
+      `SELECT endpoint_id, model_id, provider_kind,
+         MAX(provider_family) AS provider_family,
+         MAX(prompt_cache_supported) AS prompt_cache_supported,
+         COUNT(*) AS request_count,
+         SUM(CASE WHEN error_class IS NULL THEN 1 ELSE 0 END) AS success_count,
+         SUM(CASE WHEN error_class IS NULL THEN 0 ELSE 1 END) AS failure_count,
+         COALESCE(SUM(input_tokens), 0) AS total_input_tokens,
+         COALESCE(SUM(output_tokens), 0) AS total_output_tokens,
+         COALESCE(SUM(total_tokens), 0) AS total_tokens,
+         SUM(CASE WHEN prompt_cache_used = 1 THEN 1 ELSE 0 END) AS cached_request_count,
+         COALESCE(SUM(actual_cost_usd), 0) AS total_actual_cost_usd,
+         COALESCE(SUM(estimated_cost_usd), 0) AS total_estimated_cost_usd,
+         COUNT(latency_ms) AS latency_count,
+         COALESCE(SUM(latency_ms), 0) AS total_latency_ms,
+         MAX(created_at_ms) AS last_seen_at_ms
+       FROM runtime_telemetry_records
+       WHERE ${where}
+       GROUP BY endpoint_id, model_id, provider_kind`,
+    )
+    .all(...parameters) as ComparisonAggregateRow[];
+  const latencyRows = database
+    .prepare(
+      `SELECT endpoint_id, model_id, provider_kind, latency_ms
+       FROM runtime_telemetry_records
+       WHERE ${where} AND latency_ms IS NOT NULL
+       ORDER BY endpoint_id, model_id, provider_kind, latency_ms ASC`,
+    )
+    .all(...parameters) as Array<{
+    endpoint_id: string;
+    model_id: string | null;
+    provider_kind: string | null;
+    latency_ms: number;
+  }>;
   database.close();
-
-  const grouped = new Map<
-    string,
-    {
-      endpointId: string;
-      modelId: string | null;
-      providerKind: string | null;
-      providerFamily: string | null;
-      promptCacheSupported: boolean;
-      requestCount: number;
-      successCount: number;
-      failureCount: number;
-      totalInputTokens: number;
-      totalOutputTokens: number;
-      totalTokens: number;
-      cachedRequestCount: number;
-      totalActualCostUsd: number;
-      totalEstimatedCostUsd: number;
-      latencies: number[];
-      lastSeenAtMs: number;
-    }
-  >();
-
-  for (const record of records) {
-    const key = `${record.endpointId}\u0000${record.modelId ?? ""}\u0000${record.providerKind ?? ""}`;
-    const existing = grouped.get(key) ?? {
-      endpointId: record.endpointId,
-      modelId: record.modelId,
-      providerKind: record.providerKind,
-      providerFamily: record.providerFamily,
-      promptCacheSupported: record.promptCacheSupported,
-      requestCount: 0,
-      successCount: 0,
-      failureCount: 0,
-      totalInputTokens: 0,
-      totalOutputTokens: 0,
-      totalTokens: 0,
-      cachedRequestCount: 0,
-      totalActualCostUsd: 0,
-      totalEstimatedCostUsd: 0,
-      latencies: [],
-      lastSeenAtMs: record.createdAtMs,
-    };
-    existing.requestCount += 1;
-    existing.providerFamily ??= record.providerFamily;
-    existing.promptCacheSupported = existing.promptCacheSupported || record.promptCacheSupported;
-    existing.successCount += record.errorClass === null ? 1 : 0;
-    existing.failureCount += record.errorClass !== null ? 1 : 0;
-    existing.totalInputTokens += record.inputTokens;
-    existing.totalOutputTokens += record.outputTokens;
-    existing.totalTokens += record.totalTokens;
-    existing.cachedRequestCount += record.promptCacheUsed ? 1 : 0;
-    existing.totalActualCostUsd += record.actualCostUsd ?? 0;
-    existing.totalEstimatedCostUsd += record.estimatedCostUsd ?? 0;
-    if (typeof record.latencyMs === "number") {
-      existing.latencies.push(record.latencyMs);
-    }
-    if (record.createdAtMs > existing.lastSeenAtMs) {
-      existing.lastSeenAtMs = record.createdAtMs;
-    }
-    grouped.set(key, existing);
+  const latenciesByKey = new Map<string, number[]>();
+  for (const row of latencyRows) {
+    const key = `${row.endpoint_id}\u0000${row.model_id ?? ""}\u0000${row.provider_kind ?? ""}`;
+    const values = latenciesByKey.get(key) ?? [];
+    values.push(row.latency_ms);
+    latenciesByKey.set(key, values);
   }
-
-  const rows = [...grouped.values()]
-    .map<RuntimeTelemetryComparisonRow>((entry) => ({
-      endpointId: entry.endpointId,
-      modelId: entry.modelId,
-      providerKind: entry.providerKind,
-      providerFamily: entry.providerFamily,
-      promptCacheSupported: entry.promptCacheSupported,
-      requestCount: entry.requestCount,
-      successCount: entry.successCount,
-      failureCount: entry.failureCount,
-      totalInputTokens: entry.totalInputTokens,
-      totalOutputTokens: entry.totalOutputTokens,
-      totalTokens: entry.totalTokens,
-      cachedRequestCount: entry.cachedRequestCount,
-      totalActualCostUsd: roundMetric(entry.totalActualCostUsd),
-      totalEstimatedCostUsd: roundMetric(entry.totalEstimatedCostUsd),
-      averageLatencyMs:
-        entry.latencies.length > 0
-          ? Math.round(
-              entry.latencies.reduce((sum, value) => sum + value, 0) / entry.latencies.length,
-            )
-          : null,
-      p95LatencyMs: percentile95(entry.latencies),
-      lastSeenAtMs: entry.lastSeenAtMs,
-    }))
+  const rows = aggregates
+    .map<RuntimeTelemetryComparisonRow>((entry) => {
+      const key = `${entry.endpoint_id}\u0000${entry.model_id ?? ""}\u0000${entry.provider_kind ?? ""}`;
+      const latencies = latenciesByKey.get(key) ?? [];
+      return {
+        endpointId: entry.endpoint_id,
+        modelId: entry.model_id,
+        providerKind: entry.provider_kind,
+        providerFamily: entry.provider_family,
+        promptCacheSupported: Number(entry.prompt_cache_supported ?? 0) === 1,
+        requestCount: Number(entry.request_count ?? 0),
+        successCount: Number(entry.success_count ?? 0),
+        failureCount: Number(entry.failure_count ?? 0),
+        totalInputTokens: Number(entry.total_input_tokens ?? 0),
+        totalOutputTokens: Number(entry.total_output_tokens ?? 0),
+        totalTokens: Number(entry.total_tokens ?? 0),
+        cachedRequestCount: Number(entry.cached_request_count ?? 0),
+        totalActualCostUsd: roundMetric(Number(entry.total_actual_cost_usd ?? 0)),
+        totalEstimatedCostUsd: roundMetric(Number(entry.total_estimated_cost_usd ?? 0)),
+        averageLatencyMs:
+          latencies.length > 0
+            ? Math.round(latencies.reduce((sum, value) => sum + value, 0) / latencies.length)
+            : null,
+        p95LatencyMs: percentile95(latencies),
+        lastSeenAtMs: Number(entry.last_seen_at_ms),
+      };
+    })
     .sort(
       (left, right) =>
         right.lastSeenAtMs - left.lastSeenAtMs ||
         right.requestCount - left.requestCount ||
         left.endpointId.localeCompare(right.endpointId),
     );
-
   return rows.slice(0, input.limit ?? rows.length);
 }
 
