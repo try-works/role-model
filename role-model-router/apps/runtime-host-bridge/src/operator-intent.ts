@@ -26,7 +26,11 @@ export interface OperatorIntentRemoteActivation {
   readonly reasoningEffort?: string | null;
   readonly modelRoleBindings?: readonly {
     readonly modelId: string;
+    readonly endpointId?: string;
     readonly roleIds: readonly string[];
+    readonly roleAssignmentMode?: "all" | "include" | "exclude" | "custom";
+    readonly enabledRoleIds?: readonly string[];
+    readonly disabledRoleIds?: readonly string[];
   }[];
 }
 
@@ -77,7 +81,7 @@ function readStringArray(value: unknown, label: string): readonly string[] {
 
 function readModelRoleBindings(
   value: unknown,
-): readonly { modelId: string; roleIds: readonly string[] }[] | undefined {
+): OperatorIntentRemoteActivation["modelRoleBindings"] {
   if (value === undefined) {
     return undefined;
   }
@@ -91,7 +95,37 @@ function readModelRoleBindings(
     const record = entry as Record<string, unknown>;
     return {
       modelId: ensureNonEmptyString(record.modelId, `modelRoleBindings[${index}].modelId`),
+      ...(record.endpointId !== undefined
+        ? {
+            endpointId: ensureNonEmptyString(
+              record.endpointId,
+              `modelRoleBindings[${index}].endpointId`,
+            ),
+          }
+        : {}),
       roleIds: readStringArray(record.roleIds, `modelRoleBindings[${index}].roleIds`),
+      ...(record.roleAssignmentMode === "all" ||
+      record.roleAssignmentMode === "include" ||
+      record.roleAssignmentMode === "exclude" ||
+      record.roleAssignmentMode === "custom"
+        ? { roleAssignmentMode: record.roleAssignmentMode }
+        : {}),
+      ...(record.enabledRoleIds !== undefined
+        ? {
+            enabledRoleIds: readStringArray(
+              record.enabledRoleIds,
+              `modelRoleBindings[${index}].enabledRoleIds`,
+            ),
+          }
+        : {}),
+      ...(record.disabledRoleIds !== undefined
+        ? {
+            disabledRoleIds: readStringArray(
+              record.disabledRoleIds,
+              `modelRoleBindings[${index}].disabledRoleIds`,
+            ),
+          }
+        : {}),
     };
   });
 }

@@ -73,19 +73,49 @@ describe("operator-intent", () => {
       modelId: "moonshot/kimi-k2.6",
       region: "global",
       endpointId: "moonshot.personal.kimi-code.global.kimi-k2.6",
-      modelRoleBindings: [{ modelId: "moonshot/kimi-k2.6", roleIds: ["general.chat"] }],
+      modelRoleBindings: [
+        {
+          modelId: "moonshot/kimi-k2.6",
+          endpointId: "moonshot.personal.kimi-code.global.kimi-k2.6",
+          roleIds: ["general.chat"],
+          roleAssignmentMode: "include",
+          enabledRoleIds: ["general.chat"],
+          disabledRoleIds: [],
+        },
+      ],
     });
     const replaced = upsertRemoteActivation(withActivation, {
       providerAccountId: "moonshot.personal.kimi-code",
       modelId: "moonshot/kimi-k2.6",
       region: "global",
       endpointId: "moonshot.personal.kimi-code.global.kimi-k2.6",
-      modelRoleBindings: [{ modelId: "moonshot/kimi-k2.6", roleIds: ["tool.agent"] }],
+      modelRoleBindings: [
+        {
+          modelId: "moonshot/kimi-k2.6",
+          endpointId: "moonshot.personal.kimi-code.global.kimi-k2.6",
+          roleIds: ["tool.agent"],
+          roleAssignmentMode: "exclude",
+          enabledRoleIds: [],
+          disabledRoleIds: ["general.chat"],
+        },
+      ],
     });
 
     expect(withActivation.remoteActivations).toHaveLength(1);
     expect(replaced.remoteActivations).toHaveLength(1);
     expect(replaced.remoteActivations[0]?.modelRoleBindings?.[0]?.roleIds).toEqual(["tool.agent"]);
+    expect(
+      validateOperatorIntent(JSON.parse(JSON.stringify(replaced))).remoteActivations[0],
+    ).toMatchObject({
+      modelRoleBindings: [
+        {
+          endpointId: "moonshot.personal.kimi-code.global.kimi-k2.6",
+          roleAssignmentMode: "exclude",
+          enabledRoleIds: [],
+          disabledRoleIds: ["general.chat"],
+        },
+      ],
+    });
   });
 
   it("tracks peer and llama-swap loads independently", () => {

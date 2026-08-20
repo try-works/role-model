@@ -262,6 +262,7 @@ export interface RuntimeAccount {
   readonly allowedModels?: readonly string[];
   readonly modelRoleBindings?: readonly {
     readonly modelId: string;
+    readonly endpointId?: string;
     readonly roleIds: readonly string[];
     readonly roleAssignmentMode?: "all" | "include" | "exclude" | "custom";
     readonly enabledRoleIds?: readonly string[];

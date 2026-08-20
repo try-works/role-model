@@ -13,6 +13,7 @@ export interface EndpointInstanceIdentity extends EndpointInstanceIdentityInput 
   readonly reasoningEffort: string | null;
 }
 
+/** Decode-only marker retained for pre-fix Run 91 records. */
 const EFFORT_PREFIX = "~effort-v1~";
 const MAX_REASONING_EFFORT_BYTES = 128;
 
@@ -78,7 +79,7 @@ export function createEndpointInstanceIdentity(
   const endpointId =
     reasoningEffort === null
       ? legacyBaseEndpointId
-      : `${legacyBaseEndpointId}${EFFORT_PREFIX}${Buffer.from(reasoningEffort, "utf8").toString("base64url")}`;
+      : `${legacyBaseEndpointId}-${encodeURIComponent(reasoningEffort)}`;
   return {
     endpointId,
     providerAccountId,
@@ -86,6 +87,34 @@ export function createEndpointInstanceIdentity(
     modelId,
     reasoningEffort,
   };
+}
+
+/**
+ * Reads the opaque suffix emitted by early Run 91 builds. New identities never
+ * use this format, but persisted telemetry and graph records must remain
+ * readable after an update.
+ */
+export function readLegacyEndpointReasoningEffort(endpointId: string): string | null {
+  if (typeof endpointId !== "string") {
+    return null;
+  }
+  const prefixIndex = endpointId.lastIndexOf(EFFORT_PREFIX);
+  if (prefixIndex < 0) {
+    return null;
+  }
+  const encoded = endpointId.slice(prefixIndex + EFFORT_PREFIX.length);
+  if (!encoded || !/^[A-Za-z0-9_-]+$/u.test(encoded)) {
+    return null;
+  }
+  try {
+    const decoded = Buffer.from(encoded, "base64url").toString("utf8");
+    const normalized = normalizeReasoningEffort(decoded);
+    return normalized !== null && Buffer.from(normalized, "utf8").toString("base64url") === encoded
+      ? normalized
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 export { EFFORT_PREFIX, MAX_REASONING_EFFORT_BYTES };

@@ -299,8 +299,15 @@ function getAccountRoleIdsForModel(
   account: RuntimeAccount,
   modelId: string,
   allRoleIds: readonly string[],
+  endpointId?: string,
 ): string[] {
-  const binding = account.modelRoleBindings?.find((entry) => entry.modelId === modelId);
+  const binding =
+    (endpointId
+      ? account.modelRoleBindings?.find((entry) => entry.endpointId === endpointId)
+      : undefined) ??
+    account.modelRoleBindings?.find(
+      (entry) => entry.endpointId === undefined && entry.modelId === modelId,
+    );
   return resolveRoleIdsFromAssignment(binding, allRoleIds);
 }
 
@@ -404,7 +411,7 @@ export function describeSavedModelRoleEligibility(input: {
       ...(role.secondaryGroupIds ?? []),
     ]),
   );
-  return `Saved eligibility for ${input.displayName} on ${input.providerAccountId}: ${selectedRoles.length} role${selectedRoles.length === 1 ? "" : "s"} derive ${taskTypes.size} task type${taskTypes.size === 1 ? "" : "s"} across ${groupIds.size} group${groupIds.size === 1 ? "" : "s"} for ${input.endpointVariantCount} endpoint variant${input.endpointVariantCount === 1 ? "" : "s"}.`;
+  return `Saved eligibility for ${input.displayName} on ${input.providerAccountId}: ${selectedRoles.length} role${selectedRoles.length === 1 ? "" : "s"} derive ${taskTypes.size} task type${taskTypes.size === 1 ? "" : "s"} across ${groupIds.size} group${groupIds.size === 1 ? "" : "s"} for this endpoint instance.`;
 }
 
 export function resolveSelectedModelAccount<
@@ -441,18 +448,29 @@ function configuredModelCardKey(card: ConfiguredModelCardLike): string {
   return card.identityKey ?? card.modelId;
 }
 
+export function configuredModelRoleDraftKey(
+  providerAccountId: string,
+  endpointId: string | undefined,
+): string {
+  return `${providerAccountId}\u0000${endpointId ?? "legacy-model-default"}`;
+}
+
 export function createAccountMutationPayload(
   account: RuntimeAccount,
   modelId: string,
   roleIds: readonly string[],
   allRoleIds: readonly string[] = [],
+  endpointId?: string,
 ): Record<string, unknown> {
-  const otherBindings = (account.modelRoleBindings ?? []).filter(
-    (binding) => binding.modelId !== modelId,
+  const otherBindings = (account.modelRoleBindings ?? []).filter((binding) =>
+    endpointId
+      ? binding.endpointId !== endpointId
+      : binding.endpointId !== undefined || binding.modelId !== modelId,
   );
   const assignment = buildModelRoleAssignmentForSelection(roleIds, allRoleIds);
   const nextBinding = {
     modelId,
+    ...(endpointId ? { endpointId } : {}),
     roleIds:
       assignment.roleAssignmentMode === "include" ? [...(assignment.enabledRoleIds ?? [])] : [],
     ...assignment,
@@ -679,8 +697,13 @@ export default function ControlModelsRoute() {
     setDraftRolesByAccountId(
       Object.fromEntries(
         selectedModelAccounts.map((account) => [
-          account.providerAccountId,
-          getAccountRoleIdsForModel(account, selectedCard.modelId, allRuntimeRoleIds),
+          configuredModelRoleDraftKey(account.providerAccountId, selectedCard.endpointId),
+          getAccountRoleIdsForModel(
+            account,
+            selectedCard.modelId,
+            allRuntimeRoleIds,
+            selectedCard.endpointId,
+          ),
         ]),
       ),
     );
@@ -693,11 +716,22 @@ export default function ControlModelsRoute() {
     setSavingAccountId(account.providerAccountId);
     setStatusMessage(`Saving role eligibility for ${account.providerAccountId}…`);
     try {
-      const roleIds = nextRoleIds ?? draftRolesByAccountId[account.providerAccountId] ?? [];
+      const roleIds =
+        nextRoleIds ??
+        draftRolesByAccountId[
+          configuredModelRoleDraftKey(account.providerAccountId, selectedCard.endpointId)
+        ] ??
+        [];
       const loaded = await saveConfiguredModelRoleEligibility({
         mutate: () =>
           upsertRuntimeAccount(
-            createAccountMutationPayload(account, selectedCard.modelId, roleIds, allRuntimeRoleIds),
+            createAccountMutationPayload(
+              account,
+              selectedCard.modelId,
+              roleIds,
+              allRuntimeRoleIds,
+              selectedCard.endpointId,
+            ),
           ),
         reloadCanonicalState: () =>
           loadConfiguredModelsMutationState({
@@ -889,11 +923,17 @@ export default function ControlModelsRoute() {
       )
     : false;
   const selectedPrimaryAccountRoleIds = selectedPrimaryAccount
-    ? (draftRolesByAccountId[selectedPrimaryAccount.providerAccountId] ??
+    ? (draftRolesByAccountId[
+        configuredModelRoleDraftKey(
+          selectedPrimaryAccount.providerAccountId,
+          selectedCard?.endpointId,
+        )
+      ] ??
       getAccountRoleIdsForModel(
         selectedPrimaryAccount,
         selectedCard?.modelId ?? "",
         allRuntimeRoleIds,
+        selectedCard?.endpointId,
       ))
     : [];
   const selectedFooterAction = resolveConfiguredModelFooterAction({
@@ -1164,8 +1204,9 @@ export default function ControlModelsRoute() {
                       <div className={configuredModelRoleListClassName}>
                         <p className="text-[12px] leading-4 text-[var(--rm-muted)]">
                           Saved immediately for {selectedPrimaryAccount.providerAccountId}. Task and
-                          group eligibility is derived from these roles and applies to every active
-                          effort variant on this account.
+                          group eligibility is derived from these roles for this exact endpoint
+                          instance. A legacy model default is inherited only until this instance is
+                          edited.
                         </p>
                         <ModelRoleBindingTree
                           roleDefinitions={rolePolicy.roleDefinitions}
@@ -1175,8 +1216,12 @@ export default function ControlModelsRoute() {
                           disabled={savingAccountId === selectedPrimaryAccount.providerAccountId}
                           onToggleRole={(roleId, nextChecked) => {
                             const accountId = selectedPrimaryAccount.providerAccountId;
+                            const draftKey = configuredModelRoleDraftKey(
+                              accountId,
+                              selectedCard.endpointId,
+                            );
                             const existing = new Set(
-                              draftRolesByAccountId[accountId] ?? selectedPrimaryAccountRoleIds,
+                              draftRolesByAccountId[draftKey] ?? selectedPrimaryAccountRoleIds,
                             );
                             if (nextChecked) {
                               existing.add(roleId);
@@ -1188,7 +1233,7 @@ export default function ControlModelsRoute() {
                             );
                             setDraftRolesByAccountId((current) => ({
                               ...current,
-                              [accountId]: nextRoleIds,
+                              [draftKey]: nextRoleIds,
                             }));
                             void saveAccountRoles(selectedPrimaryAccount, nextRoleIds);
                           }}

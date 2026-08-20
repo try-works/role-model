@@ -7,6 +7,7 @@ import {
   buildModelRoleAssignmentForSelection,
   buildSelectedModelEvidencePills,
   buildSelectedModelPreviewPayload,
+  configuredModelRoleDraftKey,
   createAccountMutationPayload,
   describeSavedModelRoleEligibility,
   resolveConfiguredModelEjectLabel,
@@ -39,6 +40,11 @@ const account = {
 } satisfies RuntimeAccount;
 
 describe("control model role assignment helpers", () => {
+  test("keeps transient role drafts separate for effort endpoint siblings", () => {
+    expect(configuredModelRoleDraftKey("deepseek.personal", "endpoint-high")).not.toBe(
+      configuredModelRoleDraftKey("deepseek.personal", "endpoint-max"),
+    );
+  });
   test("keeps the role list in document flow without an artificial viewport cap", () => {
     expect(controlModelsModule.configuredModelRoleSectionClassName).toBe("flex flex-col gap-3");
     expect(controlModelsModule.configuredModelRoleListClassName).toBe("space-y-2 pr-1");
@@ -80,6 +86,46 @@ describe("control model role assignment helpers", () => {
       roleAssignmentMode: "exclude",
       enabledRoleIds: [],
       disabledRoleIds: ["security"],
+    });
+  });
+
+  test("persists role eligibility for one endpoint instance without replacing its effort siblings", () => {
+    const endpointAccount = {
+      ...account,
+      allowedModels: ["deepseek/deepseek-v4-flash"],
+      modelRoleBindings: [
+        {
+          modelId: "deepseek/deepseek-v4-flash",
+          endpointId: "deepseek.personal.global.deepseek-v4-flash-high",
+          roleIds: [],
+          roleAssignmentMode: "include" as const,
+          enabledRoleIds: ["coder"],
+          disabledRoleIds: [],
+        },
+      ],
+    } satisfies RuntimeAccount;
+
+    expect(
+      createAccountMutationPayload(
+        endpointAccount,
+        "deepseek/deepseek-v4-flash",
+        ["analyst"],
+        ["analyst", "coder"],
+        "deepseek.personal.global.deepseek-v4-flash-max",
+      ),
+    ).toMatchObject({
+      modelRoleBindings: [
+        {
+          endpointId: "deepseek.personal.global.deepseek-v4-flash-high",
+          enabledRoleIds: ["coder"],
+        },
+        {
+          modelId: "deepseek/deepseek-v4-flash",
+          endpointId: "deepseek.personal.global.deepseek-v4-flash-max",
+          roleAssignmentMode: "exclude",
+          disabledRoleIds: ["coder"],
+        },
+      ],
     });
   });
 
@@ -472,7 +518,7 @@ describe("configured model mutation convergence", () => {
         endpointVariantCount: 4,
       }),
     ).toBe(
-      "Saved eligibility for DeepSeek V4 Flash (High) on deepseek.personal.primary: 2 roles derive 3 task types across 3 groups for 4 endpoint variants.",
+      "Saved eligibility for DeepSeek V4 Flash (High) on deepseek.personal.primary: 2 roles derive 3 task types across 3 groups for this endpoint instance.",
     );
   });
 

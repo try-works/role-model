@@ -48,6 +48,16 @@ describe("endpoint rehydration", () => {
                 }[];
               };
               upsertProviderAccount: (body: Record<string, unknown>) => Promise<unknown>;
+              listAccounts: () => Promise<
+                readonly {
+                  providerAccountId: string;
+                  modelRoleBindings?: readonly {
+                    modelId: string;
+                    endpointId?: string;
+                    roleIds: readonly string[];
+                  }[];
+                }[]
+              >;
               activateEndpointBatch: (body: Record<string, unknown>) => Promise<{
                 activationBatchId: string;
                 status: string;
@@ -122,6 +132,19 @@ describe("endpoint rehydration", () => {
           }),
         );
         expect(new Set(result.endpoints.map((entry) => entry.endpointId)).size).toBe(2);
+        const activatedAccount = (await backend.listAccounts()).find(
+          (account) => account.providerAccountId === "deepseek.personal.primary",
+        );
+        expect(activatedAccount?.modelRoleBindings).toEqual(
+          expect.arrayContaining(
+            result.endpoints.map((entry) =>
+              expect.objectContaining({
+                modelId: "deepseek/deepseek-v4-pro",
+                endpointId: entry.endpointId,
+              }),
+            ),
+          ),
+        );
         await expect(
           backend.activateEndpointBatch({
             activationBatchId: "activation-batch-rehydration",
@@ -184,6 +207,16 @@ describe("endpoint rehydration", () => {
             .filter(Boolean)
             .sort(),
         ).toEqual(["max"]);
+        const restartedAccount = (await restarted.listAccounts()).find(
+          (account) => account.providerAccountId === "deepseek.personal.primary",
+        );
+        expect(restartedAccount?.modelRoleBindings).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              endpointId: result.endpoints[1]?.endpointId,
+            }),
+          ]),
+        );
         await restarted.shutdown?.();
       } finally {
         if (originalDeepSeekApiKey === undefined) process.env.DEEPSEEK_API_KEY = undefined;

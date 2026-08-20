@@ -327,11 +327,18 @@ export function resolveEndpointExecutionEffort(input: {
   const fixedEffort = input.fixedEffort?.trim() || null;
   const clientEffort = input.executionRequest.reasoning?.effort?.trim() || null;
   if (fixedEffort === null) {
+    const { reasoning: clientReasoning, ...executionRequestWithoutReasoning } =
+      input.executionRequest;
+    const { effort: _clientEffort, ...providerDefaultReasoning } = clientReasoning ?? {};
+    const executionRequest =
+      Object.keys(providerDefaultReasoning).length === 0
+        ? executionRequestWithoutReasoning
+        : { ...executionRequestWithoutReasoning, reasoning: providerDefaultReasoning };
     return {
-      executionRequest: input.executionRequest,
+      executionRequest,
       receipt: {
-        reasoningEffort: clientEffort,
-        effortSource: clientEffort === null ? "none" : "client",
+        reasoningEffort: null,
+        effortSource: "none",
       },
     };
   }
@@ -6220,23 +6227,26 @@ function mergeProviderAccountModelRoleBindings(
   manualBindings: readonly ProviderAccountModelRoleBinding[],
   runtimeConfigBindings: readonly ProviderAccountModelRoleBinding[],
 ): ProviderAccountRecord["modelRoleBindings"] {
+  const bindingKey = (binding: ProviderAccountModelRoleBinding): string =>
+    binding.endpointId ?? binding.modelId;
   const explicitBindings = new Map<string, ProviderAccountModelRoleBinding>();
   for (const binding of [...runtimeConfigBindings, ...manualBindings]) {
     const normalizedBinding = normalizeProviderAccountModelRoleBinding(binding);
     if (normalizedBinding.roleAssignmentMode) {
-      explicitBindings.set(normalizedBinding.modelId, normalizedBinding);
+      explicitBindings.set(bindingKey(normalizedBinding), normalizedBinding);
     }
   }
   const mergedBindings = new Map<string, Set<string>>();
   for (const binding of [...manualBindings, ...runtimeConfigBindings]) {
-    if (explicitBindings.has(binding.modelId)) {
+    const identity = bindingKey(binding);
+    if (explicitBindings.has(identity)) {
       continue;
     }
-    const roleIds = mergedBindings.get(binding.modelId) ?? new Set<string>();
+    const roleIds = mergedBindings.get(identity) ?? new Set<string>();
     for (const roleId of normalizeRuntimeRoleIds(binding.roleIds) ?? []) {
       roleIds.add(roleId);
     }
-    mergedBindings.set(binding.modelId, roleIds);
+    mergedBindings.set(identity, roleIds);
   }
 
   if (mergedBindings.size === 0 && explicitBindings.size === 0) {
@@ -6254,11 +6264,17 @@ function mergeProviderAccountModelRoleBindings(
         ? { disabledRoleIds: [...binding.disabledRoleIds].sort(compareText) }
         : {}),
     })),
-    ...[...mergedBindings.entries()].map(([modelId, roleIds]) => ({
-      modelId,
-      roleIds: [...roleIds].sort(compareText),
-    })),
-  ].sort((left, right) => compareText(left.modelId, right.modelId));
+    ...[...mergedBindings.entries()].map(([identity, roleIds]) => {
+      const source = [...manualBindings, ...runtimeConfigBindings].find(
+        (binding) => bindingKey(binding) === identity,
+      );
+      return {
+        modelId: source?.modelId ?? identity,
+        ...(source?.endpointId ? { endpointId: source.endpointId } : {}),
+        roleIds: [...roleIds].sort(compareText),
+      };
+    }),
+  ].sort((left, right) => compareText(bindingKey(left), bindingKey(right)));
 }
 
 function mergeRuntimeConfigProviderAccount(
@@ -6562,13 +6578,27 @@ function buildRuntimeRoleBindings(
   return mergeRuntimeRoleBindings(accountBindings, llamaSwapBindings);
 }
 
-function getModelRoleIds(account: ProviderAccountRecord, modelId: string): readonly string[] {
+function getModelRoleBinding(
+  account: ProviderAccountRecord,
+  modelId: string,
+  endpointId?: string,
+): ProviderAccountModelRoleBinding | undefined {
   return (
-    account.modelRoleBindings
-      ?.find((entry) => entry.modelId === modelId)
-      ?.roleIds.slice()
-      .sort(compareText) ?? []
+    (endpointId
+      ? account.modelRoleBindings?.find((entry) => entry.endpointId === endpointId)
+      : undefined) ??
+    account.modelRoleBindings?.find(
+      (entry) => entry.endpointId === undefined && entry.modelId === modelId,
+    )
   );
+}
+
+function getModelRoleIds(
+  account: ProviderAccountRecord,
+  modelId: string,
+  endpointId?: string,
+): readonly string[] {
+  return getModelRoleBinding(account, modelId, endpointId)?.roleIds.slice().sort(compareText) ?? [];
 }
 
 function getEndpointRoleIds(
@@ -8027,18 +8057,10 @@ function filterRequestedModelPoolByReasoningEffort(input: {
     );
   }
 
-  // A provider-default row can forward a client effort. Never satisfy an
-  // alias/model effort request by silently selecting a different fixed sibling.
-  const providerDefaultEndpointIds = input.registry.endpoints
-    .filter(
-      (endpoint) =>
-        allowed.has(endpoint.identity.endpoint_id) &&
-        (endpoint.identity.reasoning_effort?.trim() || null) === null,
-    )
-    .map((endpoint) => endpoint.identity.endpoint_id);
-  return input.allowEndpoints.filter((endpointId) =>
-    providerDefaultEndpointIds.includes(endpointId),
-  );
+  // Provider-default is its own endpoint instance. A requested effort must
+  // resolve to an exact fixed sibling rather than changing the base endpoint's
+  // identity and semantics at execution time.
+  return [];
 }
 
 function applyRequestedEndpointOverride(input: {
@@ -16400,7 +16422,11 @@ export async function createRuntimeBridgeBackend(
       mergedAccount.modelRoleBindings = [
         ...existingBindings.filter(
           (existingBinding) =>
-            !newBindings.some((newBinding) => newBinding.modelId === existingBinding.modelId),
+            !newBindings.some(
+              (newBinding) =>
+                (newBinding.endpointId ?? newBinding.modelId) ===
+                (existingBinding.endpointId ?? existingBinding.modelId),
+            ),
         ),
         ...newBindings,
       ];
@@ -16554,7 +16580,10 @@ export async function createRuntimeBridgeBackend(
       );
     }
     const requiredModelsByAccountId = new Map<string, Set<string>>();
-    const activationBindingsByAccountModelKey = new Map<string, ProviderAccountModelRoleBinding>();
+    const activationBindingsByAccountEndpointKey = new Map<
+      string,
+      ProviderAccountModelRoleBinding
+    >();
     const rememberRequiredModel = (providerAccountId: string, modelId: string): void => {
       if (!isConfigured(providerAccountId, modelId)) {
         return;
@@ -16566,31 +16595,23 @@ export async function createRuntimeBridgeBackend(
     const buildActivationBinding = (
       activation: OperatorIntentRemoteActivation,
     ): ProviderAccountModelRoleBinding | null => {
-      const matchingBindings = (activation.modelRoleBindings ?? []).filter(
-        (binding) => binding.modelId === activation.modelId,
-      );
-      if (matchingBindings.length === 0) {
+      const binding =
+        (activation.modelRoleBindings ?? []).find(
+          (entry) => entry.endpointId === activation.endpointId,
+        ) ??
+        (activation.modelRoleBindings ?? []).find(
+          (entry) => entry.endpointId === undefined && entry.modelId === activation.modelId,
+        );
+      if (!binding) {
         return null;
       }
-      const roleIds = [
-        ...new Set(
-          matchingBindings.flatMap(
-            (binding) => normalizeRuntimeRoleIds(binding.roleIds) ?? binding.roleIds,
-          ),
-        ),
-      ].sort(compareText);
-      if (roleIds.length === 0) {
-        return {
-          modelId: activation.modelId,
-          roleIds: [],
-          roleAssignmentMode: "all",
-          enabledRoleIds: [],
-          disabledRoleIds: [],
-        };
-      }
       return {
+        ...binding,
         modelId: activation.modelId,
-        roleIds,
+        endpointId: activation.endpointId,
+        roleIds: [...(normalizeRuntimeRoleIds(binding.roleIds) ?? binding.roleIds)].sort(
+          compareText,
+        ),
       };
     };
 
@@ -16601,8 +16622,8 @@ export async function createRuntimeBridgeBackend(
       rememberRequiredModel(activation.providerAccountId, activation.modelId);
       const binding = buildActivationBinding(activation);
       if (binding) {
-        activationBindingsByAccountModelKey.set(
-          `${activation.providerAccountId}:${activation.modelId}`,
+        activationBindingsByAccountEndpointKey.set(
+          `${activation.providerAccountId}:${activation.endpointId}`,
           binding,
         );
       }
@@ -16621,21 +16642,23 @@ export async function createRuntimeBridgeBackend(
         (account.modelRoleBindings ?? []).map((binding) =>
           normalizeProviderAccountModelRoleBinding(binding),
         ) as ProviderAccountModelRoleBinding[]
-      ).filter((binding) => account.allowedModels.includes(binding.modelId));
+      ).filter(
+        (binding) =>
+          account.allowedModels.length === 0 || account.allowedModels.includes(binding.modelId),
+      );
       prunedBindingCount += (account.modelRoleBindings?.length ?? 0) - nextBindings.length;
-      const existingBindingModelIds = new Set(nextBindings.map((binding) => binding.modelId));
-      for (const modelId of requiredModels) {
-        if (existingBindingModelIds.has(modelId)) {
+      const existingBindingIdentities = new Set(
+        nextBindings.map((binding) => binding.endpointId ?? binding.modelId),
+      );
+      for (const [key, activationBinding] of activationBindingsByAccountEndpointKey) {
+        if (!key.startsWith(`${account.providerAccountId}:`)) {
           continue;
         }
-        const activationBinding = activationBindingsByAccountModelKey.get(
-          `${account.providerAccountId}:${modelId}`,
-        );
-        if (!activationBinding) {
-          continue;
+        const identity = activationBinding.endpointId ?? activationBinding.modelId;
+        if (!existingBindingIdentities.has(identity)) {
+          nextBindings.push(activationBinding);
+          existingBindingIdentities.add(identity);
         }
-        nextBindings.push(activationBinding);
-        existingBindingModelIds.add(modelId);
       }
       const sanitizedBindings = sanitizeProviderAccountModelRoleBindingsForAllowedRoles(
         nextBindings,
@@ -18126,6 +18149,58 @@ export async function createRuntimeBridgeBackend(
     });
     return true;
   };
+  const persistEndpointSpecificRoleBindings = (
+    entries: readonly {
+      readonly providerAccountId: string;
+      readonly modelId: string;
+      readonly endpointId: string;
+    }[],
+  ): void => {
+    const accountsById = new Map(
+      currentAccounts.map((account) => [account.providerAccountId, account] as const),
+    );
+    const changedAccounts = new Map<string, ProviderAccountRecord>();
+    for (const entry of entries) {
+      const account = accountsById.get(entry.providerAccountId);
+      if (!account) {
+        continue;
+      }
+      const selectedBinding = getModelRoleBinding(account, entry.modelId, entry.endpointId);
+      if (!selectedBinding || selectedBinding.endpointId === entry.endpointId) {
+        continue;
+      }
+      const exactBinding: ProviderAccountModelRoleBinding = {
+        ...selectedBinding,
+        modelId: entry.modelId,
+        endpointId: entry.endpointId,
+        roleIds: [...selectedBinding.roleIds],
+        ...(selectedBinding.enabledRoleIds
+          ? { enabledRoleIds: [...selectedBinding.enabledRoleIds] }
+          : {}),
+        ...(selectedBinding.disabledRoleIds
+          ? { disabledRoleIds: [...selectedBinding.disabledRoleIds] }
+          : {}),
+      };
+      const nextAccount: ProviderAccountRecord = {
+        ...account,
+        modelRoleBindings: [
+          ...(account.modelRoleBindings ?? []).filter(
+            (binding) => binding.endpointId !== entry.endpointId,
+          ),
+          exactBinding,
+        ],
+      };
+      accountsById.set(entry.providerAccountId, nextAccount);
+      changedAccounts.set(entry.providerAccountId, nextAccount);
+    }
+    if (changedAccounts.size > 0) {
+      persistProviderAccounts({
+        databasePath: initialization.databasePath,
+        accounts: [...changedAccounts.values()],
+      });
+    }
+  };
+
   const activateRuntimeEndpoint = (
     body: Record<string, unknown>,
     options: { readonly deferPersistence?: boolean; readonly allowExisting?: boolean } = {},
@@ -18267,14 +18342,14 @@ export async function createRuntimeBridgeBackend(
         },
       });
       if (servingSource !== "local-peer") {
-        const modelRoleBindings = (account.modelRoleBindings ?? [])
-          .filter((binding) => binding.modelId === model.modelId)
-          .map((binding) => ({
-            ...binding,
-            roleIds: [...binding.roleIds],
-            ...(binding.enabledRoleIds ? { enabledRoleIds: [...binding.enabledRoleIds] } : {}),
-            ...(binding.disabledRoleIds ? { disabledRoleIds: [...binding.disabledRoleIds] } : {}),
-          }));
+        const selectedBinding = getModelRoleBinding(account, model.modelId, endpointId);
+        const modelRoleBindings = (selectedBinding ? [selectedBinding] : []).map((binding) => ({
+          ...binding,
+          endpointId,
+          roleIds: [...binding.roleIds],
+          ...(binding.enabledRoleIds ? { enabledRoleIds: [...binding.enabledRoleIds] } : {}),
+          ...(binding.disabledRoleIds ? { disabledRoleIds: [...binding.disabledRoleIds] } : {}),
+        }));
         persistOperatorIntent(operatorIntentLocation, (intent) =>
           upsertRemoteActivation(intent, {
             providerAccountId,
@@ -18286,6 +18361,9 @@ export async function createRuntimeBridgeBackend(
           }),
         );
       }
+      persistEndpointSpecificRoleBindings([
+        { providerAccountId, modelId: model.modelId, endpointId },
+      ]);
       rebuildCurrentState();
     }
     return {
@@ -18293,7 +18371,7 @@ export async function createRuntimeBridgeBackend(
       providerAccountId,
       providerId: account.providerId,
       modelId: model.modelId,
-      roleIds: getModelRoleIds(account, model.modelId),
+      roleIds: getModelRoleIds(account, model.modelId, endpointId),
       status: "active",
     };
   };
@@ -18429,14 +18507,16 @@ export async function createRuntimeBridgeBackend(
           const account = currentAccounts.find(
             (candidate) => candidate.providerAccountId === entry.result.providerAccountId,
           );
-          const modelRoleBindings = (account?.modelRoleBindings ?? [])
-            .filter((binding) => binding.modelId === entry.result.modelId)
-            .map((binding) => ({
-              ...binding,
-              roleIds: [...binding.roleIds],
-              ...(binding.enabledRoleIds ? { enabledRoleIds: [...binding.enabledRoleIds] } : {}),
-              ...(binding.disabledRoleIds ? { disabledRoleIds: [...binding.disabledRoleIds] } : {}),
-            }));
+          const selectedBinding = account
+            ? getModelRoleBinding(account, entry.result.modelId, entry.result.endpointId)
+            : undefined;
+          const modelRoleBindings = (selectedBinding ? [selectedBinding] : []).map((binding) => ({
+            ...binding,
+            endpointId: entry.result.endpointId,
+            roleIds: [...binding.roleIds],
+            ...(binding.enabledRoleIds ? { enabledRoleIds: [...binding.enabledRoleIds] } : {}),
+            ...(binding.disabledRoleIds ? { disabledRoleIds: [...binding.disabledRoleIds] } : {}),
+          }));
           updated = upsertRemoteActivation(updated, {
             providerAccountId: entry.result.providerAccountId,
             modelId: entry.result.modelId,
@@ -18463,6 +18543,13 @@ export async function createRuntimeBridgeBackend(
         reasoningEffort: entry.identity.reasoningEffort,
       })),
     });
+    persistEndpointSpecificRoleBindings(
+      resolved.map((entry) => ({
+        providerAccountId: entry.result.providerAccountId,
+        modelId: entry.result.modelId,
+        endpointId: entry.result.endpointId,
+      })),
+    );
     rebuildCurrentState();
     const committed = {
       activationBatchId,

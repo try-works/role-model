@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 import * as endpointRegistry from "../src/index.ts";
 
 describe("effort instance identity", () => {
-  test("exports one canonical identity constructor with stable legacy and encoded effort ids", () => {
+  test("exports one canonical identity constructor with stable default and readable effort ids", () => {
     const createIdentity = (
       endpointRegistry as typeof endpointRegistry & {
         createEndpointInstanceIdentity?: (input: {
@@ -50,12 +50,24 @@ describe("effort instance identity", () => {
       reasoningEffort: "max",
     });
 
-    expect(medium?.endpointId).toBe(
-      "deepseek.personal.primary.global.deepseek-v4-pro~effort-v1~bWVkaXVt",
-    );
-    expect(max?.endpointId).toBe("deepseek.personal.primary.global.deepseek-v4-pro~effort-v1~bWF4");
+    expect(medium?.endpointId).toBe("deepseek.personal.primary.global.deepseek-v4-pro-medium");
+    expect(max?.endpointId).toBe("deepseek.personal.primary.global.deepseek-v4-pro-max");
     expect(medium?.endpointId).not.toBe(max?.endpointId);
     expect(medium?.reasoningEffort).toBe("medium");
+  });
+
+  test("recognizes legacy encoded ids without generating them for new endpoints", () => {
+    const readLegacyEffort = (
+      endpointRegistry as typeof endpointRegistry & {
+        readLegacyEndpointReasoningEffort?: (endpointId: string) => string | null;
+      }
+    ).readLegacyEndpointReasoningEffort;
+
+    expect(readLegacyEffort).toBeTypeOf("function");
+    expect(
+      readLegacyEffort?.("deepseek.personal.primary.global.deepseek-v4-pro~effort-v1~aGlnaA"),
+    ).toBe("high");
+    expect(readLegacyEffort?.("deepseek.personal.primary.global.deepseek-v4-pro-max")).toBeNull();
   });
 
   test("normalizes canonical Unicode and rejects unsafe or oversized effort tokens", () => {

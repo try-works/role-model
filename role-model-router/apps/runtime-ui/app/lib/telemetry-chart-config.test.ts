@@ -113,6 +113,9 @@ describe("telemetry chart config", () => {
       expect(route).toContain("effortSources");
     }
     expect(requestsRoute).toContain('label: "Selected model"');
+    expect(requestsRoute).toContain('label: "Endpoint effort"');
+    expect(requestsRoute).toContain('?? "Default"');
+    expect(requestsRoute).not.toContain('label: "Request effort"');
   });
 });
 import { readFileSync } from "node:fs";

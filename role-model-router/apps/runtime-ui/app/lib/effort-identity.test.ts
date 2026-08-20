@@ -65,13 +65,19 @@ describe("reasoning-effort endpoint identity", () => {
         endpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash~effort-v1~aGlnaA",
         reasoningEffort: "high",
       }),
-    ).toBe("deepseek.personal.deepseek-api-key.global.deepseek-v4-flash~high");
+    ).toBe("deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-high");
     expect(
       formatEndpointDisplayPath({
         endpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash~effort-v1~bWF4",
         reasoningEffort: "max",
       }),
-    ).toBe("deepseek.personal.deepseek-api-key.global.deepseek-v4-flash~max");
+    ).toBe("deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-max");
+    expect(
+      formatEndpointDisplayPath({
+        endpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-max",
+        reasoningEffort: "max",
+      }),
+    ).toBe("deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-max");
   });
 
   test("keeps provider-default and contradictory canonical ids unchanged", () => {

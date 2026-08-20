@@ -6149,8 +6149,14 @@ describe("runtime-host-bridge", () => {
         endpoint.identity.endpoint_id === "moonshot.personal.primary.global.kimi-k2.5"
           ? {
               ...endpoint,
+              identity: {
+                ...endpoint.identity,
+                endpoint_id: "moonshot.personal.primary.global.kimi-k2.5-high",
+                reasoning_effort: "high",
+              },
               declared: {
                 ...endpoint.declared,
+                endpoint_id: "moonshot.personal.primary.global.kimi-k2.5-high",
                 capabilities: [...endpoint.declared.capabilities, "reasoning"],
               },
             }
@@ -6610,8 +6616,14 @@ describe("runtime-host-bridge", () => {
         endpoint.identity.endpoint_id === "moonshot.personal.primary.global.kimi-k2.5"
           ? {
               ...endpoint,
+              identity: {
+                ...endpoint.identity,
+                endpoint_id: "moonshot.personal.primary.global.kimi-k2.5-high",
+                reasoning_effort: "high",
+              },
               declared: {
                 ...endpoint.declared,
+                endpoint_id: "moonshot.personal.primary.global.kimi-k2.5-high",
                 capabilities: [...endpoint.declared.capabilities, "reasoning"],
               },
             }
@@ -10853,7 +10865,7 @@ describe("runtime-host-bridge", () => {
     }
   });
 
-  test("upsertProviderAccount replaces existing model role assignments for the same model", async () => {
+  test("upsertProviderAccount updates one endpoint role assignment without replacing effort siblings", async () => {
     const runtimeStateRoot = await mkdtemp(
       path.join(os.tmpdir(), "role-model-runtime-host-role-assignment-upsert-"),
     );
@@ -10873,6 +10885,7 @@ describe("runtime-host-bridge", () => {
                 providerAccountId: string;
                 modelRoleBindings?: readonly {
                   modelId: string;
+                  endpointId?: string;
                   roleIds: readonly string[];
                   roleAssignmentMode?: string;
                   enabledRoleIds?: readonly string[];
@@ -10920,7 +10933,13 @@ describe("runtime-host-bridge", () => {
         modelRoleBindings: [
           {
             modelId: "moonshot/kimi-k2.5",
-            roleIds: ["general.chat"],
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5-high",
+            roleIds: ["coder"],
+          },
+          {
+            modelId: "moonshot/kimi-k2.5",
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5-max",
+            roleIds: ["architect"],
           },
         ],
       });
@@ -10930,6 +10949,7 @@ describe("runtime-host-bridge", () => {
         modelRoleBindings: [
           {
             modelId: "moonshot/kimi-k2.5",
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5-max",
             roleIds: [],
             roleAssignmentMode: "all",
             enabledRoleIds: [],
@@ -10944,6 +10964,12 @@ describe("runtime-host-bridge", () => {
       expect(account?.modelRoleBindings).toEqual([
         {
           modelId: "moonshot/kimi-k2.5",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5-high",
+          roleIds: ["coder"],
+        },
+        {
+          modelId: "moonshot/kimi-k2.5",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5-max",
           roleIds: [],
           roleAssignmentMode: "all",
           enabledRoleIds: [],
@@ -22690,15 +22716,19 @@ describe("runtime-host-bridge", () => {
         rotationState: "stable",
       });
 
-      await backend.activateEndpoint?.({
+      const effortEndpoint = await backend.activateEndpoint?.({
         providerAccountId: "deepseek.personal.apikey",
         modelId: "deepseek/deepseek-v4-flash",
         region: "global",
+        reasoningEffort: "high",
       });
+      expect(effortEndpoint?.endpointId).toBe(
+        "deepseek.personal.apikey.global.deepseek-v4-flash-high",
+      );
 
       const result = await backend.executeChatCompletions(
         {
-          model: "deepseek/deepseek-v4-flash",
+          model: effortEndpoint?.endpointId ?? "missing-effort-endpoint",
           stream: true,
           reasoning_effort: "high",
           messages: [{ role: "user", content: "Say Ready." }],

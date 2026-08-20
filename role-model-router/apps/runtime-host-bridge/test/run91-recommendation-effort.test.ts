@@ -43,7 +43,7 @@ describe("Run 91 recommendation effort identity", () => {
           id: "deepseek-v4-high-pack",
           version: "1",
           provenance: "cloud:run91-high",
-          endpointId: "deepseek.personal.deepseek-v4-pro~effort-v1~high",
+          endpointId: "deepseek.personal.deepseek-v4-pro-high",
           modelId: "deepseek/deepseek-v4-pro",
           reasoningEffort: "high",
           effortSource: "variant",
@@ -52,7 +52,7 @@ describe("Run 91 recommendation effort identity", () => {
           id: "deepseek-v4-max-pack",
           version: "1",
           provenance: "cloud:run91-max",
-          endpointId: "deepseek.personal.deepseek-v4-pro~effort-v1~max",
+          endpointId: "deepseek.personal.deepseek-v4-pro-max",
           modelId: "deepseek/deepseek-v4-pro",
           reasoningEffort: "max",
           effortSource: "variant",
@@ -66,14 +66,14 @@ describe("Run 91 recommendation effort identity", () => {
       expect.arrayContaining([
         expect.objectContaining({
           id: "deepseek-v4-high-pack",
-          endpointId: "deepseek.personal.deepseek-v4-pro~effort-v1~high",
+          endpointId: "deepseek.personal.deepseek-v4-pro-high",
           modelId: "deepseek/deepseek-v4-pro",
           reasoningEffort: "high",
           effortSource: "variant",
         }),
         expect.objectContaining({
           id: "deepseek-v4-max-pack",
-          endpointId: "deepseek.personal.deepseek-v4-pro~effort-v1~max",
+          endpointId: "deepseek.personal.deepseek-v4-pro-max",
           modelId: "deepseek/deepseek-v4-pro",
           reasoningEffort: "max",
           effortSource: "variant",
@@ -87,7 +87,7 @@ describe("Run 91 recommendation effort identity", () => {
     expect(appliedHigh.activePack).toMatchObject({
       id: "deepseek-v4-high-pack",
       version: "1",
-      endpointId: "deepseek.personal.deepseek-v4-pro~effort-v1~high",
+      endpointId: "deepseek.personal.deepseek-v4-pro-high",
       modelId: "deepseek/deepseek-v4-pro",
       reasoningEffort: "high",
       effortSource: "variant",
@@ -117,7 +117,7 @@ describe("Run 91 recommendation effort identity", () => {
     };
     expect(appliedMax.activePack).toMatchObject({
       id: "deepseek-v4-max-pack",
-      endpointId: "deepseek.personal.deepseek-v4-pro~effort-v1~max",
+      endpointId: "deepseek.personal.deepseek-v4-pro-max",
       modelId: "deepseek/deepseek-v4-pro",
       reasoningEffort: "max",
       effortSource: "variant",

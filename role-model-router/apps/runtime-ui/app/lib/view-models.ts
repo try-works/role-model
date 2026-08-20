@@ -1,4 +1,5 @@
 import {
+  endpointIdentityOwnsReasoningEffort,
   formatCompactEndpointDisplayName,
   formatEndpointDisplayName,
   formatEndpointDisplayPath,
@@ -1057,6 +1058,7 @@ export function buildTelemetryRequestRows(
       | "modelId"
       | "upstreamModelId"
       | "reasoningEffort"
+      | "effortSource"
       | "sourceType"
       | "createdAtMs"
       | "latencyMs"
@@ -1088,6 +1090,11 @@ export function buildTelemetryRequestRows(
   endpointId: string;
   modelId: string | null | undefined;
   displayName: string;
+  /** Effort fixed by the selected endpoint instance, if any. */
+  reasoningEffort: string | null;
+  /** Effective request effort, which may have been forwarded by a provider-default endpoint. */
+  requestedReasoningEffort: string | null;
+  effortSource: string | null;
   sourceLabel: string;
   statusLabel: string;
   providerFamilyLabel: string;
@@ -1101,42 +1108,54 @@ export function buildTelemetryRequestRows(
 }> {
   return [...rows]
     .sort((left, right) => right.createdAtMs - left.createdAtMs)
-    .map((row) => ({
-      requestId: row.requestId,
-      clientRequestId: row.clientRequestId ?? null,
-      routingDecisionLabel: row.routingDecisionId ?? "n/a",
-      endpointId: row.endpointId,
-      modelId: row.modelId,
-      displayName: formatModelIdentity({
-        id: row.modelId ?? row.endpointId,
-        upstreamModelId: row.upstreamModelId,
-        reasoningEffort: row.reasoningEffort,
-      }),
-      sourceLabel: formatSourceLabel(row.sourceType),
-      statusLabel: buildTelemetryStatusLabel(row),
-      providerFamilyLabel:
-        row.providerId ?? row.providerFamily ?? row.providerKind ?? "unknown provider",
-      finishReasonLabel: row.finishReason ?? "unknown",
-      cacheLabel: summarizeCachePosture({
-        promptCacheSupported: row.promptCacheSupported,
-        promptCacheRequested: row.promptCacheRequested,
-        promptCacheUsed: row.promptCacheUsed,
-      }),
-      streamLabel: summarizeStreamLabel(row),
-      latencyLabel:
-        row.latencyMs !== null && row.latencyMs !== undefined ? `${row.latencyMs} ms` : "n/a",
-      tokenLabel: `${row.totalTokens ?? 0} tokens`,
-      costLabel:
-        typeof row.actualCostUsd === "number" && row.actualCostUsd > 0
-          ? formatCurrency(row.actualCostUsd, "actual")
-          : formatCurrency(row.estimatedCostUsd, "estimate"),
-      createdAtLabel: new Date(row.createdAtMs).toLocaleString("en-US", {
-        month: "short",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    }));
+    .map((row) => {
+      const requestedReasoningEffort = row.reasoningEffort?.trim() || null;
+      const endpointOwnsEffort = endpointIdentityOwnsReasoningEffort({
+        endpointId: row.endpointId,
+        reasoningEffort: requestedReasoningEffort,
+        effortSource: row.effortSource,
+      });
+      const endpointReasoningEffort = endpointOwnsEffort ? requestedReasoningEffort : null;
+      return {
+        requestId: row.requestId,
+        clientRequestId: row.clientRequestId ?? null,
+        routingDecisionLabel: row.routingDecisionId ?? "n/a",
+        endpointId: row.endpointId,
+        modelId: row.modelId,
+        displayName: formatModelIdentity({
+          id: row.modelId ?? row.endpointId,
+          upstreamModelId: row.upstreamModelId,
+          reasoningEffort: endpointReasoningEffort,
+        }),
+        reasoningEffort: endpointReasoningEffort,
+        requestedReasoningEffort,
+        effortSource: row.effortSource ?? null,
+        sourceLabel: formatSourceLabel(row.sourceType),
+        statusLabel: buildTelemetryStatusLabel(row),
+        providerFamilyLabel:
+          row.providerId ?? row.providerFamily ?? row.providerKind ?? "unknown provider",
+        finishReasonLabel: row.finishReason ?? "unknown",
+        cacheLabel: summarizeCachePosture({
+          promptCacheSupported: row.promptCacheSupported,
+          promptCacheRequested: row.promptCacheRequested,
+          promptCacheUsed: row.promptCacheUsed,
+        }),
+        streamLabel: summarizeStreamLabel(row),
+        latencyLabel:
+          row.latencyMs !== null && row.latencyMs !== undefined ? `${row.latencyMs} ms` : "n/a",
+        tokenLabel: `${row.totalTokens ?? 0} tokens`,
+        costLabel:
+          typeof row.actualCostUsd === "number" && row.actualCostUsd > 0
+            ? formatCurrency(row.actualCostUsd, "actual")
+            : formatCurrency(row.estimatedCostUsd, "estimate"),
+        createdAtLabel: new Date(row.createdAtMs).toLocaleString("en-US", {
+          month: "short",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+    });
 }
 
 export function buildDashboardLatestRequestRows(
@@ -1983,11 +2002,21 @@ export function buildConfiguredModelCards(input: {
           ...new Set(
             [
               ...endpointRows.flatMap((entry) => entry.roleIds ?? []),
-              ...input.accounts.flatMap((account) =>
-                (account.modelRoleBindings ?? [])
-                  .filter((binding) => binding.modelId === upstreamModelId)
-                  .flatMap((binding) => binding.roleIds),
-              ),
+              ...input.accounts.flatMap((account) => {
+                if (
+                  endpoint?.providerAccountId &&
+                  account.providerAccountId !== endpoint.providerAccountId
+                ) {
+                  return [];
+                }
+                const bindings = account.modelRoleBindings ?? [];
+                const binding =
+                  bindings.find((entry) => entry.endpointId === endpointId) ??
+                  bindings.find(
+                    (entry) => entry.endpointId === undefined && entry.modelId === upstreamModelId,
+                  );
+                return binding?.roleIds ?? [];
+              }),
             ].sort((left, right) => left.localeCompare(right, "en")),
           ),
         ];

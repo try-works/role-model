@@ -71,8 +71,8 @@ function endpoint(endpointId: string, reasoningEffort: string | null) {
 }
 
 const defaultEndpoint = endpoint("account.global.deepseek-v4-pro", null);
-const mediumEndpoint = endpoint("account.global.deepseek-v4-pro~effort-v1~bWVkaXVt", "medium");
-const maxEndpoint = endpoint("account.global.deepseek-v4-pro~effort-v1~bWF4", "max");
+const mediumEndpoint = endpoint("account.global.deepseek-v4-pro-medium", "medium");
+const maxEndpoint = endpoint("account.global.deepseek-v4-pro-max", "max");
 const registry = {
   endpoints: [defaultEndpoint, mediumEndpoint, maxEndpoint],
   diagnostics: [],
@@ -132,7 +132,7 @@ describe("Run 91 effort instance identity", () => {
     });
   });
 
-  test("preserves client effort on a provider-default endpoint", () => {
+  test("keeps a provider-default endpoint at default effort", () => {
     const resolution = resolveEndpointExecutionEffort({
       fixedEffort: null,
       executionRequest: {
@@ -141,10 +141,8 @@ describe("Run 91 effort instance identity", () => {
       } as never,
     });
 
-    expect(resolution.receipt).toEqual({
-      reasoningEffort: "medium",
-      effortSource: "client",
-    });
+    expect(resolution.executionRequest.reasoning).toBeUndefined();
+    expect(resolution.receipt).toEqual({ reasoningEffort: null, effortSource: "none" });
   });
 
   test("discovery retains the aggregate row and emits one selectable endpoint row per sibling", () => {
@@ -160,8 +158,8 @@ describe("Run 91 effort instance identity", () => {
       type: "model",
       endpoint_ids: [
         "account.global.deepseek-v4-pro",
-        "account.global.deepseek-v4-pro~effort-v1~bWVkaXVt",
-        "account.global.deepseek-v4-pro~effort-v1~bWF4",
+        "account.global.deepseek-v4-pro-medium",
+        "account.global.deepseek-v4-pro-max",
       ],
       capabilities: {
         reasoning: {
@@ -179,16 +177,16 @@ describe("Run 91 effort instance identity", () => {
           fixed_effort: null,
         }),
         expect.objectContaining({
-          id: "account.global.deepseek-v4-pro~effort-v1~bWVkaXVt",
+          id: "account.global.deepseek-v4-pro-medium",
           type: "endpoint",
-          endpoint_ids: ["account.global.deepseek-v4-pro~effort-v1~bWVkaXVt"],
+          endpoint_ids: ["account.global.deepseek-v4-pro-medium"],
           upstream_model_id: "deepseek/deepseek-v4-pro",
           fixed_effort: "medium",
         }),
         expect.objectContaining({
-          id: "account.global.deepseek-v4-pro~effort-v1~bWF4",
+          id: "account.global.deepseek-v4-pro-max",
           type: "endpoint",
-          endpoint_ids: ["account.global.deepseek-v4-pro~effort-v1~bWF4"],
+          endpoint_ids: ["account.global.deepseek-v4-pro-max"],
           upstream_model_id: "deepseek/deepseek-v4-pro",
           fixed_effort: "max",
         }),
@@ -200,15 +198,13 @@ describe("Run 91 effort instance identity", () => {
     const plan = mapChatCompletionsRequest(
       registry,
       {
-        model: "account.global.deepseek-v4-pro~effort-v1~bWVkaXVt",
+        model: "account.global.deepseek-v4-pro-medium",
         messages: [{ role: "user", content: "hello" }],
       } as never,
       "run91-exact-endpoint",
     );
 
-    expect(plan.routingRequest.allowEndpoints).toEqual([
-      "account.global.deepseek-v4-pro~effort-v1~bWVkaXVt",
-    ]);
+    expect(plan.routingRequest.allowEndpoints).toEqual(["account.global.deepseek-v4-pro-medium"]);
   });
 
   test("routes an alias with explicit reasoning effort only to matching fixed variants", () => {
@@ -242,32 +238,30 @@ describe("Run 91 effort instance identity", () => {
     );
 
     expect(mediumPlan.routingRequest.allowEndpoints).toEqual([
-      "account.global.deepseek-v4-pro~effort-v1~bWVkaXVt",
+      "account.global.deepseek-v4-pro-medium",
     ]);
-    expect(maxPlan.routingRequest.allowEndpoints).toEqual([
-      "account.global.deepseek-v4-pro~effort-v1~bWF4",
-    ]);
+    expect(maxPlan.routingRequest.allowEndpoints).toEqual(["account.global.deepseek-v4-pro-max"]);
   });
 
-  test("falls back to provider-default for an unconfigured alias effort without coercing a sibling", () => {
-    const plan = mapChatCompletionsRequest(
-      registry,
-      {
-        model: "baseline.remote-only",
-        messages: [{ role: "user", content: "hello" }],
-        reasoning_effort: "high",
-      } as never,
-      "run91-alias-high-fallback",
-      [
+  test("fails closed rather than treating provider-default as an unconfigured effort variant", () => {
+    expect(() =>
+      mapChatCompletionsRequest(
+        registry,
         {
-          aliasId: "baseline.remote-only",
-          modelIds: ["deepseek/deepseek-v4-pro"],
-          executionMode: "remote_only",
-        },
-      ] as never,
-    );
-
-    expect(plan.routingRequest.allowEndpoints).toEqual(["account.global.deepseek-v4-pro"]);
+          model: "baseline.remote-only",
+          messages: [{ role: "user", content: "hello" }],
+          reasoning_effort: "high",
+        } as never,
+        "run91-alias-high-no-variant",
+        [
+          {
+            aliasId: "baseline.remote-only",
+            modelIds: ["deepseek/deepseek-v4-pro"],
+            executionMode: "remote_only",
+          },
+        ] as never,
+      ),
+    ).toThrow(/no targets|no registry endpoints|no execution target/i);
   });
 
   test("fails closed when an alias effort has neither a matching variant nor provider-default", () => {
@@ -300,16 +294,14 @@ describe("Run 91 effort instance identity", () => {
     const plan = mapChatCompletionsRequest(
       registry,
       {
-        model: "account.global.deepseek-v4-pro~effort-v1~bWF4",
+        model: "account.global.deepseek-v4-pro-max",
         messages: [{ role: "user", content: "hello" }],
         reasoning_effort: "medium",
       } as never,
       "run91-exact-max-with-medium-client-effort",
     );
 
-    expect(plan.routingRequest.allowEndpoints).toEqual([
-      "account.global.deepseek-v4-pro~effort-v1~bWF4",
-    ]);
+    expect(plan.routingRequest.allowEndpoints).toEqual(["account.global.deepseek-v4-pro-max"]);
   });
 
   test("compact /v1/models fallback preserves endpoint-instance rows without a catalog", () => {
@@ -319,12 +311,12 @@ describe("Run 91 effort instance identity", () => {
     expect(endpointRows).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          id: "account.global.deepseek-v4-pro~effort-v1~bWVkaXVt",
+          id: "account.global.deepseek-v4-pro-medium",
           upstream_model_id: "deepseek/deepseek-v4-pro",
           fixed_effort: "medium",
         }),
         expect.objectContaining({
-          id: "account.global.deepseek-v4-pro~effort-v1~bWF4",
+          id: "account.global.deepseek-v4-pro-max",
           upstream_model_id: "deepseek/deepseek-v4-pro",
           fixed_effort: "max",
         }),

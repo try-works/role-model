@@ -479,12 +479,17 @@ describe("account repair mutations", () => {
             ref: "api-key/moonshot/moonshot.personal.primary",
           },
           allowedModels: ["moonshot/kimi-k2.5"],
-          modelRoleBindings: [
+          modelRoleBindings: expect.arrayContaining([
             {
               modelId: "moonshot/kimi-k2.5",
               roleIds: ["writer"],
             },
-          ],
+            {
+              modelId: "moonshot/kimi-k2.5",
+              endpointId: activation.endpointId,
+              roleIds: ["writer"],
+            },
+          ]),
         }),
       );
 
@@ -497,12 +502,17 @@ describe("account repair mutations", () => {
               ref: "api-key/moonshot/moonshot.personal.primary",
             },
             allowedModels: ["moonshot/kimi-k2.5"],
-            modelRoleBindings: [
+            modelRoleBindings: expect.arrayContaining([
               {
                 modelId: "moonshot/kimi-k2.5",
                 roleIds: ["writer"],
               },
-            ],
+              {
+                modelId: "moonshot/kimi-k2.5",
+                endpointId: activation.endpointId,
+                roleIds: ["writer"],
+              },
+            ]),
           }),
         ]),
       );

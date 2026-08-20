@@ -62,6 +62,26 @@ function encodeUtf8Base64Url(value: string): string {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/u, "");
 }
 
+/** True only when the selected endpoint itself owns the effective effort. */
+export function endpointIdentityOwnsReasoningEffort(input: {
+  readonly endpointId: string;
+  readonly reasoningEffort?: ReasoningEffortValue;
+  readonly effortSource?: string | null;
+}): boolean {
+  const effort = normalizeEffort(input.reasoningEffort);
+  if (!effort) {
+    return false;
+  }
+  if (input.effortSource === "variant" || input.effortSource === "variant_coerced") {
+    return true;
+  }
+  const endpointId = input.endpointId.trim();
+  return (
+    endpointId.endsWith(`-${encodeURIComponent(effort)}`) ||
+    endpointId.endsWith(`${EFFORT_IDENTITY_V1_PREFIX}${encodeUtf8Base64Url(effort)}`)
+  );
+}
+
 /**
  * Human-readable path for summary surfaces. The effort comes exclusively from
  * the structured field; the encoded suffix is only verified before it is
@@ -76,12 +96,15 @@ export function formatEndpointDisplayPath(input: {
   if (!reasoningEffort) {
     return endpointId;
   }
-  const canonicalSuffix = `${EFFORT_IDENTITY_V1_PREFIX}${encodeUtf8Base64Url(reasoningEffort)}`;
-  if (!endpointId.endsWith(canonicalSuffix)) {
+  const readableSuffix = `-${encodeURIComponent(reasoningEffort)}`;
+  if (endpointId.endsWith(readableSuffix)) {
     return endpointId;
   }
-  const baseEndpointId = endpointId.slice(0, -canonicalSuffix.length);
-  return `${baseEndpointId}~${encodeURIComponent(reasoningEffort)}`;
+  const legacySuffix = `${EFFORT_IDENTITY_V1_PREFIX}${encodeUtf8Base64Url(reasoningEffort)}`;
+  if (endpointId.endsWith(legacySuffix)) {
+    return `${endpointId.slice(0, -legacySuffix.length)}${readableSuffix}`;
+  }
+  return endpointId;
 }
 
 /** Compact labels retain the effort suffix so sibling endpoint instances remain distinguishable. */

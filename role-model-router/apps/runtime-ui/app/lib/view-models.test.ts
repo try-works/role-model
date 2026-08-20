@@ -773,6 +773,73 @@ describe("buildConfiguredModelCards", () => {
     ]);
   });
 
+  test("keeps role eligibility separate for effort endpoint siblings", () => {
+    const cards = buildConfiguredModelCards({
+      models: [
+        {
+          id: "deepseek/deepseek-v4-flash",
+          endpoint_ids: [
+            "deepseek.personal.global.deepseek-v4-flash-high",
+            "deepseek.personal.global.deepseek-v4-flash-max",
+          ],
+          displayName: "DeepSeek V4 Flash",
+        },
+      ],
+      endpoints: [
+        {
+          endpointId: "deepseek.personal.global.deepseek-v4-flash-high",
+          modelId: "deepseek/deepseek-v4-flash",
+          providerAccountId: "deepseek.personal",
+          providerId: "deepseek",
+          reasoningEffort: "high",
+          roleIds: [],
+          status: "active",
+          servingSource: "remote-service",
+        },
+        {
+          endpointId: "deepseek.personal.global.deepseek-v4-flash-max",
+          modelId: "deepseek/deepseek-v4-flash",
+          providerAccountId: "deepseek.personal",
+          providerId: "deepseek",
+          reasoningEffort: "max",
+          roleIds: [],
+          status: "active",
+          servingSource: "remote-service",
+        },
+      ],
+      accounts: [
+        {
+          providerAccountId: "deepseek.personal",
+          providerId: "deepseek",
+          modelRoleBindings: [
+            {
+              modelId: "deepseek/deepseek-v4-flash",
+              endpointId: "deepseek.personal.global.deepseek-v4-flash-high",
+              roleIds: ["coder"],
+            },
+            {
+              modelId: "deepseek/deepseek-v4-flash",
+              endpointId: "deepseek.personal.global.deepseek-v4-flash-max",
+              roleIds: ["architect"],
+            },
+          ],
+        },
+      ],
+      controller: null,
+    });
+
+    expect(cards).toEqual([
+      expect.objectContaining({
+        endpointId: "deepseek.personal.global.deepseek-v4-flash-high",
+        roleIds: ["coder"],
+      }),
+      expect.objectContaining({
+        endpointId: "deepseek.personal.global.deepseek-v4-flash-max",
+        roleIds: ["architect"],
+      }),
+    ]);
+  });
+
   test("keeps request counts unset when request evidence is still deferred", () => {
     expect(
       buildConfiguredModelCards({
@@ -1716,7 +1783,7 @@ describe("buildConfiguredRemoteConnectionRows", () => {
       ],
       endpoints: [
         {
-          endpointId: "deepseek.personal.primary.global.deepseek-v4-pro~effort-v1~high",
+          endpointId: "deepseek.personal.primary.global.deepseek-v4-pro-high",
           providerAccountId: "deepseek.personal.primary",
           providerId: "deepseek",
           modelId: "deepseek/deepseek-v4-pro",
@@ -1733,7 +1800,7 @@ describe("buildConfiguredRemoteConnectionRows", () => {
         {
           id: "deepseek/deepseek-v4-pro",
           displayName: "DeepSeek V4 Pro",
-          endpoint_ids: ["deepseek.personal.primary.global.deepseek-v4-pro~effort-v1~high"],
+          endpoint_ids: ["deepseek.personal.primary.global.deepseek-v4-pro-high"],
           reasoningEffortLevels: ["high", "max"],
         },
       ],
@@ -2258,6 +2325,50 @@ describe("telemetry view models", () => {
         latencyLabel: "280 ms",
         tokenLabel: "46 tokens",
         costLabel: "$0.0011 est.",
+      }),
+    ]);
+  });
+
+  test("separates requested client effort from the selected endpoint variant identity", () => {
+    expect(
+      buildTelemetryRequestRows([
+        {
+          requestId: "req-client-high",
+          endpointId: "deepseek.personal.global.deepseek-v4-flash",
+          modelId: "deepseek/deepseek-v4-flash",
+          upstreamModelId: "deepseek/deepseek-v4-flash",
+          reasoningEffort: "high",
+          effortSource: "client",
+          sourceType: "remote",
+          createdAtMs: 2,
+        },
+        {
+          requestId: "req-variant-high",
+          endpointId: "deepseek.personal.global.deepseek-v4-flash~effort-v1~aGlnaA",
+          modelId: "deepseek/deepseek-v4-flash",
+          upstreamModelId: "deepseek/deepseek-v4-flash",
+          reasoningEffort: "high",
+          effortSource: "variant",
+          sourceType: "remote",
+          createdAtMs: 1,
+        },
+      ]),
+    ).toEqual([
+      expect.objectContaining({
+        requestId: "req-client-high",
+        displayName: "Deepseek V4 Flash",
+        endpointId: "deepseek.personal.global.deepseek-v4-flash",
+        reasoningEffort: null,
+        requestedReasoningEffort: "high",
+        effortSource: "client",
+      }),
+      expect.objectContaining({
+        requestId: "req-variant-high",
+        displayName: "Deepseek V4 Flash (High)",
+        endpointId: "deepseek.personal.global.deepseek-v4-flash~effort-v1~aGlnaA",
+        reasoningEffort: "high",
+        requestedReasoningEffort: "high",
+        effortSource: "variant",
       }),
     ]);
   });

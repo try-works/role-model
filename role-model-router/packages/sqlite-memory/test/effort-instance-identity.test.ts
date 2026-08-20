@@ -72,7 +72,7 @@ describe("sqlite effort instance persistence", () => {
           databasePath,
           endpoints: [
             {
-              endpointId: "account.global.provider-model~effort-v1~bWVkaXVt",
+              endpointId: "account.global.provider-model-medium",
               providerAccountId: "account",
               modelId: "provider/model",
               region: "global",
@@ -83,7 +83,7 @@ describe("sqlite effort instance persistence", () => {
               reasoningEffort: "medium",
             },
             {
-              endpointId: "account.global.provider-model~effort-v1~aGlnaA",
+              endpointId: "account.global.provider-model-high",
               providerAccountId: "account",
               modelId: "provider/model",
               region: "global",
@@ -128,7 +128,7 @@ describe("sqlite effort instance persistence", () => {
       upsertRuntimeEndpoint({
         databasePath,
         endpoint: {
-          endpointId: "account.global.provider-model~effort-v1~bWVkaXVt",
+          endpointId: "account.global.provider-model-medium",
           providerAccountId: "account",
           modelId: "provider/model",
           region: "global",
@@ -147,7 +147,7 @@ describe("sqlite effort instance persistence", () => {
             reasoningEffort: null,
           }),
           expect.objectContaining({
-            endpointId: "account.global.provider-model~effort-v1~bWVkaXVt",
+            endpointId: "account.global.provider-model-medium",
             reasoningEffort: "medium",
           }),
         ]),
@@ -165,7 +165,7 @@ describe("sqlite effort instance persistence", () => {
       expect(stored).toEqual([
         { endpoint_id: "account.global.provider-model", reasoning_effort: null },
         {
-          endpoint_id: "account.global.provider-model~effort-v1~bWVkaXVt",
+          endpoint_id: "account.global.provider-model-medium",
           reasoning_effort: "medium",
         },
       ]);

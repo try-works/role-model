@@ -12,8 +12,8 @@ import {
 
 const modelId = "deepseek/deepseek-v4-pro";
 const defaultEndpointId = "account.global.deepseek-v4-pro";
-const mediumEndpointId = "account.global.deepseek-v4-pro~effort-v1~bWVkaXVt";
-const maxEndpointId = "account.global.deepseek-v4-pro~effort-v1~bWF4";
+const mediumEndpointId = "account.global.deepseek-v4-pro-medium";
+const maxEndpointId = "account.global.deepseek-v4-pro-max";
 
 const registry = {
   endpoints: [defaultEndpointId, mediumEndpointId, maxEndpointId].map((endpointId) => ({

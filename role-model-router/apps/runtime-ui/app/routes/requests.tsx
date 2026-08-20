@@ -19,7 +19,7 @@ import {
   mutedPanelClassName,
   supportingTextClassName,
 } from "../lib/design-system";
-import { formatEndpointDisplayPath } from "../lib/effort-identity";
+import { formatEndpointDisplayPath, formatReasoningEffortLabel } from "../lib/effort-identity";
 import { startDeferredLiveRefresh } from "../lib/live-refresh";
 import { adaptObserveChartBlock } from "../lib/observe-chart-adapter";
 import type {
@@ -631,6 +631,11 @@ export default function RequestsRoute() {
                         id: "endpoint",
                         label: "Endpoint",
                         value: formatEndpointDisplayPath(request),
+                      },
+                      {
+                        id: "effort",
+                        label: "Endpoint effort",
+                        value: formatReasoningEffortLabel(request.reasoningEffort) ?? "Default",
                       },
                       {
                         id: "status",
