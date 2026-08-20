@@ -84,6 +84,8 @@ type CliBackend = Pick<
   | "updateProviderApiKey"
   | "openExternalUrl"
   | "activateEndpoint"
+  | "activateEndpointBatch"
+  | "removeEndpoint"
   | "readControllerAssignment"
   | "updateControllerAssignment"
   | "readRouterSummary"
@@ -483,6 +485,12 @@ export function createCliServerOptions(
     activateEndpoint: bindBackendMethod(
       "activateEndpoint",
     ) as StartBridgeServerOptions["activateEndpoint"],
+    activateEndpointBatch: bindBackendMethod(
+      "activateEndpointBatch",
+    ) as StartBridgeServerOptions["activateEndpointBatch"],
+    removeEndpoint: bindBackendMethod(
+      "removeEndpoint",
+    ) as StartBridgeServerOptions["removeEndpoint"],
     readControllerAssignment: bindBackendMethod(
       "readControllerAssignment",
     ) as StartBridgeServerOptions["readControllerAssignment"],
@@ -653,6 +661,7 @@ export function applyRecommendationServiceLauncherConfig(values: LauncherConfigV
   const verificationKey = readLauncherString(values, "recommendation-verification-key");
   const serviceToken = readLauncherString(values, "recommendation-service-token");
   const materialFile = readLauncherString(values, "recommendation-material-file");
+  const aggregateScope = readLauncherString(values, "aggregate-scope");
 
   if (serviceUrl) {
     process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_URL = serviceUrl;
@@ -665,6 +674,12 @@ export function applyRecommendationServiceLauncherConfig(values: LauncherConfigV
   }
   if (serviceToken) {
     process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN = serviceToken;
+  }
+  if (aggregateScope) {
+    if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{0,511}$/.test(aggregateScope)) {
+      throw new Error("aggregate scope is invalid");
+    }
+    process.env.ROLE_MODEL_AGGREGATE_SCOPE = aggregateScope;
   }
   if (!materialFile) {
     return;

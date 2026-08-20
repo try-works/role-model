@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -72,7 +72,7 @@ function expectDefinedProvider<TValue>(
 }
 
 describe("provider overlap metadata (R1)", () => {
-  test("legacy listProviders metadata mismatches exactly the 19 known overlap ids", async () => {
+  test("legacy listProviders metadata mismatches exactly the reviewed overlap ids", async () => {
     const catalog = loadCatalog();
     const liteLLMProviders = deriveLiteLLMProviders(await loadLiteLLMModelPrices(repoRoot));
     const mismatches = listOverlapProviderKindMismatches({
@@ -225,6 +225,55 @@ describe("listProviders overlap metadata (R1 integration)", () => {
       ]);
     } finally {
       await backend.shutdown();
+    }
+  });
+
+  test("every remote connection method resolves its allowed models through the same effort-aware catalog", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run91-provider-catalog-"));
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+    await writeFile(unifiedRuntimeConfigPath, 'version: "1.0"\n', "utf8");
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "runtime-host-run91-provider-catalog",
+      unifiedRuntimeConfigPath,
+    });
+
+    try {
+      const providers = await backend.listProviders();
+      for (const provider of providers.filter(
+        (entry) => entry.providerKind !== "local-engine" && entry.modelIds.length > 0,
+      )) {
+        const catalogById = new Map(
+          (await backend.listModels({ providerId: provider.providerId })).map((model) => [
+            model.id,
+            model,
+          ]),
+        );
+        for (const variant of provider.variants) {
+          for (const modelId of variant.modelIds) {
+            expect(
+              catalogById.get(modelId),
+              `${provider.providerId}/${variant.variantId} dropped catalog metadata for ${modelId}`,
+            ).toBeDefined();
+          }
+        }
+      }
+
+      const moonshot = await backend.listModels({ providerId: "moonshot" });
+      expect(
+        moonshot.find((model) => model.id === "moonshot/kimi-k3")?.reasoningEffortLevels,
+      ).toEqual(["low", "high", "max"]);
+      const kimiCoding = await backend.listModels({ providerId: "kimi-for-coding" });
+      expect(
+        kimiCoding.find((model) => model.id === "kimi-for-coding/k3")?.reasoningEffortLevels,
+      ).toEqual(["low", "high", "max"]);
+    } finally {
+      await backend.shutdown();
+      await rm(tempRoot, { recursive: true, force: true });
     }
   });
 });

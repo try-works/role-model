@@ -135,7 +135,9 @@
         "object": { "type": "string", "const": "model" },
         "owned_by": { "type": "string", "const": "role-model" },
         "endpoint_ids": { "$ref": "#/$defs/StringList" },
-        "type": { "type": "string", "enum": ["model", "alias"] },
+        "type": { "type": "string", "enum": ["model", "alias", "endpoint"] },
+        "upstream_model_id": { "type": "string", "minLength": 1 },
+        "fixed_effort": { "type": ["string", "null"], "minLength": 1, "maxLength": 128 },
         "routingMode": {
           "type": "string",
           "enum": ["basic", "difficulty", "intelligent", "hybrid"]
@@ -200,7 +202,8 @@
               "required": ["supported", "effortControl"],
               "properties": {
                 "supported": { "type": "boolean" },
-                "effortControl": { "type": "boolean" }
+                "effortControl": { "type": "boolean" },
+                "effortLevels": { "$ref": "#/$defs/StringList" }
               }
             },
             "structuredOutput": {
@@ -247,7 +250,22 @@
           }
         },
         "sources": { "$ref": "#/$defs/StringList" }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "type": { "const": "endpoint" } },
+            "required": ["type"]
+          },
+          "then": {
+            "properties": {
+              "upstream_model_id": { "type": "string", "minLength": 1 },
+              "fixed_effort": { "type": ["string", "null"], "minLength": 1, "maxLength": 128 }
+            },
+            "required": ["upstream_model_id", "fixed_effort"]
+          }
+        }
+      ]
     },
     "ModelEndpointSet": {
       "title": "DownstreamOpenAIModelEndpointSet",

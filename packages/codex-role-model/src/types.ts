@@ -3,7 +3,19 @@ export interface DownstreamOpenAIModelRecord {
   object: "model";
   owned_by: "role-model";
   endpoint_ids?: string[];
-  type: "model" | "alias";
+  type: "model" | "alias" | "endpoint";
+  displayName?: string;
+  upstreamModelId?: string;
+  upstream_model_id?: string;
+  reasoningEffort?: string | null;
+  reasoning_effort?: string | null;
+  fixedEffort?: string | null;
+  fixed_effort?: string | null;
+  effortSource?: string | null;
+  effort_source?: string | null;
+  reasoningEffortLevels?: string[];
+  reasoning_effort_levels?: string[];
+  endpoint_id?: string;
   routingMode?: "basic" | "difficulty" | "intelligent" | "hybrid";
   targetModelIds?: string[];
   canonicalModelIds?: string[];
@@ -27,7 +39,14 @@ export interface DownstreamOpenAIModelRecord {
         available?: string[];
         conditional?: unknown;
         tools?: { functionCalling?: boolean } | boolean;
-        reasoning?: { supported?: boolean; effortControl?: boolean } | boolean;
+        reasoning?:
+          | {
+              supported?: boolean;
+              effortControl?: boolean;
+              effortLevels?: string[];
+              effort_levels?: string[];
+            }
+          | boolean;
         structuredOutput?: { supported?: boolean } | boolean;
         caching?: unknown;
       } & Record<string, unknown>);
@@ -43,6 +62,16 @@ export interface DownstreamOpenAIModelRecord {
     };
   };
   sources?: string[];
+  pricing?: {
+    inputPer1M?: number;
+    outputPer1M?: number;
+    cacheReadPer1M?: number;
+    cacheWritePer1M?: number;
+    input?: number;
+    output?: number;
+    cacheRead?: number;
+    cacheWrite?: number;
+  } | null;
 }
 
 export interface DownstreamOpenAIDiscovery {
@@ -80,6 +109,9 @@ export interface PiProviderModelConfig {
   contextWindow?: number;
   maxTokens?: number;
   reasoning?: boolean;
+  thinkingLevelMap?: PiThinkingLevelMap;
+  upstreamModelId?: string;
+  reasoningEffort?: string | null;
   provider?: string;
   api?: "openai-completions";
   compat?: {
@@ -96,6 +128,9 @@ export interface PiProviderConfig {
   api: "openai-completions";
   models: PiProviderModelConfig[];
 }
+
+export type PiThinkingLevel = "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max";
+export type PiThinkingLevelMap = Partial<Record<PiThinkingLevel, string | null>>;
 
 export interface ProviderRegistration {
   providerId: "role-model";

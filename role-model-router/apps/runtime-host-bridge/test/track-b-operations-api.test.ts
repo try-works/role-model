@@ -39,6 +39,7 @@ afterEach(async () => {
   delete process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY;
   delete process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN;
   delete process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL;
+  delete process.env.ROLE_MODEL_AGGREGATE_SCOPE;
   delete process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL;
   delete process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TOKEN;
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
@@ -477,6 +478,8 @@ describe("Track B operations APIs", () => {
           routingDecisionId: result.routingDecisionId,
           endpointId: result.endpointId,
           modelId: "deepseek/chat-capture-v1",
+          reasoningEffort: null,
+          effortSource: "none",
           taskType: "general.chat",
           inputTokens: result.usage.inputTokens,
           outputTokens: result.usage.outputTokens,
@@ -611,6 +614,8 @@ describe("Track B operations APIs", () => {
           routingDecisionId: result.routingDecisionId,
           endpointId: result.endpointId,
           modelId: "deepseek/chat-capture-v1",
+          reasoningEffort: null,
+          effortSource: "none",
           taskType: "general.chat",
           inputTokens: result.usage.inputTokens,
           outputTokens: result.usage.outputTokens,
@@ -619,10 +624,12 @@ describe("Track B operations APIs", () => {
       });
       const serialized = JSON.stringify(aggregate?.body);
       expect(Object.keys(aggregate?.body ?? {}).sort()).toEqual([
+        "effortSource",
         "endpointId",
         "inputTokens",
         "modelId",
         "outputTokens",
+        "reasoningEffort",
         "requestId",
         "routingDecisionId",
         "success",
@@ -850,6 +857,8 @@ describe("Track B operations APIs", () => {
         recommendationEvidenceTier: "advanced",
         endpointId: "deepseek.run00.dev.global.deepseek-chat",
         modelId: "deepseek-chat",
+        reasoningEffort: "max",
+        effortSource: "variant",
         preferredFor: ["general.chat"],
         action: "prefer",
         confidence: 0.92,
@@ -893,6 +902,7 @@ describe("Track B operations APIs", () => {
       process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY = publicKey;
       process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN = "service-token";
       process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL = "development";
+      process.env.ROLE_MODEL_AGGREGATE_SCOPE = "tenant:run91-live-cohort";
       vi.stubGlobal(
         "fetch",
         vi.fn(async (input, init) => {
@@ -900,6 +910,9 @@ describe("Track B operations APIs", () => {
           if (url === "https://recommendations.example/api/role-model/recommendations/resolve") {
             expect(init?.method).toBe("POST");
             expect(new Headers(init?.headers).get("authorization")).toBe("Bearer service-token");
+            expect(JSON.parse(String(init?.body))).toMatchObject({
+              scopeId: "tenant:run91-live-cohort",
+            });
             return new Response(
               JSON.stringify({
                 contract: "RecommendationResolveResponseV1",
@@ -954,6 +967,8 @@ describe("Track B operations APIs", () => {
           policyAllowed: true,
           endpointId: "deepseek.run00.dev.global.deepseek-chat",
           modelId: "deepseek-chat",
+          reasoningEffort: "max",
+          effortSource: "variant",
           preferredFor: ["general.chat"],
           action: "prefer",
           confidence: 0.92,
@@ -961,7 +976,14 @@ describe("Track B operations APIs", () => {
       ]);
       const applied = await backend.applyRecommendation({ id: "recommendation-pack-downloaded" });
       expect(applied).toMatchObject({
-        activePack: { id: "recommendation-pack-downloaded", version: "2" },
+        activePack: {
+          id: "recommendation-pack-downloaded",
+          version: "2",
+          endpointId: "deepseek.run00.dev.global.deepseek-chat",
+          modelId: "deepseek-chat",
+          reasoningEffort: "max",
+          effortSource: "variant",
+        },
       });
     } finally {
       await backend.shutdown();
@@ -988,12 +1010,14 @@ describe("Track B operations APIs", () => {
       "recommendation-service-url": "https://recommendations-run00.role-model.dev",
       "recommendation-material-file": materialPath,
       "recommendation-channel": "development",
+      "aggregate-scope": "tenant:run91-live-cohort",
     });
 
     expect(process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_URL).toBe(
       "https://recommendations-run00.role-model.dev",
     );
     expect(process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL).toBe("development");
+    expect(process.env.ROLE_MODEL_AGGREGATE_SCOPE).toBe("tenant:run91-live-cohort");
     expect(process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY).toBe("public-spki-fixture");
     expect(process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN).toBe("service-token-fixture");
   });

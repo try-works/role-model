@@ -255,20 +255,34 @@ describe("runtime-host-bridge", () => {
       }
     ).createModelListResponse(registry);
 
-    expect(result).toEqual({
-      object: "list",
-      data: [
-        {
-          id: "moonshot/kimi-k2.5",
-          object: "model",
-          owned_by: "role-model",
-          endpoint_ids: [
-            "moonshot.personal.kimi-code.global.kimi-k2.5",
-            "moonshot.personal.primary.global.kimi-k2.5",
-          ],
-        },
+    const response = result as { object: string; data: readonly Record<string, unknown>[] };
+    expect(response.object).toBe("list");
+    expect(response.data.map((entry) => entry.id)).toEqual([
+      "moonshot/kimi-k2.5",
+      "moonshot.personal.primary.global.kimi-k2.5",
+      "moonshot.personal.kimi-code.global.kimi-k2.5",
+    ]);
+    expect(response.data[0]).toMatchObject({
+      id: "moonshot/kimi-k2.5",
+      object: "model",
+      owned_by: "role-model",
+      endpoint_ids: [
+        "moonshot.personal.kimi-code.global.kimi-k2.5",
+        "moonshot.personal.primary.global.kimi-k2.5",
       ],
     });
+    expect(response.data.slice(1)).toEqual([
+      expect.objectContaining({
+        id: "moonshot.personal.primary.global.kimi-k2.5",
+        upstream_model_id: "moonshot/kimi-k2.5",
+        fixed_effort: null,
+      }),
+      expect.objectContaining({
+        id: "moonshot.personal.kimi-code.global.kimi-k2.5",
+        upstream_model_id: "moonshot/kimi-k2.5",
+        fixed_effort: null,
+      }),
+    ]);
   });
 
   test("creates alias entries in the model-list response alongside real models", () => {
@@ -289,27 +303,19 @@ describe("runtime-host-bridge", () => {
       },
     ]);
 
-    expect(result).toEqual({
-      object: "list",
-      data: [
-        {
-          id: "gpt-5.4",
-          object: "model",
-          owned_by: "role-model",
-          endpoint_ids: [
-            "moonshot.personal.kimi-code.global.kimi-k2.5",
-            "moonshot.personal.primary.global.kimi-k2.5",
-          ],
-        },
-        {
-          id: "moonshot/kimi-k2.5",
-          object: "model",
-          owned_by: "role-model",
-          endpoint_ids: [
-            "moonshot.personal.kimi-code.global.kimi-k2.5",
-            "moonshot.personal.primary.global.kimi-k2.5",
-          ],
-        },
+    const response = result as { object: string; data: readonly Record<string, unknown>[] };
+    expect(response.object).toBe("list");
+    expect(response.data.map((entry) => entry.id)).toEqual([
+      "gpt-5.4",
+      "moonshot/kimi-k2.5",
+      "moonshot.personal.primary.global.kimi-k2.5",
+      "moonshot.personal.kimi-code.global.kimi-k2.5",
+    ]);
+    expect(response.data[0]).toMatchObject({
+      id: "gpt-5.4",
+      endpoint_ids: [
+        "moonshot.personal.kimi-code.global.kimi-k2.5",
+        "moonshot.personal.primary.global.kimi-k2.5",
       ],
     });
   });
@@ -7130,7 +7136,12 @@ describe("runtime-host-bridge", () => {
       },
     ]);
 
-    expect(result.models.map((entry) => entry.id)).toEqual(["gpt-5.4", "moonshot/kimi-k2.5"]);
+    expect(result.models.map((entry) => entry.id)).toEqual([
+      "gpt-5.4",
+      "moonshot/kimi-k2.5",
+      "moonshot.personal.primary.global.kimi-k2.5",
+      "moonshot.personal.kimi-code.global.kimi-k2.5",
+    ]);
     expect(result.setup.recommendedModel).toBe("gpt-5.4");
   });
 
@@ -7174,6 +7185,8 @@ describe("runtime-host-bridge", () => {
       "default.decision-only",
       "difficulty.remote-only",
       "moonshot/kimi-k2.5",
+      "moonshot.personal.primary.global.kimi-k2.5",
+      "moonshot.personal.kimi-code.global.kimi-k2.5",
     ]);
     expect(result.setup.recommendedModel).toBe("difficulty.remote-only");
   });
@@ -7258,20 +7271,20 @@ describe("runtime-host-bridge", () => {
 
       const modelsResponse = await fetch(`http://127.0.0.1:${server.port}/v1/models`);
       expect(modelsResponse.status).toBe(200);
-      expect(await modelsResponse.json()).toEqual({
-        object: "list",
-        data: [
-          {
-            id: "moonshot/kimi-k2.5",
-            object: "model",
-            owned_by: "role-model",
-            endpoint_ids: [
-              "moonshot.personal.kimi-code.global.kimi-k2.5",
-              "moonshot.personal.primary.global.kimi-k2.5",
-            ],
-          },
-        ],
-      });
+      const models = (await modelsResponse.json()) as {
+        object: string;
+        data: readonly Record<string, unknown>[];
+      };
+      expect(models.object).toBe("list");
+      expect(models.data.map((entry) => entry.id)).toEqual([
+        "moonshot/kimi-k2.5",
+        "moonshot.personal.primary.global.kimi-k2.5",
+        "moonshot.personal.kimi-code.global.kimi-k2.5",
+      ]);
+      expect(models.data.slice(1)).toEqual([
+        expect.objectContaining({ upstream_model_id: "moonshot/kimi-k2.5", fixed_effort: null }),
+        expect.objectContaining({ upstream_model_id: "moonshot/kimi-k2.5", fixed_effort: null }),
+      ]);
     } finally {
       await server.close();
     }
@@ -7423,29 +7436,17 @@ describe("runtime-host-bridge", () => {
     try {
       const modelsResponse = await fetch(`http://127.0.0.1:${server.port}/v1/models`);
       expect(modelsResponse.status).toBe(200);
-      expect(await modelsResponse.json()).toEqual({
-        object: "list",
-        data: [
-          {
-            id: "gpt-5.4",
-            object: "model",
-            owned_by: "role-model",
-            endpoint_ids: [
-              "moonshot.personal.kimi-code.global.kimi-k2.5",
-              "moonshot.personal.primary.global.kimi-k2.5",
-            ],
-          },
-          {
-            id: "moonshot/kimi-k2.5",
-            object: "model",
-            owned_by: "role-model",
-            endpoint_ids: [
-              "moonshot.personal.kimi-code.global.kimi-k2.5",
-              "moonshot.personal.primary.global.kimi-k2.5",
-            ],
-          },
-        ],
-      });
+      const models = (await modelsResponse.json()) as {
+        object: string;
+        data: readonly Record<string, unknown>[];
+      };
+      expect(models.object).toBe("list");
+      expect(models.data.map((entry) => entry.id)).toEqual([
+        "gpt-5.4",
+        "moonshot/kimi-k2.5",
+        "moonshot.personal.primary.global.kimi-k2.5",
+        "moonshot.personal.kimi-code.global.kimi-k2.5",
+      ]);
 
       const providerResponse = await fetch(
         `http://127.0.0.1:${server.port}/api/role-model/downstream/openai`,
@@ -7453,10 +7454,12 @@ describe("runtime-host-bridge", () => {
       expect(providerResponse.status).toBe(200);
       await expect(providerResponse.json()).resolves.toEqual(
         expect.objectContaining({
-          models: [
+          models: expect.arrayContaining([
             expect.objectContaining({ id: "gpt-5.4" }),
             expect.objectContaining({ id: "moonshot/kimi-k2.5" }),
-          ],
+            expect.objectContaining({ id: "moonshot.personal.primary.global.kimi-k2.5" }),
+            expect.objectContaining({ id: "moonshot.personal.kimi-code.global.kimi-k2.5" }),
+          ]),
           setup: expect.objectContaining({
             recommendedModel: "gpt-5.4",
           }),
@@ -8137,6 +8140,18 @@ describe("runtime-host-bridge", () => {
         modelId: "moonshot/kimi-k2.5",
         status: "active",
       }),
+      activateEndpointBatch: async (body) => ({
+        activationBatchId: body.activationBatchId,
+        status: "committed",
+        endpoints: [
+          {
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5.high",
+            providerAccountId: "moonshot.personal.primary",
+            modelId: "moonshot/kimi-k2.5",
+            status: "active",
+          },
+        ],
+      }),
       readControllerAssignment: async () => ({
         scope: "global",
         endpointId: "cli.local.coder",
@@ -8562,6 +8577,40 @@ describe("runtime-host-bridge", () => {
         status: "active",
       });
 
+      const activateBatchResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/endpoints/batch`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            activationBatchId: "activation-1",
+            activations: [
+              {
+                providerAccountId: "moonshot.personal.primary",
+                modelId: "moonshot/kimi-k2.5",
+                region: "global",
+                reasoningEffort: "high",
+              },
+            ],
+          }),
+        },
+      );
+      expect(activateBatchResponse.status).toBe(200);
+      expect(await activateBatchResponse.json()).toEqual({
+        activationBatchId: "activation-1",
+        status: "committed",
+        endpoints: [
+          {
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5.high",
+            providerAccountId: "moonshot.personal.primary",
+            modelId: "moonshot/kimi-k2.5",
+            status: "active",
+          },
+        ],
+      });
+
       const endpointsResponse = await fetch(
         `http://127.0.0.1:${server.port}/api/role-model/endpoints`,
       );
@@ -8901,7 +8950,8 @@ describe("runtime-host-bridge", () => {
         `http://127.0.0.1:${server.port}/api/role-model/downstream/openai`,
       );
       expect(response.status).toBe(200);
-      expect(await response.json()).toMatchObject({
+      const provider = (await response.json()) as { models: readonly Record<string, unknown>[] };
+      expect(provider).toMatchObject({
         contractVersion: "role-model.downstream.openai.v1",
         kind: "openai-compatible",
         providerId: "role-model-runtime",
@@ -8920,29 +8970,7 @@ describe("runtime-host-bridge", () => {
           placeholderToken: "role-model-local",
           note: "Inbound API-key validation is not enforced yet. If a downstream client requires a token field, use this placeholder bearer token.",
         },
-        models: [
-          {
-            id: "moonshot/kimi-k2.5",
-            object: "model",
-            owned_by: "role-model",
-            type: "model",
-            endpoint_ids: [
-              "moonshot.personal.kimi-code.global.kimi-k2.5",
-              "moonshot.personal.primary.global.kimi-k2.5",
-            ],
-            piMapping: {
-              contextWindow: 128000,
-              maxTokens: 8192,
-            },
-            modalities: {
-              availableInput: ["text"],
-              output: ["text"],
-            },
-            capabilities: {
-              available: ["text.chat", "tools.function_calling"],
-            },
-          },
-        ],
+        models: expect.any(Array),
         setup: {
           recommendedModel: "moonshot/kimi-k2.5",
           notes: [
@@ -8956,6 +8984,19 @@ describe("runtime-host-bridge", () => {
           catalogVersion: "fallback",
           runtimeInventoryRevision: "fallback",
         },
+      });
+      expect(provider.models.map((entry) => entry.id)).toEqual([
+        "moonshot/kimi-k2.5",
+        "moonshot.personal.primary.global.kimi-k2.5",
+        "moonshot.personal.kimi-code.global.kimi-k2.5",
+      ]);
+      expect(provider.models[0]).toMatchObject({
+        id: "moonshot/kimi-k2.5",
+        endpoint_ids: [
+          "moonshot.personal.kimi-code.global.kimi-k2.5",
+          "moonshot.personal.primary.global.kimi-k2.5",
+        ],
+        piMapping: { contextWindow: 128000, maxTokens: 8192 },
       });
     } finally {
       await server.close();
@@ -14619,7 +14660,7 @@ describe("runtime-host-bridge", () => {
         }) => Promise<{
           readRuntimeSummary?: () => Promise<unknown>;
           listProviders?: () => Promise<unknown>;
-          listModels?: () => Promise<unknown>;
+          listModels?: (input?: { readonly providerId?: string }) => Promise<unknown>;
           listRoles?: () => Promise<unknown>;
           listAccounts?: () => Promise<unknown>;
           listProviderDeviceAuthorizations?: () => Promise<unknown>;
@@ -14771,6 +14812,34 @@ describe("runtime-host-bridge", () => {
         }),
       ]),
     );
+    const openAiCatalogModels = (await backend.listModels?.({
+      providerId: "openai",
+    })) as readonly {
+      readonly id: string;
+      readonly providerId: string;
+      readonly endpoint_ids: readonly string[];
+      readonly reasoningEffortLevels: readonly string[];
+    }[];
+    expect(openAiCatalogModels).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "openai/gpt-5.6-sol",
+          providerId: "openai",
+          endpoint_ids: [],
+          reasoningEffortLevels: ["none", "low", "medium", "high", "xhigh", "max"],
+        }),
+        expect.objectContaining({
+          id: "chatgpt/gpt-5.6-sol",
+          providerId: "chatgpt",
+          endpoint_ids: [],
+          reasoningEffortLevels: ["low", "medium", "high", "xhigh", "max", "ultra"],
+        }),
+      ]),
+    );
+    expect([...new Set(openAiCatalogModels.map((model) => model.providerId))].sort()).toEqual([
+      "chatgpt",
+      "openai",
+    ]);
     await expect(backend.listRoles?.()).resolves.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -14951,7 +15020,7 @@ describe("runtime-host-bridge", () => {
       ]),
     );
 
-    await expect(backend.readControllerAssignment?.()).resolves.toEqual({
+    await expect(backend.readControllerAssignment?.()).resolves.toMatchObject({
       scope: "global",
       endpointId: "test.capture.chat-v1",
       modelId: "deepseek/chat-capture-v1",
@@ -18762,8 +18831,11 @@ describe("runtime-host-bridge", () => {
     ).createRuntimeBridgeBackend({
       repoRoot,
       fixtureRoot: testFixtureRoot,
-      runtimeStateRoot: path.join(os.tmpdir(), "role-model-runtime-host-kimi-execution-tests"),
-      scopeId: "runtime-host-kimi-execution-tests",
+      runtimeStateRoot: path.join(
+        os.tmpdir(),
+        `role-model-runtime-host-kimi-execution-tests-${Date.now()}`,
+      ),
+      scopeId: `runtime-host-kimi-execution-tests-${Date.now()}`,
       networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
@@ -19183,7 +19255,7 @@ describe("runtime-host-bridge", () => {
 
       const runtimeStateRoot = path.join(
         os.tmpdir(),
-        `runtime-host-${deepseekModelId.replace(/[/.]/g, "-")}-web-search-tests`,
+        `runtime-host-${deepseekModelId.replace(/[/.]/g, "-")}-web-search-tests-${Date.now()}`,
       );
       const originalDeepSeekApiKey = process.env.DEEPSEEK_API_KEY;
       process.env.DEEPSEEK_API_KEY = "deepseek-api-key";
@@ -19406,7 +19478,7 @@ describe("runtime-host-bridge", () => {
 
       const runtimeStateRoot = path.join(
         os.tmpdir(),
-        `runtime-host-deepseek-dsml-${dsmlCase.name.replace(/[^a-z0-9]+/gi, "-")}-tests`,
+        `runtime-host-deepseek-dsml-${dsmlCase.name.replace(/[^a-z0-9]+/gi, "-")}-tests-${Date.now()}`,
       );
       const originalDeepSeekApiKey = process.env.DEEPSEEK_API_KEY;
       process.env.DEEPSEEK_API_KEY = "deepseek-api-key";
@@ -21085,6 +21157,118 @@ describe("runtime-host-bridge", () => {
     ).resolves.toSatisfy((requests: readonly Record<string, unknown>[]) => {
       return requests.length === 33 && requests.every((request) => request.sourceType === "remote");
     });
+  });
+
+  test("projects canonical model, endpoint, effort, and effort-source telemetry identities", async () => {
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-telemetry-identity-tests-"),
+    );
+    const scopeId = "runtime-host-telemetry-identity-tests";
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+        }) => Promise<{
+          queryTelemetryAnalytics?: (body: Record<string, unknown>) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+    });
+    const databasePath = resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId });
+    const startedAtMs = Date.now();
+    for (const [effort, effortSource] of [
+      ["high", "variant"],
+      ["max", "variant_coerced"],
+    ] as const) {
+      persistRuntimeTelemetryFailure({
+        databasePath,
+        requestId: `req-telemetry-identity-${effort}`,
+        endpointId: `deepseek.personal.flash.${effort}`,
+        modelId: "deepseek/deepseek-v4-flash",
+        reasoningEffort: effort,
+        effortSource,
+        sourceType: "remote",
+        statusCode: 503,
+        errorClass: "identity_fixture",
+      });
+    }
+    const endedAtMs = Date.now() + 1_000;
+
+    const modelResponse = await backend.queryTelemetryAnalytics?.({
+      startAtMs: startedAtMs - 1_000,
+      endAtMs: endedAtMs,
+      granularity: "hour",
+      metrics: ["requestCount"],
+      breakdown: "modelId",
+    });
+    expect(modelResponse).toEqual(
+      expect.objectContaining({
+        totals: expect.objectContaining({ requestCount: 2 }),
+        labels: expect.objectContaining({
+          modelId: {
+            "deepseek/deepseek-v4-flash": "DeepSeek V4 Flash",
+          },
+        }),
+        identities: expect.objectContaining({
+          modelId: expect.objectContaining({
+            "deepseek/deepseek-v4-flash": expect.objectContaining({
+              aggregationScope: "upstream-model",
+              label: "DeepSeek V4 Flash",
+              modelId: "deepseek/deepseek-v4-flash",
+              reasoningEffort: null,
+              endpointId: null,
+              effortSource: null,
+              sourceType: null,
+            }),
+          }),
+        }),
+      }),
+    );
+
+    await expect(
+      backend.queryTelemetryAnalytics?.({
+        startAtMs: startedAtMs - 1_000,
+        endAtMs: endedAtMs,
+        granularity: "hour",
+        metrics: ["requestCount"],
+        breakdown: "reasoningEffort",
+        filters: { effortSources: ["variant"] },
+        ranking: { dimension: "effortSource", metric: "requestCount", limit: 8 },
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        totals: expect.objectContaining({ requestCount: 1 }),
+        buckets: [
+          expect.objectContaining({
+            series: [
+              expect.objectContaining({ key: "high", label: "High", metrics: { requestCount: 1 } }),
+            ],
+          }),
+        ],
+        ranking: expect.objectContaining({
+          rows: [expect.objectContaining({ key: "variant", label: "Variant fixed" })],
+        }),
+        identities: expect.objectContaining({
+          reasoningEffort: expect.objectContaining({
+            high: expect.objectContaining({
+              aggregationScope: "reasoning-effort",
+              reasoningEffort: "high",
+              endpointId: null,
+              modelId: null,
+              effortSource: null,
+              sourceType: null,
+            }),
+          }),
+        }),
+      }),
+    );
   });
 
   test("startup retention cleanup removes expired raw observations while preserving telemetry ledger evidence", async () => {

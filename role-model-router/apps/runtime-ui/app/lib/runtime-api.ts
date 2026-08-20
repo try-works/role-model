@@ -279,6 +279,20 @@ export interface RuntimeAccount {
 export interface RuntimeEndpoint {
   readonly endpointId: string;
   readonly modelId: string;
+  /** Human-readable endpoint label supplied by the host discovery contract. */
+  readonly displayName?: string | null;
+  /** Upstream model identity when this endpoint is an effort-specific instance. */
+  readonly upstreamModelId?: string | null;
+  readonly upstream_model_id?: string | null;
+  /** Provider-native reasoning token fixed by this endpoint instance, if any. */
+  readonly reasoningEffort?: string | null;
+  readonly reasoning_effort?: string | null;
+  readonly fixedEffort?: string | null;
+  readonly fixed_effort?: string | null;
+  readonly effortSource?: "fixed" | "provider-default" | "unknown" | string | null;
+  readonly effort_source?: "fixed" | "provider-default" | "unknown" | string | null;
+  readonly reasoningEffortLevels?: readonly string[];
+  readonly reasoning_effort_levels?: readonly string[];
   readonly providerId: string | null;
   readonly providerAccountId?: string;
   readonly localModelSource?: "llama-swap" | "peer-backed";
@@ -478,6 +492,9 @@ export interface RuntimeTelemetrySummary extends RuntimeTelemetrySourceSummary {
 export interface RuntimeTelemetryComparisonRow extends RuntimeTelemetrySourceSummary {
   readonly endpointId: string;
   readonly modelId: string | null;
+  readonly upstreamModelId?: string | null;
+  readonly reasoningEffort?: string | null;
+  readonly effortSource?: string | null;
   readonly providerKind?: string | null;
   readonly providerFamily?: string | null;
   readonly vendorId?: string | null;
@@ -496,6 +513,9 @@ export interface RuntimeTelemetryRequestRecord {
   readonly clientRequestId?: string | null;
   readonly routingDecisionId?: string;
   readonly endpointId: string;
+  readonly upstreamModelId?: string | null;
+  readonly reasoningEffort?: string | null;
+  readonly effortSource?: string | null;
   readonly requestClass?: "benchmark" | "live_request" | "unknown";
   readonly conversationId?: string;
   readonly createdAtMs: number;
@@ -604,6 +624,8 @@ export type RuntimeTelemetryAnalyticsDimension =
   | "sourceType"
   | "endpointId"
   | "modelId"
+  | "reasoningEffort"
+  | "effortSource"
   | "providerId"
   | "providerKind"
   | "providerFamily"
@@ -626,6 +648,8 @@ export interface RuntimeTelemetryAnalyticsFilters {
   readonly sourceTypes?: readonly ("local" | "remote")[];
   readonly endpointIds?: readonly string[];
   readonly modelIds?: readonly string[];
+  readonly reasoningEfforts?: readonly string[];
+  readonly effortSources?: readonly string[];
   readonly providerIds?: readonly string[];
   readonly providerKinds?: readonly string[];
   readonly providerFamilies?: readonly string[];
@@ -703,6 +727,23 @@ export interface RuntimeTelemetryAnalyticsRankingRow {
   readonly value: number | null;
 }
 
+export interface RuntimeTelemetryAnalyticsIdentityProjection {
+  readonly dimension: RuntimeTelemetryAnalyticsDimension;
+  readonly key: string;
+  readonly label: string;
+  readonly aggregationScope:
+    | "endpoint-instance"
+    | "upstream-model"
+    | "reasoning-effort"
+    | "effort-source"
+    | "dimension-value";
+  readonly endpointId?: string | null;
+  readonly modelId?: string | null;
+  readonly reasoningEffort?: string | null;
+  readonly effortSource?: string | null;
+  readonly sourceType?: "local" | "remote" | null;
+}
+
 export interface RuntimeTelemetryAnalyticsResponse {
   readonly startAtMs: number;
   readonly endAtMs: number;
@@ -718,6 +759,12 @@ export interface RuntimeTelemetryAnalyticsResponse {
     readonly rows: readonly RuntimeTelemetryAnalyticsRankingRow[];
   } | null;
   readonly labels: Partial<Record<RuntimeTelemetryAnalyticsDimension, Record<string, string>>>;
+  readonly identities?: Partial<
+    Record<
+      RuntimeTelemetryAnalyticsDimension,
+      Record<string, RuntimeTelemetryAnalyticsIdentityProjection>
+    >
+  >;
   readonly metadata?: {
     readonly scannedRowCount: number;
     readonly matchedRowCount: number;
@@ -752,8 +799,26 @@ export interface RuntimeModelRecord {
   readonly id: string;
   readonly object?: string;
   readonly owned_by?: string;
+  readonly type?: "model" | "alias" | "endpoint" | string;
   readonly providerId?: string;
   readonly displayName?: string;
+  readonly endpoint_id?: string | null;
+  readonly upstreamModelId?: string | null;
+  readonly upstream_model_id?: string | null;
+  readonly reasoningEffort?: string | null;
+  readonly reasoning_effort?: string | null;
+  readonly fixedEffort?: string | null;
+  readonly fixed_effort?: string | null;
+  readonly effortSource?: "fixed" | "provider-default" | "unknown" | string | null;
+  readonly effort_source?: "fixed" | "provider-default" | "unknown" | string | null;
+  readonly reasoningEffortLevels?: readonly string[];
+  readonly reasoning_effort_levels?: readonly string[];
+  readonly reasoning?: {
+    readonly supported?: boolean;
+    readonly effortControl?: boolean;
+    readonly effortLevels?: readonly string[];
+    readonly effort_levels?: readonly string[];
+  } | null;
   readonly endpoint_ids?: readonly string[];
   readonly capabilities?: readonly string[];
   readonly modalities?: readonly string[];
@@ -771,6 +836,9 @@ export interface RuntimeControllerAssignment {
   readonly scope: string;
   readonly endpointId: string;
   readonly modelId: string;
+  readonly displayName?: string | null;
+  readonly upstreamModelId?: string | null;
+  readonly reasoningEffort?: string | null;
   readonly sourceType: "local" | "remote";
   readonly status?: string;
   readonly updatedAtMs?: number;
@@ -813,7 +881,12 @@ export interface RuntimeActivityLogEntry {
   /** Stable persisted identity; `id` remains for legacy clients. */
   readonly request_id?: string;
   readonly timestamp: string;
+  /** Already effort-scoped when the host has endpoint identity metadata. */
   readonly model: string;
+  readonly modelId?: string | null;
+  readonly endpointId?: string | null;
+  readonly upstreamModelId?: string | null;
+  readonly reasoningEffort?: string | null;
   readonly req_path: string;
   readonly resp_content_type: string;
   readonly resp_status_code: number;
@@ -1052,6 +1125,10 @@ export interface BenchmarkCapability {
 export interface RouterCandidate {
   readonly endpointId: string;
   readonly modelId: string;
+  readonly displayName?: string | null;
+  readonly upstreamModelId?: string | null;
+  readonly reasoningEffort?: string | null;
+  readonly effortSource?: string | null;
   readonly providerId: string | null;
   readonly sourceType: "local" | "remote";
   readonly endpointKind?: string;
@@ -1127,6 +1204,9 @@ export interface BenchmarkClearAllResult {
 export interface BenchmarkSummarySubject {
   readonly endpointId: string;
   readonly modelId: string;
+  readonly displayName?: string | null;
+  readonly upstreamModelId?: string | null;
+  readonly reasoningEffort?: string | null;
   readonly overallScore: number;
   readonly scoresByBucket: Record<
     "easy" | "medium" | "hard",
@@ -1181,6 +1261,10 @@ export interface RouterDecisionListItem {
   readonly routingDecisionId: string | null;
   readonly selectedEndpointId: string;
   readonly selectedModelId: string | null;
+  readonly displayName?: string | null;
+  readonly upstreamModelId?: string | null;
+  readonly reasoningEffort?: string | null;
+  readonly effortSource?: string | null;
   readonly strategyLabel: string | null;
   readonly decidedAtMs?: number;
   readonly sourceType?: "local" | "remote";
@@ -1207,6 +1291,10 @@ export interface RouterDecisionDetail {
   readonly routingDecisionId: string | null;
   readonly selectedEndpointId: string;
   readonly selectedModelId: string | null;
+  readonly displayName?: string | null;
+  readonly upstreamModelId?: string | null;
+  readonly reasoningEffort?: string | null;
+  readonly effortSource?: string | null;
   readonly fallbackEndpointIds: readonly string[];
   readonly strategyLabel: string | null;
   readonly decision?: Record<string, unknown> | null;
@@ -1438,6 +1526,20 @@ export async function fetchRuntimeModels(
     const modelsResponse = await fetchJson<{ data: RuntimeModelRecord[] }>("/v1/models", fetcher);
     return modelsResponse.data;
   }
+}
+
+export async function fetchRuntimeCatalogModels(
+  providerId: string,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<readonly RuntimeModelRecord[]> {
+  const normalizedProviderId = providerId.trim();
+  if (!normalizedProviderId) {
+    throw new Error("A provider id is required to load catalog models.");
+  }
+  return fetchJson<RuntimeModelRecord[]>(
+    `/api/role-model/models?providerId=${encodeURIComponent(normalizedProviderId)}`,
+    fetcher,
+  );
 }
 
 export interface RuntimeExtensionStatus {
@@ -2526,6 +2628,45 @@ export async function activateRuntimeEndpoint(
     },
     body: JSON.stringify(payload),
   });
+}
+
+export interface RuntimeEndpointActivationBatchInput {
+  readonly activationBatchId: string;
+  readonly activations: readonly Record<string, unknown>[];
+}
+
+export interface RuntimeEndpointActivationBatchResult {
+  readonly activationBatchId: string;
+  readonly status: "committed";
+  readonly endpoints: readonly RuntimeEndpoint[];
+}
+
+export async function activateRuntimeEndpointBatch(
+  payload: RuntimeEndpointActivationBatchInput,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeEndpointActivationBatchResult> {
+  return fetchJson<RuntimeEndpointActivationBatchResult>(
+    "/api/role-model/endpoints/batch",
+    fetcher,
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export async function removeRuntimeEndpoint(
+  endpointId: string,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<{ readonly endpointId: string; readonly status: "removed" | "absent" }> {
+  return fetchJson<{ endpointId: string; status: "removed" | "absent" }>(
+    `/api/role-model/endpoints/${encodeURIComponent(endpointId)}`,
+    fetcher,
+    { method: "DELETE" },
+  );
 }
 
 export async function submitWorkbenchChat(

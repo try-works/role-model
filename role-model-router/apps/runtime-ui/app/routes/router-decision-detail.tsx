@@ -18,6 +18,7 @@ import {
   secondaryButtonClassName,
   supportingTextClassName,
 } from "../lib/design-system";
+import { formatEndpointDisplayPath, formatModelIdentity } from "../lib/effort-identity";
 import { formatRoutingModeLabel } from "../lib/routing-mode";
 import { type RouterDecisionDetail, fetchRouterDecisionDetail } from "../lib/runtime-api";
 
@@ -114,10 +115,18 @@ export default function RouterDecisionDetailRoute() {
             <div className={`${mutedPanelClassName} p-4`}>
               <p className={foregroundEmphasisClassName}>Chosen endpoint</p>
               <p className={`mt-4 break-all ${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
-                {detail.selectedEndpointId}
+                {formatEndpointDisplayPath({
+                  endpointId: detail.selectedEndpointId,
+                  reasoningEffort: detail.reasoningEffort,
+                })}
               </p>
               <p className={`mt-2 ${supportingTextClassName}`}>
-                {detail.selectedModelId ?? "unknown model"}
+                {formatModelIdentity({
+                  id: detail.selectedModelId ?? "unknown model",
+                  displayName: detail.displayName,
+                  upstreamModelId: detail.upstreamModelId,
+                  reasoningEffort: detail.reasoningEffort,
+                })}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Badge tone="accent">

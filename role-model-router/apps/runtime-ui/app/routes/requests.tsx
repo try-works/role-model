@@ -19,6 +19,7 @@ import {
   mutedPanelClassName,
   supportingTextClassName,
 } from "../lib/design-system";
+import { formatEndpointDisplayPath } from "../lib/effort-identity";
 import { startDeferredLiveRefresh } from "../lib/live-refresh";
 import { adaptObserveChartBlock } from "../lib/observe-chart-adapter";
 import type {
@@ -65,6 +66,8 @@ const requestBreakdownOptions = [
         "sourceType",
         "endpointId",
         "modelId",
+        "reasoningEffort",
+        "effortSource",
         "providerId",
         "taxonomyGroupId",
         "taxonomyRoleId",
@@ -79,8 +82,10 @@ const requestBreakdownOptions = [
 ];
 
 const rankingDimensionOptions = [
-  { label: "Endpoints", value: "endpointId" },
-  { label: "Models", value: "modelId" },
+  { label: "Endpoint variants", value: "endpointId" },
+  { label: "Upstream models", value: "modelId" },
+  { label: "Reasoning efforts", value: "reasoningEffort" },
+  { label: "Effort sources", value: "effortSource" },
   { label: "Providers", value: "providerId" },
   { label: "Taxonomy groups", value: "taxonomyGroupId" },
   { label: "Taxonomy roles", value: "taxonomyRoleId" },
@@ -157,6 +162,12 @@ function matchesRequestFilters(
   if (!matchesOptionalIdFilter(filters.modelIds, request.modelId)) {
     return false;
   }
+  if (!matchesOptionalIdFilter(filters.reasoningEfforts, request.reasoningEffort)) {
+    return false;
+  }
+  if (!matchesOptionalIdFilter(filters.effortSources, request.effortSource)) {
+    return false;
+  }
   if (!matchesOptionalIdFilter(filters.providerIds, request.providerId)) {
     return false;
   }
@@ -221,6 +232,8 @@ export default function RequestsRoute() {
     (searchParams.get("status") as "all" | "success" | "failure" | "unknown") || "all";
   const endpointId = searchParams.get("endpointId") || "";
   const modelId = searchParams.get("modelId") || "";
+  const reasoningEffort = searchParams.get("effort") || "";
+  const effortSource = searchParams.get("effortSource") || "";
   const providerId = searchParams.get("providerId") || "";
   const taxonomyGroupId = searchParams.get("taxGroup") || "";
   const taxonomyRoleId = searchParams.get("taxRole") || "";
@@ -253,6 +266,8 @@ export default function RequestsRoute() {
   const filters = useMemo(() => {
     const normalizedEndpointId = normalizeOptionalId(endpointId);
     const normalizedModelId = normalizeOptionalId(modelId);
+    const normalizedReasoningEfforts = normalizeOptionalCsvIds(reasoningEffort);
+    const normalizedEffortSources = normalizeOptionalCsvIds(effortSource);
     const normalizedProviderId = normalizeOptionalId(providerId);
     const normalizedTaxonomyGroupId = normalizeOptionalId(taxonomyGroupId);
     const normalizedTaxonomyRoleId = normalizeOptionalId(taxonomyRoleId);
@@ -266,6 +281,8 @@ export default function RequestsRoute() {
       ...(statusFamily === "all" ? {} : { statusFamilies: [statusFamily] }),
       ...(normalizedEndpointId ? { endpointIds: [normalizedEndpointId] } : {}),
       ...(normalizedModelId ? { modelIds: [normalizedModelId] } : {}),
+      ...(normalizedReasoningEfforts ? { reasoningEfforts: normalizedReasoningEfforts } : {}),
+      ...(normalizedEffortSources ? { effortSources: normalizedEffortSources } : {}),
       ...(normalizedProviderId ? { providerIds: [normalizedProviderId] } : {}),
       ...(normalizedTaxonomyGroupId ? { taxonomyGroupIds: [normalizedTaxonomyGroupId] } : {}),
       ...(normalizedTaxonomyRoleId ? { taxonomyRoleIds: [normalizedTaxonomyRoleId] } : {}),
@@ -285,8 +302,10 @@ export default function RequestsRoute() {
     } satisfies RuntimeTelemetryAnalyticsFilters;
   }, [
     endpointId,
+    effortSource,
     modelId,
     providerId,
+    reasoningEffort,
     sourceFilter,
     statusFamily,
     taxonomyCapabilityIds,
@@ -301,6 +320,8 @@ export default function RequestsRoute() {
   const hasAdvancedFilters =
     endpointId.trim().length > 0 ||
     modelId.trim().length > 0 ||
+    reasoningEffort.trim().length > 0 ||
+    effortSource.trim().length > 0 ||
     providerId.trim().length > 0 ||
     statusFamily !== "all" ||
     taxonomyGroupId.trim().length > 0 ||
@@ -496,6 +517,20 @@ export default function RequestsRoute() {
               value={statusFamily}
             />
           </div>
+          <div className="grid gap-4 xl:grid-cols-2">
+            <TelemetryTextField
+              label="Reasoning efforts"
+              onChange={(value) => updateParam("effort", value)}
+              placeholder="Comma-separated values, e.g. high,max"
+              value={reasoningEffort}
+            />
+            <TelemetryTextField
+              label="Effort sources"
+              onChange={(value) => updateParam("effortSource", value)}
+              placeholder="Comma-separated values, e.g. variant,client"
+              value={effortSource}
+            />
+          </div>
           <div className="grid gap-4 xl:grid-cols-4">
             <TelemetryTextField
               label="Taxonomy group id"
@@ -589,13 +624,13 @@ export default function RequestsRoute() {
                     items={[
                       {
                         id: "model",
-                        label: "Model",
-                        value: request.modelId ?? "—",
+                        label: "Selected model",
+                        value: request.displayName ?? request.modelId ?? "—",
                       },
                       {
                         id: "endpoint",
                         label: "Endpoint",
-                        value: request.endpointId,
+                        value: formatEndpointDisplayPath(request),
                       },
                       {
                         id: "status",

@@ -337,6 +337,38 @@ export interface RuntimeReasoningStreamReceipt {
   readonly unavailableReason?: string;
 }
 
+export type RuntimeEffortSource = "none" | "client" | "variant" | "variant_coerced";
+
+export interface RuntimeEffortReceipt {
+  readonly reasoningEffort: string | null;
+  readonly effortSource: RuntimeEffortSource;
+}
+
+export interface RuntimeEffortReceiptInput {
+  readonly reasoningEffort?: string | null;
+  readonly effortSource?: RuntimeEffortSource;
+  readonly reasoning_effort?: string | null;
+  readonly effort_source?: RuntimeEffortSource;
+}
+
+/** Normalize new and historical receipt shapes without inferring effort from endpoint identity. */
+export function normalizeRuntimeEffortReceipt(
+  input: RuntimeEffortReceiptInput = {},
+): RuntimeEffortReceipt {
+  const reasoningEffort = input.reasoningEffort ?? input.reasoning_effort ?? null;
+  const effortSource = input.effortSource ?? input.effort_source ?? "none";
+  if (reasoningEffort !== null && !reasoningEffort) {
+    throw new Error("reasoningEffort must be null or a non-empty value.");
+  }
+  if (reasoningEffort === null && effortSource !== "none") {
+    throw new Error("effortSource must be none when reasoningEffort is null.");
+  }
+  if (reasoningEffort !== null && effortSource === "none") {
+    throw new Error("effortSource is required for an efforted request.");
+  }
+  return { reasoningEffort, effortSource };
+}
+
 export interface RuntimeDiagnostic {
   readonly code: string;
   readonly severity: "info" | "warning" | "error";
@@ -365,6 +397,9 @@ export interface RuntimeObservationBundleInput {
     readonly org_id?: string | null;
   };
   readonly clientRequestId?: string;
+  /** Explicit request effort; null means the provider-default instance. */
+  readonly reasoningEffort?: string | null;
+  readonly effortSource?: RuntimeEffortSource;
   readonly normalizedIntent?: Readonly<Record<string, unknown>>;
   readonly routingDiagnostics?: RuntimeRoutingDiagnostics;
   readonly retrievalReceipt: RuntimeRetrievalReceipt;
@@ -429,6 +464,8 @@ export interface RuntimeObservationCapturePolicyReceipt {
 export interface RuntimeObservationBundle {
   readonly requestId: string;
   readonly clientRequestId?: string;
+  readonly reasoningEffort: string | null;
+  readonly effortSource: RuntimeEffortSource;
   readonly routingDecisionId: string;
   readonly endpointId: string;
   readonly conversationId: string;
@@ -1000,6 +1037,7 @@ export const extractTaxonomyFields = extractTaxonomyDimensions;
 export function createRuntimeObservationBundle(
   input: RuntimeObservationBundleInput,
 ): RuntimeObservationBundle {
+  const effort = normalizeRuntimeEffortReceipt(input);
   const endpointVersion = deriveEndpointVersion(input.execution);
   const currentSample = buildObservedPerformanceSample(input, endpointVersion);
   const priorSamples = (input.priorSamples ?? []).filter(
@@ -1030,6 +1068,8 @@ export function createRuntimeObservationBundle(
   return {
     requestId: input.decision.request_id,
     ...(input.clientRequestId ? { clientRequestId: input.clientRequestId } : {}),
+    reasoningEffort: effort.reasoningEffort,
+    effortSource: effort.effortSource,
     routingDecisionId: input.decision.routing_decision_id,
     endpointId: input.decision.chosen_endpoint_id,
     conversationId: input.contextEnvelope.conversationId,
@@ -1039,7 +1079,11 @@ export function createRuntimeObservationBundle(
     retrievalReceipt: input.retrievalReceipt,
     contextEnvelope: input.contextEnvelope,
     trace: input.execution.trace,
-    usageEvent: input.execution.usageEvent,
+    usageEvent: {
+      ...input.execution.usageEvent,
+      reasoning_effort: effort.reasoningEffort,
+      effort_source: effort.effortSource,
+    },
     observedPerformance: {
       endpointVersion,
       sample: currentSample,

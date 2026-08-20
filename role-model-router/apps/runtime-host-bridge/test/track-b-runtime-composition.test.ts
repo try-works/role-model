@@ -377,7 +377,7 @@ describe("production Track B composition", () => {
       Array.from({ length: 13 }, async (_, index) => {
         const id = `startup-budget-${String(index + 1).padStart(2, "0")}`;
         const modulePath = path.join(stateRoot, `${id}.mjs`);
-        const source = `${index === 0 ? "await new Promise((resolve) => setTimeout(resolve, 2_500));\n" : ""}export async function run(){return {available:true}}\n`;
+        const source = `${index === 0 ? "await new Promise((resolve) => setTimeout(resolve, 12_000));\n" : ""}export async function run(){return {available:true}}\n`;
         await writeFile(modulePath, source, "utf8");
         return {
           descriptor: { id, protocolVersion: "1.1.0", capabilities: ["health:probe"] },
@@ -410,7 +410,7 @@ describe("production Track B composition", () => {
         }),
       ).rejects.toThrow(/startup timeout.*100.*120000/i);
     }
-  });
+  }, 60_000);
 
   test("resolves the extension host from repo root when packaged CJS has no import.meta.url", async () => {
     const resolved = resolveExtensionHostModuleUrl({ moduleUrl: "", repoRoot });

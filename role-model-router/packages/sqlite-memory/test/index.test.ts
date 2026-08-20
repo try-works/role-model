@@ -117,6 +117,7 @@ describe("initializeSqliteMemory", () => {
       { migration_id: "run62-telemetry-metadata-backfill-v1" },
       { migration_id: "run77-observed-profile-indexes-v1" },
       { migration_id: "run77-recent-observations-index-v1" },
+      { migration_id: "run91-effort-instance-identity-v1" },
     ]);
   });
 

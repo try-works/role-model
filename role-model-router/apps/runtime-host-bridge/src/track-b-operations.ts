@@ -152,6 +152,10 @@ type BridgeState = {
     readonly id: string;
     readonly version: string;
     readonly appliedAt: string;
+    readonly endpointId?: string;
+    readonly modelId?: string;
+    readonly reasoningEffort?: string | null;
+    readonly effortSource?: RecommendationEffortSource;
   } | null;
 };
 type RetentionPolicy = {
@@ -193,9 +197,73 @@ type RecommendationRecord = {
   readonly provenance: string;
   readonly endpointId?: string;
   readonly modelId?: string;
+  readonly reasoningEffort?: string | null;
+  readonly effortSource?: RecommendationEffortSource;
   readonly preferredFor?: readonly string[];
   readonly action?: string;
   readonly confidence?: number;
+};
+type RecommendationEffortSource = "none" | "client" | "variant" | "variant_coerced";
+type RecommendationIdentityFields = Pick<
+  RecommendationRecord,
+  "endpointId" | "modelId" | "reasoningEffort" | "effortSource"
+>;
+const RECOMMENDATION_EFFORT_SOURCES = new Set<RecommendationEffortSource>([
+  "none",
+  "client",
+  "variant",
+  "variant_coerced",
+]);
+const hasOwn = (value: Record<string, unknown>, key: string): boolean =>
+  Object.prototype.hasOwnProperty.call(value, key);
+const readRecommendationIdentity = (
+  value: Record<string, unknown>,
+  context: string,
+): RecommendationIdentityFields => {
+  const endpointPresent = hasOwn(value, "endpointId");
+  const modelPresent = hasOwn(value, "modelId");
+  const effortPresent = hasOwn(value, "reasoningEffort");
+  const sourcePresent = hasOwn(value, "effortSource");
+  const endpointId = endpointPresent ? value.endpointId : undefined;
+  const modelId = modelPresent ? value.modelId : undefined;
+  if (
+    (endpointPresent && (typeof endpointId !== "string" || !endpointId.trim())) ||
+    (modelPresent && (typeof modelId !== "string" || !modelId.trim()))
+  )
+    throw new Error(`recommendation endpoint/model identity invalid at ${context}`);
+  if (effortPresent !== sourcePresent)
+    throw new Error(`recommendation effort identity incomplete at ${context}`);
+  if (!effortPresent) {
+    return {
+      ...(endpointPresent ? { endpointId: endpointId as string } : {}),
+      ...(modelPresent ? { modelId: modelId as string } : {}),
+    };
+  }
+  const reasoningEffort = value.reasoningEffort;
+  const effortSource = value.effortSource;
+  if (
+    reasoningEffort !== null &&
+    (typeof reasoningEffort !== "string" || !reasoningEffort.trim() || reasoningEffort.length > 128)
+  )
+    throw new Error(`recommendation reasoning effort invalid at ${context}`);
+  if (
+    typeof effortSource !== "string" ||
+    !RECOMMENDATION_EFFORT_SOURCES.has(effortSource as RecommendationEffortSource)
+  )
+    throw new Error(`recommendation effort source invalid at ${context}`);
+  if (
+    (effortSource === "none" && reasoningEffort !== null) ||
+    (effortSource !== "none" && typeof reasoningEffort !== "string")
+  )
+    throw new Error(`recommendation effort identity inconsistent at ${context}`);
+  if (!endpointId || !modelId)
+    throw new Error(`recommendation endpoint/model identity incomplete at ${context}`);
+  return {
+    endpointId: endpointId as string,
+    modelId: modelId as string,
+    reasoningEffort: reasoningEffort as string | null,
+    effortSource: effortSource as RecommendationEffortSource,
+  };
 };
 type ArtifactBundleImport = {
   readonly manifest: Record<string, unknown>;
@@ -428,7 +496,7 @@ const importArtifactBundleRecords = (
       .map((line) => JSON.parse(line) as Record<string, unknown>);
     if (parsed.length !== entry.recordCount)
       throw new Error(`recommendation record count drift ${recordPath}`);
-    for (const record of parsed) {
+    for (const [recordIndex, record] of parsed.entries()) {
       const envelope = record.envelope as Record<string, unknown> | undefined;
       if (
         !envelope?.artifactId ||
@@ -437,6 +505,7 @@ const importArtifactBundleRecords = (
             (envelope.privacy as Record<string, unknown>).redactionApplied !== true))
       )
         throw new Error("recommendation record privacy/provenance is incomplete");
+      const identity = readRecommendationIdentity(record, `${recordPath}:${recordIndex}`);
       rows.push({
         id: String(envelope.artifactId),
         version: String(record.channelSequence ?? channelSequence),
@@ -444,8 +513,7 @@ const importArtifactBundleRecords = (
         status: "validated",
         signatureValid: true,
         policyAllowed,
-        ...(typeof record.endpointId === "string" ? { endpointId: record.endpointId } : {}),
-        ...(typeof record.modelId === "string" ? { modelId: record.modelId } : {}),
+        ...identity,
         ...(Array.isArray(record.preferredFor) &&
         record.preferredFor.every((value) => typeof value === "string")
           ? { preferredFor: record.preferredFor }
@@ -1322,6 +1390,7 @@ export function createTrackBOperations({
         const row = value as Record<string, unknown>;
         if (!row.id || !row.version || !row.provenance)
           throw new Error(`recommendation provenance incomplete at ${index}`);
+        const identity = readRecommendationIdentity(row, `recommendations:${index}`);
         return {
           id: String(row.id),
           version: String(row.version),
@@ -1329,6 +1398,7 @@ export function createTrackBOperations({
           status: "validated" as const,
           signatureValid: true,
           policyAllowed,
+          ...identity,
         };
       });
       await writeState(statePath, {
@@ -1370,7 +1440,12 @@ export function createTrackBOperations({
       if ((state.contribution ?? EMPTY_CONTRIBUTION).recommendationAccess !== "preview_and_apply")
         throw new Error("recommendation application is not authorized");
       rows[index] = { ...row, status: "applied" };
-      const activePack = { id: row.id, version: row.version, appliedAt: new Date().toISOString() };
+      const activePack = {
+        id: row.id,
+        version: row.version,
+        appliedAt: new Date().toISOString(),
+        ...readRecommendationIdentity(row as unknown as Record<string, unknown>, `apply:${row.id}`),
+      };
       await writeState(statePath, {
         ...state,
         revision: state.revision + 1,

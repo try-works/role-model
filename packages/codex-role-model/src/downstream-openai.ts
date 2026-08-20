@@ -2,6 +2,7 @@ import type {
   DownstreamOpenAIDiscovery,
   DownstreamOpenAIModelRecord,
   PiModelSelection,
+  PiProviderModelConfig,
   ProviderRegistration,
   RoleModelModelDiagnostic,
 } from "./types.js";
@@ -21,7 +22,7 @@ function isModelRecord(value: unknown): value is DownstreamOpenAIModelRecord {
     hasString(record.id) &&
     record.object === "model" &&
     record.owned_by === "role-model" &&
-    (record.type === "model" || record.type === "alias") &&
+    (record.type === "model" || record.type === "alias" || record.type === "endpoint") &&
     typeof record.piMapping === "object" &&
     record.piMapping !== null
   );
@@ -82,6 +83,38 @@ function isReasoningSupported(model: DownstreamOpenAIModelRecord): boolean {
   return false;
 }
 
+function readEffortToken(model: DownstreamOpenAIModelRecord): string | null {
+  const value =
+    model.reasoningEffort ??
+    model.reasoning_effort ??
+    model.fixedEffort ??
+    model.fixed_effort ??
+    null;
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+}
+
+function modelDisplayName(model: DownstreamOpenAIModelRecord): string {
+  const base = model.displayName ?? model.upstreamModelId ?? model.upstream_model_id ?? model.id;
+  const effort = readEffortToken(model);
+  if (!effort) return base;
+  const label = effort
+    .replace(/[_-]+/g, " ")
+    .split(/\s+/)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+  return base.endsWith(` (${label})`) ? base : `${base} (${label})`;
+}
+
+function readModelCost(model: DownstreamOpenAIModelRecord): PiProviderModelConfig["cost"] {
+  const pricing = model.pricing;
+  return {
+    input: pricing?.inputPer1M ?? pricing?.input ?? 0,
+    output: pricing?.outputPer1M ?? pricing?.output ?? 0,
+    cacheRead: pricing?.cacheReadPer1M ?? pricing?.cacheRead ?? 0,
+    cacheWrite: pricing?.cacheWritePer1M ?? pricing?.cacheWrite ?? 0,
+  };
+}
+
 function readPiCompat(
   model: DownstreamOpenAIModelRecord,
 ): Required<NonNullable<PiModelSelection["compat"]>> {
@@ -134,9 +167,9 @@ export function createPiModelSelection(
   return {
     provider: "role-model",
     id: model.id,
-    name: model.id,
+    name: modelDisplayName(model),
     input: mapInput(model),
-    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+    cost: readModelCost(model),
     contextWindow,
     maxTokens,
     reasoning: isReasoningSupported(model),
@@ -169,9 +202,9 @@ export function mapDiscoveryToProviderConfig(
         });
         return {
           id: model.id,
-          name: model.id,
+          name: modelDisplayName(model),
           input: mapInput(model),
-          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+          cost: readModelCost(model),
           contextWindow: contextWindow.value,
           maxTokens: maxTokens.value,
           reasoning: isReasoningSupported(model),

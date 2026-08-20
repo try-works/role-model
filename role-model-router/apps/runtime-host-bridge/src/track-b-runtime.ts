@@ -1211,12 +1211,56 @@ export async function runTrackBPostObservation(
       },
     }),
   );
-  await runtime.invoke(
+  const repositoryContextResult = await runtime.invoke(
     "repository-context",
     businessEnvelope("repository:read", {
       payload: { scopeId: input.scope, canonicalIdentity: input.scope },
     }),
   );
+  const repositoryContextRecord = repositoryContextResult as Record<string, unknown>;
+  const repositoryContextValue = repositoryContextRecord.context as
+    | Record<string, unknown>
+    | undefined;
+  const repositoryDiagnostics = Array.isArray(repositoryContextRecord.diagnostics)
+    ? repositoryContextRecord.diagnostics.map((diagnostic) => {
+        const row = diagnostic as Record<string, unknown>;
+        return {
+          code: String(row.code ?? ""),
+          message: String(row.message ?? ""),
+          severity: String(row.severity ?? ""),
+        };
+      })
+    : [];
+  const repositoryContext =
+    repositoryContextRecord.available === true
+      ? {
+          available: true as const,
+          scopeId: String(repositoryContextValue?.scopeId ?? ""),
+          repoFingerprint: String(repositoryContextValue?.repoFingerprint ?? ""),
+          packageId:
+            repositoryContextValue?.packageId === null ||
+            typeof repositoryContextValue?.packageId === "string"
+              ? repositoryContextValue.packageId
+              : null,
+          fallbackLevel: String(repositoryContextValue?.fallbackLevel ?? ""),
+          branchCompatibility: String(repositoryContextValue?.branchCompatibility ?? ""),
+          fingerprintEpoch: Number(repositoryContextValue?.fingerprintEpoch),
+          diagnostics: repositoryDiagnostics,
+        }
+      : {
+          available: false as const,
+          unavailableReason: String(repositoryContextRecord.unavailableReason ?? "unavailable"),
+          diagnostics: repositoryDiagnostics,
+        };
+  if (
+    repositoryContext.available &&
+    (!repositoryContext.scopeId ||
+      !/^[a-f0-9]{64}$/.test(repositoryContext.repoFingerprint) ||
+      !Number.isSafeInteger(repositoryContext.fingerprintEpoch) ||
+      repositoryContext.fingerprintEpoch < 1)
+  ) {
+    throw new Error("repository-context returned an invalid privacy-safe receipt");
+  }
   await runtime.invoke(
     "background-evidence-scheduler",
     businessEnvelope("scheduler:schedule-and-run", {
@@ -1314,7 +1358,7 @@ export async function runTrackBPostObservation(
     channel: input.channel,
     authorizationEpoch: input.authorizationEpoch,
   });
-  return { pipeline: pipeline.receipt, projection, consumption };
+  return { pipeline: pipeline.receipt, projection, consumption, repositoryContext };
 }
 
 interface ExtensionRuntimeState {
@@ -1617,7 +1661,7 @@ export async function createProductionExtensionRuntime(
     stateRoot: options.stateRoot,
     authorizationEpoch: options.authorizationEpoch,
     ...(options.repoRoot ? { repoRoot: options.repoRoot } : {}),
-    startupTimeoutMs: options.startupTimeoutMs ?? 10_000,
+    startupTimeoutMs: options.startupTimeoutMs ?? 30_000,
     extensions: [...options.extensions, ...qaExtensions],
   });
 }

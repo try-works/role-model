@@ -311,6 +311,72 @@ describe("telemetry analytics view models", () => {
     });
   });
 
+  test("uses the canonical telemetry identity projection for chart and ranking labels", () => {
+    const response = {
+      startAtMs: Date.UTC(2026, 7, 20, 0, 0, 0),
+      endAtMs: Date.UTC(2026, 7, 20, 1, 0, 0),
+      granularity: "hour",
+      metrics: ["requestCount"],
+      breakdown: "endpointId",
+      buckets: [
+        {
+          startAtMs: Date.UTC(2026, 7, 20, 0, 0, 0),
+          endAtMs: Date.UTC(2026, 7, 20, 1, 0, 0),
+          totals: { requestCount: 2 },
+          series: [
+            {
+              key: "deepseek.personal.flash~effort-v1~aGlnaA",
+              label: "deepseek.personal.flash~effort-v1~aGlnaA",
+              metrics: { requestCount: 2 },
+            },
+          ],
+        },
+      ],
+      totals: { requestCount: 2 },
+      ranking: {
+        dimension: "endpointId",
+        metric: "requestCount",
+        rows: [
+          {
+            key: "deepseek.personal.flash~effort-v1~aGlnaA",
+            label: "deepseek.personal.flash~effort-v1~aGlnaA",
+            value: 2,
+          },
+        ],
+      },
+      labels: {},
+      identities: {
+        endpointId: {
+          "deepseek.personal.flash~effort-v1~aGlnaA": {
+            dimension: "endpointId",
+            key: "deepseek.personal.flash~effort-v1~aGlnaA",
+            label: "DeepSeek V4 Flash (High)",
+            aggregationScope: "endpoint-instance",
+            endpointId: "deepseek.personal.flash~effort-v1~aGlnaA",
+            modelId: "deepseek/deepseek-v4-flash",
+            reasoningEffort: "high",
+            effortSource: "variant",
+            sourceType: "remote",
+          },
+        },
+      },
+    } as unknown as RuntimeTelemetryAnalyticsResponse;
+
+    expect(
+      buildTelemetryTimeSeriesChartModel(response, {
+        title: "Request volume",
+        metrics: ["requestCount"],
+        breakdown: "endpointId",
+      }).series[0]?.label,
+    ).toBe("DeepSeek V4 Flash (High)");
+    expect(
+      buildTelemetryRankingChartModel(response, {
+        title: "Ranked endpoints",
+        metric: "requestCount",
+      }).rows[0]?.label,
+    ).toBe("DeepSeek V4 Flash (High)");
+  });
+
   test("builds ranked routing comparison rows from the analytics response", () => {
     const response: RuntimeTelemetryAnalyticsResponse = {
       startAtMs: Date.UTC(2026, 5, 10, 0, 0, 0),

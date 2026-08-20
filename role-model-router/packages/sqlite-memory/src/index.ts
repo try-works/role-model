@@ -44,12 +44,15 @@ const OBSERVATION_METADATA_BACKFILL_MIGRATION_ID = "run62-observation-metadata-b
 const TELEMETRY_METADATA_BACKFILL_MIGRATION_ID = "run62-telemetry-metadata-backfill-v1";
 const RECENT_OBSERVATIONS_INDEX_MIGRATION_ID = "run77-recent-observations-index-v1";
 const OBSERVED_PROFILE_INDEXES_MIGRATION_ID = "run77-observed-profile-indexes-v1";
+const EFFORT_INSTANCE_IDENTITY_MIGRATION_ID = "run91-effort-instance-identity-v1";
 const CURRENT_SCHEMA_VERSION = 1;
 const COST_CALCULATION_VERSION = "run49.v1";
 const RUNTIME_TELEMETRY_INSERT_COLUMNS = [
   "request_id",
   "routing_decision_id",
   "endpoint_id",
+  "reasoning_effort",
+  "effort_source",
   "conversation_id",
   "created_at_ms",
   "client_request_id",
@@ -391,6 +394,8 @@ CREATE TABLE IF NOT EXISTS runtime_telemetry_records (
   request_id TEXT PRIMARY KEY,
   routing_decision_id TEXT NOT NULL,
   endpoint_id TEXT NOT NULL,
+  reasoning_effort TEXT,
+  effort_source TEXT,
   conversation_id TEXT NOT NULL,
   created_at_ms INTEGER NOT NULL,
   client_request_id TEXT,
@@ -502,6 +507,7 @@ CREATE TABLE IF NOT EXISTS runtime_endpoints (
   serving_source TEXT NOT NULL,
   lifecycle_state TEXT NOT NULL,
   health_status TEXT NOT NULL,
+  reasoning_effort TEXT,
   created_at_ms INTEGER NOT NULL,
   updated_at_ms INTEGER NOT NULL
 );
@@ -843,11 +849,18 @@ export interface RuntimeEndpointRecord {
   readonly servingSource: string;
   readonly lifecycleState: string;
   readonly healthStatus: string;
+  /** Explicit wire effort; null is the legacy/default instance. */
+  readonly reasoningEffort?: string | null;
 }
 
 export interface UpsertRuntimeEndpointInput {
   readonly databasePath: string;
   readonly endpoint: RuntimeEndpointRecord;
+}
+
+export interface UpsertRuntimeEndpointsAtomicallyInput {
+  readonly databasePath: string;
+  readonly endpoints: readonly RuntimeEndpointRecord[];
 }
 
 export interface ListRuntimeEndpointsInput {
@@ -960,6 +973,8 @@ export interface RuntimeTelemetryRecord {
   readonly requestId: string;
   readonly routingDecisionId: string;
   readonly endpointId: string;
+  readonly reasoningEffort: string | null;
+  readonly effortSource: "none" | "client" | "variant" | "variant_coerced";
   readonly conversationId: string;
   readonly createdAtMs: number;
   readonly clientRequestId: string | null;
@@ -1146,6 +1161,8 @@ export interface PersistedRuntimeObservationBundle {
   readonly clientRequestId?: string | null;
   readonly routingDecisionId: string;
   readonly endpointId: string;
+  readonly reasoningEffort?: string | null;
+  readonly effortSource?: "none" | "client" | "variant" | "variant_coerced";
   readonly conversationId: string;
   readonly usageEvent: {
     readonly timestamp_ms: number;
@@ -1243,6 +1260,8 @@ export interface PersistedRuntimeObservationBundle {
     readonly toolSideEffectState?: string;
   };
   readonly telemetrySnapshot?: {
+    readonly reasoningEffort?: string | null;
+    readonly effortSource?: "none" | "client" | "variant" | "variant_coerced";
     readonly providerId: string | null;
     readonly providerAccountId: string | null;
     readonly sourceType: "local" | "remote";
@@ -1431,7 +1450,21 @@ function initializeSchema(database: DatabaseSync): void {
       }>
     ).map((row) => row.name),
   );
+  const runtimeEndpointColumns = new Set(
+    (
+      database.prepare("PRAGMA table_info(runtime_endpoints)").all() as Array<{
+        name: string;
+      }>
+    ).map((row) => row.name),
+  );
+  let addedRuntimeEndpointIdentityColumn = false;
+  if (!runtimeEndpointColumns.has("reasoning_effort")) {
+    database.exec("ALTER TABLE runtime_endpoints ADD COLUMN reasoning_effort TEXT");
+    addedRuntimeEndpointIdentityColumn = true;
+  }
   const telemetryColumnDefinitions = [
+    "reasoning_effort TEXT",
+    "effort_source TEXT",
     "client_request_id TEXT",
     "request_class TEXT",
     "source_type TEXT",
@@ -1519,6 +1552,14 @@ function initializeSchema(database: DatabaseSync): void {
       addedRuntimeTelemetryMetadataColumn = true;
     }
   }
+  runOnceMigration(
+    database,
+    EFFORT_INSTANCE_IDENTITY_MIGRATION_ID,
+    addedRuntimeEndpointIdentityColumn ||
+      !runtimeTelemetryColumns.has("reasoning_effort") ||
+      !runtimeTelemetryColumns.has("effort_source"),
+    () => undefined,
+  );
   runOnceMigration(
     database,
     TELEMETRY_METADATA_BACKFILL_MIGRATION_ID,
@@ -1706,6 +1747,7 @@ function mapRuntimeEndpointRow(row: {
   serving_source: string;
   lifecycle_state: string;
   health_status: string;
+  reasoning_effort: string | null;
 }): RuntimeEndpointRecord {
   return {
     endpointId: row.endpoint_id,
@@ -1716,6 +1758,7 @@ function mapRuntimeEndpointRow(row: {
     servingSource: row.serving_source,
     lifecycleState: row.lifecycle_state,
     healthStatus: row.health_status,
+    reasoningEffort: row.reasoning_effort ?? null,
   };
 }
 
@@ -1993,11 +2036,12 @@ export function upsertRuntimeEndpoint(input: UpsertRuntimeEndpointInput): void {
       region,
       endpoint_kind,
       serving_source,
-      lifecycle_state,
-      health_status,
-      created_at_ms,
-      updated_at_ms
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       lifecycle_state,
+       health_status,
+       reasoning_effort,
+       created_at_ms,
+       updated_at_ms
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `)
     .run(
       input.endpoint.endpointId,
@@ -2008,10 +2052,57 @@ export function upsertRuntimeEndpoint(input: UpsertRuntimeEndpointInput): void {
       input.endpoint.servingSource,
       input.endpoint.lifecycleState,
       input.endpoint.healthStatus,
+      input.endpoint.reasoningEffort ?? null,
       nowMs,
       nowMs,
     );
   database.close();
+}
+
+export function upsertRuntimeEndpointsAtomically(
+  input: UpsertRuntimeEndpointsAtomicallyInput,
+): void {
+  const database = new DatabaseSync(input.databasePath);
+  const statement = database.prepare(`
+    INSERT OR REPLACE INTO runtime_endpoints (
+      endpoint_id,
+      provider_account_id,
+      model_id,
+      region,
+      endpoint_kind,
+      serving_source,
+      lifecycle_state,
+      health_status,
+      reasoning_effort,
+      created_at_ms,
+      updated_at_ms
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  try {
+    database.exec("BEGIN IMMEDIATE");
+    const nowMs = Date.now();
+    for (const endpoint of input.endpoints) {
+      statement.run(
+        endpoint.endpointId,
+        endpoint.providerAccountId,
+        endpoint.modelId,
+        endpoint.region,
+        endpoint.endpointKind,
+        endpoint.servingSource,
+        endpoint.lifecycleState,
+        endpoint.healthStatus,
+        endpoint.reasoningEffort ?? null,
+        nowMs,
+        nowMs,
+      );
+    }
+    database.exec("COMMIT");
+  } catch (error) {
+    database.exec("ROLLBACK");
+    throw error;
+  } finally {
+    database.close();
+  }
 }
 
 export function listRuntimeEndpoints(
@@ -2028,7 +2119,8 @@ export function listRuntimeEndpoints(
         endpoint_kind,
         serving_source,
         lifecycle_state,
-        health_status
+        health_status,
+        reasoning_effort
       FROM runtime_endpoints
       ORDER BY endpoint_id ASC
     `)
@@ -2041,6 +2133,7 @@ export function listRuntimeEndpoints(
     serving_source: string;
     lifecycle_state: string;
     health_status: string;
+    reasoning_effort: string | null;
   }>;
   database.close();
 
@@ -2503,6 +2596,8 @@ function mapRuntimeTelemetryRecord(row: {
   request_id: string;
   routing_decision_id: string;
   endpoint_id: string;
+  reasoning_effort: string | null;
+  effort_source: string | null;
   conversation_id: string;
   created_at_ms: number;
   client_request_id: string | null;
@@ -2634,6 +2729,13 @@ function mapRuntimeTelemetryRecord(row: {
     requestId: row.request_id,
     routingDecisionId: row.routing_decision_id,
     endpointId: row.endpoint_id,
+    reasoningEffort: row.reasoning_effort ?? null,
+    effortSource:
+      row.effort_source === "client" ||
+      row.effort_source === "variant" ||
+      row.effort_source === "variant_coerced"
+        ? row.effort_source
+        : "none",
     conversationId: row.conversation_id,
     createdAtMs: row.created_at_ms,
     clientRequestId: row.client_request_id,
@@ -2813,6 +2915,11 @@ function toRuntimeTelemetryRecord(
         : "unavailable";
   const routingDiagnostics = observation.routingDiagnostics;
   const telemetrySnapshot = observation.telemetrySnapshot;
+  const reasoningEffort = observation.reasoningEffort ?? telemetrySnapshot?.reasoningEffort ?? null;
+  const effortSource =
+    observation.effortSource ??
+    telemetrySnapshot?.effortSource ??
+    (reasoningEffort === null ? "none" : "client");
   const difficultyBucketCandidate =
     routingDiagnostics?.difficultyRouting?.difficulty ??
     observation.observedPerformance.sample.difficulty_bucket ??
@@ -2874,6 +2981,8 @@ function toRuntimeTelemetryRecord(
     requestId: observation.requestId,
     routingDecisionId: observation.routingDecisionId,
     endpointId: observation.endpointId,
+    reasoningEffort,
+    effortSource,
     conversationId: observation.conversationId,
     createdAtMs: observation.usageEvent.timestamp_ms,
     clientRequestId: observation.clientRequestId ?? null,
@@ -3007,6 +3116,8 @@ function runtimeTelemetryInsertValues(
     record.requestId,
     record.routingDecisionId,
     record.endpointId,
+    record.reasoningEffort,
+    record.effortSource,
     record.conversationId,
     record.createdAtMs,
     record.clientRequestId,
@@ -3123,6 +3234,8 @@ function toFailureRuntimeTelemetryRecord(
     requestId: input.requestId,
     routingDecisionId,
     endpointId,
+    reasoningEffort: input.reasoningEffort ?? null,
+    effortSource: input.effortSource ?? (input.reasoningEffort ? "client" : "none"),
     conversationId: "conversation-main",
     createdAtMs,
     clientRequestId: input.clientRequestId ?? null,
@@ -3262,7 +3375,7 @@ function listRuntimeTelemetryRecordsInternal(
   const limitClause = typeof input.limit === "number" ? " LIMIT ?" : "";
   const rows = database
     .prepare(
-      `SELECT request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, client_request_id, request_class, source_type, model_id, provider_kind, provider_family, vendor_id, provider_id, provider_account_id, selected_model_id, endpoint_kind, serving_source, region, lifecycle_state_at_request, health_status_at_request, requested_model_id, difficulty_bucket, routing_mode, requested_role_id, selected_strategy, request_operation, source_client, execution_family, adapter_family, status_family, request_payload_bytes, ingress_payload_bytes, translated_payload_bytes, provider_canonical_payload_bytes, provider_wire_payload_bytes, response_payload_bytes, retry_count, reroute_count, cooldown_decision, idempotency_decision, tool_side_effect_state, tooling_used, cache_state, role_ids_json, eligible_endpoint_ids_json, eligible_model_ids_json, candidate_cost_snapshot_json, selected_pricing_snapshot_json, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, effective_cost_usd, selected_uncached_cost_usd, baseline_max_eligible_cost_usd, routing_cost_savings_usd, cache_cost_savings_usd, total_avoided_cost_usd, cost_calculation_basis, cost_calculation_version, cost_baseline_source, cost_savings_support, sampling_rate, retention_ttl_hours, retain_until_ms, redaction_level, retention_class, structured_inspection_mode, raw_capture_available, structured_inspection_available, taxonomy_group_id, taxonomy_role_id, taxonomy_task_type, taxonomy_task_variant, taxonomy_capability_ids_json, taxonomy_modality_ids_json, taxonomy_tool_class_ids_json, currency, dimensions_json FROM runtime_telemetry_records WHERE ${clauses.join(
+      `SELECT request_id, routing_decision_id, endpoint_id, reasoning_effort, effort_source, conversation_id, created_at_ms, client_request_id, request_class, source_type, model_id, provider_kind, provider_family, vendor_id, provider_id, provider_account_id, selected_model_id, endpoint_kind, serving_source, region, lifecycle_state_at_request, health_status_at_request, requested_model_id, difficulty_bucket, routing_mode, requested_role_id, selected_strategy, request_operation, source_client, execution_family, adapter_family, status_family, request_payload_bytes, ingress_payload_bytes, translated_payload_bytes, provider_canonical_payload_bytes, provider_wire_payload_bytes, response_payload_bytes, retry_count, reroute_count, cooldown_decision, idempotency_decision, tool_side_effect_state, tooling_used, cache_state, role_ids_json, eligible_endpoint_ids_json, eligible_model_ids_json, candidate_cost_snapshot_json, selected_pricing_snapshot_json, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, effective_cost_usd, selected_uncached_cost_usd, baseline_max_eligible_cost_usd, routing_cost_savings_usd, cache_cost_savings_usd, total_avoided_cost_usd, cost_calculation_basis, cost_calculation_version, cost_baseline_source, cost_savings_support, sampling_rate, retention_ttl_hours, retain_until_ms, redaction_level, retention_class, structured_inspection_mode, raw_capture_available, structured_inspection_available, taxonomy_group_id, taxonomy_role_id, taxonomy_task_type, taxonomy_task_variant, taxonomy_capability_ids_json, taxonomy_modality_ids_json, taxonomy_tool_class_ids_json, currency, dimensions_json FROM runtime_telemetry_records WHERE ${clauses.join(
         " AND ",
       )} ORDER BY created_at_ms DESC, request_id DESC${limitClause}`,
     )
@@ -3270,6 +3383,8 @@ function listRuntimeTelemetryRecordsInternal(
     request_id: string;
     routing_decision_id: string;
     endpoint_id: string;
+    reasoning_effort: string | null;
+    effort_source: string | null;
     conversation_id: string;
     created_at_ms: number;
     client_request_id: string | null;
@@ -4352,6 +4467,8 @@ export interface PersistRuntimeTelemetryFailureInput {
   readonly requestId: string;
   readonly routingDecisionId?: string;
   readonly endpointId?: string;
+  readonly reasoningEffort?: string | null;
+  readonly effortSource?: "none" | "client" | "variant" | "variant_coerced";
   readonly modelId?: string;
   readonly requestedModelId?: string | null;
   readonly selectedModelId?: string | null;

@@ -154,6 +154,8 @@ describe("normalizeCatalogSnapshot", () => {
           pricing: null,
           requestShapeHints: null,
           experimentalModes: [],
+          reasoningEffortLevels: [],
+          reasoningOptionKinds: [],
           extendsProvenance: { baseModelId: null, chain: [] },
           localOverrideApplied: false,
           localNotes: [],
@@ -201,9 +203,12 @@ describe("normalizeCatalogSnapshot", () => {
       }
     )(JSON.parse(raw));
 
-    expect(Buffer.byteLength(raw)).toBeLessThanOrEqual(Math.floor(5_434_995 * 0.6));
-    expect(hydrated.providers).toHaveLength(146);
-    expect(hydrated.models).toHaveLength(5_270);
+    // The refreshed models.dev corpus now contains 6,588 models (up from the
+    // Run-90 5,270-row pin); keep the compact artifact below 3.4 MB while
+    // allowing the additive effort/cost metadata required by Run 91.
+    expect(Buffer.byteLength(raw)).toBeLessThanOrEqual(3_400_000);
+    expect(hydrated.providers).toHaveLength(186);
+    expect(hydrated.models).toHaveLength(6_588);
   });
 
   test("loads the tracked compact artifact through the canonical hydrated file boundary", async () => {
@@ -654,6 +659,8 @@ describe("runCatalogExportCli", () => {
         contextWindow: number;
         maxOutputTokens: number;
         capabilities: string[];
+        reasoningEffortLevels?: string[];
+        reasoningOptionKinds?: string[];
         pricing: { inputPer1M: number; outputPer1M: number; currency: string } | null;
       }>;
     };
@@ -662,7 +669,9 @@ describe("runCatalogExportCli", () => {
     expect(k3?.contextWindow).toBe(1048576);
     expect(k3?.maxOutputTokens).toBe(131072);
     expect(k3?.capabilities).toEqual(expect.arrayContaining(["code.edit"]));
-    expect(k3?.pricing).toEqual({
+    expect(k3?.reasoningEffortLevels).toEqual(["low", "high", "max"]);
+    expect(k3?.reasoningOptionKinds).toEqual(["effort"]);
+    expect(k3?.pricing).toMatchObject({
       inputPer1M: 3,
       outputPer1M: 15,
       currency: "USD",

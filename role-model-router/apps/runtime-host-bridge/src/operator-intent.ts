@@ -8,6 +8,8 @@ import {
 } from "node:fs";
 import path from "node:path";
 
+import { normalizeReasoningEffort } from "@role-model-router/endpoint-registry";
+
 export const OPERATOR_INTENT_SCHEMA_VERSION = 1 as const;
 
 export interface OperatorIntentLocation {
@@ -20,6 +22,8 @@ export interface OperatorIntentRemoteActivation {
   readonly modelId: string;
   readonly region: string;
   readonly endpointId: string;
+  /** Null is the provider-default slot; never derive this from endpointId. */
+  readonly reasoningEffort?: string | null;
   readonly modelRoleBindings?: readonly {
     readonly modelId: string;
     readonly roleIds: readonly string[];
@@ -105,6 +109,9 @@ function readRemoteActivation(value: unknown, index: number): OperatorIntentRemo
     modelId: ensureNonEmptyString(record.modelId, `remoteActivations[${index}].modelId`),
     region: ensureNonEmptyString(record.region, `remoteActivations[${index}].region`),
     endpointId: ensureNonEmptyString(record.endpointId, `remoteActivations[${index}].endpointId`),
+    reasoningEffort: normalizeReasoningEffort(
+      record.reasoningEffort === undefined ? null : (record.reasoningEffort as string | null),
+    ),
     modelRoleBindings: readModelRoleBindings(record.modelRoleBindings),
   };
 }
@@ -227,6 +234,7 @@ export function upsertRemoteActivation(
     modelId: activation.modelId,
     region: activation.region,
     endpointId: activation.endpointId,
+    reasoningEffort: normalizeReasoningEffort(activation.reasoningEffort),
     ...(activation.modelRoleBindings !== undefined
       ? { modelRoleBindings: activation.modelRoleBindings }
       : {}),
@@ -259,6 +267,26 @@ export function removeRemoteActivationsByConfiguredModel(
     ...intent,
     remoteActivations: intent.remoteActivations.filter(
       (entry) => !(entry.providerAccountId === providerAccountId && entry.modelId === modelId),
+    ),
+  };
+}
+
+export function removeRemoteActivationBySlot(
+  intent: OperatorIntentV1,
+  providerAccountId: string,
+  modelId: string,
+  reasoningEffort: string | null,
+): OperatorIntentV1 {
+  const normalizedReasoningEffort = normalizeReasoningEffort(reasoningEffort);
+  return {
+    ...intent,
+    remoteActivations: intent.remoteActivations.filter(
+      (entry) =>
+        !(
+          entry.providerAccountId === providerAccountId &&
+          entry.modelId === modelId &&
+          entry.reasoningEffort === normalizedReasoningEffort
+        ),
     ),
   };
 }

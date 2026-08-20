@@ -20,10 +20,38 @@ export interface ExperimentalMode {
   readonly label: string;
 }
 
+export interface ReasoningOption {
+  readonly type: string;
+  readonly values?: readonly string[];
+  readonly [key: string]: unknown;
+}
+
+export type ReasoningOptionKind = "effort" | "toggle" | "budget_tokens" | (string & {});
+
+export interface PricingProvenance {
+  readonly vendor: string;
+  readonly commit: string;
+  readonly sourcePaths: readonly string[];
+  readonly sourceHashes: readonly string[];
+  readonly capturedAt: string;
+  readonly unit?: string;
+  readonly currency?: string;
+}
+
 export interface PricingHints {
   readonly inputPer1M: number;
   readonly outputPer1M: number;
   readonly currency: string;
+  /**
+   * Complete provider cost dimensions expressed per one million provider units.
+   * Keys are normalized from models.dev's wire names (for example
+   * `cache_read` becomes `cacheRead`), while unknown future keys are retained.
+   */
+  readonly costDimensionsPer1M?: Readonly<Record<string, number>>;
+  /** Structured or provider-specific future cost data retained losslessly. */
+  readonly costMetadata?: Readonly<Record<string, unknown>>;
+  readonly costUnit?: string;
+  readonly provenance?: PricingProvenance;
 }
 
 export interface RequestShapeHints {
@@ -45,6 +73,7 @@ export interface CatalogSnapshotModel {
   readonly pricing?: PricingHints;
   readonly requestShapeHints?: RequestShapeHints;
   readonly experimentalModes?: readonly ExperimentalMode[];
+  readonly reasoningOptions?: readonly ReasoningOption[];
 }
 
 export interface CatalogSnapshot {
@@ -119,6 +148,8 @@ export interface NormalizedCatalogModel {
   readonly pricing: PricingHints | null;
   readonly requestShapeHints: RequestShapeHints | null;
   readonly experimentalModes: readonly ExperimentalMode[];
+  readonly reasoningEffortLevels: readonly string[];
+  readonly reasoningOptionKinds: readonly ReasoningOptionKind[];
   readonly extendsProvenance: ExtendsProvenance;
   readonly localOverrideApplied: boolean;
   readonly localNotes: readonly string[];
@@ -153,6 +184,8 @@ export interface SerializedNormalizedCatalogV2 {
     | "localOverrideApplied"
     | "requestShapeHints"
     | "experimentalModes"
+    | "reasoningEffortLevels"
+    | "reasoningOptionKinds"
     | "extendsProvenance"
     | "localNotes"
   > & {
@@ -160,6 +193,8 @@ export interface SerializedNormalizedCatalogV2 {
     readonly localOverrideApplied?: true;
     readonly requestShapeHints?: RequestShapeHints;
     readonly experimentalModes?: readonly ExperimentalMode[];
+    readonly reasoningEffortLevels?: readonly string[];
+    readonly reasoningOptionKinds?: readonly ReasoningOptionKind[];
     readonly extendsProvenance?: ExtendsProvenance;
     readonly localNotes?: readonly string[];
   })[];
@@ -189,6 +224,59 @@ function ensure(condition: unknown, message: string): asserts condition {
 
 function unique(values: readonly string[] | undefined): string[] {
   return [...new Set(values ?? [])];
+}
+
+function deriveReasoningEffortLevels(options: readonly ReasoningOption[] | undefined): string[] {
+  const levels: string[] = [];
+  for (const option of options ?? []) {
+    if (option.type !== "effort") {
+      continue;
+    }
+    for (const value of option.values ?? []) {
+      if (typeof value === "string" && value.length > 0 && !levels.includes(value)) {
+        levels.push(value);
+      }
+    }
+  }
+  return levels;
+}
+
+function deriveReasoningOptionKinds(
+  options: readonly ReasoningOption[] | undefined,
+): ReasoningOptionKind[] {
+  return unique((options ?? []).map((option) => option.type)) as ReasoningOptionKind[];
+}
+
+function normalizePricing(pricing: PricingHints | undefined): PricingHints | undefined {
+  if (!pricing) {
+    return undefined;
+  }
+
+  const dimensions = pricing.costDimensionsPer1M
+    ? Object.fromEntries(
+        Object.entries(pricing.costDimensionsPer1M).map(([key, value]) => {
+          ensure(Number.isFinite(value) && value >= 0, `Invalid pricing dimension ${key}`);
+          return [key, value];
+        }),
+      )
+    : undefined;
+
+  for (const [key, value] of [
+    ["inputPer1M", pricing.inputPer1M],
+    ["outputPer1M", pricing.outputPer1M],
+  ] as const) {
+    ensure(Number.isFinite(value) && value >= 0, `Invalid pricing value ${key}`);
+  }
+
+  return {
+    inputPer1M: pricing.inputPer1M,
+    outputPer1M: pricing.outputPer1M,
+    currency: pricing.currency,
+    ...(dimensions ? { costDimensionsPer1M: dimensions } : {}),
+    ...(pricing.costMetadata ? { costMetadata: pricing.costMetadata } : {}),
+    ...(pricing.costUnit ? { costUnit: pricing.costUnit } : {}),
+    ...(pricing.provenance ? { provenance: pricing.provenance } : {}),
+  };
 }
 
 function hasSameSource(left: CatalogSnapshotSource, right: CatalogSnapshotSource): boolean {
@@ -228,6 +316,8 @@ export function serializeNormalizedCatalog(
         localOverrideApplied,
         requestShapeHints,
         experimentalModes,
+        reasoningEffortLevels,
+        reasoningOptionKinds,
         extendsProvenance,
         localNotes,
         ...required
@@ -237,7 +327,9 @@ export function serializeNormalizedCatalog(
         ...(!hasSameSource(upstreamProvenance, catalog.source) ? { upstreamProvenance } : {}),
         ...(localOverrideApplied ? { localOverrideApplied: true as const } : {}),
         ...(requestShapeHints ? { requestShapeHints } : {}),
-        ...(experimentalModes.length > 0 ? { experimentalModes } : {}),
+        ...(experimentalModes?.length > 0 ? { experimentalModes } : {}),
+        ...(reasoningEffortLevels?.length ? { reasoningEffortLevels } : {}),
+        ...(reasoningOptionKinds?.length ? { reasoningOptionKinds } : {}),
         ...(extendsProvenance.baseModelId !== null || extendsProvenance.chain.length > 0
           ? { extendsProvenance }
           : {}),
@@ -256,7 +348,33 @@ export function hydrateNormalizedCatalog(value: unknown): NormalizedCatalog {
     readonly models?: readonly Record<string, unknown>[];
   };
   if (wire.catalogVersion === "1") {
-    return value as NormalizedCatalog;
+    ensure(wire.source, "Normalized catalog source is required");
+    ensure(Array.isArray(wire.providers), "Normalized catalog providers are required");
+    ensure(Array.isArray(wire.models), "Normalized catalog models are required");
+    const source = wire.source;
+    return {
+      catalogVersion: "1",
+      source,
+      providers: wire.providers.map((provider) => ({
+        ...provider,
+        supportedAuthModes: provider.supportedAuthModes ?? [],
+        controlPlaneRequirements: provider.controlPlaneRequirements ?? [],
+        localOverrideApplied: provider.localOverrideApplied ?? false,
+        upstreamProvenance: provider.upstreamProvenance ?? source,
+      })) as unknown as readonly NormalizedCatalogProvider[],
+      models: wire.models.map((model) => ({
+        ...model,
+        pricing: normalizePricing(model.pricing as PricingHints | undefined) ?? null,
+        requestShapeHints: model.requestShapeHints ?? null,
+        experimentalModes: model.experimentalModes ?? [],
+        reasoningEffortLevels: model.reasoningEffortLevels ?? [],
+        reasoningOptionKinds: model.reasoningOptionKinds ?? [],
+        extendsProvenance: model.extendsProvenance ?? { baseModelId: null, chain: [] },
+        localOverrideApplied: model.localOverrideApplied ?? false,
+        localNotes: model.localNotes ?? [],
+        upstreamProvenance: model.upstreamProvenance ?? source,
+      })) as unknown as readonly NormalizedCatalogModel[],
+    };
   }
   ensure(wire.catalogVersion === "2", "Unsupported normalized catalog version");
   ensure(wire.source, "Normalized catalog source is required");
@@ -275,8 +393,11 @@ export function hydrateNormalizedCatalog(value: unknown): NormalizedCatalog {
     })) as unknown as readonly NormalizedCatalogProvider[],
     models: wire.models.map((model) => ({
       ...model,
+      pricing: normalizePricing(model.pricing as PricingHints | undefined) ?? null,
       requestShapeHints: model.requestShapeHints ?? null,
       experimentalModes: model.experimentalModes ?? [],
+      reasoningEffortLevels: model.reasoningEffortLevels ?? [],
+      reasoningOptionKinds: model.reasoningOptionKinds ?? [],
       extendsProvenance: model.extendsProvenance ?? { baseModelId: null, chain: [] },
       localOverrideApplied: model.localOverrideApplied ?? false,
       localNotes: model.localNotes ?? [],
@@ -354,6 +475,7 @@ function resolveModelDefinition(
       ]),
       modalities: unique(model.modalities ?? resolvedBase.model.modalities),
       experimentalModes: model.experimentalModes ?? resolvedBase.model.experimentalModes,
+      reasoningOptions: model.reasoningOptions ?? resolvedBase.model.reasoningOptions,
       requestShapeHints: model.requestShapeHints ?? resolvedBase.model.requestShapeHints,
       pricing: model.pricing ?? resolvedBase.model.pricing,
     },
@@ -437,9 +559,11 @@ export function normalizeCatalogSnapshot(
         modalities: unique(resolved.model.modalities),
         contextWindow: resolved.model.contextWindow ?? 0,
         maxOutputTokens: resolved.model.maxOutputTokens ?? 0,
-        pricing: resolved.model.pricing ?? null,
+        pricing: normalizePricing(resolved.model.pricing) ?? null,
         requestShapeHints: resolved.model.requestShapeHints ?? null,
         experimentalModes: resolved.model.experimentalModes ?? [],
+        reasoningEffortLevels: deriveReasoningEffortLevels(resolved.model.reasoningOptions),
+        reasoningOptionKinds: deriveReasoningOptionKinds(resolved.model.reasoningOptions),
         extendsProvenance: {
           baseModelId: resolved.chain.at(-1) ?? null,
           chain: resolved.chain,
@@ -493,6 +617,13 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { applyAliasedCatalogPricing } from "./token-economics.js";
+
+export {
+  resolveReasoningEffortLevels,
+  type ReasoningEffortAdapterCapability,
+  type ReasoningEffortFallback,
+  type ReasoningEffortResolutionInput,
+} from "./reasoning.js";
 
 export {
   deriveLiteLLMProviders,

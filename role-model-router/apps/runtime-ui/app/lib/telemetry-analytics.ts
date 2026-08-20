@@ -179,7 +179,7 @@ function resolveLabel(
   dimension: RuntimeTelemetryAnalyticsDimension,
   key: string,
 ): string {
-  return response.labels[dimension]?.[key] ?? key;
+  return response.identities?.[dimension]?.[key]?.label ?? response.labels[dimension]?.[key] ?? key;
 }
 
 function buildOtherAggregateSeries(

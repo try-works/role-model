@@ -154,7 +154,7 @@ function buildLoginFreeCatalog(
     );
   }
   const allModels = discovery.discovery.models.filter(
-    (model) => model.type === "alias" || model.type === "model",
+    (model) => model.type === "alias" || model.type === "model" || model.type === "endpoint",
   );
   const firstModel = allModels[0];
   if (!firstModel) {
@@ -226,7 +226,7 @@ function buildSignedInMergedCatalog(
   }
 
   const allModels = discovery.discovery.models.filter(
-    (model) => model.type === "alias" || model.type === "model",
+    (model) => model.type === "alias" || model.type === "model" || model.type === "endpoint",
   );
   const firstModel = allModels[0];
   if (!firstModel) {

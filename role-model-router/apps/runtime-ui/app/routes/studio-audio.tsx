@@ -23,6 +23,7 @@ import {
   type RuntimeAudioVoiceRecord,
   type RuntimeSnapshot,
   fetchAudioVoices,
+  fetchRuntimeEndpoints,
   fetchRuntimeModels,
   submitAudioTranscription,
   submitSpeechGeneration,
@@ -156,7 +157,9 @@ export function isVoiceInventoryUnavailableError(message: string | null): boolea
 }
 
 export default function StudioAudioRoute() {
-  const [snapshot, setSnapshot] = useState<Pick<RuntimeSnapshot, "models"> | null>(null);
+  const [snapshot, setSnapshot] = useState<Pick<RuntimeSnapshot, "models" | "endpoints"> | null>(
+    null,
+  );
   const [voices, setVoices] = useState<readonly RuntimeAudioVoiceRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
@@ -172,10 +175,11 @@ export default function StudioAudioRoute() {
   const [result, setResult] = useState<AudioResult | null>(null);
 
   useEffect(() => {
-    void fetchRuntimeModels()
-      .then((models) => {
-        setSnapshot({ models });
-        setModel((current) => current || models[0]?.id || "");
+    void Promise.all([fetchRuntimeModels(), fetchRuntimeEndpoints()])
+      .then(([models, endpoints]) => {
+        setSnapshot({ models, endpoints });
+        const defaultModel = buildWorkbenchModelOptions(models, endpoints)[0]?.value || "";
+        setModel((current) => current || defaultModel);
       })
       .catch((value: unknown) =>
         setError(
@@ -214,8 +218,8 @@ export default function StudioAudioRoute() {
   }, [result]);
 
   const modelOptions = useMemo(
-    () => buildWorkbenchModelOptions(snapshot?.models ?? []),
-    [snapshot?.models],
+    () => buildWorkbenchModelOptions(snapshot?.models ?? [], snapshot?.endpoints ?? []),
+    [snapshot?.endpoints, snapshot?.models],
   );
   const voiceInventoryUnavailable = isVoiceInventoryUnavailableError(voiceError);
 

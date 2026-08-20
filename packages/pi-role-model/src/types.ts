@@ -1,9 +1,29 @@
+import type {
+  ExtensionCommandContext as UpstreamPiCommandContext,
+  ExtensionAPI as UpstreamPiExtensionAPI,
+  ExtensionContext as UpstreamPiExtensionContext,
+  ProviderConfig as UpstreamPiProviderConfig,
+  ProviderModelConfig as UpstreamPiProviderModelConfig,
+} from "@earendil-works/pi-coding-agent";
+
 export interface DownstreamOpenAIModelRecord {
   id: string;
   object: "model";
   owned_by: "role-model";
   endpoint_ids?: string[];
-  type: "model" | "alias";
+  type: "model" | "alias" | "endpoint";
+  displayName?: string;
+  upstreamModelId?: string;
+  upstream_model_id?: string;
+  reasoningEffort?: string | null;
+  reasoning_effort?: string | null;
+  fixedEffort?: string | null;
+  fixed_effort?: string | null;
+  effortSource?: string | null;
+  effort_source?: string | null;
+  reasoningEffortLevels?: string[];
+  reasoning_effort_levels?: string[];
+  endpoint_id?: string;
   routingMode?: "basic" | "difficulty" | "intelligent" | "hybrid";
   targetModelIds?: string[];
   canonicalModelIds?: string[];
@@ -27,7 +47,14 @@ export interface DownstreamOpenAIModelRecord {
         available?: string[];
         conditional?: unknown;
         tools?: { functionCalling?: boolean } | boolean;
-        reasoning?: { supported?: boolean; effortControl?: boolean } | boolean;
+        reasoning?:
+          | {
+              supported?: boolean;
+              effortControl?: boolean;
+              effortLevels?: string[];
+              effort_levels?: string[];
+            }
+          | boolean;
         structuredOutput?: { supported?: boolean } | boolean;
         caching?: unknown;
       } & Record<string, unknown>);
@@ -43,6 +70,16 @@ export interface DownstreamOpenAIModelRecord {
     };
   };
   sources?: string[];
+  pricing?: {
+    inputPer1M?: number;
+    outputPer1M?: number;
+    cacheReadPer1M?: number;
+    cacheWritePer1M?: number;
+    input?: number;
+    output?: number;
+    cacheRead?: number;
+    cacheWrite?: number;
+  } | null;
 }
 
 export interface DownstreamOpenAIDiscovery {
@@ -72,14 +109,17 @@ export interface DownstreamOpenAIDiscovery {
   freshness: Record<string, unknown>;
 }
 
-export interface PiProviderModelConfig {
+export interface PiProviderModelConfig extends UpstreamPiProviderModelConfig {
   id: string;
-  name?: string;
+  name: string;
   input: ("text" | "image")[];
   cost: { input: number; output: number; cacheRead: number; cacheWrite: number };
-  contextWindow?: number;
-  maxTokens?: number;
-  reasoning?: boolean;
+  contextWindow: number;
+  maxTokens: number;
+  reasoning: boolean;
+  thinkingLevelMap?: PiThinkingLevelMap;
+  upstreamModelId?: string;
+  reasoningEffort?: string | null;
   provider?: string;
   api?: "openai-completions";
   compat?: {
@@ -89,13 +129,21 @@ export interface PiProviderModelConfig {
   };
 }
 
-export interface PiProviderConfig {
+export interface PiProviderConfig
+  extends Omit<UpstreamPiProviderConfig, "models" | "refreshModels"> {
   name: string;
   baseUrl: string;
   apiKey: string;
   api: "openai-completions";
   models: PiProviderModelConfig[];
+  refreshModels?: (context: PiRefreshModelsContext) => Promise<PiProviderModelConfig[]>;
 }
+
+export type PiThinkingLevel = ReturnType<UpstreamPiExtensionAPI["getThinkingLevel"]>;
+export type PiThinkingLevelMap = NonNullable<UpstreamPiProviderModelConfig["thinkingLevelMap"]>;
+export type PiRefreshModelsContext = Parameters<
+  NonNullable<UpstreamPiProviderConfig["refreshModels"]>
+>[0];
 
 export interface ProviderRegistration {
   providerId: "role-model";
@@ -111,31 +159,14 @@ export interface PiModelRef {
 
 export type PiExtensionMode = "tui" | "rpc" | "json" | "print";
 
-export interface PiExtensionContext {
-  ui?: {
-    notify?: (message: string, level?: "info" | "error") => void;
-  };
-  mode?: PiExtensionMode;
-  model?: PiModelRef;
-  isProjectTrusted?: () => boolean;
-}
-
-export interface PiExtensionAPI {
-  registerProvider(name: string, config: PiProviderConfig): void;
-  registerCommand(name: string, config: { description: string; handler: PiCommandHandler }): void;
-  on?: (
-    event: "before_provider_request",
-    handler: (
-      event: { type: "before_provider_request"; payload: unknown },
-      context?: PiExtensionContext,
-    ) => unknown | Promise<unknown>,
-  ) => void;
-  setModel?: (model: PiModelSelection) => Promise<boolean>;
-}
-
-export interface PiCommandContext extends PiExtensionContext {
+export type PiExtensionContext = UpstreamPiExtensionContext;
+export type PiExtensionAPI = UpstreamPiExtensionAPI;
+export type PiCommandContext = Partial<
+  Pick<UpstreamPiCommandContext, "mode" | "model" | "isProjectTrusted">
+> & {
+  ui?: Pick<UpstreamPiCommandContext["ui"], "notify">;
   getModel?: () => PiModelRef | undefined;
-}
+};
 
 export type PiCommandHandler = (args?: string, context?: PiCommandContext) => Promise<void>;
 
@@ -162,5 +193,6 @@ export interface RoleModelModelDiagnostic {
 
 export interface PiModelSelection extends PiProviderModelConfig {
   provider: "role-model";
+  baseUrl: string;
   api: "openai-completions";
 }

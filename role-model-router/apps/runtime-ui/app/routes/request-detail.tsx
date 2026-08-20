@@ -20,6 +20,7 @@ import {
   mutedPanelClassName,
   supportingTextClassName,
 } from "../lib/design-system";
+import { formatEndpointDisplayPath, formatModelIdentity } from "../lib/effort-identity";
 import { formatRoutingModeLabel } from "../lib/routing-mode";
 import { fetchRequestDetail } from "../lib/runtime-api";
 import { useShellHeaderOverride } from "../lib/shell-header-context";
@@ -310,13 +311,21 @@ export default function RequestDetailRoute() {
   const measuredAtMs =
     pickNumber(latestProfile, "measured_at_ms", "measuredAtMs") ??
     pickNumber(observedSample, "timestamp_ms", "timestampMs");
+  const endpointId = pickString(request, "endpointId") ?? "unknown";
   const modelId =
     pickString(usageEvent, "model_id", "modelId") ??
     pickString(endpointIdentity, "model_id", "modelId");
+  const reasoningEffort =
+    pickString(usageEvent, "reasoning_effort", "reasoningEffort") ??
+    pickString(endpointIdentity, "reasoning_effort", "reasoningEffort");
+  const modelDisplayName = formatModelIdentity({
+    modelId: modelId ?? endpointId,
+    endpointId,
+    reasoningEffort,
+  });
   const providerKind =
     pickString(usageEvent, "provider_kind", "providerKind") ??
     pickString(endpointIdentity, "provider_kind", "providerKind");
-  const endpointId = pickString(request, "endpointId") ?? "unknown";
   const clientRequestId =
     pickString(request, "clientRequestId") ??
     pickString(inspectionRequest, "clientRequestId") ??
@@ -499,7 +508,9 @@ export default function RequestDetailRoute() {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <div className={`${mutedPanelClassName} space-y-2 p-4 xl:col-span-2`}>
             <p className={fieldLabelClassName}>Endpoint</p>
-            <p className={`${inlineTitleClassName} break-all`}>{endpointId}</p>
+            <p className={`${inlineTitleClassName} break-all`} title={endpointId}>
+              {formatEndpointDisplayPath({ endpointId, reasoningEffort })}
+            </p>
             <p className={supportingTextClassName}>
               Endpoint id currently associated with the captured request.
             </p>
@@ -799,7 +810,7 @@ export default function RequestDetailRoute() {
           <dl className="grid gap-x-6 gap-y-3 text-sm md:grid-cols-2">
             {[
               ["Provider", providerKind],
-              ["Model", modelId],
+              ["Model", modelDisplayName],
               ["Finish reason", finishReason],
               ["Input tokens", inputTokenTruth.text],
               ["Output tokens", outputTokenTruth.text],

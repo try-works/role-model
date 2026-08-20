@@ -14,6 +14,7 @@ import {
   secondaryButtonClassName,
   supportingTextClassName,
 } from "../lib/design-system";
+import { formatEndpointDisplayPath } from "../lib/effort-identity";
 import {
   type RuntimeSnapshot,
   fetchRuntimeAccounts,
@@ -93,8 +94,8 @@ function buildRuntimeConnectionRows(input: {
       key: `endpoint:${endpoint.endpointId}`,
       providerLabel: endpoint.providerLabel,
       connectionLabel: provider?.accountIds.join(", ") || "—",
-      modelLabel: endpoint.modelId,
-      endpointLabel: endpoint.endpointId,
+      modelLabel: endpoint.displayName ?? endpoint.modelId,
+      endpointLabel: formatEndpointDisplayPath(endpoint),
       sourceLabel: `${endpoint.sourceLabel} / ${endpoint.endpointKind}`,
       healthLabel: endpoint.healthStatus,
       healthTone: healthTone(endpoint.healthStatus),

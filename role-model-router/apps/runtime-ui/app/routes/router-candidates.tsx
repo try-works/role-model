@@ -9,6 +9,7 @@ import {
   SectionCard,
 } from "../components/page-primitives";
 import { bodyStrongTextClassName, cardClassName } from "../lib/design-system";
+import { formatEndpointDisplayPath, formatModelIdentity } from "../lib/effort-identity";
 import { type RouterCandidate, fetchRouterCandidates } from "../lib/runtime-api";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -132,7 +133,7 @@ export default function RouterCandidatesRoute() {
                           : "border-l-2 border-transparent pl-3"
                       }`}
                     >
-                      <p className={bodyStrongTextClassName}>{candidate.modelId}</p>
+                      <p className={bodyStrongTextClassName}>{formatModelIdentity(candidate)}</p>
                     </div>
                     <Badge tone={candidateStatusTone(candidate)}>
                       {candidateStatusLabel(candidate)}
@@ -140,11 +141,15 @@ export default function RouterCandidatesRoute() {
                   </div>
 
                   <MetricStrip
-                    aria-label={`${candidate.modelId} routing candidate`}
+                    aria-label={`${formatModelIdentity(candidate)} routing candidate`}
                     variant="inventory"
                     className="max-w-none"
                     items={[
-                      { id: "endpoint", label: "Endpoint", value: candidate.endpointId },
+                      {
+                        id: "endpoint",
+                        label: "Endpoint",
+                        value: formatEndpointDisplayPath(candidate),
+                      },
                       { id: "source", label: "Source", value: sourceLabel },
                       {
                         id: "cap",

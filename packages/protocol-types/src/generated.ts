@@ -101,12 +101,16 @@ export interface ConditionalSupportMap {
   [k: string]: DownstreamOpenAIConditionalSupport;
 }
 
-export interface DownstreamOpenAIModelRecord {
+export type DownstreamOpenAIModelRecord = {
+  [k: string]: unknown;
+} & {
   id: string;
   object: "model";
   owned_by: "role-model";
   endpoint_ids: StringList;
-  type: "model" | "alias";
+  type: "model" | "alias" | "endpoint";
+  upstream_model_id?: string;
+  fixed_effort?: string | null;
   routingMode?: "basic" | "difficulty" | "intelligent" | "hybrid";
   targetModelIds: StringList;
   canonicalModelIds: StringList;
@@ -133,6 +137,7 @@ export interface DownstreamOpenAIModelRecord {
     reasoning: {
       supported: boolean;
       effortControl: boolean;
+      effortLevels?: StringList;
     };
     structuredOutput: {
       supported: boolean;
@@ -155,7 +160,7 @@ export interface DownstreamOpenAIModelRecord {
     };
   };
   sources: StringList;
-}
+};
 
 export interface DownstreamOpenAIModelEndpointSet {
   modelIds: StringList;
@@ -224,6 +229,7 @@ export interface EndpointIdentity {
   region?: string;
   org_scope?: string;
   endpoint_version?: string;
+  reasoning_effort?: string | null;
 }
 
 export interface JudgeScore {
@@ -409,6 +415,8 @@ export interface RouterDecision {
     };
   }[];
   chosen_endpoint_id: string;
+  reasoning_effort?: string | null;
+  effort_source?: "none" | "client" | "variant" | "variant_coerced";
   fallback_endpoint_ids: string[];
   selection_reasons: (
     | "BEST_TOTAL_SCORE"
@@ -496,6 +504,8 @@ export interface TraceEvent {
   span_id?: string;
   request_id: string;
   routing_decision_id: string;
+  reasoning_effort?: string | null;
+  effort_source?: "none" | "client" | "variant" | "variant_coerced";
   timestamp_ms: number;
   event_type:
     | "router.decision.created"
@@ -515,6 +525,8 @@ export interface TraceSpan {
   parent_span_id?: string;
   request_id: string;
   routing_decision_id: string;
+  reasoning_effort?: string | null;
+  effort_source?: "none" | "client" | "variant" | "variant_coerced";
   span_type:
     | "router.eligibility"
     | "router.scoring"
@@ -544,6 +556,8 @@ export interface UsageEvent {
   routing_decision_id: string;
   endpoint_id: string;
   model_id?: string;
+  reasoning_effort?: string | null;
+  effort_source?: "none" | "client" | "variant" | "variant_coerced";
   package_id?: string;
   provider_kind: string;
   tokens_in: number;

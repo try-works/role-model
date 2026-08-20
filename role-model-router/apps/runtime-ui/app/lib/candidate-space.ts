@@ -1,3 +1,4 @@
+import { formatCompactEndpointDisplayName } from "./effort-identity";
 import type { RouterCandidate } from "./runtime-api";
 
 export type CandidateSpacePoint = {
@@ -63,9 +64,15 @@ function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value));
 }
 
-function shortModelLabel(modelId: string): string {
-  const leaf = modelId.includes("/") ? (modelId.split("/").at(-1) ?? modelId) : modelId;
-  return leaf.length > 28 ? `${leaf.slice(0, 27)}…` : leaf;
+function shortModelLabel(candidate: RouterCandidate): string {
+  const leaf = candidate.modelId.includes("/")
+    ? (candidate.modelId.split("/").at(-1) ?? candidate.modelId)
+    : candidate.modelId;
+  return formatCompactEndpointDisplayName({
+    base: candidate.displayName ?? leaf,
+    reasoningEffort: candidate.reasoningEffort,
+    maxLength: 28,
+  });
 }
 
 function scoreQuality(candidate: RouterCandidate): number {
@@ -235,7 +242,7 @@ export function buildCandidateSpacePoints(
     return {
       endpointId: row.candidate.endpointId,
       modelId: row.candidate.modelId,
-      label: shortModelLabel(row.candidate.modelId),
+      label: shortModelLabel(row.candidate),
       cost: row.cost,
       quality: row.quality,
       speed: row.speed,

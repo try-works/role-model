@@ -26,6 +26,7 @@ import {
   secondaryButtonClassName,
   supportingTextClassName,
 } from "../lib/design-system";
+import { formatEndpointDisplayPath, formatModelIdentity } from "../lib/effort-identity";
 import { formatScore } from "../lib/format-score";
 import {
   type BenchmarkCaseAuditEntry,
@@ -147,17 +148,16 @@ function formatDifficultyPercent(score: number | null | undefined): string {
   return `${Math.round(score * 100)}%`;
 }
 
-function shortModelLeaf(modelId: string): string {
-  return modelId.includes("/") ? (modelId.split("/").at(-1) ?? modelId) : modelId;
-}
-
 function resolveJudgeLabel(
   summary: BenchmarkSummary,
   candidates: readonly RouterCandidate[],
 ): string | null {
   return (
     summary.judgeModelId ??
-    candidates.find((candidate) => candidate.endpointId === summary.judgeEndpointId)?.modelId ??
+    (() => {
+      const candidate = candidates.find((entry) => entry.endpointId === summary.judgeEndpointId);
+      return candidate ? formatModelIdentity(candidate) : null;
+    })() ??
     summary.judgeEndpointId ??
     null
   );
@@ -183,6 +183,7 @@ function collectEndpointLatencies(input: {
 interface ModelScoreRow {
   readonly endpointId: string;
   readonly modelId: string;
+  readonly displayName: string;
   readonly sourceType: string;
   readonly overallScore: number | null;
   readonly scoresByBucket: BenchmarkSummarySubject["scoresByBucket"] | null;
@@ -245,6 +246,7 @@ function buildModelScoreRows(
     rows.push({
       endpointId: candidate.endpointId,
       modelId: candidate.modelId,
+      displayName: formatModelIdentity(candidate),
       sourceType: candidate.sourceType,
       overallScore: grade?.overallScore ?? capability?.overallScore ?? profileQualityScore,
       scoresByBucket:
@@ -777,7 +779,7 @@ export default function ControlBenchmarkRoute() {
               >
                 {runnableCandidates.map((candidate) => (
                   <option key={candidate.endpointId} value={candidate.endpointId}>
-                    {candidate.modelId} ({candidate.sourceType})
+                    {formatModelIdentity(candidate)} ({candidate.sourceType})
                   </option>
                 ))}
               </SelectField>
@@ -826,15 +828,15 @@ export default function ControlBenchmarkRoute() {
                         <td className="px-3.5 py-3">
                           <CheckboxControl
                             checked={selected}
-                            aria-label={`${selected ? "Deselect" : "Select"} ${candidate.modelId}`}
+                            aria-label={`${selected ? "Deselect" : "Select"} ${formatModelIdentity(candidate)}`}
                             onChange={() => toggleEndpoint(candidate.endpointId)}
                           />
                         </td>
                         <td className="w-40 shrink-0 px-1 py-3 text-[14px] font-semibold leading-[18px] text-[var(--rm-fg)]">
-                          {shortModelLeaf(candidate.modelId)}
+                          {formatModelIdentity(candidate)}
                         </td>
                         <td className="min-w-0 truncate px-1 py-3 font-mono text-[12px] leading-4 text-[var(--rm-muted)]">
-                          {candidate.endpointId}
+                          {formatEndpointDisplayPath(candidate)}
                         </td>
                         <td className="w-[72px] px-1 py-3 text-[13px] leading-[18px] text-[var(--rm-fg)]">
                           {candidate.sourceType}
@@ -872,8 +874,12 @@ export default function ControlBenchmarkRoute() {
                         className={`${mutedPanelClassName} flex items-start justify-between gap-3 p-3`}
                       >
                         <div className="space-y-1">
-                          <p className={bodyStrongTextClassName}>{candidate.modelId}</p>
-                          <p className={supportingTextClassName}>{candidate.endpointId}</p>
+                          <p className={bodyStrongTextClassName}>
+                            {formatModelIdentity(candidate)}
+                          </p>
+                          <p className={supportingTextClassName}>
+                            {formatEndpointDisplayPath(candidate)}
+                          </p>
                         </div>
                         <Badge tone="neutral">excluded</Badge>
                       </div>
@@ -1019,7 +1025,7 @@ export default function ControlBenchmarkRoute() {
                         className="border-b border-[var(--rm-border)] last:border-b-0"
                       >
                         <td className="px-3.5 py-3 text-[14px] font-semibold leading-[18px] text-[var(--rm-fg)]">
-                          {shortModelLeaf(row.modelId)}
+                          {row.displayName}
                         </td>
                         <td className={`${benchmarkDenseCellClassName} px-1 py-3`}>
                           {formatScore(row.overallScore)}
@@ -1148,10 +1154,16 @@ export default function ControlBenchmarkRoute() {
                         >
                           <div className="min-w-0">
                             <p className="truncate font-mono text-[13px] font-semibold text-[var(--rm-fg)]">
-                              {entry.modelId}
+                              {modelScoreRows.find((row) => row.endpointId === entry.endpointId)
+                                ?.displayName ?? entry.modelId}
                             </p>
                             <p className="truncate font-mono text-[11px] text-[var(--rm-muted)]">
-                              {entry.endpointId}
+                              {formatEndpointDisplayPath({
+                                endpointId: entry.endpointId,
+                                reasoningEffort: candidates.find(
+                                  (candidate) => candidate.endpointId === entry.endpointId,
+                                )?.reasoningEffort,
+                              })}
                             </p>
                           </div>
                           <p className={benchmarkDenseCellClassName}>{formatScore(entry.score)}</p>

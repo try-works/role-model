@@ -277,6 +277,8 @@ export async function runRuntimeAdapterValidation(
       pricing: null,
       requestShapeHints: null,
       experimentalModes: [],
+      reasoningEffortLevels: [],
+      reasoningOptionKinds: [],
       extendsProvenance: { baseModelId: null, chain: [] },
       localOverrideApplied: true,
       localNotes: ["Synthesized from fixture-referenced model ID."],

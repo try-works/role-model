@@ -249,6 +249,26 @@ test("Phase 3.5 normal post-observation work executes every canonical business o
     async invoke(id: string, envelope: Record<string, unknown>) {
       invoked.push({ id, envelope });
       if (id === "artifact-store") return { id: "artifact:run87" };
+      if (id === "repository-context") {
+        return {
+          available: true,
+          context: {
+            scopeId: "tenant:run87",
+            repoFingerprint: "a".repeat(64),
+            packageId: null,
+            fallbackLevel: "repo_task",
+            branchCompatibility: "unknown",
+            fingerprintEpoch: 1,
+          },
+          diagnostics: [
+            {
+              code: "REPOSITORY_CONTEXT_AVAILABLE",
+              message: "privacy-safe repository context available",
+              severity: "info",
+            },
+          ],
+        };
+      }
       if (id === "knowledge-store" && envelope.capability === "knowledge:write") {
         return { id: "knowledge:run87" };
       }
@@ -261,7 +281,7 @@ test("Phase 3.5 normal post-observation work executes every canonical business o
       return {};
     },
   };
-  await trackBRuntime.runTrackBPostObservation(
+  const result = await trackBRuntime.runTrackBPostObservation(
     runtime,
     {
       requestId: "all-owners-run87",
@@ -288,6 +308,22 @@ test("Phase 3.5 normal post-observation work executes every canonical business o
     ]),
   );
   expect(invoked.every((row) => row.envelope.channel === "stage")).toBe(true);
+  expect(result.repositoryContext).toEqual({
+    available: true,
+    scopeId: "tenant:run87",
+    repoFingerprint: "a".repeat(64),
+    packageId: null,
+    fallbackLevel: "repo_task",
+    branchCompatibility: "unknown",
+    fingerprintEpoch: 1,
+    diagnostics: [
+      {
+        code: "REPOSITORY_CONTEXT_AVAILABLE",
+        message: "privacy-safe repository context available",
+        severity: "info",
+      },
+    ],
+  });
   expect(
     invoked
       .filter((row) => ["event-log", "crowdsourced-learning"].includes(row.id))

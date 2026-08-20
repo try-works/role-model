@@ -335,9 +335,15 @@ export function extractLiteLLMModelIds(
     if (typeof provider !== "string" || provider.length === 0) {
       continue;
     }
-    // Match by litellm_provider or by key prefix (e.g. "moonshot/kimi-k2.5")
-    if (provider === providerId || key.startsWith(`${providerId}/`)) {
+    // LiteLLM uses both provider-qualified model keys and bare model keys. It also
+    // contains composite option rows such as `high/1024-x-1024/gpt-image-1` whose
+    // `litellm_provider` is OpenAI; those are pricing dimensions, not selectable
+    // provider/model identities. Preserve already-qualified ids, qualify bare ids,
+    // and refuse foreign slash-prefixed option keys.
+    if (key.startsWith(`${providerId}/`)) {
       modelIds.add(key);
+    } else if (provider === providerId && !key.includes("/")) {
+      modelIds.add(`${providerId}/${key}`);
     }
   }
 

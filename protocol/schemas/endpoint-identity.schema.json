@@ -45,6 +45,11 @@
     "device_class": { "type": "string" },
     "region": { "type": "string" },
     "org_scope": { "type": "string" },
-    "endpoint_version": { "type": "string" }
+    "endpoint_version": { "type": "string" },
+    "reasoning_effort": {
+      "type": ["string", "null"],
+      "minLength": 1,
+      "maxLength": 128
+    }
   }
 }

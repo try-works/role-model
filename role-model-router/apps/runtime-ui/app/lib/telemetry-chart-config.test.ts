@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import {
+  getTelemetryBreakdownOption,
   getTelemetryChartSeriesStyle,
   telemetryBreakdownOptions,
   telemetryChartColorTokens,
@@ -30,6 +31,8 @@ describe("telemetry chart config", () => {
         "sourceType",
         "endpointId",
         "modelId",
+        "reasoningEffort",
+        "effortSource",
         "providerId",
         "selectedStrategy",
         "taxonomyGroupId",
@@ -40,6 +43,22 @@ describe("telemetry chart config", () => {
         "taxonomyModalityId",
         "taxonomyToolClassId",
       ]),
+    );
+    expect(getTelemetryBreakdownOption("modelId")).toEqual(
+      expect.objectContaining({
+        label: "Upstream model (aggregates effort variants)",
+        shortLabel: "Upstream model",
+        value: "modelId",
+      }),
+    );
+    expect(getTelemetryBreakdownOption("endpointId")).toEqual(
+      expect.objectContaining({ label: "Endpoint variant" }),
+    );
+    expect(getTelemetryBreakdownOption("reasoningEffort")).toEqual(
+      expect.objectContaining({ label: "Reasoning effort" }),
+    );
+    expect(getTelemetryBreakdownOption("effortSource")).toEqual(
+      expect.objectContaining({ label: "Effort source" }),
     );
     expect(telemetryChartColorTokens).toEqual(
       expect.objectContaining({
@@ -72,4 +91,28 @@ describe("telemetry chart config", () => {
       getTelemetryChartSeriesStyle("providerId", "openai"),
     );
   });
+
+  test("uses the shared identity catalog and first-class effort filters on every analytics route", () => {
+    const requestsRoute = readFileSync(new URL("../routes/requests.tsx", import.meta.url), "utf8");
+    const routingRoute = readFileSync(
+      new URL("../routes/observe-routing.tsx", import.meta.url),
+      "utf8",
+    );
+    const dashboardRoute = readFileSync(
+      new URL("../routes/dashboard.tsx", import.meta.url),
+      "utf8",
+    );
+
+    for (const route of [requestsRoute, routingRoute, dashboardRoute]) {
+      expect(route).toContain("telemetryBreakdownOptions");
+    }
+    for (const route of [requestsRoute, routingRoute]) {
+      expect(route).toContain('"reasoningEffort"');
+      expect(route).toContain('"effortSource"');
+      expect(route).toContain("reasoningEfforts");
+      expect(route).toContain("effortSources");
+    }
+    expect(requestsRoute).toContain('label: "Selected model"');
+  });
 });
+import { readFileSync } from "node:fs";

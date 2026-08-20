@@ -6,6 +6,7 @@ import { describe, expect, test } from "vitest";
 import {
   type LiteLLMProviderInfo,
   deriveLiteLLMProviders,
+  extractLiteLLMModelIds,
   extractLiteLLMProviderIds,
   loadLiteLLMModelPrices,
 } from "@role-model-router/catalog";
@@ -38,6 +39,27 @@ describe("litellm-catalog", () => {
     expect(extractLiteLLMProviderIds(undefined)).toEqual([]);
     expect(extractLiteLLMProviderIds("string")).toEqual([]);
     expect(extractLiteLLMProviderIds(123)).toEqual([]);
+  });
+
+  test("normalizes provider model ids and excludes composite option keys", () => {
+    const modelPrices = {
+      "gpt-5.6-sol": { litellm_provider: "openai", mode: "chat" },
+      "openai/gpt-5.6-terra": { litellm_provider: "openai", mode: "chat" },
+      "high/1024-x-1024/gpt-image-1": {
+        litellm_provider: "openai",
+        mode: "image_generation",
+      },
+      "1024-x-1024/gpt-image-1": {
+        litellm_provider: "openai",
+        mode: "image_generation",
+      },
+      "claude-3": { litellm_provider: "anthropic", mode: "chat" },
+    };
+
+    expect(extractLiteLLMModelIds(modelPrices, "openai")).toEqual([
+      "openai/gpt-5.6-sol",
+      "openai/gpt-5.6-terra",
+    ]);
   });
 
   test("derives provider info with known overrides", () => {

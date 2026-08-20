@@ -16,6 +16,7 @@ import {
 } from "../lib/design-system";
 import {
   type RuntimeSnapshot,
+  fetchRuntimeEndpoints,
   fetchRuntimeModels,
   submitAdvancedRequest,
 } from "../lib/runtime-api";
@@ -96,7 +97,9 @@ function buildDefaultPayload(path: AdvancedPath, model: string): Record<string, 
 }
 
 export default function StudioAdvancedRoute() {
-  const [snapshot, setSnapshot] = useState<Pick<RuntimeSnapshot, "models"> | null>(null);
+  const [snapshot, setSnapshot] = useState<Pick<RuntimeSnapshot, "models" | "endpoints"> | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
   const [model, setModel] = useState("");
   const [path, setPath] = useState<AdvancedPath>("/v1/responses");
@@ -105,10 +108,10 @@ export default function StudioAdvancedRoute() {
   const [responsePayload, setResponsePayload] = useState<string | null>(null);
 
   useEffect(() => {
-    void fetchRuntimeModels()
-      .then((models) => {
-        setSnapshot({ models });
-        const defaultModel = models[0]?.id || "";
+    void Promise.all([fetchRuntimeModels(), fetchRuntimeEndpoints()])
+      .then(([models, endpoints]) => {
+        setSnapshot({ models, endpoints });
+        const defaultModel = buildWorkbenchModelOptions(models, endpoints)[0]?.value || "";
         setModel((current) => current || defaultModel);
       })
       .catch((value: unknown) =>
@@ -118,18 +121,19 @@ export default function StudioAdvancedRoute() {
       );
   }, []);
 
-  useEffect(() => {
-    const defaultModel = model || snapshot?.models[0]?.id || "";
-    setPayloadText(JSON.stringify(buildDefaultPayload(path, defaultModel), null, 2));
-  }, [model, path, snapshot?.models]);
-
   const modelOptions = useMemo(
-    () => buildWorkbenchModelOptions(snapshot?.models ?? []),
-    [snapshot?.models],
+    () => buildWorkbenchModelOptions(snapshot?.models ?? [], snapshot?.endpoints ?? []),
+    [snapshot?.endpoints, snapshot?.models],
   );
+
+  useEffect(() => {
+    const defaultModel = model || modelOptions[0]?.value || "";
+    setPayloadText(JSON.stringify(buildDefaultPayload(path, defaultModel), null, 2));
+  }, [model, modelOptions, path]);
+
   const hasModels = modelOptions.length > 0;
   const requestTemplate = JSON.stringify(
-    buildDefaultPayload(path, model || snapshot?.models[0]?.id || ""),
+    buildDefaultPayload(path, model || modelOptions[0]?.value || ""),
     null,
     2,
   );

@@ -4,6 +4,7 @@ import * as runtimeApiModule from "./runtime-api";
 
 import {
   activateRuntimeEndpoint,
+  activateRuntimeEndpointBatch,
   clearAllBenchmarkData,
   createRolePolicyRole,
   explicitAssignmentToRoleIds,
@@ -42,6 +43,7 @@ import {
   pollRuntimeDeviceAuthorization,
   reconnectRuntimeAccount,
   removeRuntimeAccountModel,
+  removeRuntimeEndpoint,
   roleIdsToExplicitAssignment,
   setLlamaSwapModelRoles,
   setPeerModelRoles,
@@ -394,6 +396,54 @@ describe("fetchRuntimeModels", () => {
       }),
     ]);
     expect(requestedTargets).toEqual(["/api/role-model/models"]);
+  });
+
+  test("loads provider catalog metadata without expanding the active runtime-model inventory", async () => {
+    const fetchRuntimeCatalogModels = (
+      runtimeApiModule as {
+        fetchRuntimeCatalogModels?: unknown;
+      }
+    ).fetchRuntimeCatalogModels;
+    expect(fetchRuntimeCatalogModels).toBeTypeOf("function");
+    if (typeof fetchRuntimeCatalogModels !== "function") {
+      return;
+    }
+
+    const requestedTargets: string[] = [];
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const target = requestTarget(input);
+      requestedTargets.push(target);
+      if (target !== "/api/role-model/models?providerId=openai") {
+        throw new Error(`Unexpected request: ${target}`);
+      }
+      return jsonResponse([
+        {
+          id: "openai/gpt-5.6-sol",
+          object: "model",
+          owned_by: "role-model",
+          providerId: "openai",
+          endpoint_ids: [],
+          capabilities: ["reasoning", "text.chat"],
+          modalities: ["text"],
+          reasoningEffortLevels: ["none", "low", "medium", "high", "xhigh", "max"],
+        },
+      ]);
+    });
+
+    await expect(
+      (
+        fetchRuntimeCatalogModels as (
+          providerId: string,
+          fetcher: Parameters<typeof fetchRuntimeSnapshot>[0],
+        ) => Promise<readonly unknown[]>
+      )("openai", fetcher),
+    ).resolves.toEqual([
+      expect.objectContaining({
+        id: "openai/gpt-5.6-sol",
+        reasoningEffortLevels: ["none", "low", "medium", "high", "xhigh", "max"],
+      }),
+    ]);
+    expect(requestedTargets).toEqual(["/api/role-model/models?providerId=openai"]);
   });
 });
 
@@ -2500,6 +2550,84 @@ describe("activateRuntimeEndpoint", () => {
       providerAccountId: "moonshot.personal.primary",
       modelId: "moonshot/kimi-k2.5",
       status: "active",
+    });
+  });
+});
+
+describe("activateRuntimeEndpointBatch", () => {
+  test("posts every effort identity in one atomic endpoint mutation", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      expect(url).toBe("/api/role-model/endpoints/batch");
+      expect(init?.method).toBe("POST");
+      expect(JSON.parse(String(init?.body))).toEqual({
+        activationBatchId: "activation-1",
+        activations: [
+          {
+            providerAccountId: "deepseek.personal.primary",
+            modelId: "deepseek/deepseek-v4-pro",
+            region: "global",
+            reasoningEffort: "high",
+          },
+          {
+            providerAccountId: "deepseek.personal.primary",
+            modelId: "deepseek/deepseek-v4-pro",
+            region: "global",
+            reasoningEffort: "xhigh",
+          },
+        ],
+      });
+      return jsonResponse({
+        activationBatchId: "activation-1",
+        status: "committed",
+        endpoints: [],
+      });
+    });
+
+    await expect(
+      activateRuntimeEndpointBatch(
+        {
+          activationBatchId: "activation-1",
+          activations: [
+            {
+              providerAccountId: "deepseek.personal.primary",
+              modelId: "deepseek/deepseek-v4-pro",
+              region: "global",
+              reasoningEffort: "high",
+            },
+            {
+              providerAccountId: "deepseek.personal.primary",
+              modelId: "deepseek/deepseek-v4-pro",
+              region: "global",
+              reasoningEffort: "xhigh",
+            },
+          ],
+        },
+        fetcher,
+      ),
+    ).resolves.toEqual({
+      activationBatchId: "activation-1",
+      status: "committed",
+      endpoints: [],
+    });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("removeRuntimeEndpoint", () => {
+  test("deletes one encoded endpoint identity without addressing its model siblings", async () => {
+    const endpointId = "deepseek.personal.global.deepseek-v4-pro~effort-v1~aGlnaA";
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      expect(url).toBe(`/api/role-model/endpoints/${encodeURIComponent(endpointId)}`);
+      expect(init?.method).toBe("DELETE");
+      return jsonResponse({ endpointId, status: "removed" });
+    });
+    await expect(removeRuntimeEndpoint(endpointId, fetcher)).resolves.toEqual({
+      endpointId,
+      status: "removed",
     });
   });
 });
