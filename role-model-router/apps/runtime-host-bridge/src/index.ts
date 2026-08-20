@@ -30,6 +30,7 @@ import {
   type RegistrySources,
   buildEndpointRegistry,
   createEndpointInstanceIdentity,
+  readLegacyEndpointReasoningEffort,
 } from "@role-model-router/endpoint-registry";
 import { ProcessSupervisor } from "@role-model-router/process-supervisor";
 import {
@@ -16535,15 +16536,127 @@ export async function createRuntimeBridgeBackend(
   const repairPersistedProviderAccountsFromRuntimeState = (
     persistedAccounts: readonly ProviderAccountRecord[],
   ): ProviderAccountRecord[] => {
-    const persistedRuntimeEndpoints = listRuntimeEndpoints({
+    let persistedRuntimeEndpoints = listRuntimeEndpoints({
       databasePath: initialization.databasePath,
     });
-    const operatorIntentRead = readOperatorIntentResult(operatorIntentLocation);
+    let operatorIntentRead = readOperatorIntentResult(operatorIntentLocation);
     operatorIntentDiagnostic = operatorIntentRead.diagnostic;
-    const remoteActivations: readonly OperatorIntentRemoteActivation[] =
+    let remoteActivations: readonly OperatorIntentRemoteActivation[] =
       operatorIntentRead.diagnostic.status === "corrupt"
         ? []
         : (operatorIntentRead.intent?.remoteActivations ?? []);
+    const legacyEffortEndpointMigrations = new Map<string, string>();
+    for (const endpoint of persistedRuntimeEndpoints) {
+      const decodedEffort = readLegacyEndpointReasoningEffort(endpoint.endpointId);
+      if (decodedEffort === null) {
+        continue;
+      }
+      if (endpoint.reasoningEffort !== null && endpoint.reasoningEffort !== decodedEffort) {
+        throw new Error(
+          `Legacy effort endpoint ${endpoint.endpointId} disagrees with its persisted reasoning effort.`,
+        );
+      }
+      const canonical = createEndpointInstanceIdentity({
+        providerAccountId: endpoint.providerAccountId,
+        region: endpoint.region,
+        modelId: endpoint.modelId,
+        reasoningEffort: decodedEffort,
+      });
+      const collision = persistedRuntimeEndpoints.find(
+        (candidate) => candidate.endpointId === canonical.endpointId,
+      );
+      if (
+        collision &&
+        (collision.providerAccountId !== endpoint.providerAccountId ||
+          collision.modelId !== endpoint.modelId ||
+          collision.region !== endpoint.region ||
+          collision.reasoningEffort !== decodedEffort)
+      ) {
+        throw new Error(
+          `Legacy effort endpoint migration collision for ${endpoint.endpointId} -> ${canonical.endpointId}.`,
+        );
+      }
+      if (!collision) {
+        upsertSqliteRuntimeEndpoint({
+          databasePath: initialization.databasePath,
+          endpoint: {
+            ...endpoint,
+            endpointId: canonical.endpointId,
+            reasoningEffort: decodedEffort,
+          },
+        });
+      }
+      deleteRuntimeEndpointById(initialization.databasePath, endpoint.endpointId);
+      legacyEffortEndpointMigrations.set(endpoint.endpointId, canonical.endpointId);
+    }
+    for (const activation of remoteActivations) {
+      const decodedEffort = readLegacyEndpointReasoningEffort(activation.endpointId);
+      if (decodedEffort === null) {
+        continue;
+      }
+      if (activation.reasoningEffort !== decodedEffort) {
+        throw new Error(
+          `Legacy effort activation ${activation.endpointId} disagrees with its persisted reasoning effort.`,
+        );
+      }
+      const canonical = createEndpointInstanceIdentity({
+        providerAccountId: activation.providerAccountId,
+        region: activation.region,
+        modelId: activation.modelId,
+        reasoningEffort: decodedEffort,
+      });
+      legacyEffortEndpointMigrations.set(activation.endpointId, canonical.endpointId);
+    }
+    if (
+      legacyEffortEndpointMigrations.size > 0 &&
+      operatorIntentRead.diagnostic.status !== "corrupt"
+    ) {
+      persistOperatorIntent(operatorIntentLocation, (intent) => {
+        const migratedByEndpointId = new Map<string, OperatorIntentRemoteActivation>();
+        for (const activation of intent.remoteActivations) {
+          const endpointId =
+            legacyEffortEndpointMigrations.get(activation.endpointId) ?? activation.endpointId;
+          const migrated = {
+            ...activation,
+            endpointId,
+            modelRoleBindings: activation.modelRoleBindings?.map((binding) => ({
+              ...binding,
+              ...(binding.endpointId
+                ? {
+                    endpointId:
+                      legacyEffortEndpointMigrations.get(binding.endpointId) ?? binding.endpointId,
+                  }
+                : {}),
+            })),
+          };
+          const existing = migratedByEndpointId.get(endpointId);
+          if (existing && JSON.stringify(existing) !== JSON.stringify(migrated)) {
+            throw new Error(`Legacy effort activation migration collision for ${endpointId}.`);
+          }
+          migratedByEndpointId.set(endpointId, migrated);
+        }
+        return { ...intent, remoteActivations: [...migratedByEndpointId.values()] };
+      });
+      const controllerAssignment = readRuntimeControllerAssignment({
+        databasePath: initialization.databasePath,
+        scope: "global",
+      });
+      const migratedControllerEndpointId = controllerAssignment
+        ? legacyEffortEndpointMigrations.get(controllerAssignment.endpointId)
+        : undefined;
+      if (controllerAssignment && migratedControllerEndpointId) {
+        upsertRuntimeControllerAssignment({
+          databasePath: initialization.databasePath,
+          assignment: { ...controllerAssignment, endpointId: migratedControllerEndpointId },
+        });
+      }
+      persistedRuntimeEndpoints = listRuntimeEndpoints({
+        databasePath: initialization.databasePath,
+      });
+      operatorIntentRead = readOperatorIntentResult(operatorIntentLocation);
+      operatorIntentDiagnostic = operatorIntentRead.diagnostic;
+      remoteActivations = operatorIntentRead.intent?.remoteActivations ?? [];
+    }
     const configuredModelKeys = new Set(
       persistedAccounts.flatMap((account) =>
         account.allowedModels.map((modelId) => `${account.providerAccountId}\u0000${modelId}`),
@@ -16639,9 +16752,17 @@ export async function createRuntimeBridgeBackend(
         compareText,
       );
       const nextBindings = (
-        (account.modelRoleBindings ?? []).map((binding) =>
-          normalizeProviderAccountModelRoleBinding(binding),
-        ) as ProviderAccountModelRoleBinding[]
+        (account.modelRoleBindings ?? []).map((binding) => {
+          const normalized = normalizeProviderAccountModelRoleBinding(binding);
+          return normalized.endpointId
+            ? {
+                ...normalized,
+                endpointId:
+                  legacyEffortEndpointMigrations.get(normalized.endpointId) ??
+                  normalized.endpointId,
+              }
+            : normalized;
+        }) as ProviderAccountModelRoleBinding[]
       ).filter(
         (binding) =>
           account.allowedModels.length === 0 || account.allowedModels.includes(binding.modelId),

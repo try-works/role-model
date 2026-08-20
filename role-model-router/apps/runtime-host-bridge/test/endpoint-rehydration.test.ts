@@ -1,6 +1,7 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
 import { describe, expect, test } from "vitest";
 
@@ -309,6 +310,152 @@ describe("endpoint rehydration", () => {
         } else {
           process.env.DEEPSEEK_API_KEY = originalDeepSeekApiKey;
         }
+        await rm(runtimeStateRoot, { recursive: true, force: true });
+      }
+    },
+  );
+
+  test(
+    "migrates legacy opaque effort endpoints and their role ownership to readable identities",
+    { timeout: 20_000 },
+    async () => {
+      const runtimeStateRoot = path.join(
+        os.tmpdir(),
+        `runtime-host-effort-id-migration-${Date.now()}`,
+      );
+      const scopeId = "effort-id-migration-tests";
+      const databasePath = resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId });
+      const operatorIntentLocation = { runtimeStateRoot, scopeId };
+      const originalDeepSeekApiKey = process.env.DEEPSEEK_API_KEY;
+      process.env.DEEPSEEK_API_KEY = "deepseek-effort-id-migration-key";
+
+      const createBackend = async () =>
+        (
+          bridge as {
+            createRuntimeBridgeBackend: (options: {
+              repoRoot: string;
+              fixtureRoot: string;
+              runtimeStateRoot: string;
+              scopeId: string;
+            }) => Promise<{
+              readonly effectiveRegistry: {
+                readonly endpoints: readonly {
+                  readonly identity: { readonly endpoint_id: string };
+                }[];
+              };
+              upsertProviderAccount: (body: Record<string, unknown>) => Promise<unknown>;
+              listAccounts: () => Promise<
+                readonly {
+                  providerAccountId: string;
+                  modelRoleBindings?: readonly {
+                    modelId: string;
+                    endpointId?: string;
+                    roleIds: readonly string[];
+                  }[];
+                }[]
+              >;
+              activateEndpoint: (body: Record<string, unknown>) => Promise<{ endpointId: string }>;
+              shutdown?: () => Promise<void>;
+            }>;
+          }
+        ).createRuntimeBridgeBackend({
+          repoRoot,
+          fixtureRoot: testFixtureRoot,
+          runtimeStateRoot,
+          scopeId,
+        });
+
+      try {
+        const backend = await createBackend();
+        await backend.upsertProviderAccount({
+          providerAccountId: "deepseek.personal.primary",
+          providerId: "deepseek",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "workspace-default",
+          credentialRef: { backend: "env", ref: "DEEPSEEK_API_KEY" },
+          authMode: "api-key-static",
+          regionPolicy: { mode: "prefer", regions: ["global"] },
+          baseUrlOverride: "https://api.deepseek.com/v1",
+          allowedModels: ["deepseek/deepseek-v4-pro"],
+          modelRoleBindings: [{ modelId: "deepseek/deepseek-v4-pro", roleIds: ["general.chat"] }],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        });
+        const activation = await backend.activateEndpoint({
+          providerAccountId: "deepseek.personal.primary",
+          modelId: "deepseek/deepseek-v4-pro",
+          region: "global",
+          reasoningEffort: "high",
+        });
+        expect(activation.endpointId).toBe("deepseek.personal.primary.global.deepseek-v4-pro-high");
+        await backend.shutdown?.();
+
+        const legacyEndpointId =
+          "deepseek.personal.primary.global.deepseek-v4-pro~effort-v1~aGlnaA";
+        const database = new DatabaseSync(databasePath);
+        database
+          .prepare("UPDATE runtime_endpoints SET endpoint_id = ? WHERE endpoint_id = ?")
+          .run(legacyEndpointId, activation.endpointId);
+        const accountRow = database
+          .prepare(
+            "SELECT model_role_bindings_json FROM provider_accounts WHERE provider_account_id = ?",
+          )
+          .get("deepseek.personal.primary") as { model_role_bindings_json: string };
+        database
+          .prepare(
+            "UPDATE provider_accounts SET model_role_bindings_json = ? WHERE provider_account_id = ?",
+          )
+          .run(
+            accountRow.model_role_bindings_json.replaceAll(activation.endpointId, legacyEndpointId),
+            "deepseek.personal.primary",
+          );
+        database.close();
+        persistOperatorIntent(operatorIntentLocation, (intent) => ({
+          ...intent,
+          remoteActivations: intent.remoteActivations.map((entry) =>
+            entry.endpointId === activation.endpointId
+              ? {
+                  ...entry,
+                  endpointId: legacyEndpointId,
+                  modelRoleBindings: entry.modelRoleBindings?.map((binding) => ({
+                    ...binding,
+                    endpointId:
+                      binding.endpointId === activation.endpointId
+                        ? legacyEndpointId
+                        : binding.endpointId,
+                  })),
+                }
+              : entry,
+          ),
+        }));
+
+        const restarted = await createBackend();
+        expect(listRuntimeEndpoints({ databasePath }).map((entry) => entry.endpointId)).toEqual([
+          activation.endpointId,
+        ]);
+        expect(
+          restarted.effectiveRegistry.endpoints.map((entry) => entry.identity.endpoint_id),
+        ).toContain(activation.endpointId);
+        expect(readOperatorIntent(operatorIntentLocation)?.remoteActivations).toEqual([
+          expect.objectContaining({ endpointId: activation.endpointId, reasoningEffort: "high" }),
+        ]);
+        expect(
+          (await restarted.listAccounts()).find(
+            (account) => account.providerAccountId === "deepseek.personal.primary",
+          )?.modelRoleBindings,
+        ).toEqual(
+          expect.arrayContaining([expect.objectContaining({ endpointId: activation.endpointId })]),
+        );
+        await restarted.shutdown?.();
+      } finally {
+        if (originalDeepSeekApiKey === undefined) process.env.DEEPSEEK_API_KEY = undefined;
+        else process.env.DEEPSEEK_API_KEY = originalDeepSeekApiKey;
         await rm(runtimeStateRoot, { recursive: true, force: true });
       }
     },
