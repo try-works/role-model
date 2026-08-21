@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/91-adaptive-execution-cooldown-policy/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/view-models.test.ts (41 tests | 39 skipped) 9ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed | 39 skipped (41)
+   Start at  16:49:58
+   Duration  1.24s (transform 183ms, setup 0ms, collect 198ms, tests 9ms, environment 0ms, prepare 290ms)
+

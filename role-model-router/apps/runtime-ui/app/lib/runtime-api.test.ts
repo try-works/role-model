@@ -9,6 +9,7 @@ import {
   explicitAssignmentToRoleIds,
   fetchActivityCapture,
   fetchActivityMetrics,
+  fetchActivityMetricsPage,
   fetchAudioVoices,
   fetchBenchmarkRuns,
   fetchBenchmarkSummariesByMode,
@@ -21,6 +22,7 @@ import {
   fetchRouterCandidates,
   fetchRouterConfig,
   fetchRouterDecisionDetail,
+  fetchRouterDecisionPage,
   fetchRouterDecisions,
   fetchRouterSummary,
   fetchRuntimeConfig,
@@ -31,6 +33,7 @@ import {
   fetchTelemetryAnalytics,
   fetchTelemetryDashboard,
   fetchTelemetryRequests,
+  fetchTelemetryRequestsPage,
   fetchTextLogs,
   fetchVersionInfo,
   loadLlamaSwapModel,
@@ -1192,6 +1195,45 @@ describe("router APIs", () => {
     ]);
   });
 
+  test("loads router decisions with total and page metadata", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.pathname + input.search
+            : input.url;
+      expect(url).toBe("/api/role-model/router/decisions/page?limit=50");
+      return jsonResponse({
+        items: [
+          {
+            requestId: "req-router-001",
+            routingDecisionId: "route-001",
+            selectedEndpointId: "cli.local.coder",
+            selectedModelId: "gpt-5.4",
+            strategyLabel: "balanced",
+            decidedAtMs: 1_735_689_600_000,
+            sourceType: "local",
+            providerId: null,
+            finishReason: null,
+          },
+        ],
+        totalMatching: 257,
+        returned: 1,
+        pageSize: 50,
+        truncated: true,
+        nextCursor: "cursor-001",
+        window: { startAtMs: 1, endAtMs: 2, asOfMs: 2 },
+      });
+    });
+    await expect(fetchRouterDecisionPage({ limit: 50 }, fetcher)).resolves.toMatchObject({
+      totalMatching: 257,
+      returned: 1,
+      truncated: true,
+      nextCursor: "cursor-001",
+    });
+  });
+
   test("loads router decision detail from the router decision endpoint", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
       const url =
@@ -1279,7 +1321,11 @@ describe("telemetry APIs", () => {
   test("loads the canonical telemetry dashboard reads from the role-model telemetry endpoints", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
       const url =
-        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+        typeof input === "string"
+          ? input.split("?")[0]
+          : input instanceof URL
+            ? input.pathname
+            : input.url.split("?")[0];
 
       switch (url) {
         case "/api/role-model/telemetry/summary":
@@ -1430,6 +1476,29 @@ describe("telemetry APIs", () => {
         sourceType: "local",
       },
     ]);
+  });
+
+  test("loads the versioned telemetry request page envelope", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      expect(url).toContain("/api/role-model/telemetry/requests/page?limit=50");
+      return jsonResponse({
+        items: [{ requestId: "req-page-001", endpointId: "endpoint", sourceType: "remote" }],
+        totalMatching: 257,
+        returned: 1,
+        pageSize: 50,
+        truncated: true,
+        nextCursor: "cursor",
+        window: { startAtMs: 1, endAtMs: 2, asOfMs: 2 },
+      });
+    });
+
+    await expect(fetchTelemetryRequestsPage({ limit: 50 }, fetcher)).resolves.toMatchObject({
+      totalMatching: 257,
+      returned: 1,
+      nextCursor: "cursor",
+    });
   });
 
   test("serializes taxonomy telemetry request filters into the request query string", async () => {
@@ -1686,6 +1755,32 @@ describe("observe APIs", () => {
         has_capture: true,
       },
     ]);
+  });
+
+  test("loads activity metrics with bounded-page disclosure metadata", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.pathname + input.search
+            : input.url;
+      expect(url).toBe("/api/metrics/page?limit=50");
+      return jsonResponse({
+        items: [],
+        totalMatching: 257,
+        returned: 0,
+        pageSize: 50,
+        truncated: true,
+        nextCursor: "cursor-activity",
+        window: { startAtMs: 1, endAtMs: 2, asOfMs: 2 },
+      });
+    });
+    await expect(fetchActivityMetricsPage({ limit: 50 }, fetcher)).resolves.toMatchObject({
+      totalMatching: 257,
+      pageSize: 50,
+      truncated: true,
+    });
   });
 
   test("loads a persisted request/response capture by id", async () => {

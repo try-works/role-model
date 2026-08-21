@@ -1,0 +1,24 @@
+
+> @role-model-router/runtime-observability@0.0.0 test D:\DEV\role-model\.worktrees\91-adaptive-execution-cooldown-policy\role-model-router\packages\runtime-observability
+> vitest run
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/91-adaptive-execution-cooldown-policy/role-model-router/packages/runtime-observability
+
+(node:24200) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26420) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/otel.test.ts (1 test) 503ms
+   ✓ runtime-observability otel mapping > derives a deterministic OpenTelemetry export from canonical role-model artifacts  500ms
+ ✓ test/index.test.ts (6 tests) 2643ms
+   ✓ runtime-observability > creates a redacted runtime observation bundle with diagnostics and profile updates  528ms
+   ✓ runtime-observability > tags live-request samples with the classified difficulty bucket when difficulty routing is present  656ms
+   ✓ runtime-observability > captures execution semantics receipts and per-tool side-effect state  978ms
+   ✓ runtime-observability > derives routing cache affinity from continuity diagnostics instead of generic routing-model state  471ms
+
+ Test Files  2 passed (2)
+      Tests  7 passed (7)
+   Start at  16:51:11
+   Duration  5.10s (transform 1.20s, setup 0ms, collect 2.47s, tests 3.15s, environment 1ms, prepare 1.19s)
+

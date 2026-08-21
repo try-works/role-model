@@ -1,0 +1,50 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/91-adaptive-execution-cooldown-policy/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/execution-circuit-breaker.test.ts (12 tests | 1 failed) 73ms
+   ✓ execution circuit breaker policy > keeps the first connection failure in probation then uses 5s, 15s, 60s, and 5m opens 5ms
+   ✓ execution circuit breaker policy > resets a connection sequence outside 60 seconds and every sequence after five quiet minutes 1ms
+   ✓ execution circuit breaker policy > uses the provider 5xx 2s, 10s, 30s, and 2m capped ladder 1ms
+   ✓ execution circuit breaker policy > honors bounded Retry-After and otherwise uses a 30 second rate-limit open 1ms
+   ✓ execution circuit breaker policy > blocks auth and quota explicitly but ignores invalid and non-live failures 1ms
+   ✓ execution circuit breaker policy > admits exactly one half-open probe and success clears the circuit 1ms
+   ✓ execution circuit breaker policy > recovers an abandoned half-open claim as an immediately probeable open circuit 1ms
+   ✓ execution circuit breaker policy > retires legacy v1 cooldowns without carrying their long bans into v2 1ms
+   ✓ execution circuit breaker policy > bounds persisted input and emits safe receipts with retry metadata 46ms
+   ✓ execution circuit breaker policy > parses Retry-After seconds and HTTP dates with a five-minute cap 2ms
+   ✓ execution circuit breaker policy > resets failure sequences exactly at the quiet-window boundaries 0ms
+   × execution circuit breaker policy > uses 503 only for timed cooldowns and reports configuration blocks separately 12ms
+     → expected { statusCode: 503, …(1) } to be undefined
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/execution-circuit-breaker.test.ts > execution circuit breaker policy > uses 503 only for timed cooldowns and reports configuration blocks separately
+AssertionError: expected { statusCode: 503, …(1) } to be undefined
+
+- Expected: 
+undefined
+
++ Received: 
+{
+  "code": "endpoint_temporarily_unavailable",
+  "statusCode": 503,
+}
+
+ ❯ test/execution-circuit-breaker.test.ts:343:58
+    341| 
+    342|   test("uses 503 only for timed cooldowns and reports configuration bl…
+    343|     expect(resolveExecutionCircuitRefusal([], START_MS)).toBeUndefined…
+       |                                                          ^
+    344|     const timedReceipt = toExecutionCircuitReceipt(
+    345|       requiredRecord(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 11 passed (12)
+   Start at  17:09:53
+   Duration  955ms (transform 113ms, setup 0ms, collect 124ms, tests 73ms, environment 0ms, prepare 253ms)
+
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/execution-circuit-breaker.test.ts

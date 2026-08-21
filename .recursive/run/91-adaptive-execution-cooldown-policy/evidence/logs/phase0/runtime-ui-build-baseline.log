@@ -1,0 +1,118 @@
+
+> @role-model-router/runtime-ui@ build D:\DEV\role-model\.worktrees\91-adaptive-execution-cooldown-policy\role-model-router\apps\runtime-ui
+> react-router build && tsc --noEmit
+
+vite v7.3.2 building client environment for production...
+transforming...
+../../packages/ui/src/sidebar.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/observe-activity.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/observe-shared.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/segmented-control.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/observe-logs.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/metric-strip.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/page-shell.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/observe-requests.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/chart-ranking.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/observe-routing.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/page-filters.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/chart-composition.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/runtime-overview.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+✓ 2405 modules transformed.
+rendering chunks...
+computing gzip size...
+build/client/.vite/manifest.json                           27.40 kB │ gzip:   2.53 kB
+build/client/assets/root-L18YIrvt.css                      75.24 kB │ gzip:  13.70 kB
+build/client/assets/index-BPLZSs9I.js                       0.15 kB │ gzip:   0.15 kB
+build/client/assets/live-refresh-DcaagJbF.js                0.16 kB │ gzip:   0.14 kB
+build/client/assets/local-models-BUPAQ104.js                0.16 kB │ gzip:   0.16 kB
+build/client/assets/router-config-UN_O1wHL.js               0.16 kB │ gzip:   0.16 kB
+build/client/assets/local-matrix-C8WDhmnV.js                0.18 kB │ gzip:   0.18 kB
+build/client/assets/shell-header-context-Dz-NIcHm.js        0.65 kB │ gzip:   0.39 kB
+build/client/assets/llama-swap-setup-zJl1O37-.js            0.82 kB │ gzip:   0.40 kB
+build/client/assets/segmented-control-BiT3mVhZ.js           0.86 kB │ gzip:   0.52 kB
+build/client/assets/badge-CWMrbxZ2.js                       0.88 kB │ gzip:   0.40 kB
+build/client/assets/not-found-DyoUiCi8.js                   1.04 kB │ gzip:   0.55 kB
+build/client/assets/checkbox-control-C4_IzXlS.js            1.06 kB │ gzip:   0.55 kB
+build/client/assets/theme-rIEsxy66.js                       1.14 kB │ gzip:   0.52 kB
+build/client/assets/legacy-redirect-C3RaIevJ.js             1.24 kB │ gzip:   0.44 kB
+build/client/assets/routing-mode-DNUoJD-d.js                1.54 kB │ gzip:   0.69 kB
+build/client/assets/local-choose-ziMGA44M.js                1.67 kB │ gzip:   0.71 kB
+build/client/assets/router-decisions-CiJj43ZX.js            2.36 kB │ gzip:   1.15 kB
+build/client/assets/integrations-downstream-BphXD_19.js     2.72 kB │ gzip:   1.12 kB
+build/client/assets/metric-strip-P-WzvU2o.js                2.72 kB │ gzip:   0.86 kB
+build/client/assets/router-candidates-DSJRxJdy.js           2.89 kB │ gzip:   1.43 kB
+build/client/assets/local-swap-ByUH33Sr.js                  3.33 kB │ gzip:   1.36 kB
+build/client/assets/observe-logs-Dy1BdFDR.js                3.47 kB │ gzip:   1.45 kB
+build/client/assets/control-controller-396hMoCR.js          3.52 kB │ gzip:   1.65 kB
+build/client/assets/local-policy-CBLZkKH2.js                3.59 kB │ gzip:   1.54 kB
+build/client/assets/studio-advanced-Zpw0BeDa.js             3.62 kB │ gzip:   1.53 kB
+build/client/assets/studio-rerank-D4Cu-n_v.js               3.63 kB │ gzip:   1.59 kB
+build/client/assets/observe-activity-D53B8S7v.js            3.72 kB │ gzip:   1.65 kB
+build/client/assets/studio-images-C82UGeUt.js               3.93 kB │ gzip:   1.58 kB
+build/client/assets/control-runtime-config-Cr75bz67.js      3.97 kB │ gzip:   1.72 kB
+build/client/assets/workbench-BryMkPpJ.js                   4.01 kB │ gzip:   1.84 kB
+build/client/assets/local-peers-BBZ2QXW0.js                 4.13 kB │ gzip:   1.69 kB
+build/client/assets/local-logs-C_WtVT1s.js                  4.15 kB │ gzip:   1.65 kB
+build/client/assets/runtime-DsJ55kr5.js                     4.15 kB │ gzip:   1.72 kB
+build/client/assets/root-BeifMZT-.js                        4.16 kB │ gzip:   1.74 kB
+build/client/assets/integrations-upstream-DwyYUE2T.js       4.29 kB │ gzip:   1.61 kB
+build/client/assets/page-filters-Dy6ZeP3Z.js                4.39 kB │ gzip:   1.82 kB
+build/client/assets/system-peers-D7INxLPp.js                4.55 kB │ gzip:   1.79 kB
+build/client/assets/endpoints-sGrytjIH.js                   4.91 kB │ gzip:   1.76 kB
+build/client/assets/role-task-hierarchy-Dt6rIsUy.js         5.25 kB │ gzip:   1.83 kB
+build/client/assets/session-readiness-DH4XQ_-S.js           5.33 kB │ gzip:   1.97 kB
+build/client/assets/observe-routing-Cdu4ZVYk.js             5.79 kB │ gzip:   2.35 kB
+build/client/assets/local-peer-models-CxhKh-9K.js           5.81 kB │ gzip:   2.11 kB
+build/client/assets/router-decision-detail-BCLOZM9r.js      5.97 kB │ gzip:   1.99 kB
+build/client/assets/page-primitives-DilPnkHu.js             6.84 kB │ gzip:   2.67 kB
+build/client/assets/studio-audio-DZT8O5EN.js                6.99 kB │ gzip:   2.82 kB
+build/client/assets/control-routing-strategy-D2uU2hdY.js    7.00 kB │ gzip:   2.60 kB
+build/client/assets/local-llama-swap-models-DxU0mNEj.js     7.13 kB │ gzip:   2.45 kB
+build/client/assets/storage-retention-T1qnUZ8o.js           7.35 kB │ gzip:   2.60 kB
+build/client/assets/router-CqGWezkr.js                      8.38 kB │ gzip:   2.56 kB
+build/client/assets/local-model-role-picker-Cafo2ajT.js     8.96 kB │ gzip:   2.95 kB
+build/client/assets/telemetry-page-filters-BB9rh2di.js      9.41 kB │ gzip:   3.09 kB
+build/client/assets/requests-Cp630zrP.js                    9.63 kB │ gzip:   3.59 kB
+build/client/assets/app-layout-Cl8br7-M.js                 12.59 kB │ gzip:   4.41 kB
+build/client/assets/control-roles-Di6cmUYU.js              12.63 kB │ gzip:   3.53 kB
+build/client/assets/dashboard-4iDBzf2O.js                  13.43 kB │ gzip:   5.03 kB
+build/client/assets/extensions-BZSG_WNN.js                 14.11 kB │ gzip:   4.78 kB
+build/client/assets/control-models-CcNGRMvz.js             15.51 kB │ gzip:   5.20 kB
+build/client/assets/runtime-api-VWkJQ1tl.js                16.77 kB │ gzip:   4.18 kB
+build/client/assets/view-models-DjskuMXO.js                20.16 kB │ gzip:   6.54 kB
+build/client/assets/request-detail-BcxgdiF2.js             20.63 kB │ gzip:   6.17 kB
+build/client/assets/control-benchmark-DGXqLQAr.js          21.06 kB │ gzip:   6.33 kB
+build/client/assets/providers-3E4mmuqM.js                  22.55 kB │ gzip:   6.99 kB
+build/client/assets/design-system-Cks66oxA.js              25.05 kB │ gzip:   7.71 kB
+build/client/assets/chart-grid-CZh_ZMND.js                 78.21 kB │ gzip:  26.08 kB
+build/client/assets/chunk-EVOBXE3Y-CVZcqyyg.js            128.07 kB │ gzip:  43.13 kB
+build/client/assets/entry.client-QeOYP-nr.js              190.57 kB │ gzip:  60.05 kB
+build/client/assets/telemetry-route-models-BEpSRlXP.js    388.41 kB │ gzip: 103.50 kB
+✓ built in 24.77s
+vite v7.3.2 building ssr environment for production...
+transforming...
+../../packages/ui/src/segmented-control.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/page-shell.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/observe-logs.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/observe-routing.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/chart-ranking.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/page-filters.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/metric-strip.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/sidebar.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/chart-composition.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/runtime-overview.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/observe-requests.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/observe-activity.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/observe-shared.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+✓ 32 modules transformed.
+rendering chunks...
+build/server/.vite/manifest.json                0.23 kB
+build/server/assets/server-build-L18YIrvt.css  75.24 kB
+build/server/index.js                          73.38 kB
+
+✓ 1 asset cleaned from React Router server build.
+build\server\assets\server-build-L18YIrvt.css
+
+SPA Mode: Generated build\client\index.html
+Removing the server build in D:\DEV\role-model\.worktrees\91-adaptive-execution-cooldown-policy\role-model-router\apps\runtime-ui\build\server due to ssr:false
+✓ built in 1.10s

@@ -19,21 +19,22 @@ import { startDeferredLiveRefresh } from "../lib/live-refresh";
 import { formatRoutingModeLabel } from "../lib/routing-mode";
 import {
   type RouterDecisionListItem,
-  fetchRouterDecisions,
+  type RouterDecisionPage,
+  fetchRouterDecisionPage,
   subscribeTelemetryStream,
 } from "../lib/runtime-api";
 
 export default function RouterDecisionsRoute() {
-  const [decisions, setDecisions] = useState<readonly RouterDecisionListItem[] | null>(null);
+  const [page, setPage] = useState<RouterDecisionPage | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let disposed = false;
     const load = async () => {
       try {
-        const value = await fetchRouterDecisions();
+        const value = await fetchRouterDecisionPage({ limit: 50 });
         if (!disposed) {
-          setDecisions(value);
+          setPage(value);
           setError(null);
         }
       } catch (nextError) {
@@ -60,15 +61,16 @@ export default function RouterDecisionsRoute() {
   if (error) {
     return <ErrorState label={error} />;
   }
-  if (!decisions) {
+  if (!page) {
     return <LoadingState label="Loading routing decisions…" />;
   }
+  const decisions: readonly RouterDecisionListItem[] = page.items;
 
   return (
     <div className="space-y-6">
       <SectionCard
         title="Decision ledger"
-        description="Keep the list scanable: request, chosen endpoint and model, strategy summary, and direct drill-in links."
+        description={`Showing ${page.returned} of ${page.totalMatching} routing decisions in the selected window. The page is bounded for scanability; direct drill-in links use stable request IDs.`}
       >
         {decisions.length === 0 ? (
           <EmptyState label="No routing decisions have been recorded yet." />
