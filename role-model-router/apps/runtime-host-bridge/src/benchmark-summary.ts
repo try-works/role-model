@@ -124,6 +124,7 @@ export interface BenchmarkSummaryResponse {
 }
 
 export interface BenchmarkPortfolioEntry extends BenchmarkSummarySubject {
+  readonly profileRevision: string;
   readonly runId: string;
   readonly completedAtMs: number;
   readonly mode: "quick" | "full";
@@ -190,6 +191,8 @@ export interface BenchmarkCapability {
   readonly lastRunSuiteId: string | null;
   readonly judgeEndpointId: string | null;
   readonly judgeModelId: string | null;
+  /** Immutable evidence revision for the selected endpoint's current benchmark profile. */
+  readonly profileRevision: string | null;
 }
 
 const BENCHMARK_LOW_COVERAGE_CASE_COUNT = 2;
@@ -594,8 +597,10 @@ export async function readCurrentBenchmarkPortfolio(input: {
 }): Promise<BenchmarkPortfolioResponse> {
   const runs = (await listCompletedBenchmarkRuns(input.artifactRoot))
     .filter((run) =>
-      input.membershipRevision && run.manifest.membershipRevision
-        ? run.manifest.membershipRevision === input.membershipRevision
+      input.membershipRevision
+        ? run.manifest.completionState === "completed" &&
+          run.manifest.membershipRevision === input.membershipRevision &&
+          Object.keys(run.manifest.profileRevisionByEndpointId ?? {}).length > 0
         : true,
     )
     .sort(
@@ -640,6 +645,9 @@ export async function readCurrentBenchmarkPortfolio(input: {
         suiteVersion: summary.suiteVersion,
         judgeEndpointId: summary.judgeEndpointId,
         judgeModelId: summary.judgeModelId,
+        profileRevision:
+          run.manifest.profileRevisionByEndpointId?.[subject.endpointId] ??
+          `legacy-run:${summary.runId}:${subject.endpointId}`,
       });
     }
   }
@@ -763,6 +771,7 @@ export function buildBenchmarkCapability(input: {
     lastRunSuiteId: null,
     judgeEndpointId: null,
     judgeModelId: null,
+    profileRevision: null,
   };
 }
 
@@ -781,10 +790,11 @@ export function buildBenchmarkCapabilityForEndpoint(input: {
   });
   const portfolioEntry =
     input.portfolioEntry?.endpointId === input.endpointId ? input.portfolioEntry : null;
-  const summarySubject =
-    portfolioEntry ??
-    input.summary.subjects.find((subject) => subject.endpointId === input.endpointId);
-  if (summarySubject) {
+  // The portfolio is the single current-membership authority. The latest summary is
+  // intentionally not a fallback: it can describe a completed run for a different
+  // configured pool and must never become routing evidence for the current pool.
+  if (portfolioEntry) {
+    const summarySubject = portfolioEntry;
     const capability =
       profileCapability ??
       ({
@@ -793,7 +803,7 @@ export function buildBenchmarkCapabilityForEndpoint(input: {
         scoresByBucket: {},
         benchmarkSamples: summarySubject.caseCount,
         sampleCount: summarySubject.caseCount,
-        measuredAtMs: portfolioEntry?.completedAtMs ?? input.summary.completedAtMs,
+        measuredAtMs: portfolioEntry.completedAtMs,
         freshnessScore: null,
         lastRunId: null,
         lastRunCompletedAtMs: null,
@@ -801,6 +811,7 @@ export function buildBenchmarkCapabilityForEndpoint(input: {
         lastRunSuiteId: null,
         judgeEndpointId: null,
         judgeModelId: null,
+        profileRevision: null,
       } satisfies BenchmarkCapability);
     const roleScores = summarySubject.taxonomyScores?.byRole;
     const eligibleRoleScores = buildEligibleRoleScores({
@@ -823,16 +834,13 @@ export function buildBenchmarkCapabilityForEndpoint(input: {
       evidenceSource: "run-artifact",
       overallScore: summarySubject.overallScore,
       scoresByBucket: summarySubject.scoresByBucket,
-      lastRunId: portfolioEntry ? portfolioEntry.runId : input.summary.runId,
-      lastRunCompletedAtMs: portfolioEntry
-        ? portfolioEntry.completedAtMs
-        : input.summary.completedAtMs,
-      lastRunMode: portfolioEntry ? portfolioEntry.mode : input.summary.mode,
-      lastRunSuiteId: portfolioEntry ? portfolioEntry.suiteId : input.summary.suiteId,
-      judgeEndpointId: portfolioEntry
-        ? portfolioEntry.judgeEndpointId
-        : input.summary.judgeEndpointId,
-      judgeModelId: portfolioEntry ? portfolioEntry.judgeModelId : input.summary.judgeModelId,
+      lastRunId: portfolioEntry.runId,
+      lastRunCompletedAtMs: portfolioEntry.completedAtMs,
+      lastRunMode: portfolioEntry.mode,
+      lastRunSuiteId: portfolioEntry.suiteId,
+      judgeEndpointId: portfolioEntry.judgeEndpointId,
+      judgeModelId: portfolioEntry.judgeModelId,
+      profileRevision: portfolioEntry.profileRevision,
       ...(summarySubject.taxonomyScores?.byTask
         ? { taskScores: summarySubject.taxonomyScores.byTask }
         : {}),

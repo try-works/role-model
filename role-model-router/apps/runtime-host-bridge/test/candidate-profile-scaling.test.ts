@@ -35,7 +35,7 @@ test("projects variant-scoped live task telemetry on the endpoint profile API", 
   expect(endpointProfileSlice).toContain("telemetryScores:");
 });
 
-test("stamps a non-null membership and profile revision on routing decisions", async () => {
+test("reads immutable route-time membership and profile revisions from the stored decision", async () => {
   const testDir = path.dirname(fileURLToPath(import.meta.url));
   const source = await readFile(path.join(testDir, "..", "src", "index.ts"), "utf8");
   const start = source.indexOf("const toRouterDecisionData");
@@ -44,9 +44,24 @@ test("stamps a non-null membership and profile revision on routing decisions", a
   expect(end).toBeGreaterThan(start);
   const decisionSlice = source.slice(start, end);
 
-  expect(decisionSlice).toContain("membershipRevision,");
-  expect(decisionSlice).toContain("profileRevision:");
-  expect(decisionSlice).toContain("computeConfiguredMembershipRevision");
+  expect(decisionSlice).toContain("decision?.membership_revision");
+  expect(decisionSlice).toContain("decision?.profile_revision");
+  expect(decisionSlice).not.toContain("computeConfiguredMembershipRevision");
+});
+
+test("persists the selected current benchmark profile revision with the routing decision", async () => {
+  const testDir = path.dirname(fileURLToPath(import.meta.url));
+  const source = await readFile(path.join(testDir, "..", "src", "index.ts"), "utf8");
+  const start = source.indexOf("const decisionMembershipRevision");
+  const end = source.indexOf("const bundle = createRuntimeObservationBundle", start);
+  expect(start).toBeGreaterThan(-1);
+  expect(end).toBeGreaterThan(start);
+  const decisionSlice = source.slice(start, end + 1600);
+
+  expect(decisionSlice).toContain("readCurrentBenchmarkPortfolio");
+  expect(decisionSlice).toContain("decisionProfileRevision");
+  expect(decisionSlice).toContain("membership_revision: decisionMembershipRevision");
+  expect(decisionSlice).toContain("profile_revision: decisionProfileRevision");
 });
 
 test("projects immutable decision-time live telemetry evidence", async () => {

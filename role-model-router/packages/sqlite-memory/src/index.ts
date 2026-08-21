@@ -4847,17 +4847,24 @@ export function readLatestBenchmarkProfilesByEndpointIds(input: {
   const samplesByEndpointId = new Map<string, ObservedPerformanceSample[]>();
   for (const row of rows) {
     const sample = JSON.parse(row.sample_json) as ObservedPerformanceSample;
-    // A membership revision is only enforced when both a current revision and a
-    // sample revision are present; legacy samples (no revision) are retained for
-    // backward compatibility and quarantined separately by the stale-reconciliation path.
-    if (
-      input.membershipRevision &&
-      sample.membership_revision &&
-      sample.membership_revision !== input.membershipRevision
-    ) {
+    // A current configured-pool read is an exact identity fence. A legacy sample
+    // without that fence is not safe to treat as current evidence.
+    if (input.membershipRevision && sample.membership_revision !== input.membershipRevision) {
       continue;
     }
-    if (sample.completion_state === "stale") {
+    // A configured-pool request is a current-evidence read. It accepts only a
+    // successfully published, revisioned benchmark result. Unscoped operator
+    // history remains backwards-readable, but is never used as a current pool
+    // profile or routing input.
+    if (input.membershipRevision) {
+      if (sample.completion_state !== "completed" || !sample.benchmark_profile_revision) {
+        continue;
+      }
+    } else if (
+      sample.completion_state === "stale" ||
+      sample.completion_state === "failed" ||
+      sample.completion_state === "cancelled"
+    ) {
       continue;
     }
     const samples = samplesByEndpointId.get(row.endpoint_id) ?? [];

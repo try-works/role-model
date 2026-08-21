@@ -65,7 +65,7 @@ function quickOnlyArtifactSummary(): BenchmarkSummaryResponse {
 }
 
 describe("router candidate routing benchmark quality", () => {
-  test("exposes hardBlend and routingQualityScore distinct from quick artifact overallScore", () => {
+  test("uses the revisioned profile quality rather than an unbound quick artifact", () => {
     const benchmarkSamples = [
       benchmarkSample({ id: "full-h1", bucket: "hard", mode: "full", score: 0.4 }),
       benchmarkSample({ id: "full-h2", bucket: "hard", mode: "full", score: 0.6 }),
@@ -101,8 +101,10 @@ describe("router candidate routing benchmark quality", () => {
       summary: quickOnlyArtifactSummary(),
     });
 
-    expect(benchmarkCapability?.overallScore).toBe(0.9);
-    expect(routingQualityScore).not.toBe(benchmarkCapability?.overallScore);
+    // A summary without a current-pool portfolio entry is not current routing
+    // evidence. The profile-derived quality is the only safe capability here.
+    expect(benchmarkCapability?.evidenceSource).toBe("profile-derived");
+    expect(benchmarkCapability?.overallScore).toBe(routingQualityScore);
     expect(routingQualityScore).toBeCloseTo(0.733333, 4);
   });
 

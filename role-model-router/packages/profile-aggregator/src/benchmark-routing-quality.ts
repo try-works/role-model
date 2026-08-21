@@ -41,7 +41,12 @@ function benchmarkSamplesWithScores(
   samples: readonly ObservedPerformanceSample[],
 ): ObservedPerformanceSample[] {
   return samples.filter(
-    (sample) => sample.source_type === "benchmark" && typeof sample.judge_score === "number",
+    (sample) =>
+      sample.source_type === "benchmark" &&
+      typeof sample.judge_score === "number" &&
+      sample.completion_state !== "failed" &&
+      sample.completion_state !== "cancelled" &&
+      sample.completion_state !== "stale",
   );
 }
 
