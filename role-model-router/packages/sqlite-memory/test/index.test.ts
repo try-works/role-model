@@ -27,7 +27,9 @@ import {
   persistRuntimeObservationBundle as persistRuntimeObservationBundleWithChannel,
   persistRuntimeTelemetryFailure,
   readConversationContinuity,
+  readLatestBenchmarkProfilesByEndpointIds,
   readLatestObservedProfile,
+  readLiveTaskTelemetryScoresByEndpointIds,
   readObservedPerformanceSamples,
   readRetrievalReceipts,
   readRuntimeObservationBundle,
@@ -117,6 +119,8 @@ describe("initializeSqliteMemory", () => {
       { migration_id: "run62-telemetry-metadata-backfill-v1" },
       { migration_id: "run77-observed-profile-indexes-v1" },
       { migration_id: "run77-recent-observations-index-v1" },
+      { migration_id: "run91-effort-instance-identity-v1" },
+      { migration_id: "run91-operational-profile-reprojection-v1" },
     ]);
   });
 
@@ -1096,7 +1100,41 @@ describe("initializeSqliteMemory", () => {
       }),
     ).toMatchObject({
       endpoint_id: validation.decision.chosen_endpoint_id,
-      sample_size: 2,
+      sample_size: 1,
+      profile_scope: "live-request-operational",
+    });
+
+    const database = new DatabaseSync(validation.databasePath);
+    database
+      .prepare(
+        "UPDATE runtime_telemetry_records SET taxonomy_task_type = ?, created_at_ms = ?, status_code = ?, error_class = NULL WHERE request_id = ?",
+      )
+      .run("code_generation", 10_000, 200, validation.decision.request_id);
+    database.close();
+    expect(
+      readLiveTaskTelemetryScoresByEndpointIds({
+        databasePath: validation.databasePath,
+        endpointIds: [validation.decision.chosen_endpoint_id],
+        windowStartMs: 9_000,
+        windowEndMs: 11_000,
+        minimumSampleCount: 3,
+      }),
+    ).toEqual({
+      [validation.decision.chosen_endpoint_id]: {
+        taskSuccessRates: { code_generation: 1 },
+        taskRollups: {
+          code_generation: {
+            successRate: 1,
+            successCount: 1,
+            failureCount: 0,
+            sampleCount: 1,
+            minimumSampleCount: 3,
+            windowStartMs: 9_000,
+            windowEndMs: 11_000,
+            measuredAtMs: 10_000,
+          },
+        },
+      },
     });
   });
 
@@ -4216,7 +4254,7 @@ describe("persistObservedBenchmarkSample benchmark_mode", () => {
 });
 
 describe("clearObservedBenchmarkDataForEndpoint", () => {
-  test("removes benchmark samples and clears the endpoint profile when no live samples remain", async () => {
+  test("keeps benchmark-only evidence out of the operational endpoint profile", async () => {
     const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
     const initialized = initializeSqliteMemory({
       runtimeStateRoot,
@@ -4242,7 +4280,18 @@ describe("clearObservedBenchmarkDataForEndpoint", () => {
       databasePath: initialized.databasePath,
       endpointId,
     });
-    expect(before?.sources.benchmark_samples).toBe(1);
+    expect(before).toBeNull();
+    expect(
+      readLatestBenchmarkProfilesByEndpointIds({
+        databasePath: initialized.databasePath,
+        endpointIds: [endpointId],
+      })[endpointId],
+    ).toMatchObject({
+      endpoint_id: endpointId,
+      sample_size: 1,
+      sources: { benchmark_samples: 1, live_request_samples: 0 },
+      judge_score: 0.35,
+    });
 
     const cleared = clearObservedBenchmarkDataForEndpoint({
       databasePath: initialized.databasePath,

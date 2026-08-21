@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 
-import { RoleCatalogHierarchy } from "./role-task-hierarchy";
+import { ModelRoleBindingTree, RoleCatalogHierarchy } from "./role-task-hierarchy";
 import type { RuntimeRolePolicyRole, RuntimeTaskDefinition } from "./runtime-api";
 
 const roleDefinitions: RuntimeRolePolicyRole[] = [
@@ -38,6 +38,23 @@ const taskDefinitions: RuntimeTaskDefinition[] = [
 ];
 
 describe("role task hierarchy", () => {
+  test("disables role eligibility controls while the account mutation is in flight", () => {
+    const markup = renderToStaticMarkup(
+      <ModelRoleBindingTree
+        roleDefinitions={roleDefinitions}
+        taskDefinitions={taskDefinitions}
+        selectedRoleIds={["coder.patch"]}
+        expandedRoleId="coder.patch"
+        disabled
+        onToggleRole={() => undefined}
+        onToggleExpandedRole={() => undefined}
+      />,
+    );
+
+    expect(markup).toContain('aria-label="Bind role coder.patch"');
+    expect(markup).toContain("disabled");
+  });
+
   test("keeps task content hidden until the role task detail view is expanded", () => {
     const markup = renderToStaticMarkup(
       <RoleCatalogHierarchy

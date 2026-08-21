@@ -5,6 +5,8 @@ import type {
 } from "@role-model-router/catalog";
 import type { ProviderAccountRecord } from "@role-model-router/provider-account";
 
+export * from "./effort-instance-identity.js";
+
 export type RegistryEndpointKind =
   | "local_engine"
   | "remote_api"
@@ -39,6 +41,8 @@ export interface EndpointCandidate {
     readonly device_class?: string;
     readonly region?: string;
     readonly org_scope?: string;
+    /** Explicit slot identity; null is the provider-default slot. */
+    readonly reasoning_effort?: string | null;
   };
   readonly declared: {
     readonly endpoint_id: string;
@@ -78,6 +82,7 @@ export interface CloudRegistrySource {
   readonly lifecycleState: EndpointCandidate["status"];
   readonly healthStatus: string;
   readonly requestShapeHints?: RequestShapeHints | null;
+  readonly reasoningEffort?: string | null;
 }
 
 export interface LocalRegistrySource {
@@ -235,6 +240,7 @@ function createCloudEndpoint(
       device_class: "server",
       region: source.region,
       org_scope: account.orgScope,
+      ...(source.reasoningEffort !== undefined ? { reasoning_effort: source.reasoningEffort } : {}),
     },
     declared: {
       endpoint_id: source.endpointId,

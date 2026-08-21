@@ -103,7 +103,8 @@ test("SP3 bounds raw performance history, bytes, rebuild work, late data, and re
     .prepare("SELECT COUNT(*) AS count FROM observed_profile_snapshots WHERE endpoint_id=?")
     .get(fixture.endpointId) as { count: number };
   database.close();
-  expect(snapshots.count).toBe(1);
+  // Benchmark history remains bounded and durable, but never materializes an operational profile.
+  expect(snapshots.count).toBe(0);
 
   sqliteMemory.rollbackPerformanceHistoryPolicy({
     databasePath: restarted.databasePath,

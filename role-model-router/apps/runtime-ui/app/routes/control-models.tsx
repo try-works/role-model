@@ -13,6 +13,7 @@ import {
   secondaryButtonClassName,
   supportingTextClassName,
 } from "../lib/design-system";
+import { formatScore, formatScoreWithCoverage } from "../lib/format-score";
 import { ModelRoleBindingTree } from "../lib/role-task-hierarchy";
 import {
   type ModelTelemetryRollup,
@@ -31,6 +32,7 @@ import {
   fetchRuntimeEndpoints,
   fetchRuntimeModels,
   removeRuntimeAccountModel,
+  removeRuntimeEndpoint,
   unloadLocalModel,
   unloadPeerModel,
   updateControllerAssignment,
@@ -40,6 +42,8 @@ import { buildConfiguredModelCards, buildSelectedModelMetaPanel } from "../lib/v
 
 type ConfiguredModelCardLike = {
   readonly modelId: string;
+  readonly identityKey?: string;
+  readonly endpointId?: string;
   readonly displayName?: string;
   readonly controllerState: "active" | "eligible" | "inactive";
   readonly status: string;
@@ -87,6 +91,8 @@ const inventoryFactValueClassName =
   "text-right font-sans text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)]";
 const inventoryMonoValueClassName =
   "text-right font-mono text-[12px] font-semibold leading-4 text-[var(--rm-fg)]";
+export const configuredModelRoleSectionClassName = "flex flex-col gap-3";
+export const configuredModelRoleListClassName = "space-y-2 pr-1";
 
 type ConfiguredModelsInitialLoadResult = {
   readonly snapshot: ConfiguredModelsSnapshot;
@@ -215,7 +221,7 @@ export function buildConfiguredModelInventoryPills(input: {
     ...(typeof input.capabilityScore === "number"
       ? [
           {
-            label: `score ${input.capabilityScore.toFixed(2)}`,
+            label: `score ${formatScore(input.capabilityScore)}`,
             tone: "advisory" as const,
           },
         ]
@@ -294,8 +300,15 @@ function getAccountRoleIdsForModel(
   account: RuntimeAccount,
   modelId: string,
   allRoleIds: readonly string[],
+  endpointId?: string,
 ): string[] {
-  const binding = account.modelRoleBindings?.find((entry) => entry.modelId === modelId);
+  const binding =
+    (endpointId
+      ? account.modelRoleBindings?.find((entry) => entry.endpointId === endpointId)
+      : undefined) ??
+    account.modelRoleBindings?.find(
+      (entry) => entry.endpointId === undefined && entry.modelId === modelId,
+    );
   return resolveRoleIdsFromAssignment(binding, allRoleIds);
 }
 
@@ -321,19 +334,166 @@ export function buildModelRoleAssignmentForSelection(
   };
 }
 
-export function resolveConfiguredModelEjectLabel(hasLocalPeerEndpoint: boolean): string {
+export function resolveConfiguredModelEjectLabel(
+  hasLocalPeerEndpoint: boolean,
+): "Eject from router" | "Eject from pool" {
   return hasLocalPeerEndpoint ? "Eject from router" : "Eject from pool";
+}
+
+export type ConfiguredModelFooterAction = {
+  readonly kind: "unload-local" | "eject-configured" | "none";
+  readonly label: "Unload" | "Eject from router" | "Eject from pool";
+  readonly disabled: boolean;
+};
+
+export function resolveConfiguredModelFooterAction(input: {
+  readonly hasSelectedCard: boolean;
+  readonly isController: boolean;
+  readonly hasLlamaSwapEndpoint: boolean;
+  readonly hasPrimaryAccount: boolean;
+  readonly hasLocalPeerEndpoint: boolean;
+  readonly isRemoving: boolean;
+}): ConfiguredModelFooterAction {
+  const kind = input.hasLlamaSwapEndpoint
+    ? "unload-local"
+    : input.hasPrimaryAccount
+      ? "eject-configured"
+      : "none";
+  return {
+    kind,
+    label:
+      kind === "unload-local"
+        ? "Unload"
+        : resolveConfiguredModelEjectLabel(input.hasLocalPeerEndpoint),
+    disabled: !input.hasSelectedCard || kind === "none" || input.isController || input.isRemoving,
+  };
+}
+
+export function resolveConfiguredModelRemovalClick(input: {
+  readonly actionKind: ConfiguredModelFooterAction["kind"];
+  readonly targetKey: string;
+  readonly pendingConfirmationKey: string | null;
+}): "request-confirmation" | "execute" | "none" {
+  if (input.actionKind === "none") {
+    return "none";
+  }
+  if (input.actionKind === "eject-configured" && input.pendingConfirmationKey !== input.targetKey) {
+    return "request-confirmation";
+  }
+  return "execute";
+}
+
+export async function saveConfiguredModelRoleEligibility<TAccount, TCanonicalState>(input: {
+  readonly mutate: () => Promise<TAccount>;
+  readonly reloadCanonicalState: () => Promise<TCanonicalState>;
+}): Promise<TCanonicalState> {
+  await input.mutate();
+  return input.reloadCanonicalState();
+}
+
+export function describeSavedModelRoleEligibility(input: {
+  readonly displayName: string;
+  readonly providerAccountId: string;
+  readonly selectedRoleIds: readonly string[];
+  readonly roleDefinitions: readonly {
+    readonly role_id: string;
+    readonly primaryGroupId?: string;
+    readonly secondaryGroupIds?: readonly string[];
+    readonly task_types_supported?: readonly string[];
+  }[];
+  readonly endpointVariantCount: number;
+}): string {
+  const selectedRoleIds = new Set(input.selectedRoleIds);
+  const selectedRoles = input.roleDefinitions.filter((role) => selectedRoleIds.has(role.role_id));
+  const taskTypes = new Set(selectedRoles.flatMap((role) => role.task_types_supported ?? []));
+  const groupIds = new Set(
+    selectedRoles.flatMap((role) => [
+      ...(role.primaryGroupId ? [role.primaryGroupId] : []),
+      ...(role.secondaryGroupIds ?? []),
+    ]),
+  );
+  return `Saved eligibility for ${input.displayName} on ${input.providerAccountId}: ${selectedRoles.length} role${selectedRoles.length === 1 ? "" : "s"} derive ${taskTypes.size} task type${taskTypes.size === 1 ? "" : "s"} across ${groupIds.size} group${groupIds.size === 1 ? "" : "s"} for this endpoint instance.`;
+}
+
+export function resolveSelectedModelAccount<
+  TAccount extends { readonly providerAccountId: string },
+  TEndpoint extends { readonly providerAccountId?: string },
+>(accounts: readonly TAccount[], selectedEndpoints: readonly TEndpoint[]): TAccount | null {
+  const selectedEndpointAccountIds = new Set(
+    selectedEndpoints
+      .map((endpoint) => endpoint.providerAccountId)
+      .filter((providerAccountId): providerAccountId is string => Boolean(providerAccountId)),
+  );
+  return (
+    accounts.find((account) => selectedEndpointAccountIds.has(account.providerAccountId)) ??
+    accounts[0] ??
+    null
+  );
 }
 
 export function resolveDefaultSelectedModelId(
   cards: readonly ConfiguredModelCardLike[],
 ): string | null {
   return (
+    cards.find((card) => card.controllerState === "active")?.identityKey ??
     cards.find((card) => card.controllerState === "active")?.modelId ??
+    cards.find((card) => card.status === "active" || card.status === "healthy")?.identityKey ??
     cards.find((card) => card.status === "active" || card.status === "healthy")?.modelId ??
+    cards[0]?.identityKey ??
     cards[0]?.modelId ??
     null
   );
+}
+
+export function resolveSelectedBenchmarkCandidate(
+  candidates: readonly RouterCandidate[],
+  selected: { readonly modelId: string; readonly endpointId?: string } | null,
+): RouterCandidate | null {
+  if (!selected) {
+    return null;
+  }
+  if (selected.endpointId) {
+    return candidates.find((candidate) => candidate.endpointId === selected.endpointId) ?? null;
+  }
+  const sameModel = candidates.filter((candidate) => candidate.modelId === selected.modelId);
+  return sameModel.length === 1 ? (sameModel[0] ?? null) : null;
+}
+
+export function readSelectedOperationalPerformance(candidate: RouterCandidate | null): {
+  readonly p50: number | null;
+  readonly p95: number | null;
+  readonly failureRate: number | null;
+  readonly sampleCount: number | null;
+} {
+  const profile =
+    typeof candidate?.operationalProfile === "object" && candidate.operationalProfile !== null
+      ? candidate.operationalProfile
+      : typeof candidate?.latestProfile === "object" && candidate.latestProfile !== null
+        ? candidate.latestProfile
+        : null;
+  const p50 = profile?.latency_ms_p50 ?? profile?.latencyMsP50;
+  const p95 = profile?.latency_ms_p95 ?? profile?.latencyMsP95;
+  const failureRate = profile?.failure_rate ?? profile?.failureRate;
+  const sampleCount = profile?.sample_size ?? profile?.sampleSize;
+  return {
+    p50: typeof p50 === "number" && Number.isFinite(p50) ? p50 : null,
+    p95: typeof p95 === "number" && Number.isFinite(p95) ? p95 : null,
+    failureRate:
+      typeof failureRate === "number" && Number.isFinite(failureRate) ? failureRate : null,
+    sampleCount:
+      typeof sampleCount === "number" && Number.isFinite(sampleCount) ? sampleCount : null,
+  };
+}
+
+function configuredModelCardKey(card: ConfiguredModelCardLike): string {
+  return card.identityKey ?? card.modelId;
+}
+
+export function configuredModelRoleDraftKey(
+  providerAccountId: string,
+  endpointId: string | undefined,
+): string {
+  return `${providerAccountId}\u0000${endpointId ?? "legacy-model-default"}`;
 }
 
 export function createAccountMutationPayload(
@@ -341,13 +501,17 @@ export function createAccountMutationPayload(
   modelId: string,
   roleIds: readonly string[],
   allRoleIds: readonly string[] = [],
+  endpointId?: string,
 ): Record<string, unknown> {
-  const otherBindings = (account.modelRoleBindings ?? []).filter(
-    (binding) => binding.modelId !== modelId,
+  const otherBindings = (account.modelRoleBindings ?? []).filter((binding) =>
+    endpointId
+      ? binding.endpointId !== endpointId
+      : binding.endpointId !== undefined || binding.modelId !== modelId,
   );
   const assignment = buildModelRoleAssignmentForSelection(roleIds, allRoleIds);
   const nextBinding = {
     modelId,
+    ...(endpointId ? { endpointId } : {}),
     roleIds:
       assignment.roleAssignmentMode === "include" ? [...(assignment.enabledRoleIds ?? [])] : [],
     ...assignment,
@@ -423,6 +587,9 @@ export default function ControlModelsRoute() {
   const [draftRolesByAccountId, setDraftRolesByAccountId] = useState<Record<string, string[]>>({});
   const [savingAccountId, setSavingAccountId] = useState<string | null>(null);
   const [removingTargetKey, setRemovingTargetKey] = useState<string | null>(null);
+  const [pendingRemovalConfirmationKey, setPendingRemovalConfirmationKey] = useState<string | null>(
+    null,
+  );
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<readonly RouterCandidate[]>([]);
@@ -494,7 +661,8 @@ export default function ControlModelsRoute() {
     [controller, requestEvidenceStatus, requests, snapshot],
   );
 
-  const selectedCard = cards.find((card) => card.modelId === selectedModelId) ?? null;
+  const selectedCard =
+    cards.find((card) => configuredModelCardKey(card) === selectedModelId) ?? null;
 
   useEffect(() => {
     const defaultSelectedModelId = resolveDefaultSelectedModelId(cards);
@@ -504,23 +672,29 @@ export default function ControlModelsRoute() {
       }
       return;
     }
-    if (!selectedModelId || !cards.some((card) => card.modelId === selectedModelId)) {
+    if (
+      !selectedModelId ||
+      !cards.some((card) => configuredModelCardKey(card) === selectedModelId)
+    ) {
       setSelectedModelId(defaultSelectedModelId);
     }
   }, [cards, selectedModelId]);
 
   useEffect(() => {
-    if (selectedCard) {
-      void fetchModelTelemetryRollup(selectedCard.modelId).then(setTelemetryRollup, () =>
-        setTelemetryRollup(null),
-      );
+    if (selectedCard?.endpointId) {
+      void fetchModelTelemetryRollup({
+        modelId: selectedCard.modelId,
+        endpointId: selectedCard.endpointId,
+      }).then(setTelemetryRollup, () => setTelemetryRollup(null));
     } else {
       setTelemetryRollup(null);
     }
-  }, [selectedCard]);
+  }, [selectedCard?.endpointId, selectedCard?.modelId]);
   const selectedEndpoints =
     snapshot && selectedCard
-      ? snapshot.endpoints.filter((endpoint) => endpoint.modelId === selectedCard.modelId)
+      ? selectedCard.endpointId
+        ? snapshot.endpoints.filter((endpoint) => endpoint.endpointId === selectedCard.endpointId)
+        : snapshot.endpoints.filter((endpoint) => endpoint.modelId === selectedCard.modelId)
       : [];
   const selectedLlamaSwapEndpoints = selectedEndpoints.filter(
     (endpoint) => endpoint.sourceType === "local" && endpoint.localModelSource === "llama-swap",
@@ -565,8 +739,13 @@ export default function ControlModelsRoute() {
     setDraftRolesByAccountId(
       Object.fromEntries(
         selectedModelAccounts.map((account) => [
-          account.providerAccountId,
-          getAccountRoleIdsForModel(account, selectedCard.modelId, allRuntimeRoleIds),
+          configuredModelRoleDraftKey(account.providerAccountId, selectedCard.endpointId),
+          getAccountRoleIdsForModel(
+            account,
+            selectedCard.modelId,
+            allRuntimeRoleIds,
+            selectedCard.endpointId,
+          ),
         ]),
       ),
     );
@@ -577,17 +756,50 @@ export default function ControlModelsRoute() {
       return;
     }
     setSavingAccountId(account.providerAccountId);
-    setStatusMessage(null);
+    setStatusMessage(`Saving role eligibility for ${account.providerAccountId}…`);
     try {
-      const roleIds = nextRoleIds ?? draftRolesByAccountId[account.providerAccountId] ?? [];
-      const nextSnapshot = await convergeSavedRuntimeAccount({
-        currentSnapshot: snapshot,
+      const roleIds =
+        nextRoleIds ??
+        draftRolesByAccountId[
+          configuredModelRoleDraftKey(account.providerAccountId, selectedCard.endpointId)
+        ] ??
+        [];
+      const loaded = await saveConfiguredModelRoleEligibility({
         mutate: () =>
           upsertRuntimeAccount(
-            createAccountMutationPayload(account, selectedCard.modelId, roleIds, allRuntimeRoleIds),
+            createAccountMutationPayload(
+              account,
+              selectedCard.modelId,
+              roleIds,
+              allRuntimeRoleIds,
+              selectedCard.endpointId,
+            ),
           ),
+        reloadCanonicalState: () =>
+          loadConfiguredModelsMutationState({
+            loadAccounts: fetchRuntimeAccounts,
+            loadEndpoints: fetchRuntimeEndpoints,
+            loadModels: fetchRuntimeModels,
+            loadController: fetchControllerAssignment,
+          }),
       });
-      setSnapshot(nextSnapshot);
+      setSnapshot(loaded.snapshot);
+      setController(loaded.controller);
+      setControllerLoaded(true);
+      const endpointVariantCount = loaded.snapshot.endpoints.filter(
+        (endpoint) =>
+          endpoint.modelId === selectedCard.modelId &&
+          endpoint.providerAccountId === account.providerAccountId,
+      ).length;
+      setStatusMessage(
+        describeSavedModelRoleEligibility({
+          displayName: selectedCard.displayName,
+          providerAccountId: account.providerAccountId,
+          selectedRoleIds: roleIds,
+          roleDefinitions: rolePolicy?.roleDefinitions ?? [],
+          endpointVariantCount,
+        }),
+      );
       setError(null);
     } catch (value) {
       setError(value instanceof Error ? value.message : "Could not update model roles.");
@@ -625,6 +837,14 @@ export default function ControlModelsRoute() {
         await unloadPeerModel(selectedCard.modelId);
         await refreshModelState();
         setStatusMessage(`Removed ${selectedCard.modelId} from the peer-backed router pool.`);
+      } else if (selectedCard.endpointId) {
+        const result = await removeRuntimeEndpoint(selectedCard.endpointId);
+        await refreshModelState();
+        setStatusMessage(
+          result.status === "absent"
+            ? `${selectedCard.displayName ?? selectedCard.modelId} was already absent; sibling instances are unchanged.`
+            : `Removed ${selectedCard.displayName ?? selectedCard.modelId}; sibling instances are unchanged.`,
+        );
       } else {
         const result = await removeRuntimeAccountModel(
           account.providerAccountId,
@@ -672,29 +892,8 @@ export default function ControlModelsRoute() {
     return <LoadingState label="Loading configured model cards…" />;
   }
 
-  const capabilityByModelId = new Map<string, number>();
-  const benchmarkCapabilityByModelId = new Map<
-    string,
-    NonNullable<RouterCandidate["benchmarkCapability"]>
-  >();
-  for (const candidate of candidates) {
-    const benchmarkCapability = candidate.benchmarkCapability;
-    const score = benchmarkCapability?.overallScore;
-    if (typeof score !== "number") {
-      continue;
-    }
-    const current = capabilityByModelId.get(candidate.modelId);
-    if (current === undefined || score > current) {
-      capabilityByModelId.set(candidate.modelId, score);
-      if (benchmarkCapability) {
-        benchmarkCapabilityByModelId.set(candidate.modelId, benchmarkCapability);
-      }
-    }
-  }
-
-  const selectedBenchmarkCapability = selectedCard
-    ? (benchmarkCapabilityByModelId.get(selectedCard.modelId) ?? null)
-    : null;
+  const selectedBenchmarkCandidate = resolveSelectedBenchmarkCandidate(candidates, selectedCard);
+  const selectedBenchmarkCapability = selectedBenchmarkCandidate?.benchmarkCapability ?? null;
   const benchmarkAssignedRoleRows = (rolePolicy?.roleDefinitions ?? [])
     .filter(
       (role) =>
@@ -730,10 +929,11 @@ export default function ControlModelsRoute() {
       ),
     }))
     .sort((left, right) => right.score - left.score);
-  const selectedCapabilityScore = selectedCard
-    ? (capabilityByModelId.get(selectedCard.modelId) ?? null)
-    : null;
-  const selectedPrimaryAccount = selectedModelAccounts[0] ?? null;
+  const selectedCapabilityScore = selectedBenchmarkCapability?.overallScore ?? null;
+  const selectedPrimaryAccount = resolveSelectedModelAccount(
+    selectedModelAccounts,
+    selectedEndpoints,
+  );
   const selectedPrimaryAccountHasLocalPeerEndpoint = selectedPrimaryAccount
     ? selectedEndpoints.some(
         (endpoint) =>
@@ -742,13 +942,37 @@ export default function ControlModelsRoute() {
       )
     : false;
   const selectedPrimaryAccountRoleIds = selectedPrimaryAccount
-    ? (draftRolesByAccountId[selectedPrimaryAccount.providerAccountId] ??
+    ? (draftRolesByAccountId[
+        configuredModelRoleDraftKey(
+          selectedPrimaryAccount.providerAccountId,
+          selectedCard?.endpointId,
+        )
+      ] ??
       getAccountRoleIdsForModel(
         selectedPrimaryAccount,
         selectedCard?.modelId ?? "",
         allRuntimeRoleIds,
+        selectedCard?.endpointId,
       ))
     : [];
+  const selectedFooterAction = resolveConfiguredModelFooterAction({
+    hasSelectedCard: selectedCard !== null,
+    isController: selectedCard?.controllerState === "active",
+    hasLlamaSwapEndpoint: selectedLlamaSwapEndpoints.length > 0,
+    hasPrimaryAccount: selectedPrimaryAccount !== null,
+    hasLocalPeerEndpoint: selectedPrimaryAccountHasLocalPeerEndpoint,
+    isRemoving: removingTargetKey !== null,
+  });
+  const selectedRemovalTargetKey = selectedCard
+    ? selectedFooterAction.kind === "unload-local"
+      ? `local:${selectedCard.modelId}`
+      : selectedCard.endpointId
+        ? `endpoint:${selectedCard.endpointId}`
+        : `account:${selectedPrimaryAccount?.providerAccountId ?? "none"}:${selectedCard.modelId}`
+    : "none";
+  const removalConfirmationPending =
+    selectedFooterAction.kind === "eject-configured" &&
+    pendingRemovalConfirmationKey === selectedRemovalTargetKey;
   const selectedModelEvidencePills = buildSelectedModelEvidencePills({
     assignedRoleRows: benchmarkAssignedRoleRows,
     groupRows: benchmarkGroupRows,
@@ -771,47 +995,22 @@ export default function ControlModelsRoute() {
     }
     return samples.reduce((sum, value) => sum + value, 0) / samples.length;
   })();
-  const selectedCandidateProfiles = selectedCard
-    ? candidates.filter((candidate) => candidate.modelId === selectedCard.modelId)
-    : [];
-  const selectedLatencyProfile = (() => {
-    for (const candidate of selectedCandidateProfiles) {
-      const profile =
-        typeof candidate.latestProfile === "object" && candidate.latestProfile !== null
-          ? (candidate.latestProfile as Record<string, unknown>)
-          : null;
-      const p50 = profile?.latency_ms_p50 ?? profile?.latencyMsP50;
-      const p95 = profile?.latency_ms_p95 ?? profile?.latencyMsP95;
-      if (
-        (typeof p50 === "number" && Number.isFinite(p50)) ||
-        (typeof p95 === "number" && Number.isFinite(p95))
-      ) {
-        return {
-          p50: typeof p50 === "number" && Number.isFinite(p50) ? p50 : null,
-          p95: typeof p95 === "number" && Number.isFinite(p95) ? p95 : null,
-        };
-      }
-    }
-    return { p50: null as number | null, p95: null as number | null };
-  })();
+  const selectedLatencyProfile = readSelectedOperationalPerformance(selectedBenchmarkCandidate);
   const selectedDifficultyMix = (() => {
-    for (const candidate of selectedCandidateProfiles) {
-      const buckets = candidate.benchmarkCapability?.scoresByBucket;
-      if (!buckets) {
-        continue;
-      }
-      const easy = buckets.easy?.score;
-      const medium = buckets.medium?.score;
-      const hard = buckets.hard?.score;
-      if (typeof easy === "number" && typeof medium === "number" && typeof hard === "number") {
-        return `${Math.round(easy * 100)} / ${Math.round(medium * 100)} / ${Math.round(hard * 100)}`;
-      }
+    const buckets = selectedBenchmarkCapability?.scoresByBucket;
+    if (buckets) {
+      return [
+        `E ${formatScoreWithCoverage(buckets.easy?.score, buckets.easy?.cases)}`,
+        `M ${formatScoreWithCoverage(buckets.medium?.score, buckets.medium?.cases)}`,
+        `H ${formatScoreWithCoverage(buckets.hard?.score, buckets.hard?.cases)}`,
+      ].join(" · ");
     }
     return null;
   })();
   const selectedMetaPanel = selectedCard
     ? buildSelectedModelMetaPanel({
         modelId: selectedCard.modelId,
+        displayName: selectedCard.displayName,
         sourceSummary: selectedCard.sourceSummary,
         status: selectedCard.status,
         controllerState: selectedCard.controllerState,
@@ -826,6 +1025,8 @@ export default function ControlModelsRoute() {
         latencyP50Ms: selectedLatencyProfile.p50,
         latencyP95Ms: selectedLatencyProfile.p95,
         meanLatencyMs: selectedMeanLatencyMs,
+        liveFailureRate: selectedLatencyProfile.failureRate,
+        liveSampleCount: selectedLatencyProfile.sampleCount,
         difficultyMix: selectedDifficultyMix,
         routingHint: telemetryRollup?.strengths[0] ?? selectedModelEvidencePills[0]?.label ?? null,
       })
@@ -871,8 +1072,11 @@ export default function ControlModelsRoute() {
                   <p className={inventoryEyebrowClassName}>Models</p>
                   <div className="overflow-hidden rounded-[var(--rm-radius-field)] border border-[var(--rm-border)]">
                     {cards.map((card) => {
-                      const selected = selectedModelId === card.modelId;
-                      const capabilityScore = capabilityByModelId.get(card.modelId);
+                      const cardKey = configuredModelCardKey(card);
+                      const selected = selectedModelId === cardKey;
+                      const capabilityScore =
+                        resolveSelectedBenchmarkCandidate(candidates, card)?.benchmarkCapability
+                          ?.overallScore ?? null;
                       const inventoryPills = buildConfiguredModelInventoryPills({
                         toolCallingSupported: card.toolCallingSupported,
                         endpointCount: card.endpointCount,
@@ -880,19 +1084,22 @@ export default function ControlModelsRoute() {
                       });
                       return (
                         <button
-                          key={card.modelId}
+                          key={cardKey}
                           type="button"
                           className={`flex w-full items-start gap-2.5 border-b border-[var(--rm-border)] px-3 py-2.5 text-left last:border-b-0 ${
                             selected
                               ? "border-l-[3px] border-l-[var(--rm-accent)] bg-[var(--rm-surface-strong)]"
                               : "border-l-[3px] border-l-transparent hover:bg-[var(--rm-surface-strong)]"
                           }`}
-                          onClick={() => setSelectedModelId(card.modelId)}
+                          onClick={() => {
+                            setPendingRemovalConfirmationKey(null);
+                            setSelectedModelId(cardKey);
+                          }}
                         >
                           <div className="min-w-0 flex-1 space-y-1">
                             <div className="flex items-center justify-between gap-2">
                               <span className="min-w-0 truncate font-mono text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)]">
-                                {card.modelId}
+                                {card.displayName}
                               </span>
                               <Badge
                                 tone={resolveConfiguredModelStatusTone(
@@ -983,24 +1190,35 @@ export default function ControlModelsRoute() {
 
               <div className="min-w-0">
                 {selectedCard ? (
-                  <section className="flex max-h-[min(68vh,720px)] flex-col gap-3">
+                  <section className={configuredModelRoleSectionClassName}>
                     <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                       <p className={inventoryEyebrowClassName}>Roles</p>
                       <p className="text-[12px] leading-4 text-[var(--rm-muted)]">
-                        {selectedCard.modelId} · tasks under each role
+                        {selectedCard.displayName} · tasks under each role
                       </p>
                     </div>
                     {rolePolicy && selectedPrimaryAccount ? (
-                      <div className="min-h-0 flex-1 overflow-auto pr-1">
+                      <div className={configuredModelRoleListClassName}>
+                        <p className="text-[12px] leading-4 text-[var(--rm-muted)]">
+                          Saved immediately for {selectedPrimaryAccount.providerAccountId}. Task and
+                          group eligibility is derived from these roles for this exact endpoint
+                          instance. A legacy model default is inherited only until this instance is
+                          edited.
+                        </p>
                         <ModelRoleBindingTree
                           roleDefinitions={rolePolicy.roleDefinitions}
                           taskDefinitions={rolePolicy.taskDefinitions}
                           selectedRoleIds={selectedPrimaryAccountRoleIds}
                           expandedRoleId={expandedBindingRoleId}
+                          disabled={savingAccountId === selectedPrimaryAccount.providerAccountId}
                           onToggleRole={(roleId, nextChecked) => {
                             const accountId = selectedPrimaryAccount.providerAccountId;
+                            const draftKey = configuredModelRoleDraftKey(
+                              accountId,
+                              selectedCard.endpointId,
+                            );
                             const existing = new Set(
-                              draftRolesByAccountId[accountId] ?? selectedPrimaryAccountRoleIds,
+                              draftRolesByAccountId[draftKey] ?? selectedPrimaryAccountRoleIds,
                             );
                             if (nextChecked) {
                               existing.add(roleId);
@@ -1012,7 +1230,7 @@ export default function ControlModelsRoute() {
                             );
                             setDraftRolesByAccountId((current) => ({
                               ...current,
-                              [accountId]: nextRoleIds,
+                              [draftKey]: nextRoleIds,
                             }));
                             void saveAccountRoles(selectedPrimaryAccount, nextRoleIds);
                           }}
@@ -1058,7 +1276,7 @@ export default function ControlModelsRoute() {
                     .then(async (nextController) => {
                       setController(nextController);
                       await refreshModelState();
-                      setStatusMessage(`Made ${selectedCard.modelId} the primary controller.`);
+                      setStatusMessage(`Made ${selectedCard.displayName} the primary controller.`);
                     })
                     .catch((value: unknown) =>
                       setError(
@@ -1081,16 +1299,46 @@ export default function ControlModelsRoute() {
               <button
                 type="button"
                 className={`${compactFieldButtonClassName} text-[var(--rm-error)]`}
-                disabled={
-                  !selectedCard ||
-                  selectedLlamaSwapEndpoints.length === 0 ||
-                  removingTargetKey === `local:${selectedCard.modelId}`
+                disabled={selectedFooterAction.disabled}
+                title={
+                  selectedCard?.controllerState === "active"
+                    ? "Assign another primary controller before removing this model."
+                    : undefined
                 }
-                onClick={() => void unloadSelectedLocalModel()}
+                onClick={() => {
+                  if (!selectedCard || selectedFooterAction.kind === "none") {
+                    return;
+                  }
+                  const clickDisposition = resolveConfiguredModelRemovalClick({
+                    actionKind: selectedFooterAction.kind,
+                    targetKey: selectedRemovalTargetKey,
+                    pendingConfirmationKey: pendingRemovalConfirmationKey,
+                  });
+                  if (clickDisposition === "request-confirmation") {
+                    setPendingRemovalConfirmationKey(selectedRemovalTargetKey);
+                    setStatusMessage(
+                      `Confirm ${selectedFooterAction.label.toLowerCase()} for ${selectedCard.displayName}. Other effort variants remain configured unless they share this peer-backed model.`,
+                    );
+                    return;
+                  }
+                  setPendingRemovalConfirmationKey(null);
+                  if (selectedFooterAction.kind === "unload-local") {
+                    void unloadSelectedLocalModel();
+                    return;
+                  }
+                  if (!selectedPrimaryAccount) {
+                    return;
+                  }
+                  void removeConfiguredModel(selectedPrimaryAccount);
+                }}
               >
-                {selectedCard && removingTargetKey === `local:${selectedCard.modelId}`
-                  ? "Unloading…"
-                  : "Unload"}
+                {removingTargetKey
+                  ? selectedFooterAction.kind === "unload-local"
+                    ? "Unloading…"
+                    : "Ejecting…"
+                  : removalConfirmationPending
+                    ? `Confirm ${selectedFooterAction.label.toLowerCase()}`
+                    : selectedFooterAction.label}
               </button>
             </div>
           </div>

@@ -175,6 +175,7 @@ export function ModelRoleBindingTree({
   taskDefinitions,
   selectedRoleIds,
   expandedRoleId,
+  disabled = false,
   onToggleRole,
   onToggleExpandedRole,
 }: {
@@ -182,6 +183,7 @@ export function ModelRoleBindingTree({
   readonly taskDefinitions: readonly RuntimeTaskDefinition[];
   readonly selectedRoleIds: readonly string[];
   readonly expandedRoleId: string | null;
+  readonly disabled?: boolean;
   readonly onToggleRole: (roleId: string, nextChecked: boolean) => void;
   readonly onToggleExpandedRole: (roleId: string) => void;
 }) {
@@ -203,6 +205,7 @@ export function ModelRoleBindingTree({
             <div className="flex min-h-8 items-center gap-2.5 px-2.5 py-2">
               <CheckboxControl
                 checked={isChecked}
+                disabled={disabled}
                 aria-label={`Bind role ${role.roleId}`}
                 onChange={() => onToggleRole(role.roleId, !isChecked)}
               />
@@ -250,7 +253,7 @@ export function ModelRoleBindingTree({
                     >
                       <CheckboxControl
                         checked={isChecked}
-                        disabled={!isChecked}
+                        disabled={disabled || !isChecked}
                         aria-label={`Task ${task.taskType}`}
                       />
                       <span className="truncate">{task.taskType}</span>

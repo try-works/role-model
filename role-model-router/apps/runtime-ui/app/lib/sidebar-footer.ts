@@ -1,5 +1,11 @@
 import type { ModelStatus, SidebarModel } from "@role-model/ui";
 
+import {
+  formatCompactEndpointDisplayName,
+  hasReasoningEffort,
+  readReasoningEffort,
+  readUpstreamModelId,
+} from "./effort-identity";
 import type {
   RouterSummary,
   RuntimeConfig,
@@ -64,12 +70,17 @@ export function buildSidebarModels(input: {
   }
 
   const requestCounts = new Map<string, number>();
+  const requestCountsByEndpoint = new Map<string, number>();
   for (const row of input.telemetryRows) {
     const modelId = row.modelId;
     if (!modelId) {
       continue;
     }
     requestCounts.set(modelId, (requestCounts.get(modelId) ?? 0) + (row.requestCount ?? 0));
+    requestCountsByEndpoint.set(
+      row.endpointId,
+      (requestCountsByEndpoint.get(row.endpointId) ?? 0) + (row.requestCount ?? 0),
+    );
   }
 
   const modelIds = new Set<string>();
@@ -85,15 +96,37 @@ export function buildSidebarModels(input: {
     modelIds.add(modelId);
   }
 
-  return [...modelIds]
-    .map((id) => {
-      const endpoints = endpointsByModel.get(id) ?? [];
-      return {
-        id,
-        status: summarizeSidebarModelStatus(endpoints),
-        requestCount: requestCounts.get(id) ?? 0,
-      } satisfies SidebarModel;
-    })
+  const modelById = new Map(input.models.map((model) => [model.id, model] as const));
+  const rows: SidebarModel[] = [];
+  for (const id of modelIds) {
+    const endpoints = endpointsByModel.get(id) ?? [];
+    const model = modelById.get(id);
+    const modelEffort = readReasoningEffort(model);
+    const effortSiblings =
+      endpoints.some((endpoint) => hasReasoningEffort(endpoint)) || modelEffort;
+    if (effortSiblings && endpoints.length > 0) {
+      const base = model?.displayName ?? (readUpstreamModelId(model) ?? id).split("/").at(-1) ?? id;
+      for (const endpoint of endpoints) {
+        const endpointEffort = readReasoningEffort(endpoint) ?? modelEffort;
+        rows.push({
+          id: formatCompactEndpointDisplayName({
+            base: endpoint.displayName ?? base,
+            reasoningEffort: endpointEffort,
+          }),
+          status: summarizeSidebarModelStatus([endpoint]),
+          requestCount: requestCountsByEndpoint.get(endpoint.endpointId) ?? 0,
+        });
+      }
+      continue;
+    }
+    rows.push({
+      id,
+      status: summarizeSidebarModelStatus(endpoints),
+      requestCount: requestCounts.get(id) ?? 0,
+    });
+  }
+
+  return rows
     .sort(
       (left, right) =>
         right.requestCount - left.requestCount || left.id.localeCompare(right.id, "en"),

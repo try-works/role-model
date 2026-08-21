@@ -61,7 +61,7 @@ export function buildPickerExternalModels(
 
   push(selected);
   for (const model of discovery.models) {
-    if (model.type === "model") push(model);
+    if (model.type === "model" || model.type === "endpoint") push(model);
   }
   return out;
 }

@@ -32,5 +32,27 @@ The current single-host runtime baseline now has three operator-facing validatio
 The durable playbook for vendor updates, deployment and upgrade guidance, validation and repair, and SQLite
 runtime-data drills lives at `docs/operations/01-router-runtime-hardening-playbook.md`.
 
+### Telemetry query semantics
+
+Runtime telemetry separates four contracts:
+
+- **Aggregates** (`/api/role-model/telemetry/summary` and `/rows`) cover the complete half-open UTC window
+  `[startAtMs, endAtMs)` and are independent of any recent-page size.
+- **Recent lists** (`/api/role-model/telemetry/requests` and `/requests/page`) are intentionally bounded
+  pages. The page envelope reports `returned`, `totalMatching`, `pageSize`, `truncated`, `nextCursor`, and
+  the effective `window`/`asOfMs` snapshot.
+- **Router decisions** retain the compatibility array at `/api/role-model/router/decisions`; the additive
+  `/api/role-model/router/decisions/page` envelope exposes the full window total beside its bounded page.
+- **Exact lookups** use the persisted `requestId`; they do not scan a recent page. Capture links emitted by
+  the Activity view carry the persisted request identity so inserting a newer request cannot retarget an old
+  inspection link.
+- **Rankings** retain an explicit `topN` limit and are not a substitute for totals.
+
+The default Activity page remains 50 rows for bounded transfer and rendering. Its cards and sidebar counts
+come from the aggregate window, and the UI labels the visible page as `Showing N of total`. A `limit` must
+never be reused as an aggregate or exact-lookup bound. See the Run 90 semantic regression tests under
+`packages/sqlite-memory/test/run90-telemetry-query-semantics.test.ts` and
+`apps/runtime-host-bridge/test/run90-telemetry-query-semantics.test.ts`.
+
 Future Pi and desktop hosts will add long-lived orchestration and richer runtime management on top of this
 protocol-compatible baseline.

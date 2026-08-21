@@ -120,12 +120,30 @@ function createFallbackModelRecord(
   const endpointIds = Array.isArray(record.endpoint_ids)
     ? record.endpoint_ids.filter((item): item is string => typeof item === "string")
     : [];
+  const effort =
+    typeof record.reasoning_effort === "string"
+      ? record.reasoning_effort
+      : typeof roleModel.reasoning_effort === "string"
+        ? roleModel.reasoning_effort
+        : typeof roleModel.fixed_effort === "string"
+          ? roleModel.fixed_effort
+          : null;
+  const upstreamModelId =
+    typeof record.upstream_model_id === "string"
+      ? record.upstream_model_id
+      : typeof roleModel.upstream_model_id === "string"
+        ? roleModel.upstream_model_id
+        : null;
   return {
     id: normalizedModelId,
     object: "model",
     owned_by: "role-model",
     endpoint_ids: endpointIds,
-    type: roleModel.type === "model" ? "model" : "alias",
+    type:
+      roleModel.type === "endpoint" ? "endpoint" : roleModel.type === "model" ? "model" : "alias",
+    ...(typeof roleModel.display_name === "string" ? { displayName: roleModel.display_name } : {}),
+    ...(upstreamModelId ? { upstreamModelId } : {}),
+    ...(effort ? { reasoningEffort: effort, fixedEffort: effort } : {}),
     targetModelIds: [normalizedModelId],
     canonicalModelIds: [normalizedModelId],
     providerIds: ["role-model"],

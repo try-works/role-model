@@ -1,0 +1,151 @@
+name: accept-release-candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_tag:
+        description: Exact stage prerelease tag, for example stage-rc-0123456789ab
+        required: true
+        type: string
+      accept:
+        description: I installed and tested this exact release candidate and approve production promotion
+        required: true
+        default: false
+        type: boolean
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+concurrency:
+  group: accept-release-candidate-${{ inputs.candidate_tag }}
+  cancel-in-progress: false
+
+jobs:
+  accept:
+    name: record release candidate acceptance
+    if: inputs.accept == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify published stage prerelease
+        id: candidate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CANDIDATE_TAG: ${{ inputs.candidate_tag }}
+        shell: bash
+        run: |
+          if [[ ! "$CANDIDATE_TAG" =~ ^stage-rc-[0-9a-f]{12}$ ]]; then
+            echo "Candidate tag must use stage-rc-<12 lowercase hex commit characters>."
+            exit 1
+          fi
+
+          git fetch --no-tags origin "+refs/heads/stage:refs/remotes/origin/stage"
+          git fetch origin "refs/tags/${CANDIDATE_TAG}:refs/tags/${CANDIDATE_TAG}"
+          candidate_sha="$(git rev-list -n 1 "$CANDIDATE_TAG")"
+          expected_tag="stage-rc-${candidate_sha:0:12}"
+          if [[ "$CANDIDATE_TAG" != "$expected_tag" ]]; then
+            echo "Candidate tag suffix does not match its exact commit."
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "$candidate_sha" origin/stage; then
+            echo "Candidate commit is not part of the protected stage history."
+            exit 1
+          fi
+
+          release_json="$(gh release view "$CANDIDATE_TAG" --json isDraft,isPrerelease,tagName,targetCommitish,assets)"
+          node -e '
+            const release = JSON.parse(process.argv[1]);
+            const expected = process.argv[2];
+            if (release.isDraft || !release.isPrerelease || release.tagName !== expected) {
+              throw new Error("Candidate must be a published GitHub prerelease");
+            }
+            const names = release.assets.map((asset) => asset.name).sort();
+            const short = expected.slice("stage-rc-".length);
+            const required = [
+              `role-model-stage-${short}-linux-x64.tar.gz`,
+              `role-model-stage-${short}-darwin-x64.tar.gz`,
+              `role-model-stage-${short}-darwin-arm64.tar.gz`,
+              `role-model-stage-${short}-win32-x64.zip`,
+              "SHA256SUMS.txt",
+            ].sort();
+            if (JSON.stringify(names) !== JSON.stringify(required)) {
+              throw new Error(`Candidate asset set mismatch: ${JSON.stringify(names)}`);
+            }
+          ' "$release_json" "$CANDIDATE_TAG"
+
+          assets="$RUNNER_TEMP/release-candidate-assets"
+          mkdir -p "$assets"
+          gh release download "$CANDIDATE_TAG" --dir "$assets"
+          (cd "$assets" && sha256sum -c SHA256SUMS.txt)
+
+          echo "candidate_sha=$candidate_sha" >> "$GITHUB_OUTPUT"
+          echo "candidate_tag=$CANDIDATE_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Verify packaged stage identities
+        env:
+          CANDIDATE_SHA: ${{ steps.candidate.outputs.candidate_sha }}
+          CANDIDATE_TAG: ${{ steps.candidate.outputs.candidate_tag }}
+        shell: bash
+        run: |
+          assets="$RUNNER_TEMP/release-candidate-assets"
+          extracted="$RUNNER_TEMP/release-candidate-extracted"
+          mkdir -p "$extracted"
+          for archive in "$assets"/*.tar.gz "$assets"/*.zip; do
+            target="$(basename "$archive")"
+            target="${target%.tar.gz}"
+            target="${target%.zip}"
+            mkdir -p "$extracted/$target"
+            if [[ "$archive" == *.zip ]]; then
+              unzip -q "$archive" -d "$extracted/$target"
+            else
+              tar -xzf "$archive" -C "$extracted/$target"
+            fi
+            manifest="$extracted/$target/manifest.json"
+            test -f "$manifest"
+            node -e '
+              const manifest = require(process.argv[1]);
+              const candidateSha = process.argv[2];
+              if (
+                manifest.channel !== "stage" ||
+                manifest.name !== "role-model-stage" ||
+                manifest.endpoint !== "http://127.0.0.1:3457" ||
+                manifest.commit !== candidateSha ||
+                manifest.track_b_runtime?.extension_count !== 13
+              ) {
+                throw new Error(`Stage manifest identity mismatch: ${process.argv[1]}`);
+              }
+            ' "$manifest" "$CANDIDATE_SHA"
+          done
+
+      - name: Create immutable acceptance receipt
+        env:
+          CANDIDATE_SHA: ${{ steps.candidate.outputs.candidate_sha }}
+          CANDIDATE_TAG: ${{ steps.candidate.outputs.candidate_tag }}
+        shell: bash
+        run: |
+          approval_tag="rc-approved/$CANDIDATE_SHA"
+          remote="$(git ls-remote --tags origin "refs/tags/$approval_tag" | awk '{print $1}')"
+          if [[ -n "$remote" ]]; then
+            if [[ "$remote" != "$CANDIDATE_SHA" ]]; then
+              echo "Existing acceptance receipt points to a different commit."
+              exit 1
+            fi
+            echo "Acceptance receipt already exists for $CANDIDATE_TAG."
+          else
+            git tag "$approval_tag" "$CANDIDATE_SHA"
+            git push origin "refs/tags/$approval_tag"
+          fi
+          {
+            echo "### Accepted release candidate"
+            echo "- Candidate: \`$CANDIDATE_TAG\`"
+            echo "- Commit: \`$CANDIDATE_SHA\`"
+            echo "- Receipt: \`$approval_tag\`"
+            echo "- Approved by: \`$GITHUB_ACTOR\`"
+            echo "- The stable release workflow will accept only this exact stage candidate."
+          } >> "$GITHUB_STEP_SUMMARY"

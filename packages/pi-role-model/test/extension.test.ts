@@ -1,8 +1,9 @@
+import type { ProviderConfig } from "@earendil-works/pi-coding-agent";
 import { describe, expect, test } from "vitest";
 import { createRoleModelExtension } from "../src/extension.js";
 import { loadCompactTaxonomy } from "../src/taxonomy/load-compact-taxonomy.js";
-import type { PiCommandContext, PiModelSelection } from "../src/types.js";
-import { createDiscovery } from "./fixtures.js";
+import type { PiCommandContext, PiExtensionAPI, PiModelSelection } from "../src/types.js";
+import { createDiscovery, createModelRecord } from "./fixtures.js";
 
 type RegisteredCommandConfig = {
   handler: (args?: string, context?: PiCommandContext) => Promise<void>;
@@ -12,6 +13,10 @@ type BeforeProviderRequestCallback = (
   event: { type: "before_provider_request"; payload: unknown },
   context?: { model?: PiModelSelection },
 ) => unknown;
+
+function asPiExtensionApi(value: unknown): PiExtensionAPI {
+  return value as PiExtensionAPI;
+}
 
 describe("Pi extension registration", () => {
   test("uses ROLE_MODEL_ENDPOINT for runtime request commands when no explicit endpoint is passed", async () => {
@@ -38,14 +43,16 @@ describe("Pi extension registration", () => {
         }),
       });
 
-      await extension({
-        registerProvider() {
-          // registered during startup discovery
-        },
-        registerCommand(name: string, config: RegisteredCommandConfig) {
-          commands.push({ name, config });
-        },
-      });
+      await extension(
+        asPiExtensionApi({
+          registerProvider() {
+            // registered during startup discovery
+          },
+          registerCommand(name: string, config: RegisteredCommandConfig) {
+            commands.push({ name, config });
+          },
+        }),
+      );
 
       await commands[0]?.config.handler("requests 1", {
         ui: { notify: () => undefined },
@@ -73,14 +80,16 @@ describe("Pi extension registration", () => {
       }),
     });
 
-    await extension({
-      registerProvider(name: string, config: unknown) {
-        providers.push({ name, config });
-      },
-      registerCommand(name: string, config: unknown) {
-        commands.push({ name, config });
-      },
-    });
+    await extension(
+      asPiExtensionApi({
+        registerProvider(name: string, config: unknown) {
+          providers.push({ name, config });
+        },
+        registerCommand(name: string, config: unknown) {
+          commands.push({ name, config });
+        },
+      }),
+    );
 
     expect(providers).toEqual([expect.objectContaining({ name: "role-model" })]);
     expect(commands).toHaveLength(1);
@@ -97,6 +106,113 @@ describe("Pi extension registration", () => {
     );
   });
 
+  test("refreshes and durably publishes complete Pi 0.84.2 model records", async () => {
+    const providers: ProviderConfig[] = [];
+    const publications: unknown[] = [];
+    const extension = createRoleModelExtension({
+      discover: async () => ({ discovery: createDiscovery() }),
+      resolveTaxonomy: async () => ({
+        source: "runtime",
+        taxonomy: loadCompactTaxonomy(),
+      }),
+    });
+
+    await extension(
+      asPiExtensionApi({
+        registerProvider(_name: string, config: ProviderConfig) {
+          providers.push(config);
+        },
+        registerCommand() {
+          // Registration is not under test here.
+        },
+      }),
+    );
+
+    const refreshed = await providers[0]?.refreshModels?.({
+      allowNetwork: true,
+      signal: new AbortController().signal,
+      publish: async (publication) => {
+        publications.push(publication);
+        return true;
+      },
+    });
+
+    expect(providers).toHaveLength(1);
+    expect(refreshed).toHaveLength(createDiscovery().models.length);
+    expect(refreshed?.[0]).toEqual(
+      expect.objectContaining({
+        id: expect.any(String),
+        name: expect.any(String),
+        reasoning: expect.any(Boolean),
+        input: expect.any(Array),
+        cost: expect.any(Object),
+        contextWindow: expect.any(Number),
+        maxTokens: expect.any(Number),
+      }),
+    );
+    expect(publications).toEqual([
+      expect.objectContaining({
+        persist: expect.objectContaining({
+          checkedAt: expect.any(Number),
+          models: expect.arrayContaining([
+            expect.objectContaining({
+              provider: "role-model",
+              baseUrl: "http://127.0.0.1:3456/v1",
+              api: "openai-completions",
+            }),
+          ]),
+        }),
+      }),
+    ]);
+  });
+
+  test("fails closed when Pi clamps a fixed endpoint away from its required thinking level", async () => {
+    const handlers = new Map<string, (event: unknown, context?: unknown) => unknown>();
+    let thinkingLevel = "low";
+    const endpointId = "deepseek.personal.global.deepseek-v4-pro:high";
+    const extension = createRoleModelExtension({
+      discover: async () => ({
+        discovery: createDiscovery({
+          models: [
+            createModelRecord({
+              id: endpointId,
+              type: "endpoint" as never,
+              upstreamModelId: "deepseek/deepseek-v4-pro" as never,
+              fixedEffort: "high" as never,
+              capabilities: {
+                reasoning: {
+                  supported: true,
+                  effortControl: true,
+                  effortLevels: ["low", "high"],
+                },
+              } as never,
+            }),
+          ],
+        }),
+      }),
+    });
+
+    await extension(
+      asPiExtensionApi({
+        registerProvider() {},
+        registerCommand() {},
+        on(event: string, handler: (event: unknown, context?: unknown) => unknown) {
+          handlers.set(event, handler);
+        },
+        getThinkingLevel() {
+          return thinkingLevel;
+        },
+        setThinkingLevel() {
+          thinkingLevel = "medium";
+        },
+      }),
+    );
+
+    await expect(handlers.get("model_select")?.({ model: { id: endpointId } })).rejects.toThrow(
+      "could not apply required thinking level high",
+    );
+  });
+
   test("passes Pi setModel into alias selection command dependencies", async () => {
     const commands: Array<{ name: string; config: RegisteredCommandConfig }> = [];
     const activeModels: unknown[] = [];
@@ -110,18 +226,20 @@ describe("Pi extension registration", () => {
       writeSelectedAlias: async () => undefined,
     });
 
-    await extension({
-      registerProvider() {
-        // registered during setup and startup discovery
-      },
-      registerCommand(name: string, config: RegisteredCommandConfig) {
-        commands.push({ name, config });
-      },
-      async setModel(model: PiModelSelection) {
-        activeModels.push(model);
-        return true;
-      },
-    });
+    await extension(
+      asPiExtensionApi({
+        registerProvider() {
+          // registered during setup and startup discovery
+        },
+        registerCommand(name: string, config: RegisteredCommandConfig) {
+          commands.push({ name, config });
+        },
+        async setModel(model: PiModelSelection) {
+          activeModels.push(model);
+          return true;
+        },
+      }),
+    );
 
     await commands[0]?.config.handler("alias use baseline.remote-only", {
       ui: { notify: () => undefined },
@@ -138,7 +256,7 @@ describe("Pi extension registration", () => {
 
   test("forwards command context so status can reflect Pi's live active role-model selection", async () => {
     const commands: Array<{ name: string; config: RegisteredCommandConfig }> = [];
-    const notifications: Array<{ message: string; level?: "info" | "error" }> = [];
+    const notifications: Array<{ message: string; level?: "info" | "warning" | "error" }> = [];
     const extension = createRoleModelExtension({
       discover: async () => ({
         discovery: createDiscovery(),
@@ -149,14 +267,16 @@ describe("Pi extension registration", () => {
       readSelectedAlias: async () => "hybrid.remote-only",
     });
 
-    await extension({
-      registerProvider() {
-        // registered during setup and startup discovery
-      },
-      registerCommand(name: string, config: RegisteredCommandConfig) {
-        commands.push({ name, config });
-      },
-    });
+    await extension(
+      asPiExtensionApi({
+        registerProvider() {
+          // registered during setup and startup discovery
+        },
+        registerCommand(name: string, config: RegisteredCommandConfig) {
+          commands.push({ name, config });
+        },
+      }),
+    );
 
     await commands[0]?.config.handler("status", {
       ui: {
@@ -205,17 +325,19 @@ describe("Pi extension registration", () => {
       fetchRuntimeRoleSummaries: async () => [],
     });
 
-    await extension({
-      registerProvider() {
-        // registered during startup discovery
-      },
-      registerCommand() {
-        // registered below startup discovery
-      },
-      on(event, callback) {
-        if (event === "before_provider_request") callbacks.push(callback);
-      },
-    });
+    await extension(
+      asPiExtensionApi({
+        registerProvider() {
+          // registered during startup discovery
+        },
+        registerCommand() {
+          // registered below startup discovery
+        },
+        on(event: string, callback: BeforeProviderRequestCallback) {
+          if (event === "before_provider_request") callbacks.push(callback);
+        },
+      }),
+    );
 
     const payload = await callbacks[0]?.({
       type: "before_provider_request",
@@ -282,17 +404,19 @@ describe("Pi extension registration", () => {
       fetchRuntimeRoleSummaries: async () => packageTaxonomy.roleSummaries,
     });
 
-    await extension({
-      registerProvider() {
-        // registered during startup discovery
-      },
-      registerCommand() {
-        // registered below startup discovery
-      },
-      on(event, callback) {
-        if (event === "before_provider_request") callbacks.push(callback);
-      },
-    });
+    await extension(
+      asPiExtensionApi({
+        registerProvider() {
+          // registered during startup discovery
+        },
+        registerCommand() {
+          // registered below startup discovery
+        },
+        on(event: string, callback: BeforeProviderRequestCallback) {
+          if (event === "before_provider_request") callbacks.push(callback);
+        },
+      }),
+    );
 
     const payload = await callbacks[0]?.({
       type: "before_provider_request",
@@ -336,17 +460,19 @@ describe("Pi extension registration", () => {
       fetchRuntimeRoleSummaries: async () => loadCompactTaxonomy().roleSummaries,
     });
 
-    await extension({
-      registerProvider() {
-        // registered during startup discovery
-      },
-      registerCommand() {
-        // registered below startup discovery
-      },
-      on(event, callback) {
-        if (event === "before_provider_request") callbacks.push(callback);
-      },
-    });
+    await extension(
+      asPiExtensionApi({
+        registerProvider() {
+          // registered during startup discovery
+        },
+        registerCommand() {
+          // registered below startup discovery
+        },
+        on(event: string, callback: BeforeProviderRequestCallback) {
+          if (event === "before_provider_request") callbacks.push(callback);
+        },
+      }),
+    );
 
     await callbacks[0]?.({
       type: "before_provider_request",
@@ -388,17 +514,19 @@ describe("Pi extension registration", () => {
       fetchRuntimeRoleSummaries: async () => [],
     });
 
-    await extension({
-      registerProvider() {
-        // registered during startup discovery
-      },
-      registerCommand(name: string, config: RegisteredCommandConfig) {
-        commands.push({ name, config });
-      },
-      on(event, callback) {
-        if (event === "before_provider_request") callbacks.push(callback);
-      },
-    });
+    await extension(
+      asPiExtensionApi({
+        registerProvider() {
+          // registered during startup discovery
+        },
+        registerCommand(name: string, config: RegisteredCommandConfig) {
+          commands.push({ name, config });
+        },
+        on(event: string, callback: BeforeProviderRequestCallback) {
+          if (event === "before_provider_request") callbacks.push(callback);
+        },
+      }),
+    );
 
     contentRevision = "refreshed-taxonomy";
     await commands[0]?.config.handler("setup", {
@@ -453,17 +581,19 @@ describe("Pi extension registration", () => {
       fetchRuntimeRoleSummaries: async () => [],
     });
 
-    await extension({
-      registerProvider() {
-        // registered during startup discovery
-      },
-      registerCommand() {
-        // registered below startup discovery
-      },
-      on(event, callback) {
-        if (event === "before_provider_request") callbacks.push(callback);
-      },
-    });
+    await extension(
+      asPiExtensionApi({
+        registerProvider() {
+          // registered during startup discovery
+        },
+        registerCommand() {
+          // registered below startup discovery
+        },
+        on(event: string, callback: BeforeProviderRequestCallback) {
+          if (event === "before_provider_request") callbacks.push(callback);
+        },
+      }),
+    );
 
     const payload = await callbacks[0]?.({
       type: "before_provider_request",
@@ -498,17 +628,19 @@ describe("Pi extension registration", () => {
       fetchRuntimeRoleSummaries: async () => [],
     });
 
-    await extension({
-      registerProvider() {
-        // registered during startup discovery
-      },
-      registerCommand() {
-        // registered below startup discovery
-      },
-      on(event, callback) {
-        if (event === "before_provider_request") callbacks.push(callback);
-      },
-    });
+    await extension(
+      asPiExtensionApi({
+        registerProvider() {
+          // registered during startup discovery
+        },
+        registerCommand() {
+          // registered below startup discovery
+        },
+        on(event: string, callback: BeforeProviderRequestCallback) {
+          if (event === "before_provider_request") callbacks.push(callback);
+        },
+      }),
+    );
 
     await expect(
       callbacks[0]?.(
@@ -522,10 +654,15 @@ describe("Pi extension registration", () => {
         {
           model: {
             provider: "role-model",
+            baseUrl: "http://127.0.0.1:3456/v1",
             id: "gpt-4o",
+            name: "gpt-4o",
             api: "openai-completions",
+            reasoning: false,
             input: ["text"],
             cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+            contextWindow: 8192,
+            maxTokens: 1024,
           },
         },
       ),

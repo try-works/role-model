@@ -13,6 +13,7 @@ import {
   buildBenchmarkCapabilityForEndpoint,
   listBenchmarkRuns,
   readBenchmarkSummariesByMode,
+  readCurrentBenchmarkPortfolio,
   readLatestBenchmarkSummary,
   readLatestBenchmarkSummaryByMode,
   writeBenchmarkRunResult,
@@ -186,6 +187,148 @@ describe("benchmark-summary", () => {
     ]);
   });
 
+  test("builds a current per-endpoint portfolio across later partial runs", async () => {
+    const root = await createArtifactRoot();
+    const sharedGrade = (endpointId: string, modelId: string, overallScore: number) => ({
+      endpointId,
+      modelId,
+      sourceType: "remote" as const,
+      overallScore,
+      byDifficulty: {
+        easy: { score: overallScore, cases: 1 },
+        medium: { score: overallScore, cases: 1 },
+        hard: { score: overallScore, cases: 1 },
+      },
+      caseResults: [
+        { caseId: `${endpointId}-case`, difficultyBucket: "hard" as const, score: overallScore },
+      ],
+    });
+
+    await writeBenchmarkRunManifest(root, {
+      runId: "run-high",
+      suiteId: "routing-capability-v2",
+      mode: "full",
+      judgeEndpointId: "judge.high",
+      startedAtMs: 10,
+      executionCompletedAtMs: 20,
+      gradingCompletedAtMs: 30,
+      endpointIds: ["deepseek.flash-high", "deepseek.flash-max"],
+      caseIds: ["high-case", "max-case"],
+      responseCount: 2,
+      judgeArtifactCount: 2,
+      compareArtifactCount: 0,
+    });
+    await writeBenchmarkRunResult(root, {
+      runId: "run-high",
+      suiteId: "routing-capability-v2",
+      suiteVersion: "2.0",
+      mode: "full",
+      judgeEndpointId: "judge.high",
+      startedAtMs: 10,
+      completedAtMs: 30,
+      endpointGrades: [
+        sharedGrade("deepseek.flash-high", "deepseek-v4-flash", 0.81),
+        sharedGrade("deepseek.flash-max", "deepseek-v4-flash", 0.93),
+      ],
+    });
+
+    await writeBenchmarkRunManifest(root, {
+      runId: "run-high-refresh",
+      suiteId: "routing-capability-v2",
+      mode: "quick",
+      judgeEndpointId: "judge.refresh",
+      startedAtMs: 40,
+      executionCompletedAtMs: 50,
+      gradingCompletedAtMs: 60,
+      endpointIds: ["deepseek.flash-high"],
+      caseIds: ["high-case"],
+      responseCount: 1,
+      judgeArtifactCount: 1,
+      compareArtifactCount: 0,
+    });
+    await writeBenchmarkRunResult(root, {
+      runId: "run-high-refresh",
+      suiteId: "routing-capability-v2",
+      suiteVersion: "2.0",
+      mode: "quick",
+      judgeEndpointId: "judge.refresh",
+      startedAtMs: 40,
+      completedAtMs: 60,
+      endpointGrades: [sharedGrade("deepseek.flash-high", "deepseek-v4-flash", 0.84)],
+    });
+
+    const portfolio = await readCurrentBenchmarkPortfolio({
+      artifactRoot: root,
+      resolveModelId: (endpointId) => endpointId,
+    });
+
+    expect(portfolio.scoreSemantics).toEqual({
+      storageScale: "normalized-fraction-0-to-1",
+      displayScale: "percentage-0-to-100",
+      overallAggregation: "unweighted-arithmetic-mean-of-executed-case-scores",
+      currentEvidencePolicy: "latest-completed-run-per-endpoint",
+      replacementScope: "endpoint-only",
+      zeroScoreMeaning: "executed-zero-credit",
+      absentScoreMeaning: "no-evidence",
+    });
+
+    expect(portfolio.entries).toEqual([
+      expect.objectContaining({
+        endpointId: "deepseek.flash-high",
+        overallScore: 0.84,
+        runId: "run-high-refresh",
+        completedAtMs: 60,
+        judgeEndpointId: "judge.refresh",
+      }),
+      expect.objectContaining({
+        endpointId: "deepseek.flash-max",
+        overallScore: 0.93,
+        runId: "run-high",
+        completedAtMs: 30,
+        judgeEndpointId: "judge.high",
+      }),
+    ]);
+  });
+
+  test("builds exact run capability even when no learned profile exists", () => {
+    const capability = buildBenchmarkCapabilityForEndpoint({
+      endpointId: "deepseek.flash-max",
+      latestProfile: null,
+      summary: EMPTY_BENCHMARK_SUMMARY,
+      portfolioEntry: {
+        endpointId: "deepseek.flash-max",
+        modelId: "deepseek/deepseek-v4-flash",
+        sourceType: "remote",
+        reasoningEffort: "max",
+        overallScore: 0.4,
+        scoresByBucket: {
+          easy: { score: 0, cases: 0 },
+          medium: { score: 0, cases: 0 },
+          hard: { score: 0.4, cases: 1 },
+        },
+        passingCaseIds: ["h01"],
+        caseCount: 1,
+        runId: "run-max",
+        completedAtMs: 10,
+        mode: "quick",
+        suiteId: "routing-capability-v2",
+        suiteVersion: "2.0",
+        judgeEndpointId: "judge.pro",
+        judgeModelId: "deepseek/deepseek-v4-pro",
+      },
+    });
+
+    expect(capability).toEqual(
+      expect.objectContaining({
+        evidenceSource: "run-artifact",
+        overallScore: 0.4,
+        benchmarkSamples: 1,
+        sampleCount: 1,
+        lastRunId: "run-max",
+      }),
+    );
+  });
+
   test("round-trips latencyMs in result.json", async () => {
     const root = await createArtifactRoot();
     const runId = "run-latency";
@@ -308,6 +451,161 @@ describe("benchmark-summary", () => {
     expect(capability?.benchmarkSamples).toBe(12);
     expect(capability?.lastRunId).toBe("run-newer");
     expect(capability?.scoresByBucket?.hard?.score).toBe(0.4);
+  });
+
+  test("does not borrow global latest-run provenance when the endpoint is absent", () => {
+    const capability = buildBenchmarkCapabilityForEndpoint({
+      endpointId: "deepseek.flash-max",
+      latestProfile: {
+        judge_score: 0.93,
+        sample_size: 3,
+        measured_at_ms: 30,
+        sources: { benchmark_samples: 3 },
+      },
+      summary: {
+        runId: "run-high-only",
+        completedAtMs: 60,
+        mode: "quick",
+        suiteId: "routing-capability-v2",
+        suiteVersion: "2.0",
+        judgeEndpointId: "judge.refresh",
+        judgeModelId: "judge-model",
+        artifactRoot: "run-high-only",
+        subjects: [
+          {
+            endpointId: "deepseek.flash-high",
+            modelId: "deepseek-v4-flash",
+            overallScore: 0.84,
+            scoresByBucket: {
+              easy: { score: 0.84, cases: 1 },
+              medium: { score: 0.84, cases: 1 },
+              hard: { score: 0.84, cases: 1 },
+            },
+            passingCaseIds: ["case"],
+            caseCount: 1,
+          },
+        ],
+        caseComparisons: [],
+        caseAudits: [],
+        manifest: {
+          executionCompletedAtMs: 50,
+          gradingCompletedAtMs: 60,
+          judgeArtifactCount: 1,
+          compareArtifactCount: 0,
+        },
+      },
+    });
+
+    expect(capability).toMatchObject({
+      overallScore: 0.93,
+      evidenceSource: "profile-derived",
+      lastRunId: null,
+      lastRunCompletedAtMs: null,
+      judgeEndpointId: null,
+    });
+  });
+
+  test("uses the exact endpoint portfolio entry instead of a newer sibling-only summary", () => {
+    const capability = buildBenchmarkCapabilityForEndpoint({
+      endpointId: "deepseek.flash-max",
+      latestProfile: {
+        judge_score: 0.93,
+        sample_size: 3,
+        measured_at_ms: 30,
+        sources: { benchmark_samples: 3 },
+      },
+      summary: {
+        runId: "run-high-refresh",
+        completedAtMs: 60,
+        mode: "quick",
+        suiteId: "routing-capability-v2",
+        suiteVersion: "2.0",
+        judgeEndpointId: "judge.refresh",
+        judgeModelId: "judge-refresh-model",
+        artifactRoot: "run-high-refresh",
+        subjects: [],
+        caseComparisons: [],
+        caseAudits: [],
+        manifest: null,
+      },
+      portfolioEntry: {
+        endpointId: "deepseek.flash-max",
+        modelId: "deepseek-v4-flash",
+        reasoningEffort: "max",
+        overallScore: 0.93,
+        scoresByBucket: {
+          easy: { score: 0.9, cases: 1 },
+          medium: { score: 0.92, cases: 1 },
+          hard: { score: 0.97, cases: 1 },
+        },
+        passingCaseIds: ["max-case"],
+        caseCount: 1,
+        taxonomyScores: { byTask: { "coder.review": 0.97 } },
+        runId: "run-max-original",
+        completedAtMs: 30,
+        mode: "full",
+        suiteId: "routing-capability-v2",
+        judgeEndpointId: "judge.original",
+        judgeModelId: "judge-original-model",
+      },
+    });
+
+    expect(capability).toMatchObject({
+      overallScore: 0.93,
+      evidenceSource: "run-artifact",
+      taskScores: { "coder.review": 0.97 },
+      lastRunId: "run-max-original",
+      lastRunCompletedAtMs: 30,
+      lastRunMode: "full",
+      judgeEndpointId: "judge.original",
+      judgeModelId: "judge-original-model",
+    });
+  });
+
+  test("rejects duplicate exact endpoint entries instead of silently choosing one score", async () => {
+    const root = await createArtifactRoot();
+    const runId = "run-duplicate-endpoint";
+    await writeBenchmarkRunManifest(root, {
+      runId,
+      suiteId: "routing-capability-v2",
+      mode: "quick",
+      judgeEndpointId: "judge.endpoint",
+      startedAtMs: 1,
+      executionCompletedAtMs: 2,
+      gradingCompletedAtMs: 3,
+      endpointIds: ["deepseek.flash-high"],
+      caseIds: ["case"],
+      responseCount: 1,
+      judgeArtifactCount: 1,
+      compareArtifactCount: 0,
+    });
+    const grade = {
+      endpointId: "deepseek.flash-high",
+      modelId: "deepseek-v4-flash",
+      sourceType: "remote" as const,
+      reasoningEffort: "high",
+      overallScore: 0.81,
+      byDifficulty: {
+        easy: { score: 0.81, cases: 1 },
+        medium: { score: 0, cases: 0 },
+        hard: { score: 0, cases: 0 },
+      },
+      caseResults: [{ caseId: "case", difficultyBucket: "easy" as const, score: 0.81 }],
+    };
+    await writeBenchmarkRunResult(root, {
+      runId,
+      suiteId: "routing-capability-v2",
+      suiteVersion: "2.0",
+      mode: "quick",
+      judgeEndpointId: "judge.endpoint",
+      startedAtMs: 1,
+      completedAtMs: 3,
+      endpointGrades: [grade, { ...grade, overallScore: 0.99 }],
+    });
+
+    await expect(
+      readCurrentBenchmarkPortfolio({ artifactRoot: root, resolveModelId: () => null }),
+    ).rejects.toThrow(/duplicate benchmark endpoint/i);
   });
 
   test("builds assignment-aware role and group benchmark fit from taxonomy summary data", async () => {

@@ -80,6 +80,57 @@ afterEach(async () => {
 });
 
 describe("runtime-host-bridge unified runtime backend", () => {
+  test("preserves the exact LiteLLM provider account on config-owned endpoint readback", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-litellm-endpoint-account-"));
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      `
+version: "1.0"
+execution_mode: remote_only
+litellm_proxy:
+  providers:
+    deepseek:
+      api_key: "\${DEEPSEEK_API_KEY}"
+      model_list:
+        - model_name: deepseek/deepseek-v4-pro
+          litellm_params: { model: deepseek/deepseek-v4-pro }
+`,
+      "utf8",
+    );
+    persistConfigTestProviderAccount({
+      runtimeStateRoot,
+      scopeId: "litellm-endpoint-account",
+      providerId: "deepseek",
+      modelIds: ["deepseek/deepseek-v4-pro"],
+    });
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "litellm-endpoint-account",
+      unifiedRuntimeConfigPath,
+      runtimeVendorStartup: "disabled",
+    });
+    try {
+      await expect(backend.listEndpoints()).resolves.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            endpointId: "deepseek.litellm.global.deepseek-deepseek-v4-pro",
+            providerId: "deepseek",
+            providerAccountId: "deepseek.litellm",
+            servingSource: "vendor-litellm",
+          }),
+        ]),
+      );
+    } finally {
+      await backend.shutdown();
+    }
+  });
+
   test("ejects config-owned membership durably across config reapply and restart", async () => {
     const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run76-config-eject-"));
     tempRoots.push(tempRoot);

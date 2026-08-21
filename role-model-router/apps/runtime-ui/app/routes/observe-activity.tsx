@@ -13,8 +13,11 @@ import { startDeferredLiveRefresh } from "../lib/live-refresh";
 import {
   type RuntimeActivityCapture,
   type RuntimeActivityLogEntry,
+  type RuntimeActivityMetricsPage,
+  type RuntimeTelemetrySummary,
   fetchActivityCapture,
-  fetchActivityMetrics,
+  fetchActivityMetricsPage,
+  fetchTelemetrySummary,
   subscribeTelemetryStream,
 } from "../lib/runtime-api";
 import { buildActivitySummary } from "../lib/view-models";
@@ -29,7 +32,10 @@ function decodeCaptureBody(encoded: string): string {
 
 export default function ObserveActivityRoute() {
   const [metrics, setMetrics] = useState<RuntimeActivityLogEntry[] | null>(null);
-  const [selectedCaptureId, setSelectedCaptureId] = useState<number | null>(null);
+  const [activityPage, setActivityPage] = useState<RuntimeActivityMetricsPage | null>(null);
+  const [telemetrySummary, setTelemetrySummary] = useState<RuntimeTelemetrySummary | null>(null);
+  const [telemetrySummaryError, setTelemetrySummaryError] = useState<string | null>(null);
+  const [selectedCaptureId, setSelectedCaptureId] = useState<number | string | null>(null);
   const [selectedCapture, setSelectedCapture] = useState<RuntimeActivityCapture | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [captureError, setCaptureError] = useState<string | null>(null);
@@ -39,13 +45,35 @@ export default function ObserveActivityRoute() {
     let disposed = false;
     const load = async () => {
       try {
-        const value = await fetchActivityMetrics();
+        const [metricsResult, aggregateResult] = await Promise.allSettled([
+          fetchActivityMetricsPage({ limit: 50 }),
+          fetchTelemetrySummary(),
+        ]);
         if (disposed) {
           return;
         }
-        setMetrics(value);
+        if (metricsResult.status === "rejected") {
+          throw metricsResult.reason;
+        }
+        setActivityPage(metricsResult.value);
+        setMetrics([...metricsResult.value.items]);
+        if (aggregateResult.status === "fulfilled") {
+          setTelemetrySummary(aggregateResult.value);
+          setTelemetrySummaryError(null);
+        } else {
+          setTelemetrySummary(null);
+          setTelemetrySummaryError(
+            aggregateResult.reason instanceof Error
+              ? aggregateResult.reason.message
+              : "Aggregate telemetry is temporarily unavailable.",
+          );
+        }
         setSelectedCaptureId(
-          (current) => current ?? value.find((entry) => entry.has_capture)?.id ?? null,
+          (current) =>
+            current ??
+            metricsResult.value.items.find((entry) => entry.has_capture)?.request_id ??
+            metricsResult.value.items.find((entry) => entry.has_capture)?.id ??
+            null,
         );
         setError(null);
       } catch (value) {
@@ -100,7 +128,9 @@ export default function ObserveActivityRoute() {
     return <LoadingState label="Loading activity ledger…" />;
   }
 
-  const summary = buildActivitySummary(metrics);
+  const summary = buildActivitySummary(metrics, telemetrySummary ?? undefined, {
+    aggregateUnavailable: telemetrySummaryError !== null,
+  });
 
   return (
     <div className="space-y-6">
@@ -112,15 +142,31 @@ export default function ObserveActivityRoute() {
           value: fact.value,
         }))}
       />
+      {telemetrySummaryError ? (
+        <div className="rounded-md border border-[var(--rm-warning)]/40 bg-[var(--rm-warning)]/10 px-4 py-3 text-sm text-[var(--rm-muted)]">
+          Aggregate totals are unavailable; the list below is only the bounded recent page.{" "}
+          {telemetrySummaryError}
+        </div>
+      ) : null}
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]">
-        <SectionCard title="Recent host activity">
+        <SectionCard
+          title="Recent host activity"
+          description={
+            telemetrySummary
+              ? `Showing ${summary.rows.length} of ${telemetrySummary.requestCount} requests in the last 24 hours`
+              : activityPage
+                ? `Showing ${activityPage.returned} of ${activityPage.totalMatching} requests in the selected window`
+                : `Showing ${summary.rows.length} recent requests; total unavailable`
+          }
+        >
           {summary.rows.length === 0 ? (
             <EmptyState label="No host activity is available yet." />
           ) : (
             <ul className="-mx-5 -mb-5 divide-y divide-[var(--rm-border)]">
               {summary.rows.map((row) => {
-                const active = selectedCaptureId === row.id;
+                const captureIdentity = row.requestId ?? row.id;
+                const active = selectedCaptureId === captureIdentity;
                 return (
                   <li key={row.id}>
                     <button
@@ -132,7 +178,7 @@ export default function ObserveActivityRoute() {
                       }`}
                       onClick={() => {
                         if (row.hasCapture) {
-                          setSelectedCaptureId(row.id);
+                          setSelectedCaptureId(captureIdentity);
                         }
                       }}
                     >

@@ -96,6 +96,7 @@ type QaBridgeBackend = Pick<
   | "executeChatCompletions"
   | "executeResponses"
   | "listActivityMetrics"
+  | "listActivityMetricsPage"
   | "readActivityCapture"
   | "readRuntimeSummary"
   | "readRuntimeConfig"
@@ -103,6 +104,7 @@ type QaBridgeBackend = Pick<
   | "readTelemetrySummary"
   | "listTelemetryComparisonRows"
   | "listTelemetryRequests"
+  | "listTelemetryRequestPage"
   | "queryTelemetryAnalytics"
   | "subscribeTelemetry"
   | "listProviders"
@@ -140,6 +142,7 @@ type QaBridgeBackend = Pick<
   | "readRouterConfig"
   | "listRouterCandidates"
   | "listRouterDecisions"
+  | "listRouterDecisionPage"
   | "readRouterDecision"
   | "listEndpoints"
   | "listRecentRequestIds"
@@ -153,6 +156,7 @@ type QaBridgeBackend = Pick<
   | "clearBenchmarkEndpointData"
   | "clearBenchmarkData"
   | "readBenchmarkSummary"
+  | "readBenchmarkPortfolio"
   | "listBenchmarkRuns"
   | "readBenchmarkSummariesByMode"
   | "readBenchmarkPreferences"
@@ -980,6 +984,7 @@ export function createQaServerOptions(
     executeResponses: backend.executeResponses,
     readVersionInfo: backend.readVersionInfo,
     listActivityMetrics: backend.listActivityMetrics,
+    listActivityMetricsPage: backend.listActivityMetricsPage,
     readActivityCapture: backend.readActivityCapture,
     readLogs: async () => "No logs available in QA mode.",
     readRuntimeSummary: backend.readRuntimeSummary,
@@ -989,6 +994,7 @@ export function createQaServerOptions(
     readTelemetrySummary: backend.readTelemetrySummary,
     listTelemetryComparisonRows: backend.listTelemetryComparisonRows,
     listTelemetryRequests: backend.listTelemetryRequests,
+    listTelemetryRequestPage: backend.listTelemetryRequestPage,
     queryTelemetryAnalytics: backend.queryTelemetryAnalytics,
     subscribeTelemetry: backend.subscribeTelemetry,
     listProviders: backend.listProviders,
@@ -1026,6 +1032,7 @@ export function createQaServerOptions(
     readRouterConfig: backend.readRouterConfig,
     listRouterCandidates: backend.listRouterCandidates,
     listRouterDecisions: backend.listRouterDecisions,
+    listRouterDecisionPage: backend.listRouterDecisionPage,
     readRouterDecision: backend.readRouterDecision,
     listEndpoints: backend.listEndpoints,
     listRecentRequestIds: backend.listRecentRequestIds,
@@ -1039,6 +1046,7 @@ export function createQaServerOptions(
     clearBenchmarkEndpointData: backend.clearBenchmarkEndpointData,
     clearBenchmarkData: backend.clearBenchmarkData,
     readBenchmarkSummary: backend.readBenchmarkSummary,
+    readBenchmarkPortfolio: backend.readBenchmarkPortfolio,
     listBenchmarkRuns: backend.listBenchmarkRuns,
     readBenchmarkSummariesByMode: backend.readBenchmarkSummariesByMode,
     readBenchmarkPreferences: backend.readBenchmarkPreferences,

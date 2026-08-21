@@ -54,6 +54,8 @@ export interface RegionPolicy {
 
 export interface ProviderAccountModelRoleBinding {
   readonly modelId: string;
+  /** Exact endpoint instance. Omitted only by legacy model-wide defaults. */
+  readonly endpointId?: string;
   readonly roleIds: readonly string[];
   readonly roleAssignmentMode?: "all" | "include" | "exclude" | "custom";
   readonly enabledRoleIds?: readonly string[];
@@ -169,6 +171,11 @@ function readModelRoleBindings(
       : [];
     return {
       modelId: readString(binding, "modelId", `${label}.modelRoleBindings[${index}]`),
+      ...(typeof binding.endpointId === "string"
+        ? {
+            endpointId: readString(binding, "endpointId", `${label}.modelRoleBindings[${index}]`),
+          }
+        : {}),
       roleIds,
       ...(roleAssignmentMode ? { roleAssignmentMode } : {}),
       ...(Array.isArray(binding.enabledRoleIds)
@@ -367,16 +374,17 @@ export function validateProviderAccounts(
         return;
       }
 
-      if (seenModelRoleBindings.has(binding.modelId)) {
+      const bindingIdentity = binding.endpointId ?? binding.modelId;
+      if (seenModelRoleBindings.has(bindingIdentity)) {
         diagnostics.push({
           providerAccountId: account.providerAccountId,
           severity: "error",
           code: "MODEL_ROLE_MODEL_DUPLICATE",
-          message: `Model role bindings must not repeat the same model id (${binding.modelId}).`,
+          message: `Model role bindings must not repeat the same endpoint or legacy model identity (${bindingIdentity}).`,
         });
         return;
       }
-      seenModelRoleBindings.add(binding.modelId);
+      seenModelRoleBindings.add(bindingIdentity);
 
       if (!binding.roleAssignmentMode && binding.roleIds.length === 0) {
         diagnostics.push({

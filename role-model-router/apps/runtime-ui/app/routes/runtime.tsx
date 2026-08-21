@@ -15,6 +15,7 @@ import {
   monoEyebrowClassName,
   supportingTextClassName,
 } from "../lib/design-system";
+import { formatEndpointDisplayPath, formatModelIdentity } from "../lib/effort-identity";
 import {
   type RuntimeConfigRecord,
   type RuntimeControllerAssignment,
@@ -67,8 +68,8 @@ export default function RuntimeRoute() {
   ] as const;
   const controllerRows = controller
     ? ([
-        ["Endpoint", controller.endpointId],
-        ["Model", controller.modelId],
+        ["Endpoint", formatEndpointDisplayPath(controller)],
+        ["Model", formatModelIdentity(controller, controller.modelId)],
         ["Source", controller.sourceType],
       ] as const)
     : [];

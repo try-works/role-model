@@ -145,12 +145,25 @@ function ModelInventory({ models }: { models: readonly SidebarModel[] }) {
         <SidebarEyebrow>Models</SidebarEyebrow>
         <SidebarEyebrow className="text-right">Requests</SidebarEyebrow>
       </div>
-      {models.map((model) => (
-        <div key={model.id} className="flex h-8 shrink-0 items-center gap-2 rounded-md px-2.5">
+      {models.map((model, index) => (
+        <div
+          key={model.id}
+          className="group relative flex h-8 shrink-0 items-center gap-2 rounded-md px-2.5"
+        >
           <ModelStatusDot status={model.status} />
-          <div className="min-w-0 flex-1 truncate font-mono text-xs leading-4 text-foreground">
+          <div
+            aria-describedby={`sidebar-model-identity-${index}`}
+            className="min-w-0 flex-1 truncate rounded-sm font-mono text-xs leading-4 text-foreground"
+          >
             {model.id}
           </div>
+          <span
+            id={`sidebar-model-identity-${index}`}
+            role="tooltip"
+            className="pointer-events-none absolute bottom-full left-2.5 z-50 mb-1.5 max-w-72 rounded-md border border-border bg-popover px-2.5 py-1.5 font-mono text-xs leading-4 text-popover-foreground opacity-0 shadow-sm transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
+          >
+            {model.id}
+          </span>
           <PulsingMetric
             value={model.requestCount}
             className="shrink-0 text-right font-mono text-[11px] leading-4 text-muted-foreground tabular-nums"
