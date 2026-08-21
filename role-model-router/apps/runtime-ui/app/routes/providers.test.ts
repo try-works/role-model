@@ -5,10 +5,161 @@ import {
   buildModelRoleBindings,
   buildModelRoleSelection,
   buildProviderModelRoleCoverageSummary,
+  buildReasoningEffortActivationBatch,
+  buildReasoningEffortActivationPlan,
+  buildReasoningEffortOptions,
+  buildReasoningEffortSaveAction,
   resolveConfiguredEndpointRoleIds,
 } from "./providers";
 
 describe("provider model role assignment helpers", () => {
+  test("does not claim a new instance when every selected effort is already active", () => {
+    expect(
+      buildReasoningEffortSaveAction({
+        newEffortCount: 0,
+        submitting: false,
+        selectionReady: true,
+      }),
+    ).toEqual({ disabled: false, label: "Save configuration" });
+  });
+
+  test("keeps the provider-default slot distinct and excludes already-active instances", () => {
+    expect(
+      buildReasoningEffortActivationPlan({
+        selectedEfforts: ["", "high", "max", "high"],
+        activeEfforts: new Set(["", "high"]),
+      }),
+    ).toEqual({ selectedEfforts: ["", "high", "max"], newEfforts: ["max"] });
+  });
+
+  test("builds one activation batch for every newly selected effort identity", () => {
+    expect(
+      buildReasoningEffortActivationBatch({
+        activationBatchId: "activation-1",
+        providerAccountId: "deepseek.personal.primary",
+        modelId: "deepseek/deepseek-v4-pro",
+        efforts: ["", "high", "xhigh"],
+      }),
+    ).toEqual({
+      activationBatchId: "activation-1",
+      activations: [
+        {
+          providerAccountId: "deepseek.personal.primary",
+          modelId: "deepseek/deepseek-v4-pro",
+          region: "global",
+        },
+        {
+          providerAccountId: "deepseek.personal.primary",
+          modelId: "deepseek/deepseek-v4-pro",
+          region: "global",
+          reasoningEffort: "high",
+        },
+        {
+          providerAccountId: "deepseek.personal.primary",
+          modelId: "deepseek/deepseek-v4-pro",
+          region: "global",
+          reasoningEffort: "xhigh",
+        },
+      ],
+    });
+  });
+
+  test("derives a visible reasoning-effort setting from the selected model", () => {
+    expect(
+      buildReasoningEffortOptions({
+        model: {
+          id: "deepseek/deepseek-v4-flash",
+          displayName: "DeepSeek V4 Flash",
+          reasoningEffortLevels: ["low", "high", "max"],
+        },
+        endpoints: [],
+      }),
+    ).toEqual([
+      { value: "low", label: "Low" },
+      { value: "high", label: "High" },
+      { value: "max", label: "Max" },
+    ]);
+  });
+
+  test("resolves an unconfigured model from provider catalog metadata before active models", () => {
+    const resolveProviderCatalogModel = (
+      providersModule as {
+        resolveProviderCatalogModel?: unknown;
+      }
+    ).resolveProviderCatalogModel;
+    expect(resolveProviderCatalogModel).toBeTypeOf("function");
+    if (typeof resolveProviderCatalogModel !== "function") {
+      return;
+    }
+
+    const resolved = (
+      resolveProviderCatalogModel as (input: {
+        readonly selectedModel: string;
+        readonly providerCatalogModels: readonly Record<string, unknown>[];
+        readonly activeModels: readonly Record<string, unknown>[];
+      }) => Record<string, unknown> | null
+    )({
+      selectedModel: "openai/gpt-5.6-sol",
+      providerCatalogModels: [
+        {
+          id: "openai/gpt-5.6-sol",
+          displayName: "GPT-5.6 Sol",
+          reasoningEffortLevels: ["none", "low", "medium", "high", "xhigh", "max"],
+        },
+      ],
+      activeModels: [],
+    });
+
+    expect(resolved).toEqual(
+      expect.objectContaining({
+        id: "openai/gpt-5.6-sol",
+        reasoningEffortLevels: ["none", "low", "medium", "high", "xhigh", "max"],
+      }),
+    );
+    expect(
+      buildReasoningEffortOptions({
+        model: resolved as Parameters<typeof buildReasoningEffortOptions>[0]["model"],
+        endpoints: [],
+      }),
+    ).toEqual([
+      { value: "none", label: "None" },
+      { value: "low", label: "Low" },
+      { value: "medium", label: "Medium" },
+      { value: "high", label: "High" },
+      { value: "xhigh", label: "XHigh" },
+      { value: "max", label: "Max" },
+    ]);
+  });
+
+  test("resolves an exact Codex Subscription GPT-5.6 catalog row and its native efforts", () => {
+    const resolved = providersModule.resolveProviderCatalogModel({
+      selectedModel: "chatgpt/gpt-5.6-sol",
+      providerCatalogModels: [
+        {
+          id: "chatgpt/gpt-5.6-sol",
+          displayName: "GPT-5.6 Sol",
+          reasoningEffortLevels: ["low", "medium", "high", "xhigh", "max", "ultra"],
+        },
+      ] as never,
+      activeModels: [],
+    });
+
+    expect(resolved?.id).toBe("chatgpt/gpt-5.6-sol");
+    expect(
+      buildReasoningEffortOptions({
+        model: resolved as Parameters<typeof buildReasoningEffortOptions>[0]["model"],
+        endpoints: [],
+      }),
+    ).toEqual([
+      { value: "low", label: "Low" },
+      { value: "medium", label: "Medium" },
+      { value: "high", label: "High" },
+      { value: "xhigh", label: "XHigh" },
+      { value: "max", label: "Max" },
+      { value: "ultra", label: "Ultra" },
+    ]);
+  });
+
   const allRoleIds = ["coder", "security", "writer"];
 
   test("expands missing endpoint role ids to all available roles for Remote drafts", () => {
@@ -119,6 +270,33 @@ describe("provider model role assignment helpers", () => {
         enabledRoleIds: [],
         disabledRoleIds: [],
       },
+    ]);
+  });
+
+  test("serializes same-model effort siblings as independent endpoint role bindings", () => {
+    expect(
+      buildModelRoleBindings(
+        [
+          { modelId: "deepseek/deepseek-v4-flash", endpointId: "deepseek-flash-high" },
+          { modelId: "deepseek/deepseek-v4-flash", endpointId: "deepseek-flash-max" },
+        ],
+        {
+          "deepseek-flash-high": ["coder"],
+          "deepseek-flash-max": ["writer"],
+        },
+        allRoleIds,
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        modelId: "deepseek/deepseek-v4-flash",
+        endpointId: "deepseek-flash-high",
+        enabledRoleIds: ["coder"],
+      }),
+      expect.objectContaining({
+        modelId: "deepseek/deepseek-v4-flash",
+        endpointId: "deepseek-flash-max",
+        enabledRoleIds: ["writer"],
+      }),
     ]);
   });
 

@@ -462,6 +462,81 @@ function resolveQualityFreshness(
   };
 }
 
+function applyTelemetryAdvisory(
+  input: RouteRequestInput,
+  candidate: EndpointCandidate,
+  metric: MetricEntry,
+): MetricEntry {
+  const taskType = input.request.roleModelIntent?.task?.id ?? input.request.taskType;
+  const telemetrySuccessRate = candidate.telemetryScores?.taskSuccessRates?.[taskType];
+  if (typeof telemetrySuccessRate !== "number") {
+    return metric;
+  }
+
+  const rollup = candidate.telemetryScores?.taskRollups?.[taskType];
+  const rollupValid =
+    Number.isFinite(telemetrySuccessRate) &&
+    telemetrySuccessRate >= 0 &&
+    telemetrySuccessRate <= 1 &&
+    (!rollup ||
+      (Number.isFinite(rollup.successRate) &&
+        rollup.successRate >= 0 &&
+        rollup.successRate <= 1 &&
+        Number.isSafeInteger(rollup.successCount) &&
+        Number.isSafeInteger(rollup.failureCount) &&
+        Number.isSafeInteger(rollup.sampleCount) &&
+        Number.isSafeInteger(rollup.minimumSampleCount) &&
+        rollup.successCount >= 0 &&
+        rollup.failureCount >= 0 &&
+        rollup.sampleCount === rollup.successCount + rollup.failureCount &&
+        rollup.minimumSampleCount >= 1 &&
+        rollup.windowStartMs >= 0 &&
+        rollup.windowEndMs >= rollup.windowStartMs &&
+        rollup.measuredAtMs >= rollup.windowStartMs &&
+        rollup.measuredAtMs <= rollup.windowEndMs &&
+        Math.abs(rollup.successRate - telemetrySuccessRate) < 1e-12));
+  const rollupEligible =
+    rollupValid && (!rollup || rollup.sampleCount >= rollup.minimumSampleCount);
+  const raw: Record<string, unknown> = {
+    ...(metric.raw ?? {}),
+    telemetry_advisory_available: true,
+    telemetry_advisory_eligible: rollupEligible,
+    telemetry_success_rate: telemetrySuccessRate,
+  };
+  if (rollup) {
+    raw.telemetry_success_count = rollup.successCount;
+    raw.telemetry_failure_count = rollup.failureCount;
+    raw.telemetry_sample_count = rollup.sampleCount;
+    raw.telemetry_minimum_sample_count = rollup.minimumSampleCount;
+    raw.telemetry_window_start_ms = rollup.windowStartMs;
+    raw.telemetry_window_end_ms = rollup.windowEndMs;
+    raw.telemetry_measured_at_ms = rollup.measuredAtMs;
+  }
+  if (!rollupValid) {
+    raw.telemetry_advisory_withheld_reason = "invalid-evidence";
+  } else if (!rollupEligible) {
+    raw.telemetry_advisory_withheld_reason = "insufficient-samples";
+  }
+
+  let value = metric.value;
+  const config = input.observedDataConfig;
+  const failureThreshold = config?.telemetryAdvisoryFailureThreshold ?? 0.2;
+  const advisoryAdjustment = config?.telemetryAdvisoryPenalty ?? -0.05;
+  if (rollupEligible && 1 - telemetrySuccessRate > failureThreshold) {
+    value = Math.max(0, value + advisoryAdjustment);
+    raw.telemetry_advisory_applied = true;
+    raw.telemetry_advisory_adjustment = advisoryAdjustment;
+    raw.telemetry_effective_value = value;
+  }
+  raw.effective_value = value;
+
+  return {
+    ...metric,
+    value,
+    raw,
+  };
+}
+
 export function getQualityMetric(
   candidate: EndpointCandidate,
   input: RouteRequestInput,
@@ -469,7 +544,7 @@ export function getQualityMetric(
   // Benchmark quality is the primary advisory quality signal after hard eligibility
   // so task/role/group taxonomy evidence can influence live routing decisions.
   const benchmarkScore = candidate.benchmarkCapability?.overallScore;
-  const taskType = input.request.taskType;
+  const taskType = input.request.roleModelIntent?.task?.id ?? input.request.taskType;
   const taskScore = candidate.benchmarkCapability?.taskScores?.[taskType];
   const requestedRoleId = input.request.requestedRoleId ?? input.request.roleModelIntent?.role?.id;
   const roleScore = requestedRoleId
@@ -510,10 +585,11 @@ export function getQualityMetric(
       benchmarkReason = "group";
     }
 
-    let value = config?.enabled
+    const value = config?.enabled
       ? decayToNeutral(benchmarkReferenceScore, FRESHNESS_NEUTRAL, freshnessWeight)
       : benchmarkReferenceScore;
     const raw: Record<string, unknown> = {
+      benchmark_endpoint_id: candidate.identity.endpoint_id,
       benchmark_quality_score: benchmarkScore,
       ...(typeof taskScore === "number" ? { benchmark_task_score: taskScore } : {}),
       ...(typeof roleScore === "number" ? { benchmark_role_score: roleScore } : {}),
@@ -521,6 +597,27 @@ export function getQualityMetric(
       ...(benchmarkGroupIds.length > 0 ? { benchmark_group_ids: benchmarkGroupIds } : {}),
       benchmark_reason: benchmarkReason,
       benchmark_source: "routing-capability-benchmark",
+      benchmark_evidence_source: candidate.benchmarkCapability?.evidenceSource ?? "profile-derived",
+      ...(candidate.benchmarkCapability?.lastRunId
+        ? { benchmark_run_id: candidate.benchmarkCapability.lastRunId }
+        : {}),
+      ...(typeof candidate.benchmarkCapability?.lastRunCompletedAtMs === "number"
+        ? {
+            benchmark_run_completed_at_ms: candidate.benchmarkCapability.lastRunCompletedAtMs,
+          }
+        : {}),
+      ...(candidate.benchmarkCapability?.lastRunMode
+        ? { benchmark_run_mode: candidate.benchmarkCapability.lastRunMode }
+        : {}),
+      ...(candidate.benchmarkCapability?.lastRunSuiteId
+        ? { benchmark_suite_id: candidate.benchmarkCapability.lastRunSuiteId }
+        : {}),
+      ...(candidate.benchmarkCapability?.judgeEndpointId
+        ? { benchmark_judge_endpoint_id: candidate.benchmarkCapability.judgeEndpointId }
+        : {}),
+      ...(candidate.benchmarkCapability?.judgeModelId
+        ? { benchmark_judge_model_id: candidate.benchmarkCapability.judgeModelId }
+        : {}),
       measured_at_ms: freshness.measuredAtMs,
       freshness_weight: freshnessWeight,
       freshness_source: freshness.source,
@@ -541,26 +638,11 @@ export function getQualityMetric(
       raw.benchmark_group_score_low_coverage = true;
     }
 
-    // Telemetry-derived advisory adjustment.
-    // Threshold and penalty are configurable via observedDataConfig (defaults: 0.20, -0.05).
-    const telemetrySuccessRate = candidate.telemetryScores?.taskSuccessRates?.[taskType];
-    if (typeof telemetrySuccessRate === "number") {
-      const failureThreshold = config?.telemetryAdvisoryFailureThreshold ?? 0.2;
-      const advisoryAdjustment = config?.telemetryAdvisoryPenalty ?? -0.05;
-      if (1 - telemetrySuccessRate > failureThreshold) {
-        value = Math.max(0, value + advisoryAdjustment);
-        raw.telemetry_advisory_applied = true;
-        raw.telemetry_success_rate = telemetrySuccessRate;
-        raw.telemetry_advisory_adjustment = advisoryAdjustment;
-        raw.telemetry_effective_value = value;
-      }
-    }
-
-    return {
+    return applyTelemetryAdvisory(input, candidate, {
       value,
       source: "benchmark" as const,
-      raw: { ...raw, effective_value: raw.effective_value ?? value },
-    };
+      raw: { ...raw, effective_value: value },
+    });
   }
 
   if (typeof candidate.observed?.judge_score === "number") {
@@ -570,7 +652,7 @@ export function getQualityMetric(
     const value = input.observedDataConfig?.enabled
       ? decayToNeutral(observedValue, FRESHNESS_NEUTRAL, freshnessWeight)
       : observedValue;
-    return {
+    return applyTelemetryAdvisory(input, candidate, {
       value,
       source: "measured",
       raw: {
@@ -585,7 +667,7 @@ export function getQualityMetric(
         neutral_value: FRESHNESS_NEUTRAL,
         effective_value: value,
       },
-    };
+    });
   }
 
   if (typeof candidate.observed?.quality_score === "number") {
@@ -595,7 +677,7 @@ export function getQualityMetric(
     const value = input.observedDataConfig?.enabled
       ? decayToNeutral(observedValue, FRESHNESS_NEUTRAL, freshnessWeight)
       : observedValue;
-    return {
+    return applyTelemetryAdvisory(input, candidate, {
       value,
       source: "measured",
       raw: {
@@ -610,12 +692,35 @@ export function getQualityMetric(
         neutral_value: FRESHNESS_NEUTRAL,
         effective_value: value,
       },
-    };
+    });
   }
 
-  return {
+  return applyTelemetryAdvisory(input, candidate, {
     value: 0.5,
     source: "default",
+  });
+}
+
+function getOperationalEvidenceRaw(candidate: EndpointCandidate): Record<string, unknown> {
+  const observed = candidate.observed as
+    | (EndpointCandidate["observed"] & {
+        readonly profile_scope?: string;
+        readonly profile_semantics_version?: string;
+      })
+    | undefined;
+  if (!observed) {
+    return {};
+  }
+  const measurementWindow = observed.measurement_window;
+  return {
+    operational_profile_scope: observed.profile_scope ?? "live-request-operational",
+    operational_profile_semantics_version:
+      observed.profile_semantics_version ?? "role-model.operational-performance.v1",
+    operational_sample_count: observed.sample_size,
+    operational_window_start_ms: measurementWindow?.started_at_ms,
+    operational_window_end_ms: measurementWindow?.ended_at_ms,
+    operational_freshness_score: observed.freshness_score,
+    operational_confidence_score: observed.confidence_score,
   };
 }
 
@@ -650,6 +755,7 @@ function getLatencyMetric(
     value,
     source: "measured",
     raw: {
+      ...getOperationalEvidenceRaw(candidate),
       latency_ms_p50: candidate.observed.latency_ms_p50,
       latency_ms_p95: candidate.observed.latency_ms_p95,
       effective_latency_ms: effectiveLatencyMs,
@@ -695,6 +801,7 @@ function getThroughputMetric(
     value,
     source: "measured",
     raw: {
+      ...getOperationalEvidenceRaw(candidate),
       tokens_per_sec: candidate.observed.tokens_per_sec,
       measured_at_ms: candidate.observed.measured_at_ms,
       freshness_weight: freshnessWeight,
@@ -750,6 +857,7 @@ function getCostMetric(
     value,
     source: typeof catalogCostPer1k === "number" ? "catalog" : "measured",
     raw: {
+      ...(candidate.observed ? getOperationalEvidenceRaw(candidate) : {}),
       cost_per_1k_tokens_est: costPer1k,
       measured_at_ms: candidate.observed?.measured_at_ms ?? null,
       freshness_weight: freshnessWeight,
@@ -783,6 +891,7 @@ function getReliabilityMetric(candidate: EndpointCandidate, input: RouteRequestI
     value,
     source: "measured",
     raw: {
+      ...getOperationalEvidenceRaw(candidate),
       failure_rate: candidate.observed.failure_rate,
       measured_at_ms: candidate.observed.measured_at_ms,
       freshness_weight: freshnessWeight,
@@ -1281,9 +1390,9 @@ function scoreCandidate(
     } else if (typeof qualityRaw.benchmark_quality_score === "number") {
       selectionReasons.push("BENCHMARK_FALLBACK_OVERALL_SCORE");
     }
-    if (qualityRaw.telemetry_advisory_applied === true) {
-      selectionReasons.push("TELEMETRY_TASK_PERFORMANCE");
-    }
+  }
+  if (metricScores.quality.raw?.telemetry_advisory_applied === true) {
+    selectionReasons.push("TELEMETRY_TASK_PERFORMANCE");
   }
 
   if (policySnapshot.compute_preference === "local" && isLocalCandidate(candidate)) {
@@ -1485,6 +1594,10 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
       ...candidate
     }) => candidate,
   );
+  const chosenCandidate = chosen
+    ? eligible.find((candidate) => candidate.identity.endpoint_id === chosen.endpoint_id)
+    : undefined;
+  const chosenReasoningEffort = chosenCandidate?.identity.reasoning_effort ?? null;
 
   return {
     routing_decision_id: `decision-${normalizedInput.request.requestId}`,
@@ -1495,6 +1608,12 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
     eligibility,
     scored_candidates: scoredCandidates,
     chosen_endpoint_id: chosen?.endpoint_id ?? "",
+    ...(chosen
+      ? {
+          reasoning_effort: chosenReasoningEffort,
+          effort_source: chosenReasoningEffort === null ? ("none" as const) : ("variant" as const),
+        }
+      : {}),
     fallback_endpoint_ids: scored.slice(1).map((candidate) => candidate.endpoint_id),
     selection_reasons: selectionReasons,
     used_measured: chosen?.usedMeasured ?? false,

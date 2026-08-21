@@ -7,7 +7,11 @@ export interface TrackBProjectionConsumerRuntime {
 export async function consumeTrackBProjection(
   runtime: TrackBProjectionConsumerRuntime,
   value: ProjectionV2,
-  input: { readonly channel: string; readonly authorizationEpoch: number },
+  input: {
+    readonly channel: string;
+    readonly authorizationEpoch: number;
+    readonly identity?: Readonly<Record<string, unknown>>;
+  },
 ) {
   const projection = validateProjectionV2(value);
   if (projection.readiness.rolloutPurpose !== "routing_shadow") {
@@ -38,6 +42,7 @@ export async function consumeTrackBProjection(
         scope: projection.scope,
         authorizationEpoch: input.authorizationEpoch,
         capability,
+        ...(input.identity ? { identity: input.identity } : {}),
         projection,
       }),
     );

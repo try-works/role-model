@@ -391,9 +391,22 @@ export async function runRuntimeUiValidation(
       }),
     });
     if (!activateEndpointResponse.ok) {
-      throw new Error(
-        `Runtime UI validation endpoint activation failed with ${activateEndpointResponse.status}.`,
-      );
+      const responseBody = await activateEndpointResponse.text();
+      let responseError: string | undefined;
+      try {
+        const responseJson = JSON.parse(responseBody) as { error?: unknown };
+        responseError = typeof responseJson.error === "string" ? responseJson.error : undefined;
+      } catch {
+        // Preserve the original body in the diagnostic below.
+      }
+      const alreadyActive =
+        activateEndpointResponse.status === 400 &&
+        responseError === `Endpoint effort slot ${activatedEndpointId} is already active.`;
+      if (!alreadyActive) {
+        throw new Error(
+          `Runtime UI validation endpoint activation failed with ${activateEndpointResponse.status}: ${responseBody}`,
+        );
+      }
     }
 
     const updatedEndpointsResponse = await fetch(`${baseUrl}/api/role-model/endpoints`, {

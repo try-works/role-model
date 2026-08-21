@@ -161,7 +161,12 @@ function inventoryEntriesForAlias(
   inventory: RoutableInventory,
 ): readonly RoutableInventoryEntry[] {
   const aliasModelIds = new Set(alias.modelIds);
-  return inventory.entries.filter((entry) => aliasModelIds.has(entry.modelId));
+  const expandedEntries = inventory.entries.filter((entry) => aliasModelIds.has(entry.modelId));
+  if (alias.endpointIds === undefined) {
+    return expandedEntries;
+  }
+  const allowedEndpointIds = new Set(alias.endpointIds);
+  return expandedEntries.filter((entry) => allowedEndpointIds.has(entry.endpointId));
 }
 
 export function resolveAliasAllowEndpoints(

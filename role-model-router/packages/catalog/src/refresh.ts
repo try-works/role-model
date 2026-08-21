@@ -1,8 +1,15 @@
+import { createHash } from "node:crypto";
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import type { CatalogSnapshot, CatalogSnapshotModel, CatalogSnapshotProvider } from "./index.js";
+import type {
+  CatalogSnapshot,
+  CatalogSnapshotModel,
+  CatalogSnapshotProvider,
+  PricingProvenance,
+  ReasoningOption,
+} from "./index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,7 +18,13 @@ const DEFAULT_MODELS_DEV_API_URL = "https://models.dev/api.json";
 const DEFAULT_MODELS_DEV_COMMIT_URL =
   "https://api.github.com/repos/anomalyco/models.dev/commits/dev";
 
-interface ModelsDevApiModel {
+export interface ModelsDevApiReasoningOption {
+  readonly type: string;
+  readonly values?: readonly string[];
+  readonly [key: string]: unknown;
+}
+
+export interface ModelsDevApiModel {
   readonly id: string;
   readonly name?: string;
   readonly tool_call?: boolean;
@@ -25,15 +38,13 @@ interface ModelsDevApiModel {
     readonly context?: number;
     readonly output?: number;
   };
-  readonly cost?: {
-    readonly input?: number;
-    readonly output?: number;
-  };
+  readonly cost?: Readonly<Record<string, unknown>>;
+  readonly reasoning_options?: readonly ModelsDevApiReasoningOption[];
   readonly release_date?: string;
   readonly last_updated?: string;
 }
 
-interface ModelsDevApiProvider {
+export interface ModelsDevApiProvider {
   readonly id?: string;
   readonly env?: readonly string[];
   readonly npm?: string;
@@ -43,10 +54,89 @@ interface ModelsDevApiProvider {
   readonly models?: Readonly<Record<string, ModelsDevApiModel>>;
 }
 
-type ModelsDevApiCatalog = Readonly<Record<string, ModelsDevApiProvider>>;
+export type ModelsDevApiCatalog = Readonly<Record<string, ModelsDevApiProvider>>;
 
 interface ModelsDevCommitResponse {
   readonly sha: string;
+}
+
+export interface ModelsDevFirstPartySource {
+  readonly providerId: string;
+  readonly providerName: string;
+  readonly commit: string;
+  readonly capturedAt: string;
+  readonly providerPath: string;
+  readonly providerSha256: string;
+  readonly modelSources: Readonly<
+    Record<
+      string,
+      {
+        readonly path: string;
+        readonly sha256: string;
+      }
+    >
+  >;
+}
+
+const DEEPSEEK_FIRST_PARTY_SOURCE_PATHS = {
+  provider: "providers/deepseek/provider.toml",
+  flash: "providers/deepseek/models/deepseek-v4-flash.toml",
+  pro: "providers/deepseek/models/deepseek-v4-pro.toml",
+} as const;
+
+export interface CaptureModelsDevFirstPartySourceOptions {
+  readonly commit: string;
+  readonly capturedAt: string;
+  readonly fetchImpl?: typeof fetch;
+  readonly rawBaseUrl?: string;
+}
+
+/**
+ * Capture the exact first-party DeepSeek source files at one immutable commit.
+ * A missing file is an intentional hard failure; relay/provider rows are never
+ * substituted for this source of truth.
+ */
+export async function captureModelsDevFirstPartySource(
+  options: CaptureModelsDevFirstPartySourceOptions,
+): Promise<ModelsDevFirstPartySource> {
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const rawBaseUrl = (
+    options.rawBaseUrl ?? "https://raw.githubusercontent.com/anomalyco/models.dev"
+  ).replace(/\/+$/u, "");
+  const paths = [
+    DEEPSEEK_FIRST_PARTY_SOURCE_PATHS.provider,
+    DEEPSEEK_FIRST_PARTY_SOURCE_PATHS.flash,
+    DEEPSEEK_FIRST_PARTY_SOURCE_PATHS.pro,
+  ] as const;
+  const hashes: string[] = [];
+  for (const sourcePath of paths) {
+    const response = await fetchImpl(`${rawBaseUrl}/${options.commit}/${sourcePath}`);
+    if (!response.ok) {
+      throw new Error(
+        `Missing first-party models.dev source ${sourcePath} at ${options.commit}: ${response.status}`,
+      );
+    }
+    const body = await response.text();
+    hashes.push(createHash("sha256").update(body, "utf8").digest("hex"));
+  }
+  return {
+    providerId: "deepseek",
+    providerName: "DeepSeek",
+    commit: options.commit,
+    capturedAt: options.capturedAt,
+    providerPath: DEEPSEEK_FIRST_PARTY_SOURCE_PATHS.provider,
+    providerSha256: hashes[0] as string,
+    modelSources: {
+      "deepseek-v4-flash": {
+        path: DEEPSEEK_FIRST_PARTY_SOURCE_PATHS.flash,
+        sha256: hashes[1] as string,
+      },
+      "deepseek-v4-pro": {
+        path: DEEPSEEK_FIRST_PARTY_SOURCE_PATHS.pro,
+        sha256: hashes[2] as string,
+      },
+    },
+  };
 }
 
 interface LocalCatalogSupplement {
@@ -62,6 +152,8 @@ export interface RunCatalogRefreshCliOptions {
   readonly commitUrl?: string;
   readonly capturedAt?: string;
   readonly fetchImpl?: typeof fetch;
+  /** First-party source receipt captured at the same immutable models.dev commit. */
+  readonly firstPartySource?: ModelsDevFirstPartySource;
 }
 
 export interface RunCatalogRefreshCliResult {
@@ -72,6 +164,58 @@ export interface RunCatalogRefreshCliResult {
 
 function unique(values: readonly string[] | undefined): string[] {
   return [...new Set(values ?? [])].sort((left, right) => left.localeCompare(right));
+}
+
+function normalizeCostDimensionKey(key: string): string {
+  return key.replace(/_([a-z0-9])/gu, (_match, character: string) => character.toUpperCase());
+}
+
+function normalizeCostDimensions(cost: Readonly<Record<string, unknown>> | undefined):
+  | {
+      readonly dimensions: Readonly<Record<string, number>>;
+      readonly metadata: Readonly<Record<string, unknown>>;
+    }
+  | undefined {
+  if (!cost) {
+    return undefined;
+  }
+
+  const normalized: Record<string, number> = {};
+  const metadata: Record<string, unknown> = {};
+  for (const [rawKey, rawValue] of Object.entries(cost)) {
+    if (rawValue === undefined) {
+      continue;
+    }
+    if (typeof rawValue !== "number") {
+      if (["input", "output", "reasoning", "cache_read", "cache_write"].includes(rawKey)) {
+        throw new Error(`Invalid models.dev cost dimension ${rawKey}`);
+      }
+      metadata[normalizeCostDimensionKey(rawKey)] = rawValue;
+      continue;
+    }
+    if (!Number.isFinite(rawValue) || rawValue < 0) {
+      throw new Error(`Invalid models.dev cost dimension ${rawKey}`);
+    }
+    const key = normalizeCostDimensionKey(rawKey);
+    if (key in normalized) {
+      throw new Error(`Cost dimension normalization collision for ${rawKey}`);
+    }
+    normalized[key] = rawValue;
+  }
+  return { dimensions: normalized, metadata };
+}
+
+function normalizeReasoningOptions(
+  options: readonly ModelsDevApiReasoningOption[] | undefined,
+): ReasoningOption[] | undefined {
+  if (!options) {
+    return undefined;
+  }
+  return options.map((option) => ({
+    ...option,
+    type: option.type,
+    ...(option.values ? { values: [...option.values] } : {}),
+  }));
 }
 
 function trimTrailingSlash(value: string | undefined): string {
@@ -126,7 +270,31 @@ function toCatalogSnapshotProvider(
 function toCatalogSnapshotModel(
   providerId: string,
   model: ModelsDevApiModel,
+  firstPartySource?: ModelsDevFirstPartySource,
 ): CatalogSnapshotModel {
+  const normalizedCost = normalizeCostDimensions(model.cost);
+  const costDimensionsPer1M = normalizedCost?.dimensions;
+  const costMetadata = normalizedCost?.metadata;
+  const hasAdditionalCostDimensions = Object.keys(model.cost ?? {}).some(
+    (key) => key !== "input" && key !== "output",
+  );
+  const isFirstPartyDeepSeek =
+    providerId === "deepseek" &&
+    (model.id === "deepseek-v4-flash" || model.id === "deepseek-v4-pro");
+  const firstPartyModelSource = firstPartySource?.modelSources[model.id];
+  const provenance: PricingProvenance | undefined =
+    isFirstPartyDeepSeek && firstPartySource && firstPartyModelSource
+      ? {
+          vendor: "models.dev",
+          commit: firstPartySource.commit,
+          sourcePaths: [firstPartySource.providerPath, firstPartyModelSource.path],
+          sourceHashes: [firstPartySource.providerSha256, firstPartyModelSource.sha256],
+          capturedAt: firstPartySource.capturedAt,
+          unit: "USD per 1M tokens",
+          currency: "USD",
+        }
+      : undefined;
+
   return {
     modelId: `${providerId}/${model.id}`,
     providerId,
@@ -142,16 +310,42 @@ function toCatalogSnapshotModel(
             inputPer1M: model.cost.input,
             outputPer1M: model.cost.output,
             currency: "USD",
+            ...(hasAdditionalCostDimensions && costDimensionsPer1M ? { costDimensionsPer1M } : {}),
+            ...(costMetadata && Object.keys(costMetadata).length > 0 ? { costMetadata } : {}),
+            ...(hasAdditionalCostDimensions ? { costUnit: "USD per 1M tokens" } : {}),
+            ...(provenance ? { provenance } : {}),
           }
         : undefined,
+    reasoningOptions: normalizeReasoningOptions(model.reasoning_options),
   };
 }
 
-function buildCatalogSnapshotFromModelsDev(
+export function buildCatalogSnapshotFromModelsDev(
   apiCatalog: ModelsDevApiCatalog,
   commit: string,
   capturedAt: string,
+  firstPartySource?: ModelsDevFirstPartySource,
 ): CatalogSnapshot {
+  const directDeepSeekRows = Object.entries(apiCatalog).flatMap(([providerId, provider]) =>
+    Object.values(provider.models ?? {}).filter(
+      (model) =>
+        (provider.id ?? providerId) === "deepseek" &&
+        (model.id === "deepseek-v4-flash" || model.id === "deepseek-v4-pro"),
+    ),
+  );
+  if (directDeepSeekRows.length > 0) {
+    if (!firstPartySource || firstPartySource.commit !== commit) {
+      throw new Error(
+        "First-party models.dev DeepSeek V4 source receipt is required at the snapshot commit",
+      );
+    }
+    for (const model of directDeepSeekRows) {
+      if (!firstPartySource.modelSources[model.id]) {
+        throw new Error(`Missing first-party source receipt for deepseek/${model.id}`);
+      }
+    }
+  }
+
   const providers = Object.entries(apiCatalog)
     .map(([providerId, provider]) => toCatalogSnapshotProvider(provider.id ?? providerId, provider))
     .sort((left, right) => left.providerId.localeCompare(right.providerId));
@@ -159,7 +353,7 @@ function buildCatalogSnapshotFromModelsDev(
   const models = Object.entries(apiCatalog)
     .flatMap(([providerId, provider]) =>
       Object.values(provider.models ?? {}).map((model) =>
-        toCatalogSnapshotModel(provider.id ?? providerId, model),
+        toCatalogSnapshotModel(provider.id ?? providerId, model, firstPartySource),
       ),
     )
     .sort((left, right) => left.modelId.localeCompare(right.modelId));
@@ -229,6 +423,7 @@ function mergeSupplementModel(
     pricing: liveModel.pricing ?? supplementModel.pricing,
     requestShapeHints: supplementModel.requestShapeHints ?? liveModel.requestShapeHints,
     experimentalModes: supplementModel.experimentalModes ?? liveModel.experimentalModes,
+    reasoningOptions: supplementModel.reasoningOptions ?? liveModel.reasoningOptions,
   };
 }
 
@@ -294,10 +489,30 @@ export async function runCatalogRefreshCli(
     fetchJson<ModelsDevCommitResponse>(commitUrl, fetchImpl),
   ]);
 
+  const includesDirectDeepSeekV4 = Object.entries(apiCatalog).some(([providerId, provider]) => {
+    const resolvedProviderId = provider.id ?? providerId;
+    return (
+      resolvedProviderId === "deepseek" &&
+      Object.values(provider.models ?? {}).some(
+        (model) => model.id === "deepseek-v4-flash" || model.id === "deepseek-v4-pro",
+      )
+    );
+  });
+  const firstPartySource =
+    options.firstPartySource ??
+    (includesDirectDeepSeekV4
+      ? await captureModelsDevFirstPartySource({
+          commit: commitResponse.sha,
+          capturedAt,
+          fetchImpl,
+        })
+      : undefined);
+
   const liveSnapshot = buildCatalogSnapshotFromModelsDev(
     apiCatalog,
     commitResponse.sha,
     capturedAt,
+    firstPartySource,
   );
   const supplement = await readJsonFileIfPresent<LocalCatalogSupplement>(supplementPath);
   const snapshot = mergeCatalogSnapshotWithSupplement(liveSnapshot, supplement);

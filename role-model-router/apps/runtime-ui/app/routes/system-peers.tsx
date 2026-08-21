@@ -13,6 +13,7 @@ import {
   mutedPanelClassName,
   supportingTextClassName,
 } from "../lib/design-system";
+import { formatModelIdentity } from "../lib/effort-identity";
 import {
   type PeerConfig,
   type RuntimeSnapshot,
@@ -118,11 +119,17 @@ export default function SystemPeersRoute() {
                       </td>
                       <td className="py-3">
                         <div className="flex flex-wrap gap-2">
-                          {group.modelIds.map((modelId) => (
-                            <Badge key={modelId} tone="neutral">
-                              {modelId}
-                            </Badge>
-                          ))}
+                          {group.modelIds.map((modelId) => {
+                            const model = snapshot.models.find((entry) => entry.id === modelId);
+                            return (
+                              <span
+                                key={modelId}
+                                className="rounded-md border border-[var(--rm-border)] px-2 py-1 text-xs text-[var(--rm-fg)]"
+                              >
+                                {formatModelIdentity(model ?? { id: modelId }, modelId)}
+                              </span>
+                            );
+                          })}
                         </div>
                       </td>
                       <td className="py-3 font-mono text-[12px] tabular-nums text-[var(--rm-muted)]">

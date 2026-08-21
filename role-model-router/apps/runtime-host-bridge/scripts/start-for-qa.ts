@@ -156,6 +156,7 @@ type QaBridgeBackend = Pick<
   | "clearBenchmarkEndpointData"
   | "clearBenchmarkData"
   | "readBenchmarkSummary"
+  | "readBenchmarkPortfolio"
   | "listBenchmarkRuns"
   | "readBenchmarkSummariesByMode"
   | "readBenchmarkPreferences"
@@ -1045,6 +1046,7 @@ export function createQaServerOptions(
     clearBenchmarkEndpointData: backend.clearBenchmarkEndpointData,
     clearBenchmarkData: backend.clearBenchmarkData,
     readBenchmarkSummary: backend.readBenchmarkSummary,
+    readBenchmarkPortfolio: backend.readBenchmarkPortfolio,
     listBenchmarkRuns: backend.listBenchmarkRuns,
     readBenchmarkSummariesByMode: backend.readBenchmarkSummariesByMode,
     readBenchmarkPreferences: backend.readBenchmarkPreferences,

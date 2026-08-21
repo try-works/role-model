@@ -15,6 +15,7 @@ import {
   cardClassName,
   supportingTextClassName,
 } from "../lib/design-system";
+import { formatEndpointDisplayPath, formatModelIdentity } from "../lib/effort-identity";
 import { startDeferredLiveRefresh } from "../lib/live-refresh";
 import { formatRoutingModeLabel } from "../lib/routing-mode";
 import {
@@ -95,12 +96,20 @@ export default function RouterDecisionsRoute() {
                     {
                       id: "model",
                       label: "Model",
-                      value: decision.selectedModelId ?? "unknown model",
+                      value: formatModelIdentity({
+                        id: decision.selectedModelId ?? "unknown model",
+                        displayName: decision.displayName,
+                        upstreamModelId: decision.upstreamModelId,
+                        reasoningEffort: decision.reasoningEffort,
+                      }),
                     },
                     {
                       id: "endpoint",
                       label: "Endpoint",
-                      value: decision.selectedEndpointId,
+                      value: formatEndpointDisplayPath({
+                        endpointId: decision.selectedEndpointId,
+                        reasoningEffort: decision.reasoningEffort,
+                      }),
                     },
                     {
                       id: "strategy",

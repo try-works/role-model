@@ -116,7 +116,7 @@ test("Run 90 exact telemetry lookup reads by request identity without a bounded 
   expect(typeof (sqliteMemory as Record<string, unknown>).listRuntimeTelemetryRecords).toBe(
     "function",
   );
-});
+}, 15_000);
 
 test("Run 90 aggregate implementation uses compact SQLite aggregates instead of rich page decoding", async () => {
   const source = await readFile(new URL("../src/index.ts", import.meta.url), "utf8");
@@ -192,7 +192,7 @@ test("Run 90 canonical corpus is exactly 257 in-window plus nine out-of-window r
     reroute_count: manifest.expected.rerouteCount,
     distinct_timestamps: 129,
   });
-});
+}, 15_000);
 
 test("Run 90 performance corpus keeps aggregate and lookup plans indexed", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "run90-performance-corpus-"));

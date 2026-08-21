@@ -14,6 +14,7 @@ import {
   secondaryButtonClassName,
   supportingTextClassName,
 } from "../lib/design-system";
+import { formatEndpointDisplayPath } from "../lib/effort-identity";
 import {
   type RuntimeSnapshot,
   fetchRuntimeAccounts,
@@ -67,7 +68,22 @@ function healthTone(healthStatus: string): "success" | "warning" | "neutral" {
       : "warning";
 }
 
-function buildRuntimeConnectionRows(input: {
+function formatServingSource(servingSource: string, fallback: string): string {
+  switch (servingSource) {
+    case "vendor-litellm":
+      return "LiteLLM proxy";
+    case "remote-service":
+      return "Direct provider";
+    case "vendor-llama-swap":
+      return "llama-swap";
+    case "local-peer":
+      return "Local peer";
+    default:
+      return fallback;
+  }
+}
+
+export function buildRuntimeConnectionRows(input: {
   providerRows: readonly ProviderRow[];
   endpointRows: readonly EndpointRow[];
 }): Array<{
@@ -86,22 +102,28 @@ function buildRuntimeConnectionRows(input: {
     input.providerRows.map((provider) => [provider.providerId, provider]),
   );
   const endpointProviderIds = new Set<string>();
-  const endpointRows = input.endpointRows.map((endpoint) => {
-    endpointProviderIds.add(endpoint.providerLabel);
-    const provider = providersById.get(endpoint.providerLabel);
-    return {
-      key: `endpoint:${endpoint.endpointId}`,
-      providerLabel: endpoint.providerLabel,
-      connectionLabel: provider?.accountIds.join(", ") || "—",
-      modelLabel: endpoint.modelId,
-      endpointLabel: endpoint.endpointId,
-      sourceLabel: `${endpoint.sourceLabel} / ${endpoint.endpointKind}`,
-      healthLabel: endpoint.healthStatus,
-      healthTone: healthTone(endpoint.healthStatus),
-      readinessLabel: endpoint.status,
-      readinessTone: statusTone(endpoint.status),
-    };
-  });
+  // LiteLLM is a vendor/proxy capability, not a distinct user-configured
+  // connection. Keeping its synthetic catalog rows here duplicates the same
+  // provider model beside the actual account endpoint and misstates endpoint
+  // ownership in the Registry UI.
+  const endpointRows = input.endpointRows
+    .filter((endpoint) => endpoint.servingSource !== "vendor-litellm")
+    .map((endpoint) => {
+      endpointProviderIds.add(endpoint.providerLabel);
+      const routingIneligible = endpoint.routingEligible === false;
+      return {
+        key: `endpoint:${endpoint.endpointId}`,
+        providerLabel: endpoint.providerLabel,
+        connectionLabel: endpoint.providerAccountId ?? "—",
+        modelLabel: endpoint.displayName ?? endpoint.modelId,
+        endpointLabel: formatEndpointDisplayPath(endpoint),
+        sourceLabel: `${formatServingSource(endpoint.servingSource, endpoint.sourceLabel)} / ${endpoint.endpointKind}`,
+        healthLabel: endpoint.healthStatus,
+        healthTone: healthTone(endpoint.healthStatus),
+        readinessLabel: routingIneligible ? "routing ineligible" : endpoint.status,
+        readinessTone: routingIneligible ? "warning" : statusTone(endpoint.status),
+      };
+    });
 
   const providerOnlyRows = input.providerRows
     .filter((provider) => !endpointProviderIds.has(provider.providerId))

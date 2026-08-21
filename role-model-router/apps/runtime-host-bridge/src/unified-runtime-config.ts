@@ -71,6 +71,8 @@ export interface UnifiedRuntimeModelAliasConfig {
   readonly aliasId: string;
   readonly mode?: UnifiedRuntimeAliasRoutingMode | null;
   readonly modelIds: readonly string[];
+  /** Optional exact endpoint-instance allowlist; omitted means all expanded siblings. */
+  readonly endpointIds?: readonly string[];
 }
 
 export interface UnifiedRuntimeDifficultyClassifierConfig {
@@ -305,6 +307,7 @@ interface RawUnifiedRuntimeConfig {
       {
         readonly mode?: string;
         readonly model_ids?: readonly string[];
+        readonly endpoint_ids?: readonly string[];
       }
     >
   >;
@@ -823,6 +826,22 @@ function normalizeModelAliasInput(
   if (modelIds.length === 0) {
     throw new Error(`${prefix}.${aliasId}.model_ids must include at least one model id.`);
   }
+  const endpointIdsInput =
+    "endpointIds" in value
+      ? value.endpointIds
+      : "endpoint_ids" in value
+        ? value.endpoint_ids
+        : undefined;
+  const endpointIds =
+    endpointIdsInput === undefined
+      ? undefined
+      : [
+          ...new Set(
+            readStringArray(endpointIdsInput)
+              .map((entry) => entry.trim())
+              .filter(Boolean),
+          ),
+        ];
   return {
     aliasId,
     mode: readAliasRoutingMode(
@@ -830,6 +849,7 @@ function normalizeModelAliasInput(
       `${prefix}.${aliasId}.mode`,
     ),
     modelIds,
+    ...(endpointIds !== undefined ? { endpointIds } : {}),
   };
 }
 
@@ -1537,10 +1557,17 @@ function mergeCanonicalAliasEntries(
       merged.set(alias.aliasId, alias);
       continue;
     }
+    const mergedEndpointIds =
+      existing.endpointIds === undefined
+        ? alias.endpointIds
+        : alias.endpointIds === undefined
+          ? existing.endpointIds
+          : [...new Set([...existing.endpointIds, ...alias.endpointIds])];
     merged.set(alias.aliasId, {
       aliasId: alias.aliasId,
       mode: existing.mode ?? alias.mode ?? null,
       modelIds: [...new Set([...existing.modelIds, ...alias.modelIds])],
+      ...(mergedEndpointIds !== undefined ? { endpointIds: mergedEndpointIds } : {}),
     });
   }
   return [...merged.values()];
@@ -1559,7 +1586,12 @@ function sameCanonicalAliasList(
         alias.aliasId === nextAlias.aliasId &&
         (alias.mode ?? null) === (nextAlias.mode ?? null) &&
         alias.modelIds.length === nextAlias.modelIds.length &&
-        alias.modelIds.every((modelId, modelIndex) => modelId === nextAlias.modelIds[modelIndex])
+        alias.modelIds.every((modelId, modelIndex) => modelId === nextAlias.modelIds[modelIndex]) &&
+        (alias.endpointIds ?? []).length === (nextAlias.endpointIds ?? []).length &&
+        (alias.endpointIds ?? []).every(
+          (endpointId, endpointIndex) =>
+            endpointId === (nextAlias.endpointIds ?? [])[endpointIndex],
+        )
       );
     })
   );
@@ -1852,6 +1884,7 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
         {
           ...(alias.mode !== null ? { mode: alias.mode } : {}),
           model_ids: [...alias.modelIds],
+          ...(alias.endpointIds !== undefined ? { endpoint_ids: [...alias.endpointIds] } : {}),
         },
       ]),
     );

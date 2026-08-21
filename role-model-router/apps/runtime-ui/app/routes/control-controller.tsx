@@ -14,6 +14,7 @@ import {
   primaryButtonClassName,
   supportingTextClassName,
 } from "../lib/design-system";
+import { formatEndpointDisplayPath, formatModelIdentity } from "../lib/effort-identity";
 import {
   type RuntimeControllerAssignment,
   type RuntimeEndpoint,
@@ -21,11 +22,6 @@ import {
   fetchRuntimeEndpoints,
   updateControllerAssignment,
 } from "../lib/runtime-api";
-
-function toDisplayLabel(modelId: string): string {
-  const segment = modelId.includes("/") ? (modelId.split("/").at(-1) ?? modelId) : modelId;
-  return segment.replace(/[-_]+/g, " ");
-}
 
 function summarizeRoleCoverage(roleIds: readonly string[] | undefined): {
   readonly countLabel: string;
@@ -122,7 +118,7 @@ export default function ControlControllerRoute() {
                           : "border-l-2 border-transparent pl-3"
                       }`}
                     >
-                      <p className={bodyStrongTextClassName}>{toDisplayLabel(endpoint.modelId)}</p>
+                      <p className={bodyStrongTextClassName}>{formatModelIdentity(endpoint)}</p>
                     </div>
                     <Badge
                       tone={
@@ -140,11 +136,15 @@ export default function ControlControllerRoute() {
                   </div>
 
                   <MetricStrip
-                    aria-label={`${endpoint.modelId} controller candidate`}
+                    aria-label={`${formatModelIdentity(endpoint)} controller candidate`}
                     variant="inventory"
                     className="max-w-none"
                     items={[
-                      { id: "endpoint", label: "Endpoint", value: endpoint.endpointId },
+                      {
+                        id: "endpoint",
+                        label: "Endpoint",
+                        value: formatEndpointDisplayPath(endpoint),
+                      },
                       { id: "source", label: "Source", value: sourceLabel },
                       {
                         id: "health",

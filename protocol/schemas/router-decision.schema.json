@@ -114,6 +114,11 @@
       }
     },
     "chosen_endpoint_id": { "type": "string" },
+    "reasoning_effort": { "type": ["string", "null"], "minLength": 1, "maxLength": 128 },
+    "effort_source": {
+      "type": "string",
+      "enum": ["none", "client", "variant", "variant_coerced"]
+    },
     "fallback_endpoint_ids": { "type": "array", "items": { "type": "string" } },
     "selection_reasons": {
       "type": "array",

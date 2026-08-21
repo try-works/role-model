@@ -35,6 +35,7 @@ export interface DownstreamOpenAIModelCapabilities {
   readonly reasoning: {
     readonly supported: boolean;
     readonly effortControl: boolean;
+    readonly effortLevels: readonly string[];
   };
   readonly structuredOutput: {
     readonly supported: boolean;
@@ -51,7 +52,11 @@ export interface DownstreamOpenAIModelRecord {
   readonly object: "model";
   readonly owned_by: "role-model";
   readonly endpoint_ids: readonly string[];
-  readonly type: "model" | "alias";
+  readonly type: "model" | "alias" | "endpoint";
+  /** Present only for selectable endpoint-instance rows. */
+  readonly upstream_model_id?: string;
+  /** Null means the provider-default effort slot. */
+  readonly fixed_effort?: string | null;
   readonly routingMode?: UnifiedRuntimeModelAliasConfig["mode"];
   readonly targetModelIds: readonly string[];
   readonly canonicalModelIds: readonly string[];
@@ -129,6 +134,55 @@ function uniqueSorted(values: Iterable<string>): readonly string[] {
   return [...new Set(values)].filter((value) => value.length > 0).sort(compareText);
 }
 
+function uniquePreservingOrder(values: Iterable<string>): readonly string[] {
+  return [...new Set(values)].filter((value) => value.length > 0);
+}
+
+const REASONING_EFFORT_ORDER = ["minimal", "low", "medium", "high", "xhigh", "max"] as const;
+
+function compareReasoningEffort(left: string, right: string): number {
+  const leftIndex = REASONING_EFFORT_ORDER.indexOf(left as (typeof REASONING_EFFORT_ORDER)[number]);
+  const rightIndex = REASONING_EFFORT_ORDER.indexOf(
+    right as (typeof REASONING_EFFORT_ORDER)[number],
+  );
+  if (leftIndex >= 0 && rightIndex >= 0 && leftIndex !== rightIndex) {
+    return leftIndex - rightIndex;
+  }
+  if (leftIndex >= 0 && rightIndex < 0) return -1;
+  if (leftIndex < 0 && rightIndex >= 0) return 1;
+  return compareText(left, right);
+}
+
+function uniqueReasoningEfforts(values: Iterable<string>): readonly string[] {
+  return [...new Set(values)].filter((value) => value.length > 0).sort(compareReasoningEffort);
+}
+
+function compareEndpointInstances(
+  left: EndpointRegistryResult["endpoints"][number],
+  right: EndpointRegistryResult["endpoints"][number],
+): number {
+  const leftEffort = left.identity.reasoning_effort ?? null;
+  const rightEffort = right.identity.reasoning_effort ?? null;
+  if (leftEffort === null && rightEffort !== null) {
+    return -1;
+  }
+  if (leftEffort !== null && rightEffort === null) {
+    return 1;
+  }
+  if (leftEffort !== rightEffort) {
+    const canonicalOrder = ["minimal", "low", "medium", "high", "xhigh", "max"];
+    const leftIndex = leftEffort === null ? -1 : canonicalOrder.indexOf(leftEffort);
+    const rightIndex = rightEffort === null ? -1 : canonicalOrder.indexOf(rightEffort);
+    if (leftIndex !== rightIndex) {
+      if (leftIndex === -1) return 1;
+      if (rightIndex === -1) return -1;
+      return leftIndex - rightIndex;
+    }
+    return compareText(leftEffort ?? "", rightEffort ?? "");
+  }
+  return compareText(left.identity.endpoint_id, right.identity.endpoint_id);
+}
+
 function toPublicEndpointId(endpointId: string): string {
   return endpointId.replace(/[a-zA-Z]:[\\/][^.\s"]+/g, "[local-path]");
 }
@@ -152,16 +206,46 @@ function intersectSorted(lists: readonly (readonly string[])[]): readonly string
 }
 
 function buildEndpointIdsByModelId(registry: EndpointRegistryResult): Map<string, string[]> {
-  const byModelId = new Map<string, string[]>();
+  const byModelId = new Map<string, EndpointRegistryResult["endpoints"][number][]>();
   for (const endpoint of registry.endpoints) {
     const current = byModelId.get(endpoint.identity.model_id) ?? [];
-    current.push(toPublicEndpointId(endpoint.identity.endpoint_id));
+    current.push(endpoint);
     byModelId.set(endpoint.identity.model_id, current);
   }
-  for (const [modelId, endpointIds] of byModelId.entries()) {
-    byModelId.set(modelId, endpointIds.sort(compareText));
+  const endpointIdsByModelId = new Map<string, string[]>();
+  for (const [modelId, endpoints] of byModelId.entries()) {
+    endpointIdsByModelId.set(
+      modelId,
+      endpoints
+        .slice()
+        .sort(compareEndpointInstances)
+        .map((endpoint) => toPublicEndpointId(endpoint.identity.endpoint_id)),
+    );
   }
-  return byModelId;
+  return endpointIdsByModelId;
+}
+
+function buildEffortLevelsByModelId(
+  registry: EndpointRegistryResult,
+  catalog: NormalizedCatalog,
+): Map<string, string[]> {
+  const levelsByModelId = new Map<string, string[]>();
+  for (const endpoint of registry.endpoints) {
+    const profile = resolveModelCapabilityProfile({
+      modelId: endpoint.identity.model_id,
+      catalog,
+    });
+    const levels = levelsByModelId.get(endpoint.identity.model_id) ?? [];
+    levels.push(...profile.reasoning.effortLevels);
+    if (endpoint.identity.reasoning_effort) {
+      levels.push(endpoint.identity.reasoning_effort);
+    }
+    levelsByModelId.set(endpoint.identity.model_id, [...new Set(levels)]);
+  }
+  for (const levels of levelsByModelId.values()) {
+    levels.sort(compareReasoningEffort);
+  }
+  return levelsByModelId;
 }
 
 function targetRows(input: {
@@ -218,11 +302,12 @@ function supportsPiPromptCacheContinuity(input: {
 
 function aggregateModelRecord(input: {
   readonly id: string;
-  readonly type: "model" | "alias";
+  readonly type: "model" | "alias" | "endpoint";
   readonly routingMode?: UnifiedRuntimeModelAliasConfig["mode"];
   readonly declaredModelIds: readonly string[];
   readonly routableModelIds: readonly string[];
   readonly endpointIds: readonly string[];
+  readonly effortLevels?: readonly string[];
   readonly rows: readonly {
     readonly modelId: string;
     readonly endpointIds: readonly string[];
@@ -245,7 +330,7 @@ function aggregateModelRecord(input: {
   };
   const supportsPiCompat = supportsPiPromptCacheContinuity({ rows: input.rows });
 
-  const endpointIds = uniqueSorted(input.endpointIds.map(toPublicEndpointId));
+  const endpointIds = uniquePreservingOrder(input.endpointIds.map(toPublicEndpointId));
   return {
     id: input.id,
     object: "model",
@@ -293,6 +378,7 @@ function aggregateModelRecord(input: {
       reasoning: {
         supported: input.rows.some((row) => row.profile.reasoning.supported),
         effortControl: input.rows.some((row) => row.profile.reasoning.effortControl),
+        effortLevels: uniqueReasoningEfforts(input.effortLevels ?? []),
       },
       structuredOutput: {
         supported: input.rows.some((row) => row.profile.structuredOutput.supported),
@@ -373,13 +459,19 @@ function resolveAliasEndpointIds(input: {
     };
   }
 
-  const endpointIds = input.alias.modelIds.flatMap(
+  const expandedEndpointIds = input.alias.modelIds.flatMap(
     (modelId) => input.endpointIdsByModelId.get(modelId) ?? [],
   );
+  const allowlistedEndpointIds =
+    input.alias.endpointIds === undefined
+      ? expandedEndpointIds
+      : expandedEndpointIds.filter((endpointId) => input.alias.endpointIds?.includes(endpointId));
   return {
-    endpointIds: uniqueSorted(endpointIds),
-    routableModelIds: input.alias.modelIds.filter(
-      (modelId) => (input.endpointIdsByModelId.get(modelId)?.length ?? 0) > 0,
+    endpointIds: uniqueSorted(allowlistedEndpointIds),
+    routableModelIds: input.alias.modelIds.filter((modelId) =>
+      (input.endpointIdsByModelId.get(modelId) ?? []).some((endpointId) =>
+        allowlistedEndpointIds.includes(endpointId),
+      ),
     ),
   };
 }
@@ -406,6 +498,7 @@ function buildRuntimeInventoryRevision(input: {
         aliasId: alias.aliasId,
         mode: alias.mode ?? null,
         modelIds: [...alias.modelIds].sort(compareText),
+        endpointIds: alias.endpointIds ? [...alias.endpointIds].sort(compareText) : null,
       }))
       .sort((left, right) => compareText(left.aliasId, right.aliasId)),
     inventory: input.inventory
@@ -424,6 +517,7 @@ export function createDownstreamOpenAIDiscovery(
   const modelAliases = input.modelAliases ?? [];
   const inventory = input.inventory ?? null;
   const endpointIdsByModelId = buildEndpointIdsByModelId(input.registry);
+  const effortLevelsByModelId = buildEffortLevelsByModelId(input.registry, input.catalog);
   const modelRecords: DownstreamOpenAIModelRecord[] = [];
 
   for (const [modelId, endpointIds] of endpointIdsByModelId.entries()) {
@@ -439,9 +533,50 @@ export function createDownstreamOpenAIDiscovery(
         declaredModelIds: [modelId],
         routableModelIds: endpointIds.length > 0 ? [modelId] : [],
         endpointIds,
+        effortLevels: [
+          ...(resolveModelCapabilityProfile({ modelId, catalog: input.catalog }).reasoning
+            .effortLevels ?? []),
+          ...endpointIds.flatMap((endpointId) =>
+            input.registry.endpoints
+              .filter((endpoint) => endpoint.identity.endpoint_id === endpointId)
+              .map((endpoint) => endpoint.identity.reasoning_effort ?? "")
+              .filter((effort) => effort.length > 0),
+          ),
+        ],
         rows,
       }),
     );
+  }
+
+  for (const endpoint of input.registry.endpoints) {
+    const endpointId = toPublicEndpointId(endpoint.identity.endpoint_id);
+    const profile = resolveModelCapabilityProfile({
+      modelId: endpoint.identity.model_id,
+      catalog: input.catalog,
+    });
+    modelRecords.push({
+      ...aggregateModelRecord({
+        id: endpointId,
+        type: "endpoint",
+        declaredModelIds: [endpoint.identity.model_id],
+        routableModelIds: [endpoint.identity.model_id],
+        endpointIds: [endpoint.identity.endpoint_id],
+        effortLevels:
+          endpoint.identity.reasoning_effort === undefined ||
+          endpoint.identity.reasoning_effort === null
+            ? profile.reasoning.effortLevels
+            : [...profile.reasoning.effortLevels, endpoint.identity.reasoning_effort],
+        rows: [
+          {
+            modelId: endpoint.identity.model_id,
+            endpointIds: [endpoint.identity.endpoint_id],
+            profile,
+          },
+        ],
+      }),
+      upstream_model_id: endpoint.identity.model_id,
+      fixed_effort: endpoint.identity.reasoning_effort ?? null,
+    });
   }
 
   for (const alias of modelAliases) {
@@ -471,6 +606,9 @@ export function createDownstreamOpenAIDiscovery(
         declaredModelIds: alias.modelIds,
         routableModelIds,
         endpointIds: resolution.endpointIds,
+        effortLevels: aggregateModelIds.flatMap(
+          (modelId) => effortLevelsByModelId.get(modelId) ?? [],
+        ),
         rows,
       }),
     );

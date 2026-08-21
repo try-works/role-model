@@ -26,6 +26,8 @@ export interface ModelCapabilityProfile {
   readonly reasoning: {
     readonly supported: boolean;
     readonly effortControl: boolean;
+    readonly effortLevels: readonly string[];
+    readonly optionKinds: readonly string[];
   };
   readonly caching: {
     readonly promptRead: boolean | null;
@@ -161,6 +163,8 @@ export function resolveModelCapabilityProfile(input: {
       reasoning: {
         supported: false,
         effortControl: false,
+        effortLevels: [],
+        optionKinds: [],
       },
       caching: {
         promptRead: null,
@@ -201,6 +205,8 @@ export function resolveModelCapabilityProfile(input: {
     reasoning: {
       supported: hasReasoning,
       effortControl: hasReasoning || capabilitySupported(capabilities, "reasoning.effort_control"),
+      effortLevels: [...(model.reasoningEffortLevels ?? [])],
+      optionKinds: [...(model.reasoningOptionKinds ?? [])],
     },
     caching: {
       promptRead: capabilitySupported(capabilities, "cache.prompt_read"),

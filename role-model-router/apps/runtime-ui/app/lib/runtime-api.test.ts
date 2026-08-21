@@ -4,6 +4,7 @@ import * as runtimeApiModule from "./runtime-api";
 
 import {
   activateRuntimeEndpoint,
+  activateRuntimeEndpointBatch,
   clearAllBenchmarkData,
   createRolePolicyRole,
   explicitAssignmentToRoleIds,
@@ -11,6 +12,7 @@ import {
   fetchActivityMetrics,
   fetchActivityMetricsPage,
   fetchAudioVoices,
+  fetchBenchmarkPortfolio,
   fetchBenchmarkRuns,
   fetchBenchmarkSummariesByMode,
   fetchControllerAssignment,
@@ -42,6 +44,7 @@ import {
   pollRuntimeDeviceAuthorization,
   reconnectRuntimeAccount,
   removeRuntimeAccountModel,
+  removeRuntimeEndpoint,
   roleIdsToExplicitAssignment,
   setLlamaSwapModelRoles,
   setPeerModelRoles,
@@ -394,6 +397,54 @@ describe("fetchRuntimeModels", () => {
       }),
     ]);
     expect(requestedTargets).toEqual(["/api/role-model/models"]);
+  });
+
+  test("loads provider catalog metadata without expanding the active runtime-model inventory", async () => {
+    const fetchRuntimeCatalogModels = (
+      runtimeApiModule as {
+        fetchRuntimeCatalogModels?: unknown;
+      }
+    ).fetchRuntimeCatalogModels;
+    expect(fetchRuntimeCatalogModels).toBeTypeOf("function");
+    if (typeof fetchRuntimeCatalogModels !== "function") {
+      return;
+    }
+
+    const requestedTargets: string[] = [];
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const target = requestTarget(input);
+      requestedTargets.push(target);
+      if (target !== "/api/role-model/models?providerId=openai") {
+        throw new Error(`Unexpected request: ${target}`);
+      }
+      return jsonResponse([
+        {
+          id: "openai/gpt-5.6-sol",
+          object: "model",
+          owned_by: "role-model",
+          providerId: "openai",
+          endpoint_ids: [],
+          capabilities: ["reasoning", "text.chat"],
+          modalities: ["text"],
+          reasoningEffortLevels: ["none", "low", "medium", "high", "xhigh", "max"],
+        },
+      ]);
+    });
+
+    await expect(
+      (
+        fetchRuntimeCatalogModels as (
+          providerId: string,
+          fetcher: Parameters<typeof fetchRuntimeSnapshot>[0],
+        ) => Promise<readonly unknown[]>
+      )("openai", fetcher),
+    ).resolves.toEqual([
+      expect.objectContaining({
+        id: "openai/gpt-5.6-sol",
+        reasoningEffortLevels: ["none", "low", "medium", "high", "xhigh", "max"],
+      }),
+    ]);
+    expect(requestedTargets).toEqual(["/api/role-model/models?providerId=openai"]);
   });
 });
 
@@ -828,6 +879,10 @@ describe("fetchModelTelemetryRollup", () => {
     const fetcher = vi.fn(async (_input: string | URL | Request, init?: RequestInit) => {
       expect(init?.method).toBe("POST");
       const payload = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      expect(payload.filters).toEqual({
+        modelIds: ["openai/gpt-5.4"],
+        endpointIds: ["openai.personal.primary.gpt-5.4-high"],
+      });
 
       if (payload.breakdown === "taxonomyTaskType") {
         return jsonResponse({
@@ -968,7 +1023,15 @@ describe("fetchModelTelemetryRollup", () => {
       throw new Error(`Unexpected telemetry rollup payload: ${JSON.stringify(payload)}`);
     });
 
-    await expect(fetchModelTelemetryRollup("openai/gpt-5.4", fetcher)).resolves.toEqual({
+    await expect(
+      fetchModelTelemetryRollup(
+        {
+          modelId: "openai/gpt-5.4",
+          endpointId: "openai.personal.primary.gpt-5.4-high",
+        },
+        fetcher,
+      ),
+    ).resolves.toEqual({
       groups: [{ groupId: "engineering", requestCount: 5 }],
       roles: [{ roleId: "coder", requestCount: 5 }],
       capabilities: [
@@ -2504,6 +2567,84 @@ describe("activateRuntimeEndpoint", () => {
   });
 });
 
+describe("activateRuntimeEndpointBatch", () => {
+  test("posts every effort identity in one atomic endpoint mutation", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      expect(url).toBe("/api/role-model/endpoints/batch");
+      expect(init?.method).toBe("POST");
+      expect(JSON.parse(String(init?.body))).toEqual({
+        activationBatchId: "activation-1",
+        activations: [
+          {
+            providerAccountId: "deepseek.personal.primary",
+            modelId: "deepseek/deepseek-v4-pro",
+            region: "global",
+            reasoningEffort: "high",
+          },
+          {
+            providerAccountId: "deepseek.personal.primary",
+            modelId: "deepseek/deepseek-v4-pro",
+            region: "global",
+            reasoningEffort: "xhigh",
+          },
+        ],
+      });
+      return jsonResponse({
+        activationBatchId: "activation-1",
+        status: "committed",
+        endpoints: [],
+      });
+    });
+
+    await expect(
+      activateRuntimeEndpointBatch(
+        {
+          activationBatchId: "activation-1",
+          activations: [
+            {
+              providerAccountId: "deepseek.personal.primary",
+              modelId: "deepseek/deepseek-v4-pro",
+              region: "global",
+              reasoningEffort: "high",
+            },
+            {
+              providerAccountId: "deepseek.personal.primary",
+              modelId: "deepseek/deepseek-v4-pro",
+              region: "global",
+              reasoningEffort: "xhigh",
+            },
+          ],
+        },
+        fetcher,
+      ),
+    ).resolves.toEqual({
+      activationBatchId: "activation-1",
+      status: "committed",
+      endpoints: [],
+    });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("removeRuntimeEndpoint", () => {
+  test("deletes one encoded endpoint identity without addressing its model siblings", async () => {
+    const endpointId = "deepseek.personal.global.deepseek-v4-pro~effort-v1~aGlnaA";
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      expect(url).toBe(`/api/role-model/endpoints/${encodeURIComponent(endpointId)}`);
+      expect(init?.method).toBe("DELETE");
+      return jsonResponse({ endpointId, status: "removed" });
+    });
+    await expect(removeRuntimeEndpoint(endpointId, fetcher)).resolves.toEqual({
+      endpointId,
+      status: "removed",
+    });
+  });
+});
+
 describe("fetchRuntimeConfig", () => {
   test("loads the normalized unified runtime config from the runtime control plane", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
@@ -2813,6 +2954,58 @@ describe("role policy APIs", () => {
 });
 
 describe("benchmark display endpoints", () => {
+  test("fetchBenchmarkPortfolio loads the latest completed evidence for every exact endpoint", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      if (url === "/api/role-model/benchmark/portfolio") {
+        return new Response(
+          JSON.stringify({
+            scoreSemantics: {
+              storageScale: "normalized-fraction-0-to-1",
+              displayScale: "percentage-0-to-100",
+              overallAggregation: "unweighted-arithmetic-mean-of-executed-case-scores",
+              currentEvidencePolicy: "latest-completed-run-per-endpoint",
+              replacementScope: "endpoint-only",
+              zeroScoreMeaning: "executed-zero-credit",
+              absentScoreMeaning: "no-evidence",
+            },
+            entries: [
+              {
+                endpointId: "deepseek.flash-high",
+                modelId: "deepseek/deepseek-v4-flash",
+                reasoningEffort: "high",
+                overallScore: 0.81,
+                runId: "run-high",
+              },
+            ],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }
+      throw new Error(`unexpected url ${url}`);
+    });
+
+    await expect(fetchBenchmarkPortfolio(fetcher)).resolves.toEqual({
+      scoreSemantics: {
+        storageScale: "normalized-fraction-0-to-1",
+        displayScale: "percentage-0-to-100",
+        overallAggregation: "unweighted-arithmetic-mean-of-executed-case-scores",
+        currentEvidencePolicy: "latest-completed-run-per-endpoint",
+        replacementScope: "endpoint-only",
+        zeroScoreMeaning: "executed-zero-credit",
+        absentScoreMeaning: "no-evidence",
+      },
+      entries: [
+        expect.objectContaining({
+          endpointId: "deepseek.flash-high",
+          reasoningEffort: "high",
+          runId: "run-high",
+        }),
+      ],
+    });
+  });
+
   test("fetchBenchmarkSummariesByMode loads full and quick summaries", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
       const url =

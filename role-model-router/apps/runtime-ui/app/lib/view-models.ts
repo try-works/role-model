@@ -1,3 +1,15 @@
+import {
+  endpointIdentityOwnsReasoningEffort,
+  formatCompactEndpointDisplayName,
+  formatEndpointDisplayName,
+  formatEndpointDisplayPath,
+  formatModelIdentity,
+  hasReasoningEffort,
+  readReasoningEffort,
+  readReasoningEffortLevels,
+  readUpstreamModelId,
+} from "./effort-identity";
+import { formatScore } from "./format-score";
 import type {
   RuntimeAccount,
   RuntimeActivityLogEntry,
@@ -15,6 +27,13 @@ import type {
   RuntimeTelemetryRequestRecord,
   RuntimeTelemetrySummary,
 } from "./runtime-api";
+
+export {
+  formatCompactEndpointDisplayName,
+  formatEndpointDisplayName,
+  formatEndpointDisplayPath,
+  formatReasoningEffortLabel,
+} from "./effort-identity";
 
 function toTitleLabel(modelId: string): string {
   const raw = modelId.includes("/") ? (modelId.split("/").at(-1) ?? modelId) : modelId;
@@ -598,6 +617,9 @@ export function buildConfiguredRemoteConnectionRows(input: {
     endpointId: string;
     modelId: string;
     displayName: string;
+    reasoningEffort?: string | null;
+    upstreamModelId?: string | null;
+    reasoningEffortLevels: readonly string[];
     healthStatus: string;
     routingEligible: boolean;
     benchmarkEligible: boolean;
@@ -613,7 +635,17 @@ export function buildConfiguredRemoteConnectionRows(input: {
     input.accounts.map((account) => [account.providerAccountId, account] as const),
   );
   const modelDisplayNameById = new Map(
-    input.models.map((model) => [model.id, model.displayName ?? toTitleLabel(model.id)] as const),
+    input.models.map((model) => {
+      const upstreamModelId = readUpstreamModelId(model);
+      const base = model.displayName ?? toTitleLabel(upstreamModelId ?? model.id);
+      return [
+        model.id,
+        formatEndpointDisplayName({ base, reasoningEffort: readReasoningEffort(model) }),
+      ] as const;
+    }),
+  );
+  const modelEffortLevelsById = new Map(
+    input.models.map((model) => [model.id, readReasoningEffortLevels(model)] as const),
   );
   const remoteEndpoints = input.endpoints.filter(
     (endpoint) =>
@@ -635,16 +667,33 @@ export function buildConfiguredRemoteConnectionRows(input: {
           sortLexical(left.modelId, right.modelId) ||
           sortLexical(left.endpointId, right.endpointId),
       )
-      .map((endpoint) => ({
-        endpointId: endpoint.endpointId,
-        modelId: endpoint.modelId,
-        displayName: modelDisplayNameById.get(endpoint.modelId) ?? toTitleLabel(endpoint.modelId),
-        healthStatus: resolveEndpointReadinessStatus(endpoint),
-        routingEligible: endpoint.routingEligible !== false,
-        benchmarkEligible: endpoint.benchmarkEligible !== false,
-        roleIds: endpoint.roleIds ?? [],
-        ...buildEndpointCircuitPresentation(endpoint, input.nowMs ?? Date.now()),
-      }));
+      .map((endpoint) => {
+        const reasoningEffort = readReasoningEffort(endpoint);
+        const upstreamModelId = readUpstreamModelId(endpoint);
+        const reasoningEffortLevels = [
+          ...new Set([
+            ...readReasoningEffortLevels(endpoint),
+            ...(modelEffortLevelsById.get(endpoint.modelId) ?? []),
+          ]),
+        ];
+        const base =
+          endpoint.displayName ??
+          modelDisplayNameById.get(endpoint.modelId) ??
+          toTitleLabel(upstreamModelId ?? endpoint.modelId);
+        return {
+          endpointId: endpoint.endpointId,
+          modelId: endpoint.modelId,
+          displayName: formatEndpointDisplayName({ base, reasoningEffort }),
+          ...(reasoningEffort ? { reasoningEffort } : {}),
+          ...(upstreamModelId ? { upstreamModelId } : {}),
+          reasoningEffortLevels,
+          healthStatus: resolveEndpointReadinessStatus(endpoint),
+          routingEligible: endpoint.routingEligible !== false,
+          benchmarkEligible: endpoint.benchmarkEligible !== false,
+          roleIds: endpoint.roleIds ?? [],
+          ...buildEndpointCircuitPresentation(endpoint, input.nowMs ?? Date.now()),
+        };
+      });
 
     return {
       key: providerAccountId,
@@ -960,6 +1009,7 @@ export function buildTelemetryComparisonCards(
 ): Array<{
   endpointId: string;
   modelId: string | null;
+  displayName: string;
   sourceLabel: string;
   providerLabel: string;
   cacheLabel: string;
@@ -974,6 +1024,11 @@ export function buildTelemetryComparisonCards(
   return rows.map((row) => ({
     endpointId: row.endpointId,
     modelId: row.modelId,
+    displayName: formatModelIdentity({
+      id: row.modelId ?? row.endpointId,
+      upstreamModelId: row.upstreamModelId,
+      reasoningEffort: row.reasoningEffort,
+    }),
     sourceLabel: formatSourceLabel(row.sourceType),
     providerLabel: row.providerId ?? row.providerFamily ?? row.providerKind ?? "unknown provider",
     cacheLabel: summarizeCachePosture({
@@ -1002,6 +1057,9 @@ export function buildTelemetryRequestRows(
       | "routingDecisionId"
       | "endpointId"
       | "modelId"
+      | "upstreamModelId"
+      | "reasoningEffort"
+      | "effortSource"
       | "sourceType"
       | "createdAtMs"
       | "latencyMs"
@@ -1032,6 +1090,12 @@ export function buildTelemetryRequestRows(
   routingDecisionLabel: string;
   endpointId: string;
   modelId: string | null | undefined;
+  displayName: string;
+  /** Effort fixed by the selected endpoint instance, if any. */
+  reasoningEffort: string | null;
+  /** Effective request effort, which may have been forwarded by a provider-default endpoint. */
+  requestedReasoningEffort: string | null;
+  effortSource: string | null;
   sourceLabel: string;
   statusLabel: string;
   providerFamilyLabel: string;
@@ -1045,37 +1109,54 @@ export function buildTelemetryRequestRows(
 }> {
   return [...rows]
     .sort((left, right) => right.createdAtMs - left.createdAtMs)
-    .map((row) => ({
-      requestId: row.requestId,
-      clientRequestId: row.clientRequestId ?? null,
-      routingDecisionLabel: row.routingDecisionId ?? "n/a",
-      endpointId: row.endpointId,
-      modelId: row.modelId,
-      sourceLabel: formatSourceLabel(row.sourceType),
-      statusLabel: buildTelemetryStatusLabel(row),
-      providerFamilyLabel:
-        row.providerId ?? row.providerFamily ?? row.providerKind ?? "unknown provider",
-      finishReasonLabel: row.finishReason ?? "unknown",
-      cacheLabel: summarizeCachePosture({
-        promptCacheSupported: row.promptCacheSupported,
-        promptCacheRequested: row.promptCacheRequested,
-        promptCacheUsed: row.promptCacheUsed,
-      }),
-      streamLabel: summarizeStreamLabel(row),
-      latencyLabel:
-        row.latencyMs !== null && row.latencyMs !== undefined ? `${row.latencyMs} ms` : "n/a",
-      tokenLabel: `${row.totalTokens ?? 0} tokens`,
-      costLabel:
-        typeof row.actualCostUsd === "number" && row.actualCostUsd > 0
-          ? formatCurrency(row.actualCostUsd, "actual")
-          : formatCurrency(row.estimatedCostUsd, "estimate"),
-      createdAtLabel: new Date(row.createdAtMs).toLocaleString("en-US", {
-        month: "short",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    }));
+    .map((row) => {
+      const requestedReasoningEffort = row.reasoningEffort?.trim() || null;
+      const endpointOwnsEffort = endpointIdentityOwnsReasoningEffort({
+        endpointId: row.endpointId,
+        reasoningEffort: requestedReasoningEffort,
+        effortSource: row.effortSource,
+      });
+      const endpointReasoningEffort = endpointOwnsEffort ? requestedReasoningEffort : null;
+      return {
+        requestId: row.requestId,
+        clientRequestId: row.clientRequestId ?? null,
+        routingDecisionLabel: row.routingDecisionId ?? "n/a",
+        endpointId: row.endpointId,
+        modelId: row.modelId,
+        displayName: formatModelIdentity({
+          id: row.modelId ?? row.endpointId,
+          upstreamModelId: row.upstreamModelId,
+          reasoningEffort: endpointReasoningEffort,
+        }),
+        reasoningEffort: endpointReasoningEffort,
+        requestedReasoningEffort,
+        effortSource: row.effortSource ?? null,
+        sourceLabel: formatSourceLabel(row.sourceType),
+        statusLabel: buildTelemetryStatusLabel(row),
+        providerFamilyLabel:
+          row.providerId ?? row.providerFamily ?? row.providerKind ?? "unknown provider",
+        finishReasonLabel: row.finishReason ?? "unknown",
+        cacheLabel: summarizeCachePosture({
+          promptCacheSupported: row.promptCacheSupported,
+          promptCacheRequested: row.promptCacheRequested,
+          promptCacheUsed: row.promptCacheUsed,
+        }),
+        streamLabel: summarizeStreamLabel(row),
+        latencyLabel:
+          row.latencyMs !== null && row.latencyMs !== undefined ? `${row.latencyMs} ms` : "n/a",
+        tokenLabel: `${row.totalTokens ?? 0} tokens`,
+        costLabel:
+          typeof row.actualCostUsd === "number" && row.actualCostUsd > 0
+            ? formatCurrency(row.actualCostUsd, "actual")
+            : formatCurrency(row.estimatedCostUsd, "estimate"),
+        createdAtLabel: new Date(row.createdAtMs).toLocaleString("en-US", {
+          month: "short",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+    });
 }
 
 export function buildDashboardLatestRequestRows(
@@ -1088,6 +1169,8 @@ export function buildDashboardLatestRequestRows(
       | "endpointId"
       | "requestClass"
       | "modelId"
+      | "upstreamModelId"
+      | "reasoningEffort"
       | "sourceType"
       | "createdAtMs"
       | "latencyMs"
@@ -1172,21 +1255,97 @@ export function buildDashboardLatestRequestRows(
 
 export function buildWorkbenchModelOptions(
   models: ReadonlyArray<
-    Pick<RuntimeModelRecord, "id"> & Partial<Pick<RuntimeModelRecord, "endpoint_ids">>
+    Pick<RuntimeModelRecord, "id"> &
+      Partial<
+        Pick<
+          RuntimeModelRecord,
+          | "endpoint_ids"
+          | "displayName"
+          | "type"
+          | "upstreamModelId"
+          | "upstream_model_id"
+          | "reasoningEffort"
+          | "reasoning_effort"
+          | "fixedEffort"
+          | "fixed_effort"
+        >
+      >
   >,
+  endpoints: ReadonlyArray<
+    Pick<RuntimeEndpoint, "endpointId" | "modelId" | "providerId"> &
+      Partial<
+        Pick<
+          RuntimeEndpoint,
+          | "displayName"
+          | "upstreamModelId"
+          | "upstream_model_id"
+          | "reasoningEffort"
+          | "reasoning_effort"
+          | "fixedEffort"
+          | "fixed_effort"
+          | "routingEligible"
+          | "status"
+        >
+      >
+  > = [],
 ): Array<{ label: string; value: string }> {
-  return [...new Set(models.map((model) => model.id))]
-    .sort((left, right) => left.localeCompare(right))
-    .map((modelId) => ({
-      label: toTitleLabel(modelId),
-      value: modelId,
-    }));
+  if (endpoints.length > 0) {
+    const modelsById = new Map(models.map((model) => [model.id, model]));
+    return endpoints
+      .filter((endpoint) => endpoint.routingEligible !== false && endpoint.status !== "inactive")
+      .map((endpoint) => {
+        const model = modelsById.get(endpoint.modelId);
+        if (!model) {
+          return null;
+        }
+        const base =
+          endpoint.displayName ??
+          model.displayName ??
+          toTitleLabel(readUpstreamModelId(endpoint) ?? readUpstreamModelId(model) ?? model.id);
+        return {
+          label: formatEndpointDisplayName({
+            base,
+            reasoningEffort: readReasoningEffort(endpoint) ?? readReasoningEffort(model),
+          }),
+          value: endpoint.endpointId,
+        };
+      })
+      .filter((option): option is { label: string; value: string } => option !== null)
+      .sort((left, right) => {
+        const labelOrder = left.label.localeCompare(right.label, "en");
+        return labelOrder !== 0 ? labelOrder : left.value.localeCompare(right.value, "en");
+      });
+  }
+
+  const optionsById = new Map<string, { label: string; value: string }>();
+  for (const model of models) {
+    const base = model.displayName ?? toTitleLabel(readUpstreamModelId(model) ?? model.id);
+    const label = formatEndpointDisplayName({
+      base,
+      reasoningEffort: readReasoningEffort(model),
+    });
+    optionsById.set(model.id, { label, value: model.id });
+  }
+  return [...optionsById.values()].sort((left, right) => left.value.localeCompare(right.value));
 }
 
 export function buildWorkbenchEndpointOptions(input: {
   readonly modelId: string;
   readonly models: ReadonlyArray<
-    Pick<RuntimeModelRecord, "id"> & Partial<Pick<RuntimeModelRecord, "endpoint_ids">>
+    Pick<RuntimeModelRecord, "id"> &
+      Partial<
+        Pick<
+          RuntimeModelRecord,
+          | "endpoint_ids"
+          | "displayName"
+          | "reasoningEffort"
+          | "reasoning_effort"
+          | "fixedEffort"
+          | "fixed_effort"
+          | "upstreamModelId"
+          | "upstream_model_id"
+        >
+      >
   >;
   readonly endpoints: ReadonlyArray<
     Pick<
@@ -1198,6 +1357,13 @@ export function buildWorkbenchEndpointOptions(input: {
       | "status"
       | "healthStatus"
       | "sourceType"
+      | "displayName"
+      | "reasoningEffort"
+      | "reasoning_effort"
+      | "fixedEffort"
+      | "fixed_effort"
+      | "upstreamModelId"
+      | "upstream_model_id"
     >
   >;
   readonly accounts: ReadonlyArray<
@@ -1250,30 +1416,59 @@ export function buildWorkbenchEndpointOptions(input: {
       }
       return sortLexical(left, right);
     })
-    .map((endpointId) => ({
-      label: endpointId,
-      value: endpointId,
-    }));
+    .map((endpointId) => {
+      const endpoint = endpointsById.get(endpointId);
+      const modelBase =
+        model?.displayName ?? toTitleLabel(readUpstreamModelId(model) ?? input.modelId);
+      const base = endpoint?.displayName ?? modelBase;
+      const reasoningEffort = readReasoningEffort(endpoint) ?? readReasoningEffort(model);
+      return {
+        label: reasoningEffort ? formatEndpointDisplayName({ base, reasoningEffort }) : endpointId,
+        value: endpointId,
+      };
+    });
 }
 
 export function buildModelCatalogRows(
   models: ReadonlyArray<
-    Pick<RuntimeModelRecord, "id"> & Partial<Pick<RuntimeModelRecord, "endpoint_ids">>
+    Pick<RuntimeModelRecord, "id"> &
+      Partial<
+        Pick<
+          RuntimeModelRecord,
+          | "endpoint_ids"
+          | "displayName"
+          | "upstreamModelId"
+          | "upstream_model_id"
+          | "reasoningEffort"
+          | "reasoning_effort"
+          | "fixedEffort"
+          | "fixed_effort"
+        >
+      >
   >,
 ): Array<{
   modelId: string;
   displayName: string;
   endpointCount: number;
   endpointIds: string[];
+  reasoningEffort?: string | null;
+  upstreamModelId?: string | null;
 }> {
   return models
     .map((model) => {
       const endpointIds = uniqueStrings(model.endpoint_ids ?? []).sort(sortLexical);
+      const reasoningEffort = readReasoningEffort(model);
+      const upstreamModelId = readUpstreamModelId(model);
       return {
         modelId: model.id,
-        displayName: toTitleLabel(model.id),
+        displayName: formatEndpointDisplayName({
+          base: model.displayName ?? toTitleLabel(upstreamModelId ?? model.id),
+          reasoningEffort,
+        }),
         endpointCount: endpointIds.length,
         endpointIds,
+        ...(reasoningEffort ? { reasoningEffort } : {}),
+        ...(upstreamModelId ? { upstreamModelId } : {}),
       };
     })
     .sort((left, right) => sortLexical(left.modelId, right.modelId));
@@ -1283,32 +1478,57 @@ export function buildEndpointCatalogRows(endpoints: readonly RuntimeEndpoint[]):
   endpointId: string;
   modelId: string;
   providerLabel: string;
+  providerAccountId?: string;
   sourceLabel: string;
   servingSource: string;
   endpointKind: string;
   status: string;
   healthStatus: string;
+  routingEligible?: boolean;
+  benchmarkEligible?: boolean;
+  displayName?: string;
+  reasoningEffort?: string | null;
+  upstreamModelId?: string | null;
 }> {
   return [...endpoints]
-    .map((endpoint) => ({
-      endpointId: endpoint.endpointId,
-      modelId: endpoint.modelId,
-      providerLabel:
-        endpoint.providerId ??
-        (endpoint.localModelSource === "llama-swap"
-          ? "llama-swap"
-          : endpoint.localModelSource === "peer-backed"
-            ? "local-openai-compatible"
-            : "local/runtime"),
-      sourceLabel: formatSourceLabel(
-        endpoint.sourceType ??
-          (endpoint.servingSource?.toLowerCase().includes("local") ? "local" : "remote"),
-      ),
-      servingSource: endpoint.servingSource ?? "unknown",
-      endpointKind: endpoint.endpointKind ?? "unknown",
-      status: endpoint.status ?? "unknown",
-      healthStatus: endpoint.healthStatus ?? "unknown",
-    }))
+    .map((endpoint) => {
+      const reasoningEffort = readReasoningEffort(endpoint);
+      const upstreamModelId = readUpstreamModelId(endpoint);
+      const base = endpoint.displayName ?? toTitleLabel(upstreamModelId ?? endpoint.modelId);
+      return {
+        endpointId: endpoint.endpointId,
+        modelId: endpoint.modelId,
+        providerLabel:
+          endpoint.providerId ??
+          (endpoint.localModelSource === "llama-swap"
+            ? "llama-swap"
+            : endpoint.localModelSource === "peer-backed"
+              ? "local-openai-compatible"
+              : "local/runtime"),
+        ...(endpoint.providerAccountId ? { providerAccountId: endpoint.providerAccountId } : {}),
+        sourceLabel: formatSourceLabel(
+          endpoint.sourceType ??
+            (endpoint.servingSource?.toLowerCase().includes("local") ? "local" : "remote"),
+        ),
+        servingSource: endpoint.servingSource ?? "unknown",
+        endpointKind: endpoint.endpointKind ?? "unknown",
+        status: endpoint.status ?? "unknown",
+        healthStatus: endpoint.healthStatus ?? "unknown",
+        ...(typeof endpoint.routingEligible === "boolean"
+          ? { routingEligible: endpoint.routingEligible }
+          : {}),
+        ...(typeof endpoint.benchmarkEligible === "boolean"
+          ? { benchmarkEligible: endpoint.benchmarkEligible }
+          : {}),
+        ...(reasoningEffort || endpoint.displayName || upstreamModelId
+          ? {
+              displayName: formatEndpointDisplayName({ base, reasoningEffort }),
+              ...(reasoningEffort ? { reasoningEffort } : {}),
+              ...(upstreamModelId ? { upstreamModelId } : {}),
+            }
+          : {}),
+      };
+    })
     .sort((left, right) => sortLexical(left.endpointId, right.endpointId));
 }
 
@@ -1639,7 +1859,10 @@ export function buildDownstreamProviderGuide(provider: RuntimeDownstreamOpenAIPr
         value: `${provider.authentication.headerName}: Bearer ${placeholderToken}`,
       },
     ],
-    availableModels: provider.models.map((model) => model.id),
+    // Keep effort part of the visible model identity.  Downstream clients still
+    // receive the canonical model id in the example request, but the catalog
+    // list must not collapse distinct effort instances into one label.
+    availableModels: provider.models.map((model) => formatModelIdentity(model, model.id)),
     opencodeSteps: [
       "Choose an OpenAI-compatible provider entry in the downstream client.",
       `Set the base URL to ${baseUrlWithoutV1} (most clients) or ${baseUrlWithV1} (clients that expect /v1 in the base URL).`,
@@ -1712,6 +1935,11 @@ export function buildConfiguredModelCards(input: {
 }): Array<{
   modelId: string;
   displayName: string;
+  /** Stable UI identity; modelId remains the upstream value used by runtime mutations. */
+  identityKey?: string;
+  endpointId?: string;
+  upstreamModelId?: string;
+  reasoningEffort?: string | null;
   capabilities: readonly string[];
   modalities: readonly string[];
   contextWindow: number | null;
@@ -1726,71 +1954,191 @@ export function buildConfiguredModelCards(input: {
   toolCallingSupported: boolean;
   controllerState: "active" | "eligible" | "inactive";
 }> {
-  return input.models
-    .map((model) => {
-      const endpoints = input.endpoints.filter((endpoint) => endpoint.modelId === model.id);
-      const endpointIds = [...new Set(endpoints.map((endpoint) => endpoint.endpointId))].sort(
-        (left, right) => left.localeCompare(right, "en"),
-      );
-      const roleIds = [
-        ...new Set(
-          [
-            ...endpoints.flatMap((endpoint) => endpoint.roleIds ?? []),
-            ...input.accounts.flatMap((account) =>
-              (account.modelRoleBindings ?? [])
-                .filter((binding) => binding.modelId === model.id)
-                .flatMap((binding) => binding.roleIds),
-            ),
-          ].sort((left, right) => left.localeCompare(right, "en")),
-        ),
-      ];
-      const sourceTypes = [
-        ...new Set(
-          endpoints.map(
-            (endpoint) =>
-              endpoint.sourceType ??
-              (endpoint.servingSource?.toLowerCase().includes("local") ? "local" : "remote"),
-          ),
-        ),
-      ].sort((left, right) => left.localeCompare(right, "en"));
-      const requestCount = Array.isArray(input.requests)
-        ? input.requests.filter((request) => endpointIds.includes(request.endpointId ?? "")).length
-        : null;
-      const controllerState: "active" | "eligible" | "inactive" =
-        input.controller &&
-        input.controller.modelId === model.id &&
-        endpointIds.includes(input.controller.endpointId)
-          ? "active"
-          : endpointIds.length > 0
-            ? "eligible"
-            : "inactive";
+  type ConfiguredModelCard = ReturnType<typeof buildConfiguredModelCards>[number];
+  const cards: ConfiguredModelCard[] = [];
+  const seenEndpointIdentityKeys = new Set<string>();
 
-      return {
-        modelId: model.id,
-        displayName: model.displayName ?? toTitleLabel(model.id),
-        capabilities: [...(model.capabilities ?? [])],
-        modalities: [...(model.modalities ?? [])],
-        contextWindow: model.contextWindow ?? null,
-        maxOutputTokens: model.maxOutputTokens ?? null,
-        pricing: model.pricing,
-        sourceSummary: summarizeSourceTypes(sourceTypes),
-        endpointCount: endpointIds.length,
-        endpointIds,
-        requestCount,
-        status: summarizeModelStatus(endpoints),
-        roleIds,
-        toolCallingSupported: endpoints.some((endpoint) => endpoint.toolCallingSupported === true),
-        controllerState,
-      };
-    })
-    .sort((left, right) => {
-      const controllerOrder = (value: typeof left) =>
-        value.controllerState === "active" ? 0 : value.controllerState === "eligible" ? 1 : 2;
-      return (
-        controllerOrder(left) - controllerOrder(right) ||
-        left.displayName.localeCompare(right.displayName, "en")
-      );
+  for (const model of input.models) {
+    const modelUpstreamId = readUpstreamModelId(model) ?? model.id;
+    const modelEffort = readReasoningEffort(model);
+    const isEndpointModel = model.type === "endpoint";
+    const endpoints = input.endpoints.filter(
+      (endpoint) =>
+        endpoint.modelId === model.id ||
+        endpoint.modelId === modelUpstreamId ||
+        readUpstreamModelId(endpoint) === model.id ||
+        readUpstreamModelId(endpoint) === modelUpstreamId,
+    );
+    const endpointIdsFromModel = uniqueStrings([
+      ...(model.endpoint_ids ?? []),
+      ...(model.endpoint_id ? [model.endpoint_id] : []),
+    ]);
+    const endpointById = new Map(endpoints.map((endpoint) => [endpoint.endpointId, endpoint]));
+    const endpointDefinitions: Array<{
+      endpoint: RuntimeEndpoint | null;
+      endpointIdHint?: string;
+    }> = endpoints.map((endpoint) => ({ endpoint }));
+    for (const endpointId of endpointIdsFromModel) {
+      if (!endpointById.has(endpointId)) {
+        endpointDefinitions.push({ endpoint: null, endpointIdHint: endpointId });
+      }
+    }
+    if (endpointDefinitions.length === 0) {
+      endpointDefinitions.push({ endpoint: null });
+    }
+
+    const hasDistinctInstances =
+      isEndpointModel ||
+      modelEffort !== null ||
+      endpointDefinitions.some((definition) => hasReasoningEffort(definition.endpoint));
+    if (hasDistinctInstances) {
+      for (const definition of endpointDefinitions) {
+        const endpoint = definition.endpoint;
+        const endpointId =
+          endpoint?.endpointId ??
+          definition.endpointIdHint ??
+          (endpointDefinitions.length === 1 ? (model.endpoint_id ?? model.id) : undefined);
+        if (!endpointId || seenEndpointIdentityKeys.has(endpointId)) {
+          continue;
+        }
+        seenEndpointIdentityKeys.add(endpointId);
+        const endpointModelId = endpoint?.modelId ?? modelUpstreamId;
+        const upstreamModelId = readUpstreamModelId(endpoint) ?? modelUpstreamId;
+        const reasoningEffort = readReasoningEffort(endpoint) ?? modelEffort;
+        const endpointBase =
+          endpoint?.displayName ?? model.displayName ?? toTitleLabel(upstreamModelId);
+        const endpointIds = [endpointId];
+        const endpointRows = endpoint ? [endpoint] : [];
+        const roleIds = [
+          ...new Set(
+            [
+              ...endpointRows.flatMap((entry) => entry.roleIds ?? []),
+              ...input.accounts.flatMap((account) => {
+                if (
+                  endpoint?.providerAccountId &&
+                  account.providerAccountId !== endpoint.providerAccountId
+                ) {
+                  return [];
+                }
+                const bindings = account.modelRoleBindings ?? [];
+                const binding =
+                  bindings.find((entry) => entry.endpointId === endpointId) ??
+                  bindings.find(
+                    (entry) => entry.endpointId === undefined && entry.modelId === upstreamModelId,
+                  );
+                return binding?.roleIds ?? [];
+              }),
+            ].sort((left, right) => left.localeCompare(right, "en")),
+          ),
+        ];
+        const sourceTypes = [
+          ...new Set(
+            endpointRows.map(
+              (entry) =>
+                entry.sourceType ??
+                (entry.servingSource?.toLowerCase().includes("local") ? "local" : "remote"),
+            ),
+          ),
+        ].sort((left, right) => left.localeCompare(right, "en"));
+        const requestCount = Array.isArray(input.requests)
+          ? input.requests.filter((request) => request.endpointId === endpointId).length
+          : null;
+        const controllerState: "active" | "eligible" | "inactive" =
+          input.controller &&
+          input.controller.modelId === upstreamModelId &&
+          input.controller.endpointId === endpointId
+            ? "active"
+            : endpointRows.length > 0
+              ? "eligible"
+              : "inactive";
+        cards.push({
+          modelId: upstreamModelId,
+          displayName: formatEndpointDisplayName({ base: endpointBase, reasoningEffort }),
+          identityKey: endpointId,
+          endpointId,
+          upstreamModelId,
+          ...(reasoningEffort ? { reasoningEffort } : {}),
+          capabilities: [...(model.capabilities ?? [])],
+          modalities: [...(model.modalities ?? [])],
+          contextWindow: model.contextWindow ?? null,
+          maxOutputTokens: model.maxOutputTokens ?? null,
+          pricing: model.pricing,
+          sourceSummary: summarizeSourceTypes(sourceTypes),
+          endpointCount: 1,
+          endpointIds,
+          requestCount,
+          status: summarizeModelStatus(endpointRows),
+          roleIds,
+          toolCallingSupported: endpointRows.some((entry) => entry.toolCallingSupported === true),
+          controllerState,
+        });
+      }
+      continue;
+    }
+
+    const endpointIds = [...new Set(endpoints.map((endpoint) => endpoint.endpointId))].sort(
+      (left, right) => left.localeCompare(right, "en"),
+    );
+    const roleIds = [
+      ...new Set(
+        [
+          ...endpoints.flatMap((endpoint) => endpoint.roleIds ?? []),
+          ...input.accounts.flatMap((account) =>
+            (account.modelRoleBindings ?? [])
+              .filter((binding) => binding.modelId === model.id)
+              .flatMap((binding) => binding.roleIds),
+          ),
+        ].sort((left, right) => left.localeCompare(right, "en")),
+      ),
+    ];
+    const sourceTypes = [
+      ...new Set(
+        endpoints.map(
+          (endpoint) =>
+            endpoint.sourceType ??
+            (endpoint.servingSource?.toLowerCase().includes("local") ? "local" : "remote"),
+        ),
+      ),
+    ].sort((left, right) => left.localeCompare(right, "en"));
+    const requestCount = Array.isArray(input.requests)
+      ? input.requests.filter((request) => endpointIds.includes(request.endpointId ?? "")).length
+      : null;
+    const controllerState: "active" | "eligible" | "inactive" =
+      input.controller &&
+      input.controller.modelId === model.id &&
+      endpointIds.includes(input.controller.endpointId)
+        ? "active"
+        : endpointIds.length > 0
+          ? "eligible"
+          : "inactive";
+
+    cards.push({
+      modelId: model.id,
+      displayName: model.displayName ?? toTitleLabel(model.id),
+      capabilities: [...(model.capabilities ?? [])],
+      modalities: [...(model.modalities ?? [])],
+      contextWindow: model.contextWindow ?? null,
+      maxOutputTokens: model.maxOutputTokens ?? null,
+      pricing: model.pricing,
+      sourceSummary: summarizeSourceTypes(sourceTypes),
+      endpointCount: endpointIds.length,
+      endpointIds,
+      requestCount,
+      status: summarizeModelStatus(endpoints),
+      roleIds,
+      toolCallingSupported: endpoints.some((endpoint) => endpoint.toolCallingSupported === true),
+      controllerState,
     });
+  }
+
+  return cards.sort((left, right) => {
+    const controllerOrder = (value: typeof left) =>
+      value.controllerState === "active" ? 0 : value.controllerState === "eligible" ? 1 : 2;
+    return (
+      controllerOrder(left) - controllerOrder(right) ||
+      left.displayName.localeCompare(right.displayName, "en")
+    );
+  });
 }
 
 export function buildConfiguredModelMetadataRows(model: {
@@ -1863,6 +2211,7 @@ function titleCaseSource(sourceSummary: string): string {
 
 export function buildSelectedModelMetaPanel(input: {
   readonly modelId: string;
+  readonly displayName?: string;
   readonly sourceSummary: string;
   readonly status: string;
   readonly controllerState: "active" | "eligible" | "inactive";
@@ -1877,6 +2226,8 @@ export function buildSelectedModelMetaPanel(input: {
   readonly latencyP50Ms?: number | null;
   readonly latencyP95Ms?: number | null;
   readonly meanLatencyMs?: number | null;
+  readonly liveFailureRate?: number | null;
+  readonly liveSampleCount?: number | null;
   readonly difficultyMix?: string | null;
   readonly routingHint?: string | null;
 }): {
@@ -1911,9 +2262,9 @@ export function buildSelectedModelMetaPanel(input: {
           { label: "Output", value: "Unknown" },
         ];
   const overall =
-    typeof input.overallScore === "number" ? input.overallScore.toFixed(2) : "No evidence yet";
+    typeof input.overallScore === "number" ? formatScore(input.overallScore) : "No evidence yet";
   return {
-    title: `Runtime · ${input.modelId}`,
+    title: `Runtime · ${input.displayName ?? input.modelId}`,
     facts: [
       { label: "Source", value: titleCaseSource(input.sourceSummary) },
       {
@@ -1931,9 +2282,23 @@ export function buildSelectedModelMetaPanel(input: {
     cost,
     benchmark: [
       { label: "Overall", value: overall },
-      { label: "Latency p50", value: formatLatencyMs(input.latencyP50Ms) },
-      { label: "Latency p95", value: formatLatencyMs(input.latencyP95Ms) },
-      { label: "Mean latency", value: formatLatencyMs(input.meanLatencyMs) },
+      { label: "Live latency p50", value: formatLatencyMs(input.latencyP50Ms) },
+      { label: "Live latency p95", value: formatLatencyMs(input.latencyP95Ms) },
+      { label: "Live mean latency", value: formatLatencyMs(input.meanLatencyMs) },
+      {
+        label: "Live failure rate",
+        value:
+          typeof input.liveFailureRate === "number"
+            ? `${Math.round(input.liveFailureRate * 10_000) / 100}%`
+            : "No live evidence yet",
+      },
+      {
+        label: "Live samples",
+        value:
+          typeof input.liveSampleCount === "number"
+            ? input.liveSampleCount.toLocaleString()
+            : "No live evidence yet",
+      },
       {
         label: "Difficulty mix",
         value: input.difficultyMix?.trim() || "No difficulty mix yet",
@@ -2052,7 +2417,12 @@ export function buildActivitySummary(
     id: entry.id,
     ...(entry.request_id ? { requestId: entry.request_id } : {}),
     timestamp: entry.timestamp,
-    model: entry.model,
+    model: formatModelIdentity({
+      modelId: entry.modelId ?? entry.model,
+      endpointId: entry.endpointId ?? undefined,
+      upstreamModelId: entry.upstreamModelId,
+      reasoningEffort: entry.reasoningEffort,
+    }),
     path: entry.req_path,
     status: String(entry.resp_status_code),
     durationLabel: `${entry.duration_ms} ms`,

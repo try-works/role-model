@@ -1,3 +1,4 @@
+import { formatCompactEndpointDisplayName } from "./effort-identity";
 import type { RouterCandidate } from "./runtime-api";
 
 export type CandidateSpacePoint = {
@@ -63,12 +64,22 @@ function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value));
 }
 
-function shortModelLabel(modelId: string): string {
-  const leaf = modelId.includes("/") ? (modelId.split("/").at(-1) ?? modelId) : modelId;
-  return leaf.length > 28 ? `${leaf.slice(0, 27)}…` : leaf;
+function shortModelLabel(candidate: RouterCandidate): string {
+  const leaf = candidate.modelId.includes("/")
+    ? (candidate.modelId.split("/").at(-1) ?? candidate.modelId)
+    : candidate.modelId;
+  return formatCompactEndpointDisplayName({
+    base: candidate.displayName ?? leaf,
+    reasoningEffort: candidate.reasoningEffort,
+    maxLength: 28,
+  });
 }
 
 function scoreQuality(candidate: RouterCandidate): number {
+  const overall = candidate.benchmarkCapability?.overallScore;
+  if (typeof overall === "number" && Number.isFinite(overall)) {
+    return clamp01(overall);
+  }
   const fromRouting = candidate.routingQualityScore;
   if (typeof fromRouting === "number" && Number.isFinite(fromRouting)) {
     return clamp01(fromRouting);
@@ -77,11 +88,7 @@ function scoreQuality(candidate: RouterCandidate): number {
   if (typeof blend === "number" && Number.isFinite(blend)) {
     return clamp01(blend);
   }
-  const overall = candidate.benchmarkCapability?.overallScore;
-  if (typeof overall === "number" && Number.isFinite(overall)) {
-    return clamp01(overall);
-  }
-  const profile = asRecord(candidate.latestProfile);
+  const profile = asRecord(candidate.operationalProfile ?? candidate.latestProfile);
   const fromProfile = pickNumber(
     profile,
     "quality_score",
@@ -96,7 +103,7 @@ function scoreQuality(candidate: RouterCandidate): number {
 }
 
 function scoreSpeed(candidate: RouterCandidate, fastestLatencyMs: number): number {
-  const profile = asRecord(candidate.latestProfile);
+  const profile = asRecord(candidate.operationalProfile ?? candidate.latestProfile);
   const latencyP50 = pickNumber(
     profile,
     "latency_ms_p50",
@@ -110,15 +117,15 @@ function scoreSpeed(candidate: RouterCandidate, fastestLatencyMs: number): numbe
     const fastest = Math.max(fastestLatencyMs, 1);
     return clamp01(fastest / Math.max(latencyP50, 1));
   }
-  return candidate.sourceType === "local" ? 0.78 : 0.55;
+  return 0;
 }
 
 function readInputCostPer1M(
   candidate: RouterCandidate,
   pricingByModelId?: ReadonlyMap<string, number>,
 ): number | null {
-  const profile = asRecord(candidate.latestProfile);
-  const pricing = asRecord(profile?.pricing);
+  const profile = asRecord(candidate.operationalProfile ?? candidate.latestProfile);
+  const pricing = asRecord(candidate.pricing) ?? asRecord(profile?.pricing);
   const fromProfile = pickNumber(
     pricing ?? profile,
     "inputPer1M",
@@ -164,6 +171,19 @@ function scoreRoute(cost: number, quality: number, speed: number): number {
 
 function candidateTags(candidate: RouterCandidate, selected: boolean, excluded: boolean): string[] {
   const tags: string[] = [];
+  if (typeof candidate.benchmarkCapability?.overallScore === "number") {
+    tags.push(
+      candidate.benchmarkCapability.evidenceSource === "run-artifact"
+        ? "Benchmark run"
+        : "Benchmark profile",
+    );
+  }
+  const operationalProfile = asRecord(candidate.operationalProfile ?? candidate.latestProfile);
+  if (operationalProfile?.profile_scope === "live-request-operational") {
+    tags.push("Live telemetry");
+  } else {
+    tags.push("No live telemetry");
+  }
   if (selected) {
     tags.push("Selected");
   }
@@ -195,7 +215,12 @@ export function buildCandidateSpacePoints(
 
   const latencies = pool
     .map((candidate) =>
-      pickNumber(asRecord(candidate.latestProfile), "latency_ms_p50", "latencyMsP50", "latency_ms"),
+      pickNumber(
+        asRecord(candidate.operationalProfile ?? candidate.latestProfile),
+        "latency_ms_p50",
+        "latencyMsP50",
+        "latency_ms",
+      ),
     )
     .filter((value): value is number => value !== null && value >= 0);
   const fastestLatencyMs =
@@ -235,7 +260,7 @@ export function buildCandidateSpacePoints(
     return {
       endpointId: row.candidate.endpointId,
       modelId: row.candidate.modelId,
-      label: shortModelLabel(row.candidate.modelId),
+      label: shortModelLabel(row.candidate),
       cost: row.cost,
       quality: row.quality,
       speed: row.speed,

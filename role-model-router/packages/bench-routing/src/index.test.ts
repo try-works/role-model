@@ -10,9 +10,47 @@ import {
   extractFormattedAnswer,
   gradeBenchmarkCase,
   selectBenchmarkCases,
+  summarizeEndpointGrade,
 } from "./index.ts";
 
 describe("bench-routing", () => {
+  test("defines overall as the equal-weight arithmetic mean of executed case scores", () => {
+    const grade = summarizeEndpointGrade("endpoint.high", "model.flash", "remote", [
+      {
+        caseId: "easy-1",
+        difficultyBucket: "easy",
+        score: 1,
+        rationale: "pass",
+        gradingMethod: "judge",
+        latencyMs: 10,
+        actualPreview: "ok",
+      },
+      {
+        caseId: "hard-1",
+        difficultyBucket: "hard",
+        score: 0.5,
+        rationale: "partial",
+        gradingMethod: "judge",
+        latencyMs: 20,
+        actualPreview: "partial",
+      },
+      {
+        caseId: "hard-2",
+        difficultyBucket: "hard",
+        score: 0,
+        rationale: "fail",
+        gradingMethod: "judge",
+        latencyMs: 30,
+        actualPreview: "bad",
+      },
+    ]);
+
+    expect(grade.overallScore).toBe(0.5);
+    expect(grade.byDifficulty.easy).toEqual({ score: 1, cases: 1 });
+    expect(grade.byDifficulty.medium).toEqual({ score: 0, cases: 0 });
+    expect(grade.byDifficulty.hard).toEqual({ score: 0.25, cases: 2 });
+  });
+
   test("selects quick benchmark cases only in quick mode", () => {
     const suite = {
       suite_id: "test",

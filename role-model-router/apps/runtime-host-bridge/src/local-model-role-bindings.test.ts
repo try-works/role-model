@@ -309,6 +309,62 @@ describe("local-model-role-bindings", () => {
     ).toEqual(["coder.assistant"]);
   });
 
+  it("uses an endpoint-instance role assignment before the legacy model fallback", () => {
+    const highEndpointId = "deepseek.personal.global.deepseek-v4-flash-high";
+    const maxEndpointId = "deepseek.personal.global.deepseek-v4-flash-max";
+    const accountWithVariants: ProviderAccountRecord = {
+      ...peerAccount,
+      allowedModels: ["deepseek/deepseek-v4-flash"],
+      modelRoleBindings: [
+        {
+          modelId: "deepseek/deepseek-v4-flash",
+          endpointId: highEndpointId,
+          roleIds: ["coder.assistant"],
+        },
+        {
+          modelId: "deepseek/deepseek-v4-flash",
+          endpointId: maxEndpointId,
+          roleIds: ["classifier"],
+        },
+      ],
+    };
+    const runtimeEndpoints = [
+      {
+        endpointId: highEndpointId,
+        providerAccountId: accountWithVariants.providerAccountId,
+        modelId: "deepseek/deepseek-v4-flash",
+      },
+      {
+        endpointId: maxEndpointId,
+        providerAccountId: accountWithVariants.providerAccountId,
+        modelId: "deepseek/deepseek-v4-flash",
+      },
+    ];
+
+    expect(
+      resolveEndpointRoleIds({
+        endpointId: highEndpointId,
+        runtimeEndpoints,
+        accounts: [accountWithVariants],
+        registry,
+        roleDefinitions: [...roleDefinitions],
+        roleIdsByModelId: {},
+        compareText: (left, right) => left.localeCompare(right, "en"),
+      }),
+    ).toEqual(["coder.assistant"]);
+    expect(
+      resolveEndpointRoleIds({
+        endpointId: maxEndpointId,
+        runtimeEndpoints,
+        accounts: [accountWithVariants],
+        registry,
+        roleDefinitions: [...roleDefinitions],
+        roleIdsByModelId: {},
+        compareText: (left, right) => left.localeCompare(right, "en"),
+      }),
+    ).toEqual(["classifier"]);
+  });
+
   it("resolves missing endpoint assignments as all roles in readback paths", () => {
     const unassignedAccount: ProviderAccountRecord = {
       ...peerAccount,

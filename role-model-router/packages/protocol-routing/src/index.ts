@@ -51,6 +51,10 @@ export interface ProjectRuntimeRouteInputInput {
     string,
     CoreEndpointCandidate["benchmarkCapability"] | null | undefined
   >;
+  telemetryScoresByEndpointId?: Record<
+    string,
+    CoreEndpointCandidate["telemetryScores"] | null | undefined
+  >;
 }
 
 export interface ProjectRuntimeRouteInputResult {
@@ -173,6 +177,12 @@ function toCoreCandidate(
       ? {
           benchmarkCapability:
             input.benchmarkCapabilitiesByEndpointId[candidate.identity.endpoint_id] ?? undefined,
+        }
+      : {}),
+    ...(input.telemetryScoresByEndpointId?.[candidate.identity.endpoint_id]
+      ? {
+          telemetryScores:
+            input.telemetryScoresByEndpointId[candidate.identity.endpoint_id] ?? undefined,
         }
       : {}),
     status: candidate.status,

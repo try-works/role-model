@@ -25,5 +25,8 @@
   "scripts": {
     "build": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "0.84.2"
   }
 }
