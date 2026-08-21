@@ -52,8 +52,6 @@ test("stamps a non-null membership and profile revision on routing decisions", a
 test("projects immutable decision-time live telemetry evidence", async () => {
   const module = await import("../src/index.js");
   const evidence = module.projectTelemetryDecisionEvidence(
-
-
     {
       scored_candidates: [
         {

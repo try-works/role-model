@@ -964,7 +964,8 @@ function humanizeTelemetryErrorClass(errorClass: string | null | undefined): str
 function buildTelemetryStatusLabel(
   row: Pick<RuntimeTelemetryRequestRecord, "statusCode" | "errorClass" | "dimensions">,
 ): string {
-  const statusCode = row.statusCode !== null && row.statusCode !== undefined ? String(row.statusCode) : "n/a";
+  const statusCode =
+    row.statusCode !== null && row.statusCode !== undefined ? String(row.statusCode) : "n/a";
   if (!row.errorClass) {
     return `${statusCode} ok`;
   }

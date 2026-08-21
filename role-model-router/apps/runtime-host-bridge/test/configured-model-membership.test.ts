@@ -100,7 +100,11 @@ describe("configured model membership", () => {
     }) => input;
 
     const ordered = computeConfiguredMembershipRevision([
-      entry({ providerAccountId: "acme.primary", modelId: "acme/model", endpointId: "acme.primary.acme/model" }),
+      entry({
+        providerAccountId: "acme.primary",
+        modelId: "acme/model",
+        endpointId: "acme.primary.acme/model",
+      }),
       entry({
         providerAccountId: "acme.primary",
         modelId: "acme/model",
@@ -115,7 +119,11 @@ describe("configured model membership", () => {
         endpointId: "acme.primary.acme/model~high",
         reasoningEffort: "high",
       }),
-      entry({ providerAccountId: "acme.primary", modelId: "acme/model", endpointId: "acme.primary.acme/model" }),
+      entry({
+        providerAccountId: "acme.primary",
+        modelId: "acme/model",
+        endpointId: "acme.primary.acme/model",
+      }),
     ]);
 
     expect(ordered).toBe(reordered);
@@ -123,7 +131,11 @@ describe("configured model membership", () => {
 
     // Adding a sibling effort variant changes the revision (membership is endpoint-exact).
     const withSibling = computeConfiguredMembershipRevision([
-      entry({ providerAccountId: "acme.primary", modelId: "acme/model", endpointId: "acme.primary.acme/model" }),
+      entry({
+        providerAccountId: "acme.primary",
+        modelId: "acme/model",
+        endpointId: "acme.primary.acme/model",
+      }),
       entry({
         providerAccountId: "acme.primary",
         modelId: "acme/model",

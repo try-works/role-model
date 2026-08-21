@@ -88,7 +88,8 @@ function median(values: readonly number[]): number | undefined {
 
 function sampleFailed(sample: ObservedPerformanceSample): boolean {
   return sample.failure === true || typeof sample.error_class === "string";
-}export function validateObservedPerformanceProfileConsistency(
+}
+export function validateObservedPerformanceProfileConsistency(
   profile: ObservedPerformanceProfile,
 ): void {
   const sourceCount = profile.sources.benchmark_samples + profile.sources.live_request_samples;

@@ -190,10 +190,7 @@ function scoreRoute(
     return null;
   }
   const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
-  const weighted = parts.reduce(
-    (sum, part, index) => sum + part * (weights[index] ?? 0),
-    0,
-  );
+  const weighted = parts.reduce((sum, part, index) => sum + part * (weights[index] ?? 0), 0);
   return clamp01(weighted / totalWeight);
 }
 

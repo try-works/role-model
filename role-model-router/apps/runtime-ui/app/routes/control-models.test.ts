@@ -226,7 +226,12 @@ describe("control model role assignment helpers", () => {
         hasLocalPeerEndpoint: false,
         isRemoving: false,
       }),
-    ).toEqual({ kind: "eject-configured", label: "Eject from pool", disabled: false, isController: false });
+    ).toEqual({
+      kind: "eject-configured",
+      label: "Eject from pool",
+      disabled: false,
+      isController: false,
+    });
 
     expect(
       resolveConfiguredModelFooterAction({
@@ -237,7 +242,12 @@ describe("control model role assignment helpers", () => {
         hasLocalPeerEndpoint: true,
         isRemoving: false,
       }),
-    ).toEqual({ kind: "eject-configured", label: "Eject from router", disabled: false, isController: false });
+    ).toEqual({
+      kind: "eject-configured",
+      label: "Eject from router",
+      disabled: false,
+      isController: false,
+    });
   });
 
   test("keeps controller removal disabled and uses unload only for llama-swap models", () => {
@@ -250,7 +260,12 @@ describe("control model role assignment helpers", () => {
         hasLocalPeerEndpoint: false,
         isRemoving: false,
       }),
-    ).toEqual({ kind: "eject-controller", label: "Eject controller", disabled: false, isController: true });
+    ).toEqual({
+      kind: "eject-controller",
+      label: "Eject controller",
+      disabled: false,
+      isController: true,
+    });
 
     expect(
       resolveConfiguredModelFooterAction({

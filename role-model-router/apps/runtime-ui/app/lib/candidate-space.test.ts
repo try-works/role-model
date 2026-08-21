@@ -190,15 +190,16 @@ describe("buildCandidateSpacePoints", () => {
 
     const bare = points.find((point) => point.endpointId === "bare");
     expect(bare).toBeDefined();
-    expect(bare?.quality).toBeNull();
-    expect(bare?.speed).toBeNull();
-    expect(bare?.cost).toBeNull();
-    expect(bare?.routeScore).toBeNull();
-    expect(bare?.evidence).toBe("none");
+    if (!bare) {
+      throw new Error("expected a bare candidate point");
+    }
+    expect(bare.quality).toBeNull();
+    expect(bare.speed).toBeNull();
+    expect(bare.cost).toBeNull();
+    expect(bare.routeScore).toBeNull();
+    expect(bare.evidence).toBe("none");
     // The legend must not fabricate 55/58/0 — every metric is "no data".
-    expect(formatCandidateMetricTriplet(bare!)).toBe(
-      "C— · Q— · S— · No live telemetry · Selected",
-    );
+    expect(formatCandidateMetricTriplet(bare)).toBe("C— · Q— · S— · No live telemetry · Selected");
     expect(formatRouteScore(null)).toBe("—");
   });
 

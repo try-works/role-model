@@ -180,7 +180,10 @@ interface ModelScoreRow {
   readonly sourceType: string;
   readonly overallScore: number | null;
   readonly scoresByBucket: Partial<
-    Record<"easy" | "medium" | "hard", { readonly score: number | null; readonly cases: number | null }>
+    Record<
+      "easy" | "medium" | "hard",
+      { readonly score: number | null; readonly cases: number | null }
+    >
   > | null;
   readonly profileQualityScore: number | null;
   readonly benchmarkSamples: number | null;
