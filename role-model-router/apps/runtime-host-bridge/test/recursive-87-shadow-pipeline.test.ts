@@ -368,19 +368,15 @@ test("Phase 3.5 normal post-observation work executes every canonical business o
   );
   expect(invoked.every((row) => row.envelope.channel === "stage")).toBe(true);
   expect(invoked.every((row) => row.envelope.identity !== undefined)).toBe(true);
-  expect(invoked.map((row) => row.envelope.identity)).toEqual(
-    invoked.map(() => identity),
-  );
+  expect(invoked.map((row) => row.envelope.identity)).toEqual(invoked.map(() => identity));
   const artifactInvocation = invoked.find((row) => row.id === "artifact-store");
   const artifactPayload = artifactInvocation?.envelope.payload as Record<string, unknown>;
   const artifactRecord = artifactPayload.record as Record<string, unknown>;
   expect(JSON.parse(String(artifactRecord.content))).toMatchObject({ identity });
   const eventPayload = invoked.find((row) => row.id === "event-log")?.envelope.payload;
   expect(eventPayload).toMatchObject({ identity });
-  const memoryPayload = invoked.find((row) => row.id === "memory-store")?.envelope.payload as Record<
-    string,
-    unknown
-  >;
+  const memoryPayload = invoked.find((row) => row.id === "memory-store")?.envelope
+    .payload as Record<string, unknown>;
   expect(memoryPayload.row).toMatchObject({ identity });
   const knowledgeWrite = invoked.find(
     (row) => row.id === "knowledge-store" && row.envelope.capability === "knowledge:write",

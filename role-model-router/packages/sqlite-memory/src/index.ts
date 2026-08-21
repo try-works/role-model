@@ -4918,7 +4918,11 @@ export function readLiveTaskTelemetryScoresByEndpointIds(input: {
     if (!Number.isFinite(successRate) || successRate < 0 || successRate > 1 || failureCount < 0) {
       throw new Error("Live task telemetry produced an invalid success rollup.");
     }
-    const entry = (result[row.endpoint_id] ??= { taskSuccessRates: {}, taskRollups: {} });
+    let entry = result[row.endpoint_id];
+    if (entry === undefined) {
+      entry = { taskSuccessRates: {}, taskRollups: {} };
+      result[row.endpoint_id] = entry;
+    }
     entry.taskSuccessRates[row.taxonomy_task_type] = successRate;
     entry.taskRollups[row.taxonomy_task_type] = {
       successRate,

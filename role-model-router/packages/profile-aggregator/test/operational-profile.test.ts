@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
 
 import {
-  aggregateOperationalPerformanceSamples,
   type ObservedPerformanceSample,
+  aggregateOperationalPerformanceSamples,
 } from "../src/index.js";
 
 function sample(

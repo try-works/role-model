@@ -277,10 +277,7 @@ export function buildModelRoleSelection(
 }
 
 export function buildModelRoleBindings(
-  selectedModels: readonly (
-    | string
-    | { readonly modelId: string; readonly endpointId: string }
-  )[],
+  selectedModels: readonly (string | { readonly modelId: string; readonly endpointId: string })[],
   selection: ModelRoleSelection,
   allRoleIds: readonly string[],
 ) {

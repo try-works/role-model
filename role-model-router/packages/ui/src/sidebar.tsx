@@ -153,8 +153,7 @@ function ModelInventory({ models }: { models: readonly SidebarModel[] }) {
           <ModelStatusDot status={model.status} />
           <div
             aria-describedby={`sidebar-model-identity-${index}`}
-            className="min-w-0 flex-1 truncate rounded-sm font-mono text-xs leading-4 text-foreground focus-visible:ring-[3px] focus-visible:ring-ring"
-            tabIndex={0}
+            className="min-w-0 flex-1 truncate rounded-sm font-mono text-xs leading-4 text-foreground"
           >
             {model.id}
           </div>

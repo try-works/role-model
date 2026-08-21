@@ -6,6 +6,7 @@ import path from "node:path";
 import { createInterface } from "node:readline";
 import { pathToFileURL } from "node:url";
 
+import type { RuntimeEffortSource } from "@role-model-router/runtime-observability";
 import {
   type LegacyMigrationState,
   type LegacySqliteMigration,
@@ -16,7 +17,6 @@ import {
   readRuntimeObservationBundle,
 } from "@role-model-router/sqlite-memory";
 import { createProjectionV2 } from "@role-model-router/trace";
-import type { RuntimeEffortSource } from "@role-model-router/runtime-observability";
 
 import { consumeTrackBProjection } from "./track-b-projections.js";
 
@@ -1058,10 +1058,7 @@ function normalizeTrackBVariantIdentity(
       ? (observation.usageEvent as Record<string, unknown>)
       : null;
   const endpointId = readTrackBIdentityText(observation.endpointId, "endpointId");
-  const modelId = readTrackBIdentityText(
-    observation.modelId ?? usageEvent?.model_id,
-    "modelId",
-  );
+  const modelId = readTrackBIdentityText(observation.modelId ?? usageEvent?.model_id, "modelId");
   if (usageEvent?.endpoint_id !== undefined && usageEvent.endpoint_id !== endpointId) {
     throw new Error("persisted observation effort identity endpointId conflicts with usageEvent");
   }
@@ -1079,7 +1076,10 @@ function normalizeTrackBVariantIdentity(
     throw new Error("persisted observation effort identity reasoningEffort is invalid");
   }
   const effortSource = observation.effortSource;
-  if (typeof effortSource !== "string" || !TRACK_B_EFFORT_SOURCES.has(effortSource as RuntimeEffortSource)) {
+  if (
+    typeof effortSource !== "string" ||
+    !TRACK_B_EFFORT_SOURCES.has(effortSource as RuntimeEffortSource)
+  ) {
     throw new Error("persisted observation effort identity effortSource is invalid");
   }
   if (
@@ -1092,7 +1092,9 @@ function normalizeTrackBVariantIdentity(
     usageEvent?.reasoning_effort !== undefined &&
     usageEvent.reasoning_effort !== reasoningEffort
   ) {
-    throw new Error("persisted observation effort identity reasoningEffort conflicts with usageEvent");
+    throw new Error(
+      "persisted observation effort identity reasoningEffort conflicts with usageEvent",
+    );
   }
   if (usageEvent?.effort_source !== undefined && usageEvent.effort_source !== effortSource) {
     throw new Error("persisted observation effort identity effortSource conflicts with usageEvent");

@@ -85,5 +85,14 @@ describe("runRuntimeUiValidation", () => {
     expect(result.mixedAliasRouterDecisionMatchesRequest).toBe(true);
     expect(result.mixedAliasOverviewIncludesSelectedEndpoint).toBe(true);
     expect(result.mixedAliasEndpointsIncludeSelectedEndpoint).toBe(true);
+
+    const rerun = await runRuntimeUiValidation({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-ui-validation",
+      unifiedRuntimeConfigPath,
+    });
+    expect(rerun.activatedEndpointId).toBe("moonshot.personal.primary.global.kimi-k2.5");
   }, 240_000);
 });

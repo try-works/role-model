@@ -111,6 +111,10 @@ describe("Pi extension registration", () => {
     const publications: unknown[] = [];
     const extension = createRoleModelExtension({
       discover: async () => ({ discovery: createDiscovery() }),
+      resolveTaxonomy: async () => ({
+        source: "runtime",
+        taxonomy: loadCompactTaxonomy(),
+      }),
     });
 
     await extension(

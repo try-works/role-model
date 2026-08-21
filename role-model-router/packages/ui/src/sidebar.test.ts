@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it } from "vitest";
 
 import {
   MODEL_STATUS_DOT_CLASS,
@@ -34,7 +34,7 @@ describe("rm3 sidebar helpers", () => {
     expect(MODEL_STATUS_DOT_CLASS.offline).toBe("bg-muted-foreground");
   });
 
-  it("discloses a truncated model identity on pointer hover and keyboard focus", () => {
+  it("discloses a truncated model identity on pointer hover", () => {
     const identity = "DeepSeek V4 Flash (Maximum reasoning effort)";
     const markup = renderToStaticMarkup(
       createElement(SidebarModelInventory, {
@@ -42,7 +42,6 @@ describe("rm3 sidebar helpers", () => {
       }),
     );
 
-    expect(markup).toContain('tabindex="0"');
     expect(markup).toContain('aria-describedby="sidebar-model-identity-0"');
     expect(markup).toContain('id="sidebar-model-identity-0"');
     expect(markup).toContain('role="tooltip"');

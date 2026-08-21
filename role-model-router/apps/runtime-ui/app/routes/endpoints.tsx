@@ -109,20 +109,20 @@ export function buildRuntimeConnectionRows(input: {
   const endpointRows = input.endpointRows
     .filter((endpoint) => endpoint.servingSource !== "vendor-litellm")
     .map((endpoint) => {
-    endpointProviderIds.add(endpoint.providerLabel);
-    const routingIneligible = endpoint.routingEligible === false;
-    return {
-      key: `endpoint:${endpoint.endpointId}`,
-      providerLabel: endpoint.providerLabel,
-      connectionLabel: endpoint.providerAccountId ?? "—",
-      modelLabel: endpoint.displayName ?? endpoint.modelId,
-      endpointLabel: formatEndpointDisplayPath(endpoint),
-      sourceLabel: `${formatServingSource(endpoint.servingSource, endpoint.sourceLabel)} / ${endpoint.endpointKind}`,
-      healthLabel: endpoint.healthStatus,
-      healthTone: healthTone(endpoint.healthStatus),
-      readinessLabel: routingIneligible ? "routing ineligible" : endpoint.status,
-      readinessTone: routingIneligible ? "warning" : statusTone(endpoint.status),
-    };
+      endpointProviderIds.add(endpoint.providerLabel);
+      const routingIneligible = endpoint.routingEligible === false;
+      return {
+        key: `endpoint:${endpoint.endpointId}`,
+        providerLabel: endpoint.providerLabel,
+        connectionLabel: endpoint.providerAccountId ?? "—",
+        modelLabel: endpoint.displayName ?? endpoint.modelId,
+        endpointLabel: formatEndpointDisplayPath(endpoint),
+        sourceLabel: `${formatServingSource(endpoint.servingSource, endpoint.sourceLabel)} / ${endpoint.endpointKind}`,
+        healthLabel: endpoint.healthStatus,
+        healthTone: healthTone(endpoint.healthStatus),
+        readinessLabel: routingIneligible ? "routing ineligible" : endpoint.status,
+        readinessTone: routingIneligible ? "warning" : statusTone(endpoint.status),
+      };
     });
 
   const providerOnlyRows = input.providerRows
