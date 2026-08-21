@@ -4043,18 +4043,27 @@ export function clearObservedBenchmarkDataForEndpoint(
     .get(input.endpointId) as { count: number };
   const clearedSampleCount = countRow.count;
 
-  database
-    .prepare(
-      "DELETE FROM observed_performance_samples WHERE endpoint_id = ? AND source_type = 'benchmark'",
-    )
-    .run(input.endpointId);
-  database
-    .prepare(
-      "DELETE FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND source_type = 'benchmark'",
-    )
-    .run(input.endpointId);
+  database.exec("BEGIN IMMEDIATE");
+  try {
+    database
+      .prepare(
+        "DELETE FROM observed_performance_samples WHERE endpoint_id = ? AND source_type = 'benchmark'",
+      )
+      .run(input.endpointId);
+    database
+      .prepare(
+        "DELETE FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND source_type = 'benchmark'",
+      )
+      .run(input.endpointId);
 
-  rebuildObservedProfilesForEndpoint(database, input.endpointId, nowMs);
+    rebuildObservedProfilesForEndpoint(database, input.endpointId, nowMs);
+
+    database.exec("COMMIT");
+  } catch (error) {
+    database.exec("ROLLBACK");
+    database.close();
+    throw error;
+  }
 
   database.close();
   return { endpointId: input.endpointId, clearedSampleCount };
@@ -4088,17 +4097,26 @@ export function clearAllObservedBenchmarkData(
     .get() as { count: number };
   const clearedSampleCount = countRow.count;
 
-  database
-    .prepare("DELETE FROM observed_performance_samples WHERE source_type = 'benchmark'")
-    .run();
-  database
-    .prepare(
-      "DELETE FROM observed_performance_samples_by_difficulty WHERE source_type = 'benchmark'",
-    )
-    .run();
+  database.exec("BEGIN IMMEDIATE");
+  try {
+    database
+      .prepare("DELETE FROM observed_performance_samples WHERE source_type = 'benchmark'")
+      .run();
+    database
+      .prepare(
+        "DELETE FROM observed_performance_samples_by_difficulty WHERE source_type = 'benchmark'",
+      )
+      .run();
 
-  for (const row of endpointRows) {
-    rebuildObservedProfilesForEndpoint(database, row.endpoint_id, nowMs);
+    for (const row of endpointRows) {
+      rebuildObservedProfilesForEndpoint(database, row.endpoint_id, nowMs);
+    }
+
+    database.exec("COMMIT");
+  } catch (error) {
+    database.exec("ROLLBACK");
+    database.close();
+    throw error;
   }
 
   database.close();
@@ -4123,11 +4141,12 @@ export function clearBenchmarkRunArtifacts(
     return { clearedRunCount: 0 };
   }
 
+  const runDirectories = readdirSync(input.artifactRoot, { withFileTypes: true }).filter((entry) =>
+    entry.isDirectory(),
+  );
+
   let clearedRunCount = 0;
-  for (const entry of readdirSync(input.artifactRoot, { withFileTypes: true })) {
-    if (!entry.isDirectory()) {
-      continue;
-    }
+  for (const entry of runDirectories) {
     rmSync(path.join(input.artifactRoot, entry.name), { recursive: true, force: true });
     clearedRunCount += 1;
   }
@@ -4800,6 +4819,7 @@ export function readLatestBenchmarkProfilesByEndpointIds(input: {
   readonly databasePath: string;
   readonly endpointIds: readonly string[];
   readonly difficultyBucket?: string;
+  readonly membershipRevision?: string;
 }): Record<string, ObservedPerformanceProfile> {
   const endpointIds = [...new Set(input.endpointIds)];
   if (endpointIds.length === 0) {
@@ -4827,6 +4847,19 @@ export function readLatestBenchmarkProfilesByEndpointIds(input: {
   const samplesByEndpointId = new Map<string, ObservedPerformanceSample[]>();
   for (const row of rows) {
     const sample = JSON.parse(row.sample_json) as ObservedPerformanceSample;
+    // A membership revision is only enforced when both a current revision and a
+    // sample revision are present; legacy samples (no revision) are retained for
+    // backward compatibility and quarantined separately by the stale-reconciliation path.
+    if (
+      input.membershipRevision &&
+      sample.membership_revision &&
+      sample.membership_revision !== input.membershipRevision
+    ) {
+      continue;
+    }
+    if (sample.completion_state === "stale") {
+      continue;
+    }
     const samples = samplesByEndpointId.get(row.endpoint_id) ?? [];
     samples.push(sample);
     samplesByEndpointId.set(row.endpoint_id, samples);

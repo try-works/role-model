@@ -1330,6 +1330,8 @@ export interface RouterDecisionListItem {
   readonly sourceType?: "local" | "remote";
   readonly providerId?: string | null;
   readonly finishReason?: string | null;
+  readonly membershipRevision?: string | null;
+  readonly profileRevision?: string | null;
 }
 
 export interface RouterDecisionPage {
@@ -1639,12 +1641,10 @@ export async function fetchRuntimeRequests(
 export async function fetchRuntimeModels(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<readonly RuntimeModelRecord[]> {
-  try {
-    return await fetchJson<RuntimeModelRecord[]>("/api/role-model/models", fetcher);
-  } catch {
-    const modelsResponse = await fetchJson<{ data: RuntimeModelRecord[] }>("/v1/models", fetcher);
-    return modelsResponse.data;
-  }
+  // The configured pool is the authority for the Models page. Do not silently fall
+  // back to the OpenAI-compat /v1/models catalog, which is a different (base-family
+  // keyed) projection and would mask a configured-pool outage as a "healthy" list.
+  return fetchJson<RuntimeModelRecord[]>("/api/role-model/models", fetcher);
 }
 
 export async function fetchRuntimeCatalogModels(

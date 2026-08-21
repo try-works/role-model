@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
 
-import { findConfiguredModelBlockingReferences } from "../src/configured-model-membership.js";
+import {
+  computeConfiguredMembershipRevision,
+  findConfiguredModelBlockingReferences,
+} from "../src/configured-model-membership.js";
 import {
   type UnifiedRuntimeConfig,
   removeUnifiedRuntimeConfigProviderModel,
@@ -86,5 +89,54 @@ describe("configured model membership", () => {
     expect(
       findConfiguredModelBlockingReferences({ ...input, configuredKeys: [input.target] }),
     ).toEqual([input.references[0]]);
+  });
+
+  test("computeConfiguredMembershipRevision is order-stable and effort-variant-aware", () => {
+    const entry = (input: {
+      readonly providerAccountId: string;
+      readonly modelId: string;
+      readonly endpointId: string;
+      readonly reasoningEffort?: string | null;
+    }) => input;
+
+    const ordered = computeConfiguredMembershipRevision([
+      entry({ providerAccountId: "acme.primary", modelId: "acme/model", endpointId: "acme.primary.acme/model" }),
+      entry({
+        providerAccountId: "acme.primary",
+        modelId: "acme/model",
+        endpointId: "acme.primary.acme/model~high",
+        reasoningEffort: "high",
+      }),
+    ]);
+    const reordered = computeConfiguredMembershipRevision([
+      entry({
+        providerAccountId: "acme.primary",
+        modelId: "acme/model",
+        endpointId: "acme.primary.acme/model~high",
+        reasoningEffort: "high",
+      }),
+      entry({ providerAccountId: "acme.primary", modelId: "acme/model", endpointId: "acme.primary.acme/model" }),
+    ]);
+
+    expect(ordered).toBe(reordered);
+    expect(ordered.length).toBeGreaterThan(0);
+
+    // Adding a sibling effort variant changes the revision (membership is endpoint-exact).
+    const withSibling = computeConfiguredMembershipRevision([
+      entry({ providerAccountId: "acme.primary", modelId: "acme/model", endpointId: "acme.primary.acme/model" }),
+      entry({
+        providerAccountId: "acme.primary",
+        modelId: "acme/model",
+        endpointId: "acme.primary.acme/model~high",
+        reasoningEffort: "high",
+      }),
+      entry({
+        providerAccountId: "acme.primary",
+        modelId: "acme/model",
+        endpointId: "acme.primary.acme/model~low",
+        reasoningEffort: "low",
+      }),
+    ]);
+    expect(withSibling).not.toBe(ordered);
   });
 });

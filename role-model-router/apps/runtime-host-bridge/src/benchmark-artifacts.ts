@@ -93,6 +93,8 @@ export interface BenchmarkRunManifest {
   readonly responseCount: number;
   readonly judgeArtifactCount?: number;
   readonly compareArtifactCount?: number;
+  /** Canonical configured-pool membership revision captured when the run completed. */
+  readonly membershipRevision?: string | null;
 }
 
 function sanitizePathSegment(value: string): string {
