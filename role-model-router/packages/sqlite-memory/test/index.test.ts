@@ -4309,6 +4309,49 @@ describe("clearObservedBenchmarkDataForEndpoint", () => {
 });
 
 describe("readLatestBenchmarkProfilesByEndpointIds membership revision", () => {
+  test("excludes failed, cancelled, and revisionless benchmark evidence from current profiles", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-terminal-outcome-filter",
+    });
+    const endpointId = "local.test.model";
+
+    for (const [timestampMs, judgeScore, completionState, membershipRevision, profileRevision] of [
+      [1_000, 0, "failed", "rev-current", undefined],
+      [2_000, 0, "cancelled", "rev-current", undefined],
+      [3_000, 0.3, "completed", undefined, undefined],
+      [4_000, 0.8, "completed", "rev-current", "profile-current"],
+    ] as const) {
+      persistObservedBenchmarkSample({
+        databasePath: initialized.databasePath,
+        nowMs: timestampMs,
+        sample: {
+          endpoint_id: endpointId,
+          endpoint_version: "v1",
+          source_type: "benchmark",
+          difficulty_bucket: "hard",
+          timestamp_ms: timestampMs,
+          latency_ms: 900,
+          judge_score: judgeScore,
+          completion_state: completionState,
+          ...(membershipRevision ? { membership_revision: membershipRevision } : {}),
+          ...(profileRevision ? { benchmark_profile_revision: profileRevision } : {}),
+        },
+      });
+    }
+
+    const profile = readLatestBenchmarkProfilesByEndpointIds({
+      databasePath: initialized.databasePath,
+      endpointIds: [endpointId],
+      membershipRevision: "rev-current",
+    })[endpointId];
+
+    expect(profile).toBeDefined();
+    expect(profile?.sample_size).toBe(1);
+    expect(profile?.judge_score).toBeCloseTo(0.8, 5);
+  });
+
   test("skips benchmark samples whose membership revision no longer matches", async () => {
     const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
     const initialized = initializeSqliteMemory({
@@ -4329,6 +4372,8 @@ describe("readLatestBenchmarkProfilesByEndpointIds membership revision", () => {
         latency_ms: 900,
         judge_score: 0.35,
         membership_revision: "rev-old",
+        completion_state: "completed",
+        benchmark_profile_revision: "profile-old",
       },
     });
     persistObservedBenchmarkSample({
@@ -4343,6 +4388,8 @@ describe("readLatestBenchmarkProfilesByEndpointIds membership revision", () => {
         latency_ms: 880,
         judge_score: 0.8,
         membership_revision: "rev-current",
+        completion_state: "completed",
+        benchmark_profile_revision: "profile-current",
       },
     });
 
@@ -4392,6 +4439,8 @@ describe("readLatestBenchmarkProfilesByEndpointIds membership revision", () => {
         latency_ms: 880,
         judge_score: 0.8,
         membership_revision: "rev-current",
+        completion_state: "completed",
+        benchmark_profile_revision: "profile-current",
       },
     });
 

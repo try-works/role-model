@@ -36,8 +36,14 @@ export interface ObservedPerformanceSample {
    * (not selected as latest valid) rather than silently reused.
    */
   membership_revision?: string;
-  /** Non-destructive quarantine marker; stale samples are never selected as latest valid. */
-  completion_state?: "stale";
+  /** Immutable benchmark-run identity and profile revision once successfully published. */
+  benchmark_run_id?: string;
+  benchmark_profile_revision?: string;
+  /**
+   * Benchmark lifecycle state. Only completed samples are valid current benchmark
+   * evidence; every other terminal state is retained exclusively for diagnostics.
+   */
+  completion_state?: "pending" | "completed" | "failed" | "cancelled" | "stale";
 }
 
 export interface AggregateObservedPerformanceOptions {
@@ -134,7 +140,11 @@ export function aggregateObservedPerformanceSamples(
     typeof sample.cost_per_1k_tokens_est === "number" ? [sample.cost_per_1k_tokens_est] : [],
   );
   const judgeScores = samples.flatMap((sample) =>
-    sample.source_type === "benchmark" && typeof sample.judge_score === "number"
+    sample.source_type === "benchmark" &&
+    typeof sample.judge_score === "number" &&
+    sample.completion_state !== "failed" &&
+    sample.completion_state !== "cancelled" &&
+    sample.completion_state !== "stale"
       ? [sample.judge_score]
       : [],
   );

@@ -21424,14 +21424,7 @@ export async function createRuntimeBridgeBackend(
     }) as Record<string, unknown> | null;
     const routingDiagnostics = asObjectRecord(observation?.routingDiagnostics);
     const routingMode = asObjectRecord(routingDiagnostics?.routingMode);
-    const membershipRevision = computeConfiguredMembershipRevision(
-      runtimeEndpoints.map((runtimeEndpoint) => ({
-        providerAccountId: runtimeEndpoint.providerAccountId,
-        modelId: runtimeEndpoint.modelId,
-        endpointId: runtimeEndpoint.endpointId,
-        reasoningEffort: runtimeEndpoint.reasoningEffort ?? null,
-      })),
-    );
+    const decision = asObjectRecord(observation?.decision);
     return {
       requestId: record.requestId,
       routingDecisionId: record.routingDecisionId ?? null,
@@ -21440,8 +21433,8 @@ export async function createRuntimeBridgeBackend(
       upstreamModelId: record.upstreamModelId ?? record.modelId ?? null,
       reasoningEffort: record.reasoningEffort ?? null,
       effortSource: record.effortSource ?? null,
-      membershipRevision,
-      profileRevision: membershipRevision,
+      membershipRevision: asStringValue(decision?.membership_revision) ?? null,
+      profileRevision: asStringValue(decision?.profile_revision) ?? null,
       strategyLabel:
         asStringValue(routingMode?.effectiveMode) ??
         currentUnifiedRuntimeConfig?.routingStrategy ??
@@ -23003,8 +22996,29 @@ export async function createRuntimeBridgeBackend(
         reasoningRequested && !execution.normalized.reasoningText
           ? "provider_returned_no_reasoning"
           : undefined;
+      const decisionMembershipRevision = computeConfiguredMembershipRevision(
+        runtimeEndpoints.map((runtimeEndpoint) => ({
+          providerAccountId: runtimeEndpoint.providerAccountId,
+          modelId: runtimeEndpoint.modelId,
+          endpointId: runtimeEndpoint.endpointId,
+          reasoningEffort: runtimeEndpoint.reasoningEffort ?? null,
+        })),
+      );
+      const decisionPortfolio = await readCurrentBenchmarkPortfolio({
+        artifactRoot: benchmarkArtifactRoot,
+        resolveModelId: resolveBenchmarkEndpointModelId,
+        membershipRevision: decisionMembershipRevision,
+      });
+      const decisionProfileRevision =
+        decisionPortfolio.entries.find(
+          (entry) => entry.endpointId === routed.decision.chosen_endpoint_id,
+        )?.profileRevision ?? null;
       const bundle = createRuntimeObservationBundle({
-        decision: routed.decision,
+        decision: {
+          ...routed.decision,
+          membership_revision: decisionMembershipRevision,
+          profile_revision: decisionProfileRevision,
+        },
         clientRequestId: executionOptions?.requestOptions?.clientRequestId,
         reasoningEffort: effectiveEffort.reasoningEffort,
         effortSource: effectiveEffort.effortSource,

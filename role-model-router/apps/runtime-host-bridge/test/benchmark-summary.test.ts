@@ -290,6 +290,80 @@ describe("benchmark-summary", () => {
     ]);
   });
 
+  test("quarantines revisionless and mismatched manifests from a current-membership portfolio", async () => {
+    const root = await createArtifactRoot();
+    const writeRun = async (input: {
+      readonly runId: string;
+      readonly membershipRevision?: string;
+      readonly profileRevision?: string;
+    }) => {
+      await writeBenchmarkRunManifest(root, {
+        runId: input.runId,
+        suiteId: "routing-capability-v2",
+        mode: "quick",
+        judgeEndpointId: "judge.endpoint",
+        startedAtMs: 1,
+        executionCompletedAtMs: 2,
+        gradingCompletedAtMs: 3,
+        endpointIds: ["deepseek.flash-high"],
+        caseIds: ["case"],
+        responseCount: 1,
+        judgeArtifactCount: 1,
+        compareArtifactCount: 0,
+        ...(input.membershipRevision ? { membershipRevision: input.membershipRevision } : {}),
+        ...(input.profileRevision
+          ? { profileRevisionByEndpointId: { "deepseek.flash-high": input.profileRevision } }
+          : {}),
+        ...(input.profileRevision ? { completionState: "completed" as const } : {}),
+      });
+      await writeBenchmarkRunResult(root, {
+        runId: input.runId,
+        suiteId: "routing-capability-v2",
+        suiteVersion: "2.0",
+        mode: "quick",
+        judgeEndpointId: "judge.endpoint",
+        startedAtMs: 1,
+        completedAtMs: 3,
+        endpointGrades: [
+          {
+            endpointId: "deepseek.flash-high",
+            modelId: "deepseek-v4-flash",
+            sourceType: "remote",
+            overallScore: 0.8,
+            byDifficulty: {
+              easy: { score: 0.8, cases: 1 },
+              medium: { score: 0, cases: 0 },
+              hard: { score: 0, cases: 0 },
+            },
+            caseResults: [{ caseId: "case", difficultyBucket: "easy", score: 0.8 }],
+          },
+        ],
+      });
+    };
+
+    await writeRun({ runId: "legacy" });
+    await writeRun({
+      runId: "mismatched",
+      membershipRevision: "membership-old",
+      profileRevision: "p-old",
+    });
+    await writeRun({
+      runId: "current",
+      membershipRevision: "membership-current",
+      profileRevision: "p-current",
+    });
+
+    const portfolio = await readCurrentBenchmarkPortfolio({
+      artifactRoot: root,
+      resolveModelId: (endpointId) => endpointId,
+      membershipRevision: "membership-current",
+    });
+
+    expect(portfolio.entries).toEqual([
+      expect.objectContaining({ runId: "current", profileRevision: "p-current" }),
+    ]);
+  });
+
   test("builds exact run capability even when no learned profile exists", () => {
     const capability = buildBenchmarkCapabilityForEndpoint({
       endpointId: "deepseek.flash-max",
@@ -445,6 +519,25 @@ describe("benchmark-summary", () => {
           compareArtifactCount: 1,
         },
       },
+      portfolioEntry: {
+        endpointId: "moonshot.kimi",
+        modelId: "kimi-k2.6",
+        overallScore: 0.5,
+        scoresByBucket: {
+          easy: { score: 0.6, cases: 3 },
+          medium: { score: 0.5, cases: 3 },
+          hard: { score: 0.4, cases: 3 },
+        },
+        passingCaseIds: ["h05"],
+        caseCount: 2,
+        runId: "run-newer",
+        completedAtMs: 30,
+        mode: "quick",
+        suiteId: "routing-capability-v2",
+        suiteVersion: "2.0",
+        judgeEndpointId: "judge.new",
+        judgeModelId: "kimi-k2.6",
+      },
     });
 
     expect(capability?.overallScore).toBe(0.5);
@@ -503,6 +596,43 @@ describe("benchmark-summary", () => {
       lastRunCompletedAtMs: null,
       judgeEndpointId: null,
     });
+  });
+
+  test("does not use an unfiltered latest-summary subject when no current portfolio entry exists", () => {
+    const capability = buildBenchmarkCapabilityForEndpoint({
+      endpointId: "deepseek.flash-max",
+      latestProfile: null,
+      summary: {
+        runId: "historical-other-membership",
+        completedAtMs: 60,
+        mode: "quick",
+        suiteId: "routing-capability-v2",
+        suiteVersion: "2.0",
+        judgeEndpointId: "judge.refresh",
+        judgeModelId: "judge-refresh-model",
+        artifactRoot: "historical-other-membership",
+        subjects: [
+          {
+            endpointId: "deepseek.flash-max",
+            modelId: "deepseek-v4-flash",
+            overallScore: 0.93,
+            scoresByBucket: {
+              easy: { score: 0.93, cases: 1 },
+              medium: { score: 0.93, cases: 1 },
+              hard: { score: 0.93, cases: 1 },
+            },
+            passingCaseIds: ["case"],
+            caseCount: 1,
+          },
+        ],
+        caseComparisons: [],
+        caseAudits: [],
+        manifest: null,
+      },
+      portfolioEntry: null,
+    });
+
+    expect(capability).toBeNull();
   });
 
   test("uses the exact endpoint portfolio entry instead of a newer sibling-only summary", () => {
@@ -685,6 +815,41 @@ describe("benchmark-summary", () => {
           judgeArtifactCount: 2,
           compareArtifactCount: 1,
         },
+      },
+      portfolioEntry: {
+        endpointId: "moonshot.kimi",
+        modelId: "kimi-k2.6",
+        overallScore: 0.74,
+        scoresByBucket: {
+          easy: { score: 0.8, cases: 2 },
+          medium: { score: 0.7, cases: 2 },
+          hard: { score: 0.72, cases: 2 },
+        },
+        passingCaseIds: ["h01", "h03", "h04"],
+        caseCount: 4,
+        taxonomyScores: {
+          byRole: { coder: 0.9, writer: 0.55 },
+          byTask: { "coder.review": 0.92, "writer.docs.write": 0.55 },
+          byVariant: {},
+          byCapability: {},
+          byModality: {},
+          byToolClass: {},
+        },
+        taxonomyCoverage: {
+          byRole: { coder: 3, writer: 1 },
+          byTask: { "coder.review": 3, "writer.docs.write": 1 },
+          byVariant: {},
+          byCapability: {},
+          byModality: {},
+          byToolClass: {},
+        },
+        runId: "run-role-fit",
+        completedAtMs: 30,
+        mode: "quick",
+        suiteId: "routing-capability-v2",
+        suiteVersion: "2.0",
+        judgeEndpointId: "judge.new",
+        judgeModelId: "kimi-k2.6",
       },
     });
 

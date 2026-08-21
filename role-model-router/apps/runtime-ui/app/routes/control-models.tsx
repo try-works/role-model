@@ -355,12 +355,15 @@ export function resolveConfiguredModelFooterAction(input: {
   readonly hasLocalPeerEndpoint: boolean;
   readonly isRemoving: boolean;
 }): ConfiguredModelFooterAction {
-  const kind = input.hasLlamaSwapEndpoint
-    ? "unload-local"
-    : !input.hasPrimaryAccount
-      ? "none"
-      : input.isController
-        ? "eject-controller"
+  // Controller ownership wins over local runtime mechanics: the final
+  // controller must use the destructive eject confirmation/recovery path,
+  // never the ordinary local-model unload shortcut.
+  const kind = !input.hasPrimaryAccount
+    ? "none"
+    : input.isController
+      ? "eject-controller"
+      : input.hasLlamaSwapEndpoint
+        ? "unload-local"
         : "eject-configured";
   return {
     kind,

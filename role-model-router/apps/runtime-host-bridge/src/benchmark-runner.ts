@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 
 import path from "node:path";
 
@@ -1435,6 +1435,8 @@ async function gradeCompareAcrossModels(input: {
 }
 
 function toObservedSample(input: {
+  benchmarkRunId: string;
+  benchmarkProfileRevision: string;
   endpointId: string;
 
   modelId: string;
@@ -1488,10 +1490,30 @@ function toObservedSample(input: {
 
     ...(input.failure ? { error_class: "benchmark_execution_failed" } : {}),
 
+    completion_state: input.failure ? "failed" : "completed",
+
     request_id: input.requestId,
+
+    benchmark_run_id: input.benchmarkRunId,
+
+    benchmark_profile_revision: input.benchmarkProfileRevision,
 
     ...(input.membershipRevision !== null ? { membership_revision: input.membershipRevision } : {}),
   };
+}
+
+function deriveBenchmarkProfileRevision(input: {
+  readonly runId: string;
+  readonly endpointId: string;
+  readonly endpointVersion: string;
+  readonly modelId: string;
+  readonly reasoningEffort: string | null;
+  readonly suiteId: string;
+  readonly suiteVersion: string;
+  readonly mode: "quick" | "full";
+  readonly membershipRevision: string | null;
+}): string {
+  return `sha256:${createHash("sha256").update(JSON.stringify(input)).digest("hex")}`;
 }
 
 async function persistResponseRecord(
@@ -1648,6 +1670,30 @@ export async function runRoutingCapabilityBenchmark(
     throw new Error("No healthy configured endpoints available for benchmarking.");
   }
 
+  // Freeze the configured membership once, before any benchmark execution. A
+  // benchmark result is evidence for this exact target set, never whichever
+  // pool happens to be configured when grading finishes.
+  const startMembershipRevision = deps.membershipRevision?.() ?? null;
+  const profileRevisionByEndpointId = new Map(
+    targetEndpoints.map(
+      (endpoint) =>
+        [
+          endpoint.endpointId,
+          deriveBenchmarkProfileRevision({
+            runId,
+            endpointId: endpoint.endpointId,
+            endpointVersion: deps.deriveEndpointVersion(endpoint.endpointId),
+            modelId: endpoint.modelId,
+            reasoningEffort: endpoint.reasoningEffort ?? null,
+            suiteId: suite.suite_id,
+            suiteVersion: suite.suite_version,
+            mode,
+            membershipRevision: startMembershipRevision,
+          }),
+        ] as const,
+    ),
+  );
+
   const judgeEndpointId = request.judgeEndpointId ?? null;
 
   const judgeEndpoint = judgeEndpointId
@@ -1793,6 +1839,12 @@ export async function runRoutingCapabilityBenchmark(
       caseIds: cases.map((caseItem) => caseItem.case_id),
 
       responseCount: executionSteps,
+
+      membershipRevision: startMembershipRevision,
+
+      profileRevisionByEndpointId: Object.fromEntries(profileRevisionByEndpointId),
+
+      completionState: "running",
     });
 
     const endpointGrades: BenchmarkRunEndpointGrade[] = [];
@@ -1944,6 +1996,11 @@ export async function runRoutingCapabilityBenchmark(
 
         compareByCase.set(caseItem.case_id, existingCompare);
 
+        const benchmarkProfileRevision = profileRevisionByEndpointId.get(endpoint.endpointId);
+        if (!benchmarkProfileRevision) {
+          throw new Error(`Missing frozen benchmark profile revision for ${endpoint.endpointId}.`);
+        }
+
         persistObservedBenchmarkSample({
           databasePath: deps.databasePath,
 
@@ -1956,7 +2013,11 @@ export async function runRoutingCapabilityBenchmark(
 
             endpointVersion: deps.deriveEndpointVersion(endpoint.endpointId),
 
-            membershipRevision: deps.membershipRevision?.() ?? null,
+            membershipRevision: startMembershipRevision,
+
+            benchmarkRunId: runId,
+
+            benchmarkProfileRevision,
 
             caseItem,
 
@@ -2077,6 +2138,30 @@ export async function runRoutingCapabilityBenchmark(
 
     const gradingCompletedAtMs = Date.now();
 
+    const completionMembershipRevision = deps.membershipRevision?.() ?? null;
+    if (completionMembershipRevision !== startMembershipRevision) {
+      await writeBenchmarkRunManifest(artifactRoot, {
+        runId,
+        suiteId: suite.suite_id,
+        mode,
+        judgeEndpointId: judgeEndpoint.endpointId,
+        judgeSubjectOverlap: startGuards.judgeSubjectOverlap,
+        startWarnings: startGuards.warnings,
+        startedAtMs,
+        executionCompletedAtMs,
+        gradingCompletedAtMs,
+        endpointIds: targetEndpoints.map((endpoint) => endpoint.endpointId),
+        caseIds: cases.map((caseItem) => caseItem.case_id),
+        responseCount: executionSteps,
+        judgeArtifactCount,
+        compareArtifactCount,
+        membershipRevision: startMembershipRevision,
+        profileRevisionByEndpointId: Object.fromEntries(profileRevisionByEndpointId),
+        completionState: "stale",
+      });
+      throw new Error("benchmark_membership_drifted_before_publish");
+    }
+
     await writeBenchmarkRunManifest(artifactRoot, {
       runId,
 
@@ -2106,7 +2191,11 @@ export async function runRoutingCapabilityBenchmark(
 
       compareArtifactCount,
 
-      membershipRevision: deps.membershipRevision?.() ?? null,
+      membershipRevision: startMembershipRevision,
+
+      profileRevisionByEndpointId: Object.fromEntries(profileRevisionByEndpointId),
+
+      completionState: "completed",
     });
 
     const result: BenchmarkRunResult = {

@@ -310,6 +310,19 @@ describe("control model role assignment helpers", () => {
     ).toBe("execute");
   });
 
+  test("never bypasses final-controller eject confirmation through a local unload action", () => {
+    expect(
+      resolveConfiguredModelFooterAction({
+        hasSelectedCard: true,
+        isController: true,
+        hasLlamaSwapEndpoint: true,
+        hasPrimaryAccount: true,
+        hasLocalPeerEndpoint: false,
+        isRemoving: false,
+      }),
+    ).toMatchObject({ kind: "eject-controller", label: "Eject controller", disabled: false });
+  });
+
   test("edits the account that owns the selected effort endpoint instead of the first model match", () => {
     const selectedOwner = { ...account, providerAccountId: "deepseek.personal.primary" };
     expect(

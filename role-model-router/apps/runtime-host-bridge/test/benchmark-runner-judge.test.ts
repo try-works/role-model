@@ -222,12 +222,17 @@ describe("benchmark-runner judge remediation", () => {
       sourceType: "local" as const,
       healthStatus: "healthy",
     };
+    let membershipRevisionReads = 0;
 
     const deps = {
       databasePath,
       benchmarkArtifactRoot: artifactRoot,
       listConfiguredEndpoints: async () => [localEndpoint, endpoint],
       deriveEndpointVersion: () => "v1",
+      membershipRevision: () => {
+        membershipRevisionReads += 1;
+        return "membership-at-start";
+      },
       executeChatCompletions: async (
         body: Record<string, unknown>,
         requestId: string,
@@ -301,9 +306,12 @@ describe("benchmark-runner judge remediation", () => {
       executionCompletedAtMs: number;
       gradingCompletedAtMs: number;
       judgeArtifactCount: number;
+      membershipRevision: string;
     };
     expect(manifest.executionCompletedAtMs).toBeLessThanOrEqual(manifest.gradingCompletedAtMs);
     expect(manifest.judgeArtifactCount).toBeGreaterThan(0);
+    expect(manifest.membershipRevision).toBe("membership-at-start");
+    expect(membershipRevisionReads).toBe(2);
   });
 
   test("counts executed dynamic tools when the endpoint does not echo assistant tool_calls", async () => {
