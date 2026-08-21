@@ -6,6 +6,10 @@ const workflow = readFileSync(
   new URL("../.github/workflows/build-binaries.yml", import.meta.url),
   "utf8",
 );
+const acceptanceWorkflow = readFileSync(
+  new URL("../.github/workflows/accept-release-candidate.yml", import.meta.url),
+  "utf8",
+);
 
 test("build-binaries retries release attestation before failing", () => {
   assert.match(workflow, /Attest release archive \(attempt 1\)/);
@@ -51,4 +55,33 @@ test("the public release orchestrator enforces paired private promotion", () => 
   assert.match(workflow, /Verify private revision passed paired promotion branch/);
   assert.match(workflow, /REQUIRED_PRIVATE_BRANCH:[\s\S]*?'main'[\s\S]*?'stage'/);
   assert.match(workflow, /git merge-base --is-ancestor/);
+});
+
+test("stage pushes publish downloadable prereleases before stable promotion", () => {
+  assert.match(workflow, /^ {2}publish-stage-prerelease:/m);
+  assert.match(workflow, /github\.ref == 'refs\/heads\/stage'/);
+  assert.match(workflow, /stage-rc-\$\{short_sha\}/);
+  assert.match(workflow, /role-model-stage-candidate-\*/);
+  assert.match(workflow, /--prerelease/);
+  assert.match(workflow, /SHA256SUMS\.txt/);
+});
+
+test("stable tags require a manually accepted exact stage candidate", () => {
+  assert.match(workflow, /rc-approved/);
+  assert.match(workflow, /candidate\.workflow_run\.head_sha/);
+  assert.match(workflow, /Stable release tag must be exact SemVer/);
+  assert.match(workflow, /Production tag must point to a commit promoted through main/);
+});
+
+test("release candidate acceptance is explicit, checksum-bound, and manual only", () => {
+  assert.match(acceptanceWorkflow, /workflow_dispatch:/);
+  assert.doesNotMatch(acceptanceWorkflow, /^ {2}push:/m);
+  assert.match(acceptanceWorkflow, /candidate_tag:/);
+  assert.match(acceptanceWorkflow, /accept:/);
+  assert.match(acceptanceWorkflow, /isPrerelease/);
+  assert.match(acceptanceWorkflow, /sha256sum -c SHA256SUMS\.txt/);
+  for (const target of ["linux-x64", "darwin-x64", "darwin-arm64", "win32-x64"]) {
+    assert.match(acceptanceWorkflow, new RegExp(target));
+  }
+  assert.match(acceptanceWorkflow, /rc-approved\/\$CANDIDATE_SHA/);
 });

@@ -4,7 +4,11 @@
 
 1. Ordinary `feature/*`, `fix/*`, dependency, and `recursive/*` pull requests target `dev` and normally squash merge.
 2. A maintainer promotes a tested integration with a merge-commit PR from `dev` to `stage`.
-3. A maintainer promotes a tested stage candidate with a merge-commit PR from `stage` to `main`.
+3. The `stage` push publishes a GitHub prerelease named `stage-rc-<12-character-stage-sha>`. A human installs and
+   tests that exact package on the isolated stage channel, then explicitly accepts it with the
+   `accept-release-candidate` workflow.
+4. Only after that acceptance does a maintainer promote the exact stage candidate with a merge-commit PR from
+   `stage` to `main` and create the stable version tag.
 
 `main` is production truth. A production-only emergency starts as `hotfix/*` from `main`, requires review, and is
 forwarded to `stage` and `dev` after merge. Never force-push a promotion branch to resynchronize it; use reviewed
@@ -36,7 +40,18 @@ Reviewed `hotfix/* -> main` is the explicit emergency exception.
 ## Runtime build channels
 
 `.github/workflows/build-binaries.yml` builds the full matrix for stage candidates and production tags. Development
-packages are available by explicit manual dispatch. Only a `v*` tag publishes a stable GitHub Release.
+packages are available by explicit manual dispatch. Every successful `stage` push publishes a GitHub prerelease with
+all four stage-channel archives and `SHA256SUMS.txt`; prereleases are never selected by the stable installers.
+
+After testing, a maintainer runs `.github/workflows/accept-release-candidate.yml` with the exact prerelease tag and
+checks the explicit acceptance input. That workflow re-downloads the candidate, validates all checksums and stage
+manifests, and creates the immutable `rc-approved/<full-stage-sha>` receipt. Do not approve a candidate based only on
+green CI: install it, exercise the intended user paths on port `3457`, restart it against its stage state, and inspect
+the behavior that motivated the release.
+
+Only an exact stable SemVer tag (`vMAJOR.MINOR.PATCH`) publishes a production GitHub Release. Production packaging
+fails closed unless its matching successful stage artifact also has both the published stage prerelease and the
+explicit acceptance receipt. The stable tag must point to a commit promoted through `main`.
 
 | Channel | Identity | Endpoint | State root | Scope |
 | --- | --- | --- | --- | --- |
@@ -46,9 +61,10 @@ packages are available by explicit manual dispatch. Only a `v*` tag publishes a 
 
 Manifests report channel, endpoint, commit, source tree, executable SHA-256, channel-neutral core payload SHA-256,
 the exact private source commit, Run 88 release identity, private distribution manifest and sidecar digests, and the
-canonical extension count. A production tag must find the matching successful stage candidate, rebuild its exact
-private commit, verify that the artifact came from a successful push build of public `stage`, verify that the private
-commit has subsequently passed through private `main`, and prove the complete public/private pair is identical.
+canonical extension count. A production tag must find the matching successful and explicitly accepted stage
+candidate, rebuild its exact private commit, verify that the artifact came from a successful push build of public
+`stage`, verify that the private commit has subsequently passed through private `main`, and prove the complete
+public/private pair is identical.
 Source-tree or core-payload equality alone is insufficient.
 
 Run 88's `v0.0.8` release-toolchain recovery and the exact stage/production payload diagnosis are recorded in

@@ -68,6 +68,17 @@ If you do not want to use installer scripts, download the matching archive from 
 | macOS arm64 | `role-model-darwin-arm64.tar.gz` | `role-model` |
 | Linux x64 | `role-model-linux-x64.tar.gz` | `role-model` |
 
+### Test a release candidate
+
+Stage builds are published separately as GitHub **prereleases** named `stage-rc-<stage-sha>`. They run as
+`role-model-stage` on `http://127.0.0.1:3457` and use isolated stage state, so they can be tested beside the stable
+runtime on port `3456`.
+
+Download the candidate archive and `SHA256SUMS.txt` from its prerelease page, verify the checksum, extract it, and run
+the stage launcher. Prereleases are never selected by the normal installer. A candidate is promoted to `main` and a
+stable `vMAJOR.MINOR.PATCH` release only after a maintainer explicitly records that the exact package was installed
+and tested.
+
 ### Update an installed runtime
 
 Updates are currently manual. Stop the running runtime, back up its persistent state, and then re-run the
