@@ -65,7 +65,7 @@ function quickOnlyArtifactSummary(): BenchmarkSummaryResponse {
 }
 
 describe("router candidate routing benchmark quality", () => {
-  test("exposes hardBlend and routingQualityScore distinct from quick artifact overallScore", () => {
+  test("uses the revisioned profile quality rather than an unbound quick artifact", () => {
     const benchmarkSamples = [
       benchmarkSample({ id: "full-h1", bucket: "hard", mode: "full", score: 0.4 }),
       benchmarkSample({ id: "full-h2", bucket: "hard", mode: "full", score: 0.6 }),
@@ -101,8 +101,25 @@ describe("router candidate routing benchmark quality", () => {
       summary: quickOnlyArtifactSummary(),
     });
 
-    expect(benchmarkCapability?.overallScore).toBe(0.9);
-    expect(routingQualityScore).not.toBe(benchmarkCapability?.overallScore);
+    // A summary without a current-pool portfolio entry is not current routing
+    // evidence. The profile-derived quality is the only safe capability here.
+    expect(benchmarkCapability?.evidenceSource).toBe("profile-derived");
+    expect(benchmarkCapability?.overallScore).toBe(routingQualityScore);
     expect(routingQualityScore).toBeCloseTo(0.733333, 4);
+  });
+
+  test("never fabricates an overall zero when scored samples cannot be bucketed", () => {
+    const samples: ObservedPerformanceSample[] = [
+      {
+        ...benchmarkSample({ id: "unknown-bucket", bucket: "hard", score: 0.6 }),
+        difficulty_bucket: "unknown" as ObservedPerformanceSample["difficulty_bucket"],
+      },
+    ];
+
+    // A scored benchmark sample with no recognizable bucket must not collapse to 0.
+    const quality = resolveRoutingBenchmarkQuality(samples);
+    expect(quality).not.toBeNull();
+    expect(quality?.quality_score).not.toBe(0);
+    expect(quality?.quality_score).toBeCloseTo(0.6, 5);
   });
 });

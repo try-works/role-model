@@ -10,6 +10,7 @@ function benchmarkSample(input: {
   readonly score: number;
   readonly bucket: "easy" | "medium" | "hard";
   readonly mode?: "quick" | "full";
+  readonly completionState?: "completed" | "failed" | "cancelled" | "stale";
   readonly id: string;
 }): ObservedPerformanceSample {
   return {
@@ -22,6 +23,7 @@ function benchmarkSample(input: {
     latency_ms: 900,
     judge_score: input.score,
     request_id: input.id,
+    ...(input.completionState ? { completion_state: input.completionState } : {}),
   };
 }
 
@@ -83,5 +85,37 @@ describe("resolveRoutingBenchmarkQuality", () => {
     expect(enriched.latestProfile?.judge_score).toBeCloseTo(0.8, 5);
     expect(enriched.latestProfile?.sources.benchmark_samples).toBe(1);
     expect(enriched.difficultyProfiles.hard?.judge_score).toBeCloseTo(0.8, 5);
+  });
+
+  test("excludes failed, cancelled, and stale benchmark samples from routing quality", () => {
+    const quality = resolveRoutingBenchmarkQuality([
+      benchmarkSample({
+        id: "completed",
+        bucket: "hard",
+        score: 0.8,
+        completionState: "completed",
+      }),
+      benchmarkSample({
+        id: "failed",
+        bucket: "hard",
+        score: 0,
+        completionState: "failed",
+      }),
+      benchmarkSample({
+        id: "cancelled",
+        bucket: "hard",
+        score: 0,
+        completionState: "cancelled",
+      }),
+      benchmarkSample({
+        id: "stale",
+        bucket: "hard",
+        score: 0,
+        completionState: "stale",
+      }),
+    ]);
+
+    expect(quality?.judge_score).toBe(0.8);
+    expect(quality?.benchmark_samples).toBe(1);
   });
 });

@@ -12264,7 +12264,7 @@ describe("runtime-host-bridge", () => {
     expect(result).toBe("hard");
   });
 
-  test("keeps fresh endpoint-wide metrics when stale hard-bucket quality is present under benchmark-driven routing", async () => {
+  test("keeps fresh endpoint-wide metrics when unrevisioned hard-bucket benchmark evidence is quarantined", async () => {
     const runtimeStateRoot = await mkdtemp(
       path.join(os.tmpdir(), "role-model-runtime-host-difficulty-merge-tests-"),
     );
@@ -12576,7 +12576,10 @@ describe("runtime-host-bridge", () => {
       };
     };
     expect(observation.routingDiagnostics?.effectiveMetrics?.quality).toMatchObject({
-      source: "benchmark",
+      // Run 92 makes the configured-pool membership revision an identity fence.
+      // These legacy fixture samples intentionally have no revision, therefore
+      // they cannot become current benchmark routing evidence.
+      source: "measured",
       value: expect.any(Number),
       freshnessWeight: expect.any(Number),
     });

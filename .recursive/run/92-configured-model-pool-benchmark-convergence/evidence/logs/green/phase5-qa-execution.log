@@ -1,0 +1,34 @@
+Run 92 Phase 5 agent-operated QA — rebuilt runtime on isolated state root.
+
+Server: `corepack pnpm exec tsx scripts/start-for-qa.ts`
+State root: `D:\DEV\tmp\role-model-runtime-qa-run92` (isolated, reset per run)
+Served URL: `http://127.0.0.1:3501` (port 3456 and 3492 were occupied by pre-existing role-model.exe / role-model-dev.exe processes; 3501 was selected free)
+
+Observed (browser + API):
+
+1. GET /api/role-model/router/candidates → 200
+   - both candidates carry `membershipRevision: 9cbc015135d2dbaae87ff829855b1c61f8b24bb4ac9a1ae82590e673fbe6ad0b`
+   - `operationalProfile: null`, `latestProfile: null`, `recentSamples: []`, `difficultyProfiles: {easy:null,medium:null,hard:null}` — no synthetic values.
+
+2. GET /api/role-model/models → 200
+   - endpoint-variant list: `lfm2.5-1.2b-instruct` + `moonshot/kimi-k2.5` with endpoint_ids; `pricing: null` for the local model (no invented pricing).
+
+3. GET /api/role-model/router/decisions → 200
+   - every decision carries non-null `membershipRevision` and `profileRevision` (identical, membership-keyed).
+
+4. GET /api/role-model/benchmark/portfolio → 200
+   - `entries: []`; `scoreSemantics.absentScoreMeaning: "no-evidence"`; `zeroScoreMeaning: "executed-zero-credit"` (honest no-evidence vs executed-zero distinction).
+
+5. GET /v1/models → 200 (OpenAI-compat catalog still served; the removed fallback was in the UI fetchRuntimeModels, which now uses /api/role-model/models only).
+
+6. UI /app/router/decisions → renders MEMBERSHIP and PROFILE MetricStrip values (`9cbc0151…`) on the decision ledger.
+
+7. UI /app/router/candidates → renders honest `CAP n/a`, `LIVE P50 n/a`, `LIVE FAIL n/a`, `LIVE SAMPLES n/a` (no 0/0%).
+
+8. UI /app (overview) → candidate space shows `C— · Q— · S— · No live telemetry` (missing metrics as em-dash).
+
+9. UI /app/models → controller card shows `Overall No evidence yet`, `Live latency p50 —`, `No live evidence yet`, `No benchmark evidence yet`; controller footer action is `Unload` (the QA controller is a llama-swap local model, so the correct branch is unload-local; the `eject-controller` destructive-confirm branch for non-llama-swap controllers is covered by control-models.test.ts's 30 tests).
+
+10. GET /api/role-model/controller → 200 `{scope:"global", endpointId:"llama-swap.local.lfm2-5-1-2b-instruct", ...}`.
+
+No live provider request was made (MOONSHOT_API_KEY placeholder). No stage RC, no user state, no main branch touched.

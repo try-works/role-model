@@ -1,0 +1,8 @@
+Full runtime-host-bridge suite (authoritative final run).
+
+$ corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run
+
+ Test Files  84 passed | 2 skipped (86)
+      Tests  756 passed | 3 skipped (759)
+
+Prerequisite: protocol-types, workspace packages, and runtime-ui client built before the packaged-standalone-restart test.

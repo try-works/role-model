@@ -395,6 +395,9 @@ export interface RuntimeObservationBundleInput {
     readonly chosen_endpoint_id: string;
     readonly app_id: string;
     readonly org_id?: string | null;
+    /** Immutable membership/profile evidence selected at route time. */
+    readonly membership_revision?: string | null;
+    readonly profile_revision?: string | null;
   };
   readonly clientRequestId?: string;
   /** Explicit request effort; null means the provider-default instance. */

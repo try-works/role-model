@@ -130,6 +130,24 @@ export default function RouterDecisionsRoute() {
                         ? new Date(decision.decidedAtMs).toLocaleString()
                         : "n/a",
                     },
+                    ...(decision.membershipRevision
+                      ? [
+                          {
+                            id: "membershipRevision",
+                            label: "Membership",
+                            value: decision.membershipRevision,
+                          },
+                        ]
+                      : []),
+                    ...(decision.profileRevision
+                      ? [
+                          {
+                            id: "profileRevision",
+                            label: "Profile",
+                            value: decision.profileRevision,
+                          },
+                        ]
+                      : []),
                   ]}
                 />
 

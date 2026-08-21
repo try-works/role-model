@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 
 import {
   type ManagedVendor,
@@ -58,6 +58,66 @@ afterEach(async () => {
 });
 
 describe("vendor-litellm", () => {
+  test("maps an unprefixed upstream model alias to its configured LiteLLM model name", async () => {
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-litellm-vendor-model-alias-"),
+    );
+    tempRoots.push(runtimeStateRoot);
+
+    const supervisor = new RecordingSupervisor();
+    let forwardedModel: unknown;
+    vi.stubGlobal(
+      "fetch",
+      async (_input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+        const payload = JSON.parse(String(init?.body));
+        forwardedModel = payload.model;
+        return new Response(JSON.stringify({ choices: [{ message: { content: "ok" } }] }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      },
+    );
+
+    const vendor = await startLiteLLMVendor({
+      runtimeStateRoot,
+      supervisor,
+      config: {
+        providers: [
+          {
+            providerId: "deepseek",
+            apiKeyRef: "${DEEPSEEK_API_KEY}",
+            modelMappings: [
+              {
+                modelId: "deepseek/deepseek-v4-flash",
+                litellmModel: "deepseek/deepseek-v4-flash",
+              },
+            ],
+          },
+        ],
+        command: "node",
+        args: [],
+        env: {},
+      },
+    });
+
+    try {
+      await vendor.execute({
+        providerFamily: "ai-sdk-openai",
+        endpointId: "deepseek.vendor.primary",
+        url: "https://api.deepseek.com/v1/chat/completions",
+        headers: { "content-type": "application/json" },
+        body: {
+          model: "deepseek-v4-flash",
+          messages: [{ role: "user", content: "Ping" }],
+        },
+      });
+
+      expect(forwardedModel).toBe("deepseek/deepseek-v4-flash");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   test("renders LiteLLM provider inventory into a deterministic config document", () => {
     const rendered = renderLiteLLMConfig({
       providers: [

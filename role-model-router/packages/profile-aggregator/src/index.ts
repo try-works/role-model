@@ -30,6 +30,20 @@ export interface ObservedPerformanceSample {
   request_id?: string;
   routing_decision_id?: string;
   benchmark_mode?: "quick" | "full";
+  /**
+   * Canonical configured-membership revision captured at benchmark run start.
+   * Samples whose revision no longer matches the current membership are quarantined
+   * (not selected as latest valid) rather than silently reused.
+   */
+  membership_revision?: string;
+  /** Immutable benchmark-run identity and profile revision once successfully published. */
+  benchmark_run_id?: string;
+  benchmark_profile_revision?: string;
+  /**
+   * Benchmark lifecycle state. Only completed samples are valid current benchmark
+   * evidence; every other terminal state is retained exclusively for diagnostics.
+   */
+  completion_state?: "pending" | "completed" | "failed" | "cancelled" | "stale";
 }
 
 export interface AggregateObservedPerformanceOptions {
@@ -81,7 +95,6 @@ function median(values: readonly number[]): number | undefined {
 function sampleFailed(sample: ObservedPerformanceSample): boolean {
   return sample.failure === true || typeof sample.error_class === "string";
 }
-
 export function validateObservedPerformanceProfileConsistency(
   profile: ObservedPerformanceProfile,
 ): void {
@@ -127,7 +140,11 @@ export function aggregateObservedPerformanceSamples(
     typeof sample.cost_per_1k_tokens_est === "number" ? [sample.cost_per_1k_tokens_est] : [],
   );
   const judgeScores = samples.flatMap((sample) =>
-    sample.source_type === "benchmark" && typeof sample.judge_score === "number"
+    sample.source_type === "benchmark" &&
+    typeof sample.judge_score === "number" &&
+    sample.completion_state !== "failed" &&
+    sample.completion_state !== "cancelled" &&
+    sample.completion_state !== "stale"
       ? [sample.judge_score]
       : [],
   );

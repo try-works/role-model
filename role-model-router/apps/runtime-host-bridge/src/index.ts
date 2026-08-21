@@ -200,6 +200,7 @@ import {
   writeBenchmarkPreferences,
 } from "./benchmark-summary.js";
 import {
+  computeConfiguredMembershipRevision,
   findConfiguredModelBlockingReferences,
   findConfiguredModelReferencesByPolicy,
 } from "./configured-model-membership.js";
@@ -21200,6 +21201,14 @@ export async function createRuntimeBridgeBackend(
     readCurrentBenchmarkPortfolio({
       artifactRoot: benchmarkArtifactRoot,
       resolveModelId: resolveBenchmarkEndpointModelId,
+      membershipRevision: computeConfiguredMembershipRevision(
+        runtimeEndpoints.map((runtimeEndpoint) => ({
+          providerAccountId: runtimeEndpoint.providerAccountId,
+          modelId: runtimeEndpoint.modelId,
+          endpointId: runtimeEndpoint.endpointId,
+          reasoningEffort: runtimeEndpoint.reasoningEffort ?? null,
+        })),
+      ),
     });
   const resolveEndpointAvailableRoleIds = (endpointId: string) =>
     getEndpointRoleIds(
@@ -21212,6 +21221,14 @@ export async function createRuntimeBridgeBackend(
     );
   const readCandidateProfileDataByEndpointId = () => {
     const endpointIds = currentRegistry.endpoints.map((endpoint) => endpoint.identity.endpoint_id);
+    const membershipRevision = computeConfiguredMembershipRevision(
+      runtimeEndpoints.map((runtimeEndpoint) => ({
+        providerAccountId: runtimeEndpoint.providerAccountId,
+        modelId: runtimeEndpoint.modelId,
+        endpointId: runtimeEndpoint.endpointId,
+        reasoningEffort: runtimeEndpoint.reasoningEffort ?? null,
+      })),
+    );
     const telemetryWindowEndMs = Date.now();
     const telemetryScoresByEndpointId = readLiveTaskTelemetryScoresByEndpointIds({
       databasePath: initialization.databasePath,
@@ -21228,6 +21245,7 @@ export async function createRuntimeBridgeBackend(
     const benchmarkProfiles = readLatestBenchmarkProfilesByEndpointIds({
       databasePath: initialization.databasePath,
       endpointIds,
+      membershipRevision,
     });
     const difficultyProfilesByBucket = Object.fromEntries(
       (["easy", "medium", "hard"] as const).map((difficultyBucket) => [
@@ -21236,6 +21254,7 @@ export async function createRuntimeBridgeBackend(
           databasePath: initialization.databasePath,
           endpointIds,
           difficultyBucket,
+          membershipRevision,
         }),
       ]),
     );
@@ -21318,6 +21337,14 @@ export async function createRuntimeBridgeBackend(
   const listRouterCandidateData = async () => {
     const controller = getCurrentControllerAssignment();
     const guidance = getRouterGuidance();
+    const membershipRevision = computeConfiguredMembershipRevision(
+      runtimeEndpoints.map((runtimeEndpoint) => ({
+        providerAccountId: runtimeEndpoint.providerAccountId,
+        modelId: runtimeEndpoint.modelId,
+        endpointId: runtimeEndpoint.endpointId,
+        reasoningEffort: runtimeEndpoint.reasoningEffort ?? null,
+      })),
+    );
     const profilesByEndpointId = readCandidateProfileDataByEndpointId();
     const benchmarkCapabilitiesByEndpointId =
       await buildBenchmarkCapabilityByEndpointId(profilesByEndpointId);
@@ -21352,6 +21379,7 @@ export async function createRuntimeBridgeBackend(
         upstreamModelId: endpoint.identity.model_id,
         reasoningEffort: endpoint.identity.reasoning_effort ?? null,
         effortSource: endpoint.identity.reasoning_effort ? "fixed" : "provider-default",
+        membershipRevision,
         providerId: currentModelsById.get(endpoint.identity.model_id)?.providerId ?? null,
         sourceType: toSourceType(endpoint.identity.endpoint_kind),
         endpointKind: endpoint.identity.endpoint_kind,
@@ -21396,6 +21424,7 @@ export async function createRuntimeBridgeBackend(
     }) as Record<string, unknown> | null;
     const routingDiagnostics = asObjectRecord(observation?.routingDiagnostics);
     const routingMode = asObjectRecord(routingDiagnostics?.routingMode);
+    const decision = asObjectRecord(observation?.decision);
     return {
       requestId: record.requestId,
       routingDecisionId: record.routingDecisionId ?? null,
@@ -21404,6 +21433,8 @@ export async function createRuntimeBridgeBackend(
       upstreamModelId: record.upstreamModelId ?? record.modelId ?? null,
       reasoningEffort: record.reasoningEffort ?? null,
       effortSource: record.effortSource ?? null,
+      membershipRevision: asStringValue(decision?.membership_revision) ?? null,
+      profileRevision: asStringValue(decision?.profile_revision) ?? null,
       strategyLabel:
         asStringValue(routingMode?.effectiveMode) ??
         currentUnifiedRuntimeConfig?.routingStrategy ??
@@ -22965,8 +22996,29 @@ export async function createRuntimeBridgeBackend(
         reasoningRequested && !execution.normalized.reasoningText
           ? "provider_returned_no_reasoning"
           : undefined;
+      const decisionMembershipRevision = computeConfiguredMembershipRevision(
+        runtimeEndpoints.map((runtimeEndpoint) => ({
+          providerAccountId: runtimeEndpoint.providerAccountId,
+          modelId: runtimeEndpoint.modelId,
+          endpointId: runtimeEndpoint.endpointId,
+          reasoningEffort: runtimeEndpoint.reasoningEffort ?? null,
+        })),
+      );
+      const decisionPortfolio = await readCurrentBenchmarkPortfolio({
+        artifactRoot: benchmarkArtifactRoot,
+        resolveModelId: resolveBenchmarkEndpointModelId,
+        membershipRevision: decisionMembershipRevision,
+      });
+      const decisionProfileRevision =
+        decisionPortfolio.entries.find(
+          (entry) => entry.endpointId === routed.decision.chosen_endpoint_id,
+        )?.profileRevision ?? null;
       const bundle = createRuntimeObservationBundle({
-        decision: routed.decision,
+        decision: {
+          ...routed.decision,
+          membership_revision: decisionMembershipRevision,
+          profile_revision: decisionProfileRevision,
+        },
         clientRequestId: executionOptions?.requestOptions?.clientRequestId,
         reasoningEffort: effectiveEffort.reasoningEffort,
         effortSource: effectiveEffort.effortSource,
@@ -26850,6 +26902,15 @@ export async function createRuntimeBridgeBackend(
             }
             return `${endpoint.identity.runtime_version}:${endpoint.identity.variant_id ?? "default"}`;
           },
+          membershipRevision: () =>
+            computeConfiguredMembershipRevision(
+              runtimeEndpoints.map((runtimeEndpoint) => ({
+                providerAccountId: runtimeEndpoint.providerAccountId,
+                modelId: runtimeEndpoint.modelId,
+                endpointId: runtimeEndpoint.endpointId,
+                reasoningEffort: runtimeEndpoint.reasoningEffort ?? null,
+              })),
+            ),
         },
         {
           runId,
@@ -26899,10 +26960,26 @@ export async function createRuntimeBridgeBackend(
       const artifactResult = clearBenchmarkRunArtifacts({
         artifactRoot: benchmarkArtifactRoot,
       });
-      return {
+      const receipt = {
+        clearedAtMs: Date.now(),
+        membershipRevision: computeConfiguredMembershipRevision(
+          runtimeEndpoints.map((runtimeEndpoint) => ({
+            providerAccountId: runtimeEndpoint.providerAccountId,
+            modelId: runtimeEndpoint.modelId,
+            endpointId: runtimeEndpoint.endpointId,
+            reasoningEffort: runtimeEndpoint.reasoningEffort ?? null,
+          })),
+        ),
         ...sqliteResult,
         ...artifactResult,
       };
+      await mkdir(benchmarkArtifactRoot, { recursive: true });
+      await writeFile(
+        path.join(benchmarkArtifactRoot, "clear-receipt.json"),
+        `${JSON.stringify(receipt, null, 2)}\n`,
+        "utf8",
+      );
+      return receipt;
     },
     async listLocalModels(): Promise<
       readonly {

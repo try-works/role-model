@@ -226,7 +226,12 @@ describe("control model role assignment helpers", () => {
         hasLocalPeerEndpoint: false,
         isRemoving: false,
       }),
-    ).toEqual({ kind: "eject-configured", label: "Eject from pool", disabled: false });
+    ).toEqual({
+      kind: "eject-configured",
+      label: "Eject from pool",
+      disabled: false,
+      isController: false,
+    });
 
     expect(
       resolveConfiguredModelFooterAction({
@@ -237,7 +242,12 @@ describe("control model role assignment helpers", () => {
         hasLocalPeerEndpoint: true,
         isRemoving: false,
       }),
-    ).toEqual({ kind: "eject-configured", label: "Eject from router", disabled: false });
+    ).toEqual({
+      kind: "eject-configured",
+      label: "Eject from router",
+      disabled: false,
+      isController: false,
+    });
   });
 
   test("keeps controller removal disabled and uses unload only for llama-swap models", () => {
@@ -250,7 +260,12 @@ describe("control model role assignment helpers", () => {
         hasLocalPeerEndpoint: false,
         isRemoving: false,
       }),
-    ).toEqual({ kind: "eject-configured", label: "Eject from pool", disabled: true });
+    ).toEqual({
+      kind: "eject-controller",
+      label: "Eject controller",
+      disabled: false,
+      isController: true,
+    });
 
     expect(
       resolveConfiguredModelFooterAction({
@@ -261,7 +276,51 @@ describe("control model role assignment helpers", () => {
         hasLocalPeerEndpoint: false,
         isRemoving: false,
       }),
-    ).toEqual({ kind: "unload-local", label: "Unload", disabled: false });
+    ).toEqual({ kind: "unload-local", label: "Unload", disabled: false, isController: false });
+  });
+
+  test("enables a destructive-confirmation eject action for the sole controller", () => {
+    // The sole controller-backed endpoint must be ejectable (not hard-disabled), with
+    // the confirmation flow gating the destructive second click.
+    const action = resolveConfiguredModelFooterAction({
+      hasSelectedCard: true,
+      isController: true,
+      hasLlamaSwapEndpoint: false,
+      hasPrimaryAccount: true,
+      hasLocalPeerEndpoint: false,
+      isRemoving: false,
+    });
+    expect(action.kind).toBe("eject-controller");
+    expect(action.disabled).toBe(false);
+    expect(action.isController).toBe(true);
+
+    expect(
+      resolveConfiguredModelRemovalClick({
+        actionKind: action.kind,
+        targetKey: "endpoint:controller",
+        pendingConfirmationKey: null,
+      }),
+    ).toBe("request-confirmation");
+    expect(
+      resolveConfiguredModelRemovalClick({
+        actionKind: action.kind,
+        targetKey: "endpoint:controller",
+        pendingConfirmationKey: "endpoint:controller",
+      }),
+    ).toBe("execute");
+  });
+
+  test("never bypasses final-controller eject confirmation through a local unload action", () => {
+    expect(
+      resolveConfiguredModelFooterAction({
+        hasSelectedCard: true,
+        isController: true,
+        hasLlamaSwapEndpoint: true,
+        hasPrimaryAccount: true,
+        hasLocalPeerEndpoint: false,
+        isRemoving: false,
+      }),
+    ).toMatchObject({ kind: "eject-controller", label: "Eject controller", disabled: false });
   });
 
   test("edits the account that owns the selected effort endpoint instead of the first model match", () => {
