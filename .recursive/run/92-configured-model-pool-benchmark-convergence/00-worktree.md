@@ -1,57 +1,95 @@
 Run: `/.recursive/run/92-configured-model-pool-benchmark-convergence/`
 Phase: `00 Worktree`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-08-21T09:04:47Z`
+LockHash: `ca77a34cfb2cb2a914f9bbe6c7df94621165ce1c5ae882a6d96c9f02c7fc5c53`
+Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - `/.recursive/run/92-configured-model-pool-benchmark-convergence/00-requirements.md`
-- Current git repository state
+- Current git repository and worktree state
 Outputs:
 - `/.recursive/run/92-configured-model-pool-benchmark-convergence/00-worktree.md`
-Scope note: This document records the Phase 0 worktree context and the executable diff basis that all later audited phases must reuse.
+Scope note: This document records the Phase 0 worktree context and the executable diff basis that all later audited phases must reuse for Run 92.
 
 ## TODO
 
-- [ ] Confirm the selected worktree location and isolation approach
-- [ ] Confirm the base branch and worktree branch values
-- [ ] Run setup and verify the clean test baseline
-- [ ] Confirm the diff basis fields still match live git state
-- [ ] Complete Coverage Gate checklist
-- [ ] Complete Approval Gate checklist
+- [x] Confirm the selected worktree location and isolation approach
+- [x] Confirm the base branch and worktree branch values
+- [x] Run setup and verify the clean test baseline
+- [x] Confirm the diff basis fields still match live git state
+- [x] Complete Coverage Gate checklist
+- [x] Complete Approval Gate checklist
 
 ## Directory Selection
 
-- Repository root: `D:\DEV\role-model\.worktrees\92-configured-model-pool-benchmark-convergence`
-- Preferred worktree location: `.worktrees/92-configured-model-pool-benchmark-convergence/`
-- Update this section with the actual selected location before locking Phase 0.
+- Repository root: `D:\DEV\role-model`
+- Worktree path: `D:\DEV\role-model\.worktrees\92-configured-model-pool-benchmark-convergence`
+- Worktree location policy: existing `.worktrees/` directory (project-local, preferred)
+- Git-ignore verification: PASS; `git check-ignore -v .worktrees/` resolves to `.gitignore:1:.worktrees/`.
+- Confirmed zero tracked files under `.worktrees/` (`git ls-files .worktrees/` returns empty).
 
 ## Safety Verification
 
-- Original branch / repo state observed at init time: `recursive/92-configured-model-pool-benchmark-convergence`
-- Isolation still must be confirmed after the actual worktree is created.
+- Controller checkout branch: `dev`
+- Controller checkout commit: `b4b64e5a4da02914fc6460c5b1612483933c3f60`
+- Worktree branch: `recursive/92-configured-model-pool-benchmark-convergence`
+- Worktree HEAD: `6fd8da19c0028f0656c01df9def934585ff7a7c1`
+- Isolation: PASS; the worktree is a distinct checkout registered by `git worktree list`.
+- Controller checkout dirtiness acknowledged: the root repo has unrelated uncommitted changes (`.cursor/rules/`, `.cursorrules`, `CLAUDE.md`, `.github/copilot-instructions.md`, and modifications to `AGENTS.md`, `.codex/AGENTS.md`, `.recursive/RECURSIVE.md`, `.recursive/memory/*`, plus deletions of some `.recursive/scripts/recursive-training-*` files). These are preserved untouched and are NOT part of this run's product diff.
+- Requirement artifacts already committed in the worktree branch: `00-requirements.md` is LOCKED (commit `49854266`); the scaffold `00-worktree.md` was committed at `6fd8da19`.
 
 ## Worktree Creation
 
-- Intended worktree branch: `recursive/92-configured-model-pool-benchmark-convergence`
-- Record the actual worktree creation command and output before locking.
+The worktree and branch `recursive/92-configured-model-pool-benchmark-convergence` already existed at session start (created by an earlier `recursive-init`), so no new `git worktree add` was required. Verified facts:
+
+```powershell
+git -C D:\DEV\role-model rev-parse --abbrev-ref recursive/92-configured-model-pool-benchmark-convergence
+# recursive/92-configured-model-pool-benchmark-convergence
+git -C D:\DEV\role-model merge-base recursive/92-configured-model-pool-benchmark-convergence origin/dev
+# d59f07b91e7b23c25e7297860a0f9c967b342b7a
+```
+
+Result: PASS. The worktree branch is 3 commits ahead of `origin/dev` @ `d59f07b9` (requirements lock, requirements scaffold, worktree scaffold).
 
 ## Main Branch Protection
 
-- Base branch source of truth at init time: `recursive/92-configured-model-pool-benchmark-convergence`
-- Explicitly document any deviation from isolated worktree execution before locking.
+- No implementation or later-phase work runs in the controller checkout.
+- The feature branch owns all Run 92 changes until reviewed integration into `dev`.
+- Unrelated controller-checkout changes are neither copied into the worktree nor included in the normalized diff basis.
 
 ## Project Setup
 
-- Init-time note: recursive-init detected the current repository context and prefilled the Phase 0 diff basis.
-- Replace this section with the actual setup commands and results during Phase 0.
+Command:
+
+```powershell
+corepack pnpm install --frozen-lockfile
+```
+
+Result: PASS in `35.9s` using pnpm `10.6.5` (workspace). The inherited ignored-build-script warning for Biome, esbuild, sharp, workerd, protobufjs, and `@google/genai` did not block the owning build or baseline tests.
 
 ## Test Baseline Verification
 
-- Record the baseline commands and results after setup completes.
+Commands:
+
+```powershell
+corepack pnpm --filter @role-model-router/runtime-host-bridge build
+corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/configured-model-membership.test.ts test/remove-account-model.test.ts test/restart-rehydration.test.ts test/benchmark-data-clear.test.ts
+corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/lib/candidate-space.test.ts app/lib/format-score.test.ts
+```
+
+Results:
+
+- Host bridge TypeScript build (`tsc -p tsconfig.json`): PASS.
+- Owning backend baseline: PASS; `4` files, `25` tests passed (`configured-model-membership` 3, `remove-account-model` 4, `restart-rehydration` 15, `benchmark-data-clear` 3).
+- Owning UI baseline: PASS; `2` files, `13` tests passed (`candidate-space` 8, `format-score` 5).
+- Baseline includes current sibling-model preservation, last-model account deletion, controller reassignment/clear on eject, restart rehydration without membership expansion, benchmark-data-clear, candidate-space projection, and score-formatting behavior.
 
 ## Worktree Context
 
-- Base branch: `recursive/92-configured-model-pool-benchmark-convergence`
-- Worktree branch: `recursive/92-configured-model-pool-benchmark-convergence`
-- Base commit: `d59f07b91e7b23c25e7297860a0f9c967b342b7a`
+- Base branch: `dev`
+- Base commit: `d59f07b91e7b23c25e7297860a0f9c967b342b7a` (= `origin/dev`)
+- Worktree HEAD at initialization: `6fd8da19c0028f0656c01df9def934585ff7a7c1`
+- All Phase 1+ commands and edits must run from `D:\DEV\role-model\.worktrees\92-configured-model-pool-benchmark-convergence`.
 
 ## Diff Basis For Later Audits
 
@@ -61,25 +99,32 @@ Scope note: This document records the Phase 0 worktree context and the executabl
 - Normalized baseline: `d59f07b91e7b23c25e7297860a0f9c967b342b7a`
 - Normalized comparison: `working-tree`
 - Normalized diff command: `git diff --name-only d59f07b91e7b23c25e7297860a0f9c967b342b7a`
-- Base branch: `recursive/92-configured-model-pool-benchmark-convergence`
+- Base branch: `dev`
 - Worktree branch: `recursive/92-configured-model-pool-benchmark-convergence`
-- Diff basis notes: `recursive-init prefilled this executable diff basis from the current HEAD commit. If Phase 0 later changes the chosen baseline, update every diff-basis field and rerun lint before locking.`
+- Diff basis notes: baseline is the exact `origin/dev` commit the run branches from. Recursive run artifacts under `.recursive/run/92-configured-model-pool-benchmark-convergence/` are excluded from product diff accounting by the audit tooling; controller-only local changes are not part of this comparison.
+
+## Router Policy Check
+
+- Routing config: `/.recursive/config/recursive-router.json` presence deferred to the audited phases that need delegated review (Phase 3.5). Phase 0 does not perform routed delegation.
+- Routed delegation is not required for Phase 0.
 
 ## Traceability
 
-- Recursive workflow safety -> Phase 0 records a reusable executable diff basis before audited phases begin.
+- Run 92 strict TDD and rebuilt-runtime requirements now have a clean, reproducible starting point.
+- The executable diff command is fixed for every later audited phase.
+- The existing stage RC and root-repo unrelated changes remain protected from implementation churn.
 
 ## Coverage Gate
 
-- [ ] Worktree location and branch context are recorded
-- [ ] Setup and clean baseline verification are recorded
-- [ ] Diff basis fields are executable against live git state
+- [x] Worktree location and branch context are recorded
+- [x] Setup and clean baseline verification are recorded
+- [x] Diff basis fields are executable against live git state
 
-Coverage: FAIL
+Coverage: PASS
 
 ## Approval Gate
 
-- [ ] Phase 0 context is ready for downstream audited phases
-- [ ] No unresolved setup or diff-basis inconsistencies remain
+- [x] Phase 0 context is ready for downstream audited phases
+- [x] No unresolved setup or diff-basis inconsistencies remain
 
-Approval: FAIL
+Approval: PASS
