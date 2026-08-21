@@ -1,0 +1,10 @@
+$ corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/routes/control-models.test.ts
+
+ RUN  v3.2.4 .../apps/runtime-ui
+
+ ✓ app/routes/control-models.test.ts (30 tests) 166ms
+
+ Test Files  1 passed (1)
+      Tests  30 passed (30)
+
+GREEN verified: ✅

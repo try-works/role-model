@@ -1,0 +1,6 @@
+Full runtime-ui suite (authoritative final run).
+
+$ corepack pnpm --filter @role-model-router/runtime-ui exec vitest run
+
+ Test Files  41 passed (41)
+      Tests  454 passed (454)

@@ -1,0 +1,13 @@
+$ corepack pnpm --filter @role-model-router/sqlite-memory exec vitest run test/index.test.ts -t "membership revision"
+
+ RUN  v3.2.4 .../packages/sqlite-memory
+
+ ❯ test/index.test.ts > readLatestBenchmarkProfilesByEndpointIds membership revision > skips benchmark samples whose membership revision no longer matches
+     AssertionError: expected 2 to be 1 // Object.is equality
+     ❯ test/index.test.ts:4356:34
+          expect(profile?.sample_size).toBe(1);
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 44 skipped (45)
+
+RED verified: ✅  (no membershipRevision filter yet; both samples were re-aggregated)
