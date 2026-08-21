@@ -1,0 +1,14 @@
+{
+  "artifact": "02-to-be-plan.md",
+  "artifact_hash": "9c0b336af64bc96cf3135da29c4167ce4610759f9203c7d9940296013822ceb9",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\92-configured-model-pool-benchmark-convergence\\.recursive\\run\\92-configured-model-pool-benchmark-convergence\\02-to-be-plan.md",
+  "locked_at": "2026-08-21T09:58:07Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "fbe4abc4ed111ba799a04861f8e6fb9e45baf6f52a164426060ac40389a3b0e6",
+    "00-worktree.md": "ca77a34cfb2cb2a914f9bbe6c7df94621165ce1c5ae882a6d96c9f02c7fc5c53",
+    "01-as-is.md": "a0b8b776252946b46a2efbe3c41cfd1c1e9e1e09c6335c9178084d67935a1d40",
+    "01.5-root-cause.md": "00a2378ebd9397d6ef0cafc6eef03b5bd1aa4f6d855807acdc8ceebea4b49f45"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "5e3d69f7aca11bccb59a64377f5a8b9dbcdc4facfa718c6161f8643f7ce5d65d"
+}

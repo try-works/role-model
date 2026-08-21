@@ -1,0 +1,12 @@
+$ corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/candidate-profile-scaling.test.ts
+
+ RUN  v3.2.4 .../apps/runtime-host-bridge
+
+ ✓ test/candidate-profile-scaling.test.ts (4 tests) 4363ms
+   ✓ stamps a non-null membership and profile revision on routing decisions
+   ✓ projects immutable decision-time live telemetry evidence
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+
+GREEN verified: ✅  (source-level assertion that toRouterDecisionData emits membershipRevision + profileRevision)

@@ -1,0 +1,8 @@
+Build gate for the affected packages (authoritative final run).
+
+$ corepack pnpm -r --filter "./packages/**" run build
+$ corepack pnpm --filter @role-model/protocol-types build
+$ corepack pnpm --filter @role-model-router/runtime-host-bridge build
+$ corepack pnpm --filter @role-model-router/runtime-ui build
+
+All four build commands completed successfully (exit 0).

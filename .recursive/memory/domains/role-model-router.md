@@ -4,10 +4,10 @@ Status: CURRENT
 Scope: role-model-router
 Owns-Paths: track-b-runtime.ts, 02-to-be-plan.md, node --test tests/track-b/tb10.test.mjs, extensions.tsx, role-model-router/apps/runtime-host-bridge/test/track-b-runtime-composition.test.ts, role-model-router/apps/runtime-ui/app/lib/runtime-api.test.ts, role-model-router/apps/runtime-host-bridge/test/track-b-operations-api.test.ts, track-b-operations.ts, role-model/.worktrees/81-kw-activation-browser-recommendation-evidence/role-model-router/apps/runtime-ui/app/routes/extensions.tsx, role-model-router/apps/runtime-ui/e2e/track-b-operations.spec.ts
 Watch-Paths:
-Source-Runs: 81-kw-activation-browser-recommendation-evidence, 79-extension-control-and-recommendations-qa, 86-runtime-ui-rm3-design-system-frontend
+Source-Runs: 81-kw-activation-browser-recommendation-evidence, 79-extension-control-and-recommendations-qa, 86-runtime-ui-rm3-design-system-frontend, 92-configured-model-pool-benchmark-convergence
 Validated-At-Commit:
-Last-Validated: 2026-07-24T23:06:57.809909+00:00
-Tags: reasoningbank, training-free-grpo
+Last-Validated: 2026-08-21T13:30:29+00:00
+Tags: reasoningbank, training-free-grpo, configured-model-pool, membership-revision, benchmark-quarantine
 ---
 
 # role-model-router
@@ -134,3 +134,16 @@ created_at: "2026-07-24T23:06:57.809909+00:00"
 ## RM3 runtime-ui styling authority (run 86)
 
 Run `86-runtime-ui-rm3-design-system-frontend` closed out the RM3 migration. Live styling authority for router runtime-ui is RM3 Paper pages `4-0`/`5-0`/`6-0`/`7-0` plus repo `role-model-router/apps/runtime-ui/DESIGN_SYSTEM.md` and `@role-model/ui` at `role-model-router/packages/ui`. Run `60-runtime-ui-paper-linear-review-alignment` Linear/Paper-Linear baseline is historical only. Warning pill chrome ink must not use amber (charts keep amber — see `skills/issues/rm3-pill-no-amber.md`).
+
+## Configured model pool convergence (run 92)
+
+Run `92-configured-model-pool-benchmark-convergence` closed out the endpoint-variant-exact membership convergence. Durable truths:
+
+1. The unit of membership, benchmark attribution, profile derivation, routing, and display is the **endpoint variant** (`{account}.{region}.{model}` when effort null, else `{base}-{encodeURIComponent(effort)}`), never the model family.
+2. `computeConfiguredMembershipRevision` (order-stable SHA-256 over `providerAccountId, modelId, endpointId, reasoningEffort`) is the single revision token stamped on router candidates, routing decisions, benchmark manifests/samples, and clear receipts.
+3. `fetchRuntimeModels` must never silently fall back to the OpenAI-compat `/v1/models` catalog — the configured pool is authoritative and an outage must surface honestly.
+4. Candidate-space scorers are nullable; missing cost/quality/speed/routeScore render `—`/`n/a`, never `0`/`0%`. The benchmark-only `latency_ms_p50: 0` fallback is masked via a `scoreSpeed > 0` guard, not force-nulled (no migration path).
+5. `readLatestBenchmarkProfilesByEndpointIds` skips samples whose `membership_revision` mismatches the current revision and skips `completion_state === "stale"` samples; `readCurrentBenchmarkPortfolio` skips runs whose manifest revision mismatches.
+6. Final-controller eject requires destructive confirmation; on confirm it clears the controller assignment and produces a durable empty-pool state with a recovery link. It is idempotent (backend returns `absent` on repeat).
+7. Routing decision detail shows `membershipRevision` and `profileRevision` (both membership-keyed, diagnostic-only).
+8. Benchmark clear is transactional (`BEGIN IMMEDIATE`) and writes a `clear-receipt.json` with membership revision and counts.

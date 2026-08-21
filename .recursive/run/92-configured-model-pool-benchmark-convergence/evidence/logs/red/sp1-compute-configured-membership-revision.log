@@ -1,0 +1,15 @@
+$ corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/configured-model-membership.test.ts
+
+ RUN  v3.2.4 .../apps/runtime-host-bridge
+
+ ❯ test/configured-model-membership.test.ts (4 tests | 1 failed) 14ms
+   ✓ removes an exact config-owned key and preserves its sibling
+   ✓ is idempotent and drops an empty config-owned provider
+   ✓ blocks explicit model references only when no sibling account supplies the model
+   × computeConfiguredMembershipRevision is order-stable and effort-variant-aware
+     → TypeError: (0 , computeConfiguredMembershipRevision) is not a function
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 passed (4)
+
+RED verified: ✅  (function did not exist yet)

@@ -399,6 +399,53 @@ describe("fetchRuntimeModels", () => {
     expect(requestedTargets).toEqual(["/api/role-model/models"]);
   });
 
+  test("does not fall back to /v1/models when the configured pool endpoint fails", async () => {
+    const fetchRuntimeModels = (
+      runtimeApiModule as {
+        fetchRuntimeModels?: unknown;
+      }
+    ).fetchRuntimeModels;
+    expect(fetchRuntimeModels).toBeTypeOf("function");
+    if (typeof fetchRuntimeModels !== "function") {
+      return;
+    }
+
+    const requestedTargets: string[] = [];
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const target = requestTarget(input);
+      requestedTargets.push(target);
+      if (target === "/api/role-model/models") {
+        return responseWithStatus(503, { error: "unavailable" });
+      }
+      if (target === "/v1/models") {
+        return jsonResponse({
+          data: [
+            {
+              id: "vendor/fixture",
+              object: "model",
+              owned_by: "role-model",
+              providerId: "vendor",
+              endpoint_ids: [],
+              capabilities: ["text.chat"],
+              modalities: ["text"],
+            },
+          ],
+        });
+      }
+      throw new Error(`Unexpected request: ${target}`);
+    });
+
+    await expect(
+      (
+        fetchRuntimeModels as (
+          fetcher: Parameters<typeof fetchRuntimeSnapshot>[0],
+        ) => Promise<unknown>
+      )(fetcher),
+    ).rejects.toThrow();
+    // The configured pool is authoritative; the OpenAI-compat catalog must not be queried.
+    expect(requestedTargets).toEqual(["/api/role-model/models"]);
+  });
+
   test("loads provider catalog metadata without expanding the active runtime-model inventory", async () => {
     const fetchRuntimeCatalogModels = (
       runtimeApiModule as {

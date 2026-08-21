@@ -1,0 +1,10 @@
+$ corepack pnpm --filter @role-model-router/sqlite-memory exec vitest run test/index.test.ts -t "membership revision"
+
+ RUN  v3.2.4 .../packages/sqlite-memory
+
+ ✓ test/index.test.ts (45 tests | 44 skipped) 105ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 44 skipped (45)
+
+GREEN verified: ✅

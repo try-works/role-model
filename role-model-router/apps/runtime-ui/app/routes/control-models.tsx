@@ -341,9 +341,10 @@ export function resolveConfiguredModelEjectLabel(
 }
 
 export type ConfiguredModelFooterAction = {
-  readonly kind: "unload-local" | "eject-configured" | "none";
-  readonly label: "Unload" | "Eject from router" | "Eject from pool";
+  readonly kind: "unload-local" | "eject-configured" | "eject-controller" | "none";
+  readonly label: "Unload" | "Eject from router" | "Eject from pool" | "Eject controller";
   readonly disabled: boolean;
+  readonly isController: boolean;
 };
 
 export function resolveConfiguredModelFooterAction(input: {
@@ -356,16 +357,21 @@ export function resolveConfiguredModelFooterAction(input: {
 }): ConfiguredModelFooterAction {
   const kind = input.hasLlamaSwapEndpoint
     ? "unload-local"
-    : input.hasPrimaryAccount
-      ? "eject-configured"
-      : "none";
+    : !input.hasPrimaryAccount
+      ? "none"
+      : input.isController
+        ? "eject-controller"
+        : "eject-configured";
   return {
     kind,
     label:
       kind === "unload-local"
         ? "Unload"
-        : resolveConfiguredModelEjectLabel(input.hasLocalPeerEndpoint),
-    disabled: !input.hasSelectedCard || kind === "none" || input.isController || input.isRemoving,
+        : kind === "eject-controller"
+          ? "Eject controller"
+          : resolveConfiguredModelEjectLabel(input.hasLocalPeerEndpoint),
+    disabled: !input.hasSelectedCard || kind === "none" || input.isRemoving,
+    isController: input.isController,
   };
 }
 
@@ -377,7 +383,10 @@ export function resolveConfiguredModelRemovalClick(input: {
   if (input.actionKind === "none") {
     return "none";
   }
-  if (input.actionKind === "eject-configured" && input.pendingConfirmationKey !== input.targetKey) {
+  if (
+    (input.actionKind === "eject-configured" || input.actionKind === "eject-controller") &&
+    input.pendingConfirmationKey !== input.targetKey
+  ) {
     return "request-confirmation";
   }
   return "execute";
@@ -971,7 +980,8 @@ export default function ControlModelsRoute() {
         : `account:${selectedPrimaryAccount?.providerAccountId ?? "none"}:${selectedCard.modelId}`
     : "none";
   const removalConfirmationPending =
-    selectedFooterAction.kind === "eject-configured" &&
+    (selectedFooterAction.kind === "eject-configured" ||
+      selectedFooterAction.kind === "eject-controller") &&
     pendingRemovalConfirmationKey === selectedRemovalTargetKey;
   const selectedModelEvidencePills = buildSelectedModelEvidencePills({
     assignedRoleRows: benchmarkAssignedRoleRows,
@@ -1050,6 +1060,9 @@ export default function ControlModelsRoute() {
               </Link>
               <Link className={secondaryButtonClassName} to="/app/remote/providers">
                 Open Providers
+              </Link>
+              <Link className={secondaryButtonClassName} to="/app/router/controller">
+                Select a controller
               </Link>
             </div>
           </div>
@@ -1301,8 +1314,8 @@ export default function ControlModelsRoute() {
                 className={`${compactFieldButtonClassName} text-[var(--rm-error)]`}
                 disabled={selectedFooterAction.disabled}
                 title={
-                  selectedCard?.controllerState === "active"
-                    ? "Assign another primary controller before removing this model."
+                  selectedFooterAction.kind === "eject-controller"
+                    ? "This is the primary controller. Ejecting clears the controller assignment and leaves an empty pool."
                     : undefined
                 }
                 onClick={() => {
@@ -1317,7 +1330,9 @@ export default function ControlModelsRoute() {
                   if (clickDisposition === "request-confirmation") {
                     setPendingRemovalConfirmationKey(selectedRemovalTargetKey);
                     setStatusMessage(
-                      `Confirm ${selectedFooterAction.label.toLowerCase()} for ${selectedCard.displayName}. Other effort variants remain configured unless they share this peer-backed model.`,
+                      selectedFooterAction.kind === "eject-controller"
+                        ? `Confirm eject for ${selectedCard.displayName}. This is the primary controller; ejecting clears the controller assignment and leaves an empty pool.`
+                        : `Confirm ${selectedFooterAction.label.toLowerCase()} for ${selectedCard.displayName}. Other effort variants remain configured unless they share this peer-backed model.`,
                     );
                     return;
                   }

@@ -35,6 +35,20 @@ test("projects variant-scoped live task telemetry on the endpoint profile API", 
   expect(endpointProfileSlice).toContain("telemetryScores:");
 });
 
+test("stamps a non-null membership and profile revision on routing decisions", async () => {
+  const testDir = path.dirname(fileURLToPath(import.meta.url));
+  const source = await readFile(path.join(testDir, "..", "src", "index.ts"), "utf8");
+  const start = source.indexOf("const toRouterDecisionData");
+  const end = source.indexOf("const listRouterDecisionData", start);
+  expect(start).toBeGreaterThan(-1);
+  expect(end).toBeGreaterThan(start);
+  const decisionSlice = source.slice(start, end);
+
+  expect(decisionSlice).toContain("membershipRevision,");
+  expect(decisionSlice).toContain("profileRevision:");
+  expect(decisionSlice).toContain("computeConfiguredMembershipRevision");
+});
+
 test("projects immutable decision-time live telemetry evidence", async () => {
   const module = await import("../src/index.js");
   const evidence = module.projectTelemetryDecisionEvidence(

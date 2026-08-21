@@ -30,6 +30,14 @@ export interface ObservedPerformanceSample {
   request_id?: string;
   routing_decision_id?: string;
   benchmark_mode?: "quick" | "full";
+  /**
+   * Canonical configured-membership revision captured at benchmark run start.
+   * Samples whose revision no longer matches the current membership are quarantined
+   * (not selected as latest valid) rather than silently reused.
+   */
+  membership_revision?: string;
+  /** Non-destructive quarantine marker; stale samples are never selected as latest valid. */
+  completion_state?: "stale";
 }
 
 export interface AggregateObservedPerformanceOptions {
@@ -81,7 +89,6 @@ function median(values: readonly number[]): number | undefined {
 function sampleFailed(sample: ObservedPerformanceSample): boolean {
   return sample.failure === true || typeof sample.error_class === "string";
 }
-
 export function validateObservedPerformanceProfileConsistency(
   profile: ObservedPerformanceProfile,
 ): void {

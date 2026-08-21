@@ -1,0 +1,6 @@
+Full profile-aggregator suite (authoritative final run).
+
+$ corepack pnpm --filter @role-model-router/profile-aggregator exec vitest run
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)

@@ -15,6 +15,7 @@ Source-Runs:
 - `52-codex-subscription-benchmark-tool-path`
 - `68-codex-subscription-tool-call-parity`
 - `69-benchmark-scoring-integrity`
+- `92-configured-model-pool-benchmark-convergence`
 Validated-At-Commit: `working-tree`
 Last-Validated: `2026-07-13`
 Tags:
@@ -47,6 +48,13 @@ This shard owns the durable benchmark truth for how answer formats, suite data, 
 - Benchmark investigations must distinguish historical pre-fix subject execution failures from current benchmark-layer defects on the active repaired baseline. Do not reopen a historical runtime bug as if it were a fresh scoring defect when the current worktree already carries the earlier runtime repair.
 - Classify a miss as model-caused only after a `VALID` rerun shows complete parse, compare, and progress receipts for the same run.
 - Benchmark-owned subject, judge, compare, and judge-probe executions may request a benchmark-only cooldown bypass so reruns see the real endpoint outcome instead of a stale deny-list decision. Ordinary runtime traffic must keep the normal cooldown policy.
+
+## Honest Scoring Truths (run 92)
+
+- Missing score is never `0`/`0%`. Internal routing uses `0.00–1.00` fractions; user-facing display uses `0–100%`; absent evidence renders `—`/`n/a`. A zero is reserved for "executed, zero-credit".
+- The unit of benchmark attribution is the endpoint variant; a completed benchmark updates only the exact variant that executed it and never overwrites a sibling or base endpoint.
+- Benchmark samples carry a `membership_revision` and `completion_state`; samples whose revision mismatches the current membership revision, and samples marked `stale`, are quarantined from latest-valid profile reads.
+- The benchmark-only profile fallback (`latency_ms_p50: 0`) is presented as absent (masked `—`) rather than "fastest"; non-null `ObservedPerformanceProfile` fields are not force-nulled without a migration path.
 
 ## Runtime Closeout Expectations
 

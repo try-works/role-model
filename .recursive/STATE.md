@@ -2,10 +2,13 @@
 
 ## Current State
 
-Run `89-codex-role-model-package` is the **closed-out** Codex Desktop/CLI/IDE adapter package: public npm `@try-works/codex-role-model@0.1.1`, local Responses adapter, signed-in catalog merge, adapter-only tool bridge (protocol-only), and Codex marketplace npm catalog verified. Hybrid Phase 5 operator sign-off `2026-08-07`. Direct Track B v1.1 remains the substrate baseline (run `00-direct-track-b-v1-1-implementation`). Runs 79–85 shipped mutate/dismiss UI, live `--track=dev` signed recommendation hops, gated digest-bound KW activation, pin-freeze/launch-scope honesty, shadow-ready KW soft toggle, equals-form argv, evidence-root fail-closed, Extensions UI Prepare/ON/Soft OFF, gated production retrieve + eval consumer, and gated live-router prompt inject with host join/auto-arm. Run `86-runtime-ui-rm3-design-system-frontend` remains the closed-out runtime-ui RM3 design-system migration. Track B / KW substrate truths from run 85 remain authoritative for inject/KW surfaces.
+Run `92-configured-model-pool-benchmark-convergence` is the **current closed-out** configured-model-pool convergence: endpoint-variant-exact membership revision token stamped at persist/read/portfolio/decision time, honest null candidate-space (no synthetic 0/0%), membership-revision + stale benchmark quarantine, destructive-confirm final-controller eject, decision revision, and transactional benchmark clear. Strict TDD (SP1–SP6), Phase 3.5 self-review, agent-operated rebuilt-runtime QA on `:3501`. Run `89-codex-role-model-package` remains the closed-out Codex adapter package (public npm `@try-works/codex-role-model@0.1.1`); Direct Track B v1.1 remains the substrate baseline. Runs 79–85 shipped mutate/dismiss UI, live `--track=dev` signed recommendation hops, gated KW activation, and gated live-router prompt inject. Run `86-runtime-ui-rm3-design-system-frontend` remains the closed-out runtime-ui RM3 design-system migration. Track B / KW substrate truths from run 85 remain authoritative for inject/KW surfaces.
 
 ### Product truths
 
+- **Configured model pool (run 92):** `computeConfiguredMembershipRevision` (order-stable SHA-256 over endpoint-variant-exact tuples) stamped on router candidates, routing decisions, benchmark manifests/samples, and clear receipts; runtime-ui `fetchRuntimeModels` no longer falls back to `/v1/models`; candidate-space scorers nullable with `—`/`n/a` presentation; `readLatestBenchmarkProfilesByEndpointIds` skips membership-mismatch and `completion_state: "stale"` samples; controller eject is destructive-confirmed; benchmark clear is transactional.
+- **Run 92 worktree:** `D:\DEV\role-model\.worktrees\92-configured-model-pool-benchmark-convergence` on branch `recursive/92-configured-model-pool-benchmark-convergence` (diff basis `d59f07b91e7b23c25e7297860a0f9c967b342b7a`; HEAD `01537fb8b402c6808e7a6b69c3a03227acceb17c`).
+- **Run 92 verification floor:** host-bridge 756 passed/3 skipped · runtime-ui 454 passed · sqlite-memory 67 passed · profile-aggregator 8 passed · builds green · agent-operated QA on `:3501`.
 - **Codex adapter (run 89):** `@try-works/codex-role-model@0.1.1` at `packages/codex-role-model`; adapter default `:3460`; does not own role-model runtime; signed-in `openai_base_url` + merged catalog; tool bridge + `web_search` fulfill stay adapter-only; marketplace `.agents/plugins/marketplace.json` (npm source).
 - **Run 89 worktree:** `D:\DEV\role-model\.worktrees\89-codex-role-model-package` on branch `recursive/89-codex-role-model-package` (diff basis vs `origin/dev` @ `6cf19bf033c23246c173a1bf634d13b2c822b2d8` from locked `00-worktree.md`).
 - **Run 89 Phase 5 QA:** hybrid; real runtime + real Codex CLI; operator sign-off `2026-08-07`; npm publish + marketplace→npm install verified.
@@ -23,7 +26,8 @@ Run `89-codex-role-model-package` is the **closed-out** Codex Desktop/CLI/IDE ad
 
 ### Known limitations
 
-- Feature-branch merge to origin `dev` remains operator-requested (runs 89, 86, 85, …).
+- Feature-branch merge to origin `dev` remains operator-requested (runs 92, 89, 86, 85, …).
+- Run 92 residual: `profileRevision` is membership-keyed (diagnostic-only) until a distinct profile receipt is warranted; no decision-time membership snapshot is persisted (the field reflects current membership at read time).
 - Run 89 residual: land `.agents/plugins/marketplace.json` on published `dev` for GitHub marketplace one-liner; optional Desktop UI glance; optional Codex Stop-hook auto-continue (not adapter regex).
 - Optional residual: rename legacy `--rm-*` call sites to `--rm3-*` where drift remains.
 - Local Matrix route remains a `<Navigate>` stub (run 86 R5 exception).
@@ -35,6 +39,7 @@ Run `89-codex-role-model-package` is the **closed-out** Codex Desktop/CLI/IDE ad
 
 ### Operational notes
 
+- Prefer run-92 evidence under `.recursive/run/92-configured-model-pool-benchmark-convergence/evidence/` for membership-revision convergence, honest null candidate-space, benchmark quarantine, controller eject, and Phase 5 `:3501` QA.
 - Prefer run-89 evidence under `.recursive/run/89-codex-role-model-package/evidence/` for Codex adapter, tool-bridge, npm/marketplace, and Phase 5 live routing proofs.
 - Codex outsider install: `npx --yes @try-works/codex-role-model@latest setup|start`; marketplace via personal npm catalog or (after merge) `codex plugin marketplace add try-works/role-model --ref dev`.
 - Prefer run-86 evidence for RM3 kit, shell, page IA, SP8 floor, Phase 5 `:3470` QA, screenshots, and P1–P8 polish addenda.

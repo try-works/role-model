@@ -1,0 +1,10 @@
+Run 92 SP2 (truthful candidate-space) RED evidence — captured during the SP2 slice.
+
+$ corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/lib/candidate-space.test.ts
+
+ 3 failures observed before implementation:
+   - scoreQuality() returned 0.55 instead of null (synthesized default)
+   - scoreSpeed() returned 0 instead of null (latency_ms_p50 <= 0 treated as scored)
+   - scoreRoute() returned 0 instead of null (no present metrics)
+
+RED verified: ✅  (missing metrics were still synthesized before the SP2 change)

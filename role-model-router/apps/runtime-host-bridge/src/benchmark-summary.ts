@@ -590,12 +590,19 @@ export async function readBenchmarkSummariesByMode(input: {
 export async function readCurrentBenchmarkPortfolio(input: {
   readonly artifactRoot: string;
   readonly resolveModelId: (endpointId: string) => string | null;
+  readonly membershipRevision?: string;
 }): Promise<BenchmarkPortfolioResponse> {
-  const runs = (await listCompletedBenchmarkRuns(input.artifactRoot)).sort(
-    (left, right) =>
-      (right.manifest.gradingCompletedAtMs ?? right.result?.completedAtMs ?? 0) -
-      (left.manifest.gradingCompletedAtMs ?? left.result?.completedAtMs ?? 0),
-  );
+  const runs = (await listCompletedBenchmarkRuns(input.artifactRoot))
+    .filter((run) =>
+      input.membershipRevision && run.manifest.membershipRevision
+        ? run.manifest.membershipRevision === input.membershipRevision
+        : true,
+    )
+    .sort(
+      (left, right) =>
+        (right.manifest.gradingCompletedAtMs ?? right.result?.completedAtMs ?? 0) -
+        (left.manifest.gradingCompletedAtMs ?? left.result?.completedAtMs ?? 0),
+    );
   const latestByEndpointId = new Map<string, BenchmarkPortfolioEntry>();
   for (const run of runs) {
     const summary = await buildBenchmarkSummaryResponse({

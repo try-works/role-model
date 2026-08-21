@@ -324,6 +324,7 @@ export interface BenchmarkRunnerDependencies {
   ) => Promise<BenchmarkChatCompletionsExecutionResult>;
 
   readonly deriveEndpointVersion: (endpointId: string) => string;
+  readonly membershipRevision?: () => string;
 }
 
 function isHealthyEndpoint(healthStatus: string): boolean {
@@ -1442,6 +1443,8 @@ function toObservedSample(input: {
 
   endpointVersion: string;
 
+  membershipRevision: string | null;
+
   caseItem: RoutingBenchmarkCase;
 
   requestId: string;
@@ -1486,6 +1489,8 @@ function toObservedSample(input: {
     ...(input.failure ? { error_class: "benchmark_execution_failed" } : {}),
 
     request_id: input.requestId,
+
+    ...(input.membershipRevision !== null ? { membership_revision: input.membershipRevision } : {}),
   };
 }
 
@@ -1951,6 +1956,8 @@ export async function runRoutingCapabilityBenchmark(
 
             endpointVersion: deps.deriveEndpointVersion(endpoint.endpointId),
 
+            membershipRevision: deps.membershipRevision?.() ?? null,
+
             caseItem,
 
             requestId: stored.requestId,
@@ -2098,6 +2105,8 @@ export async function runRoutingCapabilityBenchmark(
       judgeArtifactCount,
 
       compareArtifactCount,
+
+      membershipRevision: deps.membershipRevision?.() ?? null,
     });
 
     const result: BenchmarkRunResult = {
