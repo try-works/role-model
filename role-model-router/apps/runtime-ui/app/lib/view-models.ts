@@ -964,10 +964,11 @@ function humanizeTelemetryErrorClass(errorClass: string | null | undefined): str
 function buildTelemetryStatusLabel(
   row: Pick<RuntimeTelemetryRequestRecord, "statusCode" | "errorClass" | "dimensions">,
 ): string {
+  const statusCode = row.statusCode !== null && row.statusCode !== undefined ? String(row.statusCode) : "n/a";
   if (!row.errorClass) {
-    return `${row.statusCode ?? 0} ok`;
+    return `${statusCode} ok`;
   }
-  return `${row.statusCode ?? 0} ${readFailureMessageFromDimensions(row.dimensions) ?? humanizeTelemetryErrorClass(row.errorClass)}`;
+  return `${statusCode} ${readFailureMessageFromDimensions(row.dimensions) ?? humanizeTelemetryErrorClass(row.errorClass)}`;
 }
 
 export function summarizeTelemetryStats(
@@ -1037,7 +1038,7 @@ export function buildTelemetryComparisonCards(
     }),
     reliabilityLabel: `${row.failureCount} failures / ${row.successCount} success${row.successCount === 1 ? "" : "es"}`,
     requestCountLabel: `${row.requestCount} request${row.requestCount === 1 ? "" : "s"}`,
-    latencyLabel: `${row.p95LatencyMs ?? 0} ms p95 / ${row.averageLatencyMs ?? 0} ms avg`,
+    latencyLabel: `${formatLatencyMs(row.p95LatencyMs)} p95 / ${formatLatencyMs(row.averageLatencyMs)} avg`,
     tokenLabel: `${row.totalTokens} tokens`,
     costLabel:
       row.totalActualCostUsd > 0
@@ -1144,7 +1145,8 @@ export function buildTelemetryRequestRows(
         streamLabel: summarizeStreamLabel(row),
         latencyLabel:
           row.latencyMs !== null && row.latencyMs !== undefined ? `${row.latencyMs} ms` : "n/a",
-        tokenLabel: `${row.totalTokens ?? 0} tokens`,
+        tokenLabel:
+          typeof row.totalTokens === "number" ? `${row.totalTokens} tokens` : "n/a tokens",
         costLabel:
           typeof row.actualCostUsd === "number" && row.actualCostUsd > 0
             ? formatCurrency(row.actualCostUsd, "actual")

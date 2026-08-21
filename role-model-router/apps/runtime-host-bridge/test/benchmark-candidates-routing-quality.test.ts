@@ -105,4 +105,19 @@ describe("router candidate routing benchmark quality", () => {
     expect(routingQualityScore).not.toBe(benchmarkCapability?.overallScore);
     expect(routingQualityScore).toBeCloseTo(0.733333, 4);
   });
+
+  test("never fabricates an overall zero when scored samples cannot be bucketed", () => {
+    const samples: ObservedPerformanceSample[] = [
+      {
+        ...benchmarkSample({ id: "unknown-bucket", bucket: "hard", score: 0.6 }),
+        difficulty_bucket: "unknown" as ObservedPerformanceSample["difficulty_bucket"],
+      },
+    ];
+
+    // A scored benchmark sample with no recognizable bucket must not collapse to 0.
+    const quality = resolveRoutingBenchmarkQuality(samples);
+    expect(quality).not.toBeNull();
+    expect(quality?.quality_score).not.toBe(0);
+    expect(quality?.quality_score).toBeCloseTo(0.6, 5);
+  });
 });

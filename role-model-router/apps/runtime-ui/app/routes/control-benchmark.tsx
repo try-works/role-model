@@ -179,9 +179,11 @@ interface ModelScoreRow {
   readonly displayName: string;
   readonly sourceType: string;
   readonly overallScore: number | null;
-  readonly scoresByBucket: BenchmarkSummarySubject["scoresByBucket"] | null;
+  readonly scoresByBucket: Partial<
+    Record<"easy" | "medium" | "hard", { readonly score: number | null; readonly cases: number | null }>
+  > | null;
   readonly profileQualityScore: number | null;
-  readonly benchmarkSamples: number;
+  readonly benchmarkSamples: number | null;
   readonly latencyP50: number | null;
   readonly latencyP95: number | null;
   readonly lastRunId: string | null;
@@ -229,7 +231,7 @@ function buildModelScoreRows(
     const profile = asRecord(candidate.latestProfile);
     const sources = asRecord(profile?.sources);
     const profileQualityScore = pickNumber(profile, "judge_score", "quality_score");
-    const benchmarkSamples = pickNumber(sources, "benchmark_samples") ?? 0;
+    const benchmarkSamples = pickNumber(sources, "benchmark_samples");
     const capability = candidate.benchmarkCapability;
     const caseResults = grade?.caseResults ?? null;
     const { p50: latencyP50, p95: latencyP95 } = computeLatencyPercentiles(
@@ -240,7 +242,12 @@ function buildModelScoreRows(
       }),
     );
 
-    if (!grade && !capability && benchmarkSamples === 0 && profileQualityScore === null) {
+    if (
+      !grade &&
+      !capability &&
+      (benchmarkSamples === null || benchmarkSamples === 0) &&
+      profileQualityScore === null
+    ) {
       continue;
     }
 
@@ -255,16 +262,16 @@ function buildModelScoreRows(
         (capability?.scoresByBucket
           ? {
               easy: {
-                score: capability.scoresByBucket.easy?.score ?? 0,
-                cases: capability.scoresByBucket.easy?.cases ?? 0,
+                score: capability.scoresByBucket.easy?.score ?? null,
+                cases: capability.scoresByBucket.easy?.cases ?? null,
               },
               medium: {
-                score: capability.scoresByBucket.medium?.score ?? 0,
-                cases: capability.scoresByBucket.medium?.cases ?? 0,
+                score: capability.scoresByBucket.medium?.score ?? null,
+                cases: capability.scoresByBucket.medium?.cases ?? null,
               },
               hard: {
-                score: capability.scoresByBucket.hard?.score ?? 0,
-                cases: capability.scoresByBucket.hard?.cases ?? 0,
+                score: capability.scoresByBucket.hard?.score ?? null,
+                cases: capability.scoresByBucket.hard?.cases ?? null,
               },
             }
           : null),
@@ -1049,20 +1056,20 @@ export default function ControlBenchmarkRoute() {
                         </td>
                         <td className={`${benchmarkDenseCellClassName} px-1 py-3 font-normal`}>
                           {formatScoreWithCoverage(
-                            row.scoresByBucket?.easy.score,
-                            row.scoresByBucket?.easy.cases,
+                            row.scoresByBucket?.easy?.score,
+                            row.scoresByBucket?.easy?.cases,
                           )}
                         </td>
                         <td className={`${benchmarkDenseCellClassName} px-1 py-3 font-normal`}>
                           {formatScoreWithCoverage(
-                            row.scoresByBucket?.medium.score,
-                            row.scoresByBucket?.medium.cases,
+                            row.scoresByBucket?.medium?.score,
+                            row.scoresByBucket?.medium?.cases,
                           )}
                         </td>
                         <td className={`${benchmarkDenseCellClassName} px-1 py-3 font-normal`}>
                           {formatScoreWithCoverage(
-                            row.scoresByBucket?.hard.score,
-                            row.scoresByBucket?.hard.cases,
+                            row.scoresByBucket?.hard?.score,
+                            row.scoresByBucket?.hard?.cases,
                           )}
                         </td>
                         <td className={`${benchmarkDenseCellClassName} px-1 py-3 font-normal`}>

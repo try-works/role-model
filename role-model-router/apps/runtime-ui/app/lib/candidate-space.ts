@@ -5,14 +5,16 @@ export type CandidateSpacePoint = {
   readonly endpointId: string;
   readonly modelId: string;
   readonly label: string;
-  /** Cost efficiency 0–1; higher = cheaper (axis inverted in the plot). */
-  readonly cost: number;
-  /** Quality 0–1. */
-  readonly quality: number;
-  /** Speed 0–1; higher = lower latency. */
-  readonly speed: number;
-  /** Composite route score 0–1 (drives marker size + legend). */
-  readonly routeScore: number;
+  /** Cost efficiency 0–1; higher = cheaper (axis inverted in the plot). Null when no pricing evidence. */
+  readonly cost: number | null;
+  /** Quality 0–1. Null when no benchmark/routing/profile evidence. */
+  readonly quality: number | null;
+  /** Speed 0–1; higher = lower latency. Null when no latency evidence. */
+  readonly speed: number | null;
+  /** Composite route score 0–1 (drives marker size + legend). Null when no metric evidence exists. */
+  readonly routeScore: number | null;
+  /** Whether all, some, or none of the C/Q/S axes carry real evidence. */
+  readonly evidence: "none" | "partial" | "complete";
   readonly selected: boolean;
   readonly excluded: boolean;
   readonly tags: readonly string[];
@@ -75,7 +77,7 @@ function shortModelLabel(candidate: RouterCandidate): string {
   });
 }
 
-function scoreQuality(candidate: RouterCandidate): number {
+function scoreQuality(candidate: RouterCandidate): number | null {
   const overall = candidate.benchmarkCapability?.overallScore;
   if (typeof overall === "number" && Number.isFinite(overall)) {
     return clamp01(overall);
@@ -99,10 +101,11 @@ function scoreQuality(candidate: RouterCandidate): number {
   if (fromProfile !== null) {
     return clamp01(fromProfile > 1 ? fromProfile / 100 : fromProfile);
   }
-  return 0.55;
+  // Honest no-data: never synthesize a quality score.
+  return null;
 }
 
-function scoreSpeed(candidate: RouterCandidate, fastestLatencyMs: number): number {
+function scoreSpeed(candidate: RouterCandidate, fastestLatencyMs: number): number | null {
   const profile = asRecord(candidate.operationalProfile ?? candidate.latestProfile);
   const latencyP50 = pickNumber(
     profile,
@@ -111,13 +114,14 @@ function scoreSpeed(candidate: RouterCandidate, fastestLatencyMs: number): numbe
     "latency_ms",
     "latencyMs",
   );
-  if (latencyP50 !== null && latencyP50 >= 0) {
+  if (latencyP50 !== null && latencyP50 > 0) {
     // Ratio to the cohort’s fastest p50 — higher = faster.
     // Avoids pinning the slowest model to S0 (reads as “no latency data”).
+    // Zero/negative latency is treated as absent, not as "fastest".
     const fastest = Math.max(fastestLatencyMs, 1);
     return clamp01(fastest / Math.max(latencyP50, 1));
   }
-  return 0;
+  return null;
 }
 
 function readInputCostPer1M(
@@ -147,7 +151,7 @@ function scoreCost(
   candidate: RouterCandidate,
   cheapestInputPer1M: number,
   pricingByModelId?: ReadonlyMap<string, number>,
-): number {
+): number | null {
   const inputCost = readInputCostPer1M(candidate, pricingByModelId);
   if (inputCost !== null) {
     // Free / zero-priced models sit at the cost axis tip.
@@ -159,14 +163,53 @@ function scoreCost(
     const cheapest = Math.max(cheapestInputPer1M, 0.0001);
     return clamp01(cheapest / inputCost);
   }
-  if (candidate.sourceType === "local") {
-    return 0.88;
-  }
-  return 0.58;
+  // Honest no-data: never synthesize a cost score.
+  return null;
 }
 
-function scoreRoute(cost: number, quality: number, speed: number): number {
-  return clamp01(0.34 * quality + 0.33 * cost + 0.33 * speed);
+function scoreRoute(
+  cost: number | null,
+  quality: number | null,
+  speed: number | null,
+): number | null {
+  const parts: number[] = [];
+  const weights: number[] = [];
+  if (cost !== null) {
+    parts.push(cost);
+    weights.push(0.33);
+  }
+  if (quality !== null) {
+    parts.push(quality);
+    weights.push(0.34);
+  }
+  if (speed !== null) {
+    parts.push(speed);
+    weights.push(0.33);
+  }
+  if (parts.length === 0) {
+    return null;
+  }
+  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+  const weighted = parts.reduce(
+    (sum, part, index) => sum + part * (weights[index] ?? 0),
+    0,
+  );
+  return clamp01(weighted / totalWeight);
+}
+
+function evidenceOf(
+  cost: number | null,
+  quality: number | null,
+  speed: number | null,
+): "none" | "partial" | "complete" {
+  const present = [cost, quality, speed].filter((value) => value !== null).length;
+  if (present === 0) {
+    return "none";
+  }
+  if (present === 3) {
+    return "complete";
+  }
+  return "partial";
 }
 
 function candidateTags(candidate: RouterCandidate, selected: boolean, excluded: boolean): string[] {
@@ -222,7 +265,7 @@ export function buildCandidateSpacePoints(
         "latency_ms",
       ),
     )
-    .filter((value): value is number => value !== null && value >= 0);
+    .filter((value): value is number => value !== null && value > 0);
   const fastestLatencyMs =
     latencies.length > 0 ? Math.min(...latencies.map((value) => Math.max(value, 1))) : 1_000;
 
@@ -245,7 +288,7 @@ export function buildCandidateSpacePoints(
         Number(right.candidate.controllerEligible === true) -
           Number(left.candidate.controllerEligible === true) ||
         Number(right.candidate.preferred === true) - Number(left.candidate.preferred === true) ||
-        right.routeScore - left.routeScore ||
+        (right.routeScore ?? -1) - (left.routeScore ?? -1) ||
         left.candidate.modelId.localeCompare(right.candidate.modelId, "en"),
     )
     .slice(0, Math.max(0, limit));
@@ -265,6 +308,7 @@ export function buildCandidateSpacePoints(
       quality: row.quality,
       speed: row.speed,
       routeScore: row.routeScore,
+      evidence: evidenceOf(row.cost, row.quality, row.speed),
       selected,
       excluded,
       tags: candidateTags(row.candidate, selected, excluded),
@@ -273,34 +317,41 @@ export function buildCandidateSpacePoints(
   });
 }
 
-/** Project C/Q/S into the Paper isometric viewBox (400×340). */
+/** Project C/Q/S into the Paper isometric viewBox (400×340). Missing axes sit at the origin. */
 export function projectCandidateSpacePoint(point: {
-  readonly cost: number;
-  readonly quality: number;
-  readonly speed: number;
-  readonly routeScore: number;
+  readonly cost: number | null;
+  readonly quality: number | null;
+  readonly speed: number | null;
+  readonly routeScore: number | null;
 }): CandidateSpaceProjection {
-  const cost = clamp01(point.cost);
-  const quality = clamp01(point.quality);
-  const speed = clamp01(point.speed);
+  const cost = clamp01(point.cost ?? 0);
+  const quality = clamp01(point.quality ?? 0);
+  const speed = clamp01(point.speed ?? 0);
   const floorX = VIEW.originX + cost * VIEW.costDx + speed * VIEW.speedDx;
   const floorY = VIEW.originY + cost * VIEW.costDy + speed * VIEW.speedDy;
   const markerX = floorX;
   const markerY = floorY - quality * VIEW.qualityLift;
-  const radius = 8 + clamp01(point.routeScore) * 8;
+  const radius = 8 + clamp01(point.routeScore ?? 0) * 8;
   return { floorX, floorY, markerX, markerY, radius };
 }
 
+function formatAxis(value: number | null): string {
+  if (value === null) {
+    return "—";
+  }
+  return String(Math.round(value * 100));
+}
+
 export function formatCandidateMetricTriplet(point: CandidateSpacePoint): string {
-  const c = Math.round(point.cost * 100);
-  const q = Math.round(point.quality * 100);
-  const s = Math.round(point.speed * 100);
+  const c = formatAxis(point.cost);
+  const q = formatAxis(point.quality);
+  const s = formatAxis(point.speed);
   const suffix = point.tags.length > 0 ? ` · ${point.tags.join(" · ")}` : "";
   return `C${c} · Q${q} · S${s}${suffix}`;
 }
 
-export function formatRouteScore(score: number): string {
-  if (!Number.isFinite(score)) {
+export function formatRouteScore(score: number | null): string {
+  if (score === null || !Number.isFinite(score)) {
     return "—";
   }
   return score.toFixed(3);

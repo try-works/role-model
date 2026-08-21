@@ -175,9 +175,48 @@ describe("buildCandidateSpacePoints", () => {
     const firstPoint = points[0];
     expect(firstPoint).toBeDefined();
     expect(formatCandidateMetricTriplet(firstPoint)).toMatch(
-      /^C\d+ · Q\d+ · S\d+ · No live telemetry · Selected$/,
+      /^C— · Q80 · S— · No live telemetry · Selected$/,
     );
     expect(formatRouteScore(0.841)).toBe("0.841");
+  });
+
+  test("never synthesizes a default score for an un-scored candidate", () => {
+    const points = buildCandidateSpacePoints([
+      candidate({
+        endpointId: "bare",
+        modelId: "vendor/bare",
+      }),
+    ]);
+
+    const bare = points.find((point) => point.endpointId === "bare");
+    expect(bare).toBeDefined();
+    expect(bare?.quality).toBeNull();
+    expect(bare?.speed).toBeNull();
+    expect(bare?.cost).toBeNull();
+    expect(bare?.routeScore).toBeNull();
+    expect(bare?.evidence).toBe("none");
+    // The legend must not fabricate 55/58/0 — every metric is "no data".
+    expect(formatCandidateMetricTriplet(bare!)).toBe(
+      "C— · Q— · S— · No live telemetry · Selected",
+    );
+    expect(formatRouteScore(null)).toBe("—");
+  });
+
+  test("computes route score only from present metrics (partial evidence)", () => {
+    const points = buildCandidateSpacePoints([
+      candidate({
+        endpointId: "partial",
+        modelId: "vendor/partial",
+        routingQualityScore: 0.9,
+      }),
+    ]);
+
+    const partial = points.find((point) => point.endpointId === "partial");
+    expect(partial?.quality).toBeCloseTo(0.9, 5);
+    expect(partial?.speed).toBeNull();
+    expect(partial?.cost).toBeNull();
+    expect(partial?.routeScore).toBeCloseTo(0.9, 5);
+    expect(partial?.evidence).toBe("partial");
   });
 });
 
