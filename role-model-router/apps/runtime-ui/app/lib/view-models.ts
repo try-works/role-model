@@ -9,6 +9,7 @@ import {
   readReasoningEffortLevels,
   readUpstreamModelId,
 } from "./effort-identity";
+import { formatScore } from "./format-score";
 import type {
   RuntimeAccount,
   RuntimeActivityLogEntry,
@@ -1477,11 +1478,14 @@ export function buildEndpointCatalogRows(endpoints: readonly RuntimeEndpoint[]):
   endpointId: string;
   modelId: string;
   providerLabel: string;
+  providerAccountId?: string;
   sourceLabel: string;
   servingSource: string;
   endpointKind: string;
   status: string;
   healthStatus: string;
+  routingEligible?: boolean;
+  benchmarkEligible?: boolean;
   displayName?: string;
   reasoningEffort?: string | null;
   upstreamModelId?: string | null;
@@ -1501,6 +1505,7 @@ export function buildEndpointCatalogRows(endpoints: readonly RuntimeEndpoint[]):
             : endpoint.localModelSource === "peer-backed"
               ? "local-openai-compatible"
               : "local/runtime"),
+        ...(endpoint.providerAccountId ? { providerAccountId: endpoint.providerAccountId } : {}),
         sourceLabel: formatSourceLabel(
           endpoint.sourceType ??
             (endpoint.servingSource?.toLowerCase().includes("local") ? "local" : "remote"),
@@ -1509,6 +1514,12 @@ export function buildEndpointCatalogRows(endpoints: readonly RuntimeEndpoint[]):
         endpointKind: endpoint.endpointKind ?? "unknown",
         status: endpoint.status ?? "unknown",
         healthStatus: endpoint.healthStatus ?? "unknown",
+        ...(typeof endpoint.routingEligible === "boolean"
+          ? { routingEligible: endpoint.routingEligible }
+          : {}),
+        ...(typeof endpoint.benchmarkEligible === "boolean"
+          ? { benchmarkEligible: endpoint.benchmarkEligible }
+          : {}),
         ...(reasoningEffort || endpoint.displayName || upstreamModelId
           ? {
               displayName: formatEndpointDisplayName({ base, reasoningEffort }),
@@ -2215,6 +2226,8 @@ export function buildSelectedModelMetaPanel(input: {
   readonly latencyP50Ms?: number | null;
   readonly latencyP95Ms?: number | null;
   readonly meanLatencyMs?: number | null;
+  readonly liveFailureRate?: number | null;
+  readonly liveSampleCount?: number | null;
   readonly difficultyMix?: string | null;
   readonly routingHint?: string | null;
 }): {
@@ -2249,7 +2262,7 @@ export function buildSelectedModelMetaPanel(input: {
           { label: "Output", value: "Unknown" },
         ];
   const overall =
-    typeof input.overallScore === "number" ? input.overallScore.toFixed(2) : "No evidence yet";
+    typeof input.overallScore === "number" ? formatScore(input.overallScore) : "No evidence yet";
   return {
     title: `Runtime · ${input.displayName ?? input.modelId}`,
     facts: [
@@ -2269,9 +2282,23 @@ export function buildSelectedModelMetaPanel(input: {
     cost,
     benchmark: [
       { label: "Overall", value: overall },
-      { label: "Latency p50", value: formatLatencyMs(input.latencyP50Ms) },
-      { label: "Latency p95", value: formatLatencyMs(input.latencyP95Ms) },
-      { label: "Mean latency", value: formatLatencyMs(input.meanLatencyMs) },
+      { label: "Live latency p50", value: formatLatencyMs(input.latencyP50Ms) },
+      { label: "Live latency p95", value: formatLatencyMs(input.latencyP95Ms) },
+      { label: "Live mean latency", value: formatLatencyMs(input.meanLatencyMs) },
+      {
+        label: "Live failure rate",
+        value:
+          typeof input.liveFailureRate === "number"
+            ? `${Math.round(input.liveFailureRate * 10_000) / 100}%`
+            : "No live evidence yet",
+      },
+      {
+        label: "Live samples",
+        value:
+          typeof input.liveSampleCount === "number"
+            ? input.liveSampleCount.toLocaleString()
+            : "No live evidence yet",
+      },
       {
         label: "Difficulty mix",
         value: input.difficultyMix?.trim() || "No difficulty mix yet",

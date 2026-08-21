@@ -140,6 +140,8 @@ type BenchmarkEndpointRef = {
   readonly modelId: string;
 
   readonly sourceType: "local" | "remote";
+
+  readonly reasoningEffort?: string | null;
 };
 
 export function orderEndpointsForGrading(
@@ -253,7 +255,11 @@ export interface BenchmarkRunResult {
 
   readonly artifactRoot: string;
 
-  readonly endpointGrades: readonly BenchmarkEndpointGrade[];
+  readonly endpointGrades: readonly BenchmarkRunEndpointGrade[];
+}
+
+export interface BenchmarkRunEndpointGrade extends BenchmarkEndpointGrade {
+  readonly reasoningEffort: string | null;
 }
 
 export interface BenchmarkRunnerDependencies {
@@ -268,6 +274,8 @@ export interface BenchmarkRunnerDependencies {
       modelId: string;
 
       sourceType: "local" | "remote";
+
+      reasoningEffort?: string | null;
 
       healthStatus: string;
 
@@ -1428,6 +1436,10 @@ async function gradeCompareAcrossModels(input: {
 function toObservedSample(input: {
   endpointId: string;
 
+  modelId: string;
+
+  reasoningEffort: string | null;
+
   endpointVersion: string;
 
   caseItem: RoutingBenchmarkCase;
@@ -1448,6 +1460,12 @@ function toObservedSample(input: {
     endpoint_id: input.endpointId,
 
     endpoint_version: input.endpointVersion,
+
+    model_id: input.modelId,
+
+    reasoning_effort: input.reasoningEffort,
+
+    effort_source: input.reasoningEffort === null ? "none" : "variant",
 
     source_type: "benchmark",
 
@@ -1772,7 +1790,7 @@ export async function runRoutingCapabilityBenchmark(
       responseCount: executionSteps,
     });
 
-    const endpointGrades: BenchmarkEndpointGrade[] = [];
+    const endpointGrades: BenchmarkRunEndpointGrade[] = [];
 
     const compareByCase = new Map<
       string,
@@ -1927,6 +1945,10 @@ export async function runRoutingCapabilityBenchmark(
           sample: toObservedSample({
             endpointId: endpoint.endpointId,
 
+            modelId: endpoint.modelId,
+
+            reasoningEffort: endpoint.reasoningEffort ?? null,
+
             endpointVersion: deps.deriveEndpointVersion(endpoint.endpointId),
 
             caseItem,
@@ -1974,8 +1996,8 @@ export async function runRoutingCapabilityBenchmark(
     for (const endpoint of targetEndpoints) {
       const caseResults = caseResultsByEndpoint.get(endpoint.endpointId) ?? [];
 
-      endpointGrades.push(
-        summarizeEndpointGrade(
+      endpointGrades.push({
+        ...summarizeEndpointGrade(
           endpoint.endpointId,
 
           endpoint.modelId,
@@ -1984,7 +2006,8 @@ export async function runRoutingCapabilityBenchmark(
 
           caseResults,
         ),
-      );
+        reasoningEffort: endpoint.reasoningEffort ?? null,
+      });
     }
 
     if (useJudge && targetEndpoints.length >= 2) {
@@ -2126,6 +2149,7 @@ export async function runRoutingCapabilityBenchmark(
         endpointId: grade.endpointId,
         modelId: grade.modelId,
         sourceType: grade.sourceType,
+        reasoningEffort: grade.reasoningEffort,
         overallScore: grade.overallScore,
         byDifficulty: grade.byDifficulty,
         caseResults: grade.caseResults.map((caseResult) => ({

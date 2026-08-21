@@ -106,6 +106,7 @@ type CliBackend = Pick<
   | "clearBenchmarkEndpointData"
   | "clearBenchmarkData"
   | "readBenchmarkSummary"
+  | "readBenchmarkPortfolio"
   | "listBenchmarkRuns"
   | "readBenchmarkSummariesByMode"
   | "readBenchmarkPreferences"
@@ -547,6 +548,9 @@ export function createCliServerOptions(
     readBenchmarkSummary: bindBackendMethod(
       "readBenchmarkSummary",
     ) as StartBridgeServerOptions["readBenchmarkSummary"],
+    readBenchmarkPortfolio: bindBackendMethod(
+      "readBenchmarkPortfolio",
+    ) as StartBridgeServerOptions["readBenchmarkPortfolio"],
     listBenchmarkRuns: bindBackendMethod(
       "listBenchmarkRuns",
     ) as StartBridgeServerOptions["listBenchmarkRuns"],

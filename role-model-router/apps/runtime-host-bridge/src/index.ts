@@ -35,7 +35,7 @@ import {
 import { ProcessSupervisor } from "@role-model-router/process-supervisor";
 import {
   type ObservedPerformanceSample,
-  aggregateObservedPerformanceSamples,
+  aggregateOperationalPerformanceSamples,
   resolveRoutingBenchmarkQuality,
 } from "@role-model-router/profile-aggregator";
 import {
@@ -92,8 +92,10 @@ import {
   readAdvisoryMaxDifficultyRecommendation,
   readConversationContinuity,
   readDifficultyClassificationCache,
+  readLatestBenchmarkProfilesByEndpointIds,
   readLatestObservedProfile,
   readLatestObservedProfilesByEndpointIds,
+  readLiveTaskTelemetryScoresByEndpointIds,
   readObservedPerformanceSamples,
   readObservedThroughputPenaltyState,
   readProviderDeviceAuthSession,
@@ -193,6 +195,7 @@ import {
   listBenchmarkRuns,
   readBenchmarkPreferences,
   readBenchmarkSummariesByMode,
+  readCurrentBenchmarkPortfolio,
   readLatestBenchmarkSummary,
   writeBenchmarkPreferences,
 } from "./benchmark-summary.js";
@@ -2919,6 +2922,7 @@ export interface StartBridgeServerOptions {
   readonly clearBenchmarkEndpointData?: (endpointId: string) => Promise<unknown>;
   readonly clearBenchmarkData?: () => Promise<unknown>;
   readonly readBenchmarkSummary?: () => Promise<unknown>;
+  readonly readBenchmarkPortfolio?: () => Promise<unknown>;
   readonly listBenchmarkRuns?: () => Promise<unknown>;
   readonly readBenchmarkSummariesByMode?: () => Promise<unknown>;
   readonly readBenchmarkPreferences?: () => Promise<unknown>;
@@ -3129,6 +3133,7 @@ export interface RuntimeBridgeBackend {
       endpointId: string;
       modelId: string;
       providerId: string | null;
+      providerAccountId?: string;
       localModelSource?: "llama-swap" | "peer-backed";
       endpointKind: string;
       servingSource: string;
@@ -3174,6 +3179,7 @@ export interface RuntimeBridgeBackend {
   clearBenchmarkEndpointData(endpointId: string): Promise<unknown>;
   clearBenchmarkData(): Promise<unknown>;
   readBenchmarkSummary(): Promise<unknown>;
+  readBenchmarkPortfolio(): Promise<unknown>;
   listBenchmarkRuns(): Promise<unknown>;
   readBenchmarkSummariesByMode(): Promise<unknown>;
   readBenchmarkPreferences(): Promise<unknown>;
@@ -4483,6 +4489,8 @@ function buildPreExecutionFailureObservation(input: {
   readonly endpointId: string;
   readonly modelId: string;
   readonly sourceType: "local" | "remote";
+  readonly reasoningEffort: string | null;
+  readonly effortSource: RuntimeEffortSource;
   readonly error: unknown;
   readonly latencyMs: number;
   readonly dimensions: Record<string, unknown> | null;
@@ -4508,6 +4516,9 @@ function buildPreExecutionFailureObservation(input: {
   const sample: ObservedPerformanceSample = {
     endpoint_id: input.endpointId,
     endpoint_version: "pre-execution-failure",
+    model_id: input.modelId,
+    reasoning_effort: input.reasoningEffort,
+    effort_source: input.effortSource,
     source_type: "live_request",
     timestamp_ms: createdAtMs,
     latency_ms: input.latencyMs,
@@ -4516,7 +4527,10 @@ function buildPreExecutionFailureObservation(input: {
     request_id: input.requestId,
     routing_decision_id: routingDecisionId,
   };
-  const profile = aggregateObservedPerformanceSamples([sample], { nowMs: createdAtMs });
+  const profile = aggregateOperationalPerformanceSamples([sample], { nowMs: createdAtMs });
+  if (!profile) {
+    throw new Error("A live pre-execution failure must produce an operational profile.");
+  }
   const diagnostics = {
     routing: [],
     execution: [
@@ -4547,6 +4561,8 @@ function buildPreExecutionFailureObservation(input: {
     ...(input.clientRequestId ? { clientRequestId: input.clientRequestId } : {}),
     routingDecisionId,
     endpointId: input.endpointId,
+    reasoningEffort: input.reasoningEffort,
+    effortSource: input.effortSource,
     conversationId: "conversation-main",
     usageEvent: {
       timestamp_ms: createdAtMs,
@@ -4554,6 +4570,8 @@ function buildPreExecutionFailureObservation(input: {
       routing_decision_id: routingDecisionId,
       endpoint_id: input.endpointId,
       model_id: input.modelId,
+      reasoning_effort: input.reasoningEffort,
+      effort_source: input.effortSource,
       tokens_in: 0,
       tokens_out: 0,
       latency_ms: input.latencyMs,
@@ -5099,6 +5117,195 @@ function readObservedProfilesForRouting(input: {
     >[0]["observedProfilesByEndpointId"],
     throughputPenaltyStateByEndpointId,
     diagnosticsByEndpointId,
+  };
+}
+
+export function projectBenchmarkDecisionEvidence(
+  decisionValue: unknown,
+  selectedEndpointId: string,
+): {
+  readonly endpointId: string;
+  readonly effectiveQualityScore: number;
+  readonly overallScore: number;
+  readonly taskScore: number | null;
+  readonly roleScore: number | null;
+  readonly groupScore: number | null;
+  readonly reason: string | null;
+  readonly source: string;
+  readonly evidenceSource: string;
+  readonly runId: string | null;
+  readonly runCompletedAtMs: number | null;
+  readonly runMode: string | null;
+  readonly suiteId: string | null;
+  readonly judgeEndpointId: string | null;
+  readonly judgeModelId: string | null;
+  readonly freshnessWeight: number | null;
+} | null {
+  const decision =
+    typeof decisionValue === "object" && decisionValue !== null
+      ? (decisionValue as Record<string, unknown>)
+      : null;
+  const candidates = Array.isArray(decision?.scored_candidates) ? decision.scored_candidates : [];
+  const selected = candidates.find((candidate) => {
+    const record =
+      typeof candidate === "object" && candidate !== null
+        ? (candidate as Record<string, unknown>)
+        : null;
+    return record?.endpoint_id === selectedEndpointId;
+  }) as Record<string, unknown> | undefined;
+  const metricBreakdown =
+    typeof selected?.metric_breakdown === "object" && selected.metric_breakdown !== null
+      ? (selected.metric_breakdown as Record<string, unknown>)
+      : null;
+  const quality =
+    typeof metricBreakdown?.quality === "object" && metricBreakdown.quality !== null
+      ? (metricBreakdown.quality as Record<string, unknown>)
+      : null;
+  const raw =
+    typeof quality?.raw === "object" && quality.raw !== null
+      ? (quality.raw as Record<string, unknown>)
+      : null;
+  if (
+    quality?.source !== "benchmark" ||
+    typeof quality.value !== "number" ||
+    !Number.isFinite(quality.value) ||
+    typeof raw?.benchmark_quality_score !== "number" ||
+    !Number.isFinite(raw.benchmark_quality_score) ||
+    raw.benchmark_endpoint_id !== selectedEndpointId
+  ) {
+    return null;
+  }
+  const finiteNumber = (value: unknown): number | null =>
+    typeof value === "number" && Number.isFinite(value) ? value : null;
+  const stringValue = (value: unknown): string | null =>
+    typeof value === "string" && value.length > 0 ? value : null;
+  return {
+    endpointId: selectedEndpointId,
+    effectiveQualityScore: quality.value,
+    overallScore: raw.benchmark_quality_score,
+    taskScore: finiteNumber(raw.benchmark_task_score),
+    roleScore: finiteNumber(raw.benchmark_role_score),
+    groupScore: finiteNumber(raw.benchmark_group_score),
+    reason: stringValue(raw.benchmark_reason),
+    source: stringValue(raw.benchmark_source) ?? "routing-capability-benchmark",
+    evidenceSource: stringValue(raw.benchmark_evidence_source) ?? "profile-derived",
+    runId: stringValue(raw.benchmark_run_id),
+    runCompletedAtMs: finiteNumber(raw.benchmark_run_completed_at_ms),
+    runMode: stringValue(raw.benchmark_run_mode),
+    suiteId: stringValue(raw.benchmark_suite_id),
+    judgeEndpointId: stringValue(raw.benchmark_judge_endpoint_id),
+    judgeModelId: stringValue(raw.benchmark_judge_model_id),
+    freshnessWeight: finiteNumber(raw.freshness_weight),
+  };
+}
+
+export function projectTelemetryDecisionEvidence(
+  decisionValue: unknown,
+  selectedEndpointId: string,
+  identity: {
+    readonly modelId: string | null;
+    readonly reasoningEffort: string | null;
+    readonly effortSource: string | null;
+  },
+): {
+  readonly endpointId: string;
+  readonly modelId: string | null;
+  readonly reasoningEffort: string | null;
+  readonly effortSource: string | null;
+  readonly operationalProfile: {
+    readonly scope: string;
+    readonly semanticsVersion: string | null;
+    readonly sampleCount: number | null;
+    readonly windowStartMs: number | null;
+    readonly windowEndMs: number | null;
+    readonly measuredAtMs: number | null;
+    readonly freshnessScore: number | null;
+    readonly confidenceScore: number | null;
+    readonly latencyP50Ms: number | null;
+    readonly latencyP95Ms: number | null;
+    readonly failureRate: number | null;
+    readonly tokensPerSec: number | null;
+    readonly observedCostPer1kTokens: number | null;
+  } | null;
+  readonly taskTelemetry: {
+    readonly available: boolean;
+    readonly eligible: boolean;
+    readonly applied: boolean;
+    readonly withheldReason: string | null;
+    readonly successRate: number | null;
+    readonly successCount: number | null;
+    readonly failureCount: number | null;
+    readonly sampleCount: number | null;
+    readonly minimumSampleCount: number | null;
+    readonly windowStartMs: number | null;
+    readonly windowEndMs: number | null;
+    readonly measuredAtMs: number | null;
+  };
+} | null {
+  const decision = asPlainRecord(decisionValue);
+  const candidates = Array.isArray(decision?.scored_candidates) ? decision.scored_candidates : [];
+  const selected = candidates
+    .map(asPlainRecord)
+    .find((candidate) => candidate?.endpoint_id === selectedEndpointId);
+  const metricBreakdown = asPlainRecord(selected?.metric_breakdown);
+  if (!metricBreakdown) {
+    return null;
+  }
+  const metricRaw = (metricName: string): Record<string, unknown> | null =>
+    asPlainRecord(asPlainRecord(metricBreakdown[metricName])?.raw) ?? null;
+  const latencyRaw = metricRaw("latency");
+  const reliabilityRaw = metricRaw("reliability");
+  const throughputRaw = metricRaw("throughput");
+  const costRaw = metricRaw("cost");
+  const qualityRaw = metricRaw("quality");
+  const finite = (value: unknown): number | null =>
+    typeof value === "number" && Number.isFinite(value) ? value : null;
+  const stringValue = (value: unknown): string | null =>
+    typeof value === "string" && value.length > 0 ? value : null;
+  const booleanValue = (value: unknown): boolean => value === true;
+  const operationalRaw = latencyRaw ?? reliabilityRaw ?? throughputRaw ?? costRaw;
+  const operationalScope = stringValue(operationalRaw?.operational_profile_scope);
+  const operationalProfile = operationalRaw
+    ? {
+        scope: operationalScope ?? "live-request-operational",
+        semanticsVersion: stringValue(operationalRaw.operational_profile_semantics_version),
+        sampleCount: finite(operationalRaw.operational_sample_count),
+        windowStartMs: finite(operationalRaw.operational_window_start_ms),
+        windowEndMs: finite(operationalRaw.operational_window_end_ms),
+        measuredAtMs: finite(operationalRaw.measured_at_ms),
+        freshnessScore: finite(operationalRaw.operational_freshness_score),
+        confidenceScore: finite(operationalRaw.operational_confidence_score),
+        latencyP50Ms: finite(latencyRaw?.latency_ms_p50),
+        latencyP95Ms: finite(latencyRaw?.latency_ms_p95),
+        failureRate: finite(reliabilityRaw?.failure_rate),
+        tokensPerSec: finite(throughputRaw?.tokens_per_sec),
+        observedCostPer1kTokens:
+          asPlainRecord(metricBreakdown.cost)?.source === "measured"
+            ? finite(costRaw?.cost_per_1k_tokens_est)
+            : null,
+      }
+    : null;
+  const telemetryAvailable = booleanValue(qualityRaw?.telemetry_advisory_available);
+  return {
+    endpointId: selectedEndpointId,
+    modelId: identity.modelId,
+    reasoningEffort: identity.reasoningEffort,
+    effortSource: identity.effortSource,
+    operationalProfile,
+    taskTelemetry: {
+      available: telemetryAvailable,
+      eligible: booleanValue(qualityRaw?.telemetry_advisory_eligible),
+      applied: booleanValue(qualityRaw?.telemetry_advisory_applied),
+      withheldReason: stringValue(qualityRaw?.telemetry_advisory_withheld_reason),
+      successRate: finite(qualityRaw?.telemetry_success_rate),
+      successCount: finite(qualityRaw?.telemetry_success_count),
+      failureCount: finite(qualityRaw?.telemetry_failure_count),
+      sampleCount: finite(qualityRaw?.telemetry_sample_count),
+      minimumSampleCount: finite(qualityRaw?.telemetry_minimum_sample_count),
+      windowStartMs: finite(qualityRaw?.telemetry_window_start_ms),
+      windowEndMs: finite(qualityRaw?.telemetry_window_end_ms),
+      measuredAtMs: finite(qualityRaw?.telemetry_measured_at_ms),
+    },
   };
 }
 
@@ -15379,6 +15586,15 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/api/role-model/benchmark/portfolio") {
+      if (!options.readBenchmarkPortfolio) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readBenchmarkPortfolio());
+      return;
+    }
+
     if (
       request.method === "GET" &&
       url.pathname === "/api/role-model/benchmark/summaries/by-mode"
@@ -20834,6 +21050,14 @@ export async function createRuntimeBridgeBackend(
     });
   const readEndpointProfileData = (endpointId: string) => {
     const observedDataConfig = resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig);
+    const telemetryWindowEndMs = Date.now();
+    const telemetryScores = readLiveTaskTelemetryScoresByEndpointIds({
+      databasePath: initialization.databasePath,
+      endpointIds: [endpointId],
+      windowStartMs: Math.max(0, telemetryWindowEndMs - 7 * 24 * 60 * 60 * 1_000),
+      windowEndMs: telemetryWindowEndMs,
+      minimumSampleCount: observedDataConfig.aggregation.minSamples,
+    })[endpointId];
     const difficultyProfiles = Object.fromEntries(
       (["easy", "medium", "hard"] as const).map((difficultyBucket) => [
         difficultyBucket,
@@ -20845,16 +21069,30 @@ export async function createRuntimeBridgeBackend(
       ]),
     ) as Record<UnifiedRuntimeDifficultyBucket, ReturnType<typeof readLatestObservedProfile>>;
 
+    const operationalProfile = readLatestObservedProfile({
+      databasePath: initialization.databasePath,
+      endpointId,
+    });
+    const recentSamples = readObservedPerformanceSamples({
+      databasePath: initialization.databasePath,
+      endpointId,
+    });
     return {
       endpointId,
-      latestProfile: readLatestObservedProfile({
-        databasePath: initialization.databasePath,
-        endpointId,
-      }),
-      recentSamples: readObservedPerformanceSamples({
-        databasePath: initialization.databasePath,
-        endpointId,
-      }),
+      operationalProfile,
+      latestProfile: operationalProfile,
+      profileSemantics: {
+        version: "role-model.performance-evidence.v1",
+        operational: "live-request-only",
+        benchmark: "run-artifact-only",
+        legacyLatestProfile: "alias-of-operational-profile",
+      },
+      recentSamples,
+      recentSamplesBySource: {
+        liveRequest: recentSamples.filter((sample) => sample.source_type === "live_request"),
+        benchmark: recentSamples.filter((sample) => sample.source_type === "benchmark"),
+      },
+      telemetryScores: telemetryScores ?? null,
       difficultyProfiles,
       advisoryMaxDifficultyRecommendation: readAdvisoryMaxDifficultyRecommendation({
         databasePath: initialization.databasePath,
@@ -20958,6 +21196,11 @@ export async function createRuntimeBridgeBackend(
       artifactRoot: benchmarkArtifactRoot,
       resolveModelId: resolveBenchmarkEndpointModelId,
     });
+  const readBenchmarkPortfolioData = async () =>
+    readCurrentBenchmarkPortfolio({
+      artifactRoot: benchmarkArtifactRoot,
+      resolveModelId: resolveBenchmarkEndpointModelId,
+    });
   const resolveEndpointAvailableRoleIds = (endpointId: string) =>
     getEndpointRoleIds(
       endpointId,
@@ -20969,14 +21212,27 @@ export async function createRuntimeBridgeBackend(
     );
   const readCandidateProfileDataByEndpointId = () => {
     const endpointIds = currentRegistry.endpoints.map((endpoint) => endpoint.identity.endpoint_id);
+    const telemetryWindowEndMs = Date.now();
+    const telemetryScoresByEndpointId = readLiveTaskTelemetryScoresByEndpointIds({
+      databasePath: initialization.databasePath,
+      endpointIds,
+      windowStartMs: Math.max(0, telemetryWindowEndMs - 7 * 24 * 60 * 60 * 1_000),
+      windowEndMs: telemetryWindowEndMs,
+      minimumSampleCount: resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig)
+        .aggregation.minSamples,
+    });
     const latestProfiles = readLatestObservedProfilesByEndpointIds({
+      databasePath: initialization.databasePath,
+      endpointIds,
+    });
+    const benchmarkProfiles = readLatestBenchmarkProfilesByEndpointIds({
       databasePath: initialization.databasePath,
       endpointIds,
     });
     const difficultyProfilesByBucket = Object.fromEntries(
       (["easy", "medium", "hard"] as const).map((difficultyBucket) => [
         difficultyBucket,
-        readLatestObservedProfilesByEndpointIds({
+        readLatestBenchmarkProfilesByEndpointIds({
           databasePath: initialization.databasePath,
           endpointIds,
           difficultyBucket,
@@ -20998,7 +21254,9 @@ export async function createRuntimeBridgeBackend(
           {
             endpointId,
             latestProfile: latestProfiles[endpointId] ?? null,
+            benchmarkProfile: benchmarkProfiles[endpointId] ?? null,
             recentSamples: [],
+            telemetryScores: telemetryScoresByEndpointId[endpointId],
             difficultyProfiles,
             advisoryMaxDifficultyRecommendation: buildAdvisoryMaxDifficultyRecommendation({
               profiles: difficultyProfiles,
@@ -21012,7 +21270,13 @@ export async function createRuntimeBridgeBackend(
   const buildBenchmarkCapabilityByEndpointId = async (
     profilesByEndpointId: ReturnType<typeof readCandidateProfileDataByEndpointId>,
   ) => {
-    const benchmarkSummary = await readBenchmarkSummaryData();
+    const [benchmarkSummary, benchmarkPortfolio] = await Promise.all([
+      readBenchmarkSummaryData(),
+      readBenchmarkPortfolioData(),
+    ]);
+    const portfolioByEndpointId = new Map(
+      benchmarkPortfolio.entries.map((entry) => [entry.endpointId, entry] as const),
+    );
     return Object.fromEntries(
       currentRegistry.endpoints.map((endpoint) => {
         const endpointId = endpoint.identity.endpoint_id;
@@ -21021,9 +21285,10 @@ export async function createRuntimeBridgeBackend(
           endpointId,
           buildBenchmarkCapabilityForEndpoint({
             endpointId,
-            latestProfile: profile.latestProfile as unknown as Record<string, unknown> | null,
+            latestProfile: profile.benchmarkProfile as unknown as Record<string, unknown> | null,
             difficultyProfiles: profile.difficultyProfiles as Record<string, unknown> | null,
             summary: benchmarkSummary,
+            portfolioEntry: portfolioByEndpointId.get(endpointId) ?? null,
             availableRoleIds: resolveEndpointAvailableRoleIds(endpointId),
           }),
         ] as const;
@@ -21062,26 +21327,23 @@ export async function createRuntimeBridgeBackend(
       const endpointId = endpoint.identity.endpoint_id;
       const profile = profilesByEndpointId[endpointId];
       const benchmarkCapability = benchmarkCapabilitiesByEndpointId[endpointId] ?? null;
-      const routingQualityScore =
-        profile.latestProfile?.quality_score ?? profile.latestProfile?.judge_score ?? null;
       const catalogPricing = resolveModelCapabilityProfile({
         modelId: endpoint.identity.model_id,
         catalog: currentNormalizedCatalog,
       }).pricing;
-      const latestProfile = (() => {
+      const operationalProfile = (() => {
         const existing = profile.latestProfile as unknown as Record<string, unknown> | null;
-        if (!catalogPricing) {
-          return profile.latestProfile;
-        }
         if (!existing) {
-          return { pricing: catalogPricing };
-        }
-        if (existing.pricing != null) {
-          return profile.latestProfile;
+          return null;
         }
         return {
           ...existing,
-          pricing: catalogPricing,
+          endpoint_id: endpointId,
+          model_id: endpoint.identity.model_id,
+          reasoning_effort: endpoint.identity.reasoning_effort ?? null,
+          effort_source: endpoint.identity.reasoning_effort ? "fixed" : "provider-default",
+          profile_scope: "live-request-operational",
+          profile_semantics_version: "role-model.operational-performance.v1",
         };
       })();
       return {
@@ -21110,12 +21372,20 @@ export async function createRuntimeBridgeBackend(
         controllerEligible: controller?.endpointId === endpointId,
         preferred: guidance.preferredEndpointIds.includes(endpointId),
         ignored: guidance.ignoredEndpointIds.includes(endpointId),
-        latestProfile,
+        operationalProfile,
+        latestProfile: operationalProfile,
+        profileSemantics: {
+          version: "role-model.performance-evidence.v1",
+          operational: "live-request-only",
+          benchmark: "run-artifact-only",
+          legacyLatestProfile: "alias-of-operational-profile",
+        },
+        ...(catalogPricing ? { pricing: catalogPricing } : {}),
         recentSamples: profile.recentSamples,
         difficultyProfiles: profile.difficultyProfiles,
         advisoryMaxDifficultyRecommendation: profile.advisoryMaxDifficultyRecommendation,
+        ...(profile.telemetryScores ? { telemetryScores: profile.telemetryScores } : {}),
         ...(benchmarkCapability ? { benchmarkCapability } : {}),
-        ...(routingQualityScore !== null ? { routingQualityScore } : {}),
       };
     });
   };
@@ -21247,6 +21517,12 @@ export async function createRuntimeBridgeBackend(
         currentUnifiedRuntimeConfig?.routingStrategy ??
         null,
       decision,
+      benchmarkEvidence: projectBenchmarkDecisionEvidence(decision, observation.endpointId),
+      telemetryEvidence: projectTelemetryDecisionEvidence(decision, observation.endpointId, {
+        modelId: requestRecord?.modelId ?? null,
+        reasoningEffort: requestRecord?.reasoningEffort ?? null,
+        effortSource: requestRecord?.effortSource ?? null,
+      }),
       routingDiagnostics: observation.routingDiagnostics ?? null,
       retrievalReceipt: observation.retrievalReceipt ?? null,
       contextEnvelope: observation.contextEnvelope ?? null,
@@ -21286,6 +21562,15 @@ export async function createRuntimeBridgeBackend(
       observedDataConfig,
       difficultyBucket: resolveObservedDifficultyBucketForPlan(plan),
       routingTimeMs,
+    });
+    const telemetryScoresByEndpointId = readLiveTaskTelemetryScoresByEndpointIds({
+      databasePath: initialization.databasePath,
+      endpointIds: executionSnapshot.registry.endpoints.map(
+        (candidate) => candidate.identity.endpoint_id,
+      ),
+      windowStartMs: Math.max(0, routingTimeMs - 7 * 24 * 60 * 60 * 1_000),
+      windowEndMs: routingTimeMs,
+      minimumSampleCount: observedDataConfig.aggregation.minSamples,
     });
     let streamedChunkCount = 0;
     let streamedReasoningDeltaCount = 0;
@@ -21349,6 +21634,7 @@ export async function createRuntimeBridgeBackend(
           catalog: executionSnapshot.executionCatalog,
           observedProfilesByEndpointId: runtimeObservedProfiles.observedProfilesByEndpointId,
           benchmarkCapabilitiesByEndpointId,
+          telemetryScoresByEndpointId,
           observedDataConfig,
           throughputPenaltyStateByEndpointId:
             runtimeObservedProfiles.throughputPenaltyStateByEndpointId,
@@ -22021,6 +22307,8 @@ export async function createRuntimeBridgeBackend(
       const selectedEconomics = routed.catalogEconomicsByEndpointId[selectedEndpointId] ?? null;
       const selectedModelId =
         selectedCandidate?.identity.model_id ?? executionOptions?.requestedModel ?? null;
+      const selectedReasoningEffort = selectedCandidate?.identity.reasoning_effort ?? null;
+      const selectedEffortSource = selectedReasoningEffort === null ? "none" : "variant";
       const selectedEndpointDimensions = {
         selectedEndpointId,
         candidateCount: eligibleEndpointIds.length,
@@ -22111,6 +22399,8 @@ export async function createRuntimeBridgeBackend(
           : {}),
         routingDecisionId: routingDecisionId,
         endpointId: selectedEndpointId,
+        reasoningEffort: selectedReasoningEffort,
+        effortSource: selectedEffortSource,
         conversationId: envelope.conversationId,
         decision: {
           ...routed.decision,
@@ -22139,6 +22429,8 @@ export async function createRuntimeBridgeBackend(
           routing_decision_id: routingDecisionId,
           endpoint_id: selectedEndpointId,
           model_id: selectedModelId,
+          reasoning_effort: selectedReasoningEffort,
+          effort_source: selectedEffortSource,
           provider_kind: selectedCandidate?.identity.provider_kind ?? null,
           tokens_in: 0,
           tokens_out: 0,
@@ -22250,6 +22542,8 @@ export async function createRuntimeBridgeBackend(
         requestId,
         routingDecisionId,
         endpointId: selectedEndpointId,
+        reasoningEffort: selectedReasoningEffort,
+        effortSource: selectedEffortSource,
         modelId: selectedModelId ?? undefined,
         requestedModelId: executionOptions?.requestedModel ?? selectedModelId,
         selectedModelId,
@@ -22808,6 +23102,9 @@ export async function createRuntimeBridgeBackend(
           requestId,
           routingDecisionId,
           endpointId: execution.target.endpointId,
+          modelId: execution.target.candidate.identity.model_id,
+          reasoningEffort: effectiveEffort.reasoningEffort,
+          effortSource: effectiveEffort.effortSource,
           messages: captureInput,
           outputText: execution.normalized.outputText,
           toolExecutions: toolExecutionResult.executions,
@@ -23313,6 +23610,22 @@ export async function createRuntimeBridgeBackend(
         const statusCode = error instanceof BridgeHttpError ? error.statusCode : 400;
         const latencyMs = Math.max(0, Date.now() - executionStartedAtMs);
         const dimensions = runtimeTelemetryDimensionsFor(error);
+        const fallbackEndpoint = currentRegistry.endpoints.find(
+          (endpoint) =>
+            endpoint.identity.endpoint_id === fallbackFailureEndpointId ||
+            toLegacyCredentializedEndpointId(endpoint.identity.endpoint_id) ===
+              fallbackFailureEndpointId,
+        );
+        const fixedEffort = fallbackEndpoint?.identity.reasoning_effort?.trim() || null;
+        const requestedEffort = readChatCompletionsReasoningRequest(body)?.effort?.trim() || null;
+        const failureEffort = {
+          reasoningEffort: fixedEffort,
+          effortSource: (fixedEffort === null
+            ? "none"
+            : requestedEffort !== null && requestedEffort !== fixedEffort
+              ? "variant_coerced"
+              : "variant") as RuntimeEffortSource,
+        };
         persistRuntimeTelemetryFailure({
           databasePath: initialization.databasePath,
           requestId,
@@ -23320,6 +23633,8 @@ export async function createRuntimeBridgeBackend(
           requestClass: "live_request",
           sourceType: fallbackFailureSourceType,
           endpointId: fallbackFailureEndpointId,
+          reasoningEffort: failureEffort.reasoningEffort,
+          effortSource: failureEffort.effortSource,
           modelId: body.model,
           requestedModelId: body.model,
           requestOperation: "chat",
@@ -23333,6 +23648,8 @@ export async function createRuntimeBridgeBackend(
             endpointId: fallbackFailureEndpointId,
             modelId: body.model,
             sourceType: fallbackFailureSourceType,
+            reasoningEffort: failureEffort.reasoningEffort,
+            effortSource: failureEffort.effortSource,
             error,
             latencyMs,
             dimensions,
@@ -25904,6 +26221,9 @@ export async function createRuntimeBridgeBackend(
       const localSourcesByEndpointId = new Map(
         getCurrentRegistrySources().local.map((source) => [source.endpointId, source] as const),
       );
+      const cloudSourcesByEndpointId = new Map(
+        getCurrentRegistrySources().cloud.map((source) => [source.endpointId, source] as const),
+      );
       const runtimeEndpointsById = new Map(
         runtimeEndpoints.map((entry) => [entry.endpointId, entry] as const),
       );
@@ -25919,6 +26239,7 @@ export async function createRuntimeBridgeBackend(
       return currentRegistry.endpoints.map((endpoint) => {
         const runtimeEndpoint = runtimeEndpointsById.get(endpoint.identity.endpoint_id);
         const localSource = localSourcesByEndpointId.get(endpoint.identity.endpoint_id);
+        const cloudSource = cloudSourcesByEndpointId.get(endpoint.identity.endpoint_id);
         const profile = resolveModelCapabilityProfile({
           modelId: endpoint.identity.model_id,
           catalog: currentNormalizedCatalog,
@@ -25933,7 +26254,7 @@ export async function createRuntimeBridgeBackend(
             (runtimeEndpoint
               ? (accountsById.get(runtimeEndpoint.providerAccountId)?.providerId ?? null)
               : (currentModelsById.get(endpoint.identity.model_id)?.providerId ?? null)),
-          providerAccountId: runtimeEndpoint?.providerAccountId,
+          providerAccountId: runtimeEndpoint?.providerAccountId ?? cloudSource?.providerAccountId,
           roleIds: getEndpointRoleIds(
             endpoint.identity.endpoint_id,
             runtimeEndpoints,
@@ -26027,6 +26348,9 @@ export async function createRuntimeBridgeBackend(
         ];
       });
       return subjects.length > 0 ? { ...summary, subjects } : summary;
+    },
+    async readBenchmarkPortfolio(): Promise<unknown> {
+      return readBenchmarkPortfolioData();
     },
     async listBenchmarkRuns(): Promise<unknown> {
       return listBenchmarkRuns(benchmarkArtifactRoot);
@@ -26459,6 +26783,7 @@ export async function createRuntimeBridgeBackend(
                   endpointId: endpoint.endpointId,
                   modelId: endpoint.modelId,
                   sourceType: endpoint.sourceType,
+                  reasoningEffort: endpoint.reasoningEffort ?? null,
                   healthStatus: endpoint.healthStatus,
                   executionModeEligible: executionEligibilityByEndpointId.get(endpoint.endpointId),
                   benchmarkEligible: candidates.find(
@@ -26501,6 +26826,7 @@ export async function createRuntimeBridgeBackend(
               endpointId: endpoint.endpointId,
               modelId: endpoint.modelId,
               sourceType: endpoint.sourceType,
+              reasoningEffort: endpoint.reasoningEffort ?? null,
               healthStatus: endpoint.healthStatus,
               executionModeEligible: executionEligibilityByEndpointId.get(endpoint.endpointId),
               benchmarkEligible: candidates.find(

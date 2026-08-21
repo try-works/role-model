@@ -94,6 +94,7 @@ describe("benchmark-runner judge remediation", () => {
       endpointId: "local.lfm",
       modelId: "lfm2.5-1.2b-instruct",
       sourceType: "local" as const,
+      reasoningEffort: "high",
       healthStatus: "healthy",
     };
 
@@ -141,7 +142,13 @@ describe("benchmark-runner judge remediation", () => {
     });
 
     releaseEndpoints?.();
-    await benchmarkPromise;
+    const result = await benchmarkPromise;
+    expect(result.endpointGrades).toContainEqual(
+      expect.objectContaining({
+        endpointId: subjectEndpoint.endpointId,
+        reasoningEffort: "high",
+      }),
+    );
   });
 
   test("readJudgeResponseText merges reasoning and content channels", () => {

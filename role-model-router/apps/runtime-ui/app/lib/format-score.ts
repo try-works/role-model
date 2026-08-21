@@ -1,10 +1,20 @@
 export function formatScore(score: number | null | undefined): string {
-  if (typeof score !== "number" || !Number.isFinite(score)) {
+  if (typeof score !== "number" || !Number.isFinite(score) || score < 0 || score > 1) {
     return "n/a";
   }
   const percent = score * 100;
   const rounded = Math.round(percent * 10) / 10;
   return Number.isInteger(rounded) ? `${rounded}%` : `${rounded.toFixed(1)}%`;
+}
+
+export function formatScoreWithCoverage(
+  score: number | null | undefined,
+  caseCount: number | null | undefined,
+): string {
+  if (typeof caseCount !== "number" || !Number.isInteger(caseCount) || caseCount <= 0) {
+    return "n/a";
+  }
+  return formatScore(score);
 }
 
 export function formatScoreFraction(

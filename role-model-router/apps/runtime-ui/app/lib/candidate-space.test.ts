@@ -20,6 +20,31 @@ function candidate(
 }
 
 describe("buildCandidateSpacePoints", () => {
+  test("uses exact benchmark capability before a generic routing profile score", () => {
+    const points = buildCandidateSpacePoints([
+      candidate({
+        endpointId: "deepseek.flash-max",
+        modelId: "deepseek/deepseek-v4-flash",
+        reasoningEffort: "max",
+        routingQualityScore: 0.2,
+        benchmarkCapability: {
+          evidenceSource: "run-artifact",
+          overallScore: 0.91,
+          benchmarkSamples: 4,
+          sampleCount: 4,
+          measuredAtMs: 100,
+          freshnessScore: 1,
+          lastRunId: "run-max",
+          lastRunCompletedAtMs: 100,
+          judgeEndpointId: "judge",
+        },
+      }),
+    ]);
+
+    expect(points[0]?.quality).toBe(0.91);
+    expect(points[0]?.tags).toContain("Benchmark run");
+  });
+
   test("projects quality from routingQualityScore and speed from latency p50", () => {
     const points = buildCandidateSpacePoints([
       candidate({
@@ -149,7 +174,9 @@ describe("buildCandidateSpacePoints", () => {
     expect(points.every((point) => point.endpointId !== "skip")).toBe(true);
     const firstPoint = points[0];
     expect(firstPoint).toBeDefined();
-    expect(formatCandidateMetricTriplet(firstPoint)).toMatch(/^C\d+ · Q\d+ · S\d+ · Selected$/);
+    expect(formatCandidateMetricTriplet(firstPoint)).toMatch(
+      /^C\d+ · Q\d+ · S\d+ · No live telemetry · Selected$/,
+    );
     expect(formatRouteScore(0.841)).toBe("0.841");
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 
-import type { RuntimeAccount } from "../lib/runtime-api";
+import type { RouterCandidate, RuntimeAccount } from "../lib/runtime-api";
 import * as controlModelsModule from "./control-models";
 import {
   buildConfiguredModelInventoryPills,
@@ -15,9 +15,83 @@ import {
   resolveConfiguredModelRemovalClick,
   resolveConfiguredModelStatusTone,
   resolveDefaultSelectedModelId,
+  readSelectedOperationalPerformance,
+  resolveSelectedBenchmarkCandidate,
   resolveSelectedModelAccount,
   saveConfiguredModelRoleEligibility,
 } from "./control-models";
+
+test("selects benchmark evidence by exact endpoint instead of the highest same-model sibling", () => {
+  const candidates = [
+    {
+      endpointId: "deepseek.flash-high",
+      modelId: "deepseek/deepseek-v4-flash",
+      providerId: "deepseek",
+      sourceType: "remote",
+      benchmarkCapability: {
+        overallScore: 0.71,
+        benchmarkSamples: 2,
+        sampleCount: 2,
+        measuredAtMs: 10,
+        freshnessScore: 1,
+        lastRunId: "run-high",
+        lastRunCompletedAtMs: 10,
+        judgeEndpointId: "judge",
+      },
+      latestProfile: { latency_ms_p50: 410 },
+    },
+    {
+      endpointId: "deepseek.flash-max",
+      modelId: "deepseek/deepseek-v4-flash",
+      providerId: "deepseek",
+      sourceType: "remote",
+      benchmarkCapability: {
+        overallScore: 0.94,
+        benchmarkSamples: 2,
+        sampleCount: 2,
+        measuredAtMs: 20,
+        freshnessScore: 1,
+        lastRunId: "run-max",
+        lastRunCompletedAtMs: 20,
+        judgeEndpointId: "judge",
+      },
+      latestProfile: { latency_ms_p50: 920 },
+    },
+  ] satisfies RouterCandidate[];
+
+  expect(
+    resolveSelectedBenchmarkCandidate(candidates, {
+      modelId: "deepseek/deepseek-v4-flash",
+      endpointId: "deepseek.flash-high",
+    }),
+  ).toMatchObject({
+    endpointId: "deepseek.flash-high",
+    benchmarkCapability: { overallScore: 0.71 },
+    latestProfile: { latency_ms_p50: 410 },
+  });
+});
+
+test("reads the canonical operational sample_size for one exact endpoint variant", () => {
+  expect(
+    readSelectedOperationalPerformance({
+      endpointId: "deepseek.flash-high",
+      modelId: "deepseek/deepseek-v4-flash",
+      providerId: "deepseek",
+      sourceType: "remote",
+      operationalProfile: {
+        latency_ms_p50: 2_693.5,
+        latency_ms_p95: 3_604.6,
+        failure_rate: 0,
+        sample_size: 8,
+      },
+    }),
+  ).toEqual({
+    p50: 2_693.5,
+    p95: 3_604.6,
+    failureRate: 0,
+    sampleCount: 8,
+  });
+});
 
 const account = {
   providerAccountId: "openai.personal.primary",
@@ -307,7 +381,7 @@ describe("control model role assignment helpers", () => {
     ).toEqual([
       { label: "tools", tone: "info" },
       { label: "2 endpoints", tone: "neutral" },
-      { label: "score 0.93", tone: "advisory" },
+      { label: "score 93%", tone: "advisory" },
     ]);
 
     expect(

@@ -185,6 +185,41 @@ describe("telemetry analytics view models", () => {
         }),
       ]),
     );
+    expect(model.series.map((series) => series.colorToken)).toEqual([
+      "var(--rm3-chart-cache)",
+      "var(--rm3-chart-1)",
+    ]);
+  });
+
+  test("uses different color families for average and tail latency", () => {
+    const response: RuntimeTelemetryAnalyticsResponse = {
+      startAtMs: Date.UTC(2026, 5, 16, 0, 0, 0),
+      endAtMs: Date.UTC(2026, 5, 17, 0, 0, 0),
+      granularity: "hour",
+      metrics: ["averageLatencyMs", "p95LatencyMs"],
+      breakdown: null,
+      buckets: [
+        {
+          startAtMs: Date.UTC(2026, 5, 16, 10, 0, 0),
+          endAtMs: Date.UTC(2026, 5, 16, 11, 0, 0),
+          totals: { averageLatencyMs: 800, p95LatencyMs: 1300 },
+          series: [],
+        },
+      ],
+      totals: { averageLatencyMs: 800, p95LatencyMs: 1300 },
+      ranking: null,
+      labels: {},
+    };
+
+    const model = buildTelemetryTimeSeriesChartModel(response, {
+      title: "Latency trend",
+      metrics: ["averageLatencyMs", "p95LatencyMs"],
+    });
+
+    expect(model.series.map((series) => series.colorToken)).toEqual([
+      "var(--rm3-chart-azure)",
+      "var(--rm3-chart-amber)",
+    ]);
   });
 
   test("assigns distinct colors to each visible metric series in the same chart", () => {

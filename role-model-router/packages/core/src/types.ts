@@ -98,7 +98,14 @@ export interface EndpointCandidate {
   runtimeEligibility?: RuntimeEligibilitySignals;
   routingSignals?: RuntimeRoutingSignals;
   readonly benchmarkCapability?: {
+    readonly evidenceSource?: "run-artifact" | "profile-derived";
     readonly overallScore?: number | null;
+    readonly lastRunId?: string | null;
+    readonly lastRunCompletedAtMs?: number | null;
+    readonly lastRunMode?: "quick" | "full" | null;
+    readonly lastRunSuiteId?: string | null;
+    readonly judgeEndpointId?: string | null;
+    readonly judgeModelId?: string | null;
     readonly taskScores?: Record<string, number>;
     readonly roleScores?: Record<string, number>;
     readonly eligibleRoleScores?: Record<string, number>;
@@ -113,6 +120,19 @@ export interface EndpointCandidate {
   };
   readonly telemetryScores?: {
     readonly taskSuccessRates?: Record<string, number>;
+    readonly taskRollups?: Record<
+      string,
+      {
+        readonly successRate: number;
+        readonly successCount: number;
+        readonly failureCount: number;
+        readonly sampleCount: number;
+        readonly minimumSampleCount: number;
+        readonly windowStartMs: number;
+        readonly windowEndMs: number;
+        readonly measuredAtMs: number;
+      }
+    >;
   };
 }
 

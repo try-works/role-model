@@ -1099,6 +1099,7 @@ export interface RouterConfig {
 }
 
 export interface BenchmarkCapability {
+  readonly evidenceSource?: "run-artifact" | "profile-derived";
   readonly overallScore: number | null;
   readonly scoresByBucket?: Partial<
     Record<"easy" | "medium" | "hard", { readonly score: number; readonly cases?: number }>
@@ -1107,6 +1108,14 @@ export interface BenchmarkCapability {
   readonly roleScores?: Record<string, number>;
   readonly eligibleRoleScores?: Record<string, number>;
   readonly groupScores?: Record<string, number>;
+  readonly taxonomyScores?: Partial<{
+    readonly byRole: Record<string, number>;
+    readonly byTask: Record<string, number>;
+    readonly byVariant: Record<string, number>;
+    readonly byCapability: Record<string, number>;
+    readonly byModality: Record<string, number>;
+    readonly byToolClass: Record<string, number>;
+  }>;
   readonly coverage?: {
     readonly overallCases: number;
     readonly roleCases?: Record<string, number>;
@@ -1120,7 +1129,10 @@ export interface BenchmarkCapability {
   readonly freshnessScore: number | null;
   readonly lastRunId: string | null;
   readonly lastRunCompletedAtMs: number | null;
+  readonly lastRunMode?: "quick" | "full" | null;
+  readonly lastRunSuiteId?: string | null;
   readonly judgeEndpointId: string | null;
+  readonly judgeModelId?: string | null;
 }
 
 export interface RouterCandidate {
@@ -1147,6 +1159,30 @@ export interface RouterCandidate {
   readonly toolCallingSupported?: boolean;
   readonly toolCallingStyle?: string;
   readonly latestProfile?: Record<string, unknown> | null;
+  readonly operationalProfile?: Record<string, unknown> | null;
+  readonly profileSemantics?: {
+    readonly version: string;
+    readonly operational: "live-request-only";
+    readonly benchmark: "run-artifact-only";
+    readonly legacyLatestProfile: "alias-of-operational-profile";
+  };
+  readonly pricing?: Record<string, unknown> | null;
+  readonly telemetryScores?: {
+    readonly taskSuccessRates?: Record<string, number>;
+    readonly taskRollups?: Record<
+      string,
+      {
+        readonly successRate: number;
+        readonly successCount: number;
+        readonly failureCount: number;
+        readonly sampleCount: number;
+        readonly minimumSampleCount: number;
+        readonly windowStartMs: number;
+        readonly windowEndMs: number;
+        readonly measuredAtMs: number;
+      }
+    >;
+  };
   readonly recentSamples?: readonly unknown[];
   readonly difficultyProfiles?: Record<string, unknown>;
   readonly advisoryMaxDifficultyRecommendation?: Record<string, unknown> | null;
@@ -1205,9 +1241,10 @@ export interface BenchmarkClearAllResult {
 export interface BenchmarkSummarySubject {
   readonly endpointId: string;
   readonly modelId: string;
+  readonly sourceType?: string | null;
+  readonly reasoningEffort?: string | null;
   readonly displayName?: string | null;
   readonly upstreamModelId?: string | null;
-  readonly reasoningEffort?: string | null;
   readonly overallScore: number;
   readonly scoresByBucket: Record<
     "easy" | "medium" | "hard",
@@ -1231,6 +1268,28 @@ export interface BenchmarkSummarySubject {
     readonly byModality?: Record<string, number>;
     readonly byToolClass?: Record<string, number>;
   };
+}
+
+export interface BenchmarkPortfolioEntry extends BenchmarkSummarySubject {
+  readonly runId: string;
+  readonly completedAtMs: number;
+  readonly mode: "quick" | "full";
+  readonly suiteId: string;
+  readonly judgeEndpointId: string | null;
+  readonly judgeModelId: string | null;
+}
+
+export interface BenchmarkPortfolio {
+  readonly scoreSemantics: {
+    readonly storageScale: "normalized-fraction-0-to-1";
+    readonly displayScale: "percentage-0-to-100";
+    readonly overallAggregation: "unweighted-arithmetic-mean-of-executed-case-scores";
+    readonly currentEvidencePolicy: "latest-completed-run-per-endpoint";
+    readonly replacementScope: "endpoint-only";
+    readonly zeroScoreMeaning: "executed-zero-credit";
+    readonly absentScoreMeaning: "no-evidence";
+  };
+  readonly entries: readonly BenchmarkPortfolioEntry[];
 }
 
 export interface BenchmarkSummary {
@@ -1299,6 +1358,59 @@ export interface RouterDecisionDetail {
   readonly fallbackEndpointIds: readonly string[];
   readonly strategyLabel: string | null;
   readonly decision?: Record<string, unknown> | null;
+  readonly benchmarkEvidence?: {
+    readonly endpointId: string;
+    readonly effectiveQualityScore: number;
+    readonly overallScore: number;
+    readonly taskScore: number | null;
+    readonly roleScore: number | null;
+    readonly groupScore: number | null;
+    readonly reason: string | null;
+    readonly source: string;
+    readonly evidenceSource: string;
+    readonly runId: string | null;
+    readonly runCompletedAtMs: number | null;
+    readonly runMode: string | null;
+    readonly suiteId: string | null;
+    readonly judgeEndpointId: string | null;
+    readonly judgeModelId: string | null;
+    readonly freshnessWeight: number | null;
+  } | null;
+  readonly telemetryEvidence?: {
+    readonly endpointId: string;
+    readonly modelId: string | null;
+    readonly reasoningEffort: string | null;
+    readonly effortSource: string | null;
+    readonly operationalProfile: {
+      readonly scope: string;
+      readonly semanticsVersion: string | null;
+      readonly sampleCount: number | null;
+      readonly windowStartMs: number | null;
+      readonly windowEndMs: number | null;
+      readonly measuredAtMs: number | null;
+      readonly freshnessScore: number | null;
+      readonly confidenceScore: number | null;
+      readonly latencyP50Ms: number | null;
+      readonly latencyP95Ms: number | null;
+      readonly failureRate: number | null;
+      readonly tokensPerSec: number | null;
+      readonly observedCostPer1kTokens: number | null;
+    } | null;
+    readonly taskTelemetry: {
+      readonly available: boolean;
+      readonly eligible: boolean;
+      readonly applied: boolean;
+      readonly withheldReason: string | null;
+      readonly successRate: number | null;
+      readonly successCount: number | null;
+      readonly failureCount: number | null;
+      readonly sampleCount: number | null;
+      readonly minimumSampleCount: number | null;
+      readonly windowStartMs: number | null;
+      readonly windowEndMs: number | null;
+      readonly measuredAtMs: number | null;
+    };
+  } | null;
   readonly routingDiagnostics?: Record<string, unknown> | null;
   readonly retrievalReceipt?: Record<string, unknown> | null;
   readonly contextEnvelope?: Record<string, unknown> | null;
@@ -1309,7 +1421,13 @@ export interface RouterDecisionDetail {
 export interface RuntimeEndpointProfile {
   readonly endpointId: string;
   readonly latestProfile: Record<string, unknown> | null;
+  readonly operationalProfile?: Record<string, unknown> | null;
+  readonly profileSemantics?: Record<string, unknown>;
   readonly recentSamples: readonly unknown[];
+  readonly recentSamplesBySource?: {
+    readonly liveRequest: readonly unknown[];
+    readonly benchmark: readonly unknown[];
+  };
 }
 
 export interface WorkbenchChatInput {
@@ -2356,6 +2474,12 @@ export async function fetchBenchmarkSummary(
   return fetchJson<BenchmarkSummary>("/api/role-model/benchmark/summary", fetcher);
 }
 
+export async function fetchBenchmarkPortfolio(
+  fetcher: typeof fetch = fetch,
+): Promise<BenchmarkPortfolio> {
+  return fetchJson<BenchmarkPortfolio>("/api/role-model/benchmark/portfolio", fetcher);
+}
+
 export async function fetchBenchmarkSummariesByMode(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<BenchmarkSummariesByMode> {
@@ -2973,12 +3097,18 @@ export interface ModelTelemetryRollup {
 }
 
 export async function fetchModelTelemetryRollup(
-  modelId: string,
+  identity: {
+    readonly modelId: string;
+    readonly endpointId: string;
+  },
   fetcher: RuntimeFetcher = fetch,
 ): Promise<ModelTelemetryRollup> {
   const windowDays = 7;
   const windowMs = windowDays * 24 * 3600 * 1000;
-  const baseFilters = { modelIds: [modelId] } as const;
+  const baseFilters = {
+    modelIds: [identity.modelId],
+    endpointIds: [identity.endpointId],
+  } as const;
   const [taskResponse, groupResponse, roleResponse, capabilityResponse] = await Promise.all([
     fetchTelemetryAnalytics(
       {

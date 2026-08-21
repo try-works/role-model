@@ -182,7 +182,7 @@ export function CandidateSpaceChart({ points }: CandidateSpaceChartProps) {
 
       <div className="flex h-full min-h-[280px] flex-col gap-3">
         <p className="font-mono text-[11px] font-normal uppercase tracking-[0.08em] text-muted-foreground">
-          Candidates
+          Candidates · route score (0–1)
         </p>
         {points.length === 0 ? (
           <EmptyCandidateInventory />

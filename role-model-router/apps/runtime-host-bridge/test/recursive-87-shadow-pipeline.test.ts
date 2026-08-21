@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readFile, rm } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
@@ -198,6 +198,9 @@ test("Phase 3.5 post-observation work survives startup and processing failures",
     requestId: "queued-run87",
     routingDecisionId: "route-run87",
     endpointId: "endpoint-run87",
+    modelId: "provider/model-run87",
+    reasoningEffort: "future-tier-17",
+    effortSource: "variant",
   });
   await expect(
     first.drain(async () => {
@@ -221,6 +224,9 @@ test("Phase 3.5 post-observation work survives startup and processing failures",
       requestId: "queued-run87",
       routingDecisionId: "route-run87",
       endpointId: "endpoint-run87",
+      modelId: "provider/model-run87",
+      reasoningEffort: "future-tier-17",
+      effortSource: "variant",
     },
   ]);
   expect(await restarted.read()).toMatchObject({
@@ -237,6 +243,47 @@ test("Phase 3.5 post-observation work survives startup and processing failures",
           },
           projection: { id: "projection:run87", scope: "tenant:run87" },
           consumption: { consumerCount: 3, productionMutation: false },
+        },
+      },
+    ],
+  });
+});
+
+test("Run 91 safely retires legacy queued work that cannot prove variant identity", async () => {
+  const stateRoot = path.join(os.tmpdir(), `run91-legacy-shadow-outbox-${Date.now()}`);
+  roots.push(stateRoot);
+  const filePath = path.join(stateRoot, "outbox.json");
+  await mkdir(stateRoot, { recursive: true });
+  await writeFile(
+    filePath,
+    `${JSON.stringify({
+      schemaVersion: "role-model.track-b-post-observation-outbox.v2",
+      pending: [
+        {
+          requestId: "legacy-run91",
+          routingDecisionId: "decision-legacy-run91",
+          endpointId: "provider.account.global.model-high",
+        },
+      ],
+      receipts: [],
+    })}\n`,
+  );
+  const outbox = trackBRuntime.createTrackBPostObservationOutbox({ filePath });
+  const replayed: string[] = [];
+  await outbox.drain(async (observation) => {
+    replayed.push(observation.requestId);
+    return {};
+  });
+  expect(replayed).toEqual([]);
+  expect(await outbox.read()).toMatchObject({
+    pendingCount: 0,
+    receiptCount: 1,
+    receipts: [
+      {
+        requestId: "legacy-run91",
+        result: {
+          status: "retired_legacy_missing_variant_identity",
+          productionMutation: false,
         },
       },
     ],
@@ -281,12 +328,24 @@ test("Phase 3.5 normal post-observation work executes every canonical business o
       return {};
     },
   };
+  const identity = {
+    endpointId: "endpoint-run87-high",
+    modelId: "provider/model-run87",
+    reasoningEffort: "future-tier-17",
+    effortSource: "variant" as const,
+  };
   const result = await trackBRuntime.runTrackBPostObservation(
     runtime,
     {
       requestId: "all-owners-run87",
       routingDecisionId: "route-run87",
-      endpointId: "endpoint-run87",
+      ...identity,
+      usageEvent: {
+        endpoint_id: identity.endpointId,
+        model_id: identity.modelId,
+        reasoning_effort: identity.reasoningEffort,
+        effort_source: identity.effortSource,
+      },
     },
     { scope: "tenant:run87", channel: "stage", authorizationEpoch: 87 },
   );
@@ -308,6 +367,28 @@ test("Phase 3.5 normal post-observation work executes every canonical business o
     ]),
   );
   expect(invoked.every((row) => row.envelope.channel === "stage")).toBe(true);
+  expect(invoked.every((row) => row.envelope.identity !== undefined)).toBe(true);
+  expect(invoked.map((row) => row.envelope.identity)).toEqual(
+    invoked.map(() => identity),
+  );
+  const artifactInvocation = invoked.find((row) => row.id === "artifact-store");
+  const artifactPayload = artifactInvocation?.envelope.payload as Record<string, unknown>;
+  const artifactRecord = artifactPayload.record as Record<string, unknown>;
+  expect(JSON.parse(String(artifactRecord.content))).toMatchObject({ identity });
+  const eventPayload = invoked.find((row) => row.id === "event-log")?.envelope.payload;
+  expect(eventPayload).toMatchObject({ identity });
+  const memoryPayload = invoked.find((row) => row.id === "memory-store")?.envelope.payload as Record<
+    string,
+    unknown
+  >;
+  expect(memoryPayload.row).toMatchObject({ identity });
+  const knowledgeWrite = invoked.find(
+    (row) => row.id === "knowledge-store" && row.envelope.capability === "knowledge:write",
+  );
+  expect((knowledgeWrite?.envelope.payload as Record<string, unknown>).value).toMatchObject({
+    identity,
+  });
+  expect(result.projection.payload).toMatchObject({ identity });
   expect(result.repositoryContext).toEqual({
     available: true,
     scopeId: "tenant:run87",
@@ -332,4 +413,29 @@ test("Phase 3.5 normal post-observation work executes every canonical business o
         return nested.channel === "stage";
       }),
   ).toBe(true);
+});
+
+test("Run 91 final audit rejects incomplete effort identity before Track B extension fan-out", async () => {
+  const invoked: string[] = [];
+  const runtime = {
+    async invoke(id: string) {
+      invoked.push(id);
+      return {};
+    },
+  };
+
+  await expect(
+    trackBRuntime.runTrackBPostObservation(
+      runtime,
+      {
+        requestId: "missing-effort-run91",
+        routingDecisionId: "decision-missing-effort-run91",
+        endpointId: "endpoint-missing-effort-run91",
+        modelId: "provider/model-run91",
+        reasoningEffort: "high",
+      },
+      { scope: "tenant:run91", channel: "stage", authorizationEpoch: 91 },
+    ),
+  ).rejects.toThrow(/effort identity/i);
+  expect(invoked).toEqual([]);
 });

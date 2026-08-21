@@ -131,6 +131,9 @@ async function enqueueCorrelatedObservation(
     requestId: "request-1",
     routingDecisionId: "decision-1",
     endpointId: "endpoint-1",
+    modelId: "provider/model-1",
+    reasoningEffort: "high",
+    effortSource: "variant",
     run88Correlation: correlation(),
     ...overrides,
   };
@@ -143,6 +146,9 @@ const providerObservation = (overrides: Readonly<Record<string, unknown>> = {}) 
   clientRequestId: "pi-client-request-1",
   routingDecisionId: "provider-decision-1",
   endpointId: "provider-endpoint-1",
+  modelId: "provider/model-1",
+  reasoningEffort: "high",
+  effortSource: "variant",
   executionTelemetry: { providerFamily: "openai" },
   inspection: {
     request: {
@@ -941,6 +947,9 @@ export const publicRuntimeAcceptanceProbes: Readonly<Record<string, ProbeLayers>
             requestId: "request-1",
             routingDecisionId: "decision-1",
             endpointId: "endpoint-1",
+            modelId: "provider/model-1",
+            reasoningEffort: "high",
+            effortSource: "variant",
             run88Correlation: { ...correlation(), schemaVersion: "run88-correlation.v2" },
           }),
         ).rejects.toThrow(/schema/i);

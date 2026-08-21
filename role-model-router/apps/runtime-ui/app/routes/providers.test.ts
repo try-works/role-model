@@ -273,6 +273,33 @@ describe("provider model role assignment helpers", () => {
     ]);
   });
 
+  test("serializes same-model effort siblings as independent endpoint role bindings", () => {
+    expect(
+      buildModelRoleBindings(
+        [
+          { modelId: "deepseek/deepseek-v4-flash", endpointId: "deepseek-flash-high" },
+          { modelId: "deepseek/deepseek-v4-flash", endpointId: "deepseek-flash-max" },
+        ],
+        {
+          "deepseek-flash-high": ["coder"],
+          "deepseek-flash-max": ["writer"],
+        },
+        allRoleIds,
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        modelId: "deepseek/deepseek-v4-flash",
+        endpointId: "deepseek-flash-high",
+        enabledRoleIds: ["coder"],
+      }),
+      expect.objectContaining({
+        modelId: "deepseek/deepseek-v4-flash",
+        endpointId: "deepseek-flash-max",
+        enabledRoleIds: ["writer"],
+      }),
+    ]);
+  });
+
   test("builds grouped provider role coverage summaries instead of dumping raw role chips", () => {
     expect(
       buildProviderModelRoleCoverageSummary({

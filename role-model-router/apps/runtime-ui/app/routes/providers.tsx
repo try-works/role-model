@@ -277,12 +277,18 @@ export function buildModelRoleSelection(
 }
 
 export function buildModelRoleBindings(
-  selectedModels: readonly string[],
+  selectedModels: readonly (
+    | string
+    | { readonly modelId: string; readonly endpointId: string }
+  )[],
   selection: ModelRoleSelection,
   allRoleIds: readonly string[],
 ) {
-  return selectedModels.map((modelId) => {
-    const roleIds = [...new Set(selection[modelId] ?? [])].sort((left, right) =>
+  return selectedModels.map((target) => {
+    const modelId = typeof target === "string" ? target : target.modelId;
+    const endpointId = typeof target === "string" ? undefined : target.endpointId;
+    const selectionKey = endpointId ?? modelId;
+    const roleIds = [...new Set(selection[selectionKey] ?? [])].sort((left, right) =>
       left.localeCompare(right, "en"),
     );
     const assignment =
@@ -291,6 +297,7 @@ export function buildModelRoleBindings(
         : roleIdsToExplicitAssignment(roleIds, false);
     return {
       modelId,
+      ...(endpointId ? { endpointId } : {}),
       roleIds:
         assignment.roleAssignmentMode === "include" ? [...(assignment.enabledRoleIds ?? [])] : [],
       roleAssignmentMode: assignment.roleAssignmentMode,
@@ -1519,12 +1526,16 @@ export default function ProvidersRoute() {
                                         setSavingRolesEndpointId(endpoint.endpointId);
                                         setError(null);
                                         try {
-                                          const modelIds = row.endpoints.map(
-                                            (entry) => entry.modelId,
-                                          );
+                                          const modelIds = [
+                                            ...new Set(row.endpoints.map((entry) => entry.modelId)),
+                                          ];
+                                          const bindingTargets = row.endpoints.map((entry) => ({
+                                            modelId: entry.modelId,
+                                            endpointId: entry.endpointId,
+                                          }));
                                           const selection = Object.fromEntries(
                                             row.endpoints.map((entry) => [
-                                              entry.modelId,
+                                              entry.endpointId,
                                               entry.endpointId === endpoint.endpointId
                                                 ? (draftRolesByEndpointId[entry.endpointId] ??
                                                   resolveConfiguredEndpointRoleIds({
@@ -1547,7 +1558,7 @@ export default function ProvidersRoute() {
                                             ...account,
                                             allowedModels: modelIds,
                                             modelRoleBindings: buildModelRoleBindings(
-                                              modelIds,
+                                              bindingTargets,
                                               selection,
                                               availableRoleIds,
                                             ),

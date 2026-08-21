@@ -345,6 +345,9 @@ describe("Run 88 stage release boundary", () => {
       requestId: "request-1",
       routingDecisionId: "decision-1",
       endpointId: "endpoint-1",
+      modelId: "provider/model-1",
+      reasoningEffort: "high",
+      effortSource: "variant",
       run88Correlation: correlation,
     });
     let observed: Readonly<Record<string, unknown>> | undefined;

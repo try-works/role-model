@@ -27,7 +27,7 @@ import {
   supportingTextClassName,
 } from "../lib/design-system";
 import { formatEndpointDisplayPath, formatModelIdentity } from "../lib/effort-identity";
-import { formatScore } from "../lib/format-score";
+import { formatScore, formatScoreWithCoverage } from "../lib/format-score";
 import {
   type BenchmarkCaseAuditEntry,
   type BenchmarkEndpointGrade,
@@ -141,23 +141,16 @@ function formatLatencyMs(value: number | null | undefined): string {
   return `${Math.round(value)} ms`;
 }
 
-function formatDifficultyPercent(score: number | null | undefined): string {
-  if (typeof score !== "number" || !Number.isFinite(score)) {
-    return "—";
-  }
-  return `${Math.round(score * 100)}%`;
-}
-
 function resolveJudgeLabel(
   summary: BenchmarkSummary,
   candidates: readonly RouterCandidate[],
 ): string | null {
   return (
-    summary.judgeModelId ??
     (() => {
       const candidate = candidates.find((entry) => entry.endpointId === summary.judgeEndpointId);
       return candidate ? formatModelIdentity(candidate) : null;
     })() ??
+    summary.judgeModelId ??
     summary.judgeEndpointId ??
     null
   );
@@ -191,6 +184,8 @@ interface ModelScoreRow {
   readonly benchmarkSamples: number;
   readonly latencyP50: number | null;
   readonly latencyP95: number | null;
+  readonly lastRunId: string | null;
+  readonly lastRunMode: "quick" | "full" | null;
 }
 
 function buildModelScoreRows(
@@ -204,6 +199,8 @@ function buildModelScoreRows(
       overallScore: number;
       scoresByBucket: BenchmarkSummarySubject["scoresByBucket"];
       caseResults: BenchmarkEndpointGrade["caseResults"] | null;
+      runId: string | null;
+      mode: "quick" | "full" | null;
     }
   >();
 
@@ -212,6 +209,8 @@ function buildModelScoreRows(
       overallScore: subject.overallScore,
       scoresByBucket: subject.scoresByBucket,
       caseResults: null,
+      runId: summary?.runId ?? null,
+      mode: summary?.mode ?? null,
     });
   }
   for (const grade of result?.endpointGrades ?? []) {
@@ -219,6 +218,8 @@ function buildModelScoreRows(
       overallScore: grade.overallScore,
       scoresByBucket: grade.byDifficulty,
       caseResults: grade.caseResults,
+      runId: result?.runId ?? null,
+      mode: result?.mode ?? null,
     });
   }
 
@@ -271,6 +272,8 @@ function buildModelScoreRows(
       benchmarkSamples,
       latencyP50,
       latencyP95,
+      lastRunId: grade?.runId ?? capability?.lastRunId ?? null,
+      lastRunMode: grade?.mode ?? capability?.lastRunMode ?? null,
     });
   }
 
@@ -515,17 +518,20 @@ export default function ControlBenchmarkRoute() {
     const capabilityIds = new Set<string>();
 
     for (const row of modelScoreRows) {
+      const candidate = candidates?.find((entry) => entry.endpointId === row.endpointId);
       const subject = lastSummary?.subjects.find((entry) => entry.endpointId === row.endpointId);
-      if (!subject?.taxonomyScores) {
+      const taxonomyScores =
+        candidate?.benchmarkCapability?.taxonomyScores ?? subject?.taxonomyScores;
+      if (!taxonomyScores) {
         continue;
       }
-      for (const roleId of Object.keys(subject.taxonomyScores.byRole ?? {})) {
+      for (const roleId of Object.keys(taxonomyScores.byRole ?? {})) {
         roleIds.add(roleId);
       }
-      for (const taskId of Object.keys(subject.taxonomyScores.byTask ?? {})) {
+      for (const taskId of Object.keys(taxonomyScores.byTask ?? {})) {
         taskIds.add(taskId);
       }
-      for (const capabilityId of Object.keys(subject.taxonomyScores.byCapability ?? {})) {
+      for (const capabilityId of Object.keys(taxonomyScores.byCapability ?? {})) {
         capabilityIds.add(capabilityId);
       }
     }
@@ -535,7 +541,7 @@ export default function ControlBenchmarkRoute() {
       taskIds: [...taskIds].sort((left, right) => left.localeCompare(right)),
       capabilityIds: [...capabilityIds].sort((left, right) => left.localeCompare(right)),
     };
-  }, [lastSummary, modelScoreRows]);
+  }, [candidates, lastSummary, modelScoreRows]);
 
   const taxonomyHasData =
     taxonomyDimensionInventory.roleIds.length > 0 ||
@@ -554,10 +560,13 @@ export default function ControlBenchmarkRoute() {
 
       return modelScoreRows
         .map((row) => {
+          const candidate = candidates?.find((entry) => entry.endpointId === row.endpointId);
           const subject = lastSummary?.subjects.find(
             (entry) => entry.endpointId === row.endpointId,
           );
-          const score = subject?.taxonomyScores?.[dimension]?.[filterValue];
+          const taxonomyScores =
+            candidate?.benchmarkCapability?.taxonomyScores ?? subject?.taxonomyScores;
+          const score = taxonomyScores?.[dimension]?.[filterValue];
           return score !== undefined
             ? {
                 modelId: row.modelId,
@@ -577,7 +586,7 @@ export default function ControlBenchmarkRoute() {
         )
         .sort((left, right) => right.score - left.score);
     },
-    [lastSummary, modelScoreRows],
+    [candidates, lastSummary, modelScoreRows],
   );
 
   const toggleEndpoint = (endpointId: string) => {
@@ -947,7 +956,7 @@ export default function ControlBenchmarkRoute() {
 
         <SectionCard
           title="Benchmark scores"
-          description="Compare endpoints after the last completed run."
+          description="Scores are stored as normalized 0–1 fractions and shown as percentages. Overall is the unweighted mean of executed case scores. A completed run replaces current evidence only for endpoints it contains; older runs remain in history."
         >
           {modelScoreRows.length === 0 ? (
             <EmptyState label="No benchmark scores are in routing profiles yet. Run the benchmark to grade each configured model and update observed routing profiles." />
@@ -1025,7 +1034,12 @@ export default function ControlBenchmarkRoute() {
                         className="border-b border-[var(--rm-border)] last:border-b-0"
                       >
                         <td className="px-3.5 py-3 text-[14px] font-semibold leading-[18px] text-[var(--rm-fg)]">
-                          {row.displayName}
+                          <p>{row.displayName}</p>
+                          <p className="mt-1 font-mono text-[11px] font-normal text-[var(--rm-muted)]">
+                            {row.lastRunId
+                              ? `${row.lastRunId}${row.lastRunMode ? ` · ${row.lastRunMode}` : ""}`
+                              : "profile-derived"}
+                          </p>
                         </td>
                         <td className={`${benchmarkDenseCellClassName} px-1 py-3`}>
                           {formatScore(row.overallScore)}
@@ -1034,13 +1048,22 @@ export default function ControlBenchmarkRoute() {
                           {formatScore(row.profileQualityScore)}
                         </td>
                         <td className={`${benchmarkDenseCellClassName} px-1 py-3 font-normal`}>
-                          {formatDifficultyPercent(row.scoresByBucket?.easy.score)}
+                          {formatScoreWithCoverage(
+                            row.scoresByBucket?.easy.score,
+                            row.scoresByBucket?.easy.cases,
+                          )}
                         </td>
                         <td className={`${benchmarkDenseCellClassName} px-1 py-3 font-normal`}>
-                          {formatDifficultyPercent(row.scoresByBucket?.medium.score)}
+                          {formatScoreWithCoverage(
+                            row.scoresByBucket?.medium.score,
+                            row.scoresByBucket?.medium.cases,
+                          )}
                         </td>
                         <td className={`${benchmarkDenseCellClassName} px-1 py-3 font-normal`}>
-                          {formatDifficultyPercent(row.scoresByBucket?.hard.score)}
+                          {formatScoreWithCoverage(
+                            row.scoresByBucket?.hard.score,
+                            row.scoresByBucket?.hard.cases,
+                          )}
                         </td>
                         <td className={`${benchmarkDenseCellClassName} px-1 py-3 font-normal`}>
                           {formatLatencyMs(row.latencyP50)}

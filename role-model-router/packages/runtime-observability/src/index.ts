@@ -1,7 +1,7 @@
 import type { RoutedExecutionResult } from "@role-model-router/adapter-execution";
 import {
   type ObservedPerformanceSample,
-  aggregateObservedPerformanceSamples,
+  aggregateOperationalPerformanceSamples,
 } from "@role-model-router/profile-aggregator";
 import type { ToolRegistryExecution } from "@role-model-router/tool-registry";
 import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
@@ -615,10 +615,15 @@ function deriveEndpointVersion(execution: RoutedExecutionResult): string {
 function buildObservedPerformanceSample(
   input: RuntimeObservationBundleInput,
   endpointVersion: string,
+  effort: { readonly reasoningEffort: string | null; readonly effortSource: RuntimeEffortSource },
 ): ObservedPerformanceSample {
+  const identity = input.execution.target.candidate.identity;
   return {
     endpoint_id: input.decision.chosen_endpoint_id,
     endpoint_version: endpointVersion,
+    model_id: identity.model_id,
+    reasoning_effort: effort.reasoningEffort,
+    effort_source: effort.effortSource,
     source_type: "live_request",
     ...(input.routingDiagnostics?.difficultyRouting?.difficulty
       ? { difficulty_bucket: input.routingDiagnostics.difficultyRouting.difficulty }
@@ -1039,16 +1044,19 @@ export function createRuntimeObservationBundle(
 ): RuntimeObservationBundle {
   const effort = normalizeRuntimeEffortReceipt(input);
   const endpointVersion = deriveEndpointVersion(input.execution);
-  const currentSample = buildObservedPerformanceSample(input, endpointVersion);
+  const currentSample = buildObservedPerformanceSample(input, endpointVersion, effort);
   const priorSamples = (input.priorSamples ?? []).filter(
     (sample) =>
       sample.endpoint_id === input.decision.chosen_endpoint_id &&
       sample.endpoint_version === endpointVersion,
   );
   const history = [...priorSamples, currentSample];
-  const profile = aggregateObservedPerformanceSamples(history, {
+  const profile = aggregateOperationalPerformanceSamples(history, {
     nowMs: currentSample.timestamp_ms,
   });
+  if (!profile) {
+    throw new Error("A live runtime observation must produce an operational profile.");
+  }
   const capturePolicy = buildCapturePolicyReceipt(input.maintenancePolicy, input.capturePolicy);
   const telemetryConfig = input.telemetryConfig ?? {};
   const samplingRate = telemetryConfig.samplingRate ?? 1.0;

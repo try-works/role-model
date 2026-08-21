@@ -12,6 +12,7 @@ import {
   fetchActivityMetrics,
   fetchActivityMetricsPage,
   fetchAudioVoices,
+  fetchBenchmarkPortfolio,
   fetchBenchmarkRuns,
   fetchBenchmarkSummariesByMode,
   fetchControllerAssignment,
@@ -878,6 +879,10 @@ describe("fetchModelTelemetryRollup", () => {
     const fetcher = vi.fn(async (_input: string | URL | Request, init?: RequestInit) => {
       expect(init?.method).toBe("POST");
       const payload = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      expect(payload.filters).toEqual({
+        modelIds: ["openai/gpt-5.4"],
+        endpointIds: ["openai.personal.primary.gpt-5.4-high"],
+      });
 
       if (payload.breakdown === "taxonomyTaskType") {
         return jsonResponse({
@@ -1018,7 +1023,15 @@ describe("fetchModelTelemetryRollup", () => {
       throw new Error(`Unexpected telemetry rollup payload: ${JSON.stringify(payload)}`);
     });
 
-    await expect(fetchModelTelemetryRollup("openai/gpt-5.4", fetcher)).resolves.toEqual({
+    await expect(
+      fetchModelTelemetryRollup(
+        {
+          modelId: "openai/gpt-5.4",
+          endpointId: "openai.personal.primary.gpt-5.4-high",
+        },
+        fetcher,
+      ),
+    ).resolves.toEqual({
       groups: [{ groupId: "engineering", requestCount: 5 }],
       roles: [{ roleId: "coder", requestCount: 5 }],
       capabilities: [
@@ -2941,6 +2954,58 @@ describe("role policy APIs", () => {
 });
 
 describe("benchmark display endpoints", () => {
+  test("fetchBenchmarkPortfolio loads the latest completed evidence for every exact endpoint", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      if (url === "/api/role-model/benchmark/portfolio") {
+        return new Response(
+          JSON.stringify({
+            scoreSemantics: {
+              storageScale: "normalized-fraction-0-to-1",
+              displayScale: "percentage-0-to-100",
+              overallAggregation: "unweighted-arithmetic-mean-of-executed-case-scores",
+              currentEvidencePolicy: "latest-completed-run-per-endpoint",
+              replacementScope: "endpoint-only",
+              zeroScoreMeaning: "executed-zero-credit",
+              absentScoreMeaning: "no-evidence",
+            },
+            entries: [
+              {
+                endpointId: "deepseek.flash-high",
+                modelId: "deepseek/deepseek-v4-flash",
+                reasoningEffort: "high",
+                overallScore: 0.81,
+                runId: "run-high",
+              },
+            ],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }
+      throw new Error(`unexpected url ${url}`);
+    });
+
+    await expect(fetchBenchmarkPortfolio(fetcher)).resolves.toEqual({
+      scoreSemantics: {
+        storageScale: "normalized-fraction-0-to-1",
+        displayScale: "percentage-0-to-100",
+        overallAggregation: "unweighted-arithmetic-mean-of-executed-case-scores",
+        currentEvidencePolicy: "latest-completed-run-per-endpoint",
+        replacementScope: "endpoint-only",
+        zeroScoreMeaning: "executed-zero-credit",
+        absentScoreMeaning: "no-evidence",
+      },
+      entries: [
+        expect.objectContaining({
+          endpointId: "deepseek.flash-high",
+          reasoningEffort: "high",
+          runId: "run-high",
+        }),
+      ],
+    });
+  });
+
   test("fetchBenchmarkSummariesByMode loads full and quick summaries", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
       const url =

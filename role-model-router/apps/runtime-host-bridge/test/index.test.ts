@@ -150,6 +150,60 @@ function createLlamaSwapRunningModelsVendorScript(input: {
 }
 
 describe("runtime-host-bridge", () => {
+  test("projects immutable benchmark evidence from the persisted decision snapshot", () => {
+    expect(
+      bridge.projectBenchmarkDecisionEvidence(
+        {
+          chosen_endpoint_id: "deepseek.flash-max",
+          scored_candidates: [
+            {
+              endpoint_id: "deepseek.flash-max",
+              metric_breakdown: {
+                quality: {
+                  value: 0.93,
+                  source: "benchmark",
+                  raw: {
+                    benchmark_endpoint_id: "deepseek.flash-max",
+                    benchmark_quality_score: 0.93,
+                    benchmark_task_score: 0.96,
+                    benchmark_reason: "task",
+                    benchmark_source: "routing-capability-benchmark",
+                    benchmark_evidence_source: "run-artifact",
+                    benchmark_run_id: "run-max-001",
+                    benchmark_run_completed_at_ms: 1_700_000_000_000,
+                    benchmark_run_mode: "full",
+                    benchmark_suite_id: "routing-capability-v2",
+                    benchmark_judge_endpoint_id: "judge.endpoint",
+                    benchmark_judge_model_id: "judge/model",
+                    freshness_weight: 1,
+                  },
+                },
+              },
+            },
+          ],
+        },
+        "deepseek.flash-max",
+      ),
+    ).toEqual({
+      endpointId: "deepseek.flash-max",
+      effectiveQualityScore: 0.93,
+      overallScore: 0.93,
+      taskScore: 0.96,
+      roleScore: null,
+      groupScore: null,
+      reason: "task",
+      source: "routing-capability-benchmark",
+      evidenceSource: "run-artifact",
+      runId: "run-max-001",
+      runCompletedAtMs: 1_700_000_000_000,
+      runMode: "full",
+      suiteId: "routing-capability-v2",
+      judgeEndpointId: "judge.endpoint",
+      judgeModelId: "judge/model",
+      freshnessWeight: 1,
+    });
+  });
+
   test("run 87 runtime HTTP logs require registered channel authority", () => {
     const authority = bridge as typeof bridge & {
       assertRuntimeHostStorageWriteAllowed?: (storageClass: string, channel: string) => unknown;
@@ -593,6 +647,7 @@ describe("runtime-host-bridge", () => {
     const clearBenchmarkEndpointData = async () => ({ deleted: 0 });
     const clearBenchmarkData = async () => ({ deleted: 0 });
     const readBenchmarkSummary = async () => ({ subjects: [] });
+    const readBenchmarkPortfolio = async () => ({ entries: [] });
     const listBenchmarkRuns = async () => [];
     const readBenchmarkSummariesByMode = async () => ({ quick: null, full: null });
     const readBenchmarkPreferences = async () => ({ judgeEndpointId: null });
@@ -666,6 +721,7 @@ describe("runtime-host-bridge", () => {
       clearBenchmarkEndpointData,
       clearBenchmarkData,
       readBenchmarkSummary,
+      readBenchmarkPortfolio,
       listBenchmarkRuns,
       readBenchmarkSummariesByMode,
       readBenchmarkPreferences,
@@ -720,6 +776,7 @@ describe("runtime-host-bridge", () => {
     expect(options.clearBenchmarkEndpointData).toBe(clearBenchmarkEndpointData);
     expect(options.clearBenchmarkData).toBe(clearBenchmarkData);
     expect(options.readBenchmarkSummary).toBe(readBenchmarkSummary);
+    expect(options.readBenchmarkPortfolio).toBe(readBenchmarkPortfolio);
     expect(options.listBenchmarkRuns).toBe(listBenchmarkRuns);
     expect(options.readBenchmarkSummariesByMode).toBe(readBenchmarkSummariesByMode);
     expect(options.readBenchmarkPreferences).toBe(readBenchmarkPreferences);
@@ -1222,6 +1279,7 @@ describe("runtime-host-bridge", () => {
       clearBenchmarkEndpointData: async () => ({ success: true }),
       clearBenchmarkData: async () => ({ success: true }),
       readBenchmarkSummary: async () => null,
+      readBenchmarkPortfolio: async () => ({ entries: [] }),
       listBenchmarkRuns: async () => [],
       readBenchmarkSummariesByMode: async () => [],
       readBenchmarkPreferences: async () => null,
@@ -10503,11 +10561,10 @@ describe("runtime-host-bridge", () => {
           measuredAtMs: expect.any(Number),
         },
         effectiveMetrics: {
-          quality: expect.objectContaining({
+          quality: {
             value: expect.any(Number),
-            source: "benchmark",
-            freshnessWeight: expect.any(Number),
-          }),
+            source: "default",
+          },
           latency: expect.objectContaining({
             value: expect.any(Number),
             source: "measured",
@@ -11911,7 +11968,7 @@ describe("runtime-host-bridge", () => {
     });
   });
 
-  test("routes hard requests using bucketed observed profiles and records the selected difficulty bucket", async () => {
+  test("routes hard requests using bucketed live operational profiles and records the selected difficulty bucket", async () => {
     const runtimeStateRoot = await mkdtemp(
       path.join(os.tmpdir(), "role-model-runtime-host-difficulty-bucket-tests-"),
     );
@@ -12148,12 +12205,12 @@ describe("runtime-host-bridge", () => {
         requestId,
       ),
     ).resolves.toMatchObject({
-      endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      endpointId: "anthropic.litellm.global.claude-3-7-sonnet",
     });
 
     await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
       requestId,
-      endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      endpointId: "anthropic.litellm.global.claude-3-7-sonnet",
       routingDiagnostics: {
         difficultyRouting: expect.objectContaining({
           difficulty: "hard",
@@ -12161,12 +12218,12 @@ describe("runtime-host-bridge", () => {
           fallbackApplied: false,
         }),
         observedProfile: {
-          endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          endpointId: "anthropic.litellm.global.claude-3-7-sonnet",
           source: "runtime-state",
           readMode: "per-request",
           difficultyBucket: "hard",
           bucketOverrideApplied: true,
-          measuredAtMs: 11_000,
+          measuredAtMs: 11_100,
         },
       },
     });
@@ -12304,6 +12361,12 @@ describe("runtime-host-bridge", () => {
     const insertBucketedProfile = database.prepare(
       "INSERT INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
     );
+    const insertBenchmarkSample = database.prepare(
+      "INSERT INTO observed_performance_samples (sample_id, endpoint_id, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
+    );
+    const insertBucketedBenchmarkSample = database.prepare(
+      "INSERT INTO observed_performance_samples_by_difficulty (sample_id, endpoint_id, difficulty_bucket, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    );
     const buildProfile = (input: {
       endpointId: string;
       measuredAtMs: number;
@@ -12417,6 +12480,39 @@ describe("runtime-host-bridge", () => {
         }),
       ),
     );
+    for (const [endpointId, score, timestampMs] of [
+      ["openai.litellm.global.openai-gpt-4-1-mini-fast", 0.92, 1_000],
+      ["anthropic.litellm.global.claude-3-7-sonnet", 0.3, 1_100],
+    ] as const) {
+      const sample = {
+        endpoint_id: endpointId,
+        endpoint_version: "run50-difficulty-merge-v1",
+        source_type: "benchmark",
+        timestamp_ms: timestampMs,
+        latency_ms: 900,
+        success: true,
+        judge_score: score,
+      };
+      insertBenchmarkSample.run(
+        `merge-benchmark-${endpointId}`,
+        endpointId,
+        null,
+        null,
+        "benchmark",
+        timestampMs,
+        JSON.stringify(sample),
+      );
+      insertBucketedBenchmarkSample.run(
+        `merge-benchmark-hard-${endpointId}`,
+        endpointId,
+        "hard",
+        null,
+        null,
+        "benchmark",
+        timestampMs,
+        JSON.stringify(sample),
+      );
+    }
     database.close();
 
     const requestId = "req-runtime-bridge-difficulty-merge-001";
@@ -21633,6 +21729,7 @@ describe("runtime-host-bridge", () => {
         },
         body: JSON.stringify({
           model: "nonexistent/model-for-failure",
+          reasoning_effort: "high",
           messages: [{ role: "user", content: "Force a telemetry failure row." }],
         }),
       });
@@ -21684,12 +21781,16 @@ describe("runtime-host-bridge", () => {
         requestId?: string;
         requestedModelId?: string | null;
         requestOperation?: string | null;
+        reasoningEffort?: string | null;
+        effortSource?: string | null;
       }>;
       expect(telemetryRows).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             clientRequestId,
             requestClass: "live_request",
+            reasoningEffort: null,
+            effortSource: "none",
           }),
           expect.objectContaining({
             clientRequestId: capabilityClientRequestId,
@@ -21736,6 +21837,8 @@ describe("runtime-host-bridge", () => {
         expect.objectContaining({
           requestId: genericFailureRow?.requestId,
           clientRequestId,
+          reasoningEffort: null,
+          effortSource: "none",
           observationAvailability: expect.objectContaining({
             source: "raw-observation",
             rawObservationAvailable: true,
@@ -21761,6 +21864,10 @@ describe("runtime-host-bridge", () => {
                 }),
               }),
             }),
+          }),
+          usageEvent: expect.objectContaining({
+            reasoning_effort: null,
+            effort_source: "none",
           }),
         }),
       );

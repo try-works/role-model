@@ -26,6 +26,7 @@ export interface BenchmarkPersistedEndpointGrade {
   readonly endpointId: string;
   readonly modelId: string;
   readonly sourceType: string | null;
+  readonly reasoningEffort?: string | null;
   readonly overallScore: number;
   readonly byDifficulty: Record<
     "easy" | "medium" | "hard",
@@ -87,6 +88,8 @@ export interface BenchmarkCaseAuditEntry {
 export interface BenchmarkSummarySubject {
   readonly endpointId: string;
   readonly modelId: string;
+  readonly sourceType?: string | null;
+  readonly reasoningEffort?: string | null;
   readonly overallScore: number;
   readonly scoresByBucket: Record<
     "easy" | "medium" | "hard",
@@ -120,11 +123,47 @@ export interface BenchmarkSummaryResponse {
   } | null;
 }
 
+export interface BenchmarkPortfolioEntry extends BenchmarkSummarySubject {
+  readonly runId: string;
+  readonly completedAtMs: number;
+  readonly mode: "quick" | "full";
+  readonly suiteId: string;
+  readonly suiteVersion: string | null;
+  readonly judgeEndpointId: string | null;
+  readonly judgeModelId: string | null;
+}
+
+export interface BenchmarkPortfolioResponse {
+  readonly scoreSemantics: BenchmarkScoreSemantics;
+  readonly entries: readonly BenchmarkPortfolioEntry[];
+}
+
+export interface BenchmarkScoreSemantics {
+  readonly storageScale: "normalized-fraction-0-to-1";
+  readonly displayScale: "percentage-0-to-100";
+  readonly overallAggregation: "unweighted-arithmetic-mean-of-executed-case-scores";
+  readonly currentEvidencePolicy: "latest-completed-run-per-endpoint";
+  readonly replacementScope: "endpoint-only";
+  readonly zeroScoreMeaning: "executed-zero-credit";
+  readonly absentScoreMeaning: "no-evidence";
+}
+
+export const BENCHMARK_SCORE_SEMANTICS: BenchmarkScoreSemantics = {
+  storageScale: "normalized-fraction-0-to-1",
+  displayScale: "percentage-0-to-100",
+  overallAggregation: "unweighted-arithmetic-mean-of-executed-case-scores",
+  currentEvidencePolicy: "latest-completed-run-per-endpoint",
+  replacementScope: "endpoint-only",
+  zeroScoreMeaning: "executed-zero-credit",
+  absentScoreMeaning: "no-evidence",
+};
+
 export interface BenchmarkPreferences {
   readonly judgeEndpointId?: string;
 }
 
 export interface BenchmarkCapability {
+  readonly evidenceSource: "run-artifact" | "profile-derived";
   readonly overallScore: number | null;
   readonly scoresByBucket: Partial<
     Record<"easy" | "medium" | "hard", { readonly score: number; readonly cases?: number }>
@@ -133,6 +172,7 @@ export interface BenchmarkCapability {
   readonly roleScores?: Record<string, number>;
   readonly eligibleRoleScores?: Record<string, number>;
   readonly groupScores?: Record<string, number>;
+  readonly taxonomyScores?: BenchmarkSummarySubject["taxonomyScores"];
   readonly coverage?: {
     readonly overallCases: number;
     readonly roleCases?: Record<string, number>;
@@ -146,7 +186,10 @@ export interface BenchmarkCapability {
   readonly freshnessScore: number | null;
   readonly lastRunId: string | null;
   readonly lastRunCompletedAtMs: number | null;
+  readonly lastRunMode: "quick" | "full" | null;
+  readonly lastRunSuiteId: string | null;
   readonly judgeEndpointId: string | null;
+  readonly judgeModelId: string | null;
 }
 
 const BENCHMARK_LOW_COVERAGE_CASE_COUNT = 2;
@@ -428,6 +471,8 @@ async function buildBenchmarkSummaryResponse(input: {
       subjects.push({
         endpointId: grade.endpointId,
         modelId: grade.modelId,
+        sourceType: grade.sourceType,
+        reasoningEffort: grade.reasoningEffort ?? null,
         overallScore: grade.overallScore,
         scoresByBucket: grade.byDifficulty,
         passingCaseIds,
@@ -542,6 +587,63 @@ export async function readBenchmarkSummariesByMode(input: {
   return { full, quick };
 }
 
+export async function readCurrentBenchmarkPortfolio(input: {
+  readonly artifactRoot: string;
+  readonly resolveModelId: (endpointId: string) => string | null;
+}): Promise<BenchmarkPortfolioResponse> {
+  const runs = (await listCompletedBenchmarkRuns(input.artifactRoot)).sort(
+    (left, right) =>
+      (right.manifest.gradingCompletedAtMs ?? right.result?.completedAtMs ?? 0) -
+      (left.manifest.gradingCompletedAtMs ?? left.result?.completedAtMs ?? 0),
+  );
+  const latestByEndpointId = new Map<string, BenchmarkPortfolioEntry>();
+  for (const run of runs) {
+    const summary = await buildBenchmarkSummaryResponse({
+      artifactRoot: input.artifactRoot,
+      runId: run.runId,
+      manifest: run.manifest,
+      result: run.result,
+      resolveModelId: input.resolveModelId,
+    });
+    if (
+      summary.runId === null ||
+      summary.completedAtMs === null ||
+      summary.mode === null ||
+      summary.suiteId === null
+    ) {
+      continue;
+    }
+    const seenEndpointIds = new Set<string>();
+    for (const subject of summary.subjects) {
+      if (seenEndpointIds.has(subject.endpointId)) {
+        throw new Error(
+          `duplicate benchmark endpoint ${subject.endpointId} in completed run ${summary.runId}`,
+        );
+      }
+      seenEndpointIds.add(subject.endpointId);
+      if (latestByEndpointId.has(subject.endpointId)) {
+        continue;
+      }
+      latestByEndpointId.set(subject.endpointId, {
+        ...subject,
+        runId: summary.runId,
+        completedAtMs: summary.completedAtMs,
+        mode: summary.mode,
+        suiteId: summary.suiteId,
+        suiteVersion: summary.suiteVersion,
+        judgeEndpointId: summary.judgeEndpointId,
+        judgeModelId: summary.judgeModelId,
+      });
+    }
+  }
+  return {
+    scoreSemantics: BENCHMARK_SCORE_SEMANTICS,
+    entries: [...latestByEndpointId.values()].sort((left, right) =>
+      left.endpointId.localeCompare(right.endpointId, "en"),
+    ),
+  };
+}
+
 function asRecord(value: unknown): Record<string, unknown> | null {
   return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : null;
 }
@@ -641,15 +743,19 @@ export function buildBenchmarkCapability(input: {
   }
 
   return {
+    evidenceSource: "profile-derived",
     overallScore,
     scoresByBucket,
     benchmarkSamples,
     sampleCount: readNumber(profile, "sample_size") ?? benchmarkSamples,
     measuredAtMs: readNumber(profile, "measured_at_ms"),
     freshnessScore: readNumber(profile, "freshness_score"),
-    lastRunId: input.summary.runId,
-    lastRunCompletedAtMs: input.summary.completedAtMs,
-    judgeEndpointId: input.summary.judgeEndpointId,
+    lastRunId: null,
+    lastRunCompletedAtMs: null,
+    lastRunMode: null,
+    lastRunSuiteId: null,
+    judgeEndpointId: null,
+    judgeModelId: null,
   };
 }
 
@@ -658,21 +764,37 @@ export function buildBenchmarkCapabilityForEndpoint(input: {
   readonly latestProfile: Record<string, unknown> | null | undefined;
   readonly difficultyProfiles?: Record<string, unknown> | null;
   readonly summary: BenchmarkSummaryResponse;
+  readonly portfolioEntry?: BenchmarkPortfolioEntry | null;
   readonly availableRoleIds?: readonly string[];
 }): BenchmarkCapability | null {
-  const capability = buildBenchmarkCapability({
+  const profileCapability = buildBenchmarkCapability({
     latestProfile: input.latestProfile,
     difficultyProfiles: input.difficultyProfiles,
     summary: input.summary,
   });
-  if (!capability) {
-    return null;
-  }
-
-  const summarySubject = input.summary.subjects.find(
-    (subject) => subject.endpointId === input.endpointId,
-  );
+  const portfolioEntry =
+    input.portfolioEntry?.endpointId === input.endpointId ? input.portfolioEntry : null;
+  const summarySubject =
+    portfolioEntry ??
+    input.summary.subjects.find((subject) => subject.endpointId === input.endpointId);
   if (summarySubject) {
+    const capability =
+      profileCapability ??
+      ({
+        evidenceSource: "run-artifact",
+        overallScore: null,
+        scoresByBucket: {},
+        benchmarkSamples: summarySubject.caseCount,
+        sampleCount: summarySubject.caseCount,
+        measuredAtMs: portfolioEntry?.completedAtMs ?? input.summary.completedAtMs,
+        freshnessScore: null,
+        lastRunId: null,
+        lastRunCompletedAtMs: null,
+        lastRunMode: null,
+        lastRunSuiteId: null,
+        judgeEndpointId: null,
+        judgeModelId: null,
+      } satisfies BenchmarkCapability);
     const roleScores = summarySubject.taxonomyScores?.byRole;
     const eligibleRoleScores = buildEligibleRoleScores({
       roleScores,
@@ -691,11 +813,23 @@ export function buildBenchmarkCapabilityForEndpoint(input: {
 
     return {
       ...capability,
+      evidenceSource: "run-artifact",
       overallScore: summarySubject.overallScore,
       scoresByBucket: summarySubject.scoresByBucket,
+      lastRunId: portfolioEntry ? portfolioEntry.runId : input.summary.runId,
+      lastRunCompletedAtMs: portfolioEntry
+        ? portfolioEntry.completedAtMs
+        : input.summary.completedAtMs,
+      lastRunMode: portfolioEntry ? portfolioEntry.mode : input.summary.mode,
+      lastRunSuiteId: portfolioEntry ? portfolioEntry.suiteId : input.summary.suiteId,
+      judgeEndpointId: portfolioEntry
+        ? portfolioEntry.judgeEndpointId
+        : input.summary.judgeEndpointId,
+      judgeModelId: portfolioEntry ? portfolioEntry.judgeModelId : input.summary.judgeModelId,
       ...(summarySubject.taxonomyScores?.byTask
         ? { taskScores: summarySubject.taxonomyScores.byTask }
         : {}),
+      ...(summarySubject.taxonomyScores ? { taxonomyScores: summarySubject.taxonomyScores } : {}),
       ...(roleScores ? { roleScores } : {}),
       ...(eligibleRoleScores ? { eligibleRoleScores } : {}),
       ...(groupScores ? { groupScores } : {}),
@@ -710,5 +844,5 @@ export function buildBenchmarkCapabilityForEndpoint(input: {
       },
     };
   }
-  return capability;
+  return profileCapability;
 }

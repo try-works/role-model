@@ -14,6 +14,7 @@ import { DatabaseSync } from "node:sqlite";
 import {
   type ObservedPerformanceSample,
   aggregateObservedPerformanceSamples,
+  aggregateOperationalPerformanceSamples,
 } from "@role-model-router/profile-aggregator";
 import type { ProviderAccountRecord } from "@role-model-router/provider-account";
 import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
@@ -40,6 +41,7 @@ export * from "./legacy-migration.js";
 export * from "./history-policy.js";
 
 const INITIAL_MIGRATION_ID = "run06-v1-initial-schema";
+const OPERATIONAL_PROFILE_REPROJECTION_MIGRATION_ID = "run91-operational-profile-reprojection-v1";
 const OBSERVATION_METADATA_BACKFILL_MIGRATION_ID = "run62-observation-metadata-backfill-v1";
 const TELEMETRY_METADATA_BACKFILL_MIGRATION_ID = "run62-telemetry-metadata-backfill-v1";
 const RECENT_OBSERVATIONS_INDEX_MIGRATION_ID = "run77-recent-observations-index-v1";
@@ -1894,6 +1896,35 @@ export function initializeSqliteMemory(
 
   if (journalModeRow?.journal_mode?.toLowerCase() !== "wal") {
     throw new Error("SQLite journal mode did not initialize as WAL");
+  }
+
+  const operationalProjectionReceipt = database
+    .prepare("SELECT migration_id FROM migration_receipts WHERE migration_id=?")
+    .get(OPERATIONAL_PROFILE_REPROJECTION_MIGRATION_ID) as { migration_id: string } | undefined;
+  if (!operationalProjectionReceipt) {
+    const endpointRows = database
+      .prepare("SELECT DISTINCT endpoint_id FROM observed_performance_samples ORDER BY endpoint_id")
+      .all() as Array<{ endpoint_id: string }>;
+    database.exec("BEGIN IMMEDIATE");
+    try {
+      for (const row of endpointRows) {
+        rebuildObservedProfilesForEndpoint(database, row.endpoint_id, nowMs);
+      }
+      database
+        .prepare(
+          "INSERT INTO migration_receipts (migration_id, schema_version, applied_at_ms, status) VALUES (?, ?, ?, ?)",
+        )
+        .run(
+          OPERATIONAL_PROFILE_REPROJECTION_MIGRATION_ID,
+          CURRENT_SCHEMA_VERSION,
+          nowMs,
+          "applied",
+        );
+      database.exec("COMMIT");
+    } catch (error) {
+      database.exec("ROLLBACK");
+      throw error;
+    }
   }
 
   database.close();
@@ -3943,18 +3974,20 @@ function rebuildObservedProfilesForEndpoint(
     const samples = remainingRows.map(
       (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
     );
-    const profile = aggregateObservedPerformanceSamples(samples, { nowMs });
+    const profile = aggregateOperationalPerformanceSamples(samples, { nowMs });
     database.prepare("DELETE FROM observed_profile_snapshots WHERE endpoint_id=?").run(endpointId);
-    database
-      .prepare(
-        "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
-      )
-      .run(
-        `${endpointId}:${profile.measured_at_ms}`,
-        endpointId,
-        profile.measured_at_ms,
-        JSON.stringify(profile),
-      );
+    if (profile) {
+      database
+        .prepare(
+          "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
+        )
+        .run(
+          `${endpointId}:${profile.measured_at_ms}`,
+          endpointId,
+          profile.measured_at_ms,
+          JSON.stringify(profile),
+        );
+    }
   }
 
   for (const difficultyBucket of DIFFICULTY_BUCKETS) {
@@ -3974,23 +4007,25 @@ function rebuildObservedProfilesForEndpoint(
       const bucketSamples = bucketRows.map(
         (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
       );
-      const bucketProfile = aggregateObservedPerformanceSamples(bucketSamples, { nowMs });
+      const bucketProfile = aggregateOperationalPerformanceSamples(bucketSamples, { nowMs });
       database
         .prepare(
           "DELETE FROM observed_profile_snapshots_by_difficulty WHERE endpoint_id=? AND difficulty_bucket=?",
         )
         .run(endpointId, difficultyBucket);
-      database
-        .prepare(
-          "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
-        )
-        .run(
-          `${endpointId}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
-          endpointId,
-          difficultyBucket,
-          bucketProfile.measured_at_ms,
-          JSON.stringify(bucketProfile),
-        );
+      if (bucketProfile) {
+        database
+          .prepare(
+            "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+          )
+          .run(
+            `${endpointId}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
+            endpointId,
+            difficultyBucket,
+            bucketProfile.measured_at_ms,
+            JSON.stringify(bucketProfile),
+          );
+      }
     }
   }
 }
@@ -4145,7 +4180,7 @@ export function persistObservedBenchmarkSample(input: PersistObservedBenchmarkSa
         const bucketSamples = boundedBucket.sampleJson.map(
           (value) => JSON.parse(value) as ObservedPerformanceSample,
         );
-        const bucketProfile = aggregateObservedPerformanceSamples(bucketSamples, {
+        const bucketProfile = aggregateOperationalPerformanceSamples(bucketSamples, {
           nowMs: sample.timestamp_ms,
         });
         database
@@ -4153,17 +4188,19 @@ export function persistObservedBenchmarkSample(input: PersistObservedBenchmarkSa
             "DELETE FROM observed_profile_snapshots_by_difficulty WHERE endpoint_id=? AND difficulty_bucket=?",
           )
           .run(sample.endpoint_id, difficultyBucket);
-        database
-          .prepare(
-            "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
-          )
-          .run(
-            `${sample.endpoint_id}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
-            sample.endpoint_id,
-            difficultyBucket,
-            bucketProfile.measured_at_ms,
-            JSON.stringify(bucketProfile),
-          );
+        if (bucketProfile) {
+          database
+            .prepare(
+              "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+            )
+            .run(
+              `${sample.endpoint_id}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
+              sample.endpoint_id,
+              difficultyBucket,
+              bucketProfile.measured_at_ms,
+              JSON.stringify(bucketProfile),
+            );
+        }
       }
       const bounded = enforcePerformanceHistoryPolicy(database, {
         endpointId: sample.endpoint_id,
@@ -4174,22 +4211,24 @@ export function persistObservedBenchmarkSample(input: PersistObservedBenchmarkSa
       );
       if (allSamples.length === 0)
         throw new Error("performance history policy rejected every sample");
-      const profile = aggregateObservedPerformanceSamples(allSamples, {
+      const profile = aggregateOperationalPerformanceSamples(allSamples, {
         nowMs: sample.timestamp_ms,
       });
       database
         .prepare("DELETE FROM observed_profile_snapshots WHERE endpoint_id=?")
         .run(sample.endpoint_id);
-      database
-        .prepare(
-          "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
-        )
-        .run(
-          `${sample.endpoint_id}:${profile.measured_at_ms}`,
-          sample.endpoint_id,
-          profile.measured_at_ms,
-          JSON.stringify(profile),
-        );
+      if (profile) {
+        database
+          .prepare(
+            "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
+          )
+          .run(
+            `${sample.endpoint_id}:${profile.measured_at_ms}`,
+            sample.endpoint_id,
+            profile.measured_at_ms,
+            JSON.stringify(profile),
+          );
+      }
       return;
     } catch (error) {
       if (!isSqliteBusyError(error) || attempt >= SQLITE_BUSY_MAX_ATTEMPTS) {
@@ -4392,7 +4431,7 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
           const bucketSamples = boundedBucket.sampleJson.map(
             (value) => JSON.parse(value) as ObservedPerformanceSample,
           );
-          const bucketProfile = aggregateObservedPerformanceSamples(bucketSamples, {
+          const bucketProfile = aggregateOperationalPerformanceSamples(bucketSamples, {
             nowMs: observation.observedPerformance.sample.timestamp_ms,
           });
           database
@@ -4400,17 +4439,19 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
               "DELETE FROM observed_profile_snapshots_by_difficulty WHERE endpoint_id=? AND difficulty_bucket=?",
             )
             .run(observation.endpointId, difficultyBucket);
-          database
-            .prepare(
-              "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
-            )
-            .run(
-              `${observation.endpointId}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
-              observation.endpointId,
-              difficultyBucket,
-              bucketProfile.measured_at_ms,
-              JSON.stringify(bucketProfile),
-            );
+          if (bucketProfile) {
+            database
+              .prepare(
+                "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+              )
+              .run(
+                `${observation.endpointId}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
+                observation.endpointId,
+                difficultyBucket,
+                bucketProfile.measured_at_ms,
+                JSON.stringify(bucketProfile),
+              );
+          }
         }
         enforcePerformanceHistoryPolicy(database, {
           endpointId: observation.endpointId,
@@ -4753,6 +4794,144 @@ export function readObservedPerformanceSamples(
   database.close();
 
   return rows.map((row) => JSON.parse(row.sample_json) as ObservedPerformanceSample);
+}
+
+export function readLatestBenchmarkProfilesByEndpointIds(input: {
+  readonly databasePath: string;
+  readonly endpointIds: readonly string[];
+  readonly difficultyBucket?: string;
+}): Record<string, ObservedPerformanceProfile> {
+  const endpointIds = [...new Set(input.endpointIds)];
+  if (endpointIds.length === 0) {
+    return {};
+  }
+  const database = openSqliteDatabase(input.databasePath);
+  const rows: Array<{ endpoint_id: string; sample_json: string }> = [];
+  for (let offset = 0; offset < endpointIds.length; offset += 200) {
+    const chunk = endpointIds.slice(offset, offset + 200);
+    const placeholders = chunk.map(() => "?").join(", ");
+    const query = input.difficultyBucket
+      ? `SELECT endpoint_id, sample_json FROM observed_performance_samples_by_difficulty WHERE endpoint_id IN (${placeholders}) AND difficulty_bucket = ? AND source_type = 'benchmark' ORDER BY endpoint_id, timestamp_ms ASC, sample_id ASC`
+      : `SELECT endpoint_id, sample_json FROM observed_performance_samples WHERE endpoint_id IN (${placeholders}) AND source_type = 'benchmark' ORDER BY endpoint_id, timestamp_ms ASC, sample_id ASC`;
+    rows.push(
+      ...(database
+        .prepare(query)
+        .all(...chunk, ...(input.difficultyBucket ? [input.difficultyBucket] : [])) as Array<{
+        endpoint_id: string;
+        sample_json: string;
+      }>),
+    );
+  }
+  database.close();
+
+  const samplesByEndpointId = new Map<string, ObservedPerformanceSample[]>();
+  for (const row of rows) {
+    const sample = JSON.parse(row.sample_json) as ObservedPerformanceSample;
+    const samples = samplesByEndpointId.get(row.endpoint_id) ?? [];
+    samples.push(sample);
+    samplesByEndpointId.set(row.endpoint_id, samples);
+  }
+  return Object.fromEntries(
+    [...samplesByEndpointId].map(([endpointId, samples]) => [
+      endpointId,
+      aggregateObservedPerformanceSamples(samples, {
+        nowMs: Math.max(...samples.map((sample) => sample.timestamp_ms)),
+      }),
+    ]),
+  );
+}
+
+export interface LiveTaskTelemetryRollup {
+  readonly successRate: number;
+  readonly successCount: number;
+  readonly failureCount: number;
+  readonly sampleCount: number;
+  readonly minimumSampleCount: number;
+  readonly windowStartMs: number;
+  readonly windowEndMs: number;
+  readonly measuredAtMs: number;
+}
+
+export interface LiveTaskTelemetryScores {
+  readonly taskSuccessRates: Record<string, number>;
+  readonly taskRollups: Record<string, LiveTaskTelemetryRollup>;
+}
+
+export function readLiveTaskTelemetryScoresByEndpointIds(input: {
+  readonly databasePath: string;
+  readonly endpointIds: readonly string[];
+  readonly windowStartMs: number;
+  readonly windowEndMs: number;
+  readonly minimumSampleCount: number;
+}): Record<string, LiveTaskTelemetryScores> {
+  if (input.endpointIds.length === 0) {
+    return {};
+  }
+  if (
+    !Number.isSafeInteger(input.windowStartMs) ||
+    !Number.isSafeInteger(input.windowEndMs) ||
+    input.windowStartMs < 0 ||
+    input.windowEndMs < input.windowStartMs ||
+    input.windowEndMs - input.windowStartMs > 30 * 24 * 60 * 60 * 1_000
+  ) {
+    throw new Error("Live task telemetry requires a valid bounded window of at most 30 days.");
+  }
+  if (!Number.isSafeInteger(input.minimumSampleCount) || input.minimumSampleCount < 1) {
+    throw new Error("Live task telemetry minimumSampleCount must be a positive safe integer.");
+  }
+  const endpointIds = [...new Set(input.endpointIds)];
+  const placeholders = endpointIds.map(() => "?").join(", ");
+  const database = openSqliteDatabase(input.databasePath);
+  const rows = database
+    .prepare(
+      `SELECT
+        endpoint_id,
+        taxonomy_task_type,
+        COUNT(*) AS sample_count,
+        SUM(CASE WHEN error_class IS NULL AND status_code >= 200 AND status_code < 400 THEN 1 ELSE 0 END) AS success_count,
+        MIN(created_at_ms) AS first_observed_at_ms,
+        MAX(created_at_ms) AS last_observed_at_ms
+      FROM runtime_telemetry_records
+      WHERE endpoint_id IN (${placeholders})
+        AND request_class = 'live_request'
+        AND taxonomy_task_type IS NOT NULL
+        AND taxonomy_task_type <> ''
+        AND created_at_ms >= ?
+        AND created_at_ms <= ?
+      GROUP BY endpoint_id, taxonomy_task_type
+      ORDER BY endpoint_id, taxonomy_task_type`,
+    )
+    .all(...endpointIds, input.windowStartMs, input.windowEndMs) as Array<{
+    endpoint_id: string;
+    taxonomy_task_type: string;
+    sample_count: number;
+    success_count: number;
+    first_observed_at_ms: number;
+    last_observed_at_ms: number;
+  }>;
+  database.close();
+
+  const result: Record<string, LiveTaskTelemetryScores> = {};
+  for (const row of rows) {
+    const failureCount = row.sample_count - row.success_count;
+    const successRate = row.sample_count === 0 ? 0 : row.success_count / row.sample_count;
+    if (!Number.isFinite(successRate) || successRate < 0 || successRate > 1 || failureCount < 0) {
+      throw new Error("Live task telemetry produced an invalid success rollup.");
+    }
+    const entry = (result[row.endpoint_id] ??= { taskSuccessRates: {}, taskRollups: {} });
+    entry.taskSuccessRates[row.taxonomy_task_type] = successRate;
+    entry.taskRollups[row.taxonomy_task_type] = {
+      successRate,
+      successCount: row.success_count,
+      failureCount,
+      sampleCount: row.sample_count,
+      minimumSampleCount: input.minimumSampleCount,
+      windowStartMs: input.windowStartMs,
+      windowEndMs: input.windowEndMs,
+      measuredAtMs: row.last_observed_at_ms,
+    };
+  }
+  return result;
 }
 
 export function readLatestObservedProfile(

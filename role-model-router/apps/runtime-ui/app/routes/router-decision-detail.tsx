@@ -9,6 +9,7 @@ import {
   LoadingState,
   SectionCard,
 } from "../components/page-primitives";
+import { projectBenchmarkDecisionView } from "../lib/benchmark-decision-evidence";
 import {
   bodyStrongTextClassName,
   cardClassName,
@@ -63,24 +64,8 @@ export default function RouterDecisionDetailRoute() {
     return <LoadingState label="Loading routing decision detail…" />;
   }
 
-  const endpointProfile =
-    typeof detail.endpointProfile === "object" && detail.endpointProfile !== null
-      ? (detail.endpointProfile as unknown as Record<string, unknown>)
-      : null;
-  const latestProfile =
-    typeof endpointProfile?.latestProfile === "object" && endpointProfile.latestProfile !== null
-      ? (endpointProfile.latestProfile as Record<string, unknown>)
-      : null;
-  const profileSources =
-    typeof latestProfile?.sources === "object" && latestProfile.sources !== null
-      ? (latestProfile.sources as Record<string, unknown>)
-      : null;
-  const benchmarkSamples =
-    typeof profileSources?.benchmark_samples === "number" ? profileSources.benchmark_samples : 0;
-  const judgeScore =
-    typeof latestProfile?.judge_score === "number" ? latestProfile.judge_score : null;
-  const measuredAtMs =
-    typeof latestProfile?.measured_at_ms === "number" ? latestProfile.measured_at_ms : null;
+  const benchmarkDecision = projectBenchmarkDecisionView(detail);
+  const telemetryEvidence = detail.telemetryEvidence ?? null;
   const observePath = detail?.observeRequestPath ?? `/app/observe/requests/${requestId}`;
 
   return (
@@ -156,26 +141,34 @@ export default function RouterDecisionDetailRoute() {
 
             <div className={`${mutedPanelClassName} p-4 text-[var(--rm-secondary)]`}>
               <p className={foregroundEmphasisClassName}>Benchmark provenance</p>
-              {judgeScore !== null && benchmarkSamples > 0 ? (
+              {benchmarkDecision ? (
                 <>
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     <div>
-                      <p className={fieldLabelClassName}>Judge score</p>
+                      <p className={fieldLabelClassName}>Decision quality</p>
                       <p className={`mt-2 ${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
-                        {Math.round(judgeScore * 100)}%
+                        {benchmarkDecision.scorePercent}%
                       </p>
                     </div>
                     <div>
-                      <p className={fieldLabelClassName}>Benchmark samples</p>
+                      <p className={fieldLabelClassName}>Benchmark overall</p>
                       <p className={`mt-2 ${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
-                        {benchmarkSamples}
+                        {benchmarkDecision.overallPercent}%
                       </p>
                     </div>
                   </div>
                   <div className="mt-4 border-t border-[var(--rm-border)] pt-4">
-                    <p className={fieldLabelClassName}>Profile measured</p>
+                    <p className={fieldLabelClassName}>Decision-time run</p>
                     <p className={`mt-2 ${supportingTextClassName}`}>
-                      {measuredAtMs !== null ? new Date(measuredAtMs).toLocaleString() : "n/a"}
+                      {benchmarkDecision.runId ?? "profile-derived evidence"}
+                      {benchmarkDecision.runMode ? ` · ${benchmarkDecision.runMode}` : ""}
+                      {` · ${benchmarkDecision.evidenceSource}`}
+                      {benchmarkDecision.reason ? ` · ${benchmarkDecision.reason}` : ""}
+                    </p>
+                    <p className={`mt-2 ${supportingTextClassName}`}>
+                      {benchmarkDecision.measuredAtMs !== null
+                        ? new Date(benchmarkDecision.measuredAtMs).toLocaleString()
+                        : "No run timestamp recorded"}
                     </p>
                   </div>
                   <div className="mt-4">
@@ -186,12 +179,62 @@ export default function RouterDecisionDetailRoute() {
                 </>
               ) : (
                 <p className={`mt-3 ${supportingTextClassName}`}>
-                  No benchmark-backed judge score was recorded for this endpoint profile.
+                  No benchmark evidence was recorded in this routing decision.
                 </p>
               )}
             </div>
           </div>
         </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Live telemetry evidence at decision"
+        description="This immutable decision-time projection is separate from benchmark evidence and from the endpoint's current operational profile."
+      >
+        {telemetryEvidence ? (
+          <div className="grid gap-4 xl:grid-cols-2">
+            <div className={`${mutedPanelClassName} p-4`}>
+              <p className={foregroundEmphasisClassName}>Operational profile snapshot</p>
+              <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+                {[
+                  ["Samples", telemetryEvidence.operationalProfile?.sampleCount],
+                  ["Live p50", telemetryEvidence.operationalProfile?.latencyP50Ms],
+                  ["Live p95", telemetryEvidence.operationalProfile?.latencyP95Ms],
+                  ["Failure rate", telemetryEvidence.operationalProfile?.failureRate],
+                ].map(([label, value]) => (
+                  <div key={label as string}>
+                    <dt className={fieldLabelClassName}>{label}</dt>
+                    <dd className={`mt-1 ${bodyStrongTextClassName}`}>
+                      {value === null || value === undefined ? "Not available" : String(value)}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+            <div className={`${mutedPanelClassName} p-4`}>
+              <p className={foregroundEmphasisClassName}>Task telemetry advisory</p>
+              <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+                {[
+                  ["Available", telemetryEvidence.taskTelemetry.available],
+                  ["Eligible", telemetryEvidence.taskTelemetry.eligible],
+                  ["Applied", telemetryEvidence.taskTelemetry.applied],
+                  ["Samples", telemetryEvidence.taskTelemetry.sampleCount],
+                  ["Success rate", telemetryEvidence.taskTelemetry.successRate],
+                  ["Withheld reason", telemetryEvidence.taskTelemetry.withheldReason],
+                ].map(([label, value]) => (
+                  <div key={label as string}>
+                    <dt className={fieldLabelClassName}>{label}</dt>
+                    <dd className={`mt-1 ${bodyStrongTextClassName}`}>
+                      {value === null || value === undefined ? "Not available" : String(value)}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </div>
+        ) : (
+          <EmptyState label="No live telemetry evidence was persisted for this decision." />
+        )}
       </SectionCard>
 
       <SectionCard
@@ -245,8 +288,8 @@ export default function RouterDecisionDetailRoute() {
           <CodeBlock>{JSON.stringify(detail.request, null, 2)}</CodeBlock>
         </SectionCard>
         <SectionCard
-          title="Endpoint profile"
-          description="Measured candidate posture remains linked so metric provenance stays visible at decision time."
+          title="Current operational profile"
+          description="Current live-request posture is shown separately and may have changed since the immutable decision-time evidence above."
         >
           <CodeBlock>{JSON.stringify(detail.endpointProfile ?? {}, null, 2)}</CodeBlock>
         </SectionCard>

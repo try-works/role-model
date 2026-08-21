@@ -13,6 +13,7 @@ import {
   secondaryButtonClassName,
   supportingTextClassName,
 } from "../lib/design-system";
+import { formatScore, formatScoreWithCoverage } from "../lib/format-score";
 import { ModelRoleBindingTree } from "../lib/role-task-hierarchy";
 import {
   type ModelTelemetryRollup,
@@ -220,7 +221,7 @@ export function buildConfiguredModelInventoryPills(input: {
     ...(typeof input.capabilityScore === "number"
       ? [
           {
-            label: `score ${input.capabilityScore.toFixed(2)}`,
+            label: `score ${formatScore(input.capabilityScore)}`,
             tone: "advisory" as const,
           },
         ]
@@ -444,6 +445,46 @@ export function resolveDefaultSelectedModelId(
   );
 }
 
+export function resolveSelectedBenchmarkCandidate(
+  candidates: readonly RouterCandidate[],
+  selected: { readonly modelId: string; readonly endpointId?: string } | null,
+): RouterCandidate | null {
+  if (!selected) {
+    return null;
+  }
+  if (selected.endpointId) {
+    return candidates.find((candidate) => candidate.endpointId === selected.endpointId) ?? null;
+  }
+  const sameModel = candidates.filter((candidate) => candidate.modelId === selected.modelId);
+  return sameModel.length === 1 ? (sameModel[0] ?? null) : null;
+}
+
+export function readSelectedOperationalPerformance(candidate: RouterCandidate | null): {
+  readonly p50: number | null;
+  readonly p95: number | null;
+  readonly failureRate: number | null;
+  readonly sampleCount: number | null;
+} {
+  const profile =
+    typeof candidate?.operationalProfile === "object" && candidate.operationalProfile !== null
+      ? candidate.operationalProfile
+      : typeof candidate?.latestProfile === "object" && candidate.latestProfile !== null
+        ? candidate.latestProfile
+        : null;
+  const p50 = profile?.latency_ms_p50 ?? profile?.latencyMsP50;
+  const p95 = profile?.latency_ms_p95 ?? profile?.latencyMsP95;
+  const failureRate = profile?.failure_rate ?? profile?.failureRate;
+  const sampleCount = profile?.sample_size ?? profile?.sampleSize;
+  return {
+    p50: typeof p50 === "number" && Number.isFinite(p50) ? p50 : null,
+    p95: typeof p95 === "number" && Number.isFinite(p95) ? p95 : null,
+    failureRate:
+      typeof failureRate === "number" && Number.isFinite(failureRate) ? failureRate : null,
+    sampleCount:
+      typeof sampleCount === "number" && Number.isFinite(sampleCount) ? sampleCount : null,
+  };
+}
+
 function configuredModelCardKey(card: ConfiguredModelCardLike): string {
   return card.identityKey ?? card.modelId;
 }
@@ -640,14 +681,15 @@ export default function ControlModelsRoute() {
   }, [cards, selectedModelId]);
 
   useEffect(() => {
-    if (selectedCard) {
-      void fetchModelTelemetryRollup(selectedCard.modelId).then(setTelemetryRollup, () =>
-        setTelemetryRollup(null),
-      );
+    if (selectedCard?.endpointId) {
+      void fetchModelTelemetryRollup({
+        modelId: selectedCard.modelId,
+        endpointId: selectedCard.endpointId,
+      }).then(setTelemetryRollup, () => setTelemetryRollup(null));
     } else {
       setTelemetryRollup(null);
     }
-  }, [selectedCard]);
+  }, [selectedCard?.endpointId, selectedCard?.modelId]);
   const selectedEndpoints =
     snapshot && selectedCard
       ? selectedCard.endpointId
@@ -850,29 +892,8 @@ export default function ControlModelsRoute() {
     return <LoadingState label="Loading configured model cards…" />;
   }
 
-  const capabilityByModelId = new Map<string, number>();
-  const benchmarkCapabilityByModelId = new Map<
-    string,
-    NonNullable<RouterCandidate["benchmarkCapability"]>
-  >();
-  for (const candidate of candidates) {
-    const benchmarkCapability = candidate.benchmarkCapability;
-    const score = benchmarkCapability?.overallScore;
-    if (typeof score !== "number") {
-      continue;
-    }
-    const current = capabilityByModelId.get(candidate.modelId);
-    if (current === undefined || score > current) {
-      capabilityByModelId.set(candidate.modelId, score);
-      if (benchmarkCapability) {
-        benchmarkCapabilityByModelId.set(candidate.modelId, benchmarkCapability);
-      }
-    }
-  }
-
-  const selectedBenchmarkCapability = selectedCard
-    ? (benchmarkCapabilityByModelId.get(selectedCard.modelId) ?? null)
-    : null;
+  const selectedBenchmarkCandidate = resolveSelectedBenchmarkCandidate(candidates, selectedCard);
+  const selectedBenchmarkCapability = selectedBenchmarkCandidate?.benchmarkCapability ?? null;
   const benchmarkAssignedRoleRows = (rolePolicy?.roleDefinitions ?? [])
     .filter(
       (role) =>
@@ -908,9 +929,7 @@ export default function ControlModelsRoute() {
       ),
     }))
     .sort((left, right) => right.score - left.score);
-  const selectedCapabilityScore = selectedCard
-    ? (capabilityByModelId.get(selectedCard.modelId) ?? null)
-    : null;
+  const selectedCapabilityScore = selectedBenchmarkCapability?.overallScore ?? null;
   const selectedPrimaryAccount = resolveSelectedModelAccount(
     selectedModelAccounts,
     selectedEndpoints,
@@ -976,41 +995,15 @@ export default function ControlModelsRoute() {
     }
     return samples.reduce((sum, value) => sum + value, 0) / samples.length;
   })();
-  const selectedCandidateProfiles = selectedCard
-    ? candidates.filter((candidate) => candidate.modelId === selectedCard.modelId)
-    : [];
-  const selectedLatencyProfile = (() => {
-    for (const candidate of selectedCandidateProfiles) {
-      const profile =
-        typeof candidate.latestProfile === "object" && candidate.latestProfile !== null
-          ? (candidate.latestProfile as Record<string, unknown>)
-          : null;
-      const p50 = profile?.latency_ms_p50 ?? profile?.latencyMsP50;
-      const p95 = profile?.latency_ms_p95 ?? profile?.latencyMsP95;
-      if (
-        (typeof p50 === "number" && Number.isFinite(p50)) ||
-        (typeof p95 === "number" && Number.isFinite(p95))
-      ) {
-        return {
-          p50: typeof p50 === "number" && Number.isFinite(p50) ? p50 : null,
-          p95: typeof p95 === "number" && Number.isFinite(p95) ? p95 : null,
-        };
-      }
-    }
-    return { p50: null as number | null, p95: null as number | null };
-  })();
+  const selectedLatencyProfile = readSelectedOperationalPerformance(selectedBenchmarkCandidate);
   const selectedDifficultyMix = (() => {
-    for (const candidate of selectedCandidateProfiles) {
-      const buckets = candidate.benchmarkCapability?.scoresByBucket;
-      if (!buckets) {
-        continue;
-      }
-      const easy = buckets.easy?.score;
-      const medium = buckets.medium?.score;
-      const hard = buckets.hard?.score;
-      if (typeof easy === "number" && typeof medium === "number" && typeof hard === "number") {
-        return `${Math.round(easy * 100)} / ${Math.round(medium * 100)} / ${Math.round(hard * 100)}`;
-      }
+    const buckets = selectedBenchmarkCapability?.scoresByBucket;
+    if (buckets) {
+      return [
+        `E ${formatScoreWithCoverage(buckets.easy?.score, buckets.easy?.cases)}`,
+        `M ${formatScoreWithCoverage(buckets.medium?.score, buckets.medium?.cases)}`,
+        `H ${formatScoreWithCoverage(buckets.hard?.score, buckets.hard?.cases)}`,
+      ].join(" · ");
     }
     return null;
   })();
@@ -1032,6 +1025,8 @@ export default function ControlModelsRoute() {
         latencyP50Ms: selectedLatencyProfile.p50,
         latencyP95Ms: selectedLatencyProfile.p95,
         meanLatencyMs: selectedMeanLatencyMs,
+        liveFailureRate: selectedLatencyProfile.failureRate,
+        liveSampleCount: selectedLatencyProfile.sampleCount,
         difficultyMix: selectedDifficultyMix,
         routingHint: telemetryRollup?.strengths[0] ?? selectedModelEvidencePills[0]?.label ?? null,
       })
@@ -1079,7 +1074,9 @@ export default function ControlModelsRoute() {
                     {cards.map((card) => {
                       const cardKey = configuredModelCardKey(card);
                       const selected = selectedModelId === cardKey;
-                      const capabilityScore = capabilityByModelId.get(card.modelId);
+                      const capabilityScore =
+                        resolveSelectedBenchmarkCandidate(candidates, card)?.benchmarkCapability
+                          ?.overallScore ?? null;
                       const inventoryPills = buildConfiguredModelInventoryPills({
                         toolCallingSupported: card.toolCallingSupported,
                         endpointCount: card.endpointCount,
