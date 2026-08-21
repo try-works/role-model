@@ -476,6 +476,34 @@ function readStreamTerminalBody(transcript: string): unknown {
   return payloads.at(-1);
 }
 
+function resolveConfiguredLiteLLMModelName(
+  providers: readonly LiteLLMProviderConfig[],
+  requestedModel: unknown,
+): unknown {
+  if (typeof requestedModel !== "string") {
+    return requestedModel;
+  }
+  const mappings = providers.flatMap((provider) =>
+    provider.modelMappings.map((mapping) => ({
+      modelId: mapping.modelId,
+      upstreamAlias: mapping.modelId.startsWith(`${provider.providerId}/`)
+        ? mapping.modelId.slice(provider.providerId.length + 1)
+        : undefined,
+    })),
+  );
+  if (mappings.some((mapping) => mapping.modelId === requestedModel)) {
+    return requestedModel;
+  }
+  const candidates = [
+    ...new Set(
+      mappings
+        .filter((mapping) => mapping.upstreamAlias === requestedModel)
+        .map((mapping) => mapping.modelId),
+    ),
+  ];
+  return candidates.length === 1 ? candidates[0] : requestedModel;
+}
+
 export async function startLiteLLMVendor(
   options: StartLiteLLMVendorOptions,
 ): Promise<VendorRuntime> {
@@ -544,12 +572,17 @@ export async function startLiteLLMVendor(
     const requestPath = originalUrl.pathname.startsWith("/v1/")
       ? originalUrl.pathname.slice("/v1".length)
       : originalUrl.pathname;
+    const proxiedModel = resolveConfiguredLiteLLMModelName(
+      options.config.providers,
+      request.body.model,
+    );
     const response = await fetch(`${baseUrl}${requestPath}`, {
       method: "POST",
       headers: request.headers,
       signal: executionOptions?.abortSignal,
       body: JSON.stringify({
         ...request.body,
+        ...(typeof proxiedModel === "string" ? { model: proxiedModel } : {}),
         ...(executionOptions?.fallbackModelIds?.length
           ? { fallbacks: executionOptions.fallbackModelIds }
           : {}),
