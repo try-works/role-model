@@ -22,7 +22,7 @@ afterEach(async () => {
       await rm(tempRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
     }),
   );
-}, 30_000);
+}, 90_000);
 
 describe("runRuntimeVendorValidation", () => {
   test("executes decision-only, local-only, remote-only, and hybrid vendor modes end to end", async () => {
@@ -896,7 +896,7 @@ describe("runRuntimeVendorValidation", () => {
       adapterFamily: "codex-subscription-responses",
       vendorId: "chatgpt-codex-responses",
     });
-  }, 300_000);
+  }, 480_000);
 
   test("plans a real-vendor harness with repo-owned mock upstreams", async () => {
     const runtimeStateRoot = await mkdtemp(

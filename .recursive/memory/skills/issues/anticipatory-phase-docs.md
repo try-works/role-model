@@ -1,6 +1,6 @@
 # Anticipatory phase docs are invalid (issues)
 
-Type: issues
+Type: incident
 Status: CURRENT
 Scope: recursive-mode phase authoring discipline
 Owns-Paths:

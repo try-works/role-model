@@ -1,0 +1,8 @@
+# GREEN — Sub-phase A1 (lifecycle module)
+
+Command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/runtime-endpoint-lifecycle.test.ts
+Result: PASS (10 passed, 1 file)
+Date: 2026-08-22T01:08:19Z
+Files:
+  - src/runtime-endpoint-lifecycle.ts (NEW)
+  - test/runtime-endpoint-lifecycle.test.ts (NEW)

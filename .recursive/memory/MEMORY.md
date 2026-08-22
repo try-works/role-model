@@ -28,37 +28,8 @@ Control-plane docs are not memory docs:
 
 ## Registry
 
-<!-- RECURSIVE-TRAINING-REGISTRY:START -->
-## Training Extraction Registry
-
-- `domains/-recursive.md` — .recursive (Source-Runs: 79-extension-control-and-recommendations-qa, 80-signed-recommendation-cloud-lifecycle)
-- `domains/direct-track-b.md` — Direct Track B domain memory (Source-Runs: 00-direct-track-b-v1-1-implementation; 79-extension-control-and-recommendations-qa; 80-signed-recommendation-cloud-lifecycle; 81-kw-activation-browser-recommendation-evidence)
-- `domains/role-model-router.md` — role-model-router (Source-Runs: 81-kw-activation-browser-recommendation-evidence, 79-extension-control-and-recommendations-qa)
-- `training/closeout-workflow.md` — Training Memory: closeout-workflow (Source-Runs: 79-extension-control-and-recommendations-qa, 80-signed-recommendation-cloud-lifecycle)
-- `training/code-review.md` — Training Memory: code-review (Source-Runs: 79-extension-control-and-recommendations-qa, 80-signed-recommendation-cloud-lifecycle)
-- `training/extension-policy.md` — Training Memory: extension-policy (Source-Runs: 81-kw-activation-browser-recommendation-evidence, 79-extension-control-and-recommendations-qa)
-- `training/frontend-implementation.md` — Training Memory: frontend-implementation (Source-Runs: 81-kw-activation-browser-recommendation-evidence, 79-extension-control-and-recommendations-qa)
-- `training/packaging-verification.md` — Training Memory: packaging-verification (Source-Runs: 81-kw-activation-browser-recommendation-evidence, 79-extension-control-and-recommendations-qa)
-- `training/phase-authoring.md` — Training Memory: phase-authoring (Source-Runs: 79-extension-control-and-recommendations-qa, 80-signed-recommendation-cloud-lifecycle)
-- `training/qa-verification.md` — Training Memory: qa-verification (Source-Runs: 81-kw-activation-browser-recommendation-evidence, 79-extension-control-and-recommendations-qa)
-- `training/requirements-scoping.md` — Training Memory: requirements-scoping (Source-Runs: 81-kw-activation-browser-recommendation-evidence, 79-extension-control-and-recommendations-qa)
-- `training/test-validation.md` — Training Memory: test-validation (Source-Runs: 79-extension-control-and-recommendations-qa, 80-signed-recommendation-cloud-lifecycle)
-<!-- RECURSIVE-TRAINING-REGISTRY:END -->
-
-- `domains/codex-role-model-package.md` — Codex adapter package `@try-works/codex-role-model` (Source-Runs: `89-codex-role-model-package`); public npm `0.1.1`, Responses adapter, tool bridge, marketplace
-- `domains/direct-track-b.md` — Direct Track B v1.1 surfaces through run-85 gated live-router prompt inject + host join/auto-arm + post-lock live `pi` inject remediations (Source-Runs: `00-direct-track-b-v1-1-implementation`, `79-extension-control-and-recommendations-qa`, `80-signed-recommendation-cloud-lifecycle`, `81-kw-activation-browser-recommendation-evidence`, `82-tb00-pin-refreeze-kw-digest-bind-launch-scope`, `83-kw-operator-toggle-assemble-live-e2e-argv-equals`, `84-kw-ui-toggle-gated-retrieve-eval`, `85-kw-gated-router-prompt-inject`)
-- `domains/role-model-router.md` — role-model-router (Source-Runs: 79-extension-control-and-recommendations-qa, 81-kw-activation-browser-recommendation-evidence, 86-runtime-ui-rm3-design-system-frontend, 92-configured-model-pool-benchmark-convergence); RM3 `@role-model/ui` + `DESIGN_SYSTEM.md` live styling authority for runtime-ui (run 86); endpoint-variant membership revision + honest null candidate-space + benchmark quarantine + controller eject (run 92)
-- `domains/benchmark-scoring-and-grading-contracts.md` — benchmark suite contract truth (Source-Runs: 36, 52, 68, 69, 92); honest no-synthetic-zero + membership-revision/stale quarantine (run 92)
-- `domains/pi-role-model-package.md` — Pi consumer package (parity source for Codex adapter discovery/intent patterns; run 89 sibling)
-- `episodes/00-direct-track-b-v1-1-implementation.md` — closeout episode for `00-direct-track-b-v1-1-implementation`
-- `skills/usage/review-bundle-citation-requirements.md` — Phase 3.5 review-bundle citation expectations (Source-Runs: `79-extension-control-and-recommendations-qa`, `80-signed-recommendation-cloud-lifecycle`)
-- `skills/issues/anticipatory-phase-docs.md` — Do not author Phase 3–8 docs before that phase’s real work; do not invent assemble PASS or SEA inject unlock without sha-bound hop (Source-Runs: `80`–`85`)
-- `skills/issues/launch-packaged-runtime-argv-equals.md` — Equals-form and discrete argv both bind; non-run80 scopes require `--evidence-root` (Source-Runs: `82`, `83`)
-- `skills/issues/worktree-must-be-in-parent.md` — Private feature worktrees must live under parent `.worktrees/` (Source-Runs: `84`)
-- `skills/issues/sea-inject-host-join-and-seed-scope.md` — SEA inject unlock needs host join/auto-arm + matching seed scope/verification key + live query/bridge/join alignment (Source-Runs: `85`)
-- `skills/issues/kw-inject-live-host-wiring.md` — Live KW inject needs default query + bridge path + revision join + host-owned session (Source-Runs: `85`)
-- `skills/issues/rm3-pill-no-amber.md` — RM3 warning pill ink must not use amber; charts keep amber semantics (Source-Runs: `86`)
-- `skills/issues/codex-adapter-protocol-only-no-narration-detectors.md` — Codex adapter must stay protocol-only; no narration phrase-matchers / anti-narration coaching (Source-Runs: `89`)
+- `domains/remote-effort-instance-identity.md` - effort-variant identity,
+  admission, eligibility, telemetry and packaged Track B boundary (Run 93).
 
 - `domains/` - stable functional-area knowledge with `Owns-Paths`
 - `patterns/` - reusable playbooks and solution patterns

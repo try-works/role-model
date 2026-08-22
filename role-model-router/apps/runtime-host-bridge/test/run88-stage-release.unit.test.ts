@@ -24,7 +24,7 @@ afterEach(async () =>
 );
 
 describe("Run 88 stage release boundary", () => {
-  it("requires the private distribution and release identity for stage and production packaging", () => {
+  it("requires the private distribution for every runnable packaging channel", () => {
     const trackB = { manifestSha256: "a".repeat(64) };
     for (const channel of ["stage", "production"] as const) {
       expect(
@@ -53,9 +53,16 @@ describe("Run 88 stage release boundary", () => {
       validatePairedReleasePackagingInputs({
         channel: "development",
         releaseId: undefined,
+        trackBRuntime: trackB,
+      }),
+    ).toEqual({ releaseId: undefined, trackBRuntime: trackB });
+    expect(() =>
+      validatePairedReleasePackagingInputs({
+        channel: "development",
+        releaseId: undefined,
         trackBRuntime: null,
       }),
-    ).toEqual({ releaseId: undefined, trackBRuntime: null });
+    ).toThrow(/private distribution/i);
   });
   it("public runtime probes are criterion-specific at every required layer", () => {
     const expected = [

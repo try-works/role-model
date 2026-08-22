@@ -600,6 +600,16 @@ function buildEndpointCircuitPresentation(
   }
 }
 
+/**
+ * Managed adapter inventory is useful in the runtime registry, but it is not
+ * an account the user can configure. Keep it out of provider-connection UI.
+ */
+export function isManagedRemoteAdapterEndpoint(
+  endpoint: Pick<RuntimeEndpoint, "servingSource">,
+): boolean {
+  return endpoint.servingSource === "vendor-litellm";
+}
+
 export function buildConfiguredRemoteConnectionRows(input: {
   readonly accounts: readonly RuntimeAccount[];
   readonly endpoints: readonly RuntimeEndpoint[];
@@ -650,6 +660,7 @@ export function buildConfiguredRemoteConnectionRows(input: {
   const remoteEndpoints = input.endpoints.filter(
     (endpoint) =>
       endpoint.sourceType === "remote" &&
+      !isManagedRemoteAdapterEndpoint(endpoint) &&
       typeof endpoint.providerAccountId === "string" &&
       endpoint.providerAccountId.length > 0 &&
       endpoint.status !== "inactive",

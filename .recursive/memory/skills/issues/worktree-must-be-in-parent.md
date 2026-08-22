@@ -1,6 +1,6 @@
 # Private feature worktrees must stay in-parent
 
-Type: skill-issue
+Type: incident
 Status: CURRENT
 Scope: recursive-mode Phase 0 worktree placement for `role-model-internal`
 Owns-Paths:

@@ -666,12 +666,15 @@ export function validateRun88ProviderResponseObservation(
 export async function stageTrackBRuntimeDistribution(options: {
   readonly sourceRoot: string;
   readonly releaseDir: string;
+  /** Exact public Git tree from which an N-generation private distribution was built. */
+  readonly expectedPublicSourceTree?: string;
 }) {
   const manifestPath = path.join(options.sourceRoot, "track-b-runtime-manifest.json");
   const manifestBytes = await readFile(manifestPath);
   const manifestSha256 = createHash("sha256").update(manifestBytes).digest("hex");
   const manifest = JSON.parse(manifestBytes.toString("utf8")) as {
     readonly schemaVersion: string;
+    readonly publicSourceTree?: string;
     readonly sidecar: { readonly modulePath: string; readonly artifactSha256: string };
     readonly publicRuntimeAdapter?: {
       readonly modulePath: string;
@@ -696,6 +699,16 @@ export async function stageTrackBRuntimeDistribution(options: {
         : null;
   if (!compatibilityGeneration || manifest.extensions.length !== 13) {
     throw new Error("Track B runtime distribution manifest is unsupported or incomplete");
+  }
+  if (options.expectedPublicSourceTree) {
+    if (
+      !/^[0-9a-f]{40}$/.test(options.expectedPublicSourceTree) ||
+      manifest.publicSourceTree !== options.expectedPublicSourceTree
+    ) {
+      throw new Error(
+        "Track B runtime distribution public source tree does not match this package",
+      );
+    }
   }
   if (
     manifest.publicRuntimeAdapter &&
@@ -749,6 +762,7 @@ export async function stageTrackBRuntimeDistribution(options: {
     sidecarSha256: manifest.sidecar.artifactSha256,
     extensionCount: manifest.extensions.length,
     compatibilityGeneration,
+    publicSourceTree: manifest.publicSourceTree ?? null,
     manifestSha256,
   };
 }

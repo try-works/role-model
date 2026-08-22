@@ -1,0 +1,94 @@
+{
+  "schemaVersion": "run93.phase5.paired-runtime-effort-matrix.v1",
+  "execution": {
+    "endpoint": "http://127.0.0.1:59853",
+    "executableSha256": "4482efca3bda770036978bffa9bdf9c7d1312a91a1aed5aefbdfb5c48cbb5739",
+    "trackBManifestSha256": "d6b3feea1da8c34ca8a2f9045e6d929eeba16795bd9d9cbb1702c647d6cc0c33",
+    "trackBExtensionCount": 13,
+    "isolatedStateRoot": "D:/DEV/tmp/run93-phase5-ui-consistency-alias-active-state-20260822"
+  },
+  "piCli": {
+    "version": "0.84.2",
+    "mode": "no-tools,no-session,no-context-files",
+    "requestBodyRetained": false,
+    "credentialMaterialRetained": false
+  },
+  "requests": [
+    {
+      "requestId": "req-a6538f29-828f-4d8c-82d7-aa6403b103d3",
+      "routingDecisionId": "decision-req-a6538f29-828f-4d8c-82d7-aa6403b103d3",
+      "requestedModelId": "baseline.remote-only",
+      "selectedEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-low",
+      "selectedModelId": "deepseek/deepseek-v4-flash",
+      "reasoningEffort": "low",
+      "effortSource": "variant",
+      "statusCode": 200
+    },
+    {
+      "requestId": "req-f13c8109-4546-4cd2-b3f0-964ed3c89cb0",
+      "routingDecisionId": "decision-req-f13c8109-4546-4cd2-b3f0-964ed3c89cb0",
+      "requestedModelId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-high",
+      "selectedEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-high",
+      "selectedModelId": "deepseek/deepseek-v4-flash",
+      "reasoningEffort": "high",
+      "effortSource": "variant",
+      "statusCode": 200
+    },
+    {
+      "requestId": "req-d87cc78c-6e83-4bd9-88ac-59756f523731",
+      "routingDecisionId": "decision-req-d87cc78c-6e83-4bd9-88ac-59756f523731",
+      "requestedModelId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-max",
+      "selectedEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-max",
+      "selectedModelId": "deepseek/deepseek-v4-flash",
+      "reasoningEffort": "max",
+      "effortSource": "variant",
+      "statusCode": 200
+    },
+    {
+      "requestId": "req-3be65849-1410-4bfb-98a0-8812d844e638",
+      "routingDecisionId": "decision-req-3be65849-1410-4bfb-98a0-8812d844e638",
+      "requestedModelId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "selectedEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "selectedModelId": "deepseek/deepseek-v4-pro",
+      "reasoningEffort": null,
+      "effortSource": "none",
+      "statusCode": 200
+    }
+  ],
+  "browser": {
+    "overview": "passed",
+    "providers": "passed",
+    "managedLiteLlmAdapterHiddenFromConfig": true,
+    "routingEligibleDirectCandidates": 4
+  },
+  "trackB": {
+    "registry": "13 enabled and ready extensions",
+    "requestPipelineMode": "shadow",
+    "productionMutation": false,
+    "currentHighMaxAndDefaultReceipts": [
+      {
+        "requestId": "req-f13c8109-4546-4cd2-b3f0-964ed3c89cb0",
+        "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-high",
+        "reasoningEffort": "high",
+        "consumerCount": 3
+      },
+      {
+        "requestId": "req-d87cc78c-6e83-4bd9-88ac-59756f523731",
+        "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-max",
+        "reasoningEffort": "max",
+        "consumerCount": 3
+      },
+      {
+        "requestId": "req-3be65849-1410-4bfb-98a0-8812d844e638",
+        "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "reasoningEffort": null,
+        "consumerCount": 3
+      }
+    ]
+  },
+  "cloudBoundary": {
+    "mode": "read-only",
+    "verified": ["five stage Workers", "D1", "two R2 buckets", "two active queues plus dead-letter queue"],
+    "developmentRequestCloudMutation": false
+  }
+}

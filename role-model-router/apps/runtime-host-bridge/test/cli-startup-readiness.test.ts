@@ -6,8 +6,26 @@ import { describe, expect, test } from "vitest";
 
 import * as cli from "../src/cli.js";
 import * as bridge from "../src/index.js";
+import { resolveRuntimeChannelProfile } from "../src/runtime-channel.js";
 
 describe("cli startup readiness", () => {
+  test("rejects every packaged runtime channel when its Track B manifest is absent", () => {
+    expect(typeof cli.requirePackagedTrackBManifest).toBe("function");
+
+    for (const channel of ["development", "stage", "production"] as const) {
+      expect(() =>
+        cli.requirePackagedTrackBManifest(resolveRuntimeChannelProfile(channel), null),
+      ).toThrow(/Track B distribution/i);
+    }
+
+    expect(() =>
+      cli.requirePackagedTrackBManifest(
+        resolveRuntimeChannelProfile("development"),
+        '{"schemaVersion":"role-model.track-b-runtime-distribution.v2"}',
+      ),
+    ).not.toThrow();
+  });
+
   test("binds health and static UI before backend initialization completes", async () => {
     const staticRoot = await mkdtemp(path.join(os.tmpdir(), "runtime-ui-static-"));
     const bootstrapState = {

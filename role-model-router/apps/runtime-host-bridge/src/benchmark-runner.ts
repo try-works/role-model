@@ -79,6 +79,7 @@ import {
   readCompareGradingText,
   readJudgeGradingText,
 } from "./benchmark-reasoning.js";
+import { isHealthyEndpointState } from "./health-policy.js";
 
 export { resetBenchmarkJudgeRuntimeForTests };
 
@@ -327,8 +328,13 @@ export interface BenchmarkRunnerDependencies {
   readonly membershipRevision?: () => string;
 }
 
-function isHealthyEndpoint(healthStatus: string): boolean {
-  return healthStatus !== "policy-blocked" && healthStatus !== "offline";
+export function isHealthyEndpoint(healthStatus: string): boolean {
+  return isHealthyEndpointState(
+    // healthStatus is already the candidate health state string emitted by the
+    // authoritative policy; a non-`healthy` state (degraded, provider-unavailable,
+    // offline, policy-blocked, unknown) is never benchmark-eligible.
+    healthStatus as Parameters<typeof isHealthyEndpointState>[0],
+  );
 }
 
 const BENCHMARK_CODEX_ENDPOINT_ID_MARKERS = [

@@ -56,6 +56,8 @@ import {
   submitSdApiTxt2Img,
   submitSpeechGeneration,
   submitWorkbenchChat,
+  subscribeRevisionStream,
+  subscribeRuntimeRefreshStream,
   subscribeTelemetryStream,
   updateControllerAssignment,
   updateRolePolicyRole,
@@ -1811,6 +1813,76 @@ describe("telemetry APIs", () => {
           sourceType: "remote",
         }),
       }),
+    );
+
+    dispose();
+    expect(close).toHaveBeenCalledTimes(1);
+  });
+
+  test("subscribes to canonical revision SSE updates and closes the source on cleanup", () => {
+    let listener: (event: MessageEvent<string>) => void = () => {
+      throw new Error("revision listener was not registered");
+    };
+    const close = vi.fn();
+    const factory = vi.fn(() => ({
+      addEventListener(type: string, handler: (event: MessageEvent<string>) => void) {
+        expect(type).toBe("revision.update");
+        listener = handler;
+      },
+      close,
+    }));
+    const onRevision = vi.fn();
+
+    const dispose = subscribeRevisionStream(onRevision, factory);
+
+    listener({
+      data: JSON.stringify({
+        revision: 12,
+        profileRevisionByEndpointId: { "acct.global.gpt-5-high": "rev-12" },
+        membershipRevision: "membership-12",
+        emittedAtMs: 1_770_000_000_200,
+      }),
+    } as MessageEvent<string>);
+
+    expect(factory).toHaveBeenCalledWith("/api/role-model/telemetry/stream");
+    expect(onRevision).toHaveBeenCalledWith(
+      expect.objectContaining({
+        revision: 12,
+        membershipRevision: "membership-12",
+      }),
+    );
+
+    dispose();
+    expect(close).toHaveBeenCalledTimes(1);
+  });
+
+  test("subscribes once to both telemetry and revision events for cross-page refresh", () => {
+    const listeners = new Map<string, (event: MessageEvent<string>) => void>();
+    const close = vi.fn();
+    const factory = vi.fn(() => ({
+      addEventListener(type: string, handler: (event: MessageEvent<string>) => void) {
+        listeners.set(type, handler);
+      },
+      close,
+    }));
+    const onEvent = vi.fn();
+
+    const dispose = subscribeRuntimeRefreshStream(onEvent, factory);
+
+    listeners.get("revision.update")?.({
+      data: JSON.stringify({
+        eventName: "revision.update",
+        revision: 13,
+        profileRevisionByEndpointId: { "deepseek.flash-high": "profile-13" },
+        membershipRevision: "membership-13",
+        emittedAtMs: 1_770_000_000_300,
+      }),
+    } as MessageEvent<string>);
+
+    expect(factory).toHaveBeenCalledWith("/api/role-model/telemetry/stream");
+    expect([...listeners.keys()].sort()).toEqual(["revision.update", "telemetry.update"]);
+    expect(onEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ eventName: "revision.update", revision: 13 }),
     );
 
     dispose();

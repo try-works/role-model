@@ -19,9 +19,60 @@ export type CandidateSpacePoint = {
   readonly excluded: boolean;
   readonly tags: readonly string[];
   readonly colorToken: CandidateSpaceColorToken;
+  /** Canonical candidate-state classification (R5 8-state model). */
+  readonly candidateState: CandidateState;
+  /** How many candidate points were actually rendered in this projection. */
+  readonly rendered: number;
+  /** Total candidate pool size the projection started from (pre-truncation). */
+  readonly total: number;
 };
 
-export type CandidateSpaceColorToken = "serria" | "royal" | "emerald" | "coral" | "muted";
+export type CandidateSpaceColorToken =
+  | "serria"
+  | "royal"
+  | "emerald"
+  | "coral"
+  | "azure"
+  | "pink"
+  | "violet"
+  | "amber"
+  | "error"
+  | "cache"
+  | "throughput"
+  | "latency"
+  | "green"
+  | "blue"
+  | "purple"
+  | "orange"
+  | "sky"
+  | "teal"
+  | "mint"
+  | "rose"
+  | "sage"
+  | "cobalt"
+  | "blush"
+  | "lilac"
+  | "mustard"
+  | "mist"
+  | "remote"
+  | "local"
+  | "queue"
+  | "muted";
+
+/**
+ * Canonical candidate-state model (R5). Fixed precedence in `deriveCandidateState`:
+ * degraded → selected → benchmark-available → no-benchmark → usable →
+ * insufficient-samples → failed-only → no-requests.
+ */
+export type CandidateState =
+  | "no-requests"
+  | "failed-only"
+  | "insufficient-samples"
+  | "usable"
+  | "no-benchmark"
+  | "benchmark-available"
+  | "selected"
+  | "degraded";
 
 export type CandidateSpaceProjection = {
   readonly floorX: number;
@@ -43,7 +94,72 @@ const VIEW = {
   qualityLift: 135,
 } as const;
 
-const COLOR_CYCLE: readonly CandidateSpaceColorToken[] = ["serria", "royal", "emerald", "coral"];
+/**
+ * Extended RM3-based palette for simultaneously-visible candidate markers.
+ * The first four mirror the legacy cycle tokens for backwards compatibility;
+ * the rest scale well beyond seven without repeating.
+ */
+const COLOR_PALETTE: readonly CandidateSpaceColorToken[] = [
+  "serria",
+  "royal",
+  "emerald",
+  "coral",
+  "azure",
+  "pink",
+  "violet",
+  "amber",
+  "cache",
+  "throughput",
+  "latency",
+  "green",
+  "blue",
+  "purple",
+  "orange",
+  "sky",
+  "teal",
+  "mint",
+  "rose",
+  "sage",
+  "cobalt",
+  "blush",
+  "lilac",
+  "mustard",
+  "mist",
+  "remote",
+  "local",
+  "queue",
+];
+
+function hashString(value: string): number {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+/**
+ * Assign a deterministic-by-identity color token for a candidate.
+ * The preferred token is derived from a stable hash of `endpointId`, so the
+ * mapping is stable across input orderings/re-ranking. When that preferred
+ * token is already claimed by another simultaneously-visible candidate, fall
+ * back to the first unused palette token — guaranteeing no two visible
+ * candidates share a color. Mirrors `pickDistinctSeriesColorToken`.
+ */
+export function assignCandidateColorToken(
+  endpointId: string,
+  usedColorTokens: Set<CandidateSpaceColorToken>,
+): CandidateSpaceColorToken {
+  const preferred =
+    COLOR_PALETTE[hashString(endpointId) % COLOR_PALETTE.length] ?? ("serria" as const);
+  if (!usedColorTokens.has(preferred)) {
+    usedColorTokens.add(preferred);
+    return preferred;
+  }
+  const fallback = COLOR_PALETTE.find((token) => !usedColorTokens.has(token)) ?? preferred;
+  usedColorTokens.add(fallback);
+  return fallback;
+}
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : null;
@@ -240,6 +356,69 @@ function isExcluded(candidate: RouterCandidate): boolean {
   return candidate.ignored === true || candidate.routingEligible === false;
 }
 
+function readTaskRollup(candidate: RouterCandidate) {
+  const rollups = candidate.telemetryScores?.taskRollups;
+  if (!rollups) {
+    return null;
+  }
+  const keys = Object.keys(rollups);
+  if (keys.length === 0) {
+    return null;
+  }
+  return rollups[keys[0] ?? "default"] ?? null;
+}
+
+/**
+ * Derive the canonical candidate state (R5 8-state model) with fixed precedence:
+ * degraded → selected → benchmark-available → no-benchmark → usable →
+ * insufficient-samples → failed-only → no-requests.
+ * `selection` is injected by the caller (a candidate is "selected" only within
+ * the projection that picks it; the underlying candidate carries no such flag).
+ */
+export function deriveCandidateState(
+  candidate: RouterCandidate,
+  selection?: { readonly selected: boolean },
+): CandidateState {
+  const token =
+    candidate.healthStatus && candidate.healthStatus.length > 0
+      ? candidate.healthStatus
+      : (candidate.status ?? "");
+  if (token === "degraded") {
+    return "degraded";
+  }
+  const rollup = readTaskRollup(candidate);
+  const sampleCount = rollup?.sampleCount;
+  const minimumSampleCount = rollup?.minimumSampleCount;
+  const failureCount = rollup?.failureCount ?? 0;
+  const successCount = rollup?.successCount ?? 0;
+  const hasSamples = typeof sampleCount === "number" && sampleCount > 0;
+  const hasAnySuccess = successCount > 0;
+  const hasAnyRequests = hasSamples || hasAnySuccess || failureCount > 0;
+
+  if (!hasAnyRequests) {
+    return "no-requests";
+  }
+  if (typeof sampleCount !== "number" || sampleCount <= 0 || (!hasAnySuccess && failureCount > 0)) {
+    if (failureCount > 0 && !hasAnySuccess) {
+      return "failed-only";
+    }
+    return "insufficient-samples";
+  }
+  if (typeof minimumSampleCount === "number" && sampleCount < minimumSampleCount) {
+    return "insufficient-samples";
+  }
+  if (selection?.selected) {
+    return "selected";
+  }
+  if (candidate.benchmarkCapability) {
+    return "benchmark-available";
+  }
+  if (candidate.benchmarkCapability === null) {
+    return "no-benchmark";
+  }
+  return "usable";
+}
+
 /**
  * Build plottable candidate-space points from router candidates.
  * Cost/speed use ratio-to-best within the cohort when samples exist (not 1−value/max).
@@ -247,11 +426,12 @@ function isExcluded(candidate: RouterCandidate): boolean {
  */
 export function buildCandidateSpacePoints(
   candidates: readonly RouterCandidate[],
-  limit = 5,
+  limit = Number.POSITIVE_INFINITY,
   pricingByModelId?: ReadonlyMap<string, number>,
 ): readonly CandidateSpacePoint[] {
   const eligible = candidates.filter((candidate) => !isExcluded(candidate));
   const pool = (eligible.length > 0 ? eligible : candidates).slice();
+  const total = pool.length;
 
   const latencies = pool
     .map((candidate) =>
@@ -287,14 +467,17 @@ export function buildCandidateSpacePoints(
         Number(right.candidate.preferred === true) - Number(left.candidate.preferred === true) ||
         (right.routeScore ?? -1) - (left.routeScore ?? -1) ||
         left.candidate.modelId.localeCompare(right.candidate.modelId, "en"),
-    )
-    .slice(0, Math.max(0, limit));
+    );
+
+  const visible = Number.isFinite(limit) ? ranked.slice(0, Math.max(0, limit)) : ranked;
+  const rendered = visible.length;
 
   const selectedId =
-    ranked.find((row) => row.candidate.controllerEligible || row.candidate.preferred)?.candidate
-      .endpointId ?? ranked[0]?.candidate.endpointId;
+    visible.find((row) => row.candidate.controllerEligible || row.candidate.preferred)?.candidate
+      .endpointId ?? visible[0]?.candidate.endpointId;
 
-  return ranked.map((row, index) => {
+  const usedColorTokens = new Set<CandidateSpaceColorToken>();
+  return visible.map((row) => {
     const excluded = isExcluded(row.candidate);
     const selected = row.candidate.endpointId === selectedId && !excluded;
     return {
@@ -309,7 +492,12 @@ export function buildCandidateSpacePoints(
       selected,
       excluded,
       tags: candidateTags(row.candidate, selected, excluded),
-      colorToken: excluded ? "muted" : (COLOR_CYCLE[index % COLOR_CYCLE.length] ?? "serria"),
+      colorToken: excluded
+        ? "muted"
+        : assignCandidateColorToken(row.candidate.endpointId, usedColorTokens),
+      candidateState: deriveCandidateState(row.candidate, { selected }),
+      rendered,
+      total,
     };
   });
 }

@@ -35,6 +35,28 @@ export interface RemoteHealthProbeContext {
   readonly probeTimeoutMs?: number;
 }
 
+/**
+ * A bounded, instance-specific admission check.  Unlike the bootstrap
+ * `/models` inventory probe, this exercises the exact model/effort payload
+ * that will be used for routed chat-completions traffic.
+ */
+export interface RemoteEndpointAdmissionProbeContext {
+  readonly endpointId: string;
+  readonly providerAccountId: string;
+  readonly modelId: string;
+  readonly reasoningEffort: string | null;
+  readonly apiBase: string;
+  readonly servingSource: string;
+  readonly litellmHealthy?: boolean;
+  readonly resolveAuthorization: (providerAccountId: string) => Promise<string | null>;
+  readonly refreshAuthorization?: (providerAccountId: string) => Promise<string | null>;
+  readonly resolveProbeHeaders?: (
+    providerAccountId: string,
+  ) => Promise<Readonly<Record<string, string>>>;
+  readonly networkFetcher: typeof fetch;
+  readonly probeTimeoutMs?: number;
+}
+
 const COMPARABLE_MODEL_ID_ALIASES: Readonly<Record<string, readonly string[]>> = {
   "moonshot/kimi-k2.7-code": ["kimi-for-coding"],
   "kimi-k2.7-code": ["kimi-for-coding"],
@@ -109,6 +131,11 @@ export function buildModelsProbeUrl(apiBase: string): string {
     return `${trimmed}/models`;
   }
   return `${trimmed}/v1/models`;
+}
+
+export function buildChatCompletionsProbeUrl(apiBase: string): string {
+  const trimmed = apiBase.trim().replace(/\/+$/u, "");
+  return trimmed.endsWith("/v1") ? `${trimmed}/chat/completions` : `${trimmed}/v1/chat/completions`;
 }
 
 function isTimeoutError(error: unknown): boolean {
@@ -282,4 +309,98 @@ export async function probeRemoteEndpoints(
     healthy,
     degraded,
   };
+}
+
+export async function probeRemoteEndpointAdmission(
+  context: RemoteEndpointAdmissionProbeContext,
+): Promise<RemoteHealthProbeResult> {
+  if (context.servingSource === "vendor-litellm" && context.litellmHealthy === false) {
+    return {
+      endpointId: context.endpointId,
+      modelId: context.modelId,
+      reason: "vendor-down",
+      healthStatus: mapProbeReasonToHealthStatus("vendor-down"),
+      message: "LiteLLM vendor is not healthy.",
+    };
+  }
+
+  const authorization = await context.resolveAuthorization(context.providerAccountId);
+  if (!authorization) {
+    return {
+      endpointId: context.endpointId,
+      modelId: context.modelId,
+      reason: "credentials-missing",
+      healthStatus: mapProbeReasonToHealthStatus("credentials-missing"),
+      message: "No authorization credential is available for remote admission probe.",
+    };
+  }
+
+  const probeUrl = buildChatCompletionsProbeUrl(context.apiBase);
+  const body = {
+    model: context.modelId,
+    messages: [{ role: "user", content: "role-model admission readiness probe" }],
+    max_tokens: 1,
+    stream: false,
+    ...(context.reasoningEffort === null ? {} : { reasoning_effort: context.reasoningEffort }),
+  };
+  const startedAt = Date.now();
+  const probeHeaders = context.resolveProbeHeaders
+    ? await context.resolveProbeHeaders(context.providerAccountId)
+    : {};
+  const executeProbe = async (credential: string): Promise<Response> =>
+    context.networkFetcher(probeUrl, {
+      method: "POST",
+      headers: {
+        ...probeHeaders,
+        accept: "application/json",
+        "content-type": "application/json",
+        authorization: credential.startsWith("Bearer ") ? credential : `Bearer ${credential}`,
+      },
+      signal: AbortSignal.timeout(context.probeTimeoutMs ?? 5_000),
+      body: JSON.stringify(body),
+    });
+
+  try {
+    let response = await executeProbe(authorization);
+    if ((response.status === 401 || response.status === 403) && context.refreshAuthorization) {
+      const refreshed = await context.refreshAuthorization(context.providerAccountId);
+      if (refreshed?.trim()) {
+        response = await executeProbe(refreshed);
+      }
+    }
+    const latencyMs = Date.now() - startedAt;
+    if (response.ok) {
+      return {
+        endpointId: context.endpointId,
+        modelId: context.modelId,
+        reason: "healthy",
+        healthStatus: mapProbeReasonToHealthStatus("healthy"),
+        latencyMs,
+      };
+    }
+    const reason: RemoteHealthProbeReason =
+      response.status === 401 || response.status === 403
+        ? "auth"
+        : response.status === 404
+          ? "model-not-found"
+          : "vendor-down";
+    return {
+      endpointId: context.endpointId,
+      modelId: context.modelId,
+      reason,
+      healthStatus: mapProbeReasonToHealthStatus(reason),
+      latencyMs,
+      message: `Remote admission probe returned HTTP ${response.status}.`,
+    };
+  } catch (error) {
+    const reason: RemoteHealthProbeReason = isTimeoutError(error) ? "timeout" : "vendor-down";
+    return {
+      endpointId: context.endpointId,
+      modelId: context.modelId,
+      reason,
+      healthStatus: mapProbeReasonToHealthStatus(reason),
+      latencyMs: Date.now() - startedAt,
+      message: error instanceof Error ? error.message : "Remote admission probe failed.",
+    };
+  }
 }

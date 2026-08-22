@@ -18,7 +18,7 @@ import {
   fetchActivityCapture,
   fetchActivityMetricsPage,
   fetchTelemetrySummary,
-  subscribeTelemetryStream,
+  subscribeRuntimeRefreshStream,
 } from "../lib/runtime-api";
 import { buildActivitySummary } from "../lib/view-models";
 
@@ -87,7 +87,7 @@ export default function ObserveActivityRoute() {
       load: async () => {
         await load();
       },
-      subscribe: (onEvent) => subscribeTelemetryStream(onEvent),
+      subscribe: (onEvent) => subscribeRuntimeRefreshStream(onEvent),
     });
 
     return () => {

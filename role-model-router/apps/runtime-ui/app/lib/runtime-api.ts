@@ -1,8 +1,9 @@
+import type { RuntimeRevisionUpdate } from "./runtime-refresh-bus";
+
 export type RuntimeFetcher = (
   input: string | URL | Request,
   init?: RequestInit,
 ) => Promise<Response>;
-
 export type SessionBootstrapStatus = "pending" | "running" | "ready" | "degraded" | "blocked";
 
 export type BootstrapStageStatus =
@@ -596,6 +597,13 @@ export interface RuntimeTelemetryStreamEvent {
   readonly summary?: RuntimeTelemetrySummary;
   readonly request: RuntimeTelemetryRequestRecord;
 }
+
+export interface RuntimeRevisionStreamEvent extends RuntimeRevisionUpdate {
+  readonly eventName: "revision.update";
+}
+
+/** A canonical server-sent update that requires runtime-backed UI data to refresh. */
+export type RuntimeRefreshStreamEvent = RuntimeTelemetryStreamEvent | RuntimeRevisionStreamEvent;
 
 export type RuntimeTelemetryAnalyticsGranularity = "hour" | "day" | "week";
 
@@ -2214,6 +2222,41 @@ export function subscribeTelemetryStream(
   };
 }
 
+export function subscribeRevisionStream(
+  onRevision: (event: RuntimeRevisionUpdate) => void,
+  createSource: RuntimeEventSourceFactory = (url) => new EventSource(url),
+): () => void {
+  const source = createSource("/api/role-model/telemetry/stream");
+  source.addEventListener("revision.update", (event) => {
+    onRevision(JSON.parse(event.data) as RuntimeRevisionUpdate);
+  });
+  return () => {
+    source.close();
+  };
+}
+
+/**
+ * Subscribes to every runtime mutation signal on the shared SSE transport.
+ *
+ * Telemetry pages already use this transport for newly persisted requests.
+ * Including `revision.update` makes configuration admission, health transitions,
+ * membership changes, and completed benchmark profiles refresh those pages too.
+ */
+export function subscribeRuntimeRefreshStream(
+  onEvent: (event: RuntimeRefreshStreamEvent) => void,
+  createSource: RuntimeEventSourceFactory = (url) => new EventSource(url),
+): () => void {
+  const source = createSource("/api/role-model/telemetry/stream");
+  source.addEventListener("telemetry.update", (event) => {
+    onEvent(JSON.parse(event.data) as RuntimeTelemetryStreamEvent);
+  });
+  source.addEventListener("revision.update", (event) => {
+    onEvent(JSON.parse(event.data) as RuntimeRevisionStreamEvent);
+  });
+  return () => {
+    source.close();
+  };
+}
 export async function fetchDownstreamOpenAIProviderConfig(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeDownstreamOpenAIProviderConfig> {

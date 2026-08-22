@@ -1,5 +1,5 @@
 ---
-Type: training
+Type: pattern
 Status: CURRENT
 Scope: test-validation
 Owns-Paths:

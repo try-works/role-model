@@ -31,7 +31,7 @@ import {
   fetchRuntimeModels,
   fetchTelemetryAnalytics,
   fetchTelemetryRequests,
-  subscribeTelemetryStream,
+  subscribeRuntimeRefreshStream,
 } from "../lib/runtime-api";
 import {
   buildQuerySnapshot,
@@ -189,7 +189,7 @@ export default function DashboardRoute() {
 
     const dispose = startDeferredLiveRefresh({
       load,
-      subscribe: (onEvent) => subscribeTelemetryStream(onEvent),
+      subscribe: (onEvent) => subscribeRuntimeRefreshStream(onEvent),
     });
 
     return () => {
@@ -220,7 +220,7 @@ export default function DashboardRoute() {
         pricingByModelId.set(model.id, inputPer1M);
       }
     }
-    return buildCandidateSpacePoints(candidates, 5, pricingByModelId);
+    return buildCandidateSpacePoints(candidates, Number.POSITIVE_INFINITY, pricingByModelId);
   }, [candidates, models]);
 
   if (error) {

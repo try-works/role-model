@@ -22,7 +22,7 @@ import {
   type RouterDecisionListItem,
   type RouterDecisionPage,
   fetchRouterDecisionPage,
-  subscribeTelemetryStream,
+  subscribeRuntimeRefreshStream,
 } from "../lib/runtime-api";
 
 export default function RouterDecisionsRoute() {
@@ -51,7 +51,7 @@ export default function RouterDecisionsRoute() {
       load: async () => {
         await load();
       },
-      subscribe: (onEvent) => subscribeTelemetryStream(onEvent),
+      subscribe: (onEvent) => subscribeRuntimeRefreshStream(onEvent),
     });
     return () => {
       disposed = true;

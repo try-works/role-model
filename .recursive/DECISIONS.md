@@ -580,3 +580,31 @@ Date: `2026-07-24`
 - `evidence/tb11-system-proof.json`
 - `evidence/tb09-external-interop.json`
 - `evidence/release-validation.json`
+
+## Run: `93-variant-admission-model-pool-integrity`
+
+Date: `2026-08-22`
+
+### Decision
+
+- Treat a remote effort instance as its own routing identity, health/admission
+  lifecycle, telemetry target, and candidate-space entry. Managed LiteLLM
+  inventory is an adapter implementation detail and is not a configurable
+  provider connection.
+- Require the paired Track B distribution at package assembly and startup;
+  Track B's thirteen extensions are mandatory runtime substrate, while their
+  optional consumer actions remain honestly shadow/gated.
+
+### Evidence
+
+- Strict RED/GREEN evidence and Phase 3 review are under
+  `.recursive/run/93-variant-admission-model-pool-integrity/`.
+- Rebuilt executable, bounded Pi alias/Low/High/Max/default traces, Track B
+  receipts, browser checks, and Cloudflare read-only inventory are recorded
+  in `evidence/phase5-paired-runtime-effort-matrix-20260822.json`.
+
+### Promotion boundary
+
+- This decision authorizes no automatic stage/main promotion. A separate
+  Stage RC operation must use the locked run evidence and standard release
+  workflow.

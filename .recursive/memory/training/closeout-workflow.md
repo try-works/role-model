@@ -1,5 +1,5 @@
 ---
-Type: training
+Type: pattern
 Status: CURRENT
 Scope: closeout-workflow
 Owns-Paths:
@@ -40,4 +40,3 @@ success_rate: 0.50
 status: active
 created_at: "2026-07-24T22:29:02.100448+00:00"
 ```
-

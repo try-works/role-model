@@ -1,0 +1,325 @@
+Linting run: 93-variant-admission-model-pool-integrity
+Path: D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity
+Workflow Profile: recursive-mode-audit-v2
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\03-implementation-summary.md: Worktree Diff Audit does not account for actual changed files from git diff: role-model-router/apps/runtime-host-bridge/src/cli.ts, role-model-router/apps/runtime-host-bridge/src/remote-health-probe.ts, role-model-router/apps/runtime-host-bridge/src/routable-inventory.ts, role-model-router/apps/runtime-host-bridge/src/track-b-runtime.ts, role-model-router/apps/runtime-host-bridge/test/account-repair.test.ts ...
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\03-implementation-summary.md: Requirement R8 Changed Files are outside the current diff scope: .recursive/scripts/recursive-training-extract.ps1, .recursive/scripts/recursive-training-extract.py, .recursive/scripts/recursive-training-grpo.ps1, .recursive/scripts/recursive-training-grpo.py, .recursive/scripts/recursive-training-loader.ps1
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\03.5-code-review.md: Traceability is missing explicit coverage for: R1, R2, R3, R4, R5, R6, R7, R8, R9
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\03.5-code-review.md: Traceability is vague and does not mention any requirement IDs
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\03.5-code-review.md: Missing required audit verdict line: Audit: PASS|FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\03.5-code-review.md: Audit Context is missing a valid Audit Execution Mode: subagent|self-audit
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\03.5-code-review.md: Audit Context is missing a valid Subagent Availability: available|unavailable
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\03.5-code-review.md: Audit Context is missing Subagent Capability Probe
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\03.5-code-review.md: Audit Context is missing Delegation Decision Basis
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\03.5-code-review.md: Audit Context is missing Audit Inputs Provided
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\03.5-code-review.md: Worktree Diff Audit is missing: Baseline type:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\03.5-code-review.md: Worktree Diff Audit is missing: Baseline reference:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\03.5-code-review.md: Worktree Diff Audit is missing: Comparison reference:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\03.5-code-review.md: Worktree Diff Audit is missing: Normalized baseline:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\03.5-code-review.md: Worktree Diff Audit is missing: Normalized comparison:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\03.5-code-review.md: Worktree Diff Audit is missing: Normalized diff command:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\03.5-code-review.md: Worktree Diff Audit does not account for actual changed files from git diff: .codex/AGENTS.md, .cursorrules, .github/copilot-instructions.md, .recursive/RECURSIVE.md, AGENTS.md ...
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\03.5-code-review.md: Earlier Phase Reconciliation is missing relevant addenda: .recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\03.5-code-review.md: Effective Inputs Re-read is missing relevant addenda: .recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\03.5-code-review.md: Inputs is missing relevant addenda: .recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\03.5-code-review.md: Requirement Completion Status is missing in-scope requirements: R1, R2, R3, R4, R5, R6, R7, R8, R9
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\03.5-code-review.md: Requirement Completion Status leaves diff-owned changed file(s) unaccounted for: .codex/AGENTS.md, .cursorrules, .github/copilot-instructions.md, .recursive/RECURSIVE.md, AGENTS.md
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\03.5-code-review.md: Review Metadata is missing Review Bundle Path
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\04-test-summary.md: Traceability is missing explicit coverage for: R9
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\04-test-summary.md: Missing required audit verdict line: Audit: PASS|FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\04-test-summary.md: Audit Context is missing a valid Audit Execution Mode: subagent|self-audit
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\04-test-summary.md: Audit Context is missing a valid Subagent Availability: available|unavailable
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\04-test-summary.md: Audit Context is missing Subagent Capability Probe
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\04-test-summary.md: Audit Context is missing Delegation Decision Basis
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\04-test-summary.md: Audit Context is missing Audit Inputs Provided
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\04-test-summary.md: Worktree Diff Audit is missing: Baseline type:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\04-test-summary.md: Worktree Diff Audit is missing: Baseline reference:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\04-test-summary.md: Worktree Diff Audit is missing: Comparison reference:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\04-test-summary.md: Worktree Diff Audit is missing: Normalized baseline:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\04-test-summary.md: Worktree Diff Audit is missing: Normalized comparison:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\04-test-summary.md: Worktree Diff Audit is missing: Normalized diff command:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\04-test-summary.md: Worktree Diff Audit does not account for actual changed files from git diff: .codex/AGENTS.md, .cursorrules, .github/copilot-instructions.md, .recursive/RECURSIVE.md, AGENTS.md ...
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\04-test-summary.md: Earlier Phase Reconciliation is missing relevant addenda: .recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\04-test-summary.md: Effective Inputs Re-read is missing relevant addenda: .recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\04-test-summary.md: Inputs is missing relevant addenda: .recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\04-test-summary.md: Prior Recursive Evidence Reviewed must contain structured run/memory paths or an explicit no-relevant-evidence justification
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\04-test-summary.md: Requirement Completion Status is missing in-scope requirements: R1, R2, R3, R4, R5, R6, R7, R8, R9
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\04-test-summary.md: Requirement Completion Status leaves diff-owned changed file(s) unaccounted for: .codex/AGENTS.md, .cursorrules, .github/copilot-instructions.md, .recursive/RECURSIVE.md, AGENTS.md
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\06-decisions-update.md: Traceability is missing explicit coverage for: R1, R2, R3, R4, R5, R6, R7, R8, R9
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\06-decisions-update.md: Traceability is vague and does not mention any requirement IDs
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\06-decisions-update.md: Missing required audit verdict line: Audit: PASS|FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\06-decisions-update.md: Audit Context is missing a valid Audit Execution Mode: subagent|self-audit
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\06-decisions-update.md: Audit Context is missing a valid Subagent Availability: available|unavailable
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\06-decisions-update.md: Audit Context is missing Subagent Capability Probe
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\06-decisions-update.md: Audit Context is missing Delegation Decision Basis
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\06-decisions-update.md: Audit Context is missing Audit Inputs Provided
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\06-decisions-update.md: Worktree Diff Audit is missing: Baseline type:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\06-decisions-update.md: Worktree Diff Audit is missing: Baseline reference:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\06-decisions-update.md: Worktree Diff Audit is missing: Comparison reference:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\06-decisions-update.md: Worktree Diff Audit is missing: Normalized baseline:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\06-decisions-update.md: Worktree Diff Audit is missing: Normalized comparison:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\06-decisions-update.md: Worktree Diff Audit is missing: Normalized diff command:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\06-decisions-update.md: Worktree Diff Audit does not account for actual changed files from git diff: .codex/AGENTS.md, .cursorrules, .github/copilot-instructions.md, .recursive/RECURSIVE.md, AGENTS.md ...
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\06-decisions-update.md: Earlier Phase Reconciliation is missing relevant addenda: .recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\06-decisions-update.md: Effective Inputs Re-read is missing relevant addenda: .recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\06-decisions-update.md: Inputs is missing relevant addenda: .recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\06-decisions-update.md: Requirement Completion Status is missing in-scope requirements: R1, R2, R3, R4, R5, R6, R7, R8, R9
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\07-state-update.md: Traceability is missing explicit coverage for: R1, R2, R3, R4, R5, R6, R7, R8, R9
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\07-state-update.md: Traceability is vague and does not mention any requirement IDs
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\07-state-update.md: Missing required audit verdict line: Audit: PASS|FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\07-state-update.md: Audit Context is missing a valid Audit Execution Mode: subagent|self-audit
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\07-state-update.md: Audit Context is missing a valid Subagent Availability: available|unavailable
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\07-state-update.md: Audit Context is missing Subagent Capability Probe
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\07-state-update.md: Audit Context is missing Delegation Decision Basis
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\07-state-update.md: Audit Context is missing Audit Inputs Provided
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\07-state-update.md: Worktree Diff Audit is missing: Baseline type:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\07-state-update.md: Worktree Diff Audit is missing: Baseline reference:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\07-state-update.md: Worktree Diff Audit is missing: Comparison reference:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\07-state-update.md: Worktree Diff Audit is missing: Normalized baseline:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\07-state-update.md: Worktree Diff Audit is missing: Normalized comparison:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\07-state-update.md: Worktree Diff Audit is missing: Normalized diff command:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\07-state-update.md: Worktree Diff Audit does not account for actual changed files from git diff: .codex/AGENTS.md, .cursorrules, .github/copilot-instructions.md, .recursive/RECURSIVE.md, AGENTS.md ...
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\07-state-update.md: Prior Recursive Evidence Reviewed must contain structured run/memory paths or an explicit no-relevant-evidence justification
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\07-state-update.md: Requirement Completion Status is missing in-scope requirements: R1, R2, R3, R4, R5, R6, R7, R8, R9
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Traceability is missing explicit coverage for: R1, R2, R3, R4, R5, R6, R7, R8, R9
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Traceability is vague and does not mention any requirement IDs
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Missing required audit verdict line: Audit: PASS|FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Audit Context is missing a valid Audit Execution Mode: subagent|self-audit
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Audit Context is missing a valid Subagent Availability: available|unavailable
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Audit Context is missing Subagent Capability Probe
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Audit Context is missing Delegation Decision Basis
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Audit Context is missing Audit Inputs Provided
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Worktree Diff Audit is missing: Baseline type:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Worktree Diff Audit is missing: Baseline reference:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Worktree Diff Audit is missing: Comparison reference:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Worktree Diff Audit is missing: Normalized baseline:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Worktree Diff Audit is missing: Normalized comparison:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Worktree Diff Audit is missing: Normalized diff command:
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Worktree Diff Audit does not account for actual changed files from git diff: .codex/AGENTS.md, .cursorrules, .github/copilot-instructions.md, .recursive/RECURSIVE.md, .recursive/memory/MEMORY.md ...
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Earlier Phase Reconciliation is missing relevant addenda: .recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Effective Inputs Re-read is missing relevant addenda: .recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Inputs is missing relevant addenda: .recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Prior Recursive Evidence Reviewed must contain structured run/memory paths or an explicit no-relevant-evidence justification
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Requirement Completion Status is missing in-scope requirements: R1, R2, R3, R4, R5, R6, R7, R8, R9
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Run-Local Skill Usage Capture is missing Available Skills
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Run-Local Skill Usage Capture is missing Future Guidance
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Run-Local Skill Usage Capture is missing Issues Encountered
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Run-Local Skill Usage Capture is missing Promotion Candidates
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Run-Local Skill Usage Capture is missing Skill Usage Relevance
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Run-Local Skill Usage Capture is missing Skills Attempted
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Run-Local Skill Usage Capture is missing Skills Sought
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Run-Local Skill Usage Capture is missing Skills Used
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Run-Local Skill Usage Capture is missing Worked Well
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Run-Local Skill Usage Capture must declare Skill Usage Relevance: relevant|not-relevant
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\addenda\03-implementation-summary.addendum-03.md: Missing required header field(s): Inputs, Outputs, Scope note
+Remediation (copy/paste):
+  Inputs:
+  - `<path>`
+  Outputs:
+  - `<path>`
+  Scope note: <one sentence describing what this artifact decides/enables>.
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\addenda\03-implementation-summary.diff-reconciliation.addendum-03.md: Missing required header field(s): Inputs, Outputs, Scope note
+Remediation (copy/paste):
+  Inputs:
+  - `<path>`
+  Outputs:
+  - `<path>`
+  Scope note: <one sentence describing what this artifact decides/enables>.
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\addenda\05-manual-qa.requirements-audit-remediation.addendum-03.md: Missing required header field(s): Scope note
+Remediation (copy/paste):
+  Scope note: <one sentence describing what this artifact decides/enables>.
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\03.5-code-review.md: Phase-sequence violation: '03.5-code-review.md' exists but prerequisite '03-implementation-summary.md' is DRAFT (must be LOCKED first)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\04-test-summary.md: Phase-sequence violation: '04-test-summary.md' exists but prerequisite '03-implementation-summary.md' is DRAFT (must be LOCKED first)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\04-test-summary.md: Phase-sequence violation: '04-test-summary.md' exists but prerequisite '03.5-code-review.md' is DRAFT (must be LOCKED first)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\05-manual-qa.md: Phase-sequence violation: '05-manual-qa.md' exists but prerequisite '03-implementation-summary.md' is DRAFT (must be LOCKED first)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\05-manual-qa.md: Phase-sequence violation: '05-manual-qa.md' exists but prerequisite '03.5-code-review.md' is DRAFT (must be LOCKED first)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\05-manual-qa.md: Phase-sequence violation: '05-manual-qa.md' exists but prerequisite '04-test-summary.md' is DRAFT (must be LOCKED first)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\06-decisions-update.md: Phase-sequence violation: '06-decisions-update.md' exists but prerequisite '03-implementation-summary.md' is DRAFT (must be LOCKED first)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\06-decisions-update.md: Phase-sequence violation: '06-decisions-update.md' exists but prerequisite '03.5-code-review.md' is DRAFT (must be LOCKED first)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\06-decisions-update.md: Phase-sequence violation: '06-decisions-update.md' exists but prerequisite '04-test-summary.md' is DRAFT (must be LOCKED first)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\06-decisions-update.md: Phase-sequence violation: '06-decisions-update.md' exists but prerequisite '05-manual-qa.md' is DRAFT (must be LOCKED first)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\07-state-update.md: Phase-sequence violation: '07-state-update.md' exists but prerequisite '03-implementation-summary.md' is DRAFT (must be LOCKED first)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\07-state-update.md: Phase-sequence violation: '07-state-update.md' exists but prerequisite '03.5-code-review.md' is DRAFT (must be LOCKED first)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\07-state-update.md: Phase-sequence violation: '07-state-update.md' exists but prerequisite '04-test-summary.md' is DRAFT (must be LOCKED first)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\07-state-update.md: Phase-sequence violation: '07-state-update.md' exists but prerequisite '05-manual-qa.md' is DRAFT (must be LOCKED first)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\07-state-update.md: Phase-sequence violation: '07-state-update.md' exists but prerequisite '06-decisions-update.md' is DRAFT (must be LOCKED first)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Phase-sequence violation: '08-memory-impact.md' exists but prerequisite '03-implementation-summary.md' is DRAFT (must be LOCKED first)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Phase-sequence violation: '08-memory-impact.md' exists but prerequisite '03.5-code-review.md' is DRAFT (must be LOCKED first)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Phase-sequence violation: '08-memory-impact.md' exists but prerequisite '04-test-summary.md' is DRAFT (must be LOCKED first)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Phase-sequence violation: '08-memory-impact.md' exists but prerequisite '05-manual-qa.md' is DRAFT (must be LOCKED first)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Phase-sequence violation: '08-memory-impact.md' exists but prerequisite '06-decisions-update.md' is DRAFT (must be LOCKED first)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity\08-memory-impact.md: Phase-sequence violation: '08-memory-impact.md' exists but prerequisite '07-state-update.md' is DRAFT (must be LOCKED first)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\memory\skills\issues\anticipatory-phase-docs.md: Invalid memory Type 'issues' (expected one of: domain, episode, incident, index, pattern)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\memory\skills\issues\codex-adapter-protocol-only-no-narration-detectors.md: Missing required memory metadata field(s): Owns-Paths, Watch-Paths, Validated-At-Commit
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\memory\skills\issues\kw-inject-live-host-wiring.md: Invalid memory Type 'issues' (expected one of: domain, episode, incident, index, pattern)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\memory\skills\issues\launch-packaged-runtime-argv-equals.md: Invalid memory Type 'skill-issue' (expected one of: domain, episode, incident, index, pattern)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\memory\skills\issues\rm3-pill-no-amber.md: Invalid memory Type 'issues' (expected one of: domain, episode, incident, index, pattern)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\memory\skills\issues\sea-inject-host-join-and-seed-scope.md: Invalid memory Type 'issues' (expected one of: domain, episode, incident, index, pattern)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\memory\skills\issues\worktree-must-be-in-parent.md: Invalid memory Type 'skill-issue' (expected one of: domain, episode, incident, index, pattern)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\memory\skills\usage\review-bundle-citation-requirements.md: Invalid memory Type 'usage' (expected one of: domain, episode, incident, index, pattern)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\memory\training\closeout-workflow.md: Invalid memory Type 'training' (expected one of: domain, episode, incident, index, pattern)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\memory\training\code-review.md: Invalid memory Type 'training' (expected one of: domain, episode, incident, index, pattern)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\memory\training\extension-policy.md: Invalid memory Type 'training' (expected one of: domain, episode, incident, index, pattern)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\memory\training\frontend-implementation.md: Invalid memory Type 'training' (expected one of: domain, episode, incident, index, pattern)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\memory\training\packaging-verification.md: Invalid memory Type 'training' (expected one of: domain, episode, incident, index, pattern)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\memory\training\phase-authoring.md: Invalid memory Type 'training' (expected one of: domain, episode, incident, index, pattern)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\memory\training\qa-verification.md: Invalid memory Type 'training' (expected one of: domain, episode, incident, index, pattern)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\memory\training\requirements-scoping.md: Invalid memory Type 'training' (expected one of: domain, episode, incident, index, pattern)
+
+[FAIL] D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\memory\training\test-validation.md: Invalid memory Type 'training' (expected one of: domain, episode, incident, index, pattern)
+
+----
+
+Summary
+- FAIL: 150
+- WARN: 0
+
+[FAIL] Lint failed

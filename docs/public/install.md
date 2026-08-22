@@ -59,6 +59,24 @@ directory, and run its launcher. The candidate identifies itself as `role-model-
 state. After testing the intended behavior, restarts, and persistence, a maintainer records acceptance for that exact
 candidate before any `stage -> main` promotion or stable tag.
 
+## Clean-install expectation
+
+A fresh, isolated state root starts with **zero configured endpoint instances and an empty Model Pool**.
+Catalog, protocol, taxonomy, and provider-metadata files are read-only reference data shipped with the
+release; they are distinct from *configured* runtime state (endpoint instances, provider accounts,
+admission lifecycle, and telemetry), which is created only by operator or controller action after first
+launch.
+
+You can verify a clean install in the UI: the Overview, Models, and Connect surfaces should show no
+configured candidates until you add a provider account or endpoint. Programmatically, a fresh root reports
+an empty registry (`endpoints: []`) and an empty catalog (`providers: []`, `models: []`) through the
+runtime API.
+
+Release payloads are fail-closed: packaging rejects fixture/mock runtime state and the synthetic
+credential sentinel used by packaging validation, so a production executable, archive, or installer never
+carries developer fixtures, mock provider markers, or a test credential. No real secret is used by the
+packaging validation.
+
 ## Updating an installed runtime
 
 Updates are currently manual. Re-run the installer with a newer version, or extract the newer archive and

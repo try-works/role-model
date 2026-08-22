@@ -22,7 +22,11 @@ import {
   fetchRuntimeEndpoints,
   fetchRuntimeSummary,
 } from "../lib/runtime-api";
-import { buildConfiguredProviderRows, buildEndpointCatalogRows } from "../lib/view-models";
+import {
+  buildConfiguredProviderRows,
+  buildEndpointCatalogRows,
+  isManagedRemoteAdapterEndpoint,
+} from "../lib/view-models";
 
 type ProviderRow = ReturnType<typeof buildConfiguredProviderRows>[number];
 type EndpointRow = ReturnType<typeof buildEndpointCatalogRows>[number];
@@ -107,7 +111,7 @@ export function buildRuntimeConnectionRows(input: {
   // provider model beside the actual account endpoint and misstates endpoint
   // ownership in the Registry UI.
   const endpointRows = input.endpointRows
-    .filter((endpoint) => endpoint.servingSource !== "vendor-litellm")
+    .filter((endpoint) => !isManagedRemoteAdapterEndpoint(endpoint))
     .map((endpoint) => {
       endpointProviderIds.add(endpoint.providerLabel);
       const routingIneligible = endpoint.routingEligible === false;

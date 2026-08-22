@@ -263,7 +263,11 @@ export async function runCatalogEconomicsValidation(
           mode: "prefer",
           regions: ["global"],
         },
-        baseUrlOverride: "https://api.moonshot.ai/v1",
+        // This validation uses a local mock peer for both sides of its synthetic
+        // local-versus-remote routing comparison. Keeping its remote admission
+        // path local prevents an otherwise hermetic test from making a live
+        // Moonshot readiness request.
+        baseUrlOverride: `http://127.0.0.1:${mockPeer.port}/v1`,
         allowedModels: [remoteModelId],
         modelRoleBindings: [
           {
