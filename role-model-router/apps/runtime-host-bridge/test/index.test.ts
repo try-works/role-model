@@ -54,6 +54,58 @@ function splitPathSegments(value: string): string[] {
   return value.split(/[\\/]+/).filter((segment) => segment.length > 0);
 }
 
+function isAdmissionReadinessProbe(init: RequestInit | undefined): boolean {
+  if (typeof init?.body !== "string") {
+    return false;
+  }
+  try {
+    const body = JSON.parse(init.body) as {
+      readonly messages?: readonly { readonly content?: unknown }[];
+    };
+    return body.messages?.[0]?.content === "role-model admission readiness probe";
+  } catch {
+    return false;
+  }
+}
+
+function successfulAdmissionReadinessProbe(): Response {
+  return new Response(
+    JSON.stringify({
+      id: "chatcmpl-admission-probe",
+      object: "chat.completion",
+      choices: [
+        { index: 0, message: { role: "assistant", content: "ready" }, finish_reason: "stop" },
+      ],
+    }),
+    { status: 200, headers: { "content-type": "application/json" } },
+  );
+}
+
+function isCodexAdmissionReadinessProbe(requestId: string): boolean {
+  return requestId.startsWith("admission-");
+}
+
+function successfulCodexAdmissionReadinessProbe(requestId: string): {
+  statusCode: number;
+  body: Record<string, unknown>;
+  vendorMetadata: Record<string, unknown>;
+} {
+  return {
+    statusCode: 200,
+    body: {
+      id: `chatcmpl-${requestId}`,
+      choices: [
+        {
+          index: 0,
+          finish_reason: "stop",
+          message: { role: "assistant", content: "ready" },
+        },
+      ],
+    },
+    vendorMetadata: { vendorId: "chatgpt-codex-responses", latencyMs: 1 },
+  };
+}
+
 const registry: EndpointRegistryResult = {
   endpoints: [
     {
@@ -14806,6 +14858,9 @@ describe("runtime-host-bridge", () => {
       networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
+        }
         if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
           expect(init?.method ?? "POST").toBe("POST");
           return new Response(
@@ -14872,6 +14927,9 @@ describe("runtime-host-bridge", () => {
           );
         }
 
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
+        }
         throw new Error(`Unexpected network request: ${url}`);
       },
     });
@@ -15382,6 +15440,9 @@ describe("runtime-host-bridge", () => {
         networkFetcher: async (input, init) => {
           const url =
             typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
+          }
           if (url === "https://api.moonshot.ai/v1/chat/completions") {
             expect(init?.method ?? "POST").toBe("POST");
             expect(init?.headers).toEqual(
@@ -15418,6 +15479,9 @@ describe("runtime-host-bridge", () => {
             );
           }
 
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
+          }
           throw new Error(`Unexpected network request: ${url}`);
         },
       });
@@ -15547,7 +15611,13 @@ describe("runtime-host-bridge", () => {
         networkFetcher: async (input, init) => {
           const url =
             typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
+          }
           if (url !== "https://api.moonshot.ai/v1/chat/completions") {
+            if (isAdmissionReadinessProbe(init)) {
+              return successfulAdmissionReadinessProbe();
+            }
             throw new Error(`Unexpected network request: ${url}`);
           }
 
@@ -15827,6 +15897,9 @@ describe("runtime-host-bridge", () => {
       networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
+        }
         expect(url).toBe("https://api.deepseek.com/v1/chat/completions");
         seenRequestBodies.push(JSON.parse(String(init?.body)));
         return new Response(
@@ -16617,6 +16690,9 @@ describe("runtime-host-bridge", () => {
       },
       codexExecutionAdapter: {
         executeRequest: async ({ requestId, modelId, requestCapture }) => {
+          if (isCodexAdmissionReadinessProbe(requestId)) {
+            return successfulCodexAdmissionReadinessProbe(requestId);
+          }
           seenRequests.push({
             requestId,
             modelId,
@@ -17085,7 +17161,10 @@ describe("runtime-host-bridge", () => {
         },
       },
       codexExecutionAdapter: {
-        executeRequest: async ({ authPayload, modelId }) => {
+        executeRequest: async ({ authPayload, modelId, requestId }) => {
+          if (isCodexAdmissionReadinessProbe(requestId)) {
+            return successfulCodexAdmissionReadinessProbe(requestId);
+          }
           seenAuthRefreshes.push(String(authPayload.last_refresh ?? ""));
           const tokens =
             authPayload && typeof authPayload === "object"
@@ -17442,6 +17521,9 @@ describe("runtime-host-bridge", () => {
       },
       codexExecutionAdapter: {
         executeRequest: async ({ executeDynamicToolCall, requestCapture, requestId }) => {
+          if (isCodexAdmissionReadinessProbe(requestId)) {
+            return successfulCodexAdmissionReadinessProbe(requestId);
+          }
           expect(requestCapture.body.tools).toEqual(
             expect.arrayContaining([
               expect.objectContaining({
@@ -17852,7 +17934,10 @@ describe("runtime-host-bridge", () => {
         },
       },
       codexExecutionAdapter: {
-        executeRequest: async () => {
+        executeRequest: async ({ requestId }) => {
+          if (isCodexAdmissionReadinessProbe(requestId)) {
+            return successfulCodexAdmissionReadinessProbe(requestId);
+          }
           executeAttempts += 1;
           return {
             statusCode: 400,
@@ -18005,6 +18090,9 @@ describe("runtime-host-bridge", () => {
         networkFetcher: async (input, init) => {
           const url =
             typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
+          }
           const body = init?.body ? JSON.parse(String(init.body)) : {};
 
           if (url === "https://api.moonshot.ai/v1/chat/completions") {
@@ -18065,6 +18153,9 @@ describe("runtime-host-bridge", () => {
             );
           }
 
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
+          }
           throw new Error(`Unexpected network request: ${url}`);
         },
       });
@@ -18333,6 +18424,9 @@ describe("runtime-host-bridge", () => {
           );
         }
 
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
+        }
         throw new Error(`Unexpected network request: ${url}`);
       },
     });
@@ -18441,6 +18535,9 @@ describe("runtime-host-bridge", () => {
         networkFetcher: async (input, init) => {
           const url =
             typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
+          }
           const body = init?.body ? JSON.parse(String(init.body)) : {};
 
           if (url === "https://api.moonshot.ai/v1/chat/completions") {
@@ -18472,6 +18569,9 @@ describe("runtime-host-bridge", () => {
             );
           }
 
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
+          }
           throw new Error(`Unexpected network request: ${url}`);
         },
       });
@@ -18700,7 +18800,7 @@ describe("runtime-host-bridge", () => {
       fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       runtimeStateRoot,
       scopeId: "runtime-host-local-peer-miss-tests",
-      networkFetcher: async (input) => {
+      networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
         if (url === `${peerUrl}/v1/models`) {
@@ -18713,6 +18813,9 @@ describe("runtime-host-bridge", () => {
           );
         }
 
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
+        }
         throw new Error(`Unexpected network request: ${url}`);
       },
     });
@@ -18766,6 +18869,9 @@ describe("runtime-host-bridge", () => {
         );
       }
 
+      if (isAdmissionReadinessProbe(init)) {
+        return successfulAdmissionReadinessProbe();
+      }
       throw new Error(`Unexpected network request: ${url}`);
     };
 
@@ -18834,9 +18940,12 @@ describe("runtime-host-bridge", () => {
       fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       runtimeStateRoot,
       scopeId: runtimeStateId,
-      networkFetcher: async (input) => {
+      networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
+        }
         throw new Error(`Unexpected network request after restart: ${url}`);
       },
     });
@@ -18891,6 +19000,9 @@ describe("runtime-host-bridge", () => {
           );
         }
 
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
+        }
         throw new Error(`Unexpected network request: ${url}`);
       },
     });
@@ -18926,9 +19038,12 @@ describe("runtime-host-bridge", () => {
       fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       runtimeStateRoot,
       scopeId: runtimeStateId,
-      networkFetcher: async (input) => {
+      networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
+        }
         throw new Error(`Unexpected network request after restart: ${url}`);
       },
     });
@@ -18991,6 +19106,9 @@ describe("runtime-host-bridge", () => {
       networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
+        }
         if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
           expect(init?.method ?? "POST").toBe("POST");
           return new Response(
@@ -19057,6 +19175,9 @@ describe("runtime-host-bridge", () => {
           );
         }
 
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
+        }
         throw new Error(`Unexpected network request: ${url}`);
       },
     });
@@ -19201,6 +19322,9 @@ describe("runtime-host-bridge", () => {
         networkFetcher: async (input, init) => {
           const url =
             typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
+          }
           if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
             return new Response(
               JSON.stringify({
@@ -19308,6 +19432,9 @@ describe("runtime-host-bridge", () => {
             );
           }
 
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
+          }
           throw new Error(`Unexpected network request: ${url}`);
         },
       });
@@ -19458,6 +19585,10 @@ describe("runtime-host-bridge", () => {
                   ? input.toString()
                   : input.url;
 
+            if (isAdmissionReadinessProbe(init)) {
+              return successfulAdmissionReadinessProbe();
+            }
+
             if (url === "https://api.deepseek.com/v1/chat/completions") {
               providerRequestCount += 1;
               const requestBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
@@ -19500,6 +19631,9 @@ describe("runtime-host-bridge", () => {
               }
             }
 
+            if (isAdmissionReadinessProbe(init)) {
+              return successfulAdmissionReadinessProbe();
+            }
             throw new Error(`Unexpected network request: ${url}`);
           },
         });
@@ -19680,6 +19814,10 @@ describe("runtime-host-bridge", () => {
                   ? input.toString()
                   : input.url;
 
+            if (isAdmissionReadinessProbe(init)) {
+              return successfulAdmissionReadinessProbe();
+            }
+
             if (url === "https://api.deepseek.com/v1/chat/completions") {
               providerRequestCount += 1;
               const requestBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
@@ -19709,6 +19847,9 @@ describe("runtime-host-bridge", () => {
               );
             }
 
+            if (isAdmissionReadinessProbe(init)) {
+              return successfulAdmissionReadinessProbe();
+            }
             throw new Error(`Unexpected network request: ${url}`);
           },
         });
@@ -22332,6 +22473,9 @@ describe("runtime-host-bridge", () => {
       networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
+        }
         if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
           return new Response(
             JSON.stringify({
@@ -22384,6 +22528,9 @@ describe("runtime-host-bridge", () => {
             }),
             { status: 200, headers: { "content-type": "text/event-stream; charset=utf-8" } },
           );
+        }
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
         }
         throw new Error(`Unexpected network request: ${url}`);
       },
@@ -22520,6 +22667,9 @@ describe("runtime-host-bridge", () => {
         networkFetcher: async (input, init) => {
           const url =
             typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
+          }
           if (url === "https://api.moonshot.ai/v1/chat/completions") {
             const authHeader = (init?.headers as Record<string, string>)?.authorization ?? "";
             capturedAuthHeaders.push(authHeader);
@@ -22548,6 +22698,9 @@ describe("runtime-host-bridge", () => {
               }),
               { status: 200, headers: { "content-type": "text/event-stream; charset=utf-8" } },
             );
+          }
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
           }
           throw new Error(`Unexpected network request: ${url}`);
         },
@@ -22656,7 +22809,7 @@ describe("runtime-host-bridge", () => {
         fixtureRoot: testFixtureRoot,
         runtimeStateRoot,
         scopeId,
-        networkFetcher: async (input) => {
+        networkFetcher: async (input, init) => {
           const url =
             typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
           if (url === "https://api.deepseek.com/chat/completions") {
@@ -22680,6 +22833,9 @@ describe("runtime-host-bridge", () => {
               }),
               { status: 200, headers: { "content-type": "text/event-stream; charset=utf-8" } },
             );
+          }
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
           }
           throw new Error(`Unexpected network request: ${url}`);
         },
@@ -22787,7 +22943,7 @@ describe("runtime-host-bridge", () => {
         fixtureRoot: testFixtureRoot,
         runtimeStateRoot,
         scopeId,
-        networkFetcher: async (input) => {
+        networkFetcher: async (input, init) => {
           const url =
             typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
           if (url === "https://api.deepseek.com/chat/completions") {
@@ -22816,6 +22972,9 @@ describe("runtime-host-bridge", () => {
               }),
               { status: 200, headers: { "content-type": "text/event-stream; charset=utf-8" } },
             );
+          }
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
           }
           throw new Error(`Unexpected network request: ${url}`);
         },
@@ -22945,7 +23104,7 @@ describe("runtime-host-bridge", () => {
         fixtureRoot: testFixtureRoot,
         runtimeStateRoot,
         scopeId,
-        networkFetcher: async (input) => {
+        networkFetcher: async (input, init) => {
           const url =
             typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
           if (url === "https://api.deepseek.com/chat/completions") {
@@ -22969,6 +23128,9 @@ describe("runtime-host-bridge", () => {
               }),
               { status: 200, headers: { "content-type": "text/event-stream; charset=utf-8" } },
             );
+          }
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
           }
           throw new Error(`Unexpected network request: ${url}`);
         },
@@ -23088,6 +23250,9 @@ describe("runtime-host-bridge", () => {
         networkFetcher: async (input, init) => {
           const url =
             typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
+          }
           if (url === "https://api.moonshot.ai/v1/chat/completions") {
             const parsedBody = JSON.parse(String(init?.body ?? "{}")) as {
               model?: string;
@@ -23115,6 +23280,9 @@ describe("runtime-host-bridge", () => {
                 headers: { "content-type": "application/json" },
               },
             );
+          }
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
           }
           throw new Error(`Unexpected network request: ${url}`);
         },
