@@ -156,8 +156,7 @@ export function assignCandidateColorToken(
     usedColorTokens.add(preferred);
     return preferred;
   }
-  const fallback =
-    COLOR_PALETTE.find((token) => !usedColorTokens.has(token)) ?? preferred;
+  const fallback = COLOR_PALETTE.find((token) => !usedColorTokens.has(token)) ?? preferred;
   usedColorTokens.add(fallback);
   return fallback;
 }
@@ -380,9 +379,10 @@ export function deriveCandidateState(
   candidate: RouterCandidate,
   selection?: { readonly selected: boolean },
 ): CandidateState {
-  const token = candidate.healthStatus && candidate.healthStatus.length > 0
-    ? candidate.healthStatus
-    : (candidate.status ?? "");
+  const token =
+    candidate.healthStatus && candidate.healthStatus.length > 0
+      ? candidate.healthStatus
+      : (candidate.status ?? "");
   if (token === "degraded") {
     return "degraded";
   }
@@ -469,9 +469,7 @@ export function buildCandidateSpacePoints(
         left.candidate.modelId.localeCompare(right.candidate.modelId, "en"),
     );
 
-  const visible = Number.isFinite(limit)
-    ? ranked.slice(0, Math.max(0, limit))
-    : ranked;
+  const visible = Number.isFinite(limit) ? ranked.slice(0, Math.max(0, limit)) : ranked;
   const rendered = visible.length;
 
   const selectedId =

@@ -705,7 +705,9 @@ export async function stageTrackBRuntimeDistribution(options: {
       !/^[0-9a-f]{40}$/.test(options.expectedPublicSourceTree) ||
       manifest.publicSourceTree !== options.expectedPublicSourceTree
     ) {
-      throw new Error("Track B runtime distribution public source tree does not match this package");
+      throw new Error(
+        "Track B runtime distribution public source tree does not match this package",
+      );
     }
   }
   if (

@@ -148,7 +148,9 @@ export function requirePackagedTrackBManifest(
   trackBManifestText: string | null,
 ): void {
   if (packagedProfile && !trackBManifestText) {
-    throw new Error(`packaged ${packagedProfile.channel} runtime is missing its Track B distribution`);
+    throw new Error(
+      `packaged ${packagedProfile.channel} runtime is missing its Track B distribution`,
+    );
   }
 }
 

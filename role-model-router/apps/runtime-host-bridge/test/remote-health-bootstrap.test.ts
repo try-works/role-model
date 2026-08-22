@@ -86,8 +86,9 @@ describe("remote health bootstrap", () => {
       );
       const endpointId = endpoints.find((endpoint) => endpoint.status === "degraded")?.endpointId;
       expect(endpointId).toEqual(expect.any(String));
-      await expect(backend.updateBenchmarkPreferences({ judgeEndpointId: endpointId }))
-        .rejects.toThrow("Endpoint is not healthy enough for judge role");
+      await expect(
+        backend.updateBenchmarkPreferences({ judgeEndpointId: endpointId }),
+      ).rejects.toThrow("Endpoint is not healthy enough for judge role");
     } finally {
       await backend.shutdown?.();
       await rm(runtimeStateRoot, { recursive: true, force: true });

@@ -5,11 +5,11 @@ import path from "node:path";
 
 import { expect, test } from "vitest";
 
+import { resolvePackagedRuntimeSourceTree } from "../src/package-sea.js";
 import {
   stageTrackBRuntimeDistribution,
   trackBDistributionRequiresSQLiteMaintenance,
 } from "../src/track-b-runtime.js";
-import { resolvePackagedRuntimeSourceTree } from "../src/package-sea.js";
 
 test("AR6 refuses a package provenance stamp when the public source tree is dirty", () => {
   expect(() =>

@@ -13251,8 +13251,7 @@ function mergeRegistrySources(
     region: endpoint.region,
     endpointKind: endpoint.endpointKind,
     servingSource: endpoint.servingSource,
-    lifecycleState:
-      endpoint.lifecycleState as RegistrySources["cloud"][number]["lifecycleState"],
+    lifecycleState: endpoint.lifecycleState as RegistrySources["cloud"][number]["lifecycleState"],
     healthStatus: endpoint.healthStatus,
     reasoningEffort: endpoint.reasoningEffort ?? null,
     requestShapeHints: {
@@ -18775,7 +18774,9 @@ export async function createRuntimeBridgeBackend(
   }): void => {
     const endpoint = runtimeEndpoints.find((entry) => entry.endpointId === input.endpointId);
     if (!endpoint) {
-      throw new Error(`Cannot write an admission receipt for unknown endpoint ${input.endpointId}.`);
+      throw new Error(
+        `Cannot write an admission receipt for unknown endpoint ${input.endpointId}.`,
+      );
     }
     const account = currentAccounts.find(
       (entry) => entry.providerAccountId === endpoint.providerAccountId,
@@ -18866,7 +18867,8 @@ export async function createRuntimeBridgeBackend(
           modelId: input.modelId,
           reason: "credentials-missing",
           healthStatus: "credentials-missing",
-          message: "No usable Codex Subscription credential is available for remote admission probe.",
+          message:
+            "No usable Codex Subscription credential is available for remote admission probe.",
         };
       }
       const startedAt = Date.now();
@@ -21729,8 +21731,7 @@ export async function createRuntimeBridgeBackend(
     const runtimeAdmissionEligible = new Set(
       runtimeEndpoints
         .filter(
-          (endpoint) =>
-            endpoint.lifecycleState === "active" && endpoint.healthStatus === "healthy",
+          (endpoint) => endpoint.lifecycleState === "active" && endpoint.healthStatus === "healthy",
         )
         .map((endpoint) => endpoint.endpointId),
     );

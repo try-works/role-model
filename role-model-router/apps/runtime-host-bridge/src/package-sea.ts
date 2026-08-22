@@ -592,10 +592,14 @@ export async function packageSeaRuntime(): Promise<{
     throw new Error(`Unsupported runtime packaging target: ${process.platform}-${process.arch}`);
   }
   const profile = resolveRuntimeChannelProfile(resolveBuildRuntimeChannel());
-  const sourceStatusResult = spawnSync("git", ["status", "--porcelain=v1", "--untracked-files=all"], {
-    cwd: repoRoot,
-    encoding: "utf8",
-  });
+  const sourceStatusResult = spawnSync(
+    "git",
+    ["status", "--porcelain=v1", "--untracked-files=all"],
+    {
+      cwd: repoRoot,
+      encoding: "utf8",
+    },
+  );
   if (sourceStatusResult.status !== 0) {
     throw new Error("Unable to inspect public worktree cleanliness for packaged runtime");
   }
