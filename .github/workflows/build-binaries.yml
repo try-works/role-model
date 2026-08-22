@@ -262,12 +262,14 @@ jobs:
           repository: try-works/role-model-internal
           ref: ${{ steps.release_identity.outputs.private_source_commit }}
           token: ${{ secrets.ROLE_MODEL_INTERNAL_READ_TOKEN }}
-          path: _private
+          # Keep the paired source outside the public Git worktree.  SEA
+          # packaging deliberately rejects any untracked public source file.
+          path: .cache/paired-private
           fetch-depth: 0
 
       - name: Verify private revision passed paired promotion branch
         if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production'
-        working-directory: _private
+        working-directory: .cache/paired-private
         shell: bash
         env:
           RELEASE_PRIVATE_SHA: ${{ steps.release_identity.outputs.private_source_commit }}
@@ -286,7 +288,7 @@ jobs:
 
       - name: Build exact private release distribution
         if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production'
-        working-directory: _private
+        working-directory: .cache/paired-private
         env:
           ROLE_MODEL_PUBLIC_WORKTREE: ${{ github.workspace }}
           NODE_OPTIONS: --conditions=runtime
@@ -296,7 +298,7 @@ jobs:
 
       - name: Package SEA runtime
         env:
-          ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT: ${{ (env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production') && format('{0}/_private/dist/run00-dev', github.workspace) || '' }}
+          ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT: ${{ (env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production') && format('{0}/.cache/paired-private/dist/run00-dev', github.workspace) || '' }}
           RUN88_RELEASE_ID: ${{ steps.release_identity.outputs.release_id || env.RUN88_RELEASE_ID }}
         run: pnpm run runtime:package-sea
 
