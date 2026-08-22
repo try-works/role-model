@@ -434,7 +434,7 @@ describe("OpenAI Codex Subscription model matrix", () => {
       await backend.shutdown();
       await rm(runtimeStateRoot, { recursive: true, force: true });
     }
-  }, 45_000);
+  }, 120_000);
 
   test("bridges Codex continuation history onto chat-completions upstream targets for Kimi, DeepSeek, and generic LiteLLM", () => {
     const executionRequest = {

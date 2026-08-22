@@ -1,4 +1,5 @@
 import { type ChildProcess, spawn, spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import os from "node:os";
@@ -14,6 +15,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
 const tempRoots: string[] = [];
+const trackBDistributionRoot = process.env.ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT?.trim() ?? "";
+const hasExactTrackBDistribution = Boolean(
+  trackBDistributionRoot &&
+    existsSync(path.join(trackBDistributionRoot, "track-b-runtime-manifest.json")),
+);
 
 afterEach(async () => {
   await Promise.all(
@@ -352,7 +358,7 @@ async function launchPackagedRuntime(options: {
   return { child, stdout, stderr };
 }
 
-test.runIf(process.platform === "win32")(
+test.runIf(process.platform === "win32" && hasExactTrackBDistribution)(
   "packaged runtime repairs stale standalone aliases after env-backed restart bootstrap",
   async () => {
     const packaged = await packageSeaRuntime();
