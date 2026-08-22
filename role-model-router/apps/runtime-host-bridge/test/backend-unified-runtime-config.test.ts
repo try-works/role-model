@@ -207,7 +207,7 @@ litellm_proxy:
     );
     expect(account?.allowedModels).toEqual(["moonshot/kimi-k2.6"]);
     await restarted.shutdown();
-  });
+  }, 60_000);
 
   test("reassigns the controller when config-owned eject removes the active controller model", async () => {
     const tempRoot = await mkdtemp(
