@@ -2126,7 +2126,7 @@ describe("runtime design system", () => {
     expect(appShellSource).toContain("<Sidebar");
     expect(appShellSource).toContain("SegmentedControl");
     expect(appShellSource).toContain("buildSidebarModels");
-    expect(appShellSource).toContain("subscribeTelemetryStream");
+    expect(appShellSource).toContain("subscribeRuntimeRefreshStream");
     expect(appShellSource).not.toContain("SIDEBAR_FOOTER_STUB");
     expect(appShellSource).not.toContain("function primarySectionLinkClass");
     expect(appShellSource).not.toContain("function secondaryNavLinkClass");
