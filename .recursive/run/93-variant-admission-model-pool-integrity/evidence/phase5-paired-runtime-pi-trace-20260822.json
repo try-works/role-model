@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "run93-phase5-paired-runtime-pi-trace.v1",
+  "capturedAt": "2026-08-22T10:04:01.127Z",
+  "execution": {
+    "kind": "locally-packaged-paired-runtime",
+    "baseUrl": "http://127.0.0.1:59853",
+    "executionMode": "remote_only",
+    "scopeId": "run91-live-3492",
+    "publicSnapshotCommit": "96408703f91e92fdc429624f570544063cc6f965",
+    "publicSnapshotTree": "47444403ecc5f9ddb0944196861f14696ae3a33f",
+    "executableSha256": "4482efca3bda770036978bffa9bdf9c7d1312a91a1aed5aefbdfb5c48cbb5739",
+    "trackBManifestSha256": "d6b3feea1da8c34ca8a2f9045e6d929eeba16795bd9d9cbb1702c647d6cc0c33",
+    "trackBSidecarSha256": "a7a08aa3aae058e8f1a869b581b0aa6a10f21fa1374be67ace55e4c0e0e3ba88",
+    "trackBExtensionCount": 13
+  },
+  "pi": {
+    "provider": "role-model",
+    "requestedModel": "baseline.remote-only",
+    "requestedThinking": "low",
+    "result": "READY",
+    "requestId": "req-a6538f29-828f-4d8c-82d7-aa6403b103d3",
+    "routingDecisionId": "decision-req-a6538f29-828f-4d8c-82d7-aa6403b103d3",
+    "statusCode": 200,
+    "selectedModelId": "deepseek/deepseek-v4-flash",
+    "selectedEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-low",
+    "reasoningEffort": "low",
+    "effortSource": "variant",
+    "selectedHealth": "healthy"
+  },
+  "trackB": {
+    "mode": "shadow",
+    "productionMutation": false,
+    "projectionIdentity": {
+      "modelId": "deepseek/deepseek-v4-flash",
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-low",
+      "reasoningEffort": "low",
+      "effortSource": "variant"
+    },
+    "consumptionConsumerCount": 3,
+    "repositoryContextAvailable": true,
+    "extensionsEnabled": [
+      "artifact-store",
+      "event-log",
+      "repository-context",
+      "background-evidence-scheduler",
+      "memory-store",
+      "knowledge-store",
+      "evaluation-core",
+      "crowdsourced-learning",
+      "replay-core",
+      "evaluation-runner-local",
+      "trajectory-signals",
+      "profile-learner",
+      "knowledge-worker"
+    ]
+  },
+  "cloudBoundary": {
+    "contributionMode": "contributor",
+    "allowCloudUpload": true,
+    "recommendationCount": 1,
+    "liveRequestMutation": false,
+    "note": "The development shadow pipeline deliberately made no cloud write. Existing Phase 5 read-only Cloudflare inventory evidence remains authoritative for D1, R2, Queues, and five Workers."
+  },
+  "ui": {
+    "agentOperatedBrowser": true,
+    "routes": ["/app", "/app/remote/providers"],
+    "assertions": [
+      "Managed LiteLLM adapter inventory is not rendered as a configurable provider connection.",
+      "Each direct DeepSeek effort instance is labelled with its effort in the sidebar, provider list, and model-pool legend.",
+      "The model pool renders exactly the four routing-eligible direct remote endpoints."
+    ]
+  },
+  "secrets": "No credential contents, prompt content, or cloud credential material was read, copied, logged, or included."
+}

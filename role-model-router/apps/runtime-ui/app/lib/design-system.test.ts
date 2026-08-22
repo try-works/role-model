@@ -1978,6 +1978,12 @@ describe("runtime design system", () => {
     expect(candidateSpaceChartSource).not.toContain("No candidates to list.");
   });
 
+  test("model-pool candidate rail omits the redundant visible-count label", () => {
+    expect(candidateSpaceChartSource).not.toContain(
+      "Showing {points[0]?.rendered ?? 0} of {points[0]?.total ?? 0}",
+    );
+  });
+
   test("chart empty and unsupported states use RM3 dashed muted panels on every graph page", () => {
     expect(designSystemSource).toContain("export const chartEmptyStateClassName =");
     expect(designSystemSource).toContain("border-dashed border-border");
@@ -2120,7 +2126,7 @@ describe("runtime design system", () => {
     expect(appShellSource).toContain("<Sidebar");
     expect(appShellSource).toContain("SegmentedControl");
     expect(appShellSource).toContain("buildSidebarModels");
-    expect(appShellSource).toContain("subscribeTelemetryStream");
+    expect(appShellSource).toContain("subscribeRuntimeRefreshStream");
     expect(appShellSource).not.toContain("SIDEBAR_FOOTER_STUB");
     expect(appShellSource).not.toContain("function primarySectionLinkClass");
     expect(appShellSource).not.toContain("function secondaryNavLinkClass");

@@ -1,0 +1,10 @@
+# GREEN — Sub-phase A5 (pool projection + colors)
+
+Command: corepack pnpm --filter @role-model-router/runtime-ui exec vitest run
+Result: PASS (470 tests, 41 files)
+Date: 2026-08-22T01:30:34Z
+Files:
+  - apps/runtime-ui/app/lib/candidate-space.ts (Infinity default, 8-state CandidateState, 28-color RM3 palette, identity-hash color)
+  - apps/runtime-ui/app/components/candidate-space-chart.tsx (rendered/total disclosure + scrollable legend)
+  - apps/runtime-ui/app/routes/dashboard.tsx (drop hardcoded 5)
+  - apps/runtime-ui/app/lib/candidate-space.test.ts (R5/R6 tests)

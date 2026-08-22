@@ -48,6 +48,19 @@ function readRequestHeader(headers: HeadersInit | undefined, name: string): stri
   return null;
 }
 
+function successfulAdmissionChatResponse(): Response {
+  return new Response(
+    JSON.stringify({
+      id: "chatcmpl-restart-admission",
+      object: "chat.completion",
+      choices: [
+        { index: 0, message: { role: "assistant", content: "ready" }, finish_reason: "stop" },
+      ],
+    }),
+    { status: 200, headers: { "content-type": "application/json" } },
+  );
+}
+
 describe("restart rehydration", () => {
   test("restores activated endpoints and session readiness summary after backend restart", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `restart-rehydration-${Date.now()}`);
@@ -62,6 +75,7 @@ describe("restart rehydration", () => {
         fixtureRoot: testFixtureRoot,
         runtimeStateRoot,
         scopeId,
+        networkFetcher: async () => successfulAdmissionChatResponse(),
       });
 
     try {
@@ -306,6 +320,9 @@ describe("restart rehydration", () => {
       networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (url.endsWith("/chat/completions")) {
+          return successfulAdmissionChatResponse();
+        }
         if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
           expect(init?.method ?? "POST").toBe("POST");
           return new Response(
@@ -411,6 +428,9 @@ describe("restart rehydration", () => {
       networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (url.endsWith("/chat/completions")) {
+          return successfulAdmissionChatResponse();
+        }
         if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
           expect(init?.method ?? "POST").toBe("POST");
           return new Response(
@@ -630,6 +650,9 @@ describe("restart rehydration", () => {
       networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (url.endsWith("/chat/completions")) {
+          return successfulAdmissionChatResponse();
+        }
         if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
           expect(init?.method ?? "POST").toBe("POST");
           return new Response(
@@ -730,6 +753,9 @@ describe("restart rehydration", () => {
       networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (url.endsWith("/chat/completions")) {
+          return successfulAdmissionChatResponse();
+        }
         if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
           expect(init?.method ?? "POST").toBe("POST");
           return new Response(
@@ -914,6 +940,9 @@ describe("restart rehydration", () => {
       networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (url.endsWith("/chat/completions")) {
+          return successfulAdmissionChatResponse();
+        }
         if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
           expect(init?.method ?? "POST").toBe("POST");
           return new Response(
@@ -1105,6 +1134,9 @@ describe("restart rehydration", () => {
       networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (url.endsWith("/chat/completions")) {
+          return successfulAdmissionChatResponse();
+        }
         if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
           expect(init?.method ?? "POST").toBe("POST");
           return new Response(
@@ -1334,6 +1366,9 @@ describe("restart rehydration", () => {
       networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (url.endsWith("/chat/completions")) {
+          return successfulAdmissionChatResponse();
+        }
         if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
           expect(init?.method ?? "POST").toBe("POST");
           return new Response(
@@ -1501,6 +1536,9 @@ describe("restart rehydration", () => {
       networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (url.endsWith("/chat/completions")) {
+          return successfulAdmissionChatResponse();
+        }
         if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
           expect(init?.method ?? "POST").toBe("POST");
           return new Response(

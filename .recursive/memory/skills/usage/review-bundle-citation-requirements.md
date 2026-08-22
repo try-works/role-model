@@ -1,6 +1,6 @@
 # Review-bundle citation requirements (usage)
 
-Type: usage
+Type: pattern
 Status: CURRENT
 Scope: Phase 3.5 / delegated review when using recursive-review-bundle
 Owns-Paths:

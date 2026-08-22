@@ -36,6 +36,27 @@ const EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS = [
 
 const OPENAI_CODEX_SUBSCRIPTION_CODER_PATCH_TIMEOUT_MS = 90_000;
 
+function successfulCodexAdmissionReadinessProbe(requestId: string): {
+  statusCode: number;
+  body: Record<string, unknown>;
+  vendorMetadata: Record<string, unknown>;
+} {
+  return {
+    statusCode: 200,
+    body: {
+      id: `resp-${requestId}`,
+      output: [
+        {
+          type: "message",
+          role: "assistant",
+          content: [{ type: "output_text", text: "ready" }],
+        },
+      ],
+    },
+    vendorMetadata: { vendorId: "chatgpt-codex-responses", latencyMs: 1 },
+  };
+}
+
 describe("OpenAI Codex Subscription model matrix", () => {
   test("defines only the native-catalog-supported OpenAI GPT-5.3+ subscription rows", () => {
     expect(OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS).toEqual(
@@ -239,6 +260,9 @@ describe("OpenAI Codex Subscription model matrix", () => {
       },
       codexExecutionAdapter: {
         executeRequest: async ({ requestId, modelId, requestCapture }) => {
+          if (requestId.startsWith("admission-")) {
+            return successfulCodexAdmissionReadinessProbe(requestId);
+          }
           codexExecutionRequests.push({
             modelId,
             requestId,
@@ -410,7 +434,7 @@ describe("OpenAI Codex Subscription model matrix", () => {
       await backend.shutdown();
       await rm(runtimeStateRoot, { recursive: true, force: true });
     }
-  }, 45_000);
+  }, 120_000);
 
   test("bridges Codex continuation history onto chat-completions upstream targets for Kimi, DeepSeek, and generic LiteLLM", () => {
     const executionRequest = {
@@ -896,6 +920,9 @@ describe("OpenAI Codex Subscription model matrix", () => {
         },
         codexExecutionAdapter: {
           executeRequest: async ({ requestId, modelId, requestCapture }) => {
+            if (requestId.startsWith("admission-")) {
+              return successfulCodexAdmissionReadinessProbe(requestId);
+            }
             codexExecutionRequests.push({
               modelId,
               requestId,

@@ -17,7 +17,7 @@ import {
   startBridgeServer,
 } from "./index.js";
 import { validateRun88PrivateDistributionIdentity } from "./kw-private-loader.js";
-import { readPackagedRuntimeProfile } from "./runtime-channel.js";
+import { type RuntimeChannelProfile, readPackagedRuntimeProfile } from "./runtime-channel.js";
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
 import {
@@ -142,6 +142,17 @@ type CliBackend = Pick<
   | "getEffectiveRoutableInventory"
   | "shutdown"
 >;
+
+export function requirePackagedTrackBManifest(
+  packagedProfile: RuntimeChannelProfile | null,
+  trackBManifestText: string | null,
+): void {
+  if (packagedProfile && !trackBManifestText) {
+    throw new Error(
+      `packaged ${packagedProfile.channel} runtime is missing its Track B distribution`,
+    );
+  }
+}
 
 type Run88PiInvocationProvenance = Readonly<{
   source: "routed-execution-callback";
@@ -933,9 +944,7 @@ export async function main(): Promise<void> {
       modulePath: path.resolve(path.dirname(qaManifestPath as string), extension.modulePath),
     }));
     const qaStartupReceipts = new Map<string, Record<string, unknown>>();
-    if (packagedProfile?.channel === "production" && !trackBManifestText) {
-      throw new Error("packaged production runtime is missing its Track B distribution");
-    }
+    requirePackagedTrackBManifest(packagedProfile, trackBManifestText);
     const postObservationOutbox = createTrackBPostObservationOutbox({
       filePath: path.join(
         options.runtimeStateRoot,

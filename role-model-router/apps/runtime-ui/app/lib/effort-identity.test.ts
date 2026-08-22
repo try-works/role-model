@@ -162,4 +162,40 @@ describe("reasoning-effort endpoint identity", () => {
     expect(rows[0]?.requestCount).toBe(5);
     expect(rows[1]?.requestCount).toBe(2);
   });
+
+  test("shows the routable model pool rather than non-routable endpoint inventory", () => {
+    const routable = endpoint("deepseek-v4-flash:low", "deepseek/deepseek-v4-flash", "low");
+    const vendorInventory = {
+      ...endpoint("deepseek-v4-flash:litellm", "deepseek/deepseek-v4-flash", null),
+      routingEligible: false,
+    } as RuntimeEndpoint;
+
+    const rows = buildSidebarModels({
+      models: [model("deepseek/deepseek-v4-flash")],
+      endpoints: [routable, vendorInventory],
+      telemetryRows: [
+        {
+          endpointId: vendorInventory.endpointId,
+          modelId: vendorInventory.modelId,
+          sourceType: "remote",
+          requestCount: 50,
+          successCount: 50,
+          failureCount: 0,
+          totalInputTokens: 0,
+          totalOutputTokens: 0,
+          totalTokens: 0,
+          cachedRequestCount: 0,
+          totalActualCostUsd: 0,
+          totalEstimatedCostUsd: 0,
+          averageLatencyMs: null,
+          p95LatencyMs: null,
+          lastSeenAtMs: null,
+        },
+      ],
+    });
+
+    expect(rows).toEqual([
+      expect.objectContaining({ id: "deepseek-v4-flash (Low)", requestCount: 0 }),
+    ]);
+  });
 });

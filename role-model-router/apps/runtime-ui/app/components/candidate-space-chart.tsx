@@ -16,24 +16,99 @@ import {
 const STROKE: Record<CandidateSpaceColorToken, string> = {
   serria: "var(--rm3-chart-cost)",
   royal: "var(--rm3-chart-1)",
-  emerald: "var(--rm3-chart-cache)",
-  coral: "var(--rm3-chart-error)",
+  emerald: "var(--rm3-chart-2)",
+  coral: "var(--rm3-chart-coral)",
+  azure: "var(--rm3-chart-azure)",
+  pink: "var(--rm3-chart-pink)",
+  violet: "var(--rm3-chart-violet)",
+  amber: "var(--rm3-chart-amber)",
+  error: "var(--rm3-chart-error)",
+  cache: "var(--rm3-chart-cache)",
+  throughput: "var(--rm3-chart-3)",
+  latency: "var(--rm3-chart-5)",
+  green: "var(--rm3-chart-green)",
+  blue: "var(--rm3-chart-blue)",
+  purple: "var(--rm3-chart-purple)",
+  orange: "var(--rm3-chart-orange)",
+  sky: "var(--rm3-chart-sky)",
+  teal: "var(--rm3-chart-teal)",
+  mint: "var(--rm3-chart-mint)",
+  rose: "var(--rm3-chart-rose)",
+  sage: "var(--rm3-chart-sage)",
+  cobalt: "var(--rm3-chart-cobalt)",
+  blush: "var(--rm3-chart-blush)",
+  lilac: "var(--rm3-chart-lilac)",
+  mustard: "var(--rm3-chart-mustard)",
+  mist: "var(--rm3-chart-mist)",
+  remote: "var(--rm3-chart-6)",
+  local: "var(--rm3-chart-4)",
+  queue: "var(--rm3-chart-8)",
   muted: "var(--rm3-chart-nodata)",
 };
 
 const FILL: Record<CandidateSpaceColorToken, string> = {
   serria: "color-mix(in srgb, var(--rm3-chart-cost) 28%, transparent)",
   royal: "color-mix(in srgb, var(--rm3-chart-1) 24%, transparent)",
-  emerald: "color-mix(in srgb, var(--rm3-chart-cache) 26%, transparent)",
-  coral: "color-mix(in srgb, var(--rm3-chart-error) 20%, transparent)",
+  emerald: "color-mix(in srgb, var(--rm3-chart-2) 26%, transparent)",
+  coral: "color-mix(in srgb, var(--rm3-chart-coral) 24%, transparent)",
+  azure: "color-mix(in srgb, var(--rm3-chart-azure) 24%, transparent)",
+  pink: "color-mix(in srgb, var(--rm3-chart-pink) 24%, transparent)",
+  violet: "color-mix(in srgb, var(--rm3-chart-violet) 24%, transparent)",
+  amber: "color-mix(in srgb, var(--rm3-chart-amber) 24%, transparent)",
+  error: "color-mix(in srgb, var(--rm3-chart-error) 20%, transparent)",
+  cache: "color-mix(in srgb, var(--rm3-chart-cache) 26%, transparent)",
+  throughput: "color-mix(in srgb, var(--rm3-chart-3) 24%, transparent)",
+  latency: "color-mix(in srgb, var(--rm3-chart-5) 24%, transparent)",
+  green: "color-mix(in srgb, var(--rm3-chart-green) 24%, transparent)",
+  blue: "color-mix(in srgb, var(--rm3-chart-blue) 24%, transparent)",
+  purple: "color-mix(in srgb, var(--rm3-chart-purple) 24%, transparent)",
+  orange: "color-mix(in srgb, var(--rm3-chart-orange) 24%, transparent)",
+  sky: "color-mix(in srgb, var(--rm3-chart-sky) 24%, transparent)",
+  teal: "color-mix(in srgb, var(--rm3-chart-teal) 24%, transparent)",
+  mint: "color-mix(in srgb, var(--rm3-chart-mint) 24%, transparent)",
+  rose: "color-mix(in srgb, var(--rm3-chart-rose) 24%, transparent)",
+  sage: "color-mix(in srgb, var(--rm3-chart-sage) 24%, transparent)",
+  cobalt: "color-mix(in srgb, var(--rm3-chart-cobalt) 24%, transparent)",
+  blush: "color-mix(in srgb, var(--rm3-chart-blush) 24%, transparent)",
+  lilac: "color-mix(in srgb, var(--rm3-chart-lilac) 24%, transparent)",
+  mustard: "color-mix(in srgb, var(--rm3-chart-mustard) 24%, transparent)",
+  mist: "color-mix(in srgb, var(--rm3-chart-mist) 24%, transparent)",
+  remote: "color-mix(in srgb, var(--rm3-chart-6) 24%, transparent)",
+  local: "color-mix(in srgb, var(--rm3-chart-4) 24%, transparent)",
+  queue: "color-mix(in srgb, var(--rm3-chart-8) 24%, transparent)",
   muted: "transparent",
 };
 
 const SWATCH: Record<CandidateSpaceColorToken, string> = {
   serria: "bg-[var(--rm3-chart-cost)]",
   royal: "bg-[var(--rm3-chart-1)]",
-  emerald: "bg-[var(--rm3-chart-cache)]",
-  coral: "bg-[var(--rm3-chart-error)]",
+  emerald: "bg-[var(--rm3-chart-2)]",
+  coral: "bg-[var(--rm3-chart-coral)]",
+  azure: "bg-[var(--rm3-chart-azure)]",
+  pink: "bg-[var(--rm3-chart-pink)]",
+  violet: "bg-[var(--rm3-chart-violet)]",
+  amber: "bg-[var(--rm3-chart-amber)]",
+  error: "bg-[var(--rm3-chart-error)]",
+  cache: "bg-[var(--rm3-chart-cache)]",
+  throughput: "bg-[var(--rm3-chart-3)]",
+  latency: "bg-[var(--rm3-chart-5)]",
+  green: "bg-[var(--rm3-chart-green)]",
+  blue: "bg-[var(--rm3-chart-blue)]",
+  purple: "bg-[var(--rm3-chart-purple)]",
+  orange: "bg-[var(--rm3-chart-orange)]",
+  sky: "bg-[var(--rm3-chart-sky)]",
+  teal: "bg-[var(--rm3-chart-teal)]",
+  mint: "bg-[var(--rm3-chart-mint)]",
+  rose: "bg-[var(--rm3-chart-rose)]",
+  sage: "bg-[var(--rm3-chart-sage)]",
+  cobalt: "bg-[var(--rm3-chart-cobalt)]",
+  blush: "bg-[var(--rm3-chart-blush)]",
+  lilac: "bg-[var(--rm3-chart-lilac)]",
+  mustard: "bg-[var(--rm3-chart-mustard)]",
+  mist: "bg-[var(--rm3-chart-mist)]",
+  remote: "bg-[var(--rm3-chart-6)]",
+  local: "bg-[var(--rm3-chart-4)]",
+  queue: "bg-[var(--rm3-chart-8)]",
   muted: "border border-dashed border-[var(--rm3-chart-nodata)] bg-transparent",
 };
 
@@ -181,13 +256,15 @@ export function CandidateSpaceChart({ points }: CandidateSpaceChartProps) {
       </div>
 
       <div className="flex h-full min-h-[280px] flex-col gap-3">
-        <p className="font-mono text-[11px] font-normal uppercase tracking-[0.08em] text-muted-foreground">
-          Candidates · route score (0–1)
-        </p>
+        <div className="flex items-baseline gap-2">
+          <p className="font-mono text-[11px] font-normal uppercase tracking-[0.08em] text-muted-foreground">
+            Candidates · route score (0–1)
+          </p>
+        </div>
         {points.length === 0 ? (
           <EmptyCandidateInventory />
         ) : (
-          <ul className="flex flex-col gap-2.5">
+          <ul className="flex max-h-[360px] flex-col gap-2.5 overflow-y-auto pr-1">
             {points.map((point) => (
               <li key={point.endpointId} className="flex items-start gap-2.5">
                 <span

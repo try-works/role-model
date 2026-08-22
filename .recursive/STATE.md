@@ -2,6 +2,17 @@
 
 ## Current State
 
+Run `93-variant-admission-model-pool-integrity` is the current release-candidate
+readiness increment: remote effort variants are distinct endpoint identities,
+admission and probe/circuit health are authoritative for routing and benchmark
+eligibility, managed LiteLLM adapter rows are hidden from configurable provider
+connections, candidate colours are deterministic/distinct, and packaged builds
+require the paired mandatory thirteen-extension Track B distribution. Agent-run
+QA rebuilt the executable and sent bounded Pi CLI alias and direct Low/High/Max/
+Pro-default requests through telemetry, routing decisions, browser projections,
+Track B shadow consumers, and Cloudflare read-only inventory. Stage promotion
+remains a separate release operation.
+
 Run `92-configured-model-pool-benchmark-convergence` is the **current closed-out** configured-model-pool convergence: endpoint-variant-exact membership revision token stamped at persist/read/portfolio/decision time, honest null candidate-space (no synthetic 0/0%), membership-revision + stale benchmark quarantine, destructive-confirm final-controller eject, decision revision, and transactional benchmark clear. Strict TDD (SP1–SP6), Phase 3.5 self-review, agent-operated rebuilt-runtime QA on `:3501`. Run `89-codex-role-model-package` remains the closed-out Codex adapter package (public npm `@try-works/codex-role-model@0.1.1`); Direct Track B v1.1 remains the substrate baseline. Runs 79–85 shipped mutate/dismiss UI, live `--track=dev` signed recommendation hops, gated KW activation, and gated live-router prompt inject. Run `86-runtime-ui-rm3-design-system-frontend` remains the closed-out runtime-ui RM3 design-system migration. Track B / KW substrate truths from run 85 remain authoritative for inject/KW surfaces.
 
 ### Product truths

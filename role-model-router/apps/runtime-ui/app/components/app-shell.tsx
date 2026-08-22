@@ -1,5 +1,13 @@
 import { PageContent, SegmentedControl, Sidebar, SubPageHeaderBar } from "@role-model/ui";
-import { type ReactNode, startTransition, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Fragment,
+  type ReactNode,
+  startTransition,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useLocation, useNavigate } from "react-router";
 
 import {
@@ -9,7 +17,7 @@ import {
 } from "../lib/design-system";
 import { startDeferredLiveRefresh } from "../lib/live-refresh";
 import {
-  type RuntimeTelemetryStreamEvent,
+  type RuntimeRefreshStreamEvent,
   fetchDownstreamOpenAIProviderConfig,
   fetchRouterSummary,
   fetchRuntimeConfig,
@@ -17,7 +25,7 @@ import {
   fetchRuntimeModels,
   fetchTelemetryDashboard,
   fetchTelemetryRequests,
-  subscribeTelemetryStream,
+  subscribeRuntimeRefreshStream,
 } from "../lib/runtime-api";
 import { useShellHeaderState } from "../lib/shell-header-context";
 import {
@@ -66,6 +74,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { actions, override } = useShellHeaderState();
   const [footer, setFooter] = useState<SidebarFooterState>(() => createEmptySidebarFooter());
   const [theme, setTheme] = useState<RuntimeTheme>("dark");
+  const [contentRevision, setContentRevision] = useState(0);
   const route = getRuntimeRouteDefinition(location.pathname) ?? getRuntimeRouteDefinition("/app");
   const activeSection =
     runtimeNavigationSections.find((section) => section.title === route?.section) ??
@@ -181,11 +190,17 @@ export function AppShell({ children }: { children: ReactNode }) {
         await load();
       },
       subscribe: (onEvent) =>
-        subscribeTelemetryStream((event: RuntimeTelemetryStreamEvent) => {
-          setFooter((current) => ({
-            ...current,
-            cacheHitRate: cacheHitRateFromRequest(event.request),
-          }));
+        subscribeRuntimeRefreshStream((event: RuntimeRefreshStreamEvent) => {
+          if (event.eventName === "telemetry.update") {
+            setFooter((current) => ({
+              ...current,
+              cacheHitRate: cacheHitRateFromRequest(event.request),
+            }));
+          } else {
+            // A keyed fragment remounts the active route, making every runtime-backed
+            // page re-fetch after durable admission, health or benchmark changes.
+            setContentRevision(event.revision);
+          }
           onEvent();
         }),
     });
@@ -221,17 +236,19 @@ export function AppShell({ children }: { children: ReactNode }) {
           {actions}
         </SubPageHeaderBar>
         <PageContent ref={contentScrollRef} className="runtime-shell-content-scroll">
-          {hasSecondaryNavigation ? (
-            <SegmentedControl
-              aria-label={`${activeSection.title} secondary navigation`}
-              options={secondaryOptions}
-              // Match Overview PageFilters SegmentedControl text (14px / size md).
-              size="md"
-              value={secondaryValue}
-              onChange={(to) => navigate(to)}
-            />
-          ) : null}
-          {children}
+          <Fragment key={`runtime-revision-${contentRevision}`}>
+            {hasSecondaryNavigation ? (
+              <SegmentedControl
+                aria-label={`${activeSection.title} secondary navigation`}
+                options={secondaryOptions}
+                // Match Overview PageFilters SegmentedControl text (14px / size md).
+                size="md"
+                value={secondaryValue}
+                onChange={(to) => navigate(to)}
+              />
+            ) : null}
+            {children}
+          </Fragment>
         </PageContent>
       </div>
     </div>

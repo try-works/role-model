@@ -101,6 +101,18 @@ describe("Run 91 effort instance identity", () => {
     ).toEqual([]);
   });
 
+  test("offers catalog effort values through the Anthropic thinking-budget serializer adapter", () => {
+    expect(
+      resolveAdapterGatedReasoningEfforts({
+        providerId: "anthropic",
+        modelId: "claude-3.7-sonnet",
+        capabilities: ["reasoning"],
+        catalogLevels: ["medium", "max"],
+        adapterFamily: "ai-sdk-anthropic",
+      }),
+    ).toEqual(["medium", "max"]);
+  });
+
   test("coerces a conflicting client effort to the selected fixed endpoint effort", () => {
     const resolution = resolveEndpointExecutionEffort({
       fixedEffort: "high",
