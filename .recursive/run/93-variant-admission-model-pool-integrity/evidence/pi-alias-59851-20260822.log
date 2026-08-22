@@ -1,0 +1,12 @@
+Warning: Model "baseline.remote-only" not found for provider "role-model". Using custom model id.
+Extension error (D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\packages\pi-role-model\extensions\role-model.ts): invalid Role-Model model id: baseline.remote-only
+classification: unknown-model-id
+provider: role-model
+runtime reached: yes
+reason: the requested model id is not present in the discovered Role-Model alias catalog.
+Recommended Role-Model alias: deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-high
+Run /role-model alias list to inspect valid aliases.
+Run /role-model alias recommended to inspect the current default.
+Use --provider role-model --model deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-high
+Compatibility note: role-model/<alias> is accepted only when a Pi API explicitly requires a qualified id.
+400: {"type":"capability_eligibility_error","code":"no_eligible_target","message":"no_eligible_target: no targets for model baseline.remote-only satisfy the inferred request capabilities.","requestedModel":"baseline.remote-only","requiredInputModalities":["text"],"requiredOutputModalities":["text"],"requiredCapabilities":["reasoning.effort_control","text.chat"],"excludedTargets":[]}

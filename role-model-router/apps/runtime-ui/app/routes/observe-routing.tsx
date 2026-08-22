@@ -13,7 +13,7 @@ import type {
   RuntimeTelemetryAnalyticsFilters,
   RuntimeTelemetryAnalyticsResponse,
 } from "../lib/runtime-api";
-import { fetchTelemetryAnalytics, subscribeTelemetryStream } from "../lib/runtime-api";
+import { fetchTelemetryAnalytics, subscribeRuntimeRefreshStream } from "../lib/runtime-api";
 import {
   buildQuerySnapshot,
   createStaleChartDiagnostic,
@@ -244,7 +244,7 @@ export default function ObserveRoutingRoute() {
 
     const dispose = startDeferredLiveRefresh({
       load,
-      subscribe: (onEvent) => subscribeTelemetryStream(onEvent),
+      subscribe: (onEvent) => subscribeRuntimeRefreshStream(onEvent),
     });
 
     return () => {

@@ -1,0 +1,8 @@
+# GREEN — Sub-phase A2 (isHealthyEndpoint benchmark eligibility)
+
+Command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/benchmark-endpoint-health.test.ts
+Result: PASS (6 passed)
+Date: 2026-08-22T01:55:26Z
+Files:
+  - src/benchmark-runner.ts (isHealthyEndpoint delegates to health-policy isHealthyEndpointState; now exported)
+  - test/benchmark-endpoint-health.test.ts (NEW)

@@ -1,6 +1,6 @@
 # Live KW inject needs aligned host query/bridge/join wiring (issues)
 
-Type: issues
+Type: incident
 Status: CURRENT
 Scope: public runtime-host-bridge durable KW ON → gated prompt inject on live chat/completions and pi
 Owns-Paths:

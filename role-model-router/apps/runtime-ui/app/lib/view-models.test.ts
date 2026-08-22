@@ -1655,6 +1655,67 @@ describe("buildProviderMaintenanceRows", () => {
 });
 
 describe("buildConfiguredRemoteConnectionRows", () => {
+  test("excludes managed LiteLLM adapter records from user-configured provider connections", () => {
+    const rows = buildConfiguredRemoteConnectionRows({
+      accounts: [
+        {
+          providerAccountId: "deepseek.litellm",
+          providerId: "deepseek",
+          authMode: "api-key-static",
+        },
+        {
+          providerAccountId: "deepseek.personal.primary",
+          providerId: "deepseek",
+          authMode: "api-key-static",
+        },
+      ],
+      endpoints: [
+        {
+          endpointId: "deepseek.litellm.global.deepseek-v4-flash",
+          providerAccountId: "deepseek.litellm",
+          providerId: "deepseek",
+          modelId: "deepseek/deepseek-v4-flash",
+          sourceType: "remote",
+          servingSource: "vendor-litellm",
+          status: "active",
+          healthStatus: "healthy",
+          routingEligible: false,
+          benchmarkEligible: false,
+        },
+        {
+          endpointId: "deepseek.personal.primary.global.deepseek-v4-flash-low",
+          providerAccountId: "deepseek.personal.primary",
+          providerId: "deepseek",
+          modelId: "deepseek/deepseek-v4-flash",
+          sourceType: "remote",
+          servingSource: "remote-service",
+          status: "active",
+          healthStatus: "healthy",
+          routingEligible: true,
+          benchmarkEligible: true,
+          reasoningEffort: "low",
+        },
+      ],
+      models: [
+        {
+          id: "deepseek/deepseek-v4-flash",
+          displayName: "DeepSeek V4 Flash",
+          endpoint_ids: [
+            "deepseek.litellm.global.deepseek-v4-flash",
+            "deepseek.personal.primary.global.deepseek-v4-flash-low",
+          ],
+        },
+      ],
+    });
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      providerAccountId: "deepseek.personal.primary",
+      endpointCount: 1,
+      endpoints: [expect.objectContaining({ displayName: "DeepSeek V4 Flash (Low)" })],
+    });
+  });
+
   test("shows only configured remote endpoints and their models, excluding maintenance-only and local accounts", () => {
     expect(
       buildConfiguredRemoteConnectionRows({

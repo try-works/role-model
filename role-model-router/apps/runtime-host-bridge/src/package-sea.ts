@@ -57,15 +57,33 @@ export function validatePairedReleasePackagingInputs<
   releaseId: string | undefined;
   trackBRuntime: T | null;
 }>): Readonly<{ releaseId: string | undefined; trackBRuntime: T | null }> {
+  if (!trackBRuntime || !/^[0-9a-f]{64}$/.test(trackBRuntime.manifestSha256)) {
+    throw new Error(`${channel} packaging requires the exact private distribution`);
+  }
   if (channel === "stage" || channel === "production") {
     if (!/^sha256:[0-9a-f]{64}$/.test(releaseId ?? "")) {
       throw new Error(`${channel} packaging requires an exact Run 88 release identity`);
     }
-    if (!trackBRuntime || !/^[0-9a-f]{64}$/.test(trackBRuntime.manifestSha256)) {
-      throw new Error(`${channel} packaging requires the exact private distribution`);
-    }
   }
   return Object.freeze({ releaseId, trackBRuntime });
+}
+
+export function resolvePackagedRuntimeSourceTree({
+  statusPorcelain,
+  sourceTree,
+}: Readonly<{
+  statusPorcelain: string;
+  sourceTree: string;
+}>): string {
+  if (statusPorcelain.trim().length > 0) {
+    throw new Error(
+      "Packaged runtime requires a clean public worktree; commit or discard source changes before packaging",
+    );
+  }
+  if (!/^[0-9a-f]{40}$/.test(sourceTree)) {
+    throw new Error("Unable to resolve source_tree for packaged runtime");
+  }
+  return sourceTree;
 }
 
 const NODE_SEA_FUSE = "NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2";
@@ -164,6 +182,10 @@ const forbiddenProductionReleaseTextMarkers = [
   "http://127.0.0.1:45679",
   "anthropic.team.shared",
   "cli.local.coder",
+  // Synthetic packaging-validation credential sentinel (R7). Its ref and value
+  // must never leak into a production executable/archive/installer payload.
+  "SP7_MOONSHOT_API_KEY",
+  "packaging-validation-key",
 ] as const;
 
 const productionReleaseTextExtensions = new Set([
@@ -570,6 +592,21 @@ export async function packageSeaRuntime(): Promise<{
     throw new Error(`Unsupported runtime packaging target: ${process.platform}-${process.arch}`);
   }
   const profile = resolveRuntimeChannelProfile(resolveBuildRuntimeChannel());
+  const sourceStatusResult = spawnSync("git", ["status", "--porcelain=v1", "--untracked-files=all"], {
+    cwd: repoRoot,
+    encoding: "utf8",
+  });
+  if (sourceStatusResult.status !== 0) {
+    throw new Error("Unable to inspect public worktree cleanliness for packaged runtime");
+  }
+  const sourceTreeResult = spawnSync("git", ["rev-parse", "HEAD^{tree}"], {
+    cwd: repoRoot,
+    encoding: "utf8",
+  });
+  const sourceTree = resolvePackagedRuntimeSourceTree({
+    statusPorcelain: sourceStatusResult.stdout,
+    sourceTree: sourceTreeResult.status === 0 ? sourceTreeResult.stdout.trim() : "",
+  });
   const packageBuildDate = new Date();
   const packageBuildDateIso = packageBuildDate.toISOString();
   const versionInfo = await resolveRuntimeVersionInfo({
@@ -619,6 +656,7 @@ export async function packageSeaRuntime(): Promise<{
     ? await stageTrackBRuntimeDistribution({
         sourceRoot: path.resolve(trackBDistributionRoot),
         releaseDir: path.join(releaseDir, "track-b-runtime"),
+        expectedPublicSourceTree: sourceTree,
       })
     : null;
   const launcherName = `${profile.name}-launcher.exe`;
@@ -632,14 +670,6 @@ export async function packageSeaRuntime(): Promise<{
   }
 
   const sha256 = await writeSha256(outputPath);
-  const sourceTreeResult = spawnSync("git", ["rev-parse", "HEAD^{tree}"], {
-    cwd: repoRoot,
-    encoding: "utf8",
-  });
-  if (sourceTreeResult.status !== 0 || !sourceTreeResult.stdout.trim()) {
-    throw new Error("Unable to resolve source_tree for packaged runtime");
-  }
-  const sourceTree = sourceTreeResult.stdout.trim();
   const run88ReleaseId = process.env.RUN88_RELEASE_ID?.trim();
   validatePairedReleasePackagingInputs({
     channel: profile.channel,
@@ -676,6 +706,7 @@ export async function packageSeaRuntime(): Promise<{
               sidecar_sha256: trackBRuntime.sidecarSha256,
               manifest_sha256: trackBRuntime.manifestSha256,
               compatibility_generation: trackBRuntime.compatibilityGeneration,
+              public_source_tree: trackBRuntime.publicSourceTree,
               extension_count: trackBRuntime.extensionCount,
             }
           : null,

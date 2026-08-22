@@ -1,0 +1,9 @@
+# GREEN — Sub-phase A6 (packaging sentinel scan + clean-install docs)
+
+Command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/executable.test.ts -t "production release guard"
+Result: PASS (4 passed: clean release passes; sentinel/fixture/mock/litellm markers rejected)
+Date: 2026-08-22T01:45:26Z
+Files:
+  - src/package-sea.ts (forbiddenProductionReleaseTextMarkers += SP7_MOONSHOT_API_KEY, packaging-validation-key)
+  - test/executable.test.ts (sentinel-absence test)
+  - docs/public/install.md (clean-install expectation section)

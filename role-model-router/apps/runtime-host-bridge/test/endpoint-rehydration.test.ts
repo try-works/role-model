@@ -31,6 +31,26 @@ describe("endpoint rehydration", () => {
       const databasePath = resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId });
       const originalDeepSeekApiKey = process.env.DEEPSEEK_API_KEY;
       process.env.DEEPSEEK_API_KEY = "deepseek-batch-key";
+      const admissionBodies: Record<string, unknown>[] = [];
+      const networkFetcher: typeof fetch = async (input, init) => {
+        const url = String(input);
+        if (url.endsWith("/models")) {
+          return new Response(JSON.stringify({ data: [{ id: "deepseek/deepseek-v4-pro" }] }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        if (url.endsWith("/chat/completions")) {
+          // The batch must probe each configured effort sibling independently.
+          // Do not accept a base-model-only readiness check.
+          admissionBodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
+          return new Response(JSON.stringify({ choices: [{ message: { content: "ok" } }] }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        throw new Error(`Unexpected network request during batch rehydration test: ${url}`);
+      };
       const createBackend = async () =>
         (
           bridge as {
@@ -39,6 +59,7 @@ describe("endpoint rehydration", () => {
               fixtureRoot: string;
               runtimeStateRoot: string;
               scopeId: string;
+              networkFetcher: typeof fetch;
             }) => Promise<{
               readonly effectiveRegistry: {
                 readonly endpoints: readonly {
@@ -76,6 +97,7 @@ describe("endpoint rehydration", () => {
           fixtureRoot: testFixtureRoot,
           runtimeStateRoot,
           scopeId,
+          networkFetcher,
         });
 
       try {
@@ -133,6 +155,12 @@ describe("endpoint rehydration", () => {
           }),
         );
         expect(new Set(result.endpoints.map((entry) => entry.endpointId)).size).toBe(2);
+        expect(admissionBodies).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ reasoning_effort: "high" }),
+            expect.objectContaining({ reasoning_effort: "max" }),
+          ]),
+        );
         const activatedAccount = (await backend.listAccounts()).find(
           (account) => account.providerAccountId === "deepseek.personal.primary",
         );
@@ -723,6 +751,7 @@ describe("endpoint rehydration", () => {
     async () => {
       const runtimeStateRoot = path.join(os.tmpdir(), `runtime-host-endpoint-health-${Date.now()}`);
       const scopeId = "endpoint-health-tests";
+      const databasePath = resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId });
       const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
       const originalMoonshotApiKey = process.env.MOONSHOT_API_KEY;
       process.env.MOONSHOT_API_KEY = "moonshot-health-key";
@@ -739,6 +768,7 @@ describe("endpoint rehydration", () => {
               networkFetcher: typeof fetch;
             }) => Promise<{
               upsertProviderAccount: (body: Record<string, unknown>) => Promise<unknown>;
+              updateRuntimeConfig: (body: Record<string, unknown>) => Promise<unknown>;
               activateEndpoint: (body: Record<string, unknown>) => Promise<{ endpointId: string }>;
               listEndpoints: () => Promise<
                 readonly {
@@ -775,7 +805,7 @@ describe("endpoint rehydration", () => {
         await mkdir(runtimeStateRoot, { recursive: true });
         await writeFile(
           unifiedRuntimeConfigPath,
-          'version: "1.1"\nexecutionMode: hybrid\n',
+          'version: "1.0"\nrouting:\n  strategy: baseline\nexecution_mode: hybrid\n',
           "utf8",
         );
         const backend = await createBackend(async (input) => {
@@ -792,7 +822,17 @@ describe("endpoint rehydration", () => {
               },
             );
           }
+          if (url.endsWith("/chat/completions")) {
+            return new Response(JSON.stringify({ choices: [{ message: { content: "ready" } }] }), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            });
+          }
           throw new Error(`Unexpected network request during endpoint setup test: ${url}`);
+        });
+        await backend.updateRuntimeConfig({
+          routingStrategy: "baseline",
+          executionMode: "hybrid",
         });
         await backend.upsertProviderAccount({
           providerAccountId: "moonshot.personal.primary",
@@ -830,6 +870,7 @@ describe("endpoint rehydration", () => {
           modelId: "moonshot/kimi-k2.5",
           region: "global",
         });
+        expect(activation).toEqual(expect.objectContaining({ status: "active" }));
         await backend.shutdown?.();
 
         const restartedBackend = await createBackend(async (input) => {
@@ -853,6 +894,16 @@ describe("endpoint rehydration", () => {
             health = await restartedBackend.readHealthStatus?.();
           }
           expect(health?.sessionBootstrap.status).not.toBe("running");
+          expect(
+            listRuntimeEndpoints({ databasePath }).find(
+              (endpoint) => endpoint.endpointId === activation.endpointId,
+            ),
+          ).toEqual(
+            expect.objectContaining({
+              endpointId: activation.endpointId,
+              healthStatus: "offline",
+            }),
+          );
 
           await expect(restartedBackend.listEndpoints()).resolves.toEqual(
             expect.arrayContaining([

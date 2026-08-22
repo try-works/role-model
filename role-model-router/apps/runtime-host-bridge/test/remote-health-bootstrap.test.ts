@@ -1,4 +1,4 @@
-import { rm } from "node:fs/promises";
+import { readFile, readdir, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
@@ -10,6 +10,472 @@ const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
 const testFixtureRoot = path.join(import.meta.dirname, "fixtures");
 
 describe("remote health bootstrap", () => {
+  test("does not fail open when a Codex Subscription endpoint has no Responses admission probe", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `codex-admission-${Date.now()}`);
+    const scopeId = "codex-admission-tests";
+    const calls: string[] = [];
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          networkFetcher: typeof fetch;
+        }) => Promise<{
+          upsertProviderAccount: (body: Record<string, unknown>) => Promise<unknown>;
+          activateEndpoint: (body: Record<string, unknown>) => Promise<{ status: string }>;
+          listEndpoints: () => Promise<
+            readonly {
+              endpointId: string;
+              status: string;
+              healthStatus: string;
+              routingEligible: boolean;
+            }[]
+          >;
+          updateBenchmarkPreferences: (body: Record<string, unknown>) => Promise<unknown>;
+          shutdown?: () => Promise<void>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+      networkFetcher: async (input) => {
+        calls.push(String(input));
+        throw new Error("Codex admission must not use an incompatible OpenAI-compatible probe.");
+      },
+    });
+    try {
+      await backend.upsertProviderAccount({
+        providerAccountId: "openai.personal.codex-admission",
+        providerId: "openai",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: { backend: "local-file", ref: "codex-admission.json" },
+        authMode: "oauth2-device-code",
+        regionPolicy: { mode: "prefer", regions: ["global"] },
+        allowedModels: ["chatgpt/gpt-5.4"],
+        modelRoleBindings: [{ modelId: "chatgpt/gpt-5.4", roleIds: ["general.chat"] }],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      });
+      const activation = await backend.activateEndpoint({
+        providerAccountId: "openai.personal.codex-admission",
+        modelId: "chatgpt/gpt-5.4",
+        region: "global",
+      });
+      expect(activation.status).toBe("degraded");
+      expect(calls).toEqual([]);
+      const endpoints = await backend.listEndpoints();
+      expect(endpoints).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            status: "degraded",
+            healthStatus: "credentials-missing",
+            routingEligible: false,
+          }),
+        ]),
+      );
+      const endpointId = endpoints.find((endpoint) => endpoint.status === "degraded")?.endpointId;
+      expect(endpointId).toEqual(expect.any(String));
+      await expect(backend.updateBenchmarkPreferences({ judgeEndpointId: endpointId }))
+        .rejects.toThrow("Endpoint is not healthy enough for judge role");
+    } finally {
+      await backend.shutdown?.();
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("admits a remote effort instance only after its exact readiness request succeeds", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `remote-admission-${Date.now()}`);
+    const scopeId = "remote-admission-tests";
+    const originalApiKey = process.env.DEEPSEEK_API_KEY;
+    const calls: Array<{ url: string; init?: RequestInit }> = [];
+    process.env.DEEPSEEK_API_KEY = "test-deepseek-key";
+
+    try {
+      const backend = await (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            fixtureRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+            networkFetcher: typeof fetch;
+          }) => Promise<{
+            upsertProviderAccount: (body: Record<string, unknown>) => Promise<unknown>;
+            activateEndpoint: (body: Record<string, unknown>) => Promise<{
+              endpointId: string;
+              status: string;
+            }>;
+            listEndpoints: () => Promise<
+              readonly { endpointId: string; lifecycleState: string; healthStatus: string }[]
+            >;
+            subscribeTelemetry: (listener: (event: unknown) => void) => () => void;
+            shutdown?: () => Promise<void>;
+          }>;
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId,
+        networkFetcher: async (input, init) => {
+          calls.push({ url: String(input), init });
+          if (String(input).endsWith("/chat/completions")) {
+            return new Response(JSON.stringify({ choices: [{ message: { content: "ok" } }] }), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            });
+          }
+          if (String(input).endsWith("/models")) {
+            return new Response(JSON.stringify({ data: [{ id: "deepseek/deepseek-v4-flash" }] }), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            });
+          }
+          throw new Error(`Unexpected admission request ${String(input)}`);
+        },
+      });
+      try {
+        const revisionEvents: Record<string, unknown>[] = [];
+        const unsubscribe = backend.subscribeTelemetry((event) => {
+          if (
+            typeof event === "object" &&
+            event !== null &&
+            (event as { eventName?: unknown }).eventName === "revision.update"
+          ) {
+            revisionEvents.push(event as Record<string, unknown>);
+          }
+        });
+        await backend.upsertProviderAccount({
+          providerAccountId: "deepseek.personal.admission",
+          providerId: "deepseek",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "workspace-default",
+          credentialRef: { backend: "env", ref: "DEEPSEEK_API_KEY" },
+          authMode: "api-key-static",
+          regionPolicy: { mode: "prefer", regions: ["global"] },
+          baseUrlOverride: "https://api.deepseek.example/v1",
+          allowedModels: ["deepseek/deepseek-v4-flash"],
+          modelRoleBindings: [{ modelId: "deepseek/deepseek-v4-flash", roleIds: ["general.chat"] }],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        });
+
+        const activation = await backend.activateEndpoint({
+          providerAccountId: "deepseek.personal.admission",
+          modelId: "deepseek/deepseek-v4-flash",
+          region: "global",
+          reasoningEffort: "high",
+        });
+        expect(activation.status).toBe("active");
+        expect(calls.some((call) => call.url.endsWith("/chat/completions"))).toBe(true);
+        const admissionCall = calls.find((call) => call.url.endsWith("/chat/completions"));
+        expect(JSON.parse(String(admissionCall?.init?.body))).toEqual(
+          expect.objectContaining({
+            model: "deepseek/deepseek-v4-flash",
+            reasoning_effort: "high",
+          }),
+        );
+        expect(await backend.listEndpoints()).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              endpointId: activation.endpointId,
+              status: "active",
+              healthStatus: "healthy",
+            }),
+          ]),
+        );
+        const receiptRoot = path.join(runtimeStateRoot, scopeId, "endpoint-admission");
+        const receiptNames = await readdir(receiptRoot);
+        expect(receiptNames).toHaveLength(1);
+        const receiptText = await readFile(path.join(receiptRoot, receiptNames[0] ?? ""), "utf8");
+        expect(JSON.parse(receiptText)).toEqual(
+          expect.objectContaining({
+            schemaVersion: "runtime-endpoint-admission.v2",
+            endpointId: activation.endpointId,
+            providerAccountId: "deepseek.personal.admission",
+            modelId: "deepseek/deepseek-v4-flash",
+            reasoningEffort: "high",
+            adapterFamily: "openai-compatible-chat-completions",
+            credentialBindingSha256: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
+            lifecycleState: "active",
+            reasonCode: "admission_succeeded",
+            secretFree: true,
+          }),
+        );
+        expect(receiptText).not.toContain("test-deepseek-key");
+        expect(revisionEvents).toEqual([
+          expect.objectContaining({
+            eventName: "revision.update",
+            revision: 1,
+            membershipRevision: expect.any(String),
+          }),
+        ]);
+        unsubscribe();
+      } finally {
+        await backend.shutdown?.();
+      }
+    } finally {
+      if (originalApiKey === undefined) {
+        delete process.env.DEEPSEEK_API_KEY;
+      } else {
+        process.env.DEEPSEEK_API_KEY = originalApiKey;
+      }
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("keeps a 503 effort instance degraded and ineligible at admission", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `remote-admission-failure-${Date.now()}`);
+    const scopeId = "remote-admission-failure-tests";
+    const originalApiKey = process.env.DEEPSEEK_API_KEY;
+    let admissionAttempts = 0;
+    process.env.DEEPSEEK_API_KEY = "test-deepseek-key";
+    try {
+      const backend = await (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            fixtureRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+            networkFetcher: typeof fetch;
+          }) => Promise<{
+            upsertProviderAccount: (body: Record<string, unknown>) => Promise<unknown>;
+            activateEndpoint: (body: Record<string, unknown>) => Promise<{
+              endpointId: string;
+              status: string;
+            }>;
+            listEndpoints: () => Promise<
+              readonly {
+                endpointId: string;
+                status: string;
+                healthStatus: string;
+                routingEligible: boolean;
+                benchmarkEligible: boolean;
+              }[]
+            >;
+            shutdown?: () => Promise<void>;
+          }>;
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId,
+        networkFetcher: async (input) => {
+          if (String(input).endsWith("/chat/completions")) {
+            admissionAttempts += 1;
+            return new Response(
+              JSON.stringify({
+                ...(admissionAttempts === 1
+                  ? { error: { message: "temporary upstream outage" } }
+                  : { choices: [{ message: { content: "ok" } }] }),
+              }),
+              {
+                status: admissionAttempts === 1 ? 503 : 200,
+                headers: { "content-type": "application/json" },
+              },
+            );
+          }
+          if (String(input).endsWith("/models")) {
+            return new Response(JSON.stringify({ data: [{ id: "deepseek/deepseek-v4-flash" }] }), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            });
+          }
+          throw new Error(`Unexpected admission request ${String(input)}`);
+        },
+      });
+      try {
+        await backend.upsertProviderAccount({
+          providerAccountId: "deepseek.personal.admission-failure",
+          providerId: "deepseek",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "workspace-default",
+          credentialRef: { backend: "env", ref: "DEEPSEEK_API_KEY" },
+          authMode: "api-key-static",
+          regionPolicy: { mode: "prefer", regions: ["global"] },
+          baseUrlOverride: "https://api.deepseek.example/v1",
+          allowedModels: ["deepseek/deepseek-v4-flash"],
+          modelRoleBindings: [{ modelId: "deepseek/deepseek-v4-flash", roleIds: ["general.chat"] }],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        });
+        const activation = await backend.activateEndpoint({
+          providerAccountId: "deepseek.personal.admission-failure",
+          modelId: "deepseek/deepseek-v4-flash",
+          region: "global",
+          reasoningEffort: "high",
+        });
+        expect(activation.status).toBe("degraded");
+        expect(await backend.listEndpoints()).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              endpointId: activation.endpointId,
+              status: "degraded",
+              healthStatus: "provider-unavailable",
+              routingEligible: false,
+              benchmarkEligible: false,
+            }),
+          ]),
+        );
+        const retry = await backend.activateEndpoint({
+          providerAccountId: "deepseek.personal.admission-failure",
+          modelId: "deepseek/deepseek-v4-flash",
+          region: "global",
+          reasoningEffort: "high",
+        });
+        expect(retry).toEqual(
+          expect.objectContaining({ endpointId: activation.endpointId, status: "active" }),
+        );
+        expect(admissionAttempts).toBe(2);
+        expect(await backend.listEndpoints()).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              endpointId: activation.endpointId,
+              status: "active",
+              healthStatus: "healthy",
+              routingEligible: true,
+              benchmarkEligible: true,
+            }),
+          ]),
+        );
+      } finally {
+        await backend.shutdown?.();
+      }
+    } finally {
+      if (originalApiKey === undefined) {
+        delete process.env.DEEPSEEK_API_KEY;
+      } else {
+        process.env.DEEPSEEK_API_KEY = originalApiKey;
+      }
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("serializes concurrent add requests for one exact effort instance into one readiness probe", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `remote-admission-lock-${Date.now()}`);
+    const scopeId = "remote-admission-lock-tests";
+    const originalApiKey = process.env.DEEPSEEK_API_KEY;
+    let probeCalls = 0;
+    let releaseProbe: (() => void) | undefined;
+    const probeStarted = new Promise<void>((resolve) => {
+      releaseProbe = resolve;
+    });
+    process.env.DEEPSEEK_API_KEY = "test-deepseek-key";
+
+    try {
+      const backend = await (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            fixtureRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+            networkFetcher: typeof fetch;
+          }) => Promise<{
+            upsertProviderAccount: (body: Record<string, unknown>) => Promise<unknown>;
+            activateEndpoint: (body: Record<string, unknown>) => Promise<{
+              endpointId: string;
+              status: string;
+            }>;
+            shutdown?: () => Promise<void>;
+          }>;
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId,
+        networkFetcher: async (input) => {
+          if (String(input).endsWith("/chat/completions")) {
+            probeCalls += 1;
+            await probeStarted;
+            return new Response(JSON.stringify({ choices: [{ message: { content: "ok" } }] }), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            });
+          }
+          if (String(input).endsWith("/models")) {
+            return new Response(JSON.stringify({ data: [{ id: "deepseek/deepseek-v4-flash" }] }), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            });
+          }
+          throw new Error(`Unexpected admission request ${String(input)}`);
+        },
+      });
+      try {
+        await backend.upsertProviderAccount({
+          providerAccountId: "deepseek.personal.admission-lock",
+          providerId: "deepseek",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "workspace-default",
+          credentialRef: { backend: "env", ref: "DEEPSEEK_API_KEY" },
+          authMode: "api-key-static",
+          regionPolicy: { mode: "prefer", regions: ["global"] },
+          baseUrlOverride: "https://api.deepseek.example/v1",
+          allowedModels: ["deepseek/deepseek-v4-flash"],
+          modelRoleBindings: [{ modelId: "deepseek/deepseek-v4-flash", roleIds: ["general.chat"] }],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        });
+        const activationBody = {
+          providerAccountId: "deepseek.personal.admission-lock",
+          modelId: "deepseek/deepseek-v4-flash",
+          region: "global",
+          reasoningEffort: "max",
+        };
+        const first = backend.activateEndpoint(activationBody);
+        await delay(0);
+        const duplicate = backend.activateEndpoint(activationBody);
+        releaseProbe?.();
+
+        await expect(first).resolves.toEqual(expect.objectContaining({ status: "active" }));
+        await expect(duplicate).rejects.toThrow(/already active/);
+        expect(probeCalls).toBe(1);
+      } finally {
+        await backend.shutdown?.();
+      }
+    } finally {
+      if (originalApiKey === undefined) {
+        delete process.env.DEEPSEEK_API_KEY;
+      } else {
+        process.env.DEEPSEEK_API_KEY = originalApiKey;
+      }
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
   test("skips remote-health probes in decision_only mode", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `remote-health-skip-${Date.now()}`);
     const scopeId = "remote-health-skip-tests";

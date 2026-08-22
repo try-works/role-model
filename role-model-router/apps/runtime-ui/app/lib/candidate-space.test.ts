@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   buildCandidateSpacePoints,
+  deriveCandidateState,
   formatCandidateMetricTriplet,
   formatRouteScore,
   projectCandidateSpacePoint,
@@ -218,6 +219,246 @@ describe("buildCandidateSpacePoints", () => {
     expect(partial?.cost).toBeNull();
     expect(partial?.routeScore).toBeCloseTo(0.9, 5);
     expect(partial?.evidence).toBe("partial");
+  });
+});
+
+describe("buildCandidateSpacePoints full pool", () => {
+  function manyCandidates(count: number) {
+    return Array.from({ length: count }, (_, index) =>
+      candidate({
+        endpointId: `full-${index}`,
+        modelId: `vendor/model-${index}`,
+        routingEligible: true,
+        routingQualityScore: 0.5,
+        latestProfile: { latency_ms_p50: 100 + index * 10 },
+      }),
+    );
+  }
+
+  test("default (no limit) retains all seven candidates", () => {
+    const points = buildCandidateSpacePoints(manyCandidates(7));
+    expect(points).toHaveLength(7);
+  });
+
+  test("explicit Infinity retains all seven", () => {
+    const points = buildCandidateSpacePoints(manyCandidates(7), Number.POSITIVE_INFINITY);
+    expect(points).toHaveLength(7);
+    expect(points[0]?.rendered).toBe(7);
+  });
+
+  test("finite limit returns that many with total disclosure", () => {
+    const points = buildCandidateSpacePoints(manyCandidates(7), 5);
+    expect(points).toHaveLength(5);
+    expect(points[0]?.rendered).toBe(5);
+    expect(points[0]?.total).toBe(7);
+  });
+});
+
+describe("candidate colors", () => {
+  function manyCandidates(count: number) {
+    return Array.from({ length: count }, (_, index) =>
+      candidate({
+        endpointId: `color-${index}`,
+        modelId: `vendor/model-${index}`,
+        routingEligible: true,
+      }),
+    );
+  }
+
+  test("seven simultaneously visible candidates never share a color", () => {
+    const points = buildCandidateSpacePoints(manyCandidates(7));
+    const tokens = points.map((point) => point.colorToken);
+    expect(new Set(tokens).size).toBe(tokens.length);
+  });
+
+  test("more entries than the original four-color palette are all distinct", () => {
+    const points = buildCandidateSpacePoints(manyCandidates(5));
+    const tokens = points.map((point) => point.colorToken);
+    expect(new Set(tokens).size).toBe(tokens.length);
+  });
+
+  test("the endpointId→color mapping is stable across input orderings", () => {
+    const set = manyCandidates(7);
+    const forwards = new Map(
+      buildCandidateSpacePoints(set).map((point) => [point.endpointId, point.colorToken] as const),
+    );
+    const backwards = new Map(
+      buildCandidateSpacePoints([...set].reverse()).map(
+        (point) => [point.endpointId, point.colorToken] as const,
+      ),
+    );
+    expect(Object.fromEntries(backwards)).toEqual(Object.fromEntries(forwards));
+  });
+});
+
+describe("deriveCandidateState", () => {
+  const baseCandidate: RouterCandidate = {
+    providerId: "test",
+    sourceType: "remote",
+    routingEligible: true,
+    endpointId: "state-test",
+    modelId: "vendor/model",
+  };
+
+  test("no-requests when there is no request evidence at all", () => {
+    expect(deriveCandidateState(baseCandidate)).toBe("no-requests");
+  });
+
+  test("failed-only when all requests failed", () => {
+    const candidateState = deriveCandidateState({
+      ...baseCandidate,
+      telemetryScores: {
+        taskRollups: {
+          default: {
+            successRate: 0,
+            successCount: 0,
+            failureCount: 5,
+            sampleCount: 5,
+            minimumSampleCount: 3,
+            windowStartMs: 0,
+            windowEndMs: 1,
+            measuredAtMs: 1,
+          },
+        },
+      },
+    });
+    expect(candidateState).toBe("failed-only");
+  });
+
+  test("insufficient-samples when requests exist but below minimum", () => {
+    const candidateState = deriveCandidateState({
+      ...baseCandidate,
+      telemetryScores: {
+        taskRollups: {
+          default: {
+            successRate: 1,
+            successCount: 1,
+            failureCount: 0,
+            sampleCount: 1,
+            minimumSampleCount: 3,
+            windowStartMs: 0,
+            windowEndMs: 1,
+            measuredAtMs: 1,
+          },
+        },
+      },
+    });
+    expect(candidateState).toBe("insufficient-samples");
+  });
+
+  test("usable when requests pass the minimum", () => {
+    const candidateState = deriveCandidateState({
+      ...baseCandidate,
+      telemetryScores: {
+        taskRollups: {
+          default: {
+            successRate: 0.8,
+            successCount: 4,
+            failureCount: 1,
+            sampleCount: 5,
+            minimumSampleCount: 3,
+            windowStartMs: 0,
+            windowEndMs: 1,
+            measuredAtMs: 1,
+          },
+        },
+      },
+    });
+    expect(candidateState).toBe("usable");
+  });
+
+  test("no-benchmark when usable but no benchmark capability", () => {
+    const candidateState = deriveCandidateState({
+      ...baseCandidate,
+      telemetryScores: {
+        taskRollups: {
+          default: {
+            successRate: 0.8,
+            successCount: 4,
+            failureCount: 1,
+            sampleCount: 5,
+            minimumSampleCount: 3,
+            windowStartMs: 0,
+            windowEndMs: 1,
+            measuredAtMs: 1,
+          },
+        },
+      },
+      benchmarkCapability: null,
+    });
+    expect(candidateState).toBe("no-benchmark");
+  });
+
+  test("benchmark-available when a benchmark capability exists", () => {
+    const candidateState = deriveCandidateState({
+      ...baseCandidate,
+      telemetryScores: {
+        taskRollups: {
+          default: {
+            successRate: 0.8,
+            successCount: 4,
+            failureCount: 1,
+            sampleCount: 5,
+            minimumSampleCount: 3,
+            windowStartMs: 0,
+            windowEndMs: 1,
+            measuredAtMs: 1,
+          },
+        },
+      },
+      benchmarkCapability: {
+        evidenceSource: "run-artifact",
+        overallScore: 0.9,
+        benchmarkSamples: 4,
+        sampleCount: 4,
+        measuredAtMs: 100,
+        freshnessScore: 1,
+        lastRunId: "r1",
+        lastRunCompletedAtMs: 100,
+        judgeEndpointId: "judge",
+      } as unknown as RouterCandidate["benchmarkCapability"],
+    });
+    expect(candidateState).toBe("benchmark-available");
+  });
+
+  test("selected when selected is passed through and usable", () => {
+    const candidateState = deriveCandidateState(
+      {
+        ...baseCandidate,
+        telemetryScores: {
+          taskRollups: {
+            default: {
+              successRate: 0.8,
+              successCount: 4,
+              failureCount: 1,
+              sampleCount: 5,
+              minimumSampleCount: 3,
+              windowStartMs: 0,
+              windowEndMs: 1,
+              measuredAtMs: 1,
+            },
+          },
+        },
+      },
+      { selected: true },
+    );
+    expect(candidateState).toBe("selected");
+  });
+
+  test("degraded when the candidate health status is degraded", () => {
+    const candidateState = deriveCandidateState({
+      ...baseCandidate,
+      healthStatus: "degraded",
+    });
+    expect(candidateState).toBe("degraded");
+  });
+
+  test("degraded when the candidate status is degraded", () => {
+    const candidateState = deriveCandidateState({
+      ...baseCandidate,
+      status: "degraded",
+    });
+    expect(candidateState).toBe("degraded");
   });
 });
 

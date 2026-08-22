@@ -924,6 +924,18 @@ describe("account repair mutations", () => {
 
       expect(codexExecutionRequests).toEqual([
         expect.objectContaining({
+          requestId: expect.stringMatching(/^admission-/),
+          providerAccountId: "openai.personal.codex-subscription",
+          modelId: "chatgpt/gpt-5.3-codex",
+          requestCapture: expect.objectContaining({
+            url: "https://chatgpt.com/backend-api/codex/responses",
+            body: expect.objectContaining({
+              model: "chatgpt/gpt-5.3-codex",
+              stream: false,
+            }),
+          }),
+        }),
+        expect.objectContaining({
           requestId: "req-codex-subscription-001",
           providerAccountId: "openai.personal.codex-subscription",
           modelId: "chatgpt/gpt-5.3-codex",

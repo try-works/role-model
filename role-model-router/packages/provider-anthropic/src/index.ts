@@ -84,12 +84,45 @@ function toAnthropicTools(
   });
 }
 
+const ANTHROPIC_BUDGET_TOKENS_BY_EFFORT: Readonly<Record<string, number>> = {
+  low: 2_048,
+  medium: 4_096,
+  high: 8_192,
+  max: 16_384,
+};
+
+/**
+ * Serialize a normalized reasoning request into Anthropic extended thinking.
+ * Anthropic's Messages API has no generic `reasoning_effort` string; extended
+ * thinking is expressed via `thinking: { type: "enabled", budget_tokens }`.
+ * A fully-specified raw/thinking payload is forwarded verbatim, otherwise the
+ * normalized effort level is mapped onto a sensible budget_tokens value.
+ */
+function toAnthropicThinking(
+  reasoning: ProviderAdapterExecutionContext["executionRequest"]["reasoning"],
+): Record<string, unknown> | undefined {
+  if (!reasoning) {
+    return undefined;
+  }
+  if (reasoning.raw && Object.keys(reasoning.raw).length > 0) {
+    return reasoning.raw;
+  }
+  if (typeof reasoning.effort === "string") {
+    const budget_tokens = ANTHROPIC_BUDGET_TOKENS_BY_EFFORT[reasoning.effort];
+    if (typeof budget_tokens === "number") {
+      return { type: "enabled", budget_tokens };
+    }
+  }
+  return undefined;
+}
+
 export function buildAnthropicRequest(
   input: ProviderAdapterExecutionContext & {
     readonly capabilities: ProviderCapabilityMatrix;
   },
 ): ProviderRequestCapture {
   const split = splitAnthropicMessages(input.executionRequest.messages);
+  const thinking = toAnthropicThinking(input.executionRequest.reasoning);
   return {
     providerFamily: "ai-sdk-anthropic",
     endpointId: input.target.endpointId,
@@ -112,6 +145,7 @@ export function buildAnthropicRequest(
         ? { max_tokens: input.executionRequest.maxOutputTokens }
         : {}),
       ...(input.executionRequest.stream ? { stream: true } : {}),
+      ...(thinking ? { thinking } : {}),
       ...(input.executionRequest.tools?.length
         ? { tools: toAnthropicTools(input.executionRequest.tools ?? []) }
         : {}),

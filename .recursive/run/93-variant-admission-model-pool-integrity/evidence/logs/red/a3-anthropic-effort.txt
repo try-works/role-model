@@ -1,0 +1,20 @@
+RED evidence — sub-phase A3 (Anthropic effort serialization)
+Run: 93-variant-admission-model-pool-integrity
+Sub-phase: A3 — provider-anthropic buildAnthropicRequest effort -> thinking serialization
+Date: 2026-08-22T09:15:39Z
+Command run:
+  cd role-model-router
+  corepack pnpm --filter @role-model-router/provider-anthropic exec vitest run test/index.test.ts
+Result: FAIL (expected — RED)
+Tests: 2 failed | 2 passed (4)
+Failed:
+  - "serializes a normalized reasoning effort as Anthropic extended thinking budget_tokens"
+      AssertionError: expected undefined to deeply equal { type: "enabled", budget_tokens: 8192 }
+      (body.thinking is undefined because buildAnthropicRequest does not serialize thinking)
+  - "forwards a fully-specified raw thinking payload verbatim"
+      AssertionError: expected undefined to deeply equal { type: "enabled", budget_tokens: 4096 }
+      (raw thinking is not forwarded)
+Passed (guard):
+  - "omits thinking when no reasoning is supplied"
+  - "builds an Anthropic messages request and normalizes text, tool hooks, and cache-aware usage"
+Root cause confirmed: buildAnthropicRequest emits no `thinking` key (no effort serialization).

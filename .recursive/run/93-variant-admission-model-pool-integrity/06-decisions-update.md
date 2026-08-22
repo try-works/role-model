@@ -1,0 +1,123 @@
+Run: `/.recursive/run/93-variant-admission-model-pool-integrity/`
+Phase: `6-decisions-update`
+Status: `LOCKED`
+LockedAt: `2026-08-22T11:33:13Z`
+LockHash: `314f077e0d95e32e09ccacbe972b544756811d2aaad93ed198eb6f9c1efa5cfc`
+Workflow version: `recursive-mode-audit-v2`
+Inputs:
+- `/.recursive/run/93-variant-admission-model-pool-integrity/00-requirements.md`
+- `/.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md`
+- `/.recursive/run/93-variant-admission-model-pool-integrity/03.5-code-review.md`
+- `/.recursive/run/93-variant-admission-model-pool-integrity/04-test-summary.md`
+- `/.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`
+- `/.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md`
+- `/.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-01.md`
+- `/.recursive/run/93-variant-admission-model-pool-integrity/addenda/05-manual-qa.requirements-audit-remediation.addendum-03.md`
+Outputs:
+- `/.recursive/DECISIONS.md`
+- `/.recursive/run/93-variant-admission-model-pool-integrity/06-decisions-update.md`
+Scope note: This concise delta receipt updates the authoritative decision ledger; it does not re-run implementation or QA.
+
+## TODO
+
+- [x] Re-read the locked requirements, implementation, review, test, and QA artifacts.
+- [x] Add the durable Run 93 decision to the central ledger.
+- [x] Re-audit the declared worktree diff before approval.
+
+## Decisions Changes Applied
+
+- Added the Run 93 decision: remote effort instances are distinct routable identities; managed LiteLLM adapters are internal implementation detail; Track B and its 13 extensions are mandatory in packaged-runtime acceptance.
+
+## Rationale
+
+The decision prevents identity collapse between effort variants, avoids exposing managed transport adapters as user-configurable providers, and preserves the verified packaged-runtime contract.
+
+## Resulting Decision Entry
+
+`/.recursive/DECISIONS.md` records the decision, relevant source surfaces, rebuilt executable and Track B manifest evidence, and the separate operator-controlled stage-promotion boundary.
+
+## Traceability
+
+- R1: endpoint admission: `04-test-summary.md`, `05-manual-qa.md`.
+- R2: health isolation: `04-test-summary.md`, `05-manual-qa.md`.
+- R3: probe behavior: `04-test-summary.md`, `05-manual-qa.md`.
+- R4: effort identity UI: `03-implementation-summary.md`, `04-test-summary.md`, `05-manual-qa.md`.
+- R5: candidate-space: `03-implementation-summary.md`, `04-test-summary.md`, `05-manual-qa.md`.
+- R6: refresh behavior: `03-implementation-summary.md`, `04-test-summary.md`, `05-manual-qa.md`.
+- R7: packaging: `05-manual-qa.md`.
+- R8: Track B: `05-manual-qa.md`.
+- R9: release boundary: `05-manual-qa.md`, `/.recursive/DECISIONS.md`.
+
+## Audit Context
+
+- Audit Execution Mode: self-audit
+- Subagent Availability: available
+- Subagent Capability Probe: controller confirmed that all locked upstream artifacts and evidence are locally readable.
+- Delegation Decision Basis: only a concise ledger delta is in scope.
+- Delegation Override Reason: no external review can add evidence beyond the locked Phase 3.5 review and Phase 5 receipt.
+- Audit Inputs Provided: Inputs above, `/.recursive/DECISIONS.md`, and comparison baseline `1aab0512ce23aacc50cea66c2926e374be1e249e`.
+
+## Effective Inputs Re-read
+
+Re-read the effective requirements, implementation summary and `addenda/03-implementation-summary.addendum-03.md`, code review, test summary and `addenda/04-test-summary.addendum-01.md`, QA receipt and QA remediation addendum. The QA receipt binds the rebuilt executable, Track B manifest, browser observation, Pi routing, telemetry/decision facts, and read-only Cloudflare boundary.
+
+Re-read addendum paths exactly: `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md`; `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-01.md`.
+
+## Earlier Phase Reconciliation
+
+Phase 3 and 3.5 accepted the source changes, including `addenda/03-implementation-summary.addendum-03.md`; Phase 4 accepted focused regressions, including `addenda/04-test-summary.addendum-01.md`; Phase 5 accepted the rebuilt-runtime matrix. The QA remediation addendum’s earlier documentation blocker was repaired by restoring accidental baseline training-script deletions and completing audit receipts. No product scope changed here.
+
+Reconciled addenda exactly: `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md`; `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-01.md`.
+
+## Subagent Contribution Verification
+
+- Reviewed Action Records: none for this concise control-plane update.
+- Main-Agent Verification Performed: compared the ledger entry to the locked Phase 3, 3.5, 4, and 5 evidence and checked the worktree diff.
+- Acceptance Decision: accepted; no unverified contribution is represented as evidence.
+- Refresh Handling: none required.
+- Repair Performed After Verification: added the Run 93 ledger entry only.
+
+## Worktree Diff Audit
+
+- Baseline type: commit
+- Baseline reference: `1aab0512ce23aacc50cea66c2926e374be1e249e`
+- Comparison reference: working tree
+- Normalized baseline: `1aab0512ce23aacc50cea66c2926e374be1e249e`
+- Normalized comparison: `HEAD plus tracked and untracked working-tree paths`
+- Normalized diff command: `git -C D:/DEV/role-model/.worktrees/93-variant-admission-model-pool-integrity diff --name-only 1aab0512ce23aacc50cea66c2926e374be1e249e; git -C D:/DEV/role-model/.worktrees/93-variant-admission-model-pool-integrity ls-files --others --exclude-standard`
+- Owned control-plane path: `/.recursive/DECISIONS.md`.
+- Re-checked product paths: `docs/public/install.md`; `role-model-router/apps/runtime-host-bridge/src/{benchmark-runner.ts,cli.ts,health-policy.ts,index.ts,package-sea.ts,remote-health-probe.ts,routable-inventory.ts,runtime-endpoint-lifecycle.ts,track-b-runtime.ts}` and matching tests; `role-model-router/apps/runtime-ui/app/{components/app-shell.tsx,components/candidate-space-chart.tsx,lib/candidate-space.ts,lib/runtime-api.ts,lib/runtime-refresh-bus.ts,lib/sidebar-footer.ts,lib/view-models.ts,routes/dashboard.tsx,routes/endpoints.tsx,routes/observe-activity.tsx,routes/observe-routing.tsx,routes/requests.tsx,routes/router-decisions.tsx}` and matching tests; `role-model-router/packages/provider-anthropic/{src/index.ts,test/index.test.ts}`.
+- Re-checked support paths: `.codex/AGENTS.md`, `.cursorrules`, `.github/copilot-instructions.md`, `AGENTS.md`, `CLAUDE.md`, and `.recursive/RECURSIVE.md`. Run-local artifacts and separately owned state/memory paths were examined but are not decision-ledger product ownership.
+- Literal changed-path accounting: `.codex/AGENTS.md`; `.cursorrules`; `.github/copilot-instructions.md`; `.recursive/DECISIONS.md`; `.recursive/RECURSIVE.md`; `AGENTS.md`; `CLAUDE.md`; `docs/public/install.md`; `role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts`; `role-model-router/apps/runtime-host-bridge/src/cli.ts`; `role-model-router/apps/runtime-host-bridge/src/health-policy.ts`; `role-model-router/apps/runtime-host-bridge/src/index.ts`; `role-model-router/apps/runtime-host-bridge/src/package-sea.ts`; `role-model-router/apps/runtime-host-bridge/src/remote-health-probe.ts`; `role-model-router/apps/runtime-host-bridge/src/routable-inventory.ts`; `role-model-router/apps/runtime-host-bridge/src/runtime-endpoint-lifecycle.ts`; `role-model-router/apps/runtime-host-bridge/src/track-b-runtime.ts`; `role-model-router/apps/runtime-host-bridge/test/account-repair.test.ts`; `role-model-router/apps/runtime-host-bridge/test/benchmark-endpoint-health.test.ts`; `role-model-router/apps/runtime-host-bridge/test/cli-startup-readiness.test.ts`; `role-model-router/apps/runtime-host-bridge/test/endpoint-rehydration.test.ts`; `role-model-router/apps/runtime-host-bridge/test/executable.test.ts`; `role-model-router/apps/runtime-host-bridge/test/health-policy.test.ts`; `role-model-router/apps/runtime-host-bridge/test/index.test.ts`; `role-model-router/apps/runtime-host-bridge/test/recursive-87-compatibility.test.ts`; `role-model-router/apps/runtime-host-bridge/test/remote-endpoint-admission-probe.test.ts`; `role-model-router/apps/runtime-host-bridge/test/remote-health-bootstrap.test.ts`; `role-model-router/apps/runtime-host-bridge/test/run88-stage-release.unit.test.ts`; `role-model-router/apps/runtime-host-bridge/test/run91-effort-instance-identity.test.ts`; `role-model-router/apps/runtime-host-bridge/test/runtime-endpoint-lifecycle.test.ts`; `role-model-router/apps/runtime-ui/app/components/app-shell.tsx`; `role-model-router/apps/runtime-ui/app/components/candidate-space-chart.tsx`; `role-model-router/apps/runtime-ui/app/lib/candidate-space.test.ts`; `role-model-router/apps/runtime-ui/app/lib/candidate-space.ts`; `role-model-router/apps/runtime-ui/app/lib/design-system.test.ts`; `role-model-router/apps/runtime-ui/app/lib/effort-identity.test.ts`; `role-model-router/apps/runtime-ui/app/lib/runtime-api.test.ts`; `role-model-router/apps/runtime-ui/app/lib/runtime-api.ts`; `role-model-router/apps/runtime-ui/app/lib/runtime-refresh-bus.test.ts`; `role-model-router/apps/runtime-ui/app/lib/runtime-refresh-bus.ts`; `role-model-router/apps/runtime-ui/app/lib/sidebar-footer.ts`; `role-model-router/apps/runtime-ui/app/lib/view-models.test.ts`; `role-model-router/apps/runtime-ui/app/lib/view-models.ts`; `role-model-router/apps/runtime-ui/app/routes/dashboard.tsx`; `role-model-router/apps/runtime-ui/app/routes/endpoints.tsx`; `role-model-router/apps/runtime-ui/app/routes/observe-activity.tsx`; `role-model-router/apps/runtime-ui/app/routes/observe-routing.tsx`; `role-model-router/apps/runtime-ui/app/routes/requests.tsx`; `role-model-router/apps/runtime-ui/app/routes/router-decisions.tsx`; `role-model-router/packages/provider-anthropic/src/index.ts`; `role-model-router/packages/provider-anthropic/test/index.test.ts`.
+
+## Gaps Found
+
+None. This receipt does not claim stage promotion or cloud mutation.
+
+## Repair Work Performed
+
+Added the concise ledger entry and reconciled it with the locked evidence.
+
+## Requirement Completion Status
+
+- R1 | Status: verified | Changed Files: `.recursive/DECISIONS.md` | Implementation Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md` | Verification Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/04-test-summary.md`, `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`.
+- R2 | Status: verified | Changed Files: `.recursive/DECISIONS.md` | Implementation Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md` | Verification Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/04-test-summary.md`, `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`.
+- R3 | Status: verified | Changed Files: `.recursive/DECISIONS.md` | Implementation Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md` | Verification Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/04-test-summary.md`, `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`.
+- R4 | Status: verified | Changed Files: `.recursive/DECISIONS.md` | Implementation Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md` | Verification Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/04-test-summary.md`, `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`.
+- R5 | Status: verified | Changed Files: `.recursive/DECISIONS.md` | Implementation Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md` | Verification Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/04-test-summary.md`, `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`.
+- R6 | Status: verified | Changed Files: `.recursive/DECISIONS.md` | Implementation Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md` | Verification Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/04-test-summary.md`, `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`.
+- R7 | Status: verified | Changed Files: `.recursive/DECISIONS.md` | Implementation Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md` | Verification Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/04-test-summary.md`, `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`.
+- R8 | Status: verified | Changed Files: `.recursive/DECISIONS.md` | Implementation Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md` | Verification Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/04-test-summary.md`, `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`.
+- R9 | Status: verified | Changed Files: `.recursive/DECISIONS.md` | Implementation Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md` | Verification Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/04-test-summary.md`, `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`.
+
+## Audit Verdict
+
+Audit: PASS
+
+## Coverage Gate
+
+Coverage: PASS
+
+## Approval Gate
+
+Approval: PASS

@@ -150,6 +150,10 @@ import {
   serializeExecutionCircuitState,
   toExecutionCircuitReceipt,
 } from "./execution-circuit-breaker.js";
+import {
+  CONSECUTIVE_EXECUTION_FAILURE_DEGRADATION_THRESHOLD,
+  resolveEndpointHealthState,
+} from "./health-policy.js";
 import { resolveModelCapabilityProfile } from "./model-capability-resolver.js";
 import {
   filterEndpointsByCapabilityRequirements,
@@ -233,6 +237,7 @@ import {
 import {
   type RemoteHealthProbeResult,
   type RemoteHealthProbeTarget,
+  probeRemoteEndpointAdmission,
   probeRemoteEndpoints,
 } from "./remote-health-probe.js";
 import {
@@ -288,6 +293,7 @@ const REASONING_EFFORT_SERIALIZER_VERSION_BY_ADAPTER = new Map<string, string>([
   ["ai-sdk-openai-compatible", "run91.openai-compatible.reasoning-effort.v1"],
   ["litellm-proxy", "run91.openai-compatible.reasoning-effort.v1"],
   ["codex-subscription-responses", "run91.codex-responses.reasoning-effort.v1"],
+  ["ai-sdk-anthropic", "run93.anthropic.thinking-budget-tokens.v1"],
 ]);
 
 export function resolveAdapterGatedReasoningEfforts(input: {
@@ -2804,6 +2810,20 @@ export interface RuntimeTelemetryStreamEvent {
   readonly request: BridgeTelemetryRequestRecord;
 }
 
+/**
+ * A durable runtime configuration/profile revision. Consumers must re-read
+ * their projections rather than attempting to merge this compact receipt.
+ */
+export interface RuntimeRevisionStreamEvent {
+  readonly eventName: "revision.update";
+  readonly revision: number;
+  readonly profileRevisionByEndpointId: Readonly<Record<string, string>>;
+  readonly membershipRevision: string | null;
+  readonly emittedAtMs: number;
+}
+
+export type RuntimeBridgeStreamEvent = RuntimeTelemetryStreamEvent | RuntimeRevisionStreamEvent;
+
 export interface StartBridgeServerOptions {
   readonly host: string;
   readonly port: number;
@@ -2911,9 +2931,7 @@ export interface StartBridgeServerOptions {
   readonly queryTelemetryAnalytics?: (
     body: Record<string, unknown>,
   ) => Promise<BridgeTelemetryAnalyticsResponse>;
-  readonly subscribeTelemetry?: (
-    listener: (event: RuntimeTelemetryStreamEvent) => void,
-  ) => () => void;
+  readonly subscribeTelemetry?: (listener: (event: RuntimeBridgeStreamEvent) => void) => () => void;
   readonly readRequestObservation?: (requestId: string) => Promise<unknown>;
   readonly readEndpointProfile?: (endpointId: string) => Promise<unknown>;
   readonly readBenchmarkSuite?: () => Promise<unknown>;
@@ -3166,7 +3184,7 @@ export interface RuntimeBridgeBackend {
   ): Promise<readonly BridgeTelemetryRequestRecord[]>;
   listTelemetryRequestPage(query?: BridgeTelemetryQuery): Promise<BridgeTelemetryRequestPage>;
   queryTelemetryAnalytics(body: Record<string, unknown>): Promise<BridgeTelemetryAnalyticsResponse>;
-  subscribeTelemetry(listener: (event: RuntimeTelemetryStreamEvent) => void): () => void;
+  subscribeTelemetry(listener: (event: RuntimeBridgeStreamEvent) => void): () => void;
   readRequestObservation(requestId: string): Promise<BridgeRequestObservation | null>;
   readEndpointProfile(endpointId: string): Promise<{
     endpointId: string;
@@ -13223,26 +13241,31 @@ function mergeRegistrySources(
     reasoningEffort?: string | null;
   }[],
 ): RegistrySources {
+  // A durable runtime instance is the authority for its exact endpoint identity.
+  // Static catalog sources provide defaults only; retaining a duplicate ahead of
+  // the runtime source can otherwise mask a degraded/offline admission state.
+  const runtimeCloudSources = runtimeEndpoints.map((endpoint) => ({
+    endpointId: endpoint.endpointId,
+    providerAccountId: endpoint.providerAccountId,
+    modelId: endpoint.modelId,
+    region: endpoint.region,
+    endpointKind: endpoint.endpointKind,
+    servingSource: endpoint.servingSource,
+    lifecycleState:
+      endpoint.lifecycleState as RegistrySources["cloud"][number]["lifecycleState"],
+    healthStatus: endpoint.healthStatus,
+    reasoningEffort: endpoint.reasoningEffort ?? null,
+    requestShapeHints: {
+      providerShape: "openai.chat.completions" as const,
+      bodyKeys: ["messages", "max_tokens"] as [string, ...string[]],
+      headerKeys: ["authorization"] as [string, ...string[]],
+    },
+  }));
+  const runtimeEndpointIds = new Set(runtimeCloudSources.map((source) => source.endpointId));
   return {
     cloud: [
-      ...staticSources.cloud,
-      ...runtimeEndpoints.map((endpoint) => ({
-        endpointId: endpoint.endpointId,
-        providerAccountId: endpoint.providerAccountId,
-        modelId: endpoint.modelId,
-        region: endpoint.region,
-        endpointKind: endpoint.endpointKind,
-        servingSource: endpoint.servingSource,
-        lifecycleState:
-          endpoint.lifecycleState as RegistrySources["cloud"][number]["lifecycleState"],
-        healthStatus: endpoint.healthStatus,
-        reasoningEffort: endpoint.reasoningEffort ?? null,
-        requestShapeHints: {
-          providerShape: "openai.chat.completions" as const,
-          bodyKeys: ["messages", "max_tokens"] as [string, ...string[]],
-          headerKeys: ["authorization"] as [string, ...string[]],
-        },
-      })),
+      ...staticSources.cloud.filter((source) => !runtimeEndpointIds.has(source.endpointId)),
+      ...runtimeCloudSources,
     ],
     local: [...staticSources.local],
   };
@@ -17944,10 +17967,35 @@ export async function createRuntimeBridgeBackend(
       currentAccounts.map((account) => [account.providerAccountId, account] as const),
     );
     const litellmBaseUrl = currentLiteLLMVendor?.readStatus().baseUrl ?? null;
+    // Registry defaults may describe the same ID as a durable runtime instance.
+    // Bootstrap health must target the persisted instance in that case so a
+    // stale catalog entry cannot suppress its current health transition.
+    const sourcesByEndpointId = new Map(
+      getCurrentRegistrySources().cloud.map((source) => [source.endpointId, source] as const),
+    );
+    for (const endpoint of runtimeEndpoints) {
+      sourcesByEndpointId.set(endpoint.endpointId, {
+        endpointId: endpoint.endpointId,
+        providerAccountId: endpoint.providerAccountId,
+        modelId: endpoint.modelId,
+        region: endpoint.region,
+        endpointKind: endpoint.endpointKind,
+        servingSource: endpoint.servingSource,
+        lifecycleState:
+          endpoint.lifecycleState as RegistrySources["cloud"][number]["lifecycleState"],
+        healthStatus: endpoint.healthStatus,
+        reasoningEffort: endpoint.reasoningEffort ?? null,
+        requestShapeHints: {
+          providerShape: "openai.chat.completions" as const,
+          bodyKeys: ["messages", "max_tokens"] as [string, ...string[]],
+          headerKeys: ["authorization"] as [string, ...string[]],
+        },
+      });
+    }
     const seenEndpointIds = new Set<string>();
     const targets: RemoteHealthProbeTarget[] = [];
 
-    for (const source of getCurrentRegistrySources().cloud) {
+    for (const source of sourcesByEndpointId.values()) {
       if (seenEndpointIds.has(source.endpointId)) {
         continue;
       }
@@ -18541,14 +18589,19 @@ export async function createRuntimeBridgeBackend(
 
   const activateRuntimeEndpoint = (
     body: Record<string, unknown>,
-    options: { readonly deferPersistence?: boolean; readonly allowExisting?: boolean } = {},
+    options: {
+      readonly deferPersistence?: boolean;
+      readonly allowExisting?: boolean;
+      readonly lifecycleState?: "pending-admission" | "active" | "degraded";
+      readonly healthStatus?: string;
+    } = {},
   ): {
     endpointId: string;
     providerAccountId: string;
     providerId: string;
     modelId: string;
     roleIds: readonly string[];
-    status: "active";
+    status: "pending-admission" | "active" | "degraded";
   } => {
     const providerAccountId = readRequiredString(body, "providerAccountId", "activateEndpoint");
     const modelId = readRequiredString(body, "modelId", "activateEndpoint");
@@ -18674,8 +18727,8 @@ export async function createRuntimeBridgeBackend(
           region,
           endpointKind,
           servingSource,
-          lifecycleState: "active",
-          healthStatus: "healthy",
+          lifecycleState: options.lifecycleState ?? "active",
+          healthStatus: options.healthStatus ?? "healthy",
           reasoningEffort: endpointIdentity.reasoningEffort,
         },
       });
@@ -18710,17 +18763,262 @@ export async function createRuntimeBridgeBackend(
       providerId: account.providerId,
       modelId: model.modelId,
       roleIds: getModelRoleIds(account, model.modelId, endpointId),
-      status: "active",
+      status: options.lifecycleState ?? "active",
     };
   };
 
-  const activateRuntimeEndpointBatch = (
+  const writeEndpointAdmissionReceipt = (input: {
+    readonly endpointId: string;
+    readonly lifecycleState: "pending-admission" | "active" | "degraded";
+    readonly reasonCode: string;
+    readonly latencyMs?: number;
+  }): void => {
+    const endpoint = runtimeEndpoints.find((entry) => entry.endpointId === input.endpointId);
+    if (!endpoint) {
+      throw new Error(`Cannot write an admission receipt for unknown endpoint ${input.endpointId}.`);
+    }
+    const account = currentAccounts.find(
+      (entry) => entry.providerAccountId === endpoint.providerAccountId,
+    );
+    if (!account) {
+      throw new Error(
+        `Cannot write an admission receipt without provider account ${endpoint.providerAccountId}.`,
+      );
+    }
+    const credentialBindingSha256 = `sha256:${createHash("sha256")
+      .update(
+        JSON.stringify(
+          canonicalizePromptCacheValue({
+            providerAccountId: account.providerAccountId,
+            credentialBackend: account.credentialRef?.backend ?? null,
+            credentialReference: account.credentialRef?.ref ?? null,
+          }),
+        ),
+      )
+      .digest("hex")}`;
+    const receiptRoot = path.join(options.runtimeStateRoot, options.scopeId, "endpoint-admission");
+    mkdirSync(receiptRoot, { recursive: true });
+    const receiptPath = path.join(
+      receiptRoot,
+      `${createHash("sha256").update(input.endpointId).digest("hex")}.json`,
+    );
+    const receipt = {
+      schemaVersion: "runtime-endpoint-admission.v2",
+      endpointId: input.endpointId,
+      providerAccountId: endpoint.providerAccountId,
+      modelId: endpoint.modelId,
+      reasoningEffort: endpoint.reasoningEffort ?? null,
+      adapterFamily:
+        endpoint.servingSource === "local-peer"
+          ? "local-peer"
+          : isCodexSubscriptionAccount(account)
+            ? "codex-responses"
+            : "openai-compatible-chat-completions",
+      credentialBindingSha256,
+      lifecycleState: input.lifecycleState,
+      reasonCode: input.reasonCode,
+      transitionedAtMs: Date.now(),
+      ...(typeof input.latencyMs === "number" ? { latencyMs: input.latencyMs } : {}),
+      secretFree: true,
+    };
+    const temporaryPath = `${receiptPath}.${process.pid}.${randomUUID()}.tmp`;
+    writeFileSync(temporaryPath, `${JSON.stringify(receipt)}\n`, { encoding: "utf8", flag: "wx" });
+    renameSync(temporaryPath, receiptPath);
+  };
+
+  const probeRuntimeEndpointAdmission = async (input: {
+    readonly endpointId: string;
+    readonly providerAccountId: string;
+    readonly modelId: string;
+    readonly reasoningEffort: string | null;
+    readonly endpointKind: string;
+    readonly servingSource: string;
+  }): Promise<RemoteHealthProbeResult | null> => {
+    if (input.servingSource === "local-peer") {
+      return null;
+    }
+    const account = currentAccounts.find(
+      (entry) => entry.providerAccountId === input.providerAccountId,
+    );
+    if (!account) {
+      throw new Error(`Provider account ${input.providerAccountId} was not found.`);
+    }
+    if (isCodexSubscriptionAccount(account)) {
+      const credentialRef = account.credentialRef;
+      if (!credentialRef) {
+        return {
+          endpointId: input.endpointId,
+          modelId: input.modelId,
+          reason: "credentials-missing",
+          healthStatus: "credentials-missing",
+          message: "No Codex Subscription credential is available for remote admission probe.",
+        };
+      }
+      const { payload } = readFreshestStoredCodexOauthTokenFileSync({
+        runtimeStateRoot: options.runtimeStateRoot,
+        scopeId: options.scopeId,
+        credentialRef: credentialRef.ref,
+      });
+      const authPayload = readStoredCodexAuthSnapshot(payload);
+      if (!authPayload) {
+        return {
+          endpointId: input.endpointId,
+          modelId: input.modelId,
+          reason: "credentials-missing",
+          healthStatus: "credentials-missing",
+          message: "No usable Codex Subscription credential is available for remote admission probe.",
+        };
+      }
+      const startedAt = Date.now();
+      try {
+        const result = await codexExecutionAdapter.executeRequest({
+          runtimeStateRoot: options.runtimeStateRoot,
+          scopeId: options.scopeId,
+          requestId: `admission-${createHash("sha256").update(input.endpointId).digest("hex").slice(0, 24)}`,
+          providerAccountId: input.providerAccountId,
+          modelId: input.modelId,
+          requestCapture: {
+            providerFamily: "codex-subscription-responses",
+            endpointId: input.endpointId,
+            url: resolveCodexResponsesUrl(),
+            headers: {},
+            body: {
+              model: input.modelId,
+              messages: [{ role: "user", content: "role-model admission readiness probe" }],
+              stream: false,
+              ...(input.reasoningEffort === null
+                ? {}
+                : { reasoning_effort: input.reasoningEffort }),
+            },
+          },
+          authPayload,
+        });
+        const latencyMs = Math.max(0, Date.now() - startedAt);
+        if (result.statusCode >= 200 && result.statusCode < 300) {
+          return {
+            endpointId: input.endpointId,
+            modelId: input.modelId,
+            reason: "healthy",
+            healthStatus: "healthy",
+            latencyMs,
+          };
+        }
+        return {
+          endpointId: input.endpointId,
+          modelId: input.modelId,
+          reason:
+            result.statusCode === 401 || result.statusCode === 403
+              ? "auth"
+              : result.statusCode === 404
+                ? "model-not-found"
+                : "vendor-down",
+          healthStatus:
+            result.statusCode === 401 || result.statusCode === 403
+              ? "credentials-invalid"
+              : result.statusCode === 404
+                ? "model-not-found"
+                : "provider-unavailable",
+          latencyMs,
+          message: `Codex Subscription admission probe returned HTTP ${result.statusCode}.`,
+        };
+      } catch {
+        return {
+          endpointId: input.endpointId,
+          modelId: input.modelId,
+          reason: "vendor-down",
+          healthStatus: "provider-unavailable",
+          latencyMs: Math.max(0, Date.now() - startedAt),
+          message: "Codex Subscription admission probe could not reach the provider.",
+        };
+      }
+    }
+    const apiBase = account.baseUrlOverride ?? "";
+    if (!apiBase.trim()) {
+      return {
+        endpointId: input.endpointId,
+        modelId: input.modelId,
+        reason: "credentials-missing",
+        healthStatus: "degraded",
+        message: "No API base is configured for remote endpoint admission.",
+      };
+    }
+    return probeRemoteEndpointAdmission({
+      endpointId: input.endpointId,
+      providerAccountId: input.providerAccountId,
+      modelId: input.modelId,
+      reasoningEffort: input.reasoningEffort,
+      apiBase,
+      servingSource: input.servingSource,
+      litellmHealthy: currentLiteLLMVendor?.readStatus().healthStatus === "healthy",
+      resolveAuthorization: resolveProbeAuthorization,
+      refreshAuthorization: refreshProbeAuthorization,
+      resolveProbeHeaders,
+      networkFetcher,
+    });
+  };
+
+  const admitRuntimeEndpoint = async (
     body: Record<string, unknown>,
-  ): {
+  ): Promise<ReturnType<typeof activateRuntimeEndpoint>> => {
+    const providerAccountId = readRequiredString(body, "providerAccountId", "activateEndpoint");
+    const modelId = readRequiredString(body, "modelId", "activateEndpoint");
+    const region = readOptionalString(body, "region") ?? "global";
+    const reasoningEffort = readOptionalString(body, "reasoningEffort") ?? null;
+    const expectedEndpointId = createEndpointInstanceIdentity({
+      providerAccountId,
+      modelId,
+      region,
+      reasoningEffort,
+    }).endpointId;
+    const existingEndpoint = runtimeEndpoints.find(
+      (endpoint) => endpoint.endpointId === expectedEndpointId,
+    );
+    if (existingEndpoint?.lifecycleState === "active") {
+      throw new Error(`Endpoint effort slot ${expectedEndpointId} is already active.`);
+    }
+    const pending = activateRuntimeEndpoint(body, {
+      allowExisting: existingEndpoint !== undefined,
+      lifecycleState: "pending-admission",
+      healthStatus: "unknown",
+    });
+    writeEndpointAdmissionReceipt({
+      endpointId: pending.endpointId,
+      lifecycleState: "pending-admission",
+      reasonCode: "admission_started",
+    });
+    const endpointKind = readOptionalString(body, "endpointKind") ?? "remote-openai-compatible";
+    const servingSource = readOptionalString(body, "servingSource") ?? "remote-service";
+    const probe = await probeRuntimeEndpointAdmission({
+      endpointId: pending.endpointId,
+      providerAccountId: pending.providerAccountId,
+      modelId: pending.modelId,
+      reasoningEffort,
+      endpointKind,
+      servingSource,
+    });
+    const admitted = probe === null || probe.reason === "healthy";
+    const finalState = admitted ? ("active" as const) : ("degraded" as const);
+    const finalEndpoint = activateRuntimeEndpoint(body, {
+      allowExisting: true,
+      lifecycleState: finalState,
+      healthStatus: admitted ? "healthy" : (probe?.healthStatus ?? "degraded"),
+    });
+    writeEndpointAdmissionReceipt({
+      endpointId: finalEndpoint.endpointId,
+      lifecycleState: finalState,
+      reasonCode: admitted ? "admission_succeeded" : (probe?.reason ?? "admission_failed"),
+      ...(typeof probe?.latencyMs === "number" ? { latencyMs: probe.latencyMs } : {}),
+    });
+    return finalEndpoint;
+  };
+
+  const activateRuntimeEndpointBatch = async (
+    body: Record<string, unknown>,
+  ): Promise<{
     activationBatchId: string;
     status: "committed";
     endpoints: readonly ReturnType<typeof activateRuntimeEndpoint>[];
-  } => {
+  }> => {
     const activationBatchId = readRequiredString(
       body,
       "activationBatchId",
@@ -18782,9 +19080,32 @@ export async function createRuntimeBridgeBackend(
     // Resolve and validate every member before crossing either durable mutation boundary.
     const resolved = activations.map((activation) => {
       const activationBody = activation as Record<string, unknown>;
+      const activationRegion = readOptionalString(activationBody, "region") ?? "global";
+      const activationReasoningEffort =
+        readOptionalString(activationBody, "reasoningEffort") ?? null;
+      const activationProviderAccountId = readRequiredString(
+        activationBody,
+        "providerAccountId",
+        "activateEndpointBatch",
+      );
+      const activationModelId = readRequiredString(
+        activationBody,
+        "modelId",
+        "activateEndpointBatch",
+      );
+      const existingEndpointId = createEndpointInstanceIdentity({
+        providerAccountId: activationProviderAccountId,
+        modelId: activationModelId,
+        region: activationRegion,
+        reasoningEffort: activationReasoningEffort,
+      }).endpointId;
+      const retryableExistingEndpoint = runtimeEndpoints.some(
+        (endpoint) =>
+          endpoint.endpointId === existingEndpointId && endpoint.lifecycleState !== "active",
+      );
       const result = activateRuntimeEndpoint(activationBody, {
         deferPersistence: true,
-        allowExisting: existingReceipt?.status === "pending",
+        allowExisting: existingReceipt?.status === "pending" || retryableExistingEndpoint,
       });
       const region = readOptionalString(activationBody, "region") ?? "global";
       const endpointKind =
@@ -18867,6 +19188,8 @@ export async function createRuntimeBridgeBackend(
         return updated;
       });
     }
+    // The exact requested identities are durable before any remote call.  A crash here
+    // leaves them pending (and therefore ineligible), never spuriously healthy.
     upsertSqliteRuntimeEndpointsAtomically({
       databasePath: initialization.databasePath,
       endpoints: resolved.map((entry) => ({
@@ -18876,8 +19199,8 @@ export async function createRuntimeBridgeBackend(
         region: entry.region,
         endpointKind: entry.endpointKind,
         servingSource: entry.servingSource,
-        lifecycleState: "active",
-        healthStatus: "healthy",
+        lifecycleState: "pending-admission",
+        healthStatus: "unknown",
         reasoningEffort: entry.identity.reasoningEffort,
       })),
     });
@@ -18889,10 +19212,61 @@ export async function createRuntimeBridgeBackend(
       })),
     );
     rebuildCurrentState();
+    for (const entry of resolved) {
+      writeEndpointAdmissionReceipt({
+        endpointId: entry.result.endpointId,
+        lifecycleState: "pending-admission",
+        reasonCode: "admission_started",
+      });
+    }
+
+    const admissionResults = await Promise.all(
+      resolved.map(async (entry) => {
+        const probe = await probeRuntimeEndpointAdmission({
+          endpointId: entry.result.endpointId,
+          providerAccountId: entry.result.providerAccountId,
+          modelId: entry.result.modelId,
+          reasoningEffort: entry.identity.reasoningEffort,
+          endpointKind: entry.endpointKind,
+          servingSource: entry.servingSource,
+        });
+        const admitted = probe === null || probe.reason === "healthy";
+        return {
+          endpoint: entry,
+          lifecycleState: admitted ? ("active" as const) : ("degraded" as const),
+          healthStatus: admitted ? "healthy" : (probe?.healthStatus ?? "degraded"),
+        };
+      }),
+    );
+    upsertSqliteRuntimeEndpointsAtomically({
+      databasePath: initialization.databasePath,
+      endpoints: admissionResults.map(({ endpoint, lifecycleState, healthStatus }) => ({
+        endpointId: endpoint.result.endpointId,
+        providerAccountId: endpoint.result.providerAccountId,
+        modelId: endpoint.result.modelId,
+        region: endpoint.region,
+        endpointKind: endpoint.endpointKind,
+        servingSource: endpoint.servingSource,
+        lifecycleState,
+        healthStatus,
+        reasoningEffort: endpoint.identity.reasoningEffort,
+      })),
+    });
+    for (const { endpoint, lifecycleState, healthStatus } of admissionResults) {
+      writeEndpointAdmissionReceipt({
+        endpointId: endpoint.result.endpointId,
+        lifecycleState,
+        reasonCode: lifecycleState === "active" ? "admission_succeeded" : healthStatus,
+      });
+    }
+    rebuildCurrentState();
     const committed = {
       activationBatchId,
       status: "committed" as const,
-      endpoints: resolved.map(({ result }) => result),
+      endpoints: admissionResults.map(({ endpoint, lifecycleState }) => ({
+        ...endpoint.result,
+        status: lifecycleState,
+      })),
     };
     writeReceipt({
       schemaVersion: "runtime-endpoint-activation-batch.v1",
@@ -19231,7 +19605,8 @@ export async function createRuntimeBridgeBackend(
     endpointId: string,
   ): EndpointRegistryResult["endpoints"][number] | undefined =>
     currentRegistry.endpoints.find((endpoint) => endpoint.identity.endpoint_id === endpointId);
-  const telemetryListeners = new Set<(event: RuntimeTelemetryStreamEvent) => void>();
+  const telemetryListeners = new Set<(event: RuntimeBridgeStreamEvent) => void>();
+  let runtimeRevision = 0;
   const normalizeTelemetryQuery = (query?: BridgeTelemetryQuery): BridgeTelemetryQuery => {
     const hasExplicitLimit =
       query !== undefined && Object.prototype.hasOwnProperty.call(query, "limit");
@@ -20779,6 +21154,39 @@ export async function createRuntimeBridgeBackend(
       listener(event);
     }
   };
+  const emitRevisionUpdate = (): void => {
+    const emittedAtMs = Date.now();
+    const membershipRevision = computeConfiguredMembershipRevision(
+      runtimeEndpoints.map((runtimeEndpoint) => ({
+        providerAccountId: runtimeEndpoint.providerAccountId,
+        modelId: runtimeEndpoint.modelId,
+        endpointId: runtimeEndpoint.endpointId,
+        reasoningEffort: runtimeEndpoint.reasoningEffort ?? null,
+      })),
+    );
+    const profileRevisionByEndpointId = Object.fromEntries(
+      Object.entries(readCandidateProfileDataByEndpointId()).flatMap(([endpointId, profile]) => {
+        const benchmarkProfile = asObjectRecord(profile.benchmarkProfile);
+        const operationalProfile = asObjectRecord(profile.latestProfile);
+        const revision =
+          asStringValue(benchmarkProfile?.benchmark_profile_revision) ??
+          asStringValue(benchmarkProfile?.profile_revision) ??
+          asStringValue(operationalProfile?.profile_revision) ??
+          null;
+        return revision ? [[endpointId, revision] as const] : [];
+      }),
+    );
+    const event: RuntimeRevisionStreamEvent = {
+      eventName: "revision.update",
+      revision: ++runtimeRevision,
+      profileRevisionByEndpointId,
+      membershipRevision,
+      emittedAtMs,
+    };
+    for (const listener of telemetryListeners) {
+      listener(event);
+    }
+  };
   const resolveDefaultControllerAssignment = (
     effectiveRegistry: EndpointRegistryResult,
   ): BridgeControllerAssignment | null => {
@@ -21315,10 +21723,31 @@ export async function createRuntimeBridgeBackend(
     );
   };
   const buildEffectiveEligibilitySnapshot = () => {
-    const effectiveExecutionEndpointIds = new Set(
-      getRouterEffectiveRegistry().endpoints.map((endpoint) => endpoint.identity.endpoint_id),
+    // A configured runtime instance is eligible only after its own durable
+    // admission transition completed healthy. Registry/catalog metadata can be
+    // older than that transition, so it must never widen this set.
+    const runtimeAdmissionEligible = new Set(
+      runtimeEndpoints
+        .filter(
+          (endpoint) =>
+            endpoint.lifecycleState === "active" && endpoint.healthStatus === "healthy",
+        )
+        .map((endpoint) => endpoint.endpointId),
     );
-    const effectiveRoutableEndpointIds = new Set(getRouterEffectiveRoutableInventory().endpointIds);
+    const isAdmissionEligible = (endpointId: string): boolean => {
+      const runtimeEndpoint = runtimeEndpoints.find(
+        (endpoint) => endpoint.endpointId === endpointId,
+      );
+      return runtimeEndpoint === undefined || runtimeAdmissionEligible.has(endpointId);
+    };
+    const effectiveExecutionEndpointIds = new Set(
+      getRouterEffectiveRegistry()
+        .endpoints.map((endpoint) => endpoint.identity.endpoint_id)
+        .filter(isAdmissionEligible),
+    );
+    const effectiveRoutableEndpointIds = new Set(
+      getRouterEffectiveRoutableInventory().endpointIds.filter(isAdmissionEligible),
+    );
     return {
       executionEndpointIds: effectiveExecutionEndpointIds,
       routingEligibleEndpointIds: effectiveRoutableEndpointIds,
@@ -21332,7 +21761,9 @@ export async function createRuntimeBridgeBackend(
         (entry) => entry.identity.endpoint_id === endpointId && !entry.deniedByPolicy,
       );
     }
-    return runtimeEndpoint.healthStatus !== "offline";
+    return (
+      runtimeEndpoint.lifecycleState === "active" && runtimeEndpoint.healthStatus === "healthy"
+    );
   };
   const listRouterCandidateData = async () => {
     const controller = getCurrentControllerAssignment();
@@ -21350,6 +21781,12 @@ export async function createRuntimeBridgeBackend(
       await buildBenchmarkCapabilityByEndpointId(profilesByEndpointId);
     const { executionEndpointIds, routingEligibleEndpointIds, benchmarkEligibleEndpointIds } =
       buildEffectiveEligibilitySnapshot();
+    const circuitDeniedEndpointIds = new Set(
+      readDeniedExecutionCircuitEndpointIds({
+        databasePath: initialization.databasePath,
+        nowMs: Date.now(),
+      }),
+    );
     return currentRegistry.endpoints.map((endpoint) => {
       const endpointId = endpoint.identity.endpoint_id;
       const profile = profilesByEndpointId[endpointId];
@@ -21386,9 +21823,19 @@ export async function createRuntimeBridgeBackend(
         servingSource: endpoint.identity.serving_source,
         region: endpoint.identity.region,
         status: endpoint.status,
-        healthStatus:
-          runtimeEndpoints.find((entry) => entry.endpointId === endpointId)?.healthStatus ??
-          (endpoint.deniedByPolicy ? "policy-blocked" : "healthy"),
+        healthStatus: (() => {
+          const runtimeEndpoint = runtimeEndpoints.find((entry) => entry.endpointId === endpointId);
+          const probeHealthStatus =
+            runtimeEndpoint?.healthStatus ??
+            (endpoint.deniedByPolicy ? "policy-blocked" : "healthy");
+          const circuitState = circuitDeniedEndpointIds.has(endpointId) ? "open" : null;
+          return resolveEndpointHealthState({
+            lifecycleState: runtimeEndpoint?.lifecycleState ?? "active",
+            probeHealthStatus,
+            circuitState,
+            consecutiveExecutionFailures: 0,
+          });
+        })(),
         roleBindings: resolveEndpointAvailableRoleIds(endpointId),
         capabilities: endpoint.declared.capabilities,
         toolCallingSupported: endpoint.declared.tool_calling.supported,
@@ -22701,6 +23148,21 @@ export async function createRuntimeBridgeBackend(
             databasePath: initialization.databasePath,
             endpointId: result.target.endpointId,
           });
+          const recoveredEndpoint = runtimeEndpoints.find(
+            (endpoint) => endpoint.endpointId === result.target.endpointId,
+          );
+          if (recoveredEndpoint?.lifecycleState === "degraded") {
+            upsertSqliteRuntimeEndpoint({
+              databasePath: initialization.databasePath,
+              endpoint: {
+                ...recoveredEndpoint,
+                lifecycleState: "active",
+                healthStatus: "healthy",
+              },
+            });
+            rebuildCurrentState();
+            emitRevisionUpdate();
+          }
           ownedProbeEndpointId = undefined;
           routingDecisionId = routed.decision.routing_decision_id;
           return result;
@@ -22752,6 +23214,25 @@ export async function createRuntimeBridgeBackend(
             });
             if (cooldownRecord) {
               executionSemanticsReceipt.cooldownDecision = "recorded";
+              if (
+                cooldownRecord.failureCount >= CONSECUTIVE_EXECUTION_FAILURE_DEGRADATION_THRESHOLD
+              ) {
+                const failedEndpoint = runtimeEndpoints.find(
+                  (endpoint) => endpoint.endpointId === error.endpointId,
+                );
+                if (failedEndpoint && failedEndpoint.lifecycleState !== "degraded") {
+                  upsertSqliteRuntimeEndpoint({
+                    databasePath: initialization.databasePath,
+                    endpoint: {
+                      ...failedEndpoint,
+                      lifecycleState: "degraded",
+                      healthStatus: "degraded",
+                    },
+                  });
+                  rebuildCurrentState();
+                  emitRevisionUpdate();
+                }
+              }
             }
           }
           ownedProbeEndpointId = undefined;
@@ -26197,10 +26678,18 @@ export async function createRuntimeBridgeBackend(
       };
     },
     async activateEndpoint(body: Record<string, unknown>): Promise<Record<string, unknown>> {
-      return withUnifiedConfigMutationLock(async () => activateRuntimeEndpoint(body));
+      return withUnifiedConfigMutationLock(async () => {
+        const result = await admitRuntimeEndpoint(body);
+        emitRevisionUpdate();
+        return result;
+      });
     },
     async activateEndpointBatch(body: Record<string, unknown>): Promise<Record<string, unknown>> {
-      return withUnifiedConfigMutationLock(async () => activateRuntimeEndpointBatch(body));
+      return withUnifiedConfigMutationLock(async () => {
+        const result = await activateRuntimeEndpointBatch(body);
+        emitRevisionUpdate();
+        return result;
+      });
     },
     async removeEndpoint(endpointId: string): Promise<Record<string, unknown>> {
       return withUnifiedConfigMutationLock(async () => {
@@ -26217,6 +26706,7 @@ export async function createRuntimeBridgeBackend(
         );
         deleteRuntimeEndpointById(initialization.databasePath, endpointId);
         rebuildCurrentState();
+        emitRevisionUpdate();
         return { endpointId, status: "removed" };
       });
     },
@@ -26469,7 +26959,7 @@ export async function createRuntimeBridgeBackend(
     ): Promise<BridgeTelemetryAnalyticsResponse> {
       return queryTelemetryAnalyticsData(body);
     },
-    subscribeTelemetry(listener: (event: RuntimeTelemetryStreamEvent) => void): () => void {
+    subscribeTelemetry(listener: (event: RuntimeBridgeStreamEvent) => void): () => void {
       telemetryListeners.add(listener);
       return () => {
         telemetryListeners.delete(listener);
@@ -26921,7 +27411,11 @@ export async function createRuntimeBridgeBackend(
           useJudge,
           preflightProbe,
         },
-      ).catch(() => undefined);
+      )
+        .then(() => {
+          emitRevisionUpdate();
+        })
+        .catch(() => undefined);
       return warnings.length > 0
         ? {
             runId,
@@ -26948,10 +27442,12 @@ export async function createRuntimeBridgeBackend(
       if (!registryEndpoint) {
         throw new Error(`Unknown endpoint id: ${endpointId}`);
       }
-      return clearObservedBenchmarkDataForEndpoint({
+      const receipt = clearObservedBenchmarkDataForEndpoint({
         databasePath: initialization.databasePath,
         endpointId,
       });
+      emitRevisionUpdate();
+      return receipt;
     },
     async clearBenchmarkData(): Promise<unknown> {
       const sqliteResult = clearAllObservedBenchmarkData({
@@ -26979,6 +27475,7 @@ export async function createRuntimeBridgeBackend(
         `${JSON.stringify(receipt, null, 2)}\n`,
         "utf8",
       );
+      emitRevisionUpdate();
       return receipt;
     },
     async listLocalModels(): Promise<

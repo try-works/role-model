@@ -9,6 +9,23 @@ import {
   stageTrackBRuntimeDistribution,
   trackBDistributionRequiresSQLiteMaintenance,
 } from "../src/track-b-runtime.js";
+import { resolvePackagedRuntimeSourceTree } from "../src/package-sea.js";
+
+test("AR6 refuses a package provenance stamp when the public source tree is dirty", () => {
+  expect(() =>
+    resolvePackagedRuntimeSourceTree({
+      statusPorcelain: " M apps/runtime-host-bridge/src/package-sea.ts\\n",
+      sourceTree: "a".repeat(40),
+    }),
+  ).toThrow(/clean public worktree/i);
+
+  expect(
+    resolvePackagedRuntimeSourceTree({
+      statusPorcelain: "",
+      sourceTree: "a".repeat(40),
+    }),
+  ).toBe("a".repeat(40));
+});
 
 test("SP7 runs startup SQLite maintenance only for adapter-capable distributions", () => {
   expect(
@@ -79,6 +96,51 @@ test("SP7 stages N and N-1 distributions and refuses unsupported future versions
     await expect(
       stageTrackBRuntimeDistribution({ sourceRoot: root, releaseDir: path.join(root, "future") }),
     ).rejects.toThrow(/unsupported|incomplete/i);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("SP7 refuses a current Track B distribution built from another public source tree", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "run87-source-binding-"));
+  try {
+    const bytes = Buffer.from("export async function run(){return {available:true}}\n");
+    const artifactSha256 = createHash("sha256").update(bytes).digest("hex");
+    const extensions = Array.from({ length: 13 }, (_, index) => ({
+      descriptor: {
+        id: `extension-${index}`,
+        protocolVersion: "1.1.0",
+        capabilities: ["health"],
+      },
+      modulePath: `extensions/extension-${index}.mjs`,
+      artifactSha256,
+    }));
+    await mkdir(path.join(root, "extensions"));
+    await writeFile(path.join(root, "sidecar.mjs"), bytes);
+    await Promise.all(extensions.map((row) => writeFile(path.join(root, row.modulePath), bytes)));
+    await writeFile(
+      path.join(root, "track-b-runtime-manifest.json"),
+      JSON.stringify({
+        schemaVersion: "role-model.track-b-runtime-distribution.v2",
+        publicSourceTree: "a".repeat(40),
+        sidecar: { modulePath: "sidecar.mjs", artifactSha256 },
+        extensions,
+      }),
+    );
+
+    await expect(
+      (
+        stageTrackBRuntimeDistribution as unknown as (options: {
+          readonly sourceRoot: string;
+          readonly releaseDir: string;
+          readonly expectedPublicSourceTree: string;
+        }) => ReturnType<typeof stageTrackBRuntimeDistribution>
+      )({
+        sourceRoot: root,
+        releaseDir: path.join(root, "release"),
+        expectedPublicSourceTree: "b".repeat(40),
+      }),
+    ).rejects.toThrow(/source tree/i);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

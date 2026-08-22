@@ -33,7 +33,7 @@ import type {
 import {
   fetchTelemetryAnalytics,
   fetchTelemetryRequestsPage,
-  subscribeTelemetryStream,
+  subscribeRuntimeRefreshStream,
 } from "../lib/runtime-api";
 import {
   buildQuerySnapshot,
@@ -400,7 +400,7 @@ export default function RequestsRoute() {
 
     const dispose = startDeferredLiveRefresh({
       load,
-      subscribe: (onEvent) => subscribeTelemetryStream(onEvent),
+      subscribe: (onEvent) => subscribeRuntimeRefreshStream(onEvent),
     });
 
     return () => {

@@ -1,6 +1,6 @@
 # RM3 warning pill ink must not use amber (issues)
 
-Type: issues
+Type: incident
 Status: CURRENT
 Scope: runtime-ui RM3 chrome / status pills
 Owns-Paths: role-model-router/apps/runtime-ui/app/app.css; role-model-router/packages/ui/**
