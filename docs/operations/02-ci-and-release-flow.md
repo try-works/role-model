@@ -29,10 +29,23 @@ binary release or an independent version tag.
 
 ## Required CI lanes
 
-`.github/workflows/ci.yml` runs on pull requests and post-merge pushes for `dev`, `stage`, and `main`. Stable check
-names are `promotion-guard`, `quality`, `build-test`, `runtime-critical`, `runtime-router`, `rust`, and `smoke`.
-Superseded runs cancel, permissions default to read-only, jobs use bounded timeouts, and dependencies install with a
-frozen lockfile.
+CircleCI is the primary source of CI evidence for pull requests and promotions. The public
+`.circleci/config.yml` runs two non-deploying jobs: `ci/circleci: router-contract` for the router contract and
+`ci/circleci: full-contract` for the complete public verification contract. Both use the frozen pnpm lockfile; the
+full contract runs `pnpm run ci:check`.
+
+The private repository's CircleCI workflow is the companion Track B gate. It records one exact public source revision
+at pipeline start (or accepts the release-provided `public_paired_sha`), checks out that revision, builds the Track B
+distribution, verifies the paired manifests and external interoperability, runs the private suite, and exercises the
+packaged-runtime browser gate. A stage or production promotion needs the successful public CircleCI checks **and** a
+successful private `ci/circleci: track-b-conformance` run bound to the same public commit. CircleCI validation jobs
+must never deploy, tag, publish, or alter a release.
+
+`.github/workflows/ci.yml` may remain during the migration as a repository-protection compatibility signal, but it is
+not the release-test authority. Do not accept a green GitHub Actions CI run in place of the required CircleCI
+evidence. Before making CircleCI checks mandatory in branch protection, observe their exact names on a real PR and
+then replace the duplicate GitHub Actions CI requirements one recoverable change at a time. GitHub Actions remains
+the owner of promotion guards and release/build publication workflows.
 
 The promotion guard accepts ordinary work into `dev`, only `dev` into `stage`, and only `stage` into `main`.
 Reviewed `hotfix/* -> main` is the explicit emergency exception.
@@ -84,12 +97,13 @@ projects during an incident.
 
 ```bash
 corepack pnpm install --frozen-lockfile
+node --test scripts/circleci-workflow.test.mjs
 node --test scripts/ci-workflow.test.mjs scripts/build-binaries-workflow.test.mjs apps/docs-site/scripts/docs-site-deploy-workflow.test.mjs
 corepack pnpm run ci:check
 corepack pnpm run docs:build
 ROLE_MODEL_BUILD_CHANNEL=development corepack pnpm run runtime:package-sea
 ```
 
-Before changing GitHub protections, observe the successful check names on a real PR. Capture current settings, apply
-one recoverable change at a time, read it back, and keep `main` protected until the complete replacement policy is
-verified.
+Before changing branch protection, observe the successful CircleCI check names on a real PR. Capture current
+settings, apply one recoverable change at a time, read them back, and keep `main` protected until the complete
+CircleCI replacement policy is verified.
