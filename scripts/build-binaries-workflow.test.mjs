@@ -57,6 +57,16 @@ test("the public release orchestrator enforces paired private promotion", () => 
   assert.match(workflow, /git merge-base --is-ancestor/);
 });
 
+test("paired private checkout never dirties the public package provenance worktree", () => {
+  assert.match(workflow, /path:\s*\.cache\/paired-private/);
+  assert.match(workflow, /working-directory:\s*\.cache\/paired-private/);
+  assert.match(
+    workflow,
+    /ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT:[\s\S]*?\.cache\/paired-private\/dist\/run00-dev/,
+  );
+  assert.doesNotMatch(workflow, /(?:path|working-directory):\s*_private\b/);
+});
+
 test("stage pushes publish downloadable prereleases before stable promotion", () => {
   assert.match(workflow, /^ {2}publish-stage-prerelease:/m);
   assert.match(workflow, /github\.ref == 'refs\/heads\/stage'/);
