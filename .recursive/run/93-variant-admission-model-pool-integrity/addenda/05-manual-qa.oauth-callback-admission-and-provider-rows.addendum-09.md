@@ -121,6 +121,29 @@ Store RED command/output paths in the existing Run 93 evidence tree. No provider
 
 TDD Mode: `strict`
 
+### `OAAR1` OAuth-authenticated endpoint admission
+
+- RED: `role-model-router/apps/runtime-host-bridge/test/account-repair.test.ts`
+  now asserts that the first configured Codex Subscription endpoint is active,
+  routing- and benchmark-eligible, and `not-yet-executed` after OAuth, while
+  the adapter call ledger contains only the explicit user request. It failed
+  because activation issued an `admission-…` model execution before the user
+  request. Evidence:
+  `evidence/logs/red/oaar1-oauth-no-probe-red.log`.
+- GREEN: direct and batch admission now use the explicit
+  `oauth2-device-code` admission capability rather than a provider-ID special
+  case: OAuth-authenticated endpoints transition to `active` with
+  `not-yet-executed` operational evidence and an `oauth-auth-confirmed`
+  receipt, without invoking the adapter probe. The shared eligibility snapshot
+  admits `active/not-yet-executed` endpoints, while probe-based methods retain
+  their existing readiness path. A successful callback also restores only
+  same-account, probe-only degraded endpoint records to that unobserved state;
+  it excludes `model-not-found` and endpoint IDs denied by the execution
+  circuit. Evidence: `evidence/logs/green/oaar1-oauth-no-probe-green.log`.
+- REFACTOR: eligibility is expressed at the shared snapshot and healthy-endpoint
+  predicates, and the callback reconciliation is one bounded helper, avoiding
+  a UI-only exception, duplicated OAuth provider list, or circuit reset.
+
 ### `OAAR4` registration identity
 
 - RED: `packages/pi-role-model/test/effort-identity.test.ts` added default, low, high, and max siblings of one upstream model and asserted distinct configured endpoint identities plus normalized effort. The test failed because the registered models exposed no `endpointId`. Evidence: `evidence/logs/red/oaar4-pi-variant-identity-red.log`.
@@ -162,11 +185,12 @@ addendum can be called fully rebuilt-runtime verified.
 
 ## Requirement completion status
 
-- `OAAR1` | `planned` | No changed files yet; root cause and policy decision are documented here. | Evidence: Root-cause evidence.
-- `OAAR2` | `planned` | No changed files yet; recovery boundary is defined without clearing real quota data. | Evidence: Root-cause evidence.
+- `OAAR1` | `implemented; source verification pending` | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts`, `role-model-router/apps/runtime-host-bridge/test/account-repair.test.ts`. | Implementation Evidence: focused RED/GREEN covers direct and batch OAuth admission and stale probe-only endpoint reconciliation. | Deferred By: full suite, rebuilt-runtime/browser verification, and a dedicated persisted execution-circuit regression.
+- `OAAR2` | `partially implemented` | Callback reconciliation restores only stale probe-only degradation and intentionally preserves circuit-denied endpoint IDs. | Evidence: focused OAuth account-repair regression. | Deferred By: a direct persisted quota-circuit regression and rebuilt-runtime verification.
 - `OAAR3` | `planned` | No changed files yet; raw endpoint metadata is present but browser projection is defective. | Evidence: Root-cause evidence.
 - `OAAR4` | `implemented; live Stage-runtime verified` | Changed Files: `packages/pi-role-model/src/types.ts`, `packages/pi-role-model/src/downstream-openai.ts`, `packages/pi-role-model/src/extension.ts`, `packages/pi-role-model/README.md`, and focused tests. | Implementation Evidence: `evidence/logs/red/oaar4-pi-variant-identity-red.log`, `evidence/logs/red/oaar4-pi-offline-refresh-red.log`, `evidence/logs/red/oaar4-pi-unsupported-effort-red.log`, `evidence/logs/green/oaar4-pi-variant-identity-green.log`, `evidence/logs/green/oaar4-pi-unsupported-effort-green.log`. | Verification Evidence: `evidence/logs/green/oaar4-pi-stage-runtime-e2e.log`. | Deferred By: clean-source rebuilt-binary packaging receipt.
-- `OAAR-P1`–`OAAR-P5` | `planned` | Implementation and rebuilt-runtime verification are required before acceptance. | Evidence: Remediation plan.
+- `OAAR-P1` | `partially implemented` | The no-automatic-probe, active/eligible/unverified OAuth case now covers a stale probe-only record plus direct and batch endpoint admission. | Evidence: `evidence/logs/red/oaar1-oauth-no-probe-red.log`, `evidence/logs/green/oaar1-oauth-no-probe-green.log`. | Deferred By: direct persisted circuit and browser cases.
+- `OAAR-P2`–`OAAR-P5` | `planned` | Implementation and rebuilt-runtime verification are required before acceptance. | Evidence: Remediation plan.
 
 ## Coverage Gate
 

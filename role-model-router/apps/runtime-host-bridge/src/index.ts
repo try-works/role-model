@@ -18959,6 +18959,50 @@ export async function createRuntimeBridgeBackend(
     });
   };
 
+  const reconcileOAuthAuthenticatedRuntimeEndpoints = (providerAccountId: string): void => {
+    // A completed OAuth callback authenticates the account, but it does not prove that a
+    // particular model has executed. Recover only states produced by the old admission
+    // probe, preserving model-not-found and every execution-derived circuit decision.
+    const probeOnlyHealthStatuses = new Set([
+      "provider-unavailable",
+      "credentials-invalid",
+      "credentials-missing",
+      "degraded",
+    ]);
+    const circuitDeniedEndpointIds = new Set(
+      readDeniedExecutionCircuitEndpointIds({
+        databasePath: initialization.databasePath,
+        nowMs: Date.now(),
+      }),
+    );
+    const recoverableEndpoints = runtimeEndpoints.filter(
+      (endpoint) =>
+        endpoint.providerAccountId === providerAccountId &&
+        endpoint.lifecycleState === "degraded" &&
+        probeOnlyHealthStatuses.has(endpoint.healthStatus) &&
+        !circuitDeniedEndpointIds.has(endpoint.endpointId),
+    );
+    if (recoverableEndpoints.length === 0) {
+      return;
+    }
+    upsertSqliteRuntimeEndpointsAtomically({
+      databasePath: initialization.databasePath,
+      endpoints: recoverableEndpoints.map((endpoint) => ({
+        ...endpoint,
+        lifecycleState: "active",
+        healthStatus: "not-yet-executed",
+      })),
+    });
+    for (const endpoint of recoverableEndpoints) {
+      writeEndpointAdmissionReceipt({
+        endpointId: endpoint.endpointId,
+        lifecycleState: "active",
+        reasonCode: "oauth-auth-confirmed",
+      });
+    }
+    rebuildCurrentState();
+  };
+
   const admitRuntimeEndpoint = async (
     body: Record<string, unknown>,
   ): Promise<ReturnType<typeof activateRuntimeEndpoint>> => {
@@ -18990,25 +19034,42 @@ export async function createRuntimeBridgeBackend(
     });
     const endpointKind = readOptionalString(body, "endpointKind") ?? "remote-openai-compatible";
     const servingSource = readOptionalString(body, "servingSource") ?? "remote-service";
-    const probe = await probeRuntimeEndpointAdmission({
-      endpointId: pending.endpointId,
-      providerAccountId: pending.providerAccountId,
-      modelId: pending.modelId,
-      reasoningEffort,
-      endpointKind,
-      servingSource,
-    });
-    const admitted = probe === null || probe.reason === "healthy";
+    const account = currentAccounts.find(
+      (entry) => entry.providerAccountId === pending.providerAccountId,
+    );
+    if (!account) {
+      throw new Error(`Provider account ${pending.providerAccountId} was not found.`);
+    }
+    const oauthAuthenticated = account.authMode === "oauth2-device-code";
+    const probe = oauthAuthenticated
+      ? null
+      : await probeRuntimeEndpointAdmission({
+          endpointId: pending.endpointId,
+          providerAccountId: pending.providerAccountId,
+          modelId: pending.modelId,
+          reasoningEffort,
+          endpointKind,
+          servingSource,
+        });
+    const admitted = oauthAuthenticated || probe === null || probe.reason === "healthy";
     const finalState = admitted ? ("active" as const) : ("degraded" as const);
     const finalEndpoint = activateRuntimeEndpoint(body, {
       allowExisting: true,
       lifecycleState: finalState,
-      healthStatus: admitted ? "healthy" : (probe?.healthStatus ?? "degraded"),
+      healthStatus: oauthAuthenticated
+        ? "not-yet-executed"
+        : admitted
+          ? "healthy"
+          : (probe?.healthStatus ?? "degraded"),
     });
     writeEndpointAdmissionReceipt({
       endpointId: finalEndpoint.endpointId,
       lifecycleState: finalState,
-      reasonCode: admitted ? "admission_succeeded" : (probe?.reason ?? "admission_failed"),
+      reasonCode: oauthAuthenticated
+        ? "oauth-auth-confirmed"
+        : admitted
+          ? "admission_succeeded"
+          : (probe?.reason ?? "admission_failed"),
       ...(typeof probe?.latencyMs === "number" ? { latencyMs: probe.latencyMs } : {}),
     });
     return finalEndpoint;
@@ -19224,19 +19285,33 @@ export async function createRuntimeBridgeBackend(
 
     const admissionResults = await Promise.all(
       resolved.map(async (entry) => {
-        const probe = await probeRuntimeEndpointAdmission({
-          endpointId: entry.result.endpointId,
-          providerAccountId: entry.result.providerAccountId,
-          modelId: entry.result.modelId,
-          reasoningEffort: entry.identity.reasoningEffort,
-          endpointKind: entry.endpointKind,
-          servingSource: entry.servingSource,
-        });
-        const admitted = probe === null || probe.reason === "healthy";
+        const account = currentAccounts.find(
+          (candidate) => candidate.providerAccountId === entry.result.providerAccountId,
+        );
+        if (!account) {
+          throw new Error(`Provider account ${entry.result.providerAccountId} was not found.`);
+        }
+        const oauthAuthenticated = account.authMode === "oauth2-device-code";
+        const probe = oauthAuthenticated
+          ? null
+          : await probeRuntimeEndpointAdmission({
+              endpointId: entry.result.endpointId,
+              providerAccountId: entry.result.providerAccountId,
+              modelId: entry.result.modelId,
+              reasoningEffort: entry.identity.reasoningEffort,
+              endpointKind: entry.endpointKind,
+              servingSource: entry.servingSource,
+            });
+        const admitted = oauthAuthenticated || probe === null || probe.reason === "healthy";
         return {
           endpoint: entry,
           lifecycleState: admitted ? ("active" as const) : ("degraded" as const),
-          healthStatus: admitted ? "healthy" : (probe?.healthStatus ?? "degraded"),
+          healthStatus: oauthAuthenticated
+            ? "not-yet-executed"
+            : admitted
+              ? "healthy"
+              : (probe?.healthStatus ?? "degraded"),
+          oauthAuthenticated,
         };
       }),
     );
@@ -19254,11 +19329,15 @@ export async function createRuntimeBridgeBackend(
         reasoningEffort: endpoint.identity.reasoningEffort,
       })),
     });
-    for (const { endpoint, lifecycleState, healthStatus } of admissionResults) {
+    for (const { endpoint, lifecycleState, healthStatus, oauthAuthenticated } of admissionResults) {
       writeEndpointAdmissionReceipt({
         endpointId: endpoint.result.endpointId,
         lifecycleState,
-        reasonCode: lifecycleState === "active" ? "admission_succeeded" : healthStatus,
+        reasonCode: oauthAuthenticated
+          ? "oauth-auth-confirmed"
+          : lifecycleState === "active"
+            ? "admission_succeeded"
+            : healthStatus,
       });
     }
     rebuildCurrentState();
@@ -21731,7 +21810,9 @@ export async function createRuntimeBridgeBackend(
     const runtimeAdmissionEligible = new Set(
       runtimeEndpoints
         .filter(
-          (endpoint) => endpoint.lifecycleState === "active" && endpoint.healthStatus === "healthy",
+          (endpoint) =>
+            endpoint.lifecycleState === "active" &&
+            (endpoint.healthStatus === "healthy" || endpoint.healthStatus === "not-yet-executed"),
         )
         .map((endpoint) => endpoint.endpointId),
     );
@@ -21763,7 +21844,9 @@ export async function createRuntimeBridgeBackend(
       );
     }
     return (
-      runtimeEndpoint.lifecycleState === "active" && runtimeEndpoint.healthStatus === "healthy"
+      runtimeEndpoint.lifecycleState === "active" &&
+      (runtimeEndpoint.healthStatus === "healthy" ||
+        runtimeEndpoint.healthStatus === "not-yet-executed")
     );
   };
   const listRouterCandidateData = async () => {
@@ -26580,6 +26663,7 @@ export async function createRuntimeBridgeBackend(
             },
           });
           rebuildCurrentState();
+          reconcileOAuthAuthenticatedRuntimeEndpoints(session.providerAccountId);
         }
         await cleanupManagedCodexDeviceCodeSession(payload);
         return {
@@ -26637,6 +26721,7 @@ export async function createRuntimeBridgeBackend(
             },
           });
           rebuildCurrentState();
+          reconcileOAuthAuthenticatedRuntimeEndpoints(session.providerAccountId);
         }
         return {
           authRequestId,
