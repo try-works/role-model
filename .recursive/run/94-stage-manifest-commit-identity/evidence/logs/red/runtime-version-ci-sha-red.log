@@ -1,0 +1,46 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/94-stage-manifest-commit-identity/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/runtime-version.test.ts (5 tests | 1 failed | 4 skipped) 29ms
+   ↓ resolveRuntimeVersionInfo > prefers packaged release manifest metadata over fallback sources
+   ↓ resolveRuntimeVersionInfo > falls back to release-tag environment metadata when no manifest exists
+   ↓ resolveRuntimeVersionInfo > reports the latest release tag separately from a divergent local build identity
+   ↓ resolveRuntimeVersionInfo > prefers explicit build date over git commit date for local packaged builds
+   × resolveRuntimeVersionInfo > preserves the CI commit when a shallow branch build has no release tag 27ms
+     → expected { version: 'unknown', …(2) } to deeply equal { version: 'unknown', …(2) }
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/runtime-version.test.ts > resolveRuntimeVersionInfo > preserves the CI commit when a shallow branch build has no release tag
+AssertionError: expected { version: 'unknown', …(2) } to deeply equal { version: 'unknown', …(2) }
+
+- Expected
++ Received
+
+  {
+-   "build_date": "2026-08-23T08:32:00.000Z",
+-   "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
++   "build_date": "runtime-derived",
++   "commit": "runtime-derived",
+    "version": "unknown",
+  }
+
+ ❯ test/runtime-version.test.ts:158:5
+    156|     const githubSha = "a".repeat(40);
+    157| 
+    158|     await expect(
+       |     ^
+    159|       resolveRuntimeVersionInfo({
+    160|         repoRoot,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 skipped (5)
+   Start at  16:37:32
+   Duration  1.03s (transform 107ms, setup 0ms, collect 103ms, tests 29ms, environment 0ms, prepare 365ms)
+
+undefined
+D:\DEV\role-model\.worktrees\94-stage-manifest-commit-identity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/runtime-version.test.ts -t preserves the CI commit

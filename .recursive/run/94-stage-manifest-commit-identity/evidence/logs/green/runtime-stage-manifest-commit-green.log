@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/94-stage-manifest-commit-identity/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/runtime-version.test.ts (6 tests) 31ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  16:42:21
+   Duration  1.05s (transform 115ms, setup 0ms, collect 106ms, tests 31ms, environment 0ms, prepare 363ms)
+

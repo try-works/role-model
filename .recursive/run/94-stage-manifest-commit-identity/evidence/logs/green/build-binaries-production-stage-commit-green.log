@@ -1,0 +1,19 @@
+✔ build-binaries retries release attestation before failing (1.9451ms)
+✔ build-binaries pins one exact Node patch for reproducible SEA payloads (0.4906ms)
+✔ build-binaries produces stage candidates, manual dev builds, and tag-only releases (0.3739ms)
+✔ production artifacts include the exact private runtime tested at stage (0.2776ms)
+✔ the public release orchestrator enforces paired private promotion (0.3435ms)
+✔ paired private checkout never dirties the public package provenance worktree (0.4852ms)
+✔ stage pushes publish downloadable prereleases before stable promotion (0.4799ms)
+✔ stage packaging rejects a manifest whose commit is not the build revision (0.4527ms)
+✔ production rejects a stage candidate whose packaged commit is not its accepted stage revision (0.5947ms)
+✔ stable tags require a manually accepted exact stage candidate (0.64ms)
+✔ release candidate acceptance is explicit, checksum-bound, and manual only (0.5667ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 192.1634

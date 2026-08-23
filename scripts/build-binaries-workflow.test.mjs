@@ -76,6 +76,17 @@ test("stage pushes publish downloadable prereleases before stable promotion", ()
   assert.match(workflow, /SHA256SUMS\.txt/);
 });
 
+test("stage packaging rejects a manifest whose commit is not the build revision", () => {
+  assert.match(
+    workflow,
+    /Manifest commit '\$\(\$manifest\.commit\)' does not match '\$env:GITHUB_SHA'/,
+  );
+});
+
+test("production rejects a stage candidate whose packaged commit is not its accepted stage revision", () => {
+  assert.match(workflow, /Stage candidate public commit mismatch/);
+});
+
 test("stable tags require a manually accepted exact stage candidate", () => {
   assert.match(workflow, /rc-approved/);
   assert.match(workflow, /candidate\.workflow_run\.head_sha/);

@@ -91,6 +91,8 @@ export function validateRun88PackagedStageIdentity(
   }
   if (!/^[0-9a-f]{40}$/.test(String(manifest.source_tree ?? "")))
     throw new Error("Run 88 stage source tree identity is missing or invalid");
+  if (!/^[0-9a-f]{40}$/.test(String(manifest.commit ?? "")))
+    throw new Error("Run 88 stage commit identity is missing or invalid");
   const trackB = manifest.track_b_runtime as Record<string, unknown> | null | undefined;
   if (!trackB || trackB.manifest_sha256 !== manifest.private_distribution_sha256)
     throw new Error("Run 88 stage private distribution identity mismatch");
@@ -249,8 +251,11 @@ export async function resolveRuntimeVersionInfo(
 
   return {
     version: "unknown",
-    commit: "runtime-derived",
-    build_date: "runtime-derived",
+    commit: readNonEmptyString(env.GITHUB_SHA) ?? "runtime-derived",
+    build_date:
+      readNonEmptyString(env.BUILD_DATE) ??
+      readNonEmptyString(env.GITHUB_RUN_CREATED_AT) ??
+      "runtime-derived",
     ...(options.fallbackConfigVersion ? { configVersion: options.fallbackConfigVersion } : {}),
   };
 }

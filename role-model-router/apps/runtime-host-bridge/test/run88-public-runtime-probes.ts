@@ -45,6 +45,7 @@ const correlation = (overrides: Readonly<Record<string, unknown>> = {}) =>
 
 const stageManifest = (overrides: Readonly<Record<string, unknown>> = {}) => ({
   channel: "stage",
+  commit: "a".repeat(40),
   name: "role-model-stage",
   host: "127.0.0.1",
   port: 3457,
@@ -306,6 +307,9 @@ export const publicRuntimeAcceptanceProbes: Readonly<Record<string, ProbeLayers>
           stageManifest({ track_b_runtime: { manifest_sha256: "0".repeat(64) } }),
         ),
       ).toThrow(/distribution/i);
+      expect(() =>
+        validateRun88PackagedStageIdentity(stageManifest({ commit: "runtime-derived" })),
+      ).toThrow(/commit identity/i);
     },
   }),
   "R2-AC03": Object.freeze({

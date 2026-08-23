@@ -190,6 +190,7 @@ jobs:
           if (-not $stageManifestPath) { throw "Stage candidate contains no manifest" }
           $stage = Get-Content -LiteralPath $stageManifestPath -Raw | ConvertFrom-Json
           if ($stage.channel -ne "stage" -or $stage.name -ne "role-model-stage") { throw "Artifact is not a stage candidate" }
+          if ($stage.commit -ne $stageSha) { throw "Stage candidate public commit mismatch" }
           if ($stage.source_tree -ne "${{ steps.public_source.outputs.source_tree }}") { throw "Stage candidate public source tree mismatch" }
           if ($stage.release_id -notmatch '^sha256:[0-9a-f]{64}$') { throw "Stage candidate release identity is invalid" }
           if ($stage.private_source_commit -notmatch '^[0-9a-f]{40}$') { throw "Stage candidate private source identity is invalid" }
@@ -318,6 +319,12 @@ jobs:
           }
           if ($manifest.channel -ne $env:ROLE_MODEL_BUILD_CHANNEL) {
             throw "Manifest channel '$($manifest.channel)' does not match '$env:ROLE_MODEL_BUILD_CHANNEL'"
+          }
+          if (
+            $env:ROLE_MODEL_BUILD_CHANNEL -in @("stage", "production") -and
+            $manifest.commit -ne $env:GITHUB_SHA
+          ) {
+            throw "Manifest commit '$($manifest.commit)' does not match '$env:GITHUB_SHA'"
           }
           $expectedName = switch ($env:ROLE_MODEL_BUILD_CHANNEL) {
             "production" { "role-model" }

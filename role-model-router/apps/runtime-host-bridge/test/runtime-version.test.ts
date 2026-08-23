@@ -3,7 +3,10 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
 
-import { resolveRuntimeVersionInfo } from "../src/runtime-version.js";
+import {
+  resolveRuntimeVersionInfo,
+  validateRun88PackagedStageIdentity,
+} from "../src/runtime-version.js";
 
 const tempDirs: string[] = [];
 
@@ -146,5 +149,49 @@ describe("resolveRuntimeVersionInfo", () => {
       build_date: "2026-07-11T05:45:00.000Z",
       configVersion: "1.1",
     });
+  });
+
+  test("preserves the CI commit when a shallow branch build has no release tag", async () => {
+    const repoRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-version-shallow-branch-"),
+    );
+    tempDirs.push(repoRoot);
+    const githubSha = "a".repeat(40);
+
+    await expect(
+      resolveRuntimeVersionInfo({
+        repoRoot,
+        env: {
+          GITHUB_REF_NAME: "stage",
+          GITHUB_SHA: githubSha,
+          BUILD_DATE: "2026-08-23T08:32:00.000Z",
+        },
+        runGitCommand: () => null,
+      }),
+    ).resolves.toEqual({
+      version: "unknown",
+      commit: githubSha,
+      build_date: "2026-08-23T08:32:00.000Z",
+    });
+  });
+
+  test("rejects a stage package without an immutable commit identity", () => {
+    expect(() =>
+      validateRun88PackagedStageIdentity({
+        channel: "stage",
+        name: "role-model-stage",
+        host: "127.0.0.1",
+        port: 3457,
+        endpoint: "http://127.0.0.1:3457",
+        state_root_name: "role-model-runtime-stage",
+        scope_id: "standalone-runtime-stage",
+        release_id: `sha256:${"a".repeat(64)}`,
+        private_distribution_sha256: "b".repeat(64),
+        source_tree: "c".repeat(40),
+        executable_sha256: "d".repeat(64),
+        core_payload_sha256: "e".repeat(64),
+        track_b_runtime: { manifest_sha256: "b".repeat(64) },
+      }),
+    ).toThrow(/commit identity/i);
   });
 });
