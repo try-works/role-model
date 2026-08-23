@@ -1,0 +1,35 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/93-variant-admission-model-pool-integrity/role-model-router/apps/runtime-host-bridge
+
+(node:60552) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/benchmark-progress.test.ts (2 tests) 5ms
+ ✓ test/benchmark-start-guards.test.ts (9 tests) 12ms
+(node:436) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:7644) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52500) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/benchmark-endpoint-health.test.ts (6 tests) 6ms
+ ✓ test/benchmark-runner-judge.test.ts (17 tests) 880ms
+ ✓ test/remote-health-bootstrap.test.ts (5 tests) 9085ms
+   ✓ remote health bootstrap > admits a callback-authenticated Codex Subscription endpoint without a Responses admission probe  2512ms
+   ✓ remote health bootstrap > admits a remote effort instance only after its exact readiness request succeeds  1560ms
+   ✓ remote health bootstrap > keeps a 503 effort instance degraded and ineligible at admission  1802ms
+   ✓ remote health bootstrap > serializes concurrent add requests for one exact effort instance into one readiness probe  1667ms
+   ✓ remote health bootstrap > skips remote-health probes in decision_only mode  1540ms
+ ✓ test/account-repair.test.ts (7 tests) 18713ms
+   ✓ account repair mutations > starting Kimi Code authorization for k3 preserves existing allowed models and active endpoints  1830ms
+   ✓ account repair mutations > reconnect returns the current pending device-authorization session for the same account  1539ms
+   ✓ account repair mutations > reconnect starts a fresh Codex Subscription device-code session instead of reusing a stale pending one  1601ms
+   ✓ account repair mutations > starting Codex Subscription authorization again supersedes the older pending session  1635ms
+   ✓ account repair mutations > update API key preserves account identity, bindings, and endpoint associations  3455ms
+   ✓ account repair mutations > rejects overlapping repair mutations for the same account without partially mutating state  1501ms
+   ✓ account repair mutations > Codex Subscription OAuth completion admits endpoints without an automatic readiness execution  7148ms
+
+ Test Files  6 passed (6)
+      Tests  46 passed (46)
+   Start at  18:25:26
+   Duration  21.86s (transform 3.74s, setup 0ms, collect 7.62s, tests 28.70s, environment 2ms, prepare 1.88s)
+

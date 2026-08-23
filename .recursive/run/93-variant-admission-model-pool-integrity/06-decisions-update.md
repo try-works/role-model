@@ -1,8 +1,8 @@
 Run: `/.recursive/run/93-variant-admission-model-pool-integrity/`
 Phase: `6-decisions-update`
 Status: `LOCKED`
-LockedAt: `2026-08-23T04:59:03Z`
-LockHash: `09227156dd86679aec9a9db1a38641244189df46a51bee3ce4d700508d02be81`
+LockedAt: `2026-08-23T10:48:34Z`
+LockHash: `d18a627ddfc3fd91b0ea93d682817fdcdd488238167a9714b85666206b5bbb9c`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - `/.recursive/run/93-variant-admission-model-pool-integrity/00-requirements.md`
@@ -11,7 +11,10 @@ Inputs:
 - `/.recursive/run/93-variant-admission-model-pool-integrity/04-test-summary.md`
 - `/.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`
 - `/.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md`
+- `/.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-05.md`
+- `/.recursive/run/93-variant-admission-model-pool-integrity/addenda/03.5-code-review.addendum-05.md`
 - `/.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-01.md`
+- `/.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-09.md`
 - `/.recursive/run/93-variant-admission-model-pool-integrity/addenda/05-manual-qa.requirements-audit-remediation.addendum-03.md`
 Outputs:
 - `/.recursive/DECISIONS.md`
@@ -63,11 +66,15 @@ Re-read the effective requirements, implementation summary and `addenda/03-imple
 
 Re-read addendum paths exactly: `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md`; `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-01.md`.
 
+Re-read the benchmark-startup repair addenda exactly: `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-05.md`; `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03.5-code-review.addendum-05.md`; `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-09.md`.
+
 ## Earlier Phase Reconciliation
 
 Phase 3 and 3.5 accepted the source changes, including `addenda/03-implementation-summary.addendum-03.md`; Phase 4 accepted focused regressions, including `addenda/04-test-summary.addendum-01.md`; Phase 5 accepted the rebuilt-runtime matrix. The QA remediation addendum’s earlier documentation blocker was repaired by restoring accidental baseline training-script deletions and completing audit receipts. No product scope changed here.
 
 Reconciled addenda exactly: `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md`; `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-01.md`.
+
+The later benchmark-startup addenda `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-05.md`, `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03.5-code-review.addendum-05.md`, and `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-09.md` were reconciled without reversing an existing durable decision.
 
 ## Subagent Contribution Verification
 

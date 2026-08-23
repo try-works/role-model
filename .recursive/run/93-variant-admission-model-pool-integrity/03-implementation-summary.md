@@ -1,8 +1,8 @@
 Run: `/.recursive/run/93-variant-admission-model-pool-integrity/`
 Phase: `3-implementation-summary`
 Status: `LOCKED`
-LockedAt: `2026-08-23T04:58:40Z`
-LockHash: `f6cf2873447f2c293969b0b1097a2bb1eb043e061b197e2d0679c9c9a4791db3`
+LockedAt: `2026-08-23T10:48:12Z`
+LockHash: `9e9bc17d1e15e483798c99a3c90e95144aa95e46beaddbc81d9fa6946cf76dad`
 Workflow version: `recursive-mode-audit-v2`
 TDD Mode: `strict`
 Inputs:
@@ -123,7 +123,7 @@ None. The previously incomplete High/Max/default variant matrix and missing clos
 
 - R1 | Status: verified | Changed Files: role-model-router/apps/runtime-host-bridge/src/index.ts, role-model-router/apps/runtime-host-bridge/test/endpoint-rehydration.test.ts | Implementation Evidence: role-model-router/apps/runtime-host-bridge/test/endpoint-rehydration.test.ts | Verification Evidence: .recursive/run/93-variant-admission-model-pool-integrity/04-test-summary.md
 - R2 | Status: verified | Changed Files: role-model-router/apps/runtime-host-bridge/src/remote-health-probe.ts, role-model-router/apps/runtime-host-bridge/test/remote-health-bootstrap.test.ts | Implementation Evidence: role-model-router/apps/runtime-host-bridge/test/remote-health-bootstrap.test.ts | Verification Evidence: .recursive/run/93-variant-admission-model-pool-integrity/04-test-summary.md
-- R3 | Status: verified | Changed Files: role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts, role-model-router/apps/runtime-host-bridge/test/run91-effort-instance-identity.test.ts | Implementation Evidence: role-model-router/apps/runtime-host-bridge/test/run91-effort-instance-identity.test.ts | Verification Evidence: .recursive/run/93-variant-admission-model-pool-integrity/04-test-summary.md
+- R3 | Status: verified | Changed Files: role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts, role-model-router/apps/runtime-host-bridge/src/benchmark-progress.ts, role-model-router/apps/runtime-host-bridge/test/run91-effort-instance-identity.test.ts, role-model-router/apps/runtime-host-bridge/test/benchmark-runner-judge.test.ts | Implementation Evidence: role-model-router/apps/runtime-host-bridge/test/run91-effort-instance-identity.test.ts, role-model-router/apps/runtime-host-bridge/test/benchmark-runner-judge.test.ts | Verification Evidence: .recursive/run/93-variant-admission-model-pool-integrity/04-test-summary.md, .recursive/run/93-variant-admission-model-pool-integrity/evidence/logs/green/bsh-host-full-green.log
 - R4 | Status: verified | Changed Files: role-model-router/apps/runtime-ui/app/lib/runtime-api.ts, role-model-router/apps/runtime-ui/app/lib/runtime-api.test.ts | Implementation Evidence: role-model-router/apps/runtime-ui/app/lib/runtime-api.test.ts | Verification Evidence: .recursive/run/93-variant-admission-model-pool-integrity/04-test-summary.md
 - R5 | Status: verified | Changed Files: role-model-router/apps/runtime-ui/app/lib/candidate-space.ts, role-model-router/apps/runtime-ui/app/lib/candidate-space.test.ts | Implementation Evidence: role-model-router/apps/runtime-ui/app/lib/candidate-space.test.ts | Verification Evidence: .recursive/run/93-variant-admission-model-pool-integrity/04-test-summary.md
 - R6 | Status: verified | Changed Files: role-model-router/apps/runtime-ui/app/components/candidate-space-chart.tsx, role-model-router/apps/runtime-ui/app/lib/candidate-space.ts | Implementation Evidence: role-model-router/apps/runtime-ui/app/components/candidate-space-chart.tsx, role-model-router/apps/runtime-ui/app/lib/candidate-space.ts | Verification Evidence: .recursive/run/93-variant-admission-model-pool-integrity/04-test-summary.md

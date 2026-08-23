@@ -79,13 +79,22 @@ describe("remote health bootstrap", () => {
         expect.arrayContaining([
           expect.objectContaining({
             status: "active",
-            healthStatus: "not-yet-executed",
+            healthStatus: "healthy",
             routingEligible: true,
           }),
         ]),
       );
       const endpointId = endpoints.find((endpoint) => endpoint.status === "active")?.endpointId;
       expect(endpointId).toEqual(expect.any(String));
+      const receiptRoot = path.join(runtimeStateRoot, scopeId, "endpoint-admission");
+      const receiptNames = await readdir(receiptRoot);
+      const receiptText = await readFile(path.join(receiptRoot, receiptNames[0] ?? ""), "utf8");
+      expect(JSON.parse(receiptText)).toEqual(
+        expect.objectContaining({
+          reasonCode: "oauth-auth-confirmed",
+          healthEvidence: "oauth-auth-confirmed",
+        }),
+      );
       await expect(
         backend.updateBenchmarkPreferences({ judgeEndpointId: endpointId }),
       ).resolves.toEqual(expect.anything());
@@ -217,6 +226,7 @@ describe("remote health bootstrap", () => {
             credentialBindingSha256: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
             lifecycleState: "active",
             reasonCode: "admission_succeeded",
+            healthEvidence: "endpoint-executed",
             secretFree: true,
           }),
         );

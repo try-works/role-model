@@ -1,0 +1,27 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/93-variant-admission-model-pool-integrity/role-model-router/apps/runtime-host-bridge
+
+(node:27764) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:36408) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/remote-health-bootstrap.test.ts (5 tests) 9865ms
+   ✓ remote health bootstrap > admits a callback-authenticated Codex Subscription endpoint without a Responses admission probe  2567ms
+   ✓ remote health bootstrap > admits a remote effort instance only after its exact readiness request succeeds  1750ms
+   ✓ remote health bootstrap > keeps a 503 effort instance degraded and ineligible at admission  1901ms
+   ✓ remote health bootstrap > serializes concurrent add requests for one exact effort instance into one readiness probe  1859ms
+   ✓ remote health bootstrap > skips remote-health probes in decision_only mode  1784ms
+ ✓ test/account-repair.test.ts (7 tests) 19338ms
+   ✓ account repair mutations > starting Kimi Code authorization for k3 preserves existing allowed models and active endpoints  1837ms
+   ✓ account repair mutations > reconnect returns the current pending device-authorization session for the same account  1468ms
+   ✓ account repair mutations > reconnect starts a fresh Codex Subscription device-code session instead of reusing a stale pending one  1861ms
+   ✓ account repair mutations > starting Codex Subscription authorization again supersedes the older pending session  1829ms
+   ✓ account repair mutations > update API key preserves account identity, bindings, and endpoint associations  3316ms
+   ✓ account repair mutations > rejects overlapping repair mutations for the same account without partially mutating state  1616ms
+   ✓ account repair mutations > Codex Subscription OAuth completion admits endpoints without an automatic readiness execution  7406ms
+
+ Test Files  2 passed (2)
+      Tests  12 passed (12)
+   Start at  18:23:17
+   Duration  22.43s (transform 1.86s, setup 0ms, collect 4.46s, tests 29.20s, environment 1ms, prepare 629ms)
+

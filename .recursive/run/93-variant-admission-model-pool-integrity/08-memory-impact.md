@@ -1,8 +1,8 @@
 Run: `/.recursive/run/93-variant-admission-model-pool-integrity/`
 Phase: `8-memory-impact`
 Status: `LOCKED`
-LockedAt: `2026-08-23T04:59:05Z`
-LockHash: `3fe2acbeddc31222e3e2b087f94fb948bb179d5d0342f0508ee580669ffbe8b2`
+LockedAt: `2026-08-23T10:48:35Z`
+LockHash: `e62c5ddb322f3aaf165c636b92bc934b8e406adecaa668da848bbb3186599990`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - `.recursive/run/93-variant-admission-model-pool-integrity/00-requirements.md`
@@ -12,7 +12,12 @@ Inputs:
 - `.recursive/run/93-variant-admission-model-pool-integrity/06-decisions-update.md`
 - `.recursive/run/93-variant-admission-model-pool-integrity/07-state-update.md`
 - `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md`
+- `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-05.md`
+- `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03.5-code-review.addendum-05.md`
 - `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-01.md`
+- `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-09.md`
+- `.recursive/run/93-variant-admission-model-pool-integrity/addenda/06-decisions-update.addendum-02.md`
+- `.recursive/run/93-variant-admission-model-pool-integrity/addenda/07-state-update.addendum-02.md`
 Outputs:
 - `.recursive/memory/domains/remote-effort-instance-identity.md`
 - `.recursive/memory/MEMORY.md`
@@ -89,11 +94,15 @@ Memory records the verified Run 93 behavior while preserving the distinction bet
 
 Re-read `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md`, `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-01.md`, the locked QA/decision/state receipts, and the memory router.
 
+Re-read `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-05.md`, `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03.5-code-review.addendum-05.md`, `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-09.md`, `.recursive/run/93-variant-admission-model-pool-integrity/addenda/06-decisions-update.addendum-02.md`, and `.recursive/run/93-variant-admission-model-pool-integrity/addenda/07-state-update.addendum-02.md`.
+
 ## Earlier Phase Reconciliation
 
 The memory entry reflects only the effective implementation and QA evidence. It does not turn unresolved future UAT or promotion into a verified fact.
 
 Reconciled addenda exactly: `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md`; `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-01.md`.
+
+The post-close benchmark-startup implementation, review, test, decision, and state addenda were reconciled through `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-05.md`, `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03.5-code-review.addendum-05.md`, `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-09.md`, `.recursive/run/93-variant-admission-model-pool-integrity/addenda/06-decisions-update.addendum-02.md`, and `.recursive/run/93-variant-admission-model-pool-integrity/addenda/07-state-update.addendum-02.md`.
 
 ## Subagent Contribution Verification
 

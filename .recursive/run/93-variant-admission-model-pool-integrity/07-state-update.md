@@ -1,13 +1,14 @@
 Run: `/.recursive/run/93-variant-admission-model-pool-integrity/`
 Phase: `7-state-update`
 Status: `LOCKED`
-LockedAt: `2026-08-23T04:59:04Z`
-LockHash: `ab41065ddb17f1a3d6fd9f74546e38471bec5dba44b5c7ec3d14a6e5598079f3`
+LockedAt: `2026-08-23T10:48:34Z`
+LockHash: `23284114b05d7ef6f0c3524f471fd62b641b51c9a17efb9de26b36f2cc2751dc`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - `.recursive/run/93-variant-admission-model-pool-integrity/00-requirements.md`
 - `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`
 - `.recursive/run/93-variant-admission-model-pool-integrity/06-decisions-update.md`
+- `.recursive/run/93-variant-admission-model-pool-integrity/addenda/06-decisions-update.addendum-02.md`
 - `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md`
 - `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-01.md`
 Outputs:
@@ -49,9 +50,13 @@ The state router records that effort variants are distinct identities, user-faci
 
 Re-read `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md`, `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-01.md`, the QA receipt, and decision receipt.
 
+Re-read `.recursive/run/93-variant-admission-model-pool-integrity/addenda/06-decisions-update.addendum-02.md` for the post-close benchmark terminal-state decision reconciliation.
+
 ## Earlier Phase Reconciliation
 
 The state summary contains only facts accepted by implementation, review, tests, QA, and the Phase 6 ledger. It does not convert the deferred Stage RC operator action into a completed release.
+
+The state reconciliation includes `.recursive/run/93-variant-admission-model-pool-integrity/addenda/06-decisions-update.addendum-02.md` and records no decision reversal.
 
 ## Subagent Contribution Verification
 

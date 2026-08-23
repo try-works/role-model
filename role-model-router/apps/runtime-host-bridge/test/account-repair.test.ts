@@ -859,7 +859,7 @@ describe("account repair mutations", () => {
 
       // This represents an old admission-time availability failure. A later successful
       // OAuth callback is authoritative for account authentication and must restore the
-      // endpoint to the explicit, execution-unobserved state without making a probe call.
+      // endpoint to OAuth-confirmed healthy state without making a probe call.
       upsertRuntimeEndpoint({
         databasePath,
         endpoint: {
@@ -919,7 +919,7 @@ describe("account repair mutations", () => {
           expect.objectContaining({
             endpointId: "openai.personal.codex-subscription.global.gpt-5.3-codex",
             status: "active",
-            healthStatus: "not-yet-executed",
+            healthStatus: "healthy",
             routingEligible: true,
             benchmarkEligible: true,
           }),
@@ -1001,7 +1001,7 @@ describe("account repair mutations", () => {
             providerAccountId: "openai.personal.codex-subscription",
             modelId: "chatgpt/gpt-5.3-codex",
             status: "active",
-            healthStatus: "not-yet-executed",
+            healthStatus: "healthy",
             routingEligible: true,
             benchmarkEligible: true,
             toolCallingSupported: true,
@@ -1013,7 +1013,7 @@ describe("account repair mutations", () => {
             modelId: "chatgpt/gpt-5.3-codex",
             reasoningEffort: "high",
             status: "active",
-            healthStatus: "not-yet-executed",
+            healthStatus: "healthy",
             routingEligible: true,
             benchmarkEligible: true,
           }),
@@ -1023,7 +1023,7 @@ describe("account repair mutations", () => {
             modelId: "chatgpt/gpt-5.3-codex",
             reasoningEffort: "xhigh",
             status: "active",
-            healthStatus: "not-yet-executed",
+            healthStatus: "healthy",
             routingEligible: true,
             benchmarkEligible: true,
           }),

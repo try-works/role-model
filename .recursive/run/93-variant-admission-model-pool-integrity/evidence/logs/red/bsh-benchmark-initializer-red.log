@@ -1,0 +1,62 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/93-variant-admission-model-pool-integrity/role-model-router/apps/runtime-host-bridge
+
+(node:57384) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/benchmark-runner-judge.test.ts (17 tests | 1 failed) 870ms
+   ✓ benchmark-runner judge remediation > probeJudgeEndpoint reports failure when judge returns empty response 4ms
+   ✓ benchmark-runner judge remediation > creates run progress before async endpoint discovery resolves 127ms
+   × benchmark-runner judge remediation > fails allocated progress when endpoint discovery rejects before execution 30ms
+     → expected { …(19) } to match object { …(4) }
+(17 matching properties omitted from actual)
+   ✓ benchmark-runner judge remediation > readJudgeResponseText merges reasoning and content channels 1ms
+   ✓ benchmark-runner judge remediation > orderEndpointsForGrading grades judge-as-subject before other endpoints by default 1ms
+   ✓ benchmark-runner judge remediation > orderEndpointsForGrading grades non-judge subjects first when overlap risk is flagged 0ms
+   ✓ benchmark-runner judge remediation > readJudgeGradingText prefers content channel over reasoning preambles 0ms
+   ✓ benchmark-runner judge remediation > omits judge max_tokens and persists judge artifacts 92ms
+   ✓ benchmark-runner judge remediation > counts executed dynamic tools when the endpoint does not echo assistant tool_calls 85ms
+   ✓ benchmark-runner judge remediation > sends structured response_format for subject json deliverables 58ms
+   ✓ benchmark-runner judge remediation > routes Codex tool-bearing benchmark subject turns through executeResponses 53ms
+   ✓ benchmark-runner judge remediation > preserves repeated same-name tool calls in benchmark artifacts 55ms
+   ✓ benchmark-runner judge remediation > forces a post-tool follow-up before accepting tool-grounded deliverables 55ms
+   ✓ benchmark-runner judge remediation > code-fence extraction ignores reasoning text from subject turns 55ms
+   ✓ benchmark-runner judge remediation > marks benchmark subject, judge, and compare executions to bypass cooldown poisoning 88ms
+   ✓ benchmark-runner judge remediation > persists cross-model compare artifacts for multi-endpoint runs 82ms
+   ✓ benchmark-runner judge remediation > compare rankings stay diagnostic and do not rewrite endpoint scores 80ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/benchmark-runner-judge.test.ts > benchmark-runner judge remediation > fails allocated progress when endpoint discovery rejects before execution
+AssertionError: expected { …(19) } to match object { …(4) }
+(17 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "errorCode": "benchmark_initialization_failed",
+-   "errorMessage": "Benchmark initialization failed.",
+    "runId": "run-initializer-rejection",
+-   "status": "failed",
++   "status": "running",
+  }
+
+ ❯ test/benchmark-runner-judge.test.ts:178:45
+    176|       "secret-provider-detail-must-not-be-exposed",
+    177|     );
+    178|     expect(readBenchmarkRunProgress(runId)).toMatchObject({
+       |                                             ^
+    179|       runId,
+    180|       status: "failed",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 16 passed (17)
+   Start at  18:21:51
+   Duration  2.52s (transform 583ms, setup 0ms, collect 783ms, tests 870ms, environment 0ms, prepare 273ms)
+
+undefined
+D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/benchmark-runner-judge.test.ts

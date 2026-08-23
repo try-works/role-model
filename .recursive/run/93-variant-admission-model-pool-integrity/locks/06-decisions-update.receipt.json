@@ -1,19 +1,19 @@
 {
   "artifact": "06-decisions-update.md",
-  "artifact_hash": "09227156dd86679aec9a9db1a38641244189df46a51bee3ce4d700508d02be81",
+  "artifact_hash": "d18a627ddfc3fd91b0ea93d682817fdcdd488238167a9714b85666206b5bbb9c",
   "artifact_path": "D:\\DEV\\role-model\\.worktrees\\93-variant-admission-model-pool-integrity\\.recursive\\run\\93-variant-admission-model-pool-integrity\\06-decisions-update.md",
-  "locked_at": "2026-08-23T04:59:03Z",
+  "locked_at": "2026-08-23T10:48:34Z",
   "prerequisite_hashes": {
     "00-requirements.md": "cfcc07d0d8ba56b8f8ff9cbbbcc5f79c10c5c2f2b9161d864792638405c493ee",
     "00-worktree.md": "475fb5cca6a6bcad6139f76b1cdd2f5b863588914305e4bf89259af94baf6946",
     "01-as-is.md": "20774d6b0ab11880a8274243d32d4e5e46fcaef5ca31c8e1cfa72c1f4c49bd88",
     "01.5-root-cause.md": "daecba0e4e0a885ee4623580e13815529e528e360330015f1f8b30d836c35546",
     "02-to-be-plan.md": "4e4f9322500bfcf8e828f14cd753ac7c6106ff3114cf1d25ab42d8710c01d872",
-    "03-implementation-summary.md": "f6cf2873447f2c293969b0b1097a2bb1eb043e061b197e2d0679c9c9a4791db3",
-    "03.5-code-review.md": "2ad9b7073944ecd21e69fd8a5db7aca05e09056b0dc8793093729dcbf9a7a030",
-    "04-test-summary.md": "4551eab814fad1c9a62ee98c7c40ac2b3e85536643046c711bd3037ed2a76f37",
-    "05-manual-qa.md": "838d5ee98c1b5719a523f8bf839419567f25a4f3adf2d4215de6fb3cf30f5174"
+    "03-implementation-summary.md": "9e9bc17d1e15e483798c99a3c90e95144aa95e46beaddbc81d9fa6946cf76dad",
+    "03.5-code-review.md": "c8b5d2efbc37d1f33d0f85988a4d4a1c81b35a75e5e3830af3fb1b4f417341db",
+    "04-test-summary.md": "dc12ea1b7aa977418d8a7a887fdb07834f070ddb5cc5f86f9661f4daefae6c09",
+    "05-manual-qa.md": "10a9e17657854358f69d7ceebfa4e3b5e612675dd548d70a46fb715eadb83946"
   },
   "previous_receipt_hash": null,
-  "receipt_hash": "b54112b8517f256f4875f5457c041d10cf4825ba35b3603edeceb5289f3ab81c"
+  "receipt_hash": "bc2eeaefbe5c5fd0db9e2fe99ae7d13c19b3cd12e52ed812b5f8a6e72208d26a"
 }

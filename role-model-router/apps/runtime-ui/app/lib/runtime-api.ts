@@ -2457,6 +2457,7 @@ export interface BenchmarkRunProgress {
   readonly judgeEndpointId: string | null;
   readonly activeJudgeEndpointId: string | null;
   readonly artifactRoot: string | null;
+  readonly errorCode?: "benchmark_initialization_failed" | "benchmark_execution_failed";
   readonly errorMessage?: string;
   readonly result?: BenchmarkRunResult;
 }
