@@ -1655,8 +1655,10 @@ export async function runRoutingCapabilityBenchmark(
     artifactRoot,
   });
 
-  let failureCode: "benchmark_initialization_failed" | "benchmark_execution_failed" =
-    "benchmark_initialization_failed";
+  let failureCode:
+    | "benchmark_initialization_failed"
+    | "benchmark_execution_failed"
+    | "benchmark_membership_drifted" = "benchmark_initialization_failed";
 
   try {
     const endpoints = (await deps.listConfiguredEndpoints()).filter((endpoint) =>
@@ -2151,6 +2153,7 @@ export async function runRoutingCapabilityBenchmark(
 
     const completionMembershipRevision = deps.membershipRevision?.() ?? null;
     if (completionMembershipRevision !== startMembershipRevision) {
+      failureCode = "benchmark_membership_drifted";
       await writeBenchmarkRunManifest(artifactRoot, {
         runId,
         suiteId: suite.suite_id,

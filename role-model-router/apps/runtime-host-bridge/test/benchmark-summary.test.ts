@@ -41,6 +41,89 @@ describe("benchmark-summary", () => {
     ).resolves.toEqual(EMPTY_BENCHMARK_SUMMARY);
   });
 
+  test("excludes an explicitly stale graded run even when a result artifact exists", async () => {
+    const root = await createArtifactRoot();
+    await writeBenchmarkRunManifest(root, {
+      runId: "run-membership-drifted",
+      suiteId: "routing-capability-v2",
+      mode: "quick",
+      judgeEndpointId: "judge.endpoint",
+      startedAtMs: 1,
+      executionCompletedAtMs: 2,
+      gradingCompletedAtMs: 3,
+      endpointIds: ["openai.luna-max"],
+      caseIds: ["h01"],
+      responseCount: 1,
+      judgeArtifactCount: 1,
+      compareArtifactCount: 1,
+      membershipRevision: "membership-before",
+      profileRevisionByEndpointId: {
+        "openai.luna-max": "profile-luna-max",
+      },
+      completionState: "stale",
+    });
+    await writeBenchmarkRunResult(root, {
+      runId: "run-membership-drifted",
+      suiteId: "routing-capability-v2",
+      suiteVersion: "2.0",
+      mode: "quick",
+      judgeEndpointId: "judge.endpoint",
+      startedAtMs: 1,
+      completedAtMs: 3,
+      endpointGrades: [
+        {
+          endpointId: "openai.luna-max",
+          modelId: "openai/gpt-5.6-luna",
+          sourceType: "remote",
+          reasoningEffort: "max",
+          overallScore: 0.92,
+          byDifficulty: {},
+          caseResults: [{ caseId: "h01", difficultyBucket: "hard", score: 1 }],
+        },
+      ],
+    });
+
+    await expect(listBenchmarkRuns({ artifactRoot: root })).resolves.toEqual([]);
+    await expect(
+      readLatestBenchmarkSummary({ artifactRoot: root, resolveModelId: () => null }),
+    ).resolves.toEqual(EMPTY_BENCHMARK_SUMMARY);
+    await expect(
+      readLatestBenchmarkSummaryByMode({
+        artifactRoot: root,
+        mode: "quick",
+        resolveModelId: () => null,
+      }),
+    ).resolves.toEqual(EMPTY_BENCHMARK_SUMMARY);
+  });
+
+  test("excludes a completed manifest when its result artifact is absent", async () => {
+    const root = await createArtifactRoot();
+    await writeBenchmarkRunManifest(root, {
+      runId: "run-result-missing",
+      suiteId: "routing-capability-v2",
+      mode: "quick",
+      judgeEndpointId: "judge.endpoint",
+      startedAtMs: 1,
+      executionCompletedAtMs: 2,
+      gradingCompletedAtMs: 3,
+      endpointIds: ["openai.luna-max"],
+      caseIds: ["h01"],
+      responseCount: 1,
+      judgeArtifactCount: 1,
+      compareArtifactCount: 1,
+      membershipRevision: "membership-current",
+      profileRevisionByEndpointId: {
+        "openai.luna-max": "profile-luna-max",
+      },
+      completionState: "completed",
+    });
+
+    await expect(listBenchmarkRuns({ artifactRoot: root })).resolves.toEqual([]);
+    await expect(
+      readLatestBenchmarkSummary({ artifactRoot: root, resolveModelId: () => null }),
+    ).resolves.toEqual(EMPTY_BENCHMARK_SUMMARY);
+  });
+
   test("reads the latest completed run summary from manifest and result artifacts", async () => {
     const root = await createArtifactRoot();
     const olderRunId = "run-older";

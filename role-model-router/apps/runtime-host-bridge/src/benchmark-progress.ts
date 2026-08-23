@@ -3,7 +3,8 @@ import type { BenchmarkRunResult } from "./benchmark-runner.js";
 export type BenchmarkRunStatus = "running" | "completed" | "failed";
 export type BenchmarkRunErrorCode =
   | "benchmark_initialization_failed"
-  | "benchmark_execution_failed";
+  | "benchmark_execution_failed"
+  | "benchmark_membership_drifted";
 
 export interface BenchmarkRunProgressSnapshot {
   readonly runId: string;
@@ -184,7 +185,9 @@ export function failBenchmarkRunProgress(
     errorMessage:
       errorCode === "benchmark_initialization_failed"
         ? "Benchmark initialization failed."
-        : "Benchmark execution failed.",
+        : errorCode === "benchmark_membership_drifted"
+          ? "Configured model membership changed during the benchmark. Run it again after model changes are complete."
+          : "Benchmark execution failed.",
   };
   activeRuns.set(runId, next);
   return next;
