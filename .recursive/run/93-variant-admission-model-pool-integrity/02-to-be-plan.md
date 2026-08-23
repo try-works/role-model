@@ -1,8 +1,8 @@
 Run: `/.recursive/run/93-variant-admission-model-pool-integrity/`
 Phase: `2-to-be-plan`
 Status: `LOCKED`
-LockedAt: `2026-08-22T01:03:35Z`
-LockHash: `4e4f9322500bfcf8e828f14cd753ac7c6106ff3114cf1d25ab42d8710c01d872`
+LockedAt: `2026-08-23T13:33:59Z`
+LockHash: `42f58a5467d241c668138b5a1dcff9daf4efc9c16d8548f0b06ad0a84f9fb34b`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - `/.recursive/run/93-variant-admission-model-pool-integrity/00-requirements.md` (LOCKED)

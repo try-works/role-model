@@ -1,21 +1,21 @@
 {
   "artifact": "08-memory-impact.md",
-  "artifact_hash": "ed113b73ec4a6246ed5a73f3cec0452f92717efddd4141de5f53932a018b4921",
+  "artifact_hash": "b4cf8635632b6d0e5a8e7527a56723bf2d3b364b0b2c8d25ddaa7e2806a41884",
   "artifact_path": "D:\\DEV\\role-model\\.worktrees\\93-variant-admission-model-pool-integrity\\.recursive\\run\\93-variant-admission-model-pool-integrity\\08-memory-impact.md",
-  "locked_at": "2026-08-23T13:22:01Z",
+  "locked_at": "2026-08-23T13:34:32Z",
   "prerequisite_hashes": {
     "00-requirements.md": "cfcc07d0d8ba56b8f8ff9cbbbcc5f79c10c5c2f2b9161d864792638405c493ee",
-    "00-worktree.md": "475fb5cca6a6bcad6139f76b1cdd2f5b863588914305e4bf89259af94baf6946",
-    "01-as-is.md": "20774d6b0ab11880a8274243d32d4e5e46fcaef5ca31c8e1cfa72c1f4c49bd88",
-    "01.5-root-cause.md": "daecba0e4e0a885ee4623580e13815529e528e360330015f1f8b30d836c35546",
-    "02-to-be-plan.md": "4e4f9322500bfcf8e828f14cd753ac7c6106ff3114cf1d25ab42d8710c01d872",
-    "03-implementation-summary.md": "7011cc922dd6f4b18e0568cba1f123dbca101aee1861715e242447aa6a124ff1",
-    "03.5-code-review.md": "9cd8d07bc930eed7a94976044a02efb40b2e00a28d724369e6fdc1ce24bd2bb9",
-    "04-test-summary.md": "ecc0a9effac62f8a7f5c8adc55745372c1fff37d8cff142c02104c90c54626b8",
-    "05-manual-qa.md": "b61acb42176ab6e54aadf239ce9a662e3382019c85433f1c002eaab44ae2d44f",
-    "06-decisions-update.md": "bd3dcf19e6f2da4de4e37b4e063dbc2cba4d864d35074db5bd269ad4a11ea623",
-    "07-state-update.md": "a81c019d6220aeca1eadf50ade8cac324a04c384d18e97ac9100794e00f6cb6b"
+    "00-worktree.md": "e3db929ac7e463ef55402fce84ff182894e0a769004c7f57ddaa8989cfd12795",
+    "01-as-is.md": "9d2f26a38d8767c9cfb93a947048979157afd961a25f5bb16e1783879cd01f9a",
+    "01.5-root-cause.md": "4e7f0fdad28ae78a01d5a966249d9e5b05e43fe04d6d1a1395d0d82c13f84ce4",
+    "02-to-be-plan.md": "42f58a5467d241c668138b5a1dcff9daf4efc9c16d8548f0b06ad0a84f9fb34b",
+    "03-implementation-summary.md": "11daa4f397be863d17c72039fdf51754a2745a211880c466c4fb01acb55d8e26",
+    "03.5-code-review.md": "7a67e4d652c27c83d59721838a525d6e5e5b0484c3d7a53f9a14bbbbd082df6b",
+    "04-test-summary.md": "3d0714516d7a7133fb5eaaf28d7fe8b2e24fc20c6426706a5abbf7783fb809a1",
+    "05-manual-qa.md": "b74f13fb2adfab807d82ffc49d4c026a647aa75556a96183907ac2d7463e108f",
+    "06-decisions-update.md": "9ed7ab824edde4f7989ab56a13a12d1c6a652dee843c93ca8c73f194f5bfd9f5",
+    "07-state-update.md": "91dac44c0643763f7bfd8533c820e4ed5388691ec235f4ead3db53d2f100d0ac"
   },
   "previous_receipt_hash": null,
-  "receipt_hash": "5c4432a74f198a536ea627ffd753610545db1ff577d5f549177e45ba462a4971"
+  "receipt_hash": "4118cef84d33fa609b649191d85603cfe2ffffc7254df36217da304cf42bdfbb"
 }

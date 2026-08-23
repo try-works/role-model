@@ -1,13 +1,13 @@
 {
   "artifact": "01.5-root-cause.md",
-  "artifact_hash": "daecba0e4e0a885ee4623580e13815529e528e360330015f1f8b30d836c35546",
+  "artifact_hash": "4e7f0fdad28ae78a01d5a966249d9e5b05e43fe04d6d1a1395d0d82c13f84ce4",
   "artifact_path": "D:\\DEV\\role-model\\.worktrees\\93-variant-admission-model-pool-integrity\\.recursive\\run\\93-variant-admission-model-pool-integrity\\01.5-root-cause.md",
-  "locked_at": "2026-08-22T00:55:19Z",
+  "locked_at": "2026-08-23T13:33:58Z",
   "prerequisite_hashes": {
-      "00-requirements.md": "cfcc07d0d8ba56b8f8ff9cbbbcc5f79c10c5c2f2b9161d864792638405c493ee",
-      "00-worktree.md": "475fb5cca6a6bcad6139f76b1cdd2f5b863588914305e4bf89259af94baf6946",
-      "01-as-is.md": "20774d6b0ab11880a8274243d32d4e5e46fcaef5ca31c8e1cfa72c1f4c49bd88"
-    },
+    "00-requirements.md": "cfcc07d0d8ba56b8f8ff9cbbbcc5f79c10c5c2f2b9161d864792638405c493ee",
+    "00-worktree.md": "e3db929ac7e463ef55402fce84ff182894e0a769004c7f57ddaa8989cfd12795",
+    "01-as-is.md": "9d2f26a38d8767c9cfb93a947048979157afd961a25f5bb16e1783879cd01f9a"
+  },
   "previous_receipt_hash": null,
-  "receipt_hash": "f4fc4e7911f772606b33bf02b2dddb483f052fa6a66fe9b975310ac82b085a1c"
+  "receipt_hash": "16f5438ee240fa38eb6e6bba00af38d09380093a47aa3a261f6fcf782ddc7bf1"
 }
