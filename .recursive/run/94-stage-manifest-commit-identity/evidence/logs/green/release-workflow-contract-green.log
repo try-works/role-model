@@ -1,0 +1,34 @@
+
+> role-model@0.0.0 test:release-workflows D:\DEV\role-model\.worktrees\94-stage-manifest-commit-identity
+> node --test scripts/ci-workflow.test.mjs scripts/build-binaries-workflow.test.mjs scripts/track-b/wait-for-runtime-readiness.test.mjs apps/docs-site/scripts/docs-site-deploy-workflow.test.mjs
+
+✔ docs deploy workflow skips gracefully when Cloudflare secrets are absent (9.3862ms)
+✔ docs deploy is a single main-only deployment even for manual runs (3.2366ms)
+✔ build-binaries retries release attestation before failing (2.2231ms)
+✔ build-binaries pins one exact Node patch for reproducible SEA payloads (0.8627ms)
+✔ build-binaries produces stage candidates, manual dev builds, and tag-only releases (0.6603ms)
+✔ production artifacts include the exact private runtime tested at stage (0.4344ms)
+✔ the public release orchestrator enforces paired private promotion (0.3805ms)
+✔ paired private checkout never dirties the public package provenance worktree (0.4475ms)
+✔ stage pushes publish downloadable prereleases before stable promotion (0.484ms)
+✔ stage packaging rejects a manifest whose commit is not the build revision (0.2479ms)
+✔ stable tags require a manually accepted exact stage candidate (0.3547ms)
+✔ release candidate acceptance is explicit, checksum-bound, and manual only (0.7028ms)
+✔ CI is scoped to long-lived branches with stable cancellable lanes (4.7027ms)
+✔ Track B CI is always-on, explicit, and runs the tagged browser contract (1.1914ms)
+✔ Track B browser gate waits for semantic readiness without weakening exact private pairing (0.5886ms)
+✔ promotion guard encodes dev to stage to main with a hotfix exception (0.4629ms)
+✔ workspace tests serialize the resource-heavy runtime proofs (0.3931ms)
+✔ refuses an HTTP-200 health response while runtime bootstrap is degraded and pending (4.1053ms)
+✔ retains the last semantic observation when a near-deadline request aborts (0.8666ms)
+✔ accepts only healthy, authoritative, bootstrap-ready runtime health (274.5819ms)
+✔ fails closed when health responds with malformed JSON (1.1557ms)
+✔ fails closed with bounded diagnostics when health never becomes ready (0.843ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 569.1674

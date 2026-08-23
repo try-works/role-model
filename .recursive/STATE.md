@@ -2,6 +2,16 @@
 
 ## Current State
 
+Run `94-stage-manifest-commit-identity` repairs a release-blocking provenance
+defect found by the acceptance workflow: shallow CI had packaged the synthetic
+manifest commit `runtime-derived`. The repair makes `GITHUB_SHA` authoritative
+for shallow CI and requires an exact 40-hex commit at package, startup, Stage
+candidate, and production acceptance boundaries. The rejected
+`stage-rc-23f91a1f7cd8` must not be promoted. After this repair is merged,
+release operations must build a fresh Stage candidate, verify its manifest
+commit equals the Stage SHA, obtain fresh human UAT, and pass acceptance before
+the paired private/public main promotions.
+
 Run `93-variant-admission-model-pool-integrity` is the current release-candidate
 readiness increment: remote effort variants are distinct endpoint identities,
 admission and probe/circuit health are authoritative for routing and benchmark
