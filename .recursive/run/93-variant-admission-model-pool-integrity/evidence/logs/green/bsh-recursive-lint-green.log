@@ -1,0 +1,11 @@
+Linting run: 93-variant-admission-model-pool-integrity
+Path: D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\.recursive\run\93-variant-admission-model-pool-integrity
+Workflow Profile: recursive-mode-audit-v2
+
+----
+
+Summary
+- FAIL: 0
+- WARN: 0
+
+[OK] Lint passed

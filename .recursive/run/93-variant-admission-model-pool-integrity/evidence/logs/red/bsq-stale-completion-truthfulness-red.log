@@ -1,0 +1,106 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/93-variant-admission-model-pool-integrity/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/benchmark-progress.test.ts (3 tests | 1 failed) 42ms
+   ✓ benchmark-progress > includes compare steps in total when multi-endpoint judge run 4ms
+   ✓ benchmark-progress > transitions through grading and compare phases 1ms
+   × benchmark-progress > reports membership drift as a distinct safe terminal failure 33ms
+     → expected { …(21) } to match object { status: 'failed', …(2) }
+(18 matching properties omitted from actual)
+ ❯ test/benchmark-summary.test.ts (16 tests | 1 failed) 253ms
+   ✓ benchmark-summary > returns empty summary when no completed runs exist 9ms
+   × benchmark-summary > excludes an explicitly stale graded run without a result from every completed read 41ms
+     → expected { …(12) } to deeply equal { runId: null, …(11) }
+   ✓ benchmark-summary > reads the latest completed run summary from manifest and result artifacts 30ms
+   ✓ benchmark-summary > builds a current per-endpoint portfolio across later partial runs 53ms
+   ✓ benchmark-summary > quarantines revisionless and mismatched manifests from a current-membership portfolio 25ms
+   ✓ benchmark-summary > builds exact run capability even when no learned profile exists 2ms
+   ✓ benchmark-summary > round-trips latencyMs in result.json 11ms
+   ✓ benchmark-summary > builds benchmark capability from profile and summary subject 1ms
+   ✓ benchmark-summary > does not borrow global latest-run provenance when the endpoint is absent 2ms
+   ✓ benchmark-summary > does not use an unfiltered latest-summary subject when no current portfolio entry exists 1ms
+   ✓ benchmark-summary > uses the exact endpoint portfolio entry instead of a newer sibling-only summary 1ms
+   ✓ benchmark-summary > rejects duplicate exact endpoint entries instead of silently choosing one score 13ms
+   ✓ benchmark-summary > builds assignment-aware role and group benchmark fit from taxonomy summary data 2ms
+   ✓ benchmark-summary > lists completed runs and resolves latest summary per mode 39ms
+   ✓ benchmark-summary > aggregates benchmark scores by taxonomy dimensions when caseTaxonomyTags are present 14ms
+   ✓ benchmark-summary > returns undefined taxonomyScores when caseTaxonomyTags are absent 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/benchmark-progress.test.ts > benchmark-progress > reports membership drift as a distinct safe terminal failure
+AssertionError: expected { …(21) } to match object { status: 'failed', …(2) }
+(18 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "errorCode": "benchmark_membership_drifted",
+-   "errorMessage": "Configured model membership changed during the benchmark. Run it again after model changes are complete.",
++   "errorMessage": "Benchmark execution failed.",
+    "status": "failed",
+  }
+
+ ❯ test/benchmark-progress.test.ts:65:64
+     63|     failBenchmarkRunProgress("run-membership-drifted", "benchmark_memb…
+     64| 
+     65|     expect(readBenchmarkRunProgress("run-membership-drifted")).toMatch…
+       |                                                                ^
+     66|       status: "failed",
+     67|       errorCode: "benchmark_membership_drifted",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/benchmark-summary.test.ts > benchmark-summary > excludes an explicitly stale graded run without a result from every completed read
+AssertionError: expected { …(12) } to deeply equal { runId: null, …(11) }
+
+- Expected
++ Received
+
+  {
+-   "artifactRoot": null,
++   "artifactRoot": "run-membership-drifted",
+    "caseAudits": [],
+    "caseComparisons": [],
+-   "completedAtMs": null,
+-   "judgeEndpointId": null,
++   "completedAtMs": 3,
++   "judgeEndpointId": "judge.endpoint",
+    "judgeModelId": null,
+-   "manifest": null,
+-   "mode": null,
+-   "runId": null,
++   "manifest": {
++     "compareArtifactCount": 1,
++     "executionCompletedAtMs": 2,
++     "gradingCompletedAtMs": 3,
++     "judgeArtifactCount": 1,
++   },
++   "mode": "quick",
++   "runId": "run-membership-drifted",
+    "subjects": [],
+-   "suiteId": null,
++   "suiteId": "routing-capability-v2",
+    "suiteVersion": null,
+  }
+
+ ❯ test/benchmark-summary.test.ts:69:5
+     67|       listBenchmarkRuns({ artifactRoot: root }),
+     68|     ).resolves.toEqual([]);
+     69|     await expect(
+       |     ^
+     70|       readLatestBenchmarkSummary({ artifactRoot: root, resolveModelId:…
+     71|     ).resolves.toEqual(EMPTY_BENCHMARK_SUMMARY);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  2 failed | 17 passed (19)
+   Start at  19:54:23
+   Duration  1.97s (transform 432ms, setup 0ms, collect 649ms, tests 295ms, environment 1ms, prepare 905ms)
+
+undefined
+D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/benchmark-summary.test.ts test/benchmark-progress.test.ts

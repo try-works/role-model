@@ -1655,80 +1655,87 @@ export async function runRoutingCapabilityBenchmark(
     artifactRoot,
   });
 
-  const endpoints = (await deps.listConfiguredEndpoints()).filter((endpoint) =>
-    isHealthyEndpoint(endpoint.healthStatus),
-  );
-
-  const targetEligibility = evaluateBenchmarkTargetEligibility({
-    endpointIds: request.endpointIds,
-    judgeEndpointId: request.judgeEndpointId,
-    endpoints,
-  });
-  if (!targetEligibility.allowed) {
-    throw new Error(targetEligibility.warnings[0] ?? "benchmark_endpoint_ineligible");
-  }
-
-  const targetEndpoints = request.endpointIds?.length
-    ? endpoints.filter((endpoint) => request.endpointIds?.includes(endpoint.endpointId))
-    : endpoints;
-
-  if (targetEndpoints.length === 0) {
-    throw new Error("No healthy configured endpoints available for benchmarking.");
-  }
-
-  // Freeze the configured membership once, before any benchmark execution. A
-  // benchmark result is evidence for this exact target set, never whichever
-  // pool happens to be configured when grading finishes.
-  const startMembershipRevision = deps.membershipRevision?.() ?? null;
-  const profileRevisionByEndpointId = new Map(
-    targetEndpoints.map(
-      (endpoint) =>
-        [
-          endpoint.endpointId,
-          deriveBenchmarkProfileRevision({
-            runId,
-            endpointId: endpoint.endpointId,
-            endpointVersion: deps.deriveEndpointVersion(endpoint.endpointId),
-            modelId: endpoint.modelId,
-            reasoningEffort: endpoint.reasoningEffort ?? null,
-            suiteId: suite.suite_id,
-            suiteVersion: suite.suite_version,
-            mode,
-            membershipRevision: startMembershipRevision,
-          }),
-        ] as const,
-    ),
-  );
-
-  const judgeEndpointId = request.judgeEndpointId ?? null;
-
-  const judgeEndpoint = judgeEndpointId
-    ? endpoints.find((endpoint) => endpoint.endpointId === judgeEndpointId)
-    : (endpoints.find((endpoint) => endpoint.sourceType === "remote") ?? targetEndpoints[0]);
-
-  if (!judgeEndpoint) {
-    throw new Error("No judge endpoint available. Configure a capable remote model.");
-  }
-
-  const executionSteps = targetEndpoints.length * cases.length;
-
-  let completedSteps = 0;
-
-  const executionByEndpoint = new Map<string, Map<string, BenchmarkCaseExecution>>();
-
-  const compareCaseCount = useJudge && targetEndpoints.length >= 2 ? cases.length : 0;
-
-  updateBenchmarkRunProgressPlan(runId, {
-    endpointCount: targetEndpoints.length,
-    caseCount: cases.length,
-    totalSteps:
-      executionSteps + (useJudge ? targetEndpoints.length * cases.length : 0) + compareCaseCount,
-    judgeEndpointId: judgeEndpoint.endpointId,
-    activeJudgeEndpointId: judgeEndpoint.endpointId,
-    artifactRoot,
-  });
+  let failureCode:
+    | "benchmark_initialization_failed"
+    | "benchmark_execution_failed"
+    | "benchmark_membership_drifted" = "benchmark_initialization_failed";
 
   try {
+    const endpoints = (await deps.listConfiguredEndpoints()).filter((endpoint) =>
+      isHealthyEndpoint(endpoint.healthStatus),
+    );
+
+    const targetEligibility = evaluateBenchmarkTargetEligibility({
+      endpointIds: request.endpointIds,
+      judgeEndpointId: request.judgeEndpointId,
+      endpoints,
+    });
+    if (!targetEligibility.allowed) {
+      throw new Error(targetEligibility.warnings[0] ?? "benchmark_endpoint_ineligible");
+    }
+
+    const targetEndpoints = request.endpointIds?.length
+      ? endpoints.filter((endpoint) => request.endpointIds?.includes(endpoint.endpointId))
+      : endpoints;
+
+    if (targetEndpoints.length === 0) {
+      throw new Error("No healthy configured endpoints available for benchmarking.");
+    }
+
+    // Freeze the configured membership once, before any benchmark execution. A
+    // benchmark result is evidence for this exact target set, never whichever
+    // pool happens to be configured when grading finishes.
+    const startMembershipRevision = deps.membershipRevision?.() ?? null;
+    const profileRevisionByEndpointId = new Map(
+      targetEndpoints.map(
+        (endpoint) =>
+          [
+            endpoint.endpointId,
+            deriveBenchmarkProfileRevision({
+              runId,
+              endpointId: endpoint.endpointId,
+              endpointVersion: deps.deriveEndpointVersion(endpoint.endpointId),
+              modelId: endpoint.modelId,
+              reasoningEffort: endpoint.reasoningEffort ?? null,
+              suiteId: suite.suite_id,
+              suiteVersion: suite.suite_version,
+              mode,
+              membershipRevision: startMembershipRevision,
+            }),
+          ] as const,
+      ),
+    );
+
+    const judgeEndpointId = request.judgeEndpointId ?? null;
+
+    const judgeEndpoint = judgeEndpointId
+      ? endpoints.find((endpoint) => endpoint.endpointId === judgeEndpointId)
+      : (endpoints.find((endpoint) => endpoint.sourceType === "remote") ?? targetEndpoints[0]);
+
+    if (!judgeEndpoint) {
+      throw new Error("No judge endpoint available. Configure a capable remote model.");
+    }
+
+    const executionSteps = targetEndpoints.length * cases.length;
+
+    let completedSteps = 0;
+
+    const executionByEndpoint = new Map<string, Map<string, BenchmarkCaseExecution>>();
+
+    const compareCaseCount = useJudge && targetEndpoints.length >= 2 ? cases.length : 0;
+
+    updateBenchmarkRunProgressPlan(runId, {
+      endpointCount: targetEndpoints.length,
+      caseCount: cases.length,
+      totalSteps:
+        executionSteps + (useJudge ? targetEndpoints.length * cases.length : 0) + compareCaseCount,
+      judgeEndpointId: judgeEndpoint.endpointId,
+      activeJudgeEndpointId: judgeEndpoint.endpointId,
+      artifactRoot,
+    });
+
+    failureCode = "benchmark_execution_failed";
+
     if (request.preflightProbe) {
       await probeJudgeEndpoint(deps, judgeEndpoint);
     }
@@ -2146,6 +2153,7 @@ export async function runRoutingCapabilityBenchmark(
 
     const completionMembershipRevision = deps.membershipRevision?.() ?? null;
     if (completionMembershipRevision !== startMembershipRevision) {
+      failureCode = "benchmark_membership_drifted";
       await writeBenchmarkRunManifest(artifactRoot, {
         runId,
         suiteId: suite.suite_id,
@@ -2274,11 +2282,7 @@ export async function runRoutingCapabilityBenchmark(
 
     return result;
   } catch (error) {
-    failBenchmarkRunProgress(
-      runId,
-
-      error instanceof Error ? error.message : "benchmark run failed",
-    );
+    failBenchmarkRunProgress(runId, failureCode);
 
     throw error;
   }
