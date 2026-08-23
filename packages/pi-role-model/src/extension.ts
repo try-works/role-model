@@ -82,10 +82,19 @@ export function createRoleModelExtension(options: RoleModelExtensionOptions = {}
       if (context.signal.aborted || !context.allowNetwork) {
         const stored = context.stored?.models
           .filter((model) => model.provider === "role-model" && model.api === "openai-completions")
-          .map(
-            (model): PiProviderModelConfig => ({
+          .map((model): PiProviderModelConfig => {
+            const stored = model as typeof model & Record<string, unknown>;
+            return {
               id: model.id,
               name: model.name,
+              endpointId:
+                typeof stored.endpointId === "string" && stored.endpointId.trim().length > 0
+                  ? stored.endpointId
+                  : model.id,
+              variantEffort:
+                typeof stored.variantEffort === "string" && stored.variantEffort.trim().length > 0
+                  ? stored.variantEffort
+                  : "default",
               api: "openai-completions",
               reasoning: model.reasoning,
               ...(model.thinkingLevelMap ? { thinkingLevelMap: model.thinkingLevelMap } : {}),
@@ -99,8 +108,8 @@ export function createRoleModelExtension(options: RoleModelExtensionOptions = {}
                     compat: model.compat as PiProviderModelConfig["compat"],
                   }
                 : {}),
-            }),
-          );
+            };
+          });
         return stored?.length ? stored : latestProviderModels;
       }
       const result = await discover();

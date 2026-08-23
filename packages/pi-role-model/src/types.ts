@@ -112,6 +112,10 @@ export interface DownstreamOpenAIDiscovery {
 export interface PiProviderModelConfig extends UpstreamPiProviderModelConfig {
   id: string;
   name: string;
+  /** Runtime-owned configured endpoint identity; never inferred from a Pi thinking level. */
+  endpointId: string;
+  /** `default` for an unpinned endpoint, otherwise the endpoint's normalized fixed effort. */
+  variantEffort: string;
   input: ("text" | "image")[];
   cost: { input: number; output: number; cacheRead: number; cacheWrite: number };
   contextWindow: number;

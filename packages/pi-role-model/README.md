@@ -59,6 +59,21 @@ Canonical explicit-provider ids are provider-relative aliases such as `baseline.
 
 `/role-model alias list` shows the exact ids you can pass to Pi. `/role-model alias recommended` shows the current default. If someone tries a foreign id such as `gpt-4o` under provider `role-model`, the recovery path is to inspect the alias list and retry with the recommended role-model alias.
 
+## Reasoning-effort variants
+
+Each configured endpoint is a separate Pi model. A base endpoint and its effort
+siblings are not interchangeable aliases: `DeepSeek V4 Flash`, `DeepSeek V4 Flash
+(Low)`, `DeepSeek V4 Flash (High)`, and `DeepSeek V4 Flash (Max)` retain separate
+endpoint IDs, roles, health, benchmark data, and telemetry. Select the exact ID
+shown by `/role-model alias list`.
+
+An effort-bearing endpoint is fixed to that effort. Pi exposes only its configured
+thinking level and will not use a request-level setting to retarget it to a sibling.
+Likewise, selecting the default endpoint does not make it the High variant merely
+because a client preference requests high reasoning. The role-model runtime remains
+the authority for endpoint identity and routing; the Pi package passes the exact
+selected endpoint identity through unchanged.
+
 `/role-model alias use <alias>` stores the selected alias and asks Pi to make that exact role-model model id active when Pi exposes active model selection in the command context. If Pi rejects the model switch, the command reports that the active model was not changed.
 
 `/role-model requests` and `/role-model explain <request-id|latest>` read the runtime-owned structured request inspection and router decision surfaces. They report routing reason codes, selected endpoint/model, and Observe request links from the runtime without claiming that the Pi package computes benchmark or telemetry analytics itself.

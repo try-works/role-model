@@ -1,0 +1,8 @@
+Command: corepack pnpm exec vitest run test/extension.test.ts --testNamePattern "preserves a persisted effort variant identity"
+Working directory: packages/pi-role-model
+Observed result: FAIL as expected
+
+Test: Pi extension registration > preserves a persisted effort variant identity during offline refresh
+Failure: the restored provider model retained its Pi ID but omitted endpointId and variantEffort.
+
+Interpretation: Pi's offline refresh path discarded the durable configured effort-variant identity.

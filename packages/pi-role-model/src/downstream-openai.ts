@@ -115,6 +115,15 @@ function readEffortToken(model: DownstreamOpenAIModelRecord): string | null {
   return typeof value === "string" && value.trim().length > 0 ? value.trim().toLowerCase() : null;
 }
 
+function readEndpointId(model: DownstreamOpenAIModelRecord): string {
+  const endpointId = model.endpoint_id;
+  return typeof endpointId === "string" && endpointId.trim().length > 0 ? endpointId : model.id;
+}
+
+function readVariantEffort(model: DownstreamOpenAIModelRecord): string {
+  return readEffortToken(model) ?? "default";
+}
+
 function readEffortLevels(model: DownstreamOpenAIModelRecord): string[] {
   const reasoning =
     typeof model.capabilities === "object" && model.capabilities !== null
@@ -145,6 +154,12 @@ export function readThinkingLevelMap(
   model: DownstreamOpenAIModelRecord,
 ): PiThinkingLevelMap | undefined {
   const fixed = readEffortToken(model);
+  // Runtime endpoint records are immutable configured instances. An endpoint
+  // without a fixed effort is the configured default instance, not a dynamic
+  // selector that Pi may turn into one of its effort siblings.
+  if (model.type === "endpoint" && !fixed) {
+    return undefined;
+  }
   const available = readEffortLevels(model);
   if (!fixed && available.length === 0) {
     return undefined;
@@ -259,6 +274,8 @@ export function createPiModelSelection(
     baseUrl: appendOpenAIPath(discovery.baseUrl),
     id: model.id,
     name: modelDisplayName(model),
+    endpointId: readEndpointId(model),
+    variantEffort: readVariantEffort(model),
     input: mapInput(model),
     cost: readModelCost(model),
     contextWindow,
@@ -299,6 +316,8 @@ export function mapDiscoveryToProviderConfig(
         return {
           id: model.id,
           name: modelDisplayName(model),
+          endpointId: readEndpointId(model),
+          variantEffort: readVariantEffort(model),
           input: mapInput(model),
           cost: readModelCost(model),
           contextWindow: contextWindow.value,
