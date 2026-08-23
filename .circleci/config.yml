@@ -1,0 +1,76 @@
+version: 2.1
+
+executors:
+  node24:
+    docker:
+      - image: cimg/node:24.4.1
+    resource_class: medium
+    working_directory: ~/project
+
+commands:
+  install-public:
+    steps:
+      - run:
+          name: Enable Corepack and configure the pnpm store
+          command: |
+            corepack enable
+            corepack pnpm config set store-dir ~/.pnpm-store
+      - restore_cache:
+          keys:
+            - public-pnpm-v1-{{ checksum "pnpm-lock.yaml" }}
+      - run:
+          name: Install the frozen public dependency graph
+          command: corepack pnpm install --frozen-lockfile
+      - save_cache:
+          key: public-pnpm-v1-{{ checksum "pnpm-lock.yaml" }}
+          paths:
+            - ~/.pnpm-store
+  install-rust:
+    steps:
+      - restore_cache:
+          keys:
+            - public-rust-v1-{{ checksum "role-model-router/rust/Cargo.lock" }}
+      - run:
+          name: Install the stable Rust toolchain
+          command: |
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable
+            echo 'source "$HOME/.cargo/env"' >> "$BASH_ENV"
+      - run:
+          name: Verify the Rust toolchain is available
+          command: |
+            source "$HOME/.cargo/env"
+            rustc --version
+            cargo --version
+      - save_cache:
+          key: public-rust-v1-{{ checksum "role-model-router/rust/Cargo.lock" }}
+          paths:
+            - ~/.cargo/registry
+            - ~/.cargo/git
+            - ~/.rustup/toolchains
+
+jobs:
+  full-contract:
+    executor: node24
+    steps:
+      - checkout
+      - install-rust
+      - install-public
+      - run:
+          name: Run the maintained public CI contract
+          command: |
+            source "$HOME/.cargo/env"
+            corepack pnpm run ci:check
+  router-contract:
+    executor: node24
+    steps:
+      - checkout
+      - install-public
+      - run:
+          name: Run the router and trace verification lane
+          command: corepack pnpm run runtime:test-router
+
+workflows:
+  validation:
+    jobs:
+      - full-contract
+      - router-contract
