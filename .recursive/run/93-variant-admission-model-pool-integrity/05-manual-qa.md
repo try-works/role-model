@@ -1,8 +1,8 @@
 Run: `/.recursive/run/93-variant-admission-model-pool-integrity/`
 Phase: `5-manual-qa`
 Status: `LOCKED`
-LockedAt: `2026-08-23T04:59:02Z`
-LockHash: `838d5ee98c1b5719a523f8bf839419567f25a4f3adf2d4215de6fb3cf30f5174`
+LockedAt: `2026-08-23T13:34:31Z`
+LockHash: `b74f13fb2adfab807d82ffc49d4c026a647aa75556a96183907ac2d7463e108f`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - (list upstream artifacts re-read for this phase)

@@ -1,0 +1,14 @@
+Command: corepack pnpm --filter @role-model-router/runtime-host-bridge run validate-packaging
+Public source commit: 0e59950c
+Track B distribution: D:/DEV/role-model-internal/dist/run00-dev
+Result: PASS
+Packaged executable: D:/DEV/role-model/.worktrees/93-variant-admission-model-pool-integrity/role-model-router/dist/release/win32-x64/role-model-dev.exe
+SHA-256: e0a79bb4729b16735048a3a86b88d305462baa5fd8d6d53b581da67e9883990e
+Health status: degraded (isolated credential-free validation state)
+Model count: 8
+Role definition count: 28
+Taxonomy version: 1.0.0-alpha.1
+Content revision: taxonomy-v1-alpha.1
+Security task count: 10
+Extension count: 13
+Chat and Responses packaged execution: PASS

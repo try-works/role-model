@@ -414,10 +414,16 @@ async function listCompletedBenchmarkRuns(artifactRoot: string): Promise<Complet
     try {
       const manifestRaw = await readFile(manifestPath, "utf8");
       const manifest = JSON.parse(manifestRaw) as BenchmarkRunManifest;
-      if (typeof manifest.gradingCompletedAtMs !== "number") {
+      if (
+        typeof manifest.gradingCompletedAtMs !== "number" ||
+        (manifest.completionState !== undefined && manifest.completionState !== "completed")
+      ) {
         continue;
       }
       const result = await readBenchmarkRunResult(artifactRoot, runId);
+      if (!result) {
+        continue;
+      }
       completed.push({ runId, manifest, result });
     } catch {
       // skip malformed or incomplete run directories

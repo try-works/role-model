@@ -1,0 +1,25 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 validate-packaging D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\role-model-router\apps\runtime-host-bridge
+> corepack pnpm build && tsx src/validate-packaging.ts
+
+
+> @role-model-router/runtime-host-bridge@0.0.0 build D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\role-model-router\apps\runtime-host-bridge
+> tsc -p tsconfig.json
+
+(node:62064) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\role-model-router\apps\runtime-host-bridge\src\package-sea.ts:79
+    throw new Error(
+          ^
+
+Error: Packaged runtime requires a clean public worktree; commit or discard source changes before packaging
+    at resolvePackagedRuntimeSourceTree (D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\role-model-router\apps\runtime-host-bridge\src\package-sea.ts:79:11)
+    at packageSeaRuntime (D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\role-model-router\apps\runtime-host-bridge\src\package-sea.ts:610:22)
+    at runRuntimePackagingValidation (D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\role-model-router\apps\runtime-host-bridge\src\validate-packaging.ts:538:26)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\role-model-router\apps\runtime-host-bridge\src\validate-packaging.ts:656:16)
+
+Node.js v24.11.0
+D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/runtime-host-bridge@0.0.0 validate-packaging: `corepack pnpm build && tsx src/validate-packaging.ts`
+Exit status 1

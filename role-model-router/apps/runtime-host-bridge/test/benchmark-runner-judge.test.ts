@@ -6,7 +6,7 @@ import { DatabaseSync } from "node:sqlite";
 
 import { afterEach, describe, expect, test, vi } from "vitest";
 
-import { readBenchmarkRunProgress } from "../src/benchmark-progress.js";
+import { listRunningBenchmarkRuns, readBenchmarkRunProgress } from "../src/benchmark-progress.js";
 import { readJudgeGradingText, readJudgeResponseText } from "../src/benchmark-reasoning.js";
 import {
   type BenchmarkRunnerDependencies,
@@ -149,6 +149,38 @@ describe("benchmark-runner judge remediation", () => {
         reasoningEffort: "high",
       }),
     );
+  });
+
+  test("fails allocated progress when endpoint discovery rejects before execution", async () => {
+    const runId = "run-initializer-rejection";
+    const benchmarkPromise = runRoutingCapabilityBenchmark(
+      {
+        databasePath: ":memory:",
+        listConfiguredEndpoints: async () => {
+          throw new Error("secret-provider-detail-must-not-be-exposed");
+        },
+        deriveEndpointVersion: () => "v1",
+        executeChatCompletions: async () => ({ contentText: "unused" }),
+      },
+      {
+        runId,
+        endpointIds: ["subject.endpoint", "judge.endpoint"],
+        judgeEndpointId: "judge.endpoint",
+        mode: "quick",
+        caseIds: ["h04-tool-read-router"],
+        useJudge: true,
+      },
+    );
+
+    await expect(benchmarkPromise).rejects.toThrow("secret-provider-detail-must-not-be-exposed");
+    expect(readBenchmarkRunProgress(runId)).toMatchObject({
+      runId,
+      status: "failed",
+      errorCode: "benchmark_initialization_failed",
+      errorMessage: "Benchmark initialization failed.",
+    });
+    expect(readBenchmarkRunProgress(runId)?.errorMessage).not.toContain("secret-provider-detail");
+    expect(listRunningBenchmarkRuns()).not.toContainEqual(expect.objectContaining({ runId }));
   });
 
   test("readJudgeResponseText merges reasoning and content channels", () => {

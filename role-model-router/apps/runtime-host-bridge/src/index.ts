@@ -18770,6 +18770,11 @@ export async function createRuntimeBridgeBackend(
     readonly endpointId: string;
     readonly lifecycleState: "pending-admission" | "active" | "degraded";
     readonly reasonCode: string;
+    readonly healthEvidence?:
+      | "oauth-auth-confirmed"
+      | "endpoint-executed"
+      | "admission-pending"
+      | "admission-failed";
     readonly latencyMs?: number;
   }): void => {
     const endpoint = runtimeEndpoints.find((entry) => entry.endpointId === input.endpointId);
@@ -18818,6 +18823,15 @@ export async function createRuntimeBridgeBackend(
       credentialBindingSha256,
       lifecycleState: input.lifecycleState,
       reasonCode: input.reasonCode,
+      healthEvidence:
+        input.healthEvidence ??
+        (input.reasonCode === "oauth-auth-confirmed"
+          ? "oauth-auth-confirmed"
+          : input.reasonCode === "admission_succeeded"
+            ? "endpoint-executed"
+            : input.lifecycleState === "pending-admission"
+              ? "admission-pending"
+              : "admission-failed"),
       transitionedAtMs: Date.now(),
       ...(typeof input.latencyMs === "number" ? { latencyMs: input.latencyMs } : {}),
       secretFree: true,
@@ -18960,9 +18974,9 @@ export async function createRuntimeBridgeBackend(
   };
 
   const reconcileOAuthAuthenticatedRuntimeEndpoints = (providerAccountId: string): void => {
-    // A completed OAuth callback authenticates the account, but it does not prove that a
-    // particular model has executed. Recover only states produced by the old admission
-    // probe, preserving model-not-found and every execution-derived circuit decision.
+    // A completed OAuth callback is the account-level readiness proof. Recover only states
+    // produced by the old admission probe, preserving model-not-found and every
+    // execution-derived circuit decision without issuing a hidden model request.
     const probeOnlyHealthStatuses = new Set([
       "provider-unavailable",
       "credentials-invalid",
@@ -18978,8 +18992,9 @@ export async function createRuntimeBridgeBackend(
     const recoverableEndpoints = runtimeEndpoints.filter(
       (endpoint) =>
         endpoint.providerAccountId === providerAccountId &&
-        endpoint.lifecycleState === "degraded" &&
-        probeOnlyHealthStatuses.has(endpoint.healthStatus) &&
+        ((endpoint.lifecycleState === "degraded" &&
+          probeOnlyHealthStatuses.has(endpoint.healthStatus)) ||
+          (endpoint.lifecycleState === "active" && endpoint.healthStatus === "not-yet-executed")) &&
         !circuitDeniedEndpointIds.has(endpoint.endpointId),
     );
     if (recoverableEndpoints.length === 0) {
@@ -18990,7 +19005,7 @@ export async function createRuntimeBridgeBackend(
       endpoints: recoverableEndpoints.map((endpoint) => ({
         ...endpoint,
         lifecycleState: "active",
-        healthStatus: "not-yet-executed",
+        healthStatus: "healthy",
       })),
     });
     for (const endpoint of recoverableEndpoints) {
@@ -19002,6 +19017,33 @@ export async function createRuntimeBridgeBackend(
     }
     rebuildCurrentState();
   };
+
+  const reconcilePersistedOAuthAuthenticatedRuntimeEndpoints = (): void => {
+    // An active, healthy, stable Codex account is the durable result of a completed
+    // OAuth callback. Reconcile legacy endpoint rows from builds that recorded that
+    // account-level proof as `not-yet-executed`; do not issue a model request during startup.
+    for (const account of currentAccounts) {
+      if (
+        !isCodexSubscriptionAccount(account) ||
+        account.status !== "active" ||
+        account.healthStatus !== "healthy" ||
+        account.rotationState !== "stable" ||
+        !account.credentialRef
+      ) {
+        continue;
+      }
+      const { payload } = readFreshestStoredCodexOauthTokenFileSync({
+        runtimeStateRoot: options.runtimeStateRoot,
+        scopeId: options.scopeId,
+        credentialRef: account.credentialRef.ref,
+      });
+      if (!hasStoredCodexAuthTokens(payload)) {
+        continue;
+      }
+      reconcileOAuthAuthenticatedRuntimeEndpoints(account.providerAccountId);
+    }
+  };
+  reconcilePersistedOAuthAuthenticatedRuntimeEndpoints();
 
   const admitRuntimeEndpoint = async (
     body: Record<string, unknown>,
@@ -19057,7 +19099,7 @@ export async function createRuntimeBridgeBackend(
       allowExisting: true,
       lifecycleState: finalState,
       healthStatus: oauthAuthenticated
-        ? "not-yet-executed"
+        ? "healthy"
         : admitted
           ? "healthy"
           : (probe?.healthStatus ?? "degraded"),
@@ -19307,7 +19349,7 @@ export async function createRuntimeBridgeBackend(
           endpoint: entry,
           lifecycleState: admitted ? ("active" as const) : ("degraded" as const),
           healthStatus: oauthAuthenticated
-            ? "not-yet-executed"
+            ? "healthy"
             : admitted
               ? "healthy"
               : (probe?.healthStatus ?? "degraded"),
@@ -27501,7 +27543,12 @@ export async function createRuntimeBridgeBackend(
         .then(() => {
           emitRevisionUpdate();
         })
-        .catch(() => undefined);
+        .catch(() => {
+          // The runner owns the sanitized terminal failure record. Emitting the
+          // revision makes that terminal state observable without exposing the
+          // rejected provider/configuration error through this fire-and-forget edge.
+          emitRevisionUpdate();
+        });
       return warnings.length > 0
         ? {
             runId,

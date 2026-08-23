@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import {
   completeBenchmarkRunProgress,
   createBenchmarkRunProgress,
+  failBenchmarkRunProgress,
   readBenchmarkRunProgress,
   updateBenchmarkRunProgress,
 } from "../src/benchmark-progress.js";
@@ -47,5 +48,25 @@ describe("benchmark-progress", () => {
       endpointGrades: [],
     });
     expect(readBenchmarkRunProgress("run-phases")?.runPhase).toBe("complete");
+  });
+
+  test("reports membership drift as a distinct safe terminal failure", () => {
+    createBenchmarkRunProgress({
+      runId: "run-membership-drifted",
+      mode: "quick",
+      endpointCount: 1,
+      caseCount: 1,
+      judgeEndpointId: "judge.endpoint",
+      useJudge: true,
+    });
+
+    failBenchmarkRunProgress("run-membership-drifted", "benchmark_membership_drifted");
+
+    expect(readBenchmarkRunProgress("run-membership-drifted")).toMatchObject({
+      status: "failed",
+      errorCode: "benchmark_membership_drifted",
+      errorMessage:
+        "Configured model membership changed during the benchmark. Run it again after model changes are complete.",
+    });
   });
 });

@@ -1,0 +1,200 @@
+
+> role-model@0.0.0 runtime:package-sea D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity
+> corepack pnpm --filter @role-model-router/runtime-ui build && corepack pnpm --filter @role-model-router/runtime-host-bridge... build && corepack pnpm --filter @role-model-router/runtime-host-bridge run package-sea
+
+
+> @role-model-router/runtime-ui@ build D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\role-model-router\apps\runtime-ui
+> react-router build && tsc --noEmit
+
+vite v7.3.2 building client environment for production...
+transforming...
+../../packages/ui/src/sidebar.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/segmented-control.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/page-shell.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/observe-shared.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/observe-activity.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/chart-ranking.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/metric-strip.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/observe-requests.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/runtime-overview.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/observe-logs.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/page-filters.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/observe-routing.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/chart-composition.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+✓ 2407 modules transformed.
+rendering chunks...
+computing gzip size...
+build/client/.vite/manifest.json                           29.36 kB │ gzip:   2.65 kB
+build/client/assets/root-DD3btEJq.css                      78.19 kB │ gzip:  14.13 kB
+build/client/assets/index-CKLjkIRh.js                       0.15 kB │ gzip:   0.15 kB
+build/client/assets/live-refresh-DcaagJbF.js                0.16 kB │ gzip:   0.14 kB
+build/client/assets/local-models-B4n-mSaY.js                0.16 kB │ gzip:   0.16 kB
+build/client/assets/router-config-6C-g6hXx.js               0.16 kB │ gzip:   0.16 kB
+build/client/assets/local-matrix-CdXZR64P.js                0.18 kB │ gzip:   0.18 kB
+build/client/assets/format-score-CvKL6Nty.js                0.27 kB │ gzip:   0.21 kB
+build/client/assets/shell-header-context-DojSALrV.js        0.65 kB │ gzip:   0.39 kB
+build/client/assets/llama-swap-setup-zJl1O37-.js            0.82 kB │ gzip:   0.40 kB
+build/client/assets/segmented-control-OFrtyx20.js           0.86 kB │ gzip:   0.52 kB
+build/client/assets/badge-Dsa2DwYC.js                       0.88 kB │ gzip:   0.39 kB
+build/client/assets/not-found-DayeuYg7.js                   1.04 kB │ gzip:   0.56 kB
+build/client/assets/checkbox-control-6q5rTQPB.js            1.06 kB │ gzip:   0.55 kB
+build/client/assets/theme-rIEsxy66.js                       1.14 kB │ gzip:   0.52 kB
+build/client/assets/legacy-redirect-BuGSblma.js             1.24 kB │ gzip:   0.44 kB
+build/client/assets/routing-mode-DNUoJD-d.js                1.54 kB │ gzip:   0.69 kB
+build/client/assets/local-choose-DiOohlya.js                1.67 kB │ gzip:   0.71 kB
+build/client/assets/effort-identity-rhAw6yCc.js             2.61 kB │ gzip:   1.10 kB
+build/client/assets/metric-strip-BbsrEd3y.js                2.72 kB │ gzip:   0.86 kB
+build/client/assets/integrations-downstream-Bl-jqp8K.js     2.76 kB │ gzip:   1.14 kB
+build/client/assets/router-decisions-BGd_hBAd.js            2.87 kB │ gzip:   1.34 kB
+build/client/assets/router-candidates-Dp303q4i.js           3.14 kB │ gzip:   1.54 kB
+build/client/assets/local-swap-Cd4R7eFy.js                  3.33 kB │ gzip:   1.36 kB
+build/client/assets/control-controller-ssn3HhOY.js          3.47 kB │ gzip:   1.62 kB
+build/client/assets/observe-logs-UfMtA6dN.js                3.54 kB │ gzip:   1.49 kB
+build/client/assets/local-policy-C5rnc96Y.js                3.59 kB │ gzip:   1.54 kB
+build/client/assets/studio-advanced-CnSPNabr.js             3.76 kB │ gzip:   1.61 kB
+build/client/assets/studio-rerank-BwJtbAn-.js               3.80 kB │ gzip:   1.67 kB
+build/client/assets/control-runtime-config-Mlzvjs7m.js      3.97 kB │ gzip:   1.72 kB
+build/client/assets/studio-images-CESvHWwc.js               4.10 kB │ gzip:   1.66 kB
+build/client/assets/local-peers-BatH_kr_.js                 4.13 kB │ gzip:   1.69 kB
+build/client/assets/workbench-CNYoLZY-.js                   4.15 kB │ gzip:   1.91 kB
+build/client/assets/root-b7Q7zase.js                        4.16 kB │ gzip:   1.74 kB
+build/client/assets/local-logs-DFj6m3t5.js                  4.22 kB │ gzip:   1.69 kB
+build/client/assets/runtime-CPm_ZVyC.js                     4.25 kB │ gzip:   1.77 kB
+build/client/assets/page-filters-DWW_Up4G.js                4.39 kB │ gzip:   1.82 kB
+build/client/assets/integrations-upstream-CtnkXcF6.js       4.40 kB │ gzip:   1.67 kB
+build/client/assets/observe-activity-Bl2-R21L.js            4.72 kB │ gzip:   2.06 kB
+build/client/assets/system-peers-erwzNNbC.js                4.74 kB │ gzip:   1.87 kB
+build/client/assets/role-task-hierarchy-B47HxU1w.js         5.28 kB │ gzip:   1.85 kB
+build/client/assets/endpoints-rKBsIzOI.js                   5.29 kB │ gzip:   1.96 kB
+build/client/assets/session-readiness-UAJtUz60.js           5.40 kB │ gzip:   2.01 kB
+build/client/assets/local-peer-models-Mk1418vQ.js           5.81 kB │ gzip:   2.11 kB
+build/client/assets/observe-routing-D8lbG6nW.js             6.33 kB │ gzip:   2.50 kB
+build/client/assets/page-primitives-BrAHTW6H.js             6.84 kB │ gzip:   2.66 kB
+build/client/assets/control-routing-strategy-J0kdJjqE.js    7.00 kB │ gzip:   2.59 kB
+build/client/assets/local-llama-swap-models-Duo2vQn1.js     7.12 kB │ gzip:   2.45 kB
+build/client/assets/studio-audio-qfpiHUon.js                7.15 kB │ gzip:   2.91 kB
+build/client/assets/storage-retention-RgoGRtZ-.js           7.35 kB │ gzip:   2.60 kB
+build/client/assets/router-decision-detail-3vDZ4dz9.js      7.90 kB │ gzip:   2.52 kB
+build/client/assets/router-BcfvMboD.js                      8.51 kB │ gzip:   2.63 kB
+build/client/assets/local-model-role-picker-DbuSnF_P.js     8.96 kB │ gzip:   2.95 kB
+build/client/assets/telemetry-page-filters-Ck_5vw9i.js      9.41 kB │ gzip:   3.09 kB
+build/client/assets/requests-DCwb6tHA.js                   10.75 kB │ gzip:   3.95 kB
+build/client/assets/control-roles-Dnk99Urf.js              12.63 kB │ gzip:   3.53 kB
+build/client/assets/app-layout-A5y6eVSI.js                 13.91 kB │ gzip:   4.92 kB
+build/client/assets/extensions-DPxtuVZg.js                 14.11 kB │ gzip:   4.78 kB
+build/client/assets/runtime-api-BinJXMyE.js                17.83 kB │ gzip:   4.39 kB
+build/client/assets/dashboard-DQllg34v.js                  18.98 kB │ gzip:   6.51 kB
+build/client/assets/control-models-ujvslCWd.js             20.15 kB │ gzip:   6.62 kB
+build/client/assets/request-detail-DMHjbpME.js             21.20 kB │ gzip:   6.36 kB
+build/client/assets/control-benchmark-Byx2p-EW.js          21.83 kB │ gzip:   6.62 kB
+build/client/assets/design-system-io-4_AOW.js              25.05 kB │ gzip:   7.71 kB
+build/client/assets/view-models-DWvxoXnK.js                25.88 kB │ gzip:   8.24 kB
+build/client/assets/providers-kxGO2job.js                  27.11 kB │ gzip:   8.43 kB
+build/client/assets/chart-grid-CqXjTUqn.js                 78.21 kB │ gzip:  26.08 kB
+build/client/assets/chunk-EVOBXE3Y-g5m91DvX.js            128.07 kB │ gzip:  43.13 kB
+build/client/assets/entry.client-B4czBmcP.js              190.57 kB │ gzip:  60.05 kB
+build/client/assets/telemetry-route-models-BaGo3qRk.js    389.60 kB │ gzip: 103.81 kB
+✓ built in 24.94s
+vite v7.3.2 building ssr environment for production...
+transforming...
+../../packages/ui/src/sidebar.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/observe-logs.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/segmented-control.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/observe-shared.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/chart-ranking.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/metric-strip.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/observe-routing.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/observe-requests.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/observe-activity.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/page-shell.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/runtime-overview.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/chart-composition.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+../../packages/ui/src/page-filters.tsx (1:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+✓ 32 modules transformed.
+rendering chunks...
+build/server/.vite/manifest.json                0.23 kB
+build/server/assets/server-build-DD3btEJq.css  78.19 kB
+build/server/index.js                          75.05 kB
+
+✓ 1 asset cleaned from React Router server build.
+build\server\assets\server-build-DD3btEJq.css
+
+SPA Mode: Generated build\client\index.html
+Removing the server build in D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\role-model-router\apps\runtime-ui\build\server due to ssr:false
+✓ built in 1.20s
+Scope: 26 of 46 workspace projects
+packages/protocol-types build$ tsc -p tsconfig.json
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+role-model-router/packages/bench-judge build: Done
+role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+.../packages/process-supervisor build: Done
+packages/protocol-types build: Done
+.../packages/vendor-abstraction build$ tsc -p tsconfig.json
+role-model-router/packages/catalog build: Done
+role-model-router/packages/tool-registry build: Done
+.../packages/vendor-abstraction build: Done
+.../packages/profile-aggregator build$ tsc -p tsconfig.json
+.../packages/provider-account build$ tsc -p tsconfig.json
+role-model-router/packages/core build$ tsc -p tsconfig.json
+role-model-router/packages/trace build$ tsc -p tsconfig.json
+.../packages/profile-aggregator build: Done
+role-model-router/packages/usage build$ tsc -p tsconfig.json
+role-model-router/packages/trace build: Done
+role-model-router/packages/bench-routing build$ tsc -p tsconfig.json
+.../packages/provider-account build: Done
+.../packages/vendor-llama-swap build$ tsc -p tsconfig.json
+role-model-router/packages/core build: Done
+.../packages/vendor-litellm build$ tsc -p tsconfig.json
+role-model-router/packages/usage build: Done
+.../packages/vendor-llama-swap build: Done
+role-model-router/packages/bench-routing build: Done
+.../packages/vendor-litellm build: Done
+role-model-router/packages/sqlite-memory build$ tsc -p tsconfig.json
+role-model-router/packages/provider-mcp build$ tsc -p tsconfig.json
+role-model-router/packages/provider-mcp build: Done
+role-model-router/packages/sqlite-memory build: Done
+.../packages/context-envelope build$ tsc -p tsconfig.json
+.../packages/context-envelope build: Done
+.../packages/retrieval-receipt build$ tsc -p tsconfig.json
+.../packages/retrieval-receipt build: Done
+.../packages/endpoint-registry build$ tsc -p tsconfig.json
+.../packages/endpoint-registry build: Done
+.../packages/protocol-routing build$ tsc -p tsconfig.json
+.../packages/protocol-routing build: Done
+.../packages/provider-anthropic build$ tsc -p tsconfig.json
+.../packages/adapter-execution build$ tsc -p tsconfig.json
+.../packages/provider-anthropic build: Done
+.../packages/adapter-execution build: Done
+.../packages/provider-openai build$ tsc -p tsconfig.json
+.../packages/runtime-observability build$ tsc -p tsconfig.json
+.../packages/provider-openai build: Done
+.../packages/runtime-observability build: Done
+.../packages/provider-litellm build$ tsc -p tsconfig.json
+.../packages/provider-litellm build: Done
+.../apps/runtime-host-bridge build$ tsc -p tsconfig.json
+.../apps/runtime-host-bridge build: Done
+
+> @role-model-router/runtime-host-bridge@0.0.0 package-sea D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\role-model-router\apps\runtime-host-bridge
+> tsx src/package-sea.ts
+
+(node:13072) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\role-model-router\apps\runtime-host-bridge\src\package-sea.ts:79
+    throw new Error(
+          ^
+
+Error: Packaged runtime requires a clean public worktree; commit or discard source changes before packaging
+    at resolvePackagedRuntimeSourceTree (D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\role-model-router\apps\runtime-host-bridge\src\package-sea.ts:79:11)
+    at packageSeaRuntime (D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\role-model-router\apps\runtime-host-bridge\src\package-sea.ts:610:22)
+    at <anonymous> (D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\role-model-router\apps\runtime-host-bridge\src\package-sea.ts:734:24)
+    at ModuleJob.run (node:internal/modules/esm/module_job:377:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:691:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.11.0
+D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/runtime-host-bridge@0.0.0 package-sea: `tsx src/package-sea.ts`
+Exit status 1
+ ELIFECYCLE  Command failed with exit code 1.

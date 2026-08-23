@@ -1,0 +1,260 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/93-variant-admission-model-pool-integrity/role-model-router/apps/runtime-host-bridge
+
+(node:33672) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52316) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/remote-health-bootstrap.test.ts (5 tests) 8930ms
+   ✓ remote health bootstrap > admits a callback-authenticated Codex Subscription endpoint without a Responses admission probe  2393ms
+   ✓ remote health bootstrap > admits a remote effort instance only after its exact readiness request succeeds  1573ms
+   ✓ remote health bootstrap > keeps a 503 effort instance degraded and ineligible at admission  1720ms
+   ✓ remote health bootstrap > serializes concurrent add requests for one exact effort instance into one readiness probe  1697ms
+   ✓ remote health bootstrap > skips remote-health probes in decision_only mode  1543ms
+ ❯ test/account-repair.test.ts (7 tests | 1 failed) 15420ms
+   ✓ account repair mutations > starting Kimi Code authorization for k3 preserves existing allowed models and active endpoints  1981ms
+   ✓ account repair mutations > reconnect returns the current pending device-authorization session for the same account  1515ms
+   ✓ account repair mutations > reconnect starts a fresh Codex Subscription device-code session instead of reusing a stale pending one  1640ms
+   ✓ account repair mutations > starting Codex Subscription authorization again supersedes the older pending session  1624ms
+   ✓ account repair mutations > update API key preserves account identity, bindings, and endpoint associations  4275ms
+   ✓ account repair mutations > rejects overlapping repair mutations for the same account without partially mutating state  1520ms
+   × account repair mutations > Codex Subscription OAuth completion admits endpoints without an automatic readiness execution 2862ms
+     → expected [ { …(22) }, { …(23) }, { …(22) } ] to deeply equal ArrayContaining{…}
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/account-repair.test.ts > account repair mutations > Codex Subscription OAuth completion admits endpoints without an automatic readiness execution
+AssertionError: expected [ { …(22) }, { …(23) }, { …(22) } ] to deeply equal ArrayContaining{…}
+
+- Expected
++ Received
+
+- ArrayContaining [
+-   ObjectContaining {
++ [
++   {
+      "benchmarkEligible": true,
++     "capabilities": [
++       "text.chat",
++       "tools.function_calling",
++       "reasoning",
++       "structured.output",
++       "code.edit",
++     ],
++     "displayName": "GPT-5.3 Codex",
++     "effortSource": "provider-default",
+      "endpointId": "openai.personal.codex-subscription.global.gpt-5.3-codex",
+-     "healthStatus": "healthy",
++     "endpointKind": "remote_api",
++     "healthStatus": "not-yet-executed",
++     "localModelSource": undefined,
++     "modelId": "chatgpt/gpt-5.3-codex",
++     "providerAccountId": "openai.personal.codex-subscription",
++     "providerId": "openai",
++     "reasoningEffort": null,
++     "reasoningEffortLevels": [
++       "none",
++       "low",
++       "medium",
++       "high",
++       "xhigh",
++     ],
++     "roleIds": [
++       "analyst",
++       "architect",
++       "coder",
++       "coordinator",
++       "creative",
++       "data",
++       "designer",
++       "educator",
++       "finance",
++       "health",
++       "knowledge",
++       "legal",
++       "marketer",
++       "mathematician",
++       "operator",
++       "planner",
++       "procurement",
++       "product",
++       "recruiter",
++       "researcher",
++       "scientist",
++       "security",
++       "seller",
++       "strategist",
++       "support",
++       "tester",
++       "translator",
++       "writer",
++     ],
+      "routingEligible": true,
++     "servingSource": "remote-service",
++     "sourceType": "remote",
+      "status": "active",
++     "toolCallingStyle": "none",
++     "toolCallingSupported": true,
++     "upstreamModelId": "chatgpt/gpt-5.3-codex",
++     "webSearchSupport": {
++       "currentRuntimeContract": "openai.responses.web_search",
++       "documentedProviderContract": "openai.responses.web_search",
++       "mode": "native",
++     },
+    },
+-   ObjectContaining {
++   {
+      "benchmarkEligible": false,
++     "capabilities": [
++       "text.chat",
++       "tools.function_calling",
++       "reasoning",
++       "structured.output",
++       "code.edit",
++     ],
++     "displayName": "GPT-5.3 Codex",
++     "effortSource": "fixed",
+      "endpointId": "openai.personal.codex-subscription.global.gpt-5.3-codex-medium",
+-     "executionCooldown": ObjectContaining {
++     "endpointKind": "remote_api",
++     "executionCooldown": {
++       "active": true,
+        "circuitState": "blocked_quota",
++       "endpointId": "openai.personal.codex-subscription.global.gpt-5.3-codex-medium",
++       "failureCategory": "quota",
++       "failureCount": 1,
++       "lastErrorClass": "quota_exhausted",
++       "lastFailureAtMs": 1787480539478,
++       "schemaVersion": 2,
++       "sequenceStartedAtMs": 1787480539478,
+      },
+      "healthStatus": "provider-unavailable",
++     "localModelSource": undefined,
++     "modelId": "chatgpt/gpt-5.3-codex",
++     "providerAccountId": "openai.personal.codex-subscription",
++     "providerId": "openai",
++     "reasoningEffort": "medium",
++     "reasoningEffortLevels": [
++       "none",
++       "low",
++       "medium",
++       "high",
++       "xhigh",
++     ],
++     "roleIds": [
++       "analyst",
++       "architect",
++       "coder",
++       "coordinator",
++       "creative",
++       "data",
++       "designer",
++       "educator",
++       "finance",
++       "health",
++       "knowledge",
++       "legal",
++       "marketer",
++       "mathematician",
++       "operator",
++       "planner",
++       "procurement",
++       "product",
++       "recruiter",
++       "researcher",
++       "scientist",
++       "security",
++       "seller",
++       "strategist",
++       "support",
++       "tester",
++       "translator",
++       "writer",
++     ],
+      "routingEligible": false,
++     "servingSource": "remote-service",
++     "sourceType": "remote",
+      "status": "degraded",
++     "toolCallingStyle": "none",
++     "toolCallingSupported": true,
++     "upstreamModelId": "chatgpt/gpt-5.3-codex",
++     "webSearchSupport": {
++       "currentRuntimeContract": "openai.responses.web_search",
++       "documentedProviderContract": "openai.responses.web_search",
++       "mode": "native",
++     },
++   },
++   {
++     "benchmarkEligible": true,
++     "capabilities": [
++       "code.edit",
++       "reasoning.multi_step",
++       "tools.function_calling",
++     ],
++     "displayName": "gpt-5.4",
++     "effortSource": "provider-default",
++     "endpointId": "cli.local.coder",
++     "endpointKind": "local_engine",
++     "healthStatus": "healthy",
++     "localModelSource": undefined,
++     "modelId": "gpt-5.4",
++     "providerAccountId": undefined,
++     "providerId": "local-cli",
++     "reasoningEffort": null,
++     "reasoningEffortLevels": [],
++     "roleIds": [
++       "analyst",
++       "architect",
++       "coder",
++       "coordinator",
++       "creative",
++       "data",
++       "designer",
++       "educator",
++       "finance",
++       "health",
++       "knowledge",
++       "legal",
++       "marketer",
++       "mathematician",
++       "operator",
++       "planner",
++       "procurement",
++       "product",
++       "recruiter",
++       "researcher",
++       "scientist",
++       "security",
++       "seller",
++       "strategist",
++       "support",
++       "tester",
++       "translator",
++       "writer",
++     ],
++     "routingEligible": true,
++     "servingSource": "local-process",
++     "sourceType": "local",
++     "status": "active",
++     "toolCallingStyle": "openai",
++     "toolCallingSupported": true,
++     "upstreamModelId": "gpt-5.4",
++     "webSearchSupport": {
++       "currentRuntimeContract": null,
++       "documentedProviderContract": null,
++       "mode": "runtime-fallback",
++     },
+    },
+  ]
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 11 passed (12)
+   Start at  18:22:02
+   Duration  18.65s (transform 1.99s, setup 0ms, collect 4.74s, tests 24.35s, environment 1ms, prepare 645ms)
+
+undefined
+D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/remote-health-bootstrap.test.ts test/account-repair.test.ts

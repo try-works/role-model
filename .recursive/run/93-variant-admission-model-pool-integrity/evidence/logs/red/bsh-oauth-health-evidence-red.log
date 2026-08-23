@@ -1,0 +1,91 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/93-variant-admission-model-pool-integrity/role-model-router/apps/runtime-host-bridge
+
+(node:22752) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/remote-health-bootstrap.test.ts (5 tests | 2 failed) 8591ms
+   × remote health bootstrap > admits a callback-authenticated Codex Subscription endpoint without a Responses admission probe 2344ms
+     → expected { …(11) } to deeply equal ObjectContaining{…}
+   × remote health bootstrap > admits a remote effort instance only after its exact readiness request succeeds 1508ms
+     → expected { …(12) } to deeply equal ObjectContaining{…}
+   ✓ remote health bootstrap > keeps a 503 effort instance degraded and ineligible at admission  1618ms
+   ✓ remote health bootstrap > serializes concurrent add requests for one exact effort instance into one readiness probe  1579ms
+   ✓ remote health bootstrap > skips remote-health probes in decision_only mode  1539ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/remote-health-bootstrap.test.ts > remote health bootstrap > admits a callback-authenticated Codex Subscription endpoint without a Responses admission probe
+AssertionError: expected { …(11) } to deeply equal ObjectContaining{…}
+
+- Expected
++ Received
+
+- ObjectContaining {
+-   "healthEvidence": "oauth-auth-confirmed",
++ {
++   "adapterFamily": "codex-responses",
++   "credentialBindingSha256": "sha256:0a01ba879ba4720d2af23d368d1269e7f41308e6073ddfba7b9c4433f129e046",
++   "endpointId": "openai.personal.codex-admission.global.gpt-5.4",
++   "lifecycleState": "active",
++   "modelId": "chatgpt/gpt-5.4",
++   "providerAccountId": "openai.personal.codex-admission",
+    "reasonCode": "oauth-auth-confirmed",
++   "reasoningEffort": null,
++   "schemaVersion": "runtime-endpoint-admission.v2",
++   "secretFree": true,
++   "transitionedAtMs": 1787480691860,
+  }
+
+ ❯ test/remote-health-bootstrap.test.ts:92:39
+     90|       const receiptNames = await readdir(receiptRoot);
+     91|       const receiptText = await readFile(path.join(receiptRoot, receip…
+     92|       expect(JSON.parse(receiptText)).toEqual(
+       |                                       ^
+     93|         expect.objectContaining({
+     94|           reasonCode: "oauth-auth-confirmed",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/remote-health-bootstrap.test.ts > remote health bootstrap > admits a remote effort instance only after its exact readiness request succeeds
+AssertionError: expected { …(12) } to deeply equal ObjectContaining{…}
+
+- Expected
++ Received
+
+- ObjectContaining {
++ {
+    "adapterFamily": "openai-compatible-chat-completions",
+-   "credentialBindingSha256": StringMatching /^sha256:[a-f0-9]{64}$/,
++   "credentialBindingSha256": "sha256:41d264c399275362b02adb21d6c174a7ee77ce95f220346dcbc69d2cbb1e4b40",
+    "endpointId": "deepseek.personal.admission.global.deepseek-v4-flash-high",
+-   "healthEvidence": "endpoint-executed",
++   "latencyMs": 5,
+    "lifecycleState": "active",
+    "modelId": "deepseek/deepseek-v4-flash",
+    "providerAccountId": "deepseek.personal.admission",
+    "reasonCode": "admission_succeeded",
+    "reasoningEffort": "high",
+    "schemaVersion": "runtime-endpoint-admission.v2",
+    "secretFree": true,
++   "transitionedAtMs": 1787480693393,
+  }
+
+ ❯ test/remote-health-bootstrap.test.ts:218:41
+    216|         expect(receiptNames).toHaveLength(1);
+    217|         const receiptText = await readFile(path.join(receiptRoot, rece…
+    218|         expect(JSON.parse(receiptText)).toEqual(
+       |                                         ^
+    219|           expect.objectContaining({
+    220|             schemaVersion: "runtime-endpoint-admission.v2",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 3 passed (5)
+   Start at  18:24:43
+   Duration  15.06s (transform 1.89s, setup 0ms, collect 4.68s, tests 8.59s, environment 0ms, prepare 1.26s)
+
+undefined
+D:\DEV\role-model\.worktrees\93-variant-admission-model-pool-integrity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/remote-health-bootstrap.test.ts

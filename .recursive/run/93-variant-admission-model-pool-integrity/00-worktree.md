@@ -1,8 +1,8 @@
 Run: `/.recursive/run/93-variant-admission-model-pool-integrity/`
 Phase: `00 Worktree`
 Status: `LOCKED`
-LockedAt: `2026-08-22T00:11:21Z`
-LockHash: `475fb5cca6a6bcad6139f76b1cdd2f5b863588914305e4bf89259af94baf6946`
+LockedAt: `2026-08-23T13:29:54Z`
+LockHash: `e3db929ac7e463ef55402fce84ff182894e0a769004c7f57ddaa8989cfd12795`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - `/.recursive/run/93-variant-admission-model-pool-integrity/00-requirements.md`
@@ -83,7 +83,7 @@ Results:
 - Normalized baseline: `1aab0512ce23aacc50cea66c2926e374be1e249e`
 - Normalized comparison: `working-tree`
 - Normalized diff command: `git diff --name-only 1aab0512ce23aacc50cea66c2926e374be1e249e`
-- Diff basis notes: Preserve this basis for all Run 93 audits unless a later locked artifact records a reviewed base update. Baseline is the exact `origin/dev` commit (`1aab0512`) the run branches from. Recursive run artifacts under `.recursive/run/93-variant-admission-model-pool-integrity/` are excluded from product diff accounting by the audit tooling. The worktree's working-tree changes against base are exclusively tooling/environment files (`AGENTS.md`, `.codex/AGENTS.md`, `.recursive/RECURSIVE.md`, `.recursive/memory/*`, `.recursive/scripts/recursive-training-*`, `.cursorrules`, `.github/copilot-instructions.md`, `CLAUDE.md`) and are NOT part of this run's product diff.
+- Diff basis notes: Preserve this basis for all Run 93 audits unless a later locked artifact records a reviewed base update. Baseline is the exact `origin/dev` commit (`1aab0512`) the run branches from. The delivery branch was subsequently integrated onto `origin/dev` `621949ee`, which already contains Run 94 release-provenance work; those mechanically visible upstream paths are explicitly reconciled in later audit artifacts rather than changing Run 93's historical implementation basis. Recursive run artifacts under `.recursive/run/93-variant-admission-model-pool-integrity/` are excluded from product diff accounting by the audit tooling.
 
 ## Traceability
 

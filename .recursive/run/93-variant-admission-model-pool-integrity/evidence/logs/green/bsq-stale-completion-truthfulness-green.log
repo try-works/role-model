@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/93-variant-admission-model-pool-integrity/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/benchmark-progress.test.ts (3 tests) 8ms
+ ✓ test/benchmark-summary.test.ts (16 tests) 253ms
+
+ Test Files  2 passed (2)
+      Tests  19 passed (19)
+   Start at  19:56:38
+   Duration  1.99s (transform 483ms, setup 0ms, collect 723ms, tests 261ms, environment 1ms, prepare 981ms)
+
