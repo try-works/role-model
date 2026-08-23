@@ -608,3 +608,29 @@ Date: `2026-08-22`
 - This decision authorizes no automatic stage/main promotion. A separate
   Stage RC operation must use the locked run evidence and standard release
   workflow.
+
+## Run: `94-stage-manifest-commit-identity`
+
+Date: `2026-08-23`
+
+### Decision
+
+- A promotable Stage or production package must carry the exact 40-hex CI
+  commit from source fallback through package assembly, runtime startup,
+  Stage-candidate consumption, and final acceptance.
+- In shallow branch CI, `GITHUB_SHA` is authoritative. `runtime-derived` is
+  not a valid Stage/production commit identity.
+- The failed `stage-rc-23f91a1f7cd8` acceptance is retained as rejected
+  evidence. A fresh corrected Stage RC and fresh UAT are mandatory before any
+  paired main promotion.
+
+### Evidence
+
+- `.recursive/run/94-stage-manifest-commit-identity/evidence/logs/red/`
+- `.recursive/run/94-stage-manifest-commit-identity/evidence/logs/green/`
+
+### Promotion boundary
+
+- This repair does not itself publish a candidate or authorize main. CI must
+  build a new artifact with exact commit identity, then Stage UAT and
+  acceptance must pass.

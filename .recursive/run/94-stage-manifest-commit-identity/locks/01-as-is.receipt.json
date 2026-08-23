@@ -1,0 +1,12 @@
+{
+  "artifact": "01-as-is.md",
+  "artifact_hash": "31dc998fc9eafb376ef9c3b7766cf7cf3852aa298d6cf657e54899b153607335",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\94-stage-manifest-commit-identity\\.recursive\\run\\94-stage-manifest-commit-identity\\01-as-is.md",
+  "locked_at": "2026-08-23T08:48:58Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "ed975a6c59df64523c025dc34b28f181b90ee0a340e17d7f6deb4d264e748ab5",
+    "00-worktree.md": "7d0672a3f5bedd8e6778b895308ae8a41b925eb8dfd16d9041b7ad089a2fc9c4"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "e99eff3066004ff7615fe91e0bdeb8e016dc757582ca4c9d07c98ef494374f30"
+}
