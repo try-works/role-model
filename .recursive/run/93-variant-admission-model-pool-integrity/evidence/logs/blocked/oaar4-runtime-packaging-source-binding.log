@@ -1,0 +1,18 @@
+# OAAR4 runtime packaging source-binding block
+
+Command:
+
+```text
+corepack pnpm --filter @role-model-router/runtime-host-bridge run validate-packaging
+```
+
+Result: blocked by the package source-tree binding guard:
+
+```text
+Packaged runtime requires a clean public worktree; commit or discard source changes before packaging
+```
+
+The shared `D:\DEV\role-model` checkout contains unrelated user changes. No
+source was discarded, reset, or overwritten. The Pi package build and bounded
+Stage-runtime verification are recorded separately; this is not a rebuilt-binary
+acceptance receipt.

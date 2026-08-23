@@ -1,0 +1,16 @@
+# OAAR4 Pi unsupported-effort RED
+
+Command:
+
+```text
+corepack pnpm exec vitest run test/effort-identity.test.ts --testNamePattern "does not let an effort unsupported"
+```
+
+Result: FAIL (expected).
+
+```text
+Unsupported Role-Model reasoning effort token: ultra
+```
+
+The failure occurred during local synthetic discovery-to-Pi mapping. No provider
+request, credential, OAuth token, prompt, or response body was used.

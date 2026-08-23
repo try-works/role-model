@@ -166,6 +166,56 @@ describe("Pi extension registration", () => {
     ]);
   });
 
+  test("preserves a persisted effort variant identity during offline refresh", async () => {
+    const providers: ProviderConfig[] = [];
+    const endpointId = "deepseek.personal.global.deepseek-v4-flash-high";
+    const extension = createRoleModelExtension({
+      discover: async () => ({ discovery: createDiscovery() }),
+    });
+
+    await extension(
+      asPiExtensionApi({
+        registerProvider(_name: string, config: ProviderConfig) {
+          providers.push(config);
+        },
+        registerCommand() {
+          // Registration is not under test here.
+        },
+      }),
+    );
+
+    const restored = await providers[0]?.refreshModels?.({
+      allowNetwork: false,
+      signal: new AbortController().signal,
+      stored: {
+        models: [
+          {
+            provider: "role-model",
+            id: endpointId,
+            name: "DeepSeek V4 Flash (High)",
+            endpointId,
+            variantEffort: "high",
+            api: "openai-completions",
+            reasoning: true,
+            input: ["text"],
+            cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+            contextWindow: 128000,
+            maxTokens: 8192,
+          },
+        ],
+      } as never,
+      publish: async () => true,
+    });
+
+    expect(restored).toEqual([
+      expect.objectContaining({
+        id: endpointId,
+        endpointId,
+        variantEffort: "high",
+      }),
+    ]);
+  });
+
   test("fails closed when Pi clamps a fixed endpoint away from its required thinking level", async () => {
     const handlers = new Map<string, (event: unknown, context?: unknown) => unknown>();
     let thinkingLevel = "low";
@@ -657,6 +707,8 @@ describe("Pi extension registration", () => {
             baseUrl: "http://127.0.0.1:3456/v1",
             id: "gpt-4o",
             name: "gpt-4o",
+            endpointId: "gpt-4o",
+            variantEffort: "default",
             api: "openai-completions",
             reasoning: false,
             input: ["text"],

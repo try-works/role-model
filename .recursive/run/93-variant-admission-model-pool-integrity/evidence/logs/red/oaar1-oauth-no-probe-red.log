@@ -1,0 +1,82 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/93-variant-admission-model-pool-integrity
+
+(node:8036) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ role-model-router/apps/runtime-host-bridge/test/account-repair.test.ts (7 tests | 1 failed) 15254ms
+   ✓ account repair mutations > starting Kimi Code authorization for k3 preserves existing allowed models and active endpoints  1972ms
+   ✓ account repair mutations > reconnect returns the current pending device-authorization session for the same account  1463ms
+   ✓ account repair mutations > reconnect starts a fresh Codex Subscription device-code session instead of reusing a stale pending one  1522ms
+   ✓ account repair mutations > starting Codex Subscription authorization again supersedes the older pending session  1716ms
+   ✓ account repair mutations > update API key preserves account identity, bindings, and endpoint associations  3719ms
+   ✓ account repair mutations > rejects overlapping repair mutations for the same account without partially mutating state  1844ms
+   × account repair mutations > Codex Subscription OAuth completion admits endpoints without an automatic readiness execution 3015ms
+     → expected [ { …(4) }, { …(4) } ] to deeply equal [ ObjectContaining{…} ]
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  role-model-router/apps/runtime-host-bridge/test/account-repair.test.ts > account repair mutations > Codex Subscription OAuth completion admits endpoints without an automatic readiness execution
+AssertionError: expected [ { …(4) }, { …(4) } ] to deeply equal [ ObjectContaining{…} ]
+
+- Expected
++ Received
+
+  [
+-   ObjectContaining {
++   {
++     "modelId": "chatgpt/gpt-5.3-codex",
++     "providerAccountId": "openai.personal.codex-subscription",
++     "requestCapture": {
++       "body": {
++         "messages": [
++           {
++             "content": "role-model admission readiness probe",
++             "role": "user",
++           },
++         ],
++         "model": "chatgpt/gpt-5.3-codex",
++         "stream": false,
++       },
++       "url": "https://chatgpt.com/backend-api/codex/responses",
++     },
++     "requestId": "admission-f15135f9f2c3034b5f28426e",
++   },
++   {
+      "modelId": "chatgpt/gpt-5.3-codex",
+      "providerAccountId": "openai.personal.codex-subscription",
+-     "requestCapture": ObjectContaining {
+-       "body": ObjectContaining {
++     "requestCapture": {
++       "body": {
++         "messages": [
++           {
++             "content": "Reply with Codex subscription reply.",
++             "role": "user",
++           },
++         ],
+          "model": "gpt-5.3-codex",
++         "prompt_cache_key": "rm-prompt-sha256:8cbaa91ca4bffa4617a31b5a354cb329b84bcb97af4627ca651d43dc9ca0f15b",
+        },
+-       "url": StringMatching /\/v1\/(chat\/completions|responses)$/,
++       "url": "https://api.openai.com/v1/chat/completions",
+      },
+      "requestId": "req-codex-subscription-001",
+    },
+  ]
+
+ ❯ role-model-router/apps/runtime-host-bridge/test/account-repair.test.ts:925:38
+    923|       );
+    924| 
+    925|       expect(codexExecutionRequests).toEqual([
+       |                                      ^
+    926|         expect.objectContaining({
+    927|           requestId: "req-codex-subscription-001",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 passed (7)
+   Start at  09:47:00
+   Duration  19.32s (transform 2.08s, setup 0ms, collect 2.91s, tests 15.25s, environment 1ms, prepare 369ms)
+

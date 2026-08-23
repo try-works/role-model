@@ -1,0 +1,36 @@
+# OAAR4 Pi stage-runtime end-to-end verification
+
+Runtime: `http://127.0.0.1:3457` (existing configured Stage runtime)
+
+All commands used Pi 0.84.2 with a disposable `PI_CODING_AGENT_DIR`, no tools,
+no context files, and no saved session.
+
+## Discovery
+
+`pi --provider role-model --list-models` listed the exact configured endpoint
+models, including:
+
+- `deepseek.personal.deepseek-api-key.global.deepseek-v4-pro`
+- `deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-high`
+- `deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-max`
+
+## Bounded requests
+
+| Variant | Request ID | Endpoint / effort | Result |
+| --- | --- | --- | --- |
+| Default | `req-4a93d567-85af-4c9f-862e-896fa245edca` | `...deepseek-v4-pro` / `null` (`none`) | `pi-default-e2e-ok` |
+| High | `req-d9da1e3d-0cd4-4f6d-a7ac-a13cc4457d4b` | `...deepseek-v4-pro-high` / `high` (`variant`) | `pi-variant-e2e-ok` |
+| Max | `req-a7dec238-3ea9-41e5-907f-d56e1f0725e7` | `...deepseek-v4-pro-max` / `max` (`variant`) | `pi-max-e2e-ok` |
+
+For every row, request observation, routing decision, and usage event agreed on
+the exact endpoint and normalized effort. Each had two trace spans and two trace
+events with the standalone runtime conversation lineage.
+
+## Track B
+
+`GET /api/role-model/track-b/shadow-receipts` returned a matching completed
+receipt for each request: shadow mode, zero provider calls, no production
+mutation, projection schema `role-model.projection.v2`, and three consumers.
+`pendingCount` was zero.
+
+No prompt, provider response, credential, token, or header is recorded here.

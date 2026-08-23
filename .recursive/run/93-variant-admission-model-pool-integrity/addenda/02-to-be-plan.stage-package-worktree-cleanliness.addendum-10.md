@@ -3,10 +3,21 @@ Phase: `2-to-be-plan`
 Artifact: `02-to-be-plan.md`
 Addendum: `10`
 Status: `LOCKED`
-LockedAt: `2026-08-22T14:24:15Z`
-LockHash: `1641221f993cb08aa99ebb9fe165cbb61e1ea34daa5d8699748cf4b32411c06c`
+LockedAt: `2026-08-23T04:09:51Z`
+LockHash: `fd249b668eb908263a315f0dae41c1f627496e1a1bcfaed4e72be8f27d28e0a8`
 
 # Stage package worktree-cleanliness repair
+
+Inputs:
+
+- `/.recursive/run/93-variant-admission-model-pool-integrity/02-to-be-plan.md`
+
+Outputs:
+
+- `/.recursive/run/93-variant-admission-model-pool-integrity/addenda/02-to-be-plan.stage-package-worktree-cleanliness.addendum-10.md`
+
+Scope note: Reconciles the Stage packaging worktree-cleanliness contract and its CircleCI verification evidence.
+
 
 ## Finding
 
@@ -67,3 +78,20 @@ with `_private/`. The repaired workflow must pass GitHub CI and the next stage
 binary build must publish a fresh `stage-rc-<12-sha>` prerelease before this
 release path is considered complete. Its manifest must retain the mandatory
 Track B runtime binding and extension count of 13.
+
+## TODO
+
+- [x] Bind the private checkout to the ignored path and retain the source-tree cleanliness guard.
+- [x] Cover the former `_private` failure with RED/GREEN workflow-contract evidence.
+- [x] Require the replacement Stage binary workflow and extension manifest before release acceptance.
+
+## Coverage Gate
+
+The addendum covers the workflow topology, exact private distribution root, strict TDD, and the Stage artifact/Track B acceptance boundary.
+
+## Approval Gate
+
+The repair is ready for the subsequent Stage promotion workflow; the generated candidate remains subject to its normal CI and artifact gates.
+
+Coverage: PASS
+Approval: PASS

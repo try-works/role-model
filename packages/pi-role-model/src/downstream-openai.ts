@@ -115,6 +115,15 @@ function readEffortToken(model: DownstreamOpenAIModelRecord): string | null {
   return typeof value === "string" && value.trim().length > 0 ? value.trim().toLowerCase() : null;
 }
 
+function readEndpointId(model: DownstreamOpenAIModelRecord): string {
+  const endpointId = model.endpoint_id;
+  return typeof endpointId === "string" && endpointId.trim().length > 0 ? endpointId : model.id;
+}
+
+function readVariantEffort(model: DownstreamOpenAIModelRecord): string {
+  return readEffortToken(model) ?? "default";
+}
+
 function readEffortLevels(model: DownstreamOpenAIModelRecord): string[] {
   const reasoning =
     typeof model.capabilities === "object" && model.capabilities !== null
@@ -145,20 +154,30 @@ export function readThinkingLevelMap(
   model: DownstreamOpenAIModelRecord,
 ): PiThinkingLevelMap | undefined {
   const fixed = readEffortToken(model);
+  // Runtime endpoint records are immutable configured instances. An endpoint
+  // without a fixed effort is the configured default instance, not a dynamic
+  // selector that Pi may turn into one of its effort siblings.
+  if (model.type === "endpoint" && !fixed) {
+    return undefined;
+  }
   const available = readEffortLevels(model);
   if (!fixed && available.length === 0) {
     return undefined;
   }
   const tokens = fixed ? [fixed] : available;
-  for (const token of tokens) {
-    if (!effortToPiLevel(token)) {
-      throw new Error(`Unsupported Role-Model reasoning effort token: ${token}`);
-    }
+  const supportedTokens = tokens.filter((token) => effortToPiLevel(token));
+  if (supportedTokens.length === 0) {
+    // Pi 0.84.2 cannot express every runtime effort token (for example
+    // `ultra`). Keep the exact endpoint selectable; its fixed endpoint
+    // identity remains authoritative, but do not advertise an invalid Pi
+    // thinking-level control.
+    return undefined;
   }
+  if (fixed && supportedTokens.length !== 1) return undefined;
   const map: PiThinkingLevelMap = Object.fromEntries(
     PI_THINKING_LEVELS.map((level) => [level, null]),
   ) as PiThinkingLevelMap;
-  for (const token of tokens) {
+  for (const token of supportedTokens) {
     const level = effortToPiLevel(token);
     if (level) {
       map[level] = token === "none" ? "none" : PI_LEVEL_TO_PROVIDER_TOKEN[level];
@@ -259,6 +278,8 @@ export function createPiModelSelection(
     baseUrl: appendOpenAIPath(discovery.baseUrl),
     id: model.id,
     name: modelDisplayName(model),
+    endpointId: readEndpointId(model),
+    variantEffort: readVariantEffort(model),
     input: mapInput(model),
     cost: readModelCost(model),
     contextWindow,
@@ -299,6 +320,8 @@ export function mapDiscoveryToProviderConfig(
         return {
           id: model.id,
           name: modelDisplayName(model),
+          endpointId: readEndpointId(model),
+          variantEffort: readVariantEffort(model),
           input: mapInput(model),
           cost: readModelCost(model),
           contextWindow: contextWindow.value,

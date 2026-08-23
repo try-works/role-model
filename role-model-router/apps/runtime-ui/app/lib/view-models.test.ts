@@ -1655,6 +1655,45 @@ describe("buildProviderMaintenanceRows", () => {
 });
 
 describe("buildConfiguredRemoteConnectionRows", () => {
+  test("falls back to canonical model identity when an endpoint or catalog display name is blank", () => {
+    const rows = buildConfiguredRemoteConnectionRows({
+      accounts: [
+        {
+          providerAccountId: "deepseek.personal.primary",
+          providerId: "deepseek",
+          authMode: "api-key-static",
+        },
+      ],
+      endpoints: [
+        {
+          endpointId: "deepseek.personal.primary.global.deepseek-v4-flash-high",
+          providerAccountId: "deepseek.personal.primary",
+          providerId: "deepseek",
+          modelId: "deepseek/deepseek-v4-flash",
+          displayName: "   ",
+          sourceType: "remote",
+          servingSource: "remote-service",
+          status: "active",
+          healthStatus: "healthy",
+          routingEligible: true,
+          benchmarkEligible: true,
+          reasoningEffort: "high",
+        },
+      ],
+      models: [
+        {
+          id: "deepseek/deepseek-v4-flash",
+          displayName: "",
+          endpoint_ids: ["deepseek.personal.primary.global.deepseek-v4-flash-high"],
+        },
+      ],
+    });
+
+    expect(rows[0]?.endpoints).toEqual([
+      expect.objectContaining({ displayName: "Deepseek V4 Flash (High)" }),
+    ]);
+  });
+
   test("excludes managed LiteLLM adapter records from user-configured provider connections", () => {
     const rows = buildConfiguredRemoteConnectionRows({
       accounts: [

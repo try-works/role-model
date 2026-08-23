@@ -348,7 +348,7 @@ describe("validate-agent-path helper", () => {
     }
   });
 
-  test("waits for required runtime model endpoints to become active and healthy", async () => {
+  test("waits for active endpoints that are healthy or OAuth-confirmed", async () => {
     let polls = 0;
 
     await waitForRuntimeModelEndpointsReady(
@@ -372,7 +372,7 @@ describe("validate-agent-path helper", () => {
                 {
                   modelId: "chatgpt/gpt-5.4",
                   status: "active",
-                  healthStatus: "healthy",
+                  healthStatus: "not-yet-executed",
                 },
               ];
         },
