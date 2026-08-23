@@ -1,0 +1,15 @@
+Command: corepack pnpm exec vitest run test/effort-identity.test.ts
+Working directory: packages/pi-role-model
+Observed result: FAIL as expected
+
+Test: Pi 0.84.2 reasoning-effort endpoint identity > keeps default and fixed-effort siblings as distinct endpoint identities
+Failure: expected endpoint IDs but received [undefined, undefined, undefined, undefined].
+
+Interpretation: Pi discovery registration preserved model IDs but did not retain an explicit runtime endpoint identity or normalized default/low/high/max variant identity.
+
+Follow-up Command: corepack pnpm exec vitest run test/effort-identity.test.ts --testNamePattern "keeps default and fixed-effort siblings"
+Observed result: FAIL as expected
+
+Failure: a configured default endpoint exposed low, high, and max entries in Pi's thinkingLevelMap.
+
+Interpretation: Pi could treat a configured default endpoint as an implicit dynamic effort selector, which would make a default endpoint request appear as High without selecting the High endpoint instance.

@@ -16045,7 +16045,6 @@ describe("runtime-host-bridge", () => {
     const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "runtime-host-codex-timeout-"));
     const scopeId = "runtime-host-codex-timeout-tests";
     let executeAttempts = 0;
-    let admissionRequestBody: Record<string, unknown> | null = null;
 
     const backend = await (
       bridge as {
@@ -16168,15 +16167,8 @@ describe("runtime-host-bridge", () => {
         },
       },
       codexExecutionAdapter: {
-        executeRequest: async ({ requestCapture }) => {
+        executeRequest: async () => {
           executeAttempts += 1;
-          if (executeAttempts === 1) {
-            admissionRequestBody = requestCapture.body;
-            return {
-              statusCode: 200,
-              body: { output: [] },
-            };
-          }
           throw new Error("Connection Error: Could not reach the AI service. Request timed out.");
         },
       },
@@ -16215,13 +16207,7 @@ describe("runtime-host-bridge", () => {
         region: "global",
         reasoningEffort: "high",
       });
-      expect(admissionRequestBody).toEqual(
-        expect.objectContaining({
-          model: "chatgpt/gpt-5.4",
-          reasoning_effort: "high",
-          stream: false,
-        }),
-      );
+      expect(executeAttempts).toBe(0);
 
       await expect(
         backend.executeChatCompletions(
@@ -16232,7 +16218,7 @@ describe("runtime-host-bridge", () => {
           "req-runtime-bridge-codex-timeout-001",
         ),
       ).rejects.toThrow(/could not reach the ai service|timed out/i);
-      expect(executeAttempts).toBe(3);
+      expect(executeAttempts).toBe(2);
       const timeoutTelemetryRows = ((await backend.listTelemetryRequests?.()) ?? []) as Array<{
         requestId?: string;
         endpointId?: string;
@@ -16313,7 +16299,7 @@ describe("runtime-host-bridge", () => {
       }
       expect(secondFailure).toBeInstanceOf(Error);
       expect((secondFailure as Error).message).toMatch(/could not reach the ai service|timed out/i);
-      expect(executeAttempts).toBe(5);
+      expect(executeAttempts).toBe(4);
       await expect(
         backend.executeChatCompletions(
           {
@@ -16334,7 +16320,7 @@ describe("runtime-host-bridge", () => {
           },
         ),
       ).rejects.toThrow(/could not reach the ai service|timed out/i);
-      expect(executeAttempts).toBe(7);
+      expect(executeAttempts).toBe(6);
       await expect(backend.listEndpoints()).resolves.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -16416,7 +16402,7 @@ describe("runtime-host-bridge", () => {
             }),
           }),
         );
-        expect(executeAttempts).toBe(7);
+        expect(executeAttempts).toBe(6);
 
         const telemetryResponse = await fetch(
           `http://127.0.0.1:${server.port}/api/role-model/telemetry/requests`,
