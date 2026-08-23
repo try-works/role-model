@@ -61,6 +61,34 @@ describe("Pi 0.84.2 reasoning-effort endpoint identity", () => {
     });
   });
 
+  test("does not let an effort unsupported by Pi 0.84.2 block supported siblings", () => {
+    const discovery = createDiscovery({
+      models: [
+        createModelRecord({
+          id: "openai.personal.global.gpt-5.6-sol-high",
+          type: "endpoint" as never,
+          endpoint_ids: ["openai.personal.global.gpt-5.6-sol-high"],
+          fixedEffort: "high" as never,
+        }),
+        createModelRecord({
+          id: "openai.personal.global.gpt-5.6-sol-ultra",
+          type: "endpoint" as never,
+          endpoint_ids: ["openai.personal.global.gpt-5.6-sol-ultra"],
+          fixedEffort: "ultra" as never,
+        }),
+      ],
+    });
+
+    const registered = mapDiscoveryToProviderConfig(discovery).config.models;
+
+    expect(registered.map((model) => model.id)).toEqual([
+      "openai.personal.global.gpt-5.6-sol-high",
+      "openai.personal.global.gpt-5.6-sol-ultra",
+    ]);
+    expect(registered[0]?.thinkingLevelMap).toMatchObject({ high: "high" });
+    expect(registered[1]?.thinkingLevelMap).toBeUndefined();
+  });
+
   test("preserves endpoint rows and exposes native thinkingLevelMap", () => {
     const discovery = createDiscovery({
       models: [

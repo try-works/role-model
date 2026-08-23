@@ -133,9 +133,25 @@ TDD Mode: `strict`
 - GREEN: the restore projection preserves the durable fields when available and uses conservative legacy fallbacks (`model.id` and `default`) for old Pi persisted records. Evidence: `evidence/logs/green/oaar4-pi-variant-identity-green.log`.
 - REFACTOR: the fallback accepts only stored non-empty strings; no caller-provided variant is synthesized.
 
-### Remaining Phase 5 obligation
+### `OAAR4` Pi 0.84.2 catalog compatibility
 
-The source-level work is not sufficient by itself. Before `OAAR4` becomes verified, a rebuilt runtime must be used with the updated plugin to make bounded Pi CLI requests through an existing configured endpoint and to inspect runtime endpoint identity, routing decision, telemetry, message lineage, and enabled Track B receipts. Those end-to-end observations remain pending and must be recorded separately; tests and package dry-run do not stand in for live/runtime verification.
+- RED: a live discovery mapping containing an `ultra` fixed-effort endpoint made provider registration throw before any supported sibling could be registered. The focused sibling test recorded the failure without a credential or provider request.
+- GREEN: a runtime effort which Pi 0.84.2 cannot represent is still registered under its exact configured endpoint ID, but has no Pi thinking-level map. Supported siblings retain their native maps. This prevents a catalog extension from disabling all Role-Model models while avoiding a false `max` substitution for `ultra`.
+- REFACTOR: compatibility filtering occurs solely at the Pi presentation boundary; runtime endpoint identity and provider-native fixed effort are unchanged.
+
+### Phase 5 status
+
+Bounded Pi 0.84.2 Stage-runtime verification is recorded in
+`evidence/logs/green/oaar4-pi-stage-runtime-e2e.log`: default, High, and Max
+configured endpoints all completed and retained identical endpoint/effort facts
+through request observation, routing decision, usage telemetry, standalone
+message lineage, and Track B shadow receipts.
+
+The rebuilt-binary packaging check remains blocked—not bypassed—by the source
+tree binding guard because the shared public checkout has unrelated user edits.
+See `evidence/logs/blocked/oaar4-runtime-packaging-source-binding.log`. A clean
+source binding and a packaged-binary re-run are still required before this
+addendum can be called fully rebuilt-runtime verified.
 
 ## Scope and safety constraints
 
@@ -149,7 +165,7 @@ The source-level work is not sufficient by itself. Before `OAAR4` becomes verifi
 - `OAAR1` | `planned` | No changed files yet; root cause and policy decision are documented here. | Evidence: Root-cause evidence.
 - `OAAR2` | `planned` | No changed files yet; recovery boundary is defined without clearing real quota data. | Evidence: Root-cause evidence.
 - `OAAR3` | `planned` | No changed files yet; raw endpoint metadata is present but browser projection is defective. | Evidence: Root-cause evidence.
-- `OAAR4` | `implemented` | Changed Files: `packages/pi-role-model/src/types.ts`, `packages/pi-role-model/src/downstream-openai.ts`, `packages/pi-role-model/src/extension.ts`, `packages/pi-role-model/README.md`, and focused tests. | Implementation Evidence: `evidence/logs/red/oaar4-pi-variant-identity-red.log`, `evidence/logs/red/oaar4-pi-offline-refresh-red.log`, `evidence/logs/green/oaar4-pi-variant-identity-green.log`. | Verification Evidence: focused test/build/package-dry-run log. | Deferred By: Phase 5 rebuilt-runtime Pi CLI verification.
+- `OAAR4` | `implemented; live Stage-runtime verified` | Changed Files: `packages/pi-role-model/src/types.ts`, `packages/pi-role-model/src/downstream-openai.ts`, `packages/pi-role-model/src/extension.ts`, `packages/pi-role-model/README.md`, and focused tests. | Implementation Evidence: `evidence/logs/red/oaar4-pi-variant-identity-red.log`, `evidence/logs/red/oaar4-pi-offline-refresh-red.log`, `evidence/logs/red/oaar4-pi-unsupported-effort-red.log`, `evidence/logs/green/oaar4-pi-variant-identity-green.log`, `evidence/logs/green/oaar4-pi-unsupported-effort-green.log`. | Verification Evidence: `evidence/logs/green/oaar4-pi-stage-runtime-e2e.log`. | Deferred By: clean-source rebuilt-binary packaging receipt.
 - `OAAR-P1`–`OAAR-P5` | `planned` | Implementation and rebuilt-runtime verification are required before acceptance. | Evidence: Remediation plan.
 
 ## Coverage Gate

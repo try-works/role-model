@@ -74,6 +74,11 @@ because a client preference requests high reasoning. The role-model runtime rema
 the authority for endpoint identity and routing; the Pi package passes the exact
 selected endpoint identity through unchanged.
 
+If the runtime advertises a fixed effort newer than Pi 0.84.2 can represent (for
+example, `ultra`), the endpoint remains selectable by its exact ID but Pi does not
+advertise a misleading thinking-level control for it. Such a catalog entry never
+prevents the supported endpoint variants from loading.
+
 `/role-model alias use <alias>` stores the selected alias and asks Pi to make that exact role-model model id active when Pi exposes active model selection in the command context. If Pi rejects the model switch, the command reports that the active model was not changed.
 
 `/role-model requests` and `/role-model explain <request-id|latest>` read the runtime-owned structured request inspection and router decision surfaces. They report routing reason codes, selected endpoint/model, and Observe request links from the runtime without claiming that the Pi package computes benchmark or telemetry analytics itself.
