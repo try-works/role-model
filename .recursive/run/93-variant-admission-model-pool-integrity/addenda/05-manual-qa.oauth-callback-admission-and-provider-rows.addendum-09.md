@@ -30,11 +30,12 @@ Scope note: This addendum changes the effective Run 93 admission policy for OAut
 
 ## TODO
 
-- [ ] Add the focused RED cases in `OAAR-P1` before modifying production admission or provider-row code.
-- [ ] Implement `OAAR-P2` and `OAAR-P3` in the existing Run 93 worktree; do not create a new repair run.
-- [ ] Add the focused Pi variant-fidelity RED cases in `OAAR-P5` before modifying `pi-role-model` registration, selection, or downstream dispatch code.
-- [ ] Implement `OAAR4` with the existing `pi-role-model` package; do not add a parallel plugin, alias shim, or variant registry.
-- [ ] Rebuild the paired runtime and complete `OAAR-P4` and `OAAR-P5` before proposing any stage replacement.
+- [x] Add the focused RED cases in `OAAR-P1` before modifying production admission or provider-row code.
+- [x] Implement `OAAR-P2` and `OAAR-P3` in the existing Run 93 worktree; do not create a new repair run.
+- [x] Add the focused Pi variant-fidelity RED cases in `OAAR-P5` before modifying `pi-role-model` registration, selection, or downstream dispatch code.
+- [x] Implement `OAAR4` with the existing `pi-role-model` package; do not add a parallel plugin, alias shim, or variant registry.
+- [x] Rebuild the paired runtime with the exact 13-extension Track B distribution and verify its clean-state package boundary.
+- [ ] Complete an operator-assisted OAuth callback browser verification in the isolated rebuilt runtime before proposing any stage replacement.
 - [ ] Reconcile the existing pre-addendum recursive-linter failures separately; this addendum does not mask or reclassify them.
 
 ## Effective requirement changes
@@ -187,6 +188,48 @@ the clean-source binding guard while the OAAR3 UI repair was intentionally
 uncommitted. It must be re-run from the clean worktree after the OAAR3 commit;
 no packaged-binary result is claimed yet.
 
+## Rebuilt-runtime verification evidence
+
+### Clean-source Track B package build
+
+- The Run 93 public source tree was committed before packaging. Its source-tree
+  digest is `7d7047831e168dd9b0faf62a980b4016a16be730`.
+- The private distribution builder was invoked with that exact public worktree
+  as `ROLE_MODEL_PUBLIC_WORKTREE`. It produced a source-bound Track B manifest
+  with `extensionCount: 13` and sidecar SHA-256
+  `58f15aa1bbc83f6fb8b058abb78eb53d4898e3f130e73c5d04497e908219f355`.
+- `ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT=<run00-dev distribution>`
+  `pnpm run runtime:validate-packaging` then passed. Its packaged executable is
+  `role-model-dev.exe` with SHA-256
+  `38746110b2bae15f01892699b5d41af09b3180d8e605c602d0b7e60596271ddc`.
+  The generated package manifest binds the same public source tree and reports
+  `extension_count: 13`; the packaging verifier also reported `extensionCount:
+  13` and no request IDs were fabricated.
+
+### Isolated browser/runtime boundary
+
+- The packaged executable was launched from its release directory at
+  `127.0.0.1:59905` with a new `run93-oauth-package-qa` state root. `/health`
+  returned `OK`.
+- In the in-app browser, `/app/remote/providers` rendered successfully with a
+  deliberately clean state: its visible empty configuration message was
+  `No remote endpoints are configured yet`, and the browser console contained
+  no errors. This confirms that the package does not inherit an operator's
+  configured credentials or endpoint records.
+- `/app/system/extensions` reported `INSTALLED 13`, `READY 13`, and
+  `DEGRADED 0`, with the thirteen canonical Track B extension identifiers
+  listed in the UI. The browser console contained no errors.
+
+### Deliberate remaining boundary
+
+- The isolated state contains no OAuth account or credential. A real OAuth
+  callback would be an account/login action and cannot be inferred from the
+  package launch, so this record does **not** claim its browser completion.
+  The source-level callback behavior is covered by the focused account-repair
+  regression. A later operator-assisted verification may authenticate in this
+  isolated runtime and confirm the no-probe projection without copying a saved
+  credential or state root.
+
 ## Scope and safety constraints
 
 - This does not assert that OAuth proves capacity, quota, or all advertised models are available; it proves account authentication and eliminates the hidden readiness execution the user does not want.
@@ -196,12 +239,12 @@ no packaged-binary result is claimed yet.
 
 ## Requirement completion status
 
-- `OAAR1` | `implemented; source verification pending` | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts`, `role-model-router/apps/runtime-host-bridge/test/account-repair.test.ts`. | Implementation Evidence: focused RED/GREEN covers direct and batch OAuth admission and stale probe-only endpoint reconciliation. | Deferred By: rebuilt-runtime/browser verification.
-- `OAAR2` | `implemented; source verification pending` | Callback reconciliation restores only stale probe-only degradation and preserves a persisted `blocked_quota` circuit-denied endpoint ID. | Evidence: focused OAuth account-repair regression. | Deferred By: rebuilt-runtime/browser verification.
-- `OAAR3` | `implemented; source verification pending` | Changed Files: `role-model-router/apps/runtime-ui/app/lib/view-models.ts`, `role-model-router/apps/runtime-ui/app/lib/view-models.test.ts`. | Evidence: strict blank-label RED/GREEN; full view-model suite 49/49. | Deferred By: rebuilt-runtime/browser verification.
-- `OAAR4` | `implemented; live Stage-runtime verified` | Changed Files: `packages/pi-role-model/src/types.ts`, `packages/pi-role-model/src/downstream-openai.ts`, `packages/pi-role-model/src/extension.ts`, `packages/pi-role-model/README.md`, and focused tests. | Implementation Evidence: `evidence/logs/red/oaar4-pi-variant-identity-red.log`, `evidence/logs/red/oaar4-pi-offline-refresh-red.log`, `evidence/logs/red/oaar4-pi-unsupported-effort-red.log`, `evidence/logs/green/oaar4-pi-variant-identity-green.log`, `evidence/logs/green/oaar4-pi-unsupported-effort-green.log`. | Verification Evidence: `evidence/logs/green/oaar4-pi-stage-runtime-e2e.log`. | Deferred By: clean-source rebuilt-binary packaging receipt.
-- `OAAR-P1` | `partially implemented` | The no-automatic-probe, active/eligible/unverified OAuth case now covers a stale probe-only record plus direct and batch endpoint admission. | Evidence: `evidence/logs/red/oaar1-oauth-no-probe-red.log`, `evidence/logs/green/oaar1-oauth-no-probe-green.log`. | Deferred By: direct persisted circuit and browser cases.
-- `OAAR-P2`–`OAAR-P5` | `planned` | Implementation and rebuilt-runtime verification are required before acceptance. | Evidence: Remediation plan.
+- `OAAR1` | `implemented; clean packaged runtime verified` | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts`, `role-model-router/apps/runtime-host-bridge/test/account-repair.test.ts`. | Implementation Evidence: focused RED/GREEN covers direct and batch OAuth admission and stale probe-only endpoint reconciliation. | Deferred By: operator-assisted OAuth callback in the clean state.
+- `OAAR2` | `implemented; clean packaged runtime verified` | Callback reconciliation restores only stale probe-only degradation and preserves a persisted `blocked_quota` circuit-denied endpoint ID. | Evidence: focused OAuth account-repair regression. | Deferred By: operator-assisted OAuth callback in the clean state.
+- `OAAR3` | `implemented; clean package browser verified` | Changed Files: `role-model-router/apps/runtime-ui/app/lib/view-models.ts`, `role-model-router/apps/runtime-ui/app/lib/view-models.test.ts`. | Evidence: strict blank-label RED/GREEN; full view-model suite 49/49; isolated package browser loaded Remote providers without console errors. | Deferred By: browser rendering against a configured endpoint in the isolated state.
+- `OAAR4` | `implemented; live Stage-runtime and clean package boundary verified` | Changed Files: `packages/pi-role-model/src/types.ts`, `packages/pi-role-model/src/downstream-openai.ts`, `packages/pi-role-model/src/extension.ts`, `packages/pi-role-model/README.md`, and focused tests. | Implementation Evidence: `evidence/logs/red/oaar4-pi-variant-identity-red.log`, `evidence/logs/red/oaar4-pi-offline-refresh-red.log`, `evidence/logs/red/oaar4-pi-unsupported-effort-red.log`, `evidence/logs/green/oaar4-pi-variant-identity-green.log`, `evidence/logs/green/oaar4-pi-unsupported-effort-green.log`. | Verification Evidence: `evidence/logs/green/oaar4-pi-stage-runtime-e2e.log`; source-bound clean package with all 13 extensions. | Deferred By: fresh package Pi traffic requires an operator-configured isolated credential.
+- `OAAR-P1`–`OAAR-P3` | `implemented` | Focused RED/GREEN plus UI/package verification. | Evidence: named records above. | Deferred By: only the explicit operator-assisted OAuth browser action.
+- `OAAR-P4`–`OAAR-P5` | `partially verified` | Pair runtime was source-bound, packaged, launched, and verified in the browser with 13/13 Track B extensions ready. Existing Stage Pi proof remains recorded. | Deferred By: credentialed Pi/OAuth flows in an isolated state; no credential/state was copied merely to satisfy a test.
 
 ## Coverage Gate
 
