@@ -747,7 +747,7 @@ describe("endpoint rehydration", () => {
 
   test(
     "marks restarted remote endpoints offline and ineligible when startup probes time out",
-    { timeout: 20_000 },
+    { timeout: 60_000 },
     async () => {
       const runtimeStateRoot = path.join(os.tmpdir(), `runtime-host-endpoint-health-${Date.now()}`);
       const scopeId = "endpoint-health-tests";

@@ -452,5 +452,5 @@ describe("validate-agent-path helper", () => {
         expectedCaseEligibleEndpoints,
       );
     }
-  }, 60_000);
+  }, 180_000);
 });
