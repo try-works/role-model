@@ -2,7 +2,7 @@ Run: `/.recursive/run/93-variant-admission-model-pool-integrity/`
 Phase: `5-manual-qa`
 Artifact: `05-manual-qa.md`
 Addendum: `09`
-Status: `IMPLEMENTING`
+Status: `DRAFT`
 Inputs:
 - `00-requirements.md` (LOCKED)
 - `01.5-root-cause.md` (LOCKED)
