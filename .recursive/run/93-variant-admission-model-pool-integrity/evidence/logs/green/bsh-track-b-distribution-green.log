@@ -1,0 +1,12 @@
+(node:19784) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ built runtime distribution contains thirteen integrity-bound process extensions (1858.3456ms)
+✔ rebuilt distribution runs the real supervised shadow pipeline (646.7184ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2653.2394
