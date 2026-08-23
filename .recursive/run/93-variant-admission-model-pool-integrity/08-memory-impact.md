@@ -1,8 +1,8 @@
 Run: `/.recursive/run/93-variant-admission-model-pool-integrity/`
 Phase: `8-memory-impact`
 Status: `LOCKED`
-LockedAt: `2026-08-23T04:10:43Z`
-LockHash: `11f9c0e21ea6012494e4fd9f2d8b17ae40b64a8ef3cb1483cdba79d425147a1c`
+LockedAt: `2026-08-23T04:59:05Z`
+LockHash: `3fe2acbeddc31222e3e2b087f94fb948bb179d5d0342f0508ee580669ffbe8b2`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - `.recursive/run/93-variant-admission-model-pool-integrity/00-requirements.md`
@@ -104,6 +104,8 @@ Reconciled addenda exactly: `.recursive/run/93-variant-admission-model-pool-inte
 - Repair Performed After Verification: added the identity domain entry and normalized invalid memory metadata.
 
 ## Worktree Diff Audit
+
+- Release-gate reconciliation paths: `role-model-router/apps/runtime-host-bridge/src/validate-vendors.ts` and `scripts/validate-agent-path.ts`; companion regression tests are `packages/pi-role-model/test/validate-agent-path.test.ts`, `role-model-router/apps/runtime-host-bridge/test/index.test.ts`, and `role-model-router/apps/runtime-host-bridge/test/remote-health-bootstrap.test.ts`.
 
 - Baseline type: commit
 - Baseline reference: `1aab0512ce23aacc50cea66c2926e374be1e249e`

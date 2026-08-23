@@ -1,8 +1,8 @@
 Run: `/.recursive/run/93-variant-admission-model-pool-integrity/`
 Phase: `7-state-update`
 Status: `LOCKED`
-LockedAt: `2026-08-23T04:10:43Z`
-LockHash: `21c6beec990d055f0a543b63aea11d547f870ab3634dfbe817e63627933f6f03`
+LockedAt: `2026-08-23T04:59:04Z`
+LockHash: `ab41065ddb17f1a3d6fd9f74546e38471bec5dba44b5c7ec3d14a6e5598079f3`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - `.recursive/run/93-variant-admission-model-pool-integrity/00-requirements.md`
@@ -62,6 +62,8 @@ The state summary contains only facts accepted by implementation, review, tests,
 - Repair Performed After Verification: updated current state only.
 
 ## Worktree Diff Audit
+
+- Release-gate reconciliation paths: `role-model-router/apps/runtime-host-bridge/src/validate-vendors.ts` and `scripts/validate-agent-path.ts`; companion regression tests are `packages/pi-role-model/test/validate-agent-path.test.ts`, `role-model-router/apps/runtime-host-bridge/test/index.test.ts`, and `role-model-router/apps/runtime-host-bridge/test/remote-health-bootstrap.test.ts`.
 
 - Baseline type: commit
 - Baseline reference: `1aab0512ce23aacc50cea66c2926e374be1e249e`

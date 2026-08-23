@@ -145,6 +145,26 @@ TDD Mode: `strict`
   predicates, and the callback reconciliation is one bounded helper, avoiding
   a UI-only exception, duplicated OAuth provider list, or circuit reset.
 
+### `OAAR1` release-gate regression reconciliation
+
+- RED: GitHub Actions build-test run `32617258573` exposed two stale assertions
+  outside the original focused file. `remote-health-bootstrap.test.ts` still
+  required an authenticated Codex Subscription endpoint to degrade because no
+  Responses probe ran. `index.test.ts` still treated the first Codex execution
+  as an admission request, so all timeout/cooldown attempt counts were one too
+  high. Both expectations contradicted the already-green OAuth callback
+  contract above; production code correctly skipped the probe.
+- GREEN: the tests now assert active, `not-yet-executed`, routing-eligible
+  OAuth admission with zero adapter calls, and count only actual request
+  execution/retry attempts. The exact timeout, retry, cooldown, HTTP
+  `endpoint_temporarily_unavailable`, telemetry, and inspection assertions
+  remain intact. Targeted verification passed:
+  `corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/index.test.ts -t "preserves the original Codex timeout"`
+  and
+  `corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/remote-health-bootstrap.test.ts`.
+- REFACTOR: assertion-only repair; no production behavior, credentials, probe,
+  endpoint state, or release configuration changed.
+
 ### `OAAR3` blank configured-provider row projection
 
 - RED: `role-model-router/apps/runtime-ui/app/lib/view-models.test.ts` supplied

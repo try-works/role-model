@@ -1,8 +1,8 @@
 Run: `/.recursive/run/93-variant-admission-model-pool-integrity/`
 Phase: `4-test-summary`
 Status: `LOCKED`
-LockedAt: `2026-08-23T04:10:42Z`
-LockHash: `10698ef304ab2fcba06f1aeffbb0762d077edae253ec8db85e655ff95516809a`
+LockedAt: `2026-08-23T04:59:02Z`
+LockHash: `4551eab814fad1c9a62ee98c7c40ac2b3e85536643046c711bd3037ed2a76f37`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - `/.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md`
@@ -107,6 +107,7 @@ No accepted result depends on a timeout or an unbounded retry.
 - Normalized baseline: `1aab0512ce23aacc50cea66c2926e374be1e249e`
 - Normalized comparison: `working-tree`
 - Normalized diff command: `git diff --name-only 1aab0512ce23aacc50cea66c2926e374be1e249e`
+- Current release-gate paths: `role-model-router/apps/runtime-host-bridge/src/validate-vendors.ts`, `scripts/validate-agent-path.ts`.
 - Full reviewed scope is recorded in `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-01.md`.
 
 ### Current release diff reconciliation
@@ -115,6 +116,8 @@ The effective diff-basis-owned paths for this receipt were re-read from /.recurs
 
 ## Gaps Found
 
+- Release-gate reconciliation: `role-model-router/apps/runtime-host-bridge/src/validate-vendors.ts` and `scripts/validate-agent-path.ts` now share the callback-confirmed OAuth readiness condition; their current regression paths are `packages/pi-role-model/test/validate-agent-path.test.ts`, `role-model-router/apps/runtime-host-bridge/test/index.test.ts`, and `role-model-router/apps/runtime-host-bridge/test/remote-health-bootstrap.test.ts`.
+
 None.
 
 ## Repair Work Performed
@@ -122,6 +125,8 @@ None.
 The shared managed-adapter classification was added and the focused 68-test regression passed; no test-only fixture was retained in the product runtime.
 
 ## Requirement Completion Status
+
+- R10 | Status: verified | Changed Files: `role-model-router/apps/runtime-host-bridge/src/validate-vendors.ts`, `scripts/validate-agent-path.ts`, `packages/pi-role-model/test/validate-agent-path.test.ts`, `role-model-router/apps/runtime-host-bridge/test/index.test.ts`, `role-model-router/apps/runtime-host-bridge/test/remote-health-bootstrap.test.ts` | Implementation Evidence: `role-model-router/apps/runtime-host-bridge/src/validate-vendors.ts`, `scripts/validate-agent-path.ts` | Verification Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/04-test-summary.md`, `packages/pi-role-model/test/validate-agent-path.test.ts`.
 
 - R1 | Status: verified | Changed Files: role-model-router/apps/runtime-host-bridge/src/index.ts | Implementation Evidence: role-model-router/apps/runtime-host-bridge/src/index.ts | Verification Evidence: .recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md
 - R2 | Status: verified | Changed Files: role-model-router/apps/runtime-host-bridge/src/remote-health-probe.ts | Implementation Evidence: role-model-router/apps/runtime-host-bridge/src/remote-health-probe.ts | Verification Evidence: .recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md

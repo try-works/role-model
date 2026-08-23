@@ -10,7 +10,7 @@ const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
 const testFixtureRoot = path.join(import.meta.dirname, "fixtures");
 
 describe("remote health bootstrap", () => {
-  test("does not fail open when a Codex Subscription endpoint has no Responses admission probe", async () => {
+  test("admits a callback-authenticated Codex Subscription endpoint without a Responses admission probe", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `codex-admission-${Date.now()}`);
     const scopeId = "codex-admission-tests";
     const calls: string[] = [];
@@ -72,23 +72,23 @@ describe("remote health bootstrap", () => {
         modelId: "chatgpt/gpt-5.4",
         region: "global",
       });
-      expect(activation.status).toBe("degraded");
+      expect(activation.status).toBe("active");
       expect(calls).toEqual([]);
       const endpoints = await backend.listEndpoints();
       expect(endpoints).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            status: "degraded",
-            healthStatus: "credentials-missing",
-            routingEligible: false,
+            status: "active",
+            healthStatus: "not-yet-executed",
+            routingEligible: true,
           }),
         ]),
       );
-      const endpointId = endpoints.find((endpoint) => endpoint.status === "degraded")?.endpointId;
+      const endpointId = endpoints.find((endpoint) => endpoint.status === "active")?.endpointId;
       expect(endpointId).toEqual(expect.any(String));
       await expect(
         backend.updateBenchmarkPreferences({ judgeEndpointId: endpointId }),
-      ).rejects.toThrow("Endpoint is not healthy enough for judge role");
+      ).resolves.toEqual(expect.anything());
     } finally {
       await backend.shutdown?.();
       await rm(runtimeStateRoot, { recursive: true, force: true });
