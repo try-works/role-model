@@ -1,20 +1,20 @@
 {
   "artifact": "07-state-update.md",
-  "artifact_hash": "96f27b5551755050fadc31f045d29f71ed70dc5ba805145c8d22414c1f11cd3b",
+  "artifact_hash": "21c6beec990d055f0a543b63aea11d547f870ab3634dfbe817e63627933f6f03",
   "artifact_path": "D:\\DEV\\role-model\\.worktrees\\93-variant-admission-model-pool-integrity\\.recursive\\run\\93-variant-admission-model-pool-integrity\\07-state-update.md",
-  "locked_at": "2026-08-22T11:34:24Z",
+  "locked_at": "2026-08-23T04:10:43Z",
   "prerequisite_hashes": {
     "00-requirements.md": "cfcc07d0d8ba56b8f8ff9cbbbcc5f79c10c5c2f2b9161d864792638405c493ee",
     "00-worktree.md": "475fb5cca6a6bcad6139f76b1cdd2f5b863588914305e4bf89259af94baf6946",
     "01-as-is.md": "20774d6b0ab11880a8274243d32d4e5e46fcaef5ca31c8e1cfa72c1f4c49bd88",
     "01.5-root-cause.md": "daecba0e4e0a885ee4623580e13815529e528e360330015f1f8b30d836c35546",
     "02-to-be-plan.md": "4e4f9322500bfcf8e828f14cd753ac7c6106ff3114cf1d25ab42d8710c01d872",
-    "03-implementation-summary.md": "7da88aa776ee957c0416f31a409fd2bfb746f6face510066055ebb143e710e85",
-    "03.5-code-review.md": "440267e2ac40873c768afc03db2feda7cadb68b816b291b2d1bfebfd532b4ec0",
-    "04-test-summary.md": "ecb8d5885da7d0b5b01a5977ee5b5215b20410b47aa98303adab16a40f301264",
-    "05-manual-qa.md": "b2720ac4c046bd34ed8c21afafc8eda8df627473ed94b638dc43acf1b77002b0",
-    "06-decisions-update.md": "314f077e0d95e32e09ccacbe972b544756811d2aaad93ed198eb6f9c1efa5cfc"
+    "03-implementation-summary.md": "87b0f457c7434f5ab8830496441b1cda13c7b99c45a0d141a73a127bdc296d98",
+    "03.5-code-review.md": "af0fb877c0358a05e082027478556821bbb6f284ecc7f477621d9a3cdfe4b95e",
+    "04-test-summary.md": "10698ef304ab2fcba06f1aeffbb0762d077edae253ec8db85e655ff95516809a",
+    "05-manual-qa.md": "d74781c34a822b8286e7de637ea5f13a56ac9fd260952e164b286df674b4bfe0",
+    "06-decisions-update.md": "fcc4c1509aa8f889ffb0810d6cf0c7437614f529c3938f7347b945f63a175a48"
   },
   "previous_receipt_hash": null,
-  "receipt_hash": "68d51d6e6b91bebc9ba7b1fe80f1533df29bbe4e410b5ddd1bcff9a1c86d950d"
+  "receipt_hash": "114f6a60fa0f76c9149199002d01b91cefb1ca7c8b5a789b1f982b1e7c784719"
 }
