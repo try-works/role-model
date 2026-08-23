@@ -6,7 +6,7 @@ import { DatabaseSync } from "node:sqlite";
 
 import { afterEach, describe, expect, test, vi } from "vitest";
 
-import { readBenchmarkRunProgress } from "../src/benchmark-progress.js";
+import { listRunningBenchmarkRuns, readBenchmarkRunProgress } from "../src/benchmark-progress.js";
 import { readJudgeGradingText, readJudgeResponseText } from "../src/benchmark-reasoning.js";
 import {
   type BenchmarkRunnerDependencies,
@@ -94,6 +94,7 @@ describe("benchmark-runner judge remediation", () => {
       endpointId: "local.lfm",
       modelId: "lfm2.5-1.2b-instruct",
       sourceType: "local" as const,
+      reasoningEffort: "high",
       healthStatus: "healthy",
     };
 
@@ -141,7 +142,45 @@ describe("benchmark-runner judge remediation", () => {
     });
 
     releaseEndpoints?.();
-    await benchmarkPromise;
+    const result = await benchmarkPromise;
+    expect(result.endpointGrades).toContainEqual(
+      expect.objectContaining({
+        endpointId: subjectEndpoint.endpointId,
+        reasoningEffort: "high",
+      }),
+    );
+  });
+
+  test("fails allocated progress when endpoint discovery rejects before execution", async () => {
+    const runId = "run-initializer-rejection";
+    const benchmarkPromise = runRoutingCapabilityBenchmark(
+      {
+        databasePath: ":memory:",
+        listConfiguredEndpoints: async () => {
+          throw new Error("secret-provider-detail-must-not-be-exposed");
+        },
+        deriveEndpointVersion: () => "v1",
+        executeChatCompletions: async () => ({ contentText: "unused" }),
+      },
+      {
+        runId,
+        endpointIds: ["subject.endpoint", "judge.endpoint"],
+        judgeEndpointId: "judge.endpoint",
+        mode: "quick",
+        caseIds: ["h04-tool-read-router"],
+        useJudge: true,
+      },
+    );
+
+    await expect(benchmarkPromise).rejects.toThrow("secret-provider-detail-must-not-be-exposed");
+    expect(readBenchmarkRunProgress(runId)).toMatchObject({
+      runId,
+      status: "failed",
+      errorCode: "benchmark_initialization_failed",
+      errorMessage: "Benchmark initialization failed.",
+    });
+    expect(readBenchmarkRunProgress(runId)?.errorMessage).not.toContain("secret-provider-detail");
+    expect(listRunningBenchmarkRuns()).not.toContainEqual(expect.objectContaining({ runId }));
   });
 
   test("readJudgeResponseText merges reasoning and content channels", () => {
@@ -215,12 +254,17 @@ describe("benchmark-runner judge remediation", () => {
       sourceType: "local" as const,
       healthStatus: "healthy",
     };
+    let membershipRevisionReads = 0;
 
     const deps = {
       databasePath,
       benchmarkArtifactRoot: artifactRoot,
       listConfiguredEndpoints: async () => [localEndpoint, endpoint],
       deriveEndpointVersion: () => "v1",
+      membershipRevision: () => {
+        membershipRevisionReads += 1;
+        return "membership-at-start";
+      },
       executeChatCompletions: async (
         body: Record<string, unknown>,
         requestId: string,
@@ -294,9 +338,12 @@ describe("benchmark-runner judge remediation", () => {
       executionCompletedAtMs: number;
       gradingCompletedAtMs: number;
       judgeArtifactCount: number;
+      membershipRevision: string;
     };
     expect(manifest.executionCompletedAtMs).toBeLessThanOrEqual(manifest.gradingCompletedAtMs);
     expect(manifest.judgeArtifactCount).toBeGreaterThan(0);
+    expect(manifest.membershipRevision).toBe("membership-at-start");
+    expect(membershipRevisionReads).toBe(2);
   });
 
   test("counts executed dynamic tools when the endpoint does not echo assistant tool_calls", async () => {

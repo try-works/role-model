@@ -1,7 +1,10 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import {
   MODEL_STATUS_DOT_CLASS,
+  SidebarModelInventory,
   clampCacheHitRate,
   formatCacheHitRate,
   formatRequestCount,
@@ -29,5 +32,21 @@ describe("rm3 sidebar helpers", () => {
     expect(MODEL_STATUS_DOT_CLASS.active).toBe("bg-chart-cache");
     expect(MODEL_STATUS_DOT_CLASS.degraded).toBe("bg-status-warning");
     expect(MODEL_STATUS_DOT_CLASS.offline).toBe("bg-muted-foreground");
+  });
+
+  it("discloses a truncated model identity on pointer hover", () => {
+    const identity = "DeepSeek V4 Flash (Maximum reasoning effort)";
+    const markup = renderToStaticMarkup(
+      createElement(SidebarModelInventory, {
+        models: [{ id: identity, requestCount: 3, status: "active" }],
+      }),
+    );
+
+    expect(markup).toContain('aria-describedby="sidebar-model-identity-0"');
+    expect(markup).toContain('id="sidebar-model-identity-0"');
+    expect(markup).toContain('role="tooltip"');
+    expect(markup).toContain("group-hover:opacity-100");
+    expect(markup).toContain("group-focus-within:opacity-100");
+    expect(markup).toContain(identity);
   });
 });

@@ -1,0 +1,252 @@
+✔ build-binaries retries release attestation before failing (2.1346ms)
+✔ build-binaries pins one exact Node patch for reproducible SEA payloads (0.7397ms)
+✔ build-binaries produces stage candidates, manual dev builds, and tag-only releases (0.5396ms)
+✔ production artifacts include the exact private runtime tested at stage (0.4016ms)
+✔ the public release orchestrator enforces paired private promotion (0.5166ms)
+✔ paired private checkout never dirties the public package provenance worktree (0.6744ms)
+✔ stage pushes publish downloadable prereleases before stable promotion (0.5601ms)
+✔ stage packaging rejects a manifest whose commit is not the build revision (0.3044ms)
+✖ production rejects a stage candidate whose packaged commit is not its accepted stage revision (3.3442ms)
+✔ stable tags require a manually accepted exact stage candidate (0.628ms)
+✔ release candidate acceptance is explicit, checksum-bound, and manual only (0.5604ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 10
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 225.7884
+
+✖ failing tests:
+
+test at scripts\build-binaries-workflow.test.mjs:83:1
+✖ production rejects a stage candidate whose packaged commit is not its accepted stage revision (3.3442ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Stage candidate public commit mismatch/. Input:
+  
+  'name: build-binaries\n' +
+    '\n' +
+    'on:\n' +
+    '  workflow_dispatch:\n' +
+    '    inputs:\n' +
+    '      channel:\n' +
+    '        description: Runtime channel to package\n' +
+    '        required: true\n' +
+    '        default: development\n' +
+    '        type: choice\n' +
+    '        options:\n' +
+    '          - development\n' +
+    '          - stage\n' +
+    '          - production\n' +
+    '      private_sha:\n' +
+    '        description: Exact private role-model-internal commit embedded in a stage candidate\n' +
+    '        required: false\n' +
+    '        type: string\n' +
+    '      release_id:\n' +
+    '        description: Exact sha256-prefixed Run 88 candidate identity to bind into a stage package\n' +
+    '        required: false\n' +
+    '        type: string\n' +
+    '  push:\n' +
+    '    branches:\n' +
+    '      - stage\n' +
+    '    tags:\n' +
+    '      - "v*"\n' +
+    '\n' +
+    'env:\n' +
+    '  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true\n' +
+    "  ROLE_MODEL_BUILD_CHANNEL: ${{ github.ref_type == 'tag' && 'production' || (github.ref_name == 'stage' && 'stage' || inputs.channel || 'development') }}\n" +
+    '  PRIVATE_PAIRED_SHA: ${{ inputs.private_sha || vars.ROLE_MODEL_PAIRED_PRIVATE_SHA }}\n' +
+    '  RUN88_RELEASE_ID: ${{ inputs.release_id || vars.RUN88_RELEASE_ID }}\n' +
+    '\n' +
+    'concurrency:\n' +
+    "  group: runtime-build-${{ github.ref }}-${{ inputs.channel || 'automatic' }}\n" +
+    "  cancel-in-progress: ${{ github.ref_type != 'tag' }}\n" +
+    '\n' +
+    'jobs:\n' +
+    '  build-runtime:\n' +
+    '    name: build ${{ matrix.target }}\n' +
+    '    runs-on: ${{ matrix.runner }}\n' +
+    '    timeout-minutes: 60\n' +
+    '    permissions:\n' +
+    '      actions: read\n' +
+    '      contents: read\n' +
+    '      attestations: write\n' +
+    '      id-token: write\n' +
+    '      artifact-metadata: write\n' +
+    '    strategy:\n' +
+    '      fail-fast: false\n' +
+    '      matrix:\n' +
+    '        include:\n' +
+    '          - runner: ubuntu-latest\n' +
+    '            target: linux-x64\n' +
+    '          - runner: macos-15-intel\n' +
+    '            target: darwin-x64\n' +
+    '          - runner: macos-14\n' +
+    '            target: darwin-arm64\n' +
+    '          - runner: windows-latest\n' +
+    '            target: win32-x64\n' +
+    '\n' +
+    '    steps:\n' +
+    '      - uses: actions/checkout@v4\n' +
+    '\n' +
+    '      - name: Validate stable production tag\n' +
+    "        if: github.ref_type == 'tag'\n" +
+    '        shell: bash\n' +
+    '        run: |\n' +
+    '          if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\\.[0-9]+\\.[0-9]+$ ]]; then\n' +
+    '            echo "Stable release tag must be exact SemVer (vMAJOR.MINOR.PATCH)."\n' +
+    '            exit 1\n' +
+    '          fi\n' +
+    '          git fetch --no-tags origin "+refs/heads/main:refs/remotes/origin/main"\n' +
+    '          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then\n' +
+    '            echo "Production tag must point to a commit promoted through main."\n' +
+    '            exit 1\n' +
+    '          fi\n' +
+    '\n' +
+    '      - name: Resolve public source tree\n' +
+    '        id: public_source\n' +
+    '        shell: bash\n' +
+    '        run: |\n' +
+    '          source_tree="$(git rev-parse HEAD^{tree})"\n' +
+    '          if [[ ! "$source_tree" =~ ^[0-9a-f]{40}$ ]]; then\n' +
+    '            echo "Public source tree must be an exact 40-character Git tree."\n' +
+    '            exit 1\n' +
+    '          fi\n' +
+    '          echo "source_tree=$source_tree" >> "$GITHUB_OUTPUT"\n' +
+    '\n' +
+    '      - name: Validate Run 88 stage identity inputs\n' +
+    "        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage'\n" +
+    '        shell: bash\n' +
+    '        env:\n' +
+    '          PUBLIC_PAIRED_SHA: ${{ github.sha }}\n' +
+    '        run: |\n' +
+    '          if [[ ! "$PUBLIC_PAIRED_SHA" =~ ^[0-9a-f]{40}$ ]]; then\n' +
+    '            echo "Stage public revision must be an exact 40-character commit."\n' +
+    '            exit 1\n' +
+    '          fi\n' +
+    '          if [[ ! "$PRIVATE_PAIRED_SHA" =~ ^[0-9a-f]{40}$ ]]; then\n' +
+    '            echo "Stage private revision must be an exact 40-character commit."\n' +
+    '            exit 1\n' +
+    '          fi\n' +
+    '          if [[ ! "$RUN88_RELEASE_ID" =~ ^sha256:[0-9a-f]{64}$ ]]; then\n' +
+    '            echo "RUN88_RELEASE_ID must be an exact sha256-prefixed candidate identity."\n' +
+    '            exit 1\n' +
+    '          fi\n' +
+    '\n' +
+    '      - name: Resolve tested stage candidate\n' +
+    '        id: stage_candidate\n' +
+    "        if: env.ROLE_MODEL_BUILD_CHANNEL == 'production'\n" +
+    '        shell: pwsh\n' +
+    '        env:\n' +
+    '          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}\n' +
+    '        run: |\n' +
+    '          $artifactName = "role-model-stage-candidate-${{ steps.public_source.outputs.source_tree }}-${{ matrix.target }}"\n' +
+    '          $headers = @{\n' +
+    '            Authorization = "Bearer $env:GITHUB_TOKEN"\n' +
+    '            Accept = "application/vnd.github+json"\n' +
+    '            "X-GitHub-Api-Version" = "2022-11-28"\n' +
+    '          }\n' +
+    '          $listUrl = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/actions/artifacts?name=$artifactName&per_page=20"\n' +
+    '          $artifact = $null\n' +
+    '          $candidates = (Invoke-RestMethod -Headers $headers -Uri $listUrl).artifacts |\n' +
+    '            Where-Object { -not $_.expired } |\n' +
+    '            Sort-Object created_at -Descending\n' +
+    '          foreach ($candidate in $candidates) {\n' +
+    '            if ($candidate.workflow_run.head_branch -ne "stage") { continue }\n' +
+    '            $runUrl = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/actions/runs/$($candidate.workflow_run.id)"\n' +
+    '            $run = Invoke-RestMethod -Headers $headers -Uri $runUrl\n' +
+    '            if (\n' +
+    '              $run.status -eq "completed" -and\n' +
+    '              $run.conclusion -eq "success" -and\n' +
+    '              $run.event -eq "push" -and\n' +
+    '              $run.head_branch -eq "stage" -and\n' +
+    '              $run.head_sha -eq $candidate.workflow_run.head_sha -and\n' +
+    '              $run.path -eq ".github/workflows/build-binaries.yml"\n' +
+    '            ) {\n' +
+    '              $artifact = $candidate\n' +
+    '              break\n' +
+    '            }\n' +
+    '          }\n' +
+    '          if (-not $artifact) { throw "No tested stage candidate found for $artifactName" }\n' +
+    '          $stageSha = $artifact.workflow_run.head_sha\n' +
+    '          $candidateTag = "stage-rc-$($stageSha.Substring(0, 12))"\n' +
+    '          $approvalRefUrl = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/git/ref/tags/rc-approved/$stageSha"\n' +
+    '          try {\n' +
+    '            $approval = Invoke-RestMethod -Headers $headers -Uri $approvalRefUrl\n' +
+    '          } catch {\n' +
+    '            throw "Tested stage candidate $stageSha has no explicit rc-approved acceptance receipt"\n' +
+    '          }\n' +
+    '          if ($approval.object.type -ne "commit" -or $approval.object.sha -ne $stageSha) {\n' +
+    '            throw "Release candidate acceptance receipt does not point to the tested stage commit"\n' +
+    '          }\n' +
+    '          $candidateReleaseUrl = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/releases/tags/$candidateTag"\n' +
+    '          try {\n' +
+    '            $candidateRelease = Invoke-RestMethod -Headers $headers -Uri $candidateReleaseUrl\n' +
+    '          } catch {\n' +
+    '            throw "Accepted stage candidate has no published prerelease: $candidateTag"\n' +
+    '          }\n' +
+    '          if ($candidateRelease.draft -or -not $candidateRelease.prerelease -or $candidateRelease.tag_name -ne $candidateTag) {\n' +
+    '            throw "Accepted stage candidate release is not a published prerelease"\n' +
+    '          }\n' +
+    '          $candidateRefUrl = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/git/ref/tags/$candidateTag"\n' +
+    '          try {\n' +
+    '            $candidateRef = Invoke-RestMethod -Headers $headers -Uri $candidateRefUrl\n' +
+    '          } catch {\n' +
+    '            throw "Published stage prerelease tag cannot be resolved: $candidateTag"\n' +
+    '          }\n' +
+    '          if ($candidateRef.object.type -ne "commit" -or $candidateRef.object.sha -ne $stageSha) {\n' +
+    '            throw "Published stage prerelease tag does not point to the tested stage commit"\n' +
+    '          }\n' +
+    '          $outerZip = Join-Path $env:RUNNER_TEMP "stage-candidate.zip"\n' +
+    '          $outerDir = Join-Path $env:RUNNER_TEMP "stage-candidate"\n' +
+    '          $innerDir = Join-Path $env:RUNNER_TEMP "stage-package"\n' +
+    '          Invoke-WebRequest -Headers $headers -Uri $artifact.archive_download_url -OutFile $outerZip\n' +
+    '          Expand-Archive -LiteralPath $outerZip -DestinationPath $outerDir -Force\n' +
+    '          $archive = Get-ChildItem -LiteralPath $outerDir -File | Select-Object -First 1\n' +
+    '          if (-not $archive) { throw "Stage candidate artifact contains no archive" }\n' +
+    '          New-Item -ItemType Directory -Force -Path $innerDir | Out-Null\n' +
+    '          if ($archive.Extension -eq ".zip") {\n' +
+    '            Expand-Archive -LiteralPath $archive.FullName -DestinationPath $innerDir -Force\n' +
+    '          } else {\n' +
+    '            tar -xzf $archive.FullName -C $innerDir\n' +
+    '            if ($LASTEXITCODE -ne 0) { throw "Failed to extract stage candidate" }\n' +
+    '          }\n' +
+    '          $stageManifestPath = Get-ChildItem -LiteralPath $innerDir -Recurse -Filter manifest.json |\n' +
+    '            Select-Object -First 1 -ExpandProperty FullName\n' +
+    '          if (-not $stageManifestPath) { throw "Stage candidate contains no manifest" }\n' +
+    '          $stage = Get-Content -LiteralPath $stageManifestPath -Raw | ConvertFrom-Json\n' +
+    '          if ($stage.channel -ne "stage" -or $stage.name -ne "role-model-stage") { throw "Artifact is not a stage candidate" }\n' +
+    '          if ($stage.source_tree -ne "${{ steps.public_source.outputs.source_tree }}") { throw "Stage candidate public source tree mismatch" }\n' +
+    `          if ($stage.release_id -notmatch '^sha256:[0-9a-f]{64}$') { throw "Stage candidate release identity is invalid" }\n` +
+    `          if ($stage.private_source_commit -notmatch '^[0-9a-f]{40}$') { throw "Stage candidate private source identity is invalid" }\n` +
+    '          if ($stage.private_distribution_sha256 -ne $stage.track_b_runtime.manifest_sha256) { throw "Stage candidate private distribution binding mismatch" }\n' +
+    `          if ($stage.track_b_runtime.sidecar_sha256 -notmatch '^[0-9a-f]{64}$') { throw "Stage candidate sidecar identity is invalid" }\n` +
+    '          if ($stage.track_b_runtime.extension_count -ne 13) { throw "Stage candidate does not contain all thirteen extensions" }\n' +
+    '          "stage_manifest_path=$stageManifestPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append\n' +
+    '          "release_id=$($stage.release_id)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append\n' +
+    '          "private_source_commit=$($stage.private_source_commit)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append\n' +
+    '          "stage_sha=$stageSha" | Out-File -FilePath $env:GITHUB_OUTPUT -Append\n' +
+    '\n' +
+    '      - name: Select exact paired release identity\n' +
+    '        id: release_identity\n' +
+    "        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production'\n" +
+    '        shell: pwsh\n' +
+    '        run: |\n' +
+    '          if ($env:ROLE_MODEL_BUILD_CHANNEL -eq "production") {\n' +
+    '            $privateSource = "${{ steps.stage_candidate.outputs.private_source_commit }}"\n' +
+    '            $releaseId = "${'... 19643 more characters
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/94-stage-manifest-commit-identity/scripts/build-binaries-workflow.test.mjs:84:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'name: build-binaries\n\non:\n  workflow_dispatch:\n    inputs:\n      channel:\n        description: Runtime channel to package\n        required: true\n        default: development\n        type: choice\n        options:\n          - development\n          - stage\n          - production\n      private_sha:\n        description: Exact private role-model-internal commit embedded in a stage candidate\n        required: false\n        type: string\n      release_id:\n        description: Exact sha256-prefixed Run 88 candidate identity to bind into a stage package\n        required: false\n        type: string\n  push:\n    branches:\n      - stage\n    tags:\n      - "v*"\n\nenv:\n  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true\n  ROLE_MODEL_BUILD_CHANNEL: ${{ github.ref_type == \'tag\' && \'production\' || (github.ref_name == \'stage\' && \'stage\' || inputs.channel || \'development\') }}\n  PRIVATE_PAIRED_SHA: ${{ inputs.private_sha || vars.ROLE_MODEL_PAIRED_PRIVATE_SHA }}\n  RUN88_RELEASE_ID: ${{ inputs.release_id || vars.RUN88_RELEASE_ID }}\n\nconcurrency:\n  group: runtime-build-${{ github.ref }}-${{ inputs.channel || \'automatic\' }}\n  cancel-in-progress: ${{ github.ref_type != \'tag\' }}\n\njobs:\n  build-runtime:\n    name: build ${{ matrix.target }}\n    runs-on: ${{ matrix.runner }}\n    timeout-minutes: 60\n    permissions:\n      actions: read\n      contents: read\n      attestations: write\n      id-token: write\n      artifact-metadata: write\n    strategy:\n      fail-fast: false\n      matrix:\n        include:\n          - runner: ubuntu-latest\n            target: linux-x64\n          - runner: macos-15-intel\n            target: darwin-x64\n          - runner: macos-14\n            target: darwin-arm64\n          - runner: windows-latest\n            target: win32-x64\n\n    steps:\n      - uses: actions/checkout@v4\n\n      - name: Validate stable production tag\n        if: github.ref_type == \'tag\'\n        shell: bash\n        run: |\n          if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\\.[0-9]+\\.[0-9]+$ ]]; then\n            echo "Stable release tag must be exact SemVer (vMAJOR.MINOR.PATCH)."\n            exit 1\n          fi\n          git fetch --no-tags origin "+refs/heads/main:refs/remotes/origin/main"\n          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then\n            echo "Production tag must point to a commit promoted through main."\n            exit 1\n          fi\n\n      - name: Resolve public source tree\n        id: public_source\n        shell: bash\n        run: |\n          source_tree="$(git rev-parse HEAD^{tree})"\n          if [[ ! "$source_tree" =~ ^[0-9a-f]{40}$ ]]; then\n            echo "Public source tree must be an exact 40-character Git tree."\n            exit 1\n          fi\n          echo "source_tree=$source_tree" >> "$GITHUB_OUTPUT"\n\n      - name: Validate Run 88 stage identity inputs\n        if: env.ROLE_MODEL_BUILD_CHANNEL == \'stage\'\n        shell: bash\n        env:\n          PUBLIC_PAIRED_SHA: ${{ github.sha }}\n        run: |\n          if [[ ! "$PUBLIC_PAIRED_SHA" =~ ^[0-9a-f]{40}$ ]]; then\n            echo "Stage public revision must be an exact 40-character commit."\n            exit 1\n          fi\n          if [[ ! "$PRIVATE_PAIRED_SHA" =~ ^[0-9a-f]{40}$ ]]; then\n            echo "Stage private revision must be an exact 40-character commit."\n            exit 1\n          fi\n          if [[ ! "$RUN88_RELEASE_ID" =~ ^sha256:[0-9a-f]{64}$ ]]; then\n            echo "RUN88_RELEASE_ID must be an exact sha256-prefixed candidate identity."\n            exit 1\n          fi\n\n      - name: Resolve tested stage candidate\n        id: stage_candidate\n        if: env.ROLE_MODEL_BUILD_CHANNEL == \'production\'\n        shell: pwsh\n        env:\n          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}\n        run: |\n          $artifactName = "role-model-stage-candidate-${{ steps.public_source.outputs.source_tree }}-${{ matrix.target }}"\n          $headers = @{\n            Authorization = "Bearer $env:GITHUB_TOKEN"\n            Accept = "application/vnd.github+json"\n            "X-GitHub-Api-Version" = "2022-11-28"\n          }\n          $listUrl = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/actions/artifacts?name=$artifactName&per_page=20"\n          $artifact = $null\n          $candidates = (Invoke-RestMethod -Headers $headers -Uri $listUrl).artifacts |\n            Where-Object { -not $_.expired } |\n            Sort-Object created_at -Descending\n          foreach ($candidate in $candidates) {\n            if ($candidate.workflow_run.head_branch -ne "stage") { continue }\n            $runUrl = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/actions/runs/$($candidate.workflow_run.id)"\n            $run = Invoke-RestMethod -Headers $headers -Uri $runUrl\n            if (\n              $run.status -eq "completed" -and\n              $run.conclusion -eq "success" -and\n              $run.event -eq "push" -and\n              $run.head_branch -eq "stage" -and\n              $run.head_sha -eq $candidate.workflow_run.head_sha -and\n              $run.path -eq ".github/workflows/build-binaries.yml"\n            ) {\n              $artifact = $candidate\n              break\n            }\n          }\n          if (-not $artifact) { throw "No tested stage candidate found for $artifactName" }\n          $stageSha = $artifact.workflow_run.head_sha\n          $candidateTag = "stage-rc-$($stageSha.Substring(0, 12))"\n          $approvalRefUrl = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/git/ref/tags/rc-approved/$stageSha"\n          try {\n            $approval = Invoke-RestMethod -Headers $headers -Uri $approvalRefUrl\n          } catch {\n            throw "Tested stage candidate $stageSha has no explicit rc-approved acceptance receipt"\n          }\n          if ($approval.object.type -ne "commit" -or $approval.object.sha -ne $stageSha) {\n            throw "Release candidate acceptance receipt does not point to the tested stage commit"\n          }\n          $candidateReleaseUrl = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/releases/tags/$candidateTag"\n          try {\n            $candidateRelease = Invoke-RestMethod -Headers $headers -Uri $candidateReleaseUrl\n          } catch {\n            throw "Accepted stage candidate has no published prerelease: $candidateTag"\n          }\n          if ($candidateRelease.draft -or -not $candidateRelease.prerelease -or $candidateRelease.tag_name -ne $candidateTag) {\n            throw "Accepted stage candidate release is not a published prerelease"\n          }\n          $candidateRefUrl = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/git/ref/tags/$candidateTag"\n          try {\n            $candidateRef = Invoke-RestMethod -Headers $headers -Uri $candidateRefUrl\n          } catch {\n            throw "Published stage prerelease tag cannot be resolved: $candidateTag"\n          }\n          if ($candidateRef.object.type -ne "commit" -or $candidateRef.object.sha -ne $stageSha) {\n            throw "Published stage prerelease tag does not point to the tested stage commit"\n          }\n          $outerZip = Join-Path $env:RUNNER_TEMP "stage-candidate.zip"\n          $outerDir = Join-Path $env:RUNNER_TEMP "stage-candidate"\n          $innerDir = Join-Path $env:RUNNER_TEMP "stage-package"\n          Invoke-WebRequest -Headers $headers -Uri $artifact.archive_download_url -OutFile $outerZip\n          Expand-Archive -LiteralPath $outerZip -DestinationPath $outerDir -Force\n          $archive = Get-ChildItem -LiteralPath $outerDir -File | Select-Object -First 1\n          if (-not $archive) { throw "Stage candidate artifact contains no archive" }\n          New-Item -ItemType Directory -Force -Path $innerDir | Out-Null\n          if ($archive.Extension -eq ".zip") {\n            Expand-Archive -LiteralPath $archive.FullName -DestinationPath $innerDir -Force\n          } else {\n            tar -xzf $archive.FullName -C $innerDir\n            if ($LASTEXITCODE -ne 0) { throw "Failed to extract stage candidate" }\n          }\n          $stageManifestPath = Get-ChildItem -LiteralPath $innerDir -Recurse -Filter manifest.json |\n            Select-Object -First 1 -ExpandProperty FullName\n          if (-not $stageManifestPath) { throw "Stage candidate contains no manifest" }\n          $stage = Get-Content -LiteralPath $stageManifestPath -Raw | ConvertFrom-Json\n          if ($stage.channel -ne "stage" -or $stage.name -ne "role-model-stage") { throw "Artifact is not a stage candidate" }\n          if ($stage.source_tree -ne "${{ steps.public_source.outputs.source_tree }}") { throw "Stage candidate public source tree mismatch" }\n          if ($stage.release_id -notmatch \'^sha256:[0-9a-f]{64}$\') { throw "Stage candidate release identity is invalid" }\n          if ($stage.private_source_commit -notmatch \'^[0-9a-f]{40}$\') { throw "Stage candidate private source identity is invalid" }\n          if ($stage.private_distribution_sha256 -ne $stage.track_b_runtime.manifest_sha256) { throw "Stage candidate private distribution binding mismatch" }\n          if ($stage.track_b_runtime.sidecar_sha256 -notmatch \'^[0-9a-f]{64}$\') { throw "Stage candidate sidecar identity is invalid" }\n          if ($stage.track_b_runtime.extension_count -ne 13) { throw "Stage candidate does not contain all thirteen extensions" }\n          "stage_manifest_path=$stageManifestPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append\n          "release_id=$($stage.release_id)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append\n          "private_source_commit=$($stage.private_source_commit)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append\n          "stage_sha=$stageSha" | Out-File -FilePath $env:GITHUB_OUTPUT -Append\n\n      - name: Select exact paired release identity\n        id: release_identity\n        if: env.ROLE_MODEL_BUILD_CHANNEL == \'stage\' || env.ROLE_MODEL_BUILD_CHANNEL == \'production\'\n        shell: pwsh\n        run: |\n          if ($env:ROLE_MODEL_BUILD_CHANNEL -eq "production") {\n            $privateSource = "${{ steps.stage_candidate.outputs.private_source_commit }}"\n            $releaseId = "${'... 19643 more characters,
+    expected: /Stage candidate public commit mismatch/,
+    operator: 'match',
+    diff: 'simple'
+  }

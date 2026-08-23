@@ -1,0 +1,4 @@
+RED evidence — sub-phase A5 (pool/colors/state)
+Date: 2026-08-22T09:20:11.8779351+08:00
+Command: corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/lib/candidate-space.test.ts
+Result: 14 failed | 11 passed (25) — all new A5 tests fail (deriveCandidateState not a function; full-pool/disclosure/color assertions unmet).

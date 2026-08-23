@@ -1,6 +1,6 @@
 # Launch packaged-runtime argv + evidence-root hygiene
 
-Type: skill-issue
+Type: incident
 Status: CURRENT
 Scope: `scripts/track-b/launch-packaged-runtime.mjs` CLI parsing for `--track` / `--scope-id` / `--evidence-root` (and similar helpers)
 Owns-Paths:

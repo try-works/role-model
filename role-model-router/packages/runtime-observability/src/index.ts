@@ -1,7 +1,7 @@
 import type { RoutedExecutionResult } from "@role-model-router/adapter-execution";
 import {
   type ObservedPerformanceSample,
-  aggregateObservedPerformanceSamples,
+  aggregateOperationalPerformanceSamples,
 } from "@role-model-router/profile-aggregator";
 import type { ToolRegistryExecution } from "@role-model-router/tool-registry";
 import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
@@ -337,6 +337,38 @@ export interface RuntimeReasoningStreamReceipt {
   readonly unavailableReason?: string;
 }
 
+export type RuntimeEffortSource = "none" | "client" | "variant" | "variant_coerced";
+
+export interface RuntimeEffortReceipt {
+  readonly reasoningEffort: string | null;
+  readonly effortSource: RuntimeEffortSource;
+}
+
+export interface RuntimeEffortReceiptInput {
+  readonly reasoningEffort?: string | null;
+  readonly effortSource?: RuntimeEffortSource;
+  readonly reasoning_effort?: string | null;
+  readonly effort_source?: RuntimeEffortSource;
+}
+
+/** Normalize new and historical receipt shapes without inferring effort from endpoint identity. */
+export function normalizeRuntimeEffortReceipt(
+  input: RuntimeEffortReceiptInput = {},
+): RuntimeEffortReceipt {
+  const reasoningEffort = input.reasoningEffort ?? input.reasoning_effort ?? null;
+  const effortSource = input.effortSource ?? input.effort_source ?? "none";
+  if (reasoningEffort !== null && !reasoningEffort) {
+    throw new Error("reasoningEffort must be null or a non-empty value.");
+  }
+  if (reasoningEffort === null && effortSource !== "none") {
+    throw new Error("effortSource must be none when reasoningEffort is null.");
+  }
+  if (reasoningEffort !== null && effortSource === "none") {
+    throw new Error("effortSource is required for an efforted request.");
+  }
+  return { reasoningEffort, effortSource };
+}
+
 export interface RuntimeDiagnostic {
   readonly code: string;
   readonly severity: "info" | "warning" | "error";
@@ -363,8 +395,14 @@ export interface RuntimeObservationBundleInput {
     readonly chosen_endpoint_id: string;
     readonly app_id: string;
     readonly org_id?: string | null;
+    /** Immutable membership/profile evidence selected at route time. */
+    readonly membership_revision?: string | null;
+    readonly profile_revision?: string | null;
   };
   readonly clientRequestId?: string;
+  /** Explicit request effort; null means the provider-default instance. */
+  readonly reasoningEffort?: string | null;
+  readonly effortSource?: RuntimeEffortSource;
   readonly normalizedIntent?: Readonly<Record<string, unknown>>;
   readonly routingDiagnostics?: RuntimeRoutingDiagnostics;
   readonly retrievalReceipt: RuntimeRetrievalReceipt;
@@ -429,6 +467,8 @@ export interface RuntimeObservationCapturePolicyReceipt {
 export interface RuntimeObservationBundle {
   readonly requestId: string;
   readonly clientRequestId?: string;
+  readonly reasoningEffort: string | null;
+  readonly effortSource: RuntimeEffortSource;
   readonly routingDecisionId: string;
   readonly endpointId: string;
   readonly conversationId: string;
@@ -578,10 +618,15 @@ function deriveEndpointVersion(execution: RoutedExecutionResult): string {
 function buildObservedPerformanceSample(
   input: RuntimeObservationBundleInput,
   endpointVersion: string,
+  effort: { readonly reasoningEffort: string | null; readonly effortSource: RuntimeEffortSource },
 ): ObservedPerformanceSample {
+  const identity = input.execution.target.candidate.identity;
   return {
     endpoint_id: input.decision.chosen_endpoint_id,
     endpoint_version: endpointVersion,
+    model_id: identity.model_id,
+    reasoning_effort: effort.reasoningEffort,
+    effort_source: effort.effortSource,
     source_type: "live_request",
     ...(input.routingDiagnostics?.difficultyRouting?.difficulty
       ? { difficulty_bucket: input.routingDiagnostics.difficultyRouting.difficulty }
@@ -1000,17 +1045,21 @@ export const extractTaxonomyFields = extractTaxonomyDimensions;
 export function createRuntimeObservationBundle(
   input: RuntimeObservationBundleInput,
 ): RuntimeObservationBundle {
+  const effort = normalizeRuntimeEffortReceipt(input);
   const endpointVersion = deriveEndpointVersion(input.execution);
-  const currentSample = buildObservedPerformanceSample(input, endpointVersion);
+  const currentSample = buildObservedPerformanceSample(input, endpointVersion, effort);
   const priorSamples = (input.priorSamples ?? []).filter(
     (sample) =>
       sample.endpoint_id === input.decision.chosen_endpoint_id &&
       sample.endpoint_version === endpointVersion,
   );
   const history = [...priorSamples, currentSample];
-  const profile = aggregateObservedPerformanceSamples(history, {
+  const profile = aggregateOperationalPerformanceSamples(history, {
     nowMs: currentSample.timestamp_ms,
   });
+  if (!profile) {
+    throw new Error("A live runtime observation must produce an operational profile.");
+  }
   const capturePolicy = buildCapturePolicyReceipt(input.maintenancePolicy, input.capturePolicy);
   const telemetryConfig = input.telemetryConfig ?? {};
   const samplingRate = telemetryConfig.samplingRate ?? 1.0;
@@ -1030,6 +1079,8 @@ export function createRuntimeObservationBundle(
   return {
     requestId: input.decision.request_id,
     ...(input.clientRequestId ? { clientRequestId: input.clientRequestId } : {}),
+    reasoningEffort: effort.reasoningEffort,
+    effortSource: effort.effortSource,
     routingDecisionId: input.decision.routing_decision_id,
     endpointId: input.decision.chosen_endpoint_id,
     conversationId: input.contextEnvelope.conversationId,
@@ -1039,7 +1090,11 @@ export function createRuntimeObservationBundle(
     retrievalReceipt: input.retrievalReceipt,
     contextEnvelope: input.contextEnvelope,
     trace: input.execution.trace,
-    usageEvent: input.execution.usageEvent,
+    usageEvent: {
+      ...input.execution.usageEvent,
+      reasoning_effort: effort.reasoningEffort,
+      effort_source: effort.effortSource,
+    },
     observedPerformance: {
       endpointVersion,
       sample: currentSample,

@@ -1,0 +1,19 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/93-variant-admission-model-pool-integrity
+
+(node:9680) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ role-model-router/apps/runtime-host-bridge/test/account-repair.test.ts (7 tests) 21401ms
+   ✓ account repair mutations > starting Kimi Code authorization for k3 preserves existing allowed models and active endpoints  2474ms
+   ✓ account repair mutations > reconnect returns the current pending device-authorization session for the same account  2492ms
+   ✓ account repair mutations > reconnect starts a fresh Codex Subscription device-code session instead of reusing a stale pending one  3576ms
+   ✓ account repair mutations > starting Codex Subscription authorization again supersedes the older pending session  2565ms
+   ✓ account repair mutations > update API key preserves account identity, bindings, and endpoint associations  4525ms
+   ✓ account repair mutations > rejects overlapping repair mutations for the same account without partially mutating state  2357ms
+   ✓ account repair mutations > Codex Subscription OAuth completion admits endpoints without an automatic readiness execution  3407ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  09:51:20
+   Duration  25.62s (transform 2.13s, setup 0ms, collect 3.02s, tests 21.40s, environment 0ms, prepare 443ms)
+

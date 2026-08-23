@@ -1,0 +1,7 @@
+Run 92 SP2 (truthful candidate-space) GREEN evidence — captured during the SP2 slice.
+
+$ corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/lib/candidate-space.test.ts
+
+ ✓ app/lib/candidate-space.test.ts (10 tests)
+
+GREEN verified: ✅

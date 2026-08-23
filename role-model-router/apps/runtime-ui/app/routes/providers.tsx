@@ -31,17 +31,28 @@ import {
   shouldFallbackToCurrentBrowserForDeviceAuthorization,
   syncConnectedDeviceAuthorizationEndpoints,
 } from "../lib/device-authorization";
+import {
+  formatEndpointDisplayName,
+  formatModelIdentity,
+  formatReasoningEffortLabel,
+  readReasoningEffort,
+  readReasoningEffortLevels,
+} from "../lib/effort-identity";
 import { resolveProviderAccountLifecycle } from "../lib/provider-account-state";
 import {
   type ProvidersSnapshot,
   type RuntimeAccount,
   type RuntimeDeviceAuthorization,
+  type RuntimeEndpoint,
+  type RuntimeModelRecord,
   type RuntimeProvider,
   type RuntimeRolePolicy,
   activateRuntimeEndpoint,
+  activateRuntimeEndpointBatch,
   fetchProvidersSnapshot,
   fetchRecentRequestIds,
   fetchRolePolicy,
+  fetchRuntimeCatalogModels,
   openRuntimeExternalUrl,
   pollRuntimeDeviceAuthorization,
   reconnectRuntimeAccount,
@@ -66,6 +77,21 @@ type ProviderModelRoleCoverageSummary = {
   readonly groupPreviewLabels: readonly string[];
   readonly hiddenGroupCount: number;
 };
+
+export function resolveProviderCatalogModel(input: {
+  readonly selectedModel: string;
+  readonly providerCatalogModels: readonly RuntimeModelRecord[];
+  readonly activeModels: readonly RuntimeModelRecord[];
+}): RuntimeModelRecord | null {
+  if (!input.selectedModel) {
+    return null;
+  }
+  return (
+    input.providerCatalogModels.find((model) => model.id === input.selectedModel) ??
+    input.activeModels.find((model) => model.id === input.selectedModel) ??
+    null
+  );
+}
 
 export function buildProviderActionFeedback(
   input:
@@ -251,12 +277,15 @@ export function buildModelRoleSelection(
 }
 
 export function buildModelRoleBindings(
-  selectedModels: readonly string[],
+  selectedModels: readonly (string | { readonly modelId: string; readonly endpointId: string })[],
   selection: ModelRoleSelection,
   allRoleIds: readonly string[],
 ) {
-  return selectedModels.map((modelId) => {
-    const roleIds = [...new Set(selection[modelId] ?? [])].sort((left, right) =>
+  return selectedModels.map((target) => {
+    const modelId = typeof target === "string" ? target : target.modelId;
+    const endpointId = typeof target === "string" ? undefined : target.endpointId;
+    const selectionKey = endpointId ?? modelId;
+    const roleIds = [...new Set(selection[selectionKey] ?? [])].sort((left, right) =>
       left.localeCompare(right, "en"),
     );
     const assignment =
@@ -265,6 +294,7 @@ export function buildModelRoleBindings(
         : roleIdsToExplicitAssignment(roleIds, false);
     return {
       modelId,
+      ...(endpointId ? { endpointId } : {}),
       roleIds:
         assignment.roleAssignmentMode === "include" ? [...(assignment.enabledRoleIds ?? [])] : [],
       roleAssignmentMode: assignment.roleAssignmentMode,
@@ -354,6 +384,82 @@ function buildAvailableModels(input: {
   });
 }
 
+export function buildReasoningEffortOptions(input: {
+  readonly model: Pick<RuntimeModelRecord, "id"> &
+    Partial<
+      Pick<
+        RuntimeModelRecord,
+        | "displayName"
+        | "reasoningEffort"
+        | "reasoning_effort"
+        | "fixedEffort"
+        | "fixed_effort"
+        | "reasoningEffortLevels"
+        | "reasoning_effort_levels"
+      >
+    >;
+  readonly endpoints: readonly Pick<
+    RuntimeEndpoint,
+    "modelId" | "reasoningEffortLevels" | "reasoning_effort_levels"
+  >[];
+}): Array<{ value: string; label: string }> {
+  const values = [
+    ...readReasoningEffortLevels(input.model),
+    ...input.endpoints
+      .filter((endpoint) => endpoint.modelId === input.model.id)
+      .flatMap((endpoint) => readReasoningEffortLevels(endpoint)),
+  ];
+  return [...new Set(values)].map((value) => ({
+    value,
+    label: formatReasoningEffortLabel(value) ?? value,
+  }));
+}
+
+/** Resolve the Paper multi-select into endpoint instances without collapsing the default slot. */
+export function buildReasoningEffortActivationPlan(input: {
+  readonly selectedEfforts: readonly string[];
+  readonly activeEfforts: ReadonlySet<string>;
+}): { readonly selectedEfforts: readonly string[]; readonly newEfforts: readonly string[] } {
+  const selectedEfforts = [...new Set(input.selectedEfforts)];
+  const newEfforts = selectedEfforts.filter((effort) => !input.activeEfforts.has(effort));
+  return { selectedEfforts, newEfforts };
+}
+
+export function buildReasoningEffortSaveAction(input: {
+  readonly newEffortCount: number;
+  readonly submitting: boolean;
+  readonly selectionReady: boolean;
+}): { readonly disabled: boolean; readonly label: string } {
+  return {
+    disabled: input.submitting || !input.selectionReady,
+    label: input.submitting
+      ? "Saving…"
+      : input.newEffortCount === 0
+        ? "Save configuration"
+        : `Save ${input.newEffortCount} instance${input.newEffortCount === 1 ? "" : "s"}`,
+  };
+}
+
+export function buildReasoningEffortActivationBatch(input: {
+  readonly activationBatchId: string;
+  readonly providerAccountId: string;
+  readonly modelId: string;
+  readonly efforts: readonly string[];
+}): {
+  readonly activationBatchId: string;
+  readonly activations: readonly Record<string, unknown>[];
+} {
+  return {
+    activationBatchId: input.activationBatchId,
+    activations: input.efforts.map((effort) => ({
+      providerAccountId: input.providerAccountId,
+      modelId: input.modelId,
+      region: "global",
+      ...(effort ? { reasoningEffort: effort } : {}),
+    })),
+  };
+}
+
 function buildPendingDeviceAuthorizationModalKey(
   session: RuntimeDeviceAuthorization | null,
 ): string | null {
@@ -380,6 +486,7 @@ export default function ProvidersRoute() {
   const shownDeviceAuthorizationModalKeyRef = useRef<string | null>(null);
   const recentRequestIdsRef = useRef<readonly string[]>([]);
   const recentRequestIdsErrorRef = useRef<string | null>(null);
+  const activationBatchAttemptRef = useRef<{ key: string; id: string } | null>(null);
   const [snapshot, setSnapshot] = useState<ProvidersSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
@@ -388,6 +495,12 @@ export default function ProvidersRoute() {
   const [variantId, setVariantId] = useState("");
   const [credentialRef, setCredentialRef] = useState("");
   const [selectedModel, setSelectedModel] = useState<string>("");
+  const [providerCatalogModels, setProviderCatalogModels] = useState<readonly RuntimeModelRecord[]>(
+    [],
+  );
+  const [providerCatalogLoading, setProviderCatalogLoading] = useState(false);
+  const [providerCatalogError, setProviderCatalogError] = useState<string | null>(null);
+  const [selectedReasoningEfforts, setSelectedReasoningEfforts] = useState<string[]>([]);
   const [selectedModelRoles, setSelectedModelRoles] = useState<ModelRoleSelection>({});
   const [rolePolicy, setRolePolicy] = useState<RuntimeRolePolicy | null>(null);
   const [oauthState, setOauthState] = useState<RuntimeDeviceAuthorization | null>(null);
@@ -439,6 +552,7 @@ export default function ProvidersRoute() {
       setProviderAccountId(defaultProviderAccountId(nextProvider.providerId, nextVariantId));
       setCredentialRef(defaultCredentialRef(nextProvider));
       setSelectedModel("");
+      setSelectedReasoningEfforts([]);
       setSelectedModelRoles({});
       setOauthState(null);
       setOauthConnected(false);
@@ -661,6 +775,43 @@ export default function ProvidersRoute() {
   }, [providerAccountId, snapshot]);
 
   useEffect(() => {
+    const selectedProviderId = providerId.trim();
+    if (!selectedProviderId) {
+      setProviderCatalogModels([]);
+      setProviderCatalogLoading(false);
+      setProviderCatalogError(null);
+      return;
+    }
+
+    let cancelled = false;
+    setProviderCatalogModels([]);
+    setProviderCatalogLoading(true);
+    setProviderCatalogError(null);
+    void fetchRuntimeCatalogModels(selectedProviderId)
+      .then((models) => {
+        if (!cancelled) {
+          setProviderCatalogModels(models);
+        }
+      })
+      .catch((value: unknown) => {
+        if (!cancelled) {
+          setProviderCatalogError(
+            value instanceof Error ? value.message : "Could not load provider model metadata.",
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setProviderCatalogLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [providerId]);
+
+  useEffect(() => {
     const modalKey = buildPendingDeviceAuthorizationModalKey(oauthState);
     if (!modalKey || !oauthState) {
       if (!oauthState || oauthState.status !== "pending") {
@@ -731,6 +882,66 @@ export default function ProvidersRoute() {
         : [],
     [snapshot],
   );
+  const selectedModelRecord = useMemo(
+    () =>
+      resolveProviderCatalogModel({
+        selectedModel,
+        providerCatalogModels,
+        activeModels: snapshot?.models ?? [],
+      }),
+    [providerCatalogModels, selectedModel, snapshot?.models],
+  );
+  const selectedReasoningEffortOptions = useMemo(
+    () =>
+      selectedModelRecord
+        ? buildReasoningEffortOptions({
+            model: selectedModelRecord,
+            endpoints: snapshot?.endpoints ?? [],
+          })
+        : [],
+    [selectedModelRecord, snapshot?.endpoints],
+  );
+  const selectedModelIdentity = selectedModelRecord
+    ? formatModelIdentity(selectedModelRecord, selectedModelRecord.id)
+    : selectedModel;
+  const activeReasoningEfforts = useMemo(() => {
+    const active = new Set<string>();
+    for (const endpoint of snapshot?.endpoints ?? []) {
+      if (
+        endpoint.modelId === selectedModel &&
+        endpoint.providerAccountId === providerAccountId &&
+        endpoint.status !== "inactive"
+      ) {
+        active.add(readReasoningEffort(endpoint) ?? "");
+      }
+    }
+    return active;
+  }, [providerAccountId, selectedModel, snapshot?.endpoints]);
+  const effectiveSelectedReasoningEfforts = useMemo(
+    () =>
+      selectedModel ? (selectedReasoningEfforts.length > 0 ? selectedReasoningEfforts : [""]) : [],
+    [selectedModel, selectedReasoningEfforts],
+  );
+  const reasoningActivationPlan = useMemo(
+    () =>
+      buildReasoningEffortActivationPlan({
+        selectedEfforts: effectiveSelectedReasoningEfforts,
+        activeEfforts: activeReasoningEfforts,
+      }),
+    [activeReasoningEfforts, effectiveSelectedReasoningEfforts],
+  );
+  const reasoningEffortSaveAction = buildReasoningEffortSaveAction({
+    newEffortCount: reasoningActivationPlan.newEfforts.length,
+    submitting,
+    selectionReady: Boolean(
+      selectedProvider &&
+        selectedVariant &&
+        selectedModel &&
+        selectedModelRecord &&
+        !providerCatalogLoading &&
+        !providerCatalogError,
+    ),
+  });
   if (error) {
     return <ErrorState label={error} />;
   }
@@ -757,6 +968,7 @@ export default function ProvidersRoute() {
 
   const onModelSelect = (modelId: string) => {
     setSelectedModel(modelId);
+    setSelectedReasoningEfforts(modelId ? [""] : []);
     setSelectedModelRoles((current) =>
       modelId ? { [modelId]: current[modelId] ?? availableRoleIds } : {},
     );
@@ -828,11 +1040,28 @@ export default function ProvidersRoute() {
         existingAccount: selectedSavedAccount,
       });
       if (endpointActivated) {
-        await activateRuntimeEndpoint({
-          providerAccountId,
-          modelId: selectedModel,
-          region: "global",
-        });
+        if (reasoningActivationPlan.newEfforts.length > 0) {
+          const activationKey = JSON.stringify({
+            providerAccountId,
+            modelId: selectedModel,
+            efforts: reasoningActivationPlan.newEfforts,
+          });
+          if (activationBatchAttemptRef.current?.key !== activationKey) {
+            activationBatchAttemptRef.current = {
+              key: activationKey,
+              id: `activation-${globalThis.crypto.randomUUID()}`,
+            };
+          }
+          await activateRuntimeEndpointBatch(
+            buildReasoningEffortActivationBatch({
+              activationBatchId: activationBatchAttemptRef.current.id,
+              providerAccountId,
+              modelId: selectedModel,
+              efforts: reasoningActivationPlan.newEfforts,
+            }),
+          );
+          activationBatchAttemptRef.current = null;
+        }
       }
       await load();
       setActionFeedback(
@@ -1007,10 +1236,92 @@ export default function ProvidersRoute() {
                 <option value="">Select a model…</option>
                 {availableModels.map((modelId) => (
                   <option key={modelId} value={modelId}>
-                    {modelId}
+                    {formatModelIdentity(
+                      resolveProviderCatalogModel({
+                        selectedModel: modelId,
+                        providerCatalogModels,
+                        activeModels: snapshot.models,
+                      }) ?? { id: modelId },
+                      modelId,
+                    )}
                   </option>
                 ))}
               </SelectField>
+
+              {selectedModel ? (
+                <fieldset className={`${insetPanelClassName} space-y-3`}>
+                  <legend className="px-1 text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)]">
+                    Reasoning effort
+                  </legend>
+                  <p className="text-[13px] leading-[18px] text-[var(--rm-secondary)]">
+                    Select one or more catalog-advertised instances. Provider default is the empty
+                    effort slot; active instances stay checked and cannot be duplicated.
+                  </p>
+                  {providerCatalogLoading ? (
+                    <p className="text-[12px] leading-[17px] text-[var(--rm-muted)]" role="status">
+                      Loading catalog-advertised effort levels…
+                    </p>
+                  ) : null}
+                  {providerCatalogError ? (
+                    <p className="text-[12px] leading-[17px] text-[var(--rm-danger)]" role="status">
+                      Could not load provider model metadata. Reselect the provider to retry.
+                    </p>
+                  ) : null}
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {[
+                      { value: "", label: "Provider default" },
+                      ...selectedReasoningEffortOptions,
+                    ].map((option) => {
+                      const checked = effectiveSelectedReasoningEfforts.includes(option.value);
+                      const active = activeReasoningEfforts.has(option.value);
+                      const optionIdentity = option.value
+                        ? formatEndpointDisplayName({
+                            base: selectedModelIdentity,
+                            reasoningEffort: option.value,
+                          })
+                        : selectedModelIdentity;
+                      return (
+                        <label
+                          key={option.value || "provider-default"}
+                          className="flex min-h-11 items-center gap-2 rounded-[var(--rm-radius-md)] border border-[var(--rm-border)] px-3 py-2 text-[13px] text-[var(--rm-fg)] focus-within:ring-2 focus-within:ring-[var(--rm-accent)]"
+                        >
+                          <input
+                            className="size-4 accent-[var(--rm-accent)]"
+                            type="checkbox"
+                            checked={checked}
+                            disabled={active}
+                            onChange={() =>
+                              setSelectedReasoningEfforts((current) =>
+                                checked
+                                  ? current.filter((effort) => effort !== option.value)
+                                  : [...current, option.value],
+                              )
+                            }
+                          />
+                          <span className="min-w-0 flex-1 truncate" title={optionIdentity}>
+                            {optionIdentity}
+                          </span>
+                          {active ? (
+                            <span className="text-[11px] text-[var(--rm-muted)]">Active</span>
+                          ) : null}
+                        </label>
+                      );
+                    })}
+                  </div>
+                  {!providerCatalogLoading &&
+                  !providerCatalogError &&
+                  selectedReasoningEffortOptions.length === 0 ? (
+                    <p className="text-[12px] leading-[17px] text-[var(--rm-muted)]">
+                      No selectable effort levels are advertised for this model; only the provider
+                      default instance is available.
+                    </p>
+                  ) : null}
+                  <p className="text-[12px] font-medium text-[var(--rm-secondary)]">
+                    Save {reasoningActivationPlan.newEfforts.length} instance
+                    {reasoningActivationPlan.newEfforts.length === 1 ? "" : "s"}
+                  </p>
+                </fieldset>
+              ) : null}
 
               {selectedVariant?.oauth ? (
                 <div className={`${mutedPanelClassName} p-3`}>
@@ -1031,12 +1342,10 @@ export default function ProvidersRoute() {
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   className={buttonClass}
-                  disabled={
-                    submitting || !selectedProvider || !selectedVariant || selectedModel === ""
-                  }
+                  disabled={reasoningEffortSaveAction.disabled}
                   type="submit"
                 >
-                  {submitting ? "Saving…" : "Save provider"}
+                  {reasoningEffortSaveAction.label}
                 </button>
 
                 {selectedVariant?.authMode === "oauth2-device-code" ? (
@@ -1214,12 +1523,16 @@ export default function ProvidersRoute() {
                                         setSavingRolesEndpointId(endpoint.endpointId);
                                         setError(null);
                                         try {
-                                          const modelIds = row.endpoints.map(
-                                            (entry) => entry.modelId,
-                                          );
+                                          const modelIds = [
+                                            ...new Set(row.endpoints.map((entry) => entry.modelId)),
+                                          ];
+                                          const bindingTargets = row.endpoints.map((entry) => ({
+                                            modelId: entry.modelId,
+                                            endpointId: entry.endpointId,
+                                          }));
                                           const selection = Object.fromEntries(
                                             row.endpoints.map((entry) => [
-                                              entry.modelId,
+                                              entry.endpointId,
                                               entry.endpointId === endpoint.endpointId
                                                 ? (draftRolesByEndpointId[entry.endpointId] ??
                                                   resolveConfiguredEndpointRoleIds({
@@ -1242,7 +1555,7 @@ export default function ProvidersRoute() {
                                             ...account,
                                             allowedModels: modelIds,
                                             modelRoleBindings: buildModelRoleBindings(
-                                              modelIds,
+                                              bindingTargets,
                                               selection,
                                               availableRoleIds,
                                             ),

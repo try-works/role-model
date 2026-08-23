@@ -23,6 +23,15 @@
       "apiBase": "https://api.moonshot.ai/v1",
       "envVars": ["MOONSHOT_API_KEY"],
       "adapterFamilyHint": "ai-sdk-openai-compatible"
+    },
+    {
+      "providerId": "deepseek",
+      "displayName": "DeepSeek",
+      "npmPackage": "@ai-sdk/openai-compatible",
+      "apiBase": "https://api.deepseek.com",
+      "docsUrl": "https://api-docs.deepseek.com/quick_start/pricing",
+      "envVars": ["DEEPSEEK_API_KEY"],
+      "adapterFamilyHint": "ai-sdk-openai-compatible"
     }
   ],
   "models": [
@@ -158,6 +167,7 @@
       "modalities": ["text", "image", "video"],
       "contextWindow": 1048576,
       "maxOutputTokens": 131072,
+      "reasoningOptions": [{ "type": "effort", "values": ["low", "high", "max"] }],
       "requestShapeHints": {
         "providerShape": "openai.chat.completions",
         "bodyKeys": ["max_tokens", "tools", "reasoning_effort"],
@@ -190,6 +200,85 @@
           "label": "Long context reasoning"
         }
       ]
+    },
+    {
+      "modelId": "deepseek/deepseek-v4-flash",
+      "providerId": "deepseek",
+      "displayName": "DeepSeek V4 Flash",
+      "version": "2026-04-24",
+      "capabilities": ["text.chat", "tools.function_calling", "reasoning", "structured.output"],
+      "modalities": ["text"],
+      "contextWindow": 1000000,
+      "maxOutputTokens": 384000,
+      "reasoningOptions": [
+        { "type": "toggle" },
+        { "type": "effort", "values": ["low", "high", "max"] }
+      ],
+      "pricing": {
+        "inputPer1M": 0.14,
+        "outputPer1M": 0.28,
+        "currency": "USD",
+        "costDimensionsPer1M": {
+          "input": 0.14,
+          "output": 0.28,
+          "reasoning": 0.28,
+          "cacheRead": 0.0028
+        },
+        "costUnit": "USD per 1M tokens",
+        "provenance": {
+          "vendor": "models.dev",
+          "commit": "978733d4459d91bee9af1c0839e0636deebb7194",
+          "sourcePaths": [
+            "providers/deepseek/provider.toml",
+            "providers/deepseek/models/deepseek-v4-flash.toml"
+          ],
+          "sourceHashes": [
+            "3ce95b9a51dd0df0409e4e862aa3be99c4948133a1e93cb1b1a2c560da48a290",
+            "a8a8b9f5939698a13bfa563f107be50893879b2e907131a80afc36c5157ba010"
+          ],
+          "capturedAt": "2026-08-15T04:03:00Z",
+          "unit": "USD per 1M tokens",
+          "currency": "USD"
+        }
+      }
+    },
+    {
+      "modelId": "deepseek/deepseek-v4-pro",
+      "providerId": "deepseek",
+      "displayName": "DeepSeek V4 Pro",
+      "version": "2026-04-24",
+      "capabilities": ["text.chat", "tools.function_calling", "reasoning", "structured.output"],
+      "modalities": ["text"],
+      "contextWindow": 1000000,
+      "maxOutputTokens": 384000,
+      "reasoningOptions": [{ "type": "toggle" }, { "type": "effort", "values": ["high", "max"] }],
+      "pricing": {
+        "inputPer1M": 0.435,
+        "outputPer1M": 0.87,
+        "currency": "USD",
+        "costDimensionsPer1M": {
+          "input": 0.435,
+          "output": 0.87,
+          "reasoning": 0.87,
+          "cacheRead": 0.003625
+        },
+        "costUnit": "USD per 1M tokens",
+        "provenance": {
+          "vendor": "models.dev",
+          "commit": "978733d4459d91bee9af1c0839e0636deebb7194",
+          "sourcePaths": [
+            "providers/deepseek/provider.toml",
+            "providers/deepseek/models/deepseek-v4-pro.toml"
+          ],
+          "sourceHashes": [
+            "3ce95b9a51dd0df0409e4e862aa3be99c4948133a1e93cb1b1a2c560da48a290",
+            "1be70e9aa7772b9db4d04f6dfa72e21a2609e39bc78e3b2edb9b2313e0261584"
+          ],
+          "capturedAt": "2026-08-15T04:03:00Z",
+          "unit": "USD per 1M tokens",
+          "currency": "USD"
+        }
+      }
     }
   ]
 }

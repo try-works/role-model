@@ -1,0 +1,14 @@
+{
+  "artifact": "02-to-be-plan.md",
+  "artifact_hash": "8ef1a072a9d6b5f42d24fdf983a0239fc39c4e0bf7dae50cd52edc7f94623605",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\94-stage-manifest-commit-identity\\.recursive\\run\\94-stage-manifest-commit-identity\\02-to-be-plan.md",
+  "locked_at": "2026-08-23T08:51:16Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "ed975a6c59df64523c025dc34b28f181b90ee0a340e17d7f6deb4d264e748ab5",
+    "00-worktree.md": "7d0672a3f5bedd8e6778b895308ae8a41b925eb8dfd16d9041b7ad089a2fc9c4",
+    "01-as-is.md": "31dc998fc9eafb376ef9c3b7766cf7cf3852aa298d6cf657e54899b153607335",
+    "01.5-root-cause.md": "cddc54979227b0a7c37d11f2d039ebe6d518157529accb075a03f4f10b3c1750"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "0ab75715d1c155744d487988d976ae5fbf3fc9d819659ebfa62556ad56ccdd70"
+}

@@ -1,0 +1,6 @@
+Full sqlite-memory suite (authoritative final run).
+
+$ corepack pnpm --filter @role-model-router/sqlite-memory exec vitest run
+
+ Test Files  1 passed (1)
+      Tests  67 passed (67)

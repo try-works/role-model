@@ -1,0 +1,8 @@
+# GREEN — Sub-phase A2 (health-policy module)
+
+Command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/health-policy.test.ts
+Result: PASS (9 passed, 1 file)
+Date: 2026-08-22T01:13:45Z
+Files:
+  - src/health-policy.ts (NEW)
+  - test/health-policy.test.ts (NEW)

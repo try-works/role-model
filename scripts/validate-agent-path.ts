@@ -267,7 +267,7 @@ export async function waitForRuntimeModelEndpointsReady(
           (endpoint) =>
             endpoint.modelId === modelId &&
             endpoint.status === "active" &&
-            endpoint.healthStatus === "healthy",
+            (endpoint.healthStatus === "healthy" || endpoint.healthStatus === "not-yet-executed"),
         ),
       ]),
     );

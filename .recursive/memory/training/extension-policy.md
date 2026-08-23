@@ -1,5 +1,5 @@
 ---
-Type: training
+Type: pattern
 Status: CURRENT
 Scope: extension-policy
 Owns-Paths:
@@ -38,4 +38,3 @@ success_rate: 1.00
 status: active
 created_at: "2026-07-24T23:06:57.816892+00:00"
 ```
-

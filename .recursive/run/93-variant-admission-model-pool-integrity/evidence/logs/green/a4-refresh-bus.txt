@@ -1,0 +1,10 @@
+# GREEN — Sub-phase A4 (cross-page refresh bus + SSE revision.update wiring)
+
+Command: corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/lib/runtime-refresh-bus.test.ts app/lib/runtime-api.test.ts
+Result: PASS (refresh-bus 5 passed; runtime-api 67 passed)
+Date: 2026-08-22T02:26:44Z
+Files:
+  - apps/runtime-ui/app/lib/runtime-refresh-bus.ts (NEW)
+  - apps/runtime-ui/app/lib/runtime-refresh-bus.test.ts (NEW)
+  - apps/runtime-ui/app/lib/runtime-api.ts (subscribeRevisionStream: revision.update SSE listener)
+  - apps/runtime-ui/app/lib/runtime-api.test.ts (revision SSE test)

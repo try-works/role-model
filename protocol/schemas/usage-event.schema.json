@@ -25,6 +25,11 @@
     "routing_decision_id": { "type": "string" },
     "endpoint_id": { "type": "string" },
     "model_id": { "type": "string" },
+    "reasoning_effort": { "type": ["string", "null"], "minLength": 1, "maxLength": 128 },
+    "effort_source": {
+      "type": "string",
+      "enum": ["none", "client", "variant", "variant_coerced"]
+    },
     "package_id": { "type": "string" },
     "provider_kind": { "type": "string" },
     "tokens_in": { "type": "integer", "minimum": 0 },

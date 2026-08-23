@@ -27,7 +27,9 @@ import {
   persistRuntimeObservationBundle as persistRuntimeObservationBundleWithChannel,
   persistRuntimeTelemetryFailure,
   readConversationContinuity,
+  readLatestBenchmarkProfilesByEndpointIds,
   readLatestObservedProfile,
+  readLiveTaskTelemetryScoresByEndpointIds,
   readObservedPerformanceSamples,
   readRetrievalReceipts,
   readRuntimeObservationBundle,
@@ -117,6 +119,8 @@ describe("initializeSqliteMemory", () => {
       { migration_id: "run62-telemetry-metadata-backfill-v1" },
       { migration_id: "run77-observed-profile-indexes-v1" },
       { migration_id: "run77-recent-observations-index-v1" },
+      { migration_id: "run91-effort-instance-identity-v1" },
+      { migration_id: "run91-operational-profile-reprojection-v1" },
     ]);
   });
 
@@ -1096,7 +1100,41 @@ describe("initializeSqliteMemory", () => {
       }),
     ).toMatchObject({
       endpoint_id: validation.decision.chosen_endpoint_id,
-      sample_size: 2,
+      sample_size: 1,
+      profile_scope: "live-request-operational",
+    });
+
+    const database = new DatabaseSync(validation.databasePath);
+    database
+      .prepare(
+        "UPDATE runtime_telemetry_records SET taxonomy_task_type = ?, created_at_ms = ?, status_code = ?, error_class = NULL WHERE request_id = ?",
+      )
+      .run("code_generation", 10_000, 200, validation.decision.request_id);
+    database.close();
+    expect(
+      readLiveTaskTelemetryScoresByEndpointIds({
+        databasePath: validation.databasePath,
+        endpointIds: [validation.decision.chosen_endpoint_id],
+        windowStartMs: 9_000,
+        windowEndMs: 11_000,
+        minimumSampleCount: 3,
+      }),
+    ).toEqual({
+      [validation.decision.chosen_endpoint_id]: {
+        taskSuccessRates: { code_generation: 1 },
+        taskRollups: {
+          code_generation: {
+            successRate: 1,
+            successCount: 1,
+            failureCount: 0,
+            sampleCount: 1,
+            minimumSampleCount: 3,
+            windowStartMs: 9_000,
+            windowEndMs: 11_000,
+            measuredAtMs: 10_000,
+          },
+        },
+      },
     });
   });
 
@@ -4216,7 +4254,7 @@ describe("persistObservedBenchmarkSample benchmark_mode", () => {
 });
 
 describe("clearObservedBenchmarkDataForEndpoint", () => {
-  test("removes benchmark samples and clears the endpoint profile when no live samples remain", async () => {
+  test("keeps benchmark-only evidence out of the operational endpoint profile", async () => {
     const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
     const initialized = initializeSqliteMemory({
       runtimeStateRoot,
@@ -4242,7 +4280,18 @@ describe("clearObservedBenchmarkDataForEndpoint", () => {
       databasePath: initialized.databasePath,
       endpointId,
     });
-    expect(before?.sources.benchmark_samples).toBe(1);
+    expect(before).toBeNull();
+    expect(
+      readLatestBenchmarkProfilesByEndpointIds({
+        databasePath: initialized.databasePath,
+        endpointIds: [endpointId],
+      })[endpointId],
+    ).toMatchObject({
+      endpoint_id: endpointId,
+      sample_size: 1,
+      sources: { benchmark_samples: 1, live_request_samples: 0 },
+      judge_score: 0.35,
+    });
 
     const cleared = clearObservedBenchmarkDataForEndpoint({
       databasePath: initialized.databasePath,
@@ -4256,6 +4305,154 @@ describe("clearObservedBenchmarkDataForEndpoint", () => {
       endpointId,
     });
     expect(after).toBeNull();
+  });
+});
+
+describe("readLatestBenchmarkProfilesByEndpointIds membership revision", () => {
+  test("excludes failed, cancelled, and revisionless benchmark evidence from current profiles", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-terminal-outcome-filter",
+    });
+    const endpointId = "local.test.model";
+
+    for (const [timestampMs, judgeScore, completionState, membershipRevision, profileRevision] of [
+      [1_000, 0, "failed", "rev-current", undefined],
+      [2_000, 0, "cancelled", "rev-current", undefined],
+      [3_000, 0.3, "completed", undefined, undefined],
+      [4_000, 0.8, "completed", "rev-current", "profile-current"],
+    ] as const) {
+      persistObservedBenchmarkSample({
+        databasePath: initialized.databasePath,
+        nowMs: timestampMs,
+        sample: {
+          endpoint_id: endpointId,
+          endpoint_version: "v1",
+          source_type: "benchmark",
+          difficulty_bucket: "hard",
+          timestamp_ms: timestampMs,
+          latency_ms: 900,
+          judge_score: judgeScore,
+          completion_state: completionState,
+          ...(membershipRevision ? { membership_revision: membershipRevision } : {}),
+          ...(profileRevision ? { benchmark_profile_revision: profileRevision } : {}),
+        },
+      });
+    }
+
+    const profile = readLatestBenchmarkProfilesByEndpointIds({
+      databasePath: initialized.databasePath,
+      endpointIds: [endpointId],
+      membershipRevision: "rev-current",
+    })[endpointId];
+
+    expect(profile).toBeDefined();
+    expect(profile?.sample_size).toBe(1);
+    expect(profile?.judge_score).toBeCloseTo(0.8, 5);
+  });
+
+  test("skips benchmark samples whose membership revision no longer matches", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-membership-revision",
+    });
+    const endpointId = "local.test.model";
+
+    persistObservedBenchmarkSample({
+      databasePath: initialized.databasePath,
+      nowMs: 1_000,
+      sample: {
+        endpoint_id: endpointId,
+        endpoint_version: "v1",
+        source_type: "benchmark",
+        difficulty_bucket: "hard",
+        timestamp_ms: 1_000,
+        latency_ms: 900,
+        judge_score: 0.35,
+        membership_revision: "rev-old",
+        completion_state: "completed",
+        benchmark_profile_revision: "profile-old",
+      },
+    });
+    persistObservedBenchmarkSample({
+      databasePath: initialized.databasePath,
+      nowMs: 2_000,
+      sample: {
+        endpoint_id: endpointId,
+        endpoint_version: "v1",
+        source_type: "benchmark",
+        difficulty_bucket: "hard",
+        timestamp_ms: 2_000,
+        latency_ms: 880,
+        judge_score: 0.8,
+        membership_revision: "rev-current",
+        completion_state: "completed",
+        benchmark_profile_revision: "profile-current",
+      },
+    });
+
+    const profile = readLatestBenchmarkProfilesByEndpointIds({
+      databasePath: initialized.databasePath,
+      endpointIds: [endpointId],
+      membershipRevision: "rev-current",
+    })[endpointId];
+
+    expect(profile).toBeDefined();
+    expect(profile?.sample_size).toBe(1);
+    expect(profile?.judge_score).toBeCloseTo(0.8, 5);
+  });
+
+  test("quarantines stale benchmark samples and never selects them as latest valid", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-stale-quarantine",
+    });
+    const endpointId = "local.test.model";
+
+    persistObservedBenchmarkSample({
+      databasePath: initialized.databasePath,
+      nowMs: 1_000,
+      sample: {
+        endpoint_id: endpointId,
+        endpoint_version: "v1",
+        source_type: "benchmark",
+        difficulty_bucket: "hard",
+        timestamp_ms: 1_000,
+        latency_ms: 900,
+        judge_score: 0.35,
+        membership_revision: "rev-old",
+        completion_state: "stale",
+      },
+    });
+    persistObservedBenchmarkSample({
+      databasePath: initialized.databasePath,
+      nowMs: 2_000,
+      sample: {
+        endpoint_id: endpointId,
+        endpoint_version: "v1",
+        source_type: "benchmark",
+        difficulty_bucket: "hard",
+        timestamp_ms: 2_000,
+        latency_ms: 880,
+        judge_score: 0.8,
+        membership_revision: "rev-current",
+        completion_state: "completed",
+        benchmark_profile_revision: "profile-current",
+      },
+    });
+
+    const profile = readLatestBenchmarkProfilesByEndpointIds({
+      databasePath: initialized.databasePath,
+      endpointIds: [endpointId],
+      membershipRevision: "rev-current",
+    })[endpointId];
+
+    expect(profile).toBeDefined();
+    expect(profile?.sample_size).toBe(1);
+    expect(profile?.judge_score).toBeCloseTo(0.8, 5);
   });
 });
 

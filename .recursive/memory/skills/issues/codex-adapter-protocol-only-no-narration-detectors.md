@@ -1,10 +1,13 @@
 # Protocol-Only Codex Adapter (No Narration Detectors)
 
-Type: `issue`
+Type: `incident`
 Status: `CURRENT`
 Scope: `Codex adapter packages must not use phrase-matching narration detectors or injected anti-narration coaching prompts; fix protocol gaps generically; optional Stop-hook auto-continue is client-side.`
+Owns-Paths: `role-model-router/packages/codex-role-model/`
+Watch-Paths: `role-model-router/packages/codex-role-model/`; `.recursive/run/89-codex-role-model-package/`
 Source-Runs:
 - `89-codex-role-model-package`
+Validated-At-Commit: `working-tree`
 Last-Validated: `2026-08-07`
 Tags: `codex`, `adapter`, `protocol-only`, `anti-pattern`
 

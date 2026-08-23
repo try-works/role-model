@@ -1,6 +1,7 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
 import { describe, expect, test } from "vitest";
 
@@ -21,6 +22,473 @@ const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
 const testFixtureRoot = path.join(import.meta.dirname, "fixtures");
 
 describe("endpoint rehydration", () => {
+  test(
+    "commits a multi-effort activation as one durable batch and rehydrates every identity",
+    { timeout: 20_000 },
+    async () => {
+      const runtimeStateRoot = path.join(os.tmpdir(), `runtime-host-batch-${Date.now()}`);
+      const scopeId = "endpoint-batch-tests";
+      const databasePath = resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId });
+      const originalDeepSeekApiKey = process.env.DEEPSEEK_API_KEY;
+      process.env.DEEPSEEK_API_KEY = "deepseek-batch-key";
+      const admissionBodies: Record<string, unknown>[] = [];
+      const networkFetcher: typeof fetch = async (input, init) => {
+        const url = String(input);
+        if (url.endsWith("/models")) {
+          return new Response(JSON.stringify({ data: [{ id: "deepseek/deepseek-v4-pro" }] }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        if (url.endsWith("/chat/completions")) {
+          // The batch must probe each configured effort sibling independently.
+          // Do not accept a base-model-only readiness check.
+          admissionBodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
+          return new Response(JSON.stringify({ choices: [{ message: { content: "ok" } }] }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        throw new Error(`Unexpected network request during batch rehydration test: ${url}`);
+      };
+      const createBackend = async () =>
+        (
+          bridge as {
+            createRuntimeBridgeBackend: (options: {
+              repoRoot: string;
+              fixtureRoot: string;
+              runtimeStateRoot: string;
+              scopeId: string;
+              networkFetcher: typeof fetch;
+            }) => Promise<{
+              readonly effectiveRegistry: {
+                readonly endpoints: readonly {
+                  readonly identity: {
+                    readonly endpoint_id: string;
+                    readonly reasoning_effort?: string | null;
+                  };
+                }[];
+              };
+              upsertProviderAccount: (body: Record<string, unknown>) => Promise<unknown>;
+              listAccounts: () => Promise<
+                readonly {
+                  providerAccountId: string;
+                  modelRoleBindings?: readonly {
+                    modelId: string;
+                    endpointId?: string;
+                    roleIds: readonly string[];
+                  }[];
+                }[]
+              >;
+              activateEndpointBatch: (body: Record<string, unknown>) => Promise<{
+                activationBatchId: string;
+                status: string;
+                endpoints: readonly { endpointId: string }[];
+              }>;
+              activateEndpoint: (body: Record<string, unknown>) => Promise<{ endpointId: string }>;
+              removeEndpoint: (
+                endpointId: string,
+              ) => Promise<{ status: string; endpointId: string }>;
+              shutdown?: () => Promise<void>;
+            }>;
+          }
+        ).createRuntimeBridgeBackend({
+          repoRoot,
+          fixtureRoot: testFixtureRoot,
+          runtimeStateRoot,
+          scopeId,
+          networkFetcher,
+        });
+
+      try {
+        const backend = await createBackend();
+        await backend.upsertProviderAccount({
+          providerAccountId: "deepseek.personal.primary",
+          providerId: "deepseek",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "workspace-default",
+          credentialRef: { backend: "env", ref: "DEEPSEEK_API_KEY" },
+          authMode: "api-key-static",
+          regionPolicy: { mode: "prefer", regions: ["global"] },
+          baseUrlOverride: "https://api.deepseek.com/v1",
+          allowedModels: ["deepseek/deepseek-v4-pro"],
+          modelRoleBindings: [{ modelId: "deepseek/deepseek-v4-pro", roleIds: ["general.chat"] }],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        });
+        const activation = {
+          activationBatchId: "activation-batch-rehydration",
+          activations: [
+            {
+              providerAccountId: "deepseek.personal.primary",
+              modelId: "deepseek/deepseek-v4-pro",
+              region: "global",
+              reasoningEffort: "high",
+            },
+            {
+              providerAccountId: "deepseek.personal.primary",
+              modelId: "deepseek/deepseek-v4-pro",
+              region: "global",
+              reasoningEffort: "max",
+            },
+          ],
+        };
+        const [result, concurrentRetry] = await Promise.all([
+          backend.activateEndpointBatch(activation),
+          backend.activateEndpointBatch(activation),
+        ]);
+        expect(concurrentRetry).toEqual(result);
+        expect(result).toEqual(
+          expect.objectContaining({
+            activationBatchId: "activation-batch-rehydration",
+            status: "committed",
+            endpoints: [
+              expect.objectContaining({ endpointId: expect.any(String) }),
+              expect.objectContaining({ endpointId: expect.any(String) }),
+            ],
+          }),
+        );
+        expect(new Set(result.endpoints.map((entry) => entry.endpointId)).size).toBe(2);
+        expect(admissionBodies).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ reasoning_effort: "high" }),
+            expect.objectContaining({ reasoning_effort: "max" }),
+          ]),
+        );
+        const activatedAccount = (await backend.listAccounts()).find(
+          (account) => account.providerAccountId === "deepseek.personal.primary",
+        );
+        expect(activatedAccount?.modelRoleBindings).toEqual(
+          expect.arrayContaining(
+            result.endpoints.map((entry) =>
+              expect.objectContaining({
+                modelId: "deepseek/deepseek-v4-pro",
+                endpointId: entry.endpointId,
+              }),
+            ),
+          ),
+        );
+        await expect(
+          backend.activateEndpointBatch({
+            activationBatchId: "activation-batch-rehydration",
+            activations: [
+              {
+                providerAccountId: "deepseek.personal.primary",
+                modelId: "deepseek/deepseek-v4-pro",
+                region: "global",
+                reasoningEffort: "high",
+              },
+              {
+                providerAccountId: "deepseek.personal.primary",
+                modelId: "deepseek/deepseek-v4-pro",
+                region: "global",
+                reasoningEffort: "max",
+              },
+            ],
+          }),
+        ).resolves.toEqual(result);
+        await expect(
+          backend.activateEndpointBatch({
+            activationBatchId: "activation-batch-rehydration",
+            activations: [
+              {
+                providerAccountId: "deepseek.personal.primary",
+                modelId: "deepseek/deepseek-v4-pro",
+                region: "global",
+                reasoningEffort: "max",
+              },
+            ],
+          }),
+        ).rejects.toThrow("different payload");
+        expect(
+          listRuntimeEndpoints({ databasePath }).map((entry) => entry.reasoningEffort),
+        ).toEqual(["high", "max"]);
+        await expect(
+          backend.activateEndpoint({
+            providerAccountId: "deepseek.personal.primary",
+            modelId: "deepseek/deepseek-v4-pro",
+            region: "global",
+            reasoningEffort: "high",
+          }),
+        ).rejects.toThrow("is already active");
+        const endpointToRemove = result.endpoints[0];
+        expect(endpointToRemove).toBeDefined();
+        if (!endpointToRemove) throw new Error("activation result omitted the first endpoint");
+        await expect(backend.removeEndpoint(endpointToRemove.endpointId)).resolves.toEqual({
+          endpointId: endpointToRemove.endpointId,
+          status: "removed",
+        });
+        expect(
+          listRuntimeEndpoints({ databasePath }).map((entry) => entry.reasoningEffort),
+        ).toEqual(["max"]);
+        await backend.shutdown?.();
+
+        const restarted = await createBackend();
+        expect(
+          restarted.effectiveRegistry.endpoints
+            .map((entry) => entry.identity.reasoning_effort)
+            .filter(Boolean)
+            .sort(),
+        ).toEqual(["max"]);
+        const restartedAccount = (await restarted.listAccounts()).find(
+          (account) => account.providerAccountId === "deepseek.personal.primary",
+        );
+        expect(restartedAccount?.modelRoleBindings).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              endpointId: result.endpoints[1]?.endpointId,
+            }),
+          ]),
+        );
+        await restarted.shutdown?.();
+      } finally {
+        if (originalDeepSeekApiKey === undefined) process.env.DEEPSEEK_API_KEY = undefined;
+        else process.env.DEEPSEEK_API_KEY = originalDeepSeekApiKey;
+        await rm(runtimeStateRoot, { recursive: true, force: true });
+      }
+    },
+  );
+
+  test(
+    "rehydrates explicit reasoning effort into the authoritative registry identity",
+    { timeout: 20_000 },
+    async () => {
+      const runtimeStateRoot = path.join(
+        os.tmpdir(),
+        `runtime-host-effort-rehydration-${Date.now()}`,
+      );
+      const scopeId = "effort-rehydration-tests";
+      const originalDeepSeekApiKey = process.env.DEEPSEEK_API_KEY;
+      process.env.DEEPSEEK_API_KEY = "deepseek-effort-rehydration-key";
+
+      const createBackend = async () =>
+        (
+          bridge as {
+            createRuntimeBridgeBackend: (options: {
+              repoRoot: string;
+              fixtureRoot: string;
+              runtimeStateRoot: string;
+              scopeId: string;
+            }) => Promise<{
+              readonly effectiveRegistry: {
+                readonly endpoints: readonly {
+                  readonly identity: {
+                    readonly endpoint_id: string;
+                    readonly reasoning_effort?: string | null;
+                  };
+                }[];
+              };
+              upsertProviderAccount: (body: Record<string, unknown>) => Promise<unknown>;
+              activateEndpoint: (body: Record<string, unknown>) => Promise<{ endpointId: string }>;
+              shutdown?: () => Promise<void>;
+            }>;
+          }
+        ).createRuntimeBridgeBackend({
+          repoRoot,
+          fixtureRoot: testFixtureRoot,
+          runtimeStateRoot,
+          scopeId,
+        });
+
+      try {
+        const backend = await createBackend();
+        await backend.upsertProviderAccount({
+          providerAccountId: "deepseek.personal.primary",
+          providerId: "deepseek",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "workspace-default",
+          credentialRef: { backend: "env", ref: "DEEPSEEK_API_KEY" },
+          authMode: "api-key-static",
+          regionPolicy: { mode: "prefer", regions: ["global"] },
+          baseUrlOverride: "https://api.deepseek.com/v1",
+          allowedModels: ["deepseek/deepseek-v4-pro"],
+          modelRoleBindings: [{ modelId: "deepseek/deepseek-v4-pro", roleIds: ["general.chat"] }],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        });
+        const activation = await backend.activateEndpoint({
+          providerAccountId: "deepseek.personal.primary",
+          modelId: "deepseek/deepseek-v4-pro",
+          region: "global",
+          reasoningEffort: "high",
+        });
+        await backend.shutdown?.();
+
+        const restartedBackend = await createBackend();
+        const rehydrated = restartedBackend.effectiveRegistry.endpoints.find(
+          (entry) => entry.identity.endpoint_id === activation.endpointId,
+        );
+        expect(rehydrated?.identity.reasoning_effort).toBe("high");
+        await restartedBackend.shutdown?.();
+      } finally {
+        if (originalDeepSeekApiKey === undefined) {
+          process.env.DEEPSEEK_API_KEY = undefined;
+        } else {
+          process.env.DEEPSEEK_API_KEY = originalDeepSeekApiKey;
+        }
+        await rm(runtimeStateRoot, { recursive: true, force: true });
+      }
+    },
+  );
+
+  test(
+    "migrates legacy opaque effort endpoints and their role ownership to readable identities",
+    { timeout: 20_000 },
+    async () => {
+      const runtimeStateRoot = path.join(
+        os.tmpdir(),
+        `runtime-host-effort-id-migration-${Date.now()}`,
+      );
+      const scopeId = "effort-id-migration-tests";
+      const databasePath = resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId });
+      const operatorIntentLocation = { runtimeStateRoot, scopeId };
+      const originalDeepSeekApiKey = process.env.DEEPSEEK_API_KEY;
+      process.env.DEEPSEEK_API_KEY = "deepseek-effort-id-migration-key";
+
+      const createBackend = async () =>
+        (
+          bridge as {
+            createRuntimeBridgeBackend: (options: {
+              repoRoot: string;
+              fixtureRoot: string;
+              runtimeStateRoot: string;
+              scopeId: string;
+            }) => Promise<{
+              readonly effectiveRegistry: {
+                readonly endpoints: readonly {
+                  readonly identity: { readonly endpoint_id: string };
+                }[];
+              };
+              upsertProviderAccount: (body: Record<string, unknown>) => Promise<unknown>;
+              listAccounts: () => Promise<
+                readonly {
+                  providerAccountId: string;
+                  modelRoleBindings?: readonly {
+                    modelId: string;
+                    endpointId?: string;
+                    roleIds: readonly string[];
+                  }[];
+                }[]
+              >;
+              activateEndpoint: (body: Record<string, unknown>) => Promise<{ endpointId: string }>;
+              shutdown?: () => Promise<void>;
+            }>;
+          }
+        ).createRuntimeBridgeBackend({
+          repoRoot,
+          fixtureRoot: testFixtureRoot,
+          runtimeStateRoot,
+          scopeId,
+        });
+
+      try {
+        const backend = await createBackend();
+        await backend.upsertProviderAccount({
+          providerAccountId: "deepseek.personal.primary",
+          providerId: "deepseek",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "workspace-default",
+          credentialRef: { backend: "env", ref: "DEEPSEEK_API_KEY" },
+          authMode: "api-key-static",
+          regionPolicy: { mode: "prefer", regions: ["global"] },
+          baseUrlOverride: "https://api.deepseek.com/v1",
+          allowedModels: ["deepseek/deepseek-v4-pro"],
+          modelRoleBindings: [{ modelId: "deepseek/deepseek-v4-pro", roleIds: ["general.chat"] }],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        });
+        const activation = await backend.activateEndpoint({
+          providerAccountId: "deepseek.personal.primary",
+          modelId: "deepseek/deepseek-v4-pro",
+          region: "global",
+          reasoningEffort: "high",
+        });
+        expect(activation.endpointId).toBe("deepseek.personal.primary.global.deepseek-v4-pro-high");
+        await backend.shutdown?.();
+
+        const legacyEndpointId =
+          "deepseek.personal.primary.global.deepseek-v4-pro~effort-v1~aGlnaA";
+        const database = new DatabaseSync(databasePath);
+        database
+          .prepare("UPDATE runtime_endpoints SET endpoint_id = ? WHERE endpoint_id = ?")
+          .run(legacyEndpointId, activation.endpointId);
+        const accountRow = database
+          .prepare(
+            "SELECT model_role_bindings_json FROM provider_accounts WHERE provider_account_id = ?",
+          )
+          .get("deepseek.personal.primary") as { model_role_bindings_json: string };
+        database
+          .prepare(
+            "UPDATE provider_accounts SET model_role_bindings_json = ? WHERE provider_account_id = ?",
+          )
+          .run(
+            accountRow.model_role_bindings_json.replaceAll(activation.endpointId, legacyEndpointId),
+            "deepseek.personal.primary",
+          );
+        database.close();
+        persistOperatorIntent(operatorIntentLocation, (intent) => ({
+          ...intent,
+          remoteActivations: intent.remoteActivations.map((entry) =>
+            entry.endpointId === activation.endpointId
+              ? {
+                  ...entry,
+                  endpointId: legacyEndpointId,
+                  modelRoleBindings: entry.modelRoleBindings?.map((binding) => ({
+                    ...binding,
+                    endpointId:
+                      binding.endpointId === activation.endpointId
+                        ? legacyEndpointId
+                        : binding.endpointId,
+                  })),
+                }
+              : entry,
+          ),
+        }));
+
+        const restarted = await createBackend();
+        expect(listRuntimeEndpoints({ databasePath }).map((entry) => entry.endpointId)).toEqual([
+          activation.endpointId,
+        ]);
+        expect(
+          restarted.effectiveRegistry.endpoints.map((entry) => entry.identity.endpoint_id),
+        ).toContain(activation.endpointId);
+        expect(readOperatorIntent(operatorIntentLocation)?.remoteActivations).toEqual([
+          expect.objectContaining({ endpointId: activation.endpointId, reasoningEffort: "high" }),
+        ]);
+        expect(
+          (await restarted.listAccounts()).find(
+            (account) => account.providerAccountId === "deepseek.personal.primary",
+          )?.modelRoleBindings,
+        ).toEqual(
+          expect.arrayContaining([expect.objectContaining({ endpointId: activation.endpointId })]),
+        );
+        await restarted.shutdown?.();
+      } finally {
+        if (originalDeepSeekApiKey === undefined) process.env.DEEPSEEK_API_KEY = undefined;
+        else process.env.DEEPSEEK_API_KEY = originalDeepSeekApiKey;
+        await rm(runtimeStateRoot, { recursive: true, force: true });
+      }
+    },
+  );
+
   test(
     "rehydrates sqlite runtime endpoints across backend restart without re-activation",
     { timeout: 20_000 },
@@ -279,10 +747,11 @@ describe("endpoint rehydration", () => {
 
   test(
     "marks restarted remote endpoints offline and ineligible when startup probes time out",
-    { timeout: 20_000 },
+    { timeout: 60_000 },
     async () => {
       const runtimeStateRoot = path.join(os.tmpdir(), `runtime-host-endpoint-health-${Date.now()}`);
       const scopeId = "endpoint-health-tests";
+      const databasePath = resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId });
       const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
       const originalMoonshotApiKey = process.env.MOONSHOT_API_KEY;
       process.env.MOONSHOT_API_KEY = "moonshot-health-key";
@@ -299,6 +768,7 @@ describe("endpoint rehydration", () => {
               networkFetcher: typeof fetch;
             }) => Promise<{
               upsertProviderAccount: (body: Record<string, unknown>) => Promise<unknown>;
+              updateRuntimeConfig: (body: Record<string, unknown>) => Promise<unknown>;
               activateEndpoint: (body: Record<string, unknown>) => Promise<{ endpointId: string }>;
               listEndpoints: () => Promise<
                 readonly {
@@ -335,7 +805,7 @@ describe("endpoint rehydration", () => {
         await mkdir(runtimeStateRoot, { recursive: true });
         await writeFile(
           unifiedRuntimeConfigPath,
-          'version: "1.1"\nexecutionMode: hybrid\n',
+          'version: "1.0"\nrouting:\n  strategy: baseline\nexecution_mode: hybrid\n',
           "utf8",
         );
         const backend = await createBackend(async (input) => {
@@ -352,7 +822,17 @@ describe("endpoint rehydration", () => {
               },
             );
           }
+          if (url.endsWith("/chat/completions")) {
+            return new Response(JSON.stringify({ choices: [{ message: { content: "ready" } }] }), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            });
+          }
           throw new Error(`Unexpected network request during endpoint setup test: ${url}`);
+        });
+        await backend.updateRuntimeConfig({
+          routingStrategy: "baseline",
+          executionMode: "hybrid",
         });
         await backend.upsertProviderAccount({
           providerAccountId: "moonshot.personal.primary",
@@ -390,6 +870,7 @@ describe("endpoint rehydration", () => {
           modelId: "moonshot/kimi-k2.5",
           region: "global",
         });
+        expect(activation).toEqual(expect.objectContaining({ status: "active" }));
         await backend.shutdown?.();
 
         const restartedBackend = await createBackend(async (input) => {
@@ -413,6 +894,16 @@ describe("endpoint rehydration", () => {
             health = await restartedBackend.readHealthStatus?.();
           }
           expect(health?.sessionBootstrap.status).not.toBe("running");
+          expect(
+            listRuntimeEndpoints({ databasePath }).find(
+              (endpoint) => endpoint.endpointId === activation.endpointId,
+            ),
+          ).toEqual(
+            expect.objectContaining({
+              endpointId: activation.endpointId,
+              healthStatus: "offline",
+            }),
+          );
 
           await expect(restartedBackend.listEndpoints()).resolves.toEqual(
             expect.arrayContaining([

@@ -4,12 +4,15 @@ import * as runtimeApiModule from "./runtime-api";
 
 import {
   activateRuntimeEndpoint,
+  activateRuntimeEndpointBatch,
   clearAllBenchmarkData,
   createRolePolicyRole,
   explicitAssignmentToRoleIds,
   fetchActivityCapture,
   fetchActivityMetrics,
+  fetchActivityMetricsPage,
   fetchAudioVoices,
+  fetchBenchmarkPortfolio,
   fetchBenchmarkRuns,
   fetchBenchmarkSummariesByMode,
   fetchControllerAssignment,
@@ -21,6 +24,7 @@ import {
   fetchRouterCandidates,
   fetchRouterConfig,
   fetchRouterDecisionDetail,
+  fetchRouterDecisionPage,
   fetchRouterDecisions,
   fetchRouterSummary,
   fetchRuntimeConfig,
@@ -31,6 +35,7 @@ import {
   fetchTelemetryAnalytics,
   fetchTelemetryDashboard,
   fetchTelemetryRequests,
+  fetchTelemetryRequestsPage,
   fetchTextLogs,
   fetchVersionInfo,
   loadLlamaSwapModel,
@@ -39,6 +44,7 @@ import {
   pollRuntimeDeviceAuthorization,
   reconnectRuntimeAccount,
   removeRuntimeAccountModel,
+  removeRuntimeEndpoint,
   roleIdsToExplicitAssignment,
   setLlamaSwapModelRoles,
   setPeerModelRoles,
@@ -50,6 +56,8 @@ import {
   submitSdApiTxt2Img,
   submitSpeechGeneration,
   submitWorkbenchChat,
+  subscribeRevisionStream,
+  subscribeRuntimeRefreshStream,
   subscribeTelemetryStream,
   updateControllerAssignment,
   updateRolePolicyRole,
@@ -391,6 +399,101 @@ describe("fetchRuntimeModels", () => {
       }),
     ]);
     expect(requestedTargets).toEqual(["/api/role-model/models"]);
+  });
+
+  test("does not fall back to /v1/models when the configured pool endpoint fails", async () => {
+    const fetchRuntimeModels = (
+      runtimeApiModule as {
+        fetchRuntimeModels?: unknown;
+      }
+    ).fetchRuntimeModels;
+    expect(fetchRuntimeModels).toBeTypeOf("function");
+    if (typeof fetchRuntimeModels !== "function") {
+      return;
+    }
+
+    const requestedTargets: string[] = [];
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const target = requestTarget(input);
+      requestedTargets.push(target);
+      if (target === "/api/role-model/models") {
+        return responseWithStatus(503, { error: "unavailable" });
+      }
+      if (target === "/v1/models") {
+        return jsonResponse({
+          data: [
+            {
+              id: "vendor/fixture",
+              object: "model",
+              owned_by: "role-model",
+              providerId: "vendor",
+              endpoint_ids: [],
+              capabilities: ["text.chat"],
+              modalities: ["text"],
+            },
+          ],
+        });
+      }
+      throw new Error(`Unexpected request: ${target}`);
+    });
+
+    await expect(
+      (
+        fetchRuntimeModels as (
+          fetcher: Parameters<typeof fetchRuntimeSnapshot>[0],
+        ) => Promise<unknown>
+      )(fetcher),
+    ).rejects.toThrow();
+    // The configured pool is authoritative; the OpenAI-compat catalog must not be queried.
+    expect(requestedTargets).toEqual(["/api/role-model/models"]);
+  });
+
+  test("loads provider catalog metadata without expanding the active runtime-model inventory", async () => {
+    const fetchRuntimeCatalogModels = (
+      runtimeApiModule as {
+        fetchRuntimeCatalogModels?: unknown;
+      }
+    ).fetchRuntimeCatalogModels;
+    expect(fetchRuntimeCatalogModels).toBeTypeOf("function");
+    if (typeof fetchRuntimeCatalogModels !== "function") {
+      return;
+    }
+
+    const requestedTargets: string[] = [];
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const target = requestTarget(input);
+      requestedTargets.push(target);
+      if (target !== "/api/role-model/models?providerId=openai") {
+        throw new Error(`Unexpected request: ${target}`);
+      }
+      return jsonResponse([
+        {
+          id: "openai/gpt-5.6-sol",
+          object: "model",
+          owned_by: "role-model",
+          providerId: "openai",
+          endpoint_ids: [],
+          capabilities: ["reasoning", "text.chat"],
+          modalities: ["text"],
+          reasoningEffortLevels: ["none", "low", "medium", "high", "xhigh", "max"],
+        },
+      ]);
+    });
+
+    await expect(
+      (
+        fetchRuntimeCatalogModels as (
+          providerId: string,
+          fetcher: Parameters<typeof fetchRuntimeSnapshot>[0],
+        ) => Promise<readonly unknown[]>
+      )("openai", fetcher),
+    ).resolves.toEqual([
+      expect.objectContaining({
+        id: "openai/gpt-5.6-sol",
+        reasoningEffortLevels: ["none", "low", "medium", "high", "xhigh", "max"],
+      }),
+    ]);
+    expect(requestedTargets).toEqual(["/api/role-model/models?providerId=openai"]);
   });
 });
 
@@ -825,6 +928,10 @@ describe("fetchModelTelemetryRollup", () => {
     const fetcher = vi.fn(async (_input: string | URL | Request, init?: RequestInit) => {
       expect(init?.method).toBe("POST");
       const payload = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      expect(payload.filters).toEqual({
+        modelIds: ["openai/gpt-5.4"],
+        endpointIds: ["openai.personal.primary.gpt-5.4-high"],
+      });
 
       if (payload.breakdown === "taxonomyTaskType") {
         return jsonResponse({
@@ -965,7 +1072,15 @@ describe("fetchModelTelemetryRollup", () => {
       throw new Error(`Unexpected telemetry rollup payload: ${JSON.stringify(payload)}`);
     });
 
-    await expect(fetchModelTelemetryRollup("openai/gpt-5.4", fetcher)).resolves.toEqual({
+    await expect(
+      fetchModelTelemetryRollup(
+        {
+          modelId: "openai/gpt-5.4",
+          endpointId: "openai.personal.primary.gpt-5.4-high",
+        },
+        fetcher,
+      ),
+    ).resolves.toEqual({
       groups: [{ groupId: "engineering", requestCount: 5 }],
       roles: [{ roleId: "coder", requestCount: 5 }],
       capabilities: [
@@ -1192,6 +1307,45 @@ describe("router APIs", () => {
     ]);
   });
 
+  test("loads router decisions with total and page metadata", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.pathname + input.search
+            : input.url;
+      expect(url).toBe("/api/role-model/router/decisions/page?limit=50");
+      return jsonResponse({
+        items: [
+          {
+            requestId: "req-router-001",
+            routingDecisionId: "route-001",
+            selectedEndpointId: "cli.local.coder",
+            selectedModelId: "gpt-5.4",
+            strategyLabel: "balanced",
+            decidedAtMs: 1_735_689_600_000,
+            sourceType: "local",
+            providerId: null,
+            finishReason: null,
+          },
+        ],
+        totalMatching: 257,
+        returned: 1,
+        pageSize: 50,
+        truncated: true,
+        nextCursor: "cursor-001",
+        window: { startAtMs: 1, endAtMs: 2, asOfMs: 2 },
+      });
+    });
+    await expect(fetchRouterDecisionPage({ limit: 50 }, fetcher)).resolves.toMatchObject({
+      totalMatching: 257,
+      returned: 1,
+      truncated: true,
+      nextCursor: "cursor-001",
+    });
+  });
+
   test("loads router decision detail from the router decision endpoint", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
       const url =
@@ -1279,7 +1433,11 @@ describe("telemetry APIs", () => {
   test("loads the canonical telemetry dashboard reads from the role-model telemetry endpoints", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
       const url =
-        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+        typeof input === "string"
+          ? input.split("?")[0]
+          : input instanceof URL
+            ? input.pathname
+            : input.url.split("?")[0];
 
       switch (url) {
         case "/api/role-model/telemetry/summary":
@@ -1430,6 +1588,29 @@ describe("telemetry APIs", () => {
         sourceType: "local",
       },
     ]);
+  });
+
+  test("loads the versioned telemetry request page envelope", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      expect(url).toContain("/api/role-model/telemetry/requests/page?limit=50");
+      return jsonResponse({
+        items: [{ requestId: "req-page-001", endpointId: "endpoint", sourceType: "remote" }],
+        totalMatching: 257,
+        returned: 1,
+        pageSize: 50,
+        truncated: true,
+        nextCursor: "cursor",
+        window: { startAtMs: 1, endAtMs: 2, asOfMs: 2 },
+      });
+    });
+
+    await expect(fetchTelemetryRequestsPage({ limit: 50 }, fetcher)).resolves.toMatchObject({
+      totalMatching: 257,
+      returned: 1,
+      nextCursor: "cursor",
+    });
   });
 
   test("serializes taxonomy telemetry request filters into the request query string", async () => {
@@ -1637,6 +1818,76 @@ describe("telemetry APIs", () => {
     dispose();
     expect(close).toHaveBeenCalledTimes(1);
   });
+
+  test("subscribes to canonical revision SSE updates and closes the source on cleanup", () => {
+    let listener: (event: MessageEvent<string>) => void = () => {
+      throw new Error("revision listener was not registered");
+    };
+    const close = vi.fn();
+    const factory = vi.fn(() => ({
+      addEventListener(type: string, handler: (event: MessageEvent<string>) => void) {
+        expect(type).toBe("revision.update");
+        listener = handler;
+      },
+      close,
+    }));
+    const onRevision = vi.fn();
+
+    const dispose = subscribeRevisionStream(onRevision, factory);
+
+    listener({
+      data: JSON.stringify({
+        revision: 12,
+        profileRevisionByEndpointId: { "acct.global.gpt-5-high": "rev-12" },
+        membershipRevision: "membership-12",
+        emittedAtMs: 1_770_000_000_200,
+      }),
+    } as MessageEvent<string>);
+
+    expect(factory).toHaveBeenCalledWith("/api/role-model/telemetry/stream");
+    expect(onRevision).toHaveBeenCalledWith(
+      expect.objectContaining({
+        revision: 12,
+        membershipRevision: "membership-12",
+      }),
+    );
+
+    dispose();
+    expect(close).toHaveBeenCalledTimes(1);
+  });
+
+  test("subscribes once to both telemetry and revision events for cross-page refresh", () => {
+    const listeners = new Map<string, (event: MessageEvent<string>) => void>();
+    const close = vi.fn();
+    const factory = vi.fn(() => ({
+      addEventListener(type: string, handler: (event: MessageEvent<string>) => void) {
+        listeners.set(type, handler);
+      },
+      close,
+    }));
+    const onEvent = vi.fn();
+
+    const dispose = subscribeRuntimeRefreshStream(onEvent, factory);
+
+    listeners.get("revision.update")?.({
+      data: JSON.stringify({
+        eventName: "revision.update",
+        revision: 13,
+        profileRevisionByEndpointId: { "deepseek.flash-high": "profile-13" },
+        membershipRevision: "membership-13",
+        emittedAtMs: 1_770_000_000_300,
+      }),
+    } as MessageEvent<string>);
+
+    expect(factory).toHaveBeenCalledWith("/api/role-model/telemetry/stream");
+    expect([...listeners.keys()].sort()).toEqual(["revision.update", "telemetry.update"]);
+    expect(onEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ eventName: "revision.update", revision: 13 }),
+    );
+
+    dispose();
+    expect(close).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("observe APIs", () => {
@@ -1686,6 +1937,32 @@ describe("observe APIs", () => {
         has_capture: true,
       },
     ]);
+  });
+
+  test("loads activity metrics with bounded-page disclosure metadata", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.pathname + input.search
+            : input.url;
+      expect(url).toBe("/api/metrics/page?limit=50");
+      return jsonResponse({
+        items: [],
+        totalMatching: 257,
+        returned: 0,
+        pageSize: 50,
+        truncated: true,
+        nextCursor: "cursor-activity",
+        window: { startAtMs: 1, endAtMs: 2, asOfMs: 2 },
+      });
+    });
+    await expect(fetchActivityMetricsPage({ limit: 50 }, fetcher)).resolves.toMatchObject({
+      totalMatching: 257,
+      pageSize: 50,
+      truncated: true,
+    });
   });
 
   test("loads a persisted request/response capture by id", async () => {
@@ -2409,6 +2686,84 @@ describe("activateRuntimeEndpoint", () => {
   });
 });
 
+describe("activateRuntimeEndpointBatch", () => {
+  test("posts every effort identity in one atomic endpoint mutation", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      expect(url).toBe("/api/role-model/endpoints/batch");
+      expect(init?.method).toBe("POST");
+      expect(JSON.parse(String(init?.body))).toEqual({
+        activationBatchId: "activation-1",
+        activations: [
+          {
+            providerAccountId: "deepseek.personal.primary",
+            modelId: "deepseek/deepseek-v4-pro",
+            region: "global",
+            reasoningEffort: "high",
+          },
+          {
+            providerAccountId: "deepseek.personal.primary",
+            modelId: "deepseek/deepseek-v4-pro",
+            region: "global",
+            reasoningEffort: "xhigh",
+          },
+        ],
+      });
+      return jsonResponse({
+        activationBatchId: "activation-1",
+        status: "committed",
+        endpoints: [],
+      });
+    });
+
+    await expect(
+      activateRuntimeEndpointBatch(
+        {
+          activationBatchId: "activation-1",
+          activations: [
+            {
+              providerAccountId: "deepseek.personal.primary",
+              modelId: "deepseek/deepseek-v4-pro",
+              region: "global",
+              reasoningEffort: "high",
+            },
+            {
+              providerAccountId: "deepseek.personal.primary",
+              modelId: "deepseek/deepseek-v4-pro",
+              region: "global",
+              reasoningEffort: "xhigh",
+            },
+          ],
+        },
+        fetcher,
+      ),
+    ).resolves.toEqual({
+      activationBatchId: "activation-1",
+      status: "committed",
+      endpoints: [],
+    });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("removeRuntimeEndpoint", () => {
+  test("deletes one encoded endpoint identity without addressing its model siblings", async () => {
+    const endpointId = "deepseek.personal.global.deepseek-v4-pro~effort-v1~aGlnaA";
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      expect(url).toBe(`/api/role-model/endpoints/${encodeURIComponent(endpointId)}`);
+      expect(init?.method).toBe("DELETE");
+      return jsonResponse({ endpointId, status: "removed" });
+    });
+    await expect(removeRuntimeEndpoint(endpointId, fetcher)).resolves.toEqual({
+      endpointId,
+      status: "removed",
+    });
+  });
+});
+
 describe("fetchRuntimeConfig", () => {
   test("loads the normalized unified runtime config from the runtime control plane", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
@@ -2718,6 +3073,58 @@ describe("role policy APIs", () => {
 });
 
 describe("benchmark display endpoints", () => {
+  test("fetchBenchmarkPortfolio loads the latest completed evidence for every exact endpoint", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      if (url === "/api/role-model/benchmark/portfolio") {
+        return new Response(
+          JSON.stringify({
+            scoreSemantics: {
+              storageScale: "normalized-fraction-0-to-1",
+              displayScale: "percentage-0-to-100",
+              overallAggregation: "unweighted-arithmetic-mean-of-executed-case-scores",
+              currentEvidencePolicy: "latest-completed-run-per-endpoint",
+              replacementScope: "endpoint-only",
+              zeroScoreMeaning: "executed-zero-credit",
+              absentScoreMeaning: "no-evidence",
+            },
+            entries: [
+              {
+                endpointId: "deepseek.flash-high",
+                modelId: "deepseek/deepseek-v4-flash",
+                reasoningEffort: "high",
+                overallScore: 0.81,
+                runId: "run-high",
+              },
+            ],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }
+      throw new Error(`unexpected url ${url}`);
+    });
+
+    await expect(fetchBenchmarkPortfolio(fetcher)).resolves.toEqual({
+      scoreSemantics: {
+        storageScale: "normalized-fraction-0-to-1",
+        displayScale: "percentage-0-to-100",
+        overallAggregation: "unweighted-arithmetic-mean-of-executed-case-scores",
+        currentEvidencePolicy: "latest-completed-run-per-endpoint",
+        replacementScope: "endpoint-only",
+        zeroScoreMeaning: "executed-zero-credit",
+        absentScoreMeaning: "no-evidence",
+      },
+      entries: [
+        expect.objectContaining({
+          endpointId: "deepseek.flash-high",
+          reasoningEffort: "high",
+          runId: "run-high",
+        }),
+      ],
+    });
+  });
+
   test("fetchBenchmarkSummariesByMode loads full and quick summaries", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
       const url =

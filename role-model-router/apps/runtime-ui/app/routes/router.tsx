@@ -14,6 +14,7 @@ import {
   mutedPanelClassName,
   supportingTextClassName,
 } from "../lib/design-system";
+import { formatEndpointDisplayPath, formatModelIdentity } from "../lib/effort-identity";
 import { selectOverviewRouterCandidates } from "../lib/router-candidate-labels";
 import {
   type RouterCandidate,
@@ -295,9 +296,15 @@ export default function RouterOverviewRoute() {
               <tbody>
                 {overviewCandidates.map((candidate) => (
                   <tr key={candidate.endpointId} className="border-t border-[var(--rm-border)]">
-                    <td className={`py-3 ${bodyStrongTextClassName}`}>{candidate.modelId}</td>
+                    <td
+                      className={`py-3 ${bodyStrongTextClassName}`}
+                      data-model-id={candidate.modelId}
+                      title={candidate.modelId}
+                    >
+                      {formatModelIdentity(candidate)}
+                    </td>
                     <td className="max-w-[32rem] break-all py-3 text-[var(--rm-secondary)]">
-                      {candidate.endpointId}
+                      {formatEndpointDisplayPath(candidate)}
                     </td>
                     <td className="py-3 text-[var(--rm-secondary)]">{candidate.sourceType}</td>
                     <td className="py-3">

@@ -1,0 +1,20 @@
+{
+  "artifact": "07-state-update.md",
+  "artifact_hash": "91dac44c0643763f7bfd8533c820e4ed5388691ec235f4ead3db53d2f100d0ac",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\93-variant-admission-model-pool-integrity\\.recursive\\run\\93-variant-admission-model-pool-integrity\\07-state-update.md",
+  "locked_at": "2026-08-23T13:34:31Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "cfcc07d0d8ba56b8f8ff9cbbbcc5f79c10c5c2f2b9161d864792638405c493ee",
+    "00-worktree.md": "e3db929ac7e463ef55402fce84ff182894e0a769004c7f57ddaa8989cfd12795",
+    "01-as-is.md": "9d2f26a38d8767c9cfb93a947048979157afd961a25f5bb16e1783879cd01f9a",
+    "01.5-root-cause.md": "4e7f0fdad28ae78a01d5a966249d9e5b05e43fe04d6d1a1395d0d82c13f84ce4",
+    "02-to-be-plan.md": "42f58a5467d241c668138b5a1dcff9daf4efc9c16d8548f0b06ad0a84f9fb34b",
+    "03-implementation-summary.md": "11daa4f397be863d17c72039fdf51754a2745a211880c466c4fb01acb55d8e26",
+    "03.5-code-review.md": "7a67e4d652c27c83d59721838a525d6e5e5b0484c3d7a53f9a14bbbbd082df6b",
+    "04-test-summary.md": "3d0714516d7a7133fb5eaaf28d7fe8b2e24fc20c6426706a5abbf7783fb809a1",
+    "05-manual-qa.md": "b74f13fb2adfab807d82ffc49d4c026a647aa75556a96183907ac2d7463e108f",
+    "06-decisions-update.md": "9ed7ab824edde4f7989ab56a13a12d1c6a652dee843c93ca8c73f194f5bfd9f5"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "d2d7f53d164e7b38f9fad8967dfbbf76d7ec860f0b13ff0711182f7d7eb699ae"
+}

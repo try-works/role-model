@@ -1,0 +1,11 @@
+$ corepack pnpm --filter @role-model-router/sqlite-memory exec vitest run test/index.test.ts -t "stale"
+
+ RUN  v3.2.4 .../packages/sqlite-memory
+
+ ✓ test/index.test.ts (46 tests | 45 skipped) 106ms
+   ✓ quarantines stale benchmark samples and never selects them as latest valid
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 45 skipped (46)
+
+GREEN verified: ✅  (completion_state === 'stale' samples are skipped by the latest-valid read)

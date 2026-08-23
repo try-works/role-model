@@ -2,6 +2,9 @@ import type {
   DownstreamOpenAIDiscovery,
   DownstreamOpenAIModelRecord,
   PiModelSelection,
+  PiProviderModelConfig,
+  PiThinkingLevel,
+  PiThinkingLevelMap,
   ProviderRegistration,
   RoleModelModelDiagnostic,
 } from "./types.js";
@@ -21,7 +24,7 @@ function isModelRecord(value: unknown): value is DownstreamOpenAIModelRecord {
     hasString(record.id) &&
     record.object === "model" &&
     record.owned_by === "role-model" &&
-    (record.type === "model" || record.type === "alias") &&
+    (record.type === "model" || record.type === "alias" || record.type === "endpoint") &&
     typeof record.piMapping === "object" &&
     record.piMapping !== null
   );
@@ -82,6 +85,145 @@ function isReasoningSupported(model: DownstreamOpenAIModelRecord): boolean {
   return false;
 }
 
+const PI_THINKING_LEVELS: readonly PiThinkingLevel[] = [
+  "off",
+  "minimal",
+  "low",
+  "medium",
+  "high",
+  "xhigh",
+  "max",
+];
+
+const PI_LEVEL_TO_PROVIDER_TOKEN: Readonly<Record<PiThinkingLevel, string>> = {
+  off: "off",
+  minimal: "minimal",
+  low: "low",
+  medium: "medium",
+  high: "high",
+  xhigh: "xhigh",
+  max: "max",
+};
+
+function readEffortToken(model: DownstreamOpenAIModelRecord): string | null {
+  const value =
+    model.reasoningEffort ??
+    model.reasoning_effort ??
+    model.fixedEffort ??
+    model.fixed_effort ??
+    null;
+  return typeof value === "string" && value.trim().length > 0 ? value.trim().toLowerCase() : null;
+}
+
+function readEndpointId(model: DownstreamOpenAIModelRecord): string {
+  const endpointId = model.endpoint_id;
+  return typeof endpointId === "string" && endpointId.trim().length > 0 ? endpointId : model.id;
+}
+
+function readVariantEffort(model: DownstreamOpenAIModelRecord): string {
+  return readEffortToken(model) ?? "default";
+}
+
+function readEffortLevels(model: DownstreamOpenAIModelRecord): string[] {
+  const reasoning =
+    typeof model.capabilities === "object" && model.capabilities !== null
+      ? (model.capabilities.reasoning as Record<string, unknown> | undefined)
+      : undefined;
+  const values =
+    model.reasoningEffortLevels ??
+    model.reasoning_effort_levels ??
+    (Array.isArray(reasoning?.effortLevels)
+      ? reasoning.effortLevels
+      : Array.isArray(reasoning?.effort_levels)
+        ? reasoning.effort_levels
+        : undefined);
+  return Array.isArray(values)
+    ? values
+        .filter((value): value is string => typeof value === "string")
+        .map((value) => value.trim().toLowerCase())
+    : [];
+}
+
+function effortToPiLevel(token: string): PiThinkingLevel | null {
+  if (token === "none") return "off";
+  return PI_THINKING_LEVELS.includes(token as PiThinkingLevel) ? (token as PiThinkingLevel) : null;
+}
+
+/** Convert provider-native tokens to the exact Pi 0.84.2 native map semantics. */
+export function readThinkingLevelMap(
+  model: DownstreamOpenAIModelRecord,
+): PiThinkingLevelMap | undefined {
+  const fixed = readEffortToken(model);
+  // Runtime endpoint records are immutable configured instances. An endpoint
+  // without a fixed effort is the configured default instance, not a dynamic
+  // selector that Pi may turn into one of its effort siblings.
+  if (model.type === "endpoint" && !fixed) {
+    return undefined;
+  }
+  const available = readEffortLevels(model);
+  if (!fixed && available.length === 0) {
+    return undefined;
+  }
+  const tokens = fixed ? [fixed] : available;
+  const supportedTokens = tokens.filter((token) => effortToPiLevel(token));
+  if (supportedTokens.length === 0) {
+    // Pi 0.84.2 cannot express every runtime effort token (for example
+    // `ultra`). Keep the exact endpoint selectable; its fixed endpoint
+    // identity remains authoritative, but do not advertise an invalid Pi
+    // thinking-level control.
+    return undefined;
+  }
+  if (fixed && supportedTokens.length !== 1) return undefined;
+  const map: PiThinkingLevelMap = Object.fromEntries(
+    PI_THINKING_LEVELS.map((level) => [level, null]),
+  ) as PiThinkingLevelMap;
+  for (const token of supportedTokens) {
+    const level = effortToPiLevel(token);
+    if (level) {
+      map[level] = token === "none" ? "none" : PI_LEVEL_TO_PROVIDER_TOKEN[level];
+    }
+  }
+  return map;
+}
+
+function formatEffortLabel(value: string | null): string | null {
+  if (!value) return null;
+  const known: Record<string, string> = {
+    none: "None",
+    off: "Off",
+    minimal: "Minimal",
+    low: "Low",
+    medium: "Medium",
+    high: "High",
+    xhigh: "XHigh",
+    max: "Max",
+  };
+  return (
+    known[value] ??
+    value
+      .replace(/[_-]+/g, " ")
+      .split(/\s+/)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ")
+  );
+}
+
+function modelDisplayName(model: DownstreamOpenAIModelRecord): string {
+  const base = model.displayName ?? model.upstreamModelId ?? model.upstream_model_id ?? model.id;
+  const effort = formatEffortLabel(readEffortToken(model));
+  return effort && !base.endsWith(` (${effort})`) ? `${base} (${effort})` : base;
+}
+
+function readModelCost(model: DownstreamOpenAIModelRecord): PiProviderModelConfig["cost"] {
+  const pricing = model.pricing;
+  return {
+    input: pricing?.inputPer1M ?? pricing?.input ?? 0,
+    output: pricing?.outputPer1M ?? pricing?.output ?? 0,
+    cacheRead: pricing?.cacheReadPer1M ?? pricing?.cacheRead ?? 0,
+    cacheWrite: pricing?.cacheWritePer1M ?? pricing?.cacheWrite ?? 0,
+  };
+}
+
 function readPiCompat(
   model: DownstreamOpenAIModelRecord,
 ): Required<NonNullable<PiModelSelection["compat"]>> {
@@ -133,13 +275,21 @@ export function createPiModelSelection(
   const maxTokens = resolveLimit(model, "maxTokens").value;
   return {
     provider: "role-model",
+    baseUrl: appendOpenAIPath(discovery.baseUrl),
     id: model.id,
-    name: model.id,
+    name: modelDisplayName(model),
+    endpointId: readEndpointId(model),
+    variantEffort: readVariantEffort(model),
     input: mapInput(model),
-    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+    cost: readModelCost(model),
     contextWindow,
     maxTokens,
     reasoning: isReasoningSupported(model),
+    ...(readThinkingLevelMap(model) ? { thinkingLevelMap: readThinkingLevelMap(model) } : {}),
+    ...(model.upstreamModelId || model.upstream_model_id
+      ? { upstreamModelId: model.upstreamModelId ?? model.upstream_model_id }
+      : {}),
+    ...(readEffortToken(model) ? { reasoningEffort: readEffortToken(model) } : {}),
     api: "openai-completions",
     compat: readPiCompat(model),
   };
@@ -169,12 +319,19 @@ export function mapDiscoveryToProviderConfig(
         });
         return {
           id: model.id,
-          name: model.id,
+          name: modelDisplayName(model),
+          endpointId: readEndpointId(model),
+          variantEffort: readVariantEffort(model),
           input: mapInput(model),
-          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+          cost: readModelCost(model),
           contextWindow: contextWindow.value,
           maxTokens: maxTokens.value,
           reasoning: isReasoningSupported(model),
+          ...(readThinkingLevelMap(model) ? { thinkingLevelMap: readThinkingLevelMap(model) } : {}),
+          ...(model.upstreamModelId || model.upstream_model_id
+            ? { upstreamModelId: model.upstreamModelId ?? model.upstream_model_id }
+            : {}),
+          ...(readEffortToken(model) ? { reasoningEffort: readEffortToken(model) } : {}),
           compat: readPiCompat(model),
         };
       }),

@@ -143,7 +143,7 @@ function resolveMetricColorToken(metric: RuntimeTelemetryAnalyticsMetric): strin
     case "totalAvoidedCostUsd":
       return "var(--rm3-chart-violet)";
     case "averageLatencyMs":
-      return "var(--rm3-chart-latency)";
+      return "var(--rm3-chart-azure)";
     case "p95LatencyMs":
       return "var(--rm3-chart-amber)";
     case "successCount":
@@ -155,7 +155,7 @@ function resolveMetricColorToken(metric: RuntimeTelemetryAnalyticsMetric): strin
       return "var(--rm3-chart-cache)";
     case "cacheBackedRequestRate":
     case "cacheHitTokenRate":
-      return "var(--rm3-chart-throughput)";
+      return "var(--rm3-chart-1)";
     default:
       return "var(--rm3-chart-1)";
   }
@@ -179,7 +179,7 @@ function resolveLabel(
   dimension: RuntimeTelemetryAnalyticsDimension,
   key: string,
 ): string {
-  return response.labels[dimension]?.[key] ?? key;
+  return response.identities?.[dimension]?.[key]?.label ?? response.labels[dimension]?.[key] ?? key;
 }
 
 function buildOtherAggregateSeries(

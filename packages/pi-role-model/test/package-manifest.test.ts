@@ -19,6 +19,7 @@ describe("pi-role-model package manifest", () => {
       repository?: { type?: string; url?: string; directory?: string };
       pi?: { extensions?: string[]; skills?: string[] };
       scripts?: Record<string, string>;
+      devDependencies?: Record<string, string>;
     };
 
     expect(manifest.name).toBe("@try-works/pi-role-model");
@@ -35,6 +36,24 @@ describe("pi-role-model package manifest", () => {
     expect(manifest.pi?.skills).toEqual(["skills"]);
     expect(manifest.scripts?.test).toContain("vitest run");
     expect(manifest.scripts?.build).toContain("tsc");
+    expect(manifest.devDependencies?.["@earendil-works/pi-coding-agent"]).toBe("0.84.2");
+  });
+
+  test("compiles against the exact installed Pi 0.84.2 public package", async () => {
+    const installed = JSON.parse(
+      await readFile(
+        join(packageRoot, "node_modules", "@earendil-works", "pi-coding-agent", "package.json"),
+        "utf8",
+      ),
+    ) as { name?: string; version?: string; exports?: Record<string, unknown> };
+
+    expect(installed).toEqual(
+      expect.objectContaining({
+        name: "@earendil-works/pi-coding-agent",
+        version: "0.84.2",
+      }),
+    );
+    expect(installed.exports).toHaveProperty(".");
   });
 
   test("does not reuse the known-stale npm version for endpoint-aware source", async () => {

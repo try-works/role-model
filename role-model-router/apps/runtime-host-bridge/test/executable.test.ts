@@ -627,4 +627,28 @@ describe("runtime-host-bridge executable packaging", () => {
       await rm(releaseDir, { recursive: true, force: true });
     }
   });
+
+  test("production release guard rejects the synthetic packaging credential sentinel (R7)", async () => {
+    const releaseDir = await mkdtemp(path.join(os.tmpdir(), "role-model-sentinel-release-"));
+    try {
+      await mkdir(path.join(releaseDir, "build", "client"), { recursive: true });
+      await writeFile(
+        path.join(releaseDir, "build", "client", "config.json"),
+        JSON.stringify({ upstream: "http://127.0.0.1/v1", credentialRef: "SP7_MOONSHOT_API_KEY" }),
+        "utf8",
+      );
+      await mkdir(path.join(releaseDir, "state"), { recursive: true });
+      await writeFile(
+        path.join(releaseDir, "state", "credentials.env"),
+        "SP7_MOONSHOT_API_KEY=packaging-validation-key\n",
+        "utf8",
+      );
+
+      await expect(packageSea.assertProductionReleaseHasNoQaArtifacts(releaseDir)).rejects.toThrow(
+        /QA\/mock data markers/,
+      );
+    } finally {
+      await rm(releaseDir, { recursive: true, force: true });
+    }
+  });
 });

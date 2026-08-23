@@ -1,0 +1,14 @@
+Commands:
+- corepack pnpm exec biome check src/downstream-openai.ts src/extension.ts src/types.ts test/effort-identity.test.ts test/extension.test.ts README.md package.json
+- corepack pnpm exec vitest run test/effort-identity.test.ts test/extension.test.ts
+- corepack pnpm run build
+- npm pack --dry-run --json
+
+Working directory: packages/pi-role-model
+Observed result: PASS
+
+Focused tests: 2 files, 15 tests passed.
+TypeScript build: PASS.
+Package dry run: @try-works/pi-role-model@0.1.5, with source, README, extension entrypoint, skills, and taxonomy data included; no test fixtures or credentials included.
+
+Configured endpoint result: the default endpoint exposes no Pi thinking-level map; fixed low/high/max endpoints expose only their own configured level. Generic runtime aliases keep their existing capability-driven behavior.

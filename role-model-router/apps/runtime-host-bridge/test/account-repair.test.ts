@@ -3,6 +3,18 @@ import os from "node:os";
 import path from "node:path";
 import { describe, expect, test } from "vitest";
 
+import {
+  resolveSqliteMemoryLocation,
+  upsertRuntimeEndpoint,
+  upsertRuntimeMaintenanceValue,
+} from "@role-model-router/sqlite-memory";
+
+import {
+  EXECUTION_CIRCUIT_BREAKER_MAINTENANCE_KEY,
+  createEmptyExecutionCircuitState,
+  recordExecutionCircuitFailure,
+  serializeExecutionCircuitState,
+} from "../src/execution-circuit-breaker.js";
 import { createRuntimeBridgeBackend } from "../src/index.js";
 
 const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
@@ -479,12 +491,17 @@ describe("account repair mutations", () => {
             ref: "api-key/moonshot/moonshot.personal.primary",
           },
           allowedModels: ["moonshot/kimi-k2.5"],
-          modelRoleBindings: [
+          modelRoleBindings: expect.arrayContaining([
             {
               modelId: "moonshot/kimi-k2.5",
               roleIds: ["writer"],
             },
-          ],
+            {
+              modelId: "moonshot/kimi-k2.5",
+              endpointId: activation.endpointId,
+              roleIds: ["writer"],
+            },
+          ]),
         }),
       );
 
@@ -497,12 +514,17 @@ describe("account repair mutations", () => {
               ref: "api-key/moonshot/moonshot.personal.primary",
             },
             allowedModels: ["moonshot/kimi-k2.5"],
-            modelRoleBindings: [
+            modelRoleBindings: expect.arrayContaining([
               {
                 modelId: "moonshot/kimi-k2.5",
                 roleIds: ["writer"],
               },
-            ],
+              {
+                modelId: "moonshot/kimi-k2.5",
+                endpointId: activation.endpointId,
+                roleIds: ["writer"],
+              },
+            ]),
           }),
         ]),
       );
@@ -683,9 +705,10 @@ describe("account repair mutations", () => {
     }
   });
 
-  test("codex subscription start returns a real device-code session and poll connects through managed Codex auth", async () => {
+  test("Codex Subscription OAuth completion admits endpoints without an automatic readiness execution", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `account-repair-openai-codex-${Date.now()}`);
     const scopeId = "account-repair-openai-codex-tests";
+    const databasePath = resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId });
     let networkRequests = 0;
     let managedCodexHome: string | null = null;
     const codexExecutionRequests: Array<{
@@ -834,6 +857,51 @@ describe("account repair mutations", () => {
       );
       expect(managedCodexHome).toBeTruthy();
 
+      // This represents an old admission-time availability failure. A later successful
+      // OAuth callback is authoritative for account authentication and must restore the
+      // endpoint to OAuth-confirmed healthy state without making a probe call.
+      upsertRuntimeEndpoint({
+        databasePath,
+        endpoint: {
+          endpointId: "openai.personal.codex-subscription.global.gpt-5.3-codex",
+          providerAccountId: "openai.personal.codex-subscription",
+          modelId: "chatgpt/gpt-5.3-codex",
+          region: "global",
+          endpointKind: "remote-openai-compatible",
+          servingSource: "remote-service",
+          lifecycleState: "degraded",
+          healthStatus: "provider-unavailable",
+        },
+      });
+      const quotaBlockedEndpointId =
+        "openai.personal.codex-subscription.global.gpt-5.3-codex-medium";
+      upsertRuntimeEndpoint({
+        databasePath,
+        endpoint: {
+          endpointId: quotaBlockedEndpointId,
+          providerAccountId: "openai.personal.codex-subscription",
+          modelId: "chatgpt/gpt-5.3-codex",
+          region: "global",
+          endpointKind: "remote-openai-compatible",
+          servingSource: "remote-service",
+          lifecycleState: "degraded",
+          healthStatus: "provider-unavailable",
+          reasoningEffort: "medium",
+        },
+      });
+      const quotaCircuit = recordExecutionCircuitFailure({
+        state: createEmptyExecutionCircuitState(),
+        endpointId: quotaBlockedEndpointId,
+        errorClass: "quota_exhausted",
+        nowMs: Date.now(),
+        trafficClass: "live",
+      }).state;
+      upsertRuntimeMaintenanceValue({
+        databasePath,
+        key: EXECUTION_CIRCUIT_BREAKER_MAINTENANCE_KEY,
+        value: serializeExecutionCircuitState(quotaCircuit),
+      });
+
       await expect(
         backend.pollProviderDeviceAuthorization({
           authRequestId: pending.authRequestId,
@@ -844,6 +912,28 @@ describe("account repair mutations", () => {
           providerAccountId: "openai.personal.codex-subscription",
           status: "connected",
         }),
+      );
+
+      await expect(backend.listEndpoints()).resolves.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            endpointId: "openai.personal.codex-subscription.global.gpt-5.3-codex",
+            status: "active",
+            healthStatus: "healthy",
+            routingEligible: true,
+            benchmarkEligible: true,
+          }),
+          expect.objectContaining({
+            endpointId: quotaBlockedEndpointId,
+            status: "degraded",
+            healthStatus: "provider-unavailable",
+            routingEligible: false,
+            benchmarkEligible: false,
+            executionCooldown: expect.objectContaining({
+              circuitState: "blocked_quota",
+            }),
+          }),
+        ]),
       );
 
       await expect(backend.listAccounts()).resolves.toEqual(
@@ -868,6 +958,7 @@ describe("account repair mutations", () => {
           providerAccountId: "openai.personal.codex-subscription",
           modelId: "chatgpt/gpt-5.3-codex",
           region: "global",
+          reasoningEffort: "high",
         }),
       ).resolves.toEqual(
         expect.objectContaining({
@@ -878,14 +969,63 @@ describe("account repair mutations", () => {
         }),
       );
 
+      await expect(
+        backend.activateEndpointBatch({
+          activationBatchId: "oauth-codex-admission-batch-001",
+          activations: [
+            {
+              providerAccountId: "openai.personal.codex-subscription",
+              modelId: "chatgpt/gpt-5.3-codex",
+              region: "global",
+              reasoningEffort: "xhigh",
+            },
+          ],
+        }),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          activationBatchId: "oauth-codex-admission-batch-001",
+          status: "committed",
+          endpoints: expect.arrayContaining([
+            expect.objectContaining({
+              endpointId: "openai.personal.codex-subscription.global.gpt-5.3-codex-xhigh",
+              status: "active",
+            }),
+          ]),
+        }),
+      );
+
       await expect(backend.listEndpoints()).resolves.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             endpointId: "openai.personal.codex-subscription.global.gpt-5.3-codex",
             providerAccountId: "openai.personal.codex-subscription",
             modelId: "chatgpt/gpt-5.3-codex",
+            status: "active",
+            healthStatus: "healthy",
+            routingEligible: true,
+            benchmarkEligible: true,
             toolCallingSupported: true,
             toolCallingStyle: "none",
+          }),
+          expect.objectContaining({
+            endpointId: "openai.personal.codex-subscription.global.gpt-5.3-codex-high",
+            providerAccountId: "openai.personal.codex-subscription",
+            modelId: "chatgpt/gpt-5.3-codex",
+            reasoningEffort: "high",
+            status: "active",
+            healthStatus: "healthy",
+            routingEligible: true,
+            benchmarkEligible: true,
+          }),
+          expect.objectContaining({
+            endpointId: "openai.personal.codex-subscription.global.gpt-5.3-codex-xhigh",
+            providerAccountId: "openai.personal.codex-subscription",
+            modelId: "chatgpt/gpt-5.3-codex",
+            reasoningEffort: "xhigh",
+            status: "active",
+            healthStatus: "healthy",
+            routingEligible: true,
+            benchmarkEligible: true,
           }),
         ]),
       );
@@ -959,7 +1099,11 @@ describe("account repair mutations", () => {
             lifecycleState: "execution-ready",
             reasonCode: "active-endpoint-present",
             blocking: false,
-            activeEndpointIds: ["openai.personal.codex-subscription.global.gpt-5.3-codex"],
+            activeEndpointIds: [
+              "openai.personal.codex-subscription.global.gpt-5.3-codex",
+              "openai.personal.codex-subscription.global.gpt-5.3-codex-high",
+              "openai.personal.codex-subscription.global.gpt-5.3-codex-xhigh",
+            ],
           }),
         ]),
       );
@@ -967,5 +1111,5 @@ describe("account repair mutations", () => {
       await backend.shutdown();
       await rm(runtimeStateRoot, { recursive: true, force: true });
     }
-  });
+  }, 30_000);
 });

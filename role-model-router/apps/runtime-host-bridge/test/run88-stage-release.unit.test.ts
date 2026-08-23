@@ -24,7 +24,7 @@ afterEach(async () =>
 );
 
 describe("Run 88 stage release boundary", () => {
-  it("requires the private distribution and release identity for stage and production packaging", () => {
+  it("requires the private distribution for every runnable packaging channel", () => {
     const trackB = { manifestSha256: "a".repeat(64) };
     for (const channel of ["stage", "production"] as const) {
       expect(
@@ -53,9 +53,16 @@ describe("Run 88 stage release boundary", () => {
       validatePairedReleasePackagingInputs({
         channel: "development",
         releaseId: undefined,
+        trackBRuntime: trackB,
+      }),
+    ).toEqual({ releaseId: undefined, trackBRuntime: trackB });
+    expect(() =>
+      validatePairedReleasePackagingInputs({
+        channel: "development",
+        releaseId: undefined,
         trackBRuntime: null,
       }),
-    ).toEqual({ releaseId: undefined, trackBRuntime: null });
+    ).toThrow(/private distribution/i);
   });
   it("public runtime probes are criterion-specific at every required layer", () => {
     const expected = [
@@ -166,6 +173,7 @@ describe("Run 88 stage release boundary", () => {
       endpoint: "http://127.0.0.1:3457",
       state_root_name: "role-model-runtime-stage",
       scope_id: "standalone-runtime-stage",
+      commit: "0".repeat(40),
       source_tree: "1".repeat(40),
       executable_sha256: "2".repeat(64),
       core_payload_sha256: "3".repeat(64),
@@ -184,6 +192,7 @@ describe("Run 88 stage release boundary", () => {
       "endpoint",
       "state_root_name",
       "scope_id",
+      "commit",
       "source_tree",
       "executable_sha256",
       "core_payload_sha256",
@@ -208,6 +217,7 @@ describe("Run 88 stage release boundary", () => {
       endpoint: "http://127.0.0.1:3457",
       state_root_name: "role-model-runtime-stage",
       scope_id: "standalone-runtime-stage",
+      commit: "0".repeat(40),
       source_tree: "1".repeat(40),
       executable_sha256: "2".repeat(64),
       core_payload_sha256: "3".repeat(64),
@@ -345,6 +355,9 @@ describe("Run 88 stage release boundary", () => {
       requestId: "request-1",
       routingDecisionId: "decision-1",
       endpointId: "endpoint-1",
+      modelId: "provider/model-1",
+      reasoningEffort: "high",
+      effortSource: "variant",
       run88Correlation: correlation,
     });
     let observed: Readonly<Record<string, unknown>> | undefined;
@@ -380,6 +393,7 @@ describe("Run 88 stage release boundary", () => {
         endpoint: "http://127.0.0.1:3457",
         state_root_name: "role-model-runtime-stage",
         scope_id: "standalone-runtime-stage",
+        commit: "0".repeat(40),
         release_id: `sha256:${"a".repeat(64)}`,
         private_distribution_sha256: "b".repeat(64),
         source_tree: "c".repeat(40),

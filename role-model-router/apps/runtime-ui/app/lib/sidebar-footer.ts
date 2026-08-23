@@ -1,5 +1,11 @@
 import type { ModelStatus, SidebarModel } from "@role-model/ui";
 
+import {
+  formatCompactEndpointDisplayName,
+  hasReasoningEffort,
+  readReasoningEffort,
+  readUpstreamModelId,
+} from "./effort-identity";
 import type {
   RouterSummary,
   RuntimeConfig,
@@ -44,7 +50,15 @@ function summarizeSidebarModelStatus(
   return "degraded";
 }
 
-/** Build sidebar model inventory rows (request counts from telemetry comparison rows). */
+/**
+ * Build sidebar rows for the active routing pool.
+ *
+ * A discovered vendor endpoint can be healthy enough to inspect while still being
+ * excluded from routing. Do not present that inventory as a pool member: every
+ * configured endpoint shown here must satisfy the same routing-eligibility
+ * boundary as the candidate-space chart. Historical telemetry with no longer
+ * known endpoint remains visible as a model-only row.
+ */
 export function buildSidebarModels(input: {
   readonly models: readonly RuntimeModelRecord[];
   readonly endpoints: readonly RuntimeEndpoint[];
@@ -52,29 +66,42 @@ export function buildSidebarModels(input: {
   readonly limit?: number;
 }): SidebarModel[] {
   const limit = input.limit ?? SIDEBAR_MODEL_LIMIT;
+  const allEndpointsByModel = new Map<string, RuntimeEndpoint[]>();
   const endpointsByModel = new Map<string, RuntimeEndpoint[]>();
   for (const endpoint of input.endpoints) {
     const modelId = endpoint.modelId;
     if (!modelId) {
       continue;
     }
-    const bucket = endpointsByModel.get(modelId) ?? [];
-    bucket.push(endpoint);
-    endpointsByModel.set(modelId, bucket);
+    const allBucket = allEndpointsByModel.get(modelId) ?? [];
+    allBucket.push(endpoint);
+    allEndpointsByModel.set(modelId, allBucket);
+    if (endpoint.routingEligible !== false) {
+      const routableBucket = endpointsByModel.get(modelId) ?? [];
+      routableBucket.push(endpoint);
+      endpointsByModel.set(modelId, routableBucket);
+    }
   }
 
   const requestCounts = new Map<string, number>();
+  const requestCountsByEndpoint = new Map<string, number>();
   for (const row of input.telemetryRows) {
     const modelId = row.modelId;
     if (!modelId) {
       continue;
     }
     requestCounts.set(modelId, (requestCounts.get(modelId) ?? 0) + (row.requestCount ?? 0));
+    requestCountsByEndpoint.set(
+      row.endpointId,
+      (requestCountsByEndpoint.get(row.endpointId) ?? 0) + (row.requestCount ?? 0),
+    );
   }
 
   const modelIds = new Set<string>();
   for (const model of input.models) {
-    if (model.id) {
+    const knownEndpoints = allEndpointsByModel.get(model.id) ?? [];
+    const routableEndpoints = endpointsByModel.get(model.id) ?? [];
+    if (model.id && (knownEndpoints.length === 0 || routableEndpoints.length > 0)) {
       modelIds.add(model.id);
     }
   }
@@ -82,18 +109,50 @@ export function buildSidebarModels(input: {
     modelIds.add(modelId);
   }
   for (const modelId of requestCounts.keys()) {
-    modelIds.add(modelId);
+    const knownEndpoints = allEndpointsByModel.get(modelId) ?? [];
+    const routableEndpoints = endpointsByModel.get(modelId) ?? [];
+    if (knownEndpoints.length === 0 || routableEndpoints.length > 0) {
+      modelIds.add(modelId);
+    }
   }
 
-  return [...modelIds]
-    .map((id) => {
-      const endpoints = endpointsByModel.get(id) ?? [];
-      return {
-        id,
-        status: summarizeSidebarModelStatus(endpoints),
-        requestCount: requestCounts.get(id) ?? 0,
-      } satisfies SidebarModel;
-    })
+  const modelById = new Map(input.models.map((model) => [model.id, model] as const));
+  const rows: SidebarModel[] = [];
+  for (const id of modelIds) {
+    const endpoints = endpointsByModel.get(id) ?? [];
+    const model = modelById.get(id);
+    const modelEffort = readReasoningEffort(model);
+    const effortSiblings =
+      endpoints.some((endpoint) => hasReasoningEffort(endpoint)) || modelEffort;
+    if (effortSiblings && endpoints.length > 0) {
+      const base = model?.displayName ?? (readUpstreamModelId(model) ?? id).split("/").at(-1) ?? id;
+      for (const endpoint of endpoints) {
+        const endpointEffort = readReasoningEffort(endpoint) ?? modelEffort;
+        rows.push({
+          id: formatCompactEndpointDisplayName({
+            base: endpoint.displayName ?? base,
+            reasoningEffort: endpointEffort,
+          }),
+          status: summarizeSidebarModelStatus([endpoint]),
+          requestCount: requestCountsByEndpoint.get(endpoint.endpointId) ?? 0,
+        });
+      }
+      continue;
+    }
+    rows.push({
+      id,
+      status: summarizeSidebarModelStatus(endpoints),
+      requestCount:
+        endpoints.length > 0
+          ? endpoints.reduce(
+              (count, endpoint) => count + (requestCountsByEndpoint.get(endpoint.endpointId) ?? 0),
+              0,
+            )
+          : (requestCounts.get(id) ?? 0),
+    });
+  }
+
+  return rows
     .sort(
       (left, right) =>
         right.requestCount - left.requestCount || left.id.localeCompare(right.id, "en"),

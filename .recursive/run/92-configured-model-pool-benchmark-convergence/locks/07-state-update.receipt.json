@@ -1,0 +1,20 @@
+{
+  "artifact": "07-state-update.md",
+  "artifact_hash": "1653be364b38492631cbeda520e626c4ddc89fa8c690cf51b0b08ce2d336f87e",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\92-configured-model-pool-benchmark-convergence\\.recursive\\run\\92-configured-model-pool-benchmark-convergence\\07-state-update.md",
+  "locked_at": "2026-08-21T13:30:29Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "fbe4abc4ed111ba799a04861f8e6fb9e45baf6f52a164426060ac40389a3b0e6",
+    "00-worktree.md": "ca77a34cfb2cb2a914f9bbe6c7df94621165ce1c5ae882a6d96c9f02c7fc5c53",
+    "01-as-is.md": "a0b8b776252946b46a2efbe3c41cfd1c1e9e1e09c6335c9178084d67935a1d40",
+    "01.5-root-cause.md": "00a2378ebd9397d6ef0cafc6eef03b5bd1aa4f6d855807acdc8ceebea4b49f45",
+    "02-to-be-plan.md": "9c0b336af64bc96cf3135da29c4167ce4610759f9203c7d9940296013822ceb9",
+    "03-implementation-summary.md": "b7f005c51097986e815f2632d9376b028d3eedb773d9ce59da91b0a10f8bfc17",
+    "03.5-code-review.md": "fbe60385c6d25276b9a3051d8d77c3f8b2c3bcca4615e1f7213ed4798523da02",
+    "04-test-summary.md": "dd95e3bfc7ac18e3285f0fc7205fad6103da648c74a58f43e957a97b2e9fba2d",
+    "05-manual-qa.md": "dbbf8a7d7860e8d782386cd858b35f1b4c3fdfd504d2d8a437abbabaa2abc95b",
+    "06-decisions-update.md": "a826302ff0314f2765cb0611e99dafca8e0deeb40dc1536282f8176ec82b9c2c"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "e593b5e666ace36f61251a8a63aa10087943bd2cd8a430ff4b964ab2ca629315"
+}

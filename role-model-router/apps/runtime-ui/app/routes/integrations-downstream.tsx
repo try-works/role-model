@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { Badge, ErrorState, LoadingState, SectionCard } from "../components/page-primitives";
+import { ErrorState, LoadingState, SectionCard } from "../components/page-primitives";
 import {
   codeBlockClassName,
   compactTitleClassName,
@@ -86,14 +86,13 @@ export default function IntegrationsDownstreamRoute() {
             <div className={`${mutedPanelClassName} min-w-0 p-4`}>
               <p className={compactTitleClassName}>Available models</p>
               <div className="mt-3 flex min-w-0 flex-wrap gap-2">
-                {guide.availableModels.map((modelId) => (
-                  <Badge
-                    key={modelId}
-                    className="max-w-full whitespace-normal leading-4"
-                    tone={modelId === provider.setup.recommendedModel ? "accent" : "neutral"}
+                {guide.availableModels.map((modelLabel) => (
+                  <span
+                    key={modelLabel}
+                    className="max-w-full rounded-md border border-[var(--rm-border)] px-2 py-1 text-xs leading-4 text-[var(--rm-fg)]"
                   >
-                    <span className="min-w-0 break-all">{modelId}</span>
-                  </Badge>
+                    <span className="min-w-0 break-all">{modelLabel}</span>
+                  </span>
                 ))}
               </div>
             </div>

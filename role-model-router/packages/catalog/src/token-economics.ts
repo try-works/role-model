@@ -8,6 +8,7 @@ export interface TokenEconomics {
   readonly outputPer1M: number | null;
   readonly cacheReadInputPer1M?: number | null;
   readonly cacheWriteInputPer1M?: number | null;
+  readonly costDimensionsPer1M?: Readonly<Record<string, number>>;
   readonly source: TokenEconomicsSource;
   readonly currency?: string;
 }
@@ -94,8 +95,10 @@ export function collectPricingLookupIds(modelId: string): readonly string[] {
     ids.push(value);
   };
 
-  add(resolveCanonicalModelId(modelId));
   add(modelId);
+  // An exact provider row is authoritative for that provider. Alias/canonical
+  // lookup is fallback-only so a relay's explicit price is never overwritten.
+  add(resolveCanonicalModelId(modelId));
 
   const parts = modelId.split("/").filter((part) => part.length > 0);
   for (let index = 1; index < parts.length; index += 1) {
@@ -258,6 +261,7 @@ export function resolveTokenEconomics(input: {
     canonicalModelId: priced.modelId,
     inputPer1M: priced.pricing.inputPer1M,
     outputPer1M: priced.pricing.outputPer1M,
+    costDimensionsPer1M: priced.pricing.costDimensionsPer1M,
     source: "catalog",
     currency: priced.pricing.currency,
   };

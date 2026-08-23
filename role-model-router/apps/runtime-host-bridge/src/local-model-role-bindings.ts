@@ -70,6 +70,16 @@ function resolveAssignedRoleIds(input: {
   return [...binding.roleIds];
 }
 
+function findEndpointRoleBinding(
+  bindings: readonly ModelRoleAssignmentBinding[] | undefined,
+  endpoint: RuntimeEndpointRef,
+): ModelRoleAssignmentBinding | undefined {
+  return (
+    bindings?.find((entry) => entry.endpointId === endpoint.endpointId) ??
+    bindings?.find((entry) => entry.endpointId === undefined && entry.modelId === endpoint.modelId)
+  );
+}
+
 export function buildAccountEndpointRoleBindings(input: {
   readonly staticBindings: readonly RuntimeRoleBindingRecord[];
   readonly runtimeEndpoints: readonly RuntimeEndpointRef[];
@@ -93,9 +103,7 @@ export function buildAccountEndpointRoleBindings(input: {
     if (!account) {
       return [];
     }
-    const modelBinding = account.modelRoleBindings?.find(
-      (entry) => entry.modelId === endpoint.modelId,
-    );
+    const modelBinding = findEndpointRoleBinding(account.modelRoleBindings, endpoint);
     const endpointCapabilities = capabilitiesByEndpointId.get(endpoint.endpointId) ?? [];
     return resolveAssignedRoleIds({
       binding: modelBinding,
@@ -207,9 +215,7 @@ export function resolveEndpointRoleIds(input: {
     }
     return [
       ...resolveAssignedRoleIds({
-        binding: account.modelRoleBindings?.find(
-          (entry) => entry.modelId === runtimeEndpoint.modelId,
-        ),
+        binding: findEndpointRoleBinding(account.modelRoleBindings, runtimeEndpoint),
         roleDefinitions: input.roleDefinitions,
       }),
     ].sort(input.compareText);

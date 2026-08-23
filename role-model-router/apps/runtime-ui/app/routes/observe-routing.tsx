@@ -13,7 +13,7 @@ import type {
   RuntimeTelemetryAnalyticsFilters,
   RuntimeTelemetryAnalyticsResponse,
 } from "../lib/runtime-api";
-import { fetchTelemetryAnalytics, subscribeTelemetryStream } from "../lib/runtime-api";
+import { fetchTelemetryAnalytics, subscribeRuntimeRefreshStream } from "../lib/runtime-api";
 import {
   buildQuerySnapshot,
   createStaleChartDiagnostic,
@@ -39,7 +39,10 @@ const routingBreakdownOptions = [
     .filter((option) =>
       [
         "sourceType",
+        "endpointId",
         "modelId",
+        "reasoningEffort",
+        "effortSource",
         "selectedStrategy",
         "taxonomyGroupId",
         "taxonomyRoleId",
@@ -82,12 +85,13 @@ export default function ObserveRoutingRoute() {
 
   const timeRange = (searchParams.get("range") as TelemetryTimeRangeValue) || "week";
   const breakdownValue =
-    (searchParams.get("breakdown") as "" | RuntimeTelemetryAnalyticsDimension) ||
-    "selectedStrategy";
+    (searchParams.get("breakdown") as "" | RuntimeTelemetryAnalyticsDimension) || "endpointId";
   const sourceFilter = (searchParams.get("source") as "all" | "local" | "remote") || "all";
   const difficulty =
     (searchParams.get("difficulty") as "all" | "easy" | "medium" | "hard") || "all";
   const selectedStrategy = searchParams.get("strategy") || "";
+  const reasoningEffort = searchParams.get("effort") || "";
+  const effortSource = searchParams.get("effortSource") || "";
   const taxonomyGroupId = searchParams.get("taxGroup") || "";
   const requestedRoleId = searchParams.get("roleId") || "";
   const taxonomyRoleId = searchParams.get("taxRole") || "";
@@ -118,6 +122,8 @@ export default function ObserveRoutingRoute() {
   const filters: RuntimeTelemetryAnalyticsFilters = useMemo(() => {
     const normalizedRequestedRoleId = normalizeOptionalId(requestedRoleId);
     const normalizedSelectedStrategy = normalizeOptionalId(selectedStrategy);
+    const normalizedReasoningEfforts = normalizeOptionalCsvIds(reasoningEffort);
+    const normalizedEffortSources = normalizeOptionalCsvIds(effortSource);
     const normalizedTaxonomyGroupId = normalizeOptionalId(taxonomyGroupId);
     const normalizedTaxonomyRoleId = normalizeOptionalId(taxonomyRoleId);
     const normalizedTaxonomyTaskType = normalizeOptionalId(taxonomyTaskType);
@@ -131,6 +137,8 @@ export default function ObserveRoutingRoute() {
       ...(difficulty === "all" ? {} : { difficultyBuckets: [difficulty] }),
       ...(normalizedRequestedRoleId ? { requestedRoleIds: [normalizedRequestedRoleId] } : {}),
       ...(normalizedSelectedStrategy ? { selectedStrategies: [normalizedSelectedStrategy] } : {}),
+      ...(normalizedReasoningEfforts ? { reasoningEfforts: normalizedReasoningEfforts } : {}),
+      ...(normalizedEffortSources ? { effortSources: normalizedEffortSources } : {}),
       ...(normalizedTaxonomyGroupId ? { taxonomyGroupIds: [normalizedTaxonomyGroupId] } : {}),
       ...(normalizedTaxonomyRoleId ? { taxonomyRoleIds: [normalizedTaxonomyRoleId] } : {}),
       ...(normalizedTaxonomyTaskType ? { taxonomyTaskTypes: [normalizedTaxonomyTaskType] } : {}),
@@ -149,7 +157,9 @@ export default function ObserveRoutingRoute() {
     };
   }, [
     difficulty,
+    effortSource,
     requestedRoleId,
+    reasoningEffort,
     selectedStrategy,
     sourceFilter,
     taxonomyCapabilityIds,
@@ -169,6 +179,8 @@ export default function ObserveRoutingRoute() {
   const hasAdvancedFilters =
     requestedRoleId.trim().length > 0 ||
     selectedStrategy.trim().length > 0 ||
+    reasoningEffort.trim().length > 0 ||
+    effortSource.trim().length > 0 ||
     taxonomyGroupId.trim().length > 0 ||
     taxonomyRoleId.trim().length > 0 ||
     taxonomyTaskType.trim().length > 0 ||
@@ -232,7 +244,7 @@ export default function ObserveRoutingRoute() {
 
     const dispose = startDeferredLiveRefresh({
       load,
-      subscribe: (onEvent) => subscribeTelemetryStream(onEvent),
+      subscribe: (onEvent) => subscribeRuntimeRefreshStream(onEvent),
     });
 
     return () => {
@@ -335,6 +347,20 @@ export default function ObserveRoutingRoute() {
               onChange={(value) => updateParam("taxRole", value)}
               placeholder="e.g. coder"
               value={taxonomyRoleId}
+            />
+          </div>
+          <div className="grid gap-4 xl:grid-cols-2">
+            <TelemetryTextField
+              label="Reasoning efforts"
+              onChange={(value) => updateParam("effort", value)}
+              placeholder="Comma-separated values, e.g. high,max"
+              value={reasoningEffort}
+            />
+            <TelemetryTextField
+              label="Effort sources"
+              onChange={(value) => updateParam("effortSource", value)}
+              placeholder="Comma-separated values, e.g. variant,client"
+              value={effortSource}
             />
           </div>
           <div className="grid gap-4 xl:grid-cols-4">

@@ -1,0 +1,20 @@
+{
+  "artifact": "08-memory-impact.md",
+  "artifact_hash": "43569051e5470e208e00b86a5780a7e681df0bcea6a65f1d80c75045228c2d50",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\94-stage-manifest-commit-identity\\.recursive\\run\\94-stage-manifest-commit-identity\\08-memory-impact.md",
+  "locked_at": "2026-08-23T09:03:44Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "ed975a6c59df64523c025dc34b28f181b90ee0a340e17d7f6deb4d264e748ab5",
+    "00-worktree.md": "7d0672a3f5bedd8e6778b895308ae8a41b925eb8dfd16d9041b7ad089a2fc9c4",
+    "01-as-is.md": "31dc998fc9eafb376ef9c3b7766cf7cf3852aa298d6cf657e54899b153607335",
+    "01.5-root-cause.md": "cddc54979227b0a7c37d11f2d039ebe6d518157529accb075a03f4f10b3c1750",
+    "02-to-be-plan.md": "8ef1a072a9d6b5f42d24fdf983a0239fc39c4e0bf7dae50cd52edc7f94623605",
+    "03-implementation-summary.md": "9a9c595de0a160b040db299d16bdf12b928b0aea214587cd903ad4c29e3fe8b4",
+    "04-test-summary.md": "d6b6055680d51a5e23c4c72b29a2439fc86a07e39862e7167f55c3dd2dcb5417",
+    "05-manual-qa.md": "523fcca1ca3715d3afacac7cbf17171c840fbe03259bc0d955f00eb74e536461",
+    "06-decisions-update.md": "7bf4bc577463dfcb0f74ddf9de19cb4e45d09485ad3c7ba9196e0399cada38bc",
+    "07-state-update.md": "be7b4075244691fc4fd184807ae71b6e694214bf9ca93aa469f2717af8d7c74c"
+  },
+  "previous_receipt_hash": "567df825d3b1a0b1cc36715221891703468dc2b873eb4f1ae37e62f115b50b66",
+  "receipt_hash": "336195ce3d1e6a86fa08f848e2e924562da7932934cb01d3a976b5db47ef985c"
+}

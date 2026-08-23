@@ -1,0 +1,42 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/94-stage-manifest-commit-identity/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/runtime-version.test.ts (6 tests | 1 failed) 48ms
+   ✓ resolveRuntimeVersionInfo > prefers packaged release manifest metadata over fallback sources 14ms
+   ✓ resolveRuntimeVersionInfo > falls back to release-tag environment metadata when no manifest exists 2ms
+   ✓ resolveRuntimeVersionInfo > reports the latest release tag separately from a divergent local build identity 4ms
+   ✓ resolveRuntimeVersionInfo > prefers explicit build date over git commit date for local packaged builds 4ms
+   ✓ resolveRuntimeVersionInfo > preserves the CI commit when a shallow branch build has no release tag 6ms
+   × resolveRuntimeVersionInfo > rejects a stage package without an immutable commit identity 16ms
+     → expected [Function] to throw an error
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/runtime-version.test.ts > resolveRuntimeVersionInfo > rejects a stage package without an immutable commit identity
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ ❯ test/runtime-version.test.ts:195:7
+    193|         track_b_runtime: { manifest_sha256: "b".repeat(64) },
+    194|       }),
+    195|     ).toThrow(/commit identity/i);
+       |       ^
+    196|   });
+    197| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  16:41:49
+   Duration  1.16s (transform 139ms, setup 0ms, collect 141ms, tests 48ms, environment 0ms, prepare 372ms)
+
+undefined
+D:\DEV\role-model\.worktrees\94-stage-manifest-commit-identity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/runtime-version.test.ts

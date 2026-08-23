@@ -57,9 +57,14 @@ function lookupRegistrySourceHealth(
   endpointId: string,
   sources: RegistrySources,
 ): string | undefined {
-  const cloudSource = sources.cloud.find((entry) => entry.endpointId === endpointId);
-  if (cloudSource) {
-    return cloudSource.healthStatus;
+  // Runtime endpoint state is appended after static sources by the bridge. Walk
+  // backwards so its durable admission/health result overrides stale catalog
+  // metadata for the same canonical endpoint identity.
+  for (let index = sources.cloud.length - 1; index >= 0; index -= 1) {
+    const cloudSource = sources.cloud[index];
+    if (cloudSource?.endpointId === endpointId) {
+      return cloudSource.healthStatus;
+    }
   }
   const localSource = sources.local.find((entry) => entry.endpointId === endpointId);
   if (localSource) {
@@ -161,7 +166,12 @@ function inventoryEntriesForAlias(
   inventory: RoutableInventory,
 ): readonly RoutableInventoryEntry[] {
   const aliasModelIds = new Set(alias.modelIds);
-  return inventory.entries.filter((entry) => aliasModelIds.has(entry.modelId));
+  const expandedEntries = inventory.entries.filter((entry) => aliasModelIds.has(entry.modelId));
+  if (alias.endpointIds === undefined) {
+    return expandedEntries;
+  }
+  const allowedEndpointIds = new Set(alias.endpointIds);
+  return expandedEntries.filter((entry) => allowedEndpointIds.has(entry.endpointId));
 }
 
 export function resolveAliasAllowEndpoints(

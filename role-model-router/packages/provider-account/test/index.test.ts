@@ -574,4 +574,76 @@ describe("validateProviderAccounts", () => {
       },
     ]);
   });
+
+  test("accepts distinct endpoint-instance role bindings for effort siblings of one model", () => {
+    const account = {
+      providerAccountId: "deepseek.personal.primary",
+      providerId: "deepseek",
+      providerKind: "provider-openai",
+      orgScope: "personal",
+      accountScope: "primary",
+      credentialRef: { backend: "env", ref: "DEEPSEEK_API_KEY" },
+      authMode: "api-key-static",
+      regionPolicy: { mode: "prefer", regions: ["global"] },
+      baseUrlOverride: null,
+      allowedModels: ["deepseek/deepseek-v4-flash"],
+      modelRoleBindings: [
+        {
+          modelId: "deepseek/deepseek-v4-flash",
+          endpointId: "deepseek.personal.primary.global.deepseek-v4-flash-high",
+          roleIds: ["coder"],
+        },
+        {
+          modelId: "deepseek/deepseek-v4-flash",
+          endpointId: "deepseek.personal.primary.global.deepseek-v4-flash-max",
+          roleIds: ["analyst"],
+        },
+      ],
+      deniedModels: [],
+      entitlementTags: [],
+      budgetPolicyRef: "budget.default",
+      quotaPolicyRef: "quota.default",
+      status: "active",
+      healthStatus: "healthy",
+      rotationState: "stable",
+    };
+    const result = validateProviderAccounts({
+      catalog: {
+        source: {
+          vendor: "models.dev",
+          commit: "run91",
+          capturedAt: "2026-08-21T00:00:00Z",
+          schemaVersion: "models.dev.v1",
+        },
+        providers: [
+          {
+            providerId: "deepseek",
+            displayName: "DeepSeek",
+            npmPackage: "",
+            providerKind: "provider-openai",
+            authFamily: "api-key",
+            adapterFamily: "ai-sdk-openai-compatible",
+            apiBase: "https://api.deepseek.com/v1",
+            docsUrl: null,
+            envVars: ["DEEPSEEK_API_KEY"],
+            supportedAuthModes: ["api-key-static"],
+            controlPlaneRequirements: [],
+            localOverrideApplied: true,
+            upstreamProvenance: {
+              vendor: "models.dev",
+              commit: "run91",
+              capturedAt: "2026-08-21T00:00:00Z",
+              schemaVersion: "models.dev.v1",
+            },
+          },
+        ],
+        models: [],
+      } as Parameters<typeof validateProviderAccounts>[0]["catalog"],
+      allowedRoleIds: ["coder", "analyst"],
+      accounts: [account],
+    });
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.accounts[0]?.modelRoleBindings).toEqual(account.modelRoleBindings);
+  });
 });

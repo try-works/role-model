@@ -528,6 +528,71 @@ describe("buildWorkbenchModelOptions", () => {
       { label: "GPT 4.1 Mini Fast", value: "openai/gpt-4.1-mini-fast" },
     ]);
   });
+
+  test("lists routing-eligible effort endpoint instances as distinct Studio options", () => {
+    expect(
+      buildWorkbenchModelOptions(
+        [
+          {
+            id: "deepseek/deepseek-v4-flash",
+            displayName: "DeepSeek V4 Flash",
+            endpoint_ids: [
+              "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+              "deepseek.personal.primary.global.deepseek-v4-flash",
+              "deepseek.personal.primary.global.deepseek-v4-flash-high",
+              "deepseek.personal.primary.global.deepseek-v4-flash-max",
+            ],
+          },
+        ],
+        [
+          {
+            endpointId: "deepseek.litellm.global.deepseek-deepseek-v4-flash",
+            modelId: "deepseek/deepseek-v4-flash",
+            providerId: "deepseek",
+            displayName: "DeepSeek V4 Flash",
+            routingEligible: false,
+          },
+          {
+            endpointId: "deepseek.personal.primary.global.deepseek-v4-flash",
+            modelId: "deepseek/deepseek-v4-flash",
+            providerId: "deepseek",
+            displayName: "DeepSeek V4 Flash",
+            reasoningEffort: null,
+            routingEligible: true,
+          },
+          {
+            endpointId: "deepseek.personal.primary.global.deepseek-v4-flash-high",
+            modelId: "deepseek/deepseek-v4-flash",
+            providerId: "deepseek",
+            displayName: "DeepSeek V4 Flash",
+            reasoningEffort: "high",
+            routingEligible: true,
+          },
+          {
+            endpointId: "deepseek.personal.primary.global.deepseek-v4-flash-max",
+            modelId: "deepseek/deepseek-v4-flash",
+            providerId: "deepseek",
+            displayName: "DeepSeek V4 Flash",
+            reasoningEffort: "max",
+            routingEligible: true,
+          },
+        ],
+      ),
+    ).toEqual([
+      {
+        label: "DeepSeek V4 Flash",
+        value: "deepseek.personal.primary.global.deepseek-v4-flash",
+      },
+      {
+        label: "DeepSeek V4 Flash (High)",
+        value: "deepseek.personal.primary.global.deepseek-v4-flash-high",
+      },
+      {
+        label: "DeepSeek V4 Flash (Max)",
+        value: "deepseek.personal.primary.global.deepseek-v4-flash-max",
+      },
+    ]);
+  });
 });
 
 describe("buildWorkbenchEndpointOptions", () => {
@@ -708,6 +773,73 @@ describe("buildConfiguredModelCards", () => {
     ]);
   });
 
+  test("keeps role eligibility separate for effort endpoint siblings", () => {
+    const cards = buildConfiguredModelCards({
+      models: [
+        {
+          id: "deepseek/deepseek-v4-flash",
+          endpoint_ids: [
+            "deepseek.personal.global.deepseek-v4-flash-high",
+            "deepseek.personal.global.deepseek-v4-flash-max",
+          ],
+          displayName: "DeepSeek V4 Flash",
+        },
+      ],
+      endpoints: [
+        {
+          endpointId: "deepseek.personal.global.deepseek-v4-flash-high",
+          modelId: "deepseek/deepseek-v4-flash",
+          providerAccountId: "deepseek.personal",
+          providerId: "deepseek",
+          reasoningEffort: "high",
+          roleIds: [],
+          status: "active",
+          servingSource: "remote-service",
+        },
+        {
+          endpointId: "deepseek.personal.global.deepseek-v4-flash-max",
+          modelId: "deepseek/deepseek-v4-flash",
+          providerAccountId: "deepseek.personal",
+          providerId: "deepseek",
+          reasoningEffort: "max",
+          roleIds: [],
+          status: "active",
+          servingSource: "remote-service",
+        },
+      ],
+      accounts: [
+        {
+          providerAccountId: "deepseek.personal",
+          providerId: "deepseek",
+          modelRoleBindings: [
+            {
+              modelId: "deepseek/deepseek-v4-flash",
+              endpointId: "deepseek.personal.global.deepseek-v4-flash-high",
+              roleIds: ["coder"],
+            },
+            {
+              modelId: "deepseek/deepseek-v4-flash",
+              endpointId: "deepseek.personal.global.deepseek-v4-flash-max",
+              roleIds: ["architect"],
+            },
+          ],
+        },
+      ],
+      controller: null,
+    });
+
+    expect(cards).toEqual([
+      expect.objectContaining({
+        endpointId: "deepseek.personal.global.deepseek-v4-flash-high",
+        roleIds: ["coder"],
+      }),
+      expect.objectContaining({
+        endpointId: "deepseek.personal.global.deepseek-v4-flash-max",
+        roleIds: ["architect"],
+      }),
+    ]);
+  });
+
   test("keeps request counts unset when request evidence is still deferred", () => {
     expect(
       buildConfiguredModelCards({
@@ -827,6 +959,8 @@ describe("buildSelectedModelMetaPanel", () => {
         latencyP50Ms: 710,
         latencyP95Ms: 1680,
         meanLatencyMs: 910,
+        liveFailureRate: 0.025,
+        liveSampleCount: 40,
         difficultyMix: "40 / 40 / 20",
         routingHint: "Fallback for refactor tasks",
       }),
@@ -845,10 +979,12 @@ describe("buildSelectedModelMetaPanel", () => {
         { label: "Output", value: "$15.00 / 1M" },
       ],
       benchmark: [
-        { label: "Overall", value: "0.90" },
-        { label: "Latency p50", value: "710 ms" },
-        { label: "Latency p95", value: "1.68 s" },
-        { label: "Mean latency", value: "910 ms" },
+        { label: "Overall", value: "90%" },
+        { label: "Live latency p50", value: "710 ms" },
+        { label: "Live latency p95", value: "1.68 s" },
+        { label: "Live mean latency", value: "910 ms" },
+        { label: "Live failure rate", value: "2.5%" },
+        { label: "Live samples", value: "40" },
         { label: "Difficulty mix", value: "40 / 40 / 20" },
         { label: "Routing", value: "Fallback for refactor tasks" },
       ],
@@ -914,11 +1050,14 @@ describe("buildEndpointCatalogRows", () => {
           endpointId: "moonshot.litellm.global.moonshot-kimi-k2-6",
           modelId: "moonshot/kimi-k2.6",
           providerId: "moonshot",
+          providerAccountId: "moonshot.litellm",
           sourceType: "remote",
           servingSource: "vendor-litellm",
           endpointKind: "remote_api",
           status: "active",
           healthStatus: "healthy",
+          routingEligible: false,
+          benchmarkEligible: false,
         },
         {
           endpointId: "llama-swap.local.lfm2.5-1.2b-instruct",
@@ -968,11 +1107,14 @@ describe("buildEndpointCatalogRows", () => {
         endpointId: "moonshot.litellm.global.moonshot-kimi-k2-6",
         modelId: "moonshot/kimi-k2.6",
         providerLabel: "moonshot",
+        providerAccountId: "moonshot.litellm",
         sourceLabel: "Remote",
         servingSource: "vendor-litellm",
         endpointKind: "remote_api",
         status: "active",
         healthStatus: "healthy",
+        routingEligible: false,
+        benchmarkEligible: false,
       },
     ]);
   });
@@ -1513,6 +1655,106 @@ describe("buildProviderMaintenanceRows", () => {
 });
 
 describe("buildConfiguredRemoteConnectionRows", () => {
+  test("falls back to canonical model identity when an endpoint or catalog display name is blank", () => {
+    const rows = buildConfiguredRemoteConnectionRows({
+      accounts: [
+        {
+          providerAccountId: "deepseek.personal.primary",
+          providerId: "deepseek",
+          authMode: "api-key-static",
+        },
+      ],
+      endpoints: [
+        {
+          endpointId: "deepseek.personal.primary.global.deepseek-v4-flash-high",
+          providerAccountId: "deepseek.personal.primary",
+          providerId: "deepseek",
+          modelId: "deepseek/deepseek-v4-flash",
+          displayName: "   ",
+          sourceType: "remote",
+          servingSource: "remote-service",
+          status: "active",
+          healthStatus: "healthy",
+          routingEligible: true,
+          benchmarkEligible: true,
+          reasoningEffort: "high",
+        },
+      ],
+      models: [
+        {
+          id: "deepseek/deepseek-v4-flash",
+          displayName: "",
+          endpoint_ids: ["deepseek.personal.primary.global.deepseek-v4-flash-high"],
+        },
+      ],
+    });
+
+    expect(rows[0]?.endpoints).toEqual([
+      expect.objectContaining({ displayName: "Deepseek V4 Flash (High)" }),
+    ]);
+  });
+
+  test("excludes managed LiteLLM adapter records from user-configured provider connections", () => {
+    const rows = buildConfiguredRemoteConnectionRows({
+      accounts: [
+        {
+          providerAccountId: "deepseek.litellm",
+          providerId: "deepseek",
+          authMode: "api-key-static",
+        },
+        {
+          providerAccountId: "deepseek.personal.primary",
+          providerId: "deepseek",
+          authMode: "api-key-static",
+        },
+      ],
+      endpoints: [
+        {
+          endpointId: "deepseek.litellm.global.deepseek-v4-flash",
+          providerAccountId: "deepseek.litellm",
+          providerId: "deepseek",
+          modelId: "deepseek/deepseek-v4-flash",
+          sourceType: "remote",
+          servingSource: "vendor-litellm",
+          status: "active",
+          healthStatus: "healthy",
+          routingEligible: false,
+          benchmarkEligible: false,
+        },
+        {
+          endpointId: "deepseek.personal.primary.global.deepseek-v4-flash-low",
+          providerAccountId: "deepseek.personal.primary",
+          providerId: "deepseek",
+          modelId: "deepseek/deepseek-v4-flash",
+          sourceType: "remote",
+          servingSource: "remote-service",
+          status: "active",
+          healthStatus: "healthy",
+          routingEligible: true,
+          benchmarkEligible: true,
+          reasoningEffort: "low",
+        },
+      ],
+      models: [
+        {
+          id: "deepseek/deepseek-v4-flash",
+          displayName: "DeepSeek V4 Flash",
+          endpoint_ids: [
+            "deepseek.litellm.global.deepseek-v4-flash",
+            "deepseek.personal.primary.global.deepseek-v4-flash-low",
+          ],
+        },
+      ],
+    });
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      providerAccountId: "deepseek.personal.primary",
+      endpointCount: 1,
+      endpoints: [expect.objectContaining({ displayName: "DeepSeek V4 Flash (Low)" })],
+    });
+  });
+
   test("shows only configured remote endpoints and their models, excluding maintenance-only and local accounts", () => {
     expect(
       buildConfiguredRemoteConnectionRows({
@@ -1639,6 +1881,47 @@ describe("buildConfiguredRemoteConnectionRows", () => {
       nextProbeAtMs: nowMs + 5_000,
     });
   });
+
+  test("keeps selectable effort levels available to the providers surface", () => {
+    const [row] = buildConfiguredRemoteConnectionRows({
+      accounts: [
+        {
+          providerAccountId: "deepseek.personal.primary",
+          providerId: "deepseek",
+          authMode: "api-key-static",
+        },
+      ],
+      endpoints: [
+        {
+          endpointId: "deepseek.personal.primary.global.deepseek-v4-pro-high",
+          providerAccountId: "deepseek.personal.primary",
+          providerId: "deepseek",
+          modelId: "deepseek/deepseek-v4-pro",
+          sourceType: "remote",
+          status: "active",
+          healthStatus: "healthy",
+          routingEligible: true,
+          benchmarkEligible: true,
+          reasoningEffort: "high",
+          reasoningEffortLevels: ["high", "max"],
+        },
+      ],
+      models: [
+        {
+          id: "deepseek/deepseek-v4-pro",
+          displayName: "DeepSeek V4 Pro",
+          endpoint_ids: ["deepseek.personal.primary.global.deepseek-v4-pro-high"],
+          reasoningEffortLevels: ["high", "max"],
+        },
+      ],
+    });
+
+    expect(row?.endpoints[0]).toMatchObject({
+      displayName: "DeepSeek V4 Pro (High)",
+      reasoningEffort: "high",
+      reasoningEffortLevels: ["high", "max"],
+    });
+  });
 });
 
 describe("summarizeWorkbenchResult", () => {
@@ -1743,6 +2026,7 @@ describe("buildDownstreamProviderGuide", () => {
           },
           {
             id: "openai/gpt-4.1-mini-fast",
+            reasoningEffort: "high",
           },
         ],
         setup: {
@@ -1763,7 +2047,7 @@ describe("buildDownstreamProviderGuide", () => {
         { label: "Chat endpoint", value: "http://127.0.0.1:8091/v1/chat/completions" },
         { label: "Auth header", value: "Authorization: Bearer role-model-local" },
       ],
-      availableModels: ["moonshot/kimi-k2.5", "openai/gpt-4.1-mini-fast"],
+      availableModels: ["Kimi K2.5", "Gpt 4.1 Mini Fast (High)"],
       opencodeSteps: [
         "Choose an OpenAI-compatible provider entry in the downstream client.",
         "Set the base URL to http://127.0.0.1:8091 (most clients) or http://127.0.0.1:8091/v1 (clients that expect /v1 in the base URL).",
@@ -1780,6 +2064,49 @@ describe("buildDownstreamProviderGuide", () => {
 });
 
 describe("buildActivitySummary", () => {
+  test("uses the aggregate telemetry summary for totals while retaining only the recent page", () => {
+    const summary = buildActivitySummary(
+      [
+        {
+          id: 1,
+          timestamp: "2026-05-07T04:01:00.000Z",
+          model: "run90-model",
+          req_path: "/v1/chat/completions",
+          resp_content_type: "application/json",
+          resp_status_code: 200,
+          tokens: {
+            cache_tokens: 0,
+            input_tokens: 10,
+            output_tokens: 12,
+            prompt_per_second: 1,
+            tokens_per_second: 1,
+          },
+          duration_ms: 10,
+          has_capture: false,
+        },
+      ],
+      {
+        requestCount: 257,
+        successCount: 250,
+        failureCount: 7,
+        totalInputTokens: 25_700,
+        totalOutputTokens: 12_800,
+      },
+    );
+
+    expect(summary.facts).toEqual([
+      { label: "Entries", value: "257", detail: "0 with captures" },
+      { label: "Errors", value: "7", detail: "Most recent status: 200" },
+      { label: "Prompt tokens", value: "25700", detail: "0 cached tokens recorded" },
+      {
+        label: "Completion tokens",
+        value: "12800",
+        detail: "Across the current in-memory metrics window",
+      },
+    ]);
+    expect(summary.rows).toHaveLength(1);
+  });
+
   test("turns raw activity metrics into operator summary cards and ledger rows", () => {
     expect(
       buildActivitySummary([
@@ -1832,7 +2159,7 @@ describe("buildActivitySummary", () => {
       rows: [
         expect.objectContaining({
           id: 7,
-          model: "moonshot/kimi-k2.5",
+          model: "Kimi K2.5",
           path: "/v1/chat/completions",
           status: "200",
           durationLabel: "840 ms",
@@ -1840,7 +2167,7 @@ describe("buildActivitySummary", () => {
         }),
         expect.objectContaining({
           id: 8,
-          model: "openai/gpt-4.1-mini-fast",
+          model: "Gpt 4.1 Mini Fast",
           path: "/v1/responses",
           status: "500",
           durationLabel: "1600 ms",
@@ -1889,6 +2216,30 @@ describe("buildActivitySummary", () => {
         },
       ]).rows.map((row) => row.id),
     ).toEqual([1, 99]);
+  });
+
+  test("preserves the persisted request identity for stable capture links", () => {
+    const summary = buildActivitySummary([
+      {
+        id: 1,
+        request_id: "run90-stable-request",
+        timestamp: "2026-05-07T04:00:00.000Z",
+        model: "run90-model",
+        req_path: "/v1/chat/completions",
+        resp_content_type: "application/json",
+        resp_status_code: 200,
+        tokens: {
+          cache_tokens: 0,
+          input_tokens: 1,
+          output_tokens: 1,
+          prompt_per_second: 1,
+          tokens_per_second: 1,
+        },
+        duration_ms: 1,
+        has_capture: true,
+      },
+    ]);
+    expect(summary.rows[0]).toMatchObject({ id: 1, requestId: "run90-stable-request" });
   });
 });
 
@@ -2084,6 +2435,50 @@ describe("telemetry view models", () => {
         latencyLabel: "280 ms",
         tokenLabel: "46 tokens",
         costLabel: "$0.0011 est.",
+      }),
+    ]);
+  });
+
+  test("separates requested client effort from the selected endpoint variant identity", () => {
+    expect(
+      buildTelemetryRequestRows([
+        {
+          requestId: "req-client-high",
+          endpointId: "deepseek.personal.global.deepseek-v4-flash",
+          modelId: "deepseek/deepseek-v4-flash",
+          upstreamModelId: "deepseek/deepseek-v4-flash",
+          reasoningEffort: "high",
+          effortSource: "client",
+          sourceType: "remote",
+          createdAtMs: 2,
+        },
+        {
+          requestId: "req-variant-high",
+          endpointId: "deepseek.personal.global.deepseek-v4-flash~effort-v1~aGlnaA",
+          modelId: "deepseek/deepseek-v4-flash",
+          upstreamModelId: "deepseek/deepseek-v4-flash",
+          reasoningEffort: "high",
+          effortSource: "variant",
+          sourceType: "remote",
+          createdAtMs: 1,
+        },
+      ]),
+    ).toEqual([
+      expect.objectContaining({
+        requestId: "req-client-high",
+        displayName: "Deepseek V4 Flash",
+        endpointId: "deepseek.personal.global.deepseek-v4-flash",
+        reasoningEffort: null,
+        requestedReasoningEffort: "high",
+        effortSource: "client",
+      }),
+      expect.objectContaining({
+        requestId: "req-variant-high",
+        displayName: "Deepseek V4 Flash (High)",
+        endpointId: "deepseek.personal.global.deepseek-v4-flash~effort-v1~aGlnaA",
+        reasoningEffort: "high",
+        requestedReasoningEffort: "high",
+        effortSource: "variant",
       }),
     ]);
   });

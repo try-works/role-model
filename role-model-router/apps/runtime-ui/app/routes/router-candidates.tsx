@@ -9,6 +9,8 @@ import {
   SectionCard,
 } from "../components/page-primitives";
 import { bodyStrongTextClassName, cardClassName } from "../lib/design-system";
+import { formatEndpointDisplayPath, formatModelIdentity } from "../lib/effort-identity";
+import { formatScore } from "../lib/format-score";
 import { type RouterCandidate, fetchRouterCandidates } from "../lib/runtime-api";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -25,13 +27,6 @@ function pickNumber(record: Record<string, unknown> | null, ...keys: string[]): 
   return null;
 }
 
-function formatScore(score: number | null | undefined): string {
-  if (typeof score !== "number" || !Number.isFinite(score)) {
-    return "n/a";
-  }
-  return `${Math.round(score * 100)}%`;
-}
-
 function formatLatencyP50(profile: Record<string, unknown> | null | undefined): string {
   const latencyP50 = pickNumber(asRecord(profile), "latency_ms_p50", "latencyMsP50");
   return latencyP50 === null ? "n/a" : `${Math.round(latencyP50)}ms`;
@@ -39,7 +34,16 @@ function formatLatencyP50(profile: Record<string, unknown> | null | undefined): 
 
 function formatFailureRate(profile: Record<string, unknown> | null | undefined): string {
   const failureRate = pickNumber(asRecord(profile), "failure_rate", "failureRate");
-  return failureRate === null ? "n/a" : String(failureRate);
+  return formatScore(failureRate);
+}
+
+function formatOperationalSampleCount(profile: Record<string, unknown> | null | undefined): string {
+  const scope = asRecord(profile)?.profile_scope;
+  if (scope !== "live-request-operational") {
+    return "n/a";
+  }
+  const sampleCount = pickNumber(asRecord(profile), "sample_size", "sampleSize");
+  return sampleCount === null ? "n/a" : String(Math.max(0, Math.floor(sampleCount)));
 }
 
 function summarizeRoleCoverage(roleIds: readonly string[] | undefined): string {
@@ -107,7 +111,7 @@ export default function RouterCandidatesRoute() {
     <div className="space-y-6">
       <SectionCard
         title="Candidate inventory"
-        description="Capability scores come from Models → Benchmark. Latency, throughput, and failure rate remain live routing signals."
+        description="CAP is exact endpoint benchmark capability. Live p50, failure, and samples come only from the exact endpoint's operational telemetry profile."
       >
         {candidates.length === 0 ? (
           <EmptyState label="No routing candidates are available yet." />
@@ -115,6 +119,7 @@ export default function RouterCandidatesRoute() {
           <div className="grid gap-4 xl:grid-cols-2">
             {candidates.map((candidate) => {
               const capability = candidate.benchmarkCapability;
+              const operationalProfile = candidate.operationalProfile ?? candidate.latestProfile;
               const sourceLabel = [
                 candidate.sourceType ?? "unknown",
                 candidate.servingSource ?? candidate.endpointKind ?? null,
@@ -132,7 +137,7 @@ export default function RouterCandidatesRoute() {
                           : "border-l-2 border-transparent pl-3"
                       }`}
                     >
-                      <p className={bodyStrongTextClassName}>{candidate.modelId}</p>
+                      <p className={bodyStrongTextClassName}>{formatModelIdentity(candidate)}</p>
                     </div>
                     <Badge tone={candidateStatusTone(candidate)}>
                       {candidateStatusLabel(candidate)}
@@ -140,11 +145,15 @@ export default function RouterCandidatesRoute() {
                   </div>
 
                   <MetricStrip
-                    aria-label={`${candidate.modelId} routing candidate`}
+                    aria-label={`${formatModelIdentity(candidate)} routing candidate`}
                     variant="inventory"
                     className="max-w-none"
                     items={[
-                      { id: "endpoint", label: "Endpoint", value: candidate.endpointId },
+                      {
+                        id: "endpoint",
+                        label: "Endpoint",
+                        value: formatEndpointDisplayPath(candidate),
+                      },
                       { id: "source", label: "Source", value: sourceLabel },
                       {
                         id: "cap",
@@ -153,13 +162,18 @@ export default function RouterCandidatesRoute() {
                       },
                       {
                         id: "p50",
-                        label: "p50",
-                        value: formatLatencyP50(candidate.latestProfile),
+                        label: "Live p50",
+                        value: formatLatencyP50(operationalProfile),
                       },
                       {
                         id: "fail",
-                        label: "Fail",
-                        value: formatFailureRate(candidate.latestProfile),
+                        label: "Live fail",
+                        value: formatFailureRate(operationalProfile),
+                      },
+                      {
+                        id: "live-samples",
+                        label: "Live samples",
+                        value: formatOperationalSampleCount(operationalProfile),
                       },
                       {
                         id: "roles",

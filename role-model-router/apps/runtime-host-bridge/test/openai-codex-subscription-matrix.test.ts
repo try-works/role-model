@@ -20,6 +20,9 @@ const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
 const testFixtureRoot = path.join(import.meta.dirname, "fixtures-restart-rehydration");
 
 const EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS = [
+  "chatgpt/gpt-5.6-sol",
+  "chatgpt/gpt-5.6-terra",
+  "chatgpt/gpt-5.6-luna",
   "chatgpt/gpt-5.5",
   "chatgpt/gpt-5.5-pro",
   "chatgpt/gpt-5.4",
@@ -33,8 +36,29 @@ const EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS = [
 
 const OPENAI_CODEX_SUBSCRIPTION_CODER_PATCH_TIMEOUT_MS = 90_000;
 
+function successfulCodexAdmissionReadinessProbe(requestId: string): {
+  statusCode: number;
+  body: Record<string, unknown>;
+  vendorMetadata: Record<string, unknown>;
+} {
+  return {
+    statusCode: 200,
+    body: {
+      id: `resp-${requestId}`,
+      output: [
+        {
+          type: "message",
+          role: "assistant",
+          content: [{ type: "output_text", text: "ready" }],
+        },
+      ],
+    },
+    vendorMetadata: { vendorId: "chatgpt-codex-responses", latencyMs: 1 },
+  };
+}
+
 describe("OpenAI Codex Subscription model matrix", () => {
-  test("defines only the supported OpenAI GPT-5.3+ subscription rows", () => {
+  test("defines only the native-catalog-supported OpenAI GPT-5.3+ subscription rows", () => {
     expect(OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS).toEqual(
       EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS,
     );
@@ -44,6 +68,9 @@ describe("OpenAI Codex Subscription model matrix", () => {
         lifecycle,
       })),
     ).toEqual([
+      { modelId: "chatgpt/gpt-5.6-sol", lifecycle: "supported" },
+      { modelId: "chatgpt/gpt-5.6-terra", lifecycle: "supported" },
+      { modelId: "chatgpt/gpt-5.6-luna", lifecycle: "supported" },
       { modelId: "chatgpt/gpt-5.5", lifecycle: "supported" },
       { modelId: "chatgpt/gpt-5.5-pro", lifecycle: "supported" },
       { modelId: "chatgpt/gpt-5.4", lifecycle: "supported" },
@@ -56,6 +83,7 @@ describe("OpenAI Codex Subscription model matrix", () => {
     ]);
     expect(OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS).not.toEqual(
       expect.arrayContaining([
+        "chatgpt/gpt-5.6",
         "chatgpt/gpt-5.1-codex-max",
         "chatgpt/gpt-5.1-codex-mini",
         "chatgpt/gpt-5.2",
@@ -89,6 +117,42 @@ describe("OpenAI Codex Subscription model matrix", () => {
 
       expect(codexSubscription?.label).toBe("Codex Subscription");
       expect(codexSubscription?.modelIds).toEqual(EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS);
+    } finally {
+      await backend.shutdown();
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("provider catalog exposes exact GPT-5.6 subscription rows with native reasoning levels", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `openai-provider-catalog-${Date.now()}`);
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "openai-provider-catalog-tests",
+    });
+
+    try {
+      const models = await backend.listModels({ providerId: "openai" });
+      expect(
+        models
+          .filter((model) => model.id.startsWith("chatgpt/gpt-5.6-"))
+          .map((model) => ({ id: model.id, efforts: model.reasoningEffortLevels })),
+      ).toEqual([
+        {
+          id: "chatgpt/gpt-5.6-luna",
+          efforts: ["low", "medium", "high", "xhigh", "max"],
+        },
+        {
+          id: "chatgpt/gpt-5.6-sol",
+          efforts: ["low", "medium", "high", "xhigh", "max", "ultra"],
+        },
+        {
+          id: "chatgpt/gpt-5.6-terra",
+          efforts: ["low", "medium", "high", "xhigh", "max", "ultra"],
+        },
+      ]);
+      expect(models.some((model) => model.id === "chatgpt/gpt-5.6")).toBe(false);
     } finally {
       await backend.shutdown();
       await rm(runtimeStateRoot, { recursive: true, force: true });
@@ -196,6 +260,9 @@ describe("OpenAI Codex Subscription model matrix", () => {
       },
       codexExecutionAdapter: {
         executeRequest: async ({ requestId, modelId, requestCapture }) => {
+          if (requestId.startsWith("admission-")) {
+            return successfulCodexAdmissionReadinessProbe(requestId);
+          }
           codexExecutionRequests.push({
             modelId,
             requestId,
@@ -367,7 +434,7 @@ describe("OpenAI Codex Subscription model matrix", () => {
       await backend.shutdown();
       await rm(runtimeStateRoot, { recursive: true, force: true });
     }
-  }, 45_000);
+  }, 120_000);
 
   test("bridges Codex continuation history onto chat-completions upstream targets for Kimi, DeepSeek, and generic LiteLLM", () => {
     const executionRequest = {
@@ -853,6 +920,9 @@ describe("OpenAI Codex Subscription model matrix", () => {
         },
         codexExecutionAdapter: {
           executeRequest: async ({ requestId, modelId, requestCapture }) => {
+            if (requestId.startsWith("admission-")) {
+              return successfulCodexAdmissionReadinessProbe(requestId);
+            }
             codexExecutionRequests.push({
               modelId,
               requestId,

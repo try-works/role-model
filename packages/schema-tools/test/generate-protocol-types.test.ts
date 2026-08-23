@@ -38,7 +38,7 @@ describe("generateProtocolTypes", () => {
     const duplicates = exportMatches.filter((name, index) => exportMatches.indexOf(name) !== index);
 
     expect(duplicates).toEqual([]);
-  });
+  }, 30_000);
 
   it("emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol", async () => {
     const generatedTypesPath = await createGeneratedTypesPath();

@@ -946,9 +946,12 @@ describe("runtime design system", () => {
     expect(routerDecisionDetailRouteSource).toContain(
       'fallback ${String(index + 1).padStart(2, "0")}',
     );
-    expect(routerDecisionDetailRouteSource).toContain("Judge score");
-    expect(routerDecisionDetailRouteSource).toContain("Profile measured");
-    expect(routerDecisionDetailRouteSource).toContain("Benchmark samples");
+    expect(routerDecisionDetailRouteSource).toContain("Decision quality");
+    expect(routerDecisionDetailRouteSource).toContain("Benchmark overall");
+    expect(routerDecisionDetailRouteSource).toContain("Decision-time run");
+    expect(routerDecisionDetailRouteSource).toContain(
+      "No benchmark evidence was recorded in this routing decision.",
+    );
   });
 
   test("routing strategy omits the old benchmark advisory card and candidate fetch fan-out", () => {
@@ -1001,7 +1004,7 @@ describe("runtime design system", () => {
     expect(routerCandidatesRouteSource).toContain("xl:grid-cols-2");
     expect(routerCandidatesRouteSource).toContain("cardClassName");
     expect(routerCandidatesRouteSource).toContain('label: "Cap"');
-    expect(routerCandidatesRouteSource).toContain('label: "p50"');
+    expect(routerCandidatesRouteSource).toContain('label: "Live p50"');
     expect(routerCandidatesRouteSource).not.toContain("Candidate posture");
     expect(routerCandidatesRouteSource).not.toContain("FactCard");
     expect(routerCandidatesRouteSource).not.toContain(
@@ -1975,6 +1978,12 @@ describe("runtime design system", () => {
     expect(candidateSpaceChartSource).not.toContain("No candidates to list.");
   });
 
+  test("model-pool candidate rail omits the redundant visible-count label", () => {
+    expect(candidateSpaceChartSource).not.toContain(
+      "Showing {points[0]?.rendered ?? 0} of {points[0]?.total ?? 0}",
+    );
+  });
+
   test("chart empty and unsupported states use RM3 dashed muted panels on every graph page", () => {
     expect(designSystemSource).toContain("export const chartEmptyStateClassName =");
     expect(designSystemSource).toContain("border-dashed border-border");
@@ -2117,7 +2126,7 @@ describe("runtime design system", () => {
     expect(appShellSource).toContain("<Sidebar");
     expect(appShellSource).toContain("SegmentedControl");
     expect(appShellSource).toContain("buildSidebarModels");
-    expect(appShellSource).toContain("subscribeTelemetryStream");
+    expect(appShellSource).toContain("subscribeRuntimeRefreshStream");
     expect(appShellSource).not.toContain("SIDEBAR_FOOTER_STUB");
     expect(appShellSource).not.toContain("function primarySectionLinkClass");
     expect(appShellSource).not.toContain("function secondaryNavLinkClass");

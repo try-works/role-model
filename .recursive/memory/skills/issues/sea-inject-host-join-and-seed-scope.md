@@ -1,6 +1,6 @@
 # Packaged SEA inject unlock needs host join + matching seed scope (issues)
 
-Type: issues
+Type: incident
 Status: CURRENT
 Scope: Phase 5 packaged-runtime inject / recommendation hops for KW gated prompt inject
 Owns-Paths:

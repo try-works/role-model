@@ -20,6 +20,7 @@ import {
   mutedPanelClassName,
   supportingTextClassName,
 } from "../lib/design-system";
+import { formatEndpointDisplayPath, formatModelIdentity } from "../lib/effort-identity";
 import { formatRoutingModeLabel } from "../lib/routing-mode";
 import { fetchRequestDetail } from "../lib/runtime-api";
 import { useShellHeaderOverride } from "../lib/shell-header-context";
@@ -192,9 +193,17 @@ export default function RequestDetailRoute() {
 
   const request = asRecord(detail.request) ?? {};
   const endpointProfile = asRecord(detail.endpointProfile) ?? {};
-  const latestProfile = asRecord(endpointProfile.latestProfile) ?? {};
+  const latestProfile =
+    asRecord(endpointProfile.operationalProfile) ?? asRecord(endpointProfile.latestProfile) ?? {};
   const recentSamples = Array.isArray(endpointProfile.recentSamples)
     ? endpointProfile.recentSamples
+    : [];
+  const recentSamplesBySource = asRecord(endpointProfile.recentSamplesBySource) ?? {};
+  const recentLiveSamples = Array.isArray(recentSamplesBySource.liveRequest)
+    ? recentSamplesBySource.liveRequest
+    : [];
+  const recentBenchmarkSamples = Array.isArray(recentSamplesBySource.benchmark)
+    ? recentSamplesBySource.benchmark
     : [];
   const endpointIdentity =
     asRecord(latestProfile.endpoint_identity ?? latestProfile.endpointIdentity) ?? {};
@@ -310,13 +319,21 @@ export default function RequestDetailRoute() {
   const measuredAtMs =
     pickNumber(latestProfile, "measured_at_ms", "measuredAtMs") ??
     pickNumber(observedSample, "timestamp_ms", "timestampMs");
+  const endpointId = pickString(request, "endpointId") ?? "unknown";
   const modelId =
     pickString(usageEvent, "model_id", "modelId") ??
     pickString(endpointIdentity, "model_id", "modelId");
+  const reasoningEffort =
+    pickString(usageEvent, "reasoning_effort", "reasoningEffort") ??
+    pickString(endpointIdentity, "reasoning_effort", "reasoningEffort");
+  const modelDisplayName = formatModelIdentity({
+    modelId: modelId ?? endpointId,
+    endpointId,
+    reasoningEffort,
+  });
   const providerKind =
     pickString(usageEvent, "provider_kind", "providerKind") ??
     pickString(endpointIdentity, "provider_kind", "providerKind");
-  const endpointId = pickString(request, "endpointId") ?? "unknown";
   const clientRequestId =
     pickString(request, "clientRequestId") ??
     pickString(inspectionRequest, "clientRequestId") ??
@@ -499,7 +516,9 @@ export default function RequestDetailRoute() {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <div className={`${mutedPanelClassName} space-y-2 p-4 xl:col-span-2`}>
             <p className={fieldLabelClassName}>Endpoint</p>
-            <p className={`${inlineTitleClassName} break-all`}>{endpointId}</p>
+            <p className={`${inlineTitleClassName} break-all`} title={endpointId}>
+              {formatEndpointDisplayPath({ endpointId, reasoningEffort })}
+            </p>
             <p className={supportingTextClassName}>
               Endpoint id currently associated with the captured request.
             </p>
@@ -799,7 +818,7 @@ export default function RequestDetailRoute() {
           <dl className="grid gap-x-6 gap-y-3 text-sm md:grid-cols-2">
             {[
               ["Provider", providerKind],
-              ["Model", modelId],
+              ["Model", modelDisplayName],
               ["Finish reason", finishReason],
               ["Input tokens", inputTokenTruth.text],
               ["Output tokens", outputTokenTruth.text],
@@ -819,16 +838,18 @@ export default function RequestDetailRoute() {
 
         <SectionCard
           title="Observed performance"
-          description="Request-level execution telemetry and profile-history posture stay adjacent to tooling and captures."
+          description="Live-request operational evidence is kept separate from benchmark evidence and stays adjacent to tooling and captures."
         >
           <dl className="grid gap-x-6 gap-y-3 text-sm md:grid-cols-2">
             {[
-              ["Recent samples", String(profileSampleCount)],
+              ["Live profile samples", String(profileSampleCount)],
+              ["Recent live-request rows", String(recentLiveSamples.length)],
+              ["Recent benchmark rows", String(recentBenchmarkSamples.length)],
               [
-                "Profile failure rate",
+                "Live profile failure rate",
                 latestProfileFailureRate === null ? null : String(latestProfileFailureRate),
               ],
-              ["Latest profile error class", latestProfileErrorClass],
+              ["Latest live error class", latestProfileErrorClass],
               [
                 "Recent sample bundle",
                 recentEndpointSamples.length > 0
@@ -843,7 +864,7 @@ export default function RequestDetailRoute() {
             ))}
           </dl>
           <div className="mt-4">
-            <p className={`mb-2 ${compactTitleClassName}`}>Latest profile snapshot</p>
+            <p className={`mb-2 ${compactTitleClassName}`}>Current operational profile</p>
             <CodeBlock>{JSON.stringify(latestProfile, null, 2)}</CodeBlock>
           </div>
         </SectionCard>
@@ -989,8 +1010,21 @@ export default function RequestDetailRoute() {
             </div>
           </div>
           <div>
-            <p className={`mb-2 ${compactTitleClassName}`}>Endpoint profile history</p>
-            <CodeBlock>{JSON.stringify({ latestProfile, recentSamples }, null, 2)}</CodeBlock>
+            <p className={`mb-2 ${compactTitleClassName}`}>Endpoint evidence history</p>
+            <CodeBlock>
+              {JSON.stringify(
+                {
+                  operationalProfile: latestProfile,
+                  recentSamples,
+                  recentSamplesBySource: {
+                    liveRequest: recentLiveSamples,
+                    benchmark: recentBenchmarkSamples,
+                  },
+                },
+                null,
+                2,
+              )}
+            </CodeBlock>
           </div>
         </div>
       </DisclosureSection>

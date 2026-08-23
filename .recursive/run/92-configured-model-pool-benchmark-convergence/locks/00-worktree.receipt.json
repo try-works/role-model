@@ -1,0 +1,11 @@
+{
+  "artifact": "00-worktree.md",
+  "artifact_hash": "ca77a34cfb2cb2a914f9bbe6c7df94621165ce1c5ae882a6d96c9f02c7fc5c53",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\92-configured-model-pool-benchmark-convergence\\.recursive\\run\\92-configured-model-pool-benchmark-convergence\\00-worktree.md",
+  "locked_at": "2026-08-21T09:04:47Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "fbe4abc4ed111ba799a04861f8e6fb9e45baf6f52a164426060ac40389a3b0e6"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "fde4fd7eeed916006e23f651d75b54d0f1721a4d7109fb63d0f1bfa9e082ad67"
+}

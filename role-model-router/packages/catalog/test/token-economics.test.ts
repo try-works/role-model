@@ -171,7 +171,33 @@ describe("token-economics", () => {
     });
   });
 
-  test("resolves gateway-nested and chatgpt model ids to models.dev pricing", async () => {
+  test("keeps first-party DeepSeek and explicitly priced relay rows economically isolated", async () => {
+    const catalog = await loadNormalizedCatalog();
+    const direct = resolveTokenEconomics({
+      modelId: "deepseek/deepseek-v4-pro",
+      catalog,
+      isLocalEndpoint: false,
+    });
+    const hpcAi = resolveTokenEconomics({
+      modelId: "hpc-ai/deepseek/deepseek-v4-pro",
+      catalog,
+      isLocalEndpoint: false,
+    });
+
+    expect(direct).toMatchObject({
+      canonicalModelId: "deepseek/deepseek-v4-pro",
+      inputPer1M: 0.435,
+      outputPer1M: 0.87,
+    });
+    expect(hpcAi).toMatchObject({
+      canonicalModelId: "hpc-ai/deepseek/deepseek-v4-pro",
+      inputPer1M: 1.74,
+      outputPer1M: 3.48,
+    });
+    expect(hpcAi.inputPer1M).not.toBe(direct.inputPer1M);
+  });
+
+  test("respects priced gateway rows and resolves unpriced aliases to models.dev pricing", async () => {
     const catalog = await loadNormalizedCatalog();
     expect(resolveCanonicalModelId("chatgpt/gpt-5.4")).toBe("openai/gpt-5.4");
 
@@ -181,7 +207,7 @@ describe("token-economics", () => {
       isLocalEndpoint: false,
     });
     expect(nested.source).toBe("catalog");
-    expect(nested.canonicalModelId).toBe("openai/gpt-5.4");
+    expect(nested.canonicalModelId).toBe("anyapi/openai/gpt-5.4");
     expect(nested.inputPer1M).toBeTypeOf("number");
 
     const filled = applyAliasedCatalogPricing(

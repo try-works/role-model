@@ -8,6 +8,8 @@ import {
 } from "node:fs";
 import path from "node:path";
 
+import { normalizeReasoningEffort } from "@role-model-router/endpoint-registry";
+
 export const OPERATOR_INTENT_SCHEMA_VERSION = 1 as const;
 
 export interface OperatorIntentLocation {
@@ -20,9 +22,15 @@ export interface OperatorIntentRemoteActivation {
   readonly modelId: string;
   readonly region: string;
   readonly endpointId: string;
+  /** Null is the provider-default slot; never derive this from endpointId. */
+  readonly reasoningEffort?: string | null;
   readonly modelRoleBindings?: readonly {
     readonly modelId: string;
+    readonly endpointId?: string;
     readonly roleIds: readonly string[];
+    readonly roleAssignmentMode?: "all" | "include" | "exclude" | "custom";
+    readonly enabledRoleIds?: readonly string[];
+    readonly disabledRoleIds?: readonly string[];
   }[];
 }
 
@@ -73,7 +81,7 @@ function readStringArray(value: unknown, label: string): readonly string[] {
 
 function readModelRoleBindings(
   value: unknown,
-): readonly { modelId: string; roleIds: readonly string[] }[] | undefined {
+): OperatorIntentRemoteActivation["modelRoleBindings"] {
   if (value === undefined) {
     return undefined;
   }
@@ -87,7 +95,37 @@ function readModelRoleBindings(
     const record = entry as Record<string, unknown>;
     return {
       modelId: ensureNonEmptyString(record.modelId, `modelRoleBindings[${index}].modelId`),
+      ...(record.endpointId !== undefined
+        ? {
+            endpointId: ensureNonEmptyString(
+              record.endpointId,
+              `modelRoleBindings[${index}].endpointId`,
+            ),
+          }
+        : {}),
       roleIds: readStringArray(record.roleIds, `modelRoleBindings[${index}].roleIds`),
+      ...(record.roleAssignmentMode === "all" ||
+      record.roleAssignmentMode === "include" ||
+      record.roleAssignmentMode === "exclude" ||
+      record.roleAssignmentMode === "custom"
+        ? { roleAssignmentMode: record.roleAssignmentMode }
+        : {}),
+      ...(record.enabledRoleIds !== undefined
+        ? {
+            enabledRoleIds: readStringArray(
+              record.enabledRoleIds,
+              `modelRoleBindings[${index}].enabledRoleIds`,
+            ),
+          }
+        : {}),
+      ...(record.disabledRoleIds !== undefined
+        ? {
+            disabledRoleIds: readStringArray(
+              record.disabledRoleIds,
+              `modelRoleBindings[${index}].disabledRoleIds`,
+            ),
+          }
+        : {}),
     };
   });
 }
@@ -105,6 +143,9 @@ function readRemoteActivation(value: unknown, index: number): OperatorIntentRemo
     modelId: ensureNonEmptyString(record.modelId, `remoteActivations[${index}].modelId`),
     region: ensureNonEmptyString(record.region, `remoteActivations[${index}].region`),
     endpointId: ensureNonEmptyString(record.endpointId, `remoteActivations[${index}].endpointId`),
+    reasoningEffort: normalizeReasoningEffort(
+      record.reasoningEffort === undefined ? null : (record.reasoningEffort as string | null),
+    ),
     modelRoleBindings: readModelRoleBindings(record.modelRoleBindings),
   };
 }
@@ -227,6 +268,7 @@ export function upsertRemoteActivation(
     modelId: activation.modelId,
     region: activation.region,
     endpointId: activation.endpointId,
+    reasoningEffort: normalizeReasoningEffort(activation.reasoningEffort),
     ...(activation.modelRoleBindings !== undefined
       ? { modelRoleBindings: activation.modelRoleBindings }
       : {}),
@@ -259,6 +301,26 @@ export function removeRemoteActivationsByConfiguredModel(
     ...intent,
     remoteActivations: intent.remoteActivations.filter(
       (entry) => !(entry.providerAccountId === providerAccountId && entry.modelId === modelId),
+    ),
+  };
+}
+
+export function removeRemoteActivationBySlot(
+  intent: OperatorIntentV1,
+  providerAccountId: string,
+  modelId: string,
+  reasoningEffort: string | null,
+): OperatorIntentV1 {
+  const normalizedReasoningEffort = normalizeReasoningEffort(reasoningEffort);
+  return {
+    ...intent,
+    remoteActivations: intent.remoteActivations.filter(
+      (entry) =>
+        !(
+          entry.providerAccountId === providerAccountId &&
+          entry.modelId === modelId &&
+          entry.reasoningEffort === normalizedReasoningEffort
+        ),
     ),
   };
 }

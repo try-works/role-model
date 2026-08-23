@@ -1,0 +1,13 @@
+$ corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/routes/control-models.test.ts
+
+ RUN  v3.2.4 .../apps/runtime-ui
+
+ ❯ app/routes/control-models.test.ts (30 tests | 1 failed) 168ms
+   × keeps controller removal disabled and uses unload only for llama-swap models
+     → expected { kind: 'eject-controller', label: 'Eject controller', disabled: false, isController: true } to equal
+       { kind: 'eject-configured', label: 'Eject from pool', disabled: true }
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 29 passed (30)
+
+RED verified: ✅  (controller eject was still hard-disabled before the change)

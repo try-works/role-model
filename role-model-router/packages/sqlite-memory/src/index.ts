@@ -14,6 +14,7 @@ import { DatabaseSync } from "node:sqlite";
 import {
   type ObservedPerformanceSample,
   aggregateObservedPerformanceSamples,
+  aggregateOperationalPerformanceSamples,
 } from "@role-model-router/profile-aggregator";
 import type { ProviderAccountRecord } from "@role-model-router/provider-account";
 import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
@@ -40,16 +41,20 @@ export * from "./legacy-migration.js";
 export * from "./history-policy.js";
 
 const INITIAL_MIGRATION_ID = "run06-v1-initial-schema";
+const OPERATIONAL_PROFILE_REPROJECTION_MIGRATION_ID = "run91-operational-profile-reprojection-v1";
 const OBSERVATION_METADATA_BACKFILL_MIGRATION_ID = "run62-observation-metadata-backfill-v1";
 const TELEMETRY_METADATA_BACKFILL_MIGRATION_ID = "run62-telemetry-metadata-backfill-v1";
 const RECENT_OBSERVATIONS_INDEX_MIGRATION_ID = "run77-recent-observations-index-v1";
 const OBSERVED_PROFILE_INDEXES_MIGRATION_ID = "run77-observed-profile-indexes-v1";
+const EFFORT_INSTANCE_IDENTITY_MIGRATION_ID = "run91-effort-instance-identity-v1";
 const CURRENT_SCHEMA_VERSION = 1;
 const COST_CALCULATION_VERSION = "run49.v1";
 const RUNTIME_TELEMETRY_INSERT_COLUMNS = [
   "request_id",
   "routing_decision_id",
   "endpoint_id",
+  "reasoning_effort",
+  "effort_source",
   "conversation_id",
   "created_at_ms",
   "client_request_id",
@@ -391,6 +396,8 @@ CREATE TABLE IF NOT EXISTS runtime_telemetry_records (
   request_id TEXT PRIMARY KEY,
   routing_decision_id TEXT NOT NULL,
   endpoint_id TEXT NOT NULL,
+  reasoning_effort TEXT,
+  effort_source TEXT,
   conversation_id TEXT NOT NULL,
   created_at_ms INTEGER NOT NULL,
   client_request_id TEXT,
@@ -502,6 +509,7 @@ CREATE TABLE IF NOT EXISTS runtime_endpoints (
   serving_source TEXT NOT NULL,
   lifecycle_state TEXT NOT NULL,
   health_status TEXT NOT NULL,
+  reasoning_effort TEXT,
   created_at_ms INTEGER NOT NULL,
   updated_at_ms INTEGER NOT NULL
 );
@@ -843,11 +851,18 @@ export interface RuntimeEndpointRecord {
   readonly servingSource: string;
   readonly lifecycleState: string;
   readonly healthStatus: string;
+  /** Explicit wire effort; null is the legacy/default instance. */
+  readonly reasoningEffort?: string | null;
 }
 
 export interface UpsertRuntimeEndpointInput {
   readonly databasePath: string;
   readonly endpoint: RuntimeEndpointRecord;
+}
+
+export interface UpsertRuntimeEndpointsAtomicallyInput {
+  readonly databasePath: string;
+  readonly endpoints: readonly RuntimeEndpointRecord[];
 }
 
 export interface ListRuntimeEndpointsInput {
@@ -960,6 +975,8 @@ export interface RuntimeTelemetryRecord {
   readonly requestId: string;
   readonly routingDecisionId: string;
   readonly endpointId: string;
+  readonly reasoningEffort: string | null;
+  readonly effortSource: "none" | "client" | "variant" | "variant_coerced";
   readonly conversationId: string;
   readonly createdAtMs: number;
   readonly clientRequestId: string | null;
@@ -1110,6 +1127,35 @@ export interface RuntimeTelemetryQueryInput {
   readonly limit?: number;
   readonly endAtMs?: number;
   readonly startAtMs?: number;
+  /** A caller-provided snapshot boundary. When present it is the exclusive end of the window. */
+  readonly asOfMs?: number;
+}
+
+/**
+ * Semantic query boundaries for telemetry consumers.  The compatibility
+ * RuntimeTelemetryQueryInput above remains accepted by older callers, but
+ * new aggregate/lookup/list code should select one of these named contracts
+ * rather than passing a generic limit through unrelated operations.
+ */
+export interface RuntimeTelemetryAggregateQueryInput {
+  readonly databasePath: string;
+  readonly windowMs?: number;
+  readonly endAtMs?: number;
+  readonly startAtMs?: number;
+  readonly asOfMs?: number;
+}
+
+export interface RuntimeTelemetryListQueryInput extends RuntimeTelemetryAggregateQueryInput {
+  readonly limit?: number;
+}
+
+export interface RuntimeTelemetryLookupInput {
+  readonly databasePath: string;
+  readonly requestId: string;
+}
+
+export interface RuntimeTelemetryRankingQueryInput extends RuntimeTelemetryAggregateQueryInput {
+  readonly topN?: number;
 }
 
 export interface PersistedRuntimeObservationBundle {
@@ -1117,6 +1163,8 @@ export interface PersistedRuntimeObservationBundle {
   readonly clientRequestId?: string | null;
   readonly routingDecisionId: string;
   readonly endpointId: string;
+  readonly reasoningEffort?: string | null;
+  readonly effortSource?: "none" | "client" | "variant" | "variant_coerced";
   readonly conversationId: string;
   readonly usageEvent: {
     readonly timestamp_ms: number;
@@ -1214,6 +1262,8 @@ export interface PersistedRuntimeObservationBundle {
     readonly toolSideEffectState?: string;
   };
   readonly telemetrySnapshot?: {
+    readonly reasoningEffort?: string | null;
+    readonly effortSource?: "none" | "client" | "variant" | "variant_coerced";
     readonly providerId: string | null;
     readonly providerAccountId: string | null;
     readonly sourceType: "local" | "remote";
@@ -1402,7 +1452,21 @@ function initializeSchema(database: DatabaseSync): void {
       }>
     ).map((row) => row.name),
   );
+  const runtimeEndpointColumns = new Set(
+    (
+      database.prepare("PRAGMA table_info(runtime_endpoints)").all() as Array<{
+        name: string;
+      }>
+    ).map((row) => row.name),
+  );
+  let addedRuntimeEndpointIdentityColumn = false;
+  if (!runtimeEndpointColumns.has("reasoning_effort")) {
+    database.exec("ALTER TABLE runtime_endpoints ADD COLUMN reasoning_effort TEXT");
+    addedRuntimeEndpointIdentityColumn = true;
+  }
   const telemetryColumnDefinitions = [
+    "reasoning_effort TEXT",
+    "effort_source TEXT",
     "client_request_id TEXT",
     "request_class TEXT",
     "source_type TEXT",
@@ -1490,6 +1554,14 @@ function initializeSchema(database: DatabaseSync): void {
       addedRuntimeTelemetryMetadataColumn = true;
     }
   }
+  runOnceMigration(
+    database,
+    EFFORT_INSTANCE_IDENTITY_MIGRATION_ID,
+    addedRuntimeEndpointIdentityColumn ||
+      !runtimeTelemetryColumns.has("reasoning_effort") ||
+      !runtimeTelemetryColumns.has("effort_source"),
+    () => undefined,
+  );
   runOnceMigration(
     database,
     TELEMETRY_METADATA_BACKFILL_MIGRATION_ID,
@@ -1677,6 +1749,7 @@ function mapRuntimeEndpointRow(row: {
   serving_source: string;
   lifecycle_state: string;
   health_status: string;
+  reasoning_effort: string | null;
 }): RuntimeEndpointRecord {
   return {
     endpointId: row.endpoint_id,
@@ -1687,6 +1760,7 @@ function mapRuntimeEndpointRow(row: {
     servingSource: row.serving_source,
     lifecycleState: row.lifecycle_state,
     healthStatus: row.health_status,
+    reasoningEffort: row.reasoning_effort ?? null,
   };
 }
 
@@ -1822,6 +1896,35 @@ export function initializeSqliteMemory(
 
   if (journalModeRow?.journal_mode?.toLowerCase() !== "wal") {
     throw new Error("SQLite journal mode did not initialize as WAL");
+  }
+
+  const operationalProjectionReceipt = database
+    .prepare("SELECT migration_id FROM migration_receipts WHERE migration_id=?")
+    .get(OPERATIONAL_PROFILE_REPROJECTION_MIGRATION_ID) as { migration_id: string } | undefined;
+  if (!operationalProjectionReceipt) {
+    const endpointRows = database
+      .prepare("SELECT DISTINCT endpoint_id FROM observed_performance_samples ORDER BY endpoint_id")
+      .all() as Array<{ endpoint_id: string }>;
+    database.exec("BEGIN IMMEDIATE");
+    try {
+      for (const row of endpointRows) {
+        rebuildObservedProfilesForEndpoint(database, row.endpoint_id, nowMs);
+      }
+      database
+        .prepare(
+          "INSERT INTO migration_receipts (migration_id, schema_version, applied_at_ms, status) VALUES (?, ?, ?, ?)",
+        )
+        .run(
+          OPERATIONAL_PROFILE_REPROJECTION_MIGRATION_ID,
+          CURRENT_SCHEMA_VERSION,
+          nowMs,
+          "applied",
+        );
+      database.exec("COMMIT");
+    } catch (error) {
+      database.exec("ROLLBACK");
+      throw error;
+    }
   }
 
   database.close();
@@ -1964,11 +2067,12 @@ export function upsertRuntimeEndpoint(input: UpsertRuntimeEndpointInput): void {
       region,
       endpoint_kind,
       serving_source,
-      lifecycle_state,
-      health_status,
-      created_at_ms,
-      updated_at_ms
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       lifecycle_state,
+       health_status,
+       reasoning_effort,
+       created_at_ms,
+       updated_at_ms
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `)
     .run(
       input.endpoint.endpointId,
@@ -1979,10 +2083,57 @@ export function upsertRuntimeEndpoint(input: UpsertRuntimeEndpointInput): void {
       input.endpoint.servingSource,
       input.endpoint.lifecycleState,
       input.endpoint.healthStatus,
+      input.endpoint.reasoningEffort ?? null,
       nowMs,
       nowMs,
     );
   database.close();
+}
+
+export function upsertRuntimeEndpointsAtomically(
+  input: UpsertRuntimeEndpointsAtomicallyInput,
+): void {
+  const database = new DatabaseSync(input.databasePath);
+  const statement = database.prepare(`
+    INSERT OR REPLACE INTO runtime_endpoints (
+      endpoint_id,
+      provider_account_id,
+      model_id,
+      region,
+      endpoint_kind,
+      serving_source,
+      lifecycle_state,
+      health_status,
+      reasoning_effort,
+      created_at_ms,
+      updated_at_ms
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  try {
+    database.exec("BEGIN IMMEDIATE");
+    const nowMs = Date.now();
+    for (const endpoint of input.endpoints) {
+      statement.run(
+        endpoint.endpointId,
+        endpoint.providerAccountId,
+        endpoint.modelId,
+        endpoint.region,
+        endpoint.endpointKind,
+        endpoint.servingSource,
+        endpoint.lifecycleState,
+        endpoint.healthStatus,
+        endpoint.reasoningEffort ?? null,
+        nowMs,
+        nowMs,
+      );
+    }
+    database.exec("COMMIT");
+  } catch (error) {
+    database.exec("ROLLBACK");
+    throw error;
+  } finally {
+    database.close();
+  }
 }
 
 export function listRuntimeEndpoints(
@@ -1999,7 +2150,8 @@ export function listRuntimeEndpoints(
         endpoint_kind,
         serving_source,
         lifecycle_state,
-        health_status
+        health_status,
+        reasoning_effort
       FROM runtime_endpoints
       ORDER BY endpoint_id ASC
     `)
@@ -2012,6 +2164,7 @@ export function listRuntimeEndpoints(
     serving_source: string;
     lifecycle_state: string;
     health_status: string;
+    reasoning_effort: string | null;
   }>;
   database.close();
 
@@ -2474,6 +2627,8 @@ function mapRuntimeTelemetryRecord(row: {
   request_id: string;
   routing_decision_id: string;
   endpoint_id: string;
+  reasoning_effort: string | null;
+  effort_source: string | null;
   conversation_id: string;
   created_at_ms: number;
   client_request_id: string | null;
@@ -2605,6 +2760,13 @@ function mapRuntimeTelemetryRecord(row: {
     requestId: row.request_id,
     routingDecisionId: row.routing_decision_id,
     endpointId: row.endpoint_id,
+    reasoningEffort: row.reasoning_effort ?? null,
+    effortSource:
+      row.effort_source === "client" ||
+      row.effort_source === "variant" ||
+      row.effort_source === "variant_coerced"
+        ? row.effort_source
+        : "none",
     conversationId: row.conversation_id,
     createdAtMs: row.created_at_ms,
     clientRequestId: row.client_request_id,
@@ -2784,6 +2946,11 @@ function toRuntimeTelemetryRecord(
         : "unavailable";
   const routingDiagnostics = observation.routingDiagnostics;
   const telemetrySnapshot = observation.telemetrySnapshot;
+  const reasoningEffort = observation.reasoningEffort ?? telemetrySnapshot?.reasoningEffort ?? null;
+  const effortSource =
+    observation.effortSource ??
+    telemetrySnapshot?.effortSource ??
+    (reasoningEffort === null ? "none" : "client");
   const difficultyBucketCandidate =
     routingDiagnostics?.difficultyRouting?.difficulty ??
     observation.observedPerformance.sample.difficulty_bucket ??
@@ -2845,6 +3012,8 @@ function toRuntimeTelemetryRecord(
     requestId: observation.requestId,
     routingDecisionId: observation.routingDecisionId,
     endpointId: observation.endpointId,
+    reasoningEffort,
+    effortSource,
     conversationId: observation.conversationId,
     createdAtMs: observation.usageEvent.timestamp_ms,
     clientRequestId: observation.clientRequestId ?? null,
@@ -2978,6 +3147,8 @@ function runtimeTelemetryInsertValues(
     record.requestId,
     record.routingDecisionId,
     record.endpointId,
+    record.reasoningEffort,
+    record.effortSource,
     record.conversationId,
     record.createdAtMs,
     record.clientRequestId,
@@ -3094,6 +3265,8 @@ function toFailureRuntimeTelemetryRecord(
     requestId: input.requestId,
     routingDecisionId,
     endpointId,
+    reasoningEffort: input.reasoningEffort ?? null,
+    effortSource: input.effortSource ?? (input.reasoningEffort ? "client" : "none"),
     conversationId: "conversation-main",
     createdAtMs,
     clientRequestId: input.clientRequestId ?? null,
@@ -3213,7 +3386,7 @@ function listRuntimeTelemetryRecordsInternal(
 ): readonly RuntimeTelemetryRecord[] {
   const clauses: string[] = [];
   const parameters: Array<number> = [];
-  const endAtMs = input.endAtMs ?? Date.now();
+  const endAtMs = input.endAtMs ?? input.asOfMs ?? Date.now();
   const startAtMs =
     typeof input.startAtMs === "number"
       ? input.startAtMs
@@ -3224,13 +3397,16 @@ function listRuntimeTelemetryRecordsInternal(
     clauses.push("created_at_ms >= ?");
     parameters.push(startAtMs);
   }
-  clauses.push("created_at_ms <= ?");
+  // Telemetry windows are half-open: [startAtMs, endAtMs). This gives refreshes
+  // one deterministic snapshot boundary and prevents a row exactly at the
+  // boundary from appearing in both adjacent windows.
+  clauses.push("created_at_ms < ?");
   parameters.push(endAtMs);
 
   const limitClause = typeof input.limit === "number" ? " LIMIT ?" : "";
   const rows = database
     .prepare(
-      `SELECT request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, client_request_id, request_class, source_type, model_id, provider_kind, provider_family, vendor_id, provider_id, provider_account_id, selected_model_id, endpoint_kind, serving_source, region, lifecycle_state_at_request, health_status_at_request, requested_model_id, difficulty_bucket, routing_mode, requested_role_id, selected_strategy, request_operation, source_client, execution_family, adapter_family, status_family, request_payload_bytes, ingress_payload_bytes, translated_payload_bytes, provider_canonical_payload_bytes, provider_wire_payload_bytes, response_payload_bytes, retry_count, reroute_count, cooldown_decision, idempotency_decision, tool_side_effect_state, tooling_used, cache_state, role_ids_json, eligible_endpoint_ids_json, eligible_model_ids_json, candidate_cost_snapshot_json, selected_pricing_snapshot_json, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, effective_cost_usd, selected_uncached_cost_usd, baseline_max_eligible_cost_usd, routing_cost_savings_usd, cache_cost_savings_usd, total_avoided_cost_usd, cost_calculation_basis, cost_calculation_version, cost_baseline_source, cost_savings_support, sampling_rate, retention_ttl_hours, retain_until_ms, redaction_level, retention_class, structured_inspection_mode, raw_capture_available, structured_inspection_available, taxonomy_group_id, taxonomy_role_id, taxonomy_task_type, taxonomy_task_variant, taxonomy_capability_ids_json, taxonomy_modality_ids_json, taxonomy_tool_class_ids_json, currency, dimensions_json FROM runtime_telemetry_records WHERE ${clauses.join(
+      `SELECT request_id, routing_decision_id, endpoint_id, reasoning_effort, effort_source, conversation_id, created_at_ms, client_request_id, request_class, source_type, model_id, provider_kind, provider_family, vendor_id, provider_id, provider_account_id, selected_model_id, endpoint_kind, serving_source, region, lifecycle_state_at_request, health_status_at_request, requested_model_id, difficulty_bucket, routing_mode, requested_role_id, selected_strategy, request_operation, source_client, execution_family, adapter_family, status_family, request_payload_bytes, ingress_payload_bytes, translated_payload_bytes, provider_canonical_payload_bytes, provider_wire_payload_bytes, response_payload_bytes, retry_count, reroute_count, cooldown_decision, idempotency_decision, tool_side_effect_state, tooling_used, cache_state, role_ids_json, eligible_endpoint_ids_json, eligible_model_ids_json, candidate_cost_snapshot_json, selected_pricing_snapshot_json, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, effective_cost_usd, selected_uncached_cost_usd, baseline_max_eligible_cost_usd, routing_cost_savings_usd, cache_cost_savings_usd, total_avoided_cost_usd, cost_calculation_basis, cost_calculation_version, cost_baseline_source, cost_savings_support, sampling_rate, retention_ttl_hours, retain_until_ms, redaction_level, retention_class, structured_inspection_mode, raw_capture_available, structured_inspection_available, taxonomy_group_id, taxonomy_role_id, taxonomy_task_type, taxonomy_task_variant, taxonomy_capability_ids_json, taxonomy_modality_ids_json, taxonomy_tool_class_ids_json, currency, dimensions_json FROM runtime_telemetry_records WHERE ${clauses.join(
         " AND ",
       )} ORDER BY created_at_ms DESC, request_id DESC${limitClause}`,
     )
@@ -3238,6 +3414,8 @@ function listRuntimeTelemetryRecordsInternal(
     request_id: string;
     routing_decision_id: string;
     endpoint_id: string;
+    reasoning_effort: string | null;
+    effort_source: string | null;
     conversation_id: string;
     created_at_ms: number;
     client_request_id: string | null;
@@ -3796,18 +3974,20 @@ function rebuildObservedProfilesForEndpoint(
     const samples = remainingRows.map(
       (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
     );
-    const profile = aggregateObservedPerformanceSamples(samples, { nowMs });
+    const profile = aggregateOperationalPerformanceSamples(samples, { nowMs });
     database.prepare("DELETE FROM observed_profile_snapshots WHERE endpoint_id=?").run(endpointId);
-    database
-      .prepare(
-        "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
-      )
-      .run(
-        `${endpointId}:${profile.measured_at_ms}`,
-        endpointId,
-        profile.measured_at_ms,
-        JSON.stringify(profile),
-      );
+    if (profile) {
+      database
+        .prepare(
+          "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
+        )
+        .run(
+          `${endpointId}:${profile.measured_at_ms}`,
+          endpointId,
+          profile.measured_at_ms,
+          JSON.stringify(profile),
+        );
+    }
   }
 
   for (const difficultyBucket of DIFFICULTY_BUCKETS) {
@@ -3827,23 +4007,25 @@ function rebuildObservedProfilesForEndpoint(
       const bucketSamples = bucketRows.map(
         (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
       );
-      const bucketProfile = aggregateObservedPerformanceSamples(bucketSamples, { nowMs });
+      const bucketProfile = aggregateOperationalPerformanceSamples(bucketSamples, { nowMs });
       database
         .prepare(
           "DELETE FROM observed_profile_snapshots_by_difficulty WHERE endpoint_id=? AND difficulty_bucket=?",
         )
         .run(endpointId, difficultyBucket);
-      database
-        .prepare(
-          "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
-        )
-        .run(
-          `${endpointId}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
-          endpointId,
-          difficultyBucket,
-          bucketProfile.measured_at_ms,
-          JSON.stringify(bucketProfile),
-        );
+      if (bucketProfile) {
+        database
+          .prepare(
+            "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+          )
+          .run(
+            `${endpointId}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
+            endpointId,
+            difficultyBucket,
+            bucketProfile.measured_at_ms,
+            JSON.stringify(bucketProfile),
+          );
+      }
     }
   }
 }
@@ -3861,18 +4043,27 @@ export function clearObservedBenchmarkDataForEndpoint(
     .get(input.endpointId) as { count: number };
   const clearedSampleCount = countRow.count;
 
-  database
-    .prepare(
-      "DELETE FROM observed_performance_samples WHERE endpoint_id = ? AND source_type = 'benchmark'",
-    )
-    .run(input.endpointId);
-  database
-    .prepare(
-      "DELETE FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND source_type = 'benchmark'",
-    )
-    .run(input.endpointId);
+  database.exec("BEGIN IMMEDIATE");
+  try {
+    database
+      .prepare(
+        "DELETE FROM observed_performance_samples WHERE endpoint_id = ? AND source_type = 'benchmark'",
+      )
+      .run(input.endpointId);
+    database
+      .prepare(
+        "DELETE FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND source_type = 'benchmark'",
+      )
+      .run(input.endpointId);
 
-  rebuildObservedProfilesForEndpoint(database, input.endpointId, nowMs);
+    rebuildObservedProfilesForEndpoint(database, input.endpointId, nowMs);
+
+    database.exec("COMMIT");
+  } catch (error) {
+    database.exec("ROLLBACK");
+    database.close();
+    throw error;
+  }
 
   database.close();
   return { endpointId: input.endpointId, clearedSampleCount };
@@ -3906,17 +4097,26 @@ export function clearAllObservedBenchmarkData(
     .get() as { count: number };
   const clearedSampleCount = countRow.count;
 
-  database
-    .prepare("DELETE FROM observed_performance_samples WHERE source_type = 'benchmark'")
-    .run();
-  database
-    .prepare(
-      "DELETE FROM observed_performance_samples_by_difficulty WHERE source_type = 'benchmark'",
-    )
-    .run();
+  database.exec("BEGIN IMMEDIATE");
+  try {
+    database
+      .prepare("DELETE FROM observed_performance_samples WHERE source_type = 'benchmark'")
+      .run();
+    database
+      .prepare(
+        "DELETE FROM observed_performance_samples_by_difficulty WHERE source_type = 'benchmark'",
+      )
+      .run();
 
-  for (const row of endpointRows) {
-    rebuildObservedProfilesForEndpoint(database, row.endpoint_id, nowMs);
+    for (const row of endpointRows) {
+      rebuildObservedProfilesForEndpoint(database, row.endpoint_id, nowMs);
+    }
+
+    database.exec("COMMIT");
+  } catch (error) {
+    database.exec("ROLLBACK");
+    database.close();
+    throw error;
   }
 
   database.close();
@@ -3941,11 +4141,12 @@ export function clearBenchmarkRunArtifacts(
     return { clearedRunCount: 0 };
   }
 
+  const runDirectories = readdirSync(input.artifactRoot, { withFileTypes: true }).filter((entry) =>
+    entry.isDirectory(),
+  );
+
   let clearedRunCount = 0;
-  for (const entry of readdirSync(input.artifactRoot, { withFileTypes: true })) {
-    if (!entry.isDirectory()) {
-      continue;
-    }
+  for (const entry of runDirectories) {
     rmSync(path.join(input.artifactRoot, entry.name), { recursive: true, force: true });
     clearedRunCount += 1;
   }
@@ -3998,7 +4199,7 @@ export function persistObservedBenchmarkSample(input: PersistObservedBenchmarkSa
         const bucketSamples = boundedBucket.sampleJson.map(
           (value) => JSON.parse(value) as ObservedPerformanceSample,
         );
-        const bucketProfile = aggregateObservedPerformanceSamples(bucketSamples, {
+        const bucketProfile = aggregateOperationalPerformanceSamples(bucketSamples, {
           nowMs: sample.timestamp_ms,
         });
         database
@@ -4006,17 +4207,19 @@ export function persistObservedBenchmarkSample(input: PersistObservedBenchmarkSa
             "DELETE FROM observed_profile_snapshots_by_difficulty WHERE endpoint_id=? AND difficulty_bucket=?",
           )
           .run(sample.endpoint_id, difficultyBucket);
-        database
-          .prepare(
-            "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
-          )
-          .run(
-            `${sample.endpoint_id}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
-            sample.endpoint_id,
-            difficultyBucket,
-            bucketProfile.measured_at_ms,
-            JSON.stringify(bucketProfile),
-          );
+        if (bucketProfile) {
+          database
+            .prepare(
+              "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+            )
+            .run(
+              `${sample.endpoint_id}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
+              sample.endpoint_id,
+              difficultyBucket,
+              bucketProfile.measured_at_ms,
+              JSON.stringify(bucketProfile),
+            );
+        }
       }
       const bounded = enforcePerformanceHistoryPolicy(database, {
         endpointId: sample.endpoint_id,
@@ -4027,22 +4230,24 @@ export function persistObservedBenchmarkSample(input: PersistObservedBenchmarkSa
       );
       if (allSamples.length === 0)
         throw new Error("performance history policy rejected every sample");
-      const profile = aggregateObservedPerformanceSamples(allSamples, {
+      const profile = aggregateOperationalPerformanceSamples(allSamples, {
         nowMs: sample.timestamp_ms,
       });
       database
         .prepare("DELETE FROM observed_profile_snapshots WHERE endpoint_id=?")
         .run(sample.endpoint_id);
-      database
-        .prepare(
-          "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
-        )
-        .run(
-          `${sample.endpoint_id}:${profile.measured_at_ms}`,
-          sample.endpoint_id,
-          profile.measured_at_ms,
-          JSON.stringify(profile),
-        );
+      if (profile) {
+        database
+          .prepare(
+            "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
+          )
+          .run(
+            `${sample.endpoint_id}:${profile.measured_at_ms}`,
+            sample.endpoint_id,
+            profile.measured_at_ms,
+            JSON.stringify(profile),
+          );
+      }
       return;
     } catch (error) {
       if (!isSqliteBusyError(error) || attempt >= SQLITE_BUSY_MAX_ATTEMPTS) {
@@ -4245,7 +4450,7 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
           const bucketSamples = boundedBucket.sampleJson.map(
             (value) => JSON.parse(value) as ObservedPerformanceSample,
           );
-          const bucketProfile = aggregateObservedPerformanceSamples(bucketSamples, {
+          const bucketProfile = aggregateOperationalPerformanceSamples(bucketSamples, {
             nowMs: observation.observedPerformance.sample.timestamp_ms,
           });
           database
@@ -4253,17 +4458,19 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
               "DELETE FROM observed_profile_snapshots_by_difficulty WHERE endpoint_id=? AND difficulty_bucket=?",
             )
             .run(observation.endpointId, difficultyBucket);
-          database
-            .prepare(
-              "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
-            )
-            .run(
-              `${observation.endpointId}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
-              observation.endpointId,
-              difficultyBucket,
-              bucketProfile.measured_at_ms,
-              JSON.stringify(bucketProfile),
-            );
+          if (bucketProfile) {
+            database
+              .prepare(
+                "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+              )
+              .run(
+                `${observation.endpointId}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
+                observation.endpointId,
+                difficultyBucket,
+                bucketProfile.measured_at_ms,
+                JSON.stringify(bucketProfile),
+              );
+          }
         }
         enforcePerformanceHistoryPolicy(database, {
           endpointId: observation.endpointId,
@@ -4320,6 +4527,8 @@ export interface PersistRuntimeTelemetryFailureInput {
   readonly requestId: string;
   readonly routingDecisionId?: string;
   readonly endpointId?: string;
+  readonly reasoningEffort?: string | null;
+  readonly effortSource?: "none" | "client" | "variant" | "variant_coerced";
   readonly modelId?: string;
   readonly requestedModelId?: string | null;
   readonly selectedModelId?: string | null;
@@ -4606,6 +4815,169 @@ export function readObservedPerformanceSamples(
   return rows.map((row) => JSON.parse(row.sample_json) as ObservedPerformanceSample);
 }
 
+export function readLatestBenchmarkProfilesByEndpointIds(input: {
+  readonly databasePath: string;
+  readonly endpointIds: readonly string[];
+  readonly difficultyBucket?: string;
+  readonly membershipRevision?: string;
+}): Record<string, ObservedPerformanceProfile> {
+  const endpointIds = [...new Set(input.endpointIds)];
+  if (endpointIds.length === 0) {
+    return {};
+  }
+  const database = openSqliteDatabase(input.databasePath);
+  const rows: Array<{ endpoint_id: string; sample_json: string }> = [];
+  for (let offset = 0; offset < endpointIds.length; offset += 200) {
+    const chunk = endpointIds.slice(offset, offset + 200);
+    const placeholders = chunk.map(() => "?").join(", ");
+    const query = input.difficultyBucket
+      ? `SELECT endpoint_id, sample_json FROM observed_performance_samples_by_difficulty WHERE endpoint_id IN (${placeholders}) AND difficulty_bucket = ? AND source_type = 'benchmark' ORDER BY endpoint_id, timestamp_ms ASC, sample_id ASC`
+      : `SELECT endpoint_id, sample_json FROM observed_performance_samples WHERE endpoint_id IN (${placeholders}) AND source_type = 'benchmark' ORDER BY endpoint_id, timestamp_ms ASC, sample_id ASC`;
+    rows.push(
+      ...(database
+        .prepare(query)
+        .all(...chunk, ...(input.difficultyBucket ? [input.difficultyBucket] : [])) as Array<{
+        endpoint_id: string;
+        sample_json: string;
+      }>),
+    );
+  }
+  database.close();
+
+  const samplesByEndpointId = new Map<string, ObservedPerformanceSample[]>();
+  for (const row of rows) {
+    const sample = JSON.parse(row.sample_json) as ObservedPerformanceSample;
+    // A current configured-pool read is an exact identity fence. A legacy sample
+    // without that fence is not safe to treat as current evidence.
+    if (input.membershipRevision && sample.membership_revision !== input.membershipRevision) {
+      continue;
+    }
+    // A configured-pool request is a current-evidence read. It accepts only a
+    // successfully published, revisioned benchmark result. Unscoped operator
+    // history remains backwards-readable, but is never used as a current pool
+    // profile or routing input.
+    if (input.membershipRevision) {
+      if (sample.completion_state !== "completed" || !sample.benchmark_profile_revision) {
+        continue;
+      }
+    } else if (
+      sample.completion_state === "stale" ||
+      sample.completion_state === "failed" ||
+      sample.completion_state === "cancelled"
+    ) {
+      continue;
+    }
+    const samples = samplesByEndpointId.get(row.endpoint_id) ?? [];
+    samples.push(sample);
+    samplesByEndpointId.set(row.endpoint_id, samples);
+  }
+  return Object.fromEntries(
+    [...samplesByEndpointId].map(([endpointId, samples]) => [
+      endpointId,
+      aggregateObservedPerformanceSamples(samples, {
+        nowMs: Math.max(...samples.map((sample) => sample.timestamp_ms)),
+      }),
+    ]),
+  );
+}
+
+export interface LiveTaskTelemetryRollup {
+  readonly successRate: number;
+  readonly successCount: number;
+  readonly failureCount: number;
+  readonly sampleCount: number;
+  readonly minimumSampleCount: number;
+  readonly windowStartMs: number;
+  readonly windowEndMs: number;
+  readonly measuredAtMs: number;
+}
+
+export interface LiveTaskTelemetryScores {
+  readonly taskSuccessRates: Record<string, number>;
+  readonly taskRollups: Record<string, LiveTaskTelemetryRollup>;
+}
+
+export function readLiveTaskTelemetryScoresByEndpointIds(input: {
+  readonly databasePath: string;
+  readonly endpointIds: readonly string[];
+  readonly windowStartMs: number;
+  readonly windowEndMs: number;
+  readonly minimumSampleCount: number;
+}): Record<string, LiveTaskTelemetryScores> {
+  if (input.endpointIds.length === 0) {
+    return {};
+  }
+  if (
+    !Number.isSafeInteger(input.windowStartMs) ||
+    !Number.isSafeInteger(input.windowEndMs) ||
+    input.windowStartMs < 0 ||
+    input.windowEndMs < input.windowStartMs ||
+    input.windowEndMs - input.windowStartMs > 30 * 24 * 60 * 60 * 1_000
+  ) {
+    throw new Error("Live task telemetry requires a valid bounded window of at most 30 days.");
+  }
+  if (!Number.isSafeInteger(input.minimumSampleCount) || input.minimumSampleCount < 1) {
+    throw new Error("Live task telemetry minimumSampleCount must be a positive safe integer.");
+  }
+  const endpointIds = [...new Set(input.endpointIds)];
+  const placeholders = endpointIds.map(() => "?").join(", ");
+  const database = openSqliteDatabase(input.databasePath);
+  const rows = database
+    .prepare(
+      `SELECT
+        endpoint_id,
+        taxonomy_task_type,
+        COUNT(*) AS sample_count,
+        SUM(CASE WHEN error_class IS NULL AND status_code >= 200 AND status_code < 400 THEN 1 ELSE 0 END) AS success_count,
+        MIN(created_at_ms) AS first_observed_at_ms,
+        MAX(created_at_ms) AS last_observed_at_ms
+      FROM runtime_telemetry_records
+      WHERE endpoint_id IN (${placeholders})
+        AND request_class = 'live_request'
+        AND taxonomy_task_type IS NOT NULL
+        AND taxonomy_task_type <> ''
+        AND created_at_ms >= ?
+        AND created_at_ms <= ?
+      GROUP BY endpoint_id, taxonomy_task_type
+      ORDER BY endpoint_id, taxonomy_task_type`,
+    )
+    .all(...endpointIds, input.windowStartMs, input.windowEndMs) as Array<{
+    endpoint_id: string;
+    taxonomy_task_type: string;
+    sample_count: number;
+    success_count: number;
+    first_observed_at_ms: number;
+    last_observed_at_ms: number;
+  }>;
+  database.close();
+
+  const result: Record<string, LiveTaskTelemetryScores> = {};
+  for (const row of rows) {
+    const failureCount = row.sample_count - row.success_count;
+    const successRate = row.sample_count === 0 ? 0 : row.success_count / row.sample_count;
+    if (!Number.isFinite(successRate) || successRate < 0 || successRate > 1 || failureCount < 0) {
+      throw new Error("Live task telemetry produced an invalid success rollup.");
+    }
+    let entry = result[row.endpoint_id];
+    if (entry === undefined) {
+      entry = { taskSuccessRates: {}, taskRollups: {} };
+      result[row.endpoint_id] = entry;
+    }
+    entry.taskSuccessRates[row.taxonomy_task_type] = successRate;
+    entry.taskRollups[row.taxonomy_task_type] = {
+      successRate,
+      successCount: row.success_count,
+      failureCount,
+      sampleCount: row.sample_count,
+      minimumSampleCount: input.minimumSampleCount,
+      windowStartMs: input.windowStartMs,
+      windowEndMs: input.windowEndMs,
+      measuredAtMs: row.last_observed_at_ms,
+    };
+  }
+  return result;
+}
+
 export function readLatestObservedProfile(
   input: ReadLatestObservedProfileInput,
 ): ObservedPerformanceProfile | null {
@@ -4820,7 +5192,7 @@ export function listRecentRuntimeRequestIds(
 }
 
 export function listRuntimeTelemetryRecords(
-  input: RuntimeTelemetryQueryInput,
+  input: RuntimeTelemetryListQueryInput,
 ): readonly RuntimeTelemetryRecord[] {
   const database = openSqliteDatabase(input.databasePath);
   const rows = listRuntimeTelemetryRecordsInternal(database, input);
@@ -4828,143 +5200,257 @@ export function listRuntimeTelemetryRecords(
   return rows;
 }
 
+type RuntimeTelemetryAggregateRow = {
+  request_count: number;
+  success_count: number;
+  failure_count: number;
+  total_input_tokens: number | null;
+  total_output_tokens: number | null;
+  total_tokens: number | null;
+  cached_request_count: number;
+  total_actual_cost_usd: number | null;
+  total_estimated_cost_usd: number | null;
+  total_effective_cost_usd: number | null;
+  latency_count: number;
+  total_latency_ms: number | null;
+  last_seen_at_ms: number | null;
+};
+
+function telemetryWindow(input: RuntimeTelemetryAggregateQueryInput): {
+  readonly startAtMs?: number;
+  readonly endAtMs: number;
+} {
+  const endAtMs = input.endAtMs ?? input.asOfMs ?? Date.now();
+  return {
+    startAtMs:
+      typeof input.startAtMs === "number"
+        ? input.startAtMs
+        : typeof input.windowMs === "number"
+          ? endAtMs - input.windowMs
+          : undefined,
+    endAtMs,
+  };
+}
+
+function telemetryWindowWhere(
+  input: RuntimeTelemetryAggregateQueryInput,
+  sourceType?: "local" | "remote",
+): { readonly where: string; readonly parameters: readonly (number | string)[] } {
+  const window = telemetryWindow(input);
+  const clauses = ["created_at_ms < ?"];
+  const parameters: Array<number | string> = [window.endAtMs];
+  if (typeof window.startAtMs === "number") {
+    clauses.unshift("created_at_ms >= ?");
+    parameters.unshift(window.startAtMs);
+  }
+  if (sourceType) {
+    clauses.push("source_type = ?");
+    parameters.push(sourceType);
+  }
+  return { where: clauses.join(" AND "), parameters };
+}
+
+function readRuntimeTelemetryAggregateFromDatabase(
+  database: DatabaseSync,
+  input: RuntimeTelemetryAggregateQueryInput,
+  sourceType?: "local" | "remote",
+): RuntimeTelemetrySummary {
+  const { where, parameters } = telemetryWindowWhere(input, sourceType);
+  const aggregate = database
+    .prepare(
+      `SELECT
+         COUNT(*) AS request_count,
+         SUM(CASE WHEN error_class IS NULL THEN 1 ELSE 0 END) AS success_count,
+         SUM(CASE WHEN error_class IS NULL THEN 0 ELSE 1 END) AS failure_count,
+         COALESCE(SUM(input_tokens), 0) AS total_input_tokens,
+         COALESCE(SUM(output_tokens), 0) AS total_output_tokens,
+         COALESCE(SUM(total_tokens), 0) AS total_tokens,
+         SUM(CASE WHEN prompt_cache_used = 1 THEN 1 ELSE 0 END) AS cached_request_count,
+         COALESCE(SUM(actual_cost_usd), 0) AS total_actual_cost_usd,
+         COALESCE(SUM(estimated_cost_usd), 0) AS total_estimated_cost_usd,
+         COALESCE(SUM(effective_cost_usd), 0) AS total_effective_cost_usd,
+         COUNT(latency_ms) AS latency_count,
+         COALESCE(SUM(latency_ms), 0) AS total_latency_ms,
+         MAX(created_at_ms) AS last_seen_at_ms
+       FROM runtime_telemetry_records
+       WHERE ${where}`,
+    )
+    .get(...parameters) as RuntimeTelemetryAggregateRow;
+  const latencyRows = database
+    .prepare(
+      `SELECT latency_ms
+       FROM runtime_telemetry_records
+       WHERE ${where} AND latency_ms IS NOT NULL
+       ORDER BY latency_ms ASC`,
+    )
+    .all(...parameters) as Array<{ latency_ms: number }>;
+  const latencyValues = latencyRows.map((row) => row.latency_ms);
+  const latencyCount = Number(aggregate.latency_count ?? 0);
+  const totalLatency = Number(aggregate.total_latency_ms ?? 0);
+  return {
+    requestCount: Number(aggregate.request_count ?? 0),
+    successCount: Number(aggregate.success_count ?? 0),
+    failureCount: Number(aggregate.failure_count ?? 0),
+    totalInputTokens: Number(aggregate.total_input_tokens ?? 0),
+    totalOutputTokens: Number(aggregate.total_output_tokens ?? 0),
+    totalTokens: Number(aggregate.total_tokens ?? 0),
+    cachedRequestCount: Number(aggregate.cached_request_count ?? 0),
+    totalActualCostUsd: roundMetric(Number(aggregate.total_actual_cost_usd ?? 0)),
+    totalEstimatedCostUsd: roundMetric(Number(aggregate.total_estimated_cost_usd ?? 0)),
+    totalEffectiveCostUsd: roundMetric(Number(aggregate.total_effective_cost_usd ?? 0)),
+    averageLatencyMs: latencyCount > 0 ? Math.round(totalLatency / latencyCount) : null,
+    p95LatencyMs: percentile95(latencyValues),
+    lastSeenAtMs:
+      aggregate.last_seen_at_ms === null || aggregate.last_seen_at_ms === undefined
+        ? null
+        : Number(aggregate.last_seen_at_ms),
+  };
+}
+
+export function readRuntimeTelemetrySourceSummaries(input: RuntimeTelemetryAggregateQueryInput): {
+  readonly local: RuntimeTelemetrySummary;
+  readonly remote: RuntimeTelemetrySummary;
+} {
+  const database = openSqliteDatabase(input.databasePath);
+  const result = {
+    local: readRuntimeTelemetryAggregateFromDatabase(database, input, "local"),
+    remote: readRuntimeTelemetryAggregateFromDatabase(database, input, "remote"),
+  };
+  database.close();
+  return result;
+}
+
+/**
+ * Read one telemetry row by its persisted primary key. This is deliberately
+ * separate from the recent-page adapter so detail/stream paths never need to
+ * scan or decode a bounded list before resolving an older request.
+ */
+export function readRuntimeTelemetryRecord(
+  input: RuntimeTelemetryLookupInput,
+): RuntimeTelemetryRecord | null {
+  const requestId = input.requestId.trim();
+  if (requestId.length === 0) {
+    return null;
+  }
+  const database = openSqliteDatabase(input.databasePath);
+  const row = database
+    .prepare("SELECT * FROM runtime_telemetry_records WHERE request_id = ? LIMIT 1")
+    .get(requestId) as Parameters<typeof mapRuntimeTelemetryRecord>[0] | undefined;
+  database.close();
+  return row ? mapRuntimeTelemetryRecord(row) : null;
+}
+
 export function readRuntimeTelemetrySummary(
   input: RuntimeTelemetryQueryInput,
 ): RuntimeTelemetrySummary {
   const database = openSqliteDatabase(input.databasePath);
-  const records = listRuntimeTelemetryRecordsInternal(database, input);
+  // Aggregates are compact SQLite queries, never a rich-record page. The
+  // compatibility `limit` field is intentionally ignored for this contract.
+  const summary = readRuntimeTelemetryAggregateFromDatabase(database, input);
   database.close();
-
-  const latencyValues = records
-    .map((record) => record.latencyMs)
-    .filter((value): value is number => typeof value === "number");
-  const totalLatency = latencyValues.reduce((sum, value) => sum + value, 0);
-
-  return {
-    requestCount: records.length,
-    successCount: records.filter((record) => record.errorClass === null).length,
-    failureCount: records.filter((record) => record.errorClass !== null).length,
-    totalInputTokens: records.reduce((sum, record) => sum + record.inputTokens, 0),
-    totalOutputTokens: records.reduce((sum, record) => sum + record.outputTokens, 0),
-    totalTokens: records.reduce((sum, record) => sum + record.totalTokens, 0),
-    cachedRequestCount: records.filter((record) => record.promptCacheUsed).length,
-    totalActualCostUsd: roundMetric(
-      records.reduce((sum, record) => sum + (record.actualCostUsd ?? 0), 0),
-    ),
-    totalEstimatedCostUsd: roundMetric(
-      records.reduce((sum, record) => sum + (record.estimatedCostUsd ?? 0), 0),
-    ),
-    totalEffectiveCostUsd: roundMetric(
-      records.reduce((sum, record) => sum + record.effectiveCostUsd, 0),
-    ),
-    averageLatencyMs:
-      latencyValues.length > 0 ? Math.round(totalLatency / latencyValues.length) : null,
-    p95LatencyMs: percentile95(latencyValues),
-    lastSeenAtMs: records[0]?.createdAtMs ?? null,
-  };
+  return summary;
 }
 
 export function listRuntimeTelemetryComparisonRows(
-  input: RuntimeTelemetryQueryInput,
+  input: RuntimeTelemetryListQueryInput,
 ): readonly RuntimeTelemetryComparisonRow[] {
   const database = openSqliteDatabase(input.databasePath);
-  const records = listRuntimeTelemetryRecordsInternal(database, input);
+  const { where, parameters } = telemetryWindowWhere(input);
+  type ComparisonAggregateRow = {
+    endpoint_id: string;
+    model_id: string | null;
+    provider_kind: string | null;
+    provider_family: string | null;
+    prompt_cache_supported: number | null;
+    request_count: number;
+    success_count: number;
+    failure_count: number;
+    total_input_tokens: number | null;
+    total_output_tokens: number | null;
+    total_tokens: number | null;
+    cached_request_count: number;
+    total_actual_cost_usd: number | null;
+    total_estimated_cost_usd: number | null;
+    latency_count: number;
+    total_latency_ms: number | null;
+    last_seen_at_ms: number;
+  };
+  const aggregates = database
+    .prepare(
+      `SELECT endpoint_id, model_id, provider_kind,
+         MAX(provider_family) AS provider_family,
+         MAX(prompt_cache_supported) AS prompt_cache_supported,
+         COUNT(*) AS request_count,
+         SUM(CASE WHEN error_class IS NULL THEN 1 ELSE 0 END) AS success_count,
+         SUM(CASE WHEN error_class IS NULL THEN 0 ELSE 1 END) AS failure_count,
+         COALESCE(SUM(input_tokens), 0) AS total_input_tokens,
+         COALESCE(SUM(output_tokens), 0) AS total_output_tokens,
+         COALESCE(SUM(total_tokens), 0) AS total_tokens,
+         SUM(CASE WHEN prompt_cache_used = 1 THEN 1 ELSE 0 END) AS cached_request_count,
+         COALESCE(SUM(actual_cost_usd), 0) AS total_actual_cost_usd,
+         COALESCE(SUM(estimated_cost_usd), 0) AS total_estimated_cost_usd,
+         COUNT(latency_ms) AS latency_count,
+         COALESCE(SUM(latency_ms), 0) AS total_latency_ms,
+         MAX(created_at_ms) AS last_seen_at_ms
+       FROM runtime_telemetry_records
+       WHERE ${where}
+       GROUP BY endpoint_id, model_id, provider_kind`,
+    )
+    .all(...parameters) as ComparisonAggregateRow[];
+  const latencyRows = database
+    .prepare(
+      `SELECT endpoint_id, model_id, provider_kind, latency_ms
+       FROM runtime_telemetry_records
+       WHERE ${where} AND latency_ms IS NOT NULL
+       ORDER BY endpoint_id, model_id, provider_kind, latency_ms ASC`,
+    )
+    .all(...parameters) as Array<{
+    endpoint_id: string;
+    model_id: string | null;
+    provider_kind: string | null;
+    latency_ms: number;
+  }>;
   database.close();
-
-  const grouped = new Map<
-    string,
-    {
-      endpointId: string;
-      modelId: string | null;
-      providerKind: string | null;
-      providerFamily: string | null;
-      promptCacheSupported: boolean;
-      requestCount: number;
-      successCount: number;
-      failureCount: number;
-      totalInputTokens: number;
-      totalOutputTokens: number;
-      totalTokens: number;
-      cachedRequestCount: number;
-      totalActualCostUsd: number;
-      totalEstimatedCostUsd: number;
-      latencies: number[];
-      lastSeenAtMs: number;
-    }
-  >();
-
-  for (const record of records) {
-    const key = `${record.endpointId}\u0000${record.modelId ?? ""}\u0000${record.providerKind ?? ""}`;
-    const existing = grouped.get(key) ?? {
-      endpointId: record.endpointId,
-      modelId: record.modelId,
-      providerKind: record.providerKind,
-      providerFamily: record.providerFamily,
-      promptCacheSupported: record.promptCacheSupported,
-      requestCount: 0,
-      successCount: 0,
-      failureCount: 0,
-      totalInputTokens: 0,
-      totalOutputTokens: 0,
-      totalTokens: 0,
-      cachedRequestCount: 0,
-      totalActualCostUsd: 0,
-      totalEstimatedCostUsd: 0,
-      latencies: [],
-      lastSeenAtMs: record.createdAtMs,
-    };
-    existing.requestCount += 1;
-    existing.providerFamily ??= record.providerFamily;
-    existing.promptCacheSupported = existing.promptCacheSupported || record.promptCacheSupported;
-    existing.successCount += record.errorClass === null ? 1 : 0;
-    existing.failureCount += record.errorClass !== null ? 1 : 0;
-    existing.totalInputTokens += record.inputTokens;
-    existing.totalOutputTokens += record.outputTokens;
-    existing.totalTokens += record.totalTokens;
-    existing.cachedRequestCount += record.promptCacheUsed ? 1 : 0;
-    existing.totalActualCostUsd += record.actualCostUsd ?? 0;
-    existing.totalEstimatedCostUsd += record.estimatedCostUsd ?? 0;
-    if (typeof record.latencyMs === "number") {
-      existing.latencies.push(record.latencyMs);
-    }
-    if (record.createdAtMs > existing.lastSeenAtMs) {
-      existing.lastSeenAtMs = record.createdAtMs;
-    }
-    grouped.set(key, existing);
+  const latenciesByKey = new Map<string, number[]>();
+  for (const row of latencyRows) {
+    const key = `${row.endpoint_id}\u0000${row.model_id ?? ""}\u0000${row.provider_kind ?? ""}`;
+    const values = latenciesByKey.get(key) ?? [];
+    values.push(row.latency_ms);
+    latenciesByKey.set(key, values);
   }
-
-  const rows = [...grouped.values()]
-    .map<RuntimeTelemetryComparisonRow>((entry) => ({
-      endpointId: entry.endpointId,
-      modelId: entry.modelId,
-      providerKind: entry.providerKind,
-      providerFamily: entry.providerFamily,
-      promptCacheSupported: entry.promptCacheSupported,
-      requestCount: entry.requestCount,
-      successCount: entry.successCount,
-      failureCount: entry.failureCount,
-      totalInputTokens: entry.totalInputTokens,
-      totalOutputTokens: entry.totalOutputTokens,
-      totalTokens: entry.totalTokens,
-      cachedRequestCount: entry.cachedRequestCount,
-      totalActualCostUsd: roundMetric(entry.totalActualCostUsd),
-      totalEstimatedCostUsd: roundMetric(entry.totalEstimatedCostUsd),
-      averageLatencyMs:
-        entry.latencies.length > 0
-          ? Math.round(
-              entry.latencies.reduce((sum, value) => sum + value, 0) / entry.latencies.length,
-            )
-          : null,
-      p95LatencyMs: percentile95(entry.latencies),
-      lastSeenAtMs: entry.lastSeenAtMs,
-    }))
+  const rows = aggregates
+    .map<RuntimeTelemetryComparisonRow>((entry) => {
+      const key = `${entry.endpoint_id}\u0000${entry.model_id ?? ""}\u0000${entry.provider_kind ?? ""}`;
+      const latencies = latenciesByKey.get(key) ?? [];
+      return {
+        endpointId: entry.endpoint_id,
+        modelId: entry.model_id,
+        providerKind: entry.provider_kind,
+        providerFamily: entry.provider_family,
+        promptCacheSupported: Number(entry.prompt_cache_supported ?? 0) === 1,
+        requestCount: Number(entry.request_count ?? 0),
+        successCount: Number(entry.success_count ?? 0),
+        failureCount: Number(entry.failure_count ?? 0),
+        totalInputTokens: Number(entry.total_input_tokens ?? 0),
+        totalOutputTokens: Number(entry.total_output_tokens ?? 0),
+        totalTokens: Number(entry.total_tokens ?? 0),
+        cachedRequestCount: Number(entry.cached_request_count ?? 0),
+        totalActualCostUsd: roundMetric(Number(entry.total_actual_cost_usd ?? 0)),
+        totalEstimatedCostUsd: roundMetric(Number(entry.total_estimated_cost_usd ?? 0)),
+        averageLatencyMs:
+          latencies.length > 0
+            ? Math.round(latencies.reduce((sum, value) => sum + value, 0) / latencies.length)
+            : null,
+        p95LatencyMs: percentile95(latencies),
+        lastSeenAtMs: Number(entry.last_seen_at_ms),
+      };
+    })
     .sort(
       (left, right) =>
         right.lastSeenAtMs - left.lastSeenAtMs ||
         right.requestCount - left.requestCount ||
         left.endpointId.localeCompare(right.endpointId),
     );
-
   return rows.slice(0, input.limit ?? rows.length);
 }
 

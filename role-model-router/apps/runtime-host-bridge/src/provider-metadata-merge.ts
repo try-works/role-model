@@ -4,6 +4,7 @@ export const HISTORICALLY_BROKEN_OVERLAP_PROVIDER_IDS = [
   "baseten",
   "cerebras",
   "cohere",
+  "crusoe",
   "databricks",
   "deepinfra",
   "deepseek",
@@ -18,6 +19,7 @@ export const HISTORICALLY_BROKEN_OVERLAP_PROVIDER_IDS = [
   "sarvam",
   "v0",
   "wandb",
+  "watsonx",
   "xai",
   "zai",
 ] as const;

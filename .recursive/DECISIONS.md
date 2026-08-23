@@ -12,6 +12,39 @@
 - `84-kw-ui-toggle-gated-retrieve-eval` - Extensions UI Prepare/ON/Soft OFF + host mutate actions, production retrieve gate + first-party eval consumer, durable session activation, repaired full Playwright assemble, Phase 5 hops on `run84-dev` (Phases 0-8). Folder: `.recursive/run/84-kw-ui-toggle-gated-retrieve-eval/`. Soft-closes run 83 deferred Extensions UI control gap and records gated production retrieve usefulness.
 - `85-kw-gated-router-prompt-inject` - Gated live-router production prompt inject when KW ceremony ON + production retrieve PASS; host join/auto-arm; honesty/export unlock; Phase 5 SEA inject hop + live `--track=dev` + live `pi`; post-lock live `pi`→KW inject→storage E2E + host wiring remediations (Phases 0-8). Folder: `.recursive/run/85-kw-gated-router-prompt-inject/`. Soft-closes run 84 deferred full live-router inject (`OOS3`/`E6`) and honesty "remains locked" for gated inject only.
 - `86-runtime-ui-rm3-design-system-frontend` - RM v3 design system + `@role-model/ui` kit migration for router runtime-ui; Paper `4-0`/`5-0`/`6-0`/`7-0` IA; FD#15 config→strategy; SP8 floor green; hybrid Phase 5 QA on rebuilt `:3470` with human Paper sign-off; operator polish P1–P8 (Phases 0-8). Folder: `.recursive/run/86-runtime-ui-rm3-design-system-frontend/`. Soft-closes run `60-runtime-ui-paper-linear-review-alignment` as live styling authority for migrated surfaces (Linear/Paper-Linear historical).
+- `92-configured-model-pool-benchmark-convergence` - Endpoint-variant-exact membership revision token stamped at persist/read/portfolio/decision time; honest null candidate-space (no synthetic 0/0%); membership-revision + stale benchmark quarantine; destructive-confirm final-controller eject; decision revision; transactional benchmark clear (Phases 0-8, strict TDD, agent-operated QA on rebuilt `:3501`). Folder: `.recursive/run/92-configured-model-pool-benchmark-convergence/`. Soft-closes run 76's membership-authority contract with a revision-token convergence wave.
+
+## Run: `92-configured-model-pool-benchmark-convergence`
+
+Date: `2026-08-21`
+
+### What changed
+
+- Added `computeConfiguredMembershipRevision` (order-stable SHA-256 over endpoint-variant-exact tuples: providerAccountId, modelId, endpointId, reasoningEffort) and stamped it on router candidates, routing decisions, benchmark manifests, benchmark samples, and clear receipts.
+- Removed the runtime-ui `fetchRuntimeModels` `/v1/models` silent fallback so a configured-pool outage surfaces honestly.
+- Converted the candidate-space scorers to nullable (`number | null`) with `scoreRoute` weighted over present metrics only, `evidenceOf` tri-state, and `—`/`"n/a"` presentation; benchmark-only `latency_ms_p50: 0` fallback is masked as `—`.
+- Added `membership_revision` + `completion_state: "stale"` to observed performance samples; `readLatestBenchmarkProfilesByEndpointIds` skips mismatched-revision and stale samples; `readCurrentBenchmarkPortfolio` skips mismatched-revision runs.
+- Added destructive-confirm `eject-controller` footer action and empty-pool recovery link.
+- Added membership/profile revision to routing decision detail.
+- Wrapped both benchmark-clear paths in `BEGIN IMMEDIATE` transactions and wrote a `clear-receipt.json`.
+
+### Why
+
+- Three prior partial waves never converged on one revision-stamped projection; `/v1/models` fallback and `?? 0` coercions masked authority, so membership, benchmark attribution, profile derivation, routing, and display could disagree on the unit of truth.
+
+### How
+
+- Strict TDD (RED-before-GREEN) across SP1–SP6; Phase 3.5 self-review with a canonical review bundle; Phase 4 deterministic full-suite verification (host-bridge 756, runtime-ui 454, sqlite-memory 67, profile-aggregator 8); Phase 5 agent-operated rebuilt-runtime QA on `:3501`.
+
+### What was not done (OOS / residuals)
+
+- `profileRevision` is membership-keyed (diagnostic-only) until a distinct profile receipt is warranted; no decision-time membership snapshot is persisted (the field reflects current membership at read time).
+- No live provider benchmark was executed (requires credentials); benchmark exact-variant attribution is verified by read-side filters + unit tests.
+
+### Follow-ups
+
+- If a future requirement needs decision-time membership, persist the revision on the telemetry record.
+- Consider a distinct benchmark-receipt token when profile derivation decouples from membership.
 
 ## Run: `89-codex-role-model-package`
 
@@ -547,3 +580,57 @@ Date: `2026-07-24`
 - `evidence/tb11-system-proof.json`
 - `evidence/tb09-external-interop.json`
 - `evidence/release-validation.json`
+
+## Run: `93-variant-admission-model-pool-integrity`
+
+Date: `2026-08-22`
+
+### Decision
+
+- Treat a remote effort instance as its own routing identity, health/admission
+  lifecycle, telemetry target, and candidate-space entry. Managed LiteLLM
+  inventory is an adapter implementation detail and is not a configurable
+  provider connection.
+- Require the paired Track B distribution at package assembly and startup;
+  Track B's thirteen extensions are mandatory runtime substrate, while their
+  optional consumer actions remain honestly shadow/gated.
+
+### Evidence
+
+- Strict RED/GREEN evidence and Phase 3 review are under
+  `.recursive/run/93-variant-admission-model-pool-integrity/`.
+- Rebuilt executable, bounded Pi alias/Low/High/Max/default traces, Track B
+  receipts, browser checks, and Cloudflare read-only inventory are recorded
+  in `evidence/phase5-paired-runtime-effort-matrix-20260822.json`.
+
+### Promotion boundary
+
+- This decision authorizes no automatic stage/main promotion. A separate
+  Stage RC operation must use the locked run evidence and standard release
+  workflow.
+
+## Run: `94-stage-manifest-commit-identity`
+
+Date: `2026-08-23`
+
+### Decision
+
+- A promotable Stage or production package must carry the exact 40-hex CI
+  commit from source fallback through package assembly, runtime startup,
+  Stage-candidate consumption, and final acceptance.
+- In shallow branch CI, `GITHUB_SHA` is authoritative. `runtime-derived` is
+  not a valid Stage/production commit identity.
+- The failed `stage-rc-23f91a1f7cd8` acceptance is retained as rejected
+  evidence. A fresh corrected Stage RC and fresh UAT are mandatory before any
+  paired main promotion.
+
+### Evidence
+
+- `.recursive/run/94-stage-manifest-commit-identity/evidence/logs/red/`
+- `.recursive/run/94-stage-manifest-commit-identity/evidence/logs/green/`
+
+### Promotion boundary
+
+- This repair does not itself publish a candidate or authorize main. CI must
+  build a new artifact with exact commit identity, then Stage UAT and
+  acceptance must pass.

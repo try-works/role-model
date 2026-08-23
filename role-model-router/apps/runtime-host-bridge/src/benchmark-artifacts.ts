@@ -93,6 +93,12 @@ export interface BenchmarkRunManifest {
   readonly responseCount: number;
   readonly judgeArtifactCount?: number;
   readonly compareArtifactCount?: number;
+  /** Canonical configured-pool membership revision captured once before execution begins. */
+  readonly membershipRevision?: string | null;
+  /** Immutable per-endpoint profile evidence revisions for this completed run. */
+  readonly profileRevisionByEndpointId?: Readonly<Record<string, string>>;
+  /** A run may be retained for diagnostics without being eligible as current evidence. */
+  readonly completionState?: "running" | "completed" | "failed" | "cancelled" | "stale";
 }
 
 function sanitizePathSegment(value: string): string {

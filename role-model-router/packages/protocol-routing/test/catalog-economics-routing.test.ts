@@ -153,7 +153,7 @@ describe("catalog economics routing", () => {
     expect(
       result.catalogEconomicsByEndpointId["moonshot.personal.kimi-code.global.kimi-k2.6"]
         ?.canonicalModelId,
-    ).toBe("moonshotai/kimi-k2.6");
+    ).toBe("moonshot/kimi-k2.6");
     const chosenCostMetric = result.decision.scored_candidates.find(
       (candidate) => candidate.endpoint_id === result.decision.chosen_endpoint_id,
     )?.metric_breakdown.cost;

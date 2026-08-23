@@ -54,6 +54,58 @@ function splitPathSegments(value: string): string[] {
   return value.split(/[\\/]+/).filter((segment) => segment.length > 0);
 }
 
+function isAdmissionReadinessProbe(init: RequestInit | undefined): boolean {
+  if (typeof init?.body !== "string") {
+    return false;
+  }
+  try {
+    const body = JSON.parse(init.body) as {
+      readonly messages?: readonly { readonly content?: unknown }[];
+    };
+    return body.messages?.[0]?.content === "role-model admission readiness probe";
+  } catch {
+    return false;
+  }
+}
+
+function successfulAdmissionReadinessProbe(): Response {
+  return new Response(
+    JSON.stringify({
+      id: "chatcmpl-admission-probe",
+      object: "chat.completion",
+      choices: [
+        { index: 0, message: { role: "assistant", content: "ready" }, finish_reason: "stop" },
+      ],
+    }),
+    { status: 200, headers: { "content-type": "application/json" } },
+  );
+}
+
+function isCodexAdmissionReadinessProbe(requestId: string): boolean {
+  return requestId.startsWith("admission-");
+}
+
+function successfulCodexAdmissionReadinessProbe(requestId: string): {
+  statusCode: number;
+  body: Record<string, unknown>;
+  vendorMetadata: Record<string, unknown>;
+} {
+  return {
+    statusCode: 200,
+    body: {
+      id: `chatcmpl-${requestId}`,
+      choices: [
+        {
+          index: 0,
+          finish_reason: "stop",
+          message: { role: "assistant", content: "ready" },
+        },
+      ],
+    },
+    vendorMetadata: { vendorId: "chatgpt-codex-responses", latencyMs: 1 },
+  };
+}
+
 const registry: EndpointRegistryResult = {
   endpoints: [
     {
@@ -150,6 +202,60 @@ function createLlamaSwapRunningModelsVendorScript(input: {
 }
 
 describe("runtime-host-bridge", () => {
+  test("projects immutable benchmark evidence from the persisted decision snapshot", () => {
+    expect(
+      bridge.projectBenchmarkDecisionEvidence(
+        {
+          chosen_endpoint_id: "deepseek.flash-max",
+          scored_candidates: [
+            {
+              endpoint_id: "deepseek.flash-max",
+              metric_breakdown: {
+                quality: {
+                  value: 0.93,
+                  source: "benchmark",
+                  raw: {
+                    benchmark_endpoint_id: "deepseek.flash-max",
+                    benchmark_quality_score: 0.93,
+                    benchmark_task_score: 0.96,
+                    benchmark_reason: "task",
+                    benchmark_source: "routing-capability-benchmark",
+                    benchmark_evidence_source: "run-artifact",
+                    benchmark_run_id: "run-max-001",
+                    benchmark_run_completed_at_ms: 1_700_000_000_000,
+                    benchmark_run_mode: "full",
+                    benchmark_suite_id: "routing-capability-v2",
+                    benchmark_judge_endpoint_id: "judge.endpoint",
+                    benchmark_judge_model_id: "judge/model",
+                    freshness_weight: 1,
+                  },
+                },
+              },
+            },
+          ],
+        },
+        "deepseek.flash-max",
+      ),
+    ).toEqual({
+      endpointId: "deepseek.flash-max",
+      effectiveQualityScore: 0.93,
+      overallScore: 0.93,
+      taskScore: 0.96,
+      roleScore: null,
+      groupScore: null,
+      reason: "task",
+      source: "routing-capability-benchmark",
+      evidenceSource: "run-artifact",
+      runId: "run-max-001",
+      runCompletedAtMs: 1_700_000_000_000,
+      runMode: "full",
+      suiteId: "routing-capability-v2",
+      judgeEndpointId: "judge.endpoint",
+      judgeModelId: "judge/model",
+      freshnessWeight: 1,
+    });
+  });
+
   test("run 87 runtime HTTP logs require registered channel authority", () => {
     const authority = bridge as typeof bridge & {
       assertRuntimeHostStorageWriteAllowed?: (storageClass: string, channel: string) => unknown;
@@ -255,20 +361,34 @@ describe("runtime-host-bridge", () => {
       }
     ).createModelListResponse(registry);
 
-    expect(result).toEqual({
-      object: "list",
-      data: [
-        {
-          id: "moonshot/kimi-k2.5",
-          object: "model",
-          owned_by: "role-model",
-          endpoint_ids: [
-            "moonshot.personal.kimi-code.global.kimi-k2.5",
-            "moonshot.personal.primary.global.kimi-k2.5",
-          ],
-        },
+    const response = result as { object: string; data: readonly Record<string, unknown>[] };
+    expect(response.object).toBe("list");
+    expect(response.data.map((entry) => entry.id)).toEqual([
+      "moonshot/kimi-k2.5",
+      "moonshot.personal.primary.global.kimi-k2.5",
+      "moonshot.personal.kimi-code.global.kimi-k2.5",
+    ]);
+    expect(response.data[0]).toMatchObject({
+      id: "moonshot/kimi-k2.5",
+      object: "model",
+      owned_by: "role-model",
+      endpoint_ids: [
+        "moonshot.personal.kimi-code.global.kimi-k2.5",
+        "moonshot.personal.primary.global.kimi-k2.5",
       ],
     });
+    expect(response.data.slice(1)).toEqual([
+      expect.objectContaining({
+        id: "moonshot.personal.primary.global.kimi-k2.5",
+        upstream_model_id: "moonshot/kimi-k2.5",
+        fixed_effort: null,
+      }),
+      expect.objectContaining({
+        id: "moonshot.personal.kimi-code.global.kimi-k2.5",
+        upstream_model_id: "moonshot/kimi-k2.5",
+        fixed_effort: null,
+      }),
+    ]);
   });
 
   test("creates alias entries in the model-list response alongside real models", () => {
@@ -289,27 +409,19 @@ describe("runtime-host-bridge", () => {
       },
     ]);
 
-    expect(result).toEqual({
-      object: "list",
-      data: [
-        {
-          id: "gpt-5.4",
-          object: "model",
-          owned_by: "role-model",
-          endpoint_ids: [
-            "moonshot.personal.kimi-code.global.kimi-k2.5",
-            "moonshot.personal.primary.global.kimi-k2.5",
-          ],
-        },
-        {
-          id: "moonshot/kimi-k2.5",
-          object: "model",
-          owned_by: "role-model",
-          endpoint_ids: [
-            "moonshot.personal.kimi-code.global.kimi-k2.5",
-            "moonshot.personal.primary.global.kimi-k2.5",
-          ],
-        },
+    const response = result as { object: string; data: readonly Record<string, unknown>[] };
+    expect(response.object).toBe("list");
+    expect(response.data.map((entry) => entry.id)).toEqual([
+      "gpt-5.4",
+      "moonshot/kimi-k2.5",
+      "moonshot.personal.primary.global.kimi-k2.5",
+      "moonshot.personal.kimi-code.global.kimi-k2.5",
+    ]);
+    expect(response.data[0]).toMatchObject({
+      id: "gpt-5.4",
+      endpoint_ids: [
+        "moonshot.personal.kimi-code.global.kimi-k2.5",
+        "moonshot.personal.primary.global.kimi-k2.5",
       ],
     });
   });
@@ -587,6 +699,7 @@ describe("runtime-host-bridge", () => {
     const clearBenchmarkEndpointData = async () => ({ deleted: 0 });
     const clearBenchmarkData = async () => ({ deleted: 0 });
     const readBenchmarkSummary = async () => ({ subjects: [] });
+    const readBenchmarkPortfolio = async () => ({ entries: [] });
     const listBenchmarkRuns = async () => [];
     const readBenchmarkSummariesByMode = async () => ({ quick: null, full: null });
     const readBenchmarkPreferences = async () => ({ judgeEndpointId: null });
@@ -660,6 +773,7 @@ describe("runtime-host-bridge", () => {
       clearBenchmarkEndpointData,
       clearBenchmarkData,
       readBenchmarkSummary,
+      readBenchmarkPortfolio,
       listBenchmarkRuns,
       readBenchmarkSummariesByMode,
       readBenchmarkPreferences,
@@ -714,6 +828,7 @@ describe("runtime-host-bridge", () => {
     expect(options.clearBenchmarkEndpointData).toBe(clearBenchmarkEndpointData);
     expect(options.clearBenchmarkData).toBe(clearBenchmarkData);
     expect(options.readBenchmarkSummary).toBe(readBenchmarkSummary);
+    expect(options.readBenchmarkPortfolio).toBe(readBenchmarkPortfolio);
     expect(options.listBenchmarkRuns).toBe(listBenchmarkRuns);
     expect(options.readBenchmarkSummariesByMode).toBe(readBenchmarkSummariesByMode);
     expect(options.readBenchmarkPreferences).toBe(readBenchmarkPreferences);
@@ -1216,6 +1331,7 @@ describe("runtime-host-bridge", () => {
       clearBenchmarkEndpointData: async () => ({ success: true }),
       clearBenchmarkData: async () => ({ success: true }),
       readBenchmarkSummary: async () => null,
+      readBenchmarkPortfolio: async () => ({ entries: [] }),
       listBenchmarkRuns: async () => [],
       readBenchmarkSummariesByMode: async () => [],
       readBenchmarkPreferences: async () => null,
@@ -6143,8 +6259,14 @@ describe("runtime-host-bridge", () => {
         endpoint.identity.endpoint_id === "moonshot.personal.primary.global.kimi-k2.5"
           ? {
               ...endpoint,
+              identity: {
+                ...endpoint.identity,
+                endpoint_id: "moonshot.personal.primary.global.kimi-k2.5-high",
+                reasoning_effort: "high",
+              },
               declared: {
                 ...endpoint.declared,
+                endpoint_id: "moonshot.personal.primary.global.kimi-k2.5-high",
                 capabilities: [...endpoint.declared.capabilities, "reasoning"],
               },
             }
@@ -6604,8 +6726,14 @@ describe("runtime-host-bridge", () => {
         endpoint.identity.endpoint_id === "moonshot.personal.primary.global.kimi-k2.5"
           ? {
               ...endpoint,
+              identity: {
+                ...endpoint.identity,
+                endpoint_id: "moonshot.personal.primary.global.kimi-k2.5-high",
+                reasoning_effort: "high",
+              },
               declared: {
                 ...endpoint.declared,
+                endpoint_id: "moonshot.personal.primary.global.kimi-k2.5-high",
                 capabilities: [...endpoint.declared.capabilities, "reasoning"],
               },
             }
@@ -7130,7 +7258,12 @@ describe("runtime-host-bridge", () => {
       },
     ]);
 
-    expect(result.models.map((entry) => entry.id)).toEqual(["gpt-5.4", "moonshot/kimi-k2.5"]);
+    expect(result.models.map((entry) => entry.id)).toEqual([
+      "gpt-5.4",
+      "moonshot/kimi-k2.5",
+      "moonshot.personal.primary.global.kimi-k2.5",
+      "moonshot.personal.kimi-code.global.kimi-k2.5",
+    ]);
     expect(result.setup.recommendedModel).toBe("gpt-5.4");
   });
 
@@ -7174,6 +7307,8 @@ describe("runtime-host-bridge", () => {
       "default.decision-only",
       "difficulty.remote-only",
       "moonshot/kimi-k2.5",
+      "moonshot.personal.primary.global.kimi-k2.5",
+      "moonshot.personal.kimi-code.global.kimi-k2.5",
     ]);
     expect(result.setup.recommendedModel).toBe("difficulty.remote-only");
   });
@@ -7258,20 +7393,20 @@ describe("runtime-host-bridge", () => {
 
       const modelsResponse = await fetch(`http://127.0.0.1:${server.port}/v1/models`);
       expect(modelsResponse.status).toBe(200);
-      expect(await modelsResponse.json()).toEqual({
-        object: "list",
-        data: [
-          {
-            id: "moonshot/kimi-k2.5",
-            object: "model",
-            owned_by: "role-model",
-            endpoint_ids: [
-              "moonshot.personal.kimi-code.global.kimi-k2.5",
-              "moonshot.personal.primary.global.kimi-k2.5",
-            ],
-          },
-        ],
-      });
+      const models = (await modelsResponse.json()) as {
+        object: string;
+        data: readonly Record<string, unknown>[];
+      };
+      expect(models.object).toBe("list");
+      expect(models.data.map((entry) => entry.id)).toEqual([
+        "moonshot/kimi-k2.5",
+        "moonshot.personal.primary.global.kimi-k2.5",
+        "moonshot.personal.kimi-code.global.kimi-k2.5",
+      ]);
+      expect(models.data.slice(1)).toEqual([
+        expect.objectContaining({ upstream_model_id: "moonshot/kimi-k2.5", fixed_effort: null }),
+        expect.objectContaining({ upstream_model_id: "moonshot/kimi-k2.5", fixed_effort: null }),
+      ]);
     } finally {
       await server.close();
     }
@@ -7423,29 +7558,17 @@ describe("runtime-host-bridge", () => {
     try {
       const modelsResponse = await fetch(`http://127.0.0.1:${server.port}/v1/models`);
       expect(modelsResponse.status).toBe(200);
-      expect(await modelsResponse.json()).toEqual({
-        object: "list",
-        data: [
-          {
-            id: "gpt-5.4",
-            object: "model",
-            owned_by: "role-model",
-            endpoint_ids: [
-              "moonshot.personal.kimi-code.global.kimi-k2.5",
-              "moonshot.personal.primary.global.kimi-k2.5",
-            ],
-          },
-          {
-            id: "moonshot/kimi-k2.5",
-            object: "model",
-            owned_by: "role-model",
-            endpoint_ids: [
-              "moonshot.personal.kimi-code.global.kimi-k2.5",
-              "moonshot.personal.primary.global.kimi-k2.5",
-            ],
-          },
-        ],
-      });
+      const models = (await modelsResponse.json()) as {
+        object: string;
+        data: readonly Record<string, unknown>[];
+      };
+      expect(models.object).toBe("list");
+      expect(models.data.map((entry) => entry.id)).toEqual([
+        "gpt-5.4",
+        "moonshot/kimi-k2.5",
+        "moonshot.personal.primary.global.kimi-k2.5",
+        "moonshot.personal.kimi-code.global.kimi-k2.5",
+      ]);
 
       const providerResponse = await fetch(
         `http://127.0.0.1:${server.port}/api/role-model/downstream/openai`,
@@ -7453,10 +7576,12 @@ describe("runtime-host-bridge", () => {
       expect(providerResponse.status).toBe(200);
       await expect(providerResponse.json()).resolves.toEqual(
         expect.objectContaining({
-          models: [
+          models: expect.arrayContaining([
             expect.objectContaining({ id: "gpt-5.4" }),
             expect.objectContaining({ id: "moonshot/kimi-k2.5" }),
-          ],
+            expect.objectContaining({ id: "moonshot.personal.primary.global.kimi-k2.5" }),
+            expect.objectContaining({ id: "moonshot.personal.kimi-code.global.kimi-k2.5" }),
+          ]),
           setup: expect.objectContaining({
             recommendedModel: "gpt-5.4",
           }),
@@ -8137,6 +8262,18 @@ describe("runtime-host-bridge", () => {
         modelId: "moonshot/kimi-k2.5",
         status: "active",
       }),
+      activateEndpointBatch: async (body) => ({
+        activationBatchId: body.activationBatchId,
+        status: "committed",
+        endpoints: [
+          {
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5.high",
+            providerAccountId: "moonshot.personal.primary",
+            modelId: "moonshot/kimi-k2.5",
+            status: "active",
+          },
+        ],
+      }),
       readControllerAssignment: async () => ({
         scope: "global",
         endpointId: "cli.local.coder",
@@ -8562,6 +8699,40 @@ describe("runtime-host-bridge", () => {
         status: "active",
       });
 
+      const activateBatchResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/endpoints/batch`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            activationBatchId: "activation-1",
+            activations: [
+              {
+                providerAccountId: "moonshot.personal.primary",
+                modelId: "moonshot/kimi-k2.5",
+                region: "global",
+                reasoningEffort: "high",
+              },
+            ],
+          }),
+        },
+      );
+      expect(activateBatchResponse.status).toBe(200);
+      expect(await activateBatchResponse.json()).toEqual({
+        activationBatchId: "activation-1",
+        status: "committed",
+        endpoints: [
+          {
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5.high",
+            providerAccountId: "moonshot.personal.primary",
+            modelId: "moonshot/kimi-k2.5",
+            status: "active",
+          },
+        ],
+      });
+
       const endpointsResponse = await fetch(
         `http://127.0.0.1:${server.port}/api/role-model/endpoints`,
       );
@@ -8901,7 +9072,8 @@ describe("runtime-host-bridge", () => {
         `http://127.0.0.1:${server.port}/api/role-model/downstream/openai`,
       );
       expect(response.status).toBe(200);
-      expect(await response.json()).toMatchObject({
+      const provider = (await response.json()) as { models: readonly Record<string, unknown>[] };
+      expect(provider).toMatchObject({
         contractVersion: "role-model.downstream.openai.v1",
         kind: "openai-compatible",
         providerId: "role-model-runtime",
@@ -8920,29 +9092,7 @@ describe("runtime-host-bridge", () => {
           placeholderToken: "role-model-local",
           note: "Inbound API-key validation is not enforced yet. If a downstream client requires a token field, use this placeholder bearer token.",
         },
-        models: [
-          {
-            id: "moonshot/kimi-k2.5",
-            object: "model",
-            owned_by: "role-model",
-            type: "model",
-            endpoint_ids: [
-              "moonshot.personal.kimi-code.global.kimi-k2.5",
-              "moonshot.personal.primary.global.kimi-k2.5",
-            ],
-            piMapping: {
-              contextWindow: 128000,
-              maxTokens: 8192,
-            },
-            modalities: {
-              availableInput: ["text"],
-              output: ["text"],
-            },
-            capabilities: {
-              available: ["text.chat", "tools.function_calling"],
-            },
-          },
-        ],
+        models: expect.any(Array),
         setup: {
           recommendedModel: "moonshot/kimi-k2.5",
           notes: [
@@ -8956,6 +9106,19 @@ describe("runtime-host-bridge", () => {
           catalogVersion: "fallback",
           runtimeInventoryRevision: "fallback",
         },
+      });
+      expect(provider.models.map((entry) => entry.id)).toEqual([
+        "moonshot/kimi-k2.5",
+        "moonshot.personal.primary.global.kimi-k2.5",
+        "moonshot.personal.kimi-code.global.kimi-k2.5",
+      ]);
+      expect(provider.models[0]).toMatchObject({
+        id: "moonshot/kimi-k2.5",
+        endpoint_ids: [
+          "moonshot.personal.kimi-code.global.kimi-k2.5",
+          "moonshot.personal.primary.global.kimi-k2.5",
+        ],
+        piMapping: { contextWindow: 128000, maxTokens: 8192 },
       });
     } finally {
       await server.close();
@@ -10450,11 +10613,10 @@ describe("runtime-host-bridge", () => {
           measuredAtMs: expect.any(Number),
         },
         effectiveMetrics: {
-          quality: expect.objectContaining({
+          quality: {
             value: expect.any(Number),
-            source: "benchmark",
-            freshnessWeight: expect.any(Number),
-          }),
+            source: "default",
+          },
           latency: expect.objectContaining({
             value: expect.any(Number),
             source: "measured",
@@ -10812,7 +10974,7 @@ describe("runtime-host-bridge", () => {
     }
   });
 
-  test("upsertProviderAccount replaces existing model role assignments for the same model", async () => {
+  test("upsertProviderAccount updates one endpoint role assignment without replacing effort siblings", async () => {
     const runtimeStateRoot = await mkdtemp(
       path.join(os.tmpdir(), "role-model-runtime-host-role-assignment-upsert-"),
     );
@@ -10832,6 +10994,7 @@ describe("runtime-host-bridge", () => {
                 providerAccountId: string;
                 modelRoleBindings?: readonly {
                   modelId: string;
+                  endpointId?: string;
                   roleIds: readonly string[];
                   roleAssignmentMode?: string;
                   enabledRoleIds?: readonly string[];
@@ -10879,7 +11042,13 @@ describe("runtime-host-bridge", () => {
         modelRoleBindings: [
           {
             modelId: "moonshot/kimi-k2.5",
-            roleIds: ["general.chat"],
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5-high",
+            roleIds: ["coder"],
+          },
+          {
+            modelId: "moonshot/kimi-k2.5",
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5-max",
+            roleIds: ["architect"],
           },
         ],
       });
@@ -10889,6 +11058,7 @@ describe("runtime-host-bridge", () => {
         modelRoleBindings: [
           {
             modelId: "moonshot/kimi-k2.5",
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5-max",
             roleIds: [],
             roleAssignmentMode: "all",
             enabledRoleIds: [],
@@ -10903,6 +11073,12 @@ describe("runtime-host-bridge", () => {
       expect(account?.modelRoleBindings).toEqual([
         {
           modelId: "moonshot/kimi-k2.5",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5-high",
+          roleIds: ["coder"],
+        },
+        {
+          modelId: "moonshot/kimi-k2.5",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5-max",
           roleIds: [],
           roleAssignmentMode: "all",
           enabledRoleIds: [],
@@ -11844,7 +12020,7 @@ describe("runtime-host-bridge", () => {
     });
   });
 
-  test("routes hard requests using bucketed observed profiles and records the selected difficulty bucket", async () => {
+  test("routes hard requests using bucketed live operational profiles and records the selected difficulty bucket", async () => {
     const runtimeStateRoot = await mkdtemp(
       path.join(os.tmpdir(), "role-model-runtime-host-difficulty-bucket-tests-"),
     );
@@ -12081,12 +12257,12 @@ describe("runtime-host-bridge", () => {
         requestId,
       ),
     ).resolves.toMatchObject({
-      endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      endpointId: "anthropic.litellm.global.claude-3-7-sonnet",
     });
 
     await expect(backend.readRequestObservation(requestId)).resolves.toMatchObject({
       requestId,
-      endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      endpointId: "anthropic.litellm.global.claude-3-7-sonnet",
       routingDiagnostics: {
         difficultyRouting: expect.objectContaining({
           difficulty: "hard",
@@ -12094,12 +12270,12 @@ describe("runtime-host-bridge", () => {
           fallbackApplied: false,
         }),
         observedProfile: {
-          endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          endpointId: "anthropic.litellm.global.claude-3-7-sonnet",
           source: "runtime-state",
           readMode: "per-request",
           difficultyBucket: "hard",
           bucketOverrideApplied: true,
-          measuredAtMs: 11_000,
+          measuredAtMs: 11_100,
         },
       },
     });
@@ -12140,7 +12316,7 @@ describe("runtime-host-bridge", () => {
     expect(result).toBe("hard");
   });
 
-  test("keeps fresh endpoint-wide metrics when stale hard-bucket quality is present under benchmark-driven routing", async () => {
+  test("keeps fresh endpoint-wide metrics when unrevisioned hard-bucket benchmark evidence is quarantined", async () => {
     const runtimeStateRoot = await mkdtemp(
       path.join(os.tmpdir(), "role-model-runtime-host-difficulty-merge-tests-"),
     );
@@ -12236,6 +12412,12 @@ describe("runtime-host-bridge", () => {
     );
     const insertBucketedProfile = database.prepare(
       "INSERT INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+    );
+    const insertBenchmarkSample = database.prepare(
+      "INSERT INTO observed_performance_samples (sample_id, endpoint_id, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
+    );
+    const insertBucketedBenchmarkSample = database.prepare(
+      "INSERT INTO observed_performance_samples_by_difficulty (sample_id, endpoint_id, difficulty_bucket, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
     );
     const buildProfile = (input: {
       endpointId: string;
@@ -12350,6 +12532,39 @@ describe("runtime-host-bridge", () => {
         }),
       ),
     );
+    for (const [endpointId, score, timestampMs] of [
+      ["openai.litellm.global.openai-gpt-4-1-mini-fast", 0.92, 1_000],
+      ["anthropic.litellm.global.claude-3-7-sonnet", 0.3, 1_100],
+    ] as const) {
+      const sample = {
+        endpoint_id: endpointId,
+        endpoint_version: "run50-difficulty-merge-v1",
+        source_type: "benchmark",
+        timestamp_ms: timestampMs,
+        latency_ms: 900,
+        success: true,
+        judge_score: score,
+      };
+      insertBenchmarkSample.run(
+        `merge-benchmark-${endpointId}`,
+        endpointId,
+        null,
+        null,
+        "benchmark",
+        timestampMs,
+        JSON.stringify(sample),
+      );
+      insertBucketedBenchmarkSample.run(
+        `merge-benchmark-hard-${endpointId}`,
+        endpointId,
+        "hard",
+        null,
+        null,
+        "benchmark",
+        timestampMs,
+        JSON.stringify(sample),
+      );
+    }
     database.close();
 
     const requestId = "req-runtime-bridge-difficulty-merge-001";
@@ -12413,7 +12628,10 @@ describe("runtime-host-bridge", () => {
       };
     };
     expect(observation.routingDiagnostics?.effectiveMetrics?.quality).toMatchObject({
-      source: "benchmark",
+      // Run 92 makes the configured-pool membership revision an identity fence.
+      // These legacy fixture samples intentionally have no revision, therefore
+      // they cannot become current benchmark routing evidence.
+      source: "measured",
       value: expect.any(Number),
       freshnessWeight: expect.any(Number),
     });
@@ -14619,7 +14837,7 @@ describe("runtime-host-bridge", () => {
         }) => Promise<{
           readRuntimeSummary?: () => Promise<unknown>;
           listProviders?: () => Promise<unknown>;
-          listModels?: () => Promise<unknown>;
+          listModels?: (input?: { readonly providerId?: string }) => Promise<unknown>;
           listRoles?: () => Promise<unknown>;
           listAccounts?: () => Promise<unknown>;
           listProviderDeviceAuthorizations?: () => Promise<unknown>;
@@ -14640,6 +14858,9 @@ describe("runtime-host-bridge", () => {
       networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
+        }
         if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
           expect(init?.method ?? "POST").toBe("POST");
           return new Response(
@@ -14706,6 +14927,9 @@ describe("runtime-host-bridge", () => {
           );
         }
 
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
+        }
         throw new Error(`Unexpected network request: ${url}`);
       },
     });
@@ -14771,6 +14995,34 @@ describe("runtime-host-bridge", () => {
         }),
       ]),
     );
+    const openAiCatalogModels = (await backend.listModels?.({
+      providerId: "openai",
+    })) as readonly {
+      readonly id: string;
+      readonly providerId: string;
+      readonly endpoint_ids: readonly string[];
+      readonly reasoningEffortLevels: readonly string[];
+    }[];
+    expect(openAiCatalogModels).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "openai/gpt-5.6-sol",
+          providerId: "openai",
+          endpoint_ids: [],
+          reasoningEffortLevels: ["none", "low", "medium", "high", "xhigh", "max"],
+        }),
+        expect.objectContaining({
+          id: "chatgpt/gpt-5.6-sol",
+          providerId: "chatgpt",
+          endpoint_ids: [],
+          reasoningEffortLevels: ["low", "medium", "high", "xhigh", "max", "ultra"],
+        }),
+      ]),
+    );
+    expect([...new Set(openAiCatalogModels.map((model) => model.providerId))].sort()).toEqual([
+      "chatgpt",
+      "openai",
+    ]);
     await expect(backend.listRoles?.()).resolves.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -14951,7 +15203,7 @@ describe("runtime-host-bridge", () => {
       ]),
     );
 
-    await expect(backend.readControllerAssignment?.()).resolves.toEqual({
+    await expect(backend.readControllerAssignment?.()).resolves.toMatchObject({
       scope: "global",
       endpointId: "test.capture.chat-v1",
       modelId: "deepseek/chat-capture-v1",
@@ -15188,6 +15440,9 @@ describe("runtime-host-bridge", () => {
         networkFetcher: async (input, init) => {
           const url =
             typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
+          }
           if (url === "https://api.moonshot.ai/v1/chat/completions") {
             expect(init?.method ?? "POST").toBe("POST");
             expect(init?.headers).toEqual(
@@ -15224,6 +15479,9 @@ describe("runtime-host-bridge", () => {
             );
           }
 
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
+          }
           throw new Error(`Unexpected network request: ${url}`);
         },
       });
@@ -15353,7 +15611,13 @@ describe("runtime-host-bridge", () => {
         networkFetcher: async (input, init) => {
           const url =
             typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
+          }
           if (url !== "https://api.moonshot.ai/v1/chat/completions") {
+            if (isAdmissionReadinessProbe(init)) {
+              return successfulAdmissionReadinessProbe();
+            }
             throw new Error(`Unexpected network request: ${url}`);
           }
 
@@ -15633,6 +15897,9 @@ describe("runtime-host-bridge", () => {
       networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
+        }
         expect(url).toBe("https://api.deepseek.com/v1/chat/completions");
         seenRequestBodies.push(JSON.parse(String(init?.body)));
         return new Response(
@@ -15938,7 +16205,9 @@ describe("runtime-host-bridge", () => {
         providerAccountId: "openai.personal.codex-subscription",
         modelId: "chatgpt/gpt-5.4",
         region: "global",
+        reasoningEffort: "high",
       });
+      expect(executeAttempts).toBe(0);
 
       await expect(
         backend.executeChatCompletions(
@@ -16052,6 +16321,17 @@ describe("runtime-host-bridge", () => {
         ),
       ).rejects.toThrow(/could not reach the ai service|timed out/i);
       expect(executeAttempts).toBe(6);
+      await expect(backend.listEndpoints()).resolves.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            endpointId: endpoint.endpointId,
+            status: "degraded",
+            healthStatus: "degraded",
+            routingEligible: false,
+            benchmarkEligible: false,
+          }),
+        ]),
+      );
 
       const server = await (
         bridge as {
@@ -16396,6 +16676,9 @@ describe("runtime-host-bridge", () => {
       },
       codexExecutionAdapter: {
         executeRequest: async ({ requestId, modelId, requestCapture }) => {
+          if (isCodexAdmissionReadinessProbe(requestId)) {
+            return successfulCodexAdmissionReadinessProbe(requestId);
+          }
           seenRequests.push({
             requestId,
             modelId,
@@ -16864,7 +17147,10 @@ describe("runtime-host-bridge", () => {
         },
       },
       codexExecutionAdapter: {
-        executeRequest: async ({ authPayload, modelId }) => {
+        executeRequest: async ({ authPayload, modelId, requestId }) => {
+          if (isCodexAdmissionReadinessProbe(requestId)) {
+            return successfulCodexAdmissionReadinessProbe(requestId);
+          }
           seenAuthRefreshes.push(String(authPayload.last_refresh ?? ""));
           const tokens =
             authPayload && typeof authPayload === "object"
@@ -17221,6 +17507,9 @@ describe("runtime-host-bridge", () => {
       },
       codexExecutionAdapter: {
         executeRequest: async ({ executeDynamicToolCall, requestCapture, requestId }) => {
+          if (isCodexAdmissionReadinessProbe(requestId)) {
+            return successfulCodexAdmissionReadinessProbe(requestId);
+          }
           expect(requestCapture.body.tools).toEqual(
             expect.arrayContaining([
               expect.objectContaining({
@@ -17631,7 +17920,10 @@ describe("runtime-host-bridge", () => {
         },
       },
       codexExecutionAdapter: {
-        executeRequest: async () => {
+        executeRequest: async ({ requestId }) => {
+          if (isCodexAdmissionReadinessProbe(requestId)) {
+            return successfulCodexAdmissionReadinessProbe(requestId);
+          }
           executeAttempts += 1;
           return {
             statusCode: 400,
@@ -17784,6 +18076,9 @@ describe("runtime-host-bridge", () => {
         networkFetcher: async (input, init) => {
           const url =
             typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
+          }
           const body = init?.body ? JSON.parse(String(init.body)) : {};
 
           if (url === "https://api.moonshot.ai/v1/chat/completions") {
@@ -17844,6 +18139,9 @@ describe("runtime-host-bridge", () => {
             );
           }
 
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
+          }
           throw new Error(`Unexpected network request: ${url}`);
         },
       });
@@ -18112,6 +18410,9 @@ describe("runtime-host-bridge", () => {
           );
         }
 
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
+        }
         throw new Error(`Unexpected network request: ${url}`);
       },
     });
@@ -18220,6 +18521,9 @@ describe("runtime-host-bridge", () => {
         networkFetcher: async (input, init) => {
           const url =
             typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
+          }
           const body = init?.body ? JSON.parse(String(init.body)) : {};
 
           if (url === "https://api.moonshot.ai/v1/chat/completions") {
@@ -18251,6 +18555,9 @@ describe("runtime-host-bridge", () => {
             );
           }
 
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
+          }
           throw new Error(`Unexpected network request: ${url}`);
         },
       });
@@ -18479,7 +18786,7 @@ describe("runtime-host-bridge", () => {
       fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       runtimeStateRoot,
       scopeId: "runtime-host-local-peer-miss-tests",
-      networkFetcher: async (input) => {
+      networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
         if (url === `${peerUrl}/v1/models`) {
@@ -18492,6 +18799,9 @@ describe("runtime-host-bridge", () => {
           );
         }
 
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
+        }
         throw new Error(`Unexpected network request: ${url}`);
       },
     });
@@ -18545,6 +18855,9 @@ describe("runtime-host-bridge", () => {
         );
       }
 
+      if (isAdmissionReadinessProbe(init)) {
+        return successfulAdmissionReadinessProbe();
+      }
       throw new Error(`Unexpected network request: ${url}`);
     };
 
@@ -18613,9 +18926,12 @@ describe("runtime-host-bridge", () => {
       fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       runtimeStateRoot,
       scopeId: runtimeStateId,
-      networkFetcher: async (input) => {
+      networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
+        }
         throw new Error(`Unexpected network request after restart: ${url}`);
       },
     });
@@ -18670,6 +18986,9 @@ describe("runtime-host-bridge", () => {
           );
         }
 
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
+        }
         throw new Error(`Unexpected network request: ${url}`);
       },
     });
@@ -18705,9 +19024,12 @@ describe("runtime-host-bridge", () => {
       fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       runtimeStateRoot,
       scopeId: runtimeStateId,
-      networkFetcher: async (input) => {
+      networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
+        }
         throw new Error(`Unexpected network request after restart: ${url}`);
       },
     });
@@ -18762,11 +19084,17 @@ describe("runtime-host-bridge", () => {
     ).createRuntimeBridgeBackend({
       repoRoot,
       fixtureRoot: testFixtureRoot,
-      runtimeStateRoot: path.join(os.tmpdir(), "role-model-runtime-host-kimi-execution-tests"),
-      scopeId: "runtime-host-kimi-execution-tests",
+      runtimeStateRoot: path.join(
+        os.tmpdir(),
+        `role-model-runtime-host-kimi-execution-tests-${Date.now()}`,
+      ),
+      scopeId: `runtime-host-kimi-execution-tests-${Date.now()}`,
       networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
+        }
         if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
           expect(init?.method ?? "POST").toBe("POST");
           return new Response(
@@ -18833,6 +19161,9 @@ describe("runtime-host-bridge", () => {
           );
         }
 
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
+        }
         throw new Error(`Unexpected network request: ${url}`);
       },
     });
@@ -18977,6 +19308,9 @@ describe("runtime-host-bridge", () => {
         networkFetcher: async (input, init) => {
           const url =
             typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
+          }
           if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
             return new Response(
               JSON.stringify({
@@ -19084,6 +19418,9 @@ describe("runtime-host-bridge", () => {
             );
           }
 
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
+          }
           throw new Error(`Unexpected network request: ${url}`);
         },
       });
@@ -19183,7 +19520,7 @@ describe("runtime-host-bridge", () => {
 
       const runtimeStateRoot = path.join(
         os.tmpdir(),
-        `runtime-host-${deepseekModelId.replace(/[/.]/g, "-")}-web-search-tests`,
+        `runtime-host-${deepseekModelId.replace(/[/.]/g, "-")}-web-search-tests-${Date.now()}`,
       );
       const originalDeepSeekApiKey = process.env.DEEPSEEK_API_KEY;
       process.env.DEEPSEEK_API_KEY = "deepseek-api-key";
@@ -19234,6 +19571,10 @@ describe("runtime-host-bridge", () => {
                   ? input.toString()
                   : input.url;
 
+            if (isAdmissionReadinessProbe(init)) {
+              return successfulAdmissionReadinessProbe();
+            }
+
             if (url === "https://api.deepseek.com/v1/chat/completions") {
               providerRequestCount += 1;
               const requestBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
@@ -19276,6 +19617,9 @@ describe("runtime-host-bridge", () => {
               }
             }
 
+            if (isAdmissionReadinessProbe(init)) {
+              return successfulAdmissionReadinessProbe();
+            }
             throw new Error(`Unexpected network request: ${url}`);
           },
         });
@@ -19406,7 +19750,7 @@ describe("runtime-host-bridge", () => {
 
       const runtimeStateRoot = path.join(
         os.tmpdir(),
-        `runtime-host-deepseek-dsml-${dsmlCase.name.replace(/[^a-z0-9]+/gi, "-")}-tests`,
+        `runtime-host-deepseek-dsml-${dsmlCase.name.replace(/[^a-z0-9]+/gi, "-")}-tests-${Date.now()}`,
       );
       const originalDeepSeekApiKey = process.env.DEEPSEEK_API_KEY;
       process.env.DEEPSEEK_API_KEY = "deepseek-api-key";
@@ -19456,6 +19800,10 @@ describe("runtime-host-bridge", () => {
                   ? input.toString()
                   : input.url;
 
+            if (isAdmissionReadinessProbe(init)) {
+              return successfulAdmissionReadinessProbe();
+            }
+
             if (url === "https://api.deepseek.com/v1/chat/completions") {
               providerRequestCount += 1;
               const requestBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
@@ -19485,6 +19833,9 @@ describe("runtime-host-bridge", () => {
               );
             }
 
+            if (isAdmissionReadinessProbe(init)) {
+              return successfulAdmissionReadinessProbe();
+            }
             throw new Error(`Unexpected network request: ${url}`);
           },
         });
@@ -21087,6 +21438,118 @@ describe("runtime-host-bridge", () => {
     });
   });
 
+  test("projects canonical model, endpoint, effort, and effort-source telemetry identities", async () => {
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-telemetry-identity-tests-"),
+    );
+    const scopeId = "runtime-host-telemetry-identity-tests";
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+        }) => Promise<{
+          queryTelemetryAnalytics?: (body: Record<string, unknown>) => Promise<unknown>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+    });
+    const databasePath = resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId });
+    const startedAtMs = Date.now();
+    for (const [effort, effortSource] of [
+      ["high", "variant"],
+      ["max", "variant_coerced"],
+    ] as const) {
+      persistRuntimeTelemetryFailure({
+        databasePath,
+        requestId: `req-telemetry-identity-${effort}`,
+        endpointId: `deepseek.personal.flash.${effort}`,
+        modelId: "deepseek/deepseek-v4-flash",
+        reasoningEffort: effort,
+        effortSource,
+        sourceType: "remote",
+        statusCode: 503,
+        errorClass: "identity_fixture",
+      });
+    }
+    const endedAtMs = Date.now() + 1_000;
+
+    const modelResponse = await backend.queryTelemetryAnalytics?.({
+      startAtMs: startedAtMs - 1_000,
+      endAtMs: endedAtMs,
+      granularity: "hour",
+      metrics: ["requestCount"],
+      breakdown: "modelId",
+    });
+    expect(modelResponse).toEqual(
+      expect.objectContaining({
+        totals: expect.objectContaining({ requestCount: 2 }),
+        labels: expect.objectContaining({
+          modelId: {
+            "deepseek/deepseek-v4-flash": "DeepSeek V4 Flash",
+          },
+        }),
+        identities: expect.objectContaining({
+          modelId: expect.objectContaining({
+            "deepseek/deepseek-v4-flash": expect.objectContaining({
+              aggregationScope: "upstream-model",
+              label: "DeepSeek V4 Flash",
+              modelId: "deepseek/deepseek-v4-flash",
+              reasoningEffort: null,
+              endpointId: null,
+              effortSource: null,
+              sourceType: null,
+            }),
+          }),
+        }),
+      }),
+    );
+
+    await expect(
+      backend.queryTelemetryAnalytics?.({
+        startAtMs: startedAtMs - 1_000,
+        endAtMs: endedAtMs,
+        granularity: "hour",
+        metrics: ["requestCount"],
+        breakdown: "reasoningEffort",
+        filters: { effortSources: ["variant"] },
+        ranking: { dimension: "effortSource", metric: "requestCount", limit: 8 },
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        totals: expect.objectContaining({ requestCount: 1 }),
+        buckets: [
+          expect.objectContaining({
+            series: [
+              expect.objectContaining({ key: "high", label: "High", metrics: { requestCount: 1 } }),
+            ],
+          }),
+        ],
+        ranking: expect.objectContaining({
+          rows: [expect.objectContaining({ key: "variant", label: "Variant fixed" })],
+        }),
+        identities: expect.objectContaining({
+          reasoningEffort: expect.objectContaining({
+            high: expect.objectContaining({
+              aggregationScope: "reasoning-effort",
+              reasoningEffort: "high",
+              endpointId: null,
+              modelId: null,
+              effortSource: null,
+              sourceType: null,
+            }),
+          }),
+        }),
+      }),
+    );
+  });
+
   test("startup retention cleanup removes expired raw observations while preserving telemetry ledger evidence", async () => {
     const runtimeStateRoot = await mkdtemp(
       path.join(os.tmpdir(), "role-model-runtime-host-retention-cleanup-"),
@@ -21423,6 +21886,7 @@ describe("runtime-host-bridge", () => {
         },
         body: JSON.stringify({
           model: "nonexistent/model-for-failure",
+          reasoning_effort: "high",
           messages: [{ role: "user", content: "Force a telemetry failure row." }],
         }),
       });
@@ -21474,12 +21938,16 @@ describe("runtime-host-bridge", () => {
         requestId?: string;
         requestedModelId?: string | null;
         requestOperation?: string | null;
+        reasoningEffort?: string | null;
+        effortSource?: string | null;
       }>;
       expect(telemetryRows).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             clientRequestId,
             requestClass: "live_request",
+            reasoningEffort: null,
+            effortSource: "none",
           }),
           expect.objectContaining({
             clientRequestId: capabilityClientRequestId,
@@ -21526,6 +21994,8 @@ describe("runtime-host-bridge", () => {
         expect.objectContaining({
           requestId: genericFailureRow?.requestId,
           clientRequestId,
+          reasoningEffort: null,
+          effortSource: "none",
           observationAvailability: expect.objectContaining({
             source: "raw-observation",
             rawObservationAvailable: true,
@@ -21551,6 +22021,10 @@ describe("runtime-host-bridge", () => {
                 }),
               }),
             }),
+          }),
+          usageEvent: expect.objectContaining({
+            reasoning_effort: null,
+            effort_source: "none",
           }),
         }),
       );
@@ -21985,6 +22459,9 @@ describe("runtime-host-bridge", () => {
       networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
+        }
         if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
           return new Response(
             JSON.stringify({
@@ -22037,6 +22514,9 @@ describe("runtime-host-bridge", () => {
             }),
             { status: 200, headers: { "content-type": "text/event-stream; charset=utf-8" } },
           );
+        }
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
         }
         throw new Error(`Unexpected network request: ${url}`);
       },
@@ -22173,6 +22653,9 @@ describe("runtime-host-bridge", () => {
         networkFetcher: async (input, init) => {
           const url =
             typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
+          }
           if (url === "https://api.moonshot.ai/v1/chat/completions") {
             const authHeader = (init?.headers as Record<string, string>)?.authorization ?? "";
             capturedAuthHeaders.push(authHeader);
@@ -22201,6 +22684,9 @@ describe("runtime-host-bridge", () => {
               }),
               { status: 200, headers: { "content-type": "text/event-stream; charset=utf-8" } },
             );
+          }
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
           }
           throw new Error(`Unexpected network request: ${url}`);
         },
@@ -22309,7 +22795,7 @@ describe("runtime-host-bridge", () => {
         fixtureRoot: testFixtureRoot,
         runtimeStateRoot,
         scopeId,
-        networkFetcher: async (input) => {
+        networkFetcher: async (input, init) => {
           const url =
             typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
           if (url === "https://api.deepseek.com/chat/completions") {
@@ -22333,6 +22819,9 @@ describe("runtime-host-bridge", () => {
               }),
               { status: 200, headers: { "content-type": "text/event-stream; charset=utf-8" } },
             );
+          }
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
           }
           throw new Error(`Unexpected network request: ${url}`);
         },
@@ -22440,7 +22929,7 @@ describe("runtime-host-bridge", () => {
         fixtureRoot: testFixtureRoot,
         runtimeStateRoot,
         scopeId,
-        networkFetcher: async (input) => {
+        networkFetcher: async (input, init) => {
           const url =
             typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
           if (url === "https://api.deepseek.com/chat/completions") {
@@ -22469,6 +22958,9 @@ describe("runtime-host-bridge", () => {
               }),
               { status: 200, headers: { "content-type": "text/event-stream; charset=utf-8" } },
             );
+          }
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
           }
           throw new Error(`Unexpected network request: ${url}`);
         },
@@ -22506,15 +22998,19 @@ describe("runtime-host-bridge", () => {
         rotationState: "stable",
       });
 
-      await backend.activateEndpoint?.({
+      const effortEndpoint = await backend.activateEndpoint?.({
         providerAccountId: "deepseek.personal.apikey",
         modelId: "deepseek/deepseek-v4-flash",
         region: "global",
+        reasoningEffort: "high",
       });
+      expect(effortEndpoint?.endpointId).toBe(
+        "deepseek.personal.apikey.global.deepseek-v4-flash-high",
+      );
 
       const result = await backend.executeChatCompletions(
         {
-          model: "deepseek/deepseek-v4-flash",
+          model: effortEndpoint?.endpointId ?? "missing-effort-endpoint",
           stream: true,
           reasoning_effort: "high",
           messages: [{ role: "user", content: "Say Ready." }],
@@ -22594,7 +23090,7 @@ describe("runtime-host-bridge", () => {
         fixtureRoot: testFixtureRoot,
         runtimeStateRoot,
         scopeId,
-        networkFetcher: async (input) => {
+        networkFetcher: async (input, init) => {
           const url =
             typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
           if (url === "https://api.deepseek.com/chat/completions") {
@@ -22618,6 +23114,9 @@ describe("runtime-host-bridge", () => {
               }),
               { status: 200, headers: { "content-type": "text/event-stream; charset=utf-8" } },
             );
+          }
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
           }
           throw new Error(`Unexpected network request: ${url}`);
         },
@@ -22737,6 +23236,9 @@ describe("runtime-host-bridge", () => {
         networkFetcher: async (input, init) => {
           const url =
             typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
+          }
           if (url === "https://api.moonshot.ai/v1/chat/completions") {
             const parsedBody = JSON.parse(String(init?.body ?? "{}")) as {
               model?: string;
@@ -22764,6 +23266,9 @@ describe("runtime-host-bridge", () => {
                 headers: { "content-type": "application/json" },
               },
             );
+          }
+          if (isAdmissionReadinessProbe(init)) {
+            return successfulAdmissionReadinessProbe();
           }
           throw new Error(`Unexpected network request: ${url}`);
         },

@@ -6,6 +6,7 @@ import path from "node:path";
 import { createInterface } from "node:readline";
 import { pathToFileURL } from "node:url";
 
+import type { RuntimeEffortSource } from "@role-model-router/runtime-observability";
 import {
   type LegacyMigrationState,
   type LegacySqliteMigration,
@@ -665,12 +666,15 @@ export function validateRun88ProviderResponseObservation(
 export async function stageTrackBRuntimeDistribution(options: {
   readonly sourceRoot: string;
   readonly releaseDir: string;
+  /** Exact public Git tree from which an N-generation private distribution was built. */
+  readonly expectedPublicSourceTree?: string;
 }) {
   const manifestPath = path.join(options.sourceRoot, "track-b-runtime-manifest.json");
   const manifestBytes = await readFile(manifestPath);
   const manifestSha256 = createHash("sha256").update(manifestBytes).digest("hex");
   const manifest = JSON.parse(manifestBytes.toString("utf8")) as {
     readonly schemaVersion: string;
+    readonly publicSourceTree?: string;
     readonly sidecar: { readonly modulePath: string; readonly artifactSha256: string };
     readonly publicRuntimeAdapter?: {
       readonly modulePath: string;
@@ -695,6 +699,16 @@ export async function stageTrackBRuntimeDistribution(options: {
         : null;
   if (!compatibilityGeneration || manifest.extensions.length !== 13) {
     throw new Error("Track B runtime distribution manifest is unsupported or incomplete");
+  }
+  if (options.expectedPublicSourceTree) {
+    if (
+      !/^[0-9a-f]{40}$/.test(options.expectedPublicSourceTree) ||
+      manifest.publicSourceTree !== options.expectedPublicSourceTree
+    ) {
+      throw new Error(
+        "Track B runtime distribution public source tree does not match this package",
+      );
+    }
   }
   if (
     manifest.publicRuntimeAdapter &&
@@ -748,6 +762,7 @@ export async function stageTrackBRuntimeDistribution(options: {
     sidecarSha256: manifest.sidecar.artifactSha256,
     extensionCount: manifest.extensions.length,
     compatibilityGeneration,
+    publicSourceTree: manifest.publicSourceTree ?? null,
     manifestSha256,
   };
 }
@@ -828,6 +843,10 @@ export interface TrackBPostObservationWorkItem extends Readonly<Record<string, u
   readonly requestId: string;
   readonly routingDecisionId: string;
   readonly endpointId: string;
+  readonly modelId?: string;
+  readonly reasoningEffort?: string | null;
+  readonly effortSource?: RuntimeEffortSource;
+  readonly legacyIdentityMissing?: true;
   readonly run88Correlation?: Readonly<Record<string, unknown>>;
 }
 
@@ -873,7 +892,7 @@ export function createTrackBPostObservationOutbox({
       if (!row.requestId || !row.routingDecisionId || !row.endpointId) {
         throw new Error("Track B post-observation work item is incomplete");
       }
-      return {
+      const base = {
         requestId: String(row.requestId),
         routingDecisionId: String(row.routingDecisionId),
         endpointId: String(row.endpointId),
@@ -886,6 +905,14 @@ export function createTrackBPostObservationOutbox({
             }
           : {}),
       };
+      const hasCompleteIdentity =
+        Object.hasOwn(row, "modelId") &&
+        Object.hasOwn(row, "reasoningEffort") &&
+        Object.hasOwn(row, "effortSource");
+      if (!hasCompleteIdentity) {
+        return { ...base, legacyIdentityMissing: true as const };
+      }
+      return { ...base, ...normalizeTrackBVariantIdentity(row) };
     });
     const normalizedReceipts = receipts.map((item) => {
       const row = item as Record<string, unknown>;
@@ -918,10 +945,11 @@ export function createTrackBPostObservationOutbox({
   return {
     enqueue(observation: Readonly<Record<string, unknown>>): Promise<void> {
       return exclusive(async () => {
+        const identity = normalizeTrackBVariantIdentity(observation);
         const item = {
           requestId: String(observation.requestId ?? ""),
           routingDecisionId: String(observation.routingDecisionId ?? ""),
-          endpointId: String(observation.endpointId ?? ""),
+          ...identity,
           ...(observation.run88Correlation && typeof observation.run88Correlation === "object"
             ? {
                 run88Correlation: normalizeRun88RuntimeCorrelation(
@@ -953,6 +981,21 @@ export function createTrackBPostObservationOutbox({
         while (state.pending.length) {
           const item = state.pending[0];
           if (!item) break;
+          if (item.legacyIdentityMissing) {
+            state.pending.shift();
+            state.receipts.push({
+              requestId: item.requestId,
+              completedAt: new Date().toISOString(),
+              result: {
+                status: "retired_legacy_missing_variant_identity",
+                productionMutation: false,
+              },
+            });
+            if (state.receipts.length > maxItems)
+              state.receipts.splice(0, state.receipts.length - maxItems);
+            await persist(state);
+            continue;
+          }
           const result = await handler(item);
           state.pending.shift();
           state.receipts.push({
@@ -995,6 +1038,87 @@ export interface TrackBShadowPipelineInput {
   readonly counterfactuals: readonly { readonly id: string; readonly suffix: readonly unknown[] }[];
   readonly evaluationCases: readonly { readonly expected: unknown; readonly actual: unknown }[];
   readonly trajectoryEvents: readonly Record<string, unknown>[];
+  readonly identity?: TrackBVariantIdentity;
+}
+
+export interface TrackBVariantIdentity {
+  readonly endpointId: string;
+  readonly modelId: string;
+  readonly reasoningEffort: string | null;
+  readonly effortSource: RuntimeEffortSource;
+}
+
+const TRACK_B_EFFORT_SOURCES = new Set<RuntimeEffortSource>([
+  "none",
+  "client",
+  "variant",
+  "variant_coerced",
+]);
+
+function readTrackBIdentityText(value: unknown, field: string): string {
+  if (typeof value !== "string" || !value.trim() || value.length > 256) {
+    throw new Error(`persisted observation effort identity ${field} is invalid`);
+  }
+  return value;
+}
+
+function normalizeTrackBVariantIdentity(
+  observation: Readonly<Record<string, unknown>>,
+): TrackBVariantIdentity {
+  const usageEvent =
+    observation.usageEvent &&
+    typeof observation.usageEvent === "object" &&
+    !Array.isArray(observation.usageEvent)
+      ? (observation.usageEvent as Record<string, unknown>)
+      : null;
+  const endpointId = readTrackBIdentityText(observation.endpointId, "endpointId");
+  const modelId = readTrackBIdentityText(observation.modelId ?? usageEvent?.model_id, "modelId");
+  if (usageEvent?.endpoint_id !== undefined && usageEvent.endpoint_id !== endpointId) {
+    throw new Error("persisted observation effort identity endpointId conflicts with usageEvent");
+  }
+  if (usageEvent?.model_id !== undefined && usageEvent.model_id !== modelId) {
+    throw new Error("persisted observation effort identity modelId conflicts with usageEvent");
+  }
+  if (!("reasoningEffort" in observation) || !("effortSource" in observation)) {
+    throw new Error("persisted observation effort identity is incomplete");
+  }
+  const reasoningEffort = observation.reasoningEffort;
+  if (
+    reasoningEffort !== null &&
+    (typeof reasoningEffort !== "string" || !reasoningEffort.trim() || reasoningEffort.length > 128)
+  ) {
+    throw new Error("persisted observation effort identity reasoningEffort is invalid");
+  }
+  const effortSource = observation.effortSource;
+  if (
+    typeof effortSource !== "string" ||
+    !TRACK_B_EFFORT_SOURCES.has(effortSource as RuntimeEffortSource)
+  ) {
+    throw new Error("persisted observation effort identity effortSource is invalid");
+  }
+  if (
+    (reasoningEffort === null && effortSource !== "none") ||
+    (reasoningEffort !== null && effortSource === "none")
+  ) {
+    throw new Error("persisted observation effort identity effort/source pair is inconsistent");
+  }
+  if (
+    usageEvent?.reasoning_effort !== undefined &&
+    usageEvent.reasoning_effort !== reasoningEffort
+  ) {
+    throw new Error(
+      "persisted observation effort identity reasoningEffort conflicts with usageEvent",
+    );
+  }
+  if (usageEvent?.effort_source !== undefined && usageEvent.effort_source !== effortSource) {
+    throw new Error("persisted observation effort identity effortSource conflicts with usageEvent");
+  }
+  return {
+    endpointId,
+    modelId,
+    reasoningEffort: reasoningEffort as string | null,
+    effortSource: effortSource as RuntimeEffortSource,
+  };
 }
 
 export async function runTrackBShadowPipeline(
@@ -1015,6 +1139,7 @@ export async function runTrackBShadowPipeline(
     scope: input.scope,
     authorizationEpoch: input.authorizationEpoch,
     capability,
+    ...(input.identity ? { identity: input.identity } : {}),
     value,
   });
   const replay = await runtime.invoke(
@@ -1169,6 +1294,7 @@ export async function runTrackBPostObservation(
   if (!requestId || !sourceDecisionId || !routePackage || !input.scope) {
     throw new Error("persisted observation identity is required for Track B shadow processing");
   }
+  const identity = normalizeTrackBVariantIdentity(observation);
   const run88Correlation = input.expectedReleaseId
     ? normalizeRun88RuntimeCorrelation(input.run88Correlation ?? {}, input.expectedReleaseId)
     : null;
@@ -1183,6 +1309,7 @@ export async function runTrackBPostObservation(
     scope: input.scope,
     authorizationEpoch: input.authorizationEpoch,
     capability,
+    identity,
     ...(run88Correlation ? { run88Correlation } : {}),
     ...extra,
   });
@@ -1192,7 +1319,7 @@ export async function runTrackBPostObservation(
       payload: {
         scope: input.scope,
         record: {
-          content: JSON.stringify({ requestId, sourceDecisionId, routePackage }),
+          content: JSON.stringify({ requestId, sourceDecisionId, routePackage, identity }),
           mediaType: "application/json",
           schema: "role-model.track-b-post-observation.v1",
         },
@@ -1208,27 +1335,72 @@ export async function runTrackBPostObservation(
         type: "track_b_post_observation",
         idempotencyKey: `track-b:${requestId}`,
         artifactRef,
+        identity,
       },
     }),
   );
-  await runtime.invoke(
+  const repositoryContextResult = await runtime.invoke(
     "repository-context",
     businessEnvelope("repository:read", {
-      payload: { scopeId: input.scope, canonicalIdentity: input.scope },
+      payload: { scopeId: input.scope, canonicalIdentity: input.scope, identity },
     }),
   );
+  const repositoryContextRecord = repositoryContextResult as Record<string, unknown>;
+  const repositoryContextValue = repositoryContextRecord.context as
+    | Record<string, unknown>
+    | undefined;
+  const repositoryDiagnostics = Array.isArray(repositoryContextRecord.diagnostics)
+    ? repositoryContextRecord.diagnostics.map((diagnostic) => {
+        const row = diagnostic as Record<string, unknown>;
+        return {
+          code: String(row.code ?? ""),
+          message: String(row.message ?? ""),
+          severity: String(row.severity ?? ""),
+        };
+      })
+    : [];
+  const repositoryContext =
+    repositoryContextRecord.available === true
+      ? {
+          available: true as const,
+          scopeId: String(repositoryContextValue?.scopeId ?? ""),
+          repoFingerprint: String(repositoryContextValue?.repoFingerprint ?? ""),
+          packageId:
+            repositoryContextValue?.packageId === null ||
+            typeof repositoryContextValue?.packageId === "string"
+              ? repositoryContextValue.packageId
+              : null,
+          fallbackLevel: String(repositoryContextValue?.fallbackLevel ?? ""),
+          branchCompatibility: String(repositoryContextValue?.branchCompatibility ?? ""),
+          fingerprintEpoch: Number(repositoryContextValue?.fingerprintEpoch),
+          diagnostics: repositoryDiagnostics,
+        }
+      : {
+          available: false as const,
+          unavailableReason: String(repositoryContextRecord.unavailableReason ?? "unavailable"),
+          diagnostics: repositoryDiagnostics,
+        };
+  if (
+    repositoryContext.available &&
+    (!repositoryContext.scopeId ||
+      !/^[a-f0-9]{64}$/.test(repositoryContext.repoFingerprint) ||
+      !Number.isSafeInteger(repositoryContext.fingerprintEpoch) ||
+      repositoryContext.fingerprintEpoch < 1)
+  ) {
+    throw new Error("repository-context returned an invalid privacy-safe receipt");
+  }
   await runtime.invoke(
     "background-evidence-scheduler",
     businessEnvelope("scheduler:schedule-and-run", {
       jobId: `post-observation:${requestId}`,
-      payload: { requestId, sourceDecisionId, artifactRef },
+      payload: { requestId, sourceDecisionId, artifactRef, identity },
     }),
   );
   await runtime.invoke(
     "memory-store",
     businessEnvelope("memory:write", {
       payload: {
-        row: { scope: input.scope, key: `observation:${requestId}`, artifactRef },
+        row: { scope: input.scope, key: `observation:${requestId}`, artifactRef, identity },
       },
     }),
   );
@@ -1242,6 +1414,7 @@ export async function runTrackBPostObservation(
           scope: input.scope,
           artifactRef,
           provenance: `routing-decision:${sourceDecisionId}`,
+          identity,
         },
       },
     }),
@@ -1249,7 +1422,7 @@ export async function runTrackBPostObservation(
   await runtime.invoke(
     "knowledge-store",
     businessEnvelope("knowledge:read", {
-      payload: { id: knowledge.id, scope: input.scope },
+      payload: { id: knowledge.id, scope: input.scope, identity },
     }),
   );
   await runtime.invoke(
@@ -1261,7 +1434,8 @@ export async function runTrackBPostObservation(
         destination: "aggregate",
         schemaId: "route_outcome_aggregate.v1",
         classId: "route_outcome",
-        payload: { count: 1 },
+        identity,
+        payload: { count: 1, identity },
       },
     }),
   );
@@ -1275,17 +1449,19 @@ export async function runTrackBPostObservation(
     productionState: {
       routingDecisionId: sourceDecisionId,
       endpointId: routePackage,
+      identity,
       immutable: true,
     },
     routePackage,
     sourceDecisionId,
     sourceGraphRef,
-    prefix: [{ routingDecisionId: sourceDecisionId }],
-    counterfactuals: [{ id: routePackage, suffix: [{ endpointId: routePackage }] }],
+    prefix: [{ routingDecisionId: sourceDecisionId, identity }],
+    counterfactuals: [{ id: routePackage, suffix: [{ endpointId: routePackage, identity }] }],
     evaluationCases: [{ expected: routePackage, actual: routePackage }],
     trajectoryEvents: [
-      { requestId, routingDecisionId: sourceDecisionId, endpointId: routePackage },
+      { requestId, routingDecisionId: sourceDecisionId, endpointId: routePackage, identity },
     ],
+    identity,
   });
   const projection = createProjectionV2({
     scope: input.scope,
@@ -1307,14 +1483,16 @@ export async function runTrackBPostObservation(
     payload: {
       routePackage,
       sourceDecisionId,
+      identity,
       candidateId: typeof pipeline.candidate.id === "string" ? pipeline.candidate.id : null,
     },
   });
   const consumption = await consumeTrackBProjection(runtime, projection, {
     channel: input.channel,
     authorizationEpoch: input.authorizationEpoch,
+    identity: { ...identity },
   });
-  return { pipeline: pipeline.receipt, projection, consumption };
+  return { pipeline: pipeline.receipt, projection, consumption, repositoryContext };
 }
 
 interface ExtensionRuntimeState {
@@ -1617,7 +1795,7 @@ export async function createProductionExtensionRuntime(
     stateRoot: options.stateRoot,
     authorizationEpoch: options.authorizationEpoch,
     ...(options.repoRoot ? { repoRoot: options.repoRoot } : {}),
-    startupTimeoutMs: options.startupTimeoutMs ?? 10_000,
+    startupTimeoutMs: options.startupTimeoutMs ?? 30_000,
     extensions: [...options.extensions, ...qaExtensions],
   });
 }

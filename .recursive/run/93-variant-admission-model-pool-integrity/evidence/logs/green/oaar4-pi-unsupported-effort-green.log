@@ -1,0 +1,22 @@
+# OAAR4 Pi unsupported-effort GREEN
+
+Commands:
+
+```text
+corepack pnpm exec vitest run test/effort-identity.test.ts test/extension.test.ts
+corepack pnpm run build
+corepack pnpm exec biome check src/downstream-openai.ts test/effort-identity.test.ts
+```
+
+Results:
+
+```text
+Test Files  2 passed (2)
+Tests       16 passed (16)
+TypeScript build: PASS
+Biome check: PASS
+```
+
+The test proves that an exact fixed `ultra` endpoint remains distinct and
+selectable without advertising an unsupported Pi thinking level, while the
+supported `high` sibling remains registered with its native fixed map.

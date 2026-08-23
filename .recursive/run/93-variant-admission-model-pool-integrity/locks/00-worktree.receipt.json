@@ -1,0 +1,11 @@
+{
+  "artifact": "00-worktree.md",
+  "artifact_hash": "e3db929ac7e463ef55402fce84ff182894e0a769004c7f57ddaa8989cfd12795",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\93-variant-admission-model-pool-integrity\\.recursive\\run\\93-variant-admission-model-pool-integrity\\00-worktree.md",
+  "locked_at": "2026-08-23T13:29:54Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "cfcc07d0d8ba56b8f8ff9cbbbcc5f79c10c5c2f2b9161d864792638405c493ee"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "1e429b5de532819b39bedfa3a1a1d9723033dcdd80ae4b15dc208e6cdd484987"
+}

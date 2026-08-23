@@ -28,6 +28,8 @@ function model(
     pricing: overrides.pricing ?? null,
     requestShapeHints: overrides.requestShapeHints ?? null,
     experimentalModes: overrides.experimentalModes ?? [],
+    reasoningEffortLevels: overrides.reasoningEffortLevels ?? [],
+    reasoningOptionKinds: overrides.reasoningOptionKinds ?? [],
     extendsProvenance: overrides.extendsProvenance ?? { baseModelId: null, chain: [] },
     localOverrideApplied: overrides.localOverrideApplied ?? false,
     localNotes: overrides.localNotes ?? [],
@@ -175,5 +177,26 @@ describe("resolveModelCapabilityProfile", () => {
       outputPer1M: 4,
       currency: "USD",
     });
+  });
+
+  test("preserves catalog reasoning effort levels in the host capability profile", () => {
+    const profile = resolveModelCapabilityProfile({
+      modelId: "deepseek/deepseek-v4-flash",
+      catalog: {
+        ...catalog,
+        models: catalog.models.map((entry) =>
+          entry.modelId === "deepseek/deepseek-v4-flash"
+            ? {
+                ...entry,
+                reasoningEffortLevels: ["low", "high", "max"],
+                reasoningOptionKinds: ["effort"],
+              }
+            : entry,
+        ),
+      },
+    });
+
+    expect(profile.reasoning.effortLevels).toEqual(["low", "high", "max"]);
+    expect(profile.reasoning.optionKinds).toEqual(["effort"]);
   });
 });

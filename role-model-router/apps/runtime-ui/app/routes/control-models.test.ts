@@ -1,17 +1,97 @@
 import { describe, expect, test, vi } from "vitest";
 
-import type { RuntimeAccount } from "../lib/runtime-api";
+import type { RouterCandidate, RuntimeAccount } from "../lib/runtime-api";
 import * as controlModelsModule from "./control-models";
 import {
   buildConfiguredModelInventoryPills,
   buildModelRoleAssignmentForSelection,
   buildSelectedModelEvidencePills,
   buildSelectedModelPreviewPayload,
+  configuredModelRoleDraftKey,
   createAccountMutationPayload,
+  describeSavedModelRoleEligibility,
+  readSelectedOperationalPerformance,
   resolveConfiguredModelEjectLabel,
+  resolveConfiguredModelFooterAction,
+  resolveConfiguredModelRemovalClick,
   resolveConfiguredModelStatusTone,
   resolveDefaultSelectedModelId,
+  resolveSelectedBenchmarkCandidate,
+  resolveSelectedModelAccount,
+  saveConfiguredModelRoleEligibility,
 } from "./control-models";
+
+test("selects benchmark evidence by exact endpoint instead of the highest same-model sibling", () => {
+  const candidates = [
+    {
+      endpointId: "deepseek.flash-high",
+      modelId: "deepseek/deepseek-v4-flash",
+      providerId: "deepseek",
+      sourceType: "remote",
+      benchmarkCapability: {
+        overallScore: 0.71,
+        benchmarkSamples: 2,
+        sampleCount: 2,
+        measuredAtMs: 10,
+        freshnessScore: 1,
+        lastRunId: "run-high",
+        lastRunCompletedAtMs: 10,
+        judgeEndpointId: "judge",
+      },
+      latestProfile: { latency_ms_p50: 410 },
+    },
+    {
+      endpointId: "deepseek.flash-max",
+      modelId: "deepseek/deepseek-v4-flash",
+      providerId: "deepseek",
+      sourceType: "remote",
+      benchmarkCapability: {
+        overallScore: 0.94,
+        benchmarkSamples: 2,
+        sampleCount: 2,
+        measuredAtMs: 20,
+        freshnessScore: 1,
+        lastRunId: "run-max",
+        lastRunCompletedAtMs: 20,
+        judgeEndpointId: "judge",
+      },
+      latestProfile: { latency_ms_p50: 920 },
+    },
+  ] satisfies RouterCandidate[];
+
+  expect(
+    resolveSelectedBenchmarkCandidate(candidates, {
+      modelId: "deepseek/deepseek-v4-flash",
+      endpointId: "deepseek.flash-high",
+    }),
+  ).toMatchObject({
+    endpointId: "deepseek.flash-high",
+    benchmarkCapability: { overallScore: 0.71 },
+    latestProfile: { latency_ms_p50: 410 },
+  });
+});
+
+test("reads the canonical operational sample_size for one exact endpoint variant", () => {
+  expect(
+    readSelectedOperationalPerformance({
+      endpointId: "deepseek.flash-high",
+      modelId: "deepseek/deepseek-v4-flash",
+      providerId: "deepseek",
+      sourceType: "remote",
+      operationalProfile: {
+        latency_ms_p50: 2_693.5,
+        latency_ms_p95: 3_604.6,
+        failure_rate: 0,
+        sample_size: 8,
+      },
+    }),
+  ).toEqual({
+    p50: 2_693.5,
+    p95: 3_604.6,
+    failureRate: 0,
+    sampleCount: 8,
+  });
+});
 
 const account = {
   providerAccountId: "openai.personal.primary",
@@ -34,6 +114,18 @@ const account = {
 } satisfies RuntimeAccount;
 
 describe("control model role assignment helpers", () => {
+  test("keeps transient role drafts separate for effort endpoint siblings", () => {
+    expect(configuredModelRoleDraftKey("deepseek.personal", "endpoint-high")).not.toBe(
+      configuredModelRoleDraftKey("deepseek.personal", "endpoint-max"),
+    );
+  });
+  test("keeps the role list in document flow without an artificial viewport cap", () => {
+    expect(controlModelsModule.configuredModelRoleSectionClassName).toBe("flex flex-col gap-3");
+    expect(controlModelsModule.configuredModelRoleListClassName).toBe("space-y-2 pr-1");
+    expect(controlModelsModule.configuredModelRoleSectionClassName).not.toContain("max-h");
+    expect(controlModelsModule.configuredModelRoleListClassName).not.toContain("overflow-auto");
+  });
+
   test("serializes checked all roles as an explicit all assignment", () => {
     expect(
       buildModelRoleAssignmentForSelection(["coder", "security"], ["coder", "security"]),
@@ -71,6 +163,46 @@ describe("control model role assignment helpers", () => {
     });
   });
 
+  test("persists role eligibility for one endpoint instance without replacing its effort siblings", () => {
+    const endpointAccount = {
+      ...account,
+      allowedModels: ["deepseek/deepseek-v4-flash"],
+      modelRoleBindings: [
+        {
+          modelId: "deepseek/deepseek-v4-flash",
+          endpointId: "deepseek.personal.global.deepseek-v4-flash-high",
+          roleIds: [],
+          roleAssignmentMode: "include" as const,
+          enabledRoleIds: ["coder"],
+          disabledRoleIds: [],
+        },
+      ],
+    } satisfies RuntimeAccount;
+
+    expect(
+      createAccountMutationPayload(
+        endpointAccount,
+        "deepseek/deepseek-v4-flash",
+        ["analyst"],
+        ["analyst", "coder"],
+        "deepseek.personal.global.deepseek-v4-flash-max",
+      ),
+    ).toMatchObject({
+      modelRoleBindings: [
+        {
+          endpointId: "deepseek.personal.global.deepseek-v4-flash-high",
+          enabledRoleIds: ["coder"],
+        },
+        {
+          modelId: "deepseek/deepseek-v4-flash",
+          endpointId: "deepseek.personal.global.deepseek-v4-flash-max",
+          roleAssignmentMode: "exclude",
+          disabledRoleIds: ["coder"],
+        },
+      ],
+    });
+  });
+
   test("serializes unchecked all roles as explicit empty include instead of default all", () => {
     expect(buildModelRoleAssignmentForSelection([], ["coder", "security"])).toEqual({
       roleAssignmentMode: "include",
@@ -82,6 +214,152 @@ describe("control model role assignment helpers", () => {
   test("uses explicit eject labels for peer-backed and remote-backed configured models", () => {
     expect(resolveConfiguredModelEjectLabel(true)).toBe("Eject from router");
     expect(resolveConfiguredModelEjectLabel(false)).toBe("Eject from pool");
+  });
+
+  test("enables the footer action for remote and peer-backed configured models", () => {
+    expect(
+      resolveConfiguredModelFooterAction({
+        hasSelectedCard: true,
+        isController: false,
+        hasLlamaSwapEndpoint: false,
+        hasPrimaryAccount: true,
+        hasLocalPeerEndpoint: false,
+        isRemoving: false,
+      }),
+    ).toEqual({
+      kind: "eject-configured",
+      label: "Eject from pool",
+      disabled: false,
+      isController: false,
+    });
+
+    expect(
+      resolveConfiguredModelFooterAction({
+        hasSelectedCard: true,
+        isController: false,
+        hasLlamaSwapEndpoint: false,
+        hasPrimaryAccount: true,
+        hasLocalPeerEndpoint: true,
+        isRemoving: false,
+      }),
+    ).toEqual({
+      kind: "eject-configured",
+      label: "Eject from router",
+      disabled: false,
+      isController: false,
+    });
+  });
+
+  test("keeps controller removal disabled and uses unload only for llama-swap models", () => {
+    expect(
+      resolveConfiguredModelFooterAction({
+        hasSelectedCard: true,
+        isController: true,
+        hasLlamaSwapEndpoint: false,
+        hasPrimaryAccount: true,
+        hasLocalPeerEndpoint: false,
+        isRemoving: false,
+      }),
+    ).toEqual({
+      kind: "eject-controller",
+      label: "Eject controller",
+      disabled: false,
+      isController: true,
+    });
+
+    expect(
+      resolveConfiguredModelFooterAction({
+        hasSelectedCard: true,
+        isController: false,
+        hasLlamaSwapEndpoint: true,
+        hasPrimaryAccount: true,
+        hasLocalPeerEndpoint: false,
+        isRemoving: false,
+      }),
+    ).toEqual({ kind: "unload-local", label: "Unload", disabled: false, isController: false });
+  });
+
+  test("enables a destructive-confirmation eject action for the sole controller", () => {
+    // The sole controller-backed endpoint must be ejectable (not hard-disabled), with
+    // the confirmation flow gating the destructive second click.
+    const action = resolveConfiguredModelFooterAction({
+      hasSelectedCard: true,
+      isController: true,
+      hasLlamaSwapEndpoint: false,
+      hasPrimaryAccount: true,
+      hasLocalPeerEndpoint: false,
+      isRemoving: false,
+    });
+    expect(action.kind).toBe("eject-controller");
+    expect(action.disabled).toBe(false);
+    expect(action.isController).toBe(true);
+
+    expect(
+      resolveConfiguredModelRemovalClick({
+        actionKind: action.kind,
+        targetKey: "endpoint:controller",
+        pendingConfirmationKey: null,
+      }),
+    ).toBe("request-confirmation");
+    expect(
+      resolveConfiguredModelRemovalClick({
+        actionKind: action.kind,
+        targetKey: "endpoint:controller",
+        pendingConfirmationKey: "endpoint:controller",
+      }),
+    ).toBe("execute");
+  });
+
+  test("never bypasses final-controller eject confirmation through a local unload action", () => {
+    expect(
+      resolveConfiguredModelFooterAction({
+        hasSelectedCard: true,
+        isController: true,
+        hasLlamaSwapEndpoint: true,
+        hasPrimaryAccount: true,
+        hasLocalPeerEndpoint: false,
+        isRemoving: false,
+      }),
+    ).toMatchObject({ kind: "eject-controller", label: "Eject controller", disabled: false });
+  });
+
+  test("edits the account that owns the selected effort endpoint instead of the first model match", () => {
+    const selectedOwner = { ...account, providerAccountId: "deepseek.personal.primary" };
+    expect(
+      resolveSelectedModelAccount(
+        [account, selectedOwner],
+        [
+          {
+            endpointId: "deepseek.personal.primary.deepseek-v4-flash~high",
+            providerAccountId: "deepseek.personal.primary",
+          },
+        ],
+      ),
+    ).toBe(selectedOwner);
+  });
+
+  test("requires an explicit second click for destructive eject actions", () => {
+    expect(
+      resolveConfiguredModelRemovalClick({
+        actionKind: "eject-configured",
+        targetKey: "endpoint:deepseek-high",
+        pendingConfirmationKey: null,
+      }),
+    ).toBe("request-confirmation");
+    expect(
+      resolveConfiguredModelRemovalClick({
+        actionKind: "eject-configured",
+        targetKey: "endpoint:deepseek-high",
+        pendingConfirmationKey: "endpoint:deepseek-high",
+      }),
+    ).toBe("execute");
+    expect(
+      resolveConfiguredModelRemovalClick({
+        actionKind: "unload-local",
+        targetKey: "local:qwen",
+        pendingConfirmationKey: null,
+      }),
+    ).toBe("execute");
   });
 
   test("prefers the controller-backed card as the default selected model detail", () => {
@@ -162,7 +440,7 @@ describe("control model role assignment helpers", () => {
     ).toEqual([
       { label: "tools", tone: "info" },
       { label: "2 endpoints", tone: "neutral" },
-      { label: "score 0.93", tone: "advisory" },
+      { label: "score 93%", tone: "advisory" },
     ]);
 
     expect(
@@ -324,6 +602,59 @@ describe("startDeferredConfiguredModelsBootstrap", () => {
 });
 
 describe("configured model mutation convergence", () => {
+  test("reloads canonical endpoint eligibility after saving account role bindings", async () => {
+    const events: string[] = [];
+    const canonical = {
+      snapshot: {
+        accounts: [{ ...account, healthStatus: "healthy" }],
+        endpoints: [{ endpointId: "endpoint-1", roleIds: ["coder"] }],
+        models: [{ modelId: "openai/gpt-4.1-mini-fast" }],
+      },
+      controller: null,
+    };
+
+    await expect(
+      saveConfiguredModelRoleEligibility({
+        mutate: async () => {
+          events.push("mutate");
+          return account;
+        },
+        reloadCanonicalState: async () => {
+          events.push("reload");
+          return canonical;
+        },
+      }),
+    ).resolves.toBe(canonical);
+    expect(events).toEqual(["mutate", "reload"]);
+  });
+
+  test("describes the real role-derived task and group impact for an account", () => {
+    expect(
+      describeSavedModelRoleEligibility({
+        displayName: "DeepSeek V4 Flash (High)",
+        providerAccountId: "deepseek.personal.primary",
+        selectedRoleIds: ["coder", "writer"],
+        roleDefinitions: [
+          {
+            role_id: "coder",
+            primaryGroupId: "engineering",
+            secondaryGroupIds: ["delivery"],
+            task_types_supported: ["code.edit", "code.review"],
+          },
+          {
+            role_id: "writer",
+            primaryGroupId: "content",
+            secondaryGroupIds: [],
+            task_types_supported: ["text.compose"],
+          },
+        ],
+        endpointVariantCount: 4,
+      }),
+    ).toBe(
+      "Saved eligibility for DeepSeek V4 Flash (High) on deepseek.personal.primary: 2 roles derive 3 task types across 3 groups for this endpoint instance.",
+    );
+  });
+
   test("converges role binding saves from the returned account without advisory reloads", async () => {
     const convergeSavedRuntimeAccount = (
       controlModelsModule as { convergeSavedRuntimeAccount?: unknown }

@@ -4,9 +4,17 @@ import path from "node:path";
 import type { TraceEvent, TraceSpan } from "@role-model/protocol-types";
 
 export * from "./projections/index.js";
+export * from "./lineage.js";
 
-export type TraceSpanRecord = TraceSpan;
-export type TraceEventRecord = TraceEvent;
+export type TraceEffortSource = "none" | "client" | "variant" | "variant_coerced";
+
+export interface TraceEffortFields {
+  readonly reasoning_effort?: string | null;
+  readonly effort_source?: TraceEffortSource;
+}
+
+export type TraceSpanRecord = TraceSpan & TraceEffortFields;
+export type TraceEventRecord = TraceEvent & TraceEffortFields;
 
 export async function writeTraceArtifacts(
   outputDir: string,
@@ -86,6 +94,24 @@ export function validateTraceLinkage(
       if (span.routing_decision_id !== event.routing_decision_id) {
         throw new Error(
           `Trace event ${event.event_id} routing_decision_id does not match span ${event.span_id}.`,
+        );
+      }
+      if (
+        span.reasoning_effort !== undefined &&
+        event.reasoning_effort !== undefined &&
+        span.reasoning_effort !== event.reasoning_effort
+      ) {
+        throw new Error(
+          `Trace event ${event.event_id} reasoning_effort does not match span ${event.span_id}.`,
+        );
+      }
+      if (
+        span.effort_source !== undefined &&
+        event.effort_source !== undefined &&
+        span.effort_source !== event.effort_source
+      ) {
+        throw new Error(
+          `Trace event ${event.event_id} effort_source does not match span ${event.span_id}.`,
         );
       }
     }

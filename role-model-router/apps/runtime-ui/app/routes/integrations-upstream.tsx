@@ -8,6 +8,7 @@ import {
   SectionCard,
 } from "../components/page-primitives";
 import { mutedPanelClassName, supportingTextClassName } from "../lib/design-system";
+import { formatModelIdentity } from "../lib/effort-identity";
 import {
   type RuntimeSnapshot,
   fetchRuntimeAccounts,
@@ -52,6 +53,7 @@ export default function IntegrationsUpstreamRoute() {
   const modelTargets =
     snapshot?.models.map((model) => ({
       modelId: model.id,
+      displayName: formatModelIdentity(model, model.id),
       owner: model.owned_by ?? "role-model",
       endpointCount: model.endpoint_ids?.length ?? 0,
       upstreamHref: `/upstream/${model.id}/`,
@@ -158,7 +160,7 @@ export default function IntegrationsUpstreamRoute() {
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="break-all font-mono text-[13px] font-semibold text-[var(--rm-fg)]">
-                        {target.modelId}
+                        {target.displayName}
                       </p>
                       <Badge tone="accent">
                         {target.endpointCount} endpoint{target.endpointCount === 1 ? "" : "s"}

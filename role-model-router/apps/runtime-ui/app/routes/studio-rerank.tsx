@@ -17,13 +17,20 @@ import {
   primaryButtonBlockClassName,
   supportingTextClassName,
 } from "../lib/design-system";
-import { type RuntimeSnapshot, fetchRuntimeModels, submitRerankRequest } from "../lib/runtime-api";
+import {
+  type RuntimeSnapshot,
+  fetchRuntimeEndpoints,
+  fetchRuntimeModels,
+  submitRerankRequest,
+} from "../lib/runtime-api";
 import { buildWorkbenchModelOptions } from "../lib/view-models";
 
 const formFieldLabelClassName = fieldLabelClassName;
 
 export default function StudioRerankRoute() {
-  const [snapshot, setSnapshot] = useState<Pick<RuntimeSnapshot, "models"> | null>(null);
+  const [snapshot, setSnapshot] = useState<Pick<RuntimeSnapshot, "models" | "endpoints"> | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
   const [model, setModel] = useState("");
   const [query, setQuery] = useState("Which option best summarizes the runtime?");
@@ -38,10 +45,11 @@ export default function StudioRerankRoute() {
   } | null>(null);
 
   useEffect(() => {
-    void fetchRuntimeModels()
-      .then((models) => {
-        setSnapshot({ models });
-        setModel((current) => current || models[0]?.id || "");
+    void Promise.all([fetchRuntimeModels(), fetchRuntimeEndpoints()])
+      .then(([models, endpoints]) => {
+        setSnapshot({ models, endpoints });
+        const defaultModel = buildWorkbenchModelOptions(models, endpoints)[0]?.value || "";
+        setModel((current) => current || defaultModel);
       })
       .catch((value: unknown) =>
         setError(
@@ -51,8 +59,8 @@ export default function StudioRerankRoute() {
   }, []);
 
   const modelOptions = useMemo(
-    () => buildWorkbenchModelOptions(snapshot?.models ?? []),
-    [snapshot?.models],
+    () => buildWorkbenchModelOptions(snapshot?.models ?? [], snapshot?.endpoints ?? []),
+    [snapshot?.endpoints, snapshot?.models],
   );
   const documents = useMemo(
     () =>

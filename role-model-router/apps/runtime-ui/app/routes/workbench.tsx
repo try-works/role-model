@@ -17,7 +17,12 @@ import {
   primaryButtonBlockClassName,
   supportingTextClassName,
 } from "../lib/design-system";
-import { type RuntimeSnapshot, fetchRuntimeModels, submitWorkbenchChat } from "../lib/runtime-api";
+import {
+  type RuntimeSnapshot,
+  fetchRuntimeEndpoints,
+  fetchRuntimeModels,
+  submitWorkbenchChat,
+} from "../lib/runtime-api";
 import { buildWorkbenchModelOptions, summarizeWorkbenchResult } from "../lib/view-models";
 
 const formFieldLabelClassName = fieldLabelClassName;
@@ -66,7 +71,9 @@ function buildChatUsageMetrics(
 }
 
 export default function WorkbenchRoute() {
-  const [snapshot, setSnapshot] = useState<Pick<RuntimeSnapshot, "models"> | null>(null);
+  const [snapshot, setSnapshot] = useState<Pick<RuntimeSnapshot, "models" | "endpoints"> | null>(
+    null,
+  );
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [model, setModel] = useState("");
@@ -75,9 +82,9 @@ export default function WorkbenchRoute() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    void fetchRuntimeModels()
-      .then((models) => {
-        setSnapshot({ models });
+    void Promise.all([fetchRuntimeModels(), fetchRuntimeEndpoints()])
+      .then(([models, endpoints]) => {
+        setSnapshot({ models, endpoints });
       })
       .catch((value: unknown) =>
         setLoadError(value instanceof Error ? value.message : "Could not load workbench."),
@@ -85,18 +92,18 @@ export default function WorkbenchRoute() {
   }, []);
 
   const modelOptions = useMemo(
-    () => buildWorkbenchModelOptions(snapshot?.models ?? []),
-    [snapshot?.models],
+    () => buildWorkbenchModelOptions(snapshot?.models ?? [], snapshot?.endpoints ?? []),
+    [snapshot?.endpoints, snapshot?.models],
   );
 
   useEffect(() => {
     if (!snapshot) {
       return;
     }
-    if (!snapshot.models.some((entry) => entry.id === model)) {
-      setModel(snapshot.models[0]?.id ?? "");
+    if (!modelOptions.some((entry) => entry.value === model)) {
+      setModel(modelOptions[0]?.value ?? "");
     }
-  }, [model, snapshot]);
+  }, [model, modelOptions, snapshot]);
 
   if (loadError) {
     return <ErrorState label={loadError} />;

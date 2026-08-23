@@ -63,6 +63,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Validate stable production tag
+        if: github.ref_type == 'tag'
+        shell: bash
+        run: |
+          if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Stable release tag must be exact SemVer (vMAJOR.MINOR.PATCH)."
+            exit 1
+          fi
+          git fetch --no-tags origin "+refs/heads/main:refs/remotes/origin/main"
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "Production tag must point to a commit promoted through main."
+            exit 1
+          fi
+
       - name: Resolve public source tree
         id: public_source
         shell: bash
@@ -128,6 +142,35 @@ jobs:
             }
           }
           if (-not $artifact) { throw "No tested stage candidate found for $artifactName" }
+          $stageSha = $artifact.workflow_run.head_sha
+          $candidateTag = "stage-rc-$($stageSha.Substring(0, 12))"
+          $approvalRefUrl = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/git/ref/tags/rc-approved/$stageSha"
+          try {
+            $approval = Invoke-RestMethod -Headers $headers -Uri $approvalRefUrl
+          } catch {
+            throw "Tested stage candidate $stageSha has no explicit rc-approved acceptance receipt"
+          }
+          if ($approval.object.type -ne "commit" -or $approval.object.sha -ne $stageSha) {
+            throw "Release candidate acceptance receipt does not point to the tested stage commit"
+          }
+          $candidateReleaseUrl = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/releases/tags/$candidateTag"
+          try {
+            $candidateRelease = Invoke-RestMethod -Headers $headers -Uri $candidateReleaseUrl
+          } catch {
+            throw "Accepted stage candidate has no published prerelease: $candidateTag"
+          }
+          if ($candidateRelease.draft -or -not $candidateRelease.prerelease -or $candidateRelease.tag_name -ne $candidateTag) {
+            throw "Accepted stage candidate release is not a published prerelease"
+          }
+          $candidateRefUrl = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/git/ref/tags/$candidateTag"
+          try {
+            $candidateRef = Invoke-RestMethod -Headers $headers -Uri $candidateRefUrl
+          } catch {
+            throw "Published stage prerelease tag cannot be resolved: $candidateTag"
+          }
+          if ($candidateRef.object.type -ne "commit" -or $candidateRef.object.sha -ne $stageSha) {
+            throw "Published stage prerelease tag does not point to the tested stage commit"
+          }
           $outerZip = Join-Path $env:RUNNER_TEMP "stage-candidate.zip"
           $outerDir = Join-Path $env:RUNNER_TEMP "stage-candidate"
           $innerDir = Join-Path $env:RUNNER_TEMP "stage-package"
@@ -147,6 +190,7 @@ jobs:
           if (-not $stageManifestPath) { throw "Stage candidate contains no manifest" }
           $stage = Get-Content -LiteralPath $stageManifestPath -Raw | ConvertFrom-Json
           if ($stage.channel -ne "stage" -or $stage.name -ne "role-model-stage") { throw "Artifact is not a stage candidate" }
+          if ($stage.commit -ne $stageSha) { throw "Stage candidate public commit mismatch" }
           if ($stage.source_tree -ne "${{ steps.public_source.outputs.source_tree }}") { throw "Stage candidate public source tree mismatch" }
           if ($stage.release_id -notmatch '^sha256:[0-9a-f]{64}$') { throw "Stage candidate release identity is invalid" }
           if ($stage.private_source_commit -notmatch '^[0-9a-f]{40}$') { throw "Stage candidate private source identity is invalid" }
@@ -156,6 +200,7 @@ jobs:
           "stage_manifest_path=$stageManifestPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           "release_id=$($stage.release_id)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           "private_source_commit=$($stage.private_source_commit)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "stage_sha=$stageSha" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Select exact paired release identity
         id: release_identity
@@ -218,12 +263,14 @@ jobs:
           repository: try-works/role-model-internal
           ref: ${{ steps.release_identity.outputs.private_source_commit }}
           token: ${{ secrets.ROLE_MODEL_INTERNAL_READ_TOKEN }}
-          path: _private
+          # Keep the paired source outside the public Git worktree.  SEA
+          # packaging deliberately rejects any untracked public source file.
+          path: .cache/paired-private
           fetch-depth: 0
 
       - name: Verify private revision passed paired promotion branch
         if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production'
-        working-directory: _private
+        working-directory: .cache/paired-private
         shell: bash
         env:
           RELEASE_PRIVATE_SHA: ${{ steps.release_identity.outputs.private_source_commit }}
@@ -242,7 +289,7 @@ jobs:
 
       - name: Build exact private release distribution
         if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production'
-        working-directory: _private
+        working-directory: .cache/paired-private
         env:
           ROLE_MODEL_PUBLIC_WORKTREE: ${{ github.workspace }}
           NODE_OPTIONS: --conditions=runtime
@@ -252,7 +299,7 @@ jobs:
 
       - name: Package SEA runtime
         env:
-          ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT: ${{ (env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production') && format('{0}/_private/dist/run00-dev', github.workspace) || '' }}
+          ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT: ${{ (env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production') && format('{0}/.cache/paired-private/dist/run00-dev', github.workspace) || '' }}
           RUN88_RELEASE_ID: ${{ steps.release_identity.outputs.release_id || env.RUN88_RELEASE_ID }}
         run: pnpm run runtime:package-sea
 
@@ -272,6 +319,12 @@ jobs:
           }
           if ($manifest.channel -ne $env:ROLE_MODEL_BUILD_CHANNEL) {
             throw "Manifest channel '$($manifest.channel)' does not match '$env:ROLE_MODEL_BUILD_CHANNEL'"
+          }
+          if (
+            $env:ROLE_MODEL_BUILD_CHANNEL -in @("stage", "production") -and
+            $manifest.commit -ne $env:GITHUB_SHA
+          ) {
+            throw "Manifest commit '$($manifest.commit)' does not match '$env:GITHUB_SHA'"
           }
           $expectedName = switch ($env:ROLE_MODEL_BUILD_CHANNEL) {
             "production" { "role-model" }
@@ -441,6 +494,92 @@ jobs:
           path: |
             role-model-router/dist/**
             role-model-router/vendor/llama-swap/dist-assets/**
+
+  publish-stage-prerelease:
+    name: publish stage prerelease
+    if: github.event_name == 'push' && github.ref == 'refs/heads/stage'
+    needs: build-runtime
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download stage archives
+        uses: actions/download-artifact@v4
+        with:
+          pattern: role-model-stage-candidate-*
+          path: stage-release-assets
+          merge-multiple: true
+
+      - name: Verify complete stage archive set
+        shell: bash
+        run: |
+          short_sha="${GITHUB_SHA:0:12}"
+          expected=(
+            "role-model-stage-${short_sha}-linux-x64.tar.gz"
+            "role-model-stage-${short_sha}-darwin-x64.tar.gz"
+            "role-model-stage-${short_sha}-darwin-arm64.tar.gz"
+            "role-model-stage-${short_sha}-win32-x64.zip"
+          )
+          for archive in "${expected[@]}"; do
+            test -f "stage-release-assets/$archive" || {
+              echo "Missing stage prerelease archive: $archive"
+              exit 1
+            }
+          done
+          archive_count="$(find stage-release-assets -maxdepth 1 -type f \( -name '*.tar.gz' -o -name '*.zip' \) | wc -l | tr -d ' ')"
+          if [[ "$archive_count" != "4" ]]; then
+            echo "Stage prerelease must contain exactly four platform archives."
+            exit 1
+          fi
+
+      - name: Write stage checksum manifest
+        shell: bash
+        run: |
+          cd stage-release-assets
+          sha256sum * > SHA256SUMS.txt
+
+      - name: Create or update stage prerelease
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          short_sha="${GITHUB_SHA:0:12}"
+          candidate_tag="stage-rc-${short_sha}"
+          cat > stage-release-notes.md <<EOF
+          # role-model stage release candidate ${short_sha}
+
+          This is a **prerelease for human acceptance testing**, built from the exact public stage commit \`${GITHUB_SHA}\` and its paired private stage revision.
+
+          It runs as \`role-model-stage\` on \`http://127.0.0.1:3457\` with isolated stage state. It is not a production release and is not selected by the stable installers.
+
+          1. Download the archive for your platform.
+          2. Verify it against \`SHA256SUMS.txt\`.
+          3. Extract and run the stage launcher/runtime.
+          4. Exercise the intended behavior and persistent state on port 3457.
+          5. If accepted, run the **accept-release-candidate** workflow for \`${candidate_tag}\` before promoting stage to main or creating a stable tag.
+          EOF
+          if gh release view "$candidate_tag" >/dev/null 2>&1; then
+            git fetch origin "refs/tags/${candidate_tag}:refs/tags/${candidate_tag}"
+            existing_sha="$(git rev-list -n 1 "$candidate_tag")"
+            if [[ "$existing_sha" != "$GITHUB_SHA" ]]; then
+              echo "Existing stage prerelease tag points to a different commit."
+              exit 1
+            fi
+            gh release upload "$candidate_tag" stage-release-assets/* --clobber
+            gh release edit "$candidate_tag" \
+              --title "Stage RC ${short_sha}" \
+              --notes-file stage-release-notes.md \
+              --prerelease
+          else
+            gh release create "$candidate_tag" stage-release-assets/* \
+              --target "$GITHUB_SHA" \
+              --title "Stage RC ${short_sha}" \
+              --notes-file stage-release-notes.md \
+              --prerelease
+          fi
 
   publish-release:
     name: publish release

@@ -13,6 +13,10 @@ export interface BenchmarkResultSample {
 export interface ObservedPerformanceSample {
   endpoint_id: string;
   endpoint_version: string;
+  /** Structured identity is additive for legacy rows and required on newly produced samples. */
+  model_id?: string;
+  reasoning_effort?: string | null;
+  effort_source?: string;
   source_type: "benchmark" | "live_request";
   difficulty_bucket?: "easy" | "medium" | "hard";
   timestamp_ms: number;
@@ -26,11 +30,33 @@ export interface ObservedPerformanceSample {
   request_id?: string;
   routing_decision_id?: string;
   benchmark_mode?: "quick" | "full";
+  /**
+   * Canonical configured-membership revision captured at benchmark run start.
+   * Samples whose revision no longer matches the current membership are quarantined
+   * (not selected as latest valid) rather than silently reused.
+   */
+  membership_revision?: string;
+  /** Immutable benchmark-run identity and profile revision once successfully published. */
+  benchmark_run_id?: string;
+  benchmark_profile_revision?: string;
+  /**
+   * Benchmark lifecycle state. Only completed samples are valid current benchmark
+   * evidence; every other terminal state is retained exclusively for diagnostics.
+   */
+  completion_state?: "pending" | "completed" | "failed" | "cancelled" | "stale";
 }
 
 export interface AggregateObservedPerformanceOptions {
   nowMs?: number;
 }
+
+export type OperationalPerformanceProfile = ObservedPerformanceProfile & {
+  readonly model_id?: string;
+  readonly reasoning_effort?: string | null;
+  readonly effort_source?: string;
+  readonly profile_scope: "live-request-operational";
+  readonly profile_semantics_version: "role-model.operational-performance.v1";
+};
 
 export const FRESHNESS_HALFLIFE_MS = 7 * 24 * 60 * 60 * 1000;
 export const CONFIDENCE_SAMPLE_TARGET = 50;
@@ -69,7 +95,6 @@ function median(values: readonly number[]): number | undefined {
 function sampleFailed(sample: ObservedPerformanceSample): boolean {
   return sample.failure === true || typeof sample.error_class === "string";
 }
-
 export function validateObservedPerformanceProfileConsistency(
   profile: ObservedPerformanceProfile,
 ): void {
@@ -115,7 +140,11 @@ export function aggregateObservedPerformanceSamples(
     typeof sample.cost_per_1k_tokens_est === "number" ? [sample.cost_per_1k_tokens_est] : [],
   );
   const judgeScores = samples.flatMap((sample) =>
-    sample.source_type === "benchmark" && typeof sample.judge_score === "number"
+    sample.source_type === "benchmark" &&
+    typeof sample.judge_score === "number" &&
+    sample.completion_state !== "failed" &&
+    sample.completion_state !== "cancelled" &&
+    sample.completion_state !== "stale"
       ? [sample.judge_score]
       : [],
   );
@@ -187,6 +216,58 @@ export function aggregateObservedPerformanceSamples(
 
   validateObservedPerformanceProfileConsistency(profile);
   return profile;
+}
+
+function assertStructuredIdentityConsistency(samples: readonly ObservedPerformanceSample[]): void {
+  const identityFields = ["model_id", "reasoning_effort", "effort_source"] as const;
+  for (const field of identityFields) {
+    const present = samples.filter((sample) => Object.prototype.hasOwnProperty.call(sample, field));
+    if (present.length === 0) {
+      continue;
+    }
+    const expected = present[0]?.[field];
+    if (present.some((sample) => sample[field] !== expected)) {
+      throw new Error(
+        `Operational samples contain conflicting structured identity field ${field}.`,
+      );
+    }
+  }
+}
+
+/**
+ * Build the routing/UI operational profile from live executions only.
+ * Benchmark samples remain durable input evidence but never affect this projection.
+ */
+export function aggregateOperationalPerformanceSamples(
+  samples: readonly ObservedPerformanceSample[],
+  options: AggregateObservedPerformanceOptions = {},
+): OperationalPerformanceProfile | null {
+  const liveSamples = samples.filter((sample) => sample.source_type === "live_request");
+  if (liveSamples.length === 0) {
+    return null;
+  }
+  assertStructuredIdentityConsistency(liveSamples);
+  const profile = aggregateObservedPerformanceSamples(liveSamples, options);
+  const identity = [...liveSamples]
+    .reverse()
+    .find(
+      (sample) =>
+        typeof sample.model_id === "string" ||
+        Object.prototype.hasOwnProperty.call(sample, "reasoning_effort") ||
+        typeof sample.effort_source === "string",
+    );
+  return {
+    ...profile,
+    ...(typeof identity?.model_id === "string" ? { model_id: identity.model_id } : {}),
+    ...(Object.prototype.hasOwnProperty.call(identity ?? {}, "reasoning_effort")
+      ? { reasoning_effort: identity?.reasoning_effort ?? null }
+      : {}),
+    ...(typeof identity?.effort_source === "string"
+      ? { effort_source: identity.effort_source }
+      : {}),
+    profile_scope: "live-request-operational",
+    profile_semantics_version: "role-model.operational-performance.v1",
+  };
 }
 
 export {

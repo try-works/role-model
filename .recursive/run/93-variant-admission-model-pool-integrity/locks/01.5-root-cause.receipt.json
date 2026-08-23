@@ -1,0 +1,13 @@
+{
+  "artifact": "01.5-root-cause.md",
+  "artifact_hash": "4e7f0fdad28ae78a01d5a966249d9e5b05e43fe04d6d1a1395d0d82c13f84ce4",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\93-variant-admission-model-pool-integrity\\.recursive\\run\\93-variant-admission-model-pool-integrity\\01.5-root-cause.md",
+  "locked_at": "2026-08-23T13:33:58Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "cfcc07d0d8ba56b8f8ff9cbbbcc5f79c10c5c2f2b9161d864792638405c493ee",
+    "00-worktree.md": "e3db929ac7e463ef55402fce84ff182894e0a769004c7f57ddaa8989cfd12795",
+    "01-as-is.md": "9d2f26a38d8767c9cfb93a947048979157afd961a25f5bb16e1783879cd01f9a"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "16f5438ee240fa38eb6e6bba00af38d09380093a47aa3a261f6fcf782ddc7bf1"
+}

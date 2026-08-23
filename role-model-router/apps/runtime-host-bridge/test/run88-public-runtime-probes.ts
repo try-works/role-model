@@ -45,6 +45,7 @@ const correlation = (overrides: Readonly<Record<string, unknown>> = {}) =>
 
 const stageManifest = (overrides: Readonly<Record<string, unknown>> = {}) => ({
   channel: "stage",
+  commit: "a".repeat(40),
   name: "role-model-stage",
   host: "127.0.0.1",
   port: 3457,
@@ -131,6 +132,9 @@ async function enqueueCorrelatedObservation(
     requestId: "request-1",
     routingDecisionId: "decision-1",
     endpointId: "endpoint-1",
+    modelId: "provider/model-1",
+    reasoningEffort: "high",
+    effortSource: "variant",
     run88Correlation: correlation(),
     ...overrides,
   };
@@ -143,6 +147,9 @@ const providerObservation = (overrides: Readonly<Record<string, unknown>> = {}) 
   clientRequestId: "pi-client-request-1",
   routingDecisionId: "provider-decision-1",
   endpointId: "provider-endpoint-1",
+  modelId: "provider/model-1",
+  reasoningEffort: "high",
+  effortSource: "variant",
   executionTelemetry: { providerFamily: "openai" },
   inspection: {
     request: {
@@ -300,6 +307,9 @@ export const publicRuntimeAcceptanceProbes: Readonly<Record<string, ProbeLayers>
           stageManifest({ track_b_runtime: { manifest_sha256: "0".repeat(64) } }),
         ),
       ).toThrow(/distribution/i);
+      expect(() =>
+        validateRun88PackagedStageIdentity(stageManifest({ commit: "runtime-derived" })),
+      ).toThrow(/commit identity/i);
     },
   }),
   "R2-AC03": Object.freeze({
@@ -941,6 +951,9 @@ export const publicRuntimeAcceptanceProbes: Readonly<Record<string, ProbeLayers>
             requestId: "request-1",
             routingDecisionId: "decision-1",
             endpointId: "endpoint-1",
+            modelId: "provider/model-1",
+            reasoningEffort: "high",
+            effortSource: "variant",
             run88Correlation: { ...correlation(), schemaVersion: "run88-correlation.v2" },
           }),
         ).rejects.toThrow(/schema/i);

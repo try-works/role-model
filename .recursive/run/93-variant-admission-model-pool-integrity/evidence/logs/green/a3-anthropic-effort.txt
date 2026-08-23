@@ -1,0 +1,10 @@
+# GREEN — Sub-phase A3 (anthropic effort)
+
+Command: corepack pnpm --filter @role-model-router/provider-anthropic exec vitest run && corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/run91-effort-instance-identity.test.ts
+Result: PASS (provider-anthropic 4 passed; run91-effort-instance-identity 13 passed)
+Date: 2026-08-22T01:30:16Z
+Files:
+  - packages/provider-anthropic/src/index.ts (toAnthropicThinking: effort->budget_tokens, raw forwarded)
+  - packages/provider-anthropic/test/index.test.ts
+  - apps/runtime-host-bridge/src/index.ts (REASONING_EFFORT_SERIALIZER_VERSION_BY_ADAPTER += ai-sdk-anthropic)
+  - apps/runtime-host-bridge/test/run91-effort-instance-identity.test.ts

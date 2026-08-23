@@ -17,7 +17,7 @@ import {
   startBridgeServer,
 } from "./index.js";
 import { validateRun88PrivateDistributionIdentity } from "./kw-private-loader.js";
-import { readPackagedRuntimeProfile } from "./runtime-channel.js";
+import { type RuntimeChannelProfile, readPackagedRuntimeProfile } from "./runtime-channel.js";
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
 import {
@@ -39,6 +39,7 @@ type CliBackend = Pick<
   | "executeResponses"
   | "readVersionInfo"
   | "listActivityMetrics"
+  | "listActivityMetricsPage"
   | "readActivityCapture"
   | "readRuntimeSummary"
   | "readRuntimeConfig"
@@ -47,6 +48,7 @@ type CliBackend = Pick<
   | "readTelemetrySummary"
   | "listTelemetryComparisonRows"
   | "listTelemetryRequests"
+  | "listTelemetryRequestPage"
   | "queryTelemetryAnalytics"
   | "subscribeTelemetry"
   | "listProviders"
@@ -82,12 +84,15 @@ type CliBackend = Pick<
   | "updateProviderApiKey"
   | "openExternalUrl"
   | "activateEndpoint"
+  | "activateEndpointBatch"
+  | "removeEndpoint"
   | "readControllerAssignment"
   | "updateControllerAssignment"
   | "readRouterSummary"
   | "readRouterConfig"
   | "listRouterCandidates"
   | "listRouterDecisions"
+  | "listRouterDecisionPage"
   | "readRouterDecision"
   | "listEndpoints"
   | "listRecentRequestIds"
@@ -101,6 +106,7 @@ type CliBackend = Pick<
   | "clearBenchmarkEndpointData"
   | "clearBenchmarkData"
   | "readBenchmarkSummary"
+  | "readBenchmarkPortfolio"
   | "listBenchmarkRuns"
   | "readBenchmarkSummariesByMode"
   | "readBenchmarkPreferences"
@@ -136,6 +142,17 @@ type CliBackend = Pick<
   | "getEffectiveRoutableInventory"
   | "shutdown"
 >;
+
+export function requirePackagedTrackBManifest(
+  packagedProfile: RuntimeChannelProfile | null,
+  trackBManifestText: string | null,
+): void {
+  if (packagedProfile && !trackBManifestText) {
+    throw new Error(
+      `packaged ${packagedProfile.channel} runtime is missing its Track B distribution`,
+    );
+  }
+}
 
 type Run88PiInvocationProvenance = Readonly<{
   source: "routed-execution-callback";
@@ -343,6 +360,9 @@ export function createCliServerOptions(
     listActivityMetrics: bindBackendMethod(
       "listActivityMetrics",
     ) as StartBridgeServerOptions["listActivityMetrics"],
+    listActivityMetricsPage: bindBackendMethod(
+      "listActivityMetricsPage",
+    ) as StartBridgeServerOptions["listActivityMetricsPage"],
     readActivityCapture: bindBackendMethod(
       "readActivityCapture",
     ) as StartBridgeServerOptions["readActivityCapture"],
@@ -377,6 +397,9 @@ export function createCliServerOptions(
     listTelemetryRequests: bindBackendMethod(
       "listTelemetryRequests",
     ) as StartBridgeServerOptions["listTelemetryRequests"],
+    listTelemetryRequestPage: bindBackendMethod(
+      "listTelemetryRequestPage",
+    ) as StartBridgeServerOptions["listTelemetryRequestPage"],
     queryTelemetryAnalytics: bindBackendMethod(
       "queryTelemetryAnalytics",
     ) as StartBridgeServerOptions["queryTelemetryAnalytics"],
@@ -474,6 +497,12 @@ export function createCliServerOptions(
     activateEndpoint: bindBackendMethod(
       "activateEndpoint",
     ) as StartBridgeServerOptions["activateEndpoint"],
+    activateEndpointBatch: bindBackendMethod(
+      "activateEndpointBatch",
+    ) as StartBridgeServerOptions["activateEndpointBatch"],
+    removeEndpoint: bindBackendMethod(
+      "removeEndpoint",
+    ) as StartBridgeServerOptions["removeEndpoint"],
     readControllerAssignment: bindBackendMethod(
       "readControllerAssignment",
     ) as StartBridgeServerOptions["readControllerAssignment"],
@@ -492,6 +521,9 @@ export function createCliServerOptions(
     listRouterDecisions: bindBackendMethod(
       "listRouterDecisions",
     ) as StartBridgeServerOptions["listRouterDecisions"],
+    listRouterDecisionPage: bindBackendMethod(
+      "listRouterDecisionPage",
+    ) as StartBridgeServerOptions["listRouterDecisionPage"],
     readRouterDecision: bindBackendMethod(
       "readRouterDecision",
     ) as StartBridgeServerOptions["readRouterDecision"],
@@ -527,6 +559,9 @@ export function createCliServerOptions(
     readBenchmarkSummary: bindBackendMethod(
       "readBenchmarkSummary",
     ) as StartBridgeServerOptions["readBenchmarkSummary"],
+    readBenchmarkPortfolio: bindBackendMethod(
+      "readBenchmarkPortfolio",
+    ) as StartBridgeServerOptions["readBenchmarkPortfolio"],
     listBenchmarkRuns: bindBackendMethod(
       "listBenchmarkRuns",
     ) as StartBridgeServerOptions["listBenchmarkRuns"],
@@ -641,6 +676,7 @@ export function applyRecommendationServiceLauncherConfig(values: LauncherConfigV
   const verificationKey = readLauncherString(values, "recommendation-verification-key");
   const serviceToken = readLauncherString(values, "recommendation-service-token");
   const materialFile = readLauncherString(values, "recommendation-material-file");
+  const aggregateScope = readLauncherString(values, "aggregate-scope");
 
   if (serviceUrl) {
     process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_URL = serviceUrl;
@@ -653,6 +689,12 @@ export function applyRecommendationServiceLauncherConfig(values: LauncherConfigV
   }
   if (serviceToken) {
     process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN = serviceToken;
+  }
+  if (aggregateScope) {
+    if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{0,511}$/.test(aggregateScope)) {
+      throw new Error("aggregate scope is invalid");
+    }
+    process.env.ROLE_MODEL_AGGREGATE_SCOPE = aggregateScope;
   }
   if (!materialFile) {
     return;
@@ -902,9 +944,7 @@ export async function main(): Promise<void> {
       modulePath: path.resolve(path.dirname(qaManifestPath as string), extension.modulePath),
     }));
     const qaStartupReceipts = new Map<string, Record<string, unknown>>();
-    if (packagedProfile?.channel === "production" && !trackBManifestText) {
-      throw new Error("packaged production runtime is missing its Track B distribution");
-    }
+    requirePackagedTrackBManifest(packagedProfile, trackBManifestText);
     const postObservationOutbox = createTrackBPostObservationOutbox({
       filePath: path.join(
         options.runtimeStateRoot,

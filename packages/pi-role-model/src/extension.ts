@@ -2,7 +2,7 @@ import { createFileAliasStore } from "./alias-store.js";
 import { type RoleModelCommandDependencies, createRoleModelCommandHandler } from "./commands.js";
 import { createRoleModelConfig } from "./config.js";
 import { findRoleModelDiscoveryModel, formatInvalidRoleModelModelId } from "./model-guidance.js";
-import { registerRoleModelProvider } from "./provider-registration.js";
+import { createProviderRegistration, registerRoleModelProvider } from "./provider-registration.js";
 import { injectRoleModelIntentIntoPayloadWithRuntimeTasks } from "./request-intent.js";
 import { discoverRoleModelRuntime } from "./runtime-discovery.js";
 import { inspectRequest, listRecentRequests } from "./runtime-inspection.js";
@@ -14,7 +14,14 @@ import {
   resolveEffectiveTaxonomy,
 } from "./taxonomy/resolve-effective-taxonomy.js";
 import type { DownstreamOpenAIDiscovery } from "./types.js";
-import type { PiCommandContext, PiExtensionAPI } from "./types.js";
+import type {
+  PiCommandContext,
+  PiExtensionAPI,
+  PiExtensionContext,
+  PiProviderModelConfig,
+  PiRefreshModelsContext,
+  PiThinkingLevel,
+} from "./types.js";
 
 export interface RoleModelExtensionOptions extends Partial<RoleModelCommandDependencies> {
   endpoint?: string;
@@ -32,6 +39,7 @@ export function createRoleModelExtension(options: RoleModelExtensionOptions = {}
     }).endpoint;
     const roleModelModelIds = new Set<string>();
     let latestDiscovery: DownstreamOpenAIDiscovery | undefined;
+    let latestProviderModels: PiProviderModelConfig[] = [];
     let effectiveTaxonomy: CompactTaxonomy | undefined;
     const rememberRoleModelModels = (discovery: DownstreamOpenAIDiscovery) => {
       latestDiscovery = discovery;
@@ -68,10 +76,68 @@ export function createRoleModelExtension(options: RoleModelExtensionOptions = {}
         });
       });
 
+    const refreshPiProviderModels = async (
+      context: PiRefreshModelsContext,
+    ): Promise<PiProviderModelConfig[]> => {
+      if (context.signal.aborted || !context.allowNetwork) {
+        const stored = context.stored?.models
+          .filter((model) => model.provider === "role-model" && model.api === "openai-completions")
+          .map((model): PiProviderModelConfig => {
+            const stored = model as typeof model & Record<string, unknown>;
+            return {
+              id: model.id,
+              name: model.name,
+              endpointId:
+                typeof stored.endpointId === "string" && stored.endpointId.trim().length > 0
+                  ? stored.endpointId
+                  : model.id,
+              variantEffort:
+                typeof stored.variantEffort === "string" && stored.variantEffort.trim().length > 0
+                  ? stored.variantEffort
+                  : "default",
+              api: "openai-completions",
+              reasoning: model.reasoning,
+              ...(model.thinkingLevelMap ? { thinkingLevelMap: model.thinkingLevelMap } : {}),
+              input: model.input,
+              cost: model.cost,
+              contextWindow: model.contextWindow,
+              maxTokens: model.maxTokens,
+              ...(model.headers ? { headers: model.headers } : {}),
+              ...(model.compat
+                ? {
+                    compat: model.compat as PiProviderModelConfig["compat"],
+                  }
+                : {}),
+            };
+          });
+        return stored?.length ? stored : latestProviderModels;
+      }
+      const result = await discover();
+      rememberRoleModelModels(result.discovery);
+      const registration = createProviderRegistration(result.discovery);
+      latestProviderModels = registration.config.models;
+      const persistedModels = registration.config.models.map((model) => ({
+        ...model,
+        provider: registration.providerId,
+        baseUrl: registration.config.baseUrl,
+        api: registration.config.api,
+      }));
+      await context.publish({
+        persist: { models: persistedModels, checkedAt: Date.now() },
+        update: () => undefined,
+      });
+      await refreshEffectiveTaxonomy();
+      return registration.config.models;
+    };
+
     try {
       const result = await discover();
       rememberRoleModelModels(result.discovery);
-      registerRoleModelProvider(pi, result.discovery);
+      latestProviderModels = registerRoleModelProvider(
+        pi,
+        result.discovery,
+        refreshPiProviderModels,
+      ).config.models;
       await refreshEffectiveTaxonomy();
     } catch {
       // Pi should still load the command so `/role-model doctor` can explain endpoint failures.
@@ -86,7 +152,8 @@ export function createRoleModelExtension(options: RoleModelExtensionOptions = {}
       discover,
       refreshProvider: async (discovery) => {
         rememberRoleModelModels(discovery);
-        registerRoleModelProvider(pi, discovery);
+        latestProviderModels = registerRoleModelProvider(pi, discovery, refreshPiProviderModels)
+          .config.models;
         await refreshEffectiveTaxonomy();
       },
       readSelectedAlias: options.readSelectedAlias ?? aliasStore?.readSelectedAlias,
@@ -127,6 +194,29 @@ export function createRoleModelExtension(options: RoleModelExtensionOptions = {}
           ? (event.payload as Record<string, unknown>)
           : null;
       const payloadModel = typeof payload?.model === "string" ? payload.model : null;
+      const selectedModelId = context?.model?.id ?? payloadModel;
+      if (selectedModelId && pi.getThinkingLevel && pi.setThinkingLevel && latestDiscovery) {
+        const selected = latestDiscovery.models.find((model) => model.id === selectedModelId);
+        const mapped = selected
+          ? createProviderRegistration(latestDiscovery).config.models.find(
+              (model) => model.id === selected.id,
+            )?.thinkingLevelMap
+          : undefined;
+        const fixed = mapped
+          ? (Object.entries(mapped).filter(([, value]) => value !== null) as [
+              PiThinkingLevel,
+              string,
+            ][])
+          : [];
+        if (fixed.length === 1 && pi.getThinkingLevel() !== fixed[0]?.[0]) {
+          await pi.setThinkingLevel(fixed[0][0]);
+          if (pi.getThinkingLevel() !== fixed[0][0]) {
+            throw new Error(
+              `Pi could not apply required thinking level ${fixed[0][0]} for ${selectedModelId}.`,
+            );
+          }
+        }
+      }
       if (
         context?.model?.provider === "role-model" &&
         latestDiscovery &&
@@ -144,6 +234,40 @@ export function createRoleModelExtension(options: RoleModelExtensionOptions = {}
         readRuntimeRoleSummaries,
       );
     });
+
+    const syncNativeThinkingLevel = async (
+      event: { model?: { id: string }; level?: PiThinkingLevel },
+      context?: PiExtensionContext,
+    ) => {
+      const selectedModelId = event.model?.id ?? context?.model?.id;
+      if (!selectedModelId || !latestDiscovery || !pi.getThinkingLevel) return;
+      const selected = latestDiscovery.models.find((model) => model.id === selectedModelId);
+      if (!selected) return;
+      const mapped = createProviderRegistration(latestDiscovery).config.models.find(
+        (model) => model.id === selected.id,
+      )?.thinkingLevelMap;
+      const fixed = mapped
+        ? (Object.entries(mapped).filter(([, value]) => value !== null) as [
+            PiThinkingLevel,
+            string,
+          ][])
+        : [];
+      if (fixed.length === 1 && pi.setThinkingLevel && pi.getThinkingLevel() !== fixed[0]?.[0]) {
+        await pi.setThinkingLevel(fixed[0][0]);
+        if (pi.getThinkingLevel() !== fixed[0][0]) {
+          throw new Error(
+            `Pi could not apply required thinking level ${fixed[0][0]} for ${selectedModelId}.`,
+          );
+        }
+      }
+      if (event.level && mapped?.[event.level] === null) {
+        throw new Error(`Thinking level ${event.level} is unsupported for ${selectedModelId}.`);
+      }
+      // Read through Pi's native state so model_select and thinking_level_select remain the source of truth.
+      pi.getThinkingLevel();
+    };
+    pi.on?.("model_select", syncNativeThinkingLevel);
+    pi.on?.("thinking_level_select", syncNativeThinkingLevel);
 
     pi.registerCommand("role-model", {
       description: "Configure and inspect the Role-Model provider for Pi.",

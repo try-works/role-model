@@ -317,6 +317,74 @@ describe("routing intent metadata", () => {
     expect(quality.raw.judge_score).toBeUndefined();
   });
 
+  test("getQualityMetric snapshots exact benchmark portfolio provenance into the decision metric", () => {
+    const c = candidate("deepseek.flash-max", ["text.chat"], {
+      benchmarkCapability: {
+        overallScore: 0.93,
+        lastRunId: "run-max-001",
+        lastRunCompletedAtMs: 1_700_000_000_000,
+        lastRunMode: "full",
+        lastRunSuiteId: "routing-capability-v2",
+        judgeEndpointId: "judge.endpoint",
+        judgeModelId: "judge/model",
+      },
+    });
+    const quality = getQualityMetric(c, {
+      request: baseRequest,
+      candidates: [c],
+      observedDataConfig: {
+        enabled: false,
+        metricDecayPercentPerDay: { latency: 10, throughput: 10 },
+        throughputSla: { enabled: false, minTokensPerSec: 24, penaltyTimeoutMs: 600000 },
+        difficultyLearning: {
+          recommendation: {
+            minSamples: 4,
+            maxFailureRate: 0.2,
+            minQualityScore: 0.8,
+            minTokensPerSec: 22,
+          },
+        },
+      },
+    });
+
+    expect(quality.raw).toMatchObject({
+      benchmark_endpoint_id: "deepseek.flash-max",
+      benchmark_run_id: "run-max-001",
+      benchmark_run_completed_at_ms: 1_700_000_000_000,
+      benchmark_run_mode: "full",
+      benchmark_suite_id: "routing-capability-v2",
+      benchmark_judge_endpoint_id: "judge.endpoint",
+      benchmark_judge_model_id: "judge/model",
+    });
+  });
+
+  test("routeRequest snapshots the chosen endpoint effort alongside benchmark scores", () => {
+    const high = candidate("deepseek.flash-high", ["text.chat"], {
+      identity: {
+        ...candidate("deepseek.flash-high", ["text.chat"]).identity,
+        reasoning_effort: "high",
+      },
+      benchmarkCapability: { overallScore: 0.88 },
+    });
+    const decision = routeRequest({
+      request: { ...baseRequest, strategy: "quality" },
+      candidates: [high],
+    });
+
+    expect(decision).toMatchObject({
+      chosen_endpoint_id: "deepseek.flash-high",
+      reasoning_effort: "high",
+      effort_source: "variant",
+    });
+    expect(decision.scored_candidates[0]).toMatchObject({
+      endpoint_id: "deepseek.flash-high",
+    });
+    expect(decision.scored_candidates[0]?.metric_breakdown.quality.raw).toMatchObject({
+      benchmark_endpoint_id: "deepseek.flash-high",
+      benchmark_quality_score: 0.88,
+    });
+  });
+
   test("getQualityMetric falls back to default when no quality data exists", () => {
     const c = candidate("test-ep", ["text.chat"], { observed: undefined });
     const input = {
@@ -496,6 +564,215 @@ describe("routing intent metadata", () => {
     // Blended: 0.7*0.8 + 0.3*0.9 = 0.83, no penalty
     expect(quality.value).toBeCloseTo(0.83, 3);
     expect(quality.raw.telemetry_advisory_applied).toBeUndefined();
+  });
+
+  test("getQualityMetric withholds telemetry advisory below the exact task minimum sample gate", () => {
+    const c = candidate("v4-flash-high", ["text.chat"], {
+      observed: undefined,
+      benchmarkCapability: { overallScore: 0.8 },
+      telemetryScores: {
+        taskSuccessRates: { "coder.review": 0 },
+        taskRollups: {
+          "coder.review": {
+            successRate: 0,
+            successCount: 0,
+            failureCount: 1,
+            sampleCount: 1,
+            minimumSampleCount: 2,
+            windowStartMs: 1_000,
+            windowEndMs: 2_000,
+            measuredAtMs: 2_000,
+          },
+        },
+      },
+    });
+    const quality = getQualityMetric(c, {
+      request: { ...baseRequest, taskType: "coder.review" },
+      candidates: [c],
+      observedDataConfig: minimalObservedConfig,
+    });
+
+    expect(quality.value).toBe(0.8);
+    expect(quality.raw.telemetry_advisory_available).toBe(true);
+    expect(quality.raw.telemetry_advisory_eligible).toBe(false);
+    expect(quality.raw.telemetry_advisory_withheld_reason).toBe("insufficient-samples");
+    expect(quality.raw.telemetry_advisory_applied).toBeUndefined();
+  });
+
+  test("getQualityMetric records eligible task telemetry counts and bounded window", () => {
+    const c = candidate("v4-flash-high", ["text.chat"], {
+      observed: undefined,
+      benchmarkCapability: { overallScore: 0.8 },
+      telemetryScores: {
+        taskSuccessRates: { "coder.review": 0.5 },
+        taskRollups: {
+          "coder.review": {
+            successRate: 0.5,
+            successCount: 2,
+            failureCount: 2,
+            sampleCount: 4,
+            minimumSampleCount: 2,
+            windowStartMs: 1_000,
+            windowEndMs: 2_000,
+            measuredAtMs: 2_000,
+          },
+        },
+      },
+    });
+    const quality = getQualityMetric(c, {
+      request: { ...baseRequest, taskType: "coder.review" },
+      candidates: [c],
+      observedDataConfig: minimalObservedConfig,
+    });
+
+    expect(quality.value).toBeCloseTo(0.75, 3);
+    expect(quality.raw).toMatchObject({
+      telemetry_advisory_available: true,
+      telemetry_advisory_eligible: true,
+      telemetry_advisory_applied: true,
+      telemetry_success_count: 2,
+      telemetry_failure_count: 2,
+      telemetry_sample_count: 4,
+      telemetry_minimum_sample_count: 2,
+      telemetry_window_start_ms: 1_000,
+      telemetry_window_end_ms: 2_000,
+    });
+  });
+
+  test("getQualityMetric applies eligible task telemetry when no benchmark profile exists", () => {
+    const c = candidate("v4-flash-high", ["text.chat"], {
+      observed: undefined,
+      telemetryScores: {
+        taskSuccessRates: { "coder.review": 0.5 },
+        taskRollups: {
+          "coder.review": {
+            successRate: 0.5,
+            successCount: 2,
+            failureCount: 2,
+            sampleCount: 4,
+            minimumSampleCount: 3,
+            windowStartMs: 1_000,
+            windowEndMs: 2_000,
+            measuredAtMs: 2_000,
+          },
+        },
+      },
+    });
+
+    const quality = getQualityMetric(c, {
+      request: { ...baseRequest, taskType: "coder.review" },
+      candidates: [c],
+      observedDataConfig: minimalObservedConfig,
+    });
+
+    expect(quality.source).toBe("default");
+    expect(quality.value).toBeCloseTo(0.45, 3);
+    expect(quality.raw).toMatchObject({
+      telemetry_advisory_available: true,
+      telemetry_advisory_eligible: true,
+      telemetry_advisory_applied: true,
+      telemetry_success_rate: 0.5,
+      telemetry_success_count: 2,
+      telemetry_failure_count: 2,
+      telemetry_sample_count: 4,
+      telemetry_minimum_sample_count: 3,
+      telemetry_effective_value: 0.45,
+      effective_value: 0.45,
+    });
+  });
+
+  test("getQualityMetric exposes successful task telemetry without replacing measured quality", () => {
+    const c = candidate("v4-flash-max", ["text.chat"], {
+      observed: { quality_score: 0.74 },
+      telemetryScores: {
+        taskSuccessRates: { "coder.review": 1 },
+        taskRollups: {
+          "coder.review": {
+            successRate: 1,
+            successCount: 3,
+            failureCount: 0,
+            sampleCount: 3,
+            minimumSampleCount: 3,
+            windowStartMs: 1_000,
+            windowEndMs: 2_000,
+            measuredAtMs: 2_000,
+          },
+        },
+      },
+    });
+
+    const quality = getQualityMetric(c, {
+      request: { ...baseRequest, taskType: "coder.review" },
+      candidates: [c],
+      observedDataConfig: minimalObservedConfig,
+    });
+
+    expect(quality.source).toBe("measured");
+    expect(quality.value).toBe(0.74);
+    expect(quality.raw).toMatchObject({
+      telemetry_advisory_available: true,
+      telemetry_advisory_eligible: true,
+      telemetry_success_rate: 1,
+      telemetry_success_count: 3,
+      telemetry_failure_count: 0,
+      telemetry_sample_count: 3,
+      effective_value: 0.74,
+    });
+    expect(quality.raw.telemetry_advisory_applied).toBeUndefined();
+  });
+
+  test("getQualityMetric uses the classified advisory task instead of the generic transport task", () => {
+    const c = candidate("v4-flash-high", ["text.chat"], {
+      observed: undefined,
+      telemetryScores: {
+        taskSuccessRates: { "coder.review": 0.5 },
+        taskRollups: {
+          "coder.review": {
+            successRate: 0.5,
+            successCount: 2,
+            failureCount: 2,
+            sampleCount: 4,
+            minimumSampleCount: 2,
+            windowStartMs: 1_000,
+            windowEndMs: 2_000,
+            measuredAtMs: 2_000,
+          },
+        },
+      },
+    });
+    const request = {
+      ...baseRequest,
+      taskType: "text.chat",
+      roleModelIntent: {
+        taxonomyVersion: "1.0.0-alpha.1",
+        classificationContractVersion: "role-model.classification.v1",
+        role: { id: "coder", hard: false },
+        task: { id: "coder.review", hard: false },
+        source: "heuristic" as const,
+        confidence: 0.38,
+      },
+    };
+
+    const quality = getQualityMetric(c, {
+      request,
+      candidates: [c],
+      observedDataConfig: minimalObservedConfig,
+    });
+    expect(quality.value).toBeCloseTo(0.45, 3);
+    expect(quality.raw).toMatchObject({
+      telemetry_advisory_available: true,
+      telemetry_advisory_eligible: true,
+      telemetry_advisory_applied: true,
+      telemetry_success_rate: 0.5,
+    });
+
+    const decision = routeRequest({
+      request,
+      candidates: [c],
+      roleDefinitions: [],
+      taskDefinitions: [],
+    });
+    expect(decision.selection_reasons).toContain("TELEMETRY_TASK_PERFORMANCE");
   });
 
   test("getQualityMetric floors telemetry-adjusted value at 0", () => {

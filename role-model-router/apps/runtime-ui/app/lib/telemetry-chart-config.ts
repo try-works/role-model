@@ -24,21 +24,99 @@ export const telemetryMetricOptions: ReadonlyArray<{
 
 export const telemetryBreakdownOptions: ReadonlyArray<{
   label: string;
+  shortLabel: string;
+  description: string;
   value: RuntimeTelemetryAnalyticsDimension;
 }> = [
-  { label: "Source", value: "sourceType" },
-  { label: "Endpoint", value: "endpointId" },
-  { label: "Model", value: "modelId" },
-  { label: "Provider", value: "providerId" },
-  { label: "Strategy", value: "selectedStrategy" },
-  { label: "Taxonomy group", value: "taxonomyGroupId" },
-  { label: "Taxonomy role", value: "taxonomyRoleId" },
-  { label: "Taxonomy task", value: "taxonomyTaskType" },
-  { label: "Task variant", value: "taxonomyTaskVariant" },
-  { label: "Capability", value: "taxonomyCapabilityId" },
-  { label: "Modality", value: "taxonomyModalityId" },
-  { label: "Tool class", value: "taxonomyToolClassId" },
+  {
+    label: "Source",
+    shortLabel: "Source",
+    description: "Local or remote execution source.",
+    value: "sourceType",
+  },
+  {
+    label: "Endpoint variant",
+    shortLabel: "Endpoint variant",
+    description: "Exact routable endpoint, including fixed reasoning effort.",
+    value: "endpointId",
+  },
+  {
+    label: "Upstream model (aggregates effort variants)",
+    shortLabel: "Upstream model",
+    description: "Canonical upstream model; all effort variants are grouped together.",
+    value: "modelId",
+  },
+  {
+    label: "Reasoning effort",
+    shortLabel: "Reasoning effort",
+    description: "Effective reasoning effort selected for the request.",
+    value: "reasoningEffort",
+  },
+  {
+    label: "Effort source",
+    shortLabel: "Effort source",
+    description: "How the effective effort was selected or constrained.",
+    value: "effortSource",
+  },
+  {
+    label: "Provider",
+    shortLabel: "Provider",
+    description: "Provider identity.",
+    value: "providerId",
+  },
+  {
+    label: "Strategy",
+    shortLabel: "Strategy",
+    description: "Routing strategy used for selection.",
+    value: "selectedStrategy",
+  },
+  {
+    label: "Taxonomy group",
+    shortLabel: "Taxonomy group",
+    description: "Taxonomy group identity.",
+    value: "taxonomyGroupId",
+  },
+  {
+    label: "Taxonomy role",
+    shortLabel: "Taxonomy role",
+    description: "Taxonomy role identity.",
+    value: "taxonomyRoleId",
+  },
+  {
+    label: "Taxonomy task",
+    shortLabel: "Taxonomy task",
+    description: "Taxonomy task type.",
+    value: "taxonomyTaskType",
+  },
+  {
+    label: "Task variant",
+    shortLabel: "Task variant",
+    description: "Taxonomy task variant.",
+    value: "taxonomyTaskVariant",
+  },
+  {
+    label: "Capability",
+    shortLabel: "Capability",
+    description: "Taxonomy capability.",
+    value: "taxonomyCapabilityId",
+  },
+  {
+    label: "Modality",
+    shortLabel: "Modality",
+    description: "Taxonomy modality.",
+    value: "taxonomyModalityId",
+  },
+  {
+    label: "Tool class",
+    shortLabel: "Tool class",
+    description: "Taxonomy tool class.",
+    value: "taxonomyToolClassId",
+  },
 ];
+
+export function getTelemetryBreakdownOption(dimension: RuntimeTelemetryAnalyticsDimension) {
+  return telemetryBreakdownOptions.find((option) => option.value === dimension);
+}
 
 export const telemetryChartColorTokens = {
   local: "var(--rm3-chart-local)",
