@@ -18,9 +18,9 @@ Scope note: This addendum authorizes implementation only in the existing Run 93 
 
 - [x] Capture strict RED evidence for every BSH-P1 and BSH-P3 regression before production edits.
 - [x] Implement the shared benchmark terminal-state boundary and OAuth-authenticated health projection.
-- [ ] Run focused GREEN, regression, rebuild, and paired-runtime checks from BSH-P4. Package builds and full suites are green; the clean-tree paired executable check remains.
+- [x] Run focused GREEN, regression, rebuild, and paired-runtime checks from BSH-P4. The clean-tree paired executable includes and verifies all 13 Track B extensions.
 - [ ] Complete BSH-P5 only with the separately required live-traffic authorization.
-- [ ] Re-audit the effective Run 93 requirements and update closeout/addenda receipts before promotion.
+- [x] Re-audit the effective Run 93 requirements and update/re-lock the Phase 3–8 closeout receipts; the recursive linter passes with zero failures and warnings.
 
 ## Root-cause findings
 
@@ -271,6 +271,13 @@ TDD Mode: strict
   `runtime:validate-observability` also passed with receipts in
   `evidence/logs/green/bsh-validate-ui-green.log` and
   `evidence/logs/green/bsh-validate-observability-green.log`.
+- The mandatory paired Track B distribution passed 2/2 integrity and supervised
+  shadow-pipeline tests in
+  `evidence/logs/green/bsh-track-b-distribution-green.log`. The clean-tree
+  standalone executable then passed packaging validation with all 13
+  extensions, chat and Responses execution, and SHA-256
+  `e0a79bb4729b16735048a3a86b88d305462baa5fd8d6d53b581da67e9883990e`
+  in `evidence/logs/green/bsh-packaged-executable-green.log`.
 
 Changed Files:
 
