@@ -138,6 +138,20 @@ export function buildChatCompletionsProbeUrl(apiBase: string): string {
   return trimmed.endsWith("/v1") ? `${trimmed}/chat/completions` : `${trimmed}/v1/chat/completions`;
 }
 
+/**
+ * Resolve the wire model id used by the chat-completions admission probe.
+ *
+ * Catalog model ids are provider-prefixed (e.g. ``deepseek/deepseek-v4-flash``),
+ * but OpenAI-compatible vendors expect the bare upstream id on the wire
+ * (``deepseek-v4-flash``). Sending the prefixed form makes the vendor reject
+ * the probe with a 400 that we previously misclassified as ``vendor-down``.
+ * Mirrors ``resolveProviderLocalModelId`` in the OpenAI execution adapter.
+ */
+function resolveProbeModelId(modelId: string): string {
+  const trimmed = modelId.trim();
+  return trimmed.includes("/") ? trimmed.split("/").slice(1).join("/") : trimmed;
+}
+
 function isTimeoutError(error: unknown): boolean {
   return (
     error instanceof Error &&
@@ -337,7 +351,7 @@ export async function probeRemoteEndpointAdmission(
 
   const probeUrl = buildChatCompletionsProbeUrl(context.apiBase);
   const body = {
-    model: context.modelId,
+    model: resolveProbeModelId(context.modelId),
     messages: [{ role: "user", content: "role-model admission readiness probe" }],
     max_tokens: 1,
     stream: false,
