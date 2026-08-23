@@ -18992,8 +18992,9 @@ export async function createRuntimeBridgeBackend(
     const recoverableEndpoints = runtimeEndpoints.filter(
       (endpoint) =>
         endpoint.providerAccountId === providerAccountId &&
-        endpoint.lifecycleState === "degraded" &&
-        probeOnlyHealthStatuses.has(endpoint.healthStatus) &&
+        ((endpoint.lifecycleState === "degraded" &&
+          probeOnlyHealthStatuses.has(endpoint.healthStatus)) ||
+          (endpoint.lifecycleState === "active" && endpoint.healthStatus === "not-yet-executed")) &&
         !circuitDeniedEndpointIds.has(endpoint.endpointId),
     );
     if (recoverableEndpoints.length === 0) {
@@ -19016,6 +19017,33 @@ export async function createRuntimeBridgeBackend(
     }
     rebuildCurrentState();
   };
+
+  const reconcilePersistedOAuthAuthenticatedRuntimeEndpoints = (): void => {
+    // An active, healthy, stable Codex account is the durable result of a completed
+    // OAuth callback. Reconcile legacy endpoint rows from builds that recorded that
+    // account-level proof as `not-yet-executed`; do not issue a model request during startup.
+    for (const account of currentAccounts) {
+      if (
+        !isCodexSubscriptionAccount(account) ||
+        account.status !== "active" ||
+        account.healthStatus !== "healthy" ||
+        account.rotationState !== "stable" ||
+        !account.credentialRef
+      ) {
+        continue;
+      }
+      const { payload } = readFreshestStoredCodexOauthTokenFileSync({
+        runtimeStateRoot: options.runtimeStateRoot,
+        scopeId: options.scopeId,
+        credentialRef: account.credentialRef.ref,
+      });
+      if (!hasStoredCodexAuthTokens(payload)) {
+        continue;
+      }
+      reconcileOAuthAuthenticatedRuntimeEndpoints(account.providerAccountId);
+    }
+  };
+  reconcilePersistedOAuthAuthenticatedRuntimeEndpoints();
 
   const admitRuntimeEndpoint = async (
     body: Record<string, unknown>,

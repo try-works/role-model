@@ -1,8 +1,11 @@
-import { readFile, readdir, rm } from "node:fs/promises";
+import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
 import { describe, expect, test } from "vitest";
+
+import { resolveSqliteMemoryLocation } from "@role-model-router/sqlite-memory";
 
 import * as bridge from "../src/index.js";
 
@@ -100,6 +103,133 @@ describe("remote health bootstrap", () => {
       ).resolves.toEqual(expect.anything());
     } finally {
       await backend.shutdown?.();
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("restores legacy not-yet-executed Codex endpoints as healthy from persisted OAuth proof without a probe", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `codex-oauth-restore-${Date.now()}`);
+    const scopeId = "codex-oauth-restore-tests";
+    const restartFixtureRoot = path.join(import.meta.dirname, "fixtures-restart-rehydration");
+    const providerAccountId = "openai.personal.codex-restore";
+    const credentialRef = `oauth/openai/${providerAccountId}`;
+    const calls: string[] = [];
+    let firstBackend: Awaited<
+      ReturnType<
+        (typeof bridge & {
+          createRuntimeBridgeBackend: typeof bridge.createRuntimeBridgeBackend;
+        })["createRuntimeBridgeBackend"]
+      >
+    > | null = null;
+    let restoredBackend: typeof firstBackend = null;
+
+    try {
+      firstBackend = await bridge.createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: restartFixtureRoot,
+        runtimeStateRoot,
+        scopeId,
+        networkFetcher: async (input) => {
+          calls.push(String(input));
+          throw new Error("Persisted OAuth restore must not execute a provider probe.");
+        },
+      });
+      await firstBackend.upsertProviderAccount({
+        providerAccountId,
+        providerId: "openai",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: { backend: "local-file", ref: credentialRef },
+        authMode: "oauth2-device-code",
+        regionPolicy: { mode: "prefer", regions: ["global"] },
+        allowedModels: ["chatgpt/gpt-5.4"],
+        modelRoleBindings: [{ modelId: "chatgpt/gpt-5.4", roleIds: ["general.chat"] }],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      });
+      const activation = await firstBackend.activateEndpoint({
+        providerAccountId,
+        modelId: "chatgpt/gpt-5.4",
+        region: "global",
+      });
+      await firstBackend.shutdown?.();
+      firstBackend = null;
+
+      const credentialPath = path.join(
+        runtimeStateRoot,
+        scopeId,
+        "credentials",
+        `${credentialRef}.json`,
+      );
+      await mkdir(path.dirname(credentialPath), { recursive: true });
+      await writeFile(
+        credentialPath,
+        JSON.stringify({
+          providerId: "openai",
+          providerAccountId,
+          saved_at_ms: Date.now(),
+          codexAuth: {
+            auth_mode: "chatgpt",
+            OPENAI_API_KEY: null,
+            last_refresh: new Date().toISOString(),
+            tokens: {
+              access_token: "persisted-codex-access",
+              refresh_token: "persisted-codex-refresh",
+              account_id: "persisted-codex-account",
+            },
+          },
+        }),
+        "utf8",
+      );
+      const database = new DatabaseSync(resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId }));
+      try {
+        database
+          .prepare("UPDATE runtime_endpoints SET health_status = ? WHERE endpoint_id = ?")
+          .run("not-yet-executed", activation.endpointId);
+      } finally {
+        database.close();
+      }
+
+      restoredBackend = await bridge.createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: restartFixtureRoot,
+        runtimeStateRoot,
+        scopeId,
+        networkFetcher: async (input) => {
+          calls.push(String(input));
+          throw new Error("Persisted OAuth restore must not execute a provider probe.");
+        },
+      });
+      let health = await restoredBackend.readHealthStatus();
+      for (
+        let attempt = 0;
+        attempt < 100 && health.sessionBootstrap.status === "pending";
+        attempt += 1
+      ) {
+        await delay(10);
+        health = await restoredBackend.readHealthStatus();
+      }
+
+      expect(calls).toEqual([]);
+      await expect(restoredBackend.listEndpoints()).resolves.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            endpointId: activation.endpointId,
+            status: "active",
+            healthStatus: "healthy",
+            routingEligible: true,
+          }),
+        ]),
+      );
+    } finally {
+      await firstBackend?.shutdown?.();
+      await restoredBackend?.shutdown?.();
       await rm(runtimeStateRoot, { recursive: true, force: true });
     }
   });
