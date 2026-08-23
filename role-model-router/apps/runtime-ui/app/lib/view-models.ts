@@ -61,6 +61,12 @@ function uniqueStrings(values: readonly (string | null | undefined)[]): string[]
   ];
 }
 
+function firstNonBlank(...values: readonly (string | null | undefined)[]): string | undefined {
+  return values.find(
+    (value): value is string => typeof value === "string" && value.trim().length > 0,
+  );
+}
+
 function sortLexical(left: string, right: string): number {
   return left.localeCompare(right, "en");
 }
@@ -647,7 +653,7 @@ export function buildConfiguredRemoteConnectionRows(input: {
   const modelDisplayNameById = new Map(
     input.models.map((model) => {
       const upstreamModelId = readUpstreamModelId(model);
-      const base = model.displayName ?? toTitleLabel(upstreamModelId ?? model.id);
+      const base = firstNonBlank(model.displayName) ?? toTitleLabel(upstreamModelId ?? model.id);
       return [
         model.id,
         formatEndpointDisplayName({ base, reasoningEffort: readReasoningEffort(model) }),
@@ -688,8 +694,7 @@ export function buildConfiguredRemoteConnectionRows(input: {
           ]),
         ];
         const base =
-          endpoint.displayName ??
-          modelDisplayNameById.get(endpoint.modelId) ??
+          firstNonBlank(endpoint.displayName, modelDisplayNameById.get(endpoint.modelId)) ??
           toTitleLabel(upstreamModelId ?? endpoint.modelId);
         return {
           endpointId: endpoint.endpointId,

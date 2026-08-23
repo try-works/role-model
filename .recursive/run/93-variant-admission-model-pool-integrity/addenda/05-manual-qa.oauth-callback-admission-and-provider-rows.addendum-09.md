@@ -144,6 +144,18 @@ TDD Mode: `strict`
   predicates, and the callback reconciliation is one bounded helper, avoiding
   a UI-only exception, duplicated OAuth provider list, or circuit reset.
 
+### `OAAR3` blank configured-provider row projection
+
+- RED: `role-model-router/apps/runtime-ui/app/lib/view-models.test.ts` supplied
+  an endpoint with a whitespace-only endpoint name and a blank catalog display
+  name. The configured-provider projection produced `" (High)"`, proving that
+  a non-null but unusable string bypassed the canonical identity fallback.
+- GREEN: the projection now selects the first non-blank endpoint/model label
+  before falling back to the upstream model ID and formats the endpoint's own
+  effort only after that selection. The full view-model suite passes 49/49.
+- REFACTOR: the non-blank selection is a small shared helper within the view
+  model so a whitespace-only field cannot bypass canonical label construction.
+
 ### `OAAR4` registration identity
 
 - RED: `packages/pi-role-model/test/effort-identity.test.ts` added default, low, high, and max siblings of one upstream model and asserted distinct configured endpoint identities plus normalized effort. The test failed because the registered models exposed no `endpointId`. Evidence: `evidence/logs/red/oaar4-pi-variant-identity-red.log`.
@@ -170,11 +182,10 @@ configured endpoints all completed and retained identical endpoint/effort facts
 through request observation, routing decision, usage telemetry, standalone
 message lineage, and Track B shadow receipts.
 
-The rebuilt-binary packaging check remains blocked—not bypassed—by the source
-tree binding guard because the shared public checkout has unrelated user edits.
-See `evidence/logs/blocked/oaar4-runtime-packaging-source-binding.log`. A clean
-source binding and a packaged-binary re-run are still required before this
-addendum can be called fully rebuilt-runtime verified.
+The first rebuilt-binary packaging attempt correctly stopped—not bypassed—at
+the clean-source binding guard while the OAAR3 UI repair was intentionally
+uncommitted. It must be re-run from the clean worktree after the OAAR3 commit;
+no packaged-binary result is claimed yet.
 
 ## Scope and safety constraints
 
@@ -185,9 +196,9 @@ addendum can be called fully rebuilt-runtime verified.
 
 ## Requirement completion status
 
-- `OAAR1` | `implemented; source verification pending` | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts`, `role-model-router/apps/runtime-host-bridge/test/account-repair.test.ts`. | Implementation Evidence: focused RED/GREEN covers direct and batch OAuth admission and stale probe-only endpoint reconciliation. | Deferred By: full suite, rebuilt-runtime/browser verification, and a dedicated persisted execution-circuit regression.
-- `OAAR2` | `partially implemented` | Callback reconciliation restores only stale probe-only degradation and intentionally preserves circuit-denied endpoint IDs. | Evidence: focused OAuth account-repair regression. | Deferred By: a direct persisted quota-circuit regression and rebuilt-runtime verification.
-- `OAAR3` | `planned` | No changed files yet; raw endpoint metadata is present but browser projection is defective. | Evidence: Root-cause evidence.
+- `OAAR1` | `implemented; source verification pending` | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts`, `role-model-router/apps/runtime-host-bridge/test/account-repair.test.ts`. | Implementation Evidence: focused RED/GREEN covers direct and batch OAuth admission and stale probe-only endpoint reconciliation. | Deferred By: rebuilt-runtime/browser verification.
+- `OAAR2` | `implemented; source verification pending` | Callback reconciliation restores only stale probe-only degradation and preserves a persisted `blocked_quota` circuit-denied endpoint ID. | Evidence: focused OAuth account-repair regression. | Deferred By: rebuilt-runtime/browser verification.
+- `OAAR3` | `implemented; source verification pending` | Changed Files: `role-model-router/apps/runtime-ui/app/lib/view-models.ts`, `role-model-router/apps/runtime-ui/app/lib/view-models.test.ts`. | Evidence: strict blank-label RED/GREEN; full view-model suite 49/49. | Deferred By: rebuilt-runtime/browser verification.
 - `OAAR4` | `implemented; live Stage-runtime verified` | Changed Files: `packages/pi-role-model/src/types.ts`, `packages/pi-role-model/src/downstream-openai.ts`, `packages/pi-role-model/src/extension.ts`, `packages/pi-role-model/README.md`, and focused tests. | Implementation Evidence: `evidence/logs/red/oaar4-pi-variant-identity-red.log`, `evidence/logs/red/oaar4-pi-offline-refresh-red.log`, `evidence/logs/red/oaar4-pi-unsupported-effort-red.log`, `evidence/logs/green/oaar4-pi-variant-identity-green.log`, `evidence/logs/green/oaar4-pi-unsupported-effort-green.log`. | Verification Evidence: `evidence/logs/green/oaar4-pi-stage-runtime-e2e.log`. | Deferred By: clean-source rebuilt-binary packaging receipt.
 - `OAAR-P1` | `partially implemented` | The no-automatic-probe, active/eligible/unverified OAuth case now covers a stale probe-only record plus direct and batch endpoint admission. | Evidence: `evidence/logs/red/oaar1-oauth-no-probe-red.log`, `evidence/logs/green/oaar1-oauth-no-probe-green.log`. | Deferred By: direct persisted circuit and browser cases.
 - `OAAR-P2`–`OAAR-P5` | `planned` | Implementation and rebuilt-runtime verification are required before acceptance. | Evidence: Remediation plan.
