@@ -1,0 +1,17 @@
+Run 93 Addendum 12 rebuilt-runtime verification
+Date: 2026-08-23 Asia/Shanghai
+Public commit: 3b8a2d68adaf22f1a97be17ba1a2122372fcd902
+Executable SHA256: 24b61974fc425e938e2785ce7d6a35b5fe6f8406cde9851606c0673f88307b43
+Runtime URL: http://127.0.0.1:59921/app
+State root: D:/DEV/tmp/run93-uat-bsh-20260823
+Stage 3457: remained listening and untouched
+
+PASS: GET /api/role-model/benchmark/runs returned exactly two valid persisted runs:
+- b74b60a3-020c-43b5-92e5-bc7e0cc6dbd8
+- 9b819ebc-8325-432c-9533-ac3c1c577b77
+PASS: stale run d1f6f3d5-f0b3-4067-91fc-762ccfc9247c was absent.
+PASS: GET /api/role-model/benchmark/summary fell back to valid run b74b60a3-020c-43b5-92e5-bc7e0cc6dbd8.
+PASS: GET /api/role-model/benchmark/portfolio returned no current entries because current membership revision 75ebeb054f60f1b68c37be9373c4a84010304ac9f33ea713aa3ef0eae21fc324 has no matching completed run.
+PASS: Browser Overview listed all 16 current endpoint variants and rendered Luna/Luna Max Q— rather than fabricated stale quality.
+PASS: Browser Benchmark history listed only the same two valid completed runs.
+PASS: GET /api/role-model/extensions returned 13 entries; every entry reported lifecycle=ready and health.available=true.
