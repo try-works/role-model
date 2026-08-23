@@ -1,21 +1,21 @@
 {
   "artifact": "08-memory-impact.md",
-  "artifact_hash": "e62c5ddb322f3aaf165c636b92bc934b8e406adecaa668da848bbb3186599990",
+  "artifact_hash": "ed113b73ec4a6246ed5a73f3cec0452f92717efddd4141de5f53932a018b4921",
   "artifact_path": "D:\\DEV\\role-model\\.worktrees\\93-variant-admission-model-pool-integrity\\.recursive\\run\\93-variant-admission-model-pool-integrity\\08-memory-impact.md",
-  "locked_at": "2026-08-23T10:48:35Z",
+  "locked_at": "2026-08-23T13:22:01Z",
   "prerequisite_hashes": {
     "00-requirements.md": "cfcc07d0d8ba56b8f8ff9cbbbcc5f79c10c5c2f2b9161d864792638405c493ee",
     "00-worktree.md": "475fb5cca6a6bcad6139f76b1cdd2f5b863588914305e4bf89259af94baf6946",
     "01-as-is.md": "20774d6b0ab11880a8274243d32d4e5e46fcaef5ca31c8e1cfa72c1f4c49bd88",
     "01.5-root-cause.md": "daecba0e4e0a885ee4623580e13815529e528e360330015f1f8b30d836c35546",
     "02-to-be-plan.md": "4e4f9322500bfcf8e828f14cd753ac7c6106ff3114cf1d25ab42d8710c01d872",
-    "03-implementation-summary.md": "9e9bc17d1e15e483798c99a3c90e95144aa95e46beaddbc81d9fa6946cf76dad",
-    "03.5-code-review.md": "c8b5d2efbc37d1f33d0f85988a4d4a1c81b35a75e5e3830af3fb1b4f417341db",
-    "04-test-summary.md": "dc12ea1b7aa977418d8a7a887fdb07834f070ddb5cc5f86f9661f4daefae6c09",
-    "05-manual-qa.md": "10a9e17657854358f69d7ceebfa4e3b5e612675dd548d70a46fb715eadb83946",
-    "06-decisions-update.md": "d18a627ddfc3fd91b0ea93d682817fdcdd488238167a9714b85666206b5bbb9c",
-    "07-state-update.md": "23284114b05d7ef6f0c3524f471fd62b641b51c9a17efb9de26b36f2cc2751dc"
+    "03-implementation-summary.md": "7011cc922dd6f4b18e0568cba1f123dbca101aee1861715e242447aa6a124ff1",
+    "03.5-code-review.md": "9cd8d07bc930eed7a94976044a02efb40b2e00a28d724369e6fdc1ce24bd2bb9",
+    "04-test-summary.md": "ecc0a9effac62f8a7f5c8adc55745372c1fff37d8cff142c02104c90c54626b8",
+    "05-manual-qa.md": "b61acb42176ab6e54aadf239ce9a662e3382019c85433f1c002eaab44ae2d44f",
+    "06-decisions-update.md": "bd3dcf19e6f2da4de4e37b4e063dbc2cba4d864d35074db5bd269ad4a11ea623",
+    "07-state-update.md": "a81c019d6220aeca1eadf50ade8cac324a04c384d18e97ac9100794e00f6cb6b"
   },
   "previous_receipt_hash": null,
-  "receipt_hash": "fb54f49f45083db476e257c25bc8f02024e4a09bbb67f192c5f6f5d5b05af7f7"
+  "receipt_hash": "5c4432a74f198a536ea627ffd753610545db1ff577d5f549177e45ba462a4971"
 }

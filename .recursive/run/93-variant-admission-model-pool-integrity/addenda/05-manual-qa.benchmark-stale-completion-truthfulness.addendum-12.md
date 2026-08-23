@@ -1,11 +1,23 @@
 Run: `/.recursive/run/93-variant-admission-model-pool-integrity/`
 Phase: `05 Manual QA Addendum 12`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-08-23T13:13:09Z`
+LockHash: `b6da96f15074e42df99e84c5c0a2c98138eed0fccd7feb929ba0d73f5d5a3678`
 Inputs:
 - `/.recursive/run/93-variant-admission-model-pool-integrity/00-requirements.md`
 - `/.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`
 - `/.recursive/run/92-configured-model-pool-benchmark-convergence/00-requirements.md`
+Outputs:
+- `/.recursive/run/93-variant-admission-model-pool-integrity/addenda/05-manual-qa.benchmark-stale-completion-truthfulness.addendum-12.md`
 Scope note: Post-closeout UAT repair for truthful stale benchmark reporting and per-variant quality projection.
+
+## TODO
+
+- [x] Reproduce the stale-completion projection defect.
+- [x] Complete strict RED/GREEN repair evidence.
+- [x] Rebuild and relaunch the mandatory Track B runtime on the isolated UAT port.
+- [x] Verify the repaired APIs and browser projections.
+- [x] Record explicit operator UAT approval.
 
 ## UAT finding
 
@@ -32,19 +44,6 @@ UAT benchmark `d1f6f3d5-f0b3-4067-91fc-762ccfc9247c` completed execution and gra
    - existing valid per-variant results remain projected;
    - 13/13 Track B extensions are ready and available.
 6. Run a bounded stable-membership benchmark only if required to establish new live quality evidence; do not mutate configured membership while it runs.
-
-## Coverage Gate
-
-- [x] `BSQ1` through `BSQ6` have implementation and verification evidence.
-
-Coverage: `PASS`
-
-## Approval Gate
-
-- [x] Strict RED/GREEN evidence exists.
-- [x] Rebuilt-runtime UAT verification passes.
-
-Approval: `PASS`
 
 ## Implementation and verification record
 
@@ -91,3 +90,27 @@ The quarantined run's partial response/judge/compare artifacts were not
 salvaged into scores. A new quick benchmark performed without changing model
 membership will establish current Luna quality evidence; this repair does not
 send that additional live provider workload on the user's behalf.
+
+## Human UAT sign-off
+
+- QA Execution Mode: hybrid
+- Operator: repository owner/admin (`try-works`)
+- Signed off: `2026-08-23`
+- Result: PASS
+- Note: After reviewing the rebuilt runtime on the isolated UAT instance, the
+  operator explicitly replied `ok approved`, authorizing the standard
+  CircleCI-gated `dev -> stage -> main` release flow for this repair.
+
+## Coverage Gate
+
+- [x] `BSQ1` through `BSQ6` have implementation and verification evidence.
+
+Coverage: PASS
+
+## Approval Gate
+
+- [x] Strict RED/GREEN evidence exists.
+- [x] Rebuilt-runtime UAT verification passes.
+- [x] The repository owner explicitly approved the rebuilt UAT result.
+
+Approval: PASS

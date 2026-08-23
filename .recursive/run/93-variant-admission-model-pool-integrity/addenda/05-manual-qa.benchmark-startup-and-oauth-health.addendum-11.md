@@ -2,7 +2,9 @@ Run: `/.recursive/run/93-variant-admission-model-pool-integrity/`
 Phase: `5-manual-qa`
 Artifact: `05-manual-qa.md`
 Addendum: `11`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-08-23T13:13:08Z`
+LockHash: `405e70561c7ac4b8284017a6cac2cbd319be0dae85a86c907a551aba90c1b75f`
 Inputs:
 - `00-requirements.md` (LOCKED), especially R2, R3, R4, R8, and R9
 - `01.5-root-cause.md` (LOCKED)
@@ -19,7 +21,7 @@ Scope note: This addendum authorizes implementation only in the existing Run 93 
 - [x] Capture strict RED evidence for every BSH-P1 and BSH-P3 regression before production edits.
 - [x] Implement the shared benchmark terminal-state boundary and OAuth-authenticated health projection.
 - [x] Run focused GREEN, regression, rebuild, and paired-runtime checks from BSH-P4. The clean-tree paired executable includes and verifies all 13 Track B extensions.
-- [ ] Complete BSH-P5 only with the separately required live-traffic authorization.
+- [x] Complete BSH-P5 using the operator-authorized rebuilt-runtime UAT benchmark recorded by Addendum 12; no additional provider workload was sent for closeout.
 - [x] Re-audit the effective Run 93 requirements and update/re-lock the Phase 3–8 closeout receipts; the recursive linter passes with zero failures and warnings.
 
 ## Root-cause findings
@@ -291,6 +293,13 @@ Changed Files:
 
 The existing `:3457` Stage state and stuck run were not mutated. No credential
 was read and no provider request was sent during this implementation pass.
+The later operator-authorized rebuilt-runtime UAT benchmark on isolated port
+`59921` exercised real endpoint execution and grading. Its truthful stale
+membership outcome, telemetry/UI inspection, mandatory Track B readiness, and
+operator approval are recorded in
+`addenda/05-manual-qa.benchmark-stale-completion-truthfulness.addendum-12.md`
+and `evidence/logs/green/bsq-rebuilt-uat-green.log`; this satisfies BSH-P5
+without sending another validation workload.
 
 ## Coverage Gate
 

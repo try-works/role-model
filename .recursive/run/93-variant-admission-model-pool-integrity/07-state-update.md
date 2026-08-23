@@ -1,14 +1,15 @@
 Run: `/.recursive/run/93-variant-admission-model-pool-integrity/`
 Phase: `7-state-update`
 Status: `LOCKED`
-LockedAt: `2026-08-23T10:48:34Z`
-LockHash: `23284114b05d7ef6f0c3524f471fd62b641b51c9a17efb9de26b36f2cc2751dc`
+LockedAt: `2026-08-23T13:22:00Z`
+LockHash: `a81c019d6220aeca1eadf50ade8cac324a04c384d18e97ac9100794e00f6cb6b`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - `.recursive/run/93-variant-admission-model-pool-integrity/00-requirements.md`
 - `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`
 - `.recursive/run/93-variant-admission-model-pool-integrity/06-decisions-update.md`
 - `.recursive/run/93-variant-admission-model-pool-integrity/addenda/06-decisions-update.addendum-02.md`
+- `.recursive/run/93-variant-admission-model-pool-integrity/addenda/06-decisions-update.addendum-03.md`
 - `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md`
 - `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-01.md`
 Outputs:
@@ -52,11 +53,15 @@ Re-read `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-imp
 
 Re-read `.recursive/run/93-variant-admission-model-pool-integrity/addenda/06-decisions-update.addendum-02.md` for the post-close benchmark terminal-state decision reconciliation.
 
+Re-read `.recursive/run/93-variant-admission-model-pool-integrity/addenda/06-decisions-update.addendum-03.md` for the post-UAT stale-completion truthfulness decision reconciliation.
+
 ## Earlier Phase Reconciliation
 
 The state summary contains only facts accepted by implementation, review, tests, QA, and the Phase 6 ledger. It does not convert the deferred Stage RC operator action into a completed release.
 
 The state reconciliation includes `.recursive/run/93-variant-admission-model-pool-integrity/addenda/06-decisions-update.addendum-02.md` and records no decision reversal.
+
+The state reconciliation also includes `.recursive/run/93-variant-admission-model-pool-integrity/addenda/06-decisions-update.addendum-03.md`; stale or result-less runs remain excluded from completed projections.
 
 ## Subagent Contribution Verification
 
@@ -96,7 +101,7 @@ Refreshed `.recursive/STATE.md` with verified Run 93 status.
 
 - R1 | Status: verified | Changed Files: `.recursive/STATE.md` | Implementation Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md` | Verification Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`.
 - R2 | Status: verified | Changed Files: `.recursive/STATE.md` | Implementation Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md` | Verification Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`.
-- R3 | Status: verified | Changed Files: `.recursive/STATE.md` | Implementation Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md` | Verification Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`.
+- R3 | Status: verified | Changed Files: `.recursive/STATE.md`, `role-model-router/apps/runtime-host-bridge/src/benchmark-summary.ts`, `role-model-router/apps/runtime-host-bridge/test/benchmark-progress.test.ts`, `role-model-router/apps/runtime-host-bridge/test/benchmark-summary.test.ts` | Implementation Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md`, `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-06.md` | Verification Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`, `.recursive/run/93-variant-admission-model-pool-integrity/evidence/logs/green/bsq-rebuilt-uat-green.log`.
 - R4 | Status: verified | Changed Files: `.recursive/STATE.md` | Implementation Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md` | Verification Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`.
 - R5 | Status: verified | Changed Files: `.recursive/STATE.md` | Implementation Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md` | Verification Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`.
 - R6 | Status: verified | Changed Files: `.recursive/STATE.md` | Implementation Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md` | Verification Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`.

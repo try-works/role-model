@@ -1,15 +1,17 @@
 Run: `/.recursive/run/93-variant-admission-model-pool-integrity/`
 Phase: `4-test-summary`
 Status: `LOCKED`
-LockedAt: `2026-08-23T10:48:32Z`
-LockHash: `dc12ea1b7aa977418d8a7a887fdb07834f070ddb5cc5f86f9661f4daefae6c09`
+LockedAt: `2026-08-23T13:21:49Z`
+LockHash: `ecc0a9effac62f8a7f5c8adc55745372c1fff37d8cff142c02104c90c54626b8`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - `/.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md`
 - `/.recursive/run/93-variant-admission-model-pool-integrity/03.5-code-review.md`
 - `/.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md`
 - `/.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-05.md`
+- `/.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-06.md`
 - `/.recursive/run/93-variant-admission-model-pool-integrity/addenda/03.5-code-review.addendum-05.md`
+- `/.recursive/run/93-variant-admission-model-pool-integrity/addenda/03.5-code-review.addendum-06.md`
 - `/.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-01.md`
 - `/.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-09.md`
 Outputs:
@@ -88,7 +90,9 @@ No accepted result depends on a timeout or an unbounded retry.
 - `.recursive/run/93-variant-admission-model-pool-integrity/03.5-code-review.md`
 - `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md`
 - `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-05.md`
+- `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-06.md`
 - `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03.5-code-review.addendum-05.md`
+- `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03.5-code-review.addendum-06.md`
 - `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-01.md`
 - `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-09.md`
 
@@ -98,6 +102,8 @@ No accepted result depends on a timeout or an unbounded retry.
 `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-01.md` records the exact reviewed current diff inventory.
 
 The benchmark-startup addenda `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-05.md`, `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03.5-code-review.addendum-05.md`, and `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-09.md` were reread and bind the strict RED/GREEN plus full host/UI regression evidence.
+
+The stale-completion addenda `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-06.md` and `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03.5-code-review.addendum-06.md` were reread and bind the shared completed-run predicate plus its deterministic rejection and compatibility cases.
 
 ## Subagent Contribution Verification
 
@@ -138,7 +144,7 @@ The shared managed-adapter classification was added and the focused 68-test regr
 
 - R1 | Status: verified | Changed Files: role-model-router/apps/runtime-host-bridge/src/index.ts | Implementation Evidence: role-model-router/apps/runtime-host-bridge/src/index.ts | Verification Evidence: .recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md
 - R2 | Status: verified | Changed Files: role-model-router/apps/runtime-host-bridge/src/remote-health-probe.ts | Implementation Evidence: role-model-router/apps/runtime-host-bridge/src/remote-health-probe.ts | Verification Evidence: .recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md
-- R3 | Status: verified | Changed Files: role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts, role-model-router/apps/runtime-host-bridge/src/benchmark-progress.ts, role-model-router/apps/runtime-host-bridge/test/benchmark-runner-judge.test.ts | Implementation Evidence: role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts, role-model-router/apps/runtime-host-bridge/src/benchmark-progress.ts | Verification Evidence: .recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md, .recursive/run/93-variant-admission-model-pool-integrity/evidence/logs/green/bsh-host-full-green.log
+- R3 | Status: verified | Changed Files: role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts, role-model-router/apps/runtime-host-bridge/src/benchmark-progress.ts, role-model-router/apps/runtime-host-bridge/src/benchmark-summary.ts, role-model-router/apps/runtime-host-bridge/test/benchmark-runner-judge.test.ts, role-model-router/apps/runtime-host-bridge/test/benchmark-progress.test.ts, role-model-router/apps/runtime-host-bridge/test/benchmark-summary.test.ts | Implementation Evidence: role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts, role-model-router/apps/runtime-host-bridge/src/benchmark-progress.ts, .recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-06.md | Verification Evidence: .recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md, .recursive/run/93-variant-admission-model-pool-integrity/evidence/logs/green/bsh-host-full-green.log, .recursive/run/93-variant-admission-model-pool-integrity/evidence/logs/green/bsq-benchmark-regression-green.log
 - R4 | Status: verified | Changed Files: role-model-router/apps/runtime-ui/app/lib/runtime-api.ts | Implementation Evidence: role-model-router/apps/runtime-ui/app/lib/runtime-api.ts | Verification Evidence: .recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md
 - R5 | Status: verified | Changed Files: role-model-router/apps/runtime-ui/app/lib/candidate-space.ts | Implementation Evidence: role-model-router/apps/runtime-ui/app/lib/candidate-space.ts | Verification Evidence: .recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md
 - R6 | Status: verified | Changed Files: role-model-router/apps/runtime-ui/app/components/candidate-space-chart.tsx | Implementation Evidence: role-model-router/apps/runtime-ui/app/components/candidate-space-chart.tsx | Verification Evidence: .recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md

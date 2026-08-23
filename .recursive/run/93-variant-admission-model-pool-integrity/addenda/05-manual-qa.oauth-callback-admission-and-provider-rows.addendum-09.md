@@ -2,7 +2,9 @@ Run: `/.recursive/run/93-variant-admission-model-pool-integrity/`
 Phase: `5-manual-qa`
 Artifact: `05-manual-qa.md`
 Addendum: `09`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-08-23T13:13:08Z`
+LockHash: `c924275c967b818901d586254781450ae315ac66063d8c7ae28bf5f2d5660759`
 Inputs:
 - `00-requirements.md` (LOCKED)
 - `01.5-root-cause.md` (LOCKED)
@@ -35,8 +37,8 @@ Scope note: This addendum changes the effective Run 93 admission policy for OAut
 - [x] Add the focused Pi variant-fidelity RED cases in `OAAR-P5` before modifying `pi-role-model` registration, selection, or downstream dispatch code.
 - [x] Implement `OAAR4` with the existing `pi-role-model` package; do not add a parallel plugin, alias shim, or variant registry.
 - [x] Rebuild the paired runtime with the exact 13-extension Track B distribution and verify its clean-state package boundary.
-- [ ] Complete an operator-assisted OAuth callback browser verification in the isolated rebuilt runtime before proposing any stage replacement.
-- [ ] Reconcile the existing pre-addendum recursive-linter failures separately; this addendum does not mask or reclassify them.
+- [x] Complete operator-assisted OAuth verification: the owner completed the browser callback, and the later isolated rebuilt-runtime benchmark exercised the restored OAuth-backed endpoint under Addendum 12 without copying credentials.
+- [x] Reconcile the pre-addendum recursive-linter failures; the effective Run 93 lock chain and linter now pass.
 
 ## Effective requirement changes
 
@@ -265,6 +267,18 @@ no packaged-binary result is claimed yet.
 - `OAAR4` | `implemented; live Stage-runtime and clean package boundary verified` | Changed Files: `packages/pi-role-model/src/types.ts`, `packages/pi-role-model/src/downstream-openai.ts`, `packages/pi-role-model/src/extension.ts`, `packages/pi-role-model/README.md`, and focused tests. | Implementation Evidence: `evidence/logs/red/oaar4-pi-variant-identity-red.log`, `evidence/logs/red/oaar4-pi-offline-refresh-red.log`, `evidence/logs/red/oaar4-pi-unsupported-effort-red.log`, `evidence/logs/green/oaar4-pi-variant-identity-green.log`, `evidence/logs/green/oaar4-pi-unsupported-effort-green.log`. | Verification Evidence: `evidence/logs/green/oaar4-pi-stage-runtime-e2e.log`; source-bound clean package with all 13 extensions. | Deferred By: fresh package Pi traffic requires an operator-configured isolated credential.
 - `OAAR-P1`–`OAAR-P3` | `implemented` | Focused RED/GREEN plus UI/package verification. | Evidence: named records above. | Deferred By: only the explicit operator-assisted OAuth browser action.
 - `OAAR-P4`–`OAAR-P5` | `partially verified` | Pair runtime was source-bound, packaged, launched, and verified in the browser with 13/13 Track B extensions ready. Existing Stage Pi proof remains recorded. | Deferred By: credentialed Pi/OAuth flows in an isolated state; no credential/state was copied merely to satisfy a test.
+
+## Post-addendum closure
+
+The subsequent Addenda 11 and 12 close the two originally deferred operator
+checks. The repository owner completed the OAuth browser callback, the rebuilt
+isolated runtime restored the authenticated endpoint from persisted auth, and
+the owner-authorized benchmark exercised real endpoint execution and grading.
+The effective Run 93 recursive lock chain and linter also pass. Evidence is
+recorded in
+`addenda/05-manual-qa.benchmark-startup-and-oauth-health.addendum-11.md`,
+`addenda/05-manual-qa.benchmark-stale-completion-truthfulness.addendum-12.md`,
+and `evidence/logs/green/bsq-rebuilt-uat-green.log`.
 
 ## Coverage Gate
 

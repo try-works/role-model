@@ -1,8 +1,8 @@
 Run: `/.recursive/run/93-variant-admission-model-pool-integrity/`
 Phase: `8-memory-impact`
 Status: `LOCKED`
-LockedAt: `2026-08-23T10:48:35Z`
-LockHash: `e62c5ddb322f3aaf165c636b92bc934b8e406adecaa668da848bbb3186599990`
+LockedAt: `2026-08-23T13:22:01Z`
+LockHash: `ed113b73ec4a6246ed5a73f3cec0452f92717efddd4141de5f53932a018b4921`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - `.recursive/run/93-variant-admission-model-pool-integrity/00-requirements.md`
@@ -13,11 +13,16 @@ Inputs:
 - `.recursive/run/93-variant-admission-model-pool-integrity/07-state-update.md`
 - `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md`
 - `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-05.md`
+- `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-06.md`
 - `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03.5-code-review.addendum-05.md`
+- `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03.5-code-review.addendum-06.md`
 - `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-01.md`
 - `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-09.md`
+- `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-10.md`
 - `.recursive/run/93-variant-admission-model-pool-integrity/addenda/06-decisions-update.addendum-02.md`
+- `.recursive/run/93-variant-admission-model-pool-integrity/addenda/06-decisions-update.addendum-03.md`
 - `.recursive/run/93-variant-admission-model-pool-integrity/addenda/07-state-update.addendum-02.md`
+- `.recursive/run/93-variant-admission-model-pool-integrity/addenda/07-state-update.addendum-03.md`
 Outputs:
 - `.recursive/memory/domains/remote-effort-instance-identity.md`
 - `.recursive/memory/MEMORY.md`
@@ -96,6 +101,8 @@ Re-read `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-imp
 
 Re-read `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-05.md`, `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03.5-code-review.addendum-05.md`, `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-09.md`, `.recursive/run/93-variant-admission-model-pool-integrity/addenda/06-decisions-update.addendum-02.md`, and `.recursive/run/93-variant-admission-model-pool-integrity/addenda/07-state-update.addendum-02.md`.
 
+Re-read `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-06.md`, `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03.5-code-review.addendum-06.md`, `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-10.md`, `.recursive/run/93-variant-admission-model-pool-integrity/addenda/06-decisions-update.addendum-03.md`, and `.recursive/run/93-variant-admission-model-pool-integrity/addenda/07-state-update.addendum-03.md`.
+
 ## Earlier Phase Reconciliation
 
 The memory entry reflects only the effective implementation and QA evidence. It does not turn unresolved future UAT or promotion into a verified fact.
@@ -103,6 +110,8 @@ The memory entry reflects only the effective implementation and QA evidence. It 
 Reconciled addenda exactly: `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-03.md`; `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-01.md`.
 
 The post-close benchmark-startup implementation, review, test, decision, and state addenda were reconciled through `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-05.md`, `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03.5-code-review.addendum-05.md`, `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-09.md`, `.recursive/run/93-variant-admission-model-pool-integrity/addenda/06-decisions-update.addendum-02.md`, and `.recursive/run/93-variant-admission-model-pool-integrity/addenda/07-state-update.addendum-02.md`.
+
+The post-UAT stale-completion implementation, review, test, decision, and state addenda were reconciled through `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-06.md`, `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03.5-code-review.addendum-06.md`, `.recursive/run/93-variant-admission-model-pool-integrity/addenda/04-test-summary.addendum-10.md`, `.recursive/run/93-variant-admission-model-pool-integrity/addenda/06-decisions-update.addendum-03.md`, and `.recursive/run/93-variant-admission-model-pool-integrity/addenda/07-state-update.addendum-03.md`.
 
 ## Subagent Contribution Verification
 
@@ -141,7 +150,7 @@ Added the new domain-memory route and repaired stale metadata taxonomy values.
 
 - R1 | Status: verified | Changed Files: `.recursive/memory/domains/remote-effort-instance-identity.md` | Implementation Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md` | Verification Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`.
 - R2 | Status: verified | Changed Files: `.recursive/memory/domains/remote-effort-instance-identity.md` | Implementation Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md` | Verification Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`.
-- R3 | Status: verified | Changed Files: `.recursive/memory/domains/remote-effort-instance-identity.md` | Implementation Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md` | Verification Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`.
+- R3 | Status: verified | Changed Files: `.recursive/memory/domains/remote-effort-instance-identity.md`, `role-model-router/apps/runtime-host-bridge/src/benchmark-summary.ts`, `role-model-router/apps/runtime-host-bridge/test/benchmark-progress.test.ts`, `role-model-router/apps/runtime-host-bridge/test/benchmark-summary.test.ts` | Implementation Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md`, `.recursive/run/93-variant-admission-model-pool-integrity/addenda/03-implementation-summary.addendum-06.md` | Verification Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`, `.recursive/run/93-variant-admission-model-pool-integrity/evidence/logs/green/bsq-rebuilt-uat-green.log`.
 - R4 | Status: verified | Changed Files: `.recursive/memory/domains/remote-effort-instance-identity.md` | Implementation Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md` | Verification Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`.
 - R5 | Status: verified | Changed Files: `.recursive/memory/domains/remote-effort-instance-identity.md` | Implementation Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md` | Verification Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`.
 - R6 | Status: verified | Changed Files: `.recursive/memory/domains/remote-effort-instance-identity.md` | Implementation Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/03-implementation-summary.md` | Verification Evidence: `.recursive/run/93-variant-admission-model-pool-integrity/05-manual-qa.md`.
