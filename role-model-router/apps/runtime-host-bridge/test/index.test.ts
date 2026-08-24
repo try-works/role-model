@@ -18290,6 +18290,150 @@ describe("runtime-host-bridge", () => {
     }
   });
 
+  test("executes env-backed OpenAI-compatible accounts directly when unified config has no LiteLLM provider", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-unified-env-direct-execution-tests-"),
+    );
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    const providerRequests: Array<{ authorization: string; model: unknown }> = [];
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        routing: { strategy: "balanced" },
+      }),
+      "utf8",
+    );
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+          networkFetcher: typeof fetch;
+          providerCredentialEnvironment: Readonly<Record<string, string | undefined>>;
+        }) => Promise<{
+          upsertProviderAccount: (input: Record<string, unknown>) => Promise<unknown>;
+          activateEndpoint: (input: {
+            providerAccountId: string;
+            modelId: string;
+            region: string;
+          }) => Promise<{ endpointId: string }>;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{ endpointId: string; outputText: string }>;
+          shutdown: () => Promise<void>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-unified-env-direct-execution-tests",
+      unifiedRuntimeConfigPath,
+      providerCredentialEnvironment: {
+        RUN94_DEEPSEEK_API_KEY: "router-owned-test-secret",
+      },
+      networkFetcher: async (input, init) => {
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
+        }
+        if (url === "https://api.deepseek.example/v1/chat/completions") {
+          const body = init?.body ? JSON.parse(String(init.body)) : {};
+          providerRequests.push({
+            authorization: (init?.headers as Record<string, string>)?.authorization ?? "",
+            model: body.model,
+          });
+          return new Response(
+            JSON.stringify({
+              id: "chatcmpl-unified-env-direct",
+              object: "chat.completion",
+              model: "deepseek/deepseek-v4-flash",
+              choices: [
+                {
+                  index: 0,
+                  message: { role: "assistant", content: "direct provider execution" },
+                  finish_reason: "stop",
+                },
+              ],
+              usage: { prompt_tokens: 8, completion_tokens: 3, total_tokens: 11 },
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+        throw new Error(`Unexpected network request: ${url}`);
+      },
+    });
+
+    try {
+      await backend.upsertProviderAccount({
+        providerAccountId: "deepseek.personal.run94",
+        providerId: "deepseek",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: { backend: "env", ref: "RUN94_DEEPSEEK_API_KEY" },
+        authMode: "api-key-static",
+        regionPolicy: { mode: "prefer", regions: ["global"] },
+        baseUrlOverride: "https://api.deepseek.example/v1",
+        allowedModels: ["deepseek/deepseek-v4-flash"],
+        modelRoleBindings: [
+          {
+            modelId: "deepseek/deepseek-v4-flash",
+            roleAssignmentMode: "all",
+            roleIds: [],
+            enabledRoleIds: [],
+            disabledRoleIds: [],
+          },
+        ],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      });
+      const endpoint = await backend.activateEndpoint({
+        providerAccountId: "deepseek.personal.run94",
+        modelId: "deepseek/deepseek-v4-flash",
+        region: "global",
+      });
+
+      await expect(
+        backend.executeChatCompletions(
+          {
+            model: endpoint.endpointId,
+            messages: [{ role: "user", content: "Route directly." }],
+          },
+          "req-runtime-bridge-unified-env-direct-001",
+        ),
+      ).resolves.toMatchObject({
+        endpointId: endpoint.endpointId,
+        outputText: "direct provider execution",
+      });
+      expect(providerRequests).toEqual([
+        {
+          authorization: "Bearer router-owned-test-secret",
+          model: "deepseek-v4-flash",
+        },
+      ]);
+    } finally {
+      await backend.shutdown();
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
   test("registers configured local OpenAI-compatible peers as execution-ready model endpoints", async () => {
     expect(
       typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,

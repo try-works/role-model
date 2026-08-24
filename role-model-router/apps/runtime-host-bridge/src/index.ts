@@ -22469,13 +22469,16 @@ export async function createRuntimeBridgeBackend(
       requestCapture: ProviderRequestCapture;
       fallbackModelIds?: readonly string[];
     }) => {
-      // File-backed credentials (OAuth, locally-saved API keys) always need direct HTTP execution
-      // so that OAuth tokens are correctly resolved and X-Msh-* device headers are applied.
+      // Router-owned credentials (env refs, OAuth, locally-saved API keys) use direct HTTP execution
+      // so credentials stay in the runtime and provider-specific headers are applied there.
       // In the unified config path, LiteLLM providers get adapterFamily "litellm-proxy", so
       // shouldUseLiveProviderExecution would return false for them — this flag bypasses that check.
+      const usesFixtureAccount =
+        target.providerAccountId !== null && fixtureAccountIds.has(target.providerAccountId);
       const useDirectExecution =
         target.account?.credentialRef.backend === "local-file" ||
-        target.account?.credentialRef.backend === "local-encrypted-file";
+        target.account?.credentialRef.backend === "local-encrypted-file" ||
+        (!usesFixtureAccount && shouldUseLiveProviderExecution(target));
       const capture = captures.byEndpointId[target.endpointId];
       const failureContext = {
         providerId: target.providerId,
@@ -22484,9 +22487,6 @@ export async function createRuntimeBridgeBackend(
         adapterFamily: target.adapterFamily,
         failurePhase: "provider_execution",
       } as const;
-      const usesFixtureAccount =
-        target.providerAccountId !== null && fixtureAccountIds.has(target.providerAccountId);
-
       if (
         !useDirectExecution &&
         capture &&
@@ -22613,7 +22613,7 @@ export async function createRuntimeBridgeBackend(
             vendorMetadata: result.metadata,
           };
         }
-        // Fall through to direct HTTP execution for file-backed credential accounts.
+        // Fall through to direct HTTP execution for router-owned credential accounts.
       }
 
       if (!useDirectExecution && !shouldUseLiveProviderExecution(target)) {
