@@ -3387,6 +3387,10 @@ interface RuntimeBridgeSummary {
   endpointCount: number;
   scopeId: string;
   runtimeStateRoot: string;
+  processMetrics: {
+    pid: number;
+    rssBytes: number;
+  };
   readinessSummary: {
     pendingDeviceAuthorizationCount: number;
     credentialsMissingAccountCount: number;
@@ -24806,6 +24810,7 @@ export async function createRuntimeBridgeBackend(
         endpointCount: currentRegistry.endpoints.length,
         scopeId: options.scopeId,
         runtimeStateRoot: options.runtimeStateRoot,
+        processMetrics: { pid: process.pid, rssBytes: process.memoryUsage().rss },
         readinessSummary: {
           pendingDeviceAuthorizationCount: credentialLifecycle.counts.pendingAuthorization,
           credentialsMissingAccountCount: credentialLifecycle.counts.credentialsMissing,
@@ -27257,6 +27262,7 @@ export async function createRuntimeBridgeBackend(
       ): Promise<BridgeRequestObservation> => {
         let providerEvidence: Readonly<Record<string, unknown>> | undefined;
         let graphEvidence: Readonly<Record<string, unknown>> | undefined;
+        let liveBudgetEvidence: Readonly<Record<string, unknown>> | undefined;
         try {
           providerEvidence = buildProviderEvidenceFromObservation(
             value as unknown as Readonly<Record<string, unknown>>,
@@ -27266,7 +27272,24 @@ export async function createRuntimeBridgeBackend(
         }
         try {
           const capture = await readExactRouteCapture(requestId);
-          if (capture) graphEvidence = buildGraphEvidenceFromCapture(capture);
+          if (capture) {
+            graphEvidence = buildGraphEvidenceFromCapture(capture);
+            const compactRecord = readRuntimeObservationStorageRecord({
+              databasePath: initialization.databasePath,
+              requestId,
+            });
+            const captureMetrics =
+              graphEvidence.captureMetrics && typeof graphEvidence.captureMetrics === "object"
+                ? (graphEvidence.captureMetrics as Readonly<Record<string, unknown>>)
+                : {};
+            liveBudgetEvidence = Object.freeze({
+              compactObservationBytes: compactRecord
+                ? Buffer.byteLength(JSON.stringify(compactRecord))
+                : null,
+              runtimeRssBytes: process.memoryUsage().rss,
+              ...captureMetrics,
+            });
+          }
         } catch {
           // Rich capture is best effort. Absence remains visible as missing graph evidence.
         }
@@ -27274,6 +27297,7 @@ export async function createRuntimeBridgeBackend(
           ...value,
           ...(providerEvidence ? { providerEvidence } : {}),
           ...(graphEvidence ? { graphEvidence } : {}),
+          ...(liveBudgetEvidence ? { liveBudgetEvidence } : {}),
         } as BridgeRequestObservation;
       };
       const telemetryRecord = (() => {

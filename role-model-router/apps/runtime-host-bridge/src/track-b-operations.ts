@@ -642,6 +642,12 @@ function recordValue(value: unknown): Readonly<Record<string, unknown>> {
     : {};
 }
 
+function finiteNonNegative(value: unknown, label: string): number {
+  const number = Number(value);
+  if (!Number.isFinite(number) || number < 0) throw new Error(`${label} must be finite and non-negative`);
+  return number;
+}
+
 export function buildProviderEvidenceFromObservation(
   observation: Readonly<Record<string, unknown>>,
 ): Readonly<Record<string, unknown>> {
@@ -673,6 +679,24 @@ export function buildGraphEvidenceFromCapture(
 ): Readonly<Record<string, unknown>> {
   const messages = Array.isArray(capture.messages) ? capture.messages : [];
   const tools = Array.isArray(capture.tools) ? capture.tools : [];
+  const toolRows = tools.map((tool) => recordValue(tool));
+  const rawCaptureMetrics = recordValue(capture.captureMetrics);
+  const captureMetrics = Object.keys(rawCaptureMetrics).length > 0
+    ? Object.freeze({
+        captureCpuMs: finiteNonNegative(rawCaptureMetrics.captureCpuMs, "capture CPU"),
+        captureWallMs: finiteNonNegative(rawCaptureMetrics.captureWallMs, "capture wall time"),
+        sqliteLockWaitMs: finiteNonNegative(rawCaptureMetrics.sqliteLockWaitMs, "SQLite lock wait"),
+        queueDepthBefore: finiteNonNegative(rawCaptureMetrics.queueDepthBefore, "capture queue depth before"),
+        queueDepthAfter: finiteNonNegative(rawCaptureMetrics.queueDepthAfter, "capture queue depth"),
+        filesystemBytesBefore: finiteNonNegative(rawCaptureMetrics.filesystemBytesBefore, "filesystem bytes before"),
+        filesystemBytesAfter: finiteNonNegative(rawCaptureMetrics.filesystemBytesAfter, "filesystem bytes after"),
+        casBytesBefore: finiteNonNegative(rawCaptureMetrics.casBytesBefore, "CAS bytes before"),
+        casBytesAfter: finiteNonNegative(rawCaptureMetrics.casBytesAfter, "CAS bytes after"),
+        normalizedStateBytesBefore: finiteNonNegative(rawCaptureMetrics.normalizedStateBytesBefore, "normalized state bytes before"),
+        normalizedStateBytesAfter: finiteNonNegative(rawCaptureMetrics.normalizedStateBytesAfter, "normalized state bytes after"),
+        archiveManifestInlineContentBytes: finiteNonNegative(rawCaptureMetrics.archiveManifestInlineContentBytes, "archive manifest inline content bytes"),
+      })
+    : null;
   const response = recordValue(capture.response);
   const edgeCount = Number(capture.edgeCount);
   if (messages.length < 1 || !Number.isSafeInteger(edgeCount) || edgeCount < 1)
@@ -683,9 +707,18 @@ export function buildGraphEvidenceFromCapture(
       boundedIdentity(recordValue(message).nodeId, `graph message node ${index + 1}`),
     ),
     responseNodeId: boundedIdentity(response.nodeId, "graph response node id"),
-    toolExecutionNodeIds: tools.map((tool, index) =>
-      boundedIdentity(recordValue(tool).nodeId, `graph tool execution node ${index + 1}`),
-    ),
+    toolExecutionNodeIds: toolRows
+      .filter((tool) => tool.kind === undefined || tool.kind === "tool_execution")
+      .map((tool, index) =>
+        boundedIdentity(tool.nodeId, `graph tool execution node ${index + 1}`),
+      ),
+    toolCallNodeIds: toolRows
+      .filter((tool) => tool.kind === "tool_call")
+      .map((tool, index) => boundedIdentity(tool.nodeId, `graph tool call node ${index + 1}`)),
+    toolResultNodeIds: toolRows
+      .filter((tool) => tool.kind === "tool_result")
+      .map((tool, index) => boundedIdentity(tool.nodeId, `graph tool result node ${index + 1}`)),
+    ...(captureMetrics ? { captureMetrics } : {}),
     edgeCount,
   });
 }
@@ -728,9 +761,17 @@ export function buildVerifiersLiveExport(input: {
     const message = recordValue(value);
     const role = boundedIdentity(message.role, `Verifiers node ${index + 1} role`);
     if (!("content" in message)) throw new Error(`Verifiers node ${index + 1} content is required`);
+    const toolCalls = Array.isArray(message.toolCalls) ? message.toolCalls : null;
+    const toolCallId = typeof message.toolCallId === "string" ? message.toolCallId : null;
     return {
       parent: index === 0 ? null : index - 1,
-      message: { role, content: message.content },
+      message: {
+        role,
+        content: message.content,
+        ...(toolCalls ? { tool_calls: toolCalls } : {}),
+        ...(toolCallId ? { tool_call_id: toolCallId } : {}),
+        ...(typeof message.name === "string" ? { name: message.name } : {}),
+      },
       sampled: index === messages.length,
       token_ids: [],
       mask: [],
@@ -770,6 +811,16 @@ export function buildVerifiersLiveExport(input: {
           (tool, index) =>
             boundedIdentity(recordValue(tool).nodeId, `graph tool node ${index + 1}`),
         ),
+        roleModelToolCallNodeIds: (Array.isArray(input.capture.tools) ? input.capture.tools : [])
+          .filter((tool) => recordValue(tool).kind === "tool_call")
+          .map((tool, index) =>
+            boundedIdentity(recordValue(tool).nodeId, `graph tool call node ${index + 1}`),
+          ),
+        roleModelToolResultNodeIds: (Array.isArray(input.capture.tools) ? input.capture.tools : [])
+          .filter((tool) => recordValue(tool).kind === "tool_result")
+          .map((tool, index) =>
+            boundedIdentity(recordValue(tool).nodeId, `graph tool result node ${index + 1}`),
+          ),
       },
       is_completed: true,
       stop_condition: "role_model_graph_complete",

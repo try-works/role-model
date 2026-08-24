@@ -74,17 +74,45 @@ describe("Track B operations APIs", () => {
       messages: [
         { nodeId: "node-system-94", role: "system", content: "route safely" },
         { nodeId: "node-user-94", role: "user", content: "route this" },
+        {
+          nodeId: "node-assistant-tool-94",
+          role: "assistant",
+          content: null,
+          toolCalls: [{ id: "call-pi-94", type: "function", function: { name: "bash", arguments: '{"command":"printf run94-tool-ok"}' } }],
+        },
+        { nodeId: "node-tool-message-94", role: "tool", content: "run94-tool-ok", toolCallId: "call-pi-94", name: "bash" },
       ],
       response: { nodeId: "node-response-94", role: "assistant", content: "routed" },
-      tools: [{ nodeId: "node-tool-94", toolName: "bash", output: "run94-tool-ok" }],
-      edgeCount: 4,
+      tools: [
+        { nodeId: "node-tool-execution-94", kind: "tool_execution", toolName: "router-tool" },
+        { nodeId: "node-tool-call-94", kind: "tool_call", toolCallId: "call-pi-94", toolName: "bash" },
+        { nodeId: "node-tool-result-94", kind: "tool_result", toolCallId: "call-pi-94", toolName: "bash" },
+      ],
+      captureMetrics: {
+        captureCpuMs: 4,
+        captureWallMs: 7,
+        sqliteLockWaitMs: 1,
+        queueDepthBefore: 0,
+        queueDepthAfter: 0,
+        filesystemBytesBefore: 300,
+        filesystemBytesAfter: 400,
+        casBytesBefore: 100,
+        casBytesAfter: 140,
+        normalizedStateBytesBefore: 200,
+        normalizedStateBytesAfter: 260,
+        archiveManifestInlineContentBytes: 0,
+      },
+      edgeCount: 6,
     };
     expect(buildGraphEvidenceFromCapture(capture)).toEqual({
       rootArtifactId: "root-export-94",
-      messageNodeIds: ["node-system-94", "node-user-94"],
+      messageNodeIds: ["node-system-94", "node-user-94", "node-assistant-tool-94", "node-tool-message-94"],
       responseNodeId: "node-response-94",
-      toolExecutionNodeIds: ["node-tool-94"],
-      edgeCount: 4,
+      toolExecutionNodeIds: ["node-tool-execution-94"],
+      toolCallNodeIds: ["node-tool-call-94"],
+      toolResultNodeIds: ["node-tool-result-94"],
+      captureMetrics: capture.captureMetrics,
+      edgeCount: 6,
     });
     const exported = buildVerifiersLiveExport({
       channel: "development",
@@ -103,13 +131,15 @@ describe("Track B operations APIs", () => {
       requestId: "request-export-94",
       correlationId: "correlation-export-94",
       graphRootArtifactId: "root-export-94",
-      responseNodeIndex: 2,
+      responseNodeIndex: 4,
       tokenExactDisposition: "refused_missing_evidence",
       trace: {
         nodes: [
           { parent: null, message: { role: "system", content: "route safely" }, sampled: false },
           { parent: 0, message: { role: "user", content: "route this" }, sampled: false },
-          { parent: 1, message: { role: "assistant", content: "routed" }, sampled: true },
+          { parent: 1, message: { role: "assistant", content: null, tool_calls: [{ id: "call-pi-94", type: "function", function: { name: "bash", arguments: '{"command":"printf run94-tool-ok"}' } }] }, sampled: false },
+          { parent: 2, message: { role: "tool", content: "run94-tool-ok", tool_call_id: "call-pi-94", name: "bash" }, sampled: false },
+          { parent: 3, message: { role: "assistant", content: "routed" }, sampled: true },
         ],
         info: {
           routeDecisionId: "decision-export-94",
@@ -594,6 +624,20 @@ describe("Track B operations APIs", () => {
                   content: routeCapture?.outputText,
                 },
                 tools: [],
+                captureMetrics: {
+                  captureCpuMs: 4,
+                  captureWallMs: 7,
+                  sqliteLockWaitMs: 1,
+                  queueDepthBefore: 0,
+                  queueDepthAfter: 0,
+                  filesystemBytesBefore: 300,
+                  filesystemBytesAfter: 400,
+                  casBytesBefore: 100,
+                  casBytesAfter: 140,
+                  normalizedStateBytesBefore: 200,
+                  normalizedStateBytesAfter: 260,
+                  archiveManifestInlineContentBytes: 0,
+                },
                 edgeCount: 2,
               }
             : request.url === "/capture/route"
@@ -722,8 +766,29 @@ describe("Track B operations APIs", () => {
         messageNodeIds: ["message-route-capture-0"],
         responseNodeId: "response-route-capture",
         toolExecutionNodeIds: [],
+        toolCallNodeIds: [],
+        toolResultNodeIds: [],
+        captureMetrics: {
+          captureCpuMs: 4,
+          captureWallMs: 7,
+          sqliteLockWaitMs: 1,
+          queueDepthBefore: 0,
+          queueDepthAfter: 0,
+          filesystemBytesBefore: 300,
+          filesystemBytesAfter: 400,
+          casBytesBefore: 100,
+          casBytesAfter: 140,
+          normalizedStateBytesBefore: 200,
+          normalizedStateBytesAfter: 260,
+          archiveManifestInlineContentBytes: 0,
+        },
         edgeCount: 2,
       });
+      expect((detail as unknown as { liveBudgetEvidence?: { compactObservationBytes?: number; runtimeRssBytes?: number } }).liveBudgetEvidence).toMatchObject({
+        compactObservationBytes: expect.any(Number),
+        runtimeRssBytes: expect.any(Number),
+      });
+      expect((detail as unknown as { liveBudgetEvidence: { compactObservationBytes: number } }).liveBudgetEvidence.compactObservationBytes).toBeLessThanOrEqual(16 * 1024);
       const correlationId = String(
         (detail as unknown as { run88Correlation?: { correlationId?: string } })?.run88Correlation
           ?.correlationId,
