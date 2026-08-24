@@ -14,6 +14,7 @@ import { LegacySqliteMigration } from "../../../packages/sqlite-memory/src/legac
 import { applyRecommendationServiceLauncherConfig } from "../src/cli.js";
 import { createRuntimeBridgeBackend, startBridgeServer } from "../src/index.js";
 import {
+  buildGraphEvidenceFromCapture,
   buildProviderEvidenceFromObservation,
   buildVerifiersLiveExport,
   createTrackBOperations,
@@ -75,9 +76,16 @@ describe("Track B operations APIs", () => {
         { nodeId: "node-user-94", role: "user", content: "route this" },
       ],
       response: { nodeId: "node-response-94", role: "assistant", content: "routed" },
-      tools: [],
-      edgeCount: 3,
+      tools: [{ nodeId: "node-tool-94", toolName: "bash", output: "run94-tool-ok" }],
+      edgeCount: 4,
     };
+    expect(buildGraphEvidenceFromCapture(capture)).toEqual({
+      rootArtifactId: "root-export-94",
+      messageNodeIds: ["node-system-94", "node-user-94"],
+      responseNodeId: "node-response-94",
+      toolExecutionNodeIds: ["node-tool-94"],
+      edgeCount: 4,
+    });
     const exported = buildVerifiersLiveExport({
       channel: "development",
       request: {
@@ -713,6 +721,7 @@ describe("Track B operations APIs", () => {
         rootArtifactId: "artifact-route-capture",
         messageNodeIds: ["message-route-capture-0"],
         responseNodeId: "response-route-capture",
+        toolExecutionNodeIds: [],
         edgeCount: 2,
       });
       const correlationId = String(

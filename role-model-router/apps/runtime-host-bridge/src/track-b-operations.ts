@@ -672,6 +672,7 @@ export function buildGraphEvidenceFromCapture(
   capture: Readonly<Record<string, unknown>>,
 ): Readonly<Record<string, unknown>> {
   const messages = Array.isArray(capture.messages) ? capture.messages : [];
+  const tools = Array.isArray(capture.tools) ? capture.tools : [];
   const response = recordValue(capture.response);
   const edgeCount = Number(capture.edgeCount);
   if (messages.length < 1 || !Number.isSafeInteger(edgeCount) || edgeCount < 1)
@@ -682,6 +683,9 @@ export function buildGraphEvidenceFromCapture(
       boundedIdentity(recordValue(message).nodeId, `graph message node ${index + 1}`),
     ),
     responseNodeId: boundedIdentity(response.nodeId, "graph response node id"),
+    toolExecutionNodeIds: tools.map((tool, index) =>
+      boundedIdentity(recordValue(tool).nodeId, `graph tool execution node ${index + 1}`),
+    ),
     edgeCount,
   });
 }
