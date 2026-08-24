@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 
 import {
+  readRuntimeTelemetryRecord,
   readRuntimeObservationStorageRecord,
   resolveSqliteMemoryLocation,
 } from "@role-model-router/sqlite-memory";
@@ -789,8 +790,14 @@ describe("Track B operations APIs", () => {
         },
       });
       const detail = await backend.readRequestObservation("req-track-b-upload-001");
+      const telemetry = readRuntimeTelemetryRecord({
+        databasePath,
+        requestId: "req-track-b-upload-001",
+      });
+      expect(telemetry?.latencyMs).toEqual(expect.any(Number));
       expect(detail).toMatchObject({
         correlationId: aggregate?.body.correlationId,
+        latencyMs: telemetry?.latencyMs,
       });
       expect(detail?.providerEvidence).toMatchObject({
         endpointId: result.endpointId,

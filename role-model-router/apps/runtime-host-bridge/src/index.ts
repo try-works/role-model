@@ -2740,6 +2740,7 @@ type BridgeRequestObservation = RuntimeObservationBundle &
       readonly structuredInspectionAvailable: boolean;
       readonly reason: string;
     };
+    readonly latencyMs?: number | null;
     readonly effectiveCostUsd?: number;
     readonly costCalculationBasis?: string;
     readonly costCalculationVersion?: string;
@@ -27578,6 +27579,7 @@ export async function createRuntimeBridgeBackend(
             reason:
               "Raw observation retention has expired or the preserved observation bundle is unavailable; canonical request detail is reconstructed from the telemetry ledger.",
           },
+          latencyMs: telemetryRecord.latencyMs,
           effectiveCostUsd: telemetryRecord.effectiveCostUsd,
           costCalculationBasis: telemetryRecord.costCalculationBasis,
           costCalculationVersion: telemetryRecord.costCalculationVersion,
@@ -27603,6 +27605,7 @@ export async function createRuntimeBridgeBackend(
         },
         ...(telemetryRecord
           ? {
+              latencyMs: telemetryRecord.latencyMs,
               effectiveCostUsd: telemetryRecord.effectiveCostUsd,
               costCalculationBasis: telemetryRecord.costCalculationBasis,
               costCalculationVersion: telemetryRecord.costCalculationVersion,

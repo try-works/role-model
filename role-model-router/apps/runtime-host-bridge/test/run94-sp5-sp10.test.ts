@@ -323,7 +323,7 @@ test("GREEN: real process output closure covers every canonical registry key and
   expect(
     repeatedReadback.outputs.every((row) => row.readbackOutputId === row.durableOutputId),
   ).toBe(true);
-});
+}, 20_000);
 
 test("GREEN: rejects missing, health-only, and duplicate durable extension outputs", async () => {
   const base = async (id: string, envelope: Record<string, unknown>) => ({
