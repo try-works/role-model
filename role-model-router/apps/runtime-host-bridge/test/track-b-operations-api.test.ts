@@ -145,7 +145,7 @@ describe("Track B operations APIs", () => {
         nodes: [
           { parent: null, message: { role: "system", content: "route safely" }, sampled: false },
           { parent: 0, message: { role: "user", content: "route this" }, sampled: false },
-          { parent: 1, message: { role: "assistant", content: null, tool_calls: [{ id: "call-pi-94", type: "function", function: { name: "bash", arguments: '{"command":"printf run94-tool-ok"}' } }] }, sampled: false },
+          { parent: 1, message: { role: "assistant", content: null, tool_calls: [{ id: "call-pi-94", name: "bash", arguments: '{"command":"printf run94-tool-ok"}' }] }, sampled: false },
           { parent: 2, message: { role: "tool", content: "run94-tool-ok", tool_call_id: "call-pi-94", name: "bash" }, sampled: false },
           { parent: 3, message: { role: "assistant", content: "routed" }, sampled: true },
         ],

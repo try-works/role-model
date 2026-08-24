@@ -772,13 +772,34 @@ export function buildVerifiersLiveExport(input: {
     const role = boundedIdentity(message.role, `Verifiers node ${index + 1} role`);
     if (!("content" in message)) throw new Error(`Verifiers node ${index + 1} content is required`);
     const toolCalls = Array.isArray(message.toolCalls) ? message.toolCalls : null;
+    const verifierToolCalls = toolCalls?.map((value, toolIndex) => {
+      const toolCall = recordValue(value);
+      const nestedFunction = recordValue(toolCall.function);
+      const argumentsValue = toolCall.arguments ?? nestedFunction.arguments;
+      if (argumentsValue === undefined)
+        throw new Error(`Verifiers node ${index + 1} tool call ${toolIndex + 1} arguments are required`);
+      return {
+        id: boundedIdentity(
+          toolCall.id,
+          `Verifiers node ${index + 1} tool call ${toolIndex + 1} id`,
+        ),
+        name: boundedIdentity(
+          toolCall.name ?? nestedFunction.name,
+          `Verifiers node ${index + 1} tool call ${toolIndex + 1} name`,
+        ),
+        arguments:
+          typeof argumentsValue === "string"
+            ? argumentsValue
+            : JSON.stringify(argumentsValue),
+      };
+    });
     const toolCallId = typeof message.toolCallId === "string" ? message.toolCallId : null;
     return {
       parent: index === 0 ? null : index - 1,
       message: {
         role,
         content: message.content,
-        ...(toolCalls ? { tool_calls: toolCalls } : {}),
+        ...(verifierToolCalls ? { tool_calls: verifierToolCalls } : {}),
         ...(toolCallId ? { tool_call_id: toolCallId } : {}),
         ...(typeof message.name === "string" ? { name: message.name } : {}),
       },
