@@ -328,7 +328,7 @@ describe("remote health bootstrap", () => {
         const admissionCall = calls.find((call) => call.url.endsWith("/chat/completions"));
         expect(JSON.parse(String(admissionCall?.init?.body))).toEqual(
           expect.objectContaining({
-            model: "deepseek/deepseek-v4-flash",
+            model: "deepseek-v4-flash",
             reasoning_effort: "high",
           }),
         );

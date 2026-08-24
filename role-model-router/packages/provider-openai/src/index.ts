@@ -69,7 +69,7 @@ function getOpenAICapabilities(
   };
 }
 
-function resolveProviderLocalModelId(modelId: string): string {
+export function resolveOpenAIProviderUpstreamModelId(modelId: string): string {
   const override = OPENAI_MODEL_REQUEST_POLICIES[modelId]?.upstreamModelId;
   if (override) {
     return override;
@@ -920,7 +920,7 @@ export function buildOpenAIRequest(
       url: `${input.target.apiBase}/chat/completions`,
       headers,
       body: {
-        model: resolveProviderLocalModelId(input.target.modelId),
+        model: resolveOpenAIProviderUpstreamModelId(input.target.modelId),
         messages: toOpenAIInput(input.executionRequest.messages),
         ...(typeof input.executionRequest.temperature === "number" &&
         !shouldOmitChatCompletionsBodyKey(input.target.modelId, "temperature")
@@ -983,7 +983,7 @@ export function buildOpenAIRequest(
       "OpenAI-Beta": "responses=v1",
     },
     body: {
-      model: resolveProviderLocalModelId(input.target.modelId),
+      model: resolveOpenAIProviderUpstreamModelId(input.target.modelId),
       input: hasResponsesToolReplayHistory(input.executionRequest.messages)
         ? toOpenAIResponsesInput(input.executionRequest.messages)
         : toOpenAIInput(input.executionRequest.messages),
