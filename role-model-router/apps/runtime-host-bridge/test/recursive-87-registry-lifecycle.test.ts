@@ -222,6 +222,32 @@ describe("recursive run 87 SP0 registry and lifecycle authority", () => {
     expect(receipt).toMatchObject({ state: { pid: 8702, revision: 5 } });
   });
 
+  test("operations API preserves the packaged runtime channel for supervised extensions", async () => {
+    const stateRoot = path.join(os.tmpdir(), `run94-stage-extension-channel-${Date.now()}`);
+    roots.push(stateRoot);
+    const operations = createTrackBOperations({
+      statePath: path.join(stateRoot, "bridge-state.json"),
+      catalog: [{ id: "artifact-store" }],
+      runtimeChannel: "stage",
+      extensionRuntime: {
+        listExtensions: async () => [
+          {
+            id: "artifact-store",
+            lifecycle: "ready",
+            desiredState: "enabled",
+            pid: 9401,
+            revision: 1,
+          },
+        ],
+        mutateExtension: async () => ({}),
+      },
+    });
+
+    await expect(operations.listExtensions()).resolves.toEqual([
+      expect.objectContaining({ id: "artifact-store", channel: "stage" }),
+    ]);
+  });
+
   test("Phase 3.5 journal replay preserves stopped state and never resurrects removed extensions", async () => {
     const stateRoot = path.join(os.tmpdir(), `run87-journal-replay-${Date.now()}`);
     roots.push(stateRoot);

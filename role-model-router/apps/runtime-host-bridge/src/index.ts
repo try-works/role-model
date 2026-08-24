@@ -16480,6 +16480,7 @@ export async function createRuntimeBridgeBackend(
   const createTrackBOperations = (input: Parameters<typeof createTrackBOperationsFromState>[0]) =>
     createTrackBOperationsFromState({
       ...input,
+      runtimeChannel,
       operationsEndpoint: options.trackBOperationsEndpoint,
       operationsToken: options.trackBOperationsToken,
     });

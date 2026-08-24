@@ -777,12 +777,14 @@ export function buildVerifiersLiveExport(input: {
 export function createTrackBOperations({
   statePath,
   catalog,
+  runtimeChannel = "development",
   operationsEndpoint = process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL?.trim(),
   operationsToken = process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TOKEN,
   extensionRuntime,
 }: {
   readonly statePath: string;
   readonly catalog: readonly Record<string, unknown>[];
+  readonly runtimeChannel?: "development" | "stage" | "production";
   readonly operationsEndpoint?: string;
   readonly operationsToken?: string;
   readonly extensionRuntime?: {
@@ -848,7 +850,7 @@ export function createTrackBOperations({
             installed: true,
             enabled,
             enabledMode: enabled ? (id === "knowledge-worker" ? "shadow" : "active") : "disabled",
-            channel: "development",
+            channel: runtimeChannel,
             scope: "global",
             authorizationEpoch: 1,
             health: {
