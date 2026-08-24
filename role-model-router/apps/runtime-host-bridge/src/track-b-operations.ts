@@ -758,6 +758,15 @@ export function buildVerifiersLiveExport(input: {
     throw new Error("Verifiers export does not reference the exact live graph and router decision");
   const messages = Array.isArray(input.capture.messages) ? input.capture.messages : [];
   const response = recordValue(input.capture.response);
+  const taskPromptMessage =
+    messages.find((value) => recordValue(value).role === "user") ?? messages[0];
+  const taskPromptContent = recordValue(taskPromptMessage).content;
+  if (taskPromptContent === undefined)
+    throw new Error("Verifiers TraceTask prompt content is required");
+  const taskPrompt =
+    typeof taskPromptContent === "string"
+      ? taskPromptContent
+      : JSON.stringify(taskPromptContent);
   const semanticMessages = [...messages, response].map((value, index) => {
     const message = recordValue(value);
     const role = boundedIdentity(message.role, `Verifiers node ${index + 1} role`);
@@ -797,7 +806,7 @@ export function buildVerifiersLiveExport(input: {
     tokenExactDisposition: "refused_missing_evidence",
     trace: {
       id: traceId,
-      task: { type: "RoleModelTraceTask", data: { requestId } },
+      task: { type: "RoleModelTraceTask", data: { idx: 0, prompt: taskPrompt } },
       nodes: semanticMessages,
       rewards: {},
       metrics: {},

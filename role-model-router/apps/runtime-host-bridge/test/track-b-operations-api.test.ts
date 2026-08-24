@@ -135,6 +135,13 @@ describe("Track B operations APIs", () => {
       responseNodeIndex: 4,
       tokenExactDisposition: "refused_missing_evidence",
       trace: {
+        task: {
+          type: "RoleModelTraceTask",
+          data: {
+            idx: 0,
+            prompt: "route this",
+          },
+        },
         nodes: [
           { parent: null, message: { role: "system", content: "route safely" }, sampled: false },
           { parent: 0, message: { role: "user", content: "route this" }, sampled: false },
