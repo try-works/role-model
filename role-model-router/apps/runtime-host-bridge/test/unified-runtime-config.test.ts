@@ -1055,6 +1055,37 @@ observed_data:
     expect(merged.observedData?.throughputSla.enabled).toBe(true);
   });
 
+  test("merges API camelCase model aliases without retaining the stale YAML alias map", () => {
+    const merged = mergeUnifiedRuntimeConfigDocuments(
+      {
+        version: "1.0",
+        execution_mode: "remote_only",
+        model_aliases: {
+          "default.remote-only": { mode: "basic", model_ids: ["deepseek/model"] },
+        },
+      },
+      {
+        modelAliases: [
+          {
+            aliasId: "run94.success",
+            mode: "basic",
+            modelIds: ["deepseek/model"],
+            endpointIds: ["deepseek.valid"],
+          },
+        ],
+      },
+    );
+
+    expect(merged.modelAliases).toEqual([
+      {
+        aliasId: "run94.success",
+        mode: "basic",
+        modelIds: ["deepseek/model"],
+        endpointIds: ["deepseek.valid"],
+      },
+    ]);
+  });
+
   test("accepts routing_strategy alias in partial runtime config patches", () => {
     const merged = mergeUnifiedRuntimeConfigDocuments(
       {

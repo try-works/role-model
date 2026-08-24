@@ -1982,6 +1982,13 @@ function normalizeRuntimeConfigPatchDocument(
     normalized.execution_mode = normalized.executionMode;
     delete normalized.executionMode;
   }
+  if (
+    Object.prototype.hasOwnProperty.call(normalized, "modelAliases") &&
+    !Object.prototype.hasOwnProperty.call(normalized, "model_aliases")
+  ) {
+    normalized.model_aliases = normalized.modelAliases;
+    delete normalized.modelAliases;
+  }
   return normalized;
 }
 
