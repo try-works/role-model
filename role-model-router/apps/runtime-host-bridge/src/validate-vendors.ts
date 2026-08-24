@@ -16,6 +16,17 @@ import {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const VALIDATION_PROVIDER_CREDENTIAL_ENV = Object.freeze({
+  OPENAI_API_KEY: "run94-validator-runtime-only",
+});
+const PROVIDER_CREDENTIAL_ENV_SUFFIX =
+  /(?:API_KEY|API_TOKEN|AUTH_TOKEN|ACCESS_TOKEN|REFRESH_TOKEN|CLIENT_SECRET|SECRET_KEY|TOKEN)$/i;
+
+function createCredentialStrippedEnvironment(): NodeJS.ProcessEnv {
+  return Object.fromEntries(
+    Object.entries(process.env).filter(([name]) => !PROVIDER_CREDENTIAL_ENV_SUFFIX.test(name)),
+  );
+}
 
 function createLocalVendorScript(): string {
   return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/responses"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedInput=typeof parsed.input==="string"?parsed.input:JSON.stringify(parsed.input??"");const isClassifier=joinedInput.includes("ROLE_MODEL_DIFFICULTY_CLASSIFIER");const isHardPrompt=joinedInput.includes("Analyze this code-edit workflow")||joinedInput.includes('\"toolCount\":2')||joinedInput.includes('\"toolCount\": 2')||joinedInput.includes('\"codeOrSchemaBurden\":true')||joinedInput.includes('\"codeOrSchemaBurden\": true');const classifierResponse=isHardPrompt?JSON.stringify({difficulty:"hard"}):JSON.stringify({difficulty:"easy"});if(parsed.stream){res.writeHead(200,{"content-type":"text/event-stream; charset=utf-8"});res.write('data: {"type":"response.created","response":{"id":"resp-local","created_at":1,"model":"local/llama-3.1-8b-instruct"}}'+"\\n\\n");setTimeout(()=>{res.write('data: {"type":"response.output_text.delta","item_id":"msg_1","delta":'+JSON.stringify(isClassifier?classifierResponse:"local llama summary")+'}'+"\\n\\n");setTimeout(()=>{res.end('data: {"type":"response.completed","response":{"usage":{"input_tokens":11,"output_tokens":4}},"_hidden_params":{"response_cost":0.0005,"cache_hit":false}}'+"\\n\\n"+'data: [DONE]'+"\\n\\n");},10);},10);return;}res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"resp-local",output:[{type:"message",role:"assistant",content:[{type:"output_text",text:isClassifier?classifierResponse:"local llama summary"}]}],usage:{input_tokens:11,output_tokens:4},_hidden_params:{response_cost:0.0005,cache_hit:false}}));});return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isClassifier=joinedMessages.includes("ROLE_MODEL_DIFFICULTY_CLASSIFIER");const isHardPrompt=joinedMessages.includes("Analyze this code-edit workflow")||joinedMessages.includes('\"toolCount\":2')||joinedMessages.includes('\"toolCount\": 2')||joinedMessages.includes('\"codeOrSchemaBurden\":true')||joinedMessages.includes('\"codeOrSchemaBurden\": true');const classifierResponse=isHardPrompt?JSON.stringify({difficulty:"hard"}):JSON.stringify({difficulty:"easy"});if(parsed.stream){res.writeHead(200,{"content-type":"text/event-stream; charset=utf-8"});res.write('data: {"id":"chat-local","object":"chat.completion.chunk","created":1,"model":"local/llama-3.1-8b-instruct","choices":[{"index":0,"delta":{"role":"assistant","content":"local "},"finish_reason":null}]}'+"\\n\\n");setTimeout(()=>{res.write('data: {"id":"chat-local","object":"chat.completion.chunk","created":1,"model":"local/llama-3.1-8b-instruct","choices":[{"index":0,"delta":{"content":"llama summary"},"finish_reason":null}]}'+"\\n\\n");setTimeout(()=>{res.end('data: {"id":"chat-local","object":"chat.completion.chunk","created":1,"model":"local/llama-3.1-8b-instruct","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":11,"completion_tokens":4},"_hidden_params":{"response_cost":0.0005,"cache_hit":false}}'+"\\n\\n"+'data: [DONE]'+"\\n\\n");},10);},10);return;}res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-local",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content:isClassifier?classifierResponse:"local llama summary"},finish_reason:"stop"}],usage:{prompt_tokens":11,completion_tokens":4,total_tokens:15},_hidden_params:{response_cost:0.0005,cache_hit:false}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
@@ -1343,7 +1354,7 @@ async function startRemoteUpstreamProcess(input: {
   const child = spawn(process.execPath, [input.scriptPath, String(input.port)], {
     stdio: "ignore",
     env: {
-      ...process.env,
+      ...createCredentialStrippedEnvironment(),
       PORT: String(input.port),
     },
     windowsHide: true,
@@ -1463,6 +1474,8 @@ async function startRuntimeForConfig(input: {
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
   readonly config: Record<string, unknown>;
+  readonly providerCredentialEnvironment?: Readonly<Record<string, string | undefined>>;
+  readonly providerChildEnvironment?: Readonly<Record<string, string | undefined>>;
   readonly codex?: {
     readonly providerAccountId: string;
     readonly modelId: string;
@@ -1479,6 +1492,9 @@ async function startRuntimeForConfig(input: {
     runtimeStateRoot: input.runtimeStateRoot,
     scopeId: input.scopeId,
     unifiedRuntimeConfigPath: configPath,
+    providerCredentialEnvironment: input.providerCredentialEnvironment,
+    providerChildEnvironment:
+      input.providerChildEnvironment ?? createCredentialStrippedEnvironment(),
     ...(input.codex
       ? {
           codexAuthAdapter: createValidationCodexAuthAdapter(),
@@ -1770,8 +1786,6 @@ export async function runRuntimeVendorValidation(options: {
     options.runtimeStateRoot ??
     (await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-vendors-")));
   const scopePrefix = options.scopeId ?? "runtime-vendor-validation";
-  const previousOpenAiApiKey = process.env.OPENAI_API_KEY;
-  process.env.OPENAI_API_KEY = previousOpenAiApiKey || "runtime-vendor-validation-key";
   const plan = await createRuntimeVendorValidationPlan({
     runtimeStateRoot,
     scopeId: scopePrefix,
@@ -1836,6 +1850,7 @@ export async function runRuntimeVendorValidation(options: {
           runtimeStateRoot,
           scopeId: `${scopePrefix}-remote`,
           config: plan.remoteConfig,
+          providerCredentialEnvironment: VALIDATION_PROVIDER_CREDENTIAL_ENV,
         });
         try {
           await waitForRuntimeModelEndpointsReady(remoteRuntime.backend, [plan.remoteModelId]);
@@ -1862,6 +1877,7 @@ export async function runRuntimeVendorValidation(options: {
             runtimeStateRoot,
             scopeId: `${scopePrefix}-hybrid`,
             config: plan.hybridConfig,
+            providerCredentialEnvironment: VALIDATION_PROVIDER_CREDENTIAL_ENV,
             codex: {
               providerAccountId: VALIDATION_CODEX_PROVIDER_ACCOUNT_ID,
               modelId: plan.codexModelId,
@@ -2007,6 +2023,7 @@ export async function runRuntimeVendorValidation(options: {
                   },
                 },
               },
+              providerCredentialEnvironment: VALIDATION_PROVIDER_CREDENTIAL_ENV,
               codex: {
                 providerAccountId: VALIDATION_CODEX_PROVIDER_ACCOUNT_ID,
                 modelId: plan.codexModelId,
@@ -2216,11 +2233,6 @@ export async function runRuntimeVendorValidation(options: {
     await decisionRuntime.close();
     if (!options.runtimeStateRoot) {
       await rm(runtimeStateRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
-    }
-    if (previousOpenAiApiKey === undefined) {
-      process.env.OPENAI_API_KEY = undefined;
-    } else {
-      process.env.OPENAI_API_KEY = previousOpenAiApiKey;
     }
   }
 }

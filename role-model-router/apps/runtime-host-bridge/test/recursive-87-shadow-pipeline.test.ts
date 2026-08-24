@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 
 import { afterEach, expect, test } from "vitest";
 
@@ -19,6 +20,67 @@ afterEach(async () => {
   await Promise.allSettled(runtimes.splice(0).map((runtime) => runtime.close()));
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
 });
+
+const comparableEvidence = () => ({
+  source: {
+    rolloutId: "rollout-source-87",
+    routePackage: "candidate-local",
+    endpointId: "endpoint-local",
+    modelId: "model-local",
+    policyId: "routing-policy-a",
+    reasoningEffort: "medium",
+    effortSource: "variant",
+    evidenceRef: "evidence:source-87",
+    artifactRef: "artifact:source-87",
+    propensity: 0.6,
+    outcome: {
+      outcomeId: "outcome-source-87",
+      outcomeRef: "outcome:source-87",
+      outcomeDigest: "digest:source-87",
+      source: "observed",
+      status: "success",
+    },
+  },
+  counterfactuals: [
+    {
+      rolloutId: "rollout-counterfactual-87",
+      routePackage: "candidate-remote",
+      endpointId: "endpoint-remote",
+      modelId: "model-remote",
+      policyId: "routing-policy-b",
+      reasoningEffort: "high",
+      effortSource: "variant",
+      evidenceRef: "evidence:counterfactual-87",
+      artifactRef: "artifact:counterfactual-87",
+      propensity: 0.4,
+      outcome: {
+        outcomeId: "outcome-counterfactual-87",
+        outcomeRef: "outcome:counterfactual-87",
+        outcomeDigest: "digest:counterfactual-87",
+        source: "replay",
+        status: "failure",
+      },
+    },
+  ],
+  candidateSet: [
+    { routePackage: "candidate-local", endpointId: "endpoint-local", propensity: 0.6 },
+    { routePackage: "candidate-remote", endpointId: "endpoint-remote", propensity: 0.4 },
+  ],
+});
+
+const comparableCases = () => [
+  {
+    id: "case-87",
+    expected: "expected-route",
+    actual: "expected-route",
+    expectedRolloutId: "rollout-source-87",
+    actualRolloutId: "rollout-counterfactual-87",
+    expectedOutcomeRef: "outcome:source-87",
+    actualOutcomeRef: "outcome:counterfactual-87",
+    expectedEvidenceRef: "evidence:source-87",
+    actualEvidenceRef: "evidence:counterfactual-87",
+  },
+];
 
 test("SP1 runs the useful routing-learning DAG through supervised shadow capabilities", async () => {
   expect(typeof trackBRuntime.runTrackBShadowPipeline).toBe("function");
@@ -63,8 +125,9 @@ test("SP1 runs the useful routing-learning DAG through supervised shadow capabil
     sourceDecisionId: "route-87",
     sourceGraphRef: "sha256:graph-87",
     prefix: ["request", "eligible-endpoints"],
-    counterfactuals: [{ id: "candidate-local", suffix: ["candidate-local"] }],
-    evaluationCases: [{ expected: "candidate-local", actual: "candidate-local" }],
+    counterfactuals: [{ id: "candidate-remote", suffix: ["candidate-remote"] }],
+    comparableEvidence: comparableEvidence(),
+    evaluationCases: comparableCases(),
     trajectoryEvents: [],
   });
 
@@ -87,6 +150,35 @@ test("SP1 runs the useful routing-learning DAG through supervised shadow capabil
   expect(runtime.listExtensions().every((row) => row.lifecycle === "ready")).toBe(true);
 });
 
+test("Run 94 R14 refuses self-comparison before creating a learned-experience candidate", async () => {
+  const invoked: string[] = [];
+  await expect(
+    trackBRuntime.runTrackBShadowPipeline(
+      {
+        invoke: async (id) => {
+          invoked.push(id);
+          return {};
+        },
+      },
+      {
+        requestId: "run94-self-comparison",
+        channel: "development",
+        scope: "tenant:run94",
+        authorizationEpoch: 94,
+        productionState: {},
+        routePackage: "route-package-a",
+        sourceDecisionId: "decision-run94-a",
+        sourceGraphRef: "sha256:graph-run94-a",
+        prefix: [{ routePackage: "route-package-a" }],
+        counterfactuals: [{ id: "route-package-a", suffix: [{ routePackage: "route-package-a" }] }],
+        evaluationCases: [{ expected: "route-package-a", actual: "route-package-a" }],
+        trajectoryEvents: [],
+      },
+    ),
+  ).rejects.toThrow(/R14_NO_DISTINCT_COUNTERFACTUAL|distinct counterfactual|self-comparison/i);
+  expect(invoked).toEqual([]);
+});
+
 test("SP1 fails closed before Knowledge Worker when holdout evaluation fails", async () => {
   const invoke = async (id: string) =>
     id === "evaluation-runner-local"
@@ -104,8 +196,9 @@ test("SP1 fails closed before Knowledge Worker when holdout evaluation fails", a
         sourceDecisionId: "route-87",
         sourceGraphRef: "sha256:graph-87",
         prefix: [],
-        counterfactuals: [],
-        evaluationCases: [{ expected: 1, actual: 0 }],
+        counterfactuals: [{ id: "candidate-remote", suffix: [] }],
+        comparableEvidence: comparableEvidence(),
+        evaluationCases: comparableCases(),
         trajectoryEvents: [],
         productionState: {},
       },
@@ -249,7 +342,7 @@ test("Phase 3.5 post-observation work survives startup and processing failures",
   });
 });
 
-test("Run 91 safely retires legacy queued work that cannot prove variant identity", async () => {
+test("Run 91 quarantines legacy queued work that cannot prove variant identity", async () => {
   const stateRoot = path.join(os.tmpdir(), `run91-legacy-shadow-outbox-${Date.now()}`);
   roots.push(stateRoot);
   const filePath = path.join(stateRoot, "outbox.json");
@@ -275,19 +368,16 @@ test("Run 91 safely retires legacy queued work that cannot prove variant identit
     return {};
   });
   expect(replayed).toEqual([]);
-  expect(await outbox.read()).toMatchObject({
-    pendingCount: 0,
-    receiptCount: 1,
-    receipts: [
-      {
-        requestId: "legacy-run91",
-        result: {
-          status: "retired_legacy_missing_variant_identity",
-          productionMutation: false,
-        },
-      },
-    ],
-  });
+  expect(await outbox.read()).toMatchObject({ pendingCount: 0, receiptCount: 0, receipts: [] });
+  const database = new DatabaseSync(filePath);
+  expect(
+    database
+      .prepare(
+        "SELECT classification, reason FROM track_b_post_observation_legacy_rows WHERE source_id=?",
+      )
+      .get("legacy-run91"),
+  ).toMatchObject({ classification: "quarantined" });
+  database.close();
 });
 
 test("Phase 3.5 normal post-observation work executes every canonical business owner", async () => {
@@ -295,9 +385,25 @@ test("Phase 3.5 normal post-observation work executes every canonical business o
   const runtime = {
     async invoke(id: string, envelope: Record<string, unknown>) {
       invoked.push({ id, envelope });
-      if (id === "artifact-store") return { id: "artifact:run87" };
+      const base = {
+        workerPid: 1000 + invoked.length,
+        durableLocator: {
+          extensionId: id,
+          requestId: envelope.requestId,
+          invocation: invoked.length,
+        },
+        evidenceRef: `evidence:${id}:${String(envelope.requestId)}`,
+        businessOutput: {
+          extensionId: id,
+          capability: envelope.capability,
+          invocation: invoked.length,
+        },
+        readCapability: "artifact:read",
+      };
+      if (id === "artifact-store") return { ...base, id: "artifact:run87" };
       if (id === "repository-context") {
         return {
+          ...base,
           available: true,
           context: {
             scopeId: "tenant:run87",
@@ -317,15 +423,15 @@ test("Phase 3.5 normal post-observation work executes every canonical business o
         };
       }
       if (id === "knowledge-store" && envelope.capability === "knowledge:write") {
-        return { id: "knowledge:run87" };
+        return { ...base, id: "knowledge:run87" };
       }
       if (id === "evaluation-runner-local") {
-        return { scores: [1], provenance: { evidenceRef: "artifact:run87" } };
+        return { ...base, scores: [1], provenance: { evidenceRef: "artifact:run87" } };
       }
       if (id === "knowledge-worker") {
-        return { id: "candidate:run87", state: "shadow", productionEffects: {} };
+        return { ...base, id: "candidate:run87", state: "shadow", productionEffects: {} };
       }
-      return {};
+      return base;
     },
   };
   const identity = {

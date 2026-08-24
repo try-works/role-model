@@ -21,6 +21,7 @@ import { type RuntimeChannelProfile, readPackagedRuntimeProfile } from "./runtim
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
 import {
+  type TrackBExtensionClosure,
   createOwnedTrackBSidecarSpec,
   createPackagedProductionRuntime,
   createProductionExtensionRuntime,
@@ -30,6 +31,7 @@ import {
   runTrackBPostObservation,
   trackBDistributionRequiresSQLiteMaintenance,
   validateRun88ProviderResponseObservation,
+  verifyTrackBExtensionClosureAfterRestart,
 } from "./track-b-runtime.js";
 
 type CliBackend = Pick<
@@ -57,6 +59,7 @@ type CliBackend = Pick<
   | "mutateExtension"
   | "readTrackBQaExtensions"
   | "readTrackBShadowReceipts"
+  | "readTrackBExtensionReadback"
   | "readGraphMigration"
   | "advanceGraphMigration"
   | "rollbackGraphMigration"
@@ -98,6 +101,7 @@ type CliBackend = Pick<
   | "listRecentRequestIds"
   | "listRecentRequestObservations"
   | "readRequestObservation"
+  | "exportVerifiersTrace"
   | "readEndpointProfile"
   | "readBenchmarkSuite"
   | "runBenchmark"
@@ -420,6 +424,9 @@ export function createCliServerOptions(
     readTrackBShadowReceipts: bindBackendMethod(
       "readTrackBShadowReceipts",
     ) as StartBridgeServerOptions["readTrackBShadowReceipts"],
+    readTrackBExtensionReadback: bindBackendMethod(
+      "readTrackBExtensionReadback",
+    ) as StartBridgeServerOptions["readTrackBExtensionReadback"],
     readGraphMigration: bindBackendMethod(
       "readGraphMigration",
     ) as StartBridgeServerOptions["readGraphMigration"],
@@ -537,6 +544,9 @@ export function createCliServerOptions(
     readRequestObservation: bindBackendMethod(
       "readRequestObservation",
     ) as StartBridgeServerOptions["readRequestObservation"],
+    exportVerifiersTrace: bindBackendMethod(
+      "exportVerifiersTrace",
+    ) as StartBridgeServerOptions["exportVerifiersTrace"],
     readEndpointProfile: bindBackendMethod(
       "readEndpointProfile",
     ) as StartBridgeServerOptions["readEndpointProfile"],
@@ -1013,6 +1023,33 @@ export async function main(): Promise<void> {
               : {}),
           })),
         trackBPostObservationReceipts: () => postObservationOutbox.read(),
+        readTrackBExtensionReadback: async (body) => {
+          const requestId = String(body.requestId ?? "").trim();
+          if (!requestId) throw new Error("Track B extension readback requestId is required");
+          const receipt = await postObservationOutbox.readReceipt(requestId);
+          if (!receipt) throw new Error(`Track B observation receipt not found: ${requestId}`);
+          const result = receipt.result as Record<string, unknown>;
+          const closure = result.extensionClosure as TrackBExtensionClosure | undefined;
+          if (!closure)
+            throw new Error(`Track B observation has no extension closure: ${requestId}`);
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) throw new Error("Track B extension runtime is unavailable");
+          return verifyTrackBExtensionClosureAfterRestart(runtime, closure, {
+            channel: packagedProfile?.channel ?? "development",
+            scope: options.scopeId,
+            authorizationEpoch: 1,
+            readDurableEvidence: async ({ durableLocator, durableOutputId }) =>
+              runtime.invoke("artifact-store", {
+                requestId: `${requestId}:readback:evidence:${durableOutputId}`,
+                protocolVersion: "1.1.0",
+                channel: packagedProfile?.channel ?? "development",
+                scope: options.scopeId,
+                authorizationEpoch: 1,
+                capability: "artifact:read",
+                payload: { durableLocator, durableOutputId },
+              }),
+          });
+        },
         ...(trackBManifestText
           ? {
               trackBPostObservation: async (observation: Readonly<Record<string, unknown>>) => {

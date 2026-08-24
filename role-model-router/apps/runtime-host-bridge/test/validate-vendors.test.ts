@@ -29,12 +29,24 @@ describe("runRuntimeVendorValidation", () => {
     const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-vendors-"));
     tempRoots.push(runtimeStateRoot);
 
-    const result = await runRuntimeVendorValidation({
-      repoRoot,
-      runtimeStateRoot,
-      scopeId: "runtime-vendor-validation",
-      harnessMode: "mock",
-    });
+    const callerOpenAiApiKey = process.env.OPENAI_API_KEY;
+    delete process.env.OPENAI_API_KEY;
+    let result: Awaited<ReturnType<typeof runRuntimeVendorValidation>>;
+    try {
+      result = await runRuntimeVendorValidation({
+        repoRoot,
+        runtimeStateRoot,
+        scopeId: "runtime-vendor-validation",
+        harnessMode: "mock",
+      });
+      expect(process.env.OPENAI_API_KEY).toBeUndefined();
+    } finally {
+      if (callerOpenAiApiKey === undefined) {
+        delete process.env.OPENAI_API_KEY;
+      } else {
+        process.env.OPENAI_API_KEY = callerOpenAiApiKey;
+      }
+    }
 
     expect(result.decisionOnly).toEqual(
       expect.objectContaining({

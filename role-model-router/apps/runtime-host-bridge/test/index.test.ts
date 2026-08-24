@@ -10832,36 +10832,10 @@ describe("runtime-host-bridge", () => {
             safetyPolicyRefs: ["safety.review"],
           },
         },
-        inspection: {
-          request: {
-            requestCapture: {
-              body: {
-                model: "chat-capture-v1",
-                input: [
-                  {
-                    role: "system",
-                    content: "Review carefully and produce a release-readiness assessment.",
-                  },
-                  {
-                    role: "system",
-                    content:
-                      "You must satisfy these output contracts in your response: review.checklist.",
-                  },
-                  {
-                    role: "system",
-                    content:
-                      "Apply these safety policies while handling the request: safety.review.",
-                  },
-                  {
-                    role: "user",
-                    content: "Assess release readiness.",
-                  },
-                ],
-              },
-            },
-          },
-        },
       });
+      // Run 94 (SP2): request captures (including injected system instructions) are
+      // graph-external; the inline SQLite row never carries them.
+      expect(await backend.readRequestObservation(requestId)).not.toHaveProperty("inspection");
     } finally {
       await rm(fixtureRoot, { recursive: true, force: true });
       await rm(runtimeStateRoot, { recursive: true, force: true });
@@ -20174,36 +20148,10 @@ describe("runtime-host-bridge", () => {
             safetyPolicyRefs: ["safety.review"],
           },
         },
-        inspection: {
-          request: {
-            requestCapture: {
-              body: {
-                model: "chat-capture-v1",
-                input: [
-                  {
-                    role: "system",
-                    content: "Review carefully and produce a release-readiness assessment.",
-                  },
-                  {
-                    role: "system",
-                    content:
-                      "You must satisfy these output contracts in your response: review.checklist.",
-                  },
-                  {
-                    role: "system",
-                    content:
-                      "Apply these safety policies while handling the request: safety.review.",
-                  },
-                  {
-                    role: "user",
-                    content: "Assess release readiness.",
-                  },
-                ],
-              },
-            },
-          },
-        },
       });
+      // Run 94 (SP2): request captures (including injected policy messages) are
+      // graph-external; the inline SQLite row never carries them.
+      expect(await backend.readRequestObservation(requestId)).not.toHaveProperty("inspection");
     } finally {
       await rm(fixtureRoot, { recursive: true, force: true });
       await rm(runtimeStateRoot, { recursive: true, force: true });

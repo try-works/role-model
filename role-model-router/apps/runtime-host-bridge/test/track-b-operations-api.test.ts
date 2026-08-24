@@ -14,6 +14,8 @@ import { LegacySqliteMigration } from "../../../packages/sqlite-memory/src/legac
 import { applyRecommendationServiceLauncherConfig } from "../src/cli.js";
 import { createRuntimeBridgeBackend, startBridgeServer } from "../src/index.js";
 import {
+  buildProviderEvidenceFromObservation,
+  buildVerifiersLiveExport,
   createTrackBOperations,
   seedTrackBExtensionBridgeState,
 } from "../src/track-b-operations.js";
@@ -46,6 +48,141 @@ afterEach(async () => {
 });
 
 describe("Track B operations APIs", () => {
+  test("builds provider evidence and a semantic Verifiers export from the exact durable graph", () => {
+    const observation = {
+      requestId: "request-export-94",
+      routingDecisionId: "decision-export-94",
+      endpointId: "endpoint-export-94",
+      usageEvent: { model_id: "provider/model-export-94" },
+      run88Correlation: { correlationId: "correlation-export-94" },
+      executionSemantics: {
+        failedAttempts: [{ attemptId: "request-export-94:attempt:1" }],
+      },
+    };
+    expect(buildProviderEvidenceFromObservation(observation)).toEqual({
+      endpointId: "endpoint-export-94",
+      modelId: "provider/model-export-94",
+      status: "ok",
+      attemptIds: ["request-export-94:attempt:1", "request-export-94:attempt:2"],
+    });
+    const capture = {
+      schemaVersion: "role-model.route-capture-read.v1",
+      requestId: "request-export-94",
+      routingDecisionId: "decision-export-94",
+      rootArtifactId: "root-export-94",
+      messages: [
+        { nodeId: "node-system-94", role: "system", content: "route safely" },
+        { nodeId: "node-user-94", role: "user", content: "route this" },
+      ],
+      response: { nodeId: "node-response-94", role: "assistant", content: "routed" },
+      tools: [],
+      edgeCount: 3,
+    };
+    const exported = buildVerifiersLiveExport({
+      channel: "development",
+      request: {
+        requestId: "request-export-94",
+        correlationId: "correlation-export-94",
+        graphRootArtifactId: "root-export-94",
+        readiness: "semantic",
+      },
+      observation,
+      capture,
+    });
+    expect(exported).toMatchObject({
+      schemaVersion: "role-model.verifiers-live-export.v1",
+      channel: "development",
+      requestId: "request-export-94",
+      correlationId: "correlation-export-94",
+      graphRootArtifactId: "root-export-94",
+      responseNodeIndex: 2,
+      tokenExactDisposition: "refused_missing_evidence",
+      trace: {
+        nodes: [
+          { parent: null, message: { role: "system", content: "route safely" }, sampled: false },
+          { parent: 0, message: { role: "user", content: "route this" }, sampled: false },
+          { parent: 1, message: { role: "assistant", content: "routed" }, sampled: true },
+        ],
+        info: {
+          routeDecisionId: "decision-export-94",
+          roleModelGraphRootArtifactId: "root-export-94",
+          roleModelResponseNodeId: "node-response-94",
+        },
+      },
+    });
+    expect(() =>
+      buildVerifiersLiveExport({
+        channel: "development",
+        request: {
+          requestId: "request-export-94",
+          correlationId: "correlation-export-94",
+          graphRootArtifactId: "wrong-root",
+          readiness: "semantic",
+        },
+        observation,
+        capture,
+      }),
+    ).toThrow(/exact live graph/i);
+  });
+
+  test("reads one exact graph capture through the authenticated loopback sidecar", async () => {
+    const received: Array<{ path: string; authorization?: string; body: unknown }> = [];
+    const operations = createServer(async (request, response) => {
+      let body = "";
+      for await (const chunk of request) body += chunk;
+      received.push({
+        path: request.url ?? "",
+        authorization: request.headers.authorization,
+        body: JSON.parse(body),
+      });
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(
+        JSON.stringify({
+          schemaVersion: "role-model.route-capture-read.v1",
+          requestId: "request-exact-94",
+          routingDecisionId: "decision-exact-94",
+          rootArtifactId: "root-exact-94",
+          messages: [{ nodeId: "message-exact-94", role: "user", content: "route me" }],
+          response: { nodeId: "response-exact-94", role: "assistant", content: "routed" },
+          tools: [],
+          edgeCount: 2,
+        }),
+      );
+    });
+    await new Promise<void>((resolve, reject) => {
+      operations.once("error", reject);
+      operations.listen(0, "127.0.0.1", resolve);
+    });
+    try {
+      const address = operations.address();
+      if (!address || typeof address === "string")
+        throw new Error("operations server did not bind");
+      const api = createTrackBOperations({
+        statePath: path.join(os.tmpdir(), `run94-exact-capture-${Date.now()}.json`),
+        catalog: [],
+        operationsEndpoint: `http://127.0.0.1:${address.port}`,
+        operationsToken: "run94-exact-capture-token-0001",
+      });
+      const exact = await api.readLocalRouteCapture({ requestId: "request-exact-94" });
+      expect(exact).toMatchObject({
+        schemaVersion: "role-model.route-capture-read.v1",
+        requestId: "request-exact-94",
+        rootArtifactId: "root-exact-94",
+      });
+      expect(received).toEqual([
+        {
+          path: "/capture/read",
+          authorization: "Bearer run94-exact-capture-token-0001",
+          body: { requestId: "request-exact-94" },
+        },
+      ]);
+    } finally {
+      await new Promise<void>((resolve, reject) =>
+        operations.close((error) => (error ? reject(error) : resolve())),
+      );
+    }
+  });
+
   test("fails closed instead of issuing unauthenticated calls to an owned operations endpoint", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `track-b-operations-auth-${Date.now()}`);
     roots.push(runtimeStateRoot);
@@ -156,6 +293,11 @@ describe("Track B operations APIs", () => {
       listRecommendations: async () => [{ id: "pack-1", signatureValid: true }],
       applyRecommendation: async () => ({ activePack: { id: "pack-1", version: "1" } }),
       readActivePack: async () => ({ id: "pack-1", version: "1" }),
+      exportVerifiersTrace: async (body) => ({
+        schemaVersion: "role-model.verifiers-live-export.v1",
+        requestId: body.requestId,
+        graphRootArtifactId: body.graphRootArtifactId,
+      }),
     });
     try {
       const base = `http://127.0.0.1:${server.port}`;
@@ -227,6 +369,22 @@ describe("Track B operations APIs", () => {
           ).json()
         ).activeJob.status,
       ).toBe("running");
+      const exported = await fetch(`${base}/api/role-model/track-b/verifiers-export`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          requestId: "request-http-export-94",
+          correlationId: "correlation-http-export-94",
+          graphRootArtifactId: "root-http-export-94",
+          readiness: "semantic",
+        }),
+      });
+      expect(exported.status).toBe(200);
+      expect(await exported.json()).toEqual({
+        schemaVersion: "role-model.verifiers-live-export.v1",
+        requestId: "request-http-export-94",
+        graphRootArtifactId: "root-http-export-94",
+      });
     } finally {
       await server.close();
       await backend.shutdown();
@@ -398,25 +556,46 @@ describe("Track B operations APIs", () => {
     roots.push(runtimeStateRoot);
     const received: Array<{ path: string; authorization?: string; body: Record<string, unknown> }> =
       [];
+    let routeCapture: Record<string, unknown> | null = null;
     const operations = createServer(async (request, response) => {
       const chunks: Buffer[] = [];
       for await (const chunk of request) chunks.push(Buffer.from(chunk));
+      const body = JSON.parse(Buffer.concat(chunks).toString("utf8")) as Record<string, unknown>;
+      if (request.url === "/capture/route") routeCapture = body;
       received.push({
         path: request.url ?? "",
         authorization: request.headers.authorization,
-        body: JSON.parse(Buffer.concat(chunks).toString("utf8")),
+        body,
       });
       response.writeHead(200, { "content-type": "application/json" });
       response.end(
         JSON.stringify(
-          request.url === "/capture/route"
+          request.url === "/capture/read"
             ? {
-                status: "captured",
-                scope: "tenant:production-upload",
+                schemaVersion: "role-model.route-capture-read.v1",
+                requestId: "req-track-b-upload-001",
+                routingDecisionId: routeCapture?.routingDecisionId,
                 rootArtifactId: "artifact-route-capture",
-                rootArtifactDigest: "a".repeat(64),
+                messages: (routeCapture?.messages as unknown[]).map((message, index) => ({
+                  nodeId: `message-route-capture-${index}`,
+                  ...(message as object),
+                })),
+                response: {
+                  nodeId: "response-route-capture",
+                  role: "assistant",
+                  content: routeCapture?.outputText,
+                },
+                tools: [],
+                edgeCount: 2,
               }
-            : { status: "accepted" },
+            : request.url === "/capture/route"
+              ? {
+                  status: "captured",
+                  scope: "tenant:production-upload",
+                  rootArtifactId: "artifact-route-capture",
+                  rootArtifactDigest: "a".repeat(64),
+                }
+              : { status: "accepted" },
         ),
       );
     });
@@ -435,6 +614,11 @@ describe("Track B operations APIs", () => {
       runtimeStateRoot,
       scopeId: "production-upload",
       trackBOperationsEndpoint,
+      run88StageIdentity: {
+        releaseId: `sha256:${"d".repeat(64)}`,
+        sourceId: "e".repeat(40),
+        executableSha256: "c".repeat(64),
+      },
     });
     try {
       const databasePath = resolveSqliteMemoryLocation({
@@ -518,6 +702,32 @@ describe("Track B operations APIs", () => {
           contentHash: "a".repeat(64),
         },
       });
+      const detail = await backend.readRequestObservation("req-track-b-upload-001");
+      expect(detail?.providerEvidence).toMatchObject({
+        endpointId: result.endpointId,
+        modelId: "deepseek/chat-capture-v1",
+        status: "ok",
+        attemptIds: ["req-track-b-upload-001:attempt:1"],
+      });
+      expect(detail?.graphEvidence).toEqual({
+        rootArtifactId: "artifact-route-capture",
+        messageNodeIds: ["message-route-capture-0"],
+        responseNodeId: "response-route-capture",
+        edgeCount: 2,
+      });
+      const correlationId = String(
+        (detail as unknown as { run88Correlation?: { correlationId?: string } })?.run88Correlation
+          ?.correlationId,
+      );
+      expect(correlationId).not.toBe("undefined");
+      expect(
+        await backend.exportVerifiersTrace({
+          requestId: "req-track-b-upload-001",
+          correlationId,
+          graphRootArtifactId: "artifact-route-capture",
+          readiness: "semantic",
+        }),
+      ).toMatchObject({ responseNodeIndex: 1, tokenExactDisposition: "refused_missing_evidence" });
     } finally {
       await backend.shutdown();
       await new Promise<void>((resolve, reject) =>
@@ -1141,6 +1351,53 @@ describe("Track B operations APIs", () => {
     const row = enabled.extensions.find((entry) => entry.id === "event-log");
     expect(row).toMatchObject({ enabled: true, enabledMode: "shadow" });
     expect(enabled.receipts).toHaveLength(1);
+  });
+
+  test("run94 SP8 local storage fallback never fabricates physical measurements", async () => {
+    const root = path.join(os.tmpdir(), `track-b-run94-honest-${Date.now()}`);
+    roots.push(root);
+    await mkdir(root, { recursive: true });
+    const statePath = path.join(root, "bridge.json");
+    const catalog = [
+      { id: "artifact-store", packageClass: "canonical_extension", routingDependency: true },
+      { id: "event-log", packageClass: "canonical_extension", routingDependency: false },
+    ];
+    await seedTrackBExtensionBridgeState({ statePath, catalog });
+    const seeded = JSON.parse(await readFile(statePath, "utf8")) as {
+      storageServices?: unknown[];
+    };
+    seeded.storageServices = [
+      {
+        id: "artifact-store",
+        category: "rich_trace",
+        tier: "canonical",
+        scope: "repo:a",
+        bytes: 10,
+        count: 1,
+        holds: 0,
+        leases: 0,
+      },
+    ];
+    await writeFile(statePath, JSON.stringify(seeded));
+    const ops = createTrackBOperations({ statePath, catalog });
+    const summary = (await ops.readStorageRetention()) as {
+      storageAudit: unknown;
+      storageInventory: {
+        entries: readonly {
+          id: string;
+          health: string;
+          measurement: string;
+          physicalBytes: number | null;
+        }[];
+      };
+    };
+    expect(summary.storageAudit).toBeNull();
+    expect(summary.storageInventory.entries.length).toBeGreaterThan(0);
+    for (const entry of summary.storageInventory.entries) {
+      expect(entry.physicalBytes).toBeNull();
+      expect(entry.measurement).toBe("unavailable");
+      expect(entry.health).toBe("unavailable");
+    }
   });
 
   test("run79 mutateExtension enables disables and sets mode with audit receipts", async () => {

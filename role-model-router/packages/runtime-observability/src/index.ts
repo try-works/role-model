@@ -482,7 +482,6 @@ export interface RuntimeObservationBundle {
   readonly observedPerformance: {
     readonly endpointVersion: string;
     readonly sample: ObservedPerformanceSample;
-    readonly history: readonly ObservedPerformanceSample[];
     readonly profile: ObservedPerformanceProfile;
   };
   readonly diagnostics: {
@@ -598,7 +597,6 @@ export interface RuntimeObservationBundle {
       readonly endpointId: string;
       readonly endpointVersion: string;
       readonly latestProfile: ObservedPerformanceProfile;
-      readonly recentSamples: readonly ObservedPerformanceSample[];
     };
   };
 }
@@ -1098,7 +1096,6 @@ export function createRuntimeObservationBundle(
     observedPerformance: {
       endpointVersion,
       sample: currentSample,
-      history,
       profile,
     },
     diagnostics,
@@ -1166,7 +1163,6 @@ export function createRuntimeObservationBundle(
         endpointId: input.decision.chosen_endpoint_id,
         endpointVersion,
         latestProfile: profile,
-        recentSamples: history,
       },
     },
   };

@@ -117,6 +117,39 @@ type StorageRecord = {
   readonly leases?: number;
   readonly conflicts?: readonly string[];
 };
+
+function normalizeStorageRetentionContract(value: unknown): Record<string, unknown> {
+  const raw = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+  const logicalClasses = Array.isArray(raw.logicalClasses)
+    ? raw.logicalClasses
+    : Array.isArray(raw.categories)
+      ? raw.categories
+      : [];
+  const inventory =
+    raw.storageInventory && typeof raw.storageInventory === "object"
+      ? (raw.storageInventory as Record<string, unknown>)
+      : undefined;
+  const physicalResources = Array.isArray(raw.physicalResources)
+    ? raw.physicalResources
+    : Array.isArray(inventory?.entries)
+      ? inventory.entries
+      : [];
+  return {
+    ...raw,
+    logicalClasses,
+    categories: logicalClasses,
+    physicalResources,
+    ...(inventory
+      ? {
+          storageInventory: {
+            ...inventory,
+            complete: inventory.complete === true,
+            entries: physicalResources,
+          },
+        }
+      : {}),
+  };
+}
 type RetentionPlan = {
   readonly schemaVersion: "role-model.retention-dry-run.v1";
   readonly channel: string;
@@ -597,6 +630,150 @@ const privateRetentionRequest = async (
   return result;
 };
 
+function boundedIdentity(value: unknown, label: string): string {
+  if (typeof value !== "string" || value.length < 1 || value.length > 1024)
+    throw new Error(`${label} is required`);
+  return value;
+}
+
+function recordValue(value: unknown): Readonly<Record<string, unknown>> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Readonly<Record<string, unknown>>)
+    : {};
+}
+
+export function buildProviderEvidenceFromObservation(
+  observation: Readonly<Record<string, unknown>>,
+): Readonly<Record<string, unknown>> {
+  const requestId = boundedIdentity(observation.requestId, "provider evidence request id");
+  const endpointId = boundedIdentity(observation.endpointId, "provider evidence endpoint id");
+  const modelId = boundedIdentity(
+    recordValue(observation.usageEvent).model_id ?? observation.modelId,
+    "provider evidence model id",
+  );
+  const semantics = recordValue(observation.executionSemantics);
+  const failedAttempts = Array.isArray(semantics.failedAttempts) ? semantics.failedAttempts : [];
+  const failedAttemptIds = failedAttempts.map((attempt, index) =>
+    boundedIdentity(
+      recordValue(attempt).attemptId ?? recordValue(attempt).routedAttemptId,
+      `provider failed attempt ${index + 1}`,
+    ),
+  );
+  const failed = observation.statusFamily === "failure" || Boolean(observation.failure);
+  const attemptIds = failed
+    ? failedAttemptIds.length > 0
+      ? failedAttemptIds
+      : [`${requestId}:attempt:1`]
+    : [...failedAttemptIds, `${requestId}:attempt:${failedAttemptIds.length + 1}`];
+  return Object.freeze({ endpointId, modelId, status: failed ? "error" : "ok", attemptIds });
+}
+
+export function buildGraphEvidenceFromCapture(
+  capture: Readonly<Record<string, unknown>>,
+): Readonly<Record<string, unknown>> {
+  const messages = Array.isArray(capture.messages) ? capture.messages : [];
+  const response = recordValue(capture.response);
+  const edgeCount = Number(capture.edgeCount);
+  if (messages.length < 1 || !Number.isSafeInteger(edgeCount) || edgeCount < 1)
+    throw new Error("exact live graph is incomplete");
+  return Object.freeze({
+    rootArtifactId: boundedIdentity(capture.rootArtifactId, "graph root artifact id"),
+    messageNodeIds: messages.map((message, index) =>
+      boundedIdentity(recordValue(message).nodeId, `graph message node ${index + 1}`),
+    ),
+    responseNodeId: boundedIdentity(response.nodeId, "graph response node id"),
+    edgeCount,
+  });
+}
+
+export function buildVerifiersLiveExport(input: {
+  readonly channel: "development" | "stage";
+  readonly request: Readonly<Record<string, unknown>>;
+  readonly observation: Readonly<Record<string, unknown>>;
+  readonly capture: Readonly<Record<string, unknown>>;
+}): Readonly<Record<string, unknown>> {
+  const requestId = boundedIdentity(input.request.requestId, "Verifiers export request id");
+  const correlationId = boundedIdentity(
+    input.request.correlationId,
+    "Verifiers export correlation id",
+  );
+  const graphRootArtifactId = boundedIdentity(
+    input.request.graphRootArtifactId,
+    "Verifiers export graph root artifact id",
+  );
+  if (input.request.readiness !== "semantic")
+    throw new Error(
+      "only semantic live Verifiers export is available without token-exact evidence",
+    );
+  const observationCorrelation = boundedIdentity(
+    recordValue(input.observation.run88Correlation).correlationId,
+    "observation correlation id",
+  );
+  if (
+    input.capture.schemaVersion !== "role-model.route-capture-read.v1" ||
+    input.observation.requestId !== requestId ||
+    input.capture.requestId !== requestId ||
+    input.capture.routingDecisionId !== input.observation.routingDecisionId ||
+    observationCorrelation !== correlationId ||
+    input.capture.rootArtifactId !== graphRootArtifactId
+  )
+    throw new Error("Verifiers export does not reference the exact live graph and router decision");
+  const messages = Array.isArray(input.capture.messages) ? input.capture.messages : [];
+  const response = recordValue(input.capture.response);
+  const semanticMessages = [...messages, response].map((value, index) => {
+    const message = recordValue(value);
+    const role = boundedIdentity(message.role, `Verifiers node ${index + 1} role`);
+    if (!("content" in message)) throw new Error(`Verifiers node ${index + 1} content is required`);
+    return {
+      parent: index === 0 ? null : index - 1,
+      message: { role, content: message.content },
+      sampled: index === messages.length,
+      token_ids: [],
+      mask: [],
+      is_content: [],
+      logprobs: [],
+      ...(index === messages.length ? { finish_reason: "stop" } : {}),
+    };
+  });
+  const routingDecisionId = boundedIdentity(
+    input.observation.routingDecisionId,
+    "Verifiers export route decision id",
+  );
+  const responseNodeId = boundedIdentity(response.nodeId, "Verifiers response node id");
+  const traceId = `role-model-${createHash("sha256").update(`${input.channel}\0${requestId}\0${graphRootArtifactId}`).digest("hex")}`;
+  return Object.freeze({
+    schemaVersion: "role-model.verifiers-live-export.v1",
+    channel: input.channel,
+    requestId,
+    correlationId,
+    graphRootArtifactId,
+    responseNodeIndex: messages.length,
+    tokenExactDisposition: "refused_missing_evidence",
+    trace: {
+      id: traceId,
+      task: { type: "RoleModelTraceTask", data: { requestId } },
+      nodes: semanticMessages,
+      rewards: {},
+      metrics: {},
+      info: {
+        limitations: ["semantic projection; provider-native tokens unavailable"],
+        routeDecisionId: routingDecisionId,
+        roleModelGraphRootArtifactId: graphRootArtifactId,
+        roleModelResponseNodeId: responseNodeId,
+        roleModelRequestId: requestId,
+        roleModelCorrelationId: correlationId,
+        roleModelToolNodeIds: (Array.isArray(input.capture.tools) ? input.capture.tools : []).map(
+          (tool, index) =>
+            boundedIdentity(recordValue(tool).nodeId, `graph tool node ${index + 1}`),
+        ),
+      },
+      is_completed: true,
+      stop_condition: "role_model_graph_complete",
+      errors: [],
+    },
+  });
+}
+
 export function createTrackBOperations({
   statePath,
   catalog,
@@ -1076,7 +1253,12 @@ export function createTrackBOperations({
     },
     async readStorageRetention(): Promise<unknown> {
       const remote = await requestPrivate("storage-retention");
-      if (remote) return remote;
+      const storageAudit = await requestPrivate("storage-audit");
+      if (remote)
+        return {
+          ...normalizeStorageRetentionContract(remote),
+          storageAudit: storageAudit ?? null,
+        };
       const state = await readState(statePath);
       const categories = state.storageServices.map((row) => ({
         id: row.category,
@@ -1086,21 +1268,29 @@ export function createTrackBOperations({
         count: row.count,
         serviceId: row.id,
       }));
+      const physicalResources = state.storageServices.map((row) => ({
+        id: row.id,
+        owner: row.id,
+        health: "unavailable",
+        measurement: "unavailable" as const,
+        physicalBytes: null,
+        heldItems: row.holds ?? 0,
+        retentionState: "not_configured",
+      }));
       return {
         revision: state.revision,
         totalBytes: categories.reduce((sum, row) => sum + row.bytes, 0),
         categories,
+        logicalClasses: categories,
+        physicalResources,
+        // Run 94 SP8: the local fallback never fabricates a physical inventory.
+        // Physical bytes come exclusively from the read-only storage audit; without
+        // a measurement every entry is honestly unavailable.
+        storageAudit: storageAudit ?? null,
         storageInventory: {
           schemaVersion: "role-model.storage-registry.v1",
-          entries: state.storageServices.map((row) => ({
-            id: row.id,
-            owner: row.id,
-            health: "unavailable",
-            measurement: "unavailable",
-            physicalBytes: null,
-            heldItems: row.holds ?? 0,
-            retentionState: row.conflicts?.length ? "blocked" : "not_configured",
-          })),
+          complete: false,
+          entries: physicalResources,
         },
         managedPolicy: state.retention.managedPolicy,
         conflicts: state.storageServices.flatMap((row) =>
@@ -1347,6 +1537,14 @@ export function createTrackBOperations({
       if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
         throw new Error("local route capture requires a loopback operations boundary");
       return requestPrivate("capture/route", { method: "POST", body: input });
+    },
+    async readLocalRouteCapture(input: Record<string, unknown>): Promise<unknown> {
+      if (!operationsEndpoint)
+        throw new Error("private operations endpoint is required for exact route capture readback");
+      const url = new URL(operationsEndpoint);
+      if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
+        throw new Error("local route capture readback requires a loopback operations boundary");
+      return requestPrivate("capture/read", { method: "POST", body: input });
     },
     async listRecommendations(): Promise<readonly RecommendationRecord[]> {
       return (await readState(statePath)).recommendations ?? [];
