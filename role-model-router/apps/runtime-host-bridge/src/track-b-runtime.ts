@@ -6,6 +6,7 @@ import path from "node:path";
 import { createInterface } from "node:readline";
 import { DatabaseSync } from "node:sqlite";
 import { pathToFileURL } from "node:url";
+import { gunzipSync, gzipSync } from "node:zlib";
 
 import type { RuntimeEffortSource } from "@role-model-router/runtime-observability";
 import {
@@ -1184,17 +1185,62 @@ export async function verifyTrackBExtensionClosureAfterRestart(
 
 const TRACK_B_OUTBOX_SCHEMA_VERSION = "role-model.track-b-post-observation-outbox.v3" as const;
 const TRACK_B_OUTBOX_RECEIPT_CAP_BYTES = 16 * 1024;
+const TRACK_B_OUTBOX_RECEIPT_RAW_CAP_BYTES = 256 * 1024;
 const TRACK_B_OUTBOX_SQLITE_HEADER = "SQLite format 3";
 
 function boundedJson(value: unknown, capBytes = TRACK_B_OUTBOX_RECEIPT_CAP_BYTES): string {
   const json = JSON.stringify(value ?? null);
   if (Buffer.byteLength(json, "utf8") <= capBytes) return json;
-  const digest = createHash("sha256").update(json).digest("hex");
+  const bytes = Buffer.from(json, "utf8");
+  const digest = createHash("sha256").update(bytes).digest("hex");
+  if (bytes.byteLength <= TRACK_B_OUTBOX_RECEIPT_RAW_CAP_BYTES) {
+    const compressed = JSON.stringify({
+      status: "compressed_receipt",
+      encoding: "gzip-base64",
+      byteLength: bytes.byteLength,
+      sha256: `sha256:${digest}`,
+      payload: gzipSync(bytes, { level: 9 }).toString("base64"),
+    });
+    if (Buffer.byteLength(compressed, "utf8") <= capBytes) return compressed;
+  }
   return JSON.stringify({
     status: "bounded_receipt",
-    byteLength: Buffer.byteLength(json, "utf8"),
+    byteLength: bytes.byteLength,
     sha256: `sha256:${digest}`,
   });
+}
+
+function parseBoundedJson(json: string): unknown {
+  const value = JSON.parse(json) as Record<string, unknown> | unknown;
+  if (
+    !value ||
+    typeof value !== "object" ||
+    Array.isArray(value) ||
+    (value as Record<string, unknown>).status !== "compressed_receipt"
+  ) {
+    return value;
+  }
+  const record = value as Record<string, unknown>;
+  if (
+    record.encoding !== "gzip-base64" ||
+    typeof record.payload !== "string" ||
+    !Number.isSafeInteger(record.byteLength) ||
+    Number(record.byteLength) < 0 ||
+    Number(record.byteLength) > TRACK_B_OUTBOX_RECEIPT_RAW_CAP_BYTES ||
+    !/^sha256:[a-f0-9]{64}$/.test(String(record.sha256 ?? ""))
+  ) {
+    throw new Error("compressed receipt identity is invalid");
+  }
+  const bytes = gunzipSync(Buffer.from(record.payload, "base64"), {
+    maxOutputLength: TRACK_B_OUTBOX_RECEIPT_RAW_CAP_BYTES,
+  });
+  if (
+    bytes.byteLength !== record.byteLength ||
+    `sha256:${createHash("sha256").update(bytes).digest("hex")}` !== record.sha256
+  ) {
+    throw new Error("compressed receipt integrity verification failed");
+  }
+  return JSON.parse(bytes.toString("utf8"));
 }
 
 function outboxSchema(database: DatabaseSync): void {
@@ -1587,7 +1633,7 @@ export function createTrackBPostObservationOutbox({
               ...(row.reasoning_effort !== null ? { reasoningEffort: row.reasoning_effort } : {}),
               ...(row.effort_source !== null ? { effortSource: row.effort_source } : {}),
               ...(row.run88_correlation_json
-                ? { run88Correlation: JSON.parse(row.run88_correlation_json) }
+                ? { run88Correlation: parseBoundedJson(row.run88_correlation_json) }
                 : {}),
               ...(row.legacy_identity_missing ? { legacyIdentityMissing: true as const } : {}),
             } as TrackBPostObservationWorkItem;
@@ -1649,7 +1695,7 @@ export function createTrackBPostObservationOutbox({
           receipts: rows.map((row) => ({
             requestId: row.request_id,
             completedAt: row.completed_at,
-            result: JSON.parse(row.result_json),
+            result: parseBoundedJson(row.result_json),
           })),
         };
       });
@@ -1668,7 +1714,7 @@ export function createTrackBPostObservationOutbox({
           ? {
               requestId: row.request_id,
               completedAt: row.completed_at,
-              result: JSON.parse(row.result_json),
+              result: parseBoundedJson(row.result_json),
             }
           : null;
       });
@@ -1891,8 +1937,7 @@ export async function runTrackBShadowPipeline(
   const rolloutRows = [sourceRollout, ...counterfactualRollouts];
   const scoredRollouts = rolloutRows.map((rollout) => ({
     ...rollout,
-    score:
-      (rollout.outcome as Record<string, unknown> | undefined)?.status === "success" ? 1 : 0,
+    score: (rollout.outcome as Record<string, unknown> | undefined)?.status === "success" ? 1 : 0,
   }));
   const positive = scoredRollouts.filter((rollout) => rollout.score === 1);
   const negative = scoredRollouts.filter((rollout) => rollout.score === 0);
