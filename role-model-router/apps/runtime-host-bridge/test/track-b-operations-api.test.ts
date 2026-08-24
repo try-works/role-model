@@ -221,6 +221,39 @@ describe("Track B operations APIs", () => {
     }
   });
 
+  test("reads the measured no-rich baseline through the authenticated loopback sidecar", async () => {
+    const received: Array<{ path: string; authorization?: string; body: unknown }> = [];
+    const operations = createServer(async (request, response) => {
+      let body = "";
+      for await (const chunk of request) body += chunk;
+      received.push({ path: request.url ?? "", authorization: request.headers.authorization, body: JSON.parse(body) });
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(JSON.stringify({ schemaVersion: "role-model.no-rich-capture-baseline-channel.v1", sourceMode: "measured_capture_disabled_packaged_runtime", channel: "development", sampleCount: 5, captureCpuP95Ms: 12, providerPathLatencyP95Ms: 18, sqliteLockWaitP95Ms: 2 }));
+    });
+    await new Promise<void>((resolve, reject) => {
+      operations.once("error", reject);
+      operations.listen(0, "127.0.0.1", resolve);
+    });
+    try {
+      const address = operations.address();
+      if (!address || typeof address === "string") throw new Error("operations server did not bind");
+      const api = createTrackBOperations({
+        statePath: path.join(os.tmpdir(), `run94-no-rich-baseline-${Date.now()}.json`),
+        catalog: [],
+        operationsEndpoint: `http://127.0.0.1:${address.port}`,
+        operationsToken: "run94-baseline-token-0001",
+      });
+      await expect(api.measureNoRichCaptureBaseline({ sampleCount: 5 })).resolves.toMatchObject({
+        schemaVersion: "role-model.no-rich-capture-baseline-channel.v1",
+        channel: "development",
+        sampleCount: 5,
+      });
+      expect(received).toEqual([{ path: "/capture/performance-baseline", authorization: "Bearer run94-baseline-token-0001", body: { sampleCount: 5 } }]);
+    } finally {
+      await new Promise<void>((resolve, reject) => operations.close((error) => error ? reject(error) : resolve()));
+    }
+  });
+
   test("fails closed instead of issuing unauthenticated calls to an owned operations endpoint", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `track-b-operations-auth-${Date.now()}`);
     roots.push(runtimeStateRoot);

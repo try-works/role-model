@@ -1595,6 +1595,14 @@ export function createTrackBOperations({
         throw new Error("local route capture requires a loopback operations boundary");
       return requestPrivate("capture/route", { method: "POST", body: input });
     },
+    async measureNoRichCaptureBaseline(input: Record<string, unknown>): Promise<unknown> {
+      if (!operationsEndpoint)
+        throw new Error("private operations endpoint is required for no-rich capture baseline measurement");
+      const url = new URL(operationsEndpoint);
+      if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
+        throw new Error("no-rich capture baseline requires a loopback operations boundary");
+      return requestPrivate("capture/performance-baseline", { method: "POST", body: input });
+    },
     async readLocalRouteCapture(input: Record<string, unknown>): Promise<unknown> {
       if (!operationsEndpoint)
         throw new Error("private operations endpoint is required for exact route capture readback");

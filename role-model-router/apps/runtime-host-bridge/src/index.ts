@@ -2879,6 +2879,7 @@ export interface StartBridgeServerOptions {
   readonly readTrackBQaExtensions?: () => Promise<readonly unknown[]>;
   readonly readTrackBShadowReceipts?: () => Promise<unknown>;
   readonly readTrackBExtensionReadback?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly measureNoRichCaptureBaseline?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly readGraphMigration?: () => Promise<unknown>;
   readonly advanceGraphMigration?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackGraphMigration?: () => Promise<unknown>;
@@ -3096,6 +3097,7 @@ export interface RuntimeBridgeBackend {
   readTrackBQaExtensions(): Promise<readonly unknown[]>;
   readTrackBShadowReceipts(): Promise<unknown>;
   readTrackBExtensionReadback(body: Record<string, unknown>): Promise<unknown>;
+  measureNoRichCaptureBaseline(body: Record<string, unknown>): Promise<unknown>;
   readGraphMigration(): Promise<unknown>;
   advanceGraphMigration(body: Record<string, unknown>): Promise<unknown>;
   rollbackGraphMigration(): Promise<unknown>;
@@ -14845,6 +14847,28 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (
+      request.method === "POST" &&
+      url.pathname === "/api/role-model/track-b/performance-baseline"
+    ) {
+      if (!options.measureNoRichCaptureBaseline) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(
+          response,
+          200,
+          await options.measureNoRichCaptureBaseline(await readJsonBody(request)),
+        );
+      } catch (error) {
+        writeJson(response, 409, {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+      return;
+    }
+
     if (request.method === "POST" && url.pathname === "/api/role-model/track-b/verifiers-export") {
       if (!options.exportVerifiersTrace) {
         writeJson(response, 404, { error: "not found" });
@@ -25359,6 +25383,9 @@ export async function createRuntimeBridgeBackend(
         throw new Error("Track B extension readback is unavailable");
       }
       return options.readTrackBExtensionReadback(body);
+    },
+    async measureNoRichCaptureBaseline(body: Record<string, unknown>): Promise<unknown> {
+      return runtimeTrackBOperations.measureNoRichCaptureBaseline(body);
     },
     async readGraphMigration(): Promise<unknown> {
       return createTrackBOperations({

@@ -375,6 +375,15 @@ test("GREEN: exposes extension readback through the Track B HTTP surface", async
     executeChatCompletions: backend.executeChatCompletions,
     executeResponses: backend.executeResponses,
     readTrackBExtensionReadback: backend.readTrackBExtensionReadback,
+    measureNoRichCaptureBaseline: async (body) => ({
+      schemaVersion: "role-model.no-rich-capture-baseline-channel.v1",
+      sourceMode: "measured_capture_disabled_packaged_runtime",
+      channel: "development",
+      sampleCount: body.sampleCount,
+      captureCpuP95Ms: 12,
+      providerPathLatencyP95Ms: 18,
+      sqliteLockWaitP95Ms: 2,
+    }),
   });
   try {
     const response = await fetch(
@@ -389,6 +398,21 @@ test("GREEN: exposes extension readback through the Track B HTTP surface", async
     expect(await response.json()).toEqual({
       requestId: "run94-extension-closure",
       schemaVersion: "role-model.track-b-extension-readback.v1",
+    });
+    const baselineResponse = await fetch(
+      `http://127.0.0.1:${server.port}/api/role-model/track-b/performance-baseline`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ sampleCount: 5 }),
+      },
+    );
+    expect(baselineResponse.status).toBe(200);
+    expect(await baselineResponse.json()).toMatchObject({
+      schemaVersion: "role-model.no-rich-capture-baseline-channel.v1",
+      sourceMode: "measured_capture_disabled_packaged_runtime",
+      channel: "development",
+      sampleCount: 5,
     });
   } finally {
     await server.close();
