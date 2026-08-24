@@ -1,4 +1,4 @@
-import { mkdtempSync } from "node:fs";
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
@@ -9,6 +9,7 @@ import {
   initializeSqliteMemory,
   persistRuntimeTelemetryFailure,
   readLegacyMigrationJournal,
+  resolveLegacyMigrationRouterRoot,
 } from "../src/index.js";
 
 function newDatabase() {
@@ -41,6 +42,20 @@ function insertObservation(databasePath: string, requestId: string, observationJ
 }
 
 describe("Run 94 public storage corrections", () => {
+  test("discovers the migration router root without import.meta bundle semantics", () => {
+    const root = mkdtempSync(path.join(os.tmpdir(), "run94-router-root-"));
+    const routerRoot = path.join(root, "role-model-router");
+    const nestedWorkingDirectory = path.join(routerRoot, "packages", "sqlite-memory");
+    mkdirSync(path.join(routerRoot, "migrations"), { recursive: true });
+    mkdirSync(nestedWorkingDirectory, { recursive: true });
+    writeFileSync(path.join(routerRoot, "migrations", "registry.json"), "{}", "utf8");
+
+    expect(resolveLegacyMigrationRouterRoot(nestedWorkingDirectory)).toBe(routerRoot);
+    expect(() => resolveLegacyMigrationRouterRoot(path.join(root, "unrelated"))).toThrow(
+      /explicit routerRoot|migration registry/i,
+    );
+  });
+
   test("RED: enforces the 16 KiB cap by UTF-8 bytes on UPDATE, not SQLite characters", () => {
     const { databasePath } = newDatabase();
     insertObservation(databasePath, "req-utf8", JSON.stringify({ requestId: "req-utf8" }));

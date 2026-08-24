@@ -166,6 +166,7 @@ import { readPackagedRuntimeProfile, resolveRuntimeChannelProfile } from "./runt
 import { type RuntimeVersionInfoRecord, resolveRuntimeVersionInfo } from "./runtime-version.js";
 import {
   buildGraphEvidenceFromCapture,
+  buildLegacyTerminalFailureRecoveryCapture,
   buildProviderEvidenceFromObservation,
   buildVerifiersLiveExport,
   createTrackBOperations as createTrackBOperationsFromState,
@@ -2948,6 +2949,7 @@ export interface StartBridgeServerOptions {
   readonly subscribeTelemetry?: (listener: (event: RuntimeBridgeStreamEvent) => void) => () => void;
   readonly readRequestObservation?: (requestId: string) => Promise<unknown>;
   readonly exportVerifiersTrace?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly recoverLegacyTerminalFailure?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly readEndpointProfile?: (endpointId: string) => Promise<unknown>;
   readonly readBenchmarkSuite?: () => Promise<unknown>;
   readonly runBenchmark?: (body: Record<string, unknown>) => Promise<unknown>;
@@ -3204,6 +3206,7 @@ export interface RuntimeBridgeBackend {
   subscribeTelemetry(listener: (event: RuntimeBridgeStreamEvent) => void): () => void;
   readRequestObservation(requestId: string): Promise<BridgeRequestObservation | null>;
   exportVerifiersTrace(body: Record<string, unknown>): Promise<unknown>;
+  recoverLegacyTerminalFailure(body: Record<string, unknown>): Promise<unknown>;
   readEndpointProfile(endpointId: string): Promise<{
     endpointId: string;
     latestProfile: ReturnType<typeof readLatestObservedProfile>;
@@ -14881,6 +14884,28 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       }
       try {
         writeJson(response, 200, await options.exportVerifiersTrace(await readJsonBody(request)));
+      } catch (error) {
+        writeJson(response, 409, {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+      return;
+    }
+
+    if (
+      request.method === "POST" &&
+      url.pathname === "/api/role-model/track-b/recover-terminal-failure"
+    ) {
+      if (!options.recoverLegacyTerminalFailure) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(
+          response,
+          200,
+          await options.recoverLegacyTerminalFailure(await readJsonBody(request)),
+        );
       } catch (error) {
         writeJson(response, 409, {
           error: error instanceof Error ? error.message : String(error),
@@ -27682,6 +27707,93 @@ export async function createRuntimeBridgeBackend(
         return attachLiveEvidence(boundedRequestDetail as unknown as BridgeRequestObservation);
       }
       return attachLiveEvidence(requestDetail);
+    },
+    async recoverLegacyTerminalFailure(body: Record<string, unknown>): Promise<unknown> {
+      if (runtimeChannel === "production")
+        throw new Error("legacy terminal failure recovery is restricted to development and stage channels");
+      const allowedKeys = new Set(["requestId", "acknowledgeMetadataOnly"]);
+      const unexpectedKeys = Object.keys(body).filter((key) => !allowedKeys.has(key));
+      if (unexpectedKeys.length > 0)
+        throw new Error(
+          `legacy terminal failure recovery refuses caller-supplied content: ${unexpectedKeys.join(", ")}`,
+        );
+      if (body.acknowledgeMetadataOnly !== true)
+        throw new Error("metadata-only recovery requires explicit acknowledgement");
+      const requestId = typeof body.requestId === "string" ? body.requestId.trim() : "";
+      if (!requestId) throw new Error("legacy terminal failure recovery request id is required");
+      const observation = await backend.readRequestObservation(requestId);
+      if (!observation) throw new Error("persisted runtime observation not found for recovery");
+
+      let existingCapture: Record<string, unknown> | null = null;
+      try {
+        existingCapture = await readExactRouteCapture(requestId);
+      } catch {
+        // An unknown capture is the expected precondition for this bounded upgrade path.
+      }
+      if (existingCapture) {
+        const existingRecovery =
+          existingCapture.recovery && typeof existingCapture.recovery === "object"
+            ? (existingCapture.recovery as Record<string, unknown>)
+            : {};
+        if (
+          existingCapture.projectionCompleteness !== "metadata_only" ||
+          existingCapture.terminalState !== "provider_error" ||
+          existingRecovery.kind !== "legacy_terminal_failure" ||
+          existingRecovery.source !== "persisted_runtime_observation"
+        )
+          throw new Error("legacy terminal failure recovery refused because graph evidence already exists");
+        return Object.freeze({
+          schemaVersion: "role-model.legacy-terminal-failure-recovery.v1",
+          status: "already_recovered",
+          requestId,
+          routingDecisionId: observation.routingDecisionId,
+          correlationId: (observation as unknown as Record<string, unknown>).correlationId,
+          graphRootArtifactId: existingCapture.rootArtifactId,
+          projectionCompleteness: "metadata_only",
+        });
+      }
+
+      const captureInput = buildLegacyTerminalFailureRecoveryCapture(
+        observation as unknown as Readonly<Record<string, unknown>>,
+      );
+      await runtimeTrackBOperations.recordLocalRouteCapture(captureInput as Record<string, unknown>);
+      const capture = await readExactRouteCapture(requestId);
+      if (!capture) throw new Error("metadata-only recovery did not commit durable graph evidence");
+      const graphEvidence = buildGraphEvidenceFromCapture(capture);
+      const recoveredObservation = Object.freeze({
+        ...(observation as unknown as Record<string, unknown>),
+        graphEvidence,
+        recovery: Object.freeze({
+          kind: "legacy_terminal_failure",
+          source: "persisted_runtime_observation",
+        }),
+      });
+      const extensionReceipts = options.trackBPostObservation
+        ? await options.trackBPostObservation(recoveredObservation)
+        : null;
+      const correlationId = (observation as unknown as Record<string, unknown>).correlationId;
+      const receiptIdentity = JSON.stringify({
+        requestId,
+        routingDecisionId: observation.routingDecisionId,
+        correlationId,
+        graphRootArtifactId: graphEvidence.rootArtifactId,
+      });
+      return Object.freeze({
+        schemaVersion: "role-model.legacy-terminal-failure-recovery.v1",
+        receiptId: `legacy-recovery-${createHash("sha256").update(receiptIdentity).digest("hex")}`,
+        status: "recovered",
+        requestId,
+        routingDecisionId: observation.routingDecisionId,
+        correlationId,
+        graphRootArtifactId: graphEvidence.rootArtifactId,
+        responseNodeId: graphEvidence.responseNodeId,
+        projectionCompleteness: "metadata_only",
+        recovery: Object.freeze({
+          kind: "legacy_terminal_failure",
+          source: "persisted_runtime_observation",
+        }),
+        extensionProcessing: extensionReceipts === null ? "not_configured" : "completed",
+      });
     },
     async exportVerifiersTrace(body: Record<string, unknown>): Promise<unknown> {
       if (runtimeChannel === "production")

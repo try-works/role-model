@@ -16,6 +16,7 @@ import { applyRecommendationServiceLauncherConfig } from "../src/cli.js";
 import { createRuntimeBridgeBackend, startBridgeServer } from "../src/index.js";
 import {
   buildGraphEvidenceFromCapture,
+  buildLegacyTerminalFailureRecoveryCapture,
   buildProviderEvidenceFromObservation,
   buildVerifiersLiveExport,
   createTrackBOperations,
@@ -235,6 +236,112 @@ describe("Track B operations APIs", () => {
     });
   });
 
+  test("preserves metadata-only legacy failure recovery and refuses to invent a Verifiers prompt", () => {
+    const capture = {
+      schemaVersion: "role-model.route-capture-read.v1",
+      requestId: "request-legacy-failure-94",
+      routingDecisionId: "decision-legacy-failure-94",
+      rootArtifactId: "root-legacy-failure-94",
+      projectionCompleteness: "metadata_only",
+      recovery: {
+        kind: "legacy_terminal_failure",
+        source: "persisted_runtime_observation",
+      },
+      messages: [],
+      response: {
+        nodeId: "response-legacy-failure-94",
+        role: "assistant",
+        content: null,
+        failure: {
+          errorClass: "provider_auth_error",
+          statusCode: 401,
+          message: "provider rejected router-owned credentials",
+        },
+      },
+      terminalState: "provider_error",
+      failure: {
+        errorClass: "provider_auth_error",
+        statusCode: 401,
+        message: "provider rejected router-owned credentials",
+      },
+      tools: [],
+      edgeCount: 1,
+    };
+    expect(buildGraphEvidenceFromCapture(capture)).toEqual({
+      rootArtifactId: "root-legacy-failure-94",
+      messageNodeIds: [],
+      responseNodeId: "response-legacy-failure-94",
+      toolExecutionNodeIds: [],
+      toolCallNodeIds: [],
+      toolResultNodeIds: [],
+      projectionCompleteness: "metadata_only",
+      recovery: {
+        kind: "legacy_terminal_failure",
+        source: "persisted_runtime_observation",
+      },
+      edgeCount: 1,
+    });
+    expect(() =>
+      buildVerifiersLiveExport({
+        channel: "development",
+        request: {
+          requestId: "request-legacy-failure-94",
+          correlationId: "correlation-legacy-failure-94",
+          graphRootArtifactId: "root-legacy-failure-94",
+          readiness: "semantic",
+          taskIndex: 2,
+        },
+        observation: {
+          requestId: "request-legacy-failure-94",
+          routingDecisionId: "decision-legacy-failure-94",
+          correlationId: "correlation-legacy-failure-94",
+        },
+        capture,
+      }),
+    ).toThrow(/prompt content/i);
+  });
+
+  test("derives metadata-only recovery solely from a persisted terminal failure", () => {
+    const observation = {
+      requestId: "request-legacy-failure-94",
+      routingDecisionId: "decision-legacy-failure-94",
+      endpointId: "endpoint-legacy-failure-94",
+      reasoningEffort: "high",
+      effortSource: "variant",
+      statusFamily: "failure",
+      correlationId: "correlation-legacy-failure-94",
+      usageEvent: { model_id: "provider/model-legacy-failure-94" },
+      failure: { errorClass: "provider_auth_error", statusCode: 401, latencyMs: 17 },
+      inspection: { request: { requestCapture: { body: "must-not-be-recovered" } } },
+    };
+    expect(buildLegacyTerminalFailureRecoveryCapture(observation)).toEqual({
+      requestId: "request-legacy-failure-94",
+      routingDecisionId: "decision-legacy-failure-94",
+      endpointId: "endpoint-legacy-failure-94",
+      modelId: "provider/model-legacy-failure-94",
+      reasoningEffort: "high",
+      effortSource: "variant",
+      messages: [],
+      projectionCompleteness: "metadata_only",
+      recovery: {
+        kind: "legacy_terminal_failure",
+        source: "persisted_runtime_observation",
+      },
+      failure: {
+        errorClass: "provider_auth_error",
+        statusCode: 401,
+        message: "Persisted runtime observation recorded provider_auth_error (HTTP 401).",
+      },
+      toolExecutions: [],
+    });
+    expect(() =>
+      buildLegacyTerminalFailureRecoveryCapture({ ...observation, statusFamily: "success" }),
+    ).toThrow(/terminal failure/i);
+    expect(() =>
+      buildLegacyTerminalFailureRecoveryCapture({ ...observation, failure: undefined }),
+    ).toThrow(/terminal failure/i);
+  });
+
   test("reads one exact graph capture through the authenticated loopback sidecar", async () => {
     const received: Array<{ path: string; authorization?: string; body: unknown }> = [];
     const operations = createServer(async (request, response) => {
@@ -441,6 +548,11 @@ describe("Track B operations APIs", () => {
         requestId: body.requestId,
         graphRootArtifactId: body.graphRootArtifactId,
       }),
+      recoverLegacyTerminalFailure: async (body) => ({
+        schemaVersion: "role-model.legacy-terminal-failure-recovery.v1",
+        requestId: body.requestId,
+        status: "recovered",
+      }),
     });
     try {
       const base = `http://127.0.0.1:${server.port}`;
@@ -527,6 +639,20 @@ describe("Track B operations APIs", () => {
         schemaVersion: "role-model.verifiers-live-export.v1",
         requestId: "request-http-export-94",
         graphRootArtifactId: "root-http-export-94",
+      });
+      const recovered = await fetch(`${base}/api/role-model/track-b/recover-terminal-failure`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          requestId: "request-http-recovery-94",
+          acknowledgeMetadataOnly: true,
+        }),
+      });
+      expect(recovered.status).toBe(200);
+      expect(await recovered.json()).toEqual({
+        schemaVersion: "role-model.legacy-terminal-failure-recovery.v1",
+        requestId: "request-http-recovery-94",
+        status: "recovered",
       });
     } finally {
       await server.close();

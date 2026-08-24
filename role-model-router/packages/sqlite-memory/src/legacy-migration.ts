@@ -175,6 +175,30 @@ export interface SqliteMigrationRegistry {
   readonly entries: readonly SqliteMigrationRegistryEntry[];
 }
 
+/**
+ * Resolves source-checkout migration assets without relying on module URL metadata.
+ * Packaged runtimes must pass their verified staged router root explicitly.
+ */
+export function resolveLegacyMigrationRouterRoot(startDirectory = process.cwd()): string {
+  const start = path.resolve(startDirectory);
+  const initialCandidates = [start, path.join(start, "role-model-router")];
+  for (const candidate of initialCandidates) {
+    if (existsSync(path.join(candidate, "migrations", "registry.json"))) return candidate;
+  }
+
+  let candidate = path.dirname(start);
+  while (true) {
+    if (existsSync(path.join(candidate, "migrations", "registry.json"))) return candidate;
+    const parent = path.dirname(candidate);
+    if (parent === candidate) break;
+    candidate = parent;
+  }
+
+  throw new Error(
+    "SQLite migration registry was not found; packaged runtimes must provide an explicit routerRoot",
+  );
+}
+
 function sha256(value: string | Buffer): string {
   return createHash("sha256").update(value).digest("hex");
 }
@@ -699,7 +723,7 @@ export class LegacySqliteMigration {
     this.#artifactWriter = input.artifactWriter;
     this.#artifactRollback = input.artifactRollback;
     this.#now = input.now ?? Date.now;
-    this.#routerRoot = input.routerRoot ?? path.resolve(import.meta.dirname, "../../..");
+    this.#routerRoot = input.routerRoot ?? resolveLegacyMigrationRouterRoot();
   }
 
   audit(): LegacyStorageAudit {

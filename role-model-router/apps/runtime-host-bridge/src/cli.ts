@@ -106,6 +106,7 @@ type CliBackend = Pick<
   | "listRecentRequestObservations"
   | "readRequestObservation"
   | "exportVerifiersTrace"
+  | "recoverLegacyTerminalFailure"
   | "readEndpointProfile"
   | "readBenchmarkSuite"
   | "runBenchmark"
@@ -559,6 +560,9 @@ export function createCliServerOptions(
     exportVerifiersTrace: bindBackendMethod(
       "exportVerifiersTrace",
     ) as StartBridgeServerOptions["exportVerifiersTrace"],
+    recoverLegacyTerminalFailure: bindBackendMethod(
+      "recoverLegacyTerminalFailure",
+    ) as StartBridgeServerOptions["recoverLegacyTerminalFailure"],
     readEndpointProfile: bindBackendMethod(
       "readEndpointProfile",
     ) as StartBridgeServerOptions["readEndpointProfile"],

@@ -674,6 +674,47 @@ export function buildProviderEvidenceFromObservation(
   return Object.freeze({ endpointId, modelId, status: failed ? "error" : "ok", attemptIds });
 }
 
+export function buildLegacyTerminalFailureRecoveryCapture(
+  observation: Readonly<Record<string, unknown>>,
+): Readonly<Record<string, unknown>> {
+  const failure = recordValue(observation.failure);
+  if (observation.statusFamily !== "failure" || Object.keys(failure).length === 0)
+    throw new Error("legacy graph recovery requires a persisted terminal failure");
+  const errorClass = boundedIdentity(failure.errorClass, "terminal failure class");
+  const statusCode = Number(failure.statusCode);
+  if (!Number.isInteger(statusCode) || statusCode < 100 || statusCode > 599)
+    throw new Error("legacy graph recovery requires a persisted terminal failure status code");
+  return Object.freeze({
+    requestId: boundedIdentity(observation.requestId, "terminal failure request id"),
+    routingDecisionId: boundedIdentity(
+      observation.routingDecisionId,
+      "terminal failure route decision id",
+    ),
+    endpointId: boundedIdentity(observation.endpointId, "terminal failure endpoint id"),
+    modelId: boundedIdentity(
+      recordValue(observation.usageEvent).model_id ?? observation.modelId,
+      "terminal failure model id",
+    ),
+    reasoningEffort: observation.reasoningEffort ?? null,
+    effortSource: boundedIdentity(
+      observation.effortSource ?? "none",
+      "terminal failure effort source",
+    ),
+    messages: [],
+    projectionCompleteness: "metadata_only",
+    recovery: Object.freeze({
+      kind: "legacy_terminal_failure",
+      source: "persisted_runtime_observation",
+    }),
+    failure: Object.freeze({
+      errorClass,
+      statusCode,
+      message: `Persisted runtime observation recorded ${errorClass} (HTTP ${statusCode}).`,
+    }),
+    toolExecutions: [],
+  });
+}
+
 export function buildGraphEvidenceFromCapture(
   capture: Readonly<Record<string, unknown>>,
 ): Readonly<Record<string, unknown>> {
@@ -699,7 +740,18 @@ export function buildGraphEvidenceFromCapture(
     : null;
   const response = recordValue(capture.response);
   const edgeCount = Number(capture.edgeCount);
-  if (messages.length < 1 || !Number.isSafeInteger(edgeCount) || edgeCount < 1)
+  const metadataOnly = capture.projectionCompleteness === "metadata_only";
+  const recovery = recordValue(capture.recovery);
+  if (
+    !Number.isSafeInteger(edgeCount) ||
+    edgeCount < 1 ||
+    (messages.length < 1 && !metadataOnly) ||
+    (metadataOnly &&
+      (messages.length !== 0 ||
+        capture.terminalState !== "provider_error" ||
+        recovery.kind !== "legacy_terminal_failure" ||
+        recovery.source !== "persisted_runtime_observation"))
+  )
     throw new Error("exact live graph is incomplete");
   return Object.freeze({
     rootArtifactId: boundedIdentity(capture.rootArtifactId, "graph root artifact id"),
@@ -718,6 +770,15 @@ export function buildGraphEvidenceFromCapture(
     toolResultNodeIds: toolRows
       .filter((tool) => tool.kind === "tool_result")
       .map((tool, index) => boundedIdentity(tool.nodeId, `graph tool result node ${index + 1}`)),
+    ...(metadataOnly
+      ? {
+          projectionCompleteness: "metadata_only",
+          recovery: Object.freeze({
+            kind: "legacy_terminal_failure",
+            source: "persisted_runtime_observation",
+          }),
+        }
+      : {}),
     ...(captureMetrics ? { captureMetrics } : {}),
     edgeCount,
   });
