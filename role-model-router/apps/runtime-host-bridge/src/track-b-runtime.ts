@@ -552,6 +552,7 @@ export function createRun88RuntimeCorrelation(input: {
   readonly service?: string;
   readonly operation?: string;
   readonly outcome?: string;
+  readonly correlationId?: string;
 }): Record<string, unknown> {
   for (const field of [
     "requestId",
@@ -570,11 +571,14 @@ export function createRun88RuntimeCorrelation(input: {
   const seed = `${input.releaseId}\0${input.requestId}\0${input.routingDecisionId}`;
   const hex = (label: string, length: number) =>
     createHash("sha256").update(`${label}\0${seed}`).digest("hex").slice(0, length);
+  const correlationId = input.correlationId ?? `corr-${hex("correlation", 24)}`;
+  if (!/^corr-[a-f0-9]{24}$/.test(correlationId))
+    throw new Error("Run 88 correlationId is invalid");
   return normalizeRun88RuntimeCorrelation(
     {
       schemaVersion: "run88-correlation.v1",
       eventId: `evt-${hex("event", 24)}`,
-      correlationId: `corr-${hex("correlation", 24)}`,
+      correlationId,
       traceId: hex("trace", 32),
       spanId: hex("span", 16),
       causalParentId: input.routingDecisionId,
@@ -593,6 +597,23 @@ export function createRun88RuntimeCorrelation(input: {
     },
     input.releaseId,
   );
+}
+
+export function createRuntimeRequestCorrelationId(input: {
+  readonly scope: string;
+  readonly requestId: string;
+  readonly routingDecisionId: string;
+}): string {
+  for (const [field, value] of Object.entries(input)) {
+    if (typeof value !== "string" || !value.trim() || value.length > 512 || /[\r\n]/.test(value))
+      throw new Error(`runtime request correlation ${field} is invalid`);
+  }
+  return `corr-${createHash("sha256")
+    .update(
+      `role-model.request-correlation.v1\0${input.scope}\0${input.requestId}\0${input.routingDecisionId}`,
+    )
+    .digest("hex")
+    .slice(0, 24)}`;
 }
 
 export function validateRun88ProviderResponseObservation(
@@ -2374,6 +2395,49 @@ export async function runTrackBPostObservation(
   };
 }
 
+export async function runTrackBPostObservationWithContribution(
+  runtime: TrackBShadowPipelineRuntime,
+  observation: Readonly<Record<string, unknown>>,
+  input: {
+    readonly scope: string;
+    readonly channel: "development" | "stage" | "production";
+    readonly authorizationEpoch: number;
+    readonly expectedReleaseId?: string;
+    readonly run88Correlation?: Record<string, unknown>;
+  },
+  recordContribution: (input: Record<string, unknown>) => Promise<unknown>,
+) {
+  if (typeof recordContribution !== "function")
+    throw new Error("Track B contribution recorder is required");
+  const result = await runTrackBPostObservation(runtime, observation, input);
+  const identity = normalizeTrackBVariantIdentity(observation);
+  const requestId = String(observation.requestId ?? "");
+  const routingDecisionId = String(observation.routingDecisionId ?? "");
+  const correlationId = createRuntimeRequestCorrelationId({
+    scope: input.scope,
+    requestId,
+    routingDecisionId,
+  });
+  const usageEvent =
+    observation.usageEvent && typeof observation.usageEvent === "object"
+      ? (observation.usageEvent as Record<string, unknown>)
+      : {};
+  const contribution = await recordContribution({
+    requestId,
+    correlationId,
+    routingDecisionId,
+    endpointId: identity.endpointId,
+    modelId: identity.modelId,
+    reasoningEffort: identity.reasoningEffort,
+    effortSource: identity.effortSource,
+    taskType: "general.chat",
+    inputTokens: Number(usageEvent.tokens_in ?? 0),
+    outputTokens: Number(usageEvent.tokens_out ?? 0),
+    success: true,
+  });
+  return { ...result, contribution };
+}
+
 interface ExtensionRuntimeState {
   readonly id: string;
   readonly desiredState: "enabled" | "disabled";
@@ -2726,6 +2790,9 @@ export function createOwnedTrackBSidecarSpec(options: {
   trustMaterialFile?: string;
   aggregateEndpoint?: string;
   aggregateScope?: string;
+  aggregateCorrelationReleaseId?: string;
+  aggregateCorrelationCohortId?: string;
+  aggregateCorrelationOperationId?: string;
   sqliteDatabasePath?: string;
   publicRuntimeAdapterPath?: string;
   publicRouterRoot?: string;
@@ -2773,6 +2840,15 @@ export function createOwnedTrackBSidecarSpec(options: {
             : []),
           ...(options.aggregateEndpoint ? ["--aggregate-endpoint", options.aggregateEndpoint] : []),
           ...(options.aggregateScope ? ["--aggregate-scope", options.aggregateScope] : []),
+          ...(options.aggregateCorrelationReleaseId
+            ? ["--aggregate-correlation-release-id", options.aggregateCorrelationReleaseId]
+            : []),
+          ...(options.aggregateCorrelationCohortId
+            ? ["--aggregate-correlation-cohort-id", options.aggregateCorrelationCohortId]
+            : []),
+          ...(options.aggregateCorrelationOperationId
+            ? ["--aggregate-correlation-operation-id", options.aggregateCorrelationOperationId]
+            : []),
           ...(options.sqliteDatabasePath
             ? ["--sqlite-database-path", options.sqliteDatabasePath]
             : []),

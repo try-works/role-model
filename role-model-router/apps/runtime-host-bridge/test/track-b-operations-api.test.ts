@@ -744,6 +744,7 @@ describe("Track B operations APIs", () => {
         authorization: `Bearer ${"a".repeat(64)}`,
         body: {
           requestId: "req-track-b-upload-001",
+          correlationId: expect.stringMatching(/^corr-[a-f0-9]{24}$/),
           routingDecisionId: result.routingDecisionId,
           endpointId: result.endpointId,
           modelId: "deepseek/chat-capture-v1",
@@ -788,6 +789,9 @@ describe("Track B operations APIs", () => {
         },
       });
       const detail = await backend.readRequestObservation("req-track-b-upload-001");
+      expect(detail).toMatchObject({
+        correlationId: aggregate?.body.correlationId,
+      });
       expect(detail?.providerEvidence).toMatchObject({
         endpointId: result.endpointId,
         modelId: "deepseek/chat-capture-v1",
@@ -928,6 +932,7 @@ describe("Track B operations APIs", () => {
         authorization: `Bearer ${"b".repeat(64)}`,
         body: {
           requestId: "req-track-b-responses-upload-001",
+          correlationId: expect.stringMatching(/^corr-[a-f0-9]{24}$/),
           routingDecisionId: result.routingDecisionId,
           endpointId: result.endpointId,
           modelId: "deepseek/chat-capture-v1",
@@ -941,6 +946,7 @@ describe("Track B operations APIs", () => {
       });
       const serialized = JSON.stringify(aggregate?.body);
       expect(Object.keys(aggregate?.body ?? {}).sort()).toEqual([
+        "correlationId",
         "effortSource",
         "endpointId",
         "inputTokens",

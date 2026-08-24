@@ -743,7 +743,8 @@ export function buildVerifiersLiveExport(input: {
       "only semantic live Verifiers export is available without token-exact evidence",
     );
   const observationCorrelation = boundedIdentity(
-    recordValue(input.observation.run88Correlation).correlationId,
+    input.observation.correlationId ??
+      recordValue(input.observation.run88Correlation).correlationId,
     "observation correlation id",
   );
   if (

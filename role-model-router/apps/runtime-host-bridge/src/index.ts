@@ -170,7 +170,11 @@ import {
   buildVerifiersLiveExport,
   createTrackBOperations as createTrackBOperationsFromState,
 } from "./track-b-operations.js";
-import { createRun88RuntimeCorrelation, createTrackBFileGraphStore } from "./track-b-runtime.js";
+import {
+  createRun88RuntimeCorrelation,
+  createRuntimeRequestCorrelationId,
+  createTrackBFileGraphStore,
+} from "./track-b-runtime.js";
 
 import {
   type ProviderRequestCapture,
@@ -23864,6 +23868,11 @@ export async function createRuntimeBridgeBackend(
             }
           : {}),
       });
+      const correlationId = createRuntimeRequestCorrelationId({
+        scope: options.scopeId,
+        requestId,
+        routingDecisionId,
+      });
       const run88Correlation = options.run88StageIdentity
         ? createRun88RuntimeCorrelation({
             requestId,
@@ -23873,6 +23882,7 @@ export async function createRuntimeBridgeBackend(
             sourceId: options.run88StageIdentity.sourceId,
             deploymentId: `local-${runtimeChannel}:${options.run88StageIdentity.executableSha256}`,
             scope: options.scopeId,
+            correlationId,
           })
         : undefined;
       const bundle = Object.freeze({
@@ -23880,6 +23890,7 @@ export async function createRuntimeBridgeBackend(
         providerEvidence: buildProviderEvidenceFromObservation(
           baseBundle as unknown as Readonly<Record<string, unknown>>,
         ),
+        correlationId,
         ...(run88Correlation ? { run88Correlation } : {}),
       });
       let artifactRef:
@@ -24640,6 +24651,11 @@ export async function createRuntimeBridgeBackend(
         try {
           await trackBOperations.recordContributionAggregate({
             requestId,
+            correlationId: createRuntimeRequestCorrelationId({
+              scope: options.scopeId,
+              requestId,
+              routingDecisionId,
+            }),
             routingDecisionId,
             endpointId: execution.target.endpointId,
             modelId: bridgeResult.model,
@@ -24804,6 +24820,11 @@ export async function createRuntimeBridgeBackend(
       try {
         await trackBOperations.recordContributionAggregate({
           requestId,
+          correlationId: createRuntimeRequestCorrelationId({
+            scope: options.scopeId,
+            requestId,
+            routingDecisionId,
+          }),
           routingDecisionId,
           endpointId: execution.target.endpointId,
           modelId: bridgeResult.model,
@@ -27322,6 +27343,16 @@ export async function createRuntimeBridgeBackend(
         }
         return {
           ...value,
+          correlationId:
+            typeof (value as unknown as Record<string, unknown>).correlationId === "string"
+              ? (value as unknown as Record<string, unknown>).correlationId
+              : createRuntimeRequestCorrelationId({
+                  scope: options.scopeId,
+                  requestId,
+                  routingDecisionId: String(
+                    (value as unknown as Record<string, unknown>).routingDecisionId ?? "",
+                  ),
+                }),
           ...(providerEvidence ? { providerEvidence } : {}),
           ...(graphEvidence ? { graphEvidence } : {}),
           ...(liveBudgetEvidence ? { liveBudgetEvidence } : {}),

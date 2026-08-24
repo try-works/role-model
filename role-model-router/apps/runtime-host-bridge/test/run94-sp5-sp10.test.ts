@@ -11,6 +11,7 @@ import {
   createProductionExtensionRuntime,
   createTrackBPostObservationOutbox,
   runTrackBPostObservation,
+  runTrackBPostObservationWithContribution,
   verifyTrackBExtensionClosureAfterRestart,
 } from "../src/track-b-runtime.js";
 
@@ -240,11 +241,28 @@ test("GREEN: real process output closure covers every canonical registry key and
   );
   roots.push(root);
   const runtime = await createRealCanonicalRuntime(root);
-  const result = await runTrackBPostObservation(runtime, observation(), {
-    scope: "tenant:run94",
-    channel: "development",
-    authorizationEpoch: 94,
+  let contributionInput: Record<string, unknown> | null = null;
+  const result = await runTrackBPostObservationWithContribution(
+    runtime,
+    observation(),
+    {
+      scope: "tenant:run94",
+      channel: "development",
+      authorizationEpoch: 94,
+    },
+    async (input) => {
+      contributionInput = input;
+      return { status: "uploaded" };
+    },
+  );
+  expect(contributionInput).toMatchObject({
+    requestId: "run94-extension-closure",
+    correlationId: expect.stringMatching(/^corr-[a-f0-9]{24}$/),
+    routingDecisionId: "decision:run94-extension-closure",
+    endpointId: "endpoint:run94",
+    modelId: "model:run94",
   });
+  expect((result as Record<string, unknown>).contribution).toEqual({ status: "uploaded" });
   const closure = (result as Record<string, unknown>).extensionClosure as Record<string, unknown>;
   expect(Object.keys(closure.registry ?? {})).toEqual(canonicalExtensions.map(([id]) => id).sort());
   const outputs = Object.values(closure.registry as Record<string, { outputs: unknown[] }>).flatMap(
