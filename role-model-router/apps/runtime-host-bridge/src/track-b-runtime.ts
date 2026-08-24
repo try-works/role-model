@@ -1122,7 +1122,7 @@ export async function verifyTrackBExtensionClosureAfterRestart(
     const mutation = (await runtime.mutateExtension({
       id: extensionId,
       action: "restart",
-      mutationId: `run94-readback:${closure.requestId}:${extensionId}`,
+      mutationId: `run94-readback:${closure.requestId}:${extensionId}:revision:${revision}`,
       expectedRevision: revision,
     })) as Record<string, unknown>;
     const mutationState = extensionResultRecord(mutation.state);

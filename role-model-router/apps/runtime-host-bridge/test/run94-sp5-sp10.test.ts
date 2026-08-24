@@ -265,7 +265,7 @@ test("GREEN: real process output closure covers every canonical registry key and
   expect(
     outputs.every((output) => Number.isInteger((output as Record<string, unknown>).workerPid)),
   ).toBe(true);
-  const readback = await verifyTrackBExtensionClosureAfterRestart(runtime, closure as never, {
+  const readbackOptions = {
     channel: "development",
     scope: "tenant:run94",
     authorizationEpoch: 94,
@@ -279,7 +279,12 @@ test("GREEN: real process output closure covers every canonical registry key and
         capability: "artifact:read",
         payload: { durableLocator, durableOutputId },
       }),
-  });
+  } as const;
+  const readback = await verifyTrackBExtensionClosureAfterRestart(
+    runtime,
+    closure as never,
+    readbackOptions,
+  );
   expect(readback.outputs.every((row) => row.readbackOutputId === row.durableOutputId)).toBe(true);
   expect(readback.outputs.every((row) => row.preRestartPid !== row.postRestartPid)).toBe(true);
   expect(
@@ -290,6 +295,15 @@ test("GREEN: real process output closure covers every canonical registry key and
         row.durableLocator !== null &&
         row.resultDigest === row.durableOutputId,
     ),
+  ).toBe(true);
+  const repeatedReadback = await verifyTrackBExtensionClosureAfterRestart(
+    runtime,
+    closure as never,
+    readbackOptions,
+  );
+  expect(repeatedReadback.outputs).toHaveLength(readback.outputs.length);
+  expect(
+    repeatedReadback.outputs.every((row) => row.readbackOutputId === row.durableOutputId),
   ).toBe(true);
 });
 
