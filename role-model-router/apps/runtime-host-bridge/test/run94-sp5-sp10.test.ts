@@ -277,6 +277,15 @@ test("GREEN: real process output closure covers every canonical registry key and
   });
   expect(readback.outputs.every((row) => row.readbackOutputId === row.durableOutputId)).toBe(true);
   expect(readback.outputs.every((row) => row.preRestartPid !== row.postRestartPid)).toBe(true);
+  expect(
+    readback.outputs.every(
+      (row) =>
+        typeof row.capability === "string" &&
+        row.capability.length > 0 &&
+        row.durableLocator !== null &&
+        row.resultDigest === row.durableOutputId,
+    ),
+  ).toBe(true);
 });
 
 test("GREEN: rejects missing, health-only, and duplicate durable extension outputs", async () => {

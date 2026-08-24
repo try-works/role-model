@@ -1097,8 +1097,13 @@ export async function verifyTrackBExtensionClosureAfterRestart(
   const states = await runtime.listExtensions();
   const results: Array<{
     extensionId: string;
+    capability: string;
     durableOutputId: string;
     readbackOutputId: string;
+    durableLocator: unknown;
+    evidenceRef: string | null;
+    readCapability: string | null;
+    resultDigest: string;
     preRestartPid: number;
     postRestartPid: number;
   }> = [];
@@ -1158,8 +1163,13 @@ export async function verifyTrackBExtensionClosureAfterRestart(
         throw new Error(`extension ${extensionId} durable output readback mismatch`);
       results.push({
         extensionId,
+        capability: output.capability,
         durableOutputId: output.durableOutputId,
         readbackOutputId,
+        durableLocator: output.durableLocator,
+        evidenceRef: output.evidenceRef,
+        readCapability: output.readCapability,
+        resultDigest: output.resultDigest,
         preRestartPid,
         postRestartPid,
       });
