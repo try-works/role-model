@@ -472,7 +472,13 @@ export class ExtensionHost {
       return Promise.reject(
         new Error("oversized payload requires a channel-local transfer artifact"),
       );
-    if (envelope.capability && !registered.descriptor.capabilities.includes(envelope.capability))
+    const hostReadCapability =
+      registered.kind === "process" && envelope.capability === "extension-output:read";
+    if (
+      envelope.capability &&
+      !hostReadCapability &&
+      !registered.descriptor.capabilities.includes(envelope.capability)
+    )
       return Promise.reject(new Error("capability denied"));
     if (envelope.signal?.aborted) {
       this.#record(id, "cancelled", envelope);

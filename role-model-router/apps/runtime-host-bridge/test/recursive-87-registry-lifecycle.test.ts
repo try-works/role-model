@@ -66,6 +66,63 @@ describe("recursive run 87 SP0 registry and lifecycle authority", () => {
     ).resolves.toMatchObject({ echoed: { value: 87 }, requestId: "run87:synthetic:echo" });
   });
 
+  test("process extension business output survives a supervised worker restart", async () => {
+    const stateRoot = path.join(os.tmpdir(), `run94-durable-extension-output-${Date.now()}`);
+    roots.push(stateRoot);
+    const runtime = await trackBRuntime.createExtensionRuntime({
+      stateRoot,
+      authorizationEpoch: 94,
+      repoRoot,
+      extensions: await syntheticExtensions(1),
+    });
+    runtimes.push(runtime);
+
+    const output = await runtime.invoke("canonical-01", {
+      requestId: "run94:durable-output",
+      protocolVersion: "1.1.0",
+      channel: "development",
+      scope: "tenant:run94",
+      authorizationEpoch: 94,
+      capability: "fixture:echo",
+      payload: { value: 94 },
+    });
+    expect(output).toMatchObject({
+      readCapability: "extension-output:read",
+      businessOutput: { echoed: { value: 94 }, requestId: "run94:durable-output" },
+      durableLocator: {
+        extensionId: "canonical-01",
+        requestId: "run94:durable-output",
+        capability: "fixture:echo",
+      },
+    });
+
+    const before = runtime.listExtensions()[0];
+    const restarted = await runtime.mutateExtension({
+      id: "canonical-01",
+      action: "restart",
+      mutationId: "run94:restart:durable-output",
+      expectedRevision: before.revision,
+    });
+    expect(restarted.state.pid).not.toBe(before.pid);
+    await expect(
+      runtime.invoke("canonical-01", {
+        requestId: "run94:durable-output:readback",
+        protocolVersion: "1.1.0",
+        channel: "development",
+        scope: "tenant:run94",
+        authorizationEpoch: 94,
+        capability: "extension-output:read",
+        payload: {
+          durableLocator: output.durableLocator,
+          durableOutputId: "sha256:host-bound-output",
+        },
+      }),
+    ).resolves.toMatchObject({
+      readbackOutputId: "sha256:host-bound-output",
+      durableLocator: output.durableLocator,
+    });
+  });
+
   test("the production constructor keeps thirteen release extensions while admitting an explicit QA extension", async () => {
     const stateRoot = path.join(os.tmpdir(), `run87-packaged-qa-runtime-${Date.now()}`);
     roots.push(stateRoot);
