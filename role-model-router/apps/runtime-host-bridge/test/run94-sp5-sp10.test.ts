@@ -58,7 +58,7 @@ test("GREEN: post-observation outbox is a normalized SQLite authority with bound
   const restarted = createTrackBPostObservationOutbox({ filePath, maxItems: 8 });
   await restarted.drain(async () => ({
     status: "processed",
-    extensionClosure: { result: "x".repeat(100_000) },
+    extensionClosure: { result: "x".repeat(1_000_000) },
   }));
   const receipt = await restarted.read();
   expect(receipt).toMatchObject({ pendingCount: 0, receiptCount: 2 });
@@ -66,12 +66,12 @@ test("GREEN: post-observation outbox is a normalized SQLite authority with bound
   expect(
     ((recovered?.result as Record<string, unknown>).extensionClosure as Record<string, string>)
       .result,
-  ).toHaveLength(100_000);
+  ).toHaveLength(1_000_000);
   const afterDrain = new DatabaseSync(filePath);
   const row = afterDrain
     .prepare("SELECT length(result_json) AS bytes FROM track_b_post_observation_receipts")
     .get() as { bytes: number };
-  expect(row.bytes).toBeLessThanOrEqual(16 * 1024);
+  expect(row.bytes).toBeLessThanOrEqual(10 * 1024 * 1024);
   afterDrain.close();
 });
 

@@ -1184,8 +1184,8 @@ export async function verifyTrackBExtensionClosureAfterRestart(
 }
 
 const TRACK_B_OUTBOX_SCHEMA_VERSION = "role-model.track-b-post-observation-outbox.v3" as const;
-const TRACK_B_OUTBOX_RECEIPT_CAP_BYTES = 16 * 1024;
-const TRACK_B_OUTBOX_RECEIPT_RAW_CAP_BYTES = 256 * 1024;
+const TRACK_B_OUTBOX_RECEIPT_CAP_BYTES = 10 * 1024 * 1024;
+const TRACK_B_OUTBOX_RECEIPT_RAW_CAP_BYTES = 10 * 1024 * 1024;
 const TRACK_B_OUTBOX_SQLITE_HEADER = "SQLite format 3";
 
 function boundedJson(value: unknown, capBytes = TRACK_B_OUTBOX_RECEIPT_CAP_BYTES): string {
