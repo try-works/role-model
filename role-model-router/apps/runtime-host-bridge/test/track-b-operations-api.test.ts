@@ -846,6 +846,37 @@ describe("Track B operations APIs", () => {
           readiness: "semantic",
         }),
       ).toMatchObject({ responseNodeIndex: 1, tokenExactDisposition: "refused_missing_evidence" });
+      const exportServer = await startBridgeServer({
+        host: "127.0.0.1",
+        port: 0,
+        registry: backend.registry,
+        getRegistry: () => backend.registry,
+        executeChatCompletions: backend.executeChatCompletions,
+        executeResponses: backend.executeResponses,
+        exportVerifiersTrace: backend.exportVerifiersTrace,
+      });
+      try {
+        const response = await fetch(
+          `http://127.0.0.1:${exportServer.port}/api/role-model/track-b/verifiers-export`,
+          {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              requestId: "req-track-b-upload-001",
+              correlationId,
+              graphRootArtifactId: "artifact-route-capture",
+              readiness: "semantic",
+            }),
+          },
+        );
+        expect(response.status).toBe(200);
+        expect(await response.json()).toMatchObject({
+          requestId: "req-track-b-upload-001",
+          graphRootArtifactId: "artifact-route-capture",
+        });
+      } finally {
+        await exportServer.close();
+      }
     } finally {
       await backend.shutdown();
       await new Promise<void>((resolve, reject) =>

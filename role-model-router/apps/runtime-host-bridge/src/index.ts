@@ -27640,7 +27640,7 @@ export async function createRuntimeBridgeBackend(
       if (runtimeChannel === "production")
         throw new Error("live Verifiers export is restricted to development and stage channels");
       const requestId = typeof body.requestId === "string" ? body.requestId : "";
-      const observation = await this.readRequestObservation(requestId);
+      const observation = await backend.readRequestObservation(requestId);
       if (!observation) throw new Error("runtime observation not found for Verifiers export");
       const capture = await readExactRouteCapture(requestId);
       if (!capture) throw new Error("exact live graph is unavailable for Verifiers export");
