@@ -738,6 +738,9 @@ export function buildVerifiersLiveExport(input: {
     input.request.graphRootArtifactId,
     "Verifiers export graph root artifact id",
   );
+  const taskIndex = input.request.taskIndex;
+  if (!Number.isSafeInteger(taskIndex) || Number(taskIndex) < 0)
+    throw new Error("Verifiers TraceTask task index is required from external evaluation context");
   if (input.request.readiness !== "semantic")
     throw new Error(
       "only semantic live Verifiers export is available without token-exact evidence",
@@ -758,6 +761,26 @@ export function buildVerifiersLiveExport(input: {
     throw new Error("Verifiers export does not reference the exact live graph and router decision");
   const messages = Array.isArray(input.capture.messages) ? input.capture.messages : [];
   const response = recordValue(input.capture.response);
+  const hasProviderFailure = input.capture.terminalState === "provider_error";
+  const failureRecord = recordValue(input.capture.failure ?? response.failure);
+  const providerFailure = hasProviderFailure
+    ? {
+        errorClass: boundedIdentity(failureRecord.errorClass, "provider failure class"),
+        message: boundedIdentity(failureRecord.message, "provider failure message"),
+        statusCode:
+          failureRecord.statusCode === null || failureRecord.statusCode === undefined
+            ? null
+            : Number(failureRecord.statusCode),
+      }
+    : null;
+  if (
+    providerFailure &&
+    providerFailure.statusCode !== null &&
+    (!Number.isInteger(providerFailure.statusCode) ||
+      providerFailure.statusCode < 100 ||
+      providerFailure.statusCode > 599)
+  )
+    throw new Error("provider failure status code is invalid");
   const taskPromptMessage =
     messages.find((value) => recordValue(value).role === "user") ?? messages[0];
   const taskPromptContent = recordValue(taskPromptMessage).content;
@@ -803,12 +826,14 @@ export function buildVerifiersLiveExport(input: {
         ...(toolCallId ? { tool_call_id: toolCallId } : {}),
         ...(typeof message.name === "string" ? { name: message.name } : {}),
       },
-      sampled: index === messages.length,
+      sampled: index === messages.length && providerFailure === null,
       token_ids: [],
       mask: [],
       is_content: [],
       logprobs: [],
-      ...(index === messages.length ? { finish_reason: "stop" } : {}),
+      ...(index === messages.length
+        ? { finish_reason: providerFailure ? "error" : "stop" }
+        : {}),
     };
   });
   const routingDecisionId = boundedIdentity(
@@ -827,17 +852,23 @@ export function buildVerifiersLiveExport(input: {
     tokenExactDisposition: "refused_missing_evidence",
     trace: {
       id: traceId,
-      task: { type: "RoleModelTraceTask", data: { idx: 0, prompt: taskPrompt } },
+      task: { type: "RoleModelTraceTask", data: { idx: Number(taskIndex), prompt: taskPrompt } },
       nodes: semanticMessages,
       rewards: {},
       metrics: {},
       info: {
-        limitations: ["semantic projection; provider-native tokens unavailable"],
+        limitations: [
+          "semantic projection; provider-native tokens unavailable",
+          ...(providerFailure ? ["provider failed before a sampled completion"] : []),
+        ],
         routeDecisionId: routingDecisionId,
         roleModelGraphRootArtifactId: graphRootArtifactId,
         roleModelResponseNodeId: responseNodeId,
         roleModelRequestId: requestId,
         roleModelCorrelationId: correlationId,
+        ...(providerFailure && providerFailure.statusCode !== null
+          ? { providerStatusCode: providerFailure.statusCode }
+          : {}),
         roleModelToolNodeIds: (Array.isArray(input.capture.tools) ? input.capture.tools : []).map(
           (tool, index) =>
             boundedIdentity(recordValue(tool).nodeId, `graph tool node ${index + 1}`),
@@ -854,8 +885,16 @@ export function buildVerifiersLiveExport(input: {
           ),
       },
       is_completed: true,
-      stop_condition: "role_model_graph_complete",
-      errors: [],
+      stop_condition: providerFailure ? "provider_error" : "role_model_graph_complete",
+      errors: providerFailure
+        ? [
+            {
+              type: providerFailure.errorClass,
+              message: providerFailure.message,
+              traceback: null,
+            },
+          ]
+        : [],
     },
   });
 }

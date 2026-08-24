@@ -122,6 +122,7 @@ describe("Track B operations APIs", () => {
         correlationId: "correlation-export-94",
         graphRootArtifactId: "root-export-94",
         readiness: "semantic",
+        taskIndex: 7,
       },
       observation,
       capture,
@@ -138,7 +139,7 @@ describe("Track B operations APIs", () => {
         task: {
           type: "RoleModelTraceTask",
           data: {
-            idx: 0,
+            idx: 7,
             prompt: "route this",
           },
         },
@@ -164,11 +165,74 @@ describe("Track B operations APIs", () => {
           correlationId: "correlation-export-94",
           graphRootArtifactId: "wrong-root",
           readiness: "semantic",
+          taskIndex: 7,
         },
         observation,
         capture,
       }),
     ).toThrow(/exact live graph/i);
+    expect(() =>
+      buildVerifiersLiveExport({
+        channel: "development",
+        request: {
+          requestId: "request-export-94",
+          correlationId: "correlation-export-94",
+          graphRootArtifactId: "root-export-94",
+          readiness: "semantic",
+        },
+        observation,
+        capture,
+      }),
+    ).toThrow(/task index/i);
+    const failureExport = buildVerifiersLiveExport({
+      channel: "development",
+      request: {
+        requestId: "request-export-94",
+        correlationId: "correlation-export-94",
+        graphRootArtifactId: "root-export-94",
+        readiness: "semantic",
+        taskIndex: 8,
+      },
+      observation,
+      capture: {
+        ...capture,
+        terminalState: "provider_error",
+        failure: {
+          errorClass: "provider_unavailable",
+          statusCode: 503,
+          message: "provider unavailable",
+        },
+        response: {
+          nodeId: "node-response-94",
+          role: "assistant",
+          content: null,
+          failure: {
+            errorClass: "provider_unavailable",
+            statusCode: 503,
+            message: "provider unavailable",
+          },
+        },
+      },
+    });
+    expect(failureExport).toMatchObject({
+      trace: {
+        task: { data: { idx: 8, prompt: "route this" } },
+        nodes: expect.arrayContaining([
+          expect.objectContaining({
+            message: { role: "assistant", content: null },
+            sampled: false,
+            finish_reason: "error",
+          }),
+        ]),
+        is_completed: true,
+        stop_condition: "provider_error",
+        errors: [{ type: "provider_unavailable", message: "provider unavailable", traceback: null }],
+        info: expect.objectContaining({
+          providerStatusCode: 503,
+          limitations: expect.arrayContaining(["provider failed before a sampled completion"]),
+        }),
+      },
+    });
   });
 
   test("reads one exact graph capture through the authenticated loopback sidecar", async () => {
@@ -851,6 +915,7 @@ describe("Track B operations APIs", () => {
           correlationId,
           graphRootArtifactId: "artifact-route-capture",
           readiness: "semantic",
+          taskIndex: 3,
         }),
       ).toMatchObject({ responseNodeIndex: 1, tokenExactDisposition: "refused_missing_evidence" });
       const exportServer = await startBridgeServer({
@@ -873,6 +938,7 @@ describe("Track B operations APIs", () => {
               correlationId,
               graphRootArtifactId: "artifact-route-capture",
               readiness: "semantic",
+              taskIndex: 3,
             }),
           },
         );

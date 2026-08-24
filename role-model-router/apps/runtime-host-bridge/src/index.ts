@@ -22985,7 +22985,7 @@ export async function createRuntimeBridgeBackend(
       }
       return receipt;
     };
-    const persistRoutedProviderFailure = (error: UpstreamExecutionError): void => {
+    const persistRoutedProviderFailure = async (error: UpstreamExecutionError): Promise<void> => {
       if (executionOptions?.persistObservation === false || hasRuntimeTelemetryPersisted(error)) {
         return;
       }
@@ -23132,7 +23132,7 @@ export async function createRuntimeBridgeBackend(
         costSavingsSupport: "partial",
         dimensions: selectedEndpointDimensions,
       } as const;
-      const failureObservation = {
+      const baseFailureObservation = {
         requestId,
         ...(executionOptions?.requestOptions?.clientRequestId
           ? { clientRequestId: executionOptions.requestOptions.clientRequestId }
@@ -23276,6 +23276,46 @@ export async function createRuntimeBridgeBackend(
           },
         },
       };
+      let routeCapture: Record<string, unknown> | undefined;
+      try {
+        const requestBody = executionOptions?.requestBody ?? {};
+        const captureInput = Array.isArray(requestBody.messages)
+          ? requestBody.messages
+          : Array.isArray(requestBody.input)
+            ? requestBody.input
+            : [];
+        routeCapture = (await runtimeTrackBOperations.recordLocalRouteCapture({
+          requestId,
+          routingDecisionId,
+          endpointId: selectedEndpointId,
+          modelId: selectedModelId ?? selectedEndpointId,
+          reasoningEffort: selectedReasoningEffort,
+          effortSource: selectedEffortSource,
+          messages: captureInput,
+          failure: {
+            errorClass: error.errorClass,
+            statusCode: error.statusCode,
+            message: error.message,
+          },
+          toolExecutions: [],
+        })) as Record<string, unknown>;
+      } catch {
+        // Rich failure capture remains non-routing-critical and degrades to compact telemetry.
+      }
+      const graphEvidence = routeCapture
+        ? {
+            rootArtifactId: routeCapture.rootArtifactId,
+            messageNodeIds: Array.isArray(routeCapture.messageArtifactIds)
+              ? routeCapture.messageArtifactIds
+              : [],
+            responseNodeId: routeCapture.responseArtifactId,
+            edgeCount: routeCapture.edgeCount,
+          }
+        : undefined;
+      const failureObservation = Object.freeze({
+        ...baseFailureObservation,
+        ...(graphEvidence ? { graphEvidence } : {}),
+      });
       persistRuntimeTelemetryFailure({
         databasePath: initialization.databasePath,
         requestId,
@@ -23349,6 +23389,13 @@ export async function createRuntimeBridgeBackend(
         observation: failureObservation,
         ...(localGraphStore ? { graphStore: localGraphStore } : {}),
       });
+      if (options.trackBPostObservation) {
+        try {
+          await options.trackBPostObservation(failureObservation);
+        } catch (postObservationError) {
+          console.error("Track B failure post-observation processing failed", postObservationError);
+        }
+      }
       markRuntimeTelemetryPersisted(error);
       emitTelemetryUpdate(requestId);
     };
@@ -23526,7 +23573,7 @@ export async function createRuntimeBridgeBackend(
             continue;
           }
           if (!error.fallbackEligible || deniedEndpointIds.includes(error.endpointId)) {
-            persistRoutedProviderFailure(error);
+            await persistRoutedProviderFailure(error);
             throw error;
           }
           deniedEndpointIds.push(error.endpointId);
@@ -23534,11 +23581,11 @@ export async function createRuntimeBridgeBackend(
           try {
             nextRoute = routeExecutionRequest(deniedEndpointIds);
           } catch {
-            persistRoutedProviderFailure(error);
+            await persistRoutedProviderFailure(error);
             throw error;
           }
           if (nextRoute.routed.decision.chosen_endpoint_id.trim().length === 0) {
-            persistRoutedProviderFailure(error);
+            await persistRoutedProviderFailure(error);
             throwUnavailableExecutionTarget({
               deniedEndpointIds: nextRoute.deniedEndpointIds,
               previousError: error,

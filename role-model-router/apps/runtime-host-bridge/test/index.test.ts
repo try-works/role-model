@@ -15823,15 +15823,58 @@ describe("runtime-host-bridge", () => {
     process.env.DEEPSEEK_FAILURE_CAPTURE_API_KEY = "deepseek-failure-capture-key";
     const requestId = "req-runtime-bridge-routed-provider-failure-001";
     const seenRequestBodies: unknown[] = [];
+    const routeCaptures: Record<string, unknown>[] = [];
+    const postObservations: Readonly<Record<string, unknown>>[] = [];
+    const graphRootArtifactId = "a".repeat(64);
+    const graphResponseArtifactId = "b".repeat(64);
+    const operationsServer = createServer((request, response) => {
+      let body = "";
+      request.setEncoding("utf8");
+      request.on("data", (chunk) => {
+        body += chunk;
+      });
+      request.on("end", () => {
+        if (request.method !== "POST" || request.url !== "/capture/route") {
+          response.statusCode = 404;
+          response.end();
+          return;
+        }
+        routeCaptures.push(JSON.parse(body) as Record<string, unknown>);
+        response.setHeader("content-type", "application/json");
+        response.end(
+          JSON.stringify({
+            scope: "runtime-host-failure-capture-tests",
+            rootArtifactId: graphRootArtifactId,
+            rootArtifactDigest: graphRootArtifactId,
+            messageArtifactIds: ["c".repeat(64)],
+            responseArtifactId: graphResponseArtifactId,
+            edgeCount: 2,
+          }),
+        );
+      });
+    });
+    await new Promise<void>((resolve, reject) => {
+      operationsServer.once("error", reject);
+      operationsServer.listen(0, "127.0.0.1", resolve);
+    });
+    const operationsAddress = operationsServer.address();
+    if (!operationsAddress || typeof operationsAddress === "string") {
+      throw new Error("failure capture operations server did not bind a TCP port");
+    }
 
     const backend = await (
       bridge as {
         createRuntimeBridgeBackend: (options: {
           repoRoot: string;
           fixtureRoot: string;
-          runtimeStateRoot: string;
-          scopeId: string;
-          networkFetcher?: typeof fetch;
+           runtimeStateRoot: string;
+           scopeId: string;
+           networkFetcher?: typeof fetch;
+           trackBOperationsEndpoint?: string;
+           trackBOperationsToken?: string;
+           trackBPostObservation?: (
+             observation: Readonly<Record<string, unknown>>,
+           ) => Promise<unknown>;
         }) => Promise<{
           upsertProviderAccount: (body: Record<string, unknown>) => Promise<unknown>;
           activateEndpoint: (body: Record<string, unknown>) => Promise<{ endpointId: string }>;
@@ -15868,6 +15911,12 @@ describe("runtime-host-bridge", () => {
       fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       runtimeStateRoot,
       scopeId: "runtime-host-failure-capture-tests",
+      trackBOperationsEndpoint: `http://127.0.0.1:${operationsAddress.port}/`,
+      trackBOperationsToken: "failure-capture-test-token",
+      trackBPostObservation: async (observation) => {
+        postObservations.push(observation);
+        return { status: "processed" };
+      },
       networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
@@ -15940,6 +15989,30 @@ describe("runtime-host-bridge", () => {
         ),
       ).rejects.toThrow(/Insufficient Balance/);
       expect(seenRequestBodies).toHaveLength(1);
+      expect(routeCaptures).toEqual([
+        expect.objectContaining({
+          requestId,
+          endpointId: endpoint.endpointId,
+          messages: [{ role: "user", content: "Return OK." }],
+          failure: {
+            errorClass: "quota_exhausted",
+            statusCode: 402,
+            message: "Insufficient Balance",
+          },
+        }),
+      ]);
+      expect(postObservations).toEqual([
+        expect.objectContaining({
+          requestId,
+          endpointId: endpoint.endpointId,
+          graphEvidence: {
+            rootArtifactId: graphRootArtifactId,
+            messageNodeIds: ["c".repeat(64)],
+            responseNodeId: graphResponseArtifactId,
+            edgeCount: 2,
+          },
+        }),
+      ]);
 
       const telemetryRows = await backend.listTelemetryRequests();
       const failureRow = telemetryRows.find((row) => row.requestId === requestId);
@@ -15991,13 +16064,12 @@ describe("runtime-host-bridge", () => {
               }),
             ],
           }),
-          telemetrySnapshot: expect.objectContaining({
-            providerId: "deepseek",
-            providerAccountId: "deepseek.personal.failure-capture",
-            requestedModelId: "deepseek/deepseek-v4-pro",
-            selectedModelId: "deepseek/deepseek-v4-pro",
-            eligibleEndpointIds: [endpoint.endpointId],
-          }),
+          graphEvidence: {
+            rootArtifactId: graphRootArtifactId,
+            messageNodeIds: ["c".repeat(64)],
+            responseNodeId: graphResponseArtifactId,
+            edgeCount: 2,
+          },
         }),
       );
     } finally {
@@ -16007,6 +16079,9 @@ describe("runtime-host-bridge", () => {
         process.env.DEEPSEEK_FAILURE_CAPTURE_API_KEY = originalApiKey;
       }
       await backend.shutdown();
+      await new Promise<void>((resolve, reject) =>
+        operationsServer.close((error) => (error ? reject(error) : resolve())),
+      );
       await rm(runtimeStateRoot, { recursive: true, force: true });
     }
   });
