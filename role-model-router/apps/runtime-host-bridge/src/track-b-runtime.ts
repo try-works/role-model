@@ -1879,12 +1879,13 @@ export async function runTrackBShadowPipeline(
     })),
   });
   const rolloutRows = [sourceRollout, ...counterfactualRollouts];
-  const positive = rolloutRows.filter(
-    (rollout) => (rollout.outcome as Record<string, unknown> | undefined)?.status === "success",
-  );
-  const negative = rolloutRows.filter(
-    (rollout) => (rollout.outcome as Record<string, unknown> | undefined)?.status !== "success",
-  );
+  const scoredRollouts = rolloutRows.map((rollout) => ({
+    ...rollout,
+    score:
+      (rollout.outcome as Record<string, unknown> | undefined)?.status === "success" ? 1 : 0,
+  }));
+  const positive = scoredRollouts.filter((rollout) => rollout.score === 1);
+  const negative = scoredRollouts.filter((rollout) => rollout.score === 0);
   if (!positive.length || !negative.length)
     throw new Error(
       "R14_INSUFFICIENT_ROLLOUT_EVIDENCE: positive and negative rollout evidence is required",
