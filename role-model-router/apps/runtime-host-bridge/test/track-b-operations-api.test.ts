@@ -2323,7 +2323,10 @@ describe("Track B operations APIs", () => {
       revocationEpoch: 5,
     });
     await expect(
-      ops.updateContributionState({ action: "complete_disclosure", disclosureId: "disc-run94-old" }),
+      ops.updateContributionState({
+        action: "complete_disclosure",
+        disclosureId: "disc-run94-old",
+      }),
     ).rejects.toThrow(/pending|stale|revoked/i);
   });
 
