@@ -270,7 +270,7 @@ describe("Track B operations APIs", () => {
           expect.objectContaining({
             message: { role: "assistant", content: null },
             sampled: false,
-            finish_reason: "error",
+            finish_reason: "stop",
           }),
         ]),
         is_completed: true,

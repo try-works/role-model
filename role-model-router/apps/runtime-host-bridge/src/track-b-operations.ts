@@ -925,7 +925,7 @@ export function buildVerifiersLiveExport(input: {
       mask: [],
       is_content: [],
       logprobs: [],
-      ...(index === messages.length ? { finish_reason: providerFailure ? "error" : "stop" } : {}),
+      ...(index === messages.length ? { finish_reason: "stop" } : {}),
     };
   });
   const routingDecisionId = boundedIdentity(
