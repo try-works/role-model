@@ -703,6 +703,7 @@ export function applyRecommendationServiceLauncherConfig(values: LauncherConfigV
   const serviceToken = readLauncherString(values, "recommendation-service-token");
   const materialFile = readLauncherString(values, "recommendation-material-file");
   const aggregateScope = readLauncherString(values, "aggregate-scope");
+  const recommendationScope = readLauncherString(values, "recommendation-scope");
 
   if (serviceUrl) {
     process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_URL = serviceUrl;
@@ -721,6 +722,12 @@ export function applyRecommendationServiceLauncherConfig(values: LauncherConfigV
       throw new Error("aggregate scope is invalid");
     }
     process.env.ROLE_MODEL_AGGREGATE_SCOPE = aggregateScope;
+  }
+  if (recommendationScope) {
+    if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{0,511}$/.test(recommendationScope)) {
+      throw new Error("recommendation scope is invalid");
+    }
+    process.env.ROLE_MODEL_RECOMMENDATION_SCOPE = recommendationScope;
   }
   if (!materialFile) {
     return;
@@ -793,6 +800,9 @@ export async function main(): Promise<void> {
         type: "string",
       },
       "aggregate-scope": {
+        type: "string",
+      },
+      "recommendation-scope": {
         type: "string",
       },
       "recommendation-service-url": {

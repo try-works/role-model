@@ -25609,9 +25609,9 @@ export async function createRuntimeBridgeBackend(
       const baseUrl = serviceUrl.endsWith("/") ? serviceUrl : `${serviceUrl}/`;
       const channel = process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL ?? "production";
       const recommendationScopeId =
-        process.env.ROLE_MODEL_AGGREGATE_SCOPE?.trim() || options.scopeId;
+        process.env.ROLE_MODEL_RECOMMENDATION_SCOPE?.trim() || options.scopeId;
       if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{0,511}$/.test(recommendationScopeId))
-        throw new Error("recommendation contribution scope is invalid");
+        throw new Error("recommendation scope is invalid");
       const statePath = path.join(
         options.runtimeStateRoot,
         options.scopeId,

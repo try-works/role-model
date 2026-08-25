@@ -45,6 +45,7 @@ afterEach(async () => {
   delete process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY;
   delete process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN;
   delete process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL;
+  delete process.env.ROLE_MODEL_RECOMMENDATION_SCOPE;
   delete process.env.ROLE_MODEL_AGGREGATE_SCOPE;
   delete process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL;
   delete process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TOKEN;
@@ -1654,6 +1655,7 @@ describe("Track B operations APIs", () => {
       process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN = "service-token";
       process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL = "development";
       process.env.ROLE_MODEL_AGGREGATE_SCOPE = "tenant:run91-live-cohort";
+      process.env.ROLE_MODEL_RECOMMENDATION_SCOPE = "public:deepseek-high";
       vi.stubGlobal(
         "fetch",
         vi.fn(async (input, init) => {
@@ -1662,7 +1664,7 @@ describe("Track B operations APIs", () => {
             expect(init?.method).toBe("POST");
             expect(new Headers(init?.headers).get("authorization")).toBe("Bearer service-token");
             expect(JSON.parse(String(init?.body))).toMatchObject({
-              scopeId: "tenant:run91-live-cohort",
+              scopeId: "public:deepseek-high",
             });
             return new Response(
               JSON.stringify({
@@ -1762,6 +1764,7 @@ describe("Track B operations APIs", () => {
       "recommendation-material-file": materialPath,
       "recommendation-channel": "development",
       "aggregate-scope": "tenant:run91-live-cohort",
+      "recommendation-scope": "public:deepseek-high",
     });
 
     expect(process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_URL).toBe(
@@ -1769,6 +1772,7 @@ describe("Track B operations APIs", () => {
     );
     expect(process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL).toBe("development");
     expect(process.env.ROLE_MODEL_AGGREGATE_SCOPE).toBe("tenant:run91-live-cohort");
+    expect(process.env.ROLE_MODEL_RECOMMENDATION_SCOPE).toBe("public:deepseek-high");
     expect(process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY).toBe("public-spki-fixture");
     expect(process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN).toBe("service-token-fixture");
   });
