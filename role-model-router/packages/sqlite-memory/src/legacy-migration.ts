@@ -175,6 +175,23 @@ export interface SqliteMigrationRegistry {
   readonly entries: readonly SqliteMigrationRegistryEntry[];
 }
 
+function hasMigrationRegistryIdentity(routerRoot: string): boolean {
+  const registryPath = path.join(routerRoot, "migrations", "registry.json");
+  if (!existsSync(registryPath)) return false;
+  try {
+    const parsed = JSON.parse(readFileSync(registryPath, "utf8")) as {
+      readonly schemaVersion?: unknown;
+      readonly entries?: unknown;
+    };
+    return (
+      parsed.schemaVersion === "role-model.sqlite-migration-registry.v1" &&
+      Array.isArray(parsed.entries)
+    );
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Resolves source-checkout migration assets without relying on module URL metadata.
  * Packaged runtimes must pass their verified staged router root explicitly.
@@ -183,19 +200,19 @@ export function resolveLegacyMigrationRouterRoot(startDirectory = process.cwd())
   const start = path.resolve(startDirectory);
   const initialCandidates = [start, path.join(start, "role-model-router")];
   for (const candidate of initialCandidates) {
-    if (existsSync(path.join(candidate, "migrations", "registry.json"))) return candidate;
+    if (hasMigrationRegistryIdentity(candidate)) return candidate;
   }
 
   let candidate = path.dirname(start);
   while (true) {
-    if (existsSync(path.join(candidate, "migrations", "registry.json"))) return candidate;
+    if (hasMigrationRegistryIdentity(candidate)) return candidate;
     const parent = path.dirname(candidate);
     if (parent === candidate) break;
     candidate = parent;
   }
 
   throw new Error(
-    "SQLite migration registry was not found; packaged runtimes must provide an explicit routerRoot",
+    "A valid SQLite migration registry identity was not found; packaged runtimes must provide an explicit routerRoot",
   );
 }
 

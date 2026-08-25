@@ -27700,7 +27700,7 @@ export async function createRuntimeBridgeBackend(
       const isFailureObservation =
         observationRecord.statusFamily === "failure" ||
         Boolean(observationRecord.failure) ||
-        telemetryRecord?.errorClass !== null;
+        telemetryRecord?.errorClass != null;
       if (!isFailureObservation) {
         const { inspection: _inspection, ...boundedRequestDetail } =
           requestDetail as BridgeRequestObservation & { inspection?: unknown };
@@ -27724,12 +27724,7 @@ export async function createRuntimeBridgeBackend(
       const observation = await backend.readRequestObservation(requestId);
       if (!observation) throw new Error("persisted runtime observation not found for recovery");
 
-      let existingCapture: Record<string, unknown> | null = null;
-      try {
-        existingCapture = await readExactRouteCapture(requestId);
-      } catch {
-        // An unknown capture is the expected precondition for this bounded upgrade path.
-      }
+      const existingCapture = await readExactRouteCapture(requestId);
       if (existingCapture) {
         const existingRecovery =
           existingCapture.recovery && typeof existingCapture.recovery === "object"
@@ -27742,14 +27737,40 @@ export async function createRuntimeBridgeBackend(
           existingRecovery.source !== "persisted_runtime_observation"
         )
           throw new Error("legacy terminal failure recovery refused because graph evidence already exists");
+        const graphEvidence = buildGraphEvidenceFromCapture(existingCapture);
+        const recoveredObservation = Object.freeze({
+          ...(observation as unknown as Record<string, unknown>),
+          graphEvidence,
+          recovery: Object.freeze({
+            kind: "legacy_terminal_failure",
+            source: "persisted_runtime_observation",
+          }),
+        });
+        const extensionReceipts = options.trackBPostObservation
+          ? await options.trackBPostObservation(recoveredObservation)
+          : null;
+        const correlationId = (observation as unknown as Record<string, unknown>).correlationId;
+        const receiptIdentity = JSON.stringify({
+          requestId,
+          routingDecisionId: observation.routingDecisionId,
+          correlationId,
+          graphRootArtifactId: graphEvidence.rootArtifactId,
+        });
         return Object.freeze({
           schemaVersion: "role-model.legacy-terminal-failure-recovery.v1",
+          receiptId: `legacy-recovery-${createHash("sha256").update(receiptIdentity).digest("hex")}`,
           status: "already_recovered",
           requestId,
           routingDecisionId: observation.routingDecisionId,
-          correlationId: (observation as unknown as Record<string, unknown>).correlationId,
+          correlationId,
           graphRootArtifactId: existingCapture.rootArtifactId,
+          responseNodeId: graphEvidence.responseNodeId,
           projectionCompleteness: "metadata_only",
+          recovery: Object.freeze({
+            kind: "legacy_terminal_failure",
+            source: "persisted_runtime_observation",
+          }),
+          extensionProcessing: extensionReceipts === null ? "not_configured" : "completed",
         });
       }
 

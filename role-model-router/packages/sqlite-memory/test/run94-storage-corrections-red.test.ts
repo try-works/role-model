@@ -48,11 +48,30 @@ describe("Run 94 public storage corrections", () => {
     const nestedWorkingDirectory = path.join(routerRoot, "packages", "sqlite-memory");
     mkdirSync(path.join(routerRoot, "migrations"), { recursive: true });
     mkdirSync(nestedWorkingDirectory, { recursive: true });
-    writeFileSync(path.join(routerRoot, "migrations", "registry.json"), "{}", "utf8");
+    writeFileSync(
+      path.join(routerRoot, "migrations", "registry.json"),
+      JSON.stringify({
+        schemaVersion: "role-model.sqlite-migration-registry.v1",
+        entries: [],
+      }),
+      "utf8",
+    );
 
     expect(resolveLegacyMigrationRouterRoot(nestedWorkingDirectory)).toBe(routerRoot);
     expect(() => resolveLegacyMigrationRouterRoot(path.join(root, "unrelated"))).toThrow(
       /explicit routerRoot|migration registry/i,
+    );
+  });
+
+  test("rejects an unrelated ancestor that merely contains migrations/registry.json", () => {
+    const root = mkdtempSync(path.join(os.tmpdir(), "run94-unrelated-router-root-"));
+    const nestedWorkingDirectory = path.join(root, "unrelated", "packages", "sqlite-memory");
+    mkdirSync(path.join(root, "migrations"), { recursive: true });
+    mkdirSync(nestedWorkingDirectory, { recursive: true });
+    writeFileSync(path.join(root, "migrations", "registry.json"), "{}", "utf8");
+
+    expect(() => resolveLegacyMigrationRouterRoot(nestedWorkingDirectory)).toThrow(
+      /explicit routerRoot|valid migration registry|identity/i,
     );
   });
 

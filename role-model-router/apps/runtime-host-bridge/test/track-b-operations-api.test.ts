@@ -3,10 +3,11 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import os from "node:os";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 
 import {
-  readRuntimeTelemetryRecord,
   readRuntimeObservationStorageRecord,
+  readRuntimeTelemetryRecord,
   resolveSqliteMemoryLocation,
 } from "@role-model-router/sqlite-memory";
 import { afterEach, describe, expect, test, vi } from "vitest";
@@ -1030,6 +1031,14 @@ describe("Track B operations APIs", () => {
         runtimeRssBytes: expect.any(Number),
       });
       expect((detail as unknown as { liveBudgetEvidence: { compactObservationBytes: number } }).liveBudgetEvidence.compactObservationBytes).toBeLessThanOrEqual(16 * 1024);
+      const telemetryDatabase = new DatabaseSync(databasePath);
+      telemetryDatabase
+        .prepare("DELETE FROM runtime_telemetry_records WHERE request_id=?")
+        .run("req-track-b-upload-001");
+      telemetryDatabase.close();
+      expect(await backend.readRequestObservation("req-track-b-upload-001")).not.toHaveProperty(
+        "inspection",
+      );
       const correlationId = String(
         (detail as unknown as { run88Correlation?: { correlationId?: string } })?.run88Correlation
           ?.correlationId,
@@ -1076,6 +1085,106 @@ describe("Track B operations APIs", () => {
       } finally {
         await exportServer.close();
       }
+    } finally {
+      await backend.shutdown();
+      await new Promise<void>((resolve, reject) =>
+        operations.close((error) => (error ? reject(error) : resolve())),
+      );
+    }
+  });
+
+  test("legacy failure recovery retries extension closure after graph commit and propagates sidecar auth failures", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `track-b-recovery-retry-${Date.now()}`);
+    roots.push(runtimeStateRoot);
+    const scopeId = "track-b-recovery-retry";
+    const databasePath = resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId });
+    let captureInput: Record<string, unknown> | null = null;
+    let extensionAttempts = 0;
+    let rejectReadsAsUnauthorized = false;
+    const operations = createServer(async (request, response) => {
+      const chunks: Buffer[] = [];
+      for await (const chunk of request) chunks.push(Buffer.from(chunk));
+      const body = JSON.parse(Buffer.concat(chunks).toString("utf8")) as Record<string, unknown>;
+      if (request.url === "/capture/read" && rejectReadsAsUnauthorized) {
+        response.writeHead(401, { "content-type": "application/json" });
+        response.end(JSON.stringify({ error: "sidecar authorization refused" }));
+        return;
+      }
+      if (request.url === "/capture/read" && !captureInput) {
+        response.writeHead(409, { "content-type": "application/json" });
+        response.end(JSON.stringify({ error: `unknown route capture ${body.requestId}` }));
+        return;
+      }
+      if (request.url === "/capture/route") {
+        captureInput = body;
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ status: "captured" }));
+        return;
+      }
+      const failure = captureInput?.failure as Record<string, unknown>;
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(JSON.stringify({
+        schemaVersion: "role-model.route-capture-read.v1",
+        requestId: captureInput?.requestId,
+        routingDecisionId: captureInput?.routingDecisionId,
+        rootArtifactId: "root-recovered-94",
+        projectionCompleteness: "metadata_only",
+        recovery: captureInput?.recovery,
+        messages: [],
+        response: { nodeId: "response-recovered-94", role: "assistant", content: null, failure },
+        terminalState: "provider_error",
+        failure,
+        tools: [],
+        edgeCount: 1,
+      }));
+    });
+    await new Promise<void>((resolve, reject) => {
+      operations.once("error", reject);
+      operations.listen(0, "127.0.0.1", resolve);
+    });
+    const address = operations.address();
+    if (!address || typeof address === "string") throw new Error("operations server did not bind");
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+      runtimeChannel: "development",
+      trackBOperationsEndpoint: `http://127.0.0.1:${address.port}`,
+      trackBOperationsToken: "r".repeat(64),
+      trackBPostObservation: async () => {
+        extensionAttempts += 1;
+        if (extensionAttempts === 1) throw new Error("extension closure interrupted");
+        return { status: "processed" };
+      },
+    });
+    try {
+      await expect(
+        backend.executeChatCompletions(
+          {
+            model: "nonexistent/run94-recovery-provider",
+            messages: [{ role: "user", content: "exercise bounded recovery" }],
+          },
+          "request-recovery-retry-94",
+        ),
+      ).rejects.toThrow();
+      const input = {
+        requestId: "request-recovery-retry-94",
+        acknowledgeMetadataOnly: true,
+      };
+      await expect(backend.recoverLegacyTerminalFailure(input)).rejects.toThrow(
+        /extension closure interrupted/i,
+      );
+      await expect(backend.recoverLegacyTerminalFailure(input)).resolves.toMatchObject({
+        status: "already_recovered",
+        extensionProcessing: "completed",
+      });
+      expect(extensionAttempts).toBe(2);
+
+      rejectReadsAsUnauthorized = true;
+      await expect(backend.recoverLegacyTerminalFailure(input)).rejects.toThrow(
+        /authorization refused/i,
+      );
     } finally {
       await backend.shutdown();
       await new Promise<void>((resolve, reject) =>

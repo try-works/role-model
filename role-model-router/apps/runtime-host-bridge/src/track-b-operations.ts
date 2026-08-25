@@ -600,6 +600,16 @@ const runtimePlan = (state: BridgeState, sourceRevision: number): RetentionPlan 
   };
 };
 
+class TrackBPrivateOperationError extends Error {
+  readonly status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "TrackBPrivateOperationError";
+    this.status = status;
+  }
+}
+
 const privateRetentionRequest = async (
   endpoint: string | undefined,
   token: string | undefined,
@@ -622,7 +632,8 @@ const privateRetentionRequest = async (
   });
   const result = (await response.json().catch(() => ({}))) as { readonly error?: unknown };
   if (!response.ok)
-    throw new Error(
+    throw new TrackBPrivateOperationError(
+      response.status,
       typeof result.error === "string"
         ? result.error
         : `private Track B operation failed with ${response.status}`,
@@ -1740,7 +1751,18 @@ export function createTrackBOperations({
       const url = new URL(operationsEndpoint);
       if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
         throw new Error("local route capture readback requires a loopback operations boundary");
-      return requestPrivate("capture/read", { method: "POST", body: input });
+      try {
+        return await requestPrivate("capture/read", { method: "POST", body: input });
+      } catch (error) {
+        const requestId = String(input.requestId ?? "");
+        if (
+          error instanceof TrackBPrivateOperationError &&
+          error.status === 409 &&
+          error.message === `unknown route capture ${requestId}`
+        )
+          return null;
+        throw error;
+      }
     },
     async listRecommendations(): Promise<readonly RecommendationRecord[]> {
       return (await readState(statePath)).recommendations ?? [];
