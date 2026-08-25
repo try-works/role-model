@@ -1705,6 +1705,8 @@ export function createTrackBOperations({
       const action = String(input.action ?? "");
       if (current.managed && action !== "complete_disclosure")
         throw new Error("contribution is controlled by managed policy");
+      if (action === "complete_disclosure" && current.authorizationState !== "pending_disclosure")
+        throw new Error("contribution disclosure is not pending; re-enable before authorizing");
       let next: ContributionState;
       if (action === "opt_out")
         next = {

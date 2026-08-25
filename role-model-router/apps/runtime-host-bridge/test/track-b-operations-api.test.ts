@@ -2279,6 +2279,54 @@ describe("Track B operations APIs", () => {
     expect(applied.activePack.id).toBe("pack-optout");
   });
 
+  test("run94 contribution opt-out rejects stale disclosure while preserving recommendation access", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `track-b-run94-optout-${Date.now()}`);
+    roots.push(runtimeStateRoot);
+    const statePath = path.join(runtimeStateRoot, "track-b-production-bridge.json");
+    await mkdir(runtimeStateRoot, { recursive: true });
+    await writeFile(
+      statePath,
+      JSON.stringify({
+        schemaVersion: "role-model.track-b-production-bridge.v1",
+        protocolVersion: "1.0",
+        revision: 1,
+        generatedAt: new Date().toISOString(),
+        extensions: [],
+        storageServices: [],
+        retention: { managedPolicy: false, receipts: [], activeJob: null },
+        contribution: {
+          mode: "contributor",
+          contributionTier: "advanced",
+          recommendationTier: "advanced",
+          recommendationAccess: "preview_and_apply",
+          allowCloudUpload: true,
+          authorizationState: "active",
+          revocationEpoch: 4,
+          queuedCount: 0,
+          managed: false,
+          disclosureId: "disc-run94-old",
+        },
+        recommendations: [],
+        recommendationRevision: 0,
+        activePack: null,
+      }),
+    );
+    const ops = createTrackBOperations({ statePath, catalog: [] });
+    const optedOut = (await ops.updateContributionState({ action: "opt_out" })) as {
+      recommendationAccess: string;
+      authorizationState: string;
+      revocationEpoch: number;
+    };
+    expect(optedOut).toMatchObject({
+      recommendationAccess: "preview_and_apply",
+      authorizationState: "revoked",
+      revocationEpoch: 5,
+    });
+    await expect(
+      ops.updateContributionState({ action: "complete_disclosure", disclosureId: "disc-run94-old" }),
+    ).rejects.toThrow(/pending|stale|revoked/i);
+  });
+
   test("run79 HTTP exposes extensions mutate and recommendations dismiss routes", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `track-b-run79-http-${Date.now()}`);
     roots.push(runtimeStateRoot);
