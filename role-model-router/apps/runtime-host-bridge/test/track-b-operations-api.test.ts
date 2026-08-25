@@ -81,15 +81,37 @@ describe("Track B operations APIs", () => {
           nodeId: "node-assistant-tool-94",
           role: "assistant",
           content: null,
-          toolCalls: [{ id: "call-pi-94", type: "function", function: { name: "bash", arguments: '{"command":"printf run94-tool-ok"}' } }],
+          toolCalls: [
+            {
+              id: "call-pi-94",
+              type: "function",
+              function: { name: "bash", arguments: '{"command":"printf run94-tool-ok"}' },
+            },
+          ],
         },
-        { nodeId: "node-tool-message-94", role: "tool", content: "run94-tool-ok", toolCallId: "call-pi-94", name: "bash" },
+        {
+          nodeId: "node-tool-message-94",
+          role: "tool",
+          content: "run94-tool-ok",
+          toolCallId: "call-pi-94",
+          name: "bash",
+        },
       ],
       response: { nodeId: "node-response-94", role: "assistant", content: "routed" },
       tools: [
         { nodeId: "node-tool-execution-94", kind: "tool_execution", toolName: "router-tool" },
-        { nodeId: "node-tool-call-94", kind: "tool_call", toolCallId: "call-pi-94", toolName: "bash" },
-        { nodeId: "node-tool-result-94", kind: "tool_result", toolCallId: "call-pi-94", toolName: "bash" },
+        {
+          nodeId: "node-tool-call-94",
+          kind: "tool_call",
+          toolCallId: "call-pi-94",
+          toolName: "bash",
+        },
+        {
+          nodeId: "node-tool-result-94",
+          kind: "tool_result",
+          toolCallId: "call-pi-94",
+          toolName: "bash",
+        },
       ],
       captureMetrics: {
         captureCpuMs: 4,
@@ -109,7 +131,12 @@ describe("Track B operations APIs", () => {
     };
     expect(buildGraphEvidenceFromCapture(capture)).toEqual({
       rootArtifactId: "root-export-94",
-      messageNodeIds: ["node-system-94", "node-user-94", "node-assistant-tool-94", "node-tool-message-94"],
+      messageNodeIds: [
+        "node-system-94",
+        "node-user-94",
+        "node-assistant-tool-94",
+        "node-tool-message-94",
+      ],
       responseNodeId: "node-response-94",
       toolExecutionNodeIds: ["node-tool-execution-94"],
       toolCallNodeIds: ["node-tool-call-94"],
@@ -148,8 +175,27 @@ describe("Track B operations APIs", () => {
         nodes: [
           { parent: null, message: { role: "system", content: "route safely" }, sampled: false },
           { parent: 0, message: { role: "user", content: "route this" }, sampled: false },
-          { parent: 1, message: { role: "assistant", content: null, tool_calls: [{ id: "call-pi-94", name: "bash", arguments: '{"command":"printf run94-tool-ok"}' }] }, sampled: false },
-          { parent: 2, message: { role: "tool", content: "run94-tool-ok", tool_call_id: "call-pi-94", name: "bash" }, sampled: false },
+          {
+            parent: 1,
+            message: {
+              role: "assistant",
+              content: null,
+              tool_calls: [
+                { id: "call-pi-94", name: "bash", arguments: '{"command":"printf run94-tool-ok"}' },
+              ],
+            },
+            sampled: false,
+          },
+          {
+            parent: 2,
+            message: {
+              role: "tool",
+              content: "run94-tool-ok",
+              tool_call_id: "call-pi-94",
+              name: "bash",
+            },
+            sampled: false,
+          },
           { parent: 3, message: { role: "assistant", content: "routed" }, sampled: true },
         ],
         info: {
@@ -228,7 +274,9 @@ describe("Track B operations APIs", () => {
         ]),
         is_completed: true,
         stop_condition: "provider_error",
-        errors: [{ type: "provider_unavailable", message: "provider unavailable", traceback: null }],
+        errors: [
+          { type: "provider_unavailable", message: "provider unavailable", traceback: null },
+        ],
         info: expect.objectContaining({
           providerStatusCode: 503,
           limitations: expect.arrayContaining(["provider failed before a sampled completion"]),
@@ -406,9 +454,23 @@ describe("Track B operations APIs", () => {
     const operations = createServer(async (request, response) => {
       let body = "";
       for await (const chunk of request) body += chunk;
-      received.push({ path: request.url ?? "", authorization: request.headers.authorization, body: JSON.parse(body) });
+      received.push({
+        path: request.url ?? "",
+        authorization: request.headers.authorization,
+        body: JSON.parse(body),
+      });
       response.writeHead(200, { "content-type": "application/json" });
-      response.end(JSON.stringify({ schemaVersion: "role-model.no-rich-capture-baseline-channel.v1", sourceMode: "measured_capture_disabled_packaged_runtime", channel: "development", sampleCount: 5, captureCpuP95Ms: 12, providerPathLatencyP95Ms: 18, sqliteLockWaitP95Ms: 2 }));
+      response.end(
+        JSON.stringify({
+          schemaVersion: "role-model.no-rich-capture-baseline-channel.v1",
+          sourceMode: "measured_capture_disabled_packaged_runtime",
+          channel: "development",
+          sampleCount: 5,
+          captureCpuP95Ms: 12,
+          providerPathLatencyP95Ms: 18,
+          sqliteLockWaitP95Ms: 2,
+        }),
+      );
     });
     await new Promise<void>((resolve, reject) => {
       operations.once("error", reject);
@@ -416,7 +478,8 @@ describe("Track B operations APIs", () => {
     });
     try {
       const address = operations.address();
-      if (!address || typeof address === "string") throw new Error("operations server did not bind");
+      if (!address || typeof address === "string")
+        throw new Error("operations server did not bind");
       const api = createTrackBOperations({
         statePath: path.join(os.tmpdir(), `run94-no-rich-baseline-${Date.now()}.json`),
         catalog: [],
@@ -428,9 +491,17 @@ describe("Track B operations APIs", () => {
         channel: "development",
         sampleCount: 5,
       });
-      expect(received).toEqual([{ path: "/capture/performance-baseline", authorization: "Bearer run94-baseline-token-0001", body: { sampleCount: 5 } }]);
+      expect(received).toEqual([
+        {
+          path: "/capture/performance-baseline",
+          authorization: "Bearer run94-baseline-token-0001",
+          body: { sampleCount: 5 },
+        },
+      ]);
     } finally {
-      await new Promise<void>((resolve, reject) => operations.close((error) => error ? reject(error) : resolve()));
+      await new Promise<void>((resolve, reject) =>
+        operations.close((error) => (error ? reject(error) : resolve())),
+      );
     }
   });
 
@@ -1026,11 +1097,20 @@ describe("Track B operations APIs", () => {
         },
         edgeCount: 2,
       });
-      expect((detail as unknown as { liveBudgetEvidence?: { compactObservationBytes?: number; runtimeRssBytes?: number } }).liveBudgetEvidence).toMatchObject({
+      expect(
+        (
+          detail as unknown as {
+            liveBudgetEvidence?: { compactObservationBytes?: number; runtimeRssBytes?: number };
+          }
+        ).liveBudgetEvidence,
+      ).toMatchObject({
         compactObservationBytes: expect.any(Number),
         runtimeRssBytes: expect.any(Number),
       });
-      expect((detail as unknown as { liveBudgetEvidence: { compactObservationBytes: number } }).liveBudgetEvidence.compactObservationBytes).toBeLessThanOrEqual(16 * 1024);
+      expect(
+        (detail as unknown as { liveBudgetEvidence: { compactObservationBytes: number } })
+          .liveBudgetEvidence.compactObservationBytes,
+      ).toBeLessThanOrEqual(16 * 1024);
       const telemetryDatabase = new DatabaseSync(databasePath);
       telemetryDatabase
         .prepare("DELETE FROM runtime_telemetry_records WHERE request_id=?")
@@ -1123,20 +1203,22 @@ describe("Track B operations APIs", () => {
       }
       const failure = captureInput?.failure as Record<string, unknown>;
       response.writeHead(200, { "content-type": "application/json" });
-      response.end(JSON.stringify({
-        schemaVersion: "role-model.route-capture-read.v1",
-        requestId: captureInput?.requestId,
-        routingDecisionId: captureInput?.routingDecisionId,
-        rootArtifactId: "root-recovered-94",
-        projectionCompleteness: "metadata_only",
-        recovery: captureInput?.recovery,
-        messages: [],
-        response: { nodeId: "response-recovered-94", role: "assistant", content: null, failure },
-        terminalState: "provider_error",
-        failure,
-        tools: [],
-        edgeCount: 1,
-      }));
+      response.end(
+        JSON.stringify({
+          schemaVersion: "role-model.route-capture-read.v1",
+          requestId: captureInput?.requestId,
+          routingDecisionId: captureInput?.routingDecisionId,
+          rootArtifactId: "root-recovered-94",
+          projectionCompleteness: "metadata_only",
+          recovery: captureInput?.recovery,
+          messages: [],
+          response: { nodeId: "response-recovered-94", role: "assistant", content: null, failure },
+          terminalState: "provider_error",
+          failure,
+          tools: [],
+          edgeCount: 1,
+        }),
+      );
     });
     await new Promise<void>((resolve, reject) => {
       operations.once("error", reject);

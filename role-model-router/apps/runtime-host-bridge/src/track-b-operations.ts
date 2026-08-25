@@ -655,7 +655,8 @@ function recordValue(value: unknown): Readonly<Record<string, unknown>> {
 
 function finiteNonNegative(value: unknown, label: string): number {
   const number = Number(value);
-  if (!Number.isFinite(number) || number < 0) throw new Error(`${label} must be finite and non-negative`);
+  if (!Number.isFinite(number) || number < 0)
+    throw new Error(`${label} must be finite and non-negative`);
   return number;
 }
 
@@ -733,22 +734,47 @@ export function buildGraphEvidenceFromCapture(
   const tools = Array.isArray(capture.tools) ? capture.tools : [];
   const toolRows = tools.map((tool) => recordValue(tool));
   const rawCaptureMetrics = recordValue(capture.captureMetrics);
-  const captureMetrics = Object.keys(rawCaptureMetrics).length > 0
-    ? Object.freeze({
-        captureCpuMs: finiteNonNegative(rawCaptureMetrics.captureCpuMs, "capture CPU"),
-        captureWallMs: finiteNonNegative(rawCaptureMetrics.captureWallMs, "capture wall time"),
-        sqliteLockWaitMs: finiteNonNegative(rawCaptureMetrics.sqliteLockWaitMs, "SQLite lock wait"),
-        queueDepthBefore: finiteNonNegative(rawCaptureMetrics.queueDepthBefore, "capture queue depth before"),
-        queueDepthAfter: finiteNonNegative(rawCaptureMetrics.queueDepthAfter, "capture queue depth"),
-        filesystemBytesBefore: finiteNonNegative(rawCaptureMetrics.filesystemBytesBefore, "filesystem bytes before"),
-        filesystemBytesAfter: finiteNonNegative(rawCaptureMetrics.filesystemBytesAfter, "filesystem bytes after"),
-        casBytesBefore: finiteNonNegative(rawCaptureMetrics.casBytesBefore, "CAS bytes before"),
-        casBytesAfter: finiteNonNegative(rawCaptureMetrics.casBytesAfter, "CAS bytes after"),
-        normalizedStateBytesBefore: finiteNonNegative(rawCaptureMetrics.normalizedStateBytesBefore, "normalized state bytes before"),
-        normalizedStateBytesAfter: finiteNonNegative(rawCaptureMetrics.normalizedStateBytesAfter, "normalized state bytes after"),
-        archiveManifestInlineContentBytes: finiteNonNegative(rawCaptureMetrics.archiveManifestInlineContentBytes, "archive manifest inline content bytes"),
-      })
-    : null;
+  const captureMetrics =
+    Object.keys(rawCaptureMetrics).length > 0
+      ? Object.freeze({
+          captureCpuMs: finiteNonNegative(rawCaptureMetrics.captureCpuMs, "capture CPU"),
+          captureWallMs: finiteNonNegative(rawCaptureMetrics.captureWallMs, "capture wall time"),
+          sqliteLockWaitMs: finiteNonNegative(
+            rawCaptureMetrics.sqliteLockWaitMs,
+            "SQLite lock wait",
+          ),
+          queueDepthBefore: finiteNonNegative(
+            rawCaptureMetrics.queueDepthBefore,
+            "capture queue depth before",
+          ),
+          queueDepthAfter: finiteNonNegative(
+            rawCaptureMetrics.queueDepthAfter,
+            "capture queue depth",
+          ),
+          filesystemBytesBefore: finiteNonNegative(
+            rawCaptureMetrics.filesystemBytesBefore,
+            "filesystem bytes before",
+          ),
+          filesystemBytesAfter: finiteNonNegative(
+            rawCaptureMetrics.filesystemBytesAfter,
+            "filesystem bytes after",
+          ),
+          casBytesBefore: finiteNonNegative(rawCaptureMetrics.casBytesBefore, "CAS bytes before"),
+          casBytesAfter: finiteNonNegative(rawCaptureMetrics.casBytesAfter, "CAS bytes after"),
+          normalizedStateBytesBefore: finiteNonNegative(
+            rawCaptureMetrics.normalizedStateBytesBefore,
+            "normalized state bytes before",
+          ),
+          normalizedStateBytesAfter: finiteNonNegative(
+            rawCaptureMetrics.normalizedStateBytesAfter,
+            "normalized state bytes after",
+          ),
+          archiveManifestInlineContentBytes: finiteNonNegative(
+            rawCaptureMetrics.archiveManifestInlineContentBytes,
+            "archive manifest inline content bytes",
+          ),
+        })
+      : null;
   const response = recordValue(capture.response);
   const edgeCount = Number(capture.edgeCount);
   const metadataOnly = capture.projectionCompleteness === "metadata_only";
@@ -772,9 +798,7 @@ export function buildGraphEvidenceFromCapture(
     responseNodeId: boundedIdentity(response.nodeId, "graph response node id"),
     toolExecutionNodeIds: toolRows
       .filter((tool) => tool.kind === undefined || tool.kind === "tool_execution")
-      .map((tool, index) =>
-        boundedIdentity(tool.nodeId, `graph tool execution node ${index + 1}`),
-      ),
+      .map((tool, index) => boundedIdentity(tool.nodeId, `graph tool execution node ${index + 1}`)),
     toolCallNodeIds: toolRows
       .filter((tool) => tool.kind === "tool_call")
       .map((tool, index) => boundedIdentity(tool.nodeId, `graph tool call node ${index + 1}`)),
@@ -859,9 +883,7 @@ export function buildVerifiersLiveExport(input: {
   if (taskPromptContent === undefined)
     throw new Error("Verifiers TraceTask prompt content is required");
   const taskPrompt =
-    typeof taskPromptContent === "string"
-      ? taskPromptContent
-      : JSON.stringify(taskPromptContent);
+    typeof taskPromptContent === "string" ? taskPromptContent : JSON.stringify(taskPromptContent);
   const semanticMessages = [...messages, response].map((value, index) => {
     const message = recordValue(value);
     const role = boundedIdentity(message.role, `Verifiers node ${index + 1} role`);
@@ -872,7 +894,9 @@ export function buildVerifiersLiveExport(input: {
       const nestedFunction = recordValue(toolCall.function);
       const argumentsValue = toolCall.arguments ?? nestedFunction.arguments;
       if (argumentsValue === undefined)
-        throw new Error(`Verifiers node ${index + 1} tool call ${toolIndex + 1} arguments are required`);
+        throw new Error(
+          `Verifiers node ${index + 1} tool call ${toolIndex + 1} arguments are required`,
+        );
       return {
         id: boundedIdentity(
           toolCall.id,
@@ -883,9 +907,7 @@ export function buildVerifiersLiveExport(input: {
           `Verifiers node ${index + 1} tool call ${toolIndex + 1} name`,
         ),
         arguments:
-          typeof argumentsValue === "string"
-            ? argumentsValue
-            : JSON.stringify(argumentsValue),
+          typeof argumentsValue === "string" ? argumentsValue : JSON.stringify(argumentsValue),
       };
     });
     const toolCallId = typeof message.toolCallId === "string" ? message.toolCallId : null;
@@ -903,9 +925,7 @@ export function buildVerifiersLiveExport(input: {
       mask: [],
       is_content: [],
       logprobs: [],
-      ...(index === messages.length
-        ? { finish_reason: providerFailure ? "error" : "stop" }
-        : {}),
+      ...(index === messages.length ? { finish_reason: providerFailure ? "error" : "stop" } : {}),
     };
   });
   const routingDecisionId = boundedIdentity(
@@ -1739,7 +1759,9 @@ export function createTrackBOperations({
     },
     async measureNoRichCaptureBaseline(input: Record<string, unknown>): Promise<unknown> {
       if (!operationsEndpoint)
-        throw new Error("private operations endpoint is required for no-rich capture baseline measurement");
+        throw new Error(
+          "private operations endpoint is required for no-rich capture baseline measurement",
+        );
       const url = new URL(operationsEndpoint);
       if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
         throw new Error("no-rich capture baseline requires a loopback operations boundary");

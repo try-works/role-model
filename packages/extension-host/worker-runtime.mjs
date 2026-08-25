@@ -38,18 +38,19 @@ const MAX_INLINE_OUTPUT_BYTES = 16 * 1024;
 const MAX_DURABLE_OUTPUT_ROWS = 512;
 
 function persistBusinessOutput(envelope, result) {
+  const capability = envelope.capability ?? "health:probe";
   const resultJson = JSON.stringify(result ?? null);
   const byteLength = Buffer.byteLength(resultJson, "utf8");
   const resultHash = `sha256:${createHash("sha256").update(resultJson).digest("hex")}`;
   const outputKey = `sha256:${createHash("sha256")
-    .update(`${extensionId}\0${envelope.requestId}\0${envelope.capability}\0${resultHash}`)
+    .update(`${extensionId}\0${envelope.requestId}\0${capability}\0${resultHash}`)
     .digest("hex")}`;
   outputDatabase
     .prepare("INSERT OR IGNORE INTO durable_extension_outputs VALUES (?,?,?,?,?,?,?,?,?)")
     .run(
       outputKey,
       envelope.requestId,
-      envelope.capability,
+      capability,
       envelope.channel,
       envelope.scope,
       resultHash,
@@ -66,7 +67,7 @@ function persistBusinessOutput(envelope, result) {
   const durableLocator = Object.freeze({
     extensionId,
     requestId: envelope.requestId,
-    capability: envelope.capability,
+    capability,
     channel: envelope.channel,
     scope: envelope.scope,
     outputKey,

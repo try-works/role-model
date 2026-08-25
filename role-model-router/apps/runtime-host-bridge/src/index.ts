@@ -27710,7 +27710,9 @@ export async function createRuntimeBridgeBackend(
     },
     async recoverLegacyTerminalFailure(body: Record<string, unknown>): Promise<unknown> {
       if (runtimeChannel === "production")
-        throw new Error("legacy terminal failure recovery is restricted to development and stage channels");
+        throw new Error(
+          "legacy terminal failure recovery is restricted to development and stage channels",
+        );
       const allowedKeys = new Set(["requestId", "acknowledgeMetadataOnly"]);
       const unexpectedKeys = Object.keys(body).filter((key) => !allowedKeys.has(key));
       if (unexpectedKeys.length > 0)
@@ -27736,7 +27738,9 @@ export async function createRuntimeBridgeBackend(
           existingRecovery.kind !== "legacy_terminal_failure" ||
           existingRecovery.source !== "persisted_runtime_observation"
         )
-          throw new Error("legacy terminal failure recovery refused because graph evidence already exists");
+          throw new Error(
+            "legacy terminal failure recovery refused because graph evidence already exists",
+          );
         const graphEvidence = buildGraphEvidenceFromCapture(existingCapture);
         const recoveredObservation = Object.freeze({
           ...(observation as unknown as Record<string, unknown>),
@@ -27777,7 +27781,9 @@ export async function createRuntimeBridgeBackend(
       const captureInput = buildLegacyTerminalFailureRecoveryCapture(
         observation as unknown as Readonly<Record<string, unknown>>,
       );
-      await runtimeTrackBOperations.recordLocalRouteCapture(captureInput as Record<string, unknown>);
+      await runtimeTrackBOperations.recordLocalRouteCapture(
+        captureInput as Record<string, unknown>,
+      );
       const capture = await readExactRouteCapture(requestId);
       if (!capture) throw new Error("metadata-only recovery did not commit durable graph evidence");
       const graphEvidence = buildGraphEvidenceFromCapture(capture);
