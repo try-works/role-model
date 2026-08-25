@@ -15867,14 +15867,14 @@ describe("runtime-host-bridge", () => {
         createRuntimeBridgeBackend: (options: {
           repoRoot: string;
           fixtureRoot: string;
-           runtimeStateRoot: string;
-           scopeId: string;
-           networkFetcher?: typeof fetch;
-           trackBOperationsEndpoint?: string;
-           trackBOperationsToken?: string;
-           trackBPostObservation?: (
-             observation: Readonly<Record<string, unknown>>,
-           ) => Promise<unknown>;
+          runtimeStateRoot: string;
+          scopeId: string;
+          networkFetcher?: typeof fetch;
+          trackBOperationsEndpoint?: string;
+          trackBOperationsToken?: string;
+          trackBPostObservation?: (
+            observation: Readonly<Record<string, unknown>>,
+          ) => Promise<unknown>;
         }) => Promise<{
           upsertProviderAccount: (body: Record<string, unknown>) => Promise<unknown>;
           activateEndpoint: (body: Record<string, unknown>) => Promise<{ endpointId: string }>;
