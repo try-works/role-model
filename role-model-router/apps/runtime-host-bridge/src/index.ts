@@ -4215,11 +4215,15 @@ export function shouldRetryUpstreamExecutionOnSameEndpoint(input: {
   readonly errorClass: string;
   readonly statusCode: number;
   readonly alreadyRetried: boolean;
+  readonly fallbackEligible: boolean;
+  readonly hasOtherEligibleEndpoint: boolean;
 }): boolean {
   return (
     input.retryable &&
     !input.alreadyRetried &&
-    classifyExecutionFailureCategory(input.errorClass, input.statusCode) !== "rate_limit"
+    classifyExecutionFailureCategory(input.errorClass, input.statusCode) !== "rate_limit" &&
+    !input.fallbackEligible &&
+    input.hasOtherEligibleEndpoint
   );
 }
 
@@ -23572,11 +23576,30 @@ export async function createRuntimeBridgeBackend(
             error.errorClass,
             error.statusCode,
           );
+          const hasOtherEligibleEndpoint = (routed.projected.routeInput.candidates ?? []).some(
+            (candidate) => {
+              const candidateEndpointId = candidate.identity.endpoint_id;
+              if (
+                candidateEndpointId === error.endpointId ||
+                deniedEndpointIds.includes(candidateEndpointId)
+              )
+                return false;
+              const candidateEndpoint = runtimeEndpoints.find(
+                (endpoint) => endpoint.endpointId === candidateEndpointId,
+              );
+              return (
+                candidateEndpoint?.lifecycleState === "active" &&
+                candidateEndpoint.healthStatus !== "provider-unavailable"
+              );
+            },
+          );
           const shouldRetry = shouldRetryUpstreamExecutionOnSameEndpoint({
             retryable: error.retryable,
             errorClass: error.errorClass,
             statusCode: error.statusCode,
             alreadyRetried: retriedEndpointIds.has(error.endpointId),
+            fallbackEligible: error.fallbackEligible,
+            hasOtherEligibleEndpoint,
           });
           let cooldownRecord: ExecutionCircuitRecord | undefined;
           if (shouldRetry) {

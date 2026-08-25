@@ -15795,7 +15795,7 @@ describe("runtime-host-bridge", () => {
       ).resolves.toEqual(
         expect.objectContaining({
           executionSemantics: expect.objectContaining({
-            retryCount: 1,
+            retryCount: 0,
             rerouteCount: 1,
             cooldownDecision: "recorded",
             idempotencyDecision: "not_needed",
@@ -15806,17 +15806,10 @@ describe("runtime-host-bridge", () => {
                 failureClass: "upstream_timeout",
                 retryable: true,
                 fallbackEligible: true,
-                cooldownRecorded: false,
-              }),
-              expect.objectContaining({
-                failedEndpointId: "moonshot.personal.a-primary.global.kimi-k2.5",
-                failureClass: "quota_exhausted",
-                retryable: false,
-                fallbackEligible: true,
                 cooldownRecorded: true,
                 cooldownFailureCount: 1,
                 errorPreview: expect.objectContaining({
-                  message: expect.stringContaining("usage limit"),
+                  message: expect.stringContaining("timed out"),
                 }),
               }),
             ]),
@@ -15827,7 +15820,7 @@ describe("runtime-host-bridge", () => {
         expect.arrayContaining([
           expect.objectContaining({
             requestId: "req-runtime-bridge-live-fallback-001",
-            retryCount: 1,
+            retryCount: 0,
             rerouteCount: 1,
             cooldownDecision: "recorded",
           }),
@@ -15844,7 +15837,6 @@ describe("runtime-host-bridge", () => {
       expect(followUpResult.endpointId).toBe("moonshot.personal.z-backup.global.kimi-k2.5");
       expect(followUpResult.outputText).toBe("backup endpoint handled the request");
       expect(seenAuthorizations).toEqual([
-        "Bearer moonshot-primary-live-key",
         "Bearer moonshot-primary-live-key",
         "Bearer moonshot-backup-live-key",
         "Bearer moonshot-backup-live-key",
@@ -16317,7 +16309,7 @@ describe("runtime-host-bridge", () => {
           "req-runtime-bridge-codex-timeout-001",
         ),
       ).rejects.toThrow(/could not reach the ai service|timed out/i);
-      expect(executeAttempts).toBe(2);
+      expect(executeAttempts).toBe(1);
       const timeoutTelemetryRows = ((await backend.listTelemetryRequests?.()) ?? []) as Array<{
         requestId?: string;
         endpointId?: string;
@@ -16355,7 +16347,7 @@ describe("runtime-host-bridge", () => {
             structuredInspectionAvailable: true,
           }),
           executionSemantics: expect.objectContaining({
-            retryCount: 1,
+            retryCount: 0,
             failedAttempts: expect.arrayContaining([
               expect.objectContaining({
                 failedEndpointId: endpoint.endpointId,
@@ -16398,7 +16390,7 @@ describe("runtime-host-bridge", () => {
       }
       expect(secondFailure).toBeInstanceOf(Error);
       expect((secondFailure as Error).message).toMatch(/could not reach the ai service|timed out/i);
-      expect(executeAttempts).toBe(4);
+      expect(executeAttempts).toBe(2);
       await expect(
         backend.executeChatCompletions(
           {
@@ -16419,7 +16411,7 @@ describe("runtime-host-bridge", () => {
           },
         ),
       ).rejects.toThrow(/could not reach the ai service|timed out/i);
-      expect(executeAttempts).toBe(6);
+      expect(executeAttempts).toBe(3);
       await expect(backend.listEndpoints()).resolves.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -16501,7 +16493,7 @@ describe("runtime-host-bridge", () => {
             }),
           }),
         );
-        expect(executeAttempts).toBe(6);
+        expect(executeAttempts).toBe(3);
 
         const telemetryResponse = await fetch(
           `http://127.0.0.1:${server.port}/api/role-model/telemetry/requests`,
@@ -17883,6 +17875,8 @@ describe("runtime-host-bridge", () => {
           errorClass: string;
           statusCode: number;
           alreadyRetried: boolean;
+          fallbackEligible: boolean;
+          hasOtherEligibleEndpoint: boolean;
         }) => boolean;
       }
     ).shouldRetryUpstreamExecutionOnSameEndpoint;
@@ -17892,6 +17886,8 @@ describe("runtime-host-bridge", () => {
         errorClass: "rate_limited",
         statusCode: 429,
         alreadyRetried: false,
+        fallbackEligible: false,
+        hasOtherEligibleEndpoint: false,
       }),
     ).toBe(false);
     expect(
@@ -17900,14 +17896,48 @@ describe("runtime-host-bridge", () => {
         errorClass: "upstream_timeout",
         statusCode: 504,
         alreadyRetried: false,
+        fallbackEligible: false,
+        hasOtherEligibleEndpoint: false,
+      }),
+    ).toBe(false);
+    expect(
+      shouldRetry({
+        retryable: true,
+        errorClass: "upstream_timeout",
+        statusCode: 504,
+        alreadyRetried: false,
+        fallbackEligible: false,
+        hasOtherEligibleEndpoint: true,
       }),
     ).toBe(true);
+    expect(
+      shouldRetry({
+        retryable: true,
+        errorClass: "upstream_error",
+        statusCode: 503,
+        alreadyRetried: false,
+        fallbackEligible: true,
+        hasOtherEligibleEndpoint: true,
+      }),
+    ).toBe(false);
+    expect(
+      shouldRetry({
+        retryable: true,
+        errorClass: "upstream_error",
+        statusCode: 503,
+        alreadyRetried: false,
+        fallbackEligible: true,
+        hasOtherEligibleEndpoint: false,
+      }),
+    ).toBe(false);
     expect(
       shouldRetry({
         retryable: true,
         errorClass: "upstream_timeout",
         statusCode: 504,
         alreadyRetried: true,
+        fallbackEligible: false,
+        hasOtherEligibleEndpoint: true,
       }),
     ).toBe(false);
   });
