@@ -8213,6 +8213,7 @@ function resolveRequestedModelPool(
   inventory: RoutableInventory | null = null,
 ): {
   readonly allowEndpoints: readonly string[];
+  readonly preferredEndpointIds: readonly string[];
   readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution">;
 } {
   // A selectable endpoint row is also a valid OpenAI `model` value. Resolve
@@ -8224,13 +8225,14 @@ function resolveRequestedModelPool(
       toLegacyCredentializedEndpointId(endpoint.identity.endpoint_id) === requestedModel,
   );
   if (exactEndpoint) {
-    return { allowEndpoints: [exactEndpoint.identity.endpoint_id] };
+    return { allowEndpoints: [exactEndpoint.identity.endpoint_id], preferredEndpointIds: [] };
   }
 
   const alias = modelAliases.find((entry) => entry.aliasId === requestedModel);
   if (!alias) {
     return {
       allowEndpoints: collectAllowedEndpointIds(registry, [requestedModel]),
+      preferredEndpointIds: [],
     };
   }
 
@@ -8238,6 +8240,9 @@ function resolveRequestedModelPool(
     const resolution = resolveAliasAllowEndpoints(alias, inventory, registry);
     return {
       allowEndpoints: resolution.allowEndpoints,
+      preferredEndpointIds: (alias.preferredEndpointIds ?? []).filter((endpointId) =>
+        resolution.allowEndpoints.includes(endpointId),
+      ),
       routingDiagnostics: {
         aliasResolution: {
           requestedModel,
@@ -8267,6 +8272,9 @@ function resolveRequestedModelPool(
   );
   return {
     allowEndpoints,
+    preferredEndpointIds: (alias.preferredEndpointIds ?? []).filter((endpointId) =>
+      allowEndpoints.includes(endpointId),
+    ),
     routingDiagnostics: {
       aliasResolution: {
         requestedModel,
@@ -8277,6 +8285,17 @@ function resolveRequestedModelPool(
       },
     },
   };
+}
+
+function resolveAliasRoutingModel(
+  preferredEndpointIds: readonly string[],
+  allowEndpoints: readonly string[],
+): RoutingModelSelection | undefined {
+  const allowed = new Set(allowEndpoints);
+  const preferred = preferredEndpointIds.filter((endpointId) => allowed.has(endpointId));
+  return preferred.length > 0
+    ? { endpointId: preferred[0], preferredEndpointIds: preferred }
+    : undefined;
 }
 
 function filterRequestedModelPoolByReasoningEffort(input: {
@@ -8920,12 +8939,11 @@ export function mapChatCompletionsRequest(
   const roleModelIntent = readRoleModelIntentFromRequestBody(
     body as unknown as Record<string, unknown>,
   );
-  const { allowEndpoints: modelAllowEndpoints, routingDiagnostics } = resolveRequestedModelPool(
-    registry,
-    body.model,
-    modelAliases,
-    inventory,
-  );
+  const {
+    allowEndpoints: modelAllowEndpoints,
+    preferredEndpointIds: aliasPreferredEndpointIds,
+    routingDiagnostics,
+  } = resolveRequestedModelPool(registry, body.model, modelAliases, inventory);
   const allowEndpoints = filterRequestedModelPoolByReasoningEffort({
     registry,
     requestedModel: body.model,
@@ -9041,6 +9059,11 @@ export function mapChatCompletionsRequest(
       rolePolicyExecution.executionRequest.messages,
     );
   const sessionAffinity = buildBridgeExecutionSessionAffinity(requestOptions);
+  const aliasRoutingModel = resolveAliasRoutingModel(
+    aliasPreferredEndpointIds,
+    rolePolicyExecution.routingRequest.allowEndpoints ?? [],
+  );
+  const effectiveRoutingModel = controllerRouting.routingModel ?? aliasRoutingModel;
   return {
     routingRequest: rolePolicyExecution.routingRequest,
     executionRequest: {
@@ -9061,7 +9084,7 @@ export function mapChatCompletionsRequest(
       ...(typeof body.max_tokens === "number" ? { maxOutputTokens: body.max_tokens } : {}),
       ...(typeof body.temperature === "number" ? { temperature: body.temperature } : {}),
     },
-    ...(controllerRouting.routingModel ? { routingModel: controllerRouting.routingModel } : {}),
+    ...(effectiveRoutingModel ? { routingModel: effectiveRoutingModel } : {}),
     ...(rolePolicyExecution.routingDiagnostics
       ? { routingDiagnostics: rolePolicyExecution.routingDiagnostics }
       : {}),
@@ -9090,12 +9113,11 @@ export function mapResponsesRequest(
   const capabilityRequirements = inferResponsesCapabilityRequirements(
     body as unknown as Record<string, unknown>,
   );
-  const { allowEndpoints: modelAllowEndpoints, routingDiagnostics } = resolveRequestedModelPool(
-    registry,
-    body.model,
-    modelAliases,
-    inventory,
-  );
+  const {
+    allowEndpoints: modelAllowEndpoints,
+    preferredEndpointIds: aliasPreferredEndpointIds,
+    routingDiagnostics,
+  } = resolveRequestedModelPool(registry, body.model, modelAliases, inventory);
   const allowEndpoints = filterRequestedModelPoolByReasoningEffort({
     registry,
     requestedModel: body.model,
@@ -9219,6 +9241,11 @@ export function mapResponsesRequest(
     );
   const continuation = readResponsesContinuationRequest(body);
   const sessionAffinity = buildBridgeExecutionSessionAffinity(requestOptions);
+  const aliasRoutingModel = resolveAliasRoutingModel(
+    aliasPreferredEndpointIds,
+    rolePolicyExecution.routingRequest.allowEndpoints ?? [],
+  );
+  const effectiveRoutingModel = controllerRouting.routingModel ?? aliasRoutingModel;
 
   return {
     routingRequest: rolePolicyExecution.routingRequest,
@@ -9243,7 +9270,7 @@ export function mapResponsesRequest(
         : {}),
       ...(typeof body.temperature === "number" ? { temperature: body.temperature } : {}),
     },
-    ...(controllerRouting.routingModel ? { routingModel: controllerRouting.routingModel } : {}),
+    ...(effectiveRoutingModel ? { routingModel: effectiveRoutingModel } : {}),
     ...(rolePolicyExecution.routingDiagnostics
       ? { routingDiagnostics: rolePolicyExecution.routingDiagnostics }
       : {}),

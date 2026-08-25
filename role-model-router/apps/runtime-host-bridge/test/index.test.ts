@@ -1689,6 +1689,56 @@ describe("runtime-host-bridge", () => {
     });
   });
 
+  test("maps custom alias endpoint preference into the normal routing-model signal", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          aliases: readonly {
+            aliasId: string;
+            mode: "basic";
+            modelIds: readonly string[];
+            endpointIds: readonly string[];
+            preferredEndpointIds: readonly string[];
+          }[],
+        ) => {
+          routingRequest: { allowEndpoints: readonly string[] };
+          routingModel?: { endpointId: string; preferredEndpointIds: readonly string[] };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "run94.fallback",
+        messages: [{ role: "user", content: "exercise ordered fallback" }],
+      },
+      "req-run94-alias-preference",
+      [
+        {
+          aliasId: "run94.fallback",
+          mode: "basic",
+          modelIds: ["moonshot/kimi-k2.5"],
+          endpointIds: [
+            "moonshot.personal.primary.global.kimi-k2.5",
+            "moonshot.personal.kimi-code.global.kimi-k2.5",
+          ],
+          preferredEndpointIds: ["moonshot.personal.primary.global.kimi-k2.5"],
+        },
+      ],
+    );
+
+    expect(result.routingRequest.allowEndpoints).toEqual([
+      "moonshot.personal.kimi-code.global.kimi-k2.5",
+      "moonshot.personal.primary.global.kimi-k2.5",
+    ]);
+    expect(result.routingModel).toEqual({
+      endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+      preferredEndpointIds: ["moonshot.personal.primary.global.kimi-k2.5"],
+    });
+  });
+
   test("maps request role_model intent metadata into the routing request", () => {
     const result = (
       bridge as {

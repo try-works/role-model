@@ -1086,6 +1086,53 @@ observed_data:
     ]);
   });
 
+  test("round-trips an ordered preferred endpoint subset for a custom alias", () => {
+    const parsed = parseUnifiedRuntimeConfigText(`
+version: "1.0"
+execution_mode: remote_only
+model_aliases:
+  run94.fallback:
+    mode: basic
+    model_ids: [deepseek/model]
+    endpoint_ids: [deepseek.control, deepseek.valid]
+    preferred_endpoint_ids: [deepseek.control]
+`);
+
+    expect(parsed.modelAliases).toEqual(
+      expect.arrayContaining([
+        {
+          aliasId: "run94.fallback",
+          mode: "basic",
+          modelIds: ["deepseek/model"],
+          endpointIds: ["deepseek.control", "deepseek.valid"],
+          preferredEndpointIds: ["deepseek.control"],
+        },
+      ]),
+    );
+    expect(parse(renderUnifiedRuntimeConfigText(parsed))).toMatchObject({
+      model_aliases: {
+        "run94.fallback": {
+          endpoint_ids: ["deepseek.control", "deepseek.valid"],
+          preferred_endpoint_ids: ["deepseek.control"],
+        },
+      },
+    });
+  });
+
+  test("rejects alias preferred endpoints outside the endpoint allowlist", () => {
+    expect(() =>
+      parseUnifiedRuntimeConfigText(`
+version: "1.0"
+execution_mode: remote_only
+model_aliases:
+  run94.fallback:
+    model_ids: [deepseek/model]
+    endpoint_ids: [deepseek.valid]
+    preferred_endpoint_ids: [deepseek.control]
+`),
+    ).toThrow(/preferred.*subset|preferred.*allowlist/i);
+  });
+
   test("accepts routing_strategy alias in partial runtime config patches", () => {
     const merged = mergeUnifiedRuntimeConfigDocuments(
       {
