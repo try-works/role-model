@@ -19701,6 +19701,7 @@ export async function createRuntimeBridgeBackend(
   };
   const applyUnifiedRuntimeConfigState = async (
     nextConfig: UnifiedRuntimeConfig | null,
+    applyMode: "startup" | "mutation" | "rollback" = "mutation",
   ): Promise<void> => {
     const nextNormalizedCatalog = withBuiltinLocalOpenAIProvider(
       applyUnifiedLiteLLMAdapterFamilyOverrides(
@@ -19826,11 +19827,35 @@ export async function createRuntimeBridgeBackend(
       nextModelAliases.length > 0 &&
       currentRoutableInventory.endpointIds.length > 0
     ) {
+      const aliasesToValidate = nextModelAliases.filter(
+        (alias) => !isPrimaryRoutingAliasId(alias.aliasId),
+      );
       const aliasValidation = validateAliasInventoryResolution(
-        nextModelAliases.filter((alias) => !isPrimaryRoutingAliasId(alias.aliasId)),
+        aliasesToValidate,
         currentRoutableInventory,
       );
-      if (!aliasValidation.valid) {
+      const knownEndpointIds = new Set(runtimeEndpoints.map((endpoint) => endpoint.endpointId));
+      for (const account of currentAccounts) {
+        for (const region of account.regionPolicy.regions) {
+          for (const modelId of account.allowedModels) {
+            knownEndpointIds.add(createEndpointId(account.providerAccountId, region, modelId));
+          }
+        }
+      }
+      const canRetainTemporarilyUnroutableAliases =
+        applyMode !== "mutation" &&
+        aliasesToValidate
+          .filter(
+            (alias) =>
+              resolveAliasAllowEndpoints(alias, currentRoutableInventory, currentRegistry)
+                .poolEmpty,
+          )
+          .every(
+            (alias) =>
+              (alias.endpointIds?.length ?? 0) > 0 &&
+              alias.endpointIds?.every((endpointId) => knownEndpointIds.has(endpointId)),
+          );
+      if (!aliasValidation.valid && !canRetainTemporarilyUnroutableAliases) {
         throw new Error(aliasValidation.errors[0] ?? "Alias inventory resolution failed.");
       }
     }
@@ -19853,7 +19878,7 @@ export async function createRuntimeBridgeBackend(
     await syncLocalPeerState(await readStoredPeers());
     rebuildCurrentState();
   } else {
-    await applyUnifiedRuntimeConfigState(currentUnifiedRuntimeConfig);
+    await applyUnifiedRuntimeConfigState(currentUnifiedRuntimeConfig, "startup");
   }
 
   let envelope: ReturnType<typeof assembleContextEnvelope>;
@@ -25091,7 +25116,7 @@ export async function createRuntimeBridgeBackend(
             await writeConfigTextAtomically(unifiedRuntimeConfigPath, previousText);
           }
           if (previousConfig) {
-            await applyUnifiedRuntimeConfigState(previousConfig);
+            await applyUnifiedRuntimeConfigState(previousConfig, "rollback");
           }
           throw error;
         }
@@ -26286,7 +26311,7 @@ export async function createRuntimeBridgeBackend(
           } catch (error) {
             try {
               await writeConfigTextAtomically(options.unifiedRuntimeConfigPath, previousText);
-              await applyUnifiedRuntimeConfigState(previousConfig);
+              await applyUnifiedRuntimeConfigState(previousConfig, "rollback");
               writeResolvedControllerAssignment(
                 previousPersistedController
                   ? {
@@ -26498,7 +26523,7 @@ export async function createRuntimeBridgeBackend(
                     }
                   : null,
               );
-              await applyUnifiedRuntimeConfigState(previousConfig);
+              await applyUnifiedRuntimeConfigState(previousConfig, "rollback");
             } else {
               rebuildCurrentState();
             }
