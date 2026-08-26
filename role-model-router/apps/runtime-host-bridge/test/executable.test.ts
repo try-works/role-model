@@ -104,9 +104,13 @@ async function collectRuntimeDependencyGraph(): Promise<
 describe("runtime-host-bridge executable packaging", () => {
   test("resolves an explicit external release root so dev and stage package trees cannot overwrite each other", () => {
     const distFixture =
-      process.platform === "win32" ? "D:/repo/role-model-router/dist" : "/repo/role-model-router/dist";
+      process.platform === "win32"
+        ? "D:/repo/role-model-router/dist"
+        : "/repo/role-model-router/dist";
     const explicitRootFixture =
-      process.platform === "win32" ? "D:/TEMP/run94-packages/development" : "/tmp/run94-packages/development";
+      process.platform === "win32"
+        ? "D:/TEMP/run94-packages/development"
+        : "/tmp/run94-packages/development";
     const defaultDir = packageSea.resolveReleaseOutputDirectory({
       distRoot: distFixture,
       releaseTarget: "win32-x64",
