@@ -1,13 +1,18 @@
 import { spawn } from "node:child_process";
 import { createHash, randomBytes, verify as verifySignature } from "node:crypto";
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { copyFile, lstat, mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createInterface } from "node:readline";
+import { DatabaseSync } from "node:sqlite";
 import { pathToFileURL } from "node:url";
+import { gunzipSync, gzipSync } from "node:zlib";
 
 import type { RuntimeEffortSource } from "@role-model-router/runtime-observability";
 import {
+  type GraphArtifactReference,
+  type LegacyArtifactWriteInput,
+  type LegacyArtifactWriteResult,
   type LegacyMigrationState,
   type LegacySqliteMigration,
   type PersistRuntimeObservationBundleInput,
@@ -71,6 +76,87 @@ export interface OwnedTrackBSidecarSpec {
 export interface ManagedArtifactKeyFiles {
   readonly artifactDigestKeyFile?: string;
   readonly artifactEncryptionKeyFile?: string;
+}
+
+/**
+ * Small local graph adapter for fixture and development runs that do not have
+ * the private operations sidecar configured. Rich observations live in these
+ * content-addressed files; SQLite stores only the bounded graph pointer.
+ */
+export function createTrackBFileGraphStore(input: {
+  readonly scopeId: string;
+  readonly rootPath: string;
+}): RuntimeObservationGraphStore {
+  const scopeId = input.scopeId.trim();
+  const rootPath = path.resolve(input.rootPath);
+  const artifactRoot = path.join(rootPath, "artifacts");
+  if (!scopeId) throw new Error("local graph scope is required");
+
+  const assertScope = (candidate: string): void => {
+    if (candidate !== scopeId) throw new Error("local graph scope mismatch");
+  };
+  const assertPath = (candidate: string): string => {
+    const resolved = path.resolve(candidate);
+    const relative = path.relative(rootPath, resolved);
+    if (relative.startsWith("..") || path.isAbsolute(relative)) {
+      throw new Error("local graph artifact path escapes its root");
+    }
+    return resolved;
+  };
+  const artifactPathForDigest = (digest: string): string =>
+    path.join(artifactRoot, `${digest}.json`);
+
+  return {
+    scopeId,
+    write(artifact: LegacyArtifactWriteInput): LegacyArtifactWriteResult {
+      assertScope(artifact.scopeId);
+      const contentHash = createHash("sha256").update(artifact.content).digest("hex");
+      const declaredHash = artifact.contentHash.replace(/^sha256:/, "");
+      if (declaredHash !== contentHash) {
+        throw new Error("local graph content hash mismatch");
+      }
+      mkdirSync(artifactRoot, { recursive: true });
+      const artifactPath = artifactPathForDigest(contentHash);
+      if (existsSync(artifactPath)) {
+        if (readFileSync(artifactPath, "utf8") !== artifact.content) {
+          throw new Error("local graph artifact content conflicts with its digest");
+        }
+      } else {
+        const temporaryPath = `${artifactPath}.${process.pid}.${Date.now()}.tmp`;
+        writeFileSync(temporaryPath, artifact.content, { encoding: "utf8", flag: "wx" });
+        try {
+          try {
+            renameSync(temporaryPath, artifactPath);
+          } catch (error) {
+            if (!existsSync(artifactPath)) throw error;
+          }
+        } finally {
+          rmSync(temporaryPath, { force: true });
+        }
+      }
+      return {
+        artifactId: `sha256:${contentHash}`,
+        artifactPath,
+        contentHash,
+      };
+    },
+    read(reference: GraphArtifactReference): string {
+      assertScope(reference.scopeId);
+      const artifactPath = assertPath(
+        reference.artifactPath ?? artifactPathForDigest(reference.contentHash),
+      );
+      const content = readFileSync(artifactPath, "utf8");
+      const contentHash = createHash("sha256").update(content).digest("hex");
+      if (contentHash !== reference.contentHash.replace(/^sha256:/, "")) {
+        throw new Error("local graph artifact content hash mismatch");
+      }
+      return content;
+    },
+    remove(artifact: LegacyArtifactWriteResult): void {
+      assertScope(scopeId);
+      rmSync(assertPath(artifact.artifactPath), { force: true });
+    },
+  };
 }
 
 async function pathExists(filePath: string): Promise<boolean> {
@@ -466,6 +552,7 @@ export function createRun88RuntimeCorrelation(input: {
   readonly service?: string;
   readonly operation?: string;
   readonly outcome?: string;
+  readonly correlationId?: string;
 }): Record<string, unknown> {
   for (const field of [
     "requestId",
@@ -484,11 +571,14 @@ export function createRun88RuntimeCorrelation(input: {
   const seed = `${input.releaseId}\0${input.requestId}\0${input.routingDecisionId}`;
   const hex = (label: string, length: number) =>
     createHash("sha256").update(`${label}\0${seed}`).digest("hex").slice(0, length);
+  const correlationId = input.correlationId ?? `corr-${hex("correlation", 24)}`;
+  if (!/^corr-[a-f0-9]{24}$/.test(correlationId))
+    throw new Error("Run 88 correlationId is invalid");
   return normalizeRun88RuntimeCorrelation(
     {
       schemaVersion: "run88-correlation.v1",
       eventId: `evt-${hex("event", 24)}`,
-      correlationId: `corr-${hex("correlation", 24)}`,
+      correlationId,
       traceId: hex("trace", 32),
       spanId: hex("span", 16),
       causalParentId: input.routingDecisionId,
@@ -507,6 +597,23 @@ export function createRun88RuntimeCorrelation(input: {
     },
     input.releaseId,
   );
+}
+
+export function createRuntimeRequestCorrelationId(input: {
+  readonly scope: string;
+  readonly requestId: string;
+  readonly routingDecisionId: string;
+}): string {
+  for (const [field, value] of Object.entries(input)) {
+    if (typeof value !== "string" || !value.trim() || value.length > 512 || /[\r\n]/.test(value))
+      throw new Error(`runtime request correlation ${field} is invalid`);
+  }
+  return `corr-${createHash("sha256")
+    .update(
+      `role-model.request-correlation.v1\0${input.scope}\0${input.requestId}\0${input.routingDecisionId}`,
+    )
+    .digest("hex")
+    .slice(0, 24)}`;
 }
 
 export function validateRun88ProviderResponseObservation(
@@ -856,10 +963,570 @@ export interface TrackBPostObservationReceipt {
   readonly result: unknown;
 }
 
-interface TrackBPostObservationDurableState {
-  readonly schemaVersion: "role-model.track-b-post-observation-outbox.v2";
-  readonly pending: TrackBPostObservationWorkItem[];
-  readonly receipts: TrackBPostObservationReceipt[];
+export const TRACK_B_CANONICAL_EXTENSION_IDS = [
+  "artifact-store",
+  "event-log",
+  "repository-context",
+  "background-evidence-scheduler",
+  "memory-store",
+  "knowledge-store",
+  "evaluation-core",
+  "crowdsourced-learning",
+  "replay-core",
+  "evaluation-runner-local",
+  "trajectory-signals",
+  "profile-learner",
+  "knowledge-worker",
+] as const;
+
+export interface TrackBExtensionOutputRecord {
+  readonly extensionId: string;
+  readonly capability: string;
+  readonly requestId: string;
+  readonly workerPid: number;
+  readonly durableOutputId: string;
+  readonly durableLocator: unknown;
+  readonly evidenceRef: string | null;
+  readonly readCapability: string | null;
+  readonly resultDigest: string;
+}
+
+export interface TrackBExtensionClosureEntry {
+  readonly extensionId: string;
+  readonly outputs: readonly TrackBExtensionOutputRecord[];
+}
+
+export interface TrackBExtensionClosure {
+  readonly schemaVersion: "role-model.track-b-extension-closure.v1";
+  readonly requestId: string;
+  readonly routingDecisionId: string;
+  readonly scope: string;
+  readonly channel: string;
+  readonly authorizationEpoch: number;
+  readonly registry: Readonly<Record<string, TrackBExtensionClosureEntry>>;
+}
+
+function canonicalExtensionValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalExtensionValue);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.keys(value as Record<string, unknown>)
+        .sort()
+        .map((key) => [key, canonicalExtensionValue((value as Record<string, unknown>)[key])]),
+    );
+  }
+  return value;
+}
+
+function extensionResultRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function extensionEvidenceRef(result: Record<string, unknown>): string | null {
+  if (typeof result.evidenceRef === "string" && result.evidenceRef.trim())
+    return result.evidenceRef;
+  const provenance = extensionResultRecord(result.provenance);
+  return typeof provenance.evidenceRef === "string" && provenance.evidenceRef.trim()
+    ? provenance.evidenceRef
+    : null;
+}
+
+function extensionDurableLocator(result: Record<string, unknown>): unknown {
+  if (result.durableLocator !== undefined) return result.durableLocator;
+  if (result.artifactRef !== undefined) return result.artifactRef;
+  if (typeof result.id === "string" && result.id.trim()) return { id: result.id };
+  if (typeof result.receiptId === "string" && result.receiptId.trim())
+    return { receiptId: result.receiptId };
+  return null;
+}
+
+function buildExtensionOutputRecord(
+  extensionId: string,
+  envelope: Record<string, unknown>,
+  result: unknown,
+): TrackBExtensionOutputRecord {
+  const record = extensionResultRecord(result);
+  const workerPid = record.workerPid;
+  if (!Number.isInteger(workerPid) || Number(workerPid) < 1)
+    throw new Error(`extension ${extensionId} did not return an actual worker PID`);
+  const durableLocator = extensionDurableLocator(record);
+  const evidenceRef = extensionEvidenceRef(record);
+  const supervisorOnlyKeys = new Set([
+    "workerPid",
+    "health",
+    "available",
+    "lifecycle",
+    "restarts",
+    "id",
+    "durableLocator",
+    "evidenceRef",
+    "readCapability",
+    "artifactRef",
+    "receiptId",
+    "resultDigest",
+  ]);
+  const meaningful = Object.fromEntries(
+    Object.entries(record).filter(([key]) => !supervisorOnlyKeys.has(key)),
+  );
+  if (durableLocator === null || Object.keys(meaningful).length === 0)
+    throw new Error(`extension ${extensionId} returned no durable business output`);
+  const outputIdentity = canonicalExtensionValue({
+    durableLocator,
+    evidenceRef,
+    businessOutput: record.businessOutput ?? meaningful,
+  });
+  const durableOutputId = `sha256:${createHash("sha256").update(JSON.stringify(outputIdentity)).digest("hex")}`;
+  return {
+    extensionId,
+    capability: String(envelope.capability ?? ""),
+    requestId: String(envelope.requestId ?? ""),
+    workerPid: Number(workerPid),
+    durableOutputId,
+    durableLocator,
+    evidenceRef,
+    readCapability:
+      typeof record.readCapability === "string" && record.readCapability.trim()
+        ? record.readCapability
+        : null,
+    resultDigest: durableOutputId,
+  };
+}
+
+export interface TrackBExtensionReadbackRuntime {
+  listExtensions(): readonly unknown[] | Promise<readonly unknown[]>;
+  mutateExtension(input: Record<string, unknown>): unknown | Promise<unknown>;
+  invoke(id: string, envelope: Record<string, unknown>): Promise<Record<string, unknown>>;
+}
+
+export async function verifyTrackBExtensionClosureAfterRestart(
+  runtime: TrackBExtensionReadbackRuntime,
+  closure: TrackBExtensionClosure,
+  input: {
+    readonly channel: string;
+    readonly scope: string;
+    readonly authorizationEpoch: number;
+    readonly readDurableEvidence?: (input: {
+      readonly extensionId: string;
+      readonly durableLocator: unknown;
+      readonly durableOutputId: string;
+    }) => Promise<unknown>;
+  },
+) {
+  if (closure?.schemaVersion !== "role-model.track-b-extension-closure.v1")
+    throw new Error("extension closure schema is invalid");
+  const states = await runtime.listExtensions();
+  const results: Array<{
+    extensionId: string;
+    capability: string;
+    durableOutputId: string;
+    readbackOutputId: string;
+    durableLocator: unknown;
+    evidenceRef: string | null;
+    readCapability: string | null;
+    resultDigest: string;
+    preRestartPid: number;
+    postRestartPid: number;
+  }> = [];
+  for (const extensionId of Object.keys(closure.registry).sort()) {
+    const entry = closure.registry[extensionId];
+    if (!entry || entry.extensionId !== extensionId || entry.outputs.length === 0)
+      throw new Error(`extension closure entry is incomplete for ${extensionId}`);
+    const state = states.find(
+      (candidate) => String((candidate as Record<string, unknown>).id ?? "") === extensionId,
+    ) as Record<string, unknown> | undefined;
+    const preRestartPid = Number(state?.pid);
+    if (!Number.isInteger(preRestartPid) || preRestartPid < 1)
+      throw new Error(`extension ${extensionId} has no live pre-restart PID`);
+    const revision = Number(state?.revision ?? 1);
+    const mutation = (await runtime.mutateExtension({
+      id: extensionId,
+      action: "restart",
+      mutationId: `run94-readback:${closure.requestId}:${extensionId}:revision:${revision}`,
+      expectedRevision: revision,
+    })) as Record<string, unknown>;
+    const mutationState = extensionResultRecord(mutation.state);
+    const postRestartPid = Number(mutationState.pid);
+    if (!Number.isInteger(postRestartPid) || postRestartPid < 1 || postRestartPid === preRestartPid)
+      throw new Error(`extension ${extensionId} restart did not produce a distinct worker PID`);
+    for (const output of entry.outputs) {
+      let readback: unknown;
+      if (output.readCapability) {
+        readback = await runtime.invoke(extensionId, {
+          requestId: `${closure.requestId}:readback:${output.durableOutputId}`,
+          protocolVersion: "1.1.0",
+          channel: input.channel,
+          scope: input.scope,
+          authorizationEpoch: input.authorizationEpoch,
+          capability: output.readCapability,
+          payload: {
+            durableLocator: output.durableLocator,
+            durableOutputId: output.durableOutputId,
+            evidenceRef: output.evidenceRef,
+          },
+        });
+      } else if (input.readDurableEvidence) {
+        readback = await input.readDurableEvidence({
+          extensionId,
+          durableLocator: output.durableLocator,
+          durableOutputId: output.durableOutputId,
+        });
+      } else {
+        throw new Error(
+          `extension ${extensionId} has no read capability or durable evidence reader`,
+        );
+      }
+      const readbackRecord = extensionResultRecord(readback);
+      const readbackOutputId = String(
+        readbackRecord.readbackOutputId ?? readbackRecord.durableOutputId ?? "",
+      );
+      if (readbackOutputId !== output.durableOutputId)
+        throw new Error(`extension ${extensionId} durable output readback mismatch`);
+      results.push({
+        extensionId,
+        capability: output.capability,
+        durableOutputId: output.durableOutputId,
+        readbackOutputId,
+        durableLocator: output.durableLocator,
+        evidenceRef: output.evidenceRef,
+        readCapability: output.readCapability,
+        resultDigest: output.resultDigest,
+        preRestartPid,
+        postRestartPid,
+      });
+    }
+  }
+  return {
+    schemaVersion: "role-model.track-b-extension-readback.v1" as const,
+    requestId: closure.requestId,
+    outputs: results,
+  };
+}
+
+const TRACK_B_OUTBOX_SCHEMA_VERSION = "role-model.track-b-post-observation-outbox.v3" as const;
+const TRACK_B_OUTBOX_RECEIPT_CAP_BYTES = 10 * 1024 * 1024;
+const TRACK_B_OUTBOX_RECEIPT_RAW_CAP_BYTES = 10 * 1024 * 1024;
+const TRACK_B_OUTBOX_SQLITE_HEADER = "SQLite format 3";
+
+function boundedJson(value: unknown, capBytes = TRACK_B_OUTBOX_RECEIPT_CAP_BYTES): string {
+  const json = JSON.stringify(value ?? null);
+  if (Buffer.byteLength(json, "utf8") <= capBytes) return json;
+  const bytes = Buffer.from(json, "utf8");
+  const digest = createHash("sha256").update(bytes).digest("hex");
+  if (bytes.byteLength <= TRACK_B_OUTBOX_RECEIPT_RAW_CAP_BYTES) {
+    const compressed = JSON.stringify({
+      status: "compressed_receipt",
+      encoding: "gzip-base64",
+      byteLength: bytes.byteLength,
+      sha256: `sha256:${digest}`,
+      payload: gzipSync(bytes, { level: 9 }).toString("base64"),
+    });
+    if (Buffer.byteLength(compressed, "utf8") <= capBytes) return compressed;
+  }
+  return JSON.stringify({
+    status: "bounded_receipt",
+    byteLength: bytes.byteLength,
+    sha256: `sha256:${digest}`,
+  });
+}
+
+function parseBoundedJson(json: string): unknown {
+  const value = JSON.parse(json) as Record<string, unknown> | unknown;
+  if (
+    !value ||
+    typeof value !== "object" ||
+    Array.isArray(value) ||
+    (value as Record<string, unknown>).status !== "compressed_receipt"
+  ) {
+    return value;
+  }
+  const record = value as Record<string, unknown>;
+  if (
+    record.encoding !== "gzip-base64" ||
+    typeof record.payload !== "string" ||
+    !Number.isSafeInteger(record.byteLength) ||
+    Number(record.byteLength) < 0 ||
+    Number(record.byteLength) > TRACK_B_OUTBOX_RECEIPT_RAW_CAP_BYTES ||
+    !/^sha256:[a-f0-9]{64}$/.test(String(record.sha256 ?? ""))
+  ) {
+    throw new Error("compressed receipt identity is invalid");
+  }
+  const bytes = gunzipSync(Buffer.from(record.payload, "base64"), {
+    maxOutputLength: TRACK_B_OUTBOX_RECEIPT_RAW_CAP_BYTES,
+  });
+  if (
+    bytes.byteLength !== record.byteLength ||
+    `sha256:${createHash("sha256").update(bytes).digest("hex")}` !== record.sha256
+  ) {
+    throw new Error("compressed receipt integrity verification failed");
+  }
+  return JSON.parse(bytes.toString("utf8"));
+}
+
+function outboxSchema(database: DatabaseSync): void {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS track_b_post_observation_pending (
+      request_id TEXT PRIMARY KEY,
+      routing_decision_id TEXT NOT NULL,
+      endpoint_id TEXT NOT NULL,
+      model_id TEXT,
+      reasoning_effort TEXT,
+      effort_source TEXT,
+      run88_correlation_json TEXT,
+      legacy_identity_missing INTEGER NOT NULL DEFAULT 0,
+      enqueued_at_ms INTEGER NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS track_b_post_observation_receipts (
+      request_id TEXT PRIMARY KEY,
+      completed_at TEXT NOT NULL,
+      result_json TEXT NOT NULL,
+      completed_at_ms INTEGER NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS track_b_post_observation_legacy_rows (
+      source_kind TEXT NOT NULL,
+      source_index INTEGER NOT NULL,
+      source_id TEXT,
+      classification TEXT NOT NULL CHECK (classification IN ('imported', 'quarantined')),
+      reason TEXT,
+      source_hash TEXT NOT NULL,
+      classified_at_ms INTEGER NOT NULL,
+      PRIMARY KEY (source_kind, source_index)
+    );
+    CREATE INDEX IF NOT EXISTS track_b_post_observation_pending_order
+      ON track_b_post_observation_pending(enqueued_at_ms, request_id);
+    CREATE TABLE IF NOT EXISTS track_b_post_observation_meta (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+  `);
+  database
+    .prepare(
+      "INSERT OR IGNORE INTO track_b_post_observation_meta (key, value) VALUES ('schemaVersion', ?)",
+    )
+    .run(TRACK_B_OUTBOX_SCHEMA_VERSION);
+}
+
+function sqliteHeader(bytes: Buffer): boolean {
+  return (
+    bytes.subarray(0, TRACK_B_OUTBOX_SQLITE_HEADER.length).toString("utf8") ===
+    TRACK_B_OUTBOX_SQLITE_HEADER
+  );
+}
+
+function legacyRowHash(row: unknown): string {
+  return `sha256:${createHash("sha256")
+    .update(JSON.stringify(row ?? null))
+    .digest("hex")}`;
+}
+
+function legacySourceId(row: unknown): string | null {
+  if (!row || typeof row !== "object" || Array.isArray(row)) return null;
+  const value = (row as Record<string, unknown>).requestId;
+  return typeof value === "string" && value.trim() ? value : null;
+}
+
+function insertLegacyClassification(
+  database: DatabaseSync,
+  input: {
+    readonly sourceKind: "pending" | "receipt";
+    readonly sourceIndex: number;
+    readonly sourceId: string | null;
+    readonly classification: "imported" | "quarantined";
+    readonly reason?: string;
+    readonly sourceHash: string;
+  },
+): void {
+  database
+    .prepare(
+      `INSERT INTO track_b_post_observation_legacy_rows
+       (source_kind, source_index, source_id, classification, reason, source_hash, classified_at_ms)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run(
+      input.sourceKind,
+      input.sourceIndex,
+      input.sourceId,
+      input.classification,
+      input.reason ?? null,
+      input.sourceHash,
+      Date.now(),
+    );
+}
+
+async function initializeTrackBPostObservationOutbox(
+  filePath: string,
+  maxItems: number,
+): Promise<void> {
+  await mkdir(path.dirname(filePath), { recursive: true });
+  const legacyArchivePath = `${filePath}.n-1.json`;
+  const bytes = await readFile(filePath).catch((error: unknown) => {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw error;
+  });
+  if (bytes && sqliteHeader(bytes)) {
+    const database = new DatabaseSync(filePath);
+    try {
+      outboxSchema(database);
+    } finally {
+      database.close();
+    }
+    return;
+  }
+
+  let legacyValue: unknown = null;
+  let legacySourcePath: string | null = null;
+  if (bytes) {
+    try {
+      legacyValue = JSON.parse(bytes.toString("utf8")) as unknown;
+    } catch (error) {
+      throw new Error(
+        `Track B post-observation legacy JSON is malformed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+    if (
+      await readFile(legacyArchivePath)
+        .then(() => true)
+        .catch(() => false)
+    ) {
+      throw new Error("Track B post-observation legacy JSON archive already exists");
+    }
+    await rename(filePath, legacyArchivePath);
+    legacySourcePath = legacyArchivePath;
+  } else if (
+    await readFile(legacyArchivePath)
+      .then(() => true)
+      .catch(() => false)
+  ) {
+    try {
+      legacyValue = JSON.parse(await readFile(legacyArchivePath, "utf8"));
+    } catch (error) {
+      throw new Error(
+        `Track B post-observation legacy archive is malformed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  const legacyPending = Array.isArray(legacyValue) ? legacyValue : null;
+  const document =
+    !legacyPending && legacyValue && typeof legacyValue === "object" ? legacyValue : null;
+  const pending = legacyPending ?? (document as { pending?: unknown[] } | null)?.pending;
+  const receipts = (document as { receipts?: unknown[] } | null)?.receipts;
+  if (legacyValue !== null && (!Array.isArray(pending) || !Array.isArray(receipts ?? []))) {
+    throw new Error("Track B post-observation legacy JSON document is malformed");
+  }
+
+  const database = new DatabaseSync(filePath);
+  try {
+    outboxSchema(database);
+    database.exec("BEGIN IMMEDIATE");
+    try {
+      let importedPendingCount = 0;
+      let importedReceiptCount = 0;
+      for (const [sourceIndex, raw] of (pending ?? []).entries()) {
+        const row =
+          raw && typeof raw === "object" && !Array.isArray(raw)
+            ? (raw as Record<string, unknown>)
+            : {};
+        const sourceId = legacySourceId(raw);
+        try {
+          const normalized = normalizeTrackBVariantIdentity(row);
+          if (!row.requestId || !row.routingDecisionId) throw new Error("identity incomplete");
+          if (importedPendingCount >= maxItems) {
+            throw new Error("outbox capacity exceeded during legacy import");
+          }
+          database
+            .prepare(
+              `INSERT OR IGNORE INTO track_b_post_observation_pending
+               (request_id, routing_decision_id, endpoint_id, model_id, reasoning_effort, effort_source,
+                run88_correlation_json, legacy_identity_missing, enqueued_at_ms)
+               VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)`,
+            )
+            .run(
+              String(row.requestId),
+              String(row.routingDecisionId),
+              normalized.endpointId,
+              normalized.modelId,
+              normalized.reasoningEffort,
+              normalized.effortSource,
+              row.run88Correlation && typeof row.run88Correlation === "object"
+                ? boundedJson(row.run88Correlation)
+                : null,
+              Date.now() + sourceIndex,
+            );
+          importedPendingCount += 1;
+          insertLegacyClassification(database, {
+            sourceKind: "pending",
+            sourceIndex,
+            sourceId,
+            classification: "imported",
+            sourceHash: legacyRowHash(raw),
+          });
+        } catch (error) {
+          insertLegacyClassification(database, {
+            sourceKind: "pending",
+            sourceIndex,
+            sourceId,
+            classification: "quarantined",
+            reason: error instanceof Error ? error.message : String(error),
+            sourceHash: legacyRowHash(raw),
+          });
+        }
+      }
+      for (const [sourceIndex, raw] of (receipts ?? []).entries()) {
+        const row =
+          raw && typeof raw === "object" && !Array.isArray(raw)
+            ? (raw as Record<string, unknown>)
+            : {};
+        const sourceId = legacySourceId(raw);
+        try {
+          if (!row.requestId || !row.completedAt || !("result" in row))
+            throw new Error("receipt identity incomplete");
+          if (importedReceiptCount >= maxItems) {
+            throw new Error("receipt capacity exceeded during legacy import");
+          }
+          database
+            .prepare(
+              `INSERT OR IGNORE INTO track_b_post_observation_receipts
+               (request_id, completed_at, result_json, completed_at_ms) VALUES (?, ?, ?, ?)`,
+            )
+            .run(
+              String(row.requestId),
+              String(row.completedAt),
+              boundedJson(row.result),
+              Date.now(),
+            );
+          importedReceiptCount += 1;
+          insertLegacyClassification(database, {
+            sourceKind: "receipt",
+            sourceIndex,
+            sourceId,
+            classification: "imported",
+            sourceHash: legacyRowHash(raw),
+          });
+        } catch (error) {
+          insertLegacyClassification(database, {
+            sourceKind: "receipt",
+            sourceIndex,
+            sourceId,
+            classification: "quarantined",
+            reason: error instanceof Error ? error.message : String(error),
+            sourceHash: legacyRowHash(raw),
+          });
+        }
+      }
+      database.exec("COMMIT");
+    } catch (error) {
+      database.exec("ROLLBACK");
+      throw error;
+    }
+  } catch (error) {
+    database.close();
+    if (legacySourcePath) await rename(legacySourcePath, filePath).catch(() => undefined);
+    await rm(filePath, { force: true }).catch(() => undefined);
+    throw error;
+  }
+  database.close();
 }
 
 export function createTrackBPostObservationOutbox({
@@ -873,69 +1540,20 @@ export function createTrackBPostObservationOutbox({
     throw new Error("valid Track B post-observation outbox configuration required");
   }
   let operation = Promise.resolve<unknown>(undefined);
-  const load = async (): Promise<TrackBPostObservationDurableState> => {
-    const value = JSON.parse(
-      await readFile(filePath, "utf8").catch((error: unknown) => {
-        if ((error as NodeJS.ErrnoException).code === "ENOENT") return "[]";
-        throw error;
-      }),
-    ) as unknown;
-    const legacyPending = Array.isArray(value) ? value : null;
-    const document = !legacyPending && value && typeof value === "object" ? value : null;
-    const pending = legacyPending ?? (document as { pending?: unknown } | null)?.pending;
-    const receipts = (document as { receipts?: unknown } | null)?.receipts ?? [];
-    if (!Array.isArray(pending) || !Array.isArray(receipts)) {
-      throw new Error("Track B post-observation outbox is malformed");
-    }
-    const normalizedPending = pending.map((item) => {
-      const row = item as Record<string, unknown>;
-      if (!row.requestId || !row.routingDecisionId || !row.endpointId) {
-        throw new Error("Track B post-observation work item is incomplete");
-      }
-      const base = {
-        requestId: String(row.requestId),
-        routingDecisionId: String(row.routingDecisionId),
-        endpointId: String(row.endpointId),
-        ...(row.run88Correlation && typeof row.run88Correlation === "object"
-          ? {
-              run88Correlation: normalizeRun88RuntimeCorrelation(
-                row.run88Correlation as Record<string, unknown>,
-                String((row.run88Correlation as Record<string, unknown>).releaseId ?? ""),
-              ),
-            }
-          : {}),
-      };
-      const hasCompleteIdentity =
-        Object.hasOwn(row, "modelId") &&
-        Object.hasOwn(row, "reasoningEffort") &&
-        Object.hasOwn(row, "effortSource");
-      if (!hasCompleteIdentity) {
-        return { ...base, legacyIdentityMissing: true as const };
-      }
-      return { ...base, ...normalizeTrackBVariantIdentity(row) };
-    });
-    const normalizedReceipts = receipts.map((item) => {
-      const row = item as Record<string, unknown>;
-      if (!row.requestId || !row.completedAt || !("result" in row)) {
-        throw new Error("Track B post-observation receipt is incomplete");
-      }
-      return {
-        requestId: String(row.requestId),
-        completedAt: String(row.completedAt),
-        result: row.result,
-      };
-    });
-    return {
-      schemaVersion: "role-model.track-b-post-observation-outbox.v2",
-      pending: normalizedPending,
-      receipts: normalizedReceipts,
-    };
+  let initialized: Promise<void> | null = null;
+  const ensureInitialized = () => {
+    if (!initialized) initialized = initializeTrackBPostObservationOutbox(filePath, maxItems);
+    return initialized;
   };
-  const persist = async (state: TrackBPostObservationDurableState) => {
-    await mkdir(path.dirname(filePath), { recursive: true });
-    const temporary = `${filePath}.${process.pid}.${randomBytes(6).toString("hex")}.tmp`;
-    await writeFile(temporary, `${JSON.stringify(state)}\n`, "utf8");
-    await rename(temporary, filePath);
+  const withDatabase = async <T>(run: (database: DatabaseSync) => T): Promise<T> => {
+    await ensureInitialized();
+    const database = new DatabaseSync(filePath);
+    try {
+      outboxSchema(database);
+      return run(database);
+    } finally {
+      database.close();
+    }
   };
   const exclusive = <T>(run: () => Promise<T>): Promise<T> => {
     const result = operation.then(run, run);
@@ -962,50 +1580,114 @@ export function createTrackBPostObservationOutbox({
         if (!item.requestId || !item.routingDecisionId || !item.endpointId) {
           throw new Error("complete Track B post-observation identity required");
         }
-        const state = await load();
-        if (
-          state.pending.some((existing) => existing.requestId === item.requestId) ||
-          state.receipts.some((existing) => existing.requestId === item.requestId)
-        )
-          return;
-        if (state.pending.length >= maxItems)
-          throw new Error("Track B post-observation outbox is full");
-        await persist({ ...state, pending: [...state.pending, item] });
+        await withDatabase((database) => {
+          database.exec("BEGIN IMMEDIATE");
+          try {
+            const existing = database
+              .prepare(
+                "SELECT 1 AS found FROM track_b_post_observation_pending WHERE request_id=? UNION ALL SELECT 1 FROM track_b_post_observation_receipts WHERE request_id=? LIMIT 1",
+              )
+              .get(item.requestId, item.requestId);
+            if (existing) {
+              database.exec("COMMIT");
+              return;
+            }
+            const count = database
+              .prepare("SELECT COUNT(*) AS count FROM track_b_post_observation_pending")
+              .get() as { count: number };
+            if (count.count >= maxItems) throw new Error("Track B post-observation outbox is full");
+            database
+              .prepare(
+                `INSERT INTO track_b_post_observation_pending
+                 (request_id, routing_decision_id, endpoint_id, model_id, reasoning_effort, effort_source,
+                  run88_correlation_json, legacy_identity_missing, enqueued_at_ms)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)`,
+              )
+              .run(
+                item.requestId,
+                item.routingDecisionId,
+                item.endpointId,
+                item.modelId,
+                item.reasoningEffort,
+                item.effortSource,
+                item.run88Correlation ? boundedJson(item.run88Correlation) : null,
+                Date.now(),
+              );
+            database.exec("COMMIT");
+          } catch (error) {
+            database.exec("ROLLBACK");
+            throw error;
+          }
+        });
       });
     },
     drain(
       handler: (observation: TrackBPostObservationWorkItem) => Promise<unknown>,
     ): Promise<void> {
       return exclusive(async () => {
-        const state = await load();
-        while (state.pending.length) {
-          const item = state.pending[0];
-          if (!item) break;
-          if (item.legacyIdentityMissing) {
-            state.pending.shift();
-            state.receipts.push({
-              requestId: item.requestId,
-              completedAt: new Date().toISOString(),
-              result: {
-                status: "retired_legacy_missing_variant_identity",
-                productionMutation: false,
-              },
-            });
-            if (state.receipts.length > maxItems)
-              state.receipts.splice(0, state.receipts.length - maxItems);
-            await persist(state);
-            continue;
-          }
-          const result = await handler(item);
-          state.pending.shift();
-          state.receipts.push({
-            requestId: item.requestId,
-            completedAt: new Date().toISOString(),
-            result: result ?? null,
+        for (;;) {
+          const item = await withDatabase((database) => {
+            const row = database
+              .prepare(
+                `SELECT request_id, routing_decision_id, endpoint_id, model_id, reasoning_effort,
+                        effort_source, run88_correlation_json, legacy_identity_missing
+                 FROM track_b_post_observation_pending ORDER BY enqueued_at_ms, request_id LIMIT 1`,
+              )
+              .get() as
+              | {
+                  request_id: string;
+                  routing_decision_id: string;
+                  endpoint_id: string;
+                  model_id: string | null;
+                  reasoning_effort: string | null;
+                  effort_source: RuntimeEffortSource | null;
+                  run88_correlation_json: string | null;
+                  legacy_identity_missing: number;
+                }
+              | undefined;
+            if (!row) return null;
+            return {
+              requestId: row.request_id,
+              routingDecisionId: row.routing_decision_id,
+              endpointId: row.endpoint_id,
+              ...(row.model_id !== null ? { modelId: row.model_id } : {}),
+              ...(row.reasoning_effort !== null ? { reasoningEffort: row.reasoning_effort } : {}),
+              ...(row.effort_source !== null ? { effortSource: row.effort_source } : {}),
+              ...(row.run88_correlation_json
+                ? { run88Correlation: parseBoundedJson(row.run88_correlation_json) }
+                : {}),
+              ...(row.legacy_identity_missing ? { legacyIdentityMissing: true as const } : {}),
+            } as TrackBPostObservationWorkItem;
           });
-          if (state.receipts.length > maxItems)
-            state.receipts.splice(0, state.receipts.length - maxItems);
-          await persist(state);
+          if (!item) break;
+          const result = item.legacyIdentityMissing
+            ? { status: "retired_legacy_missing_variant_identity", productionMutation: false }
+            : await handler(item);
+          await withDatabase((database) => {
+            database.exec("BEGIN IMMEDIATE");
+            try {
+              database
+                .prepare("DELETE FROM track_b_post_observation_pending WHERE request_id=?")
+                .run(item.requestId);
+              database
+                .prepare(
+                  `INSERT OR REPLACE INTO track_b_post_observation_receipts
+                   (request_id, completed_at, result_json, completed_at_ms) VALUES (?, ?, ?, ?)`,
+                )
+                .run(item.requestId, new Date().toISOString(), boundedJson(result), Date.now());
+              database
+                .prepare(
+                  `DELETE FROM track_b_post_observation_receipts
+                   WHERE request_id NOT IN
+                     (SELECT request_id FROM track_b_post_observation_receipts ORDER BY completed_at_ms DESC, request_id DESC LIMIT ?)`,
+                )
+                .run(maxItems);
+              database.exec("COMMIT");
+            } catch (error) {
+              database.exec("ROLLBACK");
+              throw error;
+            }
+          });
         }
       });
     },
@@ -1015,12 +1697,48 @@ export function createTrackBPostObservationOutbox({
       readonly receipts: readonly TrackBPostObservationReceipt[];
     }> {
       await operation;
-      const state = await load();
-      return {
-        pendingCount: state.pending.length,
-        receiptCount: state.receipts.length,
-        receipts: structuredClone(state.receipts),
-      };
+      return withDatabase((database) => {
+        const pendingCount = (
+          database
+            .prepare("SELECT COUNT(*) AS count FROM track_b_post_observation_pending")
+            .get() as {
+            count: number;
+          }
+        ).count;
+        const rows = database
+          .prepare(
+            "SELECT request_id, completed_at, result_json FROM track_b_post_observation_receipts ORDER BY completed_at_ms, request_id",
+          )
+          .all() as Array<{ request_id: string; completed_at: string; result_json: string }>;
+        return {
+          pendingCount,
+          receiptCount: rows.length,
+          receipts: rows.map((row) => ({
+            requestId: row.request_id,
+            completedAt: row.completed_at,
+            result: parseBoundedJson(row.result_json),
+          })),
+        };
+      });
+    },
+    async readReceipt(requestId: string): Promise<TrackBPostObservationReceipt | null> {
+      await operation;
+      return withDatabase((database) => {
+        const row = database
+          .prepare(
+            "SELECT request_id, completed_at, result_json FROM track_b_post_observation_receipts WHERE request_id=?",
+          )
+          .get(requestId) as
+          | { request_id: string; completed_at: string; result_json: string }
+          | undefined;
+        return row
+          ? {
+              requestId: row.request_id,
+              completedAt: row.completed_at,
+              result: parseBoundedJson(row.result_json),
+            }
+          : null;
+      });
     },
   };
 }
@@ -1036,7 +1754,8 @@ export interface TrackBShadowPipelineInput {
   readonly sourceGraphRef: string;
   readonly prefix: readonly unknown[];
   readonly counterfactuals: readonly { readonly id: string; readonly suffix: readonly unknown[] }[];
-  readonly evaluationCases: readonly { readonly expected: unknown; readonly actual: unknown }[];
+  readonly comparableEvidence?: Readonly<Record<string, unknown>>;
+  readonly evaluationCases: readonly Record<string, unknown>[];
   readonly trajectoryEvents: readonly Record<string, unknown>[];
   readonly identity?: TrackBVariantIdentity;
 }
@@ -1131,6 +1850,32 @@ export async function runTrackBShadowPipeline(
   if (!input.requestId || !input.scope || !input.routePackage) {
     throw new Error("complete shadow pipeline identity is required");
   }
+  const comparableEvidence = input.comparableEvidence;
+  const sourceRollout = comparableEvidence?.source as Record<string, unknown> | undefined;
+  const counterfactualRollouts = Array.isArray(comparableEvidence?.counterfactuals)
+    ? (comparableEvidence.counterfactuals as Record<string, unknown>[])
+    : [];
+  const candidateSet = Array.isArray(comparableEvidence?.candidateSet)
+    ? (comparableEvidence.candidateSet as Record<string, unknown>[])
+    : [];
+  if (
+    !sourceRollout ||
+    counterfactualRollouts.length < 1 ||
+    candidateSet.length < 2 ||
+    input.counterfactuals.length < 1 ||
+    input.counterfactuals.every((counterfactual) => counterfactual.id === input.routePackage) ||
+    counterfactualRollouts.some(
+      (rollout) =>
+        rollout.rolloutId === sourceRollout.rolloutId ||
+        (rollout.routePackage === sourceRollout.routePackage &&
+          rollout.endpointId === sourceRollout.endpointId &&
+          rollout.modelId === sourceRollout.modelId &&
+          rollout.policyId === sourceRollout.policyId &&
+          rollout.reasoningEffort === sourceRollout.reasoningEffort),
+    )
+  ) {
+    throw new Error("R14_NO_DISTINCT_COUNTERFACTUAL: routing-shadow self-comparison is prohibited");
+  }
   const envelope = (capability: string, value: unknown): Record<string, unknown> => ({
     requestId: `${input.requestId}:${capability}`,
     sessionId: input.requestId,
@@ -1160,6 +1905,7 @@ export async function runTrackBShadowPipeline(
       split: "holdout",
       seed: 87,
       evidenceRef: input.sourceGraphRef,
+      comparableEvidence,
       cases: input.evaluationCases,
     }),
     scorerDefinitions: [scorer],
@@ -1167,7 +1913,8 @@ export async function runTrackBShadowPipeline(
   const scores = Array.isArray(evaluation.scores)
     ? evaluation.scores.filter((score): score is number => Number.isFinite(score))
     : [];
-  if (!scores.length || scores.reduce((sum, score) => sum + score, 0) / scores.length <= 0.5) {
+  const holdout = evaluation.holdout as Record<string, unknown> | undefined;
+  if (!scores.length || holdout?.passed !== true || typeof holdout.evidenceRef !== "string") {
     throw new Error("shadow holdout evaluation failed");
   }
   const signals = await runtime.invoke(
@@ -1180,54 +1927,45 @@ export async function runTrackBShadowPipeline(
   );
   const profile = await runtime.invoke("profile-learner", {
     ...envelope("profile:estimate", {
-      rows: input.evaluationCases.map((row, index) => ({
-        model: "shadow-candidate",
-        endpoint: input.routePackage,
+      rows: [sourceRollout, ...counterfactualRollouts].map((rollout) => ({
+        model: rollout.modelId,
+        endpoint: rollout.endpointId,
         prompt: "unchanged",
         tool: "unchanged",
         sampling: "deterministic",
         experience: "routing-evaluation",
-        routePackage: input.routePackage,
-        outcome: scores[index] ?? 0,
-        propensity: 1,
-        evidenceRef: `${input.sourceGraphRef}#case-${index}`,
+        routePackage: rollout.routePackage,
+        outcome:
+          (rollout.outcome as Record<string, unknown> | undefined)?.status === "success" ? 1 : 0,
+        propensity: rollout.propensity,
+        evidenceRef: rollout.evidenceRef,
       })),
     }),
-    rows: input.evaluationCases.map((row, index) => ({
-      model: "shadow-candidate",
-      endpoint: input.routePackage,
+    rows: [sourceRollout, ...counterfactualRollouts].map((rollout) => ({
+      model: rollout.modelId,
+      endpoint: rollout.endpointId,
       prompt: "unchanged",
       tool: "unchanged",
       sampling: "deterministic",
       experience: "routing-evaluation",
-      routePackage: input.routePackage,
-      outcome: scores[index] ?? 0,
-      propensity: 1,
-      evidenceRef: `${input.sourceGraphRef}#case-${index}`,
+      routePackage: rollout.routePackage,
+      outcome:
+        (rollout.outcome as Record<string, unknown> | undefined)?.status === "success" ? 1 : 0,
+      propensity: rollout.propensity,
+      evidenceRef: rollout.evidenceRef,
     })),
   });
-  const positive = scores.flatMap((score, index) =>
-    score > 0
-      ? [
-          {
-            id: `candidate-${index}`,
-            score,
-            evidenceRef: `${input.sourceGraphRef}#positive-${index}`,
-          },
-        ]
-      : [],
-  );
-  const negative = scores.flatMap((score, index) =>
-    score <= 0
-      ? [
-          {
-            id: `baseline-${index}`,
-            score,
-            evidenceRef: `${input.sourceGraphRef}#negative-${index}`,
-          },
-        ]
-      : [],
-  );
+  const rolloutRows = [sourceRollout, ...counterfactualRollouts];
+  const scoredRollouts = rolloutRows.map((rollout) => ({
+    ...rollout,
+    score: (rollout.outcome as Record<string, unknown> | undefined)?.status === "success" ? 1 : 0,
+  }));
+  const positive = scoredRollouts.filter((rollout) => rollout.score === 1);
+  const negative = scoredRollouts.filter((rollout) => rollout.score === 0);
+  if (!positive.length || !negative.length)
+    throw new Error(
+      "R14_INSUFFICIENT_ROLLOUT_EVIDENCE: positive and negative rollout evidence is required",
+    );
   const candidate = await runtime.invoke(
     "knowledge-worker",
     envelope("knowledge:eval-consumer", {
@@ -1243,18 +1981,10 @@ export async function runTrackBShadowPipeline(
         seed: 87,
         comparabilityKey: `${input.sourceDecisionId}:holdout`,
         positive,
-        negative: negative.length
-          ? negative
-          : [{ id: "baseline-control", score: 0, evidenceRef: `${input.sourceGraphRef}#baseline` }],
+        negative,
+        candidateSet,
       },
-      holdout: {
-        passed: true,
-        evidenceRef: String(
-          (evaluation.provenance &&
-            (evaluation.provenance as Record<string, unknown>).evidenceRef) ||
-            input.sourceGraphRef,
-        ),
-      },
+      holdout,
       scope: { routePackage: input.routePackage, channel: input.channel, scopeId: input.scope },
     }),
   );
@@ -1272,6 +2002,101 @@ export async function runTrackBShadowPipeline(
       providerCalls: 0,
       productionMutation: false,
       candidateId: candidate.id ?? null,
+    },
+  };
+}
+
+async function runTrackBObservationPipeline(
+  runtime: TrackBShadowPipelineRuntime,
+  input: {
+    readonly requestId: string;
+    readonly channel: string;
+    readonly scope: string;
+    readonly authorizationEpoch: number;
+    readonly productionState: Readonly<Record<string, unknown>>;
+    readonly routePackage: string;
+    readonly sourceDecisionId: string;
+    readonly sourceGraphRef: string;
+    readonly trajectoryEvents: readonly Record<string, unknown>[];
+    readonly identity: TrackBVariantIdentity;
+  },
+) {
+  const envelope = (capability: string, value: unknown): Record<string, unknown> => ({
+    requestId: `${input.requestId}:${capability}`,
+    sessionId: input.requestId,
+    protocolVersion: "1.1.0",
+    channel: input.channel,
+    scope: input.scope,
+    authorizationEpoch: input.authorizationEpoch,
+    capability,
+    identity: input.identity,
+    value,
+  });
+  const replay = await runtime.invoke(
+    "replay-core",
+    envelope("replay:plan-graph", {
+      sourceDecisionId: input.sourceDecisionId,
+      sourceGraphRef: input.sourceGraphRef,
+      prefix: [{ routingDecisionId: input.sourceDecisionId, identity: input.identity }],
+      counterfactuals: [],
+      disposition: "observation_only_no_distinct_counterfactual",
+    }),
+  );
+  const scorer = { id: "run94-observation", version: "1", algorithm: "exact_match" };
+  const evaluationCase = { expected: input.routePackage, actual: input.routePackage };
+  const evaluation = await runtime.invoke("evaluation-runner-local", {
+    ...envelope("evaluation:run-local", {
+      policy: "routing-observation",
+      task: "route-selection-observation",
+      scorer: `${scorer.id}@${scorer.version}`,
+      split: "observed",
+      seed: 94,
+      evidenceRef: input.sourceGraphRef,
+      cases: [evaluationCase],
+    }),
+    scorerDefinitions: [scorer],
+  });
+  const signals = await runtime.invoke(
+    "trajectory-signals",
+    envelope("signals:analyze", {
+      routeDecisionId: input.sourceDecisionId,
+      graphRef: input.sourceGraphRef,
+      events: input.trajectoryEvents,
+    }),
+  );
+  const profileRows = [
+    {
+      model: input.identity.modelId,
+      endpoint: input.identity.endpointId,
+      prompt: "unchanged",
+      tool: "unchanged",
+      sampling: "observed",
+      experience: "none",
+      routePackage: input.routePackage,
+      outcome: 1,
+      propensity: 1,
+      evidenceRef: input.sourceGraphRef,
+    },
+  ];
+  const profile = await runtime.invoke("profile-learner", {
+    ...envelope("profile:estimate", { rows: profileRows }),
+    rows: profileRows,
+  });
+  return {
+    replay,
+    evaluation,
+    signals,
+    profile,
+    productionState: structuredClone(input.productionState),
+    receipt: {
+      schemaVersion: "role-model.track-b-shadow-pipeline-receipt.v1",
+      mode: "shadow",
+      status: "insufficient_comparable_evidence",
+      refusalCode: "R14_NO_DISTINCT_COUNTERFACTUAL",
+      requestId: input.requestId,
+      providerCalls: 0,
+      productionMutation: false,
+      candidateId: null,
     },
   };
 }
@@ -1313,7 +2138,24 @@ export async function runTrackBPostObservation(
     ...(run88Correlation ? { run88Correlation } : {}),
     ...extra,
   });
-  const artifact = await runtime.invoke(
+  const closureEntries = new Map<string, TrackBExtensionClosureEntry>();
+  const durableOutputIds = new Set<string>();
+  const observedRuntime: TrackBShadowPipelineRuntime = {
+    async invoke(id, envelope) {
+      const result = await runtime.invoke(id, envelope);
+      const output = buildExtensionOutputRecord(id, envelope, result);
+      if (durableOutputIds.has(output.durableOutputId))
+        throw new Error(`duplicate durable extension output ${output.durableOutputId}`);
+      durableOutputIds.add(output.durableOutputId);
+      const prior = closureEntries.get(id);
+      closureEntries.set(id, {
+        extensionId: id,
+        outputs: [...(prior?.outputs ?? []), output],
+      });
+      return result;
+    },
+  };
+  const artifact = await observedRuntime.invoke(
     "artifact-store",
     businessEnvelope("graph:write", {
       payload: {
@@ -1327,7 +2169,7 @@ export async function runTrackBPostObservation(
     }),
   );
   const artifactRef = String(artifact.id ?? `observation:${requestId}`);
-  await runtime.invoke(
+  await observedRuntime.invoke(
     "event-log",
     businessEnvelope("event:append", {
       payload: {
@@ -1339,7 +2181,7 @@ export async function runTrackBPostObservation(
       },
     }),
   );
-  const repositoryContextResult = await runtime.invoke(
+  const repositoryContextResult = await observedRuntime.invoke(
     "repository-context",
     businessEnvelope("repository:read", {
       payload: { scopeId: input.scope, canonicalIdentity: input.scope, identity },
@@ -1389,14 +2231,14 @@ export async function runTrackBPostObservation(
   ) {
     throw new Error("repository-context returned an invalid privacy-safe receipt");
   }
-  await runtime.invoke(
+  await observedRuntime.invoke(
     "background-evidence-scheduler",
     businessEnvelope("scheduler:schedule-and-run", {
       jobId: `post-observation:${requestId}`,
       payload: { requestId, sourceDecisionId, artifactRef, identity },
     }),
   );
-  await runtime.invoke(
+  await observedRuntime.invoke(
     "memory-store",
     businessEnvelope("memory:write", {
       payload: {
@@ -1404,7 +2246,7 @@ export async function runTrackBPostObservation(
       },
     }),
   );
-  const knowledge = await runtime.invoke(
+  const knowledge = await observedRuntime.invoke(
     "knowledge-store",
     businessEnvelope("knowledge:write", {
       payload: {
@@ -1419,13 +2261,13 @@ export async function runTrackBPostObservation(
       },
     }),
   );
-  await runtime.invoke(
+  await observedRuntime.invoke(
     "knowledge-store",
     businessEnvelope("knowledge:read", {
       payload: { id: knowledge.id, scope: input.scope, identity },
     }),
   );
-  await runtime.invoke(
+  await observedRuntime.invoke(
     "crowdsourced-learning",
     businessEnvelope("aggregate:preview", {
       input: {
@@ -1441,28 +2283,62 @@ export async function runTrackBPostObservation(
   );
   const sourceHash = createHash("sha256").update(JSON.stringify(observation)).digest("hex");
   const sourceGraphRef = `sha256:${sourceHash}`;
-  const pipeline = await runTrackBShadowPipeline(runtime, {
-    requestId,
-    channel: input.channel,
-    scope: input.scope,
-    authorizationEpoch: input.authorizationEpoch,
-    productionState: {
-      routingDecisionId: sourceDecisionId,
-      endpointId: routePackage,
-      identity,
-      immutable: true,
-    },
-    routePackage,
-    sourceDecisionId,
-    sourceGraphRef,
-    prefix: [{ routingDecisionId: sourceDecisionId, identity }],
-    counterfactuals: [{ id: routePackage, suffix: [{ endpointId: routePackage, identity }] }],
-    evaluationCases: [{ expected: routePackage, actual: routePackage }],
-    trajectoryEvents: [
-      { requestId, routingDecisionId: sourceDecisionId, endpointId: routePackage, identity },
-    ],
+  const productionState = {
+    routingDecisionId: sourceDecisionId,
+    endpointId: routePackage,
     identity,
-  });
+    immutable: true,
+  } as const;
+  const trajectoryEvents = [
+    { requestId, routingDecisionId: sourceDecisionId, endpointId: routePackage, identity },
+  ];
+  const routingShadowEvidence =
+    observation.routingShadowEvidence &&
+    typeof observation.routingShadowEvidence === "object" &&
+    !Array.isArray(observation.routingShadowEvidence)
+      ? (observation.routingShadowEvidence as Readonly<Record<string, unknown>>)
+      : null;
+  const routingShadowCases = Array.isArray(observation.routingShadowCases)
+    ? observation.routingShadowCases.filter((item): item is Record<string, unknown> =>
+        Boolean(item && typeof item === "object" && !Array.isArray(item)),
+      )
+    : [];
+  const comparableCounterfactuals = Array.isArray(routingShadowEvidence?.counterfactuals)
+    ? (routingShadowEvidence.counterfactuals as Record<string, unknown>[])
+    : [];
+  const pipeline =
+    routingShadowEvidence && routingShadowCases.length > 0
+      ? await runTrackBShadowPipeline(observedRuntime, {
+          requestId,
+          channel: input.channel,
+          scope: input.scope,
+          authorizationEpoch: input.authorizationEpoch,
+          productionState,
+          routePackage,
+          sourceDecisionId,
+          sourceGraphRef,
+          prefix: [{ routingDecisionId: sourceDecisionId, identity }],
+          counterfactuals: comparableCounterfactuals.map((rollout) => ({
+            id: String(rollout.routePackage ?? ""),
+            suffix: [{ endpointId: rollout.endpointId, modelId: rollout.modelId }],
+          })),
+          comparableEvidence: routingShadowEvidence,
+          evaluationCases: routingShadowCases,
+          trajectoryEvents,
+          identity,
+        })
+      : await runTrackBObservationPipeline(observedRuntime, {
+          requestId,
+          channel: input.channel,
+          scope: input.scope,
+          authorizationEpoch: input.authorizationEpoch,
+          productionState,
+          routePackage,
+          sourceDecisionId,
+          sourceGraphRef,
+          trajectoryEvents,
+          identity,
+        });
   const projection = createProjectionV2({
     scope: input.scope,
     purpose: "routing_shadow",
@@ -1484,15 +2360,82 @@ export async function runTrackBPostObservation(
       routePackage,
       sourceDecisionId,
       identity,
-      candidateId: typeof pipeline.candidate.id === "string" ? pipeline.candidate.id : null,
+      candidateId:
+        "candidate" in pipeline && typeof pipeline.candidate?.id === "string"
+          ? pipeline.candidate.id
+          : null,
     },
   });
-  const consumption = await consumeTrackBProjection(runtime, projection, {
+  const consumption = await consumeTrackBProjection(observedRuntime, projection, {
     channel: input.channel,
     authorizationEpoch: input.authorizationEpoch,
     identity: { ...identity },
   });
-  return { pipeline: pipeline.receipt, projection, consumption, repositoryContext };
+  const registry = Object.fromEntries(
+    [...closureEntries.entries()].sort(([left], [right]) => left.localeCompare(right)),
+  ) as Record<string, TrackBExtensionClosureEntry>;
+  const missing = TRACK_B_CANONICAL_EXTENSION_IDS.filter((id) => !registry[id]);
+  if (missing.length)
+    throw new Error(`extension closure is missing registry outputs: ${missing.join(", ")}`);
+  const extensionClosure: TrackBExtensionClosure = {
+    schemaVersion: "role-model.track-b-extension-closure.v1",
+    requestId,
+    routingDecisionId: sourceDecisionId,
+    scope: input.scope,
+    channel: input.channel,
+    authorizationEpoch: input.authorizationEpoch,
+    registry,
+  };
+  return {
+    pipeline: pipeline.receipt,
+    projection,
+    consumption,
+    repositoryContext,
+    extensionClosure,
+  };
+}
+
+export async function runTrackBPostObservationWithContribution(
+  runtime: TrackBShadowPipelineRuntime,
+  observation: Readonly<Record<string, unknown>>,
+  input: {
+    readonly scope: string;
+    readonly channel: "development" | "stage" | "production";
+    readonly authorizationEpoch: number;
+    readonly expectedReleaseId?: string;
+    readonly run88Correlation?: Record<string, unknown>;
+  },
+  recordContribution: (input: Record<string, unknown>) => Promise<unknown>,
+) {
+  if (typeof recordContribution !== "function")
+    throw new Error("Track B contribution recorder is required");
+  const result = await runTrackBPostObservation(runtime, observation, input);
+  const identity = normalizeTrackBVariantIdentity(observation);
+  const requestId = String(observation.requestId ?? "");
+  const routingDecisionId = String(observation.routingDecisionId ?? "");
+  const correlationId = createRuntimeRequestCorrelationId({
+    scope: input.scope,
+    requestId,
+    routingDecisionId,
+  });
+  const usageEvent =
+    observation.usageEvent && typeof observation.usageEvent === "object"
+      ? (observation.usageEvent as Record<string, unknown>)
+      : {};
+  const contribution = await recordContribution({
+    requestId,
+    correlationId,
+    routingDecisionId,
+    endpointId: identity.endpointId,
+    modelId: identity.modelId,
+    reasoningEffort: identity.reasoningEffort,
+    effortSource: identity.effortSource,
+    taskType: "general.chat",
+    inputTokens: Number(usageEvent.tokens_in ?? 0),
+    outputTokens: Number(usageEvent.tokens_out ?? 0),
+    success: true,
+  });
+  return { ...result, contribution };
 }
 
 interface ExtensionRuntimeState {
@@ -1847,6 +2790,9 @@ export function createOwnedTrackBSidecarSpec(options: {
   trustMaterialFile?: string;
   aggregateEndpoint?: string;
   aggregateScope?: string;
+  aggregateCorrelationReleaseId?: string;
+  aggregateCorrelationCohortId?: string;
+  aggregateCorrelationOperationId?: string;
   sqliteDatabasePath?: string;
   publicRuntimeAdapterPath?: string;
   publicRouterRoot?: string;
@@ -1894,6 +2840,15 @@ export function createOwnedTrackBSidecarSpec(options: {
             : []),
           ...(options.aggregateEndpoint ? ["--aggregate-endpoint", options.aggregateEndpoint] : []),
           ...(options.aggregateScope ? ["--aggregate-scope", options.aggregateScope] : []),
+          ...(options.aggregateCorrelationReleaseId
+            ? ["--aggregate-correlation-release-id", options.aggregateCorrelationReleaseId]
+            : []),
+          ...(options.aggregateCorrelationCohortId
+            ? ["--aggregate-correlation-cohort-id", options.aggregateCorrelationCohortId]
+            : []),
+          ...(options.aggregateCorrelationOperationId
+            ? ["--aggregate-correlation-operation-id", options.aggregateCorrelationOperationId]
+            : []),
           ...(options.sqliteDatabasePath
             ? ["--sqlite-database-path", options.sqliteDatabasePath]
             : []),

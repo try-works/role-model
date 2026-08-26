@@ -3,6 +3,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { RuntimeObservationBundle } from "@role-model-router/runtime-observability";
+import {
+  readRuntimeObservationStorageRecord,
+  resolveSqliteMemoryLocation,
+} from "@role-model-router/sqlite-memory";
 import type { ToolRegistryExecution } from "@role-model-router/tool-registry";
 
 import {
@@ -102,7 +106,13 @@ export async function runRuntimeToolsValidation(
     requestId,
   )) as BridgeChatCompletionsExecutionResult;
   const observation = requireObservation(
-    await backend.readRequestObservation(requestId),
+    readRuntimeObservationStorageRecord({
+      databasePath: resolveSqliteMemoryLocation({
+        runtimeStateRoot: options.runtimeStateRoot,
+        scopeId: options.scopeId,
+      }),
+      requestId,
+    }) as RuntimeObservationBundle | null,
     requestId,
   );
 

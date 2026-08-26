@@ -33,18 +33,12 @@ describe("runRuntimeToolsValidation", () => {
       },
     ]);
     expect(result.toolExecutions).toEqual([]);
+    // Run 94 (SP2): the persisted observation is a compact identity stub; tool payloads
+    // are graph-external and no longer ride the inline SQLite row.
     expect(result.observation).toMatchObject({
       requestId: result.requestId,
       endpointId: result.endpointId,
-      tooling: {
-        toolCalls: [
-          {
-            toolCallId: "call_1",
-            toolName: "lookupRegistry",
-          },
-        ],
-        executions: [],
-      },
     });
+    expect(result.observation).not.toHaveProperty("tooling");
   });
 });

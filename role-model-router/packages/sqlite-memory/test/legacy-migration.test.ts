@@ -28,6 +28,10 @@ function fixture() {
   });
   const backupPath = path.join(root, "backup.sqlite");
   const database = new DatabaseSync(initialized.databasePath);
+  // Run 94 (SP2): the fixture simulates a legacy_primary database created before the
+  // compact-stub enforcement trigger existed. Drop the trigger so pre-invariant rich
+  // rows can be planted exactly as they exist in installed runtimes.
+  database.exec("DROP TRIGGER IF EXISTS runtime_observations_compact_stub_enforcement");
   const rich = JSON.stringify({
     requestId: "request-1",
     endpointId: "endpoint-1",
@@ -312,32 +316,35 @@ describe("TB04 real SQLite legacy migration", () => {
     });
     migration.cutover();
 
+    // Run 94 (SP2): the inline invariant is now state-independent. Rich content without
+    // a graph artifact reference fails closed on size, and the compact stub never
+    // carries non-identity fields.
     expect(() =>
       resolveRuntimeObservationStoragePayload({
         databasePath,
-        observation: { requestId: "request-new", providerBody: "secret-rich-body" },
+        observation: { requestId: "request-new", providerBody: "x".repeat(20_000) },
       }),
-    ).toThrow("graph artifact reference required");
+    ).toThrow(/graph externalization/i);
     expect(
-      resolveRuntimeObservationStoragePayload({
-        databasePath,
-        observation: { requestId: "request-new", providerBody: "secret-rich-body" },
-        artifactRef: {
-          scopeId: "scope-1",
-          artifactId: "artifact-new",
-          contentHash: "content-hash-new",
-        },
-      }),
-    ).toEqual(
-      JSON.stringify({
-        requestId: "request-new",
-        artifactRef: {
-          scopeId: "scope-1",
-          artifactId: "artifact-new",
-          contentHash: "content-hash-new",
-        },
-        graphPrimary: true,
-      }),
-    );
+      JSON.parse(
+        resolveRuntimeObservationStoragePayload({
+          databasePath,
+          observation: { requestId: "request-new", providerBody: "secret-rich-body" },
+          artifactRef: {
+            scopeId: "scope-1",
+            artifactId: "artifact-new",
+            contentHash: "content-hash-new",
+          },
+        }),
+      ),
+    ).toEqual({
+      requestId: "request-new",
+      artifactRef: {
+        scopeId: "scope-1",
+        artifactId: "artifact-new",
+        contentHash: "content-hash-new",
+      },
+      graphPrimary: true,
+    });
   });
 });

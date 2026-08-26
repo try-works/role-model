@@ -101,21 +101,54 @@ export function StorageRetentionRouteView() {
         variant="panel"
         items={[
           {
-            id: "usage",
-            label: "Tracked",
-            value: String(formatBytes(summary?.totalBytes ?? 0)),
+            id: "physical",
+            label: "Physical",
+            value:
+              summary?.storageAudit?.allocatedBytes != null
+                ? String(formatBytes(summary.storageAudit.allocatedBytes))
+                : "Not measured",
           },
           {
-            id: "classes",
-            label: "Physical stores",
-            value: String(summary?.storageInventory?.entries.length ?? 0),
+            id: "physical-resources",
+            label: "Physical resources",
+            value: String(summary?.physicalResources.length ?? 0),
+          },
+          {
+            id: "logical-classes",
+            label: "Logical classes",
+            value:
+              summary?.storageAudit?.logicalBytes != null
+                ? String(formatBytes(summary.storageAudit.logicalBytes))
+                : String(formatBytes(summary?.totalBytes ?? 0)),
+          },
+          {
+            id: "reclaimable",
+            label: "Reclaimable",
+            value:
+              summary?.storageAudit?.reclaimableBytes != null
+                ? String(formatBytes(summary.storageAudit.reclaimableBytes))
+                : "Not measured",
+          },
+          {
+            id: "unavailable",
+            label: "Unavailable",
+            value:
+              summary?.storageAudit?.unavailableBytes != null
+                ? String(formatBytes(summary.storageAudit.unavailableBytes))
+                : "Not measured",
           },
           {
             id: "holds",
             label: "Legal holds",
-            value: String(
-              summary?.storageInventory?.entries.reduce((sum, row) => sum + row.heldItems, 0) ?? 0,
-            ),
+            value:
+              summary?.storageAudit === null || summary?.storageAudit === undefined
+                ? "Not measured"
+                : String(
+                    summary?.storageInventory?.entries.reduce(
+                      (sum, row) => sum + row.heldItems,
+                      0,
+                    ) ?? 0,
+                  ),
           },
           {
             id: "maintenance",
@@ -125,7 +158,7 @@ export function StorageRetentionRouteView() {
         ]}
       />
       {error ? <ErrorState label={error} /> : null}
-      {summary?.storageInventory ? (
+      {summary?.physicalResources ? (
         <SectionCard
           title="Physical storage inventory"
           description="Registry ownership, health, physical size, legal holds, and current retention enforcement for every writable store."
@@ -144,7 +177,7 @@ export function StorageRetentionRouteView() {
                 </tr>
               </thead>
               <tbody>
-                {summary.storageInventory.entries.map((row) => (
+                {summary.physicalResources.map((row) => (
                   <tr className="border-t border-[var(--rm-border)]" key={row.id}>
                     <td className={`py-3 ${compactTitleClassName}`}>{row.id}</td>
                     <td className={`py-3 ${supportingTextClassName}`}>{row.owner}</td>
@@ -157,7 +190,9 @@ export function StorageRetentionRouteView() {
                       {row.physicalBytes === null ? "Unavailable" : formatBytes(row.physicalBytes)}
                     </td>
                     <td className={`py-3 ${supportingTextClassName}`}>{row.heldItems}</td>
-                    <td className={`py-3 ${supportingTextClassName}`}>{row.retentionState}</td>
+                    <td className={`py-3 ${supportingTextClassName}`}>
+                      {summary.policyState ? summary.policyState.state : row.retentionState}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -187,7 +222,7 @@ export function StorageRetentionRouteView() {
                   </tr>
                 </thead>
                 <tbody>
-                  {summary.categories.map((row) => (
+                  {summary.logicalClasses.map((row) => (
                     <tr
                       key={`${row.id}:${row.scope}`}
                       className="border-t border-[var(--rm-border)]"

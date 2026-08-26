@@ -11,9 +11,14 @@ export async function run(envelope = {}) {
   }
   if (capability === "evaluation:run-local") {
     const value = envelope.value;
+    const scores = value.cases.map((row) => (row.expected === row.actual ? 1 : 0));
     return {
       count: value.cases.length,
-      scores: value.cases.map((row) => (row.expected === row.actual ? 1 : 0)),
+      scores,
+      holdout: {
+        passed: scores.reduce((sum, score) => sum + score, 0) / scores.length > 0.5,
+        evidenceRef: "sha256:fixture-derived-holdout",
+      },
       environment: "local-routing-evaluation",
       provenance: {
         policy: value.policy,

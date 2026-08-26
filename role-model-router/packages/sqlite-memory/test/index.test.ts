@@ -1298,7 +1298,7 @@ describe("initializeSqliteMemory", () => {
           "conversation-projected",
           1000,
           "client-projected",
-          "not-json-and-intentionally-large".repeat(100_000),
+          "not-json-and-intentionally-large".repeat(500),
         );
       database.close();
 

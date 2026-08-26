@@ -117,6 +117,39 @@ type StorageRecord = {
   readonly leases?: number;
   readonly conflicts?: readonly string[];
 };
+
+function normalizeStorageRetentionContract(value: unknown): Record<string, unknown> {
+  const raw = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+  const logicalClasses = Array.isArray(raw.logicalClasses)
+    ? raw.logicalClasses
+    : Array.isArray(raw.categories)
+      ? raw.categories
+      : [];
+  const inventory =
+    raw.storageInventory && typeof raw.storageInventory === "object"
+      ? (raw.storageInventory as Record<string, unknown>)
+      : undefined;
+  const physicalResources = Array.isArray(raw.physicalResources)
+    ? raw.physicalResources
+    : Array.isArray(inventory?.entries)
+      ? inventory.entries
+      : [];
+  return {
+    ...raw,
+    logicalClasses,
+    categories: logicalClasses,
+    physicalResources,
+    ...(inventory
+      ? {
+          storageInventory: {
+            ...inventory,
+            complete: inventory.complete === true,
+            entries: physicalResources,
+          },
+        }
+      : {}),
+  };
+}
 type RetentionPlan = {
   readonly schemaVersion: "role-model.retention-dry-run.v1";
   readonly channel: string;
@@ -567,6 +600,16 @@ const runtimePlan = (state: BridgeState, sourceRevision: number): RetentionPlan 
   };
 };
 
+class TrackBPrivateOperationError extends Error {
+  readonly status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "TrackBPrivateOperationError";
+    this.status = status;
+  }
+}
+
 const privateRetentionRequest = async (
   endpoint: string | undefined,
   token: string | undefined,
@@ -589,7 +632,8 @@ const privateRetentionRequest = async (
   });
   const result = (await response.json().catch(() => ({}))) as { readonly error?: unknown };
   if (!response.ok)
-    throw new Error(
+    throw new TrackBPrivateOperationError(
+      response.status,
       typeof result.error === "string"
         ? result.error
         : `private Track B operation failed with ${response.status}`,
@@ -597,15 +641,367 @@ const privateRetentionRequest = async (
   return result;
 };
 
+function boundedIdentity(value: unknown, label: string): string {
+  if (typeof value !== "string" || value.length < 1 || value.length > 1024)
+    throw new Error(`${label} is required`);
+  return value;
+}
+
+function recordValue(value: unknown): Readonly<Record<string, unknown>> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Readonly<Record<string, unknown>>)
+    : {};
+}
+
+function finiteNonNegative(value: unknown, label: string): number {
+  const number = Number(value);
+  if (!Number.isFinite(number) || number < 0)
+    throw new Error(`${label} must be finite and non-negative`);
+  return number;
+}
+
+export function buildProviderEvidenceFromObservation(
+  observation: Readonly<Record<string, unknown>>,
+): Readonly<Record<string, unknown>> {
+  const requestId = boundedIdentity(observation.requestId, "provider evidence request id");
+  const endpointId = boundedIdentity(observation.endpointId, "provider evidence endpoint id");
+  const modelId = boundedIdentity(
+    recordValue(observation.usageEvent).model_id ?? observation.modelId,
+    "provider evidence model id",
+  );
+  const semantics = recordValue(observation.executionSemantics);
+  const failedAttempts = Array.isArray(semantics.failedAttempts) ? semantics.failedAttempts : [];
+  const failedAttemptIds = failedAttempts.map((attempt, index) =>
+    boundedIdentity(
+      recordValue(attempt).attemptId ?? recordValue(attempt).routedAttemptId,
+      `provider failed attempt ${index + 1}`,
+    ),
+  );
+  const failed = observation.statusFamily === "failure" || Boolean(observation.failure);
+  const attemptIds = failed
+    ? failedAttemptIds.length > 0
+      ? failedAttemptIds
+      : [`${requestId}:attempt:1`]
+    : [...failedAttemptIds, `${requestId}:attempt:${failedAttemptIds.length + 1}`];
+  return Object.freeze({ endpointId, modelId, status: failed ? "error" : "ok", attemptIds });
+}
+
+export function buildLegacyTerminalFailureRecoveryCapture(
+  observation: Readonly<Record<string, unknown>>,
+): Readonly<Record<string, unknown>> {
+  const failure = recordValue(observation.failure);
+  if (observation.statusFamily !== "failure" || Object.keys(failure).length === 0)
+    throw new Error("legacy graph recovery requires a persisted terminal failure");
+  const errorClass = boundedIdentity(failure.errorClass, "terminal failure class");
+  const statusCode = Number(failure.statusCode);
+  if (!Number.isInteger(statusCode) || statusCode < 100 || statusCode > 599)
+    throw new Error("legacy graph recovery requires a persisted terminal failure status code");
+  return Object.freeze({
+    requestId: boundedIdentity(observation.requestId, "terminal failure request id"),
+    routingDecisionId: boundedIdentity(
+      observation.routingDecisionId,
+      "terminal failure route decision id",
+    ),
+    endpointId: boundedIdentity(observation.endpointId, "terminal failure endpoint id"),
+    modelId: boundedIdentity(
+      recordValue(observation.usageEvent).model_id ?? observation.modelId,
+      "terminal failure model id",
+    ),
+    reasoningEffort: observation.reasoningEffort ?? null,
+    effortSource: boundedIdentity(
+      observation.effortSource ?? "none",
+      "terminal failure effort source",
+    ),
+    messages: [],
+    projectionCompleteness: "metadata_only",
+    recovery: Object.freeze({
+      kind: "legacy_terminal_failure",
+      source: "persisted_runtime_observation",
+    }),
+    failure: Object.freeze({
+      errorClass,
+      statusCode,
+      message: `Persisted runtime observation recorded ${errorClass} (HTTP ${statusCode}).`,
+    }),
+    toolExecutions: [],
+  });
+}
+
+export function buildGraphEvidenceFromCapture(
+  capture: Readonly<Record<string, unknown>>,
+): Readonly<Record<string, unknown>> {
+  const messages = Array.isArray(capture.messages) ? capture.messages : [];
+  const tools = Array.isArray(capture.tools) ? capture.tools : [];
+  const toolRows = tools.map((tool) => recordValue(tool));
+  const rawCaptureMetrics = recordValue(capture.captureMetrics);
+  const captureMetrics =
+    Object.keys(rawCaptureMetrics).length > 0
+      ? Object.freeze({
+          captureCpuMs: finiteNonNegative(rawCaptureMetrics.captureCpuMs, "capture CPU"),
+          captureWallMs: finiteNonNegative(rawCaptureMetrics.captureWallMs, "capture wall time"),
+          sqliteLockWaitMs: finiteNonNegative(
+            rawCaptureMetrics.sqliteLockWaitMs,
+            "SQLite lock wait",
+          ),
+          queueDepthBefore: finiteNonNegative(
+            rawCaptureMetrics.queueDepthBefore,
+            "capture queue depth before",
+          ),
+          queueDepthAfter: finiteNonNegative(
+            rawCaptureMetrics.queueDepthAfter,
+            "capture queue depth",
+          ),
+          filesystemBytesBefore: finiteNonNegative(
+            rawCaptureMetrics.filesystemBytesBefore,
+            "filesystem bytes before",
+          ),
+          filesystemBytesAfter: finiteNonNegative(
+            rawCaptureMetrics.filesystemBytesAfter,
+            "filesystem bytes after",
+          ),
+          casBytesBefore: finiteNonNegative(rawCaptureMetrics.casBytesBefore, "CAS bytes before"),
+          casBytesAfter: finiteNonNegative(rawCaptureMetrics.casBytesAfter, "CAS bytes after"),
+          normalizedStateBytesBefore: finiteNonNegative(
+            rawCaptureMetrics.normalizedStateBytesBefore,
+            "normalized state bytes before",
+          ),
+          normalizedStateBytesAfter: finiteNonNegative(
+            rawCaptureMetrics.normalizedStateBytesAfter,
+            "normalized state bytes after",
+          ),
+          archiveManifestInlineContentBytes: finiteNonNegative(
+            rawCaptureMetrics.archiveManifestInlineContentBytes,
+            "archive manifest inline content bytes",
+          ),
+        })
+      : null;
+  const response = recordValue(capture.response);
+  const edgeCount = Number(capture.edgeCount);
+  const metadataOnly = capture.projectionCompleteness === "metadata_only";
+  const recovery = recordValue(capture.recovery);
+  if (
+    !Number.isSafeInteger(edgeCount) ||
+    edgeCount < 1 ||
+    (messages.length < 1 && !metadataOnly) ||
+    (metadataOnly &&
+      (messages.length !== 0 ||
+        capture.terminalState !== "provider_error" ||
+        recovery.kind !== "legacy_terminal_failure" ||
+        recovery.source !== "persisted_runtime_observation"))
+  )
+    throw new Error("exact live graph is incomplete");
+  return Object.freeze({
+    rootArtifactId: boundedIdentity(capture.rootArtifactId, "graph root artifact id"),
+    messageNodeIds: messages.map((message, index) =>
+      boundedIdentity(recordValue(message).nodeId, `graph message node ${index + 1}`),
+    ),
+    responseNodeId: boundedIdentity(response.nodeId, "graph response node id"),
+    toolExecutionNodeIds: toolRows
+      .filter((tool) => tool.kind === undefined || tool.kind === "tool_execution")
+      .map((tool, index) => boundedIdentity(tool.nodeId, `graph tool execution node ${index + 1}`)),
+    toolCallNodeIds: toolRows
+      .filter((tool) => tool.kind === "tool_call")
+      .map((tool, index) => boundedIdentity(tool.nodeId, `graph tool call node ${index + 1}`)),
+    toolResultNodeIds: toolRows
+      .filter((tool) => tool.kind === "tool_result")
+      .map((tool, index) => boundedIdentity(tool.nodeId, `graph tool result node ${index + 1}`)),
+    ...(metadataOnly
+      ? {
+          projectionCompleteness: "metadata_only",
+          recovery: Object.freeze({
+            kind: "legacy_terminal_failure",
+            source: "persisted_runtime_observation",
+          }),
+        }
+      : {}),
+    ...(captureMetrics ? { captureMetrics } : {}),
+    edgeCount,
+  });
+}
+
+export function buildVerifiersLiveExport(input: {
+  readonly channel: "development" | "stage";
+  readonly request: Readonly<Record<string, unknown>>;
+  readonly observation: Readonly<Record<string, unknown>>;
+  readonly capture: Readonly<Record<string, unknown>>;
+}): Readonly<Record<string, unknown>> {
+  const requestId = boundedIdentity(input.request.requestId, "Verifiers export request id");
+  const correlationId = boundedIdentity(
+    input.request.correlationId,
+    "Verifiers export correlation id",
+  );
+  const graphRootArtifactId = boundedIdentity(
+    input.request.graphRootArtifactId,
+    "Verifiers export graph root artifact id",
+  );
+  const taskIndex = input.request.taskIndex;
+  if (!Number.isSafeInteger(taskIndex) || Number(taskIndex) < 0)
+    throw new Error("Verifiers TraceTask task index is required from external evaluation context");
+  if (input.request.readiness !== "semantic")
+    throw new Error(
+      "only semantic live Verifiers export is available without token-exact evidence",
+    );
+  const observationCorrelation = boundedIdentity(
+    input.observation.correlationId ??
+      recordValue(input.observation.run88Correlation).correlationId,
+    "observation correlation id",
+  );
+  if (
+    input.capture.schemaVersion !== "role-model.route-capture-read.v1" ||
+    input.observation.requestId !== requestId ||
+    input.capture.requestId !== requestId ||
+    input.capture.routingDecisionId !== input.observation.routingDecisionId ||
+    observationCorrelation !== correlationId ||
+    input.capture.rootArtifactId !== graphRootArtifactId
+  )
+    throw new Error("Verifiers export does not reference the exact live graph and router decision");
+  const messages = Array.isArray(input.capture.messages) ? input.capture.messages : [];
+  const response = recordValue(input.capture.response);
+  const hasProviderFailure = input.capture.terminalState === "provider_error";
+  const failureRecord = recordValue(input.capture.failure ?? response.failure);
+  const providerFailure = hasProviderFailure
+    ? {
+        errorClass: boundedIdentity(failureRecord.errorClass, "provider failure class"),
+        message: boundedIdentity(failureRecord.message, "provider failure message"),
+        statusCode:
+          failureRecord.statusCode === null || failureRecord.statusCode === undefined
+            ? null
+            : Number(failureRecord.statusCode),
+      }
+    : null;
+  if (
+    providerFailure &&
+    providerFailure.statusCode !== null &&
+    (!Number.isInteger(providerFailure.statusCode) ||
+      providerFailure.statusCode < 100 ||
+      providerFailure.statusCode > 599)
+  )
+    throw new Error("provider failure status code is invalid");
+  const taskPromptMessage =
+    messages.find((value) => recordValue(value).role === "user") ?? messages[0];
+  const taskPromptContent = recordValue(taskPromptMessage).content;
+  if (taskPromptContent === undefined)
+    throw new Error("Verifiers TraceTask prompt content is required");
+  const taskPrompt =
+    typeof taskPromptContent === "string" ? taskPromptContent : JSON.stringify(taskPromptContent);
+  const semanticMessages = [...messages, response].map((value, index) => {
+    const message = recordValue(value);
+    const role = boundedIdentity(message.role, `Verifiers node ${index + 1} role`);
+    if (!("content" in message)) throw new Error(`Verifiers node ${index + 1} content is required`);
+    const toolCalls = Array.isArray(message.toolCalls) ? message.toolCalls : null;
+    const verifierToolCalls = toolCalls?.map((value, toolIndex) => {
+      const toolCall = recordValue(value);
+      const nestedFunction = recordValue(toolCall.function);
+      const argumentsValue = toolCall.arguments ?? nestedFunction.arguments;
+      if (argumentsValue === undefined)
+        throw new Error(
+          `Verifiers node ${index + 1} tool call ${toolIndex + 1} arguments are required`,
+        );
+      return {
+        id: boundedIdentity(
+          toolCall.id,
+          `Verifiers node ${index + 1} tool call ${toolIndex + 1} id`,
+        ),
+        name: boundedIdentity(
+          toolCall.name ?? nestedFunction.name,
+          `Verifiers node ${index + 1} tool call ${toolIndex + 1} name`,
+        ),
+        arguments:
+          typeof argumentsValue === "string" ? argumentsValue : JSON.stringify(argumentsValue),
+      };
+    });
+    const toolCallId = typeof message.toolCallId === "string" ? message.toolCallId : null;
+    return {
+      parent: index === 0 ? null : index - 1,
+      message: {
+        role,
+        content: message.content,
+        ...(verifierToolCalls ? { tool_calls: verifierToolCalls } : {}),
+        ...(toolCallId ? { tool_call_id: toolCallId } : {}),
+        ...(typeof message.name === "string" ? { name: message.name } : {}),
+      },
+      sampled: index === messages.length && providerFailure === null,
+      token_ids: [],
+      mask: [],
+      is_content: [],
+      logprobs: [],
+      ...(index === messages.length ? { finish_reason: "stop" } : {}),
+    };
+  });
+  const routingDecisionId = boundedIdentity(
+    input.observation.routingDecisionId,
+    "Verifiers export route decision id",
+  );
+  const responseNodeId = boundedIdentity(response.nodeId, "Verifiers response node id");
+  const traceId = `role-model-${createHash("sha256").update(`${input.channel}\0${requestId}\0${graphRootArtifactId}`).digest("hex")}`;
+  return Object.freeze({
+    schemaVersion: "role-model.verifiers-live-export.v1",
+    channel: input.channel,
+    requestId,
+    correlationId,
+    graphRootArtifactId,
+    responseNodeIndex: messages.length,
+    tokenExactDisposition: "refused_missing_evidence",
+    trace: {
+      id: traceId,
+      task: { type: "RoleModelTraceTask", data: { idx: Number(taskIndex), prompt: taskPrompt } },
+      nodes: semanticMessages,
+      rewards: {},
+      metrics: {},
+      info: {
+        limitations: [
+          "semantic projection; provider-native tokens unavailable",
+          ...(providerFailure ? ["provider failed before a sampled completion"] : []),
+        ],
+        routeDecisionId: routingDecisionId,
+        roleModelGraphRootArtifactId: graphRootArtifactId,
+        roleModelResponseNodeId: responseNodeId,
+        roleModelRequestId: requestId,
+        roleModelCorrelationId: correlationId,
+        ...(providerFailure && providerFailure.statusCode !== null
+          ? { providerStatusCode: providerFailure.statusCode }
+          : {}),
+        roleModelToolNodeIds: (Array.isArray(input.capture.tools) ? input.capture.tools : []).map(
+          (tool, index) =>
+            boundedIdentity(recordValue(tool).nodeId, `graph tool node ${index + 1}`),
+        ),
+        roleModelToolCallNodeIds: (Array.isArray(input.capture.tools) ? input.capture.tools : [])
+          .filter((tool) => recordValue(tool).kind === "tool_call")
+          .map((tool, index) =>
+            boundedIdentity(recordValue(tool).nodeId, `graph tool call node ${index + 1}`),
+          ),
+        roleModelToolResultNodeIds: (Array.isArray(input.capture.tools) ? input.capture.tools : [])
+          .filter((tool) => recordValue(tool).kind === "tool_result")
+          .map((tool, index) =>
+            boundedIdentity(recordValue(tool).nodeId, `graph tool result node ${index + 1}`),
+          ),
+      },
+      is_completed: true,
+      stop_condition: providerFailure ? "provider_error" : "role_model_graph_complete",
+      errors: providerFailure
+        ? [
+            {
+              type: providerFailure.errorClass,
+              message: providerFailure.message,
+              traceback: null,
+            },
+          ]
+        : [],
+    },
+  });
+}
+
 export function createTrackBOperations({
   statePath,
   catalog,
+  runtimeChannel = "development",
   operationsEndpoint = process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL?.trim(),
   operationsToken = process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TOKEN,
   extensionRuntime,
 }: {
   readonly statePath: string;
   readonly catalog: readonly Record<string, unknown>[];
+  readonly runtimeChannel?: "development" | "stage" | "production";
   readonly operationsEndpoint?: string;
   readonly operationsToken?: string;
   readonly extensionRuntime?: {
@@ -671,7 +1067,7 @@ export function createTrackBOperations({
             installed: true,
             enabled,
             enabledMode: enabled ? (id === "knowledge-worker" ? "shadow" : "active") : "disabled",
-            channel: "development",
+            channel: runtimeChannel,
             scope: "global",
             authorizationEpoch: 1,
             health: {
@@ -1076,7 +1472,12 @@ export function createTrackBOperations({
     },
     async readStorageRetention(): Promise<unknown> {
       const remote = await requestPrivate("storage-retention");
-      if (remote) return remote;
+      const storageAudit = await requestPrivate("storage-audit");
+      if (remote)
+        return {
+          ...normalizeStorageRetentionContract(remote),
+          storageAudit: storageAudit ?? null,
+        };
       const state = await readState(statePath);
       const categories = state.storageServices.map((row) => ({
         id: row.category,
@@ -1086,21 +1487,29 @@ export function createTrackBOperations({
         count: row.count,
         serviceId: row.id,
       }));
+      const physicalResources = state.storageServices.map((row) => ({
+        id: row.id,
+        owner: row.id,
+        health: "unavailable",
+        measurement: "unavailable" as const,
+        physicalBytes: null,
+        heldItems: row.holds ?? 0,
+        retentionState: "not_configured",
+      }));
       return {
         revision: state.revision,
         totalBytes: categories.reduce((sum, row) => sum + row.bytes, 0),
         categories,
+        logicalClasses: categories,
+        physicalResources,
+        // Run 94 SP8: the local fallback never fabricates a physical inventory.
+        // Physical bytes come exclusively from the read-only storage audit; without
+        // a measurement every entry is honestly unavailable.
+        storageAudit: storageAudit ?? null,
         storageInventory: {
           schemaVersion: "role-model.storage-registry.v1",
-          entries: state.storageServices.map((row) => ({
-            id: row.id,
-            owner: row.id,
-            health: "unavailable",
-            measurement: "unavailable",
-            physicalBytes: null,
-            heldItems: row.holds ?? 0,
-            retentionState: row.conflicts?.length ? "blocked" : "not_configured",
-          })),
+          complete: false,
+          entries: physicalResources,
         },
         managedPolicy: state.retention.managedPolicy,
         conflicts: state.storageServices.flatMap((row) =>
@@ -1296,6 +1705,8 @@ export function createTrackBOperations({
       const action = String(input.action ?? "");
       if (current.managed && action !== "complete_disclosure")
         throw new Error("contribution is controlled by managed policy");
+      if (action === "complete_disclosure" && current.authorizationState !== "pending_disclosure")
+        throw new Error("contribution disclosure is not pending; re-enable before authorizing");
       let next: ContributionState;
       if (action === "opt_out")
         next = {
@@ -1347,6 +1758,35 @@ export function createTrackBOperations({
       if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
         throw new Error("local route capture requires a loopback operations boundary");
       return requestPrivate("capture/route", { method: "POST", body: input });
+    },
+    async measureNoRichCaptureBaseline(input: Record<string, unknown>): Promise<unknown> {
+      if (!operationsEndpoint)
+        throw new Error(
+          "private operations endpoint is required for no-rich capture baseline measurement",
+        );
+      const url = new URL(operationsEndpoint);
+      if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
+        throw new Error("no-rich capture baseline requires a loopback operations boundary");
+      return requestPrivate("capture/performance-baseline", { method: "POST", body: input });
+    },
+    async readLocalRouteCapture(input: Record<string, unknown>): Promise<unknown> {
+      if (!operationsEndpoint)
+        throw new Error("private operations endpoint is required for exact route capture readback");
+      const url = new URL(operationsEndpoint);
+      if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
+        throw new Error("local route capture readback requires a loopback operations boundary");
+      try {
+        return await requestPrivate("capture/read", { method: "POST", body: input });
+      } catch (error) {
+        const requestId = String(input.requestId ?? "");
+        if (
+          error instanceof TrackBPrivateOperationError &&
+          error.status === 409 &&
+          error.message === `unknown route capture ${requestId}`
+        )
+          return null;
+        throw error;
+      }
     },
     async listRecommendations(): Promise<readonly RecommendationRecord[]> {
       return (await readState(statePath)).recommendations ?? [];

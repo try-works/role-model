@@ -31,6 +31,8 @@ import {
   writePerformanceHistoryPolicy,
 } from "./history-policy.js";
 import {
+  LEGACY_INLINE_CAP_BYTES,
+  buildCompactRuntimeObservationStub,
   hydrateRuntimeObservationGraphPointer,
   readRuntimeObservationStorageState,
   recordRuntimeObservationGraphReference,
@@ -325,6 +327,18 @@ CREATE TABLE IF NOT EXISTS runtime_observations (
   retain_until_ms INTEGER,
   observation_json TEXT NOT NULL
 );
+CREATE TRIGGER IF NOT EXISTS runtime_observations_compact_stub_enforcement
+BEFORE INSERT ON runtime_observations
+WHEN NEW.observation_json IS NOT NULL AND length(CAST(NEW.observation_json AS BLOB)) > 16384
+BEGIN
+  SELECT RAISE(ABORT, 'runtime_observations.observation_json exceeds the 16 KiB compact stub cap');
+END;
+CREATE TRIGGER IF NOT EXISTS runtime_observations_compact_stub_update_enforcement
+BEFORE UPDATE OF observation_json ON runtime_observations
+WHEN NEW.observation_json IS NOT NULL AND length(CAST(NEW.observation_json AS BLOB)) > 16384
+BEGIN
+  SELECT RAISE(ABORT, 'runtime_observations.observation_json exceeds the 16 KiB compact stub cap');
+END;
 CREATE TABLE IF NOT EXISTS observed_performance_samples (
   sample_id TEXT PRIMARY KEY,
   endpoint_id TEXT NOT NULL,
@@ -4598,6 +4612,8 @@ export interface PersistRuntimeTelemetryFailureInput {
   readonly taxonomyToolClassIds?: readonly string[];
   readonly dimensions?: Record<string, unknown> | null;
   readonly observation?: Record<string, unknown> | null;
+  readonly artifactRef?: import("./legacy-migration.js").GraphArtifactReference;
+  readonly graphStore?: import("./legacy-migration.js").RuntimeObservationGraphStore;
 }
 
 export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFailureInput): void {
@@ -4610,32 +4626,88 @@ export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFai
     endpointId,
     createdAtMs,
   );
-  withSqliteBusyRetry(input.databasePath, (database) => {
-    if (input.observation) {
+  let artifactRef = input.artifactRef;
+  let createdArtifact: import("./legacy-migration.js").LegacyArtifactWriteResult | undefined;
+  if (input.observation && input.graphStore && !artifactRef) {
+    const content = JSON.stringify(input.observation);
+    const contentHash = createHash("sha256").update(content).digest("hex");
+    createdArtifact = input.graphStore.write({
+      scopeId: input.graphStore.scopeId,
+      sourceId: input.requestId,
+      content,
+      contentHash,
+    });
+    artifactRef = { scopeId: input.graphStore.scopeId, ...createdArtifact };
+  }
+  try {
+    withSqliteBusyRetry(input.databasePath, (database) => {
+      if (input.observation) {
+        const sourceObservation =
+          input.observation && typeof input.observation === "object"
+            ? (input.observation as Readonly<Record<string, unknown>>)
+            : null;
+        const stub = sourceObservation
+          ? buildCompactRuntimeObservationStub(sourceObservation)
+          : { requestId: input.requestId };
+        stub.requestId = input.requestId;
+        stub.statusFamily = "failure";
+        stub.failure = {
+          statusCode: input.statusCode,
+          errorClass: input.errorClass,
+          ...(input.latencyMs != null ? { latencyMs: input.latencyMs } : {}),
+        };
+        if (artifactRef) {
+          stub.artifactRef = artifactRef;
+          stub.graphPrimary = true;
+        }
+        // Failure rows are classification stubs. Diagnostics and inspection captures may
+        // contain provider errors or raw response bodies, so they remain graph/artifact
+        // content and are never copied into this SQLite row.
+        const payload = JSON.stringify(stub);
+        if (Buffer.byteLength(payload, "utf8") > LEGACY_INLINE_CAP_BYTES) {
+          throw new Error(
+            `runtime telemetry failure classification stub exceeds ${LEGACY_INLINE_CAP_BYTES} bytes`,
+          );
+        }
+        database
+          .prepare(
+            "INSERT OR REPLACE INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, retain_until_ms, taxonomy_role_id, taxonomy_task_type, client_request_id, request_class, observation_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          )
+          .run(
+            input.requestId,
+            routingDecisionId,
+            endpointId,
+            "conversation-main",
+            createdAtMs,
+            input.retainUntil ?? null,
+            input.taxonomyRoleId ?? null,
+            input.taxonomyTaskType ?? null,
+            input.clientRequestId ?? null,
+            input.requestClass ?? null,
+            payload,
+          );
+        if (artifactRef) {
+          recordRuntimeObservationGraphReference(database, {
+            observation: {
+              ...sourceObservation,
+              requestId: input.requestId,
+            },
+            artifactRef,
+          });
+        }
+      }
       database
         .prepare(
-          "INSERT OR REPLACE INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, retain_until_ms, taxonomy_role_id, taxonomy_task_type, client_request_id, request_class, observation_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          `INSERT OR REPLACE INTO runtime_telemetry_records (${RUNTIME_TELEMETRY_INSERT_COLUMNS.join(", ")}) VALUES (${RUNTIME_TELEMETRY_INSERT_COLUMNS.map(() => "?").join(", ")})`,
         )
-        .run(
-          input.requestId,
-          routingDecisionId,
-          endpointId,
-          "conversation-main",
-          createdAtMs,
-          input.retainUntil ?? null,
-          input.taxonomyRoleId ?? null,
-          input.taxonomyTaskType ?? null,
-          input.clientRequestId ?? null,
-          input.requestClass ?? null,
-          JSON.stringify(input.observation),
-        );
+        .run(...runtimeTelemetryInsertValues(telemetryRecord));
+    });
+  } catch (error) {
+    if (createdArtifact) {
+      input.graphStore?.remove?.(createdArtifact);
     }
-    database
-      .prepare(
-        `INSERT OR REPLACE INTO runtime_telemetry_records (${RUNTIME_TELEMETRY_INSERT_COLUMNS.join(", ")}) VALUES (${RUNTIME_TELEMETRY_INSERT_COLUMNS.map(() => "?").join(", ")})`,
-      )
-      .run(...runtimeTelemetryInsertValues(telemetryRecord));
-  });
+    throw error;
+  }
 }
 
 export function readRuntimeObservationBundle(

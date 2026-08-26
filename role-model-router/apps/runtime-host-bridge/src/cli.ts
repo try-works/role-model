@@ -20,16 +20,21 @@ import { validateRun88PrivateDistributionIdentity } from "./kw-private-loader.js
 import { type RuntimeChannelProfile, readPackagedRuntimeProfile } from "./runtime-channel.js";
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
+import { createTrackBOperations } from "./track-b-operations.js";
 import {
+  type TrackBExtensionClosure,
   createOwnedTrackBSidecarSpec,
   createPackagedProductionRuntime,
   createProductionExtensionRuntime,
   createRun88RuntimeCorrelation,
+  createRuntimeRequestCorrelationId,
   createTrackBPostObservationOutbox,
   resolveManagedArtifactKeyFiles,
   runTrackBPostObservation,
+  runTrackBPostObservationWithContribution,
   trackBDistributionRequiresSQLiteMaintenance,
   validateRun88ProviderResponseObservation,
+  verifyTrackBExtensionClosureAfterRestart,
 } from "./track-b-runtime.js";
 
 type CliBackend = Pick<
@@ -57,6 +62,8 @@ type CliBackend = Pick<
   | "mutateExtension"
   | "readTrackBQaExtensions"
   | "readTrackBShadowReceipts"
+  | "readTrackBExtensionReadback"
+  | "measureNoRichCaptureBaseline"
   | "readGraphMigration"
   | "advanceGraphMigration"
   | "rollbackGraphMigration"
@@ -98,6 +105,8 @@ type CliBackend = Pick<
   | "listRecentRequestIds"
   | "listRecentRequestObservations"
   | "readRequestObservation"
+  | "exportVerifiersTrace"
+  | "recoverLegacyTerminalFailure"
   | "readEndpointProfile"
   | "readBenchmarkSuite"
   | "runBenchmark"
@@ -224,6 +233,11 @@ export function createRun88StagePostObservation(input: {
       sourceId: input.sourceId,
       deploymentId: `local-stage:${input.executableSha256}`,
       scope: input.scope,
+      correlationId: createRuntimeRequestCorrelationId({
+        scope: input.scope,
+        requestId: String(input.observation.requestId ?? ""),
+        routingDecisionId: String(input.observation.routingDecisionId ?? ""),
+      }),
     }),
   });
 }
@@ -420,6 +434,12 @@ export function createCliServerOptions(
     readTrackBShadowReceipts: bindBackendMethod(
       "readTrackBShadowReceipts",
     ) as StartBridgeServerOptions["readTrackBShadowReceipts"],
+    readTrackBExtensionReadback: bindBackendMethod(
+      "readTrackBExtensionReadback",
+    ) as StartBridgeServerOptions["readTrackBExtensionReadback"],
+    measureNoRichCaptureBaseline: bindBackendMethod(
+      "measureNoRichCaptureBaseline",
+    ) as StartBridgeServerOptions["measureNoRichCaptureBaseline"],
     readGraphMigration: bindBackendMethod(
       "readGraphMigration",
     ) as StartBridgeServerOptions["readGraphMigration"],
@@ -537,6 +557,12 @@ export function createCliServerOptions(
     readRequestObservation: bindBackendMethod(
       "readRequestObservation",
     ) as StartBridgeServerOptions["readRequestObservation"],
+    exportVerifiersTrace: bindBackendMethod(
+      "exportVerifiersTrace",
+    ) as StartBridgeServerOptions["exportVerifiersTrace"],
+    recoverLegacyTerminalFailure: bindBackendMethod(
+      "recoverLegacyTerminalFailure",
+    ) as StartBridgeServerOptions["recoverLegacyTerminalFailure"],
     readEndpointProfile: bindBackendMethod(
       "readEndpointProfile",
     ) as StartBridgeServerOptions["readEndpointProfile"],
@@ -677,6 +703,7 @@ export function applyRecommendationServiceLauncherConfig(values: LauncherConfigV
   const serviceToken = readLauncherString(values, "recommendation-service-token");
   const materialFile = readLauncherString(values, "recommendation-material-file");
   const aggregateScope = readLauncherString(values, "aggregate-scope");
+  const recommendationScope = readLauncherString(values, "recommendation-scope");
 
   if (serviceUrl) {
     process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_URL = serviceUrl;
@@ -695,6 +722,12 @@ export function applyRecommendationServiceLauncherConfig(values: LauncherConfigV
       throw new Error("aggregate scope is invalid");
     }
     process.env.ROLE_MODEL_AGGREGATE_SCOPE = aggregateScope;
+  }
+  if (recommendationScope) {
+    if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{0,511}$/.test(recommendationScope)) {
+      throw new Error("recommendation scope is invalid");
+    }
+    process.env.ROLE_MODEL_RECOMMENDATION_SCOPE = recommendationScope;
   }
   if (!materialFile) {
     return;
@@ -769,6 +802,9 @@ export async function main(): Promise<void> {
       "aggregate-scope": {
         type: "string",
       },
+      "recommendation-scope": {
+        type: "string",
+      },
       "recommendation-service-url": {
         type: "string",
       },
@@ -811,6 +847,19 @@ export async function main(): Promise<void> {
     packagedManifestRecord,
   );
   const packagedReleaseId = run88StageIdentity?.releaseId;
+  const packagedExecutableSha256 = String(packagedManifestRecord?.executable_sha256 ?? "");
+  const aggregateCorrelationReleaseId =
+    run88StageIdentity?.releaseId ??
+    (/^[a-f0-9]{64}$/.test(packagedExecutableSha256)
+      ? `sha256:${packagedExecutableSha256}`
+      : undefined);
+  const aggregateCorrelationCohortId = packagedProfile
+    ? packagedProfile.channel === "stage"
+      ? "stage-1pct"
+      : packagedProfile.channel === "development"
+        ? "development-default"
+        : undefined
+    : undefined;
   const loadRun88PiInvocationProvenance = run88StageIdentity
     ? () => readRun88PiInvocationProvenance(process.env, run88StageIdentity.releaseId)
     : null;
@@ -953,11 +1002,12 @@ export async function main(): Promise<void> {
         "post-observation-outbox.json",
       ),
     });
+    let postObservationOperations: ReturnType<typeof createTrackBOperations> | null = null;
     const drainPostObservationOutbox = async (
       runtime: Awaited<ReturnType<typeof createProductionExtensionRuntime>>,
     ) =>
-      postObservationOutbox.drain((observation) =>
-        runTrackBPostObservation(runtime, observation, {
+      postObservationOutbox.drain((observation) => {
+        const processingInput = {
           scope: options.scopeId,
           channel: packagedProfile?.channel ?? "development",
           authorizationEpoch: 1,
@@ -967,13 +1017,35 @@ export async function main(): Promise<void> {
                 run88Correlation: observation.run88Correlation as Record<string, unknown>,
               }
             : {}),
-        }),
-      );
+        } as const;
+        const operations = postObservationOperations;
+        return operations
+          ? runTrackBPostObservationWithContribution(
+              runtime,
+              observation,
+              processingInput,
+              (aggregate) => operations.recordContributionAggregate(aggregate),
+            )
+          : runTrackBPostObservation(runtime, observation, processingInput);
+      });
     const createBackend = async (
       trackBOperationsEndpoint?: string,
       trackBOperationsToken?: string,
       runStartupSQLiteMaintenance = true,
     ) => {
+      postObservationOperations = trackBOperationsEndpoint
+        ? createTrackBOperations({
+            statePath: path.join(
+              options.runtimeStateRoot,
+              options.scopeId,
+              "track-b-production-bridge.json",
+            ),
+            catalog: [],
+            runtimeChannel: packagedProfile?.channel ?? "development",
+            operationsEndpoint: trackBOperationsEndpoint,
+            operationsToken: trackBOperationsToken,
+          })
+        : null;
       const created = await createRuntimeBridgeBackend({
         fixtureRoot: resolveCliFixtureRoot(options.repoRoot, args.values["fixture-root"]),
         repoRoot: options.repoRoot,
@@ -1013,6 +1085,33 @@ export async function main(): Promise<void> {
               : {}),
           })),
         trackBPostObservationReceipts: () => postObservationOutbox.read(),
+        readTrackBExtensionReadback: async (body) => {
+          const requestId = String(body.requestId ?? "").trim();
+          if (!requestId) throw new Error("Track B extension readback requestId is required");
+          const receipt = await postObservationOutbox.readReceipt(requestId);
+          if (!receipt) throw new Error(`Track B observation receipt not found: ${requestId}`);
+          const result = receipt.result as Record<string, unknown>;
+          const closure = result.extensionClosure as TrackBExtensionClosure | undefined;
+          if (!closure)
+            throw new Error(`Track B observation has no extension closure: ${requestId}`);
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) throw new Error("Track B extension runtime is unavailable");
+          return verifyTrackBExtensionClosureAfterRestart(runtime, closure, {
+            channel: packagedProfile?.channel ?? "development",
+            scope: options.scopeId,
+            authorizationEpoch: 1,
+            readDurableEvidence: async ({ durableLocator, durableOutputId }) =>
+              runtime.invoke("artifact-store", {
+                requestId: `${requestId}:readback:evidence:${durableOutputId}`,
+                protocolVersion: "1.1.0",
+                channel: packagedProfile?.channel ?? "development",
+                scope: options.scopeId,
+                authorizationEpoch: 1,
+                capability: "artifact:read",
+                payload: { durableLocator, durableOutputId },
+              }),
+          });
+        },
         ...(trackBManifestText
           ? {
               trackBPostObservation: async (observation: Readonly<Record<string, unknown>>) => {
@@ -1149,6 +1248,13 @@ export async function main(): Promise<void> {
             args.values["aggregate-ingestion-url"] ??
             process.env.ROLE_MODEL_AGGREGATE_INGESTION_URL,
           aggregateScope: args.values["aggregate-scope"] ?? process.env.ROLE_MODEL_AGGREGATE_SCOPE,
+          ...(aggregateCorrelationReleaseId && aggregateCorrelationCohortId
+            ? {
+                aggregateCorrelationReleaseId,
+                aggregateCorrelationCohortId,
+                aggregateCorrelationOperationId: "aggregate.upload",
+              }
+            : {}),
           ...(manifest.publicRuntimeAdapter
             ? {
                 sqliteDatabasePath: path.join(

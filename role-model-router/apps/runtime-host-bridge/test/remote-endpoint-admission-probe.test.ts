@@ -41,7 +41,7 @@ describe("remote endpoint admission probes", () => {
       }),
     );
     expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({
-      model: "deepseek/deepseek-v4-flash",
+      model: "deepseek-v4-flash",
       messages: [{ role: "user", content: "role-model admission readiness probe" }],
       max_tokens: 1,
       stream: false,

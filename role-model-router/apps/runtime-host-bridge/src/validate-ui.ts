@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -17,6 +18,7 @@ import {
   mapChatCompletionsRequest,
   startBridgeServer,
 } from "./index.js";
+import { createTrackBFileGraphStore } from "./track-b-runtime.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -135,6 +137,36 @@ export async function runRuntimeUiValidation(
     ...options,
     runtimeVendorStartup: "disabled",
   });
+  const localGraphStore = createTrackBFileGraphStore({
+    scopeId: options.scopeId,
+    rootPath: path.join(options.runtimeStateRoot, options.scopeId, "track-b-graph"),
+  });
+  const persistValidationObservation = (
+    observation: ReturnType<typeof createRuntimeObservationBundle>,
+  ): void => {
+    const content = JSON.stringify(observation);
+    const contentHash = createHash("sha256").update(content).digest("hex");
+    const artifact = localGraphStore.write({
+      scopeId: localGraphStore.scopeId,
+      sourceId: observation.decision.request_id,
+      content,
+      contentHash,
+    });
+    persistRuntimeObservationBundle({
+      databasePath: resolveSqliteMemoryLocation({
+        runtimeStateRoot: options.runtimeStateRoot,
+        scopeId: options.scopeId,
+      }),
+      channel: "development",
+      observation: observation as never,
+      artifactRef: {
+        scopeId: localGraphStore.scopeId,
+        artifactId: artifact.artifactId,
+        contentHash: artifact.contentHash,
+      },
+      graphStore: localGraphStore,
+    });
+  };
   traceValidation("createRuntimeBridgeBackend:done");
   traceValidation("startBridgeServer:start");
   const server = await startBridgeServer({
@@ -543,14 +575,7 @@ export async function runRuntimeUiValidation(
         rotationState: "stable",
       },
     });
-    persistRuntimeObservationBundle({
-      databasePath: resolveSqliteMemoryLocation({
-        runtimeStateRoot: options.runtimeStateRoot,
-        scopeId: options.scopeId,
-      }),
-      channel: "development",
-      observation: routedObservation,
-    });
+    persistValidationObservation(routedObservation);
     traceValidation("routed-observation:persisted");
 
     const mixedAliasRoutingDecisionId = "route-runtime-ui-mixed-alias-001";
@@ -662,14 +687,7 @@ export async function runRuntimeUiValidation(
         rotationState: "stable",
       },
     });
-    persistRuntimeObservationBundle({
-      databasePath: resolveSqliteMemoryLocation({
-        runtimeStateRoot: options.runtimeStateRoot,
-        scopeId: options.scopeId,
-      }),
-      channel: "development",
-      observation: mixedAliasObservation,
-    });
+    persistValidationObservation(mixedAliasObservation);
     traceValidation("mixed-alias-observation:persisted");
 
     traceValidation("final-readback:start");

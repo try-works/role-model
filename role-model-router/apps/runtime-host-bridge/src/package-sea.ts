@@ -86,6 +86,28 @@ export function resolvePackagedRuntimeSourceTree({
   return sourceTree;
 }
 
+export function resolveReleaseOutputDirectory({
+  distRoot,
+  releaseTarget,
+  env,
+}: Readonly<{
+  distRoot: string;
+  releaseTarget: string;
+  env: NodeJS.ProcessEnv;
+}>): string {
+  if (!/^[a-z0-9]+-[a-z0-9]+$/i.test(releaseTarget)) {
+    throw new Error("Packaged runtime release target is invalid");
+  }
+  const explicitRoot = env.ROLE_MODEL_RELEASE_OUTPUT_ROOT?.trim();
+  if (explicitRoot && !path.isAbsolute(explicitRoot)) {
+    throw new Error("ROLE_MODEL_RELEASE_OUTPUT_ROOT must be absolute");
+  }
+  return path.join(
+    explicitRoot ? path.resolve(explicitRoot) : path.join(distRoot, "release"),
+    releaseTarget,
+  );
+}
+
 const NODE_SEA_FUSE = "NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -643,7 +665,7 @@ export async function packageSeaRuntime(): Promise<{
     await rm(seaConfigPath, { force: true });
   }
 
-  const releaseDir = path.join(distRoot, "release", releaseTarget);
+  const releaseDir = resolveReleaseOutputDirectory({ distRoot, releaseTarget, env: process.env });
   const outputPath = path.join(releaseDir, resolvePackagedRuntimeName(profile.name));
   const blobPath = path.join(distRoot, "sea-prep.blob");
   await rm(releaseDir, { recursive: true, force: true });
