@@ -211,6 +211,18 @@ export async function resolveManagedArtifactKeyFiles(options: {
     ]);
     return resolved;
   }
+  if (options.channel === "stage") {
+    const packagedDigest = path.resolve("secrets", "artifact-digest.key");
+    const packagedEncryption = path.resolve("secrets", "artifact-encryption.key");
+    await Promise.all([
+      assertManagedArtifactKeyFile(packagedDigest),
+      assertManagedArtifactKeyFile(packagedEncryption),
+    ]);
+    return {
+      artifactDigestKeyFile: packagedDigest,
+      artifactEncryptionKeyFile: packagedEncryption,
+    };
+  }
   if (options.channel !== "production") return {};
 
   const stableStateRoot = path.resolve(options.stateRoot);
