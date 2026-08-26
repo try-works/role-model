@@ -210,6 +210,7 @@ jobs:
           done
           test -s "$recommendation_material"
           node _private/scripts/track-b/launch-packaged-runtime.mjs \
+            --ci-contract \
             --public-root "$GITHUB_WORKSPACE" \
             --manifest "$GITHUB_WORKSPACE/_private/dist/run00-dev/track-b-runtime-manifest.json" \
             --qa-extension-manifest "$GITHUB_WORKSPACE/role-model-router/apps/runtime-host-bridge/test/fixtures/recursive-87-synthetic-extension.manifest.json" \
