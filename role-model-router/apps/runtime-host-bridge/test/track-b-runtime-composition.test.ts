@@ -135,7 +135,10 @@ describe("production Track B composition", () => {
         "resolveManagedArtifactKeyFiles",
       ) as (input: { channel: "stage"; stateRoot: string }) => Promise<unknown>;
       await expect(
-        resolveManagedArtifactKeyFiles({ channel: "stage", stateRoot: path.join(packageRoot, "state") }),
+        resolveManagedArtifactKeyFiles({
+          channel: "stage",
+          stateRoot: path.join(packageRoot, "state"),
+        }),
       ).rejects.toThrow(/managed artifact key|ENOENT/i);
     } finally {
       process.chdir(previousCwd);
