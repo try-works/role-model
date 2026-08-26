@@ -229,4 +229,4 @@ jobs:
             --url http://127.0.0.1:3462/healthz \
             --timeout-ms 120000 \
             --poll-interval-ms 1000
-          pnpm --filter @role-model-router/runtime-ui exec playwright test --grep @recursive:87-direct-track-b-semantic-completion
+          pnpm --filter @role-model-router/runtime-ui exec playwright test --grep @recursive:94-direct-track-b-storage-graph-cloud-roundtrip
