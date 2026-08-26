@@ -1768,12 +1768,23 @@ export async function prepareKnowledgeWorkerShadowReady(
 export interface RuntimeStorageRetentionSummary {
   readonly revision: number;
   readonly totalBytes: number;
-  readonly categories: readonly {
+  readonly logicalClasses: readonly {
     readonly id: string;
     readonly tier: string;
     readonly scope: string;
     readonly bytes: number;
     readonly count: number;
+  }[];
+  /** Backward-compatible alias for callers that still use the pre-SP8 name. */
+  readonly categories: RuntimeStorageRetentionSummary["logicalClasses"];
+  readonly physicalResources: readonly {
+    readonly id: string;
+    readonly owner: string;
+    readonly health: string;
+    readonly measurement: "measured" | "unavailable";
+    readonly physicalBytes: number | null;
+    readonly heldItems: number;
+    readonly retentionState: string;
   }[];
   readonly managedPolicy: boolean;
   readonly conflicts: readonly {
@@ -1823,21 +1834,69 @@ export interface RuntimeStorageRetentionSummary {
       readonly retentionState: string;
     }[];
   };
+  // Run 94 SP8: measured physical accounting from the read-only storage audit plus
+  // the measured policy state; absent until a real measurement exists.
+  readonly storageAudit?: {
+    readonly schemaVersion: "role-model.storage-audit.v1";
+    readonly available?: boolean;
+    readonly reason?: string;
+    readonly allocatedBytes?: number;
+    readonly logicalBytes?: number;
+    readonly reclaimableBytes?: number;
+    readonly heldBytes?: number | null;
+    readonly unavailableBytes?: number;
+    readonly observationRows?: number;
+    readonly graphEdges?: number;
+    readonly measuredAt?: string;
+  } | null;
+  readonly policyState?: {
+    readonly channel: string;
+    readonly state: string;
+    readonly policyId?: string;
+    readonly scopedBytes?: number;
+    readonly maxBytes?: number;
+    readonly policyCount?: number;
+    readonly error?: string;
+  };
 }
 
 export async function fetchStorageRetention(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeStorageRetentionSummary> {
-  return fetchJson<RuntimeStorageRetentionSummary>("/api/role-model/storage-retention", fetcher);
+  return normalizeStorageRetentionSummary(
+    await fetchJson<RuntimeStorageRetentionSummary>("/api/role-model/storage-retention", fetcher),
+  );
+}
+
+function normalizeStorageRetentionSummary(
+  value: RuntimeStorageRetentionSummary,
+): RuntimeStorageRetentionSummary {
+  const raw = value as RuntimeStorageRetentionSummary & {
+    readonly logicalClasses?: RuntimeStorageRetentionSummary["logicalClasses"];
+    readonly physicalResources?: RuntimeStorageRetentionSummary["physicalResources"];
+  };
+  const logicalClasses = raw.logicalClasses ?? raw.categories ?? [];
+  const physicalResources = raw.physicalResources ?? raw.storageInventory?.entries ?? [];
+  return {
+    ...raw,
+    logicalClasses,
+    categories: logicalClasses,
+    physicalResources,
+    storageInventory: raw.storageInventory
+      ? { ...raw.storageInventory, entries: physicalResources }
+      : undefined,
+  };
 }
 
 export async function requestRetentionDryRun(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeStorageRetentionSummary> {
-  return fetchJson<RuntimeStorageRetentionSummary>(
-    "/api/role-model/storage-retention/dry-run",
-    fetcher,
-    { method: "POST" },
+  return normalizeStorageRetentionSummary(
+    await fetchJson<RuntimeStorageRetentionSummary>(
+      "/api/role-model/storage-retention/dry-run",
+      fetcher,
+      { method: "POST" },
+    ),
   );
 }
 
@@ -1850,14 +1909,16 @@ export async function updateRetentionPolicy(
   },
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeStorageRetentionSummary> {
-  return fetchJson<RuntimeStorageRetentionSummary>(
-    "/api/role-model/storage-retention/policy",
-    fetcher,
-    {
-      method: "PUT",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(policy),
-    },
+  return normalizeStorageRetentionSummary(
+    await fetchJson<RuntimeStorageRetentionSummary>(
+      "/api/role-model/storage-retention/policy",
+      fetcher,
+      {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(policy),
+      },
+    ),
   );
 }
 export async function executeRetentionPlan(
@@ -1865,37 +1926,43 @@ export async function executeRetentionPlan(
   scope: string,
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeStorageRetentionSummary> {
-  return fetchJson<RuntimeStorageRetentionSummary>(
-    "/api/role-model/storage-retention/execute",
-    fetcher,
-    {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ manifestHash, scope }),
-    },
+  return normalizeStorageRetentionSummary(
+    await fetchJson<RuntimeStorageRetentionSummary>(
+      "/api/role-model/storage-retention/execute",
+      fetcher,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ manifestHash, scope }),
+      },
+    ),
   );
 }
 export async function cancelRetentionJob(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeStorageRetentionSummary> {
-  return fetchJson<RuntimeStorageRetentionSummary>(
-    "/api/role-model/storage-retention/cancel",
-    fetcher,
-    { method: "POST" },
+  return normalizeStorageRetentionSummary(
+    await fetchJson<RuntimeStorageRetentionSummary>(
+      "/api/role-model/storage-retention/cancel",
+      fetcher,
+      { method: "POST" },
+    ),
   );
 }
 export async function rollbackRetentionReceipt(
   receiptId: string,
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeStorageRetentionSummary> {
-  return fetchJson<RuntimeStorageRetentionSummary>(
-    "/api/role-model/storage-retention/rollback",
-    fetcher,
-    {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ receiptId }),
-    },
+  return normalizeStorageRetentionSummary(
+    await fetchJson<RuntimeStorageRetentionSummary>(
+      "/api/role-model/storage-retention/rollback",
+      fetcher,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ receiptId }),
+      },
+    ),
   );
 }
 export interface RuntimeContributionState {

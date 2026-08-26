@@ -73,6 +73,8 @@ export interface UnifiedRuntimeModelAliasConfig {
   readonly modelIds: readonly string[];
   /** Optional exact endpoint-instance allowlist; omitted means all expanded siblings. */
   readonly endpointIds?: readonly string[];
+  /** Ordered routing preference; every entry must also be in endpointIds. */
+  readonly preferredEndpointIds?: readonly string[];
 }
 
 export interface UnifiedRuntimeDifficultyClassifierConfig {
@@ -308,6 +310,7 @@ interface RawUnifiedRuntimeConfig {
         readonly mode?: string;
         readonly model_ids?: readonly string[];
         readonly endpoint_ids?: readonly string[];
+        readonly preferred_endpoint_ids?: readonly string[];
       }
     >
   >;
@@ -842,6 +845,31 @@ function normalizeModelAliasInput(
               .filter(Boolean),
           ),
         ];
+  const preferredEndpointIdsInput =
+    "preferredEndpointIds" in value
+      ? value.preferredEndpointIds
+      : "preferred_endpoint_ids" in value
+        ? value.preferred_endpoint_ids
+        : undefined;
+  const preferredEndpointIds =
+    preferredEndpointIdsInput === undefined
+      ? undefined
+      : [
+          ...new Set(
+            readStringArray(preferredEndpointIdsInput)
+              .map((entry) => entry.trim())
+              .filter(Boolean),
+          ),
+        ];
+  if (
+    preferredEndpointIds !== undefined &&
+    (endpointIds === undefined ||
+      preferredEndpointIds.some((endpointId) => !endpointIds.includes(endpointId)))
+  ) {
+    throw new Error(
+      `${prefix}.${aliasId}.preferred_endpoint_ids must be a subset of endpoint_ids.`,
+    );
+  }
   return {
     aliasId,
     mode: readAliasRoutingMode(
@@ -850,6 +878,7 @@ function normalizeModelAliasInput(
     ),
     modelIds,
     ...(endpointIds !== undefined ? { endpointIds } : {}),
+    ...(preferredEndpointIds !== undefined ? { preferredEndpointIds } : {}),
   };
 }
 
@@ -1563,11 +1592,17 @@ function mergeCanonicalAliasEntries(
         : alias.endpointIds === undefined
           ? existing.endpointIds
           : [...new Set([...existing.endpointIds, ...alias.endpointIds])];
+    const mergedPreferredEndpointIds = [
+      ...new Set([...(existing.preferredEndpointIds ?? []), ...(alias.preferredEndpointIds ?? [])]),
+    ];
     merged.set(alias.aliasId, {
       aliasId: alias.aliasId,
       mode: existing.mode ?? alias.mode ?? null,
       modelIds: [...new Set([...existing.modelIds, ...alias.modelIds])],
       ...(mergedEndpointIds !== undefined ? { endpointIds: mergedEndpointIds } : {}),
+      ...(mergedPreferredEndpointIds.length > 0
+        ? { preferredEndpointIds: mergedPreferredEndpointIds }
+        : {}),
     });
   }
   return [...merged.values()];
@@ -1591,6 +1626,12 @@ function sameCanonicalAliasList(
         (alias.endpointIds ?? []).every(
           (endpointId, endpointIndex) =>
             endpointId === (nextAlias.endpointIds ?? [])[endpointIndex],
+        ) &&
+        (alias.preferredEndpointIds ?? []).length ===
+          (nextAlias.preferredEndpointIds ?? []).length &&
+        (alias.preferredEndpointIds ?? []).every(
+          (endpointId, endpointIndex) =>
+            endpointId === (nextAlias.preferredEndpointIds ?? [])[endpointIndex],
         )
       );
     })
@@ -1885,6 +1926,9 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
           ...(alias.mode !== null ? { mode: alias.mode } : {}),
           model_ids: [...alias.modelIds],
           ...(alias.endpointIds !== undefined ? { endpoint_ids: [...alias.endpointIds] } : {}),
+          ...(alias.preferredEndpointIds !== undefined
+            ? { preferred_endpoint_ids: [...alias.preferredEndpointIds] }
+            : {}),
         },
       ]),
     );
@@ -1981,6 +2025,13 @@ function normalizeRuntimeConfigPatchDocument(
   ) {
     normalized.execution_mode = normalized.executionMode;
     delete normalized.executionMode;
+  }
+  if (
+    Object.prototype.hasOwnProperty.call(normalized, "modelAliases") &&
+    !Object.prototype.hasOwnProperty.call(normalized, "model_aliases")
+  ) {
+    normalized.model_aliases = normalized.modelAliases;
+    delete normalized.modelAliases;
   }
   return normalized;
 }

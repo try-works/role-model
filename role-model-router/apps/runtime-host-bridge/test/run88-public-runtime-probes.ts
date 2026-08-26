@@ -268,8 +268,49 @@ const shadowInput = (overrides: Readonly<Record<string, unknown>> = {}) => ({
   sourceDecisionId: "decision-1",
   sourceGraphRef: "sha256:graph-1",
   prefix: ["request"],
-  counterfactuals: [{ id: "candidate-stage", suffix: ["candidate-stage"] }],
-  evaluationCases: [{ expected: "candidate-stage", actual: "candidate-stage" }],
+  counterfactuals: [{ id: "candidate-control", suffix: ["candidate-control"] }],
+  comparableEvidence: {
+    source: {
+      rolloutId: "rollout-stage-candidate",
+      routePackage: "candidate-stage",
+      endpointId: "endpoint-stage",
+      modelId: "model-stage",
+      policyId: "policy-stage",
+      reasoningEffort: "medium",
+      evidenceRef: "evidence:stage-candidate",
+      propensity: 0.6,
+      outcome: { status: "success", outcomeRef: "outcome:stage-candidate" },
+    },
+    counterfactuals: [
+      {
+        rolloutId: "rollout-stage-control",
+        routePackage: "candidate-control",
+        endpointId: "endpoint-control",
+        modelId: "model-control",
+        policyId: "policy-control",
+        reasoningEffort: "high",
+        evidenceRef: "evidence:stage-control",
+        propensity: 0.4,
+        outcome: { status: "failure", outcomeRef: "outcome:stage-control" },
+      },
+    ],
+    candidateSet: [
+      { routePackage: "candidate-stage", endpointId: "endpoint-stage", propensity: 0.6 },
+      { routePackage: "candidate-control", endpointId: "endpoint-control", propensity: 0.4 },
+    ],
+  },
+  evaluationCases: [
+    {
+      expected: "candidate-stage",
+      actual: "candidate-stage",
+      expectedRolloutId: "rollout-stage-candidate",
+      actualRolloutId: "rollout-stage-control",
+      expectedOutcomeRef: "outcome:stage-candidate",
+      actualOutcomeRef: "outcome:stage-control",
+      expectedEvidenceRef: "evidence:stage-candidate",
+      actualEvidenceRef: "evidence:stage-control",
+    },
+  ],
   trajectoryEvents: [],
   ...overrides,
 });
@@ -277,7 +318,11 @@ const shadowInput = (overrides: Readonly<Record<string, unknown>> = {}) => ({
 const shadowRuntime = {
   async invoke(id: string) {
     if (id === "evaluation-runner-local")
-      return { scores: [1], provenance: { evidenceRef: "sha256:graph-1" } };
+      return {
+        scores: [1],
+        holdout: { passed: true, evidenceRef: "sha256:graph-1" },
+        provenance: { evidenceRef: "sha256:graph-1" },
+      };
     if (id === "knowledge-worker") return { id: "shadow-candidate-1", state: "shadow" };
     return { id: `${id}-result` };
   },

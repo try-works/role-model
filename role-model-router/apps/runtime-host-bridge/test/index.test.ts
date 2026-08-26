@@ -1689,6 +1689,56 @@ describe("runtime-host-bridge", () => {
     });
   });
 
+  test("maps custom alias endpoint preference into the normal routing-model signal", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          aliases: readonly {
+            aliasId: string;
+            mode: "basic";
+            modelIds: readonly string[];
+            endpointIds: readonly string[];
+            preferredEndpointIds: readonly string[];
+          }[],
+        ) => {
+          routingRequest: { allowEndpoints: readonly string[] };
+          routingModel?: { endpointId: string; preferredEndpointIds: readonly string[] };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "run94.fallback",
+        messages: [{ role: "user", content: "exercise ordered fallback" }],
+      },
+      "req-run94-alias-preference",
+      [
+        {
+          aliasId: "run94.fallback",
+          mode: "basic",
+          modelIds: ["moonshot/kimi-k2.5"],
+          endpointIds: [
+            "moonshot.personal.primary.global.kimi-k2.5",
+            "moonshot.personal.kimi-code.global.kimi-k2.5",
+          ],
+          preferredEndpointIds: ["moonshot.personal.primary.global.kimi-k2.5"],
+        },
+      ],
+    );
+
+    expect(result.routingRequest.allowEndpoints).toEqual([
+      "moonshot.personal.kimi-code.global.kimi-k2.5",
+      "moonshot.personal.primary.global.kimi-k2.5",
+    ]);
+    expect(result.routingModel).toEqual({
+      endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+      preferredEndpointIds: ["moonshot.personal.primary.global.kimi-k2.5"],
+    });
+  });
+
   test("maps request role_model intent metadata into the routing request", () => {
     const result = (
       bridge as {
@@ -10832,36 +10882,10 @@ describe("runtime-host-bridge", () => {
             safetyPolicyRefs: ["safety.review"],
           },
         },
-        inspection: {
-          request: {
-            requestCapture: {
-              body: {
-                model: "chat-capture-v1",
-                input: [
-                  {
-                    role: "system",
-                    content: "Review carefully and produce a release-readiness assessment.",
-                  },
-                  {
-                    role: "system",
-                    content:
-                      "You must satisfy these output contracts in your response: review.checklist.",
-                  },
-                  {
-                    role: "system",
-                    content:
-                      "Apply these safety policies while handling the request: safety.review.",
-                  },
-                  {
-                    role: "user",
-                    content: "Assess release readiness.",
-                  },
-                ],
-              },
-            },
-          },
-        },
       });
+      // Run 94 (SP2): request captures (including injected system instructions) are
+      // graph-external; the inline SQLite row never carries them.
+      expect(await backend.readRequestObservation(requestId)).not.toHaveProperty("inspection");
     } finally {
       await rm(fixtureRoot, { recursive: true, force: true });
       await rm(runtimeStateRoot, { recursive: true, force: true });
@@ -15771,7 +15795,7 @@ describe("runtime-host-bridge", () => {
       ).resolves.toEqual(
         expect.objectContaining({
           executionSemantics: expect.objectContaining({
-            retryCount: 1,
+            retryCount: 0,
             rerouteCount: 1,
             cooldownDecision: "recorded",
             idempotencyDecision: "not_needed",
@@ -15782,17 +15806,10 @@ describe("runtime-host-bridge", () => {
                 failureClass: "upstream_timeout",
                 retryable: true,
                 fallbackEligible: true,
-                cooldownRecorded: false,
-              }),
-              expect.objectContaining({
-                failedEndpointId: "moonshot.personal.a-primary.global.kimi-k2.5",
-                failureClass: "quota_exhausted",
-                retryable: false,
-                fallbackEligible: true,
                 cooldownRecorded: true,
                 cooldownFailureCount: 1,
                 errorPreview: expect.objectContaining({
-                  message: expect.stringContaining("usage limit"),
+                  message: expect.stringContaining("timed out"),
                 }),
               }),
             ]),
@@ -15803,7 +15820,7 @@ describe("runtime-host-bridge", () => {
         expect.arrayContaining([
           expect.objectContaining({
             requestId: "req-runtime-bridge-live-fallback-001",
-            retryCount: 1,
+            retryCount: 0,
             rerouteCount: 1,
             cooldownDecision: "recorded",
           }),
@@ -15820,7 +15837,6 @@ describe("runtime-host-bridge", () => {
       expect(followUpResult.endpointId).toBe("moonshot.personal.z-backup.global.kimi-k2.5");
       expect(followUpResult.outputText).toBe("backup endpoint handled the request");
       expect(seenAuthorizations).toEqual([
-        "Bearer moonshot-primary-live-key",
         "Bearer moonshot-primary-live-key",
         "Bearer moonshot-backup-live-key",
         "Bearer moonshot-backup-live-key",
@@ -15849,6 +15865,44 @@ describe("runtime-host-bridge", () => {
     process.env.DEEPSEEK_FAILURE_CAPTURE_API_KEY = "deepseek-failure-capture-key";
     const requestId = "req-runtime-bridge-routed-provider-failure-001";
     const seenRequestBodies: unknown[] = [];
+    const routeCaptures: Record<string, unknown>[] = [];
+    const postObservations: Readonly<Record<string, unknown>>[] = [];
+    const graphRootArtifactId = "a".repeat(64);
+    const graphResponseArtifactId = "b".repeat(64);
+    const operationsServer = createServer((request, response) => {
+      let body = "";
+      request.setEncoding("utf8");
+      request.on("data", (chunk) => {
+        body += chunk;
+      });
+      request.on("end", () => {
+        if (request.method !== "POST" || request.url !== "/capture/route") {
+          response.statusCode = 404;
+          response.end();
+          return;
+        }
+        routeCaptures.push(JSON.parse(body) as Record<string, unknown>);
+        response.setHeader("content-type", "application/json");
+        response.end(
+          JSON.stringify({
+            scope: "runtime-host-failure-capture-tests",
+            rootArtifactId: graphRootArtifactId,
+            rootArtifactDigest: graphRootArtifactId,
+            messageArtifactIds: ["c".repeat(64)],
+            responseArtifactId: graphResponseArtifactId,
+            edgeCount: 2,
+          }),
+        );
+      });
+    });
+    await new Promise<void>((resolve, reject) => {
+      operationsServer.once("error", reject);
+      operationsServer.listen(0, "127.0.0.1", resolve);
+    });
+    const operationsAddress = operationsServer.address();
+    if (!operationsAddress || typeof operationsAddress === "string") {
+      throw new Error("failure capture operations server did not bind a TCP port");
+    }
 
     const backend = await (
       bridge as {
@@ -15858,6 +15912,11 @@ describe("runtime-host-bridge", () => {
           runtimeStateRoot: string;
           scopeId: string;
           networkFetcher?: typeof fetch;
+          trackBOperationsEndpoint?: string;
+          trackBOperationsToken?: string;
+          trackBPostObservation?: (
+            observation: Readonly<Record<string, unknown>>,
+          ) => Promise<unknown>;
         }) => Promise<{
           upsertProviderAccount: (body: Record<string, unknown>) => Promise<unknown>;
           activateEndpoint: (body: Record<string, unknown>) => Promise<{ endpointId: string }>;
@@ -15894,6 +15953,12 @@ describe("runtime-host-bridge", () => {
       fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
       runtimeStateRoot,
       scopeId: "runtime-host-failure-capture-tests",
+      trackBOperationsEndpoint: `http://127.0.0.1:${operationsAddress.port}/`,
+      trackBOperationsToken: "failure-capture-test-token",
+      trackBPostObservation: async (observation) => {
+        postObservations.push(observation);
+        return { status: "processed" };
+      },
       networkFetcher: async (input, init) => {
         const url =
           typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
@@ -15966,6 +16031,30 @@ describe("runtime-host-bridge", () => {
         ),
       ).rejects.toThrow(/Insufficient Balance/);
       expect(seenRequestBodies).toHaveLength(1);
+      expect(routeCaptures).toEqual([
+        expect.objectContaining({
+          requestId,
+          endpointId: endpoint.endpointId,
+          messages: [{ role: "user", content: "Return OK." }],
+          failure: {
+            errorClass: "quota_exhausted",
+            statusCode: 402,
+            message: "Insufficient Balance",
+          },
+        }),
+      ]);
+      expect(postObservations).toEqual([
+        expect.objectContaining({
+          requestId,
+          endpointId: endpoint.endpointId,
+          graphEvidence: {
+            rootArtifactId: graphRootArtifactId,
+            messageNodeIds: ["c".repeat(64)],
+            responseNodeId: graphResponseArtifactId,
+            edgeCount: 2,
+          },
+        }),
+      ]);
 
       const telemetryRows = await backend.listTelemetryRequests();
       const failureRow = telemetryRows.find((row) => row.requestId === requestId);
@@ -16017,13 +16106,12 @@ describe("runtime-host-bridge", () => {
               }),
             ],
           }),
-          telemetrySnapshot: expect.objectContaining({
-            providerId: "deepseek",
-            providerAccountId: "deepseek.personal.failure-capture",
-            requestedModelId: "deepseek/deepseek-v4-pro",
-            selectedModelId: "deepseek/deepseek-v4-pro",
-            eligibleEndpointIds: [endpoint.endpointId],
-          }),
+          graphEvidence: {
+            rootArtifactId: graphRootArtifactId,
+            messageNodeIds: ["c".repeat(64)],
+            responseNodeId: graphResponseArtifactId,
+            edgeCount: 2,
+          },
         }),
       );
     } finally {
@@ -16033,6 +16121,9 @@ describe("runtime-host-bridge", () => {
         process.env.DEEPSEEK_FAILURE_CAPTURE_API_KEY = originalApiKey;
       }
       await backend.shutdown();
+      await new Promise<void>((resolve, reject) =>
+        operationsServer.close((error) => (error ? reject(error) : resolve())),
+      );
       await rm(runtimeStateRoot, { recursive: true, force: true });
     }
   });
@@ -16218,7 +16309,7 @@ describe("runtime-host-bridge", () => {
           "req-runtime-bridge-codex-timeout-001",
         ),
       ).rejects.toThrow(/could not reach the ai service|timed out/i);
-      expect(executeAttempts).toBe(2);
+      expect(executeAttempts).toBe(1);
       const timeoutTelemetryRows = ((await backend.listTelemetryRequests?.()) ?? []) as Array<{
         requestId?: string;
         endpointId?: string;
@@ -16256,7 +16347,7 @@ describe("runtime-host-bridge", () => {
             structuredInspectionAvailable: true,
           }),
           executionSemantics: expect.objectContaining({
-            retryCount: 1,
+            retryCount: 0,
             failedAttempts: expect.arrayContaining([
               expect.objectContaining({
                 failedEndpointId: endpoint.endpointId,
@@ -16299,7 +16390,7 @@ describe("runtime-host-bridge", () => {
       }
       expect(secondFailure).toBeInstanceOf(Error);
       expect((secondFailure as Error).message).toMatch(/could not reach the ai service|timed out/i);
-      expect(executeAttempts).toBe(4);
+      expect(executeAttempts).toBe(2);
       await expect(
         backend.executeChatCompletions(
           {
@@ -16320,7 +16411,7 @@ describe("runtime-host-bridge", () => {
           },
         ),
       ).rejects.toThrow(/could not reach the ai service|timed out/i);
-      expect(executeAttempts).toBe(6);
+      expect(executeAttempts).toBe(3);
       await expect(backend.listEndpoints()).resolves.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -16402,7 +16493,7 @@ describe("runtime-host-bridge", () => {
             }),
           }),
         );
-        expect(executeAttempts).toBe(6);
+        expect(executeAttempts).toBe(3);
 
         const telemetryResponse = await fetch(
           `http://127.0.0.1:${server.port}/api/role-model/telemetry/requests`,
@@ -17784,6 +17875,8 @@ describe("runtime-host-bridge", () => {
           errorClass: string;
           statusCode: number;
           alreadyRetried: boolean;
+          fallbackEligible: boolean;
+          hasOtherEligibleEndpoint: boolean;
         }) => boolean;
       }
     ).shouldRetryUpstreamExecutionOnSameEndpoint;
@@ -17793,6 +17886,8 @@ describe("runtime-host-bridge", () => {
         errorClass: "rate_limited",
         statusCode: 429,
         alreadyRetried: false,
+        fallbackEligible: false,
+        hasOtherEligibleEndpoint: false,
       }),
     ).toBe(false);
     expect(
@@ -17801,14 +17896,48 @@ describe("runtime-host-bridge", () => {
         errorClass: "upstream_timeout",
         statusCode: 504,
         alreadyRetried: false,
+        fallbackEligible: false,
+        hasOtherEligibleEndpoint: false,
+      }),
+    ).toBe(false);
+    expect(
+      shouldRetry({
+        retryable: true,
+        errorClass: "upstream_timeout",
+        statusCode: 504,
+        alreadyRetried: false,
+        fallbackEligible: false,
+        hasOtherEligibleEndpoint: true,
       }),
     ).toBe(true);
+    expect(
+      shouldRetry({
+        retryable: true,
+        errorClass: "upstream_error",
+        statusCode: 503,
+        alreadyRetried: false,
+        fallbackEligible: true,
+        hasOtherEligibleEndpoint: true,
+      }),
+    ).toBe(false);
+    expect(
+      shouldRetry({
+        retryable: true,
+        errorClass: "upstream_error",
+        statusCode: 503,
+        alreadyRetried: false,
+        fallbackEligible: true,
+        hasOtherEligibleEndpoint: false,
+      }),
+    ).toBe(false);
     expect(
       shouldRetry({
         retryable: true,
         errorClass: "upstream_timeout",
         statusCode: 504,
         alreadyRetried: true,
+        fallbackEligible: false,
+        hasOtherEligibleEndpoint: true,
       }),
     ).toBe(false);
   });
@@ -18313,6 +18442,150 @@ describe("runtime-host-bridge", () => {
       } else {
         process.env.DEEPSEEK_API_KEY = originalDeepSeekApiKey;
       }
+    }
+  });
+
+  test("executes env-backed OpenAI-compatible accounts directly when unified config has no LiteLLM provider", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-unified-env-direct-execution-tests-"),
+    );
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    const providerRequests: Array<{ authorization: string; model: unknown }> = [];
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      stringify({
+        version: "1.0",
+        routing: { strategy: "balanced" },
+      }),
+      "utf8",
+    );
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          unifiedRuntimeConfigPath: string;
+          networkFetcher: typeof fetch;
+          providerCredentialEnvironment: Readonly<Record<string, string | undefined>>;
+        }) => Promise<{
+          upsertProviderAccount: (input: Record<string, unknown>) => Promise<unknown>;
+          activateEndpoint: (input: {
+            providerAccountId: string;
+            modelId: string;
+            region: string;
+          }) => Promise<{ endpointId: string }>;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{ endpointId: string; outputText: string }>;
+          shutdown: () => Promise<void>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "runtime-host-unified-env-direct-execution-tests",
+      unifiedRuntimeConfigPath,
+      providerCredentialEnvironment: {
+        RUN94_DEEPSEEK_API_KEY: "router-owned-test-secret",
+      },
+      networkFetcher: async (input, init) => {
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (isAdmissionReadinessProbe(init)) {
+          return successfulAdmissionReadinessProbe();
+        }
+        if (url === "https://api.deepseek.example/v1/chat/completions") {
+          const body = init?.body ? JSON.parse(String(init.body)) : {};
+          providerRequests.push({
+            authorization: (init?.headers as Record<string, string>)?.authorization ?? "",
+            model: body.model,
+          });
+          return new Response(
+            JSON.stringify({
+              id: "chatcmpl-unified-env-direct",
+              object: "chat.completion",
+              model: "deepseek/deepseek-v4-flash",
+              choices: [
+                {
+                  index: 0,
+                  message: { role: "assistant", content: "direct provider execution" },
+                  finish_reason: "stop",
+                },
+              ],
+              usage: { prompt_tokens: 8, completion_tokens: 3, total_tokens: 11 },
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+        throw new Error(`Unexpected network request: ${url}`);
+      },
+    });
+
+    try {
+      await backend.upsertProviderAccount({
+        providerAccountId: "deepseek.personal.run94",
+        providerId: "deepseek",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: { backend: "env", ref: "RUN94_DEEPSEEK_API_KEY" },
+        authMode: "api-key-static",
+        regionPolicy: { mode: "prefer", regions: ["global"] },
+        baseUrlOverride: "https://api.deepseek.example/v1",
+        allowedModels: ["deepseek/deepseek-v4-flash"],
+        modelRoleBindings: [
+          {
+            modelId: "deepseek/deepseek-v4-flash",
+            roleAssignmentMode: "all",
+            roleIds: [],
+            enabledRoleIds: [],
+            disabledRoleIds: [],
+          },
+        ],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      });
+      const endpoint = await backend.activateEndpoint({
+        providerAccountId: "deepseek.personal.run94",
+        modelId: "deepseek/deepseek-v4-flash",
+        region: "global",
+      });
+
+      await expect(
+        backend.executeChatCompletions(
+          {
+            model: endpoint.endpointId,
+            messages: [{ role: "user", content: "Route directly." }],
+          },
+          "req-runtime-bridge-unified-env-direct-001",
+        ),
+      ).resolves.toMatchObject({
+        endpointId: endpoint.endpointId,
+        outputText: "direct provider execution",
+      });
+      expect(providerRequests).toEqual([
+        {
+          authorization: "Bearer router-owned-test-secret",
+          model: "deepseek-v4-flash",
+        },
+      ]);
+    } finally {
+      await backend.shutdown();
+      await rm(runtimeStateRoot, { recursive: true, force: true });
     }
   });
 
@@ -20174,36 +20447,10 @@ describe("runtime-host-bridge", () => {
             safetyPolicyRefs: ["safety.review"],
           },
         },
-        inspection: {
-          request: {
-            requestCapture: {
-              body: {
-                model: "chat-capture-v1",
-                input: [
-                  {
-                    role: "system",
-                    content: "Review carefully and produce a release-readiness assessment.",
-                  },
-                  {
-                    role: "system",
-                    content:
-                      "You must satisfy these output contracts in your response: review.checklist.",
-                  },
-                  {
-                    role: "system",
-                    content:
-                      "Apply these safety policies while handling the request: safety.review.",
-                  },
-                  {
-                    role: "user",
-                    content: "Assess release readiness.",
-                  },
-                ],
-              },
-            },
-          },
-        },
       });
+      // Run 94 (SP2): request captures (including injected policy messages) are
+      // graph-external; the inline SQLite row never carries them.
+      expect(await backend.readRequestObservation(requestId)).not.toHaveProperty("inspection");
     } finally {
       await rm(fixtureRoot, { recursive: true, force: true });
       await rm(runtimeStateRoot, { recursive: true, force: true });

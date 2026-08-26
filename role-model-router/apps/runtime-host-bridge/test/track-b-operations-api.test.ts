@@ -3,9 +3,11 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import os from "node:os";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 
 import {
   readRuntimeObservationStorageRecord,
+  readRuntimeTelemetryRecord,
   resolveSqliteMemoryLocation,
 } from "@role-model-router/sqlite-memory";
 import { afterEach, describe, expect, test, vi } from "vitest";
@@ -14,6 +16,10 @@ import { LegacySqliteMigration } from "../../../packages/sqlite-memory/src/legac
 import { applyRecommendationServiceLauncherConfig } from "../src/cli.js";
 import { createRuntimeBridgeBackend, startBridgeServer } from "../src/index.js";
 import {
+  buildGraphEvidenceFromCapture,
+  buildLegacyTerminalFailureRecoveryCapture,
+  buildProviderEvidenceFromObservation,
+  buildVerifiersLiveExport,
   createTrackBOperations,
   seedTrackBExtensionBridgeState,
 } from "../src/track-b-operations.js";
@@ -39,6 +45,7 @@ afterEach(async () => {
   delete process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY;
   delete process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN;
   delete process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL;
+  delete process.env.ROLE_MODEL_RECOMMENDATION_SCOPE;
   delete process.env.ROLE_MODEL_AGGREGATE_SCOPE;
   delete process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL;
   delete process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TOKEN;
@@ -46,6 +53,459 @@ afterEach(async () => {
 });
 
 describe("Track B operations APIs", () => {
+  test("builds provider evidence and a semantic Verifiers export from the exact durable graph", () => {
+    const observation = {
+      requestId: "request-export-94",
+      routingDecisionId: "decision-export-94",
+      endpointId: "endpoint-export-94",
+      usageEvent: { model_id: "provider/model-export-94" },
+      run88Correlation: { correlationId: "correlation-export-94" },
+      executionSemantics: {
+        failedAttempts: [{ attemptId: "request-export-94:attempt:1" }],
+      },
+    };
+    expect(buildProviderEvidenceFromObservation(observation)).toEqual({
+      endpointId: "endpoint-export-94",
+      modelId: "provider/model-export-94",
+      status: "ok",
+      attemptIds: ["request-export-94:attempt:1", "request-export-94:attempt:2"],
+    });
+    const capture = {
+      schemaVersion: "role-model.route-capture-read.v1",
+      requestId: "request-export-94",
+      routingDecisionId: "decision-export-94",
+      rootArtifactId: "root-export-94",
+      messages: [
+        { nodeId: "node-system-94", role: "system", content: "route safely" },
+        { nodeId: "node-user-94", role: "user", content: "route this" },
+        {
+          nodeId: "node-assistant-tool-94",
+          role: "assistant",
+          content: null,
+          toolCalls: [
+            {
+              id: "call-pi-94",
+              type: "function",
+              function: { name: "bash", arguments: '{"command":"printf run94-tool-ok"}' },
+            },
+          ],
+        },
+        {
+          nodeId: "node-tool-message-94",
+          role: "tool",
+          content: "run94-tool-ok",
+          toolCallId: "call-pi-94",
+          name: "bash",
+        },
+      ],
+      response: { nodeId: "node-response-94", role: "assistant", content: "routed" },
+      tools: [
+        { nodeId: "node-tool-execution-94", kind: "tool_execution", toolName: "router-tool" },
+        {
+          nodeId: "node-tool-call-94",
+          kind: "tool_call",
+          toolCallId: "call-pi-94",
+          toolName: "bash",
+        },
+        {
+          nodeId: "node-tool-result-94",
+          kind: "tool_result",
+          toolCallId: "call-pi-94",
+          toolName: "bash",
+        },
+      ],
+      captureMetrics: {
+        captureCpuMs: 4,
+        captureWallMs: 7,
+        sqliteLockWaitMs: 1,
+        queueDepthBefore: 0,
+        queueDepthAfter: 0,
+        filesystemBytesBefore: 300,
+        filesystemBytesAfter: 400,
+        casBytesBefore: 100,
+        casBytesAfter: 140,
+        normalizedStateBytesBefore: 200,
+        normalizedStateBytesAfter: 260,
+        archiveManifestInlineContentBytes: 0,
+      },
+      edgeCount: 6,
+    };
+    expect(buildGraphEvidenceFromCapture(capture)).toEqual({
+      rootArtifactId: "root-export-94",
+      messageNodeIds: [
+        "node-system-94",
+        "node-user-94",
+        "node-assistant-tool-94",
+        "node-tool-message-94",
+      ],
+      responseNodeId: "node-response-94",
+      toolExecutionNodeIds: ["node-tool-execution-94"],
+      toolCallNodeIds: ["node-tool-call-94"],
+      toolResultNodeIds: ["node-tool-result-94"],
+      captureMetrics: capture.captureMetrics,
+      edgeCount: 6,
+    });
+    const exported = buildVerifiersLiveExport({
+      channel: "development",
+      request: {
+        requestId: "request-export-94",
+        correlationId: "correlation-export-94",
+        graphRootArtifactId: "root-export-94",
+        readiness: "semantic",
+        taskIndex: 7,
+      },
+      observation,
+      capture,
+    });
+    expect(exported).toMatchObject({
+      schemaVersion: "role-model.verifiers-live-export.v1",
+      channel: "development",
+      requestId: "request-export-94",
+      correlationId: "correlation-export-94",
+      graphRootArtifactId: "root-export-94",
+      responseNodeIndex: 4,
+      tokenExactDisposition: "refused_missing_evidence",
+      trace: {
+        task: {
+          type: "RoleModelTraceTask",
+          data: {
+            idx: 7,
+            prompt: "route this",
+          },
+        },
+        nodes: [
+          { parent: null, message: { role: "system", content: "route safely" }, sampled: false },
+          { parent: 0, message: { role: "user", content: "route this" }, sampled: false },
+          {
+            parent: 1,
+            message: {
+              role: "assistant",
+              content: null,
+              tool_calls: [
+                { id: "call-pi-94", name: "bash", arguments: '{"command":"printf run94-tool-ok"}' },
+              ],
+            },
+            sampled: false,
+          },
+          {
+            parent: 2,
+            message: {
+              role: "tool",
+              content: "run94-tool-ok",
+              tool_call_id: "call-pi-94",
+              name: "bash",
+            },
+            sampled: false,
+          },
+          { parent: 3, message: { role: "assistant", content: "routed" }, sampled: true },
+        ],
+        info: {
+          routeDecisionId: "decision-export-94",
+          roleModelGraphRootArtifactId: "root-export-94",
+          roleModelResponseNodeId: "node-response-94",
+        },
+      },
+    });
+    expect(() =>
+      buildVerifiersLiveExport({
+        channel: "development",
+        request: {
+          requestId: "request-export-94",
+          correlationId: "correlation-export-94",
+          graphRootArtifactId: "wrong-root",
+          readiness: "semantic",
+          taskIndex: 7,
+        },
+        observation,
+        capture,
+      }),
+    ).toThrow(/exact live graph/i);
+    expect(() =>
+      buildVerifiersLiveExport({
+        channel: "development",
+        request: {
+          requestId: "request-export-94",
+          correlationId: "correlation-export-94",
+          graphRootArtifactId: "root-export-94",
+          readiness: "semantic",
+        },
+        observation,
+        capture,
+      }),
+    ).toThrow(/task index/i);
+    const failureExport = buildVerifiersLiveExport({
+      channel: "development",
+      request: {
+        requestId: "request-export-94",
+        correlationId: "correlation-export-94",
+        graphRootArtifactId: "root-export-94",
+        readiness: "semantic",
+        taskIndex: 8,
+      },
+      observation,
+      capture: {
+        ...capture,
+        terminalState: "provider_error",
+        failure: {
+          errorClass: "provider_unavailable",
+          statusCode: 503,
+          message: "provider unavailable",
+        },
+        response: {
+          nodeId: "node-response-94",
+          role: "assistant",
+          content: null,
+          failure: {
+            errorClass: "provider_unavailable",
+            statusCode: 503,
+            message: "provider unavailable",
+          },
+        },
+      },
+    });
+    expect(failureExport).toMatchObject({
+      trace: {
+        task: { data: { idx: 8, prompt: "route this" } },
+        nodes: expect.arrayContaining([
+          expect.objectContaining({
+            message: { role: "assistant", content: null },
+            sampled: false,
+            finish_reason: "stop",
+          }),
+        ]),
+        is_completed: true,
+        stop_condition: "provider_error",
+        errors: [
+          { type: "provider_unavailable", message: "provider unavailable", traceback: null },
+        ],
+        info: expect.objectContaining({
+          providerStatusCode: 503,
+          limitations: expect.arrayContaining(["provider failed before a sampled completion"]),
+        }),
+      },
+    });
+  });
+
+  test("preserves metadata-only legacy failure recovery and refuses to invent a Verifiers prompt", () => {
+    const capture = {
+      schemaVersion: "role-model.route-capture-read.v1",
+      requestId: "request-legacy-failure-94",
+      routingDecisionId: "decision-legacy-failure-94",
+      rootArtifactId: "root-legacy-failure-94",
+      projectionCompleteness: "metadata_only",
+      recovery: {
+        kind: "legacy_terminal_failure",
+        source: "persisted_runtime_observation",
+      },
+      messages: [],
+      response: {
+        nodeId: "response-legacy-failure-94",
+        role: "assistant",
+        content: null,
+        failure: {
+          errorClass: "provider_auth_error",
+          statusCode: 401,
+          message: "provider rejected router-owned credentials",
+        },
+      },
+      terminalState: "provider_error",
+      failure: {
+        errorClass: "provider_auth_error",
+        statusCode: 401,
+        message: "provider rejected router-owned credentials",
+      },
+      tools: [],
+      edgeCount: 1,
+    };
+    expect(buildGraphEvidenceFromCapture(capture)).toEqual({
+      rootArtifactId: "root-legacy-failure-94",
+      messageNodeIds: [],
+      responseNodeId: "response-legacy-failure-94",
+      toolExecutionNodeIds: [],
+      toolCallNodeIds: [],
+      toolResultNodeIds: [],
+      projectionCompleteness: "metadata_only",
+      recovery: {
+        kind: "legacy_terminal_failure",
+        source: "persisted_runtime_observation",
+      },
+      edgeCount: 1,
+    });
+    expect(() =>
+      buildVerifiersLiveExport({
+        channel: "development",
+        request: {
+          requestId: "request-legacy-failure-94",
+          correlationId: "correlation-legacy-failure-94",
+          graphRootArtifactId: "root-legacy-failure-94",
+          readiness: "semantic",
+          taskIndex: 2,
+        },
+        observation: {
+          requestId: "request-legacy-failure-94",
+          routingDecisionId: "decision-legacy-failure-94",
+          correlationId: "correlation-legacy-failure-94",
+        },
+        capture,
+      }),
+    ).toThrow(/prompt content/i);
+  });
+
+  test("derives metadata-only recovery solely from a persisted terminal failure", () => {
+    const observation = {
+      requestId: "request-legacy-failure-94",
+      routingDecisionId: "decision-legacy-failure-94",
+      endpointId: "endpoint-legacy-failure-94",
+      reasoningEffort: "high",
+      effortSource: "variant",
+      statusFamily: "failure",
+      correlationId: "correlation-legacy-failure-94",
+      usageEvent: { model_id: "provider/model-legacy-failure-94" },
+      failure: { errorClass: "provider_auth_error", statusCode: 401, latencyMs: 17 },
+      inspection: { request: { requestCapture: { body: "must-not-be-recovered" } } },
+    };
+    expect(buildLegacyTerminalFailureRecoveryCapture(observation)).toEqual({
+      requestId: "request-legacy-failure-94",
+      routingDecisionId: "decision-legacy-failure-94",
+      endpointId: "endpoint-legacy-failure-94",
+      modelId: "provider/model-legacy-failure-94",
+      reasoningEffort: "high",
+      effortSource: "variant",
+      messages: [],
+      projectionCompleteness: "metadata_only",
+      recovery: {
+        kind: "legacy_terminal_failure",
+        source: "persisted_runtime_observation",
+      },
+      failure: {
+        errorClass: "provider_auth_error",
+        statusCode: 401,
+        message: "Persisted runtime observation recorded provider_auth_error (HTTP 401).",
+      },
+      toolExecutions: [],
+    });
+    expect(() =>
+      buildLegacyTerminalFailureRecoveryCapture({ ...observation, statusFamily: "success" }),
+    ).toThrow(/terminal failure/i);
+    expect(() =>
+      buildLegacyTerminalFailureRecoveryCapture({ ...observation, failure: undefined }),
+    ).toThrow(/terminal failure/i);
+  });
+
+  test("reads one exact graph capture through the authenticated loopback sidecar", async () => {
+    const received: Array<{ path: string; authorization?: string; body: unknown }> = [];
+    const operations = createServer(async (request, response) => {
+      let body = "";
+      for await (const chunk of request) body += chunk;
+      received.push({
+        path: request.url ?? "",
+        authorization: request.headers.authorization,
+        body: JSON.parse(body),
+      });
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(
+        JSON.stringify({
+          schemaVersion: "role-model.route-capture-read.v1",
+          requestId: "request-exact-94",
+          routingDecisionId: "decision-exact-94",
+          rootArtifactId: "root-exact-94",
+          messages: [{ nodeId: "message-exact-94", role: "user", content: "route me" }],
+          response: { nodeId: "response-exact-94", role: "assistant", content: "routed" },
+          tools: [],
+          edgeCount: 2,
+        }),
+      );
+    });
+    await new Promise<void>((resolve, reject) => {
+      operations.once("error", reject);
+      operations.listen(0, "127.0.0.1", resolve);
+    });
+    try {
+      const address = operations.address();
+      if (!address || typeof address === "string")
+        throw new Error("operations server did not bind");
+      const api = createTrackBOperations({
+        statePath: path.join(os.tmpdir(), `run94-exact-capture-${Date.now()}.json`),
+        catalog: [],
+        operationsEndpoint: `http://127.0.0.1:${address.port}`,
+        operationsToken: "run94-exact-capture-token-0001",
+      });
+      const exact = await api.readLocalRouteCapture({ requestId: "request-exact-94" });
+      expect(exact).toMatchObject({
+        schemaVersion: "role-model.route-capture-read.v1",
+        requestId: "request-exact-94",
+        rootArtifactId: "root-exact-94",
+      });
+      expect(received).toEqual([
+        {
+          path: "/capture/read",
+          authorization: "Bearer run94-exact-capture-token-0001",
+          body: { requestId: "request-exact-94" },
+        },
+      ]);
+    } finally {
+      await new Promise<void>((resolve, reject) =>
+        operations.close((error) => (error ? reject(error) : resolve())),
+      );
+    }
+  });
+
+  test("reads the measured no-rich baseline through the authenticated loopback sidecar", async () => {
+    const received: Array<{ path: string; authorization?: string; body: unknown }> = [];
+    const operations = createServer(async (request, response) => {
+      let body = "";
+      for await (const chunk of request) body += chunk;
+      received.push({
+        path: request.url ?? "",
+        authorization: request.headers.authorization,
+        body: JSON.parse(body),
+      });
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(
+        JSON.stringify({
+          schemaVersion: "role-model.no-rich-capture-baseline-channel.v1",
+          sourceMode: "measured_capture_disabled_packaged_runtime",
+          channel: "development",
+          sampleCount: 5,
+          captureCpuP95Ms: 12,
+          providerPathLatencyP95Ms: 18,
+          sqliteLockWaitP95Ms: 2,
+        }),
+      );
+    });
+    await new Promise<void>((resolve, reject) => {
+      operations.once("error", reject);
+      operations.listen(0, "127.0.0.1", resolve);
+    });
+    try {
+      const address = operations.address();
+      if (!address || typeof address === "string")
+        throw new Error("operations server did not bind");
+      const api = createTrackBOperations({
+        statePath: path.join(os.tmpdir(), `run94-no-rich-baseline-${Date.now()}.json`),
+        catalog: [],
+        operationsEndpoint: `http://127.0.0.1:${address.port}`,
+        operationsToken: "run94-baseline-token-0001",
+      });
+      await expect(api.measureNoRichCaptureBaseline({ sampleCount: 5 })).resolves.toMatchObject({
+        schemaVersion: "role-model.no-rich-capture-baseline-channel.v1",
+        channel: "development",
+        sampleCount: 5,
+      });
+      expect(received).toEqual([
+        {
+          path: "/capture/performance-baseline",
+          authorization: "Bearer run94-baseline-token-0001",
+          body: { sampleCount: 5 },
+        },
+      ]);
+    } finally {
+      await new Promise<void>((resolve, reject) =>
+        operations.close((error) => (error ? reject(error) : resolve())),
+      );
+    }
+  });
+
   test("fails closed instead of issuing unauthenticated calls to an owned operations endpoint", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `track-b-operations-auth-${Date.now()}`);
     roots.push(runtimeStateRoot);
@@ -156,6 +616,16 @@ describe("Track B operations APIs", () => {
       listRecommendations: async () => [{ id: "pack-1", signatureValid: true }],
       applyRecommendation: async () => ({ activePack: { id: "pack-1", version: "1" } }),
       readActivePack: async () => ({ id: "pack-1", version: "1" }),
+      exportVerifiersTrace: async (body) => ({
+        schemaVersion: "role-model.verifiers-live-export.v1",
+        requestId: body.requestId,
+        graphRootArtifactId: body.graphRootArtifactId,
+      }),
+      recoverLegacyTerminalFailure: async (body) => ({
+        schemaVersion: "role-model.legacy-terminal-failure-recovery.v1",
+        requestId: body.requestId,
+        status: "recovered",
+      }),
     });
     try {
       const base = `http://127.0.0.1:${server.port}`;
@@ -227,6 +697,36 @@ describe("Track B operations APIs", () => {
           ).json()
         ).activeJob.status,
       ).toBe("running");
+      const exported = await fetch(`${base}/api/role-model/track-b/verifiers-export`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          requestId: "request-http-export-94",
+          correlationId: "correlation-http-export-94",
+          graphRootArtifactId: "root-http-export-94",
+          readiness: "semantic",
+        }),
+      });
+      expect(exported.status).toBe(200);
+      expect(await exported.json()).toEqual({
+        schemaVersion: "role-model.verifiers-live-export.v1",
+        requestId: "request-http-export-94",
+        graphRootArtifactId: "root-http-export-94",
+      });
+      const recovered = await fetch(`${base}/api/role-model/track-b/recover-terminal-failure`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          requestId: "request-http-recovery-94",
+          acknowledgeMetadataOnly: true,
+        }),
+      });
+      expect(recovered.status).toBe(200);
+      expect(await recovered.json()).toEqual({
+        schemaVersion: "role-model.legacy-terminal-failure-recovery.v1",
+        requestId: "request-http-recovery-94",
+        status: "recovered",
+      });
     } finally {
       await server.close();
       await backend.shutdown();
@@ -398,25 +898,60 @@ describe("Track B operations APIs", () => {
     roots.push(runtimeStateRoot);
     const received: Array<{ path: string; authorization?: string; body: Record<string, unknown> }> =
       [];
+    let routeCapture: Record<string, unknown> | null = null;
     const operations = createServer(async (request, response) => {
       const chunks: Buffer[] = [];
       for await (const chunk of request) chunks.push(Buffer.from(chunk));
+      const body = JSON.parse(Buffer.concat(chunks).toString("utf8")) as Record<string, unknown>;
+      if (request.url === "/capture/route") routeCapture = body;
       received.push({
         path: request.url ?? "",
         authorization: request.headers.authorization,
-        body: JSON.parse(Buffer.concat(chunks).toString("utf8")),
+        body,
       });
       response.writeHead(200, { "content-type": "application/json" });
       response.end(
         JSON.stringify(
-          request.url === "/capture/route"
+          request.url === "/capture/read"
             ? {
-                status: "captured",
-                scope: "tenant:production-upload",
+                schemaVersion: "role-model.route-capture-read.v1",
+                requestId: "req-track-b-upload-001",
+                routingDecisionId: routeCapture?.routingDecisionId,
                 rootArtifactId: "artifact-route-capture",
-                rootArtifactDigest: "a".repeat(64),
+                messages: (routeCapture?.messages as unknown[]).map((message, index) => ({
+                  nodeId: `message-route-capture-${index}`,
+                  ...(message as object),
+                })),
+                response: {
+                  nodeId: "response-route-capture",
+                  role: "assistant",
+                  content: routeCapture?.outputText,
+                },
+                tools: [],
+                captureMetrics: {
+                  captureCpuMs: 4,
+                  captureWallMs: 7,
+                  sqliteLockWaitMs: 1,
+                  queueDepthBefore: 0,
+                  queueDepthAfter: 0,
+                  filesystemBytesBefore: 300,
+                  filesystemBytesAfter: 400,
+                  casBytesBefore: 100,
+                  casBytesAfter: 140,
+                  normalizedStateBytesBefore: 200,
+                  normalizedStateBytesAfter: 260,
+                  archiveManifestInlineContentBytes: 0,
+                },
+                edgeCount: 2,
               }
-            : { status: "accepted" },
+            : request.url === "/capture/route"
+              ? {
+                  status: "captured",
+                  scope: "tenant:production-upload",
+                  rootArtifactId: "artifact-route-capture",
+                  rootArtifactDigest: "a".repeat(64),
+                }
+              : { status: "accepted" },
         ),
       );
     });
@@ -435,6 +970,11 @@ describe("Track B operations APIs", () => {
       runtimeStateRoot,
       scopeId: "production-upload",
       trackBOperationsEndpoint,
+      run88StageIdentity: {
+        releaseId: `sha256:${"d".repeat(64)}`,
+        sourceId: "e".repeat(40),
+        executableSha256: "c".repeat(64),
+      },
     });
     try {
       const databasePath = resolveSqliteMemoryLocation({
@@ -475,6 +1015,7 @@ describe("Track B operations APIs", () => {
         authorization: `Bearer ${"a".repeat(64)}`,
         body: {
           requestId: "req-track-b-upload-001",
+          correlationId: expect.stringMatching(/^corr-[a-f0-9]{24}$/),
           routingDecisionId: result.routingDecisionId,
           endpointId: result.endpointId,
           modelId: "deepseek/chat-capture-v1",
@@ -518,6 +1059,215 @@ describe("Track B operations APIs", () => {
           contentHash: "a".repeat(64),
         },
       });
+      const detail = await backend.readRequestObservation("req-track-b-upload-001");
+      const telemetry = readRuntimeTelemetryRecord({
+        databasePath,
+        requestId: "req-track-b-upload-001",
+      });
+      expect(telemetry?.latencyMs).toEqual(expect.any(Number));
+      expect(detail).toMatchObject({
+        correlationId: aggregate?.body.correlationId,
+        latencyMs: telemetry?.latencyMs,
+      });
+      expect(detail?.providerEvidence).toMatchObject({
+        endpointId: result.endpointId,
+        modelId: "deepseek/chat-capture-v1",
+        status: "ok",
+        attemptIds: ["req-track-b-upload-001:attempt:1"],
+      });
+      expect(detail?.graphEvidence).toEqual({
+        rootArtifactId: "artifact-route-capture",
+        messageNodeIds: ["message-route-capture-0"],
+        responseNodeId: "response-route-capture",
+        toolExecutionNodeIds: [],
+        toolCallNodeIds: [],
+        toolResultNodeIds: [],
+        captureMetrics: {
+          captureCpuMs: 4,
+          captureWallMs: 7,
+          sqliteLockWaitMs: 1,
+          queueDepthBefore: 0,
+          queueDepthAfter: 0,
+          filesystemBytesBefore: 300,
+          filesystemBytesAfter: 400,
+          casBytesBefore: 100,
+          casBytesAfter: 140,
+          normalizedStateBytesBefore: 200,
+          normalizedStateBytesAfter: 260,
+          archiveManifestInlineContentBytes: 0,
+        },
+        edgeCount: 2,
+      });
+      expect(
+        (
+          detail as unknown as {
+            liveBudgetEvidence?: { compactObservationBytes?: number; runtimeRssBytes?: number };
+          }
+        ).liveBudgetEvidence,
+      ).toMatchObject({
+        compactObservationBytes: expect.any(Number),
+        runtimeRssBytes: expect.any(Number),
+      });
+      expect(
+        (detail as unknown as { liveBudgetEvidence: { compactObservationBytes: number } })
+          .liveBudgetEvidence.compactObservationBytes,
+      ).toBeLessThanOrEqual(16 * 1024);
+      const telemetryDatabase = new DatabaseSync(databasePath);
+      telemetryDatabase
+        .prepare("DELETE FROM runtime_telemetry_records WHERE request_id=?")
+        .run("req-track-b-upload-001");
+      telemetryDatabase.close();
+      expect(await backend.readRequestObservation("req-track-b-upload-001")).not.toHaveProperty(
+        "inspection",
+      );
+      const correlationId = String(
+        (detail as unknown as { run88Correlation?: { correlationId?: string } })?.run88Correlation
+          ?.correlationId,
+      );
+      expect(correlationId).not.toBe("undefined");
+      expect(
+        await backend.exportVerifiersTrace({
+          requestId: "req-track-b-upload-001",
+          correlationId,
+          graphRootArtifactId: "artifact-route-capture",
+          readiness: "semantic",
+          taskIndex: 3,
+        }),
+      ).toMatchObject({ responseNodeIndex: 1, tokenExactDisposition: "refused_missing_evidence" });
+      const exportServer = await startBridgeServer({
+        host: "127.0.0.1",
+        port: 0,
+        registry: backend.registry,
+        getRegistry: () => backend.registry,
+        executeChatCompletions: backend.executeChatCompletions,
+        executeResponses: backend.executeResponses,
+        exportVerifiersTrace: backend.exportVerifiersTrace,
+      });
+      try {
+        const response = await fetch(
+          `http://127.0.0.1:${exportServer.port}/api/role-model/track-b/verifiers-export`,
+          {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              requestId: "req-track-b-upload-001",
+              correlationId,
+              graphRootArtifactId: "artifact-route-capture",
+              readiness: "semantic",
+              taskIndex: 3,
+            }),
+          },
+        );
+        expect(response.status).toBe(200);
+        expect(await response.json()).toMatchObject({
+          requestId: "req-track-b-upload-001",
+          graphRootArtifactId: "artifact-route-capture",
+        });
+      } finally {
+        await exportServer.close();
+      }
+    } finally {
+      await backend.shutdown();
+      await new Promise<void>((resolve, reject) =>
+        operations.close((error) => (error ? reject(error) : resolve())),
+      );
+    }
+  });
+
+  test("legacy failure recovery retries extension closure after graph commit and propagates sidecar auth failures", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `track-b-recovery-retry-${Date.now()}`);
+    roots.push(runtimeStateRoot);
+    const scopeId = "track-b-recovery-retry";
+    const databasePath = resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId });
+    let captureInput: Record<string, unknown> | null = null;
+    let extensionAttempts = 0;
+    let rejectReadsAsUnauthorized = false;
+    const operations = createServer(async (request, response) => {
+      const chunks: Buffer[] = [];
+      for await (const chunk of request) chunks.push(Buffer.from(chunk));
+      const body = JSON.parse(Buffer.concat(chunks).toString("utf8")) as Record<string, unknown>;
+      if (request.url === "/capture/read" && rejectReadsAsUnauthorized) {
+        response.writeHead(401, { "content-type": "application/json" });
+        response.end(JSON.stringify({ error: "sidecar authorization refused" }));
+        return;
+      }
+      if (request.url === "/capture/read" && !captureInput) {
+        response.writeHead(409, { "content-type": "application/json" });
+        response.end(JSON.stringify({ error: `unknown route capture ${body.requestId}` }));
+        return;
+      }
+      if (request.url === "/capture/route") {
+        captureInput = body;
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ status: "captured" }));
+        return;
+      }
+      const failure = captureInput?.failure as Record<string, unknown>;
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(
+        JSON.stringify({
+          schemaVersion: "role-model.route-capture-read.v1",
+          requestId: captureInput?.requestId,
+          routingDecisionId: captureInput?.routingDecisionId,
+          rootArtifactId: "root-recovered-94",
+          projectionCompleteness: "metadata_only",
+          recovery: captureInput?.recovery,
+          messages: [],
+          response: { nodeId: "response-recovered-94", role: "assistant", content: null, failure },
+          terminalState: "provider_error",
+          failure,
+          tools: [],
+          edgeCount: 1,
+        }),
+      );
+    });
+    await new Promise<void>((resolve, reject) => {
+      operations.once("error", reject);
+      operations.listen(0, "127.0.0.1", resolve);
+    });
+    const address = operations.address();
+    if (!address || typeof address === "string") throw new Error("operations server did not bind");
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+      runtimeChannel: "development",
+      trackBOperationsEndpoint: `http://127.0.0.1:${address.port}`,
+      trackBOperationsToken: "r".repeat(64),
+      trackBPostObservation: async () => {
+        extensionAttempts += 1;
+        if (extensionAttempts === 1) throw new Error("extension closure interrupted");
+        return { status: "processed" };
+      },
+    });
+    try {
+      await expect(
+        backend.executeChatCompletions(
+          {
+            model: "nonexistent/run94-recovery-provider",
+            messages: [{ role: "user", content: "exercise bounded recovery" }],
+          },
+          "request-recovery-retry-94",
+        ),
+      ).rejects.toThrow();
+      const input = {
+        requestId: "request-recovery-retry-94",
+        acknowledgeMetadataOnly: true,
+      };
+      await expect(backend.recoverLegacyTerminalFailure(input)).rejects.toThrow(
+        /extension closure interrupted/i,
+      );
+      await expect(backend.recoverLegacyTerminalFailure(input)).resolves.toMatchObject({
+        status: "already_recovered",
+        extensionProcessing: "completed",
+      });
+      expect(extensionAttempts).toBe(2);
+
+      rejectReadsAsUnauthorized = true;
+      await expect(backend.recoverLegacyTerminalFailure(input)).rejects.toThrow(
+        /authorization refused/i,
+      );
     } finally {
       await backend.shutdown();
       await new Promise<void>((resolve, reject) =>
@@ -611,6 +1361,7 @@ describe("Track B operations APIs", () => {
         authorization: `Bearer ${"b".repeat(64)}`,
         body: {
           requestId: "req-track-b-responses-upload-001",
+          correlationId: expect.stringMatching(/^corr-[a-f0-9]{24}$/),
           routingDecisionId: result.routingDecisionId,
           endpointId: result.endpointId,
           modelId: "deepseek/chat-capture-v1",
@@ -624,6 +1375,7 @@ describe("Track B operations APIs", () => {
       });
       const serialized = JSON.stringify(aggregate?.body);
       expect(Object.keys(aggregate?.body ?? {}).sort()).toEqual([
+        "correlationId",
         "effortSource",
         "endpointId",
         "inputTokens",
@@ -903,6 +1655,7 @@ describe("Track B operations APIs", () => {
       process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN = "service-token";
       process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL = "development";
       process.env.ROLE_MODEL_AGGREGATE_SCOPE = "tenant:run91-live-cohort";
+      process.env.ROLE_MODEL_RECOMMENDATION_SCOPE = "public:deepseek-high";
       vi.stubGlobal(
         "fetch",
         vi.fn(async (input, init) => {
@@ -911,7 +1664,7 @@ describe("Track B operations APIs", () => {
             expect(init?.method).toBe("POST");
             expect(new Headers(init?.headers).get("authorization")).toBe("Bearer service-token");
             expect(JSON.parse(String(init?.body))).toMatchObject({
-              scopeId: "tenant:run91-live-cohort",
+              scopeId: "public:deepseek-high",
             });
             return new Response(
               JSON.stringify({
@@ -1011,6 +1764,7 @@ describe("Track B operations APIs", () => {
       "recommendation-material-file": materialPath,
       "recommendation-channel": "development",
       "aggregate-scope": "tenant:run91-live-cohort",
+      "recommendation-scope": "public:deepseek-high",
     });
 
     expect(process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_URL).toBe(
@@ -1018,6 +1772,7 @@ describe("Track B operations APIs", () => {
     );
     expect(process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL).toBe("development");
     expect(process.env.ROLE_MODEL_AGGREGATE_SCOPE).toBe("tenant:run91-live-cohort");
+    expect(process.env.ROLE_MODEL_RECOMMENDATION_SCOPE).toBe("public:deepseek-high");
     expect(process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY).toBe("public-spki-fixture");
     expect(process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN).toBe("service-token-fixture");
   });
@@ -1141,6 +1896,53 @@ describe("Track B operations APIs", () => {
     const row = enabled.extensions.find((entry) => entry.id === "event-log");
     expect(row).toMatchObject({ enabled: true, enabledMode: "shadow" });
     expect(enabled.receipts).toHaveLength(1);
+  });
+
+  test("run94 SP8 local storage fallback never fabricates physical measurements", async () => {
+    const root = path.join(os.tmpdir(), `track-b-run94-honest-${Date.now()}`);
+    roots.push(root);
+    await mkdir(root, { recursive: true });
+    const statePath = path.join(root, "bridge.json");
+    const catalog = [
+      { id: "artifact-store", packageClass: "canonical_extension", routingDependency: true },
+      { id: "event-log", packageClass: "canonical_extension", routingDependency: false },
+    ];
+    await seedTrackBExtensionBridgeState({ statePath, catalog });
+    const seeded = JSON.parse(await readFile(statePath, "utf8")) as {
+      storageServices?: unknown[];
+    };
+    seeded.storageServices = [
+      {
+        id: "artifact-store",
+        category: "rich_trace",
+        tier: "canonical",
+        scope: "repo:a",
+        bytes: 10,
+        count: 1,
+        holds: 0,
+        leases: 0,
+      },
+    ];
+    await writeFile(statePath, JSON.stringify(seeded));
+    const ops = createTrackBOperations({ statePath, catalog });
+    const summary = (await ops.readStorageRetention()) as {
+      storageAudit: unknown;
+      storageInventory: {
+        entries: readonly {
+          id: string;
+          health: string;
+          measurement: string;
+          physicalBytes: number | null;
+        }[];
+      };
+    };
+    expect(summary.storageAudit).toBeNull();
+    expect(summary.storageInventory.entries.length).toBeGreaterThan(0);
+    for (const entry of summary.storageInventory.entries) {
+      expect(entry.physicalBytes).toBeNull();
+      expect(entry.measurement).toBe("unavailable");
+      expect(entry.health).toBe("unavailable");
+    }
   });
 
   test("run79 mutateExtension enables disables and sets mode with audit receipts", async () => {
@@ -1475,6 +2277,57 @@ describe("Track B operations APIs", () => {
       activePack: { id: string };
     };
     expect(applied.activePack.id).toBe("pack-optout");
+  });
+
+  test("run94 contribution opt-out rejects stale disclosure while preserving recommendation access", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `track-b-run94-optout-${Date.now()}`);
+    roots.push(runtimeStateRoot);
+    const statePath = path.join(runtimeStateRoot, "track-b-production-bridge.json");
+    await mkdir(runtimeStateRoot, { recursive: true });
+    await writeFile(
+      statePath,
+      JSON.stringify({
+        schemaVersion: "role-model.track-b-production-bridge.v1",
+        protocolVersion: "1.0",
+        revision: 1,
+        generatedAt: new Date().toISOString(),
+        extensions: [],
+        storageServices: [],
+        retention: { managedPolicy: false, receipts: [], activeJob: null },
+        contribution: {
+          mode: "contributor",
+          contributionTier: "advanced",
+          recommendationTier: "advanced",
+          recommendationAccess: "preview_and_apply",
+          allowCloudUpload: true,
+          authorizationState: "active",
+          revocationEpoch: 4,
+          queuedCount: 0,
+          managed: false,
+          disclosureId: "disc-run94-old",
+        },
+        recommendations: [],
+        recommendationRevision: 0,
+        activePack: null,
+      }),
+    );
+    const ops = createTrackBOperations({ statePath, catalog: [] });
+    const optedOut = (await ops.updateContributionState({ action: "opt_out" })) as {
+      recommendationAccess: string;
+      authorizationState: string;
+      revocationEpoch: number;
+    };
+    expect(optedOut).toMatchObject({
+      recommendationAccess: "preview_and_apply",
+      authorizationState: "revoked",
+      revocationEpoch: 5,
+    });
+    await expect(
+      ops.updateContributionState({
+        action: "complete_disclosure",
+        disclosureId: "disc-run94-old",
+      }),
+    ).rejects.toThrow(/pending|stale|revoked/i);
   });
 
   test("run79 HTTP exposes extensions mutate and recommendations dismiss routes", async () => {

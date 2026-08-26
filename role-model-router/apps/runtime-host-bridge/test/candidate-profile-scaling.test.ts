@@ -53,7 +53,7 @@ test("persists the selected current benchmark profile revision with the routing 
   const testDir = path.dirname(fileURLToPath(import.meta.url));
   const source = await readFile(path.join(testDir, "..", "src", "index.ts"), "utf8");
   const start = source.indexOf("const decisionMembershipRevision");
-  const end = source.indexOf("const bundle = createRuntimeObservationBundle", start);
+  const end = source.indexOf("const baseBundle = createRuntimeObservationBundle", start);
   expect(start).toBeGreaterThan(-1);
   expect(end).toBeGreaterThan(start);
   const decisionSlice = source.slice(start, end + 1600);

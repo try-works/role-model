@@ -49,6 +49,9 @@ export interface LegacyStorageAudit {
   readonly sourceHash: string;
   readonly externalizationCandidateCount: number;
   readonly inlineCapBytes: number;
+  readonly quarantinedPointerRows: number;
+  readonly quarantinedRows: number;
+  readonly quarantinedRequestIds: readonly string[];
 }
 
 export interface GraphArtifactReference {
@@ -172,6 +175,47 @@ export interface SqliteMigrationRegistry {
   readonly entries: readonly SqliteMigrationRegistryEntry[];
 }
 
+function hasMigrationRegistryIdentity(routerRoot: string): boolean {
+  const registryPath = path.join(routerRoot, "migrations", "registry.json");
+  if (!existsSync(registryPath)) return false;
+  try {
+    const parsed = JSON.parse(readFileSync(registryPath, "utf8")) as {
+      readonly schemaVersion?: unknown;
+      readonly entries?: unknown;
+    };
+    return (
+      parsed.schemaVersion === "role-model.sqlite-migration-registry.v1" &&
+      Array.isArray(parsed.entries)
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Resolves source-checkout migration assets without relying on module URL metadata.
+ * Packaged runtimes must pass their verified staged router root explicitly.
+ */
+export function resolveLegacyMigrationRouterRoot(startDirectory = process.cwd()): string {
+  const start = path.resolve(startDirectory);
+  const initialCandidates = [start, path.join(start, "role-model-router")];
+  for (const candidate of initialCandidates) {
+    if (hasMigrationRegistryIdentity(candidate)) return candidate;
+  }
+
+  let candidate = path.dirname(start);
+  while (true) {
+    if (hasMigrationRegistryIdentity(candidate)) return candidate;
+    const parent = path.dirname(candidate);
+    if (parent === candidate) break;
+    candidate = parent;
+  }
+
+  throw new Error(
+    "A valid SQLite migration registry identity was not found; packaged runtimes must provide an explicit routerRoot",
+  );
+}
+
 function sha256(value: string | Buffer): string {
   return createHash("sha256").update(value).digest("hex");
 }
@@ -215,6 +259,44 @@ function tableExists(database: DatabaseSync, table: string): boolean {
   );
 }
 
+type LegacyRowClassification =
+  | { readonly kind: "import" }
+  | { readonly kind: "quarantine"; readonly reason: "malformed_json" | "unresolved_graph_pointer" };
+
+function classifyLegacyRow(observationJson: string): LegacyRowClassification {
+  try {
+    const parsed = JSON.parse(observationJson);
+    return isGraphObservationPointer(parsed)
+      ? { kind: "quarantine", reason: "unresolved_graph_pointer" }
+      : { kind: "import" };
+  } catch (error) {
+    if (error instanceof SyntaxError) return { kind: "quarantine", reason: "malformed_json" };
+    throw error;
+  }
+}
+
+function ensureQuarantineTable(database: DatabaseSync): void {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS legacy_migration_quarantine (
+      source_table TEXT NOT NULL,
+      source_id TEXT NOT NULL,
+      source_hash TEXT NOT NULL,
+      reason TEXT NOT NULL,
+      created_at_ms INTEGER NOT NULL,
+      PRIMARY KEY (source_table, source_id)
+    );
+  `);
+}
+
+function readQuarantine(database: DatabaseSync): Array<{ source_id: string; reason: string }> {
+  if (!tableExists(database, "legacy_migration_quarantine")) return [];
+  return database
+    .prepare(
+      "SELECT source_id, reason FROM legacy_migration_quarantine WHERE source_table=? ORDER BY source_id",
+    )
+    .all("runtime_observations") as Array<{ source_id: string; reason: string }>;
+}
+
 function sourceProof(database: DatabaseSync, pageSize = 1_000): { count: number; hash: string } {
   if (!tableExists(database, "runtime_observations")) return { count: 0, hash: sha256("") };
   const digest = createHash("sha256");
@@ -238,12 +320,12 @@ function sourceProof(database: DatabaseSync, pageSize = 1_000): { count: number;
     }>;
     if (!rows.length) break;
     for (const row of rows) {
-      if (count) digest.update("\n");
       let rowHash = sha256(row.observation_json);
       try {
         if (isGraphObservationPointer(JSON.parse(row.observation_json))) {
-          if (!row.source_hash)
-            throw new Error("graph observation pointer is missing its source hash");
+          // Run 94 SP6: a pointer-shaped row without a matching migration ref is
+          // unclassified residue — quarantined and excluded from parity inputs.
+          if (!row.source_hash) continue;
           rowHash = row.source_hash;
         }
       } catch (error) {
@@ -253,6 +335,7 @@ function sourceProof(database: DatabaseSync, pageSize = 1_000): { count: number;
           throw error;
         }
       }
+      if (count) digest.update("\n");
       digest.update(`${row.request_id}\0${rowHash}`);
       count += 1;
     }
@@ -334,27 +417,247 @@ export function readLegacyMigrationJournal(databasePath: string): LegacyMigratio
   }
 }
 
+/**
+ * Builds the <=16 KiB compact identity stub persisted inline in SQLite.
+ * Rich content (messages, response bodies, tool payloads, captures, cumulative
+ * history/recentSamples) is NEVER included: it is graph-external by contract.
+ */
+export function buildCompactRuntimeObservationStub(
+  observation: Readonly<Record<string, unknown>>,
+): Record<string, unknown> {
+  const requestId = observation.requestId;
+  if (typeof requestId !== "string" || requestId.length === 0) {
+    throw new Error("runtime observation request ID required");
+  }
+  const stub: Record<string, unknown> = { requestId };
+  const pickRecord = (value: unknown, keys: readonly string[]): Record<string, unknown> => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+    const source = value as Record<string, unknown>;
+    return Object.fromEntries(
+      keys.flatMap((key) => (source[key] === undefined ? [] : [[key, source[key]] as const])),
+    );
+  };
+  const usageEvent = pickRecord(observation.usageEvent, [
+    "timestamp_ms",
+    "request_id",
+    "routing_decision_id",
+    "endpoint_id",
+    "model_id",
+    "provider_kind",
+    "tokens_in",
+    "tokens_out",
+    "latency_ms",
+    "cost_actual",
+    "cost_estimate",
+    "currency",
+    "error_class",
+  ]);
+  const cacheObservability = pickRecord(observation.cacheObservability, [
+    "promptCacheRequested",
+    "promptCacheRequestSource",
+    "promptCacheUsed",
+    "cacheReadTokens",
+    "cacheWriteTokens",
+    "routingCacheAffinity",
+  ]);
+  const executionTelemetry = pickRecord(observation.executionTelemetry, [
+    "providerFamily",
+    "vendorId",
+    "finishReason",
+    "costProvenance",
+  ]);
+  const executionSemantics = pickRecord(observation.executionSemantics, [
+    "sourceClient",
+    "executionFamily",
+    "adapterFamily",
+    "statusFamily",
+    "toolSideEffectState",
+    "idempotencyDecision",
+  ]);
+  const failedAttempts = Array.isArray(
+    (observation.executionSemantics as Record<string, unknown> | undefined)?.failedAttempts,
+  )
+    ? ((observation.executionSemantics as Record<string, unknown>).failedAttempts as unknown[])
+        .slice(0, 8)
+        .filter((attempt): attempt is Record<string, unknown> =>
+          Boolean(attempt && typeof attempt === "object" && !Array.isArray(attempt)),
+        )
+        .map((attempt) => ({
+          ...pickRecord(attempt, [
+            "attemptId",
+            "routedAttemptId",
+            "requestId",
+            "routingDecisionId",
+            "failedEndpointId",
+            "providerId",
+            "providerFamily",
+            "vendorId",
+            "executionFamily",
+            "adapterFamily",
+            "statusCode",
+            "failureClass",
+            "retryable",
+            "fallbackEligible",
+            "failurePhase",
+            "cooldownRecorded",
+            "cooldownFailureCount",
+            "cooldownUntilMs",
+          ]),
+          ...(attempt.errorPreview && typeof attempt.errorPreview === "object"
+            ? {
+                errorPreview: pickRecord(attempt.errorPreview, [
+                  "message",
+                  "statusCode",
+                  "errorClass",
+                ]),
+              }
+            : {}),
+        }))
+    : [];
+  const payloadBytes = pickRecord(
+    (observation.executionSemantics as Record<string, unknown> | undefined)?.payloadBytes,
+    ["ingress", "translated", "providerCanonical", "providerWire", "providerResponse"],
+  );
+  for (const [key, value] of [
+    ["clientRequestId", observation.clientRequestId],
+    ["routingDecisionId", observation.routingDecisionId],
+    ["endpointId", observation.endpointId],
+    ["reasoningEffort", observation.reasoningEffort],
+    ["effortSource", observation.effortSource],
+    ["conversationId", observation.conversationId],
+  ] as const) {
+    if (value !== undefined) stub[key] = value;
+  }
+  if (Object.keys(usageEvent).length) stub.usageEvent = usageEvent;
+  if (Object.keys(cacheObservability).length) stub.cacheObservability = cacheObservability;
+  if (Object.keys(executionTelemetry).length) stub.executionTelemetry = executionTelemetry;
+  if (Object.keys(executionSemantics).length) {
+    stub.executionSemantics = {
+      ...executionSemantics,
+      ...(Object.keys(payloadBytes).length ? { payloadBytes } : {}),
+      ...(failedAttempts.length ? { failedAttempts } : {}),
+    };
+  }
+  const contextEnvelope = pickRecord(observation.contextEnvelope, [
+    "conversationId",
+    "latestHandoffId",
+    "estimatedTokenCount",
+  ]);
+  if (Object.keys(contextEnvelope).length) stub.contextEnvelope = contextEnvelope;
+  const retrievalReceipt = pickRecord(observation.retrievalReceipt, ["receiptId", "summary"]);
+  if (Object.keys(retrievalReceipt).length) stub.retrievalReceipt = retrievalReceipt;
+  const capturePolicy = pickRecord(observation.capturePolicy, [
+    "environment",
+    "redactionLevel",
+    "retentionClass",
+    "structuredInspectionMode",
+    "rawCaptureAvailable",
+    "structuredInspectionAvailable",
+  ]);
+  if (Object.keys(capturePolicy).length) stub.capturePolicy = capturePolicy;
+  const privacyReceipt = pickRecord(observation.privacyReceipt, [
+    "samplingRate",
+    "retentionTtlHours",
+    "retainUntil",
+  ]);
+  if (Object.keys(privacyReceipt).length) stub.privacyReceipt = privacyReceipt;
+  const taxonomyDimensions = pickRecord(observation.taxonomyDimensions, [
+    "taxonomy_group_id",
+    "taxonomy_role_id",
+    "taxonomy_task_type",
+    "taxonomy_task_variant",
+    "taxonomy_capability_ids",
+    "taxonomy_modality_ids",
+    "taxonomy_tool_class_ids",
+  ]);
+  if (Object.keys(taxonomyDimensions).length) stub.taxonomyDimensions = taxonomyDimensions;
+  const providerEvidence = pickRecord(observation.providerEvidence, [
+    "endpointId",
+    "modelId",
+    "status",
+    "attemptIds",
+  ]);
+  if (Object.keys(providerEvidence).length) stub.providerEvidence = providerEvidence;
+  const graphEvidence = pickRecord(observation.graphEvidence, [
+    "rootArtifactId",
+    "messageNodeIds",
+    "responseNodeId",
+    "edgeCount",
+  ]);
+  if (Object.keys(graphEvidence).length) stub.graphEvidence = graphEvidence;
+  const run88Correlation = pickRecord(observation.run88Correlation, [
+    "schemaVersion",
+    "correlationId",
+    "requestId",
+    "routingDecisionId",
+    "endpointId",
+    "releaseId",
+    "sourceId",
+    "deploymentId",
+    "scope",
+  ]);
+  if (Object.keys(run88Correlation).length) stub.run88Correlation = run88Correlation;
+  // SAFETY: observation is a persisted-bundle JSON payload at the storage I/O boundary;
+  // observedPerformance is an optional object-shaped field of that payload.
+  const observed = observation.observedPerformance as Record<string, unknown> | undefined;
+  const sample = pickRecord(observed?.sample, [
+    "endpoint_id",
+    "endpoint_version",
+    "model_id",
+    "source_type",
+    "timestamp_ms",
+    "latency_ms",
+    "success",
+    "input_tokens",
+    "output_tokens",
+  ]);
+  const profile = pickRecord(observed?.profile, [
+    "measured_at_ms",
+    "sample_count",
+    "success_rate",
+    "latency_ms",
+    "throughput_tokens_per_sec",
+    "quality_score",
+  ]);
+  const endpointVersion = observed?.endpointVersion;
+  if (Object.keys(sample).length || Object.keys(profile).length || endpointVersion !== undefined) {
+    const compactObserved: Record<string, unknown> = {};
+    if (endpointVersion !== undefined) compactObserved.endpointVersion = endpointVersion;
+    if (Object.keys(sample).length) compactObserved.sample = sample;
+    if (Object.keys(profile).length) compactObserved.profile = profile;
+    stub.observedPerformance = compactObserved;
+  }
+  return stub;
+}
+
 export function resolveRuntimeObservationStoragePayload(input: {
   readonly databasePath: string;
   readonly observation: Readonly<Record<string, unknown>>;
   readonly artifactRef?: GraphArtifactReference;
 }): string {
-  const database = open(input.databasePath, true);
-  let state: LegacyMigrationState;
-  try {
-    state = currentState(database);
-  } finally {
-    database.close();
-  }
-  if (state === "graph_primary" || state === "legacy_read_hold" || state === "legacy_retired") {
-    if (!input.artifactRef) throw new Error("graph artifact reference required after cutover");
-    const requestId = input.observation.requestId;
-    if (typeof requestId !== "string" || requestId.length === 0) {
-      throw new Error("runtime observation request ID required");
+  if (!input.artifactRef) {
+    // Fail closed: content we are about to drop from the inline stub must already
+    // be graph-externalized. Callers with rich observations must provide the
+    // artifact reference (or write a bounded degradation stub instead).
+    const fullJson = JSON.stringify(input.observation);
+    if (Buffer.byteLength(fullJson, "utf8") > LEGACY_INLINE_CAP_BYTES) {
+      throw new Error(
+        "rich runtime observation requires graph externalization; no graph artifact reference available",
+      );
     }
-    return JSON.stringify({ requestId, artifactRef: input.artifactRef, graphPrimary: true });
   }
-  return JSON.stringify(input.observation);
+  const stub = buildCompactRuntimeObservationStub(input.observation);
+  if (input.artifactRef) {
+    stub.artifactRef = input.artifactRef;
+    stub.graphPrimary = true;
+  }
+  const json = JSON.stringify(stub);
+  if (Buffer.byteLength(json, "utf8") > LEGACY_INLINE_CAP_BYTES) {
+    throw new Error(
+      `runtime observation compact stub exceeds ${LEGACY_INLINE_CAP_BYTES} bytes; rich content must be graph-externalized`,
+    );
+  }
+  return json;
 }
 
 export function readRuntimeObservationStorageState(databasePath: string): LegacyMigrationState {
@@ -437,13 +740,44 @@ export class LegacySqliteMigration {
     this.#artifactWriter = input.artifactWriter;
     this.#artifactRollback = input.artifactRollback;
     this.#now = input.now ?? Date.now;
-    this.#routerRoot = input.routerRoot ?? path.resolve(import.meta.dirname, "../../..");
+    this.#routerRoot = input.routerRoot ?? resolveLegacyMigrationRouterRoot();
   }
 
   audit(): LegacyStorageAudit {
     const database = open(this.#databasePath, true);
     try {
       const proof = sourceProof(database);
+      const rows = database
+        .prepare(
+          tableExists(database, "legacy_graph_migration_refs")
+            ? `SELECT observations.request_id, observations.observation_json,
+                      refs.source_id AS imported_source_id
+               FROM runtime_observations AS observations
+               LEFT JOIN legacy_graph_migration_refs AS refs
+                 ON refs.source_table='runtime_observations' AND refs.source_id=observations.request_id
+               ORDER BY observations.request_id ASC`
+            : `SELECT request_id, observation_json, NULL AS imported_source_id
+               FROM runtime_observations ORDER BY request_id ASC`,
+        )
+        .all() as Array<{
+        request_id: string;
+        observation_json: string;
+        imported_source_id: string | null;
+      }>;
+      const quarantined = rows.flatMap((row) =>
+        row.imported_source_id
+          ? []
+          : classifyLegacyRow(row.observation_json).kind === "quarantine"
+            ? [row]
+            : [],
+      );
+      const persistedQuarantine = readQuarantine(database);
+      const quarantinedIds = [
+        ...new Set([
+          ...quarantined.map((row) => row.request_id),
+          ...persistedQuarantine.map((row) => row.source_id),
+        ]),
+      ].sort();
       return {
         state: currentState(database),
         sourceRowCount: proof.count,
@@ -458,6 +792,12 @@ export class LegacySqliteMigration {
           ).count,
         ),
         inlineCapBytes: LEGACY_INLINE_CAP_BYTES,
+        // Run 94 SP6: pointer-shaped rows without a matching migration ref are
+        // unclassified residue — quarantined, reported, and excluded from parity
+        // inputs; they are never assumed migrated.
+        quarantinedPointerRows: quarantined.length,
+        quarantinedRows: quarantinedIds.length,
+        quarantinedRequestIds: quarantinedIds,
       };
     } finally {
       database.close();
@@ -515,6 +855,7 @@ export class LegacySqliteMigration {
         "utf8",
       );
       database.exec(migrationSql);
+      ensureQuarantineTable(database);
       const postcondition = database.prepare(entry.postconditionQuery).get() as
         | { valid?: number }
         | undefined;
@@ -536,11 +877,28 @@ export class LegacySqliteMigration {
         .prepare(
           `SELECT request_id, observation_json FROM runtime_observations
            WHERE request_id NOT IN (SELECT source_id FROM legacy_graph_migration_refs)
+             AND request_id NOT IN (SELECT source_id FROM legacy_migration_quarantine WHERE source_table='runtime_observations')
            ORDER BY request_id ASC LIMIT ?`,
         )
         .all(input.batchSize) as Array<{ request_id: string; observation_json: string }>;
       let migratedCount = 0;
       for (const row of rows) {
+        const classification = classifyLegacyRow(row.observation_json);
+        if (classification.kind === "quarantine") {
+          database
+            .prepare(
+              `INSERT OR REPLACE INTO legacy_migration_quarantine
+               (source_table, source_id, source_hash, reason, created_at_ms) VALUES (?, ?, ?, ?, ?)`,
+            )
+            .run(
+              "runtime_observations",
+              row.request_id,
+              sha256(row.observation_json),
+              classification.reason,
+              this.#now(),
+            );
+          continue;
+        }
         const contentHash = sha256(row.observation_json);
         const artifact = this.#artifactWriter({
           scopeId: input.scopeId,
@@ -602,7 +960,9 @@ export class LegacySqliteMigration {
         (
           database
             .prepare(
-              "SELECT COUNT(*) AS count FROM runtime_observations WHERE request_id NOT IN (SELECT source_id FROM legacy_graph_migration_refs)",
+              `SELECT COUNT(*) AS count FROM runtime_observations
+               WHERE request_id NOT IN (SELECT source_id FROM legacy_graph_migration_refs)
+                 AND request_id NOT IN (SELECT source_id FROM legacy_migration_quarantine WHERE source_table='runtime_observations')`,
             )
             .get() as { count: number }
         ).count,
@@ -628,11 +988,16 @@ export class LegacySqliteMigration {
       const pending = (
         database
           .prepare(
-            "SELECT COUNT(*) AS count FROM runtime_observations WHERE request_id NOT IN (SELECT source_id FROM legacy_graph_migration_refs)",
+            `SELECT COUNT(*) AS count FROM runtime_observations
+               WHERE request_id NOT IN (SELECT source_id FROM legacy_graph_migration_refs)
+               AND request_id NOT IN (SELECT source_id FROM legacy_migration_quarantine WHERE source_table='runtime_observations')`,
           )
           .get() as { count: number }
       ).count;
+      const quarantined = readQuarantine(database);
       if (pending !== 0) throw new Error("backfill remains incomplete");
+      if (quarantined.length > 0)
+        throw new Error("legacy migration quarantine blocks shadow mirror");
       // Persist the live dual-write window so a restart cannot silently extend it.
       this.#setState(database, "shadow_mirror", { holdUntilMs: input.deadlineMs });
     } finally {
@@ -652,6 +1017,8 @@ export class LegacySqliteMigration {
     try {
       if (currentState(database) !== "shadow_mirror")
         throw new Error("shadow mirror required before parity");
+      const quarantined = readQuarantine(database);
+      if (quarantined.length > 0) throw new Error("legacy migration quarantine blocks parity");
       const journal = readLegacyMigrationJournal(this.#databasePath);
       if (journal.holdUntilMs === null || this.#now() > journal.holdUntilMs) {
         throw new Error("shadow mirror deadline expired; restart backfill before parity");
