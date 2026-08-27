@@ -697,11 +697,15 @@ function readLauncherString(values: LauncherConfigValues, key: string): string |
 }
 
 export function applyRecommendationServiceLauncherConfig(values: LauncherConfigValues): void {
-  const serviceUrl = readLauncherString(values, "recommendation-service-url");
   const channel = readLauncherString(values, "recommendation-channel");
+  const serviceUrl =
+    readLauncherString(values, "recommendation-service-url") ??
+    (channel === "stage" ? "https://recommendations-stage.role-model.dev" : undefined);
   const verificationKey = readLauncherString(values, "recommendation-verification-key");
   const serviceToken = readLauncherString(values, "recommendation-service-token");
-  const materialFile = readLauncherString(values, "recommendation-material-file");
+  const materialFile =
+    readLauncherString(values, "recommendation-material-file") ??
+    (channel === "stage" ? path.resolve("secrets", "recommendation-material.json") : undefined);
   const aggregateScope = readLauncherString(values, "aggregate-scope");
   const recommendationScope = readLauncherString(values, "recommendation-scope");
 
@@ -1243,11 +1247,20 @@ export async function main(): Promise<void> {
           trustMaterialFile:
             args.values["destination-material-file"] ??
             args.values["destination-trust-material-file"] ??
-            process.env.ROLE_MODEL_DESTINATION_AUTH_SECRET_FILE,
+            process.env.ROLE_MODEL_DESTINATION_AUTH_SECRET_FILE ??
+            (runtimeChannel === "stage"
+              ? path.resolve("secrets", "destination-material.json")
+              : undefined),
           aggregateEndpoint:
             args.values["aggregate-ingestion-url"] ??
-            process.env.ROLE_MODEL_AGGREGATE_INGESTION_URL,
-          aggregateScope: args.values["aggregate-scope"] ?? process.env.ROLE_MODEL_AGGREGATE_SCOPE,
+            process.env.ROLE_MODEL_AGGREGATE_INGESTION_URL ??
+            (runtimeChannel === "stage"
+              ? "https://ingest-stage.role-model.dev/contribution/aggregate"
+              : undefined),
+          aggregateScope:
+            args.values["aggregate-scope"] ??
+            process.env.ROLE_MODEL_AGGREGATE_SCOPE ??
+            (runtimeChannel === "stage" ? "standalone-runtime-stage" : undefined),
           ...(aggregateCorrelationReleaseId && aggregateCorrelationCohortId
             ? {
                 aggregateCorrelationReleaseId,
