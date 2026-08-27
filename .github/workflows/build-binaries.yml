@@ -407,18 +407,19 @@ jobs:
 
       - name: Include managed stage secrets in the stage package
         if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage'
+        shell: pwsh
         env:
           STAGE_ARTIFACT_DIGEST_KEY: ${{ secrets.STAGE_ARTIFACT_DIGEST_KEY }}
           STAGE_ARTIFACT_ENCRYPTION_KEY: ${{ secrets.STAGE_ARTIFACT_ENCRYPTION_KEY }}
           STAGE_DESTINATION_MATERIAL: ${{ secrets.STAGE_DESTINATION_MATERIAL }}
           STAGE_RECOMMENDATION_MATERIAL: ${{ secrets.STAGE_RECOMMENDATION_MATERIAL }}
         run: |
-          secretsDir="role-model-router/dist/release/${{ matrix.target }}/secrets"
-          mkdir -p "$secretsDir"
-          printf '%s' "$STAGE_ARTIFACT_DIGEST_KEY" > "$secretsDir/artifact-digest.key"
-          printf '%s' "$STAGE_ARTIFACT_ENCRYPTION_KEY" > "$secretsDir/artifact-encryption.key"
-          printf '%s' "$STAGE_DESTINATION_MATERIAL" > "$secretsDir/destination-material.json"
-          printf '%s' "$STAGE_RECOMMENDATION_MATERIAL" > "$secretsDir/recommendation-material.json"
+          $secretsDir = "role-model-router/dist/release/${{ matrix.target }}/secrets"
+          New-Item -ItemType Directory -Force -Path $secretsDir | Out-Null
+          [IO.File]::WriteAllText("$secretsDir/artifact-digest.key", $env:STAGE_ARTIFACT_DIGEST_KEY)
+          [IO.File]::WriteAllText("$secretsDir/artifact-encryption.key", $env:STAGE_ARTIFACT_ENCRYPTION_KEY)
+          [IO.File]::WriteAllText("$secretsDir/destination-material.json", $env:STAGE_DESTINATION_MATERIAL)
+          [IO.File]::WriteAllText("$secretsDir/recommendation-material.json", $env:STAGE_RECOMMENDATION_MATERIAL)
 
       - name: Archive standalone package (Unix)
         if: matrix.target != 'win32-x64'
