@@ -2230,6 +2230,14 @@ export interface BridgeChatCompletionsExecutionResult {
     readonly costUsd?: number;
     readonly cacheUsed?: boolean;
   };
+  readonly persistenceDegradation?: Readonly<{
+    readonly schemaVersion: "role-model.degradation-receipt.v1";
+    readonly degraded: true;
+    readonly capability: string;
+    readonly reason: string;
+    readonly routingContinues: true;
+    readonly atMs: number;
+  }>;
 }
 
 export interface BridgeResponsesExecutionResult {
@@ -5514,6 +5522,7 @@ function createExecutionHeaders(input: {
   readonly adapterFamily: string;
   readonly routingDecisionId?: string;
   readonly costUsd?: number;
+  readonly persistenceDegradation?: Readonly<Record<string, unknown>>;
 }): Record<string, string> {
   const formattedCostUsd = formatCostUsd(input.costUsd);
   return {
@@ -5523,6 +5532,9 @@ function createExecutionHeaders(input: {
       ? { "x-role-model-routing-decision-id": input.routingDecisionId }
       : {}),
     ...(formattedCostUsd ? { "x-role-model-cost-usd": formattedCostUsd } : {}),
+    ...(input.persistenceDegradation
+      ? { "x-role-model-persistence-degradation": JSON.stringify(input.persistenceDegradation) }
+      : {}),
   };
 }
 
@@ -14662,6 +14674,9 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             adapterFamily: result.adapterFamily,
             routingDecisionId: result.routingDecisionId,
             costUsd: result.vendorMetadata?.costUsd,
+            ...(result.persistenceDegradation
+              ? { persistenceDegradation: result.persistenceDegradation }
+              : {}),
           }),
         );
         return;
@@ -23846,6 +23861,16 @@ export async function createRuntimeBridgeBackend(
       selectedEndpointId: execution.target.endpointId,
       outcome: cacheContinuityOutcome,
     });
+    let persistenceDegradation:
+      | Readonly<{
+          schemaVersion: "role-model.degradation-receipt.v1";
+          degraded: true;
+          capability: string;
+          reason: string;
+          routingContinues: true;
+          atMs: number;
+        }>
+      | undefined;
     if (executionOptions?.persistObservation !== false) {
       const requestRoutingMode = summarizeRequestRoutingModeDiagnostics(
         executionOptions?.requestOptions,
@@ -24119,13 +24144,30 @@ export async function createRuntimeBridgeBackend(
             statusFamily: "degraded-capture",
             captureDegradation: { reason: "track-b-capture-unavailable" },
           } as never);
-      persistRuntimeObservationBundle({
-        databasePath: initialization.databasePath,
-        channel: runtimeChannel,
-        observation: persistedObservation,
-        ...(artifactRef ? { artifactRef } : {}),
-        ...(localGraphStore ? { graphStore: localGraphStore } : {}),
-      });
+      try {
+        persistRuntimeObservationBundle({
+          databasePath: initialization.databasePath,
+          channel: runtimeChannel,
+          observation: persistedObservation,
+          ...(artifactRef ? { artifactRef } : {}),
+          ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+        });
+      } catch (error) {
+        // Run 94 SP48 (R11): a storage failure after the provider response was produced must
+        // never retroactively fail the client with a raw storage error. Record a bounded
+        // degradation receipt and continue delivering the provider response.
+        persistenceDegradation = {
+          schemaVersion: "role-model.degradation-receipt.v1",
+          degraded: true,
+          capability: "runtime-observation-persist",
+          reason: String(
+            error instanceof Error ? error.message : "runtime observation persist failed",
+          ).slice(0, 256),
+          routingContinues: true,
+          atMs: Date.now(),
+        };
+        console.error("Track B runtime observation persist failed", error);
+      }
       if (options.trackBPostObservation) {
         try {
           await options.trackBPostObservation(
@@ -24143,6 +24185,7 @@ export async function createRuntimeBridgeBackend(
       execution,
       toolExecutionResult,
       effortReceipt: effectiveEffort,
+      ...(persistenceDegradation ? { persistenceDegradation } : {}),
     };
   };
 
@@ -24719,15 +24762,20 @@ export async function createRuntimeBridgeBackend(
           executionInventory.endpointIds.length > 0 ? executionInventory : null,
           currentRolePolicy.taskDefinitions,
         );
-        const { execution, toolExecutionResult, routingDecisionId, effortReceipt } =
-          await executeBridgePlan(plan, requestId, body.stream, streamWriter, {
-            requestOptions,
-            requestBody: body as unknown as Record<string, unknown>,
-            requestedModel: body.model,
-            requestOperation: "chat",
-            persistObservation: !requestId.startsWith("bench-"),
-            executionSnapshot,
-          });
+        const {
+          execution,
+          toolExecutionResult,
+          routingDecisionId,
+          effortReceipt,
+          persistenceDegradation,
+        } = await executeBridgePlan(plan, requestId, body.stream, streamWriter, {
+          requestOptions,
+          requestBody: body as unknown as Record<string, unknown>,
+          requestedModel: body.model,
+          requestOperation: "chat",
+          persistObservation: !requestId.startsWith("bench-"),
+          executionSnapshot,
+        });
         const costUsd =
           execution.normalized.vendorMetadata?.costUsd ??
           execution.responseCapture.vendorMetadata?.costUsd;
@@ -24787,6 +24835,7 @@ export async function createRuntimeBridgeBackend(
                 },
               }
             : {}),
+          ...(persistenceDegradation ? { persistenceDegradation } : {}),
         };
         const trackBOperations = createTrackBOperations({
           statePath: path.join(

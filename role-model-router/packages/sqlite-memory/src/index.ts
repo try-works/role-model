@@ -3828,6 +3828,10 @@ export function runSqliteRetentionMaintenance(input: {
   readonly idle: boolean;
   readonly lockRisk: "low" | "unknown" | "high";
 }) {
+  // Canonical default age classification (retention-policies.json
+  // local-samples-bounded.v1: retentionDays 90): fresh rows and legacy
+  // NULL-retainUntil rows are never permanently undeletable.
+  const DEFAULT_OBSERVATION_RETENTION_MS = 90 * 24 * 60 * 60 * 1_000;
   if (!input.idle || input.lockRisk !== "low") {
     throw new Error("SQLite retention maintenance requires an idle window and low lock risk");
   }
@@ -3845,6 +3849,7 @@ export function runSqliteRetentionMaintenance(input: {
     receiptId: string;
     deletedRows: number;
     heldRows: number;
+    nullRetainClassified: number;
     bounded: true;
     routingInterrupted: false;
     physicalBytesBefore: number;
@@ -3859,10 +3864,13 @@ export function runSqliteRetentionMaintenance(input: {
             database
               .prepare(
                 `SELECT COUNT(*) AS count FROM runtime_observations
-                 WHERE retain_until_ms IS NOT NULL AND retain_until_ms<=?
+                 WHERE ((retain_until_ms IS NOT NULL AND retain_until_ms<=?)
+                    OR (retain_until_ms IS NULL AND created_at_ms<=?))
                    AND request_id IN (${holds.map(() => "?").join(",")})`,
               )
-              .get(input.nowMs, ...holds) as { count: number }
+              .get(input.nowMs, input.nowMs - DEFAULT_OBSERVATION_RETENTION_MS, ...holds) as {
+              count: number;
+            }
           ).count,
         )
       : 0;
@@ -3871,14 +3879,22 @@ export function runSqliteRetentionMaintenance(input: {
       : "";
     const expired = database
       .prepare(
-        `SELECT request_id,endpoint_id FROM runtime_observations
-         WHERE retain_until_ms IS NOT NULL AND retain_until_ms<=?${exclusion}
+        `SELECT request_id,endpoint_id,retain_until_ms FROM runtime_observations
+         WHERE ((retain_until_ms IS NOT NULL AND retain_until_ms<=?)
+            OR (retain_until_ms IS NULL AND created_at_ms<=?))${exclusion}
          ORDER BY retain_until_ms ASC,request_id ASC LIMIT ?`,
       )
-      .all(input.nowMs, ...holds, input.maxDeleteRows) as Array<{
+      .all(
+        input.nowMs,
+        input.nowMs - DEFAULT_OBSERVATION_RETENTION_MS,
+        ...holds,
+        input.maxDeleteRows,
+      ) as Array<{
       request_id: string;
       endpoint_id: string;
+      retain_until_ms: number | null;
     }>;
+    const nullRetainClassified = expired.filter((row) => row.retain_until_ms === null).length;
     database.exec("BEGIN IMMEDIATE");
     try {
       const deleteObservation = database.prepare(
@@ -3907,6 +3923,7 @@ export function runSqliteRetentionMaintenance(input: {
         receiptId,
         deletedRows: expired.length,
         heldRows,
+        nullRetainClassified,
         bounded: true as const,
         routingInterrupted: false as const,
         physicalBytesBefore,
@@ -4404,7 +4421,8 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
             observation.endpointId,
             observation.conversationId,
             observation.usageEvent.timestamp_ms,
-            observation.privacyReceipt?.retainUntil ?? null,
+            observation.privacyReceipt?.retainUntil ??
+              observation.usageEvent.timestamp_ms + 90 * 24 * 60 * 60 * 1_000,
             typeof observation.taxonomyDimensions?.taxonomy_role_id === "string"
               ? observation.taxonomyDimensions.taxonomy_role_id
               : null,
@@ -4679,7 +4697,7 @@ export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFai
             endpointId,
             "conversation-main",
             createdAtMs,
-            input.retainUntil ?? null,
+            input.retainUntil ?? createdAtMs + 90 * 24 * 60 * 60 * 1_000,
             input.taxonomyRoleId ?? null,
             input.taxonomyTaskType ?? null,
             input.clientRequestId ?? null,
