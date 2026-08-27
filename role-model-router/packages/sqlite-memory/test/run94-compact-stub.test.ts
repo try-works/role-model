@@ -104,6 +104,101 @@ function buildRichObservation(overrides: Record<string, unknown> = {}): Record<s
   };
 }
 
+test("run94 SP36: a long-conversation observation persists a <=16KiB stub with bounded node-id locators", async () => {
+  const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "run94-sp36-stub-"));
+  const initialized = initializeSqliteMemory({
+    runtimeStateRoot,
+    scopeId: "run94-sp36",
+    channel: "development",
+  });
+  const messageNodeIds = Array.from(
+    { length: 2000 },
+    (_, i) => `message-node-${String(i).padStart(6, "0")}-run94`,
+  );
+  const toolNodeIds = Array.from(
+    { length: 500 },
+    (_, i) => `tool-exec-node-${String(i).padStart(6, "0")}-run94`,
+  );
+  const artifactRef = {
+    scopeId: "tenant:run94",
+    artifactId: "artifact-sp36",
+    contentHash: "sha256:sp36",
+  };
+  persistRuntimeObservationBundle({
+    databasePath: initialized.databasePath,
+    channel: "development",
+    observation: buildRichObservation({
+      graphEvidence: {
+        rootArtifactId: "root-run94-sp36",
+        messageNodeIds,
+        toolExecutionNodeIds: toolNodeIds,
+        responseNodeId: "response-run94-sp36",
+        edgeCount: 2500,
+      },
+    }) as never,
+    artifactRef,
+  });
+  const database = new DatabaseSync(initialized.databasePath);
+  const row = database
+    .prepare("SELECT observation_json FROM runtime_observations WHERE request_id=?")
+    .get("req-run94-rich") as { observation_json: string };
+  database.close();
+  const json = row.observation_json;
+  expect(Buffer.byteLength(json, "utf8")).toBeLessThanOrEqual(16 * 1024);
+  const stub = JSON.parse(json) as Record<string, unknown>;
+  const graph = stub.graphEvidence as Record<string, unknown>;
+  expect(Array.isArray(graph.messageNodeIds)).toBe(true);
+  expect((graph.messageNodeIds as unknown[]).length).toBeLessThanOrEqual(128);
+  expect(graph.messageNodeIdsTruncated).toBe(true);
+  expect(Array.isArray(graph.toolExecutionNodeIds)).toBe(true);
+  expect((graph.toolExecutionNodeIds as unknown[]).length).toBeLessThanOrEqual(128);
+  expect(graph.toolExecutionNodeIdsTruncated).toBe(true);
+});
+
+test("run94 SP36: a bounded failure observation with a long conversation persists without throwing", async () => {
+  const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "run94-sp36-failure-stub-"));
+  const initialized = initializeSqliteMemory({
+    runtimeStateRoot,
+    scopeId: "run94-sp36-failure",
+    channel: "development",
+  });
+  const messageNodeIds = Array.from(
+    { length: 1500 },
+    (_, i) => `node-${String(i).padStart(6, "0")}`,
+  );
+  persistRuntimeObservationBundle({
+    databasePath: initialized.databasePath,
+    channel: "development",
+    observation: {
+      requestId: "req-run94-sp36-failure",
+      routingDecisionId: "decision-sp36-failure",
+      endpointId: "routing.failed.pre-execution",
+      conversationId: "conversation-sp36-failure",
+      usageEvent: { timestamp_ms: Date.now(), error_class: "no_eligible_target", latency_ms: 2 },
+      observedPerformance: {
+        sample: {
+          endpoint_id: "none",
+          model_id: "baseline.remote-only",
+          source_type: "live_request",
+          timestamp_ms: Date.now(),
+          latency_ms: 2,
+          success: false,
+        },
+        profile: { measured_at_ms: Date.now() },
+      },
+      graphEvidence: { messageNodeIds, edgeCount: 1500 },
+    } as never,
+  });
+  const database = new DatabaseSync(initialized.databasePath);
+  const row = database
+    .prepare("SELECT observation_json FROM runtime_observations WHERE request_id=?")
+    .get("req-run94-sp36-failure") as { observation_json: string };
+  database.close();
+  expect(Buffer.byteLength(row.observation_json, "utf8")).toBeLessThanOrEqual(16 * 1024);
+  const stub = JSON.parse(row.observation_json) as Record<string, unknown>;
+  expect((stub.graphEvidence as Record<string, unknown>).messageNodeIdsTruncated).toBe(true);
+});
+
 test("run94 F1: persistRuntimeObservationBundle writes a <=16KiB compact stub with no journal present when graph content is externalized", async () => {
   const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "run94-compact-stub-"));
   const initialized = initializeSqliteMemory({
