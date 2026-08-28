@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 
-import * as trackBRuntime from "../src/track-b-runtime.js";
 import { normalizeStorageRetentionContract } from "../src/track-b-operations.js";
+import * as trackBRuntime from "../src/track-b-runtime.js";
 
 test("SP5 host retention inventory refuses incomplete physical storage claims", () => {
   expect(typeof trackBRuntime.validateTrackBRetentionInventory).toBe("function");
