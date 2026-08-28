@@ -1836,7 +1836,15 @@ export interface RuntimeStorageRetentionSummary {
   } | null;
   readonly storageInventory?: {
     readonly schemaVersion: "role-model.storage-registry.v1" | "role-model.storage-registry.v2";
+    /** Versioned envelope for physical/logical accounting semantics. */
+    readonly storageStateVersion?: "role-model.storage-state.v1";
+    readonly channel?: string;
+    readonly accountingState?: "physical_resources_deduplicated";
     readonly complete: boolean;
+    /** A configured store with no current observation; not a provider failure. */
+    readonly unobservedResourceCount?: number;
+    /** Observed resources whose health probe reported unavailable. */
+    readonly unavailableResourceCount?: number;
     readonly entries: readonly {
       readonly id: string;
       readonly owner: string;
@@ -1845,6 +1853,10 @@ export interface RuntimeStorageRetentionSummary {
       readonly physicalBytes: number | null;
       readonly heldItems: number;
       readonly retentionState: string;
+      readonly observationState?: string;
+      readonly measurementSource?: string;
+      readonly observedAt?: string | null;
+      readonly freshUntil?: string | null;
     }[];
     /** v2 keeps the measured physical inventory separate from logical accounting. */
     readonly physicalResources?: RuntimeStorageRetentionSummary["physicalResources"];

@@ -140,6 +140,16 @@ export function StorageRetentionRouteView() {
                   : "Not measured",
           },
           {
+            id: "unobserved-stores",
+            label: "Unobserved stores",
+            value: String(summary?.storageInventory?.unobservedResourceCount ?? 0),
+          },
+          {
+            id: "unavailable-stores",
+            label: "Unavailable stores",
+            value: String(summary?.storageInventory?.unavailableResourceCount ?? 0),
+          },
+          {
             id: "holds",
             label: "Legal holds",
             value:
