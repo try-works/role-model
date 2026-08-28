@@ -225,27 +225,22 @@ function buildEndpointIdsByModelId(registry: EndpointRegistryResult): Map<string
   return endpointIdsByModelId;
 }
 
-function buildEffortLevelsByModelId(
-  registry: EndpointRegistryResult,
-  catalog: NormalizedCatalog,
-): Map<string, string[]> {
-  const levelsByModelId = new Map<string, string[]>();
-  for (const endpoint of registry.endpoints) {
-    const profile = resolveModelCapabilityProfile({
-      modelId: endpoint.identity.model_id,
-      catalog,
-    });
-    const levels = levelsByModelId.get(endpoint.identity.model_id) ?? [];
-    levels.push(...profile.reasoning.effortLevels);
-    if (endpoint.identity.reasoning_effort) {
-      levels.push(endpoint.identity.reasoning_effort);
-    }
-    levelsByModelId.set(endpoint.identity.model_id, [...new Set(levels)]);
-  }
-  for (const levels of levelsByModelId.values()) {
-    levels.sort(compareReasoningEffort);
-  }
-  return levelsByModelId;
+/**
+ * A routing alias is only allowed to advertise an effort that it can select as
+ * a concrete configured endpoint instance. Catalog support describes what a
+ * provider could offer; it does not make an unconfigured sibling routable.
+ */
+function configuredAliasEffortLevels(input: {
+  readonly registry: EndpointRegistryResult;
+  readonly endpointIds: readonly string[];
+}): readonly string[] {
+  const allowedEndpointIds = new Set(input.endpointIds);
+  return uniqueReasoningEfforts(
+    input.registry.endpoints
+      .filter((endpoint) => allowedEndpointIds.has(endpoint.identity.endpoint_id))
+      .map((endpoint) => endpoint.identity.reasoning_effort?.trim() ?? "")
+      .filter((effort) => effort.length > 0),
+  );
 }
 
 function targetRows(input: {
@@ -517,7 +512,6 @@ export function createDownstreamOpenAIDiscovery(
   const modelAliases = input.modelAliases ?? [];
   const inventory = input.inventory ?? null;
   const endpointIdsByModelId = buildEndpointIdsByModelId(input.registry);
-  const effortLevelsByModelId = buildEffortLevelsByModelId(input.registry, input.catalog);
   const modelRecords: DownstreamOpenAIModelRecord[] = [];
 
   for (const [modelId, endpointIds] of endpointIdsByModelId.entries()) {
@@ -606,9 +600,10 @@ export function createDownstreamOpenAIDiscovery(
         declaredModelIds: alias.modelIds,
         routableModelIds,
         endpointIds: resolution.endpointIds,
-        effortLevels: aggregateModelIds.flatMap(
-          (modelId) => effortLevelsByModelId.get(modelId) ?? [],
-        ),
+        effortLevels: configuredAliasEffortLevels({
+          registry: input.registry,
+          endpointIds: resolution.endpointIds,
+        }),
         rows,
       }),
     );

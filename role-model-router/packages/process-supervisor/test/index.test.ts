@@ -202,7 +202,7 @@ describe("process-supervisor", () => {
       command: process.execPath,
       args: [
         "-e",
-        `const fs=require("node:fs");const http=require("node:http");const marker=process.env.RESTART_MARKER;const shouldCrash=!fs.existsSync(marker);if(shouldCrash){fs.writeFileSync(marker,"first");}const server=http.createServer((req,res)=>{if(req.url==="/healthz"){res.statusCode=200;res.end("ok");return;}res.statusCode=404;res.end("missing");});server.listen(Number(process.env.PORT),"127.0.0.1",()=>{console.log("vendor-ready");console.error("vendor-stderr");if(shouldCrash){setTimeout(()=>process.exit(23),100);}});const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`,
+        `const fs=require("node:fs");const http=require("node:http");const marker=process.env.RESTART_MARKER;const shouldCrash=!fs.existsSync(marker);if(shouldCrash){fs.writeFileSync(marker,"first");}let crashScheduled=false;const server=http.createServer((req,res)=>{if(req.url==="/healthz"){res.statusCode=200;res.end("ok");if(shouldCrash&&!crashScheduled){crashScheduled=true;setTimeout(()=>process.exit(23),100);}return;}res.statusCode=404;res.end("missing");});server.listen(Number(process.env.PORT),"127.0.0.1",()=>{console.log("vendor-ready");console.error("vendor-stderr");});const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`,
       ],
       env: {
         PORT: String(port),
