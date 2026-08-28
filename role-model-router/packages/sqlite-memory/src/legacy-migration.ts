@@ -575,15 +575,55 @@ export function buildCompactRuntimeObservationStub(
     "endpointId",
     "modelId",
     "status",
-    "attemptIds",
   ]);
   if (Object.keys(providerEvidence).length) stub.providerEvidence = providerEvidence;
+  const providerAttemptIds = Array.isArray(
+    (observation.providerEvidence as Record<string, unknown> | undefined)?.attemptIds,
+  )
+    ? ((observation.providerEvidence as Record<string, unknown>).attemptIds as unknown[])
+    : [];
+  if (providerAttemptIds.length) {
+    providerEvidence.attemptIds = providerAttemptIds.slice(0, 64);
+    if (providerAttemptIds.length > 64) providerEvidence.attemptIdsTruncated = true;
+    stub.providerEvidence = providerEvidence;
+  }
+  // SP36: node-id locator arrays are bounded inside the capped compact stub. The full
+  // id lists live in the graph artifact; the stub carries the first N ids plus an
+  // honest truncation flag so long conversations never overflow the 16 KiB cap.
+  const GRAPH_NODE_ID_CAP = 128;
+  const boundedIds = (value: unknown): { ids: unknown[]; truncated: boolean } => {
+    const source = Array.isArray(value) ? (value as unknown[]) : [];
+    return {
+      ids: source.slice(0, GRAPH_NODE_ID_CAP),
+      truncated: source.length > GRAPH_NODE_ID_CAP,
+    };
+  };
+  const graphSource = observation.graphEvidence as Record<string, unknown> | undefined;
+  const messageIds = boundedIds(graphSource?.messageNodeIds);
+  const toolExecutionIds = boundedIds(graphSource?.toolExecutionNodeIds);
+  const toolCallIds = boundedIds(graphSource?.toolCallNodeIds);
+  const toolResultIds = boundedIds(graphSource?.toolResultNodeIds);
   const graphEvidence = pickRecord(observation.graphEvidence, [
     "rootArtifactId",
-    "messageNodeIds",
     "responseNodeId",
     "edgeCount",
   ]);
+  if (graphSource?.messageNodeIds !== undefined) {
+    graphEvidence.messageNodeIds = messageIds.ids;
+    if (messageIds.truncated) graphEvidence.messageNodeIdsTruncated = true;
+  }
+  if (graphSource?.toolExecutionNodeIds !== undefined) {
+    graphEvidence.toolExecutionNodeIds = toolExecutionIds.ids;
+    if (toolExecutionIds.truncated) graphEvidence.toolExecutionNodeIdsTruncated = true;
+  }
+  if (graphSource?.toolCallNodeIds !== undefined) {
+    graphEvidence.toolCallNodeIds = toolCallIds.ids;
+    if (toolCallIds.truncated) graphEvidence.toolCallNodeIdsTruncated = true;
+  }
+  if (graphSource?.toolResultNodeIds !== undefined) {
+    graphEvidence.toolResultNodeIds = toolResultIds.ids;
+    if (toolResultIds.truncated) graphEvidence.toolResultNodeIdsTruncated = true;
+  }
   if (Object.keys(graphEvidence).length) stub.graphEvidence = graphEvidence;
   const run88Correlation = pickRecord(observation.run88Correlation, [
     "schemaVersion",
@@ -635,21 +675,33 @@ export function resolveRuntimeObservationStoragePayload(input: {
   readonly observation: Readonly<Record<string, unknown>>;
   readonly artifactRef?: GraphArtifactReference;
 }): string {
-  if (!input.artifactRef) {
-    // Fail closed: content we are about to drop from the inline stub must already
-    // be graph-externalized. Callers with rich observations must provide the
-    // artifact reference (or write a bounded degradation stub instead).
-    const fullJson = JSON.stringify(input.observation);
-    if (Buffer.byteLength(fullJson, "utf8") > LEGACY_INLINE_CAP_BYTES) {
-      throw new Error(
-        "rich runtime observation requires graph externalization; no graph artifact reference available",
-      );
-    }
-  }
   const stub = buildCompactRuntimeObservationStub(input.observation);
   if (input.artifactRef) {
     stub.artifactRef = input.artifactRef;
     stub.graphPrimary = true;
+  } else {
+    // Fail closed: content we are about to drop from the inline stub must already
+    // be graph-externalized. SP36 exemption: when the only oversized content is the
+    // bounded node-id locator arrays and the stub records their truncation honestly,
+    // the bounded stub is allowed without an artifact reference.
+    const fullJson = JSON.stringify(input.observation);
+    if (Buffer.byteLength(fullJson, "utf8") > LEGACY_INLINE_CAP_BYTES) {
+      const stubGraph = stub.graphEvidence as Record<string, unknown> | undefined;
+      const honestLocatorTruncation = Boolean(
+        stubGraph?.messageNodeIdsTruncated ||
+          stubGraph?.toolExecutionNodeIdsTruncated ||
+          stubGraph?.toolCallNodeIdsTruncated ||
+          stubGraph?.toolResultNodeIdsTruncated,
+      );
+      const stubJson = JSON.stringify(stub);
+      if (
+        !(honestLocatorTruncation && Buffer.byteLength(stubJson, "utf8") <= LEGACY_INLINE_CAP_BYTES)
+      ) {
+        throw new Error(
+          "rich runtime observation requires graph externalization; no graph artifact reference available",
+        );
+      }
+    }
   }
   const json = JSON.stringify(stub);
   if (Buffer.byteLength(json, "utf8") > LEGACY_INLINE_CAP_BYTES) {
