@@ -137,8 +137,7 @@ export function normalizeStorageRetentionContract(value: unknown): Record<string
     : undefined;
   const physicalResources = Array.isArray(raw.physicalResources)
     ? raw.physicalResources
-    : nestedPhysicalResources ??
-      (Array.isArray(inventory?.entries) ? inventory.entries : []);
+    : (nestedPhysicalResources ?? (Array.isArray(inventory?.entries) ? inventory.entries : []));
   return {
     ...raw,
     logicalClasses,

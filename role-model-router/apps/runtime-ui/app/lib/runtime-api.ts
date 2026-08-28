@@ -1881,10 +1881,12 @@ function normalizeStorageRetentionSummary(
     readonly logicalClasses?: RuntimeStorageRetentionSummary["logicalClasses"];
     readonly physicalResources?: RuntimeStorageRetentionSummary["physicalResources"];
   };
-  const logicalClasses =
-    raw.logicalClasses ?? raw.categories ?? [];
+  const logicalClasses = raw.logicalClasses ?? raw.categories ?? [];
   const physicalResources =
-    raw.physicalResources ?? raw.storageInventory?.physicalResources ?? raw.storageInventory?.entries ?? [];
+    raw.physicalResources ??
+    raw.storageInventory?.physicalResources ??
+    raw.storageInventory?.entries ??
+    [];
   return {
     ...raw,
     logicalClasses,

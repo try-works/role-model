@@ -48,9 +48,7 @@ test("SP50 preserves distinct nested physical resources and logical classes", ()
     },
   });
 
-  expect(normalized.physicalResources).toEqual([
-    { id: "cloud_history_r2", physicalBytes: 42 },
-  ]);
+  expect(normalized.physicalResources).toEqual([{ id: "cloud_history_r2", physicalBytes: 42 }]);
   expect(normalized.logicalClasses).toEqual([]);
   expect(normalized.storageInventory).toMatchObject({
     physicalResources: [{ id: "cloud_history_r2", physicalBytes: 42 }],
@@ -63,13 +61,23 @@ test("SP53 never projects physical-inventory logical mappings as usage categorie
     storageInventory: {
       schemaVersion: "role-model.storage-registry.v2",
       complete: true,
-      logicalClasses: [{ id: "artifact_graph", physicalResourceId: "physical-a", measurement: "physical_resource_reference" }],
+      logicalClasses: [
+        {
+          id: "artifact_graph",
+          physicalResourceId: "physical-a",
+          measurement: "physical_resource_reference",
+        },
+      ],
       physicalResources: [{ id: "physical-a", physicalBytes: 10 }],
     },
   });
 
   expect(normalized.logicalClasses).toEqual([]);
   expect((normalized.storageInventory as { logicalClasses: unknown[] }).logicalClasses).toEqual([
-    { id: "artifact_graph", physicalResourceId: "physical-a", measurement: "physical_resource_reference" },
+    {
+      id: "artifact_graph",
+      physicalResourceId: "physical-a",
+      measurement: "physical_resource_reference",
+    },
   ]);
 });

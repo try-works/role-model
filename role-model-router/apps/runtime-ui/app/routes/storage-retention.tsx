@@ -137,7 +137,7 @@ export function StorageRetentionRouteView() {
                 ? String(formatBytes(summary.storageAudit.unattributedPhysicalBytes))
                 : summary?.storageAudit?.unavailableBytes != null
                   ? String(formatBytes(summary.storageAudit.unavailableBytes))
-                : "Not measured",
+                  : "Not measured",
           },
           {
             id: "holds",
@@ -161,9 +161,7 @@ export function StorageRetentionRouteView() {
       />
       {error ? <ErrorState label={error} /> : null}
       {summary?.policyState ? (
-        <p className={supportingTextClassName}>
-          Global policy state: {summary.policyState.state}
-        </p>
+        <p className={supportingTextClassName}>Global policy state: {summary.policyState.state}</p>
       ) : null}
       {summary?.physicalResources ? (
         <SectionCard
@@ -189,7 +187,11 @@ export function StorageRetentionRouteView() {
                     <td className={`py-3 ${compactTitleClassName}`}>{row.id}</td>
                     <td className={`py-3 ${supportingTextClassName}`}>{row.owner}</td>
                     <td className="py-3">
-                      <Badge tone={row.health === "healthy" || row.health === "ready" ? "success" : "warning"}>
+                      <Badge
+                        tone={
+                          row.health === "healthy" || row.health === "ready" ? "success" : "warning"
+                        }
+                      >
                         {row.health}
                       </Badge>
                     </td>
@@ -197,9 +199,7 @@ export function StorageRetentionRouteView() {
                       {row.physicalBytes === null ? "Unavailable" : formatBytes(row.physicalBytes)}
                     </td>
                     <td className={`py-3 ${supportingTextClassName}`}>{row.heldItems}</td>
-                    <td className={`py-3 ${supportingTextClassName}`}>
-                      {row.retentionState}
-                    </td>
+                    <td className={`py-3 ${supportingTextClassName}`}>{row.retentionState}</td>
                   </tr>
                 ))}
               </tbody>
