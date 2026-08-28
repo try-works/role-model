@@ -118,26 +118,32 @@ type StorageRecord = {
   readonly conflicts?: readonly string[];
 };
 
-function normalizeStorageRetentionContract(value: unknown): Record<string, unknown> {
+export function normalizeStorageRetentionContract(value: unknown): Record<string, unknown> {
   const raw = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
-  const logicalClasses = Array.isArray(raw.logicalClasses)
-    ? raw.logicalClasses
-    : Array.isArray(raw.categories)
-      ? raw.categories
-      : [];
   const inventory =
     raw.storageInventory && typeof raw.storageInventory === "object"
       ? (raw.storageInventory as Record<string, unknown>)
       : undefined;
+  const nestedLogicalClasses = Array.isArray(inventory?.logicalClasses)
+    ? inventory.logicalClasses
+    : [];
+  const logicalClasses = Array.isArray(raw.logicalClasses)
+    ? raw.logicalClasses
+    : nestedLogicalClasses.length > 0
+      ? nestedLogicalClasses
+      : Array.isArray(raw.categories)
+        ? raw.categories
+        : [];
+  const nestedPhysicalResources = Array.isArray(inventory?.physicalResources)
+    ? inventory.physicalResources
+    : undefined;
   const physicalResources = Array.isArray(raw.physicalResources)
     ? raw.physicalResources
-    : Array.isArray(inventory?.entries)
-      ? inventory.entries
-      : [];
+    : (nestedPhysicalResources ?? (Array.isArray(inventory?.entries) ? inventory.entries : []));
   return {
     ...raw,
     logicalClasses,
-    categories: logicalClasses,
+    categories: Array.isArray(raw.categories) ? raw.categories : logicalClasses,
     physicalResources,
     ...(inventory
       ? {
@@ -145,6 +151,8 @@ function normalizeStorageRetentionContract(value: unknown): Record<string, unkno
             ...inventory,
             complete: inventory.complete === true,
             entries: physicalResources,
+            physicalResources,
+            logicalClasses: nestedLogicalClasses,
           },
         }
       : {}),

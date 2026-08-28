@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 
+import { normalizeStorageRetentionContract } from "../src/track-b-operations.js";
 import * as trackBRuntime from "../src/track-b-runtime.js";
 
 test("SP5 host retention inventory refuses incomplete physical storage claims", () => {
@@ -34,4 +35,63 @@ test("SP5 host retention inventory refuses incomplete physical storage claims", 
       entries: [{ id: "unknown", owner: "", health: "ready" }],
     }),
   ).toThrow(/incomplete physical storage inventory/i);
+});
+
+test("SP50 preserves distinct nested physical resources and logical classes", () => {
+  const normalized = normalizeStorageRetentionContract({
+    storageInventory: {
+      schemaVersion: "role-model.storage-registry.v2",
+      complete: true,
+      entries: [{ id: "legacy-entry" }],
+      physicalResources: [{ id: "cloud_history_r2", physicalBytes: 42 }],
+      logicalClasses: [{ id: "history", bytes: 21 }],
+    },
+  });
+
+  expect(normalized.physicalResources).toEqual([{ id: "cloud_history_r2", physicalBytes: 42 }]);
+  expect(normalized.logicalClasses).toEqual([{ id: "history", bytes: 21 }]);
+  expect(normalized.categories).toEqual([{ id: "history", bytes: 21 }]);
+  expect(normalized.storageInventory).toMatchObject({
+    physicalResources: [{ id: "cloud_history_r2", physicalBytes: 42 }],
+    logicalClasses: [{ id: "history", bytes: 21 }],
+  });
+});
+
+test("SP53 projects a nested physical-inventory mapping as logical storage, not category usage", () => {
+  const normalized = normalizeStorageRetentionContract({
+    storageInventory: {
+      schemaVersion: "role-model.storage-registry.v2",
+      complete: true,
+      logicalClasses: [
+        {
+          id: "artifact_graph",
+          physicalResourceId: "physical-a",
+          measurement: "physical_resource_reference",
+        },
+      ],
+      physicalResources: [{ id: "physical-a", physicalBytes: 10 }],
+    },
+  });
+
+  expect(normalized.logicalClasses).toEqual([
+    {
+      id: "artifact_graph",
+      physicalResourceId: "physical-a",
+      measurement: "physical_resource_reference",
+    },
+  ]);
+  expect(normalized.categories).toEqual([
+    {
+      id: "artifact_graph",
+      physicalResourceId: "physical-a",
+      measurement: "physical_resource_reference",
+    },
+  ]);
+  expect((normalized.storageInventory as { logicalClasses: unknown[] }).logicalClasses).toEqual([
+    {
+      id: "artifact_graph",
+      physicalResourceId: "physical-a",
+      measurement: "physical_resource_reference",
+    },
+  ]);
 });
