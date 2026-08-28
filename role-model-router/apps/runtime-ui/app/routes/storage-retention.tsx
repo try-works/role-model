@@ -131,11 +131,33 @@ export function StorageRetentionRouteView() {
           },
           {
             id: "unavailable",
-            label: "Unavailable",
+            label: "Unattributed physical bytes",
             value:
-              summary?.storageAudit?.unavailableBytes != null
-                ? String(formatBytes(summary.storageAudit.unavailableBytes))
-                : "Not measured",
+              summary?.storageAudit?.unattributedPhysicalBytes != null
+                ? String(formatBytes(summary.storageAudit.unattributedPhysicalBytes))
+                : summary?.storageAudit?.unavailableBytes != null
+                  ? String(formatBytes(summary.storageAudit.unavailableBytes))
+                  : "Not measured",
+          },
+          {
+            id: "unobserved-stores",
+            label: "Unobserved stores",
+            value: String(summary?.storageInventory?.unobservedResourceCount ?? 0),
+          },
+          {
+            id: "unavailable-stores",
+            label: "Unavailable stores",
+            value: String(summary?.storageInventory?.unavailableResourceCount ?? 0),
+          },
+          {
+            id: "unavailable-physical-resources",
+            label: "Unavailable physical resources",
+            value: String(
+              summary?.physicalResources.filter(
+                (resource) =>
+                  resource.observationState === "observed" && resource.health === "unavailable",
+              ).length ?? 0,
+            ),
           },
           {
             id: "holds",
@@ -158,41 +180,69 @@ export function StorageRetentionRouteView() {
         ]}
       />
       {error ? <ErrorState label={error} /> : null}
+      {summary?.policyState ? (
+        <p className={supportingTextClassName}>Global policy state: {summary.policyState.state}</p>
+      ) : null}
+      <p className={supportingTextClassName}>
+        Unattributed physical bytes are measured physical allocation not mapped to logical storage
+        classes; they are not service health.
+      </p>
       {summary?.physicalResources ? (
         <SectionCard
           title="Physical storage inventory"
-          description="Registry ownership, health, physical size, legal holds, and current retention enforcement for every writable store."
+          description="Registry ownership, health, observation state, physical size, legal holds, and row-level retention enforcement for every writable store."
         >
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead>
                 <tr>
-                  {["Store", "Owner", "Health", "Physical bytes", "Legal holds", "Enforcement"].map(
-                    (heading) => (
-                      <th className={`pb-3 font-normal ${monoEyebrowClassName}`} key={heading}>
-                        {heading}
-                      </th>
-                    ),
-                  )}
+                  {[
+                    "Store",
+                    "Owner",
+                    "Health",
+                    "Observation state",
+                    "Measurement source",
+                    "Fresh through",
+                    "Physical bytes",
+                    "Legal holds",
+                    "Enforcement",
+                  ].map((heading) => (
+                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`} key={heading}>
+                      {heading}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {summary.physicalResources.map((row) => (
                   <tr className="border-t border-[var(--rm-border)]" key={row.id}>
                     <td className={`py-3 ${compactTitleClassName}`}>{row.id}</td>
-                    <td className={`py-3 ${supportingTextClassName}`}>{row.owner}</td>
+                    <td className={`py-3 ${supportingTextClassName}`}>
+                      {row.owners?.join(", ") || row.owner}
+                    </td>
                     <td className="py-3">
-                      <Badge tone={row.health === "healthy" ? "success" : "warning"}>
+                      <Badge
+                        tone={
+                          row.health === "healthy" || row.health === "ready" ? "success" : "warning"
+                        }
+                      >
                         {row.health}
                       </Badge>
+                    </td>
+                    <td className={`py-3 ${supportingTextClassName}`}>
+                      {row.observationState ?? row.measurement}
+                    </td>
+                    <td className={`py-3 ${supportingTextClassName}`}>
+                      {row.measurementSource ?? row.measurement}
+                    </td>
+                    <td className={`py-3 ${supportingTextClassName}`}>
+                      {row.freshUntil ?? "Not time-bounded"}
                     </td>
                     <td className={`py-3 ${supportingTextClassName}`}>
                       {row.physicalBytes === null ? "Unavailable" : formatBytes(row.physicalBytes)}
                     </td>
                     <td className={`py-3 ${supportingTextClassName}`}>{row.heldItems}</td>
-                    <td className={`py-3 ${supportingTextClassName}`}>
-                      {summary.policyState ? summary.policyState.state : row.retentionState}
-                    </td>
+                    <td className={`py-3 ${supportingTextClassName}`}>{row.retentionState}</td>
                   </tr>
                 ))}
               </tbody>
@@ -202,8 +252,8 @@ export function StorageRetentionRouteView() {
       ) : null}
       <div className="grid gap-4 xl:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]">
         <SectionCard
-          title="Usage by category"
-          description="Category, tier, and scope stay independently visible. Policies downgrade capabilities before content becomes delete-eligible."
+          title="Logical classes"
+          description="Each logical class has an owner and retention contract. Physical resource mapping remains explicit so shared storage is not double counted."
         >
           {summary === null ? (
             <LoadingState label="Loading storage inventory…" />
@@ -214,11 +264,16 @@ export function StorageRetentionRouteView() {
               <table className="min-w-full text-left text-sm">
                 <thead>
                   <tr>
-                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Category</th>
+                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Logical class</th>
+                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>
+                      Physical resource mapping
+                    </th>
                     <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Scope</th>
-                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Tier</th>
-                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Records</th>
-                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Bytes</th>
+                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>
+                      Observation state
+                    </th>
+                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Fresh through</th>
+                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Retention state</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -228,13 +283,18 @@ export function StorageRetentionRouteView() {
                       className="border-t border-[var(--rm-border)]"
                     >
                       <td className={`py-3 ${compactTitleClassName}`}>{row.id}</td>
-                      <td className={`py-3 ${supportingTextClassName}`}>{row.scope}</td>
-                      <td className="py-3">
-                        <Badge tone="neutral">{row.tier}</Badge>
-                      </td>
-                      <td className={`py-3 ${supportingTextClassName}`}>{row.count}</td>
                       <td className={`py-3 ${supportingTextClassName}`}>
-                        {formatBytes(row.bytes)}
+                        {row.physicalResourceId ?? "Not materialized"}
+                      </td>
+                      <td className={`py-3 ${supportingTextClassName}`}>{row.scope ?? "Global"}</td>
+                      <td className={`py-3 ${supportingTextClassName}`}>
+                        {row.observationState ?? "Unobserved"}
+                      </td>
+                      <td className={`py-3 ${supportingTextClassName}`}>
+                        {row.freshUntil ?? "Not time-bounded"}
+                      </td>
+                      <td className={`py-3 ${supportingTextClassName}`}>
+                        {row.retentionState ?? "Not configured"}
                       </td>
                     </tr>
                   ))}

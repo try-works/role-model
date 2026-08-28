@@ -14,7 +14,7 @@ test.describe("@recursive:94-direct-track-b-storage-graph-cloud-roundtrip @sp8 @
         allocatedBytes?: number;
         logicalBytes?: number;
         reclaimableBytes?: number;
-        unavailableBytes?: number;
+        unattributedPhysicalBytes?: number;
         heldBytes?: number | null;
         measuredAt?: string;
       } | null;
@@ -49,8 +49,10 @@ test.describe("@recursive:94-direct-track-b-storage-graph-cloud-roundtrip @sp8 @
     await expect(summary.getByText("Physical", { exact: true })).toBeVisible();
     await expect(summary.getByText("Logical classes", { exact: true })).toBeVisible();
     await expect(summary.getByText("Reclaimable", { exact: true })).toBeVisible();
-    await expect(summary.getByText("Unavailable", { exact: true })).toBeVisible();
+    await expect(summary.getByText("Unattributed physical bytes", { exact: true })).toBeVisible();
     await expect(summary.getByText("Legal holds")).toBeVisible();
     await expect(page.getByRole("columnheader", { name: "Enforcement" })).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Observation state" })).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Fresh through" })).toBeVisible();
   });
 });

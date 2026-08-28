@@ -1770,10 +1770,18 @@ export interface RuntimeStorageRetentionSummary {
   readonly totalBytes: number;
   readonly logicalClasses: readonly {
     readonly id: string;
-    readonly tier: string;
-    readonly scope: string;
-    readonly bytes: number;
-    readonly count: number;
+    readonly tier?: string;
+    readonly scope?: string;
+    readonly bytes?: number;
+    readonly count?: number;
+    readonly owner?: string;
+    readonly physicalResourceId?: string | null;
+    readonly observationState?: string;
+    readonly measurementSource?: string;
+    readonly observedAt?: string;
+    readonly freshUntil?: string;
+    readonly retentionState?: string;
+    readonly accountingState?: string;
   }[];
   /** Backward-compatible alias for callers that still use the pre-SP8 name. */
   readonly categories: RuntimeStorageRetentionSummary["logicalClasses"];
@@ -1781,10 +1789,17 @@ export interface RuntimeStorageRetentionSummary {
     readonly id: string;
     readonly owner: string;
     readonly health: string;
-    readonly measurement: "measured" | "unavailable";
+    readonly measurement: "measured" | "remote_observed" | "unavailable";
     readonly physicalBytes: number | null;
     readonly heldItems: number;
     readonly retentionState: string;
+    readonly observationState?: string;
+    readonly measurementSource?: string;
+    readonly observedAt?: string;
+    readonly freshUntil?: string;
+    readonly owners?: readonly string[];
+    readonly logicalClassIds?: readonly string[];
+    readonly accountingState?: string;
   }[];
   readonly managedPolicy: boolean;
   readonly conflicts: readonly {
@@ -1822,17 +1837,33 @@ export interface RuntimeStorageRetentionSummary {
     readonly blocks: readonly string[];
   } | null;
   readonly storageInventory?: {
-    readonly schemaVersion: "role-model.storage-registry.v1";
+    readonly schemaVersion: "role-model.storage-registry.v1" | "role-model.storage-registry.v2";
+    /** Versioned envelope for physical/logical accounting semantics. */
+    readonly storageStateVersion?: "role-model.storage-state.v1";
+    readonly channel?: string;
+    readonly accountingState?: "physical_resources_deduplicated";
     readonly complete: boolean;
+    /** A configured store with no current observation; not a provider failure. */
+    readonly unobservedResourceCount?: number;
+    /** Observed resources whose health probe reported unavailable. */
+    readonly unavailableResourceCount?: number;
     readonly entries: readonly {
       readonly id: string;
       readonly owner: string;
       readonly health: string;
-      readonly measurement: "measured" | "unavailable";
+      readonly measurement: "measured" | "remote_observed" | "unavailable";
       readonly physicalBytes: number | null;
       readonly heldItems: number;
       readonly retentionState: string;
+      readonly accountingState?: string;
+      readonly observationState?: string;
+      readonly measurementSource?: string;
+      readonly observedAt?: string | null;
+      readonly freshUntil?: string | null;
     }[];
+    /** v2 keeps the measured physical inventory separate from logical accounting. */
+    readonly physicalResources?: RuntimeStorageRetentionSummary["physicalResources"];
+    readonly logicalClasses?: RuntimeStorageRetentionSummary["logicalClasses"];
   };
   // Run 94 SP8: measured physical accounting from the read-only storage audit plus
   // the measured policy state; absent until a real measurement exists.
@@ -1844,6 +1875,9 @@ export interface RuntimeStorageRetentionSummary {
     readonly logicalBytes?: number;
     readonly reclaimableBytes?: number;
     readonly heldBytes?: number | null;
+    /** Physical allocation not attributable to logical rows; never a store health state. */
+    readonly unattributedPhysicalBytes?: number;
+    /** @deprecated Use unattributedPhysicalBytes. */
     readonly unavailableBytes?: number;
     readonly observationRows?: number;
     readonly graphEdges?: number;
@@ -1875,15 +1909,25 @@ function normalizeStorageRetentionSummary(
     readonly logicalClasses?: RuntimeStorageRetentionSummary["logicalClasses"];
     readonly physicalResources?: RuntimeStorageRetentionSummary["physicalResources"];
   };
-  const logicalClasses = raw.logicalClasses ?? raw.categories ?? [];
-  const physicalResources = raw.physicalResources ?? raw.storageInventory?.entries ?? [];
+  const logicalClasses =
+    raw.logicalClasses ?? raw.storageInventory?.logicalClasses ?? raw.categories ?? [];
+  const physicalResources =
+    raw.physicalResources ??
+    raw.storageInventory?.physicalResources ??
+    raw.storageInventory?.entries ??
+    [];
   return {
     ...raw,
     logicalClasses,
-    categories: logicalClasses,
+    categories: raw.categories ?? logicalClasses,
     physicalResources,
     storageInventory: raw.storageInventory
-      ? { ...raw.storageInventory, entries: physicalResources }
+      ? {
+          ...raw.storageInventory,
+          entries: physicalResources,
+          physicalResources,
+          logicalClasses,
+        }
       : undefined,
   };
 }
