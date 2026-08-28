@@ -1779,6 +1779,7 @@ export interface RuntimeStorageRetentionSummary {
     readonly observationState?: string;
     readonly measurementSource?: string;
     readonly observedAt?: string;
+    readonly freshUntil?: string;
     readonly retentionState?: string;
   }[];
   /** Backward-compatible alias for callers that still use the pre-SP8 name. */
@@ -1794,6 +1795,9 @@ export interface RuntimeStorageRetentionSummary {
     readonly observationState?: string;
     readonly measurementSource?: string;
     readonly observedAt?: string;
+    readonly freshUntil?: string;
+    readonly owners?: readonly string[];
+    readonly logicalClassIds?: readonly string[];
   }[];
   readonly managedPolicy: boolean;
   readonly conflicts: readonly {

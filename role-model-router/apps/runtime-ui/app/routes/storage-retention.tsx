@@ -178,6 +178,7 @@ export function StorageRetentionRouteView() {
                     "Health",
                     "Observation state",
                     "Measurement source",
+                    "Fresh through",
                     "Physical bytes",
                     "Legal holds",
                     "Enforcement",
@@ -192,7 +193,9 @@ export function StorageRetentionRouteView() {
                 {summary.physicalResources.map((row) => (
                   <tr className="border-t border-[var(--rm-border)]" key={row.id}>
                     <td className={`py-3 ${compactTitleClassName}`}>{row.id}</td>
-                    <td className={`py-3 ${supportingTextClassName}`}>{row.owner}</td>
+                    <td className={`py-3 ${supportingTextClassName}`}>
+                      {row.owners?.join(", ") || row.owner}
+                    </td>
                     <td className="py-3">
                       <Badge
                         tone={
@@ -207,6 +210,9 @@ export function StorageRetentionRouteView() {
                     </td>
                     <td className={`py-3 ${supportingTextClassName}`}>
                       {row.measurementSource ?? row.measurement}
+                    </td>
+                    <td className={`py-3 ${supportingTextClassName}`}>
+                      {row.freshUntil ?? "Not time-bounded"}
                     </td>
                     <td className={`py-3 ${supportingTextClassName}`}>
                       {row.physicalBytes === null ? "Unavailable" : formatBytes(row.physicalBytes)}
@@ -242,6 +248,7 @@ export function StorageRetentionRouteView() {
                     <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>
                       Observation state
                     </th>
+                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Fresh through</th>
                     <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Retention state</th>
                   </tr>
                 </thead>
@@ -258,6 +265,9 @@ export function StorageRetentionRouteView() {
                       <td className={`py-3 ${supportingTextClassName}`}>{row.scope ?? "Global"}</td>
                       <td className={`py-3 ${supportingTextClassName}`}>
                         {row.observationState ?? "Unobserved"}
+                      </td>
+                      <td className={`py-3 ${supportingTextClassName}`}>
+                        {row.freshUntil ?? "Not time-bounded"}
                       </td>
                       <td className={`py-3 ${supportingTextClassName}`}>
                         {row.retentionState ?? "Not configured"}
