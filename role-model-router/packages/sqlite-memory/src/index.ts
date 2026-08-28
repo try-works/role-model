@@ -1383,6 +1383,24 @@ export function resolveSqliteMemoryLocation(input: SqliteMemoryLocationInput): s
 
 function initializeSchema(database: DatabaseSync): void {
   database.exec(SCHEMA_SQL);
+  // Run 94 SP48 re-audit: bind the registry migration
+  // `run94-compact-stub-enforcement-v1` (migrations/0002_compact_stub_enforcement.sql)
+  // to the inline compact-stub triggers and assert its postcondition on every startup,
+  // eliminating the dead registry entry / dual source of truth.
+  const COMPACT_STUB_ENFORCEMENT_MIGRATION_ID = "run94-compact-stub-enforcement-v1";
+  runOnceMigration(database, COMPACT_STUB_ENFORCEMENT_MIGRATION_ID, true, () => {});
+  const enforcementTriggerCount = (
+    database
+      .prepare(
+        "SELECT COUNT(*) AS count FROM sqlite_master WHERE type='trigger' AND name IN ('runtime_observations_compact_stub_enforcement','runtime_observations_compact_stub_update_enforcement')",
+      )
+      .get() as { count: number }
+  ).count;
+  if (enforcementTriggerCount !== 2) {
+    throw new Error(
+      "run94-compact-stub-enforcement-v1 postcondition failed: compact stub enforcement triggers missing",
+    );
+  }
   ensurePerformanceHistorySchema(database);
   const providerAccountColumns = new Set(
     (
@@ -3157,6 +3175,21 @@ function toRuntimeTelemetryRecord(
 function runtimeTelemetryInsertValues(
   record: RuntimeTelemetryRecord,
 ): readonly (string | number | null)[] {
+  // Writer-side byte caps for every JSON telemetry column (Run 94 SP48 re-audit):
+  // the compact-telemetry authority must not retain rich inline content. Oversized
+  // columns fail closed; the bridge converts the failure into a bounded
+  // degradation receipt while the provider response is still delivered.
+  const MAX_TELEMETRY_JSON_COLUMN_BYTES = 16 * 1024;
+  const boundedJsonColumn = (value: unknown, column: string): string | null => {
+    if (value === undefined || value === null) return null;
+    const json = JSON.stringify(value);
+    if (Buffer.byteLength(json, "utf8") > MAX_TELEMETRY_JSON_COLUMN_BYTES) {
+      throw new Error(
+        `runtime telemetry ${column} exceeds ${MAX_TELEMETRY_JSON_COLUMN_BYTES} bytes; externalize rich content via artifactRefs`,
+      );
+    }
+    return json;
+  };
   return [
     record.requestId,
     record.routingDecisionId,
@@ -3203,11 +3236,11 @@ function runtimeTelemetryInsertValues(
     record.toolSideEffectState,
     record.toolingUsed ? 1 : 0,
     record.cacheState,
-    JSON.stringify(record.roleIds),
-    JSON.stringify(record.eligibleEndpointIds),
-    JSON.stringify(record.eligibleModelIds),
-    record.candidateCostSnapshot ? JSON.stringify(record.candidateCostSnapshot) : null,
-    record.selectedPricingSnapshot ? JSON.stringify(record.selectedPricingSnapshot) : null,
+    boundedJsonColumn(record.roleIds, "role_ids_json"),
+    boundedJsonColumn(record.eligibleEndpointIds, "eligible_endpoint_ids_json"),
+    boundedJsonColumn(record.eligibleModelIds, "eligible_model_ids_json"),
+    boundedJsonColumn(record.candidateCostSnapshot, "candidate_cost_snapshot_json"),
+    boundedJsonColumn(record.selectedPricingSnapshot, "selected_pricing_snapshot_json"),
     record.inputTokens,
     record.outputTokens,
     record.totalTokens,
@@ -3255,11 +3288,11 @@ function runtimeTelemetryInsertValues(
     record.taxonomyRoleId,
     record.taxonomyTaskType,
     record.taxonomyTaskVariant,
-    JSON.stringify(record.taxonomyCapabilityIds),
-    JSON.stringify(record.taxonomyModalityIds),
-    JSON.stringify(record.taxonomyToolClassIds),
+    boundedJsonColumn(record.taxonomyCapabilityIds, "taxonomy_capability_ids_json"),
+    boundedJsonColumn(record.taxonomyModalityIds, "taxonomy_modality_ids_json"),
+    boundedJsonColumn(record.taxonomyToolClassIds, "taxonomy_tool_class_ids_json"),
     record.currency,
-    record.dimensions ? JSON.stringify(record.dimensions) : null,
+    boundedJsonColumn(record.dimensions, "dimensions_json"),
   ];
 }
 

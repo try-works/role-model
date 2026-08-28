@@ -88,3 +88,47 @@ test("SP48 NULL-retain legacy rows become deletion-eligible after the canonical 
   verify.close();
   expect(remaining).toEqual([{ request_id: "legacy-fresh" }]);
 });
+
+test("SP48 telemetry JSON columns fail closed past the 16 KiB inline cap", () => {
+  const root = mkdtempSync(path.join(os.tmpdir(), "run94-sp48-telemetry-cap-"));
+  const initialized = initializeSqliteMemory({
+    runtimeStateRoot: root,
+    scopeId: "run94-sp48",
+    channel: "development",
+  });
+  expect(() =>
+    persistRuntimeTelemetryFailure({
+      databasePath: initialized.databasePath,
+      requestId: "failure-oversized",
+      endpointId: "endpoint",
+      routingDecisionId: "route-1",
+      statusCode: 500,
+      errorClass: "provider_error",
+      observation: { requestId: "failure-oversized" },
+      dimensions: { errorPreview: "x".repeat(20 * 1024) },
+    }),
+  ).toThrow(/telemetry dimensions_json exceeds|externalize/i);
+});
+
+test("SP48 the compact-stub enforcement migration receipt and postcondition are asserted at startup", () => {
+  const root = mkdtempSync(path.join(os.tmpdir(), "run94-sp48-postcondition-"));
+  const initialized = initializeSqliteMemory({
+    runtimeStateRoot: root,
+    scopeId: "run94-sp48",
+    channel: "development",
+  });
+  const database = new DatabaseSync(initialized.databasePath);
+  const triggers = database
+    .prepare(
+      "SELECT COUNT(*) AS count FROM sqlite_master WHERE type='trigger' AND name IN ('runtime_observations_compact_stub_enforcement','runtime_observations_compact_stub_update_enforcement')",
+    )
+    .get() as { count: number };
+  const receipt = database
+    .prepare(
+      "SELECT status FROM migration_receipts WHERE migration_id='run94-compact-stub-enforcement-v1'",
+    )
+    .get() as { status?: string } | undefined;
+  database.close();
+  expect(triggers.count).toBe(2);
+  expect(receipt?.status).toBe("applied");
+});
