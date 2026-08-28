@@ -113,6 +113,54 @@ test("GREEN: imports N-1 JSON once, classifies every legacy row, and quarantines
   expect(await readFile(`${filePath}.n-1.json`, "utf8")).toContain("legacy-malformed");
 });
 
+test("retires N-1 SQLite pending work that lacks an effort identity before dispatch", async () => {
+  const root = await import("node:fs/promises").then(({ mkdtemp }) =>
+    mkdtemp(path.join(os.tmpdir(), "run94-sp5-legacy-sqlite-")),
+  );
+  roots.push(root);
+  const filePath = path.join(root, "post-observation-outbox.sqlite");
+  const initial = createTrackBPostObservationOutbox({ filePath, maxItems: 8 });
+  await initial.read();
+  const database = new DatabaseSync(filePath);
+  database
+    .prepare(
+      `INSERT INTO track_b_post_observation_pending
+       (request_id, routing_decision_id, endpoint_id, model_id, reasoning_effort, effort_source,
+        run88_correlation_json, legacy_identity_missing, enqueued_at_ms)
+       VALUES (?, ?, ?, ?, NULL, NULL, NULL, 0, ?)`,
+    )
+    .run(
+      "legacy-sqlite-missing-effort",
+      "decision:legacy-sqlite-missing-effort",
+      "endpoint:legacy",
+      "model:legacy",
+      Date.now(),
+    );
+  database.close();
+
+  const restarted = createTrackBPostObservationOutbox({ filePath, maxItems: 8 });
+  const dispatched: string[] = [];
+  await restarted.drain(async (observation) => {
+    dispatched.push(observation.requestId);
+    return { status: "should-not-dispatch" };
+  });
+
+  expect(dispatched).toEqual([]);
+  expect(await restarted.read()).toMatchObject({
+    pendingCount: 0,
+    receiptCount: 1,
+    receipts: [
+      expect.objectContaining({
+        requestId: "legacy-sqlite-missing-effort",
+        result: expect.objectContaining({
+          status: "retired_legacy_missing_variant_identity",
+          productionMutation: false,
+        }),
+      }),
+    ],
+  });
+});
+
 test("GREEN: malformed legacy JSON fails closed without replacing the source authority", async () => {
   const root = await import("node:fs/promises").then(({ mkdtemp }) =>
     mkdtemp(path.join(os.tmpdir(), "run94-sp5-malformed-")),

@@ -1317,6 +1317,23 @@ function outboxSchema(database: DatabaseSync): void {
       "INSERT OR IGNORE INTO track_b_post_observation_meta (key, value) VALUES ('schemaVersion', ?)",
     )
     .run(TRACK_B_OUTBOX_SCHEMA_VERSION);
+  // SQLite authorities created before effort variants were modeled can retain
+  // pending rows without a complete variant identity. They cannot safely enter
+  // a current Track B workflow: preserve the row as a bounded retired receipt
+  // instead of dispatching it and failing the whole recovery pass.
+  database.exec(`
+    UPDATE track_b_post_observation_pending
+       SET legacy_identity_missing = 1
+     WHERE legacy_identity_missing = 0
+       AND (
+         model_id IS NULL
+         OR trim(model_id) = ''
+         OR effort_source IS NULL
+         OR effort_source NOT IN ('none', 'client', 'variant', 'variant_coerced')
+         OR (reasoning_effort IS NULL AND effort_source <> 'none')
+         OR (reasoning_effort IS NOT NULL AND effort_source = 'none')
+       )
+  `);
 }
 
 function sqliteHeader(bytes: Buffer): boolean {
