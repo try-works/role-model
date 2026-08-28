@@ -206,6 +206,34 @@ describe("Run 91 effort instance identity", () => {
     );
   });
 
+  test("advertises only configured fixed efforts for a routing alias", () => {
+    const configuredRegistry = {
+      endpoints: [defaultEndpoint, maxEndpoint],
+      diagnostics: [],
+      lifecycleSummary: { active: 2, degraded: 0, offline: 0 },
+    } as unknown as EndpointRegistryResult;
+    const response = createDownstreamOpenAIDiscovery({
+      baseUrl: "http://127.0.0.1:3456",
+      catalog,
+      registry: configuredRegistry,
+      modelAliases: [
+        {
+          aliasId: "baseline.remote-only",
+          modelIds: ["deepseek/deepseek-v4-pro"],
+          executionMode: "remote_only",
+        },
+      ] as never,
+    });
+
+    expect(
+      response.models.find((model) => model.id === "baseline.remote-only")?.capabilities.reasoning,
+    ).toEqual({
+      supported: true,
+      effortControl: true,
+      effortLevels: ["max"],
+    });
+  });
+
   test("recognizes an endpoint id in model selection before model or alias lookup", () => {
     const plan = mapChatCompletionsRequest(
       registry,
