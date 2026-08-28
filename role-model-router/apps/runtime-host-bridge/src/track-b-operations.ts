@@ -126,12 +126,12 @@ export function normalizeStorageRetentionContract(value: unknown): Record<string
       : undefined;
   const nestedLogicalClasses = Array.isArray(inventory?.logicalClasses)
     ? inventory.logicalClasses
-    : undefined;
+    : [];
   const logicalClasses = Array.isArray(raw.logicalClasses)
     ? raw.logicalClasses
     : Array.isArray(raw.categories)
       ? raw.categories
-      : nestedLogicalClasses ?? [];
+      : [];
   const nestedPhysicalResources = Array.isArray(inventory?.physicalResources)
     ? inventory.physicalResources
     : undefined;
@@ -151,7 +151,7 @@ export function normalizeStorageRetentionContract(value: unknown): Record<string
             complete: inventory.complete === true,
             entries: physicalResources,
             physicalResources,
-            logicalClasses,
+            logicalClasses: nestedLogicalClasses,
           },
         }
       : {}),

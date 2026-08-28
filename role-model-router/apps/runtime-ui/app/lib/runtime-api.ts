@@ -1882,7 +1882,7 @@ function normalizeStorageRetentionSummary(
     readonly physicalResources?: RuntimeStorageRetentionSummary["physicalResources"];
   };
   const logicalClasses =
-    raw.logicalClasses ?? raw.categories ?? raw.storageInventory?.logicalClasses ?? [];
+    raw.logicalClasses ?? raw.categories ?? [];
   const physicalResources =
     raw.physicalResources ?? raw.storageInventory?.physicalResources ?? raw.storageInventory?.entries ?? [];
   return {
@@ -1891,7 +1891,7 @@ function normalizeStorageRetentionSummary(
     categories: logicalClasses,
     physicalResources,
     storageInventory: raw.storageInventory
-      ? { ...raw.storageInventory, entries: physicalResources, physicalResources, logicalClasses }
+      ? { ...raw.storageInventory, entries: physicalResources, physicalResources }
       : undefined,
   };
 }
