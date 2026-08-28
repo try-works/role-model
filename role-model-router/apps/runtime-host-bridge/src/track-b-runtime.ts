@@ -2893,7 +2893,11 @@ export function createOwnedTrackBSidecarSpec(options: {
       const endpoint = await new Promise<string>((resolve, reject) => {
         const timer = setTimeout(() => {
           reject(new Error(`Track B sidecar readiness timeout${stderr ? `: ${stderr}` : ""}`));
-        }, options.startupTimeoutMs ?? 10_000);
+          // A persisted Track B graph can require more than the short process-spawn
+          // window to reconcile durable state before it can publish readiness. Keep
+          // this bounded, but align the owned sidecar with the production extension
+          // supervisor's recovery allowance.
+        }, options.startupTimeoutMs ?? 30_000);
         const rejectError = (error: Error) => {
           clearTimeout(timer);
           reject(

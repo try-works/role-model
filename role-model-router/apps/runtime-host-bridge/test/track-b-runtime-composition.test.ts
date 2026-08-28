@@ -265,6 +265,34 @@ describe("production Track B composition", () => {
     ).toThrow(/managed artifact keys/i);
   });
 
+  test("allows the packaged sidecar sufficient startup time to recover persisted Track B state", async () => {
+    const stateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-track-b-sidecar-persisted-state-"),
+    );
+    roots.push(stateRoot);
+    const artifactPath = path.join(stateRoot, "delayed-sidecar.mjs");
+    const source = [
+      'import http from "node:http";',
+      "setTimeout(()=>{",
+      ' const server=http.createServer((_req,res)=>res.end("ok"));',
+      ' server.listen(0,"127.0.0.1",()=>{const address=server.address();process.stdout.write(JSON.stringify({type:"ready",endpoint:`http://127.0.0.1:${address.port}`})+"\\n")});',
+      ' process.on("SIGTERM",()=>server.close(()=>process.exit(0)));',
+      "}, 11_000);",
+    ].join("\n");
+    await writeFile(artifactPath, source, "utf8");
+
+    const sidecar = createOwnedTrackBSidecarSpec({
+      artifactPath,
+      artifactSha256: createHash("sha256").update(source).digest("hex"),
+      stateRoot,
+      channel: "stage",
+    });
+
+    const child = await sidecar.launch();
+    expect(child.endpoint).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
+    await child.stop();
+  }, 20_000);
+
   test("passes cloud contribution trust and aggregate destination into the launcher-owned sidecar", async () => {
     const stateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-track-b-sidecar-cloud-"));
     roots.push(stateRoot);
