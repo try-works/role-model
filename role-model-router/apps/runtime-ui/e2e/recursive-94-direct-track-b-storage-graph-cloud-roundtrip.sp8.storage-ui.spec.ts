@@ -24,10 +24,12 @@ test.describe("@recursive:94-direct-track-b-storage-graph-cloud-roundtrip @sp8 @
       };
     };
 
-    // Honest accounting: every unmeasured entry stays unavailable with null bytes.
+    // Honest accounting: local and read-only cloud observations both carry a
+    // numeric byte value; intentionally unobserved/unavailable entries do not.
     expect(Array.isArray(inventory.storageInventory.entries)).toBe(true);
     for (const row of inventory.storageInventory.entries) {
-      if (row.measurement === "measured") expect(typeof row.physicalBytes).toBe("number");
+      if (["measured", "remote_observed"].includes(row.measurement))
+        expect(typeof row.physicalBytes).toBe("number");
       else expect(row.physicalBytes).toBeNull();
     }
 
