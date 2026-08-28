@@ -1822,17 +1822,20 @@ export interface RuntimeStorageRetentionSummary {
     readonly blocks: readonly string[];
   } | null;
   readonly storageInventory?: {
-    readonly schemaVersion: "role-model.storage-registry.v1";
+    readonly schemaVersion: "role-model.storage-registry.v1" | "role-model.storage-registry.v2";
     readonly complete: boolean;
     readonly entries: readonly {
       readonly id: string;
       readonly owner: string;
       readonly health: string;
-      readonly measurement: "measured" | "unavailable";
+      readonly measurement: "measured" | "remote_observed" | "unavailable";
       readonly physicalBytes: number | null;
       readonly heldItems: number;
       readonly retentionState: string;
     }[];
+    /** v2 keeps the measured physical inventory separate from logical accounting. */
+    readonly physicalResources?: RuntimeStorageRetentionSummary["physicalResources"];
+    readonly logicalClasses?: RuntimeStorageRetentionSummary["logicalClasses"];
   };
   // Run 94 SP8: measured physical accounting from the read-only storage audit plus
   // the measured policy state; absent until a real measurement exists.
@@ -1844,6 +1847,9 @@ export interface RuntimeStorageRetentionSummary {
     readonly logicalBytes?: number;
     readonly reclaimableBytes?: number;
     readonly heldBytes?: number | null;
+    /** Physical allocation not attributable to logical rows; never a store health state. */
+    readonly unattributedPhysicalBytes?: number;
+    /** @deprecated Use unattributedPhysicalBytes. */
     readonly unavailableBytes?: number;
     readonly observationRows?: number;
     readonly graphEdges?: number;
@@ -1875,15 +1881,17 @@ function normalizeStorageRetentionSummary(
     readonly logicalClasses?: RuntimeStorageRetentionSummary["logicalClasses"];
     readonly physicalResources?: RuntimeStorageRetentionSummary["physicalResources"];
   };
-  const logicalClasses = raw.logicalClasses ?? raw.categories ?? [];
-  const physicalResources = raw.physicalResources ?? raw.storageInventory?.entries ?? [];
+  const logicalClasses =
+    raw.logicalClasses ?? raw.categories ?? raw.storageInventory?.logicalClasses ?? [];
+  const physicalResources =
+    raw.physicalResources ?? raw.storageInventory?.physicalResources ?? raw.storageInventory?.entries ?? [];
   return {
     ...raw,
     logicalClasses,
     categories: logicalClasses,
     physicalResources,
     storageInventory: raw.storageInventory
-      ? { ...raw.storageInventory, entries: physicalResources }
+      ? { ...raw.storageInventory, entries: physicalResources, physicalResources, logicalClasses }
       : undefined,
   };
 }

@@ -131,10 +131,12 @@ export function StorageRetentionRouteView() {
           },
           {
             id: "unavailable",
-            label: "Unavailable",
+            label: "Unattributed physical bytes",
             value:
-              summary?.storageAudit?.unavailableBytes != null
-                ? String(formatBytes(summary.storageAudit.unavailableBytes))
+              summary?.storageAudit?.unattributedPhysicalBytes != null
+                ? String(formatBytes(summary.storageAudit.unattributedPhysicalBytes))
+                : summary?.storageAudit?.unavailableBytes != null
+                  ? String(formatBytes(summary.storageAudit.unavailableBytes))
                 : "Not measured",
           },
           {
@@ -158,6 +160,11 @@ export function StorageRetentionRouteView() {
         ]}
       />
       {error ? <ErrorState label={error} /> : null}
+      {summary?.policyState ? (
+        <p className={supportingTextClassName}>
+          Global policy state: {summary.policyState.state}
+        </p>
+      ) : null}
       {summary?.physicalResources ? (
         <SectionCard
           title="Physical storage inventory"
@@ -182,7 +189,7 @@ export function StorageRetentionRouteView() {
                     <td className={`py-3 ${compactTitleClassName}`}>{row.id}</td>
                     <td className={`py-3 ${supportingTextClassName}`}>{row.owner}</td>
                     <td className="py-3">
-                      <Badge tone={row.health === "healthy" ? "success" : "warning"}>
+                      <Badge tone={row.health === "healthy" || row.health === "ready" ? "success" : "warning"}>
                         {row.health}
                       </Badge>
                     </td>
@@ -191,7 +198,7 @@ export function StorageRetentionRouteView() {
                     </td>
                     <td className={`py-3 ${supportingTextClassName}`}>{row.heldItems}</td>
                     <td className={`py-3 ${supportingTextClassName}`}>
-                      {summary.policyState ? summary.policyState.state : row.retentionState}
+                      {row.retentionState}
                     </td>
                   </tr>
                 ))}

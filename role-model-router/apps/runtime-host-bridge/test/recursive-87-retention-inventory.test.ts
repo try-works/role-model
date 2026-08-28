@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 
 import * as trackBRuntime from "../src/track-b-runtime.js";
+import { normalizeStorageRetentionContract } from "../src/track-b-operations.js";
 
 test("SP5 host retention inventory refuses incomplete physical storage claims", () => {
   expect(typeof trackBRuntime.validateTrackBRetentionInventory).toBe("function");
@@ -34,4 +35,25 @@ test("SP5 host retention inventory refuses incomplete physical storage claims", 
       entries: [{ id: "unknown", owner: "", health: "ready" }],
     }),
   ).toThrow(/incomplete physical storage inventory/i);
+});
+
+test("SP50 preserves distinct nested physical resources and logical classes", () => {
+  const normalized = normalizeStorageRetentionContract({
+    storageInventory: {
+      schemaVersion: "role-model.storage-registry.v2",
+      complete: true,
+      entries: [{ id: "legacy-entry" }],
+      physicalResources: [{ id: "cloud_history_r2", physicalBytes: 42 }],
+      logicalClasses: [{ id: "history", bytes: 21 }],
+    },
+  });
+
+  expect(normalized.physicalResources).toEqual([
+    { id: "cloud_history_r2", physicalBytes: 42 },
+  ]);
+  expect(normalized.logicalClasses).toEqual([{ id: "history", bytes: 21 }]);
+  expect(normalized.storageInventory).toMatchObject({
+    physicalResources: [{ id: "cloud_history_r2", physicalBytes: 42 }],
+    logicalClasses: [{ id: "history", bytes: 21 }],
+  });
 });

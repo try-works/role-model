@@ -37,8 +37,13 @@ describe("StorageRetentionRoute", () => {
       "row.physicalBytes",
       "row.heldItems",
       "row.retentionState",
+      "Unattributed physical bytes",
+      "unattributedPhysicalBytes",
+      "Global policy state",
+      'row.health === "healthy" || row.health === "ready"',
     ])
       expect(source).toContain(token);
+    expect(source).not.toContain("summary.policyState ? summary.policyState.state : row.retentionState");
     expect(source).not.toContain("Maximum bytes");
     expect(source).not.toContain("StatusPill");
     expect(source).not.toContain("FactCard");
