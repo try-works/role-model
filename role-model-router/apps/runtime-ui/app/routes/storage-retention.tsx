@@ -150,6 +150,16 @@ export function StorageRetentionRouteView() {
             value: String(summary?.storageInventory?.unavailableResourceCount ?? 0),
           },
           {
+            id: "unavailable-physical-resources",
+            label: "Unavailable physical resources",
+            value: String(
+              summary?.physicalResources.filter(
+                (resource) =>
+                  resource.observationState === "observed" && resource.health === "unavailable",
+              ).length ?? 0,
+            ),
+          },
+          {
             id: "holds",
             label: "Legal holds",
             value:
@@ -173,6 +183,10 @@ export function StorageRetentionRouteView() {
       {summary?.policyState ? (
         <p className={supportingTextClassName}>Global policy state: {summary.policyState.state}</p>
       ) : null}
+      <p className={supportingTextClassName}>
+        Unattributed physical bytes are measured physical allocation not mapped to logical storage
+        classes; they are not service health.
+      </p>
       {summary?.physicalResources ? (
         <SectionCard
           title="Physical storage inventory"
