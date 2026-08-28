@@ -1770,10 +1770,16 @@ export interface RuntimeStorageRetentionSummary {
   readonly totalBytes: number;
   readonly logicalClasses: readonly {
     readonly id: string;
-    readonly tier: string;
-    readonly scope: string;
-    readonly bytes: number;
-    readonly count: number;
+    readonly tier?: string;
+    readonly scope?: string;
+    readonly bytes?: number;
+    readonly count?: number;
+    readonly owner?: string;
+    readonly physicalResourceId?: string | null;
+    readonly observationState?: string;
+    readonly measurementSource?: string;
+    readonly observedAt?: string;
+    readonly retentionState?: string;
   }[];
   /** Backward-compatible alias for callers that still use the pre-SP8 name. */
   readonly categories: RuntimeStorageRetentionSummary["logicalClasses"];
@@ -1781,10 +1787,13 @@ export interface RuntimeStorageRetentionSummary {
     readonly id: string;
     readonly owner: string;
     readonly health: string;
-    readonly measurement: "measured" | "unavailable";
+    readonly measurement: "measured" | "remote_observed" | "unavailable";
     readonly physicalBytes: number | null;
     readonly heldItems: number;
     readonly retentionState: string;
+    readonly observationState?: string;
+    readonly measurementSource?: string;
+    readonly observedAt?: string;
   }[];
   readonly managedPolicy: boolean;
   readonly conflicts: readonly {
@@ -1881,7 +1890,8 @@ function normalizeStorageRetentionSummary(
     readonly logicalClasses?: RuntimeStorageRetentionSummary["logicalClasses"];
     readonly physicalResources?: RuntimeStorageRetentionSummary["physicalResources"];
   };
-  const logicalClasses = raw.logicalClasses ?? raw.categories ?? [];
+  const logicalClasses =
+    raw.logicalClasses ?? raw.storageInventory?.logicalClasses ?? raw.categories ?? [];
   const physicalResources =
     raw.physicalResources ??
     raw.storageInventory?.physicalResources ??
@@ -1890,10 +1900,15 @@ function normalizeStorageRetentionSummary(
   return {
     ...raw,
     logicalClasses,
-    categories: logicalClasses,
+    categories: raw.categories ?? logicalClasses,
     physicalResources,
     storageInventory: raw.storageInventory
-      ? { ...raw.storageInventory, entries: physicalResources, physicalResources }
+      ? {
+          ...raw.storageInventory,
+          entries: physicalResources,
+          physicalResources,
+          logicalClasses,
+        }
       : undefined,
   };
 }

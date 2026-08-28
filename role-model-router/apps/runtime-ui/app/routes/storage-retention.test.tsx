@@ -40,6 +40,12 @@ describe("StorageRetentionRoute", () => {
       "Unattributed physical bytes",
       "unattributedPhysicalBytes",
       "Global policy state",
+      "Physical resource mapping",
+      "Observation state",
+      "Measurement source",
+      "row.physicalResourceId",
+      "row.observationState",
+      "row.measurementSource",
       'row.health === "healthy" || row.health === "ready"',
     ])
       expect(source).toContain(token);

@@ -129,9 +129,11 @@ export function normalizeStorageRetentionContract(value: unknown): Record<string
     : [];
   const logicalClasses = Array.isArray(raw.logicalClasses)
     ? raw.logicalClasses
-    : Array.isArray(raw.categories)
-      ? raw.categories
-      : [];
+    : nestedLogicalClasses.length > 0
+      ? nestedLogicalClasses
+      : Array.isArray(raw.categories)
+        ? raw.categories
+        : [];
   const nestedPhysicalResources = Array.isArray(inventory?.physicalResources)
     ? inventory.physicalResources
     : undefined;
@@ -141,7 +143,7 @@ export function normalizeStorageRetentionContract(value: unknown): Record<string
   return {
     ...raw,
     logicalClasses,
-    categories: logicalClasses,
+    categories: Array.isArray(raw.categories) ? raw.categories : logicalClasses,
     physicalResources,
     ...(inventory
       ? {

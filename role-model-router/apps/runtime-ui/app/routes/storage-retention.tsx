@@ -166,19 +166,26 @@ export function StorageRetentionRouteView() {
       {summary?.physicalResources ? (
         <SectionCard
           title="Physical storage inventory"
-          description="Registry ownership, health, physical size, legal holds, and current retention enforcement for every writable store."
+          description="Registry ownership, health, observation state, physical size, legal holds, and row-level retention enforcement for every writable store."
         >
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead>
                 <tr>
-                  {["Store", "Owner", "Health", "Physical bytes", "Legal holds", "Enforcement"].map(
-                    (heading) => (
-                      <th className={`pb-3 font-normal ${monoEyebrowClassName}`} key={heading}>
-                        {heading}
-                      </th>
-                    ),
-                  )}
+                  {[
+                    "Store",
+                    "Owner",
+                    "Health",
+                    "Observation state",
+                    "Measurement source",
+                    "Physical bytes",
+                    "Legal holds",
+                    "Enforcement",
+                  ].map((heading) => (
+                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`} key={heading}>
+                      {heading}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
@@ -196,6 +203,12 @@ export function StorageRetentionRouteView() {
                       </Badge>
                     </td>
                     <td className={`py-3 ${supportingTextClassName}`}>
+                      {row.observationState ?? row.measurement}
+                    </td>
+                    <td className={`py-3 ${supportingTextClassName}`}>
+                      {row.measurementSource ?? row.measurement}
+                    </td>
+                    <td className={`py-3 ${supportingTextClassName}`}>
                       {row.physicalBytes === null ? "Unavailable" : formatBytes(row.physicalBytes)}
                     </td>
                     <td className={`py-3 ${supportingTextClassName}`}>{row.heldItems}</td>
@@ -209,8 +222,8 @@ export function StorageRetentionRouteView() {
       ) : null}
       <div className="grid gap-4 xl:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]">
         <SectionCard
-          title="Usage by category"
-          description="Category, tier, and scope stay independently visible. Policies downgrade capabilities before content becomes delete-eligible."
+          title="Logical classes"
+          description="Each logical class has an owner and retention contract. Physical resource mapping remains explicit so shared storage is not double counted."
         >
           {summary === null ? (
             <LoadingState label="Loading storage inventory…" />
@@ -221,11 +234,15 @@ export function StorageRetentionRouteView() {
               <table className="min-w-full text-left text-sm">
                 <thead>
                   <tr>
-                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Category</th>
+                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Logical class</th>
+                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>
+                      Physical resource mapping
+                    </th>
                     <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Scope</th>
-                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Tier</th>
-                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Records</th>
-                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Bytes</th>
+                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>
+                      Observation state
+                    </th>
+                    <th className={`pb-3 font-normal ${monoEyebrowClassName}`}>Retention state</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -235,13 +252,15 @@ export function StorageRetentionRouteView() {
                       className="border-t border-[var(--rm-border)]"
                     >
                       <td className={`py-3 ${compactTitleClassName}`}>{row.id}</td>
-                      <td className={`py-3 ${supportingTextClassName}`}>{row.scope}</td>
-                      <td className="py-3">
-                        <Badge tone="neutral">{row.tier}</Badge>
-                      </td>
-                      <td className={`py-3 ${supportingTextClassName}`}>{row.count}</td>
                       <td className={`py-3 ${supportingTextClassName}`}>
-                        {formatBytes(row.bytes)}
+                        {row.physicalResourceId ?? "Not materialized"}
+                      </td>
+                      <td className={`py-3 ${supportingTextClassName}`}>{row.scope ?? "Global"}</td>
+                      <td className={`py-3 ${supportingTextClassName}`}>
+                        {row.observationState ?? "Unobserved"}
+                      </td>
+                      <td className={`py-3 ${supportingTextClassName}`}>
+                        {row.retentionState ?? "Not configured"}
                       </td>
                     </tr>
                   ))}
