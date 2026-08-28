@@ -1668,6 +1668,10 @@ observed_data:
       runtimeStateRoot,
       scopeId: "runtime-host-legacy-craft-ask",
       unifiedRuntimeConfigPath,
+      // This assertion normalizes persisted routing configuration. It does not
+      // exercise the local vendor process, so keep it hermetic instead of
+      // fetching a mutable llama-swap release from GitHub during CI.
+      runtimeVendorStartup: "disabled",
     });
 
     const updated = await backend.updateRuntimeConfig({
