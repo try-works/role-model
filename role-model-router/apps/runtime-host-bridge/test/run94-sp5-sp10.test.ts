@@ -161,6 +161,32 @@ test("retires N-1 SQLite pending work that lacks an effort identity before dispa
   });
 });
 
+test("preserves the explicit default-effort identity when SQLite work is dequeued", async () => {
+  const root = await import("node:fs/promises").then(({ mkdtemp }) =>
+    mkdtemp(path.join(os.tmpdir(), "run94-sp5-default-effort-")),
+  );
+  roots.push(root);
+  const outbox = createTrackBPostObservationOutbox({
+    filePath: path.join(root, "post-observation-outbox.sqlite"),
+    maxItems: 8,
+  });
+  await outbox.enqueue(identity("default-effort-round-trip"));
+
+  const dispatched: Array<Record<string, unknown>> = [];
+  await outbox.drain(async (observation) => {
+    dispatched.push(observation);
+    return { status: "processed" };
+  });
+
+  expect(dispatched).toHaveLength(1);
+  expect(dispatched[0]).toMatchObject({
+    requestId: "default-effort-round-trip",
+    reasoningEffort: null,
+    effortSource: "none",
+  });
+  expect("reasoningEffort" in dispatched[0]).toBe(true);
+});
+
 test("GREEN: malformed legacy JSON fails closed without replacing the source authority", async () => {
   const root = await import("node:fs/promises").then(({ mkdtemp }) =>
     mkdtemp(path.join(os.tmpdir(), "run94-sp5-malformed-")),

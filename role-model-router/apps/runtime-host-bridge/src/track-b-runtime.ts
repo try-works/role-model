@@ -1680,7 +1680,10 @@ export function createTrackBPostObservationOutbox({
               routingDecisionId: row.routing_decision_id,
               endpointId: row.endpoint_id,
               ...(row.model_id !== null ? { modelId: row.model_id } : {}),
-              ...(row.reasoning_effort !== null ? { reasoningEffort: row.reasoning_effort } : {}),
+              // `null` is the explicit provider-default effort identity. Preserve it
+              // through the SQLite round trip so the strict variant validator can
+              // distinguish a valid default from an N-1 record with no identity.
+              reasoningEffort: row.reasoning_effort,
               ...(row.effort_source !== null ? { effortSource: row.effort_source } : {}),
               ...(row.run88_correlation_json
                 ? { run88Correlation: parseBoundedJson(row.run88_correlation_json) }
