@@ -20,14 +20,21 @@ test.describe("@recursive:94-direct-track-b-storage-graph-cloud-roundtrip @sp8 @
       } | null;
       policyState: { channel: string; state: string };
       storageInventory: {
-        entries: Array<{ measurement: string; physicalBytes: number | null; health: string }>;
+        entries: Array<{
+          measurement: string;
+          observationState: "observed" | "unobserved" | "unconfigured";
+          physicalBytes: number | null;
+          health: string;
+        }>;
       };
     };
 
-    // Honest accounting: every unmeasured entry stays unavailable with null bytes.
+    // Honest accounting is defined by observation state, not by an
+    // implementation-specific measurement source. Local, cloud, and
+    // deduplicated physical-resource observations all carry numeric bytes.
     expect(Array.isArray(inventory.storageInventory.entries)).toBe(true);
     for (const row of inventory.storageInventory.entries) {
-      if (row.measurement === "measured") expect(typeof row.physicalBytes).toBe("number");
+      if (row.observationState === "observed") expect(typeof row.physicalBytes).toBe("number");
       else expect(row.physicalBytes).toBeNull();
     }
 
