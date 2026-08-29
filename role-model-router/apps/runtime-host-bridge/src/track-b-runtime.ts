@@ -794,6 +794,11 @@ export async function stageTrackBRuntimeDistribution(options: {
   const manifest = JSON.parse(manifestBytes.toString("utf8")) as {
     readonly schemaVersion: string;
     readonly publicSourceTree?: string;
+    readonly graphRegistry?: {
+      readonly version?: number;
+      readonly artifactSha256?: string;
+      readonly kinds?: readonly unknown[];
+    };
     readonly sidecar: { readonly modulePath: string; readonly artifactSha256: string };
     readonly publicRuntimeAdapter?: {
       readonly modulePath: string;
@@ -818,6 +823,28 @@ export async function stageTrackBRuntimeDistribution(options: {
         : null;
   if (!compatibilityGeneration || manifest.extensions.length !== 13) {
     throw new Error("Track B runtime distribution manifest is unsupported or incomplete");
+  }
+  if (
+    compatibilityGeneration === "N" &&
+    (!manifest.graphRegistry ||
+      manifest.graphRegistry.version !== 1 ||
+      !/^[a-f0-9]{64}$/.test(manifest.graphRegistry.artifactSha256 ?? "") ||
+      !Array.isArray(manifest.graphRegistry.kinds))
+  ) {
+    throw new Error("Track B runtime distribution graph registry is missing or invalid");
+  }
+  if (compatibilityGeneration === "N") {
+    const graphRegistryBytes = Buffer.from(
+      JSON.stringify({
+        version: manifest.graphRegistry!.version,
+        kinds: manifest.graphRegistry!.kinds,
+      }),
+      "utf8",
+    );
+    const graphRegistryDigest = createHash("sha256").update(graphRegistryBytes).digest("hex");
+    if (graphRegistryDigest !== manifest.graphRegistry!.artifactSha256) {
+      throw new Error("Track B runtime distribution graph registry digest does not bind its contents");
+    }
   }
   if (options.expectedPublicSourceTree) {
     if (
