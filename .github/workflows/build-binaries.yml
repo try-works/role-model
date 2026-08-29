@@ -202,6 +202,32 @@ jobs:
           "private_source_commit=$($stage.private_source_commit)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           "stage_sha=$stageSha" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
+      - name: Checkout exact accepted stage public revision
+        if: env.ROLE_MODEL_BUILD_CHANNEL == 'production'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.stage_candidate.outputs.stage_sha }}
+          # The stable package is built from main, but Track B must preserve
+          # the exact accepted stage candidate's public-commit provenance.
+          path: .cache/paired-public
+          fetch-depth: 1
+
+      - name: Verify accepted stage public source identity
+        if: env.ROLE_MODEL_BUILD_CHANNEL == 'production'
+        shell: bash
+        env:
+          ACCEPTED_STAGE_SHA: ${{ steps.stage_candidate.outputs.stage_sha }}
+          EXPECTED_SOURCE_TREE: ${{ steps.public_source.outputs.source_tree }}
+        run: |
+          if [[ "$(git -C .cache/paired-public rev-parse HEAD)" != "$ACCEPTED_STAGE_SHA" ]]; then
+            echo "Accepted stage public checkout does not match the stage candidate."
+            exit 1
+          fi
+          if [[ "$(git -C .cache/paired-public rev-parse HEAD^{tree})" != "$EXPECTED_SOURCE_TREE" ]]; then
+            echo "Accepted stage public checkout does not match the production source tree."
+            exit 1
+          fi
+
       - name: Select exact paired release identity
         id: release_identity
         if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production'
@@ -291,7 +317,7 @@ jobs:
         if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production'
         working-directory: .cache/paired-private
         env:
-          ROLE_MODEL_PUBLIC_WORKTREE: ${{ github.workspace }}
+          ROLE_MODEL_PUBLIC_WORKTREE: ${{ env.ROLE_MODEL_BUILD_CHANNEL == 'production' && format('{0}/.cache/paired-public', github.workspace) || github.workspace }}
           NODE_OPTIONS: --conditions=runtime
         run: |
           corepack pnpm install --frozen-lockfile
