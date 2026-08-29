@@ -799,6 +799,17 @@ export async function stageTrackBRuntimeDistribution(options: {
       readonly artifactSha256?: string;
       readonly kinds?: readonly unknown[];
     };
+    readonly registryBindings?: {
+      readonly graphRegistry?: {
+        readonly schemaVersion?: string;
+        readonly version?: number;
+        readonly path?: string;
+      };
+      readonly storageRegistry?: {
+        readonly schemaVersion?: string;
+        readonly modulePath?: string;
+      };
+    };
     readonly sidecar: { readonly modulePath: string; readonly artifactSha256: string };
     readonly publicRuntimeAdapter?: {
       readonly modulePath: string;
@@ -832,6 +843,16 @@ export async function stageTrackBRuntimeDistribution(options: {
       !Array.isArray(manifest.graphRegistry.kinds))
   ) {
     throw new Error("Track B runtime distribution graph registry is missing or invalid");
+  }
+  if (
+    compatibilityGeneration === "N" &&
+    (manifest.registryBindings?.graphRegistry?.schemaVersion !== "role-model.graph-registry.v1" ||
+      manifest.registryBindings?.graphRegistry?.version !== 1 ||
+      manifest.registryBindings?.graphRegistry?.path !== "shared/graph/registry.json" ||
+      manifest.registryBindings.storageRegistry?.schemaVersion !== "role-model.storage-registry.v1" ||
+      manifest.registryBindings?.storageRegistry?.modulePath !== "shared/retention/index.mjs")
+  ) {
+    throw new Error("Track B runtime distribution registry bindings are missing or invalid");
   }
   if (compatibilityGeneration === "N") {
     const graphRegistryBytes = Buffer.from(

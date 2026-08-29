@@ -67,6 +67,17 @@ describe("Run 95 graph registry contract", () => {
             artifactSha256: "0".repeat(64),
             kinds: [{ id: "core.message", version: 1, category: "message", fields: [] }],
           },
+          registryBindings: {
+            graphRegistry: {
+              schemaVersion: "role-model.graph-registry.v1",
+              version: 1,
+              path: "shared/graph/registry.json",
+            },
+            storageRegistry: {
+              schemaVersion: "role-model.storage-registry.v1",
+              modulePath: "shared/retention/index.mjs",
+            },
+          },
           sidecar: { modulePath: "sidecar.mjs", artifactSha256 },
           extensions,
         }),
@@ -74,6 +85,41 @@ describe("Run 95 graph registry contract", () => {
       await expect(
         stageTrackBRuntimeDistribution({ sourceRoot: root, releaseDir: path.join(root, "release") }),
       ).rejects.toThrow(/graph registry.*digest/i);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test("SP0 refuses an N distribution that does not bind graph and storage registries", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "run95-registry-bindings-"));
+    try {
+      const bytes = Buffer.from("export async function run(){return {available:true}}\n");
+      const artifactSha256 = createHash("sha256").update(bytes).digest("hex");
+      const kinds = [{ id: "core.message", version: 1, category: "message", fields: [] }];
+      const extensions = Array.from({ length: 13 }, (_, index) => ({
+        descriptor: { id: `extension-${index}`, protocolVersion: "1.1.0", capabilities: ["health"] },
+        modulePath: `extensions/extension-${index}.mjs`,
+        artifactSha256,
+      }));
+      await mkdir(path.join(root, "extensions"));
+      await writeFile(path.join(root, "sidecar.mjs"), bytes);
+      await Promise.all(extensions.map((row) => writeFile(path.join(root, row.modulePath), bytes)));
+      await writeFile(
+        path.join(root, "track-b-runtime-manifest.json"),
+        JSON.stringify({
+          schemaVersion: "role-model.track-b-runtime-distribution.v2",
+          graphRegistry: {
+            version: 1,
+            artifactSha256: createHash("sha256").update(JSON.stringify({ version: 1, kinds })).digest("hex"),
+            kinds,
+          },
+          sidecar: { modulePath: "sidecar.mjs", artifactSha256 },
+          extensions,
+        }),
+      );
+      await expect(
+        stageTrackBRuntimeDistribution({ sourceRoot: root, releaseDir: path.join(root, "release") }),
+      ).rejects.toThrow(/registry bindings/i);
     } finally {
       await rm(root, { recursive: true, force: true });
     }

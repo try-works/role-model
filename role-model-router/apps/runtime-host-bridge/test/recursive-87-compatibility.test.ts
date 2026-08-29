@@ -11,6 +11,28 @@ import {
   trackBDistributionRequiresSQLiteMaintenance,
 } from "../src/track-b-runtime.js";
 
+const graphRegistryKinds = [
+  { id: "core.message", version: 1, category: "message", fields: [] },
+];
+const graphRegistry = {
+  version: 1,
+  artifactSha256: createHash("sha256")
+    .update(JSON.stringify({ version: 1, kinds: graphRegistryKinds }))
+    .digest("hex"),
+  kinds: graphRegistryKinds,
+};
+const registryBindings = {
+  graphRegistry: {
+    schemaVersion: "role-model.graph-registry.v1",
+    version: 1,
+    path: "shared/graph/registry.json",
+  },
+  storageRegistry: {
+    schemaVersion: "role-model.storage-registry.v1",
+    modulePath: "shared/retention/index.mjs",
+  },
+};
+
 test("AR6 refuses a package provenance stamp when the public source tree is dirty", () => {
   expect(() =>
     resolvePackagedRuntimeSourceTree({
@@ -70,6 +92,9 @@ test("SP7 stages N and N-1 distributions and refuses unsupported future versions
         path.join(root, "track-b-runtime-manifest.json"),
         JSON.stringify({
           schemaVersion: version,
+          ...(version === "role-model.track-b-runtime-distribution.v2"
+            ? { graphRegistry, registryBindings }
+            : {}),
           sidecar: { modulePath: "sidecar.mjs", artifactSha256 },
           extensions,
         }),
@@ -123,6 +148,8 @@ test("SP7 refuses a current Track B distribution built from another public sourc
       JSON.stringify({
         schemaVersion: "role-model.track-b-runtime-distribution.v2",
         publicSourceTree: "a".repeat(40),
+        graphRegistry,
+        registryBindings,
         sidecar: { modulePath: "sidecar.mjs", artifactSha256 },
         extensions,
       }),
