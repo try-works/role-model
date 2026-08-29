@@ -80,6 +80,225 @@ afterEach(async () => {
 });
 
 describe("runtime-host-bridge unified runtime backend", () => {
+  test("rehydrates a persisted alias with a temporarily unroutable known endpoint without weakening live config validation", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run94-degraded-alias-"));
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const scopeId = "run94-degraded-alias";
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+    const controlAccountId = "deepseek.personal.run94-control";
+    const controlEndpointId = `${controlAccountId}.global.deepseek-v4-flash`;
+    const { databasePath } = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId,
+      channel: "development",
+    });
+    upsertProviderAccount({
+      databasePath,
+      account: {
+        providerAccountId: controlAccountId,
+        providerId: "deepseek",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: { backend: "env", ref: "RUN94_CONTROL_API_KEY" },
+        authMode: "api-key-static",
+        regionPolicy: { mode: "prefer", regions: ["global"] },
+        baseUrlOverride: "http://127.0.0.1:3468/v1",
+        allowedModels: ["deepseek/deepseek-v4-flash"],
+        modelRoleBindings: [],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.test",
+        quotaPolicyRef: "quota.test",
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      },
+    });
+    upsertProviderAccount({
+      databasePath,
+      account: {
+        providerAccountId: "deepseek.personal.run94-normal",
+        providerId: "deepseek",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: { backend: "env", ref: "RUN94_NORMAL_API_KEY" },
+        authMode: "api-key-static",
+        regionPolicy: { mode: "prefer", regions: ["global"] },
+        baseUrlOverride: "http://127.0.0.1:3469/v1",
+        allowedModels: ["deepseek/deepseek-v4-pro"],
+        modelRoleBindings: [],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.test",
+        quotaPolicyRef: "quota.test",
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      },
+    });
+    const seedProviderCredentialEnvironment = {
+      RUN94_CONTROL_API_KEY: "test-only-control-key",
+      RUN94_NORMAL_API_KEY: "test-only-normal-key",
+    };
+    const providerCredentialEnvironment = {
+      RUN94_NORMAL_API_KEY: "test-only-normal-key",
+    };
+    const networkFetcher = async () =>
+      new Response(
+        JSON.stringify({
+          data: [{ id: "deepseek/deepseek-v4-flash" }, { id: "deepseek/deepseek-v4-pro" }],
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    const seedBackend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+      runtimeVendorStartup: "disabled",
+      providerCredentialEnvironment: seedProviderCredentialEnvironment,
+      networkFetcher,
+    });
+    await seedBackend.activateEndpoint({
+      providerAccountId: controlAccountId,
+      modelId: "deepseek/deepseek-v4-flash",
+      region: "global",
+    });
+    await seedBackend.activateEndpoint({
+      providerAccountId: "deepseek.personal.run94-normal",
+      modelId: "deepseek/deepseek-v4-pro",
+      region: "global",
+    });
+    await seedBackend.shutdown();
+    upsertProviderAccount({
+      databasePath,
+      account: {
+        providerAccountId: controlAccountId,
+        providerId: "deepseek",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: { backend: "env", ref: "RUN94_CONTROL_API_KEY" },
+        authMode: "api-key-static",
+        regionPolicy: { mode: "prefer", regions: ["global"] },
+        baseUrlOverride: "http://127.0.0.1:3468/v1",
+        allowedModels: ["deepseek/deepseek-v4-flash"],
+        modelRoleBindings: [],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.test",
+        quotaPolicyRef: "quota.test",
+        status: "disabled",
+        healthStatus: "credentials-missing",
+        rotationState: "stable",
+      },
+    });
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      [
+        'version: "1.0"',
+        "execution_mode: remote_only",
+        "model_aliases:",
+        "  run94.error:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "deepseek/deepseek-v4-flash"',
+        "    endpoint_ids:",
+        `      - "${controlEndpointId}"`,
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+      unifiedRuntimeConfigPath,
+      runtimeVendorStartup: "disabled",
+      providerCredentialEnvironment,
+      networkFetcher,
+    });
+    try {
+      await expect(backend.readRuntimeConfig()).resolves.toEqual(
+        expect.objectContaining({
+          applied: true,
+          config: expect.objectContaining({
+            modelAliases: expect.arrayContaining([
+              expect.objectContaining({
+                aliasId: "run94.error",
+                endpointIds: [controlEndpointId],
+              }),
+            ]),
+          }),
+        }),
+      );
+      await expect(backend.readRouterSummary()).resolves.toEqual(
+        expect.objectContaining({
+          aliasInventory: expect.arrayContaining([
+            expect.objectContaining({
+              aliasId: "run94.error",
+              allowEndpointIds: [],
+              readiness: "unavailable",
+              activeEndpointCount: 0,
+              healthyEndpointCount: 0,
+            }),
+          ]),
+        }),
+      );
+      await expect(
+        backend.updateRuntimeConfig({
+          modelAliases: [
+            {
+              aliasId: "new.invalid.alias",
+              mode: "basic",
+              modelIds: ["deepseek/deepseek-v4-flash"],
+              endpointIds: [controlEndpointId],
+            },
+          ],
+        }),
+      ).rejects.toThrow("ALIAS_POOL_EMPTY");
+    } finally {
+      await backend.shutdown();
+    }
+
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      [
+        'version: "1.0"',
+        "execution_mode: remote_only",
+        "model_aliases:",
+        "  unknown.persisted.alias:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "deepseek/deepseek-v4-flash"',
+        "    endpoint_ids:",
+        '      - "deepseek.personal.unknown.global.deepseek-deepseek-v4-flash"',
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    await expect(
+      createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId,
+        unifiedRuntimeConfigPath,
+        runtimeVendorStartup: "disabled",
+        providerCredentialEnvironment,
+        networkFetcher,
+      }).then(async (unexpectedBackend) => {
+        await unexpectedBackend.shutdown();
+        return unexpectedBackend;
+      }),
+    ).rejects.toThrow("ALIAS_POOL_EMPTY");
+  });
+
   test("preserves the exact LiteLLM provider account on config-owned endpoint readback", async () => {
     const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-litellm-endpoint-account-"));
     tempRoots.push(tempRoot);
@@ -1449,6 +1668,10 @@ observed_data:
       runtimeStateRoot,
       scopeId: "runtime-host-legacy-craft-ask",
       unifiedRuntimeConfigPath,
+      // This assertion normalizes persisted routing configuration. It does not
+      // exercise the local vendor process, so keep it hermetic instead of
+      // fetching a mutable llama-swap release from GitHub during CI.
+      runtimeVendorStartup: "disabled",
     });
 
     const updated = await backend.updateRuntimeConfig({

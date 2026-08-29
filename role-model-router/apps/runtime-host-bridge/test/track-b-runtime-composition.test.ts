@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -87,6 +88,70 @@ describe("production Track B composition", () => {
     await expect(
       resolveManagedArtifactKeyFiles({ channel: "production", stateRoot }),
     ).rejects.toThrow(/incomplete.*managed artifact key/i);
+  });
+
+  test("resolves packaged stage artifact keys from the release secrets directory", async () => {
+    const packageRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-stage-package-"));
+    roots.push(packageRoot);
+    const secretsDir = path.join(packageRoot, "secrets");
+    await mkdir(secretsDir, { recursive: true });
+    await writeFile(path.join(secretsDir, "artifact-digest.key"), Buffer.alloc(32, 3));
+    await writeFile(path.join(secretsDir, "artifact-encryption.key"), Buffer.alloc(32, 5));
+    const previousCwd = process.cwd();
+    process.chdir(packageRoot);
+    try {
+      const runtimeModule = await import("../src/track-b-runtime.js");
+      const resolveManagedArtifactKeyFiles = Reflect.get(
+        runtimeModule,
+        "resolveManagedArtifactKeyFiles",
+      ) as (input: { channel: "stage"; stateRoot: string }) => Promise<{
+        artifactDigestKeyFile: string;
+        artifactEncryptionKeyFile: string;
+      }>;
+      const resolved = await resolveManagedArtifactKeyFiles({
+        channel: "stage",
+        stateRoot: path.join(packageRoot, "state"),
+      });
+      expect(resolved.artifactDigestKeyFile).toBe(
+        path.join(packageRoot, "secrets", "artifact-digest.key"),
+      );
+      expect(resolved.artifactEncryptionKeyFile).toBe(
+        path.join(packageRoot, "secrets", "artifact-encryption.key"),
+      );
+    } finally {
+      process.chdir(previousCwd);
+    }
+  });
+
+  test("refuses a stage package whose packaged artifact keys are missing", async () => {
+    const packageRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-stage-package-empty-"));
+    roots.push(packageRoot);
+    const previousCwd = process.cwd();
+    process.chdir(packageRoot);
+    try {
+      const runtimeModule = await import("../src/track-b-runtime.js");
+      const resolveManagedArtifactKeyFiles = Reflect.get(
+        runtimeModule,
+        "resolveManagedArtifactKeyFiles",
+      ) as (input: { channel: "stage"; stateRoot: string }) => Promise<unknown>;
+      await expect(
+        resolveManagedArtifactKeyFiles({
+          channel: "stage",
+          stateRoot: path.join(packageRoot, "state"),
+        }),
+      ).rejects.toThrow(/managed artifact key|ENOENT/i);
+    } finally {
+      process.chdir(previousCwd);
+    }
+  });
+
+  test("packages the stage channel with self-contained secrets defaults", async () => {
+    const cliSource = readFileSync(new URL("../src/cli.ts", import.meta.url), "utf8");
+    expect(cliSource).toMatch(/secrets",\s*"recommendation-material\.json/);
+    expect(cliSource).toMatch(/secrets",\s*"destination-material\.json/);
+    expect(cliSource).toMatch(/recommendations-stage\.role-model\.dev/);
+    expect(cliSource).toMatch(/ingest-stage\.role-model\.dev\/contribution\/aggregate/);
+    expect(cliSource).toMatch(/standalone-runtime-stage/);
   });
 
   test("owns and supervises the private operations sidecar without URL injection", async () => {
@@ -199,6 +264,34 @@ describe("production Track B composition", () => {
       }),
     ).toThrow(/managed artifact keys/i);
   });
+
+  test("allows the packaged sidecar sufficient startup time to recover persisted Track B state", async () => {
+    const stateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-track-b-sidecar-persisted-state-"),
+    );
+    roots.push(stateRoot);
+    const artifactPath = path.join(stateRoot, "delayed-sidecar.mjs");
+    const source = [
+      'import http from "node:http";',
+      "setTimeout(()=>{",
+      ' const server=http.createServer((_req,res)=>res.end("ok"));',
+      ' server.listen(0,"127.0.0.1",()=>{const address=server.address();process.stdout.write(JSON.stringify({type:"ready",endpoint:`http://127.0.0.1:${address.port}`})+"\\n")});',
+      ' process.on("SIGTERM",()=>server.close(()=>process.exit(0)));',
+      "}, 11_000);",
+    ].join("\n");
+    await writeFile(artifactPath, source, "utf8");
+
+    const sidecar = createOwnedTrackBSidecarSpec({
+      artifactPath,
+      artifactSha256: createHash("sha256").update(source).digest("hex"),
+      stateRoot,
+      channel: "stage",
+    });
+
+    const child = await sidecar.launch();
+    expect(child.endpoint).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
+    await child.stop();
+  }, 20_000);
 
   test("passes cloud contribution trust and aggregate destination into the launcher-owned sidecar", async () => {
     const stateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-track-b-sidecar-cloud-"));

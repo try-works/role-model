@@ -34,7 +34,8 @@ test("Track B CI is always-on, explicit, and runs the tagged browser contract", 
   assert.match(workflow, /^ {2}track-b-runtime:/m);
   assert.doesNotMatch(workflow, /track-b-runtime:[\s\S]*?if:\s*\$\{\{\s*false\s*\}\}/);
   assert.match(workflow, /recursive-87-ci-contract\.test\.ts/);
-  assert.match(workflow, /@recursive:87-direct-track-b-semantic-completion/);
+  assert.match(workflow, /@recursive:94-direct-track-b-storage-graph-cloud-roundtrip/);
+  assert.match(workflow, /--ci-contract/);
   assert.match(workflow, /playwright install --with-deps chromium/);
   assert.match(workflow, /repository:\s*try-works\/role-model-internal/);
   assert.match(workflow, /PRIVATE_PAIRED_SHA/);
@@ -66,7 +67,7 @@ test("Track B browser gate waits for semantic readiness without weakening exact 
   const privateCheckout = trackBJob.indexOf("Checkout exact private paired repository");
   const readinessGate = trackBJob.indexOf("wait-for-runtime-readiness.mjs");
   const browserGate = trackBJob.indexOf(
-    "playwright test --grep @recursive:87-direct-track-b-semantic-completion",
+    "playwright test --grep @recursive:94-direct-track-b-storage-graph-cloud-roundtrip",
   );
 
   assert.match(trackBJob, /if \[\[ ! "\$PRIVATE_PAIRED_SHA" =~ \^\[0-9a-f\]\{40\}\$ \]\]/);

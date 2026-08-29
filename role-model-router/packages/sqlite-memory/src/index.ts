@@ -31,6 +31,8 @@ import {
   writePerformanceHistoryPolicy,
 } from "./history-policy.js";
 import {
+  LEGACY_INLINE_CAP_BYTES,
+  buildCompactRuntimeObservationStub,
   hydrateRuntimeObservationGraphPointer,
   readRuntimeObservationStorageState,
   recordRuntimeObservationGraphReference,
@@ -325,6 +327,18 @@ CREATE TABLE IF NOT EXISTS runtime_observations (
   retain_until_ms INTEGER,
   observation_json TEXT NOT NULL
 );
+CREATE TRIGGER IF NOT EXISTS runtime_observations_compact_stub_enforcement
+BEFORE INSERT ON runtime_observations
+WHEN NEW.observation_json IS NOT NULL AND length(CAST(NEW.observation_json AS BLOB)) > 16384
+BEGIN
+  SELECT RAISE(ABORT, 'runtime_observations.observation_json exceeds the 16 KiB compact stub cap');
+END;
+CREATE TRIGGER IF NOT EXISTS runtime_observations_compact_stub_update_enforcement
+BEFORE UPDATE OF observation_json ON runtime_observations
+WHEN NEW.observation_json IS NOT NULL AND length(CAST(NEW.observation_json AS BLOB)) > 16384
+BEGIN
+  SELECT RAISE(ABORT, 'runtime_observations.observation_json exceeds the 16 KiB compact stub cap');
+END;
 CREATE TABLE IF NOT EXISTS observed_performance_samples (
   sample_id TEXT PRIMARY KEY,
   endpoint_id TEXT NOT NULL,
@@ -1369,6 +1383,24 @@ export function resolveSqliteMemoryLocation(input: SqliteMemoryLocationInput): s
 
 function initializeSchema(database: DatabaseSync): void {
   database.exec(SCHEMA_SQL);
+  // Run 94 SP48 re-audit: bind the registry migration
+  // `run94-compact-stub-enforcement-v1` (migrations/0002_compact_stub_enforcement.sql)
+  // to the inline compact-stub triggers and assert its postcondition on every startup,
+  // eliminating the dead registry entry / dual source of truth.
+  const COMPACT_STUB_ENFORCEMENT_MIGRATION_ID = "run94-compact-stub-enforcement-v1";
+  runOnceMigration(database, COMPACT_STUB_ENFORCEMENT_MIGRATION_ID, true, () => {});
+  const enforcementTriggerCount = (
+    database
+      .prepare(
+        "SELECT COUNT(*) AS count FROM sqlite_master WHERE type='trigger' AND name IN ('runtime_observations_compact_stub_enforcement','runtime_observations_compact_stub_update_enforcement')",
+      )
+      .get() as { count: number }
+  ).count;
+  if (enforcementTriggerCount !== 2) {
+    throw new Error(
+      "run94-compact-stub-enforcement-v1 postcondition failed: compact stub enforcement triggers missing",
+    );
+  }
   ensurePerformanceHistorySchema(database);
   const providerAccountColumns = new Set(
     (
@@ -3143,6 +3175,21 @@ function toRuntimeTelemetryRecord(
 function runtimeTelemetryInsertValues(
   record: RuntimeTelemetryRecord,
 ): readonly (string | number | null)[] {
+  // Writer-side byte caps for every JSON telemetry column (Run 94 SP48 re-audit):
+  // the compact-telemetry authority must not retain rich inline content. Oversized
+  // columns fail closed; the bridge converts the failure into a bounded
+  // degradation receipt while the provider response is still delivered.
+  const MAX_TELEMETRY_JSON_COLUMN_BYTES = 16 * 1024;
+  const boundedJsonColumn = (value: unknown, column: string): string | null => {
+    if (value === undefined || value === null) return null;
+    const json = JSON.stringify(value);
+    if (Buffer.byteLength(json, "utf8") > MAX_TELEMETRY_JSON_COLUMN_BYTES) {
+      throw new Error(
+        `runtime telemetry ${column} exceeds ${MAX_TELEMETRY_JSON_COLUMN_BYTES} bytes; externalize rich content via artifactRefs`,
+      );
+    }
+    return json;
+  };
   return [
     record.requestId,
     record.routingDecisionId,
@@ -3189,11 +3236,11 @@ function runtimeTelemetryInsertValues(
     record.toolSideEffectState,
     record.toolingUsed ? 1 : 0,
     record.cacheState,
-    JSON.stringify(record.roleIds),
-    JSON.stringify(record.eligibleEndpointIds),
-    JSON.stringify(record.eligibleModelIds),
-    record.candidateCostSnapshot ? JSON.stringify(record.candidateCostSnapshot) : null,
-    record.selectedPricingSnapshot ? JSON.stringify(record.selectedPricingSnapshot) : null,
+    boundedJsonColumn(record.roleIds, "role_ids_json"),
+    boundedJsonColumn(record.eligibleEndpointIds, "eligible_endpoint_ids_json"),
+    boundedJsonColumn(record.eligibleModelIds, "eligible_model_ids_json"),
+    boundedJsonColumn(record.candidateCostSnapshot, "candidate_cost_snapshot_json"),
+    boundedJsonColumn(record.selectedPricingSnapshot, "selected_pricing_snapshot_json"),
     record.inputTokens,
     record.outputTokens,
     record.totalTokens,
@@ -3241,11 +3288,11 @@ function runtimeTelemetryInsertValues(
     record.taxonomyRoleId,
     record.taxonomyTaskType,
     record.taxonomyTaskVariant,
-    JSON.stringify(record.taxonomyCapabilityIds),
-    JSON.stringify(record.taxonomyModalityIds),
-    JSON.stringify(record.taxonomyToolClassIds),
+    boundedJsonColumn(record.taxonomyCapabilityIds, "taxonomy_capability_ids_json"),
+    boundedJsonColumn(record.taxonomyModalityIds, "taxonomy_modality_ids_json"),
+    boundedJsonColumn(record.taxonomyToolClassIds, "taxonomy_tool_class_ids_json"),
     record.currency,
-    record.dimensions ? JSON.stringify(record.dimensions) : null,
+    boundedJsonColumn(record.dimensions, "dimensions_json"),
   ];
 }
 
@@ -3814,6 +3861,10 @@ export function runSqliteRetentionMaintenance(input: {
   readonly idle: boolean;
   readonly lockRisk: "low" | "unknown" | "high";
 }) {
+  // Canonical default age classification (retention-policies.json
+  // local-samples-bounded.v1: retentionDays 90): fresh rows and legacy
+  // NULL-retainUntil rows are never permanently undeletable.
+  const DEFAULT_OBSERVATION_RETENTION_MS = 90 * 24 * 60 * 60 * 1_000;
   if (!input.idle || input.lockRisk !== "low") {
     throw new Error("SQLite retention maintenance requires an idle window and low lock risk");
   }
@@ -3831,6 +3882,7 @@ export function runSqliteRetentionMaintenance(input: {
     receiptId: string;
     deletedRows: number;
     heldRows: number;
+    nullRetainClassified: number;
     bounded: true;
     routingInterrupted: false;
     physicalBytesBefore: number;
@@ -3845,10 +3897,13 @@ export function runSqliteRetentionMaintenance(input: {
             database
               .prepare(
                 `SELECT COUNT(*) AS count FROM runtime_observations
-                 WHERE retain_until_ms IS NOT NULL AND retain_until_ms<=?
+                 WHERE ((retain_until_ms IS NOT NULL AND retain_until_ms<=?)
+                    OR (retain_until_ms IS NULL AND created_at_ms<=?))
                    AND request_id IN (${holds.map(() => "?").join(",")})`,
               )
-              .get(input.nowMs, ...holds) as { count: number }
+              .get(input.nowMs, input.nowMs - DEFAULT_OBSERVATION_RETENTION_MS, ...holds) as {
+              count: number;
+            }
           ).count,
         )
       : 0;
@@ -3857,14 +3912,22 @@ export function runSqliteRetentionMaintenance(input: {
       : "";
     const expired = database
       .prepare(
-        `SELECT request_id,endpoint_id FROM runtime_observations
-         WHERE retain_until_ms IS NOT NULL AND retain_until_ms<=?${exclusion}
+        `SELECT request_id,endpoint_id,retain_until_ms FROM runtime_observations
+         WHERE ((retain_until_ms IS NOT NULL AND retain_until_ms<=?)
+            OR (retain_until_ms IS NULL AND created_at_ms<=?))${exclusion}
          ORDER BY retain_until_ms ASC,request_id ASC LIMIT ?`,
       )
-      .all(input.nowMs, ...holds, input.maxDeleteRows) as Array<{
+      .all(
+        input.nowMs,
+        input.nowMs - DEFAULT_OBSERVATION_RETENTION_MS,
+        ...holds,
+        input.maxDeleteRows,
+      ) as Array<{
       request_id: string;
       endpoint_id: string;
+      retain_until_ms: number | null;
     }>;
+    const nullRetainClassified = expired.filter((row) => row.retain_until_ms === null).length;
     database.exec("BEGIN IMMEDIATE");
     try {
       const deleteObservation = database.prepare(
@@ -3893,6 +3956,7 @@ export function runSqliteRetentionMaintenance(input: {
         receiptId,
         deletedRows: expired.length,
         heldRows,
+        nullRetainClassified,
         bounded: true as const,
         routingInterrupted: false as const,
         physicalBytesBefore,
@@ -4390,7 +4454,8 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
             observation.endpointId,
             observation.conversationId,
             observation.usageEvent.timestamp_ms,
-            observation.privacyReceipt?.retainUntil ?? null,
+            observation.privacyReceipt?.retainUntil ??
+              observation.usageEvent.timestamp_ms + 90 * 24 * 60 * 60 * 1_000,
             typeof observation.taxonomyDimensions?.taxonomy_role_id === "string"
               ? observation.taxonomyDimensions.taxonomy_role_id
               : null,
@@ -4598,6 +4663,8 @@ export interface PersistRuntimeTelemetryFailureInput {
   readonly taxonomyToolClassIds?: readonly string[];
   readonly dimensions?: Record<string, unknown> | null;
   readonly observation?: Record<string, unknown> | null;
+  readonly artifactRef?: import("./legacy-migration.js").GraphArtifactReference;
+  readonly graphStore?: import("./legacy-migration.js").RuntimeObservationGraphStore;
 }
 
 export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFailureInput): void {
@@ -4610,32 +4677,88 @@ export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFai
     endpointId,
     createdAtMs,
   );
-  withSqliteBusyRetry(input.databasePath, (database) => {
-    if (input.observation) {
+  let artifactRef = input.artifactRef;
+  let createdArtifact: import("./legacy-migration.js").LegacyArtifactWriteResult | undefined;
+  if (input.observation && input.graphStore && !artifactRef) {
+    const content = JSON.stringify(input.observation);
+    const contentHash = createHash("sha256").update(content).digest("hex");
+    createdArtifact = input.graphStore.write({
+      scopeId: input.graphStore.scopeId,
+      sourceId: input.requestId,
+      content,
+      contentHash,
+    });
+    artifactRef = { scopeId: input.graphStore.scopeId, ...createdArtifact };
+  }
+  try {
+    withSqliteBusyRetry(input.databasePath, (database) => {
+      if (input.observation) {
+        const sourceObservation =
+          input.observation && typeof input.observation === "object"
+            ? (input.observation as Readonly<Record<string, unknown>>)
+            : null;
+        const stub = sourceObservation
+          ? buildCompactRuntimeObservationStub(sourceObservation)
+          : { requestId: input.requestId };
+        stub.requestId = input.requestId;
+        stub.statusFamily = "failure";
+        stub.failure = {
+          statusCode: input.statusCode,
+          errorClass: input.errorClass,
+          ...(input.latencyMs != null ? { latencyMs: input.latencyMs } : {}),
+        };
+        if (artifactRef) {
+          stub.artifactRef = artifactRef;
+          stub.graphPrimary = true;
+        }
+        // Failure rows are classification stubs. Diagnostics and inspection captures may
+        // contain provider errors or raw response bodies, so they remain graph/artifact
+        // content and are never copied into this SQLite row.
+        const payload = JSON.stringify(stub);
+        if (Buffer.byteLength(payload, "utf8") > LEGACY_INLINE_CAP_BYTES) {
+          throw new Error(
+            `runtime telemetry failure classification stub exceeds ${LEGACY_INLINE_CAP_BYTES} bytes`,
+          );
+        }
+        database
+          .prepare(
+            "INSERT OR REPLACE INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, retain_until_ms, taxonomy_role_id, taxonomy_task_type, client_request_id, request_class, observation_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          )
+          .run(
+            input.requestId,
+            routingDecisionId,
+            endpointId,
+            "conversation-main",
+            createdAtMs,
+            input.retainUntil ?? createdAtMs + 90 * 24 * 60 * 60 * 1_000,
+            input.taxonomyRoleId ?? null,
+            input.taxonomyTaskType ?? null,
+            input.clientRequestId ?? null,
+            input.requestClass ?? null,
+            payload,
+          );
+        if (artifactRef) {
+          recordRuntimeObservationGraphReference(database, {
+            observation: {
+              ...sourceObservation,
+              requestId: input.requestId,
+            },
+            artifactRef,
+          });
+        }
+      }
       database
         .prepare(
-          "INSERT OR REPLACE INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, retain_until_ms, taxonomy_role_id, taxonomy_task_type, client_request_id, request_class, observation_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          `INSERT OR REPLACE INTO runtime_telemetry_records (${RUNTIME_TELEMETRY_INSERT_COLUMNS.join(", ")}) VALUES (${RUNTIME_TELEMETRY_INSERT_COLUMNS.map(() => "?").join(", ")})`,
         )
-        .run(
-          input.requestId,
-          routingDecisionId,
-          endpointId,
-          "conversation-main",
-          createdAtMs,
-          input.retainUntil ?? null,
-          input.taxonomyRoleId ?? null,
-          input.taxonomyTaskType ?? null,
-          input.clientRequestId ?? null,
-          input.requestClass ?? null,
-          JSON.stringify(input.observation),
-        );
+        .run(...runtimeTelemetryInsertValues(telemetryRecord));
+    });
+  } catch (error) {
+    if (createdArtifact) {
+      input.graphStore?.remove?.(createdArtifact);
     }
-    database
-      .prepare(
-        `INSERT OR REPLACE INTO runtime_telemetry_records (${RUNTIME_TELEMETRY_INSERT_COLUMNS.join(", ")}) VALUES (${RUNTIME_TELEMETRY_INSERT_COLUMNS.map(() => "?").join(", ")})`,
-      )
-      .run(...runtimeTelemetryInsertValues(telemetryRecord));
-  });
+    throw error;
+  }
 }
 
 export function readRuntimeObservationBundle(

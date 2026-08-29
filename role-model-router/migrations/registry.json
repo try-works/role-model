@@ -10,6 +10,16 @@
       "idempotencyStrategy": "create-if-not-exists-and-source-id-primary-key",
       "rollbackClass": "reversible",
       "postconditionQuery": "SELECT COUNT(*) = 3 AS valid FROM sqlite_master WHERE type = 'table' AND name IN ('legacy_migration_journal','legacy_graph_migration_refs','normalized_performance_samples_v2')"
+    },
+    {
+      "migrationId": "run94-compact-stub-enforcement-v1",
+      "sqlFile": "0002_compact_stub_enforcement.sql",
+      "owner": "runtime-storage",
+      "sha256": "b0e11f67521dee4db650511baf8042a7a7c878bed74b6e0e1c409a34bec2d146",
+      "transactionMode": "idempotent_guarded",
+      "idempotencyStrategy": "create-if-not-exists-insert-and-update-triggers",
+      "rollbackClass": "reversible",
+      "postconditionQuery": "SELECT COUNT(*) = 2 AS valid FROM sqlite_master WHERE type = 'trigger' AND name IN ('runtime_observations_compact_stub_enforcement','runtime_observations_compact_stub_update_enforcement')"
     }
   ]
 }

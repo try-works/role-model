@@ -116,6 +116,44 @@ describe("process-supervisor", () => {
     expect(supervisor.getVendorStatus("mock-health")?.port).toBe(port);
   });
 
+  test("can run supervised vendors without inheriting provider credential variables", async () => {
+    const port = await allocatePort();
+    const markerPath = path.join(
+      await mkdtemp(path.join(os.tmpdir(), "role-model-supervisor-env-")),
+      "credential.txt",
+    );
+    tempRoots.push(path.dirname(markerPath));
+    const previousCredential = process.env.RUN94_OPENAI_API_KEY;
+    process.env.RUN94_OPENAI_API_KEY = "redacted-test-secret";
+    const childEnvironment = { ...process.env };
+    delete childEnvironment.RUN94_OPENAI_API_KEY;
+    const supervisor = new ProcessSupervisor({ baseEnvironment: childEnvironment });
+    supervisors.push(supervisor);
+
+    try {
+      await supervisor.startVendor({
+        vendorId: "credential-stripped",
+        command: process.execPath,
+        args: [
+          "-e",
+          `const fs=require("node:fs");const http=require("node:http");fs.writeFileSync(${JSON.stringify(markerPath)},process.env.RUN94_OPENAI_API_KEY??"");const server=http.createServer((req,res)=>{res.statusCode=req.url==="/healthz"?200:404;res.end(req.url==="/healthz"?"ok":"missing");});server.listen(Number(process.env.PORT),"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`,
+        ],
+        env: { PORT: String(port) },
+        healthCheckUrl: `http://127.0.0.1:${port}/healthz`,
+        startupTimeoutMs: 5000,
+        required: true,
+      });
+
+      expect(await readFile(markerPath, "utf8")).toBe("");
+    } finally {
+      if (previousCredential === undefined) {
+        delete process.env.RUN94_OPENAI_API_KEY;
+      } else {
+        process.env.RUN94_OPENAI_API_KEY = previousCredential;
+      }
+    }
+  });
+
   test("tracks crash callbacks when a managed vendor exits unexpectedly", async () => {
     const port = await allocatePort();
     const supervisor = new ProcessSupervisor();
@@ -164,7 +202,7 @@ describe("process-supervisor", () => {
       command: process.execPath,
       args: [
         "-e",
-        `const fs=require("node:fs");const http=require("node:http");const marker=process.env.RESTART_MARKER;const shouldCrash=!fs.existsSync(marker);if(shouldCrash){fs.writeFileSync(marker,"first");}const server=http.createServer((req,res)=>{if(req.url==="/healthz"){res.statusCode=200;res.end("ok");return;}res.statusCode=404;res.end("missing");});server.listen(Number(process.env.PORT),"127.0.0.1",()=>{console.log("vendor-ready");console.error("vendor-stderr");if(shouldCrash){setTimeout(()=>process.exit(23),100);}});const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`,
+        `const fs=require("node:fs");const http=require("node:http");const marker=process.env.RESTART_MARKER;const shouldCrash=!fs.existsSync(marker);if(shouldCrash){fs.writeFileSync(marker,"first");}let crashScheduled=false;const server=http.createServer((req,res)=>{if(req.url==="/healthz"){res.statusCode=200;res.end("ok");if(shouldCrash&&!crashScheduled){crashScheduled=true;setTimeout(()=>process.exit(23),100);}return;}res.statusCode=404;res.end("missing");});server.listen(Number(process.env.PORT),"127.0.0.1",()=>{console.log("vendor-ready");console.error("vendor-stderr");});const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`,
       ],
       env: {
         PORT: String(port),

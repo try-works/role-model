@@ -71,6 +71,7 @@ import {
 } from "@role-model-router/runtime-observability";
 import {
   buildAdvisoryMaxDifficultyRecommendation,
+  buildCompactRuntimeObservationStub,
   clearAllObservedBenchmarkData,
   clearBenchmarkRunArtifacts,
   clearObservedBenchmarkDataForEndpoint,
@@ -102,6 +103,7 @@ import {
   readRuntimeControllerAssignment,
   readRuntimeMaintenancePolicy,
   readRuntimeObservationBundle,
+  readRuntimeObservationStorageRecord,
   readRuntimeTelemetryRecord,
   readRuntimeTelemetrySourceSummaries,
   readRuntimeTelemetrySummary,
@@ -162,8 +164,18 @@ import {
 } from "./request-capability-inference.js";
 import { readPackagedRuntimeProfile, resolveRuntimeChannelProfile } from "./runtime-channel.js";
 import { type RuntimeVersionInfoRecord, resolveRuntimeVersionInfo } from "./runtime-version.js";
-import { createTrackBOperations as createTrackBOperationsFromState } from "./track-b-operations.js";
-import { createRun88RuntimeCorrelation } from "./track-b-runtime.js";
+import {
+  buildGraphEvidenceFromCapture,
+  buildLegacyTerminalFailureRecoveryCapture,
+  buildProviderEvidenceFromObservation,
+  buildVerifiersLiveExport,
+  createTrackBOperations as createTrackBOperationsFromState,
+} from "./track-b-operations.js";
+import {
+  createRun88RuntimeCorrelation,
+  createRuntimeRequestCorrelationId,
+  createTrackBFileGraphStore,
+} from "./track-b-runtime.js";
 
 import {
   type ProviderRequestCapture,
@@ -2218,6 +2230,14 @@ export interface BridgeChatCompletionsExecutionResult {
     readonly costUsd?: number;
     readonly cacheUsed?: boolean;
   };
+  readonly persistenceDegradation?: Readonly<{
+    readonly schemaVersion: "role-model.degradation-receipt.v1";
+    readonly degraded: true;
+    readonly capability: string;
+    readonly reason: string;
+    readonly routingContinues: true;
+    readonly atMs: number;
+  }>;
 }
 
 export interface BridgeResponsesExecutionResult {
@@ -2729,6 +2749,7 @@ type BridgeRequestObservation = RuntimeObservationBundle &
       readonly structuredInspectionAvailable: boolean;
       readonly reason: string;
     };
+    readonly latencyMs?: number | null;
     readonly effectiveCostUsd?: number;
     readonly costCalculationBasis?: string;
     readonly costCalculationVersion?: string;
@@ -2871,6 +2892,8 @@ export interface StartBridgeServerOptions {
   readonly mutateExtension?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly readTrackBQaExtensions?: () => Promise<readonly unknown[]>;
   readonly readTrackBShadowReceipts?: () => Promise<unknown>;
+  readonly readTrackBExtensionReadback?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly measureNoRichCaptureBaseline?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly readGraphMigration?: () => Promise<unknown>;
   readonly advanceGraphMigration?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackGraphMigration?: () => Promise<unknown>;
@@ -2933,6 +2956,8 @@ export interface StartBridgeServerOptions {
   ) => Promise<BridgeTelemetryAnalyticsResponse>;
   readonly subscribeTelemetry?: (listener: (event: RuntimeBridgeStreamEvent) => void) => () => void;
   readonly readRequestObservation?: (requestId: string) => Promise<unknown>;
+  readonly exportVerifiersTrace?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly recoverLegacyTerminalFailure?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly readEndpointProfile?: (endpointId: string) => Promise<unknown>;
   readonly readBenchmarkSuite?: () => Promise<unknown>;
   readonly runBenchmark?: (body: Record<string, unknown>) => Promise<unknown>;
@@ -3086,6 +3111,8 @@ export interface RuntimeBridgeBackend {
   mutateExtension(body: Record<string, unknown>): Promise<unknown>;
   readTrackBQaExtensions(): Promise<readonly unknown[]>;
   readTrackBShadowReceipts(): Promise<unknown>;
+  readTrackBExtensionReadback(body: Record<string, unknown>): Promise<unknown>;
+  measureNoRichCaptureBaseline(body: Record<string, unknown>): Promise<unknown>;
   readGraphMigration(): Promise<unknown>;
   advanceGraphMigration(body: Record<string, unknown>): Promise<unknown>;
   rollbackGraphMigration(): Promise<unknown>;
@@ -3186,6 +3213,8 @@ export interface RuntimeBridgeBackend {
   queryTelemetryAnalytics(body: Record<string, unknown>): Promise<BridgeTelemetryAnalyticsResponse>;
   subscribeTelemetry(listener: (event: RuntimeBridgeStreamEvent) => void): () => void;
   readRequestObservation(requestId: string): Promise<BridgeRequestObservation | null>;
+  exportVerifiersTrace(body: Record<string, unknown>): Promise<unknown>;
+  recoverLegacyTerminalFailure(body: Record<string, unknown>): Promise<unknown>;
   readEndpointProfile(endpointId: string): Promise<{
     endpointId: string;
     latestProfile: ReturnType<typeof readLatestObservedProfile>;
@@ -3376,6 +3405,10 @@ interface RuntimeBridgeSummary {
   endpointCount: number;
   scopeId: string;
   runtimeStateRoot: string;
+  processMetrics: {
+    pid: number;
+    rssBytes: number;
+  };
   readinessSummary: {
     pendingDeviceAuthorizationCount: number;
     credentialsMissingAccountCount: number;
@@ -3428,6 +3461,13 @@ export interface CreateRuntimeBridgeBackendOptions {
   };
   readonly unifiedRuntimeConfigPath?: string;
   readonly networkFetcher?: typeof fetch;
+  /**
+   * Credential values owned by this router runtime process. Callers such as Pi, validators,
+   * observers, and cloud verifiers must not populate the ambient process environment instead.
+   */
+  readonly providerCredentialEnvironment?: Readonly<Record<string, string | undefined>>;
+  /** Base environment inherited by supervised vendor children. */
+  readonly providerChildEnvironment?: Readonly<Record<string, string | undefined>>;
   readonly fixtureRoot?: string;
   readonly runtimeVendorStartup?: "enabled" | "disabled";
   readonly trackBOperationsEndpoint?: string;
@@ -3445,6 +3485,7 @@ export interface CreateRuntimeBridgeBackendOptions {
     observation: Readonly<Record<string, unknown>>,
   ) => Promise<unknown>;
   readonly trackBPostObservationReceipts?: () => Promise<unknown>;
+  readonly readTrackBExtensionReadback?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly codexAuthAdapter?: CodexAuthAdapter;
   readonly codexExecutionAdapter?: CodexExecutionAdapter;
 }
@@ -4182,11 +4223,15 @@ export function shouldRetryUpstreamExecutionOnSameEndpoint(input: {
   readonly errorClass: string;
   readonly statusCode: number;
   readonly alreadyRetried: boolean;
+  readonly fallbackEligible: boolean;
+  readonly hasOtherEligibleEndpoint: boolean;
 }): boolean {
   return (
     input.retryable &&
     !input.alreadyRetried &&
-    classifyExecutionFailureCategory(input.errorClass, input.statusCode) !== "rate_limit"
+    classifyExecutionFailureCategory(input.errorClass, input.statusCode) !== "rate_limit" &&
+    !input.fallbackEligible &&
+    input.hasOtherEligibleEndpoint
   );
 }
 
@@ -4602,7 +4647,6 @@ function buildPreExecutionFailureObservation(input: {
     observedPerformance: {
       endpointVersion: "pre-execution-failure",
       sample,
-      history: [sample],
       profile,
     },
     diagnostics,
@@ -4691,7 +4735,6 @@ function buildPreExecutionFailureObservation(input: {
       endpoint: {
         endpointId: input.endpointId,
         endpointVersion: "pre-execution-failure",
-        recentSamples: [],
       },
     },
   };
@@ -5479,6 +5522,7 @@ function createExecutionHeaders(input: {
   readonly adapterFamily: string;
   readonly routingDecisionId?: string;
   readonly costUsd?: number;
+  readonly persistenceDegradation?: Readonly<Record<string, unknown>>;
 }): Record<string, string> {
   const formattedCostUsd = formatCostUsd(input.costUsd);
   return {
@@ -5488,6 +5532,9 @@ function createExecutionHeaders(input: {
       ? { "x-role-model-routing-decision-id": input.routingDecisionId }
       : {}),
     ...(formattedCostUsd ? { "x-role-model-cost-usd": formattedCostUsd } : {}),
+    ...(input.persistenceDegradation
+      ? { "x-role-model-persistence-degradation": JSON.stringify(input.persistenceDegradation) }
+      : {}),
   };
 }
 
@@ -8182,6 +8229,7 @@ function resolveRequestedModelPool(
   inventory: RoutableInventory | null = null,
 ): {
   readonly allowEndpoints: readonly string[];
+  readonly preferredEndpointIds: readonly string[];
   readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution">;
 } {
   // A selectable endpoint row is also a valid OpenAI `model` value. Resolve
@@ -8193,13 +8241,14 @@ function resolveRequestedModelPool(
       toLegacyCredentializedEndpointId(endpoint.identity.endpoint_id) === requestedModel,
   );
   if (exactEndpoint) {
-    return { allowEndpoints: [exactEndpoint.identity.endpoint_id] };
+    return { allowEndpoints: [exactEndpoint.identity.endpoint_id], preferredEndpointIds: [] };
   }
 
   const alias = modelAliases.find((entry) => entry.aliasId === requestedModel);
   if (!alias) {
     return {
       allowEndpoints: collectAllowedEndpointIds(registry, [requestedModel]),
+      preferredEndpointIds: [],
     };
   }
 
@@ -8207,6 +8256,9 @@ function resolveRequestedModelPool(
     const resolution = resolveAliasAllowEndpoints(alias, inventory, registry);
     return {
       allowEndpoints: resolution.allowEndpoints,
+      preferredEndpointIds: (alias.preferredEndpointIds ?? []).filter((endpointId) =>
+        resolution.allowEndpoints.includes(endpointId),
+      ),
       routingDiagnostics: {
         aliasResolution: {
           requestedModel,
@@ -8236,6 +8288,9 @@ function resolveRequestedModelPool(
   );
   return {
     allowEndpoints,
+    preferredEndpointIds: (alias.preferredEndpointIds ?? []).filter((endpointId) =>
+      allowEndpoints.includes(endpointId),
+    ),
     routingDiagnostics: {
       aliasResolution: {
         requestedModel,
@@ -8246,6 +8301,17 @@ function resolveRequestedModelPool(
       },
     },
   };
+}
+
+function resolveAliasRoutingModel(
+  preferredEndpointIds: readonly string[],
+  allowEndpoints: readonly string[],
+): RoutingModelSelection | undefined {
+  const allowed = new Set(allowEndpoints);
+  const preferred = preferredEndpointIds.filter((endpointId) => allowed.has(endpointId));
+  return preferred.length > 0
+    ? { endpointId: preferred[0], preferredEndpointIds: preferred }
+    : undefined;
 }
 
 function filterRequestedModelPoolByReasoningEffort(input: {
@@ -8889,12 +8955,11 @@ export function mapChatCompletionsRequest(
   const roleModelIntent = readRoleModelIntentFromRequestBody(
     body as unknown as Record<string, unknown>,
   );
-  const { allowEndpoints: modelAllowEndpoints, routingDiagnostics } = resolveRequestedModelPool(
-    registry,
-    body.model,
-    modelAliases,
-    inventory,
-  );
+  const {
+    allowEndpoints: modelAllowEndpoints,
+    preferredEndpointIds: aliasPreferredEndpointIds,
+    routingDiagnostics,
+  } = resolveRequestedModelPool(registry, body.model, modelAliases, inventory);
   const allowEndpoints = filterRequestedModelPoolByReasoningEffort({
     registry,
     requestedModel: body.model,
@@ -9010,6 +9075,11 @@ export function mapChatCompletionsRequest(
       rolePolicyExecution.executionRequest.messages,
     );
   const sessionAffinity = buildBridgeExecutionSessionAffinity(requestOptions);
+  const aliasRoutingModel = resolveAliasRoutingModel(
+    aliasPreferredEndpointIds,
+    rolePolicyExecution.routingRequest.allowEndpoints ?? [],
+  );
+  const effectiveRoutingModel = controllerRouting.routingModel ?? aliasRoutingModel;
   return {
     routingRequest: rolePolicyExecution.routingRequest,
     executionRequest: {
@@ -9030,7 +9100,7 @@ export function mapChatCompletionsRequest(
       ...(typeof body.max_tokens === "number" ? { maxOutputTokens: body.max_tokens } : {}),
       ...(typeof body.temperature === "number" ? { temperature: body.temperature } : {}),
     },
-    ...(controllerRouting.routingModel ? { routingModel: controllerRouting.routingModel } : {}),
+    ...(effectiveRoutingModel ? { routingModel: effectiveRoutingModel } : {}),
     ...(rolePolicyExecution.routingDiagnostics
       ? { routingDiagnostics: rolePolicyExecution.routingDiagnostics }
       : {}),
@@ -9059,12 +9129,11 @@ export function mapResponsesRequest(
   const capabilityRequirements = inferResponsesCapabilityRequirements(
     body as unknown as Record<string, unknown>,
   );
-  const { allowEndpoints: modelAllowEndpoints, routingDiagnostics } = resolveRequestedModelPool(
-    registry,
-    body.model,
-    modelAliases,
-    inventory,
-  );
+  const {
+    allowEndpoints: modelAllowEndpoints,
+    preferredEndpointIds: aliasPreferredEndpointIds,
+    routingDiagnostics,
+  } = resolveRequestedModelPool(registry, body.model, modelAliases, inventory);
   const allowEndpoints = filterRequestedModelPoolByReasoningEffort({
     registry,
     requestedModel: body.model,
@@ -9188,6 +9257,11 @@ export function mapResponsesRequest(
     );
   const continuation = readResponsesContinuationRequest(body);
   const sessionAffinity = buildBridgeExecutionSessionAffinity(requestOptions);
+  const aliasRoutingModel = resolveAliasRoutingModel(
+    aliasPreferredEndpointIds,
+    rolePolicyExecution.routingRequest.allowEndpoints ?? [],
+  );
+  const effectiveRoutingModel = controllerRouting.routingModel ?? aliasRoutingModel;
 
   return {
     routingRequest: rolePolicyExecution.routingRequest,
@@ -9212,7 +9286,7 @@ export function mapResponsesRequest(
         : {}),
       ...(typeof body.temperature === "number" ? { temperature: body.temperature } : {}),
     },
-    ...(controllerRouting.routingModel ? { routingModel: controllerRouting.routingModel } : {}),
+    ...(effectiveRoutingModel ? { routingModel: effectiveRoutingModel } : {}),
     ...(rolePolicyExecution.routingDiagnostics
       ? { routingDiagnostics: rolePolicyExecution.routingDiagnostics }
       : {}),
@@ -12591,6 +12665,7 @@ function isRecoveredOauthRuntimeAccount(
 function readEnvCredentialError(
   account: ProviderAccountRecord,
   ignoredAccountIds: ReadonlySet<string> = new Set<string>(),
+  environment: Readonly<Record<string, string | undefined>> = process.env,
 ): string | null {
   if (account.credentialRef.backend !== "env") {
     return null;
@@ -12599,7 +12674,7 @@ function readEnvCredentialError(
     return null;
   }
 
-  const value = process.env[account.credentialRef.ref];
+  const value = environment[account.credentialRef.ref];
   if (typeof value === "string" && value.trim().length > 0) {
     return null;
   }
@@ -12610,9 +12685,10 @@ function readEnvCredentialError(
 function hydrateEnvProviderAccounts(
   accounts: readonly ProviderAccountRecord[],
   ignoredAccountIds: ReadonlySet<string> = new Set<string>(),
+  environment: Readonly<Record<string, string | undefined>> = process.env,
 ): ProviderAccountRecord[] {
   return accounts.map((account) => {
-    const envCredentialError = readEnvCredentialError(account, ignoredAccountIds);
+    const envCredentialError = readEnvCredentialError(account, ignoredAccountIds, environment);
     if (!envCredentialError) {
       if (
         account.authMode === "api-key-static" &&
@@ -12872,6 +12948,7 @@ async function resolveCredentialValue(
   networkFetcher?: typeof fetch,
   deviceId?: string,
   onRefreshed?: () => void,
+  credentialEnvironment: Readonly<Record<string, string | undefined>> = process.env,
 ): Promise<string> {
   const credentialRef = target.account?.credentialRef;
   if (!credentialRef) {
@@ -12879,7 +12956,7 @@ async function resolveCredentialValue(
   }
 
   if (credentialRef.backend === "env") {
-    const value = process.env[credentialRef.ref];
+    const value = credentialEnvironment[credentialRef.ref];
     if (typeof value === "string" && value.trim().length > 0) {
       return value.trim();
     }
@@ -14597,6 +14674,9 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             adapterFamily: result.adapterFamily,
             routingDecisionId: result.routingDecisionId,
             costUsd: result.vendorMetadata?.costUsd,
+            ...(result.persistenceDegradation
+              ? { persistenceDegradation: result.persistenceDegradation }
+              : {}),
           }),
         );
         return;
@@ -14796,6 +14876,87 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         return;
       }
       writeJson(response, 200, await options.readTrackBShadowReceipts());
+      return;
+    }
+
+    if (
+      request.method === "POST" &&
+      url.pathname === "/api/role-model/track-b/extension-readback"
+    ) {
+      if (!options.readTrackBExtensionReadback) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(
+          response,
+          200,
+          await options.readTrackBExtensionReadback(await readJsonBody(request)),
+        );
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+      return;
+    }
+
+    if (
+      request.method === "POST" &&
+      url.pathname === "/api/role-model/track-b/performance-baseline"
+    ) {
+      if (!options.measureNoRichCaptureBaseline) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(
+          response,
+          200,
+          await options.measureNoRichCaptureBaseline(await readJsonBody(request)),
+        );
+      } catch (error) {
+        writeJson(response, 409, {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/role-model/track-b/verifiers-export") {
+      if (!options.exportVerifiersTrace) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(response, 200, await options.exportVerifiersTrace(await readJsonBody(request)));
+      } catch (error) {
+        writeJson(response, 409, {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+      return;
+    }
+
+    if (
+      request.method === "POST" &&
+      url.pathname === "/api/role-model/track-b/recover-terminal-failure"
+    ) {
+      if (!options.recoverLegacyTerminalFailure) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(
+          response,
+          200,
+          await options.recoverLegacyTerminalFailure(await readJsonBody(request)),
+        );
+      } catch (error) {
+        writeJson(response, 409, {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
       return;
     }
 
@@ -16423,10 +16584,12 @@ export async function createRuntimeBridgeBackend(
   const createTrackBOperations = (input: Parameters<typeof createTrackBOperationsFromState>[0]) =>
     createTrackBOperationsFromState({
       ...input,
+      runtimeChannel,
       operationsEndpoint: options.trackBOperationsEndpoint,
       operationsToken: options.trackBOperationsToken,
     });
   const networkFetcher = options.networkFetcher ?? fetch;
+  const providerCredentialEnvironment = options.providerCredentialEnvironment ?? process.env;
   const codexAuthAdapter = options.codexAuthAdapter ?? createSystemCodexAuthAdapter(networkFetcher);
   const codexExecutionAdapter =
     options.codexExecutionAdapter ??
@@ -16505,7 +16668,9 @@ export async function createRuntimeBridgeBackend(
       "utf8",
     );
   }
-  const supervisor = options.unifiedRuntimeConfigPath ? new ProcessSupervisor() : null;
+  const supervisor = options.unifiedRuntimeConfigPath
+    ? new ProcessSupervisor({ baseEnvironment: options.providerChildEnvironment })
+    : null;
   const baseCatalog = await readNormalizedCatalogFile(
     path.join(
       options.repoRoot,
@@ -16561,11 +16726,6 @@ export async function createRuntimeBridgeBackend(
   const captureFixtureMap = useFixtures
     ? await readJson<CaptureFixtureMap>(path.join(fixtureBasePath, "adapter-captures.json"))
     : { byEndpointId: {}, byRequestId: {} };
-  const observabilityHistory = useFixtures
-    ? await readJson<{
-        byEndpointId: Record<string, ObservedPerformanceSample[]>;
-      }>(path.join(fixtureBasePath, "observability-history.json"))
-    : { byEndpointId: {} };
   const observabilityPolicy = useFixtures
     ? await readJson<RuntimeCapturePolicy>(path.join(fixtureBasePath, "observability-policy.json"))
     : ({ captureMode: "none" } as RuntimeCapturePolicy);
@@ -16594,6 +16754,48 @@ export async function createRuntimeBridgeBackend(
     scopeId: options.scopeId,
     channel: runtimeChannel,
   });
+  const configuredTrackBOperationsEndpoint =
+    options.trackBOperationsEndpoint ?? process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL?.trim();
+  const runtimeTrackBOperations = createTrackBOperations({
+    statePath: path.join(
+      options.runtimeStateRoot,
+      options.scopeId,
+      "track-b-production-bridge.json",
+    ),
+    catalog: [],
+  });
+  const readExactRouteCapture = async (
+    requestId: string,
+  ): Promise<Record<string, unknown> | null> => {
+    if (!configuredTrackBOperationsEndpoint) return null;
+    return (await runtimeTrackBOperations.readLocalRouteCapture({ requestId })) as Record<
+      string,
+      unknown
+    >;
+  };
+  const localGraphStore =
+    useFixtures && !configuredTrackBOperationsEndpoint
+      ? createTrackBFileGraphStore({
+          scopeId: options.scopeId,
+          rootPath: path.join(options.runtimeStateRoot, options.scopeId, "track-b-graph"),
+        })
+      : undefined;
+  const readPersistedRuntimeObservation = (requestId: string) => {
+    try {
+      return readRuntimeObservationBundle({
+        databasePath: initialization.databasePath,
+        requestId,
+        ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+      });
+    } catch (error) {
+      if (!localGraphStore && /graph artifact reader required after cutover/i.test(String(error)))
+        return readRuntimeObservationStorageRecord({
+          databasePath: initialization.databasePath,
+          requestId,
+        });
+      throw error;
+    }
+  };
   const restartCircuitState = readExecutionCircuitState(initialization.databasePath);
   const normalizedRestartCircuitState = normalizeExecutionCircuitStateForRestart(
     restartCircuitState,
@@ -17101,7 +17303,11 @@ export async function createRuntimeBridgeBackend(
     const hydratedAccounts = hydrateOauthProviderAccounts(
       options.runtimeStateRoot,
       options.scopeId,
-      hydrateEnvProviderAccounts(validation.accounts, ignoredAccountIds),
+      hydrateEnvProviderAccounts(
+        validation.accounts,
+        ignoredAccountIds,
+        providerCredentialEnvironment,
+      ),
     ).map(normalizeCodexSubscriptionAccountTruth);
     const recoveredOauthAccountIds = new Set(
       hydratedAccounts.flatMap((account, index) => {
@@ -17351,7 +17557,7 @@ export async function createRuntimeBridgeBackend(
       if (account.credentialRef?.backend !== "env") {
         return false;
       }
-      const value = process.env[account.credentialRef.ref];
+      const value = providerCredentialEnvironment[account.credentialRef.ref];
       return typeof value === "string" && value.trim().length > 0;
     };
 
@@ -17897,6 +18103,7 @@ export async function createRuntimeBridgeBackend(
         networkFetcher,
         deviceId,
         rebuildCurrentState,
+        providerCredentialEnvironment,
       );
     } catch {
       return null;
@@ -19513,6 +19720,7 @@ export async function createRuntimeBridgeBackend(
   };
   const applyUnifiedRuntimeConfigState = async (
     nextConfig: UnifiedRuntimeConfig | null,
+    applyMode: "startup" | "mutation" | "rollback" = "mutation",
   ): Promise<void> => {
     const nextNormalizedCatalog = withBuiltinLocalOpenAIProvider(
       applyUnifiedLiteLLMAdapterFamilyOverrides(
@@ -19638,11 +19846,35 @@ export async function createRuntimeBridgeBackend(
       nextModelAliases.length > 0 &&
       currentRoutableInventory.endpointIds.length > 0
     ) {
+      const aliasesToValidate = nextModelAliases.filter(
+        (alias) => !isPrimaryRoutingAliasId(alias.aliasId),
+      );
       const aliasValidation = validateAliasInventoryResolution(
-        nextModelAliases.filter((alias) => !isPrimaryRoutingAliasId(alias.aliasId)),
+        aliasesToValidate,
         currentRoutableInventory,
       );
-      if (!aliasValidation.valid) {
+      const knownEndpointIds = new Set(runtimeEndpoints.map((endpoint) => endpoint.endpointId));
+      for (const account of currentAccounts) {
+        for (const region of account.regionPolicy.regions) {
+          for (const modelId of account.allowedModels) {
+            knownEndpointIds.add(createEndpointId(account.providerAccountId, region, modelId));
+          }
+        }
+      }
+      const canRetainTemporarilyUnroutableAliases =
+        applyMode !== "mutation" &&
+        aliasesToValidate
+          .filter(
+            (alias) =>
+              resolveAliasAllowEndpoints(alias, currentRoutableInventory, currentRegistry)
+                .poolEmpty,
+          )
+          .every(
+            (alias) =>
+              (alias.endpointIds?.length ?? 0) > 0 &&
+              alias.endpointIds?.every((endpointId) => knownEndpointIds.has(endpointId)),
+          );
+      if (!aliasValidation.valid && !canRetainTemporarilyUnroutableAliases) {
         throw new Error(aliasValidation.errors[0] ?? "Alias inventory resolution failed.");
       }
     }
@@ -19665,7 +19897,7 @@ export async function createRuntimeBridgeBackend(
     await syncLocalPeerState(await readStoredPeers());
     rebuildCurrentState();
   } else {
-    await applyUnifiedRuntimeConfigState(currentUnifiedRuntimeConfig);
+    await applyUnifiedRuntimeConfigState(currentUnifiedRuntimeConfig, "startup");
   }
 
   let envelope: ReturnType<typeof assembleContextEnvelope>;
@@ -21424,10 +21656,10 @@ export async function createRuntimeBridgeBackend(
     return "/v1/chat/completions";
   };
   const readActivityCaptureByRequestId = (requestId: string): unknown | null => {
-    const observation = readRuntimeObservationBundle({
-      databasePath: initialization.databasePath,
-      requestId,
-    }) as Record<string, unknown> | null;
+    const observation = readPersistedRuntimeObservation(requestId) as Record<
+      string,
+      unknown
+    > | null;
     if (!observation) {
       return null;
     }
@@ -21467,10 +21699,10 @@ export async function createRuntimeBridgeBackend(
       });
     return recent
       .map((entry, index) => {
-        const observation = readRuntimeObservationBundle({
-          databasePath: initialization.databasePath,
-          requestId: entry.requestId,
-        }) as Record<string, unknown> | null;
+        const observation = readPersistedRuntimeObservation(entry.requestId) as Record<
+          string,
+          unknown
+        > | null;
         if (!observation) {
           return null;
         }
@@ -21991,10 +22223,10 @@ export async function createRuntimeBridgeBackend(
     });
   };
   const toRouterDecisionData = (record: BridgeTelemetryRequestRecord) => {
-    const observation = readRuntimeObservationBundle({
-      databasePath: initialization.databasePath,
-      requestId: record.requestId,
-    }) as Record<string, unknown> | null;
+    const observation = readPersistedRuntimeObservation(record.requestId) as Record<
+      string,
+      unknown
+    > | null;
     const routingDiagnostics = asObjectRecord(observation?.routingDiagnostics);
     const routingMode = asObjectRecord(routingDiagnostics?.routingMode);
     const decision = asObjectRecord(observation?.decision);
@@ -22087,10 +22319,9 @@ export async function createRuntimeBridgeBackend(
   }
 
   const readRouterDecisionData = (requestId: string) => {
-    const observation = readRuntimeObservationBundle({
-      databasePath: initialization.databasePath,
-      requestId,
-    }) as (RuntimeObservationBundle & BridgeTelemetryEndpointMeta) | null;
+    const observation = readPersistedRuntimeObservation(requestId) as
+      | (RuntimeObservationBundle & BridgeTelemetryEndpointMeta)
+      | null;
     if (!observation) {
       return null;
     }
@@ -22339,13 +22570,16 @@ export async function createRuntimeBridgeBackend(
       requestCapture: ProviderRequestCapture;
       fallbackModelIds?: readonly string[];
     }) => {
-      // File-backed credentials (OAuth, locally-saved API keys) always need direct HTTP execution
-      // so that OAuth tokens are correctly resolved and X-Msh-* device headers are applied.
+      // Router-owned credentials (env refs, OAuth, locally-saved API keys) use direct HTTP execution
+      // so credentials stay in the runtime and provider-specific headers are applied there.
       // In the unified config path, LiteLLM providers get adapterFamily "litellm-proxy", so
       // shouldUseLiveProviderExecution would return false for them — this flag bypasses that check.
+      const usesFixtureAccount =
+        target.providerAccountId !== null && fixtureAccountIds.has(target.providerAccountId);
       const useDirectExecution =
         target.account?.credentialRef.backend === "local-file" ||
-        target.account?.credentialRef.backend === "local-encrypted-file";
+        target.account?.credentialRef.backend === "local-encrypted-file" ||
+        (!usesFixtureAccount && shouldUseLiveProviderExecution(target));
       const capture = captures.byEndpointId[target.endpointId];
       const failureContext = {
         providerId: target.providerId,
@@ -22354,9 +22588,6 @@ export async function createRuntimeBridgeBackend(
         adapterFamily: target.adapterFamily,
         failurePhase: "provider_execution",
       } as const;
-      const usesFixtureAccount =
-        target.providerAccountId !== null && fixtureAccountIds.has(target.providerAccountId);
-
       if (
         !useDirectExecution &&
         capture &&
@@ -22483,7 +22714,7 @@ export async function createRuntimeBridgeBackend(
             vendorMetadata: result.metadata,
           };
         }
-        // Fall through to direct HTTP execution for file-backed credential accounts.
+        // Fall through to direct HTTP execution for router-owned credential accounts.
       }
 
       if (!useDirectExecution && !shouldUseLiveProviderExecution(target)) {
@@ -22657,6 +22888,7 @@ export async function createRuntimeBridgeBackend(
         networkFetcher,
         deviceId,
         rebuildCurrentState,
+        providerCredentialEnvironment,
       );
       const oauthVariant = (() => {
         if (!target.account || target.account.authMode !== "oauth2-device-code") return null;
@@ -22849,7 +23081,7 @@ export async function createRuntimeBridgeBackend(
       }
       return receipt;
     };
-    const persistRoutedProviderFailure = (error: UpstreamExecutionError): void => {
+    const persistRoutedProviderFailure = async (error: UpstreamExecutionError): Promise<void> => {
       if (executionOptions?.persistObservation === false || hasRuntimeTelemetryPersisted(error)) {
         return;
       }
@@ -22996,7 +23228,7 @@ export async function createRuntimeBridgeBackend(
         costSavingsSupport: "partial",
         dimensions: selectedEndpointDimensions,
       } as const;
-      const failureObservation = {
+      const baseFailureObservation = {
         requestId,
         ...(executionOptions?.requestOptions?.clientRequestId
           ? { clientRequestId: executionOptions.requestOptions.clientRequestId }
@@ -23137,10 +23369,49 @@ export async function createRuntimeBridgeBackend(
           endpoint: {
             endpointId: selectedEndpointId,
             endpointVersion: selectedCandidate?.identity.runtime_version ?? "unknown",
-            recentSamples: [],
           },
         },
       };
+      let routeCapture: Record<string, unknown> | undefined;
+      try {
+        const requestBody = executionOptions?.requestBody ?? {};
+        const captureInput = Array.isArray(requestBody.messages)
+          ? requestBody.messages
+          : Array.isArray(requestBody.input)
+            ? requestBody.input
+            : [];
+        routeCapture = (await runtimeTrackBOperations.recordLocalRouteCapture({
+          requestId,
+          routingDecisionId,
+          endpointId: selectedEndpointId,
+          modelId: selectedModelId ?? selectedEndpointId,
+          reasoningEffort: selectedReasoningEffort,
+          effortSource: selectedEffortSource,
+          messages: captureInput,
+          failure: {
+            errorClass: error.errorClass,
+            statusCode: error.statusCode,
+            message: error.message,
+          },
+          toolExecutions: [],
+        })) as Record<string, unknown>;
+      } catch {
+        // Rich failure capture remains non-routing-critical and degrades to compact telemetry.
+      }
+      const graphEvidence = routeCapture
+        ? {
+            rootArtifactId: routeCapture.rootArtifactId,
+            messageNodeIds: Array.isArray(routeCapture.messageArtifactIds)
+              ? routeCapture.messageArtifactIds
+              : [],
+            responseNodeId: routeCapture.responseArtifactId,
+            edgeCount: routeCapture.edgeCount,
+          }
+        : undefined;
+      const failureObservation = Object.freeze({
+        ...baseFailureObservation,
+        ...(graphEvidence ? { graphEvidence } : {}),
+      });
       persistRuntimeTelemetryFailure({
         databasePath: initialization.databasePath,
         requestId,
@@ -23212,7 +23483,15 @@ export async function createRuntimeBridgeBackend(
         structuredInspectionAvailable: capturePolicy.structuredInspectionAvailable,
         dimensions: selectedEndpointDimensions,
         observation: failureObservation,
+        ...(localGraphStore ? { graphStore: localGraphStore } : {}),
       });
+      if (options.trackBPostObservation) {
+        try {
+          await options.trackBPostObservation(failureObservation);
+        } catch (postObservationError) {
+          console.error("Track B failure post-observation processing failed", postObservationError);
+        }
+      }
       markRuntimeTelemetryPersisted(error);
       emitTelemetryUpdate(requestId);
     };
@@ -23312,11 +23591,30 @@ export async function createRuntimeBridgeBackend(
             error.errorClass,
             error.statusCode,
           );
+          const hasOtherEligibleEndpoint = (routed.projected.routeInput.candidates ?? []).some(
+            (candidate) => {
+              const candidateEndpointId = candidate.identity.endpoint_id;
+              if (
+                candidateEndpointId === error.endpointId ||
+                deniedEndpointIds.includes(candidateEndpointId)
+              )
+                return false;
+              const candidateEndpoint = runtimeEndpoints.find(
+                (endpoint) => endpoint.endpointId === candidateEndpointId,
+              );
+              return (
+                candidateEndpoint?.lifecycleState === "active" &&
+                candidateEndpoint.healthStatus !== "provider-unavailable"
+              );
+            },
+          );
           const shouldRetry = shouldRetryUpstreamExecutionOnSameEndpoint({
             retryable: error.retryable,
             errorClass: error.errorClass,
             statusCode: error.statusCode,
             alreadyRetried: retriedEndpointIds.has(error.endpointId),
+            fallbackEligible: error.fallbackEligible,
+            hasOtherEligibleEndpoint,
           });
           let cooldownRecord: ExecutionCircuitRecord | undefined;
           if (shouldRetry) {
@@ -23390,7 +23688,7 @@ export async function createRuntimeBridgeBackend(
             continue;
           }
           if (!error.fallbackEligible || deniedEndpointIds.includes(error.endpointId)) {
-            persistRoutedProviderFailure(error);
+            await persistRoutedProviderFailure(error);
             throw error;
           }
           deniedEndpointIds.push(error.endpointId);
@@ -23398,11 +23696,11 @@ export async function createRuntimeBridgeBackend(
           try {
             nextRoute = routeExecutionRequest(deniedEndpointIds);
           } catch {
-            persistRoutedProviderFailure(error);
+            await persistRoutedProviderFailure(error);
             throw error;
           }
           if (nextRoute.routed.decision.chosen_endpoint_id.trim().length === 0) {
-            persistRoutedProviderFailure(error);
+            await persistRoutedProviderFailure(error);
             throwUnavailableExecutionTarget({
               deniedEndpointIds: nextRoute.deniedEndpointIds,
               previousError: error,
@@ -23563,6 +23861,16 @@ export async function createRuntimeBridgeBackend(
       selectedEndpointId: execution.target.endpointId,
       outcome: cacheContinuityOutcome,
     });
+    let persistenceDegradation:
+      | Readonly<{
+          schemaVersion: "role-model.degradation-receipt.v1";
+          degraded: true;
+          capability: string;
+          reason: string;
+          routingContinues: true;
+          atMs: number;
+        }>
+      | undefined;
     if (executionOptions?.persistObservation !== false) {
       const requestRoutingMode = summarizeRequestRoutingModeDiagnostics(
         executionOptions?.requestOptions,
@@ -23620,7 +23928,7 @@ export async function createRuntimeBridgeBackend(
         decisionPortfolio.entries.find(
           (entry) => entry.endpointId === routed.decision.chosen_endpoint_id,
         )?.profileRevision ?? null;
-      const bundle = createRuntimeObservationBundle({
+      const baseBundle = createRuntimeObservationBundle({
         decision: {
           ...routed.decision,
           membership_revision: decisionMembershipRevision,
@@ -23666,13 +23974,6 @@ export async function createRuntimeBridgeBackend(
           estimatedTokenCount: envelope.estimatedTokenCount,
         },
         execution,
-        priorSamples: [
-          ...(observabilityHistory.byEndpointId[routed.decision.chosen_endpoint_id] ?? []),
-          ...readObservedPerformanceSamples({
-            databasePath: initialization.databasePath,
-            endpointId: routed.decision.chosen_endpoint_id,
-          }),
-        ],
         maintenancePolicy: readRuntimeMaintenancePolicy({
           databasePath: initialization.databasePath,
         }),
@@ -23740,58 +24041,137 @@ export async function createRuntimeBridgeBackend(
             }
           : {}),
       });
+      const correlationId = createRuntimeRequestCorrelationId({
+        scope: options.scopeId,
+        requestId,
+        routingDecisionId,
+      });
+      const run88Correlation = options.run88StageIdentity
+        ? createRun88RuntimeCorrelation({
+            requestId,
+            routingDecisionId,
+            endpointId: execution.target.endpointId,
+            releaseId: options.run88StageIdentity.releaseId,
+            sourceId: options.run88StageIdentity.sourceId,
+            deploymentId: `local-${runtimeChannel}:${options.run88StageIdentity.executableSha256}`,
+            scope: options.scopeId,
+            correlationId,
+          })
+        : undefined;
+      const bundle = Object.freeze({
+        ...baseBundle,
+        providerEvidence: buildProviderEvidenceFromObservation(
+          baseBundle as unknown as Readonly<Record<string, unknown>>,
+        ),
+        correlationId,
+        ...(run88Correlation ? { run88Correlation } : {}),
+      });
       let artifactRef:
         | { readonly scopeId: string; readonly artifactId: string; readonly contentHash: string }
         | undefined;
+      let routeCapture: Record<string, unknown> | undefined;
       try {
-        const requestBody = executionOptions?.requestBody ?? {};
-        const captureInput = Array.isArray(requestBody.messages)
-          ? requestBody.messages
-          : Array.isArray(requestBody.input)
-            ? requestBody.input
-            : [];
-        const capture = (await createTrackBOperations({
-          statePath: path.join(
-            options.runtimeStateRoot,
-            options.scopeId,
-            "track-b-production-bridge.json",
-          ),
-          catalog: [],
-        }).recordLocalRouteCapture({
-          requestId,
-          routingDecisionId,
-          endpointId: execution.target.endpointId,
-          modelId: execution.target.candidate.identity.model_id,
-          reasoningEffort: effectiveEffort.reasoningEffort,
-          effortSource: effectiveEffort.effortSource,
-          messages: captureInput,
-          outputText: execution.normalized.outputText,
-          toolExecutions: toolExecutionResult.executions,
-        })) as Record<string, unknown>;
-        if (
-          typeof capture.scope === "string" &&
-          typeof capture.rootArtifactId === "string" &&
-          typeof capture.rootArtifactDigest === "string"
-        ) {
+        if (localGraphStore) {
+          const content = JSON.stringify(bundle);
+          const contentHash = createHash("sha256").update(content).digest("hex");
+          const artifact = localGraphStore.write({
+            scopeId: localGraphStore.scopeId,
+            sourceId: requestId,
+            content,
+            contentHash,
+          });
           artifactRef = {
-            scopeId: capture.scope,
-            artifactId: capture.rootArtifactId,
-            contentHash: capture.rootArtifactDigest,
+            scopeId: localGraphStore.scopeId,
+            artifactId: artifact.artifactId,
+            contentHash: artifact.contentHash,
           };
+        } else {
+          const requestBody = executionOptions?.requestBody ?? {};
+          const captureInput = Array.isArray(requestBody.messages)
+            ? requestBody.messages
+            : Array.isArray(requestBody.input)
+              ? requestBody.input
+              : [];
+          const capture = (await runtimeTrackBOperations.recordLocalRouteCapture({
+            requestId,
+            routingDecisionId,
+            endpointId: execution.target.endpointId,
+            modelId: execution.target.candidate.identity.model_id,
+            reasoningEffort: effectiveEffort.reasoningEffort,
+            effortSource: effectiveEffort.effortSource,
+            messages: captureInput,
+            outputText: execution.normalized.outputText,
+            toolExecutions: toolExecutionResult.executions,
+          })) as Record<string, unknown>;
+          routeCapture = capture;
+          if (
+            typeof capture.scope === "string" &&
+            typeof capture.rootArtifactId === "string" &&
+            typeof capture.rootArtifactDigest === "string"
+          ) {
+            artifactRef = {
+              scopeId: capture.scope,
+              artifactId: capture.rootArtifactId,
+              contentHash: capture.rootArtifactDigest,
+            };
+          }
         }
       } catch {
         // Capture remains non-routing-critical before graph-primary cutover.
+        // Run 94 (SP2): without a graph artifact reference the SQLite row must still be
+        // bounded — persist the compact degradation stub instead of the full bundle.
       }
-      persistRuntimeObservationBundle({
-        databasePath: initialization.databasePath,
-        channel: runtimeChannel,
-        observation: bundle,
-        ...(artifactRef ? { artifactRef } : {}),
+      const graphEvidence = routeCapture
+        ? {
+            rootArtifactId: routeCapture.rootArtifactId,
+            messageNodeIds: Array.isArray(routeCapture.messageArtifactIds)
+              ? routeCapture.messageArtifactIds
+              : [],
+            responseNodeId: routeCapture.responseArtifactId,
+            edgeCount: routeCapture.edgeCount,
+          }
+        : undefined;
+      const evidenceBundle = Object.freeze({
+        ...bundle,
+        ...(graphEvidence ? { graphEvidence } : {}),
       });
+      const persistedObservation = artifactRef
+        ? evidenceBundle
+        : ({
+            ...buildCompactRuntimeObservationStub(
+              evidenceBundle as unknown as Readonly<Record<string, unknown>>,
+            ),
+            statusFamily: "degraded-capture",
+            captureDegradation: { reason: "track-b-capture-unavailable" },
+          } as never);
+      try {
+        persistRuntimeObservationBundle({
+          databasePath: initialization.databasePath,
+          channel: runtimeChannel,
+          observation: persistedObservation,
+          ...(artifactRef ? { artifactRef } : {}),
+          ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+        });
+      } catch (error) {
+        // Run 94 SP48 (R11): a storage failure after the provider response was produced must
+        // never retroactively fail the client with a raw storage error. Record a bounded
+        // degradation receipt and continue delivering the provider response.
+        persistenceDegradation = {
+          schemaVersion: "role-model.degradation-receipt.v1",
+          degraded: true,
+          capability: "runtime-observation-persist",
+          reason: String(
+            error instanceof Error ? error.message : "runtime observation persist failed",
+          ).slice(0, 256),
+          routingContinues: true,
+          atMs: Date.now(),
+        };
+        console.error("Track B runtime observation persist failed", error);
+      }
       if (options.trackBPostObservation) {
         try {
           await options.trackBPostObservation(
-            bundle as unknown as Readonly<Record<string, unknown>>,
+            evidenceBundle as unknown as Readonly<Record<string, unknown>>,
           );
         } catch (error) {
           console.error("Track B shadow post-observation processing failed", error);
@@ -23805,6 +24185,7 @@ export async function createRuntimeBridgeBackend(
       execution,
       toolExecutionResult,
       effortReceipt: effectiveEffort,
+      ...(persistenceDegradation ? { persistenceDegradation } : {}),
     };
   };
 
@@ -24314,6 +24695,7 @@ export async function createRuntimeBridgeBackend(
             dimensions,
             toolingUsed: Boolean(body.tools?.length),
           }),
+          ...(localGraphStore ? { graphStore: localGraphStore } : {}),
         });
       };
       try {
@@ -24380,15 +24762,20 @@ export async function createRuntimeBridgeBackend(
           executionInventory.endpointIds.length > 0 ? executionInventory : null,
           currentRolePolicy.taskDefinitions,
         );
-        const { execution, toolExecutionResult, routingDecisionId, effortReceipt } =
-          await executeBridgePlan(plan, requestId, body.stream, streamWriter, {
-            requestOptions,
-            requestBody: body as unknown as Record<string, unknown>,
-            requestedModel: body.model,
-            requestOperation: "chat",
-            persistObservation: !requestId.startsWith("bench-"),
-            executionSnapshot,
-          });
+        const {
+          execution,
+          toolExecutionResult,
+          routingDecisionId,
+          effortReceipt,
+          persistenceDegradation,
+        } = await executeBridgePlan(plan, requestId, body.stream, streamWriter, {
+          requestOptions,
+          requestBody: body as unknown as Record<string, unknown>,
+          requestedModel: body.model,
+          requestOperation: "chat",
+          persistObservation: !requestId.startsWith("bench-"),
+          executionSnapshot,
+        });
         const costUsd =
           execution.normalized.vendorMetadata?.costUsd ??
           execution.responseCapture.vendorMetadata?.costUsd;
@@ -24448,6 +24835,7 @@ export async function createRuntimeBridgeBackend(
                 },
               }
             : {}),
+          ...(persistenceDegradation ? { persistenceDegradation } : {}),
         };
         const trackBOperations = createTrackBOperations({
           statePath: path.join(
@@ -24460,6 +24848,11 @@ export async function createRuntimeBridgeBackend(
         try {
           await trackBOperations.recordContributionAggregate({
             requestId,
+            correlationId: createRuntimeRequestCorrelationId({
+              scope: options.scopeId,
+              requestId,
+              routingDecisionId,
+            }),
             routingDecisionId,
             endpointId: execution.target.endpointId,
             modelId: bridgeResult.model,
@@ -24624,6 +25017,11 @@ export async function createRuntimeBridgeBackend(
       try {
         await trackBOperations.recordContributionAggregate({
           requestId,
+          correlationId: createRuntimeRequestCorrelationId({
+            scope: options.scopeId,
+            requestId,
+            routingDecisionId,
+          }),
           routingDecisionId,
           endpointId: execution.target.endpointId,
           modelId: bridgeResult.model,
@@ -24654,6 +25052,7 @@ export async function createRuntimeBridgeBackend(
         endpointCount: currentRegistry.endpoints.length,
         scopeId: options.scopeId,
         runtimeStateRoot: options.runtimeStateRoot,
+        processMetrics: { pid: process.pid, rssBytes: process.memoryUsage().rss },
         readinessSummary: {
           pendingDeviceAuthorizationCount: credentialLifecycle.counts.pendingAuthorization,
           credentialsMissingAccountCount: credentialLifecycle.counts.credentialsMissing,
@@ -24789,7 +25188,7 @@ export async function createRuntimeBridgeBackend(
             await writeConfigTextAtomically(unifiedRuntimeConfigPath, previousText);
           }
           if (previousConfig) {
-            await applyUnifiedRuntimeConfigState(previousConfig);
+            await applyUnifiedRuntimeConfigState(previousConfig, "rollback");
           }
           throw error;
         }
@@ -25197,6 +25596,15 @@ export async function createRuntimeBridgeBackend(
       }
       return options.trackBPostObservationReceipts();
     },
+    async readTrackBExtensionReadback(body: Record<string, unknown>): Promise<unknown> {
+      if (!options.readTrackBExtensionReadback) {
+        throw new Error("Track B extension readback is unavailable");
+      }
+      return options.readTrackBExtensionReadback(body);
+    },
+    async measureNoRichCaptureBaseline(body: Record<string, unknown>): Promise<unknown> {
+      return runtimeTrackBOperations.measureNoRichCaptureBaseline(body);
+    },
     async readGraphMigration(): Promise<unknown> {
       return createTrackBOperations({
         statePath: path.join(
@@ -25325,9 +25733,9 @@ export async function createRuntimeBridgeBackend(
       const baseUrl = serviceUrl.endsWith("/") ? serviceUrl : `${serviceUrl}/`;
       const channel = process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL ?? "production";
       const recommendationScopeId =
-        process.env.ROLE_MODEL_AGGREGATE_SCOPE?.trim() || options.scopeId;
+        process.env.ROLE_MODEL_RECOMMENDATION_SCOPE?.trim() || options.scopeId;
       if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{0,511}$/.test(recommendationScopeId))
-        throw new Error("recommendation contribution scope is invalid");
+        throw new Error("recommendation scope is invalid");
       const statePath = path.join(
         options.runtimeStateRoot,
         options.scopeId,
@@ -25975,7 +26383,7 @@ export async function createRuntimeBridgeBackend(
           } catch (error) {
             try {
               await writeConfigTextAtomically(options.unifiedRuntimeConfigPath, previousText);
-              await applyUnifiedRuntimeConfigState(previousConfig);
+              await applyUnifiedRuntimeConfigState(previousConfig, "rollback");
               writeResolvedControllerAssignment(
                 previousPersistedController
                   ? {
@@ -26187,7 +26595,7 @@ export async function createRuntimeBridgeBackend(
                     }
                   : null,
               );
-              await applyUnifiedRuntimeConfigState(previousConfig);
+              await applyUnifiedRuntimeConfigState(previousConfig, "rollback");
             } else {
               rebuildCurrentState();
             }
@@ -27094,6 +27502,59 @@ export async function createRuntimeBridgeBackend(
       };
     },
     async readRequestObservation(requestId: string): Promise<BridgeRequestObservation | null> {
+      const attachLiveEvidence = async (
+        value: BridgeRequestObservation,
+      ): Promise<BridgeRequestObservation> => {
+        let providerEvidence: Readonly<Record<string, unknown>> | undefined;
+        let graphEvidence: Readonly<Record<string, unknown>> | undefined;
+        let liveBudgetEvidence: Readonly<Record<string, unknown>> | undefined;
+        try {
+          providerEvidence = buildProviderEvidenceFromObservation(
+            value as unknown as Readonly<Record<string, unknown>>,
+          );
+        } catch {
+          // Older telemetry-only rows may not have enough provider identity for attempt evidence.
+        }
+        try {
+          const capture = await readExactRouteCapture(requestId);
+          if (capture) {
+            graphEvidence = buildGraphEvidenceFromCapture(capture);
+            const compactRecord = readRuntimeObservationStorageRecord({
+              databasePath: initialization.databasePath,
+              requestId,
+            });
+            const captureMetrics =
+              graphEvidence.captureMetrics && typeof graphEvidence.captureMetrics === "object"
+                ? (graphEvidence.captureMetrics as Readonly<Record<string, unknown>>)
+                : {};
+            liveBudgetEvidence = Object.freeze({
+              compactObservationBytes: compactRecord
+                ? Buffer.byteLength(JSON.stringify(compactRecord))
+                : null,
+              runtimeRssBytes: process.memoryUsage().rss,
+              ...captureMetrics,
+            });
+          }
+        } catch {
+          // Rich capture is best effort. Absence remains visible as missing graph evidence.
+        }
+        return {
+          ...value,
+          correlationId:
+            typeof (value as unknown as Record<string, unknown>).correlationId === "string"
+              ? (value as unknown as Record<string, unknown>).correlationId
+              : createRuntimeRequestCorrelationId({
+                  scope: options.scopeId,
+                  requestId,
+                  routingDecisionId: String(
+                    (value as unknown as Record<string, unknown>).routingDecisionId ?? "",
+                  ),
+                }),
+          ...(providerEvidence ? { providerEvidence } : {}),
+          ...(graphEvidence ? { graphEvidence } : {}),
+          ...(liveBudgetEvidence ? { liveBudgetEvidence } : {}),
+        } as BridgeRequestObservation;
+      };
       const telemetryRecord = (() => {
         const record = readRuntimeTelemetryRecord({
           databasePath: initialization.databasePath,
@@ -27104,10 +27565,9 @@ export async function createRuntimeBridgeBackend(
         }
         return enrichTelemetryRequestRecords([record])[0] ?? null;
       })();
-      const observation = readRuntimeObservationBundle({
-        databasePath: initialization.databasePath,
+      const observation = readPersistedRuntimeObservation(
         requestId,
-      }) as RuntimeObservationBundle | null;
+      ) as RuntimeObservationBundle | null;
       if (!observation) {
         if (!telemetryRecord) {
           return null;
@@ -27134,7 +27594,7 @@ export async function createRuntimeBridgeBackend(
                 },
               ]
             : [];
-        return {
+        const fallbackObservation = {
           requestId: telemetryRecord.requestId,
           routingDecisionId: telemetryRecord.routingDecisionId,
           endpointId: telemetryRecord.endpointId,
@@ -27315,6 +27775,7 @@ export async function createRuntimeBridgeBackend(
             reason:
               "Raw observation retention has expired or the preserved observation bundle is unavailable; canonical request detail is reconstructed from the telemetry ledger.",
           },
+          latencyMs: telemetryRecord.latencyMs,
           effectiveCostUsd: telemetryRecord.effectiveCostUsd,
           costCalculationBasis: telemetryRecord.costCalculationBasis,
           costCalculationVersion: telemetryRecord.costCalculationVersion,
@@ -27326,8 +27787,9 @@ export async function createRuntimeBridgeBackend(
           costBaselineSource: telemetryRecord.costBaselineSource,
           costSavingsSupport: telemetryRecord.costSavingsSupport,
         } as unknown as BridgeRequestObservation;
+        return attachLiveEvidence(fallbackObservation);
       }
-      return {
+      const requestDetail = {
         ...observation,
         ...getTelemetryEndpointMeta(observation.endpointId),
         observationAvailability: {
@@ -27339,6 +27801,7 @@ export async function createRuntimeBridgeBackend(
         },
         ...(telemetryRecord
           ? {
+              latencyMs: telemetryRecord.latencyMs,
               effectiveCostUsd: telemetryRecord.effectiveCostUsd,
               costCalculationBasis: telemetryRecord.costCalculationBasis,
               costCalculationVersion: telemetryRecord.costCalculationVersion,
@@ -27352,6 +27815,151 @@ export async function createRuntimeBridgeBackend(
             }
           : {}),
       } satisfies BridgeRequestObservation;
+      // Successful request details expose bounded routing/execution facts.  Raw
+      // request/response inspection remains available through the dedicated
+      // activity-capture surface and is not copied into the normal observation
+      // response.  Failure details retain their bounded error inspection so
+      // operators can diagnose rejected requests without reopening rich storage.
+      const observationRecord = observation as unknown as Readonly<Record<string, unknown>>;
+      const isFailureObservation =
+        observationRecord.statusFamily === "failure" ||
+        Boolean(observationRecord.failure) ||
+        telemetryRecord?.errorClass != null;
+      if (!isFailureObservation) {
+        const { inspection: _inspection, ...boundedRequestDetail } =
+          requestDetail as BridgeRequestObservation & { inspection?: unknown };
+        return attachLiveEvidence(boundedRequestDetail as unknown as BridgeRequestObservation);
+      }
+      return attachLiveEvidence(requestDetail);
+    },
+    async recoverLegacyTerminalFailure(body: Record<string, unknown>): Promise<unknown> {
+      if (runtimeChannel === "production")
+        throw new Error(
+          "legacy terminal failure recovery is restricted to development and stage channels",
+        );
+      const allowedKeys = new Set(["requestId", "acknowledgeMetadataOnly"]);
+      const unexpectedKeys = Object.keys(body).filter((key) => !allowedKeys.has(key));
+      if (unexpectedKeys.length > 0)
+        throw new Error(
+          `legacy terminal failure recovery refuses caller-supplied content: ${unexpectedKeys.join(", ")}`,
+        );
+      if (body.acknowledgeMetadataOnly !== true)
+        throw new Error("metadata-only recovery requires explicit acknowledgement");
+      const requestId = typeof body.requestId === "string" ? body.requestId.trim() : "";
+      if (!requestId) throw new Error("legacy terminal failure recovery request id is required");
+      const observation = await backend.readRequestObservation(requestId);
+      if (!observation) throw new Error("persisted runtime observation not found for recovery");
+
+      const existingCapture = await readExactRouteCapture(requestId);
+      if (existingCapture) {
+        const existingRecovery =
+          existingCapture.recovery && typeof existingCapture.recovery === "object"
+            ? (existingCapture.recovery as Record<string, unknown>)
+            : {};
+        if (
+          existingCapture.projectionCompleteness !== "metadata_only" ||
+          existingCapture.terminalState !== "provider_error" ||
+          existingRecovery.kind !== "legacy_terminal_failure" ||
+          existingRecovery.source !== "persisted_runtime_observation"
+        )
+          throw new Error(
+            "legacy terminal failure recovery refused because graph evidence already exists",
+          );
+        const graphEvidence = buildGraphEvidenceFromCapture(existingCapture);
+        const recoveredObservation = Object.freeze({
+          ...(observation as unknown as Record<string, unknown>),
+          graphEvidence,
+          recovery: Object.freeze({
+            kind: "legacy_terminal_failure",
+            source: "persisted_runtime_observation",
+          }),
+        });
+        const extensionReceipts = options.trackBPostObservation
+          ? await options.trackBPostObservation(recoveredObservation)
+          : null;
+        const correlationId = (observation as unknown as Record<string, unknown>).correlationId;
+        const receiptIdentity = JSON.stringify({
+          requestId,
+          routingDecisionId: observation.routingDecisionId,
+          correlationId,
+          graphRootArtifactId: graphEvidence.rootArtifactId,
+        });
+        return Object.freeze({
+          schemaVersion: "role-model.legacy-terminal-failure-recovery.v1",
+          receiptId: `legacy-recovery-${createHash("sha256").update(receiptIdentity).digest("hex")}`,
+          status: "already_recovered",
+          requestId,
+          routingDecisionId: observation.routingDecisionId,
+          correlationId,
+          graphRootArtifactId: existingCapture.rootArtifactId,
+          responseNodeId: graphEvidence.responseNodeId,
+          projectionCompleteness: "metadata_only",
+          recovery: Object.freeze({
+            kind: "legacy_terminal_failure",
+            source: "persisted_runtime_observation",
+          }),
+          extensionProcessing: extensionReceipts === null ? "not_configured" : "completed",
+        });
+      }
+
+      const captureInput = buildLegacyTerminalFailureRecoveryCapture(
+        observation as unknown as Readonly<Record<string, unknown>>,
+      );
+      await runtimeTrackBOperations.recordLocalRouteCapture(
+        captureInput as Record<string, unknown>,
+      );
+      const capture = await readExactRouteCapture(requestId);
+      if (!capture) throw new Error("metadata-only recovery did not commit durable graph evidence");
+      const graphEvidence = buildGraphEvidenceFromCapture(capture);
+      const recoveredObservation = Object.freeze({
+        ...(observation as unknown as Record<string, unknown>),
+        graphEvidence,
+        recovery: Object.freeze({
+          kind: "legacy_terminal_failure",
+          source: "persisted_runtime_observation",
+        }),
+      });
+      const extensionReceipts = options.trackBPostObservation
+        ? await options.trackBPostObservation(recoveredObservation)
+        : null;
+      const correlationId = (observation as unknown as Record<string, unknown>).correlationId;
+      const receiptIdentity = JSON.stringify({
+        requestId,
+        routingDecisionId: observation.routingDecisionId,
+        correlationId,
+        graphRootArtifactId: graphEvidence.rootArtifactId,
+      });
+      return Object.freeze({
+        schemaVersion: "role-model.legacy-terminal-failure-recovery.v1",
+        receiptId: `legacy-recovery-${createHash("sha256").update(receiptIdentity).digest("hex")}`,
+        status: "recovered",
+        requestId,
+        routingDecisionId: observation.routingDecisionId,
+        correlationId,
+        graphRootArtifactId: graphEvidence.rootArtifactId,
+        responseNodeId: graphEvidence.responseNodeId,
+        projectionCompleteness: "metadata_only",
+        recovery: Object.freeze({
+          kind: "legacy_terminal_failure",
+          source: "persisted_runtime_observation",
+        }),
+        extensionProcessing: extensionReceipts === null ? "not_configured" : "completed",
+      });
+    },
+    async exportVerifiersTrace(body: Record<string, unknown>): Promise<unknown> {
+      if (runtimeChannel === "production")
+        throw new Error("live Verifiers export is restricted to development and stage channels");
+      const requestId = typeof body.requestId === "string" ? body.requestId : "";
+      const observation = await backend.readRequestObservation(requestId);
+      if (!observation) throw new Error("runtime observation not found for Verifiers export");
+      const capture = await readExactRouteCapture(requestId);
+      if (!capture) throw new Error("exact live graph is unavailable for Verifiers export");
+      return buildVerifiersLiveExport({
+        channel: runtimeChannel,
+        request: body,
+        observation: observation as unknown as Readonly<Record<string, unknown>>,
+        capture,
+      });
     },
     async listRecentRequestObservations(): Promise<
       readonly ReturnType<typeof listRecentRuntimeObservations>[number][]

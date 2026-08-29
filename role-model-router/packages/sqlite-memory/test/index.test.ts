@@ -121,6 +121,7 @@ describe("initializeSqliteMemory", () => {
       { migration_id: "run77-recent-observations-index-v1" },
       { migration_id: "run91-effort-instance-identity-v1" },
       { migration_id: "run91-operational-profile-reprojection-v1" },
+      { migration_id: "run94-compact-stub-enforcement-v1" },
     ]);
   });
 
@@ -1298,7 +1299,7 @@ describe("initializeSqliteMemory", () => {
           "conversation-projected",
           1000,
           "client-projected",
-          "not-json-and-intentionally-large".repeat(100_000),
+          "not-json-and-intentionally-large".repeat(500),
         );
       database.close();
 

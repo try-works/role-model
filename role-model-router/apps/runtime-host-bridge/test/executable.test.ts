@@ -102,6 +102,48 @@ async function collectRuntimeDependencyGraph(): Promise<
 }
 
 describe("runtime-host-bridge executable packaging", () => {
+  test("resolves an explicit external release root so dev and stage package trees cannot overwrite each other", () => {
+    const distFixture =
+      process.platform === "win32"
+        ? "D:/repo/role-model-router/dist"
+        : "/repo/role-model-router/dist";
+    const explicitRootFixture =
+      process.platform === "win32"
+        ? "D:/TEMP/run94-packages/development"
+        : "/tmp/run94-packages/development";
+    const defaultDir = packageSea.resolveReleaseOutputDirectory({
+      distRoot: distFixture,
+      releaseTarget: "win32-x64",
+      env: {},
+    });
+    expect(path.normalize(defaultDir)).toBe(
+      path.normalize(path.join(distFixture, "release", "win32-x64")),
+    );
+
+    const isolatedDir = packageSea.resolveReleaseOutputDirectory({
+      distRoot: distFixture,
+      releaseTarget: "win32-x64",
+      env: { ROLE_MODEL_RELEASE_OUTPUT_ROOT: explicitRootFixture },
+    });
+    expect(path.normalize(isolatedDir)).toBe(
+      path.normalize(path.join(explicitRootFixture, "win32-x64")),
+    );
+    expect(() =>
+      packageSea.resolveReleaseOutputDirectory({
+        distRoot: distFixture,
+        releaseTarget: "../stage",
+        env: {},
+      }),
+    ).toThrow(/target/i);
+    expect(() =>
+      packageSea.resolveReleaseOutputDirectory({
+        distRoot: distFixture,
+        releaseTarget: "win32-x64",
+        env: { ROLE_MODEL_RELEASE_OUTPUT_ROOT: "relative/output" },
+      }),
+    ).toThrow(/absolute/i);
+  });
+
   test("does not treat imported package-sea modules as direct CLI execution", () => {
     expect(
       (

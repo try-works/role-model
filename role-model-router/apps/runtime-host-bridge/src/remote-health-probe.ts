@@ -1,3 +1,5 @@
+import { resolveOpenAIProviderUpstreamModelId } from "@role-model-router/provider-openai";
+
 export type RemoteHealthProbeReason =
   | "healthy"
   | "auth"
@@ -337,7 +339,7 @@ export async function probeRemoteEndpointAdmission(
 
   const probeUrl = buildChatCompletionsProbeUrl(context.apiBase);
   const body = {
-    model: context.modelId,
+    model: resolveOpenAIProviderUpstreamModelId(context.modelId),
     messages: [{ role: "user", content: "role-model admission readiness probe" }],
     max_tokens: 1,
     stream: false,

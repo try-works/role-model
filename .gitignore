@@ -16,3 +16,5 @@ tmp-role-model-launch.log
 role-model-router/apps/runtime-ui/build/
 role-model-router/apps/runtime-ui/test-results/
 /.recursive/config/recursive-router-discovered.json
+# CI paired-checkout directory (checkout of try-works/role-model-internal nested by the track-b lane)
+_private/

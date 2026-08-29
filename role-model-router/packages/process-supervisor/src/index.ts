@@ -24,6 +24,11 @@ export interface StartVendorOptions {
   readonly required: boolean;
 }
 
+export interface ProcessSupervisorOptions {
+  /** Base environment for supervised children. Defaults to the owning runtime process environment. */
+  readonly baseEnvironment?: Readonly<Record<string, string | undefined>>;
+}
+
 export interface ManagedVendorStatus {
   readonly vendorId: string;
   readonly pid: number;
@@ -164,11 +169,14 @@ function beginChildLifecycle(record: ManagedVendorRecord, child: ChildProcess): 
   });
 }
 
-function spawnVendorProcess(record: ManagedVendorRecord): ChildProcess {
+function spawnVendorProcess(
+  record: ManagedVendorRecord,
+  baseEnvironment: Readonly<Record<string, string | undefined>>,
+): ChildProcess {
   const child = spawn(record.options.command, [...(record.options.args ?? [])], {
     cwd: record.options.cwd,
     env: {
-      ...process.env,
+      ...baseEnvironment,
       ...record.options.env,
     },
     stdio: ["ignore", "pipe", "pipe"],
@@ -219,6 +227,12 @@ export class ProcessSupervisor {
   private readonly managedVendors = new Map<string, ManagedVendorRecord>();
 
   private readonly crashListeners: VendorCrashListener[] = [];
+
+  private readonly baseEnvironment: Readonly<Record<string, string | undefined>>;
+
+  constructor(options: ProcessSupervisorOptions = {}) {
+    this.baseEnvironment = options.baseEnvironment ?? process.env;
+  }
 
   onVendorCrash(listener: VendorCrashListener): void {
     this.crashListeners.push(listener);
@@ -274,7 +288,7 @@ export class ProcessSupervisor {
     record.stopping = false;
     this.managedVendors.set(options.vendorId, record);
 
-    const child = spawnVendorProcess(record);
+    const child = spawnVendorProcess(record, this.baseEnvironment);
     child.once("exit", (exitCode) => {
       void this.handleUnexpectedExit(record, exitCode);
     });
@@ -384,7 +398,7 @@ export class ProcessSupervisor {
     }
 
     try {
-      const child = spawnVendorProcess(record);
+      const child = spawnVendorProcess(record, this.baseEnvironment);
       child.once("exit", (exitCode) => {
         void this.handleUnexpectedExit(record, exitCode);
       });

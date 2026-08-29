@@ -53,6 +53,7 @@
     "test:track-b-router-continuity": "node scripts/track-b/run-command-test.mjs TB03-CMD-02",
     "test:track-b-capacity": "node scripts/track-b/run-command-test.mjs TB03-CMD-03",
     "storage:audit": "node scripts/track-b/run-command-test.mjs TB04-CMD-01",
+    "storage:audit:read-only": "node scripts/track-b/storage-audit.mjs",
     "storage:migrate:dry-run": "node scripts/track-b/run-command-test.mjs TB04-CMD-02",
     "test:track-b-performance-history": "node scripts/track-b/run-command-test.mjs TB04-CMD-03",
     "storage:migrate:verify-parity": "node scripts/track-b/run-command-test.mjs TB04-CMD-04",
