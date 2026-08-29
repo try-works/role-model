@@ -268,6 +268,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Production Track B is deliberately built against the immutable public
+      # Stage checkout, not the main checkout.  Install its workspace links
+      # separately so esbuild can resolve the public runtime packages without
+      # changing the Stage-source provenance binding.
+      - name: Install exact accepted stage public dependencies
+        if: env.ROLE_MODEL_BUILD_CHANNEL == 'production'
+        working-directory: .cache/paired-public
+        run: corepack pnpm install --frozen-lockfile
+
       - name: Build UI
         run: pnpm --filter @role-model-router/runtime-ui run build
 
