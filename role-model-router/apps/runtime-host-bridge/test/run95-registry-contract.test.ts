@@ -14,6 +14,22 @@ describe("Run 95 graph registry contract", () => {
     expect(() =>
       host.validateGraphRegistry({ version: 1, kinds: [{ id: "core.message", version: 1 }] }),
     ).toThrow(/incomplete/i);
+    expect(() =>
+      host.validateGraphRegistry({
+        version: 1,
+        kinds: [
+          { id: "core.message", version: 1, category: "node", fields: [] },
+          { id: "core.message", version: 1, category: "node", fields: [] },
+        ],
+      }),
+    ).toThrow(/duplicate/i);
+    expect(() => host.validateGraphRegistry({ version: 2, kinds: [] })).toThrow(/invalid/i);
+    expect(
+      host.validateGraphRegistry({
+        version: 1,
+        kinds: [{ id: "extension.synthetic.archive", version: 9, category: "archive", fields: [] }],
+      }).kinds[0]?.id,
+    ).toBe("extension.synthetic.archive");
   });
 
   test("SP0 refuses an N distribution that omits its graph registry", async () => {
