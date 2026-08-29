@@ -97,6 +97,18 @@ test("production rebuilds Track B against the accepted stage public commit", () 
   );
 });
 
+test("production installs dependencies in the accepted stage checkout before Track B bundling", () => {
+  assert.match(workflow, /Install exact accepted stage public dependencies/);
+  assert.match(
+    workflow,
+    /Install exact accepted stage public dependencies[\s\S]*?working-directory:\s*\.cache\/paired-public[\s\S]*?corepack pnpm install --frozen-lockfile/,
+  );
+  assert.match(
+    workflow,
+    /Install exact accepted stage public dependencies[\s\S]*?if: env\.ROLE_MODEL_BUILD_CHANNEL == 'production'/,
+  );
+});
+
 test("stable tags require a manually accepted exact stage candidate", () => {
   assert.match(workflow, /rc-approved/);
   assert.match(workflow, /candidate\.workflow_run\.head_sha/);
