@@ -87,6 +87,16 @@ test("production rejects a stage candidate whose packaged commit is not its acce
   assert.match(workflow, /Stage candidate public commit mismatch/);
 });
 
+test("production rebuilds Track B against the accepted stage public commit", () => {
+  assert.match(workflow, /Checkout exact accepted stage public revision/);
+  assert.match(workflow, /ref:\s*\$\{\{ steps\.stage_candidate\.outputs\.stage_sha \}\}/);
+  assert.match(workflow, /path:\s*\.cache\/paired-public/);
+  assert.match(
+    workflow,
+    /ROLE_MODEL_PUBLIC_WORKTREE:[\s\S]*?ROLE_MODEL_BUILD_CHANNEL == 'production'[\s\S]*?\.cache\/paired-public/,
+  );
+});
+
 test("stable tags require a manually accepted exact stage candidate", () => {
   assert.match(workflow, /rc-approved/);
   assert.match(workflow, /candidate\.workflow_run\.head_sha/);
