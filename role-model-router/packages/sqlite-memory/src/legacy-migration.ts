@@ -322,10 +322,7 @@ function classifyLegacyRow(
   try {
     const parsed = JSON.parse(observationJson);
     if (!isGraphObservationPointer(parsed)) return { kind: "import" };
-    if (
-      typeof parsed.artifactRef === "object" &&
-      canonicalPointerValidator?.(parsed)
-    ) {
+    if (typeof parsed.artifactRef === "object" && canonicalPointerValidator?.(parsed)) {
       return { kind: "canonical", reference: parsed.artifactRef };
     }
     return { kind: "quarantine", reason: "unresolved_graph_pointer" };
@@ -396,8 +393,7 @@ function sourceProof(
           // Run 94 SP6: a pointer-shaped row without a matching migration ref is
           // unclassified residue — quarantined and excluded from parity inputs.
           const confirmedCanonical =
-            typeof parsed.artifactRef === "object" &&
-            canonicalPointerValidator?.(parsed) === true;
+            typeof parsed.artifactRef === "object" && canonicalPointerValidator?.(parsed) === true;
           if (!row.source_hash && !confirmedCanonical) continue;
           rowHash = row.source_hash ?? sha256(row.observation_json);
         }
@@ -905,7 +901,8 @@ export class LegacySqliteMigration {
       const quarantined = rows.flatMap((row) =>
         row.imported_source_id
           ? []
-          : classifyLegacyRow(row.observation_json, this.#canonicalPointerValidator).kind === "quarantine"
+          : classifyLegacyRow(row.observation_json, this.#canonicalPointerValidator).kind ===
+              "quarantine"
             ? [row]
             : [],
       );
@@ -1079,7 +1076,8 @@ export class LegacySqliteMigration {
               sourceHash,
               classification.reference.scopeId,
               classification.reference.artifactId,
-              classification.reference.artifactPath ?? `artifact://${classification.reference.scopeId}/${classification.reference.artifactId}`,
+              classification.reference.artifactPath ??
+                `artifact://${classification.reference.scopeId}/${classification.reference.artifactId}`,
               classification.reference.contentHash,
               this.#now(),
             );
@@ -1165,7 +1163,15 @@ export class LegacySqliteMigration {
            SET source_count = ?, source_hash = ?, target_count = ?, target_hash = ?, cursor = ?, updated_at_ms = ?
            WHERE migration_id = ?`,
         )
-        .run(source.count, source.hash, proof.count, proof.hash, rows.at(-1)?.request_id ?? null, this.#now(), MIGRATION_ID);
+        .run(
+          source.count,
+          source.hash,
+          proof.count,
+          proof.hash,
+          rows.at(-1)?.request_id ?? null,
+          this.#now(),
+          MIGRATION_ID,
+        );
       return { migratedCount, pendingCount: pending };
     } finally {
       database.close();

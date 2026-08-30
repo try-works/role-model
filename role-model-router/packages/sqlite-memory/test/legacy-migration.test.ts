@@ -346,7 +346,8 @@ describe("TB04 real SQLite legacy migration", () => {
           artifactPath: `artifact://${sourceId}`,
           contentHash,
         }),
-        canonicalPointerValidator: candidate => verified && candidate.requestId === pointer.requestId,
+        canonicalPointerValidator: (candidate) =>
+          verified && candidate.requestId === pointer.requestId,
       });
 
     const unresolved = createMigration(false);
