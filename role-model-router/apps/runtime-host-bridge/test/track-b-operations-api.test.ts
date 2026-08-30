@@ -78,7 +78,9 @@ describe("Track B operations APIs", () => {
         queued: 0,
       });
     } finally {
-      await new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+      await new Promise<void>((resolve, reject) =>
+        server.close((error) => (error ? reject(error) : resolve())),
+      );
     }
   });
 
@@ -1692,9 +1694,23 @@ describe("Track B operations APIs", () => {
           if (url === "https://recommendations.example/api/role-model/recommendations/resolve") {
             expect(init?.method).toBe("POST");
             expect(new Headers(init?.headers).get("authorization")).toBe("Bearer service-token");
-            expect(JSON.parse(String(init?.body))).toMatchObject({
+            const resolveRequest = JSON.parse(String(init?.body));
+            expect(resolveRequest).toMatchObject({
               scopeId: "public:deepseek-high",
             });
+            if (resolveRequest.activeChannelSequence === 2) {
+              return new Response(
+                JSON.stringify({
+                  contract: "RecommendationResolveResponseV1",
+                  channel: "development",
+                  status: "not_modified",
+                  snapshotId: "snapshot-pack-downloaded",
+                  channelSequence: 2,
+                }),
+                { status: 200, headers: { "content-type": "application/json" } },
+              );
+            }
+            expect(resolveRequest.activeChannelSequence).toBe(0);
             return new Response(
               JSON.stringify({
                 contract: "RecommendationResolveResponseV1",
@@ -1756,6 +1772,7 @@ describe("Track B operations APIs", () => {
           confidence: 0.92,
         },
       ]);
+      await expect(backend.downloadRecommendations()).resolves.toEqual(downloaded);
       const applied = await backend.applyRecommendation({ id: "recommendation-pack-downloaded" });
       expect(applied).toMatchObject({
         activePack: {

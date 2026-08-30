@@ -1818,6 +1818,9 @@ export function createTrackBOperations({
     async listRecommendations(): Promise<readonly RecommendationRecord[]> {
       return (await readState(statePath)).recommendations ?? [];
     },
+    async readRecommendationRevision(): Promise<number> {
+      return (await readState(statePath)).recommendationRevision ?? 0;
+    },
     async importRecommendationBundle(
       bundle: Record<string, unknown>,
       verificationKey: string,

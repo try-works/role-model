@@ -25748,6 +25748,7 @@ export async function createRuntimeBridgeBackend(
       const contribution = (await operations.readContributionState()) as {
         readonly recommendationTier?: string;
       };
+      const activeChannelSequence = await operations.readRecommendationRevision();
       let run88CorrelationHeader: Record<string, string> = {};
       if (runtimeChannel === "stage") {
         const identity = options.run88StageIdentity;
@@ -25785,7 +25786,7 @@ export async function createRuntimeBridgeBackend(
           releaseTrack: "stable",
           recommendationTier: contribution.recommendationTier ?? "advanced",
           clientSchemaVersions: ["1.0.0"],
-          activeChannelSequence: 0,
+          activeChannelSequence,
           identityKind: "anonymous_public",
           scopeId: recommendationScopeId,
           boundaryProtocolVersion: "1.1",
