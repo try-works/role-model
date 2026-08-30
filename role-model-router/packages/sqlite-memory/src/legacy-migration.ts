@@ -16,6 +16,52 @@ export type LegacyMigrationState =
   | "rolled_back"
   | "failed";
 
+export type OccurrenceMigrationState =
+  | "v2_primary"
+  | "occurrence_shadow"
+  | "occurrence_parity"
+  | "occurrence_primary"
+  | "v2_archive_retired";
+
+/**
+ * Cross-repository cutover guard shared by the public SQLite reader and the
+ * private occurrence authority. It does not mutate journal state: callers must
+ * persist the accepted transition atomically with their own cursor/checkpoint.
+ */
+export function validateOccurrenceMigrationTransition(input: {
+  readonly from: OccurrenceMigrationState;
+  readonly to: OccurrenceMigrationState;
+  readonly parityVerified: boolean;
+  readonly backupVerified: boolean;
+  readonly consumersVerified: boolean;
+  readonly rollbackWindowVerified?: boolean;
+}): void {
+  const allowed = new Set([
+    "v2_primary:occurrence_shadow",
+    "occurrence_shadow:occurrence_parity",
+    "occurrence_parity:occurrence_primary",
+    "occurrence_primary:v2_archive_retired",
+  ]);
+  const transition = `${input.from}:${input.to}`;
+  if (input.to === "occurrence_primary" && input.from !== "occurrence_parity") {
+    throw new Error("occurrence cutover requires the explicit verified parity state");
+  }
+  if (!allowed.has(transition))
+    throw new Error(`unsupported occurrence migration transition ${transition}`);
+  if (input.to === "occurrence_parity" && !input.parityVerified) {
+    throw new Error("occurrence migration parity must be verified before parity state");
+  }
+  if (
+    input.to === "occurrence_primary" &&
+    (!input.parityVerified || !input.backupVerified || !input.consumersVerified)
+  ) {
+    throw new Error("occurrence cutover requires verified parity, backup, and consumers");
+  }
+  if (input.to === "v2_archive_retired" && input.rollbackWindowVerified !== true) {
+    throw new Error("occurrence archive retirement requires a verified rollback window");
+  }
+}
+
 export interface LegacyArtifactWriteInput {
   readonly scopeId: string;
   readonly sourceId: string;
@@ -261,14 +307,25 @@ function tableExists(database: DatabaseSync, table: string): boolean {
 
 type LegacyRowClassification =
   | { readonly kind: "import" }
+  | { readonly kind: "canonical"; readonly reference: GraphArtifactReference }
   | { readonly kind: "quarantine"; readonly reason: "malformed_json" | "unresolved_graph_pointer" };
 
-function classifyLegacyRow(observationJson: string): LegacyRowClassification {
+function classifyLegacyRow(
+  observationJson: string,
+  canonicalPointerValidator?: (pointer: {
+    readonly requestId: string;
+    readonly artifactRef: GraphArtifactReference | string;
+    readonly graphPrimary?: boolean;
+    readonly migrated?: boolean;
+  }) => boolean,
+): LegacyRowClassification {
   try {
     const parsed = JSON.parse(observationJson);
-    return isGraphObservationPointer(parsed)
-      ? { kind: "quarantine", reason: "unresolved_graph_pointer" }
-      : { kind: "import" };
+    if (!isGraphObservationPointer(parsed)) return { kind: "import" };
+    if (typeof parsed.artifactRef === "object" && canonicalPointerValidator?.(parsed)) {
+      return { kind: "canonical", reference: parsed.artifactRef };
+    }
+    return { kind: "quarantine", reason: "unresolved_graph_pointer" };
   } catch (error) {
     if (error instanceof SyntaxError) return { kind: "quarantine", reason: "malformed_json" };
     throw error;
@@ -297,7 +354,16 @@ function readQuarantine(database: DatabaseSync): Array<{ source_id: string; reas
     .all("runtime_observations") as Array<{ source_id: string; reason: string }>;
 }
 
-function sourceProof(database: DatabaseSync, pageSize = 1_000): { count: number; hash: string } {
+function sourceProof(
+  database: DatabaseSync,
+  pageSize = 1_000,
+  canonicalPointerValidator?: (pointer: {
+    readonly requestId: string;
+    readonly artifactRef: GraphArtifactReference | string;
+    readonly graphPrimary?: boolean;
+    readonly migrated?: boolean;
+  }) => boolean,
+): { count: number; hash: string } {
   if (!tableExists(database, "runtime_observations")) return { count: 0, hash: sha256("") };
   const digest = createHash("sha256");
   let cursor = "";
@@ -322,11 +388,14 @@ function sourceProof(database: DatabaseSync, pageSize = 1_000): { count: number;
     for (const row of rows) {
       let rowHash = sha256(row.observation_json);
       try {
-        if (isGraphObservationPointer(JSON.parse(row.observation_json))) {
+        const parsed = JSON.parse(row.observation_json);
+        if (isGraphObservationPointer(parsed)) {
           // Run 94 SP6: a pointer-shaped row without a matching migration ref is
           // unclassified residue — quarantined and excluded from parity inputs.
-          if (!row.source_hash) continue;
-          rowHash = row.source_hash;
+          const confirmedCanonical =
+            typeof parsed.artifactRef === "object" && canonicalPointerValidator?.(parsed) === true;
+          if (!row.source_hash && !confirmedCanonical) continue;
+          rowHash = row.source_hash ?? sha256(row.observation_json);
         }
       } catch (error) {
         if (error instanceof SyntaxError) {
@@ -778,12 +847,24 @@ export class LegacySqliteMigration {
   readonly #artifactRollback?: (input: LegacyArtifactWriteResult) => void;
   readonly #now: () => number;
   readonly #routerRoot: string;
+  readonly #canonicalPointerValidator?: (pointer: {
+    readonly requestId: string;
+    readonly artifactRef: GraphArtifactReference | string;
+    readonly graphPrimary?: boolean;
+    readonly migrated?: boolean;
+  }) => boolean;
 
   constructor(input: {
     readonly databasePath: string;
     readonly backupPath: string;
     readonly artifactWriter: (input: LegacyArtifactWriteInput) => LegacyArtifactWriteResult;
     readonly artifactRollback?: (input: LegacyArtifactWriteResult) => void;
+    readonly canonicalPointerValidator?: (pointer: {
+      readonly requestId: string;
+      readonly artifactRef: GraphArtifactReference | string;
+      readonly graphPrimary?: boolean;
+      readonly migrated?: boolean;
+    }) => boolean;
     readonly now?: () => number;
     readonly routerRoot?: string;
   }) {
@@ -791,6 +872,7 @@ export class LegacySqliteMigration {
     this.#backupPath = input.backupPath;
     this.#artifactWriter = input.artifactWriter;
     this.#artifactRollback = input.artifactRollback;
+    this.#canonicalPointerValidator = input.canonicalPointerValidator;
     this.#now = input.now ?? Date.now;
     this.#routerRoot = input.routerRoot ?? resolveLegacyMigrationRouterRoot();
   }
@@ -798,7 +880,7 @@ export class LegacySqliteMigration {
   audit(): LegacyStorageAudit {
     const database = open(this.#databasePath, true);
     try {
-      const proof = sourceProof(database);
+      const proof = sourceProof(database, 1_000, this.#canonicalPointerValidator);
       const rows = database
         .prepare(
           tableExists(database, "legacy_graph_migration_refs")
@@ -819,7 +901,8 @@ export class LegacySqliteMigration {
       const quarantined = rows.flatMap((row) =>
         row.imported_source_id
           ? []
-          : classifyLegacyRow(row.observation_json).kind === "quarantine"
+          : classifyLegacyRow(row.observation_json, this.#canonicalPointerValidator).kind ===
+              "quarantine"
             ? [row]
             : [],
       );
@@ -908,11 +991,36 @@ export class LegacySqliteMigration {
       );
       database.exec(migrationSql);
       ensureQuarantineTable(database);
+      // A pointer may have been quarantined by an older runtime before its artifact
+      // was durable or before this verifier was available. Reconsider only entries
+      // which the current validator proves canonical; malformed or still-unresolved
+      // rows remain explicit quarantine and continue to block cutover.
+      const quarantinedPointers = database
+        .prepare(
+          `SELECT observations.request_id, observations.observation_json
+           FROM runtime_observations AS observations
+           INNER JOIN legacy_migration_quarantine AS quarantine
+             ON quarantine.source_table='runtime_observations'
+            AND quarantine.source_id=observations.request_id
+           ORDER BY observations.request_id ASC`,
+        )
+        .all() as Array<{ request_id: string; observation_json: string }>;
+      const clearQuarantine = database.prepare(
+        "DELETE FROM legacy_migration_quarantine WHERE source_table=? AND source_id=?",
+      );
+      for (const row of quarantinedPointers) {
+        if (
+          classifyLegacyRow(row.observation_json, this.#canonicalPointerValidator).kind ===
+          "canonical"
+        ) {
+          clearQuarantine.run("runtime_observations", row.request_id);
+        }
+      }
       const postcondition = database.prepare(entry.postconditionQuery).get() as
         | { valid?: number }
         | undefined;
       if (postcondition?.valid !== 1) throw new Error("migration registry postcondition failed");
-      const auditProof = sourceProof(database);
+      const auditProof = sourceProof(database, 1_000, this.#canonicalPointerValidator);
       database
         .prepare(
           `INSERT OR IGNORE INTO legacy_migration_journal
@@ -935,7 +1043,10 @@ export class LegacySqliteMigration {
         .all(input.batchSize) as Array<{ request_id: string; observation_json: string }>;
       let migratedCount = 0;
       for (const row of rows) {
-        const classification = classifyLegacyRow(row.observation_json);
+        const classification = classifyLegacyRow(
+          row.observation_json,
+          this.#canonicalPointerValidator,
+        );
         if (classification.kind === "quarantine") {
           database
             .prepare(
@@ -949,6 +1060,28 @@ export class LegacySqliteMigration {
               classification.reason,
               this.#now(),
             );
+          continue;
+        }
+        if (classification.kind === "canonical") {
+          const sourceHash = sha256(row.observation_json);
+          database
+            .prepare(
+              `INSERT INTO legacy_graph_migration_refs
+               (source_table, source_id, source_hash, scope_id, artifact_id, artifact_path,
+                artifact_content_hash, migrated_at_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            )
+            .run(
+              "runtime_observations",
+              row.request_id,
+              sourceHash,
+              classification.reference.scopeId,
+              classification.reference.artifactId,
+              classification.reference.artifactPath ??
+                `artifact://${classification.reference.scopeId}/${classification.reference.artifactId}`,
+              classification.reference.contentHash,
+              this.#now(),
+            );
+          migratedCount += 1;
           continue;
         }
         const contentHash = sha256(row.observation_json);
@@ -1007,6 +1140,11 @@ export class LegacySqliteMigration {
           }
         }
       }
+      // Recompute the source proof after stale quarantine entries may have been
+      // reclassified as canonical graph pointers. The journal is the operator
+      // receipt for this batch, so it must describe the same source set that
+      // parity will subsequently compare to the target.
+      const source = sourceProof(database, 1_000, this.#canonicalPointerValidator);
       const proof = targetProof(database);
       const pending = Number(
         (
@@ -1021,10 +1159,19 @@ export class LegacySqliteMigration {
       );
       database
         .prepare(
-          `UPDATE legacy_migration_journal SET target_count = ?, target_hash = ?, cursor = ?, updated_at_ms = ?
+          `UPDATE legacy_migration_journal
+           SET source_count = ?, source_hash = ?, target_count = ?, target_hash = ?, cursor = ?, updated_at_ms = ?
            WHERE migration_id = ?`,
         )
-        .run(proof.count, proof.hash, rows.at(-1)?.request_id ?? null, this.#now(), MIGRATION_ID);
+        .run(
+          source.count,
+          source.hash,
+          proof.count,
+          proof.hash,
+          rows.at(-1)?.request_id ?? null,
+          this.#now(),
+          MIGRATION_ID,
+        );
       return { migratedCount, pendingCount: pending };
     } finally {
       database.close();
@@ -1075,7 +1222,7 @@ export class LegacySqliteMigration {
       if (journal.holdUntilMs === null || this.#now() > journal.holdUntilMs) {
         throw new Error("shadow mirror deadline expired; restart backfill before parity");
       }
-      const source = sourceProof(database);
+      const source = sourceProof(database, 1_000, this.#canonicalPointerValidator);
       const target = targetProof(database);
       if (source.count !== target.count || source.hash !== target.hash)
         throw new Error("first parity mismatch");
@@ -1124,7 +1271,7 @@ export class LegacySqliteMigration {
     try {
       if (currentState(database) !== "legacy_read_hold")
         throw new Error("legacy read hold required");
-      const source = sourceProof(database);
+      const source = sourceProof(database, 1_000, this.#canonicalPointerValidator);
       const target = targetProof(database);
       if (source.count !== target.count || source.hash !== target.hash) {
         throw new Error("second parity mismatch");

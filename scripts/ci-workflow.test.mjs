@@ -6,6 +6,10 @@ const workflow = readFileSync(new URL("../.github/workflows/ci.yml", import.meta
 const packageManifest = JSON.parse(
   readFileSync(new URL("../package.json", import.meta.url), "utf8"),
 );
+const runtimeHostVitestConfig = readFileSync(
+  new URL("../role-model-router/apps/runtime-host-bridge/vitest.config.ts", import.meta.url),
+  "utf8",
+);
 
 test("CI is scoped to long-lived branches with stable cancellable lanes", () => {
   assert.match(workflow, /push:\s*\n\s*branches:\s*\n\s*- dev\s*\n\s*- stage\s*\n\s*- main/);
@@ -92,4 +96,15 @@ test("workspace tests serialize the resource-heavy runtime proofs", () => {
     packageManifest.scripts.test,
     /--filter=\.\/\*\* --filter=!@role-model-router\/runtime-host-bridge --filter=!@try-works\/pi-role-model test.*--filter @role-model-router\/runtime-host-bridge test.*--filter @try-works\/pi-role-model test/,
   );
+});
+
+test("smoke prepares its dist-exporting workspace dependencies in a clean checkout", () => {
+  assert.match(
+    packageManifest.scripts.smoke,
+    /pnpm --filter @role-model-router\/gateway-smoke\.\.\. run build/,
+  );
+});
+
+test("runtime-host integration tests do not contend for worker-owned state", () => {
+  assert.match(runtimeHostVitestConfig, /fileParallelism:\s*false/);
 });

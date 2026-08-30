@@ -4800,6 +4800,67 @@ export function readRuntimeObservationStorageRecord(
   return parsed as Readonly<Record<string, unknown>>;
 }
 
+/**
+ * Consumer-side guard for the storage inventory produced by Track B. It keeps
+ * physical measurement authority in one resource row and makes any logical
+ * byte allocation explicit rather than silently double-charging it.
+ */
+export function validateBoundedStorageInventory(inventory: {
+  readonly accountingState: string;
+  readonly uniquePhysicalBytes: number;
+  readonly physicalResources: readonly {
+    readonly id: string;
+    readonly physicalBytes: number | null;
+    readonly health: string;
+    readonly logicalClassIds: readonly string[];
+  }[];
+  readonly logicalClasses: readonly {
+    readonly id: string;
+    readonly physicalResourceId: string | null;
+    readonly physicalBytes: number | null;
+  }[];
+}): void {
+  if (inventory.accountingState !== "physical_resources_deduplicated") {
+    throw new Error("storage inventory must declare deduplicated physical accounting");
+  }
+  const resourceIds = new Set<string>();
+  let measuredTotal = 0;
+  for (const resource of inventory.physicalResources) {
+    if (!resource.id || resourceIds.has(resource.id)) {
+      throw new Error("storage inventory contains duplicate physical resources");
+    }
+    resourceIds.add(resource.id);
+    if (resource.health === "unavailable") {
+      if (resource.physicalBytes !== null) {
+        throw new Error("unavailable physical resource bytes must remain unknown");
+      }
+      continue;
+    }
+    if (
+      resource.physicalBytes === null ||
+      !Number.isSafeInteger(resource.physicalBytes) ||
+      resource.physicalBytes < 0
+    ) {
+      throw new Error("measured physical resource bytes must be non-negative integers");
+    }
+    measuredTotal += resource.physicalBytes;
+  }
+  if (inventory.uniquePhysicalBytes !== measuredTotal) {
+    throw new Error("unique physical byte total does not match deduplicated resources");
+  }
+  for (const logicalClass of inventory.logicalClasses) {
+    if (logicalClass.physicalBytes !== null) {
+      throw new Error("logical storage classes cannot independently charge physical bytes");
+    }
+    if (
+      logicalClass.physicalResourceId !== null &&
+      !resourceIds.has(logicalClass.physicalResourceId)
+    ) {
+      throw new Error("logical storage class references an unknown physical resource");
+    }
+  }
+}
+
 export interface ReadObservationTelemetryColumnsInput {
   readonly databasePath: string;
   readonly requestId: string;

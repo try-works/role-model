@@ -37,3 +37,15 @@ test("operates disclosure, opt-out, retention, recommendations, and failure isol
     page.getByText(/private operations endpoint is required for retention execution/i),
   ).toBeVisible();
 });
+
+test("Run 95 storage inventory separates policy state from unavailable-observation diagnostics", async ({
+  page,
+}) => {
+  await page.goto("/app/system/storage-retention");
+  await expect(page.getByText(/Policy state/)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Physical storage inventory" })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: "Last checked" })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: "Reason" })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: "Retention coverage" })).toBeVisible();
+  await expect(page.getByText("Enforcement", { exact: true })).toHaveCount(0);
+});

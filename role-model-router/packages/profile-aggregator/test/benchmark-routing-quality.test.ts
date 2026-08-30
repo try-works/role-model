@@ -1,3 +1,5 @@
+import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 
 import type { ObservedPerformanceSample } from "../src/index.js";
@@ -33,6 +35,20 @@ describe("resolveRoutingBenchmarkQuality", () => {
 
     expect(typeof runtime.aggregateObservedPerformanceSamples).toBe("function");
     expect(typeof runtime.resolveRoutingBenchmarkQuality).toBe("function");
+  });
+
+  test("plain Node resolves the built package export rather than sibling TypeScript source", () => {
+    const packageRoot = fileURLToPath(new URL("..", import.meta.url));
+    const output = execFileSync(
+      process.execPath,
+      [
+        "--input-type=module",
+        "--eval",
+        'import("@role-model-router/profile-aggregator").then((module) => console.log(typeof module.resolveRoutingBenchmarkQuality))',
+      ],
+      { cwd: packageRoot, encoding: "utf8" },
+    );
+    expect(output.trim()).toBe("function");
   });
 
   test("uses quick hard mean for quick-only runs instead of averaging empty buckets", () => {
