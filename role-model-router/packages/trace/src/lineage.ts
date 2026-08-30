@@ -36,6 +36,11 @@ export interface TraceLineageStageReceipt {
   readonly predecessor_stage_id?: string;
   readonly policy_receipt?: string;
   readonly artifact_hash?: string;
+  /** Immutable causal event identity; never substitutes for the content id. */
+  readonly occurrence_id?: string;
+  /** Content-addressed payload identity, which may be shared by occurrences. */
+  readonly content_id?: string;
+  readonly predecessor_occurrence_id?: string;
   readonly pending_intent?: boolean;
   readonly source_ids?: readonly string[];
 }
@@ -130,6 +135,19 @@ function validateStage(
     !stage.artifact_hash
   ) {
     throw new Error(`Trace stage ${stage.stage_id} message_graph requires an artifact hash.`);
+  }
+  if (
+    stage.stage === "message_graph" &&
+    ["recorded", "emitted", "consumed"].includes(stage.disposition)
+  ) {
+    if (!stage.occurrence_id)
+      throw new Error(`Trace stage ${stage.stage_id} message_graph requires occurrence_id.`);
+    if (!stage.content_id)
+      throw new Error(`Trace stage ${stage.stage_id} message_graph requires content_id.`);
+    assertOpaqueId("occurrence_id", stage.occurrence_id);
+    assertOpaqueId("content_id", stage.content_id);
+    if (stage.predecessor_occurrence_id !== undefined)
+      assertOpaqueId("predecessor_occurrence_id", stage.predecessor_occurrence_id);
   }
   if (expectedPredecessor !== undefined && stage.predecessor_stage_id !== expectedPredecessor) {
     throw new Error(`Trace stage ${stage.stage_id} predecessor does not match stage order.`);

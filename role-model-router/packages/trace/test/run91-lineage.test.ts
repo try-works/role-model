@@ -39,7 +39,14 @@ function makeInput(overrides: Partial<TraceLineageManifestInput> = {}): TraceLin
       receipt_id: `${stage}-receipt-001`,
       disposition: stage === "recommendation" ? "not_eligible" : "recorded",
       ...(stage === "recommendation" ? { policy_receipt: "recommendation-policy:disabled" } : {}),
-      ...(stage === "message_graph" ? { artifact_hash: "sha256:graph-001" } : {}),
+      ...(stage === "message_graph"
+        ? {
+            artifact_hash: "sha256:graph-001",
+            occurrence_id: "occurrence-run91-message-001",
+            content_id: "content-run91-message-001",
+            predecessor_occurrence_id: "occurrence-run91-root-001",
+          }
+        : {}),
       predecessor_stage_id: index > 0 ? `${stageNames[index - 1]}-receipt-001` : undefined,
     })),
     ...overrides,
