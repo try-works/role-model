@@ -1775,6 +1775,10 @@ export function createTrackBOperations({
       });
       return remote ?? { status: "operations_boundary_unconfigured" };
     },
+    async retryContributionAggregates(): Promise<unknown> {
+      const remote = await requestPrivate("contribution/retry", { method: "POST", body: {} });
+      return remote ?? { status: "operations_boundary_unconfigured" };
+    },
     async recordLocalRouteCapture(input: Record<string, unknown>): Promise<unknown> {
       if (!operationsEndpoint) return { status: "operations_boundary_unconfigured" };
       const url = new URL(operationsEndpoint);

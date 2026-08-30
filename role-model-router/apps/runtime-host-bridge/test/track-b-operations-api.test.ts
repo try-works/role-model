@@ -53,6 +53,35 @@ afterEach(async () => {
 });
 
 describe("Track B operations APIs", () => {
+  test("retries durable contribution aggregates without manufacturing another request", async () => {
+    const token = "run95-contribution-retry-token";
+    const server = createServer((request, response) => {
+      expect(request.method).toBe("POST");
+      expect(request.url).toBe("/contribution/retry");
+      expect(request.headers.authorization).toBe(`Bearer ${token}`);
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(JSON.stringify({ status: "uploaded", delivered: 1, queued: 0 }));
+    });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("operations server did not bind");
+    try {
+      const operations = createTrackBOperations({
+        statePath: path.join(os.tmpdir(), "run95-contribution-retry-state.json"),
+        catalog: [],
+        operationsEndpoint: `http://127.0.0.1:${address.port}`,
+        operationsToken: token,
+      });
+      await expect(operations.retryContributionAggregates()).resolves.toEqual({
+        status: "uploaded",
+        delivered: 1,
+        queued: 0,
+      });
+    } finally {
+      await new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+    }
+  });
+
   test("builds provider evidence and a semantic Verifiers export from the exact durable graph", () => {
     const observation = {
       requestId: "request-export-94",

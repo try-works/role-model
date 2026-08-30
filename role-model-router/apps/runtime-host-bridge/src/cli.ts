@@ -1320,6 +1320,9 @@ export async function main(): Promise<void> {
           qaStartupReceipts.set(extension.descriptor.id, { ...receipt, requestId });
         }
         await drainPostObservationOutbox(extensionRuntime);
+        // A prior cloud outage must not require an unrelated new provider request
+        // before its already-authorized, durable aggregate is retried.
+        await postObservationOperations?.retryContributionAggregates();
       } catch (error) {
         console.error("[role-model] extension host failed after core runtime was ready:", error);
       }
