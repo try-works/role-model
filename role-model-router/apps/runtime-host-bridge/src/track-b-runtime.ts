@@ -185,7 +185,7 @@ async function assertManagedArtifactKeyFile(filePath: string): Promise<void> {
 }
 
 /**
- * Resolves operator-supplied keys or provisions a runtime-owned production key pair.
+ * Resolves operator-supplied keys or provisions a runtime-owned Stage/production key pair.
  * The owned pair lives under the stable runtime state root, never the versioned package,
  * so manual binary updates keep existing Message Graph ciphertext readable.
  */
@@ -211,19 +211,7 @@ export async function resolveManagedArtifactKeyFiles(options: {
     ]);
     return resolved;
   }
-  if (options.channel === "stage") {
-    const packagedDigest = path.resolve("secrets", "artifact-digest.key");
-    const packagedEncryption = path.resolve("secrets", "artifact-encryption.key");
-    await Promise.all([
-      assertManagedArtifactKeyFile(packagedDigest),
-      assertManagedArtifactKeyFile(packagedEncryption),
-    ]);
-    return {
-      artifactDigestKeyFile: packagedDigest,
-      artifactEncryptionKeyFile: packagedEncryption,
-    };
-  }
-  if (options.channel !== "production") return {};
+  if (options.channel === "development") return {};
 
   const stableStateRoot = path.resolve(options.stateRoot);
   const keyRoot = path.join(stableStateRoot, "managed-keys");
@@ -276,6 +264,13 @@ export interface TrackBProductionRuntimeOptions {
   stateRoot: string;
   sidecar: OwnedTrackBSidecarSpec;
 }
+
+/**
+ * A persisted Track B state can take longer than a process-spawn grace period
+ * to reconcile before it can report ready. Keep that recovery bounded while
+ * matching the extension supervisor's documented allowance.
+ */
+export const TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS = 90_000;
 
 /**
  * Normal host-path adapter for graph-primary observation storage. The SQLite
@@ -2996,7 +2991,7 @@ export function createOwnedTrackBSidecarSpec(options: {
           // window to reconcile durable state before it can publish readiness. Keep
           // this bounded, but align the owned sidecar with the production extension
           // supervisor's recovery allowance.
-        }, options.startupTimeoutMs ?? 30_000);
+        }, options.startupTimeoutMs ?? TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS);
         const rejectError = (error: Error) => {
           clearTimeout(timer);
           reject(
