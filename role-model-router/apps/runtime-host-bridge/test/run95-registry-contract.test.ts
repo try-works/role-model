@@ -38,7 +38,11 @@ describe("Run 95 graph registry contract", () => {
       const bytes = Buffer.from("export async function run(){return {available:true}}\n");
       const artifactSha256 = createHash("sha256").update(bytes).digest("hex");
       const extensions = Array.from({ length: 13 }, (_, index) => ({
-        descriptor: { id: `extension-${index}`, protocolVersion: "1.1.0", capabilities: ["health"] },
+        descriptor: {
+          id: `extension-${index}`,
+          protocolVersion: "1.1.0",
+          capabilities: ["health"],
+        },
         modulePath: `extensions/extension-${index}.mjs`,
         artifactSha256,
       }));
@@ -54,7 +58,10 @@ describe("Run 95 graph registry contract", () => {
         }),
       );
       await expect(
-        stageTrackBRuntimeDistribution({ sourceRoot: root, releaseDir: path.join(root, "release") }),
+        stageTrackBRuntimeDistribution({
+          sourceRoot: root,
+          releaseDir: path.join(root, "release"),
+        }),
       ).rejects.toThrow(/graph registry/i);
     } finally {
       await rm(root, { recursive: true, force: true });
@@ -67,7 +74,11 @@ describe("Run 95 graph registry contract", () => {
       const bytes = Buffer.from("export async function run(){return {available:true}}\n");
       const artifactSha256 = createHash("sha256").update(bytes).digest("hex");
       const extensions = Array.from({ length: 13 }, (_, index) => ({
-        descriptor: { id: `extension-${index}`, protocolVersion: "1.1.0", capabilities: ["health"] },
+        descriptor: {
+          id: `extension-${index}`,
+          protocolVersion: "1.1.0",
+          capabilities: ["health"],
+        },
         modulePath: `extensions/extension-${index}.mjs`,
         artifactSha256,
       }));
@@ -99,7 +110,10 @@ describe("Run 95 graph registry contract", () => {
         }),
       );
       await expect(
-        stageTrackBRuntimeDistribution({ sourceRoot: root, releaseDir: path.join(root, "release") }),
+        stageTrackBRuntimeDistribution({
+          sourceRoot: root,
+          releaseDir: path.join(root, "release"),
+        }),
       ).rejects.toThrow(/graph registry.*digest/i);
     } finally {
       await rm(root, { recursive: true, force: true });
@@ -113,7 +127,11 @@ describe("Run 95 graph registry contract", () => {
       const artifactSha256 = createHash("sha256").update(bytes).digest("hex");
       const kinds = [{ id: "core.message", version: 1, category: "message", fields: [] }];
       const extensions = Array.from({ length: 13 }, (_, index) => ({
-        descriptor: { id: `extension-${index}`, protocolVersion: "1.1.0", capabilities: ["health"] },
+        descriptor: {
+          id: `extension-${index}`,
+          protocolVersion: "1.1.0",
+          capabilities: ["health"],
+        },
         modulePath: `extensions/extension-${index}.mjs`,
         artifactSha256,
       }));
@@ -126,7 +144,9 @@ describe("Run 95 graph registry contract", () => {
           schemaVersion: "role-model.track-b-runtime-distribution.v2",
           graphRegistry: {
             version: 1,
-            artifactSha256: createHash("sha256").update(JSON.stringify({ version: 1, kinds })).digest("hex"),
+            artifactSha256: createHash("sha256")
+              .update(JSON.stringify({ version: 1, kinds }))
+              .digest("hex"),
             kinds,
           },
           sidecar: { modulePath: "sidecar.mjs", artifactSha256 },
@@ -134,7 +154,10 @@ describe("Run 95 graph registry contract", () => {
         }),
       );
       await expect(
-        stageTrackBRuntimeDistribution({ sourceRoot: root, releaseDir: path.join(root, "release") }),
+        stageTrackBRuntimeDistribution({
+          sourceRoot: root,
+          releaseDir: path.join(root, "release"),
+        }),
       ).rejects.toThrow(/registry bindings/i);
     } finally {
       await rm(root, { recursive: true, force: true });

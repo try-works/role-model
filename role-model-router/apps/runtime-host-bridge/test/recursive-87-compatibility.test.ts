@@ -11,9 +11,7 @@ import {
   trackBDistributionRequiresSQLiteMaintenance,
 } from "../src/track-b-runtime.js";
 
-const graphRegistryKinds = [
-  { id: "core.message", version: 1, category: "message", fields: [] },
-];
+const graphRegistryKinds = [{ id: "core.message", version: 1, category: "message", fields: [] }];
 const graphRegistry = {
   version: 1,
   artifactSha256: createHash("sha256")
