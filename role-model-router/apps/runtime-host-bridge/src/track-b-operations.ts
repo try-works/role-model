@@ -203,6 +203,7 @@ type BridgeState = {
   readonly contribution?: ContributionState;
   readonly recommendations?: readonly RecommendationRecord[];
   readonly recommendationRevision?: number;
+  readonly recommendationCursor?: RecommendationCursor | null;
   readonly extensionMutationReceipts?: readonly ExtensionMutationReceipt[];
   readonly activePack?: {
     readonly id: string;
@@ -213,6 +214,14 @@ type BridgeState = {
     readonly reasoningEffort?: string | null;
     readonly effortSource?: RecommendationEffortSource;
   } | null;
+};
+type RecommendationCursor = {
+  readonly channel: string;
+  readonly scopeId: string;
+  readonly recommendationTier: string;
+  readonly channelSequence: number;
+  readonly snapshotId: string;
+  readonly manifestHash: string;
 };
 type RetentionPolicy = {
   readonly policyId: string;
@@ -357,6 +366,7 @@ const EMPTY_STATE: BridgeState = {
   contribution: EMPTY_CONTRIBUTION,
   recommendations: [],
   recommendationRevision: 0,
+  recommendationCursor: null,
   extensionMutationReceipts: [],
   activePack: null,
 };
@@ -407,12 +417,25 @@ const validate = (value: BridgeState): BridgeState => {
       !Number.isInteger(plan.sourceRevision))
   )
     throw new Error("invalid retention plan");
+  const recommendationCursor = value.recommendationCursor ?? null;
+  if (
+    recommendationCursor &&
+    (!recommendationCursor.channel ||
+      !recommendationCursor.scopeId ||
+      !recommendationCursor.recommendationTier ||
+      !Number.isSafeInteger(recommendationCursor.channelSequence) ||
+      recommendationCursor.channelSequence < 1 ||
+      !recommendationCursor.snapshotId ||
+      !/^[a-f0-9]{64}$/.test(recommendationCursor.manifestHash))
+  )
+    throw new Error("invalid recommendation cursor");
   return {
     ...value,
     retention: { ...value.retention, policies: value.retention.policies ?? [] },
     contribution: value.contribution ?? EMPTY_CONTRIBUTION,
     recommendations: value.recommendations ?? [],
     recommendationRevision: value.recommendationRevision ?? 0,
+    recommendationCursor,
     activePack: value.activePack ?? null,
   };
 };
@@ -1821,6 +1844,28 @@ export function createTrackBOperations({
     async readRecommendationRevision(): Promise<number> {
       return (await readState(statePath)).recommendationRevision ?? 0;
     },
+    async readRecommendationCursor(): Promise<RecommendationCursor | null> {
+      return (await readState(statePath)).recommendationCursor ?? null;
+    },
+    async rememberRecommendationCursor(cursor: RecommendationCursor): Promise<void> {
+      const state = await readState(statePath);
+      const normalized = validate({ ...state, recommendationCursor: cursor }).recommendationCursor;
+      if (
+        !normalized ||
+        normalized.channelSequence !== (state.recommendationRevision ?? 0) ||
+        !(state.recommendations ?? []).length ||
+        (state.recommendations ?? []).some(
+          (row) => row.provenance !== `cloud:${normalized.manifestHash}`,
+        )
+      )
+        throw new Error("recommendation cursor does not identify the imported bundle");
+      await writeState(statePath, {
+        ...state,
+        revision: state.revision + 1,
+        generatedAt: new Date().toISOString(),
+        recommendationCursor: normalized,
+      });
+    },
     async importRecommendationBundle(
       bundle: Record<string, unknown>,
       verificationKey: string,
@@ -1883,16 +1928,24 @@ export function createTrackBOperations({
     async importRecommendationArtifactBundle(
       bundle: ArtifactBundleImport,
       verificationKey: string,
+      cursor?: RecommendationCursor,
     ): Promise<readonly RecommendationRecord[]> {
       const state = await readState(statePath);
       const rows = importArtifactBundleRecords(bundle, verificationKey, state);
       const channelSequence = Number(bundle.manifest.channelSequence);
+      if (
+        cursor &&
+        (cursor.channelSequence !== channelSequence ||
+          cursor.manifestHash !== bundle.expectedManifestSha256)
+      )
+        throw new Error("recommendation cursor does not match the imported Artifact Bundle");
       await writeState(statePath, {
         ...state,
         revision: state.revision + 1,
         generatedAt: new Date().toISOString(),
         recommendations: rows,
         recommendationRevision: channelSequence,
+        recommendationCursor: cursor ?? null,
       });
       return rows;
     },

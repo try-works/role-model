@@ -1698,7 +1698,11 @@ describe("Track B operations APIs", () => {
             expect(resolveRequest).toMatchObject({
               scopeId: "public:deepseek-high",
             });
-            if (resolveRequest.activeChannelSequence === 2) {
+            if (
+              resolveRequest.activeChannelSequence === 2 &&
+              resolveRequest.activeSnapshotId === "snapshot-pack-downloaded" &&
+              resolveRequest.activeManifestHash === manifestSha256
+            ) {
               return new Response(
                 JSON.stringify({
                   contract: "RecommendationResolveResponseV1",
@@ -1711,6 +1715,8 @@ describe("Track B operations APIs", () => {
               );
             }
             expect(resolveRequest.activeChannelSequence).toBe(0);
+            expect(resolveRequest.activeSnapshotId).toBeUndefined();
+            expect(resolveRequest.activeManifestHash).toBeUndefined();
             return new Response(
               JSON.stringify({
                 contract: "RecommendationResolveResponseV1",
@@ -1772,6 +1778,12 @@ describe("Track B operations APIs", () => {
           confidence: 0.92,
         },
       ]);
+      await expect(backend.downloadRecommendations()).resolves.toEqual(downloaded);
+      const legacyStatePath = path.join(directory, "track-b-production-bridge.json");
+      const legacyState = JSON.parse(await readFile(legacyStatePath, "utf8"));
+      delete legacyState.recommendationCursor;
+      await writeFile(legacyStatePath, `${JSON.stringify(legacyState, null, 2)}\n`, "utf8");
+      await expect(backend.downloadRecommendations()).resolves.toEqual(downloaded);
       await expect(backend.downloadRecommendations()).resolves.toEqual(downloaded);
       const applied = await backend.applyRecommendation({ id: "recommendation-pack-downloaded" });
       expect(applied).toMatchObject({

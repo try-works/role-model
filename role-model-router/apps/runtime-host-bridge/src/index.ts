@@ -25748,7 +25748,15 @@ export async function createRuntimeBridgeBackend(
       const contribution = (await operations.readContributionState()) as {
         readonly recommendationTier?: string;
       };
-      const activeChannelSequence = await operations.readRecommendationRevision();
+      const recommendationTier = contribution.recommendationTier ?? "advanced";
+      const persistedCursor = await operations.readRecommendationCursor();
+      const activeCursor =
+        persistedCursor?.channel === channel &&
+        persistedCursor.scopeId === recommendationScopeId &&
+        persistedCursor.recommendationTier === recommendationTier
+          ? persistedCursor
+          : null;
+      const legacyRecommendationRevision = await operations.readRecommendationRevision();
       let run88CorrelationHeader: Record<string, string> = {};
       if (runtimeChannel === "stage") {
         const identity = options.run88StageIdentity;
@@ -25784,9 +25792,15 @@ export async function createRuntimeBridgeBackend(
           channel,
           runtimeChannel: channel,
           releaseTrack: "stable",
-          recommendationTier: contribution.recommendationTier ?? "advanced",
+          recommendationTier,
           clientSchemaVersions: ["1.0.0"],
-          activeChannelSequence,
+          activeChannelSequence: activeCursor?.channelSequence ?? 0,
+          ...(activeCursor
+            ? {
+                activeSnapshotId: activeCursor.snapshotId,
+                activeManifestHash: activeCursor.manifestHash,
+              }
+            : {}),
           identityKind: "anonymous_public",
           scopeId: recommendationScopeId,
           boundaryProtocolVersion: "1.1",
@@ -25798,10 +25812,30 @@ export async function createRuntimeBridgeBackend(
         return operations.listRecommendations();
       if (
         resolved.status !== "available" ||
+        !Number.isSafeInteger(Number(resolved.channelSequence)) ||
+        typeof resolved.snapshotId !== "string" ||
         typeof resolved.bundleUri !== "string" ||
         typeof resolved.manifestHash !== "string"
       )
         throw new Error("recommendation resolve response did not include an available bundle");
+      const recommendationCursor = {
+        channel,
+        scopeId: recommendationScopeId,
+        recommendationTier,
+        channelSequence: Number(resolved.channelSequence),
+        snapshotId: resolved.snapshotId,
+        manifestHash: resolved.manifestHash,
+      };
+      if (!activeCursor && recommendationCursor.channelSequence === legacyRecommendationRevision) {
+        const existing = await operations.listRecommendations();
+        if (
+          existing.length > 0 &&
+          existing.every((row) => row.provenance === `cloud:${recommendationCursor.manifestHash}`)
+        ) {
+          await operations.rememberRecommendationCursor(recommendationCursor);
+          return existing;
+        }
+      }
       const manifestUrl = new URL(resolved.bundleUri);
       const manifestResponse = await fetch(manifestUrl);
       if (!manifestResponse.ok)
@@ -25841,6 +25875,7 @@ export async function createRuntimeBridgeBackend(
           signature,
         },
         verificationKey,
+        recommendationCursor,
       );
     },
     async applyRecommendation(body: Record<string, unknown>): Promise<unknown> {
