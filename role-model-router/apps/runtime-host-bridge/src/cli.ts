@@ -1007,6 +1007,13 @@ export async function main(): Promise<void> {
       ),
     });
     let postObservationOperations: ReturnType<typeof createTrackBOperations> | null = null;
+    // `createBackend` initializes this after the packaged runtime is selected.
+    // Keep that initialization boundary opaque to TypeScript's local control-flow
+    // analysis: the public-only build does not inline the private operations
+    // adapter, but startup still needs to retry a durable outbox when it is
+    // available at runtime.
+    const currentPostObservationOperations = (): ReturnType<typeof createTrackBOperations> | null =>
+      postObservationOperations;
     const drainPostObservationOutbox = async (
       runtime: Awaited<ReturnType<typeof createProductionExtensionRuntime>>,
     ) =>
@@ -1322,7 +1329,7 @@ export async function main(): Promise<void> {
         await drainPostObservationOutbox(extensionRuntime);
         // A prior cloud outage must not require an unrelated new provider request
         // before its already-authorized, durable aggregate is retried.
-        await postObservationOperations?.retryContributionAggregates();
+        await currentPostObservationOperations()?.retryContributionAggregates();
       } catch (error) {
         console.error("[role-model] extension host failed after core runtime was ready:", error);
       }
