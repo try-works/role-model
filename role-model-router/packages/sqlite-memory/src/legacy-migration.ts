@@ -1142,6 +1142,11 @@ export class LegacySqliteMigration {
           }
         }
       }
+      // Recompute the source proof after stale quarantine entries may have been
+      // reclassified as canonical graph pointers. The journal is the operator
+      // receipt for this batch, so it must describe the same source set that
+      // parity will subsequently compare to the target.
+      const source = sourceProof(database, 1_000, this.#canonicalPointerValidator);
       const proof = targetProof(database);
       const pending = Number(
         (
@@ -1156,10 +1161,11 @@ export class LegacySqliteMigration {
       );
       database
         .prepare(
-          `UPDATE legacy_migration_journal SET target_count = ?, target_hash = ?, cursor = ?, updated_at_ms = ?
+          `UPDATE legacy_migration_journal
+           SET source_count = ?, source_hash = ?, target_count = ?, target_hash = ?, cursor = ?, updated_at_ms = ?
            WHERE migration_id = ?`,
         )
-        .run(proof.count, proof.hash, rows.at(-1)?.request_id ?? null, this.#now(), MIGRATION_ID);
+        .run(source.count, source.hash, proof.count, proof.hash, rows.at(-1)?.request_id ?? null, this.#now(), MIGRATION_ID);
       return { migratedCount, pendingCount: pending };
     } finally {
       database.close();

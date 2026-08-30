@@ -360,6 +360,10 @@ describe("TB04 real SQLite legacy migration", () => {
       // A later verified artifact must make a previous quarantine eligible again.
     }
     expect(recovered.audit().quarantinedRequestIds).not.toContain(pointer.requestId);
+    expect(readLegacyMigrationJournal(databasePath)).toMatchObject({
+      sourceCount: 3,
+      targetCount: 3,
+    });
     expect(() => recovered.enterShadowMirror({ deadlineMs: Date.now() + 10_000 })).not.toThrow();
   });
 
