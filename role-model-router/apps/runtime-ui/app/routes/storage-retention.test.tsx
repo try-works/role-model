@@ -45,12 +45,17 @@ describe("StorageRetentionRoute", () => {
       "unavailableResourceCount",
       "not service health",
       "unattributedPhysicalBytes",
-      "Global policy state",
+      "Policy state",
       "Physical resource mapping",
       "Observation state",
       "Measurement source",
       "Fresh through",
+      "Last checked",
+      "Reason",
+      "Retention coverage",
       "row.freshUntil",
+      "row.lastCheckedAt",
+      "row.observationReason",
       "row.owners",
       "row.physicalResourceId",
       "row.observationState",
@@ -61,6 +66,7 @@ describe("StorageRetentionRoute", () => {
     expect(source).not.toContain(
       "summary.policyState ? summary.policyState.state : row.retentionState",
     );
+    expect(source).not.toContain(">Enforcement<");
     expect(source).not.toContain("Maximum bytes");
     expect(source).not.toContain("StatusPill");
     expect(source).not.toContain("FactCard");

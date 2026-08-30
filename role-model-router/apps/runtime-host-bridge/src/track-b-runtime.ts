@@ -794,6 +794,22 @@ export async function stageTrackBRuntimeDistribution(options: {
   const manifest = JSON.parse(manifestBytes.toString("utf8")) as {
     readonly schemaVersion: string;
     readonly publicSourceTree?: string;
+    readonly graphRegistry?: {
+      readonly version?: number;
+      readonly artifactSha256?: string;
+      readonly kinds?: readonly unknown[];
+    };
+    readonly registryBindings?: {
+      readonly graphRegistry?: {
+        readonly schemaVersion?: string;
+        readonly version?: number;
+        readonly path?: string;
+      };
+      readonly storageRegistry?: {
+        readonly schemaVersion?: string;
+        readonly modulePath?: string;
+      };
+    };
     readonly sidecar: { readonly modulePath: string; readonly artifactSha256: string };
     readonly publicRuntimeAdapter?: {
       readonly modulePath: string;
@@ -818,6 +834,43 @@ export async function stageTrackBRuntimeDistribution(options: {
         : null;
   if (!compatibilityGeneration || manifest.extensions.length !== 13) {
     throw new Error("Track B runtime distribution manifest is unsupported or incomplete");
+  }
+  if (
+    compatibilityGeneration === "N" &&
+    (!manifest.graphRegistry ||
+      manifest.graphRegistry.version !== 1 ||
+      !/^[a-f0-9]{64}$/.test(manifest.graphRegistry.artifactSha256 ?? "") ||
+      !Array.isArray(manifest.graphRegistry.kinds))
+  ) {
+    throw new Error("Track B runtime distribution graph registry is missing or invalid");
+  }
+  if (
+    compatibilityGeneration === "N" &&
+    (manifest.registryBindings?.graphRegistry?.schemaVersion !== "role-model.graph-registry.v1" ||
+      manifest.registryBindings?.graphRegistry?.version !== 1 ||
+      manifest.registryBindings?.graphRegistry?.path !== "shared/graph/registry.json" ||
+      manifest.registryBindings.storageRegistry?.schemaVersion !==
+        "role-model.storage-registry.v1" ||
+      manifest.registryBindings?.storageRegistry?.modulePath !== "shared/retention/index.mjs")
+  ) {
+    throw new Error("Track B runtime distribution registry bindings are missing or invalid");
+  }
+  if (compatibilityGeneration === "N") {
+    const graphRegistry = manifest.graphRegistry;
+    if (!graphRegistry) throw new Error("Track B runtime distribution graph registry is missing");
+    const graphRegistryBytes = Buffer.from(
+      JSON.stringify({
+        version: graphRegistry.version,
+        kinds: graphRegistry.kinds,
+      }),
+      "utf8",
+    );
+    const graphRegistryDigest = createHash("sha256").update(graphRegistryBytes).digest("hex");
+    if (graphRegistryDigest !== graphRegistry.artifactSha256) {
+      throw new Error(
+        "Track B runtime distribution graph registry digest does not bind its contents",
+      );
+    }
   }
   if (options.expectedPublicSourceTree) {
     if (
@@ -1790,6 +1843,7 @@ export interface TrackBShadowPipelineInput {
   readonly evaluationCases: readonly Record<string, unknown>[];
   readonly trajectoryEvents: readonly Record<string, unknown>[];
   readonly identity?: TrackBVariantIdentity;
+  readonly occurrence?: Readonly<{ occurrenceId: string; contentId: string }>;
 }
 
 export interface TrackBVariantIdentity {
@@ -1917,6 +1971,7 @@ export async function runTrackBShadowPipeline(
     authorizationEpoch: input.authorizationEpoch,
     capability,
     ...(input.identity ? { identity: input.identity } : {}),
+    ...(input.occurrence ? { occurrence: input.occurrence } : {}),
     value,
   });
   const replay = await runtime.invoke(
@@ -2051,6 +2106,7 @@ async function runTrackBObservationPipeline(
     readonly sourceGraphRef: string;
     readonly trajectoryEvents: readonly Record<string, unknown>[];
     readonly identity: TrackBVariantIdentity;
+    readonly occurrence?: Readonly<{ occurrenceId: string; contentId: string }>;
   },
 ) {
   const envelope = (capability: string, value: unknown): Record<string, unknown> => ({
@@ -2062,6 +2118,7 @@ async function runTrackBObservationPipeline(
     authorizationEpoch: input.authorizationEpoch,
     capability,
     identity: input.identity,
+    ...(input.occurrence ? { occurrence: input.occurrence } : {}),
     value,
   });
   const replay = await runtime.invoke(
@@ -2152,6 +2209,12 @@ export async function runTrackBPostObservation(
     throw new Error("persisted observation identity is required for Track B shadow processing");
   }
   const identity = normalizeTrackBVariantIdentity(observation);
+  const occurrenceId = String(observation.occurrenceId ?? `occurrence:${requestId}`);
+  const contentId = String(observation.contentId ?? `content:${requestId}`);
+  if (!occurrenceId || !contentId) {
+    throw new Error("post-observation occurrence and content identity is required");
+  }
+  let occurrence = Object.freeze({ occurrenceId, contentId });
   const run88Correlation = input.expectedReleaseId
     ? normalizeRun88RuntimeCorrelation(input.run88Correlation ?? {}, input.expectedReleaseId)
     : null;
@@ -2167,6 +2230,7 @@ export async function runTrackBPostObservation(
     authorizationEpoch: input.authorizationEpoch,
     capability,
     identity,
+    occurrence,
     ...(run88Correlation ? { run88Correlation } : {}),
     ...extra,
   });
@@ -2201,6 +2265,18 @@ export async function runTrackBPostObservation(
     }),
   );
   const artifactRef = String(artifact.id ?? `observation:${requestId}`);
+  const artifactOccurrence =
+    artifact.occurrence && typeof artifact.occurrence === "object"
+      ? (artifact.occurrence as Record<string, unknown>)
+      : null;
+  if (
+    artifactOccurrence?.occurrenceId === occurrenceId &&
+    typeof artifactOccurrence.contentId === "string"
+  ) {
+    occurrence = Object.freeze({ occurrenceId, contentId: artifactOccurrence.contentId });
+  } else {
+    occurrence = Object.freeze({ occurrenceId, contentId: artifactRef });
+  }
   await observedRuntime.invoke(
     "event-log",
     businessEnvelope("event:append", {
@@ -2358,6 +2434,7 @@ export async function runTrackBPostObservation(
           evaluationCases: routingShadowCases,
           trajectoryEvents,
           identity,
+          occurrence,
         })
       : await runTrackBObservationPipeline(observedRuntime, {
           requestId,
@@ -2370,6 +2447,7 @@ export async function runTrackBPostObservation(
           sourceGraphRef,
           trajectoryEvents,
           identity,
+          occurrence,
         });
   const projection = createProjectionV2({
     scope: input.scope,
@@ -2402,6 +2480,7 @@ export async function runTrackBPostObservation(
     channel: input.channel,
     authorizationEpoch: input.authorizationEpoch,
     identity: { ...identity },
+    occurrence,
   });
   const registry = Object.fromEntries(
     [...closureEntries.entries()].sort(([left], [right]) => left.localeCompare(right)),

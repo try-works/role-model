@@ -83,6 +83,10 @@ export async function runRestartRehydrationValidation(
       runtimeStateRoot: options.runtimeStateRoot,
       scopeId: options.scopeId,
       unifiedRuntimeConfigPath,
+      // Registry rehydration and /v1/models readback do not exercise the
+      // local vendor process. Keep this CI validation hermetic instead of
+      // resolving a mutable llama-swap release from GitHub.
+      runtimeVendorStartup: "disabled",
       // This validation proves durable restart rehydration. Its fixture API key
       // is deliberately synthetic, so admission must stay hermetic rather than
       // contacting the real Moonshot endpoint during CI.
