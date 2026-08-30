@@ -4836,7 +4836,11 @@ export function validateBoundedStorageInventory(inventory: {
       }
       continue;
     }
-    if (!Number.isSafeInteger(resource.physicalBytes) || resource.physicalBytes < 0) {
+    if (
+      resource.physicalBytes === null ||
+      !Number.isSafeInteger(resource.physicalBytes) ||
+      resource.physicalBytes < 0
+    ) {
       throw new Error("measured physical resource bytes must be non-negative integers");
     }
     measuredTotal += resource.physicalBytes;

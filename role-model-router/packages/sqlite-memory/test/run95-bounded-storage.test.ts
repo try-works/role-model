@@ -34,5 +34,14 @@ describe("Run 95 bounded storage inventory", () => {
         logicalClasses: [{ ...inventory.logicalClasses[0], physicalBytes: 4096 }],
       }),
     ).toThrow(/logical|double|physical/i);
+    expect(() =>
+      sqliteMemory.validateBoundedStorageInventory({
+        ...inventory,
+        physicalResources: [
+          { ...inventory.physicalResources[0], physicalBytes: null },
+          ...inventory.physicalResources.slice(1),
+        ],
+      }),
+    ).toThrow(/measured physical resource bytes/i);
   });
 });

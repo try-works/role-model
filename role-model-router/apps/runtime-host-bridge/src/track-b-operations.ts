@@ -137,9 +137,24 @@ export function normalizeStorageRetentionContract(value: unknown): Record<string
   const nestedPhysicalResources = Array.isArray(inventory?.physicalResources)
     ? inventory.physicalResources
     : undefined;
-  const physicalResources = Array.isArray(raw.physicalResources)
-    ? raw.physicalResources
-    : (nestedPhysicalResources ?? (Array.isArray(inventory?.entries) ? inventory.entries : []));
+  const normalizeObservation = (resource: unknown): unknown => {
+    if (!resource || typeof resource !== "object") return resource;
+    const row = resource as Record<string, unknown>;
+    const unavailable = row.health === "unavailable";
+    const observedAt = typeof row.observedAt === "string" ? row.observedAt : undefined;
+    return {
+      ...row,
+      ...(unavailable && typeof row.observationReason !== "string"
+        ? { observationReason: "Observation reported unavailable" }
+        : {}),
+      ...(typeof row.lastCheckedAt !== "string" && observedAt ? { lastCheckedAt: observedAt } : {}),
+    };
+  };
+  const physicalResources = (
+    Array.isArray(raw.physicalResources)
+      ? raw.physicalResources
+      : (nestedPhysicalResources ?? (Array.isArray(inventory?.entries) ? inventory.entries : []))
+  ).map(normalizeObservation);
   return {
     ...raw,
     logicalClasses,
