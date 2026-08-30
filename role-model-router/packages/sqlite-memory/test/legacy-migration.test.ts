@@ -259,6 +259,56 @@ describe("TB04 real SQLite legacy migration", () => {
     ).toThrow(/shadow mirror deadline expired/i);
   });
 
+  test("Run 95 accepts a verifier-confirmed graph-primary pointer without treating it as unresolved legacy residue", () => {
+    const { databasePath, backupPath } = fixture();
+    const database = new DatabaseSync(databasePath);
+    database
+      .prepare(
+        `INSERT INTO runtime_observations
+         (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, observation_json)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        "request-current-graph",
+        "route-current-graph",
+        "endpoint-current-graph",
+        "conversation-current-graph",
+        102,
+        JSON.stringify({
+          requestId: "request-current-graph",
+          graphPrimary: true,
+          artifactRef: {
+            scopeId: "scope-1",
+            artifactId: "a".repeat(64),
+            contentHash: "b".repeat(64),
+          },
+        }),
+      );
+    database.close();
+    const migration = new LegacySqliteMigration({
+      databasePath,
+      backupPath,
+      artifactWriter: ({ sourceId, contentHash }) => ({
+        artifactId: `artifact-${sourceId}`,
+        artifactPath: `artifact://${sourceId}`,
+        contentHash,
+      }),
+      canonicalPointerValidator: (pointer) =>
+        pointer.requestId === "request-current-graph" &&
+        typeof pointer.artifactRef === "object" &&
+        pointer.artifactRef.scopeId === "scope-1" &&
+        pointer.artifactRef.artifactId === "a".repeat(64) &&
+        pointer.artifactRef.contentHash === "b".repeat(64),
+    });
+
+    while (migration.backfill({ scopeId: "scope-1", batchSize: 10 }).pendingCount > 0) {
+      // exhaust bounded legacy rows before entering the shadow window
+    }
+
+    expect(migration.audit().quarantinedRequestIds).not.toContain("request-current-graph");
+    expect(() => migration.enterShadowMirror({ deadlineMs: Date.now() + 10_000 })).not.toThrow();
+  });
+
   test("rollback restores the populated legacy database and removes backfilled artifacts", () => {
     const { databasePath, backupPath, rich } = fixture();
     const artifacts = new Set<string>();
