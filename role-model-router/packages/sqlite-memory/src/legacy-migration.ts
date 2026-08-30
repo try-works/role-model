@@ -16,6 +16,52 @@ export type LegacyMigrationState =
   | "rolled_back"
   | "failed";
 
+export type OccurrenceMigrationState =
+  | "v2_primary"
+  | "occurrence_shadow"
+  | "occurrence_parity"
+  | "occurrence_primary"
+  | "v2_archive_retired";
+
+/**
+ * Cross-repository cutover guard shared by the public SQLite reader and the
+ * private occurrence authority. It does not mutate journal state: callers must
+ * persist the accepted transition atomically with their own cursor/checkpoint.
+ */
+export function validateOccurrenceMigrationTransition(input: {
+  readonly from: OccurrenceMigrationState;
+  readonly to: OccurrenceMigrationState;
+  readonly parityVerified: boolean;
+  readonly backupVerified: boolean;
+  readonly consumersVerified: boolean;
+  readonly rollbackWindowVerified?: boolean;
+}): void {
+  const allowed = new Set([
+    "v2_primary:occurrence_shadow",
+    "occurrence_shadow:occurrence_parity",
+    "occurrence_parity:occurrence_primary",
+    "occurrence_primary:v2_archive_retired",
+  ]);
+  const transition = `${input.from}:${input.to}`;
+  if (input.to === "occurrence_primary" && input.from !== "occurrence_parity") {
+    throw new Error("occurrence cutover requires the explicit verified parity state");
+  }
+  if (!allowed.has(transition))
+    throw new Error(`unsupported occurrence migration transition ${transition}`);
+  if (input.to === "occurrence_parity" && !input.parityVerified) {
+    throw new Error("occurrence migration parity must be verified before parity state");
+  }
+  if (
+    input.to === "occurrence_primary" &&
+    (!input.parityVerified || !input.backupVerified || !input.consumersVerified)
+  ) {
+    throw new Error("occurrence cutover requires verified parity, backup, and consumers");
+  }
+  if (input.to === "v2_archive_retired" && input.rollbackWindowVerified !== true) {
+    throw new Error("occurrence archive retirement requires a verified rollback window");
+  }
+}
+
 export interface LegacyArtifactWriteInput {
   readonly scopeId: string;
   readonly sourceId: string;
