@@ -703,9 +703,7 @@ export function applyRecommendationServiceLauncherConfig(values: LauncherConfigV
     (channel === "stage" ? "https://recommendations-stage.role-model.dev" : undefined);
   const verificationKey = readLauncherString(values, "recommendation-verification-key");
   const serviceToken = readLauncherString(values, "recommendation-service-token");
-  const materialFile =
-    readLauncherString(values, "recommendation-material-file") ??
-    (channel === "stage" ? path.resolve("secrets", "recommendation-material.json") : undefined);
+  const materialFile = readLauncherString(values, "recommendation-material-file");
   const aggregateScope = readLauncherString(values, "aggregate-scope");
   const recommendationScope = readLauncherString(values, "recommendation-scope");
 
@@ -1254,10 +1252,7 @@ export async function main(): Promise<void> {
           trustMaterialFile:
             args.values["destination-material-file"] ??
             args.values["destination-trust-material-file"] ??
-            process.env.ROLE_MODEL_DESTINATION_AUTH_SECRET_FILE ??
-            (runtimeChannel === "stage"
-              ? path.resolve("secrets", "destination-material.json")
-              : undefined),
+            process.env.ROLE_MODEL_DESTINATION_AUTH_SECRET_FILE,
           aggregateEndpoint:
             args.values["aggregate-ingestion-url"] ??
             process.env.ROLE_MODEL_AGGREGATE_INGESTION_URL ??
