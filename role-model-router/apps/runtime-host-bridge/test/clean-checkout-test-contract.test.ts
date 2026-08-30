@@ -3,6 +3,9 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 const packageJsonPath = fileURLToPath(new URL("../package.json", import.meta.url));
+const restartValidationPath = fileURLToPath(
+  new URL("../src/validate-restart-rehydration.ts", import.meta.url),
+);
 
 describe("clean checkout runtime test contract", () => {
   it("builds profile-aggregator before runtime suites import its dist entrypoint", async () => {
@@ -15,5 +18,11 @@ describe("clean checkout runtime test contract", () => {
         "pnpm --filter @role-model-router/profile-aggregator build",
       );
     }
+  });
+
+  it("keeps restart rehydration validation hermetic when it only needs registry readback", async () => {
+    const source = await readFile(restartValidationPath, "utf8");
+
+    expect(source).toContain('runtimeVendorStartup: "disabled"');
   });
 });
