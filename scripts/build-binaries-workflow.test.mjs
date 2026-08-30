@@ -109,6 +109,18 @@ test("production installs dependencies in the accepted stage checkout before Tra
   );
 });
 
+test("paired Track B packaging builds public runtime dependencies before bundling source imports", () => {
+  assert.match(workflow, /Build public runtime adapter dependencies/);
+  assert.match(
+    workflow,
+    /Build public runtime adapter dependencies[\s\S]*?corepack pnpm --filter @role-model-router\/profile-aggregator\.\.\. build/,
+  );
+  assert.match(
+    workflow,
+    /Build public runtime adapter dependencies[\s\S]*?if: env\.ROLE_MODEL_BUILD_CHANNEL == 'stage' \|\| env\.ROLE_MODEL_BUILD_CHANNEL == 'production'/,
+  );
+});
+
 test("stable tags require a manually accepted exact stage candidate", () => {
   assert.match(workflow, /rc-approved/);
   assert.match(workflow, /candidate\.workflow_run\.head_sha/);
