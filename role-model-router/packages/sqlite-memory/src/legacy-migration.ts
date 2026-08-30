@@ -994,6 +994,31 @@ export class LegacySqliteMigration {
       );
       database.exec(migrationSql);
       ensureQuarantineTable(database);
+      // A pointer may have been quarantined by an older runtime before its artifact
+      // was durable or before this verifier was available. Reconsider only entries
+      // which the current validator proves canonical; malformed or still-unresolved
+      // rows remain explicit quarantine and continue to block cutover.
+      const quarantinedPointers = database
+        .prepare(
+          `SELECT observations.request_id, observations.observation_json
+           FROM runtime_observations AS observations
+           INNER JOIN legacy_migration_quarantine AS quarantine
+             ON quarantine.source_table='runtime_observations'
+            AND quarantine.source_id=observations.request_id
+           ORDER BY observations.request_id ASC`,
+        )
+        .all() as Array<{ request_id: string; observation_json: string }>;
+      const clearQuarantine = database.prepare(
+        "DELETE FROM legacy_migration_quarantine WHERE source_table=? AND source_id=?",
+      );
+      for (const row of quarantinedPointers) {
+        if (
+          classifyLegacyRow(row.observation_json, this.#canonicalPointerValidator).kind ===
+          "canonical"
+        ) {
+          clearQuarantine.run("runtime_observations", row.request_id);
+        }
+      }
       const postcondition = database.prepare(entry.postconditionQuery).get() as
         | { valid?: number }
         | undefined;
