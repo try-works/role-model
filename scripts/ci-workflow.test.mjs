@@ -98,6 +98,13 @@ test("workspace tests serialize the resource-heavy runtime proofs", () => {
   );
 });
 
+test("smoke prepares its dist-exporting workspace dependencies in a clean checkout", () => {
+  assert.match(
+    packageManifest.scripts.smoke,
+    /pnpm --filter @role-model-router\/gateway-smoke\.\.\. run build/,
+  );
+});
+
 test("runtime-host integration tests do not contend for worker-owned state", () => {
   assert.match(runtimeHostVitestConfig, /fileParallelism:\s*false/);
 });
