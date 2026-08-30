@@ -121,6 +121,13 @@ test("paired Track B packaging builds public runtime dependencies before bundlin
   );
 });
 
+test("stage and production release archives never receive managed runtime secrets", () => {
+  assert.doesNotMatch(workflow, /Include managed stage secrets in the stage package/);
+  assert.doesNotMatch(workflow, /STAGE_ARTIFACT_DIGEST_KEY|STAGE_ARTIFACT_ENCRYPTION_KEY/);
+  assert.doesNotMatch(workflow, /STAGE_DESTINATION_MATERIAL|STAGE_RECOMMENDATION_MATERIAL/);
+  assert.match(workflow, /Assert release package has no bundled secret material/);
+});
+
 test("stable tags require a manually accepted exact stage candidate", () => {
   assert.match(workflow, /rc-approved/);
   assert.match(workflow, /candidate\.workflow_run\.head_sha/);
