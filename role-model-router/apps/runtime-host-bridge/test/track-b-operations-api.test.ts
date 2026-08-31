@@ -2061,6 +2061,35 @@ describe("Track B operations APIs", () => {
     }
   });
 
+  test("run95 bounds a stalled private storage summary instead of leaving the operator read pending", async () => {
+    const operations = createServer((_request, _response) => {
+      // Deliberately never respond: this models a stalled private sidecar.
+    });
+    await new Promise<void>((resolve, reject) => {
+      operations.once("error", reject);
+      operations.listen(0, "127.0.0.1", resolve);
+    });
+    try {
+      const address = operations.address();
+      if (!address || typeof address === "string")
+        throw new Error("operations server did not bind");
+      const api = createTrackBOperations({
+        statePath: path.join(os.tmpdir(), `run95-stalled-storage-${Date.now()}.json`),
+        catalog: [],
+        operationsEndpoint: `http://127.0.0.1:${address.port}`,
+        operationsToken: "run95-stalled-storage-token-0001",
+        operationsTimeoutMs: 25,
+      });
+      const startedAt = Date.now();
+      await expect(api.readStorageRetention()).rejects.toThrow(/timed out/i);
+      expect(Date.now() - startedAt).toBeLessThan(1_000);
+    } finally {
+      await new Promise<void>((resolve, reject) =>
+        operations.close((error) => (error ? reject(error) : resolve())),
+      );
+    }
+  });
+
   test("run79 mutateExtension enables disables and sets mode with audit receipts", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `track-b-run79-mutate-${Date.now()}`);
     roots.push(runtimeStateRoot);
