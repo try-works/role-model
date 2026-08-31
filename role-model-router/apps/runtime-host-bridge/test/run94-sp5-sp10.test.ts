@@ -76,6 +76,39 @@ test("GREEN: post-observation outbox is a normalized SQLite authority with bound
   afterDrain.close();
 });
 
+test("GREEN: a readback-driven retry drains a transiently failed pending observation without another routed request", async () => {
+  const root = await import("node:fs/promises").then(({ mkdtemp }) =>
+    mkdtemp(path.join(os.tmpdir(), "run95-readback-retry-")),
+  );
+  roots.push(root);
+  const outbox = createTrackBPostObservationOutbox({
+    filePath: path.join(root, "post-observation-outbox.sqlite"),
+    maxItems: 8,
+  });
+  await outbox.enqueue(identity("retry-without-next-route"));
+  await expect(
+    outbox.drain(async () => {
+      throw new Error("temporary private operation timeout");
+    }),
+  ).rejects.toThrow(/temporary private operation timeout/);
+  expect(await outbox.read()).toMatchObject({ pendingCount: 1, receiptCount: 0 });
+
+  const recovered = await (
+    outbox as unknown as {
+      drainUntilReceipt(
+        requestId: string,
+        handler: (item: Record<string, unknown>) => Promise<unknown>,
+      ): Promise<{ requestId: string } | null>;
+    }
+  ).drainUntilReceipt("retry-without-next-route", async (item) => ({
+    status: "recovered",
+    extensionClosure: { requestId: item.requestId },
+  }));
+
+  expect(recovered).toMatchObject({ requestId: "retry-without-next-route" });
+  expect(await outbox.read()).toMatchObject({ pendingCount: 0, receiptCount: 1 });
+});
+
 test("GREEN: imports N-1 JSON once, classifies every legacy row, and quarantines malformed rows", async () => {
   const root = await import("node:fs/promises").then(({ mkdtemp }) =>
     mkdtemp(path.join(os.tmpdir(), "run94-sp5-legacy-")),

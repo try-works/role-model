@@ -1012,10 +1012,9 @@ export async function main(): Promise<void> {
     // available at runtime.
     const currentPostObservationOperations = (): ReturnType<typeof createTrackBOperations> | null =>
       postObservationOperations;
-    const drainPostObservationOutbox = async (
-      runtime: Awaited<ReturnType<typeof createProductionExtensionRuntime>>,
-    ) =>
-      postObservationOutbox.drain((observation) => {
+    const postObservationHandler =
+      (runtime: Awaited<ReturnType<typeof createProductionExtensionRuntime>>) =>
+      (observation: Parameters<typeof runTrackBPostObservation>[1]) => {
         const processingInput = {
           scope: options.scopeId,
           channel: packagedProfile?.channel ?? "development",
@@ -1036,7 +1035,10 @@ export async function main(): Promise<void> {
               (aggregate) => operations.recordContributionAggregate(aggregate),
             )
           : runTrackBPostObservation(runtime, observation, processingInput);
-      });
+      };
+    const drainPostObservationOutbox = async (
+      runtime: Awaited<ReturnType<typeof createProductionExtensionRuntime>>,
+    ) => postObservationOutbox.drain(postObservationHandler(runtime));
     const createBackend = async (
       trackBOperationsEndpoint?: string,
       trackBOperationsToken?: string,
@@ -1097,14 +1099,17 @@ export async function main(): Promise<void> {
         readTrackBExtensionReadback: async (body) => {
           const requestId = String(body.requestId ?? "").trim();
           if (!requestId) throw new Error("Track B extension readback requestId is required");
-          const receipt = await postObservationOutbox.readReceipt(requestId);
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) throw new Error("Track B extension runtime is unavailable");
+          const receipt = await postObservationOutbox.drainUntilReceipt(
+            requestId,
+            postObservationHandler(runtime),
+          );
           if (!receipt) throw new Error(`Track B observation receipt not found: ${requestId}`);
           const result = receipt.result as Record<string, unknown>;
           const closure = result.extensionClosure as TrackBExtensionClosure | undefined;
           if (!closure)
             throw new Error(`Track B observation has no extension closure: ${requestId}`);
-          const runtime = extensionRuntimeRef.current;
-          if (!runtime) throw new Error("Track B extension runtime is unavailable");
           return verifyTrackBExtensionClosureAfterRestart(runtime, closure, {
             channel: packagedProfile?.channel ?? "development",
             scope: options.scopeId,

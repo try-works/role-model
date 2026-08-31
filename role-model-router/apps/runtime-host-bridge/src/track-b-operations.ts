@@ -661,6 +661,10 @@ const privateRetentionRequest = async (
   token: string | undefined,
   route: string,
   init: { readonly method?: string; readonly body?: Record<string, unknown> } = {},
+  // Route captures may perform bounded durable CAS and SQLite commits after the
+  // provider response. Five seconds aborts healthy local captures on mature
+  // runtimes; retain a finite budget while allowing that proven completion path.
+  timeoutMs = 8_000,
 ): Promise<unknown | null> => {
   if (!endpoint) return null;
   if (!token || token.trim().length < 24) {
@@ -668,14 +672,26 @@ const privateRetentionRequest = async (
       "Track B private operations boundary requires a launcher-issued authentication token",
     );
   }
-  const response = await fetch(new URL(route, endpoint.endsWith("/") ? endpoint : `${endpoint}/`), {
-    method: init.method ?? "GET",
-    headers: {
-      ...(init.body ? { "content-type": "application/json" } : {}),
-      authorization: `Bearer ${token}`,
-    },
-    ...(init.body ? { body: JSON.stringify(init.body) } : {}),
-  });
+  let response: Response;
+  try {
+    response = await fetch(new URL(route, endpoint.endsWith("/") ? endpoint : `${endpoint}/`), {
+      method: init.method ?? "GET",
+      headers: {
+        ...(init.body ? { "content-type": "application/json" } : {}),
+        authorization: `Bearer ${token}`,
+      },
+      ...(init.body ? { body: JSON.stringify(init.body) } : {}),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (error) {
+    if (error instanceof Error && error.name === "TimeoutError") {
+      throw new TrackBPrivateOperationError(
+        504,
+        `private Track B operation timed out after ${timeoutMs}ms`,
+      );
+    }
+    throw error;
+  }
   const result = (await response.json().catch(() => ({}))) as { readonly error?: unknown };
   if (!response.ok)
     throw new TrackBPrivateOperationError(
@@ -1060,6 +1076,7 @@ export function createTrackBOperations({
   runtimeChannel = "development",
   operationsEndpoint = process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL?.trim(),
   operationsToken = process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TOKEN,
+  operationsTimeoutMs = 8_000,
   extensionRuntime,
 }: {
   readonly statePath: string;
@@ -1067,6 +1084,8 @@ export function createTrackBOperations({
   readonly runtimeChannel?: "development" | "stage" | "production";
   readonly operationsEndpoint?: string;
   readonly operationsToken?: string;
+  /** Bounds a private sidecar operation so a dashboard request cannot wait forever. */
+  readonly operationsTimeoutMs?: number;
   readonly extensionRuntime?: {
     listExtensions(): readonly unknown[] | Promise<readonly unknown[]>;
     mutateExtension(input: Record<string, unknown>): unknown | Promise<unknown>;
@@ -1075,7 +1094,8 @@ export function createTrackBOperations({
   const requestPrivate = (
     route: string,
     init?: { readonly method?: string; readonly body?: Record<string, unknown> },
-  ) => privateRetentionRequest(operationsEndpoint, operationsToken, route, init);
+  ) =>
+    privateRetentionRequest(operationsEndpoint, operationsToken, route, init, operationsTimeoutMs);
   return {
     async readGraphMigration(): Promise<unknown> {
       const remote = await requestPrivate("graph-migration");
