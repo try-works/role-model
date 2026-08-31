@@ -8,15 +8,7 @@ describe("taxonomyDataRootCandidates", () => {
     const executablePath = path.join("D:", "release", "role-model-dev.exe");
 
     expect(taxonomyDataRootCandidates(executablePath)).toContain(
-      path.join(
-        "D:",
-        "release",
-        "role-model-router",
-        "packages",
-        "core",
-        "data",
-        "taxonomy",
-      ),
+      path.join("D:", "release", "role-model-router", "packages", "core", "data", "taxonomy"),
     );
   });
 });

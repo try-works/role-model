@@ -24178,10 +24178,9 @@ export async function createRuntimeBridgeBackend(
           capability: "runtime-observation-persist",
           reason:
             routeCaptureDegradationReason ??
-            String(error instanceof Error ? error.message : "runtime observation persist failed").slice(
-              0,
-              256,
-            ),
+            String(
+              error instanceof Error ? error.message : "runtime observation persist failed",
+            ).slice(0, 256),
           routingContinues: true,
           atMs: Date.now(),
         };

@@ -1249,7 +1249,11 @@ describe("Track B operations APIs", () => {
       });
       migration.backfill({ scopeId: `tenant:${scopeId}`, batchSize: 10 });
       migration.enterShadowMirror({ deadlineMs: Date.now() + 10_000 });
-      migration.verifyParity({ backupVerified: true, restoreVerified: true, consumersVerified: true });
+      migration.verifyParity({
+        backupVerified: true,
+        restoreVerified: true,
+        consumersVerified: true,
+      });
       migration.cutover();
 
       const result = await backend.executeChatCompletions(
@@ -1264,7 +1268,9 @@ describe("Track B operations APIs", () => {
         capability: "runtime-observation-persist",
         reason: "track-b-capture-boundary-http-503",
       });
-      expect(readRuntimeTelemetryRecord({ databasePath, requestId: "req-track-b-capture-failure-001" })).toBeNull();
+      expect(
+        readRuntimeTelemetryRecord({ databasePath, requestId: "req-track-b-capture-failure-001" }),
+      ).toBeNull();
     } finally {
       await backend.shutdown();
       await new Promise<void>((resolve, reject) =>
@@ -2189,9 +2195,10 @@ describe("Track B operations APIs", () => {
         operationsEndpoint: `http://127.0.0.1:${address.port}`,
         operationsToken: "run95-capture-budget-token-0001",
       });
-      await expect(
-        api.recordLocalRouteCapture({ requestId: "request-1" }),
-      ).resolves.toMatchObject({ status: "captured", rootArtifactId: "artifact:test" });
+      await expect(api.recordLocalRouteCapture({ requestId: "request-1" })).resolves.toMatchObject({
+        status: "captured",
+        rootArtifactId: "artifact:test",
+      });
     } finally {
       await new Promise<void>((resolve, reject) =>
         operations.close((error) => (error ? reject(error) : resolve())),

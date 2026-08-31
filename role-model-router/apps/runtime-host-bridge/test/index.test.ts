@@ -23621,9 +23621,15 @@ describe("runtime-host-bridge", () => {
   });
 
   test("prefers an existing state-root runtime config when a packaged launch omits the flag", async () => {
-    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-config-default-"));
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-config-default-"),
+    );
     try {
-      await writeFile(path.join(runtimeStateRoot, "runtime-config.yaml"), 'version: "1.0"\n', "utf8");
+      await writeFile(
+        path.join(runtimeStateRoot, "runtime-config.yaml"),
+        'version: "1.0"\n',
+        "utf8",
+      );
       const result = (
         bridge as {
           resolveBridgeServerOptions: (value: {
@@ -23633,7 +23639,9 @@ describe("runtime-host-bridge", () => {
         }
       ).resolveBridgeServerOptions({ repoRoot, runtimeStateRoot });
 
-      expect(result.unifiedRuntimeConfigPath).toBe(path.join(runtimeStateRoot, "runtime-config.yaml"));
+      expect(result.unifiedRuntimeConfigPath).toBe(
+        path.join(runtimeStateRoot, "runtime-config.yaml"),
+      );
     } finally {
       await rm(runtimeStateRoot, { recursive: true, force: true });
     }

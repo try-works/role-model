@@ -1094,7 +1094,8 @@ export function createTrackBOperations({
   const requestPrivate = (
     route: string,
     init?: { readonly method?: string; readonly body?: Record<string, unknown> },
-  ) => privateRetentionRequest(operationsEndpoint, operationsToken, route, init, operationsTimeoutMs);
+  ) =>
+    privateRetentionRequest(operationsEndpoint, operationsToken, route, init, operationsTimeoutMs);
   return {
     async readGraphMigration(): Promise<unknown> {
       const remote = await requestPrivate("graph-migration");
