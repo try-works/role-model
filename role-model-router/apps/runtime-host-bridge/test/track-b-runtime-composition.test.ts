@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -8,6 +8,7 @@ import { pathToFileURL } from "node:url";
 import { afterEach, describe, expect, test } from "vitest";
 
 import {
+  TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS,
   createOwnedTrackBSidecarSpec,
   createPackagedProductionRuntime,
   createProductionExtensionRuntime,
@@ -33,6 +34,10 @@ afterEach(async () => {
 
 describe("production Track B composition", () => {
   const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
+
+  test("allows the documented bounded recovery window before a persisted sidecar is rejected", () => {
+    expect(TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS).toBe(90_000);
+  });
 
   test("provisions production Message Graph keys once and reuses them across package updates", async () => {
     const stateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-managed-artifact-keys-"));
@@ -90,13 +95,29 @@ describe("production Track B composition", () => {
     ).rejects.toThrow(/incomplete.*managed artifact key/i);
   });
 
-  test("resolves packaged stage artifact keys from the release secrets directory", async () => {
+  test("refuses to provision replacement Message Graph keys over persisted artifact state", async () => {
+    const stateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-missing-artifact-keys-"));
+    roots.push(stateRoot);
+    const runtimeModule = await import("../src/track-b-runtime.js");
+    const resolveManagedArtifactKeyFiles = Reflect.get(
+      runtimeModule,
+      "resolveManagedArtifactKeyFiles",
+    ) as (input: { channel: "stage"; stateRoot: string }) => Promise<unknown>;
+    await mkdir(path.join(stateRoot, "artifact-store"), { recursive: true });
+    await writeFile(
+      path.join(stateRoot, "artifact-store", "metadata.sqlite"),
+      "existing encrypted graph state",
+    );
+
+    await expect(resolveManagedArtifactKeyFiles({ channel: "stage", stateRoot })).rejects.toThrow(
+      /restore.*Message Graph keys|existing.*artifact/i,
+    );
+    expect(existsSync(path.join(stateRoot, "managed-keys"))).toBe(false);
+  });
+
+  test("provisions stage artifact keys under durable state instead of a release secrets directory", async () => {
     const packageRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-stage-package-"));
     roots.push(packageRoot);
-    const secretsDir = path.join(packageRoot, "secrets");
-    await mkdir(secretsDir, { recursive: true });
-    await writeFile(path.join(secretsDir, "artifact-digest.key"), Buffer.alloc(32, 3));
-    await writeFile(path.join(secretsDir, "artifact-encryption.key"), Buffer.alloc(32, 5));
     const previousCwd = process.cwd();
     process.chdir(packageRoot);
     try {
@@ -112,46 +133,32 @@ describe("production Track B composition", () => {
         channel: "stage",
         stateRoot: path.join(packageRoot, "state"),
       });
+      expect(await readFile(resolved.artifactDigestKeyFile)).toHaveLength(32);
+      expect(await readFile(resolved.artifactEncryptionKeyFile)).toHaveLength(32);
       expect(resolved.artifactDigestKeyFile).toBe(
-        path.join(packageRoot, "secrets", "artifact-digest.key"),
+        path.join(packageRoot, "state", "managed-keys", "artifact-digest.key"),
       );
       expect(resolved.artifactEncryptionKeyFile).toBe(
-        path.join(packageRoot, "secrets", "artifact-encryption.key"),
+        path.join(packageRoot, "state", "managed-keys", "artifact-encryption.key"),
       );
     } finally {
       process.chdir(previousCwd);
     }
   });
 
-  test("refuses a stage package whose packaged artifact keys are missing", async () => {
-    const packageRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-stage-package-empty-"));
-    roots.push(packageRoot);
-    const previousCwd = process.cwd();
-    process.chdir(packageRoot);
-    try {
-      const runtimeModule = await import("../src/track-b-runtime.js");
-      const resolveManagedArtifactKeyFiles = Reflect.get(
-        runtimeModule,
-        "resolveManagedArtifactKeyFiles",
-      ) as (input: { channel: "stage"; stateRoot: string }) => Promise<unknown>;
-      await expect(
-        resolveManagedArtifactKeyFiles({
-          channel: "stage",
-          stateRoot: path.join(packageRoot, "state"),
-        }),
-      ).rejects.toThrow(/managed artifact key|ENOENT/i);
-    } finally {
-      process.chdir(previousCwd);
-    }
-  });
-
-  test("packages the stage channel with self-contained secrets defaults", async () => {
+  test("requires external stage trust and recommendation material instead of package-local defaults", async () => {
     const cliSource = readFileSync(new URL("../src/cli.ts", import.meta.url), "utf8");
-    expect(cliSource).toMatch(/secrets",\s*"recommendation-material\.json/);
-    expect(cliSource).toMatch(/secrets",\s*"destination-material\.json/);
+    expect(cliSource).not.toMatch(/secrets",\s*"recommendation-material\.json/);
+    expect(cliSource).not.toMatch(/secrets",\s*"destination-material\.json/);
     expect(cliSource).toMatch(/recommendations-stage\.role-model\.dev/);
     expect(cliSource).toMatch(/ingest-stage\.role-model\.dev\/contribution\/aggregate/);
     expect(cliSource).toMatch(/standalone-runtime-stage/);
+  });
+
+  test("does not enable the Stage aggregate destination unless external trust material is supplied", () => {
+    const cliSource = readFileSync(new URL("../src/cli.ts", import.meta.url), "utf8");
+    expect(cliSource).toMatch(/destinationTrustMaterialFile/);
+    expect(cliSource).toMatch(/runtimeChannel === "stage" && destinationTrustMaterialFile/);
   });
 
   test("owns and supervises the private operations sidecar without URL injection", async () => {

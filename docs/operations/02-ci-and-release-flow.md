@@ -56,6 +56,10 @@ Reviewed `hotfix/* -> main` is the explicit emergency exception.
 packages are available by explicit manual dispatch. Every successful `stage` push publishes a GitHub prerelease with
 all four stage-channel archives and `SHA256SUMS.txt`; prereleases are never selected by the stable installers.
 
+An explicit `workflow_dispatch` build is useful for package diagnostics, but it does not publish or replace a Stage
+prerelease. To create a candidate for acceptance, promote a reviewed public change through `dev -> stage` so that a
+`stage` push produces a new immutable `stage-rc-<stage-sha>` identity.
+
 After testing, a maintainer runs `.github/workflows/accept-release-candidate.yml` with the exact prerelease tag and
 checks the explicit acceptance input. That workflow re-downloads the candidate, validates all checksums and stage
 manifests, and creates the immutable `rc-approved/<full-stage-sha>` receipt. Do not approve a candidate based only on

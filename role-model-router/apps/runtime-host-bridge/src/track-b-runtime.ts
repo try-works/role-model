@@ -78,6 +78,18 @@ export interface ManagedArtifactKeyFiles {
   readonly artifactEncryptionKeyFile?: string;
 }
 
+function hasPersistedArtifactState(stateRoot: string): boolean {
+  const legacyFile = path.join(stateRoot, "artifact-store.json");
+  const roots = [path.join(stateRoot, "artifact-store"), `${legacyFile}.store`];
+  return (
+    existsSync(legacyFile) ||
+    roots.some(
+      (root) =>
+        existsSync(path.join(root, "metadata.sqlite")) || existsSync(path.join(root, "blobs")),
+    )
+  );
+}
+
 /**
  * Small local graph adapter for fixture and development runs that do not have
  * the private operations sidecar configured. Rich observations live in these
@@ -185,7 +197,7 @@ async function assertManagedArtifactKeyFile(filePath: string): Promise<void> {
 }
 
 /**
- * Resolves operator-supplied keys or provisions a runtime-owned production key pair.
+ * Resolves operator-supplied keys or provisions a runtime-owned Stage/production key pair.
  * The owned pair lives under the stable runtime state root, never the versioned package,
  * so manual binary updates keep existing Message Graph ciphertext readable.
  */
@@ -211,19 +223,7 @@ export async function resolveManagedArtifactKeyFiles(options: {
     ]);
     return resolved;
   }
-  if (options.channel === "stage") {
-    const packagedDigest = path.resolve("secrets", "artifact-digest.key");
-    const packagedEncryption = path.resolve("secrets", "artifact-encryption.key");
-    await Promise.all([
-      assertManagedArtifactKeyFile(packagedDigest),
-      assertManagedArtifactKeyFile(packagedEncryption),
-    ]);
-    return {
-      artifactDigestKeyFile: packagedDigest,
-      artifactEncryptionKeyFile: packagedEncryption,
-    };
-  }
-  if (options.channel !== "production") return {};
+  if (options.channel === "development") return {};
 
   const stableStateRoot = path.resolve(options.stateRoot);
   const keyRoot = path.join(stableStateRoot, "managed-keys");
@@ -247,6 +247,15 @@ export async function resolveManagedArtifactKeyFiles(options: {
   };
 
   if (await pathExists(keyRoot)) return readPublishedPair();
+
+  // Generating a replacement pair for persisted ciphertext irreversibly makes
+  // the existing graph unreadable. Require recovery of the original pair
+  // instead; first install is the only safe time to provision keys.
+  if (hasPersistedArtifactState(stableStateRoot)) {
+    throw new Error(
+      "managed artifact keys are absent for existing artifact state; restore both Message Graph keys from backup instead of generating replacements",
+    );
+  }
 
   await mkdir(stableStateRoot, { recursive: true });
   const temporaryRoot = await mkdtemp(`${keyRoot}.tmp-`);
@@ -276,6 +285,13 @@ export interface TrackBProductionRuntimeOptions {
   stateRoot: string;
   sidecar: OwnedTrackBSidecarSpec;
 }
+
+/**
+ * A persisted Track B state can take longer than a process-spawn grace period
+ * to reconcile before it can report ready. Keep that recovery bounded while
+ * matching the extension supervisor's documented allowance.
+ */
+export const TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS = 90_000;
 
 /**
  * Normal host-path adapter for graph-primary observation storage. The SQLite
@@ -794,6 +810,22 @@ export async function stageTrackBRuntimeDistribution(options: {
   const manifest = JSON.parse(manifestBytes.toString("utf8")) as {
     readonly schemaVersion: string;
     readonly publicSourceTree?: string;
+    readonly graphRegistry?: {
+      readonly version?: number;
+      readonly artifactSha256?: string;
+      readonly kinds?: readonly unknown[];
+    };
+    readonly registryBindings?: {
+      readonly graphRegistry?: {
+        readonly schemaVersion?: string;
+        readonly version?: number;
+        readonly path?: string;
+      };
+      readonly storageRegistry?: {
+        readonly schemaVersion?: string;
+        readonly modulePath?: string;
+      };
+    };
     readonly sidecar: { readonly modulePath: string; readonly artifactSha256: string };
     readonly publicRuntimeAdapter?: {
       readonly modulePath: string;
@@ -818,6 +850,43 @@ export async function stageTrackBRuntimeDistribution(options: {
         : null;
   if (!compatibilityGeneration || manifest.extensions.length !== 13) {
     throw new Error("Track B runtime distribution manifest is unsupported or incomplete");
+  }
+  if (
+    compatibilityGeneration === "N" &&
+    (!manifest.graphRegistry ||
+      manifest.graphRegistry.version !== 1 ||
+      !/^[a-f0-9]{64}$/.test(manifest.graphRegistry.artifactSha256 ?? "") ||
+      !Array.isArray(manifest.graphRegistry.kinds))
+  ) {
+    throw new Error("Track B runtime distribution graph registry is missing or invalid");
+  }
+  if (
+    compatibilityGeneration === "N" &&
+    (manifest.registryBindings?.graphRegistry?.schemaVersion !== "role-model.graph-registry.v1" ||
+      manifest.registryBindings?.graphRegistry?.version !== 1 ||
+      manifest.registryBindings?.graphRegistry?.path !== "shared/graph/registry.json" ||
+      manifest.registryBindings.storageRegistry?.schemaVersion !==
+        "role-model.storage-registry.v1" ||
+      manifest.registryBindings?.storageRegistry?.modulePath !== "shared/retention/index.mjs")
+  ) {
+    throw new Error("Track B runtime distribution registry bindings are missing or invalid");
+  }
+  if (compatibilityGeneration === "N") {
+    const graphRegistry = manifest.graphRegistry;
+    if (!graphRegistry) throw new Error("Track B runtime distribution graph registry is missing");
+    const graphRegistryBytes = Buffer.from(
+      JSON.stringify({
+        version: graphRegistry.version,
+        kinds: graphRegistry.kinds,
+      }),
+      "utf8",
+    );
+    const graphRegistryDigest = createHash("sha256").update(graphRegistryBytes).digest("hex");
+    if (graphRegistryDigest !== graphRegistry.artifactSha256) {
+      throw new Error(
+        "Track B runtime distribution graph registry digest does not bind its contents",
+      );
+    }
   }
   if (options.expectedPublicSourceTree) {
     if (
@@ -1790,6 +1859,7 @@ export interface TrackBShadowPipelineInput {
   readonly evaluationCases: readonly Record<string, unknown>[];
   readonly trajectoryEvents: readonly Record<string, unknown>[];
   readonly identity?: TrackBVariantIdentity;
+  readonly occurrence?: Readonly<{ occurrenceId: string; contentId: string }>;
 }
 
 export interface TrackBVariantIdentity {
@@ -1917,6 +1987,7 @@ export async function runTrackBShadowPipeline(
     authorizationEpoch: input.authorizationEpoch,
     capability,
     ...(input.identity ? { identity: input.identity } : {}),
+    ...(input.occurrence ? { occurrence: input.occurrence } : {}),
     value,
   });
   const replay = await runtime.invoke(
@@ -2051,6 +2122,7 @@ async function runTrackBObservationPipeline(
     readonly sourceGraphRef: string;
     readonly trajectoryEvents: readonly Record<string, unknown>[];
     readonly identity: TrackBVariantIdentity;
+    readonly occurrence?: Readonly<{ occurrenceId: string; contentId: string }>;
   },
 ) {
   const envelope = (capability: string, value: unknown): Record<string, unknown> => ({
@@ -2062,6 +2134,7 @@ async function runTrackBObservationPipeline(
     authorizationEpoch: input.authorizationEpoch,
     capability,
     identity: input.identity,
+    ...(input.occurrence ? { occurrence: input.occurrence } : {}),
     value,
   });
   const replay = await runtime.invoke(
@@ -2152,6 +2225,12 @@ export async function runTrackBPostObservation(
     throw new Error("persisted observation identity is required for Track B shadow processing");
   }
   const identity = normalizeTrackBVariantIdentity(observation);
+  const occurrenceId = String(observation.occurrenceId ?? `occurrence:${requestId}`);
+  const contentId = String(observation.contentId ?? `content:${requestId}`);
+  if (!occurrenceId || !contentId) {
+    throw new Error("post-observation occurrence and content identity is required");
+  }
+  let occurrence = Object.freeze({ occurrenceId, contentId });
   const run88Correlation = input.expectedReleaseId
     ? normalizeRun88RuntimeCorrelation(input.run88Correlation ?? {}, input.expectedReleaseId)
     : null;
@@ -2167,6 +2246,7 @@ export async function runTrackBPostObservation(
     authorizationEpoch: input.authorizationEpoch,
     capability,
     identity,
+    occurrence,
     ...(run88Correlation ? { run88Correlation } : {}),
     ...extra,
   });
@@ -2201,6 +2281,18 @@ export async function runTrackBPostObservation(
     }),
   );
   const artifactRef = String(artifact.id ?? `observation:${requestId}`);
+  const artifactOccurrence =
+    artifact.occurrence && typeof artifact.occurrence === "object"
+      ? (artifact.occurrence as Record<string, unknown>)
+      : null;
+  if (
+    artifactOccurrence?.occurrenceId === occurrenceId &&
+    typeof artifactOccurrence.contentId === "string"
+  ) {
+    occurrence = Object.freeze({ occurrenceId, contentId: artifactOccurrence.contentId });
+  } else {
+    occurrence = Object.freeze({ occurrenceId, contentId: artifactRef });
+  }
   await observedRuntime.invoke(
     "event-log",
     businessEnvelope("event:append", {
@@ -2358,6 +2450,7 @@ export async function runTrackBPostObservation(
           evaluationCases: routingShadowCases,
           trajectoryEvents,
           identity,
+          occurrence,
         })
       : await runTrackBObservationPipeline(observedRuntime, {
           requestId,
@@ -2370,6 +2463,7 @@ export async function runTrackBPostObservation(
           sourceGraphRef,
           trajectoryEvents,
           identity,
+          occurrence,
         });
   const projection = createProjectionV2({
     scope: input.scope,
@@ -2402,6 +2496,7 @@ export async function runTrackBPostObservation(
     channel: input.channel,
     authorizationEpoch: input.authorizationEpoch,
     identity: { ...identity },
+    occurrence,
   });
   const registry = Object.fromEntries(
     [...closureEntries.entries()].sort(([left], [right]) => left.localeCompare(right)),
@@ -2917,7 +3012,7 @@ export function createOwnedTrackBSidecarSpec(options: {
           // window to reconcile durable state before it can publish readiness. Keep
           // this bounded, but align the owned sidecar with the production extension
           // supervisor's recovery allowance.
-        }, options.startupTimeoutMs ?? 30_000);
+        }, options.startupTimeoutMs ?? TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS);
         const rejectError = (error: Error) => {
           clearTimeout(timer);
           reject(

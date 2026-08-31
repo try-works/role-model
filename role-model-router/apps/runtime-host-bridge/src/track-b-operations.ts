@@ -137,9 +137,24 @@ export function normalizeStorageRetentionContract(value: unknown): Record<string
   const nestedPhysicalResources = Array.isArray(inventory?.physicalResources)
     ? inventory.physicalResources
     : undefined;
-  const physicalResources = Array.isArray(raw.physicalResources)
-    ? raw.physicalResources
-    : (nestedPhysicalResources ?? (Array.isArray(inventory?.entries) ? inventory.entries : []));
+  const normalizeObservation = (resource: unknown): unknown => {
+    if (!resource || typeof resource !== "object") return resource;
+    const row = resource as Record<string, unknown>;
+    const unavailable = row.health === "unavailable";
+    const observedAt = typeof row.observedAt === "string" ? row.observedAt : undefined;
+    return {
+      ...row,
+      ...(unavailable && typeof row.observationReason !== "string"
+        ? { observationReason: "Observation reported unavailable" }
+        : {}),
+      ...(typeof row.lastCheckedAt !== "string" && observedAt ? { lastCheckedAt: observedAt } : {}),
+    };
+  };
+  const physicalResources = (
+    Array.isArray(raw.physicalResources)
+      ? raw.physicalResources
+      : (nestedPhysicalResources ?? (Array.isArray(inventory?.entries) ? inventory.entries : []))
+  ).map(normalizeObservation);
   return {
     ...raw,
     logicalClasses,
@@ -188,6 +203,7 @@ type BridgeState = {
   readonly contribution?: ContributionState;
   readonly recommendations?: readonly RecommendationRecord[];
   readonly recommendationRevision?: number;
+  readonly recommendationCursor?: RecommendationCursor | null;
   readonly extensionMutationReceipts?: readonly ExtensionMutationReceipt[];
   readonly activePack?: {
     readonly id: string;
@@ -198,6 +214,14 @@ type BridgeState = {
     readonly reasoningEffort?: string | null;
     readonly effortSource?: RecommendationEffortSource;
   } | null;
+};
+type RecommendationCursor = {
+  readonly channel: string;
+  readonly scopeId: string;
+  readonly recommendationTier: string;
+  readonly channelSequence: number;
+  readonly snapshotId: string;
+  readonly manifestHash: string;
 };
 type RetentionPolicy = {
   readonly policyId: string;
@@ -342,6 +366,7 @@ const EMPTY_STATE: BridgeState = {
   contribution: EMPTY_CONTRIBUTION,
   recommendations: [],
   recommendationRevision: 0,
+  recommendationCursor: null,
   extensionMutationReceipts: [],
   activePack: null,
 };
@@ -392,12 +417,25 @@ const validate = (value: BridgeState): BridgeState => {
       !Number.isInteger(plan.sourceRevision))
   )
     throw new Error("invalid retention plan");
+  const recommendationCursor = value.recommendationCursor ?? null;
+  if (
+    recommendationCursor &&
+    (!recommendationCursor.channel ||
+      !recommendationCursor.scopeId ||
+      !recommendationCursor.recommendationTier ||
+      !Number.isSafeInteger(recommendationCursor.channelSequence) ||
+      recommendationCursor.channelSequence < 1 ||
+      !recommendationCursor.snapshotId ||
+      !/^[a-f0-9]{64}$/.test(recommendationCursor.manifestHash))
+  )
+    throw new Error("invalid recommendation cursor");
   return {
     ...value,
     retention: { ...value.retention, policies: value.retention.policies ?? [] },
     contribution: value.contribution ?? EMPTY_CONTRIBUTION,
     recommendations: value.recommendations ?? [],
     recommendationRevision: value.recommendationRevision ?? 0,
+    recommendationCursor,
     activePack: value.activePack ?? null,
   };
 };
@@ -647,6 +685,23 @@ const privateRetentionRequest = async (
         : `private Track B operation failed with ${response.status}`,
     );
   return result;
+};
+
+const normalizeStorageAuditReadiness = (value: unknown) => {
+  const raw = recordValue(value);
+  if (raw.schemaVersion !== "role-model.storage-audit-readiness.v1")
+    return { storageAudit: value ?? null, storageAuditStatus: null };
+  const audit = recordValue(raw.audit);
+  return {
+    storageAudit: audit.schemaVersion === "role-model.storage-audit.v1" ? audit : null,
+    storageAuditStatus: {
+      schemaVersion: "role-model.storage-audit-readiness.v1",
+      status: typeof raw.status === "string" ? raw.status : "pending",
+      observedAt: typeof raw.observedAt === "string" ? raw.observedAt : null,
+      freshUntil: typeof raw.freshUntil === "string" ? raw.freshUntil : null,
+      reason: typeof raw.reason === "string" ? raw.reason : undefined,
+    },
+  };
 };
 
 function boundedIdentity(value: unknown, label: string): string {
@@ -1484,7 +1539,7 @@ export function createTrackBOperations({
       if (remote)
         return {
           ...normalizeStorageRetentionContract(remote),
-          storageAudit: storageAudit ?? null,
+          ...normalizeStorageAuditReadiness(storageAudit),
         };
       const state = await readState(statePath);
       const categories = state.storageServices.map((row) => ({
@@ -1760,6 +1815,10 @@ export function createTrackBOperations({
       });
       return remote ?? { status: "operations_boundary_unconfigured" };
     },
+    async retryContributionAggregates(): Promise<unknown> {
+      const remote = await requestPrivate("contribution/retry", { method: "POST", body: {} });
+      return remote ?? { status: "operations_boundary_unconfigured" };
+    },
     async recordLocalRouteCapture(input: Record<string, unknown>): Promise<unknown> {
       if (!operationsEndpoint) return { status: "operations_boundary_unconfigured" };
       const url = new URL(operationsEndpoint);
@@ -1798,6 +1857,31 @@ export function createTrackBOperations({
     },
     async listRecommendations(): Promise<readonly RecommendationRecord[]> {
       return (await readState(statePath)).recommendations ?? [];
+    },
+    async readRecommendationRevision(): Promise<number> {
+      return (await readState(statePath)).recommendationRevision ?? 0;
+    },
+    async readRecommendationCursor(): Promise<RecommendationCursor | null> {
+      return (await readState(statePath)).recommendationCursor ?? null;
+    },
+    async rememberRecommendationCursor(cursor: RecommendationCursor): Promise<void> {
+      const state = await readState(statePath);
+      const normalized = validate({ ...state, recommendationCursor: cursor }).recommendationCursor;
+      if (
+        !normalized ||
+        normalized.channelSequence !== (state.recommendationRevision ?? 0) ||
+        !(state.recommendations ?? []).length ||
+        (state.recommendations ?? []).some(
+          (row) => row.provenance !== `cloud:${normalized.manifestHash}`,
+        )
+      )
+        throw new Error("recommendation cursor does not identify the imported bundle");
+      await writeState(statePath, {
+        ...state,
+        revision: state.revision + 1,
+        generatedAt: new Date().toISOString(),
+        recommendationCursor: normalized,
+      });
     },
     async importRecommendationBundle(
       bundle: Record<string, unknown>,
@@ -1861,16 +1945,24 @@ export function createTrackBOperations({
     async importRecommendationArtifactBundle(
       bundle: ArtifactBundleImport,
       verificationKey: string,
+      cursor?: RecommendationCursor,
     ): Promise<readonly RecommendationRecord[]> {
       const state = await readState(statePath);
       const rows = importArtifactBundleRecords(bundle, verificationKey, state);
       const channelSequence = Number(bundle.manifest.channelSequence);
+      if (
+        cursor &&
+        (cursor.channelSequence !== channelSequence ||
+          cursor.manifestHash !== bundle.expectedManifestSha256)
+      )
+        throw new Error("recommendation cursor does not match the imported Artifact Bundle");
       await writeState(statePath, {
         ...state,
         revision: state.revision + 1,
         generatedAt: new Date().toISOString(),
         recommendations: rows,
         recommendationRevision: channelSequence,
+        recommendationCursor: cursor ?? null,
       });
       return rows;
     },

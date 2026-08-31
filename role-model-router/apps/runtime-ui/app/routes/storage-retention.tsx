@@ -180,8 +180,21 @@ export function StorageRetentionRouteView() {
         ]}
       />
       {error ? <ErrorState label={error} /> : null}
-      {summary?.policyState ? (
-        <p className={supportingTextClassName}>Global policy state: {summary.policyState.state}</p>
+      {summary ? (
+        <p className={supportingTextClassName}>
+          Policy state{summary.policyState?.channel ? ` (${summary.policyState.channel})` : ""}:{" "}
+          {summary.policyState?.state ?? "not reported"}
+        </p>
+      ) : null}
+      {summary?.storageAuditStatus ? (
+        <p className={supportingTextClassName}>
+          Storage audit: {summary.storageAuditStatus.status}
+          {summary.storageAuditStatus.observedAt
+            ? ` (observed ${summary.storageAuditStatus.observedAt})`
+            : summary.storageAuditStatus.reason
+              ? ` — ${summary.storageAuditStatus.reason}`
+              : ""}
+        </p>
       ) : null}
       <p className={supportingTextClassName}>
         Unattributed physical bytes are measured physical allocation not mapped to logical storage
@@ -190,7 +203,7 @@ export function StorageRetentionRouteView() {
       {summary?.physicalResources ? (
         <SectionCard
           title="Physical storage inventory"
-          description="Registry ownership, health, observation state, physical size, legal holds, and row-level retention enforcement for every writable store."
+          description="Registry ownership, health, observation diagnostics, physical size, legal holds, and retention coverage for every writable store."
         >
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
@@ -202,10 +215,12 @@ export function StorageRetentionRouteView() {
                     "Health",
                     "Observation state",
                     "Measurement source",
+                    "Last checked",
                     "Fresh through",
+                    "Reason",
                     "Physical bytes",
                     "Legal holds",
-                    "Enforcement",
+                    "Retention coverage",
                   ].map((heading) => (
                     <th className={`pb-3 font-normal ${monoEyebrowClassName}`} key={heading}>
                       {heading}
@@ -236,7 +251,13 @@ export function StorageRetentionRouteView() {
                       {row.measurementSource ?? row.measurement}
                     </td>
                     <td className={`py-3 ${supportingTextClassName}`}>
+                      {row.lastCheckedAt ?? row.observedAt ?? "Not checked"}
+                    </td>
+                    <td className={`py-3 ${supportingTextClassName}`}>
                       {row.freshUntil ?? "Not time-bounded"}
+                    </td>
+                    <td className={`py-3 ${supportingTextClassName}`}>
+                      {row.observationReason ?? "No diagnostic supplied"}
                     </td>
                     <td className={`py-3 ${supportingTextClassName}`}>
                       {row.physicalBytes === null ? "Unavailable" : formatBytes(row.physicalBytes)}

@@ -11,6 +11,7 @@ export async function consumeTrackBProjection(
     readonly channel: string;
     readonly authorizationEpoch: number;
     readonly identity?: Readonly<Record<string, unknown>>;
+    readonly occurrence?: Readonly<{ occurrenceId: string; contentId: string }>;
   },
 ) {
   const projection = validateProjectionV2(value);
@@ -43,6 +44,7 @@ export async function consumeTrackBProjection(
         authorizationEpoch: input.authorizationEpoch,
         capability,
         ...(input.identity ? { identity: input.identity } : {}),
+        ...(input.occurrence ? { occurrence: input.occurrence } : {}),
         projection,
       }),
     );

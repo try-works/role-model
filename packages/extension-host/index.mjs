@@ -9,6 +9,33 @@ import {
   verifySignedBundle,
 } from "../extension-sdk/index.mjs";
 
+/**
+ * Reject malformed graph-contract metadata at the host boundary.  Extension
+ * packages must not be able to treat an incomplete registry as a usable
+ * contract, even when they are loaded independently from the Track-B bundle.
+ */
+export function validateGraphRegistry(registry) {
+  if (!registry || registry.version !== 1 || !Array.isArray(registry.kinds)) {
+    throw new Error("invalid graph registry");
+  }
+  const seen = new Set();
+  const kinds = registry.kinds.map((kind) => {
+    if (
+      !kind?.id ||
+      !Number.isInteger(kind.version) ||
+      !kind.category ||
+      !Array.isArray(kind.fields)
+    ) {
+      throw new Error("incomplete graph registry entry");
+    }
+    const key = `${kind.id}@${kind.version}`;
+    if (seen.has(key)) throw new Error(`duplicate graph registry entry: ${key}`);
+    seen.add(key);
+    return Object.freeze({ ...kind, fields: Object.freeze([...kind.fields]) });
+  });
+  return Object.freeze({ version: registry.version, kinds: Object.freeze(kinds) });
+}
+
 const runtimePath = fileURLToPath(new URL("./worker-runtime.mjs", import.meta.url));
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const normalizeModuleUrl = (value) =>

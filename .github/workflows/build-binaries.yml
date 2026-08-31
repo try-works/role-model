@@ -280,6 +280,16 @@ jobs:
       - name: Build UI
         run: pnpm --filter @role-model-router/runtime-ui run build
 
+      # The Track B adapter bundles sqlite-memory directly from TypeScript.
+      # That package resolves profile-aggregator through its runtime export,
+      # which intentionally targets dist/.  A fresh CI checkout therefore
+      # needs this focused public build before the paired private distribution
+      # can be assembled.
+      - name: Build public runtime adapter dependencies
+        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production'
+        working-directory: ${{ env.ROLE_MODEL_BUILD_CHANNEL == 'production' && '.cache/paired-public' || '.' }}
+        run: corepack pnpm --filter @role-model-router/profile-aggregator... build
+
       - name: Validate exact private release revision
         if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production'
         shell: bash
@@ -440,21 +450,20 @@ jobs:
             }
           }
 
-      - name: Include managed stage secrets in the stage package
-        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage'
+      - name: Assert release package has no bundled secret material
         shell: pwsh
-        env:
-          STAGE_ARTIFACT_DIGEST_KEY: ${{ secrets.STAGE_ARTIFACT_DIGEST_KEY }}
-          STAGE_ARTIFACT_ENCRYPTION_KEY: ${{ secrets.STAGE_ARTIFACT_ENCRYPTION_KEY }}
-          STAGE_DESTINATION_MATERIAL: ${{ secrets.STAGE_DESTINATION_MATERIAL }}
-          STAGE_RECOMMENDATION_MATERIAL: ${{ secrets.STAGE_RECOMMENDATION_MATERIAL }}
         run: |
-          $secretsDir = "role-model-router/dist/release/${{ matrix.target }}/secrets"
-          New-Item -ItemType Directory -Force -Path $secretsDir | Out-Null
-          [IO.File]::WriteAllText("$secretsDir/artifact-digest.key", $env:STAGE_ARTIFACT_DIGEST_KEY)
-          [IO.File]::WriteAllText("$secretsDir/artifact-encryption.key", $env:STAGE_ARTIFACT_ENCRYPTION_KEY)
-          [IO.File]::WriteAllText("$secretsDir/destination-material.json", $env:STAGE_DESTINATION_MATERIAL)
-          [IO.File]::WriteAllText("$secretsDir/recommendation-material.json", $env:STAGE_RECOMMENDATION_MATERIAL)
+          $packageDir = "role-model-router/dist/release/${{ matrix.target }}"
+          $forbiddenPaths = @(
+            "$packageDir/secrets",
+            "$packageDir/.env",
+            "$packageDir/.env.local"
+          )
+          foreach ($path in $forbiddenPaths) {
+            if (Test-Path $path) {
+              throw "Bundled secret material is forbidden in release packages: $path"
+            }
+          }
 
       - name: Archive standalone package (Unix)
         if: matrix.target != 'win32-x64'

@@ -703,9 +703,7 @@ export function applyRecommendationServiceLauncherConfig(values: LauncherConfigV
     (channel === "stage" ? "https://recommendations-stage.role-model.dev" : undefined);
   const verificationKey = readLauncherString(values, "recommendation-verification-key");
   const serviceToken = readLauncherString(values, "recommendation-service-token");
-  const materialFile =
-    readLauncherString(values, "recommendation-material-file") ??
-    (channel === "stage" ? path.resolve("secrets", "recommendation-material.json") : undefined);
+  const materialFile = readLauncherString(values, "recommendation-material-file");
   const aggregateScope = readLauncherString(values, "aggregate-scope");
   const recommendationScope = readLauncherString(values, "recommendation-scope");
 
@@ -1007,6 +1005,13 @@ export async function main(): Promise<void> {
       ),
     });
     let postObservationOperations: ReturnType<typeof createTrackBOperations> | null = null;
+    // `createBackend` initializes this after the packaged runtime is selected.
+    // Keep that initialization boundary opaque to TypeScript's local control-flow
+    // analysis: the public-only build does not inline the private operations
+    // adapter, but startup still needs to retry a durable outbox when it is
+    // available at runtime.
+    const currentPostObservationOperations = (): ReturnType<typeof createTrackBOperations> | null =>
+      postObservationOperations;
     const drainPostObservationOutbox = async (
       runtime: Awaited<ReturnType<typeof createProductionExtensionRuntime>>,
     ) =>
@@ -1212,6 +1217,10 @@ export async function main(): Promise<void> {
       }
       const trackBStateRoot = path.join(options.runtimeStateRoot, options.scopeId, "track-b");
       const runtimeChannel = packagedProfile?.channel ?? "development";
+      const destinationTrustMaterialFile =
+        args.values["destination-material-file"] ??
+        args.values["destination-trust-material-file"] ??
+        process.env.ROLE_MODEL_DESTINATION_AUTH_SECRET_FILE;
       const artifactKeyFiles = await resolveManagedArtifactKeyFiles({
         channel: runtimeChannel,
         stateRoot: trackBStateRoot,
@@ -1244,23 +1253,19 @@ export async function main(): Promise<void> {
           channel: runtimeChannel,
           artifactDigestKeyFile: artifactKeyFiles.artifactDigestKeyFile,
           artifactEncryptionKeyFile: artifactKeyFiles.artifactEncryptionKeyFile,
-          trustMaterialFile:
-            args.values["destination-material-file"] ??
-            args.values["destination-trust-material-file"] ??
-            process.env.ROLE_MODEL_DESTINATION_AUTH_SECRET_FILE ??
-            (runtimeChannel === "stage"
-              ? path.resolve("secrets", "destination-material.json")
-              : undefined),
+          trustMaterialFile: destinationTrustMaterialFile,
           aggregateEndpoint:
             args.values["aggregate-ingestion-url"] ??
             process.env.ROLE_MODEL_AGGREGATE_INGESTION_URL ??
-            (runtimeChannel === "stage"
+            (runtimeChannel === "stage" && destinationTrustMaterialFile
               ? "https://ingest-stage.role-model.dev/contribution/aggregate"
               : undefined),
           aggregateScope:
             args.values["aggregate-scope"] ??
             process.env.ROLE_MODEL_AGGREGATE_SCOPE ??
-            (runtimeChannel === "stage" ? "standalone-runtime-stage" : undefined),
+            (runtimeChannel === "stage" && destinationTrustMaterialFile
+              ? "standalone-runtime-stage"
+              : undefined),
           ...(aggregateCorrelationReleaseId && aggregateCorrelationCohortId
             ? {
                 aggregateCorrelationReleaseId,
@@ -1320,6 +1325,9 @@ export async function main(): Promise<void> {
           qaStartupReceipts.set(extension.descriptor.id, { ...receipt, requestId });
         }
         await drainPostObservationOutbox(extensionRuntime);
+        // A prior cloud outage must not require an unrelated new provider request
+        // before its already-authorized, durable aggregate is retried.
+        await currentPostObservationOperations()?.retryContributionAggregates();
       } catch (error) {
         console.error("[role-model] extension host failed after core runtime was ready:", error);
       }

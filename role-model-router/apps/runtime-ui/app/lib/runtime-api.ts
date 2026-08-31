@@ -1779,6 +1779,10 @@ export interface RuntimeStorageRetentionSummary {
     readonly observationState?: string;
     readonly measurementSource?: string;
     readonly observedAt?: string;
+    /** Human-readable reason when observation is unavailable or degraded. */
+    readonly observationReason?: string | null;
+    /** Timestamp of the most recent health/observation attempt. */
+    readonly lastCheckedAt?: string | null;
     readonly freshUntil?: string;
     readonly retentionState?: string;
     readonly accountingState?: string;
@@ -1796,6 +1800,8 @@ export interface RuntimeStorageRetentionSummary {
     readonly observationState?: string;
     readonly measurementSource?: string;
     readonly observedAt?: string;
+    readonly observationReason?: string | null;
+    readonly lastCheckedAt?: string | null;
     readonly freshUntil?: string;
     readonly owners?: readonly string[];
     readonly logicalClassIds?: readonly string[];
@@ -1859,6 +1865,8 @@ export interface RuntimeStorageRetentionSummary {
       readonly observationState?: string;
       readonly measurementSource?: string;
       readonly observedAt?: string | null;
+      readonly observationReason?: string | null;
+      readonly lastCheckedAt?: string | null;
       readonly freshUntil?: string | null;
     }[];
     /** v2 keeps the measured physical inventory separate from logical accounting. */
@@ -1882,6 +1890,14 @@ export interface RuntimeStorageRetentionSummary {
     readonly observationRows?: number;
     readonly graphEdges?: number;
     readonly measuredAt?: string;
+  } | null;
+  /** Audit freshness is separate from completed physical accounting. */
+  readonly storageAuditStatus?: {
+    readonly schemaVersion: "role-model.storage-audit-readiness.v1";
+    readonly status: "pending" | "stale" | "ready" | string;
+    readonly observedAt?: string | null;
+    readonly freshUntil?: string | null;
+    readonly reason?: string;
   } | null;
   readonly policyState?: {
     readonly channel: string;

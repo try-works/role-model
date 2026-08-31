@@ -45,6 +45,64 @@ describe("remote-health-probe", () => {
     });
   });
 
+  it("coalesces one model-list request across effort siblings on the same provider account", async () => {
+    let requestCount = 0;
+    const result = await probeRemoteEndpoints({
+      litellmHealthy: true,
+      targets: [
+        {
+          endpointId: "deepseek.personal.primary.global.deepseek-v4-flash",
+          providerAccountId: "deepseek.personal.primary",
+          modelId: "deepseek/deepseek-v4-flash",
+          apiBase: "https://api.deepseek.com/v1",
+          servingSource: "remote-service",
+        },
+        {
+          endpointId: "deepseek.personal.primary.global.deepseek-v4-flash-max",
+          providerAccountId: "deepseek.personal.primary",
+          modelId: "deepseek/deepseek-v4-flash",
+          apiBase: "https://api.deepseek.com/v1",
+          servingSource: "remote-service",
+        },
+        {
+          endpointId: "deepseek.personal.primary.global.deepseek-v4-pro-max",
+          providerAccountId: "deepseek.personal.primary",
+          modelId: "deepseek/deepseek-v4-pro",
+          apiBase: "https://api.deepseek.com/v1",
+          servingSource: "remote-service",
+        },
+      ],
+      resolveAuthorization: async () => "deepseek-live-key",
+      networkFetcher: async () => {
+        requestCount += 1;
+        return new Response(
+          JSON.stringify({ data: [{ id: "deepseek-v4-flash" }, { id: "deepseek-v4-pro" }] }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      },
+    });
+
+    expect(requestCount).toBe(1);
+    expect(result).toMatchObject({ probed: 3, healthy: 3, degraded: 0 });
+    expect(result.results).toMatchObject([
+      {
+        endpointId: "deepseek.personal.primary.global.deepseek-v4-flash",
+        modelId: "deepseek/deepseek-v4-flash",
+        reason: "healthy",
+      },
+      {
+        endpointId: "deepseek.personal.primary.global.deepseek-v4-flash-max",
+        modelId: "deepseek/deepseek-v4-flash",
+        reason: "healthy",
+      },
+      {
+        endpointId: "deepseek.personal.primary.global.deepseek-v4-pro-max",
+        modelId: "deepseek/deepseek-v4-pro",
+        reason: "healthy",
+      },
+    ]);
+  });
+
   it("maps auth failures to degraded health with auth reason", async () => {
     const result = await probeRemoteEndpoints({
       litellmHealthy: true,

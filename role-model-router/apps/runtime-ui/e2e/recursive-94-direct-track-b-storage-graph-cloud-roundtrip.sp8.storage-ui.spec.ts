@@ -58,7 +58,9 @@ test.describe("@recursive:94-direct-track-b-storage-graph-cloud-roundtrip @sp8 @
     await expect(summary.getByText("Reclaimable", { exact: true })).toBeVisible();
     await expect(summary.getByText("Unattributed physical bytes", { exact: true })).toBeVisible();
     await expect(summary.getByText("Legal holds")).toBeVisible();
-    await expect(page.getByRole("columnheader", { name: "Enforcement" })).toBeVisible();
+    // The physical-resource projection reports measured observation state. Its
+    // legacy Enforcement column must not be revived by the packaged UI.
+    await expect(page.getByRole("columnheader", { name: "Enforcement" })).toHaveCount(0);
     await expect(page.getByRole("columnheader", { name: "Observation state" })).toBeVisible();
     await expect(page.getByRole("columnheader", { name: "Fresh through" })).toBeVisible();
   });

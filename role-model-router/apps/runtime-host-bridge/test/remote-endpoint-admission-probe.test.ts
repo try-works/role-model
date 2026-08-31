@@ -1,8 +1,15 @@
 import { describe, expect, test } from "vitest";
 
-import { probeRemoteEndpointAdmission } from "../src/remote-health-probe.js";
+import {
+  DEFAULT_REMOTE_PROBE_TIMEOUT_MS,
+  probeRemoteEndpointAdmission,
+} from "../src/remote-health-probe.js";
 
 describe("remote endpoint admission probes", () => {
+  test("uses the 15-second bounded default for remote provider readiness", () => {
+    expect(DEFAULT_REMOTE_PROBE_TIMEOUT_MS).toBe(15_000);
+  });
+
   test("uses the configured effort in a bounded OpenAI-compatible readiness request", async () => {
     const calls: Array<{ url: string; init?: RequestInit }> = [];
 

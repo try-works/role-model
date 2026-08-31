@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { resolveOpenAIProviderUpstreamModelId } from "@role-model-router/provider-openai";
 
 export type RemoteHealthProbeReason =
@@ -58,6 +60,8 @@ export interface RemoteEndpointAdmissionProbeContext {
   readonly networkFetcher: typeof fetch;
   readonly probeTimeoutMs?: number;
 }
+
+export const DEFAULT_REMOTE_PROBE_TIMEOUT_MS = 15_000;
 
 const COMPARABLE_MODEL_ID_ALIASES: Readonly<Record<string, readonly string[]>> = {
   "moonshot/kimi-k2.7-code": ["kimi-for-coding"],
@@ -193,7 +197,7 @@ async function probeTarget(
             ? resolvedAuthorization
             : `Bearer ${resolvedAuthorization}`,
         },
-        signal: AbortSignal.timeout(context.probeTimeoutMs ?? 5000),
+        signal: AbortSignal.timeout(context.probeTimeoutMs ?? DEFAULT_REMOTE_PROBE_TIMEOUT_MS),
       });
       return {
         response,
@@ -297,9 +301,43 @@ async function probeTarget(
 export async function probeRemoteEndpoints(
   context: RemoteHealthProbeContext,
 ): Promise<RemoteHealthProbeSummary> {
+  const modelListRequests = new Map<string, Promise<Response>>();
+  const sharedNetworkFetcher: typeof fetch = async (input, init) => {
+    const url =
+      typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+    const method = (
+      init?.method ?? (input instanceof Request ? input.method : "GET")
+    ).toUpperCase();
+    const headers = new Headers(
+      init?.headers ?? (input instanceof Request ? input.headers : undefined),
+    );
+    const authorizationSha256 = createHash("sha256")
+      .update(headers.get("authorization") ?? "")
+      .digest("hex");
+    headers.delete("authorization");
+    const requestKey = JSON.stringify([
+      method,
+      url,
+      authorizationSha256,
+      [...headers.entries()].sort(([left], [right]) => left.localeCompare(right)),
+    ]);
+
+    let responsePromise = modelListRequests.get(requestKey);
+    if (!responsePromise) {
+      responsePromise = context.networkFetcher(input, init);
+      modelListRequests.set(requestKey, responsePromise);
+    }
+    return (await responsePromise).clone();
+  };
+
   const results: RemoteHealthProbeResult[] = [];
   for (const target of context.targets) {
-    results.push(await probeTarget(target, context));
+    results.push(
+      await probeTarget(target, {
+        ...context,
+        networkFetcher: sharedNetworkFetcher,
+      }),
+    );
   }
 
   const healthy = results.filter((result) => result.reason === "healthy").length;
@@ -358,7 +396,7 @@ export async function probeRemoteEndpointAdmission(
         "content-type": "application/json",
         authorization: credential.startsWith("Bearer ") ? credential : `Bearer ${credential}`,
       },
-      signal: AbortSignal.timeout(context.probeTimeoutMs ?? 5_000),
+      signal: AbortSignal.timeout(context.probeTimeoutMs ?? DEFAULT_REMOTE_PROBE_TIMEOUT_MS),
       body: JSON.stringify(body),
     });
 

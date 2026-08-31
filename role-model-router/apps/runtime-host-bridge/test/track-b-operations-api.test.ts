@@ -53,6 +53,37 @@ afterEach(async () => {
 });
 
 describe("Track B operations APIs", () => {
+  test("retries durable contribution aggregates without manufacturing another request", async () => {
+    const token = "run95-contribution-retry-token";
+    const server = createServer((request, response) => {
+      expect(request.method).toBe("POST");
+      expect(request.url).toBe("/contribution/retry");
+      expect(request.headers.authorization).toBe(`Bearer ${token}`);
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(JSON.stringify({ status: "uploaded", delivered: 1, queued: 0 }));
+    });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("operations server did not bind");
+    try {
+      const operations = createTrackBOperations({
+        statePath: path.join(os.tmpdir(), "run95-contribution-retry-state.json"),
+        catalog: [],
+        operationsEndpoint: `http://127.0.0.1:${address.port}`,
+        operationsToken: token,
+      });
+      await expect(operations.retryContributionAggregates()).resolves.toEqual({
+        status: "uploaded",
+        delivered: 1,
+        queued: 0,
+      });
+    } finally {
+      await new Promise<void>((resolve, reject) =>
+        server.close((error) => (error ? reject(error) : resolve())),
+      );
+    }
+  });
+
   test("builds provider evidence and a semantic Verifiers export from the exact durable graph", () => {
     const observation = {
       requestId: "request-export-94",
@@ -1663,9 +1694,29 @@ describe("Track B operations APIs", () => {
           if (url === "https://recommendations.example/api/role-model/recommendations/resolve") {
             expect(init?.method).toBe("POST");
             expect(new Headers(init?.headers).get("authorization")).toBe("Bearer service-token");
-            expect(JSON.parse(String(init?.body))).toMatchObject({
+            const resolveRequest = JSON.parse(String(init?.body));
+            expect(resolveRequest).toMatchObject({
               scopeId: "public:deepseek-high",
             });
+            if (
+              resolveRequest.activeChannelSequence === 2 &&
+              resolveRequest.activeSnapshotId === "snapshot-pack-downloaded" &&
+              resolveRequest.activeManifestHash === manifestSha256
+            ) {
+              return new Response(
+                JSON.stringify({
+                  contract: "RecommendationResolveResponseV1",
+                  channel: "development",
+                  status: "not_modified",
+                  snapshotId: "snapshot-pack-downloaded",
+                  channelSequence: 2,
+                }),
+                { status: 200, headers: { "content-type": "application/json" } },
+              );
+            }
+            expect(resolveRequest.activeChannelSequence).toBe(0);
+            expect(resolveRequest.activeSnapshotId).toBeUndefined();
+            expect(resolveRequest.activeManifestHash).toBeUndefined();
             return new Response(
               JSON.stringify({
                 contract: "RecommendationResolveResponseV1",
@@ -1727,6 +1778,13 @@ describe("Track B operations APIs", () => {
           confidence: 0.92,
         },
       ]);
+      await expect(backend.downloadRecommendations()).resolves.toEqual(downloaded);
+      const legacyStatePath = path.join(directory, "track-b-production-bridge.json");
+      const legacyState = JSON.parse(await readFile(legacyStatePath, "utf8"));
+      delete legacyState.recommendationCursor;
+      await writeFile(legacyStatePath, `${JSON.stringify(legacyState, null, 2)}\n`, "utf8");
+      await expect(backend.downloadRecommendations()).resolves.toEqual(downloaded);
+      await expect(backend.downloadRecommendations()).resolves.toEqual(downloaded);
       const applied = await backend.applyRecommendation({ id: "recommendation-pack-downloaded" });
       expect(applied).toMatchObject({
         activePack: {
@@ -1942,6 +2000,64 @@ describe("Track B operations APIs", () => {
       expect(entry.physicalBytes).toBeNull();
       expect(entry.measurement).toBe("unavailable");
       expect(entry.health).toBe("unavailable");
+    }
+  });
+
+  test("run95 preserves an asynchronous storage-audit readiness state without presenting it as a completed audit", async () => {
+    const operations = createServer((request, response) => {
+      response.writeHead(200, { "content-type": "application/json" });
+      if (request.url === "/storage-retention") {
+        response.end(
+          JSON.stringify({
+            revision: 7,
+            totalBytes: 140,
+            physicalResources: [],
+            logicalClasses: [],
+            policyState: { state: "absent", channel: "stage" },
+          }),
+        );
+        return;
+      }
+      if (request.url === "/storage-audit") {
+        response.end(
+          JSON.stringify({
+            schemaVersion: "role-model.storage-audit-readiness.v1",
+            status: "pending",
+            observedAt: null,
+            freshUntil: null,
+            reason: "Read-only storage audit is in progress",
+          }),
+        );
+        return;
+      }
+      response.writeHead(404).end(JSON.stringify({ error: "not found" }));
+    });
+    await new Promise<void>((resolve, reject) => {
+      operations.once("error", reject);
+      operations.listen(0, "127.0.0.1", resolve);
+    });
+    try {
+      const address = operations.address();
+      if (!address || typeof address === "string")
+        throw new Error("operations server did not bind");
+      const api = createTrackBOperations({
+        statePath: path.join(os.tmpdir(), `run95-storage-audit-${Date.now()}.json`),
+        catalog: [],
+        operationsEndpoint: `http://127.0.0.1:${address.port}`,
+        operationsToken: "run95-storage-audit-token-0001",
+      });
+      await expect(api.readStorageRetention()).resolves.toMatchObject({
+        revision: 7,
+        storageAudit: null,
+        storageAuditStatus: {
+          schemaVersion: "role-model.storage-audit-readiness.v1",
+          status: "pending",
+        },
+      });
+    } finally {
+      await new Promise<void>((resolve, reject) =>
+        operations.close((error) => (error ? reject(error) : resolve())),
+      );
     }
   });
 
