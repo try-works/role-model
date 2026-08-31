@@ -2003,6 +2003,64 @@ describe("Track B operations APIs", () => {
     }
   });
 
+  test("run95 preserves an asynchronous storage-audit readiness state without presenting it as a completed audit", async () => {
+    const operations = createServer((request, response) => {
+      response.writeHead(200, { "content-type": "application/json" });
+      if (request.url === "/storage-retention") {
+        response.end(
+          JSON.stringify({
+            revision: 7,
+            totalBytes: 140,
+            physicalResources: [],
+            logicalClasses: [],
+            policyState: { state: "absent", channel: "stage" },
+          }),
+        );
+        return;
+      }
+      if (request.url === "/storage-audit") {
+        response.end(
+          JSON.stringify({
+            schemaVersion: "role-model.storage-audit-readiness.v1",
+            status: "pending",
+            observedAt: null,
+            freshUntil: null,
+            reason: "Read-only storage audit is in progress",
+          }),
+        );
+        return;
+      }
+      response.writeHead(404).end(JSON.stringify({ error: "not found" }));
+    });
+    await new Promise<void>((resolve, reject) => {
+      operations.once("error", reject);
+      operations.listen(0, "127.0.0.1", resolve);
+    });
+    try {
+      const address = operations.address();
+      if (!address || typeof address === "string")
+        throw new Error("operations server did not bind");
+      const api = createTrackBOperations({
+        statePath: path.join(os.tmpdir(), `run95-storage-audit-${Date.now()}.json`),
+        catalog: [],
+        operationsEndpoint: `http://127.0.0.1:${address.port}`,
+        operationsToken: "run95-storage-audit-token-0001",
+      });
+      await expect(api.readStorageRetention()).resolves.toMatchObject({
+        revision: 7,
+        storageAudit: null,
+        storageAuditStatus: {
+          schemaVersion: "role-model.storage-audit-readiness.v1",
+          status: "pending",
+        },
+      });
+    } finally {
+      await new Promise<void>((resolve, reject) =>
+        operations.close((error) => (error ? reject(error) : resolve())),
+      );
+    }
+  });
+
   test("run79 mutateExtension enables disables and sets mode with audit receipts", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `track-b-run79-mutate-${Date.now()}`);
     roots.push(runtimeStateRoot);
