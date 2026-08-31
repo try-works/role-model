@@ -687,6 +687,23 @@ const privateRetentionRequest = async (
   return result;
 };
 
+const normalizeStorageAuditReadiness = (value: unknown) => {
+  const raw = recordValue(value);
+  if (raw.schemaVersion !== "role-model.storage-audit-readiness.v1")
+    return { storageAudit: value ?? null, storageAuditStatus: null };
+  const audit = recordValue(raw.audit);
+  return {
+    storageAudit: audit.schemaVersion === "role-model.storage-audit.v1" ? audit : null,
+    storageAuditStatus: {
+      schemaVersion: "role-model.storage-audit-readiness.v1",
+      status: typeof raw.status === "string" ? raw.status : "pending",
+      observedAt: typeof raw.observedAt === "string" ? raw.observedAt : null,
+      freshUntil: typeof raw.freshUntil === "string" ? raw.freshUntil : null,
+      reason: typeof raw.reason === "string" ? raw.reason : undefined,
+    },
+  };
+};
+
 function boundedIdentity(value: unknown, label: string): string {
   if (typeof value !== "string" || value.length < 1 || value.length > 1024)
     throw new Error(`${label} is required`);
@@ -1522,7 +1539,7 @@ export function createTrackBOperations({
       if (remote)
         return {
           ...normalizeStorageRetentionContract(remote),
-          storageAudit: storageAudit ?? null,
+          ...normalizeStorageAuditReadiness(storageAudit),
         };
       const state = await readState(statePath);
       const categories = state.storageServices.map((row) => ({
