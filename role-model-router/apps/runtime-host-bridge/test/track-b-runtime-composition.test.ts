@@ -135,6 +135,12 @@ describe("production Track B composition", () => {
     expect(cliSource).toMatch(/standalone-runtime-stage/);
   });
 
+  test("does not enable the Stage aggregate destination unless external trust material is supplied", () => {
+    const cliSource = readFileSync(new URL("../src/cli.ts", import.meta.url), "utf8");
+    expect(cliSource).toMatch(/destinationTrustMaterialFile/);
+    expect(cliSource).toMatch(/runtimeChannel === "stage" && destinationTrustMaterialFile/);
+  });
+
   test("owns and supervises the private operations sidecar without URL injection", async () => {
     const stateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-track-b-runtime-"));
     roots.push(stateRoot);
