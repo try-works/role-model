@@ -2158,6 +2158,47 @@ describe("Track B operations APIs", () => {
     }
   });
 
+  test("run95 allows a bounded local route capture to complete beyond the legacy five-second budget", async () => {
+    const operations = createServer((request, response) => {
+      if (request.method !== "POST" || request.url !== "/capture/route") {
+        response.writeHead(404).end();
+        return;
+      }
+      setTimeout(() => {
+        response.writeHead(200, { "content-type": "application/json" }).end(
+          JSON.stringify({
+            status: "captured",
+            scope: "runtime:test",
+            rootArtifactId: "artifact:test",
+            rootArtifactDigest: "sha256:test",
+          }),
+        );
+      }, 5_500);
+    });
+    await new Promise<void>((resolve, reject) => {
+      operations.once("error", reject);
+      operations.listen(0, "127.0.0.1", resolve);
+    });
+    try {
+      const address = operations.address();
+      if (!address || typeof address === "string")
+        throw new Error("operations server did not bind");
+      const api = createTrackBOperations({
+        statePath: path.join(os.tmpdir(), `run95-capture-budget-${Date.now()}.json`),
+        catalog: [],
+        operationsEndpoint: `http://127.0.0.1:${address.port}`,
+        operationsToken: "run95-capture-budget-token-0001",
+      });
+      await expect(
+        api.recordLocalRouteCapture({ requestId: "request-1" }),
+      ).resolves.toMatchObject({ status: "captured", rootArtifactId: "artifact:test" });
+    } finally {
+      await new Promise<void>((resolve, reject) =>
+        operations.close((error) => (error ? reject(error) : resolve())),
+      );
+    }
+  });
+
   test("run79 mutateExtension enables disables and sets mode with audit receipts", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `track-b-run79-mutate-${Date.now()}`);
     roots.push(runtimeStateRoot);

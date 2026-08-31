@@ -661,7 +661,10 @@ const privateRetentionRequest = async (
   token: string | undefined,
   route: string,
   init: { readonly method?: string; readonly body?: Record<string, unknown> } = {},
-  timeoutMs = 5_000,
+  // Route captures may perform bounded durable CAS and SQLite commits after the
+  // provider response. Five seconds aborts healthy local captures on mature
+  // runtimes; retain a finite budget while allowing that proven completion path.
+  timeoutMs = 8_000,
 ): Promise<unknown | null> => {
   if (!endpoint) return null;
   if (!token || token.trim().length < 24) {
@@ -1073,7 +1076,7 @@ export function createTrackBOperations({
   runtimeChannel = "development",
   operationsEndpoint = process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL?.trim(),
   operationsToken = process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TOKEN,
-  operationsTimeoutMs = 5_000,
+  operationsTimeoutMs = 8_000,
   extensionRuntime,
 }: {
   readonly statePath: string;
