@@ -1217,6 +1217,10 @@ export async function main(): Promise<void> {
       }
       const trackBStateRoot = path.join(options.runtimeStateRoot, options.scopeId, "track-b");
       const runtimeChannel = packagedProfile?.channel ?? "development";
+      const destinationTrustMaterialFile =
+        args.values["destination-material-file"] ??
+        args.values["destination-trust-material-file"] ??
+        process.env.ROLE_MODEL_DESTINATION_AUTH_SECRET_FILE;
       const artifactKeyFiles = await resolveManagedArtifactKeyFiles({
         channel: runtimeChannel,
         stateRoot: trackBStateRoot,
@@ -1249,20 +1253,19 @@ export async function main(): Promise<void> {
           channel: runtimeChannel,
           artifactDigestKeyFile: artifactKeyFiles.artifactDigestKeyFile,
           artifactEncryptionKeyFile: artifactKeyFiles.artifactEncryptionKeyFile,
-          trustMaterialFile:
-            args.values["destination-material-file"] ??
-            args.values["destination-trust-material-file"] ??
-            process.env.ROLE_MODEL_DESTINATION_AUTH_SECRET_FILE,
+          trustMaterialFile: destinationTrustMaterialFile,
           aggregateEndpoint:
             args.values["aggregate-ingestion-url"] ??
             process.env.ROLE_MODEL_AGGREGATE_INGESTION_URL ??
-            (runtimeChannel === "stage"
+            (runtimeChannel === "stage" && destinationTrustMaterialFile
               ? "https://ingest-stage.role-model.dev/contribution/aggregate"
               : undefined),
           aggregateScope:
             args.values["aggregate-scope"] ??
             process.env.ROLE_MODEL_AGGREGATE_SCOPE ??
-            (runtimeChannel === "stage" ? "standalone-runtime-stage" : undefined),
+            (runtimeChannel === "stage" && destinationTrustMaterialFile
+              ? "standalone-runtime-stage"
+              : undefined),
           ...(aggregateCorrelationReleaseId && aggregateCorrelationCohortId
             ? {
                 aggregateCorrelationReleaseId,
