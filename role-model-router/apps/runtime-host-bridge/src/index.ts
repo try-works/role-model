@@ -24070,6 +24070,7 @@ export async function createRuntimeBridgeBackend(
         | { readonly scopeId: string; readonly artifactId: string; readonly contentHash: string }
         | undefined;
       let routeCapture: Record<string, unknown> | undefined;
+      let routeCaptureDegradationReason: string | undefined;
       try {
         if (localGraphStore) {
           const content = JSON.stringify(bundle);
@@ -24116,10 +24117,25 @@ export async function createRuntimeBridgeBackend(
             };
           }
         }
-      } catch {
+      } catch (error) {
         // Capture remains non-routing-critical before graph-primary cutover.
         // Run 94 (SP2): without a graph artifact reference the SQLite row must still be
         // bounded — persist the compact degradation stub instead of the full bundle.
+        // Keep the operator receipt actionable without copying a private-boundary
+        // message, which may include untrusted capture content.
+        const status =
+          error &&
+          typeof error === "object" &&
+          "status" in error &&
+          typeof error.status === "number" &&
+          Number.isInteger(error.status)
+            ? error.status
+            : undefined;
+        routeCaptureDegradationReason =
+          status && status >= 100 && status <= 599
+            ? `track-b-capture-boundary-http-${status}`
+            : "track-b-capture-boundary-unavailable";
+        console.error("Track B route capture failed", routeCaptureDegradationReason);
       }
       const graphEvidence = routeCapture
         ? {
@@ -24160,9 +24176,12 @@ export async function createRuntimeBridgeBackend(
           schemaVersion: "role-model.degradation-receipt.v1",
           degraded: true,
           capability: "runtime-observation-persist",
-          reason: String(
-            error instanceof Error ? error.message : "runtime observation persist failed",
-          ).slice(0, 256),
+          reason:
+            routeCaptureDegradationReason ??
+            String(error instanceof Error ? error.message : "runtime observation persist failed").slice(
+              0,
+              256,
+            ),
           routingContinues: true,
           atMs: Date.now(),
         };
