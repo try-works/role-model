@@ -29210,10 +29210,6 @@ export function resolveBridgeServerOptions(input: {
   const packagedProfile = readPackagedRuntimeProfile(input.executablePath);
   const profile = packagedProfile ?? resolveRuntimeChannelProfile("production");
   const statePath = resolveBridgePathApi([input.localAppData], process.env.LOCALAPPDATA);
-  const runtimeStatePath = resolveBridgePathApi(
-    [input.runtimeStateRoot, input.localAppData],
-    process.env.LOCALAPPDATA,
-  );
   const inferredRepoRoot = input.executablePath
     ? (() => {
         const executableDir = repoPath.dirname(repoPath.resolve(input.executablePath));
@@ -29245,6 +29241,13 @@ export function resolveBridgeServerOptions(input: {
     statePath.join(os.homedir(), ".local", "state");
   const runtimeStateRoot =
     input.runtimeStateRoot?.trim() || statePath.join(platformStateBase, profile.state_root_name);
+  const explicitUnifiedRuntimeConfigPath = input.unifiedRuntimeConfigPath?.trim();
+  const stateRootUnifiedRuntimeConfigPath = statePath.join(runtimeStateRoot, "runtime-config.yaml");
+  const legacyUnifiedRuntimeConfigPath = statePath.join(
+    runtimeStateRoot,
+    "state",
+    "runtime-config.yaml",
+  );
 
   return {
     host: input.host?.trim() || profile.host,
@@ -29259,7 +29262,9 @@ export function resolveBridgeServerOptions(input: {
       preferRepoRootBuild: Boolean(input.repoRoot?.trim()) || Boolean(packagedProfile),
     }),
     unifiedRuntimeConfigPath:
-      input.unifiedRuntimeConfigPath?.trim() ||
-      runtimeStatePath.join(runtimeStateRoot, "state", "runtime-config.yaml"),
+      explicitUnifiedRuntimeConfigPath ||
+      (existsSync(stateRootUnifiedRuntimeConfigPath)
+        ? stateRootUnifiedRuntimeConfigPath
+        : legacyUnifiedRuntimeConfigPath),
   };
 }
