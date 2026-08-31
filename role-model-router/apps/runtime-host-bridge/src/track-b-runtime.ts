@@ -1792,6 +1792,15 @@ export function createTrackBPostObservationOutbox({
         }
       });
     },
+    async drainUntilReceipt(
+      requestId: string,
+      handler: (observation: TrackBPostObservationWorkItem) => Promise<unknown>,
+    ): Promise<TrackBPostObservationReceipt | null> {
+      const existing = await this.readReceipt(requestId);
+      if (existing) return existing;
+      await this.drain(handler);
+      return this.readReceipt(requestId);
+    },
     async read(): Promise<{
       readonly pendingCount: number;
       readonly receiptCount: number;
