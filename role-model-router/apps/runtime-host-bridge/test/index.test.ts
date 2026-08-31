@@ -23681,7 +23681,7 @@ describe("runtime-host-bridge", () => {
       scopeId: "standalone-runtime",
       staticRoot:
         "/home/runner/work/role-model/role-model/role-model-router/apps/runtime-ui/build/client",
-      unifiedRuntimeConfigPath: "C:\\runtime-state\\state\\runtime-config.yaml",
+      unifiedRuntimeConfigPath: path.join("C:\\runtime-state", "state", "runtime-config.yaml"),
     });
   });
 
