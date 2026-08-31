@@ -61,6 +61,8 @@ export interface RemoteEndpointAdmissionProbeContext {
   readonly probeTimeoutMs?: number;
 }
 
+export const DEFAULT_REMOTE_PROBE_TIMEOUT_MS = 15_000;
+
 const COMPARABLE_MODEL_ID_ALIASES: Readonly<Record<string, readonly string[]>> = {
   "moonshot/kimi-k2.7-code": ["kimi-for-coding"],
   "kimi-k2.7-code": ["kimi-for-coding"],
@@ -195,7 +197,7 @@ async function probeTarget(
             ? resolvedAuthorization
             : `Bearer ${resolvedAuthorization}`,
         },
-        signal: AbortSignal.timeout(context.probeTimeoutMs ?? 5000),
+        signal: AbortSignal.timeout(context.probeTimeoutMs ?? DEFAULT_REMOTE_PROBE_TIMEOUT_MS),
       });
       return {
         response,
@@ -394,7 +396,7 @@ export async function probeRemoteEndpointAdmission(
         "content-type": "application/json",
         authorization: credential.startsWith("Bearer ") ? credential : `Bearer ${credential}`,
       },
-      signal: AbortSignal.timeout(context.probeTimeoutMs ?? 5_000),
+      signal: AbortSignal.timeout(context.probeTimeoutMs ?? DEFAULT_REMOTE_PROBE_TIMEOUT_MS),
       body: JSON.stringify(body),
     });
 
