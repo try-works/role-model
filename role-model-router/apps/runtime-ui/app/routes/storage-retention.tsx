@@ -186,6 +186,16 @@ export function StorageRetentionRouteView() {
           {summary.policyState?.state ?? "not reported"}
         </p>
       ) : null}
+      {summary?.storageAuditStatus ? (
+        <p className={supportingTextClassName}>
+          Storage audit: {summary.storageAuditStatus.status}
+          {summary.storageAuditStatus.observedAt
+            ? ` (observed ${summary.storageAuditStatus.observedAt})`
+            : summary.storageAuditStatus.reason
+              ? ` — ${summary.storageAuditStatus.reason}`
+              : ""}
+        </p>
+      ) : null}
       <p className={supportingTextClassName}>
         Unattributed physical bytes are measured physical allocation not mapped to logical storage
         classes; they are not service health.

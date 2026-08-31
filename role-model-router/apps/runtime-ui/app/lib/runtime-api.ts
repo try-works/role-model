@@ -1891,6 +1891,14 @@ export interface RuntimeStorageRetentionSummary {
     readonly graphEdges?: number;
     readonly measuredAt?: string;
   } | null;
+  /** Audit freshness is separate from completed physical accounting. */
+  readonly storageAuditStatus?: {
+    readonly schemaVersion: "role-model.storage-audit-readiness.v1";
+    readonly status: "pending" | "stale" | "ready" | string;
+    readonly observedAt?: string | null;
+    readonly freshUntil?: string | null;
+    readonly reason?: string;
+  } | null;
   readonly policyState?: {
     readonly channel: string;
     readonly state: string;
