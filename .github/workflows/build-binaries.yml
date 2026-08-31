@@ -327,8 +327,9 @@ jobs:
             exit 1
           fi
           git fetch --no-tags origin "+refs/heads/${REQUIRED_PRIVATE_BRANCH}:refs/remotes/origin/${REQUIRED_PRIVATE_BRANCH}"
-          if ! git merge-base --is-ancestor "$RELEASE_PRIVATE_SHA" "origin/$REQUIRED_PRIVATE_BRANCH"; then
-            echo "Private revision must be promoted through role-model-internal/$REQUIRED_PRIVATE_BRANCH before $ROLE_MODEL_BUILD_CHANNEL packaging."
+          required_private_head="$(git rev-parse "origin/$REQUIRED_PRIVATE_BRANCH")"
+          if [[ "$RELEASE_PRIVATE_SHA" != "$required_private_head" ]]; then
+            echo "Paired private revision must equal the current role-model-internal/$REQUIRED_PRIVATE_BRANCH head before $ROLE_MODEL_BUILD_CHANNEL packaging."
             exit 1
           fi
 
