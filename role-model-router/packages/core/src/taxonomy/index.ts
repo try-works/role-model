@@ -152,11 +152,21 @@ function readArgValue(name: string): string | undefined {
   return index >= 0 ? process.argv[index + 1] : undefined;
 }
 
-const taxonomyDataRootCandidates = (): string[] => {
+export const taxonomyDataRootCandidates = (executablePath = process.execPath): string[] => {
   const explicitRoot = process.env.ROLE_MODEL_TAXONOMY_DATA_ROOT;
   const repoRoot = readArgValue("--repo-root") ?? process.env.ROLE_MODEL_REPO_ROOT;
   return [
     ...(explicitRoot ? [explicitRoot] : []),
+    // A SEA executable has no source checkout to resolve from. Packaging stages this
+    // directory beside the executable, so prefer that self-contained release path.
+    path.join(
+      path.dirname(executablePath),
+      "role-model-router",
+      "packages",
+      "core",
+      "data",
+      "taxonomy",
+    ),
     ...(repoRoot
       ? [path.join(repoRoot, "role-model-router", "packages", "core", "data", "taxonomy")]
       : []),
