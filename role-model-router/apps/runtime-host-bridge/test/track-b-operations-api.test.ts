@@ -1205,6 +1205,80 @@ describe("Track B operations APIs", () => {
     }
   });
 
+  test("reports a bounded private capture failure instead of masking it as a graph writer error", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `track-b-capture-failure-${Date.now()}`);
+    roots.push(runtimeStateRoot);
+    const scopeId = "track-b-capture-failure";
+    const operations = createServer(async (request, response) => {
+      for await (const _chunk of request) {
+        // Drain the request without retaining potentially rich capture content.
+      }
+      if (request.url === "/capture/route") {
+        response.writeHead(503, { "content-type": "application/json" });
+        response.end(JSON.stringify({ error: "capture service unavailable" }));
+        return;
+      }
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(JSON.stringify({ status: "accepted" }));
+    });
+    await new Promise<void>((resolve, reject) => {
+      operations.once("error", reject);
+      operations.listen(0, "127.0.0.1", resolve);
+    });
+    const address = operations.address();
+    if (!address || typeof address === "string") throw new Error("operations server did not bind");
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+      trackBOperationsEndpoint: `http://127.0.0.1:${address.port}`,
+      trackBOperationsToken: "c".repeat(64),
+    });
+    try {
+      const databasePath = resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId });
+      const migration = new LegacySqliteMigration({
+        databasePath,
+        backupPath: path.join(runtimeStateRoot, "legacy-backup.sqlite"),
+        artifactWriter: ({ contentHash }) => ({
+          artifactId: contentHash,
+          artifactPath: `artifact://${contentHash}`,
+          contentHash,
+        }),
+        routerRoot: path.join(repoRoot, "role-model-router"),
+      });
+      migration.backfill({ scopeId: `tenant:${scopeId}`, batchSize: 10 });
+      migration.enterShadowMirror({ deadlineMs: Date.now() + 10_000 });
+      migration.verifyParity({
+        backupVerified: true,
+        restoreVerified: true,
+        consumersVerified: true,
+      });
+      migration.cutover();
+
+      const result = await backend.executeChatCompletions(
+        {
+          model: "deepseek/chat-capture-v1",
+          messages: [{ role: "user", content: "verify bounded capture failure" }],
+        },
+        "req-track-b-capture-failure-001",
+      );
+
+      expect(result.persistenceDegradation).toMatchObject({
+        capability: "runtime-observation-persist",
+        reason: "track-b-capture-boundary-http-503",
+      });
+      expect(
+        readRuntimeTelemetryRecord({ databasePath, requestId: "req-track-b-capture-failure-001" }),
+      ).toBeNull();
+    } finally {
+      await backend.shutdown();
+      await new Promise<void>((resolve, reject) =>
+        operations.close((error) => (error ? reject(error) : resolve())),
+      );
+    }
+  });
+
   test("legacy failure recovery retries extension closure after graph commit and propagates sidecar auth failures", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `track-b-recovery-retry-${Date.now()}`);
     roots.push(runtimeStateRoot);
@@ -2053,6 +2127,77 @@ describe("Track B operations APIs", () => {
           schemaVersion: "role-model.storage-audit-readiness.v1",
           status: "pending",
         },
+      });
+    } finally {
+      await new Promise<void>((resolve, reject) =>
+        operations.close((error) => (error ? reject(error) : resolve())),
+      );
+    }
+  });
+
+  test("run95 bounds a stalled private storage summary instead of leaving the operator read pending", async () => {
+    const operations = createServer((_request, _response) => {
+      // Deliberately never respond: this models a stalled private sidecar.
+    });
+    await new Promise<void>((resolve, reject) => {
+      operations.once("error", reject);
+      operations.listen(0, "127.0.0.1", resolve);
+    });
+    try {
+      const address = operations.address();
+      if (!address || typeof address === "string")
+        throw new Error("operations server did not bind");
+      const api = createTrackBOperations({
+        statePath: path.join(os.tmpdir(), `run95-stalled-storage-${Date.now()}.json`),
+        catalog: [],
+        operationsEndpoint: `http://127.0.0.1:${address.port}`,
+        operationsToken: "run95-stalled-storage-token-0001",
+        operationsTimeoutMs: 25,
+      });
+      const startedAt = Date.now();
+      await expect(api.readStorageRetention()).rejects.toThrow(/timed out/i);
+      expect(Date.now() - startedAt).toBeLessThan(1_000);
+    } finally {
+      await new Promise<void>((resolve, reject) =>
+        operations.close((error) => (error ? reject(error) : resolve())),
+      );
+    }
+  });
+
+  test("run95 allows a bounded local route capture to complete beyond the legacy five-second budget", async () => {
+    const operations = createServer((request, response) => {
+      if (request.method !== "POST" || request.url !== "/capture/route") {
+        response.writeHead(404).end();
+        return;
+      }
+      setTimeout(() => {
+        response.writeHead(200, { "content-type": "application/json" }).end(
+          JSON.stringify({
+            status: "captured",
+            scope: "runtime:test",
+            rootArtifactId: "artifact:test",
+            rootArtifactDigest: "sha256:test",
+          }),
+        );
+      }, 5_500);
+    });
+    await new Promise<void>((resolve, reject) => {
+      operations.once("error", reject);
+      operations.listen(0, "127.0.0.1", resolve);
+    });
+    try {
+      const address = operations.address();
+      if (!address || typeof address === "string")
+        throw new Error("operations server did not bind");
+      const api = createTrackBOperations({
+        statePath: path.join(os.tmpdir(), `run95-capture-budget-${Date.now()}.json`),
+        catalog: [],
+        operationsEndpoint: `http://127.0.0.1:${address.port}`,
+        operationsToken: "run95-capture-budget-token-0001",
+      });
+      await expect(api.recordLocalRouteCapture({ requestId: "request-1" })).resolves.toMatchObject({
+        status: "captured",
+        rootArtifactId: "artifact:test",
       });
     } finally {
       await new Promise<void>((resolve, reject) =>
