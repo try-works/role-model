@@ -78,6 +78,18 @@ export interface ManagedArtifactKeyFiles {
   readonly artifactEncryptionKeyFile?: string;
 }
 
+function hasPersistedArtifactState(stateRoot: string): boolean {
+  const legacyFile = path.join(stateRoot, "artifact-store.json");
+  const roots = [path.join(stateRoot, "artifact-store"), `${legacyFile}.store`];
+  return (
+    existsSync(legacyFile) ||
+    roots.some(
+      (root) =>
+        existsSync(path.join(root, "metadata.sqlite")) || existsSync(path.join(root, "blobs")),
+    )
+  );
+}
+
 /**
  * Small local graph adapter for fixture and development runs that do not have
  * the private operations sidecar configured. Rich observations live in these
@@ -235,6 +247,15 @@ export async function resolveManagedArtifactKeyFiles(options: {
   };
 
   if (await pathExists(keyRoot)) return readPublishedPair();
+
+  // Generating a replacement pair for persisted ciphertext irreversibly makes
+  // the existing graph unreadable. Require recovery of the original pair
+  // instead; first install is the only safe time to provision keys.
+  if (hasPersistedArtifactState(stableStateRoot)) {
+    throw new Error(
+      "managed artifact keys are absent for existing artifact state; restore both Message Graph keys from backup instead of generating replacements",
+    );
+  }
 
   await mkdir(stableStateRoot, { recursive: true });
   const temporaryRoot = await mkdtemp(`${keyRoot}.tmp-`);
