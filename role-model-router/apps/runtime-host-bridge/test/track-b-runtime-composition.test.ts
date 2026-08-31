@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -93,6 +93,26 @@ describe("production Track B composition", () => {
     await expect(
       resolveManagedArtifactKeyFiles({ channel: "production", stateRoot }),
     ).rejects.toThrow(/incomplete.*managed artifact key/i);
+  });
+
+  test("refuses to provision replacement Message Graph keys over persisted artifact state", async () => {
+    const stateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-missing-artifact-keys-"));
+    roots.push(stateRoot);
+    const runtimeModule = await import("../src/track-b-runtime.js");
+    const resolveManagedArtifactKeyFiles = Reflect.get(
+      runtimeModule,
+      "resolveManagedArtifactKeyFiles",
+    ) as (input: { channel: "stage"; stateRoot: string }) => Promise<unknown>;
+    await mkdir(path.join(stateRoot, "artifact-store"), { recursive: true });
+    await writeFile(
+      path.join(stateRoot, "artifact-store", "metadata.sqlite"),
+      "existing encrypted graph state",
+    );
+
+    await expect(resolveManagedArtifactKeyFiles({ channel: "stage", stateRoot })).rejects.toThrow(
+      /restore.*Message Graph keys|existing.*artifact/i,
+    );
+    expect(existsSync(path.join(stateRoot, "managed-keys"))).toBe(false);
   });
 
   test("provisions stage artifact keys under durable state instead of a release secrets directory", async () => {
