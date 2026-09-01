@@ -383,7 +383,7 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
         case "replay:record-branch-append":
           return { status: "awaiting_evaluation" };
         case "replay:record-evaluation-receipt":
-          return { state: "complete", evaluationJobId: "evaluation:orchestrated" };
+          return { state: "awaiting_evaluation", evaluationJobId: "evaluation:orchestrated" };
         default:
           throw new Error(`unexpected capability ${String(envelope.capability)}`);
       }
@@ -466,7 +466,7 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
         source: request.sourceDecisionId,
       }),
     }),
-  ).resolves.toMatchObject({ state: "complete", evaluationJobId: "evaluation:orchestrated" });
+  ).resolves.toMatchObject({ state: "awaiting_evaluation", evaluationJobId: "evaluation:orchestrated" });
 
   expect(dispatches).toHaveLength(1);
   expect(branches).toEqual([expect.objectContaining({ candidateEndpointId: "endpoint:counterfactual" })]);
