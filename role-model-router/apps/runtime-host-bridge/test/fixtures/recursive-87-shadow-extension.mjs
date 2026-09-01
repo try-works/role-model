@@ -45,7 +45,7 @@ export async function run(envelope = {}) {
       evaluationProvenance: value.finalizedEvaluation,
     };
   }
-  if (capability === "profile:estimate") {
+  if (capability === "profile:estimate-finalized-evaluation") {
     const rows = envelope.rows ?? envelope.value.rows;
     return {
       effects: {

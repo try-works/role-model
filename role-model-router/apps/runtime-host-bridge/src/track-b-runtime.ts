@@ -2891,7 +2891,9 @@ export async function runTrackBShadowPipeline(
     }),
   );
   const profile = await runtime.invoke("profile-learner", {
-    ...envelope("profile:estimate", {
+    ...envelope("profile:estimate-finalized-evaluation", {
+      finalizedEvaluation: persistedEvaluation,
+      signals,
       rows: [sourceRollout, ...counterfactualRollouts].map((rollout) => ({
         model: rollout.modelId,
         endpoint: rollout.endpointId,
@@ -2906,19 +2908,6 @@ export async function runTrackBShadowPipeline(
         evidenceRef: rollout.evidenceRef,
       })),
     }),
-    rows: [sourceRollout, ...counterfactualRollouts].map((rollout) => ({
-      model: rollout.modelId,
-      endpoint: rollout.endpointId,
-      prompt: "unchanged",
-      tool: "unchanged",
-      sampling: "deterministic",
-      experience: "routing-evaluation",
-      routePackage: rollout.routePackage,
-      outcome:
-        (rollout.outcome as Record<string, unknown> | undefined)?.status === "success" ? 1 : 0,
-      propensity: rollout.propensity,
-      evidenceRef: rollout.evidenceRef,
-    })),
   });
   const scoredRollouts = rolloutRows.map((rollout) => ({
     ...rollout,

@@ -92,7 +92,7 @@ test("SP1 runs the useful routing-learning DAG through supervised shadow capabil
     ["evaluation-core", ["evaluation:register-scorer", "evaluation:create-job", "evaluation:list-trials", "evaluation:claim-trial", "evaluation:submit-trial-result", "evaluation:record-trial-score", "evaluation:finalize-comparison-group", "evaluation:read-comparison-group"]],
     ["evaluation-runner-local", ["evaluation:execute-trial"]],
     ["trajectory-signals", ["signals:analyze-finalized-evaluation"]],
-    ["profile-learner", ["profile:estimate"]],
+    ["profile-learner", ["profile:estimate-finalized-evaluation"]],
     ["knowledge-worker", ["knowledge:eval-consumer"]],
   ]);
   const stateRoot = path.join(os.tmpdir(), `run87-shadow-${Date.now()}`);

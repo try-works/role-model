@@ -138,6 +138,7 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
   );
   expect(calls).not.toContainEqual({ id: "evaluation-runner-local", capability: "evaluation:run-local" });
   expect(calls).toContainEqual({ id: "trajectory-signals", capability: "signals:analyze-finalized-evaluation" });
+  expect(calls).toContainEqual({ id: "profile-learner", capability: "profile:estimate-finalized-evaluation" });
   expect(signalInput).toMatchObject({
     finalizedEvaluation: { groupId: "comparison:96", status: "finalized", outcome: "candidate" },
   });
