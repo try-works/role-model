@@ -16,7 +16,7 @@ const MAX_PERSISTED_BYTES = 1_048_576;
 const MAX_IDENTIFIER_LENGTH = 256;
 const MAX_ERROR_CLASS_LENGTH = 128;
 
-export type ExecutionTrafficClass = "live" | "benchmark" | "health" | "synthetic";
+export type ExecutionTrafficClass = "live" | "benchmark" | "health" | "synthetic" | "replay";
 export type ExecutionFailureCategory =
   | "connection"
   | "timeout"

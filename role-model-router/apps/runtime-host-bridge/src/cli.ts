@@ -26,12 +26,15 @@ import {
   createOwnedTrackBSidecarSpec,
   createPackagedProductionRuntime,
   createProductionExtensionRuntime,
+  createReplaySourceAttestation,
+  createRouterReplayAdapter,
   createRun88RuntimeCorrelation,
   createRuntimeRequestCorrelationId,
   createTrackBPostObservationOutbox,
   resolveManagedArtifactKeyFiles,
   runTrackBPostObservation,
   runTrackBPostObservationWithContribution,
+  runSupervisedReplay,
   trackBDistributionRequiresSQLiteMaintenance,
   validateRun88ProviderResponseObservation,
   verifyTrackBExtensionClosureAfterRestart,
@@ -1129,6 +1132,190 @@ export async function main(): Promise<void> {
                 payload: { durableLocator, durableOutputId },
               }),
           });
+        },
+        runTrackBSupervisedReplay: async (body) => {
+          const requestId = typeof body.requestId === "string" ? body.requestId.trim() : "";
+          const idempotencyKey =
+            typeof body.idempotencyKey === "string" ? body.idempotencyKey.trim() : "";
+          const candidateEndpointIds = Array.isArray(body.candidateEndpointIds)
+            ? [...new Set(body.candidateEndpointIds.filter((value): value is string => typeof value === "string" && value.trim().length > 0))]
+            : [];
+          if (!requestId || !idempotencyKey || candidateEndpointIds.length === 0) {
+            throw new Error("supervised replay requires requestId, idempotencyKey, and candidateEndpointIds");
+          }
+          if (candidateEndpointIds.length > 6) {
+            throw new Error("supervised replay candidate count exceeds the host bound");
+          }
+          const budget = body.budget;
+          if (
+            !budget ||
+            typeof budget !== "object" ||
+            Array.isArray(budget) ||
+            !["maxCandidates", "maxProviderCalls", "maxCostMicros", "maxBytes", "deadlineMs"].every(
+              (key) => Number.isSafeInteger((budget as Record<string, unknown>)[key]) && Number((budget as Record<string, unknown>)[key]) > 0,
+            )
+          ) {
+            throw new Error("supervised replay requires a complete positive integer budget");
+          }
+          if (
+            Number((budget as Record<string, unknown>).maxCandidates) < candidateEndpointIds.length ||
+            Number((budget as Record<string, unknown>).maxProviderCalls) < candidateEndpointIds.length
+          ) {
+            throw new Error("supervised replay budget cannot cover every requested candidate");
+          }
+          const runtime = extensionRuntimeRef.current;
+          const operations = currentPostObservationOperations();
+          if (!runtime || !operations) throw new Error("supervised replay runtime is not ready");
+          const capture = await operations.readLocalRouteCapture({ requestId });
+          if (!capture || typeof capture !== "object" || Array.isArray(capture)) {
+            throw new Error(`durable route capture is unavailable for replay request ${requestId}`);
+          }
+          const sourceCapture = capture as Record<string, unknown>;
+          const sourceMessages = Array.isArray(sourceCapture.messages) ? sourceCapture.messages : [];
+          if (
+            sourceMessages.length === 0 ||
+            sourceMessages.some((message) => {
+              const value = message && typeof message === "object" ? (message as Record<string, unknown>) : {};
+              return value.role === "tool" || value.tool_calls !== undefined || value.toolCalls !== undefined;
+            })
+          ) {
+            throw new Error("supervised replay currently accepts only complete tool-free source captures");
+          }
+          const endpoints = created.effectiveRegistry.endpoints;
+          const candidatePackages = candidateEndpointIds.map((endpointId) => {
+            const endpoint = endpoints.find((item) => item.identity.endpoint_id === endpointId);
+            if (!endpoint) throw new Error(`supervised replay candidate is not an eligible endpoint: ${endpointId}`);
+            return {
+              endpointId,
+              modelId: endpoint.identity.model_id,
+              reasoningEffort: endpoint.identity.reasoning_effort ?? null,
+              promptAdapterId: "router-host/default-v1",
+              toolPolicy: "deny",
+              experiencePackId: "none",
+              samplingProfileId: "deterministic-v1",
+            };
+          });
+          const channel = packagedProfile?.channel ?? "development";
+          const attestation = createReplaySourceAttestation({
+            channel,
+            scope: options.scopeId,
+            authorizationEpoch: 1,
+            capture: sourceCapture,
+            eligibleEndpointIds: [
+              String(sourceCapture.endpointId ?? ""),
+              ...candidateEndpointIds,
+            ].filter(Boolean),
+          });
+          const dispatched = new Map<
+            string,
+            { readonly execution: Awaited<ReturnType<typeof created.executeChatCompletions>>; readonly replayRequestId: string }
+          >();
+          const adapter = createRouterReplayAdapter({
+            channel,
+            scope: options.scopeId,
+            authorizationEpoch: 1,
+            dispatch: async (envelope) => {
+              const candidateEndpointId = String(envelope.candidateEndpointId ?? "");
+              const candidate = candidatePackages.find((item) => item.endpointId === candidateEndpointId);
+              if (!candidate) throw new Error("replay dispatch candidate package is not host-authorized");
+              const replayRequestId = `replay-${requestId}-${createHash("sha256").update(candidateEndpointId).digest("hex").slice(0, 16)}`;
+              const execution = await created.executeChatCompletions(
+                {
+                  model: candidate.modelId,
+                  messages: structuredClone(sourceMessages) as never,
+                  stream: false,
+                },
+                replayRequestId,
+                undefined,
+                { endpointId: candidateEndpointId, executionTrafficClass: "replay" },
+              );
+              dispatched.set(candidateEndpointId, { execution, replayRequestId });
+              return {
+                dispatchReceiptId: `router-replay:${replayRequestId}`,
+                routerDecisionId: execution.routingDecisionId ?? `router-decision:${replayRequestId}`,
+                providerResultRef: `route-capture:${replayRequestId}`,
+              };
+            },
+          });
+          const result = await runSupervisedReplay({
+            runtime,
+            adapter,
+            requestId,
+            channel,
+            scope: options.scopeId,
+            authorizationEpoch: 1,
+            sourceAttestation: attestation,
+            idempotencyKey,
+            intent: "counterfactual_route",
+            candidatePackages,
+            budget: structuredClone(budget) as Record<string, unknown>,
+            leaseOwner: `runtime-host:${process.pid}`,
+            leaseMs: Math.min(Number((budget as Record<string, unknown>).deadlineMs), 30_000),
+            appendBranch: async (branchRequest) => {
+              const candidateEndpointId = String(branchRequest.candidateEndpointId ?? "");
+              const dispatch = dispatched.get(candidateEndpointId);
+              if (!dispatch) throw new Error("durable replay branch append has no host dispatch receipt");
+              const branchRequestId = `${dispatch.replayRequestId}-branch`;
+              const branch = (await operations.recordLocalRouteCapture({
+                requestId: branchRequestId,
+                routingDecisionId:
+                  dispatch.execution.routingDecisionId ?? `router-decision:${dispatch.replayRequestId}`,
+                endpointId: candidateEndpointId,
+                modelId: dispatch.execution.model,
+                reasoningEffort: candidatePackages.find((item) => item.endpointId === candidateEndpointId)
+                  ?.reasoningEffort ?? null,
+                effortSource: "variant",
+                messages: structuredClone(sourceMessages),
+                outputText: dispatch.execution.outputText,
+                providerExecutions: [
+                  {
+                    attemptId: `replay:${dispatch.replayRequestId}`,
+                    providerId: dispatch.execution.vendorId ?? "router-replay",
+                    adapterFamily: dispatch.execution.adapterFamily,
+                    statusCode: 200,
+                  },
+                ],
+                toolExecutions: [],
+                branchKind: "replay",
+                branchOfRootArtifactId: sourceCapture.rootArtifactId,
+              })) as Record<string, unknown>;
+              if (typeof branch.rootArtifactId !== "string" || !branch.rootArtifactId) {
+                throw new Error("operations boundary did not return a durable replay branch root");
+              }
+              return { branchRootRef: branch.rootArtifactId };
+            },
+            handoffEvaluation: async ({ replayJobId, sourceDecisionId, sourceGeneration }) => {
+              const evaluationJobId = `evaluation-replay-${createHash("sha256").update(String(replayJobId)).digest("hex").slice(0, 20)}`;
+              await runtime.invoke("evaluation-core", {
+                requestId: `${requestId}:evaluation:${evaluationJobId}`,
+                protocolVersion: "1.1.0",
+                channel,
+                scope: options.scopeId,
+                authorizationEpoch: 1,
+                capability: "evaluation:create-job",
+                job: {
+                  id: evaluationJobId,
+                  policyId: "run96-replay-shadow-v1",
+                  scorerSetVersion: "run96-route-replay-v1",
+                  requestKind: "replay",
+                  cases: [
+                    {
+                      id: `replay:${replayJobId}`,
+                      evidenceRef: `${sourceDecisionId}:${String(sourceGeneration)}`,
+                    },
+                  ],
+                },
+              });
+              return { evaluationJobId };
+            },
+          });
+          return {
+            schemaVersion: "role-model.supervised-replay-command-receipt.v1",
+            requestId,
+            replayJobId: result.jobId,
+            state: result.state,
+            evaluationJobId: result.evaluationJobId,
+          };
         },
         ...(trackBManifestText
           ? {

@@ -1299,6 +1299,12 @@ export async function runSupervisedReplay(input: {
   );
   const jobId = typeof created.jobId === "string" ? created.jobId : null;
   if (!jobId) throw new Error("Replay Core did not return a durable replay job ID");
+  if (created.state === "complete") {
+    if (typeof created.evaluationJobId !== "string" || !created.evaluationJobId) {
+      throw new Error("completed replay is missing its durable evaluation receipt");
+    }
+    return structuredClone(created);
+  }
   const lease = await input.runtime.invoke(
     "replay-core",
     controlEnvelope("replay:claim-job", { jobId, leaseOwner: input.leaseOwner, leaseMs: input.leaseMs }),

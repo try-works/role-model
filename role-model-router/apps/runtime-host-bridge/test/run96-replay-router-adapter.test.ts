@@ -344,3 +344,82 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
   expect(JSON.stringify(invocations)).not.toContain("source-only host transcript");
   expect(JSON.stringify(invocations)).not.toMatch(/api[_-]?key|credential|secret/i);
 });
+
+test("Run96 S3 RED: a completed idempotent replay returns its durable receipt without reclaiming or redispatching", async () => {
+  const invocations: Record<string, unknown>[] = [];
+  const runtime = {
+    async invoke(_id: string, envelope: Record<string, unknown>) {
+      invocations.push(envelope);
+      if (envelope.capability === "replay:create-job") {
+        return {
+          jobId: "replay:already-complete",
+          state: "complete",
+          evaluationJobId: "evaluation:already-complete",
+        };
+      }
+      throw new Error("a completed replay must not be reclaimed");
+    },
+  };
+  const attestation = createReplaySourceAttestation({
+    channel: "development",
+    scope: "tenant:one",
+    authorizationEpoch: 96,
+    capture: {
+      schemaVersion: "role-model.route-capture-read.v2",
+      scope: "tenant:one",
+      rootArtifactId: "artifact:root-idempotent",
+      routingDecisionId: "decision:source-idempotent",
+      endpointId: "endpoint:baseline",
+      trace: { generation: 4, readiness: "ready", rootOccurrenceId: "occurrence:root-idempotent" },
+      replaySource: {
+        schemaVersion: "role-model.route-capture-replay-source.v1",
+        normalizedRequestRef: "artifact:request-idempotent",
+        sharedPrefixRef: "artifact:prefix-idempotent",
+        forkOccurrenceId: "occurrence:root-idempotent",
+        policySnapshotRef: "artifact:policy-idempotent",
+        capturePolicyRef: "artifact:capture-policy-idempotent",
+      },
+    },
+    eligibleEndpointIds: ["endpoint:baseline", "endpoint:counterfactual"],
+  });
+  const adapter = createRouterReplayAdapter({
+    channel: "development",
+    scope: "tenant:one",
+    authorizationEpoch: 96,
+    dispatch: async () => {
+      throw new Error("a completed replay must not dispatch");
+    },
+  });
+  await expect(
+    runSupervisedReplay({
+      runtime,
+      adapter,
+      requestId: "request:idempotent",
+      channel: "development",
+      scope: "tenant:one",
+      authorizationEpoch: 96,
+      sourceAttestation: attestation,
+      idempotencyKey: "replay:idempotent",
+      intent: "counterfactual_route",
+      candidatePackages: [{
+        endpointId: "endpoint:counterfactual",
+        modelId: "deepseek/deepseek-v4-pro",
+        reasoningEffort: "max",
+        promptAdapterId: "prompt:stable-v1",
+        toolPolicy: "deny",
+        experiencePackId: "experience:none",
+        samplingProfileId: "sampling:stable-v1",
+      }],
+      budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
+      leaseOwner: "scheduler:96",
+      leaseMs: 10_000,
+      appendBranch: async () => ({ branchRootRef: "must-not-run" }),
+      handoffEvaluation: async () => ({ evaluationJobId: "must-not-run" }),
+    }),
+  ).resolves.toMatchObject({
+    jobId: "replay:already-complete",
+    state: "complete",
+    evaluationJobId: "evaluation:already-complete",
+  });
+  expect(invocations).toHaveLength(1);
+});
