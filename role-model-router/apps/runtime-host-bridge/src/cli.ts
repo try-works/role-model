@@ -1244,10 +1244,24 @@ export async function main(): Promise<void> {
                 { endpointId: candidateEndpointId, executionTrafficClass: "replay" },
               );
               dispatched.set(candidateEndpointId, { execution, replayRequestId });
+              const observedCostUsd = execution.vendorMetadata?.costUsd;
+              if (typeof observedCostUsd !== "number" || !Number.isFinite(observedCostUsd) || observedCostUsd < 0) {
+                throw new Error("replay provider execution did not return an authoritative cost measurement");
+              }
               return {
                 dispatchReceiptId: `router-replay:${replayRequestId}`,
                 routerDecisionId: execution.routingDecisionId ?? `router-decision:${replayRequestId}`,
                 providerResultRef: `route-capture:${replayRequestId}`,
+                observedCostMicros: Math.ceil(observedCostUsd * 1_000_000),
+                observedResponseBytes: Buffer.byteLength(
+                  JSON.stringify({
+                    outputText: execution.outputText,
+                    contentText: execution.contentText,
+                    reasoningText: execution.reasoningText,
+                    toolCalls: execution.toolCalls ?? [],
+                  }),
+                  "utf8",
+                ),
               };
             },
           });

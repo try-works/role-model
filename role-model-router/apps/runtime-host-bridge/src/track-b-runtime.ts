@@ -1035,6 +1035,21 @@ export interface RouterReplayAdapter {
   dispatch(envelope: Record<string, unknown>): Promise<Record<string, unknown>>;
 }
 
+function readBoundedReplayUsage(result: Record<string, unknown>): {
+  readonly observedCostMicros: number;
+  readonly observedResponseBytes: number;
+} {
+  const observedCostMicros = result.observedCostMicros;
+  const observedResponseBytes = result.observedResponseBytes;
+  if (
+    typeof observedCostMicros !== "number" || !Number.isSafeInteger(observedCostMicros) || observedCostMicros < 0 ||
+    typeof observedResponseBytes !== "number" || !Number.isSafeInteger(observedResponseBytes) || observedResponseBytes < 0
+  ) {
+    throw new Error("router replay dispatch receipt is missing bounded resource usage");
+  }
+  return { observedCostMicros, observedResponseBytes };
+}
+
 const replayCredentialKey = /(credential|api[_-]?key|secret|password|access[_-]?token|refresh[_-]?token)/i;
 
 function containsReplayCredential(value: unknown): boolean {
@@ -1127,10 +1142,12 @@ export function createRouterReplayAdapter(options: {
       if (!result || typeof result.dispatchReceiptId !== "string" || typeof result.routerDecisionId !== "string" || typeof result.providerResultRef !== "string") {
         throw new Error("router replay dispatch receipt is incomplete");
       }
+      const usage = readBoundedReplayUsage(result);
       return {
         dispatchReceiptId: result.dispatchReceiptId,
         routerDecisionId: result.routerDecisionId,
         providerResultRef: result.providerResultRef,
+        ...usage,
       };
     },
   });

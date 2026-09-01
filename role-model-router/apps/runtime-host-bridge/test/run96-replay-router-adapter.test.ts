@@ -112,6 +112,8 @@ test("Run96 S3 RED: the host exposes a versioned scope-bound router replay adapt
         dispatchReceiptId: "dispatch:96",
         routerDecisionId: "decision:96",
         providerResultRef: "artifact:provider-result-96",
+        observedCostMicros: 0,
+        observedResponseBytes: 0,
       };
     },
   });
@@ -154,6 +156,8 @@ test("Run96 S3 RED: the host exposes a versioned scope-bound router replay adapt
     dispatchReceiptId: "dispatch:96",
     routerDecisionId: "decision:96",
     providerResultRef: "artifact:provider-result-96",
+    observedCostMicros: 0,
+    observedResponseBytes: 0,
   });
   expect(received).toEqual([
     expect.objectContaining({
@@ -169,12 +173,56 @@ test("Run96 S3 RED: the host exposes a versioned scope-bound router replay adapt
   ]);
 });
 
+test("Run96 S3 RED: the host adapter returns only bounded numeric usage for Replay Core budget accounting", async () => {
+  const adapter = createRouterReplayAdapter({
+    channel: "development",
+    scope: "tenant:one",
+    authorizationEpoch: 96,
+    dispatch: async () => ({
+      dispatchReceiptId: "dispatch:usage-96",
+      routerDecisionId: "decision:usage-96",
+      providerResultRef: "artifact:provider-result-usage-96",
+      observedCostMicros: 4_999,
+      observedResponseBytes: 512,
+      outputText: "must not cross the replay boundary",
+    }),
+  });
+
+  await expect(adapter.dispatch({
+    schemaVersion: "role-model.replay-dispatch.v1",
+    channel: "development",
+    scope: "tenant:one",
+    replayJobId: "replay:usage-96",
+    sourceGeneration: 4,
+    sourceDecisionId: "decision:source",
+    normalizedRequestRef: "artifact:request",
+    candidateEndpointId: "endpoint:counterfactual",
+    candidatePackage: {
+      endpointId: "endpoint:counterfactual",
+      modelId: "deepseek/deepseek-v4-pro",
+      reasoningEffort: "max",
+      promptAdapterId: "prompt:stable-v1",
+      toolPolicy: "deny",
+      experiencePackId: "experience:none",
+      samplingProfileId: "sampling:stable-v1",
+    },
+    budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
+    toolPolicy: "deny",
+  })).resolves.toEqual({
+    dispatchReceiptId: "dispatch:usage-96",
+    routerDecisionId: "decision:usage-96",
+    providerResultRef: "artifact:provider-result-usage-96",
+    observedCostMicros: 4_999,
+    observedResponseBytes: 512,
+  });
+});
+
 test("Run96 S3 RED: the host replay adapter fails closed for cross-boundary or credential-bearing dispatches", async () => {
   const adapter = createRouterReplayAdapter({
     channel: "development",
     scope: "tenant:one",
     authorizationEpoch: 96,
-    dispatch: async () => ({ dispatchReceiptId: "x", routerDecisionId: "y", providerResultRef: "z" }),
+    dispatch: async () => ({ dispatchReceiptId: "x", routerDecisionId: "y", providerResultRef: "z", observedCostMicros: 0, observedResponseBytes: 0 }),
   });
   const base = {
     schemaVersion: "role-model.replay-dispatch.v1",
@@ -281,6 +329,8 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
         dispatchReceiptId: "dispatch:orchestrated",
         routerDecisionId: "decision:replay-96",
         providerResultRef: "artifact:provider-result-96",
+        observedCostMicros: 0,
+        observedResponseBytes: 0,
       };
     },
   });
