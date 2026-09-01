@@ -1279,7 +1279,10 @@ export async function main(): Promise<void> {
                 reasoningEffort: candidatePackages.find((item) => item.endpointId === candidateEndpointId)
                   ?.reasoningEffort ?? null,
                 effortSource: "variant",
-                messages: structuredClone(sourceMessages),
+                // The private sidecar hydrates sourceCapture.rootArtifactId and
+                // reuses its prefix occurrences. Sending the transcript here
+                // would create a copied branch and violate replay isolation.
+                messages: [],
                 outputText: dispatch.execution.outputText,
                 providerExecutions: [
                   {
