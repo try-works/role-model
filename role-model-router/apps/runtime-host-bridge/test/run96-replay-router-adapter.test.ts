@@ -34,6 +34,15 @@ test("Run96 S3 RED: the host exposes a versioned scope-bound router replay adapt
       sourceDecisionId: "decision:source",
       normalizedRequestRef: "artifact:request",
       candidateEndpointId: "endpoint:counterfactual",
+      candidatePackage: {
+        endpointId: "endpoint:counterfactual",
+        modelId: "deepseek/deepseek-v4-pro",
+        reasoningEffort: "max",
+        promptAdapterId: "prompt:stable-v1",
+        toolPolicy: "deny",
+        experiencePackId: "experience:none",
+        samplingProfileId: "sampling:stable-v1",
+      },
       budget: { maxCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, maxDurationMs: 10_000 },
       toolPolicy: "deny",
     }),
@@ -48,6 +57,10 @@ test("Run96 S3 RED: the host exposes a versioned scope-bound router replay adapt
       source: "replay-core",
       replayJobId: "replay:96",
       candidateEndpointId: "endpoint:counterfactual",
+      candidatePackage: expect.objectContaining({
+        endpointId: "endpoint:counterfactual",
+        reasoningEffort: "max",
+      }),
     }),
   ]);
 });
@@ -68,6 +81,15 @@ test("Run96 S3 RED: the host replay adapter fails closed for cross-boundary or c
     sourceDecisionId: "decision:source",
     normalizedRequestRef: "artifact:request",
     candidateEndpointId: "endpoint:counterfactual",
+    candidatePackage: {
+      endpointId: "endpoint:counterfactual",
+      modelId: "deepseek/deepseek-v4-pro",
+      reasoningEffort: "max",
+      promptAdapterId: "prompt:stable-v1",
+      toolPolicy: "deny",
+      experiencePackId: "experience:none",
+      samplingProfileId: "sampling:stable-v1",
+    },
     budget: { maxCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, maxDurationMs: 10_000 },
     toolPolicy: "deny",
   };

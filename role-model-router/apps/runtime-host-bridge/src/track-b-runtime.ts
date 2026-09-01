@@ -1065,6 +1065,22 @@ function assertReplayDispatchEnvelope(envelope: Record<string, unknown>, channel
   if (envelope.toolPolicy !== "deny" && envelope.toolPolicy !== "recorded_results_only") {
     throw new Error("live replay tools require a separate sandboxed adapter");
   }
+  const candidatePackage = envelope.candidatePackage;
+  if (!candidatePackage || typeof candidatePackage !== "object" || Array.isArray(candidatePackage)) {
+    throw new Error("materialized replay candidate package required");
+  }
+  const candidate = candidatePackage as Record<string, unknown>;
+  if (
+    candidate.endpointId !== envelope.candidateEndpointId ||
+    typeof candidate.modelId !== "string" ||
+    (candidate.reasoningEffort !== null && typeof candidate.reasoningEffort !== "string") ||
+    typeof candidate.promptAdapterId !== "string" ||
+    typeof candidate.experiencePackId !== "string" ||
+    typeof candidate.samplingProfileId !== "string" ||
+    candidate.toolPolicy !== envelope.toolPolicy
+  ) {
+    throw new Error("materialized replay candidate package is invalid");
+  }
 }
 
 /**
@@ -1098,6 +1114,7 @@ export function createRouterReplayAdapter(options: {
         sourceDecisionId: envelope.sourceDecisionId,
         normalizedRequestRef: envelope.normalizedRequestRef,
         candidateEndpointId: envelope.candidateEndpointId,
+        candidatePackage: structuredClone(envelope.candidatePackage),
         budget: structuredClone(envelope.budget),
         toolPolicy: envelope.toolPolicy,
       });
