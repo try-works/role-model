@@ -515,7 +515,7 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
   expect(JSON.stringify(invocations)).not.toMatch(/api[_-]?key|credential|secret/i);
 });
 
-test("Run96 S3 RED: host orchestration records a bounded router failure before replay retry", async () => {
+test("Run96 S3 RED: host orchestration preserves a bounded rate-limit failure before replay retry", async () => {
   let providerFailure: Record<string, unknown> | null = null;
   const runtime = {
     async invoke(id: string, envelope: Record<string, unknown>) {
@@ -587,7 +587,7 @@ test("Run96 S3 RED: host orchestration records a bounded router failure before r
       authenticated: true,
       channel: "development",
       scope: "tenant:one",
-      async dispatch() { throw new Error("upstream 503"); },
+      async dispatch() { throw Object.assign(new Error("provider rate limit"), { code: "rate_limit" }); },
     },
     requestId: "request:router-failure",
     channel: "development",
@@ -611,14 +611,14 @@ test("Run96 S3 RED: host orchestration records a bounded router failure before r
     prepareBranch: async () => ({ branchRootRef: "artifact:prepared-router-failure" }),
     appendBranch: async () => { throw new Error("router failure must not append a branch"); },
     handoffEvaluation: async () => { throw new Error("router failure must not hand off evaluation"); },
-  })).rejects.toThrow("upstream 503");
+  })).rejects.toThrow("provider rate limit");
 
   expect(providerFailure).toMatchObject({
     jobId: "replay:router-failure",
     candidateEndpointId: "endpoint:counterfactual",
     leaseOwner: "scheduler:router-failure",
     fenceToken: 7,
-    failure: { code: "router_dispatch_error", message: "upstream 503", retryable: true },
+    failure: { code: "rate_limit", message: "provider rate limit", retryable: true },
   });
 });
 

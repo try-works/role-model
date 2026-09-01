@@ -1425,6 +1425,33 @@ export interface SupervisedReplayRuntime {
   invoke(id: string, envelope: Record<string, unknown>): Promise<Record<string, unknown>>;
 }
 
+function classifyReplayDispatchFailure(error: unknown): {
+  readonly code: "connection" | "provider_unavailable" | "provider_5xx" | "rate_limit" | "timeout" | "partial_response" | "router_dispatch_error";
+  readonly message: string;
+  readonly retryable: boolean;
+} {
+  const value = error && typeof error === "object" ? error as Record<string, unknown> : {};
+  const upstreamCode = typeof value.code === "string" ? value.code : "";
+  const knownCode = new Set([
+    "connection",
+    "provider_unavailable",
+    "provider_5xx",
+    "rate_limit",
+    "timeout",
+    "partial_response",
+  ]);
+  const code = knownCode.has(upstreamCode)
+    ? upstreamCode as "connection" | "provider_unavailable" | "provider_5xx" | "rate_limit" | "timeout" | "partial_response"
+    : "router_dispatch_error";
+  return {
+    code,
+    message: error instanceof Error ? error.message.slice(0, 256) : "router dispatch failed",
+    // A provider could have committed an observable partial result. Retrying it as a
+    // fresh provider call would violate Replay Core's duplicate-call fence.
+    retryable: code !== "partial_response",
+  };
+}
+
 /**
  * Executes the control-plane half of a bounded replay. The public host owns the
  * source transcript, router credentials, provider dispatch, and branch writer;
@@ -1585,11 +1612,7 @@ export async function runSupervisedReplay(input: {
           candidateEndpointId,
           leaseOwner: input.leaseOwner,
           fenceToken: lease.fenceToken,
-          failure: {
-            code: "router_dispatch_error",
-            message: error instanceof Error ? error.message.slice(0, 256) : "router dispatch failed",
-            retryable: true,
-          },
+          failure: classifyReplayDispatchFailure(error),
         }),
       );
       throw error;
