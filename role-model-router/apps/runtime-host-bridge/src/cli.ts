@@ -1105,6 +1105,7 @@ export async function main(): Promise<void> {
               : {}),
           })),
         trackBPostObservationReceipts: () => postObservationOutbox.read(),
+        readTrackBPostObservationReceipt: (requestId) => postObservationOutbox.readReceipt(requestId),
         readTrackBExtensionReadback: async (body) => {
           const requestId = String(body.requestId ?? "").trim();
           if (!requestId) throw new Error("Track B extension readback requestId is required");

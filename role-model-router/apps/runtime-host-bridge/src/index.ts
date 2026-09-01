@@ -2701,6 +2701,8 @@ export interface BridgeRouterDecisionPage {
     readonly sourceType: string;
     readonly providerId: string | null;
     readonly finishReason: string | null;
+    /** Durable, non-mutating Track B shadow advice for this exact request, when available. */
+    readonly shadowAdvice: Record<string, unknown> | null;
   }[];
   readonly totalMatching: number;
   readonly returned: number;
@@ -3485,6 +3487,11 @@ export interface CreateRuntimeBridgeBackendOptions {
     observation: Readonly<Record<string, unknown>>,
   ) => Promise<unknown>;
   readonly trackBPostObservationReceipts?: () => Promise<unknown>;
+  /**
+   * Returns the durable Track B receipt for exactly one router request. Router-decision
+   * read models use this to expose shadow advice without inferring it from another request.
+   */
+  readonly readTrackBPostObservationReceipt?: (requestId: string) => Promise<unknown>;
   readonly readTrackBExtensionReadback?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly runTrackBSupervisedReplay?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly codexAuthAdapter?: CodexAuthAdapter;
@@ -22285,7 +22292,13 @@ export async function createRuntimeBridgeBackend(
       };
     });
   };
-  const toRouterDecisionData = (record: BridgeTelemetryRequestRecord) => {
+  const readShadowAdvice = async (requestId: string): Promise<Record<string, unknown> | null> => {
+    if (!options.readTrackBPostObservationReceipt) return null;
+    const receipt = asObjectRecord(await options.readTrackBPostObservationReceipt(requestId));
+    const result = asObjectRecord(receipt?.result);
+    return asObjectRecord(result?.advisory);
+  };
+  const toRouterDecisionData = async (record: BridgeTelemetryRequestRecord) => {
     const observation = readPersistedRuntimeObservation(record.requestId) as Record<
       string,
       unknown
@@ -22311,15 +22324,18 @@ export async function createRuntimeBridgeBackend(
       sourceType: record.sourceType,
       providerId: record.providerId ?? null,
       finishReason: record.finishReason ?? null,
+      shadowAdvice: await readShadowAdvice(record.requestId),
     };
   };
-  const listRouterDecisionData = () =>
-    listTelemetryRequestRecords({ limit: DEFAULT_TELEMETRY_LIMIT }).map(toRouterDecisionData);
-  const listRouterDecisionPageData = (query?: BridgeTelemetryQuery): BridgeRouterDecisionPage => {
+  const listRouterDecisionData = async () =>
+    Promise.all(listTelemetryRequestRecords({ limit: DEFAULT_TELEMETRY_LIMIT }).map(toRouterDecisionData));
+  const listRouterDecisionPageData = async (
+    query?: BridgeTelemetryQuery,
+  ): Promise<BridgeRouterDecisionPage> => {
     const page = listTelemetryRequestPage(query);
     return {
       ...page,
-      items: page.items.map(toRouterDecisionData),
+      items: await Promise.all(page.items.map(toRouterDecisionData)),
     };
   };
   function toProposalWireContract(
@@ -22381,7 +22397,7 @@ export async function createRuntimeBridgeBackend(
     };
   }
 
-  const readRouterDecisionData = (requestId: string) => {
+  const readRouterDecisionData = async (requestId: string) => {
     const observation = readPersistedRuntimeObservation(requestId) as
       | (RuntimeObservationBundle & BridgeTelemetryEndpointMeta)
       | null;
@@ -22433,6 +22449,7 @@ export async function createRuntimeBridgeBackend(
         ? toProposalWireContract(observation.normalizedIntent as Record<string, unknown>)
         : null,
       endpointProfile: readEndpointProfileData(observation.endpointId),
+      shadowAdvice: await readShadowAdvice(requestId),
       observeRequestPath: `/app/observe/requests/${requestId}`,
     };
   };

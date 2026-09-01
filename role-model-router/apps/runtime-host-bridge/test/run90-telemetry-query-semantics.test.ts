@@ -282,7 +282,7 @@ test("Run 90 canonical host view reconciles 257 totals with a 50-row page", asyn
     const filteredPage = await (
       backend as unknown as {
         listTelemetryRequestPage(query: Record<string, unknown>): Promise<{
-          readonly items: readonly unknown[];
+      readonly items: readonly Record<string, unknown>[];
           readonly totalMatching: number;
           readonly returned: number;
         }>;
@@ -314,11 +314,28 @@ test("Run 90 router decisions expose a full total beside the bounded page", asyn
     scopeId,
     runtimeChannel: "development",
     runtimeVendorStartup: "disabled",
+    readTrackBPostObservationReceipt: async (requestId) => ({
+      requestId,
+      completedAt: "2026-09-01T00:00:00.000Z",
+      result: {
+        advisory: {
+          advisoryId: `advisory:${requestId}`,
+          decisionAdvice: {
+            consideredAdviceIds: [`advisory:${requestId}`],
+            acceptedAdviceIds: [],
+            rejectedAdviceIds: [`advisory:${requestId}`],
+            staleAdviceIds: [],
+            unavailableAdviceIds: [],
+            deterministicFallback: "baseline_retained",
+          },
+        },
+      },
+    }),
   });
   try {
     const pageApi = backend as unknown as {
       listRouterDecisionPage(query?: Record<string, unknown>): Promise<{
-        readonly items: readonly unknown[];
+        readonly items: readonly Record<string, unknown>[];
         readonly totalMatching: number;
         readonly returned: number;
         readonly truncated: boolean;
@@ -333,6 +350,12 @@ test("Run 90 router decisions expose a full total beside the bounded page", asyn
     expect(page.returned).toBe(50);
     expect(page.items).toHaveLength(50);
     expect(page.truncated).toBe(true);
+    expect(page.items[0]?.shadowAdvice).toMatchObject({
+      advisoryId: `advisory:${String(page.items[0]?.requestId)}`,
+      decisionAdvice: {
+        deterministicFallback: "baseline_retained",
+      },
+    });
   } finally {
     await backend.shutdown();
   }
