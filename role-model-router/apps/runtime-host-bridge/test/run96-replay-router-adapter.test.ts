@@ -479,6 +479,10 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
       replayJobId: "replay:orchestrated",
       sourceGeneration: 4,
       resultTraceIds: ["artifact:branch:orchestrated"],
+      resultBranches: [{
+        candidateEndpointId: "endpoint:counterfactual",
+        branchRootRef: "artifact:branch:orchestrated",
+      }],
       candidates: [expect.objectContaining({ endpointId: "endpoint:counterfactual" })],
     }),
   ]);

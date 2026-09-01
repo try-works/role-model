@@ -1508,6 +1508,7 @@ export async function runSupervisedReplay(input: {
   }
   let schedulerClaim: ReplayIntentClaim | null = null;
   const resultTraceIds: string[] = [];
+  const resultBranches: { candidateEndpointId: string; branchRootRef: string }[] = [];
   if (input.scheduler) {
     const deadlineMs = input.budget.deadlineMs;
     if (typeof deadlineMs !== "number" || !Number.isSafeInteger(deadlineMs) || deadlineMs < 1) {
@@ -1603,6 +1604,7 @@ export async function runSupervisedReplay(input: {
       throw new Error("Replay Core did not accept the durable branch append receipt");
     }
     resultTraceIds.push(branch.branchRootRef);
+    resultBranches.push({ candidateEndpointId, branchRootRef: branch.branchRootRef });
   }
   const evaluation = await input.handoffEvaluation({
     replayJobId: jobId,
@@ -1610,6 +1612,8 @@ export async function runSupervisedReplay(input: {
     sourceDecisionId: sourceRoot.sourceDecisionId,
     sourceGeneration: sourceRoot.generation,
     resultTraceIds: [...new Set(resultTraceIds)].sort(),
+    resultBranches: resultBranches
+      .sort((left, right) => left.candidateEndpointId.localeCompare(right.candidateEndpointId)),
     candidates: structuredClone(input.candidatePackages),
   });
   const completed = await input.runtime.invoke(
