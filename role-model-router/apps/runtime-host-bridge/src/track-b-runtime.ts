@@ -3542,6 +3542,11 @@ export async function runTrackBPostObservation(
   };
   return {
     pipeline: pipeline.receipt,
+    // This is an asynchronous observation result.  It may explain a shadow
+    // comparison, but it never changes the already-persisted baseline decision.
+    // An explicit null lets decision/receipt readers distinguish "not considered"
+    // from a missing or malformed advisory payload.
+    advisory: "advisory" in pipeline ? pipeline.advisory : null,
     projection,
     consumption,
     repositoryContext,
