@@ -1136,6 +1136,79 @@ export function createRouterReplayAdapter(options: {
   });
 }
 
+/**
+ * Builds the only source-root value Replay Core may accept from the public host.
+ * The graph receipt proves durable local availability; raw messages, responses, and
+ * tool payloads intentionally never cross this control-plane boundary.
+ */
+export function createReplaySourceAttestation(input: {
+  readonly channel: string;
+  readonly scope: string;
+  readonly authorizationEpoch: number;
+  readonly capture: Readonly<Record<string, unknown>>;
+  readonly normalizedRequestRef: string;
+  readonly sharedPrefixRef: string;
+  readonly forkOccurrenceId: string;
+  readonly policySnapshotRef: string;
+  readonly capturePolicyRef: string;
+  readonly eligibleEndpointIds: readonly string[];
+}): Readonly<Record<string, unknown>> {
+  if (!input.channel || !input.scope || !Number.isSafeInteger(input.authorizationEpoch)) {
+    throw new Error("replay source attestation identity is required");
+  }
+  const capture = input.capture;
+  const trace = capture.trace;
+  if (
+    capture.schemaVersion !== "role-model.route-capture-read.v2" ||
+    capture.scope !== input.scope ||
+    typeof capture.rootArtifactId !== "string" ||
+    !capture.rootArtifactId ||
+    typeof capture.routingDecisionId !== "string" ||
+    !capture.routingDecisionId ||
+    typeof capture.endpointId !== "string" ||
+    !capture.endpointId ||
+    !trace ||
+    typeof trace !== "object" ||
+    Array.isArray(trace) ||
+    !Number.isSafeInteger((trace as Record<string, unknown>).generation) ||
+    (trace as Record<string, unknown>).generation === undefined ||
+    (trace as Record<string, unknown>).readiness !== "ready" ||
+    typeof (trace as Record<string, unknown>).rootOccurrenceId !== "string" ||
+    !(trace as Record<string, unknown>).rootOccurrenceId ||
+    !input.normalizedRequestRef ||
+    !input.sharedPrefixRef ||
+    !input.forkOccurrenceId ||
+    !input.policySnapshotRef ||
+    !input.capturePolicyRef ||
+    input.eligibleEndpointIds.length === 0 ||
+    !input.eligibleEndpointIds.includes(capture.endpointId)
+  ) {
+    throw new Error("complete durable replay source receipt is required");
+  }
+  const eligibleEndpointIds = [...new Set(input.eligibleEndpointIds)].sort();
+  return Object.freeze({
+    schemaVersion: "role-model.replay-source-attestation.v1",
+    channel: input.channel,
+    scope: input.scope,
+    authorizationEpoch: input.authorizationEpoch,
+    traceRoot: Object.freeze({
+      traceRootId: capture.rootArtifactId,
+      scope: input.scope,
+      generation: (trace as Record<string, unknown>).generation,
+      readiness: "ready",
+      retentionState: "available",
+      sharedPrefixRef: input.sharedPrefixRef,
+      normalizedRequestRef: input.normalizedRequestRef,
+      sourceDecisionId: capture.routingDecisionId,
+      forkOccurrenceId: input.forkOccurrenceId,
+      policySnapshotRef: input.policySnapshotRef,
+      capturePolicyRef: input.capturePolicyRef,
+      eligibleEndpointIds,
+      selectedEndpointId: capture.endpointId,
+    }),
+  });
+}
+
 export interface TrackBPostObservationWorkItem extends Readonly<Record<string, unknown>> {
   readonly requestId: string;
   readonly routingDecisionId: string;

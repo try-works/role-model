@@ -1,6 +1,54 @@
 import { expect, test } from "vitest";
 
-import { createRouterReplayAdapter } from "../src/track-b-runtime.js";
+import {
+  createReplaySourceAttestation,
+  createRouterReplayAdapter,
+} from "../src/track-b-runtime.js";
+
+test("Run96 S3 RED: the public host derives a bounded replay source attestation from a durable graph receipt", () => {
+  const attestation = createReplaySourceAttestation({
+    channel: "development",
+    scope: "tenant:one",
+    authorizationEpoch: 96,
+    capture: {
+      schemaVersion: "role-model.route-capture-read.v2",
+      scope: "tenant:one",
+      rootArtifactId: "artifact:root-96",
+      routingDecisionId: "decision:source-96",
+      endpointId: "endpoint:baseline",
+      trace: {
+        generation: 4,
+        readiness: "ready",
+        rootOccurrenceId: "occurrence:root-96",
+        headOccurrenceId: "occurrence:response-96",
+      },
+      messages: [{ role: "user", content: "must not cross replay attestation IPC" }],
+    },
+    normalizedRequestRef: "artifact:request-96",
+    sharedPrefixRef: "artifact:prefix-96",
+    forkOccurrenceId: "occurrence:root-96",
+    policySnapshotRef: "artifact:policy-96",
+    capturePolicyRef: "artifact:capture-policy-96",
+    eligibleEndpointIds: ["endpoint:baseline", "endpoint:counterfactual"],
+  });
+
+  expect(attestation).toEqual({
+    schemaVersion: "role-model.replay-source-attestation.v1",
+    channel: "development",
+    scope: "tenant:one",
+    authorizationEpoch: 96,
+    traceRoot: expect.objectContaining({
+      traceRootId: "artifact:root-96",
+      sourceDecisionId: "decision:source-96",
+      generation: 4,
+      readiness: "ready",
+      retentionState: "available",
+      selectedEndpointId: "endpoint:baseline",
+      eligibleEndpointIds: ["endpoint:baseline", "endpoint:counterfactual"],
+    }),
+  });
+  expect(JSON.stringify(attestation)).not.toContain("must not cross replay attestation IPC");
+});
 
 test("Run96 S3 RED: the host exposes a versioned scope-bound router replay adapter without provider credentials", async () => {
   const received: Record<string, unknown>[] = [];
