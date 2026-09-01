@@ -2607,6 +2607,16 @@ export function resolveTrackBRouteAdvisory(input: {
   if (input.profileSnapshotIds.some((id) => typeof id !== "string" || !id)) {
     throw new Error("route-learning advisory profile snapshot ids are invalid");
   }
+  const advisoryId = `advisory:${createHash("sha256")
+    .update(JSON.stringify({
+      baselineDecisionId: input.baselineDecisionId,
+      scope: input.scope,
+      authorizationEpoch: input.authorizationEpoch,
+      routePackage: input.routePackage,
+      profileSnapshotIds: input.profileSnapshotIds,
+      candidateId: input.candidateId,
+    }))
+    .digest("hex")}`;
   return {
     schemaVersion: "role-model.route-advisory-disposition.v1",
     mode: "shadow" as const,
@@ -2617,6 +2627,15 @@ export function resolveTrackBRouteAdvisory(input: {
     routePackage: input.routePackage,
     profileSnapshotIds: [...input.profileSnapshotIds],
     candidateId: input.candidateId,
+    advisoryId,
+    decisionAdvice: {
+      consideredAdviceIds: [advisoryId],
+      acceptedAdviceIds: [],
+      rejectedAdviceIds: [advisoryId],
+      staleAdviceIds: [],
+      unavailableAdviceIds: [],
+      deterministicFallback: "baseline_retained" as const,
+    },
     confidence: 0,
     // A short-lived receipt makes stale evidence visibly non-actionable.  This
     // is a contract value for the shadow receipt, not an IPC content cap.

@@ -64,7 +64,7 @@ test("Run96 S5 RED: route-learning advisories are scope-bound shadow receipts wi
     nowMs: 96_000,
   });
 
-  expect(disposition).toEqual({
+  expect(disposition).toMatchObject({
     schemaVersion: "role-model.route-advisory-disposition.v1",
     mode: "shadow",
     disposition: "not_applied_shadow",
@@ -78,6 +78,15 @@ test("Run96 S5 RED: route-learning advisories are scope-bound shadow receipts wi
     expiresAtMs: 156_000,
     rollbackDisposition: "baseline_retained",
     productionMutation: false,
+  });
+  expect(disposition.advisoryId).toMatch(/^advisory:[a-f0-9]{64}$/);
+  expect(disposition.decisionAdvice).toEqual({
+    consideredAdviceIds: [disposition.advisoryId],
+    acceptedAdviceIds: [],
+    rejectedAdviceIds: [disposition.advisoryId],
+    staleAdviceIds: [],
+    unavailableAdviceIds: [],
+    deterministicFallback: "baseline_retained",
   });
 
   expect(() => resolveTrackBRouteAdvisory({
