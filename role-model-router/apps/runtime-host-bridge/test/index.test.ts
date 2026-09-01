@@ -16416,10 +16416,15 @@ describe("runtime-host-bridge", () => {
         expect.arrayContaining([
           expect.objectContaining({
             endpointId: endpoint.endpointId,
-            status: "degraded",
-            healthStatus: "degraded",
-            routingEligible: false,
-            benchmarkEligible: false,
+            status: "active",
+            healthStatus: "healthy",
+            routingEligible: true,
+            benchmarkEligible: true,
+            executionCooldown: expect.objectContaining({
+              active: true,
+              circuitState: "open",
+              failureCount: 2,
+            }),
           }),
         ]),
       );

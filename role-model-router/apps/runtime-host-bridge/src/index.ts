@@ -152,10 +152,8 @@ import {
   serializeExecutionCircuitState,
   toExecutionCircuitReceipt,
 } from "./execution-circuit-breaker.js";
-import {
-  CONSECUTIVE_EXECUTION_FAILURE_DEGRADATION_THRESHOLD,
-  resolveEndpointHealthState,
-} from "./health-policy.js";
+import { resolveEndpointHealthState } from "./health-policy.js";
+import { reconcileLegacyExecutionAdmissionRows } from "./legacy-execution-admission-reconciliation.js";
 import { resolveModelCapabilityProfile } from "./model-capability-resolver.js";
 import {
   filterEndpointsByCapabilityRequirements,
@@ -8058,6 +8056,25 @@ function throwNoEligibleCapabilityTarget(input: {
   });
 }
 
+function throwAliasPoolEmpty(input: {
+  readonly requestedModel: string;
+  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution">;
+}): never {
+  const aliasResolution = input.routingDiagnostics?.aliasResolution;
+  throw new BridgeHttpError(503, {
+    error: {
+      type: "routing_configuration_error",
+      code: "alias_pool_empty",
+      message: `ALIAS_POOL_EMPTY: no routable targets are configured for alias ${input.requestedModel}.`,
+      requestedModel: input.requestedModel,
+      ...(aliasResolution?.aliasId ? { aliasId: aliasResolution.aliasId } : {}),
+      ...(aliasResolution?.resolvedModelIds
+        ? { resolvedModelIds: aliasResolution.resolvedModelIds }
+        : {}),
+    },
+  });
+}
+
 function filterAllowEndpointsForResponsesHostedTools(input: {
   readonly registry: EndpointRegistryResult;
   readonly allowEndpoints: readonly string[];
@@ -9000,6 +9017,12 @@ export function mapChatCompletionsRequest(
           routingMode: configuredDefaultRoutingMode,
         }
       : routingDiagnostics;
+  if (baseRoutingDiagnostics?.aliasResolution?.poolEmptyReason === "ALIAS_POOL_EMPTY") {
+    throwAliasPoolEmpty({
+      requestedModel: body.model,
+      routingDiagnostics: baseRoutingDiagnostics,
+    });
+  }
   const capabilityRequirements = inferChatCompletionsCapabilityRequirements(
     body as unknown as Record<string, unknown>,
   );
@@ -17829,6 +17852,24 @@ export async function createRuntimeBridgeBackend(
   };
   let currentAccounts = [...readCurrentAccounts()];
   let runtimeEndpoints = [...listRuntimeEndpoints({ databasePath: initialization.databasePath })];
+  const legacyAdmissionReconciliation = reconcileLegacyExecutionAdmissionRows({
+    endpoints: runtimeEndpoints,
+    circuits: readExecutionCircuitState(initialization.databasePath),
+  });
+  if (legacyAdmissionReconciliation.restoredEndpointIds.length > 0) {
+    for (const endpointId of legacyAdmissionReconciliation.restoredEndpointIds) {
+      const restoredEndpoint = legacyAdmissionReconciliation.endpoints.find(
+        (endpoint) => endpoint.endpointId === endpointId,
+      );
+      if (restoredEndpoint) {
+        upsertSqliteRuntimeEndpoint({
+          databasePath: initialization.databasePath,
+          endpoint: restoredEndpoint,
+        });
+      }
+    }
+    runtimeEndpoints = [...listRuntimeEndpoints({ databasePath: initialization.databasePath })];
+  }
   let currentModelOverrides: Record<string, BridgeModelOverrideRecord> = readModelOverridesFromDisk(
     options.runtimeStateRoot,
   );
@@ -23638,25 +23679,6 @@ export async function createRuntimeBridgeBackend(
             });
             if (cooldownRecord) {
               executionSemanticsReceipt.cooldownDecision = "recorded";
-              if (
-                cooldownRecord.failureCount >= CONSECUTIVE_EXECUTION_FAILURE_DEGRADATION_THRESHOLD
-              ) {
-                const failedEndpoint = runtimeEndpoints.find(
-                  (endpoint) => endpoint.endpointId === error.endpointId,
-                );
-                if (failedEndpoint && failedEndpoint.lifecycleState !== "degraded") {
-                  upsertSqliteRuntimeEndpoint({
-                    databasePath: initialization.databasePath,
-                    endpoint: {
-                      ...failedEndpoint,
-                      lifecycleState: "degraded",
-                      healthStatus: "degraded",
-                    },
-                  });
-                  rebuildCurrentState();
-                  emitRevisionUpdate();
-                }
-              }
             }
           }
           ownedProbeEndpointId = undefined;

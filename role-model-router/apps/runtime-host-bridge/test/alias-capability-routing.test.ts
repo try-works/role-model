@@ -150,6 +150,26 @@ describe("alias capability routing", () => {
     ).toThrow(/no_eligible_target/i);
   });
 
+  test("reports an empty alias pool before attempting capability eligibility", () => {
+    expect(() =>
+      mapChatCompletionsRequest(
+        registry,
+        {
+          model: "missing-alias-target",
+          messages: [{ role: "user", content: "Hello" }],
+        } as never,
+        "req-empty-alias-pool",
+        [
+          {
+            aliasId: "missing-alias-target",
+            mode: "basic",
+            modelIds: ["does-not-exist/model"],
+          },
+        ],
+      ),
+    ).toThrow(/ALIAS_POOL_EMPTY/i);
+  });
+
   test("synthesizes prompt_cache_key from session_id when caller omits it", () => {
     const plan = mapChatCompletionsRequest(
       registry,
