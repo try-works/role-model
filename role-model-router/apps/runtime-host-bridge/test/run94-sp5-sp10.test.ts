@@ -563,3 +563,48 @@ test("GREEN: exposes extension readback through the Track B HTTP surface", async
     await backend.shutdown();
   }
 });
+
+test("Run96 S3 RED: exposes an explicit authenticated supervised replay command rather than replaying observations implicitly", async () => {
+  const runtimeStateRoot = await import("node:fs/promises").then(({ mkdtemp }) =>
+    mkdtemp(path.join(os.tmpdir(), "run96-replay-api-")),
+  );
+  roots.push(runtimeStateRoot);
+  const backend = await createRuntimeBridgeBackend({
+    repoRoot,
+    fixtureRoot: path.join(repoRoot, "role-model-router", "apps", "runtime-host-bridge", "test", "fixtures"),
+    runtimeStateRoot,
+    scopeId: "run96-api",
+    runTrackBSupervisedReplay: async (body) => ({
+      schemaVersion: "role-model.supervised-replay-command-receipt.v1",
+      requestId: body.requestId,
+      replayJobId: "replay:run96-api",
+      state: "complete",
+    }),
+  });
+  const server = await startBridgeServer({
+    host: "127.0.0.1",
+    port: 0,
+    registry: backend.registry,
+    getRegistry: () => backend.registry,
+    executeChatCompletions: backend.executeChatCompletions,
+    executeResponses: backend.executeResponses,
+    runTrackBSupervisedReplay: backend.runTrackBSupervisedReplay,
+  });
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.port}/api/role-model/track-b/replay`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ requestId: "run96-source-request", candidateEndpointIds: ["endpoint:counterfactual"] }),
+    });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      schemaVersion: "role-model.supervised-replay-command-receipt.v1",
+      requestId: "run96-source-request",
+      replayJobId: "replay:run96-api",
+      state: "complete",
+    });
+  } finally {
+    await server.close();
+    await backend.shutdown();
+  }
+});

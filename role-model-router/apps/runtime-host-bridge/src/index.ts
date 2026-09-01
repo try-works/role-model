@@ -2891,6 +2891,7 @@ export interface StartBridgeServerOptions {
   readonly readTrackBQaExtensions?: () => Promise<readonly unknown[]>;
   readonly readTrackBShadowReceipts?: () => Promise<unknown>;
   readonly readTrackBExtensionReadback?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly runTrackBSupervisedReplay?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly measureNoRichCaptureBaseline?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly readGraphMigration?: () => Promise<unknown>;
   readonly advanceGraphMigration?: (body: Record<string, unknown>) => Promise<unknown>;
@@ -3110,6 +3111,7 @@ export interface RuntimeBridgeBackend {
   readTrackBQaExtensions(): Promise<readonly unknown[]>;
   readTrackBShadowReceipts(): Promise<unknown>;
   readTrackBExtensionReadback(body: Record<string, unknown>): Promise<unknown>;
+  runTrackBSupervisedReplay(body: Record<string, unknown>): Promise<unknown>;
   measureNoRichCaptureBaseline(body: Record<string, unknown>): Promise<unknown>;
   readGraphMigration(): Promise<unknown>;
   advanceGraphMigration(body: Record<string, unknown>): Promise<unknown>;
@@ -3484,6 +3486,7 @@ export interface CreateRuntimeBridgeBackendOptions {
   ) => Promise<unknown>;
   readonly trackBPostObservationReceipts?: () => Promise<unknown>;
   readonly readTrackBExtensionReadback?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly runTrackBSupervisedReplay?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly codexAuthAdapter?: CodexAuthAdapter;
   readonly codexExecutionAdapter?: CodexExecutionAdapter;
 }
@@ -14924,6 +14927,21 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "POST" && url.pathname === "/api/role-model/track-b/replay") {
+      if (!options.runTrackBSupervisedReplay) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(response, 200, await options.runTrackBSupervisedReplay(await readJsonBody(request)));
+      } catch (error) {
+        writeJson(response, 409, {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+      return;
+    }
+
     if (
       request.method === "POST" &&
       url.pathname === "/api/role-model/track-b/performance-baseline"
@@ -25661,6 +25679,12 @@ export async function createRuntimeBridgeBackend(
         throw new Error("Track B extension readback is unavailable");
       }
       return options.readTrackBExtensionReadback(body);
+    },
+    async runTrackBSupervisedReplay(body: Record<string, unknown>): Promise<unknown> {
+      if (!options.runTrackBSupervisedReplay) {
+        throw new Error("Track B supervised replay is unavailable");
+      }
+      return options.runTrackBSupervisedReplay(body);
     },
     async measureNoRichCaptureBaseline(body: Record<string, unknown>): Promise<unknown> {
       return runtimeTrackBOperations.measureNoRichCaptureBaseline(body);

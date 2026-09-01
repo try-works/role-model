@@ -63,6 +63,7 @@ type CliBackend = Pick<
   | "readTrackBQaExtensions"
   | "readTrackBShadowReceipts"
   | "readTrackBExtensionReadback"
+  | "runTrackBSupervisedReplay"
   | "measureNoRichCaptureBaseline"
   | "readGraphMigration"
   | "advanceGraphMigration"
@@ -437,6 +438,9 @@ export function createCliServerOptions(
     readTrackBExtensionReadback: bindBackendMethod(
       "readTrackBExtensionReadback",
     ) as StartBridgeServerOptions["readTrackBExtensionReadback"],
+    runTrackBSupervisedReplay: bindBackendMethod(
+      "runTrackBSupervisedReplay",
+    ) as StartBridgeServerOptions["runTrackBSupervisedReplay"],
     measureNoRichCaptureBaseline: bindBackendMethod(
       "measureNoRichCaptureBaseline",
     ) as StartBridgeServerOptions["measureNoRichCaptureBaseline"],
