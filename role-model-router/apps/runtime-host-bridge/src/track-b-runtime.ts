@@ -1556,7 +1556,26 @@ export async function runSupervisedReplay(input: {
     if (prepared.status !== "provider_dispatch" || !envelope || typeof envelope !== "object") {
       throw new Error("Replay Core did not prepare a bounded router dispatch");
     }
-    const receipt = await input.adapter.dispatch(envelope as Record<string, unknown>);
+    let receipt: Record<string, unknown>;
+    try {
+      receipt = await input.adapter.dispatch(envelope as Record<string, unknown>);
+    } catch (error) {
+      await input.runtime.invoke(
+        "replay-core",
+        controlEnvelope("replay:record-provider-failure", {
+          jobId,
+          candidateEndpointId,
+          leaseOwner: input.leaseOwner,
+          fenceToken: lease.fenceToken,
+          failure: {
+            code: "router_dispatch_error",
+            message: error instanceof Error ? error.message.slice(0, 256) : "router dispatch failed",
+            retryable: true,
+          },
+        }),
+      );
+      throw error;
+    }
     const recorded = await input.runtime.invoke(
       "replay-core",
       controlEnvelope("replay:record-provider-receipt", {

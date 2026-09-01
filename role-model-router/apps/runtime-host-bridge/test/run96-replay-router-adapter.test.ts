@@ -497,6 +497,111 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
   expect(JSON.stringify(invocations)).not.toMatch(/api[_-]?key|credential|secret/i);
 });
 
+test("Run96 S3 RED: host orchestration records a bounded router failure before replay retry", async () => {
+  let providerFailure: Record<string, unknown> | null = null;
+  const runtime = {
+    async invoke(id: string, envelope: Record<string, unknown>) {
+      expect(id).toBe("replay-core");
+      switch (envelope.capability) {
+        case "replay:create-job":
+          return { jobId: "replay:router-failure" };
+        case "replay:claim-job":
+          return { fenceToken: 7, leaseOwner: "scheduler:router-failure" };
+        case "replay:prepare-dispatch":
+          return {
+            status: "provider_dispatch",
+            envelope: {
+              schemaVersion: "role-model.replay-dispatch.v1",
+              channel: "development",
+              scope: "tenant:one",
+              replayJobId: "replay:router-failure",
+              sourceGeneration: 4,
+              sourceDecisionId: "decision:source-failure",
+              normalizedRequestRef: "artifact:request-failure",
+              candidateEndpointId: "endpoint:counterfactual",
+              candidatePackage: {
+                endpointId: "endpoint:counterfactual",
+                modelId: "deepseek/deepseek-v4-pro",
+                reasoningEffort: "max",
+                promptAdapterId: "prompt:stable-v1",
+                toolPolicy: "deny",
+                experiencePackId: "experience:none",
+                samplingProfileId: "sampling:stable-v1",
+              },
+              budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
+              toolPolicy: "deny",
+            },
+          };
+        case "replay:record-provider-failure":
+          providerFailure = envelope.value as Record<string, unknown>;
+          return { status: "retryable_failure", replayJobId: "replay:router-failure", candidateEndpointId: "endpoint:counterfactual" };
+        default:
+          throw new Error(`unexpected capability ${String(envelope.capability)}`);
+      }
+    },
+  };
+  const sourceAttestation = createReplaySourceAttestation({
+    channel: "development",
+    scope: "tenant:one",
+    authorizationEpoch: 96,
+    capture: {
+      schemaVersion: "role-model.route-capture-read.v2",
+      scope: "tenant:one",
+      rootArtifactId: "artifact:root-failure",
+      routingDecisionId: "decision:source-failure",
+      endpointId: "endpoint:baseline",
+      trace: { generation: 4, readiness: "ready", rootOccurrenceId: "occurrence:root-failure" },
+      messages: [{ role: "user", content: "must remain host-only" }],
+    },
+    normalizedRequestRef: "artifact:request-failure",
+    sharedPrefixRef: "artifact:prefix-failure",
+    forkOccurrenceId: "occurrence:root-failure",
+    policySnapshotRef: "artifact:policy-failure",
+    capturePolicyRef: "artifact:capture-policy-failure",
+    eligibleEndpointIds: ["endpoint:baseline", "endpoint:counterfactual"],
+  });
+
+  await expect(runSupervisedReplay({
+    runtime,
+    adapter: {
+      protocolVersion: "role-model.router-replay-adapter.v1",
+      authenticated: true,
+      channel: "development",
+      scope: "tenant:one",
+      async dispatch() { throw new Error("upstream 503"); },
+    },
+    requestId: "request:router-failure",
+    channel: "development",
+    scope: "tenant:one",
+    authorizationEpoch: 96,
+    sourceAttestation,
+    idempotencyKey: "replay:router-failure",
+    intent: "counterfactual_route",
+    candidatePackages: [{
+      endpointId: "endpoint:counterfactual",
+      modelId: "deepseek/deepseek-v4-pro",
+      reasoningEffort: "max",
+      promptAdapterId: "prompt:stable-v1",
+      toolPolicy: "deny",
+      experiencePackId: "experience:none",
+      samplingProfileId: "sampling:stable-v1",
+    }],
+    budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
+    leaseOwner: "scheduler:router-failure",
+    leaseMs: 10_000,
+    appendBranch: async () => { throw new Error("router failure must not append a branch"); },
+    handoffEvaluation: async () => { throw new Error("router failure must not hand off evaluation"); },
+  })).rejects.toThrow("upstream 503");
+
+  expect(providerFailure).toMatchObject({
+    jobId: "replay:router-failure",
+    candidateEndpointId: "endpoint:counterfactual",
+    leaseOwner: "scheduler:router-failure",
+    fenceToken: 7,
+    failure: { code: "router_dispatch_error", message: "upstream 503", retryable: true },
+  });
+});
+
 test("Run96 S3 RED: a completed idempotent replay returns its durable receipt without reclaiming or redispatching", async () => {
   const invocations: Record<string, unknown>[] = [];
   const runtime = {
