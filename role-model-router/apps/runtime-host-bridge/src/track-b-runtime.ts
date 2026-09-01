@@ -2708,6 +2708,33 @@ export async function runTrackBShadowPipeline(
   if (typeof replayDigest !== "string" || !replayDigest) {
     throw new Error("replay plan must expose a durable digest before learning signals are emitted");
   }
+  const replayRecord = replay as Record<string, unknown>;
+  const replayBranches = replayRecord.branches;
+  if (
+    typeof replayRecord.sourceDecisionId !== "string" || !replayRecord.sourceDecisionId ||
+    typeof replayRecord.sourceGraphRef !== "string" || !replayRecord.sourceGraphRef ||
+    typeof replayRecord.sharedPrefixRef !== "string" || !replayRecord.sharedPrefixRef ||
+    !Array.isArray(replayBranches) || replayBranches.length > 128
+  ) {
+    throw new Error("replay plan must expose bounded provenance before knowledge learning");
+  }
+  const replayForKnowledge = {
+    sourceDecisionId: replayRecord.sourceDecisionId,
+    sourceGraphRef: replayRecord.sourceGraphRef,
+    sharedPrefixRef: replayRecord.sharedPrefixRef,
+    branches: replayBranches.map((branch) => {
+      const record = branch as Record<string, unknown>;
+      if (typeof record?.id !== "string" || !record.id) {
+        throw new Error("replay plan contains a branch without a bounded identifier");
+      }
+      return {
+        id: record.id,
+        sourceDecisionId: replayRecord.sourceDecisionId,
+        sourceGraphRef: replayRecord.sourceGraphRef,
+      };
+    }),
+    digest: replayDigest,
+  };
   const scorerSetVersion = "run96-routing-shadow-v1";
   const scorer = {
     manifestVersion: 2,
@@ -2850,8 +2877,12 @@ export async function runTrackBShadowPipeline(
   }
   const durableComparison = persistedEvaluation as Record<string, unknown>;
   const finalizedComparison = {
-    ...durableComparison,
+    groupId: durableComparison.groupId,
     comparisonId: durableComparison.groupId,
+    status: durableComparison.status,
+    outcome: durableComparison.outcome,
+    holdout: durableComparison.holdout,
+    members: durableComparison.members,
   };
   const evaluationAuthoritySecret = randomBytes(32).toString("hex");
   const finalizedComparisonReceiptPayload = {
@@ -2896,6 +2927,19 @@ export async function runTrackBShadowPipeline(
       finalizedEvaluation: persistedEvaluation,
     }),
   );
+  const signalRecord = signals as Record<string, unknown>;
+  if (
+    signalRecord.routeDecisionId !== replayForKnowledge.sourceDecisionId ||
+    signalRecord.graphRef !== replayForKnowledge.sourceGraphRef ||
+    !Array.isArray(signalRecord.signals)
+  ) {
+    throw new Error("finalized trajectory signals must retain replay provenance");
+  }
+  const signalsForKnowledge = {
+    routeDecisionId: signalRecord.routeDecisionId,
+    graphRef: signalRecord.graphRef,
+    signals: signalRecord.signals,
+  };
   const profile = await runtime.invoke("profile-learner", {
     ...envelope("profile:estimate-finalized-evaluation", {
       finalizedEvaluation: persistedEvaluation,
@@ -2918,10 +2962,23 @@ export async function runTrackBShadowPipeline(
       })),
     }),
   });
-  const scoredRollouts = rolloutRows.map((rollout) => ({
-    ...rollout,
-    score: (rollout.outcome as Record<string, unknown> | undefined)?.status === "success" ? 1 : 0,
-  }));
+  const profileRecord = profile as Record<string, unknown>;
+  if (typeof profileRecord.digest !== "string" || !profileRecord.digest || !profileRecord.effects) {
+    throw new Error("finalized profile estimate must retain attributable evidence");
+  }
+  const profileForKnowledge = {
+    digest: profileRecord.digest,
+    effects: profileRecord.effects,
+  };
+  const scoredRollouts = rolloutRows.map((rollout) => {
+    if (typeof rollout.evidenceRef !== "string" || !rollout.evidenceRef) {
+      throw new Error("routing-shadow rollout evidence references are required");
+    }
+    return {
+      evidenceRef: rollout.evidenceRef,
+      score: (rollout.outcome as Record<string, unknown> | undefined)?.status === "success" ? 1 : 0,
+    };
+  });
   const positive = scoredRollouts.filter((rollout) => rollout.score === 1);
   const negative = scoredRollouts.filter((rollout) => rollout.score === 0);
   if (!positive.length || !negative.length)
@@ -2932,10 +2989,10 @@ export async function runTrackBShadowPipeline(
     "knowledge-worker",
     {
       ...envelope("knowledge:eval-consumer", {
-      replay,
+      replay: replayForKnowledge,
       evaluation: knowledgeEvaluation,
-      signals,
-      profile,
+      signals: signalsForKnowledge,
+      profile: profileForKnowledge,
       comparableGroup: {
         policy: "routing-shadow",
         task: "route-selection",
@@ -2943,9 +3000,13 @@ export async function runTrackBShadowPipeline(
         split: "holdout",
         seed: 87,
         comparabilityKey: `${input.sourceDecisionId}:holdout`,
-        positive,
-        negative,
-        candidateSet,
+        positive: positive.map((rollout) => ({ evidenceRef: rollout.evidenceRef, score: rollout.score })),
+        negative: negative.map((rollout) => ({ evidenceRef: rollout.evidenceRef, score: rollout.score })),
+        candidateSet: candidateSet.map((candidate) => ({
+          routePackage: candidate.routePackage,
+          endpointId: candidate.endpointId,
+          propensity: candidate.propensity,
+        })),
       },
       holdout: { ...holdout, evidenceRef: input.sourceGraphRef, passed: durableComparison.outcome === "candidate" },
       scope: { routePackage: input.routePackage, channel: input.channel, scopeId: input.scope },

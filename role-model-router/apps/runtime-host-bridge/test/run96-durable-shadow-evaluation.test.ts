@@ -52,6 +52,7 @@ const comparableEvidence = {
 test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather than the legacy aggregate evaluator", async () => {
   const calls: Array<{ id: string; capability: unknown }> = [];
   let signalInput: Record<string, unknown> | undefined;
+  let knowledgeInput: Record<string, unknown> | undefined;
   const trialIds = ["trial:source-96", "trial:counterfactual-96"];
   const claimedTrialIds = ["trial:source-96", "trial:counterfactual-96"];
   let createCount = 0;
@@ -70,6 +71,7 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
               sharedPrefixRef: "artifact:source-graph-96#prefix",
               branches: [],
               digest: "sha256:replay-plan-96",
+              businessOutput: { richPromptContent: "must-not-cross-the-knowledge-ipc-boundary" },
             };
           }
           if (id === "evaluation-core" && envelope.capability === "evaluation:register-scorer") {
@@ -107,10 +109,31 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
           }
           if (id === "trajectory-signals") {
             signalInput = envelope.value as Record<string, unknown>;
-            return { signals: [] };
+            return {
+              routeDecisionId: "decision:source-96",
+              graphRef: "artifact:source-graph-96",
+              signals: [],
+            };
           }
-          if (id === "profile-learner") return { profileId: "profile:96" };
-          if (id === "knowledge-worker") return { id: "candidate:96", state: "shadow", productionEffects: {} };
+          if (id === "profile-learner") {
+            return {
+              profileId: "profile:96",
+              digest: "sha256:profile-96",
+              effects: {
+                routePackage: {
+                  values: ["candidate:source-96"],
+                  evidenceRefs: ["artifact:source-96"],
+                  sampleCount: 2,
+                  confidence: 1,
+                  bias: "none",
+                },
+              },
+            };
+          }
+          if (id === "knowledge-worker") {
+            knowledgeInput = envelope.value as Record<string, unknown>;
+            return { id: "candidate:96", state: "shadow", productionEffects: {} };
+          }
           throw new Error(`unexpected invocation ${id}:${String(envelope.capability)}`);
         },
       },
@@ -157,5 +180,12 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
     routeDecisionId: "decision:source-96",
     graphRef: "artifact:source-graph-96",
     replayRef: "sha256:replay-plan-96",
+  });
+  expect(knowledgeInput?.replay).toEqual({
+    sourceDecisionId: "decision:source-96",
+    sourceGraphRef: "artifact:source-graph-96",
+    sharedPrefixRef: "artifact:source-graph-96#prefix",
+    branches: [],
+    digest: "sha256:replay-plan-96",
   });
 });
