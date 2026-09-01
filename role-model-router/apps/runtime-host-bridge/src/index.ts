@@ -2896,7 +2896,7 @@ export interface StartBridgeServerOptions {
   readonly advanceGraphMigration?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackGraphMigration?: () => Promise<unknown>;
   readonly readStorageRetention?: () => Promise<unknown>;
-  readonly dryRunStorageRetention?: () => Promise<unknown>;
+  readonly dryRunStorageRetention?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly updateStorageRetentionPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly executeStorageRetention?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly cancelStorageRetentionJob?: () => Promise<unknown>;
@@ -3115,7 +3115,7 @@ export interface RuntimeBridgeBackend {
   advanceGraphMigration(body: Record<string, unknown>): Promise<unknown>;
   rollbackGraphMigration(): Promise<unknown>;
   readStorageRetention(): Promise<unknown>;
-  dryRunStorageRetention(): Promise<unknown>;
+  dryRunStorageRetention(body?: Record<string, unknown>): Promise<unknown>;
   updateStorageRetentionPolicy(body: Record<string, unknown>): Promise<unknown>;
   executeStorageRetention(body: Record<string, unknown>): Promise<unknown>;
   cancelStorageRetentionJob(): Promise<unknown>;
@@ -15006,7 +15006,11 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         writeJson(response, 404, { error: "not found" });
         return;
       }
-      writeJson(response, 200, await options.dryRunStorageRetention());
+      try {
+        writeJson(response, 200, await options.dryRunStorageRetention(await readJsonBody(request)));
+      } catch (error) {
+        writeJson(response, 400, { error: error instanceof Error ? error.message : "storage retention dry-run failed" });
+      }
       return;
     }
 
@@ -25701,7 +25705,7 @@ export async function createRuntimeBridgeBackend(
         catalog: [],
       }).readStorageRetention();
     },
-    async dryRunStorageRetention(): Promise<unknown> {
+    async dryRunStorageRetention(body: Record<string, unknown> = {}): Promise<unknown> {
       return createTrackBOperations({
         statePath: path.join(
           options.runtimeStateRoot,
@@ -25709,7 +25713,7 @@ export async function createRuntimeBridgeBackend(
           "track-b-production-bridge.json",
         ),
         catalog: [],
-      }).dryRunStorageRetention();
+      }).dryRunStorageRetention(body);
     },
     async updateStorageRetentionPolicy(body: Record<string, unknown>): Promise<unknown> {
       return createTrackBOperations({

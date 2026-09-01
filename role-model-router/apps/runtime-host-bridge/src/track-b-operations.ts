@@ -1606,8 +1606,8 @@ export function createTrackBOperations({
         policies: state.retention.policies ?? [],
       };
     },
-    async dryRunStorageRetention(): Promise<unknown> {
-      const remote = await requestPrivate("storage-retention/dry-run", { method: "POST" });
+    async dryRunStorageRetention(body: Record<string, unknown> = {}): Promise<unknown> {
+      const remote = await requestPrivate("storage-retention/dry-run", { method: "POST", body });
       if (remote) return remote;
       const state = await readState(statePath);
       if (state.retention.managedPolicy)

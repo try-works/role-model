@@ -590,6 +590,7 @@ describe("Track B operations APIs", () => {
       activeJob: null,
     };
     let dryRunCount = 0;
+    let receivedDryRunBody: Record<string, unknown> | undefined;
     const graphMutationCallbacks = {
       advanceGraphMigration: async (body: Record<string, unknown>) => ({
         action: "advance",
@@ -612,7 +613,9 @@ describe("Track B operations APIs", () => {
       }),
       ...graphMutationCallbacks,
       readStorageRetention: async () => summary,
-      dryRunStorageRetention: async () => ({
+      dryRunStorageRetention: async (body: Record<string, unknown>) => {
+        receivedDryRunBody = body;
+        return {
         ...summary,
         receipts: [
           {
@@ -622,7 +625,8 @@ describe("Track B operations APIs", () => {
             rollbackAvailable: true,
           },
         ],
-      }),
+        };
+      },
       updateStorageRetentionPolicy: async (body) => ({ ...summary, policies: [body] }),
       executeStorageRetention: async () => ({
         ...summary,
@@ -686,9 +690,12 @@ describe("Track B operations APIs", () => {
       );
       const dryRun = await fetch(`${base}/api/role-model/storage-retention/dry-run`, {
         method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ scope: "tenant:a" }),
       });
       expect(dryRun.status).toBe(200);
       expect((await dryRun.json()).receipts[0].id).toBe("dry-1");
+      expect(receivedDryRunBody).toEqual({ scope: "tenant:a" });
       expect((await (await fetch(`${base}/api/role-model/contribution`)).json()).mode).toBe(
         "contributor",
       );
