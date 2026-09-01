@@ -2897,6 +2897,9 @@ export async function runTrackBShadowPipeline(
       rows: [sourceRollout, ...counterfactualRollouts].map((rollout) => ({
         model: rollout.modelId,
         endpoint: rollout.endpointId,
+        effort: rollout.reasoningEffort,
+        task: "route-selection",
+        repository: input.scope,
         prompt: "unchanged",
         tool: "unchanged",
         sampling: "deterministic",
