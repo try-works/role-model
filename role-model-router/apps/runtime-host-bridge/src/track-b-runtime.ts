@@ -1198,6 +1198,7 @@ function assertReplayDispatchEnvelope(envelope: Record<string, unknown>, channel
     || typeof envelope.sourceDecisionId !== "string" || !envelope.sourceDecisionId
     || typeof envelope.normalizedRequestRef !== "string" || !envelope.normalizedRequestRef
     || typeof envelope.candidateEndpointId !== "string" || !envelope.candidateEndpointId
+    || typeof envelope.dispatchIdempotencyKey !== "string" || !/^[a-f0-9]{64}$/.test(envelope.dispatchIdempotencyKey)
     || !Number.isSafeInteger(envelope.sourceGeneration)) {
     throw new Error("complete bounded replay dispatch identity required");
   }
@@ -1310,6 +1311,7 @@ export function createRouterReplayAdapter(options: {
         sourceDecisionId: envelope.sourceDecisionId,
         normalizedRequestRef: envelope.normalizedRequestRef,
         candidateEndpointId: envelope.candidateEndpointId,
+        dispatchIdempotencyKey: envelope.dispatchIdempotencyKey,
         candidatePackage: structuredClone(envelope.candidatePackage),
         budget: structuredClone(envelope.budget),
         toolPolicy: envelope.toolPolicy,

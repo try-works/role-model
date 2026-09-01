@@ -185,6 +185,7 @@ test("Run96 S3 RED: the host exposes a versioned scope-bound router replay adapt
       sourceDecisionId: "decision:source",
       normalizedRequestRef: "artifact:request",
       candidateEndpointId: "endpoint:counterfactual",
+      dispatchIdempotencyKey: "1111111111111111111111111111111111111111111111111111111111111111",
       candidatePackage: {
         endpointId: "endpoint:counterfactual",
         modelId: "deepseek/deepseek-v4-pro",
@@ -216,6 +217,7 @@ test("Run96 S3 RED: the host exposes a versioned scope-bound router replay adapt
       source: "replay-core",
       replayJobId: "replay:96",
       candidateEndpointId: "endpoint:counterfactual",
+      dispatchIdempotencyKey: "1111111111111111111111111111111111111111111111111111111111111111",
       candidatePackage: expect.objectContaining({
         endpointId: "endpoint:counterfactual",
         reasoningEffort: "max",
@@ -248,6 +250,7 @@ test("Run96 S3 RED: the host adapter returns only bounded numeric usage for Repl
     sourceDecisionId: "decision:source",
     normalizedRequestRef: "artifact:request",
     candidateEndpointId: "endpoint:counterfactual",
+    dispatchIdempotencyKey: "2222222222222222222222222222222222222222222222222222222222222222",
     candidatePackage: {
       endpointId: "endpoint:counterfactual",
       modelId: "deepseek/deepseek-v4-pro",
@@ -284,6 +287,7 @@ test("Run96 S3 RED: the host replay adapter fails closed for cross-boundary or c
     sourceDecisionId: "decision:source",
     normalizedRequestRef: "artifact:request",
     candidateEndpointId: "endpoint:counterfactual",
+    dispatchIdempotencyKey: "3333333333333333333333333333333333333333333333333333333333333333",
     candidatePackage: {
       endpointId: "endpoint:counterfactual",
       modelId: "deepseek/deepseek-v4-pro",
@@ -353,6 +357,7 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
               sourceDecisionId: "decision:source-96",
               normalizedRequestRef: "artifact:request-96",
               candidateEndpointId: "endpoint:counterfactual",
+              dispatchIdempotencyKey: "4444444444444444444444444444444444444444444444444444444444444444",
               candidatePackage: value.candidatePackages ?? {
                 endpointId: "endpoint:counterfactual",
                 modelId: "deepseek/deepseek-v4-pro",
@@ -519,6 +524,7 @@ test("Run96 S3 RED: host orchestration records a bounded router failure before r
               sourceDecisionId: "decision:source-failure",
               normalizedRequestRef: "artifact:request-failure",
               candidateEndpointId: "endpoint:counterfactual",
+              dispatchIdempotencyKey: "5555555555555555555555555555555555555555555555555555555555555555",
               candidatePackage: {
                 endpointId: "endpoint:counterfactual",
                 modelId: "deepseek/deepseek-v4-pro",
@@ -704,6 +710,7 @@ test("Run96 S3 RED: a late-cancelled replay never hands incomplete branches to E
               sourceDecisionId: "decision:source-cancelled-late",
               normalizedRequestRef: "artifact:request-cancelled-late",
               candidateEndpointId: "endpoint:counterfactual",
+              dispatchIdempotencyKey: "6666666666666666666666666666666666666666666666666666666666666666",
               candidatePackage: {
                 endpointId: "endpoint:counterfactual",
                 modelId: "deepseek/deepseek-v4-pro",
