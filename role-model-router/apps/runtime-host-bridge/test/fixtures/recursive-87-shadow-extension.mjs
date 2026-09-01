@@ -9,27 +9,31 @@ export async function run(envelope = {}) {
       digest: "fixture-replay",
     };
   }
-  if (capability === "evaluation:run-local") {
+  if (capability === "evaluation:register-scorer") return { key: `${envelope.value.id}@${envelope.value.version}` };
+  if (capability === "evaluation:create-job") {
+    const job = envelope.value;
+    return { ...job, status: "queued" };
+  }
+  if (capability === "evaluation:list-trials") {
+    return [{ trialId: `trial:${envelope.value.jobId}`, jobId: envelope.value.jobId }];
+  }
+  if (capability === "evaluation:claim-trial") {
+    return { trialId: envelope.value.trialId, leaseId: `lease:${envelope.value.trialId}` };
+  }
+  if (capability === "evaluation:execute-trial") {
     const value = envelope.value;
-    const scores = value.cases.map((row) => (row.expected === row.actual ? 1 : 0));
     return {
-      count: value.cases.length,
-      scores,
-      holdout: {
-        passed: scores.reduce((sum, score) => sum + score, 0) / scores.length > 0.5,
-        evidenceRef: "sha256:fixture-derived-holdout",
-      },
-      environment: "local-routing-evaluation",
-      provenance: {
-        policy: value.policy,
-        task: value.task,
-        scorer: value.scorer,
-        split: value.split,
-        seed: value.seed,
-        evidenceRef: value.evidenceRef,
-      },
+      outputRef: value.outputRef,
+      outputDigest: value.outputDigest,
+      stdoutRef: value.stdoutRef,
+      stderrRef: value.stderrRef,
+      exitCode: value.exitCode,
+      measurements: value.measurements,
+      scores: [{ scorerId: "run96-exact", scorerVersion: "1", scorerDigest: envelope.scorerDefinitions[0].digest, dimension: "correctness", score: value.expected === value.actual ? 1 : 0, confidence: 1, source: "deterministic" }],
     };
   }
+  if (capability === "evaluation:submit-trial-result" || capability === "evaluation:record-trial-score") return { accepted: true };
+  if (capability === "evaluation:finalize-comparison-group" || capability === "evaluation:read-comparison-group") return { groupId: envelope.value.groupId, status: "finalized", outcome: "candidate" };
   if (capability === "signals:analyze") {
     const value = envelope.value;
     return {

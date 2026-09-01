@@ -2704,26 +2704,145 @@ export async function runTrackBShadowPipeline(
       counterfactuals: input.counterfactuals,
     }),
   );
-  const scorer = { id: "run87-exact", version: "1", algorithm: "exact_match" };
-  const evaluation = await runtime.invoke("evaluation-runner-local", {
-    ...envelope("evaluation:run-local", {
-      policy: "routing-shadow",
-      task: "route-selection",
-      scorer: `${scorer.id}@${scorer.version}`,
-      split: "holdout",
-      seed: 87,
-      evidenceRef: input.sourceGraphRef,
-      comparableEvidence,
-      cases: input.evaluationCases,
-    }),
-    scorerDefinitions: [scorer],
+  const scorerSetVersion = "run96-routing-shadow-v1";
+  const scorer = {
+    manifestVersion: 2,
+    id: "run96-exact",
+    version: "1",
+    digest: `sha256:${createHash("sha256").update("run96-routing-shadow-exact-v1").digest("hex")}`,
+    scorerSetVersion,
+    algorithm: "exact_match",
+    dimensions: ["correctness"],
+    range: { min: 0, max: 1 },
+    direction: "higher_is_better",
+    requiredInputs: ["outputRef"],
+  };
+  await runtime.invoke("evaluation-core", {
+    ...envelope("evaluation:register-scorer", scorer),
   });
-  const scores = Array.isArray(evaluation.scores)
-    ? evaluation.scores.filter((score): score is number => Number.isFinite(score))
-    : [];
-  const holdout = evaluation.holdout as Record<string, unknown> | undefined;
-  if (!scores.length || holdout?.passed !== true || typeof holdout.evidenceRef !== "string") {
-    throw new Error("shadow holdout evaluation failed");
+  const rolloutRows = [sourceRollout, ...counterfactualRollouts];
+  const trialIds: string[] = [];
+  for (const [index, rollout] of rolloutRows.entries()) {
+    const jobId = `evaluation:${input.requestId}:${index}`;
+    await runtime.invoke("evaluation-core", {
+      ...envelope("evaluation:create-job", {
+        id: jobId,
+        idempotencyKey: jobId,
+        evaluationSchemaVersion: 2,
+        candidateRef: rollout.endpointId,
+        policyId: "run96-routing-shadow",
+        scorerSetVersion,
+        requestKind: "routing_shadow_durable",
+        cases: [{
+          id: `case:${input.requestId}:${index}`,
+          evidenceRef: input.sourceGraphRef,
+          sourceGeneration: 0,
+        }],
+      }),
+    });
+    const trials = await runtime.invoke("evaluation-core", {
+      ...envelope("evaluation:list-trials", { jobId }),
+    });
+    const trialRows = Array.isArray(trials)
+      ? trials
+      : Array.isArray((trials as Record<string, unknown>).value)
+        ? (trials as Record<string, unknown>).value as unknown[]
+        : [];
+    const trial = trialRows[0] as Record<string, unknown> | undefined;
+    if (!trial || typeof trial.trialId !== "string" || !trial.trialId) {
+      throw new Error("durable routing-shadow trial materialization failed");
+    }
+    const claimed = await runtime.invoke("evaluation-core", {
+      ...envelope("evaluation:claim-trial", {
+        trialId: trial.trialId,
+        workerId: `runtime-host:${input.requestId}`,
+      }),
+    });
+    if (!claimed || typeof claimed.trialId !== "string" || typeof claimed.leaseId !== "string" || claimed.trialId !== trial.trialId) {
+      throw new Error("durable routing-shadow trial lease failed");
+    }
+    const evaluationCase = input.evaluationCases[index % input.evaluationCases.length] ?? {};
+    const expected = typeof evaluationCase.expected === "string" ? evaluationCase.expected : "success";
+    const actual = (rollout.outcome as Record<string, unknown> | undefined)?.status === "success"
+      ? expected
+      : "failure";
+    const outputRef = typeof rollout.artifactRef === "string" ? rollout.artifactRef : input.sourceGraphRef;
+    const execution = await runtime.invoke("evaluation-runner-local", {
+      ...envelope("evaluation:execute-trial", {
+        trialId: trial.trialId,
+        expected,
+        actual,
+        outputRef,
+        outputDigest: (rollout.outcome as Record<string, unknown> | undefined)?.outcomeDigest ?? input.sourceGraphRef,
+        stdoutRef: outputRef,
+        stderrRef: outputRef,
+        exitCode: 0,
+        measurements: { elapsedMs: 0, outputBytes: 0 },
+      }),
+      scorerDefinitions: [scorer],
+    });
+    if (!Array.isArray(execution.scores) || typeof execution.outputRef !== "string" || typeof execution.outputDigest !== "string") {
+      throw new Error("durable routing-shadow runner receipt is invalid");
+    }
+    await runtime.invoke("evaluation-core", {
+      ...envelope("evaluation:submit-trial-result", {
+        trialId: trial.trialId,
+        leaseId: claimed.leaseId,
+        workerId: `runtime-host:${input.requestId}`,
+        outputRef: execution.outputRef,
+        outputDigest: execution.outputDigest,
+        stdoutRef: execution.stdoutRef,
+        stderrRef: execution.stderrRef,
+        exitCode: execution.exitCode,
+        measurements: execution.measurements,
+      }),
+    });
+    for (const score of execution.scores as Record<string, unknown>[]) {
+      await runtime.invoke("evaluation-core", {
+        ...envelope("evaluation:record-trial-score", {
+          trialId: trial.trialId,
+          scorerId: score.scorerId,
+          scorerVersion: score.scorerVersion,
+          scorerDigest: score.scorerDigest,
+          dimension: score.dimension,
+          score: score.score,
+          confidence: score.confidence,
+          source: score.source,
+        }),
+      });
+    }
+    trialIds.push(trial.trialId);
+  }
+  const holdout = {
+    holdoutId: `sha256:${createHash("sha256").update(`${input.requestId}:holdout`).digest("hex")}`,
+    membershipDigest: `sha256:${createHash("sha256").update(JSON.stringify(trialIds)).digest("hex")}`,
+    partition: "holdout",
+  };
+  const evaluation = await runtime.invoke("evaluation-core", {
+    ...envelope("evaluation:finalize-comparison-group", {
+      groupId: `comparison:${input.requestId}`,
+      trialIds,
+      comparability: {
+        taskRef: input.sourceGraphRef,
+        inputRef: input.sourceGraphRef,
+        forkRef: input.sourceGraphRef,
+        policyId: "run96-routing-shadow",
+        scorerSetVersion,
+        toolPolicyDigest: input.sourceGraphRef,
+        environmentDigest: input.sourceGraphRef,
+      },
+      holdout,
+    }),
+  });
+  const persistedEvaluation = await runtime.invoke("evaluation-core", {
+    ...envelope("evaluation:read-comparison-group", { groupId: `comparison:${input.requestId}` }),
+  });
+  if (
+    !persistedEvaluation ||
+    (persistedEvaluation as Record<string, unknown>).status !== "finalized" ||
+    (persistedEvaluation as Record<string, unknown>).outcome !== "candidate"
+  ) {
+    throw new Error("durable routing-shadow comparison finalization failed");
   }
   const signals = await runtime.invoke(
     "trajectory-signals",
@@ -2763,7 +2882,6 @@ export async function runTrackBShadowPipeline(
       evidenceRef: rollout.evidenceRef,
     })),
   });
-  const rolloutRows = [sourceRollout, ...counterfactualRollouts];
   const scoredRollouts = rolloutRows.map((rollout) => ({
     ...rollout,
     score: (rollout.outcome as Record<string, unknown> | undefined)?.status === "success" ? 1 : 0,
@@ -2778,7 +2896,7 @@ export async function runTrackBShadowPipeline(
     "knowledge-worker",
     envelope("knowledge:eval-consumer", {
       replay,
-      evaluation,
+      evaluation: persistedEvaluation,
       signals,
       profile,
       comparableGroup: {
@@ -2792,13 +2910,13 @@ export async function runTrackBShadowPipeline(
         negative,
         candidateSet,
       },
-      holdout,
+      holdout: { ...holdout, passed: (persistedEvaluation as Record<string, unknown>).outcome === "candidate" },
       scope: { routePackage: input.routePackage, channel: input.channel, scopeId: input.scope },
     }),
   );
   return {
     replay,
-    evaluation,
+    evaluation: persistedEvaluation,
     signals,
     profile,
     candidate,

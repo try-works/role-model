@@ -87,12 +87,13 @@ test("SP1 runs the useful routing-learning DAG through supervised shadow capabil
   const artifactSha256 = createHash("sha256")
     .update(await readFile(modulePath))
     .digest("hex");
-  const capabilities = new Map([
-    ["replay-core", "replay:plan-graph"],
-    ["evaluation-runner-local", "evaluation:run-local"],
-    ["trajectory-signals", "signals:analyze"],
-    ["profile-learner", "profile:estimate"],
-    ["knowledge-worker", "knowledge:eval-consumer"],
+  const capabilities = new Map<string, string[]>([
+    ["replay-core", ["replay:plan-graph"]],
+    ["evaluation-core", ["evaluation:register-scorer", "evaluation:create-job", "evaluation:list-trials", "evaluation:claim-trial", "evaluation:submit-trial-result", "evaluation:record-trial-score", "evaluation:finalize-comparison-group", "evaluation:read-comparison-group"]],
+    ["evaluation-runner-local", ["evaluation:execute-trial"]],
+    ["trajectory-signals", ["signals:analyze"]],
+    ["profile-learner", ["profile:estimate"]],
+    ["knowledge-worker", ["knowledge:eval-consumer"]],
   ]);
   const stateRoot = path.join(os.tmpdir(), `run87-shadow-${Date.now()}`);
   roots.push(stateRoot);
@@ -100,8 +101,8 @@ test("SP1 runs the useful routing-learning DAG through supervised shadow capabil
     stateRoot,
     authorizationEpoch: 87,
     repoRoot,
-    extensions: [...capabilities].map(([id, capability]) => ({
-      descriptor: { id, protocolVersion: "1.1.0", capabilities: ["health:probe", capability] },
+  extensions: [...capabilities].map(([id, capabilities]) => ({
+      descriptor: { id, protocolVersion: "1.1.0", capabilities: ["health:probe", ...capabilities] },
       modulePath,
       artifactSha256,
     })),
@@ -179,11 +180,34 @@ test("Run 94 R14 refuses self-comparison before creating a learned-experience ca
   expect(invoked).toEqual([]);
 });
 
-test("SP1 fails closed before Knowledge Worker when holdout evaluation fails", async () => {
-  const invoke = async (id: string) =>
-    id === "evaluation-runner-local"
-      ? { scores: [0], provenance: { evidenceRef: "sha256:failed" } }
-      : {};
+test("SP1 fails closed before Knowledge Worker when durable holdout comparison is not a candidate", async () => {
+  const invoked: string[] = [];
+  const invoke = async (id: string, envelope: Record<string, unknown>) => {
+    invoked.push(id);
+    if (id === "replay-core") return {};
+    if (id === "evaluation-core" && envelope.capability === "evaluation:register-scorer") return {};
+    if (id === "evaluation-core" && envelope.capability === "evaluation:create-job") return {};
+    if (id === "evaluation-core" && envelope.capability === "evaluation:list-trials") {
+      const value = envelope.value as Record<string, unknown>;
+      return { value: [{ trialId: `trial:${String(value.jobId)}` }] };
+    }
+    if (id === "evaluation-core" && envelope.capability === "evaluation:claim-trial") {
+      const value = envelope.value as Record<string, unknown>;
+      return { trialId: value.trialId, leaseId: `lease:${String(value.trialId)}` };
+    }
+    if (id === "evaluation-runner-local") {
+      return {
+        outputRef: "artifact:failed-evaluation-87", outputDigest: "sha256:failed-evaluation-87",
+        stdoutRef: "artifact:failed-evaluation-87", stderrRef: "artifact:failed-evaluation-87",
+        exitCode: 0, measurements: { elapsedMs: 1, outputBytes: 1 }, scores: [],
+      };
+    }
+    if (id === "evaluation-core" && ["evaluation:submit-trial-result", "evaluation:record-trial-score"].includes(String(envelope.capability))) return {};
+    if (id === "evaluation-core" && ["evaluation:finalize-comparison-group", "evaluation:read-comparison-group"].includes(String(envelope.capability))) {
+      return { status: "finalized", outcome: "insufficient" };
+    }
+    throw new Error(`unexpected durable holdout invocation ${id}:${String(envelope.capability)}`);
+  };
   await expect(
     trackBRuntime.runTrackBShadowPipeline(
       { invoke },
@@ -203,7 +227,8 @@ test("SP1 fails closed before Knowledge Worker when holdout evaluation fails", a
         productionState: {},
       },
     ),
-  ).rejects.toThrow(/holdout/i);
+  ).rejects.toThrow(/comparison finalization|candidate/i);
+  expect(invoked).not.toContain("knowledge-worker");
 });
 
 test("SP1 operations API rejects production Knowledge Worker activation controls", async () => {

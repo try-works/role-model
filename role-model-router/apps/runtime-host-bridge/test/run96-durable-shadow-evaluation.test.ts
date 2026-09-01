@@ -1,0 +1,136 @@
+import { expect, test } from "vitest";
+
+import { runTrackBShadowPipeline } from "../src/track-b-runtime.js";
+
+const comparableEvidence = {
+  source: {
+    rolloutId: "rollout:source-96",
+    routePackage: "candidate:source-96",
+    endpointId: "endpoint:source-96",
+    modelId: "model:source-96",
+    policyId: "routing-shadow",
+    reasoningEffort: "high",
+    effortSource: "variant",
+    evidenceRef: "artifact:source-96",
+    artifactRef: "artifact:source-output-96",
+    propensity: 0.6,
+    outcome: {
+      outcomeId: "outcome:source-96",
+      outcomeRef: "artifact:outcome-source-96",
+      outcomeDigest: "sha256:source-outcome-96",
+      source: "observed",
+      status: "success",
+    },
+  },
+  counterfactuals: [
+    {
+      rolloutId: "rollout:counterfactual-96",
+      routePackage: "candidate:counterfactual-96",
+      endpointId: "endpoint:counterfactual-96",
+      modelId: "model:counterfactual-96",
+      policyId: "routing-shadow",
+      reasoningEffort: "max",
+      effortSource: "variant",
+      evidenceRef: "artifact:counterfactual-96",
+      artifactRef: "artifact:counterfactual-output-96",
+      propensity: 0.4,
+      outcome: {
+        outcomeId: "outcome:counterfactual-96",
+        outcomeRef: "artifact:outcome-counterfactual-96",
+        outcomeDigest: "sha256:counterfactual-outcome-96",
+        source: "replay",
+        status: "failure",
+      },
+    },
+  ],
+  candidateSet: [
+    { routePackage: "candidate:source-96", endpointId: "endpoint:source-96", propensity: 0.6 },
+    { routePackage: "candidate:counterfactual-96", endpointId: "endpoint:counterfactual-96", propensity: 0.4 },
+  ],
+};
+
+test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather than the legacy aggregate evaluator", async () => {
+  const calls: Array<{ id: string; capability: unknown }> = [];
+  const trialIds = ["trial:source-96", "trial:counterfactual-96"];
+  const claimedTrialIds = ["trial:source-96", "trial:counterfactual-96"];
+  let createCount = 0;
+  await expect(
+    runTrackBShadowPipeline(
+      {
+        async invoke(id, envelope) {
+          calls.push({ id, capability: envelope.capability });
+          if (id === "evaluation-runner-local" && envelope.capability === "evaluation:run-local") {
+            throw new Error("legacy aggregate evaluation is prohibited");
+          }
+          if (id === "replay-core") return { graphRef: "artifact:replay-96" };
+          if (id === "evaluation-core" && envelope.capability === "evaluation:register-scorer") {
+            return { key: "run96-exact@1" };
+          }
+          if (id === "evaluation-core" && envelope.capability === "evaluation:create-job") {
+            return { jobId: `evaluation:job-${createCount++}` };
+          }
+          if (id === "evaluation-core" && envelope.capability === "evaluation:list-trials") {
+            const trialId = trialIds.shift();
+            return trialId ? [{ trialId }] : [];
+          }
+          if (id === "evaluation-runner-local" && envelope.capability === "evaluation:execute-trial") {
+            return {
+              outputRef: "artifact:evaluated-output-96",
+              outputDigest: "sha256:evaluated-output-96",
+              stdoutRef: "artifact:evaluated-stdout-96",
+              stderrRef: "artifact:evaluated-stderr-96",
+              exitCode: 0,
+              measurements: { elapsedMs: 1, outputBytes: 1 },
+              scores: [{ dimension: "correctness", score: 1, confidence: 1, source: "deterministic" }],
+            };
+          }
+          if (id === "evaluation-core" && envelope.capability === "evaluation:claim-trial") {
+            return { trialId: claimedTrialIds.shift(), leaseId: "lease:96" };
+          }
+          if (id === "evaluation-core" && ["evaluation:submit-trial-result", "evaluation:record-trial-score"].includes(String(envelope.capability))) {
+            return { accepted: true };
+          }
+          if (id === "evaluation-core" && envelope.capability === "evaluation:finalize-comparison-group") {
+            return { groupId: "comparison:96", status: "finalized", outcome: "candidate" };
+          }
+          if (id === "evaluation-core" && envelope.capability === "evaluation:read-comparison-group") {
+            return { groupId: "comparison:96", status: "finalized", outcome: "candidate" };
+          }
+          if (id === "trajectory-signals") return { signals: [] };
+          if (id === "profile-learner") return { profileId: "profile:96" };
+          if (id === "knowledge-worker") return { id: "candidate:96", state: "shadow", productionEffects: {} };
+          throw new Error(`unexpected invocation ${id}:${String(envelope.capability)}`);
+        },
+      },
+      {
+        requestId: "request:shadow-96",
+        channel: "development",
+        scope: "tenant:run96",
+        authorizationEpoch: 96,
+        productionState: {},
+        routePackage: "candidate:source-96",
+        sourceDecisionId: "decision:source-96",
+        sourceGraphRef: "artifact:source-graph-96",
+        prefix: [],
+        counterfactuals: [{ id: "candidate:counterfactual-96", suffix: [] }],
+        comparableEvidence,
+        evaluationCases: [{ id: "case:shadow-96", expected: "success", actual: "success" }],
+        trajectoryEvents: [],
+      },
+    ),
+  ).resolves.toMatchObject({
+    evaluation: { groupId: "comparison:96", outcome: "candidate" },
+  });
+
+  expect(calls).toEqual(
+    expect.arrayContaining([
+      { id: "evaluation-core", capability: "evaluation:register-scorer" },
+      { id: "evaluation-core", capability: "evaluation:create-job" },
+      { id: "evaluation-core", capability: "evaluation:list-trials" },
+      { id: "evaluation-runner-local", capability: "evaluation:execute-trial" },
+      { id: "evaluation-core", capability: "evaluation:finalize-comparison-group" },
+      { id: "evaluation-core", capability: "evaluation:read-comparison-group" },
+    ]),
+  );
+  expect(calls).not.toContainEqual({ id: "evaluation-runner-local", capability: "evaluation:run-local" });
+});
