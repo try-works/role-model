@@ -1209,6 +1209,161 @@ export function createReplaySourceAttestation(input: {
   });
 }
 
+export interface SupervisedReplayRuntime {
+  invoke(id: string, envelope: Record<string, unknown>): Promise<Record<string, unknown>>;
+}
+
+/**
+ * Executes the control-plane half of a bounded replay. The public host owns the
+ * source transcript, router credentials, provider dispatch, and branch writer;
+ * Replay Core receives only references, candidate identity, budgets, and durable
+ * receipts. This deliberately makes a restart after provider completion resume at
+ * branch append rather than repeat a paid provider call.
+ */
+export async function runSupervisedReplay(input: {
+  readonly runtime: SupervisedReplayRuntime;
+  readonly adapter: RouterReplayAdapter;
+  readonly requestId: string;
+  readonly channel: string;
+  readonly scope: string;
+  readonly authorizationEpoch: number;
+  readonly sourceAttestation: Readonly<Record<string, unknown>>;
+  readonly idempotencyKey: string;
+  readonly intent: string;
+  readonly candidatePackages: readonly Record<string, unknown>[];
+  readonly budget: Readonly<Record<string, unknown>>;
+  readonly leaseOwner: string;
+  readonly leaseMs: number;
+  readonly appendBranch: (request: Readonly<Record<string, unknown>>) => Promise<{
+    readonly branchRootRef: string;
+  }>;
+  readonly handoffEvaluation: (request: Readonly<Record<string, unknown>>) => Promise<{
+    readonly evaluationJobId: string;
+  }>;
+}): Promise<Record<string, unknown>> {
+  if (!input.requestId || !input.idempotencyKey || !input.intent || !input.leaseOwner) {
+    throw new Error("supervised replay identity is required");
+  }
+  if (!Number.isSafeInteger(input.authorizationEpoch) || !Number.isSafeInteger(input.leaseMs)) {
+    throw new Error("supervised replay authorization and lease are required");
+  }
+  if (
+    input.adapter.channel !== input.channel ||
+    input.adapter.scope !== input.scope ||
+    input.sourceAttestation.schemaVersion !== "role-model.replay-source-attestation.v1" ||
+    input.sourceAttestation.channel !== input.channel ||
+    input.sourceAttestation.scope !== input.scope ||
+    input.sourceAttestation.authorizationEpoch !== input.authorizationEpoch ||
+    !Array.isArray(input.candidatePackages) ||
+    input.candidatePackages.length === 0 ||
+    containsReplayCredential(input.sourceAttestation) ||
+    containsReplayCredential(input.candidatePackages)
+  ) {
+    throw new Error("supervised replay authorization or source attestation is invalid");
+  }
+  const controlEnvelope = (capability: string, value: Record<string, unknown>) => ({
+    requestId: `${input.requestId}:${capability}`,
+    sessionId: input.requestId,
+    protocolVersion: "1.1.0",
+    channel: input.channel,
+    scope: input.scope,
+    authorizationEpoch: input.authorizationEpoch,
+    capability,
+    value,
+  });
+  const sourceRoot = input.sourceAttestation.traceRoot as Record<string, unknown>;
+  if (!sourceRoot || typeof sourceRoot !== "object" || Array.isArray(sourceRoot)) {
+    throw new Error("supervised replay source root is invalid");
+  }
+  const created = await input.runtime.invoke(
+    "replay-core",
+    controlEnvelope("replay:create-job", {
+      idempotencyKey: input.idempotencyKey,
+      intent: input.intent,
+      traceRootId: sourceRoot.traceRootId,
+      scope: input.scope,
+      candidatePackages: structuredClone(input.candidatePackages),
+      budget: structuredClone(input.budget),
+      sourceAttestation: structuredClone(input.sourceAttestation),
+    }),
+  );
+  const jobId = typeof created.jobId === "string" ? created.jobId : null;
+  if (!jobId) throw new Error("Replay Core did not return a durable replay job ID");
+  const lease = await input.runtime.invoke(
+    "replay-core",
+    controlEnvelope("replay:claim-job", { jobId, leaseOwner: input.leaseOwner, leaseMs: input.leaseMs }),
+  );
+  if (!Number.isSafeInteger(lease.fenceToken)) throw new Error("Replay Core did not return a fenced lease");
+
+  for (const candidate of input.candidatePackages) {
+    const candidateEndpointId = typeof candidate.endpointId === "string" ? candidate.endpointId : null;
+    const toolPolicy = candidate.toolPolicy;
+    if (!candidateEndpointId || (toolPolicy !== "deny" && toolPolicy !== "recorded_results_only")) {
+      throw new Error("supervised replay candidate package is invalid");
+    }
+    const prepared = await input.runtime.invoke(
+      "replay-core",
+      controlEnvelope("replay:prepare-dispatch", {
+        jobId,
+        candidateEndpointId,
+        leaseOwner: input.leaseOwner,
+        fenceToken: lease.fenceToken,
+        toolPolicy,
+      }),
+    );
+    if (prepared.status === "complete" || prepared.status === "cancelled") continue;
+    const envelope = prepared.envelope;
+    if (prepared.status !== "provider_dispatch" || !envelope || typeof envelope !== "object") {
+      throw new Error("Replay Core did not prepare a bounded router dispatch");
+    }
+    const receipt = await input.adapter.dispatch(envelope as Record<string, unknown>);
+    const recorded = await input.runtime.invoke(
+      "replay-core",
+      controlEnvelope("replay:record-provider-receipt", {
+        jobId,
+        candidateEndpointId,
+        leaseOwner: input.leaseOwner,
+        fenceToken: lease.fenceToken,
+        receipt,
+      }),
+    );
+    if (recorded.status === "cancelled_late") continue;
+    const branchRequest = recorded.branchRequest;
+    if (recorded.status !== "append_recovery" || !branchRequest || typeof branchRequest !== "object") {
+      throw new Error("Replay Core did not persist a branch append recovery receipt");
+    }
+    const branch = await input.appendBranch(branchRequest as Record<string, unknown>);
+    const appended = await input.runtime.invoke(
+      "replay-core",
+      controlEnvelope("replay:record-branch-append", {
+        jobId,
+        candidateEndpointId,
+        leaseOwner: input.leaseOwner,
+        fenceToken: lease.fenceToken,
+        branch,
+      }),
+    );
+    if (appended.status !== "complete" && appended.status !== "awaiting_evaluation") {
+      throw new Error("Replay Core did not accept the durable branch append receipt");
+    }
+  }
+  const evaluation = await input.handoffEvaluation({
+    replayJobId: jobId,
+    scope: input.scope,
+    sourceDecisionId: sourceRoot.sourceDecisionId,
+    sourceGeneration: sourceRoot.generation,
+  });
+  return input.runtime.invoke(
+    "replay-core",
+    controlEnvelope("replay:record-evaluation-receipt", {
+      jobId,
+      leaseOwner: input.leaseOwner,
+      fenceToken: lease.fenceToken,
+      evaluation,
+    }),
+  );
+}
+
 export interface TrackBPostObservationWorkItem extends Readonly<Record<string, unknown>> {
   readonly requestId: string;
   readonly routingDecisionId: string;

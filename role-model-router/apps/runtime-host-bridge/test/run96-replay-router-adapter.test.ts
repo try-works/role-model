@@ -3,6 +3,7 @@ import { expect, test } from "vitest";
 import {
   createReplaySourceAttestation,
   createRouterReplayAdapter,
+  runSupervisedReplay,
 } from "../src/track-b-runtime.js";
 
 test("Run96 S3 RED: the public host derives a bounded replay source attestation from a durable graph receipt", () => {
@@ -156,4 +157,141 @@ test("Run96 S3 RED: the host replay adapter fails closed for cross-boundary or c
   await expect(adapter.dispatch({ ...base, scope: "tenant:two" })).rejects.toThrow(/scope/i);
   await expect(adapter.dispatch({ ...base, apiKey: "must-never-cross-ipc" })).rejects.toThrow(/credential|secret/i);
   await expect(adapter.dispatch({ ...base, toolPolicy: "sandboxed_allowlist" })).rejects.toThrow(/tool/i);
+});
+
+test("Run96 S3 RED: host orchestration persists router, graph, and evaluation receipts without giving Replay Core a transcript or credential", async () => {
+  const invocations: Record<string, unknown>[] = [];
+  const dispatches: Record<string, unknown>[] = [];
+  const branches: Record<string, unknown>[] = [];
+  const runtime = {
+    async invoke(id: string, envelope: Record<string, unknown>) {
+      invocations.push({ id, envelope });
+      expect(id).toBe("replay-core");
+      const value = envelope.value as Record<string, unknown>;
+      switch (envelope.capability) {
+        case "replay:create-job":
+          return { jobId: "replay:orchestrated" };
+        case "replay:claim-job":
+          return { fenceToken: 3, leaseOwner: "scheduler:96" };
+        case "replay:prepare-dispatch":
+          return {
+            status: "provider_dispatch",
+            envelope: {
+              schemaVersion: "role-model.replay-dispatch.v1",
+              channel: "development",
+              scope: "tenant:one",
+              replayJobId: "replay:orchestrated",
+              sourceGeneration: 4,
+              sourceDecisionId: "decision:source-96",
+              normalizedRequestRef: "artifact:request-96",
+              candidateEndpointId: "endpoint:counterfactual",
+              candidatePackage: value.candidatePackages ?? {
+                endpointId: "endpoint:counterfactual",
+                modelId: "deepseek/deepseek-v4-pro",
+                reasoningEffort: "max",
+                promptAdapterId: "prompt:stable-v1",
+                toolPolicy: "deny",
+                experiencePackId: "experience:none",
+                samplingProfileId: "sampling:stable-v1",
+              },
+              budget: {
+                maxCandidates: 1,
+                maxProviderCalls: 1,
+                maxCostMicros: 5_000,
+                maxBytes: 16_384,
+                deadlineMs: 10_000,
+              },
+              toolPolicy: "deny",
+            },
+          };
+        case "replay:record-provider-receipt":
+          return {
+            status: "append_recovery",
+            branchRequest: {
+              replayJobId: "replay:orchestrated",
+              candidateEndpointId: "endpoint:counterfactual",
+              dispatchReceiptId: "dispatch:orchestrated",
+            },
+          };
+        case "replay:record-branch-append":
+          return { status: "awaiting_evaluation" };
+        case "replay:record-evaluation-receipt":
+          return { state: "complete", evaluationJobId: "evaluation:orchestrated" };
+        default:
+          throw new Error(`unexpected capability ${String(envelope.capability)}`);
+      }
+    },
+  };
+  const adapter = createRouterReplayAdapter({
+    channel: "development",
+    scope: "tenant:one",
+    authorizationEpoch: 96,
+    dispatch: async (request) => {
+      dispatches.push(request);
+      return {
+        dispatchReceiptId: "dispatch:orchestrated",
+        routerDecisionId: "decision:replay-96",
+        providerResultRef: "artifact:provider-result-96",
+      };
+    },
+  });
+  const sourceAttestation = createReplaySourceAttestation({
+    channel: "development",
+    scope: "tenant:one",
+    authorizationEpoch: 96,
+    capture: {
+      schemaVersion: "role-model.route-capture-read.v2",
+      scope: "tenant:one",
+      rootArtifactId: "artifact:root-96",
+      routingDecisionId: "decision:source-96",
+      endpointId: "endpoint:baseline",
+      trace: { generation: 4, readiness: "ready", rootOccurrenceId: "occurrence:root-96" },
+      messages: [{ role: "user", content: "source-only host transcript" }],
+    },
+    normalizedRequestRef: "artifact:request-96",
+    sharedPrefixRef: "artifact:prefix-96",
+    forkOccurrenceId: "occurrence:root-96",
+    policySnapshotRef: "artifact:policy-96",
+    capturePolicyRef: "artifact:capture-policy-96",
+    eligibleEndpointIds: ["endpoint:baseline", "endpoint:counterfactual"],
+  });
+
+  await expect(
+    runSupervisedReplay({
+      runtime,
+      adapter,
+      requestId: "request:orchestrated",
+      channel: "development",
+      scope: "tenant:one",
+      authorizationEpoch: 96,
+      sourceAttestation,
+      idempotencyKey: "replay:orchestrated",
+      intent: "counterfactual_route",
+      candidatePackages: [{
+        endpointId: "endpoint:counterfactual",
+        modelId: "deepseek/deepseek-v4-pro",
+        reasoningEffort: "max",
+        promptAdapterId: "prompt:stable-v1",
+        toolPolicy: "deny",
+        experiencePackId: "experience:none",
+        samplingProfileId: "sampling:stable-v1",
+      }],
+      budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
+      leaseOwner: "scheduler:96",
+      leaseMs: 10_000,
+      appendBranch: async (request) => {
+        branches.push(request);
+        return { branchRootRef: "artifact:branch:orchestrated" };
+      },
+      handoffEvaluation: async (request) => ({
+        evaluationJobId: "evaluation:orchestrated",
+        source: request.sourceDecisionId,
+      }),
+    }),
+  ).resolves.toMatchObject({ state: "complete", evaluationJobId: "evaluation:orchestrated" });
+
+  expect(dispatches).toHaveLength(1);
+  expect(branches).toEqual([expect.objectContaining({ candidateEndpointId: "endpoint:counterfactual" })]);
+  expect(JSON.stringify(invocations)).not.toContain("source-only host transcript");
+  expect(JSON.stringify(invocations)).not.toMatch(/api[_-]?key|credential|secret/i);
 });
