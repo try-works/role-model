@@ -1027,6 +1027,127 @@ export interface TrackBShadowPipelineRuntime {
   invoke(id: string, envelope: Record<string, unknown>): Promise<Record<string, unknown>>;
 }
 
+export interface ReplayIntentClaim {
+  readonly jobId: string;
+  readonly payload: Readonly<{ replayJobId: string; scope: string }>;
+  readonly leaseId: string;
+  readonly fence: number;
+  readonly attempt: number;
+  readonly deadlineAtMs: number | null;
+}
+
+export interface ReplayIntentScheduler {
+  enqueue(input: Readonly<{ jobId: string; replayJobId: string; deadlineAtMs: number }>): Promise<{ accepted: boolean }>;
+  claim(): Promise<ReplayIntentClaim | null>;
+  complete(input: Readonly<{
+    jobId: string;
+    leaseId: string;
+    fence: number;
+    result: Readonly<{ replayJobId: string; state: string }>;
+  }>): Promise<{ completed: boolean }>;
+  fail(input: Readonly<{ jobId: string; leaseId: string; fence: number }>): Promise<{ failed: boolean }>;
+}
+
+/**
+ * Bridges reference-only scheduler intent records through authenticated runtime IPC.
+ * The scheduler queues and fences work; provider dispatch stays in the router host.
+ */
+export function createReplayIntentScheduler(options: {
+  readonly runtime: TrackBShadowPipelineRuntime;
+  readonly requestId: string;
+  readonly channel: string;
+  readonly scope: string;
+  readonly authorizationEpoch: number;
+  readonly ownerId: string;
+}): ReplayIntentScheduler {
+  if (!options.requestId || !options.channel || !options.scope || !options.ownerId || !Number.isSafeInteger(options.authorizationEpoch)) {
+    throw new Error("authenticated replay scheduler identity is required");
+  }
+  const invoke = async (capability: string, value: Record<string, unknown>): Promise<Record<string, unknown>> =>
+    options.runtime.invoke("background-evidence-scheduler", {
+      requestId: `${options.requestId}:${capability}`,
+      sessionId: options.requestId,
+      protocolVersion: "1.1.0",
+      channel: options.channel,
+      scope: options.scope,
+      authorizationEpoch: options.authorizationEpoch,
+      ownerId: options.ownerId,
+      capability,
+      value,
+    });
+  return {
+    async enqueue(input) {
+      if (!input.jobId || !input.replayJobId || !Number.isSafeInteger(input.deadlineAtMs)) {
+        throw new Error("bounded replay scheduler intent is required");
+      }
+      const result = await invoke("scheduler:enqueue-replay-intent", {
+        jobId: input.jobId,
+        replayJobId: input.replayJobId,
+        scope: options.scope,
+        deadlineAtMs: input.deadlineAtMs,
+      });
+      if (typeof result.accepted !== "boolean") throw new Error("replay scheduler enqueue receipt is invalid");
+      return { accepted: result.accepted };
+    },
+    async claim() {
+      const result = await invoke("scheduler:claim-replay-intent", {});
+      if (result === null) return null;
+      const payload = result.payload;
+      const fence = result.fence;
+      const attempt = result.attempt;
+      const deadlineAtMs = result.deadlineAtMs;
+      if (!result.jobId || !result.leaseId || typeof fence !== "number" || !Number.isSafeInteger(fence)
+        || typeof attempt !== "number" || !Number.isSafeInteger(attempt) || !payload || typeof payload !== "object"
+        || Array.isArray(payload) || (payload as Record<string, unknown>).scope !== options.scope
+        || typeof (payload as Record<string, unknown>).replayJobId !== "string"
+        || (deadlineAtMs !== null && (typeof deadlineAtMs !== "number" || !Number.isSafeInteger(deadlineAtMs)))) {
+        throw new Error("replay scheduler claim receipt is invalid");
+      }
+      return {
+        jobId: String(result.jobId),
+        payload: {
+          replayJobId: String((payload as Record<string, unknown>).replayJobId),
+          scope: options.scope,
+        },
+        leaseId: String(result.leaseId),
+        fence,
+        attempt,
+        deadlineAtMs: deadlineAtMs === null ? null : deadlineAtMs,
+      };
+    },
+    async complete(input) {
+      if (!input.jobId || !input.leaseId || !Number.isSafeInteger(input.fence)
+        || !input.result.replayJobId || !input.result.state) {
+        throw new Error("fenced replay scheduler completion is required");
+      }
+      const result = await invoke("scheduler:complete-replay-intent", {
+        jobId: input.jobId,
+        leaseId: input.leaseId,
+        fence: input.fence,
+        result: {
+          replayJobId: input.result.replayJobId,
+          state: input.result.state,
+        },
+      });
+      if (typeof result.completed !== "boolean") throw new Error("replay scheduler completion receipt is invalid");
+      return { completed: result.completed };
+    },
+    async fail(input) {
+      if (!input.jobId || !input.leaseId || !Number.isSafeInteger(input.fence)) {
+        throw new Error("fenced replay scheduler failure is required");
+      }
+      const result = await invoke("scheduler:fail-replay-intent", {
+        jobId: input.jobId,
+        leaseId: input.leaseId,
+        fence: input.fence,
+        reason: "supervised replay did not complete",
+      });
+      if (typeof result.failed !== "boolean") throw new Error("replay scheduler failure receipt is invalid");
+      return { failed: result.failed };
+    },
+  };
+}
+
 export interface RouterReplayAdapter {
   readonly protocolVersion: "role-model.router-replay-adapter.v1";
   readonly authenticated: true;
@@ -1269,6 +1390,7 @@ export async function runSupervisedReplay(input: {
   readonly budget: Readonly<Record<string, unknown>>;
   readonly leaseOwner: string;
   readonly leaseMs: number;
+  readonly scheduler?: ReplayIntentScheduler;
   readonly appendBranch: (request: Readonly<Record<string, unknown>>) => Promise<{
     readonly branchRootRef: string;
   }>;
@@ -1330,6 +1452,27 @@ export async function runSupervisedReplay(input: {
     }
     return structuredClone(created);
   }
+  let schedulerClaim: ReplayIntentClaim | null = null;
+  if (input.scheduler) {
+    const deadlineMs = input.budget.deadlineMs;
+    if (typeof deadlineMs !== "number" || !Number.isSafeInteger(deadlineMs) || deadlineMs < 1) {
+      throw new Error("supervised replay requires a bounded scheduler deadline");
+    }
+    const createdAtMs = typeof created.createdAtMs === "number" && Number.isSafeInteger(created.createdAtMs)
+      ? created.createdAtMs
+      : Date.now();
+    await input.scheduler.enqueue({
+      jobId: `replay-intent:${jobId}`,
+      replayJobId: jobId,
+      deadlineAtMs: createdAtMs + deadlineMs,
+    });
+    schedulerClaim = await input.scheduler.claim();
+    if (schedulerClaim === null) return { jobId, state: "queued", schedulerState: "deferred" };
+    if (schedulerClaim.payload.replayJobId !== jobId || schedulerClaim.payload.scope !== input.scope) {
+      throw new Error("scheduler replay intent does not match the supervised job");
+    }
+  }
+  try {
   const lease = await input.runtime.invoke(
     "replay-core",
     controlEnvelope("replay:claim-job", { jobId, leaseOwner: input.leaseOwner, leaseMs: input.leaseMs }),
@@ -1394,7 +1537,7 @@ export async function runSupervisedReplay(input: {
     sourceDecisionId: sourceRoot.sourceDecisionId,
     sourceGeneration: sourceRoot.generation,
   });
-  return input.runtime.invoke(
+  const completed = await input.runtime.invoke(
     "replay-core",
     controlEnvelope("replay:record-evaluation-receipt", {
       jobId,
@@ -1403,6 +1546,32 @@ export async function runSupervisedReplay(input: {
       evaluation,
     }),
   );
+  if (schedulerClaim) {
+    const state = typeof completed.state === "string" ? completed.state : "complete";
+    const receipt = await input.scheduler?.complete({
+      jobId: schedulerClaim.jobId,
+      leaseId: schedulerClaim.leaseId,
+      fence: schedulerClaim.fence,
+      result: { replayJobId: jobId, state },
+    });
+    if (!receipt?.completed) throw new Error("replay scheduler did not accept the completed supervision receipt");
+  }
+  return completed;
+  } catch (error) {
+    if (schedulerClaim) {
+      try {
+        await input.scheduler?.fail({
+          jobId: schedulerClaim.jobId,
+          leaseId: schedulerClaim.leaseId,
+          fence: schedulerClaim.fence,
+        });
+      } catch {
+        // A scheduler failure is isolated from the original replay failure; the
+        // durable Replay Core state remains the recovery authority.
+      }
+    }
+    throw error;
+  }
 }
 
 export interface TrackBPostObservationWorkItem extends Readonly<Record<string, unknown>> {

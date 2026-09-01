@@ -26,6 +26,7 @@ import {
   createOwnedTrackBSidecarSpec,
   createPackagedProductionRuntime,
   createProductionExtensionRuntime,
+  createReplayIntentScheduler,
   createReplaySourceAttestation,
   createRouterReplayAdapter,
   createRun88RuntimeCorrelation,
@@ -1279,6 +1280,14 @@ export async function main(): Promise<void> {
             budget: structuredClone(budget) as Record<string, unknown>,
             leaseOwner: `runtime-host:${process.pid}`,
             leaseMs: Math.min(Number((budget as Record<string, unknown>).deadlineMs), 30_000),
+            scheduler: createReplayIntentScheduler({
+              runtime,
+              requestId,
+              channel,
+              scope: options.scopeId,
+              authorizationEpoch: 1,
+              ownerId: `runtime-host:${process.pid}`,
+            }),
             appendBranch: async (branchRequest) => {
               const candidateEndpointId = String(branchRequest.candidateEndpointId ?? "");
               const dispatch = dispatched.get(candidateEndpointId);

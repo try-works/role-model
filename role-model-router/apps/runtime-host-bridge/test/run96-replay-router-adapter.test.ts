@@ -1,10 +1,61 @@
 import { expect, test } from "vitest";
 
 import {
+  createReplayIntentScheduler,
   createReplaySourceAttestation,
   createRouterReplayAdapter,
   runSupervisedReplay,
 } from "../src/track-b-runtime.js";
+
+test("Run96 S3 RED: the public host uses authenticated scheduler intents that contain only replay references", async () => {
+  const invocations: Record<string, unknown>[] = [];
+  const scheduler = createReplayIntentScheduler({
+    runtime: {
+      async invoke(id, envelope) {
+        invocations.push({ id, envelope });
+        if (envelope.capability === "scheduler:enqueue-replay-intent") return { accepted: true };
+        if (envelope.capability === "scheduler:claim-replay-intent") {
+          return {
+            jobId: "intent:96",
+            payload: { replayJobId: "replay:96", scope: "tenant:one" },
+            leaseId: "intent:96:1",
+            fence: 4,
+            attempt: 1,
+            deadlineAtMs: 20_000,
+          };
+        }
+        if (envelope.capability === "scheduler:complete-replay-intent") return { completed: true };
+        throw new Error(`unexpected capability ${String(envelope.capability)}`);
+      },
+    },
+    requestId: "request:scheduler-96",
+    channel: "development",
+    scope: "tenant:one",
+    authorizationEpoch: 96,
+    ownerId: "runtime-host:test-96",
+  });
+
+  await expect(scheduler.enqueue({
+    jobId: "intent:96",
+    replayJobId: "replay:96",
+    deadlineAtMs: 20_000,
+  })).resolves.toEqual({ accepted: true });
+  const claim = await scheduler.claim();
+  if (!claim) throw new Error("expected scheduler replay intent claim");
+  expect(claim).toMatchObject({
+    jobId: "intent:96",
+    payload: { replayJobId: "replay:96", scope: "tenant:one" },
+    leaseId: "intent:96:1",
+    fence: 4,
+  });
+  await expect(scheduler.complete({
+    jobId: claim.jobId,
+    leaseId: claim.leaseId,
+    fence: claim.fence,
+    result: { replayJobId: "replay:96", state: "awaiting_evaluation" },
+  })).resolves.toEqual({ completed: true });
+  expect(JSON.stringify(invocations)).not.toMatch(/content|prompt|credential|api[_-]?key/i);
+});
 
 test("Run96 S3 RED: the public host derives a bounded replay source attestation from a durable graph receipt", () => {
   const attestation = createReplaySourceAttestation({
@@ -263,6 +314,25 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
   const runtime = {
     async invoke(id: string, envelope: Record<string, unknown>) {
       invocations.push({ id, envelope });
+      if (id === "background-evidence-scheduler") {
+        switch (envelope.capability) {
+          case "scheduler:enqueue-replay-intent":
+            return { accepted: true };
+          case "scheduler:claim-replay-intent":
+            return {
+              jobId: "intent:orchestrated",
+              payload: { replayJobId: "replay:orchestrated", scope: "tenant:one" },
+              leaseId: "intent:orchestrated:1",
+              fence: 4,
+              attempt: 1,
+              deadlineAtMs: 20_000,
+            };
+          case "scheduler:complete-replay-intent":
+            return { completed: true };
+          default:
+            throw new Error(`unexpected scheduler capability ${String(envelope.capability)}`);
+        }
+      }
       expect(id).toBe("replay-core");
       const value = envelope.value as Record<string, unknown>;
       switch (envelope.capability) {
@@ -334,6 +404,14 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
       };
     },
   });
+  const scheduler = createReplayIntentScheduler({
+    runtime,
+    requestId: "request:orchestrated",
+    channel: "development",
+    scope: "tenant:one",
+    authorizationEpoch: 96,
+    ownerId: "runtime-host:orchestrated",
+  });
   const sourceAttestation = createReplaySourceAttestation({
     channel: "development",
     scope: "tenant:one",
@@ -378,6 +456,7 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
       budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
       leaseOwner: "scheduler:96",
       leaseMs: 10_000,
+      scheduler: scheduler as never,
       appendBranch: async (request) => {
         branches.push(request);
         return { branchRootRef: "artifact:branch:orchestrated" };
@@ -391,6 +470,13 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
 
   expect(dispatches).toHaveLength(1);
   expect(branches).toEqual([expect.objectContaining({ candidateEndpointId: "endpoint:counterfactual" })]);
+  expect(invocations.filter((item) => item.id === "background-evidence-scheduler").map((item) =>
+    (item.envelope as Record<string, unknown>).capability,
+  )).toEqual([
+    "scheduler:enqueue-replay-intent",
+    "scheduler:claim-replay-intent",
+    "scheduler:complete-replay-intent",
+  ]);
   expect(JSON.stringify(invocations)).not.toContain("source-only host transcript");
   expect(JSON.stringify(invocations)).not.toMatch(/api[_-]?key|credential|secret/i);
 });
