@@ -112,7 +112,20 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
             return {
               routeDecisionId: "decision:source-96",
               graphRef: "artifact:source-graph-96",
-              signals: [],
+              signals: [{
+                signalInstanceId: "comparison:96:evaluation_outcome",
+                signalType: "evaluation_outcome",
+                dimension: "quality",
+                unit: "normalized_score",
+                direction: "higher_is_better",
+                value: 1,
+                confidence: 1,
+                weight: 1,
+                missingness: "complete",
+                evidenceRef: "comparison:96",
+                routePackage: "candidate:source-96",
+                businessOutput: { richPayload: "must-remain-in-the-trajectory-store" },
+              }],
             };
           }
           if (id === "profile-learner") {
@@ -187,5 +200,22 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
     sharedPrefixRef: "artifact:source-graph-96#prefix",
     branches: [],
     digest: "sha256:replay-plan-96",
+  });
+  expect(knowledgeInput?.signals).toEqual({
+    routeDecisionId: "decision:source-96",
+    graphRef: "artifact:source-graph-96",
+    signals: [{
+      signalInstanceId: "comparison:96:evaluation_outcome",
+      signalType: "evaluation_outcome",
+      dimension: "quality",
+      unit: "normalized_score",
+      direction: "higher_is_better",
+      value: 1,
+      confidence: 1,
+      weight: 1,
+      missingness: "complete",
+      evidenceRef: "comparison:96",
+      routePackage: "candidate:source-96",
+    }],
   });
 });

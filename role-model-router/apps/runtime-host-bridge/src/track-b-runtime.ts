@@ -26,6 +26,9 @@ import { createProjectionV2 } from "@role-model-router/trace";
 import { consumeTrackBProjection } from "./track-b-projections.js";
 
 const RUN88_PI_PROOF_VALIDITY_MS = 90 * 60 * 1000;
+// fixtures/source-authority/crowdsourced-evals-docs/guidance/capacity-slo-contracts.json
+// localRuntime.inlineContentMaxBytes / boundary.inlinePayloadMaxBytes
+const TRACK_B_INLINE_CONTENT_MAX_BYTES = 16_384;
 const isSuppressedRun88Capture = (value: unknown): boolean =>
   Boolean(
     value &&
@@ -2935,10 +2938,43 @@ export async function runTrackBShadowPipeline(
   ) {
     throw new Error("finalized trajectory signals must retain replay provenance");
   }
+  const knowledgeSignalRefs = signalRecord.signals.map((signal) => {
+    const record = signal as Record<string, unknown>;
+    const compact = {
+      signalInstanceId: record.signalInstanceId,
+      signalType: record.signalType,
+      dimension: record.dimension,
+      unit: record.unit,
+      direction: record.direction,
+      value: record.value,
+      confidence: record.confidence,
+      weight: record.weight,
+      missingness: record.missingness,
+      evidenceRef: record.evidenceRef,
+      routePackage: record.routePackage,
+    };
+    if (
+      typeof compact.signalInstanceId !== "string" || !compact.signalInstanceId ||
+      typeof compact.signalType !== "string" || !compact.signalType ||
+      typeof compact.dimension !== "string" || !compact.dimension ||
+      typeof compact.unit !== "string" || !compact.unit ||
+      typeof compact.direction !== "string" || !compact.direction ||
+      !Number.isFinite(compact.value) ||
+      !Number.isFinite(compact.confidence) ||
+      !Number.isFinite(compact.weight) ||
+      typeof compact.missingness !== "string" || !compact.missingness ||
+      typeof compact.evidenceRef !== "string" || !compact.evidenceRef ||
+      (compact.routePackage !== undefined && (typeof compact.routePackage !== "string" || !compact.routePackage)) ||
+      Buffer.byteLength(JSON.stringify(compact), "utf8") > TRACK_B_INLINE_CONTENT_MAX_BYTES
+    ) {
+      throw new Error("finalized trajectory signal reference exceeds the knowledge boundary");
+    }
+    return compact;
+  });
   const signalsForKnowledge = {
     routeDecisionId: signalRecord.routeDecisionId,
     graphRef: signalRecord.graphRef,
-    signals: signalRecord.signals,
+    signals: knowledgeSignalRefs,
   };
   const profile = await runtime.invoke("profile-learner", {
     ...envelope("profile:estimate-finalized-evaluation", {
