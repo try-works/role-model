@@ -29,6 +29,7 @@ import {
   createReplayIntentScheduler,
   createReplaySourceAttestation,
   createRouterReplayAdapter,
+  requireReplayRouterDecisionId,
   createRun88RuntimeCorrelation,
   createRuntimeRequestCorrelationId,
   createTrackBPostObservationOutbox,
@@ -1252,7 +1253,7 @@ export async function main(): Promise<void> {
               }
               return {
                 dispatchReceiptId: `router-replay:${replayRequestId}`,
-                routerDecisionId: execution.routingDecisionId ?? `router-decision:${replayRequestId}`,
+                routerDecisionId: requireReplayRouterDecisionId(execution.routingDecisionId),
                 providerResultRef: `route-capture:${replayRequestId}`,
                 observedCostMicros: Math.ceil(observedCostUsd * 1_000_000),
                 observedResponseBytes: Buffer.byteLength(
@@ -1324,8 +1325,7 @@ export async function main(): Promise<void> {
               const branchRequestId = `${dispatch.replayRequestId}-branch`;
               const branch = (await operations.recordLocalRouteCapture({
                 requestId: branchRequestId,
-                routingDecisionId:
-                  dispatch.execution.routingDecisionId ?? `router-decision:${dispatch.replayRequestId}`,
+                routingDecisionId: requireReplayRouterDecisionId(dispatch.execution.routingDecisionId),
                 endpointId: candidateEndpointId,
                 modelId: dispatch.execution.model,
                 reasoningEffort: candidatePackages.find((item) => item.endpointId === candidateEndpointId)

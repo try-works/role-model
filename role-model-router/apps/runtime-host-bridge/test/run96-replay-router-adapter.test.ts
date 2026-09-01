@@ -4,6 +4,7 @@ import {
   createReplayIntentScheduler,
   createReplaySourceAttestation,
   createRouterReplayAdapter,
+  requireReplayRouterDecisionId,
   runSupervisedReplay,
 } from "../src/track-b-runtime.js";
 
@@ -224,6 +225,12 @@ test("Run96 S3 RED: the host exposes a versioned scope-bound router replay adapt
       }),
     }),
   ]);
+});
+
+test("Run96 S3 RED: replay branch capture refuses a missing normal-router decision instead of inventing one", () => {
+  expect(() => requireReplayRouterDecisionId(undefined)).toThrow(/normal router decision/i);
+  expect(() => requireReplayRouterDecisionId(" ")).toThrow(/normal router decision/i);
+  expect(requireReplayRouterDecisionId("decision:replay-96")).toBe("decision:replay-96");
 });
 
 test("Run96 S3 RED: the host adapter returns only bounded numeric usage for Replay Core budget accounting", async () => {

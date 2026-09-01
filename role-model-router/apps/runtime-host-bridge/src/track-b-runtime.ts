@@ -1286,6 +1286,13 @@ export function createRouterEvaluationJudgeAdapter(options: {
  * credential handling already live; extensions receive neither those credentials
  * nor a direct transport handle.
  */
+export function requireReplayRouterDecisionId(value: unknown): string {
+  if (typeof value !== "string" || !value.trim() || value.length > 512 || /[\r\n]/.test(value)) {
+    throw new Error("replay provider execution is missing a normal router decision");
+  }
+  return value;
+}
+
 export function createRouterReplayAdapter(options: {
   readonly channel: string;
   readonly scope: string;
