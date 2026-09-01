@@ -1027,6 +1027,92 @@ export interface TrackBShadowPipelineRuntime {
   invoke(id: string, envelope: Record<string, unknown>): Promise<Record<string, unknown>>;
 }
 
+export interface RouterReplayAdapter {
+  readonly protocolVersion: "role-model.router-replay-adapter.v1";
+  readonly authenticated: true;
+  readonly channel: string;
+  readonly scope: string;
+  dispatch(envelope: Record<string, unknown>): Promise<Record<string, unknown>>;
+}
+
+const replayCredentialKey = /(credential|api[_-]?key|secret|password|access[_-]?token|refresh[_-]?token)/i;
+
+function containsReplayCredential(value: unknown): boolean {
+  if (Array.isArray(value)) return value.some(containsReplayCredential);
+  if (!value || typeof value !== "object") return false;
+  return Object.entries(value as Record<string, unknown>).some(
+    ([key, nested]) => replayCredentialKey.test(key) || containsReplayCredential(nested),
+  );
+}
+
+function assertReplayDispatchEnvelope(envelope: Record<string, unknown>, channel: string, scope: string): void {
+  if (envelope.schemaVersion !== "role-model.replay-dispatch.v1") throw new Error("unsupported replay dispatch schema");
+  if (envelope.channel !== channel) throw new Error("replay dispatch channel mismatch");
+  if (envelope.scope !== scope) throw new Error("replay dispatch scope mismatch");
+  if (containsReplayCredential(envelope)) throw new Error("provider credential or secret is prohibited from replay IPC");
+  if (typeof envelope.replayJobId !== "string" || !envelope.replayJobId
+    || typeof envelope.sourceDecisionId !== "string" || !envelope.sourceDecisionId
+    || typeof envelope.normalizedRequestRef !== "string" || !envelope.normalizedRequestRef
+    || typeof envelope.candidateEndpointId !== "string" || !envelope.candidateEndpointId
+    || !Number.isSafeInteger(envelope.sourceGeneration)) {
+    throw new Error("complete bounded replay dispatch identity required");
+  }
+  const budget = envelope.budget;
+  if (!budget || typeof budget !== "object" || Array.isArray(budget)) throw new Error("bounded replay dispatch budget required");
+  for (const key of ["maxCalls", "maxCostMicros", "maxBytes", "maxDurationMs"] as const) {
+    if (!Number.isSafeInteger((budget as Record<string, unknown>)[key])) throw new Error("bounded replay dispatch budget required");
+  }
+  if (envelope.toolPolicy !== "deny" && envelope.toolPolicy !== "recorded_results_only") {
+    throw new Error("live replay tools require a separate sandboxed adapter");
+  }
+}
+
+/**
+ * Exposes the only replay-to-provider boundary. The callback is supplied by the
+ * router host, where normal eligibility, policy, fallback, timeout, and provider
+ * credential handling already live; extensions receive neither those credentials
+ * nor a direct transport handle.
+ */
+export function createRouterReplayAdapter(options: {
+  readonly channel: string;
+  readonly scope: string;
+  readonly authorizationEpoch: number;
+  readonly dispatch: (request: Record<string, unknown>) => Promise<Record<string, unknown>>;
+}): RouterReplayAdapter {
+  if (!options.channel || !options.scope || !Number.isSafeInteger(options.authorizationEpoch)) {
+    throw new Error("router replay adapter identity is required");
+  }
+  return Object.freeze({
+    protocolVersion: "role-model.router-replay-adapter.v1" as const,
+    authenticated: true as const,
+    channel: options.channel,
+    scope: options.scope,
+    async dispatch(envelope: Record<string, unknown>): Promise<Record<string, unknown>> {
+      assertReplayDispatchEnvelope(envelope, options.channel, options.scope);
+      const result = await options.dispatch({
+        schemaVersion: "role-model.router-replay-router-request.v1",
+        source: "replay-core",
+        authorizationEpoch: options.authorizationEpoch,
+        replayJobId: envelope.replayJobId,
+        sourceGeneration: envelope.sourceGeneration,
+        sourceDecisionId: envelope.sourceDecisionId,
+        normalizedRequestRef: envelope.normalizedRequestRef,
+        candidateEndpointId: envelope.candidateEndpointId,
+        budget: structuredClone(envelope.budget),
+        toolPolicy: envelope.toolPolicy,
+      });
+      if (!result || typeof result.dispatchReceiptId !== "string" || typeof result.routerDecisionId !== "string" || typeof result.providerResultRef !== "string") {
+        throw new Error("router replay dispatch receipt is incomplete");
+      }
+      return {
+        dispatchReceiptId: result.dispatchReceiptId,
+        routerDecisionId: result.routerDecisionId,
+        providerResultRef: result.providerResultRef,
+      };
+    },
+  });
+}
+
 export interface TrackBPostObservationWorkItem extends Readonly<Record<string, unknown>> {
   readonly requestId: string;
   readonly routingDecisionId: string;
