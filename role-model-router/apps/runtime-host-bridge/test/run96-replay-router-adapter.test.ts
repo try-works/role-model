@@ -311,6 +311,7 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
   const invocations: Record<string, unknown>[] = [];
   const dispatches: Record<string, unknown>[] = [];
   const branches: Record<string, unknown>[] = [];
+  const evaluationHandoffs: Record<string, unknown>[] = [];
   const runtime = {
     async invoke(id: string, envelope: Record<string, unknown>) {
       invocations.push({ id, envelope });
@@ -461,15 +462,26 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
         branches.push(request);
         return { branchRootRef: "artifact:branch:orchestrated" };
       },
-      handoffEvaluation: async (request) => ({
-        evaluationJobId: "evaluation:orchestrated",
-        source: request.sourceDecisionId,
-      }),
+      handoffEvaluation: async (request) => {
+        evaluationHandoffs.push(request);
+        return {
+          evaluationJobId: "evaluation:orchestrated",
+          source: request.sourceDecisionId,
+        };
+      },
     }),
   ).resolves.toMatchObject({ state: "awaiting_evaluation", evaluationJobId: "evaluation:orchestrated" });
 
   expect(dispatches).toHaveLength(1);
   expect(branches).toEqual([expect.objectContaining({ candidateEndpointId: "endpoint:counterfactual" })]);
+  expect(evaluationHandoffs).toEqual([
+    expect.objectContaining({
+      replayJobId: "replay:orchestrated",
+      sourceGeneration: 4,
+      resultTraceIds: ["artifact:branch:orchestrated"],
+      candidates: [expect.objectContaining({ endpointId: "endpoint:counterfactual" })],
+    }),
+  ]);
   expect(invocations.filter((item) => item.id === "background-evidence-scheduler").map((item) =>
     (item.envelope as Record<string, unknown>).capability,
   )).toEqual([

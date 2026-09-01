@@ -1273,7 +1273,7 @@ export function createRouterEvaluationJudgeAdapter(options: {
         scorer: structuredClone(envelope.scorer),
         judgeEndpointId: envelope.judgeEndpointId,
       });
-      if (!result || typeof result.dispatchReceiptId !== "string" || typeof result.routerDecisionId !== "string" || typeof result.judgeResultRef !== "string" || !Number.isFinite(result.score) || !Number.isFinite(result.confidence) || result.confidence < 0 || result.confidence > 1) throw new Error("router evaluation judge receipt is incomplete");
+      if (!result || typeof result.dispatchReceiptId !== "string" || typeof result.routerDecisionId !== "string" || typeof result.judgeResultRef !== "string" || typeof result.score !== "number" || !Number.isFinite(result.score) || typeof result.confidence !== "number" || !Number.isFinite(result.confidence) || result.confidence < 0 || result.confidence > 1) throw new Error("router evaluation judge receipt is incomplete");
       return { dispatchReceiptId: result.dispatchReceiptId, routerDecisionId: result.routerDecisionId, judgeResultRef: result.judgeResultRef, score: result.score, confidence: result.confidence };
     },
   });
@@ -1507,6 +1507,7 @@ export async function runSupervisedReplay(input: {
     return structuredClone(created);
   }
   let schedulerClaim: ReplayIntentClaim | null = null;
+  const resultTraceIds: string[] = [];
   if (input.scheduler) {
     const deadlineMs = input.budget.deadlineMs;
     if (typeof deadlineMs !== "number" || !Number.isSafeInteger(deadlineMs) || deadlineMs < 1) {
@@ -1584,12 +1585,15 @@ export async function runSupervisedReplay(input: {
     if (appended.status !== "complete" && appended.status !== "awaiting_evaluation") {
       throw new Error("Replay Core did not accept the durable branch append receipt");
     }
+    resultTraceIds.push(branch.branchRootRef);
   }
   const evaluation = await input.handoffEvaluation({
     replayJobId: jobId,
     scope: input.scope,
     sourceDecisionId: sourceRoot.sourceDecisionId,
     sourceGeneration: sourceRoot.generation,
+    resultTraceIds: [...new Set(resultTraceIds)].sort(),
+    candidates: structuredClone(input.candidatePackages),
   });
   const completed = await input.runtime.invoke(
     "replay-core",
