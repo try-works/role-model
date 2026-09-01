@@ -2886,6 +2886,7 @@ export async function runTrackBShadowPipeline(
     envelope("signals:analyze-finalized-evaluation", {
       routeDecisionId: input.sourceDecisionId,
       graphRef: input.sourceGraphRef,
+      replayRef: (replay as Record<string, unknown>).graphRef,
       routePackage: input.routePackage,
       events: input.trajectoryEvents,
       finalizedEvaluation: persistedEvaluation,
