@@ -571,3 +571,113 @@ test("Run96 S3 RED: a completed idempotent replay returns its durable receipt wi
   });
   expect(invocations).toHaveLength(1);
 });
+
+test("Run96 S3 RED: a late-cancelled replay never hands incomplete branches to Evaluation Core", async () => {
+  const invocations: Record<string, unknown>[] = [];
+  let handoffCount = 0;
+  const runtime = {
+    async invoke(id: string, envelope: Record<string, unknown>) {
+      invocations.push({ id, envelope });
+      switch (envelope.capability) {
+        case "replay:create-job":
+          return { jobId: "replay:cancelled-late" };
+        case "replay:claim-job":
+          return { fenceToken: 1, leaseOwner: "scheduler:cancelled-late" };
+        case "replay:prepare-dispatch":
+          return {
+            status: "provider_dispatch",
+            envelope: {
+              schemaVersion: "role-model.replay-dispatch.v1",
+              channel: "development",
+              scope: "tenant:one",
+              replayJobId: "replay:cancelled-late",
+              sourceGeneration: 4,
+              sourceDecisionId: "decision:source-cancelled-late",
+              normalizedRequestRef: "artifact:request-cancelled-late",
+              candidateEndpointId: "endpoint:counterfactual",
+              candidatePackage: {
+                endpointId: "endpoint:counterfactual",
+                modelId: "deepseek/deepseek-v4-pro",
+                reasoningEffort: "max",
+                promptAdapterId: "prompt:stable-v1",
+                toolPolicy: "deny",
+                experiencePackId: "experience:none",
+                samplingProfileId: "sampling:stable-v1",
+              },
+              budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
+              toolPolicy: "deny",
+            },
+          };
+        case "replay:record-provider-receipt":
+          return { status: "cancelled_late", replayJobId: "replay:cancelled-late" };
+        default:
+          throw new Error(`unexpected capability ${String(envelope.capability)}`);
+      }
+    },
+  };
+  const sourceAttestation = createReplaySourceAttestation({
+    channel: "development",
+    scope: "tenant:one",
+    authorizationEpoch: 96,
+    capture: {
+      schemaVersion: "role-model.route-capture-read.v2",
+      scope: "tenant:one",
+      rootArtifactId: "artifact:root-cancelled-late",
+      routingDecisionId: "decision:source-cancelled-late",
+      endpointId: "endpoint:baseline",
+      trace: { generation: 4, readiness: "ready", rootOccurrenceId: "occurrence:root-cancelled-late" },
+    },
+    normalizedRequestRef: "artifact:request-cancelled-late",
+    sharedPrefixRef: "artifact:prefix-cancelled-late",
+    forkOccurrenceId: "occurrence:root-cancelled-late",
+    policySnapshotRef: "artifact:policy-cancelled-late",
+    capturePolicyRef: "artifact:capture-policy-cancelled-late",
+    eligibleEndpointIds: ["endpoint:baseline", "endpoint:counterfactual"],
+  });
+  const adapter = createRouterReplayAdapter({
+    channel: "development",
+    scope: "tenant:one",
+    authorizationEpoch: 96,
+    dispatch: async () => ({
+      dispatchReceiptId: "dispatch:cancelled-late",
+      routerDecisionId: "decision:cancelled-late",
+      providerResultRef: "artifact:provider-cancelled-late",
+      observedCostMicros: 0,
+      observedResponseBytes: 0,
+    }),
+  });
+  await expect(
+    runSupervisedReplay({
+      runtime,
+      adapter,
+      requestId: "request:cancelled-late",
+      channel: "development",
+      scope: "tenant:one",
+      authorizationEpoch: 96,
+      sourceAttestation,
+      idempotencyKey: "replay:cancelled-late",
+      intent: "counterfactual_route",
+      candidatePackages: [{
+        endpointId: "endpoint:counterfactual",
+        modelId: "deepseek/deepseek-v4-pro",
+        reasoningEffort: "max",
+        promptAdapterId: "prompt:stable-v1",
+        toolPolicy: "deny",
+        experiencePackId: "experience:none",
+        samplingProfileId: "sampling:stable-v1",
+      }],
+      budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
+      leaseOwner: "scheduler:cancelled-late",
+      leaseMs: 10_000,
+      appendBranch: async () => ({ branchRootRef: "must-not-run" }),
+      handoffEvaluation: async () => {
+        handoffCount += 1;
+        return { evaluationJobId: "must-not-run" };
+      },
+    }),
+  ).resolves.toMatchObject({ jobId: "replay:cancelled-late", state: "cancelled" });
+  expect(handoffCount).toBe(0);
+  expect(invocations.map((item) => (item.envelope as Record<string, unknown>).capability)).not.toContain(
+    "replay:record-evaluation-receipt",
+  );
+});

@@ -1566,7 +1566,24 @@ export async function runSupervisedReplay(input: {
         receipt,
       }),
     );
-    if (recorded.status === "cancelled_late") continue;
+    if (recorded.status === "cancelled_late") {
+      if (schedulerClaim) {
+        const schedulerReceipt = await input.scheduler?.complete({
+          jobId: schedulerClaim.jobId,
+          leaseId: schedulerClaim.leaseId,
+          fence: schedulerClaim.fence,
+          result: { replayJobId: jobId, state: "cancelled" },
+        });
+        if (!schedulerReceipt?.completed) {
+          throw new Error("replay scheduler did not accept the cancelled supervision receipt");
+        }
+      }
+      return {
+        jobId,
+        state: "cancelled",
+        cancellation: "late_provider_completion",
+      };
+    }
     const branchRequest = recorded.branchRequest;
     if (recorded.status !== "append_recovery" || !branchRequest || typeof branchRequest !== "object") {
       throw new Error("Replay Core did not persist a branch append recovery receipt");
