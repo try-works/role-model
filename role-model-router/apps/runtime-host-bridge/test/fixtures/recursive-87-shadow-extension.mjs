@@ -34,7 +34,7 @@ export async function run(envelope = {}) {
   }
   if (capability === "evaluation:submit-trial-result" || capability === "evaluation:record-trial-score") return { accepted: true };
   if (capability === "evaluation:finalize-comparison-group" || capability === "evaluation:read-comparison-group") return { groupId: envelope.value.groupId, status: "finalized", outcome: "candidate" };
-  if (capability === "signals:analyze") {
+  if (capability === "signals:analyze-finalized-evaluation") {
     const value = envelope.value;
     return {
       routeDecisionId: value.routeDecisionId,
@@ -42,6 +42,7 @@ export async function run(envelope = {}) {
       signals: [],
       evaluationPriority: "normal",
       classification: "behavioral_diagnostics_not_factual_correctness",
+      evaluationProvenance: value.finalizedEvaluation,
     };
   }
   if (capability === "profile:estimate") {

@@ -2846,10 +2846,11 @@ export async function runTrackBShadowPipeline(
   }
   const signals = await runtime.invoke(
     "trajectory-signals",
-    envelope("signals:analyze", {
+    envelope("signals:analyze-finalized-evaluation", {
       routeDecisionId: input.sourceDecisionId,
       graphRef: input.sourceGraphRef,
       events: input.trajectoryEvents,
+      finalizedEvaluation: persistedEvaluation,
     }),
   );
   const profile = await runtime.invoke("profile-learner", {

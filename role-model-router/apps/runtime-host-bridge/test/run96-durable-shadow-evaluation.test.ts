@@ -51,6 +51,7 @@ const comparableEvidence = {
 
 test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather than the legacy aggregate evaluator", async () => {
   const calls: Array<{ id: string; capability: unknown }> = [];
+  let signalInput: Record<string, unknown> | undefined;
   const trialIds = ["trial:source-96", "trial:counterfactual-96"];
   const claimedTrialIds = ["trial:source-96", "trial:counterfactual-96"];
   let createCount = 0;
@@ -96,7 +97,10 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
           if (id === "evaluation-core" && envelope.capability === "evaluation:read-comparison-group") {
             return { groupId: "comparison:96", status: "finalized", outcome: "candidate" };
           }
-          if (id === "trajectory-signals") return { signals: [] };
+          if (id === "trajectory-signals") {
+            signalInput = envelope.value as Record<string, unknown>;
+            return { signals: [] };
+          }
           if (id === "profile-learner") return { profileId: "profile:96" };
           if (id === "knowledge-worker") return { id: "candidate:96", state: "shadow", productionEffects: {} };
           throw new Error(`unexpected invocation ${id}:${String(envelope.capability)}`);
@@ -133,4 +137,8 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
     ]),
   );
   expect(calls).not.toContainEqual({ id: "evaluation-runner-local", capability: "evaluation:run-local" });
+  expect(calls).toContainEqual({ id: "trajectory-signals", capability: "signals:analyze-finalized-evaluation" });
+  expect(signalInput).toMatchObject({
+    finalizedEvaluation: { groupId: "comparison:96", status: "finalized", outcome: "candidate" },
+  });
 });

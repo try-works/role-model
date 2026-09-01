@@ -91,7 +91,7 @@ test("SP1 runs the useful routing-learning DAG through supervised shadow capabil
     ["replay-core", ["replay:plan-graph"]],
     ["evaluation-core", ["evaluation:register-scorer", "evaluation:create-job", "evaluation:list-trials", "evaluation:claim-trial", "evaluation:submit-trial-result", "evaluation:record-trial-score", "evaluation:finalize-comparison-group", "evaluation:read-comparison-group"]],
     ["evaluation-runner-local", ["evaluation:execute-trial"]],
-    ["trajectory-signals", ["signals:analyze"]],
+    ["trajectory-signals", ["signals:analyze-finalized-evaluation"]],
     ["profile-learner", ["profile:estimate"]],
     ["knowledge-worker", ["knowledge:eval-consumer"]],
   ]);
