@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { createHash, randomBytes, verify as verifySignature } from "node:crypto";
+import { createHash, createHmac, randomBytes, verify as verifySignature } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { copyFile, lstat, mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -2844,6 +2844,44 @@ export async function runTrackBShadowPipeline(
   ) {
     throw new Error("durable routing-shadow comparison finalization failed");
   }
+  const durableComparison = persistedEvaluation as Record<string, unknown>;
+  const finalizedComparison = {
+    ...durableComparison,
+    comparisonId: durableComparison.groupId,
+  };
+  const evaluationAuthoritySecret = randomBytes(32).toString("hex");
+  const finalizedComparisonReceiptPayload = {
+    schemaVersion: "role-model.evaluation-comparison-readback-receipt.v1",
+    kind: "evaluation_core_comparison_readback",
+    channel: input.channel,
+    routePackage: input.routePackage,
+    comparisonDigest: createHash("sha256")
+      .update(JSON.stringify(canonicalizeRun88Proof(finalizedComparison)))
+      .digest("hex"),
+    comparison: finalizedComparison,
+  };
+  const finalizedComparisonReceipt = {
+    payload: finalizedComparisonReceiptPayload,
+    signature: createHmac("sha256", evaluationAuthoritySecret)
+      .update(JSON.stringify(canonicalizeRun88Proof(finalizedComparisonReceiptPayload)))
+      .digest("hex"),
+  };
+  const knowledgeEvaluation = {
+    environment: "local-routing-evaluation",
+    scores: Array.isArray(durableComparison.members)
+      ? durableComparison.members.map((member) => (member as Record<string, unknown>).score)
+      : [],
+    provenance: {
+      policy: "run96-routing-shadow",
+      task: "route-selection",
+      scorer: `${scorer.id}@${scorer.version}`,
+      split: "holdout",
+      seed: 87,
+      evidenceRef: input.sourceGraphRef,
+    },
+    finalizedComparison,
+    finalizedComparisonReceipt,
+  };
   const signals = await runtime.invoke(
     "trajectory-signals",
     envelope("signals:analyze-finalized-evaluation", {
@@ -2895,9 +2933,10 @@ export async function runTrackBShadowPipeline(
     );
   const candidate = await runtime.invoke(
     "knowledge-worker",
-    envelope("knowledge:eval-consumer", {
+    {
+      ...envelope("knowledge:eval-consumer", {
       replay,
-      evaluation: persistedEvaluation,
+      evaluation: knowledgeEvaluation,
       signals,
       profile,
       comparableGroup: {
@@ -2911,9 +2950,11 @@ export async function runTrackBShadowPipeline(
         negative,
         candidateSet,
       },
-      holdout: { ...holdout, passed: (persistedEvaluation as Record<string, unknown>).outcome === "candidate" },
+      holdout: { ...holdout, evidenceRef: input.sourceGraphRef, passed: durableComparison.outcome === "candidate" },
       scope: { routePackage: input.routePackage, channel: input.channel, scopeId: input.scope },
-    }),
+      }),
+      evaluationAuthoritySecret,
+    },
   );
   return {
     replay,
