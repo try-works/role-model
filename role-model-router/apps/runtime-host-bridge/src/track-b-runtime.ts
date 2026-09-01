@@ -2858,7 +2858,6 @@ export async function runTrackBShadowPipeline(
     comparisonDigest: createHash("sha256")
       .update(JSON.stringify(canonicalizeRun88Proof(finalizedComparison)))
       .digest("hex"),
-    comparison: finalizedComparison,
   };
   const finalizedComparisonReceipt = {
     payload: finalizedComparisonReceiptPayload,
