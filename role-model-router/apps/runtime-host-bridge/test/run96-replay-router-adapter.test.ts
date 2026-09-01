@@ -51,6 +51,55 @@ test("Run96 S3 RED: the public host derives a bounded replay source attestation 
   expect(JSON.stringify(attestation)).not.toContain("must not cross replay attestation IPC");
 });
 
+test("Run96 S3 RED: the host refuses to invent replay provenance when the durable capture does not expose it", () => {
+  const capture = {
+    schemaVersion: "role-model.route-capture-read.v2",
+    scope: "tenant:one",
+    rootArtifactId: "artifact:root-96",
+    routingDecisionId: "decision:source-96",
+    endpointId: "endpoint:baseline",
+    trace: {
+      generation: 4,
+      readiness: "ready",
+      rootOccurrenceId: "occurrence:root-96",
+    },
+    replaySource: {
+      schemaVersion: "role-model.route-capture-replay-source.v1",
+      normalizedRequestRef: "artifact:request-96",
+      sharedPrefixRef: "artifact:prefix-96",
+      forkOccurrenceId: "occurrence:root-96",
+      policySnapshotRef: "artifact:policy-96",
+      capturePolicyRef: "artifact:capture-policy-96",
+    },
+  };
+  expect(
+    createReplaySourceAttestation({
+      channel: "development",
+      scope: "tenant:one",
+      authorizationEpoch: 96,
+      capture,
+      eligibleEndpointIds: ["endpoint:baseline"],
+    }),
+  ).toMatchObject({
+    traceRoot: {
+      normalizedRequestRef: "artifact:request-96",
+      sharedPrefixRef: "artifact:prefix-96",
+      policySnapshotRef: "artifact:policy-96",
+      capturePolicyRef: "artifact:capture-policy-96",
+    },
+  });
+  const { replaySource: _omitted, ...legacyCapture } = capture;
+  expect(() =>
+    createReplaySourceAttestation({
+      channel: "development",
+      scope: "tenant:one",
+      authorizationEpoch: 96,
+      capture: legacyCapture,
+      eligibleEndpointIds: ["endpoint:baseline"],
+    }),
+  ).toThrow(/durable replay source/i);
+});
+
 test("Run96 S3 RED: the host exposes a versioned scope-bound router replay adapter without provider credentials", async () => {
   const received: Record<string, unknown>[] = [];
   const adapter = createRouterReplayAdapter({

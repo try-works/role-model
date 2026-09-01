@@ -1146,11 +1146,11 @@ export function createReplaySourceAttestation(input: {
   readonly scope: string;
   readonly authorizationEpoch: number;
   readonly capture: Readonly<Record<string, unknown>>;
-  readonly normalizedRequestRef: string;
-  readonly sharedPrefixRef: string;
-  readonly forkOccurrenceId: string;
-  readonly policySnapshotRef: string;
-  readonly capturePolicyRef: string;
+  readonly normalizedRequestRef?: string;
+  readonly sharedPrefixRef?: string;
+  readonly forkOccurrenceId?: string;
+  readonly policySnapshotRef?: string;
+  readonly capturePolicyRef?: string;
   readonly eligibleEndpointIds: readonly string[];
 }): Readonly<Record<string, unknown>> {
   if (!input.channel || !input.scope || !Number.isSafeInteger(input.authorizationEpoch)) {
@@ -1158,6 +1158,15 @@ export function createReplaySourceAttestation(input: {
   }
   const capture = input.capture;
   const trace = capture.trace;
+  const replaySource =
+    capture.replaySource && typeof capture.replaySource === "object" && !Array.isArray(capture.replaySource)
+      ? (capture.replaySource as Record<string, unknown>)
+      : null;
+  const normalizedRequestRef = input.normalizedRequestRef ?? replaySource?.normalizedRequestRef;
+  const sharedPrefixRef = input.sharedPrefixRef ?? replaySource?.sharedPrefixRef;
+  const forkOccurrenceId = input.forkOccurrenceId ?? replaySource?.forkOccurrenceId;
+  const policySnapshotRef = input.policySnapshotRef ?? replaySource?.policySnapshotRef;
+  const capturePolicyRef = input.capturePolicyRef ?? replaySource?.capturePolicyRef;
   if (
     capture.schemaVersion !== "role-model.route-capture-read.v2" ||
     capture.scope !== input.scope ||
@@ -1175,11 +1184,12 @@ export function createReplaySourceAttestation(input: {
     (trace as Record<string, unknown>).readiness !== "ready" ||
     typeof (trace as Record<string, unknown>).rootOccurrenceId !== "string" ||
     !(trace as Record<string, unknown>).rootOccurrenceId ||
-    !input.normalizedRequestRef ||
-    !input.sharedPrefixRef ||
-    !input.forkOccurrenceId ||
-    !input.policySnapshotRef ||
-    !input.capturePolicyRef ||
+    (replaySource !== null && replaySource.schemaVersion !== "role-model.route-capture-replay-source.v1") ||
+    typeof normalizedRequestRef !== "string" || !normalizedRequestRef ||
+    typeof sharedPrefixRef !== "string" || !sharedPrefixRef ||
+    typeof forkOccurrenceId !== "string" || !forkOccurrenceId ||
+    typeof policySnapshotRef !== "string" || !policySnapshotRef ||
+    typeof capturePolicyRef !== "string" || !capturePolicyRef ||
     input.eligibleEndpointIds.length === 0 ||
     !input.eligibleEndpointIds.includes(capture.endpointId)
   ) {
@@ -1197,12 +1207,12 @@ export function createReplaySourceAttestation(input: {
       generation: (trace as Record<string, unknown>).generation,
       readiness: "ready",
       retentionState: "available",
-      sharedPrefixRef: input.sharedPrefixRef,
-      normalizedRequestRef: input.normalizedRequestRef,
+      sharedPrefixRef,
+      normalizedRequestRef,
       sourceDecisionId: capture.routingDecisionId,
-      forkOccurrenceId: input.forkOccurrenceId,
-      policySnapshotRef: input.policySnapshotRef,
-      capturePolicyRef: input.capturePolicyRef,
+      forkOccurrenceId,
+      policySnapshotRef,
+      capturePolicyRef,
       eligibleEndpointIds,
       selectedEndpointId: capture.endpointId,
     }),
