@@ -608,6 +608,7 @@ test("Run96 S3 RED: host orchestration records a bounded router failure before r
     budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
     leaseOwner: "scheduler:router-failure",
     leaseMs: 10_000,
+    prepareBranch: async () => ({ branchRootRef: "artifact:prepared-router-failure" }),
     appendBranch: async () => { throw new Error("router failure must not append a branch"); },
     handoffEvaluation: async () => { throw new Error("router failure must not hand off evaluation"); },
   })).rejects.toThrow("upstream 503");
@@ -689,6 +690,7 @@ test("Run96 S3 RED: a completed idempotent replay returns its durable receipt wi
       budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
       leaseOwner: "scheduler:96",
       leaseMs: 10_000,
+      prepareBranch: async () => ({ branchRootRef: "must-not-run" }),
       appendBranch: async () => ({ branchRootRef: "must-not-run" }),
       handoffEvaluation: async () => ({ evaluationJobId: "must-not-run" }),
     }),
@@ -798,6 +800,7 @@ test("Run96 S3 RED: a late-cancelled replay never hands incomplete branches to E
       budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
       leaseOwner: "scheduler:cancelled-late",
       leaseMs: 10_000,
+      prepareBranch: async () => ({ branchRootRef: "artifact:prepared-cancelled-late" }),
       appendBranch: async () => ({ branchRootRef: "must-not-run" }),
       handoffEvaluation: async () => {
         handoffCount += 1;

@@ -1448,7 +1448,7 @@ export async function runSupervisedReplay(input: {
   readonly leaseMs: number;
   readonly scheduler?: ReplayIntentScheduler;
   /** Creates the immutable replay branch root before a paid provider dispatch. */
-  readonly prepareBranch?: (request: Readonly<Record<string, unknown>>) => Promise<{
+  readonly prepareBranch: (request: Readonly<Record<string, unknown>>) => Promise<{
     readonly branchRootRef: string;
   }>;
   readonly appendBranch: (request: Readonly<Record<string, unknown>>) => Promise<{
@@ -1473,6 +1473,7 @@ export async function runSupervisedReplay(input: {
     input.sourceAttestation.authorizationEpoch !== input.authorizationEpoch ||
     !Array.isArray(input.candidatePackages) ||
     input.candidatePackages.length === 0 ||
+    typeof input.prepareBranch !== "function" ||
     containsReplayCredential(input.sourceAttestation) ||
     containsReplayCredential(input.candidatePackages)
   ) {
@@ -1562,17 +1563,15 @@ export async function runSupervisedReplay(input: {
     if (prepared.status !== "provider_dispatch" || !envelope || typeof envelope !== "object") {
       throw new Error("Replay Core did not prepare a bounded router dispatch");
     }
-    const preparedBranch = input.prepareBranch
-      ? await input.prepareBranch({
+    const preparedBranch = await input.prepareBranch({
           replayJobId: jobId,
           scope: input.scope,
           sourceGeneration: sourceRoot.generation,
           sourceDecisionId: sourceRoot.sourceDecisionId,
           candidateEndpointId,
           sharedPrefixRef: sourceRoot.sharedPrefixRef,
-        })
-      : null;
-    if (preparedBranch !== null && (!preparedBranch.branchRootRef || typeof preparedBranch.branchRootRef !== "string")) {
+        });
+    if (!preparedBranch.branchRootRef || typeof preparedBranch.branchRootRef !== "string") {
       throw new Error("replay branch preparation did not return a durable root");
     }
     let receipt: Record<string, unknown>;
