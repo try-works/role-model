@@ -2947,12 +2947,24 @@ export async function runTrackBShadowPipeline(
       evaluationAuthoritySecret,
     },
   );
+  const advisory = {
+    schemaVersion: "role-model.route-advisory-disposition.v1",
+    mode: "shadow" as const,
+    disposition: "not_applied_shadow" as const,
+    baselineDecisionId: input.sourceDecisionId,
+    profileSnapshotIds: Array.isArray((profile as Record<string, unknown>).snapshotIds)
+      ? (profile as Record<string, unknown>).snapshotIds
+      : [],
+    candidateId: (candidate as Record<string, unknown>).id ?? null,
+    productionMutation: false,
+  };
   return {
     replay,
     evaluation: persistedEvaluation,
     signals,
     profile,
     candidate,
+    advisory,
     productionState: structuredClone(input.productionState),
     receipt: {
       schemaVersion: "role-model.track-b-shadow-pipeline-receipt.v1",
@@ -2961,6 +2973,7 @@ export async function runTrackBShadowPipeline(
       providerCalls: 0,
       productionMutation: false,
       candidateId: candidate.id ?? null,
+      advisoryDisposition: advisory.disposition,
     },
   };
 }

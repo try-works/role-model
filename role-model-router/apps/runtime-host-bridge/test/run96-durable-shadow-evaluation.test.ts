@@ -124,6 +124,11 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
     ),
   ).resolves.toMatchObject({
     evaluation: { groupId: "comparison:96", outcome: "candidate" },
+    advisory: {
+      mode: "shadow",
+      disposition: "not_applied_shadow",
+      baselineDecisionId: "decision:source-96",
+    },
   });
 
   expect(calls).toEqual(
