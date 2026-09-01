@@ -1156,6 +1156,14 @@ export interface RouterReplayAdapter {
   dispatch(envelope: Record<string, unknown>): Promise<Record<string, unknown>>;
 }
 
+export interface RouterEvaluationJudgeAdapter {
+  readonly protocolVersion: "role-model.router-evaluation-judge-adapter.v1";
+  readonly authenticated: true;
+  readonly channel: string;
+  readonly scope: string;
+  dispatch(envelope: Record<string, unknown>): Promise<Record<string, unknown>>;
+}
+
 function readBoundedReplayUsage(result: Record<string, unknown>): {
   readonly observedCostMicros: number;
   readonly observedResponseBytes: number;
@@ -1223,6 +1231,52 @@ function assertReplayDispatchEnvelope(envelope: Record<string, unknown>, channel
   ) {
     throw new Error("materialized replay candidate package is invalid");
   }
+}
+
+function assertEvaluationJudgeDispatchEnvelope(envelope: Record<string, unknown>, channel: string, scope: string): void {
+  if (envelope.schemaVersion !== "role-model.evaluation-judge-dispatch.v1") throw new Error("unsupported evaluation judge dispatch schema");
+  if (envelope.channel !== channel) throw new Error("evaluation judge dispatch channel mismatch");
+  if (envelope.scope !== scope) throw new Error("evaluation judge dispatch scope mismatch");
+  if (containsReplayCredential(envelope)) throw new Error("provider credential or secret is prohibited from evaluation judge IPC");
+  for (const key of ["evaluationJobId", "trialId", "outputRef", "judgeEndpointId"] as const) {
+    if (typeof envelope[key] !== "string" || !envelope[key]) throw new Error("complete evaluation judge dispatch identity required");
+  }
+  const scorer = envelope.scorer;
+  if (!scorer || typeof scorer !== "object" || Array.isArray(scorer)) throw new Error("evaluation judge scorer provenance is required");
+  for (const key of ["id", "version", "digest", "dimension"] as const) {
+    if (typeof (scorer as Record<string, unknown>)[key] !== "string" || !(scorer as Record<string, unknown>)[key]) throw new Error("evaluation judge scorer provenance is required");
+  }
+}
+
+/** The only Evaluation Runner → remote-judge provider boundary; credentials stay in the router host. */
+export function createRouterEvaluationJudgeAdapter(options: {
+  readonly channel: string;
+  readonly scope: string;
+  readonly authorizationEpoch: number;
+  readonly dispatch: (request: Record<string, unknown>) => Promise<Record<string, unknown>>;
+}): RouterEvaluationJudgeAdapter {
+  if (!options.channel || !options.scope || !Number.isSafeInteger(options.authorizationEpoch)) throw new Error("router evaluation judge adapter identity is required");
+  return Object.freeze({
+    protocolVersion: "role-model.router-evaluation-judge-adapter.v1" as const,
+    authenticated: true as const,
+    channel: options.channel,
+    scope: options.scope,
+    async dispatch(envelope: Record<string, unknown>): Promise<Record<string, unknown>> {
+      assertEvaluationJudgeDispatchEnvelope(envelope, options.channel, options.scope);
+      const result = await options.dispatch({
+        schemaVersion: "role-model.evaluation-judge-router-request.v1",
+        source: "evaluation-runner-local",
+        authorizationEpoch: options.authorizationEpoch,
+        evaluationJobId: envelope.evaluationJobId,
+        trialId: envelope.trialId,
+        outputRef: envelope.outputRef,
+        scorer: structuredClone(envelope.scorer),
+        judgeEndpointId: envelope.judgeEndpointId,
+      });
+      if (!result || typeof result.dispatchReceiptId !== "string" || typeof result.routerDecisionId !== "string" || typeof result.judgeResultRef !== "string" || !Number.isFinite(result.score) || !Number.isFinite(result.confidence) || result.confidence < 0 || result.confidence > 1) throw new Error("router evaluation judge receipt is incomplete");
+      return { dispatchReceiptId: result.dispatchReceiptId, routerDecisionId: result.routerDecisionId, judgeResultRef: result.judgeResultRef, score: result.score, confidence: result.confidence };
+    },
+  });
 }
 
 /**
