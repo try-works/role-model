@@ -24152,6 +24152,7 @@ export async function createRuntimeBridgeBackend(
             modelId: execution.target.candidate.identity.model_id,
             reasoningEffort: effectiveEffort.reasoningEffort,
             effortSource: effectiveEffort.effortSource,
+            eligibleEndpointIds: telemetrySnapshot.eligibleEndpointIds,
             messages: captureInput,
             providerExecutions: [
               {

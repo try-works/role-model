@@ -1171,6 +1171,23 @@ export async function main(): Promise<void> {
             throw new Error(`durable route capture is unavailable for replay request ${requestId}`);
           }
           const sourceCapture = capture as Record<string, unknown>;
+          const sourceReplay =
+            sourceCapture.replaySource &&
+            typeof sourceCapture.replaySource === "object" &&
+            !Array.isArray(sourceCapture.replaySource)
+              ? (sourceCapture.replaySource as Record<string, unknown>)
+              : null;
+          const originallyEligibleEndpointIds = sourceReplay && Array.isArray(sourceReplay.eligibleEndpointIds)
+            ? [...new Set(sourceReplay.eligibleEndpointIds.filter(
+                (value): value is string => typeof value === "string" && value.trim().length > 0,
+              ))].sort()
+            : [];
+          if (originallyEligibleEndpointIds.length === 0) {
+            throw new Error("supervised replay source is missing its frozen eligible endpoint snapshot");
+          }
+          if (candidateEndpointIds.some((endpointId) => !originallyEligibleEndpointIds.includes(endpointId))) {
+            throw new Error("supervised replay candidate was not eligible in the frozen source decision");
+          }
           const sourceMessages = Array.isArray(sourceCapture.messages) ? sourceCapture.messages : [];
           if (
             sourceMessages.length === 0 ||
@@ -1201,10 +1218,7 @@ export async function main(): Promise<void> {
             scope: options.scopeId,
             authorizationEpoch: 1,
             capture: sourceCapture,
-            eligibleEndpointIds: [
-              String(sourceCapture.endpointId ?? ""),
-              ...candidateEndpointIds,
-            ].filter(Boolean),
+            eligibleEndpointIds: originallyEligibleEndpointIds,
           });
           const dispatched = new Map<
             string,

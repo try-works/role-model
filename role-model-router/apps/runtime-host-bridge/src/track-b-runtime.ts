@@ -1167,6 +1167,11 @@ export function createReplaySourceAttestation(input: {
   const forkOccurrenceId = input.forkOccurrenceId ?? replaySource?.forkOccurrenceId;
   const policySnapshotRef = input.policySnapshotRef ?? replaySource?.policySnapshotRef;
   const capturePolicyRef = input.capturePolicyRef ?? replaySource?.capturePolicyRef;
+  const capturedEligibleEndpointIds = Array.isArray(replaySource?.eligibleEndpointIds)
+    ? [...new Set(replaySource.eligibleEndpointIds.filter(
+        (value): value is string => typeof value === "string" && value.trim().length > 0,
+      ))].sort()
+    : null;
   if (
     capture.schemaVersion !== "role-model.route-capture-read.v2" ||
     capture.scope !== input.scope ||
@@ -1191,7 +1196,10 @@ export function createReplaySourceAttestation(input: {
     typeof policySnapshotRef !== "string" || !policySnapshotRef ||
     typeof capturePolicyRef !== "string" || !capturePolicyRef ||
     input.eligibleEndpointIds.length === 0 ||
-    !input.eligibleEndpointIds.includes(capture.endpointId)
+    !input.eligibleEndpointIds.includes(capture.endpointId) ||
+    (capturedEligibleEndpointIds !== null &&
+      (!capturedEligibleEndpointIds.includes(capture.endpointId) ||
+        input.eligibleEndpointIds.some((endpointId) => !capturedEligibleEndpointIds.includes(endpointId))))
   ) {
     throw new Error("complete durable replay source receipt is required");
   }
