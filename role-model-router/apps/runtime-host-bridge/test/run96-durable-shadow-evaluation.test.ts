@@ -63,7 +63,15 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
           if (id === "evaluation-runner-local" && envelope.capability === "evaluation:run-local") {
             throw new Error("legacy aggregate evaluation is prohibited");
           }
-          if (id === "replay-core") return { graphRef: "artifact:replay-96" };
+          if (id === "replay-core") {
+            return {
+              sourceDecisionId: "decision:source-96",
+              sourceGraphRef: "artifact:source-graph-96",
+              sharedPrefixRef: "artifact:source-graph-96#prefix",
+              branches: [],
+              digest: "sha256:replay-plan-96",
+            };
+          }
           if (id === "evaluation-core" && envelope.capability === "evaluation:register-scorer") {
             return { key: "run96-exact@1" };
           }
@@ -146,5 +154,8 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
   expect(calls).toContainEqual({ id: "profile-learner", capability: "profile:estimate-finalized-evaluation" });
   expect(signalInput).toMatchObject({
     finalizedEvaluation: { groupId: "comparison:96", status: "finalized", outcome: "candidate" },
+    routeDecisionId: "decision:source-96",
+    graphRef: "artifact:source-graph-96",
+    replayRef: "sha256:replay-plan-96",
   });
 });

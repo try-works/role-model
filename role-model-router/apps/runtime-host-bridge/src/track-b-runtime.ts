@@ -2704,6 +2704,10 @@ export async function runTrackBShadowPipeline(
       counterfactuals: input.counterfactuals,
     }),
   );
+  const replayDigest = (replay as Record<string, unknown>).digest;
+  if (typeof replayDigest !== "string" || !replayDigest) {
+    throw new Error("replay plan must expose a durable digest before learning signals are emitted");
+  }
   const scorerSetVersion = "run96-routing-shadow-v1";
   const scorer = {
     manifestVersion: 2,
@@ -2886,7 +2890,7 @@ export async function runTrackBShadowPipeline(
     envelope("signals:analyze-finalized-evaluation", {
       routeDecisionId: input.sourceDecisionId,
       graphRef: input.sourceGraphRef,
-      replayRef: (replay as Record<string, unknown>).graphRef,
+      replayRef: replayDigest,
       routePackage: input.routePackage,
       events: input.trajectoryEvents,
       finalizedEvaluation: persistedEvaluation,
