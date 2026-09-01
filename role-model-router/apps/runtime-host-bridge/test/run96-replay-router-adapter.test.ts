@@ -316,6 +316,7 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
   const dispatches: Record<string, unknown>[] = [];
   const branches: Record<string, unknown>[] = [];
   const evaluationHandoffs: Record<string, unknown>[] = [];
+  const causalOrder: string[] = [];
   const runtime = {
     async invoke(id: string, envelope: Record<string, unknown>) {
       invocations.push({ id, envelope });
@@ -400,6 +401,7 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
     scope: "tenant:one",
     authorizationEpoch: 96,
     dispatch: async (request) => {
+      causalOrder.push("dispatch");
       dispatches.push(request);
       return {
         dispatchReceiptId: "dispatch:orchestrated",
@@ -439,8 +441,9 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
     eligibleEndpointIds: ["endpoint:baseline", "endpoint:counterfactual"],
   });
 
-  await expect(
-    runSupervisedReplay({
+  const supervisedInput: Parameters<typeof runSupervisedReplay>[0] & {
+    readonly prepareBranch: (request: Readonly<Record<string, unknown>>) => Promise<{ readonly branchRootRef: string }>;
+  } = {
       runtime,
       adapter,
       requestId: "request:orchestrated",
@@ -463,7 +466,16 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
       leaseOwner: "scheduler:96",
       leaseMs: 10_000,
       scheduler: scheduler as never,
+      prepareBranch: async (request) => {
+        causalOrder.push("prepare");
+        expect(request).toEqual(expect.objectContaining({
+          candidateEndpointId: "endpoint:counterfactual",
+          sourceDecisionId: "decision:source-96",
+        }));
+        return { branchRootRef: "artifact:branch:orchestrated" };
+      },
       appendBranch: async (request) => {
+        causalOrder.push("append");
         branches.push(request);
         return { branchRootRef: "artifact:branch:orchestrated" };
       },
@@ -474,10 +486,11 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
           source: request.sourceDecisionId,
         };
       },
-    }),
-  ).resolves.toMatchObject({ state: "awaiting_evaluation", evaluationJobId: "evaluation:orchestrated" });
+  };
+  await expect(runSupervisedReplay(supervisedInput)).resolves.toMatchObject({ state: "awaiting_evaluation", evaluationJobId: "evaluation:orchestrated" });
 
   expect(dispatches).toHaveLength(1);
+  expect(causalOrder).toEqual(["prepare", "dispatch", "append"]);
   expect(branches).toEqual([expect.objectContaining({ candidateEndpointId: "endpoint:counterfactual" })]);
   expect(evaluationHandoffs).toEqual([
     expect.objectContaining({

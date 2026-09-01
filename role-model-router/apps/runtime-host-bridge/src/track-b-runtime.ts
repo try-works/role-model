@@ -1447,6 +1447,10 @@ export async function runSupervisedReplay(input: {
   readonly leaseOwner: string;
   readonly leaseMs: number;
   readonly scheduler?: ReplayIntentScheduler;
+  /** Creates the immutable replay branch root before a paid provider dispatch. */
+  readonly prepareBranch?: (request: Readonly<Record<string, unknown>>) => Promise<{
+    readonly branchRootRef: string;
+  }>;
   readonly appendBranch: (request: Readonly<Record<string, unknown>>) => Promise<{
     readonly branchRootRef: string;
   }>;
@@ -1558,6 +1562,19 @@ export async function runSupervisedReplay(input: {
     if (prepared.status !== "provider_dispatch" || !envelope || typeof envelope !== "object") {
       throw new Error("Replay Core did not prepare a bounded router dispatch");
     }
+    const preparedBranch = input.prepareBranch
+      ? await input.prepareBranch({
+          replayJobId: jobId,
+          scope: input.scope,
+          sourceGeneration: sourceRoot.generation,
+          sourceDecisionId: sourceRoot.sourceDecisionId,
+          candidateEndpointId,
+          sharedPrefixRef: sourceRoot.sharedPrefixRef,
+        })
+      : null;
+    if (preparedBranch !== null && (!preparedBranch.branchRootRef || typeof preparedBranch.branchRootRef !== "string")) {
+      throw new Error("replay branch preparation did not return a durable root");
+    }
     let receipt: Record<string, unknown>;
     try {
       receipt = await input.adapter.dispatch(envelope as Record<string, unknown>);
@@ -1610,7 +1627,10 @@ export async function runSupervisedReplay(input: {
     if (recorded.status !== "append_recovery" || !branchRequest || typeof branchRequest !== "object") {
       throw new Error("Replay Core did not persist a branch append recovery receipt");
     }
-    const branch = await input.appendBranch(branchRequest as Record<string, unknown>);
+    const branch = await input.appendBranch({
+      ...(branchRequest as Record<string, unknown>),
+      ...(preparedBranch ? { preparedBranchRootRef: preparedBranch.branchRootRef } : {}),
+    });
     const appended = await input.runtime.invoke(
       "replay-core",
       controlEnvelope("replay:record-branch-append", {

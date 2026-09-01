@@ -1225,6 +1225,7 @@ export async function main(): Promise<void> {
             string,
             { readonly execution: Awaited<ReturnType<typeof created.executeChatCompletions>>; readonly replayRequestId: string }
           >();
+          const preparedBranches = new Map<string, { readonly branchRootRef: string; readonly branchRequestId: string }>();
           const adapter = createRouterReplayAdapter({
             channel,
             scope: options.scopeId,
@@ -1288,10 +1289,38 @@ export async function main(): Promise<void> {
               authorizationEpoch: 1,
               ownerId: `runtime-host:${process.pid}`,
             }),
+            prepareBranch: async (branchRequest) => {
+              const candidateEndpointId = String(branchRequest.candidateEndpointId ?? "");
+              const candidate = candidatePackages.find((item) => item.endpointId === candidateEndpointId);
+              if (!candidate) throw new Error("replay branch preparation candidate is not host-authorized");
+              const existing = preparedBranches.get(candidateEndpointId);
+              if (existing) return { branchRootRef: existing.branchRootRef };
+              const branchRequestId = `replay-${requestId}-${createHash("sha256").update(candidateEndpointId).digest("hex").slice(0, 16)}-prepared`;
+              const branch = (await operations.recordLocalRouteCapture({
+                requestId: branchRequestId,
+                routingDecisionId: String(branchRequest.sourceDecisionId),
+                endpointId: candidateEndpointId,
+                modelId: candidate.modelId,
+                reasoningEffort: candidate.reasoningEffort,
+                effortSource: "variant",
+                messages: [],
+                toolExecutions: [],
+                branchKind: "replay",
+                branchPhase: "prepared",
+                branchOfRootArtifactId: sourceCapture.rootArtifactId,
+              })) as Record<string, unknown>;
+              if (typeof branch.rootArtifactId !== "string" || !branch.rootArtifactId) {
+                throw new Error("operations boundary did not persist a prepared replay branch root");
+              }
+              preparedBranches.set(candidateEndpointId, { branchRootRef: branch.rootArtifactId, branchRequestId });
+              return { branchRootRef: branch.rootArtifactId };
+            },
             appendBranch: async (branchRequest) => {
               const candidateEndpointId = String(branchRequest.candidateEndpointId ?? "");
               const dispatch = dispatched.get(candidateEndpointId);
               if (!dispatch) throw new Error("durable replay branch append has no host dispatch receipt");
+              const preparedBranchRootRef = String(branchRequest.preparedBranchRootRef ?? "");
+              if (!preparedBranchRootRef) throw new Error("durable replay result append requires its prepared branch root");
               const branchRequestId = `${dispatch.replayRequestId}-branch`;
               const branch = (await operations.recordLocalRouteCapture({
                 requestId: branchRequestId,
@@ -1317,7 +1346,7 @@ export async function main(): Promise<void> {
                 ],
                 toolExecutions: [],
                 branchKind: "replay",
-                branchOfRootArtifactId: sourceCapture.rootArtifactId,
+                branchOfRootArtifactId: preparedBranchRootRef,
               })) as Record<string, unknown>;
               if (typeof branch.rootArtifactId !== "string" || !branch.rootArtifactId) {
                 throw new Error("operations boundary did not return a durable replay branch root");
