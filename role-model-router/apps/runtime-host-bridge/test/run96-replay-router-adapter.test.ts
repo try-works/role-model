@@ -43,7 +43,13 @@ test("Run96 S3 RED: the host exposes a versioned scope-bound router replay adapt
         experiencePackId: "experience:none",
         samplingProfileId: "sampling:stable-v1",
       },
-      budget: { maxCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, maxDurationMs: 10_000 },
+      budget: {
+        maxCandidates: 1,
+        maxProviderCalls: 1,
+        maxCostMicros: 5_000,
+        maxBytes: 16_384,
+        deadlineMs: 10_000,
+      },
       toolPolicy: "deny",
     }),
   ).resolves.toEqual({
@@ -90,7 +96,13 @@ test("Run96 S3 RED: the host replay adapter fails closed for cross-boundary or c
       experiencePackId: "experience:none",
       samplingProfileId: "sampling:stable-v1",
     },
-    budget: { maxCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, maxDurationMs: 10_000 },
+    budget: {
+      maxCandidates: 1,
+      maxProviderCalls: 1,
+      maxCostMicros: 5_000,
+      maxBytes: 16_384,
+      deadlineMs: 10_000,
+    },
     toolPolicy: "deny",
   };
   await expect(adapter.dispatch({ ...base, scope: "tenant:two" })).rejects.toThrow(/scope/i);

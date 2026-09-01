@@ -1059,7 +1059,13 @@ function assertReplayDispatchEnvelope(envelope: Record<string, unknown>, channel
   }
   const budget = envelope.budget;
   if (!budget || typeof budget !== "object" || Array.isArray(budget)) throw new Error("bounded replay dispatch budget required");
-  for (const key of ["maxCalls", "maxCostMicros", "maxBytes", "maxDurationMs"] as const) {
+  for (const key of [
+    "maxCandidates",
+    "maxProviderCalls",
+    "maxCostMicros",
+    "maxBytes",
+    "deadlineMs",
+  ] as const) {
     if (!Number.isSafeInteger((budget as Record<string, unknown>)[key])) throw new Error("bounded replay dispatch budget required");
   }
   if (envelope.toolPolicy !== "deny" && envelope.toolPolicy !== "recorded_results_only") {
