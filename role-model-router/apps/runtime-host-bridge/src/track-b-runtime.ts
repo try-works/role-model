@@ -2590,6 +2590,8 @@ export function resolveTrackBRouteAdvisory(input: {
   readonly routePackage: string;
   readonly profileSnapshotIds: readonly string[];
   readonly candidateId: string | null;
+  /** The durable availability disposition of the evidence, never a routing instruction. */
+  readonly advisoryState?: "fresh" | "stale" | "unavailable";
   readonly nowMs: number;
 }) {
   if (input.channel === "production") {
@@ -2607,6 +2609,10 @@ export function resolveTrackBRouteAdvisory(input: {
   if (input.profileSnapshotIds.some((id) => typeof id !== "string" || !id)) {
     throw new Error("route-learning advisory profile snapshot ids are invalid");
   }
+  const advisoryState = input.advisoryState ?? "fresh";
+  if (!new Set(["fresh", "stale", "unavailable"]).has(advisoryState)) {
+    throw new Error("route-learning advisory state is invalid");
+  }
   const advisoryId = `advisory:${createHash("sha256")
     .update(JSON.stringify({
       baselineDecisionId: input.baselineDecisionId,
@@ -2615,6 +2621,7 @@ export function resolveTrackBRouteAdvisory(input: {
       routePackage: input.routePackage,
       profileSnapshotIds: input.profileSnapshotIds,
       candidateId: input.candidateId,
+      advisoryState,
     }))
     .digest("hex")}`;
   return {
@@ -2627,13 +2634,14 @@ export function resolveTrackBRouteAdvisory(input: {
     routePackage: input.routePackage,
     profileSnapshotIds: [...input.profileSnapshotIds],
     candidateId: input.candidateId,
+    advisoryState,
     advisoryId,
     decisionAdvice: {
       consideredAdviceIds: [advisoryId],
       acceptedAdviceIds: [],
       rejectedAdviceIds: [advisoryId],
-      staleAdviceIds: [],
-      unavailableAdviceIds: [],
+      staleAdviceIds: advisoryState === "stale" ? [advisoryId] : [],
+      unavailableAdviceIds: advisoryState === "unavailable" ? [advisoryId] : [],
       deterministicFallback: "baseline_retained" as const,
     },
     confidence: 0,

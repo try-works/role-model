@@ -101,6 +101,32 @@ test("Run96 S5 RED: route-learning advisories are scope-bound shadow receipts wi
   })).toThrow("route-learning advisories are shadow-only");
 });
 
+test("Run96 S5 RED: stale and unavailable advisory evidence remains visible while baseline routing wins", () => {
+  for (const advisoryState of ["stale", "unavailable"] as const) {
+    const disposition = resolveTrackBRouteAdvisory({
+      baselineDecisionId: "decision:96-fallback",
+      channel: "development",
+      scope: "tenant:run96",
+      authorizationEpoch: 96,
+      routePackage: "candidate:96-fallback",
+      profileSnapshotIds: ["profile:96-fallback"],
+      candidateId: "knowledge:96-fallback",
+      advisoryState,
+      nowMs: 96_000,
+    });
+
+    expect(disposition.decisionAdvice).toMatchObject({
+      consideredAdviceIds: [disposition.advisoryId],
+      acceptedAdviceIds: [],
+      rejectedAdviceIds: [disposition.advisoryId],
+      deterministicFallback: "baseline_retained",
+      ...(advisoryState === "stale"
+        ? { staleAdviceIds: [disposition.advisoryId], unavailableAdviceIds: [] }
+        : { staleAdviceIds: [], unavailableAdviceIds: [disposition.advisoryId] }),
+    });
+  }
+});
+
 test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather than the legacy aggregate evaluator", async () => {
   const calls: Array<{ id: string; capability: unknown }> = [];
   let signalInput: Record<string, unknown> | undefined;
