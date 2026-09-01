@@ -1,6 +1,9 @@
 import { expect, test } from "vitest";
 
-import { runTrackBShadowPipeline } from "../src/track-b-runtime.js";
+import {
+  resolveTrackBRouteAdvisory,
+  runTrackBShadowPipeline,
+} from "../src/track-b-runtime.js";
 
 const comparableEvidence = {
   source: {
@@ -48,6 +51,46 @@ const comparableEvidence = {
     { routePackage: "candidate:counterfactual-96", endpointId: "endpoint:counterfactual-96", propensity: 0.4 },
   ],
 };
+
+test("Run96 S5 RED: route-learning advisories are scope-bound shadow receipts with expiry and rollback", () => {
+  const disposition = resolveTrackBRouteAdvisory({
+    baselineDecisionId: "decision:96",
+    channel: "development",
+    scope: "tenant:run96",
+    authorizationEpoch: 96,
+    routePackage: "candidate:96",
+    profileSnapshotIds: ["profile:96"],
+    candidateId: "knowledge:96",
+    nowMs: 96_000,
+  });
+
+  expect(disposition).toEqual({
+    schemaVersion: "role-model.route-advisory-disposition.v1",
+    mode: "shadow",
+    disposition: "not_applied_shadow",
+    baselineDecisionId: "decision:96",
+    scope: "tenant:run96",
+    authorizationEpoch: 96,
+    routePackage: "candidate:96",
+    profileSnapshotIds: ["profile:96"],
+    candidateId: "knowledge:96",
+    confidence: 0,
+    expiresAtMs: 156_000,
+    rollbackDisposition: "baseline_retained",
+    productionMutation: false,
+  });
+
+  expect(() => resolveTrackBRouteAdvisory({
+    baselineDecisionId: "decision:96",
+    channel: "production",
+    scope: "tenant:run96",
+    authorizationEpoch: 96,
+    routePackage: "candidate:96",
+    profileSnapshotIds: [],
+    candidateId: null,
+    nowMs: 96_000,
+  })).toThrow("route-learning advisories are shadow-only");
+});
 
 test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather than the legacy aggregate evaluator", async () => {
   const calls: Array<{ id: string; capability: unknown }> = [];

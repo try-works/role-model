@@ -2577,6 +2577,55 @@ export interface TrackBVariantIdentity {
   readonly effortSource: RuntimeEffortSource;
 }
 
+/**
+ * Track B evidence is observational only.  Keep the acknowledgement beside the
+ * pipeline so a caller cannot accidentally turn a learning candidate into a
+ * route mutation just by treating its presence as approval.
+ */
+export function resolveTrackBRouteAdvisory(input: {
+  readonly baselineDecisionId: string;
+  readonly channel: string;
+  readonly scope: string;
+  readonly authorizationEpoch: number;
+  readonly routePackage: string;
+  readonly profileSnapshotIds: readonly string[];
+  readonly candidateId: string | null;
+  readonly nowMs: number;
+}) {
+  if (input.channel === "production") {
+    throw new Error("route-learning advisories are shadow-only; production channel is prohibited");
+  }
+  if (!input.baselineDecisionId || !input.scope || !input.routePackage) {
+    throw new Error("complete route-learning advisory identity is required");
+  }
+  if (!Number.isSafeInteger(input.authorizationEpoch) || input.authorizationEpoch < 0) {
+    throw new Error("route-learning advisory authorization epoch is invalid");
+  }
+  if (!Number.isSafeInteger(input.nowMs) || input.nowMs < 0) {
+    throw new Error("route-learning advisory timestamp is invalid");
+  }
+  if (input.profileSnapshotIds.some((id) => typeof id !== "string" || !id)) {
+    throw new Error("route-learning advisory profile snapshot ids are invalid");
+  }
+  return {
+    schemaVersion: "role-model.route-advisory-disposition.v1",
+    mode: "shadow" as const,
+    disposition: "not_applied_shadow" as const,
+    baselineDecisionId: input.baselineDecisionId,
+    scope: input.scope,
+    authorizationEpoch: input.authorizationEpoch,
+    routePackage: input.routePackage,
+    profileSnapshotIds: [...input.profileSnapshotIds],
+    candidateId: input.candidateId,
+    confidence: 0,
+    // A short-lived receipt makes stale evidence visibly non-actionable.  This
+    // is a contract value for the shadow receipt, not an IPC content cap.
+    expiresAtMs: input.nowMs + 60_000,
+    rollbackDisposition: "baseline_retained" as const,
+    productionMutation: false,
+  };
+}
+
 const TRACK_B_EFFORT_SOURCES = new Set<RuntimeEffortSource>([
   "none",
   "client",
@@ -3050,17 +3099,23 @@ export async function runTrackBShadowPipeline(
       evaluationAuthoritySecret,
     },
   );
-  const advisory = {
-    schemaVersion: "role-model.route-advisory-disposition.v1",
-    mode: "shadow" as const,
-    disposition: "not_applied_shadow" as const,
+  const advisory = resolveTrackBRouteAdvisory({
     baselineDecisionId: input.sourceDecisionId,
+    channel: input.channel,
+    scope: input.scope,
+    authorizationEpoch: input.authorizationEpoch,
+    routePackage: input.routePackage,
     profileSnapshotIds: Array.isArray((profile as Record<string, unknown>).snapshotIds)
-      ? (profile as Record<string, unknown>).snapshotIds
+      ? ((profile as Record<string, unknown>).snapshotIds as unknown[]).filter(
+          (snapshotId): snapshotId is string => typeof snapshotId === "string",
+        )
       : [],
-    candidateId: (candidate as Record<string, unknown>).id ?? null,
-    productionMutation: false,
-  };
+    candidateId:
+      typeof (candidate as Record<string, unknown>).id === "string"
+        ? ((candidate as Record<string, unknown>).id as string)
+        : null,
+    nowMs: Date.now(),
+  });
   return {
     replay,
     evaluation: persistedEvaluation,
