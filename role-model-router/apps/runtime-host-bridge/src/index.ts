@@ -23434,6 +23434,14 @@ export async function createRuntimeBridgeBackend(
             statusCode: error.statusCode,
             message: error.message,
           },
+          providerExecutions: [
+            {
+              attemptId: `attempt:${requestId}:failure`,
+              providerId: error.providerId,
+              adapterFamily: error.adapterFamily,
+              statusCode: error.statusCode,
+            },
+          ],
           toolExecutions: [],
         })) as Record<string, unknown>;
       } catch {
@@ -24123,6 +24131,14 @@ export async function createRuntimeBridgeBackend(
             reasoningEffort: effectiveEffort.reasoningEffort,
             effortSource: effectiveEffort.effortSource,
             messages: captureInput,
+            providerExecutions: [
+              {
+                attemptId: `attempt:${requestId}:final`,
+                providerId: execution.target.providerId,
+                adapterFamily: effectiveExecutionAdapterFamily,
+                statusCode: execution.responseCapture.statusCode,
+              },
+            ],
             outputText: execution.normalized.outputText,
             toolExecutions: toolExecutionResult.executions,
           })) as Record<string, unknown>;

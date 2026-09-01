@@ -16041,6 +16041,14 @@ describe("runtime-host-bridge", () => {
             statusCode: 402,
             message: "Insufficient Balance",
           },
+          providerExecutions: [
+            {
+              attemptId: `attempt:${requestId}:failure`,
+              providerId: "deepseek",
+              adapterFamily: "ai-sdk-openai-compatible",
+              statusCode: 402,
+            },
+          ],
         }),
       ]);
       expect(postObservations).toEqual([
