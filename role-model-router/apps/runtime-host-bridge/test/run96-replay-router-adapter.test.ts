@@ -622,6 +622,57 @@ test("Run96 S3 RED: host orchestration preserves a bounded rate-limit failure be
   });
 });
 
+test("Run96 S3 regression: timeout retries while a partial provider result is terminal", async () => {
+  for (const [code, retryable] of [["timeout", true], ["partial_response", false]] as const) {
+    let providerFailure: Record<string, unknown> | null = null;
+    const runtime = {
+      async invoke(id: string, envelope: Record<string, unknown>) {
+        expect(id).toBe("replay-core");
+        switch (envelope.capability) {
+          case "replay:create-job": return { jobId: `replay:${code}` };
+          case "replay:claim-job": return { fenceToken: 7, leaseOwner: "scheduler:failure-kind" };
+          case "replay:prepare-dispatch": return {
+            status: "provider_dispatch",
+            envelope: {
+              schemaVersion: "role-model.replay-dispatch.v1", channel: "development", scope: "tenant:one",
+              replayJobId: `replay:${code}`, sourceGeneration: 4, sourceDecisionId: "decision:failure-kind",
+              normalizedRequestRef: "artifact:request-failure-kind", candidateEndpointId: "endpoint:counterfactual",
+              dispatchIdempotencyKey: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              candidatePackage: { endpointId: "endpoint:counterfactual", modelId: "deepseek/deepseek-v4-pro", reasoningEffort: "max", promptAdapterId: "prompt:stable-v1", toolPolicy: "deny", experiencePackId: "experience:none", samplingProfileId: "sampling:stable-v1" },
+              budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 }, toolPolicy: "deny",
+            },
+          };
+          case "replay:record-provider-failure": providerFailure = envelope.value as Record<string, unknown>; return { status: retryable ? "retryable_failure" : "failed" };
+          default: throw new Error(`unexpected capability ${String(envelope.capability)}`);
+        }
+      },
+    };
+    const sourceAttestation = createReplaySourceAttestation({
+      channel: "development", scope: "tenant:one", authorizationEpoch: 96,
+      capture: {
+        schemaVersion: "role-model.route-capture-read.v2", scope: "tenant:one", rootArtifactId: "artifact:root-failure-kind",
+        routingDecisionId: "decision:failure-kind", endpointId: "endpoint:baseline",
+        trace: { generation: 4, readiness: "ready", rootOccurrenceId: "occurrence:root-failure-kind" },
+        replaySource: { schemaVersion: "role-model.route-capture-replay-source.v1", normalizedRequestRef: "artifact:request-failure-kind", sharedPrefixRef: "artifact:prefix-failure-kind", forkOccurrenceId: "occurrence:root-failure-kind", policySnapshotRef: "artifact:policy-failure-kind", capturePolicyRef: "artifact:capture-policy-failure-kind" },
+      },
+      eligibleEndpointIds: ["endpoint:baseline", "endpoint:counterfactual"],
+    });
+    await expect(runSupervisedReplay({
+      runtime,
+      adapter: { protocolVersion: "role-model.router-replay-adapter.v1", authenticated: true, channel: "development", scope: "tenant:one", async dispatch() { throw Object.assign(new Error(`provider ${code}`), { code }); } },
+      requestId: `request:${code}`, channel: "development", scope: "tenant:one", authorizationEpoch: 96,
+      sourceAttestation, idempotencyKey: `replay:${code}`, intent: "counterfactual_route",
+      candidatePackages: [{ endpointId: "endpoint:counterfactual", modelId: "deepseek/deepseek-v4-pro", reasoningEffort: "max", promptAdapterId: "prompt:stable-v1", toolPolicy: "deny", experiencePackId: "experience:none", samplingProfileId: "sampling:stable-v1" }],
+      budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
+      leaseOwner: "scheduler:failure-kind", leaseMs: 10_000,
+      prepareBranch: async () => ({ branchRootRef: "artifact:prepared-failure-kind" }),
+      appendBranch: async () => { throw new Error("must not append failed provider result"); },
+      handoffEvaluation: async () => { throw new Error("must not evaluate failed provider result"); },
+    })).rejects.toThrow(`provider ${code}`);
+    expect(providerFailure).toMatchObject({ failure: { code, retryable } });
+  }
+});
+
 test("Run96 S3 RED: a completed idempotent replay returns its durable receipt without reclaiming or redispatching", async () => {
   const invocations: Record<string, unknown>[] = [];
   const runtime = {
