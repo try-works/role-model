@@ -448,6 +448,8 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
           return { status: "awaiting_evaluation" };
         case "replay:record-evaluation-receipt":
           return { state: "awaiting_evaluation", evaluationJobId: "evaluation:orchestrated" };
+        case "replay:record-evaluation-result":
+          return { state: "complete", evaluationJobId: "evaluation:orchestrated", evaluationResult: envelope.value };
         default:
           throw new Error(`unexpected capability ${String(envelope.capability)}`);
       }
@@ -555,9 +557,15 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
         source: request.sourceDecisionId,
       };
     },
+    completeEvaluation: async (request) => ({
+      evaluationJobId: request.evaluationJobId,
+      comparisonGroupId: "comparison:orchestrated",
+      outcome: "tie",
+      comparisonDigest: "sha256:orchestrated",
+    }),
   };
   await expect(runSupervisedReplay(supervisedInput)).resolves.toMatchObject({
-    state: "awaiting_evaluation",
+    state: "complete",
     evaluationJobId: "evaluation:orchestrated",
   });
 
@@ -589,6 +597,17 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
     "scheduler:claim-replay-intent",
     "scheduler:complete-replay-intent",
   ]);
+  expect(invocations).toEqual(expect.arrayContaining([
+    expect.objectContaining({
+      id: "replay-core",
+      envelope: expect.objectContaining({
+        capability: "replay:record-evaluation-result",
+        value: expect.objectContaining({
+          evaluation: expect.objectContaining({ comparisonGroupId: "comparison:orchestrated", outcome: "tie" }),
+        }),
+      }),
+    }),
+  ]));
   expect(JSON.stringify(invocations)).not.toContain("source-only host transcript");
   expect(JSON.stringify(invocations)).not.toMatch(/api[_-]?key|credential|secret/i);
 });

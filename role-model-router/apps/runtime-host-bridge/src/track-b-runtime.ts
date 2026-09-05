@@ -1500,6 +1500,14 @@ export async function runSupervisedReplay(input: {
   readonly handoffEvaluation: (request: Readonly<Record<string, unknown>>) => Promise<{
     readonly evaluationJobId: string;
   }>;
+  /**
+   * Runs the separately durable evaluator only after Replay Core has accepted
+   * its handoff receipt.  The callback returns references/digests, never model
+   * output, so the replay journal can close without importing business text.
+   */
+  readonly completeEvaluation?: (request: Readonly<Record<string, unknown>>) => Promise<
+    Readonly<Record<string, unknown>>
+  >;
 }): Promise<Record<string, unknown>> {
   if (!input.requestId || !input.idempotencyKey || !input.intent || !input.leaseOwner) {
     throw new Error("supervised replay identity is required");
@@ -1707,8 +1715,32 @@ export async function runSupervisedReplay(input: {
       evaluation,
     }),
   );
+  const completedEvaluation = input.completeEvaluation
+    ? await input.completeEvaluation({
+        replayJobId: jobId,
+        evaluationJobId: evaluation.evaluationJobId,
+        scope: input.scope,
+        sourceDecisionId: sourceRoot.sourceDecisionId,
+        sourceGeneration: sourceRoot.generation,
+        resultTraceIds: [...new Set(resultTraceIds)].sort(),
+        resultBranches: resultBranches
+          .sort((left, right) => left.candidateEndpointId.localeCompare(right.candidateEndpointId)),
+        candidates: structuredClone(input.candidatePackages),
+      })
+    : null;
+  const finalized = completedEvaluation
+    ? await input.runtime.invoke(
+        "replay-core",
+        controlEnvelope("replay:record-evaluation-result", {
+          jobId,
+          leaseOwner: input.leaseOwner,
+          fenceToken: lease.fenceToken,
+          evaluation: completedEvaluation,
+        }),
+      )
+    : completed;
   if (schedulerClaim) {
-    const state = typeof completed.state === "string" ? completed.state : "complete";
+    const state = typeof finalized.state === "string" ? finalized.state : "complete";
     const receipt = await input.scheduler?.complete({
       jobId: schedulerClaim.jobId,
       leaseId: schedulerClaim.leaseId,
@@ -1720,10 +1752,10 @@ export async function runSupervisedReplay(input: {
       // evaluation receipts. An expired supervisory lease must be observable,
       // but it must not turn that completed durable work into a false API
       // failure or trigger a second provider dispatch on retry.
-      return { jobId, ...completed, schedulerState: "completion_not_accepted" };
+      return { jobId, ...finalized, schedulerState: "completion_not_accepted" };
     }
   }
-  return completed;
+  return finalized;
   } catch (error) {
     if (schedulerClaim) {
       try {
@@ -2581,6 +2613,8 @@ export interface TrackBShadowPipelineInput {
   readonly comparableEvidence?: Readonly<Record<string, unknown>>;
   readonly evaluationCases: readonly Record<string, unknown>[];
   readonly trajectoryEvents: readonly Record<string, unknown>[];
+  /** Optional host-owned durable job IDs, used to correlate a supervised replay handoff. */
+  readonly evaluationJobIds?: readonly string[];
   readonly identity?: TrackBVariantIdentity;
   readonly occurrence?: Readonly<{ occurrenceId: string; contentId: string }>;
 }
@@ -2848,7 +2882,10 @@ export async function runTrackBShadowPipeline(
   const rolloutRows = [sourceRollout, ...counterfactualRollouts];
   const trialIds: string[] = [];
   for (const [index, rollout] of rolloutRows.entries()) {
-    const jobId = `evaluation:${input.requestId}:${index}`;
+    const jobId = input.evaluationJobIds?.[index] ?? `evaluation:${input.requestId}:${index}`;
+    if (typeof jobId !== "string" || !jobId) {
+      throw new Error("durable routing-shadow evaluation job identity is invalid");
+    }
     await runtime.invoke("evaluation-core", {
       ...envelope("evaluation:create-job", {
         id: jobId,
@@ -2887,10 +2924,21 @@ export async function runTrackBShadowPipeline(
       throw new Error("durable routing-shadow trial lease failed");
     }
     const evaluationCase = input.evaluationCases[index % input.evaluationCases.length] ?? {};
-    const expected = typeof evaluationCase.expected === "string" ? evaluationCase.expected : "success";
-    const actual = (rollout.outcome as Record<string, unknown> | undefined)?.status === "success"
-      ? expected
-      : "failure";
+    const expected = typeof evaluationCase.expected === "string" && evaluationCase.expected
+      ? evaluationCase.expected
+      : null;
+    const independentlyObservedActual = typeof rollout.evaluationActual === "string" && rollout.evaluationActual
+      ? rollout.evaluationActual
+      : typeof evaluationCase.actual === "string" && evaluationCase.actual
+        ? evaluationCase.actual
+        : null;
+    if (!expected || !independentlyObservedActual) {
+      throw new Error("R14_INDEPENDENT_EVIDENCE_REQUIRED: durable routing evaluation requires expected and observed evidence");
+    }
+    // Do not derive the score input from a success/failure status.  A replay may
+    // execute successfully while still failing an independently specified task
+    // criterion; the runner receives bounded evidence values instead.
+    const actual = independentlyObservedActual;
     const outputRef = typeof rollout.artifactRef === "string" ? rollout.artifactRef : input.sourceGraphRef;
     const execution = await runtime.invoke("evaluation-runner-local", {
       ...envelope("evaluation:execute-trial", {
@@ -2965,7 +3013,9 @@ export async function runTrackBShadowPipeline(
   if (
     !persistedEvaluation ||
     (persistedEvaluation as Record<string, unknown>).status !== "finalized" ||
-    (persistedEvaluation as Record<string, unknown>).outcome !== "candidate"
+    !new Set(["candidate", "source", "tie", "rejected", "incomplete"]).has(
+      String((persistedEvaluation as Record<string, unknown>).outcome ?? ""),
+    )
   ) {
     throw new Error("durable routing-shadow comparison finalization failed");
   }
@@ -3097,25 +3147,34 @@ export async function runTrackBShadowPipeline(
     digest: profileRecord.digest,
     effects: profileRecord.effects,
   };
-  const scoredRollouts = rolloutRows.map((rollout) => {
+  const scoredRollouts = rolloutRows.map((rollout, index) => {
     if (typeof rollout.evidenceRef !== "string" || !rollout.evidenceRef) {
       throw new Error("routing-shadow rollout evidence references are required");
     }
+    const evaluationCase = input.evaluationCases[index % input.evaluationCases.length] ?? {};
+    const expected = typeof evaluationCase.expected === "string" ? evaluationCase.expected : null;
+    const actual = typeof rollout.evaluationActual === "string"
+      ? rollout.evaluationActual
+      : typeof evaluationCase.actual === "string"
+        ? evaluationCase.actual
+        : null;
+    if (!expected || !actual) {
+      throw new Error("R14_INDEPENDENT_EVIDENCE_REQUIRED: rollout score evidence is incomplete");
+    }
     return {
       evidenceRef: rollout.evidenceRef,
-      score: (rollout.outcome as Record<string, unknown> | undefined)?.status === "success" ? 1 : 0,
+      // This is the same bounded independent value supplied to Runner Local,
+      // not a proxy derived from the transport status.
+      score: Number(actual === expected),
     };
   });
   const positive = scoredRollouts.filter((rollout) => rollout.score === 1);
   const negative = scoredRollouts.filter((rollout) => rollout.score === 0);
-  if (!positive.length || !negative.length)
-    throw new Error(
-      "R14_INSUFFICIENT_ROLLOUT_EVIDENCE: positive and negative rollout evidence is required",
-    );
-  const candidate = await runtime.invoke(
-    "knowledge-worker",
-    {
-      ...envelope("knowledge:eval-consumer", {
+  const candidate = positive.length && negative.length
+    ? await runtime.invoke(
+      "knowledge-worker",
+      {
+        ...envelope("knowledge:eval-consumer", {
       replay: replayForKnowledge,
       evaluation: knowledgeEvaluation,
       signals: signalsForKnowledge,
@@ -3137,10 +3196,15 @@ export async function runTrackBShadowPipeline(
       },
       holdout: { ...holdout, evidenceRef: input.sourceGraphRef, passed: durableComparison.outcome === "candidate" },
       scope: { routePackage: input.routePackage, channel: input.channel, scopeId: input.scope },
-      }),
-      evaluationAuthoritySecret,
-    },
-  );
+        }),
+        evaluationAuthoritySecret,
+      },
+    )
+    : {
+        id: null,
+        state: "insufficient_comparable_evidence",
+        refusalCode: "R14_INSUFFICIENT_ROLLOUT_EVIDENCE",
+      };
   const advisory = resolveTrackBRouteAdvisory({
     baselineDecisionId: input.sourceDecisionId,
     channel: input.channel,

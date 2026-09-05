@@ -41,6 +41,7 @@ import {
   resolveManagedArtifactKeyFiles,
   runTrackBPostObservation,
   runTrackBPostObservationWithContribution,
+  runTrackBShadowPipeline,
   runSupervisedReplay,
   trackBDistributionRequiresSQLiteMaintenance,
   validateRun88ProviderResponseObservation,
@@ -1232,6 +1233,36 @@ export async function main(): Promise<void> {
               samplingProfileId: "deterministic-v1",
             };
           });
+          const expectedOutputSha256 = typeof body.expectedOutputSha256 === "string"
+            ? body.expectedOutputSha256.trim().replace(/^sha256:/, "")
+            : "";
+          if (!/^[a-f0-9]{64}$/i.test(expectedOutputSha256)) {
+            throw new Error("supervised replay requires an independently supplied expectedOutputSha256");
+          }
+          const sourceResponse = sourceCapture.response && typeof sourceCapture.response === "object"
+            ? sourceCapture.response as Record<string, unknown>
+            : null;
+          const sourceOutput = typeof sourceResponse?.content === "string"
+            ? sourceResponse.content
+            : typeof sourceCapture.outputText === "string"
+              ? sourceCapture.outputText
+              : null;
+          const sourceEndpointId = typeof sourceCapture.endpointId === "string"
+            ? sourceCapture.endpointId
+            : "";
+          const sourceModelId = typeof sourceCapture.modelId === "string"
+            ? sourceCapture.modelId
+            : "";
+          if (!sourceOutput || !sourceEndpointId || !sourceModelId) {
+            throw new Error("supervised replay source capture lacks independently observable output identity");
+          }
+          const sourceOutputSha256 = createHash("sha256").update(sourceOutput, "utf8").digest("hex");
+          const counterfactualPackages = candidatePackages.filter(
+            (candidate) => candidate.endpointId !== sourceEndpointId,
+          );
+          if (counterfactualPackages.length === 0) {
+            throw new Error("supervised replay requires an eligible counterfactual distinct from the source endpoint");
+          }
           const channel = packagedProfile?.channel ?? "development";
           const attestation = createReplaySourceAttestation({
             channel,
@@ -1371,29 +1402,108 @@ export async function main(): Promise<void> {
               }
               return { branchRootRef: branch.rootArtifactId };
             },
-            handoffEvaluation: async ({ replayJobId, sourceDecisionId, sourceGeneration }) => {
+            handoffEvaluation: async ({ replayJobId }) => {
               const evaluationJobId = `evaluation-replay-${createHash("sha256").update(String(replayJobId)).digest("hex").slice(0, 20)}`;
-              await runtime.invoke("evaluation-core", {
-                requestId: `${requestId}:evaluation:${evaluationJobId}`,
-                protocolVersion: "1.1.0",
+              return { evaluationJobId };
+            },
+            completeEvaluation: async ({ evaluationJobId, replayJobId }) => {
+              const counterfactuals = counterfactualPackages.map((candidate) => {
+                const dispatchedCandidate = dispatched.get(candidate.endpointId);
+                if (!dispatchedCandidate) {
+                  throw new Error("durable replay evaluation is missing a completed counterfactual dispatch");
+                }
+                const output = dispatchedCandidate.execution.outputText;
+                if (typeof output !== "string" || !output) {
+                  throw new Error("durable replay evaluation is missing counterfactual output evidence");
+                }
+                return {
+                  candidate,
+                  dispatch: dispatchedCandidate,
+                  outputSha256: createHash("sha256").update(output, "utf8").digest("hex"),
+                };
+              });
+              const sourceRootArtifactId = typeof sourceCapture.rootArtifactId === "string"
+                ? sourceCapture.rootArtifactId
+                : "";
+              const sourceDecisionId = typeof sourceCapture.routingDecisionId === "string"
+                ? sourceCapture.routingDecisionId
+                : "";
+              if (!sourceRootArtifactId || !sourceDecisionId || typeof evaluationJobId !== "string" || !evaluationJobId) {
+                throw new Error("durable replay evaluation is missing source or evaluation provenance");
+              }
+              const evaluated = await runTrackBShadowPipeline(runtime, {
+                requestId: `${requestId}:supervised-replay`,
                 channel,
                 scope: options.scopeId,
                 authorizationEpoch: 1,
-                capability: "evaluation:create-job",
-                job: {
-                  id: evaluationJobId,
-                  policyId: "run96-replay-shadow-v1",
-                  scorerSetVersion: "run96-route-replay-v1",
-                  requestKind: "replay",
-                  cases: [
-                    {
-                      id: `replay:${replayJobId}`,
-                      evidenceRef: `${sourceDecisionId}:${String(sourceGeneration)}`,
-                    },
+                productionState: {},
+                routePackage: sourceEndpointId,
+                sourceDecisionId,
+                sourceGraphRef: sourceRootArtifactId,
+                prefix: [],
+                counterfactuals: counterfactuals.map(({ candidate }) => ({ id: candidate.endpointId, suffix: [] })),
+                comparableEvidence: {
+                  source: {
+                    rolloutId: `source:${requestId}`,
+                    routePackage: sourceEndpointId,
+                    endpointId: sourceEndpointId,
+                    modelId: sourceModelId,
+                    policyId: "run96-supervised-replay",
+                    reasoningEffort: sourceCapture.reasoningEffort ?? null,
+                    effortSource: sourceCapture.effortSource ?? "none",
+                    evidenceRef: sourceRootArtifactId,
+                    artifactRef: sourceRootArtifactId,
+                    evaluationActual: sourceOutputSha256,
+                    propensity: 1,
+                    outcome: { outcomeId: `outcome:source:${requestId}`, outcomeRef: sourceRootArtifactId, outcomeDigest: `sha256:${sourceOutputSha256}`, source: "observed", status: "success" },
+                  },
+                  counterfactuals: counterfactuals.map(({ candidate, dispatch, outputSha256 }) => ({
+                    rolloutId: `counterfactual:${dispatch.replayRequestId}`,
+                    routePackage: candidate.endpointId,
+                    endpointId: candidate.endpointId,
+                    modelId: candidate.modelId,
+                    policyId: "run96-supervised-replay",
+                    reasoningEffort: candidate.reasoningEffort,
+                    effortSource: "variant",
+                    evidenceRef: `route-capture:${dispatch.replayRequestId}-branch`,
+                    artifactRef: `route-capture:${dispatch.replayRequestId}-branch`,
+                    evaluationActual: outputSha256,
+                    propensity: 1,
+                    outcome: { outcomeId: `outcome:${dispatch.replayRequestId}`, outcomeRef: `route-capture:${dispatch.replayRequestId}-branch`, outcomeDigest: `sha256:${outputSha256}`, source: "replay", status: "success" },
+                  })),
+                  candidateSet: [
+                    { routePackage: sourceEndpointId, endpointId: sourceEndpointId, propensity: 1 },
+                    ...counterfactuals.map(({ candidate }) => ({ routePackage: candidate.endpointId, endpointId: candidate.endpointId, propensity: 1 })),
                   ],
                 },
+                evaluationCases: Array.from({ length: 1 + counterfactuals.length }, (_, index) => ({
+                  id: `replay:${String(replayJobId)}:${index}`,
+                  expected: expectedOutputSha256,
+                })),
+                trajectoryEvents: [],
+                evaluationJobIds: [
+                  evaluationJobId,
+                  ...counterfactuals.map(({ candidate }) => `${evaluationJobId}:${createHash("sha256").update(candidate.endpointId).digest("hex").slice(0, 12)}`),
+                ],
+                identity: {
+                  endpointId: sourceEndpointId,
+                  modelId: sourceModelId,
+                  reasoningEffort: typeof sourceCapture.reasoningEffort === "string" ? sourceCapture.reasoningEffort : null,
+                  effortSource: typeof sourceCapture.effortSource === "string" ? sourceCapture.effortSource as "none" | "client" | "variant" | "variant_coerced" : "none",
+                },
               });
-              return { evaluationJobId };
+              const comparison = evaluated.evaluation as Record<string, unknown>;
+              const outcome = comparison.outcome;
+              const comparisonGroupId = comparison.groupId;
+              if (typeof comparisonGroupId !== "string" || !comparisonGroupId || !["candidate", "source", "tie", "rejected", "incomplete"].includes(String(outcome))) {
+                throw new Error("durable replay evaluation did not finalize a valid comparison");
+              }
+              return {
+                evaluationJobId,
+                comparisonGroupId,
+                outcome,
+                comparisonDigest: `sha256:${createHash("sha256").update(JSON.stringify(comparison)).digest("hex")}`,
+              };
             },
           });
           return {

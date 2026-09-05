@@ -16,6 +16,7 @@ const comparableEvidence = {
     effortSource: "variant",
     evidenceRef: "artifact:source-96",
     artifactRef: "artifact:source-output-96",
+    evaluationActual: "success",
     propensity: 0.6,
     outcome: {
       outcomeId: "outcome:source-96",
@@ -36,6 +37,7 @@ const comparableEvidence = {
       effortSource: "variant",
       evidenceRef: "artifact:counterfactual-96",
       artifactRef: "artifact:counterfactual-output-96",
+      evaluationActual: "failure",
       propensity: 0.4,
       outcome: {
         outcomeId: "outcome:counterfactual-96",
@@ -296,4 +298,97 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
       routePackage: "candidate:source-96",
     }],
   });
+});
+
+test("Run96 S4 RED: durable replay evaluation preserves independently supplied digest evidence instead of deriving a synthetic success equality", async () => {
+  const executionInputs: Record<string, unknown>[] = [];
+  const trialIds = ["trial:source-digest", "trial:counterfactual-digest"];
+  await runTrackBShadowPipeline(
+    {
+      async invoke(id, envelope) {
+        if (id === "replay-core") {
+          return {
+            sourceDecisionId: "decision:source-digest",
+            sourceGraphRef: "artifact:source-digest",
+            sharedPrefixRef: "artifact:source-digest#prefix",
+            branches: [],
+            digest: "sha256:replay-digest",
+          };
+        }
+        if (id === "evaluation-core" && envelope.capability === "evaluation:register-scorer") return { key: "digest@1" };
+        if (id === "evaluation-core" && envelope.capability === "evaluation:create-job") return { jobId: "job:digest" };
+        if (id === "evaluation-core" && envelope.capability === "evaluation:list-trials") return [{ trialId: trialIds.shift() }];
+        if (id === "evaluation-core" && envelope.capability === "evaluation:claim-trial") return { trialId: (envelope.value as Record<string, unknown>).trialId, leaseId: "lease:digest" };
+        if (id === "evaluation-runner-local" && envelope.capability === "evaluation:execute-trial") {
+          executionInputs.push(envelope.value as Record<string, unknown>);
+          return {
+            outputRef: "artifact:output-digest",
+            outputDigest: "sha256:output-digest",
+            stdoutRef: "artifact:stdout-digest",
+            stderrRef: "artifact:stderr-digest",
+            exitCode: 0,
+            measurements: { elapsedMs: 1, outputBytes: 1 },
+            scores: [{ scorerId: "run96-exact", scorerVersion: "1", scorerDigest: "sha256:scorer", dimension: "correctness", score: 0, confidence: 1, source: "deterministic" }],
+          };
+        }
+        if (id === "evaluation-core" && ["evaluation:submit-trial-result", "evaluation:record-trial-score"].includes(String(envelope.capability))) return { accepted: true };
+        if (id === "evaluation-core" && envelope.capability === "evaluation:finalize-comparison-group") return { groupId: "comparison:request-digest", status: "finalized", outcome: "tie" };
+        if (id === "evaluation-core" && envelope.capability === "evaluation:read-comparison-group") return { groupId: "comparison:request-digest", status: "finalized", outcome: "tie" };
+        if (id === "trajectory-signals") return { routeDecisionId: "decision:source-digest", graphRef: "artifact:source-digest", signals: [] };
+        if (id === "profile-learner") return { profileId: "profile:digest", digest: "sha256:profile-digest", effects: {} };
+        if (id === "knowledge-worker") return { id: "candidate:digest", state: "shadow" };
+        throw new Error(`unexpected invocation ${id}:${String(envelope.capability)}`);
+      },
+    },
+    {
+      requestId: "request:digest",
+      channel: "development",
+      scope: "tenant:run96",
+      authorizationEpoch: 96,
+      productionState: {},
+      routePackage: "candidate:source-digest",
+      sourceDecisionId: "decision:source-digest",
+      sourceGraphRef: "artifact:source-digest",
+      prefix: [],
+      counterfactuals: [{ id: "candidate:counterfactual-digest", suffix: [] }],
+      comparableEvidence: {
+        source: {
+          rolloutId: "rollout:source-digest",
+          routePackage: "candidate:source-digest",
+          endpointId: "endpoint:source-digest",
+          modelId: "model:source-digest",
+          policyId: "routing-shadow",
+          reasoningEffort: "high",
+          evidenceRef: "artifact:source-digest",
+          artifactRef: "artifact:source-output-digest",
+          evaluationActual: "sha256:source-output-digest",
+          outcome: { status: "success", outcomeDigest: "sha256:source-outcome-digest" },
+        },
+        counterfactuals: [{
+          rolloutId: "rollout:counterfactual-digest",
+          routePackage: "candidate:counterfactual-digest",
+          endpointId: "endpoint:counterfactual-digest",
+          modelId: "model:counterfactual-digest",
+          policyId: "routing-shadow",
+          reasoningEffort: "max",
+          evidenceRef: "artifact:counterfactual-digest",
+          artifactRef: "artifact:counterfactual-output-digest",
+          evaluationActual: "sha256:counterfactual-output-digest",
+          outcome: { status: "success", outcomeDigest: "sha256:counterfactual-outcome-digest" },
+        }],
+        candidateSet: [
+          { routePackage: "candidate:source-digest", endpointId: "endpoint:source-digest" },
+          { routePackage: "candidate:counterfactual-digest", endpointId: "endpoint:counterfactual-digest" },
+        ],
+      },
+      evaluationCases: [{ expected: "sha256:independent-golden-digest" }],
+      trajectoryEvents: [],
+    },
+  );
+
+  expect(executionInputs).toHaveLength(2);
+  expect(executionInputs).toEqual([
+    expect.objectContaining({ expected: "sha256:independent-golden-digest", actual: "sha256:source-output-digest" }),
+    expect.objectContaining({ expected: "sha256:independent-golden-digest", actual: "sha256:counterfactual-output-digest" }),
+  ]);
 });
