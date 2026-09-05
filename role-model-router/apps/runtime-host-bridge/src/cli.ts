@@ -33,6 +33,7 @@ import {
   createProductionExtensionRuntime,
   createReplayIntentScheduler,
   createReplaySourceAttestation,
+  createSupervisedReplayEvaluationRequestId,
   createRouterReplayAdapter,
   requireReplayRouterDecisionId,
   createRun88RuntimeCorrelation,
@@ -47,6 +48,7 @@ import {
   runSupervisedReplay,
   trackBDistributionRequiresSQLiteMaintenance,
   validateRun88ProviderResponseObservation,
+  validateRecoveredReplayCapture,
   verifyTrackBExtensionClosureAfterRestart,
 } from "./track-b-runtime.js";
 
@@ -1383,7 +1385,7 @@ export async function main(): Promise<void> {
             idempotencyKey,
             intent: "counterfactual_route",
             evaluationCriteriaDigest,
-            candidatePackages,
+            candidatePackages: counterfactualPackages,
             budget: structuredClone(budget) as Record<string, unknown>,
             leaseOwner: `runtime-host:${process.pid}`,
             leaseMs: Math.min(Number((budget as Record<string, unknown>).deadlineMs), 30_000),
@@ -1483,14 +1485,16 @@ export async function main(): Promise<void> {
                 const recoveredCapture = !dispatchedCandidate && recoveredRequestId
                   ? await operations.readLocalRouteCapture({ requestId: recoveredRequestId }) as Record<string, unknown> | null
                   : null;
-                if (recoveredCapture && (
-                  recoveredCapture.scope !== options.scopeId ||
-                  recoveredCapture.endpointId !== candidate.endpointId ||
-                  recoveredCapture.modelId !== candidate.modelId ||
-                  recoveredCapture.routingDecisionId !== durableResult?.routerDecisionId ||
-                  recoveredCapture.rootArtifactId !== durableResult?.branchRootRef
-                )) {
-                  throw new Error("durable replay evaluation recovered capture does not match its fenced replay receipt");
+                if (recoveredCapture) {
+                  validateRecoveredReplayCapture({
+                    scope: options.scopeId,
+                    candidate,
+                    dispatchReceipt: {
+                      routerDecisionId: durableResult?.routerDecisionId,
+                      branchRootRef: durableResult?.branchRootRef,
+                    },
+                    capture: recoveredCapture,
+                  });
                 }
                 const recoveredResponse = recoveredCapture?.response && typeof recoveredCapture.response === "object"
                   ? recoveredCapture.response as Record<string, unknown>
@@ -1521,7 +1525,7 @@ export async function main(): Promise<void> {
                 throw new Error("durable replay evaluation is missing source or evaluation provenance");
               }
               const evaluated = await runTrackBShadowPipeline(runtime, {
-                requestId: `${requestId}:supervised-replay`,
+                requestId: createSupervisedReplayEvaluationRequestId(requestId, String(replayJobId)),
                 channel,
                 scope: options.scopeId,
                 authorizationEpoch: 1,

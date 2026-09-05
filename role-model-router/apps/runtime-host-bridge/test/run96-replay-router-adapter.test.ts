@@ -3,10 +3,82 @@ import { expect, test } from "vitest";
 import {
   createReplayIntentScheduler,
   createReplaySourceAttestation,
+  createSupervisedReplayEvaluationRequestId,
   createRouterReplayAdapter,
   requireReplayRouterDecisionId,
   runSupervisedReplay,
+  validateRecoveredReplayCapture,
 } from "../src/track-b-runtime.js";
+
+test("Run96 regression: a supervised replay never dispatches the observed source endpoint as a counterfactual", async () => {
+  const invocations: Record<string, unknown>[] = [];
+  const sourceAttestation = createReplaySourceAttestation({
+    channel: "development",
+    scope: "tenant:counterfactual-only",
+    authorizationEpoch: 96,
+    capture: {
+      schemaVersion: "role-model.route-capture-read.v2",
+      scope: "tenant:counterfactual-only",
+      rootArtifactId: "artifact:source-counterfactual-only",
+      routingDecisionId: "decision:source-counterfactual-only",
+      endpointId: "endpoint:observed-source",
+      trace: { generation: 1, readiness: "ready", rootOccurrenceId: "occurrence:source-counterfactual-only" },
+      replaySource: {
+        schemaVersion: "role-model.route-capture-replay-source.v1",
+        normalizedRequestRef: "artifact:request-counterfactual-only",
+        sharedPrefixRef: "artifact:prefix-counterfactual-only",
+        forkOccurrenceId: "occurrence:source-counterfactual-only",
+        policySnapshotRef: "artifact:policy-counterfactual-only",
+        capturePolicyRef: "artifact:capture-policy-counterfactual-only",
+      },
+    },
+    eligibleEndpointIds: ["endpoint:observed-source", "endpoint:counterfactual"],
+  });
+  await expect(runSupervisedReplay({
+    runtime: { async invoke(_id, envelope) { invocations.push(envelope); return { jobId: "must-not-create" }; } },
+    adapter: createRouterReplayAdapter({ channel: "development", scope: "tenant:counterfactual-only", authorizationEpoch: 96, dispatch: async () => { throw new Error("must not dispatch"); } }),
+    requestId: "request:counterfactual-only",
+    channel: "development",
+    scope: "tenant:counterfactual-only",
+    authorizationEpoch: 96,
+    sourceAttestation,
+    idempotencyKey: "replay:counterfactual-only",
+    intent: "counterfactual_route",
+    evaluationCriteriaDigest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    candidatePackages: [{ endpointId: "endpoint:observed-source", modelId: "model:observed-source", reasoningEffort: null, promptAdapterId: "prompt:stable-v1", toolPolicy: "deny", experiencePackId: "experience:none", samplingProfileId: "deterministic-v1" }],
+    budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
+    leaseOwner: "scheduler:counterfactual-only",
+    leaseMs: 10_000,
+    prepareBranch: async () => ({ branchRootRef: "must-not-run" }),
+    appendBranch: async () => ({ branchRootRef: "must-not-run" }),
+    handoffEvaluation: async () => ({ evaluationJobId: "must-not-run" }),
+  })).rejects.toThrow(/counterfactual distinct from the source/i);
+  expect(invocations).toEqual([]);
+});
+
+test("Run96 regression: replay evaluation groups are stable per replay job and never collide across retries for one source", () => {
+  expect(createSupervisedReplayEvaluationRequestId("request:source", "replay:one")).toBe(
+    createSupervisedReplayEvaluationRequestId("request:source", "replay:one"),
+  );
+  expect(createSupervisedReplayEvaluationRequestId("request:source", "replay:one")).not.toBe(
+    createSupervisedReplayEvaluationRequestId("request:source", "replay:two"),
+  );
+});
+
+test("Run96 regression: recovery binds provider capture identity without confusing it for the appended replay branch root", () => {
+  expect(() => validateRecoveredReplayCapture({
+    scope: "tenant:recovery",
+    candidate: { endpointId: "endpoint:counterfactual", modelId: "model:counterfactual" },
+    dispatchReceipt: { routerDecisionId: "decision:replayed", branchRootRef: "artifact:appended-branch" },
+    capture: {
+      scope: "tenant:recovery",
+      endpointId: "endpoint:counterfactual",
+      modelId: "model:counterfactual",
+      routingDecisionId: "decision:replayed",
+      rootArtifactId: "artifact:provider-route-capture",
+    },
+  })).not.toThrow();
+});
 
 test("Run96 S3 RED: the public host uses authenticated scheduler intents that contain only replay references", async () => {
   const invocations: Record<string, unknown>[] = [];

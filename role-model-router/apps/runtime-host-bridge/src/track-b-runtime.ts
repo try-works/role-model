@@ -1632,6 +1632,49 @@ function classifyReplayDispatchFailure(error: unknown): {
 }
 
 /**
+ * Produces the shadow-pipeline identity for one durable replay job.  A source
+ * request may be replayed again under a new idempotency key, so source-request
+ * identity alone is not a safe Evaluation Core comparison-group namespace.
+ */
+export function createSupervisedReplayEvaluationRequestId(
+  sourceRequestId: string,
+  replayJobId: string,
+): string {
+  if (!sourceRequestId || !replayJobId) {
+    throw new Error("supervised replay evaluation identity is required");
+  }
+  return `supervised-replay:${createHash("sha256")
+    .update(`${sourceRequestId}\u0000${replayJobId}`, "utf8")
+    .digest("hex")}`;
+}
+
+/**
+ * Validates the provider route capture recovered during evaluation.  Its root
+ * is deliberately different from the later appended replay-branch root: the
+ * provider receipt is written before the graph branch append.  Both references
+ * remain durable, but they are different receipts and must not be equated.
+ */
+export function validateRecoveredReplayCapture(input: {
+  readonly scope: string;
+  readonly candidate: Readonly<{ endpointId: string; modelId: string }>;
+  readonly dispatchReceipt: Readonly<{ routerDecisionId?: unknown; branchRootRef?: unknown }>;
+  readonly capture: Readonly<Record<string, unknown>>;
+}): void {
+  if (
+    typeof input.dispatchReceipt.branchRootRef !== "string" ||
+    !input.dispatchReceipt.branchRootRef ||
+    typeof input.capture.rootArtifactId !== "string" ||
+    !input.capture.rootArtifactId ||
+    input.capture.scope !== input.scope ||
+    input.capture.endpointId !== input.candidate.endpointId ||
+    input.capture.modelId !== input.candidate.modelId ||
+    input.capture.routingDecisionId !== input.dispatchReceipt.routerDecisionId
+  ) {
+    throw new Error("durable replay evaluation recovered capture does not match its fenced replay receipt");
+  }
+}
+
+/**
  * Executes the control-plane half of a bounded replay. The public host owns the
  * source transcript, router credentials, provider dispatch, and branch writer;
  * Replay Core receives only references, candidate identity, budgets, and durable
@@ -1711,6 +1754,13 @@ export async function runSupervisedReplay(input: {
   const sourceRoot = input.sourceAttestation.traceRoot as Record<string, unknown>;
   if (!sourceRoot || typeof sourceRoot !== "object" || Array.isArray(sourceRoot)) {
     throw new Error("supervised replay source root is invalid");
+  }
+  const selectedSourceEndpointId = sourceRoot.selectedEndpointId;
+  if (typeof selectedSourceEndpointId !== "string" || !selectedSourceEndpointId) {
+    throw new Error("supervised replay source endpoint is invalid");
+  }
+  if (input.candidatePackages.some((candidate) => candidate.endpointId === selectedSourceEndpointId)) {
+    throw new Error("supervised replay requires a counterfactual distinct from the source endpoint");
   }
   const assertTerminalEvaluationReceipt = (value: unknown, expectedJobId: string): void => {
     const receipt = value as Record<string, unknown> | null;
