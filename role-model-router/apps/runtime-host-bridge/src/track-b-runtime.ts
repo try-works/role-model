@@ -3770,6 +3770,91 @@ export async function runTrackBShadowPipeline(
     }),
   );
   const signalRecord = signals as Record<string, unknown>;
+  // R16 forbids us from inventing a trajectory merely to complete an otherwise
+  // finalized replay/evaluation join.  The extension's bounded degradation
+  // receipt is therefore a non-learning outcome, not missing provenance or a
+  // reason to affect the baseline route.  Preserve the evidence already
+  // collected, make the unavailable advisory explicit, and stop before profile
+  // or knowledge mutation.
+  if (
+    signalRecord.schemaVersion === "role-model.degradation-receipt.v1" &&
+    signalRecord.degraded === true &&
+    signalRecord.capability === "signals:analyze-finalized-evaluation" &&
+    signalRecord.mode === "omit_signals"
+  ) {
+    const advisoryNowMs = Date.now();
+    const advisoryAuthorization = createTrackBRouteAdvisoryAuthorization({
+      authoritySecret: evaluationAuthoritySecret,
+      keyId: `runtime:${input.requestId}`,
+      issuedAtMs: advisoryNowMs,
+      expiresAtMs: advisoryNowMs + 60_000,
+      claims: {
+        baselineDecisionId: input.sourceDecisionId,
+        channel: input.channel,
+        scope: input.scope,
+        authorizationEpoch: input.authorizationEpoch,
+        routePackage: input.routePackage,
+        profileSnapshotIds: [],
+        candidateId: null,
+        advisoryState: "unavailable",
+        confidence: 0,
+      },
+    });
+    const advisory = resolveTrackBRouteAdvisory({
+      baselineDecisionId: input.sourceDecisionId,
+      channel: input.channel,
+      scope: input.scope,
+      authorizationEpoch: input.authorizationEpoch,
+      routePackage: input.routePackage,
+      profileSnapshotIds: [],
+      candidateId: null,
+      advisoryState: "unavailable",
+      confidence: 0,
+      nowMs: advisoryNowMs,
+      authorization: advisoryAuthorization,
+      authorizationValidator: (authorization, expected, nowMs) =>
+        verifyTrackBRouteAdvisoryAuthorization(authorization, evaluationAuthoritySecret, {
+          expected,
+          nowMs,
+        }),
+    });
+    const candidate = {
+      id: null,
+      state: "insufficient_trajectory_evidence",
+      refusalCode: "R16_TRAJECTORY_EVIDENCE_UNAVAILABLE",
+      productionEffects: {
+        providerCalls: 0,
+        promptMutations: 0,
+        routeMutations: 0,
+        weightMutations: 0,
+        activeProfileMutations: 0,
+      },
+    };
+    return {
+      replay,
+      evaluation: persistedEvaluation,
+      signals,
+      profile: {
+        state: "not_run",
+        reason: "R16_TRAJECTORY_EVIDENCE_UNAVAILABLE",
+      },
+      candidate,
+      advisory,
+      productionState: structuredClone(input.productionState),
+      receipt: {
+        schemaVersion: "role-model.track-b-shadow-pipeline-receipt.v1",
+        mode: "shadow",
+        requestId: input.requestId,
+        providerCalls: 0,
+        productionMutation: false,
+        candidateId: null,
+        advisoryDisposition: advisory.disposition,
+        advisoryId: advisory.advisoryId,
+        decisionAdvice: structuredClone(advisory.decisionAdvice),
+        learningDisposition: "insufficient_trajectory_evidence",
+      },
+    };
+  }
   if (
     signalRecord.routeDecisionId !== replayForKnowledge.sourceDecisionId ||
     signalRecord.graphRef !== replayForKnowledge.sourceGraphRef ||
