@@ -2653,6 +2653,55 @@ export interface TrackBShadowPipelineInput {
   readonly occurrence?: Readonly<{ occurrenceId: string; contentId: string }>;
 }
 
+export interface TrackBSemanticEvaluationCriteria {
+  readonly schemaVersion: "role-model.semantic-criteria.v1";
+  readonly requiredTerms: readonly string[];
+  readonly forbiddenTerms?: readonly string[];
+  readonly minOutputChars?: number;
+}
+
+export function normalizeTrackBSemanticEvaluationCriteria(
+  value: unknown,
+): TrackBSemanticEvaluationCriteria {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("semantic evaluation criteria are required");
+  }
+  const record = value as Record<string, unknown>;
+  if (record.schemaVersion !== "role-model.semantic-criteria.v1") {
+    throw new Error("unsupported semantic evaluation criteria schema");
+  }
+  const normalizeTerms = (raw: unknown, field: string, allowEmpty: boolean): readonly string[] => {
+    if (!Array.isArray(raw) || (!allowEmpty && raw.length === 0) || raw.length > 32) {
+      throw new Error(`semantic evaluation criteria ${field} are invalid`);
+    }
+    const terms = raw.map((item) => {
+      if (typeof item !== "string" || !item.trim() || Buffer.byteLength(item, "utf8") > 512) {
+        throw new Error(`semantic evaluation criteria ${field} are invalid`);
+      }
+      return item.trim().toLocaleLowerCase("en-US");
+    });
+    if (new Set(terms).size !== terms.length) {
+      throw new Error(`semantic evaluation criteria ${field} contain duplicates`);
+    }
+    return terms;
+  };
+  const requiredTerms = normalizeTerms(record.requiredTerms, "requiredTerms", false);
+  const forbiddenTerms = normalizeTerms(record.forbiddenTerms ?? [], "forbiddenTerms", true);
+  if (record.minOutputChars !== undefined && typeof record.minOutputChars !== "number") {
+    throw new Error("semantic evaluation criteria minOutputChars is invalid");
+  }
+  const minOutputChars: number = record.minOutputChars ?? 1;
+  if (!Number.isSafeInteger(minOutputChars) || minOutputChars < 1 || minOutputChars > 65_536) {
+    throw new Error("semantic evaluation criteria minOutputChars is invalid");
+  }
+  return {
+    schemaVersion: "role-model.semantic-criteria.v1",
+    requiredTerms,
+    ...(forbiddenTerms.length ? { forbiddenTerms } : {}),
+    ...(minOutputChars !== 1 ? { minOutputChars } : {}),
+  };
+}
+
 export interface TrackBVariantIdentity {
   readonly endpointId: string;
   readonly modelId: string;
@@ -2897,24 +2946,25 @@ export async function runTrackBShadowPipeline(
     }),
     digest: replayDigest,
   };
-  const scorerSetVersion = "run96-routing-shadow-v1";
+  const scorerSetVersion = "run96-routing-shadow-v2";
   const scorer = {
     manifestVersion: 2,
-    id: "run96-exact",
+    id: "run96-semantic-criteria",
     version: "1",
-    digest: `sha256:${createHash("sha256").update("run96-routing-shadow-exact-v1").digest("hex")}`,
+    digest: `sha256:${createHash("sha256").update("run96-routing-shadow-semantic-criteria-v1").digest("hex")}`,
     scorerSetVersion,
-    algorithm: "exact_match",
+    algorithm: "required_terms",
     dimensions: ["correctness"],
     range: { min: 0, max: 1 },
     direction: "higher_is_better",
-    requiredInputs: ["outputRef"],
+    requiredInputs: ["outputRef", "evaluationCriteria"],
   };
   await runtime.invoke("evaluation-core", {
     ...envelope("evaluation:register-scorer", scorer),
   });
   const rolloutRows = [sourceRollout, ...counterfactualRollouts];
   const trialIds: string[] = [];
+  const completedRollouts: Array<{ rollout: Record<string, unknown>; score: number }> = [];
   for (const [index, rollout] of rolloutRows.entries()) {
     const jobId = input.evaluationJobIds?.[index] ?? `evaluation:${input.requestId}:${index}`;
     if (typeof jobId !== "string" || !jobId) {
@@ -2958,16 +3008,16 @@ export async function runTrackBShadowPipeline(
       throw new Error("durable routing-shadow trial lease failed");
     }
     const evaluationCase = input.evaluationCases[index % input.evaluationCases.length] ?? {};
-    const expected = typeof evaluationCase.expected === "string" && evaluationCase.expected
-      ? evaluationCase.expected
-      : null;
+    const evaluationCriteria = normalizeTrackBSemanticEvaluationCriteria(
+      evaluationCase.evaluationCriteria,
+    );
     const independentlyObservedActual = typeof rollout.evaluationActual === "string" && rollout.evaluationActual
       ? rollout.evaluationActual
       : typeof evaluationCase.actual === "string" && evaluationCase.actual
         ? evaluationCase.actual
         : null;
-    if (!expected || !independentlyObservedActual) {
-      throw new Error("R14_INDEPENDENT_EVIDENCE_REQUIRED: durable routing evaluation requires expected and observed evidence");
+    if (!independentlyObservedActual) {
+      throw new Error("R14_INDEPENDENT_EVIDENCE_REQUIRED: durable routing evaluation requires semantic criteria and observed evidence");
     }
     // Do not derive the score input from a success/failure status.  A replay may
     // execute successfully while still failing an independently specified task
@@ -2977,8 +3027,8 @@ export async function runTrackBShadowPipeline(
     const execution = await runtime.invoke("evaluation-runner-local", {
       ...envelope("evaluation:execute-trial", {
         trialId: trial.trialId,
-        expected,
         actual,
+        evaluationCriteria,
         outputRef,
         outputDigest: (rollout.outcome as Record<string, unknown> | undefined)?.outcomeDigest ?? input.sourceGraphRef,
         stdoutRef: outputRef,
@@ -3018,6 +3068,15 @@ export async function runTrackBShadowPipeline(
         }),
       });
     }
+    const correctness = (execution.scores as Record<string, unknown>[]).find(
+      (score) => score.dimension === "correctness" &&
+        score.scorerId === scorer.id &&
+        score.scorerVersion === scorer.version,
+    );
+    if (!correctness || !Number.isFinite(correctness.score)) {
+      throw new Error("durable semantic evaluation did not produce a correctness score");
+    }
+    completedRollouts.push({ rollout, score: Number(correctness.score) });
     trialIds.push(trial.trialId);
   }
   const holdout = {
@@ -3181,25 +3240,15 @@ export async function runTrackBShadowPipeline(
     digest: profileRecord.digest,
     effects: profileRecord.effects,
   };
-  const scoredRollouts = rolloutRows.map((rollout, index) => {
+  const scoredRollouts = completedRollouts.map(({ rollout, score }) => {
     if (typeof rollout.evidenceRef !== "string" || !rollout.evidenceRef) {
       throw new Error("routing-shadow rollout evidence references are required");
     }
-    const evaluationCase = input.evaluationCases[index % input.evaluationCases.length] ?? {};
-    const expected = typeof evaluationCase.expected === "string" ? evaluationCase.expected : null;
-    const actual = typeof rollout.evaluationActual === "string"
-      ? rollout.evaluationActual
-      : typeof evaluationCase.actual === "string"
-        ? evaluationCase.actual
-        : null;
-    if (!expected || !actual) {
-      throw new Error("R14_INDEPENDENT_EVIDENCE_REQUIRED: rollout score evidence is incomplete");
-    }
     return {
       evidenceRef: rollout.evidenceRef,
-      // This is the same bounded independent value supplied to Runner Local,
-      // not a proxy derived from the transport status.
-      score: Number(actual === expected),
+      // Derived only from the durable Runner Local semantic scorer receipt,
+      // never from a transport status or output equality proxy.
+      score,
     };
   });
   const positive = scoredRollouts.filter((rollout) => rollout.score === 1);

@@ -131,6 +131,7 @@ test("Run96 S5 RED: stale and unavailable advisory evidence remains visible whil
 
 test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather than the legacy aggregate evaluator", async () => {
   const calls: Array<{ id: string; capability: unknown }> = [];
+  let scorerRegistration: unknown;
   let signalInput: Record<string, unknown> | undefined;
   let knowledgeInput: Record<string, unknown> | undefined;
   const trialIds = ["trial:source-96", "trial:counterfactual-96"];
@@ -141,6 +142,9 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
       {
         async invoke(id, envelope) {
           calls.push({ id, capability: envelope.capability });
+          if (id === "evaluation-core" && envelope.capability === "evaluation:register-scorer") {
+            scorerRegistration = envelope.value;
+          }
           if (id === "evaluation-runner-local" && envelope.capability === "evaluation:run-local") {
             throw new Error("legacy aggregate evaluation is prohibited");
           }
@@ -165,6 +169,7 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
             return trialId ? [{ trialId }] : [];
           }
           if (id === "evaluation-runner-local" && envelope.capability === "evaluation:execute-trial") {
+            const actual = (envelope.value as Record<string, unknown>).actual;
             return {
               outputRef: "artifact:evaluated-output-96",
               outputDigest: "sha256:evaluated-output-96",
@@ -172,7 +177,15 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
               stderrRef: "artifact:evaluated-stderr-96",
               exitCode: 0,
               measurements: { elapsedMs: 1, outputBytes: 1 },
-              scores: [{ dimension: "correctness", score: 1, confidence: 1, source: "deterministic" }],
+              scores: [{
+                scorerId: "run96-semantic-criteria",
+                scorerVersion: "1",
+                scorerDigest: "sha256:semantic-criteria",
+                dimension: "correctness",
+                score: actual === "success" ? 1 : 0,
+                confidence: 1,
+                source: "deterministic_semantic_criteria",
+              }],
             };
           }
           if (id === "evaluation-core" && envelope.capability === "evaluation:claim-trial") {
@@ -242,7 +255,13 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
         prefix: [],
         counterfactuals: [{ id: "candidate:counterfactual-96", suffix: [] }],
         comparableEvidence,
-        evaluationCases: [{ id: "case:shadow-96", expected: "success", actual: "success" }],
+        evaluationCases: [{
+          id: "case:shadow-96",
+          evaluationCriteria: {
+            schemaVersion: "role-model.semantic-criteria.v1",
+            requiredTerms: ["success"],
+          },
+        }],
         trajectoryEvents: [],
       },
     ),
@@ -265,6 +284,15 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
       { id: "evaluation-core", capability: "evaluation:read-comparison-group" },
     ]),
   );
+  expect(scorerRegistration).toBeDefined();
+  // R14: a source/candidate output hash comparison is useful integrity evidence,
+  // but cannot be the evaluation gate by itself.  The supervised pipeline must
+  // register a bounded semantic criterion scorer instead of exact_match.
+  expect(scorerRegistration).toMatchObject({
+    id: "run96-semantic-criteria",
+    algorithm: "required_terms",
+    requiredInputs: ["outputRef", "evaluationCriteria"],
+  });
   expect(calls).not.toContainEqual({ id: "evaluation-runner-local", capability: "evaluation:run-local" });
   expect(calls).toContainEqual({ id: "trajectory-signals", capability: "signals:analyze-finalized-evaluation" });
   expect(calls).toContainEqual({ id: "profile-learner", capability: "profile:estimate-finalized-evaluation" });
@@ -300,7 +328,7 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
   });
 });
 
-test("Run96 S4 RED: durable replay evaluation preserves independently supplied digest evidence instead of deriving a synthetic success equality", async () => {
+test("Run96 S4 RED: durable replay evaluation sends the same bounded semantic criteria to source and counterfactual trials", async () => {
   const executionInputs: Record<string, unknown>[] = [];
   const trialIds = ["trial:source-digest", "trial:counterfactual-digest"];
   await runTrackBShadowPipeline(
@@ -328,7 +356,7 @@ test("Run96 S4 RED: durable replay evaluation preserves independently supplied d
             stderrRef: "artifact:stderr-digest",
             exitCode: 0,
             measurements: { elapsedMs: 1, outputBytes: 1 },
-            scores: [{ scorerId: "run96-exact", scorerVersion: "1", scorerDigest: "sha256:scorer", dimension: "correctness", score: 0, confidence: 1, source: "deterministic" }],
+            scores: [{ scorerId: "run96-semantic-criteria", scorerVersion: "1", scorerDigest: "sha256:scorer", dimension: "correctness", score: 0, confidence: 1, source: "deterministic_semantic_criteria" }],
           };
         }
         if (id === "evaluation-core" && ["evaluation:submit-trial-result", "evaluation:record-trial-score"].includes(String(envelope.capability))) return { accepted: true };
@@ -361,7 +389,7 @@ test("Run96 S4 RED: durable replay evaluation preserves independently supplied d
           reasoningEffort: "high",
           evidenceRef: "artifact:source-digest",
           artifactRef: "artifact:source-output-digest",
-          evaluationActual: "sha256:source-output-digest",
+          evaluationActual: "The source output satisfies the required semantic criterion.",
           outcome: { status: "success", outcomeDigest: "sha256:source-outcome-digest" },
         },
         counterfactuals: [{
@@ -373,7 +401,7 @@ test("Run96 S4 RED: durable replay evaluation preserves independently supplied d
           reasoningEffort: "max",
           evidenceRef: "artifact:counterfactual-digest",
           artifactRef: "artifact:counterfactual-output-digest",
-          evaluationActual: "sha256:counterfactual-output-digest",
+          evaluationActual: "The counterfactual output is independently observed.",
           outcome: { status: "success", outcomeDigest: "sha256:counterfactual-outcome-digest" },
         }],
         candidateSet: [
@@ -381,14 +409,37 @@ test("Run96 S4 RED: durable replay evaluation preserves independently supplied d
           { routePackage: "candidate:counterfactual-digest", endpointId: "endpoint:counterfactual-digest" },
         ],
       },
-      evaluationCases: [{ expected: "sha256:independent-golden-digest" }],
+      evaluationCases: [{
+        evaluationCriteria: {
+          schemaVersion: "role-model.semantic-criteria.v1",
+          requiredTerms: ["output"],
+          forbiddenTerms: ["credential"],
+          minOutputChars: 12,
+        },
+      }],
       trajectoryEvents: [],
     },
   );
 
   expect(executionInputs).toHaveLength(2);
   expect(executionInputs).toEqual([
-    expect.objectContaining({ expected: "sha256:independent-golden-digest", actual: "sha256:source-output-digest" }),
-    expect.objectContaining({ expected: "sha256:independent-golden-digest", actual: "sha256:counterfactual-output-digest" }),
+    expect.objectContaining({
+      actual: "The source output satisfies the required semantic criterion.",
+      evaluationCriteria: {
+        schemaVersion: "role-model.semantic-criteria.v1",
+        requiredTerms: ["output"],
+        forbiddenTerms: ["credential"],
+        minOutputChars: 12,
+      },
+    }),
+    expect.objectContaining({
+      actual: "The counterfactual output is independently observed.",
+      evaluationCriteria: {
+        schemaVersion: "role-model.semantic-criteria.v1",
+        requiredTerms: ["output"],
+        forbiddenTerms: ["credential"],
+        minOutputChars: 12,
+      },
+    }),
   ]);
 });

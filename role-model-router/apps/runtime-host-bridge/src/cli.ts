@@ -38,6 +38,7 @@ import {
   createRun88RuntimeCorrelation,
   createRuntimeRequestCorrelationId,
   createTrackBPostObservationOutbox,
+  normalizeTrackBSemanticEvaluationCriteria,
   resolveManagedArtifactKeyFiles,
   runTrackBPostObservation,
   runTrackBPostObservationWithContribution,
@@ -1233,12 +1234,9 @@ export async function main(): Promise<void> {
               samplingProfileId: "deterministic-v1",
             };
           });
-          const expectedOutputSha256 = typeof body.expectedOutputSha256 === "string"
-            ? body.expectedOutputSha256.trim().replace(/^sha256:/, "")
-            : "";
-          if (!/^[a-f0-9]{64}$/i.test(expectedOutputSha256)) {
-            throw new Error("supervised replay requires an independently supplied expectedOutputSha256");
-          }
+          const evaluationCriteria = normalizeTrackBSemanticEvaluationCriteria(
+            body.evaluationCriteria,
+          );
           const sourceResponse = sourceCapture.response && typeof sourceCapture.response === "object"
             ? sourceCapture.response as Record<string, unknown>
             : null;
@@ -1439,6 +1437,7 @@ export async function main(): Promise<void> {
                 return {
                   candidate,
                   replayRequestId: dispatchedCandidate?.replayRequestId ?? recoveredRequestId,
+                  output,
                   outputSha256: createHash("sha256").update(output, "utf8").digest("hex"),
                 };
               }));
@@ -1476,11 +1475,11 @@ export async function main(): Promise<void> {
                     effortSource: sourceCapture.effortSource ?? "none",
                     evidenceRef: sourceRootArtifactId,
                     artifactRef: sourceRootArtifactId,
-                    evaluationActual: sourceOutputSha256,
+                    evaluationActual: sourceOutput,
                     propensity: 1,
                     outcome: { outcomeId: `outcome:source:${requestId}`, outcomeRef: sourceRootArtifactId, outcomeDigest: `sha256:${sourceOutputSha256}`, source: "observed", status: "success" },
                   },
-                  counterfactuals: counterfactuals.map(({ candidate, replayRequestId, outputSha256 }) => ({
+                  counterfactuals: counterfactuals.map(({ candidate, replayRequestId, output, outputSha256 }) => ({
                     rolloutId: `counterfactual:${replayRequestId}`,
                     routePackage: candidate.endpointId,
                     endpointId: candidate.endpointId,
@@ -1490,7 +1489,7 @@ export async function main(): Promise<void> {
                     effortSource: "variant",
                     evidenceRef: `route-capture:${replayRequestId}-branch`,
                     artifactRef: `route-capture:${replayRequestId}-branch`,
-                    evaluationActual: outputSha256,
+                    evaluationActual: output,
                     propensity: 1,
                     outcome: { outcomeId: `outcome:${replayRequestId}`, outcomeRef: `route-capture:${replayRequestId}-branch`, outcomeDigest: `sha256:${outputSha256}`, source: "replay", status: "success" },
                   })),
@@ -1501,7 +1500,7 @@ export async function main(): Promise<void> {
                 },
                 evaluationCases: Array.from({ length: 1 + counterfactuals.length }, (_, index) => ({
                   id: `replay:${String(replayJobId)}:${index}`,
-                  expected: expectedOutputSha256,
+                  evaluationCriteria,
                 })),
                 trajectoryEvents: [],
                 evaluationJobIds: [
