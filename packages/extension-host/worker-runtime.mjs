@@ -55,7 +55,7 @@ function persistBusinessOutput(envelope, result) {
       envelope.scope,
       resultHash,
       byteLength,
-      byteLength <= MAX_INLINE_OUTPUT_BYTES ? resultJson : null,
+      resultJson,
       new Date().toISOString(),
     );
   outputDatabase
@@ -76,9 +76,32 @@ function persistBusinessOutput(envelope, result) {
   });
   const businessOutput =
     result && typeof result === "object" && !Array.isArray(result) ? result : { value: result };
-  return {
+  const inlineResponse = {
     ...businessOutput,
     businessOutput,
+    durableLocator,
+    evidenceRef: `extension-output:${outputKey}`,
+    readCapability: "extension-output:read",
+  };
+  const inlineBusinessOutput =
+    byteLength <= MAX_INLINE_OUTPUT_BYTES &&
+    Buffer.byteLength(
+      JSON.stringify({
+        type: "result",
+        requestId: envelope.requestId,
+        result: inlineResponse,
+      }),
+      "utf8",
+    ) <= MAX_INLINE_OUTPUT_BYTES
+      ? businessOutput
+      : Object.freeze({
+          transferState: "externalized",
+          resultHash,
+          byteLength,
+        });
+  return {
+    ...inlineBusinessOutput,
+    businessOutput: inlineBusinessOutput,
     durableLocator,
     evidenceRef: `extension-output:${outputKey}`,
     readCapability: "extension-output:read",
@@ -149,10 +172,7 @@ process.stdin.on("data", async (chunk) => {
         result = readBusinessOutput(message.envelope);
       } else {
         const value = await extension.run(message.envelope);
-        result =
-          message.envelope.capability === "health:probe"
-            ? value
-            : persistBusinessOutput(message.envelope, value);
+        result = persistBusinessOutput(message.envelope, value);
       }
       const response = { type: "result", requestId: message.requestId, result };
       retained.set(message.requestId, response);
