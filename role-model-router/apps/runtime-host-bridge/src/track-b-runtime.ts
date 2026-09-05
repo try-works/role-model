@@ -1712,7 +1712,13 @@ export async function runSupervisedReplay(input: {
       fence: schedulerClaim.fence,
       result: { replayJobId: jobId, state },
     });
-    if (!receipt?.completed) throw new Error("replay scheduler did not accept the completed supervision receipt");
+    if (!receipt?.completed) {
+      // Replay Core has already durably recorded the provider, branch, and
+      // evaluation receipts. An expired supervisory lease must be observable,
+      // but it must not turn that completed durable work into a false API
+      // failure or trigger a second provider dispatch on retry.
+      return { jobId, ...completed, schedulerState: "completion_not_accepted" };
+    }
   }
   return completed;
   } catch (error) {

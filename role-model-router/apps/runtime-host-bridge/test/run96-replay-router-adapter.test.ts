@@ -36,11 +36,13 @@ test("Run96 S3 RED: the public host uses authenticated scheduler intents that co
     ownerId: "runtime-host:test-96",
   });
 
-  await expect(scheduler.enqueue({
-    jobId: "intent:96",
-    replayJobId: "replay:96",
-    deadlineAtMs: 20_000,
-  })).resolves.toEqual({ accepted: true });
+  await expect(
+    scheduler.enqueue({
+      jobId: "intent:96",
+      replayJobId: "replay:96",
+      deadlineAtMs: 20_000,
+    }),
+  ).resolves.toEqual({ accepted: true });
   const claim = await scheduler.claim();
   if (!claim) throw new Error("expected scheduler replay intent claim");
   expect(claim).toMatchObject({
@@ -49,12 +51,14 @@ test("Run96 S3 RED: the public host uses authenticated scheduler intents that co
     leaseId: "intent:96:1",
     fence: 4,
   });
-  await expect(scheduler.complete({
-    jobId: claim.jobId,
-    leaseId: claim.leaseId,
-    fence: claim.fence,
-    result: { replayJobId: "replay:96", state: "awaiting_evaluation" },
-  })).resolves.toEqual({ completed: true });
+  await expect(
+    scheduler.complete({
+      jobId: claim.jobId,
+      leaseId: claim.leaseId,
+      fence: claim.fence,
+      result: { replayJobId: "replay:96", state: "awaiting_evaluation" },
+    }),
+  ).resolves.toEqual({ completed: true });
   expect(JSON.stringify(invocations)).not.toMatch(/content|prompt|credential|api[_-]?key/i);
 });
 
@@ -77,10 +81,12 @@ test("Run96 Phase5 RED: scheduler claims only the replay intent just enqueued by
 
   await scheduler.claim({ jobId: "replay-intent:expected" });
 
-  expect(invocations).toContainEqual(expect.objectContaining({
-    capability: "scheduler:claim-replay-intent",
-    value: { jobId: "replay-intent:expected" },
-  }));
+  expect(invocations).toContainEqual(
+    expect.objectContaining({
+      capability: "scheduler:claim-replay-intent",
+      value: { jobId: "replay-intent:expected" },
+    }),
+  );
 });
 
 test("Run96 S3 RED: the public host derives a bounded replay source attestation from a durable graph receipt", () => {
@@ -273,28 +279,36 @@ test("Run96 S3 RED: the host adapter returns only bounded numeric usage for Repl
     }),
   });
 
-  await expect(adapter.dispatch({
-    schemaVersion: "role-model.replay-dispatch.v1",
-    channel: "development",
-    scope: "tenant:one",
-    replayJobId: "replay:usage-96",
-    sourceGeneration: 4,
-    sourceDecisionId: "decision:source",
-    normalizedRequestRef: "artifact:request",
-    candidateEndpointId: "endpoint:counterfactual",
-    dispatchIdempotencyKey: "2222222222222222222222222222222222222222222222222222222222222222",
-    candidatePackage: {
-      endpointId: "endpoint:counterfactual",
-      modelId: "deepseek/deepseek-v4-pro",
-      reasoningEffort: "max",
-      promptAdapterId: "prompt:stable-v1",
+  await expect(
+    adapter.dispatch({
+      schemaVersion: "role-model.replay-dispatch.v1",
+      channel: "development",
+      scope: "tenant:one",
+      replayJobId: "replay:usage-96",
+      sourceGeneration: 4,
+      sourceDecisionId: "decision:source",
+      normalizedRequestRef: "artifact:request",
+      candidateEndpointId: "endpoint:counterfactual",
+      dispatchIdempotencyKey: "2222222222222222222222222222222222222222222222222222222222222222",
+      candidatePackage: {
+        endpointId: "endpoint:counterfactual",
+        modelId: "deepseek/deepseek-v4-pro",
+        reasoningEffort: "max",
+        promptAdapterId: "prompt:stable-v1",
+        toolPolicy: "deny",
+        experiencePackId: "experience:none",
+        samplingProfileId: "sampling:stable-v1",
+      },
+      budget: {
+        maxCandidates: 1,
+        maxProviderCalls: 1,
+        maxCostMicros: 5_000,
+        maxBytes: 16_384,
+        deadlineMs: 10_000,
+      },
       toolPolicy: "deny",
-      experiencePackId: "experience:none",
-      samplingProfileId: "sampling:stable-v1",
-    },
-    budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
-    toolPolicy: "deny",
-  })).resolves.toEqual({
+    }),
+  ).resolves.toEqual({
     dispatchReceiptId: "dispatch:usage-96",
     routerDecisionId: "decision:usage-96",
     providerResultRef: "artifact:provider-result-usage-96",
@@ -308,7 +322,13 @@ test("Run96 S3 RED: the host replay adapter fails closed for cross-boundary or c
     channel: "development",
     scope: "tenant:one",
     authorizationEpoch: 96,
-    dispatch: async () => ({ dispatchReceiptId: "x", routerDecisionId: "y", providerResultRef: "z", observedCostMicros: 0, observedResponseBytes: 0 }),
+    dispatch: async () => ({
+      dispatchReceiptId: "x",
+      routerDecisionId: "y",
+      providerResultRef: "z",
+      observedCostMicros: 0,
+      observedResponseBytes: 0,
+    }),
   });
   const base = {
     schemaVersion: "role-model.replay-dispatch.v1",
@@ -339,8 +359,12 @@ test("Run96 S3 RED: the host replay adapter fails closed for cross-boundary or c
     toolPolicy: "deny",
   };
   await expect(adapter.dispatch({ ...base, scope: "tenant:two" })).rejects.toThrow(/scope/i);
-  await expect(adapter.dispatch({ ...base, apiKey: "must-never-cross-ipc" })).rejects.toThrow(/credential|secret/i);
-  await expect(adapter.dispatch({ ...base, toolPolicy: "sandboxed_allowlist" })).rejects.toThrow(/tool/i);
+  await expect(adapter.dispatch({ ...base, apiKey: "must-never-cross-ipc" })).rejects.toThrow(
+    /credential|secret/i,
+  );
+  await expect(adapter.dispatch({ ...base, toolPolicy: "sandboxed_allowlist" })).rejects.toThrow(
+    /tool/i,
+  );
 });
 
 test("Run96 S3 RED: host orchestration persists router, graph, and evaluation receipts without giving Replay Core a transcript or credential", async () => {
@@ -390,7 +414,8 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
               sourceDecisionId: "decision:source-96",
               normalizedRequestRef: "artifact:request-96",
               candidateEndpointId: "endpoint:counterfactual",
-              dispatchIdempotencyKey: "4444444444444444444444444444444444444444444444444444444444444444",
+              dispatchIdempotencyKey:
+                "4444444444444444444444444444444444444444444444444444444444444444",
               candidatePackage: value.candidatePackages ?? {
                 endpointId: "endpoint:counterfactual",
                 modelId: "deepseek/deepseek-v4-pro",
@@ -474,18 +499,21 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
   });
 
   const supervisedInput: Parameters<typeof runSupervisedReplay>[0] & {
-    readonly prepareBranch: (request: Readonly<Record<string, unknown>>) => Promise<{ readonly branchRootRef: string }>;
+    readonly prepareBranch: (
+      request: Readonly<Record<string, unknown>>,
+    ) => Promise<{ readonly branchRootRef: string }>;
   } = {
-      runtime,
-      adapter,
-      requestId: "request:orchestrated",
-      channel: "development",
-      scope: "tenant:one",
-      authorizationEpoch: 96,
-      sourceAttestation,
-      idempotencyKey: "replay:orchestrated",
-      intent: "counterfactual_route",
-      candidatePackages: [{
+    runtime,
+    adapter,
+    requestId: "request:orchestrated",
+    channel: "development",
+    scope: "tenant:one",
+    authorizationEpoch: 96,
+    sourceAttestation,
+    idempotencyKey: "replay:orchestrated",
+    intent: "counterfactual_route",
+    candidatePackages: [
+      {
         endpointId: "endpoint:counterfactual",
         modelId: "deepseek/deepseek-v4-pro",
         reasoningEffort: "max",
@@ -493,52 +521,70 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
         toolPolicy: "deny",
         experiencePackId: "experience:none",
         samplingProfileId: "sampling:stable-v1",
-      }],
-      budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
-      leaseOwner: "scheduler:96",
-      leaseMs: 10_000,
-      scheduler: scheduler as never,
-      prepareBranch: async (request) => {
-        causalOrder.push("prepare");
-        expect(request).toEqual(expect.objectContaining({
+      },
+    ],
+    budget: {
+      maxCandidates: 1,
+      maxProviderCalls: 1,
+      maxCostMicros: 5_000,
+      maxBytes: 16_384,
+      deadlineMs: 10_000,
+    },
+    leaseOwner: "scheduler:96",
+    leaseMs: 10_000,
+    scheduler: scheduler as never,
+    prepareBranch: async (request) => {
+      causalOrder.push("prepare");
+      expect(request).toEqual(
+        expect.objectContaining({
           candidateEndpointId: "endpoint:counterfactual",
           sourceDecisionId: "decision:source-96",
-        }));
-        return { branchRootRef: "artifact:branch:orchestrated" };
-      },
-      appendBranch: async (request) => {
-        causalOrder.push("append");
-        branches.push(request);
-        return { branchRootRef: "artifact:branch:orchestrated" };
-      },
-      handoffEvaluation: async (request) => {
-        evaluationHandoffs.push(request);
-        return {
-          evaluationJobId: "evaluation:orchestrated",
-          source: request.sourceDecisionId,
-        };
-      },
+        }),
+      );
+      return { branchRootRef: "artifact:branch:orchestrated" };
+    },
+    appendBranch: async (request) => {
+      causalOrder.push("append");
+      branches.push(request);
+      return { branchRootRef: "artifact:branch:orchestrated" };
+    },
+    handoffEvaluation: async (request) => {
+      evaluationHandoffs.push(request);
+      return {
+        evaluationJobId: "evaluation:orchestrated",
+        source: request.sourceDecisionId,
+      };
+    },
   };
-  await expect(runSupervisedReplay(supervisedInput)).resolves.toMatchObject({ state: "awaiting_evaluation", evaluationJobId: "evaluation:orchestrated" });
+  await expect(runSupervisedReplay(supervisedInput)).resolves.toMatchObject({
+    state: "awaiting_evaluation",
+    evaluationJobId: "evaluation:orchestrated",
+  });
 
   expect(dispatches).toHaveLength(1);
   expect(causalOrder).toEqual(["prepare", "dispatch", "append"]);
-  expect(branches).toEqual([expect.objectContaining({ candidateEndpointId: "endpoint:counterfactual" })]);
+  expect(branches).toEqual([
+    expect.objectContaining({ candidateEndpointId: "endpoint:counterfactual" }),
+  ]);
   expect(evaluationHandoffs).toEqual([
     expect.objectContaining({
       replayJobId: "replay:orchestrated",
       sourceGeneration: 4,
       resultTraceIds: ["artifact:branch:orchestrated"],
-      resultBranches: [{
-        candidateEndpointId: "endpoint:counterfactual",
-        branchRootRef: "artifact:branch:orchestrated",
-      }],
+      resultBranches: [
+        {
+          candidateEndpointId: "endpoint:counterfactual",
+          branchRootRef: "artifact:branch:orchestrated",
+        },
+      ],
       candidates: [expect.objectContaining({ endpointId: "endpoint:counterfactual" })],
     }),
   ]);
-  expect(invocations.filter((item) => item.id === "background-evidence-scheduler").map((item) =>
-    (item.envelope as Record<string, unknown>).capability,
-  )).toEqual([
+  expect(
+    invocations
+      .filter((item) => item.id === "background-evidence-scheduler")
+      .map((item) => (item.envelope as Record<string, unknown>).capability),
+  ).toEqual([
     "scheduler:enqueue-replay-intent",
     "scheduler:claim-replay-intent",
     "scheduler:complete-replay-intent",
@@ -569,7 +615,8 @@ test("Run96 S3 RED: host orchestration preserves a bounded rate-limit failure be
               sourceDecisionId: "decision:source-failure",
               normalizedRequestRef: "artifact:request-failure",
               candidateEndpointId: "endpoint:counterfactual",
-              dispatchIdempotencyKey: "5555555555555555555555555555555555555555555555555555555555555555",
+              dispatchIdempotencyKey:
+                "5555555555555555555555555555555555555555555555555555555555555555",
               candidatePackage: {
                 endpointId: "endpoint:counterfactual",
                 modelId: "deepseek/deepseek-v4-pro",
@@ -579,13 +626,23 @@ test("Run96 S3 RED: host orchestration preserves a bounded rate-limit failure be
                 experiencePackId: "experience:none",
                 samplingProfileId: "sampling:stable-v1",
               },
-              budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
+              budget: {
+                maxCandidates: 1,
+                maxProviderCalls: 1,
+                maxCostMicros: 5_000,
+                maxBytes: 16_384,
+                deadlineMs: 10_000,
+              },
               toolPolicy: "deny",
             },
           };
         case "replay:record-provider-failure":
           providerFailure = envelope.value as Record<string, unknown>;
-          return { status: "retryable_failure", replayJobId: "replay:router-failure", candidateEndpointId: "endpoint:counterfactual" };
+          return {
+            status: "retryable_failure",
+            replayJobId: "replay:router-failure",
+            candidateEndpointId: "endpoint:counterfactual",
+          };
         default:
           throw new Error(`unexpected capability ${String(envelope.capability)}`);
       }
@@ -612,38 +669,54 @@ test("Run96 S3 RED: host orchestration preserves a bounded rate-limit failure be
     eligibleEndpointIds: ["endpoint:baseline", "endpoint:counterfactual"],
   });
 
-  await expect(runSupervisedReplay({
-    runtime,
-    adapter: {
-      protocolVersion: "role-model.router-replay-adapter.v1",
-      authenticated: true,
+  await expect(
+    runSupervisedReplay({
+      runtime,
+      adapter: {
+        protocolVersion: "role-model.router-replay-adapter.v1",
+        authenticated: true,
+        channel: "development",
+        scope: "tenant:one",
+        async dispatch() {
+          throw Object.assign(new Error("provider rate limit"), { code: "rate_limit" });
+        },
+      },
+      requestId: "request:router-failure",
       channel: "development",
       scope: "tenant:one",
-      async dispatch() { throw Object.assign(new Error("provider rate limit"), { code: "rate_limit" }); },
-    },
-    requestId: "request:router-failure",
-    channel: "development",
-    scope: "tenant:one",
-    authorizationEpoch: 96,
-    sourceAttestation,
-    idempotencyKey: "replay:router-failure",
-    intent: "counterfactual_route",
-    candidatePackages: [{
-      endpointId: "endpoint:counterfactual",
-      modelId: "deepseek/deepseek-v4-pro",
-      reasoningEffort: "max",
-      promptAdapterId: "prompt:stable-v1",
-      toolPolicy: "deny",
-      experiencePackId: "experience:none",
-      samplingProfileId: "sampling:stable-v1",
-    }],
-    budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
-    leaseOwner: "scheduler:router-failure",
-    leaseMs: 10_000,
-    prepareBranch: async () => ({ branchRootRef: "artifact:prepared-router-failure" }),
-    appendBranch: async () => { throw new Error("router failure must not append a branch"); },
-    handoffEvaluation: async () => { throw new Error("router failure must not hand off evaluation"); },
-  })).rejects.toThrow("provider rate limit");
+      authorizationEpoch: 96,
+      sourceAttestation,
+      idempotencyKey: "replay:router-failure",
+      intent: "counterfactual_route",
+      candidatePackages: [
+        {
+          endpointId: "endpoint:counterfactual",
+          modelId: "deepseek/deepseek-v4-pro",
+          reasoningEffort: "max",
+          promptAdapterId: "prompt:stable-v1",
+          toolPolicy: "deny",
+          experiencePackId: "experience:none",
+          samplingProfileId: "sampling:stable-v1",
+        },
+      ],
+      budget: {
+        maxCandidates: 1,
+        maxProviderCalls: 1,
+        maxCostMicros: 5_000,
+        maxBytes: 16_384,
+        deadlineMs: 10_000,
+      },
+      leaseOwner: "scheduler:router-failure",
+      leaseMs: 10_000,
+      prepareBranch: async () => ({ branchRootRef: "artifact:prepared-router-failure" }),
+      appendBranch: async () => {
+        throw new Error("router failure must not append a branch");
+      },
+      handoffEvaluation: async () => {
+        throw new Error("router failure must not hand off evaluation");
+      },
+    }),
+  ).rejects.toThrow("provider rate limit");
 
   expect(providerFailure).toMatchObject({
     jobId: "replay:router-failure",
@@ -655,52 +728,134 @@ test("Run96 S3 RED: host orchestration preserves a bounded rate-limit failure be
 });
 
 test("Run96 S3 regression: timeout retries while a partial provider result is terminal", async () => {
-  for (const [code, retryable] of [["timeout", true], ["partial_response", false]] as const) {
+  for (const [code, retryable] of [
+    ["timeout", true],
+    ["partial_response", false],
+  ] as const) {
     let providerFailure: Record<string, unknown> | null = null;
     const runtime = {
       async invoke(id: string, envelope: Record<string, unknown>) {
         expect(id).toBe("replay-core");
         switch (envelope.capability) {
-          case "replay:create-job": return { jobId: `replay:${code}` };
-          case "replay:claim-job": return { fenceToken: 7, leaseOwner: "scheduler:failure-kind" };
-          case "replay:prepare-dispatch": return {
-            status: "provider_dispatch",
-            envelope: {
-              schemaVersion: "role-model.replay-dispatch.v1", channel: "development", scope: "tenant:one",
-              replayJobId: `replay:${code}`, sourceGeneration: 4, sourceDecisionId: "decision:failure-kind",
-              normalizedRequestRef: "artifact:request-failure-kind", candidateEndpointId: "endpoint:counterfactual",
-              dispatchIdempotencyKey: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-              candidatePackage: { endpointId: "endpoint:counterfactual", modelId: "deepseek/deepseek-v4-pro", reasoningEffort: "max", promptAdapterId: "prompt:stable-v1", toolPolicy: "deny", experiencePackId: "experience:none", samplingProfileId: "sampling:stable-v1" },
-              budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 }, toolPolicy: "deny",
-            },
-          };
-          case "replay:record-provider-failure": providerFailure = envelope.value as Record<string, unknown>; return { status: retryable ? "retryable_failure" : "failed" };
-          default: throw new Error(`unexpected capability ${String(envelope.capability)}`);
+          case "replay:create-job":
+            return { jobId: `replay:${code}` };
+          case "replay:claim-job":
+            return { fenceToken: 7, leaseOwner: "scheduler:failure-kind" };
+          case "replay:prepare-dispatch":
+            return {
+              status: "provider_dispatch",
+              envelope: {
+                schemaVersion: "role-model.replay-dispatch.v1",
+                channel: "development",
+                scope: "tenant:one",
+                replayJobId: `replay:${code}`,
+                sourceGeneration: 4,
+                sourceDecisionId: "decision:failure-kind",
+                normalizedRequestRef: "artifact:request-failure-kind",
+                candidateEndpointId: "endpoint:counterfactual",
+                dispatchIdempotencyKey:
+                  "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                candidatePackage: {
+                  endpointId: "endpoint:counterfactual",
+                  modelId: "deepseek/deepseek-v4-pro",
+                  reasoningEffort: "max",
+                  promptAdapterId: "prompt:stable-v1",
+                  toolPolicy: "deny",
+                  experiencePackId: "experience:none",
+                  samplingProfileId: "sampling:stable-v1",
+                },
+                budget: {
+                  maxCandidates: 1,
+                  maxProviderCalls: 1,
+                  maxCostMicros: 5_000,
+                  maxBytes: 16_384,
+                  deadlineMs: 10_000,
+                },
+                toolPolicy: "deny",
+              },
+            };
+          case "replay:record-provider-failure":
+            providerFailure = envelope.value as Record<string, unknown>;
+            return { status: retryable ? "retryable_failure" : "failed" };
+          default:
+            throw new Error(`unexpected capability ${String(envelope.capability)}`);
         }
       },
     };
     const sourceAttestation = createReplaySourceAttestation({
-      channel: "development", scope: "tenant:one", authorizationEpoch: 96,
+      channel: "development",
+      scope: "tenant:one",
+      authorizationEpoch: 96,
       capture: {
-        schemaVersion: "role-model.route-capture-read.v2", scope: "tenant:one", rootArtifactId: "artifact:root-failure-kind",
-        routingDecisionId: "decision:failure-kind", endpointId: "endpoint:baseline",
-        trace: { generation: 4, readiness: "ready", rootOccurrenceId: "occurrence:root-failure-kind" },
-        replaySource: { schemaVersion: "role-model.route-capture-replay-source.v1", normalizedRequestRef: "artifact:request-failure-kind", sharedPrefixRef: "artifact:prefix-failure-kind", forkOccurrenceId: "occurrence:root-failure-kind", policySnapshotRef: "artifact:policy-failure-kind", capturePolicyRef: "artifact:capture-policy-failure-kind" },
+        schemaVersion: "role-model.route-capture-read.v2",
+        scope: "tenant:one",
+        rootArtifactId: "artifact:root-failure-kind",
+        routingDecisionId: "decision:failure-kind",
+        endpointId: "endpoint:baseline",
+        trace: {
+          generation: 4,
+          readiness: "ready",
+          rootOccurrenceId: "occurrence:root-failure-kind",
+        },
+        replaySource: {
+          schemaVersion: "role-model.route-capture-replay-source.v1",
+          normalizedRequestRef: "artifact:request-failure-kind",
+          sharedPrefixRef: "artifact:prefix-failure-kind",
+          forkOccurrenceId: "occurrence:root-failure-kind",
+          policySnapshotRef: "artifact:policy-failure-kind",
+          capturePolicyRef: "artifact:capture-policy-failure-kind",
+        },
       },
       eligibleEndpointIds: ["endpoint:baseline", "endpoint:counterfactual"],
     });
-    await expect(runSupervisedReplay({
-      runtime,
-      adapter: { protocolVersion: "role-model.router-replay-adapter.v1", authenticated: true, channel: "development", scope: "tenant:one", async dispatch() { throw Object.assign(new Error(`provider ${code}`), { code }); } },
-      requestId: `request:${code}`, channel: "development", scope: "tenant:one", authorizationEpoch: 96,
-      sourceAttestation, idempotencyKey: `replay:${code}`, intent: "counterfactual_route",
-      candidatePackages: [{ endpointId: "endpoint:counterfactual", modelId: "deepseek/deepseek-v4-pro", reasoningEffort: "max", promptAdapterId: "prompt:stable-v1", toolPolicy: "deny", experiencePackId: "experience:none", samplingProfileId: "sampling:stable-v1" }],
-      budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
-      leaseOwner: "scheduler:failure-kind", leaseMs: 10_000,
-      prepareBranch: async () => ({ branchRootRef: "artifact:prepared-failure-kind" }),
-      appendBranch: async () => { throw new Error("must not append failed provider result"); },
-      handoffEvaluation: async () => { throw new Error("must not evaluate failed provider result"); },
-    })).rejects.toThrow(`provider ${code}`);
+    await expect(
+      runSupervisedReplay({
+        runtime,
+        adapter: {
+          protocolVersion: "role-model.router-replay-adapter.v1",
+          authenticated: true,
+          channel: "development",
+          scope: "tenant:one",
+          async dispatch() {
+            throw Object.assign(new Error(`provider ${code}`), { code });
+          },
+        },
+        requestId: `request:${code}`,
+        channel: "development",
+        scope: "tenant:one",
+        authorizationEpoch: 96,
+        sourceAttestation,
+        idempotencyKey: `replay:${code}`,
+        intent: "counterfactual_route",
+        candidatePackages: [
+          {
+            endpointId: "endpoint:counterfactual",
+            modelId: "deepseek/deepseek-v4-pro",
+            reasoningEffort: "max",
+            promptAdapterId: "prompt:stable-v1",
+            toolPolicy: "deny",
+            experiencePackId: "experience:none",
+            samplingProfileId: "sampling:stable-v1",
+          },
+        ],
+        budget: {
+          maxCandidates: 1,
+          maxProviderCalls: 1,
+          maxCostMicros: 5_000,
+          maxBytes: 16_384,
+          deadlineMs: 10_000,
+        },
+        leaseOwner: "scheduler:failure-kind",
+        leaseMs: 10_000,
+        prepareBranch: async () => ({ branchRootRef: "artifact:prepared-failure-kind" }),
+        appendBranch: async () => {
+          throw new Error("must not append failed provider result");
+        },
+        handoffEvaluation: async () => {
+          throw new Error("must not evaluate failed provider result");
+        },
+      }),
+    ).rejects.toThrow(`provider ${code}`);
     expect(providerFailure).toMatchObject({ failure: { code, retryable } });
   }
 });
@@ -761,16 +916,24 @@ test("Run96 S3 RED: a completed idempotent replay returns its durable receipt wi
       sourceAttestation: attestation,
       idempotencyKey: "replay:idempotent",
       intent: "counterfactual_route",
-      candidatePackages: [{
-        endpointId: "endpoint:counterfactual",
-        modelId: "deepseek/deepseek-v4-pro",
-        reasoningEffort: "max",
-        promptAdapterId: "prompt:stable-v1",
-        toolPolicy: "deny",
-        experiencePackId: "experience:none",
-        samplingProfileId: "sampling:stable-v1",
-      }],
-      budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
+      candidatePackages: [
+        {
+          endpointId: "endpoint:counterfactual",
+          modelId: "deepseek/deepseek-v4-pro",
+          reasoningEffort: "max",
+          promptAdapterId: "prompt:stable-v1",
+          toolPolicy: "deny",
+          experiencePackId: "experience:none",
+          samplingProfileId: "sampling:stable-v1",
+        },
+      ],
+      budget: {
+        maxCandidates: 1,
+        maxProviderCalls: 1,
+        maxCostMicros: 5_000,
+        maxBytes: 16_384,
+        deadlineMs: 10_000,
+      },
       leaseOwner: "scheduler:96",
       leaseMs: 10_000,
       prepareBranch: async () => ({ branchRootRef: "must-not-run" }),
@@ -808,7 +971,8 @@ test("Run96 S3 RED: a late-cancelled replay never hands incomplete branches to E
               sourceDecisionId: "decision:source-cancelled-late",
               normalizedRequestRef: "artifact:request-cancelled-late",
               candidateEndpointId: "endpoint:counterfactual",
-              dispatchIdempotencyKey: "6666666666666666666666666666666666666666666666666666666666666666",
+              dispatchIdempotencyKey:
+                "6666666666666666666666666666666666666666666666666666666666666666",
               candidatePackage: {
                 endpointId: "endpoint:counterfactual",
                 modelId: "deepseek/deepseek-v4-pro",
@@ -818,7 +982,13 @@ test("Run96 S3 RED: a late-cancelled replay never hands incomplete branches to E
                 experiencePackId: "experience:none",
                 samplingProfileId: "sampling:stable-v1",
               },
-              budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
+              budget: {
+                maxCandidates: 1,
+                maxProviderCalls: 1,
+                maxCostMicros: 5_000,
+                maxBytes: 16_384,
+                deadlineMs: 10_000,
+              },
               toolPolicy: "deny",
             },
           };
@@ -839,7 +1009,11 @@ test("Run96 S3 RED: a late-cancelled replay never hands incomplete branches to E
       rootArtifactId: "artifact:root-cancelled-late",
       routingDecisionId: "decision:source-cancelled-late",
       endpointId: "endpoint:baseline",
-      trace: { generation: 4, readiness: "ready", rootOccurrenceId: "occurrence:root-cancelled-late" },
+      trace: {
+        generation: 4,
+        readiness: "ready",
+        rootOccurrenceId: "occurrence:root-cancelled-late",
+      },
     },
     normalizedRequestRef: "artifact:request-cancelled-late",
     sharedPrefixRef: "artifact:prefix-cancelled-late",
@@ -871,16 +1045,24 @@ test("Run96 S3 RED: a late-cancelled replay never hands incomplete branches to E
       sourceAttestation,
       idempotencyKey: "replay:cancelled-late",
       intent: "counterfactual_route",
-      candidatePackages: [{
-        endpointId: "endpoint:counterfactual",
-        modelId: "deepseek/deepseek-v4-pro",
-        reasoningEffort: "max",
-        promptAdapterId: "prompt:stable-v1",
-        toolPolicy: "deny",
-        experiencePackId: "experience:none",
-        samplingProfileId: "sampling:stable-v1",
-      }],
-      budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
+      candidatePackages: [
+        {
+          endpointId: "endpoint:counterfactual",
+          modelId: "deepseek/deepseek-v4-pro",
+          reasoningEffort: "max",
+          promptAdapterId: "prompt:stable-v1",
+          toolPolicy: "deny",
+          experiencePackId: "experience:none",
+          samplingProfileId: "sampling:stable-v1",
+        },
+      ],
+      budget: {
+        maxCandidates: 1,
+        maxProviderCalls: 1,
+        maxCostMicros: 5_000,
+        maxBytes: 16_384,
+        deadlineMs: 10_000,
+      },
       leaseOwner: "scheduler:cancelled-late",
       leaseMs: 10_000,
       prepareBranch: async () => ({ branchRootRef: "artifact:prepared-cancelled-late" }),
@@ -892,7 +1074,156 @@ test("Run96 S3 RED: a late-cancelled replay never hands incomplete branches to E
     }),
   ).resolves.toMatchObject({ jobId: "replay:cancelled-late", state: "cancelled" });
   expect(handoffCount).toBe(0);
-  expect(invocations.map((item) => (item.envelope as Record<string, unknown>).capability)).not.toContain(
-    "replay:record-evaluation-receipt",
-  );
+  expect(
+    invocations.map((item) => (item.envelope as Record<string, unknown>).capability),
+  ).not.toContain("replay:record-evaluation-receipt");
+});
+
+test("Run96 Phase5 RED: an expired scheduler receipt does not erase an already-durable replay completion", async () => {
+  const sourceAttestation = createReplaySourceAttestation({
+    channel: "development",
+    scope: "tenant:one",
+    authorizationEpoch: 96,
+    capture: {
+      schemaVersion: "role-model.route-capture-read.v2",
+      scope: "tenant:one",
+      rootArtifactId: "artifact:root-expired-scheduler",
+      routingDecisionId: "decision:source-expired-scheduler",
+      endpointId: "endpoint:baseline",
+      trace: {
+        generation: 4,
+        readiness: "ready",
+        rootOccurrenceId: "occurrence:root-expired-scheduler",
+      },
+    },
+    normalizedRequestRef: "artifact:request-expired-scheduler",
+    sharedPrefixRef: "artifact:prefix-expired-scheduler",
+    forkOccurrenceId: "occurrence:root-expired-scheduler",
+    policySnapshotRef: "artifact:policy-expired-scheduler",
+    capturePolicyRef: "artifact:capture-policy-expired-scheduler",
+    eligibleEndpointIds: ["endpoint:baseline", "endpoint:counterfactual"],
+  });
+  const runtime = {
+    async invoke(_id: string, envelope: Record<string, unknown>) {
+      switch (envelope.capability) {
+        case "replay:create-job":
+          return { jobId: "replay:expired-scheduler" };
+        case "replay:claim-job":
+          return { fenceToken: 1, leaseOwner: "scheduler:expired" };
+        case "replay:prepare-dispatch":
+          return {
+            status: "provider_dispatch",
+            envelope: {
+              schemaVersion: "role-model.replay-dispatch.v1",
+              channel: "development",
+              scope: "tenant:one",
+              replayJobId: "replay:expired-scheduler",
+              sourceGeneration: 4,
+              sourceDecisionId: "decision:source-expired-scheduler",
+              normalizedRequestRef: "artifact:request-expired-scheduler",
+              candidateEndpointId: "endpoint:counterfactual",
+              dispatchIdempotencyKey: "7".repeat(64),
+              candidatePackage: {
+                endpointId: "endpoint:counterfactual",
+                modelId: "deepseek/deepseek-v4-pro",
+                reasoningEffort: "max",
+                promptAdapterId: "prompt:stable-v1",
+                toolPolicy: "deny",
+                experiencePackId: "experience:none",
+                samplingProfileId: "sampling:stable-v1",
+              },
+              budget: {
+                maxCandidates: 1,
+                maxProviderCalls: 1,
+                maxCostMicros: 5_000,
+                maxBytes: 16_384,
+                deadlineMs: 10_000,
+              },
+              toolPolicy: "deny",
+            },
+          };
+        case "replay:record-provider-receipt":
+          return {
+            status: "append_recovery",
+            branchRequest: {
+              replayJobId: "replay:expired-scheduler",
+              candidateEndpointId: "endpoint:counterfactual",
+              dispatchReceiptId: "dispatch:expired-scheduler",
+            },
+          };
+        case "replay:record-branch-append":
+          return { status: "awaiting_evaluation" };
+        case "replay:record-evaluation-receipt":
+          return { state: "awaiting_evaluation", evaluationJobId: "evaluation:expired-scheduler" };
+        default:
+          throw new Error(`unexpected capability ${String(envelope.capability)}`);
+      }
+    },
+  };
+  const adapter = createRouterReplayAdapter({
+    channel: "development",
+    scope: "tenant:one",
+    authorizationEpoch: 96,
+    dispatch: async () => ({
+      dispatchReceiptId: "dispatch:expired-scheduler",
+      routerDecisionId: "decision:replay-expired-scheduler",
+      providerResultRef: "artifact:provider-expired-scheduler",
+      observedCostMicros: 0,
+      observedResponseBytes: 0,
+    }),
+  });
+  const scheduler = {
+    enqueue: async () => ({ accepted: true }),
+    claim: async () => ({
+      jobId: "intent:expired-scheduler",
+      payload: { replayJobId: "replay:expired-scheduler", scope: "tenant:one" },
+      leaseId: "lease:expired-scheduler",
+      fence: 1,
+      attempt: 1,
+      deadlineAtMs: 1,
+    }),
+    complete: async () => ({ completed: false }),
+    fail: async () => ({ failed: false }),
+  };
+  await expect(
+    runSupervisedReplay({
+      runtime,
+      adapter,
+      requestId: "request:expired-scheduler",
+      channel: "development",
+      scope: "tenant:one",
+      authorizationEpoch: 96,
+      sourceAttestation,
+      idempotencyKey: "replay:expired-scheduler",
+      intent: "counterfactual_route",
+      candidatePackages: [
+        {
+          endpointId: "endpoint:counterfactual",
+          modelId: "deepseek/deepseek-v4-pro",
+          reasoningEffort: "max",
+          promptAdapterId: "prompt:stable-v1",
+          toolPolicy: "deny",
+          experiencePackId: "experience:none",
+          samplingProfileId: "sampling:stable-v1",
+        },
+      ],
+      budget: {
+        maxCandidates: 1,
+        maxProviderCalls: 1,
+        maxCostMicros: 5_000,
+        maxBytes: 16_384,
+        deadlineMs: 10_000,
+      },
+      leaseOwner: "scheduler:expired",
+      leaseMs: 10_000,
+      scheduler,
+      prepareBranch: async () => ({ branchRootRef: "artifact:branch-expired-scheduler" }),
+      appendBranch: async () => ({ branchRootRef: "artifact:branch-expired-scheduler" }),
+      handoffEvaluation: async () => ({ evaluationJobId: "evaluation:expired-scheduler" }),
+    }),
+  ).resolves.toMatchObject({
+    jobId: "replay:expired-scheduler",
+    state: "awaiting_evaluation",
+    schedulerState: "completion_not_accepted",
+  });
 });
