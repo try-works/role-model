@@ -337,7 +337,9 @@ function assertDigest(value: string, label: string): string {
 }
 
 async function hashFile(filePath: string): Promise<string> {
-  return createHash("sha256").update(await readFile(filePath)).digest("hex");
+  return createHash("sha256")
+    .update(await readFile(filePath))
+    .digest("hex");
 }
 
 async function createFileArtifactBinding(
@@ -433,7 +435,10 @@ export async function createPackagedRuntimeArtifactClosure({
     throw new Error("Packaged artifact closure requires Track-B distribution v2");
   }
   const sidecar = requireTrackBManifestArtifact(manifest.sidecar, "sidecar");
-  const adapter = requireTrackBManifestArtifact(manifest.publicRuntimeAdapter, "public runtime adapter");
+  const adapter = requireTrackBManifestArtifact(
+    manifest.publicRuntimeAdapter,
+    "public runtime adapter",
+  );
   if (!adapter.routerRoot || !adapter.routerAssets?.length) {
     throw new Error("Packaged artifact closure router assets are missing");
   }
@@ -551,8 +556,16 @@ export async function verifyPackagedRuntimeArtifactClosure({
   await Promise.all([
     verifyPackagedArtifactBinding(releaseDir, trackB.manifest, "Track-B manifest"),
     verifyPackagedArtifactBinding(releaseDir, trackB.sidecar, "sidecar"),
-    verifyPackagedArtifactBinding(releaseDir, trackB.public_runtime_adapter, "public runtime adapter"),
-    verifyPackagedArtifactBinding(releaseDir, trackB.public_extension_host, "public extension host"),
+    verifyPackagedArtifactBinding(
+      releaseDir,
+      trackB.public_runtime_adapter,
+      "public runtime adapter",
+    ),
+    verifyPackagedArtifactBinding(
+      releaseDir,
+      trackB.public_extension_host,
+      "public extension host",
+    ),
     verifyPackagedArtifactBinding(releaseDir, trackB.worker, "worker runtime"),
     ...trackB.router_assets.map((asset, index) =>
       verifyPackagedArtifactBinding(releaseDir, asset, `router asset ${index + 1}`),

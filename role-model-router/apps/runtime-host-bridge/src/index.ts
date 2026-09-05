@@ -2532,17 +2532,20 @@ export function resolveBridgeExecutionCost(input: {
   const inputPer1M = input.pricing?.inputPer1M;
   const outputPer1M = input.pricing?.outputPer1M;
   if (
-    !Number.isSafeInteger(input.inputTokens) || input.inputTokens < 0 ||
-    !Number.isSafeInteger(input.outputTokens) || input.outputTokens < 0 ||
-    !Number.isFinite(inputPer1M) || (inputPer1M ?? -1) < 0 ||
-    !Number.isFinite(outputPer1M) || (outputPer1M ?? -1) < 0
+    !Number.isSafeInteger(input.inputTokens) ||
+    input.inputTokens < 0 ||
+    !Number.isSafeInteger(input.outputTokens) ||
+    input.outputTokens < 0 ||
+    !Number.isFinite(inputPer1M) ||
+    (inputPer1M ?? -1) < 0 ||
+    !Number.isFinite(outputPer1M) ||
+    (outputPer1M ?? -1) < 0
   ) {
     return null;
   }
   return {
     usd: roundTelemetryUsd(
-      ((input.inputTokens * (inputPer1M as number)) +
-        (input.outputTokens * (outputPer1M as number))) /
+      (input.inputTokens * (inputPer1M as number) + input.outputTokens * (outputPer1M as number)) /
         1_000_000,
     ),
     source: "catalogue_estimate",
@@ -15296,7 +15299,11 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         return;
       }
       try {
-        writeJson(response, 200, await options.runTrackBSupervisedReplay(await readJsonBody(request)));
+        writeJson(
+          response,
+          200,
+          await options.runTrackBSupervisedReplay(await readJsonBody(request)),
+        );
       } catch (error) {
         writeJson(response, 409, {
           error: error instanceof Error ? error.message : String(error),
@@ -15390,7 +15397,9 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       try {
         writeJson(response, 200, await options.dryRunStorageRetention(await readJsonBody(request)));
       } catch (error) {
-        writeJson(response, 400, { error: error instanceof Error ? error.message : "storage retention dry-run failed" });
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "storage retention dry-run failed",
+        });
       }
       return;
     }
@@ -22684,7 +22693,9 @@ export async function createRuntimeBridgeBackend(
     };
   };
   const listRouterDecisionData = async () =>
-    Promise.all(listTelemetryRequestRecords({ limit: DEFAULT_TELEMETRY_LIMIT }).map(toRouterDecisionData));
+    Promise.all(
+      listTelemetryRequestRecords({ limit: DEFAULT_TELEMETRY_LIMIT }).map(toRouterDecisionData),
+    );
   const listRouterDecisionPageData = async (
     query?: BridgeTelemetryQuery,
   ): Promise<BridgeRouterDecisionPage> => {
