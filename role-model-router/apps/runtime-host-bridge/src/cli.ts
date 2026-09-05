@@ -1262,9 +1262,9 @@ export async function main(): Promise<void> {
                 { endpointId: candidateEndpointId, executionTrafficClass: "replay" },
               );
               dispatched.set(candidateEndpointId, { execution, replayRequestId });
-              const observedCostUsd = execution.vendorMetadata?.costUsd;
+              const observedCostUsd = execution.replayCost?.usd;
               if (typeof observedCostUsd !== "number" || !Number.isFinite(observedCostUsd) || observedCostUsd < 0) {
-                throw new Error("replay provider execution did not return an authoritative cost measurement");
+                throw new Error("replay provider execution did not return a bounded cost receipt");
               }
               return {
                 dispatchReceiptId: `router-replay:${replayRequestId}`,

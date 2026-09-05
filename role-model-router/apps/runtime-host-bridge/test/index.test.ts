@@ -665,6 +665,29 @@ describe("runtime-host-bridge", () => {
     );
   });
 
+  test("Run96 Phase5 RED: derives an explicitly labelled catalogue estimate when the provider omits billed cost", () => {
+    expect(
+      typeof (bridge as { resolveBridgeExecutionCost?: unknown }).resolveBridgeExecutionCost,
+    ).toBe("function");
+
+    const cost = (
+      bridge as {
+        resolveBridgeExecutionCost: (input: {
+          vendorCostUsd?: number;
+          inputTokens: number;
+          outputTokens: number;
+          pricing?: { inputPer1M?: number; outputPer1M?: number } | null;
+        }) => unknown;
+      }
+    ).resolveBridgeExecutionCost({
+      inputTokens: 1_000,
+      outputTokens: 500,
+      pricing: { inputPer1M: 2, outputPer1M: 4 },
+    });
+
+    expect(cost).toEqual({ usd: 0.004, source: "catalogue_estimate" });
+  });
+
   test("builds QA bootstrap options with router surfaces and complete fixtures", () => {
     const readRouterSummary = async () => ({ section: "router-summary" });
     const readRouterConfig = async () => ({ section: "router-config" });

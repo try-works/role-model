@@ -2228,6 +2228,14 @@ export interface BridgeChatCompletionsExecutionResult {
     readonly costUsd?: number;
     readonly cacheUsed?: boolean;
   };
+  /**
+   * Bounded cost usable by Replay Core. Catalogue estimates are intentionally
+   * distinct from provider-billed cost and must never be reported as actuals.
+   */
+  readonly replayCost?: {
+    readonly usd: number;
+    readonly source: "vendor_actual" | "catalogue_estimate";
+  };
   readonly persistenceDegradation?: Readonly<{
     readonly schemaVersion: "role-model.degradation-receipt.v1";
     readonly degraded: true;
@@ -2501,6 +2509,44 @@ function telemetrySourceTypeFromEndpointKind(endpointKind: string): "local" | "r
 
 function finiteTelemetryNumber(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+/**
+ * Resolves the cost receipt Replay Core can budget after a provider response.
+ * Providers that do not expose billed cost remain replayable only when the
+ * selected catalogue gives finite input and output token prices. The estimate
+ * is deliberately labelled so it cannot be mistaken for vendor billing.
+ */
+export function resolveBridgeExecutionCost(input: {
+  readonly vendorCostUsd?: number;
+  readonly inputTokens: number;
+  readonly outputTokens: number;
+  readonly pricing?: {
+    readonly inputPer1M?: number | null;
+    readonly outputPer1M?: number | null;
+  } | null;
+}): { readonly usd: number; readonly source: "vendor_actual" | "catalogue_estimate" } | null {
+  if (Number.isFinite(input.vendorCostUsd) && (input.vendorCostUsd ?? -1) >= 0) {
+    return { usd: roundTelemetryUsd(input.vendorCostUsd as number), source: "vendor_actual" };
+  }
+  const inputPer1M = input.pricing?.inputPer1M;
+  const outputPer1M = input.pricing?.outputPer1M;
+  if (
+    !Number.isSafeInteger(input.inputTokens) || input.inputTokens < 0 ||
+    !Number.isSafeInteger(input.outputTokens) || input.outputTokens < 0 ||
+    !Number.isFinite(inputPer1M) || (inputPer1M ?? -1) < 0 ||
+    !Number.isFinite(outputPer1M) || (outputPer1M ?? -1) < 0
+  ) {
+    return null;
+  }
+  return {
+    usd: roundTelemetryUsd(
+      ((input.inputTokens * (inputPer1M as number)) +
+        (input.outputTokens * (outputPer1M as number))) /
+        1_000_000,
+    ),
+    source: "catalogue_estimate",
+  };
 }
 
 export function buildRuntimeTelemetrySnapshot(input: {
@@ -24276,11 +24322,21 @@ export async function createRuntimeBridgeBackend(
       emitTelemetryUpdate(bundle.requestId);
     }
 
+    const vendorCostUsd =
+      execution.normalized.vendorMetadata?.costUsd ??
+      execution.responseCapture.vendorMetadata?.costUsd;
+    const replayCost = resolveBridgeExecutionCost({
+      vendorCostUsd,
+      inputTokens: execution.normalized.usage.inputTokens,
+      outputTokens: execution.normalized.usage.outputTokens,
+      pricing: routed.catalogEconomicsByEndpointId[execution.target.endpointId] ?? null,
+    });
     return {
       routingDecisionId,
       execution,
       toolExecutionResult,
       effortReceipt: effectiveEffort,
+      ...(replayCost ? { replayCost } : {}),
       ...(persistenceDegradation ? { persistenceDegradation } : {}),
     };
   };
@@ -24863,6 +24919,7 @@ export async function createRuntimeBridgeBackend(
           toolExecutionResult,
           routingDecisionId,
           effortReceipt,
+          replayCost,
           persistenceDegradation,
         } = await executeBridgePlan(plan, requestId, body.stream, streamWriter, {
           requestOptions,
@@ -24931,6 +24988,7 @@ export async function createRuntimeBridgeBackend(
                 },
               }
             : {}),
+          ...(replayCost ? { replayCost } : {}),
           ...(persistenceDegradation ? { persistenceDegradation } : {}),
         };
         const trackBOperations = createTrackBOperations({
