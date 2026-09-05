@@ -31,7 +31,7 @@ export type DevelopmentVerificationCapability =
       sourceScopeId: string;
       destinationDeploymentIds: readonly string[];
       revocationEpoch: number;
-    }>; 
+    }>;
 
 export type DevelopmentVerificationTrustMaterial = Readonly<{
   keyId: string;
