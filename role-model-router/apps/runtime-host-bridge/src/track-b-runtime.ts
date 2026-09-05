@@ -1041,7 +1041,7 @@ export interface ReplayIntentClaim {
 
 export interface ReplayIntentScheduler {
   enqueue(input: Readonly<{ jobId: string; replayJobId: string; deadlineAtMs: number }>): Promise<{ accepted: boolean }>;
-  claim(): Promise<ReplayIntentClaim | null>;
+  claim(input?: Readonly<{ jobId: string }>): Promise<ReplayIntentClaim | null>;
   complete(input: Readonly<{
     jobId: string;
     leaseId: string;
@@ -1092,8 +1092,14 @@ export function createReplayIntentScheduler(options: {
       if (typeof result.accepted !== "boolean") throw new Error("replay scheduler enqueue receipt is invalid");
       return { accepted: result.accepted };
     },
-    async claim() {
-      const result = await invoke("scheduler:claim-replay-intent", {});
+    async claim(input) {
+      if (input !== undefined && (!input.jobId || !input.jobId.trim())) {
+        throw new Error("target replay scheduler intent is required");
+      }
+      const result = await invoke(
+        "scheduler:claim-replay-intent",
+        input === undefined ? {} : { jobId: input.jobId },
+      );
       if (result === null) return null;
       const payload = result.payload;
       const fence = result.fence;
@@ -1566,7 +1572,7 @@ export async function runSupervisedReplay(input: {
       replayJobId: jobId,
       deadlineAtMs: createdAtMs + deadlineMs,
     });
-    schedulerClaim = await input.scheduler.claim();
+    schedulerClaim = await input.scheduler.claim({ jobId: `replay-intent:${jobId}` });
     if (schedulerClaim === null) return { jobId, state: "queued", schedulerState: "deferred" };
     if (schedulerClaim.payload.replayJobId !== jobId || schedulerClaim.payload.scope !== input.scope) {
       throw new Error("scheduler replay intent does not match the supervised job");

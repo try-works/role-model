@@ -58,6 +58,31 @@ test("Run96 S3 RED: the public host uses authenticated scheduler intents that co
   expect(JSON.stringify(invocations)).not.toMatch(/content|prompt|credential|api[_-]?key/i);
 });
 
+test("Run96 Phase5 RED: scheduler claims only the replay intent just enqueued by this supervised run", async () => {
+  const invocations: Record<string, unknown>[] = [];
+  const scheduler = createReplayIntentScheduler({
+    runtime: {
+      async invoke(_id, envelope) {
+        invocations.push(envelope);
+        if (envelope.capability === "scheduler:claim-replay-intent") return null;
+        return { accepted: true };
+      },
+    },
+    requestId: "request:claim-specific-96",
+    channel: "development",
+    scope: "tenant:one",
+    authorizationEpoch: 96,
+    ownerId: "runtime-host:test-96",
+  });
+
+  await scheduler.claim({ jobId: "replay-intent:expected" });
+
+  expect(invocations).toContainEqual(expect.objectContaining({
+    capability: "scheduler:claim-replay-intent",
+    value: { jobId: "replay-intent:expected" },
+  }));
+});
+
 test("Run96 S3 RED: the public host derives a bounded replay source attestation from a durable graph receipt", () => {
   const attestation = createReplaySourceAttestation({
     channel: "development",
