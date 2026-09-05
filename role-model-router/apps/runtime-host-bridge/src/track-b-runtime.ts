@@ -1550,7 +1550,10 @@ export async function runSupervisedReplay(input: {
   );
   const jobId = typeof created.jobId === "string" ? created.jobId : null;
   if (!jobId) throw new Error("Replay Core did not return a durable replay job ID");
-  if (created.state === "complete") {
+  // `awaiting_evaluation` is already a durable terminal result for the replay
+  // dispatch pipeline. Reclaiming it can duplicate scheduler work (and, after a
+  // restart, a provider call) before Evaluation Core completes its separate job.
+  if (created.state === "complete" || created.state === "awaiting_evaluation") {
     if (typeof created.evaluationJobId !== "string" || !created.evaluationJobId) {
       throw new Error("completed replay is missing its durable evaluation receipt");
     }

@@ -948,6 +948,86 @@ test("Run96 S3 RED: a completed idempotent replay returns its durable receipt wi
   expect(invocations).toHaveLength(1);
 });
 
+test("Run96 Phase5 RED: an idempotent replay awaiting evaluation returns its durable receipt without reclaiming", async () => {
+  const invocations: Record<string, unknown>[] = [];
+  const runtime = {
+    async invoke(_id: string, envelope: Record<string, unknown>) {
+      invocations.push(envelope);
+      if (envelope.capability === "replay:create-job") {
+        return {
+          jobId: "replay:already-awaiting-evaluation",
+          state: "awaiting_evaluation",
+          evaluationJobId: "evaluation:already-awaiting-evaluation",
+        };
+      }
+      throw new Error("an awaiting evaluation replay must not be reclaimed");
+    },
+  };
+  const sourceAttestation = createReplaySourceAttestation({
+    channel: "development",
+    scope: "tenant:one",
+    authorizationEpoch: 96,
+    capture: {
+      schemaVersion: "role-model.route-capture-read.v2",
+      scope: "tenant:one",
+      rootArtifactId: "artifact:root-awaiting-evaluation",
+      routingDecisionId: "decision:source-awaiting-evaluation",
+      endpointId: "endpoint:baseline",
+      trace: { generation: 4, readiness: "ready", rootOccurrenceId: "occurrence:root-awaiting-evaluation" },
+      replaySource: {
+        schemaVersion: "role-model.route-capture-replay-source.v1",
+        normalizedRequestRef: "artifact:request-awaiting-evaluation",
+        sharedPrefixRef: "artifact:prefix-awaiting-evaluation",
+        forkOccurrenceId: "occurrence:root-awaiting-evaluation",
+        policySnapshotRef: "artifact:policy-awaiting-evaluation",
+        capturePolicyRef: "artifact:capture-policy-awaiting-evaluation",
+      },
+    },
+    eligibleEndpointIds: ["endpoint:baseline", "endpoint:counterfactual"],
+  });
+  const adapter = createRouterReplayAdapter({
+    channel: "development",
+    scope: "tenant:one",
+    authorizationEpoch: 96,
+    dispatch: async () => {
+      throw new Error("an awaiting evaluation replay must not dispatch");
+    },
+  });
+  await expect(
+    runSupervisedReplay({
+      runtime,
+      adapter,
+      requestId: "request:awaiting-evaluation",
+      channel: "development",
+      scope: "tenant:one",
+      authorizationEpoch: 96,
+      sourceAttestation,
+      idempotencyKey: "replay:awaiting-evaluation",
+      intent: "counterfactual_route",
+      candidatePackages: [{
+        endpointId: "endpoint:counterfactual",
+        modelId: "deepseek/deepseek-v4-pro",
+        reasoningEffort: "max",
+        promptAdapterId: "prompt:stable-v1",
+        toolPolicy: "deny",
+        experiencePackId: "experience:none",
+        samplingProfileId: "sampling:stable-v1",
+      }],
+      budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
+      leaseOwner: "scheduler:96",
+      leaseMs: 10_000,
+      prepareBranch: async () => ({ branchRootRef: "must-not-run" }),
+      appendBranch: async () => ({ branchRootRef: "must-not-run" }),
+      handoffEvaluation: async () => ({ evaluationJobId: "must-not-run" }),
+    }),
+  ).resolves.toMatchObject({
+    jobId: "replay:already-awaiting-evaluation",
+    state: "awaiting_evaluation",
+    evaluationJobId: "evaluation:already-awaiting-evaluation",
+  });
+  expect(invocations).toHaveLength(1);
+});
+
 test("Run96 S3 RED: a late-cancelled replay never hands incomplete branches to Evaluation Core", async () => {
   const invocations: Record<string, unknown>[] = [];
   let handoffCount = 0;
