@@ -91,6 +91,7 @@ describe("development verification capability", () => {
         authorization: lease,
         trustedPublicKey: publicKey,
         expectedKeyId: "run96-public-key",
+        requiredRevocationEpoch: 3,
         now: 1_780_000_000_001,
         destinationDeploymentIds: ["run96-dev-ingest"],
       }),
@@ -99,6 +100,22 @@ describe("development verification capability", () => {
       capability: "development_verification_upload",
       authorizationId: "auth-run96-public",
     });
+  });
+
+  test("rejects a signed lease after the independently supplied revocation epoch advances", () => {
+    const { lease, publicKey } = signedLease();
+    expect(() =>
+      negotiateDevelopmentVerificationCapability({
+        runtimeChannel: "development",
+        sourceScopeId: "standalone-runtime-dev",
+        authorization: lease,
+        trustedPublicKey: publicKey,
+        expectedKeyId: "run96-public-key",
+        requiredRevocationEpoch: 4,
+        now: 1_780_000_000_001,
+        destinationDeploymentIds: ["run96-dev-ingest"],
+      }),
+    ).toThrow(/revoked|epoch/i);
   });
 
   test("fails closed rather than enabling a stage runtime from a development lease", () => {
@@ -110,6 +127,7 @@ describe("development verification capability", () => {
         authorization: lease,
         trustedPublicKey: publicKey,
         expectedKeyId: "run96-public-key",
+        requiredRevocationEpoch: 3,
         now: 1_780_000_000_001,
         destinationDeploymentIds: ["run96-dev-ingest"],
       }),

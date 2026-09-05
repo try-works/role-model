@@ -103,6 +103,12 @@ export function negotiateDevelopmentVerificationCapability(input: {
   authorization: DevelopmentVerificationAuthorization | null;
   trustedPublicKey?: KeyObject | string;
   expectedKeyId?: string;
+  /**
+   * Current authorization state from the operator-controlled policy store.
+   * This deliberately must not be derived from the signed lease: an advanced
+   * epoch invalidates every older lease even while it remains well-formed.
+   */
+  requiredRevocationEpoch?: number;
   now?: number;
   destinationDeploymentIds?: readonly string[];
 }): DevelopmentVerificationCapability {
@@ -123,6 +129,18 @@ export function negotiateDevelopmentVerificationCapability(input: {
     "development verification deployment binding mismatch",
   );
   assert(typeof input.expectedKeyId === "string" && lease.signerKeyId === input.expectedKeyId, "development verification signer key mismatch");
+  const requiredRevocationEpoch = input.requiredRevocationEpoch;
+  if (
+    typeof requiredRevocationEpoch !== "number" ||
+    !Number.isSafeInteger(requiredRevocationEpoch) ||
+    requiredRevocationEpoch < 0
+  ) {
+    throw new Error("development verification current revocation epoch required");
+  }
+  assert(
+    lease.revocationEpoch === requiredRevocationEpoch,
+    "development verification authorization revoked or epoch mismatch",
+  );
   const trustedPublicKey = input.trustedPublicKey;
   assert(trustedPublicKey, "development verification trusted public key required");
   const now = input.now ?? Date.now();

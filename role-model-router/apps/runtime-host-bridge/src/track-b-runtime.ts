@@ -3983,6 +3983,7 @@ export function createOwnedTrackBSidecarSpec(options: {
   developmentVerificationLeaseFile?: string;
   developmentVerificationTrustKeyFile?: string;
   developmentVerificationDeploymentIds?: readonly string[];
+  developmentVerificationRevocationEpoch?: number;
   aggregateEndpoint?: string;
   aggregateScope?: string;
   aggregateCorrelationReleaseId?: string;
@@ -4043,6 +4044,13 @@ export function createOwnedTrackBSidecarSpec(options: {
             ? [
                 "--development-verification-deployment-ids",
                 options.developmentVerificationDeploymentIds.join(","),
+              ]
+            : []),
+          ...(Number.isSafeInteger(options.developmentVerificationRevocationEpoch) &&
+          (options.developmentVerificationRevocationEpoch ?? -1) >= 0
+            ? [
+                "--development-verification-revocation-epoch",
+                String(options.developmentVerificationRevocationEpoch),
               ]
             : []),
           ...(options.aggregateEndpoint ? ["--aggregate-endpoint", options.aggregateEndpoint] : []),

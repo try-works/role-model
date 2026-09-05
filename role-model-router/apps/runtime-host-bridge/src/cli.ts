@@ -827,6 +827,9 @@ export async function main(): Promise<void> {
       "development-verification-deployment-ids": {
         type: "string",
       },
+      "development-verification-revocation-epoch": {
+        type: "string",
+      },
       "recommendation-scope": {
         type: "string",
       },
@@ -1527,15 +1530,31 @@ export async function main(): Promise<void> {
         .split(",")
         .map((value) => value.trim())
         .filter(Boolean);
+      const developmentVerificationRevocationEpochRaw =
+        args.values["development-verification-revocation-epoch"] ??
+        process.env.ROLE_MODEL_DEVELOPMENT_VERIFICATION_REVOCATION_EPOCH;
+      const developmentVerificationRevocationEpoch =
+        developmentVerificationRevocationEpochRaw === undefined
+          ? undefined
+          : Number(developmentVerificationRevocationEpochRaw);
       const hasDevelopmentVerificationInput = Boolean(
         developmentVerificationLeaseFile ||
           developmentVerificationTrustKeyFile ||
-          developmentVerificationDeploymentIds.length > 0,
+          developmentVerificationDeploymentIds.length > 0 ||
+          developmentVerificationRevocationEpochRaw !== undefined,
       );
       if (runtimeChannel !== "development" && hasDevelopmentVerificationInput) {
         throw new Error("development verification capability is valid only for development runtimes");
       }
       if (hasDevelopmentVerificationInput) {
+        const requiredDevelopmentVerificationRevocationEpoch = developmentVerificationRevocationEpoch;
+        if (
+          typeof requiredDevelopmentVerificationRevocationEpoch !== "number" ||
+          !Number.isSafeInteger(requiredDevelopmentVerificationRevocationEpoch) ||
+          requiredDevelopmentVerificationRevocationEpoch < 0
+        ) {
+          throw new Error("development verification upload requires a non-negative current revocation epoch");
+        }
         if (
           !developmentVerificationLeaseFile ||
           !developmentVerificationTrustKeyFile ||
@@ -1544,7 +1563,7 @@ export async function main(): Promise<void> {
           !aggregateScope
         ) {
           throw new Error(
-            "development verification upload requires lease, trust key, deployment IDs, aggregate endpoint, and aggregate scope",
+            "development verification upload requires lease, trust key, deployment IDs, a non-negative current revocation epoch, aggregate endpoint, and aggregate scope",
           );
         }
         const authorization = JSON.parse(
@@ -1559,6 +1578,7 @@ export async function main(): Promise<void> {
           authorization,
           trustedPublicKey: createPublicKey(trustMaterial.publicKey),
           expectedKeyId: trustMaterial.keyId,
+          requiredRevocationEpoch: requiredDevelopmentVerificationRevocationEpoch,
           destinationDeploymentIds: developmentVerificationDeploymentIds,
         });
       }
@@ -1600,6 +1620,7 @@ export async function main(): Promise<void> {
           developmentVerificationLeaseFile,
           developmentVerificationTrustKeyFile,
           developmentVerificationDeploymentIds,
+          developmentVerificationRevocationEpoch,
           ...(aggregateCorrelationReleaseId && aggregateCorrelationCohortId
             ? {
                 aggregateCorrelationReleaseId,

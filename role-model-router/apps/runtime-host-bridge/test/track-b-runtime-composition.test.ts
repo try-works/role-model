@@ -311,6 +311,7 @@ describe("production Track B composition", () => {
     const developmentVerificationTrustKeyFile = path.join(stateRoot, "development-verification-public.pem");
     const aggregateEndpoint = "https://ingest-run00.role-model.dev";
     const aggregateScope = "run00-owned-sidecar-cloud";
+    const developmentVerificationRevocationEpoch = 7;
     await writeFile(digestKeyPath, Buffer.alloc(32, 1));
     await writeFile(encryptionKeyPath, Buffer.alloc(32, 2));
     await writeFile(
@@ -321,7 +322,7 @@ describe("production Track B composition", () => {
     await writeFile(developmentVerificationTrustKeyFile, "-----BEGIN PUBLIC KEY-----\nredacted\n-----END PUBLIC KEY-----\n");
     const source = [
       'import http from "node:http";',
-      'const mustInclude=[["--trust-material-file",process.env.EXPECTED_TRUST_MATERIAL],["--aggregate-endpoint",process.env.EXPECTED_AGGREGATE_ENDPOINT],["--aggregate-scope",process.env.EXPECTED_AGGREGATE_SCOPE],["--development-verification-lease-file",process.env.EXPECTED_DEVELOPMENT_VERIFICATION_LEASE],["--development-verification-trust-key-file",process.env.EXPECTED_DEVELOPMENT_VERIFICATION_TRUST_KEY]];',
+      'const mustInclude=[["--trust-material-file",process.env.EXPECTED_TRUST_MATERIAL],["--aggregate-endpoint",process.env.EXPECTED_AGGREGATE_ENDPOINT],["--aggregate-scope",process.env.EXPECTED_AGGREGATE_SCOPE],["--development-verification-lease-file",process.env.EXPECTED_DEVELOPMENT_VERIFICATION_LEASE],["--development-verification-trust-key-file",process.env.EXPECTED_DEVELOPMENT_VERIFICATION_TRUST_KEY],["--development-verification-revocation-epoch",process.env.EXPECTED_DEVELOPMENT_VERIFICATION_REVOCATION_EPOCH]];',
       "for(const [flag,value] of mustInclude){const index=process.argv.indexOf(flag); if(index<0 || process.argv[index+1]!==value){console.error(`missing ${flag}`); process.exit(4)}}",
       'const server=http.createServer((_req,res)=>{res.end("ok")});',
       'server.listen(0,"127.0.0.1",()=>{',
@@ -336,6 +337,7 @@ describe("production Track B composition", () => {
     process.env.EXPECTED_AGGREGATE_SCOPE = aggregateScope;
     process.env.EXPECTED_DEVELOPMENT_VERIFICATION_LEASE = developmentVerificationLeaseFile;
     process.env.EXPECTED_DEVELOPMENT_VERIFICATION_TRUST_KEY = developmentVerificationTrustKeyFile;
+    process.env.EXPECTED_DEVELOPMENT_VERIFICATION_REVOCATION_EPOCH = String(developmentVerificationRevocationEpoch);
 
     const sidecar = createOwnedTrackBSidecarSpec({
       artifactPath,
@@ -349,6 +351,7 @@ describe("production Track B composition", () => {
       aggregateScope,
       developmentVerificationLeaseFile,
       developmentVerificationTrustKeyFile,
+      developmentVerificationRevocationEpoch,
     });
     const child = await sidecar.launch();
     expect(child.endpoint).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
