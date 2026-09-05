@@ -12,7 +12,8 @@ export async function run(envelope = {}) {
       digest: "fixture-replay",
     };
   }
-  if (capability === "evaluation:register-scorer") return { key: `${envelope.value.id}@${envelope.value.version}` };
+  if (capability === "evaluation:register-scorer")
+    return { key: `${envelope.value.id}@${envelope.value.version}` };
   if (capability === "evaluation:create-job") {
     const job = envelope.value;
     return { ...job, status: "queued" };
@@ -32,11 +33,30 @@ export async function run(envelope = {}) {
       stderrRef: value.stderrRef,
       exitCode: value.exitCode,
       measurements: value.measurements,
-      scores: [{ scorerId: envelope.scorerDefinitions[0].id, scorerVersion: envelope.scorerDefinitions[0].version, scorerDigest: envelope.scorerDefinitions[0].digest, scorerDefinition: envelope.scorerDefinitions[0], dimension: "correctness", score: value.actual === "expected-route" ? 1 : 0, confidence: 1, source: "deterministic_semantic_criteria" }],
+      scores: [
+        {
+          scorerId: envelope.scorerDefinitions[0].id,
+          scorerVersion: envelope.scorerDefinitions[0].version,
+          scorerDigest: envelope.scorerDefinitions[0].digest,
+          scorerDefinition: envelope.scorerDefinitions[0],
+          dimension: "correctness",
+          score: value.actual === "expected-route" ? 1 : 0,
+          confidence: 1,
+          source: "deterministic_semantic_criteria",
+        },
+      ],
     };
   }
-  if (capability === "evaluation:submit-trial-result" || capability === "evaluation:record-trial-score-batch") return { accepted: true };
-  if (capability === "evaluation:finalize-comparison-group" || capability === "evaluation:read-comparison-group") return { groupId: envelope.value.groupId, status: "finalized", outcome: "candidate" };
+  if (
+    capability === "evaluation:submit-trial-result" ||
+    capability === "evaluation:record-trial-score-batch"
+  )
+    return { accepted: true };
+  if (
+    capability === "evaluation:finalize-comparison-group" ||
+    capability === "evaluation:read-comparison-group"
+  )
+    return { groupId: envelope.value.groupId, status: "finalized", outcome: "candidate" };
   if (capability === "signals:analyze-finalized-evaluation") {
     const value = envelope.value;
     return {

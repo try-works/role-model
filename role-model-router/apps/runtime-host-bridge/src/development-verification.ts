@@ -1,4 +1,4 @@
-import { createHash, type KeyObject, verify } from "node:crypto";
+import { type KeyObject, createHash, verify } from "node:crypto";
 
 export type DevelopmentVerificationAuthorization = Readonly<{
   schemaVersion: "role-model.development-verification-authorization.v1";
@@ -49,7 +49,8 @@ const canonical = (value: unknown): string => {
   return JSON.stringify(value);
 };
 
-const digest = (value: unknown): string => createHash("sha256").update(canonical(value)).digest("hex");
+const digest = (value: unknown): string =>
+  createHash("sha256").update(canonical(value)).digest("hex");
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
@@ -70,7 +71,10 @@ export function parseDevelopmentVerificationTrustMaterial(
   } catch {
     throw new Error("development verification trust material must be JSON");
   }
-  assert(parsed && typeof parsed === "object" && !Array.isArray(parsed), "development verification trust material must be an object");
+  assert(
+    parsed && typeof parsed === "object" && !Array.isArray(parsed),
+    "development verification trust material must be an object",
+  );
   const record = parsed as Record<string, unknown>;
   assert(
     record.schemaVersion === "role-model.development-verification-trust.v1",
@@ -78,8 +82,14 @@ export function parseDevelopmentVerificationTrustMaterial(
   );
   const keyId = record.keyId;
   const publicKey = record.publicKey;
-  assert(typeof keyId === "string" && keyId.trim().length > 0, "development verification trust key ID required");
-  assert(typeof publicKey === "string" && publicKey.trim().length > 0, "development verification trust public key required");
+  assert(
+    typeof keyId === "string" && keyId.trim().length > 0,
+    "development verification trust key ID required",
+  );
+  assert(
+    typeof publicKey === "string" && publicKey.trim().length > 0,
+    "development verification trust public key required",
+  );
   return Object.freeze({ keyId: keyId.trim(), publicKey: publicKey.trim() });
 }
 
@@ -116,19 +126,42 @@ export function negotiateDevelopmentVerificationCapability(input: {
     return Object.freeze({ enabled: false, capability: null, reason: "authorization_absent" });
   }
   const lease = input.authorization;
-  assert(input.runtimeChannel === "development" && lease.runtimeChannel === "development", "development channel required");
-  assert(lease.schemaVersion === "role-model.development-verification-authorization.v1", "development verification schema required");
-  assert(lease.contractVersion === 1, "unsupported development verification contract version");
-  assert(lease.capability === "development_verification_upload", "development verification capability required");
-  assert(lease.destination === "development_verification", "development verification destination required");
-  assert(lease.sourceScopeId === input.sourceScopeId, "development verification scope mismatch");
-  assert(lease.allowedDataClasses.length === 1 && lease.allowedDataClasses[0] === "aggregates_only", "aggregate-only authorization required");
-  assert(lease.destinationDeploymentIds.length > 0 && lease.destinationDeploymentIds.every((id) => id.length > 0), "development deployment ids required");
   assert(
-    input.destinationDeploymentIds && sameStringSet(lease.destinationDeploymentIds, input.destinationDeploymentIds),
+    input.runtimeChannel === "development" && lease.runtimeChannel === "development",
+    "development channel required",
+  );
+  assert(
+    lease.schemaVersion === "role-model.development-verification-authorization.v1",
+    "development verification schema required",
+  );
+  assert(lease.contractVersion === 1, "unsupported development verification contract version");
+  assert(
+    lease.capability === "development_verification_upload",
+    "development verification capability required",
+  );
+  assert(
+    lease.destination === "development_verification",
+    "development verification destination required",
+  );
+  assert(lease.sourceScopeId === input.sourceScopeId, "development verification scope mismatch");
+  assert(
+    lease.allowedDataClasses.length === 1 && lease.allowedDataClasses[0] === "aggregates_only",
+    "aggregate-only authorization required",
+  );
+  assert(
+    lease.destinationDeploymentIds.length > 0 &&
+      lease.destinationDeploymentIds.every((id) => id.length > 0),
+    "development deployment ids required",
+  );
+  assert(
+    input.destinationDeploymentIds &&
+      sameStringSet(lease.destinationDeploymentIds, input.destinationDeploymentIds),
     "development verification deployment binding mismatch",
   );
-  assert(typeof input.expectedKeyId === "string" && lease.signerKeyId === input.expectedKeyId, "development verification signer key mismatch");
+  assert(
+    typeof input.expectedKeyId === "string" && lease.signerKeyId === input.expectedKeyId,
+    "development verification signer key mismatch",
+  );
   const requiredRevocationEpoch = input.requiredRevocationEpoch;
   if (
     typeof requiredRevocationEpoch !== "number" ||
@@ -144,12 +177,29 @@ export function negotiateDevelopmentVerificationCapability(input: {
   const trustedPublicKey = input.trustedPublicKey;
   assert(trustedPublicKey, "development verification trusted public key required");
   const now = input.now ?? Date.now();
-  assert(Number.isSafeInteger(now) && now >= lease.issuedAt && now <= lease.expiresAt, "development verification authorization expired or not yet active");
-  assert(Number.isSafeInteger(lease.maxRecords) && lease.maxRecords > 0, "development verification max record limit invalid");
-  assert(Number.isSafeInteger(lease.maxBytes) && lease.maxBytes >= 10 * 1024 * 1024, "development verification max byte limit invalid");
-  assert(digest(unsignedLease(lease)) === lease.contractDigest, "development verification contract digest mismatch");
   assert(
-    verify(null, Buffer.from(canonical(signaturePayload(lease))), trustedPublicKey, Buffer.from(lease.signature, "base64url")),
+    Number.isSafeInteger(now) && now >= lease.issuedAt && now <= lease.expiresAt,
+    "development verification authorization expired or not yet active",
+  );
+  assert(
+    Number.isSafeInteger(lease.maxRecords) && lease.maxRecords > 0,
+    "development verification max record limit invalid",
+  );
+  assert(
+    Number.isSafeInteger(lease.maxBytes) && lease.maxBytes >= 10 * 1024 * 1024,
+    "development verification max byte limit invalid",
+  );
+  assert(
+    digest(unsignedLease(lease)) === lease.contractDigest,
+    "development verification contract digest mismatch",
+  );
+  assert(
+    verify(
+      null,
+      Buffer.from(canonical(signaturePayload(lease))),
+      trustedPublicKey,
+      Buffer.from(lease.signature, "base64url"),
+    ),
     "development verification authorization signature invalid",
   );
   return Object.freeze({

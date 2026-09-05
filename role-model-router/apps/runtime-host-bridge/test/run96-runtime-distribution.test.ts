@@ -13,7 +13,9 @@ import {
 const temporaryRoots: string[] = [];
 
 afterEach(async () => {
-  await Promise.all(temporaryRoots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
+  await Promise.all(
+    temporaryRoots.splice(0).map((root) => rm(root, { recursive: true, force: true })),
+  );
 });
 
 function sha256(value: string | Buffer): string {
@@ -73,7 +75,9 @@ async function createReleaseFixture(): Promise<{ releaseDir: string }> {
       modulePath: "public-runtime-adapter.mjs",
       artifactSha256: adapterSha256,
       routerRoot: "router-assets",
-      routerAssets: [{ modulePath: "router-assets/migration.mjs", artifactSha256: routerAssetSha256 }],
+      routerAssets: [
+        { modulePath: "router-assets/migration.mjs", artifactSha256: routerAssetSha256 },
+      ],
     },
     publicExtensionHost: {
       modulePath: "public-extension-host.mjs",
@@ -84,7 +88,10 @@ async function createReleaseFixture(): Promise<{ releaseDir: string }> {
     extensions,
   };
   const manifestBytes = JSON.stringify(manifest, null, 2);
-  await writeFile(path.join(releaseDir, "track-b-runtime", "track-b-runtime-manifest.json"), manifestBytes);
+  await writeFile(
+    path.join(releaseDir, "track-b-runtime", "track-b-runtime-manifest.json"),
+    manifestBytes,
+  );
 
   return { releaseDir };
 }
@@ -110,7 +117,9 @@ describe("Run 96 packaged runtime artifact closure", () => {
     expect(closure.track_b_runtime.worker.path).toBe("track-b-runtime/worker-runtime.mjs");
     expect(closure.track_b_runtime.extensions).toHaveLength(13);
 
-    await expect(verifyPackagedRuntimeArtifactClosure({ releaseDir, closure })).resolves.toBeUndefined();
+    await expect(
+      verifyPackagedRuntimeArtifactClosure({ releaseDir, closure }),
+    ).resolves.toBeUndefined();
 
     await writeFile(path.join(releaseDir, "build", "client", "index.html"), "tampered", "utf8");
     await expect(verifyPackagedRuntimeArtifactClosure({ releaseDir, closure })).rejects.toThrow(

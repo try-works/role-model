@@ -282,7 +282,7 @@ test("Run 90 canonical host view reconciles 257 totals with a 50-row page", asyn
     const filteredPage = await (
       backend as unknown as {
         listTelemetryRequestPage(query: Record<string, unknown>): Promise<{
-      readonly items: readonly Record<string, unknown>[];
+          readonly items: readonly Record<string, unknown>[];
           readonly totalMatching: number;
           readonly returned: number;
         }>;

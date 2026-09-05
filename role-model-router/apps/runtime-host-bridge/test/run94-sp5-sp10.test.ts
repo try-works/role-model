@@ -571,7 +571,14 @@ test("Run96 S3 RED: exposes an explicit authenticated supervised replay command 
   roots.push(runtimeStateRoot);
   const backend = await createRuntimeBridgeBackend({
     repoRoot,
-    fixtureRoot: path.join(repoRoot, "role-model-router", "apps", "runtime-host-bridge", "test", "fixtures"),
+    fixtureRoot: path.join(
+      repoRoot,
+      "role-model-router",
+      "apps",
+      "runtime-host-bridge",
+      "test",
+      "fixtures",
+    ),
     runtimeStateRoot,
     scopeId: "run96-api",
     runTrackBSupervisedReplay: async (body) => ({
@@ -594,7 +601,10 @@ test("Run96 S3 RED: exposes an explicit authenticated supervised replay command 
     const response = await fetch(`http://127.0.0.1:${server.port}/api/role-model/track-b/replay`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ requestId: "run96-source-request", candidateEndpointIds: ["endpoint:counterfactual"] }),
+      body: JSON.stringify({
+        requestId: "run96-source-request",
+        candidateEndpointIds: ["endpoint:counterfactual"],
+      }),
     });
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({

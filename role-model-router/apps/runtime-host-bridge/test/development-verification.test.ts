@@ -66,9 +66,7 @@ describe("development verification capability", () => {
     });
 
     expect(() =>
-      parseDevelopmentVerificationTrustMaterial(
-        JSON.stringify({ publicKey: "unidentified" }),
-      ),
+      parseDevelopmentVerificationTrustMaterial(JSON.stringify({ publicKey: "unidentified" })),
     ).toThrow(/schema|key/i);
   });
 

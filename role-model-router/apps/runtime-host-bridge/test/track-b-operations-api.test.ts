@@ -616,15 +616,15 @@ describe("Track B operations APIs", () => {
       dryRunStorageRetention: async (body: Record<string, unknown>) => {
         receivedDryRunBody = body;
         return {
-        ...summary,
-        receipts: [
-          {
-            id: `dry-${++dryRunCount}`,
-            status: "preview",
-            affectedCount: 2,
-            rollbackAvailable: true,
-          },
-        ],
+          ...summary,
+          receipts: [
+            {
+              id: `dry-${++dryRunCount}`,
+              status: "preview",
+              affectedCount: 2,
+              rollbackAvailable: true,
+            },
+          ],
         };
       },
       updateStorageRetentionPolicy: async (body) => ({ ...summary, policies: [body] }),

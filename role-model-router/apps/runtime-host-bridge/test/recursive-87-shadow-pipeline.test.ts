@@ -81,7 +81,10 @@ const comparableCases = () => [
     actualOutcomeRef: "outcome:counterfactual-87",
     expectedEvidenceRef: "evidence:source-87",
     actualEvidenceRef: "evidence:counterfactual-87",
-    evaluationCriteria: { schemaVersion: "role-model.semantic-criteria.v1", requiredTerms: ["expected-route"] },
+    evaluationCriteria: {
+      schemaVersion: "role-model.semantic-criteria.v1",
+      requiredTerms: ["expected-route"],
+    },
   },
 ];
 
@@ -92,7 +95,19 @@ test("SP1 runs the useful routing-learning DAG through supervised shadow capabil
     .digest("hex");
   const capabilities = new Map<string, string[]>([
     ["replay-core", ["replay:plan-graph"]],
-    ["evaluation-core", ["evaluation:register-scorer", "evaluation:create-job", "evaluation:list-trials", "evaluation:claim-trial", "evaluation:submit-trial-result", "evaluation:record-trial-score-batch", "evaluation:finalize-comparison-group", "evaluation:read-comparison-group"]],
+    [
+      "evaluation-core",
+      [
+        "evaluation:register-scorer",
+        "evaluation:create-job",
+        "evaluation:list-trials",
+        "evaluation:claim-trial",
+        "evaluation:submit-trial-result",
+        "evaluation:record-trial-score-batch",
+        "evaluation:finalize-comparison-group",
+        "evaluation:read-comparison-group",
+      ],
+    ],
     ["evaluation-runner-local", ["evaluation:execute-trial"]],
     ["trajectory-signals", ["signals:analyze-finalized-evaluation"]],
     ["profile-learner", ["profile:estimate-finalized-evaluation"]],
@@ -104,7 +119,7 @@ test("SP1 runs the useful routing-learning DAG through supervised shadow capabil
     stateRoot,
     authorizationEpoch: 87,
     repoRoot,
-  extensions: [...capabilities].map(([id, capabilities]) => ({
+    extensions: [...capabilities].map(([id, capabilities]) => ({
       descriptor: { id, protocolVersion: "1.1.0", capabilities: ["health:probe", ...capabilities] },
       modulePath,
       artifactSha256,
@@ -132,7 +147,10 @@ test("SP1 runs the useful routing-learning DAG through supervised shadow capabil
     counterfactuals: [{ id: "candidate-remote", suffix: ["candidate-remote"] }],
     comparableEvidence: comparableEvidence(),
     evaluationCases: comparableCases(),
-    evaluationCriteria: { schemaVersion: "role-model.semantic-criteria.v1", requiredTerms: ["expected-route"] },
+    evaluationCriteria: {
+      schemaVersion: "role-model.semantic-criteria.v1",
+      requiredTerms: ["expected-route"],
+    },
     trajectoryEvents: [],
   });
 
@@ -210,16 +228,54 @@ test("SP1 fails closed before Knowledge Worker when durable holdout comparison i
     }
     if (id === "evaluation-runner-local") {
       return {
-        outputRef: "artifact:failed-evaluation-87", outputDigest: "sha256:failed-evaluation-87",
-        stdoutRef: "artifact:failed-evaluation-87", stderrRef: "artifact:failed-evaluation-87",
-        exitCode: 0, measurements: { elapsedMs: 1, outputBytes: 1 }, scores: [{ scorerId: "run96-semantic-criteria", scorerVersion: "1", scorerDigest: "sha256:semantic-criteria", scorerDefinition: { manifestVersion: 2, id: "run96-semantic-criteria", version: "1", digest: "sha256:semantic-criteria", scorerSetVersion: "run96-routing-shadow-v2", algorithm: "required_terms", dimensions: ["correctness"], range: { min: 0, max: 1 }, direction: "higher_is_better", requiredInputs: ["outputRef", "evaluationCriteria"] }, dimension: "correctness", score: 0, confidence: 1, source: "deterministic_semantic_criteria" }],
+        outputRef: "artifact:failed-evaluation-87",
+        outputDigest: "sha256:failed-evaluation-87",
+        stdoutRef: "artifact:failed-evaluation-87",
+        stderrRef: "artifact:failed-evaluation-87",
+        exitCode: 0,
+        measurements: { elapsedMs: 1, outputBytes: 1 },
+        scores: [
+          {
+            scorerId: "run96-semantic-criteria",
+            scorerVersion: "1",
+            scorerDigest: "sha256:semantic-criteria",
+            scorerDefinition: {
+              manifestVersion: 2,
+              id: "run96-semantic-criteria",
+              version: "1",
+              digest: "sha256:semantic-criteria",
+              scorerSetVersion: "run96-routing-shadow-v2",
+              algorithm: "required_terms",
+              dimensions: ["correctness"],
+              range: { min: 0, max: 1 },
+              direction: "higher_is_better",
+              requiredInputs: ["outputRef", "evaluationCriteria"],
+            },
+            dimension: "correctness",
+            score: 0,
+            confidence: 1,
+            source: "deterministic_semantic_criteria",
+          },
+        ],
       };
     }
-    if (id === "evaluation-core" && ["evaluation:submit-trial-result", "evaluation:record-trial-score-batch"].includes(String(envelope.capability))) return {};
-    if (id === "evaluation-core" && ["evaluation:finalize-comparison-group", "evaluation:read-comparison-group"].includes(String(envelope.capability))) {
+    if (
+      id === "evaluation-core" &&
+      ["evaluation:submit-trial-result", "evaluation:record-trial-score-batch"].includes(
+        String(envelope.capability),
+      )
+    )
+      return {};
+    if (
+      id === "evaluation-core" &&
+      ["evaluation:finalize-comparison-group", "evaluation:read-comparison-group"].includes(
+        String(envelope.capability),
+      )
+    ) {
       return { status: "finalized", outcome: "insufficient" };
     }
-    if (id === "trajectory-signals") return { routeDecisionId: "route-87", graphRef: "sha256:graph-87", signals: [] };
+    if (id === "trajectory-signals")
+      return { routeDecisionId: "route-87", graphRef: "sha256:graph-87", signals: [] };
     if (id === "profile-learner") return { digest: "sha256:profile-87", effects: {} };
     throw new Error(`unexpected durable holdout invocation ${id}:${String(envelope.capability)}`);
   };
@@ -238,7 +294,10 @@ test("SP1 fails closed before Knowledge Worker when durable holdout comparison i
         counterfactuals: [{ id: "candidate-remote", suffix: [] }],
         comparableEvidence: comparableEvidence(),
         evaluationCases: comparableCases(),
-        evaluationCriteria: { schemaVersion: "role-model.semantic-criteria.v1", requiredTerms: ["expected-route"] },
+        evaluationCriteria: {
+          schemaVersion: "role-model.semantic-criteria.v1",
+          requiredTerms: ["expected-route"],
+        },
         trajectoryEvents: [],
         productionState: {},
       },
