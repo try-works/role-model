@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from "node:crypto";
+import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import {
   appendFileSync,
   existsSync,
@@ -2891,9 +2891,28 @@ export interface RuntimeRevisionStreamEvent {
 
 export type RuntimeBridgeStreamEvent = RuntimeTelemetryStreamEvent | RuntimeRevisionStreamEvent;
 
+export type RuntimeOperatorAvailability =
+  | "available"
+  | "unavailable"
+  | "unobserved"
+  | "degraded"
+  | "blocked";
+
+export interface RuntimeOperatorStatus {
+  readonly schemaVersion: "role-model.operator-status.v1";
+  readonly overall: RuntimeOperatorAvailability;
+  readonly observedAtMs: number;
+  readonly reason?: string;
+  readonly capabilities: Readonly<Record<string, RuntimeOperatorAvailability>>;
+}
+
+type RuntimeOperatorQuery = Readonly<Record<string, string>>;
+
 export interface StartBridgeServerOptions {
   readonly host: string;
   readonly port: number;
+  /** Bearer token required for mutating and inspecting operator state. */
+  readonly operatorAuthToken?: string;
   readonly runtimeStateRoot?: string;
   readonly runtimeChannel?: "development" | "stage" | "production";
   readonly registry: EndpointRegistryResult;
@@ -2940,6 +2959,17 @@ export interface StartBridgeServerOptions {
   readonly readTrackBShadowReceipts?: () => Promise<unknown>;
   readonly readTrackBExtensionReadback?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly runTrackBSupervisedReplay?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly readOperatorStatus?: () => Promise<RuntimeOperatorStatus | unknown>;
+  readonly listReplayJobs?: (query?: RuntimeOperatorQuery) => Promise<unknown>;
+  readonly createReplayJob?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly cancelReplayJob?: (jobId: string, body: Record<string, unknown>) => Promise<unknown>;
+  readonly listEvaluationJobs?: (query?: RuntimeOperatorQuery) => Promise<unknown>;
+  readonly readEvaluationJob?: (jobId: string) => Promise<unknown>;
+  readonly cancelEvaluationJob?: (jobId: string, body: Record<string, unknown>) => Promise<unknown>;
+  readonly retryEvaluationJob?: (jobId: string, body: Record<string, unknown>) => Promise<unknown>;
+  readonly readLearningState?: () => Promise<unknown>;
+  readonly updateLearningMode?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly rollbackLearning?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly measureNoRichCaptureBaseline?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly readGraphMigration?: () => Promise<unknown>;
   readonly advanceGraphMigration?: (body: Record<string, unknown>) => Promise<unknown>;
@@ -3103,6 +3133,7 @@ export interface StartBridgeServerOptions {
 export interface RuntimeBridgeBackend {
   readonly registry: EndpointRegistryResult;
   readonly effectiveRegistry: EndpointRegistryResult;
+  readonly operatorAuthToken?: string;
   listActivityMetrics(): Promise<readonly unknown[]>;
   listActivityMetricsPage(query?: BridgeTelemetryQuery): Promise<BridgeActivityMetricsPage>;
   readActivityCapture(captureId: number | string): Promise<unknown | null>;
@@ -3160,6 +3191,17 @@ export interface RuntimeBridgeBackend {
   readTrackBShadowReceipts(): Promise<unknown>;
   readTrackBExtensionReadback(body: Record<string, unknown>): Promise<unknown>;
   runTrackBSupervisedReplay(body: Record<string, unknown>): Promise<unknown>;
+  readOperatorStatus(): Promise<RuntimeOperatorStatus | unknown>;
+  listReplayJobs(query?: RuntimeOperatorQuery): Promise<unknown>;
+  createReplayJob(body: Record<string, unknown>): Promise<unknown>;
+  cancelReplayJob(jobId: string, body: Record<string, unknown>): Promise<unknown>;
+  listEvaluationJobs(query?: RuntimeOperatorQuery): Promise<unknown>;
+  readEvaluationJob(jobId: string): Promise<unknown>;
+  cancelEvaluationJob(jobId: string, body: Record<string, unknown>): Promise<unknown>;
+  retryEvaluationJob(jobId: string, body: Record<string, unknown>): Promise<unknown>;
+  readLearningState(): Promise<unknown>;
+  updateLearningMode(body: Record<string, unknown>): Promise<unknown>;
+  rollbackLearning(body: Record<string, unknown>): Promise<unknown>;
   measureNoRichCaptureBaseline(body: Record<string, unknown>): Promise<unknown>;
   readGraphMigration(): Promise<unknown>;
   advanceGraphMigration(body: Record<string, unknown>): Promise<unknown>;
@@ -3540,6 +3582,18 @@ export interface CreateRuntimeBridgeBackendOptions {
   readonly readTrackBPostObservationReceipt?: (requestId: string) => Promise<unknown>;
   readonly readTrackBExtensionReadback?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly runTrackBSupervisedReplay?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly operatorAuthToken?: string;
+  readonly readOperatorStatus?: () => Promise<RuntimeOperatorStatus | unknown>;
+  readonly listReplayJobs?: (query?: RuntimeOperatorQuery) => Promise<unknown>;
+  readonly createReplayJob?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly cancelReplayJob?: (jobId: string, body: Record<string, unknown>) => Promise<unknown>;
+  readonly listEvaluationJobs?: (query?: RuntimeOperatorQuery) => Promise<unknown>;
+  readonly readEvaluationJob?: (jobId: string) => Promise<unknown>;
+  readonly cancelEvaluationJob?: (jobId: string, body: Record<string, unknown>) => Promise<unknown>;
+  readonly retryEvaluationJob?: (jobId: string, body: Record<string, unknown>) => Promise<unknown>;
+  readonly readLearningState?: () => Promise<unknown>;
+  readonly updateLearningMode?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly rollbackLearning?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly codexAuthAdapter?: CodexAuthAdapter;
   readonly codexExecutionAdapter?: CodexExecutionAdapter;
 }
@@ -14564,6 +14618,96 @@ function setCorsHeaders(response: ServerResponse): void {
   );
 }
 
+const RUNTIME_OPERATOR_CAPABILITIES = [
+  "graph",
+  "replay",
+  "evaluation",
+  "learning",
+  "extensions",
+  "storage",
+] as const;
+
+function unavailableOperatorStatus(reason: string): RuntimeOperatorStatus {
+  return {
+    schemaVersion: "role-model.operator-status.v1",
+    overall: "unavailable",
+    observedAtMs: Date.now(),
+    reason,
+    capabilities: Object.fromEntries(
+      RUNTIME_OPERATOR_CAPABILITIES.map((capability) => [capability, "unavailable"]),
+    ),
+  } as RuntimeOperatorStatus;
+}
+
+function readOperatorBearerToken(request: IncomingMessage): string | null {
+  const header = request.headers.authorization;
+  if (typeof header !== "string") {
+    return null;
+  }
+  const match = header.match(/^Bearer\s+(.+)$/iu);
+  return match?.[1]?.trim() || null;
+}
+
+function operatorTokenMatches(
+  request: IncomingMessage,
+  expectedToken: string | undefined,
+): boolean {
+  if (!expectedToken || expectedToken.trim().length === 0) {
+    return false;
+  }
+  const actualToken = readOperatorBearerToken(request);
+  if (!actualToken) {
+    return false;
+  }
+  const expectedDigest = createHash("sha256").update(expectedToken).digest();
+  const actualDigest = createHash("sha256").update(actualToken).digest();
+  return timingSafeEqual(expectedDigest, actualDigest);
+}
+
+function readOperatorJobId(pathname: string, prefix: string): string | null {
+  const encodedId = pathname.slice(prefix.length);
+  if (encodedId.length === 0 || encodedId.includes("/")) {
+    return null;
+  }
+  let jobId: string;
+  try {
+    jobId = decodeURIComponent(encodedId);
+  } catch {
+    return null;
+  }
+  const containsControlOrSeparator = [...jobId].some((character) => {
+    const codePoint = character.codePointAt(0) ?? 0;
+    return codePoint < 0x20 || codePoint === 0x7f || character === "/" || character === "\\";
+  });
+  if (jobId.length === 0 || jobId.length > 256 || containsControlOrSeparator) {
+    return null;
+  }
+  return jobId;
+}
+
+function writeOperatorUnauthorized(response: ServerResponse): void {
+  response.setHeader("WWW-Authenticate", "Bearer");
+  writeJson(response, 401, {
+    error: "operator_authentication_required",
+    message: "A valid operator bearer token is required.",
+  });
+}
+
+function unavailableOperatorPayload(capability: string): RuntimeOperatorStatus & {
+  readonly error: "operator_capability_unavailable";
+  readonly capability: string;
+} {
+  return {
+    ...unavailableOperatorStatus(`${capability} operator control is unavailable.`),
+    error: "operator_capability_unavailable",
+    capability,
+  };
+}
+
+function writeOperatorUnavailable(response: ServerResponse, capability: string): void {
+  writeJson(response, 503, unavailableOperatorPayload(capability));
+}
+
 function createRequestHandler(options: StartBridgeServerOptions) {
   return async (request: IncomingMessage, response: ServerResponse): Promise<void> => {
     setCorsHeaders(response);
@@ -14639,6 +14783,172 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         status: startupReadiness.status,
         ...(startupReadiness.message ? { message: startupReadiness.message } : {}),
       });
+      return;
+    }
+
+    if (url.pathname.startsWith("/api/role-model/operator/")) {
+      if (!operatorTokenMatches(request, options.operatorAuthToken)) {
+        writeOperatorUnauthorized(response);
+        return;
+      }
+
+      try {
+        if (request.method === "GET" && url.pathname === "/api/role-model/operator/status") {
+          if (!options.readOperatorStatus) {
+            writeOperatorUnavailable(response, "operator status");
+            return;
+          }
+          writeJson(response, 200, await options.readOperatorStatus());
+          return;
+        }
+
+        if (request.method === "GET" && url.pathname === "/api/role-model/operator/replay/jobs") {
+          if (!options.listReplayJobs) {
+            writeOperatorUnavailable(response, "replay inspection");
+            return;
+          }
+          writeJson(
+            response,
+            200,
+            await options.listReplayJobs(Object.fromEntries(url.searchParams.entries())),
+          );
+          return;
+        }
+
+        if (request.method === "POST" && url.pathname === "/api/role-model/operator/replay/jobs") {
+          if (!options.createReplayJob) {
+            writeOperatorUnavailable(response, "replay creation");
+            return;
+          }
+          writeJson(response, 200, await options.createReplayJob(await readJsonBody(request)));
+          return;
+        }
+
+        const replayCancelPrefix = "/api/role-model/operator/replay/jobs/";
+        if (
+          request.method === "POST" &&
+          url.pathname.endsWith("/cancel") &&
+          url.pathname.startsWith(replayCancelPrefix)
+        ) {
+          if (!options.cancelReplayJob) {
+            writeOperatorUnavailable(response, "replay cancellation");
+            return;
+          }
+          const encodedJobId = url.pathname.slice(replayCancelPrefix.length, -"/cancel".length);
+          const jobId = readOperatorJobId(encodedJobId, "");
+          if (!jobId) {
+            writeJson(response, 400, { error: "invalid replay job id" });
+            return;
+          }
+          writeJson(
+            response,
+            200,
+            await options.cancelReplayJob(jobId, await readJsonBody(request)),
+          );
+          return;
+        }
+
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/evaluation/jobs"
+        ) {
+          if (!options.listEvaluationJobs) {
+            writeOperatorUnavailable(response, "evaluation inspection");
+            return;
+          }
+          writeJson(
+            response,
+            200,
+            await options.listEvaluationJobs(Object.fromEntries(url.searchParams.entries())),
+          );
+          return;
+        }
+
+        const evaluationJobPrefix = "/api/role-model/operator/evaluation/jobs/";
+        if (url.pathname.startsWith(evaluationJobPrefix)) {
+          const suffix = url.pathname.slice(evaluationJobPrefix.length);
+          const action = suffix.endsWith("/cancel")
+            ? "cancel"
+            : suffix.endsWith("/retry")
+              ? "retry"
+              : null;
+          const encodedJobId = action ? suffix.slice(0, -(action.length + 1)) : suffix;
+          const jobId = readOperatorJobId(encodedJobId, "");
+          if (!jobId) {
+            writeJson(response, 400, { error: "invalid evaluation job id" });
+            return;
+          }
+          if (request.method === "GET" && action === null) {
+            if (!options.readEvaluationJob) {
+              writeOperatorUnavailable(response, "evaluation inspection");
+              return;
+            }
+            writeJson(response, 200, await options.readEvaluationJob(jobId));
+            return;
+          }
+          if (request.method === "POST" && action === "cancel") {
+            if (!options.cancelEvaluationJob) {
+              writeOperatorUnavailable(response, "evaluation cancellation");
+              return;
+            }
+            writeJson(
+              response,
+              200,
+              await options.cancelEvaluationJob(jobId, await readJsonBody(request)),
+            );
+            return;
+          }
+          if (request.method === "POST" && action === "retry") {
+            if (!options.retryEvaluationJob) {
+              writeOperatorUnavailable(response, "evaluation retry");
+              return;
+            }
+            writeJson(
+              response,
+              200,
+              await options.retryEvaluationJob(jobId, await readJsonBody(request)),
+            );
+            return;
+          }
+        }
+
+        if (request.method === "GET" && url.pathname === "/api/role-model/operator/learning") {
+          if (!options.readLearningState) {
+            writeOperatorUnavailable(response, "learning inspection");
+            return;
+          }
+          writeJson(response, 200, await options.readLearningState());
+          return;
+        }
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/role-model/operator/learning/mode"
+        ) {
+          if (!options.updateLearningMode) {
+            writeOperatorUnavailable(response, "learning mode update");
+            return;
+          }
+          writeJson(response, 200, await options.updateLearningMode(await readJsonBody(request)));
+          return;
+        }
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/role-model/operator/learning/rollback"
+        ) {
+          if (!options.rollbackLearning) {
+            writeOperatorUnavailable(response, "learning rollback");
+            return;
+          }
+          writeJson(response, 200, await options.rollbackLearning(await readJsonBody(request)));
+          return;
+        }
+
+        writeJson(response, 404, { error: "operator route not found" });
+      } catch (error) {
+        writeJson(response, 409, {
+          error: error instanceof Error ? error.message : "operator operation failed",
+        });
+      }
       return;
     }
 
@@ -24743,6 +25053,7 @@ export async function createRuntimeBridgeBackend(
   let lastDetectedModel: string | null = null;
   let sessionBootstrapState: SessionBootstrapState = createPendingBootstrapState();
   const backend = {
+    operatorAuthToken: options.operatorAuthToken,
     get registry(): EndpointRegistryResult {
       return currentRegistry;
     },
@@ -25761,6 +26072,52 @@ export async function createRuntimeBridgeBackend(
         throw new Error("Track B supervised replay is unavailable");
       }
       return options.runTrackBSupervisedReplay(body);
+    },
+    async readOperatorStatus(): Promise<RuntimeOperatorStatus | unknown> {
+      return options.readOperatorStatus?.() ?? unavailableOperatorStatus("operator status");
+    },
+    async listReplayJobs(query: RuntimeOperatorQuery = {}): Promise<unknown> {
+      return options.listReplayJobs?.(query) ?? unavailableOperatorPayload("replay inspection");
+    },
+    async createReplayJob(body: Record<string, unknown>): Promise<unknown> {
+      return options.createReplayJob?.(body) ?? unavailableOperatorPayload("replay creation");
+    },
+    async cancelReplayJob(jobId: string, body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.cancelReplayJob?.(jobId, body) ?? unavailableOperatorPayload("replay cancellation")
+      );
+    },
+    async listEvaluationJobs(query: RuntimeOperatorQuery = {}): Promise<unknown> {
+      return (
+        options.listEvaluationJobs?.(query) ?? unavailableOperatorPayload("evaluation inspection")
+      );
+    },
+    async readEvaluationJob(jobId: string): Promise<unknown> {
+      return (
+        options.readEvaluationJob?.(jobId) ?? unavailableOperatorPayload("evaluation inspection")
+      );
+    },
+    async cancelEvaluationJob(jobId: string, body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.cancelEvaluationJob?.(jobId, body) ??
+        unavailableOperatorPayload("evaluation cancellation")
+      );
+    },
+    async retryEvaluationJob(jobId: string, body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.retryEvaluationJob?.(jobId, body) ?? unavailableOperatorPayload("evaluation retry")
+      );
+    },
+    async readLearningState(): Promise<unknown> {
+      return options.readLearningState?.() ?? unavailableOperatorPayload("learning inspection");
+    },
+    async updateLearningMode(body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.updateLearningMode?.(body) ?? unavailableOperatorPayload("learning mode update")
+      );
+    },
+    async rollbackLearning(body: Record<string, unknown>): Promise<unknown> {
+      return options.rollbackLearning?.(body) ?? unavailableOperatorPayload("learning rollback");
     },
     async measureNoRichCaptureBaseline(body: Record<string, unknown>): Promise<unknown> {
       return runtimeTrackBOperations.measureNoRichCaptureBaseline(body);

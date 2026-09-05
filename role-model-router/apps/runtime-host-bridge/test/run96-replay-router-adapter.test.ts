@@ -514,6 +514,7 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
     sourceAttestation,
     idempotencyKey: "replay:orchestrated",
     intent: "counterfactual_route",
+    evaluationCriteriaDigest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     candidatePackages: [
       {
         endpointId: "endpoint:counterfactual",
@@ -707,6 +708,7 @@ test("Run96 S3 RED: host orchestration preserves a bounded rate-limit failure be
       sourceAttestation,
       idempotencyKey: "replay:router-failure",
       intent: "counterfactual_route",
+      evaluationCriteriaDigest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       candidatePackages: [
         {
           endpointId: "endpoint:counterfactual",
@@ -846,6 +848,7 @@ test("Run96 S3 regression: timeout retries while a partial provider result is te
         sourceAttestation,
         idempotencyKey: `replay:${code}`,
         intent: "counterfactual_route",
+        evaluationCriteriaDigest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         candidatePackages: [
           {
             endpointId: "endpoint:counterfactual",
@@ -941,6 +944,7 @@ test("Run96 S3 RED: a completed idempotent replay returns its durable receipt wi
       sourceAttestation: attestation,
       idempotencyKey: "replay:idempotent",
       intent: "counterfactual_route",
+      evaluationCriteriaDigest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       candidatePackages: [
         {
           endpointId: "endpoint:counterfactual",
@@ -1029,6 +1033,7 @@ test("Run96 Phase5 RED: an idempotent replay awaiting evaluation returns its dur
       sourceAttestation,
       idempotencyKey: "replay:awaiting-evaluation",
       intent: "counterfactual_route",
+      evaluationCriteriaDigest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       candidatePackages: [{
         endpointId: "endpoint:counterfactual",
         modelId: "deepseek/deepseek-v4-pro",
@@ -1091,6 +1096,7 @@ test("Run96 S3 regression: a retry resumes durable evaluation without redispatch
     adapter: createRouterReplayAdapter({ channel: "development", scope: "tenant:one", authorizationEpoch: 96, dispatch: async () => { throw new Error("must not redispatch"); } }),
     requestId: "request:recover-evaluation", channel: "development", scope: "tenant:one", authorizationEpoch: 96,
     sourceAttestation, idempotencyKey: "replay:recover-evaluation", intent: "counterfactual_route",
+    evaluationCriteriaDigest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     candidatePackages: [{ endpointId: "endpoint:counterfactual", modelId: "deepseek/deepseek-v4-pro", reasoningEffort: "max", promptAdapterId: "prompt:stable-v1", toolPolicy: "deny", experiencePackId: "experience:none", samplingProfileId: "deterministic-v1" }],
     budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
     leaseOwner: "scheduler:recover-evaluation", leaseMs: 10_000,
@@ -1203,6 +1209,7 @@ test("Run96 S3 RED: a late-cancelled replay never hands incomplete branches to E
       sourceAttestation,
       idempotencyKey: "replay:cancelled-late",
       intent: "counterfactual_route",
+      evaluationCriteriaDigest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       candidatePackages: [
         {
           endpointId: "endpoint:counterfactual",
@@ -1354,6 +1361,7 @@ test("Run96 Phase5 RED: an expired scheduler receipt does not erase an already-d
       sourceAttestation,
       idempotencyKey: "replay:expired-scheduler",
       intent: "counterfactual_route",
+      evaluationCriteriaDigest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       candidatePackages: [
         {
           endpointId: "endpoint:counterfactual",

@@ -5,7 +5,10 @@ export async function run(envelope = {}) {
     const value = envelope.value;
     return {
       ...value,
+      sourceDecisionId: value.sourceDecisionId,
+      sourceGraphRef: value.sourceGraphRef,
       sharedPrefixRef: `${value.sourceGraphRef}#sha256:fixture`,
+      branches: value.counterfactuals.map((counterfactual) => ({ id: counterfactual.id })),
       digest: "fixture-replay",
     };
   }
@@ -29,10 +32,10 @@ export async function run(envelope = {}) {
       stderrRef: value.stderrRef,
       exitCode: value.exitCode,
       measurements: value.measurements,
-      scores: [{ scorerId: "run96-exact", scorerVersion: "1", scorerDigest: envelope.scorerDefinitions[0].digest, dimension: "correctness", score: value.expected === value.actual ? 1 : 0, confidence: 1, source: "deterministic" }],
+      scores: [{ scorerId: envelope.scorerDefinitions[0].id, scorerVersion: envelope.scorerDefinitions[0].version, scorerDigest: envelope.scorerDefinitions[0].digest, scorerDefinition: envelope.scorerDefinitions[0], dimension: "correctness", score: value.actual === "expected-route" ? 1 : 0, confidence: 1, source: "deterministic_semantic_criteria" }],
     };
   }
-  if (capability === "evaluation:submit-trial-result" || capability === "evaluation:record-trial-score") return { accepted: true };
+  if (capability === "evaluation:submit-trial-result" || capability === "evaluation:record-trial-score-batch") return { accepted: true };
   if (capability === "evaluation:finalize-comparison-group" || capability === "evaluation:read-comparison-group") return { groupId: envelope.value.groupId, status: "finalized", outcome: "candidate" };
   if (capability === "signals:analyze-finalized-evaluation") {
     const value = envelope.value;

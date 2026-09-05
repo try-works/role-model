@@ -38,6 +38,7 @@ import {
   createRun88RuntimeCorrelation,
   createRuntimeRequestCorrelationId,
   createTrackBPostObservationOutbox,
+  digestTrackBSemanticEvaluationCriteria,
   normalizeTrackBSemanticEvaluationCriteria,
   resolveManagedArtifactKeyFiles,
   runTrackBPostObservation,
@@ -51,6 +52,7 @@ import {
 
 type CliBackend = Pick<
   RuntimeBridgeBackend,
+  | "operatorAuthToken"
   | "registry"
   | "executeChatCompletions"
   | "executeResponses"
@@ -76,6 +78,17 @@ type CliBackend = Pick<
   | "readTrackBShadowReceipts"
   | "readTrackBExtensionReadback"
   | "runTrackBSupervisedReplay"
+  | "readOperatorStatus"
+  | "listReplayJobs"
+  | "createReplayJob"
+  | "cancelReplayJob"
+  | "listEvaluationJobs"
+  | "readEvaluationJob"
+  | "cancelEvaluationJob"
+  | "retryEvaluationJob"
+  | "readLearningState"
+  | "updateLearningMode"
+  | "rollbackLearning"
   | "measureNoRichCaptureBaseline"
   | "readGraphMigration"
   | "advanceGraphMigration"
@@ -330,6 +343,7 @@ export function createCliServerOptions(
     staticRoot?: string;
     runtimeStateRoot?: string;
     runtimeChannel?: "development" | "stage" | "production";
+    operatorAuthToken?: string;
   },
   backendOrResolver: CliBackend | CliBackendResolver,
   shutdown?: () => Promise<void>,
@@ -363,6 +377,7 @@ export function createCliServerOptions(
     staticRoot: options.staticRoot,
     runtimeStateRoot: options.runtimeStateRoot,
     runtimeChannel: options.runtimeChannel,
+    operatorAuthToken: options.operatorAuthToken ?? resolveBackend()?.operatorAuthToken,
     shutdown,
     registry: resolveBackend()?.effectiveRegistry ?? EMPTY_REGISTRY,
     getRegistry: () => resolveBackend()?.effectiveRegistry ?? EMPTY_REGISTRY,
@@ -453,6 +468,39 @@ export function createCliServerOptions(
     runTrackBSupervisedReplay: bindBackendMethod(
       "runTrackBSupervisedReplay",
     ) as StartBridgeServerOptions["runTrackBSupervisedReplay"],
+    readOperatorStatus: bindBackendMethod(
+      "readOperatorStatus",
+    ) as StartBridgeServerOptions["readOperatorStatus"],
+    listReplayJobs: bindBackendMethod(
+      "listReplayJobs",
+    ) as StartBridgeServerOptions["listReplayJobs"],
+    createReplayJob: bindBackendMethod(
+      "createReplayJob",
+    ) as StartBridgeServerOptions["createReplayJob"],
+    cancelReplayJob: bindBackendMethod(
+      "cancelReplayJob",
+    ) as StartBridgeServerOptions["cancelReplayJob"],
+    listEvaluationJobs: bindBackendMethod(
+      "listEvaluationJobs",
+    ) as StartBridgeServerOptions["listEvaluationJobs"],
+    readEvaluationJob: bindBackendMethod(
+      "readEvaluationJob",
+    ) as StartBridgeServerOptions["readEvaluationJob"],
+    cancelEvaluationJob: bindBackendMethod(
+      "cancelEvaluationJob",
+    ) as StartBridgeServerOptions["cancelEvaluationJob"],
+    retryEvaluationJob: bindBackendMethod(
+      "retryEvaluationJob",
+    ) as StartBridgeServerOptions["retryEvaluationJob"],
+    readLearningState: bindBackendMethod(
+      "readLearningState",
+    ) as StartBridgeServerOptions["readLearningState"],
+    updateLearningMode: bindBackendMethod(
+      "updateLearningMode",
+    ) as StartBridgeServerOptions["updateLearningMode"],
+    rollbackLearning: bindBackendMethod(
+      "rollbackLearning",
+    ) as StartBridgeServerOptions["rollbackLearning"],
     measureNoRichCaptureBaseline: bindBackendMethod(
       "measureNoRichCaptureBaseline",
     ) as StartBridgeServerOptions["measureNoRichCaptureBaseline"],
@@ -802,6 +850,9 @@ export async function main(): Promise<void> {
       "track-b-qa-extension-manifest": {
         type: "string",
       },
+      "operator-auth-token": {
+        type: "string",
+      },
       "artifact-digest-key-file": {
         type: "string",
       },
@@ -853,6 +904,9 @@ export async function main(): Promise<void> {
     },
   });
   applyRecommendationServiceLauncherConfig(args.values);
+  const operatorAuthToken =
+    readLauncherString(args.values, "operator-auth-token") ??
+    (process.env.ROLE_MODEL_OPERATOR_AUTH_TOKEN?.trim() || undefined);
 
   const launchedWithoutRuntimeArgs =
     !args.values["repo-root"] && !args.values["runtime-state-root"];
@@ -944,6 +998,7 @@ export async function main(): Promise<void> {
         staticRoot,
         runtimeStateRoot: options.runtimeStateRoot,
         runtimeChannel: packagedProfile?.channel ?? "development",
+        ...(operatorAuthToken ? { operatorAuthToken } : {}),
         ...(run88StageIdentity ? { run88StageIdentity } : {}),
       },
       {
@@ -1091,6 +1146,7 @@ export async function main(): Promise<void> {
         runtimeStateRoot: options.runtimeStateRoot,
         scopeId: options.scopeId,
         runtimeChannel: packagedProfile?.channel ?? "development",
+        ...(operatorAuthToken ? { operatorAuthToken } : {}),
         ...(run88StageIdentity ? { run88StageIdentity } : {}),
         unifiedRuntimeConfigPath: options.unifiedRuntimeConfigPath,
         ...(trackBOperationsEndpoint ? { trackBOperationsEndpoint } : {}),
@@ -1237,9 +1293,7 @@ export async function main(): Promise<void> {
           const evaluationCriteria = normalizeTrackBSemanticEvaluationCriteria(
             body.evaluationCriteria,
           );
-          const evaluationCriteriaDigest = `sha256:${createHash("sha256")
-            .update(JSON.stringify(evaluationCriteria))
-            .digest("hex")}`;
+          const evaluationCriteriaDigest = digestTrackBSemanticEvaluationCriteria(evaluationCriteria);
           const sourceResponse = sourceCapture.response && typeof sourceCapture.response === "object"
             ? sourceCapture.response as Record<string, unknown>
             : null;

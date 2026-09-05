@@ -4,6 +4,52 @@ export type RuntimeFetcher = (
   input: string | URL | Request,
   init?: RequestInit,
 ) => Promise<Response>;
+
+/**
+ * Operator state is deliberately separate from ordinary runtime health. A
+ * worker can be alive while one operator capability is unavailable, blocked,
+ * or has not been observed yet; consumers must not turn those states into a
+ * fabricated "ready" indicator.
+ */
+export type RuntimeOperatorAvailability =
+  | "available"
+  | "unavailable"
+  | "unobserved"
+  | "degraded"
+  | "blocked";
+
+export type RuntimeOperatorCapability =
+  | "graph"
+  | "replay"
+  | "evaluation"
+  | "learning"
+  | "extensions"
+  | "storage";
+
+export interface RuntimeOperatorStatus {
+  readonly schemaVersion: "role-model.operator-status.v1";
+  readonly overall: RuntimeOperatorAvailability;
+  readonly observedAtMs: number;
+  readonly reason?: string;
+  readonly capabilities: Readonly<
+    Partial<Record<RuntimeOperatorCapability, RuntimeOperatorAvailability>>
+  >;
+}
+
+export interface RuntimeOperatorJob {
+  readonly jobId: string;
+  readonly status: string;
+  readonly [key: string]: unknown;
+}
+
+export interface RuntimeOperatorJobList {
+  readonly jobs: readonly RuntimeOperatorJob[];
+  readonly [key: string]: unknown;
+}
+
+export interface RuntimeOperatorResult {
+  readonly [key: string]: unknown;
+}
 export type SessionBootstrapStatus = "pending" | "running" | "ready" | "degraded" | "blocked";
 
 export type BootstrapStageStatus =
@@ -1582,14 +1628,209 @@ async function postJson<TValue>(
   path: string,
   payload: unknown,
   fetcher: RuntimeFetcher,
+  headers?: Readonly<Record<string, string>>,
 ): Promise<TValue> {
   return fetchJson<TValue>(path, fetcher, {
     method: "POST",
     headers: {
       "content-type": "application/json",
+      ...headers,
     },
     body: JSON.stringify(payload),
   });
+}
+
+function withOperatorToken(
+  init: RequestInit | undefined,
+  operatorToken: string | undefined,
+): RequestInit | undefined {
+  if (!operatorToken) {
+    return init;
+  }
+  const inputHeaders = init?.headers;
+  const headers: Record<string, string> = {};
+  if (inputHeaders instanceof Headers) {
+    inputHeaders.forEach((value, key) => {
+      headers[key] = value;
+    });
+  } else if (Array.isArray(inputHeaders)) {
+    for (const [key, value] of inputHeaders) {
+      headers[key] = value;
+    }
+  } else if (inputHeaders) {
+    Object.assign(headers, inputHeaders);
+  }
+  headers.authorization = `Bearer ${operatorToken}`;
+  return { ...init, headers };
+}
+
+function operatorQuery(
+  query: Readonly<Record<string, string | number | boolean>> | undefined,
+): string {
+  if (!query) {
+    return "";
+  }
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    params.set(key, String(value));
+  }
+  const serialized = params.toString();
+  return serialized.length > 0 ? `?${serialized}` : "";
+}
+
+function operatorGet<TValue>(
+  path: string,
+  fetcher: RuntimeFetcher,
+  operatorToken?: string,
+): Promise<TValue> {
+  return fetchJson<TValue>(path, fetcher, withOperatorToken(undefined, operatorToken));
+}
+
+function operatorPost<TValue>(
+  path: string,
+  payload: unknown,
+  fetcher: RuntimeFetcher,
+  operatorToken?: string,
+): Promise<TValue> {
+  return postJson<TValue>(path, payload, fetcher, {
+    ...(operatorToken ? { authorization: `Bearer ${operatorToken}` } : {}),
+  });
+}
+
+export async function fetchOperatorStatus(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorStatus> {
+  return operatorGet<RuntimeOperatorStatus>(
+    "/api/role-model/operator/status",
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function listReplayJobs(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+  query?: Readonly<Record<string, string | number | boolean>>,
+): Promise<RuntimeOperatorJobList> {
+  return operatorGet<RuntimeOperatorJobList>(
+    `/api/role-model/operator/replay/jobs${operatorQuery(query)}`,
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function createReplayJob(
+  body: Readonly<Record<string, unknown>>,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorPost<RuntimeOperatorResult>(
+    "/api/role-model/operator/replay/jobs",
+    body,
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function cancelReplayJob(
+  jobId: string,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorPost<RuntimeOperatorResult>(
+    `/api/role-model/operator/replay/jobs/${encodeURIComponent(jobId)}/cancel`,
+    {},
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function listEvaluationJobs(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+  query?: Readonly<Record<string, string | number | boolean>>,
+): Promise<RuntimeOperatorJobList> {
+  return operatorGet<RuntimeOperatorJobList>(
+    `/api/role-model/operator/evaluation/jobs${operatorQuery(query)}`,
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function fetchEvaluationJob(
+  jobId: string,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorGet<RuntimeOperatorResult>(
+    `/api/role-model/operator/evaluation/jobs/${encodeURIComponent(jobId)}`,
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function cancelEvaluationJob(
+  jobId: string,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorPost<RuntimeOperatorResult>(
+    `/api/role-model/operator/evaluation/jobs/${encodeURIComponent(jobId)}/cancel`,
+    {},
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function retryEvaluationJob(
+  jobId: string,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorPost<RuntimeOperatorResult>(
+    `/api/role-model/operator/evaluation/jobs/${encodeURIComponent(jobId)}/retry`,
+    {},
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function fetchLearningState(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorGet<RuntimeOperatorResult>(
+    "/api/role-model/operator/learning",
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function updateLearningMode(
+  body: Readonly<Record<string, unknown>>,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorPost<RuntimeOperatorResult>(
+    "/api/role-model/operator/learning/mode",
+    body,
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function rollbackLearning(
+  body: Readonly<Record<string, unknown>> = {},
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorPost<RuntimeOperatorResult>(
+    "/api/role-model/operator/learning/rollback",
+    body,
+    fetcher,
+    operatorToken,
+  );
 }
 
 async function putJson<TValue>(

@@ -30,6 +30,7 @@ const comparableEvidence = () => ({
     policyId: "routing-policy-a",
     reasoningEffort: "medium",
     effortSource: "variant",
+    evaluationActual: "expected-route",
     evidenceRef: "evidence:source-87",
     artifactRef: "artifact:source-87",
     propensity: 0.6,
@@ -50,6 +51,7 @@ const comparableEvidence = () => ({
       policyId: "routing-policy-b",
       reasoningEffort: "high",
       effortSource: "variant",
+      evaluationActual: "counterfactual-route",
       evidenceRef: "evidence:counterfactual-87",
       artifactRef: "artifact:counterfactual-87",
       propensity: 0.4,
@@ -79,6 +81,7 @@ const comparableCases = () => [
     actualOutcomeRef: "outcome:counterfactual-87",
     expectedEvidenceRef: "evidence:source-87",
     actualEvidenceRef: "evidence:counterfactual-87",
+    evaluationCriteria: { schemaVersion: "role-model.semantic-criteria.v1", requiredTerms: ["expected-route"] },
   },
 ];
 
@@ -89,7 +92,7 @@ test("SP1 runs the useful routing-learning DAG through supervised shadow capabil
     .digest("hex");
   const capabilities = new Map<string, string[]>([
     ["replay-core", ["replay:plan-graph"]],
-    ["evaluation-core", ["evaluation:register-scorer", "evaluation:create-job", "evaluation:list-trials", "evaluation:claim-trial", "evaluation:submit-trial-result", "evaluation:record-trial-score", "evaluation:finalize-comparison-group", "evaluation:read-comparison-group"]],
+    ["evaluation-core", ["evaluation:register-scorer", "evaluation:create-job", "evaluation:list-trials", "evaluation:claim-trial", "evaluation:submit-trial-result", "evaluation:record-trial-score-batch", "evaluation:finalize-comparison-group", "evaluation:read-comparison-group"]],
     ["evaluation-runner-local", ["evaluation:execute-trial"]],
     ["trajectory-signals", ["signals:analyze-finalized-evaluation"]],
     ["profile-learner", ["profile:estimate-finalized-evaluation"]],
@@ -129,6 +132,7 @@ test("SP1 runs the useful routing-learning DAG through supervised shadow capabil
     counterfactuals: [{ id: "candidate-remote", suffix: ["candidate-remote"] }],
     comparableEvidence: comparableEvidence(),
     evaluationCases: comparableCases(),
+    evaluationCriteria: { schemaVersion: "role-model.semantic-criteria.v1", requiredTerms: ["expected-route"] },
     trajectoryEvents: [],
   });
 
@@ -184,7 +188,16 @@ test("SP1 fails closed before Knowledge Worker when durable holdout comparison i
   const invoked: string[] = [];
   const invoke = async (id: string, envelope: Record<string, unknown>) => {
     invoked.push(id);
-    if (id === "replay-core") return {};
+    if (id === "replay-core") {
+      const value = envelope.value as Record<string, unknown>;
+      return {
+        digest: "sha256:replay-87",
+        sourceDecisionId: value.sourceDecisionId,
+        sourceGraphRef: value.sourceGraphRef,
+        sharedPrefixRef: "artifact:prefix-87",
+        branches: [{ id: "candidate-remote" }],
+      };
+    }
     if (id === "evaluation-core" && envelope.capability === "evaluation:register-scorer") return {};
     if (id === "evaluation-core" && envelope.capability === "evaluation:create-job") return {};
     if (id === "evaluation-core" && envelope.capability === "evaluation:list-trials") {
@@ -199,13 +212,15 @@ test("SP1 fails closed before Knowledge Worker when durable holdout comparison i
       return {
         outputRef: "artifact:failed-evaluation-87", outputDigest: "sha256:failed-evaluation-87",
         stdoutRef: "artifact:failed-evaluation-87", stderrRef: "artifact:failed-evaluation-87",
-        exitCode: 0, measurements: { elapsedMs: 1, outputBytes: 1 }, scores: [],
+        exitCode: 0, measurements: { elapsedMs: 1, outputBytes: 1 }, scores: [{ scorerId: "run96-semantic-criteria", scorerVersion: "1", scorerDigest: "sha256:semantic-criteria", scorerDefinition: { manifestVersion: 2, id: "run96-semantic-criteria", version: "1", digest: "sha256:semantic-criteria", scorerSetVersion: "run96-routing-shadow-v2", algorithm: "required_terms", dimensions: ["correctness"], range: { min: 0, max: 1 }, direction: "higher_is_better", requiredInputs: ["outputRef", "evaluationCriteria"] }, dimension: "correctness", score: 0, confidence: 1, source: "deterministic_semantic_criteria" }],
       };
     }
-    if (id === "evaluation-core" && ["evaluation:submit-trial-result", "evaluation:record-trial-score"].includes(String(envelope.capability))) return {};
+    if (id === "evaluation-core" && ["evaluation:submit-trial-result", "evaluation:record-trial-score-batch"].includes(String(envelope.capability))) return {};
     if (id === "evaluation-core" && ["evaluation:finalize-comparison-group", "evaluation:read-comparison-group"].includes(String(envelope.capability))) {
       return { status: "finalized", outcome: "insufficient" };
     }
+    if (id === "trajectory-signals") return { routeDecisionId: "route-87", graphRef: "sha256:graph-87", signals: [] };
+    if (id === "profile-learner") return { digest: "sha256:profile-87", effects: {} };
     throw new Error(`unexpected durable holdout invocation ${id}:${String(envelope.capability)}`);
   };
   await expect(
@@ -223,11 +238,12 @@ test("SP1 fails closed before Knowledge Worker when durable holdout comparison i
         counterfactuals: [{ id: "candidate-remote", suffix: [] }],
         comparableEvidence: comparableEvidence(),
         evaluationCases: comparableCases(),
+        evaluationCriteria: { schemaVersion: "role-model.semantic-criteria.v1", requiredTerms: ["expected-route"] },
         trajectoryEvents: [],
         productionState: {},
       },
     ),
-  ).rejects.toThrow(/comparison finalization|candidate/i);
+  ).resolves.toMatchObject({ candidate: { state: "insufficient_comparable_evidence" } });
   expect(invoked).not.toContain("knowledge-worker");
 });
 

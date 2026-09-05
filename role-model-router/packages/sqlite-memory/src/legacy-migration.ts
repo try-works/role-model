@@ -1,9 +1,13 @@
 import { createHash } from "node:crypto";
-import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
 export const LEGACY_INLINE_CAP_BYTES = 16 * 1024;
+export const LEGACY_MIGRATION_INVENTORY_SCHEMA =
+  "role-model.legacy-migration-inventory.v1" as const;
+export const LEGACY_MIGRATION_CONTRACT_VERSION = "role-model.legacy-migration.v2" as const;
+export const LEGACY_MIGRATION_PREVIOUS_CONTRACT_VERSION = "role-model.legacy-migration.v1" as const;
 
 export type LegacyMigrationState =
   | "legacy_primary"
@@ -89,6 +93,48 @@ export interface LegacyMigrationJournal {
   readonly secondParityVerified: boolean;
 }
 
+export type LegacyMigrationInventoryCategory =
+  | "artifact_content_edges"
+  | "occurrence_rows"
+  | "capture_roots_manifests"
+  | "replay_checkpoints"
+  | "evaluation_databases"
+  | "projection_consumers"
+  | "runtime_observations"
+  | "performance_samples";
+
+export interface LegacyMigrationInventoryEntry {
+  readonly category: LegacyMigrationInventoryCategory;
+  readonly tableName: string;
+  readonly rowCount: number;
+  readonly payloadBytes: number;
+  readonly rowHash: string;
+}
+
+export interface LegacyMigrationInventory {
+  readonly schemaVersion: typeof LEGACY_MIGRATION_INVENTORY_SCHEMA;
+  readonly contractVersion: typeof LEGACY_MIGRATION_CONTRACT_VERSION;
+  readonly entries: readonly LegacyMigrationInventoryEntry[];
+  readonly inventoryHash: string;
+  readonly totalRows: number;
+  readonly totalPayloadBytes: number;
+}
+
+export interface LegacyMigrationStageReceipt {
+  readonly migrationId: string;
+  readonly stage: LegacyMigrationState;
+  readonly sourceInventoryHash: string;
+  readonly targetInventoryHash: string;
+  readonly cursor: string | null;
+  readonly restartCount: number;
+  readonly compatibility: {
+    readonly current: typeof LEGACY_MIGRATION_CONTRACT_VERSION;
+    readonly previous: typeof LEGACY_MIGRATION_PREVIOUS_CONTRACT_VERSION;
+    readonly accepted: readonly string[];
+  };
+  readonly recordedAtMs: number;
+}
+
 export interface LegacyStorageAudit {
   readonly state: LegacyMigrationState;
   readonly sourceRowCount: number;
@@ -98,6 +144,18 @@ export interface LegacyStorageAudit {
   readonly quarantinedPointerRows: number;
   readonly quarantinedRows: number;
   readonly quarantinedRequestIds: readonly string[];
+  readonly inventory: LegacyMigrationInventory;
+  readonly unresolvedInventory: readonly LegacyMigrationInventoryEntry[];
+}
+
+export interface LegacyMigrationPhysicalFootprint {
+  readonly databaseBytes: number;
+  readonly walBytes: number;
+  readonly shmBytes: number;
+  readonly totalBytes: number;
+  readonly baselineBytes: number | null;
+  readonly growthBytes: number | null;
+  readonly bounded: boolean;
 }
 
 export interface GraphArtifactReference {
@@ -305,6 +363,412 @@ function tableExists(database: DatabaseSync, table: string): boolean {
   );
 }
 
+const LEGACY_MIGRATION_METADATA_TABLES = new Set([
+  "legacy_migration_inventory",
+  "legacy_migration_stage_receipts",
+  "legacy_migration_physical_receipts",
+  "legacy_migration_quarantine",
+  "legacy_graph_migration_refs",
+  "normalized_performance_samples_v2",
+]);
+
+// These tables are already bounded relational authorities in the released
+// runtime. They still appear in the inventory so their rows/bytes participate
+// in parity, but they do not need a second graph artifact backfill.
+const LEGACY_MIGRATION_CANONICAL_TABLES = new Set([
+  "artifact_links",
+  "context_artifacts",
+  "projection_consumers",
+  "projection_state",
+]);
+
+function quoteIdentifier(value: string): string {
+  return `"${value.replaceAll('"', '""')}"`;
+}
+
+function legacyInventoryCategory(tableName: string): LegacyMigrationInventoryCategory | undefined {
+  if (LEGACY_MIGRATION_METADATA_TABLES.has(tableName)) return undefined;
+  if (tableName === "runtime_observations") return "runtime_observations";
+  if (tableName === "observed_performance_samples") return "performance_samples";
+  if (/occurrence|graph_nodes?/i.test(tableName)) return "occurrence_rows";
+  if (/(capture|route|trace).*(root|manifest)|(^|_)roots?($|_)/i.test(tableName)) {
+    return "capture_roots_manifests";
+  }
+  if (/(replay|checkpoint)/i.test(tableName)) return "replay_checkpoints";
+  if (/(^|_)(evaluation|eval)(_|$)/i.test(tableName)) return "evaluation_databases";
+  if (/(projection|materialization|consumer)/i.test(tableName)) {
+    return "projection_consumers";
+  }
+  if (
+    /(artifact|content).*(edge|link|record)|(^|_)links?($|_)|(^|_)(artifacts?|contents?|graph_edges?)($|_)/i.test(
+      tableName,
+    )
+  ) {
+    return "artifact_content_edges";
+  }
+  return undefined;
+}
+
+function stableSqlValue(value: unknown): string {
+  if (value === null || value === undefined) return "null";
+  if (typeof value === "bigint") return `bigint:${value.toString()}`;
+  if (typeof value === "number" || typeof value === "boolean" || typeof value === "string") {
+    return `${typeof value}:${String(value)}`;
+  }
+  if (value instanceof Uint8Array) return `blob:${Buffer.from(value).toString("base64")}`;
+  return `json:${JSON.stringify(value)}`;
+}
+
+interface LegacyTableColumn {
+  readonly name: string;
+  readonly pk: number;
+}
+
+function readTableColumns(database: DatabaseSync, tableName: string): LegacyTableColumn[] {
+  return database
+    .prepare(`PRAGMA table_info(${quoteIdentifier(tableName)})`)
+    .all()
+    .map((row) => {
+      const value = row as { name: string; pk: number };
+      return { name: value.name, pk: Number(value.pk) };
+    });
+}
+
+function inventoryTable(
+  database: DatabaseSync,
+  tableName: string,
+  pageSize: number,
+): {
+  readonly rowCount: number;
+  readonly payloadBytes: number;
+  readonly rowHash: string;
+} {
+  const columns = readTableColumns(database, tableName);
+  if (columns.length === 0) return { rowCount: 0, payloadBytes: 0, rowHash: sha256("") };
+  const table = quoteIdentifier(tableName);
+  const rowCount = Number(
+    (database.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get() as { count: number }).count,
+  );
+  const payloadExpression = columns
+    .map((column) => `COALESCE(length(CAST(${quoteIdentifier(column.name)} AS BLOB)),0)`)
+    .join("+");
+  const payloadBytes = Number(
+    (
+      database
+        .prepare(`SELECT COALESCE(SUM(${payloadExpression}),0) AS bytes FROM ${table}`)
+        .get() as {
+        bytes: number;
+      }
+    ).bytes,
+  );
+  const primaryKey = columns
+    .filter((column) => column.pk > 0)
+    .sort((left, right) => left.pk - right.pk)
+    .map((column) => quoteIdentifier(column.name));
+  const orderBy = primaryKey.length > 0 ? primaryKey.join(",") : "rowid";
+  const digest = createHash("sha256");
+  let offset = 0;
+  for (;;) {
+    const rows = database
+      .prepare(`SELECT * FROM ${table} ORDER BY ${orderBy} LIMIT ? OFFSET ?`)
+      .all(pageSize, offset) as Array<Record<string, unknown>>;
+    if (rows.length === 0) break;
+    for (const row of rows) {
+      for (const column of columns) {
+        digest.update(`${column.name}\0${stableSqlValue(row[column.name])}\0`);
+      }
+      digest.update("\n");
+    }
+    offset += rows.length;
+    if (rows.length < pageSize) break;
+  }
+  return { rowCount, payloadBytes, rowHash: digest.digest("hex") };
+}
+
+function inspectLegacyMigrationInventoryFromDatabase(
+  database: DatabaseSync,
+  pageSize = 500,
+): LegacyMigrationInventory {
+  if (!Number.isInteger(pageSize) || pageSize < 1) throw new Error("inventory page size required");
+  const tableRows = database
+    .prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name ASC",
+    )
+    .all() as Array<{ name: string }>;
+  const entries = tableRows.flatMap((row) => {
+    const category = legacyInventoryCategory(row.name);
+    if (!category) return [];
+    const table = inventoryTable(database, row.name, pageSize);
+    return [{ category, tableName: row.name, ...table }];
+  });
+  const inventoryHash = sha256(
+    entries
+      .map(
+        (entry) =>
+          `${entry.category}\0${entry.tableName}\0${entry.rowCount}\0${entry.payloadBytes}\0${entry.rowHash}`,
+      )
+      .join("\n"),
+  );
+  return {
+    schemaVersion: LEGACY_MIGRATION_INVENTORY_SCHEMA,
+    contractVersion: LEGACY_MIGRATION_CONTRACT_VERSION,
+    entries,
+    inventoryHash,
+    totalRows: entries.reduce((sum, entry) => sum + entry.rowCount, 0),
+    totalPayloadBytes: entries.reduce((sum, entry) => sum + entry.payloadBytes, 0),
+  };
+}
+
+/**
+ * Read-only inventory used by TB04 preflight and parity receipts. The inventory
+ * is deliberately table/row/hash based, so a large legacy database can be
+ * inspected without copying its rich values into a second projection.
+ */
+export function inspectLegacyMigrationInventory(
+  databasePath: string,
+  options: { readonly pageSize?: number } = {},
+): LegacyMigrationInventory {
+  const database = open(databasePath, true);
+  try {
+    return inspectLegacyMigrationInventoryFromDatabase(database, options.pageSize);
+  } finally {
+    database.close();
+  }
+}
+
+export function validateLegacyMigrationContractVersion(version: string): {
+  readonly compatible: boolean;
+  readonly current: typeof LEGACY_MIGRATION_CONTRACT_VERSION;
+  readonly previous: typeof LEGACY_MIGRATION_PREVIOUS_CONTRACT_VERSION;
+  readonly accepted: readonly string[];
+} {
+  const accepted = [
+    LEGACY_MIGRATION_CONTRACT_VERSION,
+    LEGACY_MIGRATION_PREVIOUS_CONTRACT_VERSION,
+  ] as const;
+  return {
+    compatible: accepted.includes(version as (typeof accepted)[number]),
+    current: LEGACY_MIGRATION_CONTRACT_VERSION,
+    previous: LEGACY_MIGRATION_PREVIOUS_CONTRACT_VERSION,
+    accepted,
+  };
+}
+
+export function assertLegacyMigrationContractVersion(version: string): void {
+  if (!validateLegacyMigrationContractVersion(version).compatible) {
+    throw new Error(`unsupported legacy migration contract version: ${version}`);
+  }
+}
+
+function ensureMigrationInventorySchema(database: DatabaseSync): void {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS legacy_migration_inventory (
+      migration_id TEXT NOT NULL,
+      inventory_kind TEXT NOT NULL,
+      schema_version TEXT NOT NULL,
+      contract_version TEXT NOT NULL,
+      inventory_hash TEXT NOT NULL,
+      inventory_json TEXT NOT NULL,
+      captured_at_ms INTEGER NOT NULL,
+      PRIMARY KEY (migration_id, inventory_kind)
+    );
+    CREATE TABLE IF NOT EXISTS legacy_migration_stage_receipts (
+      migration_id TEXT NOT NULL,
+      stage TEXT NOT NULL,
+      source_inventory_hash TEXT NOT NULL,
+      target_inventory_hash TEXT NOT NULL,
+      cursor TEXT,
+      restart_count INTEGER NOT NULL DEFAULT 0,
+      compatibility_json TEXT NOT NULL,
+      recorded_at_ms INTEGER NOT NULL,
+      PRIMARY KEY (migration_id, stage)
+    );
+    CREATE TABLE IF NOT EXISTS legacy_migration_physical_receipts (
+      migration_id TEXT NOT NULL,
+      stage TEXT NOT NULL,
+      database_bytes INTEGER NOT NULL,
+      wal_bytes INTEGER NOT NULL,
+      shm_bytes INTEGER NOT NULL,
+      total_bytes INTEGER NOT NULL,
+      baseline_bytes INTEGER,
+      growth_bytes INTEGER,
+      bounded INTEGER NOT NULL,
+      recorded_at_ms INTEGER NOT NULL,
+      PRIMARY KEY (migration_id, stage)
+    );
+  `);
+}
+
+function writeInventoryReceipt(
+  database: DatabaseSync,
+  inventory: LegacyMigrationInventory,
+  nowMs: number,
+): void {
+  database
+    .prepare(
+      `INSERT OR REPLACE INTO legacy_migration_inventory
+       (migration_id,inventory_kind,schema_version,contract_version,inventory_hash,inventory_json,captured_at_ms)
+       VALUES (?,?,?,?,?,?,?)`,
+    )
+    .run(
+      MIGRATION_ID,
+      "source",
+      inventory.schemaVersion,
+      inventory.contractVersion,
+      inventory.inventoryHash,
+      JSON.stringify(inventory),
+      nowMs,
+    );
+}
+
+function readPersistedInventory(database: DatabaseSync): LegacyMigrationInventory | null {
+  if (!tableExists(database, "legacy_migration_inventory")) return null;
+  const row = database
+    .prepare(
+      "SELECT schema_version,contract_version,inventory_json FROM legacy_migration_inventory WHERE migration_id=? AND inventory_kind='source'",
+    )
+    .get(MIGRATION_ID) as
+    | { schema_version: string; contract_version: string; inventory_json: string }
+    | undefined;
+  if (!row) return null;
+  assertLegacyMigrationContractVersion(row.contract_version);
+  const inventory = JSON.parse(row.inventory_json) as LegacyMigrationInventory;
+  if (inventory.schemaVersion !== row.schema_version) {
+    throw new Error("legacy migration inventory schema mismatch");
+  }
+  if (inventory.inventoryHash !== computeInventoryHash(inventory.entries)) {
+    throw new Error("legacy migration inventory digest mismatch");
+  }
+  return inventory;
+}
+
+function computeInventoryHash(entries: readonly LegacyMigrationInventoryEntry[]): string {
+  return sha256(
+    entries
+      .map(
+        (entry) =>
+          `${entry.category}\0${entry.tableName}\0${entry.rowCount}\0${entry.payloadBytes}\0${entry.rowHash}`,
+      )
+      .join("\n"),
+  );
+}
+
+export function readLegacyMigrationInventory(
+  databasePath: string,
+): LegacyMigrationInventory | null {
+  const database = open(databasePath, true);
+  try {
+    return readPersistedInventory(database);
+  } finally {
+    database.close();
+  }
+}
+
+export function measureLegacyMigrationFootprint(input: {
+  readonly databasePath: string;
+  readonly baselineBytes?: number;
+}): LegacyMigrationPhysicalFootprint {
+  const stat = (filePath: string): number => {
+    try {
+      return statSync(filePath).size;
+    } catch {
+      return 0;
+    }
+  };
+  const databaseBytes = stat(input.databasePath);
+  const walBytes = stat(`${input.databasePath}-wal`);
+  const shmBytes = stat(`${input.databasePath}-shm`);
+  const totalBytes = databaseBytes + walBytes + shmBytes;
+  const baselineBytes = input.baselineBytes ?? null;
+  const growthBytes = baselineBytes === null ? null : totalBytes - baselineBytes;
+  return {
+    databaseBytes,
+    walBytes,
+    shmBytes,
+    totalBytes,
+    baselineBytes,
+    growthBytes,
+    bounded:
+      growthBytes === null || growthBytes <= Math.max(LEGACY_INLINE_CAP_BYTES, baselineBytes ?? 0),
+  };
+}
+
+function writePhysicalReceipt(
+  database: DatabaseSync,
+  stage: LegacyMigrationState,
+  databasePath: string,
+  backupPath: string,
+  nowMs: number,
+): void {
+  let baselineBytes: number | undefined;
+  try {
+    baselineBytes = statSync(backupPath).size;
+  } catch {
+    baselineBytes = undefined;
+  }
+  const footprint = measureLegacyMigrationFootprint({ databasePath, baselineBytes });
+  database
+    .prepare(
+      `INSERT OR REPLACE INTO legacy_migration_physical_receipts
+       (migration_id,stage,database_bytes,wal_bytes,shm_bytes,total_bytes,baseline_bytes,growth_bytes,bounded,recorded_at_ms)
+       VALUES (?,?,?,?,?,?,?,?,?,?)`,
+    )
+    .run(
+      MIGRATION_ID,
+      stage,
+      footprint.databaseBytes,
+      footprint.walBytes,
+      footprint.shmBytes,
+      footprint.totalBytes,
+      footprint.baselineBytes,
+      footprint.growthBytes,
+      Number(footprint.bounded),
+      nowMs,
+    );
+}
+
+export function readLegacyMigrationPhysicalReceipts(databasePath: string): readonly {
+  stage: LegacyMigrationState;
+  footprint: LegacyMigrationPhysicalFootprint;
+  recordedAtMs: number;
+}[] {
+  const database = open(databasePath, true);
+  try {
+    if (!tableExists(database, "legacy_migration_physical_receipts")) return [];
+    const rows = database
+      .prepare(
+        `SELECT stage,database_bytes,wal_bytes,shm_bytes,total_bytes,baseline_bytes,growth_bytes,bounded,recorded_at_ms
+         FROM legacy_migration_physical_receipts WHERE migration_id=? ORDER BY recorded_at_ms ASC,stage ASC`,
+      )
+      .all(MIGRATION_ID) as Array<{
+      stage: LegacyMigrationState;
+      database_bytes: number;
+      wal_bytes: number;
+      shm_bytes: number;
+      total_bytes: number;
+      baseline_bytes: number | null;
+      growth_bytes: number | null;
+      bounded: number;
+      recorded_at_ms: number;
+    }>;
+    return rows.map((row) => ({
+      stage: row.stage,
+      footprint: {
+        databaseBytes: Number(row.database_bytes),
+        walBytes: Number(row.wal_bytes),
+        shmBytes: Number(row.shm_bytes),
+        totalBytes: Number(row.total_bytes),
+        baselineBytes: row.baseline_bytes === null ? null : Number(row.baseline_bytes),
+        growthBytes: row.growth_bytes === null ? null : Number(row.growth_bytes),
+        bounded: Number(row.bounded) === 1,
+      },
+      recordedAtMs: Number(row.recorded_at_ms),
+    }));
+  } finally {
+    database.close();
+  }
+}
+
 type LegacyRowClassification =
   | { readonly kind: "import" }
   | { readonly kind: "canonical"; readonly reference: GraphArtifactReference }
@@ -444,6 +908,208 @@ function targetProof(database: DatabaseSync): { count: number; hash: string } {
     cursor = last.source_id;
   }
   return { count, hash: digest.digest("hex") };
+}
+
+function performanceSourceProof(database: DatabaseSync): { count: number; hash: string } {
+  if (!tableExists(database, "observed_performance_samples")) {
+    return { count: 0, hash: sha256("") };
+  }
+  const digest = createHash("sha256");
+  const rows = database
+    .prepare(
+      "SELECT sample_id,sample_json FROM observed_performance_samples ORDER BY sample_id ASC",
+    )
+    .all() as Array<{ sample_id: string; sample_json: string }>;
+  rows.forEach((row, index) => {
+    if (index) digest.update("\n");
+    digest.update(`${row.sample_id}\0${sha256(row.sample_json)}`);
+  });
+  return { count: rows.length, hash: digest.digest("hex") };
+}
+
+function normalizedPerformanceTargetProof(database: DatabaseSync): { count: number; hash: string } {
+  if (!tableExists(database, "normalized_performance_samples_v2")) {
+    return { count: 0, hash: sha256("") };
+  }
+  const digest = createHash("sha256");
+  const rows = database
+    .prepare(
+      "SELECT sample_id,source_hash FROM normalized_performance_samples_v2 ORDER BY sample_id ASC",
+    )
+    .all() as Array<{ sample_id: string; source_hash: string }>;
+  rows.forEach((row, index) => {
+    if (index) digest.update("\n");
+    digest.update(`${row.sample_id}\0${row.source_hash}`);
+  });
+  return { count: rows.length, hash: digest.digest("hex") };
+}
+
+/**
+ * Reconcile performance rows that were written by the legacy writer during the
+ * shadow window. Runtime observation graph writes already have an explicit
+ * dual-write hook, but performance history is persisted by the normal SQLite
+ * writer. Replaying the source row into the normalized table here keeps the
+ * parity receipt grounded in the actual source contents after a restart or a
+ * live write, instead of trusting a caller-provided parity flag.
+ */
+function reconcilePerformanceTarget(database: DatabaseSync): void {
+  if (
+    !tableExists(database, "observed_performance_samples") ||
+    !tableExists(database, "normalized_performance_samples_v2")
+  ) {
+    return;
+  }
+  const rows = database
+    .prepare(
+      "SELECT sample_id,endpoint_id,request_id,routing_decision_id,source_type,timestamp_ms,sample_json FROM observed_performance_samples ORDER BY sample_id ASC",
+    )
+    .all() as Array<{
+    sample_id: string;
+    endpoint_id: string;
+    request_id: string | null;
+    routing_decision_id: string | null;
+    source_type: string;
+    timestamp_ms: number;
+    sample_json: string;
+  }>;
+  const insert = database.prepare(
+    `INSERT OR REPLACE INTO normalized_performance_samples_v2
+     (sample_id,endpoint_id,model_id,request_id,routing_decision_id,source_type,
+      timestamp_ms,latency_ms,success,source_hash) VALUES (?,?,?,?,?,?,?,?,?,?)`,
+  );
+  for (const row of rows) {
+    const parsed = JSON.parse(row.sample_json) as Record<string, unknown>;
+    insert.run(
+      row.sample_id,
+      row.endpoint_id,
+      typeof parsed.model_id === "string" ? parsed.model_id : null,
+      row.request_id,
+      row.routing_decision_id,
+      row.source_type,
+      row.timestamp_ms,
+      typeof parsed.latency_ms === "number" ? parsed.latency_ms : null,
+      typeof parsed.success === "boolean" ? Number(parsed.success) : null,
+      sha256(row.sample_json),
+    );
+  }
+}
+
+function unresolvedInventoryEntries(
+  inventory: LegacyMigrationInventory,
+): readonly LegacyMigrationInventoryEntry[] {
+  return inventory.entries.filter(
+    (entry) =>
+      entry.rowCount > 0 &&
+      !LEGACY_MIGRATION_CANONICAL_TABLES.has(entry.tableName) &&
+      entry.category !== "runtime_observations" &&
+      entry.category !== "performance_samples",
+  );
+}
+
+function migrationTargetInventory(
+  database: DatabaseSync,
+  sourceInventory: LegacyMigrationInventory,
+): LegacyMigrationInventory {
+  const runtimeTarget = targetProof(database);
+  const performanceTarget = normalizedPerformanceTargetProof(database);
+  const entries = sourceInventory.entries.map((entry) => {
+    if (entry.category === "runtime_observations") {
+      return {
+        ...entry,
+        rowCount: runtimeTarget.count,
+        rowHash: runtimeTarget.count === entry.rowCount ? entry.rowHash : runtimeTarget.hash,
+      };
+    }
+    if (entry.category === "performance_samples") {
+      return {
+        ...entry,
+        rowCount: performanceTarget.count,
+        rowHash:
+          performanceTarget.count === entry.rowCount ? entry.rowHash : performanceTarget.hash,
+      };
+    }
+    if (LEGACY_MIGRATION_CANONICAL_TABLES.has(entry.tableName)) return entry;
+    return { ...entry, rowCount: 0, payloadBytes: 0, rowHash: sha256("") };
+  });
+  return {
+    schemaVersion: LEGACY_MIGRATION_INVENTORY_SCHEMA,
+    contractVersion: LEGACY_MIGRATION_CONTRACT_VERSION,
+    entries,
+    inventoryHash: computeInventoryHash(entries),
+    totalRows: entries.reduce((sum, entry) => sum + entry.rowCount, 0),
+    totalPayloadBytes: entries.reduce((sum, entry) => sum + entry.payloadBytes, 0),
+  };
+}
+
+function writeStageReceipt(
+  database: DatabaseSync,
+  stage: LegacyMigrationState,
+  sourceInventoryHash: string,
+  targetInventoryHash: string,
+  cursor: string | null,
+  nowMs: number,
+): void {
+  const previous = database
+    .prepare(
+      "SELECT restart_count FROM legacy_migration_stage_receipts WHERE migration_id=? AND stage=?",
+    )
+    .get(MIGRATION_ID, stage) as { restart_count: number } | undefined;
+  const compatibility = validateLegacyMigrationContractVersion(LEGACY_MIGRATION_CONTRACT_VERSION);
+  database
+    .prepare(
+      `INSERT OR REPLACE INTO legacy_migration_stage_receipts
+       (migration_id,stage,source_inventory_hash,target_inventory_hash,cursor,restart_count,compatibility_json,recorded_at_ms)
+       VALUES (?,?,?,?,?,?,?,?)`,
+    )
+    .run(
+      MIGRATION_ID,
+      stage,
+      sourceInventoryHash,
+      targetInventoryHash,
+      cursor,
+      (previous?.restart_count ?? 0) + 1,
+      JSON.stringify(compatibility),
+      nowMs,
+    );
+}
+
+export function readLegacyMigrationStageReceipts(
+  databasePath: string,
+): readonly LegacyMigrationStageReceipt[] {
+  const database = open(databasePath, true);
+  try {
+    if (!tableExists(database, "legacy_migration_stage_receipts")) return [];
+    const rows = database
+      .prepare(
+        `SELECT migration_id,stage,source_inventory_hash,target_inventory_hash,cursor,
+                restart_count,compatibility_json,recorded_at_ms
+         FROM legacy_migration_stage_receipts WHERE migration_id=? ORDER BY recorded_at_ms ASC,stage ASC`,
+      )
+      .all(MIGRATION_ID) as Array<{
+      migration_id: string;
+      stage: LegacyMigrationState;
+      source_inventory_hash: string;
+      target_inventory_hash: string;
+      cursor: string | null;
+      restart_count: number;
+      compatibility_json: string;
+      recorded_at_ms: number;
+    }>;
+    return rows.map((row) => ({
+      migrationId: row.migration_id,
+      stage: row.stage,
+      sourceInventoryHash: row.source_inventory_hash,
+      targetInventoryHash: row.target_inventory_hash,
+      cursor: row.cursor,
+      restartCount: Number(row.restart_count),
+      compatibility: JSON.parse(
+        row.compatibility_json,
+      ) as LegacyMigrationStageReceipt["compatibility"],
+      recordedAtMs: Number(row.recorded_at_ms),
+    }));
+  } finally {
+    database.close();
+  }
 }
 
 export function readLegacyMigrationJournal(databasePath: string): LegacyMigrationJournal {
@@ -880,6 +1546,7 @@ export class LegacySqliteMigration {
   audit(): LegacyStorageAudit {
     const database = open(this.#databasePath, true);
     try {
+      const inventory = inspectLegacyMigrationInventoryFromDatabase(database);
       const proof = sourceProof(database, 1_000, this.#canonicalPointerValidator);
       const rows = database
         .prepare(
@@ -933,6 +1600,8 @@ export class LegacySqliteMigration {
         quarantinedPointerRows: quarantined.length,
         quarantinedRows: quarantinedIds.length,
         quarantinedRequestIds: quarantinedIds,
+        inventory,
+        unresolvedInventory: unresolvedInventoryEntries(inventory),
       };
     } finally {
       database.close();
@@ -974,6 +1643,8 @@ export class LegacySqliteMigration {
   backfill(input: { readonly scopeId: string; readonly batchSize: number }): {
     readonly migratedCount: number;
     readonly pendingCount: number;
+    readonly unresolvedCount: number;
+    readonly inventoryHash: string;
   } {
     if (!input.scopeId || !Number.isInteger(input.batchSize) || input.batchSize < 1) {
       throw new Error("bounded scoped backfill input required");
@@ -991,6 +1662,16 @@ export class LegacySqliteMigration {
       );
       database.exec(migrationSql);
       ensureQuarantineTable(database);
+      ensureMigrationInventorySchema(database);
+      const sourceInventory = inspectLegacyMigrationInventoryFromDatabase(database);
+      const persistedInventory = readPersistedInventory(database);
+      if (
+        persistedInventory &&
+        persistedInventory.inventoryHash !== sourceInventory.inventoryHash
+      ) {
+        throw new Error("legacy migration source inventory changed; restart requires a new audit");
+      }
+      if (!persistedInventory) writeInventoryReceipt(database, sourceInventory, this.#now());
       // A pointer may have been quarantined by an older runtime before its artifact
       // was durable or before this verifier was available. Reconsider only entries
       // which the current validator proves canonical; malformed or still-unresolved
@@ -1172,7 +1853,22 @@ export class LegacySqliteMigration {
           this.#now(),
           MIGRATION_ID,
         );
-      return { migratedCount, pendingCount: pending };
+      const targetInventory = migrationTargetInventory(database, sourceInventory);
+      writeStageReceipt(
+        database,
+        "backfill",
+        sourceInventory.inventoryHash,
+        targetInventory.inventoryHash,
+        rows.at(-1)?.request_id ?? null,
+        this.#now(),
+      );
+      writePhysicalReceipt(database, "backfill", this.#databasePath, this.#backupPath, this.#now());
+      return {
+        migratedCount,
+        pendingCount: pending,
+        unresolvedCount: unresolvedInventoryEntries(sourceInventory).length,
+        inventoryHash: sourceInventory.inventoryHash,
+      };
     } finally {
       database.close();
     }
@@ -1184,6 +1880,21 @@ export class LegacySqliteMigration {
     try {
       if (currentState(database) !== "backfill")
         throw new Error("backfill required before shadow mirror");
+      ensureMigrationInventorySchema(database);
+      const sourceInventory = inspectLegacyMigrationInventoryFromDatabase(database);
+      const persistedInventory = readPersistedInventory(database);
+      if (!persistedInventory) throw new Error("legacy migration inventory receipt is required");
+      if (persistedInventory.inventoryHash !== sourceInventory.inventoryHash) {
+        throw new Error("legacy migration source inventory changed; parity requires a new audit");
+      }
+      const unresolved = unresolvedInventoryEntries(sourceInventory);
+      if (unresolved.length > 0) {
+        throw new Error(
+          `unresolved legacy migration inventory blocks shadow mirror: ${unresolved
+            .map((entry) => `${entry.tableName}(${entry.rowCount})`)
+            .join(",")}`,
+        );
+      }
       const pending = (
         database
           .prepare(
@@ -1198,6 +1909,22 @@ export class LegacySqliteMigration {
       if (quarantined.length > 0)
         throw new Error("legacy migration quarantine blocks shadow mirror");
       // Persist the live dual-write window so a restart cannot silently extend it.
+      const targetInventory = migrationTargetInventory(database, sourceInventory);
+      writeStageReceipt(
+        database,
+        "shadow_mirror",
+        sourceInventory.inventoryHash,
+        targetInventory.inventoryHash,
+        readLegacyMigrationJournal(this.#databasePath).cursor,
+        this.#now(),
+      );
+      writePhysicalReceipt(
+        database,
+        "shadow_mirror",
+        this.#databasePath,
+        this.#backupPath,
+        this.#now(),
+      );
       this.#setState(database, "shadow_mirror", { holdUntilMs: input.deadlineMs });
     } finally {
       database.close();
@@ -1222,10 +1949,45 @@ export class LegacySqliteMigration {
       if (journal.holdUntilMs === null || this.#now() > journal.holdUntilMs) {
         throw new Error("shadow mirror deadline expired; restart backfill before parity");
       }
+      ensureMigrationInventorySchema(database);
+      const sourceInventory = inspectLegacyMigrationInventoryFromDatabase(database);
+      const persistedInventory = readPersistedInventory(database);
+      if (!persistedInventory) throw new Error("legacy migration inventory receipt is required");
+      if (unresolvedInventoryEntries(sourceInventory).length > 0) {
+        throw new Error("unresolved legacy migration inventory blocks parity");
+      }
+      reconcilePerformanceTarget(database);
       const source = sourceProof(database, 1_000, this.#canonicalPointerValidator);
       const target = targetProof(database);
       if (source.count !== target.count || source.hash !== target.hash)
         throw new Error("first parity mismatch");
+      const performanceSource = performanceSourceProof(database);
+      const performanceTarget = normalizedPerformanceTargetProof(database);
+      if (
+        performanceSource.count !== performanceTarget.count ||
+        performanceSource.hash !== performanceTarget.hash
+      ) {
+        throw new Error("performance history parity mismatch");
+      }
+      const targetInventory = migrationTargetInventory(database, sourceInventory);
+      if (targetInventory.inventoryHash !== sourceInventory.inventoryHash) {
+        throw new Error("migration inventory parity mismatch");
+      }
+      writeStageReceipt(
+        database,
+        "parity_verified",
+        sourceInventory.inventoryHash,
+        targetInventory.inventoryHash,
+        journal.cursor,
+        this.#now(),
+      );
+      writePhysicalReceipt(
+        database,
+        "parity_verified",
+        this.#databasePath,
+        this.#backupPath,
+        this.#now(),
+      );
       this.#setState(database, "parity_verified");
       return { sourceCount: source.count, targetCount: target.count, hash: source.hash };
     } finally {
@@ -1271,11 +2033,39 @@ export class LegacySqliteMigration {
     try {
       if (currentState(database) !== "legacy_read_hold")
         throw new Error("legacy read hold required");
+      ensureMigrationInventorySchema(database);
+      const sourceInventory = inspectLegacyMigrationInventoryFromDatabase(database);
+      const persistedInventory = readPersistedInventory(database);
+      if (!persistedInventory) throw new Error("legacy migration inventory receipt is required");
+      if (unresolvedInventoryEntries(sourceInventory).length > 0) {
+        throw new Error("unresolved legacy migration inventory blocks parity");
+      }
+      reconcilePerformanceTarget(database);
       const source = sourceProof(database, 1_000, this.#canonicalPointerValidator);
       const target = targetProof(database);
       if (source.count !== target.count || source.hash !== target.hash) {
         throw new Error("second parity mismatch");
       }
+      const performanceSource = performanceSourceProof(database);
+      const performanceTarget = normalizedPerformanceTargetProof(database);
+      if (
+        performanceSource.count !== performanceTarget.count ||
+        performanceSource.hash !== performanceTarget.hash
+      ) {
+        throw new Error("performance history parity mismatch");
+      }
+      const targetInventory = migrationTargetInventory(database, sourceInventory);
+      if (targetInventory.inventoryHash !== sourceInventory.inventoryHash) {
+        throw new Error("migration inventory parity mismatch");
+      }
+      writeStageReceipt(
+        database,
+        "legacy_read_hold",
+        persistedInventory.inventoryHash,
+        targetInventory.inventoryHash,
+        readLegacyMigrationJournal(this.#databasePath).cursor,
+        this.#now(),
+      );
       database
         .prepare(
           "UPDATE legacy_migration_journal SET second_parity_verified = 1, updated_at_ms = ? WHERE migration_id = ?",

@@ -18,6 +18,15 @@ type Matches = [{
 }, {
   id: "routes/runtime";
   module: typeof import("../runtime.js");
+}] | [{
+  id: "root";
+  module: typeof import("../../root.js");
+}, {
+  id: "routes/app-layout";
+  module: typeof import("../app-layout.js");
+}, {
+  id: "system-operator";
+  module: typeof import("../runtime.js");
 }];
 
 type Annotations = GetAnnotations<Info & { module: Module, matches: Matches }>;

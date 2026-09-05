@@ -268,6 +268,304 @@ async function listReleaseFiles(root: string): Promise<string[]> {
   return files;
 }
 
+export interface PackagedArtifactBinding {
+  readonly kind: "file" | "tree";
+  readonly path: string;
+  readonly sha256: string;
+}
+
+export interface PackagedExtensionArtifactBinding extends PackagedArtifactBinding {
+  readonly kind: "file";
+  readonly id: string;
+}
+
+export interface PackagedRuntimeArtifactClosure {
+  readonly schema_version: 1;
+  readonly runtime_ui: PackagedArtifactBinding;
+  readonly track_b_runtime: {
+    readonly manifest: PackagedArtifactBinding;
+    readonly sidecar: PackagedArtifactBinding;
+    readonly public_runtime_adapter: PackagedArtifactBinding;
+    readonly public_extension_host: PackagedArtifactBinding;
+    readonly worker: PackagedArtifactBinding;
+    readonly router_assets: readonly PackagedArtifactBinding[];
+    readonly extensions: readonly PackagedExtensionArtifactBinding[];
+  };
+}
+
+interface TrackBManifestArtifact {
+  readonly modulePath: string;
+  readonly artifactSha256: string;
+}
+
+interface TrackBDistributionManifestForClosure {
+  readonly schemaVersion: string;
+  readonly sidecar?: TrackBManifestArtifact;
+  readonly publicRuntimeAdapter?: TrackBManifestArtifact & {
+    readonly routerRoot?: string;
+    readonly routerAssets?: readonly TrackBManifestArtifact[];
+  };
+  readonly publicExtensionHost?: TrackBManifestArtifact & {
+    readonly workerModulePath?: string;
+    readonly workerArtifactSha256?: string;
+  };
+  readonly extensions?: readonly {
+    readonly descriptor?: { readonly id?: string };
+    readonly modulePath: string;
+    readonly artifactSha256: string;
+  }[];
+}
+
+function assertSafeReleaseRelativePath(value: string, label: string): string {
+  const normalized = value.replaceAll("\\", "/");
+  if (
+    normalized.length === 0 ||
+    normalized.startsWith("/") ||
+    path.posix.isAbsolute(normalized) ||
+    normalized.split("/").some((segment) => segment === ".." || segment.length === 0)
+  ) {
+    throw new Error(`Packaged artifact closure ${label} path is unsafe`);
+  }
+  return normalized;
+}
+
+function assertDigest(value: string, label: string): string {
+  if (!/^[a-f0-9]{64}$/i.test(value)) {
+    throw new Error(`Packaged artifact closure ${label} digest is invalid`);
+  }
+  return value.toLowerCase();
+}
+
+async function hashFile(filePath: string): Promise<string> {
+  return createHash("sha256").update(await readFile(filePath)).digest("hex");
+}
+
+async function createFileArtifactBinding(
+  releaseDir: string,
+  relativePath: string,
+  label: string,
+  expectedSha256?: string,
+): Promise<PackagedArtifactBinding> {
+  const safePath = assertSafeReleaseRelativePath(relativePath, label);
+  const filePath = path.join(releaseDir, ...safePath.split("/"));
+  let observedSha256: string;
+  try {
+    observedSha256 = await hashFile(filePath);
+  } catch {
+    throw new Error(`Packaged artifact closure ${label} is missing: ${safePath}`);
+  }
+  if (expectedSha256 !== undefined && observedSha256 !== expectedSha256.toLowerCase()) {
+    throw new Error(`Packaged artifact closure ${label} digest mismatch: ${safePath}`);
+  }
+  return { kind: "file", path: safePath, sha256: observedSha256 };
+}
+
+async function createTreeArtifactBinding(
+  releaseDir: string,
+  relativePath: string,
+  label: string,
+): Promise<PackagedArtifactBinding> {
+  const safePath = assertSafeReleaseRelativePath(relativePath, label);
+  const root = path.join(releaseDir, ...safePath.split("/"));
+  let files: string[];
+  try {
+    files = await listReleaseFiles(root);
+  } catch {
+    throw new Error(`Packaged artifact closure ${label} is missing: ${safePath}`);
+  }
+  if (files.length === 0) {
+    throw new Error(`Packaged artifact closure ${label} is empty: ${safePath}`);
+  }
+  const entries = await Promise.all(
+    files.map(async (filePath) => {
+      const fileRelativePath = normalizeReleasePath(path.relative(root, filePath));
+      return `${fileRelativePath}\0${await hashFile(filePath)}`;
+    }),
+  );
+  entries.sort();
+  const sha256 = createHash("sha256").update(entries.join("\n")).digest("hex");
+  return { kind: "tree", path: safePath, sha256 };
+}
+
+function requireTrackBManifestArtifact<T extends TrackBManifestArtifact>(
+  artifact: T | undefined,
+  label: string,
+): T {
+  if (!artifact || typeof artifact.modulePath !== "string") {
+    throw new Error(`Packaged artifact closure ${label} is missing`);
+  }
+  assertDigest(artifact.artifactSha256, label);
+  return artifact;
+}
+
+function trackBReleasePath(modulePath: string, label: string): string {
+  const safeModulePath = assertSafeReleaseRelativePath(modulePath, label);
+  return assertSafeReleaseRelativePath(`track-b-runtime/${safeModulePath}`, label);
+}
+
+/**
+ * Creates the immutable artifact binding written into a packaged release.
+ * Every executable-side Track-B artifact and the copied runtime UI is bound
+ * to bytes in the same release directory, so a partial or mixed release
+ * cannot pass packaging validation.
+ */
+export async function createPackagedRuntimeArtifactClosure({
+  releaseDir,
+  trackBRuntimeManifestPath = path.join(
+    releaseDir,
+    "track-b-runtime",
+    "track-b-runtime-manifest.json",
+  ),
+}: Readonly<{
+  readonly releaseDir: string;
+  readonly trackBRuntimeManifestPath?: string;
+}>): Promise<PackagedRuntimeArtifactClosure> {
+  const runtimeUi = await createTreeArtifactBinding(releaseDir, "build/client", "runtime UI");
+  let manifestBytes: Buffer;
+  let manifest: TrackBDistributionManifestForClosure;
+  try {
+    manifestBytes = await readFile(trackBRuntimeManifestPath);
+    manifest = JSON.parse(manifestBytes.toString("utf8")) as TrackBDistributionManifestForClosure;
+  } catch {
+    throw new Error("Packaged artifact closure Track-B manifest is missing or invalid");
+  }
+  if (manifest.schemaVersion !== "role-model.track-b-runtime-distribution.v2") {
+    throw new Error("Packaged artifact closure requires Track-B distribution v2");
+  }
+  const sidecar = requireTrackBManifestArtifact(manifest.sidecar, "sidecar");
+  const adapter = requireTrackBManifestArtifact(manifest.publicRuntimeAdapter, "public runtime adapter");
+  if (!adapter.routerRoot || !adapter.routerAssets?.length) {
+    throw new Error("Packaged artifact closure router assets are missing");
+  }
+  const extensionHost = requireTrackBManifestArtifact(
+    manifest.publicExtensionHost,
+    "public extension host",
+  );
+  if (!extensionHost.workerModulePath || !extensionHost.workerArtifactSha256) {
+    throw new Error("Packaged artifact closure worker runtime is missing");
+  }
+  assertDigest(extensionHost.workerArtifactSha256, "worker runtime");
+  if (!manifest.extensions || manifest.extensions.length !== 13) {
+    throw new Error("Packaged artifact closure requires all 13 extensions");
+  }
+
+  const extensionIds = new Set<string>();
+  const extensions = await Promise.all(
+    manifest.extensions.map(async (extension, index) => {
+      const id = extension.descriptor?.id?.trim();
+      if (!id || extensionIds.has(id)) {
+        throw new Error(`Packaged artifact closure extension ${index + 1} has no unique id`);
+      }
+      extensionIds.add(id);
+      const binding = await createFileArtifactBinding(
+        releaseDir,
+        trackBReleasePath(extension.modulePath, `extension ${id}`),
+        `extension ${id}`,
+        assertDigest(extension.artifactSha256, `extension ${id}`),
+      );
+      return { ...binding, id } as PackagedExtensionArtifactBinding;
+    }),
+  );
+  const routerAssets = await Promise.all(
+    adapter.routerAssets.map(async (asset, index) =>
+      createFileArtifactBinding(
+        releaseDir,
+        trackBReleasePath(asset.modulePath, `router asset ${index + 1}`),
+        `router asset ${index + 1}`,
+        assertDigest(asset.artifactSha256, `router asset ${index + 1}`),
+      ),
+    ),
+  );
+
+  const manifestRelativePath = assertSafeReleaseRelativePath(
+    normalizeReleasePath(path.relative(releaseDir, trackBRuntimeManifestPath)),
+    "Track-B manifest",
+  );
+  const manifestBinding = await createFileArtifactBinding(
+    releaseDir,
+    manifestRelativePath,
+    "Track-B manifest",
+  );
+  return {
+    schema_version: 1,
+    runtime_ui: runtimeUi,
+    track_b_runtime: {
+      manifest: manifestBinding,
+      sidecar: await createFileArtifactBinding(
+        releaseDir,
+        trackBReleasePath(sidecar.modulePath, "sidecar"),
+        "sidecar",
+        assertDigest(sidecar.artifactSha256, "sidecar"),
+      ),
+      public_runtime_adapter: await createFileArtifactBinding(
+        releaseDir,
+        trackBReleasePath(adapter.modulePath, "public runtime adapter"),
+        "public runtime adapter",
+        assertDigest(adapter.artifactSha256, "public runtime adapter"),
+      ),
+      public_extension_host: await createFileArtifactBinding(
+        releaseDir,
+        trackBReleasePath(extensionHost.modulePath, "public extension host"),
+        "public extension host",
+        assertDigest(extensionHost.artifactSha256, "public extension host"),
+      ),
+      worker: await createFileArtifactBinding(
+        releaseDir,
+        trackBReleasePath(extensionHost.workerModulePath, "worker runtime"),
+        "worker runtime",
+        assertDigest(extensionHost.workerArtifactSha256, "worker runtime"),
+      ),
+      router_assets: routerAssets,
+      extensions,
+    },
+  };
+}
+
+async function verifyPackagedArtifactBinding(
+  releaseDir: string,
+  binding: PackagedArtifactBinding,
+  label: string,
+): Promise<void> {
+  const actual =
+    binding.kind === "tree"
+      ? await createTreeArtifactBinding(releaseDir, binding.path, label)
+      : await createFileArtifactBinding(releaseDir, binding.path, label);
+  if (actual.sha256 !== binding.sha256.toLowerCase()) {
+    throw new Error(`Packaged artifact closure ${label} digest mismatch: ${binding.path}`);
+  }
+}
+
+/** Verifies every byte bound by a previously written packaged-release closure. */
+export async function verifyPackagedRuntimeArtifactClosure({
+  releaseDir,
+  closure,
+}: Readonly<{
+  readonly releaseDir: string;
+  readonly closure: PackagedRuntimeArtifactClosure;
+}>): Promise<void> {
+  if (closure.schema_version !== 1) {
+    throw new Error("Packaged artifact closure schema is unsupported");
+  }
+  await verifyPackagedArtifactBinding(releaseDir, closure.runtime_ui, "runtime UI");
+  const trackB = closure.track_b_runtime;
+  await Promise.all([
+    verifyPackagedArtifactBinding(releaseDir, trackB.manifest, "Track-B manifest"),
+    verifyPackagedArtifactBinding(releaseDir, trackB.sidecar, "sidecar"),
+    verifyPackagedArtifactBinding(releaseDir, trackB.public_runtime_adapter, "public runtime adapter"),
+    verifyPackagedArtifactBinding(releaseDir, trackB.public_extension_host, "public extension host"),
+    verifyPackagedArtifactBinding(releaseDir, trackB.worker, "worker runtime"),
+    ...trackB.router_assets.map((asset, index) =>
+      verifyPackagedArtifactBinding(releaseDir, asset, `router asset ${index + 1}`),
+    ),
+    ...trackB.extensions.map((extension) =>
+      verifyPackagedArtifactBinding(releaseDir, extension, `extension ${extension.id}`),
+    ),
+  ]);
+  if (trackB.extensions.length !== 13) {
+    throw new Error("Packaged artifact closure extension set is incomplete");
+  }
+}
+
 export async function assertProductionReleaseHasNoQaArtifacts(releaseDir: string): Promise<void> {
   const files = await listReleaseFiles(releaseDir);
   const pathViolations = files
@@ -702,6 +1000,8 @@ export async function packageSeaRuntime(): Promise<{
     releaseId: run88ReleaseId,
     trackBRuntime,
   });
+  const artifactClosure = await createPackagedRuntimeArtifactClosure({ releaseDir });
+  await verifyPackagedRuntimeArtifactClosure({ releaseDir, closure: artifactClosure });
   await writeFile(
     path.join(releaseDir, "manifest.json"),
     JSON.stringify(
@@ -736,6 +1036,7 @@ export async function packageSeaRuntime(): Promise<{
               extension_count: trackBRuntime.extensionCount,
             }
           : null,
+        artifact_closure: artifactClosure,
       },
       null,
       2,
