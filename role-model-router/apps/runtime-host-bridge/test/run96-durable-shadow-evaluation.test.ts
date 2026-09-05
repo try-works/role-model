@@ -330,6 +330,7 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
 
 test("Run96 S4 RED: durable replay evaluation sends the same bounded semantic criteria to source and counterfactual trials", async () => {
   const executionInputs: Record<string, unknown>[] = [];
+  const durableCases: Record<string, unknown>[] = [];
   const trialIds = ["trial:source-digest", "trial:counterfactual-digest"];
   await runTrackBShadowPipeline(
     {
@@ -344,7 +345,10 @@ test("Run96 S4 RED: durable replay evaluation sends the same bounded semantic cr
           };
         }
         if (id === "evaluation-core" && envelope.capability === "evaluation:register-scorer") return { key: "digest@1" };
-        if (id === "evaluation-core" && envelope.capability === "evaluation:create-job") return { jobId: "job:digest" };
+        if (id === "evaluation-core" && envelope.capability === "evaluation:create-job") {
+          durableCases.push(envelope.value as Record<string, unknown>);
+          return { jobId: "job:digest" };
+        }
         if (id === "evaluation-core" && envelope.capability === "evaluation:list-trials") return [{ trialId: trialIds.shift() }];
         if (id === "evaluation-core" && envelope.capability === "evaluation:claim-trial") return { trialId: (envelope.value as Record<string, unknown>).trialId, leaseId: "lease:digest" };
         if (id === "evaluation-runner-local" && envelope.capability === "evaluation:execute-trial") {
@@ -422,6 +426,27 @@ test("Run96 S4 RED: durable replay evaluation sends the same bounded semantic cr
   );
 
   expect(executionInputs).toHaveLength(2);
+  expect(durableCases).toHaveLength(2);
+  expect(durableCases.map((job) => (job.cases as Array<Record<string, unknown>>)[0])).toEqual([
+    expect.objectContaining({
+      evaluationCriteria: {
+        schemaVersion: "role-model.semantic-criteria.v1",
+        requiredTerms: ["output"],
+        forbiddenTerms: ["credential"],
+        minOutputChars: 12,
+      },
+      evaluationCriteriaDigest: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
+    }),
+    expect.objectContaining({
+      evaluationCriteria: {
+        schemaVersion: "role-model.semantic-criteria.v1",
+        requiredTerms: ["output"],
+        forbiddenTerms: ["credential"],
+        minOutputChars: 12,
+      },
+      evaluationCriteriaDigest: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
+    }),
+  ]);
   expect(executionInputs).toEqual([
     expect.objectContaining({
       actual: "The source output satisfies the required semantic criterion.",

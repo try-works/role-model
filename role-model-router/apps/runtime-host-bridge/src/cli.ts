@@ -1237,6 +1237,9 @@ export async function main(): Promise<void> {
           const evaluationCriteria = normalizeTrackBSemanticEvaluationCriteria(
             body.evaluationCriteria,
           );
+          const evaluationCriteriaDigest = `sha256:${createHash("sha256")
+            .update(JSON.stringify(evaluationCriteria))
+            .digest("hex")}`;
           const sourceResponse = sourceCapture.response && typeof sourceCapture.response === "object"
             ? sourceCapture.response as Record<string, unknown>
             : null;
@@ -1325,6 +1328,7 @@ export async function main(): Promise<void> {
             sourceAttestation: attestation,
             idempotencyKey,
             intent: "counterfactual_route",
+            evaluationCriteriaDigest,
             candidatePackages,
             budget: structuredClone(budget) as Record<string, unknown>,
             leaseOwner: `runtime-host:${process.pid}`,
@@ -1425,6 +1429,15 @@ export async function main(): Promise<void> {
                 const recoveredCapture = !dispatchedCandidate && recoveredRequestId
                   ? await operations.readLocalRouteCapture({ requestId: recoveredRequestId }) as Record<string, unknown> | null
                   : null;
+                if (recoveredCapture && (
+                  recoveredCapture.scope !== options.scopeId ||
+                  recoveredCapture.endpointId !== candidate.endpointId ||
+                  recoveredCapture.modelId !== candidate.modelId ||
+                  recoveredCapture.routingDecisionId !== durableResult?.routerDecisionId ||
+                  recoveredCapture.rootArtifactId !== durableResult?.branchRootRef
+                )) {
+                  throw new Error("durable replay evaluation recovered capture does not match its fenced replay receipt");
+                }
                 const recoveredResponse = recoveredCapture?.response && typeof recoveredCapture.response === "object"
                   ? recoveredCapture.response as Record<string, unknown>
                   : null;
@@ -1517,7 +1530,7 @@ export async function main(): Promise<void> {
               const comparison = evaluated.evaluation as Record<string, unknown>;
               const outcome = comparison.outcome;
               const comparisonGroupId = comparison.groupId;
-              if (typeof comparisonGroupId !== "string" || !comparisonGroupId || !["candidate", "source", "tie", "rejected", "incomplete"].includes(String(outcome))) {
+              if (typeof comparisonGroupId !== "string" || !comparisonGroupId || !["candidate", "source", "tie", "rejected", "incomplete", "insufficient", "disagreement"].includes(String(outcome))) {
                 throw new Error("durable replay evaluation did not finalize a valid comparison");
               }
               return {

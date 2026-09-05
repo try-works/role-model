@@ -1485,6 +1485,8 @@ export async function runSupervisedReplay(input: {
   readonly sourceAttestation: Readonly<Record<string, unknown>>;
   readonly idempotencyKey: string;
   readonly intent: string;
+  /** Digest of the normalized semantic criteria used for durable evaluation. */
+  readonly evaluationCriteriaDigest?: string;
   readonly candidatePackages: readonly Record<string, unknown>[];
   readonly budget: Readonly<Record<string, unknown>>;
   readonly leaseOwner: string;
@@ -1544,6 +1546,16 @@ export async function runSupervisedReplay(input: {
   if (!sourceRoot || typeof sourceRoot !== "object" || Array.isArray(sourceRoot)) {
     throw new Error("supervised replay source root is invalid");
   }
+  const assertTerminalEvaluationReceipt = (value: unknown, expectedJobId: string): void => {
+    const receipt = value as Record<string, unknown> | null;
+    if (!receipt || typeof receipt !== "object" || Array.isArray(receipt) ||
+      receipt.evaluationJobId !== expectedJobId ||
+      typeof receipt.comparisonGroupId !== "string" || !receipt.comparisonGroupId ||
+      typeof receipt.comparisonDigest !== "string" || !receipt.comparisonDigest ||
+      !new Set(["candidate", "source", "tie", "rejected", "incomplete", "insufficient", "disagreement"]).has(String(receipt.outcome))) {
+      throw new Error("completed replay is missing a valid durable evaluation result");
+    }
+  };
   const created = await input.runtime.invoke(
     "replay-core",
     controlEnvelope("replay:create-job", {
@@ -1553,6 +1565,7 @@ export async function runSupervisedReplay(input: {
       scope: input.scope,
       candidatePackages: structuredClone(input.candidatePackages),
       budget: structuredClone(input.budget),
+      ...(input.evaluationCriteriaDigest ? { evaluationCriteriaDigest: input.evaluationCriteriaDigest } : {}),
       sourceAttestation: structuredClone(input.sourceAttestation),
     }),
   );
@@ -1565,6 +1578,7 @@ export async function runSupervisedReplay(input: {
     if (typeof created.evaluationJobId !== "string" || !created.evaluationJobId) {
       throw new Error("completed replay is missing its durable evaluation receipt");
     }
+    assertTerminalEvaluationReceipt(created.evaluationResult, created.evaluationJobId);
     return structuredClone(created);
   }
   if (created.state === "awaiting_evaluation") {
@@ -1591,7 +1605,7 @@ export async function runSupervisedReplay(input: {
       replayJob: structuredClone(created),
       recovery: true,
     });
-    return input.runtime.invoke(
+    const finalized = await input.runtime.invoke(
       "replay-core",
       controlEnvelope("replay:record-evaluation-result", {
         jobId,
@@ -1600,6 +1614,19 @@ export async function runSupervisedReplay(input: {
         evaluation,
       }),
     );
+    if (input.scheduler) {
+      const schedulerClaim = await input.scheduler.claim({ jobId: `replay-intent:${jobId}` });
+      if (schedulerClaim) {
+        const receipt = await input.scheduler.complete({
+          jobId: schedulerClaim.jobId,
+          leaseId: schedulerClaim.leaseId,
+          fence: schedulerClaim.fence,
+          result: { replayJobId: jobId, state: "complete" },
+        });
+        if (!receipt?.completed) return { ...finalized, schedulerState: "completion_not_accepted" };
+      }
+    }
+    return finalized;
   }
   let schedulerClaim: ReplayIntentClaim | null = null;
   const resultTraceIds: string[] = [];
@@ -2970,6 +2997,13 @@ export async function runTrackBShadowPipeline(
     if (typeof jobId !== "string" || !jobId) {
       throw new Error("durable routing-shadow evaluation job identity is invalid");
     }
+    const evaluationCase = input.evaluationCases[index % input.evaluationCases.length] ?? {};
+    const evaluationCriteria = normalizeTrackBSemanticEvaluationCriteria(
+      evaluationCase.evaluationCriteria,
+    );
+    const evaluationCriteriaDigest = `sha256:${createHash("sha256")
+      .update(JSON.stringify(canonicalizeRun88Proof(evaluationCriteria)))
+      .digest("hex")}`;
     await runtime.invoke("evaluation-core", {
       ...envelope("evaluation:create-job", {
         id: jobId,
@@ -2983,6 +3017,8 @@ export async function runTrackBShadowPipeline(
           id: `case:${input.requestId}:${index}`,
           evidenceRef: input.sourceGraphRef,
           sourceGeneration: 0,
+          evaluationCriteria,
+          evaluationCriteriaDigest,
         }],
       }),
     });
@@ -2998,19 +3034,33 @@ export async function runTrackBShadowPipeline(
     if (!trial || typeof trial.trialId !== "string" || !trial.trialId) {
       throw new Error("durable routing-shadow trial materialization failed");
     }
-    const claimed = await runtime.invoke("evaluation-core", {
+    if (trial.status === "scored") {
+      const scores = await runtime.invoke("evaluation-core", {
+        ...envelope("evaluation:list-trial-scores", { trialId: trial.trialId }),
+      });
+      const scoreRows = Array.isArray(scores) ? scores as Record<string, unknown>[] : [];
+      const correctness = scoreRows.find((score) => score.dimension === "correctness" &&
+        score.scorerId === scorer.id && score.scorerVersion === scorer.version);
+      if (!correctness || !Number.isFinite(correctness.score)) {
+        throw new Error("durable scored trial is missing semantic correctness evidence");
+      }
+      completedRollouts.push({ rollout, score: Number(correctness.score) });
+      trialIds.push(trial.trialId);
+      continue;
+    }
+    const alreadySubmitted = trial.status === "result_submitted";
+    if (trial.status !== undefined && trial.status !== "queued" && !alreadySubmitted) {
+      throw new Error("durable routing-shadow trial is not recoverable without an expired lease");
+    }
+    const claimed = alreadySubmitted ? null : await runtime.invoke("evaluation-core", {
       ...envelope("evaluation:claim-trial", {
         trialId: trial.trialId,
         workerId: `runtime-host:${input.requestId}`,
       }),
     });
-    if (!claimed || typeof claimed.trialId !== "string" || typeof claimed.leaseId !== "string" || claimed.trialId !== trial.trialId) {
+    if (!alreadySubmitted && (!claimed || typeof claimed.trialId !== "string" || typeof claimed.leaseId !== "string" || claimed.trialId !== trial.trialId)) {
       throw new Error("durable routing-shadow trial lease failed");
     }
-    const evaluationCase = input.evaluationCases[index % input.evaluationCases.length] ?? {};
-    const evaluationCriteria = normalizeTrackBSemanticEvaluationCriteria(
-      evaluationCase.evaluationCriteria,
-    );
     const independentlyObservedActual = typeof rollout.evaluationActual === "string" && rollout.evaluationActual
       ? rollout.evaluationActual
       : typeof evaluationCase.actual === "string" && evaluationCase.actual
@@ -3041,19 +3091,21 @@ export async function runTrackBShadowPipeline(
     if (!Array.isArray(execution.scores) || typeof execution.outputRef !== "string" || typeof execution.outputDigest !== "string") {
       throw new Error("durable routing-shadow runner receipt is invalid");
     }
-    await runtime.invoke("evaluation-core", {
-      ...envelope("evaluation:submit-trial-result", {
-        trialId: trial.trialId,
-        leaseId: claimed.leaseId,
-        workerId: `runtime-host:${input.requestId}`,
-        outputRef: execution.outputRef,
-        outputDigest: execution.outputDigest,
-        stdoutRef: execution.stdoutRef,
-        stderrRef: execution.stderrRef,
-        exitCode: execution.exitCode,
-        measurements: execution.measurements,
-      }),
-    });
+    if (!alreadySubmitted) {
+      await runtime.invoke("evaluation-core", {
+        ...envelope("evaluation:submit-trial-result", {
+          trialId: trial.trialId,
+          leaseId: claimed?.leaseId,
+          workerId: `runtime-host:${input.requestId}`,
+          outputRef: execution.outputRef,
+          outputDigest: execution.outputDigest,
+          stdoutRef: execution.stdoutRef,
+          stderrRef: execution.stderrRef,
+          exitCode: execution.exitCode,
+          measurements: execution.measurements,
+        }),
+      });
+    }
     for (const score of execution.scores as Record<string, unknown>[]) {
       await runtime.invoke("evaluation-core", {
         ...envelope("evaluation:record-trial-score", {
@@ -3106,7 +3158,7 @@ export async function runTrackBShadowPipeline(
   if (
     !persistedEvaluation ||
     (persistedEvaluation as Record<string, unknown>).status !== "finalized" ||
-    !new Set(["candidate", "source", "tie", "rejected", "incomplete"]).has(
+    !new Set(["candidate", "source", "tie", "rejected", "incomplete", "insufficient", "disagreement"]).has(
       String((persistedEvaluation as Record<string, unknown>).outcome ?? ""),
     )
   ) {
@@ -3214,7 +3266,7 @@ export async function runTrackBShadowPipeline(
     ...envelope("profile:estimate-finalized-evaluation", {
       finalizedEvaluation: persistedEvaluation,
       signals,
-      rows: [sourceRollout, ...counterfactualRollouts].map((rollout) => ({
+      rows: completedRollouts.map(({ rollout, score }) => ({
         model: rollout.modelId,
         endpoint: rollout.endpointId,
         effort: rollout.reasoningEffort,
@@ -3225,8 +3277,7 @@ export async function runTrackBShadowPipeline(
         sampling: "deterministic",
         experience: "routing-evaluation",
         routePackage: rollout.routePackage,
-        outcome:
-          (rollout.outcome as Record<string, unknown> | undefined)?.status === "success" ? 1 : 0,
+        outcome: score,
         propensity: rollout.propensity,
         evidenceRef: rollout.evidenceRef,
       })),

@@ -889,6 +889,12 @@ test("Run96 S3 RED: a completed idempotent replay returns its durable receipt wi
           jobId: "replay:already-complete",
           state: "complete",
           evaluationJobId: "evaluation:already-complete",
+          evaluationResult: {
+            evaluationJobId: "evaluation:already-complete",
+            comparisonGroupId: "comparison:already-complete",
+            comparisonDigest: "sha256:already-complete",
+            outcome: "tie",
+          },
         };
       }
       throw new Error("a completed replay must not be reclaimed");
