@@ -309,6 +309,11 @@ const shadowInput = (overrides: Readonly<Record<string, unknown>> = {}) => ({
       actualOutcomeRef: "outcome:stage-control",
       expectedEvidenceRef: "evidence:stage-candidate",
       actualEvidenceRef: "evidence:stage-control",
+      evaluationCriteria: {
+        schemaVersion: "role-model.semantic-criteria.v1",
+        requiredTerms: ["candidate-stage"],
+        minOutputChars: 1,
+      },
     },
   ],
   trajectoryEvents: [],
@@ -316,12 +321,53 @@ const shadowInput = (overrides: Readonly<Record<string, unknown>> = {}) => ({
 });
 
 const shadowRuntime = {
-  async invoke(id: string) {
+  async invoke(id: string, envelope?: { readonly capability?: string }) {
+    if (id === "replay-core")
+      return {
+        id: "replay-core-result",
+        digest: `sha256:${"d".repeat(64)}`,
+        sourceDecisionId: "decision-1",
+        sourceGraphRef: "sha256:graph-1",
+        sharedPrefixRef: "sha256:prefix-1",
+        branches: [{ id: "branch-stage-control" }],
+      };
     if (id === "evaluation-runner-local")
       return {
-        scores: [1],
+        scores: [
+          {
+            dimension: "correctness",
+            scorerId: "run96-semantic-criteria",
+            scorerVersion: "1",
+            score: 1,
+          },
+        ],
+        outputRef: "sha256:output-1",
+        outputDigest: "sha256:output-1",
+        stdoutRef: "sha256:stdout-1",
+        stderrRef: "sha256:stderr-1",
+        exitCode: 0,
+        measurements: { elapsedMs: 0, outputBytes: 1 },
         holdout: { passed: true, evidenceRef: "sha256:graph-1" },
         provenance: { evidenceRef: "sha256:graph-1" },
+      };
+    if (id === "evaluation-core" && envelope?.capability === "evaluation:list-trials")
+      return [{ trialId: "trial-stage-1", status: "queued" }];
+    if (id === "evaluation-core" && envelope?.capability === "evaluation:claim-trial")
+      return { trialId: "trial-stage-1", leaseId: "lease-stage-1" };
+    if (id === "evaluation-core" && envelope?.capability === "evaluation:read-comparison-group")
+      return {
+        groupId: "comparison:shadow-request-1",
+        status: "finalized",
+        outcome: "candidate",
+        holdout: { partition: "holdout" },
+        members: [{ score: 1 }],
+      };
+    if (id === "trajectory-signals")
+      return {
+        schemaVersion: "role-model.degradation-receipt.v1",
+        degraded: true,
+        capability: "signals:analyze-finalized-evaluation",
+        mode: "omit_signals",
       };
     if (id === "knowledge-worker") return { id: "shadow-candidate-1", state: "shadow" };
     return { id: `${id}-result` };
