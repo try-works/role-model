@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { createHash } from "node:crypto";
+import { createHash, createPublicKey } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import os from "node:os";
@@ -17,6 +17,11 @@ import {
   startBridgeServer,
 } from "./index.js";
 import { validateRun88PrivateDistributionIdentity } from "./kw-private-loader.js";
+import {
+  type DevelopmentVerificationAuthorization,
+  negotiateDevelopmentVerificationCapability,
+  parseDevelopmentVerificationTrustMaterial,
+} from "./development-verification.js";
 import { type RuntimeChannelProfile, readPackagedRuntimeProfile } from "./runtime-channel.js";
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
@@ -813,6 +818,15 @@ export async function main(): Promise<void> {
       "aggregate-scope": {
         type: "string",
       },
+      "development-verification-lease-file": {
+        type: "string",
+      },
+      "development-verification-trust-key-file": {
+        type: "string",
+      },
+      "development-verification-deployment-ids": {
+        type: "string",
+      },
       "recommendation-scope": {
         type: "string",
       },
@@ -1487,6 +1501,67 @@ export async function main(): Promise<void> {
         args.values["destination-material-file"] ??
         args.values["destination-trust-material-file"] ??
         process.env.ROLE_MODEL_DESTINATION_AUTH_SECRET_FILE;
+      const aggregateEndpoint =
+        args.values["aggregate-ingestion-url"] ??
+        process.env.ROLE_MODEL_AGGREGATE_INGESTION_URL ??
+        (runtimeChannel === "stage" && destinationTrustMaterialFile
+          ? "https://ingest-stage.role-model.dev/contribution/aggregate"
+          : undefined);
+      const aggregateScope =
+        args.values["aggregate-scope"] ??
+        process.env.ROLE_MODEL_AGGREGATE_SCOPE ??
+        (runtimeChannel === "stage" && destinationTrustMaterialFile
+          ? "standalone-runtime-stage"
+          : undefined);
+      const developmentVerificationLeaseFile =
+        args.values["development-verification-lease-file"] ??
+        process.env.ROLE_MODEL_DEVELOPMENT_VERIFICATION_LEASE_FILE;
+      const developmentVerificationTrustKeyFile =
+        args.values["development-verification-trust-key-file"] ??
+        process.env.ROLE_MODEL_DEVELOPMENT_VERIFICATION_TRUST_KEY_FILE;
+      const developmentVerificationDeploymentIds = (
+        args.values["development-verification-deployment-ids"] ??
+        process.env.ROLE_MODEL_DEVELOPMENT_VERIFICATION_DEPLOYMENT_IDS ??
+        ""
+      )
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean);
+      const hasDevelopmentVerificationInput = Boolean(
+        developmentVerificationLeaseFile ||
+          developmentVerificationTrustKeyFile ||
+          developmentVerificationDeploymentIds.length > 0,
+      );
+      if (runtimeChannel !== "development" && hasDevelopmentVerificationInput) {
+        throw new Error("development verification capability is valid only for development runtimes");
+      }
+      if (hasDevelopmentVerificationInput) {
+        if (
+          !developmentVerificationLeaseFile ||
+          !developmentVerificationTrustKeyFile ||
+          developmentVerificationDeploymentIds.length === 0 ||
+          !aggregateEndpoint ||
+          !aggregateScope
+        ) {
+          throw new Error(
+            "development verification upload requires lease, trust key, deployment IDs, aggregate endpoint, and aggregate scope",
+          );
+        }
+        const authorization = JSON.parse(
+          readFileSync(developmentVerificationLeaseFile, "utf8"),
+        ) as DevelopmentVerificationAuthorization;
+        const trustMaterial = parseDevelopmentVerificationTrustMaterial(
+          readFileSync(developmentVerificationTrustKeyFile, "utf8"),
+        );
+        negotiateDevelopmentVerificationCapability({
+          runtimeChannel,
+          sourceScopeId: aggregateScope,
+          authorization,
+          trustedPublicKey: createPublicKey(trustMaterial.publicKey),
+          expectedKeyId: trustMaterial.keyId,
+          destinationDeploymentIds: developmentVerificationDeploymentIds,
+        });
+      }
       const artifactKeyFiles = await resolveManagedArtifactKeyFiles({
         channel: runtimeChannel,
         stateRoot: trackBStateRoot,
@@ -1520,18 +1595,11 @@ export async function main(): Promise<void> {
           artifactDigestKeyFile: artifactKeyFiles.artifactDigestKeyFile,
           artifactEncryptionKeyFile: artifactKeyFiles.artifactEncryptionKeyFile,
           trustMaterialFile: destinationTrustMaterialFile,
-          aggregateEndpoint:
-            args.values["aggregate-ingestion-url"] ??
-            process.env.ROLE_MODEL_AGGREGATE_INGESTION_URL ??
-            (runtimeChannel === "stage" && destinationTrustMaterialFile
-              ? "https://ingest-stage.role-model.dev/contribution/aggregate"
-              : undefined),
-          aggregateScope:
-            args.values["aggregate-scope"] ??
-            process.env.ROLE_MODEL_AGGREGATE_SCOPE ??
-            (runtimeChannel === "stage" && destinationTrustMaterialFile
-              ? "standalone-runtime-stage"
-              : undefined),
+          aggregateEndpoint,
+          aggregateScope,
+          developmentVerificationLeaseFile,
+          developmentVerificationTrustKeyFile,
+          developmentVerificationDeploymentIds,
           ...(aggregateCorrelationReleaseId && aggregateCorrelationCohortId
             ? {
                 aggregateCorrelationReleaseId,

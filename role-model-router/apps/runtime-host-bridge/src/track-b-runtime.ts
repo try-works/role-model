@@ -3974,6 +3974,9 @@ export function createOwnedTrackBSidecarSpec(options: {
   artifactDigestKeyFile?: string;
   artifactEncryptionKeyFile?: string;
   trustMaterialFile?: string;
+  developmentVerificationLeaseFile?: string;
+  developmentVerificationTrustKeyFile?: string;
+  developmentVerificationDeploymentIds?: readonly string[];
   aggregateEndpoint?: string;
   aggregateScope?: string;
   aggregateCorrelationReleaseId?: string;
@@ -4023,6 +4026,18 @@ export function createOwnedTrackBSidecarSpec(options: {
             : []),
           ...(options.trustMaterialFile
             ? ["--trust-material-file", options.trustMaterialFile]
+            : []),
+          ...(options.developmentVerificationLeaseFile
+            ? ["--development-verification-lease-file", options.developmentVerificationLeaseFile]
+            : []),
+          ...(options.developmentVerificationTrustKeyFile
+            ? ["--development-verification-trust-key-file", options.developmentVerificationTrustKeyFile]
+            : []),
+          ...(options.developmentVerificationDeploymentIds?.length
+            ? [
+                "--development-verification-deployment-ids",
+                options.developmentVerificationDeploymentIds.join(","),
+              ]
             : []),
           ...(options.aggregateEndpoint ? ["--aggregate-endpoint", options.aggregateEndpoint] : []),
           ...(options.aggregateScope ? ["--aggregate-scope", options.aggregateScope] : []),
