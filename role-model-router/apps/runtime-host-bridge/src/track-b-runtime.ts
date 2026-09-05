@@ -1561,11 +1561,45 @@ export async function runSupervisedReplay(input: {
   // `awaiting_evaluation` is already a durable terminal result for the replay
   // dispatch pipeline. Reclaiming it can duplicate scheduler work (and, after a
   // restart, a provider call) before Evaluation Core completes its separate job.
-  if (created.state === "complete" || created.state === "awaiting_evaluation") {
+  if (created.state === "complete") {
     if (typeof created.evaluationJobId !== "string" || !created.evaluationJobId) {
       throw new Error("completed replay is missing its durable evaluation receipt");
     }
     return structuredClone(created);
+  }
+  if (created.state === "awaiting_evaluation") {
+    if (typeof created.evaluationJobId !== "string" || !created.evaluationJobId) {
+      throw new Error("awaiting replay is missing its durable evaluation receipt");
+    }
+    if (!input.completeEvaluation) return structuredClone(created);
+    const lease = await input.runtime.invoke(
+      "replay-core",
+      controlEnvelope("replay:claim-job", { jobId, leaseOwner: input.leaseOwner, leaseMs: input.leaseMs }),
+    );
+    if (!Number.isSafeInteger(lease.fenceToken)) {
+      throw new Error("Replay Core did not return a fenced lease for evaluation recovery");
+    }
+    const evaluation = await input.completeEvaluation({
+      replayJobId: jobId,
+      evaluationJobId: created.evaluationJobId,
+      scope: input.scope,
+      sourceDecisionId: sourceRoot.sourceDecisionId,
+      sourceGeneration: sourceRoot.generation,
+      resultTraceIds: Array.isArray(created.resultTraceIds) ? structuredClone(created.resultTraceIds) : [],
+      resultBranches: Array.isArray(created.branches) ? structuredClone(created.branches) : [],
+      candidates: structuredClone(input.candidatePackages),
+      replayJob: structuredClone(created),
+      recovery: true,
+    });
+    return input.runtime.invoke(
+      "replay-core",
+      controlEnvelope("replay:record-evaluation-result", {
+        jobId,
+        leaseOwner: input.leaseOwner,
+        fenceToken: lease.fenceToken,
+        evaluation,
+      }),
+    );
   }
   let schedulerClaim: ReplayIntentClaim | null = null;
   const resultTraceIds: string[] = [];

@@ -1406,22 +1406,45 @@ export async function main(): Promise<void> {
               const evaluationJobId = `evaluation-replay-${createHash("sha256").update(String(replayJobId)).digest("hex").slice(0, 20)}`;
               return { evaluationJobId };
             },
-            completeEvaluation: async ({ evaluationJobId, replayJobId }) => {
-              const counterfactuals = counterfactualPackages.map((candidate) => {
+            completeEvaluation: async ({ evaluationJobId, replayJobId, replayJob }) => {
+              const replayDispatches = replayJob && typeof replayJob === "object" &&
+                !Array.isArray(replayJob) && (replayJob as Record<string, unknown>).dispatches &&
+                typeof (replayJob as Record<string, unknown>).dispatches === "object"
+                  ? (replayJob as Record<string, unknown>).dispatches as Record<string, unknown>
+                  : {};
+              const counterfactuals = await Promise.all(counterfactualPackages.map(async (candidate) => {
                 const dispatchedCandidate = dispatched.get(candidate.endpointId);
-                if (!dispatchedCandidate) {
-                  throw new Error("durable replay evaluation is missing a completed counterfactual dispatch");
-                }
-                const output = dispatchedCandidate.execution.outputText;
+                const durableDispatch = replayDispatches[candidate.endpointId] as Record<string, unknown> | undefined;
+                const durableResult = durableDispatch?.result && typeof durableDispatch.result === "object"
+                  ? durableDispatch.result as Record<string, unknown>
+                  : null;
+                const providerResultRef = typeof durableResult?.providerResultRef === "string"
+                  ? durableResult.providerResultRef
+                  : null;
+                const recoveredRequestId = providerResultRef?.startsWith("route-capture:")
+                  ? providerResultRef.slice("route-capture:".length)
+                  : null;
+                const recoveredCapture = !dispatchedCandidate && recoveredRequestId
+                  ? await operations.readLocalRouteCapture({ requestId: recoveredRequestId }) as Record<string, unknown> | null
+                  : null;
+                const recoveredResponse = recoveredCapture?.response && typeof recoveredCapture.response === "object"
+                  ? recoveredCapture.response as Record<string, unknown>
+                  : null;
+                const output = dispatchedCandidate?.execution.outputText ??
+                  (typeof recoveredResponse?.content === "string" ? recoveredResponse.content : null) ??
+                  (typeof recoveredCapture?.outputText === "string" ? recoveredCapture.outputText : null);
                 if (typeof output !== "string" || !output) {
                   throw new Error("durable replay evaluation is missing counterfactual output evidence");
                 }
                 return {
                   candidate,
-                  dispatch: dispatchedCandidate,
+                  replayRequestId: dispatchedCandidate?.replayRequestId ?? recoveredRequestId,
                   outputSha256: createHash("sha256").update(output, "utf8").digest("hex"),
                 };
-              });
+              }));
+              if (counterfactuals.some(({ replayRequestId }) => !replayRequestId)) {
+                throw new Error("durable replay evaluation cannot recover counterfactual request provenance");
+              }
               const sourceRootArtifactId = typeof sourceCapture.rootArtifactId === "string"
                 ? sourceCapture.rootArtifactId
                 : "";
@@ -1457,19 +1480,19 @@ export async function main(): Promise<void> {
                     propensity: 1,
                     outcome: { outcomeId: `outcome:source:${requestId}`, outcomeRef: sourceRootArtifactId, outcomeDigest: `sha256:${sourceOutputSha256}`, source: "observed", status: "success" },
                   },
-                  counterfactuals: counterfactuals.map(({ candidate, dispatch, outputSha256 }) => ({
-                    rolloutId: `counterfactual:${dispatch.replayRequestId}`,
+                  counterfactuals: counterfactuals.map(({ candidate, replayRequestId, outputSha256 }) => ({
+                    rolloutId: `counterfactual:${replayRequestId}`,
                     routePackage: candidate.endpointId,
                     endpointId: candidate.endpointId,
                     modelId: candidate.modelId,
                     policyId: "run96-supervised-replay",
                     reasoningEffort: candidate.reasoningEffort,
                     effortSource: "variant",
-                    evidenceRef: `route-capture:${dispatch.replayRequestId}-branch`,
-                    artifactRef: `route-capture:${dispatch.replayRequestId}-branch`,
+                    evidenceRef: `route-capture:${replayRequestId}-branch`,
+                    artifactRef: `route-capture:${replayRequestId}-branch`,
                     evaluationActual: outputSha256,
                     propensity: 1,
-                    outcome: { outcomeId: `outcome:${dispatch.replayRequestId}`, outcomeRef: `route-capture:${dispatch.replayRequestId}-branch`, outcomeDigest: `sha256:${outputSha256}`, source: "replay", status: "success" },
+                    outcome: { outcomeId: `outcome:${replayRequestId}`, outcomeRef: `route-capture:${replayRequestId}-branch`, outcomeDigest: `sha256:${outputSha256}`, source: "replay", status: "success" },
                   })),
                   candidateSet: [
                     { routePackage: sourceEndpointId, endpointId: sourceEndpointId, propensity: 1 },

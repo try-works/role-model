@@ -1047,6 +1047,59 @@ test("Run96 Phase5 RED: an idempotent replay awaiting evaluation returns its dur
   expect(invocations).toHaveLength(1);
 });
 
+test("Run96 S3 regression: a retry resumes durable evaluation without redispatching the provider", async () => {
+  const invocations: Array<{ id: string; envelope: Record<string, unknown> }> = [];
+  const runtime = {
+    async invoke(id: string, envelope: Record<string, unknown>) {
+      invocations.push({ id, envelope });
+      switch (envelope.capability) {
+        case "replay:create-job":
+          return {
+            jobId: "replay:recover-evaluation", state: "awaiting_evaluation",
+            evaluationJobId: "evaluation:recover-evaluation",
+            resultTraceIds: ["artifact:branch:recover-evaluation"],
+            branches: [{ candidateEndpointId: "endpoint:counterfactual", branchRootRef: "artifact:branch:recover-evaluation" }],
+          };
+        case "replay:claim-job":
+          return { fenceToken: 17, leaseOwner: "scheduler:recover-evaluation" };
+        case "replay:record-evaluation-result":
+          return { state: "complete", jobId: "replay:recover-evaluation", evaluationJobId: "evaluation:recover-evaluation" };
+        default:
+          throw new Error(`unexpected capability ${String(envelope.capability)}`);
+      }
+    },
+  };
+  const sourceAttestation = createReplaySourceAttestation({
+    channel: "development", scope: "tenant:one", authorizationEpoch: 96,
+    capture: {
+      schemaVersion: "role-model.route-capture-read.v2", scope: "tenant:one",
+      rootArtifactId: "artifact:root:recover-evaluation", routingDecisionId: "decision:recover-evaluation",
+      endpointId: "endpoint:baseline",
+      trace: { generation: 4, readiness: "ready", rootOccurrenceId: "occurrence:recover-evaluation" },
+      replaySource: { schemaVersion: "role-model.route-capture-replay-source.v1", normalizedRequestRef: "artifact:request:recover-evaluation", sharedPrefixRef: "artifact:prefix:recover-evaluation", forkOccurrenceId: "occurrence:recover-evaluation", policySnapshotRef: "artifact:policy:recover-evaluation", capturePolicyRef: "artifact:capture-policy:recover-evaluation" },
+    },
+    eligibleEndpointIds: ["endpoint:baseline", "endpoint:counterfactual"],
+  });
+  await expect(runSupervisedReplay({
+    runtime,
+    adapter: createRouterReplayAdapter({ channel: "development", scope: "tenant:one", authorizationEpoch: 96, dispatch: async () => { throw new Error("must not redispatch"); } }),
+    requestId: "request:recover-evaluation", channel: "development", scope: "tenant:one", authorizationEpoch: 96,
+    sourceAttestation, idempotencyKey: "replay:recover-evaluation", intent: "counterfactual_route",
+    candidatePackages: [{ endpointId: "endpoint:counterfactual", modelId: "deepseek/deepseek-v4-pro", reasoningEffort: "max", promptAdapterId: "prompt:stable-v1", toolPolicy: "deny", experiencePackId: "experience:none", samplingProfileId: "deterministic-v1" }],
+    budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
+    leaseOwner: "scheduler:recover-evaluation", leaseMs: 10_000,
+    prepareBranch: async () => ({ branchRootRef: "must-not-run" }), appendBranch: async () => ({ branchRootRef: "must-not-run" }),
+    handoffEvaluation: async () => ({ evaluationJobId: "must-not-run" }),
+    completeEvaluation: async (request) => {
+      expect(request).toMatchObject({ recovery: true, evaluationJobId: "evaluation:recover-evaluation" });
+      return { evaluationJobId: "evaluation:recover-evaluation", comparisonGroupId: "comparison:recover-evaluation", outcome: "incomplete" };
+    },
+  })).resolves.toMatchObject({ state: "complete", jobId: "replay:recover-evaluation" });
+  expect(invocations.map((item) => item.envelope.capability)).toEqual([
+    "replay:create-job", "replay:claim-job", "replay:record-evaluation-result",
+  ]);
+});
+
 test("Run96 S3 RED: a late-cancelled replay never hands incomplete branches to Evaluation Core", async () => {
   const invocations: Record<string, unknown>[] = [];
   let handoffCount = 0;
