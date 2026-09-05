@@ -1670,7 +1670,9 @@ export function validateRecoveredReplayCapture(input: {
     input.capture.modelId !== input.candidate.modelId ||
     input.capture.routingDecisionId !== input.dispatchReceipt.routerDecisionId
   ) {
-    throw new Error("durable replay evaluation recovered capture does not match its fenced replay receipt");
+    throw new Error(
+      "durable replay evaluation recovered capture does not match its fenced replay receipt",
+    );
   }
 }
 
@@ -1759,8 +1761,12 @@ export async function runSupervisedReplay(input: {
   if (typeof selectedSourceEndpointId !== "string" || !selectedSourceEndpointId) {
     throw new Error("supervised replay source endpoint is invalid");
   }
-  if (input.candidatePackages.some((candidate) => candidate.endpointId === selectedSourceEndpointId)) {
-    throw new Error("supervised replay requires a counterfactual distinct from the source endpoint");
+  if (
+    input.candidatePackages.some((candidate) => candidate.endpointId === selectedSourceEndpointId)
+  ) {
+    throw new Error(
+      "supervised replay requires a counterfactual distinct from the source endpoint",
+    );
   }
   const assertTerminalEvaluationReceipt = (value: unknown, expectedJobId: string): void => {
     const receipt = value as Record<string, unknown> | null;

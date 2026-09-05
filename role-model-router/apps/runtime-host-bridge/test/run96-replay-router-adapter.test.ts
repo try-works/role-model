@@ -3,8 +3,8 @@ import { expect, test } from "vitest";
 import {
   createReplayIntentScheduler,
   createReplaySourceAttestation,
-  createSupervisedReplayEvaluationRequestId,
   createRouterReplayAdapter,
+  createSupervisedReplayEvaluationRequestId,
   requireReplayRouterDecisionId,
   runSupervisedReplay,
   validateRecoveredReplayCapture,
@@ -22,7 +22,11 @@ test("Run96 regression: a supervised replay never dispatches the observed source
       rootArtifactId: "artifact:source-counterfactual-only",
       routingDecisionId: "decision:source-counterfactual-only",
       endpointId: "endpoint:observed-source",
-      trace: { generation: 1, readiness: "ready", rootOccurrenceId: "occurrence:source-counterfactual-only" },
+      trace: {
+        generation: 1,
+        readiness: "ready",
+        rootOccurrenceId: "occurrence:source-counterfactual-only",
+      },
       replaySource: {
         schemaVersion: "role-model.route-capture-replay-source.v1",
         normalizedRequestRef: "artifact:request-counterfactual-only",
@@ -34,25 +38,56 @@ test("Run96 regression: a supervised replay never dispatches the observed source
     },
     eligibleEndpointIds: ["endpoint:observed-source", "endpoint:counterfactual"],
   });
-  await expect(runSupervisedReplay({
-    runtime: { async invoke(_id, envelope) { invocations.push(envelope); return { jobId: "must-not-create" }; } },
-    adapter: createRouterReplayAdapter({ channel: "development", scope: "tenant:counterfactual-only", authorizationEpoch: 96, dispatch: async () => { throw new Error("must not dispatch"); } }),
-    requestId: "request:counterfactual-only",
-    channel: "development",
-    scope: "tenant:counterfactual-only",
-    authorizationEpoch: 96,
-    sourceAttestation,
-    idempotencyKey: "replay:counterfactual-only",
-    intent: "counterfactual_route",
-    evaluationCriteriaDigest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    candidatePackages: [{ endpointId: "endpoint:observed-source", modelId: "model:observed-source", reasoningEffort: null, promptAdapterId: "prompt:stable-v1", toolPolicy: "deny", experiencePackId: "experience:none", samplingProfileId: "deterministic-v1" }],
-    budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
-    leaseOwner: "scheduler:counterfactual-only",
-    leaseMs: 10_000,
-    prepareBranch: async () => ({ branchRootRef: "must-not-run" }),
-    appendBranch: async () => ({ branchRootRef: "must-not-run" }),
-    handoffEvaluation: async () => ({ evaluationJobId: "must-not-run" }),
-  })).rejects.toThrow(/counterfactual distinct from the source/i);
+  await expect(
+    runSupervisedReplay({
+      runtime: {
+        async invoke(_id, envelope) {
+          invocations.push(envelope);
+          return { jobId: "must-not-create" };
+        },
+      },
+      adapter: createRouterReplayAdapter({
+        channel: "development",
+        scope: "tenant:counterfactual-only",
+        authorizationEpoch: 96,
+        dispatch: async () => {
+          throw new Error("must not dispatch");
+        },
+      }),
+      requestId: "request:counterfactual-only",
+      channel: "development",
+      scope: "tenant:counterfactual-only",
+      authorizationEpoch: 96,
+      sourceAttestation,
+      idempotencyKey: "replay:counterfactual-only",
+      intent: "counterfactual_route",
+      evaluationCriteriaDigest:
+        "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      candidatePackages: [
+        {
+          endpointId: "endpoint:observed-source",
+          modelId: "model:observed-source",
+          reasoningEffort: null,
+          promptAdapterId: "prompt:stable-v1",
+          toolPolicy: "deny",
+          experiencePackId: "experience:none",
+          samplingProfileId: "deterministic-v1",
+        },
+      ],
+      budget: {
+        maxCandidates: 1,
+        maxProviderCalls: 1,
+        maxCostMicros: 5_000,
+        maxBytes: 16_384,
+        deadlineMs: 10_000,
+      },
+      leaseOwner: "scheduler:counterfactual-only",
+      leaseMs: 10_000,
+      prepareBranch: async () => ({ branchRootRef: "must-not-run" }),
+      appendBranch: async () => ({ branchRootRef: "must-not-run" }),
+      handoffEvaluation: async () => ({ evaluationJobId: "must-not-run" }),
+    }),
+  ).rejects.toThrow(/counterfactual distinct from the source/i);
   expect(invocations).toEqual([]);
 });
 
@@ -66,18 +101,23 @@ test("Run96 regression: replay evaluation groups are stable per replay job and n
 });
 
 test("Run96 regression: recovery binds provider capture identity without confusing it for the appended replay branch root", () => {
-  expect(() => validateRecoveredReplayCapture({
-    scope: "tenant:recovery",
-    candidate: { endpointId: "endpoint:counterfactual", modelId: "model:counterfactual" },
-    dispatchReceipt: { routerDecisionId: "decision:replayed", branchRootRef: "artifact:appended-branch" },
-    capture: {
+  expect(() =>
+    validateRecoveredReplayCapture({
       scope: "tenant:recovery",
-      endpointId: "endpoint:counterfactual",
-      modelId: "model:counterfactual",
-      routingDecisionId: "decision:replayed",
-      rootArtifactId: "artifact:provider-route-capture",
-    },
-  })).not.toThrow();
+      candidate: { endpointId: "endpoint:counterfactual", modelId: "model:counterfactual" },
+      dispatchReceipt: {
+        routerDecisionId: "decision:replayed",
+        branchRootRef: "artifact:appended-branch",
+      },
+      capture: {
+        scope: "tenant:recovery",
+        endpointId: "endpoint:counterfactual",
+        modelId: "model:counterfactual",
+        routingDecisionId: "decision:replayed",
+        rootArtifactId: "artifact:provider-route-capture",
+      },
+    }),
+  ).not.toThrow();
 });
 
 test("Run96 S3 RED: the public host uses authenticated scheduler intents that contain only replay references", async () => {
@@ -521,7 +561,11 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
         case "replay:record-evaluation-receipt":
           return { state: "awaiting_evaluation", evaluationJobId: "evaluation:orchestrated" };
         case "replay:record-evaluation-result":
-          return { state: "complete", evaluationJobId: "evaluation:orchestrated", evaluationResult: envelope.value };
+          return {
+            state: "complete",
+            evaluationJobId: "evaluation:orchestrated",
+            evaluationResult: envelope.value,
+          };
         default:
           throw new Error(`unexpected capability ${String(envelope.capability)}`);
       }
@@ -586,7 +630,8 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
     sourceAttestation,
     idempotencyKey: "replay:orchestrated",
     intent: "counterfactual_route",
-    evaluationCriteriaDigest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    evaluationCriteriaDigest:
+      "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     candidatePackages: [
       {
         endpointId: "endpoint:counterfactual",
@@ -670,17 +715,22 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
     "scheduler:claim-replay-intent",
     "scheduler:complete-replay-intent",
   ]);
-  expect(invocations).toEqual(expect.arrayContaining([
-    expect.objectContaining({
-      id: "replay-core",
-      envelope: expect.objectContaining({
-        capability: "replay:record-evaluation-result",
-        value: expect.objectContaining({
-          evaluation: expect.objectContaining({ comparisonGroupId: "comparison:orchestrated", outcome: "tie" }),
+  expect(invocations).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        id: "replay-core",
+        envelope: expect.objectContaining({
+          capability: "replay:record-evaluation-result",
+          value: expect.objectContaining({
+            evaluation: expect.objectContaining({
+              comparisonGroupId: "comparison:orchestrated",
+              outcome: "tie",
+            }),
+          }),
         }),
       }),
-    }),
-  ]));
+    ]),
+  );
   expect(JSON.stringify(invocations)).not.toContain("source-only host transcript");
   expect(JSON.stringify(invocations)).not.toMatch(/api[_-]?key|credential|secret/i);
 });
@@ -780,7 +830,8 @@ test("Run96 S3 RED: host orchestration preserves a bounded rate-limit failure be
       sourceAttestation,
       idempotencyKey: "replay:router-failure",
       intent: "counterfactual_route",
-      evaluationCriteriaDigest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      evaluationCriteriaDigest:
+        "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       candidatePackages: [
         {
           endpointId: "endpoint:counterfactual",
@@ -920,7 +971,8 @@ test("Run96 S3 regression: timeout retries while a partial provider result is te
         sourceAttestation,
         idempotencyKey: `replay:${code}`,
         intent: "counterfactual_route",
-        evaluationCriteriaDigest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        evaluationCriteriaDigest:
+          "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         candidatePackages: [
           {
             endpointId: "endpoint:counterfactual",
@@ -1016,7 +1068,8 @@ test("Run96 S3 RED: a completed idempotent replay returns its durable receipt wi
       sourceAttestation: attestation,
       idempotencyKey: "replay:idempotent",
       intent: "counterfactual_route",
-      evaluationCriteriaDigest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      evaluationCriteriaDigest:
+        "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       candidatePackages: [
         {
           endpointId: "endpoint:counterfactual",
@@ -1074,7 +1127,11 @@ test("Run96 Phase5 RED: an idempotent replay awaiting evaluation returns its dur
       rootArtifactId: "artifact:root-awaiting-evaluation",
       routingDecisionId: "decision:source-awaiting-evaluation",
       endpointId: "endpoint:baseline",
-      trace: { generation: 4, readiness: "ready", rootOccurrenceId: "occurrence:root-awaiting-evaluation" },
+      trace: {
+        generation: 4,
+        readiness: "ready",
+        rootOccurrenceId: "occurrence:root-awaiting-evaluation",
+      },
       replaySource: {
         schemaVersion: "role-model.route-capture-replay-source.v1",
         normalizedRequestRef: "artifact:request-awaiting-evaluation",
@@ -1105,17 +1162,26 @@ test("Run96 Phase5 RED: an idempotent replay awaiting evaluation returns its dur
       sourceAttestation,
       idempotencyKey: "replay:awaiting-evaluation",
       intent: "counterfactual_route",
-      evaluationCriteriaDigest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-      candidatePackages: [{
-        endpointId: "endpoint:counterfactual",
-        modelId: "deepseek/deepseek-v4-pro",
-        reasoningEffort: "max",
-        promptAdapterId: "prompt:stable-v1",
-        toolPolicy: "deny",
-        experiencePackId: "experience:none",
-        samplingProfileId: "sampling:stable-v1",
-      }],
-      budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
+      evaluationCriteriaDigest:
+        "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      candidatePackages: [
+        {
+          endpointId: "endpoint:counterfactual",
+          modelId: "deepseek/deepseek-v4-pro",
+          reasoningEffort: "max",
+          promptAdapterId: "prompt:stable-v1",
+          toolPolicy: "deny",
+          experiencePackId: "experience:none",
+          samplingProfileId: "sampling:stable-v1",
+        },
+      ],
+      budget: {
+        maxCandidates: 1,
+        maxProviderCalls: 1,
+        maxCostMicros: 5_000,
+        maxBytes: 16_384,
+        deadlineMs: 10_000,
+      },
       leaseOwner: "scheduler:96",
       leaseMs: 10_000,
       prepareBranch: async () => ({ branchRootRef: "must-not-run" }),
@@ -1138,49 +1204,116 @@ test("Run96 S3 regression: a retry resumes durable evaluation without redispatch
       switch (envelope.capability) {
         case "replay:create-job":
           return {
-            jobId: "replay:recover-evaluation", state: "awaiting_evaluation",
+            jobId: "replay:recover-evaluation",
+            state: "awaiting_evaluation",
             evaluationJobId: "evaluation:recover-evaluation",
             resultTraceIds: ["artifact:branch:recover-evaluation"],
-            branches: [{ candidateEndpointId: "endpoint:counterfactual", branchRootRef: "artifact:branch:recover-evaluation" }],
+            branches: [
+              {
+                candidateEndpointId: "endpoint:counterfactual",
+                branchRootRef: "artifact:branch:recover-evaluation",
+              },
+            ],
           };
         case "replay:claim-job":
           return { fenceToken: 17, leaseOwner: "scheduler:recover-evaluation" };
         case "replay:record-evaluation-result":
-          return { state: "complete", jobId: "replay:recover-evaluation", evaluationJobId: "evaluation:recover-evaluation" };
+          return {
+            state: "complete",
+            jobId: "replay:recover-evaluation",
+            evaluationJobId: "evaluation:recover-evaluation",
+          };
         default:
           throw new Error(`unexpected capability ${String(envelope.capability)}`);
       }
     },
   };
   const sourceAttestation = createReplaySourceAttestation({
-    channel: "development", scope: "tenant:one", authorizationEpoch: 96,
+    channel: "development",
+    scope: "tenant:one",
+    authorizationEpoch: 96,
     capture: {
-      schemaVersion: "role-model.route-capture-read.v2", scope: "tenant:one",
-      rootArtifactId: "artifact:root:recover-evaluation", routingDecisionId: "decision:recover-evaluation",
+      schemaVersion: "role-model.route-capture-read.v2",
+      scope: "tenant:one",
+      rootArtifactId: "artifact:root:recover-evaluation",
+      routingDecisionId: "decision:recover-evaluation",
       endpointId: "endpoint:baseline",
-      trace: { generation: 4, readiness: "ready", rootOccurrenceId: "occurrence:recover-evaluation" },
-      replaySource: { schemaVersion: "role-model.route-capture-replay-source.v1", normalizedRequestRef: "artifact:request:recover-evaluation", sharedPrefixRef: "artifact:prefix:recover-evaluation", forkOccurrenceId: "occurrence:recover-evaluation", policySnapshotRef: "artifact:policy:recover-evaluation", capturePolicyRef: "artifact:capture-policy:recover-evaluation" },
+      trace: {
+        generation: 4,
+        readiness: "ready",
+        rootOccurrenceId: "occurrence:recover-evaluation",
+      },
+      replaySource: {
+        schemaVersion: "role-model.route-capture-replay-source.v1",
+        normalizedRequestRef: "artifact:request:recover-evaluation",
+        sharedPrefixRef: "artifact:prefix:recover-evaluation",
+        forkOccurrenceId: "occurrence:recover-evaluation",
+        policySnapshotRef: "artifact:policy:recover-evaluation",
+        capturePolicyRef: "artifact:capture-policy:recover-evaluation",
+      },
     },
     eligibleEndpointIds: ["endpoint:baseline", "endpoint:counterfactual"],
   });
-  await expect(runSupervisedReplay({
-    runtime,
-    adapter: createRouterReplayAdapter({ channel: "development", scope: "tenant:one", authorizationEpoch: 96, dispatch: async () => { throw new Error("must not redispatch"); } }),
-    requestId: "request:recover-evaluation", channel: "development", scope: "tenant:one", authorizationEpoch: 96,
-    sourceAttestation, idempotencyKey: "replay:recover-evaluation", intent: "counterfactual_route",
-    evaluationCriteriaDigest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    candidatePackages: [{ endpointId: "endpoint:counterfactual", modelId: "deepseek/deepseek-v4-pro", reasoningEffort: "max", promptAdapterId: "prompt:stable-v1", toolPolicy: "deny", experiencePackId: "experience:none", samplingProfileId: "deterministic-v1" }],
-    budget: { maxCandidates: 1, maxProviderCalls: 1, maxCostMicros: 5_000, maxBytes: 16_384, deadlineMs: 10_000 },
-    leaseOwner: "scheduler:recover-evaluation", leaseMs: 10_000,
-    prepareBranch: async () => ({ branchRootRef: "must-not-run" }), appendBranch: async () => ({ branchRootRef: "must-not-run" }),
-    handoffEvaluation: async () => ({ evaluationJobId: "must-not-run" }),
-    completeEvaluation: async (request) => {
-      expect(request).toMatchObject({ recovery: true, evaluationJobId: "evaluation:recover-evaluation" });
-      return { evaluationJobId: "evaluation:recover-evaluation", comparisonGroupId: "comparison:recover-evaluation", outcome: "incomplete" };
-    },
-  })).resolves.toMatchObject({ state: "complete", jobId: "replay:recover-evaluation" });
+  await expect(
+    runSupervisedReplay({
+      runtime,
+      adapter: createRouterReplayAdapter({
+        channel: "development",
+        scope: "tenant:one",
+        authorizationEpoch: 96,
+        dispatch: async () => {
+          throw new Error("must not redispatch");
+        },
+      }),
+      requestId: "request:recover-evaluation",
+      channel: "development",
+      scope: "tenant:one",
+      authorizationEpoch: 96,
+      sourceAttestation,
+      idempotencyKey: "replay:recover-evaluation",
+      intent: "counterfactual_route",
+      evaluationCriteriaDigest:
+        "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      candidatePackages: [
+        {
+          endpointId: "endpoint:counterfactual",
+          modelId: "deepseek/deepseek-v4-pro",
+          reasoningEffort: "max",
+          promptAdapterId: "prompt:stable-v1",
+          toolPolicy: "deny",
+          experiencePackId: "experience:none",
+          samplingProfileId: "deterministic-v1",
+        },
+      ],
+      budget: {
+        maxCandidates: 1,
+        maxProviderCalls: 1,
+        maxCostMicros: 5_000,
+        maxBytes: 16_384,
+        deadlineMs: 10_000,
+      },
+      leaseOwner: "scheduler:recover-evaluation",
+      leaseMs: 10_000,
+      prepareBranch: async () => ({ branchRootRef: "must-not-run" }),
+      appendBranch: async () => ({ branchRootRef: "must-not-run" }),
+      handoffEvaluation: async () => ({ evaluationJobId: "must-not-run" }),
+      completeEvaluation: async (request) => {
+        expect(request).toMatchObject({
+          recovery: true,
+          evaluationJobId: "evaluation:recover-evaluation",
+        });
+        return {
+          evaluationJobId: "evaluation:recover-evaluation",
+          comparisonGroupId: "comparison:recover-evaluation",
+          outcome: "incomplete",
+        };
+      },
+    }),
+  ).resolves.toMatchObject({ state: "complete", jobId: "replay:recover-evaluation" });
   expect(invocations.map((item) => item.envelope.capability)).toEqual([
-    "replay:create-job", "replay:claim-job", "replay:record-evaluation-result",
+    "replay:create-job",
+    "replay:claim-job",
+    "replay:record-evaluation-result",
   ]);
 });
 
@@ -1281,7 +1414,8 @@ test("Run96 S3 RED: a late-cancelled replay never hands incomplete branches to E
       sourceAttestation,
       idempotencyKey: "replay:cancelled-late",
       intent: "counterfactual_route",
-      evaluationCriteriaDigest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      evaluationCriteriaDigest:
+        "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       candidatePackages: [
         {
           endpointId: "endpoint:counterfactual",
@@ -1433,7 +1567,8 @@ test("Run96 Phase5 RED: an expired scheduler receipt does not erase an already-d
       sourceAttestation,
       idempotencyKey: "replay:expired-scheduler",
       intent: "counterfactual_route",
-      evaluationCriteriaDigest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      evaluationCriteriaDigest:
+        "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       candidatePackages: [
         {
           endpointId: "endpoint:counterfactual",
