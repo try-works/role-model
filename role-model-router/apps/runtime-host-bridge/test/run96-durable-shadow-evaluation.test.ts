@@ -44,7 +44,9 @@ const comparableEvidence = {
         outcomeRef: "artifact:outcome-counterfactual-96",
         outcomeDigest: "sha256:counterfactual-outcome-96",
         source: "replay",
-        status: "failure",
+        // A successful provider transport is not positive learning evidence.  The
+        // independently observed semantic criterion below deliberately fails.
+        status: "success",
       },
     },
   ],
@@ -133,6 +135,7 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
   const calls: Array<{ id: string; capability: unknown }> = [];
   let scorerRegistration: unknown;
   let signalInput: Record<string, unknown> | undefined;
+  let profileInput: Record<string, unknown> | undefined;
   let knowledgeInput: Record<string, unknown> | undefined;
   const trialIds = ["trial:source-96", "trial:counterfactual-96"];
   const claimedTrialIds = ["trial:source-96", "trial:counterfactual-96"];
@@ -222,6 +225,7 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
             };
           }
           if (id === "profile-learner") {
+            profileInput = envelope.value as Record<string, unknown>;
             return {
               profileId: "profile:96",
               digest: "sha256:profile-96",
@@ -296,6 +300,13 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
   expect(calls).not.toContainEqual({ id: "evaluation-runner-local", capability: "evaluation:run-local" });
   expect(calls).toContainEqual({ id: "trajectory-signals", capability: "signals:analyze-finalized-evaluation" });
   expect(calls).toContainEqual({ id: "profile-learner", capability: "profile:estimate-finalized-evaluation" });
+  // The second rollout has a successful transport status but fails the required
+  // semantic criterion.  Learning must receive the evaluator's 0, not a
+  // transport-derived positive label.
+  expect(profileInput?.rows).toEqual(expect.arrayContaining([
+    expect.objectContaining({ endpoint: "endpoint:source-96", outcome: 1 }),
+    expect.objectContaining({ endpoint: "endpoint:counterfactual-96", outcome: 0 }),
+  ]));
   expect(signalInput).toMatchObject({
     finalizedEvaluation: { groupId: "comparison:96", status: "finalized", outcome: "candidate" },
     routeDecisionId: "decision:source-96",
