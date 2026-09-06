@@ -64,6 +64,28 @@ describe("Run 96 operator controls", () => {
     expect(calls).toEqual(["aggregate:request-1", "retry"]);
   });
 
+  test("reads the exact persisted post-observation receipt through the public runtime boundary", async () => {
+    const server = await startTestServer({
+      readTrackBPostObservationReceipt: async (requestId) => ({
+        requestId,
+        completedAt: "2026-09-06T00:00:00.000Z",
+        result: {
+          extensionClosure: { schemaVersion: "role-model.track-b-extension-closure.v1" },
+          contribution: { status: "uploaded", id: "aggregate-1" },
+        },
+      }),
+    });
+    const response = await fetch(
+      `http://127.0.0.1:${server.port}/api/role-model/track-b/shadow-receipts/${encodeURIComponent("request:1")}`,
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      requestId: "request:1",
+      result: { contribution: { status: "uploaded", id: "aggregate-1" } },
+    });
+  });
+
   test("requires operator authentication and returns a truthful unavailable status", async () => {
     const server = await startTestServer({ operatorAuthToken: "operator-secret" });
 

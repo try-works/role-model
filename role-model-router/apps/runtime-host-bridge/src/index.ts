@@ -2960,6 +2960,7 @@ export interface StartBridgeServerOptions {
   readonly mutateExtension?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly readTrackBQaExtensions?: () => Promise<readonly unknown[]>;
   readonly readTrackBShadowReceipts?: () => Promise<unknown>;
+  readonly readTrackBPostObservationReceipt?: (requestId: string) => Promise<unknown>;
   readonly recordTrackBContributionAggregate?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly retryTrackBContributionAggregates?: () => Promise<unknown>;
   readonly readTrackBExtensionReadback?: (body: Record<string, unknown>) => Promise<unknown>;
@@ -3194,6 +3195,7 @@ export interface RuntimeBridgeBackend {
   mutateExtension(body: Record<string, unknown>): Promise<unknown>;
   readTrackBQaExtensions(): Promise<readonly unknown[]>;
   readTrackBShadowReceipts(): Promise<unknown>;
+  readTrackBPostObservationReceipt(requestId: string): Promise<unknown>;
   recordTrackBContributionAggregate(body: Record<string, unknown>): Promise<unknown>;
   retryTrackBContributionAggregates(): Promise<unknown>;
   readTrackBExtensionReadback(body: Record<string, unknown>): Promise<unknown>;
@@ -15275,6 +15277,28 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    const trackBReceiptMatch = url.pathname.match(
+      /^\/api\/role-model\/track-b\/shadow-receipts\/([^/]+)$/,
+    );
+    if (request.method === "GET" && trackBReceiptMatch) {
+      if (!options.readTrackBPostObservationReceipt) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      const requestId = decodeURIComponent(trackBReceiptMatch[1]);
+      if (!requestId || requestId.length > 256 || /[\r\n]/.test(requestId)) {
+        writeJson(response, 400, { error: "invalid request id" });
+        return;
+      }
+      const receipt = await options.readTrackBPostObservationReceipt(requestId);
+      if (!receipt) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, receipt);
+      return;
+    }
+
     if (
       request.method === "POST" &&
       url.pathname === "/api/role-model/track-b/contribution/aggregate"
@@ -26133,6 +26157,10 @@ export async function createRuntimeBridgeBackend(
         return { pendingCount: 0, receiptCount: 0, receipts: [] };
       }
       return options.trackBPostObservationReceipts();
+    },
+    async readTrackBPostObservationReceipt(requestId: string): Promise<unknown> {
+      if (!options.readTrackBPostObservationReceipt) return null;
+      return options.readTrackBPostObservationReceipt(requestId);
     },
     async recordTrackBContributionAggregate(body: Record<string, unknown>): Promise<unknown> {
       return createTrackBOperations({

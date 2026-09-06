@@ -78,6 +78,9 @@ type CliBackend = Pick<
   | "mutateExtension"
   | "readTrackBQaExtensions"
   | "readTrackBShadowReceipts"
+  | "readTrackBPostObservationReceipt"
+  | "recordTrackBContributionAggregate"
+  | "retryTrackBContributionAggregates"
   | "readTrackBExtensionReadback"
   | "runTrackBSupervisedReplay"
   | "readOperatorStatus"
@@ -464,6 +467,15 @@ export function createCliServerOptions(
     readTrackBShadowReceipts: bindBackendMethod(
       "readTrackBShadowReceipts",
     ) as StartBridgeServerOptions["readTrackBShadowReceipts"],
+    readTrackBPostObservationReceipt: bindBackendMethod(
+      "readTrackBPostObservationReceipt",
+    ) as StartBridgeServerOptions["readTrackBPostObservationReceipt"],
+    recordTrackBContributionAggregate: bindBackendMethod(
+      "recordTrackBContributionAggregate",
+    ) as StartBridgeServerOptions["recordTrackBContributionAggregate"],
+    retryTrackBContributionAggregates: bindBackendMethod(
+      "retryTrackBContributionAggregates",
+    ) as StartBridgeServerOptions["retryTrackBContributionAggregates"],
     readTrackBExtensionReadback: bindBackendMethod(
       "readTrackBExtensionReadback",
     ) as StartBridgeServerOptions["readTrackBExtensionReadback"],
