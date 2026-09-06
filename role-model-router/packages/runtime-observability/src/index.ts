@@ -429,6 +429,8 @@ export interface RuntimeObservationBundleInput {
     readonly sourceClient?: string;
     readonly executionFamily?: string;
     readonly adapterFamily?: string;
+    /** Opaque router-owned provider attempts, never provider content or credentials. */
+    readonly providerAttemptIds?: readonly string[];
     readonly payloadBytes?: {
       readonly ingress?: number;
       readonly translated?: number;
@@ -540,6 +542,8 @@ export interface RuntimeObservationBundle {
     readonly sourceClient?: string;
     readonly executionFamily: string;
     readonly adapterFamily: string;
+    /** Opaque router-owned provider attempts, never provider content or credentials. */
+    readonly providerAttemptIds?: readonly string[];
     readonly payloadBytes: {
       readonly ingress: number;
       readonly translated: number;

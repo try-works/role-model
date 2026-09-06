@@ -1405,6 +1405,8 @@ export interface RouterDecisionPage {
 export interface RouterDecisionDetail {
   readonly requestId: string;
   readonly routingDecisionId: string | null;
+  /** Opaque router-owned provider-attempt IDs; never request or provider content. */
+  readonly providerAttemptIds?: readonly string[];
   readonly selectedEndpointId: string;
   readonly selectedModelId: string | null;
   readonly displayName?: string | null;

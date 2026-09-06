@@ -8447,6 +8447,7 @@ describe("runtime-host-bridge", () => {
         routingDecisionId: "route-001",
         selectedEndpointId: "cli.local.coder",
         selectedModelId: "gpt-5.4",
+        providerAttemptIds: ["attempt:req-router-001:final"],
         fallbackEndpointIds: ["moonshot.personal.primary.global.kimi-k2.5"],
         strategyLabel: "balanced",
         scoredCandidates: [
@@ -8923,6 +8924,7 @@ describe("runtime-host-bridge", () => {
         routingDecisionId: "route-001",
         selectedEndpointId: "cli.local.coder",
         selectedModelId: "gpt-5.4",
+        providerAttemptIds: ["attempt:req-router-001:final"],
         fallbackEndpointIds: ["moonshot.personal.primary.global.kimi-k2.5"],
         strategyLabel: "balanced",
         scoredCandidates: [

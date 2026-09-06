@@ -22774,6 +22774,12 @@ export async function createRuntimeBridgeBackend(
     const routingDiagnostics = asObjectRecord(observation.routingDiagnostics);
     const routingMode = asObjectRecord(routingDiagnostics?.routingMode);
     const decision = asObjectRecord(observation.decision);
+    const executionSemantics = asObjectRecord(observation.executionSemantics);
+    const providerAttemptIds = Array.isArray(executionSemantics?.providerAttemptIds)
+      ? [...new Set(executionSemantics.providerAttemptIds.filter(
+          (value): value is string => typeof value === "string" && value.trim().length > 0,
+        ))]
+      : [];
     const requestRecord = (() => {
       const record = readRuntimeTelemetryRecord({
         databasePath: initialization.databasePath,
@@ -22790,6 +22796,7 @@ export async function createRuntimeBridgeBackend(
       upstreamModelId: requestRecord?.upstreamModelId ?? requestRecord?.modelId ?? null,
       reasoningEffort: requestRecord?.reasoningEffort ?? null,
       effortSource: requestRecord?.effortSource ?? null,
+      providerAttemptIds,
       fallbackEndpointIds: Array.isArray(decision?.fallback_endpoint_ids)
         ? decision.fallback_endpoint_ids
         : [],
@@ -23767,6 +23774,9 @@ export async function createRuntimeBridgeBackend(
           sourceClient,
           executionFamily: error.executionFamily,
           adapterFamily: error.adapterFamily,
+          providerAttemptIds: executionSemanticsReceipt.failedAttempts.map(
+            (attempt) => attempt.attemptId,
+          ),
           payloadBytes,
           retryCount: executionSemanticsReceipt.retryCount,
           rerouteCount: executionSemanticsReceipt.rerouteCount,
@@ -24424,6 +24434,10 @@ export async function createRuntimeBridgeBackend(
               ? "openai.responses"
               : "openai.chat.completions",
           adapterFamily: effectiveExecutionAdapterFamily,
+          providerAttemptIds: [
+            ...executionSemanticsReceipt.failedAttempts.map((attempt) => attempt.attemptId),
+            `attempt:${requestId}:final`,
+          ],
           payloadBytes: {
             ingress: measureStructuredPayloadBytes(executionOptions?.requestBody ?? null),
             translated: measureStructuredPayloadBytes(plan.executionRequest),
