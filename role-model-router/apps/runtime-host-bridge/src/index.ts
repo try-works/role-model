@@ -2960,6 +2960,8 @@ export interface StartBridgeServerOptions {
   readonly mutateExtension?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly readTrackBQaExtensions?: () => Promise<readonly unknown[]>;
   readonly readTrackBShadowReceipts?: () => Promise<unknown>;
+  readonly recordTrackBContributionAggregate?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly retryTrackBContributionAggregates?: () => Promise<unknown>;
   readonly readTrackBExtensionReadback?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly runTrackBSupervisedReplay?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly readOperatorStatus?: () => Promise<RuntimeOperatorStatus | unknown>;
@@ -3192,6 +3194,8 @@ export interface RuntimeBridgeBackend {
   mutateExtension(body: Record<string, unknown>): Promise<unknown>;
   readTrackBQaExtensions(): Promise<readonly unknown[]>;
   readTrackBShadowReceipts(): Promise<unknown>;
+  recordTrackBContributionAggregate(body: Record<string, unknown>): Promise<unknown>;
+  retryTrackBContributionAggregates(): Promise<unknown>;
   readTrackBExtensionReadback(body: Record<string, unknown>): Promise<unknown>;
   runTrackBSupervisedReplay(body: Record<string, unknown>): Promise<unknown>;
   readOperatorStatus(): Promise<RuntimeOperatorStatus | unknown>;
@@ -15273,6 +15277,46 @@ function createRequestHandler(options: StartBridgeServerOptions) {
 
     if (
       request.method === "POST" &&
+      url.pathname === "/api/role-model/track-b/contribution/aggregate"
+    ) {
+      if (!options.recordTrackBContributionAggregate) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(
+          response,
+          200,
+          await options.recordTrackBContributionAggregate(await readJsonBody(request)),
+        );
+      } catch (error) {
+        writeJson(response, 409, {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+      return;
+    }
+
+    if (
+      request.method === "POST" &&
+      url.pathname === "/api/role-model/track-b/contribution/retry"
+    ) {
+      if (!options.retryTrackBContributionAggregates) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(response, 200, await options.retryTrackBContributionAggregates());
+      } catch (error) {
+        writeJson(response, 409, {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+      return;
+    }
+
+    if (
+      request.method === "POST" &&
       url.pathname === "/api/role-model/track-b/extension-readback"
     ) {
       if (!options.readTrackBExtensionReadback) {
@@ -22776,9 +22820,13 @@ export async function createRuntimeBridgeBackend(
     const decision = asObjectRecord(observation.decision);
     const executionSemantics = asObjectRecord(observation.executionSemantics);
     const providerAttemptIds = Array.isArray(executionSemantics?.providerAttemptIds)
-      ? [...new Set(executionSemantics.providerAttemptIds.filter(
-          (value): value is string => typeof value === "string" && value.trim().length > 0,
-        ))]
+      ? [
+          ...new Set(
+            executionSemantics.providerAttemptIds.filter(
+              (value): value is string => typeof value === "string" && value.trim().length > 0,
+            ),
+          ),
+        ]
       : [];
     const requestRecord = (() => {
       const record = readRuntimeTelemetryRecord({
@@ -26085,6 +26133,28 @@ export async function createRuntimeBridgeBackend(
         return { pendingCount: 0, receiptCount: 0, receipts: [] };
       }
       return options.trackBPostObservationReceipts();
+    },
+    async recordTrackBContributionAggregate(body: Record<string, unknown>): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: options.trackBQaExtensionCatalog?.() ?? [],
+        extensionRuntime: options.trackBExtensionRuntime?.() ?? undefined,
+      }).recordContributionAggregate(body);
+    },
+    async retryTrackBContributionAggregates(): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: options.trackBQaExtensionCatalog?.() ?? [],
+        extensionRuntime: options.trackBExtensionRuntime?.() ?? undefined,
+      }).retryContributionAggregates();
     },
     async readTrackBExtensionReadback(body: Record<string, unknown>): Promise<unknown> {
       if (!options.readTrackBExtensionReadback) {

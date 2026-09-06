@@ -32,6 +32,38 @@ afterEach(async () => {
 });
 
 describe("Run 96 operator controls", () => {
+  test("routes explicit Phase 5 aggregate and retry requests through public runtime callbacks", async () => {
+    const calls: string[] = [];
+    const server = await startTestServer({
+      recordTrackBContributionAggregate: async (body) => {
+        calls.push(`aggregate:${String(body.requestId)}`);
+        return { status: "uploaded", outboxId: "outbox-1" };
+      },
+      retryTrackBContributionAggregates: async () => {
+        calls.push("retry");
+        return { status: "retried", outboxId: "outbox-1" };
+      },
+    });
+    const aggregate = await fetch(
+      `http://127.0.0.1:${server.port}/api/role-model/track-b/contribution/aggregate`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ requestId: "request-1" }),
+      },
+    );
+    const retry = await fetch(
+      `http://127.0.0.1:${server.port}/api/role-model/track-b/contribution/retry`,
+      { method: "POST" },
+    );
+
+    expect(aggregate.status).toBe(200);
+    expect(await aggregate.json()).toMatchObject({ status: "uploaded", outboxId: "outbox-1" });
+    expect(retry.status).toBe(200);
+    expect(await retry.json()).toMatchObject({ status: "retried", outboxId: "outbox-1" });
+    expect(calls).toEqual(["aggregate:request-1", "retry"]);
+  });
+
   test("requires operator authentication and returns a truthful unavailable status", async () => {
     const server = await startTestServer({ operatorAuthToken: "operator-secret" });
 
