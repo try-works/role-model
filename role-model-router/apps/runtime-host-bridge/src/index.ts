@@ -17118,6 +17118,30 @@ export async function startBridgeServer(options: StartBridgeServerOptions): Prom
   };
 }
 
+/**
+ * Project the opaque provider-attempt identifiers retained by a persisted runtime
+ * observation. Compact post-cutover observations can omit execution semantics
+ * while retaining their derived provider evidence, so the public decision view
+ * must use that equivalent recorded evidence rather than reporting an empty
+ * attempt ledger.
+ */
+export function projectPublicProviderAttemptIds(
+  observation: object,
+): readonly string[] {
+  const readAttemptIds = (value: unknown, field: string): readonly string[] => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return [];
+    const candidate = (value as Readonly<Record<string, unknown>>)[field];
+    if (!Array.isArray(candidate)) return [];
+    return candidate.filter(
+      (entry): entry is string => typeof entry === "string" && entry.trim().length > 0,
+    );
+  };
+  const source = observation as Readonly<Record<string, unknown>>;
+  const executionSemantics = readAttemptIds(source.executionSemantics, "providerAttemptIds");
+  const providerEvidence = readAttemptIds(source.providerEvidence, "attemptIds");
+  return [...new Set([...executionSemantics, ...providerEvidence])];
+}
+
 export async function createRuntimeBridgeBackend(
   options: CreateRuntimeBridgeBackendOptions,
 ): Promise<RuntimeBridgeBackend> {
@@ -22899,16 +22923,7 @@ export async function createRuntimeBridgeBackend(
     const routingDiagnostics = asObjectRecord(observation.routingDiagnostics);
     const routingMode = asObjectRecord(routingDiagnostics?.routingMode);
     const decision = asObjectRecord(observation.decision);
-    const executionSemantics = asObjectRecord(observation.executionSemantics);
-    const providerAttemptIds = Array.isArray(executionSemantics?.providerAttemptIds)
-      ? [
-          ...new Set(
-            executionSemantics.providerAttemptIds.filter(
-              (value): value is string => typeof value === "string" && value.trim().length > 0,
-            ),
-          ),
-        ]
-      : [];
+    const providerAttemptIds = projectPublicProviderAttemptIds(observation);
     const requestRecord = (() => {
       const record = readRuntimeTelemetryRecord({
         databasePath: initialization.databasePath,

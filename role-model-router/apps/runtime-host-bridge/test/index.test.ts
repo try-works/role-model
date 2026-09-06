@@ -106,6 +106,19 @@ function successfulCodexAdmissionReadinessProbe(requestId: string): {
   };
 }
 
+test("Run 96 projects persisted provider evidence attempt identities when compact observations omit execution semantics", () => {
+  expect(
+    bridge.projectPublicProviderAttemptIds({
+      executionSemantics: {
+        providerAttemptIds: [],
+      },
+      providerEvidence: {
+        attemptIds: ["req-run96-projection:attempt:1"],
+      },
+    }),
+  ).toEqual(["req-run96-projection:attempt:1"]);
+});
+
 const registry: EndpointRegistryResult = {
   endpoints: [
     {
