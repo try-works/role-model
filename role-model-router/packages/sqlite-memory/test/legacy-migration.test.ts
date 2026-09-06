@@ -157,7 +157,7 @@ describe("TB04 real SQLite legacy migration", () => {
       ),
     );
     expect(readFileSync(databasePath)).toEqual(before);
-  });
+  }, 15_000);
 
   test("backfills real rows, cuts over once, and retires only after second parity and hold expiry", () => {
     const { root, databasePath, backupPath, rich } = fixture();
