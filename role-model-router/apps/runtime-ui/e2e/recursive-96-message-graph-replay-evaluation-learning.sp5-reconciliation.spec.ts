@@ -29,14 +29,14 @@ test.describe("@recursive:96-message-graph-replay-evaluation-learning @sp5 @live
 
     await page.goto(`/app/observe/requests/${encodeURIComponent(requestId)}`);
     await expect(page.getByText(requestId, { exact: true }).first()).toBeVisible();
-    await expect(page.getByText(/Router.*Open detail|Open detail.*Router/).first()).toBeVisible();
+    await expect(page.getByText("Routing receipts", { exact: true })).toBeVisible();
 
     await page.goto("/app/system/storage-retention");
     await expect(page.getByRole("heading", { name: "Physical storage inventory" })).toBeVisible();
     const summary = page.getByLabel("Storage retention summary");
     await expect(summary.getByText("Physical", { exact: true })).toBeVisible();
     await expect(summary.getByText("Logical classes", { exact: true })).toBeVisible();
-    await expect(page.getByRole("columnheader", { name: "Observation state" })).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Observation state" }).first()).toBeVisible();
     await expect(page.getByRole("columnheader", { name: "Enforcement" })).toHaveCount(0);
 
     await test.info().attach("run96-p5-08-reconciliation", {
