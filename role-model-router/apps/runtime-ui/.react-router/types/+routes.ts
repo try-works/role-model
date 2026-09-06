@@ -425,7 +425,8 @@ type RouteFiles = {
   "routes/runtime.tsx": {
     id: "routes/runtime";
     page: "/app/system/runtime";
-  } | {
+  };
+  "routes/operator-controls.tsx": {
     id: "system-operator";
     page: "/app/system/operator";
   };
@@ -510,7 +511,7 @@ type RouteModules = {
   "legacy-endpoints-upstream": typeof import("./app/routes/legacy-redirect.tsx");
   "legacy-integrations-upstream": typeof import("./app/routes/legacy-redirect.tsx");
   "routes/runtime": typeof import("./app/routes/runtime.tsx");
-  "system-operator": typeof import("./app/routes/runtime.tsx");
+  "system-operator": typeof import("./app/routes/operator-controls.tsx");
   "routes/session-readiness": typeof import("./app/routes/session-readiness.tsx");
   "legacy-control-session-readiness": typeof import("./app/routes/legacy-redirect.tsx");
   "routes/system-peers": typeof import("./app/routes/system-peers.tsx");
