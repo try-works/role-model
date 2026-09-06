@@ -4280,6 +4280,12 @@ export async function runTrackBPostObservation(
   const observedRuntime: TrackBShadowPipelineRuntime = {
     async invoke(id, envelope) {
       const result = await runtime.invoke(id, envelope);
+      // A closure is the authoritative durable proof for the canonical
+      // extension identity, rather than a trace of every internal read after
+      // it has written that proof.  Record the first business output produced
+      // by each extension; subsequent reads and projections remain executed
+      // but cannot create duplicate closure rows for the same extension.
+      if (closureEntries.has(id)) return result;
       const output = buildExtensionOutputRecord(id, envelope, result);
       if (durableOutputIds.has(output.durableOutputId))
         throw new Error(`duplicate durable extension output ${output.durableOutputId}`);
