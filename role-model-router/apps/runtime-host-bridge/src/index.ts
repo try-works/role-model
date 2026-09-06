@@ -2977,6 +2977,8 @@ export interface StartBridgeServerOptions {
   readonly updateLearningMode?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackLearning?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly measureNoRichCaptureBaseline?: (body: Record<string, unknown>) => Promise<unknown>;
+  /** Safe, credential-free development verification lease status. */
+  readonly readDevelopmentVerificationStatus?: () => Promise<unknown>;
   readonly readGraphMigration?: () => Promise<unknown>;
   readonly advanceGraphMigration?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackGraphMigration?: () => Promise<unknown>;
@@ -3212,6 +3214,7 @@ export interface RuntimeBridgeBackend {
   updateLearningMode(body: Record<string, unknown>): Promise<unknown>;
   rollbackLearning(body: Record<string, unknown>): Promise<unknown>;
   measureNoRichCaptureBaseline(body: Record<string, unknown>): Promise<unknown>;
+  readDevelopmentVerificationStatus(): Promise<unknown>;
   readGraphMigration(): Promise<unknown>;
   advanceGraphMigration(body: Record<string, unknown>): Promise<unknown>;
   rollbackGraphMigration(): Promise<unknown>;
@@ -15448,6 +15451,15 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/api/role-model/development-verification") {
+      if (!options.readDevelopmentVerificationStatus) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readDevelopmentVerificationStatus());
+      return;
+    }
+
     if (request.method === "GET" && url.pathname === "/api/role-model/storage-retention") {
       if (!options.readStorageRetention) {
         writeJson(response, 404, { error: "not found" });
@@ -26244,6 +26256,9 @@ export async function createRuntimeBridgeBackend(
     },
     async measureNoRichCaptureBaseline(body: Record<string, unknown>): Promise<unknown> {
       return runtimeTrackBOperations.measureNoRichCaptureBaseline(body);
+    },
+    async readDevelopmentVerificationStatus(): Promise<unknown> {
+      return runtimeTrackBOperations.readDevelopmentVerificationStatus();
     },
     async readGraphMigration(): Promise<unknown> {
       return createTrackBOperations({

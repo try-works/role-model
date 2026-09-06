@@ -95,6 +95,7 @@ type CliBackend = Pick<
   | "updateLearningMode"
   | "rollbackLearning"
   | "measureNoRichCaptureBaseline"
+  | "readDevelopmentVerificationStatus"
   | "readGraphMigration"
   | "advanceGraphMigration"
   | "rollbackGraphMigration"
@@ -518,6 +519,9 @@ export function createCliServerOptions(
     measureNoRichCaptureBaseline: bindBackendMethod(
       "measureNoRichCaptureBaseline",
     ) as StartBridgeServerOptions["measureNoRichCaptureBaseline"],
+    readDevelopmentVerificationStatus: bindBackendMethod(
+      "readDevelopmentVerificationStatus",
+    ) as StartBridgeServerOptions["readDevelopmentVerificationStatus"],
     readGraphMigration: bindBackendMethod(
       "readGraphMigration",
     ) as StartBridgeServerOptions["readGraphMigration"],

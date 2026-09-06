@@ -53,6 +53,65 @@ afterEach(async () => {
 });
 
 describe("Track B operations APIs", () => {
+  test("reads the safe development verification status from the private boundary", async () => {
+    const token = "run96-development-verification-token";
+    const expected = {
+      schemaVersion: "role-model.development-verification-status.v1",
+      enabled: true,
+      capability: "development_verification_upload",
+      runtimeChannel: "development",
+      authorizationId: "run96-authorized",
+    };
+    const server = createServer((request, response) => {
+      expect(request.method).toBe("GET");
+      expect(request.url).toBe("/development-verification");
+      expect(request.headers.authorization).toBe(`Bearer ${token}`);
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(JSON.stringify(expected));
+    });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("operations server did not bind");
+    try {
+      const operations = createTrackBOperations({
+        statePath: path.join(os.tmpdir(), "run96-development-verification-state.json"),
+        catalog: [],
+        operationsEndpoint: `http://127.0.0.1:${address.port}`,
+        operationsToken: token,
+      });
+      await expect(operations.readDevelopmentVerificationStatus()).resolves.toEqual(expected);
+    } finally {
+      await new Promise<void>((resolve, reject) =>
+        server.close((error) => (error ? reject(error) : resolve())),
+      );
+    }
+  });
+
+  test("exposes development verification status through the public runtime boundary", async () => {
+    const expected = {
+      schemaVersion: "role-model.development-verification-status.v1",
+      enabled: false,
+      capability: "development_verification_upload",
+      runtimeChannel: "development",
+      reason: "not_configured",
+    };
+    const server = await startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry: { revision: 0, endpoints: [] },
+      readDevelopmentVerificationStatus: async () => expected,
+    });
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/development-verification`,
+      );
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual(expected);
+    } finally {
+      await server.close();
+    }
+  });
+
   test("retries durable contribution aggregates without manufacturing another request", async () => {
     const token = "run95-contribution-retry-token";
     const server = createServer((request, response) => {

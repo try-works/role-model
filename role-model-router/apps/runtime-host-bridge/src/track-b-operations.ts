@@ -1097,6 +1097,13 @@ export function createTrackBOperations({
   ) =>
     privateRetentionRequest(operationsEndpoint, operationsToken, route, init, operationsTimeoutMs);
   return {
+    async readDevelopmentVerificationStatus(): Promise<unknown> {
+      const remote = await requestPrivate("development-verification");
+      if (remote) return remote;
+      throw new Error(
+        "private operations endpoint is required for development verification status",
+      );
+    },
     async readGraphMigration(): Promise<unknown> {
       const remote = await requestPrivate("graph-migration");
       if (remote) return remote;
