@@ -202,6 +202,66 @@ function createLlamaSwapRunningModelsVendorScript(input: {
 }
 
 describe("runtime-host-bridge", () => {
+  test("caches the execution catalog projection until catalog, account, or endpoint inputs change", () => {
+    const catalog = {
+      catalogVersion: "test-catalog",
+      source: {
+        vendor: "test",
+        commit: "test",
+        capturedAt: "2026-09-06T00:00:00.000Z",
+        schemaVersion: "test.v1",
+      },
+      providers: [],
+      models: [],
+    } as NormalizedCatalog;
+    const accounts = [{ providerAccountId: "account-1", providerId: "openai" }] as never;
+    const endpoints = [
+      {
+        endpointId: "openai.account-1.global.runtime-only-model",
+        providerAccountId: "account-1",
+        modelId: "openai/runtime-only-model",
+      },
+    ];
+    const cache = (
+      bridge as unknown as {
+        createRuntimeExecutionCatalogCache: () => {
+          get: (
+            catalog: NormalizedCatalog,
+            accounts: typeof accounts,
+            endpoints: typeof endpoints,
+          ) => NormalizedCatalog;
+        };
+      }
+    ).createRuntimeExecutionCatalogCache();
+
+    const first = cache.get(catalog, accounts, endpoints);
+    const repeated = cache.get(catalog, accounts, endpoints);
+    const changedAccountProjection = cache.get(
+      catalog,
+      [{ providerAccountId: "account-1", providerId: "anthropic" }] as never,
+      endpoints,
+    );
+    const changedCatalogProjection = cache.get(
+      { ...catalog, catalogVersion: "test-catalog-2" },
+      accounts,
+      endpoints,
+    );
+    const changedEndpointProjection = cache.get(catalog, accounts, [
+      ...endpoints,
+      {
+        endpointId: "openai.account-1.global.runtime-only-model-2",
+        providerAccountId: "account-1",
+        modelId: "openai/runtime-only-model-2",
+      },
+    ]);
+
+    expect(first).not.toBe(catalog);
+    expect(repeated).toBe(first);
+    expect(changedAccountProjection).not.toBe(first);
+    expect(changedCatalogProjection).not.toBe(first);
+    expect(changedEndpointProjection).not.toBe(first);
+  });
+
   test("projects immutable benchmark evidence from the persisted decision snapshot", () => {
     expect(
       bridge.projectBenchmarkDecisionEvidence(

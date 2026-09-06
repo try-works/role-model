@@ -6162,6 +6162,50 @@ function withRuntimeEndpointFallbackModels(
   };
 }
 
+type RuntimeExecutionCatalogEndpoint = {
+  readonly endpointId: string;
+  readonly providerAccountId: string;
+  readonly modelId: string;
+};
+
+/**
+ * Caches only the static catalog projection used by the execution path. Routing,
+ * telemetry, provider health, and credential state remain request-time reads.
+ */
+export function createRuntimeExecutionCatalogCache(): {
+  get(
+    catalog: NormalizedCatalog,
+    accounts: readonly ProviderAccountRecord[],
+    runtimeEndpoints: readonly RuntimeExecutionCatalogEndpoint[],
+  ): NormalizedCatalog;
+} {
+  let cached:
+    | {
+        readonly catalog: NormalizedCatalog;
+        readonly inputFingerprint: string;
+        readonly projection: NormalizedCatalog;
+      }
+    | undefined;
+  return {
+    get(catalog, accounts, runtimeEndpoints) {
+      const inputFingerprint = JSON.stringify({
+        accounts: accounts.map((account) => [account.providerAccountId, account.providerId]),
+        endpoints: runtimeEndpoints.map((endpoint) => [
+          endpoint.endpointId,
+          endpoint.providerAccountId,
+          endpoint.modelId,
+        ]),
+      });
+      if (cached?.catalog === catalog && cached.inputFingerprint === inputFingerprint) {
+        return cached.projection;
+      }
+      const projection = withRuntimeEndpointFallbackModels(catalog, accounts, runtimeEndpoints);
+      cached = { catalog, inputFingerprint, projection };
+      return projection;
+    },
+  };
+}
+
 function synthesizeUnifiedLiteLLMModel(input: {
   readonly modelId: string;
   readonly providerId: string;
@@ -18360,8 +18404,9 @@ export async function createRuntimeBridgeBackend(
     filterRouterRegistryByExecutionMode(currentRegistry, getRouterExecutionMode());
   const getRouterEffectiveRoutableInventory = (): RoutableInventory =>
     buildRoutableInventory(getRouterEffectiveRegistry(), getCurrentRegistrySources());
+  const executionCatalogCache = createRuntimeExecutionCatalogCache();
   const getCurrentExecutionCatalog = (): NormalizedCatalog =>
-    withRuntimeEndpointFallbackModels(currentNormalizedCatalog, currentAccounts, runtimeEndpoints);
+    executionCatalogCache.get(currentNormalizedCatalog, currentAccounts, runtimeEndpoints);
   const emptyRoutableInventory = (): RoutableInventory => ({
     modelIds: [],
     endpointIds: [],
