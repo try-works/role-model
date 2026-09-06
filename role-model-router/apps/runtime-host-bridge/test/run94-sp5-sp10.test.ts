@@ -369,7 +369,10 @@ test("GREEN: real process output closure covers every canonical registry key and
     endpointId: "endpoint:run94",
     modelId: "model:run94",
   });
-  expect((result as Record<string, unknown>).contribution).toEqual({ status: "uploaded" });
+  expect((result as Record<string, unknown>).contribution).toMatchObject({
+    status: "uploaded",
+    correlationId: expect.stringMatching(/^corr-[a-f0-9]{24}$/),
+  });
   const closure = (result as Record<string, unknown>).extensionClosure as Record<string, unknown>;
   expect(Object.keys(closure.registry ?? {})).toEqual(canonicalExtensions.map(([id]) => id).sort());
   const outputs = Object.values(closure.registry as Record<string, { outputs: unknown[] }>).flatMap(
