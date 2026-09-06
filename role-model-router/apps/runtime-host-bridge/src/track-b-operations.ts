@@ -656,6 +656,11 @@ class TrackBPrivateOperationError extends Error {
   }
 }
 
+// Aggregate delivery commits a durable object, queue message, and workflow at
+// the configured cloud boundary. It is not a dashboard read, so it needs a
+// bounded completion window that covers that acknowledged write path.
+const DEFAULT_CONTRIBUTION_DELIVERY_TIMEOUT_MS = 30_000;
+
 const privateRetentionRequest = async (
   endpoint: string | undefined,
   token: string | undefined,
@@ -1077,6 +1082,7 @@ export function createTrackBOperations({
   operationsEndpoint = process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL?.trim(),
   operationsToken = process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TOKEN,
   operationsTimeoutMs = 8_000,
+  contributionDeliveryTimeoutMs = DEFAULT_CONTRIBUTION_DELIVERY_TIMEOUT_MS,
   extensionRuntime,
 }: {
   readonly statePath: string;
@@ -1086,16 +1092,24 @@ export function createTrackBOperations({
   readonly operationsToken?: string;
   /** Bounds a private sidecar operation so a dashboard request cannot wait forever. */
   readonly operationsTimeoutMs?: number;
+  /** Bounds an acknowledged aggregate-delivery write without truncating the cloud commit path. */
+  readonly contributionDeliveryTimeoutMs?: number;
   readonly extensionRuntime?: {
     listExtensions(): readonly unknown[] | Promise<readonly unknown[]>;
     mutateExtension(input: Record<string, unknown>): unknown | Promise<unknown>;
   };
 }) {
+  const boundedContributionDeliveryTimeoutMs = Math.max(
+    operationsTimeoutMs,
+    contributionDeliveryTimeoutMs,
+    DEFAULT_CONTRIBUTION_DELIVERY_TIMEOUT_MS,
+  );
   const requestPrivate = (
     route: string,
     init?: { readonly method?: string; readonly body?: Record<string, unknown> },
+    timeoutMs = operationsTimeoutMs,
   ) =>
-    privateRetentionRequest(operationsEndpoint, operationsToken, route, init, operationsTimeoutMs);
+    privateRetentionRequest(operationsEndpoint, operationsToken, route, init, timeoutMs);
   return {
     async readDevelopmentVerificationStatus(): Promise<unknown> {
       const remote = await requestPrivate("development-verification");
@@ -1843,7 +1857,11 @@ export function createTrackBOperations({
       return remote ?? { status: "operations_boundary_unconfigured" };
     },
     async retryContributionAggregates(): Promise<unknown> {
-      const remote = await requestPrivate("contribution/retry", { method: "POST", body: {} });
+      const remote = await requestPrivate(
+        "contribution/retry",
+        { method: "POST", body: {} },
+        boundedContributionDeliveryTimeoutMs,
+      );
       return remote ?? { status: "operations_boundary_unconfigured" };
     },
     async recordLocalRouteCapture(input: Record<string, unknown>): Promise<unknown> {
