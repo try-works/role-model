@@ -8,6 +8,9 @@ test.describe("@recursive:96-message-graph-replay-evaluation-learning @sp5 @live
   }) => {
     test.skip(!process.env.RUNTIME_LIVE_BASE_URL, "rebuilt development runtime URL required");
     test.skip(!requestId, "Pi-observed Run 96 correlation request identity required");
+    if (!requestId) {
+      return;
+    }
 
     const [storageResponse, decisionResponse] = await Promise.all([
       page.request.get("/api/role-model/storage-retention"),
