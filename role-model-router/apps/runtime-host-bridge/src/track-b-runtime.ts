@@ -1353,7 +1353,8 @@ export function createReplayAuthorizationNonceStore(
       !parsed ||
       typeof parsed !== "object" ||
       Array.isArray(parsed) ||
-      (parsed as Record<string, unknown>).schemaVersion !== REPLAY_AUTHORIZATION_NONCE_STORE_SCHEMA ||
+      (parsed as Record<string, unknown>).schemaVersion !==
+        REPLAY_AUTHORIZATION_NONCE_STORE_SCHEMA ||
       !Array.isArray((parsed as Record<string, unknown>).nonces)
     ) {
       throw new Error("replay authorization nonce store is invalid");
@@ -1361,9 +1362,7 @@ export function createReplayAuthorizationNonceStore(
     const persisted = (parsed as Record<string, unknown>).nonces as unknown[];
     if (
       persisted.length > 8192 ||
-      persisted.some(
-        (nonce) => typeof nonce !== "string" || !nonce || nonce.length > 256,
-      )
+      persisted.some((nonce) => typeof nonce !== "string" || !nonce || nonce.length > 256)
     ) {
       throw new Error("replay authorization nonce store exceeds its bounded cap");
     }

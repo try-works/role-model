@@ -8,7 +8,7 @@ import {
   createProductionReplayAdapter,
   resolveProductionReplayAuthorizationNonceStorePath,
 } from "../src/cli.js";
-import { createRouterReplayAdapter } from "../src/track-b-runtime.js";
+import type { createRouterReplayAdapter } from "../src/track-b-runtime.js";
 
 const channel = "development";
 const scope = "run96-nonce-durability";
@@ -80,7 +80,9 @@ test("Run96 replay adapter nonce consumption survives a public-host restart", as
     const first = adapter(root, dispatches);
     const firstEnvelope = envelope();
     const authorization = await first.authorize({ envelope: firstEnvelope });
-    expect((await first.verifyAuthorization({ envelope: firstEnvelope, authorization })).verified).toBe(true);
+    expect(
+      (await first.verifyAuthorization({ envelope: firstEnvelope, authorization })).verified,
+    ).toBe(true);
     await first.dispatch(firstEnvelope, { authorization });
     expect(dispatches.count).toBe(1);
     expect(
