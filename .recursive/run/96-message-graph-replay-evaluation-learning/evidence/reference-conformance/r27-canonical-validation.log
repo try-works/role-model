@@ -1,0 +1,11 @@
+Run 96 canonical proposal validation
+validator=private:scripts/track-b/run96-phase3-proof-gate.mjs#validateR27TddCrosswalk
+proposal=.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-runtime-host-bridge-tdd-tuples.json
+publicRoot=D:/DEV/role-model/.worktrees/96-message-graph-replay-evaluation-learning
+repositoryRoot=D:/DEV/role-model-internal/.worktrees/96-message-graph-replay-evaluation-learning
+changedPaths=public:role-model-router/apps/runtime-host-bridge/src/execution-circuit-breaker.ts, public:role-model-router/apps/runtime-host-bridge/src/index.ts, public:role-model-router/apps/runtime-host-bridge/src/legacy-execution-admission-reconciliation.ts
+result=PASS
+criterionCount=3
+ownedChangedPathCount=3
+rows=AC-R33-05, AC-R33-07, AC-R33-01
+note=The route-level AC-R33-02 selector is recorded as preserved because it passed on both the current public tree and the locked b52 baseline; it is not presented as a new TDD implementation row.

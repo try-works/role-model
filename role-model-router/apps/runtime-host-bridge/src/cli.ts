@@ -15,6 +15,7 @@ import {
   parseDevelopmentVerificationTrustMaterial,
 } from "./development-verification.js";
 import {
+  type CreateRuntimeBridgeBackendOptions,
   type RuntimeBridgeBackend,
   type StartBridgeServerOptions,
   createRuntimeBridgeBackend,
@@ -52,6 +53,65 @@ import {
   verifyTrackBExtensionClosureAfterRestart,
 } from "./track-b-runtime.js";
 
+type RuntimeOperatorCallbacks = Pick<
+  CreateRuntimeBridgeBackendOptions,
+  | "readOperatorStatus"
+  | "listOperatorTraceRoots"
+  | "readOperatorTraceRoot"
+  | "listReplayJobs"
+  | "createReplayJob"
+  | "cancelReplayJob"
+  | "readReplayJob"
+  | "readReplayResults"
+  | "listEvaluationJobs"
+  | "readEvaluationJob"
+  | "listEvaluationTrials"
+  | "listEvaluationScorers"
+  | "listEvaluationComparisons"
+  | "listEvaluationGroups"
+  | "cancelEvaluationJob"
+  | "retryEvaluationJob"
+  | "readLearningState"
+  | "readLearningProfile"
+  | "readLearningAdvisory"
+  | "updateLearningMode"
+  | "rollbackLearning"
+>;
+
+export function createRuntimeOperatorCallbacks(
+  operations: ReturnType<typeof createTrackBOperations>,
+): RuntimeOperatorCallbacks {
+  return {
+    readOperatorStatus: () => operations.readOperatorStatus(),
+    listOperatorTraceRoots: (query: Readonly<Record<string, string>> = {}) =>
+      operations.listOperatorTraceRoots(query),
+    readOperatorTraceRoot: (traceRootId: string) => operations.readOperatorTraceRoot(traceRootId),
+    listReplayJobs: (query: Readonly<Record<string, string>> = {}) =>
+      operations.listReplayJobs(query),
+    createReplayJob: (body: Record<string, unknown>) => operations.createReplayJob(body),
+    cancelReplayJob: (jobId: string, body: Record<string, unknown>) =>
+      operations.cancelReplayJob(jobId, body),
+    readReplayJob: (jobId: string) => operations.readReplayJob(jobId),
+    readReplayResults: (jobId: string) => operations.readReplayResults(jobId),
+    listEvaluationJobs: (query: Readonly<Record<string, string>> = {}) =>
+      operations.listEvaluationJobs(query),
+    readEvaluationJob: (jobId: string) => operations.readEvaluationJob(jobId),
+    listEvaluationTrials: (jobId: string) => operations.listEvaluationTrials(jobId),
+    listEvaluationScorers: (jobId: string) => operations.listEvaluationScorers(jobId),
+    listEvaluationComparisons: (jobId: string) => operations.listEvaluationComparisons(jobId),
+    listEvaluationGroups: (jobId: string) => operations.listEvaluationGroups(jobId),
+    cancelEvaluationJob: (jobId: string, body: Record<string, unknown>) =>
+      operations.cancelEvaluationJob(jobId, body),
+    retryEvaluationJob: (jobId: string, body: Record<string, unknown>) =>
+      operations.retryEvaluationJob(jobId, body),
+    readLearningState: () => operations.readLearningState(),
+    readLearningProfile: () => operations.readLearningProfile(),
+    readLearningAdvisory: () => operations.readLearningAdvisory(),
+    updateLearningMode: (body: Record<string, unknown>) => operations.updateLearningMode(body),
+    rollbackLearning: (body: Record<string, unknown>) => operations.rollbackLearning(body),
+  };
+}
+
 type CliBackend = Pick<
   RuntimeBridgeBackend,
   | "operatorAuthToken"
@@ -84,14 +144,24 @@ type CliBackend = Pick<
   | "readTrackBExtensionReadback"
   | "runTrackBSupervisedReplay"
   | "readOperatorStatus"
+  | "listOperatorTraceRoots"
+  | "readOperatorTraceRoot"
   | "listReplayJobs"
   | "createReplayJob"
   | "cancelReplayJob"
+  | "readReplayJob"
+  | "readReplayResults"
   | "listEvaluationJobs"
   | "readEvaluationJob"
+  | "listEvaluationTrials"
+  | "listEvaluationScorers"
+  | "listEvaluationComparisons"
+  | "listEvaluationGroups"
   | "cancelEvaluationJob"
   | "retryEvaluationJob"
   | "readLearningState"
+  | "readLearningProfile"
+  | "readLearningAdvisory"
   | "updateLearningMode"
   | "rollbackLearning"
   | "measureNoRichCaptureBaseline"
@@ -486,6 +556,12 @@ export function createCliServerOptions(
     readOperatorStatus: bindBackendMethod(
       "readOperatorStatus",
     ) as StartBridgeServerOptions["readOperatorStatus"],
+    listOperatorTraceRoots: bindBackendMethod(
+      "listOperatorTraceRoots",
+    ) as StartBridgeServerOptions["listOperatorTraceRoots"],
+    readOperatorTraceRoot: bindBackendMethod(
+      "readOperatorTraceRoot",
+    ) as StartBridgeServerOptions["readOperatorTraceRoot"],
     listReplayJobs: bindBackendMethod(
       "listReplayJobs",
     ) as StartBridgeServerOptions["listReplayJobs"],
@@ -495,12 +571,28 @@ export function createCliServerOptions(
     cancelReplayJob: bindBackendMethod(
       "cancelReplayJob",
     ) as StartBridgeServerOptions["cancelReplayJob"],
+    readReplayJob: bindBackendMethod("readReplayJob") as StartBridgeServerOptions["readReplayJob"],
+    readReplayResults: bindBackendMethod(
+      "readReplayResults",
+    ) as StartBridgeServerOptions["readReplayResults"],
     listEvaluationJobs: bindBackendMethod(
       "listEvaluationJobs",
     ) as StartBridgeServerOptions["listEvaluationJobs"],
     readEvaluationJob: bindBackendMethod(
       "readEvaluationJob",
     ) as StartBridgeServerOptions["readEvaluationJob"],
+    listEvaluationTrials: bindBackendMethod(
+      "listEvaluationTrials",
+    ) as StartBridgeServerOptions["listEvaluationTrials"],
+    listEvaluationScorers: bindBackendMethod(
+      "listEvaluationScorers",
+    ) as StartBridgeServerOptions["listEvaluationScorers"],
+    listEvaluationComparisons: bindBackendMethod(
+      "listEvaluationComparisons",
+    ) as StartBridgeServerOptions["listEvaluationComparisons"],
+    listEvaluationGroups: bindBackendMethod(
+      "listEvaluationGroups",
+    ) as StartBridgeServerOptions["listEvaluationGroups"],
     cancelEvaluationJob: bindBackendMethod(
       "cancelEvaluationJob",
     ) as StartBridgeServerOptions["cancelEvaluationJob"],
@@ -510,6 +602,12 @@ export function createCliServerOptions(
     readLearningState: bindBackendMethod(
       "readLearningState",
     ) as StartBridgeServerOptions["readLearningState"],
+    readLearningProfile: bindBackendMethod(
+      "readLearningProfile",
+    ) as StartBridgeServerOptions["readLearningProfile"],
+    readLearningAdvisory: bindBackendMethod(
+      "readLearningAdvisory",
+    ) as StartBridgeServerOptions["readLearningAdvisory"],
     updateLearningMode: bindBackendMethod(
       "updateLearningMode",
     ) as StartBridgeServerOptions["updateLearningMode"],
@@ -1158,6 +1256,7 @@ export async function main(): Promise<void> {
             operationsToken: trackBOperationsToken,
           })
         : null;
+      const operatorOperations = postObservationOperations;
       const created = await createRuntimeBridgeBackend({
         fixtureRoot: resolveCliFixtureRoot(options.repoRoot, args.values["fixture-root"]),
         repoRoot: options.repoRoot,
@@ -1776,6 +1875,7 @@ export async function main(): Promise<void> {
             evaluationJobId: result.evaluationJobId,
           };
         },
+        ...(operatorOperations ? createRuntimeOperatorCallbacks(operatorOperations) : {}),
         ...(trackBManifestText
           ? {
               trackBPostObservation: async (observation: Readonly<Record<string, unknown>>) => {

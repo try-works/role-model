@@ -1108,8 +1108,81 @@ export function createTrackBOperations({
     route: string,
     init?: { readonly method?: string; readonly body?: Record<string, unknown> },
     timeoutMs = operationsTimeoutMs,
-  ) =>
-    privateRetentionRequest(operationsEndpoint, operationsToken, route, init, timeoutMs);
+  ) => privateRetentionRequest(operationsEndpoint, operationsToken, route, init, timeoutMs);
+  const operatorSensitiveKey =
+    /(?:secret|token|password|credential|api[-_]?key|authorization|cookie|header|prompt|transcript|content|body|input|output|message|response)/i;
+  const operatorSensitiveValue = /(?:sk-[a-z0-9_-]{8,}|api[_-]?key|bearer\s+[a-z0-9._-]{12,})/i;
+  const operatorAggregateMetricKey = /^(?:inputTokens|outputTokens)$/i;
+  const sanitizeOperatorProjection = (value: unknown, key?: string): unknown => {
+    if (key && operatorAggregateMetricKey.test(key) && typeof value === "number") return value;
+    if (key && operatorSensitiveKey.test(key)) return "[redacted]";
+    if (typeof value === "string" && operatorSensitiveValue.test(value)) return "[redacted]";
+    if (Array.isArray(value)) return value.map((item) => sanitizeOperatorProjection(item));
+    if (value && typeof value === "object") {
+      return Object.fromEntries(
+        Object.entries(value).map(([entryKey, entryValue]) => [
+          entryKey,
+          sanitizeOperatorProjection(entryValue, entryKey),
+        ]),
+      );
+    }
+    return value;
+  };
+  const sanitizeOperatorBody = (body: Record<string, unknown>): Record<string, unknown> => {
+    const sanitized = sanitizeOperatorProjection(body);
+    return sanitized && typeof sanitized === "object" && !Array.isArray(sanitized)
+      ? (sanitized as Record<string, unknown>)
+      : {};
+  };
+  const unavailableOperatorPayload = (capability: string): Record<string, unknown> => ({
+    schemaVersion: "role-model.operator-status.v1",
+    overall: "unavailable",
+    observedAtMs: Date.now(),
+    reason: `${capability} operator control is unavailable.`,
+    capabilities: { [capability]: "unavailable" },
+    error: "operator_capability_unavailable",
+    capability,
+  });
+  const requestOperator = async (
+    capability: string,
+    route: string,
+    init?: { readonly method?: string; readonly body?: Record<string, unknown> },
+  ): Promise<unknown> => {
+    try {
+      const result = await requestPrivate(
+        route,
+        init?.body === undefined ? init : { ...init, body: sanitizeOperatorBody(init.body) },
+      );
+      return result === null
+        ? unavailableOperatorPayload(capability)
+        : sanitizeOperatorProjection(result);
+    } catch (error) {
+      if (
+        error instanceof TrackBPrivateOperationError &&
+        (error.status === 404 || error.status === 503 || error.status === 504)
+      ) {
+        return unavailableOperatorPayload(capability);
+      }
+      // Operator reads are dependent features. A loopback sidecar that is
+      // unreachable or still starting must not take ordinary routing down
+      // with it; expose the same explicit unavailable projection as a 503.
+      if (
+        error instanceof TypeError ||
+        (error instanceof Error && /fetch|network|socket|connect/i.test(error.message))
+      ) {
+        return unavailableOperatorPayload(capability);
+      }
+      throw error;
+    }
+  };
+  const operatorQuery = (query: Readonly<Record<string, string>> = {}): string => {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(query)) {
+      if (value.trim()) params.set(key, value);
+    }
+    const encoded = params.toString();
+    return encoded ? `?${encoded}` : "";
+  };
   return {
     async readDevelopmentVerificationStatus(): Promise<unknown> {
       const remote = await requestPrivate("development-verification");
@@ -1135,6 +1208,123 @@ export function createTrackBOperations({
       const remote = await requestPrivate("graph-migration/rollback", { method: "POST" });
       if (remote) return remote;
       throw new Error("private operations endpoint is required for graph migration rollback");
+    },
+    async readOperatorStatus(): Promise<unknown> {
+      return requestOperator("operator status", "operator/status");
+    },
+    async listOperatorTraceRoots(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return requestOperator(
+        "trace root inspection",
+        `operator/trace-roots${operatorQuery(query)}`,
+      );
+    },
+    async readOperatorTraceRoot(traceRootId: string): Promise<unknown> {
+      return requestOperator(
+        "trace root inspection",
+        `operator/trace-roots/${encodeURIComponent(traceRootId)}`,
+      );
+    },
+    async listReplayJobs(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return requestOperator("replay inspection", `operator/replay/jobs${operatorQuery(query)}`);
+    },
+    async createReplayJob(body: Record<string, unknown>): Promise<unknown> {
+      return requestOperator("replay creation", "operator/replay/jobs", {
+        method: "POST",
+        body,
+      });
+    },
+    async cancelReplayJob(jobId: string, body: Record<string, unknown>): Promise<unknown> {
+      return requestOperator(
+        "replay cancellation",
+        `operator/replay/jobs/${encodeURIComponent(jobId)}/cancel`,
+        {
+          method: "POST",
+          body,
+        },
+      );
+    },
+    async readReplayJob(jobId: string): Promise<unknown> {
+      return requestOperator(
+        "replay inspection",
+        `operator/replay/jobs/${encodeURIComponent(jobId)}`,
+      );
+    },
+    async readReplayResults(jobId: string): Promise<unknown> {
+      return requestOperator(
+        "replay results inspection",
+        `operator/replay/jobs/${encodeURIComponent(jobId)}/results`,
+      );
+    },
+    async listEvaluationJobs(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return requestOperator(
+        "evaluation inspection",
+        `operator/evaluation/jobs${operatorQuery(query)}`,
+      );
+    },
+    async readEvaluationJob(jobId: string): Promise<unknown> {
+      return requestOperator(
+        "evaluation inspection",
+        `operator/evaluation/jobs/${encodeURIComponent(jobId)}`,
+      );
+    },
+    async listEvaluationTrials(jobId: string): Promise<unknown> {
+      return requestOperator(
+        "evaluation trials inspection",
+        `operator/evaluation/jobs/${encodeURIComponent(jobId)}/trials`,
+      );
+    },
+    async listEvaluationScorers(jobId: string): Promise<unknown> {
+      return requestOperator(
+        "evaluation scorers inspection",
+        `operator/evaluation/jobs/${encodeURIComponent(jobId)}/scorers`,
+      );
+    },
+    async listEvaluationComparisons(jobId: string): Promise<unknown> {
+      return requestOperator(
+        "evaluation comparisons inspection",
+        `operator/evaluation/jobs/${encodeURIComponent(jobId)}/comparisons`,
+      );
+    },
+    async listEvaluationGroups(jobId: string): Promise<unknown> {
+      return requestOperator(
+        "evaluation groups inspection",
+        `operator/evaluation/jobs/${encodeURIComponent(jobId)}/groups`,
+      );
+    },
+    async cancelEvaluationJob(jobId: string, body: Record<string, unknown>): Promise<unknown> {
+      return requestOperator(
+        "evaluation cancellation",
+        `operator/evaluation/jobs/${encodeURIComponent(jobId)}/cancel`,
+        { method: "POST", body },
+      );
+    },
+    async retryEvaluationJob(jobId: string, body: Record<string, unknown>): Promise<unknown> {
+      return requestOperator(
+        "evaluation retry",
+        `operator/evaluation/jobs/${encodeURIComponent(jobId)}/retry`,
+        { method: "POST", body },
+      );
+    },
+    async readLearningState(): Promise<unknown> {
+      return requestOperator("learning inspection", "operator/learning");
+    },
+    async readLearningProfile(): Promise<unknown> {
+      return requestOperator("learning profile inspection", "operator/learning/profile");
+    },
+    async readLearningAdvisory(): Promise<unknown> {
+      return requestOperator("learning advisory", "operator/learning/advisory");
+    },
+    async updateLearningMode(body: Record<string, unknown>): Promise<unknown> {
+      return requestOperator("learning mode update", "operator/learning/mode", {
+        method: "POST",
+        body,
+      });
+    },
+    async rollbackLearning(body: Record<string, unknown>): Promise<unknown> {
+      return requestOperator("learning rollback", "operator/learning/rollback", {
+        method: "POST",
+        body,
+      });
     },
     async listExtensions(): Promise<readonly unknown[]> {
       if (extensionRuntime) {
@@ -1852,9 +2042,11 @@ export function createTrackBOperations({
     async recordContributionAggregate(input: Record<string, unknown>): Promise<unknown> {
       const remote = await requestPrivate("contribution/aggregate", {
         method: "POST",
-        body: input,
+        body: sanitizeOperatorBody(input),
       });
-      return remote ?? { status: "operations_boundary_unconfigured" };
+      return remote === null
+        ? { status: "operations_boundary_unconfigured" }
+        : sanitizeOperatorProjection(remote);
     },
     async retryContributionAggregates(): Promise<unknown> {
       const remote = await requestPrivate(

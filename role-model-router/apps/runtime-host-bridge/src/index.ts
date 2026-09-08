@@ -150,6 +150,7 @@ import {
   releaseExecutionCircuitProbe,
   resolveExecutionCircuitRefusal,
   serializeExecutionCircuitState,
+  settleExecutionCircuitProbe,
   toExecutionCircuitReceipt,
 } from "./execution-circuit-breaker.js";
 import { resolveEndpointHealthState } from "./health-policy.js";
@@ -2906,6 +2907,7 @@ export interface RuntimeOperatorStatus {
   readonly overall: RuntimeOperatorAvailability;
   readonly observedAtMs: number;
   readonly reason?: string;
+  readonly reasons?: Readonly<Record<string, string>>;
   readonly capabilities: Readonly<Record<string, RuntimeOperatorAvailability>>;
 }
 
@@ -2966,14 +2968,25 @@ export interface StartBridgeServerOptions {
   readonly readTrackBExtensionReadback?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly runTrackBSupervisedReplay?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly readOperatorStatus?: () => Promise<RuntimeOperatorStatus | unknown>;
+  /** Authenticated operator evidence projections supplied by the owning runtime authority. */
+  readonly listOperatorTraceRoots?: (query?: RuntimeOperatorQuery) => Promise<unknown>;
+  readonly readOperatorTraceRoot?: (traceRootId: string) => Promise<unknown>;
   readonly listReplayJobs?: (query?: RuntimeOperatorQuery) => Promise<unknown>;
   readonly createReplayJob?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly cancelReplayJob?: (jobId: string, body: Record<string, unknown>) => Promise<unknown>;
+  readonly readReplayJob?: (jobId: string) => Promise<unknown>;
+  readonly readReplayResults?: (jobId: string) => Promise<unknown>;
   readonly listEvaluationJobs?: (query?: RuntimeOperatorQuery) => Promise<unknown>;
   readonly readEvaluationJob?: (jobId: string) => Promise<unknown>;
+  readonly listEvaluationTrials?: (jobId: string) => Promise<unknown>;
+  readonly listEvaluationScorers?: (jobId: string) => Promise<unknown>;
+  readonly listEvaluationComparisons?: (jobId: string) => Promise<unknown>;
+  readonly listEvaluationGroups?: (jobId: string) => Promise<unknown>;
   readonly cancelEvaluationJob?: (jobId: string, body: Record<string, unknown>) => Promise<unknown>;
   readonly retryEvaluationJob?: (jobId: string, body: Record<string, unknown>) => Promise<unknown>;
   readonly readLearningState?: () => Promise<unknown>;
+  readonly readLearningProfile?: () => Promise<unknown>;
+  readonly readLearningAdvisory?: () => Promise<unknown>;
   readonly updateLearningMode?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackLearning?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly measureNoRichCaptureBaseline?: (body: Record<string, unknown>) => Promise<unknown>;
@@ -3203,14 +3216,24 @@ export interface RuntimeBridgeBackend {
   readTrackBExtensionReadback(body: Record<string, unknown>): Promise<unknown>;
   runTrackBSupervisedReplay(body: Record<string, unknown>): Promise<unknown>;
   readOperatorStatus(): Promise<RuntimeOperatorStatus | unknown>;
+  listOperatorTraceRoots(query?: RuntimeOperatorQuery): Promise<unknown>;
+  readOperatorTraceRoot(traceRootId: string): Promise<unknown>;
   listReplayJobs(query?: RuntimeOperatorQuery): Promise<unknown>;
   createReplayJob(body: Record<string, unknown>): Promise<unknown>;
   cancelReplayJob(jobId: string, body: Record<string, unknown>): Promise<unknown>;
+  readReplayJob(jobId: string): Promise<unknown>;
+  readReplayResults(jobId: string): Promise<unknown>;
   listEvaluationJobs(query?: RuntimeOperatorQuery): Promise<unknown>;
   readEvaluationJob(jobId: string): Promise<unknown>;
+  listEvaluationTrials(jobId: string): Promise<unknown>;
+  listEvaluationScorers(jobId: string): Promise<unknown>;
+  listEvaluationComparisons(jobId: string): Promise<unknown>;
+  listEvaluationGroups(jobId: string): Promise<unknown>;
   cancelEvaluationJob(jobId: string, body: Record<string, unknown>): Promise<unknown>;
   retryEvaluationJob(jobId: string, body: Record<string, unknown>): Promise<unknown>;
   readLearningState(): Promise<unknown>;
+  readLearningProfile(): Promise<unknown>;
+  readLearningAdvisory(): Promise<unknown>;
   updateLearningMode(body: Record<string, unknown>): Promise<unknown>;
   rollbackLearning(body: Record<string, unknown>): Promise<unknown>;
   measureNoRichCaptureBaseline(body: Record<string, unknown>): Promise<unknown>;
@@ -3596,14 +3619,24 @@ export interface CreateRuntimeBridgeBackendOptions {
   readonly runTrackBSupervisedReplay?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly operatorAuthToken?: string;
   readonly readOperatorStatus?: () => Promise<RuntimeOperatorStatus | unknown>;
+  readonly listOperatorTraceRoots?: (query?: RuntimeOperatorQuery) => Promise<unknown>;
+  readonly readOperatorTraceRoot?: (traceRootId: string) => Promise<unknown>;
   readonly listReplayJobs?: (query?: RuntimeOperatorQuery) => Promise<unknown>;
   readonly createReplayJob?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly cancelReplayJob?: (jobId: string, body: Record<string, unknown>) => Promise<unknown>;
+  readonly readReplayJob?: (jobId: string) => Promise<unknown>;
+  readonly readReplayResults?: (jobId: string) => Promise<unknown>;
   readonly listEvaluationJobs?: (query?: RuntimeOperatorQuery) => Promise<unknown>;
   readonly readEvaluationJob?: (jobId: string) => Promise<unknown>;
+  readonly listEvaluationTrials?: (jobId: string) => Promise<unknown>;
+  readonly listEvaluationScorers?: (jobId: string) => Promise<unknown>;
+  readonly listEvaluationComparisons?: (jobId: string) => Promise<unknown>;
+  readonly listEvaluationGroups?: (jobId: string) => Promise<unknown>;
   readonly cancelEvaluationJob?: (jobId: string, body: Record<string, unknown>) => Promise<unknown>;
   readonly retryEvaluationJob?: (jobId: string, body: Record<string, unknown>) => Promise<unknown>;
   readonly readLearningState?: () => Promise<unknown>;
+  readonly readLearningProfile?: () => Promise<unknown>;
+  readonly readLearningAdvisory?: () => Promise<unknown>;
   readonly updateLearningMode?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackLearning?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly codexAuthAdapter?: CodexAuthAdapter;
@@ -4422,28 +4455,50 @@ function recordExecutionFailureCooldown(input: {
   readonly adapterFamily?: string;
   readonly failurePhase?: string;
   readonly statusCode?: number;
+  readonly probeOwnerId?: string;
 }): ExecutionCircuitRecord | undefined {
+  const state = readExecutionCircuitState(input.databasePath);
+  const source = {
+    ...(input.sourceAttemptId ? { sourceAttemptId: input.sourceAttemptId } : {}),
+    ...(input.sourceRequestId ? { sourceRequestId: input.sourceRequestId } : {}),
+    ...(input.sourceRoutingDecisionId
+      ? { sourceRoutingDecisionId: input.sourceRoutingDecisionId }
+      : {}),
+    ...(input.providerId ? { providerId: input.providerId } : {}),
+    ...(input.providerFamily ? { providerFamily: input.providerFamily } : {}),
+    ...(input.vendorId ? { vendorId: input.vendorId } : {}),
+    ...(input.executionFamily ? { executionFamily: input.executionFamily } : {}),
+    ...(input.adapterFamily ? { adapterFamily: input.adapterFamily } : {}),
+    ...(input.failurePhase ? { failurePhase: input.failurePhase } : {}),
+  };
+  if (input.probeOwnerId) {
+    const transition = settleExecutionCircuitProbe({
+      state,
+      endpointId: input.endpointId,
+      probeOwnerId: input.probeOwnerId,
+      nowMs: input.nowMs,
+      result: {
+        outcome: "failure",
+        errorClass: input.errorClass,
+        ...(input.statusCode === undefined ? {} : { statusCode: input.statusCode }),
+        ...(input.retryAfterMs === undefined ? {} : { retryAfterMs: input.retryAfterMs }),
+        source,
+      },
+    });
+    if (transition.settled) {
+      writeExecutionCircuitState(input.databasePath, transition.state);
+    }
+    return transition.record;
+  }
   const transition = recordExecutionCircuitFailure({
-    state: readExecutionCircuitState(input.databasePath),
+    state,
     endpointId: input.endpointId,
     errorClass: input.errorClass,
     nowMs: input.nowMs,
     trafficClass: input.trafficClass,
     ...(input.statusCode === undefined ? {} : { statusCode: input.statusCode }),
     ...(input.retryAfterMs === undefined ? {} : { retryAfterMs: input.retryAfterMs }),
-    source: {
-      ...(input.sourceAttemptId ? { sourceAttemptId: input.sourceAttemptId } : {}),
-      ...(input.sourceRequestId ? { sourceRequestId: input.sourceRequestId } : {}),
-      ...(input.sourceRoutingDecisionId
-        ? { sourceRoutingDecisionId: input.sourceRoutingDecisionId }
-        : {}),
-      ...(input.providerId ? { providerId: input.providerId } : {}),
-      ...(input.providerFamily ? { providerFamily: input.providerFamily } : {}),
-      ...(input.vendorId ? { vendorId: input.vendorId } : {}),
-      ...(input.executionFamily ? { executionFamily: input.executionFamily } : {}),
-      ...(input.adapterFamily ? { adapterFamily: input.adapterFamily } : {}),
-      ...(input.failurePhase ? { failurePhase: input.failurePhase } : {}),
-    },
+    source,
   });
   if (transition.changed) {
     writeExecutionCircuitState(input.databasePath, transition.state);
@@ -14764,6 +14819,15 @@ function writeOperatorUnavailable(response: ServerResponse, capability: string):
   writeJson(response, 503, unavailableOperatorPayload(capability));
 }
 
+function writeOperatorResult(response: ServerResponse, result: unknown): void {
+  const isUnavailable =
+    result &&
+    typeof result === "object" &&
+    !Array.isArray(result) &&
+    (result as Record<string, unknown>).error === "operator_capability_unavailable";
+  writeJson(response, isUnavailable ? 503 : 200, result);
+}
+
 function createRequestHandler(options: StartBridgeServerOptions) {
   return async (request: IncomingMessage, response: ServerResponse): Promise<void> => {
     setCorsHeaders(response);
@@ -14854,7 +14918,34 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             writeOperatorUnavailable(response, "operator status");
             return;
           }
-          writeJson(response, 200, await options.readOperatorStatus());
+          writeOperatorResult(response, await options.readOperatorStatus());
+          return;
+        }
+
+        if (request.method === "GET" && url.pathname === "/api/role-model/operator/trace-roots") {
+          if (!options.listOperatorTraceRoots) {
+            writeOperatorUnavailable(response, "trace root inspection");
+            return;
+          }
+          writeOperatorResult(
+            response,
+            await options.listOperatorTraceRoots(Object.fromEntries(url.searchParams.entries())),
+          );
+          return;
+        }
+
+        const traceRootPrefix = "/api/role-model/operator/trace-roots/";
+        if (request.method === "GET" && url.pathname.startsWith(traceRootPrefix)) {
+          if (!options.readOperatorTraceRoot) {
+            writeOperatorUnavailable(response, "trace root inspection");
+            return;
+          }
+          const traceRootId = readOperatorJobId(url.pathname, traceRootPrefix);
+          if (!traceRootId) {
+            writeJson(response, 400, { error: "invalid trace root id" });
+            return;
+          }
+          writeOperatorResult(response, await options.readOperatorTraceRoot(traceRootId));
           return;
         }
 
@@ -14863,9 +14954,8 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             writeOperatorUnavailable(response, "replay inspection");
             return;
           }
-          writeJson(
+          writeOperatorResult(
             response,
-            200,
             await options.listReplayJobs(Object.fromEntries(url.searchParams.entries())),
           );
           return;
@@ -14876,11 +14966,38 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             writeOperatorUnavailable(response, "replay creation");
             return;
           }
-          writeJson(response, 200, await options.createReplayJob(await readJsonBody(request)));
+          writeOperatorResult(response, await options.createReplayJob(await readJsonBody(request)));
           return;
         }
 
         const replayCancelPrefix = "/api/role-model/operator/replay/jobs/";
+        if (request.method === "GET" && url.pathname.startsWith(replayCancelPrefix)) {
+          const suffix = url.pathname.slice(replayCancelPrefix.length);
+          const resultsSuffix = "/results";
+          const isResults = suffix.endsWith(resultsSuffix);
+          const jobId = readOperatorJobId(
+            isResults ? suffix.slice(0, -resultsSuffix.length) : suffix,
+            "",
+          );
+          if (!jobId) {
+            writeJson(response, 400, { error: "invalid replay job id" });
+            return;
+          }
+          if (isResults) {
+            if (!options.readReplayResults) {
+              writeOperatorUnavailable(response, "replay results inspection");
+              return;
+            }
+            writeOperatorResult(response, await options.readReplayResults(jobId));
+            return;
+          }
+          if (!options.readReplayJob) {
+            writeOperatorUnavailable(response, "replay inspection");
+            return;
+          }
+          writeOperatorResult(response, await options.readReplayJob(jobId));
+          return;
+        }
         if (
           request.method === "POST" &&
           url.pathname.endsWith("/cancel") &&
@@ -14896,9 +15013,8 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             writeJson(response, 400, { error: "invalid replay job id" });
             return;
           }
-          writeJson(
+          writeOperatorResult(
             response,
-            200,
             await options.cancelReplayJob(jobId, await readJsonBody(request)),
           );
           return;
@@ -14912,9 +15028,8 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             writeOperatorUnavailable(response, "evaluation inspection");
             return;
           }
-          writeJson(
+          writeOperatorResult(
             response,
-            200,
             await options.listEvaluationJobs(Object.fromEntries(url.searchParams.entries())),
           );
           return;
@@ -14927,7 +15042,15 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             ? "cancel"
             : suffix.endsWith("/retry")
               ? "retry"
-              : null;
+              : suffix.endsWith("/trials")
+                ? "trials"
+                : suffix.endsWith("/scorers")
+                  ? "scorers"
+                  : suffix.endsWith("/comparisons")
+                    ? "comparisons"
+                    : suffix.endsWith("/groups")
+                      ? "groups"
+                      : null;
           const encodedJobId = action ? suffix.slice(0, -(action.length + 1)) : suffix;
           const jobId = readOperatorJobId(encodedJobId, "");
           if (!jobId) {
@@ -14939,7 +15062,39 @@ function createRequestHandler(options: StartBridgeServerOptions) {
               writeOperatorUnavailable(response, "evaluation inspection");
               return;
             }
-            writeJson(response, 200, await options.readEvaluationJob(jobId));
+            writeOperatorResult(response, await options.readEvaluationJob(jobId));
+            return;
+          }
+          if (request.method === "GET" && action === "trials") {
+            if (!options.listEvaluationTrials) {
+              writeOperatorUnavailable(response, "evaluation trials inspection");
+              return;
+            }
+            writeOperatorResult(response, await options.listEvaluationTrials(jobId));
+            return;
+          }
+          if (request.method === "GET" && action === "scorers") {
+            if (!options.listEvaluationScorers) {
+              writeOperatorUnavailable(response, "evaluation scorers inspection");
+              return;
+            }
+            writeOperatorResult(response, await options.listEvaluationScorers(jobId));
+            return;
+          }
+          if (request.method === "GET" && action === "comparisons") {
+            if (!options.listEvaluationComparisons) {
+              writeOperatorUnavailable(response, "evaluation comparisons inspection");
+              return;
+            }
+            writeOperatorResult(response, await options.listEvaluationComparisons(jobId));
+            return;
+          }
+          if (request.method === "GET" && action === "groups") {
+            if (!options.listEvaluationGroups) {
+              writeOperatorUnavailable(response, "evaluation groups inspection");
+              return;
+            }
+            writeOperatorResult(response, await options.listEvaluationGroups(jobId));
             return;
           }
           if (request.method === "POST" && action === "cancel") {
@@ -14947,9 +15102,8 @@ function createRequestHandler(options: StartBridgeServerOptions) {
               writeOperatorUnavailable(response, "evaluation cancellation");
               return;
             }
-            writeJson(
+            writeOperatorResult(
               response,
-              200,
               await options.cancelEvaluationJob(jobId, await readJsonBody(request)),
             );
             return;
@@ -14959,9 +15113,8 @@ function createRequestHandler(options: StartBridgeServerOptions) {
               writeOperatorUnavailable(response, "evaluation retry");
               return;
             }
-            writeJson(
+            writeOperatorResult(
               response,
-              200,
               await options.retryEvaluationJob(jobId, await readJsonBody(request)),
             );
             return;
@@ -14973,7 +15126,29 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             writeOperatorUnavailable(response, "learning inspection");
             return;
           }
-          writeJson(response, 200, await options.readLearningState());
+          writeOperatorResult(response, await options.readLearningState());
+          return;
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/learning/profile"
+        ) {
+          if (!options.readLearningProfile) {
+            writeOperatorUnavailable(response, "learning profile inspection");
+            return;
+          }
+          writeOperatorResult(response, await options.readLearningProfile());
+          return;
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/learning/advisory"
+        ) {
+          if (!options.readLearningAdvisory) {
+            writeOperatorUnavailable(response, "learning advisory");
+            return;
+          }
+          writeOperatorResult(response, await options.readLearningAdvisory());
           return;
         }
         if (
@@ -14984,7 +15159,10 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             writeOperatorUnavailable(response, "learning mode update");
             return;
           }
-          writeJson(response, 200, await options.updateLearningMode(await readJsonBody(request)));
+          writeOperatorResult(
+            response,
+            await options.updateLearningMode(await readJsonBody(request)),
+          );
           return;
         }
         if (
@@ -14995,7 +15173,10 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             writeOperatorUnavailable(response, "learning rollback");
             return;
           }
-          writeJson(response, 200, await options.rollbackLearning(await readJsonBody(request)));
+          writeOperatorResult(
+            response,
+            await options.rollbackLearning(await readJsonBody(request)),
+          );
           return;
         }
 
@@ -17125,9 +17306,7 @@ export async function startBridgeServer(options: StartBridgeServerOptions): Prom
  * must use that equivalent recorded evidence rather than reporting an empty
  * attempt ledger.
  */
-export function projectPublicProviderAttemptIds(
-  observation: object,
-): readonly string[] {
+export function projectPublicProviderAttemptIds(observation: object): readonly string[] {
   const readAttemptIds = (value: unknown, field: string): readonly string[] => {
     if (!value || typeof value !== "object" || Array.isArray(value)) return [];
     const candidate = (value as Readonly<Record<string, unknown>>)[field];
@@ -24158,10 +24337,23 @@ export async function createRuntimeBridgeBackend(
             adapters,
             executeProviderRequest,
           });
-          clearExecutionFailureCooldown({
-            databasePath: initialization.databasePath,
-            endpointId: result.target.endpointId,
-          });
+          if (ownedProbeEndpointId) {
+            const settledProbe = settleExecutionCircuitProbe({
+              state: readExecutionCircuitState(initialization.databasePath),
+              endpointId: ownedProbeEndpointId,
+              probeOwnerId: requestId,
+              nowMs: Date.now(),
+              result: { outcome: "success" },
+            });
+            if (settledProbe.settled) {
+              writeExecutionCircuitState(initialization.databasePath, settledProbe.state);
+            }
+          } else {
+            clearExecutionFailureCooldown({
+              databasePath: initialization.databasePath,
+              endpointId: result.target.endpointId,
+            });
+          }
           const recoveredEndpoint = runtimeEndpoints.find(
             (endpoint) => endpoint.endpointId === result.target.endpointId,
           );
@@ -24225,8 +24417,9 @@ export async function createRuntimeBridgeBackend(
             fallbackEligible: error.fallbackEligible,
             hasOtherEligibleEndpoint,
           });
+          const ownsFailedProbe = ownedProbeEndpointId === error.endpointId;
           let cooldownRecord: ExecutionCircuitRecord | undefined;
-          if (shouldRetry) {
+          if (shouldRetry && !ownsFailedProbe) {
             retriedEndpointIds.add(error.endpointId);
             executionSemanticsReceipt.retryCount += 1;
           } else if (failureCategory) {
@@ -24244,9 +24437,25 @@ export async function createRuntimeBridgeBackend(
               adapterFamily: error.adapterFamily,
               failurePhase: error.failurePhase,
               statusCode: error.statusCode,
+              ...(ownsFailedProbe ? { probeOwnerId: requestId } : {}),
             });
             if (cooldownRecord) {
               executionSemanticsReceipt.cooldownDecision = "recorded";
+            }
+          }
+          if (shouldRetry && ownsFailedProbe) {
+            retriedEndpointIds.add(error.endpointId);
+            executionSemanticsReceipt.retryCount += 1;
+          }
+          if (ownsFailedProbe && !failureCategory) {
+            const released = releaseExecutionCircuitProbe({
+              state: readExecutionCircuitState(initialization.databasePath),
+              endpointId: error.endpointId,
+              probeOwnerId: requestId,
+              nowMs: Date.now(),
+            });
+            if (released.released) {
+              writeExecutionCircuitState(initialization.databasePath, released.state);
             }
           }
           ownedProbeEndpointId = undefined;
@@ -26271,6 +26480,18 @@ export async function createRuntimeBridgeBackend(
     async readOperatorStatus(): Promise<RuntimeOperatorStatus | unknown> {
       return options.readOperatorStatus?.() ?? unavailableOperatorStatus("operator status");
     },
+    async listOperatorTraceRoots(query: RuntimeOperatorQuery = {}): Promise<unknown> {
+      return (
+        options.listOperatorTraceRoots?.(query) ??
+        unavailableOperatorPayload("trace root inspection")
+      );
+    },
+    async readOperatorTraceRoot(traceRootId: string): Promise<unknown> {
+      return (
+        options.readOperatorTraceRoot?.(traceRootId) ??
+        unavailableOperatorPayload("trace root inspection")
+      );
+    },
     async listReplayJobs(query: RuntimeOperatorQuery = {}): Promise<unknown> {
       return options.listReplayJobs?.(query) ?? unavailableOperatorPayload("replay inspection");
     },
@@ -26282,6 +26503,15 @@ export async function createRuntimeBridgeBackend(
         options.cancelReplayJob?.(jobId, body) ?? unavailableOperatorPayload("replay cancellation")
       );
     },
+    async readReplayJob(jobId: string): Promise<unknown> {
+      return options.readReplayJob?.(jobId) ?? unavailableOperatorPayload("replay inspection");
+    },
+    async readReplayResults(jobId: string): Promise<unknown> {
+      return (
+        options.readReplayResults?.(jobId) ??
+        unavailableOperatorPayload("replay results inspection")
+      );
+    },
     async listEvaluationJobs(query: RuntimeOperatorQuery = {}): Promise<unknown> {
       return (
         options.listEvaluationJobs?.(query) ?? unavailableOperatorPayload("evaluation inspection")
@@ -26290,6 +26520,30 @@ export async function createRuntimeBridgeBackend(
     async readEvaluationJob(jobId: string): Promise<unknown> {
       return (
         options.readEvaluationJob?.(jobId) ?? unavailableOperatorPayload("evaluation inspection")
+      );
+    },
+    async listEvaluationTrials(jobId: string): Promise<unknown> {
+      return (
+        options.listEvaluationTrials?.(jobId) ??
+        unavailableOperatorPayload("evaluation trials inspection")
+      );
+    },
+    async listEvaluationScorers(jobId: string): Promise<unknown> {
+      return (
+        options.listEvaluationScorers?.(jobId) ??
+        unavailableOperatorPayload("evaluation scorers inspection")
+      );
+    },
+    async listEvaluationComparisons(jobId: string): Promise<unknown> {
+      return (
+        options.listEvaluationComparisons?.(jobId) ??
+        unavailableOperatorPayload("evaluation comparisons inspection")
+      );
+    },
+    async listEvaluationGroups(jobId: string): Promise<unknown> {
+      return (
+        options.listEvaluationGroups?.(jobId) ??
+        unavailableOperatorPayload("evaluation groups inspection")
       );
     },
     async cancelEvaluationJob(jobId: string, body: Record<string, unknown>): Promise<unknown> {
@@ -26305,6 +26559,14 @@ export async function createRuntimeBridgeBackend(
     },
     async readLearningState(): Promise<unknown> {
       return options.readLearningState?.() ?? unavailableOperatorPayload("learning inspection");
+    },
+    async readLearningProfile(): Promise<unknown> {
+      return (
+        options.readLearningProfile?.() ?? unavailableOperatorPayload("learning profile inspection")
+      );
+    },
+    async readLearningAdvisory(): Promise<unknown> {
+      return options.readLearningAdvisory?.() ?? unavailableOperatorPayload("learning advisory");
     },
     async updateLearningMode(body: Record<string, unknown>): Promise<unknown> {
       return (

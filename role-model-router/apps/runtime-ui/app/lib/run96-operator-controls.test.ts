@@ -3,9 +3,19 @@ import {
   cancelEvaluationJob,
   cancelReplayJob,
   createReplayJob,
+  fetchEvaluationComparisons,
+  fetchEvaluationGroups,
   fetchEvaluationJob,
+  fetchEvaluationScorers,
+  fetchEvaluationTrials,
+  fetchLearningAdvisory,
+  fetchLearningProfile,
   fetchLearningState,
   fetchOperatorStatus,
+  fetchOperatorTraceRoot,
+  fetchOperatorTraceRoots,
+  fetchReplayJob,
+  fetchReplayResults,
   listEvaluationJobs,
   listReplayJobs,
   retryEvaluationJob,
@@ -133,6 +143,52 @@ describe("Run 96 operator controls", () => {
     expect(fetcher).toHaveBeenCalledWith(
       "/api/role-model/operator/learning/rollback",
       expect.objectContaining({ method: "POST" }),
+    );
+  });
+
+  test("exposes trace completeness, replay results, evaluation evidence, and learning confidence", async () => {
+    const fetcher = vi.fn(async () =>
+      jsonResponse({
+        availability: "available",
+        reason: null,
+        roots: [],
+        jobs: [],
+        trials: [],
+        scorers: [],
+        comparisons: [],
+        groups: [],
+        confidence: null,
+      }),
+    );
+
+    await fetchOperatorTraceRoots(fetcher, "operator-secret", { limit: 10 });
+    await fetchOperatorTraceRoot("trace-root-1", fetcher, "operator-secret");
+    await fetchReplayJob("replay-1", fetcher, "operator-secret");
+    await fetchReplayResults("replay-1", fetcher, "operator-secret");
+    await fetchEvaluationTrials("eval-1", fetcher, "operator-secret");
+    await fetchEvaluationScorers("eval-1", fetcher, "operator-secret");
+    await fetchEvaluationComparisons("eval-1", fetcher, "operator-secret");
+    await fetchEvaluationGroups("eval-1", fetcher, "operator-secret");
+    await fetchLearningProfile(fetcher, "operator-secret");
+    await fetchLearningAdvisory(fetcher, "operator-secret");
+
+    expect(fetcher).toHaveBeenCalledWith(
+      "/api/role-model/operator/trace-roots?limit=10",
+      expect.objectContaining({
+        headers: expect.objectContaining({ authorization: "Bearer operator-secret" }),
+      }),
+    );
+    expect(fetcher).toHaveBeenCalledWith(
+      "/api/role-model/operator/replay/jobs/replay-1/results",
+      expect.anything(),
+    );
+    expect(fetcher).toHaveBeenCalledWith(
+      "/api/role-model/operator/evaluation/jobs/eval-1/comparisons",
+      expect.anything(),
+    );
+    expect(fetcher).toHaveBeenCalledWith(
+      "/api/role-model/operator/learning/advisory",
+      expect.anything(),
     );
   });
 });

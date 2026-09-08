@@ -1,0 +1,8 @@
+AC-R25-04
+proofFamily=run96-r27-public-ui-storage
+stage=refactor
+testPath=public:role-model-router/apps/runtime-ui/app/routes/storage-retention.test.tsx
+assertionTitle=AC-R25-04: storage retention exposes complete byte attribution, capacity forecast, and actionable operator receipts
+command=corepack pnpm --dir role-model-router/apps/runtime-ui exec biome check app/routes/storage-retention.tsx app/routes/storage-retention.test.tsx --reporter=summary
+result=PASS
+provenance=current paired public working tree after formatting settlement; command rerun and output: Checked 2 files in 46ms. No fixes applied.

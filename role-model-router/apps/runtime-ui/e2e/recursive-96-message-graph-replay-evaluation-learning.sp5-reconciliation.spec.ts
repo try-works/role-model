@@ -36,7 +36,9 @@ test.describe("@recursive:96-message-graph-replay-evaluation-learning @sp5 @live
     const summary = page.getByLabel("Storage retention summary");
     await expect(summary.getByText("Physical", { exact: true })).toBeVisible();
     await expect(summary.getByText("Logical classes", { exact: true })).toBeVisible();
-    await expect(page.getByRole("columnheader", { name: "Observation state" }).first()).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "Observation state" }).first(),
+    ).toBeVisible();
     await expect(page.getByRole("columnheader", { name: "Enforcement" })).toHaveCount(0);
 
     await test.info().attach("run96-p5-08-reconciliation", {

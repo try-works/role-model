@@ -16,7 +16,10 @@ export type RuntimeOperatorAvailability =
   | "unavailable"
   | "unobserved"
   | "degraded"
-  | "blocked";
+  | "blocked"
+  | "maintenance"
+  | "pressure"
+  | "stale";
 
 export type RuntimeOperatorCapability =
   | "graph"
@@ -31,6 +34,7 @@ export interface RuntimeOperatorStatus {
   readonly overall: RuntimeOperatorAvailability;
   readonly observedAtMs: number;
   readonly reason?: string;
+  readonly reasons?: Readonly<Record<string, string>>;
   readonly capabilities: Readonly<
     Partial<Record<RuntimeOperatorCapability, RuntimeOperatorAvailability>>
   >;
@@ -1722,6 +1726,30 @@ export async function listReplayJobs(
   );
 }
 
+export async function fetchOperatorTraceRoots(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+  query?: Readonly<Record<string, string | number | boolean>>,
+): Promise<RuntimeOperatorResult> {
+  return operatorGet<RuntimeOperatorResult>(
+    `/api/role-model/operator/trace-roots${operatorQuery(query)}`,
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function fetchOperatorTraceRoot(
+  traceRootId: string,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorGet<RuntimeOperatorResult>(
+    `/api/role-model/operator/trace-roots/${encodeURIComponent(traceRootId)}`,
+    fetcher,
+    operatorToken,
+  );
+}
+
 export async function createReplayJob(
   body: Readonly<Record<string, unknown>>,
   fetcher: RuntimeFetcher = fetch,
@@ -1743,6 +1771,30 @@ export async function cancelReplayJob(
   return operatorPost<RuntimeOperatorResult>(
     `/api/role-model/operator/replay/jobs/${encodeURIComponent(jobId)}/cancel`,
     {},
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function fetchReplayJob(
+  jobId: string,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorGet<RuntimeOperatorResult>(
+    `/api/role-model/operator/replay/jobs/${encodeURIComponent(jobId)}`,
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function fetchReplayResults(
+  jobId: string,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorGet<RuntimeOperatorResult>(
+    `/api/role-model/operator/replay/jobs/${encodeURIComponent(jobId)}/results`,
     fetcher,
     operatorToken,
   );
@@ -1798,12 +1850,79 @@ export async function retryEvaluationJob(
   );
 }
 
+async function fetchEvaluationEvidence(
+  jobId: string,
+  evidence: "trials" | "scorers" | "comparisons" | "groups",
+  fetcher: RuntimeFetcher,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorGet<RuntimeOperatorResult>(
+    `/api/role-model/operator/evaluation/jobs/${encodeURIComponent(jobId)}/${evidence}`,
+    fetcher,
+    operatorToken,
+  );
+}
+
+export function fetchEvaluationTrials(
+  jobId: string,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return fetchEvaluationEvidence(jobId, "trials", fetcher, operatorToken);
+}
+
+export function fetchEvaluationScorers(
+  jobId: string,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return fetchEvaluationEvidence(jobId, "scorers", fetcher, operatorToken);
+}
+
+export function fetchEvaluationComparisons(
+  jobId: string,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return fetchEvaluationEvidence(jobId, "comparisons", fetcher, operatorToken);
+}
+
+export function fetchEvaluationGroups(
+  jobId: string,
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return fetchEvaluationEvidence(jobId, "groups", fetcher, operatorToken);
+}
+
 export async function fetchLearningState(
   fetcher: RuntimeFetcher = fetch,
   operatorToken?: string,
 ): Promise<RuntimeOperatorResult> {
   return operatorGet<RuntimeOperatorResult>(
     "/api/role-model/operator/learning",
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function fetchLearningProfile(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorGet<RuntimeOperatorResult>(
+    "/api/role-model/operator/learning/profile",
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function fetchLearningAdvisory(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<RuntimeOperatorResult> {
+  return operatorGet<RuntimeOperatorResult>(
+    "/api/role-model/operator/learning/advisory",
     fetcher,
     operatorToken,
   );
@@ -2064,10 +2183,24 @@ export interface RuntimeStorageRetentionSummary {
   }[];
   readonly receipts: readonly {
     readonly id: string;
-    readonly status: string;
-    readonly affectedCount: number;
-    readonly rollbackAvailable: boolean;
+    readonly status?: string;
+    readonly affectedCount?: number;
+    readonly rollbackAvailable?: boolean;
     readonly manifestHash?: string;
+    readonly schemaVersion?: string;
+    readonly actionId?: string;
+    readonly owner?: string;
+    readonly trigger?: string;
+    readonly expectedImpact?: string;
+    readonly rollback?: {
+      readonly strategy: string;
+      readonly evidenceRef: string;
+    };
+    readonly recoveryProof?: {
+      readonly status: string;
+      readonly evidenceRef: string;
+      readonly recoveredAt: string;
+    };
   }[];
   readonly activeJob: {
     readonly id: string;
@@ -2096,6 +2229,29 @@ export interface RuntimeStorageRetentionSummary {
     readonly unobservedResourceCount?: number;
     /** Observed resources whose health probe reported unavailable. */
     readonly unavailableResourceCount?: number;
+    readonly byteTotals?: {
+      readonly physicalBytes: number;
+      readonly logicalBytes: number;
+      readonly reclaimableBytes: number;
+      readonly reservedBytes: number;
+      readonly archivedBytes: number;
+      readonly unattributedBytes: number;
+      readonly unavailableResourceCount: number;
+    };
+    readonly capacityForecast?: {
+      readonly schemaVersion: "role-model.storage-capacity-forecast.v1";
+      readonly elapsedDays: number;
+      readonly horizonDays: number;
+      readonly growthBytesPerDay: number;
+      readonly currentPhysicalBytes: number;
+      readonly projectedPhysicalBytes: number;
+      readonly maxBytes: number;
+      readonly highWatermarkBytes: number;
+      readonly daysToHighWatermark: number | null;
+      readonly state: "ready" | "pressure" | "unavailable";
+      readonly basis: string;
+      readonly capacityContract: string;
+    };
     readonly entries: readonly {
       readonly id: string;
       readonly owner: string;

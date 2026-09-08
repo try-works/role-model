@@ -93,6 +93,11 @@ export function StorageRetentionRouteView() {
     }
   };
   const plan = summary?.currentPlan;
+  const byteTotals = summary?.storageInventory?.byteTotals;
+  const capacityForecast = summary?.storageInventory?.capacityForecast;
+  const operatorActionReceipts = summary?.receipts.filter(
+    (receipt) => receipt.schemaVersion === "role-model.storage-operator-action-receipt.v1",
+  );
 
   return (
     <div className="space-y-6">
@@ -102,11 +107,13 @@ export function StorageRetentionRouteView() {
         items={[
           {
             id: "physical",
-            label: "Physical",
+            label: "Physical bytes",
             value:
-              summary?.storageAudit?.allocatedBytes != null
-                ? String(formatBytes(summary.storageAudit.allocatedBytes))
-                : "Not measured",
+              byteTotals?.physicalBytes != null
+                ? String(formatBytes(byteTotals.physicalBytes))
+                : summary?.storageAudit?.allocatedBytes != null
+                  ? String(formatBytes(summary.storageAudit.allocatedBytes))
+                  : "Not measured",
           },
           {
             id: "physical-resources",
@@ -115,29 +122,51 @@ export function StorageRetentionRouteView() {
           },
           {
             id: "logical-classes",
-            label: "Logical classes",
+            label: "Logical bytes",
             value:
-              summary?.storageAudit?.logicalBytes != null
-                ? String(formatBytes(summary.storageAudit.logicalBytes))
-                : String(formatBytes(summary?.totalBytes ?? 0)),
+              byteTotals?.logicalBytes != null
+                ? String(formatBytes(byteTotals.logicalBytes))
+                : summary?.storageAudit?.logicalBytes != null
+                  ? String(formatBytes(summary.storageAudit.logicalBytes))
+                  : String(formatBytes(summary?.totalBytes ?? 0)),
           },
           {
             id: "reclaimable",
-            label: "Reclaimable",
+            label: "Reclaimable bytes",
             value:
-              summary?.storageAudit?.reclaimableBytes != null
-                ? String(formatBytes(summary.storageAudit.reclaimableBytes))
+              byteTotals?.reclaimableBytes != null
+                ? String(formatBytes(byteTotals.reclaimableBytes))
+                : summary?.storageAudit?.reclaimableBytes != null
+                  ? String(formatBytes(summary.storageAudit.reclaimableBytes))
+                  : "Not measured",
+          },
+          {
+            id: "reserved",
+            label: "Reserved bytes",
+            value:
+              byteTotals?.reservedBytes != null
+                ? String(formatBytes(byteTotals.reservedBytes))
+                : "Not measured",
+          },
+          {
+            id: "archived",
+            label: "Archived bytes",
+            value:
+              byteTotals?.archivedBytes != null
+                ? String(formatBytes(byteTotals.archivedBytes))
                 : "Not measured",
           },
           {
             id: "unavailable",
-            label: "Unattributed physical bytes",
+            label: "Unattributed bytes",
             value:
-              summary?.storageAudit?.unattributedPhysicalBytes != null
-                ? String(formatBytes(summary.storageAudit.unattributedPhysicalBytes))
-                : summary?.storageAudit?.unavailableBytes != null
-                  ? String(formatBytes(summary.storageAudit.unavailableBytes))
-                  : "Not measured",
+              byteTotals?.unattributedBytes != null
+                ? String(formatBytes(byteTotals.unattributedBytes))
+                : summary?.storageAudit?.unattributedPhysicalBytes != null
+                  ? String(formatBytes(summary.storageAudit.unattributedPhysicalBytes))
+                  : summary?.storageAudit?.unavailableBytes != null
+                    ? String(formatBytes(summary.storageAudit.unavailableBytes))
+                    : "Not measured",
           },
           {
             id: "unobserved-stores",
@@ -200,6 +229,79 @@ export function StorageRetentionRouteView() {
         Unattributed physical bytes are measured physical allocation not mapped to logical storage
         classes; they are not service health.
       </p>
+      {capacityForecast ? (
+        <SectionCard
+          title="Capacity forecast"
+          description={`Contract ${capacityForecast.capacityContract}; ${capacityForecast.basis.replaceAll("_", " ")}.`}
+        >
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className={`${mutedPanelClassName} p-3`}>
+              <p className={fieldLabelClassName}>Projected bytes</p>
+              <p className={`mt-1 ${compactTitleClassName}`}>
+                {formatBytes(capacityForecast.projectedPhysicalBytes)} in{" "}
+                {capacityForecast.horizonDays} days
+              </p>
+            </div>
+            <div className={`${mutedPanelClassName} p-3`}>
+              <p className={fieldLabelClassName}>Days until high water</p>
+              <p className={`mt-1 ${compactTitleClassName}`}>
+                {capacityForecast.daysToHighWatermark ?? "No growth observed"}
+              </p>
+            </div>
+            <div className={`${mutedPanelClassName} p-3`}>
+              <p className={fieldLabelClassName}>Forecast state</p>
+              <p className="mt-1">
+                <Badge tone={capacityForecast.state === "ready" ? "success" : "warning"}>
+                  {capacityForecast.state}
+                </Badge>
+              </p>
+            </div>
+          </div>
+        </SectionCard>
+      ) : null}
+      {operatorActionReceipts?.length ? (
+        <SectionCard
+          title="Operator action receipts"
+          description="Durable maintenance evidence with accountable recovery and rollback instructions."
+        >
+          <div className="space-y-3">
+            {operatorActionReceipts.map((receipt) => (
+              <div className={`${mutedPanelClassName} p-3`} key={receipt.id}>
+                <div className="flex items-center justify-between gap-3">
+                  <p className={fieldLabelClassName}>{receipt.actionId ?? receipt.id}</p>
+                  <Badge
+                    tone={receipt.recoveryProof?.status === "verified" ? "success" : "warning"}
+                  >
+                    {receipt.recoveryProof?.status ?? "unverified"}
+                  </Badge>
+                </div>
+                <dl className={`mt-2 grid gap-2 ${supportingTextClassName}`}>
+                  <div>
+                    <dt>Owner</dt>
+                    <dd>{receipt.owner ?? "Unassigned"}</dd>
+                  </div>
+                  <div>
+                    <dt>Trigger</dt>
+                    <dd>{receipt.trigger ?? "Unknown"}</dd>
+                  </div>
+                  <div>
+                    <dt>Expected impact</dt>
+                    <dd>{receipt.expectedImpact ?? "Not recorded"}</dd>
+                  </div>
+                  <div>
+                    <dt>Rollback strategy</dt>
+                    <dd>{receipt.rollback?.strategy ?? "Not recorded"}</dd>
+                  </div>
+                  <div>
+                    <dt>Proof of recovery</dt>
+                    <dd>{receipt.recoveryProof?.evidenceRef ?? "Not recorded"}</dd>
+                  </div>
+                </dl>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      ) : null}
       {summary?.physicalResources ? (
         <SectionCard
           title="Physical storage inventory"
@@ -459,7 +561,7 @@ export function StorageRetentionRouteView() {
                       </Badge>
                     </div>
                     <p className={`mt-2 ${supportingTextClassName}`}>
-                      {receipt.affectedCount} affected ·{" "}
+                      {receipt.affectedCount ?? 0} affected ·{" "}
                       {receipt.rollbackAvailable ? "Rollback-safe" : "Rollback unavailable"}
                     </p>
                     {receipt.rollbackAvailable ? (

@@ -1,0 +1,17 @@
+Run 96 / R27 public runtime-host-bridge criterion-owned TDD
+RED receipt against the locked public baseline.
+
+Baseline:
+  path: E:/role-model-temp/run96-r27-provider-attempt-ids-public-baseline-b52a1027
+  public commit: b52a10279de21f612911bf2ae758ab40fb61d164
+  product tree was clean before scratch tests; scratch tests were removed after capture.
+
+Semantic RED command:
+  .\\node_modules\\.bin\\vitest run role-model-router/apps/runtime-host-bridge/test/run96-r27-public-legacy-red.test.ts
+Raw receipt: E:/role-model-temp/run96-r27-public-legacy-red-b52.log
+Result: EXPECTED RED; the suite failed during collection because
+../src/legacy-execution-admission-reconciliation.js could not be found (1 failed suite, no tests).
+The failure is the missing production reconciliation module at the locked baseline, not a test
+fixture or runner setup failure.
+
+Boundary: source-level TDD only. No Phase 5 live/provider/graph/storage/recovery PASS is claimed.

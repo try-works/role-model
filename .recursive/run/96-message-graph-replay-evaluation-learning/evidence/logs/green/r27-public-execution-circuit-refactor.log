@@ -1,0 +1,25 @@
+Run 96 / R27 public runtime-host-bridge criterion-owned TDD
+Refactor/build receipt for the exact owning paths.
+
+Biome command:
+  corepack pnpm exec biome check
+    role-model-router/apps/runtime-host-bridge/src/execution-circuit-breaker.ts
+    role-model-router/apps/runtime-host-bridge/src/index.ts
+    role-model-router/apps/runtime-host-bridge/src/legacy-execution-admission-reconciliation.ts
+    role-model-router/apps/runtime-host-bridge/test/execution-circuit-breaker.test.ts
+    role-model-router/apps/runtime-host-bridge/test/legacy-execution-admission-reconciliation.test.ts
+  Result: PASS; Checked 5 files in 2s. No fixes applied.
+  Raw receipt: E:/role-model-temp/run96-r27-public-execution-circuit-refactor.log
+
+Package build:
+  corepack pnpm --dir role-model-router/apps/runtime-host-bridge run build
+  Result: PASS; tsc -p tsconfig.json.
+  Raw receipt: E:/role-model-temp/run96-r27-public-execution-circuit-build.log
+
+Whitespace check:
+  git --no-optional-locks diff --check -- <the five paths above>
+  Result: PASS.
+
+This receipt records validation of the exact circuit/index/legacy source and exclusive tests. It
+does not imply unrelated dirty worktree files were reformatted or reviewed.
+Boundary: source-level TDD only. No Phase 5 live/provider/graph/storage/recovery PASS is claimed.

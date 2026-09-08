@@ -1,0 +1,14 @@
+Run 96 R27 provider-attempt propagation strict-TDD RED receipt
+repository=public
+baseline_ref=b52a10279de21f612911bf2ae758ab40fb61d164
+baseline_worktree=E:\role-model-temp\run96-r27-provider-attempt-ids-public-baseline-b52a1027
+tests=role-model-router/packages/runtime-observability/test/provider-attempt-ids.baseline-red.test.ts; role-model-router/packages/sqlite-memory/test/provider-attempt-ids.baseline-red.test.ts
+commands=npx vitest run test/provider-attempt-ids.baseline-red.test.ts (runtime-observability); npx vitest run test/provider-attempt-ids.baseline-red.test.ts (sqlite-memory)
+result=FAIL_RED
+runtime_failure=provider-attempt IDs were omitted from runtime-observation bundle assembly (received undefined)
+sqlite_failure=provider-attempt IDs were omitted from compact SQLite observation projection (received undefined)
+exit_codes=1;1
+external_logs=E:\role-model-temp\run96-r27-provider-attempt-ids-public-baseline-b52a1027-runtime-red.log; E:\role-model-temp\run96-r27-provider-attempt-ids-public-baseline-b52a1027-sqlite-red.log
+receipt_status=PASS_RED
+phase3_status=DRAFT
+phase5_status=PENDING

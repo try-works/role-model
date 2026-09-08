@@ -45,6 +45,11 @@ export interface ModelCapabilityProfile {
 
 const MODALITY_ORDER = ["text", "image", "video", "audio", "pdf"] as const;
 
+const catalogModelsById = new WeakMap<
+  NormalizedCatalog,
+  ReadonlyMap<string, NormalizedCatalogModel>
+>();
+
 function compareText(left: string, right: string): number {
   return left.localeCompare(right);
 }
@@ -86,7 +91,12 @@ function findCatalogModel(
   catalog: NormalizedCatalog,
   modelId: string,
 ): NormalizedCatalogModel | null {
-  return catalog.models.find((entry) => entry.modelId === modelId) ?? null;
+  let modelsById = catalogModelsById.get(catalog);
+  if (!modelsById) {
+    modelsById = new Map(catalog.models.map((entry) => [entry.modelId, entry]));
+    catalogModelsById.set(catalog, modelsById);
+  }
+  return modelsById.get(modelId) ?? null;
 }
 
 function resolveCanonicalCatalogModel(input: {
@@ -137,10 +147,12 @@ export function resolveModelCapabilityProfile(input: {
   readonly catalog: NormalizedCatalog;
 }): ModelCapabilityProfile {
   const model = resolveCanonicalCatalogModel(input);
-  const pricing = resolveCatalogPricingHints({
-    modelId: input.modelId,
-    catalog: input.catalog,
-  });
+  const pricing =
+    model?.pricing ??
+    resolveCatalogPricingHints({
+      modelId: input.modelId,
+      catalog: input.catalog,
+    });
   if (!model) {
     return {
       modelId: input.modelId,

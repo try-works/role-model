@@ -15,7 +15,9 @@ const runtimeQaStateRoot = path.join(
 const liveBaseUrl = process.env.RUNTIME_LIVE_BASE_URL?.trim();
 
 const configuredBrowserChannel = process.env.ROLE_MODEL_BROWSER_CHANNEL?.trim();
-const browserChannel = configuredBrowserChannel || (process.platform === "win32" && !process.env.CI ? "msedge" : undefined);
+const browserChannel =
+  configuredBrowserChannel ||
+  (process.platform === "win32" && !process.env.CI ? "msedge" : undefined);
 
 export default defineConfig({
   testDir: "./e2e",

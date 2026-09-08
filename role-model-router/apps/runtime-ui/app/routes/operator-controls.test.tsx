@@ -1,34 +1,41 @@
-import { readFileSync } from "node:fs";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
+import { OperatorCapabilityStatus, availabilityTone } from "./operator-controls";
 
 describe("Run 96 operator controls route", () => {
-  test("exposes bounded replay, evaluation, and shadow-learning controls without persisting an operator credential", () => {
-    const routeSource = readFileSync(new URL("./operator-controls.tsx", import.meta.url), "utf8");
-    const routeConfig = readFileSync(new URL("../routes.ts", import.meta.url), "utf8");
-    const navigation = readFileSync(new URL("../lib/design-system.ts", import.meta.url), "utf8");
+  test("renders every operator availability state with an explicit truthful tone", () => {
+    expect(availabilityTone("available")).toBe("success");
+    expect(availabilityTone("unobserved")).toBe("warning");
+    expect(availabilityTone("degraded")).toBe("warning");
+    expect(availabilityTone("blocked")).toBe("error");
+    expect(availabilityTone("unavailable")).toBe("neutral");
+    expect(availabilityTone(undefined)).toBe("neutral");
+  });
 
-    expect(routeConfig).toContain('route("system/operator", "routes/operator-controls.tsx"');
-    expect(navigation).toContain('to: "/app/system/operator"');
-    for (const token of [
-      "fetchOperatorStatus",
-      "listReplayJobs",
-      "listEvaluationJobs",
-      "fetchLearningState",
-      "cancelReplayJob",
-      "cancelEvaluationJob",
-      "retryEvaluationJob",
-      "updateLearningMode",
-      "rollbackLearning",
-      "Operator access token",
-      'autoComplete="off"',
-      "confirm(",
-      'aria-live="polite"',
-      "focus-visible:ring",
-      "shadow-only",
-    ]) {
-      expect(routeSource).toContain(token);
+  test("AC-R25-03: unavailable, unobserved, degraded, blocked, maintenance, pressure, and stale states render distinct reasons", () => {
+    const states = [
+      ["unavailable", "configured owner is unreachable"],
+      ["unobserved", "independent probe has not completed"],
+      ["degraded", "latency exceeded the service objective"],
+      ["blocked", "authorization epoch is stale"],
+      ["maintenance", "storage compaction is active"],
+      ["pressure", "queue byte budget is near capacity"],
+      ["stale", "last observation exceeded its freshness window"],
+    ] as const;
+    const html = renderToStaticMarkup(
+      <OperatorCapabilityStatus
+        capabilities={Object.fromEntries(
+          states.map(([state], index) => [`capability-${index}`, state]),
+        )}
+        reasons={Object.fromEntries(
+          states.map(([state, reason], index) => [`capability-${index}`, `${state}: ${reason}`]),
+        )}
+      />,
+    );
+
+    for (const [state, reason] of states) {
+      expect(html).toContain(state);
+      expect(html).toContain(reason);
     }
-    expect(routeSource).not.toContain("localStorage");
-    expect(routeSource).not.toContain("sessionStorage");
   });
 });

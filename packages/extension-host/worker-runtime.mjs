@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { pathToFileURL } from "node:url";
 import { encodeFrame, extractFrames } from "../extension-sdk/index.mjs";
+import { hydrateInputTransferArtifact } from "./transfer-artifact.mjs";
 
 const moduleRef = process.argv[2];
 if (!moduleRef) throw new Error("worker module URL required");
@@ -167,12 +168,19 @@ process.stdin.on("data", async (chunk) => {
     }
     if (message.type !== "invoke") continue;
     try {
+      const envelope = message.envelope?.transferArtifact
+        ? await hydrateInputTransferArtifact({
+            stateRoot,
+            transferKey: process.env.ROLE_MODEL_EXTENSION_TRANSFER_KEY,
+            envelope: message.envelope,
+          })
+        : message.envelope;
       let result;
-      if (message.envelope.capability === "extension-output:read") {
-        result = readBusinessOutput(message.envelope);
+      if (envelope.capability === "extension-output:read") {
+        result = readBusinessOutput(envelope);
       } else {
-        const value = await extension.run(message.envelope);
-        result = persistBusinessOutput(message.envelope, value);
+        const value = await extension.run(envelope);
+        result = persistBusinessOutput(envelope, value);
       }
       const response = { type: "result", requestId: message.requestId, result };
       retained.set(message.requestId, response);

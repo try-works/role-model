@@ -1,0 +1,9 @@
+Run 96 canonical TDD receipt
+acceptanceCriterionId=AC-R33-05
+proofFamily=execution-circuit-failed-half-open-admission
+phase=focused GREEN
+result=PASS
+testPath=public:role-model-router/apps/runtime-host-bridge/test/execution-circuit-breaker.test.ts
+assertionTitle=reopens a failed half-open provider attempt with bounded provenance without mutating admission
+command=corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run test/execution-circuit-breaker.test.ts -t "reopens a failed half-open provider attempt"
+observation=PASS: the exact selected assertion passed; the failed half-open owner reopens the execution circuit with bounded source provenance while the durable admission snapshot remains unchanged.

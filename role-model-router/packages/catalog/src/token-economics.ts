@@ -134,8 +134,9 @@ function findPricedModelByLookupIds(
   catalog: NormalizedCatalog,
   lookupIds: readonly string[],
 ): NormalizedCatalogModel | null {
+  const index = getCatalogPricingIndex(catalog);
   for (const lookupId of lookupIds) {
-    const model = catalog.models.find((entry) => entry.modelId === lookupId);
+    const model = index.byId.get(lookupId);
     if (model?.pricing) {
       return model;
     }
@@ -151,10 +152,7 @@ function findPricedModelByUniqueLeaf(
   if (!leaf || leaf.length < 3) {
     return null;
   }
-  const matches = catalog.models.filter(
-    (entry) =>
-      entry.pricing != null && (entry.modelId === leaf || entry.modelId.endsWith(`/${leaf}`)),
-  );
+  const matches = getCatalogPricingIndex(catalog).pricedByLeaf.get(leaf) ?? [];
   if (matches.length === 1) {
     return matches[0] ?? null;
   }
@@ -163,6 +161,39 @@ function findPricedModelByUniqueLeaf(
     return preferred[0] ?? null;
   }
   return null;
+}
+
+interface CatalogPricingIndex {
+  readonly byId: ReadonlyMap<string, NormalizedCatalogModel>;
+  readonly pricedByLeaf: ReadonlyMap<string, readonly NormalizedCatalogModel[]>;
+}
+
+const catalogPricingIndexes = new WeakMap<NormalizedCatalog, CatalogPricingIndex>();
+
+function getCatalogPricingIndex(catalog: NormalizedCatalog): CatalogPricingIndex {
+  const cached = catalogPricingIndexes.get(catalog);
+  if (cached) {
+    return cached;
+  }
+
+  const byId = new Map<string, NormalizedCatalogModel>();
+  const pricedByLeaf = new Map<string, NormalizedCatalogModel[]>();
+  for (const model of catalog.models) {
+    byId.set(model.modelId, model);
+    if (!model.pricing) {
+      continue;
+    }
+    const leaf = model.modelId.includes("/")
+      ? (model.modelId.split("/").at(-1) ?? model.modelId)
+      : model.modelId;
+    const matches = pricedByLeaf.get(leaf) ?? [];
+    matches.push(model);
+    pricedByLeaf.set(leaf, matches);
+  }
+
+  const index = { byId, pricedByLeaf };
+  catalogPricingIndexes.set(catalog, index);
+  return index;
 }
 
 function findPricedCatalogModel(

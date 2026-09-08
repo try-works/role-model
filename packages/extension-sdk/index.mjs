@@ -7,6 +7,7 @@ const SECRET_KEYS = new Set([
   "secret",
   "providerBody",
   "rawResponse",
+  "rawContent",
 ]);
 export const MAX_INLINE_BYTES = 16 * 1024;
 

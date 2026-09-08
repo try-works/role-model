@@ -1,0 +1,13 @@
+Run 96 / R27 public UI TDD receipt
+Stage: RED (locked public baseline)
+Baseline: b52a10279de21f612911bf2ae758ab40fb61d164
+Scratch boundary: temporary focused tests were overlaid only in E:\role-model-temp\run96-public-baseline; no baseline repository source was changed.
+Command:
+  pnpm exec vitest run app/routes/operator-controls.test.tsx app/lib/run96-r27-runtime-api.test.ts app/routes/run96-r27-storage-retention.test.tsx --reporter=dot
+Result: FAIL (expected baseline RED; exit 1)
+Observed failures:
+  - operator-controls.test.tsx: Cannot find module ./operator-controls.
+  - run96-r27-runtime-api.test.ts: fetchRuntimeOperatorStatus is not a function.
+  - run96-r27-storage-retention.test.tsx: buildStorageRetentionMetrics is not a function.
+Vitest summary: 3 failed test files, 2 failed tests; duration 107.36s.
+Claim boundary: source-level public UI/API baseline only; no Phase 5, rebuilt-runtime, provider, or live-operator result is claimed.

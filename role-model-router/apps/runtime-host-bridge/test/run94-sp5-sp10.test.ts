@@ -379,9 +379,9 @@ test("GREEN: real process output closure covers every canonical registry key and
     (entry) => entry.outputs,
   );
   expect(outputs).toHaveLength(canonicalExtensions.length);
-  expect(
-    outputs.map((output) => (output as Record<string, unknown>).extensionId).sort(),
-  ).toEqual(canonicalExtensions.map(([id]) => id).sort());
+  expect(outputs.map((output) => (output as Record<string, unknown>).extensionId).sort()).toEqual(
+    canonicalExtensions.map(([id]) => id).sort(),
+  );
   expect((result as Record<string, unknown>).pipeline).toMatchObject({
     status: "insufficient_comparable_evidence",
     refusalCode: "R14_NO_DISTINCT_COUNTERFACTUAL",

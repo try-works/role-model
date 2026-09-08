@@ -1,0 +1,282 @@
+{
+  "schemaVersion": "role-model.run96.r33-public-criterion-owned-tdd-tuples.v1",
+  "runId": "96-message-graph-replay-evaluation-learning",
+  "phase": "03-implementation",
+  "phase3Status": "DRAFT",
+  "validator": "private:scripts/track-b/run96-phase3-proof-gate.mjs#validateR27TddCrosswalk",
+  "claimBoundary": "Criterion-owned source/build/test evidence only; no live provider, graph, storage/recovery, no-mock, all-13, or exact-100 Phase 5 claim.",
+  "publicBaseline": {
+    "path": "E:/role-model-temp/run96-r27-provider-attempt-ids-public-baseline-b52a1027",
+    "commit": "b52a10279de21f612911bf2ae758ab40fb61d164",
+    "scratchTestsRemovedAfterRed": true
+  },
+  "publicWorktree": "D:/DEV/role-model/.worktrees/96-message-graph-replay-evaluation-learning",
+  "rows": [
+    {
+      "acceptanceCriterionId": "AC-R33-05",
+      "requirementId": "R33",
+      "owner": "public:role-model-router/apps/runtime-host-bridge/src/execution-circuit-breaker.ts",
+      "testPath": "public:role-model-router/apps/runtime-host-bridge/test/execution-circuit-breaker.test.ts",
+      "assertionTitle": "reopens a failed half-open provider attempt with bounded provenance without mutating admission",
+      "implementationReferences": [
+        "public:role-model-router/apps/runtime-host-bridge/src/execution-circuit-breaker.ts#claimExecutionCircuitProbe",
+        "public:role-model-router/apps/runtime-host-bridge/src/execution-circuit-breaker.ts#settleExecutionCircuitProbe"
+      ],
+      "changedCodeSelectors": [
+        "public:role-model-router/apps/runtime-host-bridge/src/execution-circuit-breaker.ts#claimExecutionCircuitProbe",
+        "public:role-model-router/apps/runtime-host-bridge/src/execution-circuit-breaker.ts#settleExecutionCircuitProbe"
+      ],
+      "redEvidence": [
+        "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-canonical/ac-r33-05-red.log"
+      ],
+      "greenEvidence": [
+        "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-canonical/ac-r33-05-green.log"
+      ],
+      "productionVerification": {
+        "command": "corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run test/execution-circuit-breaker.test.ts -t \"reopens a failed half-open provider attempt\"",
+        "result": "PASS"
+      },
+      "finalDisposition": "implemented",
+      "verificationDisposition": "source-only",
+      "tddEvidence": {
+        "red": {
+          "acceptanceCriterionId": "AC-R33-05",
+          "proofFamily": "execution-circuit-failed-half-open-admission",
+          "testPath": "public:role-model-router/apps/runtime-host-bridge/test/execution-circuit-breaker.test.ts",
+          "assertionTitle": "reopens a failed half-open provider attempt with bounded provenance without mutating admission",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run test/execution-circuit-breaker.test.ts -t \"reopens a failed half-open provider attempt\"",
+          "result": "FAIL",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-canonical/ac-r33-05-red.log"
+          ]
+        },
+        "green": {
+          "acceptanceCriterionId": "AC-R33-05",
+          "proofFamily": "execution-circuit-failed-half-open-admission",
+          "testPath": "public:role-model-router/apps/runtime-host-bridge/test/execution-circuit-breaker.test.ts",
+          "assertionTitle": "reopens a failed half-open provider attempt with bounded provenance without mutating admission",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run test/execution-circuit-breaker.test.ts -t \"reopens a failed half-open provider attempt\"",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-canonical/ac-r33-05-green.log"
+          ]
+        },
+        "refactor": {
+          "acceptanceCriterionId": "AC-R33-05",
+          "proofFamily": "execution-circuit-failed-half-open-admission",
+          "testPath": "public:role-model-router/apps/runtime-host-bridge/test/execution-circuit-breaker.test.ts",
+          "assertionTitle": "reopens a failed half-open provider attempt with bounded provenance without mutating admission",
+          "command": "corepack pnpm exec biome check role-model-router/apps/runtime-host-bridge/src/execution-circuit-breaker.ts role-model-router/apps/runtime-host-bridge/test/execution-circuit-breaker.test.ts",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-canonical/ac-r33-05-refactor.log"
+          ]
+        },
+        "owningSuite": {
+          "acceptanceCriterionId": "AC-R33-05",
+          "proofFamily": "execution-circuit-failed-half-open-admission",
+          "testPath": "public:role-model-router/apps/runtime-host-bridge/test/execution-circuit-breaker.test.ts",
+          "assertionTitle": "reopens a failed half-open provider attempt with bounded provenance without mutating admission",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run test/execution-circuit-breaker.test.ts",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-canonical/ac-r33-05-owning.log"
+          ]
+        },
+        "cumulativeGate": {
+          "acceptanceCriterionId": "AC-R33-05",
+          "proofFamily": "execution-circuit-failed-half-open-admission",
+          "testPath": "public:role-model-router/apps/runtime-host-bridge/test/execution-circuit-breaker.test.ts",
+          "assertionTitle": "reopens a failed half-open provider attempt with bounded provenance without mutating admission",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-host-bridge run test:router",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-canonical/ac-r33-05-cumulative.log"
+          ]
+        }
+      },
+      "coverageNote": "This row proves the failed owner-bound half-open transition and durable-admission immutability. It does not claim live provider execution or Phase 5 observation."
+    },
+    {
+      "acceptanceCriterionId": "AC-R33-07",
+      "requirementId": "R33",
+      "owner": "public:role-model-router/apps/runtime-host-bridge/src/index.ts",
+      "testPath": "public:role-model-router/apps/runtime-host-bridge/test/alias-capability-routing.test.ts",
+      "assertionTitle": "reports an empty alias pool before attempting capability eligibility",
+      "implementationReferences": [
+        "public:role-model-router/apps/runtime-host-bridge/src/index.ts#mapChatCompletionsRequest",
+        "public:role-model-router/apps/runtime-host-bridge/src/index.ts#throwAliasPoolEmpty"
+      ],
+      "changedCodeSelectors": [
+        "public:role-model-router/apps/runtime-host-bridge/src/index.ts#mapChatCompletionsRequest",
+        "public:role-model-router/apps/runtime-host-bridge/src/index.ts#throwAliasPoolEmpty"
+      ],
+      "redEvidence": [
+        "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-canonical/ac-r33-07-red.log"
+      ],
+      "greenEvidence": [
+        "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-canonical/ac-r33-07-green.log"
+      ],
+      "productionVerification": {
+        "command": "corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run test/alias-capability-routing.test.ts -t \"reports an empty alias pool before attempting capability eligibility\"",
+        "result": "PASS"
+      },
+      "finalDisposition": "implemented",
+      "verificationDisposition": "source-only",
+      "tddEvidence": {
+        "red": {
+          "acceptanceCriterionId": "AC-R33-07",
+          "proofFamily": "alias-pool-eligibility-diagnostic",
+          "testPath": "public:role-model-router/apps/runtime-host-bridge/test/alias-capability-routing.test.ts",
+          "assertionTitle": "reports an empty alias pool before attempting capability eligibility",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run test/alias-capability-routing.test.ts -t \"reports an empty alias pool before attempting capability eligibility\"",
+          "result": "FAIL",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-canonical/ac-r33-07-red.log"
+          ]
+        },
+        "green": {
+          "acceptanceCriterionId": "AC-R33-07",
+          "proofFamily": "alias-pool-eligibility-diagnostic",
+          "testPath": "public:role-model-router/apps/runtime-host-bridge/test/alias-capability-routing.test.ts",
+          "assertionTitle": "reports an empty alias pool before attempting capability eligibility",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run test/alias-capability-routing.test.ts -t \"reports an empty alias pool before attempting capability eligibility\"",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-canonical/ac-r33-07-green.log"
+          ]
+        },
+        "refactor": {
+          "acceptanceCriterionId": "AC-R33-07",
+          "proofFamily": "alias-pool-eligibility-diagnostic",
+          "testPath": "public:role-model-router/apps/runtime-host-bridge/test/alias-capability-routing.test.ts",
+          "assertionTitle": "reports an empty alias pool before attempting capability eligibility",
+          "command": "corepack pnpm exec biome check role-model-router/apps/runtime-host-bridge/src/index.ts role-model-router/apps/runtime-host-bridge/test/alias-capability-routing.test.ts",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-canonical/ac-r33-07-refactor.log"
+          ]
+        },
+        "owningSuite": {
+          "acceptanceCriterionId": "AC-R33-07",
+          "proofFamily": "alias-pool-eligibility-diagnostic",
+          "testPath": "public:role-model-router/apps/runtime-host-bridge/test/alias-capability-routing.test.ts",
+          "assertionTitle": "reports an empty alias pool before attempting capability eligibility",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run test/alias-capability-routing.test.ts",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-canonical/ac-r33-07-owning.log"
+          ]
+        },
+        "cumulativeGate": {
+          "acceptanceCriterionId": "AC-R33-07",
+          "proofFamily": "alias-pool-eligibility-diagnostic",
+          "testPath": "public:role-model-router/apps/runtime-host-bridge/test/alias-capability-routing.test.ts",
+          "assertionTitle": "reports an empty alias pool before attempting capability eligibility",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-host-bridge run test:router",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-canonical/ac-r33-07-cumulative.log"
+          ]
+        }
+      },
+      "coverageNote": "This row owns the index.ts alias-pool diagnostic gap. Route-level cooldown metadata is recorded separately as a preserved assertion because the exact HTTP selector also passed on the locked baseline."
+    },
+    {
+      "acceptanceCriterionId": "AC-R33-01",
+      "requirementId": "R33",
+      "owner": "public:role-model-router/apps/runtime-host-bridge/src/legacy-execution-admission-reconciliation.ts",
+      "testPath": "public:role-model-router/apps/runtime-host-bridge/test/legacy-execution-admission-reconciliation.test.ts",
+      "assertionTitle": "restores only a source-bound transient circuit from the legacy degraded row shape",
+      "implementationReferences": [
+        "public:role-model-router/apps/runtime-host-bridge/src/legacy-execution-admission-reconciliation.ts#reconcileLegacyExecutionAdmissionRows"
+      ],
+      "changedCodeSelectors": [
+        "public:role-model-router/apps/runtime-host-bridge/src/legacy-execution-admission-reconciliation.ts#reconcileLegacyExecutionAdmissionRows"
+      ],
+      "redEvidence": [
+        "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-canonical/ac-r33-01-red.log"
+      ],
+      "greenEvidence": [
+        "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-canonical/ac-r33-01-green.log"
+      ],
+      "productionVerification": {
+        "command": "corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run test/legacy-execution-admission-reconciliation.test.ts",
+        "result": "PASS"
+      },
+      "finalDisposition": "implemented",
+      "verificationDisposition": "source-only",
+      "tddEvidence": {
+        "red": {
+          "acceptanceCriterionId": "AC-R33-01",
+          "proofFamily": "legacy-admission-reconciliation",
+          "testPath": "public:role-model-router/apps/runtime-host-bridge/test/legacy-execution-admission-reconciliation.test.ts",
+          "assertionTitle": "restores only a source-bound transient circuit from the legacy degraded row shape",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run test/legacy-execution-admission-reconciliation.test.ts -t \"restores only a source-bound transient circuit from the legacy degraded row shape\"",
+          "result": "FAIL",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-canonical/ac-r33-01-red.log"
+          ]
+        },
+        "green": {
+          "acceptanceCriterionId": "AC-R33-01",
+          "proofFamily": "legacy-admission-reconciliation",
+          "testPath": "public:role-model-router/apps/runtime-host-bridge/test/legacy-execution-admission-reconciliation.test.ts",
+          "assertionTitle": "restores only a source-bound transient circuit from the legacy degraded row shape",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run test/legacy-execution-admission-reconciliation.test.ts -t \"restores only a source-bound transient circuit from the legacy degraded row shape\"",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-canonical/ac-r33-01-green.log"
+          ]
+        },
+        "refactor": {
+          "acceptanceCriterionId": "AC-R33-01",
+          "proofFamily": "legacy-admission-reconciliation",
+          "testPath": "public:role-model-router/apps/runtime-host-bridge/test/legacy-execution-admission-reconciliation.test.ts",
+          "assertionTitle": "restores only a source-bound transient circuit from the legacy degraded row shape",
+          "command": "corepack pnpm exec biome check role-model-router/apps/runtime-host-bridge/src/legacy-execution-admission-reconciliation.ts role-model-router/apps/runtime-host-bridge/test/legacy-execution-admission-reconciliation.test.ts",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-canonical/ac-r33-01-refactor.log"
+          ]
+        },
+        "owningSuite": {
+          "acceptanceCriterionId": "AC-R33-01",
+          "proofFamily": "legacy-admission-reconciliation",
+          "testPath": "public:role-model-router/apps/runtime-host-bridge/test/legacy-execution-admission-reconciliation.test.ts",
+          "assertionTitle": "restores only a source-bound transient circuit from the legacy degraded row shape",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run test/legacy-execution-admission-reconciliation.test.ts",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-canonical/ac-r33-01-owning.log"
+          ]
+        },
+        "cumulativeGate": {
+          "acceptanceCriterionId": "AC-R33-01",
+          "proofFamily": "legacy-admission-reconciliation",
+          "testPath": "public:role-model-router/apps/runtime-host-bridge/test/legacy-execution-admission-reconciliation.test.ts",
+          "assertionTitle": "restores only a source-bound transient circuit from the legacy degraded row shape",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-host-bridge run test:router",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-canonical/ac-r33-01-cumulative.log"
+          ]
+        }
+      },
+      "coverageNote": "This row binds the legacy admission reconciliation sub-seam to AC-R33-01's durable-admission safety boundary. It does not replace the independent two-transient live assertion or claim Phase 5."
+    }
+  ],
+  "preservedAssertions": [
+    {
+      "acceptanceCriterionId": "AC-R33-02",
+      "testPath": "public:role-model-router/apps/runtime-host-bridge/test/execution-circuit-breaker.test.ts",
+      "assertionTitle": "[AC-R33-02] route refusal exposes requested model, denied endpoints, cooldowns, next probe, and retry-after metadata",
+      "result": "PASS on the current public tree and the locked b52 baseline; no new TDD row is claimed because this exact route assertion did not reproduce a baseline failure."
+    }
+  ],
+  "unclaimed": [
+    "The independent AC-R33-01 two-transient live execution assertion and AC-R33-05 source transition are source-level only; no live provider execution is claimed.",
+    "Phase 5 observer correlation across ingress -> alias -> variant -> provider -> telemetry -> decision -> graph -> storage/recovery, plus all-13, no-mock, and exact-100 proof, remains unclaimed.",
+    "Phase 3 remains DRAFT; no central crosswalk, phase documentation, or lock was edited."
+  ]
+}

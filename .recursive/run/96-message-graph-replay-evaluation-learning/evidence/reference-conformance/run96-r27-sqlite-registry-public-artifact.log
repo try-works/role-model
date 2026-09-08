@@ -1,0 +1,11 @@
+Run 96 R27 public SQLite-registry artifact readback receipt
+repository=public
+public_worktree=D:/DEV/role-model/.worktrees/96-message-graph-replay-evaluation-learning
+public_head=1d5732819480cf22587570bf8c60e02efcdbfb3e
+artifact=role-model-router/packages/sqlite-memory/dist/index.js
+schemaVersion=role-model.storage-registry.v1
+sqlite_entries=sqlite_migration_journal,sqlite_performance_history,sqlite_profiles,sqlite_runtime_observations,sqlite_telemetry
+owner=sqlite-memory
+channels=development,stage,production
+result=PAIRED_ARTIFACT_MATCH
+notes=Private paired test read this exact public artifact and passed. The prior full-private RED is classified as stale/mismatched public artifact or environment selection; no public source/fixture repair was required.

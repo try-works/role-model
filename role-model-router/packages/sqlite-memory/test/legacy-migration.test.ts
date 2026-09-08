@@ -1,15 +1,19 @@
 import { createHash } from "node:crypto";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
 import { describe, expect, test } from "vitest";
 
 import {
+  LegacyRichJsonWriter,
   LegacySqliteMigration,
+  buildCompactRuntimeObservationStub,
   initializeSqliteMemory,
   loadMigrationRegistry,
   readLegacyMigrationJournal,
+  readLegacyMigrationPhysicalReceipts,
+  readLegacyMigrationWriterFence,
   resolveRuntimeObservationStoragePayload,
 } from "../src/index.js";
 
@@ -455,5 +459,98 @@ describe("TB04 real SQLite legacy migration", () => {
       },
       graphPrimary: true,
     });
+  });
+
+  test("R22 AC-R22-06 reclaims legacy rich JSON and closure files and fences a resumed writer", () => {
+    const { root, databasePath, backupPath } = fixture();
+    const legacyRoot = path.join(root, "legacy-rich-files");
+    const writer = new LegacyRichJsonWriter({ databasePath, rootPath: legacyRoot });
+    writer.write({
+      requestId: "request-1",
+      observation: { requestId: "request-1", providerBody: "x".repeat(20_000) },
+      closure: { requestId: "request-1", nodeIds: ["node-1", "node-2"] },
+    });
+    expect(existsSync(path.join(legacyRoot, "rich", "request-1.json"))).toBe(true);
+    expect(existsSync(path.join(legacyRoot, "closures", "request-1.json"))).toBe(true);
+
+    const migration = new LegacySqliteMigration({
+      databasePath,
+      backupPath,
+      legacyPaths: [legacyRoot],
+      now: () => 1_000,
+      artifactWriter: ({ sourceId, contentHash }) => ({
+        artifactId: `artifact-${sourceId}`,
+        artifactPath: `artifact://${sourceId}`,
+        contentHash,
+      }),
+    });
+    migration.backfill({ scopeId: "scope-1", batchSize: 10 });
+    migration.enterShadowMirror({ deadlineMs: 2_000 });
+    migration.verifyParity({
+      backupVerified: true,
+      restoreVerified: true,
+      consumersVerified: true,
+    });
+    migration.cutover();
+
+    const resumedWriter = new LegacyRichJsonWriter({ databasePath, rootPath: legacyRoot });
+    expect(() =>
+      resumedWriter.write({
+        requestId: "request-after-cutover",
+        observation: { requestId: "request-after-cutover", body: "must-not-grow" },
+        closure: { requestId: "request-after-cutover", nodeIds: ["new-node"] },
+      }),
+    ).toThrow(/legacy.*writer.*fenced|cutover/i);
+    expect(existsSync(path.join(legacyRoot, "rich", "request-after-cutover.json"))).toBe(false);
+
+    migration.enterLegacyReadHold({ holdUntilMs: 3_000 });
+    migration.verifySecondParity({ consumersVerified: true });
+    migration.retire({ nowMs: 3_000 });
+
+    expect(existsSync(legacyRoot)).toBe(false);
+    expect(readLegacyMigrationWriterFence(databasePath)).toMatchObject({
+      fenced: true,
+      state: "legacy_retired",
+    });
+    const retiredReceipt = readLegacyMigrationPhysicalReceipts(databasePath).find(
+      (receipt) => receipt.stage === "legacy_retired",
+    );
+    expect(retiredReceipt).toMatchObject({
+      footprint: {
+        legacyDisposition: "reclaimed",
+        legacyBytes: 0,
+      },
+    });
+    expect(retiredReceipt?.footprint.legacyBytesBefore).toBeGreaterThan(0);
+    expect(retiredReceipt?.footprint.legacyBytesReclaimed).toBeGreaterThan(0);
+
+    // A fresh migration object must be restart-safe: the receipt is durable and
+    // a repeated retirement attempt cannot recreate or grow the old files.
+    const resumedMigration = new LegacySqliteMigration({
+      databasePath,
+      backupPath,
+      legacyPaths: [legacyRoot],
+      now: () => 4_000,
+      artifactWriter: ({ sourceId, contentHash }) => ({
+        artifactId: `artifact-${sourceId}`,
+        artifactPath: `artifact://${sourceId}`,
+        contentHash,
+      }),
+    });
+    resumedMigration.retire({ nowMs: 4_000 });
+    expect(existsSync(legacyRoot)).toBe(false);
+    const resumedReceipts = readLegacyMigrationPhysicalReceipts(databasePath).filter(
+      (receipt) => receipt.stage === "legacy_retired",
+    );
+    expect(resumedReceipts).toHaveLength(1);
+    expect(resumedReceipts[0]?.footprint.legacyBytesBefore).toBeGreaterThan(0);
+    expect(resumedReceipts[0]?.footprint.legacyBytesReclaimed).toBeGreaterThan(0);
+
+    const providerAttemptIds = ["attempt:request-1:primary", "attempt:request-1:fallback"];
+    const compactObservation = buildCompactRuntimeObservationStub({
+      requestId: "request-1",
+      executionSemantics: { providerAttemptIds },
+    });
+    expect(compactObservation.executionSemantics).toMatchObject({ providerAttemptIds });
   });
 });

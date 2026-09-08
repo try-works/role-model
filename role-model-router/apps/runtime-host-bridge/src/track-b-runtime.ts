@@ -1238,7 +1238,42 @@ export interface RouterReplayAdapter {
   readonly authenticated: true;
   readonly channel: string;
   readonly scope: string;
-  dispatch(envelope: Record<string, unknown>): Promise<Record<string, unknown>>;
+  readonly authorizationEpoch: number;
+  authorize(input: {
+    readonly envelope: Record<string, unknown>;
+  }): Promise<RouterReplayAdapterAuthorization>;
+  verifyAuthorization(input: {
+    readonly envelope: Record<string, unknown>;
+    readonly authorization: Record<string, unknown>;
+  }): Promise<{ readonly verified: true } | { readonly verified: false }>;
+  authorizeSandboxedTools(input: {
+    readonly envelope: Record<string, unknown>;
+    readonly sandbox: Record<string, unknown>;
+  }): Promise<
+    | { readonly authorized: true; readonly policyDigest: string }
+    | { readonly authorized: false; readonly reason: string }
+  >;
+  dispatch(
+    envelope: Record<string, unknown>,
+    context?: RouterReplayAdapterDispatchContext,
+  ): Promise<Record<string, unknown>>;
+}
+
+export interface RouterReplayAdapterDispatchContext {
+  readonly authorization: RouterReplayAdapterAuthorization;
+  readonly sandboxReceipt?: Readonly<Record<string, unknown>>;
+}
+
+export interface RouterReplayAdapterAuthorization {
+  readonly schemaVersion: "role-model.replay-adapter-authorization.v1";
+  readonly algorithm: "hmac-sha256" | "ed25519";
+  readonly keyId: string;
+  readonly nonce: string;
+  readonly channel: string;
+  readonly scope: string;
+  readonly authorizationEpoch: number;
+  readonly mac?: string;
+  readonly signature?: string;
 }
 
 export interface RouterEvaluationJudgeAdapter {
@@ -1279,6 +1314,187 @@ function containsReplayCredential(value: unknown): boolean {
   );
 }
 
+const REPLAY_ADAPTER_AUTHORIZATION_SCHEMA = "role-model.replay-adapter-authorization.v1" as const;
+const REPLAY_TOOL_SIDE_EFFECT_RECEIPT_SCHEMA =
+  "role-model.replay-tool-side-effect-receipt.v1" as const;
+const replayAdapterAuthorizationNonces = new WeakMap<object, Set<string>>();
+
+function normalizeReplayAdapterText(value: unknown, field: string): string {
+  if (typeof value !== "string" || !value.trim() || value.length > 256 || /[\r\n]/.test(value)) {
+    throw new Error(`replay adapter ${field} is invalid`);
+  }
+  return value.trim();
+}
+
+function normalizeReplayAdapterSecret(secret: string | Uint8Array): Buffer {
+  const bytes = typeof secret === "string" ? Buffer.from(secret, "utf8") : Buffer.from(secret);
+  if (bytes.length < 16 || bytes.length > 4096) {
+    throw new Error("replay adapter authorization secret is invalid");
+  }
+  return bytes;
+}
+
+function replayAdapterAuthorizationPayload(input: {
+  readonly keyId: string;
+  readonly nonce: string;
+  readonly channel: string;
+  readonly scope: string;
+  readonly authorizationEpoch: number;
+}) {
+  return {
+    schemaVersion: REPLAY_ADAPTER_AUTHORIZATION_SCHEMA,
+    algorithm: "hmac-sha256" as const,
+    keyId: input.keyId,
+    nonce: input.nonce,
+    channel: input.channel,
+    scope: input.scope,
+    authorizationEpoch: input.authorizationEpoch,
+  };
+}
+
+function digestReplaySandbox(sandbox: Record<string, unknown>): string {
+  return createHash("sha256")
+    .update(JSON.stringify(canonicalizeRun88Proof(sandbox)))
+    .digest("hex");
+}
+
+function digestReplaySandboxWire(sandbox: Record<string, unknown>): string {
+  return createHash("sha256").update(JSON.stringify(sandbox)).digest("hex");
+}
+
+function replaySandboxPolicyDigests(sandbox: Record<string, unknown>): readonly string[] {
+  return [...new Set([digestReplaySandbox(sandbox), digestReplaySandboxWire(sandbox)])];
+}
+
+function normalizeReplaySandboxDigest(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim();
+  if (/^[a-f0-9]{64}$/.test(normalized)) return normalized;
+  if (/^sha256:[a-f0-9]{64}$/.test(normalized)) return normalized.slice("sha256:".length);
+  return null;
+}
+
+function assertReplaySandboxPolicy(candidate: Record<string, unknown>): void {
+  if (candidate.toolPolicy !== "sandboxed_allowlist") return;
+  const sandbox = candidate.sandbox;
+  const sandboxRecord =
+    sandbox && typeof sandbox === "object" && !Array.isArray(sandbox)
+      ? (sandbox as Record<string, unknown>)
+      : null;
+  const executableAllowlist = sandboxRecord?.executableAllowlist;
+  if (
+    !sandboxRecord ||
+    !Array.isArray(executableAllowlist) ||
+    executableAllowlist.length === 0 ||
+    executableAllowlist.length > 32 ||
+    executableAllowlist.some(
+      (value) => typeof value !== "string" || !value || value.length > 256,
+    ) ||
+    !["none", "read_only"].includes(String(sandboxRecord.sideEffectClass)) ||
+    !["none", "allowlisted"].includes(String(sandboxRecord.network)) ||
+    !["none", "workspace_read_only"].includes(String(sandboxRecord.filesystem)) ||
+    !Number.isSafeInteger(sandboxRecord.maxBytes) ||
+    Number(sandboxRecord.maxBytes) < 1 ||
+    !Number.isSafeInteger(sandboxRecord.maxDurationMs) ||
+    Number(sandboxRecord.maxDurationMs) < 1
+  ) {
+    throw new Error("sandboxed replay tool policy requires a bounded executable allowlist");
+  }
+  if (containsReplayCredential(sandbox)) {
+    throw new Error("provider credential or secret is prohibited from replay sandbox policy");
+  }
+}
+
+function assertReplayAdapterAuthorization(
+  authorization: unknown,
+  envelope: Record<string, unknown>,
+): asserts authorization is RouterReplayAdapterAuthorization {
+  const allowedKeys = new Set([
+    "schemaVersion",
+    "algorithm",
+    "keyId",
+    "nonce",
+    "channel",
+    "scope",
+    "authorizationEpoch",
+    "mac",
+    "signature",
+  ]);
+  if (!authorization || typeof authorization !== "object" || Array.isArray(authorization)) {
+    throw new Error("authenticated replay adapter authorization is invalid");
+  }
+  const value = authorization as Record<string, unknown>;
+  const mac = value.mac;
+  const signature = value.signature;
+  if (
+    Object.keys(value).some((key) => !allowedKeys.has(key)) ||
+    value.schemaVersion !== REPLAY_ADAPTER_AUTHORIZATION_SCHEMA ||
+    (value.algorithm !== "hmac-sha256" && value.algorithm !== "ed25519") ||
+    typeof value.keyId !== "string" ||
+    !value.keyId ||
+    value.keyId.length > 256 ||
+    typeof value.nonce !== "string" ||
+    !value.nonce ||
+    value.nonce.length > 256 ||
+    value.nonce !== envelope.nonce ||
+    value.channel !== envelope.channel ||
+    value.scope !== envelope.scope ||
+    value.authorizationEpoch !== envelope.authorizationEpoch ||
+    (typeof value.mac !== "string" && typeof value.signature !== "string") ||
+    (mac !== undefined && (typeof mac !== "string" || mac.length === 0 || mac.length > 1024)) ||
+    (signature !== undefined &&
+      (typeof signature !== "string" || signature.length === 0 || signature.length > 1024))
+  ) {
+    throw new Error("authenticated replay adapter authorization is invalid");
+  }
+}
+
+function assertReplayAdapterEnvelopeBinding(
+  envelope: Record<string, unknown>,
+  channel: string,
+  scope: string,
+  authorizationEpoch: number,
+): void {
+  if (envelope.channel !== channel) throw new Error("replay adapter channel mismatch");
+  if (envelope.scope !== scope) throw new Error("replay adapter scope mismatch");
+  if (envelope.authorizationEpoch !== authorizationEpoch) {
+    throw new Error("replay adapter authorization epoch mismatch");
+  }
+  normalizeReplayAdapterText(envelope.nonce, "authorization nonce");
+}
+
+function assertReplayToolSideEffectReceipt(
+  candidate: Record<string, unknown>,
+  receipt: Record<string, unknown>,
+): Record<string, unknown> | undefined {
+  if (candidate.toolPolicy !== "sandboxed_allowlist") return undefined;
+  const sandbox = candidate.sandbox;
+  if (!sandbox || typeof sandbox !== "object" || Array.isArray(sandbox)) {
+    throw new Error("sandboxed replay requires a valid side-effect receipt");
+  }
+  const value = receipt.toolSideEffectReceipt;
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("sandboxed replay requires a valid side-effect receipt");
+  }
+  const sideEffectReceipt = value as Record<string, unknown>;
+  const sandboxRecord = sandbox as Record<string, unknown>;
+  const suppliedPolicyDigest = normalizeReplaySandboxDigest(sideEffectReceipt.policyDigest);
+  if (
+    sideEffectReceipt.schemaVersion !== REPLAY_TOOL_SIDE_EFFECT_RECEIPT_SCHEMA ||
+    suppliedPolicyDigest === null ||
+    !replaySandboxPolicyDigests(sandboxRecord).includes(suppliedPolicyDigest) ||
+    sideEffectReceipt.sideEffectClass !== sandboxRecord.sideEffectClass ||
+    !["none", "read_only"].includes(String(sideEffectReceipt.sideEffectClass))
+  ) {
+    throw new Error("sandboxed replay requires a valid side-effect receipt");
+  }
+  return {
+    schemaVersion: REPLAY_TOOL_SIDE_EFFECT_RECEIPT_SCHEMA,
+    policyDigest: suppliedPolicyDigest,
+    sideEffectClass: sideEffectReceipt.sideEffectClass,
+  };
+}
+
 function assertReplayDispatchEnvelope(
   envelope: Record<string, unknown>,
   channel: string,
@@ -1288,6 +1504,32 @@ function assertReplayDispatchEnvelope(
     throw new Error("unsupported replay dispatch schema");
   if (envelope.channel !== channel) throw new Error("replay dispatch channel mismatch");
   if (envelope.scope !== scope) throw new Error("replay dispatch scope mismatch");
+  const serializedEnvelope = JSON.stringify(envelope);
+  if (Buffer.byteLength(serializedEnvelope, "utf8") > 1024 * 1024) {
+    throw new Error("replay dispatch envelope exceeds the 1 MiB size limit");
+  }
+  const forbiddenPathKey =
+    /^(?:path|cwd|workdir|working[-_]?directory|(?:caller|client|host|local|source|filesystem|workspace)[-_]?(?:file[-_]?path|path))$/i;
+  const containsCallerFilesystemPath = (value: unknown): boolean => {
+    if (Array.isArray(value)) return value.some(containsCallerFilesystemPath);
+    if (typeof value === "string") {
+      return /^(?:[a-z]:[\\/]|\\\\|\/|file:\/\/)/i.test(value);
+    }
+    if (!value || typeof value !== "object") return false;
+    return Object.entries(value as Record<string, unknown>).some(
+      ([key, nested]) => forbiddenPathKey.test(key) || containsCallerFilesystemPath(nested),
+    );
+  };
+  if (containsCallerFilesystemPath(envelope)) {
+    throw new Error("caller filesystem paths are prohibited from replay IPC");
+  }
+  const capability = envelope.capability;
+  if (
+    capability !== undefined &&
+    (typeof capability !== "string" || capability !== "replay:provider-dispatch")
+  ) {
+    throw new Error("replay dispatch capability is not allowlisted");
+  }
   if (containsReplayCredential(envelope))
     throw new Error("provider credential or secret is prohibited from replay IPC");
   if (
@@ -1318,8 +1560,12 @@ function assertReplayDispatchEnvelope(
     if (!Number.isSafeInteger((budget as Record<string, unknown>)[key]))
       throw new Error("bounded replay dispatch budget required");
   }
-  if (envelope.toolPolicy !== "deny" && envelope.toolPolicy !== "recorded_results_only") {
-    throw new Error("live replay tools require a separate sandboxed adapter");
+  if (
+    envelope.toolPolicy !== "deny" &&
+    envelope.toolPolicy !== "recorded_results_only" &&
+    envelope.toolPolicy !== "sandboxed_allowlist"
+  ) {
+    throw new Error("unsupported replay tool policy");
   }
   const candidatePackage = envelope.candidatePackage;
   if (
@@ -1330,17 +1576,20 @@ function assertReplayDispatchEnvelope(
     throw new Error("materialized replay candidate package required");
   }
   const candidate = candidatePackage as Record<string, unknown>;
+  if (candidate.toolPolicy !== envelope.toolPolicy) {
+    throw new Error("materialized replay candidate package tool policy is invalid");
+  }
   if (
     candidate.endpointId !== envelope.candidateEndpointId ||
     typeof candidate.modelId !== "string" ||
     (candidate.reasoningEffort !== null && typeof candidate.reasoningEffort !== "string") ||
     typeof candidate.promptAdapterId !== "string" ||
     typeof candidate.experiencePackId !== "string" ||
-    typeof candidate.samplingProfileId !== "string" ||
-    candidate.toolPolicy !== envelope.toolPolicy
+    typeof candidate.samplingProfileId !== "string"
   ) {
     throw new Error("materialized replay candidate package is invalid");
   }
+  assertReplaySandboxPolicy(candidate);
 }
 
 function assertEvaluationJudgeDispatchEnvelope(
@@ -1437,18 +1686,222 @@ export function createRouterReplayAdapter(options: {
   readonly channel: string;
   readonly scope: string;
   readonly authorizationEpoch: number;
+  readonly authorizationSecret?: string | Uint8Array;
+  readonly authorizationKeyId?: string;
+  readonly authorize?: (input: {
+    readonly envelope: Record<string, unknown>;
+  }) => Promise<Record<string, unknown>>;
+  readonly verifyAuthorization?: (input: {
+    readonly envelope: Record<string, unknown>;
+    readonly authorization: Record<string, unknown>;
+  }) => Promise<boolean | { readonly verified: boolean }>;
+  readonly authorizeSandboxedTools?: (input: {
+    readonly envelope: Record<string, unknown>;
+    readonly sandbox: Record<string, unknown>;
+  }) => Promise<
+    | true
+    | { readonly authorized: boolean; readonly policyDigest?: string; readonly reason?: string }
+  >;
   readonly dispatch: (request: Record<string, unknown>) => Promise<Record<string, unknown>>;
 }): RouterReplayAdapter {
   if (!options.channel || !options.scope || !Number.isSafeInteger(options.authorizationEpoch)) {
     throw new Error("router replay adapter identity is required");
   }
+  const authorizationSecret =
+    options.authorizationSecret === undefined
+      ? normalizeReplayAdapterSecret(randomBytes(32))
+      : normalizeReplayAdapterSecret(options.authorizationSecret);
+  const authorizationKeyId = normalizeReplayAdapterText(
+    options.authorizationKeyId ?? "router-replay-adapter",
+    "authorization key id",
+  );
+  const consumedAuthorizationNonces = new Set<string>();
+
+  const authorize = async (input: {
+    readonly envelope: Record<string, unknown>;
+  }): Promise<RouterReplayAdapterAuthorization> => {
+    assertReplayAdapterEnvelopeBinding(
+      input.envelope,
+      options.channel,
+      options.scope,
+      options.authorizationEpoch,
+    );
+    const customAuthorization = options.authorize
+      ? await options.authorize({ envelope: structuredClone(input.envelope) })
+      : undefined;
+    if (customAuthorization !== undefined) {
+      assertReplayAdapterAuthorization(customAuthorization, input.envelope);
+      return Object.freeze({ ...customAuthorization });
+    }
+    const payload = replayAdapterAuthorizationPayload({
+      keyId: authorizationKeyId,
+      nonce: String(input.envelope.nonce),
+      channel: options.channel,
+      scope: options.scope,
+      authorizationEpoch: options.authorizationEpoch,
+    });
+    const mac = createHmac("sha256", authorizationSecret)
+      .update(JSON.stringify(canonicalizeRun88Proof(payload)))
+      .digest("hex");
+    const authorization = { ...payload, mac };
+    assertReplayAdapterAuthorization(authorization, input.envelope);
+    return Object.freeze(authorization);
+  };
+
+  const verifyAuthorization = async (input: {
+    readonly envelope: Record<string, unknown>;
+    readonly authorization: Record<string, unknown>;
+  }): Promise<{ readonly verified: true } | { readonly verified: false }> => {
+    try {
+      assertReplayAdapterEnvelopeBinding(
+        input.envelope,
+        options.channel,
+        options.scope,
+        options.authorizationEpoch,
+      );
+      assertReplayAdapterAuthorization(input.authorization, input.envelope);
+      if (options.verifyAuthorization) {
+        const result = await options.verifyAuthorization({
+          envelope: structuredClone(input.envelope),
+          authorization: structuredClone(input.authorization),
+        });
+        return result === true || (typeof result === "object" && result.verified === true)
+          ? { verified: true }
+          : { verified: false };
+      }
+      if (
+        input.authorization.algorithm !== "hmac-sha256" ||
+        typeof input.authorization.mac !== "string" ||
+        !/^[a-f0-9]{64}$/.test(input.authorization.mac)
+      ) {
+        return { verified: false };
+      }
+      const payload = replayAdapterAuthorizationPayload({
+        keyId: input.authorization.keyId,
+        nonce: input.authorization.nonce,
+        channel: input.authorization.channel,
+        scope: input.authorization.scope,
+        authorizationEpoch: input.authorization.authorizationEpoch,
+      });
+      const expectedMac = createHmac("sha256", authorizationSecret)
+        .update(JSON.stringify(canonicalizeRun88Proof(payload)))
+        .digest();
+      const suppliedMac = Buffer.from(input.authorization.mac, "hex");
+      return suppliedMac.length === expectedMac.length && timingSafeEqual(suppliedMac, expectedMac)
+        ? { verified: true }
+        : { verified: false };
+    } catch {
+      return { verified: false };
+    }
+  };
+
+  const authorizeSandboxedTools = async (input: {
+    readonly envelope: Record<string, unknown>;
+    readonly sandbox: Record<string, unknown>;
+  }): Promise<
+    | { readonly authorized: true; readonly policyDigest: string }
+    | { readonly authorized: false; readonly reason: string }
+  > => {
+    try {
+      assertReplayDispatchEnvelope(input.envelope, options.channel, options.scope);
+      assertReplayAdapterEnvelopeBinding(
+        input.envelope,
+        options.channel,
+        options.scope,
+        options.authorizationEpoch,
+      );
+      const candidate = input.envelope.candidatePackage as Record<string, unknown>;
+      if (candidate.toolPolicy !== "sandboxed_allowlist") {
+        return { authorized: false, reason: "sandboxed tool authorization is not required" };
+      }
+      assertReplaySandboxPolicy(candidate);
+      const candidateSandbox = candidate.sandbox as Record<string, unknown>;
+      const policyDigest = digestReplaySandbox(candidateSandbox);
+      if (policyDigest !== digestReplaySandbox(input.sandbox)) {
+        return { authorized: false, reason: "sandbox policy does not match candidate package" };
+      }
+      if (!options.authorizeSandboxedTools) {
+        return { authorized: false, reason: "sandboxed replay authorization hook is unavailable" };
+      }
+      const result = await options.authorizeSandboxedTools({
+        envelope: structuredClone(input.envelope),
+        sandbox: structuredClone(input.sandbox),
+      });
+      if (result !== true && result.authorized !== true) {
+        return {
+          authorized: false,
+          reason: result.reason ?? "sandbox authorization rejected",
+        };
+      }
+      const acceptedPolicyDigests = new Set([
+        ...replaySandboxPolicyDigests(candidateSandbox),
+        ...replaySandboxPolicyDigests(input.sandbox),
+      ]);
+      const authorizedPolicyDigest =
+        result === true ? policyDigest : normalizeReplaySandboxDigest(result.policyDigest);
+      if (authorizedPolicyDigest === null || !acceptedPolicyDigests.has(authorizedPolicyDigest)) {
+        return { authorized: false, reason: "sandbox policy digest mismatch" };
+      }
+      return { authorized: true, policyDigest: authorizedPolicyDigest };
+    } catch (error) {
+      return {
+        authorized: false,
+        reason: String(error instanceof Error ? error.message : error).slice(0, 256),
+      };
+    }
+  };
+
   return Object.freeze({
     protocolVersion: "role-model.router-replay-adapter.v1" as const,
     authenticated: true as const,
     channel: options.channel,
     scope: options.scope,
-    async dispatch(envelope: Record<string, unknown>): Promise<Record<string, unknown>> {
+    authorizationEpoch: options.authorizationEpoch,
+    authorize,
+    verifyAuthorization,
+    authorizeSandboxedTools,
+    async dispatch(
+      envelope: Record<string, unknown>,
+      context?: RouterReplayAdapterDispatchContext,
+    ): Promise<Record<string, unknown>> {
       assertReplayDispatchEnvelope(envelope, options.channel, options.scope);
+      if (
+        envelope.authorizationEpoch !== undefined &&
+        envelope.authorizationEpoch !== options.authorizationEpoch
+      ) {
+        throw new Error("replay adapter authorization epoch mismatch");
+      }
+      if (context === undefined) {
+        throw new Error("replay adapter authorization is required");
+      }
+      assertReplayAdapterAuthorization(context.authorization, envelope);
+      if (
+        context.sandboxReceipt !== undefined &&
+        (typeof context.sandboxReceipt !== "object" ||
+          context.sandboxReceipt === null ||
+          Array.isArray(context.sandboxReceipt))
+      ) {
+        throw new Error("replay adapter sandbox authorization receipt is invalid");
+      }
+      const verified = await verifyAuthorization({
+        envelope: structuredClone(envelope),
+        authorization: structuredClone(context.authorization) as unknown as Record<string, unknown>,
+      });
+      if (!verified.verified) {
+        throw new Error("replay adapter authorization verification failed");
+      }
+      if (envelope.toolPolicy === "sandboxed_allowlist") {
+        if (context.sandboxReceipt === undefined) {
+          throw new Error("sandboxed replay requires a valid side-effect receipt");
+        }
+        assertReplayToolSideEffectReceipt(envelope.candidatePackage as Record<string, unknown>, {
+          toolSideEffectReceipt: context.sandboxReceipt,
+        });
+      }
+      if (consumedAuthorizationNonces.has(context.authorization.nonce)) {
+        throw new Error("replayed replay adapter authorization nonce");
+      }
+      consumedAuthorizationNonces.add(context.authorization.nonce);
       const result = await options.dispatch({
         schemaVersion: "role-model.router-replay-router-request.v1",
         source: "replay-core",
@@ -1462,6 +1915,15 @@ export function createRouterReplayAdapter(options: {
         candidatePackage: structuredClone(envelope.candidatePackage),
         budget: structuredClone(envelope.budget),
         toolPolicy: envelope.toolPolicy,
+        ...(envelope.nonce === undefined ? {} : { nonce: envelope.nonce }),
+        ...(context === undefined
+          ? {}
+          : {
+              authorization: structuredClone(context.authorization),
+              ...(context.sandboxReceipt === undefined
+                ? {}
+                : { sandboxReceipt: structuredClone(context.sandboxReceipt) }),
+            }),
       });
       if (
         !result ||
@@ -1471,12 +1933,20 @@ export function createRouterReplayAdapter(options: {
       ) {
         throw new Error("router replay dispatch receipt is incomplete");
       }
+      if (containsReplayCredential(result)) {
+        throw new Error("provider credential or secret is prohibited from replay receipts");
+      }
       const usage = readBoundedReplayUsage(result);
+      const toolSideEffectReceipt = assertReplayToolSideEffectReceipt(
+        envelope.candidatePackage as Record<string, unknown>,
+        result,
+      );
       return {
         dispatchReceiptId: result.dispatchReceiptId,
         routerDecisionId: result.routerDecisionId,
         providerResultRef: result.providerResultRef,
         ...usage,
+        ...(toolSideEffectReceipt === undefined ? {} : { toolSideEffectReceipt }),
       };
     },
   });
@@ -1487,6 +1957,102 @@ export function createRouterReplayAdapter(options: {
  * The graph receipt proves durable local availability; raw messages, responses, and
  * tool payloads intentionally never cross this control-plane boundary.
  */
+function readReplayTraversalClosure(trace: Record<string, unknown>): {
+  readonly rootOccurrenceId: string;
+  readonly headOccurrenceId: string;
+  readonly leafOccurrenceIds: readonly string[];
+  readonly lastSequence: number;
+  readonly traversalDigest: string;
+  readonly sourceRootOccurrenceId: string;
+  readonly sourceHeadOccurrenceId: string;
+  readonly sourceLeafOccurrenceIds: readonly string[];
+  readonly sourceLastSequence: number;
+  readonly sourceTraversalDigest: string;
+} {
+  const nested =
+    trace.traversal && typeof trace.traversal === "object" && !Array.isArray(trace.traversal)
+      ? (trace.traversal as Record<string, unknown>)
+      : null;
+  const read = (keys: readonly string[]): unknown => {
+    const values = [
+      ...keys.filter((key) => trace[key] !== undefined).map((key) => trace[key]),
+      ...(nested === null
+        ? []
+        : keys.filter((key) => nested[key] !== undefined).map((key) => nested[key])),
+    ];
+    if (
+      values.length > 1 &&
+      values.some((value) => JSON.stringify(value) !== JSON.stringify(values[0]))
+    ) {
+      throw new Error("replay source traversal closure is mismatched");
+    }
+    return values[0];
+  };
+  const rootOccurrenceId = read(["rootOccurrenceId", "sourceRootOccurrenceId"]);
+  const headOccurrenceId = read(["headOccurrenceId", "sourceHeadOccurrenceId"]);
+  const leafOccurrenceIds = read(["leafOccurrenceIds", "sourceLeafOccurrenceIds"]);
+  const lastSequence = read(["lastSequence", "sourceLastSequence"]);
+  const traversalDigest = read(["traversalDigest", "sourceTraversalDigest", "digest"]);
+  if (
+    typeof rootOccurrenceId !== "string" ||
+    !rootOccurrenceId.trim() ||
+    rootOccurrenceId.length > 512 ||
+    typeof headOccurrenceId !== "string" ||
+    !headOccurrenceId.trim() ||
+    headOccurrenceId.length > 512 ||
+    !Array.isArray(leafOccurrenceIds) ||
+    leafOccurrenceIds.length === 0 ||
+    leafOccurrenceIds.length > 1_000 ||
+    leafOccurrenceIds.some(
+      (value) => typeof value !== "string" || !value.trim() || value.length > 512,
+    ) ||
+    new Set(leafOccurrenceIds).size !== leafOccurrenceIds.length ||
+    typeof lastSequence !== "number" ||
+    !Number.isSafeInteger(lastSequence) ||
+    lastSequence < 0 ||
+    typeof traversalDigest !== "string" ||
+    !/^sha256:[a-f0-9]{64}$/.test(traversalDigest) ||
+    !leafOccurrenceIds.includes(headOccurrenceId)
+  ) {
+    throw new Error("complete replay source traversal closure is required");
+  }
+  return {
+    rootOccurrenceId,
+    headOccurrenceId,
+    leafOccurrenceIds: [...leafOccurrenceIds],
+    lastSequence,
+    traversalDigest,
+    sourceRootOccurrenceId: rootOccurrenceId,
+    sourceHeadOccurrenceId: headOccurrenceId,
+    sourceLeafOccurrenceIds: [...leafOccurrenceIds],
+    sourceLastSequence: lastSequence,
+    sourceTraversalDigest: traversalDigest,
+  };
+}
+
+function assertReplayBranchTraversalBinding(
+  request: Record<string, unknown>,
+  traversal: ReturnType<typeof readReplayTraversalClosure>,
+): Record<string, unknown> {
+  const expected = {
+    sourceRootOccurrenceId: traversal.sourceRootOccurrenceId,
+    sourceHeadOccurrenceId: traversal.sourceHeadOccurrenceId,
+    sourceLeafOccurrenceIds: traversal.sourceLeafOccurrenceIds,
+    sourceLastSequence: traversal.sourceLastSequence,
+    sourceTraversalDigest: traversal.sourceTraversalDigest,
+  } as const;
+  for (const [field, expectedValue] of Object.entries(expected)) {
+    const suppliedValue = request[field];
+    if (
+      suppliedValue !== undefined &&
+      JSON.stringify(suppliedValue) !== JSON.stringify(expectedValue)
+    ) {
+      throw new Error("replay branch traversal binding mismatch");
+    }
+  }
+  return { ...request, ...expected };
+}
+
 export function createReplaySourceAttestation(input: {
   readonly channel: string;
   readonly scope: string;
@@ -1515,6 +2081,10 @@ export function createReplaySourceAttestation(input: {
   const forkOccurrenceId = input.forkOccurrenceId ?? replaySource?.forkOccurrenceId;
   const policySnapshotRef = input.policySnapshotRef ?? replaySource?.policySnapshotRef;
   const capturePolicyRef = input.capturePolicyRef ?? replaySource?.capturePolicyRef;
+  const traversal =
+    trace && typeof trace === "object" && !Array.isArray(trace)
+      ? readReplayTraversalClosure(trace as Record<string, unknown>)
+      : null;
   const capturedEligibleEndpointIds = Array.isArray(replaySource?.eligibleEndpointIds)
     ? [
         ...new Set(
@@ -1539,8 +2109,7 @@ export function createReplaySourceAttestation(input: {
     !Number.isSafeInteger((trace as Record<string, unknown>).generation) ||
     (trace as Record<string, unknown>).generation === undefined ||
     (trace as Record<string, unknown>).readiness !== "ready" ||
-    typeof (trace as Record<string, unknown>).rootOccurrenceId !== "string" ||
-    !(trace as Record<string, unknown>).rootOccurrenceId ||
+    traversal === null ||
     (replaySource !== null &&
       replaySource.schemaVersion !== "role-model.route-capture-replay-source.v1") ||
     typeof normalizedRequestRef !== "string" ||
@@ -1575,6 +2144,16 @@ export function createReplaySourceAttestation(input: {
       generation: (trace as Record<string, unknown>).generation,
       readiness: "ready",
       retentionState: "available",
+      rootOccurrenceId: traversal.rootOccurrenceId,
+      headOccurrenceId: traversal.headOccurrenceId,
+      leafOccurrenceIds: traversal.leafOccurrenceIds,
+      lastSequence: traversal.lastSequence,
+      traversalDigest: traversal.traversalDigest,
+      sourceRootOccurrenceId: traversal.sourceRootOccurrenceId,
+      sourceHeadOccurrenceId: traversal.sourceHeadOccurrenceId,
+      sourceLeafOccurrenceIds: traversal.sourceLeafOccurrenceIds,
+      sourceLastSequence: traversal.sourceLastSequence,
+      sourceTraversalDigest: traversal.sourceTraversalDigest,
       sharedPrefixRef,
       normalizedRequestRef,
       sourceDecisionId: capture.routingDecisionId,
@@ -1757,6 +2336,7 @@ export async function runSupervisedReplay(input: {
   if (!sourceRoot || typeof sourceRoot !== "object" || Array.isArray(sourceRoot)) {
     throw new Error("supervised replay source root is invalid");
   }
+  const traversal = readReplayTraversalClosure(sourceRoot);
   const selectedSourceEndpointId = sourceRoot.selectedEndpointId;
   if (typeof selectedSourceEndpointId !== "string" || !selectedSourceEndpointId) {
     throw new Error("supervised replay source endpoint is invalid");
@@ -1873,6 +2453,15 @@ export async function runSupervisedReplay(input: {
   let schedulerClaim: ReplayIntentClaim | null = null;
   const resultTraceIds: string[] = [];
   const resultBranches: { candidateEndpointId: string; branchRootRef: string }[] = [];
+  const providerFailures: Array<{
+    readonly candidateEndpointId: string;
+    readonly failure: ReturnType<typeof classifyReplayDispatchFailure>;
+    readonly receipt: Readonly<Record<string, unknown>>;
+  }> = [];
+  let lastRetryableProviderError: unknown = null;
+  const consumedNonces =
+    replayAdapterAuthorizationNonces.get(input.adapter as object) ?? new Set<string>();
+  replayAdapterAuthorizationNonces.set(input.adapter as object, consumedNonces);
   if (input.scheduler) {
     const deadlineMs = input.budget.deadlineMs;
     if (typeof deadlineMs !== "number" || !Number.isSafeInteger(deadlineMs) || deadlineMs < 1) {
@@ -1914,7 +2503,9 @@ export async function runSupervisedReplay(input: {
       const toolPolicy = candidate.toolPolicy;
       if (
         !candidateEndpointId ||
-        (toolPolicy !== "deny" && toolPolicy !== "recorded_results_only")
+        (toolPolicy !== "deny" &&
+          toolPolicy !== "recorded_results_only" &&
+          toolPolicy !== "sandboxed_allowlist")
       ) {
         throw new Error("supervised replay candidate package is invalid");
       }
@@ -1929,9 +2520,74 @@ export async function runSupervisedReplay(input: {
         }),
       );
       if (prepared.status === "complete" || prepared.status === "cancelled") continue;
-      const envelope = prepared.envelope;
-      if (prepared.status !== "provider_dispatch" || !envelope || typeof envelope !== "object") {
+      const preparedEnvelope = prepared.envelope;
+      if (
+        prepared.status !== "provider_dispatch" ||
+        !preparedEnvelope ||
+        typeof preparedEnvelope !== "object" ||
+        Array.isArray(preparedEnvelope)
+      ) {
         throw new Error("Replay Core did not prepare a bounded router dispatch");
+      }
+      const envelope: Record<string, unknown> = {
+        ...(preparedEnvelope as Record<string, unknown>),
+        authorizationEpoch:
+          (preparedEnvelope as Record<string, unknown>).authorizationEpoch ??
+          input.authorizationEpoch,
+        nonce:
+          typeof (preparedEnvelope as Record<string, unknown>).nonce === "string"
+            ? (preparedEnvelope as Record<string, unknown>).nonce
+            : randomBytes(16).toString("hex"),
+      };
+      assertReplayDispatchEnvelope(envelope, input.channel, input.scope);
+      if (envelope.authorizationEpoch !== input.authorizationEpoch) {
+        throw new Error("replay adapter authorization epoch mismatch");
+      }
+      let authorization: RouterReplayAdapterAuthorization;
+      let sandboxReceipt: Readonly<Record<string, unknown>> | undefined;
+      try {
+        authorization = await input.adapter.authorize({ envelope: structuredClone(envelope) });
+        assertReplayAdapterAuthorization(authorization as unknown, envelope);
+        if (consumedNonces.has(authorization.nonce)) {
+          throw new Error("replayed replay adapter authorization nonce");
+        }
+        const verified = await input.adapter.verifyAuthorization({
+          envelope: structuredClone(envelope),
+          authorization: structuredClone(authorization) as unknown as Record<string, unknown>,
+        });
+        if (verified.verified !== true) {
+          throw new Error("replay adapter authorization verification failed");
+        }
+        consumedNonces.add(authorization.nonce);
+        if (toolPolicy === "sandboxed_allowlist") {
+          const sandbox =
+            envelope.candidatePackage &&
+            typeof envelope.candidatePackage === "object" &&
+            !Array.isArray(envelope.candidatePackage)
+              ? (envelope.candidatePackage as Record<string, unknown>).sandbox
+              : undefined;
+          if (!sandbox || typeof sandbox !== "object" || Array.isArray(sandbox)) {
+            throw new Error("sandboxed replay requires a valid sandbox authorization");
+          }
+          const authorized = await input.adapter.authorizeSandboxedTools({
+            envelope: structuredClone(envelope),
+            sandbox: structuredClone(sandbox as Record<string, unknown>),
+          });
+          if (authorized.authorized !== true) {
+            throw new Error(authorized.reason || "sandboxed replay authorization rejected");
+          }
+          sandboxReceipt = Object.freeze({
+            schemaVersion: REPLAY_TOOL_SIDE_EFFECT_RECEIPT_SCHEMA,
+            policyDigest: authorized.policyDigest,
+            sideEffectClass: (sandbox as Record<string, unknown>).sideEffectClass,
+          });
+        }
+      } catch (error) {
+        throw new Error(
+          String(
+            error instanceof Error ? error.message : "replay adapter authorization failed",
+          ).slice(0, 256),
+        );
       }
       const preparedBranch = await input.prepareBranch({
         replayJobId: jobId,
@@ -1940,24 +2596,49 @@ export async function runSupervisedReplay(input: {
         sourceDecisionId: sourceRoot.sourceDecisionId,
         candidateEndpointId,
         sharedPrefixRef: sourceRoot.sharedPrefixRef,
+        sourceRootOccurrenceId: traversal.sourceRootOccurrenceId,
+        sourceHeadOccurrenceId: traversal.sourceHeadOccurrenceId,
+        sourceLeafOccurrenceIds: traversal.sourceLeafOccurrenceIds,
+        sourceLastSequence: traversal.sourceLastSequence,
+        sourceTraversalDigest: traversal.sourceTraversalDigest,
       });
       if (!preparedBranch.branchRootRef || typeof preparedBranch.branchRootRef !== "string") {
         throw new Error("replay branch preparation did not return a durable root");
       }
       let receipt: Record<string, unknown>;
       try {
-        receipt = await input.adapter.dispatch(envelope as Record<string, unknown>);
+        receipt = await input.adapter.dispatch(envelope, {
+          authorization,
+          ...(sandboxReceipt === undefined ? {} : { sandboxReceipt }),
+        });
       } catch (error) {
-        await input.runtime.invoke(
+        const failure = classifyReplayDispatchFailure(error);
+        const failureReceipt = await input.runtime.invoke(
           "replay-core",
           controlEnvelope("replay:record-provider-failure", {
             jobId,
             candidateEndpointId,
             leaseOwner: input.leaseOwner,
             fenceToken: lease.fenceToken,
-            failure: classifyReplayDispatchFailure(error),
+            failure,
           }),
         );
+        if (failureReceipt.status === "cancelled") {
+          return {
+            jobId,
+            state: "cancelled",
+            cancellation: "provider_failure",
+          };
+        }
+        if (failure.retryable && failureReceipt.status === "retryable_failure") {
+          providerFailures.push({
+            candidateEndpointId,
+            failure,
+            receipt: structuredClone(failureReceipt),
+          });
+          lastRetryableProviderError = error;
+          continue;
+        }
         throw error;
       }
       const recorded = await input.runtime.invoke(
@@ -1996,8 +2677,12 @@ export async function runSupervisedReplay(input: {
       ) {
         throw new Error("Replay Core did not persist a branch append recovery receipt");
       }
+      const boundBranchRequest = assertReplayBranchTraversalBinding(
+        branchRequest as Record<string, unknown>,
+        traversal,
+      );
       const branch = await input.appendBranch({
-        ...(branchRequest as Record<string, unknown>),
+        ...boundBranchRequest,
         ...(preparedBranch ? { preparedBranchRootRef: preparedBranch.branchRootRef } : {}),
       });
       const appended = await input.runtime.invoke(
@@ -2016,6 +2701,10 @@ export async function runSupervisedReplay(input: {
       resultTraceIds.push(branch.branchRootRef);
       resultBranches.push({ candidateEndpointId, branchRootRef: branch.branchRootRef });
     }
+    if (resultBranches.length === 0) {
+      if (lastRetryableProviderError) throw lastRetryableProviderError;
+      throw new Error("supervised replay produced no durable provider result");
+    }
     const evaluation = await input.handoffEvaluation({
       replayJobId: jobId,
       scope: input.scope,
@@ -2026,6 +2715,7 @@ export async function runSupervisedReplay(input: {
         left.candidateEndpointId.localeCompare(right.candidateEndpointId),
       ),
       candidates: structuredClone(input.candidatePackages),
+      providerFailures: structuredClone(providerFailures),
     });
     const completed = await input.runtime.invoke(
       "replay-core",
@@ -2048,6 +2738,7 @@ export async function runSupervisedReplay(input: {
             left.candidateEndpointId.localeCompare(right.candidateEndpointId),
           ),
           candidates: structuredClone(input.candidatePackages),
+          providerFailures: structuredClone(providerFailures),
         })
       : null;
     const finalized = completedEvaluation
@@ -3578,38 +4269,129 @@ export async function runTrackBShadowPipeline(
     ...envelope("evaluation:register-scorer", scorer),
   });
   const rolloutRows = [sourceRollout, ...counterfactualRollouts];
-  const trialIds: string[] = [];
-  const completedRollouts: Array<{ rollout: Record<string, unknown>; score: number }> = [];
-  for (const [index, rollout] of rolloutRows.entries()) {
-    const jobId = input.evaluationJobIds?.[index] ?? `evaluation:${input.requestId}:${index}`;
-    if (typeof jobId !== "string" || !jobId) {
-      throw new Error("durable routing-shadow evaluation job identity is invalid");
+  const caseIds = rolloutRows.map((_, index) => `case:${input.requestId}:${index}`);
+  const holdout = {
+    holdoutId: `sha256:${createHash("sha256").update(`${input.requestId}:holdout`).digest("hex")}`,
+    membershipDigest: `sha256:${createHash("sha256")
+      .update(
+        JSON.stringify(
+          canonicalizeRun88Proof({ partition: "holdout", caseIds: [...caseIds].sort() }),
+        ),
+      )
+      .digest("hex")}`,
+    partition: "holdout" as const,
+    caseIds: [...caseIds].sort(),
+  };
+  const firstCounterfactual = counterfactualRollouts[0];
+  if (!firstCounterfactual) {
+    throw new Error("durable routing-shadow counterfactual evidence is required");
+  }
+  const sourceOutcome =
+    sourceRollout.outcome &&
+    typeof sourceRollout.outcome === "object" &&
+    !Array.isArray(sourceRollout.outcome)
+      ? (sourceRollout.outcome as Record<string, unknown>)
+      : null;
+  const counterfactualOutcome =
+    firstCounterfactual.outcome &&
+    typeof firstCounterfactual.outcome === "object" &&
+    !Array.isArray(firstCounterfactual.outcome)
+      ? (firstCounterfactual.outcome as Record<string, unknown>)
+      : null;
+  const requiredReference = (value: unknown, label: string): string => {
+    if (typeof value !== "string" || !value.trim()) {
+      throw new Error(`durable routing-shadow ${label} reference is required`);
     }
+    return value;
+  };
+  const comparability = {
+    taskRef: input.sourceGraphRef,
+    inputRef: input.sourceGraphRef,
+    forkRef: replayRecord.sharedPrefixRef,
+    policyId: "run96-routing-shadow",
+    scorerSetVersion,
+    toolPolicyDigest: input.sourceGraphRef,
+    environmentDigest: input.sourceGraphRef,
+    sourceEvidenceRef: requiredReference(sourceRollout.evidenceRef, "source evidence"),
+    counterfactualEvidenceRef: requiredReference(
+      firstCounterfactual.evidenceRef,
+      "counterfactual evidence",
+    ),
+    sourceOutcomeRef: requiredReference(sourceOutcome?.outcomeRef, "source outcome"),
+    counterfactualOutcomeRef: requiredReference(
+      counterfactualOutcome?.outcomeRef,
+      "counterfactual outcome",
+    ),
+  };
+  if (
+    comparability.sourceEvidenceRef === comparability.counterfactualEvidenceRef ||
+    comparability.sourceOutcomeRef === comparability.counterfactualOutcomeRef
+  ) {
+    throw new Error("durable routing-shadow source and counterfactual references must be distinct");
+  }
+  const referenceAttestation = {
+    schemaVersion: "role-model.evaluation-reference-attestation.v1",
+    authority: "runtime-shadow-pipeline",
+    channel: input.channel,
+    scope: input.scope,
+    authorizationEpoch: input.authorizationEpoch,
+    references: {
+      sourceEvidenceRef: { reference: comparability.sourceEvidenceRef, resolved: true },
+      counterfactualEvidenceRef: {
+        reference: comparability.counterfactualEvidenceRef,
+        resolved: true,
+      },
+      sourceOutcomeRef: { reference: comparability.sourceOutcomeRef, resolved: true },
+      counterfactualOutcomeRef: {
+        reference: comparability.counterfactualOutcomeRef,
+        resolved: true,
+      },
+    },
+  };
+  const withReferenceAttestation = (references: Readonly<Record<string, unknown>> = {}) => ({
+    ...referenceAttestation,
+    references: { ...referenceAttestation.references, ...references },
+  });
+  const jobId = input.evaluationJobIds?.[0] ?? `evaluation:${input.requestId}`;
+  if (typeof jobId !== "string" || !jobId) {
+    throw new Error("durable routing-shadow evaluation job identity is invalid");
+  }
+  const durableCases = rolloutRows.map((rollout, index) => {
     const evaluationCase = input.evaluationCases[index % input.evaluationCases.length] ?? {};
     const evaluationCriteria = normalizeTrackBSemanticEvaluationCriteria(
       evaluationCase.evaluationCriteria,
     );
-    const evaluationCriteriaDigest = digestTrackBSemanticEvaluationCriteria(evaluationCriteria);
-    await runtime.invoke("evaluation-core", {
-      ...envelope("evaluation:create-job", {
-        id: jobId,
-        idempotencyKey: jobId,
-        evaluationSchemaVersion: 2,
-        candidateRef: rollout.endpointId,
-        policyId: "run96-routing-shadow",
-        scorerSetVersion,
-        requestKind: "routing_shadow_durable",
-        cases: [
-          {
-            id: `case:${input.requestId}:${index}`,
-            evidenceRef: input.sourceGraphRef,
-            sourceGeneration: 0,
-            evaluationCriteria,
-            evaluationCriteriaDigest,
-          },
-        ],
-      }),
-    });
+    return {
+      id: caseIds[index],
+      candidateRef: requiredReference(rollout.endpointId, "candidate"),
+      evidenceRef: input.sourceGraphRef,
+      sourceGeneration: 0,
+      evaluationCriteria,
+      evaluationCriteriaDigest: digestTrackBSemanticEvaluationCriteria(evaluationCriteria),
+    };
+  });
+  await runtime.invoke("evaluation-core", {
+    ...envelope("evaluation:create-job", {
+      id: jobId,
+      idempotencyKey: jobId,
+      evaluationSchemaVersion: 3,
+      candidateRef: requiredReference(sourceRollout.endpointId, "source candidate"),
+      policyId: "run96-routing-shadow",
+      scorerSetVersion,
+      requestKind: "routing_shadow_durable",
+      comparability,
+      holdout,
+      referenceAttestation,
+      cases: durableCases,
+    }),
+  });
+  const trialIds: string[] = [];
+  const completedRollouts: Array<{ rollout: Record<string, unknown>; score: number }> = [];
+  for (const [index, rollout] of rolloutRows.entries()) {
+    const evaluationCase = input.evaluationCases[index % input.evaluationCases.length] ?? {};
+    const evaluationCriteria = normalizeTrackBSemanticEvaluationCriteria(
+      evaluationCase.evaluationCriteria,
+    );
     const trials = await runtime.invoke("evaluation-core", {
       ...envelope("evaluation:list-trials", { jobId }),
     });
@@ -3618,7 +4400,16 @@ export async function runTrackBShadowPipeline(
       : Array.isArray((trials as Record<string, unknown>).value)
         ? ((trials as Record<string, unknown>).value as unknown[])
         : [];
-    const trial = trialRows[0] as Record<string, unknown> | undefined;
+    const caseId = caseIds[index];
+    const trial =
+      (trialRows.find(
+        (candidate) =>
+          candidate &&
+          typeof candidate === "object" &&
+          ((candidate as Record<string, unknown>).caseId === caseId ||
+            (candidate as Record<string, unknown>).candidateRef === rollout.endpointId),
+      ) as Record<string, unknown> | undefined) ??
+      (trialRows.length === 1 ? (trialRows[0] as Record<string, unknown>) : undefined);
     if (!trial || typeof trial.trialId !== "string" || !trial.trialId) {
       throw new Error("durable routing-shadow trial materialization failed");
     }
@@ -3713,6 +4504,11 @@ export async function runTrackBShadowPipeline(
           stderrRef: execution.stderrRef,
           exitCode: execution.exitCode,
           measurements: execution.measurements,
+          referenceAttestation: withReferenceAttestation({
+            trialOutputRef: { reference: execution.outputRef, resolved: true },
+            trialStdoutRef: { reference: execution.stdoutRef, resolved: true },
+            trialStderrRef: { reference: execution.stderrRef, resolved: true },
+          }),
         }),
       });
     }
@@ -3720,6 +4516,9 @@ export async function runTrackBShadowPipeline(
       ...envelope("evaluation:record-trial-score-batch", {
         trialId: trial.trialId,
         scores: execution.scores,
+        referenceAttestation: withReferenceAttestation({
+          trialOutputRef: { reference: execution.outputRef, resolved: true },
+        }),
       }),
     });
     const correctness = (execution.scores as Record<string, unknown>[]).find(
@@ -3734,24 +4533,11 @@ export async function runTrackBShadowPipeline(
     completedRollouts.push({ rollout, score: Number(correctness.score) });
     trialIds.push(trial.trialId);
   }
-  const holdout = {
-    holdoutId: `sha256:${createHash("sha256").update(`${input.requestId}:holdout`).digest("hex")}`,
-    membershipDigest: `sha256:${createHash("sha256").update(JSON.stringify(trialIds)).digest("hex")}`,
-    partition: "holdout",
-  };
   const evaluation = await runtime.invoke("evaluation-core", {
     ...envelope("evaluation:finalize-comparison-group", {
       groupId: `comparison:${input.requestId}`,
       trialIds,
-      comparability: {
-        taskRef: input.sourceGraphRef,
-        inputRef: input.sourceGraphRef,
-        forkRef: input.sourceGraphRef,
-        policyId: "run96-routing-shadow",
-        scorerSetVersion,
-        toolPolicyDigest: input.sourceGraphRef,
-        environmentDigest: input.sourceGraphRef,
-      },
+      comparability,
       holdout,
     }),
   });
@@ -4194,24 +4980,13 @@ async function runTrackBObservationPipeline(
       events: input.trajectoryEvents,
     }),
   );
-  const profileRows = [
-    {
-      model: input.identity.modelId,
-      endpoint: input.identity.endpointId,
-      prompt: "unchanged",
-      tool: "unchanged",
-      sampling: "observed",
-      experience: "none",
-      routePackage: input.routePackage,
-      outcome: 1,
-      propensity: 1,
-      evidenceRef: input.sourceGraphRef,
-    },
-  ];
-  const profile = await runtime.invoke("profile-learner", {
-    ...envelope("profile:estimate", { rows: profileRows }),
-    rows: profileRows,
-  });
+  const profile = {
+    schemaVersion: "role-model.track-b-observation-profile-receipt.v1",
+    state: "not_run",
+    reason: "R14_NO_DISTINCT_COUNTERFACTUAL",
+    durableMutation: false,
+    authoritative: false,
+  } as const;
   return {
     replay,
     evaluation,

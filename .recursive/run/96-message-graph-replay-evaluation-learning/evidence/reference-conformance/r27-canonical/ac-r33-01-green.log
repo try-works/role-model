@@ -1,0 +1,9 @@
+Run 96 canonical TDD receipt
+acceptanceCriterionId=AC-R33-01
+proofFamily=legacy-admission-reconciliation
+phase=focused GREEN
+result=PASS
+testPath=public:role-model-router/apps/runtime-host-bridge/test/legacy-execution-admission-reconciliation.test.ts
+assertionTitle=restores only a source-bound transient circuit from the legacy degraded row shape
+command=corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run test/legacy-execution-admission-reconciliation.test.ts
+observation=PASS: the production reconciler restores only a source-bound transient circuit and leaves blocked auth, blocked quota, and incomplete source chains fail-closed.

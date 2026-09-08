@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
-import { appendFile, mkdir, readFile } from "node:fs/promises";
+import { randomBytes } from "node:crypto";
+import { appendFile, mkdir, readFile, unlink } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import {
@@ -8,6 +9,7 @@ import {
   extractFrames,
   verifySignedBundle,
 } from "../extension-sdk/index.mjs";
+import { createInputTransferArtifact } from "./transfer-artifact.mjs";
 
 /**
  * Reject malformed graph-contract metadata at the host boundary.  Extension
@@ -66,6 +68,7 @@ class ProcessWorker {
     if (this.stateRoot) await mkdir(this.stateRoot, { recursive: true });
     this.stopping = false;
     this.exited = false;
+    this.transferKey = randomBytes(32).toString("hex");
     this.child = spawn(this.workerExecPath, [runtimePath, this.moduleUrl], {
       stdio: ["pipe", "pipe", "pipe"],
       windowsHide: true,
@@ -73,6 +76,7 @@ class ProcessWorker {
         ...process.env,
         ROLE_MODEL_EXTENSION_ID: this.extensionId,
         ...(this.stateRoot ? { ROLE_MODEL_EXTENSION_STATE_ROOT: this.stateRoot } : {}),
+        ROLE_MODEL_EXTENSION_TRANSFER_KEY: this.transferKey,
       },
     });
     this.stderr = "";
@@ -99,6 +103,7 @@ class ProcessWorker {
           const pending = this.pending.get(message.requestId);
           if (!pending) continue;
           this.pending.delete(message.requestId);
+          void pending.cleanup?.().catch(() => {});
           this.child?.stdin.write(encodeFrame({ type: "ack", requestId: message.requestId }));
           if (message.type === "result")
             pending.resolve({ ...message.result, workerPid: this.pid });
@@ -110,8 +115,10 @@ class ProcessWorker {
       const expected = this.stopping;
       this.exited = true;
       const detail = this.stderr.trim();
-      for (const item of this.pending.values())
+      for (const item of this.pending.values()) {
+        void item.cleanup?.().catch(() => {});
         item.reject(new Error(detail ? `worker exited: ${detail}` : "worker exited"));
+      }
       this.pending.clear();
       if (!settled)
         rejectReady(
@@ -139,19 +146,57 @@ class ProcessWorker {
       clearTimeout(timer);
     }
   }
-  invoke(envelope) {
+  async invoke(envelope) {
     if (this.exited || !this.child) return Promise.reject(new Error("worker exited"));
+    let wireEnvelope = envelope;
+    let transferPath = null;
+    let frame;
+    try {
+      frame = encodeFrame({ type: "invoke", requestId: envelope.requestId, envelope });
+    } catch (error) {
+      if (
+        !/frame exceeds inline limit/i.test(error instanceof Error ? error.message : String(error))
+      ) {
+        throw error;
+      }
+      const transferArtifact = await createInputTransferArtifact({
+        stateRoot: this.stateRoot,
+        transferKey: this.transferKey,
+        envelope,
+      });
+      transferPath = join(this.stateRoot, ...transferArtifact.relativePath.split("/"));
+      wireEnvelope = {
+        requestId: envelope.requestId,
+        protocolVersion: envelope.protocolVersion,
+        authorizationEpoch: envelope.authorizationEpoch,
+        channel: envelope.channel,
+        scope: envelope.scope,
+        capability: envelope.capability,
+        transferArtifact,
+      };
+      frame = encodeFrame({
+        type: "invoke",
+        requestId: envelope.requestId,
+        envelope: wireEnvelope,
+      });
+    }
+    const cleanup = async () => {
+      if (!transferPath) return;
+      try {
+        await unlink(transferPath);
+      } catch (error) {
+        if (error?.code !== "ENOENT") throw error;
+      }
+    };
     return new Promise((resolve, reject) => {
-      this.pending.set(envelope.requestId, { resolve, reject });
-      this.child.stdin.write(
-        encodeFrame({ type: "invoke", requestId: envelope.requestId, envelope }),
-        (error) => {
-          if (error) {
-            this.pending.delete(envelope.requestId);
-            reject(error);
-          }
-        },
-      );
+      this.pending.set(envelope.requestId, { resolve, reject, cleanup });
+      this.child.stdin.write(frame, (error) => {
+        if (error) {
+          this.pending.delete(envelope.requestId);
+          void cleanup().catch(() => {});
+          reject(error);
+        }
+      });
     });
   }
   async stop() {
@@ -480,25 +525,23 @@ export class ExtensionHost {
       !this.protocolVersions.has(envelope.protocolVersion) ||
       !envelope.channel ||
       !envelope.scope ||
+      !envelope.capability ||
       !Number.isInteger(envelope.authorizationEpoch)
     )
-      return Promise.reject(new Error("envelope identity is incomplete or incompatible"));
+      return Promise.reject(
+        new Error("envelope identity or capability is incomplete or incompatible"),
+      );
     if (envelope.authorizationEpoch !== this.authorizationEpoch)
       return Promise.reject(new Error("authorization epoch is stale or untrusted"));
+    if (envelope.transferArtifact)
+      return Promise.reject(new Error("caller-supplied input transfer artifacts are prohibited"));
     if (envelope.artifactRef && envelope.artifactRef.channel !== envelope.channel)
       return Promise.reject(new Error("artifact channel mismatch"));
     if (envelope.artifactRef && envelope.artifactRef.scope !== envelope.scope)
       return Promise.reject(new Error("artifact scope mismatch"));
     const inlineBytes = Buffer.byteLength(JSON.stringify(envelope.payload ?? null));
-    if (
-      inlineBytes > 16 * 1024 &&
-      (!envelope.transferArtifact ||
-        envelope.transferArtifact.channel !== envelope.channel ||
-        envelope.transferArtifact.scope !== envelope.scope)
-    )
-      return Promise.reject(
-        new Error("oversized payload requires a channel-local transfer artifact"),
-      );
+    if (inlineBytes > 16 * 1024 && registered.kind !== "process")
+      return Promise.reject(new Error("oversized inline-worker payload is prohibited"));
     const hostReadCapability =
       registered.kind === "process" && envelope.capability === "extension-output:read";
     if (

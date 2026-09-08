@@ -96,4 +96,29 @@ describe("StorageRetentionRoute", () => {
     expect(html).toContain(">Execute plan<");
     expect(html).toContain("No legal holds or Managed policy conflicts.");
   });
+
+  test("Run 96 R25/R31 renders complete byte attribution, capacity forecast, and actionable operator receipts", () => {
+    const source = readFileSync(new URL("./storage-retention.tsx", import.meta.url), "utf8");
+    for (const token of [
+      "Physical bytes",
+      "Logical bytes",
+      "Reserved bytes",
+      "Archived bytes",
+      "Unattributed bytes",
+      "Capacity forecast",
+      "Projected bytes",
+      "Days until high water",
+      "Operator action receipts",
+      "Expected impact",
+      "Rollback strategy",
+      "Proof of recovery",
+      "summary?.storageInventory?.byteTotals",
+      "summary?.storageInventory?.capacityForecast",
+      "receipt.expectedImpact",
+      "receipt.rollback?.strategy",
+      "receipt.recoveryProof?.status",
+    ]) {
+      expect(source).toContain(token);
+    }
+  });
 });

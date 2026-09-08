@@ -65,6 +65,16 @@ export interface ExecutionCircuitState {
   readonly retiredLegacyEndpointCount?: number;
 }
 
+export type ExecutionCircuitProbeResult =
+  | { readonly outcome: "success" }
+  | {
+      readonly outcome: "failure";
+      readonly errorClass: string;
+      readonly statusCode?: number;
+      readonly retryAfterMs?: number;
+      readonly source?: ExecutionCircuitSource;
+    };
+
 export interface ExecutionCircuitReceipt {
   readonly schemaVersion: typeof EXECUTION_CIRCUIT_SCHEMA_VERSION;
   readonly endpointId: string;
@@ -529,6 +539,53 @@ export function releaseExecutionCircuitProbe(input: {
       nextProbeAtMs: Math.max(0, Math.trunc(input.nowMs)),
     }),
   };
+}
+
+/**
+ * Settles the result of an owner-bound half-open provider attempt.
+ *
+ * A successful probe removes only the circuit record. A classified provider
+ * failure re-enters the normal circuit ladder and carries its source receipt;
+ * neither path has access to, or mutates, durable admission state.
+ */
+export function settleExecutionCircuitProbe(input: {
+  readonly state: ExecutionCircuitState;
+  readonly endpointId: string;
+  readonly probeOwnerId: string;
+  readonly nowMs: number;
+  readonly result: ExecutionCircuitProbeResult;
+}): {
+  readonly settled: boolean;
+  readonly state: ExecutionCircuitState;
+  readonly record?: ExecutionCircuitRecord;
+} {
+  const record = input.state.endpoints[input.endpointId];
+  if (
+    !record ||
+    record.circuitState !== "half_open" ||
+    record.probeOwnerId !== input.probeOwnerId
+  ) {
+    return { settled: false, state: input.state };
+  }
+  if (input.result.outcome === "success") {
+    return {
+      settled: true,
+      state: clearExecutionCircuitEndpoint(input.state, input.endpointId),
+    };
+  }
+  const failure = recordExecutionCircuitFailure({
+    state: input.state,
+    endpointId: input.endpointId,
+    errorClass: input.result.errorClass,
+    nowMs: input.nowMs,
+    trafficClass: "live",
+    ...(input.result.statusCode === undefined ? {} : { statusCode: input.result.statusCode }),
+    ...(input.result.retryAfterMs === undefined ? {} : { retryAfterMs: input.result.retryAfterMs }),
+    ...(input.result.source === undefined ? {} : { source: input.result.source }),
+  });
+  return failure.changed
+    ? { settled: true, state: failure.state, record: failure.record }
+    : { settled: false, state: input.state };
 }
 
 export function normalizeExecutionCircuitStateForRestart(

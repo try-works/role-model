@@ -341,6 +341,7 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
   let signalInput: Record<string, unknown> | undefined;
   let profileInput: Record<string, unknown> | undefined;
   let knowledgeInput: Record<string, unknown> | undefined;
+  const durableJobs: Record<string, unknown>[] = [];
   const trialIds = ["trial:source-96", "trial:counterfactual-96"];
   const claimedTrialIds = ["trial:source-96", "trial:counterfactual-96"];
   let createCount = 0;
@@ -368,6 +369,7 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
           return { key: "run96-exact@1" };
         }
         if (id === "evaluation-core" && envelope.capability === "evaluation:create-job") {
+          durableJobs.push(envelope.value as Record<string, unknown>);
           return { jobId: `evaluation:job-${createCount++}` };
         }
         if (id === "evaluation-core" && envelope.capability === "evaluation:list-trials") {
@@ -531,6 +533,42 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
     ]),
   );
   expect(scorerRegistration).toBeDefined();
+  expect(durableJobs).toHaveLength(1);
+  expect(durableJobs[0]).toMatchObject({
+    evaluationSchemaVersion: 3,
+    comparability: {
+      taskRef: "artifact:source-graph-96",
+      inputRef: "artifact:source-graph-96",
+      forkRef: "artifact:source-graph-96#prefix",
+      policyId: "run96-routing-shadow",
+      scorerSetVersion: "run96-routing-shadow-v2",
+      toolPolicyDigest: "artifact:source-graph-96",
+      environmentDigest: "artifact:source-graph-96",
+      sourceEvidenceRef: "artifact:source-96",
+      counterfactualEvidenceRef: "artifact:counterfactual-96",
+      sourceOutcomeRef: "artifact:outcome-source-96",
+      counterfactualOutcomeRef: "artifact:outcome-counterfactual-96",
+    },
+    holdout: {
+      holdoutId: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
+      membershipDigest: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
+      partition: "holdout",
+      caseIds: ["case:request:shadow-96:0", "case:request:shadow-96:1"],
+    },
+    referenceAttestation: {
+      schemaVersion: "role-model.evaluation-reference-attestation.v1",
+      authority: "runtime-shadow-pipeline",
+      references: {
+        sourceEvidenceRef: { reference: "artifact:source-96", resolved: true },
+        counterfactualEvidenceRef: { reference: "artifact:counterfactual-96", resolved: true },
+        sourceOutcomeRef: { reference: "artifact:outcome-source-96", resolved: true },
+        counterfactualOutcomeRef: {
+          reference: "artifact:outcome-counterfactual-96",
+          resolved: true,
+        },
+      },
+    },
+  });
   // R14: a source/candidate output hash comparison is useful integrity evidence,
   // but cannot be the evaluation gate by itself.  The supervised pipeline must
   // register a bounded semantic criterion scorer instead of exact_match.
@@ -704,7 +742,11 @@ test("Run96 S4 RED: durable replay evaluation sends the same bounded semantic cr
           evidenceRef: "artifact:source-digest",
           artifactRef: "artifact:source-output-digest",
           evaluationActual: "The source output satisfies the required semantic criterion.",
-          outcome: { status: "success", outcomeDigest: "sha256:source-outcome-digest" },
+          outcome: {
+            status: "success",
+            outcomeRef: "artifact:source-outcome-digest",
+            outcomeDigest: "sha256:source-outcome-digest",
+          },
         },
         counterfactuals: [
           {
@@ -717,7 +759,11 @@ test("Run96 S4 RED: durable replay evaluation sends the same bounded semantic cr
             evidenceRef: "artifact:counterfactual-digest",
             artifactRef: "artifact:counterfactual-output-digest",
             evaluationActual: "The counterfactual output is independently observed.",
-            outcome: { status: "success", outcomeDigest: "sha256:counterfactual-outcome-digest" },
+            outcome: {
+              status: "success",
+              outcomeRef: "artifact:counterfactual-outcome-digest",
+              outcomeDigest: "sha256:counterfactual-outcome-digest",
+            },
           },
         ],
         candidateSet: [
@@ -743,8 +789,8 @@ test("Run96 S4 RED: durable replay evaluation sends the same bounded semantic cr
   );
 
   expect(executionInputs).toHaveLength(2);
-  expect(durableCases).toHaveLength(2);
-  expect(durableCases.map((job) => (job.cases as Array<Record<string, unknown>>)[0])).toEqual([
+  expect(durableCases).toHaveLength(1);
+  expect(durableCases[0].cases).toEqual([
     expect.objectContaining({
       evaluationCriteria: {
         schemaVersion: "role-model.semantic-criteria.v1",

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { expect, test } from "vitest";
 
 import {
@@ -26,6 +27,10 @@ test("Run96 regression: a supervised replay never dispatches the observed source
         generation: 1,
         readiness: "ready",
         rootOccurrenceId: "occurrence:source-counterfactual-only",
+        headOccurrenceId: "occurrence:source-counterfactual-only",
+        leafOccurrenceIds: ["occurrence:source-counterfactual-only"],
+        lastSequence: 0,
+        traversalDigest: `sha256:${"0".repeat(64)}`,
       },
       replaySource: {
         schemaVersion: "role-model.route-capture-replay-source.v1",
@@ -217,6 +222,9 @@ test("Run96 S3 RED: the public host derives a bounded replay source attestation 
         readiness: "ready",
         rootOccurrenceId: "occurrence:root-96",
         headOccurrenceId: "occurrence:response-96",
+        leafOccurrenceIds: ["occurrence:response-96"],
+        lastSequence: 1,
+        traversalDigest: `sha256:${"0".repeat(64)}`,
       },
       messages: [{ role: "user", content: "must not cross replay attestation IPC" }],
     },
@@ -257,6 +265,10 @@ test("Run96 S3 RED: the host refuses to invent replay provenance when the durabl
       generation: 4,
       readiness: "ready",
       rootOccurrenceId: "occurrence:root-96",
+      headOccurrenceId: "occurrence:root-96",
+      leafOccurrenceIds: ["occurrence:root-96"],
+      lastSequence: 0,
+      traversalDigest: `sha256:${"0".repeat(64)}`,
     },
     replaySource: {
       schemaVersion: "role-model.route-capture-replay-source.v1",
@@ -319,36 +331,38 @@ test("Run96 S3 RED: the host exposes a versioned scope-bound router replay adapt
     channel: "development",
     scope: "tenant:one",
   });
-  await expect(
-    adapter.dispatch({
-      schemaVersion: "role-model.replay-dispatch.v1",
-      channel: "development",
-      scope: "tenant:one",
-      replayJobId: "replay:96",
-      sourceGeneration: 4,
-      sourceDecisionId: "decision:source",
-      normalizedRequestRef: "artifact:request",
-      candidateEndpointId: "endpoint:counterfactual",
-      dispatchIdempotencyKey: "1111111111111111111111111111111111111111111111111111111111111111",
-      candidatePackage: {
-        endpointId: "endpoint:counterfactual",
-        modelId: "deepseek/deepseek-v4-pro",
-        reasoningEffort: "max",
-        promptAdapterId: "prompt:stable-v1",
-        toolPolicy: "deny",
-        experiencePackId: "experience:none",
-        samplingProfileId: "sampling:stable-v1",
-      },
-      budget: {
-        maxCandidates: 1,
-        maxProviderCalls: 1,
-        maxCostMicros: 5_000,
-        maxBytes: 16_384,
-        deadlineMs: 10_000,
-      },
+  const envelope = {
+    schemaVersion: "role-model.replay-dispatch.v1",
+    channel: "development",
+    scope: "tenant:one",
+    replayJobId: "replay:96",
+    sourceGeneration: 4,
+    sourceDecisionId: "decision:source",
+    normalizedRequestRef: "artifact:request",
+    candidateEndpointId: "endpoint:counterfactual",
+    dispatchIdempotencyKey: "1111111111111111111111111111111111111111111111111111111111111111",
+    candidatePackage: {
+      endpointId: "endpoint:counterfactual",
+      modelId: "deepseek/deepseek-v4-pro",
+      reasoningEffort: "max",
+      promptAdapterId: "prompt:stable-v1",
       toolPolicy: "deny",
-    }),
-  ).resolves.toEqual({
+      experiencePackId: "experience:none",
+      samplingProfileId: "sampling:stable-v1",
+    },
+    budget: {
+      maxCandidates: 1,
+      maxProviderCalls: 1,
+      maxCostMicros: 5_000,
+      maxBytes: 16_384,
+      deadlineMs: 10_000,
+    },
+    toolPolicy: "deny",
+    authorizationEpoch: 96,
+    nonce: "replay-adapter-positive-96",
+  };
+  const authorization = await adapter.authorize({ envelope });
+  await expect(adapter.dispatch(envelope, { authorization })).resolves.toEqual({
     dispatchReceiptId: "dispatch:96",
     routerDecisionId: "decision:96",
     providerResultRef: "artifact:provider-result-96",
@@ -391,36 +405,38 @@ test("Run96 S3 RED: the host adapter returns only bounded numeric usage for Repl
     }),
   });
 
-  await expect(
-    adapter.dispatch({
-      schemaVersion: "role-model.replay-dispatch.v1",
-      channel: "development",
-      scope: "tenant:one",
-      replayJobId: "replay:usage-96",
-      sourceGeneration: 4,
-      sourceDecisionId: "decision:source",
-      normalizedRequestRef: "artifact:request",
-      candidateEndpointId: "endpoint:counterfactual",
-      dispatchIdempotencyKey: "2222222222222222222222222222222222222222222222222222222222222222",
-      candidatePackage: {
-        endpointId: "endpoint:counterfactual",
-        modelId: "deepseek/deepseek-v4-pro",
-        reasoningEffort: "max",
-        promptAdapterId: "prompt:stable-v1",
-        toolPolicy: "deny",
-        experiencePackId: "experience:none",
-        samplingProfileId: "sampling:stable-v1",
-      },
-      budget: {
-        maxCandidates: 1,
-        maxProviderCalls: 1,
-        maxCostMicros: 5_000,
-        maxBytes: 16_384,
-        deadlineMs: 10_000,
-      },
+  const envelope = {
+    schemaVersion: "role-model.replay-dispatch.v1",
+    channel: "development",
+    scope: "tenant:one",
+    replayJobId: "replay:usage-96",
+    sourceGeneration: 4,
+    sourceDecisionId: "decision:source",
+    normalizedRequestRef: "artifact:request",
+    candidateEndpointId: "endpoint:counterfactual",
+    dispatchIdempotencyKey: "2222222222222222222222222222222222222222222222222222222222222222",
+    candidatePackage: {
+      endpointId: "endpoint:counterfactual",
+      modelId: "deepseek/deepseek-v4-pro",
+      reasoningEffort: "max",
+      promptAdapterId: "prompt:stable-v1",
       toolPolicy: "deny",
-    }),
-  ).resolves.toEqual({
+      experiencePackId: "experience:none",
+      samplingProfileId: "sampling:stable-v1",
+    },
+    budget: {
+      maxCandidates: 1,
+      maxProviderCalls: 1,
+      maxCostMicros: 5_000,
+      maxBytes: 16_384,
+      deadlineMs: 10_000,
+    },
+    toolPolicy: "deny",
+    authorizationEpoch: 96,
+    nonce: "replay-adapter-usage-96",
+  };
+  const authorization = await adapter.authorize({ envelope });
+  await expect(adapter.dispatch(envelope, { authorization })).resolves.toEqual({
     dispatchReceiptId: "dispatch:usage-96",
     routerDecisionId: "decision:usage-96",
     providerResultRef: "artifact:provider-result-usage-96",
@@ -605,7 +621,15 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
       rootArtifactId: "artifact:root-96",
       routingDecisionId: "decision:source-96",
       endpointId: "endpoint:baseline",
-      trace: { generation: 4, readiness: "ready", rootOccurrenceId: "occurrence:root-96" },
+      trace: {
+        generation: 4,
+        readiness: "ready",
+        rootOccurrenceId: "occurrence:root-96",
+        headOccurrenceId: "occurrence:root-96",
+        leafOccurrenceIds: ["occurrence:root-96"],
+        lastSequence: 0,
+        traversalDigest: `sha256:${"0".repeat(64)}`,
+      },
       messages: [{ role: "user", content: "source-only host transcript" }],
     },
     normalizedRequestRef: "artifact:request-96",
@@ -800,7 +824,15 @@ test("Run96 S3 RED: host orchestration preserves a bounded rate-limit failure be
       rootArtifactId: "artifact:root-failure",
       routingDecisionId: "decision:source-failure",
       endpointId: "endpoint:baseline",
-      trace: { generation: 4, readiness: "ready", rootOccurrenceId: "occurrence:root-failure" },
+      trace: {
+        generation: 4,
+        readiness: "ready",
+        rootOccurrenceId: "occurrence:root-failure",
+        headOccurrenceId: "occurrence:root-failure",
+        leafOccurrenceIds: ["occurrence:root-failure"],
+        lastSequence: 0,
+        traversalDigest: `sha256:${"0".repeat(64)}`,
+      },
       messages: [{ role: "user", content: "must remain host-only" }],
     },
     normalizedRequestRef: "artifact:request-failure",
@@ -819,6 +851,25 @@ test("Run96 S3 RED: host orchestration preserves a bounded rate-limit failure be
         authenticated: true,
         channel: "development",
         scope: "tenant:one",
+        authorizationEpoch: 96,
+        async authorize({ envelope }) {
+          return {
+            schemaVersion: "role-model.replay-adapter-authorization.v1",
+            algorithm: "hmac-sha256",
+            keyId: "run96-test-key",
+            nonce: envelope.nonce,
+            channel: envelope.channel,
+            scope: envelope.scope,
+            authorizationEpoch: envelope.authorizationEpoch,
+            mac: "run96-test-mac",
+          };
+        },
+        async verifyAuthorization() {
+          return { verified: true };
+        },
+        async authorizeSandboxedTools() {
+          return { authorized: true, policyDigest: "unused" };
+        },
         async dispatch() {
           throw Object.assign(new Error("provider rate limit"), { code: "rate_limit" });
         },
@@ -869,6 +920,217 @@ test("Run96 S3 RED: host orchestration preserves a bounded rate-limit failure be
     fenceToken: 7,
     failure: { code: "rate_limit", message: "provider rate limit", retryable: true },
   });
+});
+
+test("AC-R10-02: production supervised replay falls back after a retryable provider failure with a distinct RouterDecision receipt", async () => {
+  const invocations: { id: string; envelope: Record<string, unknown> }[] = [];
+  const dispatches: Record<string, unknown>[] = [];
+  const providerFailures: Record<string, unknown>[] = [];
+  const providerReceipts: Record<string, unknown>[] = [];
+  const appendedBranches: Record<string, unknown>[] = [];
+  const liveHealth = { endpointId: "endpoint:unavailable", status: "healthy", failures: 0 };
+  const liveHealthBefore = structuredClone(liveHealth);
+  const budget = {
+    maxCandidates: 2,
+    maxProviderCalls: 2,
+    maxCostMicros: 10,
+    maxBytes: 1_024,
+    deadlineMs: 10_000,
+  };
+  const candidates = [
+    {
+      endpointId: "endpoint:unavailable",
+      modelId: "model:unavailable",
+      reasoningEffort: "max",
+      promptAdapterId: "prompt:stable-v1",
+      toolPolicy: "deny",
+      experiencePackId: "experience:none",
+      samplingProfileId: "sampling:stable-v1",
+    },
+    {
+      endpointId: "endpoint:fallback",
+      modelId: "model:fallback",
+      reasoningEffort: "max",
+      promptAdapterId: "prompt:stable-v1",
+      toolPolicy: "recorded_results_only",
+      experiencePackId: "experience:none",
+      samplingProfileId: "sampling:stable-v1",
+    },
+  ];
+  const sourceAttestation = createReplaySourceAttestation({
+    channel: "development",
+    scope: "tenant:r10-fallback",
+    authorizationEpoch: 96,
+    capture: {
+      schemaVersion: "role-model.route-capture-read.v2",
+      scope: "tenant:r10-fallback",
+      rootArtifactId: "artifact:source-r10-fallback",
+      routingDecisionId: "decision:source-r10-fallback",
+      endpointId: "endpoint:source",
+      trace: {
+        generation: 4,
+        readiness: "ready",
+        rootOccurrenceId: "occurrence:source-r10-fallback",
+        headOccurrenceId: "occurrence:source-r10-fallback",
+        leafOccurrenceIds: ["occurrence:source-r10-fallback"],
+        lastSequence: 0,
+        traversalDigest: `sha256:${"0".repeat(64)}`,
+      },
+      replaySource: {
+        schemaVersion: "role-model.route-capture-replay-source.v1",
+        normalizedRequestRef: "artifact:request-r10-fallback",
+        sharedPrefixRef: "artifact:prefix-r10-fallback",
+        forkOccurrenceId: "occurrence:source-r10-fallback",
+        policySnapshotRef: "artifact:policy-r10-fallback",
+        capturePolicyRef: "artifact:capture-policy-r10-fallback",
+      },
+    },
+    eligibleEndpointIds: ["endpoint:source", "endpoint:unavailable", "endpoint:fallback"],
+  });
+  const runtime = {
+    async invoke(id: string, envelope: Record<string, unknown>) {
+      invocations.push({ id, envelope });
+      expect(id).toBe("replay-core");
+      const value = envelope.value as Record<string, unknown>;
+      switch (envelope.capability) {
+        case "replay:create-job":
+          return { jobId: "replay:r10-fallback" };
+        case "replay:claim-job":
+          return { fenceToken: 11, leaseOwner: "scheduler:r10-fallback" };
+        case "replay:prepare-dispatch": {
+          const candidateEndpointId = String(value.candidateEndpointId);
+          const candidate = candidates.find((item) => item.endpointId === candidateEndpointId);
+          if (
+            !candidate ||
+            !sourceAttestation.traceRoot.eligibleEndpointIds.includes(candidateEndpointId)
+          ) {
+            throw new Error("candidate is not eligible for replay");
+          }
+          return {
+            status: "provider_dispatch",
+            envelope: {
+              schemaVersion: "role-model.replay-dispatch.v1",
+              channel: "development",
+              scope: "tenant:r10-fallback",
+              replayJobId: "replay:r10-fallback",
+              sourceGeneration: 4,
+              sourceDecisionId: "decision:source-r10-fallback",
+              normalizedRequestRef: "artifact:request-r10-fallback",
+              candidateEndpointId,
+              dispatchIdempotencyKey:
+                candidateEndpointId === "endpoint:unavailable" ? "a".repeat(64) : "b".repeat(64),
+              authorizationEpoch: 96,
+              nonce: `nonce:${candidateEndpointId}`,
+              candidatePackage: candidate,
+              budget,
+              toolPolicy: candidate.toolPolicy,
+            },
+          };
+        }
+        case "replay:record-provider-failure":
+          providerFailures.push(value);
+          return {
+            status: "retryable_failure",
+            replayJobId: "replay:r10-fallback",
+            candidateEndpointId: "endpoint:unavailable",
+          };
+        case "replay:record-provider-receipt":
+          providerReceipts.push(value);
+          return {
+            status: "append_recovery",
+            branchRequest: {
+              replayJobId: "replay:r10-fallback",
+              scope: "tenant:r10-fallback",
+              sourceGeneration: 4,
+              sourceDecisionId: "decision:source-r10-fallback",
+              sharedPrefixRef: "artifact:prefix-r10-fallback",
+              candidateEndpointId: "endpoint:fallback",
+              routerDecisionId: "decision:r10-fallback",
+              providerResultRef: "artifact:provider:r10-fallback",
+              dispatchReceiptId: "dispatch:r10-fallback",
+            },
+          };
+        case "replay:record-branch-append":
+          return { status: "awaiting_evaluation" };
+        case "replay:record-evaluation-receipt":
+          return { state: "complete", evaluationJobId: "evaluation:r10-fallback" };
+        default:
+          throw new Error(`unexpected capability ${String(envelope.capability)}`);
+      }
+    },
+  };
+  const adapter = createRouterReplayAdapter({
+    channel: "development",
+    scope: "tenant:r10-fallback",
+    authorizationEpoch: 96,
+    dispatch: async (request) => {
+      dispatches.push(request);
+      if (request.candidateEndpointId === "endpoint:unavailable") {
+        throw Object.assign(new Error("forced provider outage"), { code: "provider_unavailable" });
+      }
+      return {
+        dispatchReceiptId: "dispatch:r10-fallback",
+        routerDecisionId: "decision:r10-fallback",
+        providerResultRef: "artifact:provider:r10-fallback",
+        observedCostMicros: 1,
+        observedResponseBytes: 32,
+        observedDurationMs: 5,
+      };
+    },
+  });
+
+  await expect(
+    runSupervisedReplay({
+      runtime,
+      adapter,
+      requestId: "request:r10-fallback",
+      channel: "development",
+      scope: "tenant:r10-fallback",
+      authorizationEpoch: 96,
+      sourceAttestation,
+      idempotencyKey: "replay:r10-fallback",
+      intent: "counterfactual_route",
+      evaluationCriteriaDigest: `sha256:${"1".repeat(64)}`,
+      candidatePackages: candidates,
+      budget,
+      leaseOwner: "scheduler:r10-fallback",
+      leaseMs: 10_000,
+      prepareBranch: async () => ({ branchRootRef: "artifact:prepared:r10-fallback" }),
+      appendBranch: async (request) => {
+        appendedBranches.push(request);
+        return { branchRootRef: "artifact:branch:r10-fallback" };
+      },
+      handoffEvaluation: async () => ({ evaluationJobId: "evaluation:r10-fallback" }),
+    }),
+  ).resolves.toMatchObject({ state: "complete" });
+
+  expect(dispatches.map((request) => request.candidateEndpointId)).toEqual([
+    "endpoint:unavailable",
+    "endpoint:fallback",
+  ]);
+  expect(new Set(dispatches.map((request) => request.dispatchIdempotencyKey)).size).toBe(2);
+  expect(dispatches.map((request) => request.toolPolicy)).toEqual([
+    "deny",
+    "recorded_results_only",
+  ]);
+  expect(
+    dispatches.every(
+      (request) => request.budget === undefined || request.budget.maxProviderCalls === 2,
+    ),
+  ).toBe(true);
+  expect(providerFailures).toHaveLength(1);
+  expect(providerFailures[0]).toMatchObject({
+    candidateEndpointId: "endpoint:unavailable",
+    failure: { code: "provider_unavailable", retryable: true },
+  });
+  expect(providerReceipts).toHaveLength(1);
+  expect(appendedBranches).toEqual([
+    expect.objectContaining({ candidateEndpointId: "endpoint:fallback" }),
+  ]);
+  expect(liveHealth).toEqual(liveHealthBefore);
+  expect(
+    invocations.filter(({ envelope }) => envelope.capability === "replay:record-provider-receipt"),
+  ).toHaveLength(1);
 });
 
 test("Run96 S3 regression: timeout retries while a partial provider result is terminal", async () => {
@@ -940,6 +1202,10 @@ test("Run96 S3 regression: timeout retries while a partial provider result is te
           generation: 4,
           readiness: "ready",
           rootOccurrenceId: "occurrence:root-failure-kind",
+          headOccurrenceId: "occurrence:root-failure-kind",
+          leafOccurrenceIds: ["occurrence:root-failure-kind"],
+          lastSequence: 0,
+          traversalDigest: `sha256:${"0".repeat(64)}`,
         },
         replaySource: {
           schemaVersion: "role-model.route-capture-replay-source.v1",
@@ -960,6 +1226,25 @@ test("Run96 S3 regression: timeout retries while a partial provider result is te
           authenticated: true,
           channel: "development",
           scope: "tenant:one",
+          authorizationEpoch: 96,
+          async authorize({ envelope }) {
+            return {
+              schemaVersion: "role-model.replay-adapter-authorization.v1",
+              algorithm: "hmac-sha256",
+              keyId: "run96-test-key",
+              nonce: envelope.nonce,
+              channel: envelope.channel,
+              scope: envelope.scope,
+              authorizationEpoch: envelope.authorizationEpoch,
+              mac: "run96-test-mac",
+            };
+          },
+          async verifyAuthorization() {
+            return { verified: true };
+          },
+          async authorizeSandboxedTools() {
+            return { authorized: true, policyDigest: "unused" };
+          },
           async dispatch() {
             throw Object.assign(new Error(`provider ${code}`), { code });
           },
@@ -1037,7 +1322,15 @@ test("Run96 S3 RED: a completed idempotent replay returns its durable receipt wi
       rootArtifactId: "artifact:root-idempotent",
       routingDecisionId: "decision:source-idempotent",
       endpointId: "endpoint:baseline",
-      trace: { generation: 4, readiness: "ready", rootOccurrenceId: "occurrence:root-idempotent" },
+      trace: {
+        generation: 4,
+        readiness: "ready",
+        rootOccurrenceId: "occurrence:root-idempotent",
+        headOccurrenceId: "occurrence:root-idempotent",
+        leafOccurrenceIds: ["occurrence:root-idempotent"],
+        lastSequence: 0,
+        traversalDigest: `sha256:${"0".repeat(64)}`,
+      },
       replaySource: {
         schemaVersion: "role-model.route-capture-replay-source.v1",
         normalizedRequestRef: "artifact:request-idempotent",
@@ -1131,6 +1424,10 @@ test("Run96 Phase5 RED: an idempotent replay awaiting evaluation returns its dur
         generation: 4,
         readiness: "ready",
         rootOccurrenceId: "occurrence:root-awaiting-evaluation",
+        headOccurrenceId: "occurrence:root-awaiting-evaluation",
+        leafOccurrenceIds: ["occurrence:root-awaiting-evaluation"],
+        lastSequence: 0,
+        traversalDigest: `sha256:${"0".repeat(64)}`,
       },
       replaySource: {
         schemaVersion: "role-model.route-capture-replay-source.v1",
@@ -1242,6 +1539,10 @@ test("Run96 S3 regression: a retry resumes durable evaluation without redispatch
         generation: 4,
         readiness: "ready",
         rootOccurrenceId: "occurrence:recover-evaluation",
+        headOccurrenceId: "occurrence:recover-evaluation",
+        leafOccurrenceIds: ["occurrence:recover-evaluation"],
+        lastSequence: 0,
+        traversalDigest: `sha256:${"0".repeat(64)}`,
       },
       replaySource: {
         schemaVersion: "role-model.route-capture-replay-source.v1",
@@ -1382,6 +1683,10 @@ test("Run96 S3 RED: a late-cancelled replay never hands incomplete branches to E
         generation: 4,
         readiness: "ready",
         rootOccurrenceId: "occurrence:root-cancelled-late",
+        headOccurrenceId: "occurrence:root-cancelled-late",
+        leafOccurrenceIds: ["occurrence:root-cancelled-late"],
+        lastSequence: 0,
+        traversalDigest: `sha256:${"0".repeat(64)}`,
       },
     },
     normalizedRequestRef: "artifact:request-cancelled-late",
@@ -1465,6 +1770,10 @@ test("Run96 Phase5 RED: an expired scheduler receipt does not erase an already-d
         generation: 4,
         readiness: "ready",
         rootOccurrenceId: "occurrence:root-expired-scheduler",
+        headOccurrenceId: "occurrence:root-expired-scheduler",
+        leafOccurrenceIds: ["occurrence:root-expired-scheduler"],
+        lastSequence: 0,
+        traversalDigest: `sha256:${"0".repeat(64)}`,
       },
     },
     normalizedRequestRef: "artifact:request-expired-scheduler",
@@ -1599,4 +1908,647 @@ test("Run96 Phase5 RED: an expired scheduler receipt does not erase an already-d
     state: "awaiting_evaluation",
     schedulerState: "completion_not_accepted",
   });
+});
+
+test("Run96 R10/R11: the public adapter authenticates the private ReplayCore contract and preserves sandbox receipts before append/evaluation", async () => {
+  const events: string[] = [];
+  const sandbox = {
+    executableAllowlist: ["tool:read"],
+    sideEffectClass: "read_only",
+    network: "none",
+    filesystem: "workspace_read_only",
+    maxBytes: 1_024,
+    maxDurationMs: 1_000,
+  };
+  const canonicalizeSandbox = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(canonicalizeSandbox);
+    if (value && typeof value === "object") {
+      return Object.fromEntries(
+        Object.entries(value as Record<string, unknown>)
+          .sort(([left], [right]) => left.localeCompare(right))
+          .map(([key, nested]) => [key, canonicalizeSandbox(nested)]),
+      );
+    }
+    return value;
+  };
+  const policyDigest = createHash("sha256")
+    .update(JSON.stringify(canonicalizeSandbox(sandbox)))
+    .digest("hex");
+  let responseSideEffectClass: "none" | "read_only" = "read_only";
+  const adapter = createRouterReplayAdapter({
+    channel: "development",
+    scope: "tenant:one",
+    authorizationEpoch: 96,
+    authorizationSecret: "run96-public-adapter-secret",
+    authorizationKeyId: "run96-private-replay-key",
+    authorizeSandboxedTools: async ({ sandbox: receivedSandbox }) => {
+      events.push("sandbox-authorize");
+      return {
+        authorized: true,
+        policyDigest: createHash("sha256")
+          .update(JSON.stringify(canonicalizeSandbox(receivedSandbox)))
+          .digest("hex"),
+      };
+    },
+    dispatch: async (request) => {
+      events.push("dispatch");
+      expect(request).toMatchObject({
+        schemaVersion: "role-model.router-replay-router-request.v1",
+        source: "replay-core",
+        authorizationEpoch: 96,
+        sourceDecisionId: "decision:source",
+      });
+      return {
+        dispatchReceiptId: "dispatch:run96-public-adapter",
+        routerDecisionId: "decision:new-counterfactual",
+        providerResultRef: "artifact:provider-run96-public-adapter",
+        observedCostMicros: 0,
+        observedResponseBytes: 32,
+        toolSideEffectReceipt: {
+          schemaVersion: "role-model.replay-tool-side-effect-receipt.v1",
+          policyDigest,
+          sideEffectClass: responseSideEffectClass,
+        },
+      };
+    },
+  });
+  const contract = adapter as typeof adapter & {
+    readonly authorize: (input: { readonly envelope: Record<string, unknown> }) => Promise<
+      Record<string, unknown>
+    >;
+    readonly verifyAuthorization: (input: {
+      readonly envelope: Record<string, unknown>;
+      readonly authorization: Record<string, unknown>;
+    }) => Promise<boolean | { readonly verified: boolean }>;
+    readonly authorizeSandboxedTools: (input: {
+      readonly envelope: Record<string, unknown>;
+      readonly sandbox: Record<string, unknown>;
+    }) => Promise<{ readonly authorized: boolean; readonly policyDigest: string }>;
+  };
+  const envelope: Record<string, unknown> = {
+    schemaVersion: "role-model.replay-dispatch.v1",
+    channel: "development",
+    scope: "tenant:one",
+    replayJobId: "replay:run96-public-adapter",
+    sourceGeneration: 4,
+    sourceDecisionId: "decision:source",
+    normalizedRequestRef: "artifact:request",
+    candidateEndpointId: "endpoint:counterfactual",
+    dispatchIdempotencyKey: "a".repeat(64),
+    authorizationEpoch: 96,
+    nonce: "run96-public-adapter-nonce",
+    candidatePackage: {
+      endpointId: "endpoint:counterfactual",
+      modelId: "deepseek/deepseek-v4-pro",
+      reasoningEffort: "max",
+      promptAdapterId: "prompt:stable-v1",
+      toolPolicy: "sandboxed_allowlist",
+      experiencePackId: "experience:none",
+      samplingProfileId: "sampling:stable-v1",
+      sandbox,
+    },
+    budget: {
+      maxCandidates: 1,
+      maxProviderCalls: 1,
+      maxCostMicros: 5_000,
+      maxBytes: 16_384,
+      deadlineMs: 10_000,
+    },
+    toolPolicy: "sandboxed_allowlist",
+  };
+  const authorization = await contract.authorize({ envelope });
+  expect(authorization).toMatchObject({
+    schemaVersion: "role-model.replay-adapter-authorization.v1",
+    algorithm: "hmac-sha256",
+    keyId: "run96-private-replay-key",
+    nonce: envelope.nonce,
+    channel: envelope.channel,
+    scope: envelope.scope,
+    authorizationEpoch: envelope.authorizationEpoch,
+  });
+  await expect(contract.verifyAuthorization({ envelope, authorization })).resolves.toEqual({
+    verified: true,
+  });
+  await expect(
+    contract.verifyAuthorization({
+      envelope,
+      authorization: { ...authorization, mac: "forged" },
+    }),
+  ).resolves.toEqual({ verified: false });
+  await expect(
+    contract.verifyAuthorization({
+      envelope: { ...envelope, authorizationEpoch: 95 },
+      authorization,
+    }),
+  ).resolves.toEqual({ verified: false });
+  await expect(
+    contract.verifyAuthorization({
+      envelope: { ...envelope, channel: "stage" },
+      authorization,
+    }),
+  ).resolves.toEqual({ verified: false });
+  await expect(
+    contract.verifyAuthorization({
+      envelope: { ...envelope, scope: "tenant:two" },
+      authorization,
+    }),
+  ).resolves.toEqual({ verified: false });
+  await expect(contract.authorizeSandboxedTools({ envelope, sandbox })).resolves.toEqual({
+    authorized: true,
+    policyDigest,
+  });
+  const reorderedSandbox = {
+    maxDurationMs: 1_000,
+    filesystem: "workspace_read_only",
+    executableAllowlist: ["tool:read"],
+    maxBytes: 1_024,
+    network: "none",
+    sideEffectClass: "read_only",
+  };
+  await expect(
+    contract.authorizeSandboxedTools({ envelope, sandbox: reorderedSandbox }),
+  ).resolves.toEqual({ authorized: true, policyDigest });
+  await expect(
+    adapter.dispatch(envelope, {
+      authorization: { ...authorization, mac: "forged" },
+      sandboxReceipt: {
+        schemaVersion: "role-model.replay-tool-side-effect-receipt.v1",
+        policyDigest,
+        sideEffectClass: "read_only",
+      },
+    }),
+  ).rejects.toThrow(/authorization/i);
+
+  await expect(adapter.dispatch(envelope)).rejects.toThrow(/authorization/i);
+
+  const consumedNonces = new Set<string>();
+  const authorizeAndDispatch = async () => {
+    const nextAuthorization = await contract.authorize({ envelope });
+    if (consumedNonces.has(String(nextAuthorization.nonce))) {
+      throw new Error("replayed adapter nonce");
+    }
+    const verified = await contract.verifyAuthorization({
+      envelope,
+      authorization: nextAuthorization,
+    });
+    if (verified !== true && verified.verified !== true) throw new Error("authorization rejected");
+    consumedNonces.add(String(nextAuthorization.nonce));
+    await contract.authorizeSandboxedTools({ envelope, sandbox });
+    return adapter.dispatch(envelope, {
+      authorization: nextAuthorization,
+      sandboxReceipt: {
+        schemaVersion: "role-model.replay-tool-side-effect-receipt.v1",
+        policyDigest,
+        sideEffectClass: "read_only",
+      },
+    });
+  };
+  const receipt = await authorizeAndDispatch();
+  events.push("append");
+  events.push("evaluate");
+  expect(receipt).toMatchObject({
+    routerDecisionId: "decision:new-counterfactual",
+    toolSideEffectReceipt: {
+      schemaVersion: "role-model.replay-tool-side-effect-receipt.v1",
+      policyDigest,
+      sideEffectClass: "read_only",
+    },
+  });
+  await expect(authorizeAndDispatch()).rejects.toThrow(/replayed adapter nonce/i);
+  expect(events).toEqual([
+    "sandbox-authorize",
+    "sandbox-authorize",
+    "sandbox-authorize",
+    "dispatch",
+    "append",
+    "evaluate",
+  ]);
+  await expect(
+    adapter.dispatch(envelope, {
+      authorization,
+      sandboxReceipt: {
+        schemaVersion: "role-model.replay-tool-side-effect-receipt.v1",
+        policyDigest,
+        sideEffectClass: "read_only",
+      },
+    }),
+  ).rejects.toThrow(/replay/i);
+
+  const secondEnvelope = { ...envelope, nonce: "run96-public-adapter-nonce-2" };
+  const secondAuthorization = await contract.authorize({ envelope: secondEnvelope });
+  responseSideEffectClass = "none";
+  await expect(
+    adapter.dispatch(secondEnvelope, {
+      authorization: secondAuthorization,
+      sandboxReceipt: {
+        schemaVersion: "role-model.replay-tool-side-effect-receipt.v1",
+        policyDigest,
+        sideEffectClass: "read_only",
+      },
+    }),
+  ).rejects.toThrow(/side-effect receipt/i);
+});
+
+test("Run96 F36 RED: supervised replay authenticates a sandboxed candidate before dispatch and carries the nonce and receipt", async () => {
+  const events: string[] = [];
+  const preparedBranchRequests: Record<string, unknown>[] = [];
+  const appendedBranchRequests: Record<string, unknown>[] = [];
+  const sandbox = {
+    executableAllowlist: ["tool:read"],
+    sideEffectClass: "read_only",
+    network: "none",
+    filesystem: "workspace_read_only",
+    maxBytes: 1_024,
+    maxDurationMs: 1_000,
+  };
+  const policyDigest = createHash("sha256")
+    .update(
+      JSON.stringify(
+        Object.fromEntries(
+          Object.entries(sandbox).sort(([left], [right]) => left.localeCompare(right)),
+        ),
+      ),
+    )
+    .digest("hex");
+  const sourceAttestation = createReplaySourceAttestation({
+    channel: "development",
+    scope: "tenant:supervised-sandbox",
+    authorizationEpoch: 96,
+    capture: {
+      schemaVersion: "role-model.route-capture-read.v2",
+      scope: "tenant:supervised-sandbox",
+      rootArtifactId: "artifact:source-supervised-sandbox",
+      routingDecisionId: "decision:source-supervised-sandbox",
+      endpointId: "endpoint:source",
+      trace: {
+        generation: 4,
+        readiness: "ready",
+        rootOccurrenceId: "occurrence:source-root",
+        headOccurrenceId: "occurrence:source-head",
+        leafOccurrenceIds: ["occurrence:source-head"],
+        lastSequence: 2,
+        traversalDigest: `sha256:${"a".repeat(64)}`,
+      },
+      replaySource: {
+        schemaVersion: "role-model.route-capture-replay-source.v1",
+        normalizedRequestRef: "artifact:request-supervised-sandbox",
+        sharedPrefixRef: "artifact:prefix-supervised-sandbox",
+        forkOccurrenceId: "occurrence:source-root",
+        policySnapshotRef: "artifact:policy-supervised-sandbox",
+        capturePolicyRef: "artifact:capture-policy-supervised-sandbox",
+      },
+    },
+    eligibleEndpointIds: ["endpoint:source", "endpoint:sandbox"],
+  });
+  const sandboxCandidate = {
+    endpointId: "endpoint:sandbox",
+    modelId: "model:sandbox",
+    reasoningEffort: "max",
+    promptAdapterId: "prompt:stable-v1",
+    toolPolicy: "sandboxed_allowlist",
+    experiencePackId: "experience:none",
+    samplingProfileId: "sampling:stable-v1",
+    sandbox,
+  };
+  const runtime = {
+    async invoke(_id: string, envelope: Record<string, unknown>) {
+      switch (envelope.capability) {
+        case "replay:create-job":
+          return { jobId: "replay:supervised-sandbox" };
+        case "replay:claim-job":
+          return { fenceToken: 1 };
+        case "replay:prepare-dispatch":
+          return {
+            status: "provider_dispatch",
+            envelope: {
+              schemaVersion: "role-model.replay-dispatch.v1",
+              channel: "development",
+              scope: "tenant:supervised-sandbox",
+              replayJobId: "replay:supervised-sandbox",
+              sourceGeneration: 4,
+              sourceDecisionId: "decision:source-supervised-sandbox",
+              normalizedRequestRef: "artifact:request-supervised-sandbox",
+              candidateEndpointId: "endpoint:sandbox",
+              dispatchIdempotencyKey: "b".repeat(64),
+              authorizationEpoch: 96,
+              nonce: "nonce:supervised-sandbox",
+              candidatePackage: sandboxCandidate,
+              budget: {
+                maxCandidates: 1,
+                maxProviderCalls: 1,
+                maxCostMicros: 5_000,
+                maxBytes: 16_384,
+                deadlineMs: 10_000,
+              },
+              toolPolicy: "sandboxed_allowlist",
+            },
+          };
+        case "replay:record-provider-receipt":
+          return {
+            status: "append_recovery",
+            branchRequest: { candidateEndpointId: "endpoint:sandbox" },
+          };
+        case "replay:record-branch-append":
+          return { status: "complete" };
+        case "replay:record-evaluation-receipt":
+          return { state: "complete", evaluationJobId: "evaluation:supervised-sandbox" };
+        default:
+          throw new Error(`unexpected capability ${String(envelope.capability)}`);
+      }
+    },
+  };
+  const adapter = createRouterReplayAdapter({
+    channel: "development",
+    scope: "tenant:supervised-sandbox",
+    authorizationEpoch: 96,
+    authorize: async ({ envelope }) => {
+      events.push("authorize");
+      return {
+        schemaVersion: "role-model.replay-adapter-authorization.v1",
+        algorithm: "hmac-sha256",
+        keyId: "run96-supervised-key",
+        nonce: envelope.nonce,
+        channel: envelope.channel,
+        scope: envelope.scope,
+        authorizationEpoch: envelope.authorizationEpoch,
+        mac: "test-mac",
+      };
+    },
+    verifyAuthorization: async ({ authorization }) => {
+      events.push("verify");
+      return { verified: authorization.mac === "test-mac" };
+    },
+    authorizeSandboxedTools: async ({ sandbox: receivedSandbox }) => {
+      events.push("sandbox-authorize");
+      expect(receivedSandbox).toEqual(sandbox);
+      return { authorized: true, policyDigest };
+    },
+    dispatch: async (request) => {
+      events.push("dispatch");
+      expect(request).toMatchObject({
+        nonce: "nonce:supervised-sandbox",
+        authorizationEpoch: 96,
+        toolPolicy: "sandboxed_allowlist",
+        authorization: {
+          schemaVersion: "role-model.replay-adapter-authorization.v1",
+          nonce: "nonce:supervised-sandbox",
+          channel: "development",
+          scope: "tenant:supervised-sandbox",
+          authorizationEpoch: 96,
+        },
+        sandboxReceipt: {
+          schemaVersion: "role-model.replay-tool-side-effect-receipt.v1",
+          policyDigest,
+          sideEffectClass: "read_only",
+        },
+      });
+      return {
+        dispatchReceiptId: "dispatch:supervised-sandbox",
+        routerDecisionId: "decision:supervised-sandbox",
+        providerResultRef: "artifact:provider-supervised-sandbox",
+        observedCostMicros: 0,
+        observedResponseBytes: 32,
+        toolSideEffectReceipt: {
+          schemaVersion: "role-model.replay-tool-side-effect-receipt.v1",
+          policyDigest,
+          sideEffectClass: "read_only",
+        },
+      };
+    },
+  });
+
+  await expect(
+    runSupervisedReplay({
+      runtime,
+      adapter,
+      requestId: "request:supervised-sandbox",
+      channel: "development",
+      scope: "tenant:supervised-sandbox",
+      authorizationEpoch: 96,
+      sourceAttestation,
+      idempotencyKey: "replay:supervised-sandbox",
+      intent: "counterfactual_route",
+      evaluationCriteriaDigest: `sha256:${"c".repeat(64)}`,
+      candidatePackages: [sandboxCandidate],
+      budget: {
+        maxCandidates: 1,
+        maxProviderCalls: 1,
+        maxCostMicros: 5_000,
+        maxBytes: 16_384,
+        deadlineMs: 10_000,
+      },
+      leaseOwner: "scheduler:supervised-sandbox",
+      leaseMs: 10_000,
+      prepareBranch: async (request) => {
+        preparedBranchRequests.push({ ...request });
+        return { branchRootRef: "artifact:prepared-supervised-sandbox" };
+      },
+      appendBranch: async (request) => {
+        appendedBranchRequests.push({ ...request });
+        return { branchRootRef: "artifact:appended-supervised-sandbox" };
+      },
+      handoffEvaluation: async () => ({ evaluationJobId: "evaluation:supervised-sandbox" }),
+    }),
+  ).resolves.toMatchObject({ state: "complete" });
+  expect(preparedBranchRequests).toEqual([
+    expect.objectContaining({
+      sourceRootOccurrenceId: "occurrence:source-root",
+      sourceHeadOccurrenceId: "occurrence:source-head",
+      sourceLeafOccurrenceIds: ["occurrence:source-head"],
+      sourceLastSequence: 2,
+      sourceTraversalDigest: `sha256:${"a".repeat(64)}`,
+    }),
+  ]);
+  expect(appendedBranchRequests).toEqual([
+    expect.objectContaining({
+      sourceRootOccurrenceId: "occurrence:source-root",
+      sourceHeadOccurrenceId: "occurrence:source-head",
+      sourceLeafOccurrenceIds: ["occurrence:source-head"],
+      sourceLastSequence: 2,
+      sourceTraversalDigest: `sha256:${"a".repeat(64)}`,
+    }),
+  ]);
+  expect(events).toEqual(["authorize", "verify", "sandbox-authorize", "verify", "dispatch"]);
+});
+
+test("Run96 F36 RED: source attestation includes the complete traversal closure and rejects mismatched duplicate traversal fields", () => {
+  const capture = {
+    schemaVersion: "role-model.route-capture-read.v2",
+    scope: "tenant:traversal-binding",
+    rootArtifactId: "artifact:traversal-binding",
+    routingDecisionId: "decision:traversal-binding",
+    endpointId: "endpoint:source",
+    trace: {
+      generation: 4,
+      readiness: "ready",
+      rootOccurrenceId: "occurrence:root",
+      headOccurrenceId: "occurrence:head",
+      leafOccurrenceIds: ["occurrence:head", "occurrence:leaf-z", "occurrence:leaf-a"],
+      lastSequence: 2,
+      traversalDigest: `sha256:${"d".repeat(64)}`,
+    },
+    replaySource: {
+      schemaVersion: "role-model.route-capture-replay-source.v1",
+      normalizedRequestRef: "artifact:request-traversal-binding",
+      sharedPrefixRef: "artifact:prefix-traversal-binding",
+      forkOccurrenceId: "occurrence:root",
+      policySnapshotRef: "artifact:policy-traversal-binding",
+      capturePolicyRef: "artifact:capture-policy-traversal-binding",
+    },
+  };
+  const attestation = createReplaySourceAttestation({
+    channel: "development",
+    scope: "tenant:traversal-binding",
+    authorizationEpoch: 96,
+    capture,
+    eligibleEndpointIds: ["endpoint:source", "endpoint:counterfactual"],
+  });
+  expect(attestation.traceRoot).toMatchObject({
+    rootOccurrenceId: "occurrence:root",
+    headOccurrenceId: "occurrence:head",
+    leafOccurrenceIds: ["occurrence:head", "occurrence:leaf-z", "occurrence:leaf-a"],
+    lastSequence: 2,
+    traversalDigest: `sha256:${"d".repeat(64)}`,
+    sourceRootOccurrenceId: "occurrence:root",
+    sourceHeadOccurrenceId: "occurrence:head",
+    sourceLeafOccurrenceIds: ["occurrence:head", "occurrence:leaf-z", "occurrence:leaf-a"],
+    sourceLastSequence: 2,
+    sourceTraversalDigest: `sha256:${"d".repeat(64)}`,
+  });
+  const mismatched = structuredClone(capture);
+  (mismatched.trace as Record<string, unknown>).traversal = {
+    rootOccurrenceId: "occurrence:root",
+    headOccurrenceId: "occurrence:other-head",
+    leafOccurrenceIds: ["occurrence:other-head"],
+    lastSequence: 2,
+    traversalDigest: `sha256:${"d".repeat(64)}`,
+  };
+  expect(() =>
+    createReplaySourceAttestation({
+      channel: "development",
+      scope: "tenant:traversal-binding",
+      authorizationEpoch: 96,
+      capture: mismatched,
+      eligibleEndpointIds: ["endpoint:source", "endpoint:counterfactual"],
+    }),
+  ).toThrow(/traversal|closure/i);
+
+  const incomplete = structuredClone(capture);
+  delete (incomplete.trace as Record<string, unknown>).traversalDigest;
+  expect(() =>
+    createReplaySourceAttestation({
+      channel: "development",
+      scope: "tenant:traversal-binding",
+      authorizationEpoch: 96,
+      capture: incomplete,
+      eligibleEndpointIds: ["endpoint:source", "endpoint:counterfactual"],
+    }),
+  ).toThrow(/traversal|closure/i);
+});
+
+test("Run96 F36 RED: sandbox receipt digests interoperate and authorization nonce state is isolated per adapter", async () => {
+  const sandbox = {
+    executableAllowlist: ["tool:read"],
+    sideEffectClass: "read_only",
+    network: "none",
+    filesystem: "workspace_read_only",
+    maxBytes: 1_024,
+    maxDurationMs: 1_000,
+  };
+  const rawPolicyDigest = createHash("sha256").update(JSON.stringify(sandbox)).digest("hex");
+  const wirePolicyDigest = `sha256:${rawPolicyDigest}`;
+  const envelope = (nonce: string): Record<string, unknown> => ({
+    schemaVersion: "role-model.replay-dispatch.v1",
+    channel: "development",
+    scope: "tenant:f36-isolation",
+    authorizationEpoch: 96,
+    nonce,
+    replayJobId: "replay:f36-isolation",
+    sourceGeneration: 1,
+    sourceDecisionId: "decision:f36-isolation",
+    normalizedRequestRef: "artifact:request:f36-isolation",
+    candidateEndpointId: "endpoint:f36-isolation",
+    dispatchIdempotencyKey: "e".repeat(64),
+    candidatePackage: {
+      endpointId: "endpoint:f36-isolation",
+      modelId: "model:f36-isolation",
+      reasoningEffort: "max",
+      promptAdapterId: "prompt:stable-v1",
+      toolPolicy: "sandboxed_allowlist",
+      experiencePackId: "experience:none",
+      samplingProfileId: "sampling:stable-v1",
+      sandbox,
+    },
+    budget: {
+      maxCandidates: 1,
+      maxProviderCalls: 1,
+      maxCostMicros: 5_000,
+      maxBytes: 16_384,
+      deadlineMs: 10_000,
+    },
+    toolPolicy: "sandboxed_allowlist",
+  });
+  const makeAdapter = (secret: string) =>
+    createRouterReplayAdapter({
+      channel: "development",
+      scope: "tenant:f36-isolation",
+      authorizationEpoch: 96,
+      authorizationSecret: secret,
+      authorizeSandboxedTools: async () => ({
+        authorized: true,
+        policyDigest: wirePolicyDigest,
+      }),
+      dispatch: async () => ({
+        dispatchReceiptId: "dispatch:f36-isolation",
+        routerDecisionId: "decision:f36-isolation",
+        providerResultRef: "artifact:provider:f36-isolation",
+        observedCostMicros: 0,
+        observedResponseBytes: 1,
+        toolSideEffectReceipt: {
+          schemaVersion: "role-model.replay-tool-side-effect-receipt.v1",
+          policyDigest: wirePolicyDigest,
+          sideEffectClass: "read_only",
+        },
+      }),
+    });
+  const adapterA = makeAdapter("a".repeat(32));
+  const adapterB = makeAdapter("b".repeat(32));
+  const firstEnvelope = envelope("nonce:f36-isolation");
+  const firstAuthorization = await adapterA.authorize({ envelope: firstEnvelope });
+  await expect(
+    adapterA.authorizeSandboxedTools({
+      envelope: firstEnvelope,
+      sandbox,
+    }),
+  ).resolves.toMatchObject({ authorized: true, policyDigest: rawPolicyDigest });
+  const firstReceipt = await adapterA.dispatch(firstEnvelope, {
+    authorization: firstAuthorization,
+    sandboxReceipt: {
+      schemaVersion: "role-model.replay-tool-side-effect-receipt.v1",
+      policyDigest: wirePolicyDigest,
+      sideEffectClass: "read_only",
+    },
+  });
+  expect(firstReceipt.toolSideEffectReceipt).toMatchObject({
+    policyDigest: rawPolicyDigest,
+  });
+
+  const secondEnvelope = envelope("nonce:f36-isolation");
+  const secondAuthorization = await adapterB.authorize({ envelope: secondEnvelope });
+  await expect(
+    adapterB.authorizeSandboxedTools({
+      envelope: secondEnvelope,
+      sandbox,
+    }),
+  ).resolves.toMatchObject({ authorized: true, policyDigest: rawPolicyDigest });
+  await expect(
+    adapterB.dispatch(secondEnvelope, {
+      authorization: secondAuthorization,
+      sandboxReceipt: {
+        schemaVersion: "role-model.replay-tool-side-effect-receipt.v1",
+        policyDigest: wirePolicyDigest,
+        sideEffectClass: "read_only",
+      },
+    }),
+  ).resolves.toMatchObject({ dispatchReceiptId: "dispatch:f36-isolation" });
 });
