@@ -22902,14 +22902,15 @@ export async function createRuntimeBridgeBackend(
       await buildBenchmarkCapabilityByEndpointId(profilesByEndpointId);
     const { executionEndpointIds, routingEligibleEndpointIds, benchmarkEligibleEndpointIds } =
       buildEffectiveEligibilitySnapshot();
-    const circuitDeniedEndpointIds = new Set(
-      readDeniedExecutionCircuitEndpointIds({
+    const executionCooldownsByEndpointId = new Map(
+      readExecutionCooldownReceipts({
         databasePath: initialization.databasePath,
         nowMs: Date.now(),
-      }),
+      }).map((receipt) => [receipt.endpointId, receipt] as const),
     );
     return currentRegistry.endpoints.map((endpoint) => {
       const endpointId = endpoint.identity.endpoint_id;
+      const executionCooldown = executionCooldownsByEndpointId.get(endpointId);
       const profile = profilesByEndpointId[endpointId];
       const benchmarkCapability = benchmarkCapabilitiesByEndpointId[endpointId] ?? null;
       const catalogPricing = resolveModelCapabilityProfile({
@@ -22949,7 +22950,7 @@ export async function createRuntimeBridgeBackend(
           const probeHealthStatus =
             runtimeEndpoint?.healthStatus ??
             (endpoint.deniedByPolicy ? "policy-blocked" : "healthy");
-          const circuitState = circuitDeniedEndpointIds.has(endpointId) ? "open" : null;
+          const circuitState = executionCooldown?.circuitState ?? null;
           return resolveEndpointHealthState({
             lifecycleState: runtimeEndpoint?.lifecycleState ?? "active",
             probeHealthStatus,
@@ -22982,6 +22983,12 @@ export async function createRuntimeBridgeBackend(
         advisoryMaxDifficultyRecommendation: profile.advisoryMaxDifficultyRecommendation,
         ...(profile.telemetryScores ? { telemetryScores: profile.telemetryScores } : {}),
         ...(benchmarkCapability ? { benchmarkCapability } : {}),
+        ...(executionCooldown
+          ? {
+              circuitState: executionCooldown.circuitState,
+              executionCooldown,
+            }
+          : {}),
       };
     });
   };

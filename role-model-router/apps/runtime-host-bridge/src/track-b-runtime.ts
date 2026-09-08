@@ -1259,6 +1259,16 @@ export interface RouterReplayAdapter {
   ): Promise<Record<string, unknown>>;
 }
 
+/**
+ * Durable one-shot authorization nonce storage for replay adapters.  The
+ * adapter calls `consume` while issuing authorization, so a nonce is burned
+ * before any provider side effect and cannot be re-authorized after restart.
+ */
+export interface RouterReplayAuthorizationNonceStore {
+  has(nonce: string): boolean | Promise<boolean>;
+  consume(nonce: string): boolean | Promise<boolean>;
+}
+
 export interface RouterReplayAdapterDispatchContext {
   readonly authorization: RouterReplayAdapterAuthorization;
   readonly sandboxReceipt?: Readonly<Record<string, unknown>>;
@@ -1318,6 +1328,76 @@ const REPLAY_ADAPTER_AUTHORIZATION_SCHEMA = "role-model.replay-adapter-authoriza
 const REPLAY_TOOL_SIDE_EFFECT_RECEIPT_SCHEMA =
   "role-model.replay-tool-side-effect-receipt.v1" as const;
 const replayAdapterAuthorizationNonces = new WeakMap<object, Set<string>>();
+const REPLAY_AUTHORIZATION_NONCE_STORE_SCHEMA =
+  "role-model.replay-authorization-nonce-store.v1" as const;
+
+/** Build the bounded file-backed nonce store used by the public host adapter. */
+export function createReplayAuthorizationNonceStore(
+  filePath: string,
+): RouterReplayAuthorizationNonceStore {
+  if (typeof filePath !== "string" || !filePath.trim()) {
+    throw new Error("replay authorization nonce store path is required");
+  }
+  mkdirSync(path.dirname(filePath), { recursive: true });
+  let nonces: Set<string>;
+  if (!existsSync(filePath)) {
+    nonces = new Set<string>();
+  } else {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(readFileSync(filePath, "utf8"));
+    } catch {
+      throw new Error("replay authorization nonce store is invalid");
+    }
+    if (
+      !parsed ||
+      typeof parsed !== "object" ||
+      Array.isArray(parsed) ||
+      (parsed as Record<string, unknown>).schemaVersion !== REPLAY_AUTHORIZATION_NONCE_STORE_SCHEMA ||
+      !Array.isArray((parsed as Record<string, unknown>).nonces)
+    ) {
+      throw new Error("replay authorization nonce store is invalid");
+    }
+    const persisted = (parsed as Record<string, unknown>).nonces as unknown[];
+    if (
+      persisted.length > 8192 ||
+      persisted.some(
+        (nonce) => typeof nonce !== "string" || !nonce || nonce.length > 256,
+      )
+    ) {
+      throw new Error("replay authorization nonce store exceeds its bounded cap");
+    }
+    nonces = new Set<string>(persisted as string[]);
+  }
+
+  const persist = (): void => {
+    const payload = `${JSON.stringify({
+      schemaVersion: REPLAY_AUTHORIZATION_NONCE_STORE_SCHEMA,
+      nonces: [...nonces].sort(),
+    })}\n`;
+    const temporaryPath = `${filePath}.${process.pid}.tmp`;
+    writeFileSync(temporaryPath, payload, { encoding: "utf8" });
+    renameSync(temporaryPath, filePath);
+  };
+
+  return Object.freeze({
+    has(nonce: string): boolean {
+      return nonces.has(nonce);
+    },
+    consume(nonce: string): boolean {
+      if (typeof nonce !== "string" || !nonce || nonce.length > 256) {
+        throw new Error("replay authorization nonce is invalid");
+      }
+      if (nonces.has(nonce)) return false;
+      if (nonces.size >= 8192) {
+        throw new Error("replay authorization nonce store exceeds its bounded cap");
+      }
+      nonces.add(nonce);
+      persist();
+      return true;
+    },
+  });
+}
 
 function normalizeReplayAdapterText(value: unknown, field: string): string {
   if (typeof value !== "string" || !value.trim() || value.length > 256 || /[\r\n]/.test(value)) {
@@ -1688,6 +1768,10 @@ export function createRouterReplayAdapter(options: {
   readonly authorizationEpoch: number;
   readonly authorizationSecret?: string | Uint8Array;
   readonly authorizationKeyId?: string;
+  /** Optional durable owner for one-shot authorization nonces. */
+  readonly authorizationNonceStore?: RouterReplayAuthorizationNonceStore;
+  /** Convenience path for the built-in bounded file-backed nonce owner. */
+  readonly authorizationNonceStorePath?: string;
   readonly authorize?: (input: {
     readonly envelope: Record<string, unknown>;
   }) => Promise<Record<string, unknown>>;
@@ -1715,7 +1799,26 @@ export function createRouterReplayAdapter(options: {
     options.authorizationKeyId ?? "router-replay-adapter",
     "authorization key id",
   );
+  if (options.authorizationNonceStore && options.authorizationNonceStorePath) {
+    throw new Error("replay adapter nonce store options are mutually exclusive");
+  }
+  const authorizationNonceStore =
+    options.authorizationNonceStore ??
+    (options.authorizationNonceStorePath
+      ? createReplayAuthorizationNonceStore(options.authorizationNonceStorePath)
+      : undefined);
+  if (
+    authorizationNonceStore &&
+    (typeof authorizationNonceStore.consume !== "function" ||
+      typeof authorizationNonceStore.has !== "function")
+  ) {
+    throw new Error("replay adapter nonce store is invalid");
+  }
   const consumedAuthorizationNonces = new Set<string>();
+  // A durable nonce is consumed while issuing authorization. Keep only the
+  // in-process pending handoff needed to permit the immediately following
+  // dispatch; a restart intentionally cannot re-use that handoff.
+  const pendingAuthorizationNonces = new Set<string>();
 
   const authorize = async (input: {
     readonly envelope: Record<string, unknown>;
@@ -1729,22 +1832,30 @@ export function createRouterReplayAdapter(options: {
     const customAuthorization = options.authorize
       ? await options.authorize({ envelope: structuredClone(input.envelope) })
       : undefined;
+    let authorization: RouterReplayAdapterAuthorization;
     if (customAuthorization !== undefined) {
       assertReplayAdapterAuthorization(customAuthorization, input.envelope);
-      return Object.freeze({ ...customAuthorization });
+      authorization = { ...customAuthorization };
+    } else {
+      const payload = replayAdapterAuthorizationPayload({
+        keyId: authorizationKeyId,
+        nonce: String(input.envelope.nonce),
+        channel: options.channel,
+        scope: options.scope,
+        authorizationEpoch: options.authorizationEpoch,
+      });
+      const mac = createHmac("sha256", authorizationSecret)
+        .update(JSON.stringify(canonicalizeRun88Proof(payload)))
+        .digest("hex");
+      authorization = { ...payload, mac };
+      assertReplayAdapterAuthorization(authorization, input.envelope);
     }
-    const payload = replayAdapterAuthorizationPayload({
-      keyId: authorizationKeyId,
-      nonce: String(input.envelope.nonce),
-      channel: options.channel,
-      scope: options.scope,
-      authorizationEpoch: options.authorizationEpoch,
-    });
-    const mac = createHmac("sha256", authorizationSecret)
-      .update(JSON.stringify(canonicalizeRun88Proof(payload)))
-      .digest("hex");
-    const authorization = { ...payload, mac };
-    assertReplayAdapterAuthorization(authorization, input.envelope);
+    if (authorizationNonceStore) {
+      if (!(await authorizationNonceStore.consume(authorization.nonce))) {
+        throw new Error("replayed replay adapter authorization nonce");
+      }
+      pendingAuthorizationNonces.add(authorization.nonce);
+    }
     return Object.freeze(authorization);
   };
 
@@ -1898,10 +2009,16 @@ export function createRouterReplayAdapter(options: {
           toolSideEffectReceipt: context.sandboxReceipt,
         });
       }
-      if (consumedAuthorizationNonces.has(context.authorization.nonce)) {
-        throw new Error("replayed replay adapter authorization nonce");
+      if (authorizationNonceStore) {
+        if (!pendingAuthorizationNonces.delete(context.authorization.nonce)) {
+          throw new Error("replayed replay adapter authorization nonce");
+        }
+      } else {
+        if (consumedAuthorizationNonces.has(context.authorization.nonce)) {
+          throw new Error("replayed replay adapter authorization nonce");
+        }
+        consumedAuthorizationNonces.add(context.authorization.nonce);
       }
-      consumedAuthorizationNonces.add(context.authorization.nonce);
       const result = await options.dispatch({
         schemaVersion: "role-model.router-replay-router-request.v1",
         source: "replay-core",

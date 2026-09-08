@@ -933,6 +933,49 @@ export function applyRecommendationServiceLauncherConfig(values: LauncherConfigV
   process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN = material.internalServiceToken.trim();
 }
 
+type ProductionReplayAdapterOptions = Omit<
+  Parameters<typeof createRouterReplayAdapter>[0],
+  "authorizationNonceStore" | "authorizationNonceStorePath"
+> & {
+  readonly runtimeStateRoot: string;
+  readonly scopeId: string;
+};
+
+export function resolveProductionReplayAuthorizationNonceStorePath(input: {
+  readonly runtimeStateRoot: string;
+  readonly scopeId: string;
+}): string {
+  const runtimeStateRoot = input.runtimeStateRoot.trim();
+  const scopeId = input.scopeId.trim();
+  if (!runtimeStateRoot || !scopeId) {
+    throw new Error("production replay adapter runtime state scope is required");
+  }
+  const scopeSegment = `sha256-${createHash("sha256").update(scopeId, "utf8").digest("hex")}`;
+  return path.join(
+    runtimeStateRoot,
+    "scopes",
+    scopeSegment,
+    "track-b",
+    "replay-authorization-nonces.json",
+  );
+}
+
+/**
+ * Compose the CLI's replay adapter with the scope-owned durable nonce ledger.
+ * The path deliberately lives beneath the same runtime-state scope as the
+ * Track B owner so a host restart cannot re-authorize a dispatched envelope.
+ */
+export function createProductionReplayAdapter(
+  options: ProductionReplayAdapterOptions,
+): ReturnType<typeof createRouterReplayAdapter> {
+  const authorizationNonceStorePath = resolveProductionReplayAuthorizationNonceStorePath(options);
+  const { runtimeStateRoot: _runtimeStateRoot, scopeId: _scopeId, ...adapterOptions } = options;
+  return createRouterReplayAdapter({
+    ...adapterOptions,
+    authorizationNonceStorePath,
+  });
+}
+
 export async function main(): Promise<void> {
   const args = parseArgs({
     options: {
@@ -1501,7 +1544,9 @@ export async function main(): Promise<void> {
             string,
             { readonly branchRootRef: string; readonly branchRequestId: string }
           >();
-          const adapter = createRouterReplayAdapter({
+          const adapter = createProductionReplayAdapter({
+            runtimeStateRoot: options.runtimeStateRoot,
+            scopeId: options.scopeId,
             channel,
             scope: options.scopeId,
             authorizationEpoch: 1,
