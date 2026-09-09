@@ -23,12 +23,22 @@ import {
   startBridgeServer,
 } from "./index.js";
 import { validateRun88PrivateDistributionIdentity } from "./kw-private-loader.js";
-import { type RuntimeChannelProfile, readPackagedRuntimeProfile } from "./runtime-channel.js";
+import {
+  CURRENT_RUNTIME_CHANNEL_VERSION,
+  PREVIOUS_RUNTIME_CHANNEL_VERSION,
+  type RuntimeChannel,
+  type RuntimeChannelContext,
+  type RuntimeChannelProfile,
+  negotiateRuntimeChannelStartup,
+  readPackagedRuntimeProfile,
+} from "./runtime-channel.js";
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
 import { createTrackBOperations } from "./track-b-operations.js";
 import {
+  TRACK_B_CANONICAL_EXTENSION_IDS,
   type TrackBExtensionClosure,
+  assertProductionExtensionRuntimeReady,
   createOwnedTrackBSidecarSpec,
   createPackagedProductionRuntime,
   createProductionExtensionRuntime,
@@ -48,6 +58,7 @@ import {
   runTrackBPostObservationWithContribution,
   runTrackBShadowPipeline,
   trackBDistributionRequiresSQLiteMaintenance,
+  validateProductionExtensionSet,
   validateRecoveredReplayCapture,
   validateRun88ProviderResponseObservation,
   verifyTrackBExtensionClosureAfterRestart,
@@ -344,14 +355,344 @@ export function createRun88StagePostObservation(input: {
   });
 }
 
-interface CliBootstrapState {
+export interface CliBootstrapState {
   status: "pending" | "ready" | "failed";
   message?: string;
+}
+
+export async function awaitCliExtensionRuntime<
+  Runtime extends {
+    readonly health: () => Record<string, unknown>;
+    readonly close?: () => Promise<void>;
+  },
+>(
+  extensionRuntimePromise: Promise<Runtime>,
+  bootstrapState: CliBootstrapState,
+  options: {
+    readonly expectedExtensionIds?: readonly string[];
+    readonly beforeReady?: (runtime: Runtime) => Promise<void>;
+  } = {},
+): Promise<Runtime> {
+  let runtime: Runtime | null = null;
+  try {
+    runtime = await extensionRuntimePromise;
+    assertProductionExtensionRuntimeReady(
+      runtime,
+      options.expectedExtensionIds ?? TRACK_B_CANONICAL_EXTENSION_IDS,
+    );
+    if (options.beforeReady) await options.beforeReady(runtime);
+    bootstrapState.status = "ready";
+    delete bootstrapState.message;
+    return runtime;
+  } catch (error) {
+    if (runtime?.close) await runtime.close().catch(() => undefined);
+    bootstrapState.status = "failed";
+    bootstrapState.message =
+      error instanceof Error ? error.message : "extension runtime startup failed";
+    throw error;
+  }
+}
+
+interface PackagedTrackBContractRegistryBinding {
+  readonly schemaVersion?: string;
+  readonly currentVersion?: string;
+  readonly minimumReaderVersion?: string;
+  readonly unknownFuture?: string;
+  readonly registryPath?: string;
+  readonly schemaPath?: string;
+  readonly adapterPath?: string;
+  readonly registrySha256?: string;
+  readonly schemaSha256?: string;
+  readonly adapterSha256?: string;
+}
+
+interface PackagedTrackBStartupManifest {
+  readonly schemaVersion: string;
+  readonly registryBindings?: {
+    readonly runtimeChannel?: {
+      readonly schema?: string;
+      readonly currentVersion?: string;
+      readonly minimumReaderVersion?: string;
+    };
+    readonly contractRegistry?: PackagedTrackBContractRegistryBinding;
+  };
+  readonly runtimeChannelContext?: Partial<RuntimeChannelContext>;
+  readonly extensions: readonly {
+    readonly descriptor: {
+      readonly id: string;
+      readonly protocolVersion: string;
+      readonly capabilities: readonly string[];
+      readonly channelContractVersion?: string;
+    };
+  }[];
+}
+
+interface PackagedTrackBContractRegistry {
+  readonly schemaVersion: string;
+  readonly contractVersion: string;
+  readonly contractRegistry?: {
+    readonly schemaVersion?: string;
+    readonly currentVersion?: string;
+    readonly minimumReaderVersion?: string;
+    readonly unknownFuture?: string;
+  };
+  readonly packages: readonly {
+    readonly id: string;
+    readonly class?: string;
+    readonly runtime?: {
+      readonly protocolVersion?: string;
+      readonly capabilities?: readonly string[];
+    };
+  }[];
+}
+
+type CliExtensionRuntime = {
+  readonly health: () => Record<string, unknown>;
+  readonly close?: () => Promise<void>;
+};
+
+function sameRuntimeChannelContext(
+  left: RuntimeChannelContext,
+  right: RuntimeChannelContext,
+): boolean {
+  return (
+    left.channel === right.channel &&
+    left.scopeId === right.scopeId &&
+    left.authorizationEpoch === right.authorizationEpoch
+  );
+}
+
+function flattenCapabilities(
+  descriptors: readonly { readonly capabilities: readonly string[] }[],
+): readonly string[] {
+  return [...new Set(descriptors.flatMap((descriptor) => descriptor.capabilities))];
+}
+
+function readPackagedContractRegistry(input: {
+  readonly manifest: PackagedTrackBStartupManifest;
+  readonly contractRegistryText?: string;
+}): PackagedTrackBContractRegistry | null {
+  const binding = input.manifest.registryBindings?.contractRegistry;
+  if (!binding) return null;
+  if (
+    !binding.schemaVersion ||
+    !binding.currentVersion ||
+    !binding.minimumReaderVersion ||
+    binding.unknownFuture !== "fail_closed" ||
+    !binding.registryPath ||
+    !binding.schemaPath ||
+    !binding.adapterPath ||
+    !binding.registrySha256 ||
+    !binding.schemaSha256 ||
+    !binding.adapterSha256
+  ) {
+    throw new Error("Track B packaged contract registry binding is incomplete");
+  }
+  if (
+    path.isAbsolute(binding.registryPath) ||
+    binding.registryPath.split(/[\\/]/u).some((segment) => segment === "..")
+  ) {
+    throw new Error("Track B packaged contract registry path is invalid");
+  }
+  for (const [value, field] of [
+    [binding.schemaPath, "schema path"],
+    [binding.adapterPath, "adapter path"],
+  ] as const) {
+    if (
+      !value ||
+      path.isAbsolute(value) ||
+      value.split(/[\\/]/u).some((segment) => segment === "..")
+    ) {
+      throw new Error(`Track B packaged contract registry ${field} is invalid`);
+    }
+  }
+  if (typeof input.contractRegistryText !== "string") {
+    throw new Error("Track B packaged contract registry authority is missing");
+  }
+  if (binding.schemaVersion !== "role-model.contract-registry.v1") {
+    throw new Error("Track B packaged contract registry binding schema is invalid");
+  }
+  if (
+    ![binding.registrySha256, binding.schemaSha256, binding.adapterSha256].every((value) =>
+      /^[a-f0-9]{64}$/u.test(value),
+    )
+  ) {
+    throw new Error("Track B packaged contract registry binding digests are invalid");
+  }
+  const digest = createHash("sha256").update(input.contractRegistryText).digest("hex");
+  if (digest !== binding.registrySha256) {
+    throw new Error("Track B packaged contract registry integrity check failed");
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(input.contractRegistryText);
+  } catch (error) {
+    throw new Error("Track B packaged contract registry is invalid JSON", { cause: error });
+  }
+  if (!parsed || typeof parsed !== "object") {
+    throw new Error("Track B packaged contract registry is not an object");
+  }
+  const registry = parsed as PackagedTrackBContractRegistry;
+  if (
+    registry.schemaVersion !== "role-model.extension-package-registry.v2" ||
+    registry.contractVersion !== binding.currentVersion ||
+    !Array.isArray(registry.packages) ||
+    registry.contractRegistry?.schemaVersion !== binding.schemaVersion ||
+    registry.contractRegistry?.currentVersion !== binding.currentVersion ||
+    registry.contractRegistry?.minimumReaderVersion !== binding.minimumReaderVersion ||
+    registry.contractRegistry?.unknownFuture !== binding.unknownFuture
+  ) {
+    throw new Error("Track B packaged contract registry metadata mismatch");
+  }
+  return registry;
+}
+
+export function negotiatePackagedTrackBStartup(input: {
+  readonly channel: RuntimeChannel;
+  readonly scopeId: string;
+  readonly authorizationEpoch: number;
+  readonly manifest: PackagedTrackBStartupManifest;
+  readonly writerContext?: RuntimeChannelContext;
+  readonly readerContext?: RuntimeChannelContext;
+  readonly contractRegistryText?: string;
+}) {
+  const isCurrent = input.manifest.schemaVersion === "role-model.track-b-runtime-distribution.v2";
+  const isPrevious = input.manifest.schemaVersion === "role-model.track-b-runtime-distribution.v1";
+  if (!isCurrent && !isPrevious) throw new Error("unsupported packaged Track B distribution");
+
+  const binding = input.manifest.registryBindings?.runtimeChannel;
+  if (isCurrent) {
+    if (!binding) throw new Error("v2 Track B distribution runtime channel binding is missing");
+    if (binding.schema !== "role-model.runtime-channel-contracts.v1") {
+      throw new Error("Track B runtime channel binding schema is invalid");
+    }
+    if (binding.minimumReaderVersion !== PREVIOUS_RUNTIME_CHANNEL_VERSION) {
+      throw new Error("Track B runtime channel binding minimum reader version is invalid");
+    }
+    if (!binding.currentVersion) {
+      throw new Error("Track B runtime channel binding current version is missing");
+    }
+    if (
+      binding.currentVersion !== CURRENT_RUNTIME_CHANNEL_VERSION &&
+      binding.currentVersion !== PREVIOUS_RUNTIME_CHANNEL_VERSION
+    ) {
+      throw new Error(
+        `Track B runtime channel binding current version is unsupported: ${binding.currentVersion}`,
+      );
+    }
+  }
+
+  const expectedChannelContractVersion =
+    binding?.currentVersion ?? PREVIOUS_RUNTIME_CHANNEL_VERSION;
+  validateProductionExtensionSet(input.manifest.extensions);
+  const expectedReaderContext: RuntimeChannelContext = {
+    channel: input.channel,
+    scopeId: input.scopeId,
+    authorizationEpoch: input.authorizationEpoch,
+  };
+  const writerContext =
+    input.writerContext ??
+    (!isCurrent && input.manifest.runtimeChannelContext
+      ? (input.manifest.runtimeChannelContext as RuntimeChannelContext)
+      : !isCurrent
+        ? expectedReaderContext
+        : undefined);
+  const readerContext = input.readerContext ?? (!isCurrent ? expectedReaderContext : undefined);
+  if (!writerContext || !readerContext) {
+    throw new Error("Track B packaged startup runtime channel contexts are required");
+  }
+  if (isCurrent && !input.manifest.runtimeChannelContext) {
+    throw new Error("Track B packaged startup runtime channel context is missing");
+  }
+  if (
+    isCurrent &&
+    !sameRuntimeChannelContext(
+      writerContext,
+      input.manifest.runtimeChannelContext as RuntimeChannelContext,
+    )
+  ) {
+    throw new Error("Track B packaged startup writer context does not match manifest context");
+  }
+  if (!sameRuntimeChannelContext(readerContext, expectedReaderContext)) {
+    throw new Error(
+      "Track B packaged startup reader context does not match resolved runtime context",
+    );
+  }
+
+  const registry = readPackagedContractRegistry(input);
+  const canonicalPackages = registry
+    ? registry.packages.filter((entry) => entry.class === "canonical_extension")
+    : [];
+  if (isCurrent) {
+    if (!registry || canonicalPackages.length !== TRACK_B_CANONICAL_EXTENSION_IDS.length) {
+      throw new Error("Track B packaged contract registry has an incomplete canonical set");
+    }
+    const registryIds = canonicalPackages.map((entry) => entry.id);
+    if (registryIds.some((id, index) => id !== TRACK_B_CANONICAL_EXTENSION_IDS[index])) {
+      throw new Error("Track B packaged contract registry canonical order mismatch");
+    }
+  }
+  const negotiatedDescriptors = input.manifest.extensions.map((extension, index) => {
+    const descriptor = extension.descriptor;
+    const authority = canonicalPackages[index]?.runtime;
+    const authorityId = canonicalPackages[index]?.id;
+    if (isCurrent && (!authority || authorityId !== descriptor.id)) {
+      throw new Error(`Track B extension ${descriptor.id} has no matching registry authority`);
+    }
+    if (
+      isCurrent &&
+      authority?.protocolVersion &&
+      descriptor.protocolVersion !== authority.protocolVersion
+    ) {
+      throw new Error(
+        `Track B extension ${descriptor.id} protocol version mismatch: expected ${authority.protocolVersion}, received ${descriptor.protocolVersion}`,
+      );
+    }
+    if (
+      isCurrent &&
+      (!descriptor.channelContractVersion ||
+        descriptor.channelContractVersion !== expectedChannelContractVersion)
+    ) {
+      throw new Error(
+        `Track B extension ${descriptor.id} channel contract version mismatch: expected ${expectedChannelContractVersion}, received ${descriptor.channelContractVersion ?? "missing"}`,
+      );
+    }
+    if (isCurrent && authority?.capabilities) {
+      const expectedCapabilities = [...authority.capabilities];
+      if (
+        descriptor.capabilities.length !== expectedCapabilities.length ||
+        descriptor.capabilities.some(
+          (capability, capabilityIndex) => capability !== expectedCapabilities[capabilityIndex],
+        )
+      ) {
+        throw new Error(
+          `Track B extension ${descriptor.id} capabilities do not match registry authority`,
+        );
+      }
+    }
+    return descriptor;
+  });
+  const negotiatedCapabilities = registry
+    ? flattenCapabilities(
+        canonicalPackages.map((entry) => ({ capabilities: entry.runtime?.capabilities ?? [] })),
+      )
+    : flattenCapabilities(negotiatedDescriptors);
+  return negotiateRuntimeChannelStartup({
+    channel: input.channel,
+    writerVersion: binding?.currentVersion ?? PREVIOUS_RUNTIME_CHANNEL_VERSION,
+    readerVersion: CURRENT_RUNTIME_CHANNEL_VERSION,
+    offeredCapabilities: negotiatedCapabilities,
+    requiredCapabilities: negotiatedCapabilities,
+    writerContext,
+    readerContext,
+  });
 }
 
 interface CliBackendResolver {
   getBackend: () => CliBackend | null;
   readBootstrapState?: () => CliBootstrapState;
+  readExtensionRuntime?: () => CliExtensionRuntime | null;
+  onExtensionRuntimeFailure?: (error: unknown) => Promise<void> | void;
 }
 
 const EMPTY_REGISTRY: EndpointRegistryResult = {
@@ -409,6 +750,49 @@ function createPendingHealthStatus(state: CliBootstrapState): unknown {
           ]
         : [],
     },
+  };
+}
+
+/**
+ * Keep a published CLI runtime tied to the live Track B worker set. A worker
+ * can fail after the initial startup negotiation, so readiness must be
+ * retracted and the owning process must clean up instead of serving a stale
+ * healthy backend.
+ */
+export function startCliExtensionRuntimeWatchdog(options: {
+  readonly getRuntime: () => CliExtensionRuntime | null;
+  readonly bootstrapState: CliBootstrapState;
+  readonly expectedExtensionIds?: readonly string[];
+  readonly onFailure: (error: unknown) => Promise<void> | void;
+  readonly intervalMs?: number;
+}): () => void {
+  let stopped = false;
+  let failureReported = false;
+  const check = (): void => {
+    if (stopped || failureReported || options.bootstrapState.status !== "ready") return;
+    const runtime = options.getRuntime();
+    if (!runtime) return;
+    try {
+      assertProductionExtensionRuntimeReady(
+        runtime,
+        options.expectedExtensionIds ?? TRACK_B_CANONICAL_EXTENSION_IDS,
+      );
+    } catch (error) {
+      failureReported = true;
+      options.bootstrapState.status = "failed";
+      options.bootstrapState.message =
+        error instanceof Error ? error.message : "extension runtime failed after startup";
+      void Promise.resolve(options.onFailure(error)).catch((cleanupError: unknown) => {
+        console.error("extension runtime failure cleanup failed", cleanupError);
+      });
+    }
+  };
+  const timer = setInterval(check, Math.max(1, options.intervalMs ?? 1000));
+  timer.unref?.();
+  check();
+  return () => {
+    stopped = true;
+    clearInterval(timer);
   };
 }
 
@@ -503,6 +887,24 @@ export function createCliServerOptions(
       "updateRuntimeConfig",
     ) as StartBridgeServerOptions["updateRuntimeConfig"],
     readHealthStatus: async () => {
+      const bootstrapState = readBootstrapState();
+      if (bootstrapState.status !== "ready") {
+        return createPendingHealthStatus(bootstrapState);
+      }
+      const resolver = isCliBackendResolver(backendOrResolver) ? backendOrResolver : null;
+      const extensionRuntime = resolver?.readExtensionRuntime
+        ? resolver.readExtensionRuntime()
+        : null;
+      if (extensionRuntime) {
+        try {
+          assertProductionExtensionRuntimeReady(extensionRuntime);
+        } catch (error) {
+          if (resolver?.onExtensionRuntimeFailure) {
+            await resolver.onExtensionRuntimeFailure(error);
+          }
+          return createPendingHealthStatus(readBootstrapState());
+        }
+      }
       const backend = resolveBackend();
       return backend ? backend.readHealthStatus() : createPendingHealthStatus(readBootstrapState());
     },
@@ -1133,12 +1535,36 @@ export async function main(): Promise<void> {
   } = { current: null };
   const bootstrapState: CliBootstrapState = { status: "pending" };
   let shutdownPromise: Promise<void> | null = null;
+  let stopExtensionRuntimeWatchdog: (() => void) | null = null;
+  let extensionRuntimeFailurePromise: Promise<void> | null = null;
+  const failExtensionRuntime = (error: unknown): Promise<void> => {
+    if (extensionRuntimeFailurePromise) return extensionRuntimeFailurePromise;
+    bootstrapState.status = "failed";
+    bootstrapState.message =
+      error instanceof Error ? error.message : "extension runtime failed after startup";
+    backend = null;
+    extensionRuntimeRef.current = null;
+    stopExtensionRuntimeWatchdog?.();
+    stopExtensionRuntimeWatchdog = null;
+    extensionRuntimeFailurePromise = (async () => {
+      const activeExtensionRuntime = extensionRuntime;
+      const activePackagedRuntime = packagedRuntime;
+      extensionRuntime = null;
+      packagedRuntime = null;
+      if (activeExtensionRuntime?.close)
+        await activeExtensionRuntime.close().catch(() => undefined);
+      if (activePackagedRuntime) await activePackagedRuntime.close().catch(() => undefined);
+    })();
+    return extensionRuntimeFailurePromise;
+  };
   const shutdown = async (): Promise<void> => {
     if (shutdownPromise) {
       return shutdownPromise;
     }
 
     shutdownPromise = (async () => {
+      stopExtensionRuntimeWatchdog?.();
+      stopExtensionRuntimeWatchdog = null;
       await server?.close();
       if (packagedRuntime) await packagedRuntime.close();
       else await backend?.shutdown();
@@ -1163,6 +1589,8 @@ export async function main(): Promise<void> {
       {
         getBackend: () => backend,
         readBootstrapState: () => bootstrapState,
+        readExtensionRuntime: () => extensionRuntimeRef.current,
+        onExtensionRuntimeFailure: failExtensionRuntime,
       },
       shutdown,
     ),
@@ -1972,6 +2400,15 @@ export async function main(): Promise<void> {
       const manifest = JSON.parse(trackBManifestText) as {
         readonly schemaVersion: string;
         readonly sidecar: { readonly modulePath: string; readonly artifactSha256: string };
+        readonly registryBindings?: {
+          readonly runtimeChannel?: {
+            readonly schema?: string;
+            readonly currentVersion?: string;
+            readonly minimumReaderVersion?: string;
+          };
+          readonly contractRegistry?: PackagedTrackBContractRegistryBinding;
+        };
+        readonly runtimeChannelContext?: Partial<RuntimeChannelContext>;
         readonly publicRuntimeAdapter?: {
           readonly modulePath: string;
           readonly artifactSha256: string;
@@ -1982,6 +2419,7 @@ export async function main(): Promise<void> {
             readonly id: string;
             readonly protocolVersion: string;
             readonly capabilities: readonly string[];
+            readonly channelContractVersion?: string;
           };
           readonly modulePath: string;
           readonly artifactSha256: string;
@@ -2017,6 +2455,41 @@ export async function main(): Promise<void> {
       }
       const trackBStateRoot = path.join(options.runtimeStateRoot, options.scopeId, "track-b");
       const runtimeChannel = packagedProfile?.channel ?? "development";
+      const writerContext: RuntimeChannelContext = {
+        channel: packagedProfile?.channel ?? runtimeChannel,
+        scopeId: packagedProfile?.scope_id ?? options.scopeId,
+        authorizationEpoch: 1,
+      };
+      const readerContext: RuntimeChannelContext = {
+        channel: runtimeChannel,
+        scopeId: options.scopeId,
+        authorizationEpoch: 1,
+      };
+      const contractRegistryBinding = manifest.registryBindings?.contractRegistry;
+      const contractRegistryText = contractRegistryBinding?.registryPath
+        ? await readFile(
+            (() => {
+              const registryPath = contractRegistryBinding.registryPath;
+              if (
+                path.isAbsolute(registryPath) ||
+                registryPath.split(/[\\/]/u).some((segment) => segment === "..")
+              ) {
+                throw new Error("Track B packaged contract registry path is invalid");
+              }
+              return path.resolve(path.dirname(trackBManifestPath), registryPath);
+            })(),
+            "utf8",
+          )
+        : undefined;
+      negotiatePackagedTrackBStartup({
+        channel: runtimeChannel,
+        scopeId: options.scopeId,
+        authorizationEpoch: 1,
+        manifest,
+        writerContext,
+        readerContext,
+        contractRegistryText,
+      });
       const destinationTrustMaterialFile =
         args.values["destination-material-file"] ??
         args.values["destination-trust-material-file"] ??
@@ -2115,8 +2588,7 @@ export async function main(): Promise<void> {
           process.env.ROLE_MODEL_ARTIFACT_ENCRYPTION_KEY_FILE,
       });
       // Start extension-host registration in parallel with sidecar/backend bring-up, but
-      // mark core APIs ready as soon as the packaged backend exists. Waiting on all
-      // packaged extensions previously kept /api/role-model/* at 503 runtime_initializing.
+      // do not advertise readiness until every canonical worker and startup probe is healthy.
       const extensionRuntimePromise = createProductionExtensionRuntime({
         stateRoot: path.join(trackBStateRoot, "extensions"),
         authorizationEpoch: 1,
@@ -2177,48 +2649,50 @@ export async function main(): Promise<void> {
             trackBDistributionRequiresSQLiteMaintenance(manifest),
           ),
       });
+      extensionRuntime = await awaitCliExtensionRuntime(extensionRuntimePromise, bootstrapState, {
+        expectedExtensionIds: TRACK_B_CANONICAL_EXTENSION_IDS,
+        beforeReady: async (runtime) => {
+          for (const extension of qaExtensions) {
+            const capability = extension.descriptor.capabilities.find(
+              (candidate) => candidate !== "health:probe",
+            );
+            if (!capability)
+              throw new Error(
+                `QA extension has no business capability: ${extension.descriptor.id}`,
+              );
+            const requestId = `run87:packaged-qa:${extension.descriptor.id}`;
+            const receipt = await runtime.invoke(extension.descriptor.id, {
+              requestId,
+              protocolVersion: extension.descriptor.protocolVersion,
+              channel: packagedProfile?.channel ?? "development",
+              scope: options.scopeId,
+              authorizationEpoch: 1,
+              capability,
+              payload: { packagedQa: true },
+            });
+            qaStartupReceipts.set(extension.descriptor.id, { ...receipt, requestId });
+          }
+          await drainPostObservationOutbox(runtime);
+          // A prior cloud outage must not require an unrelated new provider request
+          // before its already-authorized, durable aggregate is retried.
+          await currentPostObservationOperations()?.retryContributionAggregates();
+          extensionRuntimeRef.current = runtime;
+        },
+      });
       backend = packagedRuntime.backend;
-      bootstrapState.status = "ready";
-      delete bootstrapState.message;
-      try {
-        extensionRuntime = await extensionRuntimePromise;
-        extensionRuntimeRef.current = extensionRuntime;
-        for (const extension of qaExtensions) {
-          const capability = extension.descriptor.capabilities.find(
-            (candidate) => candidate !== "health:probe",
-          );
-          if (!capability)
-            throw new Error(`QA extension has no business capability: ${extension.descriptor.id}`);
-          const requestId = `run87:packaged-qa:${extension.descriptor.id}`;
-          const receipt = await extensionRuntime.invoke(extension.descriptor.id, {
-            requestId,
-            protocolVersion: extension.descriptor.protocolVersion,
-            channel: packagedProfile?.channel ?? "development",
-            scope: options.scopeId,
-            authorizationEpoch: 1,
-            capability,
-            payload: { packagedQa: true },
-          });
-          qaStartupReceipts.set(extension.descriptor.id, { ...receipt, requestId });
-        }
-        await drainPostObservationOutbox(extensionRuntime);
-        // A prior cloud outage must not require an unrelated new provider request
-        // before its already-authorized, durable aggregate is retried.
-        await currentPostObservationOperations()?.retryContributionAggregates();
-      } catch (error) {
-        console.error("[role-model] extension host failed after core runtime was ready:", error);
-      }
+      stopExtensionRuntimeWatchdog = startCliExtensionRuntimeWatchdog({
+        getRuntime: () => extensionRuntimeRef.current,
+        bootstrapState,
+        expectedExtensionIds: TRACK_B_CANONICAL_EXTENSION_IDS,
+        onFailure: failExtensionRuntime,
+      });
     } else {
       backend = await createBackend();
       bootstrapState.status = "ready";
       delete bootstrapState.message;
     }
   } catch (error) {
-    if (bootstrapState.status !== "ready") {
-      bootstrapState.status = "failed";
-      bootstrapState.message =
-        error instanceof Error ? error.message : "runtime backend initialization failed";
-    }
+    await failExtensionRuntime(error);
     console.error("runtime backend initialization failed", error);
   }
 }

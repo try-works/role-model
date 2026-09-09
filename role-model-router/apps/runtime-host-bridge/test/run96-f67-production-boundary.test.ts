@@ -15,6 +15,7 @@ import {
 } from "../src/track-b-operations.js";
 import {
   type RouterReplayAdapter,
+  TRACK_B_CANONICAL_EXTENSION_IDS,
   createProductionExtensionRuntime,
   createReplaySourceAttestation,
   createRouterReplayAdapter,
@@ -309,7 +310,7 @@ describe("Run 96 Addendum 26 F67 production boundaries", () => {
     temporaryRoots.push(root);
     const extensions = await Promise.all(
       Array.from({ length: 13 }, async (_, index) => {
-        const id = `run96-f67-extension-${String(index + 1).padStart(2, "0")}`;
+        const id = TRACK_B_CANONICAL_EXTENSION_IDS[index];
         const modulePath = path.join(root, `${id}.mjs`);
         const source = `export async function run(envelope){return {available:true,id:${JSON.stringify(id)},requestId:envelope.requestId,durableLocator:{id:${JSON.stringify(id)}}}}\n`;
         await writeFile(modulePath, source, "utf8");
@@ -400,6 +401,8 @@ describe("Run 96 Addendum 26 F67 production boundaries", () => {
       operationsEndpoint: "http://127.0.0.1:1",
       operationsToken: "a".repeat(64),
       operationsTimeoutMs: 10,
+      scope: "run96:f67",
+      authorizationEpoch: 96,
     });
     await expect(operations.readOperatorStatus()).resolves.toMatchObject({
       overall: "unavailable",

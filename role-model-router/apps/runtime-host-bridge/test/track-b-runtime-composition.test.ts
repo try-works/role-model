@@ -8,6 +8,7 @@ import { pathToFileURL } from "node:url";
 import { afterEach, describe, expect, test } from "vitest";
 
 import {
+  TRACK_B_CANONICAL_EXTENSION_IDS,
   TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS,
   createOwnedTrackBSidecarSpec,
   createPackagedProductionRuntime,
@@ -440,7 +441,7 @@ describe("production Track B composition", () => {
     roots.push(stateRoot);
     const extensions = await Promise.all(
       Array.from({ length: 13 }, async (_, index) => {
-        const id = `canonical-${String(index + 1).padStart(2, "0")}`;
+        const id = TRACK_B_CANONICAL_EXTENSION_IDS[index];
         const modulePath = path.join(stateRoot, `${id}.mjs`);
         const source = `export async function run(envelope){return {available:true,id:${JSON.stringify(id)},requestId:envelope.requestId}}\n`;
         await writeFile(modulePath, source, "utf8");
@@ -462,7 +463,7 @@ describe("production Track B composition", () => {
       host: {
         available: true,
         enabled: true,
-        extensions: extensions.map((row) => row.descriptor.id),
+        extensions: extensions.map((row) => row.descriptor.id).sort(),
       },
       supervisor: { available: true, readyWorkers: 13 },
     });
@@ -500,7 +501,7 @@ describe("production Track B composition", () => {
     roots.push(stateRoot);
     const extensions = await Promise.all(
       Array.from({ length: 13 }, async (_, index) => {
-        const id = `startup-budget-${String(index + 1).padStart(2, "0")}`;
+        const id = TRACK_B_CANONICAL_EXTENSION_IDS[index];
         const modulePath = path.join(stateRoot, `${id}.mjs`);
         const source = `${index === 0 ? "await new Promise((resolve) => setTimeout(resolve, 12_000));\n" : ""}export async function run(){return {available:true}}\n`;
         await writeFile(modulePath, source, "utf8");

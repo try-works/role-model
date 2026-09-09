@@ -2935,6 +2935,90 @@ export const TRACK_B_CANONICAL_EXTENSION_IDS = [
   "knowledge-worker",
 ] as const;
 
+/**
+ * Production Track B is a closed composition, not merely a count of workers.
+ * Keeping this check at the production constructor means a package cannot
+ * replace one canonical extension with an arbitrary module while still
+ * claiming to contain the production runtime.
+ */
+export function validateProductionExtensionSet(
+  extensions: readonly { readonly descriptor: Pick<ProductionExtensionDescriptor, "id"> }[],
+): void {
+  const expected = new Set<string>(TRACK_B_CANONICAL_EXTENSION_IDS);
+  const ids = extensions.map((extension) => extension.descriptor.id);
+  const observed = new Set(ids);
+  const duplicates = [...new Set(ids.filter((id, index) => ids.indexOf(id) !== index))].sort();
+  const missing = TRACK_B_CANONICAL_EXTENSION_IDS.filter((id) => !observed.has(id));
+  const unknown = [...observed].filter((id) => !expected.has(id)).sort();
+  if (ids.length !== TRACK_B_CANONICAL_EXTENSION_IDS.length || missing.length || unknown.length) {
+    throw new Error(
+      `canonical extension set mismatch: expected exactly thirteen IDs; missing=${
+        missing.join(",") || "none"
+      }; unknown=${unknown.join(",") || "none"}; duplicates=${duplicates.join(",") || "none"}`,
+    );
+  }
+  if (duplicates.length || observed.size !== ids.length) {
+    throw new Error(
+      `canonical extension set mismatch: duplicate IDs=${duplicates.join(",") || "unknown"}`,
+    );
+  }
+  const orderMismatch = ids.some((id, index) => id !== TRACK_B_CANONICAL_EXTENSION_IDS[index]);
+  if (orderMismatch) {
+    throw new Error(
+      `canonical extension set order mismatch: expected=${TRACK_B_CANONICAL_EXTENSION_IDS.join(",")}; received=${ids.join(",")}`,
+    );
+  }
+}
+
+/**
+ * Verify the extension host and supervisor have both reached the same
+ * canonical ready set before the HTTP server transitions out of pending.
+ */
+export function assertProductionExtensionRuntimeReady(
+  runtime: { readonly health: () => Record<string, unknown> },
+  expectedIds: readonly string[] = TRACK_B_CANONICAL_EXTENSION_IDS,
+): void {
+  const health = runtime.health();
+  const host = health.host;
+  const supervisor = health.supervisor;
+  const hostRecord = host && typeof host === "object" ? (host as Record<string, unknown>) : null;
+  const supervisorRecord =
+    supervisor && typeof supervisor === "object" ? (supervisor as Record<string, unknown>) : null;
+  const hostIds = hostRecord?.extensions;
+  const workerRows = supervisorRecord?.workers;
+  const observedIds = Array.isArray(hostIds)
+    ? hostIds.filter((id): id is string => typeof id === "string")
+    : [];
+  const observedWorkers = Array.isArray(workerRows) ? workerRows : [];
+  const missingIds = expectedIds.filter((id) => !observedIds.includes(id));
+  const notReadyIds = expectedIds.filter((id) => {
+    const row = observedWorkers.find(
+      (candidate) =>
+        candidate &&
+        typeof candidate === "object" &&
+        (candidate as Record<string, unknown>).id === id,
+    ) as Record<string, unknown> | undefined;
+    return row?.lifecycle !== "ready";
+  });
+  if (
+    hostRecord?.available !== true ||
+    hostRecord.enabled !== true ||
+    supervisorRecord?.available !== true ||
+    supervisorRecord.routingAvailable !== true ||
+    typeof supervisorRecord.readyWorkers !== "number" ||
+    supervisorRecord.readyWorkers < expectedIds.length ||
+    missingIds.length > 0 ||
+    notReadyIds.length > 0
+  ) {
+    throw new Error(
+      `production extension runtime is not ready: expected=${expectedIds.length}; ` +
+        `readyWorkers=${String(supervisorRecord?.readyWorkers ?? "missing")}; ` +
+        `missing=${missingIds.join(",") || "none"}; ` +
+        `notReady=${notReadyIds.join(",") || "none"}`,
+    );
+  }
+}
+
 export interface TrackBExtensionOutputRecord {
   readonly extensionId: string;
   readonly capability: string;
@@ -5787,8 +5871,7 @@ export async function createProductionExtensionRuntime(
     readonly qaExtensions?: Parameters<typeof createExtensionRuntime>[0]["extensions"];
   },
 ) {
-  if (options.extensions.length !== 13)
-    throw new Error("exactly thirteen canonical extensions are required");
+  validateProductionExtensionSet(options.extensions);
   const qaExtensions = options.qaExtensions ?? [];
   const canonicalIds = new Set(options.extensions.map((extension) => extension.descriptor.id));
   if (qaExtensions.length > 4) throw new Error("at most four explicit QA extensions are allowed");
