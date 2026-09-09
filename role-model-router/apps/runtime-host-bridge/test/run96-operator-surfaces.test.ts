@@ -257,6 +257,8 @@ describe("Run 96 operator evidence routes", () => {
         catalog: [],
         operationsEndpoint: `http://127.0.0.1:${address.port}`,
         operationsToken: token,
+        scope: "run96:operator-boundary",
+        authorizationEpoch: 96,
       });
       const callbacks = createRuntimeOperatorCallbacks(operations);
       await expect(callbacks.readOperatorStatus?.()).resolves.toEqual(payloads["/operator/status"]);

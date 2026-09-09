@@ -1723,6 +1723,8 @@ export async function main(): Promise<void> {
             ),
             catalog: [],
             runtimeChannel: packagedProfile?.channel ?? "development",
+            scope: options.scopeId,
+            authorizationEpoch: 1,
             operationsEndpoint: trackBOperationsEndpoint,
             operationsToken: trackBOperationsToken,
           })

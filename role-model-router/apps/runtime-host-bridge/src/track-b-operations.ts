@@ -665,7 +665,11 @@ const privateRetentionRequest = async (
   endpoint: string | undefined,
   token: string | undefined,
   route: string,
-  init: { readonly method?: string; readonly body?: Record<string, unknown> } = {},
+  init: {
+    readonly method?: string;
+    readonly body?: Record<string, unknown>;
+    readonly headers?: Readonly<Record<string, string>>;
+  } = {},
   // Route captures may perform bounded durable CAS and SQLite commits after the
   // provider response. Five seconds aborts healthy local captures on mature
   // runtimes; retain a finite budget while allowing that proven completion path.
@@ -682,6 +686,7 @@ const privateRetentionRequest = async (
     response = await fetch(new URL(route, endpoint.endsWith("/") ? endpoint : `${endpoint}/`), {
       method: init.method ?? "GET",
       headers: {
+        ...init.headers,
         ...(init.body ? { "content-type": "application/json" } : {}),
         authorization: `Bearer ${token}`,
       },
@@ -1079,6 +1084,8 @@ export function createTrackBOperations({
   statePath,
   catalog,
   runtimeChannel = "development",
+  scope,
+  authorizationEpoch,
   operationsEndpoint = process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL?.trim(),
   operationsToken = process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TOKEN,
   operationsTimeoutMs = 8_000,
@@ -1088,6 +1095,10 @@ export function createTrackBOperations({
   readonly statePath: string;
   readonly catalog: readonly Record<string, unknown>[];
   readonly runtimeChannel?: "development" | "stage" | "production";
+  /** Authoritative operator scope from the packaged runtime binding. */
+  readonly scope?: string;
+  /** Authoritative operator authorization epoch from the packaged runtime binding. */
+  readonly authorizationEpoch?: number;
   readonly operationsEndpoint?: string;
   readonly operationsToken?: string;
   /** Bounds a private sidecar operation so a dashboard request cannot wait forever. */
@@ -1106,9 +1117,30 @@ export function createTrackBOperations({
   );
   const requestPrivate = (
     route: string,
-    init?: { readonly method?: string; readonly body?: Record<string, unknown> },
+    init?: {
+      readonly method?: string;
+      readonly body?: Record<string, unknown>;
+      readonly headers?: Readonly<Record<string, string>>;
+    },
     timeoutMs = operationsTimeoutMs,
   ) => privateRetentionRequest(operationsEndpoint, operationsToken, route, init, timeoutMs);
+  const operatorScope = typeof scope === "string" && scope.trim() ? scope.trim() : null;
+  const operatorAuthorizationEpoch =
+    typeof authorizationEpoch === "number" &&
+    Number.isSafeInteger(authorizationEpoch) &&
+    authorizationEpoch >= 0
+      ? authorizationEpoch
+      : null;
+  const operatorCapabilityForRoute = (route: string): string => {
+    const pathname = new URL(route, "http://role-model-operator.local").pathname;
+    if (pathname === "/operator/status") return "status";
+    if (pathname.endsWith("/storage")) return "storage";
+    if (pathname.includes("/trace-roots")) return "trace";
+    if (pathname.includes("/replay/")) return "replay";
+    if (pathname.includes("/evaluation/")) return "evaluation";
+    if (pathname.includes("/learning")) return "learning";
+    throw new Error(`unknown operator route capability: ${pathname}`);
+  };
   const operatorSensitiveKey =
     /(?:secret|token|password|credential|api[-_]?key|authorization|cookie|header|prompt|transcript|content|body|input|output|message|response)/i;
   const operatorSensitiveValue = /(?:sk-[a-z0-9_-]{8,}|api[_-]?key|bearer\s+[a-z0-9._-]{12,})/i;
@@ -1146,12 +1178,39 @@ export function createTrackBOperations({
   const requestOperator = async (
     capability: string,
     route: string,
-    init?: { readonly method?: string; readonly body?: Record<string, unknown> },
+    init?: {
+      readonly method?: string;
+      readonly body?: Record<string, unknown>;
+      readonly headers?: Readonly<Record<string, string>>;
+    },
   ): Promise<unknown> => {
     try {
+      // Preserve the existing fail-closed credential contract before reporting
+      // a missing operator context. This check never performs network I/O;
+      // privateRetentionRequest validates the launcher-issued token first.
+      if (operationsEndpoint && (!operationsToken || operationsToken.trim().length < 24)) {
+        await requestPrivate(route, init);
+      }
+      if (operationsEndpoint && (!operatorScope || operatorAuthorizationEpoch === null)) {
+        throw new Error("operator context requires an authoritative scope and authorization epoch");
+      }
+      const operatorHeaders =
+        operationsEndpoint && operatorScope && operatorAuthorizationEpoch !== null
+          ? {
+              ...(init?.headers ?? {}),
+              "x-role-model-channel": runtimeChannel,
+              "x-role-model-scope": operatorScope,
+              "x-role-model-authorization-epoch": String(operatorAuthorizationEpoch),
+              "x-role-model-capability": operatorCapabilityForRoute(route),
+            }
+          : init?.headers;
+      const boundInit =
+        operatorHeaders === undefined ? init : { ...(init ?? {}), headers: operatorHeaders };
       const result = await requestPrivate(
         route,
-        init?.body === undefined ? init : { ...init, body: sanitizeOperatorBody(init.body) },
+        boundInit?.body === undefined
+          ? boundInit
+          : { ...boundInit, body: sanitizeOperatorBody(boundInit.body) },
       );
       return result === null
         ? unavailableOperatorPayload(capability)

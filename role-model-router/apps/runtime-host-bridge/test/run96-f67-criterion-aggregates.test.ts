@@ -283,6 +283,8 @@ describe("Run 96 Addendum 26 F67 criterion-owned production aggregates", () => {
       catalog: [],
       operationsEndpoint,
       operationsToken: "run96-f67-wrong-token-0123456789",
+      scope: "run96:f67",
+      authorizationEpoch: 96,
     });
     await expect(wrongToken.readOperatorStatus()).rejects.toThrow(
       /401|authentication_required|operation/i,
@@ -292,6 +294,8 @@ describe("Run 96 Addendum 26 F67 criterion-owned production aggregates", () => {
       catalog: [],
       operationsEndpoint,
       operationsToken: expectedToken,
+      scope: "run96:f67",
+      authorizationEpoch: 96,
     });
     await expect(validToken.readOperatorStatus()).resolves.toMatchObject({ overall: "available" });
 
@@ -393,6 +397,8 @@ describe("Run 96 Addendum 26 F67 criterion-owned production aggregates", () => {
       catalog: [],
       operationsEndpoint,
       operationsToken: expectedToken,
+      scope: "run96:f67:privacy",
+      authorizationEpoch: 96,
     });
     const operatorProjection = await operations.readOperatorStatus();
     expect(operatorProjection).toMatchObject({
@@ -426,6 +432,8 @@ describe("Run 96 Addendum 26 F67 criterion-owned production aggregates", () => {
       catalog: [],
       operationsEndpoint: cloudEndpoint,
       operationsToken: expectedToken,
+      scope: "run96:f67:privacy",
+      authorizationEpoch: 96,
     });
     await expect(
       cloudOperations.createReplayJob({
