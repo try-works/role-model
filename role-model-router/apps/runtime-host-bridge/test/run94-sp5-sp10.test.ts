@@ -275,15 +275,18 @@ const canonicalExtensions = [
   ["background-evidence-scheduler", ["scheduler:schedule-and-run", "artifact:read"]],
   ["memory-store", ["memory:write", "memory:read", "artifact:read"]],
   ["knowledge-store", ["knowledge:write", "knowledge:read", "artifact:read"]],
-  ["evaluation-core", ["evaluation:consume-projection", "artifact:read"]],
+  ["evaluation-core", ["health:probe", "evaluation:consume-projection", "artifact:read"]],
   ["crowdsourced-learning", ["aggregate:preview", "artifact:read"]],
   ["replay-core", ["replay:plan-graph", "artifact:read"]],
   ["evaluation-runner-local", ["evaluation:run-local", "artifact:read"]],
   ["trajectory-signals", ["signals:analyze", "artifact:read"]],
-  ["profile-learner", ["profile:estimate", "profile:consume-projection", "artifact:read"]],
+  [
+    "profile-learner",
+    ["health:probe", "profile:estimate", "profile:consume-projection", "artifact:read"],
+  ],
   [
     "knowledge-worker",
-    ["knowledge:eval-consumer", "knowledge:consume-projection", "artifact:read"],
+    ["health:probe", "knowledge:eval-consumer", "knowledge:consume-projection", "artifact:read"],
   ],
 ] as const;
 

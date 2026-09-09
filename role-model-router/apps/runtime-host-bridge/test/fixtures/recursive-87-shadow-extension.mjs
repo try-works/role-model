@@ -1,3 +1,8 @@
+import { createHash } from "node:crypto";
+
+const referenceDigest = (reference) =>
+  `sha256:${createHash("sha256").update(reference).digest("hex")}`;
+
 export async function run(envelope = {}) {
   const capability = envelope.capability ?? "health:probe";
   if (capability === "health:probe") return { available: true, probe: "run87.shadow" };
@@ -14,6 +19,38 @@ export async function run(envelope = {}) {
   }
   if (capability === "evaluation:register-scorer")
     return { key: `${envelope.value.id}@${envelope.value.version}` };
+  if (capability === "evaluation:attest-references") {
+    const now = Date.now();
+    const authority = "sidecar:recursive-87-reference-store";
+    return {
+      schemaVersion: "role-model.evaluation-reference-attestation.v1",
+      authority,
+      purpose: "evaluation",
+      channel: envelope.channel,
+      scope: envelope.scope,
+      authorizationEpoch: envelope.authorizationEpoch,
+      issuedAtMs: now - 1,
+      expiresAtMs: now + 60_000,
+      references: Object.fromEntries(
+        Object.entries(envelope.value.references).map(([field, reference]) => [
+          field,
+          {
+            schemaVersion: "role-model.evaluation-reference-attestation.v1",
+            reference,
+            referenceDigest: referenceDigest(reference),
+            authority,
+            purpose: "evaluation",
+            channel: envelope.channel,
+            scope: envelope.scope,
+            authorizationEpoch: envelope.authorizationEpoch,
+            issuedAtMs: now - 1,
+            expiresAtMs: now + 60_000,
+            resolved: true,
+          },
+        ]),
+      ),
+    };
+  }
   if (capability === "evaluation:create-job") {
     const job = envelope.value;
     return { ...job, status: "queued" };

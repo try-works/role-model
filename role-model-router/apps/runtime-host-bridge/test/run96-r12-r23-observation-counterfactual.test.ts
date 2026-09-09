@@ -97,11 +97,11 @@ test("Run 96 R12-R23 observation-only production path refuses learning without a
       ({ id, envelope }) =>
         id === "profile-learner" && envelope.capability === "profile:consume-projection",
     ),
-  ).toBe(true);
+  ).toBe(false);
   expect(
     invoked.some(
       ({ id, envelope }) =>
         id === "knowledge-worker" && envelope.capability === "knowledge:consume-projection",
     ),
-  ).toBe(true);
+  ).toBe(false);
 });

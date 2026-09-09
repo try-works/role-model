@@ -3826,10 +3826,231 @@ export interface TrackBShadowPipelineInput {
   readonly comparableEvidence?: Readonly<Record<string, unknown>>;
   readonly evaluationCases: readonly Record<string, unknown>[];
   readonly trajectoryEvents: readonly Record<string, unknown>[];
+  /**
+   * Caller-owned, independently materialized references for the evaluation
+   * join.  The public adapter forwards the sidecar proof for these references
+   * without manufacturing or rewriting it.
+   */
+  readonly evaluationReferences?: TrackBEvaluationReferences;
+  /** A proposed proof is diagnostic input only; it is never trusted by this adapter. */
+  readonly referenceAttestation?: Readonly<Record<string, unknown>>;
+  /** Observed dimension values are kept on each rollout, including explicit nulls. */
+  readonly observedDimensions?: Readonly<Record<string, unknown>>;
   /** Optional host-owned durable job IDs, used to correlate a supervised replay handoff. */
   readonly evaluationJobIds?: readonly string[];
   readonly identity?: TrackBVariantIdentity;
   readonly occurrence?: Readonly<{ occurrenceId: string; contentId: string }>;
+}
+
+export interface TrackBEvaluationReferenceSet {
+  readonly taskRef: string;
+  readonly inputRef: string;
+  readonly forkRef: string;
+  readonly toolPolicyDigest: string;
+  readonly environmentDigest: string;
+  readonly sourceEvidenceRef: string;
+  readonly counterfactualEvidenceRef: string;
+  readonly sourceOutcomeRef: string;
+  readonly counterfactualOutcomeRef: string;
+}
+
+export interface TrackBEvaluationCaseReference {
+  readonly caseId: string;
+  readonly evidenceRef: string;
+}
+
+export interface TrackBEvaluationReferences extends TrackBEvaluationReferenceSet {
+  readonly perCase: readonly TrackBEvaluationCaseReference[];
+}
+
+type TrackBReferenceAttestation = Record<string, unknown>;
+
+const trackBReferenceDigest = (reference: string): string =>
+  `sha256:${createHash("sha256").update(reference).digest("hex")}`;
+
+function requireTrackBReference(value: unknown, label: string): string {
+  if (typeof value !== "string" || !value.trim()) {
+    throw new Error(`trusted evaluation ${label} reference is required`);
+  }
+  return value;
+}
+
+function normalizeTrackBEvaluationReferences(
+  value: unknown,
+  expectedCaseCount: number,
+): TrackBEvaluationReferences {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("trusted evaluation references are required");
+  }
+  const record = value as Record<string, unknown>;
+  const normalized = {
+    taskRef: requireTrackBReference(record.taskRef, "task"),
+    inputRef: requireTrackBReference(record.inputRef, "input"),
+    forkRef: requireTrackBReference(record.forkRef, "fork"),
+    toolPolicyDigest: requireTrackBReference(record.toolPolicyDigest, "tool policy"),
+    environmentDigest: requireTrackBReference(record.environmentDigest, "environment"),
+    sourceEvidenceRef: requireTrackBReference(record.sourceEvidenceRef, "source evidence"),
+    counterfactualEvidenceRef: requireTrackBReference(
+      record.counterfactualEvidenceRef,
+      "counterfactual evidence",
+    ),
+    sourceOutcomeRef: requireTrackBReference(record.sourceOutcomeRef, "source outcome"),
+    counterfactualOutcomeRef: requireTrackBReference(
+      record.counterfactualOutcomeRef,
+      "counterfactual outcome",
+    ),
+  } satisfies TrackBEvaluationReferenceSet;
+  const fields = [
+    normalized.taskRef,
+    normalized.inputRef,
+    normalized.forkRef,
+    normalized.toolPolicyDigest,
+    normalized.environmentDigest,
+    normalized.sourceEvidenceRef,
+    normalized.counterfactualEvidenceRef,
+    normalized.sourceOutcomeRef,
+    normalized.counterfactualOutcomeRef,
+  ];
+  if (new Set(fields).size !== fields.length) {
+    throw new Error("trusted evaluation comparability references must be distinct");
+  }
+  if (!Array.isArray(record.perCase) || record.perCase.length !== expectedCaseCount) {
+    throw new Error("trusted evaluation per-case references are required for every case");
+  }
+  const perCase = record.perCase.map((item, index) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      throw new Error(`trusted evaluation case ${index} reference is invalid`);
+    }
+    const row = item as Record<string, unknown>;
+    return {
+      caseId: requireTrackBReference(row.caseId, `case ${index}`),
+      evidenceRef: requireTrackBReference(row.evidenceRef, `case ${index} evidence`),
+    };
+  });
+  if (new Set(perCase.map((row) => row.caseId)).size !== perCase.length) {
+    throw new Error("trusted evaluation case references must be unique");
+  }
+  if (new Set(perCase.map((row) => row.evidenceRef)).size !== perCase.length) {
+    throw new Error("trusted evaluation case evidence references must be distinct");
+  }
+  if (perCase.some((row) => fields.includes(row.evidenceRef))) {
+    throw new Error("trusted evaluation case evidence must remain independent from comparability");
+  }
+  return { ...normalized, perCase };
+}
+
+function trackBReferenceEntries(refs: TrackBEvaluationReferences): Record<string, string> {
+  return {
+    taskRef: refs.taskRef,
+    inputRef: refs.inputRef,
+    forkRef: refs.forkRef,
+    toolPolicyDigest: refs.toolPolicyDigest,
+    environmentDigest: refs.environmentDigest,
+    sourceEvidenceRef: refs.sourceEvidenceRef,
+    counterfactualEvidenceRef: refs.counterfactualEvidenceRef,
+    sourceOutcomeRef: refs.sourceOutcomeRef,
+    counterfactualOutcomeRef: refs.counterfactualOutcomeRef,
+    ...Object.fromEntries(refs.perCase.map((row) => [row.caseId, row.evidenceRef])),
+  };
+}
+
+function validateTrackBReferenceAttestation(
+  value: unknown,
+  refs: TrackBEvaluationReferences,
+  context: Readonly<{ channel: string; scope: string; authorizationEpoch: number }>,
+  additionalReferences: Readonly<Record<string, string>> = {},
+  nowMs = Date.now(),
+): TrackBReferenceAttestation {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("trusted evaluation reference attestation is required");
+  }
+  const attestation = value as TrackBReferenceAttestation;
+  if (attestation.schemaVersion !== "role-model.evaluation-reference-attestation.v1") {
+    throw new Error("trusted evaluation reference attestation schema is invalid");
+  }
+  const authority = attestation.authority;
+  if (
+    typeof authority !== "string" ||
+    !authority ||
+    authority === "runtime-shadow-pipeline" ||
+    !(authority.startsWith("sidecar:") || authority === "evaluation-reference-store")
+  ) {
+    throw new Error("trusted evaluation reference attestation authority is invalid");
+  }
+  if (attestation.purpose !== "evaluation") {
+    throw new Error("trusted evaluation reference attestation purpose is invalid");
+  }
+  if (
+    attestation.channel !== context.channel ||
+    attestation.scope !== context.scope ||
+    attestation.authorizationEpoch !== context.authorizationEpoch
+  ) {
+    throw new Error("trusted evaluation reference attestation context is invalid");
+  }
+  const issuedAtMs = attestation.issuedAtMs;
+  const expiresAtMs = attestation.expiresAtMs;
+  if (
+    typeof issuedAtMs !== "number" ||
+    !Number.isFinite(issuedAtMs) ||
+    typeof expiresAtMs !== "number" ||
+    !Number.isFinite(expiresAtMs) ||
+    issuedAtMs > nowMs + 5_000 ||
+    expiresAtMs <= nowMs ||
+    expiresAtMs <= issuedAtMs ||
+    expiresAtMs - issuedAtMs > RUN88_PI_PROOF_VALIDITY_MS
+  ) {
+    throw new Error("trusted evaluation reference attestation freshness is invalid");
+  }
+  const references = attestation.references;
+  if (!references || typeof references !== "object" || Array.isArray(references)) {
+    throw new Error("trusted evaluation reference proofs are required");
+  }
+  for (const [field, reference] of Object.entries({
+    ...trackBReferenceEntries(refs),
+    ...additionalReferences,
+  })) {
+    const proof = (references as Record<string, unknown>)[field];
+    if (!proof || typeof proof !== "object" || Array.isArray(proof)) {
+      throw new Error(`trusted evaluation proof for ${field} is required`);
+    }
+    const proofRecord = proof as Record<string, unknown>;
+    if (
+      proofRecord.reference !== reference ||
+      proofRecord.resolved !== true ||
+      proofRecord.referenceDigest !== trackBReferenceDigest(reference) ||
+      proofRecord.purpose !== "evaluation" ||
+      proofRecord.authority !== authority ||
+      proofRecord.channel !== context.channel ||
+      proofRecord.scope !== context.scope ||
+      proofRecord.authorizationEpoch !== context.authorizationEpoch ||
+      typeof proofRecord.issuedAtMs !== "number" ||
+      typeof proofRecord.expiresAtMs !== "number" ||
+      proofRecord.issuedAtMs > nowMs + 5_000 ||
+      proofRecord.expiresAtMs <= nowMs ||
+      proofRecord.expiresAtMs <= proofRecord.issuedAtMs
+    ) {
+      throw new Error(`trusted evaluation proof for ${field} is invalid`);
+    }
+  }
+  return attestation;
+}
+
+async function resolveTrackBReferenceAttestation(
+  runtime: TrackBShadowPipelineRuntime,
+  envelope: (capability: string, value: unknown) => Record<string, unknown>,
+  refs: TrackBEvaluationReferences,
+  context: Readonly<{ channel: string; scope: string; authorizationEpoch: number }>,
+  additionalReferences: Readonly<Record<string, string>> = {},
+): Promise<TrackBReferenceAttestation> {
+  const result = await runtime.invoke(
+    "evaluation-core",
+    envelope("evaluation:attest-references", {
+      purpose: "evaluation",
+      references: { ...trackBReferenceEntries(refs), ...additionalReferences },
+      context,
+    }),
+  );
+  return validateTrackBReferenceAttestation(result, refs, context, additionalReferences);
 }
 
 export interface TrackBSemanticEvaluationCriteria {
@@ -4469,7 +4690,21 @@ export async function runTrackBShadowPipeline(
     ...envelope("evaluation:register-scorer", scorer),
   });
   const rolloutRows = [sourceRollout, ...counterfactualRollouts];
-  const caseIds = rolloutRows.map((_, index) => `case:${input.requestId}:${index}`);
+  if (input.evaluationCases.length < 1) {
+    throw new Error("durable routing-shadow evaluation cases are required");
+  }
+  const evaluationReferences = normalizeTrackBEvaluationReferences(
+    input.evaluationReferences,
+    rolloutRows.length,
+  );
+  const caseIds = rolloutRows.map((_, index) => {
+    const referenceCaseId = evaluationReferences.perCase[index]?.caseId;
+    const evaluationCaseId = input.evaluationCases[index]?.id;
+    return referenceCaseId ?? (typeof evaluationCaseId === "string" ? evaluationCaseId : "");
+  });
+  if (caseIds.some((caseId) => !caseId)) {
+    throw new Error("durable routing-shadow evaluation case identity is required");
+  }
   const holdout = {
     holdoutId: `sha256:${createHash("sha256").update(`${input.requestId}:holdout`).digest("hex")}`,
     membershipDigest: `sha256:${createHash("sha256")
@@ -4498,73 +4733,57 @@ export async function runTrackBShadowPipeline(
     !Array.isArray(firstCounterfactual.outcome)
       ? (firstCounterfactual.outcome as Record<string, unknown>)
       : null;
-  const requiredReference = (value: unknown, label: string): string => {
-    if (typeof value !== "string" || !value.trim()) {
-      throw new Error(`durable routing-shadow ${label} reference is required`);
-    }
-    return value;
-  };
   const comparability = {
-    taskRef: input.sourceGraphRef,
-    inputRef: input.sourceGraphRef,
-    forkRef: replayRecord.sharedPrefixRef,
+    taskRef: evaluationReferences.taskRef,
+    inputRef: evaluationReferences.inputRef,
+    forkRef: evaluationReferences.forkRef,
     policyId: "run96-routing-shadow",
     scorerSetVersion,
-    toolPolicyDigest: input.sourceGraphRef,
-    environmentDigest: input.sourceGraphRef,
-    sourceEvidenceRef: requiredReference(sourceRollout.evidenceRef, "source evidence"),
-    counterfactualEvidenceRef: requiredReference(
-      firstCounterfactual.evidenceRef,
-      "counterfactual evidence",
-    ),
-    sourceOutcomeRef: requiredReference(sourceOutcome?.outcomeRef, "source outcome"),
-    counterfactualOutcomeRef: requiredReference(
-      counterfactualOutcome?.outcomeRef,
-      "counterfactual outcome",
-    ),
+    toolPolicyDigest: evaluationReferences.toolPolicyDigest,
+    environmentDigest: evaluationReferences.environmentDigest,
+    sourceEvidenceRef: evaluationReferences.sourceEvidenceRef,
+    counterfactualEvidenceRef: evaluationReferences.counterfactualEvidenceRef,
+    sourceOutcomeRef: evaluationReferences.sourceOutcomeRef,
+    counterfactualOutcomeRef: evaluationReferences.counterfactualOutcomeRef,
   };
   if (
-    comparability.sourceEvidenceRef === comparability.counterfactualEvidenceRef ||
-    comparability.sourceOutcomeRef === comparability.counterfactualOutcomeRef
+    sourceRollout.evidenceRef !== comparability.sourceEvidenceRef ||
+    firstCounterfactual.evidenceRef !== comparability.counterfactualEvidenceRef ||
+    sourceOutcome?.outcomeRef !== comparability.sourceOutcomeRef ||
+    counterfactualOutcome?.outcomeRef !== comparability.counterfactualOutcomeRef ||
+    replayRecord.sharedPrefixRef !== comparability.forkRef
   ) {
-    throw new Error("durable routing-shadow source and counterfactual references must be distinct");
+    throw new Error(
+      "durable routing-shadow comparability references do not bind the observed replay",
+    );
   }
-  const referenceAttestation = {
-    schemaVersion: "role-model.evaluation-reference-attestation.v1",
-    authority: "runtime-shadow-pipeline",
-    channel: input.channel,
-    scope: input.scope,
-    authorizationEpoch: input.authorizationEpoch,
-    references: {
-      sourceEvidenceRef: { reference: comparability.sourceEvidenceRef, resolved: true },
-      counterfactualEvidenceRef: {
-        reference: comparability.counterfactualEvidenceRef,
-        resolved: true,
-      },
-      sourceOutcomeRef: { reference: comparability.sourceOutcomeRef, resolved: true },
-      counterfactualOutcomeRef: {
-        reference: comparability.counterfactualOutcomeRef,
-        resolved: true,
-      },
+  const referenceAttestation = await resolveTrackBReferenceAttestation(
+    runtime,
+    envelope,
+    evaluationReferences,
+    {
+      channel: input.channel,
+      scope: input.scope,
+      authorizationEpoch: input.authorizationEpoch,
     },
-  };
-  const withReferenceAttestation = (references: Readonly<Record<string, unknown>> = {}) => ({
-    ...referenceAttestation,
-    references: { ...referenceAttestation.references, ...references },
-  });
+  );
   const jobId = input.evaluationJobIds?.[0] ?? `evaluation:${input.requestId}`;
   if (typeof jobId !== "string" || !jobId) {
     throw new Error("durable routing-shadow evaluation job identity is invalid");
   }
   const durableCases = rolloutRows.map((rollout, index) => {
     const evaluationCase = input.evaluationCases[index % input.evaluationCases.length] ?? {};
+    const caseReference = evaluationReferences.perCase[index];
+    if (!caseReference || caseReference.caseId !== caseIds[index]) {
+      throw new Error("durable routing-shadow case identity does not match its evidence reference");
+    }
     const evaluationCriteria = normalizeTrackBSemanticEvaluationCriteria(
       evaluationCase.evaluationCriteria,
     );
     return {
       id: caseIds[index],
-      candidateRef: requiredReference(rollout.endpointId, "candidate"),
-      evidenceRef: input.sourceGraphRef,
+      candidateRef: requireTrackBReference(rollout.endpointId, "candidate"),
+      evidenceRef: caseReference.evidenceRef,
       sourceGeneration: 0,
       evaluationCriteria,
       evaluationCriteriaDigest: digestTrackBSemanticEvaluationCriteria(evaluationCriteria),
@@ -4575,7 +4794,7 @@ export async function runTrackBShadowPipeline(
       id: jobId,
       idempotencyKey: jobId,
       evaluationSchemaVersion: 3,
-      candidateRef: requiredReference(sourceRollout.endpointId, "source candidate"),
+      candidateRef: requireTrackBReference(sourceRollout.endpointId, "source candidate"),
       policyId: "run96-routing-shadow",
       scorerSetVersion,
       requestKind: "routing_shadow_durable",
@@ -4586,7 +4805,13 @@ export async function runTrackBShadowPipeline(
     }),
   });
   const trialIds: string[] = [];
-  const completedRollouts: Array<{ rollout: Record<string, unknown>; score: number }> = [];
+  const completedRollouts: Array<{
+    rollout: Record<string, unknown>;
+    score: number;
+    trialId: string;
+    scoreId: string;
+    referenceAttestation?: TrackBReferenceAttestation;
+  }> = [];
   for (const [index, rollout] of rolloutRows.entries()) {
     const evaluationCase = input.evaluationCases[index % input.evaluationCases.length] ?? {};
     const evaluationCriteria = normalizeTrackBSemanticEvaluationCriteria(
@@ -4627,7 +4852,15 @@ export async function runTrackBShadowPipeline(
       if (!correctness || !Number.isFinite(correctness.score)) {
         throw new Error("durable scored trial is missing semantic correctness evidence");
       }
-      completedRollouts.push({ rollout, score: Number(correctness.score) });
+      completedRollouts.push({
+        rollout,
+        score: Number(correctness.score),
+        trialId: trial.trialId,
+        scoreId:
+          typeof correctness.scoreId === "string" && correctness.scoreId
+            ? correctness.scoreId
+            : `score:${trial.trialId}:${scorer.id}:correctness`,
+      });
       trialIds.push(trial.trialId);
       continue;
     }
@@ -4667,17 +4900,18 @@ export async function runTrackBShadowPipeline(
     // execute successfully while still failing an independently specified task
     // criterion; the runner receives bounded evidence values instead.
     const actual = independentlyObservedActual;
-    const outputRef =
-      typeof rollout.artifactRef === "string" ? rollout.artifactRef : input.sourceGraphRef;
+    const outputRef = requireTrackBReference(rollout.artifactRef, "rollout output");
+    const outputDigest = requireTrackBReference(
+      (rollout.outcome as Record<string, unknown> | undefined)?.outcomeDigest,
+      "rollout outcome",
+    );
     const execution = await runtime.invoke("evaluation-runner-local", {
       ...envelope("evaluation:execute-trial", {
         trialId: trial.trialId,
         actual,
         evaluationCriteria,
         outputRef,
-        outputDigest:
-          (rollout.outcome as Record<string, unknown> | undefined)?.outcomeDigest ??
-          input.sourceGraphRef,
+        outputDigest,
         stdoutRef: outputRef,
         stderrRef: outputRef,
         exitCode: 0,
@@ -4688,10 +4922,27 @@ export async function runTrackBShadowPipeline(
     if (
       !Array.isArray(execution.scores) ||
       typeof execution.outputRef !== "string" ||
-      typeof execution.outputDigest !== "string"
+      typeof execution.outputDigest !== "string" ||
+      typeof execution.stdoutRef !== "string" ||
+      typeof execution.stderrRef !== "string"
     ) {
       throw new Error("durable routing-shadow runner receipt is invalid");
     }
+    const trialReferenceAttestation = await resolveTrackBReferenceAttestation(
+      runtime,
+      envelope,
+      evaluationReferences,
+      {
+        channel: input.channel,
+        scope: input.scope,
+        authorizationEpoch: input.authorizationEpoch,
+      },
+      {
+        trialOutputRef: execution.outputRef,
+        trialStdoutRef: execution.stdoutRef,
+        trialStderrRef: execution.stderrRef,
+      },
+    );
     if (!alreadySubmitted) {
       await runtime.invoke("evaluation-core", {
         ...envelope("evaluation:submit-trial-result", {
@@ -4704,11 +4955,7 @@ export async function runTrackBShadowPipeline(
           stderrRef: execution.stderrRef,
           exitCode: execution.exitCode,
           measurements: execution.measurements,
-          referenceAttestation: withReferenceAttestation({
-            trialOutputRef: { reference: execution.outputRef, resolved: true },
-            trialStdoutRef: { reference: execution.stdoutRef, resolved: true },
-            trialStderrRef: { reference: execution.stderrRef, resolved: true },
-          }),
+          referenceAttestation: trialReferenceAttestation,
         }),
       });
     }
@@ -4716,9 +4963,7 @@ export async function runTrackBShadowPipeline(
       ...envelope("evaluation:record-trial-score-batch", {
         trialId: trial.trialId,
         scores: execution.scores,
-        referenceAttestation: withReferenceAttestation({
-          trialOutputRef: { reference: execution.outputRef, resolved: true },
-        }),
+        referenceAttestation: trialReferenceAttestation,
       }),
     });
     const correctness = (execution.scores as Record<string, unknown>[]).find(
@@ -4730,7 +4975,16 @@ export async function runTrackBShadowPipeline(
     if (!correctness || !Number.isFinite(correctness.score)) {
       throw new Error("durable semantic evaluation did not produce a correctness score");
     }
-    completedRollouts.push({ rollout, score: Number(correctness.score) });
+    completedRollouts.push({
+      rollout,
+      score: Number(correctness.score),
+      trialId: trial.trialId,
+      scoreId:
+        typeof correctness.scoreId === "string" && correctness.scoreId
+          ? correctness.scoreId
+          : `score:${trial.trialId}:${scorer.id}:correctness`,
+      referenceAttestation: trialReferenceAttestation,
+    });
     trialIds.push(trial.trialId);
   }
   const evaluation = await runtime.invoke("evaluation-core", {
@@ -4904,8 +5158,25 @@ export async function runTrackBShadowPipeline(
   ) {
     throw new Error("finalized trajectory signals must retain replay provenance");
   }
+  const linkedTrialScoreRefs = completedRollouts.map(({ trialId, scoreId, score }) => ({
+    trialId,
+    scoreId,
+    score,
+    confidence: 1,
+  }));
   const knowledgeSignalRefs = signalRecord.signals.map((signal) => {
     const record = signal as Record<string, unknown>;
+    const lineage =
+      record.lineage && typeof record.lineage === "object" && !Array.isArray(record.lineage)
+        ? record.lineage
+        : {
+            traceRef: replayForKnowledge.sourceGraphRef,
+            replayRef: replayDigest,
+            evaluationId: durableComparison.groupId,
+            routeDecisionId: input.sourceDecisionId,
+            routePackage: input.routePackage,
+            trialScoreRefs: linkedTrialScoreRefs,
+          };
     const compact = {
       signalInstanceId: record.signalInstanceId,
       signalType: record.signalType,
@@ -4918,6 +5189,11 @@ export async function runTrackBShadowPipeline(
       missingness: record.missingness,
       evidenceRef: record.evidenceRef,
       routePackage: record.routePackage,
+      evaluationId: record.evaluationId ?? durableComparison.groupId,
+      trialScoreRefs: Array.isArray(record.trialScoreRefs)
+        ? record.trialScoreRefs
+        : linkedTrialScoreRefs,
+      lineage,
     };
     if (
       typeof compact.signalInstanceId !== "string" ||
@@ -4945,29 +5221,101 @@ export async function runTrackBShadowPipeline(
     }
     return compact;
   });
+  const finalizedTrialScoreRefs = completedRollouts.map(({ trialId, scoreId, score }) => ({
+    trialId,
+    scoreId,
+    score,
+    confidence: 1,
+  }));
+  const sourceGeneration = createHash("sha256")
+    .update(
+      JSON.stringify(
+        canonicalizeRun88Proof({
+          groupId: durableComparison.groupId,
+          replayRef: replayDigest,
+          trialScoreRefs: finalizedTrialScoreRefs,
+        }),
+      ),
+    )
+    .digest("hex");
+  const evaluationSignalProvenance = {
+    groupId: durableComparison.groupId,
+    status: "finalized",
+    outcome: durableComparison.outcome,
+  };
+  const learningSignalEvidence = {
+    schemaVersion: "role-model.finalized-evaluation-signal.v1",
+    groupId: durableComparison.groupId,
+    outcome: durableComparison.outcome,
+    traceRef: replayForKnowledge.sourceGraphRef,
+    replayRef: replayDigest,
+    routePackage: input.routePackage,
+    scorerSetVersion,
+    trialScoreRefs: finalizedTrialScoreRefs,
+    sourceGeneration,
+  };
+  const signalsWithProvenance = {
+    ...(signals && typeof signals === "object" && !Array.isArray(signals)
+      ? (signals as Record<string, unknown>)
+      : {}),
+    evaluationProvenance: evaluationSignalProvenance,
+    learningEvidence: learningSignalEvidence,
+  };
   const signalsForKnowledge = {
     routeDecisionId: signalRecord.routeDecisionId,
     graphRef: signalRecord.graphRef,
     signals: knowledgeSignalRefs,
+    evaluationProvenance: evaluationSignalProvenance,
+    learningEvidence: learningSignalEvidence,
+  };
+  const observedProfileDimensions = (rollout: Record<string, unknown>) => {
+    const raw = rollout.observedDimensions;
+    const dimensions =
+      raw && typeof raw === "object" && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
+    const names = [
+      "task",
+      "repository",
+      "prompt",
+      "tool",
+      "sampling",
+      "experience",
+      "environment",
+    ] as const;
+    const unknownDimensions = names.filter(
+      (name) => dimensions[name] === null || dimensions[name] === undefined,
+    );
+    const declaredUnknown = Array.isArray(dimensions.unknownDimensions)
+      ? dimensions.unknownDimensions.filter(
+          (name): name is string =>
+            typeof name === "string" && names.includes(name as (typeof names)[number]),
+        )
+      : [];
+    return {
+      task: dimensions.task ?? null,
+      repository: dimensions.repository ?? null,
+      prompt: dimensions.prompt ?? null,
+      tool: dimensions.tool ?? null,
+      sampling: dimensions.sampling ?? null,
+      experience: dimensions.experience ?? null,
+      environment: dimensions.environment ?? null,
+      unknownDimensions: [...new Set([...unknownDimensions, ...declaredUnknown])],
+    };
   };
   const profile = await runtime.invoke("profile-learner", {
     ...envelope("profile:estimate-finalized-evaluation", {
       finalizedEvaluation: persistedEvaluation,
-      signals,
-      rows: completedRollouts.map(({ rollout, score }) => ({
+      signals: signalsWithProvenance,
+      rows: completedRollouts.map(({ rollout, score, trialId, scoreId }) => ({
         model: rollout.modelId,
         endpoint: rollout.endpointId,
         effort: rollout.reasoningEffort,
-        task: "route-selection",
-        repository: input.scope,
-        prompt: "unchanged",
-        tool: "unchanged",
-        sampling: "deterministic",
-        experience: "routing-evaluation",
+        ...observedProfileDimensions(rollout),
         routePackage: rollout.routePackage,
         outcome: score,
         propensity: rollout.propensity,
         evidenceRef: rollout.evidenceRef,
+        trialId,
+        scoreId,
       })),
     }),
   });
@@ -4979,7 +5327,7 @@ export async function runTrackBShadowPipeline(
     digest: profileRecord.digest,
     effects: profileRecord.effects,
   };
-  const scoredRollouts = completedRollouts.map(({ rollout, score }) => {
+  const scoredRollouts = completedRollouts.map(({ rollout, score, trialId, scoreId }) => {
     if (typeof rollout.evidenceRef !== "string" || !rollout.evidenceRef) {
       throw new Error("routing-shadow rollout evidence references are required");
     }
@@ -4988,10 +5336,40 @@ export async function runTrackBShadowPipeline(
       // Derived only from the durable Runner Local semantic scorer receipt,
       // never from a transport status or output equality proxy.
       score,
+      trialId,
+      scoreId,
     };
   });
   const positive = scoredRollouts.filter((rollout) => rollout.score === 1);
   const negative = scoredRollouts.filter((rollout) => rollout.score === 0);
+  const proofForEvidence = (evidenceRef: string): Record<string, unknown> => {
+    const references = referenceAttestation.references;
+    if (!references || typeof references !== "object" || Array.isArray(references)) {
+      throw new Error("trusted evaluation evidence proofs are required for knowledge learning");
+    }
+    const proof = Object.values(references as Record<string, unknown>).find(
+      (candidate) =>
+        candidate &&
+        typeof candidate === "object" &&
+        !Array.isArray(candidate) &&
+        (candidate as Record<string, unknown>).reference === evidenceRef,
+    );
+    if (!proof || typeof proof !== "object" || Array.isArray(proof)) {
+      throw new Error("trusted evaluation evidence proof is missing from the attestation");
+    }
+    return proof as Record<string, unknown>;
+  };
+  const knowledgeEvidenceRow = (rollout: (typeof scoredRollouts)[number]) => ({
+    evidenceRef: rollout.evidenceRef,
+    score: rollout.score,
+    evidenceKind: "evaluation",
+    learningCapable: true,
+    evaluationRef: durableComparison.groupId,
+    trialId: rollout.trialId,
+    scoreId: rollout.scoreId,
+    sourceGroupId: durableComparison.groupId,
+    referenceProof: proofForEvidence(rollout.evidenceRef),
+  });
   const candidate =
     positive.length && negative.length
       ? await runtime.invoke("knowledge-worker", {
@@ -5007,14 +5385,8 @@ export async function runTrackBShadowPipeline(
               split: "holdout",
               seed: 87,
               comparabilityKey: `${input.sourceDecisionId}:holdout`,
-              positive: positive.map((rollout) => ({
-                evidenceRef: rollout.evidenceRef,
-                score: rollout.score,
-              })),
-              negative: negative.map((rollout) => ({
-                evidenceRef: rollout.evidenceRef,
-                score: rollout.score,
-              })),
+              positive: positive.map(knowledgeEvidenceRow),
+              negative: negative.map(knowledgeEvidenceRow),
               candidateSet: candidateSet.map((candidate) => ({
                 routePackage: candidate.routePackage,
                 endpointId: candidate.endpointId,
@@ -5023,7 +5395,7 @@ export async function runTrackBShadowPipeline(
             },
             holdout: {
               ...holdout,
-              evidenceRef: input.sourceGraphRef,
+              evidenceRef: evaluationReferences.inputRef,
               passed: durableComparison.outcome === "candidate",
             },
             scope: {
@@ -5180,10 +5552,14 @@ async function runTrackBObservationPipeline(
       events: input.trajectoryEvents,
     }),
   );
+  // This path exists only because no distinct counterfactual was available.
+  // Missing trajectory evidence is secondary and must not hide that primary
+  // comparability refusal from operators or downstream policy.
+  const refusalCode = "R14_NO_DISTINCT_COUNTERFACTUAL";
   const profile = {
     schemaVersion: "role-model.track-b-observation-profile-receipt.v1",
     state: "not_run",
-    reason: "R14_NO_DISTINCT_COUNTERFACTUAL",
+    reason: refusalCode,
     durableMutation: false,
     authoritative: false,
   } as const;
@@ -5197,7 +5573,7 @@ async function runTrackBObservationPipeline(
       schemaVersion: "role-model.track-b-shadow-pipeline-receipt.v1",
       mode: "shadow",
       status: "insufficient_comparable_evidence",
-      refusalCode: "R14_NO_DISTINCT_COUNTERFACTUAL",
+      refusalCode,
       requestId: input.requestId,
       providerCalls: 0,
       productionMutation: false,
@@ -5419,9 +5795,11 @@ export async function runTrackBPostObservation(
     identity,
     immutable: true,
   } as const;
-  const trajectoryEvents = [
-    { requestId, routingDecisionId: sourceDecisionId, endpointId: routePackage, identity },
-  ];
+  const trajectoryEvents = Array.isArray(observation.trajectoryEvents)
+    ? observation.trajectoryEvents.filter((event): event is Record<string, unknown> =>
+        Boolean(event && typeof event === "object" && !Array.isArray(event)),
+      )
+    : [];
   const routingShadowEvidence =
     observation.routingShadowEvidence &&
     typeof observation.routingShadowEvidence === "object" &&
@@ -5455,6 +5833,14 @@ export async function runTrackBPostObservation(
           comparableEvidence: routingShadowEvidence,
           evaluationCases: routingShadowCases,
           trajectoryEvents,
+          evaluationReferences:
+            routingShadowEvidence.evaluationReferences &&
+            typeof routingShadowEvidence.evaluationReferences === "object"
+              ? (routingShadowEvidence.evaluationReferences as TrackBEvaluationReferences)
+              : observation.evaluationReferences &&
+                  typeof observation.evaluationReferences === "object"
+                ? (observation.evaluationReferences as TrackBEvaluationReferences)
+                : undefined,
           identity,
           occurrence,
         })
@@ -5471,20 +5857,29 @@ export async function runTrackBPostObservation(
           identity,
           occurrence,
         });
+  const pipelineReceipt = pipeline.receipt as Record<string, unknown>;
+  const pipelineCandidateId =
+    "candidate" in pipeline && pipeline.candidate && typeof pipeline.candidate.id === "string"
+      ? pipeline.candidate.id
+      : null;
+  const learningEligible =
+    pipelineCandidateId !== null &&
+    pipelineReceipt.refusalCode === undefined &&
+    pipelineReceipt.learningDisposition !== "insufficient_trajectory_evidence";
   const projection = createProjectionV2({
     scope: input.scope,
     purpose: "routing_shadow",
-    permittedUse: true,
-    authorizationState: "authorized",
+    permittedUse: learningEligible,
+    authorizationState: learningEligible ? "authorized" : "unknown",
     validUntilMs: null,
-    trainingAllowed: true,
+    trainingAllowed: learningEligible,
     evaluatedAtMs: Date.now(),
     evidence: [
       {
         artifactRef: sourceGraphRef,
         sourceHash: `sha256:${sourceHash}`,
         scope: input.scope,
-        verified: true,
+        verified: learningEligible,
         capabilities: ["routing_history", "full_replay"],
       },
     ],
@@ -5492,18 +5887,26 @@ export async function runTrackBPostObservation(
       routePackage,
       sourceDecisionId,
       identity,
-      candidateId:
-        "candidate" in pipeline && typeof pipeline.candidate?.id === "string"
-          ? pipeline.candidate.id
-          : null,
+      candidateId: pipelineCandidateId,
+      learningDisposition: learningEligible ? "authorized" : "insufficient_evidence",
     },
   });
-  const consumption = await consumeTrackBProjection(observedRuntime, projection, {
-    channel: input.channel,
-    authorizationEpoch: input.authorizationEpoch,
-    identity: { ...identity },
-    occurrence,
-  });
+  const consumption = learningEligible
+    ? await consumeTrackBProjection(observedRuntime, projection, {
+        channel: input.channel,
+        authorizationEpoch: input.authorizationEpoch,
+        identity: { ...identity },
+        occurrence,
+      })
+    : null;
+  // A refusal to learn is still a complete Track B execution.  Probe the
+  // learning consumers read-only so the thirteen-extension closure remains
+  // truthful without turning an insufficient observation into a mutation.
+  for (const extensionId of ["evaluation-core", "profile-learner", "knowledge-worker"]) {
+    if (!closureEntries.has(extensionId)) {
+      await observedRuntime.invoke(extensionId, businessEnvelope("health:probe"));
+    }
+  }
   const registry = Object.fromEntries(
     [...closureEntries.entries()].sort(([left], [right]) => left.localeCompare(right)),
   ) as Record<string, TrackBExtensionClosureEntry>;

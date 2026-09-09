@@ -88,6 +88,22 @@ const comparableCases = () => [
   },
 ];
 
+const evaluationReferences = () => ({
+  taskRef: "task:run87-shadow",
+  inputRef: "input:run87-shadow",
+  forkRef: "sha256:graph-87#sha256:fixture",
+  toolPolicyDigest: "sha256:run87-tool-policy",
+  environmentDigest: "sha256:run87-environment",
+  sourceEvidenceRef: "evidence:source-87",
+  counterfactualEvidenceRef: "evidence:counterfactual-87",
+  sourceOutcomeRef: "outcome:source-87",
+  counterfactualOutcomeRef: "outcome:counterfactual-87",
+  perCase: [
+    { caseId: "case:run87-source", evidenceRef: "evidence:case-run87-source" },
+    { caseId: "case:run87-counterfactual", evidenceRef: "evidence:case-run87-counterfactual" },
+  ],
+});
+
 test("SP1 runs the useful routing-learning DAG through supervised shadow capabilities", async () => {
   expect(typeof trackBRuntime.runTrackBShadowPipeline).toBe("function");
   const artifactSha256 = createHash("sha256")
@@ -99,6 +115,7 @@ test("SP1 runs the useful routing-learning DAG through supervised shadow capabil
       "evaluation-core",
       [
         "evaluation:register-scorer",
+        "evaluation:attest-references",
         "evaluation:create-job",
         "evaluation:list-trials",
         "evaluation:claim-trial",
@@ -147,6 +164,7 @@ test("SP1 runs the useful routing-learning DAG through supervised shadow capabil
     counterfactuals: [{ id: "candidate-remote", suffix: ["candidate-remote"] }],
     comparableEvidence: comparableEvidence(),
     evaluationCases: comparableCases(),
+    evaluationReferences: evaluationReferences(),
     evaluationCriteria: {
       schemaVersion: "role-model.semantic-criteria.v1",
       requiredTerms: ["expected-route"],
@@ -217,6 +235,42 @@ test("SP1 fails closed before Knowledge Worker when durable holdout comparison i
       };
     }
     if (id === "evaluation-core" && envelope.capability === "evaluation:register-scorer") return {};
+    if (id === "evaluation-core" && envelope.capability === "evaluation:attest-references") {
+      const now = Date.now();
+      const authority = "sidecar:run87-failed-reference-store";
+      const references = (envelope.value as Record<string, unknown>).references as Record<
+        string,
+        string
+      >;
+      return {
+        schemaVersion: "role-model.evaluation-reference-attestation.v1",
+        authority,
+        purpose: "evaluation",
+        channel: envelope.channel,
+        scope: envelope.scope,
+        authorizationEpoch: envelope.authorizationEpoch,
+        issuedAtMs: now - 1,
+        expiresAtMs: now + 60_000,
+        references: Object.fromEntries(
+          Object.entries(references).map(([field, reference]) => [
+            field,
+            {
+              schemaVersion: "role-model.evaluation-reference-attestation.v1",
+              reference,
+              referenceDigest: `sha256:${createHash("sha256").update(reference).digest("hex")}`,
+              authority,
+              purpose: "evaluation",
+              channel: envelope.channel,
+              scope: envelope.scope,
+              authorizationEpoch: envelope.authorizationEpoch,
+              issuedAtMs: now - 1,
+              expiresAtMs: now + 60_000,
+              resolved: true,
+            },
+          ]),
+        ),
+      };
+    }
     if (id === "evaluation-core" && envelope.capability === "evaluation:create-job") return {};
     if (id === "evaluation-core" && envelope.capability === "evaluation:list-trials") {
       const value = envelope.value as Record<string, unknown>;
@@ -294,6 +348,10 @@ test("SP1 fails closed before Knowledge Worker when durable holdout comparison i
         counterfactuals: [{ id: "candidate-remote", suffix: [] }],
         comparableEvidence: comparableEvidence(),
         evaluationCases: comparableCases(),
+        evaluationReferences: {
+          ...evaluationReferences(),
+          forkRef: "artifact:prefix-87",
+        },
         evaluationCriteria: {
           schemaVersion: "role-model.semantic-criteria.v1",
           requiredTerms: ["expected-route"],

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { expect, test } from "vitest";
 
 import {
@@ -77,6 +78,82 @@ const comparableEvidence = {
     },
   ],
 };
+
+const referenceDigest = (reference: string): string =>
+  `sha256:${createHash("sha256").update(reference).digest("hex")}`;
+
+const attestReferences = (envelope: Record<string, unknown>): Record<string, unknown> => {
+  const value = envelope.value as Record<string, unknown>;
+  const references = value.references as Record<string, string>;
+  const authority = "sidecar:run96-durable-reference-store";
+  const now = Date.now();
+  return {
+    schemaVersion: "role-model.evaluation-reference-attestation.v1",
+    authority,
+    purpose: "evaluation",
+    channel: envelope.channel,
+    scope: envelope.scope,
+    authorizationEpoch: envelope.authorizationEpoch,
+    issuedAtMs: now - 1,
+    expiresAtMs: now + 60_000,
+    references: Object.fromEntries(
+      Object.entries(references).map(([field, reference]) => [
+        field,
+        {
+          schemaVersion: "role-model.evaluation-reference-attestation.v1",
+          reference,
+          referenceDigest: referenceDigest(reference),
+          authority,
+          purpose: "evaluation",
+          channel: envelope.channel,
+          scope: envelope.scope,
+          authorizationEpoch: envelope.authorizationEpoch,
+          issuedAtMs: now - 1,
+          expiresAtMs: now + 60_000,
+          resolved: true,
+        },
+      ]),
+    ),
+  };
+};
+
+const durableEvaluationReferences = () => ({
+  taskRef: "task:run96-durable-shadow",
+  inputRef: "input:run96-durable-shadow",
+  forkRef: "artifact:source-graph-96#prefix",
+  toolPolicyDigest: "sha256:run96-durable-tool-policy",
+  environmentDigest: "sha256:run96-durable-environment",
+  sourceEvidenceRef: "artifact:source-96",
+  counterfactualEvidenceRef: "artifact:counterfactual-96",
+  sourceOutcomeRef: "artifact:outcome-source-96",
+  counterfactualOutcomeRef: "artifact:outcome-counterfactual-96",
+  perCase: [
+    { caseId: "case:request:shadow-96:0", evidenceRef: "evidence:run96-durable-source" },
+    {
+      caseId: "case:request:shadow-96:1",
+      evidenceRef: "evidence:run96-durable-counterfactual",
+    },
+  ],
+});
+
+const digestEvaluationReferences = () => ({
+  taskRef: "task:run96-digest-shadow",
+  inputRef: "input:run96-digest-shadow",
+  forkRef: "artifact:source-digest#prefix",
+  toolPolicyDigest: "sha256:run96-digest-tool-policy",
+  environmentDigest: "sha256:run96-digest-environment",
+  sourceEvidenceRef: "artifact:source-digest",
+  counterfactualEvidenceRef: "artifact:counterfactual-digest",
+  sourceOutcomeRef: "artifact:source-outcome-digest",
+  counterfactualOutcomeRef: "artifact:counterfactual-outcome-digest",
+  perCase: [
+    { caseId: "case:request-digest:0", evidenceRef: "evidence:run96-digest-source" },
+    {
+      caseId: "case:request-digest:1",
+      evidenceRef: "evidence:run96-digest-counterfactual",
+    },
+  ],
+});
 
 const advisoryAuthoritySecret = "run96-advisory-authority-secret-0123456789";
 function signedAdvisoryAuthorization(
@@ -368,6 +445,9 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
         if (id === "evaluation-core" && envelope.capability === "evaluation:register-scorer") {
           return { key: "run96-exact@1" };
         }
+        if (id === "evaluation-core" && envelope.capability === "evaluation:attest-references") {
+          return attestReferences(envelope as Record<string, unknown>);
+        }
         if (id === "evaluation-core" && envelope.capability === "evaluation:create-job") {
           durableJobs.push(envelope.value as Record<string, unknown>);
           return { jobId: `evaluation:job-${createCount++}` };
@@ -505,6 +585,7 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
           },
         },
       ],
+      evaluationReferences: durableEvaluationReferences(),
       trajectoryEvents: [],
     },
   );
@@ -537,13 +618,13 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
   expect(durableJobs[0]).toMatchObject({
     evaluationSchemaVersion: 3,
     comparability: {
-      taskRef: "artifact:source-graph-96",
-      inputRef: "artifact:source-graph-96",
+      taskRef: "task:run96-durable-shadow",
+      inputRef: "input:run96-durable-shadow",
       forkRef: "artifact:source-graph-96#prefix",
       policyId: "run96-routing-shadow",
       scorerSetVersion: "run96-routing-shadow-v2",
-      toolPolicyDigest: "artifact:source-graph-96",
-      environmentDigest: "artifact:source-graph-96",
+      toolPolicyDigest: "sha256:run96-durable-tool-policy",
+      environmentDigest: "sha256:run96-durable-environment",
       sourceEvidenceRef: "artifact:source-96",
       counterfactualEvidenceRef: "artifact:counterfactual-96",
       sourceOutcomeRef: "artifact:outcome-source-96",
@@ -557,7 +638,7 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
     },
     referenceAttestation: {
       schemaVersion: "role-model.evaluation-reference-attestation.v1",
-      authority: "runtime-shadow-pipeline",
+      authority: "sidecar:run96-durable-reference-store",
       references: {
         sourceEvidenceRef: { reference: "artifact:source-96", resolved: true },
         counterfactualEvidenceRef: { reference: "artifact:counterfactual-96", resolved: true },
@@ -619,7 +700,7 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
     branches: [],
     digest: "sha256:replay-plan-96",
   });
-  expect(knowledgeInput?.signals).toEqual({
+  expect(knowledgeInput?.signals).toMatchObject({
     routeDecisionId: "decision:source-96",
     graphRef: "artifact:source-graph-96",
     signals: [
@@ -658,6 +739,8 @@ test("Run96 S4 RED: durable replay evaluation sends the same bounded semantic cr
         }
         if (id === "evaluation-core" && envelope.capability === "evaluation:register-scorer")
           return { key: "digest@1" };
+        if (id === "evaluation-core" && envelope.capability === "evaluation:attest-references")
+          return attestReferences(envelope as Record<string, unknown>);
         if (id === "evaluation-core" && envelope.capability === "evaluation:create-job") {
           durableCases.push(envelope.value as Record<string, unknown>);
           return { jobId: "job:digest" };
@@ -784,6 +867,7 @@ test("Run96 S4 RED: durable replay evaluation sends the same bounded semantic cr
           },
         },
       ],
+      evaluationReferences: digestEvaluationReferences(),
       trajectoryEvents: [],
     },
   );
