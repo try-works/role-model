@@ -6,6 +6,7 @@ import { describe, expect, test } from "vitest";
 import {
   initializeSqliteMemory,
   listRuntimeEndpoints,
+  readRuntimeMaintenancePolicy,
   resolveSqliteMemoryLocation,
   upsertProviderAccount,
   upsertRuntimeEndpoint,
@@ -319,7 +320,7 @@ describe("execution circuit breaker policy", () => {
     }
   });
 
-  test("[R33] production alias requests do not execute a duplicate same-owner half-open probe", async () => {
+  test("[AC-R33-03][AC-R33-04] distinct concurrent alias callers execute one half-open probe and recover without a hidden readiness probe", async () => {
     const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "run96-r33-concurrency-"));
     const scopeId = "run96-r33-concurrency";
     const modelId = "deepseek/deepseek-v4-pro";
@@ -397,6 +398,7 @@ describe("execution circuit breaker policy", () => {
     );
 
     let providerCalls = 0;
+    let readinessCalls = 0;
     let releaseProvider: () => void = () => undefined;
     const providerGate = new Promise<void>((resolve) => {
       releaseProvider = resolve;
@@ -418,6 +420,7 @@ describe("execution circuit breaker policy", () => {
           });
         }
         if (body.includes("role-model admission readiness probe")) {
+          readinessCalls += 1;
           return new Response(JSON.stringify({ ok: true }), {
             status: 200,
             headers: { "content-type": "application/json" },
@@ -458,18 +461,19 @@ describe("execution circuit breaker policy", () => {
         key: EXECUTION_CIRCUIT_BREAKER_MAINTENANCE_KEY,
         value: serializeExecutionCircuitState(circuit),
       });
+      const readinessCallsBeforeHalfOpen = readinessCalls;
 
       const request = {
         model: aliasId,
         messages: [{ role: "user", content: "exercise the real half-open route" }],
       } as const;
-      const firstPromise = backend.executeChatCompletions(request, "r33-same-owner");
+      const firstPromise = backend.executeChatCompletions(request, "r33-probe-owner-one");
       for (let attempt = 0; attempt < 100 && providerCalls === 0; attempt += 1) {
         await new Promise<void>((resolve) => setTimeout(resolve, 0));
       }
       expect(providerCalls).toBe(1);
 
-      const secondPromise = backend.executeChatCompletions(request, "r33-same-owner");
+      const secondPromise = backend.executeChatCompletions(request, "r33-probe-owner-two");
       const second = await secondPromise.then(
         () => ({ ok: true as const }),
         (error: unknown) => ({ ok: false as const, error }),
@@ -480,6 +484,24 @@ describe("execution circuit breaker policy", () => {
       releaseProvider();
       await expect(firstPromise).resolves.toMatchObject({ endpointId });
       expect(providerCalls).toBe(1);
+
+      const persistedAfterProbe = parseExecutionCircuitState(
+        readRuntimeMaintenancePolicy({ databasePath })[EXECUTION_CIRCUIT_BREAKER_MAINTENANCE_KEY],
+      );
+      expect(persistedAfterProbe.endpoints[endpointId]).toBeUndefined();
+      const admissionAfterProbe = listRuntimeEndpoints({ databasePath }).find(
+        (entry) => entry.endpointId === endpointId,
+      );
+      expect(admissionAfterProbe).toMatchObject({
+        lifecycleState: "active",
+        healthStatus: "healthy",
+      });
+
+      await expect(
+        backend.executeChatCompletions(request, "r33-post-recovery-alias"),
+      ).resolves.toMatchObject({ endpointId });
+      expect(providerCalls).toBe(2);
+      expect(readinessCalls).toBe(readinessCallsBeforeHalfOpen);
     } finally {
       releaseProvider();
       await backend.shutdown();
