@@ -5,8 +5,8 @@ import { basename, dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   defineExtension,
-  encodeFrame,
-  extractFrames,
+  encodeControlFrame,
+  extractControlFrames,
   verifySignedBundle,
 } from "../extension-sdk/index.mjs";
 import { createInputTransferArtifact } from "./transfer-artifact.mjs";
@@ -62,6 +62,27 @@ class ProcessWorker {
     this.stderr = "";
     this.exited = true;
     this.stopping = false;
+    this.controlSecret = null;
+    this.outboundSequence = 0;
+    this.inboundSequence = 0;
+    this.terminationPromise = null;
+  }
+  #encode(value) {
+    const sequence = this.outboundSequence + 1;
+    const frame = encodeControlFrame(value, {
+      secret: this.controlSecret,
+      direction: "host->worker",
+      sequence,
+    });
+    this.outboundSequence = sequence;
+    return frame;
+  }
+  #rejectPending(error) {
+    for (const item of this.pending.values()) {
+      void item.cleanup?.().catch(() => {});
+      item.reject(error);
+    }
+    this.pending.clear();
   }
   async start() {
     if (this.child && !this.exited) return;
@@ -69,6 +90,9 @@ class ProcessWorker {
     this.stopping = false;
     this.exited = false;
     this.transferKey = randomBytes(32).toString("hex");
+    this.controlSecret = this.transferKey;
+    this.outboundSequence = 0;
+    this.inboundSequence = 0;
     this.child = spawn(this.workerExecPath, [runtimePath, this.moduleUrl], {
       stdio: ["pipe", "pipe", "pipe"],
       windowsHide: true,
@@ -77,6 +101,7 @@ class ProcessWorker {
         ROLE_MODEL_EXTENSION_ID: this.extensionId,
         ...(this.stateRoot ? { ROLE_MODEL_EXTENSION_STATE_ROOT: this.stateRoot } : {}),
         ROLE_MODEL_EXTENSION_TRANSFER_KEY: this.transferKey,
+        ROLE_MODEL_EXTENSION_CONTROL_KEY: this.controlSecret,
       },
     });
     this.stderr = "";
@@ -84,30 +109,52 @@ class ProcessWorker {
       this.stderr = `${this.stderr}${chunk.toString("utf8")}`.slice(-4096);
     });
     let bytes = Buffer.alloc(0);
-    let settled = false;
+    let readyResolved = false;
+    let readyRejected = false;
     let rejectReady;
+    const rejectProtocol = (error) => {
+      const failure = error instanceof Error ? error : new Error(String(error));
+      this.#rejectPending(failure);
+      if (!readyResolved && !readyRejected) {
+        readyRejected = true;
+        rejectReady(failure);
+      }
+      if (!this.exited) {
+        this.stopping = false;
+        this.child.kill();
+      }
+    };
     const ready = new Promise((resolve, reject) => {
       rejectReady = reject;
       this.child.once("error", reject);
       this.child.stdout.on("data", (chunk) => {
-        bytes = Buffer.concat([bytes, chunk]);
-        const parsed = extractFrames(bytes);
-        bytes = parsed.remainder;
-        for (const message of parsed.values) {
-          if (message.type === "ready") {
-            settled = true;
-            this.pid = message.pid;
-            resolve();
-            continue;
+        try {
+          bytes = Buffer.concat([bytes, chunk]);
+          const parsed = extractControlFrames(bytes, {
+            secret: this.controlSecret,
+            direction: "worker->host",
+            lastSequence: this.inboundSequence,
+          });
+          bytes = parsed.remainder;
+          this.inboundSequence = parsed.lastSequence;
+          for (const message of parsed.values) {
+            if (message.type === "ready") {
+              readyResolved = true;
+              this.pid = message.pid;
+              resolve();
+              continue;
+            }
+            const pending = this.pending.get(message.requestId);
+            if (!pending) continue;
+            this.pending.delete(message.requestId);
+            void pending.cleanup?.().catch(() => {});
+            this.child?.stdin.write(this.#encode({ type: "ack", requestId: message.requestId }));
+            if (message.type === "result")
+              pending.resolve({ ...message.result, workerPid: this.pid });
+            else pending.reject(new Error(message.error));
           }
-          const pending = this.pending.get(message.requestId);
-          if (!pending) continue;
-          this.pending.delete(message.requestId);
-          void pending.cleanup?.().catch(() => {});
-          this.child?.stdin.write(encodeFrame({ type: "ack", requestId: message.requestId }));
-          if (message.type === "result")
-            pending.resolve({ ...message.result, workerPid: this.pid });
-          else pending.reject(new Error(message.error));
+        } catch (error) {
+          rejectProtocol(error);
         }
       });
     });
@@ -115,12 +162,8 @@ class ProcessWorker {
       const expected = this.stopping;
       this.exited = true;
       const detail = this.stderr.trim();
-      for (const item of this.pending.values()) {
-        void item.cleanup?.().catch(() => {});
-        item.reject(new Error(detail ? `worker exited: ${detail}` : "worker exited"));
-      }
-      this.pending.clear();
-      if (!settled)
+      this.#rejectPending(new Error(detail ? `worker exited: ${detail}` : "worker exited"));
+      if (!readyResolved && !readyRejected)
         rejectReady(
           new Error(
             `worker exited during startup (${code ?? signal})${detail ? `: ${detail}` : ""}`,
@@ -152,7 +195,7 @@ class ProcessWorker {
     let transferPath = null;
     let frame;
     try {
-      frame = encodeFrame({ type: "invoke", requestId: envelope.requestId, envelope });
+      frame = this.#encode({ type: "invoke", requestId: envelope.requestId, envelope });
     } catch (error) {
       if (
         !/frame exceeds inline limit/i.test(error instanceof Error ? error.message : String(error))
@@ -174,7 +217,7 @@ class ProcessWorker {
         capability: envelope.capability,
         transferArtifact,
       };
-      frame = encodeFrame({
+      frame = this.#encode({
         type: "invoke",
         requestId: envelope.requestId,
         envelope: wireEnvelope,
@@ -201,9 +244,17 @@ class ProcessWorker {
   }
   async stop() {
     if (!this.child || this.exited) return;
+    if (this.terminationPromise) {
+      await this.terminationPromise;
+      return;
+    }
     this.stopping = true;
     const child = this.child;
-    child.stdin.write(encodeFrame({ type: "shutdown" }));
+    try {
+      child.stdin.write(this.#encode({ type: "shutdown" }));
+    } catch {
+      child.kill();
+    }
     await new Promise((resolve) => {
       const timer = setTimeout(() => {
         if (!this.exited) child.kill();
@@ -214,6 +265,35 @@ class ProcessWorker {
       });
     });
     this.child = null;
+  }
+  async terminate() {
+    if (!this.child || this.exited) return;
+    if (this.terminationPromise) return this.terminationPromise;
+    const child = this.child;
+    this.stopping = false;
+    this.#rejectPending(new Error("worker terminated"));
+    this.terminationPromise = new Promise((resolve) => {
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve();
+      };
+      const timer = setTimeout(() => {
+        if (!this.exited) child.kill();
+        finish();
+      }, 250);
+      child.once("exit", finish);
+      try {
+        child.kill();
+      } catch {
+        finish();
+      }
+    }).finally(() => {
+      this.terminationPromise = null;
+    });
+    return this.terminationPromise;
   }
   state() {
     return {
@@ -566,10 +646,16 @@ export class ExtensionHost {
         try {
           await this.#ensureProcess(registered);
           const timeout = new Promise((_, timeoutReject) => {
-            timer = setTimeout(() => timeoutReject(new Error("timeout")), this.timeoutMs);
+            timer = setTimeout(() => {
+              if (registered.kind === "process") void registered.worker.terminate();
+              timeoutReject(new Error("timeout"));
+            }, this.timeoutMs);
           });
           const cancellation = new Promise((_, cancelReject) => {
-            abort = () => cancelReject(new Error("cancelled"));
+            abort = () => {
+              if (registered.kind === "process") void registered.worker.terminate();
+              cancelReject(new Error("cancelled"));
+            };
             envelope.signal?.addEventListener("abort", abort, { once: true });
           });
           const invocation =

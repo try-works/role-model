@@ -4,7 +4,13 @@ import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { pathToFileURL } from "node:url";
-import { encodeFrame, extractFrames } from "../extension-sdk/index.mjs";
+import { encodeControlFrame, extractControlFrames } from "../extension-sdk/index.mjs";
+import {
+  DEFAULT_MAX_RETAINED_RESPONSES,
+  DEFAULT_MAX_RETAINED_RESPONSE_AGE_MS,
+  DEFAULT_MAX_RETAINED_RESPONSE_BYTES,
+  RetainedResponseStore,
+} from "./retained-response-store.mjs";
 import { hydrateInputTransferArtifact } from "./transfer-artifact.mjs";
 
 const moduleRef = process.argv[2];
@@ -145,54 +151,89 @@ function readBusinessOutput(envelope) {
   };
 }
 
-const retained = new Map();
+const controlSecret =
+  process.env.ROLE_MODEL_EXTENSION_CONTROL_KEY ?? process.env.ROLE_MODEL_EXTENSION_TRANSFER_KEY;
+const retained = new RetainedResponseStore({
+  maxCount: DEFAULT_MAX_RETAINED_RESPONSES,
+  maxBytes: DEFAULT_MAX_RETAINED_RESPONSE_BYTES,
+  maxAgeMs: DEFAULT_MAX_RETAINED_RESPONSE_AGE_MS,
+});
+const retainedPruneTimer = setInterval(
+  () => retained.prune(),
+  DEFAULT_MAX_RETAINED_RESPONSE_AGE_MS,
+);
+retainedPruneTimer.unref?.();
 let input = Buffer.alloc(0);
-const send = async (value) => {
-  if (!process.stdout.write(encodeFrame(value))) await once(process.stdout, "drain");
+let inboundSequence = 0;
+let outboundSequence = 0;
+let sendChain = Promise.resolve();
+const send = (value) => {
+  const sequence = outboundSequence + 1;
+  const frame = encodeControlFrame(value, {
+    secret: controlSecret,
+    direction: "worker->host",
+    sequence,
+  });
+  outboundSequence = sequence;
+  sendChain = sendChain.then(async () => {
+    if (!process.stdout.write(frame)) await once(process.stdout, "drain");
+  });
+  return sendChain;
 };
 
 await send({ type: "ready", pid: process.pid });
 process.stdin.on("data", async (chunk) => {
-  input = Buffer.concat([input, chunk]);
-  const parsed = extractFrames(input);
-  input = parsed.remainder;
-  for (const message of parsed.values) {
-    if (message.type === "ack") {
-      retained.delete(message.requestId);
-      continue;
-    }
-    if (message.type === "shutdown") {
-      outputDatabase.close();
-      await send({ type: "shutdown-ack" });
-      process.exit(0);
-    }
-    if (message.type !== "invoke") continue;
-    try {
-      const envelope = message.envelope?.transferArtifact
-        ? await hydrateInputTransferArtifact({
-            stateRoot,
-            transferKey: process.env.ROLE_MODEL_EXTENSION_TRANSFER_KEY,
-            envelope: message.envelope,
-          })
-        : message.envelope;
-      let result;
-      if (envelope.capability === "extension-output:read") {
-        result = readBusinessOutput(envelope);
-      } else {
-        const value = await extension.run(envelope);
-        result = persistBusinessOutput(envelope, value);
+  try {
+    input = Buffer.concat([input, chunk]);
+    const parsed = extractControlFrames(input, {
+      secret: controlSecret,
+      direction: "host->worker",
+      lastSequence: inboundSequence,
+    });
+    input = parsed.remainder;
+    inboundSequence = parsed.lastSequence;
+    for (const message of parsed.values) {
+      if (message.type === "ack") {
+        retained.delete(message.requestId);
+        continue;
       }
-      const response = { type: "result", requestId: message.requestId, result };
-      retained.set(message.requestId, response);
-      await send(response);
-    } catch (error) {
-      const response = {
-        type: "error",
-        requestId: message.requestId,
-        error: error?.message ?? String(error),
-      };
-      retained.set(message.requestId, response);
-      await send(response);
+      if (message.type === "shutdown") {
+        clearInterval(retainedPruneTimer);
+        outputDatabase.close();
+        await send({ type: "shutdown-ack" });
+        process.exit(0);
+      }
+      if (message.type !== "invoke") continue;
+      try {
+        const envelope = message.envelope?.transferArtifact
+          ? await hydrateInputTransferArtifact({
+              stateRoot,
+              transferKey: process.env.ROLE_MODEL_EXTENSION_TRANSFER_KEY,
+              envelope: message.envelope,
+            })
+          : message.envelope;
+        let result;
+        if (envelope.capability === "extension-output:read") {
+          result = readBusinessOutput(envelope);
+        } else {
+          const value = await extension.run(envelope);
+          result = persistBusinessOutput(envelope, value);
+        }
+        const response = { type: "result", requestId: message.requestId, result };
+        retained.set(message.requestId, response);
+        await send(response);
+      } catch (error) {
+        const response = {
+          type: "error",
+          requestId: message.requestId,
+          error: error?.message ?? String(error),
+        };
+        retained.set(message.requestId, response);
+        await send(response);
+      }
     }
+  } catch (error) {
+    process.stderr.write(`control frame rejected: ${error?.message ?? String(error)}\n`);
+    process.exit(1);
   }
 });

@@ -10,6 +10,8 @@ const SECRET_KEYS = new Set([
   "rawContent",
 ]);
 export const MAX_INLINE_BYTES = 16 * 1024;
+export const CONTROL_FRAME_VERSION = 1;
+export const CONTROL_FRAME_DIRECTIONS = Object.freeze(["host->worker", "worker->host"]);
 
 export function defineExtension(descriptor) {
   if (!descriptor?.id || !/^[a-z0-9][a-z0-9-]*$/.test(descriptor.id))
@@ -95,6 +97,85 @@ export function encodeFrame(value) {
   frame.writeUInt32BE(body.length, 0);
   body.copy(frame, 4);
   return frame;
+}
+
+const controlFrameKey = (secret) => {
+  if (!Buffer.isBuffer(secret) && typeof secret !== "string")
+    throw new Error("control frame secret is required");
+  const key = Buffer.isBuffer(secret) ? secret : Buffer.from(String(secret ?? ""), "utf8");
+  if (!key.length) throw new Error("control frame secret is required");
+  return key;
+};
+
+const validateControlFrameMetadata = ({ direction, sequence, lastSequence = 0 }) => {
+  if (!CONTROL_FRAME_DIRECTIONS.includes(direction))
+    throw new Error("control frame direction is invalid");
+  if (!Number.isSafeInteger(sequence) || sequence <= 0)
+    throw new Error("control frame sequence is invalid");
+  if (!Number.isSafeInteger(lastSequence) || lastSequence < 0)
+    throw new Error("control frame sequence state is invalid");
+  if (sequence <= lastSequence) throw new Error("control frame replay or stale sequence");
+};
+
+const controlFrameMessage = ({ controlVersion, direction, sequence, payload }) =>
+  JSON.stringify({ controlVersion, direction, sequence, payload });
+
+export function encodeControlFrame(value, { secret, direction, sequence } = {}) {
+  validateControlFrameMetadata({ direction, sequence, lastSequence: sequence - 1 });
+  const payload = sanitizeEnvelope(value);
+  const controlVersion = CONTROL_FRAME_VERSION;
+  const mac = createHmac("sha256", controlFrameKey(secret))
+    .update(controlFrameMessage({ controlVersion, direction, sequence, payload }))
+    .digest("hex");
+  return encodeFrame({ controlVersion, direction, sequence, payload, mac });
+}
+
+export function decodeControlFrame(frame, { secret, direction, lastSequence = 0 } = {}) {
+  const encoded = decodeFrame(frame);
+  if (encoded?.controlVersion !== CONTROL_FRAME_VERSION)
+    throw new Error("control frame version is unsupported");
+  validateControlFrameMetadata({
+    direction,
+    sequence: encoded.sequence,
+    lastSequence,
+  });
+  if (typeof encoded.mac !== "string" || !/^[a-f0-9]{64}$/.test(encoded.mac))
+    throw new Error("control frame authentication is missing");
+  const expected = createHmac("sha256", controlFrameKey(secret))
+    .update(
+      controlFrameMessage({
+        controlVersion: encoded.controlVersion,
+        direction: encoded.direction,
+        sequence: encoded.sequence,
+        payload: encoded.payload,
+      }),
+    )
+    .digest();
+  const actual = Buffer.from(encoded.mac, "hex");
+  if (actual.length !== expected.length || !timingSafeEqual(actual, expected))
+    throw new Error("control frame authentication or integrity check failed");
+  if (encoded.direction !== direction) throw new Error("control frame direction mismatch");
+  return { value: encoded.payload, sequence: encoded.sequence };
+}
+
+export function extractControlFrames(buffer, options = {}) {
+  if (!Buffer.isBuffer(buffer)) throw new Error("control frame buffer is invalid");
+  let offset = 0;
+  let lastSequence = options.lastSequence ?? 0;
+  const values = [];
+  while (buffer.length - offset >= 4) {
+    const length = buffer.readUInt32BE(offset);
+    if (length > MAX_INLINE_BYTES) throw new Error("invalid control frame size");
+    if (buffer.length - offset < length + 4) break;
+    const decoded = decodeControlFrame(buffer.subarray(offset, offset + length + 4), {
+      ...options,
+      lastSequence,
+    });
+    values.push(decoded.value);
+    lastSequence = decoded.sequence;
+    offset += length + 4;
+  }
+  return { values, remainder: buffer.subarray(offset), lastSequence };
 }
 
 export function decodeFrame(frame) {
