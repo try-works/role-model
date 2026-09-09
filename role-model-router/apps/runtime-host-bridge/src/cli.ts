@@ -371,6 +371,7 @@ export async function awaitCliExtensionRuntime<
   options: {
     readonly expectedExtensionIds?: readonly string[];
     readonly beforeReady?: (runtime: Runtime) => Promise<void>;
+    readonly closeRuntime?: () => Promise<void>;
   } = {},
 ): Promise<Runtime> {
   let runtime: Runtime | null = null;
@@ -385,12 +386,53 @@ export async function awaitCliExtensionRuntime<
     delete bootstrapState.message;
     return runtime;
   } catch (error) {
-    if (runtime?.close) await runtime.close().catch(() => undefined);
+    if (options.closeRuntime) await options.closeRuntime().catch(() => undefined);
+    else if (runtime?.close) await runtime.close().catch(() => undefined);
     bootstrapState.status = "failed";
     bootstrapState.message =
       error instanceof Error ? error.message : "extension runtime startup failed";
     throw error;
   }
+}
+
+export function createCliExtensionRuntimeOwner<
+  Runtime extends {
+    readonly health: () => Record<string, unknown>;
+    readonly close?: () => Promise<void>;
+  },
+>(
+  extensionRuntimePromise: Promise<Runtime>,
+): {
+  readonly promise: Promise<Runtime>;
+  close(): Promise<void>;
+} {
+  let resolvedRuntime: Runtime | null = null;
+  let closePromise: Promise<void> | null = null;
+  const observedPromise = extensionRuntimePromise.then(
+    (runtime) => {
+      resolvedRuntime = runtime;
+      return runtime;
+    },
+    (error: unknown) => {
+      throw error;
+    },
+  );
+
+  // Keep the rejection handled even when packaged sidecar/backend startup fails
+  // before the caller reaches its awaited startup boundary.
+  void observedPromise.catch(() => undefined);
+
+  return {
+    promise: observedPromise,
+    close: () => {
+      if (closePromise) return closePromise;
+      closePromise = (async () => {
+        const runtime = resolvedRuntime ?? (await observedPromise.catch(() => null));
+        if (runtime?.close) await runtime.close().catch(() => undefined);
+      })();
+      return closePromise;
+    },
+  };
 }
 
 interface PackagedTrackBContractRegistryBinding {
@@ -1530,6 +1572,10 @@ export async function main(): Promise<void> {
     ReturnType<typeof createPackagedProductionRuntime<RuntimeBridgeBackend>>
   > | null = null;
   let extensionRuntime: Awaited<ReturnType<typeof createProductionExtensionRuntime>> | null = null;
+  let extensionRuntimeOwner: {
+    readonly promise: Promise<Awaited<ReturnType<typeof createProductionExtensionRuntime>>>;
+    close(): Promise<void>;
+  } | null = null;
   const extensionRuntimeRef: {
     current: Awaited<ReturnType<typeof createProductionExtensionRuntime>> | null;
   } = { current: null };
@@ -1547,11 +1593,14 @@ export async function main(): Promise<void> {
     stopExtensionRuntimeWatchdog?.();
     stopExtensionRuntimeWatchdog = null;
     extensionRuntimeFailurePromise = (async () => {
+      const activeExtensionRuntimeOwner = extensionRuntimeOwner;
       const activeExtensionRuntime = extensionRuntime;
       const activePackagedRuntime = packagedRuntime;
+      extensionRuntimeOwner = null;
       extensionRuntime = null;
       packagedRuntime = null;
-      if (activeExtensionRuntime?.close)
+      if (activeExtensionRuntimeOwner) await activeExtensionRuntimeOwner.close();
+      else if (activeExtensionRuntime?.close)
         await activeExtensionRuntime.close().catch(() => undefined);
       if (activePackagedRuntime) await activePackagedRuntime.close().catch(() => undefined);
     })();
@@ -1566,9 +1615,14 @@ export async function main(): Promise<void> {
       stopExtensionRuntimeWatchdog?.();
       stopExtensionRuntimeWatchdog = null;
       await server?.close();
+      const activeExtensionRuntimeOwner = extensionRuntimeOwner;
+      const activeExtensionRuntime = extensionRuntime;
+      extensionRuntimeOwner = null;
+      extensionRuntime = null;
       if (packagedRuntime) await packagedRuntime.close();
       else await backend?.shutdown();
-      await extensionRuntime?.close();
+      if (activeExtensionRuntimeOwner) await activeExtensionRuntimeOwner.close();
+      else await activeExtensionRuntime?.close();
       process.exit(0);
     })();
 
@@ -2591,16 +2645,18 @@ export async function main(): Promise<void> {
       });
       // Start extension-host registration in parallel with sidecar/backend bring-up, but
       // do not advertise readiness until every canonical worker and startup probe is healthy.
-      const extensionRuntimePromise = createProductionExtensionRuntime({
-        stateRoot: path.join(trackBStateRoot, "extensions"),
-        authorizationEpoch: 1,
-        repoRoot: options.repoRoot,
-        extensions: manifest.extensions.map((extension) => ({
-          ...extension,
-          modulePath: path.resolve(distributionRoot, extension.modulePath),
-        })),
-        qaExtensions,
-      });
+      extensionRuntimeOwner = createCliExtensionRuntimeOwner(
+        createProductionExtensionRuntime({
+          stateRoot: path.join(trackBStateRoot, "extensions"),
+          authorizationEpoch: 1,
+          repoRoot: options.repoRoot,
+          extensions: manifest.extensions.map((extension) => ({
+            ...extension,
+            modulePath: path.resolve(distributionRoot, extension.modulePath),
+          })),
+          qaExtensions,
+        }),
+      );
       packagedRuntime = await createPackagedProductionRuntime({
         stateRoot: trackBStateRoot,
         sidecar: createOwnedTrackBSidecarSpec({
@@ -2651,36 +2707,41 @@ export async function main(): Promise<void> {
             trackBDistributionRequiresSQLiteMaintenance(manifest),
           ),
       });
-      extensionRuntime = await awaitCliExtensionRuntime(extensionRuntimePromise, bootstrapState, {
-        expectedExtensionIds: TRACK_B_CANONICAL_EXTENSION_IDS,
-        beforeReady: async (runtime) => {
-          for (const extension of qaExtensions) {
-            const capability = extension.descriptor.capabilities.find(
-              (candidate) => candidate !== "health:probe",
-            );
-            if (!capability)
-              throw new Error(
-                `QA extension has no business capability: ${extension.descriptor.id}`,
+      extensionRuntime = await awaitCliExtensionRuntime(
+        extensionRuntimeOwner.promise,
+        bootstrapState,
+        {
+          expectedExtensionIds: TRACK_B_CANONICAL_EXTENSION_IDS,
+          closeRuntime: extensionRuntimeOwner.close,
+          beforeReady: async (runtime) => {
+            for (const extension of qaExtensions) {
+              const capability = extension.descriptor.capabilities.find(
+                (candidate) => candidate !== "health:probe",
               );
-            const requestId = `run87:packaged-qa:${extension.descriptor.id}`;
-            const receipt = await runtime.invoke(extension.descriptor.id, {
-              requestId,
-              protocolVersion: extension.descriptor.protocolVersion,
-              channel: packagedProfile?.channel ?? "development",
-              scope: options.scopeId,
-              authorizationEpoch: 1,
-              capability,
-              payload: { packagedQa: true },
-            });
-            qaStartupReceipts.set(extension.descriptor.id, { ...receipt, requestId });
-          }
-          await drainPostObservationOutbox(runtime);
-          // A prior cloud outage must not require an unrelated new provider request
-          // before its already-authorized, durable aggregate is retried.
-          await currentPostObservationOperations()?.retryContributionAggregates();
-          extensionRuntimeRef.current = runtime;
+              if (!capability)
+                throw new Error(
+                  `QA extension has no business capability: ${extension.descriptor.id}`,
+                );
+              const requestId = `run87:packaged-qa:${extension.descriptor.id}`;
+              const receipt = await runtime.invoke(extension.descriptor.id, {
+                requestId,
+                protocolVersion: extension.descriptor.protocolVersion,
+                channel: packagedProfile?.channel ?? "development",
+                scope: options.scopeId,
+                authorizationEpoch: 1,
+                capability,
+                payload: { packagedQa: true },
+              });
+              qaStartupReceipts.set(extension.descriptor.id, { ...receipt, requestId });
+            }
+            await drainPostObservationOutbox(runtime);
+            // A prior cloud outage must not require an unrelated new provider request
+            // before its already-authorized, durable aggregate is retried.
+            await currentPostObservationOperations()?.retryContributionAggregates();
+            extensionRuntimeRef.current = runtime;
+          },
         },
-      });
+      );
       backend = packagedRuntime.backend;
       stopExtensionRuntimeWatchdog = startCliExtensionRuntimeWatchdog({
         getRuntime: () => extensionRuntimeRef.current,

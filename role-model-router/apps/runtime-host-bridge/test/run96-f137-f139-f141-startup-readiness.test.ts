@@ -285,6 +285,63 @@ describe("Run 96 Addendum 27 F137/F139/F141 startup boundaries", () => {
     expect(incompleteState.status).toBe("failed");
   });
 
+  test("F137: an early extension rejection is observed before later packaged startup can orphan it", async () => {
+    const createOwner = readFunction<typeof import("../src/cli.js").createCliExtensionRuntimeOwner>(
+      cli,
+      "createCliExtensionRuntimeOwner",
+    );
+    expect(createOwner).toBeTypeOf("function");
+    if (!createOwner) return;
+
+    const unhandledReasons: unknown[] = [];
+    const onUnhandledRejection = (reason: unknown) => {
+      unhandledReasons.push(reason);
+    };
+    process.on("unhandledRejection", onUnhandledRejection);
+    try {
+      const startupError = new Error("extension startup rejected before packaged backend");
+      const owner = createOwner(Promise.reject(startupError));
+
+      await delay(0);
+      expect(unhandledReasons).toEqual([]);
+      await expect(owner.promise).rejects.toThrow(startupError.message);
+    } finally {
+      process.off("unhandledRejection", onUnhandledRejection);
+    }
+  });
+
+  test("F137: later packaged startup failure closes an extension runtime that already resolved", async () => {
+    const createOwner = readFunction<typeof import("../src/cli.js").createCliExtensionRuntimeOwner>(
+      cli,
+      "createCliExtensionRuntimeOwner",
+    );
+    expect(createOwner).toBeTypeOf("function");
+    if (!createOwner) return;
+
+    let closeCount = 0;
+    const owner = createOwner(
+      Promise.resolve({
+        health: () => ({
+          host: { available: true },
+          supervisor: { available: true },
+        }),
+        close: async () => {
+          closeCount += 1;
+        },
+      }),
+    );
+
+    await expect(
+      (async () => {
+        await owner.promise;
+        throw new Error("packaged backend startup failed");
+      })(),
+    ).rejects.toThrow("packaged backend startup failed");
+    await owner.close();
+    await owner.close();
+    expect(closeCount).toBe(1);
+  });
+
   test("F139: production startup rejects an unknown ID even when the extension count is thirteen", async () => {
     const extensions = await createExtensionFixtures("unknown-extension");
     const result = await createProductionExtensionRuntime({
