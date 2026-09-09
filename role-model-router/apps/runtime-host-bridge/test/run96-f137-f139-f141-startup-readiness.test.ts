@@ -855,7 +855,7 @@ describe("Run 96 Addendum 27 F137/F139/F141 startup boundaries", () => {
     let stopWatchdog: (() => void) | undefined;
     try {
       const initialHealth = await fetch(`http://127.0.0.1:${server.port}/healthz`);
-      expect(initialHealth.status).toBe(200);
+      expect(initialHealth.status).toBe(503);
       await expect(initialHealth.json()).resolves.toEqual(
         expect.objectContaining({
           status: "degraded",
@@ -867,7 +867,7 @@ describe("Run 96 Addendum 27 F137/F139/F141 startup boundaries", () => {
       delete state.message;
       const readyHealth = await fetch(`http://127.0.0.1:${server.port}/healthz`);
       expect(readyHealth.status).toBe(200);
-      await expect(readyHealth.json()).resolves.toEqual({ status: "healthy" });
+      await expect(readyHealth.json()).resolves.toEqual({ status: "healthy", ready: true });
 
       stopWatchdog = startWatchdog({
         getRuntime: () => runtime,
@@ -883,7 +883,7 @@ describe("Run 96 Addendum 27 F137/F139/F141 startup boundaries", () => {
       expect(published).toBe(false);
 
       const failedHealth = await fetch(`http://127.0.0.1:${server.port}/healthz`);
-      expect(failedHealth.status).toBe(200);
+      expect(failedHealth.status).toBe(503);
       await expect(failedHealth.json()).resolves.toEqual(
         expect.objectContaining({
           status: "degraded",

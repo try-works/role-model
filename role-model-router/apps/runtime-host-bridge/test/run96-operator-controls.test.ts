@@ -3,6 +3,11 @@ import { createCliServerOptions } from "../src/cli.js";
 import { type StartBridgeServerOptions, startBridgeServer } from "../src/index.js";
 
 const servers: Array<{ close: () => Promise<void> }> = [];
+const operatorContext = {
+  channel: "development" as const,
+  scope: "run96:operator-controls",
+  authorizationEpoch: 96,
+};
 
 function testOptions(overrides: Partial<StartBridgeServerOptions>): StartBridgeServerOptions {
   return {
@@ -11,6 +16,7 @@ function testOptions(overrides: Partial<StartBridgeServerOptions>): StartBridgeS
     registry: {} as StartBridgeServerOptions["registry"],
     executeChatCompletions: async () => ({}) as never,
     executeResponses: async () => ({}) as never,
+    operatorContext,
     ...overrides,
   } as StartBridgeServerOptions;
 }
@@ -22,7 +28,15 @@ async function startTestServer(overrides: Partial<StartBridgeServerOptions>) {
 }
 
 async function getJson(server: { port: number }, path: string, token?: string) {
-  const headers = token ? { authorization: `Bearer ${token}` } : undefined;
+  const headers = token
+    ? {
+        authorization: `Bearer ${token}`,
+        "x-role-model-channel": operatorContext.channel,
+        "x-role-model-scope": operatorContext.scope,
+        "x-role-model-authorization-epoch": String(operatorContext.authorizationEpoch),
+        "x-role-model-capability": path.includes("/status") ? "status" : "operator",
+      }
+    : undefined;
   const response = await fetch(`http://127.0.0.1:${server.port}${path}`, { headers });
   return { response, body: (await response.json()) as Record<string, unknown> };
 }
@@ -158,7 +172,20 @@ describe("Run 96 operator controls", () => {
     const request = (path: string, init?: RequestInit) =>
       fetch(`http://127.0.0.1:${server.port}${path}`, {
         ...init,
-        headers: { authorization: "Bearer operator-secret", ...(init?.headers ?? {}) },
+        headers: {
+          authorization: "Bearer operator-secret",
+          "x-role-model-channel": operatorContext.channel,
+          "x-role-model-scope": operatorContext.scope,
+          "x-role-model-authorization-epoch": String(operatorContext.authorizationEpoch),
+          "x-role-model-capability": path.includes("/status")
+            ? "status"
+            : path.includes("/replay/")
+              ? "replay"
+              : path.includes("/evaluation/")
+                ? "evaluation"
+                : "learning",
+          ...(init?.headers ?? {}),
+        },
       });
 
     const responses = await Promise.all([
@@ -256,6 +283,7 @@ describe("Run 96 operator controls", () => {
         host: "127.0.0.1",
         port: 0,
         operatorAuthToken: "operator-secret",
+        operatorContext,
       },
       backend,
     );
@@ -265,7 +293,20 @@ describe("Run 96 operator controls", () => {
     const request = (path: string, init?: RequestInit) =>
       fetch(`http://127.0.0.1:${server.port}${path}`, {
         ...init,
-        headers: { authorization: "Bearer operator-secret", ...(init?.headers ?? {}) },
+        headers: {
+          authorization: "Bearer operator-secret",
+          "x-role-model-channel": operatorContext.channel,
+          "x-role-model-scope": operatorContext.scope,
+          "x-role-model-authorization-epoch": String(operatorContext.authorizationEpoch),
+          "x-role-model-capability": path.includes("/status")
+            ? "status"
+            : path.includes("/replay/")
+              ? "replay"
+              : path.includes("/evaluation/")
+                ? "evaluation"
+                : "learning",
+          ...(init?.headers ?? {}),
+        },
       });
     const responses = await Promise.all([
       request("/api/role-model/operator/status"),

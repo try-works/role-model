@@ -2920,11 +2920,20 @@ export interface RuntimeOperatorStatus {
 
 type RuntimeOperatorQuery = Readonly<Record<string, string>>;
 
+/** Non-secret binding required for every request to the operator surface. */
+export interface RuntimeOperatorContext {
+  readonly channel: "development" | "stage" | "production";
+  readonly scope: string;
+  readonly authorizationEpoch: number;
+}
+
 export interface StartBridgeServerOptions {
   readonly host: string;
   readonly port: number;
   /** Bearer token required for mutating and inspecting operator state. */
   readonly operatorAuthToken?: string;
+  /** Exact runtime binding required in addition to the bearer token. */
+  readonly operatorContext?: RuntimeOperatorContext;
   readonly runtimeStateRoot?: string;
   readonly runtimeChannel?: "development" | "stage" | "production";
   readonly registry: EndpointRegistryResult;
@@ -9723,17 +9732,38 @@ async function writeSseChunk(
   });
 }
 
-async function readJsonBody(request: IncomingMessage): Promise<Record<string, unknown>> {
+async function readJsonBody(
+  request: IncomingMessage,
+  maxBytes = MAX_REQUEST_BODY_BYTES,
+): Promise<Record<string, unknown>> {
+  const declaredLengthHeader = request.headers["content-length"];
+  const declaredLength = Array.isArray(declaredLengthHeader)
+    ? Number(declaredLengthHeader[0])
+    : Number(declaredLengthHeader);
+  if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+    throw maxBytes === MAX_OPERATOR_BODY_BYTES
+      ? operatorBodyTooLarge()
+      : bodyTooLarge(maxBytes, "request_body_too_large");
+  }
+
   const chunks: Buffer[] = [];
+  let byteLength = 0;
   for await (const chunk of request) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    byteLength += bytes.byteLength;
+    if (byteLength > maxBytes) {
+      throw maxBytes === MAX_OPERATOR_BODY_BYTES
+        ? operatorBodyTooLarge()
+        : bodyTooLarge(maxBytes, "request_body_too_large");
+    }
+    chunks.push(bytes);
   }
 
   if (chunks.length === 0) {
     return {};
   }
 
-  return JSON.parse(Buffer.concat(chunks).toString("utf8")) as Record<string, unknown>;
+  return JSON.parse(Buffer.concat(chunks, byteLength).toString("utf8")) as Record<string, unknown>;
 }
 
 function readModelOverrideRecord(value: unknown, label: string): BridgeModelOverrideRecord {
@@ -14733,8 +14763,22 @@ function setCorsHeaders(response: ServerResponse): void {
   response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   response.setHeader(
     "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id, X-Role-Model-Requested-Role-Id",
+    "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id, X-Role-Model-Requested-Role-Id, X-Role-Model-Channel, X-Role-Model-Scope, X-Role-Model-Authorization-Epoch, X-Role-Model-Capability",
   );
+}
+
+const MAX_OPERATOR_BODY_BYTES = 256 * 1024;
+const MAX_REQUEST_BODY_BYTES = 16 * 1024 * 1024;
+
+function bodyTooLarge(maxBytes: number, error: string): BridgeHttpError {
+  return new BridgeHttpError(413, {
+    error,
+    maxBytes,
+  });
+}
+
+function operatorBodyTooLarge(): BridgeHttpError {
+  return bodyTooLarge(MAX_OPERATOR_BODY_BYTES, "operator_body_too_large");
 }
 
 const RUNTIME_OPERATOR_CAPABILITIES = [
@@ -14781,6 +14825,115 @@ function operatorTokenMatches(
   const expectedDigest = createHash("sha256").update(expectedToken).digest();
   const actualDigest = createHash("sha256").update(actualToken).digest();
   return timingSafeEqual(expectedDigest, actualDigest);
+}
+
+type RuntimeOperatorContextField = "channel" | "scope" | "authorizationEpoch";
+
+function readOperatorHeader(request: IncomingMessage, name: string): string | undefined {
+  const value = request.headers[name];
+  if (Array.isArray(value)) {
+    if (value.length !== 1) {
+      throw new BridgeHttpError(403, {
+        error: "operator_context_mismatch",
+        field: name,
+      });
+    }
+    return value[0];
+  }
+  return value;
+}
+
+function normalizeOperatorContextValue(
+  field: RuntimeOperatorContextField,
+  value: string,
+): string | number {
+  if (field === "authorizationEpoch") {
+    const epoch = Number(value);
+    if (!Number.isSafeInteger(epoch) || epoch < 0) {
+      throw new BridgeHttpError(403, {
+        error: "operator_context_mismatch",
+        field,
+      });
+    }
+    return epoch;
+  }
+  if (!value.trim() || /[\r\n]/u.test(value)) {
+    throw new BridgeHttpError(403, {
+      error: "operator_context_mismatch",
+      field,
+    });
+  }
+  return value;
+}
+
+function operatorCapabilityForPath(pathname: string): string {
+  const operatorPath = pathname.replace(/^\/api\/role-model/u, "");
+  if (operatorPath === "/operator/status") return "status";
+  if (operatorPath.endsWith("/storage")) return "storage";
+  if (operatorPath.includes("/trace-roots")) return "trace";
+  if (operatorPath.includes("/replay/")) return "replay";
+  if (operatorPath.includes("/evaluation/")) return "evaluation";
+  if (operatorPath.includes("/learning")) return "learning";
+  return "operator";
+}
+
+function validateOperatorRequestContext(input: {
+  readonly request: IncomingMessage;
+  readonly url: URL;
+  readonly body: Record<string, unknown>;
+  readonly context: RuntimeOperatorContext | undefined;
+}): void {
+  const fields: readonly RuntimeOperatorContextField[] = ["channel", "scope", "authorizationEpoch"];
+  for (const field of fields) {
+    const headerName = `x-role-model-${field.replace(/[A-Z]/gu, (letter) => `-${letter.toLowerCase()}`)}`;
+    const supplied = readOperatorHeader(input.request, headerName);
+    if (supplied === undefined || supplied === "") {
+      throw new BridgeHttpError(403, {
+        error: "operator_context_required",
+        field,
+      });
+    }
+    const normalized = normalizeOperatorContextValue(field, supplied);
+    const expected = input.context?.[field];
+    if (expected === undefined || normalized !== expected) {
+      throw new BridgeHttpError(403, {
+        error: "operator_context_mismatch",
+        field,
+      });
+    }
+
+    const bodyValue = Object.prototype.hasOwnProperty.call(input.body, field)
+      ? input.body[field]
+      : undefined;
+    const queryValue = input.url.searchParams.has(field)
+      ? input.url.searchParams.get(field)
+      : undefined;
+    for (const alternate of [bodyValue, queryValue]) {
+      if (alternate === undefined || alternate === null) continue;
+      const alternateValue = normalizeOperatorContextValue(field, String(alternate));
+      if (alternateValue !== expected) {
+        throw new BridgeHttpError(403, {
+          error: "operator_context_mismatch",
+          field,
+        });
+      }
+    }
+  }
+
+  const expectedCapability = operatorCapabilityForPath(input.url.pathname);
+  const suppliedCapability = readOperatorHeader(input.request, "x-role-model-capability");
+  if (suppliedCapability === undefined || suppliedCapability === "") {
+    throw new BridgeHttpError(403, {
+      error: "operator_capability_required",
+      capability: expectedCapability,
+    });
+  }
+  if (suppliedCapability !== expectedCapability) {
+    throw new BridgeHttpError(403, {
+      error: "operator_context_mismatch",
+      field: "capability",
+    });
+  }
 }
 
 function readOperatorJobId(pathname: string, prefix: string): string | null {
@@ -14836,6 +14989,46 @@ function writeOperatorResult(response: ServerResponse, result: unknown): void {
   writeJson(response, isUnavailable ? 503 : 200, result);
 }
 
+function isReadyHealthProjection(value: unknown): boolean {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const record = value as Record<string, unknown>;
+  if (record.ready === false) return false;
+  const readiness = record.readiness;
+  if (readiness && typeof readiness === "object" && !Array.isArray(readiness)) {
+    const state = (readiness as Record<string, unknown>).state;
+    if (state !== undefined && state !== "ready" && state !== "healthy") return false;
+  }
+  const operator = record.operator;
+  if (operator && typeof operator === "object" && !Array.isArray(operator)) {
+    const overall = (operator as Record<string, unknown>).overall;
+    if (
+      overall !== undefined &&
+      overall !== "available" &&
+      overall !== "ready" &&
+      overall !== "healthy"
+    ) {
+      return false;
+    }
+  }
+  return record.status === "healthy" || record.status === "ok";
+}
+
+function writeHealthProjection(response: ServerResponse, value: unknown): void {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    writeJson(response, 503, {
+      status: "unavailable",
+      ready: false,
+      reason: "health_status_invalid",
+    });
+    return;
+  }
+  const body = value as Record<string, unknown>;
+  writeJson(response, isReadyHealthProjection(body) ? 200 : 503, {
+    ...body,
+    ready: isReadyHealthProjection(body),
+  });
+}
+
 function createRequestHandler(options: StartBridgeServerOptions) {
   return async (request: IncomingMessage, response: ServerResponse): Promise<void> => {
     setCorsHeaders(response);
@@ -14854,18 +15047,23 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     const url = new URL(request.url, `http://${options.host}`);
 
     if (request.method === "GET" && url.pathname === "/healthz") {
-      writeJson(
-        response,
-        200,
-        options.readHealthStatus
-          ? await options.readHealthStatus()
-          : {
-              status: "healthy",
-              executionMode: "decision_only",
-              vendors: {},
-              inactiveVendors: [],
-            },
-      );
+      if (!options.readHealthStatus) {
+        writeJson(response, 503, {
+          status: "unavailable",
+          ready: false,
+          reason: "health_status_not_configured",
+        });
+        return;
+      }
+      try {
+        writeHealthProjection(response, await options.readHealthStatus());
+      } catch {
+        writeJson(response, 503, {
+          status: "unavailable",
+          ready: false,
+          reason: "health_check_failed",
+        });
+      }
       return;
     }
 
@@ -14921,6 +15119,15 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       }
 
       try {
+        const operatorBody =
+          request.method === "GET" ? {} : await readJsonBody(request, MAX_OPERATOR_BODY_BYTES);
+        validateOperatorRequestContext({
+          request,
+          url,
+          body: operatorBody,
+          context: options.operatorContext,
+        });
+
         if (request.method === "GET" && url.pathname === "/api/role-model/operator/status") {
           if (!options.readOperatorStatus) {
             writeOperatorUnavailable(response, "operator status");
@@ -14974,7 +15181,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             writeOperatorUnavailable(response, "replay creation");
             return;
           }
-          writeOperatorResult(response, await options.createReplayJob(await readJsonBody(request)));
+          writeOperatorResult(response, await options.createReplayJob(operatorBody));
           return;
         }
 
@@ -15021,10 +15228,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             writeJson(response, 400, { error: "invalid replay job id" });
             return;
           }
-          writeOperatorResult(
-            response,
-            await options.cancelReplayJob(jobId, await readJsonBody(request)),
-          );
+          writeOperatorResult(response, await options.cancelReplayJob(jobId, operatorBody));
           return;
         }
 
@@ -15110,10 +15314,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
               writeOperatorUnavailable(response, "evaluation cancellation");
               return;
             }
-            writeOperatorResult(
-              response,
-              await options.cancelEvaluationJob(jobId, await readJsonBody(request)),
-            );
+            writeOperatorResult(response, await options.cancelEvaluationJob(jobId, operatorBody));
             return;
           }
           if (request.method === "POST" && action === "retry") {
@@ -15121,10 +15322,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
               writeOperatorUnavailable(response, "evaluation retry");
               return;
             }
-            writeOperatorResult(
-              response,
-              await options.retryEvaluationJob(jobId, await readJsonBody(request)),
-            );
+            writeOperatorResult(response, await options.retryEvaluationJob(jobId, operatorBody));
             return;
           }
         }
@@ -15167,10 +15365,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             writeOperatorUnavailable(response, "learning mode update");
             return;
           }
-          writeOperatorResult(
-            response,
-            await options.updateLearningMode(await readJsonBody(request)),
-          );
+          writeOperatorResult(response, await options.updateLearningMode(operatorBody));
           return;
         }
         if (
@@ -15181,15 +15376,16 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             writeOperatorUnavailable(response, "learning rollback");
             return;
           }
-          writeOperatorResult(
-            response,
-            await options.rollbackLearning(await readJsonBody(request)),
-          );
+          writeOperatorResult(response, await options.rollbackLearning(operatorBody));
           return;
         }
 
         writeJson(response, 404, { error: "operator route not found" });
       } catch (error) {
+        if (error instanceof BridgeHttpError) {
+          writeJson(response, error.statusCode, error.body);
+          return;
+        }
         writeJson(response, 409, {
           error: error instanceof Error ? error.message : "operator operation failed",
         });

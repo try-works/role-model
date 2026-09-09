@@ -13,6 +13,12 @@ const registry = {
   lifecycleSummary: { active: 0, degraded: 0, offline: 0 },
 } as unknown as EndpointRegistryResult;
 
+const operatorContext = {
+  channel: "development" as const,
+  scope: "run96:operator-surfaces",
+  authorizationEpoch: 96,
+};
+
 const json = (response: Response): Promise<unknown> => response.json();
 
 describe("Run 96 operator evidence routes", () => {
@@ -22,6 +28,7 @@ describe("Run 96 operator evidence routes", () => {
       host: "127.0.0.1",
       port: 0,
       operatorAuthToken: "operator-secret",
+      operatorContext,
       registry,
       executeChatCompletions: async () => {
         throw new Error("not used");
@@ -73,18 +80,41 @@ describe("Run 96 operator evidence routes", () => {
 
     try {
       const baseUrl = `http://127.0.0.1:${server.port}`;
-      const auth = { headers: { authorization: "Bearer operator-secret" } };
+      const auth = {
+        headers: {
+          authorization: "Bearer operator-secret",
+          "x-role-model-channel": operatorContext.channel,
+          "x-role-model-scope": operatorContext.scope,
+          "x-role-model-authorization-epoch": String(operatorContext.authorizationEpoch),
+          "x-role-model-capability": "operator",
+        },
+      };
+      const authFor = (capability: string) => ({
+        headers: { ...auth.headers, "x-role-model-capability": capability },
+      });
       const requests = [
-        fetch(`${baseUrl}/api/role-model/operator/trace-roots?limit=10`, auth),
-        fetch(`${baseUrl}/api/role-model/operator/trace-roots/trace-1`, auth),
-        fetch(`${baseUrl}/api/role-model/operator/replay/jobs/replay-1`, auth),
-        fetch(`${baseUrl}/api/role-model/operator/replay/jobs/replay-1/results`, auth),
-        fetch(`${baseUrl}/api/role-model/operator/evaluation/jobs/eval-1/trials`, auth),
-        fetch(`${baseUrl}/api/role-model/operator/evaluation/jobs/eval-1/scorers`, auth),
-        fetch(`${baseUrl}/api/role-model/operator/evaluation/jobs/eval-1/comparisons`, auth),
-        fetch(`${baseUrl}/api/role-model/operator/evaluation/jobs/eval-1/groups`, auth),
-        fetch(`${baseUrl}/api/role-model/operator/learning/profile`, auth),
-        fetch(`${baseUrl}/api/role-model/operator/learning/advisory`, auth),
+        fetch(`${baseUrl}/api/role-model/operator/trace-roots?limit=10`, authFor("trace")),
+        fetch(`${baseUrl}/api/role-model/operator/trace-roots/trace-1`, authFor("trace")),
+        fetch(`${baseUrl}/api/role-model/operator/replay/jobs/replay-1`, authFor("replay")),
+        fetch(`${baseUrl}/api/role-model/operator/replay/jobs/replay-1/results`, authFor("replay")),
+        fetch(
+          `${baseUrl}/api/role-model/operator/evaluation/jobs/eval-1/trials`,
+          authFor("evaluation"),
+        ),
+        fetch(
+          `${baseUrl}/api/role-model/operator/evaluation/jobs/eval-1/scorers`,
+          authFor("evaluation"),
+        ),
+        fetch(
+          `${baseUrl}/api/role-model/operator/evaluation/jobs/eval-1/comparisons`,
+          authFor("evaluation"),
+        ),
+        fetch(
+          `${baseUrl}/api/role-model/operator/evaluation/jobs/eval-1/groups`,
+          authFor("evaluation"),
+        ),
+        fetch(`${baseUrl}/api/role-model/operator/learning/profile`, authFor("learning")),
+        fetch(`${baseUrl}/api/role-model/operator/learning/advisory`, authFor("learning")),
       ];
       const responses = await Promise.all(requests);
       expect(responses.every((response) => response.status === 200)).toBe(true);
@@ -124,6 +154,7 @@ describe("Run 96 operator evidence routes", () => {
       host: "127.0.0.1",
       port: 0,
       operatorAuthToken: "operator-secret",
+      operatorContext,
       registry,
       executeChatCompletions: async () => {
         throw new Error("not used");
@@ -136,7 +167,15 @@ describe("Run 96 operator evidence routes", () => {
     try {
       const response = await fetch(
         `http://127.0.0.1:${server.port}/api/role-model/operator/learning/advisory`,
-        { headers: { authorization: "Bearer operator-secret" } },
+        {
+          headers: {
+            authorization: "Bearer operator-secret",
+            "x-role-model-channel": operatorContext.channel,
+            "x-role-model-scope": operatorContext.scope,
+            "x-role-model-authorization-epoch": String(operatorContext.authorizationEpoch),
+            "x-role-model-capability": "learning",
+          },
+        },
       );
       expect(response.status).toBe(503);
       expect(await json(response)).toMatchObject({
@@ -154,6 +193,7 @@ describe("Run 96 operator evidence routes", () => {
       host: "127.0.0.1",
       port: 0,
       operatorAuthToken: "operator-secret",
+      operatorContext,
       registry,
       executeChatCompletions: async () => {
         throw new Error("not used");
@@ -177,7 +217,15 @@ describe("Run 96 operator evidence routes", () => {
     try {
       const response = await fetch(
         `http://127.0.0.1:${server.port}/api/role-model/operator/learning/advisory`,
-        { headers: { authorization: "Bearer operator-secret" } },
+        {
+          headers: {
+            authorization: "Bearer operator-secret",
+            "x-role-model-channel": operatorContext.channel,
+            "x-role-model-scope": operatorContext.scope,
+            "x-role-model-authorization-epoch": String(operatorContext.authorizationEpoch),
+            "x-role-model-capability": "learning",
+          },
+        },
       );
       expect(response.status).toBe(503);
       expect(await json(response)).toMatchObject({
@@ -198,7 +246,12 @@ describe("Run 96 operator evidence routes", () => {
       listOperatorTraceRoots,
     } as unknown as Parameters<typeof createCliServerOptions>[1];
     const options = createCliServerOptions(
-      { host: "127.0.0.1", port: 0, operatorAuthToken: "operator-secret" },
+      {
+        host: "127.0.0.1",
+        port: 0,
+        operatorAuthToken: "operator-secret",
+        operatorContext,
+      },
       backend,
     );
     const server = await startBridgeServer({
@@ -214,7 +267,15 @@ describe("Run 96 operator evidence routes", () => {
     try {
       const response = await fetch(
         `http://127.0.0.1:${server.port}/api/role-model/operator/trace-roots`,
-        { headers: { authorization: "Bearer operator-secret" } },
+        {
+          headers: {
+            authorization: "Bearer operator-secret",
+            "x-role-model-channel": operatorContext.channel,
+            "x-role-model-scope": operatorContext.scope,
+            "x-role-model-authorization-epoch": String(operatorContext.authorizationEpoch),
+            "x-role-model-capability": "trace",
+          },
+        },
       );
       expect(response.status).toBe(200);
       expect(await json(response)).toEqual({ roots: [], completeness: "unobserved" });
