@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -13,7 +13,10 @@ import {
   hydrateInputTransferArtifact,
 } from "./transfer-artifact.mjs";
 
-const RECEIPT_ROOT = "E:\\role-model-temp";
+const RECEIPT_ROOT =
+  process.env.ROLE_MODEL_TEST_TEMP_ROOT?.trim() ||
+  process.env.RUN96_TEST_TEMP_ROOT?.trim() ||
+  "E:\\role-model-temp";
 const protocolVersion = "1.1.0";
 const authorizationEpoch = 7;
 const baseEnvelope = (body, overrides = {}) => ({
@@ -75,6 +78,7 @@ async function createHost(root) {
 }
 
 test("AC-R24-01 aggregate: real process ExtensionHost enforces the authenticated 16 KiB-to-64 MiB transfer conjunction", async () => {
+  await mkdir(RECEIPT_ROOT, { recursive: true });
   const root = await mkdtemp(path.join(RECEIPT_ROOT, "run96-r24-01-extension-host-"));
   const host = await createHost(root);
   const extensionId = "run96-r24-01-extension";

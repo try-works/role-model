@@ -13,7 +13,8 @@ import {
 } from "../src/track-b-runtime.js";
 
 const temporaryRoots: string[] = [];
-const testTempRoot = process.env.RUN96_TEST_TEMP_ROOT ?? "E:/role-model-temp";
+const testTempRoot =
+  process.env.ROLE_MODEL_TEST_TEMP_ROOT ?? process.env.RUN96_TEST_TEMP_ROOT ?? "E:/role-model-temp";
 
 afterEach(async () => {
   await Promise.all(
@@ -93,9 +94,9 @@ function fakeReadyRuntime(
 }
 
 async function createExtensionFixtures(replaceId?: string) {
+  await mkdir(testTempRoot, { recursive: true });
   const root = await mkdtemp(path.join(testTempRoot, "run96-startup-boundary-"));
   temporaryRoots.push(root);
-  await mkdir(root, { recursive: true });
   return Promise.all(
     TRACK_B_CANONICAL_EXTENSION_IDS.map(async (id, index) => {
       const descriptorId = index === 0 && replaceId ? replaceId : id;
