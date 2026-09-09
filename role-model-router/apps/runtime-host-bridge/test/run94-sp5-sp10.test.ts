@@ -342,6 +342,7 @@ function observation() {
     reasoningEffort: null,
     effortSource: "none" as const,
     usageEvent: { endpoint_id: "endpoint:run94", model_id: "model:run94" },
+    responseStatusCode: 200,
   };
 }
 

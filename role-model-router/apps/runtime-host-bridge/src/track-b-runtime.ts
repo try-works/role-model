@@ -2913,6 +2913,13 @@ export interface TrackBPostObservationWorkItem extends Readonly<Record<string, u
   readonly effortSource?: RuntimeEffortSource;
   readonly legacyIdentityMissing?: true;
   readonly run88Correlation?: Readonly<Record<string, unknown>>;
+  readonly occurrenceId?: string;
+  readonly contentId?: string;
+  readonly trajectoryEvents?: readonly Record<string, unknown>[];
+  readonly routingShadowEvidence?: Readonly<Record<string, unknown>>;
+  readonly routingShadowCases?: readonly Record<string, unknown>[];
+  readonly evaluationReferences?: Readonly<Record<string, unknown>>;
+  readonly usageEvent?: Readonly<Record<string, unknown>>;
 }
 
 export interface TrackBPostObservationReceipt {
@@ -3246,10 +3253,397 @@ export async function verifyTrackBExtensionClosureAfterRestart(
   };
 }
 
-const TRACK_B_OUTBOX_SCHEMA_VERSION = "role-model.track-b-post-observation-outbox.v3" as const;
+const TRACK_B_OUTBOX_SCHEMA_VERSION = "role-model.track-b-post-observation-outbox.v4" as const;
 const TRACK_B_OUTBOX_RECEIPT_CAP_BYTES = 10 * 1024 * 1024;
 const TRACK_B_OUTBOX_RECEIPT_RAW_CAP_BYTES = 10 * 1024 * 1024;
 const TRACK_B_OUTBOX_SQLITE_HEADER = "SQLite format 3";
+const TRACK_B_OUTBOX_OBSERVATION_CAP_BYTES = 64 * 1024;
+const TRACK_B_OUTBOX_OBSERVATION_TEXT_CAP_BYTES = 16 * 1024;
+const TRACK_B_OUTBOX_OBSERVATION_COLLECTION_CAP = 128;
+
+function outboxSafeText(value: unknown, capBytes = 1024): string | undefined {
+  if (typeof value !== "string" || !value.trim()) return undefined;
+  return Buffer.byteLength(value, "utf8") <= capBytes ? value : undefined;
+}
+
+function outboxSafeNumber(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) && Number.isSafeInteger(value)
+    ? value
+    : undefined;
+}
+
+function outboxSafeFinite(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+}
+
+function outboxPickScalar(
+  source: Record<string, unknown>,
+  target: Record<string, unknown>,
+  key: string,
+  capBytes = 1024,
+): void {
+  const value = source[key];
+  if (typeof value === "string") {
+    const safe = outboxSafeText(value, capBytes);
+    if (safe !== undefined) target[key] = safe;
+  } else if (typeof value === "boolean") {
+    target[key] = value;
+  } else {
+    const safe = outboxSafeFinite(value);
+    if (safe !== undefined) target[key] = safe;
+  }
+}
+
+function outboxPickStringArray(
+  source: Record<string, unknown>,
+  target: Record<string, unknown>,
+  key: string,
+  maxItems = 32,
+  capBytes = 512,
+): void {
+  const value = source[key];
+  if (!Array.isArray(value) || value.length > maxItems) return;
+  const strings = value.map((item) => outboxSafeText(item, capBytes));
+  if (strings.every((item): item is string => item !== undefined)) target[key] = strings;
+}
+
+function sanitizeTrackBOutboxOutcome(value: unknown): Record<string, unknown> | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const source = value as Record<string, unknown>;
+  const target: Record<string, unknown> = {};
+  for (const key of [
+    "outcomeRef",
+    "outcomeDigest",
+    "status",
+    "failureClass",
+    "errorClass",
+    "error_class",
+    "responseStatusCode",
+    "response_status_code",
+    "statusCode",
+    "status_code",
+  ]) {
+    outboxPickScalar(source, target, key, key.toLowerCase().includes("ref") ? 2048 : 512);
+  }
+  return Object.keys(target).length ? target : undefined;
+}
+
+function sanitizeTrackBOutboxDimensions(value: unknown): Record<string, unknown> | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const source = value as Record<string, unknown>;
+  const target: Record<string, unknown> = {};
+  for (const key of [
+    "task",
+    "repository",
+    "sampling",
+    "experience",
+    "environment",
+    "prompt",
+    "tool",
+  ]) {
+    const raw = source[key];
+    if (raw === null) {
+      target[key] = null;
+      continue;
+    }
+    const safe = outboxSafeText(raw, key === "prompt" || key === "tool" ? 256 : 512);
+    if (safe !== undefined) {
+      // Prompt/tool dimensions are accepted only as opaque references. Never
+      // persist an inline prompt or tool payload in the durable outbox.
+      if ((key === "prompt" || key === "tool") && !/^sha256:[a-f0-9]{64}$/.test(safe)) continue;
+      target[key] = safe;
+    }
+  }
+  outboxPickStringArray(source, target, "unknownDimensions");
+  return Object.keys(target).length ? target : undefined;
+}
+
+function sanitizeTrackBOutboxRollout(value: unknown): Record<string, unknown> | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const source = value as Record<string, unknown>;
+  const target: Record<string, unknown> = {};
+  for (const key of [
+    "rolloutId",
+    "routePackage",
+    "endpointId",
+    "modelId",
+    "policyId",
+    "reasoningEffort",
+    "effortSource",
+    "evidenceRef",
+    "artifactRef",
+  ]) {
+    outboxPickScalar(source, target, key, 2048);
+  }
+  for (const key of ["evaluationActual"])
+    outboxPickScalar(source, target, key, TRACK_B_OUTBOX_OBSERVATION_TEXT_CAP_BYTES);
+  const propensity = outboxSafeFinite(source.propensity);
+  if (propensity !== undefined) target.propensity = propensity;
+  const dimensions = sanitizeTrackBOutboxDimensions(source.observedDimensions);
+  if (dimensions) target.observedDimensions = dimensions;
+  const outcome = sanitizeTrackBOutboxOutcome(source.outcome);
+  if (outcome) target.outcome = outcome;
+  return Object.keys(target).length ? target : undefined;
+}
+
+function sanitizeTrackBOutboxCandidate(value: unknown): Record<string, unknown> | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const source = value as Record<string, unknown>;
+  const target: Record<string, unknown> = {};
+  for (const key of [
+    "routePackage",
+    "endpointId",
+    "modelId",
+    "policyId",
+    "reasoningEffort",
+    "effortSource",
+  ])
+    outboxPickScalar(source, target, key, 2048);
+  const propensity = outboxSafeFinite(source.propensity);
+  if (propensity !== undefined) target.propensity = propensity;
+  return Object.keys(target).length ? target : undefined;
+}
+
+function sanitizeTrackBOutboxEvaluationReferences(
+  value: unknown,
+): Record<string, unknown> | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const source = value as Record<string, unknown>;
+  const target: Record<string, unknown> = {};
+  for (const key of [
+    "taskRef",
+    "inputRef",
+    "forkRef",
+    "toolPolicyDigest",
+    "environmentDigest",
+    "sourceEvidenceRef",
+    "counterfactualEvidenceRef",
+    "sourceOutcomeRef",
+    "counterfactualOutcomeRef",
+  ])
+    outboxPickScalar(source, target, key, 2048);
+  const perCase = Array.isArray(source.perCase)
+    ? source.perCase.slice(0, TRACK_B_OUTBOX_OBSERVATION_COLLECTION_CAP).flatMap((value) => {
+        if (!value || typeof value !== "object" || Array.isArray(value)) return [];
+        const row = value as Record<string, unknown>;
+        const caseId = outboxSafeText(row.caseId, 512);
+        const evidenceRef = outboxSafeText(row.evidenceRef, 2048);
+        return caseId && evidenceRef ? [{ caseId, evidenceRef }] : [];
+      })
+    : [];
+  if (perCase.length) target.perCase = perCase;
+  return Object.keys(target).length ? target : undefined;
+}
+
+function sanitizeTrackBOutboxShadowEvidence(value: unknown): Record<string, unknown> | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const source = value as Record<string, unknown>;
+  const target: Record<string, unknown> = {};
+  const sourceRollout = sanitizeTrackBOutboxRollout(source.source);
+  if (sourceRollout) target.source = sourceRollout;
+  const counterfactuals = Array.isArray(source.counterfactuals)
+    ? source.counterfactuals
+        .slice(0, TRACK_B_OUTBOX_OBSERVATION_COLLECTION_CAP)
+        .flatMap((rollout) => {
+          const safe = sanitizeTrackBOutboxRollout(rollout);
+          return safe ? [safe] : [];
+        })
+    : [];
+  if (counterfactuals.length) target.counterfactuals = counterfactuals;
+  const candidateSet = Array.isArray(source.candidateSet)
+    ? source.candidateSet
+        .slice(0, TRACK_B_OUTBOX_OBSERVATION_COLLECTION_CAP)
+        .flatMap((candidate) => {
+          const safe = sanitizeTrackBOutboxCandidate(candidate);
+          return safe ? [safe] : [];
+        })
+    : [];
+  if (candidateSet.length) target.candidateSet = candidateSet;
+  const references = sanitizeTrackBOutboxEvaluationReferences(source.evaluationReferences);
+  if (references) target.evaluationReferences = references;
+  return Object.keys(target).length ? target : undefined;
+}
+
+function sanitizeTrackBOutboxTrajectoryEvent(value: unknown): Record<string, unknown> | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const source = value as Record<string, unknown>;
+  const target: Record<string, unknown> = {};
+  for (const key of [
+    "id",
+    "type",
+    "requestId",
+    "routingDecisionId",
+    "endpointId",
+    "modelId",
+    "reasoningEffort",
+    "effortSource",
+    "evidenceRef",
+    "outcomeRef",
+    "status",
+    "failureClass",
+    "errorClass",
+  ])
+    outboxPickScalar(source, target, key, 2048);
+  for (const key of [
+    "timestampMs",
+    "timestamp_ms",
+    "occurredAtMs",
+    "occurred_at_ms",
+    "createdAtMs",
+    "created_at_ms",
+  ]) {
+    const safe = outboxSafeNumber(source[key]);
+    if (safe !== undefined) target[key] = safe;
+  }
+  return Object.keys(target).length ? target : undefined;
+}
+
+function sanitizeTrackBOutboxContributionRecord(
+  value: unknown,
+  depth = 0,
+): Record<string, unknown> | undefined {
+  if (depth > 2 || !value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const source = value as Record<string, unknown>;
+  const target: Record<string, unknown> = {};
+  for (const key of [
+    "responseStatusCode",
+    "response_status_code",
+    "statusCode",
+    "status_code",
+    "errorClass",
+    "error_class",
+    "normalizedErrorClass",
+    "failureClass",
+    "failure_class",
+    "code",
+    "type",
+    "name",
+    "cancelled",
+    "canceled",
+    "aborted",
+    "failed",
+    "isError",
+    "success",
+  ])
+    outboxPickScalar(source, target, key, 512);
+  for (const key of ["failure", "error", "metadata"]) {
+    const nested = sanitizeTrackBOutboxContributionRecord(source[key], depth + 1);
+    if (nested) target[key] = nested;
+  }
+  const diagnostics = Array.isArray(source.diagnostics)
+    ? source.diagnostics.slice(0, 32).flatMap((diagnostic) => {
+        const safe = sanitizeTrackBOutboxContributionRecord(diagnostic, depth + 1);
+        return safe ? [safe] : [];
+      })
+    : [];
+  if (diagnostics.length) target.diagnostics = diagnostics;
+  return Object.keys(target).length ? target : undefined;
+}
+
+function sanitizeTrackBOutboxUsageEvent(value: unknown): Record<string, unknown> | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const source = value as Record<string, unknown>;
+  const target: Record<string, unknown> = {};
+  for (const key of [
+    "endpoint_id",
+    "model_id",
+    "reasoning_effort",
+    "effort_source",
+    "error_class",
+    "errorClass",
+    "status_code",
+    "statusCode",
+    "response_status_code",
+    "responseStatusCode",
+    "tokens_in",
+    "tokens_out",
+    "input_tokens",
+    "output_tokens",
+    "cache_read_input_tokens",
+    "cache_creation_input_tokens",
+    "cancelled",
+    "canceled",
+    "aborted",
+  ])
+    outboxPickScalar(source, target, key, 2048);
+  return Object.keys(target).length ? target : undefined;
+}
+
+function sanitizeTrackBPostObservationForOutbox(
+  observation: Readonly<Record<string, unknown>>,
+): Record<string, unknown> {
+  const target: Record<string, unknown> = {};
+  for (const key of ["occurrenceId", "contentId"]) outboxPickScalar(observation, target, key, 2048);
+  const trajectoryEvents = Array.isArray(observation.trajectoryEvents)
+    ? observation.trajectoryEvents
+        .slice(0, TRACK_B_OUTBOX_OBSERVATION_COLLECTION_CAP)
+        .flatMap((event) => {
+          const safe = sanitizeTrackBOutboxTrajectoryEvent(event);
+          return safe ? [safe] : [];
+        })
+    : [];
+  if (trajectoryEvents.length) target.trajectoryEvents = trajectoryEvents;
+  const shadowEvidence = sanitizeTrackBOutboxShadowEvidence(observation.routingShadowEvidence);
+  if (shadowEvidence) target.routingShadowEvidence = shadowEvidence;
+  const shadowCases = Array.isArray(observation.routingShadowCases)
+    ? observation.routingShadowCases
+        .slice(0, TRACK_B_OUTBOX_OBSERVATION_COLLECTION_CAP)
+        .flatMap((item) => {
+          if (!item || typeof item !== "object" || Array.isArray(item)) return [];
+          const source = item as Record<string, unknown>;
+          const targetCase: Record<string, unknown> = {};
+          outboxPickScalar(source, targetCase, "id", 512);
+          outboxPickScalar(source, targetCase, "actual", TRACK_B_OUTBOX_OBSERVATION_TEXT_CAP_BYTES);
+          const criteria = source.evaluationCriteria;
+          if (criteria && typeof criteria === "object" && !Array.isArray(criteria)) {
+            const criteriaRecord = criteria as Record<string, unknown>;
+            const safeCriteria: Record<string, unknown> = {};
+            outboxPickScalar(criteriaRecord, safeCriteria, "schemaVersion", 128);
+            outboxPickStringArray(criteriaRecord, safeCriteria, "requiredTerms");
+            outboxPickStringArray(criteriaRecord, safeCriteria, "forbiddenTerms");
+            outboxPickScalar(criteriaRecord, safeCriteria, "minOutputChars", 128);
+            if (Object.keys(safeCriteria).length) targetCase.evaluationCriteria = safeCriteria;
+          }
+          return Object.keys(targetCase).length ? [targetCase] : [];
+        })
+    : [];
+  if (shadowCases.length) target.routingShadowCases = shadowCases;
+  const evaluationReferences = sanitizeTrackBOutboxEvaluationReferences(
+    observation.evaluationReferences,
+  );
+  if (evaluationReferences) target.evaluationReferences = evaluationReferences;
+  const evaluationJobIds = Array.isArray(observation.evaluationJobIds)
+    ? observation.evaluationJobIds
+        .slice(0, TRACK_B_OUTBOX_OBSERVATION_COLLECTION_CAP)
+        .flatMap((jobId) => {
+          const safe = outboxSafeText(jobId, 512);
+          return safe ? [safe] : [];
+        })
+    : [];
+  if (evaluationJobIds.length) target.evaluationJobIds = evaluationJobIds;
+  const usageEvent = sanitizeTrackBOutboxUsageEvent(observation.usageEvent);
+  if (usageEvent) target.usageEvent = usageEvent;
+  for (const key of ["responseStatusCode", "normalizedErrorClass", "errorClass", "error_class"]) {
+    outboxPickScalar(observation, target, key, 512);
+  }
+  for (const key of ["execution", "responseCapture", "inspection", "diagnostics"]) {
+    const safe = sanitizeTrackBOutboxContributionRecord(observation[key]);
+    if (safe) target[key] = safe;
+  }
+  const payload = JSON.stringify(target);
+  if (Buffer.byteLength(payload, "utf8") > TRACK_B_OUTBOX_OBSERVATION_CAP_BYTES) {
+    throw new Error("Track B post-observation outbox payload exceeds the bounded observation cap");
+  }
+  return target;
+}
+
+function boundedTrackBObservationJson(value: unknown): string {
+  const json = JSON.stringify(value ?? {});
+  if (Buffer.byteLength(json, "utf8") > TRACK_B_OUTBOX_OBSERVATION_CAP_BYTES) {
+    throw new Error("Track B post-observation outbox payload exceeds the bounded observation cap");
+  }
+  return json;
+}
 
 function boundedJson(value: unknown, capBytes = TRACK_B_OUTBOX_RECEIPT_CAP_BYTES): string {
   const json = JSON.stringify(value ?? null);
@@ -3316,6 +3710,7 @@ function outboxSchema(database: DatabaseSync): void {
       reasoning_effort TEXT,
       effort_source TEXT,
       run88_correlation_json TEXT,
+      observation_json TEXT,
       legacy_identity_missing INTEGER NOT NULL DEFAULT 0,
       enqueued_at_ms INTEGER NOT NULL
     );
@@ -3342,9 +3737,15 @@ function outboxSchema(database: DatabaseSync): void {
       value TEXT NOT NULL
     );
   `);
+  const columns = database
+    .prepare("PRAGMA table_info(track_b_post_observation_pending)")
+    .all() as Array<{ name?: string }>;
+  if (!columns.some((column) => column.name === "observation_json")) {
+    database.exec("ALTER TABLE track_b_post_observation_pending ADD COLUMN observation_json TEXT");
+  }
   database
     .prepare(
-      "INSERT OR IGNORE INTO track_b_post_observation_meta (key, value) VALUES ('schemaVersion', ?)",
+      "INSERT INTO track_b_post_observation_meta (key, value) VALUES ('schemaVersion', ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
     )
     .run(TRACK_B_OUTBOX_SCHEMA_VERSION);
   // SQLite authorities created before effort variants were modeled can retain
@@ -3498,8 +3899,8 @@ async function initializeTrackBPostObservationOutbox(
             .prepare(
               `INSERT OR IGNORE INTO track_b_post_observation_pending
                (request_id, routing_decision_id, endpoint_id, model_id, reasoning_effort, effort_source,
-                run88_correlation_json, legacy_identity_missing, enqueued_at_ms)
-               VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)`,
+                run88_correlation_json, observation_json, legacy_identity_missing, enqueued_at_ms)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
             )
             .run(
               String(row.requestId),
@@ -3511,6 +3912,7 @@ async function initializeTrackBPostObservationOutbox(
               row.run88Correlation && typeof row.run88Correlation === "object"
                 ? boundedJson(row.run88Correlation)
                 : null,
+              boundedTrackBObservationJson(sanitizeTrackBPostObservationForOutbox(row)),
               Date.now() + sourceIndex,
             );
           importedPendingCount += 1;
@@ -3623,6 +4025,7 @@ export function createTrackBPostObservationOutbox({
     enqueue(observation: Readonly<Record<string, unknown>>): Promise<void> {
       return exclusive(async () => {
         const identity = normalizeTrackBVariantIdentity(observation);
+        const observationPayload = sanitizeTrackBPostObservationForOutbox(observation);
         const item = {
           requestId: String(observation.requestId ?? ""),
           routingDecisionId: String(observation.routingDecisionId ?? ""),
@@ -3658,9 +4061,9 @@ export function createTrackBPostObservationOutbox({
             database
               .prepare(
                 `INSERT INTO track_b_post_observation_pending
-                 (request_id, routing_decision_id, endpoint_id, model_id, reasoning_effort, effort_source,
-                  run88_correlation_json, legacy_identity_missing, enqueued_at_ms)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)`,
+               (request_id, routing_decision_id, endpoint_id, model_id, reasoning_effort, effort_source,
+                  run88_correlation_json, observation_json, legacy_identity_missing, enqueued_at_ms)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
               )
               .run(
                 item.requestId,
@@ -3670,6 +4073,7 @@ export function createTrackBPostObservationOutbox({
                 item.reasoningEffort,
                 item.effortSource,
                 item.run88Correlation ? boundedJson(item.run88Correlation) : null,
+                boundedTrackBObservationJson(observationPayload),
                 Date.now(),
               );
             database.exec("COMMIT");
@@ -3689,7 +4093,7 @@ export function createTrackBPostObservationOutbox({
             const row = database
               .prepare(
                 `SELECT request_id, routing_decision_id, endpoint_id, model_id, reasoning_effort,
-                        effort_source, run88_correlation_json, legacy_identity_missing
+                        effort_source, run88_correlation_json, observation_json, legacy_identity_missing
                  FROM track_b_post_observation_pending ORDER BY enqueued_at_ms, request_id LIMIT 1`,
               )
               .get() as
@@ -3701,11 +4105,18 @@ export function createTrackBPostObservationOutbox({
                   reasoning_effort: string | null;
                   effort_source: RuntimeEffortSource | null;
                   run88_correlation_json: string | null;
+                  observation_json: string | null;
                   legacy_identity_missing: number;
                 }
               | undefined;
             if (!row) return null;
+            const payload = row.observation_json ? parseBoundedJson(row.observation_json) : {};
+            const payloadRecord =
+              payload && typeof payload === "object" && !Array.isArray(payload)
+                ? (payload as Record<string, unknown>)
+                : {};
             return {
+              ...payloadRecord,
               requestId: row.request_id,
               routingDecisionId: row.routing_decision_id,
               endpointId: row.endpoint_id,
@@ -5300,7 +5711,7 @@ export async function runTrackBShadowPipeline(
       sampling: dimensions.sampling ?? null,
       experience: dimensions.experience ?? null,
       environment: dimensions.environment ?? null,
-      unknownDimensions: [...new Set([...unknownDimensions, ...declaredUnknown])],
+      unknownDimensions: [...new Set([...unknownDimensions, ...declaredUnknown])].sort(),
     };
   };
   const profile = await runtime.invoke("profile-learner", {
@@ -5584,6 +5995,67 @@ async function runTrackBObservationPipeline(
   };
 }
 
+const TRACK_B_R16_TRAJECTORY_REFUSAL = "R16_TRAJECTORY_EVIDENCE_UNAVAILABLE" as const;
+const TRACK_B_RECOGNIZED_TRAJECTORY_TYPES = new Set([
+  "request_started",
+  "route_selected",
+  "provider_error",
+  "provider_success",
+  "response_received",
+  "model_response",
+  "tool_success",
+  "tool_failure",
+  "user_correction",
+  "assistant_correction",
+  "semantic_evaluation",
+  "evaluation_outcome",
+  "task_completed",
+  "outcome",
+]);
+
+function trackBTrajectoryTimestamp(event: Record<string, unknown>): number | null {
+  for (const key of [
+    "timestampMs",
+    "timestamp_ms",
+    "occurredAtMs",
+    "occurred_at_ms",
+    "createdAtMs",
+    "created_at_ms",
+  ]) {
+    const value = event[key];
+    if (typeof value === "number" && Number.isSafeInteger(value) && value >= 0) return value;
+  }
+  return null;
+}
+
+function hasFinalizableTrackBTrajectory(
+  events: readonly Record<string, unknown>[],
+  requestId: string,
+): boolean {
+  if (events.length < 2 || events.length > TRACK_B_OUTBOX_OBSERVATION_COLLECTION_CAP) return false;
+  const ids = new Set<string>();
+  let previousTimestamp = -1;
+  for (const event of events) {
+    const id = outboxSafeText(event.id, 512);
+    const type = outboxSafeText(event.type, 128);
+    const timestamp = trackBTrajectoryTimestamp(event);
+    if (
+      !id ||
+      ids.has(id) ||
+      !type ||
+      !TRACK_B_RECOGNIZED_TRAJECTORY_TYPES.has(type) ||
+      timestamp === null ||
+      timestamp <= previousTimestamp
+    ) {
+      return false;
+    }
+    if (event.requestId !== undefined && event.requestId !== requestId) return false;
+    ids.add(id);
+    previousTimestamp = timestamp;
+  }
+  return true;
+}
+
 /** Normal post-observation owner for the shadow DAG and its supervised derived consumers. */
 export async function runTrackBPostObservation(
   runtime: TrackBShadowPipelineRuntime,
@@ -5651,6 +6123,117 @@ export async function runTrackBPostObservation(
       return result;
     },
   };
+  const trajectoryEvents = Array.isArray(observation.trajectoryEvents)
+    ? observation.trajectoryEvents.filter((event): event is Record<string, unknown> =>
+        Boolean(event && typeof event === "object" && !Array.isArray(event)),
+      )
+    : [];
+  const routingShadowEvidence =
+    observation.routingShadowEvidence &&
+    typeof observation.routingShadowEvidence === "object" &&
+    !Array.isArray(observation.routingShadowEvidence)
+      ? (observation.routingShadowEvidence as Readonly<Record<string, unknown>>)
+      : null;
+  const routingShadowCases = Array.isArray(observation.routingShadowCases)
+    ? observation.routingShadowCases.filter((item): item is Record<string, unknown> =>
+        Boolean(item && typeof item === "object" && !Array.isArray(item)),
+      )
+    : [];
+  const comparableCounterfactuals = Array.isArray(routingShadowEvidence?.counterfactuals)
+    ? (routingShadowEvidence.counterfactuals as Record<string, unknown>[])
+    : [];
+  const productionState = {
+    routingDecisionId: sourceDecisionId,
+    endpointId: routePackage,
+    identity,
+    immutable: true,
+  } as const;
+  const sourceHash = createHash("sha256")
+    .update(
+      JSON.stringify(
+        canonicalizeRun88Proof({
+          requestId,
+          sourceDecisionId,
+          routePackage,
+          identity,
+          trajectoryEvents,
+        }),
+      ),
+    )
+    .digest("hex");
+  const hasComparableEvidence = routingShadowEvidence !== null && routingShadowCases.length > 0;
+  if (hasComparableEvidence && !hasFinalizableTrackBTrajectory(trajectoryEvents, requestId)) {
+    // Insufficient trajectory is a complete, read-only observation. Probe every
+    // canonical extension so the closure remains truthful, but do not dispatch
+    // replay/evaluation/profile/knowledge business capabilities or fabricate an
+    // event that could make the observation look finalizable.
+    for (const extensionId of TRACK_B_CANONICAL_EXTENSION_IDS) {
+      await observedRuntime.invoke(extensionId, businessEnvelope("health:probe"));
+    }
+    const registry = Object.fromEntries(
+      [...closureEntries.entries()].sort(([left], [right]) => left.localeCompare(right)),
+    ) as Record<string, TrackBExtensionClosureEntry>;
+    const missing = TRACK_B_CANONICAL_EXTENSION_IDS.filter((id) => !registry[id]);
+    if (missing.length)
+      throw new Error(`extension closure is missing registry outputs: ${missing.join(", ")}`);
+    const extensionClosure: TrackBExtensionClosure = {
+      schemaVersion: "role-model.track-b-extension-closure.v1",
+      requestId,
+      routingDecisionId: sourceDecisionId,
+      scope: input.scope,
+      channel: input.channel,
+      authorizationEpoch: input.authorizationEpoch,
+      registry,
+    };
+    const projection = createProjectionV2({
+      scope: input.scope,
+      purpose: "routing_shadow",
+      permittedUse: false,
+      authorizationState: "unknown",
+      validUntilMs: null,
+      trainingAllowed: false,
+      evaluatedAtMs: Date.now(),
+      evidence: [
+        {
+          artifactRef: `sha256:${sourceHash}`,
+          sourceHash: `sha256:${sourceHash}`,
+          scope: input.scope,
+          verified: false,
+          capabilities: ["routing_history", "full_replay"],
+        },
+      ],
+      payload: {
+        routePackage,
+        sourceDecisionId,
+        identity,
+        candidateId: null,
+        learningDisposition: "insufficient_trajectory_evidence",
+      },
+    });
+    return {
+      pipeline: {
+        schemaVersion: "role-model.track-b-shadow-pipeline-receipt.v1",
+        mode: "shadow",
+        status: "insufficient_trajectory_evidence",
+        requestId,
+        providerCalls: 0,
+        productionMutation: false,
+        candidateId: null,
+        refusalCode: TRACK_B_R16_TRAJECTORY_REFUSAL,
+        learningDisposition: "insufficient_trajectory_evidence",
+      },
+      advisory: null,
+      projection,
+      consumption: null,
+      repositoryContext: {
+        available: false,
+        unavailableReason: TRACK_B_R16_TRAJECTORY_REFUSAL,
+        diagnostics: [],
+      },
+      extensionClosure,
+      productionState: structuredClone(productionState),
+    };
+  }
   const artifact = await observedRuntime.invoke(
     "artifact-store",
     businessEnvelope("graph:write", {
@@ -5789,33 +6372,7 @@ export async function runTrackBPostObservation(
       },
     }),
   );
-  const sourceHash = createHash("sha256").update(JSON.stringify(observation)).digest("hex");
   const sourceGraphRef = `sha256:${sourceHash}`;
-  const productionState = {
-    routingDecisionId: sourceDecisionId,
-    endpointId: routePackage,
-    identity,
-    immutable: true,
-  } as const;
-  const trajectoryEvents = Array.isArray(observation.trajectoryEvents)
-    ? observation.trajectoryEvents.filter((event): event is Record<string, unknown> =>
-        Boolean(event && typeof event === "object" && !Array.isArray(event)),
-      )
-    : [];
-  const routingShadowEvidence =
-    observation.routingShadowEvidence &&
-    typeof observation.routingShadowEvidence === "object" &&
-    !Array.isArray(observation.routingShadowEvidence)
-      ? (observation.routingShadowEvidence as Readonly<Record<string, unknown>>)
-      : null;
-  const routingShadowCases = Array.isArray(observation.routingShadowCases)
-    ? observation.routingShadowCases.filter((item): item is Record<string, unknown> =>
-        Boolean(item && typeof item === "object" && !Array.isArray(item)),
-      )
-    : [];
-  const comparableCounterfactuals = Array.isArray(routingShadowEvidence?.counterfactuals)
-    ? (routingShadowEvidence.counterfactuals as Record<string, unknown>[])
-    : [];
   const pipeline =
     routingShadowEvidence && routingShadowCases.length > 0
       ? await runTrackBShadowPipeline(observedRuntime, {
@@ -5866,6 +6423,7 @@ export async function runTrackBPostObservation(
       : null;
   const learningEligible =
     pipelineCandidateId !== null &&
+    pipelineReceipt.productionMutation === true &&
     pipelineReceipt.refusalCode === undefined &&
     pipelineReceipt.learningDisposition !== "insufficient_trajectory_evidence";
   const projection = createProjectionV2({

@@ -64,7 +64,7 @@ const observedDimensions = {
     sampling: null,
     experience: "experience:baseline",
     environment: null,
-    unknownDimensions: ["repository", "prompt", "tool", "sampling", "environment"],
+    unknownDimensions: ["tool", "repository", "tool"],
   },
 };
 
@@ -638,7 +638,7 @@ describe("Run 96 Addendum 27 public learning boundaries", () => {
           tool: null,
           sampling: null,
           experience: observedDimensions.counterfactual.experience,
-          unknownDimensions: observedDimensions.counterfactual.unknownDimensions,
+          unknownDimensions: ["environment", "prompt", "repository", "sampling", "tool"],
         }),
       ]),
     );
