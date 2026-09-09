@@ -127,6 +127,7 @@ import {
   createToolRegistry,
   executeToolCalls,
 } from "@role-model-router/tool-registry";
+import { deriveRuntimeContributionOutcome } from "./contribution-outcome.js";
 import {
   buildCompactControllerSystemPrompt,
   buildControllerSystemPrompt,
@@ -156,6 +157,12 @@ import {
 import { resolveEndpointHealthState } from "./health-policy.js";
 import { reconcileLegacyExecutionAdmissionRows } from "./legacy-execution-admission-reconciliation.js";
 import { resolveModelCapabilityProfile } from "./model-capability-resolver.js";
+export type {
+  RuntimeContributionOutcome,
+  RuntimeContributionObservation,
+  RuntimeContributionOutcomeInput,
+} from "./contribution-outcome.js";
+export { deriveRuntimeContributionOutcome } from "./contribution-outcome.js";
 import {
   filterEndpointsByCapabilityRequirements,
   inferChatCompletionsCapabilityRequirements,
@@ -4730,6 +4737,7 @@ function buildPreExecutionFailureObservation(input: {
   readonly sourceType: "local" | "remote";
   readonly reasoningEffort: string | null;
   readonly effortSource: RuntimeEffortSource;
+  readonly requestOperation?: "chat" | "responses";
   readonly error: unknown;
   readonly latencyMs: number;
   readonly dimensions: Record<string, unknown> | null;
@@ -4867,7 +4875,7 @@ function buildPreExecutionFailureObservation(input: {
       lifecycleStateAtRequest: "unknown",
       healthStatusAtRequest: null,
       requestedModelId: input.modelId,
-      requestOperation: "chat",
+      requestOperation: input.requestOperation ?? "chat",
       roleIds: [],
       toolingUsed: input.toolingUsed,
       cacheState: "unknown",
@@ -17329,6 +17337,8 @@ export async function createRuntimeBridgeBackend(
     createTrackBOperationsFromState({
       ...input,
       runtimeChannel,
+      scope: options.scopeId,
+      authorizationEpoch: 1,
       operationsEndpoint: options.trackBOperationsEndpoint,
       operationsToken: options.trackBOperationsToken,
     });
@@ -17508,6 +17518,56 @@ export async function createRuntimeBridgeBackend(
     ),
     catalog: [],
   });
+  const recordDirectContribution = async (input: {
+    readonly requestId: string;
+    readonly routingDecisionId: string;
+    readonly endpointId: string;
+    readonly modelId: string;
+    readonly reasoningEffort: string | null;
+    readonly effortSource: RuntimeEffortSource;
+    readonly taskType: string;
+    readonly inputTokens: number;
+    readonly outputTokens: number;
+    readonly responseStatusCode?: unknown;
+    readonly usageErrorClass?: unknown;
+    readonly normalizedErrorClass?: unknown;
+    readonly executionFailure?: unknown;
+    readonly cancelled?: unknown;
+  }): Promise<void> => {
+    // When the post-observation wrapper is configured it owns the contribution
+    // write. Skipping the direct write here keeps one request from producing
+    // two aggregate deliveries while the wrapper performs Track B processing.
+    if (options.trackBPostObservation) return;
+    const contributionOutcome = deriveRuntimeContributionOutcome({
+      responseStatusCode: input.responseStatusCode,
+      usageErrorClass: input.usageErrorClass,
+      normalizedErrorClass: input.normalizedErrorClass,
+      executionFailure: input.executionFailure,
+      cancelled: input.cancelled,
+    });
+    if (!contributionOutcome) return;
+    try {
+      await runtimeTrackBOperations.recordContributionAggregate({
+        requestId: input.requestId,
+        correlationId: createRuntimeRequestCorrelationId({
+          scope: options.scopeId,
+          requestId: input.requestId,
+          routingDecisionId: input.routingDecisionId,
+        }),
+        routingDecisionId: input.routingDecisionId,
+        endpointId: input.endpointId,
+        modelId: input.modelId,
+        reasoningEffort: input.reasoningEffort,
+        effortSource: input.effortSource,
+        taskType: input.taskType,
+        inputTokens: input.inputTokens,
+        outputTokens: input.outputTokens,
+        ...contributionOutcome,
+      });
+    } catch {
+      // Contribution is non-routing-critical; its bounded outbox owns retry.
+    }
+  };
   const readExactRouteCapture = async (
     requestId: string,
   ): Promise<Record<string, unknown> | null> => {
@@ -17524,6 +17584,79 @@ export async function createRuntimeBridgeBackend(
           rootPath: path.join(options.runtimeStateRoot, options.scopeId, "track-b-graph"),
         })
       : undefined;
+  const recordPreExecutionFailure = async (input: {
+    readonly requestId: string;
+    readonly modelId: string;
+    readonly requestOperation: "chat" | "responses";
+    readonly clientRequestId?: string | null;
+    readonly endpointId: string;
+    readonly requestedEffort?: string | null;
+    readonly toolingUsed: boolean;
+    readonly executionStartedAtMs: number;
+    readonly error: unknown;
+  }): Promise<void> => {
+    const statusCode = input.error instanceof BridgeHttpError ? input.error.statusCode : 400;
+    const latencyMs = Math.max(0, Date.now() - input.executionStartedAtMs);
+    const dimensions = runtimeTelemetryDimensionsFor(input.error);
+    const fallbackEndpoint = currentRegistry.endpoints.find(
+      (endpoint) =>
+        endpoint.identity.endpoint_id === input.endpointId ||
+        toLegacyCredentializedEndpointId(endpoint.identity.endpoint_id) === input.endpointId,
+    );
+    const fixedEffort = fallbackEndpoint?.identity.reasoning_effort?.trim() || null;
+    const requestedEffort = input.requestedEffort?.trim() || null;
+    const failureEffort = {
+      reasoningEffort: fixedEffort,
+      effortSource: (fixedEffort === null
+        ? "none"
+        : requestedEffort !== null && requestedEffort !== fixedEffort
+          ? "variant_coerced"
+          : "variant") as RuntimeEffortSource,
+    };
+    const failureObservation = buildPreExecutionFailureObservation({
+      requestId: input.requestId,
+      clientRequestId: input.clientRequestId ?? null,
+      endpointId: input.endpointId,
+      modelId: input.modelId,
+      sourceType: currentUnifiedRuntimeConfig?.executionMode === "remote_only" ? "remote" : "local",
+      reasoningEffort: failureEffort.reasoningEffort,
+      effortSource: failureEffort.effortSource,
+      requestOperation: input.requestOperation,
+      error: input.error,
+      latencyMs,
+      dimensions,
+      toolingUsed: input.toolingUsed,
+    });
+    persistRuntimeTelemetryFailure({
+      databasePath: initialization.databasePath,
+      requestId: input.requestId,
+      clientRequestId: input.clientRequestId ?? null,
+      requestClass: "live_request",
+      sourceType: currentUnifiedRuntimeConfig?.executionMode === "remote_only" ? "remote" : "local",
+      endpointId: input.endpointId,
+      reasoningEffort: failureEffort.reasoningEffort,
+      effortSource: failureEffort.effortSource,
+      modelId: input.modelId,
+      requestedModelId: input.modelId,
+      requestOperation: input.requestOperation,
+      statusCode,
+      errorClass: runtimeTelemetryErrorClassFor(input.error),
+      latencyMs,
+      dimensions,
+      observation: failureObservation,
+      ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+    });
+    if (options.trackBPostObservation) {
+      try {
+        await options.trackBPostObservation(failureObservation);
+      } catch (postObservationError) {
+        console.error(
+          "Track B pre-execution post-observation processing failed",
+          postObservationError,
+        );
+      }
+    }
+  };
   const readPersistedRuntimeObservation = (requestId: string) => {
     try {
       return readRuntimeObservationBundle({
@@ -25492,60 +25625,18 @@ export async function createRuntimeBridgeBackend(
         requestOptions?.endpointId && requestOptions.endpointId.trim().length > 0
           ? requestOptions.endpointId
           : "routing.failed.pre-execution";
-      const fallbackFailureSourceType: "local" | "remote" =
-        currentUnifiedRuntimeConfig?.executionMode === "remote_only" ? "remote" : "local";
-      const recordChatCompletionFailure = (error: unknown): void => {
-        const statusCode = error instanceof BridgeHttpError ? error.statusCode : 400;
-        const latencyMs = Math.max(0, Date.now() - executionStartedAtMs);
-        const dimensions = runtimeTelemetryDimensionsFor(error);
-        const fallbackEndpoint = currentRegistry.endpoints.find(
-          (endpoint) =>
-            endpoint.identity.endpoint_id === fallbackFailureEndpointId ||
-            toLegacyCredentializedEndpointId(endpoint.identity.endpoint_id) ===
-              fallbackFailureEndpointId,
-        );
-        const fixedEffort = fallbackEndpoint?.identity.reasoning_effort?.trim() || null;
-        const requestedEffort = readChatCompletionsReasoningRequest(body)?.effort?.trim() || null;
-        const failureEffort = {
-          reasoningEffort: fixedEffort,
-          effortSource: (fixedEffort === null
-            ? "none"
-            : requestedEffort !== null && requestedEffort !== fixedEffort
-              ? "variant_coerced"
-              : "variant") as RuntimeEffortSource,
-        };
-        persistRuntimeTelemetryFailure({
-          databasePath: initialization.databasePath,
+      const recordChatCompletionFailure = (error: unknown): Promise<void> =>
+        recordPreExecutionFailure({
           requestId,
-          clientRequestId: requestOptions?.clientRequestId ?? null,
-          requestClass: "live_request",
-          sourceType: fallbackFailureSourceType,
-          endpointId: fallbackFailureEndpointId,
-          reasoningEffort: failureEffort.reasoningEffort,
-          effortSource: failureEffort.effortSource,
           modelId: body.model,
-          requestedModelId: body.model,
           requestOperation: "chat",
-          statusCode,
-          errorClass: runtimeTelemetryErrorClassFor(error),
-          latencyMs,
-          dimensions,
-          observation: buildPreExecutionFailureObservation({
-            requestId,
-            clientRequestId: requestOptions?.clientRequestId ?? null,
-            endpointId: fallbackFailureEndpointId,
-            modelId: body.model,
-            sourceType: fallbackFailureSourceType,
-            reasoningEffort: failureEffort.reasoningEffort,
-            effortSource: failureEffort.effortSource,
-            error,
-            latencyMs,
-            dimensions,
-            toolingUsed: Boolean(body.tools?.length),
-          }),
-          ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+          clientRequestId: requestOptions?.clientRequestId ?? null,
+          endpointId: fallbackFailureEndpointId,
+          requestedEffort: readChatCompletionsReasoningRequest(body)?.effort ?? null,
+          toolingUsed: Boolean(body.tools?.length),
+          executionStartedAtMs,
+          error,
         });
-      };
       try {
         executionStartedAtMs = Date.now();
         if (
@@ -25687,39 +25778,28 @@ export async function createRuntimeBridgeBackend(
           ...(replayCost ? { replayCost } : {}),
           ...(persistenceDegradation ? { persistenceDegradation } : {}),
         };
-        const trackBOperations = createTrackBOperations({
-          statePath: path.join(
-            options.runtimeStateRoot,
-            options.scopeId,
-            "track-b-production-bridge.json",
+        await recordDirectContribution({
+          requestId,
+          routingDecisionId,
+          endpointId: execution.target.endpointId,
+          modelId: bridgeResult.model,
+          reasoningEffort: effortReceipt.reasoningEffort,
+          effortSource: effortReceipt.effortSource,
+          taskType: "general.chat",
+          inputTokens: execution.normalized.usage.inputTokens,
+          outputTokens: execution.normalized.usage.outputTokens,
+          responseStatusCode: execution.responseCapture.statusCode,
+          usageErrorClass: execution.usageEvent.error_class,
+          normalizedErrorClass: execution.normalized.errorClass,
+          executionFailure: execution.diagnostics.find(
+            (diagnostic) => diagnostic.code === execution.normalized.errorClass,
           ),
-          catalog: [],
+          cancelled: requestOptions?.abortSignal?.aborted,
         });
-        try {
-          await trackBOperations.recordContributionAggregate({
-            requestId,
-            correlationId: createRuntimeRequestCorrelationId({
-              scope: options.scopeId,
-              requestId,
-              routingDecisionId,
-            }),
-            routingDecisionId,
-            endpointId: execution.target.endpointId,
-            modelId: bridgeResult.model,
-            reasoningEffort: effortReceipt.reasoningEffort,
-            effortSource: effortReceipt.effortSource,
-            taskType: "general.chat",
-            inputTokens: execution.normalized.usage.inputTokens,
-            outputTokens: execution.normalized.usage.outputTokens,
-            success: true,
-          });
-        } catch {
-          // Contribution is non-routing-critical; its bounded outbox owns retry.
-        }
         return bridgeResult;
       } catch (error) {
         if (!hasRuntimeTelemetryPersisted(error)) {
-          recordChatCompletionFailure(error);
+          await recordChatCompletionFailure(error);
         }
         throw error;
       }
@@ -25730,148 +25810,138 @@ export async function createRuntimeBridgeBackend(
       streamWriter?: BridgeStreamWriter,
       requestOptions?: BridgeExecutionRequestOptions,
     ): Promise<BridgeResponsesExecutionResult> {
-      if (
-        currentUnifiedRuntimeConfig?.executionMode === "decision_only" &&
-        currentRegistry.endpoints.length === 0
-      ) {
-        throw createVendorError(
-          "runtime",
-          "Configure llama_swap.models or litellm_proxy.providers to enable execution.",
+      const executionStartedAtMs = Date.now();
+      try {
+        if (
+          currentUnifiedRuntimeConfig?.executionMode === "decision_only" &&
+          currentRegistry.endpoints.length === 0
+        ) {
+          throw createVendorError(
+            "runtime",
+            "Configure llama_swap.models or litellm_proxy.providers to enable execution.",
+          );
+        }
+        const responseMessages = toResponsesInputMessages(body.input);
+        const resolvedDifficultyClassification = await resolveDifficultyClassification({
+          requestId,
+          requestedModel: body.model,
+          messages: responseMessages,
+          contextTokens: estimateContextTokens(responseMessages, body.tools?.length ?? 0),
+          toolCount: body.tools?.length ?? 0,
+          requestOptions,
+        });
+        const resolvedControllerGuidance = await resolveControllerGuidance({
+          requestId,
+          requestedModel: body.model,
+          messages: responseMessages,
+          toolCount: body.tools?.length ?? 0,
+          requestOptions,
+        });
+        const executionRegistry = getRouterEffectiveRegistry();
+        const executionInventory = getRouterEffectiveRoutableInventory();
+        const executionSnapshot = createExecutionRuntimeSnapshot(executionRegistry);
+        const plan = mapResponsesRequest(
+          executionRegistry,
+          body,
+          requestId,
+          currentUnifiedRuntimeConfig?.modelAliases ?? [],
+          {
+            difficultyClassifier: currentUnifiedRuntimeConfig?.difficultyClassifier,
+            endpointMaxDifficultyByEndpointId: buildEndpointMaxDifficultyByEndpointId(
+              currentUnifiedRuntimeConfig,
+            ),
+            ...(resolvedDifficultyClassification
+              ? {
+                  overrideRecommendedMaxDifficultyByEndpointId:
+                    readObservedOverrideMaxDifficultyByEndpointId({
+                      databasePath: initialization.databasePath,
+                      endpointIds: executionRegistry.endpoints.map(
+                        (endpoint) => endpoint.identity.endpoint_id,
+                      ),
+                      observedDataConfig: resolveUnifiedRuntimeObservedDataConfig(
+                        currentUnifiedRuntimeConfig,
+                      ),
+                    }),
+                }
+              : {}),
+            ...(resolvedDifficultyClassification
+              ? { resolvedClassification: resolvedDifficultyClassification }
+              : {}),
+          },
+          resolvedControllerGuidance,
+          requestOptions,
+          currentRolePolicy.roleDefinitions,
+          normalizeConfiguredRoutingMode(currentUnifiedRuntimeConfig?.routingStrategy) ?? undefined,
+          executionInventory.endpointIds.length > 0 ? executionInventory : null,
+          currentRolePolicy.taskDefinitions,
         );
-      }
-      const responseMessages = toResponsesInputMessages(body.input);
-      const resolvedDifficultyClassification = await resolveDifficultyClassification({
-        requestId,
-        requestedModel: body.model,
-        messages: responseMessages,
-        contextTokens: estimateContextTokens(responseMessages, body.tools?.length ?? 0),
-        toolCount: body.tools?.length ?? 0,
-        requestOptions,
-      });
-      const resolvedControllerGuidance = await resolveControllerGuidance({
-        requestId,
-        requestedModel: body.model,
-        messages: responseMessages,
-        toolCount: body.tools?.length ?? 0,
-        requestOptions,
-      });
-      const executionRegistry = getRouterEffectiveRegistry();
-      const executionInventory = getRouterEffectiveRoutableInventory();
-      const executionSnapshot = createExecutionRuntimeSnapshot(executionRegistry);
-      const plan = mapResponsesRequest(
-        executionRegistry,
-        body,
-        requestId,
-        currentUnifiedRuntimeConfig?.modelAliases ?? [],
-        {
-          difficultyClassifier: currentUnifiedRuntimeConfig?.difficultyClassifier,
-          endpointMaxDifficultyByEndpointId: buildEndpointMaxDifficultyByEndpointId(
-            currentUnifiedRuntimeConfig,
-          ),
-          ...(resolvedDifficultyClassification
+        const { execution, toolExecutionResult, routingDecisionId, effortReceipt } =
+          await executeBridgePlan(plan, requestId, body.stream, streamWriter, {
+            requestOptions,
+            requestBody: body as unknown as Record<string, unknown>,
+            requestedModel: body.model,
+            requestOperation: "responses",
+            executionSnapshot,
+          });
+        const costUsd =
+          execution.normalized.vendorMetadata?.costUsd ??
+          execution.responseCapture.vendorMetadata?.costUsd;
+        const cacheUsed =
+          execution.normalized.vendorMetadata?.cacheUsed ??
+          execution.responseCapture.vendorMetadata?.cacheUsed;
+        const responseVendorId =
+          execution.responseCapture.vendorMetadata?.vendorId ??
+          execution.normalized.vendorMetadata?.vendorId;
+        const responseAdapterFamily = resolveEffectiveExecutionAdapterFamily({
+          endpointId: execution.target.endpointId,
+          adapterFamily: execution.target.adapterFamily,
+          vendorId: responseVendorId,
+        });
+        const shouldSuppressResponseToolCalls = hasRequestScopedDynamicToolExecution(
+          toolExecutionResult.executions,
+        );
+        const responseToolCalls = shouldSuppressResponseToolCalls
+          ? []
+          : execution.normalized.toolCalls;
+
+        const bridgeResult: BridgeResponsesExecutionResult = {
+          responseId: extractResponseId(execution.responseCapture.body) ?? "resp-role-model",
+          model: execution.target.modelId,
+          endpointId: execution.target.endpointId,
+          adapterFamily: responseAdapterFamily,
+          routingDecisionId,
+          ...(responseVendorId ? { vendorId: responseVendorId } : {}),
+          outputText: execution.normalized.outputText,
+          finishReason: shouldSuppressResponseToolCalls
+            ? "stop"
+            : execution.normalized.finishReason,
+          ...(responseToolCalls.length
             ? {
-                overrideRecommendedMaxDifficultyByEndpointId:
-                  readObservedOverrideMaxDifficultyByEndpointId({
-                    databasePath: initialization.databasePath,
-                    endpointIds: executionRegistry.endpoints.map(
-                      (endpoint) => endpoint.identity.endpoint_id,
-                    ),
-                    observedDataConfig: resolveUnifiedRuntimeObservedDataConfig(
-                      currentUnifiedRuntimeConfig,
-                    ),
-                  }),
+                toolCalls: responseToolCalls.map((toolCall, index) =>
+                  toBridgeToolCall(toolCall, index),
+                ),
               }
             : {}),
-          ...(resolvedDifficultyClassification
-            ? { resolvedClassification: resolvedDifficultyClassification }
+          ...(toolExecutionResult.executions.length
+            ? {
+                toolExecutions: toolExecutionResult.executions,
+              }
             : {}),
-        },
-        resolvedControllerGuidance,
-        requestOptions,
-        currentRolePolicy.roleDefinitions,
-        normalizeConfiguredRoutingMode(currentUnifiedRuntimeConfig?.routingStrategy) ?? undefined,
-        executionInventory.endpointIds.length > 0 ? executionInventory : null,
-        currentRolePolicy.taskDefinitions,
-      );
-      const { execution, toolExecutionResult, routingDecisionId, effortReceipt } =
-        await executeBridgePlan(plan, requestId, body.stream, streamWriter, {
-          requestOptions,
-          requestBody: body as unknown as Record<string, unknown>,
-          requestedModel: body.model,
-          requestOperation: "responses",
-          executionSnapshot,
-        });
-      const costUsd =
-        execution.normalized.vendorMetadata?.costUsd ??
-        execution.responseCapture.vendorMetadata?.costUsd;
-      const cacheUsed =
-        execution.normalized.vendorMetadata?.cacheUsed ??
-        execution.responseCapture.vendorMetadata?.cacheUsed;
-      const responseVendorId =
-        execution.responseCapture.vendorMetadata?.vendorId ??
-        execution.normalized.vendorMetadata?.vendorId;
-      const responseAdapterFamily = resolveEffectiveExecutionAdapterFamily({
-        endpointId: execution.target.endpointId,
-        adapterFamily: execution.target.adapterFamily,
-        vendorId: responseVendorId,
-      });
-      const shouldSuppressResponseToolCalls = hasRequestScopedDynamicToolExecution(
-        toolExecutionResult.executions,
-      );
-      const responseToolCalls = shouldSuppressResponseToolCalls
-        ? []
-        : execution.normalized.toolCalls;
-
-      const bridgeResult: BridgeResponsesExecutionResult = {
-        responseId: extractResponseId(execution.responseCapture.body) ?? "resp-role-model",
-        model: execution.target.modelId,
-        endpointId: execution.target.endpointId,
-        adapterFamily: responseAdapterFamily,
-        routingDecisionId,
-        ...(responseVendorId ? { vendorId: responseVendorId } : {}),
-        outputText: execution.normalized.outputText,
-        finishReason: shouldSuppressResponseToolCalls ? "stop" : execution.normalized.finishReason,
-        ...(responseToolCalls.length
-          ? {
-              toolCalls: responseToolCalls.map((toolCall, index) =>
-                toBridgeToolCall(toolCall, index),
-              ),
-            }
-          : {}),
-        ...(toolExecutionResult.executions.length
-          ? {
-              toolExecutions: toolExecutionResult.executions,
-            }
-          : {}),
-        usage: {
-          inputTokens: execution.normalized.usage.inputTokens,
-          outputTokens: execution.normalized.usage.outputTokens,
-        },
-        ...(typeof costUsd === "number" || typeof cacheUsed === "boolean"
-          ? {
-              vendorMetadata: {
-                ...(typeof costUsd === "number" ? { costUsd } : {}),
-                ...(typeof cacheUsed === "boolean" ? { cacheUsed } : {}),
-              },
-            }
-          : {}),
-      };
-      const trackBOperations = createTrackBOperations({
-        statePath: path.join(
-          options.runtimeStateRoot,
-          options.scopeId,
-          "track-b-production-bridge.json",
-        ),
-        catalog: [],
-      });
-      try {
-        await trackBOperations.recordContributionAggregate({
+          usage: {
+            inputTokens: execution.normalized.usage.inputTokens,
+            outputTokens: execution.normalized.usage.outputTokens,
+          },
+          ...(typeof costUsd === "number" || typeof cacheUsed === "boolean"
+            ? {
+                vendorMetadata: {
+                  ...(typeof costUsd === "number" ? { costUsd } : {}),
+                  ...(typeof cacheUsed === "boolean" ? { cacheUsed } : {}),
+                },
+              }
+            : {}),
+        };
+        await recordDirectContribution({
           requestId,
-          correlationId: createRuntimeRequestCorrelationId({
-            scope: options.scopeId,
-            requestId,
-            routingDecisionId,
-          }),
           routingDecisionId,
           endpointId: execution.target.endpointId,
           modelId: bridgeResult.model,
@@ -25880,12 +25950,34 @@ export async function createRuntimeBridgeBackend(
           taskType: "general.chat",
           inputTokens: execution.normalized.usage.inputTokens,
           outputTokens: execution.normalized.usage.outputTokens,
-          success: true,
+          responseStatusCode: execution.responseCapture.statusCode,
+          usageErrorClass: execution.usageEvent.error_class,
+          normalizedErrorClass: execution.normalized.errorClass,
+          executionFailure: execution.diagnostics.find(
+            (diagnostic) => diagnostic.code === execution.normalized.errorClass,
+          ),
+          cancelled: requestOptions?.abortSignal?.aborted,
         });
-      } catch {
-        // Contribution is non-routing-critical; its bounded outbox owns retry.
+        return bridgeResult;
+      } catch (error) {
+        if (!hasRuntimeTelemetryPersisted(error)) {
+          await recordPreExecutionFailure({
+            requestId,
+            modelId: body.model,
+            requestOperation: "responses",
+            clientRequestId: requestOptions?.clientRequestId ?? null,
+            endpointId:
+              requestOptions?.endpointId && requestOptions.endpointId.trim().length > 0
+                ? requestOptions.endpointId
+                : "routing.failed.pre-execution",
+            requestedEffort: readResponsesReasoningRequest(body)?.effort ?? null,
+            toolingUsed: Boolean(body.tools?.length),
+            executionStartedAtMs,
+            error,
+          });
+        }
+        throw error;
       }
-      return bridgeResult;
     },
     async readRuntimeSummary(): Promise<RuntimeBridgeSummary> {
       const credentialLifecycle = buildCredentialLifecycleSummary();
