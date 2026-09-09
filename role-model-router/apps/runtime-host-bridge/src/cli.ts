@@ -17,6 +17,7 @@ import {
 import {
   type CreateRuntimeBridgeBackendOptions,
   type RuntimeBridgeBackend,
+  type RuntimeOperatorContext,
   type StartBridgeServerOptions,
   createRuntimeBridgeBackend,
   resolveBridgeServerOptions,
@@ -63,6 +64,870 @@ import {
   validateRun88ProviderResponseObservation,
   verifyTrackBExtensionClosureAfterRestart,
 } from "./track-b-runtime.js";
+
+const DURABLE_ARTIFACT_ID = /^[a-f0-9]{64}$/u;
+
+type DurableReplayCapture = Readonly<Record<string, unknown>>;
+
+export interface SupervisedReplayRolloutReferences {
+  readonly evidenceRef: string;
+  readonly artifactRef: string;
+  readonly outcomeRef: string;
+}
+
+export interface SupervisedReplayEvaluationReferences {
+  readonly taskRef: string;
+  readonly inputRef: string;
+  readonly forkRef: string;
+  readonly toolPolicyDigest: string;
+  readonly environmentDigest: string;
+  readonly sourceEvidenceRef: string;
+  readonly counterfactualEvidenceRef: string;
+  readonly sourceOutcomeRef: string;
+  readonly counterfactualOutcomeRef: string;
+  readonly perCase: readonly { readonly caseId: string; readonly evidenceRef: string }[];
+}
+
+export interface SupervisedReplayEvaluationReferenceBuild {
+  readonly evaluationReferences: SupervisedReplayEvaluationReferences;
+  readonly rolloutReferences: readonly SupervisedReplayRolloutReferences[];
+}
+
+export interface SupervisedReplayEvaluationReferenceFacts {
+  readonly taskRef: string;
+  readonly inputRef: string;
+  readonly toolPolicyDigest: string;
+  readonly environmentDigest: string;
+}
+
+type SupervisedReplayEvaluationReferenceFactValues = Readonly<{
+  readonly task: Readonly<Record<string, unknown>>;
+  readonly input: Readonly<Record<string, unknown>>;
+  readonly toolPolicy: Readonly<Record<string, unknown>>;
+  readonly environment: Readonly<Record<string, unknown>>;
+}>;
+
+function durableCaptureArtifactReference(
+  capture: DurableReplayCapture,
+  field: string,
+  label: string,
+): string {
+  const value = capture[field];
+  if (typeof value !== "string" || !DURABLE_ARTIFACT_ID.test(value)) {
+    throw new Error(`${label} must name a persisted artifact-store artifact`);
+  }
+  return `artifact:${value}`;
+}
+
+function durableCaptureArrayArtifactReference(
+  capture: DurableReplayCapture,
+  field: string,
+  index: number,
+  label: string,
+): string {
+  const values = capture[field];
+  if (
+    !Array.isArray(values) ||
+    typeof values[index] !== "string" ||
+    !DURABLE_ARTIFACT_ID.test(values[index])
+  ) {
+    throw new Error(`${label} must name a persisted artifact-store artifact`);
+  }
+  return `artifact:${values[index]}`;
+}
+
+function durableReplaySource(capture: DurableReplayCapture, label: string): DurableReplayCapture {
+  const replaySource = capture.replaySource;
+  if (!replaySource || typeof replaySource !== "object" || Array.isArray(replaySource)) {
+    throw new Error(`${label} is missing its durable replay source`);
+  }
+  return replaySource as DurableReplayCapture;
+}
+
+function assertDistinctDurableReferences(references: readonly string[], label: string): void {
+  if (new Set(references).size !== references.length) {
+    throw new Error(`${label} must contain distinct persisted artifact references`);
+  }
+}
+
+/**
+ * Preserve only trajectory events that were actually captured with a durable
+ * evidence locator. The replay callback must not synthesize a user action or
+ * provider signal simply to make the learning path appear complete.
+ */
+export function deriveSupervisedReplayTrajectoryEvents(input: {
+  readonly sourceCapture: DurableReplayCapture;
+  readonly counterfactualCaptures: readonly DurableReplayCapture[];
+}): readonly Record<string, unknown>[] {
+  const captures = [input.sourceCapture, ...input.counterfactualCaptures];
+  return captures
+    .flatMap((capture, captureIndex) => {
+      const rawEvents = capture.trajectoryEvents;
+      if (rawEvents === undefined) return [];
+      if (!Array.isArray(rawEvents)) {
+        throw new Error(`replay capture ${captureIndex} trajectory events are invalid`);
+      }
+      return rawEvents.map((event, eventIndex) => {
+        if (!event || typeof event !== "object" || Array.isArray(event)) {
+          throw new Error(
+            `replay capture ${captureIndex} trajectory event ${eventIndex} is invalid`,
+          );
+        }
+        const record = event as Record<string, unknown>;
+        if (typeof record.type !== "string" || !record.type.trim()) {
+          throw new Error(`replay capture ${captureIndex} trajectory event type is required`);
+        }
+        if (
+          typeof record.evidenceRef !== "string" ||
+          !/^artifact:[a-f0-9]{64}$/u.test(record.evidenceRef)
+        ) {
+          throw new Error(
+            `replay capture ${captureIndex} trajectory event must name a durable evidence artifact`,
+          );
+        }
+        const sequence = Number.isSafeInteger(record.sequence)
+          ? Number(record.sequence)
+          : Number.MAX_SAFE_INTEGER;
+        const occurredAt = typeof record.occurredAt === "string" ? record.occurredAt : "";
+        return { record, captureIndex, eventIndex, sequence, occurredAt };
+      });
+    })
+    .sort(
+      (left, right) =>
+        left.sequence - right.sequence ||
+        left.occurredAt.localeCompare(right.occurredAt) ||
+        left.captureIndex - right.captureIndex ||
+        left.eventIndex - right.eventIndex,
+    )
+    .map(({ record }) => record);
+}
+
+/**
+ * Build the Evaluation Core join entirely from Replay/retention artifacts.
+ * This deliberately accepts artifact IDs returned by the operations boundary;
+ * it never derives a reference from a request ID, output hash, or display
+ * string.  The CLI uses this builder for both the initial and recovery paths.
+ */
+export function buildSupervisedReplayEvaluationReferences(input: {
+  readonly sourceCapture: DurableReplayCapture;
+  readonly counterfactualCaptures: readonly DurableReplayCapture[];
+  readonly caseIds: readonly string[];
+  readonly perCaseEvidenceRefs?: readonly string[];
+  readonly referenceFacts: SupervisedReplayEvaluationReferenceFacts;
+}): SupervisedReplayEvaluationReferenceBuild {
+  if (!input.sourceCapture || input.counterfactualCaptures.length === 0) {
+    throw new Error("supervised replay evaluation requires source and counterfactual captures");
+  }
+  const captures = [input.sourceCapture, ...input.counterfactualCaptures];
+  if (
+    input.caseIds.length !== captures.length ||
+    input.caseIds.some((id) => typeof id !== "string" || !id.trim())
+  ) {
+    throw new Error("supervised replay evaluation case identity must bind every durable capture");
+  }
+  assertDistinctDurableReferences(
+    captures.map((capture, index) =>
+      durableCaptureArtifactReference(capture, "rootArtifactId", `capture ${index} root`),
+    ),
+    "replay capture roots",
+  );
+
+  const sourceCapture = input.sourceCapture;
+  const sourceReplaySource = durableReplaySource(sourceCapture, "source replay capture");
+  const firstCounterfactualCapture = input.counterfactualCaptures[0];
+
+  const sourceRootRef = durableCaptureArtifactReference(
+    sourceCapture,
+    "rootArtifactId",
+    "source root",
+  );
+  const sourceSharedPrefixRef = durableCaptureArtifactReference(
+    sourceReplaySource,
+    "sharedPrefixRef",
+    "source shared prefix",
+  );
+  const firstCounterfactualRootRef = durableCaptureArtifactReference(
+    firstCounterfactualCapture,
+    "rootArtifactId",
+    "counterfactual root",
+  );
+  const referenceFacts = input.referenceFacts;
+  const factReferences = [
+    referenceFacts.taskRef,
+    referenceFacts.inputRef,
+    referenceFacts.toolPolicyDigest,
+    referenceFacts.environmentDigest,
+  ];
+  if (factReferences.some((reference) => !/^artifact:[a-f0-9]{64}$/u.test(reference))) {
+    throw new Error("evaluation reference facts must name persisted artifact-store artifacts");
+  }
+
+  // The semantic facts are separate artifact-store records. Capture roots and
+  // route decisions remain the independently persisted evidence and outcome
+  // anchors for the observed source and counterfactual branches.
+  const rolloutReferences = captures.map((capture, index) => ({
+    evidenceRef: durableCaptureArtifactReference(
+      capture,
+      "rootArtifactId",
+      `capture ${index} evidence`,
+    ),
+    artifactRef: durableCaptureArtifactReference(
+      capture,
+      "routeDecisionArtifactId",
+      `capture ${index} route decision`,
+    ),
+    outcomeRef: durableCaptureArrayArtifactReference(
+      capture,
+      "providerArtifactIds",
+      0,
+      `capture ${index} provider result`,
+    ),
+  }));
+  assertDistinctDurableReferences(
+    rolloutReferences.flatMap((references) => [
+      references.evidenceRef,
+      references.artifactRef,
+      references.outcomeRef,
+    ]),
+    "rollout evidence, artifact, and outcome references",
+  );
+
+  const comparisonReferences = [
+    ...factReferences,
+    sourceSharedPrefixRef,
+    sourceRootRef,
+    firstCounterfactualRootRef,
+    rolloutReferences[0]?.outcomeRef,
+    rolloutReferences[1]?.outcomeRef,
+  ];
+  if (comparisonReferences.some((reference) => typeof reference !== "string")) {
+    throw new Error("evaluation comparability outcome references are missing");
+  }
+  assertDistinctDurableReferences(comparisonReferences, "evaluation comparability references");
+
+  const perCaseEvidenceRefs = input.perCaseEvidenceRefs
+    ? [...input.perCaseEvidenceRefs]
+    : captures.map((capture, index) =>
+        durableCaptureArtifactReference(capture, "responseArtifactId", `capture ${index} response`),
+      );
+  if (
+    perCaseEvidenceRefs.length !== captures.length ||
+    perCaseEvidenceRefs.some((reference) => !/^artifact:[a-f0-9]{64}$/u.test(reference))
+  ) {
+    throw new Error("per-case evaluation evidence must name persisted artifact-store artifacts");
+  }
+  assertDistinctDurableReferences(perCaseEvidenceRefs, "per-case evaluation evidence");
+  assertDistinctDurableReferences(input.caseIds, "evaluation case IDs");
+
+  const evaluationReferences: SupervisedReplayEvaluationReferences = {
+    taskRef: referenceFacts.taskRef,
+    inputRef: referenceFacts.inputRef,
+    forkRef: sourceSharedPrefixRef,
+    toolPolicyDigest: referenceFacts.toolPolicyDigest,
+    environmentDigest: referenceFacts.environmentDigest,
+    sourceEvidenceRef: sourceRootRef,
+    counterfactualEvidenceRef: firstCounterfactualRootRef,
+    sourceOutcomeRef: rolloutReferences[0].outcomeRef,
+    counterfactualOutcomeRef: rolloutReferences[1].outcomeRef,
+    perCase: input.caseIds.map((caseId, index) => ({
+      caseId,
+      evidenceRef: perCaseEvidenceRefs[index],
+    })),
+  };
+  return { evaluationReferences, rolloutReferences };
+}
+
+/**
+ * Persist one small, reference-only artifact per evaluation case.  The
+ * artifact-store extension is the authority that allocates the IDs; the CLI
+ * only supplies links to already durable replay artifacts and never signs or
+ * invents an evaluation proof.
+ */
+export async function persistSupervisedReplayEvaluationCaseReferences(input: {
+  readonly runtime: {
+    readonly invoke: (
+      id: string,
+      envelope: Record<string, unknown>,
+    ) => Promise<Record<string, unknown>>;
+  };
+  readonly requestId: string;
+  readonly channel: string;
+  readonly scope: string;
+  readonly authorizationEpoch: number;
+  readonly caseIds: readonly string[];
+  readonly captures: readonly DurableReplayCapture[];
+}): Promise<readonly string[]> {
+  if (
+    !input.requestId ||
+    !input.channel ||
+    !input.scope ||
+    !Number.isSafeInteger(input.authorizationEpoch) ||
+    input.caseIds.length !== input.captures.length ||
+    input.caseIds.length === 0
+  ) {
+    throw new Error("supervised replay case-reference artifact identity is required");
+  }
+  assertDistinctDurableReferences(input.caseIds, "evaluation case IDs");
+  return Promise.all(
+    input.captures.map(async (capture, index) => {
+      const caseId = input.caseIds[index];
+      const rootRef = durableCaptureArtifactReference(
+        capture,
+        "rootArtifactId",
+        `case ${index} root`,
+      );
+      const responseRef = durableCaptureArtifactReference(
+        capture,
+        "responseArtifactId",
+        `case ${index} response`,
+      );
+      const routeDecisionRef = durableCaptureArtifactReference(
+        capture,
+        "routeDecisionArtifactId",
+        `case ${index} route decision`,
+      );
+      const providerRef = durableCaptureArrayArtifactReference(
+        capture,
+        "providerArtifactIds",
+        0,
+        `case ${index} provider result`,
+      );
+      const result = await input.runtime.invoke("artifact-store", {
+        requestId: `${input.requestId}:evaluation-reference:${index}`,
+        sessionId: input.requestId,
+        protocolVersion: "1.1.0",
+        channel: input.channel,
+        scope: input.scope,
+        authorizationEpoch: input.authorizationEpoch,
+        capability: "graph:write",
+        payload: {
+          scope: input.scope,
+          record: {
+            content: JSON.stringify({
+              schemaVersion: "role-model.evaluation-case-reference.v1",
+              caseId,
+              replayRootRef: rootRef,
+              responseArtifactRef: responseRef,
+              routeDecisionArtifactRef: routeDecisionRef,
+              providerArtifactRef: providerRef,
+            }),
+            mediaType: "application/json",
+            schema: "role-model.evaluation-case-reference.v1",
+          },
+        },
+      });
+      const artifactId = result?.id;
+      if (typeof artifactId !== "string" || !DURABLE_ARTIFACT_ID.test(artifactId)) {
+        throw new Error(
+          `artifact-store did not return a durable case-reference artifact for ${caseId}`,
+        );
+      }
+      return `artifact:${artifactId}`;
+    }),
+  );
+}
+
+/**
+ * Materialize the semantic facts used by Evaluation Core through the actual
+ * artifact-store authority. Every write is read back by ID so a restart-safe
+ * locator, rather than a request ID or local signature, enters the join.
+ */
+export async function persistSupervisedReplayEvaluationReferenceFacts(input: {
+  readonly runtime: {
+    readonly invoke: (
+      id: string,
+      envelope: Record<string, unknown>,
+    ) => Promise<Record<string, unknown> | string | null>;
+  };
+  readonly requestId: string;
+  readonly channel: string;
+  readonly scope: string;
+  readonly authorizationEpoch: number;
+  readonly facts: SupervisedReplayEvaluationReferenceFactValues;
+}): Promise<SupervisedReplayEvaluationReferenceFacts> {
+  if (
+    !input.requestId ||
+    !input.channel ||
+    !input.scope ||
+    !Number.isSafeInteger(input.authorizationEpoch)
+  ) {
+    throw new Error("supervised replay reference-fact artifact identity is required");
+  }
+  const entries = [
+    ["taskRef", "task", input.facts.task],
+    ["inputRef", "input", input.facts.input],
+    ["toolPolicyDigest", "tool_policy", input.facts.toolPolicy],
+    ["environmentDigest", "environment", input.facts.environment],
+  ] as const;
+  const refs = await Promise.all(
+    entries.map(async ([field, factType, fact]) => {
+      if (!fact || typeof fact !== "object" || Array.isArray(fact)) {
+        throw new Error(`supervised replay ${factType} fact is invalid`);
+      }
+      const content = JSON.stringify({
+        schemaVersion: "role-model.evaluation-reference-fact.v1",
+        factType,
+        fact,
+      });
+      const result = await input.runtime.invoke("artifact-store", {
+        requestId: `${input.requestId}:reference-fact:${factType}`,
+        sessionId: input.requestId,
+        protocolVersion: "1.1.0",
+        channel: input.channel,
+        scope: input.scope,
+        authorizationEpoch: input.authorizationEpoch,
+        capability: "graph:write",
+        payload: {
+          scope: input.scope,
+          record: {
+            content,
+            mediaType: "application/json",
+            schema: "role-model.evaluation-reference-fact.v1",
+          },
+        },
+      });
+      const artifactId =
+        result && typeof result === "object" && typeof result.id === "string" ? result.id : null;
+      if (!artifactId || !DURABLE_ARTIFACT_ID.test(artifactId)) {
+        throw new Error(`artifact-store did not return a durable ${factType} reference fact`);
+      }
+      const readback = await input.runtime.invoke("artifact-store", {
+        requestId: `${input.requestId}:reference-fact-readback:${factType}`,
+        sessionId: input.requestId,
+        protocolVersion: "1.1.0",
+        channel: input.channel,
+        scope: input.scope,
+        authorizationEpoch: input.authorizationEpoch,
+        capability: "artifact:read",
+        payload: { scope: input.scope, id: artifactId },
+      });
+      if (typeof readback !== "string" || readback !== content) {
+        throw new Error(`artifact-store reference fact ${factType} failed durable readback`);
+      }
+      const parsed = JSON.parse(readback) as Record<string, unknown>;
+      if (
+        parsed.schemaVersion !== "role-model.evaluation-reference-fact.v1" ||
+        parsed.factType !== factType
+      ) {
+        throw new Error(`artifact-store reference fact ${factType} readback schema is invalid`);
+      }
+      return [field, `artifact:${artifactId}`] as const;
+    }),
+  );
+  const result = Object.fromEntries(refs) as unknown as SupervisedReplayEvaluationReferenceFacts;
+  assertDistinctDurableReferences(Object.values(result), "evaluation reference facts");
+  return result;
+}
+
+type SupervisedReplayCompletionDispatch = Readonly<{
+  readonly execution: Readonly<Record<string, unknown>>;
+  readonly replayRequestId: string;
+}>;
+
+type SupervisedReplayCompletionOperations = Readonly<{
+  readonly readLocalRouteCapture: (input: Record<string, unknown>) => Promise<unknown>;
+}>;
+
+/**
+ * Production completion callback shared by the fresh and awaiting-evaluation
+ * paths. Keeping the callback as a factory makes the durable join directly
+ * testable without bypassing the CLI's actual completion registration.
+ */
+export function createSupervisedReplayEvaluationCompleter(input: {
+  readonly runtime: Parameters<typeof runTrackBShadowPipeline>[0];
+  readonly operations: SupervisedReplayCompletionOperations;
+  readonly requestId: string;
+  readonly channel: string;
+  readonly scope: string;
+  readonly sourceCapture: Readonly<Record<string, unknown>>;
+  readonly sourceOutput: string;
+  readonly sourceEndpointId: string;
+  readonly sourceModelId: string;
+  readonly counterfactualPackages: readonly {
+    readonly endpointId: string;
+    readonly modelId: string;
+    readonly reasoningEffort: string | null;
+  }[];
+  readonly getDispatched: (endpointId: string) => SupervisedReplayCompletionDispatch | undefined;
+  readonly evaluationCriteria: Readonly<Record<string, unknown>>;
+  readonly evaluationCriteriaDigest: string;
+  readonly runPipeline?: typeof runTrackBShadowPipeline;
+}) {
+  const runPipeline = input.runPipeline ?? runTrackBShadowPipeline;
+  return async (request: Readonly<Record<string, unknown>>) => {
+    const evaluationJobId =
+      typeof request.evaluationJobId === "string" ? request.evaluationJobId : "";
+    const replayJobId = typeof request.replayJobId === "string" ? request.replayJobId : "";
+    const replayJob =
+      request.replayJob &&
+      typeof request.replayJob === "object" &&
+      !Array.isArray(request.replayJob)
+        ? (request.replayJob as Record<string, unknown>)
+        : null;
+    const callbackBranches = Array.isArray(request.resultBranches) ? request.resultBranches : [];
+    const replayDispatches =
+      replayJob?.dispatches &&
+      typeof replayJob.dispatches === "object" &&
+      !Array.isArray(replayJob.dispatches)
+        ? (replayJob.dispatches as Record<string, unknown>)
+        : {};
+    const persistedBranches = Array.isArray(replayJob?.branches) ? replayJob.branches : [];
+    const branchRootByCandidate = new Map<string, string>();
+    for (const branch of [...persistedBranches, ...callbackBranches]) {
+      if (!branch || typeof branch !== "object" || Array.isArray(branch)) continue;
+      const record = branch as Record<string, unknown>;
+      const candidateEndpointId =
+        typeof record.candidateEndpointId === "string"
+          ? record.candidateEndpointId
+          : typeof record.endpointId === "string"
+            ? record.endpointId
+            : "";
+      const branchRootRef = typeof record.branchRootRef === "string" ? record.branchRootRef : "";
+      if (candidateEndpointId && branchRootRef) {
+        branchRootByCandidate.set(candidateEndpointId, branchRootRef);
+      }
+    }
+    if (!evaluationJobId || !replayJobId) {
+      throw new Error("durable replay evaluation is missing its evaluation job identity");
+    }
+    const counterfactuals = await Promise.all(
+      input.counterfactualPackages.map(async (candidate) => {
+        const dispatchedCandidate = input.getDispatched(candidate.endpointId);
+        const durableDispatch = replayDispatches[candidate.endpointId] as
+          | Record<string, unknown>
+          | undefined;
+        const durableResult =
+          durableDispatch?.result && typeof durableDispatch.result === "object"
+            ? (durableDispatch.result as Record<string, unknown>)
+            : null;
+        const providerResultRef =
+          typeof durableResult?.providerResultRef === "string"
+            ? durableResult.providerResultRef
+            : null;
+        const recoveredRequestId = providerResultRef?.startsWith("route-capture:")
+          ? providerResultRef.slice("route-capture:".length)
+          : null;
+        const replayRequestId = dispatchedCandidate?.replayRequestId ?? recoveredRequestId;
+        const branchRequestId = replayRequestId ? `${replayRequestId}-branch` : null;
+        const branchCapture = branchRequestId
+          ? ((await input.operations.readLocalRouteCapture({
+              requestId: branchRequestId,
+            })) as Record<string, unknown> | null)
+          : null;
+        const branchRootRef = branchRootByCandidate.get(candidate.endpointId) ?? null;
+        if (!branchCapture) {
+          throw new Error(
+            `durable replay evaluation is missing branch capture for ${candidate.endpointId}`,
+          );
+        }
+        const dispatchedExecution = dispatchedCandidate?.execution;
+        const routerDecisionId =
+          durableResult?.routerDecisionId ?? dispatchedExecution?.routingDecisionId;
+        if (branchRootRef && branchCapture.rootArtifactId !== branchRootRef) {
+          throw new Error(`durable replay branch root drifted for ${candidate.endpointId}`);
+        }
+        if (typeof routerDecisionId !== "string" || !routerDecisionId) {
+          throw new Error(
+            `durable replay evaluation is missing router decision provenance for ${candidate.endpointId}`,
+          );
+        }
+        validateRecoveredReplayCapture({
+          scope: input.scope,
+          candidate,
+          dispatchReceipt: {
+            routerDecisionId,
+            branchRootRef: branchRootRef ?? branchCapture.rootArtifactId,
+          },
+          capture: branchCapture,
+        });
+        const recoveredResponse =
+          branchCapture.response && typeof branchCapture.response === "object"
+            ? (branchCapture.response as Record<string, unknown>)
+            : null;
+        const output =
+          (typeof dispatchedExecution?.outputText === "string"
+            ? dispatchedExecution.outputText
+            : null) ??
+          (typeof recoveredResponse?.content === "string" ? recoveredResponse.content : null) ??
+          (typeof branchCapture.outputText === "string" ? branchCapture.outputText : null);
+        if (!output) {
+          throw new Error("durable replay evaluation is missing counterfactual output evidence");
+        }
+        return {
+          candidate,
+          replayRequestId,
+          output,
+          outputSha256: createHash("sha256").update(output, "utf8").digest("hex"),
+          branchCapture,
+        };
+      }),
+    );
+    if (counterfactuals.some(({ replayRequestId }) => !replayRequestId)) {
+      throw new Error("durable replay evaluation cannot recover counterfactual request provenance");
+    }
+    const sourceRootArtifactId =
+      typeof input.sourceCapture.rootArtifactId === "string"
+        ? input.sourceCapture.rootArtifactId
+        : "";
+    const sourceDecisionId =
+      typeof input.sourceCapture.routingDecisionId === "string"
+        ? input.sourceCapture.routingDecisionId
+        : "";
+    if (!sourceRootArtifactId || !sourceDecisionId) {
+      throw new Error("durable replay evaluation is missing source provenance");
+    }
+    const caseIds = Array.from(
+      { length: 1 + counterfactuals.length },
+      (_, index) => `replay:${replayJobId}:${index}`,
+    );
+    const captures = [
+      input.sourceCapture,
+      ...counterfactuals.map(({ branchCapture }) => branchCapture),
+    ];
+    const perCaseEvidenceRefs = await persistSupervisedReplayEvaluationCaseReferences({
+      runtime: input.runtime,
+      requestId: createSupervisedReplayEvaluationRequestId(input.requestId, replayJobId),
+      channel: input.channel,
+      scope: input.scope,
+      authorizationEpoch: 1,
+      caseIds,
+      captures,
+    });
+    const sourceReplaySource = durableReplaySource(input.sourceCapture, "source replay capture");
+    const sourceNormalizedRequestRef = durableCaptureArtifactReference(
+      sourceReplaySource,
+      "normalizedRequestRef",
+      "source normalized request",
+    );
+    const sourcePolicySnapshotRef = durableCaptureArtifactReference(
+      sourceReplaySource,
+      "policySnapshotRef",
+      "source policy snapshot",
+    );
+    const sourceCapturePolicyRef = durableCaptureArtifactReference(
+      sourceReplaySource,
+      "capturePolicyRef",
+      "source capture policy",
+    );
+    const sourceMessageArtifactRefs = Array.isArray(input.sourceCapture.messageArtifactIds)
+      ? input.sourceCapture.messageArtifactIds.map((value, index) =>
+          durableCaptureArtifactReference(
+            { artifactId: value },
+            "artifactId",
+            `source message ${index}`,
+          ),
+        )
+      : [];
+    if (sourceMessageArtifactRefs.length === 0) {
+      throw new Error("durable replay evaluation source input artifacts are missing");
+    }
+    const replayReferenceFacts = await persistSupervisedReplayEvaluationReferenceFacts({
+      runtime: input.runtime,
+      requestId: createSupervisedReplayEvaluationRequestId(input.requestId, replayJobId),
+      channel: input.channel,
+      scope: input.scope,
+      authorizationEpoch: 1,
+      facts: {
+        task: {
+          schemaVersion: "role-model.evaluation-task-fact.v1",
+          kind: "routing_shadow_replay",
+          sourceDecisionId,
+          sourceRootArtifactRef: `artifact:${sourceRootArtifactId}`,
+          routePackage: input.sourceEndpointId,
+          candidateEndpointIds: counterfactuals.map(({ candidate }) => candidate.endpointId),
+          evaluationCriteriaDigest: input.evaluationCriteriaDigest,
+        },
+        input: {
+          schemaVersion: "role-model.evaluation-input-fact.v1",
+          normalizedRequestRef: sourceNormalizedRequestRef,
+          messageArtifactRefs: sourceMessageArtifactRefs,
+        },
+        toolPolicy: {
+          schemaVersion: "role-model.evaluation-tool-policy-fact.v1",
+          mode: "deny",
+          policySnapshotRef: sourcePolicySnapshotRef,
+          capturePolicyRef: sourceCapturePolicyRef,
+        },
+        environment: {
+          schemaVersion: "role-model.evaluation-environment-fact.v1",
+          channel: input.channel,
+          scope: input.scope,
+          authorizationEpoch: 1,
+          replaySourceSchemaVersion: sourceReplaySource.schemaVersion,
+          sourceGeneration:
+            input.sourceCapture.trace &&
+            typeof input.sourceCapture.trace === "object" &&
+            typeof (input.sourceCapture.trace as Record<string, unknown>).generation === "number"
+              ? (input.sourceCapture.trace as Record<string, unknown>).generation
+              : null,
+        },
+      },
+    });
+    const replayReferenceBuild = buildSupervisedReplayEvaluationReferences({
+      sourceCapture: input.sourceCapture,
+      counterfactualCaptures: counterfactuals.map(({ branchCapture }) => branchCapture),
+      caseIds,
+      perCaseEvidenceRefs,
+      referenceFacts: replayReferenceFacts,
+    });
+    const trajectoryEvents = deriveSupervisedReplayTrajectoryEvents({
+      sourceCapture: input.sourceCapture,
+      counterfactualCaptures: counterfactuals.map(({ branchCapture }) => branchCapture),
+    });
+    const sourceRolloutReferences = replayReferenceBuild.rolloutReferences[0];
+    if (!sourceRolloutReferences) {
+      throw new Error("durable replay evaluation is missing source rollout references");
+    }
+    const evaluated = await runPipeline(input.runtime, {
+      requestId: createSupervisedReplayEvaluationRequestId(input.requestId, replayJobId),
+      channel: input.channel,
+      scope: input.scope,
+      authorizationEpoch: 1,
+      productionState: {},
+      routePackage: input.sourceEndpointId,
+      sourceDecisionId,
+      sourceGraphRef: `artifact:${sourceRootArtifactId}`,
+      prefix: [],
+      counterfactuals: counterfactuals.map(({ candidate }) => ({
+        id: candidate.endpointId,
+        suffix: [],
+      })),
+      comparableEvidence: {
+        source: {
+          rolloutId: `source:${input.requestId}`,
+          routePackage: input.sourceEndpointId,
+          endpointId: input.sourceEndpointId,
+          modelId: input.sourceModelId,
+          policyId: "run96-supervised-replay",
+          reasoningEffort:
+            typeof input.sourceCapture.reasoningEffort === "string"
+              ? input.sourceCapture.reasoningEffort
+              : null,
+          effortSource:
+            typeof input.sourceCapture.effortSource === "string"
+              ? input.sourceCapture.effortSource
+              : "none",
+          evidenceRef: sourceRolloutReferences.evidenceRef,
+          artifactRef: sourceRolloutReferences.artifactRef,
+          evaluationActual: input.sourceOutput,
+          propensity: 1,
+          outcome: {
+            outcomeId: `outcome:source:${input.requestId}`,
+            outcomeRef: sourceRolloutReferences.outcomeRef,
+            outcomeDigest: `sha256:${createHash("sha256").update(input.sourceOutput, "utf8").digest("hex")}`,
+            source: "observed",
+            status: "success",
+          },
+        },
+        counterfactuals: counterfactuals.map(
+          ({ candidate, replayRequestId, output, outputSha256 }, index) => {
+            const rolloutReferences = replayReferenceBuild.rolloutReferences[index + 1];
+            if (!rolloutReferences) {
+              throw new Error(
+                `durable replay evaluation is missing rollout references for ${candidate.endpointId}`,
+              );
+            }
+            return {
+              rolloutId: `counterfactual:${replayRequestId}`,
+              routePackage: candidate.endpointId,
+              endpointId: candidate.endpointId,
+              modelId: candidate.modelId,
+              policyId: "run96-supervised-replay",
+              reasoningEffort: candidate.reasoningEffort,
+              effortSource: "variant",
+              evidenceRef: rolloutReferences.evidenceRef,
+              artifactRef: rolloutReferences.artifactRef,
+              evaluationActual: output,
+              propensity: 1,
+              outcome: {
+                outcomeId: `outcome:${replayRequestId}`,
+                outcomeRef: rolloutReferences.outcomeRef,
+                outcomeDigest: `sha256:${outputSha256}`,
+                source: "replay",
+                status: "success",
+              },
+            };
+          },
+        ),
+        candidateSet: [
+          {
+            routePackage: input.sourceEndpointId,
+            endpointId: input.sourceEndpointId,
+            propensity: 1,
+          },
+          ...counterfactuals.map(({ candidate }) => ({
+            routePackage: candidate.endpointId,
+            endpointId: candidate.endpointId,
+            propensity: 1,
+          })),
+        ],
+      },
+      evaluationCases: caseIds.map((id) => ({ id, evaluationCriteria: input.evaluationCriteria })),
+      trajectoryEvents,
+      evaluationReferences: replayReferenceBuild.evaluationReferences,
+      evaluationJobIds: [
+        evaluationJobId,
+        ...counterfactuals.map(
+          ({ candidate }) =>
+            `${evaluationJobId}:${createHash("sha256").update(candidate.endpointId).digest("hex").slice(0, 12)}`,
+        ),
+      ],
+      identity: {
+        endpointId: input.sourceEndpointId,
+        modelId: input.sourceModelId,
+        reasoningEffort:
+          typeof input.sourceCapture.reasoningEffort === "string"
+            ? input.sourceCapture.reasoningEffort
+            : null,
+        effortSource:
+          typeof input.sourceCapture.effortSource === "string"
+            ? (input.sourceCapture.effortSource as
+                | "none"
+                | "client"
+                | "variant"
+                | "variant_coerced")
+            : "none",
+      },
+    });
+    if (trajectoryEvents.length < 2) {
+      const evaluatedCandidate =
+        evaluated.candidate &&
+        typeof evaluated.candidate === "object" &&
+        !Array.isArray(evaluated.candidate)
+          ? (evaluated.candidate as Record<string, unknown>)
+          : null;
+      if (evaluatedCandidate?.state !== "insufficient_trajectory_evidence") {
+        throw new Error(
+          "durable replay evaluation must decline learning when captured trajectory evidence is insufficient",
+        );
+      }
+    }
+    const comparison = evaluated.evaluation as Record<string, unknown>;
+    const outcome = comparison.outcome;
+    const comparisonGroupId = comparison.groupId;
+    if (
+      typeof comparisonGroupId !== "string" ||
+      !comparisonGroupId ||
+      ![
+        "candidate",
+        "source",
+        "tie",
+        "rejected",
+        "incomplete",
+        "insufficient",
+        "disagreement",
+      ].includes(String(outcome))
+    ) {
+      throw new Error("durable replay evaluation did not finalize a valid comparison");
+    }
+    return {
+      evaluationJobId,
+      comparisonGroupId,
+      outcome,
+      comparisonDigest: `sha256:${createHash("sha256").update(JSON.stringify(comparison)).digest("hex")}`,
+    };
+  };
+}
 
 type RuntimeOperatorCallbacks = Pick<
   CreateRuntimeBridgeBackendOptions,
@@ -846,6 +1711,7 @@ export function createCliServerOptions(
     runtimeStateRoot?: string;
     runtimeChannel?: "development" | "stage" | "production";
     operatorAuthToken?: string;
+    operatorContext?: RuntimeOperatorContext;
   },
   backendOrResolver: CliBackend | CliBackendResolver,
   shutdown?: () => Promise<void>,
@@ -880,6 +1746,7 @@ export function createCliServerOptions(
     runtimeStateRoot: options.runtimeStateRoot,
     runtimeChannel: options.runtimeChannel,
     operatorAuthToken: options.operatorAuthToken ?? resolveBackend()?.operatorAuthToken,
+    operatorContext: options.operatorContext,
     shutdown,
     registry: resolveBackend()?.effectiveRegistry ?? EMPTY_REGISTRY,
     getRegistry: () => resolveBackend()?.effectiveRegistry ?? EMPTY_REGISTRY,
@@ -1637,6 +2504,11 @@ export async function main(): Promise<void> {
         staticRoot,
         runtimeStateRoot: options.runtimeStateRoot,
         runtimeChannel: packagedProfile?.channel ?? "development",
+        operatorContext: {
+          channel: packagedProfile?.channel ?? "development",
+          scope: options.scopeId,
+          authorizationEpoch: 1,
+        },
         ...(operatorAuthToken ? { operatorAuthToken } : {}),
         ...(run88StageIdentity ? { run88StageIdentity } : {}),
       },
@@ -1998,9 +2870,6 @@ export async function main(): Promise<void> {
               "supervised replay source capture lacks independently observable output identity",
             );
           }
-          const sourceOutputSha256 = createHash("sha256")
-            .update(sourceOutput, "utf8")
-            .digest("hex");
           const counterfactualPackages = candidatePackages.filter(
             (candidate) => candidate.endpointId !== sourceEndpointId,
           );
@@ -2181,220 +3050,31 @@ export async function main(): Promise<void> {
               const evaluationJobId = `evaluation-replay-${createHash("sha256").update(String(replayJobId)).digest("hex").slice(0, 20)}`;
               return { evaluationJobId };
             },
-            completeEvaluation: async ({ evaluationJobId, replayJobId, replayJob }) => {
-              const replayDispatches =
-                replayJob &&
-                typeof replayJob === "object" &&
-                !Array.isArray(replayJob) &&
-                (replayJob as Record<string, unknown>).dispatches &&
-                typeof (replayJob as Record<string, unknown>).dispatches === "object"
-                  ? ((replayJob as Record<string, unknown>).dispatches as Record<string, unknown>)
-                  : {};
-              const counterfactuals = await Promise.all(
-                counterfactualPackages.map(async (candidate) => {
-                  const dispatchedCandidate = dispatched.get(candidate.endpointId);
-                  const durableDispatch = replayDispatches[candidate.endpointId] as
-                    | Record<string, unknown>
-                    | undefined;
-                  const durableResult =
-                    durableDispatch?.result && typeof durableDispatch.result === "object"
-                      ? (durableDispatch.result as Record<string, unknown>)
-                      : null;
-                  const providerResultRef =
-                    typeof durableResult?.providerResultRef === "string"
-                      ? durableResult.providerResultRef
-                      : null;
-                  const recoveredRequestId = providerResultRef?.startsWith("route-capture:")
-                    ? providerResultRef.slice("route-capture:".length)
-                    : null;
-                  const recoveredCapture =
-                    !dispatchedCandidate && recoveredRequestId
-                      ? ((await operations.readLocalRouteCapture({
-                          requestId: recoveredRequestId,
-                        })) as Record<string, unknown> | null)
-                      : null;
-                  if (recoveredCapture) {
-                    validateRecoveredReplayCapture({
-                      scope: options.scopeId,
-                      candidate,
-                      dispatchReceipt: {
-                        routerDecisionId: durableResult?.routerDecisionId,
-                        branchRootRef: durableResult?.branchRootRef,
-                      },
-                      capture: recoveredCapture,
-                    });
-                  }
-                  const recoveredResponse =
-                    recoveredCapture?.response && typeof recoveredCapture.response === "object"
-                      ? (recoveredCapture.response as Record<string, unknown>)
-                      : null;
-                  const output =
-                    dispatchedCandidate?.execution.outputText ??
-                    (typeof recoveredResponse?.content === "string"
-                      ? recoveredResponse.content
-                      : null) ??
-                    (typeof recoveredCapture?.outputText === "string"
-                      ? recoveredCapture.outputText
-                      : null);
-                  if (typeof output !== "string" || !output) {
-                    throw new Error(
-                      "durable replay evaluation is missing counterfactual output evidence",
-                    );
-                  }
-                  return {
-                    candidate,
-                    replayRequestId: dispatchedCandidate?.replayRequestId ?? recoveredRequestId,
-                    output,
-                    outputSha256: createHash("sha256").update(output, "utf8").digest("hex"),
-                  };
-                }),
-              );
-              if (counterfactuals.some(({ replayRequestId }) => !replayRequestId)) {
-                throw new Error(
-                  "durable replay evaluation cannot recover counterfactual request provenance",
-                );
-              }
-              const sourceRootArtifactId =
-                typeof sourceCapture.rootArtifactId === "string"
-                  ? sourceCapture.rootArtifactId
-                  : "";
-              const sourceDecisionId =
-                typeof sourceCapture.routingDecisionId === "string"
-                  ? sourceCapture.routingDecisionId
-                  : "";
-              if (
-                !sourceRootArtifactId ||
-                !sourceDecisionId ||
-                typeof evaluationJobId !== "string" ||
-                !evaluationJobId
-              ) {
-                throw new Error(
-                  "durable replay evaluation is missing source or evaluation provenance",
-                );
-              }
-              const evaluated = await runTrackBShadowPipeline(runtime, {
-                requestId: createSupervisedReplayEvaluationRequestId(
-                  requestId,
-                  String(replayJobId),
-                ),
-                channel,
-                scope: options.scopeId,
-                authorizationEpoch: 1,
-                productionState: {},
-                routePackage: sourceEndpointId,
-                sourceDecisionId,
-                sourceGraphRef: sourceRootArtifactId,
-                prefix: [],
-                counterfactuals: counterfactuals.map(({ candidate }) => ({
-                  id: candidate.endpointId,
-                  suffix: [],
-                })),
-                comparableEvidence: {
-                  source: {
-                    rolloutId: `source:${requestId}`,
-                    routePackage: sourceEndpointId,
-                    endpointId: sourceEndpointId,
-                    modelId: sourceModelId,
-                    policyId: "run96-supervised-replay",
-                    reasoningEffort: sourceCapture.reasoningEffort ?? null,
-                    effortSource: sourceCapture.effortSource ?? "none",
-                    evidenceRef: sourceRootArtifactId,
-                    artifactRef: sourceRootArtifactId,
-                    evaluationActual: sourceOutput,
-                    propensity: 1,
-                    outcome: {
-                      outcomeId: `outcome:source:${requestId}`,
-                      outcomeRef: sourceRootArtifactId,
-                      outcomeDigest: `sha256:${sourceOutputSha256}`,
-                      source: "observed",
-                      status: "success",
-                    },
-                  },
-                  counterfactuals: counterfactuals.map(
-                    ({ candidate, replayRequestId, output, outputSha256 }) => ({
-                      rolloutId: `counterfactual:${replayRequestId}`,
-                      routePackage: candidate.endpointId,
-                      endpointId: candidate.endpointId,
-                      modelId: candidate.modelId,
-                      policyId: "run96-supervised-replay",
-                      reasoningEffort: candidate.reasoningEffort,
-                      effortSource: "variant",
-                      evidenceRef: `route-capture:${replayRequestId}-branch`,
-                      artifactRef: `route-capture:${replayRequestId}-branch`,
-                      evaluationActual: output,
-                      propensity: 1,
-                      outcome: {
-                        outcomeId: `outcome:${replayRequestId}`,
-                        outcomeRef: `route-capture:${replayRequestId}-branch`,
-                        outcomeDigest: `sha256:${outputSha256}`,
-                        source: "replay",
-                        status: "success",
-                      },
-                    }),
-                  ),
-                  candidateSet: [
-                    { routePackage: sourceEndpointId, endpointId: sourceEndpointId, propensity: 1 },
-                    ...counterfactuals.map(({ candidate }) => ({
-                      routePackage: candidate.endpointId,
-                      endpointId: candidate.endpointId,
-                      propensity: 1,
-                    })),
-                  ],
-                },
-                evaluationCases: Array.from({ length: 1 + counterfactuals.length }, (_, index) => ({
-                  id: `replay:${String(replayJobId)}:${index}`,
-                  evaluationCriteria,
-                })),
-                trajectoryEvents: [],
-                evaluationJobIds: [
-                  evaluationJobId,
-                  ...counterfactuals.map(
-                    ({ candidate }) =>
-                      `${evaluationJobId}:${createHash("sha256").update(candidate.endpointId).digest("hex").slice(0, 12)}`,
-                  ),
-                ],
-                identity: {
-                  endpointId: sourceEndpointId,
-                  modelId: sourceModelId,
-                  reasoningEffort:
-                    typeof sourceCapture.reasoningEffort === "string"
-                      ? sourceCapture.reasoningEffort
-                      : null,
-                  effortSource:
-                    typeof sourceCapture.effortSource === "string"
-                      ? (sourceCapture.effortSource as
-                          | "none"
-                          | "client"
-                          | "variant"
-                          | "variant_coerced")
-                      : "none",
-                },
-              });
-              const comparison = evaluated.evaluation as Record<string, unknown>;
-              const outcome = comparison.outcome;
-              const comparisonGroupId = comparison.groupId;
-              if (
-                typeof comparisonGroupId !== "string" ||
-                !comparisonGroupId ||
-                ![
-                  "candidate",
-                  "source",
-                  "tie",
-                  "rejected",
-                  "incomplete",
-                  "insufficient",
-                  "disagreement",
-                ].includes(String(outcome))
-              ) {
-                throw new Error("durable replay evaluation did not finalize a valid comparison");
-              }
-              return {
-                evaluationJobId,
-                comparisonGroupId,
-                outcome,
-                comparisonDigest: `sha256:${createHash("sha256").update(JSON.stringify(comparison)).digest("hex")}`,
-              };
-            },
+            completeEvaluation: createSupervisedReplayEvaluationCompleter({
+              runtime,
+              operations,
+              requestId,
+              channel,
+              scope: options.scopeId,
+              sourceCapture,
+              sourceOutput,
+              sourceEndpointId,
+              sourceModelId,
+              counterfactualPackages,
+              getDispatched: (endpointId) => {
+                const dispatch = dispatched.get(endpointId);
+                return dispatch
+                  ? {
+                      execution: dispatch.execution as unknown as Readonly<Record<string, unknown>>,
+                      replayRequestId: dispatch.replayRequestId,
+                    }
+                  : undefined;
+              },
+              evaluationCriteria: evaluationCriteria as unknown as Readonly<
+                Record<string, unknown>
+              >,
+              evaluationCriteriaDigest,
+            }),
           });
           return {
             schemaVersion: "role-model.supervised-replay-command-receipt.v1",
