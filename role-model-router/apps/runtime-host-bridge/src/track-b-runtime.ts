@@ -3803,6 +3803,61 @@ function sanitizeTrackBOutboxUsageEvent(value: unknown): Record<string, unknown>
   return Object.keys(target).length ? target : undefined;
 }
 
+const OUTBOX_STATUS_CODE_KEYS = [
+  "responseStatusCode",
+  "response_status_code",
+  "statusCode",
+  "status_code",
+] as const;
+
+function readOutboxStatusCode(record: unknown): number | undefined {
+  if (!record || typeof record !== "object" || Array.isArray(record)) return undefined;
+  const source = record as Record<string, unknown>;
+  for (const key of OUTBOX_STATUS_CODE_KEYS) {
+    const value = source[key];
+    if (typeof value === "number" && Number.isInteger(value) && value >= 100 && value <= 599) {
+      return value;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Resolve the authoritative provider response status from the observation
+ * shapes the packaged runtime actually emits: the status lives inside the
+ * execution or inspection response capture, not as a top-level scalar.
+ */
+function readOutboxResponseStatusCode(
+  observation: Readonly<Record<string, unknown>>,
+): number | undefined {
+  const execution = observation.execution;
+  const executionRecord =
+    execution && typeof execution === "object" && !Array.isArray(execution)
+      ? (execution as Record<string, unknown>)
+      : null;
+  const inspection = observation.inspection;
+  const inspectionRecord =
+    inspection && typeof inspection === "object" && !Array.isArray(inspection)
+      ? (inspection as Record<string, unknown>)
+      : null;
+  const inspectionRequest = inspectionRecord?.request;
+  const inspectionRequestRecord =
+    inspectionRequest && typeof inspectionRequest === "object" && !Array.isArray(inspectionRequest)
+      ? (inspectionRequest as Record<string, unknown>)
+      : null;
+  for (const candidate of [
+    observation,
+    observation.responseCapture,
+    executionRecord,
+    executionRecord?.responseCapture,
+    inspectionRequestRecord?.responseCapture,
+  ]) {
+    const statusCode = readOutboxStatusCode(candidate);
+    if (statusCode !== undefined) return statusCode;
+  }
+  return undefined;
+}
+
 function sanitizeTrackBPostObservationForOutbox(
   observation: Readonly<Record<string, unknown>>,
 ): Record<string, unknown> {
@@ -3859,6 +3914,14 @@ function sanitizeTrackBPostObservationForOutbox(
   if (usageEvent) target.usageEvent = usageEvent;
   for (const key of ["responseStatusCode", "normalizedErrorClass", "errorClass", "error_class"]) {
     outboxPickScalar(observation, target, key, 512);
+  }
+  // The live runtime observation carries the authoritative provider status
+  // inside the execution/response capture rather than as a top-level scalar.
+  // Project it into the bounded durable field so a queued observation still
+  // classifies the same contribution outcome the live observation did.
+  if (target.responseStatusCode === undefined) {
+    const statusCode = readOutboxResponseStatusCode(observation);
+    if (statusCode !== undefined) target.responseStatusCode = statusCode;
   }
   for (const key of ["execution", "responseCapture", "inspection", "diagnostics"]) {
     const safe = sanitizeTrackBOutboxContributionRecord(observation[key]);

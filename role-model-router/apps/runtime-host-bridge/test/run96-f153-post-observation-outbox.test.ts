@@ -463,3 +463,64 @@ test("F153 GREEN: a truthful ordered two-event trajectory reaches the real shado
   ).toMatchObject({ events });
   expect(contributionCalls).toBe(1);
 });
+
+test("Run 96 F174: a live-shaped observation keeps its authoritative response status through the durable outbox", async () => {
+  const root = await mkdtemp(path.join(testRoot, "run96-f174-outbox-status-"));
+  roots.push(root);
+  const filePath = path.join(root, "post-observation.sqlite");
+  const outbox = createTrackBPostObservationOutbox({ filePath, maxItems: 4 });
+  const queued = observation([
+    {
+      id: "trajectory:f174",
+      type: "captured",
+      timestampMs: 96_000,
+      requestId: "request:f153-outbox",
+    },
+  ]);
+  // The packaged runtime observation carries the authoritative provider status
+  // inside the execution/response capture rather than as a top-level scalar.
+  const { responseStatusCode: _topLevel, ...withoutTopLevelStatus } = queued;
+  const liveShaped = {
+    ...withoutTopLevelStatus,
+    execution: {
+      responseCapture: { statusCode: 200, body: { id: "completion:f174" } },
+    },
+    inspection: {
+      request: {
+        responseCapture: { statusCode: 200, body: { id: "completion:f174" } },
+      },
+    },
+  };
+
+  await outbox.enqueue(liveShaped);
+  const database = new DatabaseSync(filePath);
+  let pending: { observation_json: string };
+  try {
+    pending = database
+      .prepare("SELECT observation_json FROM track_b_post_observation_pending WHERE request_id=?")
+      .get(liveShaped.requestId) as { observation_json: string };
+  } finally {
+    database.close();
+  }
+  const persisted = JSON.parse(pending.observation_json) as Record<string, unknown>;
+  expect(persisted.responseStatusCode).toBe(200);
+
+  const calls: Array<{ id: string; capability: string; envelope: Record<string, unknown> }> = [];
+  let contributionInput: Record<string, unknown> | null = null;
+  await outbox.drain(async (item) =>
+    runTrackBPostObservationWithContribution(
+      createGenericRuntime(calls),
+      item,
+      { scope: "tenant:f153", channel: "development", authorizationEpoch: 96 },
+      async (input) => {
+        contributionInput = input;
+        return { status: "uploaded", id: "aggregate:f174" };
+      },
+    ),
+  );
+  const receipt = await outbox.readReceipt(liveShaped.requestId);
+  const result = (receipt?.result ?? {}) as Record<string, unknown>;
+  expect(result.contribution).toMatchObject({ status: "uploaded", id: "aggregate:f174" });
+  expect(result.contributionCorrelationId).toMatch(/^corr-[a-f0-9]{24}$/);
+  expect(contributionInput).toMatchObject({ success: true });
+});
