@@ -34,8 +34,14 @@ test.describe("@recursive:96-message-graph-replay-evaluation-learning @sp5 @live
     await page.goto("/app/system/storage-retention");
     await expect(page.getByRole("heading", { name: "Physical storage inventory" })).toBeVisible();
     const summary = page.getByLabel("Storage retention summary");
-    await expect(summary.getByText("Physical", { exact: true })).toBeVisible();
-    await expect(summary.getByText("Logical classes", { exact: true })).toBeVisible();
+    // The summary strip reports the measured physical, logical, reclaimable,
+    // and unattributed totals with their unit-suffixed labels; the logical
+    // class breakdown and the unattributed explanation live below it.
+    await expect(summary.getByText("Physical bytes", { exact: true })).toBeVisible();
+    await expect(summary.getByText("Logical bytes", { exact: true })).toBeVisible();
+    await expect(summary.getByText("Reclaimable bytes", { exact: true })).toBeVisible();
+    await expect(summary.getByText("Unattributed bytes", { exact: true })).toBeVisible();
+    await expect(summary.getByText("Legal holds", { exact: true })).toBeVisible();
     await expect(
       page.getByRole("columnheader", { name: "Observation state" }).first(),
     ).toBeVisible();
