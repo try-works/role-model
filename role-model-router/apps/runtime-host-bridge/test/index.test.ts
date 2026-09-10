@@ -119,6 +119,36 @@ test("Run 96 projects persisted provider evidence attempt identities when compac
   ).toEqual(["req-run96-projection:attempt:1"]);
 });
 
+test("Run 96 F177: public provider attempt projection counts physical dispatches, not semantic labels", () => {
+  // A single successful provider call is described twice inside one
+  // observation: the execution semantics carry a router-owned terminal label
+  // (`attempt:<request>:final`) while the provider evidence carries the real
+  // provider attempt identity. Projecting both double-counts the dispatch and
+  // breaks the bounded Phase 5 provider-call ledger.
+  expect(
+    bridge.projectPublicProviderAttemptIds({
+      executionSemantics: { providerAttemptIds: ["attempt:req-run96-f177:final"] },
+      providerEvidence: { attemptIds: ["req-run96-f177:attempt:1"] },
+    }),
+  ).toEqual(["req-run96-f177:attempt:1"]);
+
+  // Retries still surface every physical attempt, including the failed ones
+  // that both projections agree on.
+  expect(
+    bridge.projectPublicProviderAttemptIds({
+      executionSemantics: {
+        providerAttemptIds: [
+          "req-run96-f177-retry:attempt:1",
+          "attempt:req-run96-f177-retry:final",
+        ],
+      },
+      providerEvidence: {
+        attemptIds: ["req-run96-f177-retry:attempt:1", "req-run96-f177-retry:attempt:2"],
+      },
+    }),
+  ).toEqual(["req-run96-f177-retry:attempt:1", "req-run96-f177-retry:attempt:2"]);
+});
+
 const registry: EndpointRegistryResult = {
   endpoints: [
     {

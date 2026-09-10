@@ -17522,7 +17522,13 @@ export function projectPublicProviderAttemptIds(observation: object): readonly s
   const source = observation as Readonly<Record<string, unknown>>;
   const executionSemantics = readAttemptIds(source.executionSemantics, "providerAttemptIds");
   const providerEvidence = readAttemptIds(source.providerEvidence, "attemptIds");
-  return [...new Set([...executionSemantics, ...providerEvidence])];
+  // Provider evidence names the physical provider dispatches.  Execution
+  // semantics additionally carry a router-owned terminal label for the same
+  // call, so merging both counts one dispatch twice and inflates every bounded
+  // provider-call ledger.  Prefer the physical identities and keep the
+  // semantics list only as the fallback for compact observations.
+  if (providerEvidence.length > 0) return [...new Set(providerEvidence)];
+  return [...new Set(executionSemantics)];
 }
 
 export async function createRuntimeBridgeBackend(
