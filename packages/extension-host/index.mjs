@@ -417,6 +417,7 @@ export class ExtensionHost {
       restarts: 0,
       autoRestart: false,
       restartPromise: null,
+      transitions: 0,
     };
     record.worker = new ProcessWorker(
       normalized,
@@ -498,6 +499,10 @@ export class ExtensionHost {
       lifecycle: record.lifecycle,
       pid: record.kind === "process" ? record.worker.state().pid : null,
       restarts: record.restarts ?? 0,
+      // A supervised start/stop/restart is a bounded, expected transition.  The
+      // readiness projection must be able to tell it apart from a terminal
+      // worker failure, including the window between stop and start.
+      transitioning: (record.transitions ?? 0) > 0 || Boolean(record.restartPromise),
     };
   }
   listExtensionStates() {
@@ -506,33 +511,54 @@ export class ExtensionHost {
   async stopProcess(id) {
     const record = this.#workers.get(id);
     if (!record || record.kind !== "process") throw new Error(`unknown process extension ${id}`);
-    record.lifecycle = "stopping";
-    record.autoRestart = false;
-    await record.worker.stop();
-    record.lifecycle = "stopped";
-    await this.#journal({ type: "stopped", extensionId: id, pid: null });
-    return this.extensionState(id);
+    record.transitions = (record.transitions ?? 0) + 1;
+    try {
+      record.lifecycle = "stopping";
+      record.autoRestart = false;
+      await record.worker.stop();
+      record.lifecycle = "stopped";
+      await this.#journal({ type: "stopped", extensionId: id, pid: null });
+      return this.extensionState(id);
+    } finally {
+      record.transitions = Math.max(0, (record.transitions ?? 1) - 1);
+    }
   }
   async startProcess(id) {
     const record = this.#workers.get(id);
     if (!record || record.kind !== "process") throw new Error(`unknown process extension ${id}`);
     if (record.lifecycle === "ready" && !record.worker.exited) return this.extensionState(id);
-    record.lifecycle = "starting";
-    await record.worker.start();
-    record.lifecycle = "ready";
-    record.autoRestart = true;
-    await this.#journal({ type: "started", extensionId: id, pid: record.worker.state().pid });
-    return this.extensionState(id);
+    record.transitions = (record.transitions ?? 0) + 1;
+    try {
+      record.lifecycle = "starting";
+      await record.worker.start();
+      record.lifecycle = "ready";
+      record.autoRestart = true;
+      await this.#journal({ type: "started", extensionId: id, pid: record.worker.state().pid });
+      return this.extensionState(id);
+    } catch (error) {
+      // A failed supervised start is terminal for this attempt: leaving the
+      // record in `starting` would let readiness report an unbounded pending
+      // transition instead of a real worker failure.
+      record.lifecycle = "exited";
+      throw error;
+    } finally {
+      record.transitions = Math.max(0, (record.transitions ?? 1) - 1);
+    }
   }
   async restartProcess(id) {
     const record = this.#workers.get(id);
     if (!record || record.kind !== "process") throw new Error(`unknown process extension ${id}`);
-    await this.stopProcess(id);
-    record.restarts = (record.restarts ?? 0) + 1;
-    this.#restartCount += 1;
-    const state = await this.startProcess(id);
-    await this.#journal({ type: "restarted", extensionId: id, restart: record.restarts });
-    return state;
+    record.transitions = (record.transitions ?? 0) + 1;
+    try {
+      await this.stopProcess(id);
+      record.restarts = (record.restarts ?? 0) + 1;
+      this.#restartCount += 1;
+      const state = await this.startProcess(id);
+      await this.#journal({ type: "restarted", extensionId: id, restart: record.restarts });
+      return state;
+    } finally {
+      record.transitions = Math.max(0, (record.transitions ?? 1) - 1);
+    }
   }
   async removeProcess(id) {
     const record = this.#workers.get(id);

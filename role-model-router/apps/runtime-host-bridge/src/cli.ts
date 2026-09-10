@@ -51,6 +51,7 @@ import {
   createSupervisedReplayEvaluationRequestId,
   createTrackBPostObservationOutbox,
   digestTrackBSemanticEvaluationCriteria,
+  evaluateProductionExtensionRuntimeReadiness,
   normalizeTrackBSemanticEvaluationCriteria,
   requireReplayRouterDecisionId,
   resolveManagedArtifactKeyFiles,
@@ -1679,20 +1680,21 @@ export function startCliExtensionRuntimeWatchdog(options: {
     if (stopped || failureReported || options.bootstrapState.status !== "ready") return;
     const runtime = options.getRuntime();
     if (!runtime) return;
-    try {
-      assertProductionExtensionRuntimeReady(
-        runtime,
-        options.expectedExtensionIds ?? TRACK_B_CANONICAL_EXTENSION_IDS,
-      );
-    } catch (error) {
-      failureReported = true;
-      options.bootstrapState.status = "failed";
-      options.bootstrapState.message =
-        error instanceof Error ? error.message : "extension runtime failed after startup";
-      void Promise.resolve(options.onFailure(error)).catch((cleanupError: unknown) => {
+    // A bounded supervised restart temporarily retracts readiness without
+    // failing the runtime; only a terminal worker lifecycle tears it down.
+    const readiness = evaluateProductionExtensionRuntimeReadiness(
+      runtime,
+      options.expectedExtensionIds ?? TRACK_B_CANONICAL_EXTENSION_IDS,
+    );
+    if (readiness.state !== "failed") return;
+    failureReported = true;
+    options.bootstrapState.status = "failed";
+    options.bootstrapState.message = readiness.message;
+    void Promise.resolve(options.onFailure(new Error(readiness.message))).catch(
+      (cleanupError: unknown) => {
         console.error("extension runtime failure cleanup failed", cleanupError);
-      });
-    }
+      },
+    );
   };
   const timer = setInterval(check, Math.max(1, options.intervalMs ?? 1000));
   timer.unref?.();
@@ -1805,13 +1807,17 @@ export function createCliServerOptions(
         ? resolver.readExtensionRuntime()
         : null;
       if (extensionRuntime) {
-        try {
-          assertProductionExtensionRuntimeReady(extensionRuntime);
-        } catch (error) {
+        const readiness = evaluateProductionExtensionRuntimeReadiness(extensionRuntime);
+        if (readiness.state === "failed") {
           if (resolver?.onExtensionRuntimeFailure) {
-            await resolver.onExtensionRuntimeFailure(error);
+            await resolver.onExtensionRuntimeFailure(new Error(readiness.message));
           }
           return createPendingHealthStatus(readBootstrapState());
+        }
+        if (readiness.state === "pending") {
+          // Keep the probe honest while a supervised transition is in flight
+          // without permanently failing an otherwise healthy runtime.
+          return createPendingHealthStatus({ status: "pending", message: readiness.message });
         }
       }
       const backend = resolveBackend();

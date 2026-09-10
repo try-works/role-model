@@ -1008,10 +1008,7 @@ export async function stageTrackBRuntimeDistribution(options: {
             modulePath: manifest.registryBindings?.capacitySlo?.schemaPath,
             artifactSha256: manifest.registryBindings?.capacitySlo?.schemaSha256,
           },
-        ].filter(
-          (file) =>
-            file.modulePath !== undefined || file.artifactSha256 !== undefined,
-        )
+        ].filter((file) => file.modulePath !== undefined || file.artifactSha256 !== undefined)
       : [];
   if (
     contractCandidates.some(
@@ -1070,9 +1067,7 @@ export async function stageTrackBRuntimeDistribution(options: {
   }
   if (compatibilityGeneration === "N") {
     const graphRelative = manifest.registryBindings?.graphRegistry?.path;
-    const graphSource = graphRelative
-      ? path.join(options.sourceRoot, graphRelative)
-      : null;
+    const graphSource = graphRelative ? path.join(options.sourceRoot, graphRelative) : null;
     if (!graphSource) {
       throw new Error("Track B runtime distribution graph registry path is missing");
     }
@@ -1106,48 +1101,58 @@ export async function stageTrackBRuntimeDistribution(options: {
     );
     await mkdir(path.dirname(extensionGraphDestination), { recursive: true });
     await copyFile(graphSource, extensionGraphDestination);
+    // Optional N-generation bindings are staged exactly as declared.  An older
+    // or narrower N-generation manifest that omits them must still stage, so the
+    // staging contract stays compatible while every declared artifact remains
+    // integrity-verified and fail-closed.
     const fixtures = manifest.sourceAuthorityFixtures;
-    if (!Array.isArray(fixtures) || fixtures.length === 0) {
-      throw new Error("Track B runtime distribution source-authority fixtures are incomplete");
-    }
-    for (const fixture of fixtures) {
-      if (
-        typeof fixture.modulePath !== "string" ||
-        !fixture.modulePath ||
-        !/^[a-f0-9]{64}$/i.test(fixture.artifactSha256 ?? "")
-      ) {
-        throw new Error("Track B runtime distribution source-authority fixture is incomplete");
+    if (fixtures !== undefined) {
+      if (!Array.isArray(fixtures) || fixtures.length === 0) {
+        throw new Error("Track B runtime distribution source-authority fixtures are incomplete");
       }
-      const fixtureSource = path.join(options.sourceRoot, fixture.modulePath);
-      const fixtureDigest = createHash("sha256")
-        .update(await readFile(fixtureSource))
-        .digest("hex");
-      if (fixtureDigest !== fixture.artifactSha256.toLowerCase()) {
-        throw new Error("Track B runtime distribution source-authority fixture integrity failed");
+      for (const fixture of fixtures) {
+        if (
+          typeof fixture.modulePath !== "string" ||
+          !fixture.modulePath ||
+          !/^[a-f0-9]{64}$/i.test(fixture.artifactSha256 ?? "")
+        ) {
+          throw new Error("Track B runtime distribution source-authority fixture is incomplete");
+        }
+        const fixtureSource = path.join(options.sourceRoot, fixture.modulePath);
+        const fixtureDigest = createHash("sha256")
+          .update(await readFile(fixtureSource))
+          .digest("hex");
+        if (fixtureDigest !== fixture.artifactSha256.toLowerCase()) {
+          throw new Error("Track B runtime distribution source-authority fixture integrity failed");
+        }
+        const fixtureDestination = path.join(options.releaseDir, "..", "..", fixture.modulePath);
+        await mkdir(path.dirname(fixtureDestination), { recursive: true });
+        await copyFile(fixtureSource, fixtureDestination);
       }
-      const fixtureDestination = path.join(
-        options.releaseDir,
-        "..",
-        "..",
-        fixture.modulePath,
-      );
-      await mkdir(path.dirname(fixtureDestination), { recursive: true });
-      await copyFile(fixtureSource, fixtureDestination);
     }
     const capacity = manifest.registryBindings?.capacitySlo;
-    if (!capacity?.contractPath || !capacity.schemaPath) {
-      throw new Error("Track B runtime distribution capacity bindings are incomplete");
-    }
-    for (const [sourceRelative, destinationName, expectedHash] of [
-      [capacity.contractPath, path.basename(capacity.contractPath), capacity.contractSha256],
-      [capacity.schemaPath, path.basename(capacity.schemaPath), capacity.schemaSha256],
-    ] as const) {
-      const source = path.join(options.sourceRoot, sourceRelative);
-      const digest = createHash("sha256").update(await readFile(source)).digest("hex");
-      if (digest !== expectedHash?.toLowerCase()) {
-        throw new Error("Track B runtime distribution capacity artifact integrity failed");
+    if (capacity) {
+      if (
+        !capacity.contractPath ||
+        !capacity.schemaPath ||
+        !capacity.contractSha256 ||
+        !capacity.schemaSha256
+      ) {
+        throw new Error("Track B runtime distribution capacity bindings are incomplete");
       }
-      await copyFile(source, path.join(options.releaseDir, destinationName));
+      for (const [sourceRelative, destinationName, expectedHash] of [
+        [capacity.contractPath, path.basename(capacity.contractPath), capacity.contractSha256],
+        [capacity.schemaPath, path.basename(capacity.schemaPath), capacity.schemaSha256],
+      ] as const) {
+        const source = path.join(options.sourceRoot, sourceRelative);
+        const digest = createHash("sha256")
+          .update(await readFile(source))
+          .digest("hex");
+        if (digest !== expectedHash?.toLowerCase()) {
+          throw new Error("Track B runtime distribution capacity artifact integrity failed");
+        }
+        await copyFile(source, path.join(options.releaseDir, destinationName));
+      }
     }
   }
   const stagedManifestPath = path.join(options.releaseDir, "track-b-runtime-manifest.json");
@@ -3139,14 +3144,37 @@ export function validateProductionExtensionSet(
   }
 }
 
+export type TrackBExtensionRuntimeReadiness =
+  | { readonly state: "ready" }
+  | {
+      readonly state: "pending";
+      readonly message: string;
+      readonly pendingIds: readonly string[];
+    }
+  | {
+      readonly state: "failed";
+      readonly message: string;
+      readonly failedIds: readonly string[];
+    };
+
 /**
- * Verify the extension host and supervisor have both reached the same
- * canonical ready set before the HTTP server transitions out of pending.
+ * Lifecycles that describe an in-flight supervised transition rather than a
+ * worker that can no longer serve traffic.
  */
-export function assertProductionExtensionRuntimeReady(
+const TRACK_B_EXTENSION_PENDING_LIFECYCLES = new Set(["starting", "stopping"]);
+
+/**
+ * Classify the extension host and supervisor against the canonical ready set.
+ *
+ * A supervised restart is a bounded, expected transition: readiness stays
+ * retracted while it is in flight, but the runtime must not be torn down and
+ * routing must stay available.  A terminal lifecycle (exited/degraded/failed,
+ * or an expected-stopped worker that is not mid-transition) still fails closed.
+ */
+export function evaluateProductionExtensionRuntimeReadiness(
   runtime: { readonly health: () => Record<string, unknown> },
   expectedIds: readonly string[] = TRACK_B_CANONICAL_EXTENSION_IDS,
-): void {
+): TrackBExtensionRuntimeReadiness {
   const health = runtime.health();
   const host = health.host;
   const supervisor = health.supervisor;
@@ -3160,32 +3188,78 @@ export function assertProductionExtensionRuntimeReady(
     : [];
   const observedWorkers = Array.isArray(workerRows) ? workerRows : [];
   const missingIds = expectedIds.filter((id) => !observedIds.includes(id));
-  const notReadyIds = expectedIds.filter((id) => {
-    const row = observedWorkers.find(
-      (candidate) =>
-        candidate &&
-        typeof candidate === "object" &&
-        (candidate as Record<string, unknown>).id === id,
-    ) as Record<string, unknown> | undefined;
-    return row?.lifecycle !== "ready";
-  });
+  // A deliberately disabled extension is not required to be ready.
+  const requiredRows = expectedIds
+    .map((id) => ({
+      id,
+      row: observedWorkers.find(
+        (candidate) =>
+          candidate &&
+          typeof candidate === "object" &&
+          (candidate as Record<string, unknown>).id === id,
+      ) as Record<string, unknown> | undefined,
+    }))
+    .filter(({ row }) => row?.desiredState !== "disabled");
+  const pendingIds: string[] = [];
+  const failedIds: string[] = [];
+  for (const { id, row } of requiredRows) {
+    const lifecycle = row?.lifecycle;
+    if (lifecycle === "ready") continue;
+    const transitioning = row?.transitioning === true;
+    if (
+      transitioning ||
+      (typeof lifecycle === "string" && TRACK_B_EXTENSION_PENDING_LIFECYCLES.has(lifecycle))
+    ) {
+      pendingIds.push(id);
+      continue;
+    }
+    failedIds.push(id);
+  }
+  const readyWorkers =
+    typeof supervisorRecord?.readyWorkers === "number"
+      ? supervisorRecord.readyWorkers
+      : requiredRows.length - pendingIds.length - failedIds.length;
+  const summary =
+    `expected=${expectedIds.length}; readyWorkers=${readyWorkers}; ` +
+    `missing=${missingIds.join(",") || "none"}`;
   if (
     hostRecord?.available !== true ||
     hostRecord.enabled !== true ||
     supervisorRecord?.available !== true ||
     supervisorRecord.routingAvailable !== true ||
-    typeof supervisorRecord.readyWorkers !== "number" ||
-    supervisorRecord.readyWorkers < expectedIds.length ||
     missingIds.length > 0 ||
-    notReadyIds.length > 0
+    failedIds.length > 0
   ) {
-    throw new Error(
-      `production extension runtime is not ready: expected=${expectedIds.length}; ` +
-        `readyWorkers=${String(supervisorRecord?.readyWorkers ?? "missing")}; ` +
-        `missing=${missingIds.join(",") || "none"}; ` +
-        `notReady=${notReadyIds.join(",") || "none"}`,
-    );
+    return {
+      state: "failed",
+      failedIds,
+      message:
+        `production extension runtime is not ready: ${summary}; ` +
+        `notReady=${[...missingIds, ...failedIds].join(",") || "none"}`,
+    };
   }
+  if (pendingIds.length > 0 || readyWorkers < expectedIds.length) {
+    return {
+      state: "pending",
+      pendingIds,
+      message:
+        `production extension runtime is transitioning: ${summary}; ` +
+        `pending=${pendingIds.join(",") || "none"}`,
+    };
+  }
+  return { state: "ready" };
+}
+
+/**
+ * Verify the extension host and supervisor have both reached the same
+ * canonical ready set before the HTTP server transitions out of pending.
+ */
+export function assertProductionExtensionRuntimeReady(
+  runtime: { readonly health: () => Record<string, unknown> },
+  expectedIds: readonly string[] = TRACK_B_CANONICAL_EXTENSION_IDS,
+): void {
+  const readiness = evaluateProductionExtensionRuntimeReadiness(runtime, expectedIds);
+  if (readiness.state !== "ready") throw new Error(readiness.message);
 }
 
 export interface TrackBExtensionOutputRecord {
@@ -6719,6 +6793,7 @@ interface ExtensionRuntimeState {
   readonly pid: number | null;
   readonly revision: number;
   readonly previousDesiredState?: "enabled" | "disabled";
+  readonly transitioning?: boolean;
 }
 
 interface ExtensionRuntimeReceipt {
@@ -6773,6 +6848,7 @@ export async function createExtensionRuntime(options: {
         readonly lifecycle: string;
         readonly pid: number | null;
         readonly restarts: number;
+        readonly transitioning: boolean;
       }[];
       stopProcess(id: string): Promise<Record<string, unknown>>;
       startProcess(id: string): Promise<Record<string, unknown>>;
@@ -6845,14 +6921,24 @@ export async function createExtensionRuntime(options: {
     if (!current) throw new Error(`unknown extension ${id}`);
     const observed = host.listExtensionStates().find((state) => state.id === id);
     if (!observed) throw new Error(`extension runtime state missing ${id}`);
-    const next = { ...current, lifecycle: observed.lifecycle, pid: observed.pid };
+    const next = {
+      ...current,
+      lifecycle: observed.lifecycle,
+      pid: observed.pid,
+      transitioning: observed.transitioning === true,
+    };
     states.set(id, next);
     return next;
   };
   const persist = async () => {
     const document = {
       schemaVersion: "role-model.extension-runtime-state.v1",
-      states: ids.map((id) => refresh(id)),
+      // The supervised-transition flag is live readiness information, not
+      // durable runtime state, so the persisted document stays schema-stable.
+      states: ids.map((id) => {
+        const { transitioning: _transitioning, ...durable } = refresh(id);
+        return durable;
+      }),
       receipts: [...receipts.values()].slice(-256),
     };
     const temporary = `${statePath}.${process.pid}.${randomBytes(6).toString("hex")}.tmp`;
@@ -6925,6 +7011,7 @@ export async function createExtensionRuntime(options: {
         pid: observed.pid,
         revision: current.revision + 1,
         previousDesiredState,
+        transitioning: observed.transitioning === true,
       };
       states.set(input.id, state);
       const receipt = { mutationId: input.mutationId, action: input.action, inputIdentity, state };

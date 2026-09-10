@@ -262,21 +262,122 @@ describe("Run 96 packaged runtime artifact closure", () => {
       ).resolves.toBeTypeOf("string");
     }
     await expect(
-      readFile(
-        path.join(releaseDir, "capacity-slo-contracts.v3.json"),
-        "utf8",
-      ),
+      readFile(path.join(releaseDir, "capacity-slo-contracts.v3.json"), "utf8"),
     ).resolves.toBe("capacity");
     await expect(
-      readFile(
-        path.join(releaseDir, "capacity-slo-contracts.v3.schema.json"),
-        "utf8",
-      ),
+      readFile(path.join(releaseDir, "capacity-slo-contracts.v3.schema.json"), "utf8"),
     ).resolves.toBe("capacity-schema");
     for (const [relativePath] of contractFiles) {
       await expect(readFile(path.join(releaseDir, relativePath), "utf8")).resolves.toBeTypeOf(
         "string",
       );
     }
+  });
+
+  test("stages only the manifest-declared optional v2 bindings and fails closed when a declared fixture is wrong", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "run96-optional-binding-stage-"));
+    temporaryRoots.push(root);
+    const sourceRoot = path.join(root, "source");
+    const releaseDir = path.join(root, "release");
+    await mkdir(sourceRoot, { recursive: true });
+    const graphRegistry = {
+      version: 1,
+      kinds: [{ id: "core.message", version: 1 }],
+    };
+    const graphRegistrySha256 = await writeArtifact(
+      sourceRoot,
+      "shared/graph/registry.json",
+      JSON.stringify(graphRegistry),
+    );
+    const sidecar = await writeArtifact(sourceRoot, "runtime-operations-server.mjs", "sidecar");
+    const extensionHostSha256 = await writeArtifact(
+      sourceRoot,
+      "public-extension-host.mjs",
+      "extension-host",
+    );
+    const workerSha256 = await writeArtifact(sourceRoot, "worker-runtime.mjs", "worker");
+    const extensions = [];
+    for (let index = 0; index < 13; index += 1) {
+      const modulePath = `extensions/extension-${index + 1}.mjs`;
+      extensions.push({
+        descriptor: { id: `extension-${index + 1}`, protocolVersion: "1", capabilities: [] },
+        modulePath,
+        artifactSha256: await writeArtifact(sourceRoot, modulePath, `extension-${index + 1}`),
+      });
+    }
+    // An N-generation manifest that predates the run-96 contract bindings must
+    // still stage: the staged closure is exactly what the manifest declares.
+    const manifestPath = path.join(sourceRoot, "track-b-runtime-manifest.json");
+    await writeFile(
+      manifestPath,
+      JSON.stringify({
+        schemaVersion: "role-model.track-b-runtime-distribution.v2",
+        publicSourceTree: "0123456789abcdef0123456789abcdef01234567",
+        graphRegistry: {
+          version: 1,
+          artifactSha256: graphRegistrySha256,
+          kinds: graphRegistry.kinds,
+        },
+        registryBindings: {
+          graphRegistry: {
+            schemaVersion: "role-model.graph-registry.v1",
+            version: 1,
+            path: "shared/graph/registry.json",
+          },
+          storageRegistry: {
+            schemaVersion: "role-model.storage-registry.v1",
+            modulePath: "shared/retention/index.mjs",
+          },
+        },
+        sidecar: { modulePath: "runtime-operations-server.mjs", artifactSha256: sidecar },
+        publicExtensionHost: {
+          modulePath: "public-extension-host.mjs",
+          artifactSha256: extensionHostSha256,
+          workerModulePath: "worker-runtime.mjs",
+          workerArtifactSha256: workerSha256,
+        },
+        extensions,
+      }),
+    );
+    await expect(stageTrackBRuntimeDistribution({ sourceRoot, releaseDir })).resolves.toMatchObject(
+      { compatibilityGeneration: "N", extensionCount: 13 },
+    );
+    await expect(
+      readFile(path.join(releaseDir, "..", "..", "shared", "graph", "registry.json"), "utf8"),
+    ).resolves.toBe(JSON.stringify(graphRegistry));
+
+    const declaredFixturePath =
+      "fixtures/source-authority/crowdsourced-evals-docs/guidance/retention-policies.json";
+    const declaredFixtureSha256 = await writeArtifact(
+      sourceRoot,
+      declaredFixturePath,
+      "retention-policies",
+    );
+    const declaredManifest = JSON.parse(await readFile(manifestPath, "utf8")) as Record<
+      string,
+      unknown
+    >;
+    declaredManifest.sourceAuthorityFixtures = [
+      { modulePath: declaredFixturePath, artifactSha256: declaredFixtureSha256 },
+    ];
+    await writeFile(manifestPath, JSON.stringify(declaredManifest));
+    const declaredRelease = path.join(root, "release-declared");
+    await expect(
+      stageTrackBRuntimeDistribution({ sourceRoot, releaseDir: declaredRelease }),
+    ).resolves.toMatchObject({ compatibilityGeneration: "N" });
+    await expect(
+      readFile(path.join(declaredRelease, "..", "..", declaredFixturePath), "utf8"),
+    ).resolves.toBe("retention-policies");
+
+    declaredManifest.sourceAuthorityFixtures = [
+      { modulePath: declaredFixturePath, artifactSha256: "f".repeat(64) },
+    ];
+    await writeFile(manifestPath, JSON.stringify(declaredManifest));
+    await expect(
+      stageTrackBRuntimeDistribution({
+        sourceRoot,
+        releaseDir: path.join(root, "release-tampered"),
+      }),
+    ).rejects.toThrow(/source-authority fixture/i);
   });
 });
