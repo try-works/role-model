@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
@@ -9,6 +9,7 @@ import {
   createPackagedRuntimeArtifactClosure,
   verifyPackagedRuntimeArtifactClosure,
 } from "../src/package-sea.js";
+import { stageTrackBRuntimeDistribution } from "../src/track-b-runtime.js";
 
 const temporaryRoots: string[] = [];
 
@@ -134,5 +135,148 @@ describe("Run 96 packaged runtime artifact closure", () => {
     await expect(createPackagedRuntimeArtifactClosure({ releaseDir })).rejects.toThrow(
       /runtime UI|artifact/i,
     );
+  });
+
+  test("stages every manifest-bound v2 contract into the public package", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "run96-contract-stage-"));
+    temporaryRoots.push(root);
+    const sourceRoot = path.join(root, "source");
+    const releaseDir = path.join(root, "release");
+    await mkdir(sourceRoot, { recursive: true });
+    const graphRegistry = {
+      version: 1,
+      kinds: [{ id: "core.message", version: 1 }],
+    };
+    const graphRegistrySha256 = sha256(JSON.stringify(graphRegistry));
+    await writeArtifact(sourceRoot, "shared/graph/registry.json", JSON.stringify(graphRegistry));
+    const contractFiles = [
+      ["contracts/package-registry.json", "registry"],
+      ["contracts/contract-registry.schema.json", "registry-schema"],
+      ["contracts/runtime-channel-contracts.v1.json", "channel"],
+      ["contracts/runtime-channel-contracts.schema.json", "channel-schema"],
+      ["contracts/runtime-channel-source-matrix.json", "channel-matrix"],
+      ["contracts/capacity-slo-contracts.v3.json", "capacity"],
+      ["contracts/capacity-slo-contracts.v3.schema.json", "capacity-schema"],
+    ] as const;
+    const hashes = Object.fromEntries(
+      await Promise.all(
+        contractFiles.map(async ([relativePath, content]) => [
+          relativePath,
+          await writeArtifact(sourceRoot, relativePath, content),
+        ]),
+      ),
+    );
+    const sidecar = await writeArtifact(sourceRoot, "runtime-operations-server.mjs", "sidecar");
+    const sourceAuthorityFixtures = await Promise.all(
+      [
+        ["capacity-slo-contracts.json", "capacity-fixture"],
+        ["retention-policies.json", "retention-policies"],
+      ].map(async ([fileName, content]) => ({
+        modulePath: `fixtures/source-authority/crowdsourced-evals-docs/guidance/${fileName}`,
+        artifactSha256: await writeArtifact(
+          sourceRoot,
+          `fixtures/source-authority/crowdsourced-evals-docs/guidance/${fileName}`,
+          content,
+        ),
+      })),
+    );
+    const extensionHostSha256 = await writeArtifact(
+      sourceRoot,
+      "public-extension-host.mjs",
+      "extension-host",
+    );
+    const workerSha256 = await writeArtifact(sourceRoot, "worker-runtime.mjs", "worker");
+    const extensions = [];
+    for (let index = 0; index < 13; index += 1) {
+      const modulePath = `extensions/extension-${index + 1}.mjs`;
+      extensions.push({
+        descriptor: { id: `extension-${index + 1}`, protocolVersion: "1", capabilities: [] },
+        modulePath,
+        artifactSha256: await writeArtifact(sourceRoot, modulePath, `extension-${index + 1}`),
+      });
+    }
+    await writeFile(
+      path.join(sourceRoot, "track-b-runtime-manifest.json"),
+      JSON.stringify({
+        schemaVersion: "role-model.track-b-runtime-distribution.v2",
+        publicSourceTree: "0123456789abcdef0123456789abcdef01234567",
+        graphRegistry: {
+          version: 1,
+          artifactSha256: graphRegistrySha256,
+          kinds: graphRegistry.kinds,
+        },
+        registryBindings: {
+          graphRegistry: {
+            schemaVersion: "role-model.graph-registry.v1",
+            version: 1,
+            path: "shared/graph/registry.json",
+          },
+          storageRegistry: {
+            schemaVersion: "role-model.storage-registry.v1",
+            modulePath: "shared/retention/index.mjs",
+          },
+          contractRegistry: {
+            schemaVersion: "role-model.contract-registry.v1",
+            registryPath: "contracts/package-registry.json",
+            schemaPath: "contracts/contract-registry.schema.json",
+            registrySha256: hashes["contracts/package-registry.json"],
+            schemaSha256: hashes["contracts/contract-registry.schema.json"],
+          },
+          runtimeChannel: {
+            contractPath: "contracts/runtime-channel-contracts.v1.json",
+            schemaPath: "contracts/runtime-channel-contracts.schema.json",
+            sourceMatrixPath: "contracts/runtime-channel-source-matrix.json",
+            contractSha256: hashes["contracts/runtime-channel-contracts.v1.json"],
+            schemaSha256: hashes["contracts/runtime-channel-contracts.schema.json"],
+            sourceMatrixSha256: hashes["contracts/runtime-channel-source-matrix.json"],
+          },
+          capacitySlo: {
+            contractPath: "contracts/capacity-slo-contracts.v3.json",
+            schemaPath: "contracts/capacity-slo-contracts.v3.schema.json",
+            contractSha256: hashes["contracts/capacity-slo-contracts.v3.json"],
+            schemaSha256: hashes["contracts/capacity-slo-contracts.v3.schema.json"],
+          },
+        },
+        sidecar: { modulePath: "runtime-operations-server.mjs", artifactSha256: sidecar },
+        sourceAuthorityFixtures,
+        publicExtensionHost: {
+          modulePath: "public-extension-host.mjs",
+          artifactSha256: extensionHostSha256,
+          workerModulePath: "worker-runtime.mjs",
+          workerArtifactSha256: workerSha256,
+        },
+        extensions,
+      }),
+    );
+
+    await stageTrackBRuntimeDistribution({ sourceRoot, releaseDir });
+    await expect(
+      readFile(path.join(releaseDir, "..", "..", "shared", "graph", "registry.json"), "utf8"),
+    ).resolves.toBe(JSON.stringify(graphRegistry));
+    await expect(
+      readFile(path.join(releaseDir, "..", "shared", "graph", "registry.json"), "utf8"),
+    ).resolves.toBe(JSON.stringify(graphRegistry));
+    for (const fixture of sourceAuthorityFixtures) {
+      await expect(
+        readFile(path.join(releaseDir, "..", "..", fixture.modulePath), "utf8"),
+      ).resolves.toBeTypeOf("string");
+    }
+    await expect(
+      readFile(
+        path.join(releaseDir, "capacity-slo-contracts.v3.json"),
+        "utf8",
+      ),
+    ).resolves.toBe("capacity");
+    await expect(
+      readFile(
+        path.join(releaseDir, "capacity-slo-contracts.v3.schema.json"),
+        "utf8",
+      ),
+    ).resolves.toBe("capacity-schema");
+    for (const [relativePath] of contractFiles) {
+      await expect(readFile(path.join(releaseDir, relativePath), "utf8")).resolves.toBeTypeOf(
+        "string",
+      );
+    }
   });
 });

@@ -849,8 +849,35 @@ export async function stageTrackBRuntimeDistribution(options: {
         readonly schemaVersion?: string;
         readonly modulePath?: string;
       };
+      readonly contractRegistry?: {
+        readonly schemaVersion?: string;
+        readonly registryPath?: string;
+        readonly schemaPath?: string;
+        readonly registrySha256?: string;
+        readonly schemaSha256?: string;
+      };
+      readonly runtimeChannel?: {
+        readonly schema?: string;
+        readonly contractPath?: string;
+        readonly schemaPath?: string;
+        readonly sourceMatrixPath?: string;
+        readonly contractSha256?: string;
+        readonly schemaSha256?: string;
+        readonly sourceMatrixSha256?: string;
+      };
+      readonly capacitySlo?: {
+        readonly schemaVersion?: string;
+        readonly contractPath?: string;
+        readonly schemaPath?: string;
+        readonly contractSha256?: string;
+        readonly schemaSha256?: string;
+      };
     };
     readonly sidecar: { readonly modulePath: string; readonly artifactSha256: string };
+    readonly sourceAuthorityFixtures?: readonly {
+      readonly modulePath: string;
+      readonly artifactSha256: string;
+    }[];
     readonly publicRuntimeAdapter?: {
       readonly modulePath: string;
       readonly artifactSha256: string;
@@ -950,6 +977,56 @@ export async function stageTrackBRuntimeDistribution(options: {
   ) {
     throw new Error("Track B public extension host artifacts are incomplete");
   }
+  const contractCandidates =
+    compatibilityGeneration === "N"
+      ? [
+          {
+            modulePath: manifest.registryBindings?.contractRegistry?.registryPath,
+            artifactSha256: manifest.registryBindings?.contractRegistry?.registrySha256,
+          },
+          {
+            modulePath: manifest.registryBindings?.contractRegistry?.schemaPath,
+            artifactSha256: manifest.registryBindings?.contractRegistry?.schemaSha256,
+          },
+          {
+            modulePath: manifest.registryBindings?.runtimeChannel?.contractPath,
+            artifactSha256: manifest.registryBindings?.runtimeChannel?.contractSha256,
+          },
+          {
+            modulePath: manifest.registryBindings?.runtimeChannel?.schemaPath,
+            artifactSha256: manifest.registryBindings?.runtimeChannel?.schemaSha256,
+          },
+          {
+            modulePath: manifest.registryBindings?.runtimeChannel?.sourceMatrixPath,
+            artifactSha256: manifest.registryBindings?.runtimeChannel?.sourceMatrixSha256,
+          },
+          {
+            modulePath: manifest.registryBindings?.capacitySlo?.contractPath,
+            artifactSha256: manifest.registryBindings?.capacitySlo?.contractSha256,
+          },
+          {
+            modulePath: manifest.registryBindings?.capacitySlo?.schemaPath,
+            artifactSha256: manifest.registryBindings?.capacitySlo?.schemaSha256,
+          },
+        ].filter(
+          (file) =>
+            file.modulePath !== undefined || file.artifactSha256 !== undefined,
+        )
+      : [];
+  if (
+    contractCandidates.some(
+      (file) =>
+        typeof file.modulePath !== "string" ||
+        !file.modulePath ||
+        !/^[a-f0-9]{64}$/i.test(file.artifactSha256 ?? ""),
+    )
+  ) {
+    throw new Error("Track B runtime distribution contract bindings are incomplete");
+  }
+  const contractFiles = contractCandidates as Array<{
+    readonly modulePath: string;
+    readonly artifactSha256: string;
+  }>;
   const files = [
     manifest.sidecar,
     ...(manifest.publicRuntimeAdapter
@@ -965,6 +1042,7 @@ export async function stageTrackBRuntimeDistribution(options: {
         ]
       : []),
     ...manifest.extensions,
+    ...contractFiles,
   ];
   const verified = await Promise.all(
     files.map(async (file) => {
@@ -989,6 +1067,88 @@ export async function stageTrackBRuntimeDistribution(options: {
     const destination = path.join(options.releaseDir, file.relative);
     await mkdir(path.dirname(destination), { recursive: true });
     await copyFile(file.sourcePath, destination);
+  }
+  if (compatibilityGeneration === "N") {
+    const graphRelative = manifest.registryBindings?.graphRegistry?.path;
+    const graphSource = graphRelative
+      ? path.join(options.sourceRoot, graphRelative)
+      : null;
+    if (!graphSource) {
+      throw new Error("Track B runtime distribution graph registry path is missing");
+    }
+    const graphBytes = await readFile(graphSource);
+    const graph = JSON.parse(graphBytes.toString("utf8")) as {
+      readonly version?: number;
+      readonly kinds?: readonly unknown[];
+    };
+    const graphDigest = createHash("sha256")
+      .update(JSON.stringify({ version: graph.version, kinds: graph.kinds }))
+      .digest("hex");
+    if (graphDigest !== manifest.graphRegistry?.artifactSha256) {
+      throw new Error("Track B runtime distribution graph registry integrity verification failed");
+    }
+    const graphDestination = path.join(
+      options.releaseDir,
+      "..",
+      "..",
+      "shared",
+      "graph",
+      "registry.json",
+    );
+    await mkdir(path.dirname(graphDestination), { recursive: true });
+    await copyFile(graphSource, graphDestination);
+    const extensionGraphDestination = path.join(
+      options.releaseDir,
+      "..",
+      "shared",
+      "graph",
+      "registry.json",
+    );
+    await mkdir(path.dirname(extensionGraphDestination), { recursive: true });
+    await copyFile(graphSource, extensionGraphDestination);
+    const fixtures = manifest.sourceAuthorityFixtures;
+    if (!Array.isArray(fixtures) || fixtures.length === 0) {
+      throw new Error("Track B runtime distribution source-authority fixtures are incomplete");
+    }
+    for (const fixture of fixtures) {
+      if (
+        typeof fixture.modulePath !== "string" ||
+        !fixture.modulePath ||
+        !/^[a-f0-9]{64}$/i.test(fixture.artifactSha256 ?? "")
+      ) {
+        throw new Error("Track B runtime distribution source-authority fixture is incomplete");
+      }
+      const fixtureSource = path.join(options.sourceRoot, fixture.modulePath);
+      const fixtureDigest = createHash("sha256")
+        .update(await readFile(fixtureSource))
+        .digest("hex");
+      if (fixtureDigest !== fixture.artifactSha256.toLowerCase()) {
+        throw new Error("Track B runtime distribution source-authority fixture integrity failed");
+      }
+      const fixtureDestination = path.join(
+        options.releaseDir,
+        "..",
+        "..",
+        fixture.modulePath,
+      );
+      await mkdir(path.dirname(fixtureDestination), { recursive: true });
+      await copyFile(fixtureSource, fixtureDestination);
+    }
+    const capacity = manifest.registryBindings?.capacitySlo;
+    if (!capacity?.contractPath || !capacity.schemaPath) {
+      throw new Error("Track B runtime distribution capacity bindings are incomplete");
+    }
+    for (const [sourceRelative, destinationName, expectedHash] of [
+      [capacity.contractPath, path.basename(capacity.contractPath), capacity.contractSha256],
+      [capacity.schemaPath, path.basename(capacity.schemaPath), capacity.schemaSha256],
+    ] as const) {
+      const source = path.join(options.sourceRoot, sourceRelative);
+      const digest = createHash("sha256").update(await readFile(source)).digest("hex");
+      if (digest !== expectedHash?.toLowerCase()) {
+        throw new Error("Track B runtime distribution capacity artifact integrity failed");
+      }
+      await copyFile(source, path.join(options.releaseDir, destinationName));
+    }
   }
   const stagedManifestPath = path.join(options.releaseDir, "track-b-runtime-manifest.json");
   await copyFile(manifestPath, stagedManifestPath);

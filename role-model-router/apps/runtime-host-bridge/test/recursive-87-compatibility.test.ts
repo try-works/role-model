@@ -84,6 +84,11 @@ test("SP7 stages N and N-1 distributions and refuses unsupported future versions
       artifactSha256,
     }));
     await mkdir(path.join(root, "extensions"));
+    await mkdir(path.join(root, "shared", "graph"), { recursive: true });
+    await writeFile(
+      path.join(root, "shared", "graph", "registry.json"),
+      JSON.stringify({ version: graphRegistry.version, kinds: graphRegistry.kinds }),
+    );
     await writeFile(path.join(root, "sidecar.mjs"), bytes);
     await writeFile(path.join(root, "public-extension-host.mjs"), extensionHostBytes);
     await writeFile(path.join(root, "worker-runtime.mjs"), extensionHostBytes);
