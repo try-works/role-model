@@ -48,9 +48,10 @@ const CONTROL_AUTHENTICATION_SYMBOL = Symbol.for(CONTROL_AUTHENTICATION_SCHEMA);
 
 function authenticateControlEnvelope(envelope) {
   const nonce = randomUUID();
-  const payloadDigest = createHash("sha256")
-    .update(JSON.stringify(envelope.payload ?? null))
-    .digest("hex");
+  // The signature must cover the body the extension actually consumes, not a
+  // sibling alias that a caller may omit entirely.
+  const body = envelope.value ?? envelope.payload ?? null;
+  const payloadDigest = createHash("sha256").update(JSON.stringify(body)).digest("hex");
   const message = JSON.stringify([
     CONTROL_AUTHENTICATION_SCHEMA,
     nonce,
