@@ -203,12 +203,19 @@ describe("normalizeCatalogSnapshot", () => {
       }
     )(JSON.parse(raw));
 
-    // The refreshed models.dev corpus now contains 6,588 models (up from the
-    // Run-90 5,270-row pin); keep the compact artifact below 3.4 MB while
-    // allowing the additive effort/cost metadata required by Run 91.
+    // The compact artifact must cover exactly the pinned models.dev corpus
+    // while staying far below the raw corpus size, so derive the expected
+    // coverage from the pin instead of hard-coding a row count that has to be
+    // revised every time upstream adds or renames a model.
+    const pinned = JSON.parse(
+      await readFile(
+        path.join(repoRoot, "testdata", "catalog", "models-dev-snapshot.json"),
+        "utf8",
+      ),
+    ) as { readonly providers: readonly unknown[]; readonly models: readonly unknown[] };
     expect(Buffer.byteLength(raw)).toBeLessThanOrEqual(3_400_000);
-    expect(hydrated.providers).toHaveLength(186);
-    expect(hydrated.models).toHaveLength(6_588);
+    expect(hydrated.providers).toHaveLength(pinned.providers.length);
+    expect(hydrated.models).toHaveLength(pinned.models.length);
   });
 
   test("loads the tracked compact artifact through the canonical hydrated file boundary", async () => {
