@@ -205,6 +205,64 @@ test("Run96 CLI persists and reads back independent evaluation reference facts",
   ).toBe(true);
 });
 
+test("Run96 CLI reads reference facts through the real extension business-output envelope", async () => {
+  const stored = new Map<string, string>();
+  const ids = [artifactId("a"), artifactId("b"), artifactId("c"), artifactId("d")];
+  let next = 0;
+  // The packaged extension host never returns a bare string: every business
+  // result crosses the worker boundary inside the durable-output envelope.
+  const runtime = {
+    async invoke(id: string, envelope: Record<string, unknown>) {
+      expect(id).toBe("artifact-store");
+      const capability = envelope.capability;
+      const payload = envelope.payload as Record<string, unknown>;
+      if (capability === "graph:write") {
+        const record = payload.record as Record<string, unknown>;
+        const content = String(record.content);
+        const storedId = ids[next++] ?? artifactId("e");
+        stored.set(storedId, content);
+        return {
+          id: storedId,
+          businessOutput: { id: storedId },
+          durableLocator: { extensionId: id, requestId: envelope.requestId, capability },
+        };
+      }
+      if (capability === "artifact:read") {
+        const content = stored.get(String(payload.id)) ?? null;
+        return {
+          value: content,
+          businessOutput: { value: content },
+          durableLocator: { extensionId: id, requestId: envelope.requestId, capability },
+          evidenceRef: "extension-output:fixture",
+          readCapability: "extension-output:read",
+        };
+      }
+      throw new Error(`unexpected capability ${String(capability)}`);
+    },
+  };
+
+  const facts = await persistSupervisedReplayEvaluationReferenceFacts({
+    runtime,
+    requestId: "supervised-replay:source:envelope",
+    channel: "development",
+    scope: "tenant:run96",
+    authorizationEpoch: 96,
+    facts: {
+      task: { sourceDecisionId: "decision:source", criteriaDigest: "sha256:task" },
+      input: { normalizedRequestRef: "artifact:prefix" },
+      toolPolicy: { policySnapshotRef: "artifact:policy", toolPolicy: "deny" },
+      environment: { channel: "development", scope: "tenant:run96", authorizationEpoch: 96 },
+    },
+  });
+
+  expect(facts).toEqual({
+    taskRef: `artifact:${ids[0]}`,
+    inputRef: `artifact:${ids[1]}`,
+    toolPolicyDigest: `artifact:${ids[2]}`,
+    environmentDigest: `artifact:${ids[3]}`,
+  });
+});
+
 test("Run96 CLI forwards only durable captured trajectory events in stable order", () => {
   const sourceCapture = {
     ...durableCapture("1"),

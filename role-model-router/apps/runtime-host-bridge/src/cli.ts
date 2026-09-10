@@ -120,6 +120,29 @@ function durableCaptureArtifactReference(
   return `artifact:${value}`;
 }
 
+/**
+ * Business results cross the packaged extension host inside a durable-output
+ * envelope, so a string result arrives as `businessOutput` rather than as a
+ * bare value.  Callers must decode that envelope instead of assuming the raw
+ * extension return type survives the process boundary.
+ */
+function decodeExtensionBusinessOutput(value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  if (!("businessOutput" in record) || record.durableLocator === undefined) return value;
+  return record.businessOutput;
+}
+
+function decodeExtensionTextOutput(value: unknown): string | null {
+  const decoded = decodeExtensionBusinessOutput(value);
+  if (typeof decoded === "string") return decoded;
+  if (decoded && typeof decoded === "object" && !Array.isArray(decoded)) {
+    const inner = (decoded as Record<string, unknown>).value;
+    if (typeof inner === "string") return inner;
+  }
+  return null;
+}
+
 function durableCaptureArrayArtifactReference(
   capture: DurableReplayCapture,
   field: string,
@@ -502,10 +525,11 @@ export async function persistSupervisedReplayEvaluationReferenceFacts(input: {
         capability: "artifact:read",
         payload: { scope: input.scope, id: artifactId },
       });
-      if (typeof readback !== "string" || readback !== content) {
+      const readbackText = decodeExtensionTextOutput(readback);
+      if (readbackText === null || readbackText !== content) {
         throw new Error(`artifact-store reference fact ${factType} failed durable readback`);
       }
-      const parsed = JSON.parse(readback) as Record<string, unknown>;
+      const parsed = JSON.parse(readbackText) as Record<string, unknown>;
       if (
         parsed.schemaVersion !== "role-model.evaluation-reference-fact.v1" ||
         parsed.factType !== factType
