@@ -719,6 +719,11 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       captures,
     });
     const sourceReplaySource = durableReplaySource(input.sourceCapture, "source replay capture");
+    const sourceSharedPrefixRef = durableCaptureArtifactReference(
+      sourceReplaySource,
+      "sharedPrefixRef",
+      "source shared prefix",
+    );
     const sourceNormalizedRequestRef = durableCaptureArtifactReference(
       sourceReplaySource,
       "normalizedRequestRef",
@@ -813,6 +818,7 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       sourceDecisionId,
       sourceGraphRef: `artifact:${sourceRootArtifactId}`,
       prefix: [],
+      sourcePrefixRef: sourceSharedPrefixRef,
       counterfactuals: counterfactuals.map(({ candidate }) => ({
         id: candidate.endpointId,
         suffix: [],

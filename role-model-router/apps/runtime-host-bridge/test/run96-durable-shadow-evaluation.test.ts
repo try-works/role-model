@@ -418,6 +418,7 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
   let signalInput: Record<string, unknown> | undefined;
   let profileInput: Record<string, unknown> | undefined;
   let knowledgeInput: Record<string, unknown> | undefined;
+  let planGraphInput: Record<string, unknown> | undefined;
   const durableJobs: Record<string, unknown>[] = [];
   const trialIds = ["trial:source-96", "trial:counterfactual-96"];
   const claimedTrialIds = ["trial:source-96", "trial:counterfactual-96"];
@@ -433,6 +434,7 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
           throw new Error("legacy aggregate evaluation is prohibited");
         }
         if (id === "replay-core") {
+          planGraphInput = envelope.value as Record<string, unknown>;
           return {
             sourceDecisionId: "decision:source-96",
             sourceGraphRef: "artifact:source-graph-96",
@@ -574,6 +576,7 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
       sourceDecisionId: "decision:source-96",
       sourceGraphRef: "artifact:source-graph-96",
       prefix: [],
+      sourcePrefixRef: "artifact:source-graph-96#prefix",
       counterfactuals: [{ id: "candidate:counterfactual-96", suffix: [] }],
       comparableEvidence,
       evaluationCases: [
@@ -601,6 +604,12 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
     schemaVersion: "role-model.track-b-shadow-pipeline-receipt.v1",
     advisoryId: pipeline.advisory.advisoryId,
     decisionAdvice: pipeline.advisory.decisionAdvice,
+  });
+  // The replay plan must bind the authoritative source prefix reference, not a
+  // locally derived look-alike, or comparability can never bind the replay.
+  expect(planGraphInput).toMatchObject({
+    sourceGraphRef: "artifact:source-graph-96",
+    sourcePrefixRef: "artifact:source-graph-96#prefix",
   });
 
   expect(calls).toEqual(

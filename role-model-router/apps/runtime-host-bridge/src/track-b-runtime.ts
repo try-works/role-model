@@ -4471,6 +4471,12 @@ export interface TrackBShadowPipelineInput {
   readonly sourceDecisionId: string;
   readonly sourceGraphRef: string;
   readonly prefix: readonly unknown[];
+  /**
+   * Authoritative durable reference for the source prefix the caller observed.
+   * A replay plan must echo it instead of deriving a look-alike identity that
+   * cannot bind the observed replay.
+   */
+  readonly sourcePrefixRef?: string;
   readonly counterfactuals: readonly { readonly id: string; readonly suffix: readonly unknown[] }[];
   readonly comparableEvidence?: Readonly<Record<string, unknown>>;
   readonly evaluationCases: readonly Record<string, unknown>[];
@@ -5284,6 +5290,7 @@ export async function runTrackBShadowPipeline(
       sourceDecisionId: input.sourceDecisionId,
       sourceGraphRef: input.sourceGraphRef,
       prefix: input.prefix,
+      ...(input.sourcePrefixRef ? { sourcePrefixRef: input.sourcePrefixRef } : {}),
       counterfactuals: input.counterfactuals,
     }),
   );
