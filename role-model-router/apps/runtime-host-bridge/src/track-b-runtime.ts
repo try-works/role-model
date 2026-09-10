@@ -3710,7 +3710,7 @@ function outboxSchema(database: DatabaseSync): void {
       reasoning_effort TEXT,
       effort_source TEXT,
       run88_correlation_json TEXT,
-      observation_json TEXT,
+      observation_json TEXT CHECK(length(CAST(observation_json AS BLOB)) <= 65536),
       legacy_identity_missing INTEGER NOT NULL DEFAULT 0,
       enqueued_at_ms INTEGER NOT NULL
     );
@@ -3741,7 +3741,9 @@ function outboxSchema(database: DatabaseSync): void {
     .prepare("PRAGMA table_info(track_b_post_observation_pending)")
     .all() as Array<{ name?: string }>;
   if (!columns.some((column) => column.name === "observation_json")) {
-    database.exec("ALTER TABLE track_b_post_observation_pending ADD COLUMN observation_json TEXT");
+    database.exec(
+      "ALTER TABLE track_b_post_observation_pending ADD COLUMN observation_json TEXT CHECK(length(CAST(observation_json AS BLOB)) <= 65536)",
+    );
   }
   database
     .prepare(

@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, createHmac, randomUUID } from "node:crypto";
 import { once } from "node:events";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
@@ -43,6 +43,45 @@ outputDatabase.exec(`
 `);
 const MAX_INLINE_OUTPUT_BYTES = 16 * 1024;
 const MAX_DURABLE_OUTPUT_ROWS = 512;
+const CONTROL_AUTHENTICATION_SCHEMA = "role-model.extension-host.control-authentication.v1";
+const CONTROL_AUTHENTICATION_SYMBOL = Symbol.for(CONTROL_AUTHENTICATION_SCHEMA);
+
+function authenticateControlEnvelope(envelope) {
+  const nonce = randomUUID();
+  const payloadDigest = createHash("sha256")
+    .update(JSON.stringify(envelope.payload ?? null))
+    .digest("hex");
+  const message = JSON.stringify([
+    CONTROL_AUTHENTICATION_SCHEMA,
+    nonce,
+    envelope.requestId ?? null,
+    envelope.capability ?? "health:probe",
+    envelope.channel ?? null,
+    envelope.scope ?? null,
+    envelope.authorizationEpoch ?? 0,
+    payloadDigest,
+  ]);
+  const proof = Object.freeze({
+    schemaVersion: CONTROL_AUTHENTICATION_SCHEMA,
+    algorithm: "hmac-sha256",
+    nonce,
+    requestId: envelope.requestId ?? null,
+    capability: envelope.capability ?? "health:probe",
+    channel: envelope.channel ?? null,
+    scope: envelope.scope ?? null,
+    authorizationEpoch: envelope.authorizationEpoch ?? 0,
+    payloadDigest,
+    mac: createHmac("sha256", controlSecret).update(message).digest("hex"),
+  });
+  const authenticatedEnvelope = { ...envelope };
+  Object.defineProperty(authenticatedEnvelope, CONTROL_AUTHENTICATION_SYMBOL, {
+    value: proof,
+    enumerable: false,
+    configurable: false,
+    writable: false,
+  });
+  return authenticatedEnvelope;
+}
 
 function persistBusinessOutput(envelope, result) {
   const capability = envelope.capability ?? "health:probe";
@@ -216,7 +255,7 @@ process.stdin.on("data", async (chunk) => {
         if (envelope.capability === "extension-output:read") {
           result = readBusinessOutput(envelope);
         } else {
-          const value = await extension.run(envelope);
+          const value = await extension.run(authenticateControlEnvelope(envelope));
           result = persistBusinessOutput(envelope, value);
         }
         const response = { type: "result", requestId: message.requestId, result };

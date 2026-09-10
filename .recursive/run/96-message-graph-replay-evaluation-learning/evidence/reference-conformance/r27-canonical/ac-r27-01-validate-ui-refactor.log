@@ -1,0 +1,10 @@
+Checked 2 files in 51ms. No fixes applied.
+Run 96 canonical TDD receipt
+acceptanceCriterionId=AC-R27-01
+proofFamily=r27-ac-r27-01-validate-ui-bootstrap-readiness
+phase=REFACTOR
+result=PASS
+testPath=public:role-model-router/apps/runtime-host-bridge/test/validate-ui.test.ts
+assertionTitle=[AC-R27-01] accepts a degraded health response while bootstrap is already idle
+command=corepack pnpm exec biome check role-model-router/apps/runtime-host-bridge/src/validate-ui.ts role-model-router/apps/runtime-host-bridge/test/validate-ui.test.ts
+refactor=PASS: formatting remained clean and the testability-only named export did not alter runtime behavior.

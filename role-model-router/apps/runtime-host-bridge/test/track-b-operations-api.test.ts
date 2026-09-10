@@ -1460,13 +1460,12 @@ describe("Track B operations APIs", () => {
         requestId: "request-recovery-retry-94",
         acknowledgeMetadataOnly: true,
       };
-      await expect(backend.recoverLegacyTerminalFailure(input)).rejects.toThrow(
-        /extension closure interrupted/i,
-      );
       await expect(backend.recoverLegacyTerminalFailure(input)).resolves.toMatchObject({
-        status: "already_recovered",
+        status: "recovered",
         extensionProcessing: "completed",
       });
+      // The original failed request already attempted post-observation closure.
+      // Recovery retries that interrupted attempt against the committed graph.
       expect(extensionAttempts).toBe(2);
 
       rejectReadsAsUnauthorized = true;

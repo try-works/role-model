@@ -610,6 +610,7 @@ describe("production Track B composition", () => {
       "applyRecommendation",
       "dismissRecommendation",
       "readActivePack",
+      "runTrackBSupervisedReplay",
     ] as const;
     const backend = Object.fromEntries(names.map((name) => [name, async () => name]));
     const serverOptions = createTrackBBridgeServerOptions(backend);

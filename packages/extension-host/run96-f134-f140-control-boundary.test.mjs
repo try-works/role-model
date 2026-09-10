@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
@@ -70,6 +71,32 @@ async function makeNeverEndingFixture(root) {
   await writeFile(
     fixture,
     "export async function run() { await new Promise(() => {}); }\n",
+    "utf8",
+  );
+  return pathToFileURL(fixture).href;
+}
+
+async function makeAuthenticatedEnvelopeFixture(root) {
+  const fixture = path.join(root, "run96-authenticated-envelope.mjs");
+  await writeFile(
+    fixture,
+    `import { createHash } from "node:crypto";
+export async function run(envelope) {
+  const proof = envelope[Symbol.for("role-model.extension-host.control-authentication.v1")];
+  return {
+    schemaVersion: proof?.schemaVersion,
+    requestId: proof?.requestId,
+    capability: proof?.capability,
+    channel: proof?.channel,
+    scope: proof?.scope,
+    authorizationEpoch: proof?.authorizationEpoch,
+    payloadDigest: proof?.payloadDigest,
+    expectedPayloadDigest: createHash("sha256")
+      .update(JSON.stringify(envelope.payload ?? null))
+      .digest("hex"),
+  };
+}
+`,
     "utf8",
   );
   return pathToFileURL(fixture).href;
@@ -172,6 +199,40 @@ test("F134 rejects forged, tampered, and replayed legacy child frames before res
       await host.shutdown();
       await rm(root, { recursive: true, force: true });
     }
+  }
+});
+
+test("F134 binds worker authentication proof to the complete control envelope payload", async () => {
+  const root = await makeTempRoot("run96-f134-envelope-proof-");
+  const host = new ExtensionHost({
+    protocolVersion,
+    authorizationEpoch,
+    journalPath: path.join(root, "host.jsonl"),
+    timeoutMs: 250,
+    startupTimeoutMs: 2_000,
+    maxRestarts: 0,
+  });
+  const extensionId = "run96-authenticated-envelope";
+  const requestId = "run96-f134-envelope-proof";
+  try {
+    await host.registerProcess(
+      { id: extensionId, protocolVersion, capabilities: ["fixture:boundary"] },
+      await makeAuthenticatedEnvelopeFixture(root),
+    );
+    const result = await host.invoke(extensionId, baseEnvelope(requestId));
+    assert.deepEqual(result.businessOutput, {
+      schemaVersion: "role-model.extension-host.control-authentication.v1",
+      requestId,
+      capability: "fixture:boundary",
+      channel: "development",
+      scope: "run96-f134-f140",
+      authorizationEpoch,
+      payloadDigest: result.businessOutput.expectedPayloadDigest,
+      expectedPayloadDigest: result.businessOutput.expectedPayloadDigest,
+    });
+  } finally {
+    await host.shutdown();
+    await rm(root, { recursive: true, force: true });
   }
 });
 

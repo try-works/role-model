@@ -7516,6 +7516,7 @@ describe("runtime-host-bridge", () => {
             body: Record<string, unknown>,
             requestId: string,
           ) => Promise<unknown>;
+          readHealthStatus: () => Promise<Record<string, unknown>>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
     ).startBridgeServer({
@@ -7525,6 +7526,12 @@ describe("runtime-host-bridge", () => {
       executeChatCompletions: async () => {
         throw new Error("not used");
       },
+      readHealthStatus: async () => ({
+        status: "healthy",
+        executionMode: "decision_only",
+        vendors: {},
+        inactiveVendors: [],
+      }),
     });
 
     try {
@@ -7532,6 +7539,7 @@ describe("runtime-host-bridge", () => {
       expect(healthResponse.status).toBe(200);
       expect(await healthResponse.json()).toEqual({
         status: "healthy",
+        ready: true,
         executionMode: "decision_only",
         vendors: {},
         inactiveVendors: [],
