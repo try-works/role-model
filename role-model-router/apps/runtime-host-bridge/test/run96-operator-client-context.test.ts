@@ -1,5 +1,6 @@
 import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { type IncomingMessage, type ServerResponse, createServer } from "node:http";
+import os from "node:os";
 import path from "node:path";
 
 import { afterEach, describe, expect, test } from "vitest";
@@ -14,7 +15,7 @@ const operatorContext = {
 };
 
 async function createTestRoot(): Promise<string> {
-  const parent = process.env.ROLE_MODEL_TEST_TEMP_ROOT ?? "E:\\role-model-temp";
+  const parent = process.env.ROLE_MODEL_TEST_TEMP_ROOT ?? os.tmpdir();
   await mkdir(parent, { recursive: true });
   const root = await mkdtemp(path.join(parent, "run96-public-operator-client-"));
   testRoots.push(root);

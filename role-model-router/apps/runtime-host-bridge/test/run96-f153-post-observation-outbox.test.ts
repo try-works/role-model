@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
@@ -12,7 +13,7 @@ import {
   runTrackBPostObservationWithContribution,
 } from "../src/track-b-runtime.js";
 
-const testRoot = process.env.ROLE_MODEL_TEST_TEMP_ROOT ?? "E:\\role-model-temp";
+const testRoot = process.env.ROLE_MODEL_TEST_TEMP_ROOT ?? os.tmpdir();
 const roots: string[] = [];
 const routingShadowScorer = createRun96RoutingShadowScorer();
 

@@ -1,5 +1,6 @@
 import { createHash, generateKeyPairSync, sign } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { expect } from "vitest";
 
@@ -116,7 +117,7 @@ async function workflowBytes() {
 async function withDurableOutbox<T>(
   run: (outbox: ReturnType<typeof createTrackBPostObservationOutbox>) => Promise<T>,
 ) {
-  const tempRoot = process.env.ROLE_MODEL_TEST_TEMP_ROOT ?? "E:\\role-model-temp";
+  const tempRoot = process.env.ROLE_MODEL_TEST_TEMP_ROOT ?? os.tmpdir();
   await mkdir(tempRoot, { recursive: true });
   const root = await mkdtemp(path.join(tempRoot, "run88-public-probe-"));
   try {
@@ -216,7 +217,7 @@ async function withRecommendationOperations<T>(
   recommendation: Readonly<Record<string, unknown>>,
   run: (operations: ReturnType<typeof createTrackBOperations>, statePath: string) => Promise<T>,
 ) {
-  const tempRoot = process.env.ROLE_MODEL_TEST_TEMP_ROOT ?? "E:\\role-model-temp";
+  const tempRoot = process.env.ROLE_MODEL_TEST_TEMP_ROOT ?? os.tmpdir();
   await mkdir(tempRoot, { recursive: true });
   const root = await mkdtemp(path.join(tempRoot, "run88-recommendation-probe-"));
   const statePath = path.join(root, "track-b-production-bridge.json");

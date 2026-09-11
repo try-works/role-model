@@ -1,4 +1,6 @@
 import { createServer } from "node:http";
+import os from "node:os";
+import path from "node:path";
 
 import { describe, expect, test, vi } from "vitest";
 
@@ -314,7 +316,10 @@ describe("Run 96 operator evidence routes", () => {
 
     try {
       const operations = createTrackBOperations({
-        statePath: "E:\\role-model-temp\\run96-operator-boundary-state.json",
+        statePath: path.join(
+          os.tmpdir(),
+          `run96-operator-boundary-state-${process.pid}-${Date.now()}.json`,
+        ),
         catalog: [],
         operationsEndpoint: `http://127.0.0.1:${address.port}`,
         operationsToken: token,
