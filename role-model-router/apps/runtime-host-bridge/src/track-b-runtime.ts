@@ -2882,8 +2882,7 @@ export async function runSupervisedReplay(input: {
           failure: prepared.failure as ReturnType<typeof classifyReplayDispatchFailure>,
           preparedBranchRootRef: recoveredBranch.branchRootRef,
         });
-        const pendingFailure =
-          prepared.failure as ReturnType<typeof classifyReplayDispatchFailure>;
+        const pendingFailure = prepared.failure as ReturnType<typeof classifyReplayDispatchFailure>;
         if (finalized.failureReceipt.status === "cancelled") {
           return {
             jobId,
@@ -5633,10 +5632,7 @@ export async function runTrackBShadowPipeline(
     counterfactualEvidenceRef: evaluationReferences.counterfactualEvidenceRef,
     sourceOutcomeRef: evaluationReferences.sourceOutcomeRef,
     counterfactualOutcomeRef: evaluationReferences.counterfactualOutcomeRef,
-    sourceCandidateRef: requireTrackBReference(
-      sourceRollout.endpointId,
-      "source candidate",
-    ),
+    sourceCandidateRef: requireTrackBReference(sourceRollout.endpointId, "source candidate"),
     counterfactualCandidateRef: requireTrackBReference(
       firstCounterfactual.endpointId,
       "counterfactual candidate",

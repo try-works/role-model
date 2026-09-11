@@ -59,16 +59,18 @@ function adapter(
     scope,
     authorizationEpoch,
     authorizationSecret,
-    dispatch: dispatchImpl ?? (async () => {
-      dispatches.count += 1;
-      return {
-        dispatchReceiptId: "dispatch:nonce-durability",
-        routerDecisionId: "decision:nonce-durability",
-        providerResultRef: "artifact:provider-result:nonce-durability",
-        observedCostMicros: 0,
-        observedResponseBytes: 0,
-      };
-    }),
+    dispatch:
+      dispatchImpl ??
+      (async () => {
+        dispatches.count += 1;
+        return {
+          dispatchReceiptId: "dispatch:nonce-durability",
+          routerDecisionId: "decision:nonce-durability",
+          providerResultRef: "artifact:provider-result:nonce-durability",
+          observedCostMicros: 0,
+          observedResponseBytes: 0,
+        };
+      }),
   } as unknown as Parameters<typeof createRouterReplayAdapter>[0];
   return createProductionReplayAdapter({
     ...options,

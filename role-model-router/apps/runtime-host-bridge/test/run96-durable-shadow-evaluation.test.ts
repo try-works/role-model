@@ -3,8 +3,8 @@ import { expect, test } from "vitest";
 
 import {
   type TrackBRouteAdvisoryClaims,
-  createTrackBRouteAdvisoryAuthorization,
   createRun96RoutingShadowScorer,
+  createTrackBRouteAdvisoryAuthorization,
   digestTrackBSemanticEvaluationCriteria,
   resolveTrackBRouteAdvisory,
   runTrackBShadowPipeline,

@@ -352,10 +352,13 @@ describe("remote-health-probe", () => {
       ],
       resolveAuthorization: async () => "deepseek-live-key",
       networkFetcher: async () =>
-        new Response(JSON.stringify({ data: [{ id: "deepseek-flash" }, { id: "deepseek-v4-pro" }] }), {
-          status: 200,
-          headers: { "content-type": "application/json" },
-        }),
+        new Response(
+          JSON.stringify({ data: [{ id: "deepseek-flash" }, { id: "deepseek-v4-pro" }] }),
+          {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          },
+        ),
     });
 
     expect(result.results[0]).toMatchObject({

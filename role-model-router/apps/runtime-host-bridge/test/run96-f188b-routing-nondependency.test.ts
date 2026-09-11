@@ -90,9 +90,10 @@ describe("Run 96 F188b routing-nondependency degradation", () => {
     mutable.setLifecycle("event-log", "exited");
     const multipleDegraded = evaluateProductionExtensionRuntimeReadiness(mutable.runtime);
     expect(multipleDegraded).toMatchObject({ state: "degraded" });
-    expect([...((multipleDegraded as { failedIds: readonly string[] }).failedIds)].sort()).toEqual(
-      ["background-evidence-scheduler", "event-log"],
-    );
+    expect([...(multipleDegraded as { failedIds: readonly string[] }).failedIds].sort()).toEqual([
+      "background-evidence-scheduler",
+      "event-log",
+    ]);
   });
 
   test("F188b: a broken host transport or routing boundary is still fatal", () => {
@@ -108,9 +109,9 @@ describe("Run 96 F188b routing-nondependency degradation", () => {
     routingUnavailable.mutateHealth((health) => {
       (health.supervisor as Record<string, unknown>).routingAvailable = false;
     });
-    expect(
-      evaluateProductionExtensionRuntimeReadiness(routingUnavailable.runtime),
-    ).toMatchObject({ state: "failed" });
+    expect(evaluateProductionExtensionRuntimeReadiness(routingUnavailable.runtime)).toMatchObject({
+      state: "failed",
+    });
 
     const missingWorker = mutableExtensionRuntime();
     missingWorker.mutateHealth((health) => {

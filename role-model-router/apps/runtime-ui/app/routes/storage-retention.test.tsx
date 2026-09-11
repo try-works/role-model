@@ -25,9 +25,9 @@ describe("StorageRetentionRoute operator policy editing", () => {
       maxBytes: 7_500_000_000,
       maxAgeDays: 45,
     };
-    expect(
-      selectEditableRetentionPolicy([canonicalTierPolicy, operatorPolicy])?.policyId,
-    ).toBe("runtime-custom");
+    expect(selectEditableRetentionPolicy([canonicalTierPolicy, operatorPolicy])?.policyId).toBe(
+      "runtime-custom",
+    );
     // With only canonical tier policies there is no operator policy yet, so the
     // form must keep its own defaults rather than showing a tier's preset.
     expect(selectEditableRetentionPolicy([canonicalTierPolicy])).toBeNull();

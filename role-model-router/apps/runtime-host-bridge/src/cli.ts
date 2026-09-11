@@ -1728,8 +1728,7 @@ export function startCliExtensionRuntimeWatchdog(options: {
     if (
       stopped ||
       failureReported ||
-      (options.bootstrapState.status !== "ready" &&
-        options.bootstrapState.status !== "degraded")
+      (options.bootstrapState.status !== "ready" && options.bootstrapState.status !== "degraded")
     ) {
       return;
     }
@@ -2442,9 +2441,10 @@ function createProductionReplayDispatchLedger(filePath: string) {
     ) {
       throw new Error("production replay dispatch ledger is invalid");
     }
-    records = (
-      parsed as ProductionReplayDispatchLedgerDocument
-    ).records as Record<string, ProductionReplayDispatchLedgerRecord>;
+    records = (parsed as ProductionReplayDispatchLedgerDocument).records as Record<
+      string,
+      ProductionReplayDispatchLedgerRecord
+    >;
     const entries = Object.entries(records);
     if (entries.length > 8192) {
       throw new Error("production replay dispatch ledger exceeds its bounded cap");
@@ -2486,7 +2486,9 @@ function createProductionReplayDispatchLedger(filePath: string) {
       dispatchIdempotencyKey: string,
       requestDigest: string,
       ownerInstanceId: string,
-    ): { state: "new" | "in_flight" | "failed" } | { state: "complete"; receipt: Record<string, unknown> } {
+    ):
+      | { state: "new" | "in_flight" | "failed" }
+      | { state: "complete"; receipt: Record<string, unknown> } {
       const existing = records[dispatchIdempotencyKey];
       if (existing) {
         if (existing.requestDigest !== requestDigest) {
@@ -2601,9 +2603,7 @@ export function createProductionReplayAdapter(
       sandboxReceipt: _sandboxReceipt,
       ...stableRequest
     } = request;
-    const requestDigest = createHash("sha256")
-      .update(JSON.stringify(stableRequest))
-      .digest("hex");
+    const requestDigest = createHash("sha256").update(JSON.stringify(stableRequest)).digest("hex");
     const existing = dispatchLedger.begin(
       dispatchIdempotencyKey,
       requestDigest,
@@ -2615,18 +2615,10 @@ export function createProductionReplayAdapter(
     const pending = (async () => {
       try {
         const receipt = await options.dispatch(request);
-        dispatchLedger.complete(
-          dispatchIdempotencyKey,
-          dispatchOwnerInstanceId,
-          receipt,
-        );
+        dispatchLedger.complete(dispatchIdempotencyKey, dispatchOwnerInstanceId, receipt);
         return receipt;
       } catch (error) {
-        dispatchLedger.fail(
-          dispatchIdempotencyKey,
-          dispatchOwnerInstanceId,
-          error,
-        );
+        dispatchLedger.fail(dispatchIdempotencyKey, dispatchOwnerInstanceId, error);
         throw error;
       } finally {
         activeDispatches.delete(dispatchIdempotencyKey);

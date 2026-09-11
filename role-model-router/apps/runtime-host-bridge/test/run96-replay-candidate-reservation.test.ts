@@ -13,9 +13,7 @@ describe("Run96 F198: supervised replay candidate budget reservations", () => {
       expect(reservation.reservedCostMicros * candidateCount).toBeLessThanOrEqual(
         budget.maxCostMicros,
       );
-      expect(reservation.reservedBytes * candidateCount).toBeLessThanOrEqual(
-        budget.maxBytes,
-      );
+      expect(reservation.reservedBytes * candidateCount).toBeLessThanOrEqual(budget.maxBytes);
       expect(reservation.reservedCostMicros).toBeGreaterThanOrEqual(0);
       expect(reservation.reservedBytes).toBeGreaterThanOrEqual(0);
     }

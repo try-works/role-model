@@ -411,9 +411,7 @@ export function ExtensionsRouteView() {
                         v{row.version} · {row.provenance}
                       </p>
                     </div>
-                    <Badge
-                      tone={row.signatureValid && row.policyAllowed ? "success" : "warning"}
-                    >
+                    <Badge tone={row.signatureValid && row.policyAllowed ? "success" : "warning"}>
                       {row.status}
                     </Badge>
                   </div>

@@ -77,19 +77,16 @@ export function StorageRetentionRouteView() {
   const [busy, setBusy] = useState(false);
   const [maxGb, setMaxGb] = useState(DEFAULT_MAX_GB);
   const [maxAgeDays, setMaxAgeDays] = useState(DEFAULT_MAX_AGE_DAYS);
-  const applyEditablePolicy = useCallback(
-    (next: RuntimeStorageRetentionSummary) => {
-      const policy = selectEditableRetentionPolicy(next.policies);
-      if (policy) {
-        setMaxGb(bytesToGbInput(policy.maxBytes));
-        setMaxAgeDays(String(policy.maxAgeDays));
-        return;
-      }
-      setMaxGb(DEFAULT_MAX_GB);
-      setMaxAgeDays(DEFAULT_MAX_AGE_DAYS);
-    },
-    [],
-  );
+  const applyEditablePolicy = useCallback((next: RuntimeStorageRetentionSummary) => {
+    const policy = selectEditableRetentionPolicy(next.policies);
+    if (policy) {
+      setMaxGb(bytesToGbInput(policy.maxBytes));
+      setMaxAgeDays(String(policy.maxAgeDays));
+      return;
+    }
+    setMaxGb(DEFAULT_MAX_GB);
+    setMaxAgeDays(DEFAULT_MAX_AGE_DAYS);
+  }, []);
   const load = useCallback(
     () =>
       fetchStorageRetention()

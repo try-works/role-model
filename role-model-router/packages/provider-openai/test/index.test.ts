@@ -17,9 +17,7 @@ describe("OpenAI provider upstream model identity", () => {
     expect(resolveOpenAIProviderUpstreamModelId("deepseek/deepseek-v4-flash")).toBe(
       "deepseek-flash",
     );
-    expect(resolveOpenAIProviderUpstreamModelId("deepseek/deepseek-flash")).toBe(
-      "deepseek-flash",
-    );
+    expect(resolveOpenAIProviderUpstreamModelId("deepseek/deepseek-flash")).toBe("deepseek-flash");
     expect(resolveOpenAIProviderUpstreamModelId("deepseek/deepseek-v4-pro")).toBe(
       "deepseek-v4-pro",
     );
