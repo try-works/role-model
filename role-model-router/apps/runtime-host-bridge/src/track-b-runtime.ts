@@ -5431,6 +5431,54 @@ function normalizeTrackBVariantIdentity(
   };
 }
 
+/**
+ * R14: the routing-shadow scorer is identified by ID/version/digest, and its
+ * digest must bind the definition that Evaluation Core persists. Deriving both
+ * the version generation and the digest from the definition keeps an upgraded
+ * runtime from re-registering a changed definition under the old identity,
+ * which a durable store must refuse as a conflicting version.
+ */
+export const RUN96_ROUTING_SHADOW_SCORER_SET_VERSION = "run96-routing-shadow-v3";
+
+export function createRun96RoutingShadowScorer(
+  overrides: Partial<{
+    readonly id: string;
+    readonly version: string;
+    readonly algorithm: string;
+    readonly dimensions: readonly string[];
+    readonly requiredInputs: readonly string[];
+  }> = {},
+): {
+  readonly manifestVersion: 2;
+  readonly id: string;
+  readonly version: string;
+  readonly digest: string;
+  readonly scorerSetVersion: string;
+  readonly algorithm: string;
+  readonly dimensions: readonly string[];
+  readonly range: { readonly min: number; readonly max: number };
+  readonly direction: string;
+  readonly requiredInputs: readonly string[];
+} {
+  const definition = {
+    manifestVersion: 2 as const,
+    id: overrides.id ?? "run96-semantic-criteria",
+    version: overrides.version ?? "2",
+    scorerSetVersion: RUN96_ROUTING_SHADOW_SCORER_SET_VERSION,
+    algorithm: overrides.algorithm ?? "required_terms",
+    dimensions: [...(overrides.dimensions ?? ["correctness"])],
+    range: { min: 0, max: 1 },
+    direction: "higher_is_better",
+    requiredInputs: [...(overrides.requiredInputs ?? ["outputRef", "evaluationCriteria"])],
+  };
+  return {
+    ...definition,
+    digest: `sha256:${createHash("sha256")
+      .update(JSON.stringify(canonicalExtensionValue(definition)))
+      .digest("hex")}`,
+  };
+}
+
 export async function runTrackBShadowPipeline(
   runtime: TrackBShadowPipelineRuntime,
   input: TrackBShadowPipelineInput,
@@ -5524,19 +5572,8 @@ export async function runTrackBShadowPipeline(
     }),
     digest: replayDigest,
   };
-  const scorerSetVersion = "run96-routing-shadow-v2";
-  const scorer = {
-    manifestVersion: 2,
-    id: "run96-semantic-criteria",
-    version: "1",
-    digest: `sha256:${createHash("sha256").update("run96-routing-shadow-semantic-criteria-v1").digest("hex")}`,
-    scorerSetVersion,
-    algorithm: "required_terms",
-    dimensions: ["correctness"],
-    range: { min: 0, max: 1 },
-    direction: "higher_is_better",
-    requiredInputs: ["outputRef", "evaluationCriteria"],
-  };
+  const scorer = createRun96RoutingShadowScorer();
+  const scorerSetVersion = scorer.scorerSetVersion;
   await runtime.invoke("evaluation-core", {
     ...envelope("evaluation:register-scorer", scorer),
   });

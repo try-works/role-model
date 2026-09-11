@@ -4,11 +4,14 @@ import { expect, test } from "vitest";
 import {
   type TrackBRouteAdvisoryClaims,
   createTrackBRouteAdvisoryAuthorization,
+  createRun96RoutingShadowScorer,
   digestTrackBSemanticEvaluationCriteria,
   resolveTrackBRouteAdvisory,
   runTrackBShadowPipeline,
   verifyTrackBRouteAdvisoryAuthorization,
 } from "../src/track-b-runtime.js";
+
+const routingShadowScorer = createRun96RoutingShadowScorer();
 
 test("Run96 Addendum 17: semantic criteria have one order-independent durable digest", () => {
   const first = digestTrackBSemanticEvaluationCriteria({
@@ -473,20 +476,9 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
             scores: [
               {
                 scorerId: "run96-semantic-criteria",
-                scorerVersion: "1",
-                scorerDigest: "sha256:semantic-criteria",
-                scorerDefinition: {
-                  manifestVersion: 2,
-                  id: "run96-semantic-criteria",
-                  version: "1",
-                  digest: "sha256:semantic-criteria",
-                  scorerSetVersion: "run96-routing-shadow-v2",
-                  algorithm: "required_terms",
-                  dimensions: ["correctness"],
-                  range: { min: 0, max: 1 },
-                  direction: "higher_is_better",
-                  requiredInputs: ["outputRef", "evaluationCriteria"],
-                },
+                scorerVersion: routingShadowScorer.version,
+                scorerDigest: routingShadowScorer.digest,
+                scorerDefinition: routingShadowScorer,
                 dimension: "correctness",
                 score: actual === "success" ? 1 : 0,
                 confidence: 1,
@@ -631,7 +623,7 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
       inputRef: "input:run96-durable-shadow",
       forkRef: "artifact:source-graph-96#prefix",
       policyId: "run96-routing-shadow",
-      scorerSetVersion: "run96-routing-shadow-v2",
+      scorerSetVersion: routingShadowScorer.scorerSetVersion,
       toolPolicyDigest: "sha256:run96-durable-tool-policy",
       environmentDigest: "sha256:run96-durable-environment",
       sourceEvidenceRef: "artifact:source-96",
@@ -670,7 +662,7 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
   expect(semanticScoreSubmission).toMatchObject({
     scores: [
       expect.objectContaining({
-        scorerDigest: "sha256:semantic-criteria",
+        scorerDigest: routingShadowScorer.digest,
         scorerDefinition: expect.objectContaining({ algorithm: "required_terms" }),
       }),
     ],
@@ -776,8 +768,8 @@ test("Run96 S4 RED: durable replay evaluation sends the same bounded semantic cr
             scores: [
               {
                 scorerId: "run96-semantic-criteria",
-                scorerVersion: "1",
-                scorerDigest: "sha256:scorer",
+                scorerVersion: routingShadowScorer.version,
+                scorerDigest: routingShadowScorer.digest,
                 dimension: "correctness",
                 score: 0,
                 confidence: 1,

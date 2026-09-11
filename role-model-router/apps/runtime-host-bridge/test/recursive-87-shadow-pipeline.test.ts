@@ -15,6 +15,7 @@ const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
 const modulePath = path.join(import.meta.dirname, "fixtures", "recursive-87-shadow-extension.mjs");
 const roots: string[] = [];
 const runtimes: Array<{ close(): Promise<void> }> = [];
+const routingShadowScorer = trackBRuntime.createRun96RoutingShadowScorer();
 
 afterEach(async () => {
   await Promise.allSettled(runtimes.splice(0).map((runtime) => runtime.close()));
@@ -291,20 +292,9 @@ test("SP1 fails closed before Knowledge Worker when durable holdout comparison i
         scores: [
           {
             scorerId: "run96-semantic-criteria",
-            scorerVersion: "1",
-            scorerDigest: "sha256:semantic-criteria",
-            scorerDefinition: {
-              manifestVersion: 2,
-              id: "run96-semantic-criteria",
-              version: "1",
-              digest: "sha256:semantic-criteria",
-              scorerSetVersion: "run96-routing-shadow-v2",
-              algorithm: "required_terms",
-              dimensions: ["correctness"],
-              range: { min: 0, max: 1 },
-              direction: "higher_is_better",
-              requiredInputs: ["outputRef", "evaluationCriteria"],
-            },
+            scorerVersion: routingShadowScorer.version,
+            scorerDigest: routingShadowScorer.digest,
+            scorerDefinition: routingShadowScorer,
             dimension: "correctness",
             score: 0,
             confidence: 1,

@@ -5,9 +5,12 @@ import { describe, expect, test } from "vitest";
 import {
   type TrackBShadowPipelineInput,
   type TrackBShadowPipelineRuntime,
+  createRun96RoutingShadowScorer,
   runTrackBPostObservation,
   runTrackBShadowPipeline,
 } from "../src/track-b-runtime.js";
+
+const routingShadowScorer = createRun96RoutingShadowScorer();
 
 type Invocation = {
   readonly id: string;
@@ -393,8 +396,8 @@ function createShadowHarness(
           scores: [
             {
               scorerId: "run96-semantic-criteria",
-              scorerVersion: "1",
-              scorerDigest: sha256("run96-semantic-criteria"),
+              scorerVersion: routingShadowScorer.version,
+              scorerDigest: routingShadowScorer.digest,
               dimension: "correctness",
               score: index === 1 ? 1 : 0,
               confidence: 1,
