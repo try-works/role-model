@@ -5596,6 +5596,14 @@ export async function runTrackBShadowPipeline(
     counterfactualEvidenceRef: evaluationReferences.counterfactualEvidenceRef,
     sourceOutcomeRef: evaluationReferences.sourceOutcomeRef,
     counterfactualOutcomeRef: evaluationReferences.counterfactualOutcomeRef,
+    sourceCandidateRef: requireTrackBReference(
+      sourceRollout.endpointId,
+      "source candidate",
+    ),
+    counterfactualCandidateRef: requireTrackBReference(
+      firstCounterfactual.endpointId,
+      "counterfactual candidate",
+    ),
   };
   if (
     sourceRollout.evidenceRef !== comparability.sourceEvidenceRef ||
