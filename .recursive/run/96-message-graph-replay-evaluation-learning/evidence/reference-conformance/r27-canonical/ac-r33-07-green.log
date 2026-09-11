@@ -1,0 +1,9 @@
+Run 96 canonical TDD receipt
+acceptanceCriterionId=AC-R33-07
+proofFamily=alias-pool-eligibility-diagnostic
+phase=focused GREEN
+result=PASS
+testPath=public:role-model-router/apps/runtime-host-bridge/test/alias-capability-routing.test.ts
+assertionTitle=reports an empty alias pool before attempting capability eligibility
+command=corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run test/alias-capability-routing.test.ts -t "reports an empty alias pool before attempting capability eligibility"
+observation=PASS: an empty alias pool now raises alias_pool_empty before capability filtering, preserving the truthful routing-configuration diagnostic.

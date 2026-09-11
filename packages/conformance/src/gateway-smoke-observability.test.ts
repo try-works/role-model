@@ -15,17 +15,14 @@ const schemaDir = path.join(repoRoot, "protocol", "schemas");
 const smokeOutputDir = path.join(repoRoot, "runtime-output", "gateway-smoke");
 
 async function runSmokeApp(): Promise<void> {
-  if (process.platform === "win32") {
-    await execFileAsync("cmd.exe", ["/c", "corepack pnpm run smoke"], {
+  await execFileAsync(
+    process.execPath,
+    ["--import", "tsx", "role-model-router/apps/gateway-smoke/src/index.ts"],
+    {
       cwd: repoRoot,
-      windowsHide: true,
-    });
-    return;
-  }
-
-  await execFileAsync("sh", ["-lc", "corepack pnpm run smoke"], {
-    cwd: repoRoot,
-  });
+      windowsHide: process.platform === "win32",
+    },
+  );
 }
 
 async function readJsonLines(filePath: string): Promise<unknown[]> {

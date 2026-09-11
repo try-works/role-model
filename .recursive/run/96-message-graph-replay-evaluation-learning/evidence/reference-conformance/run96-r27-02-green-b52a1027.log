@@ -1,0 +1,15 @@
+Run 96 R27-02 GREEN receipt
+acceptanceCriterionId=AC-R27-02
+proofFamily=transfer-artifact-authentication
+repository=public
+baseline_ref=b52a10279de21f612911bf2ae758ab40fb61d164
+implementationReferences=public:packages/extension-host/transfer-artifact.mjs#createTransferArtifact;public:packages/extension-host/transfer-artifact.mjs#consumeTransferArtifact
+testPath=public:packages/extension-host/run96-r27-extension-boundary.test.mjs
+selector=public:packages/extension-host/run96-r27-extension-boundary.test.mjs#AC-R27-02 tuple: transfer-artifact authenticates scope/channel/epoch, bounds content, sanitizes private fields, and is single-use
+command=node --test --test-name-pattern="^AC-R27-02 tuple:" packages/extension-host/run96-r27-extension-boundary.test.mjs
+external_log=E:\role-model-temp\run96-r27-02-green-b52a1027.log
+exit=0
+tests=1
+passed=1
+failed=0
+receipt_status=PASS_GREEN

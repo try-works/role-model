@@ -15,6 +15,7 @@ const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
 const modulePath = path.join(import.meta.dirname, "fixtures", "recursive-87-shadow-extension.mjs");
 const roots: string[] = [];
 const runtimes: Array<{ close(): Promise<void> }> = [];
+const routingShadowScorer = trackBRuntime.createRun96RoutingShadowScorer();
 
 afterEach(async () => {
   await Promise.allSettled(runtimes.splice(0).map((runtime) => runtime.close()));
@@ -30,6 +31,7 @@ const comparableEvidence = () => ({
     policyId: "routing-policy-a",
     reasoningEffort: "medium",
     effortSource: "variant",
+    evaluationActual: "expected-route",
     evidenceRef: "evidence:source-87",
     artifactRef: "artifact:source-87",
     propensity: 0.6,
@@ -50,6 +52,7 @@ const comparableEvidence = () => ({
       policyId: "routing-policy-b",
       reasoningEffort: "high",
       effortSource: "variant",
+      evaluationActual: "counterfactual-route",
       evidenceRef: "evidence:counterfactual-87",
       artifactRef: "artifact:counterfactual-87",
       propensity: 0.4,
@@ -79,20 +82,54 @@ const comparableCases = () => [
     actualOutcomeRef: "outcome:counterfactual-87",
     expectedEvidenceRef: "evidence:source-87",
     actualEvidenceRef: "evidence:counterfactual-87",
+    evaluationCriteria: {
+      schemaVersion: "role-model.semantic-criteria.v1",
+      requiredTerms: ["expected-route"],
+    },
   },
 ];
+
+const evaluationReferences = () => ({
+  taskRef: "task:run87-shadow",
+  inputRef: "input:run87-shadow",
+  forkRef: "sha256:graph-87#sha256:fixture",
+  toolPolicyDigest: "sha256:run87-tool-policy",
+  environmentDigest: "sha256:run87-environment",
+  sourceEvidenceRef: "evidence:source-87",
+  counterfactualEvidenceRef: "evidence:counterfactual-87",
+  sourceOutcomeRef: "outcome:source-87",
+  counterfactualOutcomeRef: "outcome:counterfactual-87",
+  perCase: [
+    { caseId: "case:run87-source", evidenceRef: "evidence:case-run87-source" },
+    { caseId: "case:run87-counterfactual", evidenceRef: "evidence:case-run87-counterfactual" },
+  ],
+});
 
 test("SP1 runs the useful routing-learning DAG through supervised shadow capabilities", async () => {
   expect(typeof trackBRuntime.runTrackBShadowPipeline).toBe("function");
   const artifactSha256 = createHash("sha256")
     .update(await readFile(modulePath))
     .digest("hex");
-  const capabilities = new Map([
-    ["replay-core", "replay:plan-graph"],
-    ["evaluation-runner-local", "evaluation:run-local"],
-    ["trajectory-signals", "signals:analyze"],
-    ["profile-learner", "profile:estimate"],
-    ["knowledge-worker", "knowledge:eval-consumer"],
+  const capabilities = new Map<string, string[]>([
+    ["replay-core", ["replay:plan-graph"]],
+    [
+      "evaluation-core",
+      [
+        "evaluation:register-scorer",
+        "evaluation:attest-references",
+        "evaluation:create-job",
+        "evaluation:list-trials",
+        "evaluation:claim-trial",
+        "evaluation:submit-trial-result",
+        "evaluation:record-trial-score-batch",
+        "evaluation:finalize-comparison-group",
+        "evaluation:read-comparison-group",
+      ],
+    ],
+    ["evaluation-runner-local", ["evaluation:execute-trial"]],
+    ["trajectory-signals", ["signals:analyze-finalized-evaluation"]],
+    ["profile-learner", ["profile:estimate-finalized-evaluation"]],
+    ["knowledge-worker", ["knowledge:eval-consumer"]],
   ]);
   const stateRoot = path.join(os.tmpdir(), `run87-shadow-${Date.now()}`);
   roots.push(stateRoot);
@@ -100,8 +137,8 @@ test("SP1 runs the useful routing-learning DAG through supervised shadow capabil
     stateRoot,
     authorizationEpoch: 87,
     repoRoot,
-    extensions: [...capabilities].map(([id, capability]) => ({
-      descriptor: { id, protocolVersion: "1.1.0", capabilities: ["health:probe", capability] },
+    extensions: [...capabilities].map(([id, capabilities]) => ({
+      descriptor: { id, protocolVersion: "1.1.0", capabilities: ["health:probe", ...capabilities] },
       modulePath,
       artifactSha256,
     })),
@@ -128,6 +165,11 @@ test("SP1 runs the useful routing-learning DAG through supervised shadow capabil
     counterfactuals: [{ id: "candidate-remote", suffix: ["candidate-remote"] }],
     comparableEvidence: comparableEvidence(),
     evaluationCases: comparableCases(),
+    evaluationReferences: evaluationReferences(),
+    evaluationCriteria: {
+      schemaVersion: "role-model.semantic-criteria.v1",
+      requiredTerms: ["expected-route"],
+    },
     trajectoryEvents: [],
   });
 
@@ -179,11 +221,108 @@ test("Run 94 R14 refuses self-comparison before creating a learned-experience ca
   expect(invoked).toEqual([]);
 });
 
-test("SP1 fails closed before Knowledge Worker when holdout evaluation fails", async () => {
-  const invoke = async (id: string) =>
-    id === "evaluation-runner-local"
-      ? { scores: [0], provenance: { evidenceRef: "sha256:failed" } }
-      : {};
+test("SP1 fails closed before Knowledge Worker when durable holdout comparison is not a candidate", async () => {
+  const invoked: string[] = [];
+  const invoke = async (id: string, envelope: Record<string, unknown>) => {
+    invoked.push(id);
+    if (id === "replay-core") {
+      const value = envelope.value as Record<string, unknown>;
+      return {
+        digest: "sha256:replay-87",
+        sourceDecisionId: value.sourceDecisionId,
+        sourceGraphRef: value.sourceGraphRef,
+        sharedPrefixRef: "artifact:prefix-87",
+        branches: [{ id: "candidate-remote" }],
+      };
+    }
+    if (id === "evaluation-core" && envelope.capability === "evaluation:register-scorer") return {};
+    if (id === "evaluation-core" && envelope.capability === "evaluation:attest-references") {
+      const now = Date.now();
+      const authority = "sidecar:run87-failed-reference-store";
+      const references = (envelope.value as Record<string, unknown>).references as Record<
+        string,
+        string
+      >;
+      return {
+        schemaVersion: "role-model.evaluation-reference-attestation.v1",
+        authority,
+        purpose: "evaluation",
+        channel: envelope.channel,
+        scope: envelope.scope,
+        authorizationEpoch: envelope.authorizationEpoch,
+        issuedAtMs: now - 1,
+        expiresAtMs: now + 60_000,
+        references: Object.fromEntries(
+          Object.entries(references).map(([field, reference]) => [
+            field,
+            {
+              schemaVersion: "role-model.evaluation-reference-attestation.v1",
+              reference,
+              referenceDigest: `sha256:${createHash("sha256").update(reference).digest("hex")}`,
+              authority,
+              purpose: "evaluation",
+              channel: envelope.channel,
+              scope: envelope.scope,
+              authorizationEpoch: envelope.authorizationEpoch,
+              issuedAtMs: now - 1,
+              expiresAtMs: now + 60_000,
+              resolved: true,
+            },
+          ]),
+        ),
+      };
+    }
+    if (id === "evaluation-core" && envelope.capability === "evaluation:create-job") return {};
+    if (id === "evaluation-core" && envelope.capability === "evaluation:list-trials") {
+      const value = envelope.value as Record<string, unknown>;
+      return { value: [{ trialId: `trial:${String(value.jobId)}` }] };
+    }
+    if (id === "evaluation-core" && envelope.capability === "evaluation:claim-trial") {
+      const value = envelope.value as Record<string, unknown>;
+      return { trialId: value.trialId, leaseId: `lease:${String(value.trialId)}` };
+    }
+    if (id === "evaluation-runner-local") {
+      return {
+        outputRef: "artifact:failed-evaluation-87",
+        outputDigest: "sha256:failed-evaluation-87",
+        stdoutRef: "artifact:failed-evaluation-87",
+        stderrRef: "artifact:failed-evaluation-87",
+        exitCode: 0,
+        measurements: { elapsedMs: 1, outputBytes: 1 },
+        scores: [
+          {
+            scorerId: "run96-semantic-criteria",
+            scorerVersion: routingShadowScorer.version,
+            scorerDigest: routingShadowScorer.digest,
+            scorerDefinition: routingShadowScorer,
+            dimension: "correctness",
+            score: 0,
+            confidence: 1,
+            source: "deterministic_semantic_criteria",
+          },
+        ],
+      };
+    }
+    if (
+      id === "evaluation-core" &&
+      ["evaluation:submit-trial-result", "evaluation:record-trial-score-batch"].includes(
+        String(envelope.capability),
+      )
+    )
+      return {};
+    if (
+      id === "evaluation-core" &&
+      ["evaluation:finalize-comparison-group", "evaluation:read-comparison-group"].includes(
+        String(envelope.capability),
+      )
+    ) {
+      return { status: "finalized", outcome: "insufficient" };
+    }
+    if (id === "trajectory-signals")
+      return { routeDecisionId: "route-87", graphRef: "sha256:graph-87", signals: [] };
+    if (id === "profile-learner") return { digest: "sha256:profile-87", effects: {} };
+    throw new Error(`unexpected durable holdout invocation ${id}:${String(envelope.capability)}`);
+  };
   await expect(
     trackBRuntime.runTrackBShadowPipeline(
       { invoke },
@@ -199,11 +338,20 @@ test("SP1 fails closed before Knowledge Worker when holdout evaluation fails", a
         counterfactuals: [{ id: "candidate-remote", suffix: [] }],
         comparableEvidence: comparableEvidence(),
         evaluationCases: comparableCases(),
+        evaluationReferences: {
+          ...evaluationReferences(),
+          forkRef: "artifact:prefix-87",
+        },
+        evaluationCriteria: {
+          schemaVersion: "role-model.semantic-criteria.v1",
+          requiredTerms: ["expected-route"],
+        },
         trajectoryEvents: [],
         productionState: {},
       },
     ),
-  ).rejects.toThrow(/holdout/i);
+  ).resolves.toMatchObject({ candidate: { state: "insufficient_comparable_evidence" } });
+  expect(invoked).not.toContain("knowledge-worker");
 });
 
 test("SP1 operations API rejects production Knowledge Worker activation controls", async () => {

@@ -1,0 +1,321 @@
+{
+  "schemaVersion": "role-model.run96.r27-public-ui-proposed-tuples.v3",
+  "runId": "96-message-graph-replay-evaluation-learning",
+  "phase": "03-implementation",
+  "phase3Status": "DRAFT",
+  "claimBoundary": "Criterion-owned public UI/API source evidence only. Phase 5 live rebuilt-runtime, provider, graph, storage/recovery, no-mock, all-13, and exact-100 proof remains unclaimed.",
+  "pairing": {
+    "publicWorktree": "D:/DEV/role-model/.worktrees/96-message-graph-replay-evaluation-learning",
+    "publicHead": "1d5732819480cf22587570bf8c60e02efcdbfb3e",
+    "publicBaseline": "b52a10279de21f612911bf2ae758ab40fb61d164"
+  },
+  "baseline": {
+    "kind": "locked-public",
+    "path": "E:/role-model-temp/run96-public-baseline",
+    "publicCommit": "b52a10279de21f612911bf2ae758ab40fb61d164",
+    "redEvidence": [
+      "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-ui-api-red-b52a1027.log",
+      "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-ui-dom-red-b52a1027.log",
+      "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-ui-storage-red-b52a1027.log"
+    ]
+  },
+  "rows": [
+    {
+      "tupleId": "R27-PUBLIC-UI-API-01",
+      "acceptanceCriterionId": "AC-R25-01",
+      "criterionIds": [
+        "AC-R25-01"
+      ],
+      "owner": "public:role-model-router/apps/runtime-ui/app/lib/runtime-api.ts#fetchOperatorStatus",
+      "sourcePaths": [
+        "public:role-model-router/apps/runtime-ui/app/lib/runtime-api.ts"
+      ],
+      "changedCodeSelectors": [
+        "public:role-model-router/apps/runtime-ui/app/lib/runtime-api.ts#RuntimeOperatorAvailability",
+        "public:role-model-router/apps/runtime-ui/app/lib/runtime-api.ts#RuntimeOperatorStatus",
+        "public:role-model-router/apps/runtime-ui/app/lib/runtime-api.ts#fetchOperatorStatus"
+      ],
+      "testPath": "public:role-model-router/apps/runtime-ui/app/lib/run96-operator-controls.test.ts",
+      "testSelectors": [
+        "Run 96 operator controls > uses the authenticated operator status endpoint and preserves truthful state"
+      ],
+      "assertionTitle": "AC-R25-01: operator status preserves explicit capability states and reasons",
+      "redEvidence": [
+        "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-ui-api-red-b52a1027.log"
+      ],
+      "greenEvidence": [
+        "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-ui-api-green-1d573281.log"
+      ],
+      "productionVerification": {
+        "command": "corepack pnpm --dir role-model-router/apps/runtime-ui exec vitest run app/lib/run96-operator-controls.test.ts --reporter=dot",
+        "result": "PASS",
+        "note": "Source-level authenticated request construction is covered; live sidecar/runtime verification remains pending."
+      },
+      "finalDisposition": "implemented",
+      "verificationDisposition": "source-only",
+      "phase5Disposition": "pending",
+      "tddEvidence": {
+        "red": {
+          "acceptanceCriterionId": "AC-R25-01",
+          "proofFamily": "run96-r27-public-ui-api",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-ui exec vitest run app/lib/run96-operator-controls.test.ts --reporter=dot",
+          "result": "FAIL",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-ui-api-red-b52a1027.log"
+          ],
+          "testPath": "public:role-model-router/apps/runtime-ui/app/lib/run96-operator-controls.test.ts",
+          "assertionTitle": "AC-R25-01: operator status preserves explicit capability states and reasons",
+          "provenance": "locked-baseline"
+        },
+        "green": {
+          "acceptanceCriterionId": "AC-R25-01",
+          "proofFamily": "run96-r27-public-ui-api",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-ui exec vitest run app/lib/run96-operator-controls.test.ts --reporter=dot",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-ui-api-green-1d573281.log"
+          ],
+          "testPath": "public:role-model-router/apps/runtime-ui/app/lib/run96-operator-controls.test.ts",
+          "assertionTitle": "AC-R25-01: operator status preserves explicit capability states and reasons",
+          "provenance": "current"
+        },
+        "refactor": {
+          "acceptanceCriterionId": "AC-R25-01",
+          "proofFamily": "run96-r27-public-ui-api",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-ui exec biome check app/lib/runtime-api.ts app/lib/run96-operator-controls.test.ts app/routes/operator-controls.tsx app/routes/operator-controls.test.tsx",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-ui-api-refactor-1d573281.log"
+          ],
+          "testPath": "public:role-model-router/apps/runtime-ui/app/lib/run96-operator-controls.test.ts",
+          "assertionTitle": "AC-R25-01: operator status preserves explicit capability states and reasons",
+          "provenance": "current"
+        },
+        "owningSuite": {
+          "acceptanceCriterionId": "AC-R25-01",
+          "proofFamily": "run96-r27-public-ui-api",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-ui exec vitest run app/lib/run96-operator-controls.test.ts app/routes/operator-controls.test.tsx app/routes/storage-retention.test.tsx --reporter=dot",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-ui-api-owning-1d573281.log"
+          ],
+          "testPath": "public:role-model-router/apps/runtime-ui/app/lib/run96-operator-controls.test.ts",
+          "assertionTitle": "AC-R25-01: operator status preserves explicit capability states and reasons",
+          "provenance": "current"
+        },
+        "cumulativeGate": {
+          "acceptanceCriterionId": "AC-R25-01",
+          "proofFamily": "run96-r27-public-ui-api",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-ui run test:critical -- --reporter=dot",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-ui-api-cumulative-1d573281.log"
+          ],
+          "testPath": "public:role-model-router/apps/runtime-ui/app/lib/run96-operator-controls.test.ts",
+          "assertionTitle": "AC-R25-01: operator status preserves explicit capability states and reasons",
+          "provenance": "current"
+        }
+      }
+    },
+    {
+      "tupleId": "R27-PUBLIC-UI-DOM-02",
+      "acceptanceCriterionId": "AC-R25-03",
+      "criterionIds": [
+        "AC-R25-03"
+      ],
+      "owner": "public:role-model-router/apps/runtime-ui/app/routes/operator-controls.tsx#OperatorCapabilityStatus",
+      "sourcePaths": [
+        "public:role-model-router/apps/runtime-ui/app/routes/operator-controls.tsx"
+      ],
+      "changedCodeSelectors": [
+        "public:role-model-router/apps/runtime-ui/app/routes/operator-controls.tsx#OperatorCapabilityStatus",
+        "public:role-model-router/apps/runtime-ui/app/routes/operator-controls.tsx#OperatorControlsRoute",
+        "public:role-model-router/apps/runtime-ui/app/lib/design-system.ts#systemOperatorRoute",
+        "public:role-model-router/apps/runtime-ui/app/routes.ts#route(system/operator)"
+      ],
+      "testPath": "public:role-model-router/apps/runtime-ui/app/routes/operator-controls.test.tsx",
+      "testSelectors": [
+        "Run 96 operator controls route > AC-R25-03: unavailable, unobserved, degraded, blocked, maintenance, pressure, and stale states render distinct reasons"
+      ],
+      "assertionTitle": "AC-R25-03: unavailable, unobserved, degraded, blocked, maintenance, pressure, and stale states render distinct reasons",
+      "redEvidence": [
+        "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-ui-dom-red-b52a1027.log"
+      ],
+      "greenEvidence": [
+        "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-ui-dom-green-1d573281.log"
+      ],
+      "productionVerification": {
+        "command": "corepack pnpm --dir role-model-router/apps/runtime-ui exec vitest run app/routes/operator-controls.test.tsx --reporter=dot",
+        "result": "PASS",
+        "note": "Rendered DOM assertions cover distinct state/reason text; rebuilt-runtime browser verification remains pending."
+      },
+      "finalDisposition": "implemented",
+      "verificationDisposition": "source-only",
+      "phase5Disposition": "pending",
+      "tddEvidence": {
+        "red": {
+          "acceptanceCriterionId": "AC-R25-03",
+          "proofFamily": "run96-r27-public-ui-operator-dom",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-ui exec vitest run app/routes/operator-controls.test.tsx --reporter=dot",
+          "result": "FAIL",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-ui-dom-red-b52a1027.log"
+          ],
+          "testPath": "public:role-model-router/apps/runtime-ui/app/routes/operator-controls.test.tsx",
+          "assertionTitle": "AC-R25-03: unavailable, unobserved, degraded, blocked, maintenance, pressure, and stale states render distinct reasons",
+          "provenance": "locked-baseline"
+        },
+        "green": {
+          "acceptanceCriterionId": "AC-R25-03",
+          "proofFamily": "run96-r27-public-ui-operator-dom",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-ui exec vitest run app/routes/operator-controls.test.tsx --reporter=dot",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-ui-dom-green-1d573281.log"
+          ],
+          "testPath": "public:role-model-router/apps/runtime-ui/app/routes/operator-controls.test.tsx",
+          "assertionTitle": "AC-R25-03: unavailable, unobserved, degraded, blocked, maintenance, pressure, and stale states render distinct reasons",
+          "provenance": "current"
+        },
+        "refactor": {
+          "acceptanceCriterionId": "AC-R25-03",
+          "proofFamily": "run96-r27-public-ui-operator-dom",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-ui exec biome check app/lib/runtime-api.ts app/lib/run96-operator-controls.test.ts app/routes/operator-controls.tsx app/routes/operator-controls.test.tsx",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-ui-dom-refactor-1d573281.log"
+          ],
+          "testPath": "public:role-model-router/apps/runtime-ui/app/routes/operator-controls.test.tsx",
+          "assertionTitle": "AC-R25-03: unavailable, unobserved, degraded, blocked, maintenance, pressure, and stale states render distinct reasons",
+          "provenance": "current"
+        },
+        "owningSuite": {
+          "acceptanceCriterionId": "AC-R25-03",
+          "proofFamily": "run96-r27-public-ui-operator-dom",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-ui exec vitest run app/lib/run96-operator-controls.test.ts app/routes/operator-controls.test.tsx app/routes/storage-retention.test.tsx --reporter=dot",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-ui-dom-owning-1d573281.log"
+          ],
+          "testPath": "public:role-model-router/apps/runtime-ui/app/routes/operator-controls.test.tsx",
+          "assertionTitle": "AC-R25-03: unavailable, unobserved, degraded, blocked, maintenance, pressure, and stale states render distinct reasons",
+          "provenance": "current"
+        },
+        "cumulativeGate": {
+          "acceptanceCriterionId": "AC-R25-03",
+          "proofFamily": "run96-r27-public-ui-operator-dom",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-ui run test:critical -- --reporter=dot",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-ui-dom-cumulative-1d573281.log"
+          ],
+          "testPath": "public:role-model-router/apps/runtime-ui/app/routes/operator-controls.test.tsx",
+          "assertionTitle": "AC-R25-03: unavailable, unobserved, degraded, blocked, maintenance, pressure, and stale states render distinct reasons",
+          "provenance": "current"
+        }
+      }
+    },
+    {
+      "tupleId": "R27-PUBLIC-UI-STORAGE-03",
+      "acceptanceCriterionId": "AC-R25-04",
+      "criterionIds": [
+        "AC-R25-04"
+      ],
+      "owner": "public:role-model-router/apps/runtime-ui/app/routes/storage-retention.tsx#StorageRetentionRouteView",
+      "sourcePaths": [
+        "public:role-model-router/apps/runtime-ui/app/routes/storage-retention.tsx"
+      ],
+      "changedCodeSelectors": [
+        "public:role-model-router/apps/runtime-ui/app/routes/storage-retention.tsx#StorageRetentionRouteView",
+        "public:role-model-router/apps/runtime-ui/app/lib/runtime-api.ts#RuntimeStorageRetentionSummary",
+        "public:role-model-router/apps/runtime-ui/app/lib/runtime-api.ts#fetchStorageRetention"
+      ],
+      "testPath": "public:role-model-router/apps/runtime-ui/app/routes/storage-retention.test.tsx",
+      "testSelectors": [
+        "StorageRetentionRoute > Run 96 R25/R31 renders complete byte attribution, capacity forecast, and actionable operator receipts"
+      ],
+      "assertionTitle": "AC-R25-04: storage retention exposes complete byte attribution, capacity forecast, and actionable operator receipts",
+      "redEvidence": [
+        "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-ui-storage-red-b52a1027.log"
+      ],
+      "greenEvidence": [
+        "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-ui-storage-green-1d573281.log"
+      ],
+      "productionVerification": {
+        "command": "corepack pnpm --dir role-model-router/apps/runtime-ui exec vitest run app/routes/storage-retention.test.tsx --reporter=dot",
+        "result": "PASS",
+        "note": "Storage projection assertions passed; current paired-tree Biome formatting check is now passing after the concurrent storage-route formatting settlement."
+      },
+      "finalDisposition": "implemented",
+      "verificationDisposition": "source-only",
+      "phase5Disposition": "pending",
+      "tddEvidence": {
+        "red": {
+          "acceptanceCriterionId": "AC-R25-04",
+          "proofFamily": "run96-r27-public-ui-storage",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-ui exec vitest run app/routes/storage-retention.test.tsx --reporter=dot",
+          "result": "FAIL",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-ui-storage-red-b52a1027.log"
+          ],
+          "testPath": "public:role-model-router/apps/runtime-ui/app/routes/storage-retention.test.tsx",
+          "assertionTitle": "AC-R25-04: storage retention exposes complete byte attribution, capacity forecast, and actionable operator receipts",
+          "provenance": "locked-baseline"
+        },
+        "green": {
+          "acceptanceCriterionId": "AC-R25-04",
+          "proofFamily": "run96-r27-public-ui-storage",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-ui exec vitest run app/routes/storage-retention.test.tsx --reporter=dot",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-ui-storage-green-1d573281.log"
+          ],
+          "testPath": "public:role-model-router/apps/runtime-ui/app/routes/storage-retention.test.tsx",
+          "assertionTitle": "AC-R25-04: storage retention exposes complete byte attribution, capacity forecast, and actionable operator receipts",
+          "provenance": "current"
+        },
+        "refactor": {
+          "acceptanceCriterionId": "AC-R25-04",
+          "proofFamily": "run96-r27-public-ui-storage",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-ui exec biome check app/routes/storage-retention.tsx app/routes/storage-retention.test.tsx --reporter=summary",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-ui-storage-refactor-1d573281.log"
+          ],
+          "testPath": "public:role-model-router/apps/runtime-ui/app/routes/storage-retention.test.tsx",
+          "assertionTitle": "AC-R25-04: storage retention exposes complete byte attribution, capacity forecast, and actionable operator receipts",
+          "provenance": "current"
+        },
+        "owningSuite": {
+          "acceptanceCriterionId": "AC-R25-04",
+          "proofFamily": "run96-r27-public-ui-storage",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-ui exec vitest run app/lib/run96-operator-controls.test.ts app/routes/operator-controls.test.tsx app/routes/storage-retention.test.tsx --reporter=dot",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-ui-storage-owning-1d573281.log"
+          ],
+          "testPath": "public:role-model-router/apps/runtime-ui/app/routes/storage-retention.test.tsx",
+          "assertionTitle": "AC-R25-04: storage retention exposes complete byte attribution, capacity forecast, and actionable operator receipts",
+          "provenance": "current"
+        },
+        "cumulativeGate": {
+          "acceptanceCriterionId": "AC-R25-04",
+          "proofFamily": "run96-r27-public-ui-storage",
+          "command": "corepack pnpm --dir role-model-router/apps/runtime-ui run test:critical -- --reporter=dot",
+          "result": "PASS",
+          "evidence": [
+            "public:.recursive/run/96-message-graph-replay-evaluation-learning/evidence/reference-conformance/r27-public-ui-storage-cumulative-1d573281.log"
+          ],
+          "testPath": "public:role-model-router/apps/runtime-ui/app/routes/storage-retention.test.tsx",
+          "assertionTitle": "AC-R25-04: storage retention exposes complete byte attribution, capacity forecast, and actionable operator receipts",
+          "provenance": "current"
+        }
+      }
+    }
+  ],
+  "unclaimed": [
+    "Phase 5 live rebuilt-runtime and browser verification of public operator controls and storage state remains pending.",
+    "Live provider, graph, storage/recovery, no-mock, all-13, and exact-100 proofs remain outside this source-only proposal.",
+    "Phase 3 remains DRAFT; no central crosswalk, phase document, or lock was edited."
+  ]
+}

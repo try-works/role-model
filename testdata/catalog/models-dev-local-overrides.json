@@ -37,7 +37,16 @@
       "localNotes": ["Moonshot Open Platform catalog slice with Kimi Code OAuth onboarding support"]
     },
     "deepseek/deepseek-v4-flash": {
-      "capabilities": ["code.edit"]
+      "capabilities": ["code.edit"],
+      "localNotes": [
+        "Pre-rename DeepSeek flash identity. The provider now advertises `deepseek-flash`, and the OpenAI-compatible adapter maps this canonical id to that provider model id so existing endpoint configuration keeps working."
+      ]
+    },
+    "deepseek/deepseek-flash": {
+      "capabilities": ["code.edit"],
+      "localNotes": [
+        "Current DeepSeek first-party flash model id as advertised by https://api.deepseek.com/v1/models."
+      ]
     },
     "deepseek/deepseek-v4-pro": {
       "capabilities": ["code.edit"]

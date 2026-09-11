@@ -8,6 +8,7 @@ import { pathToFileURL } from "node:url";
 import { afterEach, describe, expect, test } from "vitest";
 
 import {
+  TRACK_B_CANONICAL_EXTENSION_IDS,
   TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS,
   createOwnedTrackBSidecarSpec,
   createPackagedProductionRuntime,
@@ -307,17 +308,34 @@ describe("production Track B composition", () => {
     const digestKeyPath = path.join(stateRoot, "digest.key");
     const encryptionKeyPath = path.join(stateRoot, "encryption.key");
     const trustMaterialFile = path.join(stateRoot, "destination-trust.json");
+    const developmentVerificationLeaseFile = path.join(
+      stateRoot,
+      "development-verification-lease.json",
+    );
+    const developmentVerificationTrustKeyFile = path.join(
+      stateRoot,
+      "development-verification-public.pem",
+    );
     const aggregateEndpoint = "https://ingest-run00.role-model.dev";
     const aggregateScope = "run00-owned-sidecar-cloud";
+    const developmentVerificationRevocationEpoch = 7;
     await writeFile(digestKeyPath, Buffer.alloc(32, 1));
     await writeFile(encryptionKeyPath, Buffer.alloc(32, 2));
     await writeFile(
       trustMaterialFile,
       JSON.stringify({ destinationPrivateKey: "redacted", destinationPublicKey: "redacted" }),
     );
+    await writeFile(
+      developmentVerificationLeaseFile,
+      JSON.stringify({ authorizationId: "run96-test" }),
+    );
+    await writeFile(
+      developmentVerificationTrustKeyFile,
+      "-----BEGIN PUBLIC KEY-----\nredacted\n-----END PUBLIC KEY-----\n",
+    );
     const source = [
       'import http from "node:http";',
-      'const mustInclude=[["--trust-material-file",process.env.EXPECTED_TRUST_MATERIAL],["--aggregate-endpoint",process.env.EXPECTED_AGGREGATE_ENDPOINT],["--aggregate-scope",process.env.EXPECTED_AGGREGATE_SCOPE]];',
+      'const mustInclude=[["--trust-material-file",process.env.EXPECTED_TRUST_MATERIAL],["--aggregate-endpoint",process.env.EXPECTED_AGGREGATE_ENDPOINT],["--aggregate-scope",process.env.EXPECTED_AGGREGATE_SCOPE],["--development-verification-lease-file",process.env.EXPECTED_DEVELOPMENT_VERIFICATION_LEASE],["--development-verification-trust-key-file",process.env.EXPECTED_DEVELOPMENT_VERIFICATION_TRUST_KEY],["--development-verification-revocation-epoch",process.env.EXPECTED_DEVELOPMENT_VERIFICATION_REVOCATION_EPOCH]];',
       "for(const [flag,value] of mustInclude){const index=process.argv.indexOf(flag); if(index<0 || process.argv[index+1]!==value){console.error(`missing ${flag}`); process.exit(4)}}",
       'const server=http.createServer((_req,res)=>{res.end("ok")});',
       'server.listen(0,"127.0.0.1",()=>{',
@@ -330,6 +348,11 @@ describe("production Track B composition", () => {
     process.env.EXPECTED_TRUST_MATERIAL = trustMaterialFile;
     process.env.EXPECTED_AGGREGATE_ENDPOINT = aggregateEndpoint;
     process.env.EXPECTED_AGGREGATE_SCOPE = aggregateScope;
+    process.env.EXPECTED_DEVELOPMENT_VERIFICATION_LEASE = developmentVerificationLeaseFile;
+    process.env.EXPECTED_DEVELOPMENT_VERIFICATION_TRUST_KEY = developmentVerificationTrustKeyFile;
+    process.env.EXPECTED_DEVELOPMENT_VERIFICATION_REVOCATION_EPOCH = String(
+      developmentVerificationRevocationEpoch,
+    );
 
     const sidecar = createOwnedTrackBSidecarSpec({
       artifactPath,
@@ -341,6 +364,9 @@ describe("production Track B composition", () => {
       trustMaterialFile,
       aggregateEndpoint,
       aggregateScope,
+      developmentVerificationLeaseFile,
+      developmentVerificationTrustKeyFile,
+      developmentVerificationRevocationEpoch,
     });
     const child = await sidecar.launch();
     expect(child.endpoint).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
@@ -415,7 +441,7 @@ describe("production Track B composition", () => {
     roots.push(stateRoot);
     const extensions = await Promise.all(
       Array.from({ length: 13 }, async (_, index) => {
-        const id = `canonical-${String(index + 1).padStart(2, "0")}`;
+        const id = TRACK_B_CANONICAL_EXTENSION_IDS[index];
         const modulePath = path.join(stateRoot, `${id}.mjs`);
         const source = `export async function run(envelope){return {available:true,id:${JSON.stringify(id)},requestId:envelope.requestId}}\n`;
         await writeFile(modulePath, source, "utf8");
@@ -437,7 +463,7 @@ describe("production Track B composition", () => {
       host: {
         available: true,
         enabled: true,
-        extensions: extensions.map((row) => row.descriptor.id),
+        extensions: extensions.map((row) => row.descriptor.id).sort(),
       },
       supervisor: { available: true, readyWorkers: 13 },
     });
@@ -475,7 +501,7 @@ describe("production Track B composition", () => {
     roots.push(stateRoot);
     const extensions = await Promise.all(
       Array.from({ length: 13 }, async (_, index) => {
-        const id = `startup-budget-${String(index + 1).padStart(2, "0")}`;
+        const id = TRACK_B_CANONICAL_EXTENSION_IDS[index];
         const modulePath = path.join(stateRoot, `${id}.mjs`);
         const source = `${index === 0 ? "await new Promise((resolve) => setTimeout(resolve, 12_000));\n" : ""}export async function run(){return {available:true}}\n`;
         await writeFile(modulePath, source, "utf8");
@@ -584,6 +610,7 @@ describe("production Track B composition", () => {
       "applyRecommendation",
       "dismissRecommendation",
       "readActivePack",
+      "runTrackBSupervisedReplay",
     ] as const;
     const backend = Object.fromEntries(names.map((name) => [name, async () => name]));
     const serverOptions = createTrackBBridgeServerOptions(backend);

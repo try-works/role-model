@@ -1,0 +1,32 @@
+Run 96 / R27 public runtime-host-bridge criterion-owned TDD
+Focused GREEN receipt for the exact index.ts production paths.
+
+Current public worktree: D:/DEV/role-model/.worktrees/96-message-graph-replay-evaluation-learning
+HEAD: 1d5732819480cf22587570bf8c60e02efcdbfb3e
+
+Exact production-path selector:
+  corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run
+    test/index.test.ts -t "preserves the original Codex timeout when exact-model fallback exhausts all eligible endpoints"
+    --testTimeout 120000
+  Result: PASS; 1 selected, 213 skipped.
+  The test exercises runtime-backed routing/fallback and the original timeout receipt.
+
+Additional name-filter run:
+  The existing selector group for transient retry, persisted failure inspection, and the exact
+  Codex timeout completed 2 tests before the exact-model test hit Vitest's default 30s per-test
+  timeout (the file had a 90s transform/collect phase). The exact selector above was then rerun
+  with the bounded 120s timeout and passed. This harness timeout is retained as a regression note,
+  not reported as a production failure or silently converted into a pass.
+
+Existing criterion-owned route/mapping selectors also pass in the circuit owning suite:
+  [AC-R33-02] route refusal exposes requested model, denied endpoints, cooldowns, next probe, and retry-after metadata
+  [AC-R33-04] a successful half-open alias request clears only the execution circuit and keeps admission routable
+  [AC-R33-08] covers default and fixed-effort siblings across text.chat/tools.function_calling auth, quota, transient, cooldown, expiry, repeated failure, success, and concurrent probes
+  keeps default and fixed-effort alias siblings distinct through tool eligibility and circuit recovery
+
+Source selectors exercised by these tests: public:role-model-router/apps/runtime-host-bridge/src/index.ts#mapChatCompletionsRequest,
+#createRuntimeBridgeBackend, and #executeCurrentExecutionRequest. The normal failure/fallback
+selectors exercise #recordExecutionFailureCooldown; the route refusal selector stops before provider
+dispatch and verifies the HTTP error payload.
+
+Boundary: source-level TDD only. No Phase 5 live/provider/graph/storage/recovery PASS is claimed.

@@ -1,0 +1,13 @@
+Run 96 AC-R22-06 owning-surface receipt
+repository=public
+current_paired_head=1d5732819480cf22587570bf8c60e02efcdbfb3e
+command=npx vitest run test/provider-attempt-ids.test.ts test/legacy-migration.test.ts test/run96-migration-inventory.test.ts test/index.test.ts (role-model-router/packages/sqlite-memory)
+result=PASS_OWNING
+test_files=4
+tests=62
+passed=62
+failed=0
+scope=compact runtime-observation projection, physical legacy migration/cutover/retirement, migration inventory, SQLite package public APIs
+verification_disposition=source-only
+phase3_status=DRAFT
+phase5_status=PENDING

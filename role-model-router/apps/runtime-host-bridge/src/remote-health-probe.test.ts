@@ -76,7 +76,7 @@ describe("remote-health-probe", () => {
       networkFetcher: async () => {
         requestCount += 1;
         return new Response(
-          JSON.stringify({ data: [{ id: "deepseek-v4-flash" }, { id: "deepseek-v4-pro" }] }),
+          JSON.stringify({ data: [{ id: "deepseek-flash" }, { id: "deepseek-v4-pro" }] }),
           { status: 200, headers: { "content-type": "application/json" } },
         );
       },
@@ -212,7 +212,7 @@ describe("remote-health-probe", () => {
       ],
       resolveAuthorization: async () => "deepseek-live-key",
       networkFetcher: async () =>
-        new Response(JSON.stringify({ data: [{ id: "deepseek-v4-flash" }] }), { status: 200 }),
+        new Response(JSON.stringify({ data: [{ id: "deepseek-flash" }] }), { status: 200 }),
     });
 
     expect(result.results[0]).toMatchObject({
@@ -332,6 +332,64 @@ describe("remote-health-probe", () => {
       reason: "model-not-found",
       healthStatus: "degraded",
     });
+  });
+
+  it("compares the provider-advertised model id, not the canonical catalog id", async () => {
+    // The DeepSeek provider now advertises `deepseek-flash`. An endpoint that
+    // still carries the historical canonical id `deepseek/deepseek-v4-flash`
+    // must probe that renamed provider model instead of reporting a false
+    // model-not-found.
+    const result = await probeRemoteEndpoints({
+      litellmHealthy: true,
+      targets: [
+        {
+          endpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-max",
+          providerAccountId: "deepseek.personal.deepseek-api-key",
+          modelId: "deepseek/deepseek-v4-flash",
+          apiBase: "https://api.deepseek.com/v1",
+          servingSource: "remote-service",
+        },
+      ],
+      resolveAuthorization: async () => "deepseek-live-key",
+      networkFetcher: async () =>
+        new Response(
+          JSON.stringify({ data: [{ id: "deepseek-flash" }, { id: "deepseek-v4-pro" }] }),
+          {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          },
+        ),
+    });
+
+    expect(result.results[0]).toMatchObject({
+      reason: "healthy",
+      healthStatus: "healthy",
+    });
+  });
+
+  it("names the provider-advertised model id when the model is genuinely absent", async () => {
+    const result = await probeRemoteEndpoints({
+      litellmHealthy: true,
+      targets: [
+        {
+          endpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash-max",
+          providerAccountId: "deepseek.personal.deepseek-api-key",
+          modelId: "deepseek/deepseek-v4-flash",
+          apiBase: "https://api.deepseek.com/v1",
+          servingSource: "remote-service",
+        },
+      ],
+      resolveAuthorization: async () => "deepseek-live-key",
+      networkFetcher: async () =>
+        new Response(JSON.stringify({ data: [{ id: "some-other-model" }] }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+    });
+
+    expect(result.results[0]).toMatchObject({ reason: "model-not-found" });
+    expect(result.results[0]?.message).toContain("deepseek-flash");
+    expect(result.results[0]?.message).not.toContain("deepseek/deepseek-v4-flash");
   });
 
   it("maps vendor outages to provider-unavailable without probing", async () => {

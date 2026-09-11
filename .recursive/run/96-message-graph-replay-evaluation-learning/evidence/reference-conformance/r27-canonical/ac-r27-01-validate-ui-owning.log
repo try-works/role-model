@@ -1,0 +1,23 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/96-message-graph-replay-evaluation-learning/role-model-router/apps/runtime-host-bridge
+
+(node:25384) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54048) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+····
+
+ Test Files  2 passed (2)
+      Tests  4 passed (4)
+   Start at  06:14:11
+   Duration  32.17s (transform 6.15s, setup 0ms, collect 8.41s, tests 21.65s, environment 1ms, prepare 962ms)
+
+Run 96 canonical TDD receipt
+acceptanceCriterionId=AC-R27-01
+proofFamily=r27-ac-r27-01-validate-ui-bootstrap-readiness
+phase=OWNING SUITE
+result=PASS
+testPath=public:role-model-router/apps/runtime-host-bridge/test/validate-ui.test.ts
+assertionTitle=[AC-R27-01] accepts a degraded health response while bootstrap is already idle
+command=corepack pnpm --dir role-model-router/apps/runtime-host-bridge exec vitest run test/validate-ui.test.ts test/validate-ui-cleanup.test.ts --reporter=dot
+owningSuite=PASS: the runtime UI validation and cleanup suites completed 4/4 tests.

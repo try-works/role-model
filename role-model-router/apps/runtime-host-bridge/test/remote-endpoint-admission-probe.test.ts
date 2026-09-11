@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest";
 
+import { resolveOpenAIProviderUpstreamModelId } from "@role-model-router/provider-openai";
+
 import {
   DEFAULT_REMOTE_PROBE_TIMEOUT_MS,
   probeRemoteEndpointAdmission,
@@ -48,7 +50,7 @@ describe("remote endpoint admission probes", () => {
       }),
     );
     expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({
-      model: "deepseek-v4-flash",
+      model: resolveOpenAIProviderUpstreamModelId("deepseek/deepseek-v4-flash"),
       messages: [{ role: "user", content: "role-model admission readiness probe" }],
       max_tokens: 1,
       stream: false,

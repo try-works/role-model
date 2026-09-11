@@ -1,0 +1,12 @@
+Run 96 AC-R22-06 cumulative-gate receipt
+repository=paired public/private
+public_head=1d5732819480cf22587570bf8c60e02efcdbfb3e
+private_head=64c75a3739217b083e24930286391b5994c710aa
+command=sequential runtime focused provider test; SQLite provider, migration-inventory, and legacy-migration tests; private AC-R22-06 observer test
+result=PASS_CUMULATIVE
+public_tests=15
+private_observer_tests=2
+external_log=E:\role-model-temp\run96-r27-provider-attempt-ids-cumulative.log
+notes=Physical reclamation is source-level green evidence. Independent rebuilt-runtime byte/growth measurement remains Phase 5 PENDING; no live PASS is claimed.
+phase3_status=DRAFT
+phase5_status=PENDING

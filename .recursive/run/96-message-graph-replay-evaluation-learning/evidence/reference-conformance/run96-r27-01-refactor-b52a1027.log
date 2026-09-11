@@ -1,0 +1,14 @@
+Run 96 R27-01 REFACTOR receipt
+acceptanceCriterionId=AC-R27-01
+proofFamily=authenticated-process-transfer
+repository=public
+baseline_ref=b52a10279de21f612911bf2ae758ab40fb61d164
+implementationReferences=public:packages/extension-host/index.mjs#ExtensionHost.invoke;public:packages/extension-host/worker-runtime.mjs#process transfer
+testPath=public:packages/extension-host/run96-r27-extension-boundary.test.mjs
+assertionTitle=AC-R27-01 tuple: real ExtensionHost and worker-runtime preserve authenticated identity across bounded process transfer
+command=corepack pnpm exec biome check packages/extension-host/index.mjs packages/extension-host/worker-runtime.mjs
+external_log=E:\role-model-temp\run96-r27-01-refactor-b52a1027.log
+exit=0
+result=PASS
+diagnostics=none
+receipt_status=PASS_REFACTOR

@@ -22,7 +22,7 @@ afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
 });
 
-async function syntheticExtensions(count: number) {
+async function syntheticExtensions(count: number, productionIds = false) {
   const bytes = await readFile(fixtureModule);
   const artifactSha256 = createHash("sha256").update(bytes).digest("hex");
   return Array.from({ length: count }, (_, index) => ({
@@ -30,7 +30,9 @@ async function syntheticExtensions(count: number) {
       id:
         index === 13
           ? "synthetic-future-extension"
-          : `canonical-${String(index + 1).padStart(2, "0")}`,
+          : productionIds
+            ? trackBRuntime.TRACK_B_CANONICAL_EXTENSION_IDS[index]
+            : `canonical-${String(index + 1).padStart(2, "0")}`,
       protocolVersion: "1.1.0",
       capabilities: ["health:probe", "fixture:echo"],
     },
@@ -126,7 +128,7 @@ describe("recursive run 87 SP0 registry and lifecycle authority", () => {
   test("the production constructor keeps thirteen release extensions while admitting an explicit QA extension", async () => {
     const stateRoot = path.join(os.tmpdir(), `run87-packaged-qa-runtime-${Date.now()}`);
     roots.push(stateRoot);
-    const canonical = await syntheticExtensions(13);
+    const canonical = await syntheticExtensions(13, true);
     const qaExtension = (await syntheticExtensions(14))[13];
     const runtime = await trackBRuntime.createProductionExtensionRuntime({
       stateRoot,
@@ -154,7 +156,7 @@ describe("recursive run 87 SP0 registry and lifecycle authority", () => {
   test("durable lifecycle mutations change observed worker state and are idempotent", async () => {
     const stateRoot = path.join(os.tmpdir(), `run87-production-runtime-${Date.now()}`);
     roots.push(stateRoot);
-    const extensions = await syntheticExtensions(13);
+    const extensions = await syntheticExtensions(13, true);
     const runtime = await trackBRuntime.createProductionExtensionRuntime({
       stateRoot,
       authorizationEpoch: 11,
@@ -165,14 +167,15 @@ describe("recursive run 87 SP0 registry and lifecycle authority", () => {
 
     expect(typeof runtime.listExtensions).toBe("function");
     expect(typeof runtime.mutateExtension).toBe("function");
-    const initial = runtime.listExtensions().find((row) => row.id === "canonical-01");
+    const productionId = trackBRuntime.TRACK_B_CANONICAL_EXTENSION_IDS[0];
+    const initial = runtime.listExtensions().find((row) => row.id === productionId);
     expect(initial).toMatchObject({ lifecycle: "ready", desiredState: "enabled", revision: 1 });
     expect(initial?.pid).toBeGreaterThan(0);
 
     const disabled = await runtime.mutateExtension({
-      id: "canonical-01",
+      id: productionId,
       action: "disable",
-      mutationId: "run87:disable:canonical-01",
+      mutationId: `run87:disable:${productionId}`,
       expectedRevision: initial?.revision,
     });
     expect(disabled.state).toMatchObject({
@@ -181,22 +184,22 @@ describe("recursive run 87 SP0 registry and lifecycle authority", () => {
       pid: null,
     });
     const repeated = await runtime.mutateExtension({
-      id: "canonical-01",
+      id: productionId,
       action: "disable",
-      mutationId: "run87:disable:canonical-01",
+      mutationId: `run87:disable:${productionId}`,
       expectedRevision: initial?.revision,
     });
     expect(repeated).toEqual(disabled);
     await expect(
       runtime.mutateExtension({
-        id: "canonical-01",
+        id: productionId,
         action: "enable",
-        mutationId: "run87:disable:canonical-01",
+        mutationId: `run87:disable:${productionId}`,
         expectedRevision: disabled.state.revision,
       }),
     ).rejects.toThrow(/mutation.*conflict|idempotency/i);
     await expect(
-      runtime.invoke("canonical-01", {
+      runtime.invoke(productionId, {
         requestId: "run87:disabled:invoke",
         protocolVersion: "1.1.0",
         channel: "development",
@@ -208,9 +211,9 @@ describe("recursive run 87 SP0 registry and lifecycle authority", () => {
     ).rejects.toThrow(/disabled|stopped/i);
 
     const enabled = await runtime.mutateExtension({
-      id: "canonical-01",
+      id: productionId,
       action: "enable",
-      mutationId: "run87:enable:canonical-01",
+      mutationId: `run87:enable:${productionId}`,
       expectedRevision: disabled.state.revision,
     });
     expect(enabled.state.lifecycle).toBe("ready");
@@ -218,9 +221,9 @@ describe("recursive run 87 SP0 registry and lifecycle authority", () => {
     expect(enabled.state.pid).not.toBe(initial?.pid);
 
     const restarted = await runtime.mutateExtension({
-      id: "canonical-01",
+      id: productionId,
       action: "restart",
-      mutationId: "run87:restart:canonical-01",
+      mutationId: `run87:restart:${productionId}`,
       expectedRevision: enabled.state.revision,
     });
     expect(restarted.state.lifecycle).toBe("ready");
@@ -228,9 +231,9 @@ describe("recursive run 87 SP0 registry and lifecycle authority", () => {
     expect(restarted.state.pid).not.toBe(enabled.state.pid);
 
     const rolledBack = await runtime.mutateExtension({
-      id: "canonical-01",
+      id: productionId,
       action: "rollback",
-      mutationId: "run87:rollback:canonical-01",
+      mutationId: `run87:rollback:${productionId}`,
       expectedRevision: restarted.state.revision,
     });
     expect(rolledBack.state).toMatchObject({ lifecycle: "ready", desiredState: "enabled" });

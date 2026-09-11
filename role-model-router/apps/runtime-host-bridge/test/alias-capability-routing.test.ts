@@ -2,6 +2,15 @@ import { describe, expect, test } from "vitest";
 
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 
+import {
+  claimExecutionCircuitProbe,
+  clearExecutionCircuitEndpoint,
+  createEmptyExecutionCircuitState,
+  evaluateExecutionCircuitEligibility,
+  recordExecutionCircuitFailure,
+  resolveExecutionCircuitRefusal,
+  toExecutionCircuitReceipt,
+} from "../src/execution-circuit-breaker.js";
 import { mapChatCompletionsRequest } from "../src/index.js";
 
 const registry = {
@@ -20,7 +29,15 @@ const registry = {
   lifecycleSummary: { active: 3, degraded: 0, offline: 0 },
 } as unknown as EndpointRegistryResult;
 
-function endpoint(endpointId: string, modelId: string, modalities: readonly string[]) {
+function endpoint(
+  endpointId: string,
+  modelId: string,
+  modalities: readonly string[],
+  options: {
+    reasoningEffort?: string;
+    capabilities?: readonly string[];
+  } = {},
+) {
   return {
     identity: {
       endpoint_id: endpointId,
@@ -30,13 +47,24 @@ function endpoint(endpointId: string, modelId: string, modalities: readonly stri
       model_id: modelId,
       runtime_version: "1",
       region: "global",
+      ...(options.reasoningEffort ? { reasoning_effort: options.reasoningEffort } : {}),
     },
     declared: {
       endpoint_id: endpointId,
-      capabilities: ["text.chat", "tools.function_calling", "reasoning", "structured.output"],
+      capabilities: options.capabilities ?? [
+        "text.chat",
+        "tools.function_calling",
+        "reasoning",
+        "structured.output",
+      ],
       modalities,
       max_context_tokens: 1,
-      tool_calling: { supported: true, style: "openai" },
+      tool_calling: {
+        supported: (options.capabilities ?? ["tools.function_calling"]).includes(
+          "tools.function_calling",
+        ),
+        style: "openai",
+      },
       supports_embeddings: false,
     },
     status: "active",
@@ -150,6 +178,26 @@ describe("alias capability routing", () => {
     ).toThrow(/no_eligible_target/i);
   });
 
+  test("reports an empty alias pool before attempting capability eligibility", () => {
+    expect(() =>
+      mapChatCompletionsRequest(
+        registry,
+        {
+          model: "missing-alias-target",
+          messages: [{ role: "user", content: "Hello" }],
+        } as never,
+        "req-empty-alias-pool",
+        [
+          {
+            aliasId: "missing-alias-target",
+            mode: "basic",
+            modelIds: ["does-not-exist/model"],
+          },
+        ],
+      ),
+    ).toThrow(/ALIAS_POOL_EMPTY/i);
+  });
+
   test("synthesizes prompt_cache_key from session_id when caller omits it", () => {
     const plan = mapChatCompletionsRequest(
       registry,
@@ -254,5 +302,158 @@ describe("alias capability routing", () => {
     );
 
     expect(plan.executionRequest.promptCache?.key).not.toContain(secret);
+  });
+
+  test("keeps default and fixed-effort alias siblings distinct through tool eligibility and circuit recovery", () => {
+    const baseModelId = "deepseek/deepseek-v4-flash";
+    const defaultEndpointId = "deepseek.personal.primary.global.deepseek-v4-flash";
+    const highEndpointId = `${defaultEndpointId}-high`;
+    const maxEndpointId = `${defaultEndpointId}-max`;
+    const variantRegistry = {
+      endpoints: [
+        endpoint(defaultEndpointId, baseModelId, ["text"]),
+        endpoint(highEndpointId, baseModelId, ["text"], { reasoningEffort: "high" }),
+        endpoint(maxEndpointId, baseModelId, ["text"], { reasoningEffort: "max" }),
+      ],
+      diagnostics: [],
+      lifecycleSummary: { active: 3, degraded: 0, offline: 0 },
+    } as unknown as EndpointRegistryResult;
+    const aliases = [
+      { aliasId: "baseline.remote-only", mode: "basic" as const, modelIds: [baseModelId] },
+    ];
+
+    const defaultPlan = mapChatCompletionsRequest(
+      variantRegistry,
+      {
+        model: "baseline.remote-only",
+        messages: [{ role: "user", content: "Use the configured default effort." }],
+      } as never,
+      "req-run96-r33-default",
+      aliases,
+    );
+    expect(defaultPlan.routingRequest.allowEndpoints).toEqual([
+      defaultEndpointId,
+      highEndpointId,
+      maxEndpointId,
+    ]);
+
+    const highPlan = mapChatCompletionsRequest(
+      variantRegistry,
+      {
+        model: "baseline.remote-only",
+        reasoning_effort: "high",
+        messages: [{ role: "user", content: "Call the tool with high effort." }],
+        tools: [
+          {
+            type: "function",
+            function: { name: "lookup", parameters: { type: "object", properties: {} } },
+          },
+        ],
+      } as never,
+      "req-run96-r33-high",
+      aliases,
+    );
+    expect(highPlan.routingRequest.requiredCapabilities).toEqual(
+      expect.arrayContaining(["text.chat", "tools.function_calling"]),
+    );
+    expect(highPlan.routingRequest.allowEndpoints).toEqual([highEndpointId]);
+
+    const startedAtMs = 10_000;
+    let circuit = createEmptyExecutionCircuitState();
+    for (let failure = 0; failure < 2; failure += 1) {
+      circuit = recordExecutionCircuitFailure({
+        state: circuit,
+        endpointId: highEndpointId,
+        errorClass: "upstream_connection_error",
+        nowMs: startedAtMs + failure,
+        trafficClass: "live",
+      }).state;
+    }
+    expect(evaluateExecutionCircuitEligibility(circuit, highEndpointId, startedAtMs + 2)).toEqual({
+      eligible: false,
+      probeRequired: false,
+    });
+    const openRecord = circuit.endpoints[highEndpointId];
+    expect(openRecord).toBeDefined();
+    const refusal = resolveExecutionCircuitRefusal(
+      openRecord ? [toExecutionCircuitReceipt(openRecord, startedAtMs + 2)] : [],
+      startedAtMs + 2,
+    );
+    expect(refusal).toMatchObject({
+      statusCode: 503,
+      code: "endpoint_temporarily_unavailable",
+    });
+
+    const probeAtMs = openRecord?.nextProbeAtMs;
+    expect(probeAtMs).toBeTypeOf("number");
+    const firstProbe = claimExecutionCircuitProbe({
+      state: circuit,
+      endpointId: highEndpointId,
+      nowMs: probeAtMs ?? 0,
+      probeOwnerId: "req-run96-r33-probe-one",
+    });
+    expect(firstProbe.claimed).toBe(true);
+    const concurrentProbe = claimExecutionCircuitProbe({
+      state: firstProbe.state,
+      endpointId: highEndpointId,
+      nowMs: (probeAtMs ?? 0) + 1,
+      probeOwnerId: "req-run96-r33-probe-two",
+    });
+    expect(concurrentProbe.claimed).toBe(false);
+    expect(
+      clearExecutionCircuitEndpoint(firstProbe.state, highEndpointId).endpoints,
+    ).not.toHaveProperty(highEndpointId);
+  });
+
+  test("reports every fixed-effort alias sibling excluded by a genuine tool-capability mismatch", () => {
+    const modelId = "deepseek/deepseek-v4-flash";
+    const lowEndpointId = "deepseek.personal.primary.global.deepseek-v4-flash-low";
+    const incapableRegistry = {
+      endpoints: [
+        endpoint(lowEndpointId, modelId, ["text"], {
+          reasoningEffort: "low",
+          capabilities: ["text.chat", "reasoning"],
+        }),
+      ],
+      diagnostics: [],
+      lifecycleSummary: { active: 1, degraded: 0, offline: 0 },
+    } as unknown as EndpointRegistryResult;
+
+    let failure: unknown;
+    try {
+      mapChatCompletionsRequest(
+        incapableRegistry,
+        {
+          model: "baseline.remote-only",
+          reasoning_effort: "low",
+          messages: [{ role: "user", content: "Call the tool." }],
+          tools: [
+            {
+              type: "function",
+              function: { name: "lookup", parameters: { type: "object", properties: {} } },
+            },
+          ],
+        } as never,
+        "req-run96-r33-tool-mismatch",
+        [{ aliasId: "baseline.remote-only", mode: "basic", modelIds: [modelId] }],
+      );
+    } catch (error) {
+      failure = error;
+    }
+    expect(failure).toMatchObject({
+      statusCode: 400,
+      body: {
+        error: {
+          type: "capability_eligibility_error",
+          code: "no_eligible_target",
+          excludedTargets: [
+            expect.objectContaining({
+              endpointId: lowEndpointId,
+              reasons: ["missing_capability.tools.function_calling"],
+            }),
+          ],
+        },
+      },
+    });
   });
 });

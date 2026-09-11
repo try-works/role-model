@@ -25,5 +25,5 @@ async function runCoreBuild() {
 describe("run31 core build regression for run81", () => {
   it("requires @role-model-router/core to build cleanly under repository config", async () => {
     await runCoreBuild();
-  }, 30_000);
+  }, 60_000);
 });

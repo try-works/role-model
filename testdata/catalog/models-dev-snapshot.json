@@ -45173,6 +45173,49 @@
       "reasoningOptions": []
     },
     {
+      "modelId": "deepseek/deepseek-flash",
+      "providerId": "deepseek",
+      "displayName": "DeepSeek V4.1 Flash",
+      "version": "2026-09-10",
+      "capabilities": [
+        "text.chat",
+        "tools.function_calling",
+        "reasoning",
+        "structured.output"
+      ],
+      "modalities": [
+        "image",
+        "text"
+      ],
+      "contextWindow": 1000000,
+      "maxOutputTokens": 384000,
+      "pricing": {
+        "inputPer1M": 0.15,
+        "outputPer1M": 0.6,
+        "currency": "USD",
+        "costDimensionsPer1M": {
+          "input": 0.15,
+          "output": 0.6,
+          "reasoning": 0.6,
+          "cacheRead": 0.003
+        },
+        "costUnit": "USD per 1M tokens"
+      },
+      "reasoningOptions": [
+        {
+          "type": "toggle"
+        },
+        {
+          "type": "effort",
+          "values": [
+            "low",
+            "high",
+            "max"
+          ]
+        }
+      ]
+    },
+    {
       "modelId": "deepseek/deepseek-v4-flash",
       "providerId": "deepseek",
       "displayName": "DeepSeek V4 Flash",

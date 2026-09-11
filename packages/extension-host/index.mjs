@@ -1,13 +1,15 @@
 import { spawn } from "node:child_process";
-import { appendFile, mkdir, readFile } from "node:fs/promises";
+import { randomBytes } from "node:crypto";
+import { appendFile, mkdir, readFile, unlink } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   defineExtension,
-  encodeFrame,
-  extractFrames,
+  encodeControlFrame,
+  extractControlFrames,
   verifySignedBundle,
 } from "../extension-sdk/index.mjs";
+import { createInputTransferArtifact } from "./transfer-artifact.mjs";
 
 /**
  * Reject malformed graph-contract metadata at the host boundary.  Extension
@@ -60,12 +62,37 @@ class ProcessWorker {
     this.stderr = "";
     this.exited = true;
     this.stopping = false;
+    this.controlSecret = null;
+    this.outboundSequence = 0;
+    this.inboundSequence = 0;
+    this.terminationPromise = null;
+  }
+  #encode(value) {
+    const sequence = this.outboundSequence + 1;
+    const frame = encodeControlFrame(value, {
+      secret: this.controlSecret,
+      direction: "host->worker",
+      sequence,
+    });
+    this.outboundSequence = sequence;
+    return frame;
+  }
+  #rejectPending(error) {
+    for (const item of this.pending.values()) {
+      void item.cleanup?.().catch(() => {});
+      item.reject(error);
+    }
+    this.pending.clear();
   }
   async start() {
     if (this.child && !this.exited) return;
     if (this.stateRoot) await mkdir(this.stateRoot, { recursive: true });
     this.stopping = false;
     this.exited = false;
+    this.transferKey = randomBytes(32).toString("hex");
+    this.controlSecret = this.transferKey;
+    this.outboundSequence = 0;
+    this.inboundSequence = 0;
     this.child = spawn(this.workerExecPath, [runtimePath, this.moduleUrl], {
       stdio: ["pipe", "pipe", "pipe"],
       windowsHide: true,
@@ -73,6 +100,8 @@ class ProcessWorker {
         ...process.env,
         ROLE_MODEL_EXTENSION_ID: this.extensionId,
         ...(this.stateRoot ? { ROLE_MODEL_EXTENSION_STATE_ROOT: this.stateRoot } : {}),
+        ROLE_MODEL_EXTENSION_TRANSFER_KEY: this.transferKey,
+        ROLE_MODEL_EXTENSION_CONTROL_KEY: this.controlSecret,
       },
     });
     this.stderr = "";
@@ -80,29 +109,52 @@ class ProcessWorker {
       this.stderr = `${this.stderr}${chunk.toString("utf8")}`.slice(-4096);
     });
     let bytes = Buffer.alloc(0);
-    let settled = false;
+    let readyResolved = false;
+    let readyRejected = false;
     let rejectReady;
+    const rejectProtocol = (error) => {
+      const failure = error instanceof Error ? error : new Error(String(error));
+      this.#rejectPending(failure);
+      if (!readyResolved && !readyRejected) {
+        readyRejected = true;
+        rejectReady(failure);
+      }
+      if (!this.exited) {
+        this.stopping = false;
+        this.child.kill();
+      }
+    };
     const ready = new Promise((resolve, reject) => {
       rejectReady = reject;
       this.child.once("error", reject);
       this.child.stdout.on("data", (chunk) => {
-        bytes = Buffer.concat([bytes, chunk]);
-        const parsed = extractFrames(bytes);
-        bytes = parsed.remainder;
-        for (const message of parsed.values) {
-          if (message.type === "ready") {
-            settled = true;
-            this.pid = message.pid;
-            resolve();
-            continue;
+        try {
+          bytes = Buffer.concat([bytes, chunk]);
+          const parsed = extractControlFrames(bytes, {
+            secret: this.controlSecret,
+            direction: "worker->host",
+            lastSequence: this.inboundSequence,
+          });
+          bytes = parsed.remainder;
+          this.inboundSequence = parsed.lastSequence;
+          for (const message of parsed.values) {
+            if (message.type === "ready") {
+              readyResolved = true;
+              this.pid = message.pid;
+              resolve();
+              continue;
+            }
+            const pending = this.pending.get(message.requestId);
+            if (!pending) continue;
+            this.pending.delete(message.requestId);
+            void pending.cleanup?.().catch(() => {});
+            this.child?.stdin.write(this.#encode({ type: "ack", requestId: message.requestId }));
+            if (message.type === "result")
+              pending.resolve({ ...message.result, workerPid: this.pid });
+            else pending.reject(new Error(message.error));
           }
-          const pending = this.pending.get(message.requestId);
-          if (!pending) continue;
-          this.pending.delete(message.requestId);
-          this.child?.stdin.write(encodeFrame({ type: "ack", requestId: message.requestId }));
-          if (message.type === "result")
-            pending.resolve({ ...message.result, workerPid: this.pid });
-          else pending.reject(new Error(message.error));
+        } catch (error) {
+          rejectProtocol(error);
         }
       });
     });
@@ -110,10 +162,8 @@ class ProcessWorker {
       const expected = this.stopping;
       this.exited = true;
       const detail = this.stderr.trim();
-      for (const item of this.pending.values())
-        item.reject(new Error(detail ? `worker exited: ${detail}` : "worker exited"));
-      this.pending.clear();
-      if (!settled)
+      this.#rejectPending(new Error(detail ? `worker exited: ${detail}` : "worker exited"));
+      if (!readyResolved && !readyRejected)
         rejectReady(
           new Error(
             `worker exited during startup (${code ?? signal})${detail ? `: ${detail}` : ""}`,
@@ -139,26 +189,72 @@ class ProcessWorker {
       clearTimeout(timer);
     }
   }
-  invoke(envelope) {
+  async invoke(envelope) {
     if (this.exited || !this.child) return Promise.reject(new Error("worker exited"));
+    let wireEnvelope = envelope;
+    let transferPath = null;
+    let frame;
+    try {
+      frame = this.#encode({ type: "invoke", requestId: envelope.requestId, envelope });
+    } catch (error) {
+      if (
+        !/frame exceeds inline limit/i.test(error instanceof Error ? error.message : String(error))
+      ) {
+        throw error;
+      }
+      const transferArtifact = await createInputTransferArtifact({
+        stateRoot: this.stateRoot,
+        transferKey: this.transferKey,
+        envelope,
+      });
+      transferPath = join(this.stateRoot, ...transferArtifact.relativePath.split("/"));
+      wireEnvelope = {
+        requestId: envelope.requestId,
+        protocolVersion: envelope.protocolVersion,
+        authorizationEpoch: envelope.authorizationEpoch,
+        channel: envelope.channel,
+        scope: envelope.scope,
+        capability: envelope.capability,
+        transferArtifact,
+      };
+      frame = this.#encode({
+        type: "invoke",
+        requestId: envelope.requestId,
+        envelope: wireEnvelope,
+      });
+    }
+    const cleanup = async () => {
+      if (!transferPath) return;
+      try {
+        await unlink(transferPath);
+      } catch (error) {
+        if (error?.code !== "ENOENT") throw error;
+      }
+    };
     return new Promise((resolve, reject) => {
-      this.pending.set(envelope.requestId, { resolve, reject });
-      this.child.stdin.write(
-        encodeFrame({ type: "invoke", requestId: envelope.requestId, envelope }),
-        (error) => {
-          if (error) {
-            this.pending.delete(envelope.requestId);
-            reject(error);
-          }
-        },
-      );
+      this.pending.set(envelope.requestId, { resolve, reject, cleanup });
+      this.child.stdin.write(frame, (error) => {
+        if (error) {
+          this.pending.delete(envelope.requestId);
+          void cleanup().catch(() => {});
+          reject(error);
+        }
+      });
     });
   }
   async stop() {
     if (!this.child || this.exited) return;
+    if (this.terminationPromise) {
+      await this.terminationPromise;
+      return;
+    }
     this.stopping = true;
     const child = this.child;
-    child.stdin.write(encodeFrame({ type: "shutdown" }));
+    try {
+      child.stdin.write(this.#encode({ type: "shutdown" }));
+    } catch {
+      child.kill();
+    }
     await new Promise((resolve) => {
       const timer = setTimeout(() => {
         if (!this.exited) child.kill();
@@ -169,6 +265,35 @@ class ProcessWorker {
       });
     });
     this.child = null;
+  }
+  async terminate() {
+    if (!this.child || this.exited) return;
+    if (this.terminationPromise) return this.terminationPromise;
+    const child = this.child;
+    this.stopping = false;
+    this.#rejectPending(new Error("worker terminated"));
+    this.terminationPromise = new Promise((resolve) => {
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve();
+      };
+      const timer = setTimeout(() => {
+        if (!this.exited) child.kill();
+        finish();
+      }, 250);
+      child.once("exit", finish);
+      try {
+        child.kill();
+      } catch {
+        finish();
+      }
+    }).finally(() => {
+      this.terminationPromise = null;
+    });
+    return this.terminationPromise;
   }
   state() {
     return {
@@ -292,6 +417,7 @@ export class ExtensionHost {
       restarts: 0,
       autoRestart: false,
       restartPromise: null,
+      transitions: 0,
     };
     record.worker = new ProcessWorker(
       normalized,
@@ -373,6 +499,10 @@ export class ExtensionHost {
       lifecycle: record.lifecycle,
       pid: record.kind === "process" ? record.worker.state().pid : null,
       restarts: record.restarts ?? 0,
+      // A supervised start/stop/restart is a bounded, expected transition.  The
+      // readiness projection must be able to tell it apart from a terminal
+      // worker failure, including the window between stop and start.
+      transitioning: (record.transitions ?? 0) > 0 || Boolean(record.restartPromise),
     };
   }
   listExtensionStates() {
@@ -381,33 +511,54 @@ export class ExtensionHost {
   async stopProcess(id) {
     const record = this.#workers.get(id);
     if (!record || record.kind !== "process") throw new Error(`unknown process extension ${id}`);
-    record.lifecycle = "stopping";
-    record.autoRestart = false;
-    await record.worker.stop();
-    record.lifecycle = "stopped";
-    await this.#journal({ type: "stopped", extensionId: id, pid: null });
-    return this.extensionState(id);
+    record.transitions = (record.transitions ?? 0) + 1;
+    try {
+      record.lifecycle = "stopping";
+      record.autoRestart = false;
+      await record.worker.stop();
+      record.lifecycle = "stopped";
+      await this.#journal({ type: "stopped", extensionId: id, pid: null });
+      return this.extensionState(id);
+    } finally {
+      record.transitions = Math.max(0, (record.transitions ?? 1) - 1);
+    }
   }
   async startProcess(id) {
     const record = this.#workers.get(id);
     if (!record || record.kind !== "process") throw new Error(`unknown process extension ${id}`);
     if (record.lifecycle === "ready" && !record.worker.exited) return this.extensionState(id);
-    record.lifecycle = "starting";
-    await record.worker.start();
-    record.lifecycle = "ready";
-    record.autoRestart = true;
-    await this.#journal({ type: "started", extensionId: id, pid: record.worker.state().pid });
-    return this.extensionState(id);
+    record.transitions = (record.transitions ?? 0) + 1;
+    try {
+      record.lifecycle = "starting";
+      await record.worker.start();
+      record.lifecycle = "ready";
+      record.autoRestart = true;
+      await this.#journal({ type: "started", extensionId: id, pid: record.worker.state().pid });
+      return this.extensionState(id);
+    } catch (error) {
+      // A failed supervised start is terminal for this attempt: leaving the
+      // record in `starting` would let readiness report an unbounded pending
+      // transition instead of a real worker failure.
+      record.lifecycle = "exited";
+      throw error;
+    } finally {
+      record.transitions = Math.max(0, (record.transitions ?? 1) - 1);
+    }
   }
   async restartProcess(id) {
     const record = this.#workers.get(id);
     if (!record || record.kind !== "process") throw new Error(`unknown process extension ${id}`);
-    await this.stopProcess(id);
-    record.restarts = (record.restarts ?? 0) + 1;
-    this.#restartCount += 1;
-    const state = await this.startProcess(id);
-    await this.#journal({ type: "restarted", extensionId: id, restart: record.restarts });
-    return state;
+    record.transitions = (record.transitions ?? 0) + 1;
+    try {
+      await this.stopProcess(id);
+      record.restarts = (record.restarts ?? 0) + 1;
+      this.#restartCount += 1;
+      const state = await this.startProcess(id);
+      await this.#journal({ type: "restarted", extensionId: id, restart: record.restarts });
+      return state;
+    } finally {
+      record.transitions = Math.max(0, (record.transitions ?? 1) - 1);
+    }
   }
   async removeProcess(id) {
     const record = this.#workers.get(id);
@@ -480,25 +631,23 @@ export class ExtensionHost {
       !this.protocolVersions.has(envelope.protocolVersion) ||
       !envelope.channel ||
       !envelope.scope ||
+      !envelope.capability ||
       !Number.isInteger(envelope.authorizationEpoch)
     )
-      return Promise.reject(new Error("envelope identity is incomplete or incompatible"));
+      return Promise.reject(
+        new Error("envelope identity or capability is incomplete or incompatible"),
+      );
     if (envelope.authorizationEpoch !== this.authorizationEpoch)
       return Promise.reject(new Error("authorization epoch is stale or untrusted"));
+    if (envelope.transferArtifact)
+      return Promise.reject(new Error("caller-supplied input transfer artifacts are prohibited"));
     if (envelope.artifactRef && envelope.artifactRef.channel !== envelope.channel)
       return Promise.reject(new Error("artifact channel mismatch"));
     if (envelope.artifactRef && envelope.artifactRef.scope !== envelope.scope)
       return Promise.reject(new Error("artifact scope mismatch"));
     const inlineBytes = Buffer.byteLength(JSON.stringify(envelope.payload ?? null));
-    if (
-      inlineBytes > 16 * 1024 &&
-      (!envelope.transferArtifact ||
-        envelope.transferArtifact.channel !== envelope.channel ||
-        envelope.transferArtifact.scope !== envelope.scope)
-    )
-      return Promise.reject(
-        new Error("oversized payload requires a channel-local transfer artifact"),
-      );
+    if (inlineBytes > 16 * 1024 && registered.kind !== "process")
+      return Promise.reject(new Error("oversized inline-worker payload is prohibited"));
     const hostReadCapability =
       registered.kind === "process" && envelope.capability === "extension-output:read";
     if (
@@ -523,10 +672,16 @@ export class ExtensionHost {
         try {
           await this.#ensureProcess(registered);
           const timeout = new Promise((_, timeoutReject) => {
-            timer = setTimeout(() => timeoutReject(new Error("timeout")), this.timeoutMs);
+            timer = setTimeout(() => {
+              if (registered.kind === "process") void registered.worker.terminate();
+              timeoutReject(new Error("timeout"));
+            }, this.timeoutMs);
           });
           const cancellation = new Promise((_, cancelReject) => {
-            abort = () => cancelReject(new Error("cancelled"));
+            abort = () => {
+              if (registered.kind === "process") void registered.worker.terminate();
+              cancelReject(new Error("cancelled"));
+            };
             envelope.signal?.addEventListener("abort", abort, { once: true });
           });
           const invocation =

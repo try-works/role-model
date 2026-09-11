@@ -13,6 +13,7 @@ import { stringify } from "yaml";
 import type { NormalizedCatalog } from "@role-model-router/catalog";
 import { canonicalTaxonomy } from "@role-model-router/core";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
+import { resolveOpenAIProviderUpstreamModelId } from "@role-model-router/provider-openai";
 import { createRuntimeObservationBundle } from "@role-model-router/runtime-observability";
 import {
   initializeSqliteMemory,
@@ -105,6 +106,49 @@ function successfulCodexAdmissionReadinessProbe(requestId: string): {
     vendorMetadata: { vendorId: "chatgpt-codex-responses", latencyMs: 1 },
   };
 }
+
+test("Run 96 projects persisted provider evidence attempt identities when compact observations omit execution semantics", () => {
+  expect(
+    bridge.projectPublicProviderAttemptIds({
+      executionSemantics: {
+        providerAttemptIds: [],
+      },
+      providerEvidence: {
+        attemptIds: ["req-run96-projection:attempt:1"],
+      },
+    }),
+  ).toEqual(["req-run96-projection:attempt:1"]);
+});
+
+test("Run 96 F177: public provider attempt projection counts physical dispatches, not semantic labels", () => {
+  // A single successful provider call is described twice inside one
+  // observation: the execution semantics carry a router-owned terminal label
+  // (`attempt:<request>:final`) while the provider evidence carries the real
+  // provider attempt identity. Projecting both double-counts the dispatch and
+  // breaks the bounded Phase 5 provider-call ledger.
+  expect(
+    bridge.projectPublicProviderAttemptIds({
+      executionSemantics: { providerAttemptIds: ["attempt:req-run96-f177:final"] },
+      providerEvidence: { attemptIds: ["req-run96-f177:attempt:1"] },
+    }),
+  ).toEqual(["req-run96-f177:attempt:1"]);
+
+  // Retries still surface every physical attempt, including the failed ones
+  // that both projections agree on.
+  expect(
+    bridge.projectPublicProviderAttemptIds({
+      executionSemantics: {
+        providerAttemptIds: [
+          "req-run96-f177-retry:attempt:1",
+          "attempt:req-run96-f177-retry:final",
+        ],
+      },
+      providerEvidence: {
+        attemptIds: ["req-run96-f177-retry:attempt:1", "req-run96-f177-retry:attempt:2"],
+      },
+    }),
+  ).toEqual(["req-run96-f177-retry:attempt:1", "req-run96-f177-retry:attempt:2"]);
+});
 
 const registry: EndpointRegistryResult = {
   endpoints: [
@@ -202,6 +246,66 @@ function createLlamaSwapRunningModelsVendorScript(input: {
 }
 
 describe("runtime-host-bridge", () => {
+  test("caches the execution catalog projection until catalog, account, or endpoint inputs change", () => {
+    const catalog = {
+      catalogVersion: "test-catalog",
+      source: {
+        vendor: "test",
+        commit: "test",
+        capturedAt: "2026-09-06T00:00:00.000Z",
+        schemaVersion: "test.v1",
+      },
+      providers: [],
+      models: [],
+    } as NormalizedCatalog;
+    const accounts = [{ providerAccountId: "account-1", providerId: "openai" }] as never;
+    const endpoints = [
+      {
+        endpointId: "openai.account-1.global.runtime-only-model",
+        providerAccountId: "account-1",
+        modelId: "openai/runtime-only-model",
+      },
+    ];
+    const cache = (
+      bridge as unknown as {
+        createRuntimeExecutionCatalogCache: () => {
+          get: (
+            catalog: NormalizedCatalog,
+            accounts: typeof accounts,
+            endpoints: typeof endpoints,
+          ) => NormalizedCatalog;
+        };
+      }
+    ).createRuntimeExecutionCatalogCache();
+
+    const first = cache.get(catalog, accounts, endpoints);
+    const repeated = cache.get(catalog, accounts, endpoints);
+    const changedAccountProjection = cache.get(
+      catalog,
+      [{ providerAccountId: "account-1", providerId: "anthropic" }] as never,
+      endpoints,
+    );
+    const changedCatalogProjection = cache.get(
+      { ...catalog, catalogVersion: "test-catalog-2" },
+      accounts,
+      endpoints,
+    );
+    const changedEndpointProjection = cache.get(catalog, accounts, [
+      ...endpoints,
+      {
+        endpointId: "openai.account-1.global.runtime-only-model-2",
+        providerAccountId: "account-1",
+        modelId: "openai/runtime-only-model-2",
+      },
+    ]);
+
+    expect(first).not.toBe(catalog);
+    expect(repeated).toBe(first);
+    expect(changedAccountProjection).not.toBe(first);
+    expect(changedCatalogProjection).not.toBe(first);
+    expect(changedEndpointProjection).not.toBe(first);
+  });
+
   test("projects immutable benchmark evidence from the persisted decision snapshot", () => {
     expect(
       bridge.projectBenchmarkDecisionEvidence(
@@ -663,6 +767,29 @@ describe("runtime-host-bridge", () => {
         }),
       }),
     );
+  });
+
+  test("Run96 Phase5 RED: derives an explicitly labelled catalogue estimate when the provider omits billed cost", () => {
+    expect(
+      typeof (bridge as { resolveBridgeExecutionCost?: unknown }).resolveBridgeExecutionCost,
+    ).toBe("function");
+
+    const cost = (
+      bridge as {
+        resolveBridgeExecutionCost: (input: {
+          vendorCostUsd?: number;
+          inputTokens: number;
+          outputTokens: number;
+          pricing?: { inputPer1M?: number; outputPer1M?: number } | null;
+        }) => unknown;
+      }
+    ).resolveBridgeExecutionCost({
+      inputTokens: 1_000,
+      outputTokens: 500,
+      pricing: { inputPer1M: 2, outputPer1M: 4 },
+    });
+
+    expect(cost).toEqual({ usd: 0.004, source: "catalogue_estimate" });
   });
 
   test("builds QA bootstrap options with router surfaces and complete fixtures", () => {
@@ -7420,6 +7547,7 @@ describe("runtime-host-bridge", () => {
             body: Record<string, unknown>,
             requestId: string,
           ) => Promise<unknown>;
+          readHealthStatus: () => Promise<Record<string, unknown>>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
     ).startBridgeServer({
@@ -7429,6 +7557,12 @@ describe("runtime-host-bridge", () => {
       executeChatCompletions: async () => {
         throw new Error("not used");
       },
+      readHealthStatus: async () => ({
+        status: "healthy",
+        executionMode: "decision_only",
+        vendors: {},
+        inactiveVendors: [],
+      }),
     });
 
     try {
@@ -7436,6 +7570,7 @@ describe("runtime-host-bridge", () => {
       expect(healthResponse.status).toBe(200);
       expect(await healthResponse.json()).toEqual({
         status: "healthy",
+        ready: true,
         executionMode: "decision_only",
         vendors: {},
         inactiveVendors: [],
@@ -8424,6 +8559,7 @@ describe("runtime-host-bridge", () => {
         routingDecisionId: "route-001",
         selectedEndpointId: "cli.local.coder",
         selectedModelId: "gpt-5.4",
+        providerAttemptIds: ["attempt:req-router-001:final"],
         fallbackEndpointIds: ["moonshot.personal.primary.global.kimi-k2.5"],
         strategyLabel: "balanced",
         scoredCandidates: [
@@ -8900,6 +9036,7 @@ describe("runtime-host-bridge", () => {
         routingDecisionId: "route-001",
         selectedEndpointId: "cli.local.coder",
         selectedModelId: "gpt-5.4",
+        providerAttemptIds: ["attempt:req-router-001:final"],
         fallbackEndpointIds: ["moonshot.personal.primary.global.kimi-k2.5"],
         strategyLabel: "balanced",
         scoredCandidates: [
@@ -16041,6 +16178,14 @@ describe("runtime-host-bridge", () => {
             statusCode: 402,
             message: "Insufficient Balance",
           },
+          providerExecutions: [
+            {
+              attemptId: `attempt:${requestId}:failure`,
+              providerId: "deepseek",
+              adapterFamily: "ai-sdk-openai-compatible",
+              statusCode: 402,
+            },
+          ],
         }),
       ]);
       expect(postObservations).toEqual([
@@ -16416,10 +16561,15 @@ describe("runtime-host-bridge", () => {
         expect.arrayContaining([
           expect.objectContaining({
             endpointId: endpoint.endpointId,
-            status: "degraded",
-            healthStatus: "degraded",
-            routingEligible: false,
-            benchmarkEligible: false,
+            status: "active",
+            healthStatus: "healthy",
+            routingEligible: true,
+            benchmarkEligible: true,
+            executionCooldown: expect.objectContaining({
+              active: true,
+              circuitState: "open",
+              failureCount: 2,
+            }),
           }),
         ]),
       );
@@ -18241,7 +18391,9 @@ describe("runtime-host-bridge", () => {
 
           if (url === "https://api.deepseek.com/v1/chat/completions") {
             expect(body).toMatchObject({
-              model: "deepseek-v4-flash",
+              // DeepSeek advertises the renamed first-party flash id; the wire
+              // request must follow the provider, not the historical catalog id.
+              model: resolveOpenAIProviderUpstreamModelId("deepseek/deepseek-v4-flash"),
             });
             return new Response(
               JSON.stringify({
@@ -18580,7 +18732,7 @@ describe("runtime-host-bridge", () => {
       expect(providerRequests).toEqual([
         {
           authorization: "Bearer router-owned-test-secret",
-          model: "deepseek-v4-flash",
+          model: resolveOpenAIProviderUpstreamModelId("deepseek/deepseek-v4-flash"),
         },
       ]);
     } finally {
@@ -19854,7 +20006,7 @@ describe("runtime-host-bridge", () => {
               providerRequestBodies.push(requestBody);
               expect(requestBody).toEqual(
                 expect.objectContaining({
-                  model: deepseekModelId.split("/").slice(1).join("/"),
+                  model: resolveOpenAIProviderUpstreamModelId(deepseekModelId),
                 }),
               );
               if (providerRequestCount === 1) {

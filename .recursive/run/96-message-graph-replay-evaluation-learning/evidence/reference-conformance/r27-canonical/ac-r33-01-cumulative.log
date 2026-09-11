@@ -1,0 +1,9 @@
+Run 96 canonical TDD receipt
+acceptanceCriterionId=AC-R33-01
+proofFamily=legacy-admission-reconciliation
+phase=CUMULATIVE GATE
+result=PASS
+testPath=public:role-model-router/apps/runtime-host-bridge/test/legacy-execution-admission-reconciliation.test.ts
+assertionTitle=restores only a source-bound transient circuit from the legacy degraded row shape
+command=corepack pnpm --dir role-model-router/apps/runtime-host-bridge run test:router
+cumulativeGate=PASS: the public router cumulative receipt records the legacy admission and related execution-circuit regressions green; this remains source/build/test evidence only.

@@ -70,6 +70,10 @@ test("SP7 stages N and N-1 distributions and refuses unsupported future versions
   try {
     const bytes = Buffer.from("export async function run(){return {available:true}}\n");
     const artifactSha256 = createHash("sha256").update(bytes).digest("hex");
+    const extensionHostBytes = Buffer.from(
+      "export async function host(){return {available:true}}\n",
+    );
+    const extensionHostSha256 = createHash("sha256").update(extensionHostBytes).digest("hex");
     const extensions = Array.from({ length: 13 }, (_, index) => ({
       descriptor: {
         id: `extension-${index}`,
@@ -80,7 +84,14 @@ test("SP7 stages N and N-1 distributions and refuses unsupported future versions
       artifactSha256,
     }));
     await mkdir(path.join(root, "extensions"));
+    await mkdir(path.join(root, "shared", "graph"), { recursive: true });
+    await writeFile(
+      path.join(root, "shared", "graph", "registry.json"),
+      JSON.stringify({ version: graphRegistry.version, kinds: graphRegistry.kinds }),
+    );
     await writeFile(path.join(root, "sidecar.mjs"), bytes);
+    await writeFile(path.join(root, "public-extension-host.mjs"), extensionHostBytes);
+    await writeFile(path.join(root, "worker-runtime.mjs"), extensionHostBytes);
     await Promise.all(extensions.map((row) => writeFile(path.join(root, row.modulePath), bytes)));
     for (const [version, expectedGeneration] of [
       ["role-model.track-b-runtime-distribution.v1", "N-1"],
@@ -94,6 +105,16 @@ test("SP7 stages N and N-1 distributions and refuses unsupported future versions
             ? { graphRegistry, registryBindings }
             : {}),
           sidecar: { modulePath: "sidecar.mjs", artifactSha256 },
+          ...(version === "role-model.track-b-runtime-distribution.v2"
+            ? {
+                publicExtensionHost: {
+                  modulePath: "public-extension-host.mjs",
+                  artifactSha256: extensionHostSha256,
+                  workerModulePath: "worker-runtime.mjs",
+                  workerArtifactSha256: extensionHostSha256,
+                },
+              }
+            : {}),
           extensions,
         }),
       );

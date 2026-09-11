@@ -1,0 +1,12 @@
+Run 96 addendum 27 final semantic audit
+finding=F117
+acceptanceCriterionId=AC-R33-08
+proofFamily=r27-final-semantic-audit-f117-ac-r33-08
+stage=cumulative gate
+testPath=public:role-model-router/apps/runtime-host-bridge/test/execution-circuit-breaker.test.ts
+assertionTitle=[AC-R33-08] covers default and fixed-effort siblings across text.chat/tools.function_calling auth, quota, transient, cooldown, expiry, repeated failure, success, and concurrent probes
+command=corepack pnpm exec vitest run test/execution-circuit-breaker.test.ts test/alias-capability-routing.test.ts test/legacy-execution-admission-reconciliation.test.ts test/run96-replay-nonce-durability.test.ts --reporter=dot
+result=PASS
+executionStatus=current-worktree
+observed=38 tests passed, 0 failed
+phase3Disposition=source evidence only; Phase 5 remains pending.

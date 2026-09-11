@@ -80,7 +80,10 @@ export interface ModelsDevFirstPartySource {
 
 const DEEPSEEK_FIRST_PARTY_SOURCE_PATHS = {
   provider: "providers/deepseek/provider.toml",
-  flash: "providers/deepseek/models/deepseek-v4-flash.toml",
+  // DeepSeek renamed the first-party flash model file from
+  // `deepseek-v4-flash.toml` to `deepseek-flash.toml`. The pinned capture must
+  // follow the provider's current path or refresh fails closed on a 404.
+  flash: "providers/deepseek/models/deepseek-flash.toml",
   pro: "providers/deepseek/models/deepseek-v4-pro.toml",
 } as const;
 
@@ -127,7 +130,9 @@ export async function captureModelsDevFirstPartySource(
     providerPath: DEEPSEEK_FIRST_PARTY_SOURCE_PATHS.provider,
     providerSha256: hashes[0] as string,
     modelSources: {
-      "deepseek-v4-flash": {
+      // Keyed by the provider's own model id, which the models.dev catalog now
+      // publishes as `deepseek-flash` for the first-party flash slot.
+      "deepseek-flash": {
         path: DEEPSEEK_FIRST_PARTY_SOURCE_PATHS.flash,
         sha256: hashes[1] as string,
       },
@@ -494,7 +499,13 @@ export async function runCatalogRefreshCli(
     return (
       resolvedProviderId === "deepseek" &&
       Object.values(provider.models ?? {}).some(
-        (model) => model.id === "deepseek-v4-flash" || model.id === "deepseek-v4-pro",
+        (model) =>
+          // `deepseek-flash` is the provider's current id for the flash slot;
+          // `deepseek-v4-flash` is retained so a pinned older commit still
+          // satisfies first-party capture detection.
+          model.id === "deepseek-flash" ||
+          model.id === "deepseek-v4-flash" ||
+          model.id === "deepseek-v4-pro",
       )
     );
   });
