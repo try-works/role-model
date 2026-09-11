@@ -49,13 +49,17 @@ function envelope(nonce = "run96-dispatch-nonce") {
   } satisfies Record<string, unknown>;
 }
 
-function adapter(runtimeStateRoot: string, dispatches: { count: number }) {
+function adapter(
+  runtimeStateRoot: string,
+  dispatches: { count: number },
+  dispatchImpl?: (request: Record<string, unknown>) => Promise<Record<string, unknown>>,
+) {
   const options = {
     channel,
     scope,
     authorizationEpoch,
     authorizationSecret,
-    dispatch: async () => {
+    dispatch: dispatchImpl ?? (async () => {
       dispatches.count += 1;
       return {
         dispatchReceiptId: "dispatch:nonce-durability",
@@ -64,7 +68,7 @@ function adapter(runtimeStateRoot: string, dispatches: { count: number }) {
         observedCostMicros: 0,
         observedResponseBytes: 0,
       };
-    },
+    }),
   } as unknown as Parameters<typeof createRouterReplayAdapter>[0];
   return createProductionReplayAdapter({
     ...options,
@@ -97,6 +101,71 @@ test("Run96 replay adapter nonce consumption survives a public-host restart", as
     const restarted = adapter(root, dispatches);
     await expect(restarted.authorize({ envelope: firstEnvelope })).rejects.toThrow(/nonce/i);
     await expect(restarted.dispatch(firstEnvelope, { authorization })).rejects.toThrow(/nonce/i);
+    expect(dispatches.count).toBe(1);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("Run96 F190: a completed dispatch is returned from the durable ledger after restart", async () => {
+  const root = mkdtempSync(path.join(tmpdir(), "run96-replay-dispatch-ledger-"));
+  try {
+    const dispatches = { count: 0 };
+    const first = adapter(root, dispatches);
+    const firstEnvelope = envelope("run96-f190-complete");
+    const firstAuthorization = await first.authorize({ envelope: firstEnvelope });
+    const firstReceipt = await first.dispatch(firstEnvelope, {
+      authorization: firstAuthorization,
+    });
+    expect(dispatches.count).toBe(1);
+
+    const restarted = adapter(root, dispatches);
+    const restartedEnvelope = envelope("run96-f190-complete-restart");
+    const restartedAuthorization = await restarted.authorize({
+      envelope: restartedEnvelope,
+    });
+    await expect(
+      restarted.dispatch(restartedEnvelope, { authorization: restartedAuthorization }),
+    ).resolves.toEqual(firstReceipt);
+    expect(dispatches.count).toBe(1);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("Run96 F190: an indeterminate restart cannot repeat a provider dispatch", async () => {
+  const root = mkdtempSync(path.join(tmpdir(), "run96-replay-dispatch-indeterminate-"));
+  try {
+    const dispatches = { count: 0 };
+    const crashAfterProvider = async () => {
+      dispatches.count += 1;
+      throw new Error("provider connection dropped after dispatch");
+    };
+    const first = adapter(root, dispatches, crashAfterProvider);
+    const firstEnvelope = envelope("run96-f190-crash");
+    const firstAuthorization = await first.authorize({ envelope: firstEnvelope });
+    await expect(
+      first.dispatch(firstEnvelope, { authorization: firstAuthorization }),
+    ).rejects.toThrow(/provider connection dropped/i);
+    expect(dispatches.count).toBe(1);
+
+    const restarted = adapter(root, dispatches, async () => {
+      dispatches.count += 1;
+      return {
+        dispatchReceiptId: "dispatch:must-not-run",
+        routerDecisionId: "decision:must-not-run",
+        providerResultRef: "artifact:provider-result:must-not-run",
+        observedCostMicros: 0,
+        observedResponseBytes: 0,
+      };
+    });
+    const restartedEnvelope = envelope("run96-f190-crash-restart");
+    const restartedAuthorization = await restarted.authorize({
+      envelope: restartedEnvelope,
+    });
+    await expect(
+      restarted.dispatch(restartedEnvelope, { authorization: restartedAuthorization }),
+    ).rejects.toThrow(/indeterminate|in-flight/i);
     expect(dispatches.count).toBe(1);
   } finally {
     rmSync(root, { recursive: true, force: true });

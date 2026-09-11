@@ -2740,6 +2740,7 @@ export async function runSupervisedReplay(input: {
     readonly candidateEndpointId: string;
     readonly failure: ReturnType<typeof classifyReplayDispatchFailure>;
     readonly receipt: Readonly<Record<string, unknown>>;
+    readonly branchRootRef: string;
   }> = [];
   let lastRetryableProviderError: unknown = null;
   const consumedNonces =
@@ -2779,6 +2780,74 @@ export async function runSupervisedReplay(input: {
     );
     if (!Number.isSafeInteger(lease.fenceToken))
       throw new Error("Replay Core did not return a fenced lease");
+    const finalizeProviderFailure = async (failureInput: {
+      readonly candidateEndpointId: string;
+      readonly failure: ReturnType<typeof classifyReplayDispatchFailure>;
+      readonly preparedBranchRootRef: string;
+    }): Promise<{
+      readonly failureReceipt: Record<string, unknown>;
+      readonly branchRootRef: string;
+    }> => {
+      const preparedFailure = await input.runtime.invoke(
+        "replay-core",
+        controlEnvelope("replay:prepare-provider-failure", {
+          jobId,
+          candidateEndpointId: failureInput.candidateEndpointId,
+          leaseOwner: input.leaseOwner,
+          fenceToken: lease.fenceToken,
+          failure: failureInput.failure,
+        }),
+      );
+      if (preparedFailure.status === "retryable_failure" || preparedFailure.status === "failed") {
+        if (
+          typeof preparedFailure.failureBranchRootRef !== "string" ||
+          !preparedFailure.failureBranchRootRef
+        ) {
+          throw new Error("durable provider failure receipt is missing its branch");
+        }
+        return {
+          failureReceipt: structuredClone(preparedFailure),
+          branchRootRef: preparedFailure.failureBranchRootRef,
+        };
+      }
+      if (
+        preparedFailure.status !== "failure_append_pending" ||
+        !preparedFailure.branchRequest ||
+        typeof preparedFailure.branchRequest !== "object" ||
+        Array.isArray(preparedFailure.branchRequest)
+      ) {
+        throw new Error("Replay Core did not prepare a durable provider failure branch");
+      }
+      const failureBranch = await input.appendBranch({
+        ...(preparedFailure.branchRequest as Record<string, unknown>),
+        branchKind: "replay",
+        branchPhase: "provider_failure",
+        disposition: failureInput.failure.retryable ? "retryable" : "terminal",
+        preparedBranchRootRef: failureInput.preparedBranchRootRef,
+      });
+      if (typeof failureBranch?.branchRootRef !== "string" || !failureBranch.branchRootRef) {
+        throw new Error("replay provider failure branch was not persisted");
+      }
+      const failureReceipt = await input.runtime.invoke(
+        "replay-core",
+        controlEnvelope("replay:record-provider-failure", {
+          jobId,
+          candidateEndpointId: failureInput.candidateEndpointId,
+          leaseOwner: input.leaseOwner,
+          fenceToken: lease.fenceToken,
+          failure: structuredClone(preparedFailure.failure ?? failureInput.failure),
+          failureBranch: {
+            branchRootRef: failureBranch.branchRootRef,
+            failureClass: failureInput.failure.code,
+            disposition: failureInput.failure.retryable ? "retryable" : "terminal",
+          },
+        }),
+      );
+      return {
+        failureReceipt: structuredClone(failureReceipt),
+        branchRootRef: failureBranch.branchRootRef,
+      };
+    };
 
     for (const candidate of input.candidatePackages) {
       const candidateEndpointId =
@@ -2803,6 +2872,43 @@ export async function runSupervisedReplay(input: {
         }),
       );
       if (prepared.status === "complete" || prepared.status === "cancelled") continue;
+      if (prepared.status === "failure_append_pending") {
+        const recoveredBranch = await input.prepareBranch({
+          ...(prepared.branchRequest as Record<string, unknown>),
+          candidateEndpointId,
+        });
+        const finalized = await finalizeProviderFailure({
+          candidateEndpointId,
+          failure: prepared.failure as ReturnType<typeof classifyReplayDispatchFailure>,
+          preparedBranchRootRef: recoveredBranch.branchRootRef,
+        });
+        const pendingFailure =
+          prepared.failure as ReturnType<typeof classifyReplayDispatchFailure>;
+        if (finalized.failureReceipt.status === "cancelled") {
+          return {
+            jobId,
+            state: "cancelled",
+            cancellation: "provider_failure",
+          };
+        }
+        if (pendingFailure.retryable && finalized.failureReceipt.status === "retryable_failure") {
+          providerFailures.push({
+            candidateEndpointId,
+            failure: pendingFailure,
+            receipt: finalized.failureReceipt,
+            branchRootRef: finalized.branchRootRef,
+          });
+          lastRetryableProviderError = Object.assign(new Error(pendingFailure.message), {
+            code: pendingFailure.code,
+            retryable: true,
+          });
+          continue;
+        }
+        throw Object.assign(new Error(pendingFailure.message), {
+          code: pendingFailure.code,
+          retryable: pendingFailure.retryable,
+        });
+      }
       const preparedEnvelope = prepared.envelope;
       if (
         prepared.status !== "provider_dispatch" ||
@@ -2896,16 +3002,12 @@ export async function runSupervisedReplay(input: {
         });
       } catch (error) {
         const failure = classifyReplayDispatchFailure(error);
-        const failureReceipt = await input.runtime.invoke(
-          "replay-core",
-          controlEnvelope("replay:record-provider-failure", {
-            jobId,
-            candidateEndpointId,
-            leaseOwner: input.leaseOwner,
-            fenceToken: lease.fenceToken,
-            failure,
-          }),
-        );
+        const finalized = await finalizeProviderFailure({
+          candidateEndpointId,
+          failure,
+          preparedBranchRootRef: preparedBranch.branchRootRef,
+        });
+        const { failureReceipt } = finalized;
         if (failureReceipt.status === "cancelled") {
           return {
             jobId,
@@ -2918,6 +3020,7 @@ export async function runSupervisedReplay(input: {
             candidateEndpointId,
             failure,
             receipt: structuredClone(failureReceipt),
+            branchRootRef: finalized.branchRootRef,
           });
           lastRetryableProviderError = error;
           continue;
@@ -2988,12 +3091,23 @@ export async function runSupervisedReplay(input: {
       if (lastRetryableProviderError) throw lastRetryableProviderError;
       throw new Error("supervised replay produced no durable provider result");
     }
+    if (
+      providerFailures.some(
+        (entry) => typeof entry.branchRootRef !== "string" || !entry.branchRootRef,
+      )
+    ) {
+      throw new Error("supervised replay provider failure is missing its durable branch");
+    }
+    const failureTraceIds = [
+      ...new Set(providerFailures.map((entry) => entry.branchRootRef)),
+    ].sort();
     const evaluation = await input.handoffEvaluation({
       replayJobId: jobId,
       scope: input.scope,
       sourceDecisionId: sourceRoot.sourceDecisionId,
       sourceGeneration: sourceRoot.generation,
       resultTraceIds: [...new Set(resultTraceIds)].sort(),
+      failureTraceIds,
       resultBranches: resultBranches.sort((left, right) =>
         left.candidateEndpointId.localeCompare(right.candidateEndpointId),
       ),
@@ -3017,6 +3131,7 @@ export async function runSupervisedReplay(input: {
           sourceDecisionId: sourceRoot.sourceDecisionId,
           sourceGeneration: sourceRoot.generation,
           resultTraceIds: [...new Set(resultTraceIds)].sort(),
+          failureTraceIds,
           resultBranches: resultBranches.sort((left, right) =>
             left.candidateEndpointId.localeCompare(right.candidateEndpointId),
           ),
@@ -3147,6 +3262,11 @@ export function validateProductionExtensionSet(
 export type TrackBExtensionRuntimeReadiness =
   | { readonly state: "ready" }
   | {
+      readonly state: "degraded";
+      readonly message: string;
+      readonly failedIds: readonly string[];
+    }
+  | {
       readonly state: "pending";
       readonly message: string;
       readonly pendingIds: readonly string[];
@@ -3222,13 +3342,16 @@ export function evaluateProductionExtensionRuntimeReadiness(
   const summary =
     `expected=${expectedIds.length}; readyWorkers=${readyWorkers}; ` +
     `missing=${missingIds.join(",") || "none"}`;
+  // R8/R24/R30: ordinary routing depends on the host transport, the supervisor,
+  // and the supervisor's declared routing availability, not on every worker
+  // being ready. A terminal worker for a routing-nondependent extension is a
+  // degradation of that extension's capability, not a routing outage.
   if (
     hostRecord?.available !== true ||
     hostRecord.enabled !== true ||
     supervisorRecord?.available !== true ||
     supervisorRecord.routingAvailable !== true ||
-    missingIds.length > 0 ||
-    failedIds.length > 0
+    missingIds.length > 0
   ) {
     return {
       state: "failed",
@@ -3236,6 +3359,15 @@ export function evaluateProductionExtensionRuntimeReadiness(
       message:
         `production extension runtime is not ready: ${summary}; ` +
         `notReady=${[...missingIds, ...failedIds].join(",") || "none"}`,
+    };
+  }
+  if (failedIds.length > 0) {
+    return {
+      state: "degraded",
+      failedIds,
+      message:
+        `production extension runtime is degraded while routing remains available: ${summary}; ` +
+        `degraded=${failedIds.join(",")}`,
     };
   }
   if (pendingIds.length > 0 || readyWorkers < expectedIds.length) {

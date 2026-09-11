@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
-import { createHash, createPublicKey } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { createHash, createPublicKey, randomUUID } from "node:crypto";
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -1252,8 +1252,26 @@ export function createRun88StagePostObservation(input: {
 }
 
 export interface CliBootstrapState {
-  status: "pending" | "ready" | "failed";
+  status: "pending" | "ready" | "degraded" | "failed";
   message?: string;
+}
+
+/**
+ * R8/R24/R30: the HTTP boundary only blocks when routing itself is unavailable.
+ * A degraded extension runtime (a routing-nondependent worker in a terminal
+ * lifecycle) still serves ordinary `/api` and `/v1` routing traffic, while the
+ * degradation is reported honestly through `/healthz` and operator surfaces.
+ */
+export function projectCliStartupReadiness(state: CliBootstrapState): {
+  readonly ready: boolean;
+  readonly status: CliBootstrapState["status"];
+  readonly message?: string;
+} {
+  return {
+    ready: state.status === "ready" || state.status === "degraded",
+    status: state.status,
+    ...(state.message ? { message: state.message } : {}),
+  };
 }
 
 export async function awaitCliExtensionRuntime<
@@ -1707,7 +1725,14 @@ export function startCliExtensionRuntimeWatchdog(options: {
   let stopped = false;
   let failureReported = false;
   const check = (): void => {
-    if (stopped || failureReported || options.bootstrapState.status !== "ready") return;
+    if (
+      stopped ||
+      failureReported ||
+      (options.bootstrapState.status !== "ready" &&
+        options.bootstrapState.status !== "degraded")
+    ) {
+      return;
+    }
     const runtime = options.getRuntime();
     if (!runtime) return;
     // A bounded supervised restart temporarily retracts readiness without
@@ -1716,6 +1741,21 @@ export function startCliExtensionRuntimeWatchdog(options: {
       runtime,
       options.expectedExtensionIds ?? TRACK_B_CANONICAL_EXTENSION_IDS,
     );
+    if (readiness.state === "degraded") {
+      // R8/R24/R30: a routing-nondependent extension may stay terminally
+      // degraded while ordinary routing keeps serving. Report it honestly
+      // instead of tearing down the backend that routing depends on.
+      options.bootstrapState.status = "degraded";
+      options.bootstrapState.message = readiness.message;
+      return;
+    }
+    if (readiness.state === "ready") {
+      if (options.bootstrapState.status === "degraded") {
+        options.bootstrapState.status = "ready";
+        delete options.bootstrapState.message;
+      }
+      return;
+    }
     if (readiness.state !== "failed") return;
     failureReported = true;
     options.bootstrapState.status = "failed";
@@ -1784,12 +1824,7 @@ export function createCliServerOptions(
     getRegistry: () => resolveBackend()?.effectiveRegistry ?? EMPTY_REGISTRY,
     getExecutionCatalog: () => resolveBackend()?.getExecutionCatalog() ?? EMPTY_CATALOG,
     readStartupReadiness: () => {
-      const state = readBootstrapState();
-      return {
-        ready: state.status === "ready",
-        status: state.status,
-        ...(state.message ? { message: state.message } : {}),
-      };
+      return projectCliStartupReadiness(readBootstrapState());
     },
     executeChatCompletions: bindBackendMethod(
       "executeChatCompletions",
@@ -1838,6 +1873,14 @@ export function createCliServerOptions(
         : null;
       if (extensionRuntime) {
         const readiness = evaluateProductionExtensionRuntimeReadiness(extensionRuntime);
+        if (readiness.state === "degraded") {
+          // Routing stays available; the probe reports the degradation without
+          // invoking the fatal extension-runtime teardown.
+          return createPendingHealthStatus({
+            status: "degraded",
+            message: readiness.message,
+          });
+        }
         if (readiness.state === "failed") {
           if (resolver?.onExtensionRuntimeFailure) {
             await resolver.onExtensionRuntimeFailure(new Error(readiness.message));
@@ -2288,6 +2331,54 @@ type ProductionReplayAdapterOptions = Omit<
   readonly scopeId: string;
 };
 
+const PRODUCTION_REPLAY_DISPATCH_LEDGER_SCHEMA =
+  "role-model.replay-dispatch-idempotency-ledger.v1" as const;
+
+type ProductionReplayDispatchLedgerRecord = {
+  readonly requestDigest: string;
+  readonly ownerInstanceId: string;
+  readonly state: "in_flight" | "complete" | "failed";
+  readonly receipt?: Record<string, unknown>;
+  readonly failure?: string;
+  readonly updatedAtMs: number;
+};
+
+type ProductionReplayDispatchLedgerDocument = {
+  readonly schemaVersion: typeof PRODUCTION_REPLAY_DISPATCH_LEDGER_SCHEMA;
+  readonly records: Record<string, ProductionReplayDispatchLedgerRecord>;
+};
+
+/**
+ * R11-01: each candidate declares the share of the job budget it reserves
+ * before its provider call is placed. Floor division keeps the sum of every
+ * candidate reservation inside the single job budget, so a multi-candidate
+ * replay cannot reserve the whole budget once per candidate and then refuse
+ * every candidate after the first.
+ */
+export function resolveReplayCandidateBudgetReservation(input: {
+  readonly budget: Record<string, unknown>;
+  readonly candidateCount: number;
+}): { readonly reservedCostMicros: number; readonly reservedBytes: number } {
+  const candidateCount = input.candidateCount;
+  if (!Number.isSafeInteger(candidateCount) || candidateCount < 1) {
+    throw new Error("replay candidate count is required for its budget reservation");
+  }
+  const maxCostMicros = Number(input.budget?.maxCostMicros);
+  const maxBytes = Number(input.budget?.maxBytes);
+  if (
+    !Number.isSafeInteger(maxCostMicros) ||
+    maxCostMicros < 0 ||
+    !Number.isSafeInteger(maxBytes) ||
+    maxBytes < 1
+  ) {
+    throw new Error("bounded replay budget is required for its candidate reservations");
+  }
+  return {
+    reservedCostMicros: Math.floor(maxCostMicros / candidateCount),
+    reservedBytes: Math.floor(maxBytes / candidateCount),
+  };
+}
+
 export function resolveProductionReplayAuthorizationNonceStorePath(input: {
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
@@ -2307,6 +2398,179 @@ export function resolveProductionReplayAuthorizationNonceStorePath(input: {
   );
 }
 
+export function resolveProductionReplayDispatchLedgerPath(input: {
+  readonly runtimeStateRoot: string;
+  readonly scopeId: string;
+}): string {
+  const runtimeStateRoot = input.runtimeStateRoot.trim();
+  const scopeId = input.scopeId.trim();
+  if (!runtimeStateRoot || !scopeId) {
+    throw new Error("production replay dispatch ledger runtime state scope is required");
+  }
+  const scopeSegment = `sha256-${createHash("sha256").update(scopeId, "utf8").digest("hex")}`;
+  return path.join(
+    runtimeStateRoot,
+    "scopes",
+    scopeSegment,
+    "track-b",
+    "replay-dispatch-idempotency.json",
+  );
+}
+
+function createProductionReplayDispatchLedger(filePath: string) {
+  if (typeof filePath !== "string" || !filePath.trim()) {
+    throw new Error("production replay dispatch ledger path is required");
+  }
+  mkdirSync(path.dirname(filePath), { recursive: true });
+  let records: Record<string, ProductionReplayDispatchLedgerRecord> = {};
+  if (existsSync(filePath)) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(readFileSync(filePath, "utf8"));
+    } catch {
+      throw new Error("production replay dispatch ledger is invalid");
+    }
+    if (
+      !parsed ||
+      typeof parsed !== "object" ||
+      Array.isArray(parsed) ||
+      (parsed as Record<string, unknown>).schemaVersion !==
+        PRODUCTION_REPLAY_DISPATCH_LEDGER_SCHEMA ||
+      !(parsed as Record<string, unknown>).records ||
+      typeof (parsed as Record<string, unknown>).records !== "object" ||
+      Array.isArray((parsed as Record<string, unknown>).records)
+    ) {
+      throw new Error("production replay dispatch ledger is invalid");
+    }
+    records = (
+      parsed as ProductionReplayDispatchLedgerDocument
+    ).records as Record<string, ProductionReplayDispatchLedgerRecord>;
+    const entries = Object.entries(records);
+    if (entries.length > 8192) {
+      throw new Error("production replay dispatch ledger exceeds its bounded cap");
+    }
+    for (const [key, record] of entries) {
+      if (
+        !/^[a-f0-9]{64}$/u.test(key) ||
+        !record ||
+        typeof record !== "object" ||
+        typeof record.requestDigest !== "string" ||
+        !/^[a-f0-9]{64}$/u.test(record.requestDigest) ||
+        typeof record.ownerInstanceId !== "string" ||
+        !record.ownerInstanceId ||
+        !new Set(["in_flight", "complete", "failed"]).has(record.state) ||
+        !Number.isSafeInteger(record.updatedAtMs) ||
+        record.updatedAtMs < 0 ||
+        (record.state === "complete" &&
+          (!record.receipt ||
+            typeof record.receipt !== "object" ||
+            Array.isArray(record.receipt))) ||
+        (record.state === "failed" &&
+          (typeof record.failure !== "string" || record.failure.length > 512))
+      ) {
+        throw new Error("production replay dispatch ledger is invalid");
+      }
+    }
+  }
+  const persist = (): void => {
+    const document: ProductionReplayDispatchLedgerDocument = {
+      schemaVersion: PRODUCTION_REPLAY_DISPATCH_LEDGER_SCHEMA,
+      records,
+    };
+    const temporaryPath = `${filePath}.${process.pid}.tmp`;
+    writeFileSync(temporaryPath, `${JSON.stringify(document)}\n`, { encoding: "utf8" });
+    renameSync(temporaryPath, filePath);
+  };
+  return Object.freeze({
+    begin(
+      dispatchIdempotencyKey: string,
+      requestDigest: string,
+      ownerInstanceId: string,
+    ): { state: "new" | "in_flight" | "failed" } | { state: "complete"; receipt: Record<string, unknown> } {
+      const existing = records[dispatchIdempotencyKey];
+      if (existing) {
+        if (existing.requestDigest !== requestDigest) {
+          throw new Error("replay dispatch idempotency key contract conflict");
+        }
+        if (existing.state === "complete") {
+          return {
+            state: "complete",
+            receipt: structuredClone(existing.receipt as Record<string, unknown>),
+          };
+        }
+        if (existing.ownerInstanceId !== ownerInstanceId) {
+          const error = new Error(
+            "REPLAY_DISPATCH_INDETERMINATE: an earlier replay dispatch did not record completion; refusing to repeat it after restart",
+          );
+          (error as Error & { code?: string }).code = "REPLAY_DISPATCH_INDETERMINATE";
+          throw error;
+        }
+        records = {
+          ...records,
+          [dispatchIdempotencyKey]: {
+            requestDigest,
+            ownerInstanceId,
+            state: "in_flight",
+            updatedAtMs: Date.now(),
+          },
+        };
+        persist();
+        return { state: existing.state };
+      }
+      if (Object.keys(records).length >= 8192) {
+        throw new Error("production replay dispatch ledger exceeds its bounded cap");
+      }
+      records = {
+        ...records,
+        [dispatchIdempotencyKey]: {
+          requestDigest,
+          ownerInstanceId,
+          state: "in_flight",
+          updatedAtMs: Date.now(),
+        },
+      };
+      persist();
+      return { state: "new" };
+    },
+    complete(
+      dispatchIdempotencyKey: string,
+      ownerInstanceId: string,
+      receipt: Record<string, unknown>,
+    ): void {
+      const existing = records[dispatchIdempotencyKey];
+      if (!existing || existing.ownerInstanceId !== ownerInstanceId) {
+        throw new Error("production replay dispatch ledger completion owner mismatch");
+      }
+      records = {
+        ...records,
+        [dispatchIdempotencyKey]: {
+          requestDigest: existing.requestDigest,
+          ownerInstanceId,
+          state: "complete",
+          receipt: structuredClone(receipt),
+          updatedAtMs: Date.now(),
+        },
+      };
+      persist();
+    },
+    fail(dispatchIdempotencyKey: string, ownerInstanceId: string, failure: unknown): void {
+      const existing = records[dispatchIdempotencyKey];
+      if (!existing || existing.ownerInstanceId !== ownerInstanceId) return;
+      records = {
+        ...records,
+        [dispatchIdempotencyKey]: {
+          requestDigest: existing.requestDigest,
+          ownerInstanceId,
+          state: "failed",
+          failure: String(failure instanceof Error ? failure.message : failure).slice(0, 512),
+          updatedAtMs: Date.now(),
+        },
+      };
+      persist();
+    },
+  });
+}
+
 /**
  * Compose the CLI's replay adapter with the scope-owned durable nonce ledger.
  * The path deliberately lives beneath the same runtime-state scope as the
@@ -2316,10 +2580,66 @@ export function createProductionReplayAdapter(
   options: ProductionReplayAdapterOptions,
 ): ReturnType<typeof createRouterReplayAdapter> {
   const authorizationNonceStorePath = resolveProductionReplayAuthorizationNonceStorePath(options);
+  const dispatchLedger = createProductionReplayDispatchLedger(
+    resolveProductionReplayDispatchLedgerPath(options),
+  );
+  const dispatchOwnerInstanceId = randomUUID();
+  const activeDispatches = new Map<string, Promise<Record<string, unknown>>>();
+  const dispatchWithIdempotency = (
+    request: Record<string, unknown>,
+  ): Promise<Record<string, unknown>> => {
+    const dispatchIdempotencyKey = request.dispatchIdempotencyKey;
+    if (
+      typeof dispatchIdempotencyKey !== "string" ||
+      !/^[a-f0-9]{64}$/u.test(dispatchIdempotencyKey)
+    ) {
+      throw new Error("replay dispatch idempotency key is required");
+    }
+    const {
+      authorization: _authorization,
+      nonce: _nonce,
+      sandboxReceipt: _sandboxReceipt,
+      ...stableRequest
+    } = request;
+    const requestDigest = createHash("sha256")
+      .update(JSON.stringify(stableRequest))
+      .digest("hex");
+    const existing = dispatchLedger.begin(
+      dispatchIdempotencyKey,
+      requestDigest,
+      dispatchOwnerInstanceId,
+    );
+    if (existing.state === "complete") return Promise.resolve(existing.receipt);
+    const active = activeDispatches.get(dispatchIdempotencyKey);
+    if (active) return active;
+    const pending = (async () => {
+      try {
+        const receipt = await options.dispatch(request);
+        dispatchLedger.complete(
+          dispatchIdempotencyKey,
+          dispatchOwnerInstanceId,
+          receipt,
+        );
+        return receipt;
+      } catch (error) {
+        dispatchLedger.fail(
+          dispatchIdempotencyKey,
+          dispatchOwnerInstanceId,
+          error,
+        );
+        throw error;
+      } finally {
+        activeDispatches.delete(dispatchIdempotencyKey);
+      }
+    })();
+    activeDispatches.set(dispatchIdempotencyKey, pending);
+    return pending;
+  };
   const { runtimeStateRoot: _runtimeStateRoot, scopeId: _scopeId, ...adapterOptions } = options;
   return createRouterReplayAdapter({
     ...adapterOptions,
     authorizationNonceStorePath,
+    dispatch: dispatchWithIdempotency,
   });
 }
 
@@ -2807,6 +3127,11 @@ export async function main(): Promise<void> {
           ) {
             throw new Error("supervised replay budget cannot cover every requested candidate");
           }
+          const replayBudget = budget as Record<string, unknown>;
+          const replayBudgetReservation = resolveReplayCandidateBudgetReservation({
+            budget: replayBudget,
+            candidateCount: candidateEndpointIds.length,
+          });
           const runtime = extensionRuntimeRef.current;
           const operations = currentPostObservationOperations();
           if (!runtime || !operations) throw new Error("supervised replay runtime is not ready");
@@ -2880,6 +3205,7 @@ export async function main(): Promise<void> {
               toolPolicy: "deny",
               experiencePackId: "none",
               samplingProfileId: "deterministic-v1",
+              ...replayBudgetReservation,
             };
           });
           const evaluationCriteria = normalizeTrackBSemanticEvaluationCriteria(
@@ -3042,6 +3368,56 @@ export async function main(): Promise<void> {
             },
             appendBranch: async (branchRequest) => {
               const candidateEndpointId = String(branchRequest.candidateEndpointId ?? "");
+              const failure =
+                branchRequest.failure &&
+                typeof branchRequest.failure === "object" &&
+                !Array.isArray(branchRequest.failure)
+                  ? (branchRequest.failure as Record<string, unknown>)
+                  : null;
+              if (failure) {
+                // R10/AC-R10-05: a failed provider dispatch is durable graph
+                // evidence before the replay transitions or hands off.
+                const candidate = candidatePackages.find(
+                  (item) => item.endpointId === candidateEndpointId,
+                );
+                if (!candidate)
+                  throw new Error("replay failure branch candidate is not host-authorized");
+                const preparedBranchRootRef = String(branchRequest.preparedBranchRootRef ?? "");
+                if (!preparedBranchRootRef)
+                  throw new Error(
+                    "durable replay failure branch append requires its prepared branch root",
+                  );
+                const failureRequestId = `replay-${requestId}-${createHash("sha256")
+                  .update(candidateEndpointId)
+                  .digest("hex")
+                  .slice(0, 16)}-failure`;
+                const failureBranch = (await operations.recordLocalRouteCapture({
+                  requestId: failureRequestId,
+                  routingDecisionId: String(branchRequest.sourceDecisionId),
+                  endpointId: candidateEndpointId,
+                  modelId: candidate.modelId,
+                  reasoningEffort: candidate.reasoningEffort,
+                  effortSource: "variant",
+                  messages: [],
+                  toolExecutions: [],
+                  branchKind: "replay",
+                  branchOfRootArtifactId: preparedBranchRootRef,
+                  failure: {
+                    errorClass: String(failure.code ?? "router_dispatch_error"),
+                    statusCode: null,
+                    message: String(failure.message ?? "replay provider dispatch failed"),
+                  },
+                })) as Record<string, unknown>;
+                if (
+                  typeof failureBranch.rootArtifactId !== "string" ||
+                  !failureBranch.rootArtifactId
+                ) {
+                  throw new Error(
+                    "operations boundary did not return a durable replay failure branch root",
+                  );
+                }
+                return { branchRootRef: failureBranch.rootArtifactId };
+              }
               const dispatch = dispatched.get(candidateEndpointId);
               if (!dispatch)
                 throw new Error("durable replay branch append has no host dispatch receipt");

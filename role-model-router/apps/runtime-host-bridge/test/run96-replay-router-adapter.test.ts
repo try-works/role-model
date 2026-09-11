@@ -761,6 +761,7 @@ test("Run96 S3 RED: host orchestration persists router, graph, and evaluation re
 
 test("Run96 S3 RED: host orchestration preserves a bounded rate-limit failure before replay retry", async () => {
   let providerFailure: Record<string, unknown> | null = null;
+  const appendedFailureBranches: Record<string, unknown>[] = [];
   const runtime = {
     async invoke(id: string, envelope: Record<string, unknown>) {
       expect(id).toBe("replay-core");
@@ -809,6 +810,24 @@ test("Run96 S3 RED: host orchestration preserves a bounded rate-limit failure be
             replayJobId: "replay:router-failure",
             candidateEndpointId: "endpoint:counterfactual",
           };
+        case "replay:prepare-provider-failure": {
+          const failure = (envelope.value as Record<string, unknown>).failure as Record<
+            string,
+            unknown
+          >;
+          return {
+            status: "failure_append_pending",
+            failure,
+            branchRequest: {
+              replayJobId: "replay:router-failure",
+              scope: "tenant:one",
+              sourceGeneration: 4,
+              sourceDecisionId: "decision:source-failure",
+              candidateEndpointId: "endpoint:counterfactual",
+              failure,
+            },
+          };
+        }
         default:
           throw new Error(`unexpected capability ${String(envelope.capability)}`);
       }
@@ -904,8 +923,9 @@ test("Run96 S3 RED: host orchestration preserves a bounded rate-limit failure be
       leaseOwner: "scheduler:router-failure",
       leaseMs: 10_000,
       prepareBranch: async () => ({ branchRootRef: "artifact:prepared-router-failure" }),
-      appendBranch: async () => {
-        throw new Error("router failure must not append a branch");
+      appendBranch: async (request) => {
+        appendedFailureBranches.push(request);
+        return { branchRootRef: "artifact:branch-router-failure" };
       },
       handoffEvaluation: async () => {
         throw new Error("router failure must not hand off evaluation");
@@ -913,6 +933,16 @@ test("Run96 S3 RED: host orchestration preserves a bounded rate-limit failure be
     }),
   ).rejects.toThrow("provider rate limit");
 
+  // AC-R10-05: the provider error is durable graph evidence even though the
+  // failure never reaches the evaluation handoff.
+  expect(appendedFailureBranches).toEqual([
+    expect.objectContaining({
+      candidateEndpointId: "endpoint:counterfactual",
+      branchPhase: "provider_failure",
+      disposition: "retryable",
+      failure: expect.objectContaining({ code: "rate_limit", retryable: true }),
+    }),
+  ]);
   expect(providerFailure).toMatchObject({
     jobId: "replay:router-failure",
     candidateEndpointId: "endpoint:counterfactual",
@@ -1034,6 +1064,19 @@ test("AC-R10-02: production supervised replay falls back after a retryable provi
             replayJobId: "replay:r10-fallback",
             candidateEndpointId: "endpoint:unavailable",
           };
+        case "replay:prepare-provider-failure":
+          return {
+            status: "failure_append_pending",
+            failure: value.failure,
+            branchRequest: {
+              replayJobId: "replay:r10-fallback",
+              scope: "tenant:r10-fallback",
+              sourceGeneration: 4,
+              sourceDecisionId: "decision:source-r10-fallback",
+              candidateEndpointId: "endpoint:unavailable",
+              failure: value.failure,
+            },
+          };
         case "replay:record-provider-receipt":
           providerReceipts.push(value);
           return {
@@ -1125,6 +1168,14 @@ test("AC-R10-02: production supervised replay falls back after a retryable provi
   });
   expect(providerReceipts).toHaveLength(1);
   expect(appendedBranches).toEqual([
+    // AC-R10-05: the failed candidate's error is durable graph evidence
+    // alongside the successful counterfactual branch.
+    expect.objectContaining({
+      candidateEndpointId: "endpoint:unavailable",
+      branchPhase: "provider_failure",
+      disposition: "retryable",
+      failure: expect.objectContaining({ code: "provider_unavailable", retryable: true }),
+    }),
     expect.objectContaining({ candidateEndpointId: "endpoint:fallback" }),
   ]);
   expect(liveHealth).toEqual(liveHealthBefore);
@@ -1139,6 +1190,7 @@ test("Run96 S3 regression: timeout retries while a partial provider result is te
     ["partial_response", false],
   ] as const) {
     let providerFailure: Record<string, unknown> | null = null;
+    const appendedFailureBranches: Record<string, unknown>[] = [];
     const runtime = {
       async invoke(id: string, envelope: Record<string, unknown>) {
         expect(id).toBe("replay-core");
@@ -1183,6 +1235,24 @@ test("Run96 S3 regression: timeout retries while a partial provider result is te
           case "replay:record-provider-failure":
             providerFailure = envelope.value as Record<string, unknown>;
             return { status: retryable ? "retryable_failure" : "failed" };
+          case "replay:prepare-provider-failure": {
+            const failure = (envelope.value as Record<string, unknown>).failure as Record<
+              string,
+              unknown
+            >;
+            return {
+              status: "failure_append_pending",
+              failure,
+              branchRequest: {
+                replayJobId: "replay:failure-kind",
+                scope: "tenant:one",
+                sourceGeneration: 4,
+                sourceDecisionId: "decision:failure-kind",
+                candidateEndpointId: "endpoint:counterfactual",
+                failure,
+              },
+            };
+          }
           default:
             throw new Error(`unexpected capability ${String(envelope.capability)}`);
         }
@@ -1279,8 +1349,9 @@ test("Run96 S3 regression: timeout retries while a partial provider result is te
         leaseOwner: "scheduler:failure-kind",
         leaseMs: 10_000,
         prepareBranch: async () => ({ branchRootRef: "artifact:prepared-failure-kind" }),
-        appendBranch: async () => {
-          throw new Error("must not append failed provider result");
+        appendBranch: async (request) => {
+          appendedFailureBranches.push(request);
+          return { branchRootRef: `artifact:branch-failure-kind:${code}` };
         },
         handoffEvaluation: async () => {
           throw new Error("must not evaluate failed provider result");
@@ -1288,6 +1359,16 @@ test("Run96 S3 regression: timeout retries while a partial provider result is te
       }),
     ).rejects.toThrow(`provider ${code}`);
     expect(providerFailure).toMatchObject({ failure: { code, retryable } });
+    // AC-R10-05: the bounded error branch is appended even though neither a
+    // provider result branch nor an evaluation handoff may follow.
+    expect(appendedFailureBranches).toEqual([
+      expect.objectContaining({
+        candidateEndpointId: "endpoint:counterfactual",
+        branchPhase: "provider_failure",
+        disposition: retryable ? "retryable" : "terminal",
+        failure: expect.objectContaining({ code, retryable }),
+      }),
+    ]);
   }
 });
 
