@@ -7,7 +7,34 @@ import {
   StorageRetentionRouteView,
   bytesToGbInput,
   gbInputToBytes,
+  selectEditableRetentionPolicy,
 } from "./storage-retention";
+
+describe("StorageRetentionRoute operator policy editing", () => {
+  test("edits the operator policy instead of an arbitrary canonical tier policy", () => {
+    const canonicalTierPolicy = {
+      policyId: "cloud-staging-short.v1",
+      scope: "global",
+      maxBytes: 268_435_456,
+      maxAgeDays: 3,
+      source: "canonical_machine_readable",
+    };
+    const operatorPolicy = {
+      policyId: "runtime-custom",
+      scope: "global",
+      maxBytes: 7_500_000_000,
+      maxAgeDays: 45,
+    };
+    expect(
+      selectEditableRetentionPolicy([canonicalTierPolicy, operatorPolicy])?.policyId,
+    ).toBe("runtime-custom");
+    // With only canonical tier policies there is no operator policy yet, so the
+    // form must keep its own defaults rather than showing a tier's preset.
+    expect(selectEditableRetentionPolicy([canonicalTierPolicy])).toBeNull();
+    // A saved 268,435,456-byte budget must not render as 0.268435.
+    expect(bytesToGbInput(268_435_456)).toBe("0.268");
+  });
+});
 
 describe("StorageRetentionRoute", () => {
   test("uses existing page primitives for dry-run, conflicts, receipts, and rollback", () => {

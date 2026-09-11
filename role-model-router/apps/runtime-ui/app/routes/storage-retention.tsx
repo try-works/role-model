@@ -31,6 +31,7 @@ import {
 /** 1 GB = 10⁹ bytes. UI edits GB; API still stores maxBytes. */
 export const BYTES_PER_GB = 1_000_000_000;
 export const DEFAULT_MAX_GB = "1";
+export const DEFAULT_MAX_AGE_DAYS = "30";
 
 export function bytesToGbInput(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes < 0) {
@@ -40,7 +41,26 @@ export function bytesToGbInput(bytes: number): string {
   if (Number.isInteger(gb)) {
     return String(gb);
   }
-  return String(Number(gb.toFixed(6)));
+  // Canonical tier budgets are binary byte counts, so a raw conversion renders
+  // as an arbitrary-looking number such as 0.268435. Keep the editable value to
+  // millesimal GB precision instead.
+  return String(Number(gb.toFixed(3)));
+}
+
+/**
+ * The retention form edits the operator's own policy. The API also returns the
+ * canonical per-tier policies, so binding the form to `policies[0]` showed an
+ * arbitrary tier preset and then overwrote whatever the operator saved with it.
+ */
+export function selectEditableRetentionPolicy<
+  T extends { readonly policyId: string; readonly source?: string },
+>(policies: readonly T[] | undefined): T | null {
+  if (!Array.isArray(policies)) return null;
+  return (
+    policies.find((policy) => policy.policyId === "runtime-custom") ??
+    policies.find((policy) => policy.source !== "canonical_machine_readable") ??
+    null
+  );
 }
 
 export function gbInputToBytes(value: string): number | null {
@@ -56,20 +76,29 @@ export function StorageRetentionRouteView() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [maxGb, setMaxGb] = useState(DEFAULT_MAX_GB);
-  const [maxAgeDays, setMaxAgeDays] = useState("30");
+  const [maxAgeDays, setMaxAgeDays] = useState(DEFAULT_MAX_AGE_DAYS);
+  const applyEditablePolicy = useCallback(
+    (next: RuntimeStorageRetentionSummary) => {
+      const policy = selectEditableRetentionPolicy(next.policies);
+      if (policy) {
+        setMaxGb(bytesToGbInput(policy.maxBytes));
+        setMaxAgeDays(String(policy.maxAgeDays));
+        return;
+      }
+      setMaxGb(DEFAULT_MAX_GB);
+      setMaxAgeDays(DEFAULT_MAX_AGE_DAYS);
+    },
+    [],
+  );
   const load = useCallback(
     () =>
       fetchStorageRetention()
         .then((next) => {
           setSummary(next);
-          const policy = next.policies[0];
-          if (policy) {
-            setMaxGb(bytesToGbInput(policy.maxBytes));
-            setMaxAgeDays(String(policy.maxAgeDays));
-          }
+          applyEditablePolicy(next);
         })
         .catch((value: unknown) => setError(message(value))),
-    [],
+    [applyEditablePolicy],
   );
   useEffect(() => {
     void load();
@@ -81,11 +110,7 @@ export function StorageRetentionRouteView() {
     try {
       const next = await operation();
       setSummary(next);
-      const policy = next.policies[0];
-      if (policy) {
-        setMaxGb(bytesToGbInput(policy.maxBytes));
-        setMaxAgeDays(String(policy.maxAgeDays));
-      }
+      applyEditablePolicy(next);
     } catch (value) {
       setError(message(value));
     } finally {
