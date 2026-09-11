@@ -429,6 +429,8 @@ export interface RuntimeObservationBundleInput {
     readonly sourceClient?: string;
     readonly executionFamily?: string;
     readonly adapterFamily?: string;
+    /** Opaque router-owned provider attempts, never provider content or credentials. */
+    readonly providerAttemptIds?: readonly string[];
     readonly payloadBytes?: {
       readonly ingress?: number;
       readonly translated?: number;
@@ -540,6 +542,8 @@ export interface RuntimeObservationBundle {
     readonly sourceClient?: string;
     readonly executionFamily: string;
     readonly adapterFamily: string;
+    /** Opaque router-owned provider attempts, never provider content or credentials. */
+    readonly providerAttemptIds?: readonly string[];
     readonly payloadBytes: {
       readonly ingress: number;
       readonly translated: number;
@@ -869,6 +873,16 @@ function buildExecutionSemantics(
     input.execution.target.adapterFamily;
   const adapterFamily =
     input.executionSemantics?.adapterFamily ?? input.execution.target.adapterFamily;
+  // Provider attempt identifiers are opaque router-owned correlation handles.
+  // Keep them in the bounded observation bundle so downstream persistence and
+  // the runtime UI can explain retries/fallbacks without retaining provider
+  // payloads or credentials.
+  const providerAttemptIds = input.executionSemantics?.providerAttemptIds
+    ?.filter(
+      (attemptId): attemptId is string =>
+        typeof attemptId === "string" && attemptId.trim().length > 0,
+    )
+    .slice(0, 64);
   const providerCanonicalBytes =
     readMeasuredPayloadBytes(input.executionSemantics?.payloadBytes?.providerCanonical) ??
     measurePayloadBytes(input.execution.requestCapture.body);
@@ -901,6 +915,7 @@ function buildExecutionSemantics(
       : {}),
     executionFamily,
     adapterFamily,
+    ...(providerAttemptIds && providerAttemptIds.length > 0 ? { providerAttemptIds } : {}),
     payloadBytes: {
       ingress:
         readMeasuredPayloadBytes(input.executionSemantics?.payloadBytes?.ingress) ??

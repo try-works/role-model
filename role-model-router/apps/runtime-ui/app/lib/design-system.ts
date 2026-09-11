@@ -467,6 +467,18 @@ const systemRuntimeRoute = createRoute({
     "Bridge lifecycle, validation floor, controller posture, version facts, and tooling runtime contracts in one system view.",
 });
 
+const systemOperatorRoute = createRoute({
+  id: "system-operator",
+  to: "/app/system/operator",
+  label: "Operator",
+  section: "System",
+  icon: PanelsTopLeft,
+  template: "system-topology",
+  title: "Operator controls",
+  description:
+    "Bounded replay, evaluation, and shadow-learning controls with explicit runtime capability status.",
+});
+
 const systemSessionReadinessRoute = createRoute({
   id: "system-session-readiness",
   to: "/app/system/session-readiness",
@@ -550,6 +562,7 @@ const runtimeRouteDefinitions = [
   integrationsDownstreamRoute,
   integrationsUpstreamRoute,
   systemRuntimeRoute,
+  systemOperatorRoute,
   systemSessionReadinessRoute,
   systemPeersRoute,
   systemExtensionsRoute,

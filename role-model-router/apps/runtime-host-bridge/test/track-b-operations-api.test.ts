@@ -53,6 +53,65 @@ afterEach(async () => {
 });
 
 describe("Track B operations APIs", () => {
+  test("reads the safe development verification status from the private boundary", async () => {
+    const token = "run96-development-verification-token";
+    const expected = {
+      schemaVersion: "role-model.development-verification-status.v1",
+      enabled: true,
+      capability: "development_verification_upload",
+      runtimeChannel: "development",
+      authorizationId: "run96-authorized",
+    };
+    const server = createServer((request, response) => {
+      expect(request.method).toBe("GET");
+      expect(request.url).toBe("/development-verification");
+      expect(request.headers.authorization).toBe(`Bearer ${token}`);
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(JSON.stringify(expected));
+    });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("operations server did not bind");
+    try {
+      const operations = createTrackBOperations({
+        statePath: path.join(os.tmpdir(), "run96-development-verification-state.json"),
+        catalog: [],
+        operationsEndpoint: `http://127.0.0.1:${address.port}`,
+        operationsToken: token,
+      });
+      await expect(operations.readDevelopmentVerificationStatus()).resolves.toEqual(expected);
+    } finally {
+      await new Promise<void>((resolve, reject) =>
+        server.close((error) => (error ? reject(error) : resolve())),
+      );
+    }
+  });
+
+  test("exposes development verification status through the public runtime boundary", async () => {
+    const expected = {
+      schemaVersion: "role-model.development-verification-status.v1",
+      enabled: false,
+      capability: "development_verification_upload",
+      runtimeChannel: "development",
+      reason: "not_configured",
+    };
+    const server = await startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry: { revision: 0, endpoints: [] },
+      readDevelopmentVerificationStatus: async () => expected,
+    });
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/development-verification`,
+      );
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual(expected);
+    } finally {
+      await server.close();
+    }
+  });
+
   test("retries durable contribution aggregates without manufacturing another request", async () => {
     const token = "run95-contribution-retry-token";
     const server = createServer((request, response) => {
@@ -71,6 +130,40 @@ describe("Track B operations APIs", () => {
         catalog: [],
         operationsEndpoint: `http://127.0.0.1:${address.port}`,
         operationsToken: token,
+      });
+      await expect(operations.retryContributionAggregates()).resolves.toEqual({
+        status: "uploaded",
+        delivered: 1,
+        queued: 0,
+      });
+    } finally {
+      await new Promise<void>((resolve, reject) =>
+        server.close((error) => (error ? reject(error) : resolve())),
+      );
+    }
+  });
+
+  test("gives an authorized aggregate retry its bounded delivery completion window", async () => {
+    const token = "run96-contribution-delivery-window-token";
+    const server = createServer((request, response) => {
+      expect(request.method).toBe("POST");
+      expect(request.url).toBe("/contribution/retry");
+      setTimeout(() => {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ status: "uploaded", delivered: 1, queued: 0 }));
+      }, 40);
+    });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("operations server did not bind");
+    try {
+      const operations = createTrackBOperations({
+        statePath: path.join(os.tmpdir(), "run96-contribution-delivery-window-state.json"),
+        catalog: [],
+        operationsEndpoint: `http://127.0.0.1:${address.port}`,
+        operationsToken: token,
+        operationsTimeoutMs: 25,
+        contributionDeliveryTimeoutMs: 100,
       });
       await expect(operations.retryContributionAggregates()).resolves.toEqual({
         status: "uploaded",
@@ -590,6 +683,7 @@ describe("Track B operations APIs", () => {
       activeJob: null,
     };
     let dryRunCount = 0;
+    let receivedDryRunBody: Record<string, unknown> | undefined;
     const graphMutationCallbacks = {
       advanceGraphMigration: async (body: Record<string, unknown>) => ({
         action: "advance",
@@ -612,17 +706,20 @@ describe("Track B operations APIs", () => {
       }),
       ...graphMutationCallbacks,
       readStorageRetention: async () => summary,
-      dryRunStorageRetention: async () => ({
-        ...summary,
-        receipts: [
-          {
-            id: `dry-${++dryRunCount}`,
-            status: "preview",
-            affectedCount: 2,
-            rollbackAvailable: true,
-          },
-        ],
-      }),
+      dryRunStorageRetention: async (body: Record<string, unknown>) => {
+        receivedDryRunBody = body;
+        return {
+          ...summary,
+          receipts: [
+            {
+              id: `dry-${++dryRunCount}`,
+              status: "preview",
+              affectedCount: 2,
+              rollbackAvailable: true,
+            },
+          ],
+        };
+      },
       updateStorageRetentionPolicy: async (body) => ({ ...summary, policies: [body] }),
       executeStorageRetention: async () => ({
         ...summary,
@@ -686,9 +783,12 @@ describe("Track B operations APIs", () => {
       );
       const dryRun = await fetch(`${base}/api/role-model/storage-retention/dry-run`, {
         method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ scope: "tenant:a" }),
       });
       expect(dryRun.status).toBe(200);
       expect((await dryRun.json()).receipts[0].id).toBe("dry-1");
+      expect(receivedDryRunBody).toEqual({ scope: "tenant:a" });
       expect((await (await fetch(`${base}/api/role-model/contribution`)).json()).mode).toBe(
         "contributor",
       );
@@ -1360,13 +1460,12 @@ describe("Track B operations APIs", () => {
         requestId: "request-recovery-retry-94",
         acknowledgeMetadataOnly: true,
       };
-      await expect(backend.recoverLegacyTerminalFailure(input)).rejects.toThrow(
-        /extension closure interrupted/i,
-      );
       await expect(backend.recoverLegacyTerminalFailure(input)).resolves.toMatchObject({
-        status: "already_recovered",
+        status: "recovered",
         extensionProcessing: "completed",
       });
+      // The original failed request already attempted post-observation closure.
+      // Recovery retries that interrupted attempt against the committed graph.
       expect(extensionAttempts).toBe(2);
 
       rejectReadsAsUnauthorized = true;

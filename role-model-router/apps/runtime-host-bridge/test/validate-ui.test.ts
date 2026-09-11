@@ -1,11 +1,10 @@
-import { mkdtemp, writeFile } from "node:fs/promises";
-import os from "node:os";
+import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
-import { runRuntimeUiValidation } from "../src/validate-ui.js";
+import { runRuntimeUiValidation, waitForSessionBootstrapIdle } from "../src/validate-ui.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,8 +12,36 @@ const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
 const testFixtureRoot = path.join(__dirname, "fixtures");
 
 describe("runRuntimeUiValidation", () => {
+  test("[AC-R27-01] accepts a degraded health response while bootstrap is already idle", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          status: "degraded",
+          sessionBootstrap: { status: "ready" },
+        }),
+        {
+          status: 503,
+          headers: { "content-type": "application/json" },
+        },
+      ),
+    );
+
+    try {
+      await expect(
+        waitForSessionBootstrapIdle("http://runtime", { connection: "close" }, 1_000),
+      ).resolves.toBeUndefined();
+      expect(fetchMock).toHaveBeenCalledWith("http://runtime/healthz", {
+        headers: { connection: "close" },
+      });
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
   test("validates runtime config reads and the main control-plane mutations", async () => {
-    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-ui-"));
+    const tempRoot = process.env.ROLE_MODEL_TEST_TEMP_ROOT ?? "E:/role-model-temp";
+    await mkdir(tempRoot, { recursive: true });
+    const runtimeStateRoot = await mkdtemp(path.join(tempRoot, "role-model-runtime-ui-"));
     const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
     await writeFile(
       unifiedRuntimeConfigPath,

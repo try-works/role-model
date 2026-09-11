@@ -1,0 +1,16 @@
+R27-04 repository-owned regression receipt
+repository=public
+cwd=D:\DEV\role-model\.worktrees\96-message-graph-replay-evaluation-learning
+TEMP=E:\role-model-temp TMP=E:\role-model-temp TMPDIR=E:\role-model-temp
+COMMAND=corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/run94-local-graph-capture.test.ts test/run94-sp5-sp10.test.ts test/run95-all13-correlation.test.ts test/run95-registry-contract.test.ts test/run95-storage-projection.test.ts
+test/run94-local-graph-capture.test.ts: PASS (1 test)
+test/run94-sp5-sp10.test.ts: PASS (11 tests)
+test/run95-all13-correlation.test.ts: PASS (1 test)
+test/run95-registry-contract.test.ts: PASS (4 tests)
+test/run95-storage-projection.test.ts: PASS (1 test)
+Test Files 5 passed (5)
+Tests 18 passed (18)
+Failed 0
+Skipped 0
+EXIT=0
+PASS

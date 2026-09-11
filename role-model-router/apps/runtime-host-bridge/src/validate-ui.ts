@@ -33,7 +33,7 @@ function traceValidation(message: string): void {
   }
 }
 
-async function waitForSessionBootstrapIdle(
+export async function waitForSessionBootstrapIdle(
   baseUrl: string,
   headers: Record<string, string>,
   timeoutMs = 30_000,
@@ -41,14 +41,12 @@ async function waitForSessionBootstrapIdle(
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     const response = await fetch(`${baseUrl}/healthz`, { headers });
-    if (response.ok) {
-      const health = (await response.json()) as {
-        sessionBootstrap?: { status?: string };
-      };
-      const status = health.sessionBootstrap?.status;
-      if (status !== "running" && status !== "pending") {
-        return;
-      }
+    const health = (await response.json().catch(() => null)) as {
+      sessionBootstrap?: { status?: string };
+    } | null;
+    const status = health?.sessionBootstrap?.status;
+    if (status && status !== "running" && status !== "pending") {
+      return;
     }
     await delay(100);
   }

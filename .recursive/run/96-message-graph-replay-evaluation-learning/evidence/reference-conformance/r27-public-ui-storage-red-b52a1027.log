@@ -1,0 +1,8 @@
+AC-R25-04
+proofFamily=run96-r27-public-ui-storage
+stage=semantic RED
+testPath=public:role-model-router/apps/runtime-ui/app/routes/storage-retention.test.tsx
+assertionTitle=AC-R25-04: storage retention exposes complete byte attribution, capacity forecast, and actionable operator receipts
+command=corepack pnpm --dir role-model-router/apps/runtime-ui exec vitest run app/routes/storage-retention.test.tsx --reporter=dot
+result=FAIL
+provenance=locked-baseline b52a10279de21f612911bf2ae758ab40fb61d164; temporary baseline test overlay

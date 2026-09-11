@@ -1262,6 +1262,7 @@ export interface PersistedRuntimeObservationBundle {
     readonly sourceClient?: string;
     readonly executionFamily?: string;
     readonly adapterFamily?: string;
+    readonly providerAttemptIds?: readonly string[];
     readonly payloadBytes?: {
       readonly ingress?: number;
       readonly translated?: number;

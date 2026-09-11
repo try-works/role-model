@@ -1,0 +1,23 @@
+Run 96 AC-R22-06 aggregate physical-cutover owning suite receipt
+requirementId=R22
+acceptanceCriterionId=AC-R22-06
+proof-family=r22-06-aggregate-physical-cutover
+phase=owning suite PASS
+source-test=public:role-model-router/packages/sqlite-memory/test/legacy-migration.test.ts
+source-assertion=AC-R22-06
+assertion-title=R22 AC-R22-06 reclaims legacy rich JSON and closure files and fences a resumed writer
+command=npx vitest run test/provider-attempt-ids.test.ts test/legacy-migration.test.ts test/run96-migration-inventory.test.ts test/index.test.ts (role-model-router/packages/sqlite-memory)
+execution-status=executed
+exit-code=0
+result=PASS
+public-head=1d5732819480cf22587570bf8c60e02efcdbfb3e
+tests=62
+passed=62
+failed=0
+private-supporting-test=private:tests/track-b/run96-legacy-migration-observer.test.mjs
+private-supporting-tests=2
+private-supporting-passed=2
+scope=physical legacy migration/cutover/retirement, compact SQLite provider-attempt projection, plus independent filesystem byte measurement
+verification_disposition=phase5-required
+phase3_status=DRAFT
+phase5_status=PENDING

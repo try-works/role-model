@@ -5,7 +5,29 @@ import {
   buildOpenAIRequest,
   createOpenAIProviderAdapter,
   normalizeOpenAIResponse,
+  resolveOpenAIProviderUpstreamModelId,
 } from "../src/index.js";
+
+describe("OpenAI provider upstream model identity", () => {
+  test("uses DeepSeek's current published provider model ids", () => {
+    // The DeepSeek provider renamed its first-party models: the flash slot is
+    // published as `deepseek-flash` (no `deepseek-v4-` segment) while the pro
+    // slot keeps `deepseek-v4-pro`. A legacy catalog id must not be sent
+    // verbatim, because the provider no longer lists or accepts it.
+    expect(resolveOpenAIProviderUpstreamModelId("deepseek/deepseek-v4-flash")).toBe(
+      "deepseek-flash",
+    );
+    expect(resolveOpenAIProviderUpstreamModelId("deepseek/deepseek-flash")).toBe("deepseek-flash");
+    expect(resolveOpenAIProviderUpstreamModelId("deepseek/deepseek-v4-pro")).toBe(
+      "deepseek-v4-pro",
+    );
+  });
+
+  test("still derives non-DeepSeek upstream ids from the provider prefix", () => {
+    expect(resolveOpenAIProviderUpstreamModelId("moonshot/kimi-k2.5")).toBe("kimi-k2.5");
+    expect(resolveOpenAIProviderUpstreamModelId("openai/gpt-5.4")).toBe("gpt-5.4");
+  });
+});
 
 describe("OpenAI provider adapter", () => {
   test("can be created for the openai-compatible adapter family", () => {

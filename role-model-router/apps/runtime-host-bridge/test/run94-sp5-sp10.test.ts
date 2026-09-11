@@ -275,15 +275,18 @@ const canonicalExtensions = [
   ["background-evidence-scheduler", ["scheduler:schedule-and-run", "artifact:read"]],
   ["memory-store", ["memory:write", "memory:read", "artifact:read"]],
   ["knowledge-store", ["knowledge:write", "knowledge:read", "artifact:read"]],
-  ["evaluation-core", ["evaluation:consume-projection", "artifact:read"]],
+  ["evaluation-core", ["health:probe", "evaluation:consume-projection", "artifact:read"]],
   ["crowdsourced-learning", ["aggregate:preview", "artifact:read"]],
   ["replay-core", ["replay:plan-graph", "artifact:read"]],
   ["evaluation-runner-local", ["evaluation:run-local", "artifact:read"]],
   ["trajectory-signals", ["signals:analyze", "artifact:read"]],
-  ["profile-learner", ["profile:estimate", "profile:consume-projection", "artifact:read"]],
+  [
+    "profile-learner",
+    ["health:probe", "profile:estimate", "profile:consume-projection", "artifact:read"],
+  ],
   [
     "knowledge-worker",
-    ["knowledge:eval-consumer", "knowledge:consume-projection", "artifact:read"],
+    ["health:probe", "knowledge:eval-consumer", "knowledge:consume-projection", "artifact:read"],
   ],
 ] as const;
 
@@ -339,6 +342,7 @@ function observation() {
     reasoningEffort: null,
     effortSource: "none" as const,
     usageEvent: { endpoint_id: "endpoint:run94", model_id: "model:run94" },
+    responseStatusCode: 200,
   };
 }
 
@@ -369,13 +373,19 @@ test("GREEN: real process output closure covers every canonical registry key and
     endpointId: "endpoint:run94",
     modelId: "model:run94",
   });
-  expect((result as Record<string, unknown>).contribution).toEqual({ status: "uploaded" });
+  expect((result as Record<string, unknown>).contribution).toMatchObject({
+    status: "uploaded",
+    correlationId: expect.stringMatching(/^corr-[a-f0-9]{24}$/),
+  });
   const closure = (result as Record<string, unknown>).extensionClosure as Record<string, unknown>;
   expect(Object.keys(closure.registry ?? {})).toEqual(canonicalExtensions.map(([id]) => id).sort());
   const outputs = Object.values(closure.registry as Record<string, { outputs: unknown[] }>).flatMap(
     (entry) => entry.outputs,
   );
-  expect(outputs).toHaveLength(15);
+  expect(outputs).toHaveLength(canonicalExtensions.length);
+  expect(outputs.map((output) => (output as Record<string, unknown>).extensionId).sort()).toEqual(
+    canonicalExtensions.map(([id]) => id).sort(),
+  );
   expect((result as Record<string, unknown>).pipeline).toMatchObject({
     status: "insufficient_comparable_evidence",
     refusalCode: "R14_NO_DISTINCT_COUNTERFACTUAL",
@@ -557,6 +567,61 @@ test("GREEN: exposes extension readback through the Track B HTTP surface", async
       sourceMode: "measured_capture_disabled_packaged_runtime",
       channel: "development",
       sampleCount: 5,
+    });
+  } finally {
+    await server.close();
+    await backend.shutdown();
+  }
+});
+
+test("Run96 S3 RED: exposes an explicit authenticated supervised replay command rather than replaying observations implicitly", async () => {
+  const runtimeStateRoot = await import("node:fs/promises").then(({ mkdtemp }) =>
+    mkdtemp(path.join(os.tmpdir(), "run96-replay-api-")),
+  );
+  roots.push(runtimeStateRoot);
+  const backend = await createRuntimeBridgeBackend({
+    repoRoot,
+    fixtureRoot: path.join(
+      repoRoot,
+      "role-model-router",
+      "apps",
+      "runtime-host-bridge",
+      "test",
+      "fixtures",
+    ),
+    runtimeStateRoot,
+    scopeId: "run96-api",
+    runTrackBSupervisedReplay: async (body) => ({
+      schemaVersion: "role-model.supervised-replay-command-receipt.v1",
+      requestId: body.requestId,
+      replayJobId: "replay:run96-api",
+      state: "complete",
+    }),
+  });
+  const server = await startBridgeServer({
+    host: "127.0.0.1",
+    port: 0,
+    registry: backend.registry,
+    getRegistry: () => backend.registry,
+    executeChatCompletions: backend.executeChatCompletions,
+    executeResponses: backend.executeResponses,
+    runTrackBSupervisedReplay: backend.runTrackBSupervisedReplay,
+  });
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.port}/api/role-model/track-b/replay`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        requestId: "run96-source-request",
+        candidateEndpointIds: ["endpoint:counterfactual"],
+      }),
+    });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      schemaVersion: "role-model.supervised-replay-command-receipt.v1",
+      requestId: "run96-source-request",
+      replayJobId: "replay:run96-api",
+      state: "complete",
     });
   } finally {
     await server.close();

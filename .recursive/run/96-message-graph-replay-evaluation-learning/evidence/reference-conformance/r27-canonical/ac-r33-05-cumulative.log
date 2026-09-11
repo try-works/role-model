@@ -1,0 +1,9 @@
+Run 96 canonical TDD receipt
+acceptanceCriterionId=AC-R33-05
+proofFamily=execution-circuit-failed-half-open-admission
+phase=CUMULATIVE GATE
+result=PASS
+testPath=public:role-model-router/apps/runtime-host-bridge/test/execution-circuit-breaker.test.ts
+assertionTitle=reopens a failed half-open provider attempt with bounded provenance without mutating admission
+command=corepack pnpm --dir role-model-router/apps/runtime-host-bridge run test:router
+cumulativeGate=PASS: the public router cumulative receipt records the owning circuit and related runtime-host-bridge regression suites green; this remains source/build/test evidence only.
