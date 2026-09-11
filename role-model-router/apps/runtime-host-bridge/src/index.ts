@@ -2941,7 +2941,7 @@ export interface StartBridgeServerOptions {
   readonly getExecutionCatalog?: () => NormalizedCatalog;
   readonly readStartupReadiness?: () => {
     readonly ready: boolean;
-    readonly status: "pending" | "ready" | "failed";
+    readonly status: "pending" | "ready" | "degraded" | "failed";
     readonly message?: string;
   };
   readonly executeChatCompletions: (

@@ -122,20 +122,23 @@ describe("Run 96 F166 supervised extension restart readiness", () => {
       pendingIds: ["evaluation-runner-local"],
     });
 
+    // R8/R24/R30 supersede the original terminal-is-fatal expectation: a
+    // routing-nondependent worker may stay terminally degraded while ordinary
+    // routing continues to serve.
     ready.setLifecycle("evaluation-runner-local", "exited");
     expect(evaluateProductionExtensionRuntimeReadiness(ready.runtime)).toMatchObject({
-      state: "failed",
+      state: "degraded",
       failedIds: ["evaluation-runner-local"],
     });
 
     ready.setLifecycle("evaluation-runner-local", "degraded");
     expect(evaluateProductionExtensionRuntimeReadiness(ready.runtime)).toMatchObject({
-      state: "failed",
+      state: "degraded",
       failedIds: ["evaluation-runner-local"],
     });
   });
 
-  test("F166: the readiness watchdog tolerates a bounded restart window and still retracts a failed worker", async () => {
+  test("F166: the readiness watchdog tolerates a bounded restart window and degrades a terminal worker without teardown", async () => {
     const startWatchdog = readFunction<
       typeof import("../src/cli.js").startCliExtensionRuntimeWatchdog
     >(cli, "startCliExtensionRuntimeWatchdog");
@@ -143,7 +146,7 @@ describe("Run 96 F166 supervised extension restart readiness", () => {
     if (!startWatchdog) return;
 
     const mutable = mutableExtensionRuntime();
-    const state: { status: "pending" | "ready" | "failed"; message?: string } = {
+    const state: { status: "pending" | "ready" | "degraded" | "failed"; message?: string } = {
       status: "ready",
     };
     let cleanupCount = 0;
@@ -173,8 +176,8 @@ describe("Run 96 F166 supervised extension restart readiness", () => {
 
       mutable.setLifecycle("evaluation-runner-local", "exited");
       await delay(30);
-      expect(cleanupCount).toBe(1);
-      expect(state.status).toBe("failed");
+      expect(cleanupCount).toBe(0);
+      expect(state.status).toBe("degraded");
     } finally {
       stop();
     }
@@ -237,10 +240,11 @@ describe("Run 96 F166 supervised extension restart readiness", () => {
       await expect(failedHealth.json()).resolves.toEqual(
         expect.objectContaining({
           status: "degraded",
-          sessionBootstrap: expect.objectContaining({ status: "blocked" }),
+          sessionBootstrap: expect.objectContaining({ status: "degraded" }),
         }),
       );
-      expect(failureCount).toBe(1);
+      expect(failureCount).toBe(0);
+      expect(runtime).not.toBeNull();
     } finally {
       await server.close();
     }
@@ -304,7 +308,7 @@ describe("Run 96 F166 supervised extension restart readiness", () => {
     }
   }, 60_000);
 
-  test("F166: a supervised start that fails is terminal, not an unbounded pending transition", async () => {
+  test("F166: a supervised start that fails degrades its extension without an unbounded pending transition", async () => {
     const extensions = await createSlowStartExtensionFixtures(0);
     const runtime = await createProductionExtensionRuntime({
       stateRoot: path.dirname(extensions[0].modulePath),
@@ -330,7 +334,7 @@ describe("Run 96 F166 supervised extension restart readiness", () => {
       expect(observed?.lifecycle).toBe("exited");
       expect(observed?.transitioning).toBe(false);
       expect(evaluateProductionExtensionRuntimeReadiness(runtime)).toMatchObject({
-        state: "failed",
+        state: "degraded",
         failedIds: [target.descriptor.id],
       });
     } finally {
