@@ -14,9 +14,12 @@ import {
   type TrackBShadowPipelineRuntime,
   createReplaySourceAttestation,
   createRouterReplayAdapter,
+  createRun96RoutingShadowScorer,
   runSupervisedReplay,
   runTrackBShadowPipeline,
 } from "../src/track-b-runtime.js";
+
+const routingShadowScorer = createRun96RoutingShadowScorer();
 
 const artifactId = (pattern: string): string =>
   pattern.repeat(Math.ceil(64 / pattern.length)).slice(0, 64);
@@ -552,8 +555,12 @@ test("Run96 CLI production completion reaches trusted Evaluation Core and declin
           measurements: { elapsedMs: 1, outputBytes: 1 },
           scores: [
             {
-              scorerId: "run96-semantic-criteria",
-              scorerVersion: "1",
+              // The registered routing-shadow scorer owns the generation and digest;
+              // a double that hardcodes the previous generation can never satisfy
+              // the pipeline's definition-bound correctness lookup.
+              scorerId: routingShadowScorer.id,
+              scorerVersion: routingShadowScorer.version,
+              scorerDigest: routingShadowScorer.digest,
               dimension: "correctness",
               score: 1,
               confidence: 1,

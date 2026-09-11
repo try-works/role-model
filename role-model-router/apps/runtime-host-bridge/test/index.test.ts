@@ -13,6 +13,7 @@ import { stringify } from "yaml";
 import type { NormalizedCatalog } from "@role-model-router/catalog";
 import { canonicalTaxonomy } from "@role-model-router/core";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
+import { resolveOpenAIProviderUpstreamModelId } from "@role-model-router/provider-openai";
 import { createRuntimeObservationBundle } from "@role-model-router/runtime-observability";
 import {
   initializeSqliteMemory,
@@ -18390,7 +18391,9 @@ describe("runtime-host-bridge", () => {
 
           if (url === "https://api.deepseek.com/v1/chat/completions") {
             expect(body).toMatchObject({
-              model: "deepseek-v4-flash",
+              // DeepSeek advertises the renamed first-party flash id; the wire
+              // request must follow the provider, not the historical catalog id.
+              model: resolveOpenAIProviderUpstreamModelId("deepseek/deepseek-v4-flash"),
             });
             return new Response(
               JSON.stringify({
@@ -18729,7 +18732,7 @@ describe("runtime-host-bridge", () => {
       expect(providerRequests).toEqual([
         {
           authorization: "Bearer router-owned-test-secret",
-          model: "deepseek-v4-flash",
+          model: resolveOpenAIProviderUpstreamModelId("deepseek/deepseek-v4-flash"),
         },
       ]);
     } finally {
@@ -20003,7 +20006,7 @@ describe("runtime-host-bridge", () => {
               providerRequestBodies.push(requestBody);
               expect(requestBody).toEqual(
                 expect.objectContaining({
-                  model: deepseekModelId.split("/").slice(1).join("/"),
+                  model: resolveOpenAIProviderUpstreamModelId(deepseekModelId),
                 }),
               );
               if (providerRequestCount === 1) {

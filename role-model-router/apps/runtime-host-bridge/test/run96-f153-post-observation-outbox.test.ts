@@ -7,12 +7,14 @@ import { afterEach, expect, test } from "vitest";
 
 import {
   type TrackBShadowPipelineRuntime,
+  createRun96RoutingShadowScorer,
   createTrackBPostObservationOutbox,
   runTrackBPostObservationWithContribution,
 } from "../src/track-b-runtime.js";
 
 const testRoot = process.env.ROLE_MODEL_TEST_TEMP_ROOT ?? "E:\\role-model-temp";
 const roots: string[] = [];
+const routingShadowScorer = createRun96RoutingShadowScorer();
 
 afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
@@ -236,9 +238,11 @@ function createGenericRuntime(
           measurements: { elapsedMs: 1, outputBytes: 10 },
           scores: [
             {
-              scorerId: "run96-semantic-criteria",
-              scorerVersion: "1",
-              scorerDigest: digest("run96-semantic-criteria"),
+              // Derive the emitted identity from the definition-bound factory so
+              // the durable correctness lookup matches the registered generation.
+              scorerId: routingShadowScorer.id,
+              scorerVersion: routingShadowScorer.version,
+              scorerDigest: routingShadowScorer.digest,
               dimension: "correctness",
               score: index === 1 ? 1 : 0,
               confidence: 1,

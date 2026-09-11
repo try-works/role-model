@@ -13,11 +13,14 @@ import { validateRun88PackagedStageIdentity } from "../src/runtime-version.js";
 import { createTrackBOperations } from "../src/track-b-operations.js";
 import {
   createRun88RuntimeCorrelation,
+  createRun96RoutingShadowScorer,
   createTrackBPostObservationOutbox,
   normalizeRun88RuntimeCorrelation,
   runTrackBShadowPipeline,
   validateRun88ProviderResponseObservation,
 } from "../src/track-b-runtime.js";
+
+const routingShadowScorer = createRun96RoutingShadowScorer();
 
 type Probe = () => unknown | Promise<unknown>;
 type ProbeLayers = Readonly<{
@@ -430,8 +433,11 @@ const shadowRuntime = {
         scores: [
           {
             dimension: "correctness",
-            scorerId: "run96-semantic-criteria",
-            scorerVersion: "1",
+            // The registered routing-shadow scorer owns its generation and
+            // digest; the probe must echo the definition-bound identity.
+            scorerId: routingShadowScorer.id,
+            scorerVersion: routingShadowScorer.version,
+            scorerDigest: routingShadowScorer.digest,
             score: 1,
           },
         ],
