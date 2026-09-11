@@ -330,7 +330,7 @@ describe("Run 91 catalog reasoning metadata", () => {
 
     expect(requested).toEqual([
       "https://models.dev.test/raw/run91-source-commit/providers/deepseek/provider.toml",
-      "https://models.dev.test/raw/run91-source-commit/providers/deepseek/models/deepseek-v4-flash.toml",
+      "https://models.dev.test/raw/run91-source-commit/providers/deepseek/models/deepseek-flash.toml",
       "https://models.dev.test/raw/run91-source-commit/providers/deepseek/models/deepseek-v4-pro.toml",
     ]);
     expect(receipt).toMatchObject({
@@ -338,8 +338,8 @@ describe("Run 91 catalog reasoning metadata", () => {
       commit: "run91-source-commit",
       providerPath: "providers/deepseek/provider.toml",
       modelSources: {
-        "deepseek-v4-flash": {
-          path: "providers/deepseek/models/deepseek-v4-flash.toml",
+        "deepseek-flash": {
+          path: "providers/deepseek/models/deepseek-flash.toml",
         },
         "deepseek-v4-pro": {
           path: "providers/deepseek/models/deepseek-v4-pro.toml",

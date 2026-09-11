@@ -2561,7 +2561,10 @@ version: "1.0"
           JSON.stringify({
             data: [
               { id: "chatgpt/gpt-5.4" },
-              { id: "deepseek/deepseek-v4-flash" },
+              // DeepSeek advertises its first-party flash model as
+              // `deepseek-flash`; the canonical catalog id is mapped by the
+              // OpenAI-compatible adapter before the request and probe.
+              { id: "deepseek-flash" },
               { id: "moonshot/kimi-k2.7-code" },
             ],
           }),

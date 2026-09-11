@@ -81,4 +81,12 @@ describe("ExtensionsRoute", () => {
     expect(html).toContain("Recommendation ledger");
     expect(html).not.toContain("installed: true");
   });
+
+  test("keeps long recommendation identities inside their ledger card", () => {
+    // Recommendation ids and provenance digests are unbounded opaque strings.
+    // The ledger card must let them wrap instead of overflowing the panel.
+    const routeSource = readFileSync(new URL("./extensions.tsx", import.meta.url), "utf8");
+    expect(routeSource).toContain("min-w-0 flex-1");
+    expect(routeSource).toContain("break-all");
+  });
 });

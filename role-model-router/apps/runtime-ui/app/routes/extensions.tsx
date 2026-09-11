@@ -394,7 +394,9 @@ export function ExtensionsRouteView() {
             Download & validate latest
           </button>
           {activePack ? (
-            <p className={`mb-3 ${supportingTextClassName}`}>Active pack · {activePack.id}</p>
+            <p className={`mb-3 break-all ${supportingTextClassName}`}>
+              Active pack · {activePack.id}
+            </p>
           ) : null}
           {recommendations.length === 0 ? (
             <EmptyState label="No recommendation bundles downloaded." />
@@ -403,17 +405,19 @@ export function ExtensionsRouteView() {
               {recommendations.map((row) => (
                 <article className={`${mutedPanelClassName} p-4`} key={row.id}>
                   <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className={compactTitleClassName}>{row.id}</p>
-                      <p className={`mt-1 ${supportingTextClassName}`}>
+                    <div className="min-w-0 flex-1">
+                      <p className={`break-all ${compactTitleClassName}`}>{row.id}</p>
+                      <p className={`mt-1 break-all ${supportingTextClassName}`}>
                         v{row.version} · {row.provenance}
                       </p>
                     </div>
-                    <Badge tone={row.signatureValid && row.policyAllowed ? "success" : "warning"}>
+                    <Badge
+                      tone={row.signatureValid && row.policyAllowed ? "success" : "warning"}
+                    >
                       {row.status}
                     </Badge>
                   </div>
-                  <p className={`mt-3 ${supportingTextClassName}`}>
+                  <p className={`mt-3 break-all ${supportingTextClassName}`}>
                     {[
                       row.endpointId ? `Endpoint ${row.endpointId}` : null,
                       typeof row.confidence === "number"

@@ -252,7 +252,11 @@ async function probeTarget(
 
     const payload = (await response.json()) as unknown;
     const modelIds = extractOpenAIModelIds(payload);
-    const targetComparableIds = new Set(buildComparableModelIds(target.modelId));
+    // The provider advertises its own model id, which can differ from the
+    // catalog's canonical id when a provider renames a first-party model. The
+    // probe must compare and report the id the provider actually serves.
+    const upstreamModelId = resolveOpenAIProviderUpstreamModelId(target.modelId);
+    const targetComparableIds = new Set(buildComparableModelIds(upstreamModelId));
     const matchesTargetModel = modelIds.some((modelId) =>
       buildComparableModelIds(modelId).some((candidate) => targetComparableIds.has(candidate)),
     );
@@ -263,7 +267,7 @@ async function probeTarget(
         reason: "model-not-found",
         healthStatus: mapProbeReasonToHealthStatus("model-not-found"),
         latencyMs,
-        message: `Model ${target.modelId} was not listed by ${probeUrl}.`,
+        message: `Model ${upstreamModelId} was not listed by ${probeUrl}.`,
       };
     }
 
