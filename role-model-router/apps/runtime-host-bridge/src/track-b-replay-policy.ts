@@ -164,6 +164,74 @@ export function resolveReplayToolPolicy(input: {
 
 export const REPLAY_POLICY_SET_VERSION = "run97.replay-policy-set.v1";
 
+export type ReplayPolicyKey = "trigger" | "tool" | "candidateSelection" | "budget" | "scorerSet";
+
+export const REPLAY_POLICY_IDS: Readonly<Record<ReplayPolicyKey, string>> = Object.freeze({
+  trigger: "replay.trigger.all-requests.v1",
+  tool: "replay.tool.reuse-first.v1",
+  candidateSelection: "replay.candidates.configured-set.v1",
+  budget: "replay.budget.daily.v1",
+  scorerSet: "replay.scorers.routing-shadow.v1",
+});
+
+export const REPLAY_POLICY_REGISTRY_SCHEMA = "run97.replay-policy-registry.v1";
+
+export interface ReplayPolicyRegistryEntry {
+  readonly policyId: string;
+  /** Version literals this runtime can resolve; a list enables N/N-1 readers. */
+  readonly supportedVersions: readonly string[];
+}
+
+export interface ReplayPolicyRegistry {
+  readonly schemaVersion: string;
+  readonly entries: readonly ReplayPolicyRegistryEntry[];
+}
+
+export type ReplayPolicyResolution =
+  | Readonly<{ ok: true }>
+  | Readonly<{ ok: false; code: "policy_unknown"; detail: string }>;
+
+export function buildReplayPolicyRegistry(input?: {
+  readonly policyVersions?: Partial<Record<ReplayPolicyKey, string>>;
+}): ReplayPolicyRegistry {
+  const versions = input?.policyVersions ?? {};
+  const entries = (Object.keys(REPLAY_POLICY_IDS) as ReplayPolicyKey[]).map((key) => ({
+    policyId: REPLAY_POLICY_IDS[key],
+    supportedVersions: [versions[key] ?? "1"],
+  }));
+  return { schemaVersion: REPLAY_POLICY_REGISTRY_SCHEMA, entries };
+}
+
+export function withAdditionalReplayPolicy(
+  registry: ReplayPolicyRegistry,
+  entry: ReplayPolicyRegistryEntry,
+): ReplayPolicyRegistry {
+  return {
+    schemaVersion: registry.schemaVersion,
+    entries: [
+      ...registry.entries.filter((existing) => existing.policyId !== entry.policyId),
+      { policyId: entry.policyId, supportedVersions: [...entry.supportedVersions] },
+    ],
+  };
+}
+
+export function resolveReplayPolicySet(
+  set: ReplayPolicySet,
+  registry: ReplayPolicyRegistry = buildReplayPolicyRegistry(),
+): ReplayPolicyResolution {
+  for (const record of [set.trigger, set.tool, set.candidateSelection, set.budget, set.scorerSet]) {
+    const entry = registry.entries.find((candidate) => candidate.policyId === record.policyId);
+    if (!entry || !entry.supportedVersions.includes(record.policyVersion)) {
+      return {
+        ok: false,
+        code: "policy_unknown",
+        detail: `unresolved replay policy ${record.policyId}#${record.policyVersion}`,
+      };
+    }
+  }
+  return { ok: true };
+}
+
 export interface ReplayPolicyRecord {
   readonly policyId: string;
   readonly policyVersion: string;
@@ -205,29 +273,35 @@ export function buildReplayPolicySet(input?: {
   readonly candidateCap?: number;
   readonly counterfactualsPerDay?: number;
   readonly dispatchesPerDay?: number;
+  readonly policyVersions?: Partial<Record<ReplayPolicyKey, string>>;
 }): ReplayPolicySet {
   const candidateCap = input?.candidateCap ?? DEFAULT_REPLAY_CANDIDATE_CAP;
   const counterfactualsPerDay = input?.counterfactualsPerDay ?? 100;
   const dispatchesPerDay = input?.dispatchesPerDay ?? 300;
-  const trigger = policyRecord("replay.trigger.all-requests.v1", "1", {
+  const versions = input?.policyVersions ?? {};
+  const trigger = policyRecord(REPLAY_POLICY_IDS.trigger, versions.trigger ?? "1", {
     mode: "automatic-and-on-demand",
     ordering: "triage-priority-then-capture-age",
   });
-  const tool = policyRecord("replay.tool.reuse-first.v1", "1", {
+  const tool = policyRecord(REPLAY_POLICY_IDS.tool, versions.tool ?? "1", {
     default: "recorded_results_only",
     fallback: "sandboxed_allowlist",
   });
-  const candidateSelection = policyRecord("replay.candidates.configured-set.v1", "1", {
-    source: "configured-healthy-endpoints",
-    excludeSourceCandidate: true,
-    cap: candidateCap,
-  });
-  const budget = policyRecord("replay.budget.daily.v1", "1", {
+  const candidateSelection = policyRecord(
+    REPLAY_POLICY_IDS.candidateSelection,
+    versions.candidateSelection ?? "1",
+    {
+      source: "configured-healthy-endpoints",
+      excludeSourceCandidate: true,
+      cap: candidateCap,
+    },
+  );
+  const budget = policyRecord(REPLAY_POLICY_IDS.budget, versions.budget ?? "1", {
     counterfactualsPerDay,
     dispatchesPerDay,
     countsDerivedDispatches: true,
   });
-  const scorerSet = policyRecord("replay.scorers.routing-shadow.v1", "1", {
+  const scorerSet = policyRecord(REPLAY_POLICY_IDS.scorerSet, versions.scorerSet ?? "1", {
     scorerSet: "run96-routing-shadow",
   });
   const body = { trigger, tool, candidateSelection, budget, scorerSet };

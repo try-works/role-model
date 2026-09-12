@@ -43,6 +43,7 @@ import {
   buildReplayPolicySet,
   decideReplayAdmission,
   hasRecordedToolResults,
+  resolveReplayPolicySet,
   resolveReplayToolPolicy,
   selectReplayCandidates,
 } from "./track-b-replay-policy.js";
@@ -3284,7 +3285,7 @@ export async function main(): Promise<void> {
             ),
             sourceIsReplayProduced:
               sourceReplay !== null && sourceReplay.parentTraceId !== undefined,
-            policyIdsResolvable: true,
+            policyIdsResolvable: resolveReplayPolicySet(replayPolicySet).ok,
             dependenciesAvailable: true,
           });
           if (!admission.admitted) {
