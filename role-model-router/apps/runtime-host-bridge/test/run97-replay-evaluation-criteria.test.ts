@@ -1,7 +1,9 @@
 import { expect, test } from "vitest";
 
 import {
+  deriveAutomaticReplayCriteria,
   deriveSemanticEvaluationCriteria,
+  extractTaskInstructionText,
   extractSourceOutputText,
 } from "../src/track-b-replay-evaluation-criteria.js";
 
@@ -93,4 +95,85 @@ test("run97 falls back to the recorded prompt when the assistant output is empty
       ],
     }),
   ).toBe("Summarize the role-model router replay and evaluation loop.");
+});
+
+test("run97 derives automatic criteria from the task literal, never from the graded source output", () => {
+  // The recorded source output is the text the source trial is graded on. Deriving
+  // required terms from it makes the source satisfy its own criterion by
+  // construction, so a counterfactual can never win and the learner never sees a
+  // candidate comparison. The task instruction is branch-shared evidence.
+  const derived = deriveAutomaticReplayCriteria({
+    taskText: "Write the report, then reply with exactly ZQ97-MARKER-DONE.",
+    sourceOutput: "sourceonlyword report complete with no marker at all",
+  });
+  expect(derived).not.toBeNull();
+  expect(derived?.evidenceSource).toBe("task_literal");
+  // "done" is a declared stopword, so the bounded literal keeps the two content terms.
+  expect(derived?.criteria.requiredTerms).toEqual(["zq97", "marker"]);
+  expect(derived?.criteria.requiredTerms).not.toContain("sourceonlyword");
+  expect(derived?.criteria.schemaVersion).toBe("role-model.semantic-criteria.v1");
+  expect(derived?.derivation).toContain("task literal");
+});
+
+test("run97 extracts a quoted task literal without an exactly phrase", () => {
+  const derived = deriveAutomaticReplayCriteria({
+    taskText: "Include `SHA-ABC123` in the final answer.",
+    sourceOutput: null,
+  });
+  expect(derived?.evidenceSource).toBe("task_literal");
+  expect(derived?.criteria.requiredTerms).toEqual(["sha", "abc123"]);
+});
+
+test("run97 extracts an unquoted marker named by the task wording", () => {
+  const derived = deriveAutomaticReplayCriteria({
+    taskText: "Reply with the single token run97-canary-015 and nothing else.",
+    sourceOutput: "run97-canary-015",
+  });
+  expect(derived?.evidenceSource).toBe("task_literal");
+  expect(derived?.criteria.requiredTerms).toEqual(["run97", "canary", "015"]);
+});
+
+test("run97 falls back to bounded task text when the instruction names no literal", () => {
+  const derived = deriveAutomaticReplayCriteria({
+    taskText: "Audit the export pipeline and summarize the findings.",
+    sourceOutput: "sourceonlytoken repeated twice",
+  });
+  expect(derived?.evidenceSource).toBe("task_text");
+  expect(derived?.criteria.requiredTerms).toEqual(["audit", "export", "pipeline"]);
+  expect(derived?.criteria.requiredTerms).not.toContain("sourceonlytoken");
+});
+
+test("run97 keeps the recorded-output derivation only when no task evidence exists", () => {
+  const derived = deriveAutomaticReplayCriteria({
+    taskText: "yes no",
+    sourceOutput: "counterfactual branch evaluation",
+  });
+  expect(derived?.evidenceSource).toBe("recorded_output");
+  expect(derived?.criteria.requiredTerms).toEqual([
+    "counterfactual",
+    "branch",
+    "evaluation",
+  ]);
+  expect(
+    deriveAutomaticReplayCriteria({ taskText: "yes no", sourceOutput: "   " }),
+  ).toBeNull();
+});
+
+test("run97 reads the task instruction from the last user message only", () => {
+  expect(
+    extractTaskInstructionText({
+      messages: [
+        { role: "system", content: "You are a coding assistant." },
+        { role: "user", content: "first request" },
+        { role: "assistant", content: "assistant answer" },
+        { role: "user", content: "second request" },
+        { role: "assistant", content: "final answer" },
+      ],
+    }),
+  ).toBe("second request");
+  expect(
+    extractTaskInstructionText({ messages: [{ role: "assistant", content: "only an answer" }] }),
+  ).toBeNull();
+  expect(extractTaskInstructionText({ promptText: "inline request" })).toBe("inline request");
+  expect(extractTaskInstructionText({})).toBeNull();
 });

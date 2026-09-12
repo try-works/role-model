@@ -41,8 +41,9 @@ import {
 } from "./track-b-auto-replay-runtime.js";
 import { createTrackBOperations } from "./track-b-operations.js";
 import {
-  deriveSemanticEvaluationCriteria,
+  deriveAutomaticReplayCriteria,
   extractSourceOutputText,
+  extractTaskInstructionText,
 } from "./track-b-replay-evaluation-criteria.js";
 import { createReplayLedger } from "./track-b-replay-ledger.js";
 import {
@@ -3208,11 +3209,15 @@ export async function main(): Promise<void> {
             };
           }
           const sourceOutput = extractSourceOutputText(sourceCapture);
+          const taskText = extractTaskInstructionText(sourceCapture);
           // The replay endpoint requires semantic evaluation criteria and the
-          // routing-shadow scorer scores required terms. Automatic replay inherits
-          // them deterministically from the recorded source output; unusable output
-          // defers the capture instead of inventing a criterion.
-          const derivedCriteria = deriveSemanticEvaluationCriteria({ sourceOutput });
+          // routing-shadow scorer scores required terms. The source trial is graded
+          // on the recorded source output, so criteria must come from branch-shared
+          // task evidence while it exists: deriving them from the graded output
+          // would make the source satisfy its own criterion and no counterfactual
+          // could ever win. Unusable evidence defers the capture with a receipt
+          // instead of inventing a criterion.
+          const derivedCriteria = deriveAutomaticReplayCriteria({ taskText, sourceOutput });
           if (!derivedCriteria) {
             const responseShape =
               sourceCapture.response && typeof sourceCapture.response === "object"
@@ -3547,8 +3552,9 @@ export async function main(): Promise<void> {
               : null;
           // Observable output identity: prefer the recorded assistant text and fall
           // back to the bounded response excerpt or recorded request text when the
-          // capture stored an empty assistant message. Criteria use the same rule, so
-          // source and counterfactual trials are scored against one observable basis.
+          // capture stored an empty assistant message. This text is the source
+          // trial's independently observed result; the caller's evaluation criteria
+          // come from branch-shared task evidence, never from this graded output.
           const sourceOutput = extractSourceOutputText(sourceCapture);
           const sourceEndpointId =
             typeof sourceCapture.endpointId === "string" ? sourceCapture.endpointId : "";

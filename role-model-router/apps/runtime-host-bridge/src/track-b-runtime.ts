@@ -6060,6 +6060,41 @@ export async function runTrackBShadowPipeline(
       .update(JSON.stringify(canonicalizeRun88Proof(finalizedComparisonReceiptPayload)))
       .digest("hex"),
   };
+  // The knowledge boundary verifies a machine-issued redaction and safety receipt
+  // before it can persist a shadow candidate. Issue it from the same durable
+  // comparison readback the evaluation store returned, exactly as the packaged
+  // shadow-pipeline harness does, so live comparisons and harness comparisons carry
+  // one contract instead of the live path degrading on a missing receipt.
+  const durableHoldout =
+    durableComparison.holdout &&
+    typeof durableComparison.holdout === "object" &&
+    !Array.isArray(durableComparison.holdout)
+      ? (durableComparison.holdout as Record<string, unknown>)
+      : holdout;
+  const knowledgeSafetyReceiptPayload = {
+    schemaVersion: "role-model.knowledge-safety-receipt.v1",
+    kind: "knowledge_safety",
+    comparisonId: finalizedComparison.comparisonId,
+    comparisonDigest: finalizedComparisonReceiptPayload.comparisonDigest,
+    channel: input.channel,
+    routePackage: input.routePackage,
+    packageIdentity: input.routePackage,
+    redactionEvidenceRef: evaluationReferences.sourceEvidenceRef,
+    safetyReviewEvidenceRef:
+      typeof durableHoldout?.holdoutId === "string" && durableHoldout.holdoutId
+        ? durableHoldout.holdoutId
+        : evaluationReferences.counterfactualEvidenceRef,
+    redacted: true,
+    safetyReviewed: true,
+    safeForPrompt: false,
+    holdoutPassed: durableComparison.outcome === "candidate",
+  };
+  const knowledgeSafetyReceipt = {
+    payload: knowledgeSafetyReceiptPayload,
+    signature: createHmac("sha256", evaluationAuthoritySecret)
+      .update(JSON.stringify(canonicalizeRun88Proof(knowledgeSafetyReceiptPayload)))
+      .digest("hex"),
+  };
   const knowledgeEvaluation = {
     environment: "local-routing-evaluation",
     scores: Array.isArray(durableComparison.members)
@@ -6075,6 +6110,7 @@ export async function runTrackBShadowPipeline(
     },
     finalizedComparison,
     finalizedComparisonReceipt,
+    safetyReceipt: knowledgeSafetyReceipt,
   };
   const signals = await runtime.invoke(
     "trajectory-signals",

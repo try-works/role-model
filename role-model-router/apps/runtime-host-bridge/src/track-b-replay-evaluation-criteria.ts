@@ -15,6 +15,20 @@ export interface TrackBSemanticEvaluationCriteriaLike {
   readonly minOutputChars: number;
 }
 
+/**
+ * Where an automatic replay's required terms came from. The source trial is graded
+ * on the recorded source output, so criteria derived from that same output make the
+ * source satisfy its own criterion by construction and no counterfactual can ever
+ * win. Task evidence is branch-shared and keeps the comparison decidable.
+ */
+export type TrackBCriteriaEvidenceSource = "task_literal" | "task_text" | "recorded_output";
+
+export interface TrackBAutomaticReplayCriteria {
+  readonly criteria: TrackBSemanticEvaluationCriteriaLike;
+  readonly derivation: string;
+  readonly evidenceSource: TrackBCriteriaEvidenceSource;
+}
+
 const STOPWORDS = new Set([
   "about",
   "after",
@@ -206,6 +220,117 @@ export function extractSourceOutputText(capture: Record<string, unknown>): strin
     if (content) return content;
   }
   return null;
+}
+
+/**
+ * Read the task instruction a capture can support: the last user turn, or an inline
+ * prompt field when the capture stores no message list. Assistant turns are never
+ * used here because they are the graded artifact, not the task.
+ */
+export function extractTaskInstructionText(capture: Record<string, unknown>): string | null {
+  const messageLists = [capture.messages, (capture.request as Record<string, unknown> | undefined)?.messages];
+  for (const list of messageLists) {
+    if (!Array.isArray(list)) continue;
+    for (let index = list.length - 1; index >= 0; index -= 1) {
+      const message = list[index];
+      if (!message || typeof message !== "object" || Array.isArray(message)) continue;
+      const record = message as Record<string, unknown>;
+      if (record.role !== "user") continue;
+      const content = textFromContent(record.content);
+      if (content) return content;
+    }
+  }
+  for (const key of ["promptText", "requestText"]) {
+    const value = capture[key];
+    if (typeof value === "string" && value.trim()) return value;
+  }
+  return null;
+}
+
+function collectBoundedTerms(text: string, maxTerms: number): string[] {
+  const terms: string[] = [];
+  for (const token of text.toLowerCase().split(/[^a-z0-9]+/u)) {
+    if (token.length < MIN_TERM_LENGTH || token.length > MAX_TERM_LENGTH) continue;
+    if (STOPWORDS.has(token)) continue;
+    if (terms.includes(token)) continue;
+    terms.push(token);
+    if (terms.length === maxTerms) break;
+  }
+  return terms;
+}
+
+/**
+ * Bounded explicit-literal extraction from a task instruction: backticked or quoted
+ * literals, and the word that follows "exactly" or "only". The literals are the parts
+ * of the task a compliant answer must reproduce, so they are branch-shared evidence.
+ */
+function extractTaskLiterals(taskText: string): string[] {
+  const literals: string[] = [];
+  const quoted = /`([^`]{1,128})`|"([^"]{1,128})"|'([^']{1,128})'/gu;
+  for (const match of taskText.matchAll(quoted)) {
+    const value = match[1] ?? match[2] ?? match[3];
+    if (value?.trim()) literals.push(value);
+  }
+  const required =
+    /\b(?:exactly|only|token|marker|word|phrase|value)\s+([A-Za-z0-9][A-Za-z0-9._-]{1,63})/giu;
+  for (const match of taskText.matchAll(required)) {
+    if (match[1]) literals.push(match[1]);
+  }
+  return literals;
+}
+
+/**
+ * Derive the automatic replay criterion from branch-shared task evidence, falling
+ * back to the recorded source output only when the capture carries no usable task
+ * text. Callers keep the recorded-output derivation available for receipts, but the
+ * task-literal tier is what makes a counterfactual win reachable at all.
+ */
+export function deriveAutomaticReplayCriteria(input: {
+  readonly taskText?: string | null;
+  readonly sourceOutput?: string | null;
+  readonly maxTerms?: number;
+}): TrackBAutomaticReplayCriteria | null {
+  const maxTerms =
+    Number.isSafeInteger(input.maxTerms) && (input.maxTerms ?? 0) > 0
+      ? Math.min(Number(input.maxTerms), 8)
+      : DEFAULT_MAX_TERMS;
+  const taskText = typeof input.taskText === "string" ? input.taskText : "";
+  const literalTerms = collectBoundedTerms(extractTaskLiterals(taskText).join(" "), maxTerms);
+  if (literalTerms.length > 0) {
+    return {
+      criteria: {
+        schemaVersion: "role-model.semantic-criteria.v1",
+        requiredTerms: literalTerms,
+        forbiddenTerms: [],
+        minOutputChars: 1,
+      },
+      derivation: `derived from task literal: ${literalTerms.join(", ")}`,
+      evidenceSource: "task_literal",
+    };
+  }
+  const taskTerms = collectBoundedTerms(taskText, maxTerms);
+  if (taskTerms.length > 0) {
+    return {
+      criteria: {
+        schemaVersion: "role-model.semantic-criteria.v1",
+        requiredTerms: taskTerms,
+        forbiddenTerms: [],
+        minOutputChars: 1,
+      },
+      derivation: `derived from task text: ${taskTerms.join(", ")}`,
+      evidenceSource: "task_text",
+    };
+  }
+  const recorded = deriveSemanticEvaluationCriteria({
+    sourceOutput: input.sourceOutput,
+    maxTerms,
+  });
+  if (!recorded) return null;
+  return {
+    criteria: recorded.criteria,
+    derivation: recorded.derivation,
+    evidenceSource: "recorded_output",
+  };
 }
 
 export function deriveSemanticEvaluationCriteria(input: {
