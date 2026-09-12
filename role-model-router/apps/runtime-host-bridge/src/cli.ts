@@ -2988,7 +2988,7 @@ export async function main(): Promise<void> {
     // through the public replay endpoint, and persist every disposition. Production
     // stays disabled; failures degrade the loop instead of affecting routing.
     const startHostAutoReplayLoop = (
-      endpoints: readonly string[],
+      endpoints: () => readonly string[],
     ): ReturnType<typeof startAutoReplayLoop> | null => {
       const operations = postObservationOperations;
       const channel = packagedProfile?.channel ?? "development";
@@ -3664,7 +3664,7 @@ export async function main(): Promise<void> {
           throw new Error(`Track B startup SQLite maintenance failed with ${response.status}`);
         }
       }
-      activeAutoReplayLoop = startHostAutoReplayLoop(
+      activeAutoReplayLoop = startHostAutoReplayLoop(() =>
         created.effectiveRegistry.endpoints.map((endpoint) => endpoint.identity.endpoint_id),
       );
       return created;

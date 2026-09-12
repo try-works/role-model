@@ -59,7 +59,12 @@ export function startAutoReplayLoop(input: {
   readonly operations: AutoReplayOperations;
   readonly ledger: ReplayLedger;
   readonly policySet: ReplayPolicySet;
-  readonly configuredEndpointIds: readonly string[];
+  /**
+   * Configured endpoints may change while the runtime is up (an operator adds an
+   * endpoint after launch), so callers may supply a provider that is re-read on
+   * every tick instead of a snapshot.
+   */
+  readonly configuredEndpointIds: readonly string[] | (() => readonly string[]);
   readonly healthyEndpointIds?: readonly string[];
   readonly executor: (input: {
     readonly capture: AutoReplayCapture;
@@ -120,9 +125,13 @@ export function startAutoReplayLoop(input: {
         sourceEndpointId: null,
         hasRecordedToolResults: true,
       }));
+      const configuredEndpointIds =
+        typeof input.configuredEndpointIds === "function"
+          ? input.configuredEndpointIds()
+          : input.configuredEndpointIds;
       const result = await runAutoReplayTick({
         captures,
-        configuredEndpointIds: input.configuredEndpointIds,
+        configuredEndpointIds,
         ...(input.healthyEndpointIds ? { healthyEndpointIds: input.healthyEndpointIds } : {}),
         ledger: input.ledger,
         policySet: input.policySet,

@@ -223,3 +223,38 @@ test("run97 auto loop reports bounded operator status", async () => {
     cleanup();
   }
 });
+
+test("run97 auto loop re-reads configured endpoints on every tick", async () => {
+  const { ledger, cleanup } = harness();
+  try {
+    const configured: string[] = [];
+    const operations = fakeOperations(["req-1"]);
+    const loop = startAutoReplayLoop({
+      operations,
+      ledger,
+      policySet: buildReplayPolicySet(),
+      configuredEndpointIds: () => configured,
+      executor: async ({ candidates }) => ({
+        terminal: true,
+        branches: candidates.map((endpointId) => ({
+          endpointId,
+          outcome: "complete" as const,
+        })),
+      }),
+      intervalMs: 0,
+      now: () => Date.parse("2026-09-12T06:00:00Z"),
+    });
+    const beforeConfiguration = await loop.tick();
+    expect(beforeConfiguration.refused).toBe(1);
+    expect(beforeConfiguration.dispositions[0]?.code).toBe("no_distinct_candidate_configured");
+    configured.push("endpoint-a", "endpoint-b");
+    const afterConfiguration = await loop.tick();
+    expect(afterConfiguration.replayed).toBe(1);
+    // Two configured endpoints both differ from the unknown source, so the tick
+    // dispatches both candidates under one counterfactual.
+    expect(ledger.status()).toMatchObject({ counterfactuals: 1, dispatches: 2 });
+    loop.stop();
+  } finally {
+    cleanup();
+  }
+});
