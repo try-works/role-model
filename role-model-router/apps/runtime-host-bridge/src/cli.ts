@@ -79,6 +79,13 @@ import {
 
 const DURABLE_ARTIFACT_ID = /^[a-f0-9]{64}$/u;
 
+/**
+ * The automatic replay loop is created inside `main()` once the runtime backend
+ * exists, but the bridge server options are built by a module-level factory. This
+ * holder is the single shared reference for status and pause/resume control.
+ */
+let activeAutoReplayLoop: ReturnType<typeof startAutoReplayLoop> | null = null;
+
 type DurableReplayCapture = Readonly<Record<string, unknown>>;
 
 export interface SupervisedReplayRolloutReferences {
@@ -1953,6 +1960,14 @@ export function createCliServerOptions(
     runTrackBSupervisedReplay: bindBackendMethod(
       "runTrackBSupervisedReplay",
     ) as StartBridgeServerOptions["runTrackBSupervisedReplay"],
+    readTrackBReplayStatus: () => activeAutoReplayLoop?.status() ?? null,
+    controlTrackBReplay: async (body: Record<string, unknown>) => {
+      const action = typeof body?.action === "string" ? body.action : "";
+      if (action === "pause") activeAutoReplayLoop?.pause();
+      else if (action === "resume") activeAutoReplayLoop?.resume();
+      else throw new Error("replay control action must be pause or resume");
+      return { action, status: activeAutoReplayLoop?.status() ?? null };
+    },
     readOperatorStatus: bindBackendMethod(
       "readOperatorStatus",
     ) as StartBridgeServerOptions["readOperatorStatus"],
@@ -2832,16 +2847,14 @@ export async function main(): Promise<void> {
     })();
     return extensionRuntimeFailurePromise;
   };
-  let autoReplayLoop: ReturnType<typeof startAutoReplayLoop> | null = null;
-
   const shutdown = async (): Promise<void> => {
     if (shutdownPromise) {
       return shutdownPromise;
     }
 
     shutdownPromise = (async () => {
-      autoReplayLoop?.stop();
-      autoReplayLoop = null;
+      activeAutoReplayLoop?.stop();
+      activeAutoReplayLoop = null;
       stopExtensionRuntimeWatchdog?.();
       stopExtensionRuntimeWatchdog = null;
       await server?.close();
@@ -3651,7 +3664,7 @@ export async function main(): Promise<void> {
           throw new Error(`Track B startup SQLite maintenance failed with ${response.status}`);
         }
       }
-      autoReplayLoop = startHostAutoReplayLoop(
+      activeAutoReplayLoop = startHostAutoReplayLoop(
         created.effectiveRegistry.endpoints.map((endpoint) => endpoint.identity.endpoint_id),
       );
       return created;

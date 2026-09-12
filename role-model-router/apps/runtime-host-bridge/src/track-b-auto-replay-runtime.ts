@@ -27,9 +27,23 @@ export interface AutoReplayOperations {
 export interface AutoReplayLoopHealth {
   readonly ticks: number;
   readonly running: boolean;
+  readonly paused: boolean;
   readonly lastOutcome: "idle" | "ok" | "degraded";
   readonly lastError: string | null;
   readonly lastProcessedAtMs: number | null;
+}
+
+export interface AutoReplayLoopStatus extends AutoReplayLoopHealth {
+  readonly budget: {
+    readonly window: string;
+    readonly counterfactuals: number;
+    readonly reservedCounterfactuals: number;
+    readonly reservedDispatches: number;
+    readonly dispatches: number;
+    readonly counterfactualLimit: number;
+    readonly dispatchLimit: number;
+  };
+  readonly lastDispositions: number;
 }
 
 const emptyResult = (): AutoReplayTickResult => ({
@@ -62,7 +76,10 @@ export function startAutoReplayLoop(input: {
 }): {
   tick(): Promise<AutoReplayTickResult & { readonly skipped?: boolean }>;
   stop(): void;
+  pause(): void;
+  resume(): void;
   health(): AutoReplayLoopHealth;
+  status(): AutoReplayLoopStatus;
 } {
   const now = input.now ?? (() => Date.now());
   const maxCapturesPerTick = input.maxCapturesPerTick ?? 8;
@@ -71,6 +88,8 @@ export function startAutoReplayLoop(input: {
   let lastOutcome: AutoReplayLoopHealth["lastOutcome"] = "idle";
   let lastError: string | null = null;
   let lastProcessedAtMs: number | null = null;
+  let paused = false;
+  let lastDispositions = 0;
   let timer: unknown = null;
 
   const pendingRefs = (value: unknown): readonly string[] => {
@@ -89,7 +108,7 @@ export function startAutoReplayLoop(input: {
   };
 
   const tick = async (): Promise<AutoReplayTickResult & { readonly skipped?: boolean }> => {
-    if (running) return { ...emptyResult(), skipped: true };
+    if (running || paused) return { ...emptyResult(), skipped: true };
     running = true;
     try {
       const pending = await input.operations.listPendingReplayCaptures({
@@ -125,6 +144,7 @@ export function startAutoReplayLoop(input: {
       lastOutcome = "ok";
       lastError = null;
       lastProcessedAtMs = now();
+      lastDispositions = result.dispositions.length;
       return result;
     } catch (error) {
       lastOutcome = "degraded";
@@ -160,8 +180,21 @@ export function startAutoReplayLoop(input: {
       }
       running = false;
     },
+    pause() {
+      paused = true;
+    },
+    resume() {
+      paused = false;
+    },
     health() {
-      return { ticks, running, lastOutcome, lastError, lastProcessedAtMs };
+      return { ticks, running, paused, lastOutcome, lastError, lastProcessedAtMs };
+    },
+    status() {
+      return {
+        ...{ ticks, running, paused, lastOutcome, lastError, lastProcessedAtMs },
+        budget: { ...input.ledger.status() },
+        lastDispositions,
+      };
     },
   };
 }

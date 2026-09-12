@@ -155,3 +155,71 @@ test("run97 auto loop degrades when the private boundary is unavailable", async 
     cleanup();
   }
 });
+
+test("run97 auto loop pauses and resumes without disabling routing", async () => {
+  const { ledger, cleanup } = harness();
+  try {
+    const operations = fakeOperations(["req-1"]);
+    const loop = startAutoReplayLoop({
+      operations,
+      ledger,
+      policySet: buildReplayPolicySet(),
+      configuredEndpointIds: ["endpoint-a", "endpoint-b"],
+      executor: async ({ candidates }) => ({
+        terminal: true,
+        branches: candidates.map((endpointId) => ({
+          endpointId,
+          outcome: "complete" as const,
+        })),
+      }),
+      intervalMs: 60_000,
+      now: () => Date.parse("2026-09-12T06:00:00Z"),
+    });
+    loop.pause();
+    expect(loop.health().paused).toBe(true);
+    const paused = await loop.tick();
+    expect(paused.skipped).toBe(true);
+    expect(operations.recorded).toEqual([]);
+    expect(ledger.status()).toMatchObject({ dispatches: 0 });
+    loop.resume();
+    const resumed = await loop.tick();
+    expect(resumed.replayed).toBe(1);
+    expect(loop.health().paused).toBe(false);
+    loop.stop();
+  } finally {
+    cleanup();
+  }
+});
+
+test("run97 auto loop reports bounded operator status", async () => {
+  const { ledger, cleanup } = harness();
+  try {
+    const operations = fakeOperations(["req-1"]);
+    const loop = startAutoReplayLoop({
+      operations,
+      ledger,
+      policySet: buildReplayPolicySet(),
+      configuredEndpointIds: ["endpoint-a", "endpoint-b"],
+      executor: async ({ candidates }) => ({
+        terminal: true,
+        branches: candidates.map((endpointId) => ({
+          endpointId,
+          outcome: "complete" as const,
+        })),
+      }),
+      intervalMs: 0,
+      now: () => Date.parse("2026-09-12T06:00:00Z"),
+    });
+    await loop.tick();
+    const status = loop.status();
+    expect(status).toMatchObject({
+      paused: false,
+      lastOutcome: "ok",
+      budget: { window: "2026-09-12", counterfactuals: 1, dispatchLimit: 300 },
+      lastDispositions: 1,
+    });
+    loop.stop();
+  } finally {
+    cleanup();
+  }
+});
