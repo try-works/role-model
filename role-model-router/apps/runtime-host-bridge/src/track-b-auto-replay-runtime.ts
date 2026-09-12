@@ -97,7 +97,7 @@ export function startAutoReplayLoop(input: {
   let lastDispositions = 0;
   let timer: unknown = null;
 
-  const pendingRefs = (value: unknown): readonly string[] => {
+  const pendingCaptures = (value: unknown): readonly AutoReplayCapture[] => {
     const record =
       value && typeof value === "object" && !Array.isArray(value)
         ? (value as Record<string, unknown>)
@@ -107,9 +107,33 @@ export function startAutoReplayLoop(input: {
       : Array.isArray(record?.pending)
         ? record.pending
         : [];
-    return list
-      .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
-      .map((item) => item.trim());
+    const captures: AutoReplayCapture[] = [];
+    for (const item of list) {
+      if (typeof item === "string") {
+        const captureRef = item.trim();
+        if (captureRef) {
+          captures.push({
+            captureRef,
+            sourceEndpointId: null,
+            hasRecordedToolResults: true,
+          });
+        }
+        continue;
+      }
+      if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+      const row = item as Record<string, unknown>;
+      const captureRef = typeof row.captureRef === "string" ? row.captureRef.trim() : "";
+      if (!captureRef) continue;
+      captures.push({
+        captureRef,
+        sourceEndpointId:
+          typeof row.sourceEndpointId === "string" && row.sourceEndpointId.trim()
+            ? row.sourceEndpointId.trim()
+            : null,
+        hasRecordedToolResults: row.hasRecordedToolResults !== false,
+      });
+    }
+    return captures;
   };
 
   const tick = async (): Promise<AutoReplayTickResult & { readonly skipped?: boolean }> => {
@@ -120,11 +144,7 @@ export function startAutoReplayLoop(input: {
         policySetDigest: input.policySet.policySetDigest,
         limit: maxCapturesPerTick * 4,
       });
-      const captures: AutoReplayCapture[] = pendingRefs(pending).map((captureRef) => ({
-        captureRef,
-        sourceEndpointId: null,
-        hasRecordedToolResults: true,
-      }));
+      const captures = pendingCaptures(pending);
       const configuredEndpointIds =
         typeof input.configuredEndpointIds === "function"
           ? input.configuredEndpointIds()

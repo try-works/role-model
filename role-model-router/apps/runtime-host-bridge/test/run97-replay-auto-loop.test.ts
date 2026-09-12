@@ -258,3 +258,54 @@ test("run97 auto loop re-reads configured endpoints on every tick", async () => 
     cleanup();
   }
 });
+
+test("run97 auto loop uses the capture's source endpoint to pick distinct candidates", async () => {
+  const { ledger, cleanup } = harness();
+  try {
+    const operations = {
+      async listPendingReplayCaptures() {
+        return {
+          pending: [
+            {
+              captureRef: "req-object-1",
+              sourceEndpointId: "endpoint-a",
+              hasRecordedToolResults: true,
+            },
+          ],
+        };
+      },
+      async recordReplayDisposition(input: Record<string, unknown>) {
+        operations.recorded.push(input);
+        return { recorded: true };
+      },
+      recorded: [] as Array<Record<string, unknown>>,
+    };
+    const seenCandidates: string[][] = [];
+    const loop = startAutoReplayLoop({
+      operations,
+      ledger,
+      policySet: buildReplayPolicySet(),
+      configuredEndpointIds: ["endpoint-a", "endpoint-b"],
+      executor: async ({ candidates }) => {
+        seenCandidates.push([...candidates]);
+        return {
+          terminal: true,
+          branches: candidates.map((endpointId) => ({
+            endpointId,
+            outcome: "complete" as const,
+          })),
+        };
+      },
+      intervalMs: 0,
+      now: () => Date.parse("2026-09-12T06:00:00Z"),
+    });
+    const result = await loop.tick();
+    loop.stop();
+    // The source endpoint must never be offered as its own counterfactual.
+    expect(seenCandidates).toEqual([["endpoint-b"]]);
+    expect(result.replayed).toBe(1);
+    expect(operations.recorded[0]).toMatchObject({ outcome: "replayed" });
+  } finally {
+    cleanup();
+  }
+});
