@@ -30,6 +30,10 @@ import {
 import { createProjectionV2 } from "@role-model-router/trace";
 
 import { DEFAULT_REPLAY_CANDIDATE_CAP } from "./track-b-replay-policy.js";
+import {
+  boundedTrackBLearningRefusal,
+  selectTrackBLearningEvidence,
+} from "./track-b-learning-evidence.js";
 
 import { deriveRuntimeContributionOutcomeFromObservation } from "./contribution-outcome.js";
 import { consumeTrackBProjection } from "./track-b-projections.js";
@@ -6389,28 +6393,33 @@ export async function runTrackBShadowPipeline(
     }),
   });
   const profileRecord = profile as Record<string, unknown>;
-  if (typeof profileRecord.digest !== "string" || !profileRecord.digest || !profileRecord.effects) {
-    throw new Error("finalized profile estimate must retain attributable evidence");
-  }
-  const profileForKnowledge = {
-    digest: profileRecord.digest,
-    effects: profileRecord.effects,
-  };
-  const scoredRollouts = completedRollouts.map(({ rollout, score, trialId, scoreId }) => {
-    if (typeof rollout.evidenceRef !== "string" || !rollout.evidenceRef) {
-      throw new Error("routing-shadow rollout evidence references are required");
-    }
-    return {
-      evidenceRef: rollout.evidenceRef,
-      // Derived only from the durable Runner Local semantic scorer receipt,
-      // never from a transport status or output equality proxy.
-      score,
+  // A degraded profile estimate is a learning refusal with a receipt, not a replay
+  // failure: the comparison is already durable and the replay already completed.
+  const profileForKnowledge =
+    typeof profileRecord.digest === "string" &&
+    profileRecord.digest &&
+    profileRecord.effects
+      ? {
+          digest: profileRecord.digest,
+          effects: profileRecord.effects,
+        }
+      : null;
+  // The durable comparison decides which trials were positive and negative. The
+  // in-memory re-score stays a fallback only, because a comparison the evaluation
+  // store finalized as `candidate` must not be refused by a drifted local score.
+  const learningEvidence = selectTrackBLearningEvidence({
+    members: Array.isArray(durableComparison.members)
+      ? (durableComparison.members as Record<string, unknown>[])
+      : [],
+    rollouts: completedRollouts.map(({ rollout, score, trialId, scoreId }) => ({
       trialId,
+      score,
       scoreId,
-    };
+      evidenceRef: typeof rollout.evidenceRef === "string" ? rollout.evidenceRef : "",
+    })),
   });
-  const positive = scoredRollouts.filter((rollout) => rollout.score === 1);
-  const negative = scoredRollouts.filter((rollout) => rollout.score === 0);
+  const positive = learningEvidence.positive;
+  const negative = learningEvidence.negative;
   const proofForEvidence = (evidenceRef: string): Record<string, unknown> => {
     const references = referenceAttestation.references;
     if (!references || typeof references !== "object" || Array.isArray(references)) {
@@ -6428,20 +6437,26 @@ export async function runTrackBShadowPipeline(
     }
     return proof as Record<string, unknown>;
   };
-  const knowledgeEvidenceRow = (rollout: (typeof scoredRollouts)[number]) => ({
-    evidenceRef: rollout.evidenceRef,
-    score: rollout.score,
+  const knowledgeEvidenceRow = (row: (typeof positive)[number]) => ({
+    evidenceRef: row.evidenceRef,
+    score: row.score,
     evidenceKind: "evaluation",
     learningCapable: true,
     evaluationRef: durableComparison.groupId,
-    trialId: rollout.trialId,
-    scoreId: rollout.scoreId,
+    trialId: row.trialId,
+    scoreId: row.scoreId,
     sourceGroupId: durableComparison.groupId,
-    referenceProof: proofForEvidence(rollout.evidenceRef),
+    referenceProof: proofForEvidence(row.evidenceRef),
   });
-  const candidate =
-    positive.length && negative.length
-      ? await runtime.invoke("knowledge-worker", {
+  let candidate: Record<string, unknown>;
+  if (!profileForKnowledge) {
+    candidate = boundedTrackBLearningRefusal(
+      "profile:estimate-finalized-evaluation",
+      "finalized profile estimate must retain attributable evidence",
+    );
+  } else if (positive.length && negative.length) {
+    try {
+      candidate = await runtime.invoke("knowledge-worker", {
           ...envelope("knowledge:eval-consumer", {
             replay: replayForKnowledge,
             evaluation: knowledgeEvaluation,
@@ -6474,12 +6489,17 @@ export async function runTrackBShadowPipeline(
             },
           }),
           evaluationAuthoritySecret,
-        })
-      : {
-          id: null,
-          state: "insufficient_comparable_evidence",
-          refusalCode: "R14_INSUFFICIENT_ROLLOUT_EVIDENCE",
-        };
+        });
+    } catch (error) {
+      candidate = boundedTrackBLearningRefusal("knowledge:eval-consumer", error);
+    }
+  } else {
+    candidate = {
+      id: null,
+      state: "insufficient_comparable_evidence",
+      refusalCode: "R14_INSUFFICIENT_ROLLOUT_EVIDENCE",
+    };
+  }
   const candidateId =
     typeof (candidate as Record<string, unknown>).id === "string"
       ? ((candidate as Record<string, unknown>).id as string)
