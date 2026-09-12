@@ -2392,7 +2392,12 @@ export function createReplaySourceAttestation(input: {
   // instead of guessing which durable receipt is incomplete.
   const missingReceiptInputs: string[] = [];
   const captureEndpointId = typeof capture.endpointId === "string" ? capture.endpointId : "";
-  if (capture.schemaVersion !== "role-model.route-capture-read.v2") {
+  // A durable capture may be read as v1 (no inline graph trace) or v2 (traced); both
+  // are replayable because the requirement is durability, not trace richness.
+  if (
+    capture.schemaVersion !== "role-model.route-capture-read.v1" &&
+    capture.schemaVersion !== "role-model.route-capture-read.v2"
+  ) {
     missingReceiptInputs.push(`capture schema ${String(capture.schemaVersion)}`);
   }
   if (capture.scope !== input.scope) missingReceiptInputs.push("capture scope");
@@ -2405,19 +2410,14 @@ export function createReplaySourceAttestation(input: {
   if (!captureEndpointId) {
     missingReceiptInputs.push("selected endpoint");
   }
-  if (!trace || typeof trace !== "object" || Array.isArray(trace)) {
+  if (trace !== undefined && (typeof trace !== "object" || Array.isArray(trace))) {
     missingReceiptInputs.push("trace");
-  } else {
+  } else if (trace !== undefined) {
     if (!Number.isSafeInteger((trace as Record<string, unknown>).generation)) {
       missingReceiptInputs.push("trace generation");
     }
-    if ((trace as Record<string, unknown>).readiness !== "ready") {
-      missingReceiptInputs.push(
-        `trace readiness ${String((trace as Record<string, unknown>).readiness)}`,
-      );
-    }
   }
-  if (traversal === null) missingReceiptInputs.push("canonical traversal");
+  if (trace !== undefined && traversal === null) missingReceiptInputs.push("canonical traversal");
   if (
     replaySource !== null &&
     replaySource.schemaVersion !== "role-model.route-capture-replay-source.v1"
@@ -2449,10 +2449,41 @@ export function createReplaySourceAttestation(input: {
       `complete durable replay source receipt is required: ${missingReceiptInputs.join(", ")}`,
     );
   }
-  if (traversal === null) {
-    // Unreachable: the receipt check above already threw for a missing traversal.
-    throw new Error("complete durable replay source receipt is required: canonical traversal");
-  }
+  const traceRecord =
+    trace && typeof trace === "object" && !Array.isArray(trace)
+      ? (trace as Record<string, unknown>)
+      : null;
+  const untracedOccurrenceId =
+    typeof capture.rootOccurrenceId === "string" && capture.rootOccurrenceId
+      ? capture.rootOccurrenceId
+      : typeof capture.rootArtifactId === "string"
+        ? capture.rootArtifactId
+        : "";
+  const traversalFields = traversal
+    ? {
+        rootOccurrenceId: traversal.rootOccurrenceId,
+        headOccurrenceId: traversal.headOccurrenceId,
+        leafOccurrenceIds: traversal.leafOccurrenceIds,
+        lastSequence: traversal.lastSequence,
+        traversalDigest: traversal.traversalDigest,
+        sourceRootOccurrenceId: traversal.sourceRootOccurrenceId,
+        sourceHeadOccurrenceId: traversal.sourceHeadOccurrenceId,
+        sourceLeafOccurrenceIds: traversal.sourceLeafOccurrenceIds,
+        sourceLastSequence: traversal.sourceLastSequence,
+        sourceTraversalDigest: traversal.sourceTraversalDigest,
+      }
+    : {
+        rootOccurrenceId: untracedOccurrenceId,
+        headOccurrenceId: untracedOccurrenceId,
+        leafOccurrenceIds: [untracedOccurrenceId],
+        lastSequence: 0,
+        traversalDigest: "unavailable",
+        sourceRootOccurrenceId: untracedOccurrenceId,
+        sourceHeadOccurrenceId: untracedOccurrenceId,
+        sourceLeafOccurrenceIds: [untracedOccurrenceId],
+        sourceLastSequence: 0,
+        sourceTraversalDigest: "unavailable",
+      };
   const eligibleEndpointIds = [...new Set(input.eligibleEndpointIds)].sort();
   return Object.freeze({
     schemaVersion: "role-model.replay-source-attestation.v1",
@@ -2462,19 +2493,10 @@ export function createReplaySourceAttestation(input: {
     traceRoot: Object.freeze({
       traceRootId: capture.rootArtifactId,
       scope: input.scope,
-      generation: (trace as Record<string, unknown>).generation,
-      readiness: "ready",
+      generation: typeof traceRecord?.generation === "number" ? traceRecord.generation : 0,
+      readiness: traceRecord ? traceRecord.readiness : "unavailable",
       retentionState: "available",
-      rootOccurrenceId: traversal.rootOccurrenceId,
-      headOccurrenceId: traversal.headOccurrenceId,
-      leafOccurrenceIds: traversal.leafOccurrenceIds,
-      lastSequence: traversal.lastSequence,
-      traversalDigest: traversal.traversalDigest,
-      sourceRootOccurrenceId: traversal.sourceRootOccurrenceId,
-      sourceHeadOccurrenceId: traversal.sourceHeadOccurrenceId,
-      sourceLeafOccurrenceIds: traversal.sourceLeafOccurrenceIds,
-      sourceLastSequence: traversal.sourceLastSequence,
-      sourceTraversalDigest: traversal.sourceTraversalDigest,
+      ...traversalFields,
       sharedPrefixRef,
       normalizedRequestRef,
       sourceDecisionId: capture.routingDecisionId,
