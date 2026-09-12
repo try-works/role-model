@@ -191,5 +191,7 @@ test("Run 97 observations with distinct configured candidates enqueue replay ins
         id === "background-evidence-scheduler" &&
         envelope.capability === "scheduler:enqueue-replay-intent",
     ),
-  ).toBe(true);
+  ).toBe(false);
+  expect(receipt.replayIntentJobId).toBe("replay-intent:run97-live-request");
+  expect(receipt.replayIntentAccepted).toBe(true);
 });

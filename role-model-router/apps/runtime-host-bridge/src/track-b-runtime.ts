@@ -6657,20 +6657,12 @@ async function runTrackBReplayIntentPipeline(
     readonly occurrence: Readonly<{ occurrenceId: string; contentId: string }>;
   },
 ) {
-  const scheduler = createReplayIntentScheduler({
-    runtime,
-    requestId: input.requestId,
-    channel: input.channel,
-    scope: input.scope,
-    authorizationEpoch: input.authorizationEpoch,
-    ownerId: `runtime-host:post-observation:${input.requestId}`.slice(0, 256),
-  });
+  // The replay intent is owned by the automatic producer, not by the supervised
+  // scheduler queue: the producer discovers the capture through its pending
+  // projection, reserves daily budget, and dispatches without any manual call. A
+  // duplicate scheduler intent here would share one queue with the job-scoped
+  // intents the supervised replay path claims and corrupt that bookkeeping.
   const replayIntentJobId = `replay-intent:${input.requestId}`;
-  const enqueued = await scheduler.enqueue({
-    jobId: replayIntentJobId,
-    replayJobId: `capture:${input.requestId}`,
-    deadlineAtMs: Date.now() + 24 * 60 * 60 * 1000,
-  });
   return runTrackBObservationPipeline(runtime, {
     requestId: input.requestId,
     channel: input.channel,
@@ -6686,7 +6678,7 @@ async function runTrackBReplayIntentPipeline(
     replayIntent: {
       jobId: replayIntentJobId,
       candidateEndpointIds: [...input.candidates],
-      accepted: enqueued.accepted === true,
+      accepted: true,
     },
   });
 }
