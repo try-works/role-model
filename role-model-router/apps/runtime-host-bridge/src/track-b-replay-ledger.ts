@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
+import { assertReplayReceiptMetadataOnly } from "./track-b-replay-retention.js";
+
 /**
  * Run 97 replay budget ledger.
  *
@@ -226,6 +228,7 @@ export function createReplayLedger(options: {
       persist(file);
     },
     record(input) {
+      assertReplayReceiptMetadataOnly(input as unknown as Record<string, unknown>);
       const atMs = now();
       const file = load();
       const window = windowOf(file, atMs);
