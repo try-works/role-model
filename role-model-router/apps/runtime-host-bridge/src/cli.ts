@@ -3372,7 +3372,12 @@ export async function main(): Promise<void> {
               ? originallyEligibleEndpointIds
               : [
                   ...new Set([
-                    ...(capturedSourceEndpointId ? [capturedSourceEndpointId] : []),
+                    ...(typeof sourceCapture.endpointId === "string" &&
+                    sourceCapture.endpointId.trim()
+                      ? [sourceCapture.endpointId.trim()]
+                      : capturedSourceEndpointId
+                        ? [capturedSourceEndpointId]
+                        : []),
                     ...candidateEndpointIds,
                   ]),
                 ].sort();
