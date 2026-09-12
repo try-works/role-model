@@ -364,3 +364,45 @@ test("run97 auto loop refuses replay-produced captures reported by the private b
     cleanup();
   }
 });
+
+test("run97 auto loop re-reads endpoint health and never dispatches a degraded candidate", async () => {
+  const { ledger, cleanup } = harness();
+  try {
+    const operations = fakeOperations(["req-health-1"]);
+    let healthReads = 0;
+    const seenCandidates: string[][] = [];
+    const loop = startAutoReplayLoop({
+      operations,
+      ledger,
+      policySet: buildReplayPolicySet(),
+      configuredEndpointIds: ["endpoint-a", "endpoint-b", "endpoint-degraded"],
+      // A credential-less endpoint is degraded: selecting it can only burn budget and
+      // leave the capture without a comparison.
+      healthyEndpointIds: async () => {
+        healthReads += 1;
+        return ["endpoint-a", "endpoint-b"];
+      },
+      executor: async ({ candidates }) => {
+        seenCandidates.push([...candidates]);
+        return {
+          terminal: true,
+          branches: candidates.map((endpointId) => ({
+            endpointId,
+            outcome: "complete" as const,
+          })),
+        };
+      },
+      intervalMs: 0,
+      now: () => Date.parse("2026-09-13T02:00:00Z"),
+    });
+    const first = await loop.tick();
+    const second = await loop.tick();
+    loop.stop();
+    expect(healthReads).toBe(2);
+    expect(seenCandidates[0]).toEqual(["endpoint-a", "endpoint-b"]);
+    expect(seenCandidates.flat()).not.toContain("endpoint-degraded");
+    expect(first.replayed + second.replayed).toBeGreaterThanOrEqual(1);
+  } finally {
+    cleanup();
+  }
+});

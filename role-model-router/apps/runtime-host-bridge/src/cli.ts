@@ -3012,6 +3012,7 @@ export async function main(): Promise<void> {
     // stays disabled; failures degrade the loop instead of affecting routing.
     const startHostAutoReplayLoop = (
       endpoints: () => readonly string[],
+      healthyEndpoints: () => Promise<readonly string[] | null>,
     ): ReturnType<typeof startAutoReplayLoop> | null => {
       const operations = postObservationOperations;
       const channel = packagedProfile?.channel ?? "development";
@@ -3033,6 +3034,7 @@ export async function main(): Promise<void> {
         ledger,
         policySet,
         configuredEndpointIds: endpoints,
+        healthyEndpointIds: healthyEndpoints,
         intervalMs,
         executor: async ({ capture, candidates, reservationId }) => {
           const sourceCapture = (await operations.readLocalRouteCapture({
@@ -3863,8 +3865,29 @@ export async function main(): Promise<void> {
           throw new Error(`Track B startup SQLite maintenance failed with ${response.status}`);
         }
       }
-      activeAutoReplayLoop = startHostAutoReplayLoop(() =>
-        created.effectiveRegistry.endpoints.map((endpoint) => endpoint.identity.endpoint_id),
+      activeAutoReplayLoop = startHostAutoReplayLoop(
+        () => created.effectiveRegistry.endpoints.map((endpoint) => endpoint.identity.endpoint_id),
+        // R3/R7: the counterfactual candidate set is the runtime's *dispatchable*
+        // configured set. A credential-less or degraded endpoint must never be chosen
+        // as a counterfactual: its dispatch can only fail, which would leave the
+        // capture without a comparison while still consuming the daily dispatch
+        // ceiling. Health is re-read every tick because credentials can be repaired
+        // or revoked while the runtime is up.
+        async () => {
+          try {
+            const activeRuntime = packagedRuntime;
+            if (!activeRuntime) return null;
+            const rows = await activeRuntime.backend.listEndpoints();
+            const healthy = rows
+              .filter((row) => row.healthStatus === "healthy")
+              .map((row) => row.endpointId);
+            // An empty healthy set is a real observation (nothing can be dispatched),
+            // so it is returned as-is rather than being confused with "no filter".
+            return healthy;
+          } catch {
+            return null;
+          }
+        },
       );
       configuredEndpointIdsRef.current = created.effectiveRegistry.endpoints.map(
         (endpoint) => endpoint.identity.endpoint_id,

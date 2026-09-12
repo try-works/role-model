@@ -137,7 +137,15 @@ export function startAutoReplayLoop(input: {
    * every tick instead of a snapshot.
    */
   readonly configuredEndpointIds: readonly string[] | (() => readonly string[]);
-  readonly healthyEndpointIds?: readonly string[];
+  /**
+   * Endpoints the runtime can actually dispatch to. A provider may be supplied so a
+   * credential-less or degraded endpoint is re-evaluated every tick instead of being
+   * frozen at loop construction; resolving to null means "no health filter is
+   * currently known", which must not be treated as "no endpoint is healthy".
+   */
+  readonly healthyEndpointIds?:
+    | readonly string[]
+    | (() => readonly string[] | null | Promise<readonly string[] | null>);
   readonly executor: (input: {
     readonly capture: AutoReplayCapture;
     readonly candidates: readonly string[];
@@ -225,10 +233,16 @@ export function startAutoReplayLoop(input: {
         typeof input.configuredEndpointIds === "function"
           ? input.configuredEndpointIds()
           : input.configuredEndpointIds;
+      const providedHealthyEndpointIds =
+        typeof input.healthyEndpointIds === "function"
+          ? await input.healthyEndpointIds()
+          : input.healthyEndpointIds;
       const result = await runAutoReplayTick({
         captures,
         configuredEndpointIds,
-        ...(input.healthyEndpointIds ? { healthyEndpointIds: input.healthyEndpointIds } : {}),
+        ...(providedHealthyEndpointIds && providedHealthyEndpointIds.length > 0
+          ? { healthyEndpointIds: [...providedHealthyEndpointIds] }
+          : {}),
         ledger: input.ledger,
         policySet: input.policySet,
         executor: input.executor,
