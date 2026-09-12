@@ -3363,12 +3363,25 @@ export async function main(): Promise<void> {
             );
           }
           const channel = packagedProfile?.channel ?? "development";
+          // R3: the frozen decision snapshot is provenance, not a filter. Captures
+          // that do not record one (for example a channel that captured a single
+          // eligible endpoint) still replay against the configured candidate set,
+          // and the effective set is what the attestation binds.
+          const effectiveEligibleEndpointIds =
+            originallyEligibleEndpointIds.length > 0
+              ? originallyEligibleEndpointIds
+              : [
+                  ...new Set([
+                    ...(capturedSourceEndpointId ? [capturedSourceEndpointId] : []),
+                    ...candidateEndpointIds,
+                  ]),
+                ].sort();
           const attestation = createReplaySourceAttestation({
             channel,
             scope: options.scopeId,
             authorizationEpoch: 1,
             capture: sourceCapture,
-            eligibleEndpointIds: originallyEligibleEndpointIds,
+            eligibleEndpointIds: effectiveEligibleEndpointIds,
           });
           const dispatched = new Map<
             string,
