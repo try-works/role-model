@@ -222,3 +222,45 @@ test("run97 executor failure detail is recorded on the disposition", async () =>
     cleanup();
   }
 });
+
+test("run97 auto producer refuses replay-produced captures instead of replaying them again", async () => {
+  const { ledger, cleanup } = tempLedger();
+  try {
+    let dispatches = 0;
+    const result = await runAutoReplayTick({
+      captures: [
+        { captureRef: "req-live", sourceEndpointId: "endpoint-a", hasRecordedToolResults: true },
+        {
+          captureRef: "replay-req-live-1e03652ce6770a82",
+          sourceEndpointId: "endpoint-a",
+          hasRecordedToolResults: false,
+          replayProduced: true,
+        },
+        {
+          captureRef: "replay-req-live-1e03652ce6770a82-branch",
+          sourceEndpointId: "endpoint-a",
+          hasRecordedToolResults: false,
+          replayProduced: true,
+        },
+      ],
+      configuredEndpointIds: ["endpoint-a", "endpoint-b"],
+      ledger,
+      policySet: buildReplayPolicySet(),
+      executor: async ({ capture }) => {
+        dispatches += 1;
+        return { terminal: true, branches: [{ endpointId: "endpoint-b", outcome: "complete" }] };
+      },
+    });
+    expect(dispatches).toBe(1);
+    expect(result.replayed).toBe(1);
+    expect(result.refused).toBe(2);
+    expect(result.dispositions.map((row) => `${row.captureRef}:${row.outcome}:${row.code}`)).toEqual([
+      "req-live:replayed:undefined",
+      "replay-req-live-1e03652ce6770a82:refused:amplification_depth_exceeded",
+      "replay-req-live-1e03652ce6770a82-branch:refused:amplification_depth_exceeded",
+    ]);
+    expect(retryableReplayRefusalCodes().has("amplification_depth_exceeded")).toBe(false);
+  } finally {
+    cleanup();
+  }
+});

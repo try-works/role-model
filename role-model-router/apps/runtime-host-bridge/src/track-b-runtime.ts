@@ -29,6 +29,8 @@ import {
 } from "@role-model-router/sqlite-memory";
 import { createProjectionV2 } from "@role-model-router/trace";
 
+import { DEFAULT_REPLAY_CANDIDATE_CAP } from "./track-b-replay-policy.js";
+
 import { deriveRuntimeContributionOutcomeFromObservation } from "./contribution-outcome.js";
 import { consumeTrackBProjection } from "./track-b-projections.js";
 
@@ -2561,6 +2563,71 @@ function classifyReplayDispatchFailure(error: unknown): {
  * request may be replayed again under a new idempotency key, so source-request
  * identity alone is not a safe Evaluation Core comparison-group namespace.
  */
+/**
+ * Run 97 replay dispatch transcript.
+ *
+ * Durable captures store tool linkage in the graph's normalised camelCase shape
+ * (`toolCalls`, `toolCallId`) while provider requests require the wire shape
+ * (`tool_calls`, `tool_call_id`). Replaying a tool-bearing capture without this
+ * mapping sends `role: "tool"` messages without their call identity and the
+ * provider rejects the whole request with `messages[N]: missing field
+ * tool_call_id`, which is why tool-using captures could not be replayed at all.
+ * Requirement R1/R2: every capture, including tool-bearing ones, is replayable and
+ * recorded tool results are reused rather than re-executed.
+ */
+export function buildReplayDispatchMessages(
+  sourceMessages: readonly unknown[],
+): Record<string, unknown>[] {
+  const messages: Record<string, unknown>[] = [];
+  for (const raw of sourceMessages) {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) continue;
+    const message = raw as Record<string, unknown>;
+    const role = typeof message.role === "string" && message.role ? message.role : "user";
+    const record: Record<string, unknown> = { role, content: message.content ?? null };
+    const toolCallId =
+      typeof message.toolCallId === "string" && message.toolCallId
+        ? message.toolCallId
+        : typeof message.tool_call_id === "string" && message.tool_call_id
+          ? message.tool_call_id
+          : null;
+    if (toolCallId) record.tool_call_id = toolCallId;
+    const rawCalls = Array.isArray(message.toolCalls)
+      ? message.toolCalls
+      : Array.isArray(message.tool_calls)
+        ? message.tool_calls
+        : [];
+    const toolCalls: Record<string, unknown>[] = [];
+    for (const rawCall of rawCalls) {
+      if (!rawCall || typeof rawCall !== "object" || Array.isArray(rawCall)) continue;
+      const call = rawCall as Record<string, unknown>;
+      const fn =
+        call.function && typeof call.function === "object" && !Array.isArray(call.function)
+          ? (call.function as Record<string, unknown>)
+          : null;
+      const id = typeof call.id === "string" ? call.id : "";
+      const name = typeof fn?.name === "string" ? fn.name : "";
+      if (!id || !name) continue;
+      toolCalls.push({
+        id,
+        type: "function",
+        function: {
+          name,
+          arguments:
+            typeof fn?.arguments === "string"
+              ? fn.arguments
+              : typeof call.arguments === "string"
+                ? call.arguments
+                : "{}",
+        },
+      });
+    }
+    if (toolCalls.length > 0) record.tool_calls = toolCalls;
+    if (typeof message.name === "string" && message.name) record.name = message.name;
+    messages.push(record);
+  }
+  return messages;
+}
+
 export function createSupervisedReplayEvaluationRequestId(
   sourceRequestId: string,
   replayJobId: string,
@@ -6537,6 +6604,76 @@ async function runTrackBObservationPipeline(
   };
 }
 
+/**
+ * Run 97 replay-intent pipeline.
+ *
+ * A live request whose runtime has at least one distinct configured endpoint is
+ * replay work, not an observation-only refusal: the request is durably enqueued as
+ * a replay intent (bound to the capture scope) so the automatic producer can
+ * replay it against the configured candidate set. No provider call happens here,
+ * the routing decision is untouched, and the receipt carries no refusal code.
+ */
+async function runTrackBReplayIntentPipeline(
+  runtime: TrackBShadowPipelineRuntime,
+  input: {
+    readonly requestId: string;
+    readonly channel: "development" | "stage" | "production";
+    readonly scope: string;
+    readonly authorizationEpoch: number;
+    readonly routePackage: string;
+    readonly sourceDecisionId: string;
+    readonly candidates: readonly string[];
+    readonly identity: TrackBVariantIdentity;
+    readonly occurrence: Readonly<{ occurrenceId: string; contentId: string }>;
+  },
+) {
+  const scheduler = createReplayIntentScheduler({
+    runtime,
+    requestId: input.requestId,
+    channel: input.channel,
+    scope: input.scope,
+    authorizationEpoch: input.authorizationEpoch,
+    ownerId: `runtime-host:post-observation:${input.requestId}`.slice(0, 256),
+  });
+  const replayIntentJobId = `replay-intent:${input.requestId}`;
+  const enqueued = await scheduler.enqueue({
+    jobId: replayIntentJobId,
+    replayJobId: `capture:${input.requestId}`,
+    deadlineAtMs: Date.now() + 24 * 60 * 60 * 1000,
+  });
+  return {
+    replay: null,
+    evaluation: null,
+    signals: null,
+    profile: {
+      schemaVersion: "role-model.track-b-observation-profile-receipt.v1",
+      state: "not_run",
+      reason: "awaiting_replay",
+      durableMutation: false,
+      authoritative: false,
+    },
+    candidate: null,
+    advisory: null,
+    productionState: {},
+    receipt: {
+      schemaVersion: "role-model.track-b-shadow-pipeline-receipt.v1",
+      mode: "shadow",
+      status: "replay_enqueued",
+      requestId: input.requestId,
+      providerCalls: 0,
+      productionMutation: false,
+      candidateId: null,
+      replayIntentJobId,
+      replayIntentAccepted: enqueued.accepted === true,
+      candidateEndpointIds: [...input.candidates],
+      sourceDecisionId: input.sourceDecisionId,
+      routePackage: input.routePackage,
+      occurrence: structuredClone(input.occurrence),
+      identity: structuredClone(input.identity),
+    },
+  };
+}
+
 const TRACK_B_R16_TRAJECTORY_REFUSAL = "R16_TRAJECTORY_EVIDENCE_UNAVAILABLE" as const;
 const TRACK_B_RECOGNIZED_TRAJECTORY_TYPES = new Set([
   "request_started",
@@ -6608,6 +6745,14 @@ export async function runTrackBPostObservation(
     readonly authorizationEpoch: number;
     readonly expectedReleaseId?: string;
     readonly run88Correlation?: Record<string, unknown>;
+    /**
+     * R3: the counterfactual candidate set comes from the running registry, not
+     * from the capture's frozen decision snapshot (which is provenance only). The
+     * host passes the configured endpoint ids so a real request with at least one
+     * distinct configured endpoint becomes replay work instead of an
+     * `R14_NO_DISTINCT_COUNTERFACTUAL` refusal.
+     */
+    readonly configuredCandidateEndpointIds?: readonly string[];
   },
 ) {
   const requestId = String(observation.requestId ?? "");
@@ -6915,6 +7060,21 @@ export async function runTrackBPostObservation(
     }),
   );
   const sourceGraphRef = `sha256:${sourceHash}`;
+  // R3: the frozen decision snapshot is provenance, never a candidate filter. A
+  // live request with at least one distinct configured endpoint is replay work, so
+  // it must not fall through to the observation-only refusal.
+  const configuredCounterfactualCandidates = [
+    ...new Set(
+      (input.configuredCandidateEndpointIds ?? []).filter(
+        (endpointId): endpointId is string =>
+          typeof endpointId === "string"
+          && endpointId.trim().length > 0
+          && endpointId.trim() !== routePackage,
+      ),
+    ),
+  ]
+    .sort()
+    .slice(0, DEFAULT_REPLAY_CANDIDATE_CAP);
   const pipeline =
     routingShadowEvidence && routingShadowCases.length > 0
       ? await runTrackBShadowPipeline(observedRuntime, {
@@ -6945,7 +7105,19 @@ export async function runTrackBPostObservation(
           identity,
           occurrence,
         })
-      : await runTrackBObservationPipeline(observedRuntime, {
+      : configuredCounterfactualCandidates.length > 0
+        ? await runTrackBReplayIntentPipeline(observedRuntime, {
+            requestId,
+            channel: input.channel,
+            scope: input.scope,
+            authorizationEpoch: input.authorizationEpoch,
+            routePackage,
+            sourceDecisionId,
+            candidates: configuredCounterfactualCandidates,
+            identity,
+            occurrence,
+          })
+        : await runTrackBObservationPipeline(observedRuntime, {
           requestId,
           channel: input.channel,
           scope: input.scope,

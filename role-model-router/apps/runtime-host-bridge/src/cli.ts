@@ -35,7 +35,10 @@ import {
 } from "./runtime-channel.js";
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
-import { startAutoReplayLoop } from "./track-b-auto-replay-runtime.js";
+import {
+  autoReplayExecutionFromCommandReceipt,
+  startAutoReplayLoop,
+} from "./track-b-auto-replay-runtime.js";
 import { createTrackBOperations } from "./track-b-operations.js";
 import {
   deriveSemanticEvaluationCriteria,
@@ -64,6 +67,7 @@ import {
   createRun88RuntimeCorrelation,
   createRuntimeRequestCorrelationId,
   createSupervisedReplayEvaluationRequestId,
+  buildReplayDispatchMessages,
   createTrackBPostObservationOutbox,
   digestTrackBSemanticEvaluationCriteria,
   evaluateProductionExtensionRuntimeReadiness,
@@ -2828,6 +2832,10 @@ export async function main(): Promise<void> {
   const extensionRuntimeRef: {
     current: Awaited<ReturnType<typeof createProductionExtensionRuntime>> | null;
   } = { current: null };
+  // R3: the post-observation handler needs the running registry's configured
+  // endpoints, but it is defined before the backend exists. The reference is filled
+  // in once the runtime is created and read on every observation.
+  const configuredEndpointIdsRef: { current: readonly string[] } = { current: [] };
   const bootstrapState: CliBootstrapState = { status: "pending" };
   let shutdownPromise: Promise<void> | null = null;
   let stopExtensionRuntimeWatchdog: (() => void) | null = null;
@@ -3077,16 +3085,10 @@ export async function main(): Promise<void> {
               failureDetail: `replay endpoint HTTP ${response.status}: ${failureText.slice(0, 200)}`,
             };
           }
-          const payload = (await response.json()) as {
-            readonly branches?: readonly { readonly candidateEndpointId?: unknown }[];
-          };
-          return {
-            terminal: true,
-            branches: (payload.branches ?? []).map((branch) => ({
-              endpointId: String(branch?.candidateEndpointId ?? ""),
-              outcome: "complete" as const,
-            })),
-          };
+          // The receipt is authoritative: a job that reached `awaiting_evaluation`
+          // produced branches but no comparison, so it stays retryable and the ledger
+          // never counts it as a replayed counterfactual.
+          return autoReplayExecutionFromCommandReceipt(await response.json());
         },
       });
     };
@@ -3097,6 +3099,9 @@ export async function main(): Promise<void> {
           scope: options.scopeId,
           channel: packagedProfile?.channel ?? "development",
           authorizationEpoch: 1,
+          // R3: counterfactual candidates come from the running registry, not from
+          // the capture's frozen decision snapshot.
+          configuredCandidateEndpointIds: configuredEndpointIdsRef.current,
           ...(packagedReleaseId
             ? {
                 expectedReleaseId: packagedReleaseId,
@@ -3463,11 +3468,24 @@ export async function main(): Promise<void> {
               );
               if (!candidate)
                 throw new Error("replay dispatch candidate package is not host-authorized");
-              const replayRequestId = `replay-${requestId}-${createHash("sha256").update(candidateEndpointId).digest("hex").slice(0, 16)}`;
+              // R13/R7: every capture this attempt writes must be attempt-scoped. The
+              // durable replay job identity (not the per-tick idempotency key) makes a
+              // retry inside one attempt idempotent while a later attempt of the same
+              // source capture appends new bytes instead of colliding with the previous
+              // attempt's immutable capture under the same request id.
+              const replayJobId =
+                typeof envelope.replayJobId === "string" ? envelope.replayJobId : "";
+              const replayAttemptToken = createHash("sha256")
+                .update(`${replayJobId}\u0000${candidateEndpointId}`)
+                .digest("hex")
+                .slice(0, 16);
+              const replayRequestId = `replay-${requestId}-${replayAttemptToken}`;
               const execution = await created.executeChatCompletions(
                 {
                   model: candidate.modelId,
-                  messages: structuredClone(sourceMessages) as never,
+                  // Tool linkage must survive the capture -> provider hop; recorded
+                  // tool results stay reused (no tool re-execution).
+                  messages: buildReplayDispatchMessages(sourceMessages) as never,
                   stream: false,
                 },
                 replayRequestId,
@@ -3706,12 +3724,72 @@ export async function main(): Promise<void> {
               evaluationCriteriaDigest,
             }),
           });
+          // R5/R12: the receipt is the automatic producer's only view of the durable
+          // replay outcome. It must therefore carry the terminal state, the durable
+          // evaluation outcome, and the per-dispatch accounting; otherwise the
+          // producer cannot distinguish "replayed" from "handed off", cannot
+          // reconcile the daily ledger, and re-attempts a capture that already
+          // produced branches.
+          const durableDispatches =
+            result.dispatches && typeof result.dispatches === "object" && !Array.isArray(result.dispatches)
+              ? (result.dispatches as Record<string, Record<string, unknown>>)
+              : {};
+          const durableEvaluation =
+            result.evaluationResult && typeof result.evaluationResult === "object"
+              ? (result.evaluationResult as Record<string, unknown>)
+              : null;
+          const receiptBranches = (
+            Array.isArray(result.branches) ? (result.branches as Record<string, unknown>[]) : []
+          ).map((branch) => {
+            const candidateEndpointId = String(branch.candidateEndpointId ?? "");
+            const dispatch = durableDispatches[candidateEndpointId] ?? null;
+            const dispatchResult =
+              dispatch && typeof dispatch.result === "object" && dispatch.result && !Array.isArray(dispatch.result)
+                ? (dispatch.result as Record<string, unknown>)
+                : null;
+            return {
+              candidateEndpointId,
+              outcome: dispatch ? String(dispatch.status ?? "unknown") : "unknown",
+              branchRootRef:
+                typeof dispatchResult?.branchRootRef === "string"
+                  ? dispatchResult.branchRootRef
+                  : null,
+            };
+          });
+          const receiptDispatches = Object.entries(durableDispatches).map(
+            ([endpointId, dispatch]) => {
+              const receipt =
+                dispatch.receipt && typeof dispatch.receipt === "object" && !Array.isArray(dispatch.receipt)
+                  ? (dispatch.receipt as Record<string, unknown>)
+                  : null;
+              return {
+                kind: "candidate",
+                endpointId,
+                attempt: Number.isSafeInteger(dispatch.attempt) ? Number(dispatch.attempt) : 1,
+                costMicros: Number.isSafeInteger(receipt?.observedCostMicros)
+                  ? Number(receipt?.observedCostMicros)
+                  : 0,
+                bytes: Number.isSafeInteger(receipt?.observedResponseBytes)
+                  ? Number(receipt?.observedResponseBytes)
+                  : 0,
+                outcome: String(dispatch.status ?? "unknown"),
+              };
+            },
+          );
           return {
             schemaVersion: "role-model.supervised-replay-command-receipt.v1",
             requestId,
             replayJobId: result.jobId,
             state: result.state,
             evaluationJobId: result.evaluationJobId,
+            evaluationOutcome:
+              typeof durableEvaluation?.outcome === "string" ? durableEvaluation.outcome : null,
+            comparisonGroupId:
+              typeof durableEvaluation?.comparisonGroupId === "string"
+                ? durableEvaluation.comparisonGroupId
+                : null,
+            branches: receiptBranches,
+            dispatches: receiptDispatches,
           };
         },
         ...(operatorOperations ? createRuntimeOperatorCallbacks(operatorOperations) : {}),
@@ -3762,6 +3840,9 @@ export async function main(): Promise<void> {
       }
       activeAutoReplayLoop = startHostAutoReplayLoop(() =>
         created.effectiveRegistry.endpoints.map((endpoint) => endpoint.identity.endpoint_id),
+      );
+      configuredEndpointIdsRef.current = created.effectiveRegistry.endpoints.map(
+        (endpoint) => endpoint.identity.endpoint_id,
       );
       return created;
     };

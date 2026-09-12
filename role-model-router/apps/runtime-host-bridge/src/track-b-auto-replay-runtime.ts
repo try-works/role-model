@@ -4,6 +4,78 @@ import {
   type AutoReplayTickResult,
   runAutoReplayTick,
 } from "./track-b-auto-replay.js";
+
+/**
+ * Run 97 automatic replay receipt accounting.
+ *
+ * The supervised replay endpoint answers with the durable outcome of the replay
+ * job. The automatic producer may only treat that job as a completed
+ * counterfactual when Evaluation Core also completed durably (`state ===
+ * "complete"`). A job in `awaiting_evaluation` has produced provider dispatch and
+ * branch evidence, but no comparison, so the capture stays retryable and the
+ * ledger must not mark it terminal.
+ */
+export function autoReplayExecutionFromCommandReceipt(receipt: unknown): AutoReplayExecution {
+  const record =
+    receipt && typeof receipt === "object" && !Array.isArray(receipt)
+      ? (receipt as Record<string, unknown>)
+      : null;
+  if (!record) {
+    return {
+      terminal: false,
+      branches: [],
+      failureDetail: "replay command receipt was not a durable object",
+    };
+  }
+  const state = typeof record.state === "string" && record.state ? record.state : "unknown";
+  const branches = (Array.isArray(record.branches) ? record.branches : []).flatMap((branch) => {
+    if (!branch || typeof branch !== "object" || Array.isArray(branch)) return [];
+    const row = branch as Record<string, unknown>;
+    const endpointId = typeof row.candidateEndpointId === "string" ? row.candidateEndpointId : "";
+    if (!endpointId) return [];
+    const outcome =
+      row.outcome === "complete" || row.outcome === "failed" || row.outcome === "refused"
+        ? row.outcome
+        : row.outcome === "append_recovery"
+          ? "complete"
+          : "failed";
+    return [{ endpointId, outcome } as const];
+  });
+  const dispatches = (Array.isArray(record.dispatches) ? record.dispatches : []).flatMap(
+    (dispatch) => {
+      if (!dispatch || typeof dispatch !== "object" || Array.isArray(dispatch)) return [];
+      const row = dispatch as Record<string, unknown>;
+      const endpointId = typeof row.endpointId === "string" ? row.endpointId : "";
+      if (!endpointId) return [];
+      const outcome =
+        row.outcome === "complete" || row.outcome === "failed" || row.outcome === "refused"
+          ? row.outcome
+          : row.outcome === "append_recovery"
+            ? "complete"
+            : "failed";
+      const kind = row.kind === "retry" || row.kind === "derived" ? row.kind : "candidate";
+      return [
+        {
+          kind,
+          endpointId,
+          attempt: Number.isSafeInteger(row.attempt) && Number(row.attempt) > 0 ? Number(row.attempt) : 1,
+          costMicros: Number.isSafeInteger(row.costMicros) && Number(row.costMicros) >= 0 ? Number(row.costMicros) : 0,
+          bytes: Number.isSafeInteger(row.bytes) && Number(row.bytes) >= 0 ? Number(row.bytes) : 0,
+          outcome,
+        } as const,
+      ];
+    },
+  );
+  if (state !== "complete") {
+    return {
+      terminal: false,
+      branches,
+      dispatches,
+      failureDetail: `durable replay state is ${state}`,
+    };
+  }
+  return { terminal: true, branches, dispatches };
+}
 import type { ReplayLedger } from "./track-b-replay-ledger.js";
 import type { ReplayPolicySet, ReplayToolPolicy } from "./track-b-replay-policy.js";
 
@@ -131,6 +203,10 @@ export function startAutoReplayLoop(input: {
             ? row.sourceEndpointId.trim()
             : null,
         hasRecordedToolResults: row.hasRecordedToolResults !== false,
+        // Replay output is never a replay source: the private boundary classifies
+        // captures it produced while replaying, and the producer refuses them with
+        // `amplification_depth_exceeded` instead of dispatching again.
+        replayProduced: row.replayProduced === true,
       });
     }
     return captures;

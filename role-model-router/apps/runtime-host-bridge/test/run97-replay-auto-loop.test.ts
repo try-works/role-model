@@ -309,3 +309,58 @@ test("run97 auto loop uses the capture's source endpoint to pick distinct candid
     cleanup();
   }
 });
+
+test("run97 auto loop refuses replay-produced captures reported by the private boundary", async () => {
+  const { ledger, cleanup } = harness();
+  try {
+    const recorded: Array<Record<string, unknown>> = [];
+    const operations = {
+      async listPendingReplayCaptures() {
+        return {
+          pending: [
+            {
+              captureRef: "req-live-1",
+              sourceEndpointId: "endpoint-a",
+              hasRecordedToolResults: true,
+              replayProduced: false,
+            },
+            {
+              captureRef: "replay-req-live-1-1e03652ce6770a82",
+              sourceEndpointId: "endpoint-a",
+              hasRecordedToolResults: false,
+              replayProduced: true,
+            },
+          ],
+          replayProducedCount: 1,
+        };
+      },
+      async recordReplayDisposition(input: Record<string, unknown>) {
+        recorded.push(input);
+        return { recorded: true };
+      },
+    };
+    const executed: string[] = [];
+    const loop = startAutoReplayLoop({
+      operations,
+      ledger,
+      policySet: buildReplayPolicySet(),
+      configuredEndpointIds: ["endpoint-a", "endpoint-b"],
+      executor: async ({ capture }) => {
+        executed.push(capture.captureRef);
+        return { terminal: true, branches: [{ endpointId: "endpoint-b", outcome: "complete" as const }] };
+      },
+      intervalMs: 0,
+      now: () => Date.parse("2026-09-12T06:00:00Z"),
+    });
+    const result = await loop.tick();
+    loop.stop();
+    expect(executed).toEqual(["req-live-1"]);
+    expect(result.refused).toBe(1);
+    expect(recorded.map((row) => `${row.captureRef}:${row.outcome}:${row.refusalCode}`)).toEqual([
+      "req-live-1:replayed:null",
+      "replay-req-live-1-1e03652ce6770a82:refused:amplification_depth_exceeded",
+    ]);
+  } finally {
+    cleanup();
+  }
+});

@@ -220,3 +220,76 @@ test("run97 ledger persists across restarts and reconciles by window", () => {
     cleanup();
   }
 });
+
+test("run97 ledger keeps a completed counterfactual terminal across instances, retries, and releases", () => {
+  const { file, cleanup } = tempFile();
+  try {
+    const at = () => Date.parse("2026-09-12T08:00:00Z");
+    const ledger = createReplayLedger({ filePath: file, now: at });
+    const reservation = ledger.reserve({
+      captureRef: "req-26922286-b7ab-4584-98e0-7cf9c06671c6",
+      policySetDigest: "policy-a",
+      candidateDispatches: 1,
+    });
+    expect(reservation.accepted).toBe(true);
+    if (!reservation.accepted) throw new Error("reservation refused");
+    expect(
+      ledger.record({
+        reservationId: reservation.reservationId,
+        captureRef: "req-26922286-b7ab-4584-98e0-7cf9c06671c6",
+        policySetDigest: "policy-a",
+        counterfactualRef: "cf:req-26922286",
+        dispatchKind: "candidate",
+        candidateEndpointId: "endpoint-b",
+        attempt: 1,
+        costMicros: 640,
+        bytes: 1536,
+        outcome: "complete",
+      }).accepted,
+    ).toBe(true);
+    ledger.completeCounterfactual({
+      captureRef: "req-26922286-b7ab-4584-98e0-7cf9c06671c6",
+      policySetDigest: "policy-a",
+    });
+    ledger.release(reservation.reservationId);
+
+    // A restarted loop reads the same durable ledger: the capture stays terminal, so
+    // the producer cannot burn the day's budget re-replaying it.
+    const restarted = createReplayLedger({ filePath: file, now: at });
+    expect(
+      restarted.hasTerminalCounterfactual(
+        "req-26922286-b7ab-4584-98e0-7cf9c06671c6",
+        "policy-a",
+      ),
+    ).toBe(true);
+    const duplicate = restarted.reserve({
+      captureRef: "req-26922286-b7ab-4584-98e0-7cf9c06671c6",
+      policySetDigest: "policy-a",
+      candidateDispatches: 1,
+    });
+    expect(duplicate).toMatchObject({ accepted: false, code: "duplicate_already_processed" });
+    // The marker survives later accounting writes in the same window.
+    restarted.record({
+      reservationId: "unknown-reservation",
+      captureRef: "req-other",
+      policySetDigest: "policy-a",
+      counterfactualRef: "cf:req-other",
+      dispatchKind: "retry",
+      candidateEndpointId: "endpoint-c",
+      attempt: 2,
+      costMicros: 1,
+      bytes: 1,
+      outcome: "failed",
+    });
+    const afterWrites = createReplayLedger({ filePath: file, now: at });
+    expect(
+      afterWrites.hasTerminalCounterfactual(
+        "req-26922286-b7ab-4584-98e0-7cf9c06671c6",
+        "policy-a",
+      ),
+    ).toBe(true);
+    expect(afterWrites.status()).toMatchObject({ counterfactuals: 1, dispatches: 2 });
+  } finally {
+    cleanup();
+  }
+});
