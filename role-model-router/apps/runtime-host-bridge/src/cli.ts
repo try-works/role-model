@@ -3392,6 +3392,13 @@ export async function main(): Promise<void> {
             );
           }
           const channel = packagedProfile?.channel ?? "development";
+          // Bind the replay source to the capture's own runtime scope: the durable
+          // capture records the private runtime scope, which is not necessarily the
+          // host's operator scope.
+          const captureScope =
+            typeof sourceCapture.scope === "string" && sourceCapture.scope.trim()
+              ? sourceCapture.scope.trim()
+              : options.scopeId;
           // R3: the frozen decision snapshot is provenance, not a filter. Captures
           // that do not record one (for example a channel that captured a single
           // eligible endpoint) still replay against the configured candidate set,
@@ -3412,7 +3419,7 @@ export async function main(): Promise<void> {
                 ].sort();
           const attestation = createReplaySourceAttestation({
             channel,
-            scope: options.scopeId,
+            scope: captureScope,
             authorizationEpoch: 1,
             capture: sourceCapture,
             eligibleEndpointIds: effectiveEligibleEndpointIds,
@@ -3514,7 +3521,7 @@ export async function main(): Promise<void> {
             adapter,
             requestId,
             channel,
-            scope: options.scopeId,
+            scope: captureScope,
             authorizationEpoch: 1,
             sourceAttestation: attestation,
             idempotencyKey,
