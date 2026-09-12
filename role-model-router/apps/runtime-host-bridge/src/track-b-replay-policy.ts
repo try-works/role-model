@@ -169,16 +169,29 @@ export function resolveReplayToolPolicy(input: {
   /** True when the capture actually contains tool calls or tool content. */
   readonly hasToolCalls?: boolean;
   readonly policyAllowsExecution?: boolean;
+  /**
+   * The replay IPC prohibits caller-supplied filesystem paths, so a caller cannot
+   * ship a sandbox allowlist. Execution therefore requires a worker-side sandbox
+   * policy; until one is configured the caller stays on recorded results only, which
+   * still replays tool-bearing captures by reusing what the capture recorded.
+   */
+  readonly workerSandboxAvailable?: boolean;
 }): Readonly<{ toolPolicy: ReplayToolPolicy; reason: string }> {
   // A capture with no tool content needs neither reuse nor execution, so it stays on
   // the reuse policy; execution only becomes relevant when tool calls exist without
   // recorded results to satisfy them.
-  if (input.hasRecordedToolResults || input.hasToolCalls === false) {
+  if (
+    input.hasRecordedToolResults ||
+    input.hasToolCalls === false ||
+    input.workerSandboxAvailable !== true
+  ) {
     return {
       toolPolicy: "recorded_results_only",
       reason: input.hasRecordedToolResults
         ? "recorded_tool_results_available"
-        : "capture_contains_no_tool_calls",
+        : input.hasToolCalls === false
+          ? "capture_contains_no_tool_calls"
+          : "recorded_results_only_until_worker_sandbox_configured",
     };
   }
   return {

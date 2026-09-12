@@ -190,10 +190,20 @@ test("run97 tool policy stays on reuse when the capture has no tool calls", asyn
     messages: [{ role: "assistant", tool_calls: [{ id: "call-1", name: "shell" }] }],
   } as Record<string, unknown>;
   expect(hasToolCalls(toolCapture)).toBe(true);
+  // The replay IPC forbids caller-supplied filesystem paths, so without a worker-side
+  // sandbox the caller stays on recorded results (tool-bearing captures still replay
+  // by reusing recorded results).
   expect(
     resolveReplayToolPolicy({
       hasRecordedToolResults: false,
       hasToolCalls: hasToolCalls(toolCapture),
+    }).toolPolicy,
+  ).toBe("recorded_results_only");
+  expect(
+    resolveReplayToolPolicy({
+      hasRecordedToolResults: false,
+      hasToolCalls: hasToolCalls(toolCapture),
+      workerSandboxAvailable: true,
     }).toolPolicy,
   ).toBe("sandboxed_allowlist");
   const sandbox = defaultReplaySandbox();
