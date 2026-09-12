@@ -7303,6 +7303,13 @@ export async function createExtensionRuntime(options: {
     readonly modulePath: string;
     readonly artifactSha256: string;
   }[];
+  /**
+   * R14: the packaged extension host must know the runtime channel so envelopes
+   * built without an explicit channel are stamped with the served channel instead
+   * of defaulting to development (which breaks scope bindings and reference
+   * attestation on stage and production runtimes).
+   */
+  readonly channel?: string;
 }) {
   if (options.extensions.length < 1) throw new Error("at least one extension is required");
   if (
@@ -7379,6 +7386,7 @@ export async function createExtensionRuntime(options: {
     ...(options.startupTimeoutMs !== undefined
       ? { startupTimeoutMs: options.startupTimeoutMs }
       : {}),
+    ...(options.channel ? { channel: options.channel } : {}),
     journalPath: path.join(options.stateRoot, "extension-host.journal.ndjson"),
   });
   const states = new Map<string, ExtensionRuntimeState>();
@@ -7588,6 +7596,7 @@ export async function createProductionExtensionRuntime(
     stateRoot: options.stateRoot,
     authorizationEpoch: options.authorizationEpoch,
     ...(options.repoRoot ? { repoRoot: options.repoRoot } : {}),
+    ...(options.channel ? { channel: options.channel } : {}),
     startupTimeoutMs: options.startupTimeoutMs ?? 30_000,
     extensions: [...options.extensions, ...qaExtensions],
   });

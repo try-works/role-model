@@ -4069,6 +4069,7 @@ export async function main(): Promise<void> {
           stateRoot: path.join(trackBStateRoot, "extensions"),
           authorizationEpoch: 1,
           repoRoot: options.repoRoot,
+          channel: runtimeChannel,
           extensions: manifest.extensions.map((extension) => ({
             ...extension,
             modulePath: path.resolve(distributionRoot, extension.modulePath),

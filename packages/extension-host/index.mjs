@@ -323,6 +323,12 @@ export class ExtensionHost {
     maxRestarts = 3,
     restartBackoffMs = 10,
     workerExecPath = resolveNodeWorkerExecutable(),
+    /**
+     * Runtime channel this host serves. Envelopes that omit a channel are stamped
+     * with it, so extension-side scope bindings and reference resolvers see the
+     * channel the runtime actually serves instead of falling back to development.
+     */
+    channel = null,
   }) {
     this.protocolVersion = protocolVersion;
     this.protocolVersions = new Set([protocolVersion, ...compatibleProtocolVersions]);
@@ -336,6 +342,7 @@ export class ExtensionHost {
     this.maxRestarts = maxRestarts;
     this.restartBackoffMs = restartBackoffMs;
     this.workerExecPath = workerExecPath;
+    this.channel = channel;
   }
   #validateDescriptor(descriptor) {
     const validated = defineExtension(descriptor);
@@ -626,6 +633,9 @@ export class ExtensionHost {
     if (!registered) return Promise.reject(new Error(`unknown extension ${id}`));
     if (registered.lifecycle === "stopped" || registered.lifecycle === "stopping")
       return Promise.reject(new Error(`extension ${id} is disabled or stopped`));
+    if (this.channel && envelope && !envelope.channel) {
+      envelope = { ...envelope, channel: this.channel };
+    }
     if (
       !envelope?.requestId ||
       !this.protocolVersions.has(envelope.protocolVersion) ||
