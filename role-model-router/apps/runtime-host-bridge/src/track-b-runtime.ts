@@ -6085,6 +6085,17 @@ export async function runTrackBShadowPipeline(
       routePackage: input.routePackage,
       events: input.trajectoryEvents,
       finalizedEvaluation: persistedEvaluation,
+      // R6: the trajectory analyzer requires every reference it consumes to be
+      // demonstrably resolved. The host has already resolved all three: the source
+      // graph ref comes from the durable capture, the replay digest from the replay
+      // plan it just read back, and the evaluation group from the finalized
+      // comparison readback. A resolver function cannot cross the extension IPC
+      // boundary, so the resolution is stated as data.
+      resolvedReferences: {
+        graph: [input.sourceGraphRef],
+        replay: [replayDigest],
+        evaluation: [String(persistedEvaluation.groupId ?? "")].filter(Boolean),
+      },
     }),
   );
   const signalRecord = signals as Record<string, unknown>;
