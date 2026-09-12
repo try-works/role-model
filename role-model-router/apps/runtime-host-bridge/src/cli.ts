@@ -37,6 +37,12 @@ import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
 import { createTrackBOperations } from "./track-b-operations.js";
 import {
+  buildReplayPolicySet,
+  decideReplayAdmission,
+  resolveReplayToolPolicy,
+  selectReplayCandidates,
+} from "./track-b-replay-policy.js";
+import {
   TRACK_B_CANONICAL_EXTENSION_IDS,
   type TrackBExtensionClosure,
   assertProductionExtensionRuntimeReady,
@@ -3149,52 +3155,65 @@ export async function main(): Promise<void> {
                   ),
                 ].sort()
               : [];
-          if (originallyEligibleEndpointIds.length === 0) {
-            throw new Error(
-              "supervised replay source is missing its frozen eligible endpoint snapshot",
-            );
-          }
-          if (
-            candidateEndpointIds.some(
-              (endpointId) => !originallyEligibleEndpointIds.includes(endpointId),
-            )
-          ) {
-            throw new Error(
-              "supervised replay candidate was not eligible in the frozen source decision",
-            );
-          }
+          const capturedSourceEndpointId =
+            (sourceReplay && typeof sourceReplay.selectedEndpointId === "string"
+              ? sourceReplay.selectedEndpointId
+              : null) ??
+            (sourceReplay && typeof sourceReplay.endpointId === "string"
+              ? sourceReplay.endpointId
+              : null);
           const sourceMessages = Array.isArray(sourceCapture.messages)
             ? sourceCapture.messages
             : [];
-          if (
-            sourceMessages.length === 0 ||
-            sourceMessages.some((message) => {
-              const value =
-                message && typeof message === "object" ? (message as Record<string, unknown>) : {};
-              return (
-                value.role === "tool" ||
-                value.tool_calls !== undefined ||
-                value.toolCalls !== undefined
-              );
-            })
-          ) {
-            throw new Error(
-              "supervised replay currently accepts only complete tool-free source captures",
-            );
+          const distinctReplayCandidates = selectReplayCandidates({
+            configuredEndpointIds: candidateEndpointIds,
+            sourceEndpointId: capturedSourceEndpointId,
+          });
+          const admission = decideReplayAdmission({
+            channelReplayEnabled: true,
+            captureAvailable: true,
+            scopeAuthorized: true,
+            authorizationEpochValid: true,
+            retentionReplayable: true,
+            privacyReplayable: true,
+            distinctCandidateCount: distinctReplayCandidates.length,
+            budgetAvailable: true,
+            alreadyProcessed: false,
+            sourceIsReplayProduced:
+              sourceReplay !== null && sourceReplay.parentTraceId !== undefined,
+            policyIdsResolvable: true,
+            dependenciesAvailable: true,
+          });
+          if (!admission.admitted) {
+            throw new Error(`${admission.code}: ${admission.detail}`);
           }
+          const recordedToolResultArtifacts = Array.isArray(sourceCapture.toolResultArtifactIds)
+            ? sourceCapture.toolResultArtifactIds.filter(
+                (value): value is string => typeof value === "string" && value.length > 0,
+              )
+            : [];
+          const { toolPolicy: resolvedReplayToolPolicy, reason: replayToolPolicyReason } =
+            resolveReplayToolPolicy({
+              hasRecordedToolResults: recordedToolResultArtifacts.length > 0,
+            });
+          const replayPolicySet = buildReplayPolicySet();
           const endpoints = created.effectiveRegistry.endpoints;
           const candidatePackages = candidateEndpointIds.map((endpointId) => {
             const endpoint = endpoints.find((item) => item.identity.endpoint_id === endpointId);
             if (!endpoint)
               throw new Error(
-                `supervised replay candidate is not an eligible endpoint: ${endpointId}`,
+                `supervised replay candidate is not a configured endpoint: ${endpointId}`,
               );
             return {
               endpointId,
               modelId: endpoint.identity.model_id,
               reasoningEffort: endpoint.identity.reasoning_effort ?? null,
               promptAdapterId: "router-host/default-v1",
-              toolPolicy: "deny",
+              toolPolicy: resolvedReplayToolPolicy,
+              toolPolicyReason: replayToolPolicyReason,
+              toolPolicyDigest: replayPolicySet.tool.policyDigest,
+              policySetDigest: replayPolicySet.policySetDigest,
+              sourceEligibleEndpointIds: originallyEligibleEndpointIds,
               experiencePackId: "none",
               samplingProfileId: "deterministic-v1",
               ...replayBudgetReservation,
