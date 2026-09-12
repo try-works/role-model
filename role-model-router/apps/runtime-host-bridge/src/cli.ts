@@ -36,6 +36,7 @@ import {
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
 import { createTrackBOperations } from "./track-b-operations.js";
+import { createReplayLedger } from "./track-b-replay-ledger.js";
 import {
   buildReplayPolicySet,
   decideReplayAdmission,
@@ -3169,6 +3170,15 @@ export async function main(): Promise<void> {
             configuredEndpointIds: candidateEndpointIds,
             sourceEndpointId: capturedSourceEndpointId,
           });
+          const replayPolicySet = buildReplayPolicySet();
+          const replayLedger = createReplayLedger({
+            filePath: path.join(
+              options.runtimeStateRoot,
+              options.scopeId,
+              "track-b-replay-ledger.json",
+            ),
+          });
+          const replayLedgerStatus = replayLedger.status();
           const admission = decideReplayAdmission({
             channelReplayEnabled: true,
             captureAvailable: true,
@@ -3177,8 +3187,13 @@ export async function main(): Promise<void> {
             retentionReplayable: true,
             privacyReplayable: true,
             distinctCandidateCount: distinctReplayCandidates.length,
-            budgetAvailable: true,
-            alreadyProcessed: false,
+            budgetAvailable:
+              replayLedgerStatus.dispatches + replayLedgerStatus.reservedDispatches <
+              replayLedgerStatus.dispatchLimit,
+            alreadyProcessed: replayLedger.hasTerminalCounterfactual(
+              requestId,
+              replayPolicySet.policySetDigest,
+            ),
             sourceIsReplayProduced:
               sourceReplay !== null && sourceReplay.parentTraceId !== undefined,
             policyIdsResolvable: true,
@@ -3196,7 +3211,6 @@ export async function main(): Promise<void> {
             resolveReplayToolPolicy({
               hasRecordedToolResults: recordedToolResultArtifacts.length > 0,
             });
-          const replayPolicySet = buildReplayPolicySet();
           const endpoints = created.effectiveRegistry.endpoints;
           const candidatePackages = candidateEndpointIds.map((endpointId) => {
             const endpoint = endpoints.find((item) => item.identity.endpoint_id === endpointId);
