@@ -735,13 +735,19 @@ export function createSupervisedReplayEvaluationCompleter(input: {
     if (!sourceRootArtifactId || !sourceDecisionId) {
       throw new Error("durable replay evaluation is missing source provenance");
     }
+    // R5: the released comparability tuple names exactly one source and one
+    // counterfactual candidate (Evaluation Core refuses a trial whose candidate is
+    // not one of those two). The durable comparison therefore evaluates the primary
+    // counterfactual; the remaining candidates stay recorded replay branches with
+    // their own provenance instead of being forced into a tuple they do not fit.
+    const evaluatedCounterfactuals = counterfactuals.slice(0, 1);
     const caseIds = Array.from(
-      { length: 1 + counterfactuals.length },
+      { length: 1 + evaluatedCounterfactuals.length },
       (_, index) => `replay:${replayJobId}:${index}`,
     );
     const captures = [
       input.sourceCapture,
-      ...counterfactuals.map(({ branchCapture }) => branchCapture),
+      ...evaluatedCounterfactuals.map(({ branchCapture }) => branchCapture),
     ];
     const perCaseEvidenceRefs = await persistSupervisedReplayEvaluationCaseReferences({
       runtime: input.runtime,
@@ -829,14 +835,16 @@ export function createSupervisedReplayEvaluationCompleter(input: {
     });
     const replayReferenceBuild = buildSupervisedReplayEvaluationReferences({
       sourceCapture: input.sourceCapture,
-      counterfactualCaptures: counterfactuals.map(({ branchCapture }) => branchCapture),
+      counterfactualCaptures: evaluatedCounterfactuals.map(({ branchCapture }) => branchCapture),
       caseIds,
       perCaseEvidenceRefs,
       referenceFacts: replayReferenceFacts,
     });
     const trajectoryEvents = deriveSupervisedReplayTrajectoryEvents({
       sourceCapture: input.sourceCapture,
-      counterfactualCaptures: counterfactuals.map(({ branchCapture }) => branchCapture),
+      counterfactualCaptures: evaluatedCounterfactuals.map(
+        ({ branchCapture }) => branchCapture,
+      ),
     });
     const sourceRolloutReferences = replayReferenceBuild.rolloutReferences[0];
     if (!sourceRolloutReferences) {
@@ -853,7 +861,7 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       sourceGraphRef: `artifact:${sourceRootArtifactId}`,
       prefix: [],
       sourcePrefixRef: sourceSharedPrefixRef,
-      counterfactuals: counterfactuals.map(({ candidate }) => ({
+      counterfactuals: evaluatedCounterfactuals.map(({ candidate }) => ({
         id: candidate.endpointId,
         suffix: [],
       })),
@@ -884,7 +892,7 @@ export function createSupervisedReplayEvaluationCompleter(input: {
             status: "success",
           },
         },
-        counterfactuals: counterfactuals.map(
+        counterfactuals: evaluatedCounterfactuals.map(
           ({ candidate, replayRequestId, output, outputSha256 }, index) => {
             const rolloutReferences = replayReferenceBuild.rolloutReferences[index + 1];
             if (!rolloutReferences) {
