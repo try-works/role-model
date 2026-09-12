@@ -53,6 +53,8 @@ export interface AutoReplayBranch {
 export interface AutoReplayExecution {
   readonly terminal: boolean;
   readonly branches: readonly AutoReplayBranch[];
+  /** Bounded, operator-visible reason when the executor could not reach a terminal state. */
+  readonly failureDetail?: string;
   readonly dispatches?: readonly {
     readonly kind: "candidate" | "retry" | "derived";
     readonly endpointId: string;
@@ -240,9 +242,11 @@ export async function runAutoReplayTick(input: {
         captureRef: capture.captureRef,
         outcome: "deferred",
         code: "replay_failed",
-        detail: execution.terminal
-          ? "no candidate branch completed"
-          : "replay did not reach a terminal state",
+        detail:
+          execution.failureDetail ??
+          (execution.terminal
+            ? "no candidate branch completed"
+            : "replay did not reach a terminal state"),
       });
       continue;
     }

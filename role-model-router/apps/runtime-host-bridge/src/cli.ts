@@ -3051,7 +3051,14 @@ export async function main(): Promise<void> {
               },
             }),
           });
-          if (!response.ok) return { terminal: false, branches: [] };
+          if (!response.ok) {
+            const failureText = await response.text().catch(() => "");
+            return {
+              terminal: false,
+              branches: [],
+              failureDetail: `replay endpoint HTTP ${response.status}: ${failureText.slice(0, 200)}`,
+            };
+          }
           const payload = (await response.json()) as {
             readonly branches?: readonly { readonly candidateEndpointId?: unknown }[];
           };

@@ -195,3 +195,30 @@ test("run97 transient admission failures defer instead of terminally refusing", 
     cleanup();
   }
 });
+
+test("run97 executor failure detail is recorded on the disposition", async () => {
+  const { ledger, cleanup } = tempLedger();
+  try {
+    const result = await runAutoReplayTick({
+      captures: [
+        { captureRef: "req-detail", sourceEndpointId: "endpoint-a", hasRecordedToolResults: true },
+      ],
+      configuredEndpointIds: ["endpoint-a", "endpoint-b"],
+      ledger,
+      policySet: buildReplayPolicySet(),
+      executor: async () => ({
+        terminal: false,
+        branches: [],
+        failureDetail:
+          "replay endpoint HTTP 409: complete durable replay source receipt is required",
+      }),
+    });
+    expect(result.dispositions[0]).toMatchObject({
+      outcome: "deferred",
+      code: "replay_failed",
+      detail: "replay endpoint HTTP 409: complete durable replay source receipt is required",
+    });
+  } finally {
+    cleanup();
+  }
+});
