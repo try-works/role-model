@@ -124,6 +124,14 @@ const MAX_TERM_LENGTH = 32;
 
 function textFromContent(value: unknown): string | null {
   if (typeof value === "string") return value.trim() ? value : null;
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const record = value as Record<string, unknown>;
+    for (const key of ["text", "content", "value", "output_text", "outputText"]) {
+      const candidate = textFromContent(record[key]);
+      if (candidate) return candidate;
+    }
+    return collectStrings(value).join(" ") || null;
+  }
   if (!Array.isArray(value)) return null;
   const parts: string[] = [];
   for (const part of value) {
@@ -137,6 +145,26 @@ function textFromContent(value: unknown): string | null {
     if (typeof text === "string" && text.trim()) parts.push(text);
   }
   return parts.length ? parts.join(" ") : null;
+}
+
+/** Bounded recursive string collection for unknown response shapes. */
+function collectStrings(value: unknown, depth = 0, collected: string[] = []): string[] {
+  if (depth > 4 || collected.length >= 64) return collected;
+  if (typeof value === "string") {
+    if (value.trim()) collected.push(value);
+    return collected;
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) collectStrings(item, depth + 1, collected);
+    return collected;
+  }
+  if (value && typeof value === "object") {
+    for (const item of Object.values(value as Record<string, unknown>)) {
+      collectStrings(item, depth + 1, collected);
+      if (collected.length >= 64) break;
+    }
+  }
+  return collected;
 }
 
 /**

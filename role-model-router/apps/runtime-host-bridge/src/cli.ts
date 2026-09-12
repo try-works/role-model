@@ -3036,10 +3036,19 @@ export async function main(): Promise<void> {
           // defers the capture instead of inventing a criterion.
           const derivedCriteria = deriveSemanticEvaluationCriteria({ sourceOutput });
           if (!derivedCriteria) {
+            const responseShape =
+              sourceCapture.response && typeof sourceCapture.response === "object"
+                ? Object.entries(sourceCapture.response as Record<string, unknown>)
+                    .slice(0, 6)
+                    .map(
+                      ([key, value]) => `${key}:${Array.isArray(value) ? "array" : typeof value}`,
+                    )
+                    .join(",")
+                : "none";
             return {
               terminal: false,
               branches: [],
-              failureDetail: `recorded output of ${capture.captureRef} cannot support semantic evaluation criteria`,
+              failureDetail: `recorded output of ${capture.captureRef} cannot support semantic evaluation criteria (response ${responseShape}, hasResponseText ${typeof sourceCapture.responseText === "string"})`,
             };
           }
           const response = await fetch(`http://127.0.0.1:${port}/api/role-model/track-b/replay`, {
