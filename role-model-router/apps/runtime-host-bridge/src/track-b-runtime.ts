@@ -2391,6 +2391,7 @@ export function createReplaySourceAttestation(input: {
   // Name every missing input so an operator can repair the capture or the caller
   // instead of guessing which durable receipt is incomplete.
   const missingReceiptInputs: string[] = [];
+  const captureEndpointId = typeof capture.endpointId === "string" ? capture.endpointId : "";
   if (capture.schemaVersion !== "role-model.route-capture-read.v2") {
     missingReceiptInputs.push(`capture schema ${String(capture.schemaVersion)}`);
   }
@@ -2401,7 +2402,7 @@ export function createReplaySourceAttestation(input: {
   if (typeof capture.routingDecisionId !== "string" || !capture.routingDecisionId) {
     missingReceiptInputs.push("routing decision");
   }
-  if (typeof capture.endpointId !== "string" || !capture.endpointId) {
+  if (!captureEndpointId) {
     missingReceiptInputs.push("selected endpoint");
   }
   if (!trace || typeof trace !== "object" || Array.isArray(trace)) {
@@ -2440,13 +2441,17 @@ export function createReplaySourceAttestation(input: {
   }
   if (input.eligibleEndpointIds.length === 0) {
     missingReceiptInputs.push("effective eligible endpoints");
-  } else if (!input.eligibleEndpointIds.includes(capture.endpointId)) {
+  } else if (!input.eligibleEndpointIds.includes(captureEndpointId)) {
     missingReceiptInputs.push("source endpoint in effective eligible set");
   }
   if (missingReceiptInputs.length > 0) {
     throw new Error(
       `complete durable replay source receipt is required: ${missingReceiptInputs.join(", ")}`,
     );
+  }
+  if (traversal === null) {
+    // Unreachable: the receipt check above already threw for a missing traversal.
+    throw new Error("complete durable replay source receipt is required: canonical traversal");
   }
   const eligibleEndpointIds = [...new Set(input.eligibleEndpointIds)].sort();
   return Object.freeze({
