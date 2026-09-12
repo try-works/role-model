@@ -3543,7 +3543,7 @@ export async function main(): Promise<void> {
               runtime,
               requestId,
               channel,
-              scope: options.scopeId,
+              scope: captureScope,
               authorizationEpoch: 1,
               ownerId: `runtime-host:${process.pid}`,
             }),
