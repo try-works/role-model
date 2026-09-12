@@ -1,6 +1,9 @@
 import { expect, test } from "vitest";
 
-import { deriveSemanticEvaluationCriteria } from "../src/track-b-replay-evaluation-criteria.js";
+import {
+  deriveSemanticEvaluationCriteria,
+  extractSourceOutputText,
+} from "../src/track-b-replay-evaluation-criteria.js";
 
 test("run97 derives schema-valid semantic criteria from the recorded source output", () => {
   const derived = deriveSemanticEvaluationCriteria({
@@ -36,4 +39,31 @@ test("run97 criteria derivation declines unusable output instead of inventing te
   expect(deriveSemanticEvaluationCriteria({ sourceOutput: "   " })).toBeNull();
   expect(deriveSemanticEvaluationCriteria({ sourceOutput: "a b c d e" })).toBeNull();
   expect(deriveSemanticEvaluationCriteria({ sourceOutput: "!!! ??? ---" })).toBeNull();
+});
+
+test("run97 extracts recorded output text from response content, outputText, or messages", () => {
+  expect(extractSourceOutputText({ response: { content: "router replay works" } })).toBe(
+    "router replay works",
+  );
+  expect(extractSourceOutputText({ outputText: "legacy output text" })).toBe("legacy output text");
+  expect(
+    extractSourceOutputText({
+      messages: [
+        { role: "user", content: "please reply" },
+        { role: "assistant", content: "router replay works" },
+      ],
+    }),
+  ).toBe("router replay works");
+  expect(
+    extractSourceOutputText({
+      messages: [
+        { role: "user", content: "please reply" },
+        { role: "assistant", content: [{ type: "text", text: "part based replay works" }] },
+      ],
+    }),
+  ).toBe("part based replay works");
+  expect(
+    extractSourceOutputText({ messages: [{ role: "user", content: "only a question" }] }),
+  ).toBeNull();
+  expect(extractSourceOutputText({})).toBeNull();
 });

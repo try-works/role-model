@@ -77,6 +77,50 @@ const DEFAULT_MAX_TERMS = 3;
 const MIN_TERM_LENGTH = 4;
 const MAX_TERM_LENGTH = 32;
 
+function textFromContent(value: unknown): string | null {
+  if (typeof value === "string") return value.trim() ? value : null;
+  if (!Array.isArray(value)) return null;
+  const parts: string[] = [];
+  for (const part of value) {
+    if (typeof part === "string") {
+      if (part.trim()) parts.push(part);
+      continue;
+    }
+    if (!part || typeof part !== "object" || Array.isArray(part)) continue;
+    const record = part as Record<string, unknown>;
+    const text = typeof record.text === "string" ? record.text : record.content;
+    if (typeof text === "string" && text.trim()) parts.push(text);
+  }
+  return parts.length ? parts.join(" ") : null;
+}
+
+/**
+ * Read the recorded output text a capture can support. Durable captures store the
+ * response either inline (`response.content`, legacy `outputText`) or as an ordered
+ * message list whose assistant turn carries the output; text-only fallbacks keep the
+ * automatic path deterministic without inventing content.
+ */
+export function extractSourceOutputText(capture: Record<string, unknown>): string | null {
+  const response =
+    capture.response && typeof capture.response === "object" && !Array.isArray(capture.response)
+      ? (capture.response as Record<string, unknown>)
+      : null;
+  const responseContent = textFromContent(response?.content);
+  if (responseContent) return responseContent;
+  const outputText = typeof capture.outputText === "string" ? capture.outputText : null;
+  if (outputText?.trim()) return outputText;
+  const messages = Array.isArray(capture.messages) ? capture.messages : [];
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index];
+    if (!message || typeof message !== "object" || Array.isArray(message)) continue;
+    const record = message as Record<string, unknown>;
+    if (record.role !== "assistant") continue;
+    const content = textFromContent(record.content);
+    if (content) return content;
+  }
+  return null;
+}
+
 export function deriveSemanticEvaluationCriteria(input: {
   readonly sourceOutput: string | null | undefined;
   readonly maxTerms?: number;

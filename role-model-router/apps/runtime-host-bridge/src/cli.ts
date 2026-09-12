@@ -37,7 +37,10 @@ import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
 import { startAutoReplayLoop } from "./track-b-auto-replay-runtime.js";
 import { createTrackBOperations } from "./track-b-operations.js";
-import { deriveSemanticEvaluationCriteria } from "./track-b-replay-evaluation-criteria.js";
+import {
+  deriveSemanticEvaluationCriteria,
+  extractSourceOutputText,
+} from "./track-b-replay-evaluation-criteria.js";
 import { createReplayLedger } from "./track-b-replay-ledger.js";
 import {
   buildReplayPolicySet,
@@ -3022,16 +3025,7 @@ export async function main(): Promise<void> {
               failureDetail: `durable capture ${capture.captureRef} is unavailable through the operations boundary`,
             };
           }
-          const sourceResponse =
-            sourceCapture.response && typeof sourceCapture.response === "object"
-              ? (sourceCapture.response as Record<string, unknown>)
-              : null;
-          const sourceOutput =
-            typeof sourceResponse?.content === "string"
-              ? sourceResponse.content
-              : typeof sourceCapture.outputText === "string"
-                ? sourceCapture.outputText
-                : null;
+          const sourceOutput = extractSourceOutputText(sourceCapture);
           // The replay endpoint requires semantic evaluation criteria and the
           // routing-shadow scorer scores required terms. Automatic replay inherits
           // them deterministically from the recorded source output; unusable output
