@@ -2,7 +2,9 @@ import { describe, expect, test } from "vitest";
 
 import {
   controlActionFor,
+  formatLearningSummary,
   formatReplayBudget,
+  normalizeLearningSummary,
   normalizeReplayAutomationStatus,
 } from "./replay-status";
 
@@ -73,5 +75,26 @@ describe("run97 replay automation view model", () => {
     expect(formatReplayBudget(normalizeReplayAutomationStatus(null))).toBe(
       "replay automation unavailable",
     );
+  });
+});
+
+describe("run97 learning summary view model", () => {
+  test("normalizes durable evaluation and learner counters", () => {
+    const view = normalizeLearningSummary({
+      evaluation: { jobs: 2, trials: 3, trialScores: 2, comparisonGroups: 1 },
+      learning: { trajectorySignalReports: 4, knowledgeCandidates: 5 },
+    });
+    expect(formatLearningSummary(view)).toBe(
+      "2 evaluation job(s) · 3 trial(s) · 1 group(s) · 4 signal report(s) · 5 candidate(s)",
+    );
+  });
+
+  test("missing or partial payloads render zeros", () => {
+    expect(formatLearningSummary(normalizeLearningSummary(null))).toBe(
+      "0 evaluation job(s) · 0 trial(s) · 0 group(s) · 0 signal report(s) · 0 candidate(s)",
+    );
+    const partial = normalizeLearningSummary({ evaluation: { jobs: 1 } });
+    expect(partial.learning.knowledgeCandidates).toBe(0);
+    expect(partial.evaluation.comparisonGroups).toBe(0);
   });
 });

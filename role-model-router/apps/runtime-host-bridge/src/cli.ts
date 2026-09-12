@@ -88,6 +88,7 @@ const DURABLE_ARTIFACT_ID = /^[a-f0-9]{64}$/u;
  * holder is the single shared reference for status and pause/resume control.
  */
 let activeAutoReplayLoop: ReturnType<typeof startAutoReplayLoop> | null = null;
+let activeLearningSummaryReader: (() => Promise<unknown>) | null = null;
 
 type DurableReplayCapture = Readonly<Record<string, unknown>>;
 
@@ -1971,6 +1972,9 @@ export function createCliServerOptions(
       else throw new Error("replay control action must be pause or resume");
       return { action, status: activeAutoReplayLoop?.status() ?? null };
     },
+    readTrackBLearningSummary: async () => {
+      return activeLearningSummaryReader ? activeLearningSummaryReader() : null;
+    },
     readOperatorStatus: bindBackendMethod(
       "readOperatorStatus",
     ) as StartBridgeServerOptions["readOperatorStatus"],
@@ -3122,6 +3126,12 @@ export async function main(): Promise<void> {
             operationsEndpoint: trackBOperationsEndpoint,
             operationsToken: trackBOperationsToken,
           })
+        : null;
+      activeLearningSummaryReader = postObservationOperations
+        ? (() => {
+            const reader = postObservationOperations;
+            return () => reader.readLearningSummary();
+          })()
         : null;
       const operatorOperations = postObservationOperations;
       const created = await createRuntimeBridgeBackend({

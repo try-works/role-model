@@ -1742,6 +1742,22 @@ export async function controlReplayAutomation(
   );
 }
 
+/**
+ * Bounded Evaluation Core and learner counters from the durable stores, used by the
+ * operator surface to answer whether replay is producing comparisons and candidates.
+ */
+export async function fetchLearningSummary(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<Record<string, unknown>> {
+  return operatorPost<Record<string, unknown>>(
+    "/api/role-model/track-b/learning/summary",
+    {},
+    fetcher,
+    operatorToken,
+  );
+}
+
 export async function listReplayJobs(
   fetcher: RuntimeFetcher = fetch,
   operatorToken?: string,

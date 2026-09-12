@@ -2986,6 +2986,8 @@ export interface StartBridgeServerOptions {
   /** Automatic replay operator surface: bounded loop status and pause/resume control. */
   readonly readTrackBReplayStatus?: () => Promise<unknown> | unknown;
   readonly controlTrackBReplay?: (body: Record<string, unknown>) => Promise<unknown>;
+  /** Bounded Evaluation Core and learner counters for the operator surface. */
+  readonly readTrackBLearningSummary?: () => Promise<unknown> | unknown;
   readonly readOperatorStatus?: () => Promise<RuntimeOperatorStatus | unknown>;
   /** Authenticated operator evidence projections supplied by the owning runtime authority. */
   readonly listOperatorTraceRoots?: (query?: RuntimeOperatorQuery) => Promise<unknown>;
@@ -3639,6 +3641,8 @@ export interface CreateRuntimeBridgeBackendOptions {
   /** Automatic replay operator surface: bounded loop status and pause/resume control. */
   readonly readTrackBReplayStatus?: () => Promise<unknown> | unknown;
   readonly controlTrackBReplay?: (body: Record<string, unknown>) => Promise<unknown>;
+  /** Bounded Evaluation Core and learner counters for the operator surface. */
+  readonly readTrackBLearningSummary?: () => Promise<unknown> | unknown;
   readonly operatorAuthToken?: string;
   readonly readOperatorStatus?: () => Promise<RuntimeOperatorStatus | unknown>;
   readonly listOperatorTraceRoots?: (query?: RuntimeOperatorQuery) => Promise<unknown>;
@@ -15840,6 +15844,21 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       }
       try {
         writeJson(response, 200, await options.controlTrackBReplay(await readJsonBody(request)));
+      } catch (error) {
+        writeJson(response, 409, {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/track-b/learning/summary") {
+      if (!options.readTrackBLearningSummary) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        writeJson(response, 200, await options.readTrackBLearningSummary());
       } catch (error) {
         writeJson(response, 409, {
           error: error instanceof Error ? error.message : String(error),

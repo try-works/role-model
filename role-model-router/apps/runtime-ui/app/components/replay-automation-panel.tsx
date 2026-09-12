@@ -1,6 +1,8 @@
 import {
+  type LearningSummaryView,
   type ReplayAutomationView,
   controlActionFor,
+  formatLearningSummary,
   formatReplayBudget,
 } from "../lib/replay-status";
 
@@ -15,11 +17,13 @@ export function ReplayAutomationPanelView({
   onControl,
   busy,
   controlError,
+  learning,
 }: {
   readonly view: ReplayAutomationView;
   readonly onControl: (action: "pause" | "resume") => void;
   readonly busy: boolean;
   readonly controlError?: string | null;
+  readonly learning?: LearningSummaryView | null;
 }) {
   const action = controlActionFor(view);
   return (
@@ -36,6 +40,9 @@ export function ReplayAutomationPanelView({
               : "replay automation unavailable"}
           </p>
           <p className="text-xs text-[var(--rm-fg-muted)]">{formatReplayBudget(view)}</p>
+          {learning ? (
+            <p className="text-xs text-[var(--rm-fg-muted)]">{formatLearningSummary(learning)}</p>
+          ) : null}
           {view.lastError ? (
             <p className="text-xs text-[var(--rm-danger)]">{view.lastError}</p>
           ) : null}

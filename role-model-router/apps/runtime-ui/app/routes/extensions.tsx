@@ -22,7 +22,12 @@ import {
   secondaryButtonClassName,
   supportingTextClassName,
 } from "../lib/design-system";
-import { type ReplayAutomationView, normalizeReplayAutomationStatus } from "../lib/replay-status";
+import {
+  type LearningSummaryView,
+  type ReplayAutomationView,
+  normalizeLearningSummary,
+  normalizeReplayAutomationStatus,
+} from "../lib/replay-status";
 import {
   type KnowledgeValidationReceipt,
   type RuntimeActivePack,
@@ -37,6 +42,7 @@ import {
   fetchActivePack,
   fetchContributionState,
   fetchExtensions,
+  fetchLearningSummary,
   fetchRecommendations,
   fetchReplayAutomationStatus,
   mutateExtension,
@@ -167,6 +173,7 @@ export function ExtensionsRouteView() {
   );
   const [replayBusy, setReplayBusy] = useState(false);
   const [replayError, setReplayError] = useState<string | null>(null);
+  const [learningView, setLearningView] = useState<LearningSummaryView | null>(null);
   const load = useCallback(async () => {
     try {
       const [extensionRows, contributionState, recommendationRows, pack] = await Promise.all([
@@ -202,6 +209,12 @@ export function ExtensionsRouteView() {
             statusError instanceof Error ? statusError.message : "replay status unavailable",
           );
         }
+      }
+      try {
+        const summary = await fetchLearningSummary();
+        if (!cancelled) setLearningView(normalizeLearningSummary(summary));
+      } catch {
+        if (!cancelled) setLearningView(null);
       }
     };
     void refreshReplay();
@@ -364,6 +377,7 @@ export function ExtensionsRouteView() {
         onControl={(action) => void controlReplay(action)}
         busy={replayBusy}
         controlError={replayError}
+        learning={learningView}
       />
       {notice ? (
         <output

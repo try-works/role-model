@@ -2188,6 +2188,20 @@ export function createTrackBOperations({
         body: sanitizeOperatorBody(input),
       });
     },
+    async readLearningSummary(): Promise<unknown> {
+      if (!operationsEndpoint) {
+        return {
+          schemaVersion: "run97.learning-summary.v1",
+          evaluation: { jobs: 0, trials: 0, trialScores: 0, comparisonGroups: 0 },
+          learning: { trajectorySignalReports: 0, knowledgeCandidates: 0 },
+          scannedStores: 0,
+        };
+      }
+      const url = new URL(operationsEndpoint);
+      if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
+        throw new Error("learning summary requires a loopback operations boundary");
+      return requestPrivate("learning/summary", { method: "POST", body: {} });
+    },
     async listRecommendations(): Promise<readonly RecommendationRecord[]> {
       return (await readState(statePath)).recommendations ?? [];
     },

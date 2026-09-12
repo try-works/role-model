@@ -97,3 +97,44 @@ export function formatReplayBudget(view: ReplayAutomationView): string {
     `window ${budget.window}`,
   ].join(" · ");
 }
+
+export interface LearningSummaryView {
+  readonly evaluation: {
+    readonly jobs: number;
+    readonly trials: number;
+    readonly trialScores: number;
+    readonly comparisonGroups: number;
+  };
+  readonly learning: {
+    readonly trajectorySignalReports: number;
+    readonly knowledgeCandidates: number;
+  };
+}
+
+export function normalizeLearningSummary(value: unknown): LearningSummaryView {
+  const record = asRecord(value);
+  const evaluationRecord = asRecord(record?.evaluation);
+  const learningRecord = asRecord(record?.learning);
+  return {
+    evaluation: {
+      jobs: asCount(evaluationRecord?.jobs),
+      trials: asCount(evaluationRecord?.trials),
+      trialScores: asCount(evaluationRecord?.trialScores),
+      comparisonGroups: asCount(evaluationRecord?.comparisonGroups),
+    },
+    learning: {
+      trajectorySignalReports: asCount(learningRecord?.trajectorySignalReports),
+      knowledgeCandidates: asCount(learningRecord?.knowledgeCandidates),
+    },
+  };
+}
+
+export function formatLearningSummary(view: LearningSummaryView): string {
+  return [
+    `${view.evaluation.jobs} evaluation job(s)`,
+    `${view.evaluation.trials} trial(s)`,
+    `${view.evaluation.comparisonGroups} group(s)`,
+    `${view.learning.trajectorySignalReports} signal report(s)`,
+    `${view.learning.knowledgeCandidates} candidate(s)`,
+  ].join(" · ");
+}
