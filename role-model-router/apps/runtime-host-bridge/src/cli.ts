@@ -300,7 +300,16 @@ export function deriveSupervisedReplayTrajectoryEvents(input: {
         : {};
       const failure = tool.failure && typeof tool.failure === "object";
       const status = typeof tool.status === "string" ? tool.status.toLowerCase() : "";
-      const failed = failure || status === "failed" || status === "error" || status === "failure";
+      // A recorded tool failure can arrive three ways: a runtime execution status, a
+      // structured failure, or the provider transcript's own error marker on the tool
+      // result. All three are recorded facts, never inferred from output text.
+      const failed =
+        failure ||
+        tool.isError === true ||
+        tool.error === true ||
+        status === "failed" ||
+        status === "error" ||
+        status === "failure";
       pushEvent(`tool:${index}`, failed ? "tool_failure" : "tool_call", artifactId, index + 1);
     });
     const response = capture.response;
