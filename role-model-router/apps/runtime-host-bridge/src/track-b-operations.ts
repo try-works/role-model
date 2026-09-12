@@ -2151,6 +2151,43 @@ export function createTrackBOperations({
         throw error;
       }
     },
+    async listPendingReplayCaptures(input: Record<string, unknown>): Promise<unknown> {
+      if (!operationsEndpoint) {
+        return {
+          policySetDigest: String(input.policySetDigest ?? ""),
+          captureCount: 0,
+          pendingCount: 0,
+          pending: [],
+        };
+      }
+      const url = new URL(operationsEndpoint);
+      if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
+        throw new Error("pending replay captures require a loopback operations boundary");
+      return requestPrivate("capture/replay-pending", {
+        method: "POST",
+        body: sanitizeOperatorBody(input),
+      });
+    },
+    async recordReplayDisposition(input: Record<string, unknown>): Promise<unknown> {
+      if (!operationsEndpoint) return { recorded: false };
+      const url = new URL(operationsEndpoint);
+      if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
+        throw new Error("replay disposition requires a loopback operations boundary");
+      return requestPrivate("capture/replay-disposition", {
+        method: "POST",
+        body: sanitizeOperatorBody(input),
+      });
+    },
+    async listReplayDispositions(input: Record<string, unknown>): Promise<unknown> {
+      if (!operationsEndpoint) return { rows: [], cursor: null };
+      const url = new URL(operationsEndpoint);
+      if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
+        throw new Error("replay disposition listing requires a loopback operations boundary");
+      return requestPrivate("capture/replay-dispositions", {
+        method: "POST",
+        body: sanitizeOperatorBody(input),
+      });
+    },
     async listRecommendations(): Promise<readonly RecommendationRecord[]> {
       return (await readState(statePath)).recommendations ?? [];
     },
