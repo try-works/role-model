@@ -65,3 +65,25 @@ test("run97 replay trajectory events mark a recorded provider failure", () => {
   });
   expect(events.map((event) => String(event.type))).toContain("provider_error");
 });
+
+test("run97 repeated recorded tool use is a recorded tool loop", () => {
+  const events = deriveSupervisedReplayTrajectoryEvents({
+    sourceCapture: {
+      requestId: "req-run97-tool-loop",
+      capturedAt: "2026-09-13T01:10:00.000Z",
+      rootArtifactId: artifactId("a"),
+      toolArtifactIds: [artifactId("c"), artifactId("d")],
+      tools: [
+        { toolName: "bash", status: "succeeded" },
+        { toolName: "bash", status: "succeeded" },
+      ],
+      responseArtifactId: artifactId("e"),
+    },
+    counterfactualCaptures: [],
+  });
+  const types = events.map((event) => String(event.type));
+  expect(types).toContain("tool_call");
+  // The second use of the same tool is recorded repetition, not an interpretation of
+  // the tool's output text.
+  expect(types).toContain("tool_loop");
+});

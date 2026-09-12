@@ -294,6 +294,7 @@ export function deriveSupervisedReplayTrajectoryEvents(input: {
     );
     const toolArtifactIds = Array.isArray(capture.toolArtifactIds) ? capture.toolArtifactIds : [];
     const tools = Array.isArray(capture.tools) ? capture.tools : [];
+    const seenToolNames = new Set<string>();
     toolArtifactIds.forEach((artifactId, index) => {
       const tool = tools[index] && typeof tools[index] === "object" && !Array.isArray(tools[index])
         ? (tools[index] as Record<string, unknown>)
@@ -310,7 +311,19 @@ export function deriveSupervisedReplayTrajectoryEvents(input: {
         status === "failed" ||
         status === "error" ||
         status === "failure";
-      pushEvent(`tool:${index}`, failed ? "tool_failure" : "tool_call", artifactId, index + 1);
+      // A capture that recorded the same tool more than once is repeated tool use: the
+      // repetition itself is a recorded fact (the taxonomy's `tool_loop`), which is
+      // exactly the behavioral evidence a learner may consume without interpreting tool
+      // output text.
+      const toolName = String(tool.toolName ?? tool.toolId ?? "");
+      const repeated = toolName.length > 0 && seenToolNames.has(toolName);
+      if (toolName) seenToolNames.add(toolName);
+      pushEvent(
+        `tool:${index}`,
+        failed ? "tool_failure" : repeated ? "tool_loop" : "tool_call",
+        artifactId,
+        index + 1,
+      );
     });
     const response = capture.response;
     const responseFailure =
