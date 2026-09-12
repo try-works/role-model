@@ -211,46 +211,120 @@ export function deriveSupervisedReplayTrajectoryEvents(input: {
   readonly counterfactualCaptures: readonly DurableReplayCapture[];
 }): readonly Record<string, unknown>[] {
   const captures = [input.sourceCapture, ...input.counterfactualCaptures];
-  return captures
-    .flatMap((capture, captureIndex) => {
-      const rawEvents = capture.trajectoryEvents;
-      if (rawEvents === undefined) return [];
-      if (!Array.isArray(rawEvents)) {
-        throw new Error(`replay capture ${captureIndex} trajectory events are invalid`);
+  // A capture records its trajectory as durable artifact identities (route decision,
+  // tool executions, response), not as a ready-made event list. Deriving events from
+  // those identities keeps every event evidence-backed: each one names the artifact
+  // that proves it, carries the capture's recorded time, and is typed by what the
+  // artifact actually says (a recorded tool failure is a `tool_failure`, a successful
+  // call is a plain `tool_call`). A capture without a recorded time contributes no
+  // events at all rather than a fabricated timeline, which is what lets R16 degrade
+  // honestly for captures that carry no real behavioral evidence.
+  const DURABLE_ID = /^[a-f0-9]{64}$/u;
+  // A capture that already records its own validated trajectory events keeps them
+  // verbatim; derivation only fills captures that record none.
+  const recorded = captures.flatMap((capture, captureIndex) => {
+    const rawEvents = capture.trajectoryEvents;
+    if (rawEvents === undefined) return [];
+    if (!Array.isArray(rawEvents)) {
+      throw new Error(`replay capture ${captureIndex} trajectory events are invalid`);
+    }
+    return rawEvents.map((event, eventIndex) => {
+      if (!event || typeof event !== "object" || Array.isArray(event)) {
+        throw new Error(`replay capture ${captureIndex} trajectory event ${eventIndex} is invalid`);
       }
-      return rawEvents.map((event, eventIndex) => {
-        if (!event || typeof event !== "object" || Array.isArray(event)) {
-          throw new Error(
-            `replay capture ${captureIndex} trajectory event ${eventIndex} is invalid`,
-          );
-        }
-        const record = event as Record<string, unknown>;
-        if (typeof record.type !== "string" || !record.type.trim()) {
-          throw new Error(`replay capture ${captureIndex} trajectory event type is required`);
-        }
-        if (
-          typeof record.evidenceRef !== "string" ||
-          !/^artifact:[a-f0-9]{64}$/u.test(record.evidenceRef)
-        ) {
-          throw new Error(
-            `replay capture ${captureIndex} trajectory event must name a durable evidence artifact`,
-          );
-        }
-        const sequence = Number.isSafeInteger(record.sequence)
-          ? Number(record.sequence)
-          : Number.MAX_SAFE_INTEGER;
-        const occurredAt = typeof record.occurredAt === "string" ? record.occurredAt : "";
-        return { record, captureIndex, eventIndex, sequence, occurredAt };
+      const record = event as Record<string, unknown>;
+      if (typeof record.type !== "string" || !record.type.trim()) {
+        throw new Error(`replay capture ${captureIndex} trajectory event type is required`);
+      }
+      if (
+        typeof record.evidenceRef !== "string" ||
+        !/^artifact:[a-f0-9]{64}$/u.test(record.evidenceRef)
+      ) {
+        throw new Error(
+          `replay capture ${captureIndex} trajectory event must name a durable evidence artifact`,
+        );
+      }
+      const sequence = Number.isSafeInteger(record.sequence)
+        ? Number(record.sequence)
+        : Number.MAX_SAFE_INTEGER;
+      const occurredAt = typeof record.occurredAt === "string" ? record.occurredAt : "";
+      return { record, captureIndex, eventIndex, sequence, occurredAt };
+    });
+  });
+  if (recorded.length > 0) {
+    return recorded
+      .sort(
+        (left, right) =>
+          left.sequence - right.sequence ||
+          left.occurredAt.localeCompare(right.occurredAt) ||
+          left.captureIndex - right.captureIndex ||
+          left.eventIndex - right.eventIndex,
+      )
+      .map(({ record }) => record);
+  }
+  const events: Record<string, unknown>[] = [];
+  captures.forEach((capture, captureIndex) => {
+    const capturedAtMs =
+      typeof capture.capturedAt === "string" ? Date.parse(capture.capturedAt) : Number.NaN;
+    if (!Number.isSafeInteger(capturedAtMs) || capturedAtMs <= 0) return;
+    const requestId = String(capture.requestId ?? `capture:${captureIndex}`);
+    const pushEvent = (
+      suffix: string,
+      type: string,
+      artifactId: unknown,
+      sequence: number,
+    ): void => {
+      if (typeof artifactId !== "string" || !DURABLE_ID.test(artifactId)) return;
+      events.push({
+        id: `${requestId}:${suffix}`,
+        type,
+        timestampMs: capturedAtMs,
+        evidenceRef: `artifact:${artifactId}`,
+        sequence,
+        requestId,
       });
+    };
+    pushEvent(
+      "route",
+      "route_selected",
+      typeof capture.routeDecisionArtifactId === "string"
+        ? capture.routeDecisionArtifactId
+        : capture.rootArtifactId,
+      0,
+    );
+    const toolArtifactIds = Array.isArray(capture.toolArtifactIds) ? capture.toolArtifactIds : [];
+    const tools = Array.isArray(capture.tools) ? capture.tools : [];
+    toolArtifactIds.forEach((artifactId, index) => {
+      const tool = tools[index] && typeof tools[index] === "object" && !Array.isArray(tools[index])
+        ? (tools[index] as Record<string, unknown>)
+        : {};
+      const failure = tool.failure && typeof tool.failure === "object";
+      const status = typeof tool.status === "string" ? tool.status.toLowerCase() : "";
+      const failed = failure || status === "failed" || status === "error" || status === "failure";
+      pushEvent(`tool:${index}`, failed ? "tool_failure" : "tool_call", artifactId, index + 1);
+    });
+    const response = capture.response;
+    const responseFailure =
+      response && typeof response === "object" && !Array.isArray(response)
+        ? (response as Record<string, unknown>).failure
+        : null;
+    pushEvent(
+      "response",
+      responseFailure ? "provider_error" : "model_response",
+      capture.responseArtifactId,
+      toolArtifactIds.length + 1,
+    );
+  });
+  const seen = new Set<string>();
+  return events
+    .filter((event) => {
+      const id = String(event.id);
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
     })
-    .sort(
-      (left, right) =>
-        left.sequence - right.sequence ||
-        left.occurredAt.localeCompare(right.occurredAt) ||
-        left.captureIndex - right.captureIndex ||
-        left.eventIndex - right.eventIndex,
-    )
-    .map(({ record }) => record);
+    .sort((left, right) => Number(left.sequence) - Number(right.sequence))
+    .slice(0, 128);
 }
 
 /**
