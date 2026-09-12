@@ -9,6 +9,7 @@ import {
   LoadingState,
   SectionCard,
 } from "../components/page-primitives";
+import { ReplayAutomationPanelView } from "../components/replay-automation-panel";
 import {
   compactFieldButtonClassName,
   compactFieldButtonEmphasisClassName,
@@ -21,6 +22,7 @@ import {
   secondaryButtonClassName,
   supportingTextClassName,
 } from "../lib/design-system";
+import { type ReplayAutomationView, normalizeReplayAutomationStatus } from "../lib/replay-status";
 import {
   type KnowledgeValidationReceipt,
   type RuntimeActivePack,
@@ -29,12 +31,14 @@ import {
   type RuntimeExtensionStatus,
   type RuntimeRecommendation,
   applyRecommendation,
+  controlReplayAutomation,
   dismissRecommendation,
   downloadRecommendations,
   fetchActivePack,
   fetchContributionState,
   fetchExtensions,
   fetchRecommendations,
+  fetchReplayAutomationStatus,
   mutateExtension,
   prepareKnowledgeWorkerShadowReady,
   updateContributionState,
@@ -158,6 +162,11 @@ export function ExtensionsRouteView() {
   const [modeDraft, setModeDraft] = useState<Record<string, RuntimeExtensionMode>>({});
   const [bootstrapReceiptJson, setBootstrapReceiptJson] = useState("");
   const [bootstrapGroupDigest, setBootstrapGroupDigest] = useState("");
+  const [replayView, setReplayView] = useState<ReplayAutomationView>(() =>
+    normalizeReplayAutomationStatus(null),
+  );
+  const [replayBusy, setReplayBusy] = useState(false);
+  const [replayError, setReplayError] = useState<string | null>(null);
   const load = useCallback(async () => {
     try {
       const [extensionRows, contributionState, recommendationRows, pack] = await Promise.all([
@@ -177,6 +186,46 @@ export function ExtensionsRouteView() {
   useEffect(() => {
     void load();
   }, [load]);
+  useEffect(() => {
+    let cancelled = false;
+    const refreshReplay = async () => {
+      try {
+        const status = await fetchReplayAutomationStatus();
+        if (!cancelled) {
+          setReplayView(normalizeReplayAutomationStatus(status));
+          setReplayError(null);
+        }
+      } catch (statusError) {
+        if (!cancelled) {
+          setReplayView(normalizeReplayAutomationStatus(null));
+          setReplayError(
+            statusError instanceof Error ? statusError.message : "replay status unavailable",
+          );
+        }
+      }
+    };
+    void refreshReplay();
+    const timer = setInterval(() => void refreshReplay(), 15_000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, []);
+  const controlReplay = async (action: "pause" | "resume") => {
+    setReplayBusy(true);
+    try {
+      const result = await controlReplayAutomation(action);
+      const status = (result as { readonly status?: unknown }).status;
+      setReplayView(normalizeReplayAutomationStatus(status ?? null));
+      setReplayError(null);
+    } catch (controlError) {
+      setReplayError(
+        controlError instanceof Error ? controlError.message : "replay control unavailable",
+      );
+    } finally {
+      setReplayBusy(false);
+    }
+  };
   const facts = useMemo(() => {
     const rows = extensions ?? [];
     return {
@@ -310,6 +359,12 @@ export function ExtensionsRouteView() {
         ]}
       />
       {error ? <ErrorState label={error} /> : null}
+      <ReplayAutomationPanelView
+        view={replayView}
+        onControl={(action) => void controlReplay(action)}
+        busy={replayBusy}
+        controlError={replayError}
+      />
       {notice ? (
         <output
           className={`${mutedPanelClassName} block border-[var(--rm-border-strong)] p-4 ${supportingTextClassName} text-[var(--rm-fg)]`}

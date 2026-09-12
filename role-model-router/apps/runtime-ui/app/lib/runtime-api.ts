@@ -1714,6 +1714,34 @@ export async function fetchOperatorStatus(
   );
 }
 
+/**
+ * Run 97 automatic replay automation surface: bounded loop status and pause/resume.
+ * Both routes return 404 when the loop is not configured for the channel.
+ */
+export async function fetchReplayAutomationStatus(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<Record<string, unknown>> {
+  return operatorGet<Record<string, unknown>>(
+    "/api/role-model/track-b/replay/status",
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function controlReplayAutomation(
+  action: "pause" | "resume",
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<Record<string, unknown>> {
+  return operatorPost<Record<string, unknown>>(
+    "/api/role-model/track-b/replay/control",
+    { action },
+    fetcher,
+    operatorToken,
+  );
+}
+
 export async function listReplayJobs(
   fetcher: RuntimeFetcher = fetch,
   operatorToken?: string,
