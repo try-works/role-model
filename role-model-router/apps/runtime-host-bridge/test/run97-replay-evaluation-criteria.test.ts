@@ -41,6 +41,13 @@ test("run97 criteria derivation declines unusable output instead of inventing te
   expect(deriveSemanticEvaluationCriteria({ sourceOutput: "!!! ??? ---" })).toBeNull();
 });
 
+test("run97 short but substantive outputs still yield a bounded criterion", () => {
+  const derived = deriveSemanticEvaluationCriteria({ sourceOutput: "OK" });
+  expect(derived?.criteria.requiredTerms).toEqual(["ok"]);
+  const stopwordOnly = deriveSemanticEvaluationCriteria({ sourceOutput: "yes no" });
+  expect(stopwordOnly).toBeNull();
+});
+
 test("run97 extracts recorded output text from response content, outputText, or messages", () => {
   expect(extractSourceOutputText({ response: { content: "router replay works" } })).toBe(
     "router replay works",
