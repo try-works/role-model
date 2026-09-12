@@ -146,3 +146,26 @@ test("run97 guard: the removed replay restrictions cannot reappear in the host C
   );
   expect(cli).not.toContain('toolPolicy: "deny"');
 });
+
+test("run97 recorded tool results are recognised from the durable capture shape", async () => {
+  const { hasRecordedToolResults } = await import("../src/track-b-replay-policy.js");
+  expect(hasRecordedToolResults({ toolArtifactIds: ["a".repeat(64)] })).toBe(true);
+  expect(hasRecordedToolResults({ toolResultArtifactIds: ["b".repeat(64)] })).toBe(true);
+  expect(hasRecordedToolResults({ toolArtifactIds: [] })).toBe(false);
+  expect(hasRecordedToolResults({ toolArtifactIds: [""] })).toBe(false);
+  expect(hasRecordedToolResults({})).toBe(false);
+  expect(hasRecordedToolResults({ toolArtifactIds: "not-an-array" })).toBe(false);
+});
+
+test("run97 tool policy prefers reuse whenever recorded tool artifacts exist", async () => {
+  const { hasRecordedToolResults, resolveReplayToolPolicy } = await import(
+    "../src/track-b-replay-policy.js"
+  );
+  const capture = {
+    messages: [{ role: "user", content: "use a tool" }],
+    toolArtifactIds: ["c".repeat(64)],
+  };
+  expect(
+    resolveReplayToolPolicy({ hasRecordedToolResults: hasRecordedToolResults(capture) }).toolPolicy,
+  ).toBe("recorded_results_only");
+});

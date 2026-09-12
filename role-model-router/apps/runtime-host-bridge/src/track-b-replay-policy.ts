@@ -127,6 +127,25 @@ export function selectReplayCandidates(input: {
 
 export type ReplayToolPolicy = "recorded_results_only" | "sandboxed_allowlist";
 
+/**
+ * Detect whether a durable route capture already carries recorded tool content.
+ * The operations projection names the tool call/result artifacts `toolArtifactIds`;
+ * older captures may use `toolResultArtifactIds`. Reuse is preferred whenever any
+ * recorded tool artifact exists so replay does not re-execute tools needlessly.
+ */
+export function hasRecordedToolResults(capture: Record<string, unknown>): boolean {
+  for (const field of ["toolArtifactIds", "toolResultArtifactIds", "toolCallArtifactIds"]) {
+    const value = capture[field];
+    if (
+      Array.isArray(value) &&
+      value.some((item) => typeof item === "string" && item.trim().length > 0)
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function resolveReplayToolPolicy(input: {
   readonly hasRecordedToolResults: boolean;
   readonly policyAllowsExecution?: boolean;

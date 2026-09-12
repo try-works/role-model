@@ -42,6 +42,7 @@ import { createReplayLedger } from "./track-b-replay-ledger.js";
 import {
   buildReplayPolicySet,
   decideReplayAdmission,
+  hasRecordedToolResults,
   resolveReplayToolPolicy,
   selectReplayCandidates,
 } from "./track-b-replay-policy.js";
@@ -3289,14 +3290,9 @@ export async function main(): Promise<void> {
           if (!admission.admitted) {
             throw new Error(`${admission.code}: ${admission.detail}`);
           }
-          const recordedToolResultArtifacts = Array.isArray(sourceCapture.toolResultArtifactIds)
-            ? sourceCapture.toolResultArtifactIds.filter(
-                (value): value is string => typeof value === "string" && value.length > 0,
-              )
-            : [];
           const { toolPolicy: resolvedReplayToolPolicy, reason: replayToolPolicyReason } =
             resolveReplayToolPolicy({
-              hasRecordedToolResults: recordedToolResultArtifacts.length > 0,
+              hasRecordedToolResults: hasRecordedToolResults(sourceCapture),
             });
           const endpoints = created.effectiveRegistry.endpoints;
           const candidatePackages = candidateEndpointIds.map((endpointId) => {
