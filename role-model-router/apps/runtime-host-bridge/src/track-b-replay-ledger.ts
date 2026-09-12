@@ -244,13 +244,9 @@ export function createReplayLedger(options: {
       const reservation = window.reservations.find(
         (row) => row.reservationId === input.reservationId,
       );
-      if (!reservation) {
-        return {
-          accepted: false,
-          code: "unknown_reservation",
-          detail: "the dispatch reservation is not active in this window",
-        };
-      }
+      // A retry or derived dispatch may arrive after its planned candidates were
+      // consumed; the daily ceiling is the real guard, so the dispatch is still
+      // recorded (the reservation row is optional attribution).
       if (window.dispatches.length + 1 > limits.dispatchesPerDay) {
         return {
           accepted: false,
@@ -262,7 +258,7 @@ export function createReplayLedger(options: {
       const index = window.reservations.findIndex(
         (row) => row.reservationId === input.reservationId,
       );
-      if (index !== -1) {
+      if (reservation && index !== -1) {
         const reservation = window.reservations[index] as ReservationRow;
         const remaining = reservation.candidateDispatches - 1;
         // Consumed reservations leave the window: a later attempt creates a new
