@@ -20,6 +20,24 @@ import {
 
 export const DEFAULT_MAX_CAPTURES_PER_TICK = 8;
 
+/**
+ * Refusal codes that reflect runtime state which can change (configuration, budget
+ * window, dependencies). These defer the capture so a later tick can replay it;
+ * every other code is terminal for the budget window.
+ */
+const RETRYABLE_REPLAY_REFUSAL_CODES: ReadonlySet<string> = new Set([
+  "replay_disabled_channel",
+  "capture_unavailable",
+  "no_distinct_candidate_configured",
+  "budget_exhausted",
+  "policy_unknown",
+  "dependency_unavailable",
+]);
+
+export function retryableReplayRefusalCodes(): ReadonlySet<string> {
+  return RETRYABLE_REPLAY_REFUSAL_CODES;
+}
+
 export interface AutoReplayCapture {
   readonly captureRef: string;
   readonly sourceEndpointId: string | null;
@@ -135,12 +153,7 @@ export async function runAutoReplayTick(input: {
       dependenciesAvailable: input.dependenciesAvailable ?? true,
     });
     if (!admission.admitted) {
-      const outcome =
-        admission.code === "budget_exhausted" ||
-        admission.code === "dependency_unavailable" ||
-        admission.code === "replay_disabled_channel"
-          ? "deferred"
-          : "refused";
+      const outcome = RETRYABLE_REPLAY_REFUSAL_CODES.has(admission.code) ? "deferred" : "refused";
       if (outcome === "deferred") deferred += 1;
       else refused += 1;
       emit({

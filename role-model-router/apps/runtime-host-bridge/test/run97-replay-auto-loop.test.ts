@@ -245,7 +245,7 @@ test("run97 auto loop re-reads configured endpoints on every tick", async () => 
       now: () => Date.parse("2026-09-12T06:00:00Z"),
     });
     const beforeConfiguration = await loop.tick();
-    expect(beforeConfiguration.refused).toBe(1);
+    expect(beforeConfiguration.deferred).toBe(1);
     expect(beforeConfiguration.dispositions[0]?.code).toBe("no_distinct_candidate_configured");
     configured.push("endpoint-a", "endpoint-b");
     const afterConfiguration = await loop.tick();

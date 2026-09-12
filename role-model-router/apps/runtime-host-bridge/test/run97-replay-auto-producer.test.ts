@@ -4,7 +4,7 @@ import path from "node:path";
 
 import { expect, test } from "vitest";
 
-import { runAutoReplayTick } from "../src/track-b-auto-replay.js";
+import { retryableReplayRefusalCodes, runAutoReplayTick } from "../src/track-b-auto-replay.js";
 import { createReplayLedger } from "../src/track-b-replay-ledger.js";
 import { buildReplayPolicySet } from "../src/track-b-replay-policy.js";
 
@@ -74,7 +74,10 @@ test("run97 auto producer refuses with a declared code instead of skipping work"
       executor: async () => ({ terminal: true, branches: [] }),
     });
     expect(result.replayed).toBe(0);
-    expect(result.refused).toBe(2);
+    // A missing distinct candidate is retryable (configuration can change), so it
+    // defers; replay-produced sources stay terminally refused.
+    expect(result.refused).toBe(1);
+    expect(result.deferred).toBe(1);
     expect(result.dispositions.map((row) => row.code)).toEqual([
       "no_distinct_candidate_configured",
       "amplification_depth_exceeded",
@@ -153,6 +156,41 @@ test("run97 auto producer bounds each tick and reports the cursor", async () => 
     expect(seen).toEqual(["req-1", "req-2"]);
     expect(result.cursor).toBe("req-2");
     expect(result.processed).toBe(2);
+  } finally {
+    cleanup();
+  }
+});
+
+test("run97 transient admission failures defer instead of terminally refusing", async () => {
+  const { ledger, cleanup } = tempLedger();
+  try {
+    const result = await runAutoReplayTick({
+      captures: [
+        {
+          captureRef: "req-no-candidates",
+          sourceEndpointId: "endpoint-a",
+          hasRecordedToolResults: true,
+        },
+        { captureRef: "req-privacy", sourceEndpointId: "endpoint-a", hasRecordedToolResults: true },
+      ],
+      configuredEndpointIds: ["endpoint-a"],
+      ledger,
+      policySet: buildReplayPolicySet(),
+      executor: async () => ({ terminal: true, branches: [] }),
+    });
+    // A capture refused only because the runtime had no distinct candidate yet must
+    // stay pending so a later tick can replay it once configuration changes.
+    expect(result.dispositions[0]).toMatchObject({
+      outcome: "deferred",
+      code: "no_distinct_candidate_configured",
+    });
+    expect(result.deferred).toBeGreaterThanOrEqual(1);
+
+    const retryable = retryableReplayRefusalCodes();
+    expect(retryable.has("no_distinct_candidate_configured")).toBe(true);
+    expect(retryable.has("budget_exhausted")).toBe(true);
+    expect(retryable.has("privacy_denied")).toBe(false);
+    expect(retryable.has("retention_expired")).toBe(false);
   } finally {
     cleanup();
   }
