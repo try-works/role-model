@@ -53,10 +53,12 @@ test.describe("@recursive:94-direct-track-b-storage-graph-cloud-roundtrip @sp8 @
     await page.goto("/app/system/storage-retention");
     await expect(page.getByRole("heading", { name: "Physical storage inventory" })).toBeVisible();
     const summary = page.getByLabel("Storage retention summary");
-    await expect(summary.getByText("Physical", { exact: true })).toBeVisible();
-    await expect(summary.getByText("Logical classes", { exact: true })).toBeVisible();
-    await expect(summary.getByText("Reclaimable", { exact: true })).toBeVisible();
-    await expect(summary.getByText("Unattributed physical bytes", { exact: true })).toBeVisible();
+    // Run 96 renamed the summary metrics to carry their units; the logical
+    // classes heading now lives on the mapping section rather than the strip.
+    await expect(summary.getByText("Physical bytes", { exact: true })).toBeVisible();
+    await expect(summary.getByText("Logical bytes", { exact: true })).toBeVisible();
+    await expect(summary.getByText("Reclaimable bytes", { exact: true })).toBeVisible();
+    await expect(summary.getByText("Unattributed bytes", { exact: true })).toBeVisible();
     await expect(summary.getByText("Legal holds")).toBeVisible();
     // The physical-resource projection reports measured observation state. Its
     // legacy Enforcement column must not be revived by the packaged UI.
