@@ -2417,12 +2417,7 @@ export function createReplaySourceAttestation(input: {
     typeof capturePolicyRef !== "string" ||
     !capturePolicyRef ||
     input.eligibleEndpointIds.length === 0 ||
-    !input.eligibleEndpointIds.includes(capture.endpointId) ||
-    (capturedEligibleEndpointIds !== null &&
-      (!capturedEligibleEndpointIds.includes(capture.endpointId) ||
-        input.eligibleEndpointIds.some(
-          (endpointId) => !capturedEligibleEndpointIds.includes(endpointId),
-        )))
+    !input.eligibleEndpointIds.includes(capture.endpointId)
   ) {
     throw new Error("complete durable replay source receipt is required");
   }
@@ -2455,6 +2450,9 @@ export function createReplaySourceAttestation(input: {
       policySnapshotRef,
       capturePolicyRef,
       eligibleEndpointIds,
+      // The frozen decision snapshot is provenance, not a filter: the effective set
+      // above may be wider than what the source decision recorded.
+      ...(capturedEligibleEndpointIds !== null ? { capturedEligibleEndpointIds } : {}),
       selectedEndpointId: capture.endpointId,
     }),
   });
