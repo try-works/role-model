@@ -3576,7 +3576,15 @@ export async function main(): Promise<void> {
             candidatePackages: counterfactualPackages,
             budget: structuredClone(budget) as Record<string, unknown>,
             leaseOwner: `runtime-host:${process.pid}`,
-            leaseMs: Math.min(Number((budget as Record<string, unknown>).deadlineMs), 30_000),
+            // R10: a tool-bearing replay can dispatch for far longer than 30 seconds
+            // (a long transcript plus parallel tool calls), and a lease that expires
+            // mid-dispatch makes the durable receipt look like it came from a stale
+            // supervisor ("current replay job lease is required for dispatch"). Hold
+            // the lease for the whole bounded replay deadline, capped at five minutes.
+            leaseMs: Math.max(
+              30_000,
+              Math.min(Number((budget as Record<string, unknown>).deadlineMs), 300_000),
+            ),
             scheduler: createReplayIntentScheduler({
               runtime,
               requestId,
