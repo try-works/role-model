@@ -50,13 +50,14 @@ const resolveNodeWorkerExecutable = (configured = process.env.ROLE_MODEL_EXTENSI
 };
 
 class ProcessWorker {
-  constructor(moduleUrl, onExit, startupTimeoutMs, workerExecPath, extensionId, stateRoot) {
+  constructor(moduleUrl, onExit, startupTimeoutMs, workerExecPath, extensionId, stateRoot, channel = null) {
     this.moduleUrl = normalizeModuleUrl(moduleUrl);
     this.onExit = onExit;
     this.startupTimeoutMs = startupTimeoutMs;
     this.workerExecPath = workerExecPath;
     this.extensionId = extensionId;
     this.stateRoot = stateRoot;
+    this.channel = channel;
     this.pending = new Map();
     this.child = null;
     this.stderr = "";
@@ -100,6 +101,7 @@ class ProcessWorker {
         ...process.env,
         ROLE_MODEL_EXTENSION_ID: this.extensionId,
         ...(this.stateRoot ? { ROLE_MODEL_EXTENSION_STATE_ROOT: this.stateRoot } : {}),
+        ...(this.channel ? { ROLE_MODEL_EXTENSION_CHANNEL: this.channel } : {}),
         ROLE_MODEL_EXTENSION_TRANSFER_KEY: this.transferKey,
         ROLE_MODEL_EXTENSION_CONTROL_KEY: this.controlSecret,
       },
@@ -436,6 +438,7 @@ export class ExtensionHost {
       this.workerExecPath,
       validated.id,
       this.journalPath ? join(dirname(this.journalPath), "workers", validated.id) : null,
+      this.channel,
     );
     this.#workers.set(validated.id, record);
     try {
