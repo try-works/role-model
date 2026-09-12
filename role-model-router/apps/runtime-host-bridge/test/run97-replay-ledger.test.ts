@@ -105,6 +105,7 @@ test("run97 ledger rejects a second terminal counterfactual for the same capture
         bytes: 100,
         outcome: "complete",
       });
+      ledger.completeCounterfactual({ captureRef: "req-1", policySetDigest: "p" });
     }
     const duplicate = ledger.reserve({
       captureRef: "req-1",

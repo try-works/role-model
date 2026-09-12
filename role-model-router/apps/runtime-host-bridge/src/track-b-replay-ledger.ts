@@ -109,6 +109,15 @@ export interface ReplayLedger {
   reserve(input: ReplayLedgerReservationInput): ReplayLedgerReservationResult;
   release(reservationId: string): void;
   record(input: ReplayLedgerRecordInput): ReplayLedgerRecordResult;
+  /**
+   * Mark a capture's counterfactual terminal. Called only after the whole replay job
+   * completed (branches appended), so a dispatch that succeeded but whose branch or
+   * evaluation step failed stays retryable in the same window.
+   */
+  completeCounterfactual(input: {
+    readonly captureRef: string;
+    readonly policySetDigest: string;
+  }): void;
   hasTerminalCounterfactual(captureRef: string, policySetDigest: string): boolean;
   status(): ReplayLedgerStatus;
   entries(): readonly DispatchRow[];
@@ -256,21 +265,26 @@ export function createReplayLedger(options: {
       if (index !== -1) {
         const reservation = window.reservations[index] as ReservationRow;
         const remaining = reservation.candidateDispatches - 1;
-        const terminal =
-          input.dispatchKind === "candidate" && input.outcome === "complete" && remaining <= 0;
-        if (terminal) {
-          const key = captureKey(input.captureRef, input.policySetDigest);
-          if (!window.counterfactuals.includes(key)) window.counterfactuals.push(key);
-          window.reservations.splice(index, 1);
-        } else {
-          window.reservations[index] = {
-            ...reservation,
-            candidateDispatches: remaining > 0 ? remaining : 0,
-          };
-        }
+        window.reservations[index] = {
+          ...reservation,
+          candidateDispatches: remaining > 0 ? remaining : 0,
+        };
       }
       persist(file);
       return { accepted: true };
+    },
+    completeCounterfactual(input) {
+      const file = load();
+      const window = windowOf(file, now());
+      const key = captureKey(input.captureRef, input.policySetDigest);
+      if (!window.counterfactuals.includes(key)) window.counterfactuals.push(key);
+      for (let index = window.reservations.length - 1; index >= 0; index -= 1) {
+        const row = window.reservations[index] as ReservationRow;
+        if (row.captureRef === input.captureRef && row.policySetDigest === input.policySetDigest) {
+          window.reservations.splice(index, 1);
+        }
+      }
+      persist(file);
     },
     hasTerminalCounterfactual(captureRef, policySetDigest) {
       const file = load();

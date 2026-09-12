@@ -250,6 +250,12 @@ export async function runAutoReplayTick(input: {
       });
       continue;
     }
+    // Terminal only after the replay job completed with appended branches; a dispatch
+    // that succeeded but whose branch/evaluation step failed stays retryable.
+    input.ledger.completeCounterfactual({
+      captureRef: capture.captureRef,
+      policySetDigest: input.policySet.policySetDigest,
+    });
     input.ledger.release(reservation.reservationId);
     replayed += 1;
     emit({
