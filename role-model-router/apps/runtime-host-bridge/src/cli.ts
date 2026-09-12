@@ -521,7 +521,15 @@ export async function persistSupervisedReplayEvaluationReferenceFacts(input: {
         fact,
       });
       const result = await input.runtime.invoke("artifact-store", {
-        requestId: `${input.requestId}:reference-fact:${factType}`,
+        // The write request id carries the fact digest: a retry that recomputes the
+        // fact with different bytes (for example after a recovered attempt appends a
+        // different branch root) must persist its own artifact instead of receiving a
+        // cached result for an earlier attempt's bytes, which then fails the durable
+        // readback comparison.
+        requestId: `${input.requestId}:reference-fact:${factType}:${createHash("sha256")
+          .update(content)
+          .digest("hex")
+          .slice(0, 16)}`,
         sessionId: input.requestId,
         protocolVersion: "1.1.0",
         channel: input.channel,
