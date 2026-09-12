@@ -6528,6 +6528,18 @@ async function runTrackBObservationPipeline(
     readonly trajectoryEvents: readonly Record<string, unknown>[];
     readonly identity: TrackBVariantIdentity;
     readonly occurrence?: Readonly<{ occurrenceId: string; contentId: string }>;
+    /**
+     * R3: when the runtime has distinct configured candidates, the observation
+     * records a durable replay intent instead of the `R14_NO_DISTINCT_COUNTERFACTUAL`
+     * refusal. The canonical extension closure is unchanged: replay-core,
+     * evaluation-runner-local, and trajectory-signals still run, so the closure stays
+     * truthful and the post-observation remains durable.
+     */
+    readonly replayIntent?: Readonly<{
+      jobId: string;
+      candidateEndpointIds: readonly string[];
+      accepted: boolean;
+    }>;
   },
 ) {
   const envelope = (capability: string, value: unknown): Record<string, unknown> => ({
@@ -6549,7 +6561,9 @@ async function runTrackBObservationPipeline(
       sourceGraphRef: input.sourceGraphRef,
       prefix: [{ routingDecisionId: input.sourceDecisionId, identity: input.identity }],
       counterfactuals: [],
-      disposition: "observation_only_no_distinct_counterfactual",
+      disposition: input.replayIntent
+        ? "replay_intent_enqueued_for_configured_candidates"
+        : "observation_only_no_distinct_counterfactual",
     }),
   );
   const scorer = { id: "run94-observation", version: "1", algorithm: "exact_match" };
@@ -6574,14 +6588,15 @@ async function runTrackBObservationPipeline(
       events: input.trajectoryEvents,
     }),
   );
-  // This path exists only because no distinct counterfactual was available.
-  // Missing trajectory evidence is secondary and must not hide that primary
-  // comparability refusal from operators or downstream policy.
-  const refusalCode = "R14_NO_DISTINCT_COUNTERFACTUAL";
+  // Without distinct configured candidates this path exists only because no
+  // comparable evidence was available, and the refusal names that blocking input.
+  // With distinct candidates the same closure runs, but the durable outcome is the
+  // enqueued replay intent; there is no comparability refusal to report.
+  const refusalCode = input.replayIntent ? null : "R14_NO_DISTINCT_COUNTERFACTUAL";
   const profile = {
     schemaVersion: "role-model.track-b-observation-profile-receipt.v1",
     state: "not_run",
-    reason: refusalCode,
+    reason: refusalCode ?? "awaiting_replay",
     durableMutation: false,
     authoritative: false,
   } as const;
@@ -6594,12 +6609,19 @@ async function runTrackBObservationPipeline(
     receipt: {
       schemaVersion: "role-model.track-b-shadow-pipeline-receipt.v1",
       mode: "shadow",
-      status: "insufficient_comparable_evidence",
-      refusalCode,
+      status: input.replayIntent ? "replay_enqueued" : "insufficient_comparable_evidence",
+      ...(refusalCode ? { refusalCode } : {}),
       requestId: input.requestId,
       providerCalls: 0,
       productionMutation: false,
       candidateId: null,
+      ...(input.replayIntent
+        ? {
+            replayIntentJobId: input.replayIntent.jobId,
+            replayIntentAccepted: input.replayIntent.accepted,
+            candidateEndpointIds: [...input.replayIntent.candidateEndpointIds],
+          }
+        : {}),
     },
   };
 }
@@ -6612,6 +6634,11 @@ async function runTrackBObservationPipeline(
  * a replay intent (bound to the capture scope) so the automatic producer can
  * replay it against the configured candidate set. No provider call happens here,
  * the routing decision is untouched, and the receipt carries no refusal code.
+ *
+ * The observation closure itself stays in `runTrackBObservationPipeline`: every
+ * canonical extension still runs and records a durable output, so a cutover cannot
+ * leave the post-observation closure incomplete (an incomplete closure fails the
+ * observation and retries forever on the outbox).
  */
 async function runTrackBReplayIntentPipeline(
   runtime: TrackBShadowPipelineRuntime,
@@ -6620,8 +6647,11 @@ async function runTrackBReplayIntentPipeline(
     readonly channel: "development" | "stage" | "production";
     readonly scope: string;
     readonly authorizationEpoch: number;
+    readonly productionState: Readonly<Record<string, unknown>>;
     readonly routePackage: string;
     readonly sourceDecisionId: string;
+    readonly sourceGraphRef: string;
+    readonly trajectoryEvents: readonly Record<string, unknown>[];
     readonly candidates: readonly string[];
     readonly identity: TrackBVariantIdentity;
     readonly occurrence: Readonly<{ occurrenceId: string; contentId: string }>;
@@ -6641,37 +6671,24 @@ async function runTrackBReplayIntentPipeline(
     replayJobId: `capture:${input.requestId}`,
     deadlineAtMs: Date.now() + 24 * 60 * 60 * 1000,
   });
-  return {
-    replay: null,
-    evaluation: null,
-    signals: null,
-    profile: {
-      schemaVersion: "role-model.track-b-observation-profile-receipt.v1",
-      state: "not_run",
-      reason: "awaiting_replay",
-      durableMutation: false,
-      authoritative: false,
-    },
-    candidate: null,
-    advisory: null,
-    productionState: {},
-    receipt: {
-      schemaVersion: "role-model.track-b-shadow-pipeline-receipt.v1",
-      mode: "shadow",
-      status: "replay_enqueued",
-      requestId: input.requestId,
-      providerCalls: 0,
-      productionMutation: false,
-      candidateId: null,
-      replayIntentJobId,
-      replayIntentAccepted: enqueued.accepted === true,
+  return runTrackBObservationPipeline(runtime, {
+    requestId: input.requestId,
+    channel: input.channel,
+    scope: input.scope,
+    authorizationEpoch: input.authorizationEpoch,
+    productionState: input.productionState,
+    routePackage: input.routePackage,
+    sourceDecisionId: input.sourceDecisionId,
+    sourceGraphRef: input.sourceGraphRef,
+    trajectoryEvents: input.trajectoryEvents,
+    identity: input.identity,
+    occurrence: input.occurrence,
+    replayIntent: {
+      jobId: replayIntentJobId,
       candidateEndpointIds: [...input.candidates],
-      sourceDecisionId: input.sourceDecisionId,
-      routePackage: input.routePackage,
-      occurrence: structuredClone(input.occurrence),
-      identity: structuredClone(input.identity),
+      accepted: enqueued.accepted === true,
     },
-  };
+  });
 }
 
 const TRACK_B_R16_TRAJECTORY_REFUSAL = "R16_TRAJECTORY_EVIDENCE_UNAVAILABLE" as const;
@@ -7111,8 +7128,11 @@ export async function runTrackBPostObservation(
             channel: input.channel,
             scope: input.scope,
             authorizationEpoch: input.authorizationEpoch,
+            productionState,
             routePackage,
             sourceDecisionId,
+            sourceGraphRef,
+            trajectoryEvents,
             candidates: configuredCounterfactualCandidates,
             identity,
             occurrence,
