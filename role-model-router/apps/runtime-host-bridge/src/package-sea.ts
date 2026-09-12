@@ -183,6 +183,14 @@ const standaloneReleaseCopies = [
     destinationRelativePath: "packages/extension-host/worker-runtime.mjs",
   },
   {
+    sourceRelativePath: "packages/extension-host/transfer-artifact.mjs",
+    destinationRelativePath: "packages/extension-host/transfer-artifact.mjs",
+  },
+  {
+    sourceRelativePath: "packages/extension-host/retained-response-store.mjs",
+    destinationRelativePath: "packages/extension-host/retained-response-store.mjs",
+  },
+  {
     sourceRelativePath: "packages/extension-sdk/index.mjs",
     destinationRelativePath: "packages/extension-sdk/index.mjs",
   },
