@@ -37,6 +37,7 @@ import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
 import { startAutoReplayLoop } from "./track-b-auto-replay-runtime.js";
 import { createTrackBOperations } from "./track-b-operations.js";
+import { deriveSemanticEvaluationCriteria } from "./track-b-replay-evaluation-criteria.js";
 import { createReplayLedger } from "./track-b-replay-ledger.js";
 import {
   buildReplayPolicySet,
@@ -2996,6 +2997,28 @@ export async function main(): Promise<void> {
         configuredEndpointIds: endpoints,
         intervalMs,
         executor: async ({ capture, candidates, reservationId }) => {
+          const sourceCapture = (await operations.readLocalRouteCapture({
+            requestId: capture.captureRef,
+          })) as Record<string, unknown> | null;
+          if (!sourceCapture || typeof sourceCapture !== "object") {
+            return { terminal: false, branches: [] };
+          }
+          const sourceResponse =
+            sourceCapture.response && typeof sourceCapture.response === "object"
+              ? (sourceCapture.response as Record<string, unknown>)
+              : null;
+          const sourceOutput =
+            typeof sourceResponse?.content === "string"
+              ? sourceResponse.content
+              : typeof sourceCapture.outputText === "string"
+                ? sourceCapture.outputText
+                : null;
+          // The replay endpoint requires semantic evaluation criteria and the
+          // routing-shadow scorer scores required terms. Automatic replay inherits
+          // them deterministically from the recorded source output; unusable output
+          // defers the capture instead of inventing a criterion.
+          const derivedCriteria = deriveSemanticEvaluationCriteria({ sourceOutput });
+          if (!derivedCriteria) return { terminal: false, branches: [] };
           const response = await fetch(`http://127.0.0.1:${port}/api/role-model/track-b/replay`, {
             method: "POST",
             headers: { "content-type": "application/json" },
@@ -3003,6 +3026,7 @@ export async function main(): Promise<void> {
               requestId: capture.captureRef,
               idempotencyKey: `auto:${capture.captureRef}:${reservationId}`,
               candidateEndpointIds: candidates,
+              evaluationCriteria: derivedCriteria.criteria,
               budget: {
                 maxCandidates: candidates.length,
                 maxProviderCalls: candidates.length,
