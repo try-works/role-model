@@ -247,13 +247,24 @@ export function createReplayLedger(options: {
         };
       }
       window.dispatches.push({ ...input, recordedAtMs: atMs });
-      if (input.dispatchKind === "candidate" && input.outcome === "complete") {
-        const key = captureKey(input.captureRef, input.policySetDigest);
-        if (!window.counterfactuals.includes(key)) window.counterfactuals.push(key);
-        const index = window.reservations.findIndex(
-          (row) => row.reservationId === input.reservationId,
-        );
-        if (index !== -1) window.reservations.splice(index, 1);
+      const index = window.reservations.findIndex(
+        (row) => row.reservationId === input.reservationId,
+      );
+      if (index !== -1) {
+        const reservation = window.reservations[index] as ReservationRow;
+        const remaining = reservation.candidateDispatches - 1;
+        const terminal =
+          input.dispatchKind === "candidate" && input.outcome === "complete" && remaining <= 0;
+        if (terminal) {
+          const key = captureKey(input.captureRef, input.policySetDigest);
+          if (!window.counterfactuals.includes(key)) window.counterfactuals.push(key);
+          window.reservations.splice(index, 1);
+        } else {
+          window.reservations[index] = {
+            ...reservation,
+            candidateDispatches: remaining > 0 ? remaining : 0,
+          };
+        }
       }
       persist(file);
       return { accepted: true };

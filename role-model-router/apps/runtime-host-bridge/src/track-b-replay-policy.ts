@@ -74,14 +74,14 @@ export function decideReplayAdmission(input: ReplayAdmissionInput): ReplayAdmiss
       "no configured candidate differs from the source candidate",
     );
   }
-  if (!input.budgetAvailable) {
-    return refuse("budget_exhausted", "the replay budget window has no remaining capacity");
-  }
   if (input.alreadyProcessed) {
     return refuse(
       "duplicate_already_processed",
       "this capture already has a terminal replay in the current budget window",
     );
+  }
+  if (!input.budgetAvailable) {
+    return refuse("budget_exhausted", "the replay budget window has no remaining capacity");
   }
   if (input.sourceIsReplayProduced) {
     return refuse("amplification_depth_exceeded", "replay output is not a replay source");
