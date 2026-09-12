@@ -323,7 +323,14 @@ export function deriveSupervisedReplayTrajectoryEvents(input: {
       seen.add(id);
       return true;
     })
-    .sort((left, right) => Number(left.sequence) - Number(right.sequence))
+    // Order by recorded time: the analyzer requires non-decreasing timestamps, and a
+    // counterfactual capture is written after its source, so ordering purely by
+    // per-capture sequence numbers would interleave the two timelines.
+    .sort(
+      (left, right) =>
+        Number(left.timestampMs) - Number(right.timestampMs) ||
+        Number(left.sequence) - Number(right.sequence),
+    )
     .slice(0, 128);
 }
 
