@@ -3410,6 +3410,10 @@ export async function main(): Promise<void> {
             string,
             { readonly branchRootRef: string; readonly branchRequestId: string }
           >();
+          // R7/R11: the on-demand path consumes the same daily ledger as the
+          // automatic producer, reserving on the first dispatch and recording every
+          // candidate call so both paths share one accounting authority.
+          let ledgerReservationId: string | null = null;
           const adapter = createProductionReplayAdapter({
             runtimeStateRoot: options.runtimeStateRoot,
             scopeId: options.scopeId,
@@ -3443,20 +3447,47 @@ export async function main(): Promise<void> {
               ) {
                 throw new Error("replay provider execution did not return a bounded cost receipt");
               }
+              if (ledgerReservationId === null) {
+                const reservation = replayLedger.reserve({
+                  captureRef: requestId,
+                  policySetDigest: replayPolicySet.policySetDigest,
+                  candidateDispatches: counterfactualPackages.length,
+                });
+                if (!reservation.accepted) {
+                  throw new Error(`${reservation.code}: ${reservation.detail}`);
+                }
+                ledgerReservationId = reservation.reservationId;
+              }
+              const observedResponseBytes = Buffer.byteLength(
+                JSON.stringify({
+                  outputText: execution.outputText,
+                  contentText: execution.contentText,
+                  reasoningText: execution.reasoningText,
+                  toolCalls: execution.toolCalls ?? [],
+                }),
+                "utf8",
+              );
+              const recordedDispatch = replayLedger.record({
+                reservationId: ledgerReservationId,
+                captureRef: requestId,
+                policySetDigest: replayPolicySet.policySetDigest,
+                counterfactualRef: `cf:${requestId}`,
+                dispatchKind: "candidate",
+                candidateEndpointId,
+                attempt: 1,
+                costMicros: Math.ceil(observedCostUsd * 1_000_000),
+                bytes: observedResponseBytes,
+                outcome: "complete",
+              });
+              if (!recordedDispatch.accepted) {
+                throw new Error(`${recordedDispatch.code}: ${recordedDispatch.detail}`);
+              }
               return {
                 dispatchReceiptId: `router-replay:${replayRequestId}`,
                 routerDecisionId: requireReplayRouterDecisionId(execution.routingDecisionId),
                 providerResultRef: `route-capture:${replayRequestId}`,
                 observedCostMicros: Math.ceil(observedCostUsd * 1_000_000),
-                observedResponseBytes: Buffer.byteLength(
-                  JSON.stringify({
-                    outputText: execution.outputText,
-                    contentText: execution.contentText,
-                    reasoningText: execution.reasoningText,
-                    toolCalls: execution.toolCalls ?? [],
-                  }),
-                  "utf8",
-                ),
+                observedResponseBytes,
               };
             },
           });
