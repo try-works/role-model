@@ -87,3 +87,27 @@ test("run97 repeated recorded tool use is a recorded tool loop", () => {
   // the tool's output text.
   expect(types).toContain("tool_loop");
 });
+
+test("run97 trajectory events read the operations readback tool shape", () => {
+  // Exactly what the durable capture readback returns: tools carry their own artifact
+  // identity and the parsed tool content, with no parallel toolArtifactIds array.
+  const events = deriveSupervisedReplayTrajectoryEvents({
+    sourceCapture: {
+      requestId: "req-run97-readback-shape",
+      capturedAt: "2026-09-13T01:20:00.000Z",
+      rootArtifactId: artifactId("a"),
+      routeDecisionArtifactId: artifactId("b"),
+      tools: [
+        { kind: "tool_call", toolName: "bash", artifactId: artifactId("c") },
+        { kind: "tool_result", toolName: "bash", artifactId: artifactId("d") },
+      ],
+      responseArtifactId: artifactId("e"),
+    },
+    counterfactualCaptures: [],
+  });
+  expect(events.length).toBeGreaterThanOrEqual(2);
+  const types = events.map((event) => String(event.type));
+  expect(types).toContain("tool_call");
+  expect(types).toContain("tool_loop");
+  expect(types).toContain("model_response");
+});

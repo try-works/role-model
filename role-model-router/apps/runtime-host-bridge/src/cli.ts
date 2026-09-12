@@ -292,8 +292,24 @@ export function deriveSupervisedReplayTrajectoryEvents(input: {
         : capture.rootArtifactId,
       0,
     );
-    const toolArtifactIds = Array.isArray(capture.toolArtifactIds) ? capture.toolArtifactIds : [];
+    // The operations readback exposes recorded tools as `tools`, each carrying its own
+    // artifact identity (`artifactId`/`nodeId`) and the parsed tool content. It does not
+    // expose a parallel `toolArtifactIds` array, so iterating that (absent) field meant no
+    // tool event was ever derived - which is why every replay degraded with "recognized
+    // semantic or behavioral trajectory evidence is required" despite recorded tool use.
     const tools = Array.isArray(capture.tools) ? capture.tools : [];
+    const recordedToolArtifactIds = Array.isArray(capture.toolArtifactIds)
+      ? capture.toolArtifactIds
+      : [];
+    const toolArtifactIds =
+      recordedToolArtifactIds.length > 0
+        ? recordedToolArtifactIds
+        : tools.map((tool) =>
+            tool && typeof tool === "object" && !Array.isArray(tool)
+              ? ((tool as Record<string, unknown>).artifactId ??
+                (tool as Record<string, unknown>).nodeId)
+              : null,
+          );
     const seenToolNames = new Set<string>();
     toolArtifactIds.forEach((artifactId, index) => {
       const tool = tools[index] && typeof tools[index] === "object" && !Array.isArray(tools[index])
