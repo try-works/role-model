@@ -265,10 +265,15 @@ export function createReplayLedger(options: {
       if (index !== -1) {
         const reservation = window.reservations[index] as ReservationRow;
         const remaining = reservation.candidateDispatches - 1;
-        window.reservations[index] = {
-          ...reservation,
-          candidateDispatches: remaining > 0 ? remaining : 0,
-        };
+        // Consumed reservations leave the window: a later attempt creates a new
+        // reservation instead of leaking capacity for the rest of the day.
+        if (remaining <= 0) window.reservations.splice(index, 1);
+        else {
+          window.reservations[index] = {
+            ...reservation,
+            candidateDispatches: remaining,
+          };
+        }
       }
       persist(file);
       return { accepted: true };

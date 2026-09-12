@@ -3441,6 +3441,13 @@ export async function main(): Promise<void> {
           // automatic producer, reserving on the first dispatch and recording every
           // candidate call so both paths share one accounting authority.
           let ledgerReservationId: string | null = null;
+          // Each replay attempt gets its own prepared-branch identity: a retry inside
+          // the same attempt stays idempotent, while a later attempt appends a new
+          // branch instead of colliding with the previous attempt's immutable bytes.
+          const replayAttemptToken = createHash("sha256")
+            .update(`${requestId}:${idempotencyKey}`)
+            .digest("hex")
+            .slice(0, 12);
           const adapter = createProductionReplayAdapter({
             runtimeStateRoot: options.runtimeStateRoot,
             // The adapter, the attestation, and the replay job must all bind the same
@@ -3552,7 +3559,7 @@ export async function main(): Promise<void> {
                 throw new Error("replay branch preparation candidate is not host-authorized");
               const existing = preparedBranches.get(candidateEndpointId);
               if (existing) return { branchRootRef: existing.branchRootRef };
-              const branchRequestId = `replay-${requestId}-${createHash("sha256").update(candidateEndpointId).digest("hex").slice(0, 16)}-prepared`;
+              const branchRequestId = `replay-${requestId}-${createHash("sha256").update(candidateEndpointId).digest("hex").slice(0, 16)}-prepared-${replayAttemptToken}`;
               const branch = (await operations.recordLocalRouteCapture({
                 requestId: branchRequestId,
                 routingDecisionId: String(branchRequest.sourceDecisionId),
