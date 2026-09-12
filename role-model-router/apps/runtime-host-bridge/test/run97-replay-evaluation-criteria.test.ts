@@ -72,5 +72,10 @@ test("run97 extracts recorded output text from response content, outputText, or 
   expect(
     extractSourceOutputText({ messages: [{ role: "user", content: "only a question" }] }),
   ).toBeNull();
+  // The operations boundary may return a bounded response excerpt instead of inline
+  // message content; automatic replay must accept it.
+  expect(extractSourceOutputText({ responseText: "bounded replay excerpt" })).toBe(
+    "bounded replay excerpt",
+  );
   expect(extractSourceOutputText({})).toBeNull();
 });

@@ -146,6 +146,10 @@ function textFromContent(value: unknown): string | null {
  * automatic path deterministic without inventing content.
  */
 export function extractSourceOutputText(capture: Record<string, unknown>): string | null {
+  // A bounded excerpt supplied by the operations boundary takes precedence: it is the
+  // only form available when the capture stores its response as a sealed artifact.
+  const responseText = typeof capture.responseText === "string" ? capture.responseText : null;
+  if (responseText?.trim()) return responseText;
   const response =
     capture.response && typeof capture.response === "object" && !Array.isArray(capture.response)
       ? (capture.response as Record<string, unknown>)
