@@ -3016,7 +3016,11 @@ export async function main(): Promise<void> {
             requestId: capture.captureRef,
           })) as Record<string, unknown> | null;
           if (!sourceCapture || typeof sourceCapture !== "object") {
-            return { terminal: false, branches: [] };
+            return {
+              terminal: false,
+              branches: [],
+              failureDetail: `durable capture ${capture.captureRef} is unavailable through the operations boundary`,
+            };
           }
           const sourceResponse =
             sourceCapture.response && typeof sourceCapture.response === "object"
@@ -3033,7 +3037,13 @@ export async function main(): Promise<void> {
           // them deterministically from the recorded source output; unusable output
           // defers the capture instead of inventing a criterion.
           const derivedCriteria = deriveSemanticEvaluationCriteria({ sourceOutput });
-          if (!derivedCriteria) return { terminal: false, branches: [] };
+          if (!derivedCriteria) {
+            return {
+              terminal: false,
+              branches: [],
+              failureDetail: `recorded output of ${capture.captureRef} cannot support semantic evaluation criteria`,
+            };
+          }
           const response = await fetch(`http://127.0.0.1:${port}/api/role-model/track-b/replay`, {
             method: "POST",
             headers: { "content-type": "application/json" },
