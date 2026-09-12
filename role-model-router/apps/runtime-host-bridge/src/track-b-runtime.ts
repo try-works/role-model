@@ -5670,6 +5670,7 @@ export async function runTrackBShadowPipeline(
       counterfactuals: input.counterfactuals,
     }),
   );
+  console.error(`[run97] shadow pipeline start ${input.requestId}`);
   const replayDigest = (replay as Record<string, unknown>).digest;
   if (typeof replayDigest !== "string" || !replayDigest) {
     throw new Error("replay plan must expose a durable digest before learning signals are emitted");
@@ -6321,7 +6322,11 @@ export async function runTrackBShadowPipeline(
     groupId: durableComparison.groupId,
     outcome: durableComparison.outcome,
     traceRef: replayForKnowledge.sourceGraphRef,
-    replayRef: replayDigest,
+    // The knowledge boundary binds the finalized signal evidence to the replay
+    // provenance it can verify: the shared prefix of the replay plan, not the plan
+    // digest. A plan digest here made every live knowledge consumption fail the
+    // "finalized trajectory signal references must match replay provenance" check.
+    replayRef: replayForKnowledge.sharedPrefixRef,
     routePackage: input.routePackage,
     scorerSetVersion,
     trialScoreRefs: finalizedTrialScoreRefs,
@@ -6450,6 +6455,11 @@ export async function runTrackBShadowPipeline(
   });
   let candidate: Record<string, unknown>;
   if (!profileForKnowledge) {
+    console.error(
+      `[run97] learning degraded profile:${input.requestId} ${String(
+        (profileRecord as Record<string, unknown>).reason ?? "profile estimate unavailable",
+      ).slice(0, 160)}`,
+    );
     candidate = boundedTrackBLearningRefusal(
       "profile:estimate-finalized-evaluation",
       "finalized profile estimate must retain attributable evidence",
@@ -6491,9 +6501,17 @@ export async function runTrackBShadowPipeline(
           evaluationAuthoritySecret,
         });
     } catch (error) {
+      console.error(
+        `[run97] learning degraded knowledge:${input.requestId} ${String(
+          (error as { message?: unknown })?.message ?? error,
+        ).slice(0, 200)}`,
+      );
       candidate = boundedTrackBLearningRefusal("knowledge:eval-consumer", error);
     }
   } else {
+    console.error(
+      `[run97] learning gate closed:${input.requestId} positive=${positive.length} negative=${negative.length} members=${Array.isArray(durableComparison.members) ? durableComparison.members.length : 0}`,
+    );
     candidate = {
       id: null,
       state: "insufficient_comparable_evidence",
