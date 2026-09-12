@@ -881,6 +881,19 @@ export function createSupervisedReplayEvaluationCompleter(input: {
     if (sourceMessageArtifactRefs.length === 0) {
       throw new Error("durable replay evaluation source input artifacts are missing");
     }
+    // The input fact is read back byte-for-byte to prove durability, and the extension
+    // host returns very large results as a transfer artifact instead of inline bytes.
+    // A long tool-bearing transcript produced an 8 KB fact that could not be decoded,
+    // so the fact now binds the exact reference set by digest and carries a bounded
+    // prefix of the refs; the digest is what the attestation depends on.
+    const MAX_REFERENCE_FACT_REFS = 64;
+    const boundedMessageArtifactRefs = sourceMessageArtifactRefs.slice(
+      0,
+      MAX_REFERENCE_FACT_REFS,
+    );
+    const messageArtifactRefsDigest = createHash("sha256")
+      .update(JSON.stringify(sourceMessageArtifactRefs))
+      .digest("hex");
     const replayReferenceFacts = await persistSupervisedReplayEvaluationReferenceFacts({
       runtime: input.runtime,
       requestId: createSupervisedReplayEvaluationRequestId(input.requestId, replayJobId),
@@ -900,7 +913,9 @@ export function createSupervisedReplayEvaluationCompleter(input: {
         input: {
           schemaVersion: "role-model.evaluation-input-fact.v1",
           normalizedRequestRef: sourceNormalizedRequestRef,
-          messageArtifactRefs: sourceMessageArtifactRefs,
+          messageArtifactRefs: boundedMessageArtifactRefs,
+          messageArtifactCount: sourceMessageArtifactRefs.length,
+          messageArtifactRefsDigest,
         },
         toolPolicy: {
           schemaVersion: "role-model.evaluation-tool-policy-fact.v1",
