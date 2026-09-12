@@ -520,16 +520,14 @@ export async function persistSupervisedReplayEvaluationReferenceFacts(input: {
         factType,
         fact,
       });
+      const factDigest = createHash("sha256").update(content).digest("hex").slice(0, 16);
       const result = await input.runtime.invoke("artifact-store", {
         // The write request id carries the fact digest: a retry that recomputes the
         // fact with different bytes (for example after a recovered attempt appends a
         // different branch root) must persist its own artifact instead of receiving a
         // cached result for an earlier attempt's bytes, which then fails the durable
         // readback comparison.
-        requestId: `${input.requestId}:reference-fact:${factType}:${createHash("sha256")
-          .update(content)
-          .digest("hex")
-          .slice(0, 16)}`,
+        requestId: `${input.requestId}:reference-fact:${factType}:${factDigest}`,
         sessionId: input.requestId,
         protocolVersion: "1.1.0",
         channel: input.channel,
@@ -551,7 +549,10 @@ export async function persistSupervisedReplayEvaluationReferenceFacts(input: {
         throw new Error(`artifact-store did not return a durable ${factType} reference fact`);
       }
       const readback = await input.runtime.invoke("artifact-store", {
-        requestId: `${input.requestId}:reference-fact-readback:${factType}`,
+        // The readback id carries the same digest: the extension host caches durable
+        // outputs by request id, so a retry that recomputed the fact must not read the
+        // earlier attempt's cached bytes (which failed the durable comparison).
+        requestId: `${input.requestId}:reference-fact-readback:${factType}:${factDigest}`,
         sessionId: input.requestId,
         protocolVersion: "1.1.0",
         channel: input.channel,
