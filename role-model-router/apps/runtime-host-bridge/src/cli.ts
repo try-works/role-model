@@ -3441,9 +3441,11 @@ export async function main(): Promise<void> {
           let ledgerReservationId: string | null = null;
           const adapter = createProductionReplayAdapter({
             runtimeStateRoot: options.runtimeStateRoot,
-            scopeId: options.scopeId,
+            // The adapter, the attestation, and the replay job must all bind the same
+            // scope: the durable capture's runtime scope.
+            scopeId: captureScope,
             channel,
-            scope: options.scopeId,
+            scope: captureScope,
             authorizationEpoch: 1,
             dispatch: async (envelope) => {
               const candidateEndpointId = String(envelope.candidateEndpointId ?? "");
