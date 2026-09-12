@@ -3369,12 +3369,11 @@ export async function main(): Promise<void> {
             sourceCapture.response && typeof sourceCapture.response === "object"
               ? (sourceCapture.response as Record<string, unknown>)
               : null;
-          const sourceOutput =
-            typeof sourceResponse?.content === "string"
-              ? sourceResponse.content
-              : typeof sourceCapture.outputText === "string"
-                ? sourceCapture.outputText
-                : null;
+          // Observable output identity: prefer the recorded assistant text and fall
+          // back to the bounded response excerpt or recorded request text when the
+          // capture stored an empty assistant message. Criteria use the same rule, so
+          // source and counterfactual trials are scored against one observable basis.
+          const sourceOutput = extractSourceOutputText(sourceCapture);
           const sourceEndpointId =
             typeof sourceCapture.endpointId === "string" ? sourceCapture.endpointId : "";
           const sourceModelId =
