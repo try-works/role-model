@@ -317,9 +317,18 @@ export function deriveSupervisedReplayTrajectoryEvents(input: {
       response && typeof response === "object" && !Array.isArray(response)
         ? (response as Record<string, unknown>).failure
         : null;
+    // A capture whose provider dispatch failed records that failure on the capture
+    // itself (`failure` plus a `provider_error` terminal state). That is a recorded
+    // provider error, which is the recognized behavioral evidence the learner needs.
+    const captureFailure =
+      capture.failure && typeof capture.failure === "object"
+        ? capture.failure
+        : capture.terminalState === "provider_error"
+          ? { errorClass: "provider_error" }
+          : null;
     pushEvent(
       "response",
-      responseFailure ? "provider_error" : "model_response",
+      responseFailure || captureFailure ? "provider_error" : "model_response",
       capture.responseArtifactId,
       toolArtifactIds.length + 1,
     );
