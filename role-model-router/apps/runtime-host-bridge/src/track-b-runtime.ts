@@ -1065,6 +1065,17 @@ export async function stageTrackBRuntimeDistribution(options: {
     await mkdir(path.dirname(destination), { recursive: true });
     await copyFile(file.sourcePath, destination);
   }
+  // shared/capacity loads the v2 contract next to the bundled sidecar so a
+  // packaged runtime can boot without reaching back into the source checkout.
+  // The v3 contract is manifest-bound; the v2 compatibility copy is staged
+  // alongside it by the private distribution build.
+  const capacityV2Source = path.join(options.sourceRoot, "capacity-slo-contracts.v2.json");
+  if (existsSync(capacityV2Source)) {
+    await copyFile(
+      capacityV2Source,
+      path.join(options.releaseDir, "capacity-slo-contracts.v2.json"),
+    );
+  }
   if (compatibilityGeneration === "N") {
     const graphRelative = manifest.registryBindings?.graphRegistry?.path;
     const graphSource = graphRelative ? path.join(options.sourceRoot, graphRelative) : null;
