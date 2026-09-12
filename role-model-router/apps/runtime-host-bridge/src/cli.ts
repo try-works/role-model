@@ -35,6 +35,7 @@ import {
 } from "./runtime-channel.js";
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
+import { startAutoReplayLoop } from "./track-b-auto-replay-runtime.js";
 import { createTrackBOperations } from "./track-b-operations.js";
 import { createReplayLedger } from "./track-b-replay-ledger.js";
 import {
@@ -2828,12 +2829,16 @@ export async function main(): Promise<void> {
     })();
     return extensionRuntimeFailurePromise;
   };
+  let autoReplayLoop: ReturnType<typeof startAutoReplayLoop> | null = null;
+
   const shutdown = async (): Promise<void> => {
     if (shutdownPromise) {
       return shutdownPromise;
     }
 
     shutdownPromise = (async () => {
+      autoReplayLoop?.stop();
+      autoReplayLoop = null;
       stopExtensionRuntimeWatchdog?.();
       stopExtensionRuntimeWatchdog = null;
       await server?.close();
@@ -2963,6 +2968,64 @@ export async function main(): Promise<void> {
     // available at runtime.
     const currentPostObservationOperations = (): ReturnType<typeof createTrackBOperations> | null =>
       postObservationOperations;
+    // Automatic replay: read pending captures from the private boundary, replay them
+    // through the public replay endpoint, and persist every disposition. Production
+    // stays disabled; failures degrade the loop instead of affecting routing.
+    const startHostAutoReplayLoop = (
+      endpoints: readonly string[],
+    ): ReturnType<typeof startAutoReplayLoop> | null => {
+      const operations = postObservationOperations;
+      const channel = packagedProfile?.channel ?? "development";
+      if (!operations || channel === "production") return null;
+      const port = options.port;
+      if (!Number.isInteger(port) || port <= 0) return null;
+      const ledger = createReplayLedger({
+        filePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-replay-ledger.json",
+        ),
+      });
+      const policySet = buildReplayPolicySet();
+      const intervalMs = Number(process.env.ROLE_MODEL_AUTO_REPLAY_INTERVAL_MS ?? 30_000);
+      if (!Number.isSafeInteger(intervalMs) || intervalMs < 1_000) return null;
+      return startAutoReplayLoop({
+        operations,
+        ledger,
+        policySet,
+        configuredEndpointIds: endpoints,
+        intervalMs,
+        executor: async ({ capture, candidates, reservationId }) => {
+          const response = await fetch(`http://127.0.0.1:${port}/api/role-model/track-b/replay`, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              requestId: capture.captureRef,
+              idempotencyKey: `auto:${capture.captureRef}:${reservationId}`,
+              candidateEndpointIds: candidates,
+              budget: {
+                maxCandidates: candidates.length,
+                maxProviderCalls: candidates.length,
+                maxCostMicros: 1_000_000,
+                maxBytes: 8_388_608,
+                deadlineMs: 120_000,
+              },
+            }),
+          });
+          if (!response.ok) return { terminal: false, branches: [] };
+          const payload = (await response.json()) as {
+            readonly branches?: readonly { readonly candidateEndpointId?: unknown }[];
+          };
+          return {
+            terminal: true,
+            branches: (payload.branches ?? []).map((branch) => ({
+              endpointId: String(branch?.candidateEndpointId ?? ""),
+              outcome: "complete" as const,
+            })),
+          };
+        },
+      });
+    };
     const postObservationHandler =
       (runtime: Awaited<ReturnType<typeof createProductionExtensionRuntime>>) =>
       (observation: Parameters<typeof runTrackBPostObservation>[1]) => {
@@ -3567,6 +3630,9 @@ export async function main(): Promise<void> {
           throw new Error(`Track B startup SQLite maintenance failed with ${response.status}`);
         }
       }
+      autoReplayLoop = startHostAutoReplayLoop(
+        created.effectiveRegistry.endpoints.map((endpoint) => endpoint.identity.endpoint_id),
+      );
       return created;
     };
     if (trackBManifestText && trackBManifestPath) {
