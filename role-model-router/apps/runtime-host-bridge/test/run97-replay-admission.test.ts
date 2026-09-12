@@ -112,9 +112,14 @@ test("run97 tool policy defaults to recorded results and executes only when need
   expect(resolveReplayToolPolicy({ hasRecordedToolResults: true }).toolPolicy).toBe(
     "recorded_results_only",
   );
+  // Without a worker-side sandbox the caller stays on recorded results.
   expect(resolveReplayToolPolicy({ hasRecordedToolResults: false }).toolPolicy).toBe(
-    "sandboxed_allowlist",
+    "recorded_results_only",
   );
+  expect(
+    resolveReplayToolPolicy({ hasRecordedToolResults: false, workerSandboxAvailable: true })
+      .toolPolicy,
+  ).toBe("sandboxed_allowlist");
   expect(
     resolveReplayToolPolicy({ hasRecordedToolResults: true, policyAllowsExecution: false })
       .toolPolicy,
