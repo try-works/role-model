@@ -195,6 +195,16 @@ export function extractSourceOutputText(capture: Record<string, unknown>): strin
     const content = textFromContent(record.content);
     if (content) return content;
   }
+  // Last resort: the recorded request text. It is branch-shared evidence, so the
+  // derived criterion never depends on the branch being scored.
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index];
+    if (!message || typeof message !== "object" || Array.isArray(message)) continue;
+    const record = message as Record<string, unknown>;
+    if (record.role !== "user") continue;
+    const content = textFromContent(record.content);
+    if (content) return content;
+  }
   return null;
 }
 

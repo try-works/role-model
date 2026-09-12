@@ -79,3 +79,18 @@ test("run97 extracts recorded output text from response content, outputText, or 
   );
   expect(extractSourceOutputText({})).toBeNull();
 });
+
+test("run97 falls back to the recorded prompt when the assistant output is empty", () => {
+  // Some captures persist an empty assistant message because the provider streamed the
+  // answer into its execution artifact. The recorded request text is still branch-shared
+  // evidence, so criteria derive from it instead of deferring the capture forever.
+  expect(
+    extractSourceOutputText({
+      response: { role: "assistant", content: "" },
+      messages: [
+        { role: "system", content: "You are a coding assistant." },
+        { role: "user", content: "Summarize the role-model router replay and evaluation loop." },
+      ],
+    }),
+  ).toBe("Summarize the role-model router replay and evaluation loop.");
+});
