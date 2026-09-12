@@ -169,3 +169,35 @@ test("run97 tool policy prefers reuse whenever recorded tool artifacts exist", a
     resolveReplayToolPolicy({ hasRecordedToolResults: hasRecordedToolResults(capture) }).toolPolicy,
   ).toBe("recorded_results_only");
 });
+
+test("run97 tool policy stays on reuse when the capture has no tool calls", async () => {
+  const { hasToolCalls, resolveReplayToolPolicy, defaultReplaySandbox } = await import(
+    "../src/track-b-replay-policy.js"
+  );
+  const plainCapture = { messages: [{ role: "user", content: "hello" }] } as Record<
+    string,
+    unknown
+  >;
+  expect(hasToolCalls(plainCapture)).toBe(false);
+  expect(
+    resolveReplayToolPolicy({
+      hasRecordedToolResults: false,
+      hasToolCalls: hasToolCalls(plainCapture),
+    }).toolPolicy,
+  ).toBe("recorded_results_only");
+
+  const toolCapture = {
+    messages: [{ role: "assistant", tool_calls: [{ id: "call-1", name: "shell" }] }],
+  } as Record<string, unknown>;
+  expect(hasToolCalls(toolCapture)).toBe(true);
+  expect(
+    resolveReplayToolPolicy({
+      hasRecordedToolResults: false,
+      hasToolCalls: hasToolCalls(toolCapture),
+    }).toolPolicy,
+  ).toBe("sandboxed_allowlist");
+  const sandbox = defaultReplaySandbox();
+  expect(Array.isArray(sandbox.executableAllowlist)).toBe(true);
+  expect(sandbox.network).toBe("none");
+  expect(Number(sandbox.maxDurationMs)).toBeGreaterThan(0);
+});

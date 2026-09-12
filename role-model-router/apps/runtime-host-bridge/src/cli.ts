@@ -45,7 +45,9 @@ import { createReplayLedger } from "./track-b-replay-ledger.js";
 import {
   buildReplayPolicySet,
   decideReplayAdmission,
+  defaultReplaySandbox,
   hasRecordedToolResults,
+  hasToolCalls,
   resolveReplayPolicySet,
   resolveReplayToolPolicy,
   selectReplayCandidates,
@@ -3337,6 +3339,7 @@ export async function main(): Promise<void> {
           const { toolPolicy: resolvedReplayToolPolicy, reason: replayToolPolicyReason } =
             resolveReplayToolPolicy({
               hasRecordedToolResults: hasRecordedToolResults(sourceCapture),
+              hasToolCalls: hasToolCalls(sourceCapture),
             });
           const endpoints = created.effectiveRegistry.endpoints;
           const candidatePackages = candidateEndpointIds.map((endpointId) => {
@@ -3355,6 +3358,9 @@ export async function main(): Promise<void> {
               toolPolicyDigest: replayPolicySet.tool.policyDigest,
               policySetDigest: replayPolicySet.policySetDigest,
               sourceEligibleEndpointIds: originallyEligibleEndpointIds,
+              ...(resolvedReplayToolPolicy === "sandboxed_allowlist"
+                ? { sandbox: defaultReplaySandbox() }
+                : {}),
               experiencePackId: "none",
               samplingProfileId: "deterministic-v1",
               ...replayBudgetReservation,

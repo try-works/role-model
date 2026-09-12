@@ -146,20 +146,57 @@ export function hasRecordedToolResults(capture: Record<string, unknown>): boolea
   return false;
 }
 
+/** Detect tool calls or tool content anywhere in the durable capture. */
+export function hasToolCalls(capture: Record<string, unknown>): boolean {
+  if (hasRecordedToolResults(capture)) return true;
+  const messages = Array.isArray(capture.messages) ? capture.messages : [];
+  for (const message of messages) {
+    if (!message || typeof message !== "object" || Array.isArray(message)) continue;
+    const record = message as Record<string, unknown>;
+    if (
+      record.role === "tool" ||
+      record.tool_calls !== undefined ||
+      record.toolCalls !== undefined
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function resolveReplayToolPolicy(input: {
   readonly hasRecordedToolResults: boolean;
+  /** True when the capture actually contains tool calls or tool content. */
+  readonly hasToolCalls?: boolean;
   readonly policyAllowsExecution?: boolean;
 }): Readonly<{ toolPolicy: ReplayToolPolicy; reason: string }> {
-  if (input.hasRecordedToolResults) {
+  // A capture with no tool content needs neither reuse nor execution, so it stays on
+  // the reuse policy; execution only becomes relevant when tool calls exist without
+  // recorded results to satisfy them.
+  if (input.hasRecordedToolResults || input.hasToolCalls === false) {
     return {
       toolPolicy: "recorded_results_only",
-      reason: "recorded_tool_results_available",
+      reason: input.hasRecordedToolResults
+        ? "recorded_tool_results_available"
+        : "capture_contains_no_tool_calls",
     };
   }
   return {
     toolPolicy: "sandboxed_allowlist",
     reason: "live_tool_execution_required",
   };
+}
+
+/** A bounded, read-only sandbox for captures whose tool calls need execution. */
+export function defaultReplaySandbox(): Readonly<Record<string, unknown>> {
+  return Object.freeze({
+    executableAllowlist: ["/usr/bin/true"],
+    sideEffectClass: "read_only",
+    network: "none",
+    filesystem: "none",
+    maxBytes: 1_048_576,
+    maxDurationMs: 30_000,
+  });
 }
 
 export const REPLAY_POLICY_SET_VERSION = "run97.replay-policy-set.v1";
