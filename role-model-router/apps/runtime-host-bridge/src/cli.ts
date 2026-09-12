@@ -591,6 +591,13 @@ export function createSupervisedReplayEvaluationCompleter(input: {
   readonly requestId: string;
   readonly channel: string;
   readonly scope: string;
+  /**
+   * R10/R11: the durable capture carries the private runtime scope, which is not
+   * necessarily the host operator scope. Recovered branch validation must compare
+   * against the capture's own scope, or a valid replay is rejected as "does not
+   * match its fenced replay receipt".
+   */
+  readonly captureScope?: string;
   readonly sourceCapture: Readonly<Record<string, unknown>>;
   readonly sourceOutput: string;
   readonly sourceEndpointId: string;
@@ -684,7 +691,7 @@ export function createSupervisedReplayEvaluationCompleter(input: {
           );
         }
         validateRecoveredReplayCapture({
-          scope: input.scope,
+          scope: input.captureScope ?? input.scope,
           candidate,
           dispatchReceipt: {
             routerDecisionId,
@@ -3578,13 +3585,19 @@ export async function main(): Promise<void> {
               const existing = preparedBranches.get(candidateEndpointId);
               if (existing) return { branchRootRef: existing.branchRootRef };
               const branchRequestId = `replay-${requestId}-${createHash("sha256").update(candidateEndpointId).digest("hex").slice(0, 16)}-prepared-${replayAttemptToken}`;
+              // A candidate without a reasoning effort is captured with `none`, not
+              // `variant`: the durable capture contract couples a null effort to the
+              // `none` source, and a mixed pair is rejected at the capture boundary.
+              const preparedEffort =
+                typeof candidate.reasoningEffort === "string" && candidate.reasoningEffort
+                  ? { reasoningEffort: candidate.reasoningEffort, effortSource: "variant" as const }
+                  : { reasoningEffort: null, effortSource: "none" as const };
               const branch = (await operations.recordLocalRouteCapture({
                 requestId: branchRequestId,
                 routingDecisionId: String(branchRequest.sourceDecisionId),
                 endpointId: candidateEndpointId,
                 modelId: candidate.modelId,
-                reasoningEffort: candidate.reasoningEffort,
-                effortSource: "variant",
+                ...preparedEffort,
                 messages: [],
                 toolExecutions: [],
                 branchKind: "replay",
@@ -3627,13 +3640,16 @@ export async function main(): Promise<void> {
                   .update(candidateEndpointId)
                   .digest("hex")
                   .slice(0, 16)}-failure`;
+                const failureEffort =
+                  typeof candidate.reasoningEffort === "string" && candidate.reasoningEffort
+                    ? { reasoningEffort: candidate.reasoningEffort, effortSource: "variant" as const }
+                    : { reasoningEffort: null, effortSource: "none" as const };
                 const failureBranch = (await operations.recordLocalRouteCapture({
                   requestId: failureRequestId,
                   routingDecisionId: String(branchRequest.sourceDecisionId),
                   endpointId: candidateEndpointId,
                   modelId: candidate.modelId,
-                  reasoningEffort: candidate.reasoningEffort,
-                  effortSource: "variant",
+                  ...failureEffort,
                   messages: [],
                   toolExecutions: [],
                   branchKind: "replay",
@@ -3661,6 +3677,17 @@ export async function main(): Promise<void> {
               if (!preparedBranchRootRef)
                 throw new Error("durable replay result append requires its prepared branch root");
               const branchRequestId = `${dispatch.replayRequestId}-branch`;
+              const resultCandidateReasoningEffort =
+                candidatePackages.find((item) => item.endpointId === candidateEndpointId)
+                  ?.reasoningEffort ?? null;
+              const resultEffort =
+                typeof resultCandidateReasoningEffort === "string" &&
+                resultCandidateReasoningEffort
+                  ? {
+                      reasoningEffort: resultCandidateReasoningEffort,
+                      effortSource: "variant" as const,
+                    }
+                  : { reasoningEffort: null, effortSource: "none" as const };
               const branch = (await operations.recordLocalRouteCapture({
                 requestId: branchRequestId,
                 routingDecisionId: requireReplayRouterDecisionId(
@@ -3668,10 +3695,7 @@ export async function main(): Promise<void> {
                 ),
                 endpointId: candidateEndpointId,
                 modelId: dispatch.execution.model,
-                reasoningEffort:
-                  candidatePackages.find((item) => item.endpointId === candidateEndpointId)
-                    ?.reasoningEffort ?? null,
-                effortSource: "variant",
+                ...resultEffort,
                 // The private sidecar hydrates sourceCapture.rootArtifactId and
                 // reuses its prefix occurrences. Sending the transcript here
                 // would create a copied branch and violate replay isolation.
@@ -3704,6 +3728,7 @@ export async function main(): Promise<void> {
               requestId,
               channel,
               scope: options.scopeId,
+              captureScope,
               sourceCapture,
               sourceOutput,
               sourceEndpointId,
