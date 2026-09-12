@@ -2388,38 +2388,65 @@ export function createReplaySourceAttestation(input: {
         ),
       ].sort()
     : null;
+  // Name every missing input so an operator can repair the capture or the caller
+  // instead of guessing which durable receipt is incomplete.
+  const missingReceiptInputs: string[] = [];
+  if (capture.schemaVersion !== "role-model.route-capture-read.v2") {
+    missingReceiptInputs.push(`capture schema ${String(capture.schemaVersion)}`);
+  }
+  if (capture.scope !== input.scope) missingReceiptInputs.push("capture scope");
+  if (typeof capture.rootArtifactId !== "string" || !capture.rootArtifactId) {
+    missingReceiptInputs.push("root artifact");
+  }
+  if (typeof capture.routingDecisionId !== "string" || !capture.routingDecisionId) {
+    missingReceiptInputs.push("routing decision");
+  }
+  if (typeof capture.endpointId !== "string" || !capture.endpointId) {
+    missingReceiptInputs.push("selected endpoint");
+  }
+  if (!trace || typeof trace !== "object" || Array.isArray(trace)) {
+    missingReceiptInputs.push("trace");
+  } else {
+    if (!Number.isSafeInteger((trace as Record<string, unknown>).generation)) {
+      missingReceiptInputs.push("trace generation");
+    }
+    if ((trace as Record<string, unknown>).readiness !== "ready") {
+      missingReceiptInputs.push(
+        `trace readiness ${String((trace as Record<string, unknown>).readiness)}`,
+      );
+    }
+  }
+  if (traversal === null) missingReceiptInputs.push("canonical traversal");
   if (
-    capture.schemaVersion !== "role-model.route-capture-read.v2" ||
-    capture.scope !== input.scope ||
-    typeof capture.rootArtifactId !== "string" ||
-    !capture.rootArtifactId ||
-    typeof capture.routingDecisionId !== "string" ||
-    !capture.routingDecisionId ||
-    typeof capture.endpointId !== "string" ||
-    !capture.endpointId ||
-    !trace ||
-    typeof trace !== "object" ||
-    Array.isArray(trace) ||
-    !Number.isSafeInteger((trace as Record<string, unknown>).generation) ||
-    (trace as Record<string, unknown>).generation === undefined ||
-    (trace as Record<string, unknown>).readiness !== "ready" ||
-    traversal === null ||
-    (replaySource !== null &&
-      replaySource.schemaVersion !== "role-model.route-capture-replay-source.v1") ||
-    typeof normalizedRequestRef !== "string" ||
-    !normalizedRequestRef ||
-    typeof sharedPrefixRef !== "string" ||
-    !sharedPrefixRef ||
-    typeof forkOccurrenceId !== "string" ||
-    !forkOccurrenceId ||
-    typeof policySnapshotRef !== "string" ||
-    !policySnapshotRef ||
-    typeof capturePolicyRef !== "string" ||
-    !capturePolicyRef ||
-    input.eligibleEndpointIds.length === 0 ||
-    !input.eligibleEndpointIds.includes(capture.endpointId)
+    replaySource !== null &&
+    replaySource.schemaVersion !== "role-model.route-capture-replay-source.v1"
   ) {
-    throw new Error("complete durable replay source receipt is required");
+    missingReceiptInputs.push("replay source schema");
+  }
+  if (typeof normalizedRequestRef !== "string" || !normalizedRequestRef) {
+    missingReceiptInputs.push("normalized request reference");
+  }
+  if (typeof sharedPrefixRef !== "string" || !sharedPrefixRef) {
+    missingReceiptInputs.push("shared prefix reference");
+  }
+  if (typeof forkOccurrenceId !== "string" || !forkOccurrenceId) {
+    missingReceiptInputs.push("fork occurrence");
+  }
+  if (typeof policySnapshotRef !== "string" || !policySnapshotRef) {
+    missingReceiptInputs.push("policy snapshot reference");
+  }
+  if (typeof capturePolicyRef !== "string" || !capturePolicyRef) {
+    missingReceiptInputs.push("capture policy reference");
+  }
+  if (input.eligibleEndpointIds.length === 0) {
+    missingReceiptInputs.push("effective eligible endpoints");
+  } else if (!input.eligibleEndpointIds.includes(capture.endpointId)) {
+    missingReceiptInputs.push("source endpoint in effective eligible set");
+  }
+  if (missingReceiptInputs.length > 0) {
+    throw new Error(
+      `complete durable replay source receipt is required: ${missingReceiptInputs.join(", ")}`,
+    );
   }
   const eligibleEndpointIds = [...new Set(input.eligibleEndpointIds)].sort();
   return Object.freeze({
