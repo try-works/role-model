@@ -6117,7 +6117,7 @@ export async function runTrackBShadowPipeline(
         score: correctness && Number.isFinite(correctness.score) ? Number(correctness.score) : 0,
         trialId: trial.trialId,
         scoreId:
-          typeof correctness.scoreId === "string" && correctness.scoreId
+          typeof correctness?.scoreId === "string" && correctness.scoreId
             ? correctness.scoreId
             : `score:${trial.trialId}:${scorer.id}:correctness`,
       });
