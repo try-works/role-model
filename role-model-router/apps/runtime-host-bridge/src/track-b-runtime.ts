@@ -5032,6 +5032,92 @@ function validateTrackBReferenceAttestation(
   return attestation;
 }
 
+/**
+ * Large extension results cross the packaged boundary as an externalized durable
+ * output (`businessOutput.transferState = "externalized"`). The payload stays in the
+ * extension worker's durable output store, so the host must read it back by locator
+ * instead of treating the transfer marker as the business result. Returning the
+ * marker as-is made every large profile estimate look degraded.
+ */
+function readExternalizedExtensionOutput(input: {
+  readonly stateRoot: string;
+  readonly scopeId: string;
+  readonly extensionId: string;
+  readonly locator: Readonly<Record<string, unknown>>;
+}): Record<string, unknown> | null {
+  const outputKey = String(input.locator.outputKey ?? "");
+  if (!outputKey) return null;
+  const databasePath = path.join(
+    input.stateRoot,
+    input.scopeId,
+    "track-b",
+    "extensions",
+    "workers",
+    input.extensionId,
+    "durable-output.sqlite",
+  );
+  if (!existsSync(databasePath)) return null;
+  const database = new DatabaseSync(databasePath, { readOnly: true });
+  try {
+    const row = database
+      .prepare(
+        "SELECT result_json, result_hash, byte_length FROM durable_extension_outputs WHERE output_key = ?",
+      )
+      .get(outputKey) as
+      | { result_json?: string; result_hash?: string; byte_length?: number }
+      | undefined;
+    if (!row?.result_json) return null;
+    const expectedHash = input.locator.resultHash;
+    if (typeof expectedHash === "string" && row.result_hash !== expectedHash) {
+      throw new Error("externalized extension output hash does not match its locator");
+    }
+    return JSON.parse(row.result_json) as Record<string, unknown>;
+  } finally {
+    database.close();
+  }
+}
+
+/**
+ * Decode an extension invoke result: inline business output when present, otherwise a
+ * read-back of the externalized durable output. Returns null when the payload cannot be
+ * recovered, so callers keep an honest degradation path.
+ */
+function decodeExtensionBusinessResult(input: {
+  readonly result: unknown;
+  readonly extensionId: string;
+  readonly stateRoot?: string;
+  readonly scopeId: string;
+}): Record<string, unknown> | null {
+  const record =
+    input.result && typeof input.result === "object" && !Array.isArray(input.result)
+      ? (input.result as Record<string, unknown>)
+      : null;
+  if (!record) return null;
+  const business =
+    record.businessOutput && typeof record.businessOutput === "object" && !Array.isArray(record.businessOutput)
+      ? (record.businessOutput as Record<string, unknown>)
+      : null;
+  if (business && business.transferState === "externalized") {
+    if (!input.stateRoot) return null;
+    const locator =
+      record.durableLocator && typeof record.durableLocator === "object" && !Array.isArray(record.durableLocator)
+        ? (record.durableLocator as Record<string, unknown>)
+        : null;
+    if (!locator) return null;
+    try {
+      return readExternalizedExtensionOutput({
+        stateRoot: input.stateRoot,
+        scopeId: input.scopeId,
+        extensionId: input.extensionId,
+        locator,
+      });
+    } catch {
+      return null;
+    }
+  }
+  return business ?? record;
+}
+
 async function resolveTrackBReferenceAttestation(
   runtime: TrackBShadowPipelineRuntime,
   envelope: (capability: string, value: unknown) => Record<string, unknown>,
@@ -6249,7 +6335,13 @@ export async function runTrackBShadowPipeline(
       },
     }),
   );
-  const signalRecord = signals as Record<string, unknown>;
+  const signalRecord =
+    decodeExtensionBusinessResult({
+      result: signals,
+      extensionId: "trajectory-signals",
+      ...(input.contractStateRoot ? { stateRoot: input.contractStateRoot } : {}),
+      scopeId: input.scope,
+    }) ?? (signals as Record<string, unknown>);
   // R16 forbids us from inventing a trajectory merely to complete an otherwise
   // finalized replay/evaluation join.  The extension's bounded degradation
   // receipt is therefore a non-learning outcome, not missing provenance or a
@@ -6508,7 +6600,17 @@ export async function runTrackBShadowPipeline(
         })),
       }),
     });
-  let profileRecord = (await profileRequest()) as Record<string, unknown>;
+  const decodeProfileResult = (raw: unknown): Record<string, unknown> =>
+    decodeExtensionBusinessResult({
+      result: raw,
+      extensionId: "profile-learner",
+      ...(input.contractStateRoot ? { stateRoot: input.contractStateRoot } : {}),
+      scopeId: input.scope,
+    }) ??
+    (raw && typeof raw === "object" && !Array.isArray(raw)
+      ? (raw as Record<string, unknown>)
+      : {});
+  let profileRecord = decodeProfileResult(await profileRequest());
   // A worker that restarts mid-invoke can answer once with a bounded degradation even
   // though the same request succeeds on a fresh attempt. Retry the estimate once
   // before the pipeline records a learning refusal.
@@ -6521,7 +6623,7 @@ export async function runTrackBShadowPipeline(
         (profileRecord as Record<string, unknown>).reason ?? "",
       ).slice(0, 160)}`,
     );
-    profileRecord = (await profileRequest()) as Record<string, unknown>;
+    profileRecord = decodeProfileResult(await profileRequest());
   }
   // A degraded profile estimate is a learning refusal with a receipt, not a replay
   // failure: the comparison is already durable and the replay already completed.
@@ -6591,7 +6693,7 @@ export async function runTrackBShadowPipeline(
     );
   } else if (positive.length && negative.length) {
     try {
-      candidate = await runtime.invoke("knowledge-worker", {
+      const knowledgeRaw = await runtime.invoke("knowledge-worker", {
           ...envelope("knowledge:eval-consumer", {
             replay: replayForKnowledge,
             evaluation: knowledgeEvaluation,
@@ -6625,6 +6727,13 @@ export async function runTrackBShadowPipeline(
           }),
           evaluationAuthoritySecret,
         });
+      candidate =
+        decodeExtensionBusinessResult({
+          result: knowledgeRaw,
+          extensionId: "knowledge-worker",
+          ...(input.contractStateRoot ? { stateRoot: input.contractStateRoot } : {}),
+          scopeId: input.scope,
+        }) ?? (knowledgeRaw as Record<string, unknown>);
     } catch (error) {
       console.error(
         `[run97] learning degraded knowledge:${input.requestId} ${String(
