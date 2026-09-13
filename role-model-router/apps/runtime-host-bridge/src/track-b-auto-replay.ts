@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import type { ReplayLedger } from "./track-b-replay-ledger.js";
 import {
   type ReplayPolicySet,
@@ -19,6 +21,47 @@ import {
  */
 
 export const DEFAULT_MAX_CAPTURES_PER_TICK = 8;
+
+/**
+ * Run 97 Repair Cycle 04 (L3): the retry identity of an automatic counterfactual.
+ *
+ * The per-attempt ledger reservation is budget bookkeeping, not replay identity.
+ * Keying the durable replay job with it made every retry create a *new* job - and a
+ * new set of provider dispatches - while the previous job was orphaned mid-dispatch
+ * (live evidence: two to three jobs per capture, `failure_append_pending` rows that
+ * could never be recovered). `guidance/05` requires an idempotency key that makes a
+ * retry resume the same job, and `AC-R07-03` forbids amplification paths that consume
+ * the daily dispatch ceiling.
+ *
+ * The identity is therefore the capture plus the frozen policy and candidate
+ * contract: the same contract resumes, a genuinely different contract (for example
+ * when a non-dispatchable endpoint leaves the healthy set) is a distinct job that the
+ * caller reconciles against its superseded predecessor.
+ */
+export function buildAutoReplayIdempotencyKey(input: {
+  readonly captureRef: string;
+  readonly policySetDigest: string;
+  readonly candidateEndpointIds: readonly string[];
+}): string {
+  const captureRef = input.captureRef.trim();
+  if (!captureRef) throw new Error("auto replay idempotency requires a capture reference");
+  const policySetDigest = input.policySetDigest.trim();
+  if (!policySetDigest) throw new Error("auto replay idempotency requires a policy set digest");
+  const candidateEndpointIds = [
+    ...new Set(
+      input.candidateEndpointIds
+        .map((endpointId) => endpointId.trim())
+        .filter((endpointId) => endpointId.length > 0),
+    ),
+  ].sort();
+  if (candidateEndpointIds.length === 0) {
+    throw new Error("auto replay idempotency requires at least one candidate endpoint");
+  }
+  const contractDigest = createHash("sha256")
+    .update(JSON.stringify({ policySetDigest, candidateEndpointIds }))
+    .digest("hex");
+  return `auto:${captureRef}:${contractDigest}`;
+}
 
 /**
  * Refusal codes that reflect runtime state which can change (configuration, budget

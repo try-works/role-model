@@ -35,6 +35,7 @@ import {
 } from "./runtime-channel.js";
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
+import { buildAutoReplayIdempotencyKey } from "./track-b-auto-replay.js";
 import {
   autoReplayExecutionFromCommandReceipt,
   startAutoReplayLoop,
@@ -3305,7 +3306,16 @@ export async function main(): Promise<void> {
             headers: { "content-type": "application/json" },
             body: JSON.stringify({
               requestId: capture.captureRef,
-              idempotencyKey: `auto:${capture.captureRef}:${reservationId}`,
+              // RC04 L3: retry identity is the capture plus the frozen policy and
+              // candidate contract, never the per-attempt ledger reservation. A
+              // reservation-scoped key created a new durable replay job (and a new
+              // set of provider dispatches) on every retry while the previous job
+              // was orphaned mid-dispatch.
+              idempotencyKey: buildAutoReplayIdempotencyKey({
+                captureRef: capture.captureRef,
+                policySetDigest: policySet.policySetDigest,
+                candidateEndpointIds: candidates,
+              }),
               candidateEndpointIds: candidates,
               evaluationCriteria: derivedCriteria.criteria,
               budget: {
