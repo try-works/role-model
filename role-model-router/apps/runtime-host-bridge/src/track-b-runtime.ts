@@ -31,6 +31,11 @@ import { createProjectionV2 } from "@role-model-router/trace";
 
 import { DEFAULT_REPLAY_CANDIDATE_CAP } from "./track-b-replay-policy.js";
 import {
+  TRACK_B_PAIRWISE_JUDGE_WINNER_COUNTERFACTUAL,
+  type TrackBPairwiseJudge,
+  pairwiseJudgeScores,
+} from "./track-b-shadow-judge.js";
+import {
   buildLearnedExperienceCandidate,
   buildRoutePackageActivationReceipt,
   buildRoutingEvaluationExecutionContext,
@@ -39,6 +44,7 @@ import {
 } from "./track-b-contract-emission.js";
 import {
   boundedTrackBLearningRefusal,
+  deriveTrackBLearningCapability,
   selectTrackBLearningEvidence,
 } from "./track-b-learning-evidence.js";
 
@@ -4835,6 +4841,14 @@ export interface TrackBShadowPipelineInput {
    * internal receipts.
    */
   readonly contractStateRoot?: string;
+  /**
+   * RC04 (L4): optional router-backed pairwise judge. When present the pipeline
+   * registers the canonical `role_model_pairwise_judge.battle` scorer, dispatches the
+   * judge exactly once per comparison, and records the preference as a second durable
+   * dimension on both trials. A judge failure is recorded as bounded score
+   * missingness, never as a fabricated zero (`guidance/09`, `guidance/11`).
+   */
+  readonly judge?: TrackBPairwiseJudge;
   readonly identity?: TrackBVariantIdentity;
   readonly occurrence?: Readonly<{ occurrenceId: string; contentId: string }>;
 }
@@ -5712,6 +5726,60 @@ export function createRun96RoutingShadowScorer(
   };
 }
 
+/**
+ * Run 97 RC04: the canonical replay comparison scorer set (`guidance/09`:
+ * `role-model.scorers.replay.pairwise.v1 -> ['role_model_pairwise_judge.battle']`).
+ *
+ * The deterministic semantic-criteria scorer alone cannot decision a routing
+ * counterfactual: on live traffic both branches scored 0 against terms derived from
+ * the request text, so every comparison finalized as `tie` and the shadow learner
+ * never received evidence. This scorer carries the router judge's pairwise
+ * preference as its own durable dimension; Evaluation Core persists it with the
+ * judge receipt and folds it into the comparison outcome.
+ */
+export const RUN97_PAIRWISE_JUDGE_SCORER_ID = "role_model_pairwise_judge.battle";
+export const RUN97_PAIRWISE_JUDGE_DIMENSION = "task_specific_quality";
+
+export function createRun97PairwiseJudgeScorer(input: {
+  readonly judgeEndpointId: string;
+}): {
+  readonly manifestVersion: 2;
+  readonly id: string;
+  readonly version: string;
+  readonly digest: string;
+  readonly scorerSetVersion: string;
+  readonly algorithm: string;
+  readonly dimensions: readonly string[];
+  readonly range: { readonly min: number; readonly max: number };
+  readonly direction: string;
+  readonly requiredInputs: readonly string[];
+  readonly source: string;
+  readonly judgeEndpointId: string;
+} {
+  if (typeof input?.judgeEndpointId !== "string" || !input.judgeEndpointId.trim()) {
+    throw new Error("pairwise judge scorer requires a router judge endpoint");
+  }
+  const definition = {
+    manifestVersion: 2 as const,
+    id: RUN97_PAIRWISE_JUDGE_SCORER_ID,
+    version: "1",
+    scorerSetVersion: RUN96_ROUTING_SHADOW_SCORER_SET_VERSION,
+    algorithm: "pairwise_battle",
+    dimensions: [RUN97_PAIRWISE_JUDGE_DIMENSION],
+    range: { min: 0, max: 1 },
+    direction: "higher_is_better",
+    requiredInputs: ["outputRef", "evaluationCriteria"],
+    source: "role_model_pairwise_judge",
+    judgeEndpointId: input.judgeEndpointId.trim(),
+  };
+  return {
+    ...definition,
+    digest: `sha256:${createHash("sha256")
+      .update(JSON.stringify(canonicalExtensionValue(definition)))
+      .digest("hex")}`,
+  };
+}
+
 export async function runTrackBShadowPipeline(
   runtime: TrackBShadowPipelineRuntime,
   input: TrackBShadowPipelineInput,
@@ -5811,6 +5879,19 @@ export async function runTrackBShadowPipeline(
   await runtime.invoke("evaluation-core", {
     ...envelope("evaluation:register-scorer", scorer),
   });
+  // RC04 (L4): the deterministic semantic-criteria scorer alone cannot decision a
+  // real routing counterfactual - live traffic produced `tie` for every group because
+  // both branches scored 0 against terms derived from the request text. When the host
+  // supplies a router judge, the canonical pairwise judge dimension joins the scorer
+  // set so the comparison carries a real preference with judge provenance.
+  const judgeScorer = input.judge
+    ? createRun97PairwiseJudgeScorer({ judgeEndpointId: input.judge.endpointId })
+    : null;
+  if (judgeScorer) {
+    await runtime.invoke("evaluation-core", {
+      ...envelope("evaluation:register-scorer", judgeScorer),
+    });
+  }
   const rolloutRows = [sourceRollout, ...counterfactualRollouts];
   if (input.evaluationCases.length < 1) {
     throw new Error("durable routing-shadow evaluation cases are required");
@@ -6113,6 +6194,118 @@ export async function runTrackBShadowPipeline(
       referenceAttestation: trialReferenceAttestation,
     });
     trialIds.push(trial.trialId);
+  }
+  if (judgeScorer && input.judge) {
+    // One bounded judgement per comparison, after both branches produced durable
+    // output, so the judge sees the same evidence the comparison will bind. The
+    // dispatch itself is the host's (provider execution + ledger accounting).
+    const sourceEntry = completedRollouts[0];
+    const counterfactualEntry = completedRollouts[1];
+    const judgeBranches = [sourceEntry, counterfactualEntry].map((entry, index) =>
+      entry
+        ? {
+            trialId: entry.trialId,
+            candidateRef: entry.rollout.endpointId as string,
+            outputRef: String(entry.rollout.artifactRef ?? ""),
+            outputDigest: String(
+              (entry.rollout.outcome as Record<string, unknown> | undefined)?.outcomeDigest ?? "",
+            ),
+            outputText:
+              typeof entry.rollout.evaluationActual === "string"
+                ? entry.rollout.evaluationActual
+                : "",
+            role: index === 0 ? ("source" as const) : ("counterfactual" as const),
+          }
+        : null,
+    );
+    const [sourceBranch, counterfactualBranch] = judgeBranches;
+    if (!sourceBranch || !counterfactualBranch) {
+      throw new Error("pairwise judge requires both durable comparison branches");
+    }
+    let judgeScores: Array<Record<string, unknown>>;
+    try {
+      const decision = await input.judge.dispatch({
+        requestId: input.requestId,
+        channel: input.channel,
+        scope: input.scope,
+        authorizationEpoch: input.authorizationEpoch,
+        evaluationJobId: jobId,
+        judgeEndpointId: input.judge.endpointId,
+        source: {
+          trialId: sourceBranch.trialId,
+          candidateRef: sourceBranch.candidateRef,
+          outputRef: sourceBranch.outputRef,
+          outputDigest: sourceBranch.outputDigest,
+          outputText: sourceBranch.outputText,
+        },
+        counterfactual: {
+          trialId: counterfactualBranch.trialId,
+          candidateRef: counterfactualBranch.candidateRef,
+          outputRef: counterfactualBranch.outputRef,
+          outputDigest: counterfactualBranch.outputDigest,
+          outputText: counterfactualBranch.outputText,
+        },
+      });
+      const winner = decision?.winner;
+      if (
+        winner !== "source" &&
+        winner !== TRACK_B_PAIRWISE_JUDGE_WINNER_COUNTERFACTUAL &&
+        winner !== "tie"
+      ) {
+        throw new Error("router judge returned an unknown pairwise winner");
+      }
+      if (!Number.isFinite(decision.confidence) || decision.confidence < 0 || decision.confidence > 1) {
+        throw new Error("router judge returned unbounded confidence");
+      }
+      const judgeReceipt = {
+        dispatchReceiptId: decision.dispatchReceiptId,
+        routerDecisionId: decision.routerDecisionId,
+        judgeResultRef: decision.judgeResultRef,
+        judgeEndpointId: decision.judgeEndpointId,
+      };
+      judgeScores = [sourceBranch, counterfactualBranch].map((branch) => ({
+        scorerId: judgeScorer.id,
+        scorerVersion: judgeScorer.version,
+        scorerDigest: judgeScorer.digest,
+        scorerDefinition: judgeScorer,
+        dimension: judgeScorer.dimensions[0],
+        score: pairwiseJudgeScores({ winner, role: branch.role }),
+        confidence: decision.confidence,
+        source: judgeScorer.source,
+        judgeReceipt,
+      }));
+    } catch (error) {
+      // guidance/09: a judge failure is persisted as a scorer failure, never as a
+      // valid zero score. The comparison then stays honestly undecided instead of
+      // manufacturing a tie from an unrun judge.
+      const reason = `router judge failed: ${
+        error instanceof Error ? error.message.slice(0, 160) : "unknown judge error"
+      }`;
+      judgeScores = [sourceBranch, counterfactualBranch].map((branch) => ({
+        scorerId: judgeScorer.id,
+        scorerVersion: judgeScorer.version,
+        scorerDigest: judgeScorer.digest,
+        scorerDefinition: judgeScorer,
+        dimension: judgeScorer.dimensions[0],
+        score: null,
+        confidence: 0,
+        source: judgeScorer.source,
+        missingness: "invalid",
+        missingReason: reason.slice(0, 200),
+      }));
+    }
+    for (const [index, branch] of [sourceBranch, counterfactualBranch].entries()) {
+      const entry = index === 0 ? sourceEntry : counterfactualEntry;
+      await runtime.invoke("evaluation-core", {
+        ...envelope("evaluation:record-trial-score-batch", {
+          trialId: branch.trialId,
+          scores: [judgeScores[index]],
+          ...(entry?.referenceAttestation
+            ? { referenceAttestation: entry.referenceAttestation }
+            : {}),
+        }),
+      });
+    }
   }
   const evaluation = await runtime.invoke("evaluation-core", {
     ...envelope("evaluation:finalize-comparison-group", {
@@ -6700,12 +6893,36 @@ export async function runTrackBShadowPipeline(
     );
   } else if (positive.length && negative.length) {
     try {
+      // The knowledge consumer refuses any eval-consumer input without a derived
+      // learning-capability claim, so the marker and its finalized lineage travel
+      // with the evidence instead of being asserted by the caller.
+      const learningCapability = deriveTrackBLearningCapability({
+        comparison: durableComparison as {
+          readonly groupId?: unknown;
+          readonly status?: unknown;
+          readonly outcome?: unknown;
+        },
+        members: Array.isArray(durableComparison.members)
+          ? (durableComparison.members as Record<string, unknown>[])
+          : [],
+        positive,
+        negative,
+      });
       const knowledgeRaw = await runtime.invoke("knowledge-worker", {
           ...envelope("knowledge:eval-consumer", {
             replay: replayForKnowledge,
             evaluation: knowledgeEvaluation,
             signals: signalsForKnowledge,
             profile: profileForKnowledge,
+            ...(learningCapability.learningCapable &&
+            learningCapability.finalizedEvaluation &&
+            learningCapability.learningEvidence
+              ? {
+                  learningCapable: true as const,
+                  finalizedEvaluation: learningCapability.finalizedEvaluation,
+                  learningEvidence: learningCapability.learningEvidence,
+                }
+              : {}),
             comparableGroup: {
               policy: "routing-shadow",
               task: "route-selection",

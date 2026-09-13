@@ -36,6 +36,8 @@ import {
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
 import { buildAutoReplayIdempotencyKey } from "./track-b-auto-replay.js";
+import { createRouterPairwiseJudge } from "./track-b-shadow-judge-dispatch.js";
+import type { TrackBPairwiseJudge } from "./track-b-shadow-judge.js";
 import {
   autoReplayExecutionFromCommandReceipt,
   startAutoReplayLoop,
@@ -813,6 +815,12 @@ export function createSupervisedReplayEvaluationCompleter(input: {
   readonly evaluationCriteriaDigest: string;
   /** Host runtime state root; the completer persists the v1.1 route-learning contracts there. */
   readonly contractStateRoot?: string;
+  /**
+   * RC04 (L4): optional router-backed pairwise judge. When present, the automatic
+   * comparison records a real preference dimension (with judge provenance) instead of
+   * relying on a deterministic term that neither branch satisfies.
+   */
+  readonly judge?: TrackBPairwiseJudge;
   readonly runPipeline?: typeof runTrackBShadowPipeline;
 }) {
   const runPipeline = input.runPipeline ?? runTrackBShadowPipeline;
@@ -1163,6 +1171,7 @@ export function createSupervisedReplayEvaluationCompleter(input: {
             `${evaluationJobId}:${createHash("sha256").update(candidate.endpointId).digest("hex").slice(0, 12)}`,
         ),
       ],
+      ...(input.judge ? { judge: input.judge } : {}),
       ...(input.contractStateRoot ? { contractStateRoot: input.contractStateRoot } : {}),
       identity: {
         endpointId: input.sourceEndpointId,
@@ -3988,6 +3997,44 @@ export async function main(): Promise<void> {
               sourceEndpointId,
               sourceModelId,
               counterfactualPackages,
+              // RC04 (L4): the automatic comparison carries a router-backed pairwise
+              // judge so a real counterfactual can be decisioned instead of tying on a
+              // deterministic term that neither branch satisfies. The judge dispatch is
+              // ledgered as a derived dispatch inside the same daily ceiling.
+              judge: createRouterPairwiseJudge({
+                executeChatCompletions: created.executeChatCompletions.bind(created),
+                endpoints: created.effectiveRegistry.endpoints.map((endpoint) => ({
+                  endpointId: endpoint.identity.endpoint_id,
+                  modelId: endpoint.identity.model_id,
+                })),
+                excludedEndpointIds: [sourceEndpointId, ...candidateEndpointIds],
+                taskText: extractTaskInstructionText(sourceCapture) ?? "",
+                recordDerivedDispatch: (input) => {
+                  try {
+                    // The supervised replay already reserved this counterfactual at its
+                    // first candidate dispatch, so the derived judge dispatch is recorded
+                    // against the same reservation (AC-R07-02: judge spend is visible in
+                    // the same daily ceiling).
+                    const reservationId = ledgerReservationId;
+                    if (!reservationId) return;
+                    replayLedger.record({
+                      reservationId,
+                      captureRef: requestId,
+                      policySetDigest: replayPolicySet.policySetDigest,
+                      counterfactualRef: `cf:${requestId}`,
+                      dispatchKind: "derived",
+                      candidateEndpointId: input.judgeEndpointId,
+                      attempt: input.attempt,
+                      costMicros: input.costMicros,
+                      bytes: input.bytes,
+                      outcome: input.outcome,
+                    });
+                  } catch {
+                    // Ledger accounting is best-effort here; the judge receipt remains
+                    // durable on the score row and the producer reconciles dispatches.
+                  }
+                },
+              }),
               getDispatched: (endpointId) => {
                 const dispatch = dispatched.get(endpointId);
                 return dispatch
