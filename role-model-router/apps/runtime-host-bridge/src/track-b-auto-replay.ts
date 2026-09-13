@@ -23,6 +23,30 @@ import {
 export const DEFAULT_MAX_CAPTURES_PER_TICK = 8;
 
 /**
+ * Run 97 Repair Cycle 16 (W3): the automatic replay budget's wall-clock deadline.
+ *
+ * The dispatches inside one counterfactual are serialized, so a flat 120 s deadline
+ * (the original constant) is shorter than the slow tail of a three-candidate job: live
+ * stage evidence showed complete jobs at 36-83 s and timeouts at 122-173 s where every
+ * provider call had already succeeded and been paid for. The deadline therefore scales
+ * with the candidate count and stays within a bounded cap; `RC16-W1` additionally keeps
+ * a job whose dispatches all completed alive through a bounded finalization grace so the
+ * branch append and evaluation handoff can finish.
+ */
+export const AUTO_REPLAY_DEADLINE_PER_CANDIDATE_MS = 120_000;
+export const AUTO_REPLAY_DEADLINE_MAX_MS = 600_000;
+
+export function resolveAutoReplayDeadlineMs(candidateCount: number): number {
+  if (!Number.isSafeInteger(candidateCount) || candidateCount < 1) {
+    throw new Error("auto replay deadline requires a positive candidate count");
+  }
+  return Math.min(
+    AUTO_REPLAY_DEADLINE_PER_CANDIDATE_MS * candidateCount,
+    AUTO_REPLAY_DEADLINE_MAX_MS,
+  );
+}
+
+/**
  * Run 97 Repair Cycle 04 (L3): the retry identity of an automatic counterfactual.
  *
  * The per-attempt ledger reservation is budget bookkeeping, not replay identity.

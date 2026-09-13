@@ -35,7 +35,10 @@ import {
 } from "./runtime-channel.js";
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
-import { buildAutoReplayIdempotencyKey } from "./track-b-auto-replay.js";
+import {
+  buildAutoReplayIdempotencyKey,
+  resolveAutoReplayDeadlineMs,
+} from "./track-b-auto-replay.js";
 import { createRouterPairwiseJudge } from "./track-b-shadow-judge-dispatch.js";
 import type { TrackBPairwiseJudge } from "./track-b-shadow-judge.js";
 import {
@@ -3374,7 +3377,9 @@ export async function main(): Promise<void> {
                 maxProviderCalls: candidates.length,
                 maxCostMicros: 1_000_000,
                 maxBytes: 8_388_608,
-                deadlineMs: 120_000,
+                // RC16 (W3): the dispatches are serialized, so the deadline scales with
+                // the candidate count instead of racing a flat two-minute clock.
+                deadlineMs: resolveAutoReplayDeadlineMs(candidates.length),
               },
             }),
           });
