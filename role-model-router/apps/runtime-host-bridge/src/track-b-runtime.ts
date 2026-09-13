@@ -5199,6 +5199,48 @@ export function normalizeTrackBSemanticEvaluationCriteria(
   };
 }
 
+/**
+ * Run 97 RC04: a `requiredTerms` criterion only discriminates when it names a real
+ * task requirement. Live traffic derived `["hey"]` from the request text, which both
+ * branches fail (so the dimension is dead weight) and which fires at random when it
+ * does match (turning a judge-decided counterfactual into `disagreement`).
+ *
+ * `guidance/05` selects scorers from case metadata; a greeting is not task metadata,
+ * so the comparison keeps the router-judge dimension and drops the semantic-criteria
+ * dimension instead of letting a meaningless check vote.
+ */
+const NON_VERIFIABLE_CRITERIA_TERMS = new Set([
+  "hey",
+  "hi",
+  "hello",
+  "yo",
+  "sup",
+  "ping",
+  "test",
+  "thanks",
+  "thank",
+  "please",
+  "ok",
+  "okay",
+  "yes",
+  "no",
+]);
+
+export function hasVerifiableSemanticCriteria(value: unknown): boolean {
+  let criteria: TrackBSemanticEvaluationCriteria;
+  try {
+    criteria = normalizeTrackBSemanticEvaluationCriteria(value);
+  } catch {
+    return false;
+  }
+  return [...criteria.requiredTerms, ...(criteria.forbiddenTerms ?? [])].some((term) => {
+    const normalized = term.trim().toLocaleLowerCase("en-US");
+    if (normalized.length < 3) return false;
+    if (NON_VERIFIABLE_CRITERIA_TERMS.has(normalized)) return false;
+    return /[a-z0-9]/i.test(normalized);
+  });
+}
+
 export interface TrackBVariantIdentity {
   readonly endpointId: string;
   readonly modelId: string;
@@ -5876,9 +5918,19 @@ export async function runTrackBShadowPipeline(
   };
   const scorer = createRun96RoutingShadowScorer();
   const scorerSetVersion = scorer.scorerSetVersion;
-  await runtime.invoke("evaluation-core", {
-    ...envelope("evaluation:register-scorer", scorer),
-  });
+  // RC04: the semantic-criteria dimension only exists when the comparison carries a
+  // real task requirement. Greeting-only criteria from live traffic were dead weight
+  // (both branches score 0) and actively harmful when they fired at random.
+  const deterministicCriteriaVerifiable = input.evaluationCases.some((evaluationCase) =>
+    hasVerifiableSemanticCriteria(
+      (evaluationCase as Record<string, unknown> | undefined)?.evaluationCriteria,
+    ),
+  );
+  if (deterministicCriteriaVerifiable) {
+    await runtime.invoke("evaluation-core", {
+      ...envelope("evaluation:register-scorer", scorer),
+    });
+  }
   // RC04 (L4): the deterministic semantic-criteria scorer alone cannot decision a
   // real routing counterfactual - live traffic produced `tie` for every group because
   // both branches scored 0 against terms derived from the request text. When the host
@@ -6057,12 +6109,12 @@ export async function runTrackBShadowPipeline(
           score.scorerId === scorer.id &&
           score.scorerVersion === scorer.version,
       );
-      if (!correctness || !Number.isFinite(correctness.score)) {
+      if (deterministicCriteriaVerifiable && (!correctness || !Number.isFinite(correctness.score))) {
         throw new Error("durable scored trial is missing semantic correctness evidence");
       }
       completedRollouts.push({
         rollout,
-        score: Number(correctness.score),
+        score: correctness && Number.isFinite(correctness.score) ? Number(correctness.score) : 0,
         trialId: trial.trialId,
         scoreId:
           typeof correctness.scoreId === "string" && correctness.scoreId
@@ -6167,28 +6219,35 @@ export async function runTrackBShadowPipeline(
         }),
       });
     }
-    await runtime.invoke("evaluation-core", {
-      ...envelope("evaluation:record-trial-score-batch", {
-        trialId: trial.trialId,
-        scores: execution.scores,
-        referenceAttestation: trialReferenceAttestation,
-      }),
-    });
-    const correctness = (execution.scores as Record<string, unknown>[]).find(
-      (score) =>
-        score.dimension === "correctness" &&
-        score.scorerId === scorer.id &&
-        score.scorerVersion === scorer.version,
-    );
-    if (!correctness || !Number.isFinite(correctness.score)) {
-      throw new Error("durable semantic evaluation did not produce a correctness score");
+    // RC04: when no verifiable task requirement exists the semantic-criteria scores are
+    // not recorded at all, so the comparison is decided by the router judge dimension
+    // alone (or reported `insufficient` when no judge exists) instead of by a check
+    // that measures nothing.
+    let correctness: Record<string, unknown> | undefined;
+    if (deterministicCriteriaVerifiable) {
+      await runtime.invoke("evaluation-core", {
+        ...envelope("evaluation:record-trial-score-batch", {
+          trialId: trial.trialId,
+          scores: execution.scores,
+          referenceAttestation: trialReferenceAttestation,
+        }),
+      });
+      correctness = (execution.scores as Record<string, unknown>[]).find(
+        (score) =>
+          score.dimension === "correctness" &&
+          score.scorerId === scorer.id &&
+          score.scorerVersion === scorer.version,
+      );
+      if (!correctness || !Number.isFinite(correctness.score)) {
+        throw new Error("durable semantic evaluation did not produce a correctness score");
+      }
     }
     completedRollouts.push({
       rollout,
-      score: Number(correctness.score),
+      score: correctness ? Number(correctness.score) : 0,
       trialId: trial.trialId,
       scoreId:
-        typeof correctness.scoreId === "string" && correctness.scoreId
+        typeof correctness?.scoreId === "string" && correctness.scoreId
           ? correctness.scoreId
           : `score:${trial.trialId}:${scorer.id}:correctness`,
       referenceAttestation: trialReferenceAttestation,

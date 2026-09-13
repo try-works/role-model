@@ -90,7 +90,10 @@ export function createRouterPairwiseJudge(
           }),
         )
         .digest("hex")
-        .slice(0, 24);
+        .slice(0, 16);
+      // The capture the judge call produces must be classified as evaluation output by
+      // the private boundary (shared/capture/replay-provenance.mjs), or it re-enters the
+      // pending replay queue and amplifies.
       const judgeRequestId = `replay-judge-${digest}`;
       const messages = buildPairwiseJudgeMessages({
         taskText,
