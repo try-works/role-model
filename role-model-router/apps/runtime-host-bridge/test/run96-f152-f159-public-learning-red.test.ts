@@ -659,7 +659,12 @@ describe("Run 96 Addendum 27 public learning boundaries", () => {
     expect(positive).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          evidenceKind: "evaluation",
+          // Run 97 RC06: the knowledge boundary requires explicit graph lineage on the
+          // winning row (`extensions/knowledge-worker` "explicit graph/evaluation/
+          // trial/score lineage required"), so the winner carries the durable branch
+          // graph reference as well as the evaluation reference.
+          evidenceKind: "graph",
+          graphRef: expect.any(String),
           learningCapable: true,
           evaluationRef: "comparison:run96",
           trialId: expect.any(String),

@@ -7129,7 +7129,21 @@ export async function runTrackBShadowPipeline(
   // durable knowledge authority must receive it as a Store document, or knowledge never
   // outlives the worker. Failures degrade the handoff with a bounded receipt instead of
   // failing the replay.
-  if (candidateId) {
+  // The handoff only runs when the runtime actually advertises the Knowledge Store
+  // extension: a composition without it must degrade the optional step silently rather
+  // than invoke a capability that does not exist (`guidance/05`: missing optional
+  // producers mark the work unavailable and continue).
+  const runtimeExtensionIds =
+    typeof (runtime as { listExtensions?: () => unknown }).listExtensions === "function"
+      ? ((runtime as { listExtensions: () => unknown }).listExtensions() as unknown[])
+      : null;
+  const knowledgeStoreAvailable =
+    runtimeExtensionIds === null
+      ? false
+      : runtimeExtensionIds.some(
+          (row) => row && typeof row === "object" && (row as { id?: unknown }).id === "knowledge-store",
+        );
+  if (candidateId && knowledgeStoreAvailable) {
     const learned = (candidate as Record<string, unknown>).learnedExperienceCandidate;
     const learnedRecord =
       learned && typeof learned === "object" && !Array.isArray(learned)

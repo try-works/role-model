@@ -314,7 +314,10 @@ const pipelineInput = () => ({
 
 test("run97 rc11 a shadow candidate is handed to the Knowledge Store and read back", async () => {
   const invocations: Invocation[] = [];
-  const runtime = { invoke: scriptedRuntime(invocations) };
+  const runtime = {
+    invoke: scriptedRuntime(invocations),
+    listExtensions: () => [{ id: "knowledge-store", lifecycle: "ready" }],
+  };
   await trackBRuntime.runTrackBShadowPipeline(runtime as never, pipelineInput()).catch(() => null);
 
   const writes = invocations.filter(
@@ -339,4 +342,5 @@ test("run97 rc11 a shadow candidate is handed to the Knowledge Store and read ba
     id: "knowledge:rc11",
   });
 });
+
 
