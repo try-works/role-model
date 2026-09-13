@@ -7133,9 +7133,10 @@ export async function runTrackBShadowPipeline(
   // extension: a composition without it must degrade the optional step silently rather
   // than invoke a capability that does not exist (`guidance/05`: missing optional
   // producers mark the work unavailable and continue).
+  const runtimeWithExtensions = runtime as unknown as { listExtensions?: () => unknown };
   const runtimeExtensionIds =
-    typeof (runtime as { listExtensions?: () => unknown }).listExtensions === "function"
-      ? ((runtime as { listExtensions: () => unknown }).listExtensions() as unknown[])
+    typeof runtimeWithExtensions.listExtensions === "function"
+      ? (runtimeWithExtensions.listExtensions() as unknown[])
       : null;
   const knowledgeStoreAvailable =
     runtimeExtensionIds === null
