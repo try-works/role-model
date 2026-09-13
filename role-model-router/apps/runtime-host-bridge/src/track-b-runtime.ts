@@ -45,6 +45,7 @@ import {
 import {
   boundedTrackBLearningRefusal,
   deriveTrackBLearningCapability,
+  selectTrackBLearningTarget,
   selectTrackBLearningEvidence,
 } from "./track-b-learning-evidence.js";
 
@@ -6393,6 +6394,31 @@ export async function runTrackBShadowPipeline(
     throw new Error("durable routing-shadow comparison finalization failed");
   }
   const durableComparison = persistedEvaluation as Record<string, unknown>;
+  // Run 97 RC06: a decisive comparison is evidence about the winning package, and both
+  // directions are learnable (`guidance/07`: the worker compares winners and losers;
+  // `guidance/13`: signed observational evidence, `keep` for a holding incumbent). The
+  // target is derived from the durable member dispositions, never assumed.
+  const learningTarget = selectTrackBLearningTarget({
+    comparisonOutcome: durableComparison.outcome,
+    members: Array.isArray(durableComparison.members)
+      ? (durableComparison.members as Record<string, unknown>[])
+      : [],
+    sourceRoutePackage: input.routePackage,
+    routePackages: completedRollouts.flatMap(({ rollout }) => {
+      const endpointId = typeof rollout.endpointId === "string" ? rollout.endpointId : "";
+      const routePackage = typeof rollout.routePackage === "string" ? rollout.routePackage : "";
+      return endpointId && routePackage ? [{ endpointId, routePackage }] : [];
+    }),
+    // The compared alternatives, so a decisive counterfactual win stays attributable
+    // when the durable member carries no candidate reference.
+    counterfactualRoutePackages: completedRollouts
+      .slice(1)
+      .map(({ rollout }) => rollout.routePackage)
+      .filter((value): value is string => typeof value === "string" && value.length > 0),
+  });
+  // The learned package is the winner's when the comparison is decisive; otherwise the
+  // incumbent's package stays the attributed package for the bounded refusal receipts.
+  const learningRoutePackage = learningTarget.routePackage ?? input.routePackage;
   const finalizedComparison = {
     groupId: durableComparison.groupId,
     comparisonId: durableComparison.groupId,
@@ -6406,7 +6432,7 @@ export async function runTrackBShadowPipeline(
     schemaVersion: "role-model.evaluation-comparison-readback-receipt.v1",
     kind: "evaluation_core_comparison_readback",
     channel: input.channel,
-    routePackage: input.routePackage,
+    routePackage: learningRoutePackage,
     comparisonDigest: createHash("sha256")
       .update(JSON.stringify(canonicalizeRun88Proof(finalizedComparison)))
       .digest("hex"),
@@ -6434,8 +6460,8 @@ export async function runTrackBShadowPipeline(
     comparisonId: finalizedComparison.comparisonId,
     comparisonDigest: finalizedComparisonReceiptPayload.comparisonDigest,
     channel: input.channel,
-    routePackage: input.routePackage,
-    packageIdentity: input.routePackage,
+    routePackage: learningRoutePackage,
+    packageIdentity: learningRoutePackage,
     redactionEvidenceRef: evaluationReferences.sourceEvidenceRef,
     safetyReviewEvidenceRef:
       typeof durableHoldout?.holdoutId === "string" && durableHoldout.holdoutId
@@ -6444,7 +6470,7 @@ export async function runTrackBShadowPipeline(
     redacted: true,
     safetyReviewed: true,
     safeForPrompt: false,
-    holdoutPassed: durableComparison.outcome === "candidate",
+    holdoutPassed: learningTarget.decisive,
   };
   const knowledgeSafetyReceipt = {
     payload: knowledgeSafetyReceiptPayload,
@@ -6950,6 +6976,17 @@ export async function runTrackBShadowPipeline(
       "profile:estimate-finalized-evaluation",
       "finalized profile estimate must retain attributable evidence",
     );
+  } else if (learningTarget.decisive && !learningTarget.routePackage) {
+    // A decisive counterfactual win whose package cannot be resolved is never
+    // attributed to the incumbent package (which lost the comparison). The learning
+    // step records a bounded refusal instead.
+    console.error(
+      `[run97] learning degraded target:${input.requestId} winner=${String(learningTarget.winnerRole)} outcome=${String(durableComparison.outcome)}`,
+    );
+    candidate = boundedTrackBLearningRefusal(
+      "knowledge:eval-consumer",
+      "winning route package cannot be attributed",
+    );
   } else if (positive.length && negative.length) {
     try {
       // The knowledge consumer refuses any eval-consumer input without a derived
@@ -7000,10 +7037,10 @@ export async function runTrackBShadowPipeline(
             holdout: {
               ...holdout,
               evidenceRef: evaluationReferences.inputRef,
-              passed: durableComparison.outcome === "candidate",
+              passed: learningTarget.decisive,
             },
             scope: {
-              routePackage: input.routePackage,
+              routePackage: learningRoutePackage,
               channel: input.channel,
               scopeId: input.scope,
             },

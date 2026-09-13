@@ -125,22 +125,114 @@ export interface TrackBFinalizedLearningCapability {
   readonly finalizedEvaluation: {
     readonly groupId: string;
     readonly status: "finalized";
-    readonly outcome: "candidate";
+    readonly outcome: TrackBDecisiveLearningOutcome;
     readonly members: readonly TrackBFinalizedLearningLineageRow[];
   } | null;
   readonly learningEvidence: {
     readonly schemaVersion: "role-model.finalized-evaluation-signal.v1";
     readonly groupId: string;
-    readonly outcome: "candidate";
+    readonly outcome: TrackBDecisiveLearningOutcome;
     readonly trialScoreRefs: readonly TrackBFinalizedLearningLineageRow[];
   } | null;
 }
+
+/**
+ * Run 97 RC06: the two decisive comparison outcomes.
+ *
+ * `candidate` means a counterfactual package won; `source` means the incumbent
+ * package won. Both are comparable, provenance-complete results about the routing
+ * packages under test, so both are learning evidence
+ * (`guidance/07_knowledge_store_and_knowledge_worker.md`: the worker "compares winners
+ * and losers" and proposes `keep` as well as `add`; "Positive and negative source
+ * rollouts are mandatory evidence"). Non-decisive outcomes (`tie`, `disagreement`,
+ * `insufficient`, `incomplete`, `rejected`) stay excluded.
+ */
+export type TrackBDecisiveLearningOutcome = "candidate" | "source";
+
+const DECISIVE_LEARNING_OUTCOMES: readonly TrackBDecisiveLearningOutcome[] = [
+  "candidate",
+  "source",
+];
+
+const isDecisiveLearningOutcome = (
+  value: unknown,
+): value is TrackBDecisiveLearningOutcome =>
+  typeof value === "string" &&
+  (DECISIVE_LEARNING_OUTCOMES as readonly string[]).includes(value);
+
+/**
+ * Which role wins a decisive outcome. `candidate` is the counterfactual package
+ * beating the incumbent, `source` is the incumbent holding.
+ */
+const winnerRoleForOutcome = (outcome: TrackBDecisiveLearningOutcome): string =>
+  outcome === "source" ? "source" : "counterfactual";
 
 const withheldLearningCapability: TrackBFinalizedLearningCapability = {
   learningCapable: false,
   finalizedEvaluation: null,
   learningEvidence: null,
 };
+
+/**
+ * Run 97 RC06: which route package a finalized comparison is evidence about.
+ *
+ * A decisive comparison is evidence about the winner: the incumbent's package when the
+ * source won, the counterfactual's package when a candidate won
+ * (`guidance/07_knowledge_store_and_knowledge_worker.md` "compare winners and losers",
+ * `guidance/13_profile_learner.md` route-package attribution). A non-decisive outcome
+ * carries no target, and a counterfactual win whose package cannot be resolved fails
+ * closed with `routePackage: null` rather than attributing evidence to the loser.
+ */
+export function selectTrackBLearningTarget(input: {
+  readonly comparisonOutcome: unknown;
+  readonly members: readonly Record<string, unknown>[];
+  readonly sourceRoutePackage: string;
+  readonly routePackages?: readonly {
+    readonly endpointId: string;
+    readonly routePackage: string;
+  }[];
+  /**
+   * The counterfactual packages the comparison could have measured. The winner is
+   * only unambiguous without a durable winner reference when there is exactly one, so
+   * several candidates fail closed instead of attributing evidence by position.
+   */
+  readonly counterfactualRoutePackages?: readonly string[];
+}): {
+  readonly decisive: boolean;
+  readonly winnerRole: "source" | "counterfactual" | null;
+  readonly routePackage: string | null;
+} {
+  const outcome = input.comparisonOutcome;
+  if (!isDecisiveLearningOutcome(outcome)) {
+    return { decisive: false, winnerRole: null, routePackage: null };
+  }
+  const impliedRole: "source" | "counterfactual" =
+    outcome === "source" ? "source" : "counterfactual";
+  const winner = input.members.find((member) => member?.disposition === "positive");
+  const recordedRole = boundedString(winner?.role);
+  const winnerRole: "source" | "counterfactual" =
+    recordedRole === "source" || recordedRole === "counterfactual"
+      ? recordedRole
+      : impliedRole;
+  if (winnerRole === "source") {
+    return { decisive: true, winnerRole, routePackage: boundedString(input.sourceRoutePackage) };
+  }
+  const winnerRef = boundedString(winner?.candidateRef);
+  if (!winnerRef) {
+    const candidates = [
+      ...new Set(
+        (input.counterfactualRoutePackages ?? []).map((value) => boundedString(value)).filter(Boolean),
+      ),
+    ];
+    return {
+      decisive: true,
+      winnerRole,
+      routePackage: candidates.length === 1 ? candidates[0] : null,
+    };
+  }
+  const mapped = input.routePackages?.find((row) => row.endpointId === winnerRef)?.routePackage;
+  return { decisive: true, winnerRole, routePackage: boundedString(mapped, winnerRef) };
+}
 
 /**
  * Derive the learning-capability claim the knowledge boundary demands.
@@ -164,10 +256,34 @@ export function deriveTrackBLearningCapability(input: {
   readonly negative: readonly TrackBLearningEvidenceRow[];
 }): TrackBFinalizedLearningCapability {
   if (input.comparison?.status !== "finalized") return withheldLearningCapability;
-  if (input.comparison?.outcome !== "candidate") return withheldLearningCapability;
+  const outcome = input.comparison?.outcome;
+  if (!isDecisiveLearningOutcome(outcome)) return withheldLearningCapability;
   const groupId = boundedString(input.comparison?.groupId);
   if (!groupId) return withheldLearningCapability;
   if (!input.positive.length || !input.negative.length) return withheldLearningCapability;
+
+  // Fail closed when the durable member dispositions contradict the recorded outcome:
+  // a `source` win must file the source member positive and the counterfactual member
+  // negative. Members without a recorded disposition keep working (older fixtures and
+  // hand-built capability claims), but a contradiction is never learning capability.
+  const dispositioned = input.members.filter(
+    (member) =>
+      typeof member?.disposition === "string" &&
+      (member.disposition === "positive" || member.disposition === "negative"),
+  );
+  if (dispositioned.length > 0) {
+    const expectedWinnerRole = winnerRoleForOutcome(outcome);
+    const winners = dispositioned.filter((member) => member.disposition === "positive");
+    const losers = dispositioned.filter((member) => member.disposition === "negative");
+    if (!winners.length || !losers.length) return withheldLearningCapability;
+    const roleContradicts = winners.some(
+      (member) =>
+        typeof member?.role === "string" &&
+        member.role &&
+        member.role !== expectedWinnerRole,
+    );
+    if (roleContradicts) return withheldLearningCapability;
+  }
 
   const selected = [...input.positive, ...input.negative];
   const selectedByTrialId = new Map<string, TrackBLearningEvidenceRow>();
@@ -214,13 +330,13 @@ export function deriveTrackBLearningCapability(input: {
     finalizedEvaluation: {
       groupId,
       status: "finalized",
-      outcome: "candidate",
+      outcome,
       members: lineage,
     },
     learningEvidence: {
       schemaVersion: "role-model.finalized-evaluation-signal.v1",
       groupId,
-      outcome: "candidate",
+      outcome,
       trialScoreRefs: lineage,
     },
   };

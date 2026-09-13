@@ -5,6 +5,7 @@ import {
   parsePairwiseJudgeResponse,
   redactJudgeExcerpt,
 } from "../src/track-b-shadow-judge.js";
+import { createRouterPairwiseJudge } from "../src/track-b-shadow-judge-dispatch.js";
 
 /**
  * Run 97 RC04 - the judge boundary: bounded, redacted excerpts in, a decisively
@@ -62,4 +63,70 @@ test("run97 rc04 unusable judge responses are rejected instead of defaulting to 
   expect(parsePairwiseJudgeResponse('{"winner":"A"}')).toBeNull();
   expect(parsePairwiseJudgeResponse("")).toBeNull();
   expect(parsePairwiseJudgeResponse(null)).toBeNull();
+});
+
+/**
+ * RC04 live follow-up: the judge dispatch is itself a routed request, so the runtime
+ * captures it. The capture boundary classifies replay output by the documented naming
+ * family (`<replay-prefix><source>-<16 hex>`), and the first judged comparison on
+ * stage used a 24-hex id, so the producer replayed the judge call and amplified. The
+ * judge request id therefore has to stay inside the recognised family.
+ */
+test("run97 rc04 judge dispatches are named in the replay-produced capture family", async () => {
+  const requestIds: string[] = [];
+  const derived: Record<string, unknown>[] = [];
+  const judge = createRouterPairwiseJudge({
+    executeChatCompletions: async (_body, requestId) => {
+      requestIds.push(requestId);
+      return {
+        contentText: '{"winner":"B","confidence":0.9}',
+        routingDecisionId: "decision:judge-1",
+        replayCost: { usd: 0.0005 },
+        responseBytes: 64,
+      };
+    },
+    endpoints: [{ endpointId: "endpoint:judge", modelId: "model:judge" }],
+    taskText: "Fix the failing test.",
+    recordDerivedDispatch: (row) => derived.push(row),
+  });
+  const branch = (role: "source" | "counterfactual") => ({
+    trialId: `trial:${role}`,
+    candidateRef: `endpoint:${role}`,
+    outputRef: `artifact:${role}`,
+    outputDigest: `sha256:${role}`,
+    outputText: `${role} answer`,
+    role,
+  });
+  const decision = await judge?.dispatch({
+    requestId: "run97-rc04-naming",
+    channel: "stage",
+    scope: "tenant:naming",
+    authorizationEpoch: 1,
+    evaluationJobId: "job:naming",
+    judgeEndpointId: "endpoint:judge",
+    source: branch("source"),
+    counterfactual: branch("counterfactual"),
+  });
+  expect(requestIds).toHaveLength(1);
+  expect(requestIds[0]).toMatch(/^replay-judge-[0-9a-f]{16}$/);
+  // A 24-hex suffix would not match the boundary's `<16 hex>` family, which is what let
+  // the judge capture re-enter the pending replay queue on live traffic.
+  expect(requestIds[0]).not.toMatch(/^replay-judge-[0-9a-f]{17,}$/);
+  expect(decision).toEqual({
+    winner: "counterfactual",
+    confidence: 0.9,
+    dispatchReceiptId: `router-judge:${requestIds[0]}`,
+    routerDecisionId: "decision:judge-1",
+    judgeResultRef: expect.stringMatching(/^judge-result:[0-9a-f]{16}$/),
+    judgeEndpointId: "endpoint:judge",
+  });
+  expect(derived).toEqual([
+    {
+      judgeEndpointId: "endpoint:judge",
+      attempt: 1,
+      costMicros: 500,
+      bytes: 64,
+      outcome: "complete",
+    },
+  ]);
 });
