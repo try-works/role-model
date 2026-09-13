@@ -6995,12 +6995,33 @@ export async function runTrackBShadowPipeline(
     const artifactRef = typeof rollout.artifactRef === "string" ? rollout.artifactRef.trim() : "";
     if (trialId && artifactRef) branchGraphRefByTrialId.set(trialId, artifactRef);
   }
+  // RC14: the knowledge boundary proves every reference through the durable artifact
+  // store, so the rows must cite the per-case evidence artifacts the completer persisted
+  // (`persistSupervisedReplayEvaluationCaseReferences`), not the rollout-fact references
+  // that exist only inside the evaluation job JSON. Live evidence: the worker refused
+  // with "authoritative trusted resolver-backed reference proof is required
+  // (reference=artifact:2ff7abe0...)" and those ids were absent from the artifact store.
+  const perCaseEvidenceRefByTrialId = new Map<string, string>();
+  // The per-case references are built in rollout order (source first, then the evaluated
+  // counterfactuals), so the join is by rollout index - a member-order join paired the
+  // winner with the loser's case artifact.
+  completedRollouts.forEach((entry, index) => {
+    const reference = evaluationReferences.perCase[index];
+    const evidenceRef =
+      reference && typeof reference.evidenceRef === "string" ? reference.evidenceRef : "";
+    if (entry.trialId && evidenceRef) {
+      perCaseEvidenceRefByTrialId.set(entry.trialId, evidenceRef);
+    }
+  });
+  const durableEvidenceRefForTrial = (trialId: string, fallback: string): string =>
+    perCaseEvidenceRefByTrialId.get(trialId) ?? fallback;
   const knowledgeEvidenceRow = (row: (typeof positive)[number]) => {
     const graphRef = positive.some((entry) => entry.trialId === row.trialId)
       ? (branchGraphRefByTrialId.get(row.trialId) ?? "")
       : "";
+    const evidenceRef = durableEvidenceRefForTrial(row.trialId, row.evidenceRef);
     return {
-      evidenceRef: row.evidenceRef,
+      evidenceRef,
       score: row.score,
       evidenceKind: graphRef ? "graph" : "evaluation",
       ...(graphRef ? { graphRef, rolloutRef: graphRef } : {}),
@@ -7009,7 +7030,7 @@ export async function runTrackBShadowPipeline(
       trialId: row.trialId,
       scoreId: row.scoreId,
       sourceGroupId: durableComparison.groupId,
-      referenceProof: proofForEvidence(row.evidenceRef),
+      referenceProof: proofForEvidence(evidenceRef),
     };
   };
   let candidate: Record<string, unknown>;

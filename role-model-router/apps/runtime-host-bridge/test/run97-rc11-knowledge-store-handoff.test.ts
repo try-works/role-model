@@ -344,3 +344,26 @@ test("run97 rc11 a shadow candidate is handed to the Knowledge Store and read ba
 });
 
 
+
+test("run97 rc14 knowledge rows cite the durable per-case evidence artifacts", async () => {
+  const invocations: Invocation[] = [];
+  const runtime = {
+    invoke: scriptedRuntime(invocations),
+    listExtensions: () => [{ id: "knowledge-store", lifecycle: "ready" }],
+  };
+  await trackBRuntime
+    .runTrackBShadowPipeline(runtime as never, pipelineInput())
+    .catch(() => null);
+
+  const knowledge = invocations.find((call) => call.id === "knowledge-worker");
+  expect(knowledge).toBeDefined();
+  const group = (knowledge?.value.comparableGroup ?? {}) as Record<string, unknown>;
+  const positive = (group.positive ?? []) as Record<string, unknown>[];
+  const negative = (group.negative ?? []) as Record<string, unknown>[];
+  // The pipeline persists per-case evidence through the artifact store; those are the
+  // references the local resolver can prove. Citing the rollout-fact references left the
+  // knowledge proof unsatisfiable live ("authoritative trusted resolver-backed reference
+  // proof is required (reference=artifact:2ff7abe0...)").
+  expect(positive[0].evidenceRef).toBe("artifact:case-counterfactual");
+  expect(negative[0].evidenceRef).toBe("artifact:case-source");
+});
