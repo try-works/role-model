@@ -4,7 +4,11 @@ import path from "node:path";
 
 import { expect, test } from "vitest";
 
-import { createReplayLedger, replayBudgetWindow } from "../src/track-b-replay-ledger.js";
+import {
+  createReplayLedger,
+  replayBudgetWindow,
+  resolveReplayLedgerLimits,
+} from "../src/track-b-replay-ledger.js";
 
 function tempFile(): { file: string; cleanup: () => void } {
   const dir = mkdtempSync(path.join(os.tmpdir(), "run97-ledger-"));
@@ -17,6 +21,53 @@ function tempFile(): { file: string; cleanup: () => void } {
 test("run97 ledger windows are UTC calendar days", () => {
   expect(replayBudgetWindow(Date.parse("2026-09-12T23:59:59Z"))).toBe("2026-09-12");
   expect(replayBudgetWindow(Date.parse("2026-09-13T00:00:00Z"))).toBe("2026-09-13");
+});
+
+test("run97 ledger limits are operator-configurable with validated overrides", () => {
+  expect(
+    resolveReplayLedgerLimits({
+      ROLE_MODEL_REPLAY_DAILY_COUNTERFACTUALS: "250",
+      ROLE_MODEL_REPLAY_DAILY_DISPATCHES: "750",
+    }),
+  ).toEqual({ counterfactualsPerDay: 250, dispatchesPerDay: 750 });
+  expect(resolveReplayLedgerLimits({})).toEqual({});
+  for (const invalid of ["0", "-1", "abc", "1.5", "9999999999"]) {
+    expect(() =>
+      resolveReplayLedgerLimits({ ROLE_MODEL_REPLAY_DAILY_DISPATCHES: invalid }),
+    ).toThrow();
+  }
+});
+
+test("run97 a configured ceiling replaces the default and is receipted on the window", () => {
+  const { file, cleanup } = tempFile();
+  try {
+    const limits = resolveReplayLedgerLimits({
+      ROLE_MODEL_REPLAY_DAILY_DISPATCHES: "4",
+      ROLE_MODEL_REPLAY_DAILY_COUNTERFACTUALS: "3",
+    });
+    const ledger = createReplayLedger({
+      filePath: file,
+      now: () => Date.parse("2026-09-12T06:00:00Z"),
+      limits,
+    });
+    expect(
+      ledger.reserve({ captureRef: "req-a", policySetDigest: "policy-a", candidateDispatches: 4 })
+        .accepted,
+    ).toBe(true);
+    const refused = ledger.reserve({
+      captureRef: "req-b",
+      policySetDigest: "policy-a",
+      candidateDispatches: 1,
+    });
+    expect(refused.accepted).toBe(false);
+    expect(refused.code).toBe("budget_exhausted");
+    expect(ledger.status()).toMatchObject({
+      counterfactualLimit: 3,
+      dispatchLimit: 4,
+    });
+  } finally {
+    cleanup();
+  }
 });
 
 test("run97 ledger admits up to the daily counterfactual and dispatch ceilings", () => {

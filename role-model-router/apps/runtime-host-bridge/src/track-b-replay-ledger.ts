@@ -104,6 +104,33 @@ function emptyWindow(): WindowRow {
   return { reservations: [], dispatches: [], counterfactuals: [] };
 }
 
+/**
+ * Run 97 R7: the daily ceilings are operator-configurable with safe defaults. The
+ * defaults (100 counterfactuals / 300 dispatches) stay in force unless an operator
+ * sets an explicit, validated ceiling; the effective limits are recorded on every
+ * ledger window so a raised ceiling is receipted and versioned with the accounting
+ * it governed.
+ */
+export function resolveReplayLedgerLimits(
+  env: Readonly<Record<string, string | undefined>> = process.env,
+): Partial<ReplayLedgerLimits> {
+  const read = (name: string): number | undefined => {
+    const raw = env[name]?.trim();
+    if (!raw) return undefined;
+    const value = Number(raw);
+    if (!Number.isSafeInteger(value) || value <= 0 || value > 1_000_000) {
+      throw new Error(`${name} must be a positive integer no greater than 1000000`);
+    }
+    return value;
+  };
+  const counterfactualsPerDay = read("ROLE_MODEL_REPLAY_DAILY_COUNTERFACTUALS");
+  const dispatchesPerDay = read("ROLE_MODEL_REPLAY_DAILY_DISPATCHES");
+  return {
+    ...(counterfactualsPerDay === undefined ? {} : { counterfactualsPerDay }),
+    ...(dispatchesPerDay === undefined ? {} : { dispatchesPerDay }),
+  };
+}
+
 export interface ReplayLedger {
   readonly filePath: string;
   reserve(input: ReplayLedgerReservationInput): ReplayLedgerReservationResult;

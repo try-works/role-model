@@ -45,7 +45,7 @@ import {
   extractSourceOutputText,
   extractTaskInstructionText,
 } from "./track-b-replay-evaluation-criteria.js";
-import { createReplayLedger } from "./track-b-replay-ledger.js";
+import { createReplayLedger, resolveReplayLedgerLimits } from "./track-b-replay-ledger.js";
 import {
   buildReplayPolicySet,
   decideReplayAdmission,
@@ -3186,6 +3186,7 @@ export async function main(): Promise<void> {
           options.scopeId,
           "track-b-replay-ledger.json",
         ),
+        limits: resolveReplayLedgerLimits(),
       });
       const policySet = buildReplayPolicySet();
       const intervalMs = Number(process.env.ROLE_MODEL_AUTO_REPLAY_INTERVAL_MS ?? 30_000);
@@ -3489,6 +3490,7 @@ export async function main(): Promise<void> {
               options.scopeId,
               "track-b-replay-ledger.json",
             ),
+            limits: resolveReplayLedgerLimits(),
           });
           const replayLedgerStatus = replayLedger.status();
           const admission = decideReplayAdmission({
