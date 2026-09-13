@@ -7177,21 +7177,22 @@ export async function runTrackBShadowPipeline(
         : `contract:${candidateId}`;
     try {
       const written = (await runtime.invoke("knowledge-store", {
-        ...envelope("knowledge:write", {
-          payload: {
-            value: {
-              type: "learned_experience_candidate",
-              version: 1,
-              scope: input.scope,
-              artifactRef: experienceTextRef,
-              provenance: `evaluation-comparison:${String(
-                durableComparison.groupId ?? `comparison:${input.requestId}`,
-              )}`,
-              taskType: "task:route-selection",
-              sensitivity: "reviewed_shadow_candidate",
-            },
+        ...envelope("knowledge:write", {}),
+        // The knowledge-store extension reads `envelope.payload`, so the document travels
+        // at the envelope's top level (the post-observation path does the same).
+        payload: {
+          value: {
+            type: "learned_experience_candidate",
+            version: 1,
+            scope: input.scope,
+            artifactRef: experienceTextRef,
+            provenance: `evaluation-comparison:${String(
+              durableComparison.groupId ?? `comparison:${input.requestId}`,
+            )}`,
+            taskType: "task:route-selection",
+            sensitivity: "reviewed_shadow_candidate",
           },
-        }),
+        },
       })) as Record<string, unknown> | null;
       const knowledgeDocumentId =
         written && typeof written.id === "string" && written.id ? written.id : null;
@@ -7199,9 +7200,8 @@ export async function runTrackBShadowPipeline(
         throw new Error("knowledge store did not return a durable document id");
       }
       const readBack = (await runtime.invoke("knowledge-store", {
-        ...envelope("knowledge:read", {
-          payload: { id: knowledgeDocumentId, scope: input.scope },
-        }),
+        ...envelope("knowledge:read", {}),
+        payload: { id: knowledgeDocumentId, scope: input.scope },
       })) as Record<string, unknown> | null;
       (candidate as Record<string, unknown>).knowledgeStoreHandoff = {
         schemaVersion: "role-model.knowledge-store-handoff.v1",

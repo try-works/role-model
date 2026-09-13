@@ -18,6 +18,7 @@ interface Invocation {
   readonly id: string;
   readonly capability: string;
   readonly value: Record<string, unknown>;
+  readonly envelope: Record<string, unknown>;
 }
 
 const referenceDigest = (reference: string) =>
@@ -28,7 +29,7 @@ function scriptedRuntime(invocations: Invocation[]) {
   return async (id: string, envelope: Record<string, unknown>) => {
     const capability = String(envelope.capability ?? "");
     const value = (envelope.value ?? {}) as Record<string, unknown>;
-    invocations.push({ id, capability, value });
+    invocations.push({ id, capability, value, envelope });
     if (id === "replay-core") {
       return {
         digest: "sha256:replay-plan",
@@ -324,7 +325,7 @@ test("run97 rc11 a shadow candidate is handed to the Knowledge Store and read ba
     (call) => call.id === "knowledge-store" && call.capability === "knowledge:write",
   );
   expect(writes).toHaveLength(1);
-  const payload = (writes[0].value.payload ?? {}) as Record<string, unknown>;
+  const payload = (writes[0].envelope.payload ?? {}) as Record<string, unknown>;
   const document = (payload.value ?? {}) as Record<string, unknown>;
   expect(document).toMatchObject({
     type: "learned_experience_candidate",
@@ -338,7 +339,7 @@ test("run97 rc11 a shadow candidate is handed to the Knowledge Store and read ba
     (call) => call.id === "knowledge-store" && call.capability === "knowledge:read",
   );
   expect(reads).toHaveLength(1);
-  expect((reads[0].value.payload ?? {}) as Record<string, unknown>).toMatchObject({
+  expect((reads[0].envelope.payload ?? {}) as Record<string, unknown>).toMatchObject({
     id: "knowledge:rc11",
   });
 });
@@ -367,3 +368,4 @@ test("run97 rc14 knowledge rows cite the durable per-case evidence artifacts", a
   expect(positive[0].evidenceRef).toBe("artifact:case-counterfactual");
   expect(negative[0].evidenceRef).toBe("artifact:case-source");
 });
+
