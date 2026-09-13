@@ -6434,12 +6434,26 @@ export async function runTrackBShadowPipeline(
   ) {
     throw new Error("finalized trajectory signals must retain replay provenance");
   }
-  const linkedTrialScoreRefs = completedRollouts.map(({ trialId, scoreId, score }) => ({
-    trialId,
-    scoreId,
-    score,
-    confidence: 1,
+  // The durable comparison is authoritative for which trial/score pairs the
+  // boundary will validate; a re-scored in-memory set can carry different ids after
+  // a restart. Signal lineage therefore cites the durable members.
+  const durableTrialScoreRefs = (Array.isArray(durableComparison.members)
+    ? (durableComparison.members as Record<string, unknown>[])
+    : []
+  ).map((member) => ({
+    trialId: String(member.trialId ?? ""),
+    scoreId: String(member.scoreId ?? ""),
+    score: Number(member.score ?? 0),
+    confidence: Number(member.confidence ?? 1),
   }));
+  const linkedTrialScoreRefs = durableTrialScoreRefs.length
+    ? durableTrialScoreRefs
+    : completedRollouts.map(({ trialId, scoreId, score }) => ({
+        trialId,
+        scoreId,
+        score,
+        confidence: 1,
+      }));
   const knowledgeSignalRefs = signalRecord.signals.map((signal) => {
     const record = signal as Record<string, unknown>;
     const lineage =
@@ -6466,9 +6480,7 @@ export async function runTrackBShadowPipeline(
       evidenceRef: record.evidenceRef,
       routePackage: record.routePackage,
       evaluationId: record.evaluationId ?? durableComparison.groupId,
-      trialScoreRefs: Array.isArray(record.trialScoreRefs)
-        ? record.trialScoreRefs
-        : linkedTrialScoreRefs,
+      trialScoreRefs: linkedTrialScoreRefs,
       lineage,
     };
     if (
@@ -6497,12 +6509,7 @@ export async function runTrackBShadowPipeline(
     }
     return compact;
   });
-  const finalizedTrialScoreRefs = completedRollouts.map(({ trialId, scoreId, score }) => ({
-    trialId,
-    scoreId,
-    score,
-    confidence: 1,
-  }));
+  const finalizedTrialScoreRefs = linkedTrialScoreRefs;
   const sourceGeneration = createHash("sha256")
     .update(
       JSON.stringify(
