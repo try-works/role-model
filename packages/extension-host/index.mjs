@@ -126,6 +126,12 @@ class ProcessWorker {
         this.child.kill();
       }
     };
+    // A worker that dies or closes its pipes makes the host->worker socket emit an
+    // asynchronous `error` (EPIPE). Without a listener Node raises an uncaught
+    // exception and the whole packaged runtime process exits; that killed the Phase 5
+    // proof runtime under real traffic. Pipe errors now degrade the worker instead.
+    this.child.stdin.on("error", (error) => rejectProtocol(error));
+    this.child.stdout.on("error", (error) => rejectProtocol(error));
     const ready = new Promise((resolve, reject) => {
       rejectReady = reject;
       this.child.once("error", reject);
@@ -150,7 +156,11 @@ class ProcessWorker {
             if (!pending) continue;
             this.pending.delete(message.requestId);
             void pending.cleanup?.().catch(() => {});
-            this.child?.stdin.write(this.#encode({ type: "ack", requestId: message.requestId }));
+            try {
+              this.child?.stdin.write(this.#encode({ type: "ack", requestId: message.requestId }));
+            } catch {
+              // The worker already closed its pipe; the pending invoke has settled.
+            }
             if (message.type === "result")
               pending.resolve({ ...message.result, workerPid: this.pid });
             else pending.reject(new Error(message.error));
@@ -235,13 +245,19 @@ class ProcessWorker {
     };
     return new Promise((resolve, reject) => {
       this.pending.set(envelope.requestId, { resolve, reject, cleanup });
-      this.child.stdin.write(frame, (error) => {
-        if (error) {
-          this.pending.delete(envelope.requestId);
-          void cleanup().catch(() => {});
-          reject(error);
-        }
-      });
+      try {
+        this.child.stdin.write(frame, (error) => {
+          if (error) {
+            this.pending.delete(envelope.requestId);
+            void cleanup().catch(() => {});
+            reject(error);
+          }
+        });
+      } catch (error) {
+        this.pending.delete(envelope.requestId);
+        void cleanup().catch(() => {});
+        reject(error);
+      }
     });
   }
   async stop() {
