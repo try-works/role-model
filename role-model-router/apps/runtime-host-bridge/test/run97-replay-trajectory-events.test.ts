@@ -111,3 +111,76 @@ test("run97 trajectory events read the operations readback tool shape", () => {
   expect(types).toContain("tool_loop");
   expect(types).toContain("model_response");
 });
+
+test("run97 replay trajectory events mark a repeated recorded user request as a rephrase", () => {
+  const events = deriveSupervisedReplayTrajectoryEvents({
+    sourceCapture: {
+      requestId: "req-run97-rephrase",
+      capturedAt: "2026-09-13T01:30:00.000Z",
+      rootArtifactId: artifactId("a"),
+      responseArtifactId: artifactId("e"),
+      messages: [
+        { role: "user", content: "fix the failing export test", nodeId: artifactId("f") },
+        { role: "assistant", content: "here is a patch", nodeId: artifactId("1") },
+        { role: "user", content: "fix the failing export test", nodeId: artifactId("2") },
+      ],
+    },
+    counterfactualCaptures: [],
+  });
+  expect(events.map((event) => String(event.type))).toContain("user_rephrase");
+  // The rephrase event must name the recorded message artifact, never the graph root.
+  const rephrase = events.find((event) => String(event.type) === "user_rephrase");
+  expect(String(rephrase?.evidenceRef)).toBe(`artifact:${artifactId("2")}`);
+});
+
+test("run97 replay trajectory events mark a recorded assistant regeneration", () => {
+  const events = deriveSupervisedReplayTrajectoryEvents({
+    sourceCapture: {
+      requestId: "req-run97-regeneration",
+      capturedAt: "2026-09-13T01:35:00.000Z",
+      rootArtifactId: artifactId("a"),
+      responseArtifactId: artifactId("e"),
+      messages: [
+        { role: "user", content: "summarize the incident", nodeId: artifactId("f") },
+        { role: "assistant", content: "first answer", nodeId: artifactId("1") },
+        { role: "assistant", content: "second answer", nodeId: artifactId("2") },
+      ],
+    },
+    counterfactualCaptures: [],
+  });
+  expect(events.map((event) => String(event.type))).toContain("regeneration");
+});
+
+test("run97 replay trajectory events mark recorded user satisfaction and correction", () => {
+  const satisfaction = deriveSupervisedReplayTrajectoryEvents({
+    sourceCapture: {
+      requestId: "req-run97-satisfaction",
+      capturedAt: "2026-09-13T01:40:00.000Z",
+      rootArtifactId: artifactId("a"),
+      responseArtifactId: artifactId("e"),
+      messages: [
+        { role: "user", content: "apply the migration", nodeId: artifactId("f") },
+        { role: "assistant", content: "migration applied", nodeId: artifactId("1") },
+        { role: "user", content: "thanks, that works", nodeId: artifactId("2") },
+      ],
+    },
+    counterfactualCaptures: [],
+  });
+  expect(satisfaction.map((event) => String(event.type))).toContain("satisfaction");
+
+  const correction = deriveSupervisedReplayTrajectoryEvents({
+    sourceCapture: {
+      requestId: "req-run97-correction",
+      capturedAt: "2026-09-13T01:45:00.000Z",
+      rootArtifactId: artifactId("a"),
+      responseArtifactId: artifactId("e"),
+      messages: [
+        { role: "user", content: "apply the migration", nodeId: artifactId("f") },
+        { role: "assistant", content: "migration applied", nodeId: artifactId("1") },
+        { role: "user", content: "no, that is wrong, revert it", nodeId: artifactId("2") },
+      ],
+    },
+    counterfactualCaptures: [],
+  });
+  expect(correction.map((event) => String(event.type))).toContain("user_correction");
+});

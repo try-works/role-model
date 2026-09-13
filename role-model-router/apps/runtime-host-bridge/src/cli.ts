@@ -207,6 +207,29 @@ function assertDistinctDurableReferences(references: readonly string[], label: s
  * evidence locator. The replay callback must not synthesize a user action or
  * provider signal simply to make the learning path appear complete.
  */
+/**
+ * Guidance 12 interaction markers. They are deliberately lexical and bounded: a user
+ * turn that follows an answer and contains one of these phrases is a recorded
+ * satisfaction or correction event, never a semantic-quality judgement.
+ */
+const TRACK_B_SATISFACTION_MARKERS = Object.freeze([
+  "thanks",
+  "thank you",
+  "perfect",
+  "looks good",
+  "that works",
+  "works great",
+]);
+const TRACK_B_CORRECTION_MARKERS = Object.freeze([
+  "no,",
+  "that's wrong",
+  "that is wrong",
+  "incorrect",
+  "not what i",
+  "i said",
+  "revert",
+]);
+
 export function deriveSupervisedReplayTrajectoryEvents(input: {
   readonly sourceCapture: DurableReplayCapture;
   readonly counterfactualCaptures: readonly DurableReplayCapture[];
@@ -362,6 +385,45 @@ export function deriveSupervisedReplayTrajectoryEvents(input: {
       capture.responseArtifactId,
       toolArtifactIds.length + 1,
     );
+    // Guidance 12 defines the interaction half of the signal taxonomy; the recorded
+    // transcript proves those events without interpreting model quality. A repeated
+    // user request is a recorded rephrase, two assistant turns with no user turn
+    // between them are a recorded regeneration, and a bounded marker on the user turn
+    // that follows an answer records satisfaction or a correction. Each event names
+    // the message artifact that carries it.
+    const messages = Array.isArray(capture.messages) ? capture.messages : [];
+    const banner = (value: unknown): string =>
+      typeof value === "string"
+        ? value.trim().toLocaleLowerCase("en-US").replace(/\s+/gu, " ").slice(0, 512)
+        : "";
+    const seenUserText = new Set<string>();
+    let previousRole = "";
+    messages.forEach((rawMessage, messageIndex) => {
+      if (!rawMessage || typeof rawMessage !== "object" || Array.isArray(rawMessage)) return;
+      const message = rawMessage as Record<string, unknown>;
+      const role = typeof message.role === "string" ? message.role : "";
+      const messageArtifactId = message.nodeId ?? message.artifactId;
+      const content = banner(message.content);
+      const sequence = toolArtifactIds.length + 2 + messageIndex;
+      if (role === "user" && content) {
+        const repeatedUserText = content.length >= 8 && seenUserText.has(content);
+        if (content.length >= 8) seenUserText.add(content);
+        if (repeatedUserText) {
+          pushEvent(`rephrase:${messageIndex}`, "user_rephrase", messageArtifactId, sequence);
+        }
+        if (previousRole === "assistant") {
+          if (TRACK_B_SATISFACTION_MARKERS.some((marker) => content.includes(marker))) {
+            pushEvent(`satisfaction:${messageIndex}`, "satisfaction", messageArtifactId, sequence);
+          } else if (TRACK_B_CORRECTION_MARKERS.some((marker) => content.includes(marker))) {
+            pushEvent(`correction:${messageIndex}`, "user_correction", messageArtifactId, sequence);
+          }
+        }
+      }
+      if (role === "assistant" && previousRole === "assistant") {
+        pushEvent(`regeneration:${messageIndex}`, "regeneration", messageArtifactId, sequence);
+      }
+      previousRole = role;
+    });
   });
   const seen = new Set<string>();
   return events
