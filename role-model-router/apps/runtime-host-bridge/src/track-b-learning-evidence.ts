@@ -112,3 +112,116 @@ export function boundedTrackBLearningRefusal(
     reason: (message || "learning step failed").slice(0, 240),
   };
 }
+
+export interface TrackBFinalizedLearningLineageRow {
+  readonly trialId: string;
+  readonly scoreId: string;
+  readonly score: number;
+  readonly confidence: number;
+}
+
+export interface TrackBFinalizedLearningCapability {
+  readonly learningCapable: boolean;
+  readonly finalizedEvaluation: {
+    readonly groupId: string;
+    readonly status: "finalized";
+    readonly outcome: "candidate";
+    readonly members: readonly TrackBFinalizedLearningLineageRow[];
+  } | null;
+  readonly learningEvidence: {
+    readonly schemaVersion: "role-model.finalized-evaluation-signal.v1";
+    readonly groupId: string;
+    readonly outcome: "candidate";
+    readonly trialScoreRefs: readonly TrackBFinalizedLearningLineageRow[];
+  } | null;
+}
+
+const withheldLearningCapability: TrackBFinalizedLearningCapability = {
+  learningCapable: false,
+  finalizedEvaluation: null,
+  learningEvidence: null,
+};
+
+/**
+ * Derive the learning-capability claim the knowledge boundary demands.
+ *
+ * Canonical guidance (`07_knowledge_store_and_knowledge_worker.md`) accepts only
+ * immutable `finalized` rollout groups whose members are comparable under the
+ * recorded policy and whose scorer provenance is complete. The marker therefore
+ * has to be derived from the durable comparison readback joined to the evidence
+ * rows actually handed to the consumer: membership comes from the comparison, the
+ * trial/score lineage is completed from the selected rows, and anything incomplete
+ * withholds the claim instead of asserting it.
+ */
+export function deriveTrackBLearningCapability(input: {
+  readonly comparison: {
+    readonly groupId?: unknown;
+    readonly status?: unknown;
+    readonly outcome?: unknown;
+  };
+  readonly members: readonly Record<string, unknown>[];
+  readonly positive: readonly TrackBLearningEvidenceRow[];
+  readonly negative: readonly TrackBLearningEvidenceRow[];
+}): TrackBFinalizedLearningCapability {
+  if (input.comparison?.status !== "finalized") return withheldLearningCapability;
+  if (input.comparison?.outcome !== "candidate") return withheldLearningCapability;
+  const groupId = boundedString(input.comparison?.groupId);
+  if (!groupId) return withheldLearningCapability;
+  if (!input.positive.length || !input.negative.length) return withheldLearningCapability;
+
+  const selected = [...input.positive, ...input.negative];
+  const selectedByTrialId = new Map<string, TrackBLearningEvidenceRow>();
+  for (const row of selected) {
+    const trialId = boundedString(row?.trialId);
+    const scoreId = boundedString(row?.scoreId);
+    if (!trialId || !scoreId || !Number.isFinite(row?.score)) {
+      return withheldLearningCapability;
+    }
+    selectedByTrialId.set(trialId, { ...row, trialId, scoreId });
+  }
+
+  const lineage: TrackBFinalizedLearningLineageRow[] = [];
+  for (const member of input.members) {
+    const trialId = boundedString(member?.trialId);
+    if (!trialId) return withheldLearningCapability;
+    const scoreId = boundedString(member?.scoreId, selectedByTrialId.get(trialId)?.scoreId ?? "");
+    if (!scoreId) return withheldLearningCapability;
+    const rawScore = Number(member?.score);
+    const score = Number.isFinite(rawScore)
+      ? rawScore
+      : Number(selectedByTrialId.get(trialId)?.score);
+    if (!Number.isFinite(score)) return withheldLearningCapability;
+    const rawConfidence = Number(member?.confidence);
+    lineage.push({
+      trialId,
+      scoreId,
+      score,
+      confidence: Number.isFinite(rawConfidence) && rawConfidence > 0 ? rawConfidence : 1,
+    });
+  }
+  if (!lineage.length) return withheldLearningCapability;
+  const lineageKeys = new Set(lineage.map((row) => `${row.trialId}\u0000${row.scoreId}`));
+  if (
+    selected.some(
+      (row) => !lineageKeys.has(`${boundedString(row?.trialId)}\u0000${boundedString(row?.scoreId)}`),
+    )
+  ) {
+    return withheldLearningCapability;
+  }
+
+  return {
+    learningCapable: true,
+    finalizedEvaluation: {
+      groupId,
+      status: "finalized",
+      outcome: "candidate",
+      members: lineage,
+    },
+    learningEvidence: {
+      schemaVersion: "role-model.finalized-evaluation-signal.v1",
+      groupId,
+      outcome: "candidate",
+      trialScoreRefs: lineage,
+    },
+  };
+}

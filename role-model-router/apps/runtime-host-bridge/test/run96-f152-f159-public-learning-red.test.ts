@@ -683,4 +683,42 @@ describe("Run 96 Addendum 27 public learning boundaries", () => {
       ]),
     );
   });
+
+  test("F160: the knowledge consumer input declares durable learning capability", async () => {
+    // The knowledge worker refuses any eval-consumer input whose top-level
+    // `learningCapable` marker is absent, so the pipeline has to derive that
+    // marker (with its finalized lineage) from the durable comparison readback.
+    const harness = createShadowHarness();
+    await runTrackBShadowPipeline(harness.runtime, createShadowInput());
+    const knowledgeInput = harness.knowledgeInputs[0];
+    expect(knowledgeInput?.learningCapable).toBe(true);
+    const finalizedEvaluation = knowledgeInput?.finalizedEvaluation as
+      | Record<string, unknown>
+      | undefined;
+    expect(finalizedEvaluation).toMatchObject({
+      groupId: "comparison:run96",
+      status: "finalized",
+      outcome: "candidate",
+    });
+    const finalizedMembers = (finalizedEvaluation?.members ?? []) as Record<string, unknown>[];
+    expect(finalizedMembers.length).toBeGreaterThan(1);
+    expect(
+      finalizedMembers.every(
+        (member) =>
+          typeof member.trialId === "string" &&
+          member.trialId &&
+          typeof member.scoreId === "string" &&
+          member.scoreId,
+      ),
+    ).toBe(true);
+    const learningEvidence = knowledgeInput?.learningEvidence as
+      | Record<string, unknown>
+      | undefined;
+    expect(learningEvidence).toMatchObject({
+      schemaVersion: "role-model.finalized-evaluation-signal.v1",
+      groupId: "comparison:run96",
+      outcome: "candidate",
+    });
+    expect(learningEvidence?.trialScoreRefs).toHaveLength(finalizedMembers.length);
+  });
 });
