@@ -7123,6 +7123,69 @@ export async function runTrackBShadowPipeline(
     typeof (candidate as Record<string, unknown>).id === "string"
       ? ((candidate as Record<string, unknown>).id as string)
       : null;
+  // RC11 (KW-F): `knowledge-store` is a hard dependency of `knowledge-worker`
+  // (`guidance/24` / `extension-dependencies.json`) and TB10 requires the successful
+  // Knowledge Store handoff. The worker persists the candidate in its own table; the
+  // durable knowledge authority must receive it as a Store document, or knowledge never
+  // outlives the worker. Failures degrade the handoff with a bounded receipt instead of
+  // failing the replay.
+  if (candidateId) {
+    const learned = (candidate as Record<string, unknown>).learnedExperienceCandidate;
+    const learnedRecord =
+      learned && typeof learned === "object" && !Array.isArray(learned)
+        ? (learned as Record<string, unknown>)
+        : null;
+    const experienceTextRef =
+      typeof learnedRecord?.experienceTextRef === "string" && learnedRecord.experienceTextRef
+        ? learnedRecord.experienceTextRef
+        : `contract:${candidateId}`;
+    try {
+      const written = (await runtime.invoke("knowledge-store", {
+        ...envelope("knowledge:write", {
+          payload: {
+            value: {
+              type: "learned_experience_candidate",
+              version: 1,
+              scope: input.scope,
+              artifactRef: experienceTextRef,
+              provenance: `evaluation-comparison:${String(
+                durableComparison.groupId ?? `comparison:${input.requestId}`,
+              )}`,
+              taskType: "task:route-selection",
+              sensitivity: "reviewed_shadow_candidate",
+            },
+          },
+        }),
+      })) as Record<string, unknown> | null;
+      const knowledgeDocumentId =
+        written && typeof written.id === "string" && written.id ? written.id : null;
+      if (!knowledgeDocumentId) {
+        throw new Error("knowledge store did not return a durable document id");
+      }
+      const readBack = (await runtime.invoke("knowledge-store", {
+        ...envelope("knowledge:read", {
+          payload: { id: knowledgeDocumentId, scope: input.scope },
+        }),
+      })) as Record<string, unknown> | null;
+      (candidate as Record<string, unknown>).knowledgeStoreHandoff = {
+        schemaVersion: "role-model.knowledge-store-handoff.v1",
+        id: knowledgeDocumentId,
+        state: typeof readBack?.state === "string" ? readBack.state : null,
+        experienceTextRef,
+      };
+    } catch (error) {
+      console.error(
+        `[run97] learning degraded knowledge-store:${input.requestId} ${String(
+          (error as { message?: unknown })?.message ?? error,
+        ).slice(0, 200)}`,
+      );
+      (candidate as Record<string, unknown>).knowledgeStoreHandoff = {
+        schemaVersion: "role-model.knowledge-store-handoff.v1",
+        degraded: true,
+        reason: String((error as { message?: unknown })?.message ?? error).slice(0, 200),
+      };
+    }
+  }
   if (candidateId && input.contractStateRoot) {
     try {
       contractEmissions.push(
