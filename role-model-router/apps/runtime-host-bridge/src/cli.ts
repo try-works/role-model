@@ -3380,6 +3380,7 @@ export async function main(): Promise<void> {
             authorizationEpoch: 1,
             operationsEndpoint: trackBOperationsEndpoint,
             operationsToken: trackBOperationsToken,
+            contractStateRoot: options.runtimeStateRoot,
           })
         : null;
       activeLearningSummaryReader = postObservationOperations

@@ -20,6 +20,17 @@ const CONTRACT_ID_FIELDS: Readonly<Record<string, string>> = Object.freeze({
   RouteLearningValidationReceiptV1: "receiptId",
   RoutePackageAttributionV1: "attributionId",
   RoutePackageActivationReceiptV1: "receiptId",
+  ArtifactGraphNodeV2: "nodeId",
+  ArtifactGraphEdgeV2: "edgeId",
+  ContentArtifactV2: "artifactId",
+  ContentReferenceV1: "referenceId",
+  GraphLeaseV1: "leaseId",
+  PerformanceSampleV2: "sampleId",
+  PerformanceRollupV2: "rollupId",
+  CaptureDegradationReceiptV1: "receiptId",
+  TraceGraphProjectionV2: "projectionId",
+  RoutingTrainingExampleV2: "exampleId",
+  ExportProjectionV2: "exportId",
 });
 
 const safeFilePart = (value: string): string =>

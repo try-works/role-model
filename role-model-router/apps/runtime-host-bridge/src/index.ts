@@ -17774,6 +17774,7 @@ export async function createRuntimeBridgeBackend(
       "track-b-production-bridge.json",
     ),
     catalog: [],
+    contractStateRoot: options.runtimeStateRoot,
   });
   const recordDirectContribution = async (input: {
     readonly requestId: string;

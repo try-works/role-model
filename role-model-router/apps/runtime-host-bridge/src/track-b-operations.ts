@@ -1,6 +1,7 @@
 import { createHash, createHmac, createPublicKey, timingSafeEqual, verify } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { emitCaptureGraphContracts } from "./track-b-capture-contracts.js";
 import {
   type KwSessionWorker,
   clearKwPromptInjectSessionsForTests,
@@ -1091,6 +1092,7 @@ export function createTrackBOperations({
   operationsTimeoutMs = 8_000,
   contributionDeliveryTimeoutMs = DEFAULT_CONTRIBUTION_DELIVERY_TIMEOUT_MS,
   extensionRuntime,
+  contractStateRoot,
 }: {
   readonly statePath: string;
   readonly catalog: readonly Record<string, unknown>[];
@@ -1109,6 +1111,11 @@ export function createTrackBOperations({
     listExtensions(): readonly unknown[] | Promise<readonly unknown[]>;
     mutateExtension(input: Record<string, unknown>): unknown | Promise<unknown>;
   };
+  /**
+   * Runtime state root. When present, each recorded capture also persists the
+   * documented v1.1 graph contracts (nodes and edges) for its recorded artifacts.
+   */
+  readonly contractStateRoot?: string;
 }) {
   const boundedContributionDeliveryTimeoutMs = Math.max(
     operationsTimeoutMs,
@@ -2120,7 +2127,45 @@ export function createTrackBOperations({
       const url = new URL(operationsEndpoint);
       if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
         throw new Error("local route capture requires a loopback operations boundary");
-      return requestPrivate("capture/route", { method: "POST", body: input });
+      const result = await requestPrivate("capture/route", { method: "POST", body: input });
+      if (contractStateRoot && result && typeof result === "object" && !Array.isArray(result)) {
+        const capture = result as Record<string, unknown>;
+        const scopeId = String(capture.scope ?? scope ?? "");
+        if (scopeId) {
+          try {
+            emitCaptureGraphContracts({
+              stateRoot: contractStateRoot,
+              graph: {
+                capture,
+                request: input,
+                channel: runtimeChannel,
+                scopeId,
+                ...(typeof capture.branchRootRef === "string" &&
+                typeof capture.branchId === "string"
+                  ? {
+                      branch: {
+                        kind:
+                          String(capture.branchKind ?? "") === "counterfactual"
+                            ? ("counterfactual" as const)
+                            : ("replay" as const),
+                        branchId: capture.branchId,
+                        sourceNodeId: capture.branchRootRef,
+                      },
+                    }
+                  : {}),
+              },
+            });
+          } catch (error) {
+            // Capture graph contracts are evidence, never routing-critical.
+            console.error(
+              `[run97] capture contract emission degraded:${String(input.requestId ?? "")} ${String(
+                (error as { message?: unknown })?.message ?? error,
+              ).slice(0, 200)}`,
+            );
+          }
+        }
+      }
+      return result;
     },
     async measureNoRichCaptureBaseline(input: Record<string, unknown>): Promise<unknown> {
       if (!operationsEndpoint)
