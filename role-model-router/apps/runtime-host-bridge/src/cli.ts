@@ -810,6 +810,8 @@ export function createSupervisedReplayEvaluationCompleter(input: {
   readonly getDispatched: (endpointId: string) => SupervisedReplayCompletionDispatch | undefined;
   readonly evaluationCriteria: Readonly<Record<string, unknown>>;
   readonly evaluationCriteriaDigest: string;
+  /** Host runtime state root; the completer persists the v1.1 route-learning contracts there. */
+  readonly contractStateRoot?: string;
   readonly runPipeline?: typeof runTrackBShadowPipeline;
 }) {
   const runPipeline = input.runPipeline ?? runTrackBShadowPipeline;
@@ -1160,6 +1162,7 @@ export function createSupervisedReplayEvaluationCompleter(input: {
             `${evaluationJobId}:${createHash("sha256").update(candidate.endpointId).digest("hex").slice(0, 12)}`,
         ),
       ],
+      ...(input.contractStateRoot ? { contractStateRoot: input.contractStateRoot } : {}),
       identity: {
         endpointId: input.sourceEndpointId,
         modelId: input.sourceModelId,
@@ -3987,6 +3990,7 @@ export async function main(): Promise<void> {
                 Record<string, unknown>
               >,
               evaluationCriteriaDigest,
+              contractStateRoot: options.runtimeStateRoot,
             }),
           });
           // R5/R12: the receipt is the automatic producer's only view of the durable

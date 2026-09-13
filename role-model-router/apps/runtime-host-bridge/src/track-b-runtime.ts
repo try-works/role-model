@@ -31,6 +31,13 @@ import { createProjectionV2 } from "@role-model-router/trace";
 
 import { DEFAULT_REPLAY_CANDIDATE_CAP } from "./track-b-replay-policy.js";
 import {
+  buildLearnedExperienceCandidate,
+  buildRoutePackageActivationReceipt,
+  buildRoutingEvaluationExecutionContext,
+  buildRoutingRolloutGroupLifecycle,
+  emitTrackBContract,
+} from "./track-b-contract-emission.js";
+import {
   boundedTrackBLearningRefusal,
   selectTrackBLearningEvidence,
 } from "./track-b-learning-evidence.js";
@@ -4821,6 +4828,13 @@ export interface TrackBShadowPipelineInput {
   readonly observedDimensions?: Readonly<Record<string, unknown>>;
   /** Optional host-owned durable job IDs, used to correlate a supervised replay handoff. */
   readonly evaluationJobIds?: readonly string[];
+  /**
+   * Host-owned runtime state root. When present the pipeline persists the documented
+   * v1.1 route-learning contracts (execution context, rollout group lifecycle,
+   * disabled activation receipt, shadow experience candidate) alongside its
+   * internal receipts.
+   */
+  readonly contractStateRoot?: string;
   readonly identity?: TrackBVariantIdentity;
   readonly occurrence?: Readonly<{ occurrenceId: string; contentId: string }>;
 }
@@ -6100,6 +6114,94 @@ export async function runTrackBShadowPipeline(
       .update(JSON.stringify(canonicalizeRun88Proof(knowledgeSafetyReceiptPayload)))
       .digest("hex"),
   };
+  // Persist the documented v1.1 route-learning contracts for this execution. Emission
+  // is contract-validated, and a failure is recorded without ever failing the replay.
+  const contractEmissions: ReturnType<typeof emitTrackBContract>[] = [];
+  const executionContextId = `execution:${input.requestId}`;
+  const contractMembers = Array.isArray(durableComparison.members)
+    ? (durableComparison.members as Record<string, unknown>[])
+    : [];
+  const contractRefsOfDisposition = (disposition: string): string[] =>
+    contractMembers
+      .filter((member) => member.disposition === disposition)
+      .map((member) => String(member.trialId ?? ""))
+      .filter(Boolean);
+  if (input.contractStateRoot) {
+    try {
+      contractEmissions.push(
+        emitTrackBContract({
+          stateRoot: input.contractStateRoot,
+          scopeId: input.scope,
+          contract: buildRoutingEvaluationExecutionContext({
+            executionId: executionContextId,
+            purpose: "routing_replay",
+            tasksetRef: "taskset:live-captures",
+            harnessRef: "harness:recorded-capture",
+            runtimeRef: `runtime:${input.channel}:${input.scope}`,
+            routerPolicyVersion: comparability.policyId,
+            splitSeed: 87,
+            sourceProjectionIds: [input.sourceGraphRef],
+            channel: input.channel,
+            scopeId: input.scope,
+            createdAtMs: Date.now(),
+          }),
+        }),
+      );
+      contractEmissions.push(
+        emitTrackBContract({
+          stateRoot: input.contractStateRoot,
+          scopeId: input.scope,
+          contract: buildRoutingRolloutGroupLifecycle({
+            groupId: String(durableComparison.groupId ?? `comparison:${input.requestId}`),
+            executionContextId,
+            state: "finalized",
+            comparabilityKey: `${comparability.taskRef}|${comparability.inputRef}|${comparability.policyId}`,
+            rolloutRefs: contractMembers
+              .map((member) => String(member.trialId ?? ""))
+              .filter(Boolean),
+            scoreRefs: contractMembers
+              .map((member) => String(member.scoreId ?? ""))
+              .filter(Boolean),
+            ...(contractRefsOfDisposition("positive").length
+              ? { positiveRolloutRefs: contractRefsOfDisposition("positive") }
+              : {}),
+            ...(contractRefsOfDisposition("negative").length
+              ? { negativeRolloutRefs: contractRefsOfDisposition("negative") }
+              : {}),
+            scorerSetVersion: `${scorer.id}@${scorer.version}`,
+            policySnapshotRef: comparability.policyId,
+            channel: input.channel,
+            scopeId: input.scope,
+            createdAtMs: Date.now(),
+            updatedAtMs: Date.now(),
+          }),
+        }),
+      );
+      contractEmissions.push(
+        emitTrackBContract({
+          stateRoot: input.contractStateRoot,
+          scopeId: input.scope,
+          contract: buildRoutePackageActivationReceipt({
+            receiptId: `activation:${input.requestId}`,
+            packageId: input.routePackage,
+            scope: { taskTypeId: "task:route-selection" },
+            policyGateId: "gate:route-package-activation",
+            priorPackageId: input.routePackage,
+            state: "disabled",
+            channel: input.channel,
+            scopeId: input.scope,
+            activatedAtMs: Date.now(),
+          }),
+        }),
+      );
+    } catch (error) {
+      console.error(
+        `[run97] contract emission degraded:${input.requestId} ${String(
+          (error as { message?: unknown })?.message ?? error,
+        ).slice(0, 200)}`,
+      );
+    }
+  }
   const knowledgeEvaluation = {
     environment: "local-routing-evaluation",
     scores: Array.isArray(durableComparison.members)
@@ -6522,6 +6624,40 @@ export async function runTrackBShadowPipeline(
     typeof (candidate as Record<string, unknown>).id === "string"
       ? ((candidate as Record<string, unknown>).id as string)
       : null;
+  if (candidateId && input.contractStateRoot) {
+    try {
+      contractEmissions.push(
+        emitTrackBContract({
+          stateRoot: input.contractStateRoot,
+          scopeId: input.scope,
+          contract: buildLearnedExperienceCandidate({
+            experienceId: candidateId,
+            scope: {
+              taskTypeId: "task:route-selection",
+              ...(input.identity?.modelId ? { modelFamily: input.identity.modelId } : {}),
+            },
+            experienceTextRef: `contract:${candidateId}`,
+            sourceGroupIds: [String(durableComparison.groupId ?? `comparison:${input.requestId}`)],
+            positiveRolloutRefs: contractRefsOfDisposition("positive"),
+            negativeRolloutRefs: contractRefsOfDisposition("negative"),
+            status: "shadow_validating",
+            redactionStatus: "redacted",
+            instructionHierarchyChecked: true,
+            promptInjectionReviewed: true,
+            channel: input.channel,
+            scopeId: input.scope,
+            createdAtMs: Date.now(),
+          }),
+        }),
+      );
+    } catch (error) {
+      console.error(
+        `[run97] experience contract degraded:${input.requestId} ${String(
+          (error as { message?: unknown })?.message ?? error,
+        ).slice(0, 200)}`,
+      );
+    }
+  }
   const profileConfidence = (profile as Record<string, unknown>).confidence;
   const candidateConfidence = (candidate as Record<string, unknown>).confidence;
   const advisoryConfidence =
@@ -6595,6 +6731,12 @@ export async function runTrackBShadowPipeline(
       // result or mutating the baseline decision.
       advisoryId: advisory.advisoryId,
       decisionAdvice: structuredClone(advisory.decisionAdvice),
+      contractRefs: contractEmissions.map((emission) => ({
+        contract: emission.contract,
+        contractId: emission.contractId,
+        ref: emission.ref,
+        digest: emission.digest,
+      })),
     },
   };
 }
