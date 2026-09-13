@@ -1280,11 +1280,90 @@ export interface ReplayIntentClaim {
   readonly deadlineAtMs: number | null;
 }
 
+/**
+ * Run 98 R2 (RC18): the scheduler reports an elapsed intent deadline with a typed marker
+ * (`{ jobId, expired: true }`) rather than a full claim receipt. Representing it in the
+ * type keeps callers from mistaking it for a malformed receipt.
+ */
+export interface ReplayIntentExpired {
+  readonly jobId: string;
+  readonly expired: true;
+}
+
+export type ReplayIntentClaimOutcome =
+  | { readonly state: "claimed"; readonly claim: ReplayIntentClaim }
+  | { readonly state: "empty" }
+  | {
+      readonly state: "expired";
+      readonly reason: "scheduler_intent_expired";
+      readonly attempts: number;
+      readonly intentId: string;
+    };
+
+/**
+ * Run 98 R2 (RC18): enqueue the intent, claim it, and recover exactly once from an expired
+ * intent by enqueueing a *fresh* intent id that still references the same durable replay
+ * job. Replay Core's job identity is idempotent, so the recovery never duplicates provider
+ * work; the scheduler's dead-lettered intent stays terminal.
+ */
+export async function claimReplayIntentWithRecovery(input: {
+  readonly scheduler: ReplayIntentScheduler;
+  readonly replayJobId: string;
+  readonly scope: string;
+  readonly deadlineAtMs: number;
+  readonly maxAttempts?: number;
+}): Promise<ReplayIntentClaimOutcome> {
+  const maxAttempts = Number.isSafeInteger(input.maxAttempts) && (input.maxAttempts ?? 0) > 0
+    ? Number(input.maxAttempts)
+    : 2;
+  const baseIntentId = `replay-intent:${input.replayJobId}`;
+  let lastIntentId = baseIntentId;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const intentId = attempt === 1 ? baseIntentId : `${baseIntentId}:retry-${attempt - 1}`;
+    lastIntentId = intentId;
+    await input.scheduler.enqueue({
+      jobId: intentId,
+      replayJobId: input.replayJobId,
+      deadlineAtMs: input.deadlineAtMs,
+    });
+    const result = await input.scheduler.claim({ jobId: intentId });
+    if (result === null) return { state: "empty" };
+    if ((result as ReplayIntentExpired).expired === true) continue;
+    const claim = result as ReplayIntentClaim;
+    const invalid: string[] = [];
+    if (typeof claim.jobId !== "string" || !claim.jobId) invalid.push("jobId");
+    if (typeof claim.leaseId !== "string" || !claim.leaseId) invalid.push("leaseId");
+    if (typeof claim.fence !== "number" || !Number.isSafeInteger(claim.fence)) invalid.push("fence");
+    if (typeof claim.attempt !== "number" || !Number.isSafeInteger(claim.attempt)) invalid.push("attempt");
+    if (!claim.payload || typeof claim.payload !== "object") invalid.push("payload");
+    else {
+      if (claim.payload.replayJobId !== input.replayJobId) invalid.push("payload.replayJobId");
+      if (claim.payload.scope !== input.scope) invalid.push("payload.scope");
+    }
+    if (
+      claim.deadlineAtMs !== null
+      && (typeof claim.deadlineAtMs !== "number" || !Number.isSafeInteger(claim.deadlineAtMs))
+    ) {
+      invalid.push("deadlineAtMs");
+    }
+    if (invalid.length > 0) {
+      throw new Error(`replay scheduler claim receipt is invalid: ${invalid.join(", ")}`);
+    }
+    return { state: "claimed", claim };
+  }
+  return {
+    state: "expired",
+    reason: "scheduler_intent_expired",
+    attempts: maxAttempts,
+    intentId: lastIntentId,
+  };
+}
+
 export interface ReplayIntentScheduler {
   enqueue(
     input: Readonly<{ jobId: string; replayJobId: string; deadlineAtMs: number }>,
   ): Promise<{ accepted: boolean }>;
-  claim(input?: Readonly<{ jobId: string }>): Promise<ReplayIntentClaim | null>;
+  claim(input?: Readonly<{ jobId: string }>): Promise<ReplayIntentClaim | ReplayIntentExpired | null>;
   complete(
     input: Readonly<{
       jobId: string;
@@ -1358,26 +1437,39 @@ export function createReplayIntentScheduler(options: {
         input === undefined ? {} : { jobId: input.jobId },
       );
       if (result === null) return null;
+      // Run 98 R2 (RC18): an elapsed intent deadline is a typed scheduler outcome, not a
+      // malformed claim receipt. Pass it through so the caller can recover with a fresh
+      // intent instead of failing the capture with an invalid-receipt error.
+      if (result.expired === true) {
+        if (typeof result.jobId !== "string" || !result.jobId) {
+          throw new Error("replay scheduler claim receipt is invalid: jobId");
+        }
+        return { jobId: result.jobId, expired: true } as const;
+      }
       const payload = result.payload;
       const fence = result.fence;
       const attempt = result.attempt;
       const deadlineAtMs = result.deadlineAtMs;
+      const invalidFields: string[] = [];
+      if (!result.jobId) invalidFields.push("jobId");
+      if (!result.leaseId) invalidFields.push("leaseId");
+      if (typeof fence !== "number" || !Number.isSafeInteger(fence)) invalidFields.push("fence");
+      if (typeof attempt !== "number" || !Number.isSafeInteger(attempt)) invalidFields.push("attempt");
+      if (!payload || typeof payload !== "object" || Array.isArray(payload)) invalidFields.push("payload");
+      else {
+        if ((payload as Record<string, unknown>).scope !== options.scope) invalidFields.push("payload.scope");
+        if (typeof (payload as Record<string, unknown>).replayJobId !== "string") {
+          invalidFields.push("payload.replayJobId");
+        }
+      }
       if (
-        !result.jobId ||
-        !result.leaseId ||
-        typeof fence !== "number" ||
-        !Number.isSafeInteger(fence) ||
-        typeof attempt !== "number" ||
-        !Number.isSafeInteger(attempt) ||
-        !payload ||
-        typeof payload !== "object" ||
-        Array.isArray(payload) ||
-        (payload as Record<string, unknown>).scope !== options.scope ||
-        typeof (payload as Record<string, unknown>).replayJobId !== "string" ||
-        (deadlineAtMs !== null &&
-          (typeof deadlineAtMs !== "number" || !Number.isSafeInteger(deadlineAtMs)))
+        deadlineAtMs !== null &&
+        (typeof deadlineAtMs !== "number" || !Number.isSafeInteger(deadlineAtMs))
       ) {
-        throw new Error("replay scheduler claim receipt is invalid");
+        invalidFields.push("deadlineAtMs");
+      }
+      if (invalidFields.length > 0) {
+        throw new Error(`replay scheduler claim receipt is invalid: ${invalidFields.join(", ")}`);
       }
       return {
         jobId: String(result.jobId),
@@ -1386,10 +1478,10 @@ export function createReplayIntentScheduler(options: {
           scope: options.scope,
         },
         leaseId: String(result.leaseId),
-        fence,
-        attempt,
-        deadlineAtMs: deadlineAtMs === null ? null : deadlineAtMs,
-      };
+        fence: fence as number,
+        attempt: attempt as number,
+        deadlineAtMs: deadlineAtMs === null ? null : (deadlineAtMs as number),
+      } satisfies ReplayIntentClaim;
     },
     async complete(input) {
       if (
@@ -2890,8 +2982,23 @@ export async function runSupervisedReplay(input: {
       }),
     );
     if (input.scheduler) {
-      const schedulerClaim = await input.scheduler.claim({ jobId: `replay-intent:${jobId}` });
-      if (schedulerClaim) {
+      // Run 98 R2 (RC18): recovery completes the same durable replay job, so an elapsed
+      // scheduler intent must not fail the recovery. A fresh intent is claimed when the
+      // previous one expired; a second expiry is reported as a typed scheduler state.
+      const outcome = await claimReplayIntentWithRecovery({
+        scheduler: input.scheduler,
+        replayJobId: jobId,
+        scope: input.scope,
+        deadlineAtMs:
+          Date.now()
+          + (typeof input.budget.deadlineMs === "number"
+            && Number.isSafeInteger(input.budget.deadlineMs)
+            && input.budget.deadlineMs > 0
+            ? input.budget.deadlineMs
+            : 120_000),
+      });
+      if (outcome.state === "claimed") {
+        const schedulerClaim = outcome.claim;
         const receipt = await input.scheduler.complete({
           jobId: schedulerClaim.jobId,
           leaseId: schedulerClaim.leaseId,
@@ -2899,6 +3006,9 @@ export async function runSupervisedReplay(input: {
           result: { replayJobId: jobId, state: "complete" },
         });
         if (!receipt?.completed) return { ...finalized, schedulerState: "completion_not_accepted" };
+      }
+      if (outcome.state === "expired") {
+        return { ...finalized, schedulerState: "intent_expired" };
       }
     }
     return finalized;
@@ -2925,13 +3035,28 @@ export async function runSupervisedReplay(input: {
       typeof created.createdAtMs === "number" && Number.isSafeInteger(created.createdAtMs)
         ? created.createdAtMs
         : Date.now();
-    await input.scheduler.enqueue({
-      jobId: `replay-intent:${jobId}`,
+    // Run 98 R2 (RC18): claim through the recovery helper. An expired intent is replaced by
+    // a fresh intent for the same durable replay job; if that also expires the caller
+    // receives a typed deferral instead of an invalid-receipt failure.
+    const schedulerOutcome = await claimReplayIntentWithRecovery({
+      scheduler: input.scheduler,
       replayJobId: jobId,
+      scope: input.scope,
       deadlineAtMs: createdAtMs + deadlineMs,
     });
-    schedulerClaim = await input.scheduler.claim({ jobId: `replay-intent:${jobId}` });
-    if (schedulerClaim === null) return { jobId, state: "queued", schedulerState: "deferred" };
+    if (schedulerOutcome.state === "empty") {
+      return { jobId, state: "queued", schedulerState: "deferred" };
+    }
+    if (schedulerOutcome.state === "expired") {
+      return {
+        jobId,
+        state: "deferred",
+        schedulerState: "intent_expired",
+        schedulerReason: schedulerOutcome.reason,
+        schedulerAttempts: schedulerOutcome.attempts,
+      };
+    }
+    schedulerClaim = schedulerOutcome.claim;
     if (
       schedulerClaim.payload.replayJobId !== jobId ||
       schedulerClaim.payload.scope !== input.scope
