@@ -1309,6 +1309,18 @@ export function createTrackBOperations({
         },
       );
     },
+    /**
+     * Run 97 RC07 (L2): bounded sweep that moves abandoned replay jobs to a typed
+     * terminal state once their deadline has elapsed. The producer calls it once per
+     * auto-replay tick so a job whose branch append failed and whose capture already
+     * reached terminal ledger evidence cannot live on forever.
+     */
+    async expireStaleReplayJobs(body: Record<string, unknown> = {}): Promise<unknown> {
+      return requestOperator("replay expiration", "operator/replay/expire-stale", {
+        method: "POST",
+        body,
+      });
+    },
     async readReplayJob(jobId: string): Promise<unknown> {
       return requestOperator(
         "replay inspection",

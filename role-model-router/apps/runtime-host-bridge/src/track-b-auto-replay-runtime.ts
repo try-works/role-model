@@ -94,6 +94,12 @@ export interface AutoReplayOperations {
     readonly limit?: number;
   }): Promise<unknown>;
   recordReplayDisposition(input: Record<string, unknown>): Promise<unknown>;
+  /**
+   * Run 97 RC07 (L2): optional bounded sweep that expires replay jobs whose deadline
+   * has elapsed. A runtime whose boundary does not expose the sweep keeps working;
+   * the tick simply reports zero expired jobs.
+   */
+  expireStaleReplayJobs?(input: Record<string, unknown>): Promise<unknown>;
 }
 
 export interface AutoReplayLoopHealth {
@@ -103,6 +109,7 @@ export interface AutoReplayLoopHealth {
   readonly lastOutcome: "idle" | "ok" | "degraded";
   readonly lastError: string | null;
   readonly lastProcessedAtMs: number | null;
+  readonly lastExpiredJobs: number;
 }
 
 export interface AutoReplayLoopStatus extends AutoReplayLoopHealth {
@@ -175,6 +182,7 @@ export function startAutoReplayLoop(input: {
   let lastProcessedAtMs: number | null = null;
   let paused = false;
   let lastDispositions = 0;
+  let lastExpiredJobs = 0;
   let timer: unknown = null;
 
   const pendingCaptures = (value: unknown): readonly AutoReplayCapture[] => {
@@ -260,8 +268,32 @@ export function startAutoReplayLoop(input: {
           window,
         });
       }
-      lastOutcome = "ok";
-      lastError = null;
+      // RC07 (L2): one bounded sweep per tick. A job whose deadline elapsed without
+      // reaching a terminal state is expired with a typed receipt instead of living on
+      // as an orphan the producer will never drive again. A sweep failure degrades this
+      // tick, never the routing path.
+      lastExpiredJobs = 0;
+      let sweepError: string | null = null;
+      if (typeof input.operations.expireStaleReplayJobs === "function") {
+        try {
+          const sweep = (await input.operations.expireStaleReplayJobs({
+            window,
+            policySetDigest: input.policySet.policySetDigest,
+          })) as { readonly expiredCount?: unknown } | null;
+          if (sweep && Number.isSafeInteger(sweep.expiredCount) && Number(sweep.expiredCount) >= 0) {
+            lastExpiredJobs = Number(sweep.expiredCount);
+          }
+        } catch (error) {
+          // The dispositions are already durable, so a failed sweep degrades the tick's
+          // health instead of discarding the work that succeeded.
+          sweepError =
+            error instanceof Error
+              ? `replay expiration sweep failed: ${error.message.slice(0, 200)}`
+              : "replay expiration sweep failed";
+        }
+      }
+      lastOutcome = sweepError ? "degraded" : "ok";
+      lastError = sweepError;
       lastProcessedAtMs = now();
       lastDispositions = result.dispositions.length;
       return result;
@@ -306,13 +338,22 @@ export function startAutoReplayLoop(input: {
       paused = false;
     },
     health() {
-      return { ticks, running, paused, lastOutcome, lastError, lastProcessedAtMs };
+      return {
+        ticks,
+        running,
+        paused,
+        lastOutcome,
+        lastError,
+        lastProcessedAtMs,
+        lastExpiredJobs,
+      };
     },
     status() {
       return {
         ...{ ticks, running, paused, lastOutcome, lastError, lastProcessedAtMs },
         budget: { ...input.ledger.status() },
         lastDispositions,
+        lastExpiredJobs,
       };
     },
   };
