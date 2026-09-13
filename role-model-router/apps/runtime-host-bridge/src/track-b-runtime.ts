@@ -6154,7 +6154,15 @@ export async function runTrackBShadowPipeline(
           contract: buildRoutingRolloutGroupLifecycle({
             groupId: String(durableComparison.groupId ?? `comparison:${input.requestId}`),
             executionContextId,
-            state: "finalized",
+            // A finalized rollout group must carry positive and negative rollout
+            // references. A tie carries neither, so it is recorded as a partial
+            // grouping rather than a fabricated decision.
+            state:
+              durableComparison.outcome === "candidate" || durableComparison.outcome === "source"
+                ? "finalized"
+                : durableComparison.outcome === "tie"
+                  ? "partial"
+                  : "failed",
             comparabilityKey: `${comparability.taskRef}|${comparability.inputRef}|${comparability.policyId}`,
             rolloutRefs: contractMembers
               .map((member) => String(member.trialId ?? ""))

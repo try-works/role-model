@@ -60,7 +60,10 @@ export function emitTrackBContract(input: {
   if (!idField) throw new Error(`unsupported v1.1 contract emission: ${name}`);
   const contractId = String(input.contract[idField] ?? "");
   if (!contractId) throw new Error(`${name} is missing ${idField}`);
-  const directory = path.join(input.stateRoot, input.scopeId, "track-b", "contracts");
+  // The recorded scope id can be a private runtime scope (it contains a colon and is
+  // not a legal Windows path segment); the contract keeps the raw id while the
+  // directory uses a bounded file-safe form.
+  const directory = path.join(input.stateRoot, safeFilePart(input.scopeId), "track-b", "contracts");
   mkdirSync(directory, { recursive: true });
   const filePath = path.join(directory, `${safeFilePart(name)}-${safeFilePart(contractId)}.json`);
   const body = `${JSON.stringify(input.contract, null, 2)}\n`;
