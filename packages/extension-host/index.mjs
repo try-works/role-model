@@ -644,7 +644,16 @@ export class ExtensionHost {
   async #ensureProcess(record) {
     if (record.kind !== "process" || !record.worker.exited) return;
     await this.#recoverExitedProcess(record);
-    if (record.worker.exited) throw new Error("worker restart budget exhausted");
+    if (record.worker.exited) {
+      // Surface the crashed worker's own bounded stderr so the operator can see the
+      // cause instead of only the exhausted restart counter.
+      const detail = String(record.worker.stderr ?? "").trim().replace(/\s+/gu, " ").slice(-600);
+      throw new Error(
+        detail
+          ? `worker restart budget exhausted: ${detail}`
+          : "worker restart budget exhausted",
+      );
+    }
   }
   invoke(id, envelope) {
     if (!this.#enabled) return Promise.reject(new Error("extension discovery disabled"));
