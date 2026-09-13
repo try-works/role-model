@@ -2709,6 +2709,13 @@ export async function runSupervisedReplay(input: {
   readonly budget: Readonly<Record<string, unknown>>;
   readonly leaseOwner: string;
   readonly leaseMs: number;
+  /**
+   * Run 97 RC09: the replay-core worker externalizes results above the canonical inline
+   * cap, so the host needs the runtime state root and scope to read a large create-job
+   * receipt back instead of treating the transfer marker as the job identity.
+   */
+  readonly runtimeStateRoot?: string;
+  readonly runtimeScopeId?: string;
   readonly scheduler?: ReplayIntentScheduler;
   /** Creates the immutable replay branch root before a paid provider dispatch. */
   readonly prepareBranch: (request: Readonly<Record<string, unknown>>) => Promise<{
@@ -2803,7 +2810,7 @@ export async function runSupervisedReplay(input: {
       throw new Error("completed replay is missing a valid durable evaluation result");
     }
   };
-  const created = await input.runtime.invoke(
+  const createdRaw = await input.runtime.invoke(
     "replay-core",
     controlEnvelope("replay:create-job", {
       idempotencyKey: input.idempotencyKey,
@@ -2816,6 +2823,21 @@ export async function runSupervisedReplay(input: {
       sourceAttestation: structuredClone(input.sourceAttestation),
     }),
   );
+  // RC09: a replay job record with several candidates exceeds the canonical inline cap,
+  // so the worker answers with `transferState: "externalized"`. Reading the marker as the
+  // job identity reported `Replay Core did not return a durable replay job ID` while the
+  // job itself was already durable (observed live on stage v44: three such captures had
+  // complete replay jobs).
+  const created =
+    decodeExtensionBusinessResult({
+      result: createdRaw,
+      extensionId: "replay-core",
+      ...(input.runtimeStateRoot ? { stateRoot: input.runtimeStateRoot } : {}),
+      scopeId: input.runtimeScopeId ?? input.scope,
+    }) ??
+    (createdRaw && typeof createdRaw === "object" && !Array.isArray(createdRaw)
+      ? (createdRaw as Record<string, unknown>)
+      : {});
   const jobId = typeof created.jobId === "string" ? created.jobId : null;
   if (!jobId) throw new Error("Replay Core did not return a durable replay job ID");
   // `awaiting_evaluation` is already a durable terminal result for the replay

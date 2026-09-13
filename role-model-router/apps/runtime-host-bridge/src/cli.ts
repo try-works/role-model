@@ -3821,6 +3821,10 @@ export async function main(): Promise<void> {
             candidatePackages: counterfactualPackages,
             budget: structuredClone(budget) as Record<string, unknown>,
             leaseOwner: `runtime-host:${process.pid}`,
+            // RC09: replay-core externalizes large job receipts; the host reads them
+            // back from the worker's durable output store under the runtime scope.
+            runtimeStateRoot: options.runtimeStateRoot,
+            runtimeScopeId: options.scopeId,
             // R10: a tool-bearing replay can dispatch for far longer than 30 seconds
             // (a long transcript plus parallel tool calls), and a lease that expires
             // mid-dispatch makes the durable receipt look like it came from a stale
