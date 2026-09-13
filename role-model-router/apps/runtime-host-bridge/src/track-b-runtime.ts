@@ -6954,17 +6954,34 @@ export async function runTrackBShadowPipeline(
     }
     return proof as Record<string, unknown>;
   };
-  const knowledgeEvidenceRow = (row: (typeof positive)[number]) => ({
-    evidenceRef: row.evidenceRef,
-    score: row.score,
-    evidenceKind: "evaluation",
-    learningCapable: true,
-    evaluationRef: durableComparison.groupId,
-    trialId: row.trialId,
-    scoreId: row.scoreId,
-    sourceGroupId: durableComparison.groupId,
-    referenceProof: proofForEvidence(row.evidenceRef),
-  });
+  // RC06 (L7): the knowledge boundary requires explicit graph *and* evaluation lineage
+  // on every grouped learning evidence set
+  // (`extensions/knowledge-worker`: "explicit graph/evaluation/trial/score lineage
+  // required"). The winner's branch artifact is the graph authority for that trial, so
+  // the winning row carries the branch graph reference while the losing row keeps the
+  // evaluation reference; both keep their durable trial and score lineage.
+  const branchGraphRefByTrialId = new Map<string, string>();
+  for (const { rollout, trialId } of completedRollouts) {
+    const artifactRef = typeof rollout.artifactRef === "string" ? rollout.artifactRef.trim() : "";
+    if (trialId && artifactRef) branchGraphRefByTrialId.set(trialId, artifactRef);
+  }
+  const knowledgeEvidenceRow = (row: (typeof positive)[number]) => {
+    const graphRef = positive.some((entry) => entry.trialId === row.trialId)
+      ? (branchGraphRefByTrialId.get(row.trialId) ?? "")
+      : "";
+    return {
+      evidenceRef: row.evidenceRef,
+      score: row.score,
+      evidenceKind: graphRef ? "graph" : "evaluation",
+      ...(graphRef ? { graphRef, rolloutRef: graphRef } : {}),
+      learningCapable: true,
+      evaluationRef: durableComparison.groupId,
+      trialId: row.trialId,
+      scoreId: row.scoreId,
+      sourceGroupId: durableComparison.groupId,
+      referenceProof: proofForEvidence(row.evidenceRef),
+    };
+  };
   let candidate: Record<string, unknown>;
   if (!profileForKnowledge) {
     console.error(
