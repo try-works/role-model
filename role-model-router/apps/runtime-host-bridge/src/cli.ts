@@ -3266,6 +3266,10 @@ export async function main(): Promise<void> {
       const policySet = buildReplayPolicySet();
       const intervalMs = Number(process.env.ROLE_MODEL_AUTO_REPLAY_INTERVAL_MS ?? 30_000);
       if (!Number.isSafeInteger(intervalMs) || intervalMs < 1_000) return null;
+      // The scope of the durable captures (and therefore of the replay jobs they
+      // produce). It is learned from the capture the executor reads each tick so the
+      // expiration sweep targets the same authority the jobs were created under.
+      let lastReplayCaptureScope: string | null = null;
       // RC07 (L2): the bounded expiration sweep goes straight through the extension
       // host the producer already uses for replay-core, because the operator boundary's
       // replay domain does not expose the sweep in the packaged composition
@@ -3282,10 +3286,14 @@ export async function main(): Promise<void> {
               sessionId: `replay-expire-stale:${options.scopeId}`,
               protocolVersion: "1.1.0",
               channel,
-              scope: options.scopeId,
+              // Durable replay jobs are scoped to the *capture* scope, which is not
+              // necessarily the operator scope id (live: `runtime:<hash>`). Sweeping with
+              // the operator scope matched nothing, so the sweep uses the scope of the
+              // capture the producer most recently read.
+              scope: lastReplayCaptureScope ?? options.scopeId,
               authorizationEpoch: 1,
               capability: "replay:expire-stale-jobs",
-              value: { ...input, scope: options.scopeId, channel },
+              value: { ...input, scope: lastReplayCaptureScope ?? options.scopeId, channel },
             });
             const record =
               result && typeof result === "object" && !Array.isArray(result)
@@ -3308,6 +3316,9 @@ export async function main(): Promise<void> {
           const sourceCapture = (await operations.readLocalRouteCapture({
             requestId: capture.captureRef,
           })) as Record<string, unknown> | null;
+          if (sourceCapture && typeof sourceCapture.scope === "string" && sourceCapture.scope) {
+            lastReplayCaptureScope = sourceCapture.scope;
+          }
           if (!sourceCapture || typeof sourceCapture !== "object") {
             return {
               terminal: false,
