@@ -25345,7 +25345,17 @@ export async function createRuntimeBridgeBackend(
           status && status >= 100 && status <= 599
             ? `track-b-capture-boundary-http-${status}`
             : "track-b-capture-boundary-unavailable";
-        console.error("Track B route capture failed", routeCaptureDegradationReason);
+        // Bound and redact the reason: the private boundary message names the failing
+        // check and never carries request content.
+        const reason =
+          error && typeof error === "object" && "message" in error
+            ? String((error as { message?: unknown }).message ?? "").slice(0, 200)
+            : "";
+        console.error(
+          "Track B route capture failed",
+          routeCaptureDegradationReason,
+          reason ? `reason=${reason}` : "",
+        );
       }
       const graphEvidence = routeCapture
         ? {
