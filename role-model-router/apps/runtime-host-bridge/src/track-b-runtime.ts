@@ -6654,6 +6654,14 @@ export async function runTrackBShadowPipeline(
     signalRecord.capability === "signals:analyze-finalized-evaluation" &&
     signalRecord.mode === "omit_signals"
   ) {
+    // Run 97 RC10: this outcome is a non-learning one, so it must be observable. It was
+    // silent, which made a live learner that produced no candidates indistinguishable
+    // from a learner that never ran.
+    console.error(
+      `[run97] learning degraded signals:${input.requestId} ${String(
+        signalRecord.reasonCode ?? signalRecord.code ?? "omit_signals",
+      ).slice(0, 80)} ${String(signalRecord.reason ?? "").slice(0, 160)}`,
+    );
     const advisoryNowMs = Date.now();
     const advisoryAuthorization = createTrackBRouteAdvisoryAuthorization({
       authoritySecret: evaluationAuthoritySecret,

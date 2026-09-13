@@ -3266,8 +3266,39 @@ export async function main(): Promise<void> {
       const policySet = buildReplayPolicySet();
       const intervalMs = Number(process.env.ROLE_MODEL_AUTO_REPLAY_INTERVAL_MS ?? 30_000);
       if (!Number.isSafeInteger(intervalMs) || intervalMs < 1_000) return null;
+      // RC07 (L2): the bounded expiration sweep goes straight through the extension
+      // host the producer already uses for replay-core, because the operator boundary's
+      // replay domain does not expose the sweep in the packaged composition
+      // (live: `operator_capability_unavailable`). Binding is still enforced by the
+      // capability itself from the envelope's channel/scope/epoch.
+      const sweepOperations = {
+        ...operations,
+        async expireStaleReplayJobs(input: Record<string, unknown>) {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) return { expiredCount: 0, expired: [] };
+          try {
+            const result = await runtime.invoke("replay-core", {
+              requestId: `replay-expire-stale:${Date.now()}`,
+              sessionId: `replay-expire-stale:${options.scopeId}`,
+              protocolVersion: "1.1.0",
+              channel,
+              scope: options.scopeId,
+              authorizationEpoch: 1,
+              capability: "replay:expire-stale-jobs",
+              value: { ...input, scope: options.scopeId, channel },
+            });
+            const record =
+              result && typeof result === "object" && !Array.isArray(result)
+                ? (result as Record<string, unknown>)
+                : {};
+            return record;
+          } catch (error) {
+            throw error instanceof Error ? error : new Error("replay expiration sweep failed");
+          }
+        },
+      };
       return startAutoReplayLoop({
-        operations,
+        operations: sweepOperations,
         ledger,
         policySet,
         configuredEndpointIds: endpoints,
