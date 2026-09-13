@@ -6489,25 +6489,40 @@ export async function runTrackBShadowPipeline(
       unknownDimensions: [...new Set([...unknownDimensions, ...declaredUnknown])].sort(),
     };
   };
-  const profile = await runtime.invoke("profile-learner", {
-    ...envelope("profile:estimate-finalized-evaluation", {
-      finalizedEvaluation: persistedEvaluation,
-      signals: signalsWithProvenance,
-      rows: completedRollouts.map(({ rollout, score, trialId, scoreId }) => ({
-        model: rollout.modelId,
-        endpoint: rollout.endpointId,
-        effort: rollout.reasoningEffort,
-        ...observedProfileDimensions(rollout),
-        routePackage: rollout.routePackage,
-        outcome: score,
-        propensity: rollout.propensity,
-        evidenceRef: rollout.evidenceRef,
-        trialId,
-        scoreId,
-      })),
-    }),
-  });
-  const profileRecord = profile as Record<string, unknown>;
+  const profileRequest = () =>
+    runtime.invoke("profile-learner", {
+      ...envelope("profile:estimate-finalized-evaluation", {
+        finalizedEvaluation: persistedEvaluation,
+        signals: signalsWithProvenance,
+        rows: completedRollouts.map(({ rollout, score, trialId, scoreId }) => ({
+          model: rollout.modelId,
+          endpoint: rollout.endpointId,
+          effort: rollout.reasoningEffort,
+          ...observedProfileDimensions(rollout),
+          routePackage: rollout.routePackage,
+          outcome: score,
+          propensity: rollout.propensity,
+          evidenceRef: rollout.evidenceRef,
+          trialId,
+          scoreId,
+        })),
+      }),
+    });
+  let profileRecord = (await profileRequest()) as Record<string, unknown>;
+  // A worker that restarts mid-invoke can answer once with a bounded degradation even
+  // though the same request succeeds on a fresh attempt. Retry the estimate once
+  // before the pipeline records a learning refusal.
+  if (
+    (typeof profileRecord.digest !== "string" || !profileRecord.digest || !profileRecord.effects) &&
+    profileRecord.schemaVersion === "role-model.degradation-receipt.v1"
+  ) {
+    console.error(
+      `[run97] profile estimate retry:${input.requestId} keys=${Object.keys(profileRecord).join(",")} reason=${String(
+        (profileRecord as Record<string, unknown>).reason ?? "",
+      ).slice(0, 160)}`,
+    );
+    profileRecord = (await profileRequest()) as Record<string, unknown>;
+  }
   // A degraded profile estimate is a learning refusal with a receipt, not a replay
   // failure: the comparison is already durable and the replay already completed.
   const profileForKnowledge =
@@ -6566,7 +6581,7 @@ export async function runTrackBShadowPipeline(
   let candidate: Record<string, unknown>;
   if (!profileForKnowledge) {
     console.error(
-      `[run97] learning degraded profile:${input.requestId} ${String(
+      `[run97] learning degraded profile:${input.requestId} keys=${Object.keys(profileRecord).join(",")} ${String(
         (profileRecord as Record<string, unknown>).reason ?? "profile estimate unavailable",
       ).slice(0, 160)}`,
     );
@@ -6666,7 +6681,7 @@ export async function runTrackBShadowPipeline(
       );
     }
   }
-  const profileConfidence = (profile as Record<string, unknown>).confidence;
+  const profileConfidence = profileRecord.confidence;
   const candidateConfidence = (candidate as Record<string, unknown>).confidence;
   const advisoryConfidence =
     typeof profileConfidence === "number" && Number.isFinite(profileConfidence)
@@ -6686,8 +6701,8 @@ export async function runTrackBShadowPipeline(
       scope: input.scope,
       authorizationEpoch: input.authorizationEpoch,
       routePackage: input.routePackage,
-      profileSnapshotIds: Array.isArray((profile as Record<string, unknown>).snapshotIds)
-        ? ((profile as Record<string, unknown>).snapshotIds as unknown[]).filter(
+      profileSnapshotIds: Array.isArray(profileRecord.snapshotIds)
+        ? (profileRecord.snapshotIds as unknown[]).filter(
             (snapshotId): snapshotId is string => typeof snapshotId === "string",
           )
         : [],
@@ -6702,8 +6717,8 @@ export async function runTrackBShadowPipeline(
     scope: input.scope,
     authorizationEpoch: input.authorizationEpoch,
     routePackage: input.routePackage,
-    profileSnapshotIds: Array.isArray((profile as Record<string, unknown>).snapshotIds)
-      ? ((profile as Record<string, unknown>).snapshotIds as unknown[]).filter(
+    profileSnapshotIds: Array.isArray(profileRecord.snapshotIds)
+      ? (profileRecord.snapshotIds as unknown[]).filter(
           (snapshotId): snapshotId is string => typeof snapshotId === "string",
         )
       : [],
@@ -6721,7 +6736,7 @@ export async function runTrackBShadowPipeline(
     replay,
     evaluation: persistedEvaluation,
     signals,
-    profile,
+    profile: profileRecord,
     candidate,
     advisory,
     productionState: structuredClone(input.productionState),
