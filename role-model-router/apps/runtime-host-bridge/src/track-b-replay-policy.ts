@@ -22,6 +22,12 @@ export const REPLAY_REFUSAL_CODES = [
   "amplification_depth_exceeded",
   "policy_unknown",
   "dependency_unavailable",
+  /**
+   * Run 98 R2: the capture's durable replay job already failed terminally (timed_out,
+   * expired, failed, cancelled), so its frozen window can never dispatch again. The
+   * capture is retired instead of being re-deferred on every tick forever.
+   */
+  "replay_window_elapsed",
 ] as const;
 
 export type ReplayRefusalCode = (typeof REPLAY_REFUSAL_CODES)[number];
