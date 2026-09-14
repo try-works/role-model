@@ -559,6 +559,23 @@ describe("runtime design system", () => {
     );
   });
 
+  test("resolves every Learning page through the route registry", () => {
+    // Run 99: the Learning pages (including the new History page) must resolve so the shell shows
+    // the page title and marks the Learning section active instead of falling back to Overview.
+    for (const [path, id, title] of [
+      ["/app/learning", "learning-overview", "Learning overview"],
+      ["/app/learning/configuration", "learning-configuration", "Learning configuration"],
+      ["/app/learning/packs", "learning-packs", "Learned packs"],
+      ["/app/learning/decisions", "learning-decisions", "Decision receipts"],
+      ["/app/learning/evidence", "learning-evidence", "Cohort evidence"],
+      ["/app/learning/history", "learning-history", "Learning history"],
+    ] as const) {
+      expect(getRuntimeRouteDefinition(path)).toEqual(
+        expect.objectContaining({ id, section: "Learning", title }),
+      );
+    }
+  });
+
   test("uses analytics charts as the primary Observe entry point", () => {
     const observeSection = runtimeNavigationSections.find((section) => section.title === "Observe");
 

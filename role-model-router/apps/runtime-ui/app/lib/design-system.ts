@@ -644,6 +644,14 @@ const runtimeRouteDefinitions = [
   systemPeersRoute,
   systemExtensionsRoute,
   systemStorageRetentionRoute,
+  // Run 98/99: the Learning section pages resolve through the same lookup as every other page,
+  // so the shell shows the page title and marks the Learning section active.
+  learningOverviewRoute,
+  learningConfigurationRoute,
+  learningPacksRoute,
+  learningDecisionsRoute,
+  learningEvidenceRoute,
+  learningHistoryRoute,
 ] as const;
 
 export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
