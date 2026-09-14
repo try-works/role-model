@@ -100,10 +100,14 @@ export function OperatorTokenField({
       <input
         className={`${fieldClassName} mt-1 font-mono`}
         onChange={(event) => onToken(event.target.value)}
-        placeholder="Bearer token for the operator surface"
+        placeholder="Optional on this machine — required for changes"
         type="password"
         value={token}
       />
+      <span className="mt-1 block text-xs text-[var(--rm-fg-muted)]">
+        Readbacks work from this machine without a token. Changing policy, activating or rolling back a pack
+        and the kill switch require the runtime&apos;s operator bearer token.
+      </span>
     </label>
   );
 }

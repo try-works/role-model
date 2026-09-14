@@ -98,6 +98,28 @@ export function LearningLivePanelView({
 }): ReactElement {
   const anyActive = view.pipeline.some((stage) => stage.active);
   const observed = formatRelativeAge(view.observedAtMs, nowMs);
+  const unauthorized = Boolean(error && /401|operator_authentication_required|unauthorized/i.test(error));
+  // An unreadable state is never "idle": say what is actually true.
+  const status: { readonly tone: "success" | "neutral" | "error" | "warning"; readonly label: string } = loading
+    ? { tone: "neutral", label: "loading" }
+    : error
+      ? { tone: unauthorized ? "warning" : "error", label: unauthorized ? "token required" : "unavailable" }
+      : view.available
+        ? { tone: anyActive ? "success" : "neutral", label: anyActive ? "running" : "idle" }
+        : { tone: "neutral", label: "no readback" };
+  const metadata = [
+    scopeLabel && scopeLabel !== "—" ? scopeLabel : "scope not set",
+    `last ${view.windowMinutes}m`,
+    loading
+      ? "reading"
+      : error
+        ? unauthorized
+          ? "awaiting operator token"
+          : "not read"
+        : view.available
+          ? `updated ${observed}`
+          : "not read",
+  ].join(" · ");
 
   return (
     <section
@@ -111,14 +133,10 @@ export function LearningLivePanelView({
           </span>
           <div className="space-y-1">
             <h2 className="text-sm font-semibold text-[var(--rm-fg)]">Live replay &amp; evaluation</h2>
-            <p className="font-mono text-xs text-[var(--rm-fg-muted)]">
-              {[scopeLabel ?? "scope", `last ${view.windowMinutes}m`, `updated ${observed}`].join(" · ")}
-            </p>
+            <p className="font-mono text-xs text-[var(--rm-fg-muted)]">{metadata}</p>
           </div>
         </div>
-        {loading ? null : (
-          <StatusPill tone={anyActive ? "success" : "neutral"}>{anyActive ? "running" : "idle"}</StatusPill>
-        )}
+        <StatusPill tone={status.tone}>{status.label}</StatusPill>
       </div>
 
       {loading ? (

@@ -15021,6 +15021,23 @@ function writeOperatorUnauthorized(response: ServerResponse): void {
   });
 }
 
+const LOOPBACK_OPERATOR_CLIENTS = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
+const LEARNING_READBACK_PREFIX = "/api/role-model/operator/learning/";
+
+/**
+ * Run 99: the Learning page is served by this runtime and used from the same machine, yet every
+ * readback required pasting the operator bearer token, so the whole surface rendered 401 until the
+ * operator found the token. Loopback reads of the Learning projections are now allowed anonymously
+ * — the same posture as the other local read APIs (telemetry, learning summary) — while every
+ * mutating operator call and every other operator surface stays token-gated. A request that *does*
+ * present an Authorization header must still present a valid one.
+ */
+function isAnonymousLearningReadback(request: IncomingMessage, url: URL): boolean {
+  if (request.method !== "GET") return false;
+  if (!url.pathname.startsWith(LEARNING_READBACK_PREFIX)) return false;
+  return LOOPBACK_OPERATOR_CLIENTS.has(String(request.socket?.remoteAddress ?? ""));
+}
+
 function unavailableOperatorPayload(capability: string): RuntimeOperatorStatus & {
   readonly error: "operator_capability_unavailable";
   readonly capability: string;
@@ -15169,7 +15186,12 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     }
 
     if (url.pathname.startsWith("/api/role-model/operator/")) {
-      if (!operatorTokenMatches(request, options.operatorAuthToken)) {
+      const suppliedAuthorization = readOperatorHeader(request, "authorization");
+      const presentsCredential = typeof suppliedAuthorization === "string" && suppliedAuthorization.length > 0;
+      const authorized = operatorTokenMatches(request, options.operatorAuthToken);
+      const anonymousLearningRead =
+        !presentsCredential && !authorized && isAnonymousLearningReadback(request, url);
+      if (!authorized && !anonymousLearningRead) {
         writeOperatorUnauthorized(response);
         return;
       }

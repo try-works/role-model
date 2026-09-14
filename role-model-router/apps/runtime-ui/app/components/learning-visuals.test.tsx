@@ -112,15 +112,21 @@ describe("run99 learning live panel", () => {
       <LearningLivePanelView view={activity} loading error={null} nowMs={NOW} scopeLabel="scope" />,
     );
     expect(loading).toContain("Reading live replay and evaluation state");
+    expect(loading).toContain("loading");
     const failed = renderToStaticMarkup(
       <LearningLivePanelView view={activity} loading={false} error="operator_authentication_required" nowMs={NOW} />,
     );
     expect(failed).toContain("No value is fabricated");
+    // An unreadable panel must never claim to be idle or running.
+    expect(failed).toContain("token required");
+    expect(failed).toContain("awaiting operator token");
+    expect(failed).not.toContain(">idle<");
     const empty = renderToStaticMarkup(
       <LearningLivePanelView view={normalizeLearningActivity(null)} loading={false} error={null} nowMs={NOW} />,
     );
     expect(empty).toContain("No live activity readback has been recorded");
     expect(empty).not.toContain("of 300 dispatches");
+    expect(empty).toContain("no readback");
   });
 });
 
