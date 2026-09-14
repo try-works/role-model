@@ -221,6 +221,15 @@ export async function runTrackBLearningPass(
     ...envelope(capability, value),
     evaluationAuthoritySecret,
   });
+  /**
+   * Run 98 R3: the Knowledge Store reads `envelope.payload` (the worker reads
+   * `envelope.value`), and it answers a bounded degradation receipt instead of throwing, so the
+   * pass must both use the right field and verify the answer.
+   */
+  const storeEnvelope = (capability: string, payload: Record<string, unknown>) => ({
+    ...envelope(capability, payload),
+    payload,
+  });
   const nowMs = input.nowMs ?? Date.now();
   const evidenceFloor = input.evidenceFloor ?? DEFAULT_LEARNING_EVIDENCE_FLOOR;
   const guardrails = input.guardrails ?? DEFAULT_LEARNING_GUARDRAILS;
@@ -281,22 +290,32 @@ export async function runTrackBLearningPass(
   // The validation receipt is durable learning evidence even when the decision is
   // `insufficient_evidence` or `reject`; recording it is how the operator sees why learning
   // did not promote instead of seeing silence.
-  const validationRecord = await runtime.invoke(
-    "knowledge-store",
-    envelope("knowledge:record-learning", {
-      record: {
-        recordId: receiptId,
-        kind: "validation_receipt",
-        state: decision,
-        scopeId: input.scope,
-        identity: {
-          scorerSetVersion,
-          judgeEndpointId: input.identity.judgeEndpointId ?? null,
+  const recordValidationReceipt = async (): Promise<Record<string, unknown>> => {
+    const answer = await runtime.invoke(
+      "knowledge-store",
+      storeEnvelope("knowledge:record-learning", {
+        record: {
+          recordId: receiptId,
+          kind: "validation_receipt",
+          state: decision,
+          scopeId: input.scope,
+          identity: {
+            scorerSetVersion,
+            judgeEndpointId: input.identity.judgeEndpointId ?? null,
+          },
+          record: { ...receipt },
         },
-        record: { ...receipt },
-      },
-    }),
-  );
+      }),
+    );
+    const decoded = decodeBusinessResult(answer, "knowledge-store", input.scope);
+    if (decoded.schemaVersion === "role-model.degradation-receipt.v1") {
+      throw new Error(
+        `knowledge store refused the validation receipt: ${String(decoded.reason ?? decoded.code ?? "unknown")}`,
+      );
+    }
+    return decoded;
+  };
+  const validationRecord = await recordValidationReceipt();
 
   let packId: string | null = null;
   let promoted = false;
@@ -323,9 +342,9 @@ export async function runTrackBLearningPass(
       throw new Error("learning pass promotion did not return a pack candidate");
     }
     promoted = true;
-    await runtime.invoke(
+    const packAnswer = await runtime.invoke(
       "knowledge-store",
-      envelope("knowledge:record-learning", {
+      storeEnvelope("knowledge:record-learning", {
         record: {
           recordId: packId,
           kind: "pack",
@@ -339,6 +358,12 @@ export async function runTrackBLearningPass(
         },
       }),
     );
+    const decodedPack = decodeBusinessResult(packAnswer, "knowledge-store", input.scope);
+    if (decodedPack.schemaVersion === "role-model.degradation-receipt.v1") {
+      throw new Error(
+        `knowledge store refused the pack record: ${String(decodedPack.reason ?? decodedPack.code ?? "unknown")}`,
+      );
+    }
   }
 
   return {

@@ -126,7 +126,10 @@ function fakeRuntime(options: {
     invocations,
     async invoke(extensionId: string, envelope: Record<string, unknown>) {
       const capability = String(envelope.capability);
-      const value = (envelope.value ?? {}) as Record<string, unknown>;
+      // The Knowledge Store reads `payload`; the worker reads `value`.
+      const value = (envelope.capability === "knowledge:record-learning"
+        ? envelope.payload
+        : envelope.value ?? {}) as Record<string, unknown>;
       invocations.push({ extensionId, capability, value, envelope });
       if (capability === "evaluation:list-groups") return options.groups;
       if (capability === "knowledge:validate-candidate") {
@@ -190,6 +193,12 @@ test("run98 R3 a validated candidate is promoted and both receipts are recorded"
   expect(runtime.invocations[3].envelope.evaluationAuthoritySecret).toBe(
     "run98-learning-pass-secret",
   );
+  // The Knowledge Store reads `payload`, and a bounded degradation receipt must not be
+  // mistaken for a recorded receipt.
+  expect((runtime.invocations[2].envelope.payload as Record<string, unknown>).record).toMatchObject({
+    kind: "validation_receipt",
+    recordId: "validation:1",
+  });
   const validationInput = runtime.invocations[1].value;
   expect(validationInput).toMatchObject({
     candidateId: "shadow-candidate-1",
