@@ -581,6 +581,18 @@ const learningEvidenceRoute = createRoute({
     "Baseline-versus-advisory comparison on the paired holdout distribution with confidence bounds and guardrail verdicts.",
 });
 
+const learningHistoryRoute = createRoute({
+  id: "learning-history",
+  to: "/app/learning/history",
+  label: "History",
+  section: "Learning",
+  icon: Activity,
+  template: "summary-board",
+  title: "Learning history",
+  description:
+    "Windowed activity, decisive comparison mix with per-comparison deltas, the activation timeline and the guardrail verdicts.",
+});
+
 const systemStorageRetentionRoute = createRoute({
   id: "system-storage-retention",
   to: "/app/system/storage-retention",
@@ -718,6 +730,7 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
       learningPacksRoute,
       learningDecisionsRoute,
       learningEvidenceRoute,
+      learningHistoryRoute,
     ],
   },
 ] as const;

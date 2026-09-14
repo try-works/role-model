@@ -1580,6 +1580,20 @@ export function createTrackBOperations({
         `operator/learning/measurement${operatorQuery(query)}`,
       );
     },
+    // Run 99: the Learning UI live panel and history page read the reconciled projections
+    // from the same supervised sidecar, so the UI never invents a value.
+    async readLearningActivity(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return requestOperator(
+        "learning activity readback",
+        `operator/learning/activity${operatorQuery(query)}`,
+      );
+    },
+    async readLearningHistory(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return requestOperator(
+        "learning history readback",
+        `operator/learning/history${operatorQuery(query)}`,
+      );
+    },
     // Run 98 R6/R15/R17: the operator policy readback, change and rollback routes were
     // served by the sidecar from S4 on; the host now exposes them for the Learning UI.
     async readLearningPolicy(query: Readonly<Record<string, string>> = {}): Promise<unknown> {

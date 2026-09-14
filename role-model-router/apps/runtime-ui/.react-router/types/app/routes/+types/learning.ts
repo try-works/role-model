@@ -54,6 +54,15 @@ type Matches = [{
 }, {
   id: "learning-evidence";
   module: typeof import("../learning.js");
+}] | [{
+  id: "root";
+  module: typeof import("../../root.js");
+}, {
+  id: "routes/app-layout";
+  module: typeof import("../app-layout.js");
+}, {
+  id: "learning-history";
+  module: typeof import("../learning.js");
 }];
 
 type Annotations = GetAnnotations<Info & { module: Module, matches: Matches }>;

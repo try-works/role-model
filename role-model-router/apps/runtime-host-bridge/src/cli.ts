@@ -1290,6 +1290,8 @@ type RuntimeOperatorCallbacks = Pick<
   | "readLearningRecords"
   | "readLearningDecisions"
   | "readLearningMeasurement"
+  | "readLearningActivity"
+  | "readLearningHistory"
   | "readLearningPolicy"
   | "setLearningPolicy"
   | "rollbackLearningPolicy"
@@ -1337,6 +1339,11 @@ export function createRuntimeOperatorCallbacks(
       operations.readLearningDecisions(query),
     readLearningMeasurement: (query: Readonly<Record<string, string>> = {}) =>
       operations.readLearningMeasurement(query),
+    // Run 99: the Learning UI live activity and history projections.
+    readLearningActivity: (query: Readonly<Record<string, string>> = {}) =>
+      operations.readLearningActivity(query),
+    readLearningHistory: (query: Readonly<Record<string, string>> = {}) =>
+      operations.readLearningHistory(query),
     readLearningPolicy: (query: Readonly<Record<string, string>> = {}) =>
       operations.readLearningPolicy(query),
     setLearningPolicy: (body: Record<string, unknown>) => operations.setLearningPolicy(body),
@@ -1407,6 +1414,8 @@ type CliBackend = Pick<
   | "readLearningRecords"
   | "readLearningDecisions"
   | "readLearningMeasurement"
+  | "readLearningActivity"
+  | "readLearningHistory"
   | "readLearningPolicy"
   | "setLearningPolicy"
   | "rollbackLearningPolicy"
@@ -2371,6 +2380,12 @@ export function createCliServerOptions(
     readLearningMeasurement: bindBackendMethod(
       "readLearningMeasurement",
     ) as StartBridgeServerOptions["readLearningMeasurement"],
+    readLearningActivity: bindBackendMethod(
+      "readLearningActivity",
+    ) as StartBridgeServerOptions["readLearningActivity"],
+    readLearningHistory: bindBackendMethod(
+      "readLearningHistory",
+    ) as StartBridgeServerOptions["readLearningHistory"],
     readLearningPolicy: bindBackendMethod(
       "readLearningPolicy",
     ) as StartBridgeServerOptions["readLearningPolicy"],

@@ -76,6 +76,7 @@ export default [
     route("learning/packs", "routes/learning.tsx", { id: "learning-packs" }),
     route("learning/decisions", "routes/learning.tsx", { id: "learning-decisions" }),
     route("learning/evidence", "routes/learning.tsx", { id: "learning-evidence" }),
+    route("learning/history", "routes/learning.tsx", { id: "learning-history" }),
     route("system/operator", "routes/operator-controls.tsx", { id: "system-operator" }),
     route("system/session-readiness", "routes/session-readiness.tsx"),
     route("control/session-readiness", "routes/legacy-redirect.tsx", {

@@ -551,6 +551,8 @@ const trackBServerOperationNames = [
   "readLearningRecords",
   "readLearningDecisions",
   "readLearningMeasurement",
+  "readLearningActivity",
+  "readLearningHistory",
   "readLearningPolicy",
   "setLearningPolicy",
   "rollbackLearningPolicy",

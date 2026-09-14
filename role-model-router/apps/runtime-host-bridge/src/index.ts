@@ -3017,6 +3017,9 @@ export interface StartBridgeServerOptions {
   readonly readLearningRecords?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
   readonly readLearningDecisions?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
   readonly readLearningMeasurement?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  /** Run 99: the Learning UI live activity and history projections. */
+  readonly readLearningActivity?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readLearningHistory?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
   readonly readLearningPolicy?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
   readonly setLearningPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackLearningPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
@@ -3275,6 +3278,8 @@ export interface RuntimeBridgeBackend {
   readLearningRecords(query?: Readonly<Record<string, string>>): Promise<unknown>;
   readLearningDecisions(query?: Readonly<Record<string, string>>): Promise<unknown>;
   readLearningMeasurement(query?: Readonly<Record<string, string>>): Promise<unknown>;
+  readLearningActivity(query?: Readonly<Record<string, string>>): Promise<unknown>;
+  readLearningHistory(query?: Readonly<Record<string, string>>): Promise<unknown>;
   readLearningPolicy(query?: Readonly<Record<string, string>>): Promise<unknown>;
   setLearningPolicy(body: Record<string, unknown>): Promise<unknown>;
   rollbackLearningPolicy(body: Record<string, unknown>): Promise<unknown>;
@@ -3694,6 +3699,9 @@ export interface CreateRuntimeBridgeBackendOptions {
   readonly readLearningRecords?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
   readonly readLearningDecisions?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
   readonly readLearningMeasurement?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  /** Run 99: the Learning UI live activity and history projections. */
+  readonly readLearningActivity?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readLearningHistory?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
   readonly readLearningPolicy?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
   readonly setLearningPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackLearningPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
@@ -15521,6 +15529,34 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           return;
         }
         if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/learning/activity"
+        ) {
+          if (!options.readLearningActivity) {
+            writeOperatorUnavailable(response, "learning activity readback");
+            return;
+          }
+          writeOperatorResult(
+            response,
+            await options.readLearningActivity(Object.fromEntries(url.searchParams)),
+          );
+          return;
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/learning/history"
+        ) {
+          if (!options.readLearningHistory) {
+            writeOperatorUnavailable(response, "learning history readback");
+            return;
+          }
+          writeOperatorResult(
+            response,
+            await options.readLearningHistory(Object.fromEntries(url.searchParams)),
+          );
+          return;
+        }
+        if (
           request.method === "POST" &&
           url.pathname === "/api/role-model/operator/learning/activate-pack"
         ) {
@@ -27188,6 +27224,19 @@ export async function createRuntimeBridgeBackend(
       return (
         options.readLearningMeasurement?.(query) ??
         unavailableOperatorPayload("learning measurement readback")
+      );
+    },
+    // Run 99: the Learning UI live activity and history projections.
+    async readLearningActivity(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return (
+        options.readLearningActivity?.(query) ??
+        unavailableOperatorPayload("learning activity readback")
+      );
+    },
+    async readLearningHistory(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return (
+        options.readLearningHistory?.(query) ??
+        unavailableOperatorPayload("learning history readback")
       );
     },
     async readLearningPolicy(query: Readonly<Record<string, string>> = {}): Promise<unknown> {

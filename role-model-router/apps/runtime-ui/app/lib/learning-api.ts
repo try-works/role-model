@@ -182,6 +182,34 @@ export async function fetchLearningMeasurement(
   );
 }
 
+/**
+ * Run 99: the live activity projection behind the Learning live panel (pipeline, budget,
+ * newest events) and the windowed history projection behind the History page.
+ */
+export async function fetchLearningActivity(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+  query: Readonly<Record<string, string | number | undefined>> = {},
+): Promise<Record<string, unknown>> {
+  return fetchJson(
+    `/api/role-model/operator/learning/activity${operatorQuery(query)}`,
+    fetcher,
+    operatorHeaders(operatorToken),
+  );
+}
+
+export async function fetchLearningHistory(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+  query: Readonly<Record<string, string | number | undefined>> = {},
+): Promise<Record<string, unknown>> {
+  return fetchJson(
+    `/api/role-model/operator/learning/history${operatorQuery(query)}`,
+    fetcher,
+    operatorHeaders(operatorToken),
+  );
+}
+
 export async function activateLearningPack(
   body: Record<string, unknown>,
   fetcher: RuntimeFetcher = fetch,

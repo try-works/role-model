@@ -29,6 +29,15 @@ import {
   type LearningPolicyView,
 } from "../lib/learning-api";
 import { fetchLearningSummary } from "../lib/runtime-api";
+import { fetchLearningActivity, fetchLearningHistory } from "../lib/learning-api";
+import { LearningLivePanelView } from "../components/learning-live-panel";
+import {
+  LearningActivationTimelineView,
+  LearningActivityHeatmapView,
+  LearningComparisonMixView,
+  LearningGuardrailListView,
+} from "../components/learning-history-panels";
+import { normalizeLearningActivity, normalizeLearningHistory } from "../lib/learning-visuals";
 
 /**
  * Run 98 R17: the Learning route.
@@ -136,6 +145,11 @@ export function LearningOverviewPage() {
     () => fetchLearningDecisions(fetch, token || undefined, { limit: 10 }),
     [token],
   );
+  const activity = useOperatorSurface<Record<string, unknown>>(
+    () => fetchLearningActivity(fetch, token || undefined, { windowMinutes: 60, limit: 24 }),
+    [token],
+  );
+  const activityView = normalizeLearningActivity(activity.value);
   const advisory = asRecord(asRecord(summary.value).advisory);
   const rolloutValue = asRecord(rollout.value);
   const receipts = Array.isArray(rolloutValue.receipts) ? rolloutValue.receipts : [];
@@ -179,6 +193,13 @@ export function LearningOverviewPage() {
           </div>
         )}
       </SectionCard>
+      <LearningLivePanelView
+        view={activityView}
+        loading={activity.loading}
+        error={activity.error}
+        nowMs={Date.now()}
+        scopeLabel={show(rolloutValue.scopeId ?? rolloutValue.scope)}
+      />
       <SectionCard
         title="Recent decisions"
         description="Advisory observations recorded per decision; the selection always remains the baseline in stage S1."
@@ -683,12 +704,63 @@ export function LearningEvidencePage() {
   );
 }
 
+
+/**
+ * Run 99 history page: a windowed summary of the live loop - activity heat grid, the decisive
+ * comparison mix with per-comparison deltas, the activation/rollback timeline and the guardrail
+ * verdicts. Every panel reads the durable projection; nothing is derived in the browser.
+ */
+export function LearningHistoryPage() {
+  const { token, setToken } = useOperatorToken();
+  const history = useOperatorSurface<Record<string, unknown>>(
+    () => fetchLearningHistory(fetch, token || undefined, { hours: 168, bucketHours: 6 }),
+    [token],
+  );
+  const view = normalizeLearningHistory(history.value);
+  const nowMs = Date.now();
+  return (
+    <div className="grid gap-4">
+      <SectionCard
+        title="Learning history"
+        description="What the replay, evaluation and learning loop did over the window, read from durable state."
+      >
+        <OperatorTokenField onToken={setToken} token={token} />
+        {view.available ? (
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Metric label="Window" value={`${view.windowHours}h · ${view.bucketHours}h buckets`} />
+            <Metric label="Replayed" value={show(view.totals.replays)} />
+            <Metric label="Refused" value={show(view.totals.refusals)} />
+            <Metric label="Deferred" value={show(view.totals.deferred)} />
+            <Metric label="Evaluations" value={show(view.totals.evaluations)} />
+            <Metric label="Comparisons" value={show(view.totals.comparisons)} />
+            <Metric label="Decisive" value={show(view.totals.decisive)} />
+            <Metric label="Validations" value={show(view.totals.validations)} />
+            <Metric label="Activations" value={show(view.totals.activations)} />
+            <Metric label="Rollbacks" value={show(view.totals.rollbacks)} />
+            <Metric label="Advisory observed" value={show(view.totals.advisoryObserved)} />
+            <Metric label="Would have changed" value={show(view.totals.advisoryWouldHaveChanged)} />
+          </div>
+        ) : null}
+      </SectionCard>
+      {degraded(history.loading, history.error) ?? (
+        <>
+          <LearningActivityHeatmapView history={view} nowMs={nowMs} />
+          <LearningComparisonMixView history={view} />
+          <LearningActivationTimelineView history={view} nowMs={nowMs} />
+          <LearningGuardrailListView history={view} />
+        </>
+      )}
+    </div>
+  );
+}
+
 const PAGE_FOR_PATH: Readonly<Record<string, () => ReactElement>> = {
   "/app/learning": LearningOverviewPage,
   "/app/learning/configuration": LearningConfigurationPage,
   "/app/learning/packs": LearningPacksPage,
   "/app/learning/decisions": LearningDecisionsPage,
   "/app/learning/evidence": LearningEvidencePage,
+  "/app/learning/history": LearningHistoryPage,
 };
 
 export function LearningRouteView() {

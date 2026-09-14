@@ -400,6 +400,19 @@ describe("runtime design system", () => {
           "/app/system/storage-retention",
         ],
       },
+      {
+        // Run 98/99: the Learning section carries the operator surfaces, including the
+        // run-99 history page.
+        title: "Learning",
+        routes: [
+          "/app/learning",
+          "/app/learning/configuration",
+          "/app/learning/packs",
+          "/app/learning/decisions",
+          "/app/learning/evidence",
+          "/app/learning/history",
+        ],
+      },
     ]);
 
     expect(getRuntimeRouteDefinition("/app")).toEqual(
