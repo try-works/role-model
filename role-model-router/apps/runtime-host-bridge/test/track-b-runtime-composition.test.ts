@@ -611,6 +611,22 @@ describe("production Track B composition", () => {
       "dismissRecommendation",
       "readActivePack",
       "runTrackBSupervisedReplay",
+      // Run 98 R17: the packaged projection must reach every Learning UI surface.
+      "readLearningState",
+      "readLearningProfile",
+      "readLearningAdvisory",
+      "updateLearningMode",
+      "rollbackLearning",
+      "readLearningRollout",
+      "readLearningRecords",
+      "readLearningDecisions",
+      "readLearningMeasurement",
+      "readLearningPolicy",
+      "setLearningPolicy",
+      "rollbackLearningPolicy",
+      "activateLearningPack",
+      "rollbackLearningPack",
+      "engageLearningKillSwitch",
     ] as const;
     const backend = Object.fromEntries(names.map((name) => [name, async () => name]));
     const serverOptions = createTrackBBridgeServerOptions(backend);

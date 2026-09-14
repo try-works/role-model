@@ -4549,6 +4549,9 @@ export async function main(): Promise<void> {
           artifactSha256: manifest.sidecar.artifactSha256,
           stateRoot: trackBStateRoot,
           channel: runtimeChannel,
+          // Run 98 R17: the operator boundary must validate the same runtime scope
+          // identity the host sends on operator requests.
+          runtimeScope: options.scopeId,
           artifactDigestKeyFile: artifactKeyFiles.artifactDigestKeyFile,
           artifactEncryptionKeyFile: artifactKeyFiles.artifactEncryptionKeyFile,
           trustMaterialFile: destinationTrustMaterialFile,

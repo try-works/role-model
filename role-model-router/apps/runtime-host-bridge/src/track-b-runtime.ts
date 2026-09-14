@@ -9077,6 +9077,13 @@ export function createOwnedTrackBSidecarSpec(options: {
   publicRuntimeAdapterPath?: string;
   publicRouterRoot?: string;
   migrationScope?: string;
+  /**
+   * Run 98 R17: the runtime scope identity the host sends as
+   * `x-role-model-scope` on operator requests. The sidecar adopts it as its own
+   * operator context so the host and the sidecar agree without either side
+   * guessing an installation-derived scope.
+   */
+  runtimeScope?: string;
   startupTimeoutMs?: number;
 }): OwnedTrackBSidecarSpec {
   const authorizationEpoch =
@@ -9166,6 +9173,7 @@ export function createOwnedTrackBSidecarSpec(options: {
             : []),
           ...(options.publicRouterRoot ? ["--public-router-root", options.publicRouterRoot] : []),
           ...(options.migrationScope ? ["--migration-scope", options.migrationScope] : []),
+          ...(options.runtimeScope ? ["--runtime-scope", options.runtimeScope] : []),
         ],
         {
           stdio: ["ignore", "pipe", "pipe"],
