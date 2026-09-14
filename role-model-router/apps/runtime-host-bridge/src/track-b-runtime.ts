@@ -529,6 +529,23 @@ const trackBServerOperationNames = [
   "dismissRecommendation",
   "readActivePack",
   "runTrackBSupervisedReplay",
+  // Run 98 R17: the Learning UI readback and rollout actions must survive the packaged
+  // bridge-option projection, or the operator routes answer "unavailable" behind the SEA.
+  "readLearningState",
+  "readLearningProfile",
+  "readLearningAdvisory",
+  "updateLearningMode",
+  "rollbackLearning",
+  "readLearningRollout",
+  "readLearningRecords",
+  "readLearningDecisions",
+  "readLearningMeasurement",
+  "readLearningPolicy",
+  "setLearningPolicy",
+  "rollbackLearningPolicy",
+  "activateLearningPack",
+  "rollbackLearningPack",
+  "engageLearningKillSwitch",
 ] as const;
 
 export function createTrackBBridgeServerOptions<
