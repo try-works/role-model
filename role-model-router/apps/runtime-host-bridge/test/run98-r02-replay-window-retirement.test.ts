@@ -341,3 +341,87 @@ test("run98 R2 an unrecoverable terminal replay still retires", async () => {
   expect(result).toMatchObject({ jobId: "job-recoverable", state: "timed_out" });
   expect(invocations).toEqual(["replay:create-job", "replay:claim-job"]);
 });
+
+function loopHarness(executor: () => Promise<unknown>) {
+  const dir = mkdtempSync(path.join(os.tmpdir(), "run98-replay-accounting-"));
+  const recorded: Array<Record<string, unknown>> = [];
+  const ledger = createReplayLedger({
+    filePath: path.join(dir, "ledger.json"),
+    now: () => Date.parse("2026-09-14T09:00:00Z"),
+  });
+  return {
+    recorded,
+    ledger,
+    cleanup: () => rmSync(dir, { recursive: true, force: true }),
+    loop: startAutoReplayLoop({
+      operations: {
+        async listPendingReplayCaptures() {
+          return {
+            pending: [
+              { captureRef: "req-evaluating", sourceEndpointId: "endpoint-a", hasRecordedToolResults: true },
+            ],
+            pendingCount: 1,
+          };
+        },
+        async recordReplayDisposition(input: Record<string, unknown>) {
+          recorded.push(input);
+          return { recorded: true };
+        },
+      },
+      ledger,
+      policySet: buildReplayPolicySet(),
+      configuredEndpointIds: ["endpoint-a", "endpoint-b"],
+      executor,
+      intervalMs: 60_000,
+      now: () => Date.parse("2026-09-14T09:00:00Z"),
+    }),
+  };
+}
+
+const completedBranch = {
+  kind: "candidate" as const,
+  endpointId: "endpoint-b",
+  attempt: 1,
+  costMicros: 512,
+  bytes: 2_048,
+  outcome: "complete" as const,
+};
+
+test("run98 R2 a dispatched branch is not a completed counterfactual until evaluation finalizes", async () => {
+  const harness = loopHarness(async () => ({
+    terminal: false,
+    branches: [{ endpointId: "endpoint-b", outcome: "complete" as const }],
+    dispatches: [completedBranch],
+    failureDetail: "durable replay state is awaiting_evaluation",
+  }));
+  try {
+    const result = await harness.loop.tick();
+    harness.loop.stop();
+    expect(result.replayed).toBe(0);
+    expect(result.deferred).toBe(1);
+    expect(harness.recorded[0]).toMatchObject({
+      captureRef: "req-evaluating",
+      outcome: "deferred",
+      refusalCode: "replay_failed",
+    });
+  } finally {
+    harness.cleanup();
+  }
+});
+
+test("run98 R2 a durably evaluated replay is the only terminal counterfactual", async () => {
+  const harness = loopHarness(async () => ({
+    terminal: true,
+    branches: [{ endpointId: "endpoint-b", outcome: "complete" as const }],
+    dispatches: [completedBranch],
+  }));
+  try {
+    const result = await harness.loop.tick();
+    harness.loop.stop();
+    expect(result.replayed).toBe(1);
+    expect(result.deferred).toBe(0);
+    expect(harness.recorded[0]).toMatchObject({ captureRef: "req-evaluating", outcome: "replayed" });
+  } finally {
+    harness.cleanup();
+  }
+});

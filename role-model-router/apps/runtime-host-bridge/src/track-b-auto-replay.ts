@@ -331,6 +331,23 @@ export async function runAutoReplayTick(input: {
       });
       continue;
     }
+    // Run 98 R2: a dispatched branch is not a completed counterfactual. Evaluation Core owns
+    // the comparison, so the capture stays retryable until the durable replay job reports
+    // `complete` (the evaluation finalized). Live stage evidence: captures were marked
+    // `replayed` while their jobs sat in `awaiting_evaluation`, which removed them from the
+    // pending queue before the group was finalized — the finalized-group count froze even
+    // though paid dispatches kept succeeding.
+    if (!execution.terminal) {
+      input.ledger.release(reservation.reservationId);
+      deferred += 1;
+      emit({
+        captureRef: capture.captureRef,
+        outcome: "deferred",
+        code: "replay_failed",
+        detail: execution.failureDetail ?? "replay evaluation is not complete",
+      });
+      continue;
+    }
     // Terminal only after the replay job completed with appended branches; a dispatch
     // that succeeded but whose branch/evaluation step failed stays retryable.
     input.ledger.completeCounterfactual({
