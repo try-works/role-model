@@ -95,4 +95,44 @@ describe("run98 R17 owned Track B sidecar runtime scope", () => {
       await child.stop();
     }
   });
+
+  test("passes the staged Track B runtime manifest so the sidecar composes its owner domains", async () => {
+    // Run 98 R7/R17 live defect: the owned sidecar was launched without its manifest, so the
+    // supervised evaluation and rollout domains never composed and every learning operator
+    // control (pack activation, rollback, kill switch) answered `operator_capability_unavailable`.
+    const stateRoot = await mkdtemp(path.join(os.tmpdir(), "run98-sidecar-manifest-"));
+    roots.push(stateRoot);
+    const artifactPath = path.join(stateRoot, "manifest-echo-sidecar.mjs");
+    const source = [
+      'import http from "node:http";',
+      'const index = process.argv.indexOf("--track-b-runtime-manifest");',
+      'const manifestPath = index >= 0 ? process.argv[index + 1] : null;',
+      "const server = http.createServer((_request, response) => {",
+      '  response.setHeader("content-type", "application/json");',
+      "  response.end(JSON.stringify({ manifestPath }));",
+      "});",
+      'server.listen(0, "127.0.0.1", () => {',
+      "  const address = server.address();",
+      '  process.stdout.write(JSON.stringify({ type: "ready", endpoint: `http://127.0.0.1:${address.port}` }) + "\\n");',
+      "});",
+      'process.on("SIGTERM", () => server.close(() => process.exit(0)));',
+    ].join("\n");
+    await writeFile(artifactPath, source, "utf8");
+    const manifestPath = path.join(stateRoot, "track-b-runtime-manifest.json");
+
+    const sidecar = createOwnedTrackBSidecarSpec({
+      artifactPath,
+      artifactSha256: createHash("sha256").update(source).digest("hex"),
+      stateRoot,
+      channel: "stage",
+      manifestPath,
+    });
+    const child = await sidecar.launch();
+    try {
+      const payload = (await (await fetch(child.endpoint)).json()) as { manifestPath?: string };
+      expect(payload.manifestPath).toBe(manifestPath);
+    } finally {
+      await child.stop();
+    }
+  });
 });

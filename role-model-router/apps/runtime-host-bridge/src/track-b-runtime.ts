@@ -9272,6 +9272,13 @@ export function createOwnedTrackBSidecarSpec(options: {
   sqliteDatabasePath?: string;
   publicRuntimeAdapterPath?: string;
   publicRouterRoot?: string;
+  /**
+   * Run 98 R7/R17: the staged Track B runtime manifest. The owned sidecar composes its
+   * supervised evaluation and rollout domains from this manifest; without it those operator
+   * controls answer `operator_capability_unavailable` (observed live: the Learning activation
+   * drill could not activate or roll back a promoted pack).
+   */
+  manifestPath?: string;
   migrationScope?: string;
   /**
    * Run 98 R17: the runtime scope identity the host sends as
@@ -9368,6 +9375,9 @@ export function createOwnedTrackBSidecarSpec(options: {
             ? ["--public-runtime-adapter", options.publicRuntimeAdapterPath]
             : []),
           ...(options.publicRouterRoot ? ["--public-router-root", options.publicRouterRoot] : []),
+          ...(options.manifestPath
+            ? ["--track-b-runtime-manifest", options.manifestPath]
+            : []),
           ...(options.migrationScope ? ["--migration-scope", options.migrationScope] : []),
           ...(options.runtimeScope ? ["--runtime-scope", options.runtimeScope] : []),
         ],

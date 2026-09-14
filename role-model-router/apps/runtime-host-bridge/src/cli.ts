@@ -4603,6 +4603,9 @@ export async function main(): Promise<void> {
           // Run 98 R17: the operator boundary must validate the same runtime scope
           // identity the host sends on operator requests.
           runtimeScope: options.scopeId,
+          // Run 98 R7/R17: the sidecar composes its supervised evaluation and rollout
+          // domains from the same staged manifest the host reads.
+          ...(trackBManifestPath ? { manifestPath: trackBManifestPath } : {}),
           artifactDigestKeyFile: artifactKeyFiles.artifactDigestKeyFile,
           artifactEncryptionKeyFile: artifactKeyFiles.artifactEncryptionKeyFile,
           trustMaterialFile: destinationTrustMaterialFile,
