@@ -1580,6 +1580,26 @@ export function createTrackBOperations({
         `operator/learning/measurement${operatorQuery(query)}`,
       );
     },
+    // Run 98 R6/R15/R17: the operator policy readback, change and rollback routes were
+    // served by the sidecar from S4 on; the host now exposes them for the Learning UI.
+    async readLearningPolicy(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return requestOperator(
+        "learning policy readback",
+        `operator/learning/policy${operatorQuery(query)}`,
+      );
+    },
+    async setLearningPolicy(body: Record<string, unknown>): Promise<unknown> {
+      return requestOperator("learning policy change", "operator/learning/policy", {
+        method: "POST",
+        body,
+      });
+    },
+    async rollbackLearningPolicy(body: Record<string, unknown>): Promise<unknown> {
+      return requestOperator("learning policy rollback", "operator/learning/policy/rollback", {
+        method: "POST",
+        body,
+      });
+    },
     async activateLearningPack(body: Record<string, unknown>): Promise<unknown> {
       return requestOperator("learning pack activation", "operator/learning/activate-pack", {
         method: "POST",

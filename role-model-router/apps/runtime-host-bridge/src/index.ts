@@ -3017,6 +3017,9 @@ export interface StartBridgeServerOptions {
   readonly readLearningRecords?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
   readonly readLearningDecisions?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
   readonly readLearningMeasurement?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readLearningPolicy?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly setLearningPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly rollbackLearningPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly activateLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly engageLearningKillSwitch?: (body: Record<string, unknown>) => Promise<unknown>;
@@ -3680,6 +3683,9 @@ export interface CreateRuntimeBridgeBackendOptions {
   readonly readLearningRecords?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
   readonly readLearningDecisions?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
   readonly readLearningMeasurement?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readLearningPolicy?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly setLearningPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly rollbackLearningPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly activateLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly engageLearningKillSwitch?: (body: Record<string, unknown>) => Promise<unknown>;
@@ -14915,19 +14921,24 @@ function validateOperatorRequestContext(input: {
   for (const field of fields) {
     const headerName = `x-role-model-${field.replace(/[A-Z]/gu, (letter) => `-${letter.toLowerCase()}`)}`;
     const supplied = readOperatorHeader(input.request, headerName);
-    if (supplied === undefined || supplied === "") {
-      throw new BridgeHttpError(403, {
-        error: "operator_context_required",
-        field,
-      });
-    }
-    const normalized = normalizeOperatorContextValue(field, supplied);
     const expected = input.context?.[field];
-    if (expected === undefined || normalized !== expected) {
+    if (expected === undefined) {
       throw new BridgeHttpError(403, {
         error: "operator_context_mismatch",
         field,
       });
+    }
+    // Run 98 R17: the bearer token is the authority. The context headers stay supported
+    // for clients that bind explicitly, but a runtime with a single configured context
+    // accepts a header-less request (the UI's operator calls) and applies its own context.
+    if (supplied !== undefined && supplied !== "") {
+      const normalized = normalizeOperatorContextValue(field, supplied);
+      if (normalized !== expected) {
+        throw new BridgeHttpError(403, {
+          error: "operator_context_mismatch",
+          field,
+        });
+      }
     }
 
     const bodyValue = Object.prototype.hasOwnProperty.call(input.body, field)
@@ -14950,13 +14961,11 @@ function validateOperatorRequestContext(input: {
 
   const expectedCapability = operatorCapabilityForPath(input.url.pathname);
   const suppliedCapability = readOperatorHeader(input.request, "x-role-model-capability");
-  if (suppliedCapability === undefined || suppliedCapability === "") {
-    throw new BridgeHttpError(403, {
-      error: "operator_capability_required",
-      capability: expectedCapability,
-    });
-  }
-  if (suppliedCapability !== expectedCapability) {
+  if (
+    suppliedCapability !== undefined &&
+    suppliedCapability !== "" &&
+    suppliedCapability !== expectedCapability
+  ) {
     throw new BridgeHttpError(403, {
       error: "operator_context_mismatch",
       field: "capability",
@@ -15408,6 +15417,42 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           return;
         }
         // Run 98 R17: Learning UI readback and rollout actions.
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/learning/policy"
+        ) {
+          if (!options.readLearningPolicy) {
+            writeOperatorUnavailable(response, "learning policy readback");
+            return;
+          }
+          writeOperatorResult(
+            response,
+            await options.readLearningPolicy(Object.fromEntries(url.searchParams)),
+          );
+          return;
+        }
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/role-model/operator/learning/policy"
+        ) {
+          if (!options.setLearningPolicy) {
+            writeOperatorUnavailable(response, "learning policy change");
+            return;
+          }
+          writeOperatorResult(response, await options.setLearningPolicy(operatorBody));
+          return;
+        }
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/role-model/operator/learning/policy/rollback"
+        ) {
+          if (!options.rollbackLearningPolicy) {
+            writeOperatorUnavailable(response, "learning policy rollback");
+            return;
+          }
+          writeOperatorResult(response, await options.rollbackLearningPolicy(operatorBody));
+          return;
+        }
         if (
           request.method === "GET" &&
           url.pathname === "/api/role-model/operator/learning/rollout"
