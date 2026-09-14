@@ -1,0 +1,55 @@
+import { expect, test } from "vitest";
+
+import {
+  RUN97_PAIRWISE_JUDGE_SCORER_ID,
+  createRun97PairwiseJudgeScorer,
+} from "../src/track-b-runtime.js";
+
+/**
+ * Run 98 R10 (AC-R10-03) live defect: the pairwise judge scorer's *definition* varies with the
+ * judge endpoint and the judge mode, but its `version` was hardcoded to `"1"`. Evaluation Core
+ * keys the durable scorer registry on `id@version` and refuses a different definition under the
+ * same key, so the first judge-identity change failed the whole comparison:
+ *
+ *   `extension evaluation-core failed: duplicate scorer ID has incompatible version`
+ *
+ * Observed on the stage root at 2026-09-14T08:38Z. The version must follow the definition, so a
+ * changed judge identity registers a new scorer instead of colliding with the old one.
+ */
+
+test("run98 R10 the judge scorer version changes with the judge identity", () => {
+  const baseline = createRun97PairwiseJudgeScorer({ judgeEndpointId: "endpoint:judge-a" });
+  const otherEndpoint = createRun97PairwiseJudgeScorer({ judgeEndpointId: "endpoint:judge-b" });
+  const identityBlind = createRun97PairwiseJudgeScorer({
+    judgeEndpointId: "endpoint:judge-a",
+    judgeMode: "identity_blind",
+  });
+  const identified = createRun97PairwiseJudgeScorer({
+    judgeEndpointId: "endpoint:judge-a",
+    judgeMode: "identified",
+  });
+
+  expect(baseline.id).toBe(RUN97_PAIRWISE_JUDGE_SCORER_ID);
+  expect(otherEndpoint.version).not.toBe(baseline.version);
+  expect(identityBlind.version).not.toBe(baseline.version);
+  expect(identityBlind.version).not.toBe(identified.version);
+  expect(new Set([baseline.digest, otherEndpoint.digest, identityBlind.digest]).size).toBe(3);
+});
+
+test("run98 R10 the judge scorer version is deterministic, bounded and identity-derived", () => {
+  const first = createRun97PairwiseJudgeScorer({
+    judgeEndpointId: "endpoint:judge-a",
+    judgeMode: "identity_blind",
+  });
+  const second = createRun97PairwiseJudgeScorer({
+    judgeEndpointId: "endpoint:judge-a",
+    judgeMode: "identity_blind",
+  });
+  expect(second).toEqual(first);
+  expect(first.version).toMatch(/^[A-Za-z0-9._+-]{1,32}$/);
+  expect(first.version.startsWith("1")).toBe(true);
+  // The default identity keeps the canonical scorer-set version, so existing bindings that
+  // never changed judge identity stay valid.
+  const defaultIdentity = createRun97PairwiseJudgeScorer({ judgeEndpointId: "endpoint:judge-a" });
+  expect(defaultIdentity.scorerSetVersion).toBe(first.scorerSetVersion.replace(".identity-blind", ""));
+});

@@ -6333,10 +6333,26 @@ export function createRun97PairwiseJudgeScorer(input: {
   }
   const judgeMode: "identified" | "identity_blind" =
     input.judgeMode === "identity_blind" ? "identity_blind" : "identified";
+  // Run 98 R10 (AC-R10-03): Evaluation Core keys its durable scorer registry on
+  // `id@version` and refuses a different definition under the same key. The judge identity
+  // (endpoint + mode) is part of the definition, so it must be part of the version too —
+  // otherwise the first judge change fails the comparison with "duplicate scorer ID has
+  // incompatible version" (observed live at 2026-09-14T08:38Z).
+  const judgeIdentityVersion = `1+${createHash("sha256")
+    .update(
+      JSON.stringify(
+        canonicalExtensionValue({
+          judgeEndpointId: input.judgeEndpointId.trim(),
+          judgeMode,
+        }),
+      ),
+    )
+    .digest("hex")
+    .slice(0, 12)}`;
   const definition = {
     manifestVersion: 2 as const,
     id: RUN97_PAIRWISE_JUDGE_SCORER_ID,
-    version: "1",
+    version: judgeIdentityVersion,
     scorerSetVersion:
       judgeMode === "identified"
         ? RUN96_ROUTING_SHADOW_SCORER_SET_VERSION
