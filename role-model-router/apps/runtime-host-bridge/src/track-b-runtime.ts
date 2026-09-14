@@ -7870,6 +7870,15 @@ export async function runTrackBShadowPipeline(
               }
             : {}),
           envelope: (capability, value) => envelope(capability, value),
+          // The packaged host externalizes oversized business results, so the pass decodes the
+          // comparison-group list exactly like the pipeline decodes its own extension answers.
+          decodeResult: (extensionId, _capability, raw) =>
+            decodeExtensionBusinessResult({
+              result: raw,
+              extensionId,
+              ...(input.contractStateRoot ? { stateRoot: input.contractStateRoot } : {}),
+              scopeId: input.scope,
+            }) ?? raw,
         });
       } catch (error) {
         learningPass = {

@@ -154,6 +154,18 @@ export interface TrackBLearningPassInput {
   /** Compose the envelope the sidecar host expects (`{value, filePath, ...}`). */
   readonly envelope?: (capability: string, value: Record<string, unknown>) => Record<string, unknown>;
   /**
+   * Run 98 R3: the packaged extension host externalizes a business result that exceeds the
+   * inline cap (`evaluation:list-groups` on a live stage root answers with a durable-output
+   * envelope). The caller supplies the host's own decoder so the pass reads the same list the
+   * pipeline does; without it the pass silently counted zero decisive comparisons and refused
+   * every candidate with `insufficient_evidence` (observed live on stage v86).
+   */
+  readonly decodeResult?: (
+    extensionId: string,
+    capability: string,
+    raw: unknown,
+  ) => unknown;
+  /**
    * Run 98 R3: the same evidence-authority secret the derive call used. Without it the worker has
    * no authority to verify the durable comparison readback and safety receipts, and validation
    * fails closed with `verified durable comparison readback receipt required for validation`
@@ -235,9 +247,16 @@ export async function runTrackBLearningPass(
   const guardrails = input.guardrails ?? DEFAULT_LEARNING_GUARDRAILS;
 
   const rawGroups = await runtime.invoke("evaluation-core", envelope("evaluation:list-groups", {}));
-  const groups: TrackBLearningEvidenceGroup[] = Array.isArray(rawGroups)
-    ? (rawGroups as TrackBLearningEvidenceGroup[])
-    : [];
+  const decodedGroups = input.decodeResult
+    ? input.decodeResult("evaluation-core", "evaluation:list-groups", rawGroups)
+    : Array.isArray(rawGroups)
+      ? rawGroups
+      : decodeBusinessResult(rawGroups, "evaluation-core", input.scope);
+  const groups: TrackBLearningEvidenceGroup[] = Array.isArray(decodedGroups)
+    ? (decodedGroups as TrackBLearningEvidenceGroup[])
+    : Array.isArray(asRecord(decodedGroups)?.groups)
+      ? ((asRecord(decodedGroups) as Record<string, unknown>).groups as TrackBLearningEvidenceGroup[])
+      : [];
   const evidenceSummary = buildTrackBLearningEvidenceSummary({
     groups,
     routePackage,

@@ -248,3 +248,48 @@ test("run98 R3 the pass fails closed without a scoring identity or durable recei
     runTrackBLearningPass(fakeRuntime({ groups: decisiveGroups, validation: {} }), passInput()),
   ).rejects.toThrow(/durable receipt/);
 });
+
+test("run98 R3 an externalized comparison-group list is decoded before the evidence floor runs", async () => {
+  // The packaged extension host answers a large `evaluation:list-groups` with a durable-output
+  // envelope; reading it as an array silently produced zero decisive comparisons and refused
+  // every candidate (observed live on stage v86).
+  const seen: string[] = [];
+  const runtime = {
+    async invoke(extensionId: string, envelope: Record<string, unknown>) {
+      const capability = String(envelope.capability);
+      seen.push(capability);
+      if (capability === "evaluation:list-groups") {
+        return { businessOutput: decisiveGroups, durableLocator: "artifact:groups" };
+      }
+      if (capability === "knowledge:validate-candidate") {
+        const summary = (envelope.value as Record<string, unknown>).evidenceSummary as Record<
+          string,
+          unknown
+        >;
+        // The floor must see the real evidence, not an empty list.
+        expect(summary).toMatchObject({
+          decisiveComparisons: 3,
+          holdoutComparisons: 3,
+          distinctCaptures: 3,
+        });
+        return {
+          receipt: { receiptId: "validation:externalized", decision: "validate" },
+          promotionEligible: false,
+        };
+      }
+      if (capability === "knowledge:record-learning") return { recorded: true };
+      throw new Error(`unexpected capability ${capability}`);
+    },
+  };
+  const receipt = await runTrackBLearningPass(runtime, {
+    ...passInput(),
+    decodeResult: (_extensionId, _capability, raw) =>
+      (raw as { businessOutput?: unknown }).businessOutput,
+  });
+  expect(receipt).toMatchObject({ decision: "validate", validationReceiptId: "validation:externalized" });
+  expect(seen).toEqual([
+    "evaluation:list-groups",
+    "knowledge:validate-candidate",
+    "knowledge:record-learning",
+  ]);
+});
