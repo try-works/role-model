@@ -55,6 +55,11 @@ export interface ProjectRuntimeRouteInputInput {
     string,
     CoreEndpointCandidate["telemetryScores"] | null | undefined
   >;
+  /**
+   * Run 98 R5: operator-policy-gated advisory consideration. Passed only when the
+   * effective learning stage is S2 or above; hard eligibility and scoring still run first.
+   */
+  advisoryConsideration?: RouteRequestInput["advisoryConsideration"];
 }
 
 export interface ProjectRuntimeRouteInputResult {
@@ -243,6 +248,9 @@ export function projectRuntimeRouteInput(
       observedDataConfig: input.observedDataConfig,
       throughputPenaltyStateByEndpointId: input.throughputPenaltyStateByEndpointId,
       routingTimeMs: input.routingTimeMs,
+      ...(input.advisoryConsideration
+        ? { advisoryConsideration: input.advisoryConsideration }
+        : {}),
     },
     routingDiagnostics: {
       retrievalReceiptId: input.retrievalReceipt.receiptId,

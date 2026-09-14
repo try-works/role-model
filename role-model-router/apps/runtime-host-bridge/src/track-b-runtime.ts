@@ -5913,6 +5913,26 @@ export function clearTrackBRouteAdvisoryCacheForTests() {
 }
 
 /**
+ * Run 98 R5: the newest advisory for a scope, whichever route package produced it. The
+ * live decision needs this before the route package is chosen, because the advisory's
+ * preferred package is what the bounded tie-break considers.
+ */
+export function recallNewestTrackBRouteAdvisory(input: {
+  readonly channel: string;
+  readonly scope: string;
+}) {
+  let newest: (typeof trackBRouteAdvisoryCache extends Map<string, infer TValue>
+    ? TValue
+    : never) | null = null;
+  for (const [key, value] of trackBRouteAdvisoryCache) {
+    const [channel, scope] = key.split("\u0000");
+    if (channel !== input.channel || scope !== input.scope) continue;
+    if (!newest || value.cachedAtMs > newest.cachedAtMs) newest = value;
+  }
+  return newest;
+}
+
+/**
  * The observation for one already-taken live decision: the newest advisory for the scope
  * when one exists, and an explicit `unavailable` observation otherwise (`AC-R04-04`).
  */

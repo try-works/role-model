@@ -181,6 +181,7 @@ import {
   createRun88RuntimeCorrelation,
   createRuntimeRequestCorrelationId,
   createTrackBFileGraphStore,
+  recallNewestTrackBRouteAdvisory,
 } from "./track-b-runtime.js";
 
 import {
@@ -23633,6 +23634,49 @@ export async function createRuntimeBridgeBackend(
         databasePath: initialization.databasePath,
         executionRequest: plan.executionRequest,
       });
+      // Run 98 R5 (AC-R05-04): S2+ is the only stage that passes an advisory into routing,
+      // so the default S1 runtime produces exactly the decision it produced before. The
+      // policy values mirror the R15 defaults until the policy file/UI wiring lands.
+      const learningStage = (process.env.ROLE_MODEL_LEARNING_STAGE?.trim() ?? "S1") as
+        | "S0"
+        | "S1"
+        | "S2"
+        | "S3"
+        | "S4";
+      const advisoryConsideration = ["S2", "S3", "S4"].includes(learningStage)
+        ? (() => {
+            const cached = recallNewestTrackBRouteAdvisory({
+              channel: runtimeChannel,
+              scope: options.scopeId,
+            });
+            if (!cached) return undefined;
+            const numeric = (value: string | undefined, fallback: number): number => {
+              const parsed = Number(value);
+              return Number.isFinite(parsed) ? parsed : fallback;
+            };
+            return {
+              candidateId: cached.candidateId,
+              preferredEndpointId: cached.preferredRoutePackage,
+              advisoryState: cached.advisoryState,
+              confidence: cached.confidence,
+              advisoryId: cached.advisoryId,
+              policyVersion: process.env.ROLE_MODEL_LEARNING_POLICY_VERSION?.trim() ?? null,
+              stage: learningStage,
+              scoreBand: numeric(process.env.ROLE_MODEL_LEARNING_SCORE_BAND, 0.05),
+              minAdvisoryConfidence: numeric(
+                process.env.ROLE_MODEL_LEARNING_MIN_CONFIDENCE,
+                0.7,
+              ),
+              cohortPercent: numeric(process.env.ROLE_MODEL_LEARNING_COHORT_PERCENT, 100),
+              explorationPercent: numeric(
+                process.env.ROLE_MODEL_LEARNING_EXPLORATION_PERCENT,
+                0,
+              ),
+              killSwitch: process.env.ROLE_MODEL_LEARNING_KILL_SWITCH?.trim() === "true",
+              thresholdSetVersion: process.env.ROLE_MODEL_SCORER_SET_VERSION?.trim() ?? null,
+            };
+          })()
+        : undefined;
       return {
         deniedEndpointIds: mergedDenyEndpoints,
         routed: routeRuntimeRequest({
@@ -23659,6 +23703,7 @@ export async function createRuntimeBridgeBackend(
           taskDefinitions: executionSnapshot.taskDefinitions,
           roleBindings,
           routingModel: plan.routingModel ?? executionSnapshot.routingModel ?? undefined,
+          ...(advisoryConsideration ? { advisoryConsideration } : {}),
           ...(cacheContinuityRouteHints
             ? {
                 cacheContinuity: {

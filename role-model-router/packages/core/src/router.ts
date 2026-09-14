@@ -4,6 +4,8 @@ import type {
   EndpointCandidate,
   RoleBindingRecord,
   RoleDefinitionRecord,
+  RouteAdvisoryConsiderationInput,
+  RouteAdvisoryConsiderationOutcome,
   RouteRequestInput,
   RouterDecisionRecord,
   RoutingPolicySnapshot,
@@ -28,6 +30,99 @@ function clamp(value: number, minimum = 0, maximum = 1): number {
 }
 
 export const ROUTER_SCORE_TIE_EPSILON = 0.01;
+
+const ADVISORY_STAGES_WITH_INFLUENCE = new Set(["S2", "S3", "S4"]);
+
+const advisoryBucket = (seed: string): number => {
+  let hash = 2166136261;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash ^= seed.charCodeAt(index);
+    hash = Math.imul(hash, 16777619) >>> 0;
+  }
+  return hash % 100;
+};
+
+/**
+ * Run 98 R5 (AC-R05-01..04): stage S2 advisory-considered selection.
+ *
+ * The advisory is consulted only after hard eligibility and scoring: it can re-rank
+ * candidates that are already eligible, and only when the advised candidate is within the
+ * configured score band of the leader. Every gate failure returns a typed fallback reason
+ * and leaves the baseline selection untouched, so an S1 runtime (or a stale/low-confidence
+ * advisory) produces exactly the same decision it produced before.
+ */
+export function evaluateRouteAdvisoryConsideration(input: {
+  readonly scored: readonly { readonly endpoint_id: string; readonly total_score: number }[];
+  readonly eligibleEndpointIds: readonly string[];
+  readonly decisionSeed: string;
+  readonly advisory?: RouteAdvisoryConsiderationInput | null;
+}): RouteAdvisoryConsiderationOutcome {
+  const band = Number.isFinite(input.advisory?.scoreBand) ? Number(input.advisory?.scoreBand) : 0;
+  const base = {
+    applied: false,
+    explorationMode: "baseline" as const,
+    selectionProbability: null,
+    advisoryCandidateId: input.advisory?.candidateId ?? null,
+    advisoryPackageId: input.advisory?.preferredEndpointId ?? null,
+    advisoryConfidence: Number.isFinite(input.advisory?.confidence)
+      ? Number(input.advisory?.confidence)
+      : 0,
+    thresholdSetVersion: input.advisory?.thresholdSetVersion ?? null,
+    policyVersion: input.advisory?.policyVersion ?? null,
+    scoreBand: band,
+    scoreGapBefore: null,
+    cohortBucket: null,
+  };
+  const fallback = (reason: string): RouteAdvisoryConsiderationOutcome => ({
+    ...base,
+    fallbackReason: reason,
+  });
+  const advisory = input.advisory;
+  if (!advisory) return fallback("no_advisory");
+  if (advisory.advisoryState !== "fresh") return fallback(`advisory_${advisory.advisoryState}`);
+  if (!ADVISORY_STAGES_WITH_INFLUENCE.has(advisory.stage)) return fallback("stage_below_s2");
+  if (advisory.killSwitch === true) return fallback("kill_switch_engaged");
+  const confidence = Number.isFinite(advisory.confidence) ? Number(advisory.confidence) : 0;
+  if (confidence < advisory.minAdvisoryConfidence) return fallback("below_confidence_floor");
+  const preferred = advisory.preferredEndpointId;
+  // AC-R05-01: an advisory can never add or widen a candidate.
+  if (!preferred || !input.eligibleEndpointIds.includes(preferred)) {
+    return fallback("advisory_candidate_not_eligible");
+  }
+  const cohortPercent = Number.isFinite(advisory.cohortPercent)
+    ? Math.min(100, Math.max(0, Number(advisory.cohortPercent)))
+    : 0;
+  const bucket = advisoryBucket(input.decisionSeed);
+  if (cohortPercent <= 0) return fallback("cohort_excluded");
+  if (bucket >= cohortPercent) {
+    return { ...fallback("cohort_excluded"), cohortBucket: bucket };
+  }
+  const leader = input.scored[0];
+  const advised = input.scored.find((candidate) => candidate.endpoint_id === preferred);
+  if (!leader || !advised) return fallback("advisory_candidate_not_eligible");
+  const gap = leader.total_score - advised.total_score;
+  if (gap > band) return { ...fallback("outside_score_band"), scoreGapBefore: gap, cohortBucket: bucket };
+  const explorationPercent = Number.isFinite(advisory.explorationPercent)
+    ? Math.min(100, Math.max(0, Number(advisory.explorationPercent)))
+    : 0;
+  const rngBucket = advisoryBucket(`${input.decisionSeed}:exploration`);
+  const explore = explorationPercent > 0 && rngBucket < explorationPercent;
+  const applied = preferred !== leader.endpoint_id;
+  const selectionProbability = explore
+    ? explorationPercent / 100
+    : explorationPercent > 0
+      ? 1 - explorationPercent / 100
+      : 1;
+  return {
+    ...base,
+    applied,
+    explorationMode: explore ? "advisory_exploration" : applied ? "advisory_considered" : "baseline",
+    selectionProbability: applied ? selectionProbability : 1,
+    fallbackReason: applied ? null : "advisory_matches_baseline",
+    scoreGapBefore: gap,
+    cohortBucket: bucket,
+  };
+}
 const LATENCY_TARGET_MS = 150;
 const LATENCY_MAX_MS = 300;
 const THROUGHPUT_TARGET_TPS = 40;
@@ -1572,12 +1667,36 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
     );
   });
 
-  const chosen = scored[0];
+  // Run 98 R5: the advisory is consulted only here, after hard eligibility and scoring,
+  // and only within the policy's score band.
+  const advisoryOutcome = evaluateRouteAdvisoryConsideration({
+    scored: scored.map((candidate) => ({
+      endpoint_id: candidate.endpoint_id,
+      total_score: candidate.total_score,
+    })),
+    eligibleEndpointIds: eligible.map((candidate) => candidate.identity.endpoint_id),
+    decisionSeed: normalizedInput.request.requestId,
+    advisory: normalizedInput.advisoryConsideration ?? null,
+  });
+  const advisoryPreferredIndex =
+    advisoryOutcome.applied && advisoryOutcome.advisoryPackageId
+      ? scored.findIndex((candidate) => candidate.endpoint_id === advisoryOutcome.advisoryPackageId)
+      : -1;
+  const chosen =
+    advisoryPreferredIndex > 0
+      ? scored[advisoryPreferredIndex]
+      : scored[0];
   const runnerUp = scored[1];
+  const orderedFallbacks = chosen
+    ? [chosen, ...scored.filter((candidate) => candidate !== chosen)]
+    : scored;
   const tieBreakApplied =
     Boolean(chosen) &&
     Boolean(runnerUp) &&
-    Math.abs((chosen?.total_score ?? 0) - (runnerUp?.total_score ?? 0)) <= ROUTER_SCORE_TIE_EPSILON;
+    (advisoryOutcome.applied
+      ? true
+      : Math.abs((chosen?.total_score ?? 0) - (runnerUp?.total_score ?? 0)) <=
+        ROUTER_SCORE_TIE_EPSILON);
   const selectionReasons: SelectionReasonCode[] = chosen
     ? unique<SelectionReasonCode>([
         "BEST_TOTAL_SCORE",
@@ -1614,10 +1733,13 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
           effort_source: chosenReasoningEffort === null ? ("none" as const) : ("variant" as const),
         }
       : {}),
-    fallback_endpoint_ids: scored.slice(1).map((candidate) => candidate.endpoint_id),
+    fallback_endpoint_ids: orderedFallbacks.slice(1).map((candidate) => candidate.endpoint_id),
     selection_reasons: selectionReasons,
     used_measured: chosen?.usedMeasured ?? false,
     used_declared: chosen?.usedDeclared ?? false,
     scoring_version: "baseline-v2",
+    ...(normalizedInput.advisoryConsideration === undefined
+      ? {}
+      : { advisory_consideration: advisoryOutcome }),
   };
 }
