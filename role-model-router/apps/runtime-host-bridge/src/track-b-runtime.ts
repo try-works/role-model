@@ -5979,6 +5979,13 @@ export const RUN97_PAIRWISE_JUDGE_DIMENSION = "task_specific_quality";
 
 export function createRun97PairwiseJudgeScorer(input: {
   readonly judgeEndpointId: string;
+  /**
+   * Run 98 R10 (AC-R10-03): the judge mode is part of the scorer identity, so a mode
+   * change produces a different scorer digest (and, for non-default modes, a different
+   * scorer set version) and therefore invalidates comparisons and packs bound to the
+   * previous judge identity.
+   */
+  readonly judgeMode?: "identified" | "identity_blind";
 }): {
   readonly manifestVersion: 2;
   readonly id: string;
@@ -5992,15 +5999,21 @@ export function createRun97PairwiseJudgeScorer(input: {
   readonly requiredInputs: readonly string[];
   readonly source: string;
   readonly judgeEndpointId: string;
+  readonly judgeMode: "identified" | "identity_blind";
 } {
   if (typeof input?.judgeEndpointId !== "string" || !input.judgeEndpointId.trim()) {
     throw new Error("pairwise judge scorer requires a router judge endpoint");
   }
+  const judgeMode: "identified" | "identity_blind" =
+    input.judgeMode === "identity_blind" ? "identity_blind" : "identified";
   const definition = {
     manifestVersion: 2 as const,
     id: RUN97_PAIRWISE_JUDGE_SCORER_ID,
     version: "1",
-    scorerSetVersion: RUN96_ROUTING_SHADOW_SCORER_SET_VERSION,
+    scorerSetVersion:
+      judgeMode === "identified"
+        ? RUN96_ROUTING_SHADOW_SCORER_SET_VERSION
+        : `${RUN96_ROUTING_SHADOW_SCORER_SET_VERSION}.identity-blind`,
     algorithm: "pairwise_battle",
     dimensions: [RUN97_PAIRWISE_JUDGE_DIMENSION],
     range: { min: 0, max: 1 },
@@ -6008,6 +6021,7 @@ export function createRun97PairwiseJudgeScorer(input: {
     requiredInputs: ["outputRef", "evaluationCriteria"],
     source: "role_model_pairwise_judge",
     judgeEndpointId: input.judgeEndpointId.trim(),
+    judgeMode,
   };
   return {
     ...definition,
@@ -6132,7 +6146,10 @@ export async function runTrackBShadowPipeline(
   // supplies a router judge, the canonical pairwise judge dimension joins the scorer
   // set so the comparison carries a real preference with judge provenance.
   const judgeScorer = input.judge
-    ? createRun97PairwiseJudgeScorer({ judgeEndpointId: input.judge.endpointId })
+    ? createRun97PairwiseJudgeScorer({
+        judgeEndpointId: input.judge.endpointId,
+        ...(input.judge.mode ? { judgeMode: input.judge.mode } : {}),
+      })
     : null;
   if (judgeScorer) {
     await runtime.invoke("evaluation-core", {
@@ -6516,6 +6533,11 @@ export async function runTrackBShadowPipeline(
         routerDecisionId: decision.routerDecisionId,
         judgeResultRef: decision.judgeResultRef,
         judgeEndpointId: decision.judgeEndpointId,
+        ...(decision.judgeMode ? { judgeMode: decision.judgeMode } : {}),
+        ...(decision.presentation ? { presentation: decision.presentation } : {}),
+        ...(decision.judgeModeAgreement === undefined
+          ? {}
+          : { judgeModeAgreement: decision.judgeModeAgreement }),
       };
       judgeScores = [sourceBranch, counterfactualBranch].map((branch) => ({
         scorerId: judgeScorer.id,

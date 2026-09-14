@@ -15,6 +15,34 @@ export const TRACK_B_PAIRWISE_JUDGE_WINNER_SOURCE = "source" as const;
 export const TRACK_B_PAIRWISE_JUDGE_WINNER_COUNTERFACTUAL = "counterfactual" as const;
 export const TRACK_B_PAIRWISE_JUDGE_WINNER_TIE = "tie" as const;
 
+/**
+ * Run 98 R10 (AC-R10-01): the judge can run identity-blind. Model identities are
+ * withheld from the prompt in that mode, and the decision records which mode produced
+ * it so agreement between the two modes can be measured and reported.
+ */
+export const PAIRWISE_JUDGE_MODE_IDENTIFIED = "identified" as const;
+export const PAIRWISE_JUDGE_MODE_IDENTITY_BLIND = "identity_blind" as const;
+export type PairwiseJudgeMode =
+  | typeof PAIRWISE_JUDGE_MODE_IDENTIFIED
+  | typeof PAIRWISE_JUDGE_MODE_IDENTITY_BLIND;
+export const PAIRWISE_JUDGE_MODES: readonly PairwiseJudgeMode[] = Object.freeze([
+  PAIRWISE_JUDGE_MODE_IDENTIFIED,
+  PAIRWISE_JUDGE_MODE_IDENTITY_BLIND,
+]);
+
+export const isPairwiseJudgeMode = (value: unknown): value is PairwiseJudgeMode =>
+  typeof value === "string" && (PAIRWISE_JUDGE_MODES as readonly string[]).includes(value);
+
+/**
+ * Run 98 R10 (AC-R10-02): answer position is presentation state, never identity. The
+ * presentation order is recorded so a second, swapped dispatch can bound position-order
+ * effects instead of silently producing a tie.
+ */
+export type PairwiseJudgePresentation = { readonly first: "source" | "counterfactual" };
+
+export const pairwiseJudgePresentation = (swap: boolean): PairwiseJudgePresentation =>
+  swap ? { first: "counterfactual" } : { first: "source" };
+
 export type TrackBPairwiseJudgeWinner =
   | typeof TRACK_B_PAIRWISE_JUDGE_WINNER_SOURCE
   | typeof TRACK_B_PAIRWISE_JUDGE_WINNER_COUNTERFACTUAL
@@ -47,10 +75,20 @@ export interface TrackBPairwiseJudgeDecision {
   readonly routerDecisionId: string;
   readonly judgeResultRef: string;
   readonly judgeEndpointId: string;
+  /** Run 98 R10: which judge mode produced this decision. */
+  readonly judgeMode?: PairwiseJudgeMode;
+  /** Run 98 R10: the presentation order the decision was produced under. */
+  readonly presentation?: PairwiseJudgePresentation;
+  /** Run 98 R10: measured agreement with the reference judge mode, when probed. */
+  readonly judgeModeAgreement?: boolean;
 }
 
 export interface TrackBPairwiseJudge {
   readonly endpointId: string;
+  /** Run 98 R10: the configured judge mode travels with the judge identity. */
+  readonly mode?: PairwiseJudgeMode;
+  /** Run 98 R10: the configured presentation-order policy. */
+  readonly orderPolicy?: "source_first" | "dual_order";
   readonly dispatch: (
     request: TrackBPairwiseJudgeRequest,
   ) => Promise<TrackBPairwiseJudgeDecision>;
@@ -104,10 +142,28 @@ export function buildPairwiseJudgeMessages(input: {
   readonly counterfactualText: string;
   readonly sourceCandidateRef: string;
   readonly counterfactualCandidateRef: string;
+  /** Run 98 R10: identity-blind mode withholds the model identity from the prompt. */
+  readonly mode?: PairwiseJudgeMode;
+  /** Run 98 R10 (AC-R10-02): presentation order; defaults to source-first. */
+  readonly presentation?: PairwiseJudgePresentation;
 }): readonly { readonly role: "system" | "user"; readonly content: string }[] {
   const task = redactJudgeExcerpt(input.taskText, PAIRWISE_JUDGE_MAX_TASK_CHARS);
   const source = redactJudgeExcerpt(input.sourceText);
   const counterfactual = redactJudgeExcerpt(input.counterfactualText);
+  const identityBlind = input.mode === PAIRWISE_JUDGE_MODE_IDENTITY_BLIND;
+  const firstIsSource = (input.presentation?.first ?? "source") === "source";
+  const first = {
+    text: firstIsSource ? source : counterfactual,
+    ref: firstIsSource ? input.sourceCandidateRef : input.counterfactualCandidateRef,
+  };
+  const second = {
+    text: firstIsSource ? counterfactual : source,
+    ref: firstIsSource ? input.counterfactualCandidateRef : input.sourceCandidateRef,
+  };
+  const answer = (label: "A" | "B", branch: { readonly text: string; readonly ref: string }): string =>
+    identityBlind
+      ? `<answer label="${label}">`
+      : `<answer label="${label}" model="${branch.ref}">`;
   return [
     { role: "system", content: PAIRWISE_JUDGE_SYSTEM_PROMPT },
     {
@@ -116,11 +172,11 @@ export function buildPairwiseJudgeMessages(input: {
         "<task>",
         task,
         "</task>",
-        `<answer label="A" model="${input.sourceCandidateRef}">`,
-        source,
+        answer("A", first),
+        first.text,
         "</answer>",
-        `<answer label="B" model="${input.counterfactualCandidateRef}">`,
-        counterfactual,
+        answer("B", second),
+        second.text,
         "</answer>",
         "Which answer better satisfies the task? JSON only.",
       ].join("\n"),
@@ -141,6 +197,7 @@ export interface TrackBPairwiseJudgeResponse {
  */
 export function parsePairwiseJudgeResponse(
   value: unknown,
+  presentation: PairwiseJudgePresentation = { first: "source" },
 ): TrackBPairwiseJudgeResponse | null {
   if (typeof value !== "string" || !value.trim()) return null;
   const match = value.match(/\{[\s\S]*\}/);
@@ -154,10 +211,20 @@ export function parsePairwiseJudgeResponse(
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
   const record = parsed as Record<string, unknown>;
   const rawWinner = typeof record.winner === "string" ? record.winner.trim().toLowerCase() : "";
+  // The judge answers in presentation labels; translate them back through the order the
+  // answers were presented in (`AC-R10-02`).
+  const labelWinner =
+    rawWinner === "a"
+      ? presentation.first
+      : rawWinner === "b"
+        ? presentation.first === "source"
+          ? "counterfactual"
+          : "source"
+        : null;
   const winner =
-    rawWinner === "a" || rawWinner === "source"
+    labelWinner === "source" || rawWinner === "source"
       ? TRACK_B_PAIRWISE_JUDGE_WINNER_SOURCE
-      : rawWinner === "b" || rawWinner === "counterfactual"
+      : labelWinner === "counterfactual" || rawWinner === "counterfactual"
         ? TRACK_B_PAIRWISE_JUDGE_WINNER_COUNTERFACTUAL
         : rawWinner === "tie"
           ? TRACK_B_PAIRWISE_JUDGE_WINNER_TIE

@@ -119,6 +119,10 @@ test("run97 rc04 judge dispatches are named in the replay-produced capture famil
     routerDecisionId: "decision:judge-1",
     judgeResultRef: expect.stringMatching(/^judge-result:[0-9a-f]{16}$/),
     judgeEndpointId: "endpoint:judge",
+    // Run 98 R10: the decision records the judge mode and presentation order it was
+    // produced under, so agreement and position-order effects stay measurable.
+    judgeMode: "identified",
+    presentation: { first: "source" },
   });
   expect(derived).toEqual([
     {

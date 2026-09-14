@@ -1,11 +1,34 @@
 import { createHash } from "node:crypto";
 
 import {
+  PAIRWISE_JUDGE_MODE_IDENTIFIED,
+  PAIRWISE_JUDGE_MODE_IDENTITY_BLIND,
   buildPairwiseJudgeMessages,
+  isPairwiseJudgeMode,
+  pairwiseJudgePresentation,
   parsePairwiseJudgeResponse,
+  type PairwiseJudgeMode,
+  type PairwiseJudgePresentation,
   type TrackBPairwiseJudge,
+  type TrackBPairwiseJudgeDecision,
   type TrackBPairwiseJudgeRequest,
 } from "./track-b-shadow-judge.js";
+
+/**
+ * Run 98 R10 (AC-R10-02): a judge that prefers A in one presentation and B in the
+ * swapped presentation has measured a position-order effect, not a preference. The
+ * dispatch fails with this typed reason so the caller records bounded missingness
+ * instead of turning it into a silent tie.
+ */
+export const POSITION_ORDER_DISAGREEMENT = "position_order_disagreement" as const;
+
+export class PairwiseJudgeOrderDisagreementError extends Error {
+  readonly code = POSITION_ORDER_DISAGREEMENT;
+  constructor(message = "pairwise judge disagreed with itself under swapped presentation order") {
+    super(message);
+    this.name = "PairwiseJudgeOrderDisagreementError";
+  }
+}
 
 /**
  * Run 97 RC04 (L4): the host side of the pairwise judge boundary.
@@ -49,6 +72,24 @@ export interface CreateRouterPairwiseJudgeInput {
   readonly endpoints: readonly { readonly endpointId: string; readonly modelId: string }[];
   readonly excludedEndpointIds?: readonly string[];
   readonly taskText: string;
+  /** Run 98 R10: judge mode; defaults to the identified judge (previous behaviour). */
+  readonly mode?: PairwiseJudgeMode;
+  /**
+   * Run 98 R10 (AC-R10-02): `dual_order` dispatches the swapped presentation too and
+   * fails closed on disagreement; `source_first` keeps the single dispatch.
+   */
+  readonly orderPolicy?: "source_first" | "dual_order";
+  /**
+   * Run 98 R10 (AC-R10-01): when the primary dispatch is identity-blind, also probe the
+   * identified judge so agreement is measured for every decision.
+   */
+  readonly measureAgreement?: boolean;
+  readonly recordJudgeObservation?: (row: {
+    readonly judgeMode: PairwiseJudgeMode;
+    readonly outcome: "complete" | "failed" | "order_disagreement";
+    readonly presentation: PairwiseJudgePresentation;
+    readonly agreement?: boolean;
+  }) => void;
   readonly recordDerivedDispatch?: (row: {
     readonly judgeEndpointId: string;
     readonly attempt: number;
@@ -80,6 +121,8 @@ export function createRouterPairwiseJudge(
 
   return {
     endpointId: judgeEndpoint.endpointId,
+    mode: isPairwiseJudgeMode(input.mode) ? input.mode : PAIRWISE_JUDGE_MODE_IDENTIFIED,
+    orderPolicy: input.orderPolicy === "dual_order" ? "dual_order" : "source_first",
     async dispatch(request: TrackBPairwiseJudgeRequest) {
       const digest = createHash("sha256")
         .update(
@@ -94,83 +137,176 @@ export function createRouterPairwiseJudge(
       // The capture the judge call produces must be classified as evaluation output by
       // the private boundary (shared/capture/replay-provenance.mjs), or it re-enters the
       // pending replay queue and amplifies.
-      const judgeRequestId = `replay-judge-${digest}`;
-      const messages = buildPairwiseJudgeMessages({
-        taskText,
-        sourceText: request.source.outputText,
-        counterfactualText: request.counterfactual.outputText,
-        sourceCandidateRef: request.source.candidateRef,
-        counterfactualCandidateRef: request.counterfactual.candidateRef,
-      });
-      let execution: RouterPairwiseJudgeExecution;
-      try {
-        execution = await input.executeChatCompletions(
-          {
-            model: judgeEndpoint.modelId,
-            messages: messages as never,
-            temperature: 0,
-            stream: false,
-          } as never,
-          judgeRequestId,
-          undefined,
-          { endpointId: judgeEndpoint.endpointId, executionTrafficClass: "replay" },
-        );
-      } catch (error) {
-        input.recordDerivedDispatch?.({
-          judgeEndpointId: judgeEndpoint.endpointId,
-          attempt: 1,
-          costMicros: 0,
-          bytes: 0,
-          outcome: "failed",
+      const mode: PairwiseJudgeMode = isPairwiseJudgeMode(input.mode)
+        ? input.mode
+        : PAIRWISE_JUDGE_MODE_IDENTIFIED;
+      const orderPolicy = input.orderPolicy === "dual_order" ? "dual_order" : "source_first";
+      const runJudge = async (options: {
+        readonly mode: PairwiseJudgeMode;
+        readonly presentation: PairwiseJudgePresentation;
+        readonly attempt: number;
+      }): Promise<{ readonly decision: TrackBPairwiseJudgeDecision; readonly routerDecisionId: string }> => {
+        // The judge capture must stay inside the boundary's `replay-judge-<16 hex>` family
+        // (run 97 RC04/L5), so the mode, presentation and attempt are folded into the
+        // digest rather than appended to the id.
+        const callDigest = createHash("sha256")
+          .update(`${digest}:${options.mode}:${options.presentation.first}:${options.attempt}`)
+          .digest("hex")
+          .slice(0, 16);
+        const judgeRequestId = `replay-judge-${callDigest}`;
+        const messages = buildPairwiseJudgeMessages({
+          taskText,
+          sourceText: request.source.outputText,
+          counterfactualText: request.counterfactual.outputText,
+          sourceCandidateRef: request.source.candidateRef,
+          counterfactualCandidateRef: request.counterfactual.candidateRef,
+          mode: options.mode,
+          presentation: options.presentation,
         });
-        throw error instanceof Error ? error : new Error("router judge dispatch failed");
-      }
-      const text =
-        (typeof execution?.contentText === "string" && execution.contentText) ||
-        (typeof execution?.reasoningText === "string" && execution.reasoningText) ||
-        "";
-      const parsed = parsePairwiseJudgeResponse(text);
-      const observedCostUsd = execution?.replayCost?.usd;
-      const costMicros =
-        typeof observedCostUsd === "number" && Number.isFinite(observedCostUsd) && observedCostUsd >= 0
-          ? Math.ceil(observedCostUsd * 1_000_000)
-          : 0;
-      const bytes =
-        Number.isSafeInteger(execution?.responseBytes) && Number(execution?.responseBytes) >= 0
-          ? Number(execution?.responseBytes)
-          : Buffer.byteLength(text, "utf8");
-      if (!parsed) {
+        let execution: RouterPairwiseJudgeExecution;
+        try {
+          execution = await input.executeChatCompletions(
+            {
+              model: judgeEndpoint.modelId,
+              messages: messages as never,
+              temperature: 0,
+              stream: false,
+            } as never,
+            judgeRequestId,
+            undefined,
+            { endpointId: judgeEndpoint.endpointId, executionTrafficClass: "replay" },
+          );
+        } catch (error) {
+          input.recordDerivedDispatch?.({
+            judgeEndpointId: judgeEndpoint.endpointId,
+            attempt: options.attempt,
+            costMicros: 0,
+            bytes: 0,
+            outcome: "failed",
+          });
+          input.recordJudgeObservation?.({
+            judgeMode: options.mode,
+            outcome: "failed",
+            presentation: options.presentation,
+          });
+          throw error instanceof Error ? error : new Error("router judge dispatch failed");
+        }
+        const text =
+          (typeof execution?.contentText === "string" && execution.contentText) ||
+          (typeof execution?.reasoningText === "string" && execution.reasoningText) ||
+          "";
+        const parsed = parsePairwiseJudgeResponse(text, options.presentation);
+        const observedCostUsd = execution?.replayCost?.usd;
+        const costMicros =
+          typeof observedCostUsd === "number" && Number.isFinite(observedCostUsd) && observedCostUsd >= 0
+            ? Math.ceil(observedCostUsd * 1_000_000)
+            : 0;
+        const bytes =
+          Number.isSafeInteger(execution?.responseBytes) && Number(execution?.responseBytes) >= 0
+            ? Number(execution?.responseBytes)
+            : Buffer.byteLength(text, "utf8");
+        if (!parsed) {
+          input.recordDerivedDispatch?.({
+            judgeEndpointId: judgeEndpoint.endpointId,
+            attempt: options.attempt,
+            costMicros,
+            bytes,
+            outcome: "failed",
+          });
+          input.recordJudgeObservation?.({
+            judgeMode: options.mode,
+            outcome: "failed",
+            presentation: options.presentation,
+          });
+          throw new Error("router judge returned an unparseable pairwise preference");
+        }
         input.recordDerivedDispatch?.({
           judgeEndpointId: judgeEndpoint.endpointId,
-          attempt: 1,
+          attempt: options.attempt,
           costMicros,
           bytes,
-          outcome: "failed",
+          outcome: "complete",
         });
-        throw new Error("router judge returned an unparseable pairwise preference");
+        const routerDecisionId =
+          typeof execution?.routingDecisionId === "string" && execution.routingDecisionId
+            ? execution.routingDecisionId
+            : "";
+        if (!routerDecisionId) {
+          throw new Error("router judge dispatch did not return a routing decision");
+        }
+        return {
+          routerDecisionId,
+          decision: {
+            winner: parsed.winner,
+            confidence: parsed.confidence,
+            dispatchReceiptId: `router-judge:${judgeRequestId}`,
+            routerDecisionId,
+            judgeResultRef: `judge-result:${digest}`,
+            judgeEndpointId: judgeEndpoint.endpointId,
+            judgeMode: options.mode,
+            presentation: options.presentation,
+          },
+        };
+      };
+
+      const primaryPresentation = pairwiseJudgePresentation(false);
+      const primary = await runJudge({ mode, presentation: primaryPresentation, attempt: 1 });
+
+      // AC-R10-02: bound position-order effects with a swapped dispatch instead of
+      // accepting a single-order preference as decisive.
+      if (orderPolicy === "dual_order") {
+        const swappedPresentation = pairwiseJudgePresentation(true);
+        const swapped = await runJudge({ mode, presentation: swappedPresentation, attempt: 2 });
+        if (swapped.decision.winner !== primary.decision.winner) {
+          input.recordJudgeObservation?.({
+            judgeMode: mode,
+            outcome: "order_disagreement",
+            presentation: swappedPresentation,
+          });
+          throw new PairwiseJudgeOrderDisagreementError();
+        }
+        input.recordJudgeObservation?.({
+          judgeMode: mode,
+          outcome: "complete",
+          presentation: swappedPresentation,
+        });
       }
-      input.recordDerivedDispatch?.({
-        judgeEndpointId: judgeEndpoint.endpointId,
-        attempt: 1,
-        costMicros,
-        bytes,
+
+      // AC-R10-01: measure agreement with the identified judge whenever the primary mode
+      // is identity-blind. A probe failure is recorded and the primary decision stands.
+      let judgeModeAgreement: boolean | undefined;
+      if (input.measureAgreement === true && mode === PAIRWISE_JUDGE_MODE_IDENTITY_BLIND) {
+        try {
+          const probe = await runJudge({
+            mode: PAIRWISE_JUDGE_MODE_IDENTIFIED,
+            presentation: primaryPresentation,
+            attempt: 3,
+          });
+          judgeModeAgreement = probe.decision.winner === primary.decision.winner;
+          input.recordJudgeObservation?.({
+            judgeMode: PAIRWISE_JUDGE_MODE_IDENTIFIED,
+            outcome: "complete",
+            presentation: primaryPresentation,
+            agreement: judgeModeAgreement,
+          });
+        } catch {
+          input.recordJudgeObservation?.({
+            judgeMode: PAIRWISE_JUDGE_MODE_IDENTIFIED,
+            outcome: "failed",
+            presentation: primaryPresentation,
+          });
+        }
+      }
+      input.recordJudgeObservation?.({
+        judgeMode: mode,
         outcome: "complete",
+        presentation: primaryPresentation,
       });
-      const routerDecisionId =
-        typeof execution?.routingDecisionId === "string" && execution.routingDecisionId
-          ? execution.routingDecisionId
-          : "";
-      if (!routerDecisionId) {
-        throw new Error("router judge dispatch did not return a routing decision");
-      }
       return {
-        winner: parsed.winner,
-        confidence: parsed.confidence,
-        dispatchReceiptId: `router-judge:${judgeRequestId}`,
-        routerDecisionId,
-        judgeResultRef: `judge-result:${digest}`,
-        judgeEndpointId: judgeEndpoint.endpointId,
+        ...primary.decision,
+        ...(judgeModeAgreement === undefined ? {} : { judgeModeAgreement }),
       };
     },
+
   };
 }

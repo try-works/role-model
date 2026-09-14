@@ -40,7 +40,7 @@ import {
   resolveAutoReplayDeadlineMs,
 } from "./track-b-auto-replay.js";
 import { createRouterPairwiseJudge } from "./track-b-shadow-judge-dispatch.js";
-import type { TrackBPairwiseJudge } from "./track-b-shadow-judge.js";
+import { isPairwiseJudgeMode, type TrackBPairwiseJudge } from "./track-b-shadow-judge.js";
 import {
   autoReplayExecutionFromCommandReceipt,
   startAutoReplayLoop,
@@ -4060,6 +4060,18 @@ export async function main(): Promise<void> {
                 })),
                 excludedEndpointIds: [sourceEndpointId, ...candidateEndpointIds],
                 taskText: extractTaskInstructionText(sourceCapture) ?? "",
+                // Run 98 R10: the judge mode, presentation-order policy and agreement
+                // measurement are runtime configuration (fail closed to the previous
+                // identified, source-first, no-probe behaviour).
+                mode: isPairwiseJudgeMode(process.env.ROLE_MODEL_JUDGE_MODE?.trim())
+                  ? (process.env.ROLE_MODEL_JUDGE_MODE.trim() as "identified" | "identity_blind")
+                  : "identified",
+                orderPolicy:
+                  process.env.ROLE_MODEL_JUDGE_ORDER_POLICY?.trim() === "dual_order"
+                    ? "dual_order"
+                    : "source_first",
+                measureAgreement:
+                  process.env.ROLE_MODEL_JUDGE_MEASURE_AGREEMENT?.trim() === "true",
                 recordDerivedDispatch: (input) => {
                   try {
                     // The supervised replay already reserved this counterfactual at its
