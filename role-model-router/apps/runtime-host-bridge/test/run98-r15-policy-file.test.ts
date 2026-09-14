@@ -1,0 +1,99 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+
+import { afterEach, describe, expect, test } from "vitest";
+
+import {
+  ACTIVATION_POLICY_RELATIVE_PATH,
+  readLearningPolicyFile,
+} from "../src/learning-policy-file.js";
+
+/**
+ * Run 98 R15/R17: the packaged host resolves the effective activation policy from the
+ * operator's versioned config file, with scope over channel over global precedence, and
+ * fails closed to the documented defaults when the file is missing or malformed.
+ */
+
+const roots: string[] = [];
+const writePolicy = (document: unknown): string => {
+  const root = mkdtempSync(path.join(os.tmpdir(), "run98-r15-file-"));
+  roots.push(root);
+  mkdirSync(path.join(root, "shared"), { recursive: true });
+  writeFileSync(
+    path.join(root, ACTIVATION_POLICY_RELATIVE_PATH),
+    typeof document === "string" ? document : JSON.stringify(document, null, 2),
+    "utf8",
+  );
+  return root;
+};
+
+afterEach(() => {
+  while (roots.length) rmSync(roots.pop() as string, { recursive: true, force: true });
+});
+
+const policy = (overrides: Record<string, unknown> = {}) => ({
+  schemaVersion: "role-model.route-learning-activation-policy.v1",
+  policyVersion: 3,
+  global: {
+    stage: "S1",
+    cohortLadder: [10, 25, 50, 100],
+    scoreBand: 0.05,
+    minAdvisoryConfidence: 0.7,
+    qualityMinDelta: -0.02,
+    costMaxMultiplier: 1.5,
+    latencyP95MaxDeltaMs: 10000,
+    errorRateMaxDeltaPp: 2,
+    ...overrides,
+  },
+  channels: { development: { stage: "S1" }, stage: { stage: "S2" }, production: { stage: "S0" } },
+  scopes: {},
+});
+
+describe("run98 R15 packaged policy file", () => {
+  test("resolves the channel stage and carries the policy version plus digest", () => {
+    const root = writePolicy(policy());
+    const stageChannel = readLearningPolicyFile({ repoRoot: root, channel: "stage" });
+    expect(stageChannel).toMatchObject({
+      policyVersion: 3,
+      source: ACTIVATION_POLICY_RELATIVE_PATH,
+      effective: { stage: "S2", cohortPercent: 100, scoreBand: 0.05, minAdvisoryConfidence: 0.7 },
+    });
+    expect(stageChannel?.digest).toMatch(/^sha256:[a-f0-9]{64}$/);
+    expect(readLearningPolicyFile({ repoRoot: root, channel: "production" })?.effective.stage).toBe("S0");
+  });
+
+  test("scope overrides beat channel overrides beat global", () => {
+    const root = writePolicy({
+      ...policy({ stage: "S1" }),
+      scopes: { "tenant:run98": { stage: "S3", scoreBand: 0.1 } },
+    });
+    const scoped = readLearningPolicyFile({
+      repoRoot: root,
+      channel: "stage",
+      scopeId: "tenant:run98",
+    });
+    expect(scoped?.effective).toMatchObject({ stage: "S3", scoreBand: 0.1 });
+    // S3+ is cohort-gated, so the effective share starts at the first ladder rung.
+    expect(scoped?.effective.cohortPercent).toBe(10);
+  });
+
+  test("fails closed to the documented defaults when the file is missing or malformed", () => {
+    const missing = mkdtempSync(path.join(os.tmpdir(), "run98-r15-none-"));
+    roots.push(missing);
+    expect(readLearningPolicyFile({ repoRoot: missing, channel: "stage" })).toBeNull();
+
+    const broken = writePolicy("{ not json");
+    expect(readLearningPolicyFile({ repoRoot: broken, channel: "stage" })).toBeNull();
+
+    const wrongSchema = writePolicy({ ...policy(), schemaVersion: "role-model.other.v9" });
+    expect(readLearningPolicyFile({ repoRoot: wrongSchema, channel: "stage" })).toBeNull();
+
+    const unknownStage = writePolicy({
+      ...policy(),
+      channels: { stage: { stage: "S9" } },
+    });
+    // An unknown enum value falls back to the shipped default stage rather than widening.
+    expect(readLearningPolicyFile({ repoRoot: unknownStage, channel: "stage" })?.effective.stage).toBe("S1");
+  });
+});

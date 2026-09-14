@@ -169,6 +169,7 @@ import {
   inferResponsesCapabilityRequirements,
 } from "./request-capability-inference.js";
 import { readPackagedRuntimeProfile, resolveRuntimeChannelProfile } from "./runtime-channel.js";
+import { readLearningPolicyFile } from "./learning-policy-file.js";
 import { type RuntimeVersionInfoRecord, resolveRuntimeVersionInfo } from "./runtime-version.js";
 import {
   buildGraphEvidenceFromCapture,
@@ -23742,13 +23743,16 @@ export async function createRuntimeBridgeBackend(
       });
       // Run 98 R5 (AC-R05-04): S2+ is the only stage that passes an advisory into routing,
       // so the default S1 runtime produces exactly the decision it produced before. The
-      // policy values mirror the R15 defaults until the policy file/UI wiring lands.
-      const learningStage = (process.env.ROLE_MODEL_LEARNING_STAGE?.trim() ?? "S1") as
-        | "S0"
-        | "S1"
-        | "S2"
-        | "S3"
-        | "S4";
+      // effective values come from the operator's versioned policy config (R15), with the
+      // environment kept as an explicit override for local experiments.
+      const learningPolicySnapshot = readLearningPolicyFile({
+        repoRoot: options.repoRoot,
+        channel: runtimeChannel,
+        scopeId: options.scopeId,
+      });
+      const learningStage = (process.env.ROLE_MODEL_LEARNING_STAGE?.trim() ??
+        learningPolicySnapshot?.effective.stage ??
+        "S1") as "S0" | "S1" | "S2" | "S3" | "S4";
       const advisoryConsideration = ["S2", "S3", "S4"].includes(learningStage)
         ? (() => {
             const cached = recallNewestTrackBRouteAdvisory({
@@ -23766,14 +23770,24 @@ export async function createRuntimeBridgeBackend(
               advisoryState: cached.advisoryState,
               confidence: cached.confidence,
               advisoryId: cached.advisoryId,
-              policyVersion: process.env.ROLE_MODEL_LEARNING_POLICY_VERSION?.trim() ?? null,
+              policyVersion:
+                process.env.ROLE_MODEL_LEARNING_POLICY_VERSION?.trim() ??
+                (learningPolicySnapshot
+                  ? `policy:${learningPolicySnapshot.policyVersion}:${learningPolicySnapshot.digest.slice(7, 23)}`
+                  : null),
               stage: learningStage,
-              scoreBand: numeric(process.env.ROLE_MODEL_LEARNING_SCORE_BAND, 0.05),
+              scoreBand: numeric(
+                process.env.ROLE_MODEL_LEARNING_SCORE_BAND,
+                learningPolicySnapshot?.effective.scoreBand ?? 0.05,
+              ),
               minAdvisoryConfidence: numeric(
                 process.env.ROLE_MODEL_LEARNING_MIN_CONFIDENCE,
-                0.7,
+                learningPolicySnapshot?.effective.minAdvisoryConfidence ?? 0.7,
               ),
-              cohortPercent: numeric(process.env.ROLE_MODEL_LEARNING_COHORT_PERCENT, 100),
+              cohortPercent: numeric(
+                process.env.ROLE_MODEL_LEARNING_COHORT_PERCENT,
+                learningPolicySnapshot?.effective.cohortPercent ?? 100,
+              ),
               explorationPercent: numeric(
                 process.env.ROLE_MODEL_LEARNING_EXPLORATION_PERCENT,
                 0,
