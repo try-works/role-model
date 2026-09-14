@@ -79,6 +79,32 @@ describe("run98 rc18 replay intent claim recovery", () => {
     expect(decoded).toMatchObject({ jobId: claim.jobId, leaseId: claim.leaseId, fence: claim.fence });
   });
 
+  it("decodes a claim nested one level deeper under businessOutput.value", async () => {
+    const claim = intentClaim("replay-intent:replay-job:2");
+    const runtime = {
+      async invoke() {
+        return {
+          businessOutput: { value: claim },
+          durableLocator: "durable:locator",
+          evidenceRef: "artifact:evidence",
+          readCapability: "artifact:read",
+          value: null,
+          workerPid: 1234,
+        };
+      },
+    } as unknown as Parameters<typeof createReplayIntentScheduler>[0]["runtime"];
+    const scheduler = createReplayIntentScheduler({
+      runtime,
+      requestId: "run98-rc18-envelope-nested",
+      channel: "stage",
+      scope: "standalone-runtime-stage",
+      authorizationEpoch: 1,
+      ownerId: "runtime-host:test",
+    });
+    const decoded = await scheduler.claim({ jobId: "replay-intent:replay-job:2" });
+    expect(decoded).toMatchObject({ jobId: claim.jobId, leaseId: claim.leaseId, fence: claim.fence });
+  });
+
   it("recovers an expired intent with a fresh intent for the same durable replay job", async () => {
     const { scheduler, enqueued, claimed } = schedulerWith([
       { jobId: "replay-intent:replay-job:1", expired: true },

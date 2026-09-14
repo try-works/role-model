@@ -1397,8 +1397,24 @@ export interface ReplayIntentScheduler {
 function decodeSchedulerBusinessOutput(value: unknown): unknown {
   if (!value || typeof value !== "object" || Array.isArray(value)) return value;
   const record = value as Record<string, unknown>;
-  if (!("businessOutput" in record) || record.durableLocator === undefined) return value;
-  return record.businessOutput;
+  if ("businessOutput" in record && record.durableLocator !== undefined) {
+    const inner = record.businessOutput;
+    // The packaged host wraps the business payload once more: `{ value: <result> }`.
+    if (inner && typeof inner === "object" && !Array.isArray(inner) && "value" in inner) {
+      return (inner as Record<string, unknown>).value;
+    }
+    return inner;
+  }
+  // A bare `{ value: <result> }` wrapper is also accepted when it carries no claim fields.
+  if (
+    "value" in record
+    && !("jobId" in record)
+    && !("leaseId" in record)
+    && !("fence" in record)
+  ) {
+    return record.value;
+  }
+  return value;
 }
 
 export function createReplayIntentScheduler(options: {
