@@ -62,14 +62,14 @@ describe("Run 96 F135 public operator boundary", () => {
     });
     const url = `http://127.0.0.1:${server.port}/api/role-model/operator/status`;
 
-    const missingContext = await fetch(url, {
+    // Run 98 R17: the bearer token is the authority, so a header-less operator call is
+    // served under the runtime's own context (the Learning UI is token-only). When the
+    // client does bind context, it must match exactly - see the mismatches below.
+    const tokenOnly = await fetch(url, {
       headers: { authorization: "Bearer operator-secret" },
     });
-    expect(missingContext.status).toBe(403);
-    expect(await missingContext.json()).toMatchObject({
-      error: "operator_context_required",
-      field: "channel",
-    });
+    expect(tokenOnly.status).toBe(200);
+    expect(await tokenOnly.json()).toMatchObject({ overall: "available" });
 
     const wrongScope = await fetch(url, {
       headers: operatorHeaders("status", { "x-role-model-scope": "other-scope" }),
@@ -97,11 +97,10 @@ describe("Run 96 F135 public operator boundary", () => {
         "x-role-model-authorization-epoch": String(operatorContext.authorizationEpoch),
       },
     });
-    expect(missingCapability.status).toBe(403);
-    expect(await missingCapability.json()).toMatchObject({
-      error: "operator_capability_required",
-      capability: "status",
-    });
+    // The capability header is an additional binding when supplied; its absence now means
+    // "the route's own capability", exactly like the context headers.
+    expect(missingCapability.status).toBe(200);
+    expect(await missingCapability.json()).toMatchObject({ overall: "available" });
 
     const wrongCapability = await fetch(url, {
       headers: operatorHeaders("replay"),
@@ -114,7 +113,9 @@ describe("Run 96 F135 public operator boundary", () => {
 
     const valid = await fetch(url, { headers: operatorHeaders("status") });
     expect(valid.status).toBe(200);
-    expect(calls).toEqual(["status"]);
+    // Four authenticated calls reached the callback: the token-only and capability-less
+    // calls (run 98 R17), the mismatching-context probes above were rejected, and this one.
+    expect(calls).toEqual(["status", "status", "status"]);
   });
 
   test("rejects an oversized operator body before invoking the callback", async () => {

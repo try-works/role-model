@@ -3270,6 +3270,17 @@ export interface RuntimeBridgeBackend {
   readLearningAdvisory(): Promise<unknown>;
   updateLearningMode(body: Record<string, unknown>): Promise<unknown>;
   rollbackLearning(body: Record<string, unknown>): Promise<unknown>;
+  /** Run 98 R17: Learning UI readback and rollout actions. */
+  readLearningRollout(query?: Readonly<Record<string, string>>): Promise<unknown>;
+  readLearningRecords(query?: Readonly<Record<string, string>>): Promise<unknown>;
+  readLearningDecisions(query?: Readonly<Record<string, string>>): Promise<unknown>;
+  readLearningMeasurement(query?: Readonly<Record<string, string>>): Promise<unknown>;
+  readLearningPolicy(query?: Readonly<Record<string, string>>): Promise<unknown>;
+  setLearningPolicy(body: Record<string, unknown>): Promise<unknown>;
+  rollbackLearningPolicy(body: Record<string, unknown>): Promise<unknown>;
+  activateLearningPack(body: Record<string, unknown>): Promise<unknown>;
+  rollbackLearningPack(body: Record<string, unknown>): Promise<unknown>;
+  engageLearningKillSwitch(body: Record<string, unknown>): Promise<unknown>;
   measureNoRichCaptureBaseline(body: Record<string, unknown>): Promise<unknown>;
   readDevelopmentVerificationStatus(): Promise<unknown>;
   readGraphMigration(): Promise<unknown>;
@@ -27152,6 +27163,67 @@ export async function createRuntimeBridgeBackend(
     },
     async rollbackLearning(body: Record<string, unknown>): Promise<unknown> {
       return options.rollbackLearning?.(body) ?? unavailableOperatorPayload("learning rollback");
+    },
+    // Run 98 R17: the Learning UI surfaces forward through the same operator options the
+    // CLI binds to the sidecar-backed Track B operations client.
+    async readLearningRollout(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return (
+        options.readLearningRollout?.(query) ??
+        unavailableOperatorPayload("learning rollout readback")
+      );
+    },
+    async readLearningRecords(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return (
+        options.readLearningRecords?.(query) ??
+        unavailableOperatorPayload("learning records readback")
+      );
+    },
+    async readLearningDecisions(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return (
+        options.readLearningDecisions?.(query) ??
+        unavailableOperatorPayload("learning decisions readback")
+      );
+    },
+    async readLearningMeasurement(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return (
+        options.readLearningMeasurement?.(query) ??
+        unavailableOperatorPayload("learning measurement readback")
+      );
+    },
+    async readLearningPolicy(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return (
+        options.readLearningPolicy?.(query) ??
+        unavailableOperatorPayload("learning policy readback")
+      );
+    },
+    async setLearningPolicy(body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.setLearningPolicy?.(body) ?? unavailableOperatorPayload("learning policy change")
+      );
+    },
+    async rollbackLearningPolicy(body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.rollbackLearningPolicy?.(body) ??
+        unavailableOperatorPayload("learning policy rollback")
+      );
+    },
+    async activateLearningPack(body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.activateLearningPack?.(body) ??
+        unavailableOperatorPayload("learning pack activation")
+      );
+    },
+    async rollbackLearningPack(body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.rollbackLearningPack?.(body) ??
+        unavailableOperatorPayload("learning pack rollback")
+      );
+    },
+    async engageLearningKillSwitch(body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.engageLearningKillSwitch?.(body) ??
+        unavailableOperatorPayload("learning kill switch")
+      );
     },
     async measureNoRichCaptureBaseline(body: Record<string, unknown>): Promise<unknown> {
       return runtimeTrackBOperations.measureNoRichCaptureBaseline(body);

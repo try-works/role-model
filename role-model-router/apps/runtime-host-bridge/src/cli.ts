@@ -1373,6 +1373,16 @@ type CliBackend = Pick<
   | "readLearningAdvisory"
   | "updateLearningMode"
   | "rollbackLearning"
+  | "readLearningRollout"
+  | "readLearningRecords"
+  | "readLearningDecisions"
+  | "readLearningMeasurement"
+  | "readLearningPolicy"
+  | "setLearningPolicy"
+  | "rollbackLearningPolicy"
+  | "activateLearningPack"
+  | "rollbackLearningPack"
+  | "engageLearningKillSwitch"
   | "measureNoRichCaptureBaseline"
   | "readDevelopmentVerificationStatus"
   | "readGraphMigration"
@@ -2316,6 +2326,39 @@ export function createCliServerOptions(
     rollbackLearning: bindBackendMethod(
       "rollbackLearning",
     ) as StartBridgeServerOptions["rollbackLearning"],
+    // Run 98 R17: the CLI's server options enumerate every operator callback explicitly, so
+    // the Learning UI readback and rollout actions must be bound here or they answer
+    // "unavailable" behind the packaged executable.
+    readLearningRollout: bindBackendMethod(
+      "readLearningRollout",
+    ) as StartBridgeServerOptions["readLearningRollout"],
+    readLearningRecords: bindBackendMethod(
+      "readLearningRecords",
+    ) as StartBridgeServerOptions["readLearningRecords"],
+    readLearningDecisions: bindBackendMethod(
+      "readLearningDecisions",
+    ) as StartBridgeServerOptions["readLearningDecisions"],
+    readLearningMeasurement: bindBackendMethod(
+      "readLearningMeasurement",
+    ) as StartBridgeServerOptions["readLearningMeasurement"],
+    readLearningPolicy: bindBackendMethod(
+      "readLearningPolicy",
+    ) as StartBridgeServerOptions["readLearningPolicy"],
+    setLearningPolicy: bindBackendMethod(
+      "setLearningPolicy",
+    ) as StartBridgeServerOptions["setLearningPolicy"],
+    rollbackLearningPolicy: bindBackendMethod(
+      "rollbackLearningPolicy",
+    ) as StartBridgeServerOptions["rollbackLearningPolicy"],
+    activateLearningPack: bindBackendMethod(
+      "activateLearningPack",
+    ) as StartBridgeServerOptions["activateLearningPack"],
+    rollbackLearningPack: bindBackendMethod(
+      "rollbackLearningPack",
+    ) as StartBridgeServerOptions["rollbackLearningPack"],
+    engageLearningKillSwitch: bindBackendMethod(
+      "engageLearningKillSwitch",
+    ) as StartBridgeServerOptions["engageLearningKillSwitch"],
     measureNoRichCaptureBaseline: bindBackendMethod(
       "measureNoRichCaptureBaseline",
     ) as StartBridgeServerOptions["measureNoRichCaptureBaseline"],
