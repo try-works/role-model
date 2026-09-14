@@ -5842,6 +5842,136 @@ export function resolveTrackBRouteAdvisory(input: {
   };
 }
 
+export const TRACK_B_ROUTE_ADVISORY_OBSERVATION_SCHEMA =
+  "role-model.route-advisory-observation.v1";
+export const TRACK_B_ROUTE_ADVISORY_OBSERVATION_LEDGER_SCHEMA =
+  "role-model.route-advisory-observation-ledger.v1";
+const TRACK_B_ROUTE_ADVISORY_LEDGER_MAX_ENTRIES = 5000;
+
+/**
+ * Run 98 R4 (stage S1, advisory-observed).
+ *
+ * The observation records what the advisory would have preferred for a decision that has
+ * already been taken, without changing it: the baseline package, the advised package, the
+ * advisory state/confidence/profile snapshots/candidate id, whether the advised package was
+ * even eligible, and therefore whether the advisory would have changed the choice.
+ * `selection: "baseline_retained"` is the S1 invariant (`AC-R04-02`).
+ */
+export function buildTrackBRouteAdvisoryObservation(input: {
+  readonly decisionId: string;
+  readonly routePackage: string;
+  readonly preferredRoutePackage?: string | null;
+  readonly eligibleRoutePackages?: readonly string[];
+  readonly advisoryState: TrackBRouteAdvisoryState;
+  readonly confidence?: number;
+  readonly profileSnapshotIds?: readonly string[];
+  readonly candidateId?: string | null;
+  readonly advisoryId?: string | null;
+  readonly reason?: string | null;
+  readonly observedAtMs: number;
+}) {
+  if (!input.decisionId || !input.routePackage) {
+    throw new Error("route advisory observation requires decision and route package");
+  }
+  if (!Number.isSafeInteger(input.observedAtMs) || input.observedAtMs < 0) {
+    throw new Error("route advisory observation timestamp is invalid");
+  }
+  const eligible = (input.eligibleRoutePackages ?? []).filter(
+    (value): value is string => typeof value === "string" && value.length > 0,
+  );
+  const preferred =
+    typeof input.preferredRoutePackage === "string" && input.preferredRoutePackage
+      ? input.preferredRoutePackage
+      : null;
+  const preferredEligible = Boolean(preferred && eligible.includes(preferred));
+  return {
+    schemaVersion: TRACK_B_ROUTE_ADVISORY_OBSERVATION_SCHEMA,
+    decisionId: input.decisionId,
+    routePackage: input.routePackage,
+    preferredRoutePackage: preferred,
+    preferredEligible,
+    eligibleRoutePackageCount: eligible.length,
+    wouldHaveChanged: preferredEligible && preferred !== input.routePackage,
+    advisoryState: input.advisoryState,
+    confidence: Number.isFinite(input.confidence) ? Number(input.confidence) : 0,
+    profileSnapshotIds: [...(input.profileSnapshotIds ?? [])],
+    candidateId: input.candidateId ?? null,
+    advisoryId: input.advisoryId ?? null,
+    ...(input.reason ? { reason: String(input.reason).slice(0, 256) } : {}),
+    mode: "shadow" as const,
+    selection: "baseline_retained" as const,
+    observedAtMs: input.observedAtMs,
+  };
+}
+
+/**
+ * Durable, bounded advisory-observation ledger (`R4`/`R12`). The runtime appends one
+ * observation per decision; the operator readback derives the advisory-state distribution
+ * and the counterfactual influence rate from `totals` without replaying the decisions.
+ */
+export async function appendTrackBRouteAdvisoryObservation(input: {
+  readonly filePath: string;
+  readonly observation: Readonly<Record<string, unknown>>;
+  readonly maxEntries?: number;
+}) {
+  const maxEntries =
+    Number.isSafeInteger(input.maxEntries) && Number(input.maxEntries) > 0
+      ? Number(input.maxEntries)
+      : TRACK_B_ROUTE_ADVISORY_LEDGER_MAX_ENTRIES;
+  const empty = {
+    schemaVersion: TRACK_B_ROUTE_ADVISORY_OBSERVATION_LEDGER_SCHEMA,
+    revision: 0,
+    updatedAtMs: 0,
+    totals: {
+      observed: 0,
+      fresh: 0,
+      stale: 0,
+      unavailable: 0,
+      wouldHaveChanged: 0,
+      preferredEligible: 0,
+    },
+    entries: [] as Readonly<Record<string, unknown>>[],
+  };
+  let ledger = empty;
+  try {
+    const parsed = JSON.parse(await readFile(input.filePath, "utf8")) as typeof empty;
+    if (parsed?.schemaVersion === TRACK_B_ROUTE_ADVISORY_OBSERVATION_LEDGER_SCHEMA) {
+      ledger = {
+        ...empty,
+        ...parsed,
+        totals: { ...empty.totals, ...(parsed.totals ?? {}) },
+        entries: Array.isArray(parsed.entries) ? parsed.entries : [],
+      };
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
+  const observation = input.observation;
+  const state = String(observation.advisoryState ?? "unavailable");
+  const totals = {
+    observed: ledger.totals.observed + 1,
+    fresh: ledger.totals.fresh + (state === "fresh" ? 1 : 0),
+    stale: ledger.totals.stale + (state === "stale" ? 1 : 0),
+    unavailable: ledger.totals.unavailable + (state === "unavailable" ? 1 : 0),
+    wouldHaveChanged:
+      ledger.totals.wouldHaveChanged + (observation.wouldHaveChanged === true ? 1 : 0),
+    preferredEligible:
+      ledger.totals.preferredEligible + (observation.preferredEligible === true ? 1 : 0),
+  };
+  const next = {
+    schemaVersion: TRACK_B_ROUTE_ADVISORY_OBSERVATION_LEDGER_SCHEMA,
+    revision: ledger.revision + 1,
+    updatedAtMs: Date.now(),
+    totals,
+    entries: [...ledger.entries, observation].slice(-maxEntries),
+  };
+  await mkdir(path.dirname(input.filePath), { recursive: true });
+  const temporary = `${input.filePath}.${process.pid}.tmp`;
+  await writeFile(temporary, `${JSON.stringify(next, null, 2)}\n`, "utf8");
+  await rename(temporary, input.filePath);
+  return next;
+}
+
 const TRACK_B_EFFORT_SOURCES = new Set<RuntimeEffortSource>([
   "none",
   "client",
@@ -7480,26 +7610,110 @@ export async function runTrackBShadowPipeline(
       confidence: advisoryConfidence,
     },
   });
-  const advisory = resolveTrackBRouteAdvisory({
-    baselineDecisionId: input.sourceDecisionId,
-    channel: input.channel,
-    scope: input.scope,
-    authorizationEpoch: input.authorizationEpoch,
-    routePackage: input.routePackage,
-    profileSnapshotIds: Array.isArray(profileRecord.snapshotIds)
-      ? (profileRecord.snapshotIds as unknown[]).filter(
-          (snapshotId): snapshotId is string => typeof snapshotId === "string",
-        )
-      : [],
-    candidateId: candidateId,
-    confidence: advisoryConfidence,
-    nowMs: advisoryNowMs,
-    authorization: advisoryAuthorization,
-    authorizationValidator: (authorization, expected, nowMs) =>
-      verifyTrackBRouteAdvisoryAuthorization(authorization, evaluationAuthoritySecret, {
-        expected,
-        nowMs,
+  const advisoryProfileSnapshotIds = Array.isArray(profileRecord.snapshotIds)
+    ? (profileRecord.snapshotIds as unknown[]).filter(
+        (snapshotId): snapshotId is string => typeof snapshotId === "string",
+      )
+    : [];
+  const advisoryValidator = (
+    authorization: TrackBRouteAdvisoryAuthorization,
+    expected: TrackBRouteAdvisoryClaims,
+    nowMs: number,
+  ) =>
+    verifyTrackBRouteAdvisoryAuthorization(authorization, evaluationAuthoritySecret, {
+      expected,
+      nowMs,
+    });
+  // Run 98 R4 (AC-R04-04): a stale or expired advisory is recorded as stale and never
+  // blocks the decision; the deterministic baseline stays selected either way.
+  let advisory: ReturnType<typeof resolveTrackBRouteAdvisory>;
+  let advisoryStaleReason: string | null = null;
+  try {
+    advisory = resolveTrackBRouteAdvisory({
+      baselineDecisionId: input.sourceDecisionId,
+      channel: input.channel,
+      scope: input.scope,
+      authorizationEpoch: input.authorizationEpoch,
+      routePackage: input.routePackage,
+      profileSnapshotIds: advisoryProfileSnapshotIds,
+      candidateId,
+      confidence: advisoryConfidence,
+      nowMs: advisoryNowMs,
+      authorization: advisoryAuthorization,
+      authorizationValidator: advisoryValidator,
+    });
+  } catch (error) {
+    advisoryStaleReason = String(
+      (error as { message?: unknown })?.message ?? error,
+    ).slice(0, 256);
+    const staleNowMs = Date.now();
+    advisory = resolveTrackBRouteAdvisory({
+      baselineDecisionId: input.sourceDecisionId,
+      channel: input.channel,
+      scope: input.scope,
+      authorizationEpoch: input.authorizationEpoch,
+      routePackage: input.routePackage,
+      profileSnapshotIds: advisoryProfileSnapshotIds,
+      candidateId: null,
+      advisoryState: "stale",
+      confidence: 0,
+      nowMs: staleNowMs,
+      authorization: createTrackBRouteAdvisoryAuthorization({
+        authoritySecret: evaluationAuthoritySecret,
+        keyId: `runtime:${input.requestId}`,
+        issuedAtMs: staleNowMs,
+        expiresAtMs: staleNowMs + 60_000,
+        claims: {
+          baselineDecisionId: input.sourceDecisionId,
+          channel: input.channel,
+          scope: input.scope,
+          authorizationEpoch: input.authorizationEpoch,
+          routePackage: input.routePackage,
+          profileSnapshotIds: advisoryProfileSnapshotIds,
+          candidateId: null,
+          advisoryState: "stale",
+          confidence: 0,
+        },
       }),
+      authorizationValidator: advisoryValidator,
+    });
+  }
+  // AC-R04-01/02: observe what the advisory would have preferred for the decision that
+  // was already taken; the selection itself is never changed in S1.
+  const eligibleRoutePackages = [
+    input.routePackage,
+    ...(Array.isArray(input.comparableEvidence?.candidateSet)
+      ? (input.comparableEvidence.candidateSet as Record<string, unknown>[]).flatMap((entry) =>
+          typeof entry?.id === "string" && entry.id ? [entry.id] : [],
+        )
+      : []),
+    ...(Array.isArray(input.comparableEvidence?.counterfactuals)
+      ? (input.comparableEvidence.counterfactuals as Record<string, unknown>[]).flatMap((entry) =>
+          typeof entry?.id === "string" && entry.id ? [entry.id] : [],
+        )
+      : []),
+  ];
+  const advisoryObservation = buildTrackBRouteAdvisoryObservation({
+    decisionId: input.sourceDecisionId,
+    routePackage: input.routePackage,
+    preferredRoutePackage:
+      typeof (candidate as Record<string, unknown>).routePackageAttribution === "object" &&
+      (candidate as Record<string, unknown>).routePackageAttribution !== null
+        ? String(
+            ((candidate as Record<string, unknown>).routePackageAttribution as Record<
+              string,
+              unknown
+            >).routePackage ?? "",
+          ) || null
+        : null,
+    eligibleRoutePackages,
+    advisoryState: advisory.advisoryState,
+    confidence: advisory.confidence,
+    profileSnapshotIds: advisory.profileSnapshotIds,
+    candidateId: advisory.candidateId,
+    advisoryId: advisory.advisoryId,
+    reason: advisoryStaleReason,
+    observedAtMs: Date.now(),
   });
   return {
     replay,
@@ -7508,6 +7722,7 @@ export async function runTrackBShadowPipeline(
     profile: profileRecord,
     candidate,
     advisory,
+    advisoryObservation,
     productionState: structuredClone(input.productionState),
     receipt: {
       schemaVersion: "role-model.track-b-shadow-pipeline-receipt.v1",
@@ -7523,6 +7738,7 @@ export async function runTrackBShadowPipeline(
       // result or mutating the baseline decision.
       advisoryId: advisory.advisoryId,
       decisionAdvice: structuredClone(advisory.decisionAdvice),
+      advisoryObservation,
       contractRefs: contractEmissions.map((emission) => ({
         contract: emission.contract,
         contractId: emission.contractId,
@@ -7781,6 +7997,12 @@ export async function runTrackBPostObservation(
      * `R14_NO_DISTINCT_COUNTERFACTUAL` refusal.
      */
     readonly configuredCandidateEndpointIds?: readonly string[];
+    /**
+     * Run 98 R4: durable advisory-observation ledger path. When present the post-observation
+     * appends the decision's advisory observation so the readback can report the state
+     * distribution and the counterfactual influence rate from durable state.
+     */
+    readonly advisoryObservationLedgerPath?: string;
   },
 ) {
   const requestId = String(observation.requestId ?? "");
@@ -8227,6 +8449,27 @@ export async function runTrackBPostObservation(
     authorizationEpoch: input.authorizationEpoch,
     registry,
   };
+  // Run 98 R4 (AC-R04-01/03): persist the advisory observation for this decision so the
+  // operator readback can report the advisory-state distribution and the influence rate
+  // from durable state instead of logs.
+  if (input.advisoryObservationLedgerPath && "advisoryObservation" in pipeline) {
+    const observation = (pipeline as { readonly advisoryObservation?: unknown })
+      .advisoryObservation;
+    if (observation && typeof observation === "object") {
+      try {
+        await appendTrackBRouteAdvisoryObservation({
+          filePath: input.advisoryObservationLedgerPath,
+          observation: observation as Readonly<Record<string, unknown>>,
+        });
+      } catch (error) {
+        console.error(
+          `[run98] advisory observation ledger degraded:${requestId} ${String(
+            (error as { message?: unknown })?.message ?? error,
+          ).slice(0, 200)}`,
+        );
+      }
+    }
+  }
   return {
     pipeline: pipeline.receipt,
     // This is an asynchronous observation result.  It may explain a shadow

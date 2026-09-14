@@ -3408,6 +3408,13 @@ export async function main(): Promise<void> {
           // R3: counterfactual candidates come from the running registry, not from
           // the capture's frozen decision snapshot.
           configuredCandidateEndpointIds: configuredEndpointIdsRef.current,
+          // Run 98 R4: durable advisory observations (state distribution + influence rate).
+          advisoryObservationLedgerPath: path.join(
+            options.runtimeStateRoot,
+            options.scopeId,
+            "track-b",
+            "advisory-observations.json",
+          ),
           ...(packagedReleaseId
             ? {
                 expectedReleaseId: packagedReleaseId,

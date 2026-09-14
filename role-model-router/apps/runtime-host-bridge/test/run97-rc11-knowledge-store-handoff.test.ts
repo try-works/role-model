@@ -368,4 +368,32 @@ test("run97 rc14 knowledge rows cite the durable per-case evidence artifacts", a
   expect(positive[0].evidenceRef).toBe("artifact:case-counterfactual");
   expect(negative[0].evidenceRef).toBe("artifact:case-source");
 });
-
+test("run98 r04 the pipeline records the advisory observation without changing the decision", async () => {
+  const invocations: Invocation[] = [];
+  const runtime = {
+    invoke: scriptedRuntime(invocations),
+    listExtensions: () => [{ id: "knowledge-store", lifecycle: "ready" }],
+  };
+  const input = pipelineInput();
+  const result = (await trackBRuntime.runTrackBShadowPipeline(
+    runtime as never,
+    input,
+  )) as unknown as {
+    readonly advisoryObservation: Record<string, unknown>;
+    readonly receipt: Record<string, unknown>;
+    readonly productionState: Record<string, unknown>;
+  };
+  expect(result.advisoryObservation).toMatchObject({
+    schemaVersion: "role-model.route-advisory-observation.v1",
+    decisionId: "decision:rc11",
+    routePackage: "candidate-local",
+    mode: "shadow",
+    selection: "baseline_retained",
+  });
+  expect(result.advisoryObservation).toHaveProperty("advisoryState");
+  expect(result.receipt.advisoryObservation).toEqual(result.advisoryObservation);
+  // AC-R04-02: stage S1 observes the advisory and provably leaves the decision alone.
+  expect(result.productionState).toEqual(input.productionState);
+  expect(result.receipt.providerCalls).toBe(0);
+  expect(result.receipt.productionMutation).toBe(false);
+});
