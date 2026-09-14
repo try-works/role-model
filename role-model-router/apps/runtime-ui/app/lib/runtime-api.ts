@@ -1750,9 +1750,10 @@ export async function fetchLearningSummary(
   fetcher: RuntimeFetcher = fetch,
   operatorToken?: string,
 ): Promise<Record<string, unknown>> {
-  return operatorPost<Record<string, unknown>>(
+  // Run 99: the runtime serves this readback as a GET (the POST form 404s), which left the
+  // Learning overview's advisory counters rendering as "—" on every page load.
+  return operatorGet<Record<string, unknown>>(
     "/api/role-model/track-b/learning/summary",
-    {},
     fetcher,
     operatorToken,
   );

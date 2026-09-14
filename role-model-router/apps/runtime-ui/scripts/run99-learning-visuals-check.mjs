@@ -30,7 +30,7 @@ await page.waitForTimeout(1500);
 await page.screenshot({ path: `${outDir}\\run99-learning-live.png`, fullPage: true });
 const overviewText = await page.locator("body").innerText();
 
-// Without an operator token the surface must say so instead of showing an idle readback.
+// Without an operator token the readbacks still work on the loopback origin (run 99).
 const anonymous = await browser.newContext({ viewport: { width: 1560, height: 1200 }, colorScheme: "dark" });
 const anonymousPage = await anonymous.newPage();
 await anonymousPage.goto(`${base}/app/learning`, { waitUntil: "domcontentloaded" });
@@ -38,6 +38,11 @@ await anonymousPage.getByText("Live replay & evaluation").waitFor({ timeout: 450
 await anonymousPage.waitForTimeout(1500);
 await anonymousPage.screenshot({ path: `${outDir}\\run99-learning-live-no-token.png`, fullPage: true });
 const anonymousText = await anonymousPage.locator("body").innerText();
+await anonymousPage.goto(`${base}/app/learning/history`, { waitUntil: "domcontentloaded" });
+await anonymousPage.getByText("Activity by bucket").waitFor({ timeout: 45000 });
+await anonymousPage.waitForTimeout(1500);
+await anonymousPage.screenshot({ path: `${outDir}\\run99-learning-history-no-token.png`, fullPage: true });
+const anonymousHistoryText = await anonymousPage.locator("body").innerText();
 
 await browser.close();
 console.log(
@@ -50,8 +55,9 @@ console.log(
       historyNumbers: historyText.match(/\b(156|1970|344)\b/g) ?? [],
       liveHasPanel: overviewText.includes("Live replay & evaluation"),
       liveHasPipeline: overviewText.includes("Learner"),
-      noTokenSaysTokenRequired: anonymousText.includes("token required") && anonymousText.includes("awaiting operator token"),
-      noTokenClaimsIdle: /\bidle\b/.test(anonymousText),
+      noTokenLiveReadsWork: !anonymousText.includes("No value is fabricated") && /\b(idle|running)\b/.test(anonymousText),
+      noTokenHistoryReadsWork: !anonymousHistoryText.includes("No value is fabricated") && anonymousHistoryText.includes("Decisive comparison mix"),
+      noTokenHistoryNumbers: anonymousHistoryText.match(/\b(156|1970|344)\b/g) ?? [],
       consoleErrors: errors.slice(0, 5),
     },
     null,
