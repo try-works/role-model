@@ -105,6 +105,7 @@ function passInput(overrides: Record<string, unknown> = {}) {
     finalizedComparison: decisiveGroups[0].result,
     finalizedComparisonReceipt: { payload: { kind: "evaluation_core_comparison_readback" }, signature: "sig" },
     safetyReceipt: { payload: { kind: "knowledge_safety" }, signature: "sig" },
+    evaluationAuthoritySecret: "run98-learning-pass-secret",
     nowMs: Date.parse("2026-09-14T10:00:00Z"),
     ...overrides,
   } as Parameters<typeof runTrackBLearningPass>[1];
@@ -115,13 +116,18 @@ function fakeRuntime(options: {
   validation?: Record<string, unknown>;
   promotion?: Record<string, unknown>;
 }) {
-  const invocations: Array<{ extensionId: string; capability: string; value: Record<string, unknown> }> = [];
+  const invocations: Array<{
+    extensionId: string;
+    capability: string;
+    value: Record<string, unknown>;
+    envelope: Record<string, unknown>;
+  }> = [];
   return {
     invocations,
     async invoke(extensionId: string, envelope: Record<string, unknown>) {
       const capability = String(envelope.capability);
       const value = (envelope.value ?? {}) as Record<string, unknown>;
-      invocations.push({ extensionId, capability, value });
+      invocations.push({ extensionId, capability, value, envelope });
       if (capability === "evaluation:list-groups") return options.groups;
       if (capability === "knowledge:validate-candidate") {
         return (
@@ -176,6 +182,14 @@ test("run98 R3 a validated candidate is promoted and both receipts are recorded"
     "knowledge:promote-candidate",
     "knowledge:record-learning",
   ]);
+  // The worker can only verify the durable readback and safety receipts with the same
+  // evidence-authority secret the derive call used.
+  expect(runtime.invocations[1].envelope.evaluationAuthoritySecret).toBe(
+    "run98-learning-pass-secret",
+  );
+  expect(runtime.invocations[3].envelope.evaluationAuthoritySecret).toBe(
+    "run98-learning-pass-secret",
+  );
   const validationInput = runtime.invocations[1].value;
   expect(validationInput).toMatchObject({
     candidateId: "shadow-candidate-1",

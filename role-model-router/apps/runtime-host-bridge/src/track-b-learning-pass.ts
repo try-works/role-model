@@ -153,6 +153,13 @@ export interface TrackBLearningPassInput {
   readonly allowPromotion?: boolean;
   /** Compose the envelope the sidecar host expects (`{value, filePath, ...}`). */
   readonly envelope?: (capability: string, value: Record<string, unknown>) => Record<string, unknown>;
+  /**
+   * Run 98 R3: the same evidence-authority secret the derive call used. Without it the worker has
+   * no authority to verify the durable comparison readback and safety receipts, and validation
+   * fails closed with `verified durable comparison readback receipt required for validation`
+   * (observed live on stage v83).
+   */
+  readonly evaluationAuthoritySecret?: string;
 }
 
 function defaultEnvelope(
@@ -205,7 +212,15 @@ export async function runTrackBLearningPass(
   if (!routePackage) throw new Error("learning pass requires the candidate route package");
   const scorerSetVersion = boundedText(input.identity?.scorerSetVersion);
   if (!scorerSetVersion) throw new Error("learning pass requires the scoring identity");
+  const evaluationAuthoritySecret = boundedText(input.evaluationAuthoritySecret);
+  if (!evaluationAuthoritySecret) {
+    throw new Error("learning pass requires the evidence authority secret");
+  }
   const envelope = input.envelope ?? ((capability, value) => defaultEnvelope(input, capability, value));
+  const workerEnvelope = (capability: string, value: Record<string, unknown>) => ({
+    ...envelope(capability, value),
+    evaluationAuthoritySecret,
+  });
   const nowMs = input.nowMs ?? Date.now();
   const evidenceFloor = input.evidenceFloor ?? DEFAULT_LEARNING_EVIDENCE_FLOOR;
   const guardrails = input.guardrails ?? DEFAULT_LEARNING_GUARDRAILS;
@@ -228,7 +243,7 @@ export async function runTrackBLearningPass(
   const validation = decodeBusinessResult(
     await runtime.invoke(
       "knowledge-worker",
-      envelope("knowledge:validate-candidate", {
+      workerEnvelope("knowledge:validate-candidate", {
         candidateId,
         scope: { routePackage, channel: input.channel, scopeId: input.scope },
         identity: {
@@ -293,7 +308,7 @@ export async function runTrackBLearningPass(
     const promotion = decodeBusinessResult(
       await runtime.invoke(
         "knowledge-worker",
-        envelope("knowledge:promote-candidate", {
+        workerEnvelope("knowledge:promote-candidate", {
           candidateId,
           validationReceiptId: receiptId,
           baselinePackId: boundedText(receipt.baselineId) ?? undefined,

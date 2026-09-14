@@ -7841,6 +7841,7 @@ export async function runTrackBShadowPipeline(
           finalizedComparison,
           finalizedComparisonReceipt,
           safetyReceipt: knowledgeSafetyReceipt,
+          evaluationAuthoritySecret,
           provenance: {
             policy: "routing-shadow",
             task: String(
