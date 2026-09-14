@@ -836,6 +836,19 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       minDistinctCaptures: number;
     }>;
     guardrails: Readonly<{ qualityMinDelta: number }>;
+    /** Run 98 R19: the predeclared promotion protocol the validation decides under. */
+    promotionProtocol?: Readonly<{
+      protocolId: string;
+      primaryMetricId: string;
+      direction: "higher_is_better";
+      minimumPracticalDelta: number;
+      intervalLevel: number;
+      resamples: number;
+      bootstrapSeed: number;
+      analysisMethod: "paired_cluster_bootstrap";
+      selectionFamilySize: number;
+      multiplicityAdjustment: "none" | "holm_bonferroni";
+    }>;
     evidenceMaxAgeMs?: number;
   }>;
   readonly runPipeline?: typeof runTrackBShadowPipeline;
@@ -4236,6 +4249,23 @@ export async function main(): Promise<void> {
                       },
                       guardrails: {
                         qualityMinDelta: learningPolicySnapshot.effective.qualityMinDelta,
+                      },
+                      // Run 98 R19: the promotion protocol is declared from the same versioned
+                      // policy as the floors, so the validation gate is reproducible from config.
+                      promotionProtocol: {
+                        protocolId: `promotion:${learningPolicySnapshot.digest.slice(0, 16)}`,
+                        primaryMetricId: "role_model_pairwise_judge.battle",
+                        direction: "higher_is_better" as const,
+                        minimumPracticalDelta:
+                          learningPolicySnapshot.effective.minimumPracticalDelta,
+                        intervalLevel: learningPolicySnapshot.effective.promotionIntervalLevel,
+                        resamples: learningPolicySnapshot.effective.promotionResamples,
+                        bootstrapSeed: learningPolicySnapshot.effective.promotionBootstrapSeed,
+                        analysisMethod: learningPolicySnapshot.effective.promotionAnalysisMethod,
+                        selectionFamilySize:
+                          learningPolicySnapshot.effective.promotionSelectionFamilySize,
+                        multiplicityAdjustment:
+                          learningPolicySnapshot.effective.multiplicityAdjustment,
                       },
                       evidenceMaxAgeMs:
                         learningPolicySnapshot.effective.evidenceMaxAgeDays * 24 * 60 * 60 * 1_000,

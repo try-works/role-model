@@ -5146,6 +5146,19 @@ export interface TrackBShadowPipelineInput {
       minDistinctCaptures: number;
     }>;
     guardrails: Readonly<{ qualityMinDelta: number }>;
+    /** Run 98 R19: the predeclared promotion protocol the validation decides under. */
+    promotionProtocol?: Readonly<{
+      protocolId: string;
+      primaryMetricId: string;
+      direction: "higher_is_better";
+      minimumPracticalDelta: number;
+      intervalLevel: number;
+      resamples: number;
+      bootstrapSeed: number;
+      analysisMethod: "paired_cluster_bootstrap";
+      selectionFamilySize: number;
+      multiplicityAdjustment: "none" | "holm_bonferroni";
+    }>;
     evidenceMaxAgeMs?: number;
   }>;
   readonly identity?: TrackBVariantIdentity;
@@ -7864,6 +7877,9 @@ export async function runTrackBShadowPipeline(
             ? {
                 evidenceFloor: input.learningPolicy.evidenceFloor,
                 guardrails: input.learningPolicy.guardrails,
+                ...(input.learningPolicy.promotionProtocol
+                  ? { promotionProtocol: input.learningPolicy.promotionProtocol }
+                  : {}),
                 ...(input.learningPolicy.evidenceMaxAgeMs
                   ? { evidenceMaxAgeMs: input.learningPolicy.evidenceMaxAgeMs }
                   : {}),

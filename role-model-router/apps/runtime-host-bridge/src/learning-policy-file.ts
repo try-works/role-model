@@ -46,6 +46,18 @@ export interface LearningPolicySnapshot {
     readonly judgeMode: "identified" | "identity_blind";
     readonly judgeOrderPolicy: "source_first" | "dual_order";
     readonly judgeMeasureAgreement: boolean;
+    /**
+     * Run 98 R19 / addendum 02: the predeclared statistical promotion protocol of
+     * `guidance/07`. The learning pass sends these to the worker, and the worker's promotion
+     * decision uses the paired interval lower bound against `minimumPracticalDelta`.
+     */
+    readonly minimumPracticalDelta: number;
+    readonly promotionIntervalLevel: number;
+    readonly promotionResamples: number;
+    readonly promotionBootstrapSeed: number;
+    readonly promotionAnalysisMethod: "paired_cluster_bootstrap";
+    readonly multiplicityAdjustment: "none" | "holm_bonferroni";
+    readonly promotionSelectionFamilySize: number;
   };
 }
 
@@ -65,6 +77,13 @@ const DEFAULT_EFFECTIVE: LearningPolicySnapshot["effective"] = Object.freeze({
   judgeMode: "identified",
   judgeOrderPolicy: "source_first",
   judgeMeasureAgreement: false,
+  minimumPracticalDelta: 0.05,
+  promotionIntervalLevel: 0.95,
+  promotionResamples: 10_000,
+  promotionBootstrapSeed: 0,
+  promotionAnalysisMethod: "paired_cluster_bootstrap",
+  multiplicityAdjustment: "holm_bonferroni",
+  promotionSelectionFamilySize: 1,
 });
 
 const asRecord = (value: unknown): Record<string, unknown> =>
@@ -139,6 +158,53 @@ export function readLearningPolicyFile(input: {
     judgeMode: merged.judgeMode === "identity_blind" ? "identity_blind" : "identified",
     judgeOrderPolicy: merged.judgeOrderPolicy === "dual_order" ? "dual_order" : "source_first",
     judgeMeasureAgreement: merged.judgeMeasureAgreement === true,
+    // The legacy name `qualityClaimedImprovement` is the same value under its pre-R19 name, so an
+    // older config that only carries the alias still resolves the enforced parameter.
+    minimumPracticalDelta: Math.min(
+      0.5,
+      Math.max(
+        0,
+        finiteOr(
+          merged.minimumPracticalDelta ?? merged.qualityClaimedImprovement,
+          DEFAULT_EFFECTIVE.minimumPracticalDelta,
+        ),
+      ),
+    ),
+    promotionIntervalLevel: Math.min(
+      0.99,
+      Math.max(
+        0.8,
+        finiteOr(merged.promotionIntervalLevel, DEFAULT_EFFECTIVE.promotionIntervalLevel),
+      ),
+    ),
+    promotionResamples: Math.min(
+      20_000,
+      Math.max(
+        1000,
+        Math.round(finiteOr(merged.promotionResamples, DEFAULT_EFFECTIVE.promotionResamples)),
+      ),
+    ),
+    promotionBootstrapSeed: Math.min(
+      2_147_483_647,
+      Math.max(
+        0,
+        Math.round(finiteOr(merged.promotionBootstrapSeed, DEFAULT_EFFECTIVE.promotionBootstrapSeed)),
+      ),
+    ),
+    promotionAnalysisMethod: "paired_cluster_bootstrap",
+    multiplicityAdjustment: merged.multiplicityAdjustment === "none" ? "none" : "holm_bonferroni",
+    promotionSelectionFamilySize: Math.min(
+      100,
+      Math.max(
+        1,
+        Math.round(
+          finiteOr(
+            merged.promotionSelectionFamilySize,
+            DEFAULT_EFFECTIVE.promotionSelectionFamilySize,
+          ),
+        ),
+      ),
+    ),
   };
   return {
     policyVersion: Number.isSafeInteger(parsed.policyVersion) ? Number(parsed.policyVersion) : 1,

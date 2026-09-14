@@ -37,6 +37,24 @@ export const DEFAULT_LEARNING_EVIDENCE_FLOOR = Object.freeze({
 
 export const DEFAULT_LEARNING_GUARDRAILS = Object.freeze({ qualityMinDelta: -0.02 });
 
+/**
+ * Run 98 R19 / addendum 02: the predeclared statistical promotion protocol of `guidance/07`.
+ * The pass always declares one; the worker fails closed (`promotion_protocol_required`) when a
+ * validation arrives without it, so a pack can never be promoted on a point estimate.
+ */
+export const DEFAULT_PROMOTION_PROTOCOL = Object.freeze({
+  protocolId: "promotion:paired-cluster-bootstrap",
+  primaryMetricId: "role_model_pairwise_judge.battle",
+  direction: "higher_is_better" as const,
+  minimumPracticalDelta: 0.05,
+  intervalLevel: 0.95,
+  resamples: 10_000,
+  bootstrapSeed: 0,
+  analysisMethod: "paired_cluster_bootstrap" as const,
+  selectionFamilySize: 1,
+  multiplicityAdjustment: "holm_bonferroni" as const,
+});
+
 const DECISIVE_OUTCOMES = new Set(["candidate", "source"]);
 
 export interface TrackBLearningPassRuntime {
@@ -147,6 +165,23 @@ export interface TrackBLearningPassInput {
   }>;
   readonly guardrails?: Readonly<{ qualityMinDelta: number }>;
   readonly estimator?: Readonly<{ bootstrapSeed?: number; resamples?: number }>;
+  /**
+   * Run 98 R19: the predeclared promotion protocol the validation decides under. Callers pass the
+   * effective policy; when omitted the pass declares `DEFAULT_PROMOTION_PROTOCOL` so a validation
+   * is never taken without one.
+   */
+  readonly promotionProtocol?: Readonly<{
+    protocolId: string;
+    primaryMetricId: string;
+    direction: "higher_is_better";
+    minimumPracticalDelta: number;
+    intervalLevel: number;
+    resamples: number;
+    bootstrapSeed: number;
+    analysisMethod: "paired_cluster_bootstrap";
+    selectionFamilySize: number;
+    multiplicityAdjustment: "none" | "holm_bonferroni";
+  }>;
   readonly evidenceMaxAgeMs?: number;
   readonly nowMs?: number;
   /** Promotion stays opt-in so a caller can record validation evidence without a pack. */
@@ -245,6 +280,7 @@ export async function runTrackBLearningPass(
   const nowMs = input.nowMs ?? Date.now();
   const evidenceFloor = input.evidenceFloor ?? DEFAULT_LEARNING_EVIDENCE_FLOOR;
   const guardrails = input.guardrails ?? DEFAULT_LEARNING_GUARDRAILS;
+  const promotionProtocol = { ...DEFAULT_PROMOTION_PROTOCOL, ...(input.promotionProtocol ?? {}) };
 
   const rawGroups = await runtime.invoke("evaluation-core", envelope("evaluation:list-groups", {}));
   const decodedGroups = input.decodeResult
@@ -289,6 +325,12 @@ export async function runTrackBLearningPass(
         evidenceSummary,
         evidenceFloor: { ...evidenceFloor },
         guardrails: { ...guardrails },
+        // Run 98 R19: the protocol is declared before the holdout decision and the non-inferiority
+        // margin is the quality guardrail bound the operator already configures.
+        promotionProtocol: {
+          ...promotionProtocol,
+          nonInferiorityMargin: guardrails.qualityMinDelta,
+        },
         estimator: {
           estimatorVersion: RUN98_LEARNING_ESTIMATOR_VERSION,
           bootstrapSeed: input.estimator?.bootstrapSeed ?? 0,

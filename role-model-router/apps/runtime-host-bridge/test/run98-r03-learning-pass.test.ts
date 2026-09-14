@@ -2,6 +2,8 @@ import { expect, test } from "vitest";
 
 import {
   DEFAULT_LEARNING_EVIDENCE_FLOOR,
+  DEFAULT_LEARNING_GUARDRAILS,
+  DEFAULT_PROMOTION_PROTOCOL,
   RUN98_LEARNING_PASS_SCHEMA,
   buildTrackBLearningEvidenceSummary,
   runTrackBLearningPass,
@@ -204,6 +206,23 @@ test("run98 R3 a validated candidate is promoted and both receipts are recorded"
     candidateId: "shadow-candidate-1",
     identity: { scorerSetVersion: "run96-routing-shadow-v3", judgeEndpointId: "endpoint:judge" },
     evidenceSummary: { decisiveComparisons: 3, holdoutComparisons: 3, distinctCaptures: 3 },
+  });
+  // Run 98 R19: the pass always declares the predeclared promotion protocol, and the
+  // non-inferiority margin is the operator's quality guardrail bound.
+  expect(validationInput).toMatchObject({
+    promotionProtocol: {
+      protocolId: DEFAULT_PROMOTION_PROTOCOL.protocolId,
+      primaryMetricId: DEFAULT_PROMOTION_PROTOCOL.primaryMetricId,
+      direction: "higher_is_better",
+      minimumPracticalDelta: DEFAULT_PROMOTION_PROTOCOL.minimumPracticalDelta,
+      intervalLevel: DEFAULT_PROMOTION_PROTOCOL.intervalLevel,
+      resamples: DEFAULT_PROMOTION_PROTOCOL.resamples,
+      bootstrapSeed: DEFAULT_PROMOTION_PROTOCOL.bootstrapSeed,
+      analysisMethod: "paired_cluster_bootstrap",
+      selectionFamilySize: DEFAULT_PROMOTION_PROTOCOL.selectionFamilySize,
+      multiplicityAdjustment: "holm_bonferroni",
+      nonInferiorityMargin: DEFAULT_LEARNING_GUARDRAILS.qualityMinDelta,
+    },
   });
   const evaluation = validationInput.evaluation as Record<string, unknown>;
   expect(evaluation.environment).toBe("local-routing-evaluation");

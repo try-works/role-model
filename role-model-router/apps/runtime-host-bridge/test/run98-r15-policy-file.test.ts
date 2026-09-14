@@ -102,4 +102,49 @@ describe("run98 R15 packaged policy file", () => {
     // An unknown enum value falls back to the shipped default stage rather than widening.
     expect(readLearningPolicyFile({ repoRoot: unknownStage, channel: "stage" })?.effective.stage).toBe("S1");
   });
+
+  test("run98 R19 resolves the predeclared promotion protocol from the same policy record", () => {
+    const root = writePolicy(
+      policy({
+        minimumPracticalDelta: 0.08,
+        promotionIntervalLevel: 0.9,
+        promotionResamples: 12000,
+        promotionBootstrapSeed: 98,
+        promotionAnalysisMethod: "paired_cluster_bootstrap",
+        multiplicityAdjustment: "holm_bonferroni",
+        promotionSelectionFamilySize: 3,
+      }),
+    );
+    expect(readLearningPolicyFile({ repoRoot: root, channel: "stage" })?.effective).toMatchObject({
+      minimumPracticalDelta: 0.08,
+      promotionIntervalLevel: 0.9,
+      promotionResamples: 12000,
+      promotionBootstrapSeed: 98,
+      promotionAnalysisMethod: "paired_cluster_bootstrap",
+      multiplicityAdjustment: "holm_bonferroni",
+      promotionSelectionFamilySize: 3,
+    });
+
+    // The legacy name of the same value still resolves, and the documented defaults apply when
+    // the config predates the promotion protocol.
+    const legacy = writePolicy(policy({ qualityClaimedImprovement: 0.07 }));
+    expect(readLearningPolicyFile({ repoRoot: legacy, channel: "stage" })?.effective).toMatchObject({
+      minimumPracticalDelta: 0.07,
+      promotionIntervalLevel: 0.95,
+      promotionResamples: 10000,
+      promotionBootstrapSeed: 0,
+      multiplicityAdjustment: "holm_bonferroni",
+      promotionSelectionFamilySize: 1,
+    });
+
+    // An out-of-bounds value never widens the gate: it clamps to the documented bound.
+    const outOfBounds = writePolicy(
+      policy({ promotionIntervalLevel: 0.5, promotionResamples: 10, minimumPracticalDelta: -1 }),
+    );
+    expect(readLearningPolicyFile({ repoRoot: outOfBounds, channel: "stage" })?.effective).toMatchObject({
+      minimumPracticalDelta: 0,
+      promotionIntervalLevel: 0.8,
+      promotionResamples: 1000,
+    });
+  });
 });
