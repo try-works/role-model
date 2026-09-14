@@ -1300,6 +1300,23 @@ type RuntimeOperatorCallbacks = Pick<
   | "engageLearningKillSwitch"
 >;
 
+/**
+ * Run 99 (option 2): parse `--anonymous-learning-reads on|off` (or the environment equivalent).
+ * Undefined keeps the bind-host default; anything else is rejected so a typo cannot silently
+ * widen or narrow the read posture.
+ */
+export function parseAnonymousLearningReadsFlag(
+  value: string | undefined,
+): "on" | "off" | undefined {
+  const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
+  if (normalized === "") return undefined;
+  if (["on", "true", "1", "yes"].includes(normalized)) return "on";
+  if (["off", "false", "0", "no"].includes(normalized)) return "off";
+  throw new Error(
+    `--anonymous-learning-reads must be on or off (received ${JSON.stringify(value)})`,
+  );
+}
+
 export function createRuntimeOperatorCallbacks(
   operations: ReturnType<typeof createTrackBOperations>,
 ): RuntimeOperatorCallbacks {
@@ -2134,6 +2151,8 @@ export function createCliServerOptions(
     runtimeChannel?: "development" | "stage" | "production";
     operatorAuthToken?: string;
     operatorContext?: RuntimeOperatorContext;
+    /** Run 99 (option 2): anonymous loopback Learning readbacks. */
+    anonymousLearningReads?: "on" | "off";
   },
   backendOrResolver: CliBackend | CliBackendResolver,
   shutdown?: () => Promise<void>,
@@ -2380,6 +2399,7 @@ export function createCliServerOptions(
     readLearningMeasurement: bindBackendMethod(
       "readLearningMeasurement",
     ) as StartBridgeServerOptions["readLearningMeasurement"],
+    ...(options.anonymousLearningReads ? { anonymousLearningReads: options.anonymousLearningReads } : {}),
     readLearningActivity: bindBackendMethod(
       "readLearningActivity",
     ) as StartBridgeServerOptions["readLearningActivity"],
@@ -3072,6 +3092,9 @@ export async function main(): Promise<void> {
       "operator-auth-token": {
         type: "string",
       },
+      "anonymous-learning-reads": {
+        type: "string",
+      },
       "artifact-digest-key-file": {
         type: "string",
       },
@@ -3126,6 +3149,13 @@ export async function main(): Promise<void> {
   const operatorAuthToken =
     readLauncherString(args.values, "operator-auth-token") ??
     (process.env.ROLE_MODEL_OPERATOR_AUTH_TOKEN?.trim() || undefined);
+  // Run 99 (option 2): anonymous loopback Learning readbacks are explicit policy. An explicit
+  // value wins over the bind-host default; an unparseable value fails the launch instead of
+  // silently falling back to the permissive default.
+  const anonymousLearningReads = parseAnonymousLearningReadsFlag(
+    readLauncherString(args.values, "anonymous-learning-reads") ??
+      process.env.ROLE_MODEL_ANONYMOUS_LEARNING_READS,
+  );
 
   const launchedWithoutRuntimeArgs =
     !args.values["repo-root"] && !args.values["runtime-state-root"];
@@ -3259,6 +3289,7 @@ export async function main(): Promise<void> {
         staticRoot,
         runtimeStateRoot: options.runtimeStateRoot,
         runtimeChannel: packagedProfile?.channel ?? "development",
+        ...(anonymousLearningReads ? { anonymousLearningReads } : {}),
         operatorContext: {
           channel: packagedProfile?.channel ?? "development",
           scope: options.scopeId,

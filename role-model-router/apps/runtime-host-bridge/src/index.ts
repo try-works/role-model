@@ -3021,6 +3021,8 @@ export interface StartBridgeServerOptions {
   readonly readLearningActivity?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
   readonly readLearningHistory?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
   readonly readLearningPolicy?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  /** Run 99 (option 2): anonymous loopback Learning readbacks (`on`/`off`, default by bind host). */
+  readonly anonymousLearningReads?: "on" | "off" | boolean;
   readonly setLearningPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackLearningPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly activateLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
@@ -3703,6 +3705,8 @@ export interface CreateRuntimeBridgeBackendOptions {
   readonly readLearningActivity?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
   readonly readLearningHistory?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
   readonly readLearningPolicy?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  /** Run 99 (option 2): anonymous loopback Learning readbacks (`on`/`off`, default by bind host). */
+  readonly anonymousLearningReads?: "on" | "off" | boolean;
   readonly setLearningPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackLearningPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly activateLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
@@ -15032,7 +15036,30 @@ const LEARNING_READBACK_PREFIX = "/api/role-model/operator/learning/";
  * mutating operator call and every other operator surface stays token-gated. A request that *does*
  * present an Authorization header must still present a valid one.
  */
-function isAnonymousLearningReadback(request: IncomingMessage, url: URL): boolean {
+const LOOPBACK_BIND_HOSTS = new Set(["127.0.0.1", "::1", "localhost", "[::1]"]);
+
+/**
+ * Run 99 (option 2): whether anonymous loopback reads of the Learning projections are allowed is
+ * explicit policy, not an accident of transport. `--anonymous-learning-reads on|off` (or
+ * `ROLE_MODEL_ANONYMOUS_LEARNING_READS`) wins; otherwise the default is `on` for a loopback bind
+ * (the operator's own machine) and `off` for a bind that accepts remote clients, where the bearer
+ * token stays the only way in.
+ */
+export function resolveAnonymousLearningReads(
+  host: string | undefined,
+  explicit?: "on" | "off" | boolean,
+): "on" | "off" {
+  if (explicit === "on" || explicit === true) return "on";
+  if (explicit === "off" || explicit === false) return "off";
+  return LOOPBACK_BIND_HOSTS.has(String(host ?? "").trim().toLowerCase()) ? "on" : "off";
+}
+
+function isAnonymousLearningReadback(
+  request: IncomingMessage,
+  url: URL,
+  anonymousReads: "on" | "off",
+): boolean {
+  if (anonymousReads !== "on") return false;
   if (request.method !== "GET") return false;
   if (!url.pathname.startsWith(LEARNING_READBACK_PREFIX)) return false;
   return LOOPBACK_OPERATOR_CLIENTS.has(String(request.socket?.remoteAddress ?? ""));
@@ -15190,7 +15217,13 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       const presentsCredential = typeof suppliedAuthorization === "string" && suppliedAuthorization.length > 0;
       const authorized = operatorTokenMatches(request, options.operatorAuthToken);
       const anonymousLearningRead =
-        !presentsCredential && !authorized && isAnonymousLearningReadback(request, url);
+        !presentsCredential &&
+        !authorized &&
+        isAnonymousLearningReadback(
+          request,
+          url,
+          resolveAnonymousLearningReads(options.host, options.anonymousLearningReads),
+        );
       if (!authorized && !anonymousLearningRead) {
         writeOperatorUnauthorized(response);
         return;
