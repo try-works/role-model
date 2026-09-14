@@ -6,6 +6,14 @@ import {
 } from "./track-b-auto-replay.js";
 
 /**
+ * Run 98 R2: durable replay states that can never be dispatched again. RC16 freezes a replay
+ * job's deadline at creation, so a job that already timed out (or was expired, failed, or
+ * cancelled) must be reported as terminal; otherwise the producer re-defers the capture on
+ * every tick and the pending queue never drains.
+ */
+const TERMINAL_REPLAY_JOB_STATES = new Set(["timed_out", "expired", "failed", "cancelled"]);
+
+/**
  * Run 97 automatic replay receipt accounting.
  *
  * The supervised replay endpoint answers with the durable outcome of the replay
@@ -67,11 +75,14 @@ export function autoReplayExecutionFromCommandReceipt(receipt: unknown): AutoRep
     },
   );
   if (state !== "complete") {
+    const terminal = TERMINAL_REPLAY_JOB_STATES.has(state);
     return {
-      terminal: false,
+      terminal,
       branches,
       dispatches,
-      failureDetail: `durable replay state is ${state}`,
+      failureDetail: terminal
+        ? `durable replay job ${state}`
+        : `durable replay state is ${state}`,
     };
   }
   return { terminal: true, branches, dispatches };

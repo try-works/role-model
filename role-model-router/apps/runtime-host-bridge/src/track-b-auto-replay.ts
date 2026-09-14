@@ -304,6 +304,20 @@ export async function runAutoReplayTick(input: {
     }
     if (completedBranches === 0) {
       input.ledger.release(reservation.reservationId);
+      // Run 98 R2: a durable replay job that already reached a terminal failure state can
+      // never dispatch again (RC16 freezes the deadline at creation). Retire the capture with
+      // a terminal refusal so the pending projection stops re-offering it every tick; only
+      // replayable deferrals stay pending.
+      if (execution.terminal) {
+        refused += 1;
+        emit({
+          captureRef: capture.captureRef,
+          outcome: "refused",
+          code: "replay_window_elapsed",
+          detail: execution.failureDetail ?? "replay window elapsed without a completed branch",
+        });
+        continue;
+      }
       deferred += 1;
       emit({
         captureRef: capture.captureRef,

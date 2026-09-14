@@ -337,6 +337,13 @@ export interface TrackBProductionRuntimeOptions {
 export const TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS = 90_000;
 
 /**
+ * Run 98 R2: durable replay job states that can never be dispatched again. RC16 freezes a
+ * replay job's deadline at creation, so a job that already failed terminally must never be
+ * re-claimed; the automatic producer retires the capture from these states.
+ */
+const TERMINAL_REPLAY_JOB_STATES = new Set(["timed_out", "expired", "failed", "cancelled"]);
+
+/**
  * Normal host-path adapter for graph-primary observation storage. The SQLite
  * package owns the journal and pointer rows; the injected store owns rich bytes.
  */
@@ -2996,6 +3003,13 @@ export async function runSupervisedReplay(input: {
       : {});
   const jobId = typeof created.jobId === "string" ? created.jobId : null;
   if (!jobId) throw new Error("Replay Core did not return a durable replay job ID");
+  // Run 98 R2: a durable job that already reached a terminal failure state can never be
+  // dispatched again — RC16 freezes its deadline at creation, so claiming a fresh scheduler
+  // intent only produces instant expiries and an endless `deferred` answer. Return the job as
+  // it stands so the automatic producer retires the capture instead of re-deferring it.
+  if (TERMINAL_REPLAY_JOB_STATES.has(String(created.state ?? ""))) {
+    return { ...structuredClone(created), schedulerState: "terminal_job" };
+  }
   // `awaiting_evaluation` is already a durable terminal result for the replay
   // dispatch pipeline. Reclaiming it can duplicate scheduler work (and, after a
   // restart, a provider call) before Evaluation Core completes its separate job.
