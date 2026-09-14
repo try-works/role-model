@@ -39,6 +39,13 @@ export interface LearningPolicySnapshot {
     readonly minHoldoutComparisons: number;
     readonly minDistinctCaptures: number;
     readonly evidenceMaxAgeDays: number;
+    /**
+     * Run 98 R10: judge configuration is resolved from the versioned policy (env vars remain an
+     * explicit local override in the runtime composition).
+     */
+    readonly judgeMode: "identified" | "identity_blind";
+    readonly judgeOrderPolicy: "source_first" | "dual_order";
+    readonly judgeMeasureAgreement: boolean;
   };
 }
 
@@ -55,6 +62,9 @@ const DEFAULT_EFFECTIVE: LearningPolicySnapshot["effective"] = Object.freeze({
   minHoldoutComparisons: 1,
   minDistinctCaptures: 3,
   evidenceMaxAgeDays: 30,
+  judgeMode: "identified",
+  judgeOrderPolicy: "source_first",
+  judgeMeasureAgreement: false,
 });
 
 const asRecord = (value: unknown): Record<string, unknown> =>
@@ -126,6 +136,9 @@ export function readLearningPolicyFile(input: {
       1,
       finiteOr(merged.evidenceMaxAgeDays, DEFAULT_EFFECTIVE.evidenceMaxAgeDays),
     ),
+    judgeMode: merged.judgeMode === "identity_blind" ? "identity_blind" : "identified",
+    judgeOrderPolicy: merged.judgeOrderPolicy === "dual_order" ? "dual_order" : "source_first",
+    judgeMeasureAgreement: merged.judgeMeasureAgreement === true,
   };
   return {
     policyVersion: Number.isSafeInteger(parsed.policyVersion) ? Number(parsed.policyVersion) : 1,

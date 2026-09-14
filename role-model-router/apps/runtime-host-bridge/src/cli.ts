@@ -3950,6 +3950,14 @@ export async function main(): Promise<void> {
               };
             },
           });
+          // Run 98 R10/R15: the judge configuration and the learning-pass floors come from the
+          // operator's versioned policy for this channel and scope; environment variables stay an
+          // explicit local override.
+          const learningPolicySnapshot = readLearningPolicyFile({
+            repoRoot: options.repoRoot,
+            channel,
+            scopeId: options.scopeId,
+          });
           const result = await runSupervisedReplay({
             runtime,
             adapter,
@@ -4157,17 +4165,23 @@ export async function main(): Promise<void> {
                 excludedEndpointIds: [sourceEndpointId, ...candidateEndpointIds],
                 taskText: extractTaskInstructionText(sourceCapture) ?? "",
                 // Run 98 R10: the judge mode, presentation-order policy and agreement
-                // measurement are runtime configuration (fail closed to the previous
-                // identified, source-first, no-probe behaviour).
+                // measurement resolve from the versioned policy (env override first), failing
+                // closed to the previous identified, source-first, no-probe behaviour.
                 mode: isPairwiseJudgeMode(process.env.ROLE_MODEL_JUDGE_MODE?.trim())
                   ? (process.env.ROLE_MODEL_JUDGE_MODE.trim() as "identified" | "identity_blind")
-                  : "identified",
+                  : (learningPolicySnapshot?.effective.judgeMode ?? "identified"),
                 orderPolicy:
                   process.env.ROLE_MODEL_JUDGE_ORDER_POLICY?.trim() === "dual_order"
                     ? "dual_order"
-                    : "source_first",
+                    : process.env.ROLE_MODEL_JUDGE_ORDER_POLICY?.trim() === "source_first"
+                      ? "source_first"
+                      : (learningPolicySnapshot?.effective.judgeOrderPolicy ?? "source_first"),
                 measureAgreement:
-                  process.env.ROLE_MODEL_JUDGE_MEASURE_AGREEMENT?.trim() === "true",
+                  process.env.ROLE_MODEL_JUDGE_MEASURE_AGREEMENT?.trim() === "true"
+                    ? true
+                    : process.env.ROLE_MODEL_JUDGE_MEASURE_AGREEMENT?.trim() === "false"
+                      ? false
+                      : (learningPolicySnapshot?.effective.judgeMeasureAgreement ?? false),
                 recordDerivedDispatch: (input) => {
                   try {
                     // The supervised replay already reserved this counterfactual at its
@@ -4210,26 +4224,24 @@ export async function main(): Promise<void> {
               contractStateRoot: options.runtimeStateRoot,
               // Run 98 R3/R15: the learning pass consumes the operator's versioned policy
               // floors for this channel and scope.
-              ...(() => {
-                const snapshot = readLearningPolicyFile({
-                  repoRoot: options.repoRoot,
-                  channel,
-                  scopeId: options.scopeId,
-                });
-                if (!snapshot) return {};
-                return {
-                  learningPolicy: {
-                    evidenceFloor: {
-                      minDecisiveComparisons: snapshot.effective.minDecisiveComparisons,
-                      minHoldoutComparisons: snapshot.effective.minHoldoutComparisons,
-                      minDistinctCaptures: snapshot.effective.minDistinctCaptures,
+              ...(learningPolicySnapshot
+                ? {
+                    learningPolicy: {
+                      evidenceFloor: {
+                        minDecisiveComparisons:
+                          learningPolicySnapshot.effective.minDecisiveComparisons,
+                        minHoldoutComparisons:
+                          learningPolicySnapshot.effective.minHoldoutComparisons,
+                        minDistinctCaptures: learningPolicySnapshot.effective.minDistinctCaptures,
+                      },
+                      guardrails: {
+                        qualityMinDelta: learningPolicySnapshot.effective.qualityMinDelta,
+                      },
+                      evidenceMaxAgeMs:
+                        learningPolicySnapshot.effective.evidenceMaxAgeDays * 24 * 60 * 60 * 1_000,
                     },
-                    guardrails: { qualityMinDelta: snapshot.effective.qualityMinDelta },
-                    evidenceMaxAgeMs:
-                      snapshot.effective.evidenceMaxAgeDays * 24 * 60 * 60 * 1_000,
-                  },
-                };
-              })(),
+                  }
+                : {}),
             }),
           });
           // R5/R12: the receipt is the automatic producer's only view of the durable

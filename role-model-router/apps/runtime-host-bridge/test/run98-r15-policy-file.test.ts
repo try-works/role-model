@@ -61,6 +61,12 @@ describe("run98 R15 packaged policy file", () => {
     });
     expect(stageChannel?.digest).toMatch(/^sha256:[a-f0-9]{64}$/);
     expect(readLearningPolicyFile({ repoRoot: root, channel: "production" })?.effective.stage).toBe("S0");
+    // Run 98 R10: the judge configuration resolves from the same versioned policy record.
+    expect(readLearningPolicyFile({ repoRoot: root, channel: "stage" })?.effective).toMatchObject({
+      judgeMode: "identified",
+      judgeOrderPolicy: "source_first",
+      judgeMeasureAgreement: false,
+    });
   });
 
   test("scope overrides beat channel overrides beat global", () => {
