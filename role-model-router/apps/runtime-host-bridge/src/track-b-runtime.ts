@@ -31,6 +31,10 @@ import { createProjectionV2 } from "@role-model-router/trace";
 
 import { DEFAULT_REPLAY_CANDIDATE_CAP } from "./track-b-replay-policy.js";
 import {
+  type TrackBLearningPassRuntime,
+  runTrackBLearningPass,
+} from "./track-b-learning-pass.js";
+import {
   TRACK_B_PAIRWISE_JUDGE_WINNER_COUNTERFACTUAL,
   type TrackBPairwiseJudge,
   pairwiseJudgeScores,
@@ -5130,6 +5134,20 @@ export interface TrackBShadowPipelineInput {
    * missingness, never as a fabricated zero (`guidance/09`, `guidance/11`).
    */
   readonly judge?: TrackBPairwiseJudge;
+  /**
+   * Run 98 R3/R15: the effective activation-policy floors the learning pass validates
+   * against. Callers pass the versioned policy snapshot; without it the pass uses the
+   * documented defaults.
+   */
+  readonly learningPolicy?: Readonly<{
+    evidenceFloor: Readonly<{
+      minDecisiveComparisons: number;
+      minHoldoutComparisons: number;
+      minDistinctCaptures: number;
+    }>;
+    guardrails: Readonly<{ qualityMinDelta: number }>;
+    evidenceMaxAgeMs?: number;
+  }>;
   readonly identity?: TrackBVariantIdentity;
   readonly occurrence?: Readonly<{ occurrenceId: string; contentId: string }>;
 }
@@ -7794,6 +7812,88 @@ export async function runTrackBShadowPipeline(
     }
   }
   const profileConfidence = profileRecord.confidence;
+  // Run 98 R3: the learning pass. A derived candidate is only text until validation turns it
+  // into a receipt and promotion turns that receipt into a pack. The pass runs here, on the
+  // durable finalized comparison the candidate was derived from, and never performs a provider
+  // call, a route mutation or a prompt injection.
+  let learningPass: Record<string, unknown> | null = null;
+  if (candidateId) {
+    const candidateScorerIdentity =
+      candidate && typeof candidate === "object" && !Array.isArray(candidate)
+        ? ((candidate as Record<string, unknown>).scorerIdentity as
+            | { scorerSetVersion?: unknown; judgeEndpointId?: unknown }
+            | null
+            | undefined)
+        : undefined;
+    const scorerSetVersion =
+      typeof candidateScorerIdentity?.scorerSetVersion === "string"
+        ? candidateScorerIdentity.scorerSetVersion
+        : null;
+    if (scorerSetVersion) {
+      try {
+        learningPass = await runTrackBLearningPass(runtime, {
+          requestId: input.requestId,
+          channel: input.channel,
+          scope: input.scope,
+          authorizationEpoch: input.authorizationEpoch,
+          candidateId,
+          routePackage: learningRoutePackage,
+          finalizedComparison,
+          finalizedComparisonReceipt,
+          safetyReceipt: knowledgeSafetyReceipt,
+          provenance: {
+            policy: "routing-shadow",
+            task: String(
+              (durableComparison.comparability as Record<string, unknown> | undefined)?.taskRef ??
+                evaluationReferences.sourceEvidenceRef,
+            ),
+            scorer: scorerSetVersion,
+            split: "holdout",
+            seed: 87,
+            evidenceRef: evaluationReferences.sourceEvidenceRef,
+          },
+          identity: {
+            scorerSetVersion,
+            judgeEndpointId:
+              typeof candidateScorerIdentity?.judgeEndpointId === "string"
+                ? candidateScorerIdentity.judgeEndpointId
+                : null,
+          },
+          ...(input.learningPolicy
+            ? {
+                evidenceFloor: input.learningPolicy.evidenceFloor,
+                guardrails: input.learningPolicy.guardrails,
+                ...(input.learningPolicy.evidenceMaxAgeMs
+                  ? { evidenceMaxAgeMs: input.learningPolicy.evidenceMaxAgeMs }
+                  : {}),
+              }
+            : {}),
+          envelope: (capability, value) => envelope(capability, value),
+        });
+      } catch (error) {
+        learningPass = {
+          schemaVersion: "role-model.route-learning-pass-degradation.v1",
+          degraded: true,
+          candidateId,
+          reason: String((error as { message?: unknown })?.message ?? error).slice(0, 256),
+        };
+        console.error(
+          `[run98] learning pass declined:${input.requestId} ${String(
+            (error as { message?: unknown })?.message ?? error,
+          ).slice(0, 200)}`,
+        );
+      }
+    } else {
+      // R10: validation refuses a candidate without a bound scoring identity, so the pass
+      // reports that instead of sending an unverifiable request.
+      learningPass = {
+        schemaVersion: "role-model.route-learning-pass-degradation.v1",
+        degraded: true,
+        candidateId,
+        reason: "candidate carries no scoring identity; re-derive it under the current judge",
+      };
+    }
+  }
   const candidateConfidence = (candidate as Record<string, unknown>).confidence;
   const advisoryConfidence =
     typeof profileConfidence === "number" && Number.isFinite(profileConfidence)
@@ -7965,6 +8065,7 @@ export async function runTrackBShadowPipeline(
       advisoryId: advisory.advisoryId,
       decisionAdvice: structuredClone(advisory.decisionAdvice),
       advisoryObservation,
+      ...(learningPass ? { learningPass } : {}),
       contractRefs: contractEmissions.map((emission) => ({
         contract: emission.contract,
         contractId: emission.contractId,

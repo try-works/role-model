@@ -31,6 +31,14 @@ export interface LearningPolicySnapshot {
     readonly costMaxMultiplier: number;
     readonly latencyP95MaxDeltaMs: number;
     readonly errorRateMaxDeltaPp: number;
+    /**
+     * Run 98 R3: the evidence floors the learning pass validates against, so the validation
+     * decision follows the operator's versioned policy instead of a hardcoded threshold.
+     */
+    readonly minDecisiveComparisons: number;
+    readonly minHoldoutComparisons: number;
+    readonly minDistinctCaptures: number;
+    readonly evidenceMaxAgeDays: number;
   };
 }
 
@@ -43,6 +51,10 @@ const DEFAULT_EFFECTIVE: LearningPolicySnapshot["effective"] = Object.freeze({
   costMaxMultiplier: 1.5,
   latencyP95MaxDeltaMs: 10_000,
   errorRateMaxDeltaPp: 2,
+  minDecisiveComparisons: 3,
+  minHoldoutComparisons: 1,
+  minDistinctCaptures: 3,
+  evidenceMaxAgeDays: 30,
 });
 
 const asRecord = (value: unknown): Record<string, unknown> =>
@@ -96,6 +108,24 @@ export function readLearningPolicyFile(input: {
       DEFAULT_EFFECTIVE.latencyP95MaxDeltaMs,
     ),
     errorRateMaxDeltaPp: finiteOr(merged.errorRateMaxDeltaPp, DEFAULT_EFFECTIVE.errorRateMaxDeltaPp),
+    minDecisiveComparisons: Math.max(
+      1,
+      Math.round(
+        finiteOr(merged.minDecisiveComparisons, DEFAULT_EFFECTIVE.minDecisiveComparisons),
+      ),
+    ),
+    minHoldoutComparisons: Math.max(
+      0,
+      Math.round(finiteOr(merged.minHoldoutComparisons, DEFAULT_EFFECTIVE.minHoldoutComparisons)),
+    ),
+    minDistinctCaptures: Math.max(
+      1,
+      Math.round(finiteOr(merged.minDistinctCaptures, DEFAULT_EFFECTIVE.minDistinctCaptures)),
+    ),
+    evidenceMaxAgeDays: Math.max(
+      1,
+      finiteOr(merged.evidenceMaxAgeDays, DEFAULT_EFFECTIVE.evidenceMaxAgeDays),
+    ),
   };
   return {
     policyVersion: Number.isSafeInteger(parsed.policyVersion) ? Number(parsed.policyVersion) : 1,

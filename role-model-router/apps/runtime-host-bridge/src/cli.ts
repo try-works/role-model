@@ -61,6 +61,7 @@ import {
   resolveReplayToolPolicy,
   selectReplayCandidates,
 } from "./track-b-replay-policy.js";
+import { readLearningPolicyFile } from "./learning-policy-file.js";
 import {
   TRACK_B_CANONICAL_EXTENSION_IDS,
   type TrackBExtensionClosure,
@@ -824,6 +825,19 @@ export function createSupervisedReplayEvaluationCompleter(input: {
    * relying on a deterministic term that neither branch satisfies.
    */
   readonly judge?: TrackBPairwiseJudge;
+  /**
+   * Run 98 R3/R15: effective activation-policy floors for the learning pass, resolved from
+   * the versioned policy config for this channel and scope.
+   */
+  readonly learningPolicy?: Readonly<{
+    evidenceFloor: Readonly<{
+      minDecisiveComparisons: number;
+      minHoldoutComparisons: number;
+      minDistinctCaptures: number;
+    }>;
+    guardrails: Readonly<{ qualityMinDelta: number }>;
+    evidenceMaxAgeMs?: number;
+  }>;
   readonly runPipeline?: typeof runTrackBShadowPipeline;
 }) {
   const runPipeline = input.runPipeline ?? runTrackBShadowPipeline;
@@ -1192,6 +1206,9 @@ export function createSupervisedReplayEvaluationCompleter(input: {
                 | "variant_coerced")
             : "none",
       },
+      // Run 98 R3/R15: the learning pass validates against the effective, versioned
+      // activation-policy floors for this scope rather than a hardcoded threshold.
+      ...(input.learningPolicy ? { learningPolicy: input.learningPolicy } : {}),
     });
     if (trajectoryEvents.length < 2) {
       const evaluatedCandidate =
@@ -4191,6 +4208,28 @@ export async function main(): Promise<void> {
               >,
               evaluationCriteriaDigest,
               contractStateRoot: options.runtimeStateRoot,
+              // Run 98 R3/R15: the learning pass consumes the operator's versioned policy
+              // floors for this channel and scope.
+              ...(() => {
+                const snapshot = readLearningPolicyFile({
+                  repoRoot: options.repoRoot,
+                  channel,
+                  scopeId: options.scopeId,
+                });
+                if (!snapshot) return {};
+                return {
+                  learningPolicy: {
+                    evidenceFloor: {
+                      minDecisiveComparisons: snapshot.effective.minDecisiveComparisons,
+                      minHoldoutComparisons: snapshot.effective.minHoldoutComparisons,
+                      minDistinctCaptures: snapshot.effective.minDistinctCaptures,
+                    },
+                    guardrails: { qualityMinDelta: snapshot.effective.qualityMinDelta },
+                    evidenceMaxAgeMs:
+                      snapshot.effective.evidenceMaxAgeDays * 24 * 60 * 60 * 1_000,
+                  },
+                };
+              })(),
             }),
           });
           // R5/R12: the receipt is the automatic producer's only view of the durable
