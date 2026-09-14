@@ -3005,9 +3005,64 @@ export async function runSupervisedReplay(input: {
   if (!jobId) throw new Error("Replay Core did not return a durable replay job ID");
   // Run 98 R2: a durable job that already reached a terminal failure state can never be
   // dispatched again — RC16 freezes its deadline at creation, so claiming a fresh scheduler
-  // intent only produces instant expiries and an endless `deferred` answer. Return the job as
-  // it stands so the automatic producer retires the capture instead of re-deferring it.
+  // intent only produces instant expiries and an endless `deferred` answer. Before retiring
+  // the job, recover the one thing that is still durable and already paid for: a comparison
+  // that handed off to Evaluation Core and was scored while the dispatch window closed. Only
+  // when that evidence cannot be finalized does the capture get retired.
   if (TERMINAL_REPLAY_JOB_STATES.has(String(created.state ?? ""))) {
+    if (
+      input.completeEvaluation &&
+      typeof created.evaluationJobId === "string" &&
+      created.evaluationJobId
+    ) {
+      try {
+        const recoveryLease = (await input.runtime.invoke(
+          "replay-core",
+          controlEnvelope("replay:claim-job", {
+            jobId,
+            leaseOwner: input.leaseOwner,
+            leaseMs: input.leaseMs,
+          }),
+        )) as Record<string, unknown> | null;
+        const recoveryFenceToken = recoveryLease?.fenceToken;
+        if (Number.isSafeInteger(recoveryFenceToken)) {
+          const evaluation = await input.completeEvaluation({
+            replayJobId: jobId,
+            evaluationJobId: created.evaluationJobId,
+            scope: input.scope,
+            sourceDecisionId: sourceRoot.sourceDecisionId,
+            sourceGeneration: sourceRoot.generation,
+            resultTraceIds: Array.isArray(created.resultTraceIds)
+              ? structuredClone(created.resultTraceIds)
+              : [],
+            resultBranches: Array.isArray(created.branches) ? structuredClone(created.branches) : [],
+            candidates: structuredClone(input.candidatePackages),
+            replayJob: structuredClone(created),
+            recovery: true,
+          });
+          const finalized = await input.runtime.invoke(
+            "replay-core",
+            controlEnvelope("replay:record-evaluation-result", {
+              jobId,
+              leaseOwner: input.leaseOwner,
+              fenceToken: recoveryFenceToken,
+              evaluation,
+            }),
+          );
+          if (finalized && typeof finalized === "object") {
+            return { ...(finalized as Record<string, unknown>), schedulerState: "terminal_recovery" };
+          }
+        }
+      } catch (error) {
+        // Recovery is best-effort: the durable replay state stays the authority and the
+        // capture is retired below when its evidence cannot be finalized.
+        console.error(
+          `[run98] terminal replay evaluation recovery declined:${jobId} ${String(
+            (error as { message?: unknown })?.message ?? error,
+          ).slice(0, 200)}`,
+        );
+      }
+    }
     return { ...structuredClone(created), schedulerState: "terminal_job" };
   }
   // `awaiting_evaluation` is already a durable terminal result for the replay
