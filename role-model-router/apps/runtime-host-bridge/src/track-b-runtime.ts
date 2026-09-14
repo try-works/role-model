@@ -1388,6 +1388,19 @@ export interface ReplayIntentScheduler {
  * Bridges reference-only scheduler intent records through authenticated runtime IPC.
  * The scheduler queues and fences work; provider dispatch stays in the router host.
  */
+/**
+ * Run 98 R2 (RC18): the packaged extension host returns business results inside a
+ * durable-output envelope. Decode the inline form (`businessOutput`) the same way RC09
+ * decoded replay-core receipts; envelopes without an inline body stay untouched so the
+ * caller reports the received shape instead of silently proceeding.
+ */
+function decodeSchedulerBusinessOutput(value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  if (!("businessOutput" in record) || record.durableLocator === undefined) return value;
+  return record.businessOutput;
+}
+
 export function createReplayIntentScheduler(options: {
   readonly runtime: TrackBShadowPipelineRuntime;
   readonly requestId: string;
@@ -1408,8 +1421,8 @@ export function createReplayIntentScheduler(options: {
   const invoke = async (
     capability: string,
     value: Record<string, unknown>,
-  ): Promise<Record<string, unknown>> =>
-    options.runtime.invoke("background-evidence-scheduler", {
+  ): Promise<Record<string, unknown>> => {
+    const result = await options.runtime.invoke("background-evidence-scheduler", {
       requestId: `${options.requestId}:${capability}`,
       sessionId: options.requestId,
       protocolVersion: "1.1.0",
@@ -1420,6 +1433,12 @@ export function createReplayIntentScheduler(options: {
       capability,
       value,
     });
+    // Run 98 R2 (RC18): packaged business results cross the extension host inside a
+    // durable-output envelope (`businessOutput` + `durableLocator`), exactly like the
+    // replay-core receipts RC09 fixed. Decode it before validating the claim shape,
+    // otherwise a valid claim is rejected as a malformed receipt.
+    return decodeSchedulerBusinessOutput(result) as Record<string, unknown>;
+  };
   return {
     async enqueue(input) {
       if (!input.jobId || !input.replayJobId || !Number.isSafeInteger(input.deadlineAtMs)) {
