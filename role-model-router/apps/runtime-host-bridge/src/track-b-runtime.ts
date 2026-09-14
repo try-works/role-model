@@ -1347,7 +1347,14 @@ export async function claimReplayIntentWithRecovery(input: {
       invalid.push("deadlineAtMs");
     }
     if (invalid.length > 0) {
-      throw new Error(`replay scheduler claim receipt is invalid: ${invalid.join(", ")}`);
+      // Run 98 R2 diagnosis: include the received shape so a mismatch between the
+      // scheduler and the host is diagnosable from the runtime's own error.
+      const received = Object.keys(result as unknown as Record<string, unknown>)
+        .sort()
+        .join("|");
+      throw new Error(
+        `replay scheduler claim receipt is invalid: ${invalid.join(", ")} (received: ${received || "none"})`,
+      );
     }
     return { state: "claimed", claim };
   }
@@ -1469,7 +1476,12 @@ export function createReplayIntentScheduler(options: {
         invalidFields.push("deadlineAtMs");
       }
       if (invalidFields.length > 0) {
-        throw new Error(`replay scheduler claim receipt is invalid: ${invalidFields.join(", ")}`);
+        const received = Object.keys(result)
+          .sort()
+          .join("|");
+        throw new Error(
+          `replay scheduler claim receipt is invalid: ${invalidFields.join(", ")} (received: ${received || "none"})`,
+        );
       }
       return {
         jobId: String(result.jobId),
