@@ -183,6 +183,21 @@ type Pages = {
   "/app/system/runtime": {
     params: {};
   };
+  "/app/learning": {
+    params: {};
+  };
+  "/app/learning/configuration": {
+    params: {};
+  };
+  "/app/learning/packs": {
+    params: {};
+  };
+  "/app/learning/decisions": {
+    params: {};
+  };
+  "/app/learning/evidence": {
+    params: {};
+  };
   "/app/system/operator": {
     params: {};
   };
@@ -211,7 +226,7 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/choose" | "/app/local/models" | "/app/local/peer-models" | "/app/local/llama-swap/models" | "/app/local/llama-swap/swap" | "/app/local/llama-swap/policy" | "/app/local/llama-swap/logs" | "/app/local/llama-swap/matrix" | "/app/local/swap" | "/app/local/policy" | "/app/local/logs" | "/app/local/matrix" | "/app/local/endpoints" | "/app/local/peers" | "/app/remote/providers" | "/app/control/providers" | "/app/router/strategy" | "/app/control/routing-strategy" | "/app/system/runtime-config" | "/app/control/runtime-config" | "/app/router/controller" | "/app/control/controller" | "/app/connect" | "/app/connect/downstream" | "/app/connect/upstream" | "/app/endpoints" | "/app/control/endpoints" | "/app/models/roles" | "/app/control/roles" | "/app/models" | "/app/models/benchmark" | "/app/control/benchmark" | "/app/control/models" | "/app/router" | "/app/router/config" | "/app/router/candidates" | "/app/router/decisions" | "/app/router/decisions/:requestId" | "/app/observe" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/routing" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/endpoints/downstream" | "/app/integrations/downstream" | "/app/endpoints/upstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/operator" | "/app/system/session-readiness" | "/app/control/session-readiness" | "/app/system/peers" | "/app/system/extensions" | "/app/system/storage-retention" | "/*";
+    page: "/" | "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/choose" | "/app/local/models" | "/app/local/peer-models" | "/app/local/llama-swap/models" | "/app/local/llama-swap/swap" | "/app/local/llama-swap/policy" | "/app/local/llama-swap/logs" | "/app/local/llama-swap/matrix" | "/app/local/swap" | "/app/local/policy" | "/app/local/logs" | "/app/local/matrix" | "/app/local/endpoints" | "/app/local/peers" | "/app/remote/providers" | "/app/control/providers" | "/app/router/strategy" | "/app/control/routing-strategy" | "/app/system/runtime-config" | "/app/control/runtime-config" | "/app/router/controller" | "/app/control/controller" | "/app/connect" | "/app/connect/downstream" | "/app/connect/upstream" | "/app/endpoints" | "/app/control/endpoints" | "/app/models/roles" | "/app/control/roles" | "/app/models" | "/app/models/benchmark" | "/app/control/benchmark" | "/app/control/models" | "/app/router" | "/app/router/config" | "/app/router/candidates" | "/app/router/decisions" | "/app/router/decisions/:requestId" | "/app/observe" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/routing" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/endpoints/downstream" | "/app/integrations/downstream" | "/app/endpoints/upstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/learning" | "/app/learning/configuration" | "/app/learning/packs" | "/app/learning/decisions" | "/app/learning/evidence" | "/app/system/operator" | "/app/system/session-readiness" | "/app/control/session-readiness" | "/app/system/peers" | "/app/system/extensions" | "/app/system/storage-retention" | "/*";
   };
   "routes/index.tsx": {
     id: "routes/index";
@@ -219,7 +234,7 @@ type RouteFiles = {
   };
   "routes/app-layout.tsx": {
     id: "routes/app-layout";
-    page: "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/choose" | "/app/local/models" | "/app/local/peer-models" | "/app/local/llama-swap/models" | "/app/local/llama-swap/swap" | "/app/local/llama-swap/policy" | "/app/local/llama-swap/logs" | "/app/local/llama-swap/matrix" | "/app/local/swap" | "/app/local/policy" | "/app/local/logs" | "/app/local/matrix" | "/app/local/endpoints" | "/app/local/peers" | "/app/remote/providers" | "/app/control/providers" | "/app/router/strategy" | "/app/control/routing-strategy" | "/app/system/runtime-config" | "/app/control/runtime-config" | "/app/router/controller" | "/app/control/controller" | "/app/connect" | "/app/connect/downstream" | "/app/connect/upstream" | "/app/endpoints" | "/app/control/endpoints" | "/app/models/roles" | "/app/control/roles" | "/app/models" | "/app/models/benchmark" | "/app/control/benchmark" | "/app/control/models" | "/app/router" | "/app/router/config" | "/app/router/candidates" | "/app/router/decisions" | "/app/router/decisions/:requestId" | "/app/observe" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/routing" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/endpoints/downstream" | "/app/integrations/downstream" | "/app/endpoints/upstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/system/operator" | "/app/system/session-readiness" | "/app/control/session-readiness" | "/app/system/peers" | "/app/system/extensions" | "/app/system/storage-retention";
+    page: "/app" | "/app/studio/chat" | "/app/studio/images" | "/app/studio/audio" | "/app/studio/rerank" | "/app/studio/advanced" | "/app/local/choose" | "/app/local/models" | "/app/local/peer-models" | "/app/local/llama-swap/models" | "/app/local/llama-swap/swap" | "/app/local/llama-swap/policy" | "/app/local/llama-swap/logs" | "/app/local/llama-swap/matrix" | "/app/local/swap" | "/app/local/policy" | "/app/local/logs" | "/app/local/matrix" | "/app/local/endpoints" | "/app/local/peers" | "/app/remote/providers" | "/app/control/providers" | "/app/router/strategy" | "/app/control/routing-strategy" | "/app/system/runtime-config" | "/app/control/runtime-config" | "/app/router/controller" | "/app/control/controller" | "/app/connect" | "/app/connect/downstream" | "/app/connect/upstream" | "/app/endpoints" | "/app/control/endpoints" | "/app/models/roles" | "/app/control/roles" | "/app/models" | "/app/models/benchmark" | "/app/control/benchmark" | "/app/control/models" | "/app/router" | "/app/router/config" | "/app/router/candidates" | "/app/router/decisions" | "/app/router/decisions/:requestId" | "/app/observe" | "/app/observe/activity" | "/app/observe/requests" | "/app/observe/routing" | "/app/observe/requests/:requestId" | "/app/observe/logs" | "/app/endpoints/downstream" | "/app/integrations/downstream" | "/app/endpoints/upstream" | "/app/integrations/upstream" | "/app/system/runtime" | "/app/learning" | "/app/learning/configuration" | "/app/learning/packs" | "/app/learning/decisions" | "/app/learning/evidence" | "/app/system/operator" | "/app/system/session-readiness" | "/app/control/session-readiness" | "/app/system/peers" | "/app/system/extensions" | "/app/system/storage-retention";
   };
   "routes/dashboard.tsx": {
     id: "routes/dashboard";
@@ -426,6 +441,22 @@ type RouteFiles = {
     id: "routes/runtime";
     page: "/app/system/runtime";
   };
+  "routes/learning.tsx": {
+    id: "learning-overview";
+    page: "/app/learning";
+  } | {
+    id: "learning-configuration";
+    page: "/app/learning/configuration";
+  } | {
+    id: "learning-packs";
+    page: "/app/learning/packs";
+  } | {
+    id: "learning-decisions";
+    page: "/app/learning/decisions";
+  } | {
+    id: "learning-evidence";
+    page: "/app/learning/evidence";
+  };
   "routes/operator-controls.tsx": {
     id: "system-operator";
     page: "/app/system/operator";
@@ -511,6 +542,11 @@ type RouteModules = {
   "legacy-endpoints-upstream": typeof import("./app/routes/legacy-redirect.tsx");
   "legacy-integrations-upstream": typeof import("./app/routes/legacy-redirect.tsx");
   "routes/runtime": typeof import("./app/routes/runtime.tsx");
+  "learning-overview": typeof import("./app/routes/learning.tsx");
+  "learning-configuration": typeof import("./app/routes/learning.tsx");
+  "learning-packs": typeof import("./app/routes/learning.tsx");
+  "learning-decisions": typeof import("./app/routes/learning.tsx");
+  "learning-evidence": typeof import("./app/routes/learning.tsx");
   "system-operator": typeof import("./app/routes/operator-controls.tsx");
   "routes/session-readiness": typeof import("./app/routes/session-readiness.tsx");
   "legacy-control-session-readiness": typeof import("./app/routes/legacy-redirect.tsx");
