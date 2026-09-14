@@ -7,6 +7,10 @@ import { describe, expect, test } from "vitest";
 import {
   appendTrackBRouteAdvisoryObservation,
   buildTrackBRouteAdvisoryObservation,
+  clearTrackBRouteAdvisoryCacheForTests,
+  observeTrackBRouteAdvisoryForDecision,
+  recallTrackBRouteAdvisory,
+  rememberTrackBRouteAdvisory,
 } from "../src/track-b-runtime.js";
 
 /**
@@ -166,5 +170,69 @@ describe("run98 R4 advisory observation", () => {
     } finally {
       await space.cleanup();
     }
+  });
+
+  test("AC-R04-01/04 a live decision observes the newest advisory for its scope", () => {
+    clearTrackBRouteAdvisoryCacheForTests();
+    const unavailable = observeTrackBRouteAdvisoryForDecision({
+      channel: "stage",
+      scope: "scope:live",
+      routePackage: "endpoint:incumbent",
+      decisionId: "decision-live-1",
+      eligibleRoutePackages: ["endpoint:incumbent", "endpoint:candidate"],
+      nowMs: 1,
+    });
+    expect(unavailable).toMatchObject({
+      advisoryState: "unavailable",
+      wouldHaveChanged: false,
+      selection: "baseline_retained",
+    });
+
+    rememberTrackBRouteAdvisory({
+      channel: "stage",
+      scope: "scope:live",
+      routePackage: "endpoint:incumbent",
+      preferredRoutePackage: "endpoint:candidate",
+      advisoryState: "fresh",
+      confidence: 0.7,
+      profileSnapshotIds: ["snapshot:live"],
+      candidateId: "candidate-live",
+      advisoryId: "advisory:live",
+      nowMs: 2,
+    });
+    expect(
+      recallTrackBRouteAdvisory({ channel: "stage", scope: "scope:live", routePackage: "endpoint:incumbent" }),
+    ).toMatchObject({ preferredRoutePackage: "endpoint:candidate", advisoryState: "fresh" });
+
+    const observed = observeTrackBRouteAdvisoryForDecision({
+      channel: "stage",
+      scope: "scope:live",
+      routePackage: "endpoint:incumbent",
+      decisionId: "decision-live-2",
+      eligibleRoutePackages: ["endpoint:incumbent", "endpoint:candidate"],
+      nowMs: 3,
+    });
+    expect(observed).toMatchObject({
+      decisionId: "decision-live-2",
+      advisoryState: "fresh",
+      confidence: 0.7,
+      candidateId: "candidate-live",
+      preferredEligible: true,
+      wouldHaveChanged: true,
+      selection: "baseline_retained",
+    });
+
+    // An advisory for a different scope never leaks into this decision.
+    const otherScope = observeTrackBRouteAdvisoryForDecision({
+      channel: "stage",
+      scope: "scope:other",
+      routePackage: "endpoint:incumbent",
+      decisionId: "decision-live-3",
+      eligibleRoutePackages: ["endpoint:incumbent"],
+      nowMs: 4,
+    });
+    expect(otherScope.advisoryState).toBe("unavailable");
+    expect(otherScope.wouldHaveChanged).toBe(false);
+    clearTrackBRouteAdvisoryCacheForTests();
   });
 });

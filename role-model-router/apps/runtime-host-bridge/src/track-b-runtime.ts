@@ -5847,6 +5847,97 @@ export const TRACK_B_ROUTE_ADVISORY_OBSERVATION_SCHEMA =
 export const TRACK_B_ROUTE_ADVISORY_OBSERVATION_LEDGER_SCHEMA =
   "role-model.route-advisory-observation-ledger.v1";
 const TRACK_B_ROUTE_ADVISORY_LEDGER_MAX_ENTRIES = 5000;
+const TRACK_B_ROUTE_ADVISORY_CACHE_MAX_ENTRIES = 128;
+/**
+ * Run 98 R4: the newest advisory per (channel, scope, route package) produced by a
+ * learning pass. Live decisions observe it; nothing else reads it, so stage S1 cannot
+ * change a routed answer (`AC-R04-01`, `AC-R04-02`).
+ */
+const trackBRouteAdvisoryCache = new Map<
+  string,
+  {
+    readonly preferredRoutePackage: string | null;
+    readonly advisoryState: TrackBRouteAdvisoryState;
+    readonly confidence: number;
+    readonly profileSnapshotIds: readonly string[];
+    readonly candidateId: string | null;
+    readonly advisoryId: string | null;
+    readonly cachedAtMs: number;
+  }
+>();
+
+export function rememberTrackBRouteAdvisory(input: {
+  readonly channel: string;
+  readonly scope: string;
+  readonly routePackage: string;
+  readonly preferredRoutePackage?: string | null;
+  readonly advisoryState: TrackBRouteAdvisoryState;
+  readonly confidence?: number;
+  readonly profileSnapshotIds?: readonly string[];
+  readonly candidateId?: string | null;
+  readonly advisoryId?: string | null;
+  readonly nowMs: number;
+}) {
+  const key = `${input.channel}\u0000${input.scope}\u0000${input.routePackage}`;
+  trackBRouteAdvisoryCache.set(key, {
+    preferredRoutePackage: input.preferredRoutePackage ?? null,
+    advisoryState: input.advisoryState,
+    confidence: Number.isFinite(input.confidence) ? Number(input.confidence) : 0,
+    profileSnapshotIds: [...(input.profileSnapshotIds ?? [])],
+    candidateId: input.candidateId ?? null,
+    advisoryId: input.advisoryId ?? null,
+    cachedAtMs: input.nowMs,
+  });
+  while (trackBRouteAdvisoryCache.size > TRACK_B_ROUTE_ADVISORY_CACHE_MAX_ENTRIES) {
+    const oldest = trackBRouteAdvisoryCache.keys().next().value;
+    if (oldest === undefined) break;
+    trackBRouteAdvisoryCache.delete(oldest);
+  }
+  return trackBRouteAdvisoryCache.get(key);
+}
+
+export function recallTrackBRouteAdvisory(input: {
+  readonly channel: string;
+  readonly scope: string;
+  readonly routePackage: string;
+}) {
+  return (
+    trackBRouteAdvisoryCache.get(
+      `${input.channel}\u0000${input.scope}\u0000${input.routePackage}`,
+    ) ?? null
+  );
+}
+
+export function clearTrackBRouteAdvisoryCacheForTests() {
+  trackBRouteAdvisoryCache.clear();
+}
+
+/**
+ * The observation for one already-taken live decision: the newest advisory for the scope
+ * when one exists, and an explicit `unavailable` observation otherwise (`AC-R04-04`).
+ */
+export function observeTrackBRouteAdvisoryForDecision(input: {
+  readonly channel: string;
+  readonly scope: string;
+  readonly routePackage: string;
+  readonly decisionId: string;
+  readonly eligibleRoutePackages?: readonly string[];
+  readonly nowMs: number;
+}) {
+  const cached = recallTrackBRouteAdvisory(input);
+  return buildTrackBRouteAdvisoryObservation({
+    decisionId: input.decisionId,
+    routePackage: input.routePackage,
+    preferredRoutePackage: cached?.preferredRoutePackage ?? null,
+    eligibleRoutePackages: input.eligibleRoutePackages,
+    advisoryState: cached?.advisoryState ?? "unavailable",
+    confidence: cached?.confidence ?? 0,
+    profileSnapshotIds: cached?.profileSnapshotIds ?? [],
+    candidateId: cached?.candidateId ?? null,
+    advisoryId: cached?.advisoryId ?? null,
+    observedAtMs: input.nowMs,
+  });
+}
 
 /**
  * Run 98 R4 (stage S1, advisory-observed).
@@ -7715,6 +7806,19 @@ export async function runTrackBShadowPipeline(
     reason: advisoryStaleReason,
     observedAtMs: Date.now(),
   });
+  // Run 98 R4: the next live decision for this scope observes this advisory.
+  rememberTrackBRouteAdvisory({
+    channel: input.channel,
+    scope: input.scope,
+    routePackage: input.routePackage,
+    preferredRoutePackage: advisoryObservation.preferredRoutePackage,
+    advisoryState: advisory.advisoryState,
+    confidence: advisory.confidence,
+    profileSnapshotIds: advisory.profileSnapshotIds,
+    candidateId: advisory.candidateId,
+    advisoryId: advisory.advisoryId,
+    nowMs: advisoryObservation.observedAtMs,
+  });
   return {
     replay,
     evaluation: persistedEvaluation,
@@ -7835,11 +7939,23 @@ async function runTrackBObservationPipeline(
     durableMutation: false,
     authoritative: false,
   } as const;
+  // Run 98 R4 (AC-R04-01/03): every live decision carries an advisory observation, using
+  // the newest advisory produced for the scope (or an explicit `unavailable`), and the
+  // observation never changes the decision that already happened.
+  const advisoryObservation = observeTrackBRouteAdvisoryForDecision({
+    channel: input.channel,
+    scope: input.scope,
+    routePackage: input.routePackage,
+    decisionId: input.sourceDecisionId,
+    eligibleRoutePackages: input.replayIntent?.candidateEndpointIds,
+    nowMs: Date.now(),
+  });
   return {
     replay,
     evaluation,
     signals,
     profile,
+    advisoryObservation,
     productionState: structuredClone(input.productionState),
     receipt: {
       schemaVersion: "role-model.track-b-shadow-pipeline-receipt.v1",
@@ -7850,6 +7966,7 @@ async function runTrackBObservationPipeline(
       providerCalls: 0,
       productionMutation: false,
       candidateId: null,
+      advisoryObservation,
       ...(input.replayIntent
         ? {
             replayIntentJobId: input.replayIntent.jobId,
