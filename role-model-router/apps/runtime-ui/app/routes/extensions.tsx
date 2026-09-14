@@ -109,13 +109,49 @@ const LIFECYCLE_COPY: Record<
 };
 
 const operatorBoundaryNote = (extensionId: string): string | null => {
-  if (extensionId === "knowledge-worker") {
-    return "Direct Track B v1.1 keeps Knowledge Worker shadow-only. Evidence-backed candidates support evaluation and route-package attribution but cannot change production prompts, routes, weights, or active profiles.";
-  }
   if (extensionId === "knowledge-store") {
     return "Serves bounded knowledge references to shadow evaluation consumers; it does not authorize production behavior changes.";
   }
   return null;
+};
+
+/**
+ * Run 98 R18: the boundary record declared by the host drives the mode options, the default
+ * caption and the boundary copy, so a future boundary change needs no UI change.
+ */
+const activationBoundaryNote = (extension: RuntimeExtensionStatus): string | null => {
+  const boundary = extension.activationBoundary;
+  if (!boundary?.policyGated) return null;
+  const prohibited =
+    boundary.prohibitedActions.length > 0
+      ? ` ${boundary.prohibitedActions.join(" and ")} remain prohibited, so production prompts, weights, and privacy classification are unchanged.`
+      : "";
+  return (
+    "Evidence-only package: it derives candidates and bounded references, and any routing " +
+    "influence is carried by promoted packs under the Learning activation policy (stage, " +
+    "cohorts, guardrails, rollback)." +
+    prohibited
+  );
+};
+
+const boundaryCaption = (extension: RuntimeExtensionStatus): string | null => {
+  const boundary = extension.activationBoundary;
+  if (!boundary) return null;
+  // Only restrict-stated boundaries replace the package-class caption; unrestricted
+  // packages keep the inventory caption they always had.
+  if (boundary.allowedModes.length >= EXTENSION_MODES.length && !boundary.policyGated) return null;
+  const ceiling = boundary.allowedModes.at(-1);
+  const defaultLabel = formatModeLabel(boundary.defaultMode);
+  return boundary.policyGated
+    ? `${defaultLabel} by default · policy-gated (ceiling ${formatModeLabel(ceiling ?? boundary.defaultMode)})`
+    : `${defaultLabel} by default`;
+};
+
+const modeOptionsFor = (extension: RuntimeExtensionStatus) => {
+  const allowed = extension.activationBoundary?.allowedModes;
+  return !allowed || allowed.length === 0
+    ? EXTENSION_MODE_OPTIONS
+    : EXTENSION_MODE_OPTIONS.filter(({ value }) => allowed.includes(value));
 };
 
 const lifecycleTone = (lifecycle: string): "success" | "warning" | "error" | "neutral" => {
@@ -340,7 +376,7 @@ export function ExtensionsRouteView() {
       });
       setExtensions(next.extensions);
       setNotice(
-        "Knowledge Worker shadow-ready evidence stored. Direct Track B v1.1 remains shadow-only.",
+        "Knowledge Worker shadow-ready evidence stored. The worker stays evidence-only; routing influence is governed by the Learning activation policy.",
       );
     } catch (value) {
       setError(message(value));
@@ -561,11 +597,10 @@ export function ExtensionsRouteView() {
                   const draftMode = modeDraft[extension.id] ?? currentMode;
                   const modeDirty = draftMode !== currentMode;
                   const caption =
-                    extension.id === "knowledge-worker"
-                      ? "Shadow-ready by default"
-                      : extension.id === "knowledge-store"
-                        ? "Last-ready references"
-                        : extension.packageClass.replaceAll("_", " ");
+                    boundaryCaption(extension) ??
+                    (extension.id === "knowledge-store"
+                      ? "Last-ready references"
+                      : extension.packageClass.replaceAll("_", " "));
                   return (
                     <tr key={extension.id} className="border-t border-[var(--rm-border)] align-top">
                       <td className="py-3 pr-3">
@@ -589,13 +624,7 @@ export function ExtensionsRouteView() {
                               [extension.id]: value as RuntimeExtensionMode,
                             }));
                           }}
-                          options={
-                            extension.id === "knowledge-worker"
-                              ? EXTENSION_MODE_OPTIONS.filter(({ value }) =>
-                                  ["disabled", "shadow"].includes(value),
-                                )
-                              : EXTENSION_MODE_OPTIONS
-                          }
+                          options={modeOptionsFor(extension)}
                           value={draftMode}
                         />
                       </td>
@@ -653,7 +682,8 @@ export function ExtensionsRouteView() {
                   routingMeaning:
                     "Lifecycle reported by the host. Core routing continuity is independent of this worker unless marked as a routing dependency.",
                 } as const);
-              const boundaryNote = operatorBoundaryNote(extension.id);
+              const boundaryNote =
+                activationBoundaryNote(extension) ?? operatorBoundaryNote(extension.id);
               const operatorDisabled = isOperatorDisabled(extension);
               const unexpectedWorkerIssue =
                 !operatorDisabled &&
@@ -723,6 +753,20 @@ export function ExtensionsRouteView() {
                       value={extension.permissions.join(", ") || "none"}
                     />
                     <Detail label="Compatibility" value={extension.compatibility.join(", ")} />
+                    {extension.activationBoundary ? (
+                      <Detail
+                        label="Activation boundary"
+                        value={[
+                          extension.activationBoundary.policyGated
+                            ? "policy-gated"
+                            : "package-managed",
+                          `default ${formatModeLabel(extension.activationBoundary.defaultMode)}`,
+                          `allowed ${extension.activationBoundary.allowedModes
+                            .map((mode) => formatModeLabel(mode))
+                            .join(", ")}`,
+                        ].join(" · ")}
+                      />
+                    ) : null}
                   </dl>
                 </article>
               );
@@ -753,17 +797,23 @@ function KnowledgeWorkerGate({
 }) {
   const bootstrapReady = Boolean(extension.health.knowledgeWorkerBootstrap);
   return (
-    <DisclosureSection summary="Knowledge Worker shadow pipeline">
+    <DisclosureSection summary="Knowledge Worker evidence pipeline">
       <div className={`${mutedPanelClassName} border-[var(--rm-border-strong)] p-4`}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className={compactTitleClassName}>Shadow-only evaluation boundary</p>
+            <p className={compactTitleClassName}>Evidence-only evaluation boundary</p>
             <p className={`mt-1 ${supportingTextClassName}`}>
-              Direct Track B v1.1 uses reviewed evidence for shadow evaluation and attribution. It
-              cannot change production prompts, routes, weights, or active profiles.
+              Reviewed evidence feeds evaluation, route-package attribution and the Learning
+              activation policy. The worker itself never injects prompts, never trains weights and
+              never changes privacy classification.
             </p>
           </div>
-          <Badge tone="neutral">Shadow-only</Badge>
+          <Badge tone="neutral">
+            {formatModeLabel(
+              extension.enabledMode ?? extension.activationBoundary?.defaultMode ?? "shadow",
+            )}{" "}
+            · evidence-only
+          </Badge>
         </div>
         {!bootstrapReady ? (
           <div className="mt-4 grid gap-3">

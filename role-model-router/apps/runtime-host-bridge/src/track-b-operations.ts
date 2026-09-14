@@ -1,6 +1,12 @@
 import { createHash, createHmac, createPublicKey, timingSafeEqual, verify } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
+import {
+  EXTENSION_MODE_VALUES,
+  type ExtensionMode,
+  extensionActivationBoundaryFor,
+  extensionModeCeilingError,
+} from "./extension-activation-boundaries.js";
 import { emitCaptureGraphContracts } from "./track-b-capture-contracts.js";
 import {
   type KwSessionWorker,
@@ -58,7 +64,6 @@ type KnowledgeWorkerBootstrap = {
   readonly receipt: KnowledgeValidationReceipt;
   readonly groupDigest: string;
 };
-type ExtensionMode = "disabled" | "shadow" | "advisory" | "bounded" | "active";
 type ExtensionMutationReceipt = {
   readonly id: string;
   readonly at: string;
@@ -74,13 +79,7 @@ type ExtensionMutationReceipt = {
   readonly mode: ExtensionMode;
   readonly result: "applied";
 };
-const EXTENSION_MODES = new Set<ExtensionMode>([
-  "disabled",
-  "shadow",
-  "advisory",
-  "bounded",
-  "active",
-]);
+const EXTENSION_MODES = new Set<ExtensionMode>(EXTENSION_MODE_VALUES);
 const asExtensionMode = (value: unknown, fallback: ExtensionMode = "active"): ExtensionMode =>
   typeof value === "string" && EXTENSION_MODES.has(value as ExtensionMode)
     ? (value as ExtensionMode)
@@ -453,6 +452,154 @@ const writeState = async (statePath: string, state: BridgeState) => {
   const temporary = `${statePath}.${process.pid}.tmp`;
   await writeFile(temporary, `${JSON.stringify(state, null, 2)}\n`, "utf8");
   await rename(temporary, statePath);
+};
+
+/**
+ * Normalize lifecycle/health consistency for the bridge state validator: a disabled row is
+ * stopped and unavailable; an enabled row that is not degraded is ready and available.
+ */
+const normalizeExtensionRows = (rows: readonly LifecycleRecord[]): LifecycleRecord[] =>
+  rows.map((row) => {
+    if (!row.enabled) {
+      return {
+        ...row,
+        enabledMode: "disabled" as const,
+        lifecycle: "stopped" as const,
+        health: {
+          ...row.health,
+          available: false,
+          reason: row.health.reason ?? "operator_disabled",
+        },
+      };
+    }
+    const lifecycle = row.lifecycle === "stopped" ? ("ready" as const) : row.lifecycle;
+    return {
+      ...row,
+      enabledMode: row.enabledMode ?? "active",
+      lifecycle,
+      health: {
+        ...row.health,
+        available: lifecycle === "ready",
+        reason:
+          row.health.reason === "operator_disabled"
+            ? "operator_enabled"
+            : (row.health.reason ?? "operator_enabled"),
+      },
+    };
+  });
+
+const extensionMutationReceiptFor = (input: {
+  readonly id: string;
+  readonly action: string;
+  readonly mode: ExtensionMode;
+  readonly revision: number;
+}): ExtensionMutationReceipt => ({
+  id: `ext-mut-${createHash("sha256")
+    .update(JSON.stringify([input.id, input.action, input.mode, input.revision]))
+    .digest("hex")
+    .slice(0, 16)}`,
+  at: new Date().toISOString(),
+  who: "local-operator",
+  extensionId: input.id,
+  action: input.action as ExtensionMutationReceipt["action"],
+  mode: input.mode,
+  result: "applied",
+});
+
+/**
+ * Durable boundary-mode readback. The supervised extension runtime owns process lifecycle
+ * but has no mode concept, so the bridge state is the durable authority for the operator's
+ * activation-boundary selection (`R18`).
+ */
+const readStoredExtensionModes = async (
+  statePath: string,
+): Promise<ReadonlyMap<string, ExtensionMode>> => {
+  const state = await readState(statePath);
+  const modes = new Map<string, ExtensionMode>();
+  for (const row of state.extensions) if (row.enabledMode) modes.set(row.id, row.enabledMode);
+  return modes;
+};
+
+const persistExtensionBoundaryMode = async (input: {
+  readonly statePath: string;
+  readonly catalog: readonly Record<string, unknown>[];
+  readonly id: string;
+  readonly mode: ExtensionMode;
+  readonly action: "enable" | "set_mode";
+  readonly channel?: string;
+  readonly scope?: string;
+  readonly authorizationEpoch?: number;
+}): Promise<{
+  readonly extensions: readonly LifecycleRecord[];
+  readonly receipts: readonly ExtensionMutationReceipt[];
+}> => {
+  const state = await readState(input.statePath);
+  const catalogEntry = input.catalog.find((entry) => String(entry.id ?? "") === input.id);
+  if (!catalogEntry) throw new Error(`extension not found: ${input.id}`);
+  const enabled = input.mode !== "disabled";
+  let index = state.extensions.findIndex((row) => row.id === input.id);
+  let extensions = [...state.extensions];
+  if (index < 0) {
+    const seeded: LifecycleRecord = {
+      id: input.id,
+      lifecycle: "stopped",
+      enabled: false,
+      enabledMode: "disabled",
+      channel: String(catalogEntry.channel ?? input.channel ?? "production"),
+      scope: String(catalogEntry.scope ?? input.scope ?? "global"),
+      authorizationEpoch:
+        Number(catalogEntry.authorizationEpoch ?? input.authorizationEpoch ?? 0) || 0,
+      ...(input.id === "knowledge-worker" ? { productionActivation: false } : {}),
+      health: {
+        available: false,
+        routingDependency: Boolean(catalogEntry.routingDependency),
+        reason: "operator_unregistered_pending_mutation",
+        ...(input.id === "knowledge-worker" ? { productionActivation: false } : {}),
+      },
+    };
+    extensions = [...extensions, seeded];
+    index = extensions.length - 1;
+  }
+  const current = extensions[index];
+  if (!current) throw new Error(`extension state missing for ${input.id}`);
+  const nextRow: LifecycleRecord = {
+    ...current,
+    enabled,
+    enabledMode: input.mode,
+    lifecycle: enabled ? (current.lifecycle === "stopped" ? "ready" : current.lifecycle) : "stopped",
+    ...(input.id === "knowledge-worker" ? { productionActivation: false } : {}),
+    health: {
+      ...current.health,
+      available: enabled,
+      reason: enabled
+        ? current.health.reason === "operator_disabled"
+          ? "operator_enabled"
+          : (current.health.reason ?? "operator_enabled")
+        : "operator_disabled",
+      ...(input.id === "knowledge-worker" ? { productionActivation: false } : {}),
+    },
+  };
+  const normalized = normalizeExtensionRows(
+    extensions.map((row, rowIndex) => (rowIndex === index ? nextRow : row)),
+  );
+  const receipt = extensionMutationReceiptFor({
+    id: input.id,
+    action: input.action,
+    mode: input.mode,
+    revision: state.revision + 1,
+  });
+  const receipts = [...(state.extensionMutationReceipts ?? []), receipt].slice(-100);
+  await writeState(
+    input.statePath,
+    validate({
+      ...state,
+      revision: state.revision + 1,
+      generatedAt: new Date().toISOString(),
+      extensions: normalized,
+      extensionMutationReceipts: receipts,
+    }),
+  );
+  return { extensions: normalized, receipts };
 };
 
 /** Seed local Track B bridge state so Extension boundary reflects registered packages. */
@@ -1249,7 +1396,7 @@ export function createTrackBOperations({
     const encoded = params.toString();
     return encoded ? `?${encoded}` : "";
   };
-  return {
+  const operations = {
     async readDevelopmentVerificationStatus(): Promise<unknown> {
       const remote = await requestPrivate("development-verification");
       if (remote) return remote;
@@ -1407,6 +1554,7 @@ export function createTrackBOperations({
       });
     },
     async listExtensions(): Promise<readonly unknown[]> {
+      const storedModes = await readStoredExtensionModes(statePath);
       if (extensionRuntime) {
         const runtimeRows = (await extensionRuntime.listExtensions()) as Array<{
           readonly id: string;
@@ -1418,6 +1566,7 @@ export function createTrackBOperations({
         const runtimeById = new Map(runtimeRows.map((row) => [row.id, row]));
         return catalog.map((entry) => {
           const id = String(entry.id ?? "");
+          const activationBoundary = extensionActivationBoundaryFor(id);
           const actual = runtimeById.get(id);
           if (!actual) {
             return {
@@ -1427,6 +1576,7 @@ export function createTrackBOperations({
               enabledMode: "disabled",
               lifecycle: "unavailable",
               revision: 0,
+              activationBoundary,
               health: {
                 available: false,
                 routingDependency: Boolean(entry.routingDependency),
@@ -1435,12 +1585,18 @@ export function createTrackBOperations({
             };
           }
           const enabled = actual.desiredState === "enabled";
+          const storedMode = storedModes.get(id);
           return {
             ...entry,
             ...actual,
             installed: true,
             enabled,
-            enabledMode: enabled ? (id === "knowledge-worker" ? "shadow" : "active") : "disabled",
+            enabledMode: !enabled
+              ? "disabled"
+              : storedMode && activationBoundary.allowedModes.includes(storedMode)
+                ? storedMode
+                : activationBoundary.defaultMode,
+            activationBoundary,
             channel: runtimeChannel,
             scope: "global",
             authorizationEpoch: 1,
@@ -1458,13 +1614,17 @@ export function createTrackBOperations({
       const byId = new Map(state.extensions.map((row) => [row.id, row]));
       return catalog.map((entry) => {
         const id = String(entry.id ?? "");
+        const activationBoundary = extensionActivationBoundaryFor(id);
         const actual = byId.get(id);
         return actual
           ? {
               ...entry,
               ...actual,
               installed: true,
-              enabledMode: actual.enabledMode ?? (actual.enabled ? "active" : "disabled"),
+              enabledMode:
+                actual.enabledMode ??
+                (actual.enabled ? activationBoundary.defaultMode : "disabled"),
+              activationBoundary,
               ...(id === "knowledge-worker"
                 ? {
                     productionActivation: actual.productionActivation ?? false,
@@ -1482,6 +1642,7 @@ export function createTrackBOperations({
               enabled: false,
               enabledMode: "disabled",
               lifecycle: "unavailable",
+              activationBoundary,
               channel: "production",
               scope: "global",
               authorizationEpoch: 0,
@@ -1496,28 +1657,62 @@ export function createTrackBOperations({
       });
     },
     async mutateExtension(input: Record<string, unknown>): Promise<unknown> {
-      if (extensionRuntime) return extensionRuntime.mutateExtension(input);
       const id = String(input.id ?? "");
       const action = String(input.action ?? "");
       if (!id) throw new Error("extension id is required");
-      if (
-        id === "knowledge-worker" &&
-        ["activate_production", "deactivate_production"].includes(action)
-      ) {
+      const activationBoundary = extensionActivationBoundaryFor(id);
+      if (activationBoundary.prohibitedActions.includes(action)) {
         throw new Error(
-          "production Knowledge Worker controls are prohibited by Direct Track B v1.1; shadow-only execution required",
+          `${action} is prohibited for ${id} by Direct Track B v1.1: the package is ` +
+            `evidence-only and its boundary ceiling is ${activationBoundary.allowedModes.at(-1)}`,
         );
       }
-      if (
-        id === "knowledge-worker" &&
-        ["enable", "set_mode"].includes(action) &&
-        !["shadow", "disabled"].includes(
-          String(input.mode ?? (action === "enable" ? "active" : "")),
-        )
-      ) {
-        throw new Error(
-          "Knowledge Worker is shadow-only under Direct Track B v1.1; active, advisory, and bounded modes are prohibited",
-        );
+      let requestedMode: ExtensionMode | undefined;
+      if (action === "enable" || action === "set_mode") {
+        const raw = input.mode ?? (action === "enable" ? activationBoundary.defaultMode : undefined);
+        if (raw !== undefined) {
+          if (typeof raw !== "string" || !EXTENSION_MODES.has(raw as ExtensionMode))
+            throw new Error(`illegal extension mode: ${String(raw)}`);
+          requestedMode = raw as ExtensionMode;
+          if (!activationBoundary.allowedModes.includes(requestedMode))
+            throw new Error(extensionModeCeilingError(id, requestedMode));
+        }
+      }
+      if (extensionRuntime) {
+        if (action === "set_mode" || (action === "enable" && requestedMode !== undefined)) {
+          const applied = await persistExtensionBoundaryMode({
+            statePath,
+            catalog,
+            id,
+            mode: requestedMode as ExtensionMode,
+            action,
+            channel: runtimeChannel,
+            scope,
+            authorizationEpoch,
+          });
+          if (action === "enable") {
+            const runtimeRows = (await extensionRuntime.listExtensions()) as readonly {
+              readonly id: string;
+              readonly desiredState?: string;
+              readonly revision?: number;
+            }[];
+            const current = runtimeRows.find((row) => String(row.id ?? "") === id);
+            const expectedRevision = Number(current?.revision ?? 0);
+            if (current && current.desiredState !== "enabled" && expectedRevision >= 1) {
+              await extensionRuntime.mutateExtension({
+                id,
+                action: "prepare",
+                mutationId: `ext-boundary-${id}-${expectedRevision}-enable`,
+                expectedRevision,
+              });
+            }
+          }
+          return {
+            extensions: await operations.listExtensions(),
+            receipts: applied.receipts,
+          };
+        }
+        return extensionRuntime.mutateExtension(input);
       }
       if (
         ![
@@ -1580,7 +1775,10 @@ export function createTrackBOperations({
         enabled = false;
         enabledMode = "disabled";
       } else if (action === "enable" || action === "set_mode") {
-        const requested = asExtensionMode(input.mode, action === "enable" ? "active" : enabledMode);
+        const requested = asExtensionMode(
+          input.mode,
+          action === "enable" ? activationBoundary.defaultMode : enabledMode,
+        );
         if (typeof input.mode === "string" && !EXTENSION_MODES.has(input.mode as ExtensionMode))
           throw new Error(`illegal extension mode: ${String(input.mode)}`);
         if (action === "set_mode" && input.mode == null)
@@ -1785,13 +1983,17 @@ export function createTrackBOperations({
       const byId = new Map(normalized.map((row) => [row.id, row]));
       const listed = catalog.map((entry) => {
         const entryId = String(entry.id ?? "");
+        const entryBoundary = extensionActivationBoundaryFor(entryId);
         const actual = byId.get(entryId);
         return actual
           ? {
               ...entry,
               ...actual,
               installed: true,
-              enabledMode: actual.enabledMode ?? (actual.enabled ? "active" : "disabled"),
+              enabledMode:
+                actual.enabledMode ??
+                (actual.enabled ? entryBoundary.defaultMode : "disabled"),
+              activationBoundary: entryBoundary,
               ...(entryId === "knowledge-worker"
                 ? {
                     productionActivation: actual.productionActivation ?? false,
@@ -1809,6 +2011,7 @@ export function createTrackBOperations({
               enabled: false,
               enabledMode: "disabled",
               lifecycle: "unavailable",
+              activationBoundary: entryBoundary,
               channel: "production",
               scope: "global",
               authorizationEpoch: 0,
@@ -2405,4 +2608,5 @@ export function createTrackBOperations({
       return (await readState(statePath)).activePack ?? null;
     },
   };
+  return operations;
 }

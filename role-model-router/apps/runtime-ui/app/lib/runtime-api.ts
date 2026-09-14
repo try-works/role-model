@@ -2089,6 +2089,18 @@ export interface RuntimeExtensionStatus {
   readonly installed: boolean;
   readonly enabled: boolean;
   readonly enabledMode?: "disabled" | "shadow" | "advisory" | "bounded" | "active";
+  /**
+   * Declared activation boundary for this package (run 98 R18). The mode selector, the
+   * default label and the prohibited actions are rendered from this record instead of
+   * per-extension UI branching.
+   */
+  readonly activationBoundary?: {
+    readonly policyGated: boolean;
+    readonly defaultMode: "disabled" | "shadow" | "advisory" | "bounded" | "active";
+    readonly allowedModes: readonly ("disabled" | "shadow" | "advisory" | "bounded" | "active")[];
+    readonly prohibitedActions: readonly string[];
+    readonly prohibitedCapabilities: readonly string[];
+  };
   readonly channel: string;
   readonly scope: string;
   readonly authorizationEpoch: number;
