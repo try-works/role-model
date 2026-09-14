@@ -639,7 +639,12 @@ export function LearningEvidencePage() {
   const report = Array.isArray(asRecord(measurement.value).report)
     ? (asRecord(measurement.value).report as readonly Record<string, unknown>[])[0]
     : undefined;
-  const value = asRecord(report ?? measurement.value);
+  const raw = asRecord(measurement.value);
+  // Run 99: three honest shapes - a measurement report, an explicit "nothing recorded yet" answer,
+  // and a bounded degradation receipt. Only the first may render the cohort grid.
+  const noMeasurement = raw.status === "no-measurement";
+  const degradedReceipt = raw.degraded === true;
+  const value = noMeasurement || degradedReceipt ? {} : asRecord(report ?? measurement.value);
   const cohorts = asRecord(value.cohorts);
   const deltas = asRecord(value.deltas);
   const confidence = asRecord(value.confidence);
@@ -651,7 +656,11 @@ export function LearningEvidencePage() {
     >
       <OperatorTokenField onToken={setToken} token={token} />
       {degraded(measurement.loading, measurement.error) ??
-        (value.schemaVersion === undefined && Object.keys(value).length === 0 ? (
+        (degradedReceipt ? (
+          <ErrorState
+            label={`Cohort measurement unavailable: ${show(raw.reason)}. No value is fabricated.`}
+          />
+        ) : noMeasurement || (value.schemaVersion === undefined && Object.keys(value).length === 0) ? (
           <EmptyState label="No cohort measurement has been recorded yet." />
         ) : (
           <>
