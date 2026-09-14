@@ -1553,6 +1553,51 @@ export function createTrackBOperations({
         body,
       });
     },
+    // Run 98 R17: the Learning UI surfaces (rollout state, records, decisions, measurement)
+    // and the activation/rollback/kill-switch actions all cross the operator boundary to
+    // the supervised sidecar, so a UI action is the same durable operation as a CLI one.
+    async readLearningRollout(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return requestOperator(
+        "learning rollout readback",
+        `operator/learning/rollout${operatorQuery(query)}`,
+      );
+    },
+    async readLearningRecords(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return requestOperator(
+        "learning records readback",
+        `operator/learning/records${operatorQuery(query)}`,
+      );
+    },
+    async readLearningDecisions(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return requestOperator(
+        "learning decisions readback",
+        `operator/learning/decisions${operatorQuery(query)}`,
+      );
+    },
+    async readLearningMeasurement(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return requestOperator(
+        "learning measurement readback",
+        `operator/learning/measurement${operatorQuery(query)}`,
+      );
+    },
+    async activateLearningPack(body: Record<string, unknown>): Promise<unknown> {
+      return requestOperator("learning pack activation", "operator/learning/activate-pack", {
+        method: "POST",
+        body,
+      });
+    },
+    async rollbackLearningPack(body: Record<string, unknown>): Promise<unknown> {
+      return requestOperator("learning pack rollback", "operator/learning/rollback-pack", {
+        method: "POST",
+        body,
+      });
+    },
+    async engageLearningKillSwitch(body: Record<string, unknown>): Promise<unknown> {
+      return requestOperator("learning kill switch", "operator/learning/kill-switch", {
+        method: "POST",
+        body,
+      });
+    },
     async listExtensions(): Promise<readonly unknown[]> {
       const storedModes = await readStoredExtensionModes(statePath);
       if (extensionRuntime) {

@@ -1540,7 +1540,7 @@ async function extractErrorMessage(response: Response, path: string): Promise<st
   }
 }
 
-async function fetchJson<TValue>(
+export async function fetchJson<TValue>(
   path: string,
   fetcher: RuntimeFetcher,
   init?: RequestInit,
@@ -1630,7 +1630,7 @@ async function fetchBlob(path: string, fetcher: RuntimeFetcher, init?: RequestIn
   return response.blob();
 }
 
-async function postJson<TValue>(
+export async function postJson<TValue>(
   path: string,
   payload: unknown,
   fetcher: RuntimeFetcher,

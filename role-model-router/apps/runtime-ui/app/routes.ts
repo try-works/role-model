@@ -70,6 +70,12 @@ export default [
       id: "legacy-integrations-upstream",
     }),
     route("system/runtime", "routes/runtime.tsx"),
+    // Run 98 R17: the Learning route (Overview, Configuration, Packs, Decisions, Evidence).
+    route("learning", "routes/learning.tsx", { id: "learning-overview" }),
+    route("learning/configuration", "routes/learning.tsx", { id: "learning-configuration" }),
+    route("learning/packs", "routes/learning.tsx", { id: "learning-packs" }),
+    route("learning/decisions", "routes/learning.tsx", { id: "learning-decisions" }),
+    route("learning/evidence", "routes/learning.tsx", { id: "learning-evidence" }),
     route("system/operator", "routes/operator-controls.tsx", { id: "system-operator" }),
     route("system/session-readiness", "routes/session-readiness.tsx"),
     route("control/session-readiness", "routes/legacy-redirect.tsx", {

@@ -3011,6 +3011,14 @@ export interface StartBridgeServerOptions {
   readonly readLearningAdvisory?: () => Promise<unknown>;
   readonly updateLearningMode?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackLearning?: (body: Record<string, unknown>) => Promise<unknown>;
+  /** Run 98 R17: Learning UI readback and rollout actions. */
+  readonly readLearningRollout?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readLearningRecords?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readLearningDecisions?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readLearningMeasurement?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly activateLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly rollbackLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly engageLearningKillSwitch?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly measureNoRichCaptureBaseline?: (body: Record<string, unknown>) => Promise<unknown>;
   /** Safe, credential-free development verification lease status. */
   readonly readDevelopmentVerificationStatus?: () => Promise<unknown>;
@@ -3666,6 +3674,14 @@ export interface CreateRuntimeBridgeBackendOptions {
   readonly readLearningAdvisory?: () => Promise<unknown>;
   readonly updateLearningMode?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackLearning?: (body: Record<string, unknown>) => Promise<unknown>;
+  /** Run 98 R17: Learning UI readback and rollout actions. */
+  readonly readLearningRollout?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readLearningRecords?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readLearningDecisions?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly readLearningMeasurement?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  readonly activateLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly rollbackLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly engageLearningKillSwitch?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly codexAuthAdapter?: CodexAuthAdapter;
   readonly codexExecutionAdapter?: CodexExecutionAdapter;
 }
@@ -15388,6 +15404,96 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             return;
           }
           writeOperatorResult(response, await options.rollbackLearning(operatorBody));
+          return;
+        }
+        // Run 98 R17: Learning UI readback and rollout actions.
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/learning/rollout"
+        ) {
+          if (!options.readLearningRollout) {
+            writeOperatorUnavailable(response, "learning rollout readback");
+            return;
+          }
+          writeOperatorResult(
+            response,
+            await options.readLearningRollout(Object.fromEntries(url.searchParams)),
+          );
+          return;
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/learning/records"
+        ) {
+          if (!options.readLearningRecords) {
+            writeOperatorUnavailable(response, "learning records readback");
+            return;
+          }
+          writeOperatorResult(
+            response,
+            await options.readLearningRecords(Object.fromEntries(url.searchParams)),
+          );
+          return;
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/learning/decisions"
+        ) {
+          if (!options.readLearningDecisions) {
+            writeOperatorUnavailable(response, "learning decisions readback");
+            return;
+          }
+          writeOperatorResult(
+            response,
+            await options.readLearningDecisions(Object.fromEntries(url.searchParams)),
+          );
+          return;
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/learning/measurement"
+        ) {
+          if (!options.readLearningMeasurement) {
+            writeOperatorUnavailable(response, "learning measurement readback");
+            return;
+          }
+          writeOperatorResult(
+            response,
+            await options.readLearningMeasurement(Object.fromEntries(url.searchParams)),
+          );
+          return;
+        }
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/role-model/operator/learning/activate-pack"
+        ) {
+          if (!options.activateLearningPack) {
+            writeOperatorUnavailable(response, "learning pack activation");
+            return;
+          }
+          writeOperatorResult(response, await options.activateLearningPack(operatorBody));
+          return;
+        }
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/role-model/operator/learning/rollback-pack"
+        ) {
+          if (!options.rollbackLearningPack) {
+            writeOperatorUnavailable(response, "learning pack rollback");
+            return;
+          }
+          writeOperatorResult(response, await options.rollbackLearningPack(operatorBody));
+          return;
+        }
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/role-model/operator/learning/kill-switch"
+        ) {
+          if (!options.engageLearningKillSwitch) {
+            writeOperatorUnavailable(response, "learning kill switch");
+            return;
+          }
+          writeOperatorResult(response, await options.engageLearningKillSwitch(operatorBody));
           return;
         }
 

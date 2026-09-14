@@ -1256,6 +1256,13 @@ type RuntimeOperatorCallbacks = Pick<
   | "readLearningAdvisory"
   | "updateLearningMode"
   | "rollbackLearning"
+  | "readLearningRollout"
+  | "readLearningRecords"
+  | "readLearningDecisions"
+  | "readLearningMeasurement"
+  | "activateLearningPack"
+  | "rollbackLearningPack"
+  | "engageLearningKillSwitch"
 >;
 
 export function createRuntimeOperatorCallbacks(
@@ -1289,6 +1296,20 @@ export function createRuntimeOperatorCallbacks(
     readLearningAdvisory: () => operations.readLearningAdvisory(),
     updateLearningMode: (body: Record<string, unknown>) => operations.updateLearningMode(body),
     rollbackLearning: (body: Record<string, unknown>) => operations.rollbackLearning(body),
+    readLearningRollout: (query: Readonly<Record<string, string>> = {}) =>
+      operations.readLearningRollout(query),
+    readLearningRecords: (query: Readonly<Record<string, string>> = {}) =>
+      operations.readLearningRecords(query),
+    readLearningDecisions: (query: Readonly<Record<string, string>> = {}) =>
+      operations.readLearningDecisions(query),
+    readLearningMeasurement: (query: Readonly<Record<string, string>> = {}) =>
+      operations.readLearningMeasurement(query),
+    activateLearningPack: (body: Record<string, unknown>) =>
+      operations.activateLearningPack(body),
+    rollbackLearningPack: (body: Record<string, unknown>) =>
+      operations.rollbackLearningPack(body),
+    engageLearningKillSwitch: (body: Record<string, unknown>) =>
+      operations.engageLearningKillSwitch(body),
   };
 }
 
