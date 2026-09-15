@@ -3640,7 +3640,12 @@ export async function main(): Promise<void> {
                 maxBytes: 8_388_608,
                 // RC16 (W3): the dispatches are serialized, so the deadline scales with
                 // the candidate count instead of racing a flat two-minute clock.
-                deadlineMs: resolveAutoReplayDeadlineMs(candidates.length),
+                // Run 99 R33: multi-megabyte coding-agent prompts need a larger replay budget,
+                // otherwise the durable job expires mid-dispatch (observed live: 74-164 s per
+                // provider call for a 2.5 MiB prompt with a flat 120 s per-candidate deadline).
+                deadlineMs: resolveAutoReplayDeadlineMs(candidates.length, {
+                  captureBytes: Buffer.byteLength(JSON.stringify(sourceCapture)),
+                }),
               },
             }),
           });

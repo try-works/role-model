@@ -34,14 +34,34 @@ export const DEFAULT_MAX_CAPTURES_PER_TICK = 8;
  * branch append and evaluation handoff can finish.
  */
 export const AUTO_REPLAY_DEADLINE_PER_CANDIDATE_MS = 120_000;
-export const AUTO_REPLAY_DEADLINE_MAX_MS = 600_000;
+export const AUTO_REPLAY_DEADLINE_MAX_MS = 1_800_000;
+/**
+ * Run 99 R33 live finding (stage v143): real coding-agent requests arrive with multi-megabyte
+ * prompts. Once the capture admission bound stopped refusing them, the *replay* became the next
+ * bound to bite: a 2.5 MiB prompt took 74–164 s per provider call, so a flat 120 s-per-candidate
+ * deadline expired the durable job mid-dispatch (`durable replay job timed_out`) and discarded paid
+ * work. The deadline now grows with the capture size, still inside the documented cap.
+ */
+export const AUTO_REPLAY_DEADLINE_SIZE_STEP_BYTES = 1024 * 1024;
+export const AUTO_REPLAY_DEADLINE_SIZE_STEP_MS = 60_000;
 
-export function resolveAutoReplayDeadlineMs(candidateCount: number): number {
+export function resolveAutoReplayDeadlineMs(
+  candidateCount: number,
+  options: { readonly captureBytes?: number } = {},
+): number {
   if (!Number.isSafeInteger(candidateCount) || candidateCount < 1) {
     throw new Error("auto replay deadline requires a positive candidate count");
   }
+  const captureBytes =
+    Number.isSafeInteger(options.captureBytes) && (options.captureBytes ?? 0) > 0
+      ? (options.captureBytes as number)
+      : 0;
+  // Only whole megabytes of prompt add budget: a 64 KiB request keeps the plain per-candidate
+  // deadline, while a 3 MiB coding-agent prompt gets three extra steps.
+  const sizeSteps = Math.floor(captureBytes / AUTO_REPLAY_DEADLINE_SIZE_STEP_BYTES);
   return Math.min(
-    AUTO_REPLAY_DEADLINE_PER_CANDIDATE_MS * candidateCount,
+    (AUTO_REPLAY_DEADLINE_PER_CANDIDATE_MS + sizeSteps * AUTO_REPLAY_DEADLINE_SIZE_STEP_MS) *
+      candidateCount,
     AUTO_REPLAY_DEADLINE_MAX_MS,
   );
 }
