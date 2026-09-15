@@ -285,6 +285,47 @@ test("run99 R33 the evidence summary decays old comparisons by the half-life", (
   expect(summary.effectiveDecisiveComparisons).toBeCloseTo(1.25, 3);
 });
 
+/**
+ * Run 99 R33 (addendum 21 D10, `guidance/11`): a comparison the judge could not decide
+ * consistently under swapped presentation order is *incomparable*, so it is excluded from the
+ * evidence entirely and counted by its canonical code instead of being averaged in as a tie.
+ */
+test("run99 R33 an incomparable comparison is excluded and counted by code", () => {
+  const nowMs = Date.parse("2026-09-14T10:00:00Z");
+  const comparable = group({
+    groupId: "comparable:1",
+    outcome: "candidate",
+    inputRef: `artifact:${"e".repeat(64)}`,
+    taskTypeId: "coder.review",
+  });
+  const flipped = group({
+    groupId: "incomparable:flip",
+    outcome: "candidate",
+    inputRef: `artifact:${"f".repeat(64)}`,
+    taskTypeId: "coder.review",
+  });
+  const incomparable = {
+    ...flipped,
+    result: {
+      ...(flipped.result as Record<string, unknown>),
+      validityIssues: ["position_order_disagreement"],
+    },
+  };
+
+  const summary = buildTrackBLearningEvidenceSummary({
+    groups: [comparable, incomparable],
+    routePackage,
+    nowMs,
+    evidenceMaxAgeMs: 30 * 24 * 60 * 60 * 1_000,
+  });
+
+  expect(summary.decisiveComparisons).toBe(1);
+  expect(summary.byFamily["coder.review"].decisiveComparisons).toBe(1);
+  expect(summary.excludedByReason).toEqual({
+    "incomparable:position_order_disagreement": 1,
+  });
+});
+
 test("run98 R3 a validated candidate is promoted and both receipts are recorded", async () => {
   const runtime = fakeRuntime({ groups: decisiveGroups });
   const receipt = await runTrackBLearningPass(runtime, passInput());

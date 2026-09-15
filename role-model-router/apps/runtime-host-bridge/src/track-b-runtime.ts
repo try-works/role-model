@@ -7585,7 +7585,13 @@ export async function runTrackBShadowPipeline(
       // guidance/09: a judge failure is persisted as a scorer failure, never as a
       // valid zero score. The comparison then stays honestly undecided instead of
       // manufacturing a tie from an unrun judge.
-      const reason = `router judge failed: ${
+      // Run 99 R33 (addendum 21 D10): the canonical code travels with the failure, so the
+      // learner's exclusion counter can name the incomparability instead of a generic string.
+      const failureCode =
+        typeof (error as { code?: unknown })?.code === "string"
+          ? String((error as { code: string }).code).slice(0, 48)
+          : null;
+      const reason = `${failureCode ? `${failureCode}: ` : ""}router judge failed: ${
         error instanceof Error ? error.message.slice(0, 160) : "unknown judge error"
       }`;
       judgeScores = [sourceBranch, counterfactualBranch].map((branch) => ({

@@ -19,6 +19,11 @@
  * policy consumes.
  */
 
+// Run 99 R33 D10: the canonical code for a judge that disagreed with itself under swapped
+// presentation order. Imported from the dispatcher so the exclusion counter and the judge share
+// one vocabulary.
+import { POSITION_ORDER_DISAGREEMENT } from "./track-b-shadow-judge-dispatch.js";
+
 export const RUN98_LEARNING_PASS_SCHEMA = "role-model.route-learning-pass.v1";
 export const RUN98_LEARNING_PASS_DEGRADATION_SCHEMA = "role-model.route-learning-pass-degradation.v1";
 export const RUN98_LEARNING_ESTIMATOR_VERSION = "paired-cluster-bootstrap@1";
@@ -148,6 +153,26 @@ export function buildTrackBLearningEvidenceSummary(input: {
     }
     if (result.status !== "finalized") {
       exclude("not_finalized");
+      continue;
+    }
+    // Run 99 R33 (addendum 21 D10, `guidance/11` "incomparable ... groups are ineligible for
+    // promotion evidence"): a comparison that reports validity issues — including the judge's
+    // own position-order disagreement — is excluded and counted by code, never averaged in.
+    const validityIssues = Array.isArray(result.validityIssues)
+      ? result.validityIssues
+          .map((issue) => boundedText(issue))
+          .filter((issue): issue is string => issue !== null)
+      : [];
+    if (
+      result.orderDisagreement === true ||
+      String(result.outcome ?? "").trim().toLowerCase() === "order_disagreement"
+    ) {
+      validityIssues.push(POSITION_ORDER_DISAGREEMENT);
+    }
+    if (validityIssues.length > 0) {
+      for (const issue of new Set(validityIssues)) {
+        exclude(`incomparable:${issue.slice(0, 48)}`);
+      }
       continue;
     }
     if (!DECISIVE_OUTCOMES.has(String(result.outcome ?? ""))) {
