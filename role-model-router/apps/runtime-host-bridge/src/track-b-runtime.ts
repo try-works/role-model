@@ -6986,6 +6986,17 @@ export function createRun96RoutingShadowScorer(
  */
 export const RUN97_PAIRWISE_JUDGE_SCORER_ID = "role_model_pairwise_judge.battle";
 export const RUN97_PAIRWISE_JUDGE_DIMENSION = "task_specific_quality";
+/**
+ * Run 99 R33 (S34 live finding): version of the judge scorer *definition shape*.
+ *
+ * Evaluation Core keys its durable scorer registry on `id@version` and refuses a different
+ * definition under the same key. Durable registries already contain
+ * `role_model_pairwise_judge.battle@1+<identity hash>` — written before the definition carried
+ * `judgeMode`. Any change to the definition shape must therefore bump this prefix so the new
+ * definition registers under a fresh key instead of colliding with the legacy entry
+ * (`duplicate scorer ID has incompatible version`, observed live on stage v132).
+ */
+export const RUN97_PAIRWISE_JUDGE_DEFINITION_VERSION = 2;
 
 export function createRun97PairwiseJudgeScorer(input: {
   readonly judgeEndpointId: string;
@@ -7021,7 +7032,11 @@ export function createRun97PairwiseJudgeScorer(input: {
   // (endpoint + mode) is part of the definition, so it must be part of the version too —
   // otherwise the first judge change fails the comparison with "duplicate scorer ID has
   // incompatible version" (observed live at 2026-09-14T08:38Z).
-  const judgeIdentityVersion = `1+${createHash("sha256")
+  // Run 99 R33 (S34 live finding): the definition gained `judgeMode`, but the version prefix stayed
+  // `1+…`, so a durable registry written before that field existed collided with today's definition
+  // ("duplicate scorer ID has incompatible version") and every comparison deferred. Evaluation Core
+  // keys on `id@version`, so a definition change must bump the version: `2+<identity hash>`.
+  const judgeIdentityVersion = `${RUN97_PAIRWISE_JUDGE_DEFINITION_VERSION}+${createHash("sha256")
     .update(
       JSON.stringify(
         canonicalExtensionValue({

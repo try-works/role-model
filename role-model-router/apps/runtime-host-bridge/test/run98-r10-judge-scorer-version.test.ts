@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 
 import {
+  RUN97_PAIRWISE_JUDGE_DEFINITION_VERSION,
   RUN97_PAIRWISE_JUDGE_SCORER_ID,
   createRun97PairwiseJudgeScorer,
 } from "../src/track-b-runtime.js";
@@ -47,7 +48,9 @@ test("run98 R10 the judge scorer version is deterministic, bounded and identity-
   });
   expect(second).toEqual(first);
   expect(first.version).toMatch(/^[A-Za-z0-9._+-]{1,32}$/);
-  expect(first.version.startsWith("1")).toBe(true);
+  // Run 99 R33: the definition gained `judgeMode`, so the shape version moved past the legacy
+  // `1+…` registry key. Assert against the exported constant so this pin never goes stale again.
+  expect(first.version.startsWith(`${RUN97_PAIRWISE_JUDGE_DEFINITION_VERSION}+`)).toBe(true);
   // The default identity keeps the canonical scorer-set version, so existing bindings that
   // never changed judge identity stay valid.
   const defaultIdentity = createRun97PairwiseJudgeScorer({ judgeEndpointId: "endpoint:judge-a" });

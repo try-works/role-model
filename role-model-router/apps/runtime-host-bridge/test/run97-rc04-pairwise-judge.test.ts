@@ -273,11 +273,16 @@ test("run97 rc04 registers the canonical pairwise judge scorer for the compariso
   expect(judgeRegistration?.value).toMatchObject({
     manifestVersion: 2,
     id: "role_model_pairwise_judge.battle",
-    version: "1",
     dimensions: ["task_specific_quality"],
     judgeEndpointId: "endpoint:judge",
     scorerSetVersion: trackBRuntime.RUN96_ROUTING_SHADOW_SCORER_SET_VERSION,
   });
+  // Run 98 R10 / Run 99 R33: the version is derived from the judge identity (endpoint + mode) and
+  // carries the definition-shape prefix, so a definition change registers a new durable scorer
+  // instead of colliding with the previous one ("duplicate scorer ID has incompatible version").
+  expect(String(judgeRegistration?.value.version)).toMatch(
+    new RegExp(`^${trackBRuntime.RUN97_PAIRWISE_JUDGE_DEFINITION_VERSION}\\+[a-f0-9]{12}$`),
+  );
   expect(String(judgeRegistration?.value.digest)).toMatch(/^sha256:[a-f0-9]{64}$/);
 });
 
