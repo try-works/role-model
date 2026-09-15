@@ -511,6 +511,43 @@ test("run98 R3 a validated candidate is promoted and both receipts are recorded"
   expect(records[1]).toMatchObject({ recordId: "pack:1", state: "validated" });
 });
 
+/**
+ * Run 99 R33 S34 live finding (stage v137): the worker answers a family-scoped validation with
+ * `familyEvidence` *beside* the receipt, and the learning pass recorded only the receipt. The
+ * durable learning record therefore had no family at all, so the operator readback could not show
+ * which family a validation belonged to even though the whole chain had just propagated it
+ * (addendum 21 D11: "the per-family receipt must carry the canonical gate dimensions").
+ */
+test("run99 R33 the recorded validation receipt keeps the family evidence", async () => {
+  const runtime = fakeRuntime({
+    groups: decisiveGroups,
+    validation: {
+      receipt: { receiptId: "validation:family", decision: "validate", baselineId: "baseline:family" },
+      promotionEligible: true,
+      familyEvidence: {
+        taskTypeId: "coder.review",
+        taxonomyVersion: "1.0.0-alpha.1",
+        decisiveComparisons: 3,
+        holdoutComparisons: 1,
+        distinctCaptures: 3,
+        baselinePackageId: "sha256:baseline-package",
+        floorMet: true,
+      },
+    },
+  });
+  await runTrackBLearningPass(runtime, passInput({ taskTypeId: "coder.review" }));
+  const records = runtime.invocations
+    .filter((entry) => entry.capability === "knowledge:record-learning")
+    .map((entry) => (entry.value.record ?? {}) as Record<string, unknown>);
+  const receiptRecord = records.find((record) => record.kind === "validation_receipt");
+  expect(receiptRecord).toBeDefined();
+  const stored = (receiptRecord?.record ?? {}) as Record<string, unknown>;
+  expect(stored.familyEvidence).toMatchObject({
+    taskTypeId: "coder.review",
+    floorMet: true,
+  });
+});
+
 test("run98 R3 an insufficient-evidence decision is recorded without promoting", async () => {
   const runtime = fakeRuntime({
     groups: [group({ groupId: "comparison:1", outcome: "candidate" })],

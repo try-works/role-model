@@ -686,6 +686,14 @@ export async function runTrackBLearningPass(
     throw new Error("learning pass validation did not return a durable receipt");
   }
   const decision = boundedText(receipt.decision) ?? "insufficient_evidence";
+  // Run 99 R33 S34 live finding (stage v137): the worker answers a family-scoped validation with
+  // `familyEvidence` *beside* the receipt. Recording only the receipt left the durable learning
+  // record family-free, so the operator readback could not attribute a validation to the family the
+  // whole chain had just propagated (addendum 21 D11: the per-family receipt carries the canonical
+  // gate dimensions). The evidence travels with the recorded receipt.
+  const recordedFamilyEvidence = asRecord(
+    (validation as Record<string, unknown>).familyEvidence,
+  );
 
   // The validation receipt is durable learning evidence even when the decision is
   // `insufficient_evidence` or `reject`; recording it is how the operator sees why learning
@@ -703,7 +711,10 @@ export async function runTrackBLearningPass(
             scorerSetVersion,
             judgeEndpointId: input.identity.judgeEndpointId ?? null,
           },
-          record: { ...receipt },
+          record: {
+            ...receipt,
+            ...(recordedFamilyEvidence ? { familyEvidence: { ...recordedFamilyEvidence } } : {}),
+          },
         },
       }),
     );
