@@ -17,6 +17,9 @@ import {
 } from "node:fs";
 import { copyFile, lstat, mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
+
+// Run 99 R33 D7: the declared, family-stratified holdout split.
+import { buildFamilyStratifiedHoldout, RUN99_HOLDOUT_SPLIT_SEED } from "./track-b-holdout-split.js";
 import { createInterface } from "node:readline";
 import { DatabaseSync } from "node:sqlite";
 import { pathToFileURL } from "node:url";
@@ -7195,18 +7198,14 @@ export async function runTrackBShadowPipeline(
   if (caseIds.some((caseId) => !caseId)) {
     throw new Error("durable routing-shadow evaluation case identity is required");
   }
-  const holdout = {
-    holdoutId: `sha256:${createHash("sha256").update(`${input.requestId}:holdout`).digest("hex")}`,
-    membershipDigest: `sha256:${createHash("sha256")
-      .update(
-        JSON.stringify(
-          canonicalizeRun88Proof({ partition: "holdout", caseIds: [...caseIds].sort() }),
-        ),
-      )
-      .digest("hex")}`,
-    partition: "holdout" as const,
-    caseIds: [...caseIds].sort(),
-  };
+  // Run 99 R33 (addendum 20 D7): the holdout is a declared, family-stratified, reproducible split
+  // (`stratified_hash_partition_v1` + seed + stratum), not a request-id-only identity.
+  const holdout = buildFamilyStratifiedHoldout({
+    requestId: input.requestId,
+    taskTypeId: input.taskTypeId ?? null,
+    caseIds,
+    splitSeed: RUN99_HOLDOUT_SPLIT_SEED,
+  });
   const firstCounterfactual = counterfactualRollouts[0];
   if (!firstCounterfactual) {
     throw new Error("durable routing-shadow counterfactual evidence is required");

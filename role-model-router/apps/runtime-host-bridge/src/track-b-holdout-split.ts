@@ -1,0 +1,83 @@
+import { createHash } from "node:crypto";
+
+/**
+ * Run 99 R33 (addendum 20 D7, `route-learning-contracts.schema.json` `executionContext`):
+ * family-stratified, deterministic holdout identity.
+ *
+ * The canonical execution context declares `splitAlgorithm: stratified_hash_partition_v1` and a
+ * `splitSeed`. Before this module the live routing-shadow pipeline derived its holdout only from the
+ * request id, so two task families could share a split identity and a replay of a different family
+ * could reuse the same holdout name. The identity is now derived from the declared algorithm, the
+ * seed and the family, which makes it reproducible from the declaration and disjoint across
+ * families.
+ *
+ * Note: this module owns the *split identity and declaration*. The live pipeline evaluates the
+ * holdout partition per comparison (every evaluated case belongs to the holdout), so a train/holdout
+ * case split inside a family is a separate, larger change to the evaluation contract.
+ */
+
+export const SPLIT_ALGORITHM = "stratified_hash_partition_v1" as const;
+
+/** The seed the live routing-shadow pipeline declares for its holdout split (deterministic). */
+export const RUN99_HOLDOUT_SPLIT_SEED = 87;
+
+export interface FamilyStratifiedHoldout {
+  readonly holdoutId: string;
+  readonly membershipDigest: string;
+  readonly partition: "holdout";
+  readonly caseIds: readonly string[];
+  readonly splitAlgorithm: typeof SPLIT_ALGORITHM;
+  readonly splitSeed: number;
+  readonly stratum: string | null;
+}
+
+const digest = (value: unknown): string => {
+  const canonical =
+    value && typeof value === "object"
+      ? JSON.stringify(value, Object.keys(value as Record<string, unknown>).sort())
+      : JSON.stringify(value);
+  return createHash("sha256").update(canonical).digest("hex");
+};
+
+export function buildFamilyStratifiedHoldout(input: {
+  readonly requestId: string;
+  readonly taskTypeId?: string | null;
+  readonly caseIds: readonly string[];
+  readonly splitSeed: number;
+}): FamilyStratifiedHoldout {
+  const requestId = typeof input.requestId === "string" ? input.requestId.trim() : "";
+  if (!requestId) throw new Error("holdout split requires a request id");
+  if (!Array.isArray(input.caseIds) || input.caseIds.length === 0) {
+    throw new Error("holdout split requires at least one evaluation case");
+  }
+  const caseIds = [...new Set(input.caseIds.map((caseId) => String(caseId)))].sort();
+  const stratum =
+    typeof input.taskTypeId === "string" && input.taskTypeId.trim()
+      ? input.taskTypeId.trim()
+      : null;
+  const splitSeed = Number.isSafeInteger(input.splitSeed) ? input.splitSeed : 0;
+  // The identity is a function of the declaration (algorithm, seed, stratum) plus the request, so a
+  // replay can rebuild it without the original process state.
+  const holdoutId = `sha256:${digest({
+    algorithm: SPLIT_ALGORITHM,
+    seed: splitSeed,
+    stratum,
+    requestId,
+  })}`;
+  const membershipDigest = `sha256:${digest({
+    algorithm: SPLIT_ALGORITHM,
+    seed: splitSeed,
+    stratum,
+    partition: "holdout",
+    caseIds,
+  })}`;
+  return {
+    holdoutId,
+    membershipDigest,
+    partition: "holdout",
+    caseIds,
+    splitAlgorithm: SPLIT_ALGORITHM,
+    splitSeed,
+    stratum,
+  };
+}
