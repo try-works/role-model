@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
 
-import { readTrackBRouteAdvisoryFromRollout } from "../src/route-advisory-source.js";
+import {
+  readTrackBRouteAdvisoryFromRollout,
+  resolveAdvisoryCohortPercent,
+} from "../src/route-advisory-source.js";
 
 /**
  * Run 99 R24 / addendum 06: the routing advisory has to be sourced from the durable
@@ -217,5 +220,46 @@ describe("run99 R24 durable route advisory source", () => {
       cohortPercent: 0,
     });
     expect(advisory.reason).toBeTruthy();
+  });
+
+  test("bounds the live cohort by the receipted activation step", () => {
+    // S2 considers every eligible decision, but an activated pack may only have reached the
+    // first ladder rung, so the activation is the narrower bound.
+    expect(
+      resolveAdvisoryCohortPercent({
+        stage: "S2",
+        policyCohortPercent: 100,
+        rolloutCohortPercent: 10,
+      }),
+    ).toBe(10);
+    expect(
+      resolveAdvisoryCohortPercent({
+        stage: "S3",
+        policyCohortPercent: 10,
+        rolloutCohortPercent: 25,
+      }),
+    ).toBe(25);
+    expect(
+      resolveAdvisoryCohortPercent({
+        stage: "S4",
+        policyCohortPercent: 10,
+        rolloutCohortPercent: 0,
+      }),
+    ).toBe(10);
+    // Without an activated pack the policy value stands and is always clamped into 0-100.
+    expect(
+      resolveAdvisoryCohortPercent({
+        stage: "S2",
+        policyCohortPercent: 140,
+        rolloutCohortPercent: null,
+      }),
+    ).toBe(100);
+    expect(
+      resolveAdvisoryCohortPercent({
+        stage: "S1",
+        policyCohortPercent: -5,
+        rolloutCohortPercent: 25,
+      }),
+    ).toBe(0);
   });
 });

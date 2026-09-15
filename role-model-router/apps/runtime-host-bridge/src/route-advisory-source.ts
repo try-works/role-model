@@ -38,6 +38,29 @@ export interface TrackBRouteAdvisorySourceInput {
   readonly evidenceMaxAgeMs: number;
 }
 
+/**
+ * Run 99 R24: the cohort a live decision may use.
+ *
+ * `AC-R05-04` makes the operator activation the authorization, and the activation receipt
+ * carries the ladder step. At `S2` the policy considers every eligible decision, so the
+ * receipted step is the narrower bound; at `S3`/`S4` the durable ladder step is the rollout
+ * state itself and therefore governs. With no active pack the policy value stands.
+ */
+export function resolveAdvisoryCohortPercent(input: {
+  readonly stage: string;
+  readonly policyCohortPercent: number;
+  readonly rolloutCohortPercent: number | null;
+}): number {
+  const clamp = (value: number): number =>
+    Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : 0;
+  const policy = clamp(input.policyCohortPercent);
+  const rollout =
+    input.rolloutCohortPercent === null ? null : clamp(input.rolloutCohortPercent);
+  if (rollout === null || rollout <= 0) return policy;
+  if (input.stage === "S3" || input.stage === "S4") return rollout;
+  return Math.min(policy, rollout);
+}
+
 const asRecord = (value: unknown): Record<string, unknown> | null =>
   value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)

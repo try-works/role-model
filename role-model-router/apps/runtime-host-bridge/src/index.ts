@@ -188,6 +188,7 @@ import {
   recallNewestTrackBRouteAdvisory,
   recallTrackBDurableRouteAdvisory,
 } from "./track-b-runtime.js";
+import { resolveAdvisoryCohortPercent } from "./route-advisory-source.js";
 
 import {
   type ProviderRequestCapture,
@@ -23936,20 +23937,15 @@ export async function createRuntimeBridgeBackend(
               process.env.ROLE_MODEL_LEARNING_COHORT_PERCENT,
               learningPolicySnapshot?.effective.cohortPercent ?? 100,
             );
-            const boundedCohortPercent = (value: number): number =>
-              Math.min(100, Math.max(0, value));
-            const durableCohortPercent =
-              durable && Number.isFinite(durable.cohortPercent)
-                ? boundedCohortPercent(durable.cohortPercent)
-                : null;
-            // S2 considers every eligible decision; S3/S4 follow the durably receipted ladder
-            // step, so a narrow cohort can never be widened by a cached observation.
-            const cohortPercent =
-              (learningStage === "S3" || learningStage === "S4") &&
-              durableCohortPercent !== null &&
-              durableCohortPercent > 0
-                ? durableCohortPercent
-                : boundedCohortPercent(policyCohortPercent);
+            // Run 99 R24: the receipted activation step bounds the cohort (S3/S4 follow the
+            // durable ladder, S2 can only be narrowed by it); a pipeline advisory keeps the
+            // policy value and can never widen the activation.
+            const cohortPercent = resolveAdvisoryCohortPercent({
+              stage: learningStage,
+              policyCohortPercent,
+              rolloutCohortPercent:
+                durable && Number.isFinite(durable.cohortPercent) ? durable.cohortPercent : null,
+            });
             return {
               candidateId: cached.candidateId,
               preferredEndpointId: cached.preferredRoutePackage,
