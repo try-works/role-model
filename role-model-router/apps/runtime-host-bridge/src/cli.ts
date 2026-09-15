@@ -84,6 +84,8 @@ import {
   evaluateProductionExtensionRuntimeReadiness,
   normalizeTrackBSemanticEvaluationCriteria,
   readTrackBAdvisoryMeasurement,
+  readTrackBRouteAdvisorySourceFromRuntime,
+  rememberTrackBDurableRouteAdvisory,
   requireReplayRouterDecisionId,
   resolveManagedArtifactKeyFiles,
   runSupervisedReplay,
@@ -1777,6 +1779,11 @@ interface PackagedTrackBContractRegistry {
 type CliExtensionRuntime = {
   readonly health: () => Record<string, unknown>;
   readonly close?: () => Promise<void>;
+  /** Present on a fully composed extension runtime; absent while the host is degraded. */
+  readonly invoke?: (
+    id: string,
+    envelope: Record<string, unknown>,
+  ) => Promise<Record<string, unknown>>;
 };
 
 function sameRuntimeChannelContext(
@@ -2078,6 +2085,79 @@ function createPendingHealthStatus(state: CliBootstrapState): unknown {
           ]
         : [],
     },
+  };
+}
+
+/**
+ * Run 99 R24 / addendum 06: keep the live routing advisory tied to the durable rollout state.
+ *
+ * The router only applies an advisory when the operator has activated a validated pack
+ * (`AC-R05-04`), and the per-replay pipeline advisory is frequently empty because a single
+ * replay's learning pass can degrade. This refresh reads the scope's rollout state and pack
+ * through the extension host and publishes the durable advisory the router prefers, so an
+ * activation actually reaches routing. Refresh failures and `unavailable` answers are recorded,
+ * never treated as influence.
+ */
+export function startDurableRouteAdvisoryRefresh(options: {
+  readonly getRuntime: () => CliExtensionRuntime | null;
+  readonly repoRoot: string;
+  readonly stateRoot: string;
+  readonly channel: string;
+  readonly scopeId: string;
+  readonly intervalMs?: number;
+}): () => void {
+  let stopped = false;
+  const refresh = async (): Promise<void> => {
+    if (stopped) return;
+    const runtime = options.getRuntime();
+    // A degraded host exposes no extension invoke; there is no advisory to publish then.
+    if (!runtime || typeof runtime.invoke !== "function") return;
+    const snapshot = readLearningPolicyFile({
+      repoRoot: options.repoRoot,
+      stateRoot: options.stateRoot,
+      channel: options.channel,
+      scopeId: options.scopeId,
+    });
+    const stage = snapshot?.effective.stage ?? "S1";
+    // S0/S1 never consult an advisory, so there is nothing to publish.
+    if (stage !== "S2" && stage !== "S3" && stage !== "S4") return;
+    const nowMs = Date.now();
+    const evidenceMaxAgeMs =
+      (snapshot?.effective.evidenceMaxAgeDays ?? 30) * 24 * 60 * 60 * 1_000;
+    const advisory = await readTrackBRouteAdvisorySourceFromRuntime({
+      runtime: runtime as unknown as Parameters<
+        typeof readTrackBRouteAdvisorySourceFromRuntime
+      >[0]["runtime"],
+      channel: options.channel,
+      scope: options.scopeId,
+      stateRoot: options.stateRoot,
+      nowMs,
+      evidenceMaxAgeMs,
+      requestId: `route-advisory:${options.scopeId}:${nowMs}`,
+    });
+    rememberTrackBDurableRouteAdvisory({
+      channel: options.channel,
+      scope: options.scopeId,
+      advisory,
+      nowMs,
+    });
+  };
+  const report = (error: unknown): void => {
+    console.error(
+      `[run99] durable route advisory degraded: ${String(
+        (error as { message?: unknown })?.message ?? error,
+      ).slice(0, 200)}`,
+    );
+  };
+  const timer = setInterval(() => {
+    void refresh().catch(report);
+  }, options.intervalMs ?? 15_000);
+  // A background refresh must never hold the process open.
+  (timer as { unref?: () => void }).unref?.();
+  void refresh().catch(report);
+  return () => {
+    stopped = true;
+    clearInterval(timer);
   };
 }
 
@@ -4801,6 +4881,15 @@ export async function main(): Promise<void> {
             // before its already-authorized, durable aggregate is retried.
             await currentPostObservationOperations()?.retryContributionAggregates();
             extensionRuntimeRef.current = runtime;
+            // Run 99 R24 / addendum 06: publish the durable operator advisory so an activated
+            // pack can influence routing instead of only the transient replay candidate.
+            startDurableRouteAdvisoryRefresh({
+              getRuntime: () => extensionRuntimeRef.current,
+              repoRoot: options.repoRoot,
+              stateRoot: trackBStateRoot,
+              channel: runtimeChannel,
+              scopeId: options.scopeId,
+            });
           },
         },
       );

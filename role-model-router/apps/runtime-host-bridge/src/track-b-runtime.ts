@@ -31,6 +31,10 @@ import { createProjectionV2 } from "@role-model-router/trace";
 
 import { DEFAULT_REPLAY_CANDIDATE_CAP } from "./track-b-replay-policy.js";
 import {
+  type TrackBRouteAdvisorySourceResult,
+  readTrackBRouteAdvisoryFromRollout,
+} from "./route-advisory-source.js";
+import {
   type TrackBLearningPassRuntime,
   runTrackBLearningPass,
 } from "./track-b-learning-pass.js";
@@ -6212,6 +6216,113 @@ export function recallNewestTrackBRouteAdvisory(input: {
     if (!newest || value.cachedAtMs > newest.cachedAtMs) newest = value;
   }
   return newest;
+}
+
+/**
+ * Run 99 R24 / addendum 06: the advisory the *operator activated*, kept apart from the
+ * per-replay pipeline cache.
+ *
+ * `AC-R05-04` gates S2 influence on an activated pack with a validation receipt and a cohort,
+ * so a transient pipeline advisory is evidence, not an authorization. Live routing therefore
+ * prefers the durable entry whenever one exists — including when it says `unavailable`, which is
+ * the honest answer for a scope whose pack was rolled back.
+ */
+export interface TrackBDurableRouteAdvisoryEntry {
+  readonly preferredRoutePackage: string | null;
+  readonly advisoryState: TrackBRouteAdvisoryState;
+  readonly confidence: number;
+  readonly candidateId: string | null;
+  readonly advisoryId: string | null;
+  readonly cohortPercent: number;
+  readonly reason: string | null;
+  readonly cachedAtMs: number;
+}
+
+const trackBDurableRouteAdvisoryCache = new Map<string, TrackBDurableRouteAdvisoryEntry>();
+const TRACK_B_DURABLE_ADVISORY_CACHE_MAX_ENTRIES = 128;
+
+const durableAdvisoryKey = (channel: string, scope: string): string =>
+  `${channel}\u0000${scope}`;
+
+export function rememberTrackBDurableRouteAdvisory(input: {
+  readonly channel: string;
+  readonly scope: string;
+  readonly advisory: TrackBRouteAdvisorySourceResult;
+  readonly nowMs: number;
+}): TrackBDurableRouteAdvisoryEntry {
+  const entry: TrackBDurableRouteAdvisoryEntry = {
+    preferredRoutePackage: input.advisory.preferredRoutePackage,
+    advisoryState: input.advisory.advisoryState,
+    confidence: Number.isFinite(input.advisory.confidence) ? input.advisory.confidence : 0,
+    candidateId: input.advisory.candidateId,
+    advisoryId: input.advisory.advisoryId,
+    cohortPercent: Number.isFinite(input.advisory.cohortPercent)
+      ? input.advisory.cohortPercent
+      : 0,
+    reason: input.advisory.reason,
+    cachedAtMs: input.nowMs,
+  };
+  const key = durableAdvisoryKey(input.channel, input.scope);
+  trackBDurableRouteAdvisoryCache.set(key, entry);
+  while (trackBDurableRouteAdvisoryCache.size > TRACK_B_DURABLE_ADVISORY_CACHE_MAX_ENTRIES) {
+    const oldest = trackBDurableRouteAdvisoryCache.keys().next().value;
+    if (oldest === undefined) break;
+    trackBDurableRouteAdvisoryCache.delete(oldest);
+  }
+  return entry;
+}
+
+export function recallTrackBDurableRouteAdvisory(input: {
+  readonly channel: string;
+  readonly scope: string;
+}): TrackBDurableRouteAdvisoryEntry | null {
+  return (
+    trackBDurableRouteAdvisoryCache.get(durableAdvisoryKey(input.channel, input.scope)) ?? null
+  );
+}
+
+/**
+ * Reads the durable advisory source through the extension host and decodes the externalized
+ * business result the same way the measurement readback does.
+ */
+export async function readTrackBRouteAdvisorySourceFromRuntime(input: {
+  readonly runtime: TrackBShadowPipelineRuntime;
+  readonly channel: string;
+  readonly scope: string;
+  readonly stateRoot?: string;
+  readonly authorizationEpoch?: number;
+  readonly nowMs: number;
+  readonly evidenceMaxAgeMs: number;
+  readonly requestId?: string;
+}): Promise<TrackBRouteAdvisorySourceResult> {
+  const requestId = input.requestId ?? `route-advisory:${input.scope}:${input.nowMs}`;
+  const invoke = async (capability: string, value: Readonly<Record<string, unknown>>) => {
+    const result = await input.runtime.invoke("knowledge-store", {
+      requestId: `${requestId}:${capability}`,
+      sessionId: requestId,
+      protocolVersion: "1.1.0",
+      channel: input.channel,
+      scope: input.scope,
+      authorizationEpoch: input.authorizationEpoch ?? 1,
+      capability,
+      value,
+      payload: value,
+    });
+    return (
+      decodeExtensionBusinessResult({
+        result,
+        extensionId: "knowledge-store",
+        ...(input.stateRoot ? { stateRoot: input.stateRoot } : {}),
+        scopeId: input.scope,
+      }) ?? result
+    );
+  };
+  return readTrackBRouteAdvisoryFromRollout({
+    invoke,
+    scopeId: input.scope,
+    nowMs: input.nowMs,
+    evidenceMaxAgeMs: input.evidenceMaxAgeMs,
+  });
 }
 
 /**

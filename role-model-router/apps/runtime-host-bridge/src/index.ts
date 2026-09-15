@@ -186,6 +186,7 @@ import {
   createRuntimeRequestCorrelationId,
   createTrackBFileGraphStore,
   recallNewestTrackBRouteAdvisory,
+  recallTrackBDurableRouteAdvisory,
 } from "./track-b-runtime.js";
 
 import {
@@ -23912,15 +23913,43 @@ export async function createRuntimeBridgeBackend(
         "S1") as "S0" | "S1" | "S2" | "S3" | "S4";
       const advisoryConsideration = ["S2", "S3", "S4"].includes(learningStage)
         ? (() => {
-            const cached = recallNewestTrackBRouteAdvisory({
+            // Run 99 R24 / addendum 06: the operator-activated pack is the authorization for
+            // influence (`AC-R05-04`), so the durable advisory wins over the transient
+            // per-replay one; with no active pack the durable entry answers `unavailable` and
+            // the decision records that bounded reason instead of an empty fresh advisory.
+            const durable = recallTrackBDurableRouteAdvisory({
               channel: runtimeChannel,
               scope: options.scopeId,
             });
+            const cached =
+              durable ??
+              recallNewestTrackBRouteAdvisory({
+                channel: runtimeChannel,
+                scope: options.scopeId,
+              });
             if (!cached) return undefined;
             const numeric = (value: string | undefined, fallback: number): number => {
               const parsed = Number(value);
               return Number.isFinite(parsed) ? parsed : fallback;
             };
+            const policyCohortPercent = numeric(
+              process.env.ROLE_MODEL_LEARNING_COHORT_PERCENT,
+              learningPolicySnapshot?.effective.cohortPercent ?? 100,
+            );
+            const boundedCohortPercent = (value: number): number =>
+              Math.min(100, Math.max(0, value));
+            const durableCohortPercent =
+              durable && Number.isFinite(durable.cohortPercent)
+                ? boundedCohortPercent(durable.cohortPercent)
+                : null;
+            // S2 considers every eligible decision; S3/S4 follow the durably receipted ladder
+            // step, so a narrow cohort can never be widened by a cached observation.
+            const cohortPercent =
+              (learningStage === "S3" || learningStage === "S4") &&
+              durableCohortPercent !== null &&
+              durableCohortPercent > 0
+                ? durableCohortPercent
+                : boundedCohortPercent(policyCohortPercent);
             return {
               candidateId: cached.candidateId,
               preferredEndpointId: cached.preferredRoutePackage,
@@ -23941,10 +23970,7 @@ export async function createRuntimeBridgeBackend(
                 process.env.ROLE_MODEL_LEARNING_MIN_CONFIDENCE,
                 learningPolicySnapshot?.effective.minAdvisoryConfidence ?? 0.7,
               ),
-              cohortPercent: numeric(
-                process.env.ROLE_MODEL_LEARNING_COHORT_PERCENT,
-                learningPolicySnapshot?.effective.cohortPercent ?? 100,
-              ),
+              cohortPercent,
               explorationPercent: numeric(
                 process.env.ROLE_MODEL_LEARNING_EXPLORATION_PERCENT,
                 0,
