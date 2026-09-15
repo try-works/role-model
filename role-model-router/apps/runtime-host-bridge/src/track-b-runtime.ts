@@ -6,7 +6,15 @@ import {
   timingSafeEqual,
   verify as verifySignature,
 } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { copyFile, lstat, mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createInterface } from "node:readline";
@@ -5446,6 +5454,100 @@ function readExternalizedExtensionOutput(input: {
   } finally {
     database.close();
   }
+}
+
+/**
+ * Run 99 R28: an operator readback that outgrew the inline transfer limit crosses the packaged
+ * boundary as an externalized marker (`{transferState, resultHash, byteLength}`), sometimes with
+ * and sometimes without the `businessOutput`/`durableLocator` wrapper. Observed live: the
+ * Learning rollout readback (7 974 bytes) and the pack records readback (28 149 bytes) answered
+ * with the marker, so the packs page rendered "No pack records have been derived" while the
+ * payload sat in the worker's durable-output store.
+ *
+ * A marker with no matching row is returned unchanged, so the surface renders an explicit empty
+ * state instead of invented data.
+ */
+export function decodeExternalizedOperatorReadback(input: {
+  readonly stateRoot: string;
+  readonly scopeId?: string | null;
+  readonly value: unknown;
+}): unknown {
+  const record =
+    input.value && typeof input.value === "object" && !Array.isArray(input.value)
+      ? (input.value as Record<string, unknown>)
+      : null;
+  if (!record) return input.value;
+  const business =
+    record.businessOutput && typeof record.businessOutput === "object"
+      ? (record.businessOutput as Record<string, unknown>)
+      : null;
+  const marker = business && business.transferState === "externalized" ? business : record;
+  if (marker.transferState !== "externalized") return input.value;
+  const locator =
+    record.durableLocator && typeof record.durableLocator === "object"
+      ? (record.durableLocator as Record<string, unknown>)
+      : null;
+  const outputKey = typeof locator?.outputKey === "string" ? locator.outputKey : null;
+  const resultHash =
+    typeof marker.resultHash === "string"
+      ? marker.resultHash
+      : typeof locator?.resultHash === "string"
+        ? locator.resultHash
+        : null;
+  if (!outputKey && !resultHash) return input.value;
+  // The caller may not know the runtime scope, so the declared one is tried first and the state
+  // root's scope directories are scanned as a bounded fallback.
+  const candidateRoots: string[] = [];
+  if (typeof input.scopeId === "string" && input.scopeId) {
+    candidateRoots.push(
+      path.join(input.stateRoot, input.scopeId, "track-b", "extensions", "workers"),
+    );
+  }
+  let scopeDirectories: string[] = [];
+  try {
+    scopeDirectories = readdirSync(input.stateRoot);
+  } catch {
+    scopeDirectories = [];
+  }
+  for (const scope of scopeDirectories.slice(0, 16)) {
+    const candidate = path.join(input.stateRoot, scope, "track-b", "extensions", "workers");
+    if (!candidateRoots.includes(candidate) && existsSync(candidate)) candidateRoots.push(candidate);
+  }
+  for (const workersRoot of candidateRoots) {
+    let workerIds: string[] = [];
+    try {
+      workerIds = readdirSync(workersRoot);
+    } catch {
+      continue;
+    }
+    for (const workerId of workerIds) {
+      const databasePath = path.join(workersRoot, workerId, "durable-output.sqlite");
+      if (!existsSync(databasePath)) continue;
+      let database: DatabaseSync | null = null;
+      try {
+        database = new DatabaseSync(databasePath, { readOnly: true });
+        const row = (
+          outputKey
+            ? database
+                .prepare(
+                  "SELECT result_json FROM durable_extension_outputs WHERE output_key = ?",
+                )
+                .get(outputKey)
+            : database
+                .prepare(
+                  "SELECT result_json FROM durable_extension_outputs WHERE result_hash = ? ORDER BY rowid DESC LIMIT 1",
+                )
+                .get(resultHash)
+        ) as { result_json?: string } | undefined;
+        if (row?.result_json) return JSON.parse(row.result_json) as unknown;
+      } catch {
+        // Keep looking; never invent a value.
+      } finally {
+        database?.close();
+      }
+    }
+  }
+  return input.value;
 }
 
 /**

@@ -189,6 +189,7 @@ import {
   recallTrackBDurableRouteAdvisory,
   appendTrackBRouteAdvisoryObservation,
   buildLiveRouteAdvisoryObservation,
+  decodeExternalizedOperatorReadback,
 } from "./track-b-runtime.js";
 import { resolveAdvisoryCohortPercent } from "./route-advisory-source.js";
 
@@ -15262,6 +15263,16 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       }
 
       try {
+        // Run 99 R28: oversized readbacks arrive as an externalized transfer marker; decode them
+        // from the worker durable-output store so the Learning surface shows the durable state
+        // instead of an empty page.
+        const decodeReadback = (value: unknown): unknown =>
+          options.runtimeStateRoot
+            ? decodeExternalizedOperatorReadback({
+                stateRoot: options.runtimeStateRoot,
+                value,
+              })
+            : value;
         const operatorBody =
           request.method === "GET" ? {} : await readJsonBody(request, MAX_OPERATOR_BODY_BYTES);
         validateOperatorRequestContext({
@@ -15572,7 +15583,9 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           }
           writeOperatorResult(
             response,
-            await options.readLearningRollout(Object.fromEntries(url.searchParams)),
+            decodeReadback(
+              await options.readLearningRollout(Object.fromEntries(url.searchParams)),
+            ),
           );
           return;
         }
@@ -15586,7 +15599,9 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           }
           writeOperatorResult(
             response,
-            await options.readLearningRecords(Object.fromEntries(url.searchParams)),
+            decodeReadback(
+              await options.readLearningRecords(Object.fromEntries(url.searchParams)),
+            ),
           );
           return;
         }
@@ -15600,7 +15615,9 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           }
           writeOperatorResult(
             response,
-            await options.readLearningDecisions(Object.fromEntries(url.searchParams)),
+            decodeReadback(
+              await options.readLearningDecisions(Object.fromEntries(url.searchParams)),
+            ),
           );
           return;
         }
