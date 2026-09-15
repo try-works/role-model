@@ -235,6 +235,10 @@ test("run99 R33 the evidence summary is keyed by task family and reports exclusi
     // Run 99 R33 D12: without a recorded observation time the decay weight is 1.
     effectiveDecisiveComparisons: 3,
     effectiveHoldoutComparisons: 3,
+    // Run 99 R33 D11: three distinct captures, so no single source dominates.
+    effectiveSampleSize: 3,
+    maxCaptureShare: 0.3333,
+    drift: null,
   });
   expect(summary.byFamily["planner.requirements"]).toEqual({
     decisiveComparisons: 1,
@@ -242,6 +246,9 @@ test("run99 R33 the evidence summary is keyed by task family and reports exclusi
     distinctCaptures: 1,
     effectiveDecisiveComparisons: 1,
     effectiveHoldoutComparisons: 1,
+    effectiveSampleSize: 1,
+    maxCaptureShare: 1,
+    drift: null,
   });
   expect(summary.excludedByReason).toEqual({
     non_decisive_outcome: 1,
@@ -324,6 +331,55 @@ test("run99 R33 an incomparable comparison is excluded and counted by code", () 
   expect(summary.excludedByReason).toEqual({
     "incomparable:position_order_disagreement": 1,
   });
+});
+
+/**
+ * Run 99 R33 (addendum 21 D11): the per-family receipt carries the canonical gate dimensions —
+ * effective sample size, source concentration and temporal drift — not just raw counts.
+ */
+test("run99 R33 the family carries concentration and a temporal drift dimension", () => {
+  const nowMs = Date.parse("2026-09-14T10:00:00Z");
+  const day = 24 * 60 * 60 * 1_000;
+  const withDelta = (id: string, ageDays: number, comparisonDelta: number) => {
+    const base = group({
+      groupId: id,
+      outcome: "candidate",
+      inputRef: `artifact:${id.padEnd(64, "0")}`,
+      taskTypeId: "coder.review",
+      observedAt: new Date(nowMs - ageDays * day).toISOString(),
+    });
+    return {
+      ...base,
+      result: {
+        ...(base.result as Record<string, unknown>),
+        members: [
+          { score: 0, disposition: "negative" },
+          { score: comparisonDelta, disposition: "positive" },
+        ],
+      },
+    };
+  };
+
+  const summary = buildTrackBLearningEvidenceSummary({
+    groups: [
+      withDelta("g1", 10, 0.2),
+      withDelta("g2", 8, 0.2),
+      withDelta("g3", 2, 0.8),
+      withDelta("g4", 1, 0.8),
+    ],
+    routePackage,
+    nowMs,
+    evidenceMaxAgeMs: 30 * day,
+  });
+
+  const family = summary.byFamily["coder.review"];
+  expect(family.decisiveComparisons).toBe(4);
+  // Four distinct captures, none dominant.
+  expect(family.maxCaptureShare).toBe(0.25);
+  // The older half drifted 0.6 below the newer half (0.2 vs 0.8 mean delta).
+  expect(family.drift).toBeCloseTo(0.6, 3);
+  // The decayed weight is smaller than the nominal count.
+  expect(family.effectiveSampleSize).toBeLessThan(4);
 });
 
 test("run98 R3 a validated candidate is promoted and both receipts are recorded", async () => {

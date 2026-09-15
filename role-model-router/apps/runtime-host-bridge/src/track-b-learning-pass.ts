@@ -116,7 +116,16 @@ export function buildTrackBLearningEvidenceSummary(input: {
    */
   readonly byFamily: Record<
     string,
-    { decisiveComparisons: number; holdoutComparisons: number; distinctCaptures: number }
+    {
+      decisiveComparisons: number;
+      holdoutComparisons: number;
+      distinctCaptures: number;
+      effectiveDecisiveComparisons: number;
+      effectiveHoldoutComparisons: number;
+      effectiveSampleSize: number;
+      maxCaptureShare: number | null;
+      drift: number | null;
+    }
   >;
   /** Run 99 R33 / addendum 21 D10: why the other finalized groups were not counted. */
   readonly excludedByReason: Record<string, number>;
@@ -128,6 +137,9 @@ export function buildTrackBLearningEvidenceSummary(input: {
   const familyHoldout = new Map<string, number>();
   const familyEffectiveDecisive = new Map<string, number>();
   const familyEffectiveHoldout = new Map<string, number>();
+  // Run 99 R33 D11: per-family source concentration and temporal drift dimensions.
+  const familyCaptureCounts = new Map<string, Map<string, number>>();
+  const familyObservations = new Map<string, { atMs: number; delta: number }[]>();
   const excludedByReason: Record<string, number> = {};
   const exclude = (reason: string): void => {
     excludedByReason[reason] = (excludedByReason[reason] ?? 0) + 1;
@@ -219,6 +231,16 @@ export function buildTrackBLearningEvidenceSummary(input: {
       if (caseIds.length > 0) {
         familyEffectiveHoldout.set(family, (familyEffectiveHoldout.get(family) ?? 0) + decay);
       }
+      const captureCounts = familyCaptureCounts.get(family) ?? new Map<string, number>();
+      captureCounts.set(captureRef, (captureCounts.get(captureRef) ?? 0) + 1);
+      familyCaptureCounts.set(family, captureCounts);
+      const delta = comparisonDelta(result);
+      const observedAtMs = comparisonObservedAtMs(comparability, input.nowMs, ageMs);
+      if (delta !== null && observedAtMs !== null) {
+        const rows = familyObservations.get(family) ?? [];
+        rows.push({ atMs: observedAtMs, delta });
+        familyObservations.set(family, rows);
+      }
     }
   }
   const byFamily: Record<
@@ -229,15 +251,35 @@ export function buildTrackBLearningEvidenceSummary(input: {
       distinctCaptures: number;
       effectiveDecisiveComparisons: number;
       effectiveHoldoutComparisons: number;
+      effectiveSampleSize: number;
+      maxCaptureShare: number | null;
+      drift: number | null;
     }
   > = {};
   for (const [family, groupIds] of familyDecisive) {
+    const captureCounts = familyCaptureCounts.get(family) ?? new Map<string, number>();
+    const captureTotal = [...captureCounts.values()].reduce((sum, count) => sum + count, 0);
+    const maxCaptureShare =
+      captureTotal > 0 ? roundWeight(Math.max(...captureCounts.values()) / captureTotal) : null;
+    const observations = [...(familyObservations.get(family) ?? [])].sort(
+      (left, right) => left.atMs - right.atMs,
+    );
+    const drift = (() => {
+      if (observations.length < 4) return null;
+      const half = Math.floor(observations.length / 2);
+      const mean = (rows: { delta: number }[]) =>
+        rows.reduce((sum, row) => sum + row.delta, 0) / rows.length;
+      return roundWeight(Math.abs(mean(observations.slice(0, half)) - mean(observations.slice(half))));
+    })();
     byFamily[family] = {
       decisiveComparisons: groupIds.length,
       holdoutComparisons: familyHoldout.get(family) ?? 0,
       distinctCaptures: familyCaptures.get(family)?.size ?? 0,
       effectiveDecisiveComparisons: roundWeight(familyEffectiveDecisive.get(family) ?? 0),
       effectiveHoldoutComparisons: roundWeight(familyEffectiveHoldout.get(family) ?? 0),
+      effectiveSampleSize: roundWeight(familyEffectiveDecisive.get(family) ?? 0),
+      maxCaptureShare,
+      drift,
     };
   }
   return {
@@ -267,6 +309,38 @@ function evidenceAgeMs(
   const observedAtMs = comparability.observedAtMs;
   return Number.isSafeInteger(observedAtMs) && Number(observedAtMs) > 0
     ? Math.max(0, nowMs - Number(observedAtMs))
+    : null;
+}
+
+/**
+ * Run 99 R33 (addendum 21 D11): the per-family gate dimensions. `delta` is the observed
+ * positive-minus-negative member score of one comparison, and the observation time is what the
+ * temporal drift split needs.
+ */
+function comparisonDelta(result: Record<string, unknown>): number | null {
+  const members = Array.isArray(result.members) ? result.members : [];
+  const scored = members
+    .map((member) => ({
+      score: Number((member as Record<string, unknown>)?.score),
+      disposition: String((member as Record<string, unknown>)?.disposition ?? ""),
+    }))
+    .filter((row) => Number.isFinite(row.score));
+  const positives = scored.filter((row) => row.disposition === "positive").map((row) => row.score);
+  const negatives = scored.filter((row) => row.disposition === "negative").map((row) => row.score);
+  if (positives.length === 0 || negatives.length === 0) return null;
+  const mean = (values: number[]) => values.reduce((sum, value) => sum + value, 0) / values.length;
+  return mean(positives) - mean(negatives);
+}
+
+function comparisonObservedAtMs(
+  comparability: Record<string, unknown>,
+  nowMs: number,
+  ageMs: number | null,
+): number | null {
+  if (ageMs !== null) return Math.max(0, nowMs - ageMs);
+  const observedAtMs = comparability.observedAtMs;
+  return Number.isSafeInteger(observedAtMs) && Number(observedAtMs) > 0
+    ? Number(observedAtMs)
     : null;
 }
 
