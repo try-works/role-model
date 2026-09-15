@@ -26,6 +26,7 @@ function group(input: {
   inputRef?: string;
   taskTypeId?: string;
   observedAt?: string;
+  evidenceStrength?: string;
 }) {
   return {
     groupId: input.groupId,
@@ -40,6 +41,7 @@ function group(input: {
       sourceEvidenceRef: `artifact:${"c".repeat(64)}`,
       ...(input.taskTypeId ? { taskTypeId: input.taskTypeId } : {}),
       ...(input.observedAt ? { observedAt: input.observedAt } : {}),
+      ...(input.evidenceStrength ? { evidenceStrength: input.evidenceStrength } : {}),
     },
     holdout: {
       holdoutId: `sha256:${"d".repeat(64)}`,
@@ -233,22 +235,26 @@ test("run99 R33 the evidence summary is keyed by task family and reports exclusi
     holdoutComparisons: 3,
     distinctCaptures: 3,
     // Run 99 R33 D12: without a recorded observation time the decay weight is 1.
-    effectiveDecisiveComparisons: 3,
-    effectiveHoldoutComparisons: 3,
+    // Run 99 R33 D5: three counterfactual replays at the 0.9 class weight.
+    effectiveDecisiveComparisons: 2.7,
+    effectiveHoldoutComparisons: 2.7,
     // Run 99 R33 D11: three distinct captures, so no single source dominates.
-    effectiveSampleSize: 3,
+    effectiveSampleSize: 2.7,
     maxCaptureShare: 0.3333,
     drift: null,
+    // Run 99 R33 D5: these fixtures declare no class, so they are counterfactual replays.
+    evidenceClasses: { counterfactual_replay: 3 },
   });
   expect(summary.byFamily["planner.requirements"]).toEqual({
     decisiveComparisons: 1,
     holdoutComparisons: 1,
     distinctCaptures: 1,
-    effectiveDecisiveComparisons: 1,
-    effectiveHoldoutComparisons: 1,
-    effectiveSampleSize: 1,
+    effectiveDecisiveComparisons: 0.9,
+    effectiveHoldoutComparisons: 0.9,
+    effectiveSampleSize: 0.9,
     maxCaptureShare: 1,
     drift: null,
+    evidenceClasses: { counterfactual_replay: 1 },
   });
   expect(summary.excludedByReason).toEqual({
     non_decisive_outcome: 1,
@@ -287,9 +293,10 @@ test("run99 R33 the evidence summary decays old comparisons by the half-life", (
   });
 
   expect(summary.decisiveComparisons).toBe(2);
-  // 28 days is two 14-day half-lives, so the stale comparison counts as a quarter.
-  expect(summary.byFamily["coder.review"].effectiveDecisiveComparisons).toBeCloseTo(1.25, 3);
-  expect(summary.effectiveDecisiveComparisons).toBeCloseTo(1.25, 3);
+  // Both comparisons are counterfactual replays (class weight 0.9); the stale one is two 14-day
+  // half-lives old (0.25): 0.9 + 0.25 * 0.9 = 1.125.
+  expect(summary.byFamily["coder.review"].effectiveDecisiveComparisons).toBeCloseTo(1.125, 3);
+  expect(summary.effectiveDecisiveComparisons).toBeCloseTo(1.125, 3);
 });
 
 /**
@@ -380,6 +387,55 @@ test("run99 R33 the family carries concentration and a temporal drift dimension"
   expect(family.drift).toBeCloseTo(0.6, 3);
   // The decayed weight is smaller than the nominal count.
   expect(family.effectiveSampleSize).toBeLessThan(4);
+});
+
+/**
+ * Run 99 R33 (addendum 20 D5, `guidance/13` §Evidence-source weighting): a comparison counts by
+ * its evidence class — `counterfactual_replay` 0.9, deterministic/manual 1.0,
+ * `background_local_eval` 0.8, `benchmark` 0.75 — and route-only or passive evidence counts for
+ * nothing at all, because it is not semantic-quality evidence.
+ */
+test("run99 R33 the effective counts weight each comparison by its evidence class", () => {
+  const nowMs = Date.parse("2026-09-14T10:00:00Z");
+  const summary = buildTrackBLearningEvidenceSummary({
+    groups: [
+      group({
+        groupId: "class:counterfactual",
+        outcome: "candidate",
+        inputRef: `artifact:${"1".repeat(64)}`,
+        taskTypeId: "coder.review",
+        evidenceStrength: "counterfactual_replay",
+      }),
+      group({
+        groupId: "class:deterministic",
+        outcome: "source",
+        inputRef: `artifact:${"2".repeat(64)}`,
+        taskTypeId: "coder.review",
+        evidenceStrength: "natural_deterministic_outcome",
+      }),
+      group({
+        groupId: "class:route-only",
+        outcome: "candidate",
+        inputRef: `artifact:${"3".repeat(64)}`,
+        taskTypeId: "coder.review",
+        evidenceStrength: "route_replay",
+      }),
+    ],
+    routePackage,
+    nowMs,
+    evidenceMaxAgeMs: 30 * 24 * 60 * 60 * 1_000,
+  });
+
+  // Route-only replay is not quality evidence: it is excluded, not down-weighted.
+  expect(summary.decisiveComparisons).toBe(2);
+  expect(summary.excludedByReason).toEqual({ "non_semantic_evidence:route_replay": 1 });
+  // 0.9 for the counterfactual plus 1.0 for the deterministic outcome.
+  expect(summary.effectiveDecisiveComparisons).toBeCloseTo(1.9, 3);
+  expect(summary.byFamily["coder.review"].effectiveDecisiveComparisons).toBeCloseTo(1.9, 3);
+  expect(summary.byFamily["coder.review"].evidenceClasses).toEqual({
+    counterfactual_replay: 1,
+    natural_deterministic_outcome: 1,
+  });
 });
 
 test("run98 R3 a validated candidate is promoted and both receipts are recorded", async () => {

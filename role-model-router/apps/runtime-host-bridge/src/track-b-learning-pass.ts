@@ -47,6 +47,23 @@ export const DEFAULT_LEARNING_EVIDENCE_FLOOR = Object.freeze({
  */
 export const DEFAULT_EVIDENCE_HALF_LIFE_DAYS = 14;
 
+/**
+ * Run 99 R33 (addendum 20 D5, `guidance/13` §Evidence-source weighting): how much each evidence
+ * class counts toward the learner's floor. Zero means the class is not semantic-quality evidence
+ * at all, so the comparison is excluded rather than down-weighted.
+ */
+export const EVIDENCE_CLASS_WEIGHTS: Readonly<Record<string, number>> = Object.freeze({
+  natural_deterministic_outcome: 1,
+  manual_replay: 1,
+  counterfactual_replay: 0.9,
+  background_local_eval: 0.8,
+  benchmark: 0.75,
+  passive_outcome_proxy: 0.1,
+  route_replay: 0,
+  passive_observability: 0,
+});
+const DEFAULT_EVIDENCE_CLASS = "counterfactual_replay";
+
 export const DEFAULT_LEARNING_GUARDRAILS = Object.freeze({ qualityMinDelta: -0.02 });
 
 /**
@@ -125,6 +142,7 @@ export function buildTrackBLearningEvidenceSummary(input: {
       effectiveSampleSize: number;
       maxCaptureShare: number | null;
       drift: number | null;
+      evidenceClasses: Record<string, number>;
     }
   >;
   /** Run 99 R33 / addendum 21 D10: why the other finalized groups were not counted. */
@@ -140,6 +158,8 @@ export function buildTrackBLearningEvidenceSummary(input: {
   // Run 99 R33 D11: per-family source concentration and temporal drift dimensions.
   const familyCaptureCounts = new Map<string, Map<string, number>>();
   const familyObservations = new Map<string, { atMs: number; delta: number }[]>();
+  // Run 99 R33 D5: how many comparisons of each evidence class back each family.
+  const familyEvidenceClasses = new Map<string, Record<string, number>>();
   const excludedByReason: Record<string, number> = {};
   const exclude = (reason: string): void => {
     excludedByReason[reason] = (excludedByReason[reason] ?? 0) + 1;
@@ -187,6 +207,17 @@ export function buildTrackBLearningEvidenceSummary(input: {
       }
       continue;
     }
+    // Run 99 R33 D5: the evidence class decides how much the comparison is worth. A class with
+    // weight 0 (route-only replay, passive observability) is not quality evidence and is excluded.
+    const evidenceClass =
+      boundedText(comparability.evidenceStrength) ??
+      boundedText(result.evidenceStrength) ??
+      DEFAULT_EVIDENCE_CLASS;
+    const classWeight = EVIDENCE_CLASS_WEIGHTS[evidenceClass] ?? EVIDENCE_CLASS_WEIGHTS[DEFAULT_EVIDENCE_CLASS];
+    if (!(classWeight > 0)) {
+      exclude(`non_semantic_evidence:${evidenceClass.slice(0, 48)}`);
+      continue;
+    }
     if (!DECISIVE_OUTCOMES.has(String(result.outcome ?? ""))) {
       exclude("non_decisive_outcome");
       continue;
@@ -216,8 +247,9 @@ export function buildTrackBLearningEvidenceSummary(input: {
     if (caseIds.length > 0) holdoutComparisons += 1;
     // Run 99 R33 D12: the decay weight uses the same age the freshness window used.
     const decay = ageMs === null ? 1 : Math.pow(0.5, ageMs / 86_400_000 / halfLifeDays);
-    effectiveDecisiveComparisons += decay;
-    if (caseIds.length > 0) effectiveHoldoutComparisons += decay;
+    const weight = decay * classWeight;
+    effectiveDecisiveComparisons += weight;
+    if (caseIds.length > 0) effectiveHoldoutComparisons += weight;
     const family = boundedText(comparability.taskTypeId);
     if (family) {
       const bucket = familyDecisive.get(family) ?? [];
@@ -227,10 +259,13 @@ export function buildTrackBLearningEvidenceSummary(input: {
       familyCaptureSet.add(captureRef);
       familyCaptures.set(family, familyCaptureSet);
       if (caseIds.length > 0) familyHoldout.set(family, (familyHoldout.get(family) ?? 0) + 1);
-      familyEffectiveDecisive.set(family, (familyEffectiveDecisive.get(family) ?? 0) + decay);
+      familyEffectiveDecisive.set(family, (familyEffectiveDecisive.get(family) ?? 0) + weight);
       if (caseIds.length > 0) {
-        familyEffectiveHoldout.set(family, (familyEffectiveHoldout.get(family) ?? 0) + decay);
+        familyEffectiveHoldout.set(family, (familyEffectiveHoldout.get(family) ?? 0) + weight);
       }
+      const classCounts = familyEvidenceClasses.get(family) ?? {};
+      classCounts[evidenceClass] = (classCounts[evidenceClass] ?? 0) + 1;
+      familyEvidenceClasses.set(family, classCounts);
       const captureCounts = familyCaptureCounts.get(family) ?? new Map<string, number>();
       captureCounts.set(captureRef, (captureCounts.get(captureRef) ?? 0) + 1);
       familyCaptureCounts.set(family, captureCounts);
@@ -254,6 +289,7 @@ export function buildTrackBLearningEvidenceSummary(input: {
       effectiveSampleSize: number;
       maxCaptureShare: number | null;
       drift: number | null;
+      evidenceClasses: Record<string, number>;
     }
   > = {};
   for (const [family, groupIds] of familyDecisive) {
@@ -280,6 +316,7 @@ export function buildTrackBLearningEvidenceSummary(input: {
       effectiveSampleSize: roundWeight(familyEffectiveDecisive.get(family) ?? 0),
       maxCaptureShare,
       drift,
+      evidenceClasses: { ...(familyEvidenceClasses.get(family) ?? {}) },
     };
   }
   return {
