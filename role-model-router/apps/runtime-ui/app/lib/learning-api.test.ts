@@ -1,9 +1,11 @@
 import { describe, expect, test } from "vitest";
 
 import {
+  type LearningPolicyField,
+  fetchLearningActivity,
+  fetchLearningPolicy,
   fetchLearningRollout,
   validatePolicyDraft,
-  type LearningPolicyField,
 } from "./learning-api";
 
 /**
@@ -24,10 +26,35 @@ const field = (input: Partial<LearningPolicyField> & { name: string }): Learning
 
 const fields: readonly LearningPolicyField[] = [
   field({ name: "minAdvisoryConfidence", min: 0.5, max: 1, value: 0.7, default: 0.7 }),
-  field({ name: "minDecisiveComparisons", type: "integer", min: 1, max: 100, value: 3, default: 3 }),
-  field({ name: "promotionAnalysisMethod", type: "enum", values: ["paired_cluster_bootstrap"], value: "paired_cluster_bootstrap", default: "paired_cluster_bootstrap", uiEditable: false }),
-  field({ name: "stage", type: "enum", values: ["S0", "S1", "S2", "S3", "S4"], value: "S1", default: "S1" }),
-  field({ name: "cohortLadder", type: "percent-list", value: [10, 25, 50, 100], default: [10, 25, 50, 100] }),
+  field({
+    name: "minDecisiveComparisons",
+    type: "integer",
+    min: 1,
+    max: 100,
+    value: 3,
+    default: 3,
+  }),
+  field({
+    name: "promotionAnalysisMethod",
+    type: "enum",
+    values: ["paired_cluster_bootstrap"],
+    value: "paired_cluster_bootstrap",
+    default: "paired_cluster_bootstrap",
+    uiEditable: false,
+  }),
+  field({
+    name: "stage",
+    type: "enum",
+    values: ["S0", "S1", "S2", "S3", "S4"],
+    value: "S1",
+    default: "S1",
+  }),
+  field({
+    name: "cohortLadder",
+    type: "percent-list",
+    value: [10, 25, 50, 100],
+    default: [10, 25, 50, 100],
+  }),
 ];
 
 describe("learning policy draft validation", () => {
@@ -38,23 +65,40 @@ describe("learning policy draft validation", () => {
   });
 
   test("refuses out-of-range, wrong-type and fractional-integer values", () => {
-    expect(validatePolicyDraft(fields, { minAdvisoryConfidence: 1.4 }).errors.minAdvisoryConfidence).toMatch(/at most 1/);
-    expect(validatePolicyDraft(fields, { minAdvisoryConfidence: 0.2 }).errors.minAdvisoryConfidence).toMatch(/at least 0.5/);
-    expect(validatePolicyDraft(fields, { minDecisiveComparisons: 2.5 }).errors.minDecisiveComparisons).toMatch(/integer/);
-    expect(validatePolicyDraft(fields, { minAdvisoryConfidence: "many" }).errors.minAdvisoryConfidence).toMatch(/number/);
+    expect(
+      validatePolicyDraft(fields, { minAdvisoryConfidence: 1.4 }).errors.minAdvisoryConfidence,
+    ).toMatch(/at most 1/);
+    expect(
+      validatePolicyDraft(fields, { minAdvisoryConfidence: 0.2 }).errors.minAdvisoryConfidence,
+    ).toMatch(/at least 0.5/);
+    expect(
+      validatePolicyDraft(fields, { minDecisiveComparisons: 2.5 }).errors.minDecisiveComparisons,
+    ).toMatch(/integer/);
+    expect(
+      validatePolicyDraft(fields, { minAdvisoryConfidence: "many" }).errors.minAdvisoryConfidence,
+    ).toMatch(/number/);
   });
 
   test("refuses read-only fields and unknown fields", () => {
-    expect(validatePolicyDraft(fields, { promotionAnalysisMethod: "none" }).errors.promotionAnalysisMethod).toMatch(/read-only/);
-    expect(validatePolicyDraft(fields, { brandNewParameter: 1 }).errors.brandNewParameter).toMatch(/unknown field/);
+    expect(
+      validatePolicyDraft(fields, { promotionAnalysisMethod: "none" }).errors
+        .promotionAnalysisMethod,
+    ).toMatch(/read-only/);
+    expect(validatePolicyDraft(fields, { brandNewParameter: 1 }).errors.brandNewParameter).toMatch(
+      /unknown field/,
+    );
   });
 
   test("validates enum values and the monotone percentage ladder", () => {
     expect(validatePolicyDraft(fields, { stage: "S3" }).changes).toEqual({ stage: "S3" });
     expect(validatePolicyDraft(fields, { stage: "S9" }).errors.stage).toMatch(/must be one of/);
     expect(validatePolicyDraft(fields, { cohortLadder: [10, 25, 50, 100] }).changes).toEqual({});
-    expect(validatePolicyDraft(fields, { cohortLadder: [25, 10, 50, 100] }).errors.cohortLadder).toMatch(/non-decreasing/);
-    expect(validatePolicyDraft(fields, { cohortLadder: [5, 25] }).errors.cohortLadder).toMatch(/10-100/);
+    expect(
+      validatePolicyDraft(fields, { cohortLadder: [25, 10, 50, 100] }).errors.cohortLadder,
+    ).toMatch(/non-decreasing/);
+    expect(validatePolicyDraft(fields, { cohortLadder: [5, 25] }).errors.cohortLadder).toMatch(
+      /10-100/,
+    );
   });
 
   test("does not report unchanged values as changes", () => {
@@ -86,7 +130,10 @@ describe("learning readback start-up retry", () => {
       attempts += 1;
       if (attempts === 1) {
         return new Response(
-          JSON.stringify({ error: "operator_capability_unavailable", capability: "learning rollout readback" }),
+          JSON.stringify({
+            error: "operator_capability_unavailable",
+            capability: "learning rollout readback",
+          }),
           { status: 503, headers: { "content-type": "application/json" } },
         );
       }
@@ -99,5 +146,27 @@ describe("learning readback start-up retry", () => {
     const rollout = await fetchLearningRollout(fetcher);
     expect(rollout).toMatchObject({ state: "active", activePackageId: "pack-retry" });
     expect(attempts).toBe(2);
+  });
+
+  // The same warm-up answered `/learning/policy` and `/learning/activity` with 503 while the runtime
+  // brought its learning domain up, so every Learning readback retries the two start-up shapes.
+  test("retries a warming capability for the policy and activity readbacks too", async () => {
+    const attemptCounts: Record<string, number> = {};
+    const fetcher = (async (path: string) => {
+      attemptCounts[path] = (attemptCounts[path] ?? 0) + 1;
+      if (attemptCounts[path] === 1) {
+        return new Response(
+          JSON.stringify({ error: "operator_capability_unavailable", capability: path }),
+          { status: 503, headers: { "content-type": "application/json" } },
+        );
+      }
+      return new Response(
+        JSON.stringify(path.includes("/policy") ? { policyVersion: 28 } : { windowMinutes: 60 }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    }) as unknown as typeof fetch;
+
+    await expect(fetchLearningPolicy(fetcher)).resolves.toMatchObject({ policyVersion: 28 });
+    await expect(fetchLearningActivity(fetcher)).resolves.toMatchObject({ windowMinutes: 60 });
   });
 });

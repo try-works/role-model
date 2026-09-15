@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { fetchJson, postJson, withRuntimeStartupRetry, type RuntimeFetcher } from "./runtime-api";
+import { type RuntimeFetcher, fetchJson, postJson, withRuntimeStartupRetry } from "./runtime-api";
 
 /**
  * Run 98 R17: the Learning surface's operator client.
@@ -96,10 +96,12 @@ export async function fetchLearningPolicy(
   operatorToken?: string,
   query: Readonly<Record<string, string | number | undefined>> = {},
 ): Promise<LearningPolicyView> {
-  return fetchJson<LearningPolicyView>(
-    `/api/role-model/operator/learning/policy${operatorQuery(query)}`,
-    fetcher,
-    operatorHeaders(operatorToken),
+  return withRuntimeStartupRetry(() =>
+    fetchJson<LearningPolicyView>(
+      `/api/role-model/operator/learning/policy${operatorQuery(query)}`,
+      fetcher,
+      operatorHeaders(operatorToken),
+    ),
   );
 }
 
@@ -122,7 +124,12 @@ export async function saveLearningPolicy(
 }
 
 export async function rollbackLearningPolicy(
-  input: { readonly toPolicyVersion: number; readonly expectedPolicyVersion: number; readonly operator: string; readonly reason?: string },
+  input: {
+    readonly toPolicyVersion: number;
+    readonly expectedPolicyVersion: number;
+    readonly operator: string;
+    readonly reason?: string;
+  },
   fetcher: RuntimeFetcher = fetch,
   operatorToken?: string,
 ): Promise<LearningPolicyChangeResult> {
@@ -169,10 +176,12 @@ export async function fetchLearningDecisions(
   operatorToken?: string,
   query: Readonly<Record<string, string | number | undefined>> = {},
 ): Promise<Record<string, unknown>> {
-  return fetchJson(
-    `/api/role-model/operator/learning/decisions${operatorQuery(query)}`,
-    fetcher,
-    operatorHeaders(operatorToken),
+  return withRuntimeStartupRetry(() =>
+    fetchJson(
+      `/api/role-model/operator/learning/decisions${operatorQuery(query)}`,
+      fetcher,
+      operatorHeaders(operatorToken),
+    ),
   );
 }
 
@@ -181,10 +190,12 @@ export async function fetchLearningMeasurement(
   operatorToken?: string,
   query: Readonly<Record<string, string | number | undefined>> = {},
 ): Promise<Record<string, unknown>> {
-  return fetchJson(
-    `/api/role-model/operator/learning/measurement${operatorQuery(query)}`,
-    fetcher,
-    operatorHeaders(operatorToken),
+  return withRuntimeStartupRetry(() =>
+    fetchJson(
+      `/api/role-model/operator/learning/measurement${operatorQuery(query)}`,
+      fetcher,
+      operatorHeaders(operatorToken),
+    ),
   );
 }
 
@@ -197,10 +208,12 @@ export async function fetchLearningActivity(
   operatorToken?: string,
   query: Readonly<Record<string, string | number | undefined>> = {},
 ): Promise<Record<string, unknown>> {
-  return fetchJson(
-    `/api/role-model/operator/learning/activity${operatorQuery(query)}`,
-    fetcher,
-    operatorHeaders(operatorToken),
+  return withRuntimeStartupRetry(() =>
+    fetchJson(
+      `/api/role-model/operator/learning/activity${operatorQuery(query)}`,
+      fetcher,
+      operatorHeaders(operatorToken),
+    ),
   );
 }
 
@@ -209,10 +222,12 @@ export async function fetchLearningHistory(
   operatorToken?: string,
   query: Readonly<Record<string, string | number | undefined>> = {},
 ): Promise<Record<string, unknown>> {
-  return fetchJson(
-    `/api/role-model/operator/learning/history${operatorQuery(query)}`,
-    fetcher,
-    operatorHeaders(operatorToken),
+  return withRuntimeStartupRetry(() =>
+    fetchJson(
+      `/api/role-model/operator/learning/history${operatorQuery(query)}`,
+      fetcher,
+      operatorHeaders(operatorToken),
+    ),
   );
 }
 
