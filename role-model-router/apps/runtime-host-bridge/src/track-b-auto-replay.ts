@@ -45,6 +45,53 @@ export const AUTO_REPLAY_DEADLINE_MAX_MS = 1_800_000;
 export const AUTO_REPLAY_DEADLINE_SIZE_STEP_BYTES = 1024 * 1024;
 export const AUTO_REPLAY_DEADLINE_SIZE_STEP_MS = 60_000;
 
+/**
+ * Run 99 R33 live finding (stage v143/v144): the loop deferred captures whose durable replay job was
+ * already held by another dispatcher —
+ *
+ *   `replay endpoint HTTP 409: {"error":"extension replay-core failed: replay job is already leased"}`
+ *
+ * Deferral was the wrong answer twice over: the job is in flight (its terminal receipt is a bounded
+ * wait away) and re-dispatching after the hold released produced the same 409 until the capture was
+ * refused as `replay_window_elapsed`. A lease hold is now classified explicitly and retried with
+ * backoff inside the capture's own deadline.
+ */
+export const REPLAY_LEASE_RETRY_DELAYS_MS = [2_000, 5_000, 10_000, 20_000, 30_000] as const;
+
+export function isReplayJobLeasedFailure(status: number, body: string): boolean {
+  return status === 409 && typeof body === "string" && /already leased/i.test(body);
+}
+
+export async function retryLeasedReplayDispatch<TValue>(input: {
+  readonly dispatch: () => Promise<
+    { readonly ok: true; readonly value: TValue } | { readonly ok: false; readonly status: number; readonly body: string }
+  >;
+  readonly deadlineAtMs: number;
+  readonly now?: () => number;
+  readonly sleep?: (ms: number) => Promise<void>;
+}): Promise<{ readonly value: TValue | null; readonly attempts: number; readonly lastFailure: string | null }> {
+  const now = input.now ?? (() => Date.now());
+  const sleep = input.sleep ?? ((ms: number) => new Promise(resolve => setTimeout(resolve, ms)));
+  let attempts = 0;
+  let lastFailure: string | null = null;
+  for (;;) {
+    attempts += 1;
+    const attempt = await input.dispatch();
+    if (attempt.ok) return { value: attempt.value, attempts, lastFailure };
+    lastFailure = attempt.body;
+    if (!isReplayJobLeasedFailure(attempt.status, attempt.body)) {
+      return { value: null, attempts, lastFailure };
+    }
+    const delay = REPLAY_LEASE_RETRY_DELAYS_MS[
+      Math.min(attempts - 1, REPLAY_LEASE_RETRY_DELAYS_MS.length - 1)
+    ];
+    if (now() + delay >= input.deadlineAtMs) {
+      return { value: null, attempts, lastFailure };
+    }
+    await sleep(delay);
+  }
+}
+
 export function resolveAutoReplayDeadlineMs(
   candidateCount: number,
   options: { readonly captureBytes?: number } = {},

@@ -38,6 +38,7 @@ import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
 import {
   buildAutoReplayIdempotencyKey,
   resolveAutoReplayDeadlineMs,
+  retryLeasedReplayDispatch,
 } from "./track-b-auto-replay.js";
 import { createRouterPairwiseJudge } from "./track-b-shadow-judge-dispatch.js";
 import { isPairwiseJudgeMode, type TrackBPairwiseJudge } from "./track-b-shadow-judge.js";
@@ -3616,10 +3617,10 @@ export async function main(): Promise<void> {
               failureDetail: `recorded output of ${capture.captureRef} cannot support semantic evaluation criteria (response ${responseShape}, hasResponseText ${typeof sourceCapture.responseText === "string"})`,
             };
           }
-          const response = await fetch(`http://127.0.0.1:${port}/api/role-model/track-b/replay`, {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({
+          const replayDeadlineMs = resolveAutoReplayDeadlineMs(candidates.length, {
+            captureBytes: Buffer.byteLength(JSON.stringify(sourceCapture)),
+          });
+          const replayRequestBody = JSON.stringify({
               requestId: capture.captureRef,
               // RC04 L3: retry identity is the capture plus the frozen policy and
               // candidate contract, never the per-attempt ledger reservation. A
@@ -3643,18 +3644,38 @@ export async function main(): Promise<void> {
                 // Run 99 R33: multi-megabyte coding-agent prompts need a larger replay budget,
                 // otherwise the durable job expires mid-dispatch (observed live: 74-164 s per
                 // provider call for a 2.5 MiB prompt with a flat 120 s per-candidate deadline).
-                deadlineMs: resolveAutoReplayDeadlineMs(candidates.length, {
-                  captureBytes: Buffer.byteLength(JSON.stringify(sourceCapture)),
-                }),
+                deadlineMs: replayDeadlineMs,
               },
-            }),
+            });
+          // Run 99 R33: a durable replay job that another dispatcher already holds is not a
+          // failure — the 409 `replay job is already leased` means the very idempotency this loop
+          // depends on is working. Wait the hold out inside the capture's own deadline and take the
+          // terminal receipt instead of deferring (and eventually refusing) paid work.
+          let lastReplayDispatchStatus: number | null = null;
+          const leasedDispatch = await retryLeasedReplayDispatch({
+            deadlineAtMs: Date.now() + replayDeadlineMs,
+            dispatch: async () => {
+              const attempt = await fetch(
+                `http://127.0.0.1:${port}/api/role-model/track-b/replay`,
+                {
+                  method: "POST",
+                  headers: { "content-type": "application/json" },
+                  body: replayRequestBody,
+                },
+              );
+              if (attempt.ok) return { ok: true as const, value: await attempt.json() };
+              const body = await attempt.text().catch(() => "");
+              lastReplayDispatchStatus = attempt.status;
+              return { ok: false as const, status: attempt.status, body };
+            },
           });
-          if (!response.ok) {
-            const failureText = await response.text().catch(() => "");
+          if (!leasedDispatch.value) {
             return {
               terminal: false,
               branches: [],
-              failureDetail: `replay endpoint HTTP ${response.status}: ${failureText.slice(0, 200)}`,
+              failureDetail: `replay endpoint HTTP ${lastReplayDispatchStatus ?? 409}: ${String(
+                leasedDispatch.lastFailure ?? "",
+              ).slice(0, 200)}`,
             };
           }
           // The receipt is authoritative: a job that reached `awaiting_evaluation`
@@ -3669,7 +3690,7 @@ export async function main(): Promise<void> {
             decodeExternalizedOperatorReadback({
               stateRoot: options.runtimeStateRoot,
               scopeId: options.scopeId,
-              value: await response.json(),
+              value: leasedDispatch.value,
             }),
           );
         },
