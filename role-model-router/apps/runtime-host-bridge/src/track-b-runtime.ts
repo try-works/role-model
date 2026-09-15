@@ -5580,7 +5580,25 @@ export function decodeExternalizedOperatorReadback(input: {
  * Decode an extension invoke result: inline business output when present, otherwise a
  * read-back of the externalized durable output. Returns null when the payload cannot be
  * recovered, so callers keep an honest degradation path.
+ *
+ * Run 99 R33: `businessOutput` is transport metadata, not automatically the business result.
+ * The packaged host returns every extension's own named fields at the top level next to it
+ * (`extensions/trajectory-signals` answers `{...report, durableLocator, readCapability}`, and the
+ * advisory-measurement receipt read back from the live stage runtime carries exactly that shape).
+ * Decoding `businessOutput` whenever it existed therefore handed callers the transport envelope
+ * instead of the payload: the post-observation drain threw
+ * `finalized trajectory signals must retain replay provenance`, because the "signals" it inspected
+ * were `{extensionId, capability}`. Prefer the explicit transfer marker, then the record's own
+ * payload, and fall back to `businessOutput` only when the record carries nothing else.
  */
+const EXTENSION_TRANSPORT_FIELDS = [
+  "workerPid",
+  "businessOutput",
+  "durableLocator",
+  "evidenceRef",
+  "readCapability",
+] as const;
+
 function decodeExtensionBusinessResult(input: {
   readonly result: unknown;
   readonly extensionId: string;
@@ -5614,6 +5632,13 @@ function decodeExtensionBusinessResult(input: {
       return null;
     }
   }
+  // A record that carries its own named payload is authoritative; `businessOutput` is only the
+  // payload when the record has nothing else to offer (`{businessOutput, durableLocator}` and the
+  // `{value, businessOutput, durableLocator}` array form decode the same either way).
+  const carriesOwnPayload = Object.keys(record).some(
+    (key) => !(EXTENSION_TRANSPORT_FIELDS as readonly string[]).includes(key),
+  );
+  if (carriesOwnPayload) return record;
   return business ?? record;
 }
 
