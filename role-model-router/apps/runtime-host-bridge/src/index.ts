@@ -24036,6 +24036,8 @@ export async function createRuntimeBridgeBackend(
                     readonly fallbackReason?: string | null;
                     readonly cohortBucket?: number | null;
                     readonly scoreGapBefore?: number | null;
+                    readonly advisoryPackageEligible?: boolean;
+                    readonly eligibleEndpointCount?: number;
                   };
                 }
               ).advisory_consideration;
@@ -24064,6 +24066,11 @@ export async function createRuntimeBridgeBackend(
                     typeof outcome.cohortBucket === "number" ? outcome.cohortBucket : null,
                   scoreGapBefore:
                     typeof outcome.scoreGapBefore === "number" ? outcome.scoreGapBefore : null,
+                  advisoryPackageEligible: outcome.advisoryPackageEligible === true,
+                  eligibleEndpointCount:
+                    typeof outcome.eligibleEndpointCount === "number"
+                      ? outcome.eligibleEndpointCount
+                      : undefined,
                 }
               : null,
             observedAtMs: Date.now(),

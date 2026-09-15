@@ -6388,6 +6388,9 @@ export function buildTrackBRouteAdvisoryObservation(input: {
   readonly origin?: "live" | "shadow";
   /** Live decisions answer the counterfactual question with what actually happened. */
   readonly wouldHaveChangedOverride?: boolean;
+  /** Run 99 R27: the router's eligibility verdict, when the caller has it. */
+  readonly preferredEligibleOverride?: boolean;
+  readonly eligibleRoutePackageCountOverride?: number;
 }) {
   if (!input.decisionId || !input.routePackage) {
     throw new Error("route advisory observation requires decision and route package");
@@ -6402,14 +6405,16 @@ export function buildTrackBRouteAdvisoryObservation(input: {
     typeof input.preferredRoutePackage === "string" && input.preferredRoutePackage
       ? input.preferredRoutePackage
       : null;
-  const preferredEligible = Boolean(preferred && eligible.includes(preferred));
+  const preferredEligible =
+    input.preferredEligibleOverride ?? Boolean(preferred && eligible.includes(preferred));
   return {
     schemaVersion: TRACK_B_ROUTE_ADVISORY_OBSERVATION_SCHEMA,
     decisionId: input.decisionId,
     routePackage: input.routePackage,
     preferredRoutePackage: preferred,
     preferredEligible,
-    eligibleRoutePackageCount: eligible.length,
+    eligibleRoutePackageCount:
+      input.eligibleRoutePackageCountOverride ?? eligible.length,
     wouldHaveChanged:
       input.wouldHaveChangedOverride ?? (preferredEligible && preferred !== input.routePackage),
     advisoryState: input.advisoryState,
@@ -6484,6 +6489,8 @@ export function buildLiveRouteAdvisoryObservation(input: {
     readonly fallbackReason?: string | null;
     readonly cohortBucket?: number | null;
     readonly scoreGapBefore?: number | null;
+    readonly advisoryPackageEligible?: boolean;
+    readonly eligibleEndpointCount?: number;
   } | null;
   readonly observedAtMs: number;
 }): Record<string, unknown> {
@@ -6510,6 +6517,13 @@ export function buildLiveRouteAdvisoryObservation(input: {
     cohortBucket: input.outcome?.cohortBucket ?? null,
     scoreBand: input.advisory.scoreBand ?? null,
     scoreGapBefore: input.outcome?.scoreGapBefore ?? null,
+    // The router's own verdict wins over the pre-filter candidate list.
+    ...(input.outcome?.advisoryPackageEligible === undefined
+      ? {}
+      : { preferredEligibleOverride: input.outcome.advisoryPackageEligible }),
+    ...(Number.isSafeInteger(input.outcome?.eligibleEndpointCount)
+      ? { eligibleRoutePackageCountOverride: input.outcome?.eligibleEndpointCount }
+      : {}),
     cohortPercent: input.advisory.cohortPercent ?? null,
     stage,
     policyVersion: input.advisory.policyVersion ?? null,

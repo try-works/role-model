@@ -100,6 +100,9 @@ describe("run98 R5 advisory-considered selection", () => {
       thresholdSetVersion: "scorers.replay.v1+judge",
     });
     expect(applied.scoreGapBefore).toBeCloseTo(0.02, 5);
+    // Run 99 R27: the operator surface must read the router's own eligibility verdict; the
+    // pre-filter candidate list said "eligible" while this gate refused the package.
+    expect(applied).toMatchObject({ advisoryPackageEligible: true, eligibleEndpointCount: 3 });
 
     const ineligible = evaluateRouteAdvisoryConsideration({
       scored,
@@ -109,6 +112,7 @@ describe("run98 R5 advisory-considered selection", () => {
     });
     expect(ineligible.applied).toBe(false);
     expect(ineligible.fallbackReason).toBe("advisory_candidate_not_eligible");
+    expect(ineligible).toMatchObject({ advisoryPackageEligible: false, eligibleEndpointCount: 1 });
 
     const outsideBand = evaluateRouteAdvisoryConsideration({
       scored,

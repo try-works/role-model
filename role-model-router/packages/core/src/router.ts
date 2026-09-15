@@ -72,6 +72,14 @@ export function evaluateRouteAdvisoryConsideration(input: {
     scoreBand: band,
     scoreGapBefore: null,
     cohortBucket: null,
+    // Run 99 R27: the router's own eligibility verdict. The host's pre-filter candidate list is
+    // not this set, so a surface that reported eligibility from it claimed "eligible" while this
+    // gate refused the package.
+    advisoryPackageEligible: Boolean(
+      input.advisory?.preferredEndpointId &&
+        input.eligibleEndpointIds.includes(input.advisory.preferredEndpointId),
+    ),
+    eligibleEndpointCount: input.eligibleEndpointIds.length,
   };
   const fallback = (reason: string): RouteAdvisoryConsiderationOutcome => ({
     ...base,
