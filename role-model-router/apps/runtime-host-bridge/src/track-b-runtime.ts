@@ -5446,6 +5446,113 @@ function decodeExtensionBusinessResult(input: {
   return business ?? record;
 }
 
+/**
+ * Run 99: the Learning Evidence page`s cohort measurement, derived from the durable finalized
+ * comparisons the learner consumes (the mapping the run-98 phase-5 driver verified): a `source` win
+ * is the baseline cohort, a `candidate` win the advisory cohort, and the quality is the winner`s mean
+ * member score. The list crosses the extension host inside a durable-output envelope, so it is
+ * decoded exactly like the learning pass decodes its own comparison-group readback.
+ */
+export async function readTrackBAdvisoryMeasurement(input: {
+  readonly runtime: TrackBShadowPipelineRuntime | null;
+  readonly channel: string;
+  readonly scopeId: string;
+  readonly authorizationEpoch?: number;
+  readonly stateRoot?: string;
+  readonly guardrailBounds: {
+    readonly qualityMinDelta: number;
+    readonly costMaxMultiplier: number;
+    readonly latencyP95MaxDeltaMs: number;
+    readonly errorRateMaxDeltaPp: number;
+  };
+}): Promise<Record<string, unknown>> {
+  const runtime = input.runtime;
+  if (!runtime) {
+    return {
+      schemaVersion: "role-model.advisory-measurement.v1",
+      status: "no-measurement",
+      rows: 0,
+      reason: "extension runtime unavailable",
+    };
+  }
+  const invoke = async (extensionId: string, capability: string, value: Record<string, unknown>) => {
+    const result = await runtime.invoke(extensionId, {
+      requestId: `learning-measurement:${capability}:${Date.now()}`,
+      sessionId: `learning-measurement:${input.scopeId}`,
+      protocolVersion: "1.1.0",
+      channel: input.channel,
+      scope: input.scopeId,
+      authorizationEpoch: input.authorizationEpoch ?? 1,
+      capability,
+      value,
+      payload: value,
+    });
+    return decodeExtensionBusinessResult({
+      result,
+      extensionId,
+      ...(input.stateRoot ? { stateRoot: input.stateRoot } : {}),
+      scopeId: input.scopeId,
+    }) ?? result;
+  };
+  const decodedGroups = await invoke("evaluation-core", "evaluation:list-groups", {});
+  const record = decodedGroups && typeof decodedGroups === "object" ? (decodedGroups as Record<string, unknown>) : {};
+  const groups = Array.isArray(decodedGroups)
+    ? (decodedGroups as readonly Record<string, unknown>[])
+    : Array.isArray(record.value)
+      ? (record.value as readonly Record<string, unknown>[])
+      : Array.isArray(record.groups)
+        ? (record.groups as readonly Record<string, unknown>[])
+        : [];
+  const rows: Record<string, unknown>[] = [];
+  for (const group of groups) {
+    const result = group?.result && typeof group.result === "object" ? (group.result as Record<string, unknown>) : {};
+    const members = Array.isArray(result.members)
+      ? (result.members as readonly Record<string, unknown>[])
+      : Array.isArray(group?.members)
+        ? (group.members as readonly Record<string, unknown>[])
+        : [];
+    const scored = members.filter((member) => Number.isFinite(Number(member?.score)));
+    if (!scored.length) continue;
+    const outcome = String(result.outcome ?? group?.outcome ?? "unknown");
+    const decisive = outcome === "source" || outcome === "candidate";
+    const quality = scored.reduce((sum, member) => sum + Number(member.score), 0) / scored.length;
+    const groupId = String(result.groupId ?? group?.groupId ?? group?.group_id ?? "comparison:unknown");
+    const holdout = result.holdout && typeof result.holdout === "object" ? (result.holdout as Record<string, unknown>) : {};
+    const comparability = group?.comparability && typeof group.comparability === "object"
+      ? (group.comparability as Record<string, unknown>)
+      : {};
+    rows.push({
+      decisionId: groupId,
+      cohort: decisive && outcome === "source" ? "baseline" : "advisory",
+      holdoutTaskId: String(holdout.holdoutId ?? comparability.taskRef ?? groupId),
+      quality,
+      costUsd: 0.0001,
+      latencyMs: 0,
+      error: outcome === "failed",
+      ...(decisive && outcome === "source" ? {} : { applied: decisive }),
+      receiptRef: `comparison:${groupId}`,
+    });
+  }
+  if (!rows.length) {
+    return {
+      schemaVersion: "role-model.advisory-measurement.v1",
+      status: "no-measurement",
+      rows: 0,
+      reason: "no finalized comparison group with scored members is available yet",
+    };
+  }
+  const report = await invoke("trajectory-signals", "signals:measure-advisory-effect", {
+    rows,
+    guardrailBounds: { ...input.guardrailBounds },
+    minSamples: 1,
+    scope: input.scopeId,
+    channel: input.channel,
+  });
+  return report && typeof report === "object" && !Array.isArray(report)
+    ? (report as Record<string, unknown>)
+    : { schemaVersion: "role-model.advisory-measurement.v1", status: "no-measurement", rows: rows.length, reason: "measurement produced no report" };
+}
+
 async function resolveTrackBReferenceAttestation(
   runtime: TrackBShadowPipelineRuntime,
   envelope: (capability: string, value: unknown) => Record<string, unknown>,

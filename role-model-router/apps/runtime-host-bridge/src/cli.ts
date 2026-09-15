@@ -80,6 +80,7 @@ import {
   digestTrackBSemanticEvaluationCriteria,
   evaluateProductionExtensionRuntimeReadiness,
   normalizeTrackBSemanticEvaluationCriteria,
+  readTrackBAdvisoryMeasurement,
   requireReplayRouterDecisionId,
   resolveManagedArtifactKeyFiles,
   runSupervisedReplay,
@@ -4389,6 +4390,31 @@ export async function main(): Promise<void> {
           };
         },
         ...(operatorOperations ? createRuntimeOperatorCallbacks(operatorOperations) : {}),
+        // Run 99: the Evidence page's cohort measurement is derived here, where the extension
+        // runtime and the durable-output decoder live (the sidecar cannot reach either).
+        readLearningMeasurement: async (query: Readonly<Record<string, string>> = {}) => {
+          const channel = packagedProfile?.channel ?? "development";
+          const scopeId = String(options.scopeId ?? query.scope ?? "");
+          const snapshot = readLearningPolicyFile({
+            repoRoot: options.repoRoot,
+            channel,
+            scopeId,
+          });
+          const effective = snapshot?.effective;
+          return readTrackBAdvisoryMeasurement({
+            runtime: extensionRuntimeRef.current,
+            channel,
+            scopeId,
+            authorizationEpoch: 1,
+            ...(options.runtimeStateRoot ? { stateRoot: options.runtimeStateRoot } : {}),
+            guardrailBounds: {
+              qualityMinDelta: effective?.qualityMinDelta ?? -0.02,
+              costMaxMultiplier: effective?.costMaxMultiplier ?? 1.5,
+              latencyP95MaxDeltaMs: effective?.latencyP95MaxDeltaMs ?? 10_000,
+              errorRateMaxDeltaPp: effective?.errorRateMaxDeltaPp ?? 2,
+            },
+          });
+        },
         ...(trackBManifestText
           ? {
               trackBPostObservation: async (observation: Readonly<Record<string, unknown>>) => {
