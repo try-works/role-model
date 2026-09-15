@@ -230,7 +230,7 @@ test("run99 R33 the evidence summary is keyed by task family and reports exclusi
   });
 
   expect(summary.decisiveComparisons).toBe(4);
-  expect(summary.byFamily["coder.review"]).toEqual({
+  expect(summary.byFamily["coder.review"]).toMatchObject({
     decisiveComparisons: 3,
     holdoutComparisons: 3,
     distinctCaptures: 3,
@@ -245,7 +245,7 @@ test("run99 R33 the evidence summary is keyed by task family and reports exclusi
     // Run 99 R33 D5: these fixtures declare no class, so they are counterfactual replays.
     evidenceClasses: { counterfactual_replay: 3 },
   });
-  expect(summary.byFamily["planner.requirements"]).toEqual({
+  expect(summary.byFamily["planner.requirements"]).toMatchObject({
     decisiveComparisons: 1,
     holdoutComparisons: 1,
     distinctCaptures: 1,
@@ -581,4 +581,57 @@ test("run98 R3 an externalized comparison-group list is decoded before the evide
     "knowledge:validate-candidate",
     "knowledge:record-learning",
   ]);
+});
+
+/**
+ * Run 99 R33 (addendum 20 D4, `guidance/13` §Shrinkage across context hierarchy): a family's
+ * estimate is shrunk toward the broader route-package level when its own evidence is thin, the
+ * broader level is calibrated from the *other* families only (disjoint), and the fallback level is
+ * recorded so route diagnostics can say which level actually applied. The floor stays family-gated:
+ * broader evidence can move a prior, never satisfy the floor.
+ */
+test("run99 R33 D4 a thin family shrinks toward the package prior and discloses the fallback level", () => {
+  const nowMs = Date.parse("2026-09-14T10:00:00Z");
+  const withDelta = (id: string, family: string, comparisonDelta: number) => {
+    const base = group({
+      groupId: id,
+      outcome: "candidate",
+      inputRef: `artifact:${id.padEnd(64, "0")}`,
+      taskTypeId: family,
+      observedAt: new Date(nowMs).toISOString(),
+    });
+    return {
+      ...base,
+      result: {
+        ...(base.result as Record<string, unknown>),
+        members: [
+          { score: 0, disposition: "negative" },
+          { score: comparisonDelta, disposition: "positive" },
+        ],
+      },
+    };
+  };
+
+  const summary = buildTrackBLearningEvidenceSummary({
+    groups: [
+      withDelta("thin-a", "coder.review", 1),
+      withDelta("sib-a", "coder.refactor", 0.2),
+      withDelta("sib-b", "coder.refactor", 0.2),
+      withDelta("sib-c", "coder.refactor", 0.2),
+    ],
+    routePackage,
+    nowMs,
+    evidenceMaxAgeMs: 30 * 24 * 60 * 60 * 1_000,
+  });
+
+  const review = summary.byFamily["coder.review"].hierarchy;
+  expect(review.level).toBe("task_family");
+  expect(review.fallbackLevel).toBe("route_package");
+  // The prior is calibrated from the other family only (0.2), never from the family's own value.
+  expect(review.priorMean).toBeCloseTo(0.2, 3);
+  expect(review.effectiveN).toBeCloseTo(0.9, 3);
+  expect(review.priorStrength).toBe(5);
+  // (0.9 * 1.0 + 5 * 0.2) / 5.9
+  expect(review.shrunkValue).toBeCloseTo((0.9 * 1 + 5 * 0.2) / 5.9, 3);
+  expect(review.confidence).toBeCloseTo(0.9 / 5.9, 3);
 });

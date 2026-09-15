@@ -64,6 +64,13 @@ export const EVIDENCE_CLASS_WEIGHTS: Readonly<Record<string, number>> = Object.f
 });
 const DEFAULT_EVIDENCE_CLASS = "counterfactual_replay";
 
+/**
+ * Run 99 R33 (addendum 20 D4): the strength of the parent (route-package) prior when a family's own
+ * evidence is thin. `guidance/13` shrinks the most specific level toward its parent; a family below
+ * this many effective comparisons leans on the package level, and the fallback level is disclosed.
+ */
+export const FAMILY_PRIOR_STRENGTH = 5;
+
 export const DEFAULT_LEARNING_GUARDRAILS = Object.freeze({ qualityMinDelta: -0.02 });
 
 /**
@@ -143,6 +150,15 @@ export function buildTrackBLearningEvidenceSummary(input: {
       maxCaptureShare: number | null;
       drift: number | null;
       evidenceClasses: Record<string, number>;
+      hierarchy: {
+        level: "task_family";
+        fallbackLevel: "route_package" | null;
+        effectiveN: number;
+        priorMean: number | null;
+        priorStrength: number;
+        shrunkValue: number;
+        confidence: number;
+      };
     }
   >;
   /** Run 99 R33 / addendum 21 D10: why the other finalized groups were not counted. */
@@ -290,6 +306,15 @@ export function buildTrackBLearningEvidenceSummary(input: {
       maxCaptureShare: number | null;
       drift: number | null;
       evidenceClasses: Record<string, number>;
+      hierarchy: {
+        level: "task_family";
+        fallbackLevel: "route_package" | null;
+        effectiveN: number;
+        priorMean: number | null;
+        priorStrength: number;
+        shrunkValue: number;
+        confidence: number;
+      };
     }
   > = {};
   for (const [family, groupIds] of familyDecisive) {
@@ -307,6 +332,36 @@ export function buildTrackBLearningEvidenceSummary(input: {
         rows.reduce((sum, row) => sum + row.delta, 0) / rows.length;
       return roundWeight(Math.abs(mean(observations.slice(0, half)) - mean(observations.slice(half))));
     })();
+    // Run 99 R33 D4: shrink the family estimate toward the route-package prior, calibrated from the
+    // *other* families only (a disjoint set), and record which level the estimate actually leans on.
+    const ownObservations = familyObservations.get(family) ?? [];
+    const mean = (rows: { delta: number }[]) =>
+      rows.length ? rows.reduce((sum, row) => sum + row.delta, 0) / rows.length : 0;
+    const ownMean = mean(ownObservations);
+    const packagePrior = [...familyObservations.entries()]
+      .filter(([otherFamily]) => otherFamily !== family)
+      .flatMap(([, rows]) => rows);
+    const priorMean = packagePrior.length > 0 ? mean(packagePrior) : null;
+    const familyEffectiveN = familyEffectiveDecisive.get(family) ?? 0;
+    const hierarchy = {
+      level: "task_family" as const,
+      fallbackLevel:
+        priorMean !== null && familyEffectiveN < FAMILY_PRIOR_STRENGTH
+          ? ("route_package" as const)
+          : null,
+      effectiveN: roundWeight(familyEffectiveN),
+      priorMean: priorMean === null ? null : roundWeight(priorMean),
+      priorStrength: FAMILY_PRIOR_STRENGTH,
+      shrunkValue: roundWeight(
+        priorMean === null
+          ? ownMean
+          : (ownMean * familyEffectiveN + priorMean * FAMILY_PRIOR_STRENGTH) /
+              (familyEffectiveN + FAMILY_PRIOR_STRENGTH),
+      ),
+      confidence: roundWeight(
+        Math.min(1, familyEffectiveN / (familyEffectiveN + FAMILY_PRIOR_STRENGTH)),
+      ),
+    };
     byFamily[family] = {
       decisiveComparisons: groupIds.length,
       holdoutComparisons: familyHoldout.get(family) ?? 0,
@@ -317,6 +372,7 @@ export function buildTrackBLearningEvidenceSummary(input: {
       maxCaptureShare,
       drift,
       evidenceClasses: { ...(familyEvidenceClasses.get(family) ?? {}) },
+      hierarchy,
     };
   }
   return {
