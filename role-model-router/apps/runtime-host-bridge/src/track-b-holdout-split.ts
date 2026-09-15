@@ -64,13 +64,14 @@ export function buildFamilyStratifiedHoldout(input: {
     stratum,
     requestId,
   })}`;
-  const membershipDigest = `sha256:${digest({
-    algorithm: SPLIT_ALGORITHM,
-    seed: splitSeed,
-    stratum,
-    partition: "holdout",
-    caseIds,
-  })}`;
+  // Run 99 R33 live finding (stage v133): the membership digest is *not* the split identity. It is
+  // the durable case binding that `evaluation-core` recomputes and verifies
+  // (`#v3Holdout` -> `digestEvaluationHoldout({ partition, caseIds })`), and that helper binds
+  // exactly those two fields. Carrying the algorithm/seed/stratum inside it made every supervised
+  // replay fail closed with "evaluation holdout membership digest is not bound to its cases". The
+  // declaration therefore travels beside the binding (below), where a receipt reader can still
+  // rebuild the split, while the binding stays reproducible by the authority that enforces it.
+  const membershipDigest = `sha256:${digest({ partition: "holdout", caseIds })}`;
   return {
     holdoutId,
     membershipDigest,

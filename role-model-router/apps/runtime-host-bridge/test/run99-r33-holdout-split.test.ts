@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { expect, test } from "vitest";
 
 import { buildFamilyStratifiedHoldout, SPLIT_ALGORITHM } from "../src/track-b-holdout-split.js";
@@ -35,7 +37,33 @@ test("run99 R33 D7 two task families never share a holdout identity", () => {
   expect(review.stratum).toBe("coder.review");
   expect(refactor.stratum).toBe("coder.refactor");
   expect(review.holdoutId).not.toBe(refactor.holdoutId);
-  expect(review.membershipDigest).not.toBe(refactor.membershipDigest);
+  // The *identity* is family-stratified; the membership digest binds the cases, and Evaluation Core
+  // recomputes it as `sha256(canonical({partition, caseIds}))` and refuses any other formula.
+  expect(review.membershipDigest).toBe(refactor.membershipDigest);
+});
+
+/**
+ * Run 99 R33 live finding on stage v133: every supervised replay deferred with
+ *
+ *   `extension evaluation-core failed: evaluation holdout membership digest is not bound to its cases`
+ *
+ * `evaluation-core` recomputes the membership digest from the durable job and refuses a holdout
+ * whose digest it cannot reproduce (`#v3Holdout` -> `digestEvaluationHoldout({ partition, caseIds })`
+ * = `sha256:` of the canonical JSON of exactly those two fields). The declared split therefore has
+ * to travel *beside* that binding, not inside it.
+ */
+test("run99 R33 D7 the membership digest is the canonical case binding Evaluation Core recomputes", () => {
+  const holdout = buildFamilyStratifiedHoldout(base);
+  const canonicalCases = [...base.caseIds].sort();
+  const canonicalBinding = `sha256:${createHash("sha256")
+    .update(JSON.stringify({ caseIds: canonicalCases, partition: "holdout" }))
+    .digest("hex")}`;
+
+  expect(holdout.membershipDigest).toBe(canonicalBinding);
+  // The declaration travels beside the binding so a receipt reader can rebuild the split.
+  expect(holdout.splitAlgorithm).toBe(SPLIT_ALGORITHM);
+  expect(holdout.splitSeed).toBe(87);
+  expect(holdout.stratum).toBe("coder.review");
 });
 
 test("run99 R33 D7 the split fails closed without a request id or cases", () => {
