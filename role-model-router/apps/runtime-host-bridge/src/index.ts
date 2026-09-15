@@ -25804,6 +25804,12 @@ export async function createRuntimeBridgeBackend(
             requestId,
             routingDecisionId,
             endpointId: execution.target.endpointId,
+            // Run 99 R33 (S34 live finding): the capture records the task family, so the recovered
+            // capture read by the supervised replay can carry it into the comparison.
+            ...(plan.routingRequest.taskType ? { taskTypeId: plan.routingRequest.taskType } : {}),
+            ...(taxonomyManifest.taxonomyVersion
+              ? { taxonomyVersion: taxonomyManifest.taxonomyVersion }
+              : {}),
             modelId: execution.target.candidate.identity.model_id,
             reasoningEffort: effectiveEffort.reasoningEffort,
             effortSource: effectiveEffort.effortSource,
