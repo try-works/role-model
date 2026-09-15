@@ -251,15 +251,17 @@ describe("run99 R24 durable route advisory source", () => {
   });
 
   test("bounds the live cohort by the receipted activation step", () => {
-    // S2 considers every eligible decision, but an activated pack may only have reached the
-    // first ladder rung, so the activation is the narrower bound.
+    // Run 99 R30: the canonical ladder makes cohorts an S3/S4 mechanism ("S3 bounded cohorts");
+    // S2 is "advisory-considered" for every eligible decision after hard filters. Bounding S2 by
+    // the activation step made 104 live decisions `cohort_excluded` at a stage that must not
+    // cohort-gate, so S2 keeps the policy value and S3/S4 follow the receipted step.
     expect(
       resolveAdvisoryCohortPercent({
         stage: "S2",
         policyCohortPercent: 100,
         rolloutCohortPercent: 10,
       }),
-    ).toBe(10);
+    ).toBe(100);
     expect(
       resolveAdvisoryCohortPercent({
         stage: "S3",
@@ -289,5 +291,13 @@ describe("run99 R24 durable route advisory source", () => {
         rolloutCohortPercent: 25,
       }),
     ).toBe(0);
+    // S1 never consults an advisory, so the clamp still applies to whatever the policy says.
+    expect(
+      resolveAdvisoryCohortPercent({
+        stage: "S2",
+        policyCohortPercent: 100,
+        rolloutCohortPercent: null,
+      }),
+    ).toBe(100);
   });
 });

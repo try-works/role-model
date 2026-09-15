@@ -41,10 +41,10 @@ export interface TrackBRouteAdvisorySourceInput {
 /**
  * Run 99 R24: the cohort a live decision may use.
  *
- * `AC-R05-04` makes the operator activation the authorization, and the activation receipt
- * carries the ladder step. At `S2` the policy considers every eligible decision, so the
- * receipted step is the narrower bound; at `S3`/`S4` the durable ladder step is the rollout
- * state itself and therefore governs. With no active pack the policy value stands.
+ * The canonical ladder makes cohorts an `S3`/`S4` mechanism ("S3 bounded cohorts"): `S2` is
+ * "advisory-considered" for every eligible decision after hard filters, so it keeps the policy
+ * value (100). `S3`/`S4` follow the receipted rollout step, falling back to the policy value when
+ * no step is recorded. Clamping still applies, so a cached observation can never widen a step.
  */
 export function resolveAdvisoryCohortPercent(input: {
   readonly stage: string;
@@ -56,9 +56,10 @@ export function resolveAdvisoryCohortPercent(input: {
   const policy = clamp(input.policyCohortPercent);
   const rollout =
     input.rolloutCohortPercent === null ? null : clamp(input.rolloutCohortPercent);
+  const cohortBoundStage = input.stage === "S3" || input.stage === "S4";
+  if (!cohortBoundStage) return policy;
   if (rollout === null || rollout <= 0) return policy;
-  if (input.stage === "S3" || input.stage === "S4") return rollout;
-  return Math.min(policy, rollout);
+  return rollout;
 }
 
 const asRecord = (value: unknown): Record<string, unknown> | null =>
