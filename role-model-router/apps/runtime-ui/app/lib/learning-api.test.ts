@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest";
 
-import { validatePolicyDraft, type LearningPolicyField } from "./learning-api";
+import {
+  fetchLearningRollout,
+  validatePolicyDraft,
+  type LearningPolicyField,
+} from "./learning-api";
 
 /**
  * Run 98 R17 (AC-R17-03a/04): the Configuration page renders whatever the R15 schema
@@ -62,5 +66,38 @@ describe("learning policy draft validation", () => {
     });
     expect(result.errors).toEqual({});
     expect(result.changes).toEqual({});
+  });
+});
+
+/**
+ * Run 99 R33 (Learning surface, observed live on stage v138/v139): the Overview answered
+ *
+ *   `Learning surface unavailable: Request to /api/role-model/operator/learning/rollout failed with
+ *    503: operator_capability_unavailable. No value is fabricated.`
+ *
+ * while the same readback succeeded seconds later, because the runtime was still bringing its
+ * learning domain up. The readback now retries the two start-up 503 shapes (a booting runtime and a
+ * warming operator capability) before it reports the surface as unavailable.
+ */
+describe("learning readback start-up retry", () => {
+  test("retries a warming operator capability and then returns the durable state", async () => {
+    let attempts = 0;
+    const fetcher = (async () => {
+      attempts += 1;
+      if (attempts === 1) {
+        return new Response(
+          JSON.stringify({ error: "operator_capability_unavailable", capability: "learning rollout readback" }),
+          { status: 503, headers: { "content-type": "application/json" } },
+        );
+      }
+      return new Response(JSON.stringify({ state: "active", activePackageId: "pack-retry" }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }) as unknown as typeof fetch;
+
+    const rollout = await fetchLearningRollout(fetcher);
+    expect(rollout).toMatchObject({ state: "active", activePackageId: "pack-retry" });
+    expect(attempts).toBe(2);
   });
 });

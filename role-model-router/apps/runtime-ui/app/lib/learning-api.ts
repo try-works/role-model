@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { fetchJson, postJson, type RuntimeFetcher } from "./runtime-api";
+import { fetchJson, postJson, withRuntimeStartupRetry, type RuntimeFetcher } from "./runtime-api";
 
 /**
  * Run 98 R17: the Learning surface's operator client.
@@ -139,10 +139,14 @@ export async function fetchLearningRollout(
   operatorToken?: string,
   query: Readonly<Record<string, string | number | undefined>> = {},
 ): Promise<Record<string, unknown>> {
-  return fetchJson(
-    `/api/role-model/operator/learning/rollout${operatorQuery(query)}`,
-    fetcher,
-    operatorHeaders(operatorToken),
+  // Run 99 R33: the Overview's first readback must survive a runtime that is still bringing its
+  // learning domain up instead of rendering "Learning surface unavailable".
+  return withRuntimeStartupRetry(() =>
+    fetchJson(
+      `/api/role-model/operator/learning/rollout${operatorQuery(query)}`,
+      fetcher,
+      operatorHeaders(operatorToken),
+    ),
   );
 }
 
@@ -151,10 +155,12 @@ export async function fetchLearningRecords(
   operatorToken?: string,
   query: Readonly<Record<string, string | number | undefined>> = {},
 ): Promise<Record<string, unknown>> {
-  return fetchJson(
-    `/api/role-model/operator/learning/records${operatorQuery(query)}`,
-    fetcher,
-    operatorHeaders(operatorToken),
+  return withRuntimeStartupRetry(() =>
+    fetchJson(
+      `/api/role-model/operator/learning/records${operatorQuery(query)}`,
+      fetcher,
+      operatorHeaders(operatorToken),
+    ),
   );
 }
 

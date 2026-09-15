@@ -1573,6 +1573,44 @@ function isRuntimeInitializingError(error: unknown): boolean {
   return error instanceof Error && error.message.includes("runtime_initializing");
 }
 
+/**
+ * Run 99 R33 (Learning surface, observed live on stage v138/v139): the operator sidecar answers two
+ * different start-up 503s — `runtime_initializing` while the runtime boots, and
+ * `operator_capability_unavailable` while its learning domain is still warming. Both are transient
+ * and both used to reach the page as "surface unavailable" even though the same readback succeeded
+ * seconds later, so the readbacks retry either shape.
+ */
+function isRuntimeStartupError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    (error.message.includes("runtime_initializing") ||
+      error.message.includes("operator_capability_unavailable"))
+  );
+}
+
+/**
+ * Bounded retry for operator readbacks that can arrive while the runtime is still starting.
+ */
+export async function withRuntimeStartupRetry<TValue>(
+  operation: () => Promise<TValue>,
+): Promise<TValue> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= RUNTIME_INITIALIZING_RETRY_DELAYS_MS.length; attempt += 1) {
+    if (attempt > 0) {
+      await sleep(RUNTIME_INITIALIZING_RETRY_DELAYS_MS[attempt - 1]);
+    }
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (!isRuntimeStartupError(error)) {
+        throw error;
+      }
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("Runtime API is still starting.");
+}
+
 async function withRuntimeInitializingRetry<TValue>(
   operation: () => Promise<TValue>,
 ): Promise<TValue> {
