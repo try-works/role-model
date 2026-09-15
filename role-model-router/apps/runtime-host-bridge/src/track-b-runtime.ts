@@ -2990,6 +2990,23 @@ export async function runSupervisedReplay(input: {
     capability,
     value,
   });
+  /**
+   * Run 99 R29: a durable replay job record is ~9 KB, so Replay Core hands it back as an
+   * externalized transfer marker. The supervised replay read `state` straight off that marker, so
+   * the command receipt carried no state and the automatic producer deferred the capture forever
+   * as "durable replay state is unknown" (observed live at 06:39Z). Decode before reading.
+   */
+  const invokeReplayCore = async (capability: string, value: Record<string, unknown>) => {
+    const result = await input.runtime.invoke("replay-core", controlEnvelope(capability, value));
+    return (
+      decodeExtensionBusinessResult({
+        result,
+        extensionId: "replay-core",
+        ...(input.runtimeStateRoot ? { stateRoot: input.runtimeStateRoot } : {}),
+        scopeId: input.runtimeScopeId ?? input.scope,
+      }) ?? result
+    );
+  };
   const sourceRoot = input.sourceAttestation.traceRoot as Record<string, unknown>;
   if (!sourceRoot || typeof sourceRoot !== "object" || Array.isArray(sourceRoot)) {
     throw new Error("supervised replay source root is invalid");
@@ -3555,16 +3572,13 @@ export async function runSupervisedReplay(input: {
         ...boundBranchRequest,
         ...(preparedBranch ? { preparedBranchRootRef: preparedBranch.branchRootRef } : {}),
       });
-      const appended = await input.runtime.invoke(
-        "replay-core",
-        controlEnvelope("replay:record-branch-append", {
-          jobId,
-          candidateEndpointId,
-          leaseOwner: input.leaseOwner,
-          fenceToken: lease.fenceToken,
-          branch,
-        }),
-      );
+      const appended = await invokeReplayCore("replay:record-branch-append", {
+        jobId,
+        candidateEndpointId,
+        leaseOwner: input.leaseOwner,
+        fenceToken: lease.fenceToken,
+        branch,
+      });
       if (appended.status !== "complete" && appended.status !== "awaiting_evaluation") {
         throw new Error("Replay Core did not accept the durable branch append receipt");
       }
@@ -3598,15 +3612,12 @@ export async function runSupervisedReplay(input: {
       candidates: structuredClone(input.candidatePackages),
       providerFailures: structuredClone(providerFailures),
     });
-    const completed = await input.runtime.invoke(
-      "replay-core",
-      controlEnvelope("replay:record-evaluation-receipt", {
-        jobId,
-        leaseOwner: input.leaseOwner,
-        fenceToken: lease.fenceToken,
-        evaluation,
-      }),
-    );
+    const completed = await invokeReplayCore("replay:record-evaluation-receipt", {
+      jobId,
+      leaseOwner: input.leaseOwner,
+      fenceToken: lease.fenceToken,
+      evaluation,
+    });
     const completedEvaluation = input.completeEvaluation
       ? await input.completeEvaluation({
           replayJobId: jobId,
@@ -3624,15 +3635,12 @@ export async function runSupervisedReplay(input: {
         })
       : null;
     const finalized = completedEvaluation
-      ? await input.runtime.invoke(
-          "replay-core",
-          controlEnvelope("replay:record-evaluation-result", {
-            jobId,
-            leaseOwner: input.leaseOwner,
-            fenceToken: lease.fenceToken,
-            evaluation: completedEvaluation,
-          }),
-        )
+      ? await invokeReplayCore("replay:record-evaluation-result", {
+          jobId,
+          leaseOwner: input.leaseOwner,
+          fenceToken: lease.fenceToken,
+          evaluation: completedEvaluation,
+        })
       : completed;
     if (schedulerClaim) {
       const state = typeof finalized.state === "string" ? finalized.state : "complete";
