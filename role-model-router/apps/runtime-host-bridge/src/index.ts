@@ -1380,10 +1380,67 @@ function parseClassifierDifficultyOutput(text: string): UnifiedRuntimeDifficulty
   return parseDifficultyBucket(matched);
 }
 
-function buildDifficultyClassifierMessages(input: {
+/**
+ * Run 99 R33 live finding (stage v145, operator report): the classifier prompt carried the *entire*
+ * transcript, so a multi-megabyte coding-agent turn overflowed the classifier model's context window
+ * and the whole turn failed before routing (`CONTEXT_WINDOW_EXCEEDED` on `difficulty.remote-only`).
+ *
+ * The classifier reasons about the rubric signals and the shape of the newest turn, so the excerpt is
+ * bounded: the newest `DIFFICULTY_CLASSIFIER_MAX_MESSAGES` messages, at most
+ * `DIFFICULTY_CLASSIFIER_MAX_CHARS_PER_MESSAGE` characters each (head and tail, so both the intent and
+ * the latest instruction survive), and `DIFFICULTY_CLASSIFIER_MAX_JSON_BYTES` of serialized prompt in
+ * total. Truncation is stated in the payload, never silent.
+ */
+export const DIFFICULTY_CLASSIFIER_MAX_MESSAGES = 12;
+export const DIFFICULTY_CLASSIFIER_MAX_CHARS_PER_MESSAGE = 4_000;
+export const DIFFICULTY_CLASSIFIER_MAX_JSON_BYTES = 48 * 1024;
+
+export function buildDifficultyClassifierMessages(input: {
   readonly messages: readonly OpenAIChatCompletionsMessage[];
   readonly signals: DifficultyRoutingSignals;
 }): readonly OpenAIChatCompletionsMessage[] {
+  const messages = Array.isArray(input.messages) ? input.messages : [];
+  const kept = messages.slice(-DIFFICULTY_CLASSIFIER_MAX_MESSAGES);
+  let contentTruncated = messages.length > kept.length;
+  const excerpt = kept.map((message) => {
+    const record = message as unknown as Record<string, unknown>;
+    const content = typeof record.content === "string" ? record.content : "";
+    let bounded = content;
+    if (content.length > DIFFICULTY_CLASSIFIER_MAX_CHARS_PER_MESSAGE) {
+      const half = Math.floor(DIFFICULTY_CLASSIFIER_MAX_CHARS_PER_MESSAGE / 2);
+      bounded = `${content.slice(0, half)}\n[…truncated for classification…]\n${content.slice(-half)}`;
+      contentTruncated = true;
+    }
+    return { ...record, content: bounded };
+  });
+  const payload = {
+    rubricSignals: input.signals,
+    messages: excerpt,
+    ...(contentTruncated
+      ? {
+          truncation: {
+            messagesOmitted: Math.max(0, messages.length - kept.length),
+            note: "The transcript was truncated for classification; difficulty is judged on the rubric signals and the newest turns.",
+          },
+        }
+      : {}),
+  };
+  let serialized = JSON.stringify(payload, null, 2);
+  while (Buffer.byteLength(serialized) > DIFFICULTY_CLASSIFIER_MAX_JSON_BYTES && excerpt.length > 1) {
+    excerpt.shift();
+    serialized = JSON.stringify(
+      {
+        ...payload,
+        messages: excerpt,
+        truncation: {
+          messagesOmitted: messages.length - excerpt.length,
+          note: "The transcript was truncated for classification; difficulty is judged on the rubric signals and the newest turns.",
+        },
+      },
+      null,
+      2,
+    );
+  }
   return [
     {
       role: "system",
@@ -1392,19 +1449,39 @@ function buildDifficultyClassifierMessages(input: {
     },
     {
       role: "user",
-      content: JSON.stringify(
-        {
-          rubricSignals: input.signals,
-          messages: input.messages,
-        },
-        null,
-        2,
-      ),
+      content: serialized,
     },
   ];
 }
 
-function buildControllerRoutingMessages(input: {
+/**
+ * Run 99 R33 live finding (stage v145): both controller prompts serialized the entire transcript, so
+ * a multi-megabyte coding-agent turn would overflow the controller model exactly the way the
+ * difficulty classifier overflowed on `difficulty.remote-only`. The excerpt is bounded to the newest
+ * turns and says so, so routing still sees the shape of the conversation without exceeding a model
+ * context window.
+ */
+export const CONTROLLER_MAX_TRANSCRIPT_BYTES = 128 * 1024;
+
+function boundedControllerTranscript(messages: readonly OpenAIChatCompletionsMessage[]): {
+  readonly messages: readonly OpenAIChatCompletionsMessage[];
+  readonly truncation: { readonly messagesOmitted: number; readonly note: string } | null;
+} {
+  const list = Array.isArray(messages) ? messages : [];
+  const kept = [...list];
+  const note =
+    "The transcript was truncated for routing; the newest turns and the requested model decide the route.";
+  let truncation: { readonly messagesOmitted: number; readonly note: string } | null = null;
+  const fits = () =>
+    Buffer.byteLength(JSON.stringify(kept), "utf8") <= CONTROLLER_MAX_TRANSCRIPT_BYTES;
+  while (!fits() && kept.length > 1) {
+    kept.shift();
+    truncation = { messagesOmitted: list.length - kept.length, note };
+  }
+  return { messages: kept, truncation };
+}
+
+export function buildControllerRoutingMessages(input: {
   readonly requestedModel: string;
   readonly messages: readonly OpenAIChatCompletionsMessage[];
   readonly toolCount: number;
@@ -1412,12 +1489,14 @@ function buildControllerRoutingMessages(input: {
   readonly roleDefinitions?: readonly RuntimeRoleDefinitionRecord[];
   readonly taskDefinitions?: readonly RuntimeTaskDefinitionRecord[];
 }): readonly OpenAIChatCompletionsMessage[] {
+  const bounded = boundedControllerTranscript(input.messages);
   const userPayload = JSON.stringify(
     {
       requestedModel: input.requestedModel,
       toolCount: input.toolCount,
       candidateEndpointIds: input.candidateEndpointIds,
-      messages: input.messages,
+      messages: bounded.messages,
+      ...(bounded.truncation ? { truncation: bounded.truncation } : {}),
     },
     null,
     2,
@@ -1438,7 +1517,7 @@ function buildControllerRoutingMessages(input: {
   ];
 }
 
-function buildCompactControllerRoutingMessages(input: {
+export function buildCompactControllerRoutingMessages(input: {
   readonly requestedModel: string;
   readonly messages: readonly OpenAIChatCompletionsMessage[];
   readonly toolCount: number;
@@ -1446,12 +1525,14 @@ function buildCompactControllerRoutingMessages(input: {
   readonly roleDefinitions?: readonly RuntimeRoleDefinitionRecord[];
   readonly taskDefinitions?: readonly RuntimeTaskDefinitionRecord[];
 }): readonly OpenAIChatCompletionsMessage[] {
+  const bounded = boundedControllerTranscript(input.messages);
   const userPayload = JSON.stringify(
     {
       requestedModel: input.requestedModel,
       toolCount: input.toolCount,
       candidateEndpointIds: input.candidateEndpointIds,
-      messages: input.messages,
+      messages: bounded.messages,
+      ...(bounded.truncation ? { truncation: bounded.truncation } : {}),
     },
     null,
     2,
