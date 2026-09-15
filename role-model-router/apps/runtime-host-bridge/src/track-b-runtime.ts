@@ -7351,6 +7351,12 @@ export async function runTrackBShadowPipeline(
       trialIds,
       comparability,
       holdout,
+      // Run 99 R26: the predeclared promotion protocol names the primary metric, so the
+      // comparison outcome follows it instead of collapsing a two-scorer split into
+      // `disagreement` (observed live: 38 of 60 groups).
+      ...(input.learningPolicy?.promotionProtocol?.primaryMetricId
+        ? { primaryMetricId: input.learningPolicy.promotionProtocol.primaryMetricId }
+        : {}),
     }),
   });
   const persistedEvaluation = await runtime.invoke("evaluation-core", {
