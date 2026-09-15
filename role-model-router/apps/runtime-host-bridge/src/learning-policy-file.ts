@@ -14,6 +14,15 @@ import path from "node:path";
 
 export const ACTIVATION_POLICY_SCHEMA_VERSION = "role-model.route-learning-activation-policy.v1";
 export const ACTIVATION_POLICY_RELATIVE_PATH = "shared/route-learning-activation-policy.json";
+/**
+ * Run 99 R23: the durable operator state written by
+ * `shared/route-learning/policy-store.mjs` and read/written by the Learning > Configuration
+ * page. The packaged host resolves it first, so a UI policy change actually reaches live
+ * routing instead of only updating a record that no router reads.
+ */
+export const LEARNING_POLICY_STATE_SCHEMA_VERSION =
+  "role-model.route-learning-policy-state.v1";
+export const LEARNING_POLICY_STATE_RELATIVE_PATH = "learning/activation-policy-state.json";
 
 export type ActivationStage = "S0" | "S1" | "S2" | "S3" | "S4";
 const STAGES = new Set<ActivationStage>(["S0", "S1", "S2", "S3", "S4"]);
@@ -92,25 +101,95 @@ const asRecord = (value: unknown): Record<string, unknown> =>
 const finiteOr = (value: unknown, fallback: number): number =>
   typeof value === "number" && Number.isFinite(value) ? value : fallback;
 
+interface ResolvedPolicyDocument {
+  readonly document: Record<string, unknown>;
+  readonly policyVersion: number;
+  readonly source: string;
+}
+
+/** Canonical JSON identical to `policyDigest` in the operator policy store. */
+function canonicalPolicyJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonicalPolicyJson).join(",")}]`;
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return `{${Object.keys(record)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${canonicalPolicyJson(record[key])}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function safePolicyVersion(...candidates: unknown[]): number {
+  for (const candidate of candidates) {
+    if (Number.isSafeInteger(candidate) && Number(candidate) >= 1) return Number(candidate);
+  }
+  return 1;
+}
+
+/** The durable operator state is the control plane; a foreign or damaged file is ignored. */
+function resolveDurablePolicyState(
+  stateRoot: string | null | undefined,
+): ResolvedPolicyDocument | null {
+  if (typeof stateRoot !== "string" || !stateRoot.trim()) return null;
+  try {
+    const text = readFileSync(path.join(stateRoot, LEARNING_POLICY_STATE_RELATIVE_PATH), "utf8");
+    const state = asRecord(JSON.parse(text));
+    if (state.schemaVersion !== LEARNING_POLICY_STATE_SCHEMA_VERSION) return null;
+    const document = asRecord(state.document);
+    if (document.schemaVersion !== ACTIVATION_POLICY_SCHEMA_VERSION) return null;
+    return {
+      document,
+      policyVersion: safePolicyVersion(state.policyVersion, document.policyVersion),
+      source: LEARNING_POLICY_STATE_RELATIVE_PATH,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** The staged file is the shipped seed used before any operator change exists. */
+function resolveStagedPolicyFile(repoRoot: string): ResolvedPolicyDocument | null {
+  try {
+    const text = readFileSync(path.join(repoRoot, ACTIVATION_POLICY_RELATIVE_PATH), "utf8");
+    const document = asRecord(JSON.parse(text));
+    if (document.schemaVersion !== ACTIVATION_POLICY_SCHEMA_VERSION) return null;
+    return {
+      document,
+      policyVersion: safePolicyVersion(document.policyVersion),
+      source: ACTIVATION_POLICY_RELATIVE_PATH,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export function readLearningPolicyFile(input: {
   readonly repoRoot: string;
   readonly channel: string;
   readonly scopeId?: string | null;
+  readonly stateRoot?: string | null;
 }): LearningPolicySnapshot | null {
   if (typeof input.repoRoot !== "string" || !input.repoRoot.trim()) return null;
-  let parsed: Record<string, unknown>;
-  try {
-    const text = readFileSync(path.join(input.repoRoot, ACTIVATION_POLICY_RELATIVE_PATH), "utf8");
-    parsed = asRecord(JSON.parse(text));
-    if (parsed.schemaVersion !== ACTIVATION_POLICY_SCHEMA_VERSION) return null;
-  } catch {
-    return null;
-  }
+  const resolved =
+    resolveDurablePolicyState(input.stateRoot) ?? resolveStagedPolicyFile(input.repoRoot);
+  if (!resolved) return null;
+  const parsed = resolved.document;
   const global = asRecord(parsed.global);
   const channels = asRecord(parsed.channels);
   const scopes = asRecord(parsed.scopes);
   const channelValues = asRecord(channels[input.channel]);
-  const scopeValues = input.scopeId ? asRecord(scopes[String(input.scopeId)]) : {};
+  // Run 99 R23: the operator policy store keys scopes as `channel/scope`
+  // (`shared/route-learning/activation-policy.mjs`); the host used to look up the bare
+  // scope id, so every scope override was silently ignored. The canonical key wins and the
+  // bare id stays readable for older documents.
+  const scopeId = input.scopeId ? String(input.scopeId) : "";
+  const scopeValues = scopeId
+    ? {
+        ...asRecord(scopes[scopeId]),
+        ...asRecord(scopes[`${input.channel}/${scopeId}`]),
+      }
+    : {};
   const merged = { ...global, ...channelValues, ...scopeValues };
   const stage = STAGES.has(merged.stage as ActivationStage)
     ? (merged.stage as ActivationStage)
@@ -207,9 +286,9 @@ export function readLearningPolicyFile(input: {
     ),
   };
   return {
-    policyVersion: Number.isSafeInteger(parsed.policyVersion) ? Number(parsed.policyVersion) : 1,
-    digest: `sha256:${createHash("sha256").update(JSON.stringify(parsed)).digest("hex")}`,
-    source: ACTIVATION_POLICY_RELATIVE_PATH,
+    policyVersion: resolved.policyVersion,
+    digest: `sha256:${createHash("sha256").update(canonicalPolicyJson(parsed)).digest("hex")}`,
+    source: resolved.source,
     effective,
   };
 }

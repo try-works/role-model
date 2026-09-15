@@ -28,6 +28,45 @@ const writePolicy = (document: unknown): string => {
   return root;
 };
 
+const makeRoot = (prefix: string): string => {
+  const root = mkdtempSync(path.join(os.tmpdir(), prefix));
+  roots.push(root);
+  return root;
+};
+
+/**
+ * The durable operator policy state written by `shared/route-learning/policy-store.mjs`.
+ * It is the record the Learning > Configuration page reads and writes, so the packaged
+ * host has to resolve it as well or the UI knob is inert for live routing.
+ */
+const writePolicyState = (stateRoot: string, state: unknown): string => {
+  mkdirSync(path.join(stateRoot, "learning"), { recursive: true });
+  writeFileSync(
+    path.join(stateRoot, "learning", "activation-policy-state.json"),
+    typeof state === "string" ? state : JSON.stringify(state, null, 2),
+    "utf8",
+  );
+  return stateRoot;
+};
+
+const policyState = (document: unknown, overrides: Record<string, unknown> = {}) => ({
+  schemaVersion: "role-model.route-learning-policy-state.v1",
+  policyVersion: 22,
+  document,
+  updatedAtMs: 1789399521632,
+  receipts: [],
+  ...overrides,
+});
+
+const policyDocument = (overrides: Record<string, unknown> = {}) => ({
+  schemaVersion: "role-model.route-learning-activation-policy.v1",
+  policyVersion: 22,
+  global: { ...policy().global },
+  channels: {},
+  scopes: {},
+  ...overrides,
+});
+
 afterEach(() => {
   while (roots.length) rmSync(roots.pop() as string, { recursive: true, force: true });
 });
@@ -146,5 +185,88 @@ describe("run98 R15 packaged policy file", () => {
       promotionIntervalLevel: 0.8,
       promotionResamples: 1000,
     });
+  });
+});
+
+/**
+ * Run 99 R23: a UI policy change has to reach live routing.
+ *
+ * Observed on the stage release (2026-09-15): the SEA packaging never copied
+ * `shared/route-learning-activation-policy.json` into the release directory, so the host
+ * fell back to the hardcoded S1 defaults while the Learning > Configuration page showed the
+ * durable state. Both sides now resolve the durable operator state first, with the staged
+ * file as the shipped seed and the documented defaults as the fail-closed last resort.
+ */
+describe("run99 R23 durable operator policy state", () => {
+  test("the durable state governs live routing over the staged file", () => {
+    const repoRoot = writePolicy({
+      ...policy(),
+      channels: { development: { stage: "S1" }, stage: { stage: "S1" }, production: { stage: "S0" } },
+    });
+    const stateRoot = writePolicyState(
+      makeRoot("run99-r23-state-"),
+      policyState(
+        policyDocument({
+          channels: { stage: { stage: "S4" } },
+          scopes: { "stage/standalone-runtime-stage": { scoreBand: 0.12 } },
+        }),
+      ),
+    );
+
+    const snapshot = readLearningPolicyFile({
+      repoRoot,
+      stateRoot,
+      channel: "stage",
+      scopeId: "standalone-runtime-stage",
+    });
+    expect(snapshot).toMatchObject({
+      policyVersion: 22,
+      source: "learning/activation-policy-state.json",
+      effective: { stage: "S4", scoreBand: 0.12, cohortPercent: 10 },
+    });
+    expect(snapshot?.digest).toMatch(/^sha256:[a-f0-9]{64}$/);
+    // Without the state root (a source checkout, or before the operator ever changed the
+    // policy) the staged file still resolves exactly as before.
+    expect(
+      readLearningPolicyFile({ repoRoot, channel: "stage", scopeId: "standalone-runtime-stage" })
+        ?.effective.stage,
+    ).toBe("S1");
+  });
+
+  test("a missing, malformed, or foreign state file falls back to the staged policy", () => {
+    const repoRoot = writePolicy({ ...policy(), channels: { stage: { stage: "S2" } } });
+    const emptyStateRoot = makeRoot("run99-r23-empty-state-");
+    expect(
+      readLearningPolicyFile({ repoRoot, stateRoot: emptyStateRoot, channel: "stage" })?.effective
+        .stage,
+    ).toBe("S2");
+
+    const brokenStateRoot = writePolicyState(
+      makeRoot("run99-r23-broken-state-"),
+      "{ not json",
+    );
+    expect(
+      readLearningPolicyFile({ repoRoot, stateRoot: brokenStateRoot, channel: "stage" })?.effective
+        .stage,
+    ).toBe("S2");
+
+    const foreignStateRoot = writePolicyState(
+      makeRoot("run99-r23-foreign-state-"),
+      policyState(policyDocument(), { schemaVersion: "role-model.other-state.v9" }),
+    );
+    expect(
+      readLearningPolicyFile({ repoRoot, stateRoot: foreignStateRoot, channel: "stage" })?.effective
+        .stage,
+    ).toBe("S2");
+
+    // A durable document with the wrong activation schema must not widen activation either.
+    const wrongDocumentRoot = writePolicyState(
+      makeRoot("run99-r23-wrong-document-"),
+      policyState({ ...policyDocument(), schemaVersion: "role-model.other.v9" }),
+    );
+    expect(
+      readLearningPolicyFile({ repoRoot, stateRoot: wrongDocumentRoot, channel: "stage" })?.effective
+        .stage,
+    ).toBe("S2");
   });
 });

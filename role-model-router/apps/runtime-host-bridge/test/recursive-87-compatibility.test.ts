@@ -89,6 +89,19 @@ test("SP7 stages N and N-1 distributions and refuses unsupported future versions
       path.join(root, "shared", "graph", "registry.json"),
       JSON.stringify({ version: graphRegistry.version, kinds: graphRegistry.kinds }),
     );
+    // Run 99 R23: a real distribution always carries the activation policy config, and the
+    // packaged host resolves the effective stage from it.
+    await mkdir(path.join(root, "shared", "route-learning"), { recursive: true });
+    await writeFile(
+      path.join(root, "shared", "route-learning-activation-policy.json"),
+      JSON.stringify({
+        schemaVersion: "role-model.route-learning-activation-policy.v1",
+        policyVersion: 1,
+        global: { stage: "S1" },
+        channels: {},
+        scopes: {},
+      }),
+    );
     await writeFile(path.join(root, "sidecar.mjs"), bytes);
     await writeFile(path.join(root, "public-extension-host.mjs"), extensionHostBytes);
     await writeFile(path.join(root, "worker-runtime.mjs"), extensionHostBytes);

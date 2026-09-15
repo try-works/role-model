@@ -1126,6 +1126,45 @@ export async function stageTrackBRuntimeDistribution(options: {
       path.join(options.releaseDir, "capacity-slo-contracts.v2.json"),
     );
   }
+  // Run 99 R23: the packaged host resolves the activation policy from
+  // `<repo-root>/shared/route-learning-activation-policy.json`. The private distribution
+  // build stages that file, but the release staging used to drop it, so every packaged
+  // runtime fell back to the hardcoded S1 defaults and an operator policy change (including
+  // the graduation stage) was inert for live routing. Stage it with the release, exactly
+  // like the graph registry, and fail closed if the private distribution is incomplete.
+  const activationPolicySource = path.join(
+    options.sourceRoot,
+    "shared",
+    "route-learning-activation-policy.json",
+  );
+  if (!existsSync(activationPolicySource)) {
+    throw new Error("Track B runtime distribution activation policy config is missing");
+  }
+  const activationPolicy = JSON.parse(await readFile(activationPolicySource, "utf8")) as {
+    readonly schemaVersion?: string;
+  };
+  if (activationPolicy.schemaVersion !== "role-model.route-learning-activation-policy.v1") {
+    throw new Error(
+      "Track B runtime distribution activation policy config has an unknown schema version",
+    );
+  }
+  const activationPolicyDestination = path.join(
+    options.releaseDir,
+    "..",
+    "..",
+    "shared",
+    "route-learning-activation-policy.json",
+  );
+  await mkdir(path.dirname(activationPolicyDestination), { recursive: true });
+  await copyFile(activationPolicySource, activationPolicyDestination);
+  const hostActivationPolicyDestination = path.join(
+    options.releaseDir,
+    "..",
+    "shared",
+    "route-learning-activation-policy.json",
+  );
+  await mkdir(path.dirname(hostActivationPolicyDestination), { recursive: true });
+  await copyFile(activationPolicySource, hostActivationPolicyDestination);
   if (compatibilityGeneration === "N") {
     const graphRelative = manifest.registryBindings?.graphRegistry?.path;
     const graphSource = graphRelative ? path.join(options.sourceRoot, graphRelative) : null;

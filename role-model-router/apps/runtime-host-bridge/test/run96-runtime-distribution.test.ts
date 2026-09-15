@@ -149,6 +149,23 @@ describe("Run 96 packaged runtime artifact closure", () => {
     };
     const graphRegistrySha256 = sha256(JSON.stringify(graphRegistry));
     await writeArtifact(sourceRoot, "shared/graph/registry.json", JSON.stringify(graphRegistry));
+    // Run 99 R23: the host resolves the activation policy from `<repo-root>/shared/...`, so the
+    // staged release has to carry the private distribution's policy config. The stage release
+    // shipped without it on 2026-09-15, which made every live decision fall back to the S1
+    // defaults while the Learning > Configuration page showed the durable state.
+    const activationPolicy = {
+      schemaVersion: "role-model.route-learning-activation-policy.v1",
+      policyVersion: 1,
+      global: { stage: "S1" },
+      channels: { stage: { stage: "S4" } },
+      scopes: {},
+    };
+    const activationPolicyJson = JSON.stringify(activationPolicy);
+    await writeArtifact(
+      sourceRoot,
+      "shared/route-learning-activation-policy.json",
+      activationPolicyJson,
+    );
     const contractFiles = [
       ["contracts/package-registry.json", "registry"],
       ["contracts/contract-registry.schema.json", "registry-schema"],
@@ -256,6 +273,18 @@ describe("Run 96 packaged runtime artifact closure", () => {
     await expect(
       readFile(path.join(releaseDir, "..", "shared", "graph", "registry.json"), "utf8"),
     ).resolves.toBe(JSON.stringify(graphRegistry));
+    await expect(
+      readFile(
+        path.join(releaseDir, "..", "..", "shared", "route-learning-activation-policy.json"),
+        "utf8",
+      ),
+    ).resolves.toBe(activationPolicyJson);
+    await expect(
+      readFile(
+        path.join(releaseDir, "..", "shared", "route-learning-activation-policy.json"),
+        "utf8",
+      ),
+    ).resolves.toBe(activationPolicyJson);
     for (const fixture of sourceAuthorityFixtures) {
       await expect(
         readFile(path.join(releaseDir, "..", "..", fixture.modulePath), "utf8"),
@@ -288,6 +317,19 @@ describe("Run 96 packaged runtime artifact closure", () => {
       sourceRoot,
       "shared/graph/registry.json",
       JSON.stringify(graphRegistry),
+    );
+    // Run 99 R23: the activation policy config is part of the private distribution, so a
+    // distribution fixture that omits it is not a valid staging input.
+    await writeArtifact(
+      sourceRoot,
+      "shared/route-learning-activation-policy.json",
+      JSON.stringify({
+        schemaVersion: "role-model.route-learning-activation-policy.v1",
+        policyVersion: 1,
+        global: { stage: "S1" },
+        channels: {},
+        scopes: {},
+      }),
     );
     const sidecar = await writeArtifact(sourceRoot, "runtime-operations-server.mjs", "sidecar");
     const extensionHostSha256 = await writeArtifact(

@@ -23894,6 +23894,9 @@ export async function createRuntimeBridgeBackend(
       // environment kept as an explicit override for local experiments.
       const learningPolicySnapshot = readLearningPolicyFile({
         repoRoot: options.repoRoot,
+        // Run 99 R23: the durable operator policy state is the control plane the Learning
+        // > Configuration page writes, so live routing must resolve it.
+        stateRoot: options.runtimeStateRoot,
         channel: runtimeChannel,
         scopeId: options.scopeId,
       });

@@ -4015,6 +4015,9 @@ export async function main(): Promise<void> {
           // explicit local override.
           const learningPolicySnapshot = readLearningPolicyFile({
             repoRoot: options.repoRoot,
+            // Run 99 R23: judge mode, promotion protocol and evidence floors come from the
+            // durable operator policy state when it exists, so a UI change governs replays too.
+            stateRoot: options.runtimeStateRoot,
             channel,
             scopeId: options.scopeId,
           });
@@ -4397,6 +4400,8 @@ export async function main(): Promise<void> {
           const scopeId = String(options.scopeId ?? query.scope ?? "");
           const snapshot = readLearningPolicyFile({
             repoRoot: options.repoRoot,
+            // Run 99 R23: the Evidence page measures against the operator's live policy.
+            stateRoot: options.runtimeStateRoot,
             channel,
             scopeId,
           });

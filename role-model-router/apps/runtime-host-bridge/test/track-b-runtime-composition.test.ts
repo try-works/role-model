@@ -621,6 +621,9 @@ describe("production Track B composition", () => {
       "readLearningRecords",
       "readLearningDecisions",
       "readLearningMeasurement",
+      // Run 99: the Learning activity and history readbacks are part of the packaged surface.
+      "readLearningActivity",
+      "readLearningHistory",
       "readLearningPolicy",
       "setLearningPolicy",
       "rollbackLearningPolicy",
@@ -649,6 +652,19 @@ describe("production Track B composition", () => {
     await writeFile(
       path.join(sourceRoot, "public-router", "migrations", "0001_test.sql"),
       migrationSql,
+    );
+    // Run 99 R23: the release staging requires the private distribution's activation policy
+    // config, because the packaged host resolves the effective stage from it.
+    await mkdir(path.join(sourceRoot, "shared", "route-learning"), { recursive: true });
+    await writeFile(
+      path.join(sourceRoot, "shared", "route-learning-activation-policy.json"),
+      JSON.stringify({
+        schemaVersion: "role-model.route-learning-activation-policy.v1",
+        policyVersion: 1,
+        global: { stage: "S1" },
+        channels: {},
+        scopes: {},
+      }),
     );
     const extensions = await Promise.all(
       Array.from({ length: 13 }, async (_, index) => {
