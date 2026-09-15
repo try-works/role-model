@@ -159,6 +159,8 @@ export function buildTrackBLearningEvidenceSummary(input: {
         shrunkValue: number;
         confidence: number;
       };
+      propensityCoverage: number;
+      causalClaim: "observational" | "randomized";
     }
   >;
   /** Run 99 R33 / addendum 21 D10: why the other finalized groups were not counted. */
@@ -176,6 +178,9 @@ export function buildTrackBLearningEvidenceSummary(input: {
   const familyObservations = new Map<string, { atMs: number; delta: number }[]>();
   // Run 99 R33 D5: how many comparisons of each evidence class back each family.
   const familyEvidenceClasses = new Map<string, Record<string, number>>();
+  // Run 99 R33 D6: how much of each family's evidence carries a valid selection probability.
+  const familyCounted = new Map<string, number>();
+  const familyWithPropensity = new Map<string, number>();
   const excludedByReason: Record<string, number> = {};
   const exclude = (reason: string): void => {
     excludedByReason[reason] = (excludedByReason[reason] ?? 0) + 1;
@@ -234,6 +239,17 @@ export function buildTrackBLearningEvidenceSummary(input: {
       exclude(`non_semantic_evidence:${evidenceClass.slice(0, 48)}`);
       continue;
     }
+    // Run 99 R33 D6: a comparison is randomized evidence only when it declares a valid selection
+    // probability for a randomized mode; everything else counts as observational.
+    const selectionMode =
+      boundedText(comparability.selectionMode) ?? boundedText(result.selectionMode) ?? null;
+    const selectionProbabilityRaw = comparability.selectionProbability ?? result.selectionProbability;
+    const selectionProbability = Number(selectionProbabilityRaw);
+    const hasPropensity =
+      (selectionMode === "controlled_exploration" || selectionMode === "policy_randomized") &&
+      Number.isFinite(selectionProbability) &&
+      selectionProbability > 0 &&
+      selectionProbability <= 1;
     if (!DECISIVE_OUTCOMES.has(String(result.outcome ?? ""))) {
       exclude("non_decisive_outcome");
       continue;
@@ -282,6 +298,10 @@ export function buildTrackBLearningEvidenceSummary(input: {
       const classCounts = familyEvidenceClasses.get(family) ?? {};
       classCounts[evidenceClass] = (classCounts[evidenceClass] ?? 0) + 1;
       familyEvidenceClasses.set(family, classCounts);
+      familyCounted.set(family, (familyCounted.get(family) ?? 0) + 1);
+      if (hasPropensity) {
+        familyWithPropensity.set(family, (familyWithPropensity.get(family) ?? 0) + 1);
+      }
       const captureCounts = familyCaptureCounts.get(family) ?? new Map<string, number>();
       captureCounts.set(captureRef, (captureCounts.get(captureRef) ?? 0) + 1);
       familyCaptureCounts.set(family, captureCounts);
@@ -315,6 +335,8 @@ export function buildTrackBLearningEvidenceSummary(input: {
         shrunkValue: number;
         confidence: number;
       };
+      propensityCoverage: number;
+      causalClaim: "observational" | "randomized";
     }
   > = {};
   for (const [family, groupIds] of familyDecisive) {
@@ -373,6 +395,16 @@ export function buildTrackBLearningEvidenceSummary(input: {
       drift,
       evidenceClasses: { ...(familyEvidenceClasses.get(family) ?? {}) },
       hierarchy,
+      // Run 99 R33 D6: observational unless every counted comparison carries a valid propensity.
+      propensityCoverage: (() => {
+        const counted = familyCounted.get(family) ?? 0;
+        return counted > 0 ? roundWeight((familyWithPropensity.get(family) ?? 0) / counted) : 0;
+      })(),
+      causalClaim:
+        (familyCounted.get(family) ?? 0) > 0 &&
+        (familyWithPropensity.get(family) ?? 0) === (familyCounted.get(family) ?? 0)
+          ? ("randomized" as const)
+          : ("observational" as const),
     };
   }
   return {

@@ -27,6 +27,8 @@ function group(input: {
   taskTypeId?: string;
   observedAt?: string;
   evidenceStrength?: string;
+  selectionMode?: string;
+  selectionProbability?: number;
 }) {
   return {
     groupId: input.groupId,
@@ -42,6 +44,10 @@ function group(input: {
       ...(input.taskTypeId ? { taskTypeId: input.taskTypeId } : {}),
       ...(input.observedAt ? { observedAt: input.observedAt } : {}),
       ...(input.evidenceStrength ? { evidenceStrength: input.evidenceStrength } : {}),
+      ...(input.selectionMode ? { selectionMode: input.selectionMode } : {}),
+      ...(input.selectionProbability === undefined
+        ? {}
+        : { selectionProbability: input.selectionProbability }),
     },
     holdout: {
       holdoutId: `sha256:${"d".repeat(64)}`,
@@ -634,4 +640,50 @@ test("run99 R33 D4 a thin family shrinks toward the package prior and discloses 
   // (0.9 * 1.0 + 5 * 0.2) / 5.9
   expect(review.shrunkValue).toBeCloseTo((0.9 * 1 + 5 * 0.2) / 5.9, 3);
   expect(review.confidence).toBeCloseTo(0.9 / 5.9, 3);
+});
+
+/**
+ * Run 99 R33 (addendum 20 D6, `guidance/13` L417 / `guidance/16` L469): observational traffic is
+ * not an unbiased experiment. The family receipt states how much of its evidence carries a valid
+ * selection probability, and it only claims a randomized basis when every counted comparison does
+ * — otherwise the claim is explicitly observational.
+ */
+test("run99 R33 D6 the family states its propensity coverage and qualifies the causal claim", () => {
+  const nowMs = Date.parse("2026-09-14T10:00:00Z");
+  const traced = (id: string, mode: string, probability: number) =>
+    group({
+      groupId: id,
+      outcome: "candidate",
+      inputRef: `artifact:${id.padEnd(64, "0")}`,
+      taskTypeId: "coder.review",
+      observedAt: new Date(nowMs).toISOString(),
+      selectionMode: mode,
+      selectionProbability: probability,
+    });
+  const untraced = group({
+    groupId: "untraced",
+    outcome: "source",
+    inputRef: `artifact:${"u".repeat(64)}`,
+    taskTypeId: "coder.review",
+    observedAt: new Date(nowMs).toISOString(),
+  });
+
+  const mixed = buildTrackBLearningEvidenceSummary({
+    groups: [traced("t1", "controlled_exploration", 0.25), traced("t2", "policy_randomized", 0.5), untraced],
+    routePackage,
+    nowMs,
+    evidenceMaxAgeMs: 30 * 24 * 60 * 60 * 1_000,
+  });
+  // Two of three comparisons carry a valid propensity, and the untraced one is not randomized.
+  expect(mixed.byFamily["coder.review"].propensityCoverage).toBeCloseTo(0.6667, 3);
+  expect(mixed.byFamily["coder.review"].causalClaim).toBe("observational");
+
+  const fullyTraced = buildTrackBLearningEvidenceSummary({
+    groups: [traced("p1", "controlled_exploration", 0.25), traced("p2", "policy_randomized", 0.5)],
+    routePackage,
+    nowMs,
+    evidenceMaxAgeMs: 30 * 24 * 60 * 60 * 1_000,
+  });
+  expect(fullyTraced.byFamily["coder.review"].propensityCoverage).toBe(1);
+  expect(fullyTraced.byFamily["coder.review"].causalClaim).toBe("randomized");
 });
