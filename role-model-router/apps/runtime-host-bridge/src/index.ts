@@ -169,7 +169,10 @@ import {
   inferResponsesCapabilityRequirements,
 } from "./request-capability-inference.js";
 import { readPackagedRuntimeProfile, resolveRuntimeChannelProfile } from "./runtime-channel.js";
-import { readLearningPolicyFile } from "./learning-policy-file.js";
+import {
+  readLearningPolicyFile,
+  resolveLearningPolicyStateRoot,
+} from "./learning-policy-file.js";
 import { type RuntimeVersionInfoRecord, resolveRuntimeVersionInfo } from "./runtime-version.js";
 import {
   buildGraphEvidenceFromCapture,
@@ -23895,8 +23898,12 @@ export async function createRuntimeBridgeBackend(
       const learningPolicySnapshot = readLearningPolicyFile({
         repoRoot: options.repoRoot,
         // Run 99 R23: the durable operator policy state is the control plane the Learning
-        // > Configuration page writes, so live routing must resolve it.
-        stateRoot: options.runtimeStateRoot,
+        // > Configuration page writes, so live routing must resolve the same Track B state
+        // root the sidecar uses.
+        stateRoot: resolveLearningPolicyStateRoot({
+          runtimeStateRoot: options.runtimeStateRoot,
+          scopeId: options.scopeId,
+        }),
         channel: runtimeChannel,
         scopeId: options.scopeId,
       });

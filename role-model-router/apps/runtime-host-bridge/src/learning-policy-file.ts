@@ -127,6 +127,21 @@ function safePolicyVersion(...candidates: unknown[]): number {
   return 1;
 }
 
+/**
+ * Run 99 R23: where the durable operator policy state actually lives on disk.
+ *
+ * The host composes the Track B state root for the sidecar as
+ * `<runtime-state-root>/<scope-id>/track-b` and the sidecar writes the policy store under it,
+ * so live routing has to resolve the same directory instead of the runtime state root; passing
+ * the base root silently falls back to the shipped defaults.
+ */
+export function resolveLearningPolicyStateRoot(input: {
+  readonly runtimeStateRoot: string;
+  readonly scopeId: string;
+}): string {
+  return path.join(input.runtimeStateRoot, input.scopeId, "track-b");
+}
+
 /** The durable operator state is the control plane; a foreign or damaged file is ignored. */
 function resolveDurablePolicyState(
   stateRoot: string | null | undefined,

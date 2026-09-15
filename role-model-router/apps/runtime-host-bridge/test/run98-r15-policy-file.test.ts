@@ -7,6 +7,7 @@ import { afterEach, describe, expect, test } from "vitest";
 import {
   ACTIVATION_POLICY_RELATIVE_PATH,
   readLearningPolicyFile,
+  resolveLearningPolicyStateRoot,
 } from "../src/learning-policy-file.js";
 
 /**
@@ -268,5 +269,34 @@ describe("run99 R23 durable operator policy state", () => {
       readLearningPolicyFile({ repoRoot, stateRoot: wrongDocumentRoot, channel: "stage" })?.effective
         .stage,
     ).toBe("S2");
+  });
+
+  test("resolves the durable state from the Track B state root the sidecar writes", () => {
+    const runtimeStateRoot = makeRoot("run99-r23-runtime-state-");
+    const scopeId = "standalone-runtime-stage";
+    const stateRoot = resolveLearningPolicyStateRoot({ runtimeStateRoot, scopeId });
+    expect(stateRoot).toBe(path.join(runtimeStateRoot, scopeId, "track-b"));
+    writePolicyState(
+      stateRoot,
+      policyState(policyDocument({ channels: { stage: { stage: "S3" } } })),
+    );
+    const repoRoot = writePolicy({
+      ...policy(),
+      channels: { development: { stage: "S1" }, stage: { stage: "S1" }, production: { stage: "S0" } },
+    });
+
+    expect(
+      readLearningPolicyFile({ repoRoot, stateRoot, channel: "stage", scopeId })?.effective,
+    ).toMatchObject({ stage: "S3", cohortPercent: 10 });
+    // Handing the base runtime state root to the resolver is a real defect: the store lives
+    // under the scope's track-b directory, so the resolver would fall back to the shipped file.
+    expect(
+      readLearningPolicyFile({
+        repoRoot,
+        stateRoot: runtimeStateRoot,
+        channel: "stage",
+        scopeId,
+      })?.effective.stage,
+    ).toBe("S1");
   });
 });

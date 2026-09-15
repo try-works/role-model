@@ -61,7 +61,10 @@ import {
   resolveReplayToolPolicy,
   selectReplayCandidates,
 } from "./track-b-replay-policy.js";
-import { readLearningPolicyFile } from "./learning-policy-file.js";
+import {
+  readLearningPolicyFile,
+  resolveLearningPolicyStateRoot,
+} from "./learning-policy-file.js";
 import {
   TRACK_B_CANONICAL_EXTENSION_IDS,
   type TrackBExtensionClosure,
@@ -4017,7 +4020,10 @@ export async function main(): Promise<void> {
             repoRoot: options.repoRoot,
             // Run 99 R23: judge mode, promotion protocol and evidence floors come from the
             // durable operator policy state when it exists, so a UI change governs replays too.
-            stateRoot: options.runtimeStateRoot,
+            stateRoot: resolveLearningPolicyStateRoot({
+              runtimeStateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+            }),
             channel,
             scopeId: options.scopeId,
           });
@@ -4401,7 +4407,10 @@ export async function main(): Promise<void> {
           const snapshot = readLearningPolicyFile({
             repoRoot: options.repoRoot,
             // Run 99 R23: the Evidence page measures against the operator's live policy.
-            stateRoot: options.runtimeStateRoot,
+            stateRoot: resolveLearningPolicyStateRoot({
+              runtimeStateRoot: options.runtimeStateRoot,
+              scopeId,
+            }),
             channel,
             scopeId,
           });
@@ -4551,7 +4560,11 @@ export async function main(): Promise<void> {
           },
         );
       }
-      const trackBStateRoot = path.join(options.runtimeStateRoot, options.scopeId, "track-b");
+      // Run 99 R23: one definition of the Track B state root, shared with the policy resolver.
+      const trackBStateRoot = resolveLearningPolicyStateRoot({
+        runtimeStateRoot: options.runtimeStateRoot,
+        scopeId: options.scopeId,
+      });
       const runtimeChannel = packagedProfile?.channel ?? "development";
       const writerContext: RuntimeChannelContext = {
         channel: packagedProfile?.channel ?? runtimeChannel,
