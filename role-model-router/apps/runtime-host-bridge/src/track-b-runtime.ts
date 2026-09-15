@@ -5498,10 +5498,15 @@ export function decodeExternalizedOperatorReadback(input: {
   // The caller may not know the runtime scope, so the declared one is tried first and the state
   // root's scope directories are scanned as a bounded fallback.
   const candidateRoots: string[] = [];
+  const workerRootsForScope = (scope: string): string[] => [
+    // The production extension runtime keeps its workers here.
+    path.join(input.stateRoot, scope, "track-b", "extensions", "workers"),
+    // The packaged operator extension host keeps its own workers here (`ProcessWorker` roots
+    // itself at `<journalDir>/workers/<id>`), and an operator readback is served by that host.
+    path.join(input.stateRoot, scope, "track-b", "workers"),
+  ];
   if (typeof input.scopeId === "string" && input.scopeId) {
-    candidateRoots.push(
-      path.join(input.stateRoot, input.scopeId, "track-b", "extensions", "workers"),
-    );
+    candidateRoots.push(...workerRootsForScope(input.scopeId).filter((root) => existsSync(root)));
   }
   let scopeDirectories: string[] = [];
   try {
@@ -5510,8 +5515,11 @@ export function decodeExternalizedOperatorReadback(input: {
     scopeDirectories = [];
   }
   for (const scope of scopeDirectories.slice(0, 16)) {
-    const candidate = path.join(input.stateRoot, scope, "track-b", "extensions", "workers");
-    if (!candidateRoots.includes(candidate) && existsSync(candidate)) candidateRoots.push(candidate);
+    for (const candidate of workerRootsForScope(scope)) {
+      if (!candidateRoots.includes(candidate) && existsSync(candidate)) {
+        candidateRoots.push(candidate);
+      }
+    }
   }
   for (const workersRoot of candidateRoots) {
     let workerIds: string[] = [];

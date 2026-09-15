@@ -17,16 +17,12 @@ import { decodeExternalizedOperatorReadback } from "../src/track-b-runtime.js";
 
 const scopeId = "standalone-runtime-stage";
 
-function stateRootWithPayload(payload: unknown): { root: string; hash: string; key: string } {
+function stateRootWithPayload(
+  payload: unknown,
+  layout: "extensions/workers" | "workers" = "extensions/workers",
+): { root: string; hash: string; key: string } {
   const root = mkdtempSync(path.join(os.tmpdir(), "run99-r28-readback-"));
-  const workerRoot = path.join(
-    root,
-    scopeId,
-    "track-b",
-    "extensions",
-    "workers",
-    "knowledge-store",
-  );
+  const workerRoot = path.join(root, scopeId, "track-b", ...layout.split("/"), "knowledge-store");
   mkdirSync(workerRoot, { recursive: true });
   const resultJson = JSON.stringify(payload);
   const hash = `sha256:${Buffer.from(resultJson).toString("hex").slice(0, 8)}`;
@@ -83,6 +79,27 @@ describe("run99 R28 externalized operator readback", () => {
       expect(
         decodeExternalizedOperatorReadback({ stateRoot: space.root, scopeId, value: orphan }),
       ).toBe(orphan);
+    } finally {
+      rmSync(space.root, { recursive: true, force: true });
+    }
+  });
+
+  test("reads the operator host's own worker store, which is where operator readbacks live", () => {
+    // The packaged operator extension host roots its workers at `<track-b>/workers/<id>`, so a
+    // readback served by that host is not in `extensions/workers` (observed live for the 28 KB
+    // pack-records payload while the rollout payload happened to exist in both stores).
+    const payload = {
+      schemaVersion: "role-model.knowledge-learning-records.v1",
+      scopeId,
+      records: [{ recordId: "pack-r28", kind: "pack", state: "validated" }],
+    };
+    const space = stateRootWithPayload(payload, "workers");
+    try {
+      const decoded = decodeExternalizedOperatorReadback({
+        stateRoot: space.root,
+        value: { transferState: "externalized", resultHash: space.hash, byteLength: 28_149 },
+      });
+      expect(decoded).toMatchObject(payload);
     } finally {
       rmSync(space.root, { recursive: true, force: true });
     }
