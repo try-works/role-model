@@ -6373,6 +6373,18 @@ export function buildTrackBRouteAdvisoryObservation(input: {
   readonly advisoryId?: string | null;
   readonly reason?: string | null;
   readonly observedAtMs: number;
+  /** Run 99 R25: the operative vocabulary of the decision that produced this observation. */
+  readonly mode?: TrackBRouteAdvisoryMode;
+  readonly selection?: TrackBRouteAdvisorySelection;
+  readonly applied?: boolean;
+  readonly fallbackReason?: string | null;
+  readonly cohortBucket?: number | null;
+  readonly cohortPercent?: number | null;
+  readonly stage?: "S0" | "S1" | "S2" | "S3" | "S4";
+  readonly policyVersion?: string | null;
+  readonly origin?: "live" | "shadow";
+  /** Live decisions answer the counterfactual question with what actually happened. */
+  readonly wouldHaveChangedOverride?: boolean;
 }) {
   if (!input.decisionId || !input.routePackage) {
     throw new Error("route advisory observation requires decision and route package");
@@ -6395,17 +6407,105 @@ export function buildTrackBRouteAdvisoryObservation(input: {
     preferredRoutePackage: preferred,
     preferredEligible,
     eligibleRoutePackageCount: eligible.length,
-    wouldHaveChanged: preferredEligible && preferred !== input.routePackage,
+    wouldHaveChanged:
+      input.wouldHaveChangedOverride ?? (preferredEligible && preferred !== input.routePackage),
     advisoryState: input.advisoryState,
     confidence: Number.isFinite(input.confidence) ? Number(input.confidence) : 0,
     profileSnapshotIds: [...(input.profileSnapshotIds ?? [])],
     candidateId: input.candidateId ?? null,
     advisoryId: input.advisoryId ?? null,
     ...(input.reason ? { reason: String(input.reason).slice(0, 256) } : {}),
-    mode: "shadow" as const,
-    selection: "baseline_retained" as const,
+    mode: input.mode ?? ("shadow" as const),
+    selection: input.selection ?? ("baseline_retained" as const),
+    ...(input.applied === undefined ? {} : { applied: input.applied === true }),
+    ...(input.fallbackReason === undefined
+      ? {}
+      : {
+          fallbackReason:
+            input.fallbackReason === null
+              ? null
+              : String(input.fallbackReason).slice(0, 128),
+        }),
+    ...(Number.isSafeInteger(input.cohortBucket) ? { cohortBucket: input.cohortBucket } : {}),
+    ...(Number.isFinite(input.cohortPercent) ? { cohortPercent: input.cohortPercent } : {}),
+    ...(input.stage ? { stage: input.stage } : {}),
+    ...(input.policyVersion ? { policyVersion: String(input.policyVersion).slice(0, 128) } : {}),
+    origin: input.origin ?? ("shadow" as const),
     observedAtMs: input.observedAtMs,
   };
+}
+
+export const TRACK_B_ROUTE_ADVISORY_MODES = [
+  "shadow",
+  "advisory_considered",
+  "bounded_cohort",
+  "active",
+] as const;
+export type TrackBRouteAdvisoryMode = (typeof TRACK_B_ROUTE_ADVISORY_MODES)[number];
+export type TrackBRouteAdvisorySelection = "baseline_retained" | "advisory_applied";
+
+const advisoryModeForStage = (stage: string): TrackBRouteAdvisoryMode => {
+  if (stage === "S4") return "active";
+  if (stage === "S3") return "bounded_cohort";
+  if (stage === "S2") return "advisory_considered";
+  return "shadow";
+};
+
+/**
+ * Run 99 R25 / `AC-R05-03`: the observation for a decision the live router already took.
+ *
+ * Unlike the shadow pipeline's observation, this one records what actually happened: whether the
+ * advisory was applied, the router's typed fallback reason, the cohort bucket and the operative
+ * stage, so the operator surface can distinguish "considered but retained" from "applied" instead
+ * of reporting every decision as an S1 shadow.
+ */
+export function buildLiveRouteAdvisoryObservation(input: {
+  readonly decisionId: string;
+  readonly routePackage: string;
+  readonly eligibleRoutePackages?: readonly string[];
+  readonly advisory: {
+    readonly candidateId?: string | null;
+    readonly preferredEndpointId?: string | null;
+    readonly advisoryId?: string | null;
+    readonly advisoryState: TrackBRouteAdvisoryState;
+    readonly confidence?: number;
+    readonly stage: "S0" | "S1" | "S2" | "S3" | "S4";
+    readonly policyVersion?: string | null;
+    readonly cohortPercent?: number | null;
+  };
+  readonly outcome?: {
+    readonly applied?: boolean;
+    readonly fallbackReason?: string | null;
+    readonly cohortBucket?: number | null;
+  } | null;
+  readonly observedAtMs: number;
+}): Record<string, unknown> {
+  const stage = input.advisory.stage;
+  const consulted = stage === "S2" || stage === "S3" || stage === "S4";
+  const applied = consulted && input.outcome?.applied === true;
+  return buildTrackBRouteAdvisoryObservation({
+    decisionId: input.decisionId,
+    routePackage: input.routePackage,
+    preferredRoutePackage: input.advisory.preferredEndpointId ?? null,
+    eligibleRoutePackages: input.eligibleRoutePackages,
+    advisoryState: input.advisory.advisoryState,
+    confidence: input.advisory.confidence,
+    candidateId: input.advisory.candidateId ?? null,
+    advisoryId: input.advisory.advisoryId ?? null,
+    observedAtMs: input.observedAtMs,
+    mode: advisoryModeForStage(stage),
+    selection: applied ? "advisory_applied" : "baseline_retained",
+    applied,
+    // For a live decision the counterfactual question and the observed answer coincide: the
+    // advisory changed the choice or it did not.
+    wouldHaveChangedOverride: applied,
+    fallbackReason: applied ? null : (input.outcome?.fallbackReason ?? null),
+    cohortBucket: input.outcome?.cohortBucket ?? null,
+    cohortPercent: input.advisory.cohortPercent ?? null,
+    stage,
+    policyVersion: input.advisory.policyVersion ?? null,
+    origin: "live",
+  });
 }
 
 /**
@@ -6433,6 +6533,10 @@ export async function appendTrackBRouteAdvisoryObservation(input: {
       unavailable: 0,
       wouldHaveChanged: 0,
       preferredEligible: 0,
+      // Run 99 R25: `AC-R05-03` observability - a consulted advisory and an applied one are
+      // different outcomes, and only the applied count is influence.
+      considered: 0,
+      applied: 0,
     },
     entries: [] as Readonly<Record<string, unknown>>[],
   };
@@ -6461,6 +6565,14 @@ export async function appendTrackBRouteAdvisoryObservation(input: {
       ledger.totals.wouldHaveChanged + (observation.wouldHaveChanged === true ? 1 : 0),
     preferredEligible:
       ledger.totals.preferredEligible + (observation.preferredEligible === true ? 1 : 0),
+    considered:
+      ledger.totals.considered +
+      (observation.mode === "advisory_considered" ||
+      observation.mode === "bounded_cohort" ||
+      observation.mode === "active"
+        ? 1
+        : 0),
+    applied: ledger.totals.applied + (observation.applied === true ? 1 : 0),
   };
   const next = {
     schemaVersion: TRACK_B_ROUTE_ADVISORY_OBSERVATION_LEDGER_SCHEMA,

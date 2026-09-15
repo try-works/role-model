@@ -216,7 +216,14 @@ export function LearningOverviewPage() {
               <table className="min-w-full text-left text-sm">
                 <thead>
                   <tr>
-                    {["Decision", "Route package", "Advisory", "Would change", "Candidate"].map((header) => (
+                    {[
+                      "Decision",
+                      "Route package",
+                      "Advisory",
+                      "Outcome",
+                      "Would change",
+                      "Candidate",
+                    ].map((header) => (
                       <th className={`pb-3 pr-3 font-normal ${monoEyebrowClassName}`} key={header}>
                         {header}
                       </th>
@@ -232,6 +239,17 @@ export function LearningOverviewPage() {
                         <Badge tone={row.advisoryState === "fresh" ? "success" : "neutral"}>
                           {show(row.advisoryState)}
                         </Badge>
+                      </td>
+                      {/* Run 99 R25: whether the advisory was consulted, applied or refused. */}
+                      <td className="py-2 pr-3">
+                        <Badge tone={row.applied === true ? "success" : "neutral"}>
+                          {show(row.mode)}
+                        </Badge>
+                        {row.applied === true
+                          ? " applied"
+                          : row.fallbackReason
+                            ? ` ${show(row.fallbackReason)}`
+                            : ""}
                       </td>
                       <td className="py-2 pr-3">{show(row.wouldHaveChanged)}</td>
                       <td className="py-2 pr-3">{show(row.candidateId)}</td>
@@ -606,7 +624,15 @@ export function LearningDecisionsPage() {
               <details className={`${mutedPanelClassName} p-3`} key={`${show(row.decisionId)}-${index}`}>
                 <summary className={compactTitleClassName}>
                   {show(row.decisionId)} · {show(row.routePackage)} · {show(row.advisoryState)}
-                  {row.wouldHaveChanged ? " · would have changed" : ""}
+                  {" · "}
+                  {show(row.mode)}
+                  {row.applied === true
+                    ? " · applied"
+                    : row.fallbackReason
+                      ? ` · ${show(row.fallbackReason)}`
+                      : row.wouldHaveChanged
+                        ? " · would have changed"
+                        : ""}
                 </summary>
                 <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   <Metric label="Advisory id" value={show(row.advisoryId)} />
@@ -616,6 +642,11 @@ export function LearningDecisionsPage() {
                   <Metric label="Confidence" value={show(row.confidence)} />
                   <Metric label="Observed" value={show(row.observedAtMs)} />
                   <Metric label="Selection" value={show(row.selection)} />
+                  <Metric label="Stage" value={show(row.stage)} />
+                  <Metric label="Fallback reason" value={show(row.fallbackReason)} />
+                  <Metric label="Cohort percent" value={show(row.cohortPercent)} />
+                  <Metric label="Policy version" value={show(row.policyVersion)} />
+                  <Metric label="Origin" value={show(row.origin)} />
                   <Metric label="Profiles" value={show(row.profileSnapshotIds)} />
                 </div>
               </details>

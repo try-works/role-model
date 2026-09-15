@@ -187,6 +187,8 @@ import {
   createTrackBFileGraphStore,
   recallNewestTrackBRouteAdvisory,
   recallTrackBDurableRouteAdvisory,
+  appendTrackBRouteAdvisoryObservation,
+  buildLiveRouteAdvisoryObservation,
 } from "./track-b-runtime.js";
 import { resolveAdvisoryCohortPercent } from "./route-advisory-source.js";
 
@@ -23988,9 +23990,7 @@ export async function createRuntimeBridgeBackend(
             };
           })()
         : undefined;
-      return {
-        deniedEndpointIds: mergedDenyEndpoints,
-        routed: routeRuntimeRequest({
+      const routed = routeRuntimeRequest({
           request: {
             ...plan.routingRequest,
             ...(mergedDenyEndpoints.length > 0 ? { denyEndpoints: mergedDenyEndpoints } : {}),
@@ -24023,8 +24023,71 @@ export async function createRuntimeBridgeBackend(
                 },
               }
             : {}),
-        }),
-      };
+      });
+      // Run 99 R25 / `AC-R05-03`: record what the live router did with the advisory, so the
+      // operator surface can distinguish "considered but retained" (with the router's typed
+      // reason) from "applied" instead of reporting every decision as an S1 shadow.
+      if (advisoryConsideration) {
+        try {
+          const outcome = (
+            routed.decision as unknown as {
+              readonly advisory_consideration?: {
+                readonly applied?: boolean;
+                readonly fallbackReason?: string | null;
+                readonly cohortBucket?: number | null;
+              };
+            }
+          ).advisory_consideration;
+          const observation = buildLiveRouteAdvisoryObservation({
+            decisionId: routed.decision.routing_decision_id,
+            routePackage: routed.decision.chosen_endpoint_id,
+            eligibleRoutePackages: (routed.projected.routeInput.candidates ?? []).map(
+              (candidate) => candidate.identity.endpoint_id,
+            ),
+            advisory: {
+              candidateId: advisoryConsideration.candidateId ?? null,
+              preferredEndpointId: advisoryConsideration.preferredEndpointId ?? null,
+              advisoryId: advisoryConsideration.advisoryId ?? null,
+              advisoryState: advisoryConsideration.advisoryState,
+              confidence: advisoryConsideration.confidence,
+              stage: advisoryConsideration.stage,
+              policyVersion: advisoryConsideration.policyVersion ?? null,
+              cohortPercent: advisoryConsideration.cohortPercent ?? null,
+            },
+            outcome: outcome
+              ? {
+                  applied: outcome.applied === true,
+                  fallbackReason: outcome.fallbackReason ?? null,
+                  cohortBucket:
+                    typeof outcome.cohortBucket === "number" ? outcome.cohortBucket : null,
+                }
+              : null,
+            observedAtMs: Date.now(),
+          });
+          void appendTrackBRouteAdvisoryObservation({
+            filePath: path.join(
+              options.runtimeStateRoot,
+              options.scopeId,
+              "track-b",
+              "advisory-observations.json",
+            ),
+            observation,
+          }).catch((error: unknown) => {
+            console.error(
+              `[run99] live advisory observation degraded: ${String(
+                (error as { message?: unknown })?.message ?? error,
+              ).slice(0, 200)}`,
+            );
+          });
+        } catch (error) {
+          console.error(
+            `[run99] live advisory observation skipped: ${String(
+              (error as { message?: unknown })?.message ?? error,
+            ).slice(0, 200)}`,
+          );
+        }
+      }
+      return { deniedEndpointIds: mergedDenyEndpoints, routed };
     };
     const throwUnavailableExecutionTarget = (input: {
       readonly deniedEndpointIds: readonly string[];
