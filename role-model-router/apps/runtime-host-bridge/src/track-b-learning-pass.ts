@@ -35,6 +35,13 @@ export const DEFAULT_LEARNING_EVIDENCE_FLOOR = Object.freeze({
   minDistinctCaptures: 3,
 });
 
+/**
+ * Run 99 R33 D12: the shipped default of `evidenceHalfLifeDays`. The pass takes the operator's
+ * value when the caller supplies it; otherwise the policy default applies, so the decay is never
+ * silently absent.
+ */
+export const DEFAULT_EVIDENCE_HALF_LIFE_DAYS = 14;
+
 export const DEFAULT_LEARNING_GUARDRAILS = Object.freeze({ qualityMinDelta: -0.02 });
 
 /**
@@ -84,11 +91,19 @@ export function buildTrackBLearningEvidenceSummary(input: {
   readonly routePackage: string;
   readonly evidenceMaxAgeMs: number;
   readonly nowMs: number;
+  /**
+   * Run 99 R33 (addendum 21 D12): the estimator decay half-life from the operator policy. Each
+   * comparison contributes `0.5 ** (ageDays / halfLifeDays)` to the effective count, so old
+   * evidence cannot outweigh fresh evidence of the same nominal count.
+   */
+  readonly evidenceHalfLifeDays?: number | null;
 }): {
   readonly decisiveComparisons: number;
   readonly holdoutComparisons: number;
   readonly distinctCaptures: number;
   readonly caseManifestRef: string;
+  readonly effectiveDecisiveComparisons: number;
+  readonly effectiveHoldoutComparisons: number;
   /**
    * Run 99 R33 (addendum 19 S34, addendum 20 D2/D4, addendum 21 D11): the same counts keyed by
    * the task family the comparison was produced for. The learner's floor is per
@@ -106,11 +121,22 @@ export function buildTrackBLearningEvidenceSummary(input: {
   const familyCaptures = new Map<string, Set<string>>();
   const familyDecisive = new Map<string, string[]>();
   const familyHoldout = new Map<string, number>();
+  const familyEffectiveDecisive = new Map<string, number>();
+  const familyEffectiveHoldout = new Map<string, number>();
   const excludedByReason: Record<string, number> = {};
   const exclude = (reason: string): void => {
     excludedByReason[reason] = (excludedByReason[reason] ?? 0) + 1;
   };
   let holdoutComparisons = 0;
+  let effectiveDecisiveComparisons = 0;
+  let effectiveHoldoutComparisons = 0;
+  const halfLifeDays =
+    typeof input.evidenceHalfLifeDays === "number" &&
+    Number.isFinite(input.evidenceHalfLifeDays) &&
+    input.evidenceHalfLifeDays > 0
+      ? input.evidenceHalfLifeDays
+      : DEFAULT_EVIDENCE_HALF_LIFE_DAYS;
+  const roundWeight = (value: number) => Math.round(value * 10_000) / 10_000;
   for (const group of input.groups) {
     const result = asRecord(group.result);
     const comparability = asRecord(group.comparability ?? result?.comparability);
@@ -151,6 +177,10 @@ export function buildTrackBLearningEvidenceSummary(input: {
     captures.add(captureRef);
     const caseIds = Array.isArray(holdout?.caseIds) ? holdout.caseIds : [];
     if (caseIds.length > 0) holdoutComparisons += 1;
+    // Run 99 R33 D12: the decay weight uses the same age the freshness window used.
+    const decay = ageMs === null ? 1 : Math.pow(0.5, ageMs / 86_400_000 / halfLifeDays);
+    effectiveDecisiveComparisons += decay;
+    if (caseIds.length > 0) effectiveHoldoutComparisons += decay;
     const family = boundedText(comparability.taskTypeId);
     if (family) {
       const bucket = familyDecisive.get(family) ?? [];
@@ -160,17 +190,29 @@ export function buildTrackBLearningEvidenceSummary(input: {
       familyCaptureSet.add(captureRef);
       familyCaptures.set(family, familyCaptureSet);
       if (caseIds.length > 0) familyHoldout.set(family, (familyHoldout.get(family) ?? 0) + 1);
+      familyEffectiveDecisive.set(family, (familyEffectiveDecisive.get(family) ?? 0) + decay);
+      if (caseIds.length > 0) {
+        familyEffectiveHoldout.set(family, (familyEffectiveHoldout.get(family) ?? 0) + decay);
+      }
     }
   }
   const byFamily: Record<
     string,
-    { decisiveComparisons: number; holdoutComparisons: number; distinctCaptures: number }
+    {
+      decisiveComparisons: number;
+      holdoutComparisons: number;
+      distinctCaptures: number;
+      effectiveDecisiveComparisons: number;
+      effectiveHoldoutComparisons: number;
+    }
   > = {};
   for (const [family, groupIds] of familyDecisive) {
     byFamily[family] = {
       decisiveComparisons: groupIds.length,
       holdoutComparisons: familyHoldout.get(family) ?? 0,
       distinctCaptures: familyCaptures.get(family)?.size ?? 0,
+      effectiveDecisiveComparisons: roundWeight(familyEffectiveDecisive.get(family) ?? 0),
+      effectiveHoldoutComparisons: roundWeight(familyEffectiveHoldout.get(family) ?? 0),
     };
   }
   return {
@@ -183,6 +225,8 @@ export function buildTrackBLearningEvidenceSummary(input: {
       .length}`,
     byFamily,
     excludedByReason,
+    effectiveDecisiveComparisons: roundWeight(effectiveDecisiveComparisons),
+    effectiveHoldoutComparisons: roundWeight(effectiveHoldoutComparisons),
   };
 }
 
@@ -242,6 +286,8 @@ export interface TrackBLearningPassInput {
     multiplicityAdjustment: "none" | "holm_bonferroni";
   }>;
   readonly evidenceMaxAgeMs?: number;
+  /** Run 99 R33 D12: `evidenceHalfLifeDays` from the operator policy. */
+  readonly evidenceHalfLifeDays?: number | null;
   readonly nowMs?: number;
   /** Promotion stays opt-in so a caller can record validation evidence without a pack. */
   readonly allowPromotion?: boolean;
@@ -357,6 +403,8 @@ export async function runTrackBLearningPass(
     routePackage,
     nowMs,
     evidenceMaxAgeMs: input.evidenceMaxAgeMs ?? 30 * 24 * 60 * 60 * 1_000,
+    // Run 99 R33 D12: `evidenceHalfLifeDays` from the operator policy decays the effective counts.
+    evidenceHalfLifeDays: input.evidenceHalfLifeDays ?? DEFAULT_EVIDENCE_HALF_LIFE_DAYS,
   });
   const holdout = asRecord(input.finalizedComparison.holdout);
   const holdoutCaseIds = Array.isArray(holdout?.caseIds)

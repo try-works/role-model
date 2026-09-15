@@ -6388,6 +6388,8 @@ export interface TrackBDurableRouteAdvisoryEntry {
   /** Run 99 R33: the family the activated pack was validated for, when the pack declares one. */
   readonly taskTypeId: string | null;
   readonly taxonomyVersion: string | null;
+  /** Run 99 R33 D12: the activation outlived the operator's revalidation interval. */
+  readonly revalidationDue: boolean;
   readonly cachedAtMs: number;
 }
 
@@ -6415,6 +6417,7 @@ export function rememberTrackBDurableRouteAdvisory(input: {
     reason: input.advisory.reason,
     taskTypeId: input.advisory.taskTypeId ?? null,
     taxonomyVersion: input.advisory.taxonomyVersion ?? null,
+    revalidationDue: input.advisory.revalidationDue === true,
     cachedAtMs: input.nowMs,
   };
   const key = durableAdvisoryKey(input.channel, input.scope);
@@ -6479,6 +6482,8 @@ export async function readTrackBRouteAdvisorySourceFromRuntime(input: {
   readonly authorizationEpoch?: number;
   readonly nowMs: number;
   readonly evidenceMaxAgeMs: number;
+  /** Run 99 R33 D12: `revalidationIntervalDays` as milliseconds, when the caller has it. */
+  readonly revalidationIntervalMs?: number | null;
   readonly requestId?: string;
 }): Promise<TrackBRouteAdvisorySourceResult> {
   const requestId = input.requestId ?? `route-advisory:${input.scope}:${input.nowMs}`;
@@ -6508,6 +6513,9 @@ export async function readTrackBRouteAdvisorySourceFromRuntime(input: {
     scopeId: input.scope,
     nowMs: input.nowMs,
     evidenceMaxAgeMs: input.evidenceMaxAgeMs,
+    ...(Number.isFinite(input.revalidationIntervalMs)
+      ? { revalidationIntervalMs: input.revalidationIntervalMs }
+      : {}),
   });
 }
 

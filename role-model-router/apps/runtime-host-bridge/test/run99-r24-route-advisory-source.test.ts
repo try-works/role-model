@@ -114,6 +114,9 @@ describe("run99 R24 durable route advisory source", () => {
       // router refuses once the request declares a family (`advisory_task_unscoped`).
       taskTypeId: null,
       taxonomyVersion: null,
+      // Run 99 R33 D12: the revalidation interval is only overdue when the operator policy
+      // supplies one; without it the advisory keeps the pre-R33 shape.
+      revalidationDue: false,
     });
     expect(calls.map((call) => call.capability)).toEqual([
       "knowledge:rollout-state",
@@ -147,6 +150,43 @@ describe("run99 R24 durable route advisory source", () => {
     expect(advisory.taskTypeId).toBe("coder.review");
     expect(advisory.taxonomyVersion).toBe("taxonomy-v1-alpha.1");
     expect(advisory.advisoryState).toBe("fresh");
+  });
+
+  /**
+   * Run 99 R33 (addendum 21 D12): `revalidationIntervalDays` was published and rendered but read
+   * by nothing. It is now enforced here: an activated pack whose validation evidence is older than
+   * the interval is reported stale, so the scope stops influencing until it is revalidated.
+   */
+  test("an activated pack past the revalidation interval is reported stale", async () => {
+    const NOW_MS = Date.parse("2026-09-15T00:00:00.000Z");
+    const fresh = await readTrackBRouteAdvisoryFromRollout({
+      invoke: createInvoke({
+        validations: {
+          records: [validationRecord({ createdAt: "2026-09-14T00:00:00.000Z" })],
+        },
+      }),
+      scopeId: SCOPE,
+      nowMs: NOW_MS,
+      evidenceMaxAgeMs: 30 * 24 * 60 * 60 * 1_000,
+      revalidationIntervalMs: 7 * 24 * 60 * 60 * 1_000,
+    });
+    expect(fresh.revalidationDue).toBe(false);
+    expect(fresh.advisoryState).toBe("fresh");
+
+    const overdue = await readTrackBRouteAdvisoryFromRollout({
+      invoke: createInvoke({
+        validations: {
+          records: [validationRecord({ createdAt: "2026-09-01T00:00:00.000Z" })],
+        },
+      }),
+      scopeId: SCOPE,
+      nowMs: NOW_MS,
+      evidenceMaxAgeMs: 30 * 24 * 60 * 60 * 1_000,
+      revalidationIntervalMs: 7 * 24 * 60 * 60 * 1_000,
+    });
+    expect(overdue.revalidationDue).toBe(true);
+    expect(overdue.advisoryState).toBe("stale");
+    expect(overdue.reason).toMatch(/revalidation/i);
   });
 
   test("reads the route package from the durable pack scope the Knowledge Store writes", async () => {

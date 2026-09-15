@@ -32,6 +32,11 @@ export interface TrackBRouteAdvisorySourceResult {
    */
   readonly taskTypeId: string | null;
   readonly taxonomyVersion: string | null;
+  /**
+   * Run 99 R33 (addendum 21 D12): the activation has outlived the operator's revalidation
+   * interval, so the advisory is reported stale until the scope is revalidated.
+   */
+  readonly revalidationDue: boolean;
 }
 
 export interface TrackBRouteAdvisorySourceInput {
@@ -43,6 +48,8 @@ export interface TrackBRouteAdvisorySourceInput {
   readonly scopeId: string;
   readonly nowMs: number;
   readonly evidenceMaxAgeMs: number;
+  /** `revalidationIntervalDays` from the operator policy, as milliseconds. */
+  readonly revalidationIntervalMs?: number | null;
 }
 
 /**
@@ -93,6 +100,7 @@ function unavailable(reason: string, cohortPercent = 0): TrackBRouteAdvisorySour
     reason,
     taskTypeId: null,
     taxonomyVersion: null,
+    revalidationDue: false,
   };
 }
 
@@ -212,18 +220,33 @@ export async function readTrackBRouteAdvisoryFromRollout(
       : !Number.isFinite(input.evidenceMaxAgeMs) ||
         input.evidenceMaxAgeMs <= 0 ||
         input.nowMs - createdAtMs <= input.evidenceMaxAgeMs;
+  const revalidationIntervalMs =
+    typeof input.revalidationIntervalMs === "number" &&
+    Number.isFinite(input.revalidationIntervalMs) &&
+    input.revalidationIntervalMs > 0
+      ? input.revalidationIntervalMs
+      : null;
+  const revalidationDue =
+    revalidationIntervalMs !== null &&
+    createdAtMs !== null &&
+    input.nowMs - createdAtMs > revalidationIntervalMs;
   const experienceIds = Array.isArray(pack.experienceIds) ? pack.experienceIds : [];
   const candidateId = boundedText(experienceIds[0]);
 
   return {
     preferredRoutePackage: routePackage,
-    advisoryState: withinWindow ? "fresh" : "stale",
+    advisoryState: withinWindow && !revalidationDue ? "fresh" : "stale",
     confidence,
     candidateId,
     advisoryId: activePackageId,
     cohortPercent,
-    reason: withinWindow ? null : "validation evidence beyond the evidence window",
+    reason: !withinWindow
+      ? "validation evidence beyond the evidence window"
+      : revalidationDue
+        ? "validation evidence beyond the revalidation interval"
+        : null,
     taskTypeId,
     taxonomyVersion,
+    revalidationDue,
   };
 }

@@ -2145,6 +2145,9 @@ export function startDurableRouteAdvisoryRefresh(options: {
       stateRoot: options.runtimeStateRoot,
       nowMs,
       evidenceMaxAgeMs,
+      // Run 99 R33 D12: the scheduled revalidation interval is enforced by the advisory source.
+      revalidationIntervalMs:
+        (snapshot?.effective.revalidationIntervalDays ?? 7) * 24 * 60 * 60 * 1_000,
       requestId: `route-advisory:${options.scopeId}:${nowMs}`,
     });
     rememberTrackBDurableRouteAdvisory({

@@ -25,6 +25,7 @@ function group(input: {
   caseIds?: string[];
   inputRef?: string;
   taskTypeId?: string;
+  observedAt?: string;
 }) {
   return {
     groupId: input.groupId,
@@ -38,6 +39,7 @@ function group(input: {
       taskRef: `artifact:${"b".repeat(64)}`,
       sourceEvidenceRef: `artifact:${"c".repeat(64)}`,
       ...(input.taskTypeId ? { taskTypeId: input.taskTypeId } : {}),
+      ...(input.observedAt ? { observedAt: input.observedAt } : {}),
     },
     holdout: {
       holdoutId: `sha256:${"d".repeat(64)}`,
@@ -230,16 +232,57 @@ test("run99 R33 the evidence summary is keyed by task family and reports exclusi
     decisiveComparisons: 3,
     holdoutComparisons: 3,
     distinctCaptures: 3,
+    // Run 99 R33 D12: without a recorded observation time the decay weight is 1.
+    effectiveDecisiveComparisons: 3,
+    effectiveHoldoutComparisons: 3,
   });
   expect(summary.byFamily["planner.requirements"]).toEqual({
     decisiveComparisons: 1,
     holdoutComparisons: 1,
     distinctCaptures: 1,
+    effectiveDecisiveComparisons: 1,
+    effectiveHoldoutComparisons: 1,
   });
   expect(summary.excludedByReason).toEqual({
     non_decisive_outcome: 1,
     package_not_involved: 1,
   });
+});
+
+/**
+ * Run 99 R33 (addendum 21 D12): `evidenceHalfLifeDays` was published and rendered but read by
+ * nothing. The summary now decays each comparison by its age, so three month-old comparisons are
+ * not worth three fresh ones — and the floor is judged on the decayed weight.
+ */
+test("run99 R33 the evidence summary decays old comparisons by the half-life", () => {
+  const nowMs = Date.parse("2026-09-14T10:00:00Z");
+  const fresh = group({
+    groupId: "halflife:fresh",
+    outcome: "candidate",
+    inputRef: `artifact:${"c".repeat(64)}`,
+    taskTypeId: "coder.review",
+    observedAt: new Date(nowMs).toISOString(),
+  });
+  const stale = group({
+    groupId: "halflife:stale",
+    outcome: "candidate",
+    inputRef: `artifact:${"d".repeat(64)}`,
+    taskTypeId: "coder.review",
+    observedAt: new Date(nowMs - 28 * 24 * 60 * 60 * 1_000).toISOString(),
+  });
+
+  const summary = buildTrackBLearningEvidenceSummary({
+    groups: [fresh, stale],
+    routePackage,
+    nowMs,
+    evidenceMaxAgeMs: 30 * 24 * 60 * 60 * 1_000,
+    evidenceHalfLifeDays: 14,
+  });
+
+  expect(summary.decisiveComparisons).toBe(2);
+  // 28 days is two 14-day half-lives, so the stale comparison counts as a quarter.
+  expect(summary.byFamily["coder.review"].effectiveDecisiveComparisons).toBeCloseTo(1.25, 3);
+  expect(summary.effectiveDecisiveComparisons).toBeCloseTo(1.25, 3);
 });
 
 test("run98 R3 a validated candidate is promoted and both receipts are recorded", async () => {

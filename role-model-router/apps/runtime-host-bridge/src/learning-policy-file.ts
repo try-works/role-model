@@ -72,6 +72,11 @@ export interface LearningPolicySnapshot {
      * Distinct from `evidenceMaxAgeDays`, which bounds the evidence behind the advisory.
      */
     readonly advisorySourceMaxAgeMs: number;
+    /**
+     * Run 99 R33 (addendum 21 D12): the scheduled revalidation interval the advisory source
+     * enforces — evidence older than this is reported stale until the scope is revalidated.
+     */
+    readonly revalidationIntervalDays: number;
   };
 }
 
@@ -99,6 +104,7 @@ const DEFAULT_EFFECTIVE: LearningPolicySnapshot["effective"] = Object.freeze({
   multiplicityAdjustment: "holm_bonferroni",
   promotionSelectionFamilySize: 1,
   advisorySourceMaxAgeMs: 900_000,
+  revalidationIntervalDays: 7,
 });
 
 const asRecord = (value: unknown): Record<string, unknown> =>
@@ -263,6 +269,10 @@ export function readLearningPolicyFile(input: {
         60_000,
         finiteOr(merged.advisorySourceMaxAgeMs, DEFAULT_EFFECTIVE.advisorySourceMaxAgeMs),
       ),
+    ),
+    revalidationIntervalDays: Math.min(
+      90,
+      Math.max(1, finiteOr(merged.revalidationIntervalDays, DEFAULT_EFFECTIVE.revalidationIntervalDays)),
     ),
     judgeMode: merged.judgeMode === "identity_blind" ? "identity_blind" : "identified",
     judgeOrderPolicy: merged.judgeOrderPolicy === "dual_order" ? "dual_order" : "source_first",
