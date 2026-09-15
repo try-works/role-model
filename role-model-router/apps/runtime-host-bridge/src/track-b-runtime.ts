@@ -7723,6 +7723,17 @@ export async function runTrackBShadowPipeline(
     status: durableComparison.status,
     outcome: durableComparison.outcome,
     holdout: durableComparison.holdout,
+    // Run 99 R33 S34 live finding (stage v136): the learner must know *which* dimension decided the
+    // comparison. Dropping the declared primary metric left it with the cross-dimension mean, which
+    // ties at 0.5/0.5 on live traffic (the judge prefers the counterfactual, the deterministic
+    // semantic scorer prefers the source), so every `knowledge:eval-consumer` degraded with
+    // "group-relative semantic advantage could not be derived from the finalized comparison".
+    // The primary metric, every scorer's verdict and the per-dimension member scores travel with
+    // the comparison; `members` already carries the durable `dimensionScores`.
+    ...(durableComparison.primaryMetric ? { primaryMetric: durableComparison.primaryMetric } : {}),
+    ...(Array.isArray(durableComparison.scorerOutcomes)
+      ? { scorerOutcomes: durableComparison.scorerOutcomes }
+      : {}),
     members: durableComparison.members,
   };
   const evaluationAuthoritySecret = randomBytes(32).toString("hex");

@@ -469,6 +469,122 @@ test("F153 GREEN: a truthful ordered two-event trajectory reaches the real shado
   expect(contributionCalls).toBe(1);
 });
 
+/**
+ * Run 99 R33 S34 live finding (stage v136): the host rebuilt `finalizedComparison` as
+ * `{groupId, comparisonId, status, outcome, holdout, members}`, dropping the durable comparison's
+ * `primaryMetric`. The learner therefore could not tell which dimension decided the comparison, fell
+ * back to the cross-dimension mean (which ties at 0.5/0.5 on live traffic) and degraded every
+ * `knowledge:eval-consumer` call with "group-relative semantic advantage could not be derived".
+ *
+ * The deciding metadata has to travel with the comparison: the declared primary metric, every
+ * scorer's verdict, and the per-dimension member scores.
+ */
+test("run99 R33 the learner receives the primary metric and the per-dimension scores", async () => {
+  const root = await mkdtemp(path.join(testRoot, "run99-r33-primary-metric-"));
+  roots.push(root);
+  const filePath = path.join(root, "post-observation.sqlite");
+  const outbox = createTrackBPostObservationOutbox({ filePath, maxItems: 4 });
+  const queued = observation([
+    {
+      id: "trajectory:r33:start",
+      type: "provider_error",
+      timestampMs: 96_000,
+      requestId: "request:f153-outbox",
+    },
+    {
+      id: "trajectory:r33:correction",
+      type: "user_correction",
+      timestampMs: 96_100,
+      requestId: "request:f153-outbox",
+    },
+  ]);
+  await outbox.enqueue(queued);
+  const calls: Array<{ id: string; capability: string; envelope: Record<string, unknown> }> = [];
+  const scripted = createGenericRuntime(calls);
+  const primaryMetricKey =
+    "role_model_pairwise_judge.battle@2+eb5b78055424:sha256:judge:task_specific_quality";
+  const semanticMetricKey = "run96-semantic-criteria@2:sha256:semantic:correctness";
+  const runtime: TrackBShadowPipelineRuntime = {
+    async invoke(id, envelope) {
+      const result = await scripted.invoke(id, envelope);
+      const capability = String(envelope.capability ?? "");
+      if (id === "evaluation-core" && capability === "evaluation:read-comparison-group") {
+        // The live shape: the primary metric decided, the scorers disagree, and both members mean
+        // out to exactly 0.5.
+        return {
+          ...(result as Record<string, unknown>),
+          primaryMetric: { id: "role_model_pairwise_judge.battle", applied: true },
+          scorerOutcomes: [
+            {
+              scorerKey: primaryMetricKey,
+              outcome: "candidate",
+              winnerTrialId: "trial:f153:2",
+              winnerRole: "counterfactual",
+            },
+            {
+              scorerKey: semanticMetricKey,
+              outcome: "source",
+              winnerTrialId: "trial:f153:1",
+              winnerRole: "source",
+            },
+          ],
+          members: [
+            {
+              trialId: "trial:f153:1",
+              score: 0.5,
+              confidence: 1,
+              disposition: "negative",
+              scoreId: "score:f153:1",
+              dimensionScores: [
+                { scorerKey: primaryMetricKey, score: 0 },
+                { scorerKey: semanticMetricKey, score: 1 },
+              ],
+            },
+            {
+              trialId: "trial:f153:2",
+              score: 0.5,
+              confidence: 1,
+              disposition: "positive",
+              scoreId: "score:f153:2",
+              dimensionScores: [
+                { scorerKey: primaryMetricKey, score: 1 },
+                { scorerKey: semanticMetricKey, score: 0 },
+              ],
+            },
+          ],
+        };
+      }
+      return result;
+    },
+  } as TrackBShadowPipelineRuntime;
+  await outbox.drain(async (item) =>
+    runTrackBPostObservationWithContribution(
+      runtime,
+      item,
+      { scope: "tenant:f153", channel: "development", authorizationEpoch: 96 },
+      async () => ({ status: "uploaded" }),
+    ),
+  );
+
+  const knowledgeCall = calls.find(
+    ({ id, capability }) => id === "knowledge-worker" && capability === "knowledge:eval-consumer",
+  );
+  expect(knowledgeCall).toBeDefined();
+  const value = (knowledgeCall?.envelope.value ?? {}) as Record<string, unknown>;
+  const evaluation = (value.evaluation ?? {}) as Record<string, unknown>;
+  const comparison = (evaluation.finalizedComparison ?? {}) as Record<string, unknown>;
+  expect(comparison.primaryMetric).toEqual({
+    id: "role_model_pairwise_judge.battle",
+    applied: true,
+  });
+  expect(Array.isArray(comparison.scorerOutcomes)).toBe(true);
+  const members = (comparison.members ?? []) as Array<Record<string, unknown>>;
+  expect(members).toHaveLength(2);
+  for (const member of members) {
+    expect(Array.isArray(member.dimensionScores)).toBe(true);
+  }
+});
+
 test("Run 96 F174: a live-shaped observation keeps its authoritative response status through the durable outbox", async () => {
   const root = await mkdtemp(path.join(testRoot, "run96-f174-outbox-status-"));
   roots.push(root);
