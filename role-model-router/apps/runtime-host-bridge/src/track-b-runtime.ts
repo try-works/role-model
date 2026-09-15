@@ -5524,7 +5524,9 @@ export async function readTrackBAdvisoryMeasurement(input: {
     rows.push({
       decisionId: groupId,
       cohort: decisive && outcome === "source" ? "baseline" : "advisory",
-      holdoutTaskId: String(holdout.holdoutId ?? comparability.taskRef ?? groupId),
+      // Pair on the declared task, not on the per-comparison holdout id: each comparison is its
+      // own holdout, so holdout-id pairing always yields zero paired tasks (observed live).
+      holdoutTaskId: String(comparability.taskRef ?? holdout.holdoutId ?? groupId),
       quality,
       costUsd: 0.0001,
       latencyMs: 0,
@@ -5548,9 +5550,24 @@ export async function readTrackBAdvisoryMeasurement(input: {
     scope: input.scopeId,
     channel: input.channel,
   });
-  return report && typeof report === "object" && !Array.isArray(report)
-    ? (report as Record<string, unknown>)
-    : { schemaVersion: "role-model.advisory-measurement.v1", status: "no-measurement", rows: rows.length, reason: "measurement produced no report" };
+  if (!report || typeof report !== "object" || Array.isArray(report)) {
+    return {
+      schemaVersion: "role-model.advisory-measurement.v1",
+      status: "no-measurement",
+      rows: rows.length,
+      reason: "measurement produced no report",
+    };
+  }
+  // The extension requires finite cost/latency inputs, but this composition does not measure them
+  // per arm; say so instead of letting the placeholder inputs read as measured zeros.
+  return {
+    ...(report as Record<string, unknown>),
+    measurementInputs: {
+      rows: rows.length,
+      costLatencyAvailable: false,
+      pairedTaskKey: "taskRef",
+    },
+  };
 }
 
 async function resolveTrackBReferenceAttestation(

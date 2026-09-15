@@ -649,6 +649,9 @@ export function LearningEvidencePage() {
   const deltas = asRecord(value.deltas);
   const confidence = asRecord(value.confidence);
   const guardrails = Array.isArray(value.guardrails) ? (value.guardrails as readonly Record<string, unknown>[]) : [];
+  // Run 99: cost and latency are inputs this composition does not measure per arm, so the page says
+  // so rather than presenting the placeholder inputs as measured zeros.
+  const costLatencyMeasured = asRecord(raw.measurementInputs).costLatencyAvailable !== false;
   return (
     <SectionCard
       title="Evidence"
@@ -676,8 +679,14 @@ export function LearningEvidencePage() {
               <Metric label="Advisory samples" value={show(asRecord(cohorts.advisory).samples)} />
               <Metric label="Applied share" value={show(asRecord(cohorts.advisory).appliedShare)} />
               <Metric label="Quality delta" value={show(deltas.quality)} />
-              <Metric label="Cost multiplier" value={show(deltas.costMultiplier)} />
-              <Metric label="Latency p95 delta (ms)" value={show(deltas.latencyP95DeltaMs)} />
+              <Metric
+                label="Cost multiplier"
+                value={costLatencyMeasured ? show(deltas.costMultiplier) : "not measured here"}
+              />
+              <Metric
+                label="Latency p95 delta (ms)"
+                value={costLatencyMeasured ? show(deltas.latencyP95DeltaMs) : "not measured here"}
+              />
               <Metric label="Error-rate delta (pp)" value={show(deltas.errorRateDeltaPp)} />
               <Metric
                 label="Quality CI"
