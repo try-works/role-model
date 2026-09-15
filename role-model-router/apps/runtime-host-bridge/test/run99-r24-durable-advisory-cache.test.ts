@@ -129,4 +129,39 @@ describe("run99 R24 durable route advisory cache", () => {
       cohortPercent: 0,
     });
   });
+
+  /**
+   * Run 99 R33 (S37 live finding): a durable entry scoped to another task family must still reach
+   * the router, so the refusal is reported as `advisory_task_mismatch`. Withholding it in the cache
+   * made the host fall through to the transient pipeline advisory, which the eligibility gate
+   * refuses first — hiding the family verdict from the operator.
+   */
+  test("a family-mismatched durable advisory is returned so the router can name the refusal", () => {
+    const channel = "stage";
+    const scope = "run99-r33-family-mismatch-scope";
+    rememberTrackBDurableRouteAdvisory({
+      channel,
+      scope,
+      advisory: {
+        preferredRoutePackage: "moonshot.personal.kimi-code.global.kimi-k3",
+        advisoryState: "fresh",
+        confidence: 0.82,
+        candidateId: "shadow-r33-family",
+        advisoryId: "pack-r33-family-proof",
+        cohortPercent: 100,
+        reason: null,
+        taskTypeId: "coder.review",
+        taxonomyVersion: "1.0.0-alpha.1",
+      },
+      nowMs: 1_000,
+    });
+
+    const other = recallTrackBDurableRouteAdvisory({
+      channel,
+      scope,
+      taskTypeId: "coder.test.write",
+    });
+    expect(other?.taskTypeId).toBe("coder.review");
+    expect(other?.advisoryState).toBe("fresh");
+  });
 });

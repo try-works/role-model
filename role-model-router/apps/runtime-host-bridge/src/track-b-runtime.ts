@@ -6461,13 +6461,13 @@ export function recallTrackBDurableRouteAdvisory(input: {
       ? { ...entry, advisoryState: "stale" as const, reason: "advisory source beyond max age" }
       : entry;
   const resolved = aged;
-  const requestedFamily =
-    typeof input.taskTypeId === "string" && input.taskTypeId.trim()
-      ? input.taskTypeId.trim()
-      : null;
-  if (!requestedFamily) return resolved;
-  if (resolved.taskTypeId === null) return resolved;
-  return resolved.taskTypeId === requestedFamily ? resolved : null;
+  // Run 99 R33 (S37 live finding): a family-mismatched entry must reach the router so it answers
+  // `advisory_task_mismatch` — the operator has to see *why* the learned preference was refused.
+  // Withholding it here made the host fall through to the transient pipeline advisory, which is
+  // refused earlier by the eligibility gate and reported as `advisory_candidate_not_eligible`,
+  // hiding the family verdict. The router still cannot apply a mismatched advisory, so the safety
+  // property is unchanged; only the reported reason becomes truthful.
+  return resolved;
 }
 
 /**
