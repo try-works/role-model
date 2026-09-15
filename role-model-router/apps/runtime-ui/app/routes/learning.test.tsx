@@ -81,4 +81,19 @@ describe("LearningRoute", () => {
     expect(markup).toContain("Learning overview");
     expect(markup).toContain("Operator token");
   });
+
+  /**
+   * Run 99 R33 (addendum 19 S33/S35): the decision surface must show which task family the
+   * request belonged to and which family the advisory was scoped to, so a family-scoped refusal is
+   * readable. Absent data renders an explicit "not reported" rather than a fabricated value.
+   */
+  test("the decisions and overview surfaces render the request and advisory task families", () => {
+    const routeSource = readFileSync(new URL("./learning.tsx", import.meta.url), "utf8");
+    expect(routeSource).toContain('label="Task family (request)"');
+    expect(routeSource).toContain('label="Advisory family"');
+    expect(routeSource).toContain('"Request family"');
+    // Absent families are reported honestly on both surfaces.
+    expect(routeSource).toContain('? show(row.requestTaskTypeId) : "not reported"');
+    expect(routeSource).toContain('? show(row.taskTypeId) : "not reported"');
+  });
 });
