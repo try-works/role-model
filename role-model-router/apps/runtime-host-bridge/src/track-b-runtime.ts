@@ -6518,6 +6518,31 @@ export async function appendTrackBRouteAdvisoryObservation(input: {
   readonly observation: Readonly<Record<string, unknown>>;
   readonly maxEntries?: number;
 }) {
+  // Run 99 R25: the live routing path and the shadow pipeline append to this ledger from the
+  // same process, and the pid-suffixed temp file made one rename consume the other's temp
+  // (`ENOENT ... advisory-observations.json.<pid>.tmp`). Serialize per file so a
+  // read-modify-write cannot lose entries, and keep a unique temp name as defence in depth.
+  const previous = trackBAdvisoryLedgerLocks.get(input.filePath) ?? Promise.resolve();
+  const append = previous
+    .catch(() => undefined)
+    .then(() => appendTrackBRouteAdvisoryObservationExclusive(input));
+  trackBAdvisoryLedgerLocks.set(
+    input.filePath,
+    append.then(
+      () => undefined,
+      () => undefined,
+    ),
+  );
+  return append;
+}
+
+const trackBAdvisoryLedgerLocks = new Map<string, Promise<void>>();
+
+async function appendTrackBRouteAdvisoryObservationExclusive(input: {
+  readonly filePath: string;
+  readonly observation: Readonly<Record<string, unknown>>;
+  readonly maxEntries?: number;
+}) {
   const maxEntries =
     Number.isSafeInteger(input.maxEntries) && Number(input.maxEntries) > 0
       ? Number(input.maxEntries)
@@ -6582,7 +6607,7 @@ export async function appendTrackBRouteAdvisoryObservation(input: {
     entries: [...ledger.entries, observation].slice(-maxEntries),
   };
   await mkdir(path.dirname(input.filePath), { recursive: true });
-  const temporary = `${input.filePath}.${process.pid}.tmp`;
+  const temporary = `${input.filePath}.${process.pid}.${randomBytes(6).toString("hex")}.tmp`;
   await writeFile(temporary, `${JSON.stringify(next, null, 2)}\n`, "utf8");
   await rename(temporary, input.filePath);
   return next;
