@@ -59,14 +59,15 @@ const routes = [
   ["/app/learning/history", ["Learning history", "Activity by bucket"]],
 ];
 
+// Page-level failure phrasing only: the word "unavailable" is legitimate data on several pages
+// (advisory state counts, capability notes), so the markers stay specific.
 const ERROR_MARKERS = [
   "No value is fabricated",
-  "unavailable",
+  "surface unavailable:",
   "failed with",
-  "Cannot read",
+  "Cannot read properties",
   "Something went wrong",
-  "Error:",
-  "not found",
+  "operator_authentication_required",
 ];
 
 mkdirSync(outDir, { recursive: true });
