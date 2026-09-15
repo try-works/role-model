@@ -5157,6 +5157,13 @@ export interface TrackBShadowPipelineInput {
   readonly routePackage: string;
   readonly sourceDecisionId: string;
   readonly sourceGraphRef: string;
+  /**
+   * Run 99 R33 (addendum 19 S33/S34): the task family the captured request belonged to, carried
+   * from the routing decision so the comparison, the learned candidate and the promoted pack are
+   * all scoped to it. Optional: a caller that omits it keeps the pre-R33 behaviour.
+   */
+  readonly taskTypeId?: string | null;
+  readonly taxonomyVersion?: string | null;
   readonly prefix: readonly unknown[];
   /**
    * Authoritative durable reference for the source prefix the caller observed.
@@ -7191,6 +7198,14 @@ export async function runTrackBShadowPipeline(
       : null;
   const comparability = {
     taskRef: evaluationReferences.taskRef,
+    // Run 99 R33: the family travels with the group (evaluation-core persists it on the
+    // comparability record), so per-family evidence counts are derivable from the readback.
+    ...(typeof input.taskTypeId === "string" && input.taskTypeId.trim()
+      ? { taskTypeId: input.taskTypeId.trim() }
+      : {}),
+    ...(typeof input.taxonomyVersion === "string" && input.taxonomyVersion.trim()
+      ? { taxonomyVersion: input.taxonomyVersion.trim() }
+      : {}),
     inputRef: evaluationReferences.inputRef,
     forkRef: evaluationReferences.forkRef,
     policyId: "run96-routing-shadow",
@@ -8267,6 +8282,14 @@ export async function runTrackBShadowPipeline(
             evaluation: knowledgeEvaluation,
             signals: signalsForKnowledge,
             profile: profileForKnowledge,
+            // Run 99 R33: the derived candidate records the family it was learned for, so the
+            // promoted pack can carry it to the durable advisory.
+            ...(typeof input.taskTypeId === "string" && input.taskTypeId.trim()
+              ? { taskTypeId: input.taskTypeId.trim() }
+              : {}),
+            ...(typeof input.taxonomyVersion === "string" && input.taxonomyVersion.trim()
+              ? { taxonomyVersion: input.taxonomyVersion.trim() }
+              : {}),
             ...(learningCapability.learningCapable &&
             learningCapability.finalizedEvaluation &&
             learningCapability.learningEvidence
@@ -8470,6 +8493,12 @@ export async function runTrackBShadowPipeline(
           channel: input.channel,
           scope: input.scope,
           authorizationEpoch: input.authorizationEpoch,
+          ...(typeof input.taskTypeId === "string" && input.taskTypeId.trim()
+            ? { taskTypeId: input.taskTypeId.trim() }
+            : {}),
+          ...(typeof input.taxonomyVersion === "string" && input.taxonomyVersion.trim()
+            ? { taxonomyVersion: input.taxonomyVersion.trim() }
+            : {}),
           candidateId,
           routePackage: learningRoutePackage,
           finalizedComparison,
@@ -9319,6 +9348,14 @@ export async function runTrackBPostObservation(
           channel: input.channel,
           scope: input.scope,
           authorizationEpoch: input.authorizationEpoch,
+          // Run 99 R33: the capture carries the request's task family (addendum 19 S33), so the
+          // comparison, the learned candidate and the promoted pack are all family-scoped.
+          ...(typeof observation.taskTypeId === "string" && observation.taskTypeId.trim()
+            ? { taskTypeId: observation.taskTypeId.trim() }
+            : {}),
+          ...(typeof observation.taxonomyVersion === "string" && observation.taxonomyVersion.trim()
+            ? { taxonomyVersion: observation.taxonomyVersion.trim() }
+            : {}),
           productionState,
           routePackage,
           sourceDecisionId,

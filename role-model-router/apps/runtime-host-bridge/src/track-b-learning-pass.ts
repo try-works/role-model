@@ -89,26 +89,59 @@ export function buildTrackBLearningEvidenceSummary(input: {
   readonly holdoutComparisons: number;
   readonly distinctCaptures: number;
   readonly caseManifestRef: string;
+  /**
+   * Run 99 R33 (addendum 19 S34, addendum 20 D2/D4, addendum 21 D11): the same counts keyed by
+   * the task family the comparison was produced for. The learner's floor is per
+   * (route package x task family), so another family's evidence can never clear this one's.
+   */
+  readonly byFamily: Record<
+    string,
+    { decisiveComparisons: number; holdoutComparisons: number; distinctCaptures: number }
+  >;
+  /** Run 99 R33 / addendum 21 D10: why the other finalized groups were not counted. */
+  readonly excludedByReason: Record<string, number>;
 } {
   const decisiveGroupIds: string[] = [];
   const captures = new Set<string>();
+  const familyCaptures = new Map<string, Set<string>>();
+  const familyDecisive = new Map<string, string[]>();
+  const familyHoldout = new Map<string, number>();
+  const excludedByReason: Record<string, number> = {};
+  const exclude = (reason: string): void => {
+    excludedByReason[reason] = (excludedByReason[reason] ?? 0) + 1;
+  };
   let holdoutComparisons = 0;
   for (const group of input.groups) {
     const result = asRecord(group.result);
     const comparability = asRecord(group.comparability ?? result?.comparability);
     const holdout = asRecord(group.holdout ?? result?.holdout);
     const groupId = boundedText(group.groupId ?? result?.groupId);
-    if (!result || !comparability || !groupId) continue;
-    if (result.status !== "finalized") continue;
-    if (!DECISIVE_OUTCOMES.has(String(result.outcome ?? ""))) continue;
+    if (!result || !comparability || !groupId) {
+      exclude("missing_comparability");
+      continue;
+    }
+    if (result.status !== "finalized") {
+      exclude("not_finalized");
+      continue;
+    }
+    if (!DECISIVE_OUTCOMES.has(String(result.outcome ?? ""))) {
+      exclude("non_decisive_outcome");
+      continue;
+    }
     // The candidate's route package must be the counterfactual or the source of the
     // comparison: evidence about a different package can never validate this candidate.
     const involved =
       String(comparability.counterfactualCandidateRef ?? "") === input.routePackage ||
       String(comparability.sourceCandidateRef ?? "") === input.routePackage;
-    if (!involved) continue;
+    if (!involved) {
+      exclude("package_not_involved");
+      continue;
+    }
     const ageMs = evidenceAgeMs(comparability, input.nowMs);
-    if (ageMs !== null && ageMs > input.evidenceMaxAgeMs) continue;
+    if (ageMs !== null && ageMs > input.evidenceMaxAgeMs) {
+      exclude("evidence_expired");
+      continue;
+    }
     decisiveGroupIds.push(groupId);
     const captureRef =
       boundedText(comparability.inputRef) ??
@@ -118,6 +151,27 @@ export function buildTrackBLearningEvidenceSummary(input: {
     captures.add(captureRef);
     const caseIds = Array.isArray(holdout?.caseIds) ? holdout.caseIds : [];
     if (caseIds.length > 0) holdoutComparisons += 1;
+    const family = boundedText(comparability.taskTypeId);
+    if (family) {
+      const bucket = familyDecisive.get(family) ?? [];
+      bucket.push(groupId);
+      familyDecisive.set(family, bucket);
+      const familyCaptureSet = familyCaptures.get(family) ?? new Set<string>();
+      familyCaptureSet.add(captureRef);
+      familyCaptures.set(family, familyCaptureSet);
+      if (caseIds.length > 0) familyHoldout.set(family, (familyHoldout.get(family) ?? 0) + 1);
+    }
+  }
+  const byFamily: Record<
+    string,
+    { decisiveComparisons: number; holdoutComparisons: number; distinctCaptures: number }
+  > = {};
+  for (const [family, groupIds] of familyDecisive) {
+    byFamily[family] = {
+      decisiveComparisons: groupIds.length,
+      holdoutComparisons: familyHoldout.get(family) ?? 0,
+      distinctCaptures: familyCaptures.get(family)?.size ?? 0,
+    };
   }
   return {
     decisiveComparisons: decisiveGroupIds.length,
@@ -127,6 +181,8 @@ export function buildTrackBLearningEvidenceSummary(input: {
       .sort()
       .join(",")
       .length}`,
+    byFamily,
+    excludedByReason,
   };
 }
 
@@ -150,6 +206,9 @@ export interface TrackBLearningPassInput {
   readonly channel: string;
   readonly scope: string;
   readonly authorizationEpoch: number;
+  /** Run 99 R33: the task family of the capture this candidate was derived from. */
+  readonly taskTypeId?: string | null;
+  readonly taxonomyVersion?: string | null;
   readonly candidateId: string;
   readonly routePackage: string;
   /** The finalized comparison the candidate was derived from, as Evaluation Core returned it. */
@@ -309,7 +368,15 @@ export async function runTrackBLearningPass(
       "knowledge-worker",
       workerEnvelope("knowledge:validate-candidate", {
         candidateId,
-        scope: { routePackage, channel: input.channel, scopeId: input.scope },
+        scope: {
+          routePackage,
+          channel: input.channel,
+          scopeId: input.scope,
+          ...(boundedText(input.taskTypeId) ? { taskTypeId: boundedText(input.taskTypeId) } : {}),
+          ...(boundedText(input.taxonomyVersion)
+            ? { taxonomyVersion: boundedText(input.taxonomyVersion) }
+            : {}),
+        },
         identity: {
           scorerSetVersion,
           judgeEndpointId: input.identity.judgeEndpointId ?? null,

@@ -24,6 +24,7 @@ function group(input: {
   sourceRef?: string;
   caseIds?: string[];
   inputRef?: string;
+  taskTypeId?: string;
 }) {
   return {
     groupId: input.groupId,
@@ -36,6 +37,7 @@ function group(input: {
       scorerSetVersion: "run96-routing-shadow-v3",
       taskRef: `artifact:${"b".repeat(64)}`,
       sourceEvidenceRef: `artifact:${"c".repeat(64)}`,
+      ...(input.taskTypeId ? { taskTypeId: input.taskTypeId } : {}),
     },
     holdout: {
       holdoutId: `sha256:${"d".repeat(64)}`,
@@ -51,6 +53,7 @@ function group(input: {
         counterfactualCandidateRef: input.counterfactualRef ?? routePackage,
         sourceCandidateRef: input.sourceRef ?? "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
         inputRef: input.inputRef ?? `artifact:${"a".repeat(64)}`,
+        ...(input.taskTypeId ? { taskTypeId: input.taskTypeId } : {}),
       },
       holdout: { caseIds: input.caseIds ?? ["case:1"] },
       members: [
@@ -166,6 +169,77 @@ test("run98 R3 the evidence summary counts only decisive, in-package, in-window 
   expect(summary.holdoutComparisons).toBe(3);
   expect(summary.distinctCaptures).toBe(3);
   expect(summary.caseManifestRef).toContain("manifest:learning-pass:");
+});
+
+/**
+ * Run 99 R33 (addendum 19 S34, addendum 20 D2/D4, addendum 21 D10/D11): the learner's evidence
+ * counts are keyed by the task family the comparison was produced for, and the groups that were
+ * not counted say why — another family's evidence can never clear this family's floor.
+ */
+test("run99 R33 the evidence summary is keyed by task family and reports exclusions", () => {
+  const familyGroups = [
+    group({
+      groupId: "family:review-a",
+      outcome: "candidate",
+      inputRef: `artifact:${"6".repeat(64)}`,
+      taskTypeId: "coder.review",
+    }),
+    group({
+      groupId: "family:review-b",
+      outcome: "source",
+      inputRef: `artifact:${"7".repeat(64)}`,
+      taskTypeId: "coder.review",
+    }),
+    group({
+      groupId: "family:review-c",
+      outcome: "candidate",
+      inputRef: `artifact:${"8".repeat(64)}`,
+      taskTypeId: "coder.review",
+    }),
+    group({
+      groupId: "family:planner-a",
+      outcome: "candidate",
+      inputRef: `artifact:${"9".repeat(64)}`,
+      taskTypeId: "planner.requirements",
+    }),
+    group({
+      groupId: "family:tie",
+      outcome: "tie",
+      inputRef: `artifact:${"a".repeat(64)}`,
+      taskTypeId: "coder.review",
+    }),
+    group({
+      groupId: "family:other-package",
+      outcome: "candidate",
+      counterfactualRef: "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-high",
+      sourceRef: "moonshot.personal.kimi-code.global.kimi-k3",
+      inputRef: `artifact:${"b".repeat(64)}`,
+      taskTypeId: "coder.review",
+    }),
+  ];
+
+  const summary = buildTrackBLearningEvidenceSummary({
+    groups: familyGroups,
+    routePackage,
+    nowMs: Date.parse("2026-09-14T10:00:00Z"),
+    evidenceMaxAgeMs: 30 * 24 * 60 * 60 * 1_000,
+  });
+
+  expect(summary.decisiveComparisons).toBe(4);
+  expect(summary.byFamily["coder.review"]).toEqual({
+    decisiveComparisons: 3,
+    holdoutComparisons: 3,
+    distinctCaptures: 3,
+  });
+  expect(summary.byFamily["planner.requirements"]).toEqual({
+    decisiveComparisons: 1,
+    holdoutComparisons: 1,
+    distinctCaptures: 1,
+  });
+  expect(summary.excludedByReason).toEqual({
+    non_decisive_outcome: 1,
+    package_not_involved: 1,
+  });
 });
 
 test("run98 R3 a validated candidate is promoted and both receipts are recorded", async () => {

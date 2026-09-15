@@ -25761,6 +25761,12 @@ export async function createRuntimeBridgeBackend(
           baseBundle as unknown as Readonly<Record<string, unknown>>,
         ),
         correlationId,
+        // Run 99 R33 (addendum 19 S33): the capture records the task family the request was
+        // routed for, so replay, evaluation, learning and the advisory can all be scoped to it.
+        ...(plan.routingRequest.taskType ? { taskTypeId: plan.routingRequest.taskType } : {}),
+        ...(taxonomyManifest.taxonomyVersion
+          ? { taxonomyVersion: taxonomyManifest.taxonomyVersion }
+          : {}),
         ...(run88Correlation ? { run88Correlation } : {}),
       });
       let artifactRef:
