@@ -118,6 +118,34 @@ describe("run99 R24 durable route advisory source", () => {
     ]);
   });
 
+  test("reads the route package from the durable pack scope the Knowledge Store writes", async () => {
+    // Observed on the stage root (pack-4f96d9b1…): the stored pack carries
+    // `scope.endpointId`, not `scope.routePackage`, so the resolver has to accept the shape the
+    // store actually writes or an activated pack publishes an empty advisory.
+    const advisory = await readTrackBRouteAdvisoryFromRollout({
+      invoke: createInvoke({
+        packs: {
+          records: [
+            packRecord({
+              scope: {
+                endpointId: "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+              },
+            }),
+          ],
+        },
+      }),
+      scopeId: SCOPE,
+      nowMs: NOW,
+      evidenceMaxAgeMs: 30 * 24 * 60 * 60 * 1_000,
+    });
+    expect(advisory).toMatchObject({
+      preferredRoutePackage:
+        "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+      advisoryState: "fresh",
+      confidence: 0.82,
+    });
+  });
+
   test("stays unavailable without an active pack or with the kill switch engaged", async () => {
     const inactive = await readTrackBRouteAdvisoryFromRollout({
       invoke: createInvoke({ rollout: rolloutState({ activePackageId: null, cohortPercent: 0 }) }),

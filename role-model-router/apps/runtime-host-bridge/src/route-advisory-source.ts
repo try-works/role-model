@@ -167,8 +167,12 @@ export async function readTrackBRouteAdvisoryFromRollout(
   const packEntry = findRecord(packAnswer, activePackageId);
   const pack = asRecord(packEntry?.record);
   if (!pack) return unavailable("active pack record unavailable", cohortPercent);
+  // The Knowledge Store persists the pack scope as an endpoint id (observed live on
+  // pack-4f96d9b1…), while an older or auxiliary shape may carry route-package attribution.
+  const packScope = asRecord(pack.scope);
   const routePackage =
-    boundedText(asRecord(pack.scope)?.routePackage) ??
+    boundedText(packScope?.endpointId) ??
+    boundedText(packScope?.routePackage) ??
     boundedText(asRecord(pack.routePackageAttribution)?.routePackage);
   if (!routePackage) return unavailable("active pack carries no route package", cohortPercent);
   const validationReceiptId = boundedText(pack.validationReceiptId);
