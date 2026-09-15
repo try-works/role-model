@@ -644,6 +644,9 @@ export function LearningDecisionsPage() {
                   <Metric label="Selection" value={show(row.selection)} />
                   <Metric label="Stage" value={show(row.stage)} />
                   <Metric label="Fallback reason" value={show(row.fallbackReason)} />
+                  {/* Run 99 R27: the in-band requirement is a different lever from the floor. */}
+                  <Metric label="Score band" value={show(row.scoreBand)} />
+                  <Metric label="Score gap before" value={show(row.scoreGapBefore)} />
                   <Metric label="Cohort percent" value={show(row.cohortPercent)} />
                   <Metric label="Policy version" value={show(row.policyVersion)} />
                   <Metric label="Origin" value={show(row.origin)} />

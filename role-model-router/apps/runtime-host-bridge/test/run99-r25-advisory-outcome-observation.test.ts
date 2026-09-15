@@ -113,6 +113,27 @@ describe("run99 R25 live advisory outcome observation", () => {
     );
     expect(shadow).toMatchObject({ mode: "shadow", selection: "baseline_retained", applied: false });
   });
+
+  test("records the score gap and band so a refusal can be read without guessing", () => {
+    // Run 99 R27: the operator has to see *why* the router refused - the confidence floor and
+    // the in-band requirement are different levers and only the gap distinguishes them.
+    const retained = buildLiveRouteAdvisoryObservation(
+      decision({
+        advisory: { ...decision().advisory, scoreBand: 0.05 },
+        outcome: {
+          applied: false,
+          fallbackReason: "below_confidence_floor",
+          scoreGapBefore: 0.031,
+          cohortBucket: 42,
+        },
+      }) as never,
+    );
+    expect(retained).toMatchObject({
+      fallbackReason: "below_confidence_floor",
+      scoreBand: 0.05,
+      scoreGapBefore: 0.031,
+    });
+  });
 });
 
 describe("run99 R25 advisory ledger totals", () => {

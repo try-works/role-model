@@ -24029,15 +24029,16 @@ export async function createRuntimeBridgeBackend(
       // reason) from "applied" instead of reporting every decision as an S1 shadow.
       if (advisoryConsideration) {
         try {
-          const outcome = (
-            routed.decision as unknown as {
-              readonly advisory_consideration?: {
-                readonly applied?: boolean;
-                readonly fallbackReason?: string | null;
-                readonly cohortBucket?: number | null;
-              };
-            }
-          ).advisory_consideration;
+              const outcome = (
+                routed.decision as unknown as {
+                  readonly advisory_consideration?: {
+                    readonly applied?: boolean;
+                    readonly fallbackReason?: string | null;
+                    readonly cohortBucket?: number | null;
+                    readonly scoreGapBefore?: number | null;
+                  };
+                }
+              ).advisory_consideration;
           const observation = buildLiveRouteAdvisoryObservation({
             decisionId: routed.decision.routing_decision_id,
             routePackage: routed.decision.chosen_endpoint_id,
@@ -24053,6 +24054,7 @@ export async function createRuntimeBridgeBackend(
               stage: advisoryConsideration.stage,
               policyVersion: advisoryConsideration.policyVersion ?? null,
               cohortPercent: advisoryConsideration.cohortPercent ?? null,
+              scoreBand: advisoryConsideration.scoreBand ?? null,
             },
             outcome: outcome
               ? {
@@ -24060,6 +24062,8 @@ export async function createRuntimeBridgeBackend(
                   fallbackReason: outcome.fallbackReason ?? null,
                   cohortBucket:
                     typeof outcome.cohortBucket === "number" ? outcome.cohortBucket : null,
+                  scoreGapBefore:
+                    typeof outcome.scoreGapBefore === "number" ? outcome.scoreGapBefore : null,
                 }
               : null,
             observedAtMs: Date.now(),

@@ -6378,6 +6378,9 @@ export function buildTrackBRouteAdvisoryObservation(input: {
   readonly selection?: TrackBRouteAdvisorySelection;
   readonly applied?: boolean;
   readonly fallbackReason?: string | null;
+  /** Run 99 R27: the in-band requirement, recorded so a refusal is readable. */
+  readonly scoreBand?: number | null;
+  readonly scoreGapBefore?: number | null;
   readonly cohortBucket?: number | null;
   readonly cohortPercent?: number | null;
   readonly stage?: "S0" | "S1" | "S2" | "S3" | "S4";
@@ -6427,6 +6430,8 @@ export function buildTrackBRouteAdvisoryObservation(input: {
               : String(input.fallbackReason).slice(0, 128),
         }),
     ...(Number.isSafeInteger(input.cohortBucket) ? { cohortBucket: input.cohortBucket } : {}),
+    ...(Number.isFinite(input.scoreBand) ? { scoreBand: input.scoreBand } : {}),
+    ...(Number.isFinite(input.scoreGapBefore) ? { scoreGapBefore: input.scoreGapBefore } : {}),
     ...(Number.isFinite(input.cohortPercent) ? { cohortPercent: input.cohortPercent } : {}),
     ...(input.stage ? { stage: input.stage } : {}),
     ...(input.policyVersion ? { policyVersion: String(input.policyVersion).slice(0, 128) } : {}),
@@ -6472,11 +6477,13 @@ export function buildLiveRouteAdvisoryObservation(input: {
     readonly stage: "S0" | "S1" | "S2" | "S3" | "S4";
     readonly policyVersion?: string | null;
     readonly cohortPercent?: number | null;
+    readonly scoreBand?: number | null;
   };
   readonly outcome?: {
     readonly applied?: boolean;
     readonly fallbackReason?: string | null;
     readonly cohortBucket?: number | null;
+    readonly scoreGapBefore?: number | null;
   } | null;
   readonly observedAtMs: number;
 }): Record<string, unknown> {
@@ -6501,6 +6508,8 @@ export function buildLiveRouteAdvisoryObservation(input: {
     wouldHaveChangedOverride: applied,
     fallbackReason: applied ? null : (input.outcome?.fallbackReason ?? null),
     cohortBucket: input.outcome?.cohortBucket ?? null,
+    scoreBand: input.advisory.scoreBand ?? null,
+    scoreGapBefore: input.outcome?.scoreGapBefore ?? null,
     cohortPercent: input.advisory.cohortPercent ?? null,
     stage,
     policyVersion: input.advisory.policyVersion ?? null,
