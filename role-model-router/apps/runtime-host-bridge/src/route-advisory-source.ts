@@ -141,7 +141,12 @@ export async function readTrackBRouteAdvisoryFromRollout(
 
   let rolloutAnswer: unknown;
   try {
-    rolloutAnswer = await input.invoke("knowledge:rollout-state", { scopeId });
+    // Run 99 R33 (S37 live finding): the advisory only needs the rollout row and the newest
+    // activation receipt, but the store's default read returns up to 100 receipts. On the stage
+    // root that response tripped the extension host's 16 KiB inline frame cap
+    // ("frame exceeds inline limit"), which silently disabled every advisory. Bound the read to
+    // the single receipt the advisory uses.
+    rolloutAnswer = await input.invoke("knowledge:rollout-state", { scopeId, limit: 1 });
   } catch (error) {
     return unavailable(
       `rollout state unavailable: ${String(

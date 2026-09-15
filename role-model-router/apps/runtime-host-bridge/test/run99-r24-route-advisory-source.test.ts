@@ -123,6 +123,9 @@ describe("run99 R24 durable route advisory source", () => {
       "knowledge:list-learning",
       "knowledge:list-learning",
     ]);
+    // Run 99 R33 (S37 live finding): the rollout read is bounded to the newest activation receipt
+    // so the response stays inside the extension host's 16 KiB inline frame cap.
+    expect(calls[0].value.limit).toBe(1);
   });
 
   test("carries the activated pack's task family and taxonomy to the router", async () => {
