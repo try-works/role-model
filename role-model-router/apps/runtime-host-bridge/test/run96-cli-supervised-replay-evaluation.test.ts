@@ -45,6 +45,8 @@ function durableCapture(seed: string) {
     routingDecisionId: `decision:${seed}`,
     endpointId: `endpoint:${seed}`,
     modelId: `model:${seed}`,
+    // Run 99 R33 S33: a recovered capture carries the family the request was routed for.
+    taskTypeId: "coder.review",
     responseArtifactId,
     routeDecisionArtifactId,
     providerArtifactIds: [providerArtifactId],
@@ -302,6 +304,8 @@ test("Run96 CLI forwards only durable captured trajectory events in stable order
 test("Run96 CLI production completion uses the same durable join for fresh and recovery", async () => {
   const sourceCapture = {
     ...durableCapture("1"),
+    // Run 99 R33 S33: the capture records the family the request was routed for.
+    taskTypeId: "coder.review",
     response: { content: "source output" },
   };
   const counterfactualCapture = {
@@ -635,6 +639,9 @@ test("Run96 CLI production completion reaches trusted Evaluation Core and declin
     outcome: "candidate",
   });
   const firstReferences = pipelineInputs[0]?.evaluationReferences as Record<string, unknown>;
+  // Run 99 R33 (S34 live finding): the capture's task family must travel with the supervised
+  // replay, otherwise the comparison — and the learner's family-scoped floor — never sees it.
+  expect(pipelineInputs[0]?.taskTypeId).toBe("coder.review");
   const restartReadbackRuntime: TrackBShadowPipelineRuntime = {
     async invoke(id, envelope) {
       expect(id).toBe("artifact-store");

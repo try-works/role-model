@@ -1118,6 +1118,13 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       channel: input.channel,
       scope: input.scope,
       authorizationEpoch: 1,
+      // Run 99 R33 (S34 live finding): every comparison in the live store carried no task family
+      // because this supervised-replay path never passed the capture's family, so the learner's
+      // family-scoped floor could never be met from real traffic. The capture records the family
+      // (`addendum 19 S33`), so it travels with the replay.
+      ...(typeof input.sourceCapture.taskTypeId === "string" && input.sourceCapture.taskTypeId.trim()
+        ? { taskTypeId: input.sourceCapture.taskTypeId.trim() }
+        : {}),
       productionState: {},
       routePackage: input.sourceEndpointId,
       sourceDecisionId,
