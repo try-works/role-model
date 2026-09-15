@@ -52,6 +52,11 @@ describe("LearningRoute", () => {
       "Save policy change",
       "Roll back policy",
       "expectedPolicyVersion",
+      // Run 99 R28: the kill switch is reversible from the surface, and a refused mutation must
+      // surface the server error instead of a success notice.
+      "Release kill switch",
+      "engaged: false",
+      "Kill switch released; activation is allowed again.",
     ]) {
       expect(routeSource).toContain(token);
     }
