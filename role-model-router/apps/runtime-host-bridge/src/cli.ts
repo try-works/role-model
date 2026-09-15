@@ -2101,7 +2101,15 @@ function createPendingHealthStatus(state: CliBootstrapState): unknown {
 export function startDurableRouteAdvisoryRefresh(options: {
   readonly getRuntime: () => CliExtensionRuntime | null;
   readonly repoRoot: string;
+  /** Track B state root: where the durable activation policy lives. */
   readonly stateRoot: string;
+  /**
+   * Base runtime state root: `decodeExtensionBusinessResult` composes
+   * `<base>/<scope>/track-b/extensions/workers/<extension>/durable-output.sqlite`, so handing it
+   * the Track B root resolves a path that does not exist and every externalized answer (the
+   * validation receipts, observed live) looks unavailable.
+   */
+  readonly runtimeStateRoot: string;
   readonly channel: string;
   readonly scopeId: string;
   readonly intervalMs?: number;
@@ -2133,7 +2141,7 @@ export function startDurableRouteAdvisoryRefresh(options: {
       >[0]["runtime"],
       channel: options.channel,
       scope: options.scopeId,
-      stateRoot: options.stateRoot,
+      stateRoot: options.runtimeStateRoot,
       nowMs,
       evidenceMaxAgeMs,
       requestId: `route-advisory:${options.scopeId}:${nowMs}`,
@@ -4897,6 +4905,7 @@ export async function main(): Promise<void> {
               getRuntime: () => extensionRuntimeRef.current,
               repoRoot: options.repoRoot,
               stateRoot: trackBStateRoot,
+              runtimeStateRoot: options.runtimeStateRoot,
               channel: runtimeChannel,
               scopeId: options.scopeId,
             });
