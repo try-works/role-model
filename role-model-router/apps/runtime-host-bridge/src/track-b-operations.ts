@@ -1228,6 +1228,16 @@ export function buildVerifiersLiveExport(input: {
   });
 }
 
+/**
+ * Run 99: the value-level operator redaction rule, exported so the contract is testable on its own.
+ * It redacts credentials only; identifiers that merely contain a label word stay readable.
+ */
+export function redactOperatorSensitiveValue(value: string): string {
+  return /(?:sk-[a-z0-9_-]{8,}|api[_-]?key\s*[:=]\s*\S{6,}|bearer\s+[a-z0-9._-]{12,})/i.test(value)
+    ? "[redacted]"
+    : value;
+}
+
 export function createTrackBOperations({
   statePath,
   catalog,
@@ -1297,12 +1307,16 @@ export function createTrackBOperations({
   };
   const operatorSensitiveKey =
     /(?:secret|token|password|credential|api[-_]?key|authorization|cookie|header|prompt|transcript|content|body|input|output|message|response)/i;
-  const operatorSensitiveValue = /(?:sk-[a-z0-9_-]{8,}|api[_-]?key|bearer\s+[a-z0-9._-]{12,})/i;
+  // Run 99: redact credentials, not identifiers that merely contain a label word. The previous
+  // rule matched the bare substring `api-key`, so endpoint ids such as
+  // `deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-high` reached the Learning UI as
+  // `[redacted]`. A credential carries a separator plus a value (`api_key=...`, `api-key: ...`).
+  const operatorSensitiveValue = /(?:sk-[a-z0-9_-]{8,}|api[_-]?key\s*[:=]\s*\S{6,}|bearer\s+[a-z0-9._-]{12,})/i;
   const operatorAggregateMetricKey = /^(?:inputTokens|outputTokens)$/i;
   const sanitizeOperatorProjection = (value: unknown, key?: string): unknown => {
     if (key && operatorAggregateMetricKey.test(key) && typeof value === "number") return value;
     if (key && operatorSensitiveKey.test(key)) return "[redacted]";
-    if (typeof value === "string" && operatorSensitiveValue.test(value)) return "[redacted]";
+    if (typeof value === "string" && redactOperatorSensitiveValue(value) === "[redacted]") return "[redacted]";
     if (Array.isArray(value)) return value.map((item) => sanitizeOperatorProjection(item));
     if (value && typeof value === "object") {
       return Object.fromEntries(
