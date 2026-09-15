@@ -86,6 +86,7 @@ import {
   readTrackBAdvisoryMeasurement,
   readTrackBRouteAdvisorySourceFromRuntime,
   rememberTrackBDurableRouteAdvisory,
+  decodeExternalizedOperatorReadback,
   requireReplayRouterDecisionId,
   resolveManagedArtifactKeyFiles,
   runSupervisedReplay,
@@ -3644,7 +3645,18 @@ export async function main(): Promise<void> {
           // The receipt is authoritative: a job that reached `awaiting_evaluation`
           // produced branches but no comparison, so it stays retryable and the ledger
           // never counts it as a replayed counterfactual.
-          return autoReplayExecutionFromCommandReceipt(await response.json());
+          //
+          // Run 99 R29: a large replay receipt crosses the operations boundary as an
+          // externalized transfer marker; parsing the marker made `state` undefined and every
+          // such capture was deferred as "durable replay state is unknown" (observed live as
+          // recently as 06:26Z). Decode it from the worker durable-output store first.
+          return autoReplayExecutionFromCommandReceipt(
+            decodeExternalizedOperatorReadback({
+              stateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+              value: await response.json(),
+            }),
+          );
         },
       });
     };
