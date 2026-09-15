@@ -62,6 +62,49 @@ describe("run99 R24 durable route advisory cache", () => {
     expect(recallTrackBDurableRouteAdvisory({ channel, scope: "other-scope" })).toBeNull();
   });
 
+  /**
+   * Run 99 R33 (addendum 21 D12): the five-minute "canonical" bound was read by nothing. The
+   * replacement is an operator-settable advisory-source age limit the runtime actually enforces:
+   * a record older than the bound is reported `stale` with a bounded reason instead of silently
+   * continuing to authorize influence.
+   */
+  test("an advisory older than the source age bound is reported stale", () => {
+    const channel = "stage";
+    const scope = "run99-r33-advisory-age-scope";
+    rememberTrackBDurableRouteAdvisory({
+      channel,
+      scope,
+      advisory: {
+        preferredRoutePackage: "deepseek.flash-high",
+        advisoryState: "fresh",
+        confidence: 0.82,
+        candidateId: "shadow-r33",
+        advisoryId: "pack-r33",
+        cohortPercent: 100,
+        reason: null,
+      },
+      nowMs: 1_000,
+    });
+
+    expect(
+      recallTrackBDurableRouteAdvisory({ channel, scope, nowMs: 1_000, maxAgeMs: 900_000 })
+        ?.advisoryState,
+    ).toBe("fresh");
+
+    const aged = recallTrackBDurableRouteAdvisory({
+      channel,
+      scope,
+      nowMs: 1_000 + 900_001,
+      maxAgeMs: 900_000,
+    });
+    expect(aged?.advisoryState).toBe("stale");
+    expect(aged?.reason).toMatch(/max age/i);
+    // Without a bound the record is returned unchanged, so existing callers keep their behaviour.
+    expect(
+      recallTrackBDurableRouteAdvisory({ channel, scope, nowMs: 1_000 + 900_001 })?.advisoryState,
+    ).toBe("fresh");
+  });
+
   test("records an unavailable durable answer instead of leaving a stale fresh advisory", () => {
     const channel = "stage";
     const scope = "run99-r24-unavailable-scope";

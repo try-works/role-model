@@ -67,6 +67,11 @@ export interface LearningPolicySnapshot {
     readonly promotionAnalysisMethod: "paired_cluster_bootstrap";
     readonly multiplicityAdjustment: "none" | "holm_bonferroni";
     readonly promotionSelectionFamilySize: number;
+    /**
+     * Run 99 R33 (addendum 21 D12): the enforced age limit of the derived advisory source record.
+     * Distinct from `evidenceMaxAgeDays`, which bounds the evidence behind the advisory.
+     */
+    readonly advisorySourceMaxAgeMs: number;
   };
 }
 
@@ -93,6 +98,7 @@ const DEFAULT_EFFECTIVE: LearningPolicySnapshot["effective"] = Object.freeze({
   promotionAnalysisMethod: "paired_cluster_bootstrap",
   multiplicityAdjustment: "holm_bonferroni",
   promotionSelectionFamilySize: 1,
+  advisorySourceMaxAgeMs: 900_000,
 });
 
 const asRecord = (value: unknown): Record<string, unknown> =>
@@ -248,6 +254,15 @@ export function readLearningPolicyFile(input: {
     evidenceMaxAgeDays: Math.max(
       1,
       finiteOr(merged.evidenceMaxAgeDays, DEFAULT_EFFECTIVE.evidenceMaxAgeDays),
+    ),
+    // Run 99 R33 (addendum 21 D12): the enforced advisory-source age bound, clamped to the same
+    // 1 minute - 24 hour range the operator policy declares.
+    advisorySourceMaxAgeMs: Math.min(
+      86_400_000,
+      Math.max(
+        60_000,
+        finiteOr(merged.advisorySourceMaxAgeMs, DEFAULT_EFFECTIVE.advisorySourceMaxAgeMs),
+      ),
     ),
     judgeMode: merged.judgeMode === "identity_blind" ? "identity_blind" : "identified",
     judgeOrderPolicy: merged.judgeOrderPolicy === "dual_order" ? "dual_order" : "source_first",

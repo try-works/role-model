@@ -6435,17 +6435,36 @@ export function recallTrackBDurableRouteAdvisory(input: {
    * entry, which the router then refuses) may be returned.
    */
   readonly taskTypeId?: string | null;
+  /**
+   * Run 99 R33 (addendum 21 D12): when both are supplied the record's age is enforced, so an
+   * advisory source older than the operator's `advisorySourceMaxAgeMs` is reported `stale`
+   * instead of silently continuing to authorize influence.
+   */
+  readonly nowMs?: number;
+  readonly maxAgeMs?: number | null;
 }): TrackBDurableRouteAdvisoryEntry | null {
   const entry =
     trackBDurableRouteAdvisoryCache.get(durableAdvisoryKey(input.channel, input.scope)) ?? null;
   if (!entry) return null;
+  const maxAgeMs =
+    typeof input.maxAgeMs === "number" && Number.isFinite(input.maxAgeMs) && input.maxAgeMs > 0
+      ? input.maxAgeMs
+      : null;
+  const aged =
+    maxAgeMs !== null &&
+    typeof input.nowMs === "number" &&
+    Number.isFinite(input.nowMs) &&
+    input.nowMs - entry.cachedAtMs > maxAgeMs
+      ? { ...entry, advisoryState: "stale" as const, reason: "advisory source beyond max age" }
+      : entry;
+  const resolved = aged;
   const requestedFamily =
     typeof input.taskTypeId === "string" && input.taskTypeId.trim()
       ? input.taskTypeId.trim()
       : null;
-  if (!requestedFamily) return entry;
-  if (entry.taskTypeId === null) return entry;
-  return entry.taskTypeId === requestedFamily ? entry : null;
+  if (!requestedFamily) return resolved;
+  if (resolved.taskTypeId === null) return resolved;
+  return resolved.taskTypeId === requestedFamily ? resolved : null;
 }
 
 /**

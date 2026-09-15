@@ -23979,6 +23979,10 @@ export async function createRuntimeBridgeBackend(
               channel: runtimeChannel,
               scope: options.scopeId,
               taskTypeId: requestTaskTypeId,
+              // Run 99 R33 (addendum 21 D12): the operator's advisory-source age bound is
+              // enforced on every live consultation.
+              nowMs: Date.now(),
+              maxAgeMs: learningPolicySnapshot?.effective.advisorySourceMaxAgeMs ?? 900000,
             });
             const cached =
               durable ??

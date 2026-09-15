@@ -21,7 +21,7 @@ const field = (input: Partial<LearningPolicyField> & { name: string }): Learning
 const fields: readonly LearningPolicyField[] = [
   field({ name: "minAdvisoryConfidence", min: 0.5, max: 1, value: 0.7, default: 0.7 }),
   field({ name: "minDecisiveComparisons", type: "integer", min: 1, max: 100, value: 3, default: 3 }),
-  field({ name: "advisoryAuthorizationTtlMs", type: "integer", min: 60000, max: 300000, value: 300000, default: 300000, uiEditable: false }),
+  field({ name: "promotionAnalysisMethod", type: "enum", values: ["paired_cluster_bootstrap"], value: "paired_cluster_bootstrap", default: "paired_cluster_bootstrap", uiEditable: false }),
   field({ name: "stage", type: "enum", values: ["S0", "S1", "S2", "S3", "S4"], value: "S1", default: "S1" }),
   field({ name: "cohortLadder", type: "percent-list", value: [10, 25, 50, 100], default: [10, 25, 50, 100] }),
 ];
@@ -41,7 +41,7 @@ describe("learning policy draft validation", () => {
   });
 
   test("refuses read-only fields and unknown fields", () => {
-    expect(validatePolicyDraft(fields, { advisoryAuthorizationTtlMs: 120000 }).errors.advisoryAuthorizationTtlMs).toMatch(/read-only/);
+    expect(validatePolicyDraft(fields, { promotionAnalysisMethod: "none" }).errors.promotionAnalysisMethod).toMatch(/read-only/);
     expect(validatePolicyDraft(fields, { brandNewParameter: 1 }).errors.brandNewParameter).toMatch(/unknown field/);
   });
 
