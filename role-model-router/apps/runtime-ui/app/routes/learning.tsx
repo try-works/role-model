@@ -525,6 +525,22 @@ export function LearningPacksPage() {
       setError(message(killError));
     }
   };
+  // Run 99 R28: the switch is reversible; releasing clears the flag (receipted) and leaves the
+  // scope on the base route until a pack is activated again.
+  const releaseKillSwitch = async () => {
+    if (typeof window !== "undefined" && !window.confirm("Release the kill switch? The scope stays on the base route until a pack is activated.")) return;
+    try {
+      await engageLearningKillSwitch(
+        { scopeId: rolloutValue.scopeId ?? "standalone-runtime-stage", engaged: false },
+        fetch,
+        token || undefined,
+      );
+      setNotice("Kill switch released; activation is allowed again.");
+      await rollout.reload();
+    } catch (releaseError) {
+      setError(message(releaseError));
+    }
+  };
   return (
     <SectionCard
       title="Learned packs"
@@ -579,6 +595,14 @@ export function LearningPacksPage() {
         </button>
         <button className={secondaryButtonClassName} disabled={rolloutValue.state === "disabled"} onClick={() => void killSwitch()} type="button">
           Engage kill switch
+        </button>
+        <button
+          className={secondaryButtonClassName}
+          disabled={!rolloutValue.killSwitchAtMs}
+          onClick={() => void releaseKillSwitch()}
+          type="button"
+        >
+          Release kill switch
         </button>
       </div>
     </SectionCard>

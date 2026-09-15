@@ -15096,6 +15096,31 @@ function writeOperatorResult(response: ServerResponse, result: unknown): void {
   writeJson(response, isUnavailable ? 503 : 200, result);
 }
 
+/**
+ * Run 99 R28: a refused *mutation* must not be reported as success.
+ *
+ * Observed live: activating an unknown pack answered HTTP 200 with
+ * `role-model.degradation-receipt.v1` (`degraded: true`, reason "activation requires a recorded
+ * pack"), and the Learning UI reported "Activation receipt written for <packId>" while nothing
+ * changed. Reads keep their degradation-receipt semantics; mutations answer 409 (or 503 when the
+ * capability itself is unavailable) and carry the receipt so the surface can show the reason.
+ */
+function writeOperatorMutationResult(response: ServerResponse, result: unknown): void {
+  const record =
+    result && typeof result === "object" && !Array.isArray(result)
+      ? (result as Record<string, unknown>)
+      : null;
+  if (record?.error === "operator_capability_unavailable") {
+    writeJson(response, 503, result);
+    return;
+  }
+  if (record?.degraded === true) {
+    writeJson(response, 409, result);
+    return;
+  }
+  writeJson(response, 200, result);
+}
+
 function isReadyHealthProjection(value: unknown): boolean {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const record = value as Record<string, unknown>;
@@ -15483,7 +15508,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             writeOperatorUnavailable(response, "learning mode update");
             return;
           }
-          writeOperatorResult(response, await options.updateLearningMode(operatorBody));
+          writeOperatorMutationResult(response, await options.updateLearningMode(operatorBody));
           return;
         }
         if (
@@ -15494,7 +15519,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             writeOperatorUnavailable(response, "learning rollback");
             return;
           }
-          writeOperatorResult(response, await options.rollbackLearning(operatorBody));
+          writeOperatorMutationResult(response, await options.rollbackLearning(operatorBody));
           return;
         }
         // Run 98 R17: Learning UI readback and rollout actions.
@@ -15520,7 +15545,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             writeOperatorUnavailable(response, "learning policy change");
             return;
           }
-          writeOperatorResult(response, await options.setLearningPolicy(operatorBody));
+          writeOperatorMutationResult(response, await options.setLearningPolicy(operatorBody));
           return;
         }
         if (
@@ -15531,7 +15556,10 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             writeOperatorUnavailable(response, "learning policy rollback");
             return;
           }
-          writeOperatorResult(response, await options.rollbackLearningPolicy(operatorBody));
+          writeOperatorMutationResult(
+            response,
+            await options.rollbackLearningPolicy(operatorBody),
+          );
           return;
         }
         if (
@@ -15626,7 +15654,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             writeOperatorUnavailable(response, "learning pack activation");
             return;
           }
-          writeOperatorResult(response, await options.activateLearningPack(operatorBody));
+          writeOperatorMutationResult(response, await options.activateLearningPack(operatorBody));
           return;
         }
         if (
@@ -15637,7 +15665,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             writeOperatorUnavailable(response, "learning pack rollback");
             return;
           }
-          writeOperatorResult(response, await options.rollbackLearningPack(operatorBody));
+          writeOperatorMutationResult(response, await options.rollbackLearningPack(operatorBody));
           return;
         }
         if (
@@ -15648,7 +15676,10 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             writeOperatorUnavailable(response, "learning kill switch");
             return;
           }
-          writeOperatorResult(response, await options.engageLearningKillSwitch(operatorBody));
+          writeOperatorMutationResult(
+            response,
+            await options.engageLearningKillSwitch(operatorBody),
+          );
           return;
         }
 
