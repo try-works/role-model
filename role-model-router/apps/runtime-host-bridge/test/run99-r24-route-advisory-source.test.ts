@@ -110,12 +110,43 @@ describe("run99 R24 durable route advisory source", () => {
       advisoryId: "pack-4f96d9b16fce94b8cae484f87bea903285cb333bcafc6d0ee1ebf7dde70e1f17",
       cohortPercent: 10,
       reason: null,
+      // Run 99 R33: a pack that declares no family yields an unscoped advisory, which the
+      // router refuses once the request declares a family (`advisory_task_unscoped`).
+      taskTypeId: null,
+      taxonomyVersion: null,
     });
     expect(calls.map((call) => call.capability)).toEqual([
       "knowledge:rollout-state",
       "knowledge:list-learning",
       "knowledge:list-learning",
     ]);
+  });
+
+  test("carries the activated pack's task family and taxonomy to the router", async () => {
+    const advisory = await readTrackBRouteAdvisoryFromRollout({
+      invoke: createInvoke({
+        packs: {
+          records: [
+            packRecord({
+              scope: {
+                channel: "stage",
+                scopeId: SCOPE,
+                routePackage: "deepseek.flash-high",
+                taskTypeId: "coder.review",
+                taxonomyVersion: "taxonomy-v1-alpha.1",
+              },
+            }),
+          ],
+        },
+      }),
+      scopeId: SCOPE,
+      nowMs: NOW,
+      evidenceMaxAgeMs: 30 * 24 * 60 * 60 * 1_000,
+    });
+
+    expect(advisory.taskTypeId).toBe("coder.review");
+    expect(advisory.taxonomyVersion).toBe("taxonomy-v1-alpha.1");
+    expect(advisory.advisoryState).toBe("fresh");
   });
 
   test("reads the route package from the durable pack scope the Knowledge Store writes", async () => {

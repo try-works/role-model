@@ -56,7 +56,22 @@ export function evaluateRouteAdvisoryConsideration(input: {
   readonly eligibleEndpointIds: readonly string[];
   readonly decisionSeed: string;
   readonly advisory?: RouteAdvisoryConsiderationInput | null;
+  /** Run 99 R33: the request's own family/taxonomy, so the advisory can be scope-checked. */
+  readonly requestTaskTypeId?: string | null;
+  readonly requestTaxonomyVersion?: string | null;
 }): RouteAdvisoryConsiderationOutcome {
+  const normalizeScopeId = (value: string | null | undefined): string | null => {
+    if (typeof value !== "string") return null;
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  };
+  const advisory = input.advisory;
+  const requestTaskTypeId = normalizeScopeId(input.requestTaskTypeId);
+  const advisoryTaskTypeId = advisory
+    ? (normalizeScopeId(advisory.taskTypeId) ??
+      (advisory.preferredFor?.length === 1 ? normalizeScopeId(advisory.preferredFor[0]) : null))
+    : null;
+  const advisoryTaxonomyVersion = advisory ? normalizeScopeId(advisory.taxonomyVersion) : null;
   const band = Number.isFinite(input.advisory?.scoreBand) ? Number(input.advisory?.scoreBand) : 0;
   const base = {
     applied: false,
@@ -80,23 +95,42 @@ export function evaluateRouteAdvisoryConsideration(input: {
         input.eligibleEndpointIds.includes(input.advisory.preferredEndpointId),
     ),
     eligibleEndpointCount: input.eligibleEndpointIds.length,
+    advisoryTaskTypeId,
+    requestTaskTypeId,
+    advisoryTaxonomyVersion,
   };
   const fallback = (reason: string): RouteAdvisoryConsiderationOutcome => ({
     ...base,
     fallbackReason: reason,
   });
-  const advisory = input.advisory;
   if (!advisory) return fallback("no_advisory");
   if (advisory.advisoryState !== "fresh") return fallback(`advisory_${advisory.advisoryState}`);
   if (!ADVISORY_STAGES_WITH_INFLUENCE.has(advisory.stage)) return fallback("stage_below_s2");
   if (advisory.killSwitch === true) return fallback("kill_switch_engaged");
   const confidence = Number.isFinite(advisory.confidence) ? Number(advisory.confidence) : 0;
-  if (confidence < advisory.minAdvisoryConfidence) return fallback("below_confidence_floor");
   const preferred = advisory.preferredEndpointId;
   // AC-R05-01: an advisory can never add or widen a candidate.
   if (!preferred || !input.eligibleEndpointIds.includes(preferred)) {
     return fallback("advisory_candidate_not_eligible");
   }
+  // Run 99 R33 (addendum 19 S35, addendum 20 D1-D3, D10): applicability is checked after the
+  // eligibility invariant and before the confidence floor, so the operator sees the real reason.
+  // A request that declares no family keeps the pre-R33 behaviour; once it declares one, an
+  // unscoped advisory is refused rather than trusted, and a taxonomy mismatch fails closed.
+  if (requestTaskTypeId) {
+    if (
+      advisory.avoidFor?.some((entry) => normalizeScopeId(entry) === requestTaskTypeId) === true
+    ) {
+      return fallback("advisory_task_avoided");
+    }
+    if (!advisoryTaskTypeId) return fallback("advisory_task_unscoped");
+    if (advisoryTaskTypeId !== requestTaskTypeId) return fallback("advisory_task_mismatch");
+    const requestTaxonomyVersion = normalizeScopeId(input.requestTaxonomyVersion);
+    if (requestTaxonomyVersion && requestTaxonomyVersion !== advisoryTaxonomyVersion) {
+      return fallback("advisory_taxonomy_mismatch");
+    }
+  }
+  if (confidence < advisory.minAdvisoryConfidence) return fallback("below_confidence_floor");
   const cohortPercent = Number.isFinite(advisory.cohortPercent)
     ? Math.min(100, Math.max(0, Number(advisory.cohortPercent)))
     : 0;
@@ -1685,6 +1719,10 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
     eligibleEndpointIds: eligible.map((candidate) => candidate.identity.endpoint_id),
     decisionSeed: normalizedInput.request.requestId,
     advisory: normalizedInput.advisoryConsideration ?? null,
+    // Run 99 R33: the routing request already carries the task family; the host supplies the
+    // taxonomy identity it resolved the request against.
+    requestTaskTypeId: normalizedInput.request.taskType ?? null,
+    requestTaxonomyVersion: normalizedInput.advisoryConsideration?.requestTaxonomyVersion ?? null,
   });
   const advisoryPreferredIndex =
     advisoryOutcome.applied && advisoryOutcome.advisoryPackageId

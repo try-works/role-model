@@ -6266,6 +6266,9 @@ const trackBRouteAdvisoryCache = new Map<
     readonly profileSnapshotIds: readonly string[];
     readonly candidateId: string | null;
     readonly advisoryId: string | null;
+    /** Run 99 R33: the task family this pipeline advisory was derived for, when known. */
+    readonly taskTypeId: string | null;
+    readonly taxonomyVersion: string | null;
     readonly cachedAtMs: number;
   }
 >();
@@ -6280,6 +6283,8 @@ export function rememberTrackBRouteAdvisory(input: {
   readonly profileSnapshotIds?: readonly string[];
   readonly candidateId?: string | null;
   readonly advisoryId?: string | null;
+  readonly taskTypeId?: string | null;
+  readonly taxonomyVersion?: string | null;
   readonly nowMs: number;
 }) {
   const key = `${input.channel}\u0000${input.scope}\u0000${input.routePackage}`;
@@ -6290,6 +6295,14 @@ export function rememberTrackBRouteAdvisory(input: {
     profileSnapshotIds: [...(input.profileSnapshotIds ?? [])],
     candidateId: input.candidateId ?? null,
     advisoryId: input.advisoryId ?? null,
+    taskTypeId:
+      typeof input.taskTypeId === "string" && input.taskTypeId.trim()
+        ? input.taskTypeId.trim()
+        : null,
+    taxonomyVersion:
+      typeof input.taxonomyVersion === "string" && input.taxonomyVersion.trim()
+        ? input.taxonomyVersion.trim()
+        : null,
     cachedAtMs: input.nowMs,
   });
   while (trackBRouteAdvisoryCache.size > TRACK_B_ROUTE_ADVISORY_CACHE_MAX_ENTRIES) {
@@ -6324,13 +6337,25 @@ export function clearTrackBRouteAdvisoryCacheForTests() {
 export function recallNewestTrackBRouteAdvisory(input: {
   readonly channel: string;
   readonly scope: string;
+  /** Run 99 R33: when given, only an exact family match (or an unscoped entry) is returned. */
+  readonly taskTypeId?: string | null;
 }) {
   let newest: (typeof trackBRouteAdvisoryCache extends Map<string, infer TValue>
     ? TValue
     : never) | null = null;
+  const requestedFamily =
+    typeof input.taskTypeId === "string" && input.taskTypeId.trim()
+      ? input.taskTypeId.trim()
+      : null;
   for (const [key, value] of trackBRouteAdvisoryCache) {
     const [channel, scope] = key.split("\u0000");
     if (channel !== input.channel || scope !== input.scope) continue;
+    if (requestedFamily) {
+      // A family-specific entry for a different family is not this request's advisory; an
+      // unscoped entry is returned so the router can report `advisory_task_unscoped` honestly.
+      if (value.taskTypeId !== null && value.taskTypeId !== requestedFamily) continue;
+      if (value.taskTypeId !== null && newest?.taskTypeId === requestedFamily) continue;
+    }
     if (!newest || value.cachedAtMs > newest.cachedAtMs) newest = value;
   }
   return newest;
@@ -6353,6 +6378,9 @@ export interface TrackBDurableRouteAdvisoryEntry {
   readonly advisoryId: string | null;
   readonly cohortPercent: number;
   readonly reason: string | null;
+  /** Run 99 R33: the family the activated pack was validated for, when the pack declares one. */
+  readonly taskTypeId: string | null;
+  readonly taxonomyVersion: string | null;
   readonly cachedAtMs: number;
 }
 
@@ -6378,6 +6406,8 @@ export function rememberTrackBDurableRouteAdvisory(input: {
       ? input.advisory.cohortPercent
       : 0,
     reason: input.advisory.reason,
+    taskTypeId: input.advisory.taskTypeId ?? null,
+    taxonomyVersion: input.advisory.taxonomyVersion ?? null,
     cachedAtMs: input.nowMs,
   };
   const key = durableAdvisoryKey(input.channel, input.scope);
@@ -6393,10 +6423,22 @@ export function rememberTrackBDurableRouteAdvisory(input: {
 export function recallTrackBDurableRouteAdvisory(input: {
   readonly channel: string;
   readonly scope: string;
+  /**
+   * Run 99 R33: when the request declares a family, only that family's entry (or an unscoped
+   * entry, which the router then refuses) may be returned.
+   */
+  readonly taskTypeId?: string | null;
 }): TrackBDurableRouteAdvisoryEntry | null {
-  return (
-    trackBDurableRouteAdvisoryCache.get(durableAdvisoryKey(input.channel, input.scope)) ?? null
-  );
+  const entry =
+    trackBDurableRouteAdvisoryCache.get(durableAdvisoryKey(input.channel, input.scope)) ?? null;
+  if (!entry) return null;
+  const requestedFamily =
+    typeof input.taskTypeId === "string" && input.taskTypeId.trim()
+      ? input.taskTypeId.trim()
+      : null;
+  if (!requestedFamily) return entry;
+  if (entry.taskTypeId === null) return entry;
+  return entry.taskTypeId === requestedFamily ? entry : null;
 }
 
 /**
@@ -6509,6 +6551,10 @@ export function buildTrackBRouteAdvisoryObservation(input: {
   /** Run 99 R27: the router's eligibility verdict, when the caller has it. */
   readonly preferredEligibleOverride?: boolean;
   readonly eligibleRoutePackageCountOverride?: number;
+  /** Run 99 R33: the task family the advisory was scoped to, and the request's own family. */
+  readonly taskTypeId?: string | null;
+  readonly requestTaskTypeId?: string | null;
+  readonly taxonomyVersion?: string | null;
 }) {
   if (!input.decisionId || !input.routePackage) {
     throw new Error("route advisory observation requires decision and route package");
@@ -6558,6 +6604,15 @@ export function buildTrackBRouteAdvisoryObservation(input: {
     ...(Number.isFinite(input.cohortPercent) ? { cohortPercent: input.cohortPercent } : {}),
     ...(input.stage ? { stage: input.stage } : {}),
     ...(input.policyVersion ? { policyVersion: String(input.policyVersion).slice(0, 128) } : {}),
+    ...(input.taskTypeId
+      ? { taskTypeId: String(input.taskTypeId).slice(0, 128) }
+      : { taskTypeId: null }),
+    ...(input.requestTaskTypeId
+      ? { requestTaskTypeId: String(input.requestTaskTypeId).slice(0, 128) }
+      : { requestTaskTypeId: null }),
+    ...(input.taxonomyVersion
+      ? { taxonomyVersion: String(input.taxonomyVersion).slice(0, 128) }
+      : {}),
     origin: input.origin ?? ("shadow" as const),
     observedAtMs: input.observedAtMs,
   };
@@ -6601,6 +6656,9 @@ export function buildLiveRouteAdvisoryObservation(input: {
     readonly policyVersion?: string | null;
     readonly cohortPercent?: number | null;
     readonly scoreBand?: number | null;
+    readonly taskTypeId?: string | null;
+    readonly requestTaskTypeId?: string | null;
+    readonly taxonomyVersion?: string | null;
   };
   readonly outcome?: {
     readonly applied?: boolean;
@@ -6645,6 +6703,9 @@ export function buildLiveRouteAdvisoryObservation(input: {
     cohortPercent: input.advisory.cohortPercent ?? null,
     stage,
     policyVersion: input.advisory.policyVersion ?? null,
+    taskTypeId: input.advisory.taskTypeId ?? null,
+    requestTaskTypeId: input.advisory.requestTaskTypeId ?? null,
+    taxonomyVersion: input.advisory.taxonomyVersion ?? null,
     origin: "live",
   });
 }

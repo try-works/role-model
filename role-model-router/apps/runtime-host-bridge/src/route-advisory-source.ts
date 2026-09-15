@@ -25,6 +25,13 @@ export interface TrackBRouteAdvisorySourceResult {
   readonly advisoryId: string | null;
   readonly cohortPercent: number;
   readonly reason: string | null;
+  /**
+   * Run 99 R33 (addendum 19 S35 / addendum 20 D1-D3): the task family the activated pack was
+   * validated for, plus the taxonomy identity behind that label. `null` means the pack declares
+   * no family, which the router refuses (`advisory_task_unscoped`) once the request declares one.
+   */
+  readonly taskTypeId: string | null;
+  readonly taxonomyVersion: string | null;
 }
 
 export interface TrackBRouteAdvisorySourceInput {
@@ -84,6 +91,8 @@ function unavailable(reason: string, cohortPercent = 0): TrackBRouteAdvisorySour
     advisoryId: null,
     cohortPercent,
     reason,
+    taskTypeId: null,
+    taxonomyVersion: null,
   };
 }
 
@@ -176,6 +185,10 @@ export async function readTrackBRouteAdvisoryFromRollout(
     boundedText(packScope?.routePackage) ??
     boundedText(asRecord(pack.routePackageAttribution)?.routePackage);
   if (!routePackage) return unavailable("active pack carries no route package", cohortPercent);
+  const taskTypeId =
+    boundedText(packScope?.taskTypeId) ??
+    boundedText(asRecord(pack.routePackageAttribution)?.taskTypeId);
+  const taxonomyVersion = boundedText(packScope?.taxonomyVersion);
   const validationReceiptId = boundedText(pack.validationReceiptId);
   if (!validationReceiptId) {
     return unavailable("active pack has no validation receipt", cohortPercent);
@@ -210,5 +223,7 @@ export async function readTrackBRouteAdvisoryFromRollout(
     advisoryId: activePackageId,
     cohortPercent,
     reason: withinWindow ? null : "validation evidence beyond the evidence window",
+    taskTypeId,
+    taxonomyVersion,
   };
 }

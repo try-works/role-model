@@ -235,6 +235,22 @@ export interface RouteAdvisoryConsiderationInput {
   readonly explorationPercent?: number;
   readonly killSwitch?: boolean;
   readonly thresholdSetVersion?: string | null;
+  /**
+   * Run 99 R33 (addendum 19 S35, addendum 20 D1-D3): the task family this advisory may
+   * influence, and the taxonomy identity it was learned under. Canonical
+   * `EndpointPreferenceRecordV1` applicability travels as `preferredFor`/`avoidFor`
+   * (`guidance/19`), so a preference learned from one family cannot move another family's
+   * traffic. A mismatch is refused before the confidence floor.
+   */
+  readonly taskTypeId?: string | null;
+  readonly taxonomyVersion?: string | null;
+  readonly preferredFor?: readonly string[];
+  readonly avoidFor?: readonly string[];
+  /**
+   * Run 99 R33: the taxonomy identity the host resolved the *request* against, so the router can
+   * fail closed when the advisory was learned under a different taxonomy revision.
+   */
+  readonly requestTaxonomyVersion?: string | null;
 }
 
 export interface RouteAdvisoryConsiderationOutcome {
@@ -250,4 +266,8 @@ export interface RouteAdvisoryConsiderationOutcome {
   readonly scoreBand: number;
   readonly scoreGapBefore: number | null;
   readonly cohortBucket: number | null;
+  /** Run 99 R33: the scope that actually decided the family gate. */
+  readonly advisoryTaskTypeId: string | null;
+  readonly requestTaskTypeId: string | null;
+  readonly advisoryTaxonomyVersion: string | null;
 }

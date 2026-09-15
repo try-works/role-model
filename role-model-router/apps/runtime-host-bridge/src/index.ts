@@ -23964,6 +23964,11 @@ export async function createRuntimeBridgeBackend(
       const learningStage = (process.env.ROLE_MODEL_LEARNING_STAGE?.trim() ??
         learningPolicySnapshot?.effective.stage ??
         "S1") as "S0" | "S1" | "S2" | "S3" | "S4";
+      // Run 99 R33 (addendum 19 S33/S35): the live decision carries the request's own task
+      // family and the taxonomy it was resolved against, so a preference learned for one family
+      // cannot move another family's traffic.
+      const requestTaskTypeId = plan.routingRequest.taskType ?? null;
+      const requestTaxonomyVersion = taxonomyManifest.taxonomyVersion ?? null;
       const advisoryConsideration = ["S2", "S3", "S4"].includes(learningStage)
         ? (() => {
             // Run 99 R24 / addendum 06: the operator-activated pack is the authorization for
@@ -23973,12 +23978,14 @@ export async function createRuntimeBridgeBackend(
             const durable = recallTrackBDurableRouteAdvisory({
               channel: runtimeChannel,
               scope: options.scopeId,
+              taskTypeId: requestTaskTypeId,
             });
             const cached =
               durable ??
               recallNewestTrackBRouteAdvisory({
                 channel: runtimeChannel,
                 scope: options.scopeId,
+                taskTypeId: requestTaskTypeId,
               });
             if (!cached) {
               // Bounded diagnostic (run 99 R24): an S2+ runtime with no advisory at all is the
@@ -24035,6 +24042,11 @@ export async function createRuntimeBridgeBackend(
               ),
               killSwitch: process.env.ROLE_MODEL_LEARNING_KILL_SWITCH?.trim() === "true",
               thresholdSetVersion: process.env.ROLE_MODEL_SCORER_SET_VERSION?.trim() ?? null,
+              // Run 99 R33: the activated pack's scope travels with the advisory so the router
+              // can enforce `preferredFor`/`avoidFor` and the taxonomy identity.
+              taskTypeId: cached.taskTypeId ?? null,
+              taxonomyVersion: cached.taxonomyVersion ?? null,
+              requestTaxonomyVersion,
             };
           })()
         : undefined;
@@ -24105,6 +24117,12 @@ export async function createRuntimeBridgeBackend(
               policyVersion: advisoryConsideration.policyVersion ?? null,
               cohortPercent: advisoryConsideration.cohortPercent ?? null,
               scoreBand: advisoryConsideration.scoreBand ?? null,
+              // Run 99 R33 (addendum 19 S33): the observation records which family the advisory
+              // was scoped to and which family the request belonged to, so an operator can see
+              // why a preference did or did not reach a decision.
+              taskTypeId: advisoryConsideration.taskTypeId ?? null,
+              requestTaskTypeId,
+              taxonomyVersion: advisoryConsideration.taxonomyVersion ?? null,
             },
             outcome: outcome
               ? {
