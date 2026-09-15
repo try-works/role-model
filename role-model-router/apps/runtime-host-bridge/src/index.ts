@@ -23882,6 +23882,8 @@ export async function createRuntimeBridgeBackend(
       });
       return [...new Set([...denyEndpoints, ...cooldownDeniedEndpoints])];
     };
+    // Bounded diagnostic for the run-99 R24 durable advisory wiring.
+    let runtimeAdvisoryMissLogged = 0;
     const routeExecutionRequest = (
       denyEndpoints: readonly string[],
     ): {
@@ -23928,7 +23930,17 @@ export async function createRuntimeBridgeBackend(
                 channel: runtimeChannel,
                 scope: options.scopeId,
               });
-            if (!cached) return undefined;
+            if (!cached) {
+              // Bounded diagnostic (run 99 R24): an S2+ runtime with no advisory at all is the
+              // signal that the durable refresh never published, not that the gate refused.
+              if (runtimeAdvisoryMissLogged < 3) {
+                runtimeAdvisoryMissLogged += 1;
+                console.error(
+                  `[run99] live advisory miss: stage=${learningStage} channel=${runtimeChannel} scope=${options.scopeId}`,
+                );
+              }
+              return undefined;
+            }
             const numeric = (value: string | undefined, fallback: number): number => {
               const parsed = Number(value);
               return Number.isFinite(parsed) ? parsed : fallback;

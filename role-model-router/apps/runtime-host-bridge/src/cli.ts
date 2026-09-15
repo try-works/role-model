@@ -2107,6 +2107,9 @@ export function startDurableRouteAdvisoryRefresh(options: {
   readonly intervalMs?: number;
 }): () => void {
   let stopped = false;
+  // Bounded diagnostic: log only when the published advisory changes, so the stage log shows
+  // whether an activation reached routing without spamming one line per refresh.
+  let lastPublished = "";
   const refresh = async (): Promise<void> => {
     if (stopped) return;
     const runtime = options.getRuntime();
@@ -2141,6 +2144,13 @@ export function startDurableRouteAdvisoryRefresh(options: {
       advisory,
       nowMs,
     });
+    const published = `${advisory.advisoryState}\u0000${advisory.reason ?? ""}\u0000${advisory.preferredRoutePackage ?? ""}\u0000${advisory.confidence}\u0000${advisory.cohortPercent}`;
+    if (published !== lastPublished) {
+      lastPublished = published;
+      console.error(
+        `[run99] durable route advisory published: state=${advisory.advisoryState} reason=${advisory.reason ?? "none"} package=${advisory.preferredRoutePackage ?? "none"} confidence=${advisory.confidence} cohort=${advisory.cohortPercent} stage=${stage}`,
+      );
+    }
   };
   const report = (error: unknown): void => {
     console.error(
