@@ -809,6 +809,33 @@ class TrackBPrivateOperationError extends Error {
 // bounded completion window that covers that acknowledged write path.
 const DEFAULT_CONTRIBUTION_DELIVERY_TIMEOUT_MS = 30_000;
 
+/**
+ * Run 99 R33 live finding (stage v146, with real coding-agent traffic flowing): the eight-second
+ * private-operations bound was aborting healthy calls on a mature stage root —
+ *
+ *   `Track B route capture failed track-b-capture-boundary-http-504 reason=private Track B operation
+ *    timed out after 8000ms`
+ *
+ *   `{"running":true,"lastOutcome":"degraded","lastError":"private Track B operation timed out after
+ *     8000ms"}` on `/api/role-model/track-b/replay/status`
+ *
+ * — and the second one starved the auto-replay producer, so freshly captured requests were never
+ * replayed. Five seconds was already raised to eight for the same reason; the bound now covers the
+ * durable commit path under load and stays operator-tunable without a rebuild.
+ */
+export const DEFAULT_TRACK_B_OPERATIONS_TIMEOUT_MS = 30_000;
+
+export function resolveTrackBOperationsTimeoutMs(
+  configured: number | null | undefined = Number.parseInt(
+    process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TIMEOUT_MS ?? "",
+    10,
+  ),
+): number {
+  return Number.isSafeInteger(configured) && Number(configured) > 0
+    ? Number(configured)
+    : DEFAULT_TRACK_B_OPERATIONS_TIMEOUT_MS;
+}
+
 const privateRetentionRequest = async (
   endpoint: string | undefined,
   token: string | undefined,
@@ -819,9 +846,9 @@ const privateRetentionRequest = async (
     readonly headers?: Readonly<Record<string, string>>;
   } = {},
   // Route captures may perform bounded durable CAS and SQLite commits after the
-  // provider response. Five seconds aborts healthy local captures on mature
-  // runtimes; retain a finite budget while allowing that proven completion path.
-  timeoutMs = 8_000,
+  // provider response. A shorter bound aborts healthy local captures (and the replay producer's
+  // pending read) on mature runtimes; retain a finite budget while allowing that proven path.
+  timeoutMs = DEFAULT_TRACK_B_OPERATIONS_TIMEOUT_MS,
 ): Promise<unknown | null> => {
   if (!endpoint) return null;
   if (!token || token.trim().length < 24) {
@@ -1246,7 +1273,7 @@ export function createTrackBOperations({
   authorizationEpoch,
   operationsEndpoint = process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL?.trim(),
   operationsToken = process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TOKEN,
-  operationsTimeoutMs = 8_000,
+  operationsTimeoutMs = DEFAULT_TRACK_B_OPERATIONS_TIMEOUT_MS,
   contributionDeliveryTimeoutMs = DEFAULT_CONTRIBUTION_DELIVERY_TIMEOUT_MS,
   extensionRuntime,
   contractStateRoot,
