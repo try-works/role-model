@@ -4979,6 +4979,17 @@ export async function main(): Promise<void> {
             const evaluationCriteria = storedCriteria
               ? normalizeTrackBSemanticEvaluationCriteria(storedCriteria)
               : normalizeTrackBSemanticEvaluationCriteria(entry.evaluationCriteria);
+            // Run 99 R33: the durable job is created with the criteria the executor derived from the
+            // capture's own task evidence, and re-creating it with a different rubric is refused as an
+            // idempotency conflict. Derive them the same way, so a resumed completion re-presents the
+            // job's immutable bytes.
+            const derivedCriteria = deriveAutomaticReplayCriteria({
+              taskText: extractTaskInstructionText(sourceCapture),
+              sourceOutput,
+            });
+            const effectiveCriteria = derivedCriteria
+              ? normalizeTrackBSemanticEvaluationCriteria(derivedCriteria.criteria)
+              : evaluationCriteria;
             const completer = buildSupervisedReplayEvaluationCompleter({
               backend: created,
               runtime,
@@ -4992,9 +5003,9 @@ export async function main(): Promise<void> {
               sourceModelId,
               counterfactualPackages,
               evaluationCriteria:
-                evaluationCriteria as unknown as Readonly<Record<string, unknown>>,
+                effectiveCriteria as unknown as Readonly<Record<string, unknown>>,
               evaluationCriteriaDigest:
-                digestTrackBSemanticEvaluationCriteria(evaluationCriteria),
+                digestTrackBSemanticEvaluationCriteria(effectiveCriteria),
               learningPolicySnapshot: readEvaluationLearningPolicySnapshot(),
               // A resumed completion performs no candidate dispatch, so its judge has no live
               // reservation to charge.
