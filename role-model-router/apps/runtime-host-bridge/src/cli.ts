@@ -1157,6 +1157,13 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       ...(typeof input.sourceCapture.taskTypeId === "string" && input.sourceCapture.taskTypeId.trim()
         ? { taskTypeId: input.sourceCapture.taskTypeId.trim() }
         : {}),
+      // Run 98 addendum 30 S4 (live finding, stage v190): the pipeline has recorded the judge
+      // presentation-order policy in the comparability key since run 99 close-out, but this
+      // supervised-replay path never passed it — so `0 of 473` durable evaluation jobs (and the
+      // comparison groups built from them) carried the order their judge actually ran under. The
+      // judge already resolved the policy (env override, then the versioned operator policy, then
+      // source-first), so the comparison records exactly what that judge applied.
+      ...(input.judge?.orderPolicy ? { judgeOrderPolicy: input.judge.orderPolicy } : {}),
       productionState: {},
       routePackage: input.sourceEndpointId,
       sourceDecisionId,
