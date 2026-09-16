@@ -1273,7 +1273,10 @@ export function createTrackBOperations({
   authorizationEpoch,
   operationsEndpoint = process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL?.trim(),
   operationsToken = process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TOKEN,
-  operationsTimeoutMs = DEFAULT_TRACK_B_OPERATIONS_TIMEOUT_MS,
+  // Run 99 R33: the bound resolves through the operator override
+  // (`ROLE_MODEL_TRACK_B_OPERATIONS_TIMEOUT_MS`) so a mature stage root can be given more room
+  // without a rebuild — the constant alone left the documented override inert.
+  operationsTimeoutMs = resolveTrackBOperationsTimeoutMs(),
   contributionDeliveryTimeoutMs = DEFAULT_CONTRIBUTION_DELIVERY_TIMEOUT_MS,
   extensionRuntime,
   contractStateRoot,

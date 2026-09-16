@@ -29,6 +29,19 @@ describe("run99 R33 private operations timeout", () => {
     expect(resolveTrackBOperationsTimeoutMs(1)).toBe(1);
   });
 
+  it("reads the operator override from the environment when no value is passed", () => {
+    const previous = process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TIMEOUT_MS;
+    try {
+      process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TIMEOUT_MS = "120000";
+      expect(resolveTrackBOperationsTimeoutMs()).toBe(120_000);
+      process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TIMEOUT_MS = "not-a-number";
+      expect(resolveTrackBOperationsTimeoutMs()).toBe(DEFAULT_TRACK_B_OPERATIONS_TIMEOUT_MS);
+    } finally {
+      if (previous === undefined) delete process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TIMEOUT_MS;
+      else process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TIMEOUT_MS = previous;
+    }
+  });
+
   it("falls back to the default for unusable values", () => {
     for (const value of [null, 0, -5, Number.NaN, 1.5]) {
       expect(resolveTrackBOperationsTimeoutMs(value as number)).toBe(
