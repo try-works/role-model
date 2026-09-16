@@ -698,6 +698,35 @@ export function selectDurableJudgeScores(input: {
   return selected.length === input.trialIds.length && selected.length > 0 ? selected : null;
 }
 
+/**
+ * Run 99 R33 live finding (stage v167): a resumed comparison reuses durable scores but passed the
+ * comparability and holdout it had re-derived, while the durable trial rows are written against the
+ * job's immutable tuple — the extension refused with `submitted trials with matching durable
+ * comparability and holdout evidence required`. The stored job's tuple is the authority.
+ */
+export function selectFinalizeBinding(input: {
+  readonly storedJob: unknown;
+  readonly comparability: Record<string, unknown>;
+  readonly holdout: Record<string, unknown>;
+}): { readonly comparability: Record<string, unknown>; readonly holdout: Record<string, unknown> } {
+  const job =
+    input.storedJob && typeof input.storedJob === "object" && !Array.isArray(input.storedJob)
+      ? (input.storedJob as Record<string, unknown>)
+      : null;
+  const storedComparability =
+    job?.comparability && typeof job.comparability === "object" && !Array.isArray(job.comparability)
+      ? (job.comparability as Record<string, unknown>)
+      : null;
+  const storedHoldout =
+    job?.holdout && typeof job.holdout === "object" && !Array.isArray(job.holdout)
+      ? (job.holdout as Record<string, unknown>)
+      : null;
+  return {
+    comparability: storedComparability ?? input.comparability,
+    holdout: storedHoldout ?? input.holdout,
+  };
+}
+
 export function selectDurableScoredTrialEvidence(input: {
   readonly scores: readonly Record<string, unknown>[];
   readonly scorerId: string;
@@ -7978,15 +8007,41 @@ export async function runTrackBShadowPipeline(
       });
     }
   }
+  // Run 99 R33 live finding (v167): the durable trial rows are written against the job's immutable
+  // comparability and holdout tuple, so a resumed run that passes its own re-derivation is refused
+  // with "submitted trials with matching durable comparability and holdout evidence required". Read
+  // the stored job and adopt that tuple when it exists.
+  const storedJobForBinding = await (async () => {
+    try {
+      const rawJob = await runtime.invoke("evaluation-core", {
+        ...envelope("evaluation:get-job", { jobId }),
+      });
+      return (
+        decodeExtensionBusinessResult({
+          result: rawJob,
+          extensionId: "evaluation-core",
+          ...(input.contractStateRoot ? { stateRoot: input.contractStateRoot } : {}),
+          scopeId: input.scope,
+        }) ?? rawJob
+      );
+    } catch {
+      return null;
+    }
+  })();
+  const finalizeBinding = selectFinalizeBinding({
+    storedJob: storedJobForBinding,
+    comparability: comparability as unknown as Record<string, unknown>,
+    holdout: effectiveHoldout as unknown as Record<string, unknown>,
+  });
   const evaluation = await runtime.invoke("evaluation-core", {
     ...envelope("evaluation:finalize-comparison-group", {
       groupId: `comparison:${input.requestId}`,
       trialIds,
-      comparability,
+      comparability: finalizeBinding.comparability,
       // Run 99 R33 D7 live finding: the comparison has to bind the same membership the durable job
       // was created with (the effective holdout), otherwise the authority refuses the finalize with
       // "durable evaluation holdout membership mismatch" and the job stays in `scoring` forever.
-      holdout: effectiveHoldout,
+      holdout: finalizeBinding.holdout,
       // Run 99 R26: the predeclared promotion protocol names the primary metric, so the
       // comparison outcome follows it instead of collapsing a two-scorer split into
       // `disagreement` (observed live: 38 of 60 groups).
