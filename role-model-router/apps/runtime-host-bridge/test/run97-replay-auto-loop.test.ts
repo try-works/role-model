@@ -365,7 +365,39 @@ test("run97 auto loop refuses replay-produced captures reported by the private b
   }
 });
 
-test("run97 auto loop re-reads endpoint health and never dispatches a degraded candidate", async () => {
+test("run98 addendum 04 a hung replay execution is bounded instead of stalling the producer", async () => {
+  const { ledger, cleanup } = harness();
+  try {
+    const operations = fakeOperations(["req-hung-1"]);
+    const recorded: Record<string, unknown>[] = [];
+    operations.recordReplayDisposition = async (input: Record<string, unknown>) => {
+      recorded.push(input);
+      return { recorded: true };
+    };
+    const loop = startAutoReplayLoop({
+      operations,
+      ledger,
+      policySet: buildReplayPolicySet(),
+      configuredEndpointIds: ["endpoint-a", "endpoint-b"],
+      // Measured live on v170: one capture whose replay never returned held the whole producer
+      // tick open (`ticks: 0`, `lastProcessedAtMs: null`), so no disposition was recorded, no
+      // expiry sweep ran, and eight replay jobs accumulated in `running` past their deadline.
+      executor: () => new Promise(() => {}),
+      executorTimeoutMs: 50,
+      intervalMs: 0,
+      now: () => Date.parse("2026-09-12T06:00:00Z"),
+    });
+    const result = await loop.tick();
+    loop.stop();
+    expect(result.deferred).toBe(1);
+    expect(String(recorded[0]?.outcome)).toBe("deferred");
+    expect(String(recorded[0]?.detail ?? "")).toMatch(/exceeded 50ms/);
+  } finally {
+    cleanup();
+  }
+});
+
+  test("run97 auto loop re-reads endpoint health and never dispatches a degraded candidate", async () => {
   const { ledger, cleanup } = harness();
   try {
     const operations = fakeOperations(["req-health-1"]);

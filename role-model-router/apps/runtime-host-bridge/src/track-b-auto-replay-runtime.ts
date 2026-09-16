@@ -182,6 +182,15 @@ export function startAutoReplayLoop(input: {
   }) => Promise<AutoReplayExecution>;
   readonly intervalMs?: number;
   readonly maxCapturesPerTick?: number;
+  /**
+   * Run 98 addendum 04 §7 (`L4`). Measured live on v170: one capture whose replay never returned
+   * held the whole producer tick open (`ticks: 0`, `lastProcessedAtMs: null`), so no disposition was
+   * recorded, the expiry sweep never ran, and eight replay jobs accumulated in `running` past their
+   * deadline. The default is deliberately larger than a replay job's own deadline plus its
+   * finalization grace (6 min + 5 min), so a legitimately slow multi-candidate replay is never
+   * abandoned early; only work that has outlived even the durable job's own bound is cut off.
+   */
+  readonly executorTimeoutMs?: number;
   readonly now?: () => number;
   readonly setIntervalFn?: (handler: () => void, timeout: number) => unknown;
   readonly clearIntervalFn?: (handle: unknown) => void;
@@ -276,6 +285,9 @@ export function startAutoReplayLoop(input: {
         policySet: input.policySet,
         executor: input.executor,
         maxCapturesPerTick,
+        ...(Number.isSafeInteger(input.executorTimeoutMs) && (input.executorTimeoutMs ?? 0) > 0
+          ? { executorTimeoutMs: Number(input.executorTimeoutMs) }
+          : {}),
       });
       const window = input.ledger.status().window;
       for (const disposition of result.dispositions) {

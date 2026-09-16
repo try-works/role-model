@@ -216,6 +216,53 @@ export interface AutoReplayTickResult {
   readonly cursor: string | null;
 }
 
+/**
+ * Run 98 addendum 04 §7 (`L4`), measured live on v170: one capture whose replay never returned held
+ * the whole producer tick open, so no disposition was recorded and the expiry sweep never ran. The
+ * bound is deliberately larger than a replay job's own deadline plus finalization grace (6 min +
+ * 5 min), so a legitimately slow multi-candidate replay is never cut off early — only work that has
+ * outlived even the durable job's own bound is abandoned to the next tick.
+ */
+const DEFAULT_EXECUTOR_TIMEOUT_MS = 12 * 60 * 1000;
+
+type AutoReplayExecutorRequest = {
+  readonly capture: AutoReplayCapture;
+  readonly candidates: readonly string[];
+  readonly toolPolicy: ReplayToolPolicy;
+  readonly policySet: ReplayPolicySet;
+  readonly reservationId: string;
+};
+
+async function runBoundedExecutor(
+  input: {
+    readonly executor: (request: AutoReplayExecutorRequest) => Promise<AutoReplayExecution>;
+    readonly executorTimeoutMs?: number;
+  },
+  request: AutoReplayExecutorRequest,
+): Promise<AutoReplayExecution> {
+  const configured = Number(input.executorTimeoutMs);
+  const timeoutMs =
+    Number.isSafeInteger(configured) && configured > 0 ? configured : DEFAULT_EXECUTOR_TIMEOUT_MS;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      input.executor(request),
+      new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(
+          () =>
+            reject(
+              new Error(`replay execution exceeded ${timeoutMs}ms (bounded per-capture budget)`),
+            ),
+          timeoutMs,
+        );
+        (timer as { unref?: () => void } | undefined)?.unref?.();
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
 export async function runAutoReplayTick(input: {
   readonly captures: readonly AutoReplayCapture[];
   readonly configuredEndpointIds: readonly string[];
@@ -234,6 +281,12 @@ export async function runAutoReplayTick(input: {
   readonly startCursor?: string | null;
   readonly channelReplayEnabled?: boolean;
   readonly dependenciesAvailable?: boolean;
+  /**
+   * Run 98 addendum 04 §7 (`L4`): bound a single capture's replay execution so one hung replay
+   * cannot hold the producer's tick open. Measured live: `ticks: 0`, `lastProcessedAtMs: null` on a
+   * runtime that had been up for minutes while eight jobs accumulated in `running`.
+   */
+  readonly executorTimeoutMs?: number;
 }): Promise<AutoReplayTickResult> {
   const maxCapturesPerTick = input.maxCapturesPerTick ?? DEFAULT_MAX_CAPTURES_PER_TICK;
   const dispositions: AutoReplayDisposition[] = [];
@@ -324,7 +377,7 @@ export async function runAutoReplayTick(input: {
     });
     let execution: AutoReplayExecution;
     try {
-      execution = await input.executor({
+      execution = await runBoundedExecutor(input, {
         capture,
         candidates,
         toolPolicy,
