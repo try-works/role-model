@@ -624,6 +624,32 @@ export function isEvaluationJobIdempotencyConflict(error: unknown): boolean {
  * actually recorded: the correctness score when it exists, otherwise the recorded score (the router
  * judge's) with a real reference, and a refusal only when the trial recorded nothing at all.
  */
+/**
+ * The trial-score readback reaches the host as a bare array, as a `{scores}` object, or wrapped in an
+ * externalized business result. Live evidence (v162): treating anything but a bare array as "no
+ * scores" made a durable scored trial look unscored, so a resumed comparison refused with
+ * `durable scored trial has no recorded scores` although the store held 1–2 rows per trial.
+ */
+export function normalizeTrialScoreRows(value: unknown): readonly Record<string, unknown>[] {
+  const rows = (candidate: unknown): readonly Record<string, unknown>[] =>
+    Array.isArray(candidate)
+      ? candidate.filter(
+          (row): row is Record<string, unknown> =>
+            Boolean(row) && typeof row === "object" && !Array.isArray(row),
+        )
+      : [];
+  if (Array.isArray(value)) return rows(value);
+  if (!value || typeof value !== "object") return [];
+  const record = value as Record<string, unknown>;
+  const direct = rows(record.scores);
+  if (direct.length > 0) return direct;
+  const business =
+    record.businessOutput && typeof record.businessOutput === "object"
+      ? (record.businessOutput as Record<string, unknown>)
+      : null;
+  return rows(business?.scores);
+}
+
 export function selectDurableScoredTrialEvidence(input: {
   readonly scores: readonly Record<string, unknown>[];
   readonly scorerId: string;
@@ -7576,10 +7602,20 @@ export async function runTrackBShadowPipeline(
       throw new Error("durable routing-shadow trial materialization failed");
     }
     if (trial.status === "scored") {
-      const scores = await runtime.invoke("evaluation-core", {
+      const rawScores = await runtime.invoke("evaluation-core", {
         ...envelope("evaluation:list-trial-scores", { trialId: trial.trialId }),
       });
-      const scoreRows = Array.isArray(scores) ? (scores as Record<string, unknown>[]) : [];
+      // Run 99 R33 (v162 live finding): the readback can cross the boundary as an externalized
+      // business result or a `{scores}` wrapper; only a bare array was recognized, so durable scored
+      // trials looked unscored and the resumed comparison refused with "no recorded scores".
+      const decodedScores =
+        decodeExtensionBusinessResult({
+          result: rawScores,
+          extensionId: "evaluation-core",
+          ...(input.contractStateRoot ? { stateRoot: input.contractStateRoot } : {}),
+          scopeId: input.scope,
+        }) ?? rawScores;
+      const scoreRows = [...normalizeTrialScoreRows(decodedScores)];
       // Run 99 R33: the durable trial's own recorded scores decide what it can prove. A resumed run
       // can re-derive a rubric the durable run never graded against, and refusing that trial made the
       // comparison unfinalizable; the recorded scores carry the comparison instead.

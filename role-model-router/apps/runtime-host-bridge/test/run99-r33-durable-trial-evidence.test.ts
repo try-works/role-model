@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { selectDurableScoredTrialEvidence } from "../src/track-b-runtime.js";
+import {
+  normalizeTrialScoreRows,
+  selectDurableScoredTrialEvidence,
+} from "../src/track-b-runtime.js";
 
 /**
  * Run 99 R33 live finding (stage v162): resuming an interrupted comparison reached the pipeline's
@@ -17,6 +20,15 @@ import { selectDurableScoredTrialEvidence } from "../src/track-b-runtime.js";
  */
 
 describe("run99 R33 durable scored trial evidence", () => {
+  it("accepts both the bare and the wrapped trial-score readback shape", () => {
+    const row = { scoreId: "score:judge", dimension: "preference", score: 1 };
+    expect(normalizeTrialScoreRows([row])).toEqual([row]);
+    expect(normalizeTrialScoreRows({ scores: [row] })).toEqual([row]);
+    expect(normalizeTrialScoreRows({ businessOutput: { scores: [row] } })).toEqual([row]);
+    expect(normalizeTrialScoreRows(null)).toEqual([]);
+    expect(normalizeTrialScoreRows({ transferState: "externalized" })).toEqual([]);
+  });
+
   it("uses the correctness score when the durable trial recorded one", () => {
     const evidence = selectDurableScoredTrialEvidence({
       scores: [
