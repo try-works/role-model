@@ -797,6 +797,27 @@ type SupervisedReplayCompletionOperations = Readonly<{
 }>;
 
 /**
+ * Run 99 R33 live finding (stage release swap): a durable post-observation backlog legitimately
+ * carries the release identity that produced it, and validating every stored correlation against the
+ * currently packaged release blocked the whole backend at startup after a release swap —
+ *
+ *   `runtime backend initialization failed Error: Run 88 correlation release identity mismatch`
+ *
+ * — which forced a rollback to the previous release to keep serving traffic. A backlog row is now
+ * validated against its own recorded release identity (never rewritten: the receipt keeps naming the
+ * release that served the request), while a live observation still validates against the packaged
+ * release, and a malformed recorded identity falls back to it so the strict comparison still refuses.
+ */
+export function resolvePostObservationReleaseId(input: {
+  readonly packagedReleaseId: string | undefined;
+  readonly correlationReleaseId: unknown;
+}): string | undefined {
+  const recorded = input.correlationReleaseId;
+  if (typeof recorded === "string" && /^sha256:[0-9a-f]{64}$/u.test(recorded)) return recorded;
+  return input.packagedReleaseId;
+}
+
+/**
  * Production completion callback shared by the fresh and awaiting-evaluation
  * paths. Keeping the callback as a factory makes the durable join directly
  * testable without bypassing the CLI's actual completion registration.
@@ -3734,7 +3755,14 @@ export async function main(): Promise<void> {
           ),
           ...(packagedReleaseId
             ? {
-                expectedReleaseId: packagedReleaseId,
+                expectedReleaseId: resolvePostObservationReleaseId({
+                  packagedReleaseId,
+                  correlationReleaseId:
+                    observation.run88Correlation &&
+                    typeof observation.run88Correlation === "object"
+                      ? (observation.run88Correlation as Record<string, unknown>).releaseId
+                      : undefined,
+                }),
                 run88Correlation: observation.run88Correlation as Record<string, unknown>,
               }
             : {}),
