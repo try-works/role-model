@@ -192,6 +192,7 @@ import {
   appendTrackBRouteAdvisoryObservation,
   buildLiveRouteAdvisoryObservation,
   decodeExternalizedOperatorReadback,
+  type TrackBRouteAdvisoryClassification,
 } from "./track-b-runtime.js";
 import { resolveAdvisoryCohortPercent } from "./route-advisory-source.js";
 
@@ -7608,6 +7609,52 @@ export function createRoleModelNormalizedIntentObservation(
 
   return { normalizedIntent, diagnostics };
 }
+
+/**
+ * Run 99 close-out (addenda 19-21 `S33`/`D1`/`D2`).
+ *
+ * The classification is already resolved and validated by the time a request is routed; this
+ * packages it so it can be *recorded* — on the capture, on the advisory observation and on the
+ * observation ledger entry — instead of leaving only the family behind.
+ *
+ * The taxonomy identity is always recorded (it is the taxonomy the request was classified
+ * against); `taskTypeId`, `roleId` and `toolClassIds` are recorded when the request declared them.
+ * Tool classes are filtered against the shipped taxonomy so a classification can never name a tool
+ * class this runtime does not have. Returns `null` when nothing at all is known, so a record shows
+ * absence rather than an invented classification.
+ */
+function buildRequestClassification(input: {
+  readonly taskTypeId?: string | null;
+  readonly roleId?: string | null;
+  readonly toolClasses?: readonly string[] | null;
+}): TrackBRouteAdvisoryClassification | null {
+  const knownToolClasses = new Set(canonicalTaxonomy.toolClasses.map((toolClass) => toolClass.id));
+  const toolClassIds = [
+    ...new Set(
+      (input.toolClasses ?? []).filter(
+        (toolClass): toolClass is string =>
+          typeof toolClass === "string" && knownToolClasses.has(toolClass),
+      ),
+    ),
+  ];
+  const taskTypeId = boundedRequestClassificationId(input.taskTypeId);
+  const roleId = boundedRequestClassificationId(input.roleId);
+  const taxonomyVersion = boundedRequestClassificationId(taxonomyManifest.taxonomyVersion);
+  const contentRevision = boundedRequestClassificationId(taxonomyManifest.contentRevision);
+  const taskTypesHash = boundedRequestClassificationId(taxonomyManifest.contentHashes?.taskTypes);
+  if (!taskTypeId && !roleId && !taxonomyVersion && toolClassIds.length === 0) return null;
+  return {
+    taskTypeId,
+    roleId,
+    toolClassIds,
+    taxonomyVersion,
+    contentRevision,
+    contentHashes: { taskTypes: taskTypesHash },
+  };
+}
+
+const boundedRequestClassificationId = (value: unknown): string | null =>
+  typeof value === "string" && value.trim() ? value.trim().slice(0, 128) : null;
 
 function resolveRoleModelIntentTaskType(input: {
   readonly roleModelIntent?: BridgeExecutionPlan["routingRequest"]["roleModelIntent"];
@@ -24263,6 +24310,15 @@ export async function createRuntimeBridgeBackend(
               requestTaskTypeId,
               taxonomyVersion: advisoryConsideration.taxonomyVersion ?? null,
             },
+            // Run 99 close-out (addenda 19-21 S33/D1/D2): record the classification the request was
+            // routed with, so the evidence is keyed by family *and* by the taxonomy identity it was
+            // classified against rather than by a bare family string.
+            classification: buildRequestClassification({
+              taskTypeId: plan.routingRequest.taskType ?? null,
+              roleId: plan.routingRequest.requestedRoleId ?? null,
+              toolClasses: plan.routingRequest.roleModelIntent?.toolClasses ?? null,
+            }),
+            // Run 99 close-out (D6): a live routed answer is the policy's own deterministic choice.
             outcome: outcome
               ? {
                   applied: outcome.applied === true,

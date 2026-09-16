@@ -6855,6 +6855,11 @@ export function buildTrackBRouteAdvisoryObservation(input: {
   readonly taskTypeId?: string | null;
   readonly requestTaskTypeId?: string | null;
   readonly taxonomyVersion?: string | null;
+  /** Run 99 close-out (addenda 19-21 S33/D1/D2): the classification the request was routed with. */
+  readonly classification?: TrackBRouteAdvisoryClassification | null;
+  /** Run 99 close-out (addenda 19-21 D6): how the observed arm was selected, and its propensity. */
+  readonly selectionMode?: TrackBRouteAdvisorySelectionMode;
+  readonly selectionProbability?: number;
 }) {
   if (!input.decisionId || !input.routePackage) {
     throw new Error("route advisory observation requires decision and route package");
@@ -6862,6 +6867,15 @@ export function buildTrackBRouteAdvisoryObservation(input: {
   if (!Number.isSafeInteger(input.observedAtMs) || input.observedAtMs < 0) {
     throw new Error("route advisory observation timestamp is invalid");
   }
+  if (
+    input.selectionProbability !== undefined &&
+    (!Number.isFinite(input.selectionProbability) ||
+      input.selectionProbability <= 0 ||
+      input.selectionProbability > 1)
+  ) {
+    throw new Error("route advisory observation propensity must fall within (0, 1]");
+  }
+  const normalizedClassification = normalizeTrackBRouteAdvisoryClassification(input.classification);
   const eligible = (input.eligibleRoutePackages ?? []).filter(
     (value): value is string => typeof value === "string" && value.length > 0,
   );
@@ -6913,6 +6927,19 @@ export function buildTrackBRouteAdvisoryObservation(input: {
     ...(input.taxonomyVersion
       ? { taxonomyVersion: String(input.taxonomyVersion).slice(0, 128) }
       : {}),
+    ...(normalizedClassification ? { classification: normalizedClassification } : {}),
+    ...(input.selectionMode
+      ? {
+          selectionMode: input.selectionMode,
+          // The canonical contract (`PerformanceSampleV2`) requires a propensity in (0, 1]. A
+          // counterfactual arm was chosen by the replay scheduler rather than drawn from the
+          // policy, so its propensity is unobservable and `D6` requires the evidence to stay
+          // observational instead of inventing one.
+          ...(Number.isFinite(input.selectionProbability)
+            ? { selectionProbability: Number(input.selectionProbability) }
+            : {}),
+        }
+      : {}),
     origin: input.origin ?? ("shadow" as const),
     observedAtMs: input.observedAtMs,
   };
@@ -6926,6 +6953,82 @@ export const TRACK_B_ROUTE_ADVISORY_MODES = [
 ] as const;
 export type TrackBRouteAdvisoryMode = (typeof TRACK_B_ROUTE_ADVISORY_MODES)[number];
 export type TrackBRouteAdvisorySelection = "baseline_retained" | "advisory_applied";
+
+/**
+ * Run 99 close-out (addenda 19-21 `S33`/`D1`/`D2`): the classification a request was routed with,
+ * recorded so the evidence can be keyed by `(channel, scope, route package, taskTypeId)` and by the
+ * taxonomy identity it was classified against. Shape follows the canonical
+ * `route-learning-contracts.schema.json` `scope` object (`roleId`, `taskTypeId`, `toolClassIds`).
+ */
+export interface TrackBRouteAdvisoryClassification {
+  readonly taskTypeId?: string | null;
+  readonly roleId?: string | null;
+  readonly toolClassIds?: readonly string[] | null;
+  readonly taxonomyVersion?: string | null;
+  readonly contentRevision?: string | null;
+  readonly contentHashes?: { readonly taskTypes?: string | null } | null;
+}
+
+/**
+ * Run 99 close-out (`D6`): the canonical `PerformanceSampleV2.selectionMode` vocabulary.
+ * `policy_deterministic` is the live routing case — the recorded package is the policy's own
+ * deterministic choice, so its propensity is 1. `replay_counterfactual` is an arm the replay
+ * scheduler chose, whose propensity is unobservable and therefore never fabricated.
+ */
+export const TRACK_B_ROUTE_ADVISORY_SELECTION_MODES = [
+  "policy_deterministic",
+  "policy_randomized",
+  "controlled_exploration",
+  "manual",
+  "replay_counterfactual",
+] as const;
+export type TrackBRouteAdvisorySelectionMode =
+  (typeof TRACK_B_ROUTE_ADVISORY_SELECTION_MODES)[number];
+
+const boundedClassificationId = (value: unknown, max = 128): string | null =>
+  typeof value === "string" && value.trim() ? value.trim().slice(0, max) : null;
+
+/**
+ * Bounds and normalizes the classification before it is persisted, and returns `null` when nothing
+ * was declared so the record shows absence rather than an invented classification.
+ */
+function normalizeTrackBRouteAdvisoryClassification(
+  value: TrackBRouteAdvisoryClassification | null | undefined,
+): TrackBRouteAdvisoryClassification | null {
+  if (!value || typeof value !== "object") return null;
+  const taskTypeId = boundedClassificationId(value.taskTypeId);
+  const roleId = boundedClassificationId(value.roleId);
+  const toolClassIds = Array.isArray(value.toolClassIds)
+    ? [
+        ...new Set(
+          value.toolClassIds
+            .map((item) => boundedClassificationId(item))
+            .filter((item): item is string => item !== null),
+        ),
+      ].slice(0, 256)
+    : [];
+  const taxonomyVersion = boundedClassificationId(value.taxonomyVersion);
+  const contentRevision = boundedClassificationId(value.contentRevision);
+  const taskTypesHash = boundedClassificationId(value.contentHashes?.taskTypes, 256);
+  if (
+    !taskTypeId &&
+    !roleId &&
+    toolClassIds.length === 0 &&
+    !taxonomyVersion &&
+    !contentRevision &&
+    !taskTypesHash
+  ) {
+    return null;
+  }
+  return {
+    taskTypeId,
+    roleId,
+    toolClassIds,
+    taxonomyVersion,
+    contentRevision,
+    contentHashes: { taskTypes: taskTypesHash },
+  };
+}
 
 const advisoryModeForStage = (stage: string): TrackBRouteAdvisoryMode => {
   if (stage === "S4") return "active";
@@ -6960,6 +7063,11 @@ export function buildLiveRouteAdvisoryObservation(input: {
     readonly requestTaskTypeId?: string | null;
     readonly taxonomyVersion?: string | null;
   };
+  /** Run 99 close-out (addenda 19-21 S33): the classification this request was routed with. */
+  readonly classification?: TrackBRouteAdvisoryClassification | null;
+  /** Run 99 close-out (addenda 19-21 D6): the selection mode of the observed arm. */
+  readonly selectionMode?: TrackBRouteAdvisorySelectionMode;
+  readonly selectionProbability?: number;
   readonly outcome?: {
     readonly applied?: boolean;
     readonly fallbackReason?: string | null;
@@ -6973,6 +7081,13 @@ export function buildLiveRouteAdvisoryObservation(input: {
   const stage = input.advisory.stage;
   const consulted = stage === "S2" || stage === "S3" || stage === "S4";
   const applied = consulted && input.outcome?.applied === true;
+  const selectionMode = input.selectionMode ?? ("policy_deterministic" as const);
+  // A deterministic policy picks the recorded package with probability 1; a counterfactual arm is
+  // handed back to the caller's explicit value (or omitted) so no propensity is invented.
+  const selectionProbability =
+    selectionMode === "replay_counterfactual"
+      ? input.selectionProbability
+      : (input.selectionProbability ?? 1);
   return buildTrackBRouteAdvisoryObservation({
     decisionId: input.decisionId,
     routePackage: input.routePackage,
@@ -7006,6 +7121,9 @@ export function buildLiveRouteAdvisoryObservation(input: {
     taskTypeId: input.advisory.taskTypeId ?? null,
     requestTaskTypeId: input.advisory.requestTaskTypeId ?? null,
     taxonomyVersion: input.advisory.taxonomyVersion ?? null,
+    classification: input.classification ?? null,
+    selectionMode,
+    selectionProbability,
     origin: "live",
   });
 }
