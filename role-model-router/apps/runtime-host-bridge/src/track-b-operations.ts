@@ -836,6 +836,37 @@ export function resolveTrackBOperationsTimeoutMs(
     : DEFAULT_TRACK_B_OPERATIONS_TIMEOUT_MS;
 }
 
+/**
+ * Run 98 addendum 04 §7 (`L1`): how many extra attempts a connection-level failure gets, and how long
+ * to wait before each. Kept small and bounded so a genuinely down boundary still fails promptly.
+ */
+const PRIVATE_OPERATIONS_TRANSPORT_RETRIES = 2;
+const PRIVATE_OPERATIONS_TRANSPORT_RETRY_DELAYS_MS = [250, 1_000];
+
+const RETRYABLE_PRIVATE_OPERATION_TRANSPORT_CODES = new Set([
+  "ECONNRESET",
+  "ECONNREFUSED",
+  "ECONNABORTED",
+  "EPIPE",
+  "ETIMEDOUT",
+  "UND_ERR_SOCKET",
+  "UND_ERR_CONNECT_TIMEOUT",
+]);
+
+/**
+ * A *connection-level* failure is retryable; a protocol error, a stated status, or a timeout is not.
+ * A timeout is excluded deliberately: the far side may still be doing the work, and retrying it would
+ * duplicate it rather than recover a lost connection.
+ */
+const isRetryablePrivateOperationTransportFailure = (error: unknown): boolean => {
+  const cause = (error as { cause?: { code?: unknown } } | undefined)?.cause;
+  const ownCode = (error as { code?: unknown } | undefined)?.code;
+  const code = typeof cause?.code === "string" ? cause.code : typeof ownCode === "string" ? ownCode : "";
+  if (RETRYABLE_PRIVATE_OPERATION_TRANSPORT_CODES.has(code)) return true;
+  const message = String((error as { message?: unknown } | undefined)?.message ?? "");
+  return message === "fetch failed" || /socket hang up|other side closed/i.test(message);
+};
+
 const privateRetentionRequest = async (
   endpoint: string | undefined,
   token: string | undefined,
@@ -856,27 +887,54 @@ const privateRetentionRequest = async (
       "Track B private operations boundary requires a launcher-issued authentication token",
     );
   }
-  let response: Response;
-  try {
-    response = await fetch(new URL(route, endpoint.endsWith("/") ? endpoint : `${endpoint}/`), {
-      method: init.method ?? "GET",
-      headers: {
-        ...init.headers,
-        ...(init.body ? { "content-type": "application/json" } : {}),
-        authorization: `Bearer ${token}`,
-      },
-      ...(init.body ? { body: JSON.stringify(init.body) } : {}),
-      signal: AbortSignal.timeout(timeoutMs),
-    });
-  } catch (error) {
-    if (error instanceof Error && error.name === "TimeoutError") {
-      throw new TrackBPrivateOperationError(
-        504,
-        `private Track B operation timed out after ${timeoutMs}ms`,
+  const url = new URL(route, endpoint.endsWith("/") ? endpoint : `${endpoint}/`);
+  const requestInit = {
+    method: init.method ?? "GET",
+    headers: {
+      ...init.headers,
+      ...(init.body ? { "content-type": "application/json" } : {}),
+      authorization: `Bearer ${token}`,
+    },
+    ...(init.body ? { body: JSON.stringify(init.body) } : {}),
+  } as const;
+  /**
+   * Run 98 addendum 04 §7 (`L1`), measured on real dsh traffic: this boundary did a single `fetch`
+   * with no retry, so one transient connection reset surfaced as `fetch failed` / `read ECONNRESET`
+   * and the caller recorded a terminal `refused replay_failed` for a capture that was perfectly
+   * replayable. Every operation here is idempotency-keyed (capture ids, replay/job ids, request
+   * correlation ids), so retrying a *connection-level* failure is safe; a timeout is not retried
+   * because the work may still be running on the far side.
+   */
+  let response: Response | null = null;
+  let lastTransportError: unknown = null;
+  for (let attempt = 0; attempt <= PRIVATE_OPERATIONS_TRANSPORT_RETRIES; attempt += 1) {
+    try {
+      response = await fetch(url, {
+        ...requestInit,
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+      lastTransportError = null;
+      break;
+    } catch (error) {
+      if (error instanceof Error && error.name === "TimeoutError") {
+        throw new TrackBPrivateOperationError(
+          504,
+          `private Track B operation timed out after ${timeoutMs}ms`,
+        );
+      }
+      lastTransportError = error;
+      if (
+        attempt >= PRIVATE_OPERATIONS_TRANSPORT_RETRIES ||
+        !isRetryablePrivateOperationTransportFailure(error)
+      ) {
+        throw error;
+      }
+      await new Promise((resolve) =>
+        setTimeout(resolve, PRIVATE_OPERATIONS_TRANSPORT_RETRY_DELAYS_MS[attempt] ?? 1_000),
       );
     }
-    throw error;
   }
+  if (!response) throw lastTransportError ?? new Error("private Track B operation failed");
   const result = (await response.json().catch(() => ({}))) as { readonly error?: unknown };
   if (!response.ok)
     throw new TrackBPrivateOperationError(

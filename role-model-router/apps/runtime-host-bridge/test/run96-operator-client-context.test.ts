@@ -175,4 +175,41 @@ describe("Run 96 public operator context binding", () => {
       await close(server);
     }
   });
+
+  /**
+   * Run 98 addendum 04 §7 (`L1`), measured on real dsh traffic: the private operations boundary did a
+   * single `fetch` with no retry, so one connection reset surfaced as `fetch failed` /
+   * `read ECONNRESET` and was recorded as `refused replay_failed`. The operations are
+   * idempotency-keyed, so a bounded retry is safe and a transient reset must not become a terminal
+   * failure.
+   */
+  test("retries once when the private boundary resets the connection", async () => {
+    let attempts = 0;
+    const server = createServer((request, response) => {
+      attempts += 1;
+      if (attempts === 1) {
+        request.socket.destroy();
+        return;
+      }
+      respondJson(response);
+    });
+    const port = await listen(server);
+    const root = await createTestRoot();
+
+    try {
+      const operations = createTrackBOperations({
+        statePath: path.join(root, "state.json"),
+        catalog: [],
+        runtimeChannel: operatorContext.channel,
+        operationsEndpoint: `http://127.0.0.1:${port}`,
+        operationsToken: "run96-operator-client-token-0123456789",
+        scope: operatorContext.scope,
+        authorizationEpoch: operatorContext.authorizationEpoch,
+      });
+      await expect(operations.readOperatorStatus()).resolves.toBeDefined();
+      expect(attempts).toBe(2);
+    } finally {
+      await close(server);
+    }
+  });
 });
