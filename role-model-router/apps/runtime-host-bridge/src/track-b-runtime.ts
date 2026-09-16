@@ -1705,7 +1705,20 @@ export interface RouterReplayAdapter {
  */
 export interface RouterReplayAuthorizationNonceStore {
   has(nonce: string): boolean | Promise<boolean>;
-  consume(nonce: string): boolean | Promise<boolean>;
+  /**
+   * Consumes a fresh nonce for one dispatch identity.
+   *
+   * Run 99 R33: a replay job resumes its *prepared* envelope verbatim after a failed provider
+   * attempt, so the same nonce is presented again for the same `dispatchIdempotencyKey`. The nonce
+   * stays bound to that identity — it can never authorize different work — and the caller's policy
+   * decides whether the bound dispatch may still be retried (the production composition refuses once
+   * the dispatch ledger holds a completed receipt).
+   */
+  consume(
+    nonce: string,
+    dispatchIdentity?: string,
+    options?: { readonly mayReauthorize?: (dispatchIdentity: string) => boolean },
+  ): boolean | Promise<boolean>;
 }
 
 export interface RouterReplayAdapterDispatchContext {
@@ -1779,6 +1792,10 @@ export function createReplayAuthorizationNonceStore(
   }
   mkdirSync(path.dirname(filePath), { recursive: true });
   let nonces: Set<string>;
+  // A nonce is bound to exactly one dispatch identity. The binding is what lets a resumed
+  // *prepared* envelope be re-authorized without ever letting a captured nonce authorize
+  // different work.
+  let bindings: Record<string, string> = {};
   if (!existsSync(filePath)) {
     nonces = new Set<string>();
   } else {
@@ -1806,12 +1823,37 @@ export function createReplayAuthorizationNonceStore(
       throw new Error("replay authorization nonce store exceeds its bounded cap");
     }
     nonces = new Set<string>(persisted as string[]);
+    const persistedBindings = (parsed as Record<string, unknown>).bindings;
+    if (
+      persistedBindings !== undefined &&
+      (!persistedBindings || typeof persistedBindings !== "object" || Array.isArray(persistedBindings))
+    ) {
+      throw new Error("replay authorization nonce store is invalid");
+    }
+    for (const [nonce, identity] of Object.entries(
+      (persistedBindings ?? {}) as Record<string, unknown>,
+    )) {
+      if (
+        typeof nonce !== "string" ||
+        !nonce ||
+        nonce.length > 256 ||
+        typeof identity !== "string" ||
+        !identity ||
+        identity.length > 256 ||
+        !nonces.has(nonce)
+      ) {
+        throw new Error("replay authorization nonce store binding is invalid");
+      }
+      bindings[nonce] = identity;
+    }
   }
 
   const persist = (): void => {
+    const bound = Object.entries(bindings).sort(([left], [right]) => left.localeCompare(right));
     const payload = `${JSON.stringify({
       schemaVersion: REPLAY_AUTHORIZATION_NONCE_STORE_SCHEMA,
       nonces: [...nonces].sort(),
+      ...(bound.length > 0 ? { bindings: Object.fromEntries(bound) } : {}),
     })}\n`;
     const temporaryPath = `${filePath}.${process.pid}.tmp`;
     writeFileSync(temporaryPath, payload, { encoding: "utf8" });
@@ -1822,15 +1864,32 @@ export function createReplayAuthorizationNonceStore(
     has(nonce: string): boolean {
       return nonces.has(nonce);
     },
-    consume(nonce: string): boolean {
+    consume(
+      nonce: string,
+      dispatchIdentity?: string,
+      options?: { readonly mayReauthorize?: (dispatchIdentity: string) => boolean },
+    ): boolean {
       if (typeof nonce !== "string" || !nonce || nonce.length > 256) {
         throw new Error("replay authorization nonce is invalid");
       }
-      if (nonces.has(nonce)) return false;
+      if (
+        dispatchIdentity !== undefined &&
+        (typeof dispatchIdentity !== "string" ||
+          !dispatchIdentity ||
+          dispatchIdentity.length > 256)
+      ) {
+        throw new Error("replay dispatch identity is invalid");
+      }
+      if (nonces.has(nonce)) {
+        const bound = bindings[nonce];
+        if (bound === undefined || dispatchIdentity !== bound) return false;
+        return options?.mayReauthorize?.(bound) === true;
+      }
       if (nonces.size >= 8192) {
         throw new Error("replay authorization nonce store exceeds its bounded cap");
       }
       nonces.add(nonce);
+      if (dispatchIdentity !== undefined) bindings[nonce] = dispatchIdentity;
       persist();
       return true;
     },
@@ -2289,7 +2348,12 @@ export function createRouterReplayAdapter(options: {
       assertReplayAdapterAuthorization(authorization, input.envelope);
     }
     if (authorizationNonceStore) {
-      if (!(await authorizationNonceStore.consume(authorization.nonce))) {
+      const dispatchIdentity =
+        typeof input.envelope.dispatchIdempotencyKey === "string" &&
+        input.envelope.dispatchIdempotencyKey.length > 0
+          ? input.envelope.dispatchIdempotencyKey
+          : undefined;
+      if (!(await authorizationNonceStore.consume(authorization.nonce, dispatchIdentity))) {
         throw new Error("replayed replay adapter authorization nonce");
       }
       pendingAuthorizationNonces.add(authorization.nonce);

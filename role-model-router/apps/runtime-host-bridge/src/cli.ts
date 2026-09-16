@@ -75,6 +75,7 @@ import {
   createProductionExtensionRuntime,
   createReplayIntentScheduler,
   createReplaySourceAttestation,
+  createReplayAuthorizationNonceStore,
   createRouterReplayAdapter,
   createRun88RuntimeCorrelation,
   createRuntimeRequestCorrelationId,
@@ -3105,6 +3106,15 @@ function createProductionReplayDispatchLedger(filePath: string) {
       };
       persist();
     },
+    /**
+     * Run 99 R33: a completed dispatch keeps its authorization single-use forever. Every other
+     * state (never started, failed, or indeterminate) may re-present the *same* nonce for the
+     * *same* dispatch identity, because the ledger — not the nonce — owns whether provider work
+     * is repeated.
+     */
+    hasCompleted(dispatchIdempotencyKey: string): boolean {
+      return records[dispatchIdempotencyKey]?.state === "complete";
+    },
   });
 }
 
@@ -3117,6 +3127,9 @@ export function createProductionReplayAdapter(
   options: ProductionReplayAdapterOptions,
 ): ReturnType<typeof createRouterReplayAdapter> {
   const authorizationNonceStorePath = resolveProductionReplayAuthorizationNonceStorePath(options);
+  const authorizationNonceStore = createReplayAuthorizationNonceStore(
+    authorizationNonceStorePath,
+  );
   const dispatchLedger = createProductionReplayDispatchLedger(
     resolveProductionReplayDispatchLedgerPath(options),
   );
@@ -3165,7 +3178,13 @@ export function createProductionReplayAdapter(
   const { runtimeStateRoot: _runtimeStateRoot, scopeId: _scopeId, ...adapterOptions } = options;
   return createRouterReplayAdapter({
     ...adapterOptions,
-    authorizationNonceStorePath,
+    authorizationNonceStore: {
+      has: (nonce: string) => authorizationNonceStore.has(nonce),
+      consume: (nonce: string, dispatchIdentity?: string) =>
+        authorizationNonceStore.consume(nonce, dispatchIdentity, {
+          mayReauthorize: (identity: string) => !dispatchLedger.hasCompleted(identity),
+        }),
+    },
     dispatch: dispatchWithIdempotency,
   });
 }
