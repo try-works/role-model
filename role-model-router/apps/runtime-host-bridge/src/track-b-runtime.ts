@@ -7327,7 +7327,31 @@ export async function runTrackBShadowPipeline(
       authorizationEpoch: input.authorizationEpoch,
     },
   );
-  const jobId = input.evaluationJobIds?.[0] ?? `evaluation:${input.requestId}`;
+  // Run 99 R33 (D7 live finding): Evaluation Core refuses a re-created job whose contract-relevant
+  // shape changed under the same id ("evaluation job idempotency conflict"), which stranded every
+  // capture whose job had been created by the previous build and blocked the comparison. The durable
+  // identity is therefore contract-addressed: it carries a bounded digest of the declared holdout
+  // membership, the scoring identity and the comparability, so a changed contract produces a new job
+  // instead of colliding with the old one, while an unchanged replay still reuses its job.
+  const evaluationContractDigest = createHash("sha256")
+    .update(
+      JSON.stringify(
+        canonicalizeRun88Proof({
+          holdoutId: holdout.holdoutId,
+          holdoutCaseIds: [...caseIds].sort(),
+          scorerSetVersion,
+          taskRef: comparability.taskRef,
+          inputRef: comparability.inputRef,
+          forkRef: comparability.forkRef,
+          toolPolicyDigest: comparability.toolPolicyDigest,
+          environmentDigest: comparability.environmentDigest,
+        }),
+      ),
+    )
+    .digest("hex")
+    .slice(0, 16);
+  const jobId =
+    input.evaluationJobIds?.[0] ?? `evaluation:${input.requestId}:${evaluationContractDigest}`;
   if (typeof jobId !== "string" || !jobId) {
     throw new Error("durable routing-shadow evaluation job identity is invalid");
   }
