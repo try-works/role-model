@@ -435,3 +435,33 @@ test("run99 r33 the shadow observation carries the classification and the propen
   expect(observation.selectionMode).toBe("policy_deterministic");
   expect(observation.selectionProbability).toBe(1);
 });
+
+/**
+ * Run 99 close-out (addendum 21 §4 `S33`): the `comparabilityKey` inputs.
+ *
+ * Two comparisons judged under different presentation orders are not comparable, so the judge order
+ * policy that produced a comparison belongs in its comparability key. Measured before this slice:
+ * the policy was enforced by the judge but recorded nowhere on the evidence.
+ */
+test("run99 addendum 21 the comparison records the judge order policy it was produced under", async () => {
+  const invocations: Invocation[] = [];
+  const runtime = {
+    invoke: scriptedRuntime(invocations),
+    listExtensions: () => [{ id: "knowledge-store", lifecycle: "ready" }],
+  };
+  const result = (await trackBRuntime.runTrackBShadowPipeline(runtime as never, {
+    ...pipelineInput(),
+    judgeOrderPolicy: "dual_order",
+  })) as unknown as { readonly evaluation: Record<string, unknown> };
+  expect(result.evaluation).toBeDefined();
+  // The comparability key travels in the `evaluation:create-job` envelope, so it is the recorded
+  // invocation — not the comparison-group readback — that proves the value reached Evaluation Core.
+  const createJob = invocations.find(
+    (call) => call.id === "evaluation-core" && call.capability === "evaluation:create-job",
+  );
+  expect(createJob).toBeDefined();
+  const comparability = (createJob?.value as { comparability?: Record<string, unknown> })
+    ?.comparability;
+  expect(comparability?.judgeOrderPolicy).toBe("dual_order");
+  expect(comparability?.taskTypeId).toBeUndefined();
+});

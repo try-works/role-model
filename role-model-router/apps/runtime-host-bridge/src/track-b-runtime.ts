@@ -5411,6 +5411,12 @@ export interface TrackBShadowPipelineInput {
    * durable ledger, so the classification has to travel through this path too.
    */
   readonly classification?: TrackBRouteAdvisoryClassification | null;
+  /**
+   * Run 99 close-out (addendum 21 §4 `S33`): the judge presentation order the comparison was
+   * produced under. Two comparisons judged under different order policies are not comparable, so the
+   * value belongs in the comparability key rather than only in the policy that configured the judge.
+   */
+  readonly judgeOrderPolicy?: "source_first" | "dual_order" | null;
   readonly prefix: readonly unknown[];
   /**
    * Authoritative durable reference for the source prefix the caller observed.
@@ -7638,6 +7644,9 @@ export async function runTrackBShadowPipeline(
     forkRef: evaluationReferences.forkRef,
     policyId: "run96-routing-shadow",
     scorerSetVersion,
+    // Run 99 close-out (addendum 21 §4 S33): the judge order policy is part of the comparability key,
+    // so a comparison records the presentation order that produced it.
+    ...(input.judgeOrderPolicy ? { judgeOrderPolicy: input.judgeOrderPolicy } : {}),
     toolPolicyDigest: evaluationReferences.toolPolicyDigest,
     environmentDigest: evaluationReferences.environmentDigest,
     sourceEvidenceRef: evaluationReferences.sourceEvidenceRef,
@@ -9612,6 +9621,8 @@ export async function runTrackBPostObservation(
      * distribution and the counterfactual influence rate from durable state.
      */
     readonly advisoryObservationLedgerPath?: string;
+    /** Run 99 close-out (addendum 21 §4 S33): the judge order policy in force for this scope. */
+    readonly judgeOrderPolicy?: "source_first" | "dual_order" | null;
   },
 ) {
   const requestId = String(observation.requestId ?? "");
@@ -9958,6 +9969,7 @@ export async function runTrackBPostObservation(
                   observation.classification as TrackBRouteAdvisoryClassification,
               }
             : {}),
+          ...(input.judgeOrderPolicy ? { judgeOrderPolicy: input.judgeOrderPolicy } : {}),
           productionState,
           routePackage,
           sourceDecisionId,

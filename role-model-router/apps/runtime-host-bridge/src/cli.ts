@@ -3795,6 +3795,18 @@ export async function main(): Promise<void> {
                 run88Correlation: observation.run88Correlation as Record<string, unknown>,
               }
             : {}),
+          // Run 99 close-out (addendum 21 §4 S33): the judge presentation order is part of the
+          // comparability key, so the comparison records the policy it was produced under.
+          judgeOrderPolicy:
+            readLearningPolicyFile({
+              repoRoot: options.repoRoot,
+              stateRoot: resolveLearningPolicyStateRoot({
+                runtimeStateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+              }),
+              channel: packagedProfile?.channel ?? "development",
+              scopeId: options.scopeId,
+            })?.effective.judgeOrderPolicy ?? null,
         } as const;
         const operations = postObservationOperations;
         return operations
