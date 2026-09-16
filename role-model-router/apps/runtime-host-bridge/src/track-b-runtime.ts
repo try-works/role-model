@@ -631,23 +631,41 @@ export function isEvaluationJobIdempotencyConflict(error: unknown): boolean {
  * `durable scored trial has no recorded scores` although the store held 1–2 rows per trial.
  */
 export function normalizeTrialScoreRows(value: unknown): readonly Record<string, unknown>[] {
-  const rows = (candidate: unknown): readonly Record<string, unknown>[] =>
-    Array.isArray(candidate)
-      ? candidate.filter(
-          (row): row is Record<string, unknown> =>
-            Boolean(row) && typeof row === "object" && !Array.isArray(row),
-        )
-      : [];
-  if (Array.isArray(value)) return rows(value);
-  if (!value || typeof value !== "object") return [];
-  const record = value as Record<string, unknown>;
-  const direct = rows(record.scores);
-  if (direct.length > 0) return direct;
-  const business =
-    record.businessOutput && typeof record.businessOutput === "object"
-      ? (record.businessOutput as Record<string, unknown>)
-      : null;
-  return rows(business?.scores);
+  const looksLikeScore = (row: unknown): row is Record<string, unknown> =>
+    Boolean(row) &&
+    typeof row === "object" &&
+    !Array.isArray(row) &&
+    ("dimension" in (row as Record<string, unknown>) ||
+      "scoreId" in (row as Record<string, unknown>) ||
+      "scorerId" in (row as Record<string, unknown>));
+  const visit = (node: unknown, depth: number): readonly Record<string, unknown>[] => {
+    if (depth > 5 || node === null || node === undefined) return [];
+    if (Array.isArray(node)) return node.filter(looksLikeScore);
+    if (typeof node !== "object") return [];
+    const record = node as Record<string, unknown>;
+    // The live readback reaches the host in several wrappers (a bare array, `{scores}`, `{value}`,
+    // `{businessOutput: …}`, an externalized transfer marker). Walk the bounded payload keys instead
+    // of guessing one shape: a marker carries no score rows, so it still yields `[]`.
+    for (const key of [
+      "scores",
+      "value",
+      "result",
+      "businessOutput",
+      "businessResult",
+      "output",
+      "payload",
+      "data",
+      "rows",
+      "items",
+      "records",
+    ]) {
+      if (!(key in record)) continue;
+      const found = visit(record[key], depth + 1);
+      if (found.length > 0) return found;
+    }
+    return [];
+  };
+  return visit(value, 0);
 }
 
 export function selectDurableScoredTrialEvidence(input: {
@@ -7616,6 +7634,15 @@ export async function runTrackBShadowPipeline(
           scopeId: input.scope,
         }) ?? rawScores;
       const scoreRows = [...normalizeTrialScoreRows(decodedScores)];
+      if (scoreRows.length === 0) {
+        // Bounded diagnostic: a durable scored trial always has rows in the store, so an empty
+        // readback means the host did not recognize the transport shape.
+        console.error(
+          `[run99] durable trial score readback unrecognized:${trial.trialId} ${JSON.stringify(
+            rawScores,
+          ).slice(0, 300)}`,
+        );
+      }
       // Run 99 R33: the durable trial's own recorded scores decide what it can prove. A resumed run
       // can re-derive a rubric the durable run never graded against, and refusing that trial made the
       // comparison unfinalizable; the recorded scores carry the comparison instead.

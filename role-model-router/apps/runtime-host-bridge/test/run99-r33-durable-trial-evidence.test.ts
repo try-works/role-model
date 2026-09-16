@@ -25,6 +25,9 @@ describe("run99 R33 durable scored trial evidence", () => {
     expect(normalizeTrialScoreRows([row])).toEqual([row]);
     expect(normalizeTrialScoreRows({ scores: [row] })).toEqual([row]);
     expect(normalizeTrialScoreRows({ businessOutput: { scores: [row] } })).toEqual([row]);
+    expect(normalizeTrialScoreRows({ value: [row] })).toEqual([row]);
+    expect(normalizeTrialScoreRows({ businessOutput: { value: [row] } })).toEqual([row]);
+    expect(normalizeTrialScoreRows({ result: { payload: { rows: [row] } } })).toEqual([row]);
     expect(normalizeTrialScoreRows(null)).toEqual([]);
     expect(normalizeTrialScoreRows({ transferState: "externalized" })).toEqual([]);
   });
