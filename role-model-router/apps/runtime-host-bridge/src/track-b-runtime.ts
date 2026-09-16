@@ -602,6 +602,20 @@ export function createTrackBBridgeServerOptions<
   ) as Pick<Backend, (typeof trackBServerOperationNames)[number]>;
 }
 
+/**
+ * Run 99 R33 live finding (stage v161): a resumed supervised-replay completion re-presents its
+ * durable evaluation job. The extension compares the whole canonical job JSON, so a re-derived
+ * attestation or reference proof answers `evaluation job idempotency conflict` — and treating that as
+ * fatal meant a resumed comparison could never be finalized. The durable job is the authority for
+ * that comparison, so a conflict continues with the stored job; every other create failure still
+ * fails closed.
+ */
+export function isEvaluationJobIdempotencyConflict(error: unknown): boolean {
+  return /idempotency conflict/i.test(
+    String((error as { message?: unknown })?.message ?? error ?? ""),
+  );
+}
+
 const run88CorrelationFields = new Set([
   "schemaVersion",
   "eventId",
@@ -7462,7 +7476,15 @@ export async function runTrackBShadowPipeline(
     caseIds: effectiveHoldoutCaseIds,
     membershipDigest: computeHoldoutMembershipDigest(effectiveHoldoutCaseIds),
   };
-  await runtime.invoke("evaluation-core", {
+  /**
+   * Run 99 R33 live finding (stage v161): a resumed completion re-presents the same durable job. The
+   * extension compares the whole canonical job JSON, so a re-derived attestation or proof makes the
+   * re-presentation an `evaluation job idempotency conflict` — and a conflict meant the resumed
+   * comparison could never be finalized. The durable job is the authority for this comparison, so a
+   * conflict continues with the stored job and lets the finalize step refuse if its holdout does not
+   * match the resumed derivation. Any other create failure still fails closed.
+   */
+  const createJobEnvelope = {
     ...envelope("evaluation:create-job", {
       id: jobId,
       idempotencyKey: jobId,
@@ -7476,7 +7498,12 @@ export async function runTrackBShadowPipeline(
       referenceAttestation,
       cases: durableCases,
     }),
-  });
+  };
+  try {
+    await runtime.invoke("evaluation-core", createJobEnvelope);
+  } catch (error) {
+    if (!isEvaluationJobIdempotencyConflict(error)) throw error;
+  }
   const trialIds: string[] = [];
   const completedRollouts: Array<{
     rollout: Record<string, unknown>;
