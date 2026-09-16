@@ -184,101 +184,99 @@ test("run97 rc06 knowledge evidence carries both graph and evaluation lineage", 
     },
   };
 
-  await trackBRuntime
-    .runTrackBShadowPipeline(runtime as never, {
-      requestId: "run97-rc06-graph-lineage",
-      channel: "development",
-      scope: "tenant:rc06",
-      authorizationEpoch: 1,
-      productionState: {},
-      routePackage: "candidate-local",
-      sourceDecisionId: "decision:rc06",
-      sourceGraphRef: "artifact:source-graph",
-      prefix: [],
-      sourcePrefixRef: "artifact:prefix",
-      counterfactuals: [{ id: "candidate-remote", suffix: [] }],
-      comparableEvidence: {
-        source: {
-          rolloutId: "rollout:source",
-          routePackage: "candidate-local",
-          endpointId: "endpoint-local",
-          modelId: "model-local",
+  await trackBRuntime.runTrackBShadowPipeline(runtime as never, {
+    requestId: "run97-rc06-graph-lineage",
+    channel: "development",
+    scope: "tenant:rc06",
+    authorizationEpoch: 1,
+    productionState: {},
+    routePackage: "candidate-local",
+    sourceDecisionId: "decision:rc06",
+    sourceGraphRef: "artifact:source-graph",
+    prefix: [],
+    sourcePrefixRef: "artifact:prefix",
+    counterfactuals: [{ id: "candidate-remote", suffix: [] }],
+    comparableEvidence: {
+      source: {
+        rolloutId: "rollout:source",
+        routePackage: "candidate-local",
+        endpointId: "endpoint-local",
+        modelId: "model-local",
+        policyId: "run96-supervised-replay",
+        reasoningEffort: "high",
+        effortSource: "variant",
+        evaluationActual: "the incumbent answer",
+        evidenceRef: "artifact:source-evidence",
+        artifactRef: "artifact:source-graph",
+        propensity: 1,
+        outcome: {
+          outcomeId: "outcome:source",
+          outcomeRef: "artifact:outcome-source",
+          outcomeDigest: "sha256:source",
+          source: "observed",
+          status: "success",
+        },
+      },
+      counterfactuals: [
+        {
+          rolloutId: "rollout:counterfactual",
+          routePackage: "candidate-remote",
+          endpointId: "endpoint-remote",
+          modelId: "model-remote",
           policyId: "run96-supervised-replay",
           reasoningEffort: "high",
           effortSource: "variant",
-          evaluationActual: "the incumbent answer",
-          evidenceRef: "artifact:source-evidence",
-          artifactRef: "artifact:source-graph",
+          evaluationActual: "the counterfactual answer",
+          evidenceRef: "artifact:counterfactual-evidence",
+          artifactRef: "artifact:counterfactual-graph",
           propensity: 1,
           outcome: {
-            outcomeId: "outcome:source",
-            outcomeRef: "artifact:outcome-source",
-            outcomeDigest: "sha256:source",
-            source: "observed",
+            outcomeId: "outcome:counterfactual",
+            outcomeRef: "artifact:outcome-counterfactual",
+            outcomeDigest: "sha256:counterfactual",
+            source: "replay",
             status: "success",
           },
         },
-        counterfactuals: [
-          {
-            rolloutId: "rollout:counterfactual",
-            routePackage: "candidate-remote",
-            endpointId: "endpoint-remote",
-            modelId: "model-remote",
-            policyId: "run96-supervised-replay",
-            reasoningEffort: "high",
-            effortSource: "variant",
-            evaluationActual: "the counterfactual answer",
-          evidenceRef: "artifact:counterfactual-evidence",
-            artifactRef: "artifact:counterfactual-graph",
-            propensity: 1,
-            outcome: {
-              outcomeId: "outcome:counterfactual",
-              outcomeRef: "artifact:outcome-counterfactual",
-              outcomeDigest: "sha256:counterfactual",
-              source: "replay",
-              status: "success",
-            },
-          },
-        ],
-        candidateSet: [
-          { routePackage: "candidate-local", endpointId: "endpoint-local", propensity: 1 },
-          { routePackage: "candidate-remote", endpointId: "endpoint-remote", propensity: 1 },
-        ],
-      },
-      evaluationCases: [
-        {
-          id: "case:source",
-          evaluationCriteria: {
-            schemaVersion: "role-model.semantic-criteria.v1",
-            requiredTerms: ["fix the failing test"],
-          },
-        },
-        {
-          id: "case:counterfactual",
-          evaluationCriteria: {
-            schemaVersion: "role-model.semantic-criteria.v1",
-            requiredTerms: ["fix the failing test"],
-          },
-        },
       ],
-      evaluationReferences: {
-        taskRef: "artifact:task",
-        inputRef: "artifact:input",
-        forkRef: "artifact:prefix",
-        toolPolicyDigest: "artifact:tool-policy",
-        environmentDigest: "artifact:environment",
-        sourceEvidenceRef: "artifact:source-evidence",
-        counterfactualEvidenceRef: "artifact:counterfactual-evidence",
-        sourceOutcomeRef: "artifact:outcome-source",
-        counterfactualOutcomeRef: "artifact:outcome-counterfactual",
-        perCase: [
-          { caseId: "case:source", evidenceRef: "artifact:case-source" },
-          { caseId: "case:counterfactual", evidenceRef: "artifact:case-counterfactual" },
-        ],
+      candidateSet: [
+        { routePackage: "candidate-local", endpointId: "endpoint-local", propensity: 1 },
+        { routePackage: "candidate-remote", endpointId: "endpoint-remote", propensity: 1 },
+      ],
+    },
+    evaluationCases: [
+      {
+        id: "case:source",
+        evaluationCriteria: {
+          schemaVersion: "role-model.semantic-criteria.v1",
+          requiredTerms: ["fix the failing test"],
+        },
       },
-      trajectoryEvents: [],
-    })
-    .catch(() => null);
+      {
+        id: "case:counterfactual",
+        evaluationCriteria: {
+          schemaVersion: "role-model.semantic-criteria.v1",
+          requiredTerms: ["fix the failing test"],
+        },
+      },
+    ],
+    evaluationReferences: {
+      taskRef: "artifact:task",
+      inputRef: "artifact:input",
+      forkRef: "artifact:prefix",
+      toolPolicyDigest: "artifact:tool-policy",
+      environmentDigest: "artifact:environment",
+      sourceEvidenceRef: "artifact:source-evidence",
+      counterfactualEvidenceRef: "artifact:counterfactual-evidence",
+      sourceOutcomeRef: "artifact:outcome-source",
+      counterfactualOutcomeRef: "artifact:outcome-counterfactual",
+      perCase: [
+        { caseId: "case:source", evidenceRef: "artifact:case-source" },
+        { caseId: "case:counterfactual", evidenceRef: "artifact:case-counterfactual" },
+      ],
+    },
+    trajectoryEvents: [],
+  });
 
   const knowledge = invocations.find((entry) => entry.id === "knowledge-worker");
   expect(knowledge).toBeDefined();
@@ -303,5 +301,3 @@ test("run97 rc06 knowledge evidence carries both graph and evaluation lineage", 
     scoreId: "trial-score:counterfactual",
   });
 });
-
-

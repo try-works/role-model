@@ -119,7 +119,9 @@ function scriptedRuntime(invocations: Invocation[]) {
     }
     if (
       id === "evaluation-core" &&
-      ["evaluation:finalize-comparison-group", "evaluation:read-comparison-group"].includes(capability)
+      ["evaluation:finalize-comparison-group", "evaluation:read-comparison-group"].includes(
+        capability,
+      )
     ) {
       return {
         groupId: "comparison:rc11-graph",
@@ -319,7 +321,7 @@ test("run97 rc11 a shadow candidate is handed to the Knowledge Store and read ba
     invoke: scriptedRuntime(invocations),
     listExtensions: () => [{ id: "knowledge-store", lifecycle: "ready" }],
   };
-  await trackBRuntime.runTrackBShadowPipeline(runtime as never, pipelineInput()).catch(() => null);
+  await trackBRuntime.runTrackBShadowPipeline(runtime as never, pipelineInput());
 
   const writes = invocations.filter(
     (call) => call.id === "knowledge-store" && call.capability === "knowledge:write",
@@ -344,17 +346,13 @@ test("run97 rc11 a shadow candidate is handed to the Knowledge Store and read ba
   });
 });
 
-
-
 test("run97 rc14 knowledge rows cite the durable per-case evidence artifacts", async () => {
   const invocations: Invocation[] = [];
   const runtime = {
     invoke: scriptedRuntime(invocations),
     listExtensions: () => [{ id: "knowledge-store", lifecycle: "ready" }],
   };
-  await trackBRuntime
-    .runTrackBShadowPipeline(runtime as never, pipelineInput())
-    .catch(() => null);
+  await trackBRuntime.runTrackBShadowPipeline(runtime as never, pipelineInput());
 
   const knowledge = invocations.find((call) => call.id === "knowledge-worker");
   expect(knowledge).toBeDefined();

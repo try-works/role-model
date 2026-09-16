@@ -116,7 +116,12 @@ const evaluationCases = () => [
   },
 ];
 
-function scriptedRuntime(invocations: Invocation[]) {
+function scriptedRuntime(
+  invocations: Invocation[],
+  options: {
+    readonly trialScoresByTrial?: Readonly<Record<string, readonly Record<string, unknown>[]>>;
+  } = {},
+) {
   const deterministicScorer = trackBRuntime.createRun96RoutingShadowScorer();
   return async (id: string, envelope: Record<string, unknown>) => {
     const capability = String(envelope.capability ?? "");
@@ -181,6 +186,13 @@ function scriptedRuntime(invocations: Invocation[]) {
     if (id === "evaluation-core" && capability === "evaluation:claim-trial") {
       return { trialId: value.trialId, leaseId: `lease:${String(value.trialId)}` };
     }
+    if (id === "evaluation-core" && capability === "evaluation:list-trial-scores") {
+      // Run 98 addendum 27: read back the durable trial scores before judging. A fresh comparison
+      // has none (empty rows -> the pipeline dispatches); a resumed one already carries this
+      // judge's rows, and `selectDurableJudgeScores` reuses them instead of dispatching again.
+      const trialId = String(value.trialId ?? "");
+      return { value: options.trialScoresByTrial?.[trialId] ?? [] };
+    }
     if (id === "evaluation-runner-local") {
       return {
         outputRef: value.outputRef,
@@ -215,10 +227,22 @@ function scriptedRuntime(invocations: Invocation[]) {
         capability,
       )
     ) {
-      return { status: "finalized", outcome: "candidate", groupId: `comparison:${envelope.requestId ?? "run"}` };
+      return {
+        status: "finalized",
+        outcome: "candidate",
+        groupId: `comparison:${envelope.requestId ?? "run"}`,
+      };
     }
     if (id === "trajectory-signals") {
-      return { routeDecisionId: "route-rc04", graphRef: "sha256:graph-rc04", signals: [] };
+      // Run 98 addendum 27: `signals:analyze-finalized-evaluation` answers with the replay
+      // provenance it was handed. The boundary validates that the finalized signal record still
+      // carries `routeDecisionId`/`graphRef` equal to the replay's, so a stub that invents its own
+      // ids models a contract the extension does not have (and the pipeline rightly refuses it).
+      return {
+        routeDecisionId: value.routeDecisionId,
+        graphRef: value.graphRef,
+        signals: [],
+      };
     }
     if (id === "profile-learner") return { digest: "sha256:profile-rc04", effects: {} };
     throw new Error(`unexpected invocation ${id}:${capability}`);
@@ -246,25 +270,22 @@ const pipelineInput = (requestId: string) => ({
 test("run97 rc04 registers the canonical pairwise judge scorer for the comparison", async () => {
   const invocations: Invocation[] = [];
   const runtime = { invoke: scriptedRuntime(invocations) };
-  await trackBRuntime
-    .runTrackBShadowPipeline(runtime, {
-      ...pipelineInput("run97-rc04-judge"),
-      judge: {
-        endpointId: "endpoint:judge",
-        dispatch: async () => ({
-          winner: "counterfactual" as const,
-          confidence: 0.8,
-          dispatchReceiptId: "dispatch:judge-1",
-          routerDecisionId: "decision:judge-1",
-          judgeResultRef: "artifact:judge-result-1",
-          judgeEndpointId: "endpoint:judge",
-        }),
-      },
-    })
-    .catch(() => null);
+  await trackBRuntime.runTrackBShadowPipeline(runtime, {
+    ...pipelineInput("run97-rc04-judge"),
+    judge: {
+      endpointId: "endpoint:judge",
+      dispatch: async () => ({
+        winner: "counterfactual" as const,
+        confidence: 0.8,
+        dispatchReceiptId: "dispatch:judge-1",
+        routerDecisionId: "decision:judge-1",
+        judgeResultRef: "artifact:judge-result-1",
+        judgeEndpointId: "endpoint:judge",
+      }),
+    },
+  });
   const registrations = invocations.filter(
-    (call) =>
-      call.id === "evaluation-core" && call.capability === "evaluation:register-scorer",
+    (call) => call.id === "evaluation-core" && call.capability === "evaluation:register-scorer",
   );
   const judgeRegistration = registrations.find(
     (call) => call.value.source === "role_model_pairwise_judge",
@@ -290,25 +311,23 @@ test("run97 rc04 dispatches the judge once per comparison and records both prefe
   const invocations: Invocation[] = [];
   const runtime = { invoke: scriptedRuntime(invocations) };
   const judgeRequests: Record<string, unknown>[] = [];
-  await trackBRuntime
-    .runTrackBShadowPipeline(runtime, {
-      ...pipelineInput("run97-rc04-judge"),
-      judge: {
-        endpointId: "endpoint:judge",
-        dispatch: async (request) => {
-          judgeRequests.push(request as Record<string, unknown>);
-          return {
-            winner: "counterfactual" as const,
-            confidence: 0.8,
-            dispatchReceiptId: "dispatch:judge-1",
-            routerDecisionId: "decision:judge-1",
-            judgeResultRef: "artifact:judge-result-1",
-            judgeEndpointId: "endpoint:judge",
-          };
-        },
+  await trackBRuntime.runTrackBShadowPipeline(runtime, {
+    ...pipelineInput("run97-rc04-judge"),
+    judge: {
+      endpointId: "endpoint:judge",
+      dispatch: async (request) => {
+        judgeRequests.push(request as Record<string, unknown>);
+        return {
+          winner: "counterfactual" as const,
+          confidence: 0.8,
+          dispatchReceiptId: "dispatch:judge-1",
+          routerDecisionId: "decision:judge-1",
+          judgeResultRef: "artifact:judge-result-1",
+          judgeEndpointId: "endpoint:judge",
+        };
       },
-    })
-    .catch(() => null);
+    },
+  });
 
   expect(judgeRequests).toHaveLength(1);
   expect(judgeRequests[0]).toMatchObject({
@@ -325,8 +344,7 @@ test("run97 rc04 dispatches the judge once per comparison and records both prefe
   const judgeScores = invocations
     .filter(
       (call) =>
-        call.id === "evaluation-core" &&
-        call.capability === "evaluation:record-trial-score-batch",
+        call.id === "evaluation-core" && call.capability === "evaluation:record-trial-score-batch",
     )
     .flatMap((call) => {
       const scores = Array.isArray(call.value.scores)
@@ -359,23 +377,20 @@ test("run97 rc04 dispatches the judge once per comparison and records both prefe
 test("run97 rc04 persists a judge failure as bounded missingness instead of a zero score", async () => {
   const invocations: Invocation[] = [];
   const runtime = { invoke: scriptedRuntime(invocations) };
-  await trackBRuntime
-    .runTrackBShadowPipeline(runtime, {
-      ...pipelineInput("run97-rc04-judge-failure"),
-      judge: {
-        endpointId: "endpoint:judge",
-        dispatch: async () => {
-          throw new Error("judge endpoint returned HTTP 503");
-        },
+  await trackBRuntime.runTrackBShadowPipeline(runtime, {
+    ...pipelineInput("run97-rc04-judge-failure"),
+    judge: {
+      endpointId: "endpoint:judge",
+      dispatch: async () => {
+        throw new Error("judge endpoint returned HTTP 503");
       },
-    })
-    .catch(() => null);
+    },
+  });
 
   const judgeScores = invocations
     .filter(
       (call) =>
-        call.id === "evaluation-core" &&
-        call.capability === "evaluation:record-trial-score-batch",
+        call.id === "evaluation-core" && call.capability === "evaluation:record-trial-score-batch",
     )
     .flatMap((call) => {
       const scores = Array.isArray(call.value.scores)
@@ -390,4 +405,86 @@ test("run97 rc04 persists a judge failure as bounded missingness instead of a ze
     expect(String(score.missingReason)).toMatch(/judge/i);
     expect(score).not.toMatchObject({ score: 0 });
   }
+});
+
+/**
+ * Run 98 addendum 27 (pre-existing red gates, 2026-09-16).
+ *
+ * The pipeline gained a durable readback before judging (`evaluation:list-trial-scores` per branch,
+ * run 99 R33 / live v165): a resumed comparison that already carries *this* judge's score must reuse
+ * the stored rows instead of dispatching again, because the extension refuses the duplicate batch
+ * (`evaluation trial score batch conflict`). That path had no test, which is also why this file's
+ * harness drifted: the un-stubbed capability threw, and the blanket `.catch(() => null)` on the two
+ * judge tests turned the thrown error into an indistinguishable "no judge request was dispatched".
+ */
+test("run97 rc04 reuses durable judge scores for a resumed comparison instead of dispatching again", async () => {
+  const invocations: Invocation[] = [];
+  const runtime = {
+    invoke: scriptedRuntime(invocations, {
+      trialScoresByTrial: {
+        "trial:source": [
+          {
+            scoreId: "score:trial:source:judge",
+            trialId: "trial:source",
+            scorerId: "role_model_pairwise_judge.battle",
+            dimension: "task_specific_quality",
+            score: 0,
+            confidence: 0.8,
+            source: "role_model_pairwise_judge",
+            judgeReceipt: { dispatchReceiptId: "dispatch:durable" },
+          },
+        ],
+        "trial:counterfactual": [
+          {
+            scoreId: "score:trial:counterfactual:judge",
+            trialId: "trial:counterfactual",
+            scorerId: "role_model_pairwise_judge.battle",
+            dimension: "task_specific_quality",
+            score: 1,
+            confidence: 0.8,
+            source: "role_model_pairwise_judge",
+            judgeReceipt: { dispatchReceiptId: "dispatch:durable" },
+          },
+        ],
+      },
+    }),
+  };
+  const judgeRequests: Record<string, unknown>[] = [];
+  await trackBRuntime.runTrackBShadowPipeline(runtime, {
+    ...pipelineInput("run97-rc04-judge-resume"),
+    judge: {
+      endpointId: "endpoint:judge",
+      dispatch: async (request) => {
+        judgeRequests.push(request as Record<string, unknown>);
+        throw new Error("a resumed comparison must not re-dispatch the pairwise judge");
+      },
+    },
+  });
+
+  // The durable rows are the authority: no second dispatch, and no re-recorded score batch (the
+  // extension refuses one, which is the whole reason the readback exists).
+  expect(judgeRequests).toHaveLength(0);
+  // The deterministic correctness batches are still recorded (they are this run's first dimension);
+  // what must not be re-recorded is the *judge* dimension, which the durable rows already carry.
+  const reRecordedJudgeScores = invocations
+    .filter(
+      (call) =>
+        call.id === "evaluation-core" && call.capability === "evaluation:record-trial-score-batch",
+    )
+    .flatMap((call) => {
+      const scores = Array.isArray(call.value.scores)
+        ? (call.value.scores as Record<string, unknown>[])
+        : [];
+      return scores.filter(
+        (score) =>
+          score.dimension === "task_specific_quality" ||
+          score.scorerId === "role_model_pairwise_judge.battle",
+      );
+    });
+  expect(reRecordedJudgeScores).toHaveLength(0);
+  // The comparison still finalizes, so a reused judgement is not a silent no-op.
+  const finalize = invocations.find(
+    (call) => call.capability === "evaluation:finalize-comparison-group",
+  );
+  expect(finalize).toBeDefined();
 });
