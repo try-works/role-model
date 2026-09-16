@@ -43,6 +43,7 @@ import {
 import {
   buildAutoReplayIdempotencyKey,
   resolveAutoReplayDeadlineMs,
+  resolveAutoReplayTickBudgetMs,
   retryLeasedReplayDispatch,
 } from "./track-b-auto-replay.js";
 import { createRouterPairwiseJudge } from "./track-b-shadow-judge-dispatch.js";
@@ -3646,6 +3647,12 @@ export async function main(): Promise<void> {
         configuredEndpointIds: endpoints,
         healthyEndpointIds: healthyEndpoints,
         intervalMs,
+        // Run 98 addendum 04 follow-on: bound one tick's wall clock so a tick made of several
+        // minutes-long replays leaves the remaining captures for the next tick. Operators can tune it
+        // with ROLE_MODEL_AUTO_REPLAY_TICK_BUDGET_MS; 0 disables the bound.
+        ...(resolveAutoReplayTickBudgetMs(process.env) === null
+          ? {}
+          : { tickBudgetMs: resolveAutoReplayTickBudgetMs(process.env) as number }),
         executor: async ({ capture, candidates, reservationId }) => {
           const sourceCapture = (await operations.readLocalRouteCapture({
             requestId: capture.captureRef,

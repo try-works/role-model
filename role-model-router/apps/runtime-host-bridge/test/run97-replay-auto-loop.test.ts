@@ -5,6 +5,10 @@ import path from "node:path";
 import { expect, test } from "vitest";
 
 import { startAutoReplayLoop } from "../src/track-b-auto-replay-runtime.js";
+import {
+  DEFAULT_TICK_BUDGET_MS,
+  resolveAutoReplayTickBudgetMs,
+} from "../src/track-b-auto-replay.js";
 import { createReplayLedger } from "../src/track-b-replay-ledger.js";
 import { buildReplayPolicySet } from "../src/track-b-replay-policy.js";
 
@@ -543,5 +547,74 @@ test("run98 addendum 04 a hung replay execution is bounded instead of stalling t
     expect(first.replayed + second.replayed).toBeGreaterThanOrEqual(1);
   } finally {
     cleanup();
+  }
+});
+
+/**
+ * Run 98 addendum 04 follow-on: the tick had no wall-clock bound.
+ *
+ * Measured live: eight captures at ~4 minutes each made a single tick run for tens of minutes, and
+ * although `L7` keeps the liveness sweeps running on the interval path, everything else the tick
+ * owns — dispositions for the captures it has not reached, the auto-loop's status, the next tick —
+ * waited with it. The tick now stops *starting* new captures once its budget is spent; the remaining
+ * captures stay queued for the next tick, and the cursor is left on the last capture actually
+ * processed so nothing is skipped.
+ */
+test("run98 addendum 04 the tick stops starting captures once its wall-clock budget is spent", async () => {
+  const { ledger, cleanup } = harness();
+  try {
+    const operations = fakeOperations(["req-1", "req-2", "req-3", "req-4"]);
+    const executions: string[] = [];
+    let clock = Date.parse("2026-09-14T06:00:00Z");
+    const loop = startAutoReplayLoop({
+      operations,
+      ledger,
+      policySet: buildReplayPolicySet(),
+      configuredEndpointIds: ["endpoint-a", "endpoint-b"],
+      executor: async ({ capture, candidates }) => {
+        executions.push(capture.captureRef);
+        // Each capture takes two minutes of the tick's budget.
+        clock += 120_000;
+        return {
+          terminal: true,
+          branches: candidates.map((endpointId) => ({
+            endpointId,
+            outcome: "complete" as const,
+          })),
+        };
+      },
+      intervalMs: 0,
+      now: () => clock,
+      maxCapturesPerTick: 8,
+      tickBudgetMs: 300_000,
+    });
+    const result = await loop.tick();
+    loop.stop();
+    // Three captures fit inside the five-minute budget; the fourth is left for the next tick.
+    expect(executions).toHaveLength(3);
+    expect(result.processed).toBe(3);
+    expect(result.budgetExhausted).toBe(true);
+    // Only the captures that ran wrote dispositions, and the cursor stayed on the last one that ran.
+    const recordedRefs = operations.recorded.map((row) => String(row.captureRef));
+    expect(recordedRefs).toEqual(["req-1", "req-2", "req-3"]);
+    expect(result.cursor).toBe("req-3");
+  } finally {
+    cleanup();
+  }
+});
+
+test("run98 addendum 04 the tick budget is operator-tunable and bounded", () => {
+  // No explicit value: the loop keeps its documented default.
+  expect(resolveAutoReplayTickBudgetMs({})).toBeNull();
+  expect(
+    resolveAutoReplayTickBudgetMs({ ROLE_MODEL_AUTO_REPLAY_TICK_BUDGET_MS: "600000" }),
+  ).toBe(600_000);
+  // Zero is meaningful: it disables the wall-clock bound.
+  expect(resolveAutoReplayTickBudgetMs({ ROLE_MODEL_AUTO_REPLAY_TICK_BUDGET_MS: "0" })).toBe(0);
+  // Malformed or out-of-range values fall back to the default rather than removing the bound.
+  for (const raw of ["nope", "-5", "99999999", "1.5"]) {
+    expect(
+      resolveAutoReplayTickBudgetMs({ ROLE_MODEL_AUTO_REPLAY_TICK_BUDGET_MS: raw }),
+    ).toBe(DEFAULT_TICK_BUDGET_MS);
   }
 });

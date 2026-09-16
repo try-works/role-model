@@ -152,6 +152,7 @@ const emptyResult = (): AutoReplayTickResult => ({
   deferred: 0,
   dispositions: [],
   cursor: null,
+  budgetExhausted: false,
 });
 
 export function startAutoReplayLoop(input: {
@@ -191,6 +192,11 @@ export function startAutoReplayLoop(input: {
    * abandoned early; only work that has outlived even the durable job's own bound is cut off.
    */
   readonly executorTimeoutMs?: number;
+  /**
+   * Run 98 addendum 04 follow-on: the tick's wall-clock budget, so a tick made of several
+   * minutes-long replays cannot hold the loop open for tens of minutes. `0` disables the bound.
+   */
+  readonly tickBudgetMs?: number;
   readonly now?: () => number;
   readonly setIntervalFn?: (handler: () => void, timeout: number) => unknown;
   readonly clearIntervalFn?: (handle: unknown) => void;
@@ -400,6 +406,11 @@ export function startAutoReplayLoop(input: {
         ...(Number.isSafeInteger(input.executorTimeoutMs) && (input.executorTimeoutMs ?? 0) > 0
           ? { executorTimeoutMs: Number(input.executorTimeoutMs) }
           : {}),
+        // Run 98 addendum 04 follow-on: the tick's own wall-clock budget, so a tick made of several
+        // minutes-long replays leaves the remaining captures for the next tick instead of holding the
+        // loop open for tens of minutes. The injectable clock keeps it testable.
+        ...(Number.isSafeInteger(input.tickBudgetMs) ? { tickBudgetMs: Number(input.tickBudgetMs) } : {}),
+        now,
       });
       await Promise.all(dispositionWrites);
       // RC07 (L2): one bounded sweep per tick. A job whose deadline elapsed without

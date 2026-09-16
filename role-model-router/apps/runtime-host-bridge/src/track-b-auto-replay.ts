@@ -214,6 +214,37 @@ export interface AutoReplayTickResult {
   readonly deferred: number;
   readonly dispositions: readonly AutoReplayDisposition[];
   readonly cursor: string | null;
+  /**
+   * Run 98 addendum 04 follow-on: true when the tick stopped starting new captures because its
+   * wall-clock budget was spent. The captures it did not reach stay queued for the next tick.
+   */
+  readonly budgetExhausted: boolean;
+}
+
+/**
+ * Run 98 addendum 04 follow-on, measured live: eight captures at ~4 minutes each made one tick run
+ * for tens of minutes. `L7` keeps the liveness sweeps alive on the interval path, but the captures
+ * the tick had not reached, their dispositions and the next tick all waited. The tick now stops
+ * *starting* captures once this budget is spent — the current capture still finishes inside the
+ * `L4` executor bound, and the rest are picked up by the next tick.
+ */
+export const DEFAULT_TICK_BUDGET_MS = 5 * 60_000;
+
+/**
+ * Run 98 addendum 04 follow-on: the operator-tunable tick budget. `null` means "no explicit value",
+ * so the loop keeps its default; a valid value (including `0`, which disables the bound) is returned
+ * as-is. Malformed or out-of-range values fall back to the default rather than silently removing the
+ * bound.
+ */
+export function resolveAutoReplayTickBudgetMs(
+  env: Record<string, string | undefined> = process.env,
+): number | null {
+  const raw = env.ROLE_MODEL_AUTO_REPLAY_TICK_BUDGET_MS;
+  if (typeof raw !== "string" || raw.trim() === "") return null;
+  const parsed = Number(raw);
+  return Number.isSafeInteger(parsed) && parsed >= 0 && parsed <= 3_600_000
+    ? parsed
+    : DEFAULT_TICK_BUDGET_MS;
 }
 
 /**
@@ -287,8 +318,18 @@ export async function runAutoReplayTick(input: {
    * runtime that had been up for minutes while eight jobs accumulated in `running`.
    */
   readonly executorTimeoutMs?: number;
+  /**
+   * Run 98 addendum 04 follow-on: the tick's wall-clock budget. Defaults to `DEFAULT_TICK_BUDGET_MS`;
+   * `0` disables the bound (used by tests that want the pre-follow-on behaviour).
+   */
+  readonly tickBudgetMs?: number;
+  /** Injectable clock so the budget is testable without waiting. */
+  readonly now?: () => number;
 }): Promise<AutoReplayTickResult> {
   const maxCapturesPerTick = input.maxCapturesPerTick ?? DEFAULT_MAX_CAPTURES_PER_TICK;
+  const tickBudgetMs = input.tickBudgetMs ?? DEFAULT_TICK_BUDGET_MS;
+  const now = input.now ?? (() => Date.now());
+  const tickStartedAtMs = now();
   const dispositions: AutoReplayDisposition[] = [];
   const emit = (row: AutoReplayDisposition): void => {
     dispositions.push(row);
@@ -312,9 +353,18 @@ export async function runAutoReplayTick(input: {
   let refused = 0;
   let deferred = 0;
   let cursor: string | null = input.startCursor ?? null;
+  let budgetExhausted = false;
 
   for (const capture of pending) {
     if (processed >= maxCapturesPerTick) break;
+    // Run 98 addendum 04 follow-on: stop *starting* captures once the tick's budget is spent, so a
+    // tick made of several minutes-long replays cannot hold the loop open for tens of minutes. The
+    // capture already running finishes under the `L4` executor bound; the rest are left for the
+    // next tick and the cursor stays on the last capture this tick actually started.
+    if (tickBudgetMs > 0 && processed > 0 && now() - tickStartedAtMs >= tickBudgetMs) {
+      budgetExhausted = true;
+      break;
+    }
     processed += 1;
     cursor = capture.captureRef;
 
@@ -483,5 +533,5 @@ export async function runAutoReplayTick(input: {
     });
   }
 
-  return { processed, replayed, refused, deferred, dispositions, cursor };
+  return { processed, replayed, refused, deferred, dispositions, cursor, budgetExhausted };
 }
