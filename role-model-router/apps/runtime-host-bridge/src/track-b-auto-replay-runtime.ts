@@ -111,6 +111,14 @@ export interface AutoReplayOperations {
    * the tick simply reports zero expired jobs.
    */
   expireStaleReplayJobs?(input: Record<string, unknown>): Promise<unknown>;
+  /**
+   * Run 99 R33 live finding: optional bounded sweep that re-runs a supervised-replay evaluation
+   * whose completion was interrupted (a restart between "scores recorded" and "comparison group
+   * finalized" strands the durable job in `scoring` forever, because the producer only drives
+   * *replay jobs* and those are already terminal). A runtime whose boundary does not expose the
+   * sweep keeps working; the tick simply reports zero resumed evaluations.
+   */
+  resumePendingEvaluations?(input: Record<string, unknown>): Promise<unknown>;
 }
 
 export interface AutoReplayLoopHealth {
@@ -121,6 +129,7 @@ export interface AutoReplayLoopHealth {
   readonly lastError: string | null;
   readonly lastProcessedAtMs: number | null;
   readonly lastExpiredJobs: number;
+  readonly lastResumedEvaluations: number;
 }
 
 export interface AutoReplayLoopStatus extends AutoReplayLoopHealth {
@@ -194,6 +203,7 @@ export function startAutoReplayLoop(input: {
   let paused = false;
   let lastDispositions = 0;
   let lastExpiredJobs = 0;
+  let lastResumedEvaluations = 0;
   let timer: unknown = null;
 
   const pendingCaptures = (value: unknown): readonly AutoReplayCapture[] => {
@@ -284,6 +294,7 @@ export function startAutoReplayLoop(input: {
       // as an orphan the producer will never drive again. A sweep failure degrades this
       // tick, never the routing path.
       lastExpiredJobs = 0;
+      lastResumedEvaluations = 0;
       let sweepError: string | null = null;
       if (typeof input.operations.expireStaleReplayJobs === "function") {
         try {
@@ -301,6 +312,26 @@ export function startAutoReplayLoop(input: {
             error instanceof Error
               ? `replay expiration sweep failed: ${error.message.slice(0, 200)}`
               : "replay expiration sweep failed";
+        }
+      }
+      // Run 99 R33: the same bounded-per-tick shape for interrupted supervised-replay evaluations.
+      // Without it a stranded evaluation is never retried, because the producer only drives replay
+      // jobs and those are already terminal.
+      if (typeof input.operations.resumePendingEvaluations === "function") {
+        try {
+          const sweep = (await input.operations.resumePendingEvaluations({
+            window,
+            policySetDigest: input.policySet.policySetDigest,
+          })) as { readonly resumed?: unknown } | null;
+          if (sweep && Number.isSafeInteger(sweep.resumed) && Number(sweep.resumed) >= 0) {
+            lastResumedEvaluations = Number(sweep.resumed);
+          }
+        } catch (error) {
+          const detail =
+            error instanceof Error
+              ? `evaluation resume sweep failed: ${error.message.slice(0, 200)}`
+              : "evaluation resume sweep failed";
+          sweepError = sweepError ? `${sweepError}; ${detail}` : detail;
         }
       }
       lastOutcome = sweepError ? "degraded" : "ok";
@@ -357,6 +388,7 @@ export function startAutoReplayLoop(input: {
         lastError,
         lastProcessedAtMs,
         lastExpiredJobs,
+        lastResumedEvaluations,
       };
     },
     status() {
@@ -365,6 +397,7 @@ export function startAutoReplayLoop(input: {
         budget: { ...input.ledger.status() },
         lastDispositions,
         lastExpiredJobs,
+        lastResumedEvaluations,
       };
     },
   };

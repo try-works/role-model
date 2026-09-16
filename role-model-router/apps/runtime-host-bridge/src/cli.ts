@@ -36,6 +36,11 @@ import {
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
 import {
+  createSupervisedReplayEvaluationResumeStore,
+  resolveSupervisedReplayEvaluationResumePath,
+  resumePendingSupervisedReplayEvaluations,
+} from "./supervised-replay-evaluation-resume.js";
+import {
   buildAutoReplayIdempotencyKey,
   resolveAutoReplayDeadlineMs,
   retryLeasedReplayDispatch,
@@ -3551,6 +3556,20 @@ export async function main(): Promise<void> {
     // Automatic replay: read pending captures from the private boundary, replay them
     // through the public replay endpoint, and persist every disposition. Production
     // stays disabled; failures degrade the loop instead of affecting routing.
+    /**
+     * Run 99 R33 live finding (stage v158, `:3457`): the supervised-replay evaluation completer is the
+     * only path that finalizes an automatic comparison and runs the learner. Four durable evaluation
+     * jobs were stranded in `scoring` because a restart interrupted that completion between "scores
+     * recorded" and "comparison group finalized", and nothing re-entered it — the producer only drives
+     * replay jobs, and those were already terminal. Every handoff now records a bounded resume entry,
+     * and the auto-replay tick re-runs the outstanding ones through this ref (the implementation lives
+     * with the replay command handler inside createBackend).
+     */
+    const resumeEvaluationsRef: {
+      current:
+        | (() => Promise<{ resumed: number; completed: number; failed: number; remaining: number }>)
+        | null;
+    } = { current: null };
     const startHostAutoReplayLoop = (
       endpoints: () => readonly string[],
       healthyEndpoints: () => Promise<readonly string[] | null>,
@@ -3608,6 +3627,16 @@ export async function main(): Promise<void> {
           } catch (error) {
             throw error instanceof Error ? error : new Error("replay expiration sweep failed");
           }
+        },
+        /**
+         * Run 99 R33: one bounded evaluation-resume sweep per auto-replay tick, delegated to the
+         * implementation that lives with the replay command handler.
+         */
+        async resumePendingEvaluations() {
+          if (!resumeEvaluationsRef.current) {
+            return { resumed: 0, completed: 0, failed: 0, remaining: 0 };
+          }
+          return resumeEvaluationsRef.current();
         },
       };
       return startAutoReplayLoop({
@@ -4402,126 +4431,95 @@ export async function main(): Promise<void> {
               const evaluationJobId = `evaluation-replay-${createHash("sha256").update(String(replayJobId)).digest("hex").slice(0, 20)}`;
               return { evaluationJobId };
             },
-            completeEvaluation: createSupervisedReplayEvaluationCompleter({
-              runtime,
-              operations,
-              requestId,
-              channel,
-              scope: options.scopeId,
-              captureScope,
-              sourceCapture,
-              sourceOutput,
-              sourceEndpointId,
-              sourceModelId,
-              counterfactualPackages,
-              // RC04 (L4): the automatic comparison carries a router-backed pairwise
-              // judge so a real counterfactual can be decisioned instead of tying on a
-              // deterministic term that neither branch satisfies. The judge dispatch is
-              // ledgered as a derived dispatch inside the same daily ceiling.
-              judge: createRouterPairwiseJudge({
-                executeChatCompletions: created.executeChatCompletions.bind(created),
-                endpoints: created.effectiveRegistry.endpoints.map((endpoint) => ({
-                  endpointId: endpoint.identity.endpoint_id,
-                  modelId: endpoint.identity.model_id,
-                })),
-                excludedEndpointIds: [sourceEndpointId, ...candidateEndpointIds],
-                taskText: extractTaskInstructionText(sourceCapture) ?? "",
-                // Run 98 R10: the judge mode, presentation-order policy and agreement
-                // measurement resolve from the versioned policy (env override first), failing
-                // closed to the previous identified, source-first, no-probe behaviour.
-                mode: isPairwiseJudgeMode(process.env.ROLE_MODEL_JUDGE_MODE?.trim())
-                  ? (process.env.ROLE_MODEL_JUDGE_MODE.trim() as "identified" | "identity_blind")
-                  : (learningPolicySnapshot?.effective.judgeMode ?? "identified"),
-                orderPolicy:
-                  process.env.ROLE_MODEL_JUDGE_ORDER_POLICY?.trim() === "dual_order"
-                    ? "dual_order"
-                    : process.env.ROLE_MODEL_JUDGE_ORDER_POLICY?.trim() === "source_first"
-                      ? "source_first"
-                      : (learningPolicySnapshot?.effective.judgeOrderPolicy ?? "source_first"),
-                measureAgreement:
-                  process.env.ROLE_MODEL_JUDGE_MEASURE_AGREEMENT?.trim() === "true"
-                    ? true
-                    : process.env.ROLE_MODEL_JUDGE_MEASURE_AGREEMENT?.trim() === "false"
-                      ? false
-                      : (learningPolicySnapshot?.effective.judgeMeasureAgreement ?? false),
-                recordDerivedDispatch: (input) => {
-                  try {
-                    // The supervised replay already reserved this counterfactual at its
-                    // first candidate dispatch, so the derived judge dispatch is recorded
-                    // against the same reservation (AC-R07-02: judge spend is visible in
-                    // the same daily ceiling).
-                    const reservationId = ledgerReservationId;
-                    if (!reservationId) return;
-                    replayLedger.record({
-                      reservationId,
-                      captureRef: requestId,
-                      policySetDigest: replayPolicySet.policySetDigest,
-                      counterfactualRef: `cf:${requestId}`,
-                      dispatchKind: "derived",
-                      candidateEndpointId: input.judgeEndpointId,
-                      attempt: input.attempt,
-                      costMicros: input.costMicros,
-                      bytes: input.bytes,
-                      outcome: input.outcome,
-                    });
-                  } catch {
-                    // Ledger accounting is best-effort here; the judge receipt remains
-                    // durable on the score row and the producer reconciles dispatches.
-                  }
+            completeEvaluation: (() => {
+              const evaluationCompleter = buildSupervisedReplayEvaluationCompleter({
+                backend: created,
+                runtime,
+                operations,
+                requestId,
+                channel,
+                captureScope,
+                sourceCapture,
+                sourceOutput,
+                sourceEndpointId,
+                sourceModelId,
+                counterfactualPackages,
+                evaluationCriteria: evaluationCriteria as unknown as Readonly<Record<string, unknown>>,
+                evaluationCriteriaDigest,
+                learningPolicySnapshot,
+                replayLedger,
+                replayPolicySet,
+                getDispatched: (endpointId: string) => {
+                  const dispatch = dispatched.get(endpointId);
+                  return dispatch
+                    ? {
+                        execution: dispatch.execution as unknown as Readonly<Record<string, unknown>>,
+                        replayRequestId: dispatch.replayRequestId,
+                      }
+                    : undefined;
                 },
-              }),
-              getDispatched: (endpointId) => {
-                const dispatch = dispatched.get(endpointId);
-                return dispatch
-                  ? {
-                      execution: dispatch.execution as unknown as Readonly<Record<string, unknown>>,
-                      replayRequestId: dispatch.replayRequestId,
-                    }
-                  : undefined;
-              },
-              evaluationCriteria: evaluationCriteria as unknown as Readonly<
-                Record<string, unknown>
-              >,
-              evaluationCriteriaDigest,
-              contractStateRoot: options.runtimeStateRoot,
-              // Run 98 R3/R15: the learning pass consumes the operator's versioned policy
-              // floors for this channel and scope.
-              ...(learningPolicySnapshot
-                ? {
-                    learningPolicy: {
-                      evidenceFloor: {
-                        minDecisiveComparisons:
-                          learningPolicySnapshot.effective.minDecisiveComparisons,
-                        minHoldoutComparisons:
-                          learningPolicySnapshot.effective.minHoldoutComparisons,
-                        minDistinctCaptures: learningPolicySnapshot.effective.minDistinctCaptures,
-                      },
-                      guardrails: {
-                        qualityMinDelta: learningPolicySnapshot.effective.qualityMinDelta,
-                      },
-                      // Run 98 R19: the promotion protocol is declared from the same versioned
-                      // policy as the floors, so the validation gate is reproducible from config.
-                      promotionProtocol: {
-                        protocolId: `promotion:${learningPolicySnapshot.digest.slice(0, 16)}`,
-                        primaryMetricId: "role_model_pairwise_judge.battle",
-                        direction: "higher_is_better" as const,
-                        minimumPracticalDelta:
-                          learningPolicySnapshot.effective.minimumPracticalDelta,
-                        intervalLevel: learningPolicySnapshot.effective.promotionIntervalLevel,
-                        resamples: learningPolicySnapshot.effective.promotionResamples,
-                        bootstrapSeed: learningPolicySnapshot.effective.promotionBootstrapSeed,
-                        analysisMethod: learningPolicySnapshot.effective.promotionAnalysisMethod,
-                        selectionFamilySize:
-                          learningPolicySnapshot.effective.promotionSelectionFamilySize,
-                        multiplicityAdjustment:
-                          learningPolicySnapshot.effective.multiplicityAdjustment,
-                      },
-                      evidenceMaxAgeMs:
-                        learningPolicySnapshot.effective.evidenceMaxAgeDays * 24 * 60 * 60 * 1_000,
-                    },
+                currentLedgerReservationId: () => ledgerReservationId,
+              });
+              // Run 99 R33: the handoff is recorded before the completion runs, so a restart in
+              // between leaves a retryable resume entry for the sweep instead of a stranded job.
+              return async (request: Readonly<Record<string, unknown>>) => {
+                const replayJobId = String(request.replayJobId ?? "");
+                const evaluationJobId = String(request.evaluationJobId ?? "");
+                const sourceCaptureRequestId =
+                  typeof sourceCapture.requestId === "string" ? sourceCapture.requestId : "";
+                if (replayJobId && evaluationJobId && sourceCaptureRequestId) {
+                  try {
+                    evaluationResumeStore.record({
+                      schemaVersion: "role-model.supervised-replay-evaluation-resume.v1",
+                      replayJobId,
+                      evaluationJobId,
+                      requestId,
+                      sourceCaptureRequestId,
+                      sourceEndpointId,
+                      sourceModelId,
+                      counterfactualPackages: counterfactualPackages.map((candidate) => ({
+                        endpointId: candidate.endpointId,
+                        modelId: candidate.modelId,
+                        reasoningEffort: candidate.reasoningEffort ?? null,
+                      })),
+                      evaluationCriteria: evaluationCriteria as unknown as Readonly<
+                        Record<string, unknown>
+                      >,
+                      evaluationCriteriaDigest,
+                      recordedAtMs: Date.now(),
+                      attempts: 0,
+                      resolvedAtMs: null,
+                      outcome: null,
+                      lastError: null,
+                    });
+                  } catch (error) {
+                    console.error(
+                      `[run99] evaluation resume entry declined:${requestId} ${String(
+                        (error as { message?: unknown })?.message ?? error,
+                      ).slice(0, 200)}`,
+                    );
                   }
-                : {}),
-            }),
+                }
+                const completed = await evaluationCompleter(request);
+                try {
+                  const record = completed as Record<string, unknown>;
+                  evaluationResumeStore.resolve(replayJobId, {
+                    outcome: typeof record?.outcome === "string" ? record.outcome : "resolved",
+                    comparisonGroupId:
+                      typeof record?.comparisonGroupId === "string"
+                        ? record.comparisonGroupId
+                        : null,
+                  });
+                } catch (error) {
+                  console.error(
+                    `[run99] evaluation resume resolution declined:${requestId} ${String(
+                      (error as { message?: unknown })?.message ?? error,
+                    ).slice(0, 200)}`,
+                  );
+                }
+                return completed;
+              };
+            })(),
           });
           // R5/R12: the receipt is the automatic producer's only view of the durable
           // replay outcome. It must therefore carry the terminal state, the durable
@@ -4649,6 +4647,361 @@ export async function main(): Promise<void> {
             }
           : {}),
       });
+      // Run 99 R33 (addendum 22 §3.28): durable resume entries for supervised-replay evaluations.
+      // A handoff is recorded before the completion runs and resolved when it lands, so a restart in
+      // between leaves a bounded, retryable record instead of a job stranded in `scoring` forever.
+      const evaluationResumeStore = createSupervisedReplayEvaluationResumeStore({
+        filePath: resolveSupervisedReplayEvaluationResumePath({
+          runtimeStateRoot: options.runtimeStateRoot,
+          scopeId: options.scopeId,
+        }),
+      });
+      const readEvaluationLearningPolicySnapshot = () =>
+        readLearningPolicyFile({
+          repoRoot: options.repoRoot,
+          stateRoot: resolveLearningPolicyStateRoot({
+            runtimeStateRoot: options.runtimeStateRoot,
+            scopeId: options.scopeId,
+          }),
+          channel: packagedProfile?.channel ?? "development",
+          scopeId: options.scopeId,
+        });
+      /**
+       * The single construction of the supervised-replay evaluation completer. The live replay path
+       * and the resume sweep differ only in where their dispatch/output evidence comes from, so both
+       * go through here and produce identical comparisons and learner rows.
+       */
+      const buildSupervisedReplayEvaluationCompleter = (input: {
+        readonly backend: Awaited<ReturnType<typeof createRuntimeBridgeBackend>>;
+        readonly runtime: NonNullable<typeof extensionRuntimeRef.current>;
+        readonly operations: ReturnType<typeof createTrackBOperations>;
+        readonly requestId: string;
+        readonly channel: string;
+        readonly captureScope: string;
+        readonly sourceCapture: Readonly<Record<string, unknown>>;
+        readonly sourceOutput: string;
+        readonly sourceEndpointId: string;
+        readonly sourceModelId: string;
+        readonly counterfactualPackages: readonly {
+          readonly endpointId: string;
+          readonly modelId: string;
+          readonly reasoningEffort: string | null;
+        }[];
+        readonly evaluationCriteria: Readonly<Record<string, unknown>>;
+        readonly evaluationCriteriaDigest: string;
+        readonly learningPolicySnapshot: ReturnType<typeof readLearningPolicyFile>;
+        readonly replayLedger: ReturnType<typeof createReplayLedger>;
+        readonly replayPolicySet: ReturnType<typeof buildReplayPolicySet>;
+        readonly getDispatched: (endpointId: string) => unknown;
+        readonly currentLedgerReservationId: () => string | null;
+      }) =>
+        createSupervisedReplayEvaluationCompleter({
+          runtime: input.runtime,
+          operations: input.operations,
+          requestId: input.requestId,
+          channel: input.channel,
+          scope: options.scopeId,
+          captureScope: input.captureScope,
+          sourceCapture: input.sourceCapture as Record<string, unknown>,
+          sourceOutput: input.sourceOutput,
+          sourceEndpointId: input.sourceEndpointId,
+          sourceModelId: input.sourceModelId,
+          counterfactualPackages: input.counterfactualPackages,
+          // RC04 (L4): the automatic comparison carries a router-backed pairwise judge so a real
+          // counterfactual can be decisioned instead of tying on a deterministic term that neither
+          // branch satisfies. The judge dispatch is ledgered as a derived dispatch inside the same
+          // daily ceiling.
+          judge: createRouterPairwiseJudge({
+            executeChatCompletions: input.backend.executeChatCompletions.bind(input.backend),
+            endpoints: input.backend.effectiveRegistry.endpoints.map((endpoint) => ({
+              endpointId: endpoint.identity.endpoint_id,
+              modelId: endpoint.identity.model_id,
+            })),
+            excludedEndpointIds: [
+              input.sourceEndpointId,
+              ...input.counterfactualPackages.map((candidate) => candidate.endpointId),
+            ],
+            taskText: extractTaskInstructionText(input.sourceCapture) ?? "",
+            // Run 98 R10: the judge mode, presentation-order policy and agreement measurement resolve
+            // from the versioned policy (env override first), failing closed to the previous
+            // identified, source-first, no-probe behaviour.
+            mode: isPairwiseJudgeMode(process.env.ROLE_MODEL_JUDGE_MODE?.trim())
+              ? (process.env.ROLE_MODEL_JUDGE_MODE.trim() as "identified" | "identity_blind")
+              : (input.learningPolicySnapshot?.effective.judgeMode ?? "identified"),
+            orderPolicy:
+              process.env.ROLE_MODEL_JUDGE_ORDER_POLICY?.trim() === "dual_order"
+                ? "dual_order"
+                : process.env.ROLE_MODEL_JUDGE_ORDER_POLICY?.trim() === "source_first"
+                  ? "source_first"
+                  : (input.learningPolicySnapshot?.effective.judgeOrderPolicy ?? "source_first"),
+            measureAgreement:
+              process.env.ROLE_MODEL_JUDGE_MEASURE_AGREEMENT?.trim() === "true"
+                ? true
+                : process.env.ROLE_MODEL_JUDGE_MEASURE_AGREEMENT?.trim() === "false"
+                  ? false
+                  : (input.learningPolicySnapshot?.effective.judgeMeasureAgreement ?? false),
+            recordDerivedDispatch: (dispatch) => {
+              try {
+                // The supervised replay already reserved this counterfactual at its first candidate
+                // dispatch, so the derived judge dispatch is recorded against the same reservation
+                // (AC-R07-02: judge spend is visible in the same daily ceiling).
+                const reservationId = input.currentLedgerReservationId();
+                if (!reservationId) return;
+                input.replayLedger.record({
+                  reservationId,
+                  captureRef: input.requestId,
+                  policySetDigest: input.replayPolicySet.policySetDigest,
+                  counterfactualRef: `cf:${input.requestId}`,
+                  dispatchKind: "derived",
+                  candidateEndpointId: dispatch.judgeEndpointId,
+                  attempt: dispatch.attempt,
+                  costMicros: dispatch.costMicros,
+                  bytes: dispatch.bytes,
+                  outcome: dispatch.outcome,
+                });
+              } catch {
+                // Ledger accounting is best-effort here; the judge receipt remains durable on the
+                // score row and the producer reconciles dispatches.
+              }
+            },
+          }),
+          getDispatched: input.getDispatched as never,
+          evaluationCriteria: input.evaluationCriteria,
+          evaluationCriteriaDigest: input.evaluationCriteriaDigest,
+          contractStateRoot: options.runtimeStateRoot,
+          // Run 98 R3/R15: the learning pass consumes the operator's versioned policy floors for this
+          // channel and scope.
+          ...(input.learningPolicySnapshot
+            ? {
+                learningPolicy: {
+                  evidenceFloor: {
+                    minDecisiveComparisons:
+                      input.learningPolicySnapshot.effective.minDecisiveComparisons,
+                    minHoldoutComparisons:
+                      input.learningPolicySnapshot.effective.minHoldoutComparisons,
+                    minDistinctCaptures: input.learningPolicySnapshot.effective.minDistinctCaptures,
+                  },
+                  guardrails: {
+                    qualityMinDelta: input.learningPolicySnapshot.effective.qualityMinDelta,
+                  },
+                  // Run 98 R19: the promotion protocol is declared from the same versioned policy as
+                  // the floors, so the validation gate is reproducible from config.
+                  promotionProtocol: {
+                    protocolId: `promotion:${input.learningPolicySnapshot.digest.slice(0, 16)}`,
+                    primaryMetricId: "role_model_pairwise_judge.battle",
+                    direction: "higher_is_better" as const,
+                    minimumPracticalDelta:
+                      input.learningPolicySnapshot.effective.minimumPracticalDelta,
+                    intervalLevel: input.learningPolicySnapshot.effective.promotionIntervalLevel,
+                    resamples: input.learningPolicySnapshot.effective.promotionResamples,
+                    bootstrapSeed: input.learningPolicySnapshot.effective.promotionBootstrapSeed,
+                    analysisMethod: input.learningPolicySnapshot.effective.promotionAnalysisMethod,
+                    selectionFamilySize:
+                      input.learningPolicySnapshot.effective.promotionSelectionFamilySize,
+                    multiplicityAdjustment:
+                      input.learningPolicySnapshot.effective.multiplicityAdjustment,
+                  },
+                  evidenceMaxAgeMs:
+                    input.learningPolicySnapshot.effective.evidenceMaxAgeDays * 24 * 60 * 60 * 1_000,
+                },
+              }
+            : {}),
+        });
+      /**
+       * Re-runs one interrupted supervised-replay evaluation. The branch captures are deterministic
+       * (`replay-<requestId>-<hash(replayJobId, candidate)>-branch`), and the pipeline reuses the
+       * already-scored durable trials, so this finalizes the existing comparison group and lets the
+       * learner consume it instead of needing a fresh provider dispatch.
+       */
+      const resumePendingEvaluations = async () => {
+        const runtime = extensionRuntimeRef.current;
+        const operations = currentPostObservationOperations();
+        if (!runtime || !operations) {
+          return { resumed: 0, completed: 0, failed: 0, remaining: 0 };
+        }
+        const channel = packagedProfile?.channel ?? "development";
+        return resumePendingSupervisedReplayEvaluations({
+          store: evaluationResumeStore,
+          isEvaluationComplete: async (entry) => {
+            try {
+              const job = await runtime.invoke("evaluation-core", {
+                requestId: `evaluation-resume:${entry.replayJobId}`,
+                sessionId: `evaluation-resume:${options.scopeId}`,
+                protocolVersion: "1.1.0",
+                channel,
+                scope: options.scopeId,
+                authorizationEpoch: 1,
+                capability: "evaluation:get-job",
+                value: { jobId: entry.evaluationJobId },
+              });
+              const status =
+                job && typeof job === "object" && !Array.isArray(job)
+                  ? String((job as Record<string, unknown>).status ?? "")
+                  : "";
+              return status === "completed";
+            } catch {
+              return false;
+            }
+          },
+          complete: async (entry) => {
+            // The durable evaluation job carries the criteria the original attempt used, so a resumed
+            // completion grades with the same rubric instead of inventing one.
+            let storedCriteria: Readonly<Record<string, unknown>> | null = null;
+            let storedJobId: string | null = null;
+            try {
+              const storedJob = await runtime.invoke("evaluation-core", {
+                requestId: `evaluation-resume-read:${entry.replayJobId}`,
+                sessionId: `evaluation-resume:${options.scopeId}`,
+                protocolVersion: "1.1.0",
+                channel,
+                scope: options.scopeId,
+                authorizationEpoch: 1,
+                capability: "evaluation:get-job",
+                value: { jobId: entry.evaluationJobId },
+              });
+              const record =
+                storedJob && typeof storedJob === "object" && !Array.isArray(storedJob)
+                  ? (storedJob as Record<string, unknown>)
+                  : null;
+              storedJobId = record && typeof record.id === "string" ? record.id : null;
+              const cases = record && Array.isArray(record.cases) ? record.cases : [];
+              const firstCase =
+                cases[0] && typeof cases[0] === "object" && !Array.isArray(cases[0])
+                  ? (cases[0] as Record<string, unknown>)
+                  : null;
+              const criteria = firstCase?.evaluationCriteria;
+              storedCriteria =
+                criteria && typeof criteria === "object" && !Array.isArray(criteria)
+                  ? (criteria as Readonly<Record<string, unknown>>)
+                  : null;
+            } catch {
+              storedCriteria = null;
+            }
+            if (!storedJobId) {
+              // Nothing durable to finalize: the evaluation job never reached its create step, so the
+              // sweep reports it instead of manufacturing a comparison from thin air.
+              throw new Error(
+                `durable evaluation job ${entry.evaluationJobId} is unavailable for resume`,
+              );
+            }
+            const sourceCapture = (await operations.readLocalRouteCapture({
+              requestId: entry.sourceCaptureRequestId,
+            })) as Record<string, unknown> | null;
+            if (!sourceCapture || typeof sourceCapture !== "object") {
+              throw new Error(
+                `durable replay evaluation is missing its source capture ${entry.sourceCaptureRequestId}`,
+              );
+            }
+            const sourceOutput = extractSourceOutputText(sourceCapture);
+            if (!sourceOutput) {
+              throw new Error("durable replay evaluation is missing its source output evidence");
+            }
+            const captureScope =
+              typeof sourceCapture.scope === "string" && sourceCapture.scope.trim()
+                ? sourceCapture.scope.trim()
+                : options.scopeId;
+            const sourceEndpointId =
+              typeof sourceCapture.endpointId === "string" && sourceCapture.endpointId.trim()
+                ? sourceCapture.endpointId.trim()
+                : entry.sourceEndpointId;
+            const sourceModelId =
+              typeof sourceCapture.modelId === "string" && sourceCapture.modelId.trim()
+                ? sourceCapture.modelId.trim()
+                : entry.sourceModelId;
+            const dispatched = new Map<
+              string,
+              { readonly replayRequestId: string; readonly execution: Record<string, unknown> }
+            >();
+            const counterfactualPackages: {
+              endpointId: string;
+              modelId: string;
+              reasoningEffort: string | null;
+            }[] = [];
+            for (const candidate of entry.counterfactualPackages) {
+              const replayRequestId = `replay-${entry.requestId}-${createHash("sha256")
+                .update(`${entry.replayJobId}\u0000${candidate.endpointId}`)
+                .digest("hex")
+                .slice(0, 16)}`;
+              const branchCapture = (await operations.readLocalRouteCapture({
+                requestId: `${replayRequestId}-branch`,
+              })) as Record<string, unknown> | null;
+              if (!branchCapture || typeof branchCapture !== "object") continue;
+              const response =
+                branchCapture.response && typeof branchCapture.response === "object"
+                  ? (branchCapture.response as Record<string, unknown>)
+                  : null;
+              const outputText =
+                (typeof response?.content === "string" ? response.content : null) ??
+                (typeof branchCapture.outputText === "string" ? branchCapture.outputText : null);
+              if (!outputText) continue;
+              counterfactualPackages.push({
+                endpointId: candidate.endpointId,
+                modelId:
+                  typeof branchCapture.modelId === "string" && branchCapture.modelId.trim()
+                    ? branchCapture.modelId.trim()
+                    : candidate.modelId,
+                reasoningEffort:
+                  typeof branchCapture.reasoningEffort === "string"
+                    ? branchCapture.reasoningEffort
+                    : candidate.reasoningEffort,
+              });
+              dispatched.set(candidate.endpointId, {
+                replayRequestId,
+                execution: {
+                  routingDecisionId: String(branchCapture.routingDecisionId ?? ""),
+                  outputText,
+                },
+              });
+            }
+            if (dispatched.size === 0) {
+              throw new Error(
+                "durable replay evaluation has no recorded counterfactual branch to evaluate",
+              );
+            }
+            const evaluationCriteria = storedCriteria
+              ? normalizeTrackBSemanticEvaluationCriteria(storedCriteria)
+              : normalizeTrackBSemanticEvaluationCriteria(entry.evaluationCriteria);
+            const completer = buildSupervisedReplayEvaluationCompleter({
+              backend: created,
+              runtime,
+              operations,
+              requestId: entry.requestId,
+              channel,
+              captureScope,
+              sourceCapture,
+              sourceOutput,
+              sourceEndpointId,
+              sourceModelId,
+              counterfactualPackages,
+              evaluationCriteria:
+                evaluationCriteria as unknown as Readonly<Record<string, unknown>>,
+              evaluationCriteriaDigest:
+                digestTrackBSemanticEvaluationCriteria(evaluationCriteria),
+              learningPolicySnapshot: readEvaluationLearningPolicySnapshot(),
+              // A resumed completion performs no candidate dispatch, so its judge has no live
+              // reservation to charge.
+              replayLedger: createReplayLedger({
+                filePath: path.join(
+                  options.runtimeStateRoot,
+                  options.scopeId,
+                  "track-b-replay-ledger.json",
+                ),
+                limits: resolveReplayLedgerLimits(),
+              }),
+              replayPolicySet: buildReplayPolicySet(),
+              getDispatched: (endpointId: string) => dispatched.get(endpointId),
+              currentLedgerReservationId: () => null,
+            });
+            return (await completer({
+              replayJobId: entry.replayJobId,
+              evaluationJobId: entry.evaluationJobId,
+              replayJob: null,
+              resultBranches: [],
+            })) as Readonly<Record<string, unknown>>;
+          },
+        });
+      };
+      resumeEvaluationsRef.current = resumePendingEvaluations;
       if (trackBOperationsEndpoint && trackBOperationsToken && runStartupSQLiteMaintenance) {
         const response = await fetch(`${trackBOperationsEndpoint}/sqlite-maintenance`, {
           method: "POST",
