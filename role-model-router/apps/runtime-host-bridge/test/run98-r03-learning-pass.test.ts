@@ -347,6 +347,52 @@ test("run99 R33 an incomparable comparison is excluded and counted by code", () 
 });
 
 /**
+ * Run 98 addendum 30 S3 (`guidance/11` "judge-self-evaluated ... groups are ineligible for
+ * promotion evidence"): a group the judge produced about itself cannot teach the router anything
+ * about the candidates, so the learner excludes it by the canonical code the evaluation store now
+ * records (`validityIssues: ["judge_self_evaluation"]`) instead of averaging a self-preference in.
+ */
+test("run98 A30 a judge-self-evaluated comparison is excluded and counted by code", () => {
+  const nowMs = Date.parse("2026-09-14T10:00:00Z");
+  const comparable = group({
+    groupId: "comparable:self-judge",
+    outcome: "candidate",
+    inputRef: `artifact:${"1".repeat(64)}`,
+    taskTypeId: "coder.review",
+  });
+  const flipped = group({
+    groupId: "self-judged:1",
+    outcome: "candidate",
+    inputRef: `artifact:${"2".repeat(64)}`,
+    taskTypeId: "coder.review",
+  });
+  const selfJudged = {
+    ...flipped,
+    result: {
+      ...(flipped.result as Record<string, unknown>),
+      validityIssues: ["judge_self_evaluation"],
+      judgeProvenance: {
+        endpointIds: ["deepseek.personal.deepseek-api-key.global.deepseek-flash-high"],
+        modes: ["identified"],
+      },
+    },
+  };
+
+  const summary = buildTrackBLearningEvidenceSummary({
+    groups: [comparable, selfJudged],
+    routePackage,
+    nowMs,
+    evidenceMaxAgeMs: 30 * 24 * 60 * 60 * 1_000,
+  });
+
+  expect(summary.decisiveComparisons).toBe(1);
+  expect(summary.byFamily["coder.review"].decisiveComparisons).toBe(1);
+  expect(summary.excludedByReason).toEqual({
+    "incomparable:judge_self_evaluation": 1,
+  });
+});
+
+/**
  * Run 99 R33 (addendum 21 D11): the per-family receipt carries the canonical gate dimensions —
  * effective sample size, source concentration and temporal drift — not just raw counts.
  */
