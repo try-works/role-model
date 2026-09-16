@@ -365,6 +365,58 @@ test("run97 auto loop refuses replay-produced captures reported by the private b
   }
 });
 
+/**
+ * Run 98 addendum 04 §7 (`L6`), measured live on v171: a tick walks up to eight captures and each
+ * real dsh replay takes ~4 minutes, so a full tick runs for tens of minutes. Nothing was written to
+ * the durable disposition ledger until the whole tick returned, so the ledger showed "no replay
+ * activity" for half an hour at a time while the captures were simply queued behind each other.
+ */
+test("run98 addendum 04 a disposition is recorded per capture instead of only when the tick ends", async () => {
+  const { ledger, cleanup } = harness();
+  try {
+    const operations = fakeOperations(["req-slow-1", "req-slow-2"]);
+    const recorded: Record<string, unknown>[] = [];
+    operations.recordReplayDisposition = async (input: Record<string, unknown>) => {
+      recorded.push(input);
+      return { recorded: true };
+    };
+    let releaseSecond: (() => void) | undefined;
+    const gate = new Promise<void>((resolve) => {
+      releaseSecond = resolve;
+    });
+    const loop = startAutoReplayLoop({
+      operations,
+      ledger,
+      policySet: buildReplayPolicySet(),
+      configuredEndpointIds: ["endpoint-a", "endpoint-b"],
+      executor: async ({ capture }) => {
+        if (capture.captureRef === "req-slow-2") await gate;
+        return {
+          terminal: true,
+          branches: [{ endpointId: "endpoint-b", outcome: "complete" as const }],
+        };
+      },
+      executorTimeoutMs: 30_000,
+      intervalMs: 0,
+      now: () => Date.parse("2026-09-12T06:00:00Z"),
+    });
+    const tickPromise = loop.tick();
+    // While the second capture is still executing, the first one's disposition must already be
+    // durable — that is what lets the ledger and the pending projection advance mid-tick.
+    for (let attempt = 0; attempt < 200 && recorded.length === 0; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 5));
+    }
+    expect(recorded.length).toBe(1);
+    expect(recorded[0]?.captureRef).toBe("req-slow-1");
+    releaseSecond?.();
+    await tickPromise;
+    loop.stop();
+    expect(recorded.length).toBe(2);
+  } finally {
+    cleanup();
+  }
+});
+
 test("run98 addendum 04 a hung replay execution is bounded instead of stalling the producer", async () => {
   const { ledger, cleanup } = harness();
   try {

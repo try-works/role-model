@@ -275,6 +275,40 @@ export function startAutoReplayLoop(input: {
         typeof input.healthyEndpointIds === "function"
           ? await input.healthyEndpointIds()
           : input.healthyEndpointIds;
+      const window = input.ledger.status().window;
+      /**
+       * Run 98 addendum 04 §7 (`L6`), measured live on v171: a tick walks up to eight captures and a
+       * real dsh replay takes ~4 minutes, so a full tick runs for tens of minutes. Writing the
+       * dispositions only after the tick returned left the durable ledger looking idle for half an
+       * hour at a time while captures were simply queued behind each other. Each disposition is now
+       * written as soon as its capture finishes; the post-tick loop is gone, so nothing is written
+       * twice.
+       */
+      const dispositionWrites: Promise<unknown>[] = [];
+      const writeDisposition = (disposition: {
+        readonly captureRef: string;
+        readonly outcome: string;
+        readonly code?: string | null;
+        readonly detail?: string | null;
+        readonly branches?: unknown;
+      }): Promise<unknown> =>
+        input.operations
+          .recordReplayDisposition({
+            captureRef: disposition.captureRef,
+            policySetDigest: input.policySet.policySetDigest,
+            outcome: disposition.outcome,
+            refusalCode: disposition.code ?? null,
+            detail: disposition.detail ?? null,
+            branches: disposition.branches ?? null,
+            window,
+          })
+          .catch((error: unknown) => {
+            console.error(
+              `[run98] replay disposition write degraded:${disposition.captureRef} ${String(
+                (error as { message?: unknown })?.message ?? error,
+              ).slice(0, 200)}`,
+            );
+          });
       const result = await runAutoReplayTick({
         captures,
         configuredEndpointIds,
@@ -285,22 +319,14 @@ export function startAutoReplayLoop(input: {
         policySet: input.policySet,
         executor: input.executor,
         maxCapturesPerTick,
+        dispositionSink: (disposition) => {
+          dispositionWrites.push(writeDisposition(disposition));
+        },
         ...(Number.isSafeInteger(input.executorTimeoutMs) && (input.executorTimeoutMs ?? 0) > 0
           ? { executorTimeoutMs: Number(input.executorTimeoutMs) }
           : {}),
       });
-      const window = input.ledger.status().window;
-      for (const disposition of result.dispositions) {
-        await input.operations.recordReplayDisposition({
-          captureRef: disposition.captureRef,
-          policySetDigest: input.policySet.policySetDigest,
-          outcome: disposition.outcome,
-          refusalCode: disposition.code ?? null,
-          detail: disposition.detail ?? null,
-          branches: disposition.branches ?? null,
-          window,
-        });
-      }
+      await Promise.all(dispositionWrites);
       // RC07 (L2): one bounded sweep per tick. A job whose deadline elapsed without
       // reaching a terminal state is expired with a typed receipt instead of living on
       // as an orphan the producer will never drive again. A sweep failure degrades this
