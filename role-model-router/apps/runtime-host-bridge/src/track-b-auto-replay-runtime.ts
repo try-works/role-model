@@ -258,8 +258,83 @@ export function startAutoReplayLoop(input: {
     return captures;
   };
 
+  /**
+   * Run 98 addendum 04 §7 (`L7`), measured live on v171/v172: a work tick walks up to eight captures
+   * at ~4 minutes per real dsh replay, so it can hold the loop for tens of minutes — and the deadline
+   * sweep used to run only *after* that work. Ten replay jobs accumulated in `running` at ages up to
+   * 79 minutes against a 360 s deadline, and the newest expiry in the whole store was still 08:16Z.
+   * Liveness bookkeeping (expiring overdue jobs, resuming stranded evaluations) must not be hostage
+   * to replay throughput, so it is now runnable on its own with a re-entrancy guard.
+   */
+  let sweeping = false;
+  const runLivenessSweeps = async (
+    window: Record<string, unknown>,
+  ): Promise<{ expired: number; resumed: number; error: string | null }> => {
+    if (sweeping) return { expired: 0, resumed: 0, error: null };
+    sweeping = true;
+    let expired = 0;
+    let resumed = 0;
+    let error: string | null = null;
+    try {
+      if (typeof input.operations.expireStaleReplayJobs === "function") {
+        try {
+          const sweep = (await input.operations.expireStaleReplayJobs({
+            window,
+            policySetDigest: input.policySet.policySetDigest,
+          })) as { readonly expiredCount?: unknown } | null;
+          if (sweep && Number.isSafeInteger(sweep.expiredCount) && Number(sweep.expiredCount) >= 0) {
+            expired = Number(sweep.expiredCount);
+          }
+        } catch (cause) {
+          // The dispositions are already durable, so a failed sweep degrades health instead of
+          // discarding the work that succeeded.
+          error =
+            cause instanceof Error
+              ? `replay expiration sweep failed: ${cause.message.slice(0, 200)}`
+              : "replay expiration sweep failed";
+        }
+      }
+      // Run 99 R33: the same bounded shape for interrupted supervised-replay evaluations. Without it
+      // a stranded evaluation is never retried, because the producer only drives replay jobs and
+      // those are already terminal.
+      if (typeof input.operations.resumePendingEvaluations === "function") {
+        try {
+          const sweep = (await input.operations.resumePendingEvaluations({
+            window,
+            policySetDigest: input.policySet.policySetDigest,
+          })) as { readonly resumed?: unknown } | null;
+          if (sweep && Number.isSafeInteger(sweep.resumed) && Number(sweep.resumed) >= 0) {
+            resumed = Number(sweep.resumed);
+          }
+        } catch (cause) {
+          const detail =
+            cause instanceof Error
+              ? `evaluation resume sweep failed: ${cause.message.slice(0, 200)}`
+              : "evaluation resume sweep failed";
+          error = error ? `${error}; ${detail}` : detail;
+        }
+      }
+    } finally {
+      sweeping = false;
+    }
+    return { expired, resumed, error };
+  };
+
   const tick = async (): Promise<AutoReplayTickResult & { readonly skipped?: boolean }> => {
-    if (running || paused) return { ...emptyResult(), skipped: true };
+    if (running || paused) {
+      // `L7`: this is the interval path while a long work tick is in flight. Run the liveness sweeps
+      // here instead of skipping them, so an overdue job is still expired on schedule.
+      const sweep = await runLivenessSweeps(
+        input.ledger.status().window as unknown as Record<string, unknown>,
+      );
+      if (sweep.expired > 0) lastExpiredJobs = sweep.expired;
+      if (sweep.resumed > 0) lastResumedEvaluations = sweep.resumed;
+      if (sweep.error) {
+        lastOutcome = "degraded";
+        lastError = sweep.error;
+      }
+      return { ...emptyResult(), skipped: true };
+    }
     running = true;
     try {
       const pending = await input.operations.listPendingReplayCaptures({
@@ -331,47 +406,10 @@ export function startAutoReplayLoop(input: {
       // reaching a terminal state is expired with a typed receipt instead of living on
       // as an orphan the producer will never drive again. A sweep failure degrades this
       // tick, never the routing path.
-      lastExpiredJobs = 0;
-      lastResumedEvaluations = 0;
-      let sweepError: string | null = null;
-      if (typeof input.operations.expireStaleReplayJobs === "function") {
-        try {
-          const sweep = (await input.operations.expireStaleReplayJobs({
-            window,
-            policySetDigest: input.policySet.policySetDigest,
-          })) as { readonly expiredCount?: unknown } | null;
-          if (sweep && Number.isSafeInteger(sweep.expiredCount) && Number(sweep.expiredCount) >= 0) {
-            lastExpiredJobs = Number(sweep.expiredCount);
-          }
-        } catch (error) {
-          // The dispositions are already durable, so a failed sweep degrades the tick's
-          // health instead of discarding the work that succeeded.
-          sweepError =
-            error instanceof Error
-              ? `replay expiration sweep failed: ${error.message.slice(0, 200)}`
-              : "replay expiration sweep failed";
-        }
-      }
-      // Run 99 R33: the same bounded-per-tick shape for interrupted supervised-replay evaluations.
-      // Without it a stranded evaluation is never retried, because the producer only drives replay
-      // jobs and those are already terminal.
-      if (typeof input.operations.resumePendingEvaluations === "function") {
-        try {
-          const sweep = (await input.operations.resumePendingEvaluations({
-            window,
-            policySetDigest: input.policySet.policySetDigest,
-          })) as { readonly resumed?: unknown } | null;
-          if (sweep && Number.isSafeInteger(sweep.resumed) && Number(sweep.resumed) >= 0) {
-            lastResumedEvaluations = Number(sweep.resumed);
-          }
-        } catch (error) {
-          const detail =
-            error instanceof Error
-              ? `evaluation resume sweep failed: ${error.message.slice(0, 200)}`
-              : "evaluation resume sweep failed";
-          sweepError = sweepError ? `${sweepError}; ${detail}` : detail;
-        }
-      }
+      const sweep = await runLivenessSweeps(window as unknown as Record<string, unknown>);
+      lastExpiredJobs = sweep.expired;
+      lastResumedEvaluations = sweep.resumed;
+      const sweepError = sweep.error;
       lastOutcome = sweepError ? "degraded" : "ok";
       lastError = sweepError;
       lastProcessedAtMs = now();

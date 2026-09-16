@@ -371,6 +371,61 @@ test("run97 auto loop refuses replay-produced captures reported by the private b
  * the durable disposition ledger until the whole tick returned, so the ledger showed "no replay
  * activity" for half an hour at a time while the captures were simply queued behind each other.
  */
+/**
+ * Run 98 addendum 04 §7 (`L7`), measured live on v171/v172: a work tick walks up to eight captures
+ * at ~4 minutes each, so it can hold the loop for tens of minutes — and the deadline sweep ran only
+ * *after* that work. The result was 10 replay jobs sitting in `running` at ages up to 79 minutes
+ * against a 360 s deadline, with the newest expiry in the whole store still 08:16Z. Liveness
+ * bookkeeping must not be hostage to replay throughput.
+ */
+test("run98 addendum 04 liveness sweeps still run while a long work tick is in flight", async () => {
+  const { ledger, cleanup } = harness();
+  try {
+    const operations = fakeOperations(["req-long-1"]);
+    let expiries = 0;
+    let resumes = 0;
+    operations.expireStaleReplayJobs = async () => {
+      expiries += 1;
+      return { expiredCount: 1 };
+    };
+    operations.resumePendingEvaluations = async () => {
+      resumes += 1;
+      return { resumed: 0 };
+    };
+    let releaseFirst: (() => void) | undefined;
+    const gate = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    const loop = startAutoReplayLoop({
+      operations,
+      ledger,
+      policySet: buildReplayPolicySet(),
+      configuredEndpointIds: ["endpoint-a", "endpoint-b"],
+      executor: async () => {
+        await gate;
+        return {
+          terminal: true,
+          branches: [{ endpointId: "endpoint-b", outcome: "complete" as const }],
+        };
+      },
+      intervalMs: 0,
+      now: () => Date.parse("2026-09-12T06:00:00Z"),
+    });
+    const first = loop.tick();
+    // Let the first tick enter its executor, then let the interval fire while it is still working.
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const second = await loop.tick();
+    expect(second.skipped).toBe(true);
+    expect(expiries).toBeGreaterThan(0);
+    expect(resumes).toBeGreaterThan(0);
+    releaseFirst?.();
+    await first;
+    loop.stop();
+  } finally {
+    cleanup();
+  }
+});
+
 test("run98 addendum 04 a disposition is recorded per capture instead of only when the tick ends", async () => {
   const { ledger, cleanup } = harness();
   try {
