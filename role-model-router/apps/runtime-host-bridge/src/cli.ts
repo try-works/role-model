@@ -4824,7 +4824,7 @@ export async function main(): Promise<void> {
           store: evaluationResumeStore,
           isEvaluationComplete: async (entry) => {
             try {
-              const job = await runtime.invoke("evaluation-core", {
+              const rawJob = await runtime.invoke("evaluation-core", {
                 requestId: `evaluation-resume:${entry.replayJobId}`,
                 sessionId: `evaluation-resume:${options.scopeId}`,
                 protocolVersion: "1.1.0",
@@ -4833,6 +4833,14 @@ export async function main(): Promise<void> {
                 authorizationEpoch: 1,
                 capability: "evaluation:get-job",
                 value: { jobId: entry.evaluationJobId },
+              });
+              // A durable job readback can cross the extension boundary as an externalized transfer
+              // marker (the same class that made the Learning packs page render empty in R28), so
+              // decode it before reading the status.
+              const job = decodeExternalizedOperatorReadback({
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+                value: rawJob,
               });
               const status =
                 job && typeof job === "object" && !Array.isArray(job)
@@ -4849,7 +4857,7 @@ export async function main(): Promise<void> {
             let storedCriteria: Readonly<Record<string, unknown>> | null = null;
             let storedJobId: string | null = null;
             try {
-              const storedJob = await runtime.invoke("evaluation-core", {
+              const rawStoredJob = await runtime.invoke("evaluation-core", {
                 requestId: `evaluation-resume-read:${entry.replayJobId}`,
                 sessionId: `evaluation-resume:${options.scopeId}`,
                 protocolVersion: "1.1.0",
@@ -4859,11 +4867,21 @@ export async function main(): Promise<void> {
                 capability: "evaluation:get-job",
                 value: { jobId: entry.evaluationJobId },
               });
+              const storedJob = decodeExternalizedOperatorReadback({
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+                value: rawStoredJob,
+              });
               const record =
                 storedJob && typeof storedJob === "object" && !Array.isArray(storedJob)
                   ? (storedJob as Record<string, unknown>)
                   : null;
-              storedJobId = record && typeof record.id === "string" ? record.id : null;
+              storedJobId =
+                record && typeof record.id === "string"
+                  ? record.id
+                  : record && typeof record.jobId === "string"
+                    ? record.jobId
+                    : null;
               const cases = record && Array.isArray(record.cases) ? record.cases : [];
               const firstCase =
                 cases[0] && typeof cases[0] === "object" && !Array.isArray(cases[0])
