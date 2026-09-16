@@ -353,7 +353,21 @@ export interface TrackBProductionRuntimeOptions {
  * to reconcile before it can report ready. Keep that recovery bounded while
  * matching the extension supervisor's documented allowance.
  */
-export const TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS = 90_000;
+/**
+ * Run 99 R33 live finding (stage v147, with real coding-agent traffic): a mature stage root needs
+ * longer than 90 s to reconcile durable state before it can publish readiness — the host reported
+ * `Track B sidecar readiness timeout` on a boot that the previous build completed, because the
+ * private operations bound now allows a slow durable commit to run to completion instead of being
+ * aborted at eight seconds. The startup budget is a bound, not a latency claim, and it stays
+ * operator-tunable (`ROLE_MODEL_TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS`) without a rebuild.
+ */
+export const TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS = (() => {
+  const configured = Number.parseInt(
+    process.env.ROLE_MODEL_TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS ?? "",
+    10,
+  );
+  return Number.isSafeInteger(configured) && configured > 0 ? configured : 240_000;
+})();
 
 /**
  * Run 98 R2: durable replay job states that can never be dispatched again. RC16 freezes a

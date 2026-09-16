@@ -37,7 +37,10 @@ describe("production Track B composition", () => {
   const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
 
   test("allows the documented bounded recovery window before a persisted sidecar is rejected", () => {
-    expect(TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS).toBe(90_000);
+    // Run 99 R33: a mature stage root reconciling durable state (with the private operations bound
+    // covering slow commits instead of aborting them) needs more than the previous 90 s window; the
+    // budget stays finite and operator-tunable via ROLE_MODEL_TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS.
+    expect(TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS).toBeGreaterThanOrEqual(180_000);
   });
 
   test("provisions production Message Graph keys once and reuses them across package updates", async () => {
