@@ -54,6 +54,27 @@ describe("run99 R33 durable scored trial evidence", () => {
     });
   });
 
+  it("accepts a durable correctness row recorded under a different semantic scorer version", () => {
+    const evidence = selectDurableScoredTrialEvidence({
+      scores: [
+        {
+          scoreId: "score:correctness:older",
+          dimension: "correctness",
+          scorerId: "run96-shadow-exact",
+          scorerVersion: "1+older",
+          score: 0.5,
+        },
+      ],
+      scorerId: "run96-shadow-exact",
+      scorerVersion: "2",
+    });
+    expect(evidence).toMatchObject({
+      score: 0.5,
+      scoreId: "score:correctness:older",
+      hasCorrectness: true,
+    });
+  });
+
   it("accepts a durable trial scored by the judge alone, with a real score reference", () => {
     const evidence = selectDurableScoredTrialEvidence({
       scores: [

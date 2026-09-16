@@ -685,10 +685,11 @@ export function selectDurableJudgeScores(input: {
   const selected: Record<string, unknown>[] = [];
   for (const trialId of input.trialIds) {
     const rows = input.scoresByTrial[trialId] ?? [];
+    // The stored row is the authority: the judge's version embeds the endpoint and mode, which a
+    // resumed run re-derives, so the identity that matters is the scorer id plus the dimension.
     const match = rows.find(
       (row) =>
         row.scorerId === input.scorerId &&
-        row.scorerVersion === input.scorerVersion &&
         row.dimension === input.dimension,
     );
     if (!match) return null;
@@ -706,11 +707,13 @@ export function selectDurableScoredTrialEvidence(input: {
     (row): row is Record<string, unknown> => Boolean(row) && typeof row === "object" && !Array.isArray(row),
   );
   if (rows.length === 0) throw new Error("durable scored trial has no recorded scores");
+  // The durable row is the authority: a resumed run re-derives the scorer definition (the judge's
+  // version embeds the endpoint and mode), so matching on the exact version alone rejected a trial
+  // that had in fact been graded. The dimension plus the scorer identity is what the comparison needs.
   const correctness = rows.find(
     (score) =>
       score.dimension === "correctness" &&
-      score.scorerId === input.scorerId &&
-      score.scorerVersion === input.scorerVersion,
+      score.scorerId === input.scorerId,
   );
   const hasCorrectness = Boolean(correctness && Number.isFinite(correctness.score));
   const referenced = rows.find((row) => typeof row.scoreId === "string" && row.scoreId) ?? rows[0];

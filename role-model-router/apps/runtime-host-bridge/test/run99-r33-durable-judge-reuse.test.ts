@@ -59,20 +59,41 @@ describe("run99 R33 durable judge reuse", () => {
     ).toBeNull();
   });
 
-  it("does not reuse another scorer or dimension", () => {
-    const otherScorer = { ...judgeRow("trial:source"), scorerVersion: "1+old" };
+  it("reuses a durable judgement recorded under a different judge version", () => {
+    const olderVersion = { ...judgeRow("trial:source"), scorerVersion: "2+olderhash" };
+    const olderVersionCounterfactual = {
+      ...judgeRow("trial:counterfactual"),
+      scorerVersion: "2+olderhash",
+    };
+    const selected = selectDurableJudgeScores({
+      trialIds: ["trial:source", "trial:counterfactual"],
+      scoresByTrial: {
+        "trial:source": [olderVersion],
+        "trial:counterfactual": [olderVersionCounterfactual],
+      },
+      scorerId: judgeScorer.id,
+      scorerVersion: judgeScorer.version,
+      dimension: judgeScorer.dimension,
+    });
+    expect(selected?.map((row) => row.scorerVersion)).toEqual(["2+olderhash", "2+olderhash"]);
+  });
+
+  it("does not reuse another scorer or another dimension", () => {
+    const otherScorer = { ...judgeRow("trial:source"), scorerId: "another-scorer" };
     const otherDimension = { ...judgeRow("trial:source"), dimension: "correctness" };
-    expect(
-      selectDurableJudgeScores({
-        trialIds: ["trial:source", "trial:counterfactual"],
-        scoresByTrial: {
-          "trial:source": [otherScorer, otherDimension],
-          "trial:counterfactual": [otherScorer, otherDimension],
-        },
-        scorerId: judgeScorer.id,
-        scorerVersion: judgeScorer.version,
-        dimension: judgeScorer.dimension,
-      }),
-    ).toBeNull();
+    for (const rows of [[otherScorer], [otherDimension]]) {
+      expect(
+        selectDurableJudgeScores({
+          trialIds: ["trial:source", "trial:counterfactual"],
+          scoresByTrial: {
+            "trial:source": rows,
+            "trial:counterfactual": rows,
+          },
+          scorerId: judgeScorer.id,
+          scorerVersion: judgeScorer.version,
+          dimension: judgeScorer.dimension,
+        }),
+      ).toBeNull();
+    }
   });
 });
