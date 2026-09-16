@@ -19,7 +19,11 @@ import { copyFile, lstat, mkdir, mkdtemp, readFile, rename, rm, writeFile } from
 import path from "node:path";
 
 // Run 99 R33 D7: the declared, family-stratified holdout split.
-import { buildFamilyStratifiedHoldout, RUN99_HOLDOUT_SPLIT_SEED } from "./track-b-holdout-split.js";
+import {
+  buildFamilyStratifiedHoldout,
+  computeHoldoutMembershipDigest,
+  RUN99_HOLDOUT_SPLIT_SEED,
+} from "./track-b-holdout-split.js";
 import { createInterface } from "node:readline";
 import { DatabaseSync } from "node:sqlite";
 import { pathToFileURL } from "node:url";
@@ -7327,6 +7331,15 @@ export async function runTrackBShadowPipeline(
   if (typeof jobId !== "string" || !jobId) {
     throw new Error("durable routing-shadow evaluation job identity is invalid");
   }
+  // Run 99 R33 (addendum 20 D7, second half): the declared split partitions a *candidate's own*
+  // cases. A candidate that contributes a single case cannot hold it out and still be compared, so
+  // that case stays in the holdout set; the declared partition applies where a candidate carries
+  // more than one case. The membership published below always matches the partitions stamped here.
+  const casesPerCandidate = new Map<string, number>();
+  for (const rollout of rolloutRows) {
+    const candidateRef = requireTrackBReference(rollout.endpointId, "candidate");
+    casesPerCandidate.set(candidateRef, (casesPerCandidate.get(candidateRef) ?? 0) + 1);
+  }
   const durableCases = rolloutRows.map((rollout, index) => {
     const evaluationCase = input.evaluationCases[index % input.evaluationCases.length] ?? {};
     const caseReference = evaluationReferences.perCase[index];
@@ -7336,21 +7349,31 @@ export async function runTrackBShadowPipeline(
     const evaluationCriteria = normalizeTrackBSemanticEvaluationCriteria(
       evaluationCase.evaluationCriteria,
     );
-    // Run 99 R33 (addendum 20 D7, second half): the declared split assigns each durable case to
-    // train or holdout, so the job carries the partition it was evaluated under. The holdout
-    // membership keeps binding only the holdout-partition cases.
-    const partition =
+    const candidateRef = requireTrackBReference(rollout.endpointId, "candidate");
+    const declaredPartition =
       holdout.partitions.find((row) => row.caseId === caseIds[index])?.partition ?? "holdout";
+    const partition =
+      (casesPerCandidate.get(candidateRef) ?? 1) > 1 ? declaredPartition : "holdout";
     return {
       id: caseIds[index],
       partition,
-      candidateRef: requireTrackBReference(rollout.endpointId, "candidate"),
+      candidateRef,
       evidenceRef: caseReference.evidenceRef,
       sourceGeneration: 0,
       evaluationCriteria,
       evaluationCriteriaDigest: digestTrackBSemanticEvaluationCriteria(evaluationCriteria),
     };
   });
+  // Run 99 R33 D7: publish the membership that matches the partitions actually stamped — a candidate
+  // whose only case cannot be held out still binds the canonical digest Evaluation Core recomputes.
+  const effectiveHoldoutCaseIds = durableCases
+    .filter((entry) => entry.partition === "holdout")
+    .map((entry) => entry.id);
+  const effectiveHoldout = {
+    ...holdout,
+    caseIds: effectiveHoldoutCaseIds,
+    membershipDigest: computeHoldoutMembershipDigest(effectiveHoldoutCaseIds),
+  };
   await runtime.invoke("evaluation-core", {
     ...envelope("evaluation:create-job", {
       id: jobId,
@@ -7361,7 +7384,7 @@ export async function runTrackBShadowPipeline(
       scorerSetVersion,
       requestKind: "routing_shadow_durable",
       comparability,
-      holdout,
+      holdout: effectiveHoldout,
       referenceAttestation,
       cases: durableCases,
     }),
@@ -8418,7 +8441,7 @@ export async function runTrackBShadowPipeline(
               })),
             },
             holdout: {
-              ...holdout,
+              ...effectiveHoldout,
               evidenceRef: evaluationReferences.inputRef,
               passed: learningTarget.decisive,
             },

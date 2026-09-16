@@ -18,6 +18,16 @@ import { createHash } from "node:crypto";
 
 export const SPLIT_ALGORITHM = "stratified_hash_partition_v1" as const;
 
+/**
+ * The canonical membership binding Evaluation Core recomputes: the digest of
+ * `{ partition: "holdout", caseIds }` over the holdout cases only. Exported so the supervised
+ * pipeline can publish a membership that matches the partitions it actually stamps (a candidate
+ * whose only case cannot be held out stays in the holdout set).
+ */
+export function computeHoldoutMembershipDigest(caseIds: readonly string[]): string {
+  return `sha256:${digest({ partition: "holdout", caseIds: [...caseIds].map(String).sort() })}`;
+}
+
 /** The seed the live routing-shadow pipeline declares for its holdout split (deterministic). */
 export const RUN99_HOLDOUT_SPLIT_SEED = 87;
 
@@ -107,7 +117,7 @@ export function buildFamilyStratifiedHoldout(input: {
   // replay fail closed with "evaluation holdout membership digest is not bound to its cases". The
   // declaration therefore travels beside the binding (below), where a receipt reader can still
   // rebuild the split, while the binding stays reproducible by the authority that enforces it.
-  const membershipDigest = `sha256:${digest({ partition: "holdout", caseIds: holdoutCaseIds })}`;
+  const membershipDigest = computeHoldoutMembershipDigest(holdoutCaseIds);
   return {
     holdoutId,
     membershipDigest,

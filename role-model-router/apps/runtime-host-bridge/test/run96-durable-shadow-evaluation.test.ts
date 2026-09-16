@@ -635,10 +635,10 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
       holdoutId: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
       membershipDigest: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
       partition: "holdout",
-      // Run 99 R33 (addendum 20 D7, second half): the declared split assigns the family's cases to
-      // train and holdout, so the immutable membership binds the holdout subset only while the job
-      // still evaluates (and records) both partitions.
-      caseIds: [expect.stringMatching(/^case:request:shadow-96:[01]$/)],
+      // Run 99 R33 (addendum 20 D7, second half): the split partitions a *candidate's own* cases. Each
+      // candidate here contributes exactly one case, and a candidate cannot hold out its only case and
+      // still be compared, so both cases remain in the holdout membership.
+      caseIds: ["case:request:shadow-96:0", "case:request:shadow-96:1"],
     },
     referenceAttestation: {
       schemaVersion: "role-model.evaluation-reference-attestation.v1",
@@ -656,7 +656,7 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
   });
   expect(
     (durableJobs[0].cases as Array<{ readonly partition?: string }>).map((entry) => entry.partition).sort(),
-  ).toEqual(["holdout", "train"]);
+  ).toEqual(["holdout", "holdout"]);
   // R14: a source/candidate output hash comparison is useful integrity evidence,
   // but cannot be the evaluation gate by itself.  The supervised pipeline must
   // register a bounded semantic criterion scorer instead of exact_match.
