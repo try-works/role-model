@@ -5405,6 +5405,12 @@ export interface TrackBShadowPipelineInput {
    */
   readonly taskTypeId?: string | null;
   readonly taxonomyVersion?: string | null;
+  /**
+   * Run 99 close-out (addendas 19-21 `S33`): the classification the captured request was routed
+   * with. The shadow pipeline's advisory observation is what the post-observation appends to the
+   * durable ledger, so the classification has to travel through this path too.
+   */
+  readonly classification?: TrackBRouteAdvisoryClassification | null;
   readonly prefix: readonly unknown[];
   /**
    * Authoritative durable reference for the source prefix the caller observed.
@@ -9281,6 +9287,15 @@ export async function runTrackBShadowPipeline(
     advisoryId: advisory.advisoryId,
     reason: advisoryStaleReason,
     observedAtMs: Date.now(),
+    // Run 99 close-out (addendas 19-21 S33/D1/D6): the shadow path records the request's family and
+    // the classification it was routed against, not just the advisory's own state. The observed arm
+    // is the policy's own deterministic choice for these inputs, so its propensity is 1.
+    ...(typeof input.taskTypeId === "string" && input.taskTypeId.trim()
+      ? { requestTaskTypeId: input.taskTypeId.trim() }
+      : {}),
+    ...(input.classification ? { classification: input.classification } : {}),
+    selectionMode: "policy_deterministic" as const,
+    selectionProbability: 1,
   });
   // Run 98 R4: the next live decision for this scope observes this advisory.
   rememberTrackBRouteAdvisory({
@@ -9933,6 +9948,15 @@ export async function runTrackBPostObservation(
             : {}),
           ...(typeof observation.taxonomyVersion === "string" && observation.taxonomyVersion.trim()
             ? { taxonomyVersion: observation.taxonomyVersion.trim() }
+            : {}),
+          // Run 99 close-out (addendas 19-21 S33): the capture now records the whole classification,
+          // so the shadow observation can carry it instead of only the family string. The builder
+          // bounds it again on the way in.
+          ...(observation.classification && typeof observation.classification === "object"
+            ? {
+                classification:
+                  observation.classification as TrackBRouteAdvisoryClassification,
+              }
             : {}),
           productionState,
           routePackage,

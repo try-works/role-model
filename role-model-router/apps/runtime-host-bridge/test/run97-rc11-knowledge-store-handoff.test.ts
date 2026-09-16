@@ -397,3 +397,41 @@ test("run98 r04 the pipeline records the advisory observation without changing t
   expect(result.receipt.providerCalls).toBe(0);
   expect(result.receipt.productionMutation).toBe(false);
 });
+
+/**
+ * Run 99 close-out (addendas 19-21 `S33`/`D1`/`D6`).
+ *
+ * The shadow pipeline's advisory observation is the entry `runTrackBPostObservation` appends to the
+ * durable ledger, so the classification has to travel through *this* path too — not only the live
+ * routing path. Measured on the live ledger before this slice: every entry written by the shadow
+ * pipeline carried no family, no role, no taxonomy version, no propensity.
+ */
+test("run99 r33 the shadow observation carries the classification and the propensity", async () => {
+  const invocations: Invocation[] = [];
+  const runtime = {
+    invoke: scriptedRuntime(invocations),
+    listExtensions: () => [{ id: "knowledge-store", lifecycle: "ready" }],
+  };
+  const classification = {
+    taskTypeId: "coder.review",
+    roleId: "coder",
+    toolClassIds: ["filesystem.read", "shell.execute"],
+    taxonomyVersion: "1.0.0-alpha.1",
+    contentRevision: "taxonomy-v1-alpha.1",
+    contentHashes: { taskTypes: `sha256:${"d".repeat(64)}` },
+  };
+  const result = (await trackBRuntime.runTrackBShadowPipeline(runtime as never, {
+    ...pipelineInput(),
+    taskTypeId: "coder.review",
+    taxonomyVersion: "1.0.0-alpha.1",
+    classification,
+  })) as unknown as {
+    readonly advisoryObservation: Record<string, unknown>;
+  };
+  const observation = result.advisoryObservation;
+  expect(observation.requestTaskTypeId).toBe("coder.review");
+  expect(observation.classification).toEqual(classification);
+  // The observed arm is the policy's own deterministic choice, so its propensity is 1.
+  expect(observation.selectionMode).toBe("policy_deterministic");
+  expect(observation.selectionProbability).toBe(1);
+});

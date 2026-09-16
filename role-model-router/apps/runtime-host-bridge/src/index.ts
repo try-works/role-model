@@ -192,6 +192,7 @@ import {
   appendTrackBRouteAdvisoryObservation,
   buildLiveRouteAdvisoryObservation,
   decodeExternalizedOperatorReadback,
+  RUN96_ROUTING_SHADOW_SCORER_SET_VERSION,
   type TrackBRouteAdvisoryClassification,
 } from "./track-b-runtime.js";
 import { resolveAdvisoryCohortPercent } from "./route-advisory-source.js";
@@ -25256,6 +25257,14 @@ export async function createRuntimeBridgeBackend(
           modelId: selectedModelId ?? selectedEndpointId,
           reasoningEffort: selectedReasoningEffort,
           effortSource: selectedEffortSource,
+          // Run 99 close-out (addendas 19-21 S33): a failed request is still evidence, so its
+          // capture records the same classification the routed path would have.
+          classification: buildRequestClassification({
+            taskTypeId: plan.routingRequest.taskType ?? null,
+            roleId: plan.routingRequest.requestedRoleId ?? null,
+            toolClasses: plan.routingRequest.roleModelIntent?.toolClasses ?? null,
+          }),
+          comparability: { scorerSetVersion: RUN96_ROUTING_SHADOW_SCORER_SET_VERSION },
           messages: captureInput,
           failure: {
             errorClass: error.errorClass,
@@ -26009,6 +26018,11 @@ export async function createRuntimeBridgeBackend(
               roleId: plan.routingRequest.requestedRoleId ?? null,
               toolClasses: plan.routingRequest.roleModelIntent?.toolClasses ?? null,
             }),
+            // Run 99 close-out (addendum 21 §4 S33): the comparability key's scorer-set identity is
+            // a property of this runtime, so it is known before the request is even dispatched. The
+            // two digests and the judge order policy are resolved when the evaluation case is built
+            // from the capture, so they stay on the comparison record rather than being pre-declared.
+            comparability: { scorerSetVersion: RUN96_ROUTING_SHADOW_SCORER_SET_VERSION },
             modelId: execution.target.candidate.identity.model_id,
             reasoningEffort: effectiveEffort.reasoningEffort,
             effortSource: effectiveEffort.effortSource,
