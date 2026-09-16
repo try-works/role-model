@@ -29,6 +29,42 @@ import { DatabaseSync } from "node:sqlite";
 import { pathToFileURL } from "node:url";
 import { gunzipSync, gzipSync } from "node:zlib";
 
+/**
+ * Run 98 addendum 04 (live finding, stage v180, 2026-09-16).
+ *
+ * This process builds its own extension host for the replay/evaluation path and never passed
+ * `timeoutMs`, so it inherited the extension host's one-second default while the sidecar's hosts next
+ * to it ran on 60 s. Every evaluation slower than a second was reported as
+ * `extension evaluation-core failed: timeout`, the replay deferred, and evaluation jobs sat in
+ * `scoring`. The timing profile is bounded, shared and operator-tunable; the private sidecar reads the
+ * same variables so both halves of the runtime are governed by one contract.
+ */
+export function extensionHostTiming(env: Record<string, string | undefined> = process.env): {
+  readonly timeoutMs: number;
+  readonly startupTimeoutMs: number;
+  readonly maxRestarts: number;
+  readonly restartBackoffMs: number;
+  readonly restartCooldownMs: number;
+} {
+  const bounded = (value: string | undefined, fallback: number, min: number, max: number): number => {
+    const numeric =
+      typeof value === "string" && value.trim() !== "" ? Number(value) : Number.NaN;
+    return Number.isSafeInteger(numeric) && numeric >= min && numeric <= max ? numeric : fallback;
+  };
+  return {
+    timeoutMs: bounded(env.ROLE_MODEL_EXTENSION_INVOKE_TIMEOUT_MS, 60_000, 100, 600_000),
+    startupTimeoutMs: bounded(env.ROLE_MODEL_EXTENSION_STARTUP_TIMEOUT_MS, 30_000, 100, 600_000),
+    maxRestarts: bounded(env.ROLE_MODEL_EXTENSION_MAX_RESTARTS, 3, 0, 20),
+    restartBackoffMs: bounded(env.ROLE_MODEL_EXTENSION_RESTART_BACKOFF_MS, 10, 0, 10_000),
+    restartCooldownMs: bounded(
+      env.ROLE_MODEL_EXTENSION_RESTART_COOLDOWN_MS,
+      60_000,
+      0,
+      3_600_000,
+    ),
+  };
+}
+
 import type { RuntimeEffortSource } from "@role-model-router/runtime-observability";
 import {
   type GraphArtifactReference,
@@ -10312,6 +10348,9 @@ export async function createExtensionRuntime(options: {
     protocolVersion: "1.1.0",
     compatibleProtocolVersions: ["1.0.0"],
     authorizationEpoch: options.authorizationEpoch,
+    // Run 98 addendum 04: without this spread the host ran on the extension host's 1 s default and
+    // every slower evaluation was reported as `extension evaluation-core failed: timeout`.
+    ...extensionHostTiming(),
     ...(options.startupTimeoutMs !== undefined
       ? { startupTimeoutMs: options.startupTimeoutMs }
       : {}),
