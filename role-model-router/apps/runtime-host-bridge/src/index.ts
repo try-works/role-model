@@ -26001,6 +26001,14 @@ export async function createRuntimeBridgeBackend(
             ...(taxonomyManifest.taxonomyVersion
               ? { taxonomyVersion: taxonomyManifest.taxonomyVersion }
               : {}),
+            // Run 99 close-out (addendas 19-21 S33/D1/D2): the capture records the whole
+            // classification — family, role, tool classes and the taxonomy identity — not only the
+            // family string, so the evidence is keyed by the taxonomy it was classified against.
+            classification: buildRequestClassification({
+              taskTypeId: plan.routingRequest.taskType ?? null,
+              roleId: plan.routingRequest.requestedRoleId ?? null,
+              toolClasses: plan.routingRequest.roleModelIntent?.toolClasses ?? null,
+            }),
             modelId: execution.target.candidate.identity.model_id,
             reasoningEffort: effectiveEffort.reasoningEffort,
             effortSource: effectiveEffort.effortSource,
