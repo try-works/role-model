@@ -85,6 +85,37 @@ const history = normalizeLearningHistory({
 });
 
 describe("run99 learning live panel", () => {
+  /**
+   * Run 98 addendum 24: the durable receipt names `replay_handoff_evaluation_pending` when a replay
+   * handed its branches to Evaluation Core. The panel must render operator copy for that vocabulary
+   * instead of the raw code, and must not present it as a failure.
+   */
+  test("run98 a24 a handed-off replay renders operator copy, not the raw receipt reason", () => {
+    const handedOff = normalizeLearningActivity({
+      observedAtMs: NOW,
+      window: { minutes: 60 },
+      pipeline: [{ stage: "replay", pending: 0, recent: 1, active: false, lastEventAtMs: NOW }],
+      budget: { day: "2026-09-15", counterfactuals: { used: 0, limit: 100 }, dispatches: { used: 0, limit: 300 }, byKind: [] },
+      recent: [
+        {
+          atMs: NOW,
+          kind: "replay",
+          id: "req-handoff",
+          outcome: "refused",
+          detail: '{"reason":"replay_handoff_evaluation_pending","evaluationJobId":"evaluation-replay-1"}',
+        },
+      ],
+    });
+    const html = renderToStaticMarkup(
+      <LearningLivePanelView view={handedOff} loading={false} error={null} nowMs={NOW} scopeLabel="standalone-runtime-stage" />,
+    );
+    expect(html).toContain("Handed off");
+    expect(html).toContain("not a failed replay");
+    // The raw vocabulary stays in the DOM so the ledger can still be grepped from the page.
+    expect(html).toContain('data-outcome="refused"');
+    expect(html).toContain("replay_handoff_evaluation_pending");
+  });
+
   test("renders pipeline rows, the budget gauge and the newest events", () => {
     const html = renderToStaticMarkup(
       <LearningLivePanelView view={activity} loading={false} error={null} nowMs={NOW} scopeLabel="standalone-runtime-stage" />,

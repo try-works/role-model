@@ -7,6 +7,10 @@ import {
   formatCompact,
   formatRelativeAge,
 } from "../lib/learning-visuals";
+// Run 98 addendum 24: replay dispositions now carry a vocabulary the operator had no copy for
+// (`replay_handoff_evaluation_pending`). This maps a disposition into operator copy and keeps the
+// raw vocabulary available, so a handed-off capture never reads as a failed replay.
+import { describeReplayDisposition } from "../lib/replay-disposition-copy";
 
 /**
  * Run 99 - the Learning live panel, modelled on the reference "Context window" gauge plus the
@@ -213,10 +217,19 @@ export function LearningLivePanelView({
               <EmptyState label="No replay, evaluation or learning event in the window." />
             ) : (
               <ul className="space-y-1">
-                {view.recent.map((event) => (
+                {view.recent.map((event) => {
+                  const disposition = describeReplayDisposition({
+                    outcome: event.outcome,
+                    detail: event.detail,
+                  });
+                  return (
                   <li
                     key={`${event.kind}:${event.id}:${event.atMs}`}
                     className="flex items-center gap-3 border-b border-[var(--rm-border)] py-1.5 last:border-b-0"
+                    title={disposition.explanation}
+                    // Run 98 addendum 24: the raw disposition vocabulary stays in the DOM (and the
+                    // detail line below keeps it visible) while the pill renders operator copy.
+                    data-outcome={event.outcome}
                   >
                     <span className="w-16 shrink-0 font-mono text-xs text-[var(--rm-fg-muted)]">
                       {new Date(event.atMs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
@@ -230,9 +243,10 @@ export function LearningLivePanelView({
                     {event.detail ? (
                       <span className="hidden shrink-0 font-mono text-xs text-[var(--rm-fg-muted)] sm:block">{event.detail}</span>
                     ) : null}
-                    <StatusPill tone={toneFor(event.outcome)}>{event.outcome}</StatusPill>
+                    <StatusPill tone={disposition.tone}>{disposition.label}</StatusPill>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             )}
           </div>
