@@ -31,6 +31,23 @@ export class PairwiseJudgeOrderDisagreementError extends Error {
 }
 
 /**
+ * Run 98 addendum 30 S1: the designated judge endpoint, resolved once per call site.
+ *
+ * Precedence is environment override → policy value → unset, and an unset designation is a real
+ * answer ("no judge"), never "pick a candidate". The policy value is the operator-editable record
+ * (`judgeEndpointId`); the env override exists so a stage or a smoke test can point the judge at a
+ * specific endpoint without a policy write.
+ */
+export function resolveEvalJudgeEndpointId(input: {
+  readonly policyValue?: unknown;
+  readonly envValue?: unknown;
+}): string {
+  const normalize = (value: unknown): string =>
+    typeof value === "string" && value.trim() ? value.trim() : "";
+  return normalize(input.envValue) || normalize(input.policyValue);
+}
+
+/**
  * Run 97 RC04 (L4): the host side of the pairwise judge boundary.
  *
  * The route-learning pipeline owns the comparison contract; this module owns the one
@@ -71,6 +88,13 @@ export interface CreateRouterPairwiseJudgeInput {
   ) => Promise<RouterPairwiseJudgeExecution>;
   readonly endpoints: readonly { readonly endpointId: string; readonly modelId: string }[];
   readonly excludedEndpointIds?: readonly string[];
+  /**
+   * Run 98 addendum 30 S1 (`guidance/11` `judgePolicy.excludeFromLiveEvaluation`): the **designated**
+   * judge endpoint. When set, that endpoint is the judge or there is no judge — the factory never
+   * falls back to another endpoint, and it refuses a pair that contains the designation. When unset
+   * the legacy independence-first selection is kept for callers that have not adopted the policy.
+   */
+  readonly judgeEndpointId?: string;
   readonly taskText: string;
   /** Run 98 R10: judge mode; defaults to the identified judge (previous behaviour). */
   readonly mode?: PairwiseJudgeMode;
@@ -111,11 +135,21 @@ export function createRouterPairwiseJudge(
       typeof endpoint.modelId === "string" &&
       endpoint.modelId.length > 0,
   );
-  // Judge independence first: prefer an endpoint that is neither the source nor a
-  // counterfactual candidate, falling back to the remaining dispatchable set.
-  const judgeEndpoint =
-    candidateEndpoints.find((endpoint) => !excluded.has(endpoint.endpointId)) ??
-    candidateEndpoints[0];
+  const designated =
+    typeof input.judgeEndpointId === "string" && input.judgeEndpointId.trim()
+      ? input.judgeEndpointId.trim()
+      : null;
+  // Run 98 addendum 30 S1: a designated judge is the only judge. A pair that contains it is not
+  // judged (self-evaluation is what corrupted 861 of 863 live battles), and a designation that is
+  // not dispatchable fails closed rather than substituting a candidate.
+  const judgeEndpoint = designated
+    ? excluded.has(designated)
+      ? undefined
+      : candidateEndpoints.find((endpoint) => endpoint.endpointId === designated)
+    : // Legacy callers keep the independence-first rule: prefer an endpoint that is neither the source
+      // nor a counterfactual candidate, falling back to the remaining dispatchable set.
+      (candidateEndpoints.find((endpoint) => !excluded.has(endpoint.endpointId)) ??
+      candidateEndpoints[0]);
   if (!judgeEndpoint) return undefined;
   const taskText = typeof input.taskText === "string" ? input.taskText : "";
 

@@ -109,6 +109,39 @@ describe("run98 R15 packaged policy file", () => {
     });
   });
 
+  /**
+   * Run 98 addendum 30 S1: the judge designation is part of the same policy record, and a malformed
+   * or absent value resolves to "no judge" rather than to a candidate standing in for one.
+   */
+  test("run98 a30 the designated judge endpoint resolves from the policy and fails closed when malformed", () => {
+    const designated = writePolicy({
+      ...policy(),
+      global: { ...policy().global, judgeEndpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-high" },
+    });
+    expect(
+      readLearningPolicyFile({ repoRoot: designated, channel: "stage" })?.effective.judgeEndpointId,
+    ).toBe("deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-high");
+
+    // A scope override wins for its scope, like every other policy field.
+    const scoped = writePolicy({
+      ...policy(),
+      scopes: { "tenant:a30": { judgeEndpointId: "moonshot.personal.kimi-code.global.kimi-k3" } },
+    });
+    expect(
+      readLearningPolicyFile({ repoRoot: scoped, channel: "stage", scopeId: "tenant:a30" })?.effective
+        .judgeEndpointId,
+    ).toBe("moonshot.personal.kimi-code.global.kimi-k3");
+
+    // Malformed, empty, or wrong-typed values are not a designation.
+    for (const bad of ["", "   ", "has space", "../escape", 42, {}]) {
+      const root = writePolicy({
+        ...policy(),
+        global: { ...policy().global, judgeEndpointId: bad as never },
+      });
+      expect(readLearningPolicyFile({ repoRoot: root, channel: "stage" })?.effective.judgeEndpointId).toBe("");
+    }
+  });
+
   test("scope overrides beat channel overrides beat global", () => {
     const root = writePolicy({
       ...policy({ stage: "S1" }),

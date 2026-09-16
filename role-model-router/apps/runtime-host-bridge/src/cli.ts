@@ -46,7 +46,10 @@ import {
   resolveAutoReplayTickBudgetMs,
   retryLeasedReplayDispatch,
 } from "./track-b-auto-replay.js";
-import { createRouterPairwiseJudge } from "./track-b-shadow-judge-dispatch.js";
+import {
+  createRouterPairwiseJudge,
+  resolveEvalJudgeEndpointId,
+} from "./track-b-shadow-judge-dispatch.js";
 import { isPairwiseJudgeMode, type TrackBPairwiseJudge } from "./track-b-shadow-judge.js";
 import {
   autoReplayExecutionFromCommandReceipt,
@@ -4011,9 +4014,28 @@ export async function main(): Promise<void> {
           const sourceMessages = Array.isArray(sourceCapture.messages)
             ? sourceCapture.messages
             : [];
+          // Run 98 addendum 30 S1: resolve the designated judge once for this capture — policy first
+          // (operator-editable), environment override second, and an unset value means no judge at
+          // all rather than a candidate standing in for one.
+          const evalJudgeEndpointId = resolveEvalJudgeEndpointId({
+            policyValue: readLearningPolicyFile({
+              repoRoot: options.repoRoot,
+              stateRoot: resolveLearningPolicyStateRoot({
+                runtimeStateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+              }),
+              channel: packagedProfile?.channel ?? "development",
+              scopeId: options.scopeId,
+            })?.effective.judgeEndpointId,
+            envValue: process.env.ROLE_MODEL_EVAL_JUDGE_ENDPOINT,
+          });
           const distinctReplayCandidates = selectReplayCandidates({
             configuredEndpointIds: candidateEndpointIds,
             sourceEndpointId: capturedSourceEndpointId,
+            // Run 98 addendum 30 S1/S2 (`guidance/11` `judgePolicy.excludeFromLiveEvaluation`): the
+            // judge is a designated client and is never offered as a scored candidate, so a battle
+            // cannot contain the endpoint that judges it.
+            ...(evalJudgeEndpointId ? { excludedEndpointIds: [evalJudgeEndpointId] } : {}),
           });
           const replayPolicySet = buildReplayPolicySet();
           const replayLedger = createReplayLedger({
@@ -4100,7 +4122,11 @@ export async function main(): Promise<void> {
             );
           }
           const counterfactualPackages = candidatePackages.filter(
-            (candidate) => candidate.endpointId !== sourceEndpointId,
+            (candidate) =>
+              candidate.endpointId !== sourceEndpointId &&
+              // Run 98 addendum 30 S2: the designated judge is never a scored candidate, whatever
+              // the dispatch list said.
+              (!evalJudgeEndpointId || candidate.endpointId !== evalJudgeEndpointId),
           );
           if (counterfactualPackages.length === 0) {
             throw new Error(
@@ -4736,6 +4762,14 @@ export async function main(): Promise<void> {
               endpointId: endpoint.identity.endpoint_id,
               modelId: endpoint.identity.model_id,
             })),
+            // Run 98 addendum 30 S1: the judge is the designated client. When the designation is
+            // unset there is no judge, and when it names an endpoint that is not dispatchable — or
+            // that is part of this pair — the factory returns undefined and the comparison records
+            // judge missingness instead of scoring a candidate with itself.
+            judgeEndpointId: resolveEvalJudgeEndpointId({
+              policyValue: input.learningPolicySnapshot?.effective.judgeEndpointId,
+              envValue: process.env.ROLE_MODEL_EVAL_JUDGE_ENDPOINT,
+            }),
             excludedEndpointIds: [
               input.sourceEndpointId,
               ...input.counterfactualPackages.map((candidate) => candidate.endpointId),

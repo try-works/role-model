@@ -107,6 +107,13 @@ export function selectReplayCandidates(input: {
   readonly configuredEndpointIds: readonly string[];
   readonly healthyEndpointIds?: readonly string[];
   readonly sourceEndpointId?: string | null;
+  /**
+   * Run 98 addendum 30 S2 (`guidance/11` `judgePolicy.excludeFromLiveEvaluation`): endpoints that may
+   * never be *scored* candidates — in practice the designated judge. A battle must not contain the
+   * endpoint that judges it: live data showed the judge judging itself in 861 of 863 battles, with the
+   * deterministic and judge dimensions inverting for it.
+   */
+  readonly excludedEndpointIds?: readonly string[];
   readonly cap?: number;
 }): readonly string[] {
   const cap = input.cap ?? DEFAULT_REPLAY_CANDIDATE_CAP;
@@ -115,11 +122,15 @@ export function selectReplayCandidates(input: {
     input.healthyEndpointIds === undefined
       ? null
       : new Set(input.healthyEndpointIds.filter((value) => value.trim().length > 0));
+  const excluded = new Set(
+    (input.excludedEndpointIds ?? []).map((value) => value.trim()).filter((value) => value.length > 0),
+  );
   const selected: string[] = [];
   const seen = new Set<string>();
   for (const endpointId of input.configuredEndpointIds) {
     const normalized = endpointId.trim();
     if (!normalized || seen.has(normalized)) continue;
+    if (excluded.has(normalized)) continue;
     if (input.sourceEndpointId !== undefined && input.sourceEndpointId !== null) {
       if (normalized === input.sourceEndpointId) continue;
     }

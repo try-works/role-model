@@ -56,6 +56,12 @@ export interface LearningPolicySnapshot {
     readonly judgeOrderPolicy: "source_first" | "dual_order";
     readonly judgeMeasureAgreement: boolean;
     /**
+     * Run 98 addendum 30 S1 (`guidance/11` `judgePolicy`): the **designated** judge endpoint. Empty
+     * means no judge is designated, so the runtime judges nothing rather than substituting a scored
+     * candidate for the judge.
+     */
+    readonly judgeEndpointId: string;
+    /**
      * Run 98 R19 / addendum 02: the predeclared statistical promotion protocol of
      * `guidance/07`. The learning pass sends these to the worker, and the worker's promotion
      * decision uses the paired interval lower bound against `minimumPracticalDelta`.
@@ -96,6 +102,7 @@ const DEFAULT_EFFECTIVE: LearningPolicySnapshot["effective"] = Object.freeze({
   judgeMode: "identified",
   judgeOrderPolicy: "source_first",
   judgeMeasureAgreement: false,
+  judgeEndpointId: "",
   minimumPracticalDelta: 0.05,
   promotionIntervalLevel: 0.95,
   promotionResamples: 10_000,
@@ -277,6 +284,14 @@ export function readLearningPolicyFile(input: {
     judgeMode: merged.judgeMode === "identity_blind" ? "identity_blind" : "identified",
     judgeOrderPolicy: merged.judgeOrderPolicy === "dual_order" ? "dual_order" : "source_first",
     judgeMeasureAgreement: merged.judgeMeasureAgreement === true,
+    // Run 98 addendum 30 S1: a designated judge endpoint is a bounded, schema-validated identity; a
+    // malformed or absent value resolves to the empty string, which means "no judge" rather than
+    // "pick a candidate".
+    judgeEndpointId:
+      typeof merged.judgeEndpointId === "string" &&
+      /^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$/.test(merged.judgeEndpointId.trim())
+        ? merged.judgeEndpointId.trim()
+        : "",
     // The legacy name `qualityClaimedImprovement` is the same value under its pre-R19 name, so an
     // older config that only carries the alias still resolves the enforced parameter.
     minimumPracticalDelta: Math.min(

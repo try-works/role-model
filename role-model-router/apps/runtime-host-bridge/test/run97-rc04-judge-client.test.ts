@@ -6,6 +6,7 @@ import {
   redactJudgeExcerpt,
 } from "../src/track-b-shadow-judge.js";
 import { createRouterPairwiseJudge } from "../src/track-b-shadow-judge-dispatch.js";
+import { resolveEvalJudgeEndpointId } from "../src/track-b-shadow-judge-dispatch.js";
 
 /**
  * Run 97 RC04 - the judge boundary: bounded, redacted excerpts in, a decisively
@@ -133,4 +134,106 @@ test("run97 rc04 judge dispatches are named in the replay-produced capture famil
       outcome: "complete",
     },
   ]);
+});
+
+/**
+ * Run 98 addendum 30 S1 (`guidance/11` judgePolicy `excludeFromLiveEvaluation: true`).
+ *
+ * The judge used to be "the first registry endpoint that is not in this pair", which is how a scored
+ * candidate ended up judging itself in 861 of 863 live battles. The judge is now a designated client:
+ * the policy names it, and the factory fails closed rather than ever substituting a candidate.
+ */
+const judgeBranches = () => ({
+  source: {
+    trialId: "trial:source",
+    candidateRef: "endpoint:source",
+    outputRef: "artifact:source",
+    outputDigest: "sha256:source",
+    outputText: "source answer",
+    role: "source" as const,
+  },
+  counterfactual: {
+    trialId: "trial:counterfactual",
+    candidateRef: "endpoint:counterfactual",
+    outputRef: "artifact:counterfactual",
+    outputDigest: "sha256:counterfactual",
+    outputText: "counterfactual answer",
+    role: "counterfactual" as const,
+  },
+});
+
+test("run98 a30 the designated judge endpoint is used even when it is not first in the registry", async () => {
+  const used: string[] = [];
+  const judge = createRouterPairwiseJudge({
+    executeChatCompletions: async (_body, _requestId, _stream, options) => {
+      used.push(String(options?.endpointId ?? ""));
+      return { contentText: '{"winner":"B","confidence":0.9}', routingDecisionId: "decision:judge" };
+    },
+    // The designated judge is deliberately NOT the first endpoint: the old selection rule would have
+    // taken `endpoint:first`, the new rule takes the designation.
+    endpoints: [
+      { endpointId: "endpoint:first", modelId: "model:first" },
+      { endpointId: "endpoint:designated", modelId: "model:designated" },
+    ],
+    judgeEndpointId: "endpoint:designated",
+    taskText: "Fix the failing test.",
+  });
+  expect(judge?.endpointId).toBe("endpoint:designated");
+  const { source, counterfactual } = judgeBranches();
+  const decision = await judge?.dispatch({
+    requestId: "run98-a30-designated",
+    channel: "stage",
+    scope: "tenant:a30",
+    authorizationEpoch: 1,
+    evaluationJobId: "job:a30",
+    judgeEndpointId: "endpoint:designated",
+    source,
+    counterfactual,
+  });
+  expect(used).toEqual(["endpoint:designated"]);
+  expect(decision?.judgeEndpointId).toBe("endpoint:designated");
+});
+
+test("run98 a30 a pair that contains the designated judge is not judged at all", () => {
+  const judge = createRouterPairwiseJudge({
+    executeChatCompletions: async () => ({ contentText: '{"winner":"B","confidence":0.9}' }),
+    endpoints: [
+      { endpointId: "endpoint:designated", modelId: "model:designated" },
+      { endpointId: "endpoint:other", modelId: "model:other" },
+    ],
+    judgeEndpointId: "endpoint:designated",
+    // The pair under test contains the designated judge (as the source).
+    excludedEndpointIds: ["endpoint:designated", "endpoint:other"],
+    taskText: "Fix the failing test.",
+  });
+  expect(judge).toBeUndefined();
+});
+
+test("run98 a30 a designated judge missing from the registry fails closed", () => {
+  const judge = createRouterPairwiseJudge({
+    executeChatCompletions: async () => ({ contentText: '{"winner":"B","confidence":0.9}' }),
+    endpoints: [
+      { endpointId: "endpoint:first", modelId: "model:first" },
+      { endpointId: "endpoint:second", modelId: "model:second" },
+    ],
+    judgeEndpointId: "endpoint:not-registered",
+    taskText: "Fix the failing test.",
+  });
+  // No fallback to a candidate: the caller records judge missingness instead.
+  expect(judge).toBeUndefined();
+});
+
+test("run98 a30 the judge designation resolves env override then policy, and unset means no judge", () => {
+  // The policy value is the operator-editable record.
+  expect(
+    resolveEvalJudgeEndpointId({ policyValue: "endpoint:policy-judge", envValue: undefined }),
+  ).toBe("endpoint:policy-judge");
+  // The environment override wins (stage smoke tests, incident overrides) without a policy write.
+  expect(
+    resolveEvalJudgeEndpointId({ policyValue: "endpoint:policy-judge", envValue: "endpoint:env-judge" }),
+  ).toBe("endpoint:env-judge");
+  // Blank/whitespace/junk values never become a designation.
+  expect(resolveEvalJudgeEndpointId({ policyValue: "   ", envValue: "" })).toBe("");
+  expect(resolveEvalJudgeEndpointId({ policyValue: 42, envValue: null })).toBe("");
+  expect(resolveEvalJudgeEndpointId({})).toBe("");
 });

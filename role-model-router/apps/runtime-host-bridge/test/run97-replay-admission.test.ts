@@ -216,3 +216,46 @@ test("run97 tool policy stays on reuse when the capture has no tool calls", asyn
   expect(sandbox.network).toBe("none");
   expect(Number(sandbox.maxDurationMs)).toBeGreaterThan(0);
 });
+
+/**
+ * Run 98 addendum 30 S2 (`guidance/11` `judgePolicy.excludeFromLiveEvaluation: true`): the designated
+ * judge is excluded from the replay candidate set, so a battle can never contain the endpoint that
+ * judges it. Live evidence for the defect: `deepseek-flash-high` judged 861 battles it was also a
+ * candidate in, and the two scorers inverted for it (deterministic 0.10 vs judge 0.81).
+ */
+test("run98 a30 candidate selection never offers the designated judge as a scored candidate", async () => {
+  const { selectReplayCandidates } = await import("../src/track-b-replay-policy.js");
+  const judge = "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-high";
+  const configured = [
+    "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+    judge,
+    "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+    "moonshot.personal.kimi-code.global.kimi-k3",
+  ];
+  const selected = selectReplayCandidates({
+    configuredEndpointIds: configured,
+    sourceEndpointId: "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+    excludedEndpointIds: [judge],
+  });
+  expect(selected).not.toContain(judge);
+  expect(selected).toEqual([
+    "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+    "moonshot.personal.kimi-code.global.kimi-k3",
+  ]);
+  // A source that IS the judge yields no candidates at all rather than a self-judged pair.
+  expect(
+    selectReplayCandidates({
+      configuredEndpointIds: configured,
+      sourceEndpointId: judge,
+      excludedEndpointIds: [judge],
+    }),
+  ).toEqual([
+    "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+    "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+    "moonshot.personal.kimi-code.global.kimi-k3",
+  ]);
+  // Nothing is excluded when no judge is designated (legacy behaviour preserved).
+  expect(
+    selectReplayCandidates({ configuredEndpointIds: configured, excludedEndpointIds: [] }),
+  ).toContain(judge);
+});
