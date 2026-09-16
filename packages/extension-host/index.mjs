@@ -61,6 +61,11 @@ class ProcessWorker {
     this.pending = new Map();
     this.child = null;
     this.stderr = "";
+    // Run 98 addendum 04: the exhausted-budget report used to cite the worker's stderr tail, which
+    // for a Node worker is usually a warning (`ExperimentalWarning: SQLite …`). The exit status is
+    // the part of the failure that is always true, so it is captured alongside the stderr.
+    this.exitCode = null;
+    this.exitSignal = null;
     this.exited = true;
     this.stopping = false;
     this.controlSecret = null;
@@ -110,6 +115,8 @@ class ProcessWorker {
     this.child.stderr.on("data", (chunk) => {
       this.stderr = `${this.stderr}${chunk.toString("utf8")}`.slice(-4096);
     });
+    this.exitCode = null;
+    this.exitSignal = null;
     let bytes = Buffer.alloc(0);
     let readyResolved = false;
     let readyRejected = false;
@@ -173,6 +180,8 @@ class ProcessWorker {
     this.child.once("exit", (code, signal) => {
       const expected = this.stopping;
       this.exited = true;
+      this.exitCode = code ?? null;
+      this.exitSignal = signal ?? null;
       const detail = this.stderr.trim();
       this.#rejectPending(new Error(detail ? `worker exited: ${detail}` : "worker exited"));
       if (!readyResolved && !readyRejected)
@@ -319,6 +328,33 @@ class ProcessWorker {
       exited: this.exited,
     };
   }
+  /**
+   * Run 98 addendum 04: an honest failure report for an exhausted restart budget. The exit
+   * code/signal is always reported, and the stderr tail is filtered down to its substantive lines —
+   * a Node `ExperimentalWarning`/`DeprecationWarning` and the `--trace-warnings` advice that follows
+   * it are not failure causes and must not be presented as one.
+   */
+  failureDetail() {
+    const exit =
+      this.exitCode !== null
+        ? `exit code ${this.exitCode}`
+        : this.exitSignal
+          ? `signal ${this.exitSignal}`
+          : null;
+    const detail = String(this.stderr ?? "")
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(
+        (line) =>
+          line &&
+          !/(ExperimentalWarning|DeprecationWarning|Warning):/.test(line) &&
+          !line.startsWith("(Use `node --trace-warnings"),
+      )
+      .join(" ")
+      .replace(/\s+/gu, " ")
+      .slice(-400);
+    return { exit, detail };
+  }
 }
 
 export class ExtensionHost {
@@ -340,6 +376,10 @@ export class ExtensionHost {
     journalPath = null,
     maxRestarts = 3,
     restartBackoffMs = 10,
+    // Run 98 addendum 04: how long an exhausted restart budget stays latched before the host gives
+    // the worker a fresh budget. Without it a transient crash-loop disabled replays/evaluations for
+    // the lifetime of the runtime (stage v177).
+    restartCooldownMs = 60_000,
     workerExecPath = resolveNodeWorkerExecutable(),
     /**
      * Runtime channel this host serves. Envelopes that omit a channel are stamped
@@ -359,6 +399,7 @@ export class ExtensionHost {
     this.journalPath = journalPath;
     this.maxRestarts = maxRestarts;
     this.restartBackoffMs = restartBackoffMs;
+    this.restartCooldownMs = restartCooldownMs;
     this.workerExecPath = workerExecPath;
     this.channel = channel;
   }
@@ -384,13 +425,31 @@ export class ExtensionHost {
     record.restartPromise = (async () => {
       while (record.autoRestart && record.worker.exited) {
         if (record.restarts >= this.maxRestarts) {
-          record.lifecycle = "degraded";
+          const nowMs = Date.now();
+          // Run 98 addendum 04 (live v177): the budget is a circuit breaker, not a one-way latch.
+          // A transient crash-loop — CPU starvation, a slow disk, a restart storm — must not disable
+          // the extension until the runtime is restarted, so once the cooldown has elapsed the worker
+          // is given a fresh budget and tried again.
+          const retryAtMs = record.degradedUntilMs ?? nowMs + this.restartCooldownMs;
+          if (nowMs < retryAtMs) {
+            record.lifecycle = "degraded";
+            record.degradedUntilMs = retryAtMs;
+            await this.#journal({
+              type: "restart_exhausted",
+              extensionId: record.descriptor.id,
+              restart: record.restarts,
+              retryAtMs,
+            });
+            return;
+          }
+          record.restarts = 0;
+          record.degradedUntilMs = null;
+          record.lifecycle = "exited";
           await this.#journal({
-            type: "restart_exhausted",
+            type: "restart_budget_reset",
             extensionId: record.descriptor.id,
-            restart: record.restarts,
+            cooldownMs: this.restartCooldownMs,
           });
-          return;
         }
         await delay(this.restartBackoffMs * 2 ** record.restarts);
         if (!record.autoRestart || !record.worker.exited) return;
@@ -400,6 +459,7 @@ export class ExtensionHost {
         try {
           await record.worker.start();
           record.lifecycle = "ready";
+          record.degradedUntilMs = null;
           await this.#journal({
             type: "restarted",
             extensionId: record.descriptor.id,
@@ -645,13 +705,22 @@ export class ExtensionHost {
     if (record.kind !== "process" || !record.worker.exited) return;
     await this.#recoverExitedProcess(record);
     if (record.worker.exited) {
-      // Surface the crashed worker's own bounded stderr so the operator can see the
-      // cause instead of only the exhausted restart counter.
-      const detail = String(record.worker.stderr ?? "").trim().replace(/\s+/gu, " ").slice(-600);
+      // Run 98 addendum 04: report the exit status and the substantive stderr lines. The previous
+      // message quoted the raw stderr tail, so the operator was shown a Node warning
+      // (`ExperimentalWarning: SQLite is an experimental feature …`) as if it were the cause.
+      const { exit, detail } = record.worker.failureDetail
+        ? record.worker.failureDetail()
+        : { exit: null, detail: "" };
+      const attempts = `${record.restarts} restart${record.restarts === 1 ? "" : "s"}`;
+      const suffix = [exit, detail].filter(Boolean).join(": ");
+      const retrySuffix =
+        typeof record.degradedUntilMs === "number"
+          ? `; the next recovery attempt is allowed at ${new Date(record.degradedUntilMs).toISOString()}`
+          : "";
       throw new Error(
-        detail
-          ? `worker restart budget exhausted: ${detail}`
-          : "worker restart budget exhausted",
+        suffix
+          ? `worker restart budget exhausted after ${attempts} (${suffix})${retrySuffix}`
+          : `worker restart budget exhausted after ${attempts}${retrySuffix}`,
       );
     }
   }
