@@ -7731,7 +7731,10 @@ export async function runTrackBShadowPipeline(
       groupId: `comparison:${input.requestId}`,
       trialIds,
       comparability,
-      holdout,
+      // Run 99 R33 D7 live finding: the comparison has to bind the same membership the durable job
+      // was created with (the effective holdout), otherwise the authority refuses the finalize with
+      // "durable evaluation holdout membership mismatch" and the job stays in `scoring` forever.
+      holdout: effectiveHoldout,
       // Run 99 R26: the predeclared promotion protocol names the primary metric, so the
       // comparison outcome follows it instead of collapsing a two-scorer split into
       // `disagreement` (observed live: 38 of 60 groups).
