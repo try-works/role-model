@@ -668,6 +668,35 @@ export function normalizeTrialScoreRows(value: unknown): readonly Record<string,
   return visit(value, 0);
 }
 
+/**
+ * Run 99 R33 live finding (stage v165): a resumed comparison reuses durable scored trials and then ran
+ * the pairwise judge again, recording a second judge score that the extension refused (`evaluation
+ * trial score batch conflict`, or `partial evaluation trial scores require recovery`) because the
+ * durable receipt from the original attempt is the authority. A pair that already carries *this*
+ * judge's score reuses those rows and skips the judge dispatch; a partially judged pair does not.
+ */
+export function selectDurableJudgeScores(input: {
+  readonly trialIds: readonly string[];
+  readonly scoresByTrial: Readonly<Record<string, readonly Record<string, unknown>[]>>;
+  readonly scorerId: string;
+  readonly scorerVersion: string;
+  readonly dimension: string;
+}): readonly Record<string, unknown>[] | null {
+  const selected: Record<string, unknown>[] = [];
+  for (const trialId of input.trialIds) {
+    const rows = input.scoresByTrial[trialId] ?? [];
+    const match = rows.find(
+      (row) =>
+        row.scorerId === input.scorerId &&
+        row.scorerVersion === input.scorerVersion &&
+        row.dimension === input.dimension,
+    );
+    if (!match) return null;
+    selected.push(match);
+  }
+  return selected.length === input.trialIds.length && selected.length > 0 ? selected : null;
+}
+
 export function selectDurableScoredTrialEvidence(input: {
   readonly scores: readonly Record<string, unknown>[];
   readonly scorerId: string;
@@ -7817,7 +7846,37 @@ export async function runTrackBShadowPipeline(
     if (!sourceBranch || !counterfactualBranch) {
       throw new Error("pairwise judge requires both durable comparison branches");
     }
+    // Run 99 R33 live finding (v165): a resumed comparison reuses durable scored trials, and a pair
+    // that already carries *this* judge's score keeps the original receipt. Re-judging would dispatch
+    // again and then be refused as a score conflict (`evaluation trial score batch conflict` /
+    // `partial evaluation trial scores require recovery`), so the durable rows are the authority.
+    const durableJudgeScores = await (async () => {
+      const scoresByTrial: Record<string, readonly Record<string, unknown>[]> = {};
+      for (const branch of [sourceBranch, counterfactualBranch]) {
+        const rawScores = await runtime.invoke("evaluation-core", {
+          ...envelope("evaluation:list-trial-scores", { trialId: branch.trialId }),
+        });
+        const decoded =
+          decodeExtensionBusinessResult({
+            result: rawScores,
+            extensionId: "evaluation-core",
+            ...(input.contractStateRoot ? { stateRoot: input.contractStateRoot } : {}),
+            scopeId: input.scope,
+          }) ?? rawScores;
+        scoresByTrial[branch.trialId] = normalizeTrialScoreRows(decoded);
+      }
+      return selectDurableJudgeScores({
+        trialIds: [sourceBranch.trialId, counterfactualBranch.trialId],
+        scoresByTrial,
+        scorerId: judgeScorer.id,
+        scorerVersion: judgeScorer.version,
+        dimension: judgeScorer.dimensions[0],
+      });
+    })();
     let judgeScores: Array<Record<string, unknown>>;
+    if (durableJudgeScores) {
+      judgeScores = [...durableJudgeScores];
+    } else {
     try {
       const decision = await input.judge.dispatch({
         requestId: input.requestId,
@@ -7900,7 +7959,10 @@ export async function runTrackBShadowPipeline(
         missingReason: reason.slice(0, 200),
       }));
     }
+    }
     for (const [index, branch] of [sourceBranch, counterfactualBranch].entries()) {
+      // A reused durable judgement is already recorded; re-recording it is what the extension refuses.
+      if (durableJudgeScores) break;
       const entry = index === 0 ? sourceEntry : counterfactualEntry;
       await runtime.invoke("evaluation-core", {
         ...envelope("evaluation:record-trial-score-batch", {
