@@ -7322,8 +7322,14 @@ export async function runTrackBShadowPipeline(
     const evaluationCriteria = normalizeTrackBSemanticEvaluationCriteria(
       evaluationCase.evaluationCriteria,
     );
+    // Run 99 R33 (addendum 20 D7, second half): the declared split assigns each durable case to
+    // train or holdout, so the job carries the partition it was evaluated under. The holdout
+    // membership keeps binding only the holdout-partition cases.
+    const partition =
+      holdout.partitions.find((row) => row.caseId === caseIds[index])?.partition ?? "holdout";
     return {
       id: caseIds[index],
+      partition,
       candidateRef: requireTrackBReference(rollout.endpointId, "candidate"),
       evidenceRef: caseReference.evidenceRef,
       sourceGeneration: 0,

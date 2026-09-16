@@ -1,4 +1,6 @@
 import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
+
+import { evaluateDispatchContextGuard } from "./dispatch-context-guard.js";
 import {
   appendFileSync,
   existsSync,
@@ -24169,6 +24171,58 @@ export async function createRuntimeBridgeBackend(
               }
             : {}),
       });
+      // Run 99 R33: the dispatch-side context guard. The router already excludes candidates whose
+      // *declared* context is too small, but the selected candidate was never re-checked before the
+      // provider call, so a prompt far beyond the model's window was forwarded and the overflow
+      // surfaced as a client-side "context overflow" instead of a clear runtime answer (observed:
+      // 630,034 estimated tokens handed to a deepseek endpoint, and the operator's DSH turn failing
+      // on `difficulty.remote-only`). Refuse with the estimate, the limit and the model named, and
+      // point at a larger-context alternative when one is eligible.
+      {
+        const guardCandidates = Array.isArray(routed.projected.routeInput.candidates)
+          ? routed.projected.routeInput.candidates
+          : [];
+        const chosenEndpointId = String(routed.decision.chosen_endpoint_id);
+        const selectedCandidate =
+          guardCandidates.find(
+            (candidate) => candidate.identity.endpoint_id === chosenEndpointId,
+          ) ?? null;
+        const contextGuard = evaluateDispatchContextGuard({
+          estimatedContextTokens: plan.routingRequest.contextTokens ?? null,
+          maxContextTokens: selectedCandidate?.declared.max_context_tokens ?? null,
+          modelId:
+            selectedCandidate?.declared.model_id ??
+            selectedCandidate?.identity.model_id ??
+            chosenEndpointId,
+          endpointId: chosenEndpointId,
+          alternatives: guardCandidates
+            .filter((candidate) => candidate.identity.endpoint_id !== chosenEndpointId)
+            .map((candidate) => ({
+              endpointId: candidate.identity.endpoint_id,
+              modelId: candidate.declared.model_id ?? candidate.identity.model_id,
+              maxContextTokens: candidate.declared.max_context_tokens ?? 0,
+            })),
+        });
+        if (!contextGuard.allowed) {
+          throw new BridgeHttpError(400, {
+            error: {
+              type: contextGuard.code,
+              code: contextGuard.code,
+              message: contextGuard.reason,
+              model: contextGuard.modelId,
+              endpoint_id: contextGuard.endpointId,
+              estimated_context_tokens: contextGuard.estimatedContextTokens,
+              max_context_tokens: contextGuard.maxContextTokens,
+              ...(contextGuard.reroute
+                ? {
+                    suggested_endpoint_id: contextGuard.reroute.endpointId,
+                    suggested_model: contextGuard.reroute.modelId,
+                  }
+                : {}),
+            },
+          });
+        }
+      }
       // Run 99 R25 / `AC-R05-03`: record what the live router did with the advisory, so the
       // operator surface can distinguish "considered but retained" (with the router's typed
       // reason) from "applied" instead of reporting every decision as an S1 shadow.

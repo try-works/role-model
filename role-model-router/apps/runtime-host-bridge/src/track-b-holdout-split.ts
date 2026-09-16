@@ -25,7 +25,15 @@ export interface FamilyStratifiedHoldout {
   readonly holdoutId: string;
   readonly membershipDigest: string;
   readonly partition: "holdout";
+  /** The holdout membership the durable comparison binds. */
   readonly caseIds: readonly string[];
+  /** Run 99 R33 D7: the complementary train membership inside the same family. */
+  readonly trainCaseIds: readonly string[];
+  /** Every case the family supplied, with the partition the declaration assigns it. */
+  readonly partitions: readonly {
+    readonly caseId: string;
+    readonly partition: "train" | "holdout";
+  }[];
   readonly splitAlgorithm: typeof SPLIT_ALGORITHM;
   readonly splitSeed: number;
   readonly stratum: string | null;
@@ -58,6 +66,34 @@ export function buildFamilyStratifiedHoldout(input: {
   const splitSeed = Number.isSafeInteger(input.splitSeed) ? input.splitSeed : 0;
   // The identity is a function of the declaration (algorithm, seed, stratum) plus the request, so a
   // replay can rebuild it without the original process state.
+  // Run 99 R33 (addendum 20 D7, second half): "the holdout is disjoint *within* each family". Each
+  // case is assigned to train or holdout by the declared algorithm and seed (`stratified_hash_partition_v1`),
+  // so the split is reproducible from the receipt and independent of arrival order.
+  const partitionOf = (caseId: string): "train" | "holdout" => {
+    const bucket = createHash("sha256")
+      .update(`${SPLIT_ALGORITHM}:${splitSeed}:${stratum ?? ""}:${caseId}`)
+      .digest();
+    return bucket[0] % 2 === 0 ? "train" : "holdout";
+  };
+  let partitions = caseIds.map((caseId) => ({ caseId, partition: partitionOf(caseId) }));
+  // A family with two or more cases must contribute to both sets, otherwise a "holdout" that holds
+  // everything (or nothing) is not a split. The adjustment stays deterministic: the last case by id
+  // moves, and the move is part of the declaration because it is a pure function of the case ids.
+  if (caseIds.length >= 2 && partitions.every((row) => row.partition === "holdout")) {
+    partitions = partitions.map((row, index) =>
+      index === 0 ? { ...row, partition: "train" as const } : row,
+    );
+  } else if (caseIds.length >= 2 && partitions.every((row) => row.partition === "train")) {
+    partitions = partitions.map((row, index) =>
+      index === partitions.length - 1 ? { ...row, partition: "holdout" as const } : row,
+    );
+  }
+  const holdoutCaseIds = partitions
+    .filter((row) => row.partition === "holdout")
+    .map((row) => row.caseId);
+  const trainCaseIds = partitions
+    .filter((row) => row.partition === "train")
+    .map((row) => row.caseId);
   const holdoutId = `sha256:${digest({
     algorithm: SPLIT_ALGORITHM,
     seed: splitSeed,
@@ -71,12 +107,14 @@ export function buildFamilyStratifiedHoldout(input: {
   // replay fail closed with "evaluation holdout membership digest is not bound to its cases". The
   // declaration therefore travels beside the binding (below), where a receipt reader can still
   // rebuild the split, while the binding stays reproducible by the authority that enforces it.
-  const membershipDigest = `sha256:${digest({ partition: "holdout", caseIds })}`;
+  const membershipDigest = `sha256:${digest({ partition: "holdout", caseIds: holdoutCaseIds })}`;
   return {
     holdoutId,
     membershipDigest,
     partition: "holdout",
-    caseIds,
+    caseIds: holdoutCaseIds,
+    trainCaseIds,
+    partitions,
     splitAlgorithm: SPLIT_ALGORITHM,
     splitSeed,
     stratum,
