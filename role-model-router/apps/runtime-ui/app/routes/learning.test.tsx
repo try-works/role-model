@@ -40,6 +40,21 @@ describe("LearningRoute", () => {
     }
   });
 
+  test("publishes the classification columns on the decisions views (run 99 addenda 19-21 S33)", () => {
+    const routeSource = readFileSync(new URL("./learning.tsx", import.meta.url), "utf8");
+    for (const token of [
+      '"Role"',
+      '"Taxonomy"',
+      '"Taxonomy version"',
+      '"Tool classes"',
+      "row.roleId",
+      "row.taxonomyVersion",
+      "row.toolClassIds",
+    ]) {
+      expect(routeSource).toContain(token);
+    }
+  });
+
   test("renders schema-driven configuration with bounds, defaults and confirmations", () => {
     const routeSource = readFileSync(new URL("./learning.tsx", import.meta.url), "utf8");
     for (const token of [

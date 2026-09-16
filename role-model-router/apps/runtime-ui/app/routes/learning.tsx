@@ -223,6 +223,8 @@ export function LearningOverviewPage() {
                       "Outcome",
                       "Would change",
                       "Request family",
+                      "Role",
+                      "Taxonomy",
                       "Candidate",
                     ].map((header) => (
                       <th className={`pb-3 pr-3 font-normal ${monoEyebrowClassName}`} key={header}>
@@ -257,6 +259,12 @@ export function LearningOverviewPage() {
                           readable from the overview without opening the decision. */}
                       <td className="py-2 pr-3">
                         {row.requestTaskTypeId ? show(row.requestTaskTypeId) : "not reported"}
+                      </td>
+                      {/* Run 99 close-out (addendas 19-21 S33): the family alone does not say which
+                          role or which taxonomy version the decision was classified against. */}
+                      <td className="py-2 pr-3">{row.roleId ? show(row.roleId) : "not reported"}</td>
+                      <td className="py-2 pr-3">
+                        {row.taxonomyVersion ? show(row.taxonomyVersion) : "not reported"}
                       </td>
                       <td className="py-2 pr-3">{show(row.candidateId)}</td>
                     </tr>
@@ -683,6 +691,24 @@ export function LearningDecisionsPage() {
                   <Metric
                     label="Advisory family"
                     value={row.taskTypeId ? show(row.taskTypeId) : "not reported"}
+                  />
+                  {/* Run 99 close-out (addendas 19-21 S33): the role and the taxonomy identity the
+                      request was classified against, published by the decisions readback. */}
+                  <Metric
+                    label="Role"
+                    value={row.roleId ? show(row.roleId) : "not reported"}
+                  />
+                  <Metric
+                    label="Taxonomy version"
+                    value={row.taxonomyVersion ? show(row.taxonomyVersion) : "not reported"}
+                  />
+                  <Metric
+                    label="Tool classes"
+                    value={
+                      Array.isArray(row.toolClassIds) && row.toolClassIds.length
+                        ? row.toolClassIds.join(", ")
+                        : "not reported"
+                    }
                   />
                   <Metric label="Fallback reason" value={show(row.fallbackReason)} />
                   {/* Run 99 R27: the in-band requirement is a different lever from the floor. */}
