@@ -616,6 +616,43 @@ export function isEvaluationJobIdempotencyConflict(error: unknown): boolean {
   );
 }
 
+/**
+ * Run 99 R33 live finding (stage v162): a resumed comparison reuses durable scored trials, but the
+ * resumed run re-derives its rubric and then demanded a correctness score the durable run never
+ * recorded under that scorer identity (`durable scored trial is missing semantic correctness
+ * evidence`), so the comparison could never be finalized. What a durable trial can prove is what it
+ * actually recorded: the correctness score when it exists, otherwise the recorded score (the router
+ * judge's) with a real reference, and a refusal only when the trial recorded nothing at all.
+ */
+export function selectDurableScoredTrialEvidence(input: {
+  readonly scores: readonly Record<string, unknown>[];
+  readonly scorerId: string;
+  readonly scorerVersion: string;
+}): { readonly score: number; readonly scoreId: string; readonly hasCorrectness: boolean } {
+  const rows = (Array.isArray(input.scores) ? input.scores : []).filter(
+    (row): row is Record<string, unknown> => Boolean(row) && typeof row === "object" && !Array.isArray(row),
+  );
+  if (rows.length === 0) throw new Error("durable scored trial has no recorded scores");
+  const correctness = rows.find(
+    (score) =>
+      score.dimension === "correctness" &&
+      score.scorerId === input.scorerId &&
+      score.scorerVersion === input.scorerVersion,
+  );
+  const hasCorrectness = Boolean(correctness && Number.isFinite(correctness.score));
+  const referenced = rows.find((row) => typeof row.scoreId === "string" && row.scoreId) ?? rows[0];
+  const scoreId = hasCorrectness
+    ? String(correctness?.scoreId)
+    : typeof referenced.scoreId === "string" && referenced.scoreId
+      ? String(referenced.scoreId)
+      : `score:${String(referenced.trialId ?? "durable")}`;
+  return {
+    score: hasCorrectness ? Number(correctness?.score) : 0,
+    scoreId,
+    hasCorrectness,
+  };
+}
+
 const run88CorrelationFields = new Set([
   "schemaVersion",
   "eventId",
@@ -7543,23 +7580,19 @@ export async function runTrackBShadowPipeline(
         ...envelope("evaluation:list-trial-scores", { trialId: trial.trialId }),
       });
       const scoreRows = Array.isArray(scores) ? (scores as Record<string, unknown>[]) : [];
-      const correctness = scoreRows.find(
-        (score) =>
-          score.dimension === "correctness" &&
-          score.scorerId === scorer.id &&
-          score.scorerVersion === scorer.version,
-      );
-      if (deterministicCriteriaVerifiable && (!correctness || !Number.isFinite(correctness.score))) {
-        throw new Error("durable scored trial is missing semantic correctness evidence");
-      }
+      // Run 99 R33: the durable trial's own recorded scores decide what it can prove. A resumed run
+      // can re-derive a rubric the durable run never graded against, and refusing that trial made the
+      // comparison unfinalizable; the recorded scores carry the comparison instead.
+      const durableEvidence = selectDurableScoredTrialEvidence({
+        scores: scoreRows,
+        scorerId: scorer.id,
+        scorerVersion: scorer.version,
+      });
       completedRollouts.push({
         rollout,
-        score: correctness && Number.isFinite(correctness.score) ? Number(correctness.score) : 0,
+        score: durableEvidence.score,
         trialId: trial.trialId,
-        scoreId:
-          typeof correctness?.scoreId === "string" && correctness.scoreId
-            ? correctness.scoreId
-            : `score:${trial.trialId}:${scorer.id}:correctness`,
+        scoreId: durableEvidence.scoreId,
       });
       trialIds.push(trial.trialId);
       continue;
