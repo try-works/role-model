@@ -130,6 +130,22 @@ function degraded(loading: boolean, error: string | null): ReactElement | null {
   return null;
 }
 
+/**
+ * Run 98 addendum 25 §1 (operator-reported): the Recent decisions panel asserted a hardcoded
+ * "the selection always remains the baseline in stage S1" while the scope was running S2, which
+ * contradicted the STAGE metric in the same page's header. That sentence is a claim about
+ * safety-relevant behaviour, so it is derived from the live stage readback instead: only S1 keeps
+ * the baseline guarantee, every other reported stage states the eligible-set bound for that stage,
+ * and an unreported stage asserts no stage at all rather than defaulting to S1 copy.
+ */
+export function selectionNoteForStage(effectiveStage: string): string {
+  if (effectiveStage === "S1") return "the selection always remains the baseline in stage S1";
+  if (effectiveStage) {
+    return `the advisory may only act inside the eligible set (stage ${effectiveStage})`;
+  }
+  return "the selection follows the configured activation stage";
+}
+
 /** Overview: stage, policy identity, cohort, advisory counts, guardrails, last rollback. */
 export function LearningOverviewPage() {
   const { token, setToken } = useOperatorToken();
@@ -162,6 +178,11 @@ export function LearningOverviewPage() {
   const decisionRows = Array.isArray(decisionsValue.decisions)
     ? (decisionsValue.decisions as readonly Record<string, unknown>[])
     : [];
+  // Run 98 addendum 25 §1 (operator-reported): this panel used to assert a hardcoded "stage S1" while
+  // the scope ran S2, contradicting the STAGE metric in its own header. The note now follows the live
+  // stage readback, and the panel says what a row is: one decision with its observation count (§2).
+  const effectiveStage = String(asRecord(asRecord(policy.value).effective).stage ?? "");
+  const selectionNote = selectionNoteForStage(effectiveStage);
   const fallback = degraded(policy.loading, policy.error) ?? degraded(rollout.loading, rollout.error);
   return (
     <div className="grid gap-4">
@@ -206,7 +227,7 @@ export function LearningOverviewPage() {
       />
       <SectionCard
         title="Recent decisions"
-        description="Advisory observations recorded per decision; the selection always remains the baseline in stage S1."
+        description={`Advisory observations recorded per decision; ${selectionNote}. Each row is one decision with its observation count.`}
       >
         {degraded(decisions.loading, decisions.error) ??
           (decisionRows.length === 0 ? (
@@ -236,7 +257,16 @@ export function LearningOverviewPage() {
                 <tbody>
                   {decisionRows.map((row, index) => (
                     <tr className="border-t border-[var(--rm-border)]" key={`${show(row.decisionId)}-${index}`}>
-                      <td className="py-2 pr-3 font-mono">{show(row.decisionId)}</td>
+                      <td className="py-2 pr-3 font-mono">
+                        {show(row.decisionId)}
+                        {/* Run 98 addendum 25 §2: a collapsed row states how many observations it
+                            stands for, so the table cannot read as duplicated rows. */}
+                        {Number(row.observationCount) > 1 ? (
+                          <span className="ml-2 text-xs text-[var(--rm-fg-muted)]">
+                            ×{show(row.observationCount)}
+                          </span>
+                        ) : null}
+                      </td>
                       <td className="py-2 pr-3">{show(row.routePackage)}</td>
                       <td className="py-2 pr-3">
                         <Badge tone={row.advisoryState === "fresh" ? "success" : "neutral"}>
@@ -679,6 +709,9 @@ export function LearningDecisionsPage() {
                   <Metric label="Preferred eligible" value={show(row.preferredEligible)} />
                   <Metric label="Confidence" value={show(row.confidence)} />
                   <Metric label="Observed" value={show(row.observedAtMs)} />
+                  {/* Run 98 addendum 25 §2: the row is one decision, so say how many observations
+                      it stands for instead of leaving the reader to guess. */}
+                  <Metric label="Observations" value={show(row.observationCount)} />
                   <Metric label="Selection" value={show(row.selection)} />
                   <Metric label="Stage" value={show(row.stage)} />
                   {/* Run 99 R33 (addendum 19 S33/S35): which task family the request belonged to,

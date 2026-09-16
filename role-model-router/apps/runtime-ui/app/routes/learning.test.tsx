@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { describe, expect, test } from "vitest";
 
-import { LearningOverviewPage } from "./learning";
+import { LearningOverviewPage, selectionNoteForStage } from "./learning";
 
 /**
  * Run 98 R17: the Learning route exists with its five pages, reads the operator surface
@@ -110,5 +110,48 @@ describe("LearningRoute", () => {
     // Absent families are reported honestly on both surfaces.
     expect(routeSource).toContain('? show(row.requestTaskTypeId) : "not reported"');
     expect(routeSource).toContain('? show(row.taskTypeId) : "not reported"');
+  });
+
+  /**
+   * Run 98 addendum 25 §1 (operator-reported, 2026-09-16): the Recent decisions panel asserted a
+   * hardcoded "the selection always remains the baseline in stage S1" while the scope was running
+   * S2, contradicting the STAGE metric in the same page's header. The sentence is a claim about
+   * safety-relevant behaviour, so it has to follow the live stage readback rather than being static
+   * copy. This pins the derivation itself: S1 keeps the baseline claim, any other reported stage
+   * states the eligible-set bound *for that stage*, and an unreported stage asserts no stage at all.
+   */
+  test("the decisions panel derives its selection claim from the live stage instead of asserting S1", () => {
+    // Stage S1 is the only stage in which the selection is guaranteed to stay on the baseline.
+    expect(selectionNoteForStage("S1")).toBe(
+      "the selection always remains the baseline in stage S1",
+    );
+    // S2 (the stage the scope was actually running) must never be described with the S1 claim.
+    const s2 = selectionNoteForStage("S2");
+    expect(s2).not.toContain("S1");
+    expect(s2).toContain("stage S2");
+    // Higher activation stages are handled by the same rule rather than falling back to S1 copy.
+    const s4 = selectionNoteForStage("S4");
+    expect(s4).not.toContain("S1");
+    expect(s4).toContain("stage S4");
+    // An unreported stage makes no stage claim at all instead of inventing one.
+    const unknown = selectionNoteForStage("");
+    expect(unknown).not.toContain("S1");
+    expect(unknown).not.toContain("S2");
+    expect(unknown.length).toBeGreaterThan(0);
+  });
+
+  /**
+   * Run 98 addendum 25 §1/§2: the panel description is composed from the derived note (never a
+   * hardcoded stage), and a collapsed decision row states how many observations it stands for so
+   * the "Recent decisions" table cannot read as duplicated rows.
+   */
+  test("the decisions panel composes its description from the derived note and labels collapsed rows", () => {
+    const routeSource = readFileSync(new URL("./learning.tsx", import.meta.url), "utf8");
+    expect(routeSource).toContain("${selectionNote}");
+    expect(routeSource).toContain("Each row is one decision with its observation count");
+    // The overview table marks a row that stands for several observations…
+    expect(routeSource).toContain("Number(row.observationCount) > 1");
+    // …and the Decisions page reports the count as a first-class metric.
+    expect(routeSource).toContain('label="Observations"');
   });
 });
