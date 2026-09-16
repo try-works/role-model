@@ -231,3 +231,99 @@ export async function run() {
     await host.shutdown();
   }
 });
+
+/**
+ * Run 98 addendum 04 (§7.11): the root cause of the stage-v177 crash-loop.
+ *
+ * The host terminates the worker when an invoke outlives `timeoutMs`. The retired budgets were far
+ * smaller than the work they dispatched — the evaluation host and the bridge host left `timeoutMs`
+ * unset (the 1 s default) while evaluations routinely take longer, and the operator host hardcoded
+ * 5 s — so each slow evaluation killed its worker, the next invoke counted a restart, and three of
+ * them exhausted the budget. Nothing was wrong with the worker: it was killed by its own host, which
+ * is why the only stderr it left was a Node warning.
+ *
+ * This pins the coupling so the budget can never silently shrink below the work again: a budget
+ * smaller than the work terminates the worker and fails the invoke, while a budget that fits lets the
+ * same worker answer. The measured startup latency (265 ms idle, 1.6 s under eight busy processes)
+ * rules out the startup timeout as the cause.
+ */
+test("run98 a04 a budget smaller than the work terminates the worker, and one that fits serves it", async () => {
+  await mkdir(RECEIPT_ROOT, { recursive: true });
+  const root = await mkdtemp(path.join(RECEIPT_ROOT, "run98-a04-slow-invoke-"));
+  const fixture = path.join(root, "slow-extension.mjs");
+  await writeFile(
+    fixture,
+    `
+export async function run(envelope) {
+  await new Promise((resolve) => setTimeout(resolve, 600));
+  return { ok: true, capability: envelope.capability, pid: process.pid };
+}
+`,
+    "utf8",
+  );
+  const envelope = () => ({
+    requestId: `run98-a04-slow-${Math.random().toString(16).slice(2)}`,
+    protocolVersion,
+    authorizationEpoch: 1,
+    channel: "development",
+    scope: "run98-a04",
+    capability: "a04:slow",
+  });
+  const register = async (host) =>
+    host.registerProcess(
+      { id: "run98-a04-slow-extension", protocolVersion, capabilities: ["a04:slow"] },
+      pathToFileURL(fixture).href,
+    );
+
+  // The retired shape: a budget smaller than the work. The invoke fails *and* the worker dies.
+  const tight = new ExtensionHost({
+    protocolVersion,
+    authorizationEpoch: 1,
+    startupTimeoutMs: 10_000,
+    timeoutMs: 250,
+    restartBackoffMs: 1,
+    maxRestarts: 0,
+    restartCooldownMs: 60_000,
+  });
+  try {
+    await register(tight);
+    const workerPid = tight.extensionState("run98-a04-slow-extension").pid;
+    assert.ok(Number.isSafeInteger(workerPid), "the worker must be running before the slow invoke");
+    await assert.rejects(
+      tight.invoke("run98-a04-slow-extension", envelope()),
+      /failed: timeout/,
+      "a budget smaller than the work must surface as a timeout",
+    );
+    // The worker paid for that timeout with its life: this is the coupling that caused the outage.
+    const deadline = Date.now() + 5_000;
+    while (Date.now() < deadline && tight.extensionState("run98-a04-slow-extension").pid !== null) {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+    assert.equal(
+      tight.extensionState("run98-a04-slow-extension").pid,
+      null,
+      "the host terminates the worker when the invoke outlives the budget",
+    );
+  } finally {
+    await tight.shutdown();
+  }
+
+  // The repaired shape: a budget that fits the work. The same worker answers.
+  const generous = new ExtensionHost({
+    protocolVersion,
+    authorizationEpoch: 1,
+    startupTimeoutMs: 10_000,
+    timeoutMs: 5_000,
+    restartBackoffMs: 1,
+  });
+  try {
+    await register(generous);
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const result = await generous.invoke("run98-a04-slow-extension", envelope());
+      assert.equal(result.ok, true, "a budget that fits the work must keep serving it");
+    }
+    assert.equal(generous.degradations().length, 0, "no degradation may be recorded for slow work");
+  } finally {
+    await generous.shutdown();
+  }
+});
