@@ -5613,6 +5613,18 @@ export async function main(): Promise<void> {
           typeof value === "string" && value.trim() ? value.trim() : "";
         const scorerId = text(body.scorerId) || "run96-semantic-criteria";
         const dimension = text(body.dimension) || "correctness";
+        // Run 98 addendum 34 S4: per-prior-version before/after counts, merged across the batches this
+        // call re-scores, so the operator readback names the rulers the revisions superseded.
+        const priorVersionBuckets: Record<
+          string,
+          {
+            revisions: number;
+            beforeSum: number;
+            beforeCount: number;
+            afterSum: number;
+            afterCount: number;
+          }
+        > = {};
         const requestedLimit = Number(body.limit ?? 6);
         const limit = Number.isSafeInteger(requestedLimit)
           ? Math.min(Math.max(requestedLimit, 1), 12)
@@ -5723,6 +5735,36 @@ export async function main(): Promise<void> {
               const revisionId = text(revision.scoreId) || text(revision.score_id);
               if (revisionId) revisionIds.push(revisionId);
             }
+            /**
+             * Run 98 addendum 34 S4: the operator readback carries the per-prior-version before/after
+             * summary the extension now computes, and refuses an aggregate mean while the re-scored set
+             * spans more than one ruler version — a mean across rulers is not a measurement.
+             */
+            const byPriorVersion = result?.byPriorVersion;
+            if (byPriorVersion && typeof byPriorVersion === "object" && !Array.isArray(byPriorVersion)) {
+              for (const [key, bucket] of Object.entries(
+                byPriorVersion as Record<string, Record<string, unknown>>,
+              )) {
+                const row = priorVersionBuckets[key] ?? {
+                  revisions: 0,
+                  beforeSum: 0,
+                  beforeCount: 0,
+                  afterSum: 0,
+                  afterCount: 0,
+                };
+                const bucketRevisions = Number(bucket?.revisions ?? 0);
+                row.revisions += Number.isSafeInteger(bucketRevisions) ? bucketRevisions : 0;
+                if (Number.isFinite(bucket?.meanBefore) && bucketRevisions > 0) {
+                  row.beforeSum += Number(bucket.meanBefore) * bucketRevisions;
+                  row.beforeCount += bucketRevisions;
+                }
+                if (Number.isFinite(bucket?.meanAfter) && bucketRevisions > 0) {
+                  row.afterSum += Number(bucket.meanAfter) * bucketRevisions;
+                  row.afterCount += bucketRevisions;
+                }
+                priorVersionBuckets[key] = row;
+              }
+            }
           } catch (error) {
             skipped.push(
               `${entry.evaluationJobId}:${String(
@@ -5739,6 +5781,31 @@ export async function main(): Promise<void> {
           groups,
           revisions: revisionIds.length,
           revisionIds: revisionIds.slice(0, 10),
+          // Run 98 addendum 34 S4: per prior ruler version, with before/after means, and a refused
+          // aggregate while the re-scored set spans more than one version.
+          byPriorVersion: Object.fromEntries(
+            Object.entries(priorVersionBuckets).map(([key, bucket]) => [
+              key,
+              {
+                revisions: bucket.revisions,
+                meanBefore:
+                  bucket.beforeCount > 0 ? bucket.beforeSum / bucket.beforeCount : null,
+                meanAfter: bucket.afterCount > 0 ? bucket.afterSum / bucket.afterCount : null,
+              },
+            ]),
+          ),
+          ...((() => {
+            const versions = new Set(
+              Object.keys(priorVersionBuckets).map((key) => key.slice(key.lastIndexOf("@") + 1)),
+            );
+            if (versions.size <= 1) return {};
+            return {
+              aggregateMean: null,
+              refusal: "mixed_scorer_versions",
+              refusalDetail:
+                "a mean across rows produced by different ruler versions is not a measurement; re-score under one pinned version first",
+            };
+          })()),
           skipped,
         };
       };
