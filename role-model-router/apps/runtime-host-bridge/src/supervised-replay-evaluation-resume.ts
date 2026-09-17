@@ -127,6 +127,12 @@ function boundedCounterfactuals(value: unknown): readonly SupervisedReplayEvalua
   });
 }
 
+/**
+ * Run 98 addendum 34 S5: entries whose replay job this process has already tried to terminalize, keyed
+ * by store instance and resolution stamp, so an abandoned entry is reconciled once per runtime start.
+ */
+const reconciledAbandonedEntries = new WeakMap<object, Set<string>>();
+
 function normalizeEntry(entry: SupervisedReplayEvaluationResumeEntry): SupervisedReplayEvaluationResumeEntry {
   if (!entry || typeof entry !== "object" || entry.schemaVersion !== SCHEMA_VERSION) {
     throw new Error("supervised replay evaluation resume entry schema is unsupported");
@@ -336,14 +342,53 @@ export async function resumePendingSupervisedReplayEvaluations(input: {
   readonly complete: (
     entry: SupervisedReplayEvaluationResumeEntry,
   ) => Promise<Readonly<Record<string, unknown>> | null | undefined>;
+  /**
+   * Run 98 addendum 34 S5 (live stage v200): called exactly once, when an entry crosses the attempt
+   * cap and is recorded `abandoned`. The evaluation is then *proven* unavailable, and the caller must
+   * terminalize the replay job behind it — otherwise the job stays `awaiting_evaluation`, so the
+   * scheduler re-claims it on every tick (409 "awaiting evaluation and cannot be re-leased") and the
+   * capture neither evaluates nor fails: three real captures cycled that way with no evaluation job
+   * in Evaluation Core at all.
+   */
+  readonly onAbandoned?: (
+    entry: SupervisedReplayEvaluationResumeEntry,
+    error: unknown,
+  ) => Promise<void> | void;
   readonly limit?: number;
   readonly now?: () => number;
-}): Promise<{ readonly resumed: number; readonly completed: number; readonly failed: number; readonly remaining: number }> {
+}): Promise<{
+  readonly resumed: number;
+  readonly completed: number;
+  readonly failed: number;
+  readonly reconciled: number;
+  readonly remaining: number;
+}> {
   const now = input.now ?? (() => Date.now());
   const selected = selectResumableSupervisedReplayEvaluations({
     entries: input.store.list(),
     ...(input.limit === undefined ? {} : { limit: input.limit }),
   });
+  // Run 98 addendum 34 S5: an entry abandoned *before* this repair is no longer selected by the sweep,
+  // so its replay job would stay `awaiting_evaluation` for ever and the capture would keep deferring on
+  // the "cannot be re-leased" 409. Reconcile those once per process, keyed by the resolution stamp so a
+  // resolved entry is never re-terminalized.
+  let reconciled = 0;
+  const reconcileSeen = reconciledAbandonedEntries.get(input.store) ?? new Set<string>();
+  reconciledAbandonedEntries.set(input.store, reconcileSeen);
+  if (typeof input.onAbandoned === "function") {
+    for (const entry of input.store.list()) {
+      if (entry.resolvedAtMs === null || entry.outcome !== "abandoned") continue;
+      const key = `${entry.replayJobId}:${entry.resolvedAtMs}`;
+      if (reconcileSeen.has(key)) continue;
+      reconcileSeen.add(key);
+      try {
+        await input.onAbandoned(entry, new Error(entry.lastError ?? "evaluation abandoned"));
+        reconciled += 1;
+      } catch {
+        // The caller reports its own failure; the entry stays resolved either way.
+      }
+    }
+  }
   let completed = 0;
   let failed = 0;
   for (const entry of selected) {
@@ -367,13 +412,28 @@ export async function resumePendingSupervisedReplayEvaluations(input: {
       completed += 1;
     } catch (error) {
       failed += 1;
-      input.store.recordFailure(entry.replayJobId, error, now());
+      const updated = input.store.recordFailure(entry.replayJobId, error, now());
+      // The entry has just been recorded `abandoned`: the evaluation is proven unavailable, so the
+      // replay job behind it must stop being re-claimed. The caller terminalizes it (run 98 addendum 34
+      // S5) so the scheduler records a terminal refusal carrying the real reason.
+      if (updated?.outcome === "abandoned" && typeof input.onAbandoned === "function") {
+        // Mark it reconciled here so the reconcile pass does not terminalize the same entry again on the
+        // next sweep (the entry is `abandoned` from now on and the sweep will not select it).
+        reconcileSeen.add(`${updated.replayJobId}:${updated.resolvedAtMs}`);
+        try {
+          await input.onAbandoned(updated, error);
+        } catch {
+          // Terminalizing is best-effort here: the entry is already resolved and the next sweep will
+          // not retry it, so a failure is reported by the caller's own logging rather than thrown here.
+        }
+      }
     }
   }
   return {
     resumed: selected.length,
     completed,
     failed,
+    reconciled,
     remaining: input.store.list().filter((entry) => (entry.resolvedAtMs ?? null) === null).length,
   };
 }

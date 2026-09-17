@@ -180,4 +180,92 @@ describe("run99 R33 supervised replay evaluation resume", () => {
       expect(calls).toBe(SUPERVISED_REPLAY_EVALUATION_MAX_ATTEMPTS);
     });
   });
+
+  /**
+   * Run 98 addendum 34 S5 (live stage v200): three real captures cycled for ever on
+   * `replay job is awaiting evaluation and cannot be re-leased`. The resume entry was abandoned at the
+   * cap, but the replay job stayed `awaiting_evaluation`, so the scheduler re-claimed it on every tick
+   * and the capture neither evaluated nor failed. Abandoning an entry must therefore terminalize the
+   * job behind it — exactly once, with the reason that exhausted the attempts.
+   */
+  it("terminalizes the replay job exactly once when an entry is abandoned", async () => {
+    await withRoot(async (root) => {
+      const store = createSupervisedReplayEvaluationResumeStore({
+        filePath: path.join(root, "resume.json"),
+      });
+      store.record(entry("job-abandoned", 1));
+      const abandoned: { readonly replayJobId: string; readonly reason: string }[] = [];
+      const complete = async () => {
+        throw new Error(
+          "durable evaluation job evaluation-replay-67cc04911acd656424cf is unavailable for resume",
+        );
+      };
+      const sweep = () =>
+        resumePendingSupervisedReplayEvaluations({
+          store,
+          isEvaluationComplete: async () => false,
+          complete,
+          onAbandoned: (resolved, error) => {
+            abandoned.push({
+              replayJobId: resolved.replayJobId,
+              reason: String((error as { message?: unknown })?.message ?? error),
+            });
+          },
+        });
+
+      for (let attempt = 0; attempt < SUPERVISED_REPLAY_EVALUATION_MAX_ATTEMPTS; attempt += 1) {
+        await sweep();
+        if (attempt < SUPERVISED_REPLAY_EVALUATION_MAX_ATTEMPTS - 1) {
+          expect(abandoned).toHaveLength(0);
+        }
+      }
+      expect(abandoned).toHaveLength(1);
+      expect(abandoned[0]?.replayJobId).toBe("job-abandoned");
+      expect(abandoned[0]?.reason).toMatch(/unavailable for resume/);
+
+      // A later sweep neither retries the entry nor terminalizes the job twice.
+      const after = await sweep();
+      expect(after.resumed).toBe(0);
+      expect(abandoned).toHaveLength(1);
+    });
+  });
+
+  /**
+   * Run 98 addendum 34 S5: the three live captures had already crossed the attempt cap *before* the
+   * repair shipped, so the sweep no longer selected them and their replay jobs stayed
+   * `awaiting_evaluation`. An abandoned entry must therefore be reconciled — once per runtime start —
+   * even though it is not selectable any more.
+   */
+  it("reconciles an entry abandoned before the repair exactly once", async () => {
+    await withRoot(async (root) => {
+      const store = createSupervisedReplayEvaluationResumeStore({
+        filePath: path.join(root, "resume.json"),
+      });
+      store.record({ ...entry("job-pre-abandoned", 1), attempts: SUPERVISED_REPLAY_EVALUATION_MAX_ATTEMPTS });
+      store.recordFailure(
+        "job-pre-abandoned",
+        new Error("durable evaluation job evaluation-replay-67cc04911acd656424cf is unavailable for resume"),
+      );
+      const reconciled: string[] = [];
+      const sweep = () =>
+        resumePendingSupervisedReplayEvaluations({
+          store,
+          isEvaluationComplete: async () => false,
+          complete: async () => {
+            throw new Error("must not be re-selected");
+          },
+          onAbandoned: (resolved) => {
+            reconciled.push(resolved.replayJobId);
+          },
+        });
+
+      const first = await sweep();
+      expect(first.resumed).toBe(0);
+      expect(first.reconciled).toBe(1);
+      expect(reconciled).toEqual(["job-pre-abandoned"]);
+      const second = await sweep();
+      expect(second.reconciled).toBe(0);
+      expect(reconciled).toHaveLength(1);
+    });
+  });
 });

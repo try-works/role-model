@@ -5263,6 +5263,54 @@ export async function main(): Promise<void> {
               resultBranches: [],
             })) as Readonly<Record<string, unknown>>;
           },
+          /**
+           * Run 98 addendum 34 S5 (live stage v200): when the sweep abandons an entry, the evaluation
+           * is proven unavailable. The replay job behind it must stop being re-claimed — otherwise it
+           * stays `awaiting_evaluation`, the scheduler 409s on every tick ("replay job is awaiting
+           * evaluation and cannot be re-leased"), the capture defers without consuming its budget, and
+           * nothing is ever evaluated or failed. Terminalizing it with the recorded reason turns that
+           * silent infinite loop into an observable terminal refusal.
+           */
+          onAbandoned: async (entry, error) => {
+            const activeRuntime = extensionRuntimeRef.current;
+            if (!activeRuntime) return;
+            const reason = String((error as { message?: unknown })?.message ?? error ?? "unknown").slice(0, 360);
+            // Durable replay jobs are scoped to the *capture's* scope, and `replay:fail-job` is bound to
+            // the persisted job, so the scope has to come from the capture — the same authority the
+            // completion path reads. Guessing the operator scope is refused with a binding mismatch.
+            let scope = options.scopeId;
+            try {
+              const capture = (await currentPostObservationOperations()?.readLocalRouteCapture({
+                requestId: entry.sourceCaptureRequestId,
+              })) as Record<string, unknown> | null | undefined;
+              if (capture && typeof capture.scope === "string" && capture.scope.trim()) {
+                scope = capture.scope.trim();
+              }
+            } catch {
+              // Fall back to the last capture scope the producer read.
+            }
+            try {
+              await activeRuntime.invoke("replay-core", {
+                requestId: `replay-fail-job:${entry.replayJobId}`,
+                sessionId: `replay-fail-job:${options.scopeId}`,
+                protocolVersion: "1.1.0",
+                channel,
+                scope,
+                authorizationEpoch: 1,
+                capability: "replay:fail-job",
+                value: {
+                  jobId: entry.replayJobId,
+                  reason: `evaluation_unavailable: ${reason}`,
+                },
+              });
+            } catch (failure) {
+              console.error(
+                `[run98] replay job terminalization declined:${entry.replayJobId} ${String(
+                  (failure as { message?: unknown })?.message ?? failure,
+                ).slice(0, 200)}`,
+              );
+            }
+          },
         });
       };
       resumeEvaluationsRef.current = resumePendingEvaluations;
