@@ -6,6 +6,40 @@ import {
   extractTaskInstructionText,
   extractSourceOutputText,
 } from "../src/track-b-replay-evaluation-criteria.js";
+import { normalizeTrackBSemanticEvaluationCriteria } from "../src/track-b-runtime.js";
+
+/**
+ * Live stage v209 (real dsh traffic, `req-a4b39ff5-…`): the replay endpoint refused a capture with
+ * `semantic evaluation criteria requiredTerms are invalid`. The derivation had chosen its
+ * structured-assertion tier — which deliberately emits `requiredTerms: []` beside the assertion — and
+ * the *runtime's own* criteria normaliser still required a non-empty term list.
+ *
+ * The addendum 33 S5 repair reached the two extension bundles (evaluation-core and
+ * evaluation-runner-local) but not this third copy in `track-b-runtime.ts`, so the runtime refused
+ * exactly the criteria it had just derived. These tests pin every copy to the same contract.
+ */
+test("run98 A33 S5 the runtime normaliser accepts an empty term list beside a derived assertion", () => {
+  const normalized = normalizeTrackBSemanticEvaluationCriteria({
+    schemaVersion: "role-model.semantic-criteria.v1",
+    requiredTerms: [],
+    forbiddenTerms: [],
+    minOutputChars: 1,
+    assertions: [{ kind: "normalized_equals", value: "ok" }],
+  });
+  expect(normalized.requiredTerms).toEqual([]);
+  expect(normalized.assertions).toEqual([{ kind: "normalized_equals", value: "ok" }]);
+});
+
+test("run98 A33 S5 criteria that constrain nothing are still refused by the runtime", () => {
+  expect(() =>
+    normalizeTrackBSemanticEvaluationCriteria({
+      schemaVersion: "role-model.semantic-criteria.v1",
+      requiredTerms: [],
+      forbiddenTerms: [],
+      minOutputChars: 1,
+    }),
+  ).toThrow(/requiredTerms/);
+});
 
 /**
  * Run 98 addendum 33 S5: the derivation prefers a *structural* assertion when the task plainly implies

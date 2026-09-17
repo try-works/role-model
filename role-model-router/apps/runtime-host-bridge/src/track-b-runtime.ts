@@ -6087,9 +6087,21 @@ async function resolveTrackBReferenceAttestation(
 
 export interface TrackBSemanticEvaluationCriteria {
   readonly schemaVersion: "role-model.semantic-criteria.v1";
-  readonly requiredTerms: readonly string[];
+  /**
+   * Run 98 addendum 33 S5: optional once structured assertions declare the check. The derivation emits
+   * `requiredTerms: []` beside its assertion, so an empty list is a valid, declared criterion set.
+   */
+  readonly requiredTerms?: readonly string[];
   readonly forbiddenTerms?: readonly string[];
   readonly minOutputChars?: number;
+  /** Run 98 addendum 33 S5: structural per-case checks (mirrors the extension registries). */
+  readonly assertions?: readonly (
+    | { readonly kind: "json_parses" }
+    | { readonly kind: "normalized_equals"; readonly value: string }
+    | { readonly kind: "numeric_equals"; readonly value: number; readonly tolerance: number }
+    | { readonly kind: "array_length"; readonly value: number }
+    | { readonly kind: "contains_all"; readonly values: readonly string[] }
+  )[];
 }
 
 export function normalizeTrackBSemanticEvaluationCriteria(
@@ -6117,7 +6129,68 @@ export function normalizeTrackBSemanticEvaluationCriteria(
     }
     return terms;
   };
-  const requiredTerms = normalizeTerms(record.requiredTerms, "requiredTerms", false);
+  // Run 98 addendum 33 S5 (live stage v209, real dsh traffic): the derivation's assertion tier emits
+  // `requiredTerms: []` beside the assertion it derived, and this third copy of the normaliser still
+  // demanded a non-empty list — so the runtime refused exactly the criteria it had just produced
+  // ("semantic evaluation criteria requiredTerms are invalid"). The two extension bundles were fixed;
+  // this copy is now pinned to the same contract: an empty or absent term list is valid *when* the
+  // assertions declare the check, and criteria that constrain nothing are still refused.
+  const assertions = Array.isArray(record.assertions) ? record.assertions : [];
+  if (assertions.length > 32) {
+    throw new Error("semantic evaluation criteria assertions are invalid");
+  }
+  const normalizedAssertions = assertions.map((assertion) => {
+    if (!assertion || typeof assertion !== "object" || Array.isArray(assertion)) {
+      throw new Error("semantic evaluation criteria assertions are invalid");
+    }
+    const entry = assertion as Record<string, unknown>;
+    const kind = entry.kind;
+    if (
+      kind !== "json_parses" &&
+      kind !== "normalized_equals" &&
+      kind !== "numeric_equals" &&
+      kind !== "array_length" &&
+      kind !== "contains_all"
+    ) {
+      throw new Error("semantic evaluation criteria assertion kind is invalid");
+    }
+    if (kind === "json_parses") return { kind } as const;
+    if (kind === "normalized_equals") {
+      if (typeof entry.value !== "string" || !entry.value.trim()) {
+        throw new Error("semantic evaluation criteria assertion value is invalid");
+      }
+      return { kind, value: entry.value } as const;
+    }
+    if (kind === "numeric_equals") {
+      if (!Number.isFinite(Number(entry.value))) {
+        throw new Error("semantic evaluation criteria assertion value is invalid");
+      }
+      const tolerance = Number(entry.tolerance ?? 0);
+      if (!Number.isFinite(tolerance) || tolerance < 0) {
+        throw new Error("semantic evaluation criteria assertion tolerance is invalid");
+      }
+      return { kind, value: Number(entry.value), tolerance } as const;
+    }
+    if (kind === "array_length") {
+      if (!Number.isSafeInteger(Number(entry.value)) || Number(entry.value) < 0) {
+        throw new Error("semantic evaluation criteria assertion value is invalid");
+      }
+      return { kind, value: Number(entry.value) } as const;
+    }
+    const values = Array.isArray(entry.values) ? entry.values : [];
+    if (values.length === 0 || values.some((value) => typeof value !== "string")) {
+      throw new Error("semantic evaluation criteria assertion values are invalid");
+    }
+    return { kind, values: values as readonly string[] } as const;
+  });
+  const declaresAssertions = normalizedAssertions.length > 0;
+  const emptyRequiredTerms =
+    record.requiredTerms === undefined ||
+    (Array.isArray(record.requiredTerms) && record.requiredTerms.length === 0);
+  const requiredTerms =
+    declaresAssertions && emptyRequiredTerms
+      ? ([] as readonly string[])
+      : normalizeTerms(record.requiredTerms, "requiredTerms", false);
   const forbiddenTerms = normalizeTerms(record.forbiddenTerms ?? [], "forbiddenTerms", true);
   if (record.minOutputChars !== undefined && typeof record.minOutputChars !== "number") {
     throw new Error("semantic evaluation criteria minOutputChars is invalid");
@@ -6131,6 +6204,7 @@ export function normalizeTrackBSemanticEvaluationCriteria(
     requiredTerms,
     ...(forbiddenTerms.length ? { forbiddenTerms } : {}),
     ...(minOutputChars !== 1 ? { minOutputChars } : {}),
+    ...(declaresAssertions ? { assertions: normalizedAssertions } : {}),
   };
 }
 
