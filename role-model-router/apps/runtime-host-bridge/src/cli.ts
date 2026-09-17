@@ -913,6 +913,8 @@ export function createSupervisedReplayEvaluationCompleter(input: {
     evidenceFloor: Readonly<{
       minDecisiveComparisons: number;
       minHoldoutComparisons: number;
+      /** Run 98 addendum 32 S1: development-partition floor for the promotion gate. */
+      minDevelopmentComparisons: number;
       minDistinctCaptures: number;
     }>;
     guardrails: Readonly<{ qualityMinDelta: number }>;
@@ -4890,6 +4892,8 @@ export async function main(): Promise<void> {
                       input.learningPolicySnapshot.effective.minDecisiveComparisons,
                     minHoldoutComparisons:
                       input.learningPolicySnapshot.effective.minHoldoutComparisons,
+                    minDevelopmentComparisons:
+                      input.learningPolicySnapshot.effective.minDevelopmentComparisons,
                     minDistinctCaptures: input.learningPolicySnapshot.effective.minDistinctCaptures,
                   },
                   guardrails: {

@@ -37,6 +37,8 @@ export const RUN98_LEARNING_DEFAULT_BOOTSTRAP_RESAMPLES = 2_000;
 export const DEFAULT_LEARNING_EVIDENCE_FLOOR = Object.freeze({
   minDecisiveComparisons: 3,
   minHoldoutComparisons: 1,
+  /** Run 98 addendum 32 S1: development-partition evidence the promotion gate fits against. */
+  minDevelopmentComparisons: 1,
   minDistinctCaptures: 3,
 });
 
@@ -129,10 +131,13 @@ export function buildTrackBLearningEvidenceSummary(input: {
 }): {
   readonly decisiveComparisons: number;
   readonly holdoutComparisons: number;
+  /** Run 98 addendum 32 S1: comparisons carrying the family's development partition. */
+  readonly developmentComparisons: number;
   readonly distinctCaptures: number;
   readonly caseManifestRef: string;
   readonly effectiveDecisiveComparisons: number;
   readonly effectiveHoldoutComparisons: number;
+  readonly effectiveDevelopmentComparisons: number;
   /**
    * Run 99 R33 (addendum 19 S34, addendum 20 D2/D4, addendum 21 D11): the same counts keyed by
    * the task family the comparison was produced for. The learner's floor is per
@@ -143,9 +148,11 @@ export function buildTrackBLearningEvidenceSummary(input: {
     {
       decisiveComparisons: number;
       holdoutComparisons: number;
+      developmentComparisons: number;
       distinctCaptures: number;
       effectiveDecisiveComparisons: number;
       effectiveHoldoutComparisons: number;
+      effectiveDevelopmentComparisons: number;
       effectiveSampleSize: number;
       maxCaptureShare: number | null;
       drift: number | null;
@@ -171,8 +178,11 @@ export function buildTrackBLearningEvidenceSummary(input: {
   const familyCaptures = new Map<string, Set<string>>();
   const familyDecisive = new Map<string, string[]>();
   const familyHoldout = new Map<string, number>();
+  /** Run 98 addendum 32 S1: development-partition comparisons per family. */
+  const familyDevelopment = new Map<string, number>();
   const familyEffectiveDecisive = new Map<string, number>();
   const familyEffectiveHoldout = new Map<string, number>();
+  const familyEffectiveDevelopment = new Map<string, number>();
   // Run 99 R33 D11: per-family source concentration and temporal drift dimensions.
   const familyCaptureCounts = new Map<string, Map<string, number>>();
   const familyObservations = new Map<string, { atMs: number; delta: number }[]>();
@@ -186,8 +196,15 @@ export function buildTrackBLearningEvidenceSummary(input: {
     excludedByReason[reason] = (excludedByReason[reason] ?? 0) + 1;
   };
   let holdoutComparisons = 0;
+  /**
+   * Run 98 addendum 32 S1 (`guidance/07`: fit on development evidence, decide on the holdout): the
+   * family's development partition, as recorded on the finalized comparison. With 474 holdout-only jobs
+   * on the live store this count is the field that makes the missing split visible to the gate.
+   */
+  let developmentComparisons = 0;
   let effectiveDecisiveComparisons = 0;
   let effectiveHoldoutComparisons = 0;
+  let effectiveDevelopmentComparisons = 0;
   const halfLifeDays =
     typeof input.evidenceHalfLifeDays === "number" &&
     Number.isFinite(input.evidenceHalfLifeDays) &&
@@ -277,11 +294,20 @@ export function buildTrackBLearningEvidenceSummary(input: {
     captures.add(captureRef);
     const caseIds = Array.isArray(holdout?.caseIds) ? holdout.caseIds : [];
     if (caseIds.length > 0) holdoutComparisons += 1;
+    // The development partition travels on the comparison result (addendum 32 S1).
+    const developmentPartition = asRecord(result.developmentPartition);
+    const developmentCaseIds = Array.isArray(developmentPartition?.caseIds)
+      ? developmentPartition.caseIds.filter(
+          (caseId): caseId is string => typeof caseId === "string" && caseId.length > 0,
+        )
+      : [];
+    if (developmentCaseIds.length > 0) developmentComparisons += 1;
     // Run 99 R33 D12: the decay weight uses the same age the freshness window used.
     const decay = ageMs === null ? 1 : Math.pow(0.5, ageMs / 86_400_000 / halfLifeDays);
     const weight = decay * classWeight;
     effectiveDecisiveComparisons += weight;
     if (caseIds.length > 0) effectiveHoldoutComparisons += weight;
+    if (developmentCaseIds.length > 0) effectiveDevelopmentComparisons += weight;
     const family = boundedText(comparability.taskTypeId);
     if (family) {
       const bucket = familyDecisive.get(family) ?? [];
@@ -291,9 +317,18 @@ export function buildTrackBLearningEvidenceSummary(input: {
       familyCaptureSet.add(captureRef);
       familyCaptures.set(family, familyCaptureSet);
       if (caseIds.length > 0) familyHoldout.set(family, (familyHoldout.get(family) ?? 0) + 1);
+      if (developmentCaseIds.length > 0) {
+        familyDevelopment.set(family, (familyDevelopment.get(family) ?? 0) + 1);
+      }
       familyEffectiveDecisive.set(family, (familyEffectiveDecisive.get(family) ?? 0) + weight);
       if (caseIds.length > 0) {
         familyEffectiveHoldout.set(family, (familyEffectiveHoldout.get(family) ?? 0) + weight);
+      }
+      if (developmentCaseIds.length > 0) {
+        familyEffectiveDevelopment.set(
+          family,
+          (familyEffectiveDevelopment.get(family) ?? 0) + weight,
+        );
       }
       const classCounts = familyEvidenceClasses.get(family) ?? {};
       classCounts[evidenceClass] = (classCounts[evidenceClass] ?? 0) + 1;
@@ -319,9 +354,11 @@ export function buildTrackBLearningEvidenceSummary(input: {
     {
       decisiveComparisons: number;
       holdoutComparisons: number;
+      developmentComparisons: number;
       distinctCaptures: number;
       effectiveDecisiveComparisons: number;
       effectiveHoldoutComparisons: number;
+      effectiveDevelopmentComparisons: number;
       effectiveSampleSize: number;
       maxCaptureShare: number | null;
       drift: number | null;
@@ -387,9 +424,11 @@ export function buildTrackBLearningEvidenceSummary(input: {
     byFamily[family] = {
       decisiveComparisons: groupIds.length,
       holdoutComparisons: familyHoldout.get(family) ?? 0,
+      developmentComparisons: familyDevelopment.get(family) ?? 0,
       distinctCaptures: familyCaptures.get(family)?.size ?? 0,
       effectiveDecisiveComparisons: roundWeight(familyEffectiveDecisive.get(family) ?? 0),
       effectiveHoldoutComparisons: roundWeight(familyEffectiveHoldout.get(family) ?? 0),
+      effectiveDevelopmentComparisons: roundWeight(familyEffectiveDevelopment.get(family) ?? 0),
       effectiveSampleSize: roundWeight(familyEffectiveDecisive.get(family) ?? 0),
       maxCaptureShare,
       drift,
@@ -410,6 +449,7 @@ export function buildTrackBLearningEvidenceSummary(input: {
   return {
     decisiveComparisons: decisiveGroupIds.length,
     holdoutComparisons,
+    developmentComparisons,
     distinctCaptures: captures.size,
     caseManifestRef: `manifest:learning-pass:${decisiveGroupIds.length}:${[...captures]
       .sort()
@@ -419,6 +459,7 @@ export function buildTrackBLearningEvidenceSummary(input: {
     excludedByReason,
     effectiveDecisiveComparisons: roundWeight(effectiveDecisiveComparisons),
     effectiveHoldoutComparisons: roundWeight(effectiveHoldoutComparisons),
+    effectiveDevelopmentComparisons: roundWeight(effectiveDevelopmentComparisons),
   };
 }
 

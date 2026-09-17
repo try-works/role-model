@@ -5500,6 +5500,8 @@ export interface TrackBShadowPipelineInput {
     evidenceFloor: Readonly<{
       minDecisiveComparisons: number;
       minHoldoutComparisons: number;
+      /** Run 98 addendum 32 S1: development-partition floor for the promotion gate. */
+      minDevelopmentComparisons: number;
       minDistinctCaptures: number;
     }>;
     guardrails: Readonly<{ qualityMinDelta: number }>;

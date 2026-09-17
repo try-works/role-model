@@ -46,6 +46,8 @@ export interface LearningPolicySnapshot {
      */
     readonly minDecisiveComparisons: number;
     readonly minHoldoutComparisons: number;
+    /** Run 98 addendum 32 S1: the development-partition floor the gate fits against. */
+    readonly minDevelopmentComparisons: number;
     readonly minDistinctCaptures: number;
     readonly evidenceMaxAgeDays: number;
     /**
@@ -97,6 +99,7 @@ const DEFAULT_EFFECTIVE: LearningPolicySnapshot["effective"] = Object.freeze({
   errorRateMaxDeltaPp: 2,
   minDecisiveComparisons: 3,
   minHoldoutComparisons: 1,
+  minDevelopmentComparisons: 1,
   minDistinctCaptures: 3,
   evidenceMaxAgeDays: 30,
   judgeMode: "identified",
@@ -259,6 +262,12 @@ export function readLearningPolicyFile(input: {
     minHoldoutComparisons: Math.max(
       0,
       Math.round(finiteOr(merged.minHoldoutComparisons, DEFAULT_EFFECTIVE.minHoldoutComparisons)),
+    ),
+    minDevelopmentComparisons: Math.max(
+      0,
+      Math.round(
+        finiteOr(merged.minDevelopmentComparisons, DEFAULT_EFFECTIVE.minDevelopmentComparisons),
+      ),
     ),
     minDistinctCaptures: Math.max(
       1,
