@@ -5416,12 +5416,18 @@ export async function main(): Promise<void> {
             if (!record) return current;
             if (Array.isArray(record.result)) return record.result;
             if (Array.isArray(record.businessOutput)) return record.businessOutput;
+            // The supervised invoke answers `{value: ...}` on this boundary (measured on stage v205).
+            if (Array.isArray(record.value)) return record.value;
             if (record.businessOutput && typeof record.businessOutput === "object") {
               current = record.businessOutput;
               continue;
             }
             if (record.result !== undefined) {
               current = record.result;
+              continue;
+            }
+            if (record.value !== undefined && typeof record.value === "object") {
+              current = record.value;
               continue;
             }
             return record;
