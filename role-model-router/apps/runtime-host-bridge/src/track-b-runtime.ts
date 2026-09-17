@@ -8415,10 +8415,29 @@ export async function runTrackBShadowPipeline(
     comparability: comparability as unknown as Record<string, unknown>,
     holdout: effectiveHoldout as unknown as Record<string, unknown>,
   });
+  /**
+   * Run 98 addendum 34 S3 (live v224, real request `req-1cf3f53d`): the comparison submits **its own two
+   * sides** — the served source and the counterfactual it judged — and nothing else. Once a capture also
+   * carries development cases for the arms the comparison does not decide between, `trialIds` (which is
+   * accumulated over every rollout row) no longer equals the comparison's tuple, and Evaluation Core
+   * correctly refused it: `comparable evaluation trials must resolve to the declared source and
+   * counterfactual candidates`. The development trials stay durable evidence on the same job — which is
+   * exactly what makes the group's `developmentPartition` non-empty — but they are not part of the
+   * decision.
+   */
+  const comparisonCandidateRefs = new Set([
+    sourceCandidateRef,
+    firstCounterfactualCandidateRef,
+  ]);
+  const comparisonTrialIds = completedRollouts
+    .filter(({ rollout }) =>
+      comparisonCandidateRefs.has(requireTrackBReference(rollout.endpointId, "candidate")),
+    )
+    .map(({ trialId }) => trialId);
   const evaluation = await runtime.invoke("evaluation-core", {
     ...envelope("evaluation:finalize-comparison-group", {
       groupId: `comparison:${input.requestId}`,
-      trialIds,
+      trialIds: comparisonTrialIds,
       comparability: finalizeBinding.comparability,
       // Run 99 R33 D7 live finding: the comparison has to bind the same membership the durable job
       // was created with (the effective holdout), otherwise the authority refuses the finalize with

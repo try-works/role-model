@@ -71,7 +71,11 @@ function capture(mark: string, overrides: Record<string, unknown> = {}) {
   };
 }
 
-function createFakeRuntime(store: Map<string, string>, capturedJobs: Record<string, unknown>[] = []) {
+function createFakeRuntime(
+  store: Map<string, string>,
+  capturedJobs: Record<string, unknown>[] = [],
+  capturedFinalizers: Record<string, unknown>[] = [],
+) {
   let writeIndex = 0;
   let trialIndex = 0;
   const runtime: TrackBShadowPipelineRuntime = {
@@ -150,6 +154,7 @@ function createFakeRuntime(store: Map<string, string>, capturedJobs: Record<stri
       }
       if (id === "evaluation-core" && capability === "evaluation:finalize-comparison-group") {
         const value = envelope.value as Record<string, unknown>;
+        capturedFinalizers.push(structuredClone(value));
         return { groupId: value.groupId, status: "finalized", outcome: "candidate" };
       }
       if (id === "evaluation-core" && capability === "evaluation:read-comparison-group") {
@@ -228,10 +233,11 @@ function buildScenario(
   const byReplayRequestId = new Map(arms.map((arm) => [`${arm.replayRequestId}-branch`, arm]));
   const store = new Map<string, string>();
   const capturedJobs: Record<string, unknown>[] = [];
+  const capturedFinalizers: Record<string, unknown>[] = [];
   const pipelineInputs: TrackBShadowPipelineInput[] = [];
   const pipelineCalls: string[] = [];
   const completer = createSupervisedReplayEvaluationCompleter({
-    runtime: createFakeRuntime(store, capturedJobs),
+    runtime: createFakeRuntime(store, capturedJobs, capturedFinalizers),
     operations: {
       async readLocalRouteCapture(input) {
         const requestId = String(input?.requestId ?? "");
@@ -305,7 +311,15 @@ function buildScenario(
         branchRootRef: arm.capture.rootArtifactId,
       })),
     });
-  return { sourceCapture, arms, pipelineInputs, pipelineCalls, capturedJobs, invoke };
+  return {
+    sourceCapture,
+    arms,
+    pipelineInputs,
+    pipelineCalls,
+    capturedJobs,
+    capturedFinalizers,
+    invoke,
+  };
 }
 
 /**
@@ -478,5 +492,9 @@ describe("run 98 addendum 34 S1 pair comparisons", () => {
     expect(holdoutCandidates.has(primaryArmId)).toBe(true);
     const durableHoldout = job?.holdout as Record<string, unknown> | undefined;
     expect((durableHoldout?.caseIds as readonly string[] | undefined)?.length).toBeGreaterThanOrEqual(2);
+    // The development case is durable evidence on the same job, but it is not part of the decision:
+    // the finalized comparison submits exactly the two holdout sides it judged.
+    const finalizer = scenario.capturedFinalizers[0];
+    expect((finalizer?.trialIds as readonly string[] | undefined)?.length).toBe(2);
   });
 });
