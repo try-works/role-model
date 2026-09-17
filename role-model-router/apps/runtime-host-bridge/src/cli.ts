@@ -1447,6 +1447,14 @@ export function createSupervisedReplayEvaluationCompleter(input: {
      */
     const extraComparisons: Array<Record<string, unknown>> = [];
     const maxExtraPairs = resolveMaxExtraPairComparisons(process.env);
+    // Run 98 addendum 34 S1 instrumentation (live v221): the coverage ledger never appeared on the
+    // rebuilt runtime while comparisons did finalize, so the next observation has to say whether this
+    // block is reached at all, with how many arms, and with which ledger path.
+    console.error(
+      `[a34-probe] pair pass ${input.requestId} arms=${counterfactuals.length} maxExtra=${maxExtraPairs} ledger=${
+        input.pairCoverageLedgerPath ? "yes" : "no"
+      }`,
+    );
     if (maxExtraPairs > 0 && counterfactuals.length > 1) {
       const ledger = input.pairCoverageLedgerPath
         ? createPairCoverageLedger({ filePath: input.pairCoverageLedgerPath })
@@ -1473,6 +1481,12 @@ export function createSupervisedReplayEvaluationCompleter(input: {
         maxPairs: maxExtraPairs,
         ...(primaryArmId ? { excludePairs: [pairKey(input.sourceEndpointId, primaryArmId)] } : {}),
       });
+      console.error(
+        `[a34-probe] pair plan ${input.requestId} planned=${planned.length} pairs=${planned
+          .map((entry) => `${entry.left.endpointId}<->${entry.right.endpointId}`)
+          .join(",")
+          .slice(0, 200)}`,
+      );
       for (const [index, pair] of planned.entries()) {
         const suffix = `:pair${index + 1}`;
         try {
