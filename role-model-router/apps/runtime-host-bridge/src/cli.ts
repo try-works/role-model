@@ -1263,6 +1263,12 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       // judge already resolved the policy (env override, then the versioned operator policy, then
       // source-first), so the comparison records exactly what that judge applied.
       ...(input.judge?.orderPolicy ? { judgeOrderPolicy: input.judge.orderPolicy } : {}),
+      // Run 98 addendum 34 S9 (live v210, real dsh traffic): the job records *which* endpoint judges it.
+      // Without this the write-time independence guard fell back to scanning every registered judge
+      // manifest that shares the scorer-set version — including a historical one that designated
+      // `deepseek-flash-max` — and refused candidates that are not today's judge at all, so real
+      // captures deferred to refusal (`judge_candidate_overlap`).
+      ...(input.judge?.endpointId ? { judgeEndpointId: input.judge.endpointId } : {}),
       // Run 98 addendum 33 S2: the judge's measured position consistency for the endpoint that judges this
       // comparison (resolved by the caller), so a below-floor judge cannot promote what it graded.
       ...(input.judgeConsistency ? { judgeConsistency: input.judgeConsistency } : {}),
