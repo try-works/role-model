@@ -5453,6 +5453,19 @@ export interface TrackBShadowPipelineInput {
    * value belongs in the comparability key rather than only in the policy that configured the judge.
    */
   readonly judgeOrderPolicy?: "source_first" | "dual_order" | null;
+  /**
+   * Run 98 addendum 33 S2: the measured position consistency of the judge behind this evidence, resolved by
+   * the caller from the durable ledger. It travels with the comparison so the promotion gate can refuse
+   * evidence a low-consistency judge produced.
+   */
+  readonly judgeConsistency?: {
+    readonly judgeEndpointId: string;
+    readonly orderChecks: number;
+    readonly orderDisagreements: number;
+    readonly consistency: number | null;
+    readonly sufficientSample: boolean;
+    readonly belowFloor: boolean;
+  } | null;
   readonly prefix: readonly unknown[];
   /**
    * Authoritative durable reference for the source prefix the caller observed.
@@ -9203,6 +9216,8 @@ export async function runTrackBShadowPipeline(
                   : {}),
               }
             : {}),
+          // Run 98 addendum 33 S2: the judge's measured consistency, resolved by the caller.
+          ...(input.judgeConsistency ? { judgeConsistency: input.judgeConsistency } : {}),
           envelope: (capability, value) => envelope(capability, value),
           // The packaged host externalizes oversized business results, so the pass decodes the
           // comparison-group list exactly like the pipeline decodes its own extension answers.

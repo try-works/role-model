@@ -601,6 +601,20 @@ export interface TrackBLearningPassInput {
   readonly safetyReceipt: Readonly<Record<string, unknown>>;
   readonly provenance: Readonly<Record<string, unknown>>;
   readonly identity: Readonly<{ scorerSetVersion: string; judgeEndpointId: string | null }>;
+  /**
+   * Run 98 addendum 33 S2 (the research's Shi et al.: "a judge whose consistency is near chance should be
+   * excluded from promotion evidence entirely"): the measured position consistency of the judge behind this
+   * candidate's evidence, as the durable ledger reports it. The gate refuses the evidence when the judge is
+   * measured below the configured floor and has enough order checks for that measurement to mean anything.
+   */
+  readonly judgeConsistency?: Readonly<{
+    judgeEndpointId: string;
+    orderChecks: number;
+    orderDisagreements: number;
+    consistency: number | null;
+    sufficientSample: boolean;
+    belowFloor: boolean;
+  }> | null;
   readonly evidenceFloor?: Readonly<{
     minDecisiveComparisons: number;
     minHoldoutComparisons: number;
@@ -778,6 +792,9 @@ export async function runTrackBLearningPass(
         },
         holdoutCaseIds,
         evidenceSummary,
+        // Run 98 addendum 33 S2: the judge's measured position consistency travels with the evidence it
+        // produced, so the gate can refuse a below-floor judge instead of promoting its preference.
+        ...(input.judgeConsistency ? { judgeConsistency: { ...input.judgeConsistency } } : {}),
         evidenceFloor: { ...evidenceFloor },
         guardrails: { ...guardrails },
         // Run 98 R19: the protocol is declared before the holdout decision and the non-inferiority

@@ -64,6 +64,10 @@ import {
 import { createReplayLedger, resolveReplayLedgerLimits } from "./track-b-replay-ledger.js";
 import { createJudgeConsistencyLedger } from "./track-b-judge-consistency.js";
 import {
+  DEFAULT_POSITION_CONSISTENCY_FLOOR,
+  evaluateJudgePositionConsistency,
+} from "./track-b-judge-consistency.js";
+import {
   buildReplayPolicySet,
   decideReplayAdmission,
   hasRecordedToolResults,
@@ -935,6 +939,19 @@ export function createSupervisedReplayEvaluationCompleter(input: {
     evidenceMaxAgeMs?: number;
   }>;
   readonly runPipeline?: typeof runTrackBShadowPipeline;
+  /**
+   * Run 98 addendum 33 S2: the judge's measured position consistency for the endpoint that will judge this
+   * comparison, resolved by the caller (it owns the ledger and the policy snapshot). It travels into the
+   * pipeline so the promotion gate sees the same measurement the ledger records.
+   */
+  readonly judgeConsistency?: {
+    readonly judgeEndpointId: string;
+    readonly orderChecks: number;
+    readonly orderDisagreements: number;
+    readonly consistency: number | null;
+    readonly sufficientSample: boolean;
+    readonly belowFloor: boolean;
+  } | null;
 }) {
   const runPipeline = input.runPipeline ?? runTrackBShadowPipeline;
   return async (request: Readonly<Record<string, unknown>>) => {
@@ -1218,6 +1235,9 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       // judge already resolved the policy (env override, then the versioned operator policy, then
       // source-first), so the comparison records exactly what that judge applied.
       ...(input.judge?.orderPolicy ? { judgeOrderPolicy: input.judge.orderPolicy } : {}),
+      // Run 98 addendum 33 S2: the judge's measured position consistency for the endpoint that judges this
+      // comparison (resolved by the caller), so a below-floor judge cannot promote what it graded.
+      ...(input.judgeConsistency ? { judgeConsistency: input.judgeConsistency } : {}),
       productionState: {},
       routePackage: input.sourceEndpointId,
       sourceDecisionId,
@@ -4817,8 +4837,27 @@ export async function main(): Promise<void> {
         readonly replayPolicySet: ReturnType<typeof buildReplayPolicySet>;
         readonly getDispatched: (endpointId: string) => unknown;
         readonly currentLedgerReservationId: () => string | null;
-      }) =>
-        createSupervisedReplayEvaluationCompleter({
+        /** Run 98 addendum 33 S2: the judge's measured position consistency, resolved by the caller. */
+        readonly judgeConsistency?: Readonly<Record<string, unknown>> | null;
+      }) => {
+        // Run 98 addendum 33 S2: the judge's measured position consistency, straight from the durable
+        // ledger, with the operator's floor applied. The completer passes it into the pipeline so the
+        // promotion gate sees the measurement the ledger records.
+        const judgeConsistency = (() => {
+          const judgeEndpointId = resolveEvalJudgeEndpointId({
+            policyValue: input.learningPolicySnapshot?.effective.judgeEndpointId,
+            envValue: process.env.ROLE_MODEL_EVAL_JUDGE_ENDPOINT,
+          });
+          if (!judgeEndpointId) return null;
+          const row = judgeConsistencyLedger.summary(judgeEndpointId)[0] ?? null;
+          if (!row) return null;
+          const floor =
+            input.learningPolicySnapshot?.effective.judgePositionConsistencyFloor ??
+            DEFAULT_POSITION_CONSISTENCY_FLOOR;
+          return { ...row, ...evaluateJudgePositionConsistency({ row, floor }) };
+        })();
+        return createSupervisedReplayEvaluationCompleter({
+          ...(judgeConsistency ? { judgeConsistency } : {}),
           runtime: input.runtime,
           operations: input.operations,
           requestId: input.requestId,
@@ -4973,7 +5012,8 @@ export async function main(): Promise<void> {
                 },
               }
             : {}),
-        });
+          });
+      };
       /**
        * Re-runs one interrupted supervised-replay evaluation. The branch captures are deterministic
        * (`replay-<requestId>-<hash(replayJobId, candidate)>-branch`), and the pipeline reuses the
