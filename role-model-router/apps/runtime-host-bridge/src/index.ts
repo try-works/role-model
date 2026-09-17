@@ -3132,6 +3132,11 @@ export interface StartBridgeServerOptions {
   readonly readLearningPolicy?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
   /** Run 99 (option 2): anonymous loopback Learning readbacks (`on`/`off`, default by bind host). */
   readonly anonymousLearningReads?: "on" | "off" | boolean;
+  /**
+   * Run 98 addendum 34 S7 (addendum 33 S6's missing caller): re-score the newest completed supervised
+   * replays under one pinned scorer version into `evaluation_trial_score_revisions`.
+   */
+  readonly rescoreLearningScores?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly setLearningPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackLearningPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly activateLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
@@ -15718,6 +15723,19 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             response,
             await options.rollbackLearningPolicy(operatorBody),
           );
+          return;
+        }
+        // Run 98 addendum 34 S7 (addendum 33 S6's missing caller): re-score stored trials under one
+        // pinned scorer version, so a corrected ruler corrects history instead of discarding it.
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/role-model/operator/learning/rescore"
+        ) {
+          if (!options.rescoreLearningScores) {
+            writeOperatorUnavailable(response, "learning re-score");
+            return;
+          }
+          writeOperatorMutationResult(response, await options.rescoreLearningScores(operatorBody));
           return;
         }
         if (

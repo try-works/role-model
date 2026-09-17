@@ -2407,6 +2407,8 @@ export function createCliServerOptions(
     operatorContext?: RuntimeOperatorContext;
     /** Run 99 (option 2): anonymous loopback Learning readbacks. */
     anonymousLearningReads?: "on" | "off";
+    /** Run 98 addendum 34 S7: the operator re-score action. */
+    rescoreLearningScores?: StartBridgeServerOptions["rescoreLearningScores"];
   },
   backendOrResolver: CliBackend | CliBackendResolver,
   shutdown?: () => Promise<void>,
@@ -2442,6 +2444,9 @@ export function createCliServerOptions(
     runtimeChannel: options.runtimeChannel,
     operatorAuthToken: options.operatorAuthToken ?? resolveBackend()?.operatorAuthToken,
     operatorContext: options.operatorContext,
+    ...(options.rescoreLearningScores
+      ? { rescoreLearningScores: options.rescoreLearningScores }
+      : {}),
     shutdown,
     registry: resolveBackend()?.effectiveRegistry ?? EMPTY_REGISTRY,
     getRegistry: () => resolveBackend()?.effectiveRegistry ?? EMPTY_REGISTRY,
@@ -3553,6 +3558,16 @@ export async function main(): Promise<void> {
     return shutdownPromise;
   };
 
+  /**
+   * Run 98 addendum 34 S7 (addendum 33 S6's missing caller): the re-score implementation needs the
+   * extension runtime, the private operations boundary and the packaged profile, none of which exist
+   * yet when the server options are built. The route therefore reads it through this holder, which the
+   * runtime fills in once the supervised runtime is ready.
+   */
+  const rescoreLearningScoresRef: {
+    current: ((body: Record<string, unknown>) => Promise<unknown>) | null;
+  } = { current: null };
+
   server = await startBridgeServer(
     createCliServerOptions(
       {
@@ -3562,6 +3577,12 @@ export async function main(): Promise<void> {
         runtimeStateRoot: options.runtimeStateRoot,
         runtimeChannel: packagedProfile?.channel ?? "development",
         ...(anonymousLearningReads ? { anonymousLearningReads } : {}),
+        // Run 98 addendum 34 S7: the operator re-score route reads the handler through the holder above.
+        rescoreLearningScores: async (body: Readonly<Record<string, unknown>> = {}) => {
+          const handler = rescoreLearningScoresRef.current;
+          if (!handler) throw new Error("evaluation re-score is not available yet");
+          return handler({ ...body });
+        },
         operatorContext: {
           channel: packagedProfile?.channel ?? "development",
           scope: options.scopeId,
@@ -5345,6 +5366,158 @@ export async function main(): Promise<void> {
         });
       };
       resumeEvaluationsRef.current = resumePendingEvaluations;
+      /**
+       * Run 98 addendum 34 S7 — the production caller addendum 33 S6 never had.
+       *
+       * `evaluation:rescore-trial-scores` recomputes a stored trial's deterministic score under a new
+       * registered version and writes `evaluation_trial_score_revisions`. It shipped with unit coverage
+       * and **zero callers**, so the table stayed empty and a corrected ruler could never correct
+       * history. The host is the only layer that can read both the durable captures and Evaluation
+       * Core, so the operator action lives here: it rebuilds each arm's scored text from its durable
+       * capture (the source capture plus the deterministic
+       * `replay-<requestId>-<hash(replayJobId,candidate)>-branch` captures) and re-scores the newest
+       * completed supervised replays under one pinned version.
+       */
+      rescoreLearningScoresRef.current = async (body: Readonly<Record<string, unknown>> = {}) => {
+        const runtime = extensionRuntimeRef.current;
+        if (!runtime) throw new Error("evaluation runtime is unavailable for re-score");
+        const channel = packagedProfile?.channel ?? "development";
+        const decode = (value: unknown) =>
+          decodeExternalizedOperatorReadback({
+            stateRoot: options.runtimeStateRoot,
+            scopeId: options.scopeId,
+            value,
+          });
+        const invokeEvaluation = async (capability: string, value: unknown) =>
+          decode(
+            await runtime.invoke("evaluation-core", {
+              requestId: `learning-rescore:${capability}:${Date.now()}`,
+              sessionId: `learning-rescore:${options.scopeId}`,
+              protocolVersion: "1.1.0",
+              channel,
+              scope: options.scopeId,
+              authorizationEpoch: 1,
+              capability,
+              value,
+            }),
+          );
+        const text = (value: unknown) =>
+          typeof value === "string" && value.trim() ? value.trim() : "";
+        const scorerId = text(body.scorerId) || "run96-semantic-criteria";
+        const dimension = text(body.dimension) || "correctness";
+        const requestedLimit = Number(body.limit ?? 6);
+        const limit = Number.isSafeInteger(requestedLimit)
+          ? Math.min(Math.max(requestedLimit, 1), 12)
+          : 6;
+        const definitions = (await invokeEvaluation("evaluation:list-scorers", {})) as Array<
+          Record<string, unknown>
+        >;
+        const versions = definitions
+          .filter((definition) => definition?.id === scorerId)
+          .map((definition) => text(definition.version))
+          .filter(Boolean)
+          .sort((left, right) => Number(left) - Number(right) || left.localeCompare(right));
+        const scorerVersion = text(body.scorerVersion) || versions[versions.length - 1] || "";
+        if (!scorerVersion) throw new Error(`no registered scorer version for ${scorerId}`);
+        const resumeStore = createSupervisedReplayEvaluationResumeStore({
+          filePath: resolveSupervisedReplayEvaluationResumePath({
+            runtimeStateRoot: options.runtimeStateRoot,
+            scopeId: options.scopeId,
+          }),
+        });
+        const entries = resumeStore
+          .list()
+          .filter((entry) => typeof entry.outcome === "string" && entry.outcome !== "abandoned")
+          .sort((left, right) => (right.resolvedAtMs ?? 0) - (left.resolvedAtMs ?? 0))
+          .slice(0, limit);
+        const entryOperations = currentPostObservationOperations();
+        let groups = 0;
+        const revisionIds: string[] = [];
+        const skipped: string[] = [];
+        for (const entry of entries) {
+          try {
+            const job = (await invokeEvaluation("evaluation:get-job", {
+              jobId: entry.evaluationJobId,
+            })) as Record<string, unknown> | null;
+            if (!job || String(job.status ?? "") !== "completed") {
+              skipped.push(`${entry.evaluationJobId}:not_completed`);
+              continue;
+            }
+            const cases = Array.isArray(job.cases)
+              ? (job.cases as Array<Record<string, unknown>>)
+              : [];
+            const evaluationCriteria = cases[0]?.evaluationCriteria;
+            if (!evaluationCriteria || typeof evaluationCriteria !== "object") {
+              skipped.push(`${entry.evaluationJobId}:no_criteria`);
+              continue;
+            }
+            const trials = (await invokeEvaluation("evaluation:list-trials", {
+              jobId: entry.evaluationJobId,
+            })) as Array<Record<string, unknown>>;
+            const sourceCapture = (await entryOperations?.readLocalRouteCapture({
+              requestId: entry.sourceCaptureRequestId,
+            })) as Record<string, unknown> | null | undefined;
+            const sourceText = sourceCapture ? extractSourceOutputText(sourceCapture) : null;
+            const candidates: Array<{
+              trialId: string;
+              actual: string;
+              evaluationCriteria: unknown;
+            }> = [];
+            for (const trial of trials) {
+              const trialId = text(trial.trialId) || text(trial.id);
+              const candidateRef = text(trial.candidateRef) || text(trial.candidate_ref);
+              if (!trialId || !candidateRef) continue;
+              let actual = candidateRef === entry.sourceEndpointId ? sourceText : null;
+              if (!actual) {
+                const token = createHash("sha256")
+                  .update(`${entry.replayJobId}\u0000${candidateRef}`)
+                  .digest("hex")
+                  .slice(0, 16);
+                const branchCapture = (await entryOperations?.readLocalRouteCapture({
+                  requestId: `replay-${entry.requestId}-${token}-branch`,
+                })) as Record<string, unknown> | null | undefined;
+                actual = branchCapture ? extractSourceOutputText(branchCapture) : null;
+              }
+              if (!actual) continue;
+              candidates.push({ trialId, actual, evaluationCriteria });
+            }
+            if (candidates.length === 0) {
+              skipped.push(`${entry.evaluationJobId}:no_scored_text`);
+              continue;
+            }
+            const result = (await invokeEvaluation("evaluation:rescore-trial-scores", {
+              groups: candidates.slice(0, 25),
+              scorerId,
+              scorerVersion,
+              dimension,
+            })) as Record<string, unknown> | null;
+            const revisions = Array.isArray(result?.revisions)
+              ? (result.revisions as Array<Record<string, unknown>>)
+              : [];
+            groups += candidates.length;
+            for (const revision of revisions) {
+              const revisionId = text(revision.scoreId) || text(revision.score_id);
+              if (revisionId) revisionIds.push(revisionId);
+            }
+          } catch (error) {
+            skipped.push(
+              `${entry.evaluationJobId}:${String(
+                (error as { message?: unknown })?.message ?? error,
+              ).slice(0, 90)}`,
+            );
+          }
+        }
+        return {
+          scorerId,
+          scorerVersion,
+          dimension,
+          evaluatedEntries: entries.length,
+          groups,
+          revisions: revisionIds.length,
+          revisionIds: revisionIds.slice(0, 10),
+          skipped,
+        };
+      };
       if (trackBOperationsEndpoint && trackBOperationsToken && runStartupSQLiteMaintenance) {
         const response = await fetch(`${trackBOperationsEndpoint}/sqlite-maintenance`, {
           method: "POST",
