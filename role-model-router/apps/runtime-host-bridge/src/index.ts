@@ -1200,7 +1200,7 @@ function summarizeDifficultySignals(input: {
   };
 }
 
-function classifyDifficultyFromSignals(input: {
+export function classifyDifficultyFromSignals(input: {
   readonly signals: DifficultyRoutingSignals;
   readonly classifier?: UnifiedRuntimeDifficultyClassifierConfig;
 }): {
@@ -1224,17 +1224,33 @@ function classifyDifficultyFromSignals(input: {
   }
 
   let score = 0;
-  if (input.signals.contextTokens >= 2000) {
+  // Run 98 addendum 32 S3 (external audit §6): the rubric saturated because `contextTokens >= 2000`,
+  // `toolCount >= 2` and `historyTurnCount >= 4` - worth 8 points together, already "hard" - are true
+  // for essentially every agent session, so a 562K-token tool-heavy session shared a bucket with a
+  // 2K-token one and the gate stopped selecting. The context contribution is graded across the observed
+  // range (live `contextTokens` p50 = 130, p95 = 450,732) and the tool/history steps keep climbing
+  // instead of stopping at the first rung.
+  if (input.signals.contextTokens >= 200_000) {
+    score += 5;
+  } else if (input.signals.contextTokens >= 50_000) {
+    score += 4;
+  } else if (input.signals.contextTokens >= 10_000) {
     score += 3;
+  } else if (input.signals.contextTokens >= 2_000) {
+    score += 2;
   } else if (input.signals.contextTokens >= 600) {
     score += 1;
   }
-  if (input.signals.toolCount >= 2) {
+  if (input.signals.toolCount >= 5) {
     score += 3;
+  } else if (input.signals.toolCount >= 2) {
+    score += 2;
   } else if (input.signals.toolCount === 1) {
     score += 1;
   }
-  if (input.signals.historyTurnCount >= 4) {
+  if (input.signals.historyTurnCount >= 16) {
+    score += 3;
+  } else if (input.signals.historyTurnCount >= 6) {
     score += 2;
   } else if (input.signals.historyTurnCount >= 2) {
     score += 1;
