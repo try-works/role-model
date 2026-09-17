@@ -42,6 +42,7 @@ import {
 } from "./supervised-replay-evaluation-resume.js";
 import {
   buildAutoReplayIdempotencyKey,
+  isReplayJobLeasedFailure,
   resolveAutoReplayDeadlineMs,
   resolveAutoReplayTickBudgetMs,
   retryLeasedReplayDispatch,
@@ -4001,21 +4002,43 @@ export async function main(): Promise<void> {
           // depends on is working. Wait the hold out inside the capture's own deadline and take the
           // terminal receipt instead of deferring (and eventually refusing) paid work.
           let lastReplayDispatchStatus: number | null = null;
+          // Run 98 addendum 34 S5 residual: a thrown fetch is a transport failure, not a refusal. Its real
+          // cause (undici wraps it) travels into the disposition, and the attempt is retryable inside the
+          // capture's own deadline like a lease hold — the durable job is still there to be driven.
+          let lastReplayDispatchDetail: string | null = null;
           const leasedDispatch = await retryLeasedReplayDispatch({
             deadlineAtMs: Date.now() + replayDeadlineMs,
+            retryable: (failure) =>
+              failure.status === 0 || isReplayJobLeasedFailure(failure.status, failure.body),
             dispatch: async () => {
-              const attempt = await fetch(
-                `http://127.0.0.1:${port}/api/role-model/track-b/replay`,
-                {
-                  method: "POST",
-                  headers: { "content-type": "application/json" },
-                  body: replayRequestBody,
-                },
-              );
-              if (attempt.ok) return { ok: true as const, value: await attempt.json() };
-              const body = await attempt.text().catch(() => "");
-              lastReplayDispatchStatus = attempt.status;
-              return { ok: false as const, status: attempt.status, body };
+              try {
+                const attempt = await fetch(
+                  `http://127.0.0.1:${port}/api/role-model/track-b/replay`,
+                  {
+                    method: "POST",
+                    headers: { "content-type": "application/json" },
+                    body: replayRequestBody,
+                  },
+                );
+                if (attempt.ok) return { ok: true as const, value: await attempt.json() };
+                const body = await attempt.text().catch(() => "");
+                lastReplayDispatchStatus = attempt.status;
+                lastReplayDispatchDetail = body.slice(0, 200);
+                return { ok: false as const, status: attempt.status, body };
+              } catch (error) {
+                const cause = (error as { cause?: { code?: unknown; message?: unknown } })?.cause;
+                const code =
+                  typeof cause?.code === "string" && cause.code
+                    ? cause.code
+                    : typeof cause?.message === "string" && cause.message
+                      ? cause.message.slice(0, 120)
+                      : error instanceof Error
+                        ? error.message
+                        : "unknown transport failure";
+                lastReplayDispatchStatus = 0;
+                lastReplayDispatchDetail = String(code).slice(0, 200);
+                return { ok: false as const, status: 0, body: lastReplayDispatchDetail };
+              }
             },
           });
           if (!leasedDispatch.value) {
@@ -4023,7 +4046,7 @@ export async function main(): Promise<void> {
               terminal: false,
               branches: [],
               failureDetail: `replay endpoint HTTP ${lastReplayDispatchStatus ?? 409}: ${String(
-                leasedDispatch.lastFailure ?? "",
+                leasedDispatch.lastFailure ?? lastReplayDispatchDetail ?? "",
               ).slice(0, 200)}`,
             };
           }

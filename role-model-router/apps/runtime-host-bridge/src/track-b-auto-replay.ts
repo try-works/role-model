@@ -69,6 +69,13 @@ export async function retryLeasedReplayDispatch<TValue>(input: {
   readonly deadlineAtMs: number;
   readonly now?: () => number;
   readonly sleep?: (ms: number) => Promise<void>;
+  /**
+   * Run 98 addendum 34 S5 residual: which failed attempts are worth waiting out. Defaults to the lease
+   * hold this helper was written for; a caller whose dispatch can also fail at the transport layer passes a
+   * predicate that accepts those too, so a transient socket abort does not terminalize a capture that still
+   * has a durable job to drive.
+   */
+  readonly retryable?: (failure: { readonly status: number; readonly body: string }) => boolean;
 }): Promise<{ readonly value: TValue | null; readonly attempts: number; readonly lastFailure: string | null }> {
   const now = input.now ?? (() => Date.now());
   const sleep = input.sleep ?? ((ms: number) => new Promise(resolve => setTimeout(resolve, ms)));
@@ -79,7 +86,10 @@ export async function retryLeasedReplayDispatch<TValue>(input: {
     const attempt = await input.dispatch();
     if (attempt.ok) return { value: attempt.value, attempts, lastFailure };
     lastFailure = attempt.body;
-    if (!isReplayJobLeasedFailure(attempt.status, attempt.body)) {
+    const retryable = input.retryable
+      ? input.retryable({ status: attempt.status, body: attempt.body })
+      : isReplayJobLeasedFailure(attempt.status, attempt.body);
+    if (!retryable) {
       return { value: null, attempts, lastFailure };
     }
     const delay = REPLAY_LEASE_RETRY_DELAYS_MS[

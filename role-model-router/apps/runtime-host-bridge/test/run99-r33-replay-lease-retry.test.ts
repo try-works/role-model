@@ -29,6 +29,54 @@ describe("run99 R33 replay lease retry", () => {
     expect(isReplayJobLeasedFailure(500, "already leased")).toBe(false);
   });
 
+  /**
+   * Run 98 addendum 34 S5 residual (live 2026-09-18): the Learning UI showed every replay deferred, with
+   * `fetch failed` as the dominant detail — the auto-replay producer's own POST to the runtime's replay
+   * endpoint threw at the transport layer (undici wraps the real cause in `error.cause`), and a *transport*
+   * failure was treated as terminal for the capture even though the durable job was still there to be
+   * driven. A transient socket abort is exactly the kind of thing the capture's own deadline should absorb,
+   * like the lease hold next to it, and the disposition must name the cause instead of the wrapper.
+   */
+  it("retries a transport failure inside the deadline and names it", async () => {
+    const slept: number[] = [];
+    let attempts = 0;
+    const result = await retryLeasedReplayDispatch({
+      dispatch: async () => {
+        attempts += 1;
+        if (attempts < 3) {
+          return { ok: false, status: 0, body: "UND_ERR_HEADERS_TIMEOUT: headers timeout" };
+        }
+        return { ok: true, value: { state: "complete" } };
+      },
+      deadlineAtMs: 10_000,
+      now: () => 0,
+      sleep: async (ms) => {
+        slept.push(ms);
+      },
+      retryable: (failure) => failure.status === 0 || isReplayJobLeasedFailure(failure.status, failure.body),
+    });
+
+    expect(result.value).toEqual({ state: "complete" });
+    expect(result.attempts).toBe(3);
+    expect(slept).toHaveLength(2);
+  });
+
+  it("does not retry a transport failure when the caller does not ask it to", async () => {
+    let attempts = 0;
+    const result = await retryLeasedReplayDispatch({
+      dispatch: async () => {
+        attempts += 1;
+        return { ok: false, status: 0, body: "ECONNRESET" };
+      },
+      deadlineAtMs: 10_000,
+      now: () => 0,
+      sleep: async () => {},
+    });
+    expect(result.value).toBeNull();
+    expect(result.attempts).toBe(1);
+    expect(result.lastFailure).toBe("ECONNRESET");
+  });
+
   it("waits out a hold and returns the terminal receipt", async () => {
     const slept: number[] = [];
     let attempts = 0;
