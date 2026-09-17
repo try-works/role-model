@@ -25999,6 +25999,32 @@ export async function createRuntimeBridgeBackend(
           baseBundle as unknown as Readonly<Record<string, unknown>>,
         ),
         correlationId,
+        /**
+         * Run 98 addendum 32 S3/S5 (live finding, stage v207): the difficulty bucket the alias gate
+         * reads was never persisted for real requests — `runtime_telemetry_records.difficulty_bucket`
+         * was NULL on all 4055 rows and only benchmark samples carried one, so the de-saturated rubric
+         * could not be observed live and the request detail surface showed no bucket. The plan's
+         * routing diagnostics travel with the observation now; `toRuntimeTelemetryRecord` derives the
+         * bucket, the effective mode and the strategy from exactly these fields.
+         */
+        ...(plan.routingDiagnostics
+          ? {
+              routingDiagnostics: {
+                ...(plan.routingDiagnostics.difficultyRouting
+                  ? { difficultyRouting: plan.routingDiagnostics.difficultyRouting }
+                  : {}),
+                ...(plan.routingDiagnostics.routingMode
+                  ? { routingMode: plan.routingDiagnostics.routingMode }
+                  : {}),
+                ...(plan.routingDiagnostics.controllerRouting
+                  ? { controllerRouting: plan.routingDiagnostics.controllerRouting }
+                  : {}),
+                ...(plan.routingDiagnostics.hybridArbitration
+                  ? { hybridArbitration: plan.routingDiagnostics.hybridArbitration }
+                  : {}),
+              },
+            }
+          : {}),
         // Run 99 R33 (addendum 19 S33): the capture records the task family the request was
         // routed for, so replay, evaluation, learning and the advisory can all be scoped to it.
         ...(plan.routingRequest.taskType ? { taskTypeId: plan.routingRequest.taskType } : {}),
