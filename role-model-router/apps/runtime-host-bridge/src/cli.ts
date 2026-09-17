@@ -62,6 +62,7 @@ import {
   extractTaskInstructionText,
 } from "./track-b-replay-evaluation-criteria.js";
 import { createReplayLedger, resolveReplayLedgerLimits } from "./track-b-replay-ledger.js";
+import { createJudgeConsistencyLedger } from "./track-b-judge-consistency.js";
 import {
   buildReplayPolicySet,
   decideReplayAdmission,
@@ -4764,6 +4765,20 @@ export async function main(): Promise<void> {
           scopeId: options.scopeId,
         }),
       });
+      /**
+       * Run 98 addendum 33 S2: the durable per-judge position-consistency ledger. The pairwise dispatch
+       * already measures a flip per pair (dual_order) and reports it through `recordJudgeObservation`;
+       * this is where those observations become an aggregate a reader can act on.
+       */
+      const judgeConsistencyLedger = createJudgeConsistencyLedger({
+        filePath: path.join(
+          resolveLearningPolicyStateRoot({
+            runtimeStateRoot: options.runtimeStateRoot,
+            scopeId: options.scopeId,
+          }),
+          "judge-position-consistency.json",
+        ),
+      });
       const readEvaluationLearningPolicySnapshot = () =>
         readLearningPolicyFile({
           repoRoot: options.repoRoot,
@@ -4864,6 +4879,32 @@ export async function main(): Promise<void> {
                 : process.env.ROLE_MODEL_JUDGE_MEASURE_AGREEMENT?.trim() === "false"
                   ? false
                   : (input.learningPolicySnapshot?.effective.judgeMeasureAgreement ?? false),
+            // Run 98 addendum 33 S2: every dispatch that measured an order effect is recorded per judge, so
+            // position consistency is an aggregate measurement rather than a per-pair footnote. The primary
+            // completion counts the check; a disagreement counts the check and the flip it produced.
+            recordJudgeObservation: (row) => {
+              const outcome = String((row as { outcome?: unknown }).outcome ?? "");
+              const presentation = (row as { presentation?: { first?: unknown } }).presentation;
+              try {
+                judgeConsistencyLedger.record({
+                  judgeEndpointId:
+                    resolveEvalJudgeEndpointId({
+                      policyValue: input.learningPolicySnapshot?.effective.judgeEndpointId,
+                      envValue: process.env.ROLE_MODEL_EVAL_JUDGE_ENDPOINT,
+                    }) ?? "",
+                  judgeMode:
+                    typeof (row as { judgeMode?: unknown }).judgeMode === "string"
+                      ? String((row as { judgeMode: string }).judgeMode)
+                      : null,
+                  orderCheck: outcome === "order_disagreement" || presentation?.first === "source",
+                  orderDisagreement: outcome === "order_disagreement",
+                  modeCheck: typeof (row as { agreement?: unknown }).agreement === "boolean",
+                  modeAgreement: (row as { agreement?: boolean }).agreement === true,
+                });
+              } catch {
+                // Consistency accounting is best-effort telemetry: a full disk must not fail a battle.
+              }
+            },
             recordDerivedDispatch: (dispatch) => {
               try {
                 // The supervised replay already reserved this counterfactual at its first candidate

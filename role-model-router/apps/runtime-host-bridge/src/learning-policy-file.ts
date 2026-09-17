@@ -58,6 +58,8 @@ export interface LearningPolicySnapshot {
     readonly judgeOrderPolicy: "source_first" | "dual_order";
     /** Run 98 addendum 33 S2: how a position-order flip is scored. */
     readonly judgeOrderAggregation: "balanced" | "strict_consistency" | "fails_closed";
+    /** Run 98 addendum 33 S2: the position-consistency floor a judge must clear. */
+    readonly judgePositionConsistencyFloor: number;
     readonly judgeMeasureAgreement: boolean;
     /**
      * Run 98 addendum 30 S1 (`guidance/11` `judgePolicy`): the **designated** judge endpoint. Empty
@@ -107,6 +109,7 @@ const DEFAULT_EFFECTIVE: LearningPolicySnapshot["effective"] = Object.freeze({
   judgeMode: "identified",
   judgeOrderPolicy: "source_first",
   judgeOrderAggregation: "balanced",
+  judgePositionConsistencyFloor: 0.5,
   judgeMeasureAgreement: false,
   judgeEndpointId: "",
   minimumPracticalDelta: 0.05,
@@ -300,6 +303,14 @@ export function readLearningPolicyFile(input: {
       merged.judgeOrderAggregation === "fails_closed"
         ? merged.judgeOrderAggregation
         : "balanced",
+    // Run 98 addendum 33 S2: the floor is a probability in [0,1]; a malformed value falls back to the
+    // shipped default rather than silently disabling the check.
+    judgePositionConsistencyFloor: (() => {
+      const value = Number(merged.judgePositionConsistencyFloor);
+      return Number.isFinite(value) && value >= 0 && value <= 1
+        ? value
+        : DEFAULT_EFFECTIVE.judgePositionConsistencyFloor;
+    })(),
     judgeMeasureAgreement: merged.judgeMeasureAgreement === true,
     // Run 98 addendum 30 S1: a designated judge endpoint is a bounded, schema-validated identity; a
     // malformed or absent value resolves to the empty string, which means "no judge" rather than
