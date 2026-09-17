@@ -30,6 +30,25 @@ import { pathToFileURL } from "node:url";
 import { gunzipSync, gzipSync } from "node:zlib";
 
 /**
+ * Run 98 addendum 34 S1: how many counterfactual arms one capture dispatches.
+ *
+ * The observation-driven replay-intent path builds its arm list from
+ * `input.configuredCandidateEndpointIds` and caps it at `DEFAULT_REPLAY_CANDIDATE_CAP` (3). The operator's
+ * run-97 `d2` decision allows up to three models per counterfactual, and addendum 34 S1 makes the arm list
+ * the input to coverage-driven pair planning — so the bound is a policy value rather than a constant, and
+ * `0`/unparseable falls back to the default instead of disabling replay.
+ */
+export function resolveMaxCounterfactualArms(
+  environment: Readonly<Record<string, string | undefined>> = process.env,
+): number {
+  const raw = environment.ROLE_MODEL_MAX_COUNTERFACTUAL_ARMS?.trim();
+  if (!raw) return DEFAULT_REPLAY_CANDIDATE_CAP;
+  const parsed = Number(raw);
+  if (!Number.isSafeInteger(parsed) || parsed < 1 || parsed > 6) return DEFAULT_REPLAY_CANDIDATE_CAP;
+  return parsed;
+}
+
+/**
  * Run 98 addendum 04 (live finding, stage v180, 2026-09-16).
  *
  * This process builds its own extension host for the replay/evaluation path and never passed
@@ -10110,7 +10129,9 @@ export async function runTrackBPostObservation(
     ),
   ]
     .sort()
-    .slice(0, DEFAULT_REPLAY_CANDIDATE_CAP);
+    // Run 98 addendum 34 S1: the arm list is the input to coverage-driven pair planning, so its bound is
+    // the policy value (default = the release cap) instead of a bare constant.
+    .slice(0, resolveMaxCounterfactualArms());
   const pipeline =
     routingShadowEvidence && routingShadowCases.length > 0
       ? await runTrackBShadowPipeline(observedRuntime, {

@@ -9,6 +9,17 @@ import {
   planPairComparisons,
 } from "../src/track-b-pair-coverage.js";
 import { resolveMaxExtraPairComparisons } from "../src/cli.js";
+import { resolveMaxCounterfactualArms } from "../src/track-b-runtime.js";
+
+test("run98 A34 S1 the arm bound is policy-driven and bounded", () => {
+  // Default is the released cap; the operator can widen it up to six arms, and nonsense falls back.
+  expect(resolveMaxCounterfactualArms({})).toBe(3);
+  expect(resolveMaxCounterfactualArms({ ROLE_MODEL_MAX_COUNTERFACTUAL_ARMS: "2" })).toBe(2);
+  expect(resolveMaxCounterfactualArms({ ROLE_MODEL_MAX_COUNTERFACTUAL_ARMS: "6" })).toBe(6);
+  expect(resolveMaxCounterfactualArms({ ROLE_MODEL_MAX_COUNTERFACTUAL_ARMS: "0" })).toBe(3);
+  expect(resolveMaxCounterfactualArms({ ROLE_MODEL_MAX_COUNTERFACTUAL_ARMS: "9" })).toBe(3);
+  expect(resolveMaxCounterfactualArms({ ROLE_MODEL_MAX_COUNTERFACTUAL_ARMS: "many" })).toBe(3);
+});
 
 test("run98 A34 S1 the extra-pair bound defaults to three and refuses nonsense", () => {
   expect(resolveMaxExtraPairComparisons({})).toBe(3);
