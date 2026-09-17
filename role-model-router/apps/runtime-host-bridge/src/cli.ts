@@ -76,6 +76,12 @@ import {
   resolveReplayToolPolicy,
   selectReplayCandidates,
 } from "./track-b-replay-policy.js";
+// Run 98 addendum 34 S1: coverage-driven pair planning for the comparison graph.
+import {
+  createPairCoverageLedger,
+  pairKey,
+  planPairComparisons,
+} from "./track-b-pair-coverage.js";
 import {
   readLearningPolicyFile,
   resolveLearningPolicyStateRoot,
@@ -1476,6 +1482,21 @@ export function parseAnonymousLearningReadsFlag(
   throw new Error(
     `--anonymous-learning-reads must be on or off (received ${JSON.stringify(value)})`,
   );
+}
+
+/**
+ * Run 98 addendum 34 S1: how many *extra* comparisons one capture may add beside its primary pair.
+ * Default 3 covers a three-arm capture (two extra source pairs plus the arm-vs-arm pair) and stays
+ * bounded when the operator configures more arms. `0` disables extra pairs.
+ */
+export function resolveMaxExtraPairComparisons(
+  environment: Readonly<Record<string, string | undefined>> = process.env,
+): number {
+  const raw = environment.ROLE_MODEL_MAX_EXTRA_PAIR_COMPARISONS?.trim();
+  if (!raw) return 3;
+  const parsed = Number(raw);
+  if (!Number.isSafeInteger(parsed) || parsed < 0 || parsed > 12) return 3;
+  return parsed;
 }
 
 export function createRuntimeOperatorCallbacks(
@@ -4703,6 +4724,114 @@ export async function main(): Promise<void> {
                 } catch (error) {
                   console.error(
                     `[run99] evaluation resume resolution declined:${requestId} ${String(
+                      (error as { message?: unknown })?.message ?? error,
+                    ).slice(0, 200)}`,
+                  );
+                }
+                /**
+                 * Run 98 addendum 34 S1 (live v211: 501 groups, every one of them two arms, 13 of 21
+                 * candidate pairs with no direct comparison — and every missing pair excludes the served
+                 * model, so rotating the counterfactual cannot close any of them).
+                 *
+                 * The primary comparison above covers (served source, first arm). This adds the pairs the
+                 * graph is missing, least-covered first: every arm the capture already paid for can be
+                 * compared against the served source *and against the other arms*, because both sides are
+                 * durable captures. Each extra pair is one more evaluation (scoring and judging only — no
+                 * extra model dispatch), bounded per capture and recorded in a coverage ledger so the
+                 * planner stops re-spending on pairs that already have evidence.
+                 */
+                try {
+                  const resumePath = resolveSupervisedReplayEvaluationResumePath({
+                    runtimeStateRoot: options.runtimeStateRoot,
+                    scopeId: options.scopeId,
+                  });
+                  const ledger = createPairCoverageLedger({
+                    filePath: path.join(path.dirname(resumePath), "pair-coverage-ledger.json"),
+                  });
+                  const primaryArm = counterfactualPackages[0]?.endpointId ?? "";
+                  if (primaryArm) ledger.record(sourceEndpointId, primaryArm);
+
+                  const armedCaptures: Array<{
+                    candidate: { endpointId: string; modelId: string; reasoningEffort: string | null };
+                    capture: Record<string, unknown>;
+                    output: string;
+                  }> = [];
+                  for (const candidate of counterfactualPackages) {
+                    const dispatch = dispatched.get(candidate.endpointId);
+                    if (!dispatch?.replayRequestId) continue;
+                    const branchCapture = (await operations.readLocalRouteCapture({
+                      requestId: `${dispatch.replayRequestId}-branch`,
+                    })) as Record<string, unknown> | null;
+                    if (!branchCapture || typeof branchCapture !== "object") continue;
+                    const output = extractSourceOutputText(branchCapture);
+                    if (!output) continue;
+                    armedCaptures.push({ candidate, capture: branchCapture, output });
+                  }
+                  const maxPairs = resolveMaxExtraPairComparisons(process.env);
+                  if (armedCaptures.length >= 2 && maxPairs > 0) {
+                    const planned = planPairComparisons({
+                      source: {
+                        candidate: {
+                          endpointId: sourceEndpointId,
+                          modelId: sourceModelId,
+                          reasoningEffort: null,
+                        },
+                        capture: sourceCapture as Record<string, unknown>,
+                        output: sourceOutput,
+                      },
+                      arms: armedCaptures,
+                      endpointIdOf: (arm) => arm.candidate.endpointId,
+                      coverage: ledger.snapshot(),
+                      maxPairs,
+                      excludePairs: primaryArm ? [pairKey(sourceEndpointId, primaryArm)] : [],
+                    });
+                    for (const [index, pair] of planned.entries()) {
+                      const pairCompleter = buildSupervisedReplayEvaluationCompleter({
+                        backend: created,
+                        runtime,
+                        operations,
+                        requestId: `${requestId}:pair${index + 1}`,
+                        channel,
+                        captureScope,
+                        sourceCapture: pair.left.capture,
+                        sourceOutput: pair.left.output,
+                        sourceEndpointId: pair.left.candidate.endpointId,
+                        sourceModelId: pair.left.candidate.modelId,
+                        counterfactualPackages: [pair.right.candidate],
+                        evaluationCriteria: evaluationCriteria as unknown as Readonly<
+                          Record<string, unknown>
+                        >,
+                        evaluationCriteriaDigest,
+                        learningPolicySnapshot,
+                        replayLedger,
+                        replayPolicySet,
+                        getDispatched: (endpointId: string) => {
+                          const dispatch = dispatched.get(endpointId);
+                          return dispatch
+                            ? {
+                                execution: dispatch.execution as unknown as Readonly<
+                                  Record<string, unknown>
+                                >,
+                                replayRequestId: dispatch.replayRequestId,
+                              }
+                            : undefined;
+                        },
+                        currentLedgerReservationId: () => ledgerReservationId,
+                      });
+                      await pairCompleter({
+                        replayJobId: `${replayJobId}:pair${index + 1}`,
+                        evaluationJobId: `${evaluationJobId}:pair${index + 1}`,
+                        replayJob: null,
+                        resultBranches: [],
+                      });
+                      ledger.record(pair.left.candidate.endpointId, pair.right.candidate.endpointId);
+                    }
+                  }
+                } catch (error) {
+                  // An extra comparison is additional evidence, never the capture's decisive outcome: a
+                  // failure here must not turn a completed replay into a failed one.
+                  console.error(
+                    `[run98] extra pair comparison declined:${requestId} ${String(
                       (error as { message?: unknown })?.message ?? error,
                     ).slice(0, 200)}`,
                   );
