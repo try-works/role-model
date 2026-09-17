@@ -1543,6 +1543,110 @@ export function readLegacyMigrationJournal(databasePath: string): LegacyMigratio
  * Rich content (messages, response bodies, tool payloads, captures, cumulative
  * history/recentSamples) is NEVER included: it is graph-external by contract.
  */
+/**
+ * Run 98 addendum 35: the diagnostics sub-trees the decision evidence needs, in the order they are
+ * worth spending the stub's byte budget on. The first group *is* the decision (which difficulty
+ * band, which effective mode, which strategy, which role, what the endpoint's live profile and
+ * metrics were, whether throughput was penalised); the second group is optional detail that may be
+ * dropped when the tree is oversized.
+ */
+const ROUTING_DIAGNOSTIC_REQUIRED_KEYS = [
+  "difficultyRouting",
+  "routingMode",
+  "hybridArbitration",
+  "controllerRouting",
+  "rolePolicy",
+  "observedProfile",
+  "effectiveMetrics",
+  "throughputPenalty",
+] as const;
+const ROUTING_DIAGNOSTIC_OPTIONAL_KEYS = [
+  "selection",
+  "aliasResolution",
+  "rewrite",
+  "cacheContinuity",
+  "routingCacheAffinity",
+  "roleModelIntent",
+  "catalogEconomics",
+] as const;
+const ROUTING_DIAGNOSTIC_BUDGET_BYTES = 8 * 1024;
+
+/**
+ * Copy a diagnostics value without ever carrying rich content: scalars, small records, bounded
+ * arrays of scalars, bounded strings, bounded depth. Anything else is dropped rather than truncated
+ * mid-value, so the projection can never smuggle a prompt, a response body or a tool payload into
+ * the inline row.
+ */
+function projectBoundedDiagnosticValue(value: unknown, depth = 0): unknown {
+  if (value === null || typeof value === "number" || typeof value === "boolean") return value;
+  if (typeof value === "string") return value.length > 512 ? `${value.slice(0, 512)}…` : value;
+  if (Array.isArray(value)) {
+    if (depth >= 3) return undefined;
+    const entries = value
+      .slice(0, 32)
+      .map((entry) => projectBoundedDiagnosticValue(entry, depth + 1))
+      .filter((entry) => entry !== undefined);
+    return entries.length > 0 ? entries : undefined;
+  }
+  if (value && typeof value === "object") {
+    if (depth >= 3) return undefined;
+    const record = value as Record<string, unknown>;
+    const projected: Record<string, unknown> = {};
+    for (const key of Object.keys(record).slice(0, 64)) {
+      const entry = projectBoundedDiagnosticValue(record[key], depth + 1);
+      if (entry !== undefined) projected[key] = entry;
+    }
+    return Object.keys(projected).length > 0 ? projected : undefined;
+  }
+  return undefined;
+}
+
+function projectBoundedRoutingDiagnostics(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const source = value as Record<string, unknown>;
+  const projected: Record<string, unknown> = {};
+  for (const key of ROUTING_DIAGNOSTIC_REQUIRED_KEYS) {
+    const entry = projectBoundedDiagnosticValue(source[key]);
+    if (entry !== undefined) projected[key] = entry;
+  }
+  for (const key of ROUTING_DIAGNOSTIC_OPTIONAL_KEYS) {
+    const entry = projectBoundedDiagnosticValue(source[key]);
+    if (entry !== undefined) projected[key] = entry;
+  }
+  // Bound the projection inside the stub's own 16 KiB cap: drop optional detail first, then the
+  // optional-everything case, so the decision evidence is what survives an oversized tree.
+  if (Buffer.byteLength(JSON.stringify(projected), "utf8") > ROUTING_DIAGNOSTIC_BUDGET_BYTES) {
+    for (const key of ROUTING_DIAGNOSTIC_OPTIONAL_KEYS) delete projected[key];
+  }
+  for (const key of ["selection", "roleModelIntent", "catalogEconomics"] as const) {
+    if (Buffer.byteLength(JSON.stringify(projected), "utf8") <= ROUTING_DIAGNOSTIC_BUDGET_BYTES) {
+      break;
+    }
+    delete projected[key];
+  }
+  if (Buffer.byteLength(JSON.stringify(projected), "utf8") > ROUTING_DIAGNOSTIC_BUDGET_BYTES) {
+    // Still oversized: keep the scalar decision fields only.
+    for (const key of ["observedProfile", "effectiveMetrics", "throughputPenalty"] as const) {
+      const entry = projected[key];
+      if (entry && typeof entry === "object" && !Array.isArray(entry)) {
+        const shrunk: Record<string, unknown> = {};
+        for (const [field, fieldValue] of Object.entries(entry as Record<string, unknown>)) {
+          if (
+            fieldValue === null ||
+            typeof fieldValue === "number" ||
+            typeof fieldValue === "boolean" ||
+            (typeof fieldValue === "string" && fieldValue.length <= 512)
+          ) {
+            shrunk[field] = fieldValue;
+          }
+        }
+        projected[key] = shrunk;
+      }
+    }
+  }
+  return projected;
+}
+
 export function buildCompactRuntimeObservationStub(
   observation: Readonly<Record<string, unknown>>,
 ): Record<string, unknown> {
@@ -1693,6 +1797,22 @@ export function buildCompactRuntimeObservationStub(
     "structuredInspectionAvailable",
   ]);
   if (Object.keys(capturePolicy).length) stub.capturePolicy = capturePolicy;
+  /**
+   * Run 98 addendum 35 (live stage finding, 2026-09-18): the stub dropped `routingDiagnostics` with
+   * the rich content, so every real request read back as having no routing diagnostics at all. Live
+   * telemetry wrote `difficulty_bucket = NULL`, `routing_mode = NULL` and `selected_strategy = NULL`
+   * for traffic whose decision had all three, and ten runtime-host-bridge acceptance tests failed on
+   * the same readback (the observed profile, the effective metric summary and the throughput penalty
+   * are what make a routing decision auditable, and the replay comparability, the telemetry
+   * projection and the Learning readbacks all consume them).
+   *
+   * Routing diagnostics are routing *evidence*, not rich content, so a bounded projection survives:
+   * scalars and small records only, bounded depth, bounded arrays, bounded strings, and a byte budget
+   * that drops the optional detail before the decision evidence. Messages, responses, tool payloads
+   * and capture bodies remain graph-external exactly as before.
+   */
+  const routingDiagnostics = projectBoundedRoutingDiagnostics(observation.routingDiagnostics);
+  if (Object.keys(routingDiagnostics).length) stub.routingDiagnostics = routingDiagnostics;
   const privacyReceipt = pickRecord(observation.privacyReceipt, [
     "samplingRate",
     "retentionTtlHours",

@@ -26010,6 +26010,18 @@ export async function createRuntimeBridgeBackend(
         ...(plan.routingDiagnostics
           ? {
               routingDiagnostics: {
+                // Run 98 addendum 35 (live stage finding, 2026-09-18): this branch used to *replace*
+                // the bundle's diagnostics with these four difficulty keys, so any request whose plan
+                // carried only some of them persisted `routingDiagnostics: {}` — the per-request
+                // observed profile, the effective metric summary, the throughput penalty, the role
+                // policy and the alias/selection detail all vanished, ten runtime-host-bridge
+                // acceptance tests failed on the readback, and the live difficulty bucket stayed
+                // unobservable for exactly the traffic this block was added to make observable. The
+                // plan's difficulty evidence layers on top of the bundle's diagnostics; it never
+                // replaces them.
+                ...((baseBundle as unknown as Record<string, unknown>).routingDiagnostics as
+                  | Record<string, unknown>
+                  | undefined) ?? {},
                 ...(plan.routingDiagnostics.difficultyRouting
                   ? { difficultyRouting: plan.routingDiagnostics.difficultyRouting }
                   : {}),
