@@ -5401,6 +5401,37 @@ export async function main(): Promise<void> {
               value,
             }),
           );
+        /**
+         * A supervised invoke answers with the extension's business output, which may arrive wrapped
+         * (`{result}`, `{businessOutput}` or `{businessOutput:{result}}`) or, for a list capability, as
+         * the list itself. Unwrap defensively instead of assuming one shape.
+         */
+        const unwrap = (value: unknown): unknown => {
+          let current = value;
+          for (let depth = 0; depth < 3; depth += 1) {
+            const record =
+              current && typeof current === "object" && !Array.isArray(current)
+                ? (current as Record<string, unknown>)
+                : null;
+            if (!record) return current;
+            if (Array.isArray(record.result)) return record.result;
+            if (Array.isArray(record.businessOutput)) return record.businessOutput;
+            if (record.businessOutput && typeof record.businessOutput === "object") {
+              current = record.businessOutput;
+              continue;
+            }
+            if (record.result !== undefined) {
+              current = record.result;
+              continue;
+            }
+            return record;
+          }
+          return current;
+        };
+        const invokeList = async (capability: string, value: unknown) => {
+          const unwrapped = unwrap(await invokeEvaluation(capability, value));
+          return Array.isArray(unwrapped) ? (unwrapped as Array<Record<string, unknown>>) : [];
+        };
         const text = (value: unknown) =>
           typeof value === "string" && value.trim() ? value.trim() : "";
         const scorerId = text(body.scorerId) || "run96-semantic-criteria";
@@ -5409,16 +5440,22 @@ export async function main(): Promise<void> {
         const limit = Number.isSafeInteger(requestedLimit)
           ? Math.min(Math.max(requestedLimit, 1), 12)
           : 6;
-        const definitions = (await invokeEvaluation("evaluation:list-scorers", {})) as Array<
-          Record<string, unknown>
-        >;
+        const rawDefinitions = await invokeEvaluation("evaluation:list-scorers", {});
+        const definitions = await invokeList("evaluation:list-scorers", {});
         const versions = definitions
           .filter((definition) => definition?.id === scorerId)
           .map((definition) => text(definition.version))
           .filter(Boolean)
           .sort((left, right) => Number(left) - Number(right) || left.localeCompare(right));
         const scorerVersion = text(body.scorerVersion) || versions[versions.length - 1] || "";
-        if (!scorerVersion) throw new Error(`no registered scorer version for ${scorerId}`);
+        if (!scorerVersion) {
+          // A shape regression here would otherwise show up as a silent empty result; name it.
+          throw new Error(
+            `no registered scorer version for ${scorerId} (definitions: ${JSON.stringify(
+              rawDefinitions,
+            ).slice(0, 200)})`,
+          );
+        }
         const resumeStore = createSupervisedReplayEvaluationResumeStore({
           filePath: resolveSupervisedReplayEvaluationResumePath({
             runtimeStateRoot: options.runtimeStateRoot,
@@ -5436,9 +5473,13 @@ export async function main(): Promise<void> {
         const skipped: string[] = [];
         for (const entry of entries) {
           try {
-            const job = (await invokeEvaluation("evaluation:get-job", {
-              jobId: entry.evaluationJobId,
-            })) as Record<string, unknown> | null;
+            const jobResult = unwrap(
+              await invokeEvaluation("evaluation:get-job", { jobId: entry.evaluationJobId }),
+            );
+            const job =
+              jobResult && typeof jobResult === "object" && !Array.isArray(jobResult)
+                ? (jobResult as Record<string, unknown>)
+                : null;
             if (!job || String(job.status ?? "") !== "completed") {
               skipped.push(`${entry.evaluationJobId}:not_completed`);
               continue;
@@ -5451,9 +5492,9 @@ export async function main(): Promise<void> {
               skipped.push(`${entry.evaluationJobId}:no_criteria`);
               continue;
             }
-            const trials = (await invokeEvaluation("evaluation:list-trials", {
+            const trials = await invokeList("evaluation:list-trials", {
               jobId: entry.evaluationJobId,
-            })) as Array<Record<string, unknown>>;
+            });
             const sourceCapture = (await entryOperations?.readLocalRouteCapture({
               requestId: entry.sourceCaptureRequestId,
             })) as Record<string, unknown> | null | undefined;
@@ -5485,12 +5526,18 @@ export async function main(): Promise<void> {
               skipped.push(`${entry.evaluationJobId}:no_scored_text`);
               continue;
             }
-            const result = (await invokeEvaluation("evaluation:rescore-trial-scores", {
-              groups: candidates.slice(0, 25),
-              scorerId,
-              scorerVersion,
-              dimension,
-            })) as Record<string, unknown> | null;
+            const rescoreResult = unwrap(
+              await invokeEvaluation("evaluation:rescore-trial-scores", {
+                groups: candidates.slice(0, 25),
+                scorerId,
+                scorerVersion,
+                dimension,
+              }),
+            );
+            const result =
+              rescoreResult && typeof rescoreResult === "object" && !Array.isArray(rescoreResult)
+                ? (rescoreResult as Record<string, unknown>)
+                : null;
             const revisions = Array.isArray(result?.revisions)
               ? (result.revisions as Array<Record<string, unknown>>)
               : [];
