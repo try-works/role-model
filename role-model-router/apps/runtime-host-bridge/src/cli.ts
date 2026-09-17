@@ -4741,6 +4741,12 @@ export async function main(): Promise<void> {
                  * planner stops re-spending on pairs that already have evidence.
                  */
                 try {
+                  // Run 98 addendum 34 S1 instrumentation: two consecutive builds produced neither the
+                  // coverage ledger nor a decline line, so the next observation has to say whether this
+                  // block is reached at all (and with how many arms).
+                  console.error(
+                    `[run98] pair pass enter:${requestId} arms=${counterfactualPackages.length} job=${replayJobId}`,
+                  );
                   const resumePath = resolveSupervisedReplayEvaluationResumePath({
                     runtimeStateRoot: options.runtimeStateRoot,
                     scopeId: options.scopeId,
