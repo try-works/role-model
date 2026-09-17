@@ -5629,6 +5629,16 @@ export async function main(): Promise<void> {
         const limit = Number.isSafeInteger(requestedLimit)
           ? Math.min(Math.max(requestedLimit, 1), 12)
           : 6;
+        /**
+         * Run 98 addendum 34 S4: the requirement is to re-score the **historical mixed-version set**, not
+         * only the newest captures — the newest entries are already pinned to the current ruler, while the
+         * store still holds 991 trials whose newest base score came from the older version. A bounded
+         * offset walks the historical window instead of making the operator re-score nothing.
+         */
+        const requestedOffset = Number(body.offset ?? 0);
+        const offset = Number.isSafeInteger(requestedOffset)
+          ? Math.min(Math.max(requestedOffset, 0), 4096)
+          : 0;
         const rawDefinitions = await invokeEvaluation("evaluation:list-scorers", {});
         const definitions = await invokeList("evaluation:list-scorers", {});
         const versions = definitions
@@ -5655,7 +5665,7 @@ export async function main(): Promise<void> {
           .list()
           .filter((entry) => typeof entry.outcome === "string" && entry.outcome !== "abandoned")
           .sort((left, right) => (right.resolvedAtMs ?? 0) - (left.resolvedAtMs ?? 0))
-          .slice(0, limit);
+          .slice(offset, offset + limit);
         const entryOperations = currentPostObservationOperations();
         let groups = 0;
         const revisionIds: string[] = [];
@@ -5777,6 +5787,7 @@ export async function main(): Promise<void> {
           scorerId,
           scorerVersion,
           dimension,
+          window: { offset, limit },
           evaluatedEntries: entries.length,
           groups,
           revisions: revisionIds.length,
