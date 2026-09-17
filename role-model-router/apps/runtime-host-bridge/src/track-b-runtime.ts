@@ -7616,6 +7616,14 @@ export function createRun97PairwiseJudgeScorer(input: {
     source: "role_model_pairwise_judge",
     judgeEndpointId: input.judgeEndpointId.trim(),
     judgeMode,
+    /**
+     * Run 98 addendum 34 S6: when this judge manifest has a different endpoint than the one already
+     * registered for the same scorer set, Evaluation Core records the change; this is the reason it
+     * records. The endpoint is resolved from the versioned activation policy (environment override
+     * first), so a switch is a policy decision, and the durable record now says so instead of leaving the
+     * change unexplained.
+     */
+    judgeSwitchReason: "judge_endpoint_resolved_from_runtime_policy",
   };
   const judgeIdentityVersion = `${RUN97_PAIRWISE_JUDGE_DEFINITION_VERSION}+${createHash("sha256")
     .update(JSON.stringify(canonicalExtensionValue(definitionBody)))
