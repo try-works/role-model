@@ -5485,6 +5485,17 @@ export interface TrackBShadowPipelineInput {
     readonly sufficientSample: boolean;
     readonly belowFloor: boolean;
   } | null;
+  /**
+   * Run 98 addendum 34 S5 residual (live v219, real request `req-edc9ee3b`): the endpoint designated to
+   * judge this comparison, as resolved by the caller that owns the policy and the judge factory. It
+   * travels into the durable comparability so Evaluation Core's write-time independence guard checks the
+   * judge that actually judges, instead of falling back to a manifest scan over every historical judge
+   * that shares the scorer-set version. Without it a real capture deferred to refusal with
+   * `judge_candidate_overlap` for a candidate that is not today's judge at all, and no comparison could be
+   * created. The caller has passed this value since addendum 34 S9; the field was never declared here, so
+   * the spread at the call site hid it from the type checker and it was dropped.
+   */
+  readonly judgeEndpointId?: string;
   readonly prefix: readonly unknown[];
   /**
    * Authoritative durable reference for the source prefix the caller observed.
@@ -7812,6 +7823,13 @@ export async function runTrackBShadowPipeline(
     // Run 99 close-out (addendum 21 §4 S33): the judge order policy is part of the comparability key,
     // so a comparison records the presentation order that produced it.
     ...(input.judgeOrderPolicy ? { judgeOrderPolicy: input.judgeOrderPolicy } : {}),
+    // Run 98 addendum 34 S5 residual: the designated judge is part of the comparison's identity, so the
+    // write-time independence guard checks the judge that actually judges. `input.judge.endpointId` is
+    // the factory-resolved judge; the explicit field is the caller's resolution and they agree by
+    // construction (the caller builds the judge from the same policy value).
+    ...((input.judge?.endpointId ?? input.judgeEndpointId)?.trim()
+      ? { judgeEndpointId: String(input.judge?.endpointId ?? input.judgeEndpointId).trim() }
+      : {}),
     toolPolicyDigest: evaluationReferences.toolPolicyDigest,
     environmentDigest: evaluationReferences.environmentDigest,
     sourceEvidenceRef: evaluationReferences.sourceEvidenceRef,

@@ -71,7 +71,7 @@ function capture(mark: string, overrides: Record<string, unknown> = {}) {
   };
 }
 
-function createFakeRuntime(store: Map<string, string>) {
+function createFakeRuntime(store: Map<string, string>, capturedJobs: Record<string, unknown>[] = []) {
   let writeIndex = 0;
   let trialIndex = 0;
   const runtime: TrackBShadowPipelineRuntime = {
@@ -157,7 +157,10 @@ function createFakeRuntime(store: Map<string, string>) {
         return { groupId: value.groupId, status: "finalized", outcome: "candidate" };
       }
       if (id === "evaluation-core" && capability === "evaluation:register-scorer") return {};
-      if (id === "evaluation-core" && capability === "evaluation:create-job") return {};
+      if (id === "evaluation-core" && capability === "evaluation:create-job") {
+        capturedJobs.push(structuredClone(envelope.value as Record<string, unknown>));
+        return {};
+      }
       if (id === "evaluation-core" && capability === "evaluation:submit-trial-result") {
         return { accepted: true };
       }
@@ -209,7 +212,11 @@ interface Arm {
   readonly replayRequestId: string;
 }
 
-function buildScenario(armMarks: readonly string[], ledgerPath?: string) {
+function buildScenario(
+  armMarks: readonly string[],
+  ledgerPath?: string,
+  options: { readonly judgeEndpointId?: string } = {},
+) {
   const sourceCapture = capture("1");
   const arms: Arm[] = armMarks.map((mark) => ({
     endpointId: `endpoint:${mark}`,
@@ -220,10 +227,11 @@ function buildScenario(armMarks: readonly string[], ledgerPath?: string) {
   }));
   const byReplayRequestId = new Map(arms.map((arm) => [`${arm.replayRequestId}-branch`, arm]));
   const store = new Map<string, string>();
+  const capturedJobs: Record<string, unknown>[] = [];
   const pipelineInputs: TrackBShadowPipelineInput[] = [];
   const pipelineCalls: string[] = [];
   const completer = createSupervisedReplayEvaluationCompleter({
-    runtime: createFakeRuntime(store),
+    runtime: createFakeRuntime(store, capturedJobs),
     operations: {
       async readLocalRouteCapture(input) {
         const requestId = String(input?.requestId ?? "");
@@ -260,6 +268,27 @@ function buildScenario(armMarks: readonly string[], ledgerPath?: string) {
       requiredTerms: ["output"],
     },
     evaluationCriteriaDigest: `sha256:${hash("criteria")}`,
+    ...(options.judgeEndpointId
+      ? {
+          judge: {
+            endpointId: options.judgeEndpointId,
+            mode: "identity_blind" as const,
+            orderPolicy: "dual_order" as const,
+            async dispatch(request) {
+              return {
+                winner: "source" as const,
+                confidence: 1,
+                dispatchReceiptId: `judge-dispatch:${request.evaluationJobId}`,
+                routerDecisionId: `judge-decision:${request.evaluationJobId}`,
+                judgeResultRef: `artifact:${artifactId(hash(request.evaluationJobId).slice(0, 16))}`,
+                judgeEndpointId: options.judgeEndpointId as string,
+                judgeMode: "identity_blind" as const,
+                presentation: { first: "source" as const, second: "counterfactual" as const },
+              };
+            },
+          },
+        }
+      : {}),
     ...(ledgerPath ? { pairCoverageLedgerPath: ledgerPath } : {}),
     runPipeline: async (pipelineRuntime, pipelineInput) => {
       pipelineInputs.push(pipelineInput);
@@ -276,7 +305,7 @@ function buildScenario(armMarks: readonly string[], ledgerPath?: string) {
         branchRootRef: arm.capture.rootArtifactId,
       })),
     });
-  return { sourceCapture, arms, pipelineInputs, pipelineCalls, invoke };
+  return { sourceCapture, arms, pipelineInputs, pipelineCalls, capturedJobs, invoke };
 }
 
 /** The unordered candidate pairs a pipeline call actually compared. */
@@ -369,6 +398,29 @@ describe("run 98 addendum 34 S1 pair comparisons", () => {
     for (const coveredPair of ["endpoint:a|endpoint:b", "endpoint:a|endpoint:c"]) {
       const index = secondExtras.indexOf(coveredPair);
       if (index >= 0) expect(index).toBeGreaterThanOrEqual(uncovered.length);
+    }
+  });
+
+  /**
+   * Run 98 addendum 34 S5 residual (live v219, real request `req-edc9ee3b`): the fresh replay deferred to
+   * refusal with `judge_candidate_overlap` because the durable job's comparability carried **no**
+   * `judgeEndpointId`, so Evaluation Core's write-time independence guard fell back to scanning every
+   * registered judge manifest that shares the scorer-set version - including a historical one that
+   * designated `deepseek-flash-max` - and refused a candidate that is not today's judge. The completer
+   * has passed the designated judge into the pipeline since addendum 34 S9, but the pipeline never
+   * declared or consumed the field: the spread in the call site hid it from TypeScript, so the value was
+   * silently dropped and no live comparison could be created for such a capture.
+   */
+  test("the durable comparison records the endpoint that will judge it", async () => {
+    const scenario = buildScenario(["a", "b"], undefined, {
+      judgeEndpointId: "endpoint:judge-stub",
+    });
+    await scenario.invoke();
+
+    expect(scenario.capturedJobs.length).toBeGreaterThan(0);
+    for (const job of scenario.capturedJobs) {
+      const comparability = job.comparability as Record<string, unknown> | undefined;
+      expect(comparability?.judgeEndpointId).toBe("endpoint:judge-stub");
     }
   });
 });
