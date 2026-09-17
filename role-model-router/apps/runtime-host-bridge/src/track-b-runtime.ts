@@ -7993,6 +7993,9 @@ export async function runTrackBShadowPipeline(
           stderrRef: execution.stderrRef,
           exitCode: execution.exitCode,
           measurements: execution.measurements,
+          // Run 98 addendum 31 S4: the stream model travels with the result, so a reader can tell the
+          // single provider artifact from three independently captured streams.
+          ...(execution.streams ? { streams: execution.streams } : {}),
           referenceAttestation: trialReferenceAttestation,
         }),
       });
