@@ -5,6 +5,56 @@ import {
   RUN97_PAIRWISE_JUDGE_SCORER_ID,
   createRun97PairwiseJudgeScorer,
 } from "../src/track-b-runtime.js";
+import { createHash } from "node:crypto";
+
+/**
+ * Run 98 addendum 34 S5 (live stage v213, 2026-09-17T12:30Z): the class came back.
+ *
+ *   `extension evaluation-core failed: duplicate scorer ID has incompatible version`
+ *
+ * The version was hashed from `{judgeEndpointId, judgeMode}` only, so a change to any *other* part of the
+ * definition kept the same `id@version` key while the definition JSON differed — exactly what the
+ * registry refuses. Bumping a constant each time is what failed twice already; the structural fix is to
+ * derive the version from the whole definition body, so a definition change *is* a new key by
+ * construction.
+ */
+
+test("run98 A34 S5 the judge scorer key is derived from the whole definition body", () => {
+  const scorer = createRun97PairwiseJudgeScorer({
+    judgeEndpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-high",
+    judgeMode: "identity_blind",
+  });
+  const { version, digest, ...body } = scorer as unknown as Record<string, unknown> & {
+    version: string;
+    digest: string;
+  };
+  const canonical = (value: unknown): string => {
+    if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
+    if (value && typeof value === "object") {
+      return `{${Object.keys(value as Record<string, unknown>)
+        .sort()
+        .map((key) => `${JSON.stringify(key)}:${canonical((value as Record<string, unknown>)[key])}`)
+        .join(",")}}`;
+    }
+    return JSON.stringify(value);
+  };
+  const expected = `${RUN97_PAIRWISE_JUDGE_DEFINITION_VERSION}+${createHash("sha256")
+    .update(canonical(body))
+    .digest("hex")
+    .slice(0, 12)}`;
+  expect(version).toBe(expected);
+  expect(digest).toMatch(/^sha256:[a-f0-9]{64}$/);
+});
+
+test("run98 A34 S5 the live colliding key is not reused", () => {
+  // The durable registry holds this key with an *older* definition; the live runtime refused every
+  // comparison because today's definition arrived under it.
+  const scorer = createRun97PairwiseJudgeScorer({
+    judgeEndpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-high",
+    judgeMode: "identity_blind",
+  });
+  expect(scorer.version).not.toBe("2+8ea7ffea02ee");
+});
 
 /**
  * Run 99 R33 (S34 live finding, stage v132 at 2026-09-15): every replay comparison deferred with

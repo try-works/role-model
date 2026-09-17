@@ -7562,21 +7562,18 @@ export function createRun97PairwiseJudgeScorer(input: {
   // `1+…`, so a durable registry written before that field existed collided with today's definition
   // ("duplicate scorer ID has incompatible version") and every comparison deferred. Evaluation Core
   // keys on `id@version`, so a definition change must bump the version: `2+<identity hash>`.
-  const judgeIdentityVersion = `${RUN97_PAIRWISE_JUDGE_DEFINITION_VERSION}+${createHash("sha256")
-    .update(
-      JSON.stringify(
-        canonicalExtensionValue({
-          judgeEndpointId: input.judgeEndpointId.trim(),
-          judgeMode,
-        }),
-      ),
-    )
-    .digest("hex")
-    .slice(0, 12)}`;
-  const definition = {
+  /**
+   * Run 98 addendum 34 S5 (live v213, 2026-09-17T12:30Z): the class returned — every comparison deferred
+   * with `duplicate scorer ID has incompatible version`. The version used to be hashed from
+   * `{judgeEndpointId, judgeMode}` alone, so a change to any *other* part of the definition kept the same
+   * `id@version` key while the definition JSON differed, which the registry refuses by design. Bumping the
+   * constant by hand is what failed twice already, so the version is now derived from the **whole
+   * definition body**: a definition change is a new key by construction, and the digest below covers the
+   * version, so the two can never disagree about which definition a key names.
+   */
+  const definitionBody = {
     manifestVersion: 2 as const,
     id: RUN97_PAIRWISE_JUDGE_SCORER_ID,
-    version: judgeIdentityVersion,
     scorerSetVersion:
       judgeMode === "identified"
         ? RUN96_ROUTING_SHADOW_SCORER_SET_VERSION
@@ -7590,6 +7587,11 @@ export function createRun97PairwiseJudgeScorer(input: {
     judgeEndpointId: input.judgeEndpointId.trim(),
     judgeMode,
   };
+  const judgeIdentityVersion = `${RUN97_PAIRWISE_JUDGE_DEFINITION_VERSION}+${createHash("sha256")
+    .update(JSON.stringify(canonicalExtensionValue(definitionBody)))
+    .digest("hex")
+    .slice(0, 12)}`;
+  const definition = { ...definitionBody, version: judgeIdentityVersion };
   return {
     ...definition,
     digest: `sha256:${createHash("sha256")
