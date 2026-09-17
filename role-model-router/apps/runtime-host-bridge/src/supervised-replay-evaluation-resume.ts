@@ -46,6 +46,13 @@ export interface SupervisedReplayEvaluationResumeEntry {
   readonly counterfactualPackages: readonly SupervisedReplayEvaluationCounterfactual[];
   readonly evaluationCriteria: Readonly<Record<string, unknown>>;
   readonly evaluationCriteriaDigest: string;
+  /**
+   * Run 98 addendum 34 S5: the scope the durable replay job was created under. Durable replay jobs are
+   * bound to their own scope, so terminalizing one requires that exact value — the operator scope is
+   * refused with `replay persisted job scope binding mismatch`. Older entries predate this field and
+   * carry `null`.
+   */
+  readonly scope: string | null;
   readonly recordedAtMs: number;
   readonly attempts: number;
   readonly resolvedAtMs: number | null;
@@ -157,6 +164,11 @@ function normalizeEntry(entry: SupervisedReplayEvaluationResumeEntry): Supervise
   if (lastError !== null && (typeof lastError !== "string" || lastError.length > MAX_ERROR_TEXT)) {
     throw new Error("supervised replay evaluation resume lastError must be null or a bounded string");
   }
+  // Run 98 addendum 34 S5: older entries were written before the job's scope was recorded, so an
+  // absent value normalises to null rather than failing the whole store.
+  const scope = entry.scope === undefined || entry.scope === null || entry.scope === ""
+    ? null
+    : boundedText(entry.scope, "scope");
   return Object.freeze({
     schemaVersion: SCHEMA_VERSION,
     replayJobId: boundedText(entry.replayJobId, "replayJobId"),
@@ -168,6 +180,7 @@ function normalizeEntry(entry: SupervisedReplayEvaluationResumeEntry): Supervise
     counterfactualPackages: boundedCounterfactuals(entry.counterfactualPackages),
     evaluationCriteria: boundedCriteria(entry.evaluationCriteria),
     evaluationCriteriaDigest: boundedDigest(entry.evaluationCriteriaDigest, "evaluationCriteriaDigest"),
+    scope,
     recordedAtMs,
     attempts,
     resolvedAtMs,

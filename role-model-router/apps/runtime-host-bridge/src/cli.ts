@@ -4643,6 +4643,12 @@ export async function main(): Promise<void> {
                         Record<string, unknown>
                       >,
                       evaluationCriteriaDigest,
+                      // Run 98 addendum 34 S5: the durable replay job is bound to this scope, so
+                      // terminalizing it later needs the same value (see `onAbandoned`).
+                      scope:
+                        typeof request.scope === "string" && request.scope.trim()
+                          ? request.scope.trim()
+                          : null,
                       recordedAtMs: Date.now(),
                       attempts: 0,
                       resolvedAtMs: null,
@@ -5278,25 +5284,33 @@ export async function main(): Promise<void> {
             // Durable replay jobs are scoped to the *capture's* scope, and `replay:fail-job` is bound to
             // the persisted job, so the scope has to come from the capture — the same authority the
             // completion path reads. Guessing the operator scope is refused with a binding mismatch.
-            let scope = options.scopeId;
+            // Run 98 addendum 34 S5: durable replay jobs are bound to the scope they were created under,
+            // so the terminalization needs *that* scope — the operator scope is refused with
+            // `replay persisted job scope binding mismatch`. The entry records it from the handoff; the
+            // capture and the operator scope are the fallbacks for entries written before the field.
+            const candidateScopes: string[] = [];
+            const pushScope = (value: unknown) => {
+              const text = typeof value === "string" ? value.trim() : "";
+              if (text && !candidateScopes.includes(text)) candidateScopes.push(text);
+            };
+            pushScope(entry.scope);
             try {
               const capture = (await currentPostObservationOperations()?.readLocalRouteCapture({
                 requestId: entry.sourceCaptureRequestId,
               })) as Record<string, unknown> | null | undefined;
-              if (capture && typeof capture.scope === "string" && capture.scope.trim()) {
-                scope = capture.scope.trim();
-              }
+              pushScope(capture?.scope);
             } catch {
-              // Fall back to the last capture scope the producer read.
+              // The capture may be gone (retention); the remaining candidates still apply.
             }
+            pushScope(options.scopeId);
             try {
-              const invokeFailJob = async (invokeScope: string | null) =>
+              const invokeFailJob = async (invokeScope: string) =>
                 activeRuntime.invoke("replay-core", {
                   requestId: `replay-fail-job:${entry.replayJobId}`,
                   sessionId: `replay-fail-job:${options.scopeId}`,
                   protocolVersion: "1.1.0",
                   channel,
-                  ...(invokeScope === null ? {} : { scope: invokeScope }),
+                  scope: invokeScope,
                   authorizationEpoch: 1,
                   capability: "replay:fail-job",
                   value: {
@@ -5304,18 +5318,22 @@ export async function main(): Promise<void> {
                     reason: `evaluation_unavailable: ${reason}`,
                   },
                 });
-              try {
-                await invokeFailJob(scope);
-              } catch (bindingError) {
-                // Older entries can point at a job whose durable scope is not the source capture's
-                // (captures move between scopes). The host still enforces channel and authorization
-                // epoch, and the job id is the durable identity, so retry without the scope assertion
-                // rather than leaving the job parked for ever.
-                if (!/scope binding mismatch/u.test(String((bindingError as { message?: unknown })?.message ?? bindingError))) {
-                  throw bindingError;
+              let lastError: unknown = null;
+              for (const candidateScope of candidateScopes) {
+                try {
+                  await invokeFailJob(candidateScope);
+                  lastError = null;
+                  break;
+                } catch (scopeError) {
+                  lastError = scopeError;
+                  // Only a scope mismatch is worth retrying with the next candidate; anything else is a
+                  // real failure (already terminal, unknown job) and is reported as-is.
+                  if (!/scope binding mismatch/u.test(String((scopeError as { message?: unknown })?.message ?? scopeError))) {
+                    break;
+                  }
                 }
-                await invokeFailJob(null);
               }
+              if (lastError) throw lastError;
             } catch (failure) {
               console.error(
                 `[run98] replay job terminalization declined:${entry.replayJobId} ${String(
