@@ -123,6 +123,75 @@ test("Run96 CLI completeEvaluation binds fresh and recovery evaluation refs to d
   ]);
 });
 
+/**
+ * Run 98 addendum 34 S5 (live stage v199, request `replay-req-de6cf9bb-…`): a real replay whose two
+ * arms produced byte-identical answers shared one content-addressed response artifact, and the
+ * reference builder refused the whole capture with `rollout evidence, artifact, and outcome
+ * references must contain distinct persisted artifact references`. The capture then deferred four
+ * times and was refused, so real traffic was never evaluated.
+ *
+ * `guidance/11` line 117 settles what should happen instead: a "single-outcome" group is *ineligible
+ * for promotion evidence* — recorded and excluded, never refused. The arms keep their own evidence,
+ * route decision and provider execution; only the scored text may coincide, and when it does the
+ * build must say so rather than throw.
+ */
+test("Run98 A34 S5 two arms with identical answers build references and report a single outcome", () => {
+  const sourceCapture = durableCapture("1");
+  const counterfactualCapture = {
+    ...durableCapture("8"),
+    // Same scored text as the source: the artifact store addresses content, so both arms resolve to
+    // the same response artifact while every other reference stays per-arm.
+    responseArtifactId: sourceCapture.responseArtifactId,
+  };
+  const result = buildSupervisedReplayEvaluationReferences({
+    sourceCapture,
+    counterfactualCaptures: [counterfactualCapture],
+    caseIds: ["case:run98:source", "case:run98:counterfactual"],
+    referenceFacts: {
+      taskRef: `artifact:${artifactId("f")}`,
+      inputRef: `artifact:${artifactId("0")}`,
+      toolPolicyDigest: `artifact:${artifactId("f0")}`,
+      environmentDigest: `artifact:${artifactId("0f")}`,
+    },
+  });
+
+  expect(result.singleOutcome).toBe(true);
+  expect(result.rolloutReferences[0]?.artifactRef).toBe(result.rolloutReferences[1]?.artifactRef);
+  // The evidence and provider references remain distinct, so the comparison is still complete.
+  expect(result.rolloutReferences[0]?.evidenceRef).not.toBe(result.rolloutReferences[1]?.evidenceRef);
+  expect(result.rolloutReferences[0]?.outcomeRef).not.toBe(result.rolloutReferences[1]?.outcomeRef);
+  expect(result.evaluationReferences.sourceOutcomeRef).not.toBe(
+    result.evaluationReferences.counterfactualOutcomeRef,
+  );
+});
+
+test("Run98 A34 S5 a rollout that reuses its own reference is still refused", () => {
+  const sourceCapture = durableCapture("1");
+  const collapsed = {
+    ...durableCapture("8"),
+    // A branch whose provider result *is* its response is not a comparison: its own three references
+    // collapse onto one artifact.
+    providerArtifactIds: [durableCapture("8").responseArtifactId],
+    responseArtifactId: durableCapture("8").responseArtifactId,
+  };
+  const collapsedProvider = durableCapture("8").responseArtifactId;
+  expect(() =>
+    buildSupervisedReplayEvaluationReferences({
+      sourceCapture,
+      counterfactualCaptures: [
+        { ...collapsed, providerArtifactIds: [collapsedProvider], responseArtifactId: collapsedProvider },
+      ],
+      caseIds: ["case:run98:source", "case:run98:counterfactual"],
+      referenceFacts: {
+        taskRef: `artifact:${artifactId("f")}`,
+        inputRef: `artifact:${artifactId("0")}`,
+        toolPolicyDigest: `artifact:${artifactId("f0")}`,
+        environmentDigest: `artifact:${artifactId("0f")}`,
+      },
+    }),
+  ).toThrow(/distinct persisted artifact references/);
+});
+
 test("Run96 CLI case references are materialized by artifact-store", async () => {
   const sourceCapture = durableCapture("1");
   const counterfactualCapture = durableCapture("8");

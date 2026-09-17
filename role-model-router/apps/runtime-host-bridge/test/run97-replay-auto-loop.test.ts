@@ -542,7 +542,10 @@ test("run98 addendum 04 a hung replay execution is bounded instead of stalling t
     const second = await loop.tick();
     loop.stop();
     expect(healthReads).toBe(2);
-    expect(seenCandidates[0]).toEqual(["endpoint-a", "endpoint-b"]);
+    // Run 98 addendum 33 S3 rotates the counterfactual by a per-capture digest key, so the offered
+    // order is a property of the capture, not of the configured list. What the health filter must
+    // guarantee is the *set*: every healthy endpoint is offered and the degraded one never is.
+    expect([...seenCandidates[0]].sort()).toEqual(["endpoint-a", "endpoint-b"]);
     expect(seenCandidates.flat()).not.toContain("endpoint-degraded");
     expect(first.replayed + second.replayed).toBeGreaterThanOrEqual(1);
   } finally {

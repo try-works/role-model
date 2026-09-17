@@ -150,6 +150,13 @@ export interface SupervisedReplayEvaluationReferences {
 export interface SupervisedReplayEvaluationReferenceBuild {
   readonly evaluationReferences: SupervisedReplayEvaluationReferences;
   readonly rolloutReferences: readonly SupervisedReplayRolloutReferences[];
+  /**
+   * Run 98 addendum 34 S5: true when the compared arms resolved to the same content-addressed
+   * response artifact — two answers that are byte-identical. `guidance/11` line 117 makes such a
+   * group "single-outcome": recorded, and ineligible for promotion evidence. It is never a reason to
+   * refuse the capture (live stage v199 refused real traffic here until this was fixed).
+   */
+  readonly singleOutcome: boolean;
 }
 
 export interface SupervisedReplayEvaluationReferenceFacts {
@@ -559,14 +566,31 @@ export function buildSupervisedReplayEvaluationReferences(input: {
       `capture ${index} provider result`,
     ),
   }));
+  // Run 98 addendum 34 S5 (live stage v199): the artifact store addresses content, so two arms that
+  // produce byte-identical answers resolve to the *same* response artifact. The previous blanket
+  // requirement of distinct evidence/artifact/outcome references across every arm refused that
+  // capture with a 409, which deferred and then refused real traffic without ever evaluating it.
+  // `guidance/11` line 117 states the correct handling: a single-outcome group is recorded and
+  // ineligible for promotion evidence. What must stay distinct is each arm's *own* three references
+  // (a rollout whose response is its provider execution is not a comparison) and the cross-arm
+  // identity references (each arm's capture root and provider execution are per-arm facts).
+  rolloutReferences.forEach((references, index) => {
+    assertDistinctDurableReferences(
+      [references.evidenceRef, references.artifactRef, references.outcomeRef],
+      `capture ${index} evidence, response, and provider references`,
+    );
+  });
   assertDistinctDurableReferences(
-    rolloutReferences.flatMap((references) => [
-      references.evidenceRef,
-      references.artifactRef,
-      references.outcomeRef,
-    ]),
-    "rollout evidence, artifact, and outcome references",
+    rolloutReferences.map((references) => references.evidenceRef),
+    "replay capture roots",
   );
+  assertDistinctDurableReferences(
+    rolloutReferences.map((references) => references.outcomeRef),
+    "replay provider outcomes",
+  );
+  const singleOutcome =
+    new Set(rolloutReferences.map((references) => references.artifactRef)).size <
+    rolloutReferences.length;
 
   const comparisonReferences = [
     ...factReferences,
@@ -592,7 +616,11 @@ export function buildSupervisedReplayEvaluationReferences(input: {
   ) {
     throw new Error("per-case evaluation evidence must name persisted artifact-store artifacts");
   }
-  assertDistinctDurableReferences(perCaseEvidenceRefs, "per-case evaluation evidence");
+  // Two arms with identical answers share one response artifact; the case identity (not the content
+  // address) is what keeps them apart, so the distinctness rule applies only when the outcomes differ.
+  if (!singleOutcome) {
+    assertDistinctDurableReferences(perCaseEvidenceRefs, "per-case evaluation evidence");
+  }
   assertDistinctDurableReferences(input.caseIds, "evaluation case IDs");
 
   const evaluationReferences: SupervisedReplayEvaluationReferences = {
@@ -610,7 +638,7 @@ export function buildSupervisedReplayEvaluationReferences(input: {
       evidenceRef: perCaseEvidenceRefs[index],
     })),
   };
-  return { evaluationReferences, rolloutReferences };
+  return { evaluationReferences, rolloutReferences, singleOutcome };
 }
 
 /**
