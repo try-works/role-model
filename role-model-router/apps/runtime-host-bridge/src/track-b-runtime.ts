@@ -8494,6 +8494,28 @@ export async function runTrackBShadowPipeline(
         : {}),
     }),
   });
+  /**
+   * Run 98 addendum 34 S5 residual (live v230): the readback check below reported the generic
+   * `durable routing-shadow comparison finalization failed` for seven captures in thirty minutes while
+   * every durable group was finalized — the message named nothing, so the disposition could not attribute
+   * the failure. The finalize answer is now kept (a bounded, name-only summary) and travels into the
+   * refusal, so the replay disposition says which layer refused instead of pointing at this check.
+   */
+  const finalizeOutcomeSummary = (() => {
+    const record =
+      evaluation && typeof evaluation === "object" && !Array.isArray(evaluation)
+        ? (evaluation as Record<string, unknown>)
+        : null;
+    if (!record) return "finalize returned no durable answer";
+    const error = typeof record.error === "string" ? record.error.trim() : "";
+    const status = typeof record.status === "string" ? record.status : "";
+    const outcome = typeof record.outcome === "string" ? record.outcome : "";
+    const groupId = typeof record.groupId === "string" ? record.groupId : "";
+    return [error, status ? `status=${status}` : "", outcome ? `outcome=${outcome}` : "", groupId ? `group=${groupId.slice(0, 48)}` : ""]
+      .filter(Boolean)
+      .join(" ")
+      .slice(0, 200);
+  })();
   const persistedEvaluation = await runtime.invoke("evaluation-core", {
     ...envelope("evaluation:read-comparison-group", { groupId: `comparison:${input.requestId}` }),
   });
@@ -8528,7 +8550,15 @@ export async function runTrackBShadowPipeline(
       "disagreement",
     ]).has(String((persistedEvaluationDecoded as Record<string, unknown>).outcome ?? ""))
   ) {
-    throw new Error("durable routing-shadow comparison finalization failed");
+    const readbackShape =
+      persistedEvaluationDecoded && typeof persistedEvaluationDecoded === "object"
+        ? Object.keys(persistedEvaluationDecoded as Record<string, unknown>).slice(0, 8).join(",")
+        : String(persistedEvaluationDecoded);
+    throw new Error(
+      `durable routing-shadow comparison finalization failed: ${finalizeOutcomeSummary}${
+        readbackShape ? ` readback=${readbackShape}` : ""
+      }`.slice(0, 320),
+    );
   }
   const durableComparison = persistedEvaluationDecoded as Record<string, unknown>;
   // Run 97 RC06: a decisive comparison is evidence about the winning package, and both
