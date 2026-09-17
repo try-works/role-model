@@ -109,9 +109,10 @@ import {
   readTrackBRouteAdvisorySourceFromRuntime,
   rememberTrackBDurableRouteAdvisory,
   decodeExternalizedOperatorReadback,
-  requireReplayRouterDecisionId,
-  resolveManagedArtifactKeyFiles,
-  runSupervisedReplay,
+requireReplayRouterDecisionId,
+resolveManagedArtifactKeyFiles,
+resolveMaxCounterfactualArms,
+runSupervisedReplay,
   runTrackBPostObservation,
   runTrackBPostObservationWithContribution,
   runTrackBShadowPipeline,
@@ -3941,7 +3942,14 @@ export async function main(): Promise<void> {
           authorizationEpoch: 1,
           // R3: counterfactual candidates come from the running registry, not from
           // the capture's frozen decision snapshot.
-          configuredCandidateEndpointIds: configuredEndpointIdsRef.current,
+        // Run 98 addendum 34 S1: the arm bound is resolved *here*, in the process that reads the operator's
+        // environment, and travels with the work item. The sidecar that consumes it is a child process with
+        // its own environment, so a bound resolved only there ignored the override (measured on v216: three
+        // arms with the bound set to four).
+        configuredCandidateEndpointIds: configuredEndpointIdsRef.current.slice(
+          0,
+          resolveMaxCounterfactualArms(),
+        ),
           // Run 98 R4: durable advisory observations (state distribution + influence rate).
           advisoryObservationLedgerPath: path.join(
             options.runtimeStateRoot,
