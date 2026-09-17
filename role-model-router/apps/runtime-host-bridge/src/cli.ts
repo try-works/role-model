@@ -4847,6 +4847,14 @@ export async function main(): Promise<void> {
                 : process.env.ROLE_MODEL_JUDGE_ORDER_POLICY?.trim() === "source_first"
                   ? "source_first"
                   : (input.learningPolicySnapshot?.effective.judgeOrderPolicy ?? "source_first"),
+            // Run 98 addendum 33 S2: what a flipped pair means (env override → policy → balanced).
+            orderAggregation: (() => {
+              const envValue = process.env.ROLE_MODEL_JUDGE_ORDER_AGGREGATION?.trim();
+              if (envValue === "balanced" || envValue === "strict_consistency" || envValue === "fails_closed") {
+                return envValue;
+              }
+              return input.learningPolicySnapshot?.effective.judgeOrderAggregation ?? "balanced";
+            })(),
             measureAgreement:
               process.env.ROLE_MODEL_JUDGE_MEASURE_AGREEMENT?.trim() === "true"
                 ? true

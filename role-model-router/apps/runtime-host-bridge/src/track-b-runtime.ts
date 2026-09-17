@@ -8143,6 +8143,9 @@ export async function runTrackBShadowPipeline(
         ...(decision.judgeModeAgreement === undefined
           ? {}
           : { judgeModeAgreement: decision.judgeModeAgreement }),
+        // Run 98 addendum 33 S2: a pair the judge flipped under the swapped presentation was calibrated
+        // to an explicit tie; the flip travels with the receipt so the comparison can report it.
+        ...(decision.orderDisagreement === true ? { orderDisagreement: true } : {}),
       };
       judgeScores = [sourceBranch, counterfactualBranch].map((branch) => ({
         scorerId: judgeScorer.id,

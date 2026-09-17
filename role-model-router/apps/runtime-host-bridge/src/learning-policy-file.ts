@@ -56,6 +56,8 @@ export interface LearningPolicySnapshot {
      */
     readonly judgeMode: "identified" | "identity_blind";
     readonly judgeOrderPolicy: "source_first" | "dual_order";
+    /** Run 98 addendum 33 S2: how a position-order flip is scored. */
+    readonly judgeOrderAggregation: "balanced" | "strict_consistency" | "fails_closed";
     readonly judgeMeasureAgreement: boolean;
     /**
      * Run 98 addendum 30 S1 (`guidance/11` `judgePolicy`): the **designated** judge endpoint. Empty
@@ -104,6 +106,7 @@ const DEFAULT_EFFECTIVE: LearningPolicySnapshot["effective"] = Object.freeze({
   evidenceMaxAgeDays: 30,
   judgeMode: "identified",
   judgeOrderPolicy: "source_first",
+  judgeOrderAggregation: "balanced",
   judgeMeasureAgreement: false,
   judgeEndpointId: "",
   minimumPracticalDelta: 0.05,
@@ -292,6 +295,11 @@ export function readLearningPolicyFile(input: {
     ),
     judgeMode: merged.judgeMode === "identity_blind" ? "identity_blind" : "identified",
     judgeOrderPolicy: merged.judgeOrderPolicy === "dual_order" ? "dual_order" : "source_first",
+    judgeOrderAggregation:
+      merged.judgeOrderAggregation === "strict_consistency" ||
+      merged.judgeOrderAggregation === "fails_closed"
+        ? merged.judgeOrderAggregation
+        : "balanced",
     judgeMeasureAgreement: merged.judgeMeasureAgreement === true,
     // Run 98 addendum 30 S1: a designated judge endpoint is a bounded, schema-validated identity; a
     // malformed or absent value resolves to the empty string, which means "no judge" rather than

@@ -81,6 +81,12 @@ export interface TrackBPairwiseJudgeDecision {
   readonly presentation?: PairwiseJudgePresentation;
   /** Run 98 R10: measured agreement with the reference judge mode, when probed. */
   readonly judgeModeAgreement?: boolean;
+  /**
+   * Run 98 addendum 33 S2: the two presentation orders disagreed, and the pair was calibrated to an
+   * explicit tie (Balanced Position Calibration). The flag travels so the comparison can report the flip
+   * and a judge's order consistency stays measurable — the pair is evidence, not a discarded row.
+   */
+  readonly orderDisagreement?: boolean;
 }
 
 export interface TrackBPairwiseJudge {

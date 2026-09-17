@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import {
   PAIRWISE_JUDGE_MODE_IDENTIFIED,
   PAIRWISE_JUDGE_MODE_IDENTITY_BLIND,
+  TRACK_B_PAIRWISE_JUDGE_WINNER_TIE,
   buildPairwiseJudgeMessages,
   isPairwiseJudgeMode,
   pairwiseJudgePresentation,
@@ -103,6 +104,18 @@ export interface CreateRouterPairwiseJudgeInput {
    * fails closed on disagreement; `source_first` keeps the single dispatch.
    */
   readonly orderPolicy?: "source_first" | "dual_order";
+  /**
+   * Run 98 addendum 33 S2 (`guidance/07`: "Randomize execution order where order can bias tools or
+   * caches"; the research's Balanced Position Calibration): what to do when the two presentations
+   * disagree.
+   *
+   * - `balanced` (default): the flip is *evidence of position bias*, not a preference, so the pair is
+   *   calibrated to an explicit tie (0.5/0.5) and the flip is recorded. This keeps the sample instead of
+   *   discarding every order-sensitive pair.
+   * - `strict_consistency`: the pair is refused outright (the pre-repair behaviour).
+   * - `fails_closed`: alias of `strict_consistency`, kept because that is what the live policy named.
+   */
+  readonly orderAggregation?: "balanced" | "strict_consistency" | "fails_closed";
   /**
    * Run 98 R10 (AC-R10-01): when the primary dispatch is identity-blind, also probe the
    * identified judge so agreement is measured for every decision.
@@ -288,6 +301,7 @@ export function createRouterPairwiseJudge(
 
       // AC-R10-02: bound position-order effects with a swapped dispatch instead of
       // accepting a single-order preference as decisive.
+      let calibrated: { readonly winner: typeof TRACK_B_PAIRWISE_JUDGE_WINNER_TIE; readonly confidence: number } | null = null;
       if (orderPolicy === "dual_order") {
         const swappedPresentation = pairwiseJudgePresentation(true);
         const swapped = await runJudge({ mode, presentation: swappedPresentation, attempt: 2 });
@@ -297,13 +311,27 @@ export function createRouterPairwiseJudge(
             outcome: "order_disagreement",
             presentation: swappedPresentation,
           });
-          throw new PairwiseJudgeOrderDisagreementError();
+          const aggregation = input.orderAggregation ?? "balanced";
+          if (aggregation === "balanced") {
+            // Run 98 addendum 33 S2: a pair that flips under a swapped presentation measured a position
+            // effect, so it is calibrated to an explicit tie instead of being discarded. The flip travels
+            // with the decision so the comparison can report it (and so a judge's consistency is
+            // measurable) without the pair being relabelled as unimpeachable evidence.
+            calibrated = {
+              winner: TRACK_B_PAIRWISE_JUDGE_WINNER_TIE,
+              confidence: Math.min(primary.decision.confidence, swapped.decision.confidence, 0.5),
+            };
+          } else {
+            throw new PairwiseJudgeOrderDisagreementError();
+          }
         }
-        input.recordJudgeObservation?.({
-          judgeMode: mode,
-          outcome: "complete",
-          presentation: swappedPresentation,
-        });
+        if (!calibrated) {
+          input.recordJudgeObservation?.({
+            judgeMode: mode,
+            outcome: "complete",
+            presentation: swappedPresentation,
+          });
+        }
       }
 
       // AC-R10-01: measure agreement with the identified judge whenever the primary mode
@@ -338,6 +366,13 @@ export function createRouterPairwiseJudge(
       });
       return {
         ...primary.decision,
+        ...(calibrated
+          ? {
+              winner: calibrated.winner,
+              confidence: calibrated.confidence,
+              orderDisagreement: true,
+            }
+          : {}),
         ...(judgeModeAgreement === undefined ? {} : { judgeModeAgreement }),
       };
     },

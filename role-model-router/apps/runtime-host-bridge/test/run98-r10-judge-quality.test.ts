@@ -152,7 +152,12 @@ test("AC-R10-01 agreement with the identified judge is measured and recorded", a
   expect(observations.some((row) => row.agreement === false)).toBe(true);
 });
 
-test("AC-R10-02 dual-order disagreement fails closed with a typed reason instead of a tie", async () => {
+/**
+ * Run 98 addendum 33 S2: `balanced` is now the default (a flipped pair is calibrated to an explicit tie
+ * and kept as evidence), so the strict refusal is asserted by naming it — `fails_closed` remains the
+ * behaviour a caller gets when it asks for it, and `run98-a33-order-calibration.test.ts` pins the default.
+ */
+test("AC-R10-02 dual-order disagreement fails closed with a typed reason when strictness is declared", async () => {
   const observations: Array<Record<string, unknown>> = [];
   const judge = createRouterPairwiseJudge({
     ...judgeRouter(
@@ -162,6 +167,7 @@ test("AC-R10-02 dual-order disagreement fails closed with a typed reason instead
       [],
     ),
     orderPolicy: "dual_order",
+    orderAggregation: "fails_closed",
     recordJudgeObservation: (row) => observations.push(row as unknown as Record<string, unknown>),
   });
   await expect(judge!.dispatch(request)).rejects.toBeInstanceOf(
