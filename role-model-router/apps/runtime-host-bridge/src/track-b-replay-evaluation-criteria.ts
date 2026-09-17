@@ -10,9 +10,18 @@
 
 export interface TrackBSemanticEvaluationCriteriaLike {
   readonly schemaVersion: "role-model.semantic-criteria.v1";
-  readonly requiredTerms: readonly string[];
+  /** Run 98 addendum 33 S5: optional when the criteria are built from structured assertions. */
+  readonly requiredTerms?: readonly string[];
   readonly forbiddenTerms: readonly string[];
   readonly minOutputChars: number;
+  /** Run 98 addendum 33 S5: structural per-case checks the answer either satisfies or does not. */
+  readonly assertions?: readonly (
+    | { readonly kind: "json_parses" }
+    | { readonly kind: "normalized_equals"; readonly value: string }
+    | { readonly kind: "numeric_equals"; readonly value: number; readonly tolerance: number }
+    | { readonly kind: "array_length"; readonly value: number }
+    | { readonly kind: "contains_all"; readonly values: readonly string[] }
+  )[];
 }
 
 /**
@@ -21,7 +30,11 @@ export interface TrackBSemanticEvaluationCriteriaLike {
  * source satisfy its own criterion by construction and no counterfactual can ever
  * win. Task evidence is branch-shared and keeps the comparison decidable.
  */
-export type TrackBCriteriaEvidenceSource = "task_literal" | "task_text" | "recorded_output";
+export type TrackBCriteriaEvidenceSource =
+  | "task_assertion"
+  | "task_literal"
+  | "task_text"
+  | "recorded_output";
 
 export interface TrackBAutomaticReplayCriteria {
   readonly criteria: TrackBSemanticEvaluationCriteriaLike;
@@ -280,6 +293,48 @@ function extractTaskLiterals(taskText: string): string[] {
 }
 
 /**
+ * Run 98 addendum 33 S5 (the research §4): the structural assertion a task plainly implies, if any. The
+ * patterns are deliberately narrow — a phrase the answer must equal, a JSON deliverable, or a list of a
+ * declared length — because a wrongly-derived assertion would score a correct answer as wrong.
+ */
+function deriveStructuredAssertion(
+  taskText: string,
+):
+  | { readonly kind: "normalized_equals"; readonly value: string }
+  | { readonly kind: "json_parses" }
+  | { readonly kind: "array_length"; readonly value: number }
+  | null {
+  const text = typeof taskText === "string" ? taskText.trim() : "";
+  if (!text) return null;
+  // "single word/token/value" names one token, so the answer is that token — capturing to the end of the
+  // sentence would swallow trailing instruction ("... and nothing else"), which is how a phrase assertion
+  // briefly required the wrong string.
+  const single =
+    /\b(?:reply|respond|answer)\s+(?:with|using)\s+(?:the\s+)?single\s+(?:word|token|value|marker)\s*[:=]?\s*["'`]?([^\s"'`]{1,120})/iu.exec(
+      text,
+    );
+  const phrase =
+    /\b(?:reply|respond|answer)\s+(?:with|using)\s+(?:the\s+)?(?:word|phrase)\s*[:=]?\s*["'`]?([^"'`\n]{1,120}?)["'`]?(?:\s+(?:and|or|with|in|to|for)\b|[.!?,;]|$)/iu.exec(
+      text,
+    );
+  const phraseValue = (single?.[1] ?? phrase?.[1])?.trim();
+  if (phraseValue && phraseValue.length <= 120) {
+    return { kind: "normalized_equals", value: phraseValue };
+  }
+  const list = /\b(?:list|array)\s+of\s+(?:exactly\s+)?(\d{1,3})\b/iu.exec(text);
+  if (list?.[1]) {
+    const length = Number(list[1]);
+    if (Number.isSafeInteger(length) && length >= 0 && length <= 1_000) {
+      return { kind: "array_length", value: length };
+    }
+  }
+  if (/\bjson\b/iu.test(text) && /\b(?:reply|respond|answer|return|output|format)\b/iu.test(text)) {
+    return { kind: "json_parses" };
+  }
+  return null;
+}
+
+/**
  * Derive the automatic replay criterion from branch-shared task evidence, falling
  * back to the recorded source output only when the capture carries no usable task
  * text. Callers keep the recorded-output derivation available for receipts, but the
@@ -295,6 +350,23 @@ export function deriveAutomaticReplayCriteria(input: {
       ? Math.min(Number(input.maxTerms), 8)
       : DEFAULT_MAX_TERMS;
   const taskText = typeof input.taskText === "string" ? input.taskText : "";
+  // Run 98 addendum 33 S5: prefer a *structural* assertion when the task plainly implies one. These are
+  // the checks a reviewer would write for the case — the answer is exactly this phrase, it parses as
+  // JSON, it is a list of this length — so a correct answer worded differently still scores.
+  const assertion = deriveStructuredAssertion(taskText);
+  if (assertion) {
+    return {
+      criteria: {
+        schemaVersion: "role-model.semantic-criteria.v1",
+        requiredTerms: [],
+        forbiddenTerms: [],
+        minOutputChars: 1,
+        assertions: [assertion],
+      },
+      derivation: `derived assertion: ${assertion.kind}`,
+      evidenceSource: "task_assertion",
+    };
+  }
   const literalTerms = collectBoundedTerms(extractTaskLiterals(taskText).join(" "), maxTerms);
   if (literalTerms.length > 0) {
     return {

@@ -6155,7 +6155,11 @@ export function hasVerifiableSemanticCriteria(value: unknown): boolean {
   } catch {
     return false;
   }
-  return [...criteria.requiredTerms, ...(criteria.forbiddenTerms ?? [])].some((term) => {
+  // Run 98 addendum 33 S5: a structured assertion is verifiable evidence by construction — it names what
+  // the answer must do, not which words it shares with the prompt.
+  const assertions = (criteria as { assertions?: readonly unknown[] }).assertions;
+  if (Array.isArray(assertions) && assertions.length > 0) return true;
+  return [...(criteria.requiredTerms ?? []), ...(criteria.forbiddenTerms ?? [])].some((term) => {
     const normalized = term.trim().toLocaleLowerCase("en-US");
     if (normalized.length < 3) return false;
     if (NON_VERIFIABLE_CRITERIA_TERMS.has(normalized)) return false;
@@ -7601,7 +7605,18 @@ export async function runTrackBShadowPipeline(
     }),
     digest: replayDigest,
   };
-  const scorer = createRun96RoutingShadowScorer();
+  // Run 98 addendum 33 S5: when the case criteria are structured assertions, the deterministic dimension
+  // is scored by the assertion algorithm instead of term overlap — the scorer definition follows the
+  // criteria, so both the durable manifest and the recorded score name the ruler that actually ran.
+  const usesStructuredAssertions = input.evaluationCases.some((evaluationCase) => {
+    const criteria = (evaluationCase as Record<string, unknown> | undefined)?.evaluationCriteria as
+      | { assertions?: readonly unknown[] }
+      | undefined;
+    return Array.isArray(criteria?.assertions) && criteria.assertions.length > 0;
+  });
+  const scorer = createRun96RoutingShadowScorer(
+    usesStructuredAssertions ? { algorithm: "structured_assertions" } : {},
+  );
   const scorerSetVersion = scorer.scorerSetVersion;
   // RC04: the semantic-criteria dimension only exists when the comparison carries a
   // real task requirement. Greeting-only criteria from live traffic were dead weight

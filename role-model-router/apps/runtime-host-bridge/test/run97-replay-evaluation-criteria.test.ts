@@ -7,6 +7,44 @@ import {
   extractSourceOutputText,
 } from "../src/track-b-replay-evaluation-criteria.js";
 
+/**
+ * Run 98 addendum 33 S5: the derivation prefers a *structural* assertion when the task plainly implies
+ * one, so a task whose answer is a phrase is graded on the phrase rather than on shared vocabulary.
+ */
+test("run98 A33 S5 a single-word task derives a normalized-equality assertion", () => {
+  const derived = deriveAutomaticReplayCriteria({
+    taskText: "Reply with the single word: ok",
+    sourceOutput: "ok",
+  });
+  expect(derived?.evidenceSource).toBe("task_assertion");
+  expect(derived?.criteria.assertions).toEqual([{ kind: "normalized_equals", value: "ok" }]);
+  expect(derived?.criteria.requiredTerms ?? []).toEqual([]);
+});
+
+test("run98 A33 S5 a JSON deliverable derives a parse assertion and a list length derives an array length", () => {
+  const json = deriveAutomaticReplayCriteria({
+    taskText: "Reply with a JSON object describing the plan.",
+    sourceOutput: '{"plan":[]}',
+  });
+  expect(json?.criteria.assertions).toEqual([{ kind: "json_parses" }]);
+  expect(json?.evidenceSource).toBe("task_assertion");
+
+  const list = deriveAutomaticReplayCriteria({
+    taskText: "Return a list of exactly 3 items.",
+    sourceOutput: "[1,2,3]",
+  });
+  expect(list?.criteria.assertions).toEqual([{ kind: "array_length", value: 3 }]);
+});
+
+test("run98 A33 S5 a task with no structural implication still derives its terms", () => {
+  const derived = deriveAutomaticReplayCriteria({
+    taskText: "Summarise the deployment risk in two sentences.",
+    sourceOutput: "The deployment risk is low.",
+  });
+  expect(derived?.criteria.assertions ?? []).toEqual([]);
+  expect((derived?.criteria.requiredTerms ?? []).length).toBeGreaterThan(0);
+});
+
 test("run97 derives schema-valid semantic criteria from the recorded source output", () => {
   const derived = deriveSemanticEvaluationCriteria({
     sourceOutput:
@@ -129,8 +167,13 @@ test("run97 extracts an unquoted marker named by the task wording", () => {
     taskText: "Reply with the single token run97-canary-015 and nothing else.",
     sourceOutput: "run97-canary-015",
   });
-  expect(derived?.evidenceSource).toBe("task_literal");
-  expect(derived?.criteria.requiredTerms).toEqual(["run97", "canary", "015"]);
+  // Run 98 addendum 33 S5: "reply with the single token X" now derives the stronger assertion — the
+  // answer must *equal* the token, not merely contain its fragments — so the vocabulary split into
+  // ["run97", "canary", "015"] is no longer how this case is graded.
+  expect(derived?.evidenceSource).toBe("task_assertion");
+  expect(derived?.criteria.assertions).toEqual([
+    { kind: "normalized_equals", value: "run97-canary-015" },
+  ]);
 });
 
 test("run97 falls back to bounded task text when the instruction names no literal", () => {
