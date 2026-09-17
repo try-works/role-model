@@ -1117,12 +1117,27 @@ export function createSupervisedReplayEvaluationCompleter(input: {
     if (!sourceRootArtifactId || !sourceDecisionId) {
       throw new Error("durable replay evaluation is missing source provenance");
     }
-    // R5: the released comparability tuple names exactly one source and one
-    // counterfactual candidate (Evaluation Core refuses a trial whose candidate is
-    // not one of those two). The durable comparison therefore evaluates the primary
-    // counterfactual; the remaining candidates stay recorded replay branches with
-    // their own provenance instead of being forced into a tuple they do not fit.
-    const evaluatedCounterfactuals = counterfactuals.slice(0, 1);
+    /**
+     * R5: the released comparability tuple names exactly one source and one counterfactual candidate
+     * (Evaluation Core refuses a *finalized comparison* whose trials name anyone else), so the durable
+     * comparison still decides between the source and the **first** arm - that is the primary pair and it
+     * is unchanged.
+     *
+     * Run 98 addendum 34 S3 (live v223 finding): truncating *here* threw the other arms away before the
+     * pipeline ever saw them, and with them the family's development partition. Measured live: every
+     * durable case in the store carried `partition: holdout` — 516 comparison groups and not one
+     * development case — because a candidate that contributes a single case was forced into the holdout,
+     * and a job that only ever carries the two compared cases has nothing else to partition. The family
+     * split always moves at least one case of a multi-case family into the train partition, so the
+     * promotion gate's `minDevelopmentComparisons` floor could only ever answer
+     * `development_partition_missing`.
+     *
+     * Every arm the capture already paid for now travels as a durable case. The comparison still decides
+     * between the primary pair (its holdout cases are exactly those two), and the arms the comparison does
+     * not decide between carry the partition the split declared — the development evidence the protocol
+     * fits on.
+     */
+    const evaluatedCounterfactuals = counterfactuals;
     const caseIds = Array.from(
       { length: 1 + evaluatedCounterfactuals.length },
       (_, index) => `replay:${replayJobId}:${index}`,

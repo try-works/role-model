@@ -7900,7 +7900,22 @@ export async function runTrackBShadowPipeline(
     const candidateRef = requireTrackBReference(rollout.endpointId, "candidate");
     casesPerCandidate.set(candidateRef, (casesPerCandidate.get(candidateRef) ?? 0) + 1);
   }
-  const durableCases = rolloutRows.map((rollout, index) => {
+  // The primary comparison's two sides: the served source and the first counterfactual it is decided
+  // against. Everything else is development-partition material (Run 98 addendum 34 S3).
+  const sourceCandidateRef = requireTrackBReference(sourceRollout.endpointId, "source candidate");
+  const firstCounterfactualCandidateRef = requireTrackBReference(
+    firstCounterfactual.endpointId,
+    "counterfactual candidate",
+  );
+  const durableCases: Array<{
+    id: string;
+    partition: string;
+    candidateRef: string;
+    evidenceRef: string;
+    sourceGeneration: number;
+    evaluationCriteria: ReturnType<typeof normalizeTrackBSemanticEvaluationCriteria>;
+    evaluationCriteriaDigest: string;
+  }> = rolloutRows.map((rollout, index) => {
     const evaluationCase = input.evaluationCases[index % input.evaluationCases.length] ?? {};
     const caseReference = evaluationReferences.perCase[index];
     if (!caseReference || caseReference.caseId !== caseIds[index]) {
@@ -7912,8 +7927,20 @@ export async function runTrackBShadowPipeline(
     const candidateRef = requireTrackBReference(rollout.endpointId, "candidate");
     const declaredPartition =
       holdout.partitions.find((row) => row.caseId === caseIds[index])?.partition ?? "holdout";
+    /**
+     * Run 98 addendum 34 S3 (`guidance/07`): the comparison needs both of its own sides in the holdout, and
+     * a candidate that contributes a single case has nothing to spare — but that must not force *every*
+     * case into the holdout. A candidate the comparison does not decide between (an arm outside the
+     * primary pair) carries the partition the family split declared, which is how the development
+     * evidence the promotion protocol fits on reaches the durable store. Measured live before this: all
+     * 516 groups were holdout-only, so `minDevelopmentComparisons` could never be satisfied.
+     */
+    const decidedByThisComparison =
+      candidateRef === sourceCandidateRef || candidateRef === firstCounterfactualCandidateRef;
     const partition =
-      (casesPerCandidate.get(candidateRef) ?? 1) > 1 ? declaredPartition : "holdout";
+      (casesPerCandidate.get(candidateRef) ?? 1) > 1 || !decidedByThisComparison
+        ? declaredPartition
+        : "holdout";
     return {
       id: caseIds[index],
       partition,
@@ -7924,6 +7951,27 @@ export async function runTrackBShadowPipeline(
       evaluationCriteriaDigest: digestTrackBSemanticEvaluationCriteria(evaluationCriteria),
     };
   });
+  /**
+   * Run 98 addendum 34 S3: the family split moves at least one case into train — but the split ran over the
+   * case ids before the rule above, and when it moved the *served source* (the comparison's own side) this
+   * rule has to move it back. That could leave a job with no development case at all, which is the state
+   * the live store is in. Whenever the capture carries a case the comparison does not decide between, one
+   * of those cases is development evidence; the comparison's own two sides are never moved.
+   */
+  if (!durableCases.some((entry) => entry.partition === "train")) {
+    const developmentIndex = durableCases.findIndex(
+      (entry) =>
+        entry.partition === "holdout" &&
+        entry.candidateRef !== sourceCandidateRef &&
+        entry.candidateRef !== firstCounterfactualCandidateRef,
+    );
+    if (developmentIndex >= 0) {
+      durableCases[developmentIndex] = {
+        ...durableCases[developmentIndex],
+        partition: "train",
+      };
+    }
+  }
   // Run 99 R33 D7: publish the membership that matches the partitions actually stamped — a candidate
   // whose only case cannot be held out still binds the canonical digest Evaluation Core recomputes.
   const effectiveHoldoutCaseIds = durableCases

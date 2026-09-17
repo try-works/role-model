@@ -308,15 +308,20 @@ function buildScenario(
   return { sourceCapture, arms, pipelineInputs, pipelineCalls, capturedJobs, invoke };
 }
 
-/** The unordered candidate pairs a pipeline call actually compared. */
-function comparedPairs(inputs: readonly TrackBShadowPipelineInput[]): string[] {
+/**
+ * The unordered pair a pipeline call actually **decides between**: the served source and the first
+ * counterfactual, which is the comparison the pipeline judges and finalizes. A capture may now carry
+ * further arms as development evidence (addendum 34 S3), so reading every counterfactual would overstate
+ * what a single call compares.
+ */
+function decidedPairs(inputs: readonly TrackBShadowPipelineInput[]): string[] {
   return inputs.map((input) => {
     const evidence = input.comparableEvidence as Record<string, unknown> | undefined;
     const source = evidence?.source as Record<string, unknown> | undefined;
     const counterfactuals = Array.isArray(evidence?.counterfactuals)
       ? (evidence?.counterfactuals as Record<string, unknown>[])
       : [];
-    return [String(source?.endpointId ?? ""), ...counterfactuals.map((entry) => String(entry.endpointId ?? ""))]
+    return [String(source?.endpointId ?? ""), String(counterfactuals[0]?.endpointId ?? "")]
       .sort()
       .join("|");
   });
@@ -335,11 +340,11 @@ describe("run 98 addendum 34 S1 pair comparisons", () => {
     expect(String(scenario.pipelineInputs[0]?.requestId)).toMatch(
       /^supervised-replay:[a-f0-9]{64}$/,
     );
-    expect(comparedPairs(scenario.pipelineInputs)[0]).toBe("endpoint:1|endpoint:a");
+    expect(decidedPairs(scenario.pipelineInputs)[0]).toBe("endpoint:1|endpoint:a");
 
     // One call per comparison: the primary pair plus the pairs the graph is missing.
     expect(scenario.pipelineInputs.length).toBeGreaterThan(1);
-    const pairs = comparedPairs(scenario.pipelineInputs);
+    const pairs = decidedPairs(scenario.pipelineInputs);
     expect(new Set(pairs).size).toBe(pairs.length);
     for (const pair of pairs) {
       expect(pair.split("|")).toHaveLength(2);
@@ -373,7 +378,7 @@ describe("run 98 addendum 34 S1 pair comparisons", () => {
 
     const first = buildScenario(["a", "b", "c"], ledgerPath);
     await first.invoke();
-    const firstPairs = comparedPairs(first.pipelineInputs);
+    const firstPairs = decidedPairs(first.pipelineInputs);
     // The uncovered arm-vs-arm pairs are the graph's gaps, so they are planned before a second source pair.
     expect(firstPairs).toContain("endpoint:a|endpoint:b");
 
@@ -384,7 +389,7 @@ describe("run 98 addendum 34 S1 pair comparisons", () => {
 
     const second = buildScenario(["a", "b", "c"], ledgerPath);
     await second.invoke();
-    const secondExtras = comparedPairs(second.pipelineInputs).slice(1);
+    const secondExtras = decidedPairs(second.pipelineInputs).slice(1);
     // A pair that already carries evidence is never selected while an uncovered pair is still
     // available: the two source pairs the first capture could not afford come first, and the
     // already-covered arm pairs can only fill what remains of the bounded budget.
@@ -422,5 +427,56 @@ describe("run 98 addendum 34 S1 pair comparisons", () => {
       const comparability = job.comparability as Record<string, unknown> | undefined;
       expect(comparability?.judgeEndpointId).toBe("endpoint:judge-stub");
     }
+  });
+
+  /**
+   * Run 98 addendum 34 S3 (`guidance/07`: fit on development evidence, decide on the holdout).
+   *
+   * Measured live before this: **every** durable case in the store carried `partition: holdout` — 516
+   * comparison groups and not one development case — because the pipeline forced every candidate that
+   * contributes a single case into the holdout. The family split always moves at least one case of a
+   * multi-case family into the train partition, so that rule made the promotion gate's
+   * `minDevelopmentComparisons` floor impossible to satisfy: the gate could only ever answer
+   * `development_partition_missing`.
+   *
+   * The comparison still needs both of its own sides in the holdout. Everything the comparison does not
+   * decide between — here the third arm of a three-arm capture — carries the partition the split declared,
+   * so the family accrues the development evidence the protocol fits on.
+   */
+  test("a three-arm capture carries development evidence beside the compared holdout", async () => {
+    const scenario = buildScenario(["a", "b", "c"], undefined, {
+      judgeEndpointId: "endpoint:judge-stub",
+    });
+    await scenario.invoke();
+
+    const job = scenario.capturedJobs[0];
+    const cases = (job?.cases ?? []) as Array<{
+      id: string;
+      partition: string;
+      candidateRef: string;
+    }>;
+    const partitions = cases.map((entry) => entry.partition);
+    expect(partitions).toContain("holdout");
+    expect(partitions).toContain("train");
+    // The primary comparison keeps a holdout case for each of its own two sides, so its decision set is
+    // unchanged; the extra arms are what carry the development partition.
+    const holdoutCandidates = new Set(
+      cases.filter((entry) => entry.partition === "holdout").map((entry) => entry.candidateRef),
+    );
+    expect(holdoutCandidates.size).toBeGreaterThanOrEqual(2);
+    const primaryEvidence = scenario.pipelineInputs[0]?.comparableEvidence as
+      | Record<string, unknown>
+      | undefined;
+    const primarySourceId = String(
+      (primaryEvidence?.source as Record<string, unknown> | undefined)?.endpointId ?? "",
+    );
+    const primaryArmId = String(
+      ((primaryEvidence?.counterfactuals as Record<string, unknown>[] | undefined) ?? [])[0]
+        ?.endpointId ?? "",
+    );
+    expect(holdoutCandidates.has(primarySourceId)).toBe(true);
+    expect(holdoutCandidates.has(primaryArmId)).toBe(true);
+    const durableHoldout = job?.holdout as Record<string, unknown> | undefined;
+    expect((durableHoldout?.caseIds as readonly string[] | undefined)?.length).toBeGreaterThanOrEqual(2);
   });
 });
