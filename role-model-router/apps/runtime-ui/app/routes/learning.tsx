@@ -171,6 +171,8 @@ export function LearningOverviewPage() {
   );
   const activityView = normalizeLearningActivity(activity.value);
   const advisory = asRecord(asRecord(summary.value).advisory);
+  // Run 98 addendum 31 S5: how much of the scored evidence is actually checkable.
+  const auditability = asRecord(asRecord(summary.value).auditability);
   const rolloutValue = asRecord(rollout.value);
   const receipts = Array.isArray(rolloutValue.receipts) ? rolloutValue.receipts : [];
   const lastRollback = receipts.find((row) => asRecord(row).state === "rolled_back");
@@ -211,6 +213,10 @@ export function LearningOverviewPage() {
             />
             <Metric label="Influence rate" value={show(advisory.influenceRate)} />
             <Metric label="Would have changed" value={show(advisory.wouldHaveChanged)} />
+            <Metric
+              label="Input auditability"
+              value={`${show(auditability.resolvedInputs)} resolved · ${show(auditability.unresolvedInputs)} unresolved · ${show(auditability.missingInputProof)} no proof`}
+            />
             <Metric
               label="Last rollback"
               value={lastRollback ? `${show(asRecord(lastRollback).receiptId)} · ${show(asRecord(lastRollback).rolledBackAt)}` : "none"}

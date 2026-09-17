@@ -110,12 +110,14 @@ test("Run96 CLI completeEvaluation binds fresh and recovery evaluation refs to d
   expect(result.rolloutReferences).toEqual([
     {
       evidenceRef: `artifact:${sourceCapture.rootArtifactId}`,
-      artifactRef: `artifact:${sourceCapture.routeDecisionArtifactId}`,
+      // Run 98 addendum 31 S4: the trial's output reference is the branch *response* artifact (the
+      // text the runner scores), not the capture's route-decision document.
+      artifactRef: `artifact:${sourceCapture.responseArtifactId}`,
       outcomeRef: `artifact:${sourceCapture.providerArtifactIds[0]}`,
     },
     {
       evidenceRef: `artifact:${counterfactualCapture.rootArtifactId}`,
-      artifactRef: `artifact:${counterfactualCapture.routeDecisionArtifactId}`,
+      artifactRef: `artifact:${counterfactualCapture.responseArtifactId}`,
       outcomeRef: `artifact:${counterfactualCapture.providerArtifactIds[0]}`,
     },
   ]);
@@ -156,6 +158,80 @@ test("Run96 CLI case references are materialized by artifact-store", async () =>
   expect((firstPayload.record as Record<string, unknown>).schema).toBe(
     "role-model.evaluation-case-reference.v1",
   );
+});
+
+/**
+ * Run 98 addendum 31 S2 (`guidance/11`: a score binds its *input projection*): the case reference is
+ * the one artifact a score's input can be recovered from. It used to carry pointers only, so a reader
+ * had to follow the capture to see what was asked. It now carries the bounded evaluation subject -
+ * the task instruction, the criteria and the branch output - inline.
+ */
+test("run98 A31 S2 the case reference carries the bounded evaluation subject", async () => {
+  const sourceCapture = durableCapture("1");
+  const counterfactualCapture = durableCapture("8");
+  const written: string[] = [];
+  const runtime = {
+    async invoke(_id: string, envelope: Record<string, unknown>) {
+      const payload = envelope.payload as Record<string, unknown>;
+      const record = payload.record as Record<string, unknown>;
+      written.push(String(record.content));
+      return { id: artifactId("f") };
+    },
+  };
+  const criteria = {
+    schemaVersion: "role-model.semantic-criteria.v1",
+    requiredTerms: ["ok"],
+  };
+  await persistSupervisedReplayEvaluationCaseReferences({
+    runtime,
+    requestId: "supervised-replay:source:subject",
+    channel: "development",
+    scope: "tenant:run96",
+    authorizationEpoch: 96,
+    caseIds: ["case:run96:source", "case:run96:counterfactual"],
+    captures: [sourceCapture, counterfactualCapture],
+    subjects: [
+      { taskText: "Reply with the single word: ok", criteria, outputText: "ok" },
+      { taskText: "Reply with the single word: ok", criteria, outputText: "okay" },
+    ],
+  });
+  const first = JSON.parse(written[0]) as Record<string, unknown>;
+  const second = JSON.parse(written[1]) as Record<string, unknown>;
+  expect(first.subject).toMatchObject({
+    taskText: "Reply with the single word: ok",
+    outputText: "ok",
+  });
+  expect((first.subject as Record<string, unknown>).criteria).toMatchObject({ requiredTerms: ["ok"] });
+  expect(second.subject).toMatchObject({ outputText: "okay" });
+
+  // The subject is bounded: an oversized instruction is truncated with an explicit marker instead of
+  // being written out in full.
+  const huge = "x".repeat(200_000);
+  const bounded: string[] = [];
+  await persistSupervisedReplayEvaluationCaseReferences({
+    runtime: {
+      async invoke(_id: string, envelope: Record<string, unknown>) {
+        const payload = envelope.payload as Record<string, unknown>;
+        bounded.push(String((payload.record as Record<string, unknown>).content));
+        return { id: artifactId("0") };
+      },
+    },
+    requestId: "supervised-replay:source:bounded",
+    channel: "development",
+    scope: "tenant:run96",
+    authorizationEpoch: 96,
+    caseIds: ["case:run96:bounded"],
+    captures: [sourceCapture],
+    subjects: [{ taskText: huge, criteria, outputText: huge }],
+  });
+  const boundedSubject = (JSON.parse(bounded[0]) as Record<string, unknown>).subject as Record<
+    string,
+    unknown
+  >;
+  expect(String(boundedSubject.taskText).length).toBeGreaterThan(0);
+  expect(String(boundedSubject.taskText).length).toBeLessThan(huge.length);
+  expect(String(boundedSubject.taskText)).toMatch(/truncated/i);
+  expect(String(boundedSubject.outputText).length).toBeLessThan(huge.length);
 });
 
 test("Run96 CLI persists and reads back independent evaluation reference facts", async () => {

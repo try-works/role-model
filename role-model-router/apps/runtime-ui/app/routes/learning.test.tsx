@@ -113,6 +113,19 @@ describe("LearningRoute", () => {
   });
 
   /**
+   * Run 98 addendum 31 S5: "missing or pruned evidence lowers readiness" has to be visible. The
+   * overview reads the auditability counts the runtime publishes, so an operator can see how much of
+   * the scored evidence is checkable instead of reading a surface that only reports volume.
+   */
+  test("the overview reports input auditability from the runtime summary", () => {
+    const routeSource = readFileSync(new URL("./learning.tsx", import.meta.url), "utf8");
+    expect(routeSource).toContain('label="Input auditability"');
+    expect(routeSource).toContain("auditability.resolvedInputs");
+    expect(routeSource).toContain("auditability.unresolvedInputs");
+    expect(routeSource).toContain("auditability.missingInputProof");
+  });
+
+  /**
    * Run 98 addendum 25 §1 (operator-reported, 2026-09-16): the Recent decisions panel asserted a
    * hardcoded "the selection always remains the baseline in stage S1" while the scope was running
    * S2, contradicting the STAGE metric in the same page's header. The sentence is a claim about

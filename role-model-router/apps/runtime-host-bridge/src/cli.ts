@@ -614,6 +614,23 @@ export function buildSupervisedReplayEvaluationReferences(input: {
  * only supplies links to already durable replay artifacts and never signs or
  * invents an evaluation proof.
  */
+const MAX_EVALUATION_CASE_SUBJECT_BYTES = 8 * 1024;
+
+/**
+ * Run 98 addendum 31 S2: bound the evaluation subject that travels with a case reference. The point
+ * is that the score's input survives; it must not turn a reference artifact into a transcript copy,
+ * so an oversized subject is truncated with an explicit marker.
+ */
+function boundCaseSubjectText(value: unknown): string {
+  const text = typeof value === "string" ? value : "";
+  if (Buffer.byteLength(text, "utf8") <= MAX_EVALUATION_CASE_SUBJECT_BYTES) return text;
+  let bounded = text;
+  while (bounded.length > 0 && Buffer.byteLength(bounded, "utf8") > MAX_EVALUATION_CASE_SUBJECT_BYTES) {
+    bounded = bounded.slice(0, Math.floor(bounded.length * 0.9));
+  }
+  return `${bounded}\n[truncated ${text.length - bounded.length} chars]`;
+}
+
 export async function persistSupervisedReplayEvaluationCaseReferences(input: {
   readonly runtime: {
     readonly invoke: (
@@ -627,6 +644,16 @@ export async function persistSupervisedReplayEvaluationCaseReferences(input: {
   readonly authorizationEpoch: number;
   readonly caseIds: readonly string[];
   readonly captures: readonly DurableReplayCapture[];
+  /**
+   * Run 98 addendum 31 S2 (`guidance/11`: a score binds its *input projection*): the evaluation
+   * subject travels with the case reference, so a score is checkable without following the capture
+   * store. Bounded and truncated with an explicit marker.
+   */
+  readonly subjects?: readonly {
+    readonly taskText: string;
+    readonly criteria: unknown;
+    readonly outputText: string;
+  }[];
 }): Promise<readonly string[]> {
   if (
     !input.requestId ||
@@ -642,6 +669,7 @@ export async function persistSupervisedReplayEvaluationCaseReferences(input: {
   return Promise.all(
     input.captures.map(async (capture, index) => {
       const caseId = input.caseIds[index];
+      const subject = input.subjects?.[index];
       const rootRef = durableCaptureArtifactReference(
         capture,
         "rootArtifactId",
@@ -681,6 +709,15 @@ export async function persistSupervisedReplayEvaluationCaseReferences(input: {
               responseArtifactRef: responseRef,
               routeDecisionArtifactRef: routeDecisionRef,
               providerArtifactRef: providerRef,
+              ...(subject
+                ? {
+                    subject: {
+                      taskText: boundCaseSubjectText(subject.taskText),
+                      criteria: subject.criteria ?? null,
+                      outputText: boundCaseSubjectText(subject.outputText),
+                    },
+                  }
+                : {}),
             }),
             mediaType: "application/json",
             schema: "role-model.evaluation-case-reference.v1",
@@ -1041,6 +1078,16 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       authorizationEpoch: 1,
       caseIds,
       captures,
+      // Run 98 addendum 31 S2: the case reference carries the bounded evaluation subject, so the
+      // score's input is readable from the evaluation store instead of only through the capture.
+      subjects: captures.map((_capture, index) => ({
+        taskText: extractTaskInstructionText(input.sourceCapture) ?? "",
+        criteria: input.evaluationCriteria,
+        outputText:
+          index === 0
+            ? input.sourceOutput
+            : evaluatedCounterfactuals[index - 1]?.output ?? "",
+      })),
     });
     const sourceReplaySource = durableReplaySource(input.sourceCapture, "source replay capture");
     const sourceSharedPrefixRef = durableCaptureArtifactReference(
