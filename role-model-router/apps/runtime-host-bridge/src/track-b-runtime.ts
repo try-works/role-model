@@ -7931,6 +7931,17 @@ export async function runTrackBShadowPipeline(
       (rollout.outcome as Record<string, unknown> | undefined)?.outcomeDigest,
       "rollout outcome",
     );
+    // Run 98 addendum 31 S4 (live finding, stage v191): the trial result claimed three streams
+    // (`outputRef == stdoutRef == stderrRef`) and two measurements it never made
+    // (`{elapsedMs: 0, outputBytes: 0}`). A replay executes one provider call whose raw record is the
+    // provider-result artifact, so the stdout/stderr references point at that record and the result
+    // says they are one artifact; and because this runner performs no timing or byte measurement, it
+    // says so instead of reporting zeros as measured values.
+    const providerRecordRef =
+      typeof (rollout.outcome as Record<string, unknown> | undefined)?.outcomeRef === "string" &&
+      String((rollout.outcome as Record<string, unknown>).outcomeRef).trim()
+        ? String((rollout.outcome as Record<string, unknown>).outcomeRef).trim()
+        : outputRef;
     const execution = await runtime.invoke("evaluation-runner-local", {
       ...envelope("evaluation:execute-trial", {
         trialId: trial.trialId,
@@ -7938,10 +7949,11 @@ export async function runTrackBShadowPipeline(
         evaluationCriteria,
         outputRef,
         outputDigest,
-        stdoutRef: outputRef,
-        stderrRef: outputRef,
+        stdoutRef: providerRecordRef,
+        stderrRef: providerRecordRef,
         exitCode: 0,
-        measurements: { elapsedMs: 0, outputBytes: 0 },
+        streams: "single_provider_artifact",
+        measurements: { measured: false, reason: "replay_runner_reports_no_timings" },
       }),
       scorerDefinitions: [scorer],
     });

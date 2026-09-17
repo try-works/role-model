@@ -538,10 +538,14 @@ export function buildSupervisedReplayEvaluationReferences(input: {
       "rootArtifactId",
       `capture ${index} evidence`,
     ),
+    // Run 98 addendum 31 S4: the trial's output reference must be the artifact that holds the answer
+    // text the runner scores. It used to be the capture's *route decision* artifact, so a score's
+    // output reference did not contain its output. The route decision stays reachable through the
+    // evidence root; the response artifact is what "output" means.
     artifactRef: durableCaptureArtifactReference(
       capture,
-      "routeDecisionArtifactId",
-      `capture ${index} route decision`,
+      "responseArtifactId",
+      `capture ${index} response`,
     ),
     outcomeRef: durableCaptureArrayArtifactReference(
       capture,
