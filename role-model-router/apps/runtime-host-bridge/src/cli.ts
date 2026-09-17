@@ -5418,12 +5418,134 @@ export async function main(): Promise<void> {
               getDispatched: (endpointId: string) => dispatched.get(endpointId),
               currentLedgerReservationId: () => null,
             });
-            return (await completer({
+            const completedEntry = (await completer({
               replayJobId: entry.replayJobId,
               evaluationJobId: entry.evaluationJobId,
               replayJob: null,
               resultBranches: [],
             })) as Readonly<Record<string, unknown>>;
+            /**
+             * Run 98 addendum 34 S1 (live v212 finding): this resume path — not the fresh-completion
+             * path — is the one that finalizes most captures, so the extra-pair pass has to run here
+             * too or the comparison graph never gains the pairs it is missing. The arms and the source
+             * capture are read exactly as the completion above reads them; the planner and the coverage
+             * ledger are shared with the fresh path (`track-b-pair-coverage.ts`).
+             */
+            try {
+              const sweepOperations = currentPostObservationOperations();
+              const sourceCaptureForPairs = (await sweepOperations?.readLocalRouteCapture({
+                requestId: entry.sourceCaptureRequestId,
+              })) as Record<string, unknown> | null;
+              const sourceOutputForPairs = sourceCaptureForPairs
+                ? extractSourceOutputText(sourceCaptureForPairs)
+                : null;
+              const sweepArms: Array<{
+                candidate: { endpointId: string; modelId: string; reasoningEffort: string | null };
+                capture: Record<string, unknown>;
+                output: string;
+              }> = [];
+              for (const candidate of entry.counterfactualPackages) {
+                const replayRequestId = `replay-${entry.requestId}-${createHash("sha256")
+                  .update(`${entry.replayJobId}\u0000${candidate.endpointId}`)
+                  .digest("hex")
+                  .slice(0, 16)}`;
+                const branchCapture = (await sweepOperations?.readLocalRouteCapture({
+                  requestId: `${replayRequestId}-branch`,
+                })) as Record<string, unknown> | null;
+                if (!branchCapture || typeof branchCapture !== "object") continue;
+                const output = extractSourceOutputText(branchCapture);
+                if (!output) continue;
+                sweepArms.push({ candidate, capture: branchCapture, output });
+              }
+              if (sourceCaptureForPairs && sourceOutputForPairs && sweepArms.length >= 2) {
+                const ledger = createPairCoverageLedger({
+                  filePath: path.join(
+                    path.dirname(
+                      resolveSupervisedReplayEvaluationResumePath({
+                        runtimeStateRoot: options.runtimeStateRoot,
+                        scopeId: options.scopeId,
+                      }),
+                    ),
+                    "pair-coverage-ledger.json",
+                  ),
+                });
+                const sweepSourceEndpointId =
+                  typeof sourceCaptureForPairs.endpointId === "string" &&
+                  sourceCaptureForPairs.endpointId.trim()
+                    ? sourceCaptureForPairs.endpointId.trim()
+                    : entry.sourceEndpointId;
+                const sweepSourceModelId =
+                  typeof sourceCaptureForPairs.modelId === "string" && sourceCaptureForPairs.modelId.trim()
+                    ? sourceCaptureForPairs.modelId.trim()
+                    : entry.sourceModelId;
+                const primaryArm = entry.counterfactualPackages[0]?.endpointId ?? "";
+                if (primaryArm) ledger.record(sweepSourceEndpointId, primaryArm);
+                const planned = planPairComparisons({
+                  source: {
+                    candidate: {
+                      endpointId: sweepSourceEndpointId,
+                      modelId: sweepSourceModelId,
+                      reasoningEffort: null,
+                    },
+                    capture: sourceCaptureForPairs,
+                    output: sourceOutputForPairs,
+                  },
+                  arms: sweepArms,
+                  endpointIdOf: (arm) => arm.candidate.endpointId,
+                  coverage: ledger.snapshot(),
+                  maxPairs: resolveMaxExtraPairComparisons(process.env),
+                  excludePairs: primaryArm ? [pairKey(sweepSourceEndpointId, primaryArm)] : [],
+                });
+                for (const [index, pair] of planned.entries()) {
+                  const pairCompleter = buildSupervisedReplayEvaluationCompleter({
+                    backend: created,
+                    runtime,
+                    operations: sweepOperations ?? operations,
+                    requestId: `${entry.requestId}:pair${index + 1}`,
+                    channel,
+                    captureScope: entry.sourceCaptureRequestId ? captureScope : options.scopeId,
+                    sourceCapture: pair.left.capture,
+                    sourceOutput: pair.left.output,
+                    sourceEndpointId: pair.left.candidate.endpointId,
+                    sourceModelId: pair.left.candidate.modelId,
+                    counterfactualPackages: [pair.right.candidate],
+                    evaluationCriteria: entry.evaluationCriteria as unknown as Readonly<
+                      Record<string, unknown>
+                    >,
+                    evaluationCriteriaDigest: entry.evaluationCriteriaDigest,
+                    // The sweep builds its own policy snapshot, ledger and policy set for the primary
+                    // completion; the extra pairs use exactly the same authorities.
+                    learningPolicySnapshot: readEvaluationLearningPolicySnapshot(),
+                    replayLedger: createReplayLedger({
+                      filePath: path.join(
+                        options.runtimeStateRoot,
+                        options.scopeId,
+                        "track-b-replay-ledger.json",
+                      ),
+                      limits: resolveReplayLedgerLimits(),
+                    }),
+                    replayPolicySet: buildReplayPolicySet(),
+                    getDispatched: () => undefined,
+                    currentLedgerReservationId: () => null,
+                  });
+                  await pairCompleter({
+                    replayJobId: `${entry.replayJobId}:pair${index + 1}`,
+                    evaluationJobId: `${entry.evaluationJobId}:pair${index + 1}`,
+                    replayJob: null,
+                    resultBranches: [],
+                  });
+                  ledger.record(pair.left.candidate.endpointId, pair.right.candidate.endpointId);
+                }
+              }
+            } catch (error) {
+              // Extra comparisons are additional evidence, never the capture's decisive outcome.
+              console.error(
+                `[run98] sweep extra pair comparison declined:${entry.replayJobId} ${String(
+                  (error as { message?: unknown })?.message ?? error,
+                ).slice(0, 200)}`,
+              );
+            }
+            return completedEntry;
           },
           /**
            * Run 98 addendum 34 S5 (live stage v200): when the sweep abandons an entry, the evaluation
