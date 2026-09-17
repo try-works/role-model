@@ -310,6 +310,38 @@ test("run99 R33 the evidence summary decays old comparisons by the half-life", (
  * consistently under swapped presentation order is *incomparable*, so it is excluded from the
  * evidence entirely and counted by its canonical code instead of being averaged in as a tie.
  */
+/**
+ * Run 98 addendum 33 S3 (the research §3: "the comparison graph is a star ... three of six candidate
+ * pairs have never been directly compared"): the evidence summary states the graph it was computed over —
+ * each edge's count and the pairs no counted comparison covered — so a ranking can never be inferred
+ * silently through a hub.
+ */
+test("run98 A33 S3 the summary reports its comparison graph and the pairs it never covered", () => {
+  const nowMs = Date.parse("2026-09-14T10:00:00Z");
+  const alpha = "endpoint:alpha";
+  const beta = "endpoint:beta";
+  const gamma = "endpoint:gamma";
+  const summary = buildTrackBLearningEvidenceSummary({
+    groups: [
+      group({ groupId: "edge:ab", outcome: "candidate", sourceRef: alpha, counterfactualRef: beta }),
+      group({ groupId: "edge:ab-2", outcome: "candidate", sourceRef: alpha, counterfactualRef: beta }),
+      group({ groupId: "edge:ac", outcome: "source", sourceRef: alpha, counterfactualRef: gamma }),
+    ],
+    routePackage: alpha,
+    nowMs,
+    evidenceMaxAgeMs: 30 * 24 * 60 * 60 * 1_000,
+  });
+  expect(summary.comparable.cases).toBeGreaterThan(0);
+  expect(summary.comparable.candidates).toEqual([alpha, beta, gamma]);
+  expect(summary.comparable.pairs).toEqual(
+    expect.arrayContaining([
+      { sourceCandidateRef: alpha, counterfactualCandidateRef: beta, comparisons: 2 },
+      { sourceCandidateRef: alpha, counterfactualCandidateRef: gamma, comparisons: 1 },
+    ]),
+  );
+  expect(summary.comparable.missingPairs).toEqual([[beta, gamma]]);
+});
+
 test("run99 R33 an incomparable comparison is excluded and counted by code", () => {
   const nowMs = Date.parse("2026-09-14T10:00:00Z");
   const comparable = group({

@@ -147,6 +147,18 @@ export function buildTrackBLearningEvidenceSummary(input: {
     readonly cases: number;
     readonly candidates: readonly string[];
     readonly caseIds: readonly string[];
+    /** Run 98 addendum 33 S3: the comparison graph's edges and their counts. */
+    readonly pairs: readonly {
+      readonly sourceCandidateRef: string;
+      readonly counterfactualCandidateRef: string;
+      readonly comparisons: number;
+    }[];
+    /**
+     * Run 98 addendum 33 S3 (the research §3: "three of six candidate pairs have never been directly
+     * compared"): the candidate pairs the counted evidence never covered, so a reader can see the graph is
+     * incomplete instead of inferring a ranking through a hub.
+     */
+    readonly missingPairs: readonly (readonly [string, string])[];
   };
   /**
    * Run 99 R33 (addendum 19 S34, addendum 20 D2/D4, addendum 21 D11): the same counts keyed by
@@ -193,6 +205,8 @@ export function buildTrackBLearningEvidenceSummary(input: {
    */
   const comparableCases = new Set<string>();
   const comparableCandidates = new Set<string>();
+  /** Run 98 addendum 33 S3: how many counted comparisons each candidate pair actually has. */
+  const comparablePairs = new Map<string, number>();
   const familyCaptures = new Map<string, Set<string>>();
   const familyDecisive = new Map<string, string[]>();
   const familyHoldout = new Map<string, number>();
@@ -320,6 +334,12 @@ export function buildTrackBLearningEvidenceSummary(input: {
     for (const field of ["sourceCandidateRef", "counterfactualCandidateRef"] as const) {
       const candidateRef = boundedText(comparability[field]);
       if (candidateRef) comparableCandidates.add(candidateRef);
+    }
+    const sourceCandidate = boundedText(comparability.sourceCandidateRef);
+    const counterfactualCandidate = boundedText(comparability.counterfactualCandidateRef);
+    if (sourceCandidate && counterfactualCandidate) {
+      const pairKey = `${sourceCandidate}\u0000${counterfactualCandidate}`;
+      comparablePairs.set(pairKey, (comparablePairs.get(pairKey) ?? 0) + 1);
     }
     // The development partition travels on the comparison result (addendum 32 S1).
     const developmentPartition = asRecord(result.developmentPartition);
@@ -491,6 +511,29 @@ export function buildTrackBLearningEvidenceSummary(input: {
       cases: comparableCases.size,
       candidates: [...comparableCandidates].sort().slice(0, 32),
       caseIds: [...comparableCases].sort().slice(0, 256),
+      pairs: [...comparablePairs.entries()]
+        .map(([key, comparisons]) => {
+          const [sourceCandidateRef, counterfactualCandidateRef] = key.split("\u0000");
+          return { sourceCandidateRef, counterfactualCandidateRef, comparisons };
+        })
+        .sort((left, right) => right.comparisons - left.comparisons)
+        .slice(0, 32),
+      missingPairs: (() => {
+        const candidates = [...comparableCandidates].sort();
+        const covered = new Set(
+          [...comparablePairs.keys()].map((key) =>
+            key.split("\u0000").sort().join("\u0000"),
+          ),
+        );
+        const missing: [string, string][] = [];
+        for (let index = 0; index < candidates.length; index += 1) {
+          for (let other = index + 1; other < candidates.length; other += 1) {
+            const key = [candidates[index], candidates[other]].sort().join("\u0000");
+            if (!covered.has(key)) missing.push([candidates[index], candidates[other]]);
+          }
+        }
+        return missing.slice(0, 32);
+      })(),
     },
   };
 }

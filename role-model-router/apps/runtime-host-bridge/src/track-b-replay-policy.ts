@@ -114,6 +114,13 @@ export function selectReplayCandidates(input: {
    * deterministic and judge dimensions inverting for it.
    */
   readonly excludedEndpointIds?: readonly string[];
+  /**
+   * Run 98 addendum 33 S3 (the research §3: "rotate which candidate serves as the reference across prompts
+   * so the graph becomes connected"): a stable per-capture key. When present, the eligible candidates are
+   * ordered by a digest of the key, so successive captures explore different counterfactuals instead of
+   * every capture comparing the same two candidates (the live store's 465-of-465 star).
+   */
+  readonly rotationKey?: string | null;
   readonly cap?: number;
 }): readonly string[] {
   const cap = input.cap ?? DEFAULT_REPLAY_CANDIDATE_CAP;
@@ -127,6 +134,7 @@ export function selectReplayCandidates(input: {
   );
   const selected: string[] = [];
   const seen = new Set<string>();
+  const eligible: string[] = [];
   for (const endpointId of input.configuredEndpointIds) {
     const normalized = endpointId.trim();
     if (!normalized || seen.has(normalized)) continue;
@@ -136,7 +144,18 @@ export function selectReplayCandidates(input: {
     }
     if (healthy && !healthy.has(normalized)) continue;
     seen.add(normalized);
-    selected.push(normalized);
+    eligible.push(normalized);
+  }
+  const rotationKey = typeof input.rotationKey === "string" ? input.rotationKey.trim() : "";
+  const ordered = rotationKey
+    ? [...eligible].sort((left, right) => {
+        const leftDigest = createHash("sha256").update(`${rotationKey}\n${left}`).digest("hex");
+        const rightDigest = createHash("sha256").update(`${rotationKey}\n${right}`).digest("hex");
+        return leftDigest === rightDigest ? left.localeCompare(right) : leftDigest.localeCompare(rightDigest);
+      })
+    : eligible;
+  for (const endpointId of ordered) {
+    selected.push(endpointId);
     if (selected.length === cap) break;
   }
   return selected;

@@ -4092,6 +4092,9 @@ export async function main(): Promise<void> {
           const distinctReplayCandidates = selectReplayCandidates({
             configuredEndpointIds: candidateEndpointIds,
             sourceEndpointId: capturedSourceEndpointId,
+            // Run 98 addendum 33 S3: rotate the counterfactual per request so the comparison graph gains
+            // edges across captures rather than repeating one pair (the live store's 465-of-465 star).
+            rotationKey: requestId,
             // Run 98 addendum 30 S1/S2 (`guidance/11` `judgePolicy.excludeFromLiveEvaluation`): the
             // judge is a designated client and is never offered as a scored candidate, so a battle
             // cannot contain the endpoint that judges it.

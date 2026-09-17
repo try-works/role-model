@@ -372,6 +372,9 @@ export async function runAutoReplayTick(input: {
       configuredEndpointIds: input.configuredEndpointIds,
       ...(input.healthyEndpointIds ? { healthyEndpointIds: input.healthyEndpointIds } : {}),
       sourceEndpointId: capture.sourceEndpointId,
+      // Run 98 addendum 33 S3: rotate the counterfactual with the capture, so the comparison graph grows
+      // edges instead of every capture comparing the same two candidates.
+      rotationKey: capture.captureRef,
     });
     const status = input.ledger.status();
     const admission = decideReplayAdmission({
