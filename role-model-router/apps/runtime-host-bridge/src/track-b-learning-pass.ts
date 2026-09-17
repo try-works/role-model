@@ -139,6 +139,16 @@ export function buildTrackBLearningEvidenceSummary(input: {
   readonly effectiveHoldoutComparisons: number;
   readonly effectiveDevelopmentComparisons: number;
   /**
+   * Run 98 addendum 33 S4: the comparable set behind every number above — the distinct evaluated cases
+   * and the candidates they were evaluated for. An aggregate that does not declare this set cannot be
+   * read as a comparison.
+   */
+  readonly comparable: {
+    readonly cases: number;
+    readonly candidates: readonly string[];
+    readonly caseIds: readonly string[];
+  };
+  /**
    * Run 99 R33 (addendum 19 S34, addendum 20 D2/D4, addendum 21 D11): the same counts keyed by
    * the task family the comparison was produced for. The learner's floor is per
    * (route package x task family), so another family's evidence can never clear this one's.
@@ -175,6 +185,14 @@ export function buildTrackBLearningEvidenceSummary(input: {
 } {
   const decisiveGroupIds: string[] = [];
   const captures = new Set<string>();
+  /**
+   * Run 98 addendum 33 S4 (the research §3: "candidate means are computed over different task
+   * populations ... report only on the common rubric set, and state the comparable n alongside every
+   * number"): the counted evidence declares which cases and candidates it actually covers, so an
+   * aggregate can name its own comparable set instead of silently averaging different populations.
+   */
+  const comparableCases = new Set<string>();
+  const comparableCandidates = new Set<string>();
   const familyCaptures = new Map<string, Set<string>>();
   const familyDecisive = new Map<string, string[]>();
   const familyHoldout = new Map<string, number>();
@@ -294,6 +312,15 @@ export function buildTrackBLearningEvidenceSummary(input: {
     captures.add(captureRef);
     const caseIds = Array.isArray(holdout?.caseIds) ? holdout.caseIds : [];
     if (caseIds.length > 0) holdoutComparisons += 1;
+    // The comparable set: the cases the counted comparison actually evaluated (the holdout membership)
+    // and the two candidates it compared.
+    for (const caseId of caseIds) {
+      if (typeof caseId === "string" && caseId.length > 0) comparableCases.add(caseId);
+    }
+    for (const field of ["sourceCandidateRef", "counterfactualCandidateRef"] as const) {
+      const candidateRef = boundedText(comparability[field]);
+      if (candidateRef) comparableCandidates.add(candidateRef);
+    }
     // The development partition travels on the comparison result (addendum 32 S1).
     const developmentPartition = asRecord(result.developmentPartition);
     const developmentCaseIds = Array.isArray(developmentPartition?.caseIds)
@@ -460,6 +487,11 @@ export function buildTrackBLearningEvidenceSummary(input: {
     effectiveDecisiveComparisons: roundWeight(effectiveDecisiveComparisons),
     effectiveHoldoutComparisons: roundWeight(effectiveHoldoutComparisons),
     effectiveDevelopmentComparisons: roundWeight(effectiveDevelopmentComparisons),
+    comparable: {
+      cases: comparableCases.size,
+      candidates: [...comparableCandidates].sort().slice(0, 32),
+      caseIds: [...comparableCases].sort().slice(0, 256),
+    },
   };
 }
 
