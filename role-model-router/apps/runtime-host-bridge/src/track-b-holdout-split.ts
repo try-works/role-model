@@ -39,6 +39,25 @@ export interface FamilyStratifiedHoldout {
   readonly caseIds: readonly string[];
   /** Run 99 R33 D7: the complementary train membership inside the same family. */
   readonly trainCaseIds: readonly string[];
+  /**
+   * Run 98 addendum 32 S1: the same set, named for what it is - the development evidence a promotion
+   * fits on, while the holdout decides. Kept beside `trainCaseIds` so historical receipts keep their
+   * exact shape and nothing is re-labelled retroactively.
+   */
+  readonly developmentCaseIds: readonly string[];
+  /**
+   * The development membership binding, computed the same way the holdout binding is
+   * (`{partition, caseIds}`) so a reader can verify the complement without re-running the split. It is
+   * informational: Evaluation Core binds the holdout membership only, so this digest never enters a
+   * durable comparison.
+   */
+  readonly developmentMembershipDigest: string;
+  /** The split declaration that produced both partitions, rebuilt from the receipt alone. */
+  readonly splitDeclaration: {
+    readonly algorithm: typeof SPLIT_ALGORITHM;
+    readonly seed: number;
+    readonly stratum: string | null;
+  };
   /** Every case the family supplied, with the partition the declaration assigns it. */
   readonly partitions: readonly {
     readonly caseId: string;
@@ -118,12 +137,19 @@ export function buildFamilyStratifiedHoldout(input: {
   // declaration therefore travels beside the binding (below), where a receipt reader can still
   // rebuild the split, while the binding stays reproducible by the authority that enforces it.
   const membershipDigest = computeHoldoutMembershipDigest(holdoutCaseIds);
+  const developmentMembershipDigest = `sha256:${digest({
+    partition: "train",
+    caseIds: [...trainCaseIds].sort(),
+  })}`;
   return {
     holdoutId,
     membershipDigest,
     partition: "holdout",
     caseIds: holdoutCaseIds,
     trainCaseIds,
+    developmentCaseIds: trainCaseIds,
+    developmentMembershipDigest,
+    splitDeclaration: { algorithm: SPLIT_ALGORITHM, seed: splitSeed, stratum },
     partitions,
     splitAlgorithm: SPLIT_ALGORITHM,
     splitSeed,
