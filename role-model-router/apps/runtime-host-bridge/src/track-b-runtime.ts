@@ -7386,7 +7386,11 @@ export function createRun96RoutingShadowScorer(
   const definition = {
     manifestVersion: 2 as const,
     id: overrides.id ?? "run96-semantic-criteria",
-    version: overrides.version ?? "2",
+    // Run 98 addendum 32 S2: `required_terms` now grants proportional credit instead of all-or-nothing
+    // (the deterministic ruler's semantics changed), so the definition registers as a new scorer
+    // version. Evaluation Core keys on `id@version`; a semantics change under the old identity is
+    // refused as "duplicate scorer ID has incompatible version" and mixed-version means stay readable.
+    version: overrides.version ?? "3",
     scorerSetVersion: RUN96_ROUTING_SHADOW_SCORER_SET_VERSION,
     algorithm: overrides.algorithm ?? "required_terms",
     dimensions: [...(overrides.dimensions ?? ["correctness"])],
