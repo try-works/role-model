@@ -5930,6 +5930,41 @@ const EXTENSION_TRANSPORT_FIELDS = [
   "readCapability",
 ] as const;
 
+/**
+ * Run 98 addendum 34 S5 residual (live v228/v229): the supervised invoke boundary answers a readback as
+ * `{value: …}` (and some hosts as `{businessOutput: …}` or `{result: …}`), which `decodeExtensionBusinessResult`
+ * deliberately leaves alone because it treats any non-transport key as the payload itself. A caller that
+ * validates the *shape* of a business record therefore has to unwrap first. The unwrap is conservative: it
+ * only descends while the record carries **no** payload of its own beyond the known wrapper keys, so a
+ * business record that legitimately has a `value` field is never mistaken for a wrapper. Bounded to eight
+ * levels so a pathological nesting cannot spin.
+ */
+function unwrapExtensionBusinessValue(raw: unknown): Record<string, unknown> | null {
+  const wrapperKeys = new Set<string>([
+    "value",
+    "result",
+    "businessOutput",
+    ...EXTENSION_TRANSPORT_FIELDS,
+  ]);
+  let current: unknown = raw;
+  for (let depth = 0; depth < 8; depth += 1) {
+    if (!current || typeof current !== "object" || Array.isArray(current)) return null;
+    const record = current as Record<string, unknown>;
+    const keys = Object.keys(record);
+    const isWrapper = keys.length > 0 && keys.every((key) => wrapperKeys.has(key));
+    if (!isWrapper) return record;
+    const inner =
+      record.value !== undefined
+        ? record.value
+        : record.result !== undefined
+          ? record.result
+          : record.businessOutput;
+    if (inner === undefined || typeof inner !== "object" || inner === null) return record;
+    current = inner;
+  }
+  return null;
+}
+
 function decodeExtensionBusinessResult(input: {
   readonly result: unknown;
   readonly extensionId: string;
@@ -8462,9 +8497,27 @@ export async function runTrackBShadowPipeline(
   const persistedEvaluation = await runtime.invoke("evaluation-core", {
     ...envelope("evaluation:read-comparison-group", { groupId: `comparison:${input.requestId}` }),
   });
+  /**
+   * Run 98 addendum 34 S5 residual (live v228/v229: 16 dispositions in twelve hours deferred with
+   * `durable routing-shadow comparison finalization failed` while every group in the store was finalized
+   * and every payload was inline). The group exists; the *readback shape* failed the check. Some hosts
+   * answer the extension invoke wrapped (`{value: …}` / `{businessOutput: …}`) — the same boundary shape
+   * addendum 34 S7 unwrapped on its own readbacks — and this call validated the wrapper directly, so
+   * `status` was undefined and a completed comparison was reported as a failure. Decode first, exactly as
+   * the neighbouring call sites do.
+   */
+  const persistedEvaluationDecoded =
+    unwrapExtensionBusinessValue(persistedEvaluation) ??
+    decodeExtensionBusinessResult({
+      result: persistedEvaluation,
+      extensionId: "evaluation-core",
+      ...(input.contractStateRoot ? { stateRoot: input.contractStateRoot } : {}),
+      scopeId: input.scope,
+    }) ??
+    persistedEvaluation;
   if (
-    !persistedEvaluation ||
-    (persistedEvaluation as Record<string, unknown>).status !== "finalized" ||
+    !persistedEvaluationDecoded ||
+    (persistedEvaluationDecoded as Record<string, unknown>).status !== "finalized" ||
     !new Set([
       "candidate",
       "source",
@@ -8473,11 +8526,11 @@ export async function runTrackBShadowPipeline(
       "incomplete",
       "insufficient",
       "disagreement",
-    ]).has(String((persistedEvaluation as Record<string, unknown>).outcome ?? ""))
+    ]).has(String((persistedEvaluationDecoded as Record<string, unknown>).outcome ?? ""))
   ) {
     throw new Error("durable routing-shadow comparison finalization failed");
   }
-  const durableComparison = persistedEvaluation as Record<string, unknown>;
+  const durableComparison = persistedEvaluationDecoded as Record<string, unknown>;
   // Run 97 RC06: a decisive comparison is evidence about the winning package, and both
   // directions are learnable (`guidance/07`: the worker compares winners and losers;
   // `guidance/13`: signed observational evidence, `keep` for a holding incumbent). The
@@ -8785,7 +8838,10 @@ export async function runTrackBShadowPipeline(
     };
     return {
       replay,
-      evaluation: persistedEvaluation,
+      // Run 98 addendum 34 S5 residual: the *unwrapped* comparison is what travels outward. Returning the
+      // wrapper made the completer's own outcome check (`evaluated.evaluation.outcome`) fail on a comparison
+      // that had in fact finalized — the second half of the same boundary-shape defect.
+      evaluation: persistedEvaluationDecoded,
       signals,
       profile: {
         state: "not_run",

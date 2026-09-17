@@ -75,6 +75,8 @@ function createFakeRuntime(
   store: Map<string, string>,
   capturedJobs: Record<string, unknown>[] = [],
   capturedFinalizers: Record<string, unknown>[] = [],
+  /** Run 98 addendum 34 S5 residual: some hosts answer the readback wrapped (`{value}`). */
+  wrapReadback = false,
 ) {
   let writeIndex = 0;
   let trialIndex = 0;
@@ -159,7 +161,8 @@ function createFakeRuntime(
       }
       if (id === "evaluation-core" && capability === "evaluation:read-comparison-group") {
         const value = envelope.value as Record<string, unknown>;
-        return { groupId: value.groupId, status: "finalized", outcome: "candidate" };
+        const readback = { groupId: value.groupId, status: "finalized", outcome: "candidate" };
+        return wrapReadback ? { value: readback } : readback;
       }
       if (id === "evaluation-core" && capability === "evaluation:register-scorer") return {};
       if (id === "evaluation-core" && capability === "evaluation:create-job") {
@@ -220,7 +223,7 @@ interface Arm {
 function buildScenario(
   armMarks: readonly string[],
   ledgerPath?: string,
-  options: { readonly judgeEndpointId?: string } = {},
+  options: { readonly judgeEndpointId?: string; readonly wrapReadback?: boolean } = {},
 ) {
   const sourceCapture = capture("1");
   const arms: Arm[] = armMarks.map((mark) => ({
@@ -237,7 +240,7 @@ function buildScenario(
   const pipelineInputs: TrackBShadowPipelineInput[] = [];
   const pipelineCalls: string[] = [];
   const completer = createSupervisedReplayEvaluationCompleter({
-    runtime: createFakeRuntime(store, capturedJobs, capturedFinalizers),
+    runtime: createFakeRuntime(store, capturedJobs, capturedFinalizers, options.wrapReadback === true),
     operations: {
       async readLocalRouteCapture(input) {
         const requestId = String(input?.requestId ?? "");
@@ -496,5 +499,27 @@ describe("run 98 addendum 34 S1 pair comparisons", () => {
     // the finalized comparison submits exactly the two holdout sides it judged.
     const finalizer = scenario.capturedFinalizers[0];
     expect((finalizer?.trialIds as readonly string[] | undefined)?.length).toBe(2);
+  });
+
+  /**
+   * Run 98 addendum 34 S5 residual (live v228/v229: 16 dispositions in twelve hours deferred with
+   * `durable routing-shadow comparison finalization failed` while every group in the store was finalized).
+   *
+   * The group exists and is valid; the *readback* shape is what fails the pipeline's check. Some hosts
+   * answer the extension invoke wrapped (`{value: …}` / `{businessOutput: …}`) — the same boundary shape
+   * that made addendum 34 S7 unwrap its own readbacks — and the pipeline validated the wrapper directly,
+   * so `status` was undefined and a completed comparison was reported as a failure.
+   */
+  test("a wrapped comparison readback still counts as a finalized comparison", async () => {
+    const scenario = buildScenario(["a", "b"], undefined, {
+      judgeEndpointId: "endpoint:judge-stub",
+      wrapReadback: true,
+    });
+    const result = await scenario.invoke();
+    expect(result).toMatchObject({
+      evaluationJobId: "evaluation:run98:a34",
+      outcome: "candidate",
+    });
+    expect(String(result.comparisonGroupId)).toContain("comparison:");
   });
 });
