@@ -5290,19 +5290,32 @@ export async function main(): Promise<void> {
               // Fall back to the last capture scope the producer read.
             }
             try {
-              await activeRuntime.invoke("replay-core", {
-                requestId: `replay-fail-job:${entry.replayJobId}`,
-                sessionId: `replay-fail-job:${options.scopeId}`,
-                protocolVersion: "1.1.0",
-                channel,
-                scope,
-                authorizationEpoch: 1,
-                capability: "replay:fail-job",
-                value: {
-                  jobId: entry.replayJobId,
-                  reason: `evaluation_unavailable: ${reason}`,
-                },
-              });
+              const invokeFailJob = async (invokeScope: string | null) =>
+                activeRuntime.invoke("replay-core", {
+                  requestId: `replay-fail-job:${entry.replayJobId}`,
+                  sessionId: `replay-fail-job:${options.scopeId}`,
+                  protocolVersion: "1.1.0",
+                  channel,
+                  ...(invokeScope === null ? {} : { scope: invokeScope }),
+                  authorizationEpoch: 1,
+                  capability: "replay:fail-job",
+                  value: {
+                    jobId: entry.replayJobId,
+                    reason: `evaluation_unavailable: ${reason}`,
+                  },
+                });
+              try {
+                await invokeFailJob(scope);
+              } catch (bindingError) {
+                // Older entries can point at a job whose durable scope is not the source capture's
+                // (captures move between scopes). The host still enforces channel and authorization
+                // epoch, and the job id is the durable identity, so retry without the scope assertion
+                // rather than leaving the job parked for ever.
+                if (!/scope binding mismatch/u.test(String((bindingError as { message?: unknown })?.message ?? bindingError))) {
+                  throw bindingError;
+                }
+                await invokeFailJob(null);
+              }
             } catch (failure) {
               console.error(
                 `[run98] replay job terminalization declined:${entry.replayJobId} ${String(
