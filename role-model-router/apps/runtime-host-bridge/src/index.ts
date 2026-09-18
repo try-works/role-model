@@ -4575,6 +4575,12 @@ export function classifyUpstreamExecutionFailure(input: {
   });
 }
 
+const TRANSPORT_RETRY_ERROR_CLASSES: ReadonlySet<string> = new Set([
+  // A stalled connect/TLS handshake is not the endpoint's verdict: it is the
+  // transport's, and the same endpoint usually succeeds on a fresh connection.
+  "upstream_connection_error",
+]);
+
 export function shouldRetryUpstreamExecutionOnSameEndpoint(input: {
   readonly retryable: boolean;
   readonly errorClass: string;
@@ -4583,13 +4589,16 @@ export function shouldRetryUpstreamExecutionOnSameEndpoint(input: {
   readonly fallbackEligible: boolean;
   readonly hasOtherEligibleEndpoint: boolean;
 }): boolean {
-  return (
-    input.retryable &&
-    !input.alreadyRetried &&
-    classifyExecutionFailureCategory(input.errorClass, input.statusCode) !== "rate_limit" &&
-    !input.fallbackEligible &&
-    input.hasOtherEligibleEndpoint
-  );
+  if (!input.retryable || input.alreadyRetried) {
+    return false;
+  }
+  if (classifyExecutionFailureCategory(input.errorClass, input.statusCode) === "rate_limit") {
+    return false;
+  }
+  if (TRANSPORT_RETRY_ERROR_CLASSES.has(input.errorClass)) {
+    return true;
+  }
+  return !input.fallbackEligible && input.hasOtherEligibleEndpoint;
 }
 
 function readExecutionCircuitState(databasePath: string): ExecutionCircuitState {

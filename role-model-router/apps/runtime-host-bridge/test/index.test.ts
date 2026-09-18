@@ -18090,6 +18090,26 @@ describe("runtime-host-bridge", () => {
         hasOtherEligibleEndpoint: true,
       }),
     ).toBe(false);
+    expect(
+      shouldRetry({
+        retryable: true,
+        errorClass: "upstream_connection_error",
+        statusCode: 503,
+        alreadyRetried: false,
+        fallbackEligible: true,
+        hasOtherEligibleEndpoint: false,
+      }),
+    ).toBe(true);
+    expect(
+      shouldRetry({
+        retryable: true,
+        errorClass: "upstream_connection_error",
+        statusCode: 503,
+        alreadyRetried: true,
+        fallbackEligible: true,
+        hasOtherEligibleEndpoint: false,
+      }),
+    ).toBe(false);
   });
 
   test("does not place Codex subscription endpoints on cooldown for invalid_request failures", async () => {
