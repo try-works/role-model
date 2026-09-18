@@ -525,6 +525,14 @@ export interface RuntimeTelemetrySourceSummary {
   readonly totalEstimatedCostUsd: number;
   readonly averageLatencyMs: number | null;
   readonly p95LatencyMs: number | null;
+  /**
+   * Run 98 addendum 40 (L1): the provider response-header percentiles above are not the latency a
+   * caller experienced. These describe the flushed request duration; they are absent on responses
+   * from a runtime older than addendum 40 and null for windows whose rows predate it.
+   */
+  readonly averageRequestLatencyMs?: number | null;
+  readonly p95RequestLatencyMs?: number | null;
+  readonly requestLatencySampleCount?: number;
   readonly lastSeenAtMs: number | null;
 }
 

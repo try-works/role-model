@@ -16090,6 +16090,9 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           requestLatencyMs: Math.max(0, Date.now() - requestStartedAtMs),
         });
       };
+      // The duration is only known once the response has been flushed. Hooking `finish` covers every
+      // outcome, including failures written by the outer error handler.
+      response.once("finish", recordClientLatency);
       try {
         const requestAbortSignal = createBridgeRequestAbortSignal(request, response);
         const requestOptions = mergeBridgeRequestAbortSignal(
@@ -16160,7 +16163,6 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           }
           await writeSseChunk(response, "data: [DONE]\n\n", requestAbortSignal);
           response.end();
-          recordClientLatency();
           return;
         }
         const result = await options.executeChatCompletions(
@@ -16183,7 +16185,6 @@ function createRequestHandler(options: StartBridgeServerOptions) {
               : {}),
           }),
         );
-        recordClientLatency();
         return;
       } catch (error) {
         if (endCommittedBridgeResponse(response)) {
@@ -16198,7 +16199,6 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         }
         const message = error instanceof Error ? error.message : "chat completions request failed";
         writeJson(response, 400, { error: message });
-        recordClientLatency();
         return;
       }
     }
@@ -16213,6 +16213,8 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           requestLatencyMs: Math.max(0, Date.now() - requestStartedAtMs),
         });
       };
+      // Same contract as the chat-completions surface: record once the response is flushed.
+      response.once("finish", recordClientLatency);
       try {
         const requestAbortSignal = createBridgeRequestAbortSignal(request, response);
         const requestOptions = mergeBridgeRequestAbortSignal(
@@ -16311,7 +16313,6 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             }
           }
           response.end();
-          recordClientLatency();
           return;
         }
         const result = await options.executeResponses(
@@ -16331,7 +16332,6 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             costUsd: result.vendorMetadata?.costUsd,
           }),
         );
-        recordClientLatency();
         return;
       } catch (error) {
         if (endCommittedBridgeResponse(response)) {
@@ -16346,7 +16346,6 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         }
         const message = error instanceof Error ? error.message : "responses request failed";
         writeJson(response, 400, { error: message });
-        recordClientLatency();
         return;
       }
     }
