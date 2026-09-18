@@ -421,6 +421,13 @@ export interface RuntimeObservationBundleInput {
     readonly executions: readonly ToolRegistryExecution[];
   };
   readonly telemetrySnapshot?: RuntimeTelemetrySnapshot;
+  // Run 98 addendum 40 (L1): `execution.usageEvent.latency_ms` is the provider's response-header
+  // time. This carries the rest of the turn the client waited for so telemetry can report both.
+  readonly latencyBreakdown?: {
+    readonly providerHeaderMs?: number | null;
+    readonly providerCompletionMs?: number | null;
+    readonly timeToFirstTokenMs?: number | null;
+  };
   readonly telemetryConfig?: {
     readonly samplingRate?: number;
     readonly retentionTtlHours?: number;
@@ -481,6 +488,8 @@ export interface RuntimeObservationBundle {
   readonly contextEnvelope: RuntimeContextEnvelopeSummary;
   readonly trace: RoutedExecutionResult["trace"];
   readonly usageEvent: RoutedExecutionResult["usageEvent"];
+  /** Run 98 addendum 40 (L1): provider header/completion/first-token breakdown for this request. */
+  readonly latencyBreakdown?: RuntimeObservationBundleInput["latencyBreakdown"];
   readonly observedPerformance: {
     readonly endpointVersion: string;
     readonly sample: ObservedPerformanceSample;
@@ -1108,6 +1117,7 @@ export function createRuntimeObservationBundle(
       reasoning_effort: effort.reasoningEffort,
       effort_source: effort.effortSource,
     },
+    ...(input.latencyBreakdown ? { latencyBreakdown: input.latencyBreakdown } : {}),
     observedPerformance: {
       endpointVersion,
       sample: currentSample,

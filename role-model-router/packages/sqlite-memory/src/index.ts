@@ -106,6 +106,9 @@ const RUNTIME_TELEMETRY_INSERT_COLUMNS = [
   "output_tokens",
   "total_tokens",
   "latency_ms",
+  "provider_completion_latency_ms",
+  "time_to_first_token_ms",
+  "request_latency_ms",
   "error_class",
   "status_code",
   "finish_reason",
@@ -461,6 +464,9 @@ CREATE TABLE IF NOT EXISTS runtime_telemetry_records (
   output_tokens INTEGER NOT NULL,
   total_tokens INTEGER NOT NULL,
   latency_ms INTEGER,
+  provider_completion_latency_ms INTEGER,
+  time_to_first_token_ms INTEGER,
+  request_latency_ms INTEGER,
   error_class TEXT,
   status_code INTEGER,
   finish_reason TEXT,
@@ -1043,7 +1049,13 @@ export interface RuntimeTelemetryRecord {
   readonly outputTokensSource: "measured" | "normalized" | "estimated" | "unavailable";
   readonly outputTokensAvailable: boolean;
   readonly totalTokens: number;
+  // Run 98 addendum 40 (L1): provider response-header time. Kept under its historical name so
+  // existing readers and stored rows keep their meaning.
   readonly latencyMs: number | null;
+  readonly providerCompletionLatencyMs: number | null;
+  readonly timeToFirstTokenMs: number | null;
+  /** Client-visible duration; written after the response is flushed, null until then. */
+  readonly requestLatencyMs: number | null;
   readonly errorClass: string | null;
   readonly statusCode: number | null;
   readonly finishReason: string | null;
@@ -1112,6 +1124,12 @@ export interface RuntimeTelemetrySummary {
   readonly totalEffectiveCostUsd: number;
   readonly averageLatencyMs: number | null;
   readonly p95LatencyMs: number | null;
+  // Run 98 addendum 40 (L1): the provider response-header time above is not the latency a client
+  // experienced. These describe the flushed request duration; they stay null for rows written
+  // before the addendum, so historical windows keep reporting the provider percentile only.
+  readonly averageRequestLatencyMs: number | null;
+  readonly p95RequestLatencyMs: number | null;
+  readonly requestLatencySampleCount: number;
   readonly lastSeenAtMs: number | null;
 }
 
@@ -1198,6 +1216,14 @@ export interface PersistedRuntimeObservationBundle {
     readonly cost_estimate?: number;
     readonly currency?: string;
     readonly error_class?: string;
+  };
+  // Run 98 addendum 40 (L1): `usageEvent.latency_ms` keeps its historical meaning (the provider's
+  // response-header time). This breakdown carries the rest of the request the client actually
+  // waited for, so the operator surface stops reporting the header time as request latency.
+  readonly latencyBreakdown?: {
+    readonly providerHeaderMs?: number | null;
+    readonly providerCompletionMs?: number | null;
+    readonly timeToFirstTokenMs?: number | null;
   };
   readonly observedPerformance: {
     readonly sample: ObservedPerformanceSample;
@@ -1542,6 +1568,11 @@ function initializeSchema(database: DatabaseSync): void {
     "candidate_cost_snapshot_json TEXT",
     "selected_pricing_snapshot_json TEXT",
     "finish_reason TEXT",
+    // Run 98 addendum 40 (L1): provider completion time, first-token time, and the
+    // client-visible duration written once the response has been flushed.
+    "provider_completion_latency_ms INTEGER",
+    "time_to_first_token_ms INTEGER",
+    "request_latency_ms INTEGER",
     "prompt_cache_supported INTEGER NOT NULL DEFAULT 0",
     "cache_read_tokens_supported INTEGER NOT NULL DEFAULT 0",
     "cache_write_tokens_supported INTEGER NOT NULL DEFAULT 0",
@@ -2711,6 +2742,9 @@ function mapRuntimeTelemetryRecord(row: {
   output_tokens: number;
   total_tokens: number;
   latency_ms: number | null;
+  provider_completion_latency_ms: number | null;
+  time_to_first_token_ms: number | null;
+  request_latency_ms: number | null;
   error_class: string | null;
   status_code: number | null;
   finish_reason: string | null;
@@ -2889,6 +2923,9 @@ function mapRuntimeTelemetryRecord(row: {
         : usageTokenTruth === null && row.output_tokens > 0,
     totalTokens: row.total_tokens,
     latencyMs: row.latency_ms,
+    providerCompletionLatencyMs: row.provider_completion_latency_ms,
+    timeToFirstTokenMs: row.time_to_first_token_ms,
+    requestLatencyMs: row.request_latency_ms,
     errorClass: row.error_class,
     statusCode: row.status_code,
     finishReason: row.finish_reason,
@@ -3123,6 +3160,11 @@ function toRuntimeTelemetryRecord(
       observation.usageEvent.latency_ms ??
       observation.observedPerformance.sample.latency_ms ??
       null,
+    // Run 98 addendum 40 (L1): the provider breakdown and the client-visible duration.
+    providerCompletionLatencyMs: observation.latencyBreakdown?.providerCompletionMs ?? null,
+    timeToFirstTokenMs: observation.latencyBreakdown?.timeToFirstTokenMs ?? null,
+    // Written by `updateRuntimeTelemetryClientLatency` once the response has been flushed.
+    requestLatencyMs: null,
     errorClass,
     statusCode,
     finishReason: executionTelemetry?.finishReason ?? null,
@@ -3255,6 +3297,9 @@ function runtimeTelemetryInsertValues(
     record.outputTokens,
     record.totalTokens,
     record.latencyMs,
+    record.providerCompletionLatencyMs,
+    record.timeToFirstTokenMs,
+    record.requestLatencyMs,
     record.errorClass,
     record.statusCode,
     record.finishReason,
@@ -3377,6 +3422,11 @@ function toFailureRuntimeTelemetryRecord(
     outputTokensAvailable: false,
     totalTokens: 0,
     latencyMs: input.latencyMs ?? null,
+    // Run 98 addendum 40 (L1): the failure path records only the provider-header time it measured;
+    // the completion and client-visible durations are written by the callers that can observe them.
+    providerCompletionLatencyMs: null,
+    timeToFirstTokenMs: null,
+    requestLatencyMs: null,
     errorClass: input.errorClass,
     statusCode: input.statusCode,
     finishReason: null,
@@ -3463,7 +3513,7 @@ function listRuntimeTelemetryRecordsInternal(
   const limitClause = typeof input.limit === "number" ? " LIMIT ?" : "";
   const rows = database
     .prepare(
-      `SELECT request_id, routing_decision_id, endpoint_id, reasoning_effort, effort_source, conversation_id, created_at_ms, client_request_id, request_class, source_type, model_id, provider_kind, provider_family, vendor_id, provider_id, provider_account_id, selected_model_id, endpoint_kind, serving_source, region, lifecycle_state_at_request, health_status_at_request, requested_model_id, difficulty_bucket, routing_mode, requested_role_id, selected_strategy, request_operation, source_client, execution_family, adapter_family, status_family, request_payload_bytes, ingress_payload_bytes, translated_payload_bytes, provider_canonical_payload_bytes, provider_wire_payload_bytes, response_payload_bytes, retry_count, reroute_count, cooldown_decision, idempotency_decision, tool_side_effect_state, tooling_used, cache_state, role_ids_json, eligible_endpoint_ids_json, eligible_model_ids_json, candidate_cost_snapshot_json, selected_pricing_snapshot_json, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, effective_cost_usd, selected_uncached_cost_usd, baseline_max_eligible_cost_usd, routing_cost_savings_usd, cache_cost_savings_usd, total_avoided_cost_usd, cost_calculation_basis, cost_calculation_version, cost_baseline_source, cost_savings_support, sampling_rate, retention_ttl_hours, retain_until_ms, redaction_level, retention_class, structured_inspection_mode, raw_capture_available, structured_inspection_available, taxonomy_group_id, taxonomy_role_id, taxonomy_task_type, taxonomy_task_variant, taxonomy_capability_ids_json, taxonomy_modality_ids_json, taxonomy_tool_class_ids_json, currency, dimensions_json FROM runtime_telemetry_records WHERE ${clauses.join(
+      `SELECT request_id, routing_decision_id, endpoint_id, reasoning_effort, effort_source, conversation_id, created_at_ms, client_request_id, request_class, source_type, model_id, provider_kind, provider_family, vendor_id, provider_id, provider_account_id, selected_model_id, endpoint_kind, serving_source, region, lifecycle_state_at_request, health_status_at_request, requested_model_id, difficulty_bucket, routing_mode, requested_role_id, selected_strategy, request_operation, source_client, execution_family, adapter_family, status_family, request_payload_bytes, ingress_payload_bytes, translated_payload_bytes, provider_canonical_payload_bytes, provider_wire_payload_bytes, response_payload_bytes, retry_count, reroute_count, cooldown_decision, idempotency_decision, tool_side_effect_state, tooling_used, cache_state, role_ids_json, eligible_endpoint_ids_json, eligible_model_ids_json, candidate_cost_snapshot_json, selected_pricing_snapshot_json, input_tokens, output_tokens, total_tokens, latency_ms, provider_completion_latency_ms, time_to_first_token_ms, request_latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, effective_cost_usd, selected_uncached_cost_usd, baseline_max_eligible_cost_usd, routing_cost_savings_usd, cache_cost_savings_usd, total_avoided_cost_usd, cost_calculation_basis, cost_calculation_version, cost_baseline_source, cost_savings_support, sampling_rate, retention_ttl_hours, retain_until_ms, redaction_level, retention_class, structured_inspection_mode, raw_capture_available, structured_inspection_available, taxonomy_group_id, taxonomy_role_id, taxonomy_task_type, taxonomy_task_variant, taxonomy_capability_ids_json, taxonomy_modality_ids_json, taxonomy_tool_class_ids_json, currency, dimensions_json FROM runtime_telemetry_records WHERE ${clauses.join(
         " AND ",
       )} ORDER BY created_at_ms DESC, request_id DESC${limitClause}`,
     )
@@ -3522,6 +3572,9 @@ function listRuntimeTelemetryRecordsInternal(
     output_tokens: number;
     total_tokens: number;
     latency_ms: number | null;
+    provider_completion_latency_ms: number | null;
+    time_to_first_token_ms: number | null;
+    request_latency_ms: number | null;
     error_class: string | null;
     status_code: number | null;
     finish_reason: string | null;
@@ -4331,6 +4384,47 @@ export function persistObservedBenchmarkSample(input: PersistObservedBenchmarkSa
     } finally {
       database.close();
     }
+  }
+}
+
+export interface UpdateRuntimeTelemetryClientLatencyInput {
+  readonly databasePath: string;
+  readonly channel: unknown;
+  readonly requestId: string;
+  readonly requestLatencyMs: number;
+  readonly timeToFirstTokenMs?: number | null;
+}
+
+/**
+ * Run 98 addendum 40 (L1): the duration the client actually waited for is only known after the
+ * runtime has flushed the response, which is after the observation row was persisted. Record it as a
+ * bounded follow-up update so the provider turn itself never pays for the measurement.
+ *
+ * Returns `true` when a telemetry row was updated, `false` when the request has no row (for example a
+ * request that never reached routing), so callers can record the miss instead of assuming success.
+ */
+export function updateRuntimeTelemetryClientLatency(
+  input: UpdateRuntimeTelemetryClientLatencyInput,
+): boolean {
+  assertSqliteStorageWriteAllowed(input.databasePath, input.channel, ["sqlite_telemetry"]);
+  const requestLatencyMs = Math.max(0, Math.round(input.requestLatencyMs));
+  const timeToFirstTokenMs =
+    typeof input.timeToFirstTokenMs === "number" && Number.isFinite(input.timeToFirstTokenMs)
+      ? Math.max(0, Math.round(input.timeToFirstTokenMs))
+      : null;
+  const database = openSqliteDatabase(input.databasePath);
+  try {
+    const result = database
+      .prepare(
+        `UPDATE runtime_telemetry_records
+         SET request_latency_ms = ?,
+             time_to_first_token_ms = COALESCE(?, time_to_first_token_ms)
+         WHERE request_id = ?`,
+      )
+      .run(requestLatencyMs, timeToFirstTokenMs, input.requestId);
+    return Number(result.changes ?? 0) > 0;
+  } finally {
+    database.close();
   }
 }
 
@@ -5407,6 +5501,8 @@ type RuntimeTelemetryAggregateRow = {
   total_effective_cost_usd: number | null;
   latency_count: number;
   total_latency_ms: number | null;
+  request_latency_count: number;
+  total_request_latency_ms: number | null;
   last_seen_at_ms: number | null;
 };
 
@@ -5465,6 +5561,8 @@ function readRuntimeTelemetryAggregateFromDatabase(
          COALESCE(SUM(effective_cost_usd), 0) AS total_effective_cost_usd,
          COUNT(latency_ms) AS latency_count,
          COALESCE(SUM(latency_ms), 0) AS total_latency_ms,
+         COUNT(request_latency_ms) AS request_latency_count,
+         COALESCE(SUM(request_latency_ms), 0) AS total_request_latency_ms,
          MAX(created_at_ms) AS last_seen_at_ms
        FROM runtime_telemetry_records
        WHERE ${where}`,
@@ -5479,8 +5577,19 @@ function readRuntimeTelemetryAggregateFromDatabase(
     )
     .all(...parameters) as Array<{ latency_ms: number }>;
   const latencyValues = latencyRows.map((row) => row.latency_ms);
+  const requestLatencyRows = database
+    .prepare(
+      `SELECT request_latency_ms
+       FROM runtime_telemetry_records
+       WHERE ${where} AND request_latency_ms IS NOT NULL
+       ORDER BY request_latency_ms ASC`,
+    )
+    .all(...parameters) as Array<{ request_latency_ms: number }>;
+  const requestLatencyValues = requestLatencyRows.map((row) => row.request_latency_ms);
   const latencyCount = Number(aggregate.latency_count ?? 0);
   const totalLatency = Number(aggregate.total_latency_ms ?? 0);
+  const requestLatencyCount = Number(aggregate.request_latency_count ?? 0);
+  const totalRequestLatency = Number(aggregate.total_request_latency_ms ?? 0);
   return {
     requestCount: Number(aggregate.request_count ?? 0),
     successCount: Number(aggregate.success_count ?? 0),
@@ -5494,6 +5603,10 @@ function readRuntimeTelemetryAggregateFromDatabase(
     totalEffectiveCostUsd: roundMetric(Number(aggregate.total_effective_cost_usd ?? 0)),
     averageLatencyMs: latencyCount > 0 ? Math.round(totalLatency / latencyCount) : null,
     p95LatencyMs: percentile95(latencyValues),
+    averageRequestLatencyMs:
+      requestLatencyCount > 0 ? Math.round(totalRequestLatency / requestLatencyCount) : null,
+    p95RequestLatencyMs: percentile95(requestLatencyValues),
+    requestLatencySampleCount: requestLatencyCount,
     lastSeenAtMs:
       aggregate.last_seen_at_ms === null || aggregate.last_seen_at_ms === undefined
         ? null

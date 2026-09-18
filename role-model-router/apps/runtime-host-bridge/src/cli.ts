@@ -1685,6 +1685,7 @@ type CliBackend = Pick<
   | "listActivityMetrics"
   | "listActivityMetricsPage"
   | "readActivityCapture"
+  | "recordClientLatency"
   | "readRuntimeSummary"
   | "readRuntimeConfig"
   | "updateRuntimeConfig"
@@ -2617,6 +2618,9 @@ export function createCliServerOptions(
     readActivityCapture: bindBackendMethod(
       "readActivityCapture",
     ) as StartBridgeServerOptions["readActivityCapture"],
+    recordClientLatency: bindBackendMethod(
+      "recordClientLatency",
+    ) as StartBridgeServerOptions["recordClientLatency"],
     readLogs: async () =>
       (
         (await (bindBackendMethod("getLocalLogs") as CliBackend["getLocalLogs"])()) as {

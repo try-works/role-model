@@ -117,6 +117,7 @@ import {
   upsertProviderAccount as upsertSqliteProviderAccount,
   upsertRuntimeEndpoint as upsertSqliteRuntimeEndpoint,
   upsertRuntimeEndpointsAtomically as upsertSqliteRuntimeEndpointsAtomically,
+  updateRuntimeTelemetryClientLatency,
 } from "@role-model-router/sqlite-memory";
 import {
   type ConversationContinuitySnapshot,
@@ -3122,6 +3123,16 @@ export interface StartBridgeServerOptions {
     query?: BridgeTelemetryQuery,
   ) => Promise<BridgeActivityMetricsPage>;
   readonly readActivityCapture?: (captureId: number | string) => Promise<unknown>;
+  /**
+   * Run 98 addendum 40 (L1): the duration the client actually waited for is only known once the
+   * response has been flushed. The host reports it here so telemetry can record it as a bounded
+   * follow-up write instead of leaving the provider response-header time as "request latency".
+   */
+  readonly recordClientLatency?: (input: {
+    readonly requestId: string;
+    readonly requestLatencyMs: number;
+    readonly timeToFirstTokenMs?: number | null;
+  }) => void;
   readonly readLogs?: () => Promise<string>;
   readonly proxyVendorLogStream?: (
     pathname: string,
@@ -3359,6 +3370,15 @@ export interface RuntimeBridgeBackend {
   listActivityMetrics(): Promise<readonly unknown[]>;
   listActivityMetricsPage(query?: BridgeTelemetryQuery): Promise<BridgeActivityMetricsPage>;
   readActivityCapture(captureId: number | string): Promise<unknown | null>;
+  /**
+   * Run 98 addendum 40 (L1): persist the duration the client actually waited for, once the response
+   * has been flushed. Returns whether a telemetry row was updated.
+   */
+  recordClientLatency(input: {
+    readonly requestId: string;
+    readonly requestLatencyMs: number;
+    readonly timeToFirstTokenMs?: number | null;
+  }): boolean;
   executeChatCompletions: (
     body: OpenAIChatCompletionsBody,
     requestId: string,
@@ -16059,8 +16079,18 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     }
 
     if (request.method === "POST" && url.pathname === "/v1/chat/completions") {
+      const requestId = readBridgeRequestId(request);
+      // Run 98 addendum 40 (L1): the wall clock the client is waiting on starts when the request
+      // reaches this handler, not when the provider accepts it. Declared outside the try so the
+      // failure path records the same client-visible duration.
+      const requestStartedAtMs = Date.now();
+      const recordClientLatency = (): void => {
+        options.recordClientLatency?.({
+          requestId,
+          requestLatencyMs: Math.max(0, Date.now() - requestStartedAtMs),
+        });
+      };
       try {
-        const requestId = readBridgeRequestId(request);
         const requestAbortSignal = createBridgeRequestAbortSignal(request, response);
         const requestOptions = mergeBridgeRequestAbortSignal(
           readBridgeExecutionRequestOptions(request),
@@ -16130,6 +16160,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           }
           await writeSseChunk(response, "data: [DONE]\n\n", requestAbortSignal);
           response.end();
+          recordClientLatency();
           return;
         }
         const result = await options.executeChatCompletions(
@@ -16152,6 +16183,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
               : {}),
           }),
         );
+        recordClientLatency();
         return;
       } catch (error) {
         if (endCommittedBridgeResponse(response)) {
@@ -16166,13 +16198,22 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         }
         const message = error instanceof Error ? error.message : "chat completions request failed";
         writeJson(response, 400, { error: message });
+        recordClientLatency();
         return;
       }
     }
 
     if (request.method === "POST" && url.pathname === "/v1/responses") {
+      const requestId = readBridgeRequestId(request);
+      // Run 98 addendum 40 (L1): same client-visible clock as the chat-completions surface.
+      const requestStartedAtMs = Date.now();
+      const recordClientLatency = (): void => {
+        options.recordClientLatency?.({
+          requestId,
+          requestLatencyMs: Math.max(0, Date.now() - requestStartedAtMs),
+        });
+      };
       try {
-        const requestId = readBridgeRequestId(request);
         const requestAbortSignal = createBridgeRequestAbortSignal(request, response);
         const requestOptions = mergeBridgeRequestAbortSignal(
           readBridgeExecutionRequestOptions(request),
@@ -16270,6 +16311,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             }
           }
           response.end();
+          recordClientLatency();
           return;
         }
         const result = await options.executeResponses(
@@ -16289,6 +16331,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             costUsd: result.vendorMetadata?.costUsd,
           }),
         );
+        recordClientLatency();
         return;
       } catch (error) {
         if (endCommittedBridgeResponse(response)) {
@@ -16303,6 +16346,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         }
         const message = error instanceof Error ? error.message : "responses request failed";
         writeJson(response, 400, { error: message });
+        recordClientLatency();
         return;
       }
     }
@@ -22807,6 +22851,17 @@ export async function createRuntimeBridgeBackend(
     const totalLatency = latencies.reduce((sum, value) => sum + value, 0);
     const p95Index =
       latencies.length > 0 ? Math.max(0, Math.ceil(latencies.length * 0.95) - 1) : -1;
+    // Run 98 addendum 40 (L1): the projected summary reports the client-visible duration beside the
+    // provider response-header time, so a bridge-level summary never hides the tail either.
+    const requestLatencies = records
+      .map((record) => record.requestLatencyMs)
+      .filter((value): value is number => typeof value === "number")
+      .sort((left, right) => left - right);
+    const totalRequestLatency = requestLatencies.reduce((sum, value) => sum + value, 0);
+    const requestP95Index =
+      requestLatencies.length > 0
+        ? Math.max(0, Math.ceil(requestLatencies.length * 0.95) - 1)
+        : -1;
     return {
       requestCount: records.length,
       successCount: records.filter((record) => record.errorClass === null).length,
@@ -22826,6 +22881,13 @@ export async function createRuntimeBridgeBackend(
       ),
       averageLatencyMs: latencies.length > 0 ? Math.round(totalLatency / latencies.length) : null,
       p95LatencyMs: p95Index >= 0 ? (latencies[p95Index] ?? null) : null,
+      averageRequestLatencyMs:
+        requestLatencies.length > 0
+          ? Math.round(totalRequestLatency / requestLatencies.length)
+          : null,
+      p95RequestLatencyMs:
+        requestP95Index >= 0 ? (requestLatencies[requestP95Index] ?? null) : null,
+      requestLatencySampleCount: requestLatencies.length,
       lastSeenAtMs: records[0]?.createdAtMs ?? null,
     };
   };
@@ -24220,9 +24282,16 @@ export async function createRuntimeBridgeBackend(
     });
     let streamedChunkCount = 0;
     let streamedReasoningDeltaCount = 0;
+    // Run 98 addendum 40 (L1): the provider phase the client pays for. `latency_ms` on the usage
+    // event is only the response-header time; this pair brackets the whole dispatch, and the first
+    // streamed chunk (when the request streams) gives the first-token time.
+    let providerPhaseStartedAtMs: number | null = null;
+    let providerPhaseCompletedAtMs: number | null = null;
+    let firstStreamedChunkAtMs: number | null = null;
     const trackedStreamWriter: BridgeStreamWriter | undefined = streamWriter
       ? async (chunk, metadata) => {
           streamedChunkCount += 1;
+          firstStreamedChunkAtMs ??= Date.now();
           streamedReasoningDeltaCount += countChatCompletionsReasoningDeltas(chunk);
           await streamWriter(chunk, metadata);
         }
@@ -25624,6 +25693,7 @@ export async function createRuntimeBridgeBackend(
             executionRequest,
           });
           markPhase("provider-call-start");
+          providerPhaseStartedAtMs = Date.now();
           const result = await executeLiveRoutedRequest({
             routeResult: routed,
             catalog: executionSnapshot.executionCatalog,
@@ -25635,6 +25705,7 @@ export async function createRuntimeBridgeBackend(
             adapters,
             executeProviderRequest,
           });
+          providerPhaseCompletedAtMs = Date.now();
           if (ownedProbeEndpointId) {
             const settledProbe = settleExecutionCircuitProbe({
               state: readExecutionCircuitState(initialization.databasePath),
@@ -26038,6 +26109,19 @@ export async function createRuntimeBridgeBackend(
         clientRequestId: executionOptions?.requestOptions?.clientRequestId,
         reasoningEffort: effectiveEffort.reasoningEffort,
         effortSource: effectiveEffort.effortSource,
+        // Run 98 addendum 40 (L1): record the provider breakdown beside the historical header time,
+        // so telemetry can report what the client waited for instead of the provider's first byte.
+        latencyBreakdown: {
+          providerHeaderMs: execution.usageEvent.latency_ms ?? null,
+          providerCompletionMs:
+            providerPhaseStartedAtMs !== null && providerPhaseCompletedAtMs !== null
+              ? Math.max(0, providerPhaseCompletedAtMs - providerPhaseStartedAtMs)
+              : null,
+          timeToFirstTokenMs:
+            providerPhaseStartedAtMs !== null && firstStreamedChunkAtMs !== null
+              ? Math.max(0, firstStreamedChunkAtMs - providerPhaseStartedAtMs)
+              : null,
+        },
         ...(normalizedIntentObservation.normalizedIntent
           ? { normalizedIntent: normalizedIntentObservation.normalizedIntent }
           : {}),
@@ -26849,6 +26933,27 @@ export async function createRuntimeBridgeBackend(
       return (
         buildObservedActivityEntries().find((entry) => entry.id === captureId)?.capture ?? null
       );
+    },
+    // Run 98 addendum 40 (L1): the client-visible duration is written after the response flushes, so
+    // the provider turn never pays for the measurement. A missing row (a request that never reached
+    // routing) returns false instead of throwing.
+    recordClientLatency(input: {
+      readonly requestId: string;
+      readonly requestLatencyMs: number;
+      readonly timeToFirstTokenMs?: number | null;
+    }): boolean {
+      try {
+        return updateRuntimeTelemetryClientLatency({
+          databasePath: initialization.databasePath,
+          channel: runtimeChannel,
+          requestId: input.requestId,
+          requestLatencyMs: input.requestLatencyMs,
+          timeToFirstTokenMs: input.timeToFirstTokenMs ?? null,
+        });
+      } catch (error) {
+        console.error("runtime client latency update failed", error);
+        return false;
+      }
     },
     async executeChatCompletions(
       body: OpenAIChatCompletionsBody,
