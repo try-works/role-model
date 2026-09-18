@@ -2544,11 +2544,19 @@ export function createTrackBOperations({
         throw new Error("local route capture requires a loopback operations boundary");
       // A capture failure keeps its existing bounded degradation semantics upstream
       // (routing continues); the bound only stops an unbounded wait for the boundary.
+      const captureStartedAtMs = Date.now();
       const result = await requestPrivate(
         "capture/route",
         { method: "POST", body: input },
         boundedRouteCaptureTimeoutMs,
       );
+      if (process.env.ROLE_MODEL_PHASE_TIMING === "1") {
+        console.error(
+          `[run98] phase route-capture ${Date.now() - captureStartedAtMs}ms request=${String(
+            input.requestId ?? "",
+          )}`,
+        );
+      }
       if (contractStateRoot && result && typeof result === "object" && !Array.isArray(result)) {
         const capture = result as Record<string, unknown>;
         const scopeId = String(capture.scope ?? scope ?? "");

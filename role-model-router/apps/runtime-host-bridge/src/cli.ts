@@ -5035,7 +5035,13 @@ export async function main(): Promise<void> {
                       scope: options.scopeId,
                     })
                   : observation;
+                const enqueueStartedAtMs = Date.now();
                 await postObservationOutbox.enqueue(correlatedObservation);
+                if (process.env.ROLE_MODEL_PHASE_TIMING === "1") {
+                  console.error(
+                    `[run98] phase observation-enqueue ${Date.now() - enqueueStartedAtMs}ms`,
+                  );
+                }
                 const runtime = extensionRuntimeRef.current;
                 if (!runtime) return { status: "queued_for_extension_runtime" };
                 schedulePostObservationDrain(runtime);
