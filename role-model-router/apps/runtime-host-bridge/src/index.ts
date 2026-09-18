@@ -24169,6 +24169,7 @@ export async function createRuntimeBridgeBackend(
       readonly executionSnapshot?: ReturnType<typeof createExecutionRuntimeSnapshot>;
     },
   ) => {
+    markPhase("bridge-plan-start");
     const executionSnapshot =
       executionOptions?.executionSnapshot ?? createExecutionRuntimeSnapshot(currentRegistry);
     const observedDataConfig = resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig);
