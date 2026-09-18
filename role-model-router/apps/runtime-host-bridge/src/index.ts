@@ -25595,6 +25595,7 @@ export async function createRuntimeBridgeBackend(
             ),
             executionRequest,
           });
+          markPhase("provider-call-start");
           const result = await executeLiveRoutedRequest({
             routeResult: routed,
             catalog: executionSnapshot.executionCatalog,
