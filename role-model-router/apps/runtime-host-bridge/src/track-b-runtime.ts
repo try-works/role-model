@@ -5341,9 +5341,14 @@ export function createTrackBPostObservationOutbox({
     drain(
       handler: (observation: TrackBPostObservationWorkItem) => Promise<unknown>,
     ): Promise<void> {
-      return exclusive(async () => {
+      // Run 98 addendum 39 S1: the handler (the extension runtime) must not hold the
+      // outbox lock, or a live request's enqueue waits for the whole drain pass —
+      // measured at 31-82 s under real traffic. Claiming and receipting are short
+      // transactions; only those take the exclusive lane.
+      return (async () => {
         for (;;) {
-          const item = await withDatabase((database) => {
+          const item = await exclusive(() =>
+            withDatabase((database) => {
             const row = database
               .prepare(
                 `SELECT request_id, routing_decision_id, endpoint_id, model_id, reasoning_effort,
@@ -5385,13 +5390,15 @@ export function createTrackBPostObservationOutbox({
                 : {}),
               ...(row.legacy_identity_missing ? { legacyIdentityMissing: true as const } : {}),
             } as TrackBPostObservationWorkItem;
-          });
+            }),
+          );
           if (!item) break;
           const result = item.legacyIdentityMissing
             ? { status: "retired_legacy_missing_variant_identity", productionMutation: false }
             : await handler(item);
-          await withDatabase((database) => {
-            database.exec("BEGIN IMMEDIATE");
+          await exclusive(() =>
+            withDatabase((database) => {
+              database.exec("BEGIN IMMEDIATE");
             try {
               database
                 .prepare("DELETE FROM track_b_post_observation_pending WHERE request_id=?")
@@ -5414,9 +5421,10 @@ export function createTrackBPostObservationOutbox({
               database.exec("ROLLBACK");
               throw error;
             }
-          });
+            }),
+          );
         }
-      });
+      })();
     },
     async drainUntilReceipt(
       requestId: string,

@@ -65,6 +65,46 @@ test("addendum 39 S1: a live request only schedules the background drain", async
   expect(String(errors.at(-1))).toBe("Error: extension runtime unavailable");
 });
 
+test("addendum 39 S1: enqueue does not wait behind an in-flight drain", async () => {
+  const root = await mkdtemp(path.join(testRoot, "a39-outbox-lock-"));
+  roots.push(root);
+  const outbox = createTrackBPostObservationOutbox({
+    filePath: path.join(root, "outbox.sqlite"),
+    maxItems: 8,
+  });
+  await outbox.enqueue(observation([]));
+
+  let releaseHandler: (() => void) | null = null;
+  let handlerStarted = false;
+  let handlerCalls = 0;
+  const drainPromise = outbox.drain(async () => {
+    handlerCalls += 1;
+    if (handlerCalls === 1) {
+      handlerStarted = true;
+      await new Promise<void>((resolve) => {
+        releaseHandler = resolve;
+      });
+    }
+    return { status: "processed" };
+  });
+  while (!handlerStarted) {
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+
+  // The live path must be able to record a new observation while the extension
+  // runtime is still working on an earlier one.
+  const enqueueStartedAtMs = Date.now();
+  await outbox.enqueue({
+    ...observation([]),
+    requestId: "request:a39-lock-second",
+    routingDecisionId: "decision:a39-lock-second",
+  });
+  expect(Date.now() - enqueueStartedAtMs).toBeLessThan(1_000);
+
+  releaseHandler?.();
+  await drainPromise;
+});
+
 function comparableEvidence() {
   return {
     source: {
