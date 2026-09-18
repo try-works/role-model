@@ -31091,6 +31091,7 @@ export async function createRuntimeBridgeBackend(
         }
 
         let refreshAttempted = 0;
+        let refreshFailureReason: string | null = null;
         let refreshSucceeded = 0;
         let refreshFailed = 0;
         for (const account of currentAccounts) {
@@ -31140,7 +31141,11 @@ export async function createRuntimeBridgeBackend(
             currentAccounts = [...readCurrentAccounts()];
             rebuildCurrentState();
             refreshSucceeded += 1;
-          } catch {
+          } catch (error) {
+            refreshFailureReason =
+              error instanceof Error
+                ? `${error.name}: ${error.message}`.slice(0, 200)
+                : String(error).slice(0, 200);
             upsertSqliteProviderAccount({
               databasePath: initialization.databasePath,
               account: {
@@ -31161,6 +31166,11 @@ export async function createRuntimeBridgeBackend(
 
         return {
           status: credentialsStatus,
+          ...(credentialsStatus !== "ready" && refreshFailureReason
+            ? {
+                message: `OAuth refresh failed for ${refreshFailed} account(s): ${refreshFailureReason}`,
+              }
+            : {}),
           details: {
             pendingAttempted,
             pendingSucceeded,
