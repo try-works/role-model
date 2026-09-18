@@ -359,6 +359,12 @@ export function resolveAdapterGatedReasoningEfforts(input: {
   });
 }
 
+function markPhase(label: string): void {
+  if (process.env.ROLE_MODEL_PHASE_TIMING === "1") {
+    console.error(`[run98] phase ${label} ${Date.now()}`);
+  }
+}
+
 export function resolveEndpointExecutionEffort(input: {
   readonly fixedEffort?: string | null;
   readonly declaredEffortLevels?: readonly string[] | null;
@@ -26865,6 +26871,7 @@ export async function createRuntimeBridgeBackend(
         const executionRegistry = getRouterEffectiveRegistry();
         const executionInventory = getRouterEffectiveRoutableInventory();
         const executionSnapshot = createExecutionRuntimeSnapshot(executionRegistry);
+        markPhase("plan-map-start");
         const plan = mapChatCompletionsRequest(
           executionRegistry,
           body,
