@@ -5594,11 +5594,20 @@ export async function main(): Promise<void> {
               }
               if (lastError) throw lastError;
             } catch (failure) {
-              console.error(
-                `[run98] replay job terminalization declined:${entry.replayJobId} ${String(
-                  (failure as { message?: unknown })?.message ?? failure,
-                ).slice(0, 200)}`,
-              );
+              const message = String((failure as { message?: unknown })?.message ?? failure);
+              // Run 98 addendum 39 S5: a resume record written before the scope field existed
+              // cannot resolve a scope from any candidate. Give it its own typed disposition
+              // instead of the generic decline, so an operator can see the class and the effort
+              // spent on it.
+              if (/scope binding mismatch/u.test(message)) {
+                console.error(
+                  `[run98] replay job terminalization deferred:legacy_scope_unresolved job=${entry.replayJobId} candidates=${candidateScopes.length} reason=${message.slice(0, 160)}`,
+                );
+              } else {
+                console.error(
+                  `[run98] replay job terminalization declined:${entry.replayJobId} ${message.slice(0, 200)}`,
+                );
+              }
             }
           },
         });
