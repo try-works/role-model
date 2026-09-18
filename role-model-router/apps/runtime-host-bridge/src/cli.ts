@@ -102,6 +102,7 @@ import {
   createRouterReplayAdapter,
   createRun88RuntimeCorrelation,
   createRuntimeRequestCorrelationId,
+  classifyReplayTerminalizationFailure,
   createSingleFlightBackgroundDrain,
   createSupervisedReplayEvaluationRequestId,
   buildReplayDispatchMessages,
@@ -5599,7 +5600,7 @@ export async function main(): Promise<void> {
               // cannot resolve a scope from any candidate. Give it its own typed disposition
               // instead of the generic decline, so an operator can see the class and the effort
               // spent on it.
-              if (/scope binding mismatch/u.test(message)) {
+              if (classifyReplayTerminalizationFailure(message) === "legacy_scope_unresolved") {
                 console.error(
                   `[run98] replay job terminalization deferred:legacy_scope_unresolved job=${entry.replayJobId} candidates=${candidateScopes.length} reason=${message.slice(0, 160)}`,
                 );

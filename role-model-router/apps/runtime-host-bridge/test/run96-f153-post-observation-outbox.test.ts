@@ -8,11 +8,23 @@ import { afterEach, expect, test } from "vitest";
 
 import {
   type TrackBShadowPipelineRuntime,
+  classifyReplayTerminalizationFailure,
   createSingleFlightBackgroundDrain,
   createRun96RoutingShadowScorer,
   createTrackBPostObservationOutbox,
   runTrackBPostObservationWithContribution,
 } from "../src/track-b-runtime.js";
+
+test("addendum 39 S5: a legacy scope failure is classified separately from a decline", () => {
+  expect(
+    classifyReplayTerminalizationFailure(
+      "extension replay-core failed: replay persisted job scope binding mismatch",
+    ),
+  ).toBe("legacy_scope_unresolved");
+  expect(
+    classifyReplayTerminalizationFailure("extension replay-core failed: replay job is already terminal"),
+  ).toBe("declined");
+});
 
 const testRoot = process.env.ROLE_MODEL_TEST_TEMP_ROOT ?? os.tmpdir();
 const roots: string[] = [];

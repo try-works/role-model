@@ -5217,6 +5217,17 @@ async function initializeTrackBPostObservationOutbox(
  * drain while one is in flight, and converts a drain failure into an `onError`
  * callback so a broken extension runtime cannot fail the routing request.
  */
+/**
+ * Run 98 addendum 39 S5: classify a replay terminalization failure. A resume record
+ * written before the scope field existed cannot resolve a scope from any candidate,
+ * so it gets a typed disposition instead of the generic decline.
+ */
+export function classifyReplayTerminalizationFailure(
+  message: string,
+): "legacy_scope_unresolved" | "declined" {
+  return /scope binding mismatch/u.test(message) ? "legacy_scope_unresolved" : "declined";
+}
+
 export function createSingleFlightBackgroundDrain<Runtime>(input: {
   readonly drain: (runtime: Runtime) => Promise<void>;
   readonly onError?: (error: unknown) => void;
