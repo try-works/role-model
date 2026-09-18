@@ -27003,6 +27003,7 @@ export async function createRuntimeBridgeBackend(
           ),
           cancelled: requestOptions?.abortSignal?.aborted,
         });
+        markPhase("response-ready");
         return bridgeResult;
       } catch (error) {
         if (!hasRuntimeTelemetryPersisted(error)) {
