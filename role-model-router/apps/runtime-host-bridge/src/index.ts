@@ -131,6 +131,7 @@ import {
   executeToolCalls,
 } from "@role-model-router/tool-registry";
 import { deriveRuntimeContributionOutcome } from "./contribution-outcome.js";
+import { createTrackBRouteCaptureQueue } from "./track-b-capture-queue.js";
 import {
   buildCompactControllerSystemPrompt,
   buildControllerSystemPrompt,
@@ -18452,6 +18453,43 @@ export async function createRuntimeBridgeBackend(
     catalog: [],
     contractStateRoot: options.runtimeStateRoot,
   });
+  // Run 98 addendum 40 (L2) with v1.1 guidance 05 §"Post-v1 maintenance and shadow jobs": rich capture
+  // uses a bounded async queue with backoff so it never starves request handling. Enqueue is one
+  // bounded SQLite write; the operations boundary is called by the background drain.
+  const routeCaptureQueue = options.runtimeStateRoot
+    ? createTrackBRouteCaptureQueue({
+        filePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b",
+          "deferred-route-captures.sqlite",
+        ),
+      })
+    : null;
+  let routeCaptureDrainActive = false;
+  const scheduleDeferredRouteCaptureDrain = (): void => {
+    if (!routeCaptureQueue || routeCaptureDrainActive) return;
+    routeCaptureDrainActive = true;
+    void routeCaptureQueue
+      .drain(async (item) =>
+        runtimeTrackBOperations.recordLocalRouteCapture({
+          ...item.payload,
+          requestId: item.requestId,
+          routingDecisionId: item.routingDecisionId,
+          endpointId: item.endpointId,
+        } as Record<string, unknown>),
+      )
+      .catch((error: unknown) => {
+        console.error("Track B deferred route capture drain failed", error);
+      })
+      .finally(() => {
+        routeCaptureDrainActive = false;
+      });
+  };
+  if (routeCaptureQueue) {
+    const routeCaptureDrainTimer = setInterval(scheduleDeferredRouteCaptureDrain, 15_000);
+    routeCaptureDrainTimer.unref?.();
+  }
   const recordDirectContribution = async (input: {
     readonly requestId: string;
     readonly routingDecisionId: string;
@@ -26325,7 +26363,7 @@ export async function createRuntimeBridgeBackend(
             : Array.isArray(requestBody.input)
               ? requestBody.input
               : [];
-          const capture = (await runtimeTrackBOperations.recordLocalRouteCapture({
+          const routeCapturePayload = {
             requestId,
             routingDecisionId,
             endpointId: execution.target.endpointId,
@@ -26363,18 +26401,35 @@ export async function createRuntimeBridgeBackend(
             ],
             outputText: execution.normalized.outputText,
             toolExecutions: toolExecutionResult.executions,
-          })) as Record<string, unknown>;
-          routeCapture = capture;
-          if (
-            typeof capture.scope === "string" &&
-            typeof capture.rootArtifactId === "string" &&
-            typeof capture.rootArtifactDigest === "string"
-          ) {
-            artifactRef = {
-              scopeId: capture.scope,
-              artifactId: capture.rootArtifactId,
-              contentHash: capture.rootArtifactDigest,
-            };
+          };
+          if (routeCaptureQueue) {
+            // v1.1 guidance 05: rich capture must not starve request handling. The capture is queued
+            // (actionTaken `queued_for_retry`) and delivered by the background drain; only its local
+            // graph pointer is deferred, and the receipt records that on the observation.
+            await routeCaptureQueue.enqueue({
+              requestId,
+              routingDecisionId,
+              endpointId: execution.target.endpointId,
+              payload: routeCapturePayload,
+            });
+            routeCaptureDegradationReason = "track-b-capture-deferred";
+            scheduleDeferredRouteCaptureDrain();
+          } else {
+            const capture = (await runtimeTrackBOperations.recordLocalRouteCapture(
+              routeCapturePayload,
+            )) as Record<string, unknown>;
+            routeCapture = capture;
+            if (
+              typeof capture.scope === "string" &&
+              typeof capture.rootArtifactId === "string" &&
+              typeof capture.rootArtifactDigest === "string"
+            ) {
+              artifactRef = {
+                scopeId: capture.scope,
+                artifactId: capture.rootArtifactId,
+                contentHash: capture.rootArtifactDigest,
+              };
+            }
           }
         }
       } catch (error) {

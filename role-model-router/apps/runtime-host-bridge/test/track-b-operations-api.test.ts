@@ -15,6 +15,7 @@ import { LegacySqliteMigration } from "../../../packages/sqlite-memory/src/legac
 
 import { applyRecommendationServiceLauncherConfig } from "../src/cli.js";
 import { createRuntimeBridgeBackend, startBridgeServer } from "../src/index.js";
+import { createTrackBRouteCaptureQueue } from "../src/track-b-capture-queue.js";
 import {
   buildGraphEvidenceFromCapture,
   buildLegacyTerminalFailureRecoveryCapture,
@@ -26,6 +27,23 @@ import {
 
 const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
 const fixtureRoot = path.join(import.meta.dirname, "fixtures");
+// Run 98 addendum 40 (L2): route captures are delivered by a background drain, so the operations
+// contract tests wait for the delivery instead of asserting it happened inside the response.
+async function waitForCaptureDelivery<T>(
+  read: () => T | Promise<T>,
+  predicate: (value: T) => boolean,
+  timeoutMs = 10_000,
+): Promise<T> {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const value = await read();
+    if (predicate(value)) return value;
+    if (Date.now() > deadline) {
+      throw new Error("deferred route capture was not delivered within the wait budget");
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+}
 const canonicalJson = (value: unknown): string =>
   Array.isArray(value)
     ? `[${value.map(canonicalJson).join(",")}]`
@@ -1140,7 +1158,10 @@ describe("Track B operations APIs", () => {
       expect(result.outputText.length).toBeGreaterThan(0);
       expect(received).toHaveLength(2);
       const aggregate = received.find((entry) => entry.path === "/contribution/aggregate");
-      const capture = received.find((entry) => entry.path === "/capture/route");
+      const capture = await waitForCaptureDelivery(
+        () => received.find((entry) => entry.path === "/capture/route"),
+        (value) => Boolean(value),
+      );
       expect(aggregate).toMatchObject({
         path: "/contribution/aggregate",
         authorization: `Bearer ${"a".repeat(64)}`,
@@ -1177,17 +1198,21 @@ describe("Track B operations APIs", () => {
           outputText: result.outputText,
         },
       });
+      // v1.1 guidance 03: the capture above is delivered by the deferred drain; the local observation
+      // records the canonical degradation receipt instead of a graph artifact pointer.
       expect(
         readRuntimeObservationStorageRecord({
           databasePath,
           requestId: "req-track-b-upload-001",
         }),
       ).toMatchObject({
-        graphPrimary: true,
-        artifactRef: {
-          scopeId: "tenant:production-upload",
-          artifactId: "artifact-route-capture",
-          contentHash: "a".repeat(64),
+        statusFamily: "degraded-capture",
+        captureDegradation: {
+          contract: "CaptureDegradationReceiptV1",
+          failureStage: "graph_write",
+          actionTaken: "queued_for_retry",
+          routingContinued: true,
+          reason: "track-b-capture-deferred",
         },
       });
       const detail = await backend.readRequestObservation("req-track-b-upload-001");
@@ -1364,9 +1389,9 @@ describe("Track B operations APIs", () => {
         "req-track-b-capture-failure-001",
       );
 
-      // v1.1 guidance 01/03: a failed rich capture keeps compact telemetry and routing and reports the
-      // failure as a CaptureDegradationReceipt — it must not be masked as a graph-writer error, and it
-      // must not drop the request's observation and telemetry (run 98 addendum 40 L2).
+      // v1.1 guidance 01/03 + run 98 addendum 40 L2: the boundary 503 is no longer paid by the live
+      // response. The observation records the deferred-capture receipt (actionTaken queued_for_retry)
+      // and the durable queue keeps the capture with the boundary's failure for the retry.
       expect(result.persistenceDegradation).toBeUndefined();
       const failedCaptureObservation = readRuntimeObservationStorageRecord({
         databasePath,
@@ -1377,15 +1402,30 @@ describe("Track B operations APIs", () => {
         captureDegradation: {
           contract: "CaptureDegradationReceiptV1",
           failureStage: "graph_write",
-          actionTaken: "metadata_only",
+          actionTaken: "queued_for_retry",
           routingContinued: true,
-          reason: "track-b-capture-boundary-http-503",
+          reason: "track-b-capture-deferred",
         },
       });
       expect(
         readRuntimeTelemetryRecord({ databasePath, requestId: "req-track-b-capture-failure-001" })
           ?.latencyMs,
       ).toEqual(expect.any(Number));
+      const deferredCaptures = createTrackBRouteCaptureQueue({
+        filePath: path.join(
+          runtimeStateRoot,
+          scopeId,
+          "track-b",
+          "deferred-route-captures.sqlite",
+        ),
+      });
+      const pending = await waitForCaptureDelivery(
+        () => deferredCaptures.readPending(),
+        (value) => value.length > 0 && (value[0]?.attempts ?? 0) > 0,
+      );
+      expect(pending[0]?.requestId).toBe("req-track-b-capture-failure-001");
+      // The queue keeps the boundary's own message, so the operator sees why the retry is pending.
+      expect(pending[0]?.lastError).toContain("capture service unavailable");
     } finally {
       await backend.shutdown();
       await new Promise<void>((resolve, reject) =>
@@ -1574,7 +1614,10 @@ describe("Track B operations APIs", () => {
       expect(result.outputText.length).toBeGreaterThan(0);
       expect(received).toHaveLength(2);
       const aggregate = received.find((entry) => entry.path === "/contribution/aggregate");
-      const capture = received.find((entry) => entry.path === "/capture/route");
+      const capture = await waitForCaptureDelivery(
+        () => received.find((entry) => entry.path === "/capture/route"),
+        (value) => Boolean(value),
+      );
       expect(aggregate).toMatchObject({
         path: "/contribution/aggregate",
         authorization: `Bearer ${"b".repeat(64)}`,
@@ -1629,11 +1672,12 @@ describe("Track B operations APIs", () => {
           requestId: "req-track-b-responses-upload-001",
         }),
       ).toMatchObject({
-        graphPrimary: true,
-        artifactRef: {
-          scopeId: "tenant:production-responses-upload",
-          artifactId: "artifact-route-capture",
-          contentHash: "b".repeat(64),
+        statusFamily: "degraded-capture",
+        captureDegradation: {
+          contract: "CaptureDegradationReceiptV1",
+          actionTaken: "queued_for_retry",
+          routingContinued: true,
+          reason: "track-b-capture-deferred",
         },
       });
     } finally {
