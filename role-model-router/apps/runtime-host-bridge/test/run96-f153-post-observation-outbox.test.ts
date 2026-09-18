@@ -8,6 +8,7 @@ import { afterEach, expect, test } from "vitest";
 
 import {
   type TrackBShadowPipelineRuntime,
+  createSingleFlightBackgroundDrain,
   createRun96RoutingShadowScorer,
   createTrackBPostObservationOutbox,
   runTrackBPostObservationWithContribution,
@@ -24,6 +25,45 @@ afterEach(async () => {
 function digest(value: string): string {
   return `sha256:${createHash("sha256").update(value).digest("hex")}`;
 }
+
+test("addendum 39 S1: a live request only schedules the background drain", async () => {
+  let releaseDrain: (() => void) | null = null;
+  const drained: string[] = [];
+  const errors: unknown[] = [];
+  const scheduler = createSingleFlightBackgroundDrain<string>({
+    drain: async (runtime) => {
+      drained.push(runtime);
+      await new Promise<void>((resolve) => {
+        releaseDrain = resolve;
+      });
+    },
+    onError: (error) => errors.push(error),
+  });
+
+  // Scheduling must return immediately even though the drain never settles, and a
+  // second request must not start a concurrent drain.
+  expect(scheduler.schedule("runtime-a")).toBe(true);
+  expect(scheduler.isInFlight()).toBe(true);
+  expect(scheduler.schedule("runtime-b")).toBe(false);
+  expect(scheduler.schedule(null)).toBe(false);
+  expect(drained).toEqual(["runtime-a"]);
+
+  releaseDrain?.();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(scheduler.isInFlight()).toBe(false);
+
+  // A failed drain is reported out-of-band and does not wedge the scheduler.
+  const failing = createSingleFlightBackgroundDrain<string>({
+    drain: async () => {
+      throw new Error("extension runtime unavailable");
+    },
+    onError: (error) => errors.push(error),
+  });
+  expect(failing.schedule("runtime-c")).toBe(true);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(failing.isInFlight()).toBe(false);
+  expect(String(errors.at(-1))).toBe("Error: extension runtime unavailable");
+});
 
 function comparableEvidence() {
   return {

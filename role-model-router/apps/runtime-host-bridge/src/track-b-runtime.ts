@@ -5209,6 +5209,41 @@ async function initializeTrackBPostObservationOutbox(
   database.close();
 }
 
+/**
+ * Run 98 addendum 39 S1: routing must not depend on replays.
+ *
+ * A live request may only *ask* for background delivery of its durable observation
+ * work. This scheduler never returns the drain promise, refuses to start a second
+ * drain while one is in flight, and converts a drain failure into an `onError`
+ * callback so a broken extension runtime cannot fail the routing request.
+ */
+export function createSingleFlightBackgroundDrain<Runtime>(input: {
+  readonly drain: (runtime: Runtime) => Promise<void>;
+  readonly onError?: (error: unknown) => void;
+}): {
+  readonly schedule: (runtime: Runtime | null | undefined) => boolean;
+  readonly isInFlight: () => boolean;
+} {
+  let inFlight: Promise<void> | null = null;
+  return {
+    schedule: (runtime) => {
+      if (!runtime || inFlight) {
+        return false;
+      }
+      inFlight = input
+        .drain(runtime)
+        .catch((error: unknown) => {
+          input.onError?.(error);
+        })
+        .finally(() => {
+          inFlight = null;
+        });
+      return true;
+    },
+    isInFlight: () => inFlight !== null,
+  };
+}
+
 export function createTrackBPostObservationOutbox({
   filePath,
   maxItems = 4096,

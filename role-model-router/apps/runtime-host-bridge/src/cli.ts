@@ -102,6 +102,7 @@ import {
   createRouterReplayAdapter,
   createRun88RuntimeCorrelation,
   createRuntimeRequestCorrelationId,
+  createSingleFlightBackgroundDrain,
   createSupervisedReplayEvaluationRequestId,
   buildReplayDispatchMessages,
   createTrackBPostObservationOutbox,
@@ -4148,6 +4149,26 @@ export async function main(): Promise<void> {
     const drainPostObservationOutbox = async (
       runtime: Awaited<ReturnType<typeof createProductionExtensionRuntime>>,
     ) => postObservationOutbox.drain(postObservationHandler(runtime));
+
+    // Run 98 addendum 39 S1: routing must not depend on replays. The durable outbox
+    // owns delivery, so a live request only enqueues and asks for a drain. Awaiting
+    // the drain inside the request made the client pay for the whole backlog and for
+    // slow extension work (measured 75-100 s wall against a 2-3 s upstream call).
+    // Delivery is single-flight and background; the periodic kick started with the
+    // extension runtime drains a backlog even when no further request arrives.
+    const postObservationDrain = createSingleFlightBackgroundDrain<
+      Awaited<ReturnType<typeof createProductionExtensionRuntime>>
+    >({
+      drain: (runtime) => drainPostObservationOutbox(runtime),
+      onError: (error) => {
+        console.error("Track B post-observation drain failed", error);
+      },
+    });
+    const schedulePostObservationDrain = (
+      runtime: Awaited<ReturnType<typeof createProductionExtensionRuntime>> | null | undefined,
+    ): void => {
+      postObservationDrain.schedule(runtime);
+    };
     const createBackend = async (
       trackBOperationsEndpoint?: string,
       trackBOperationsToken?: string,
@@ -5017,8 +5038,8 @@ export async function main(): Promise<void> {
                 await postObservationOutbox.enqueue(correlatedObservation);
                 const runtime = extensionRuntimeRef.current;
                 if (!runtime) return { status: "queued_for_extension_runtime" };
-                await drainPostObservationOutbox(runtime);
-                return { status: "processed" };
+                schedulePostObservationDrain(runtime);
+                return { status: "queued" };
               },
             }
           : {}),
@@ -6205,6 +6226,10 @@ export async function main(): Promise<void> {
             // before its already-authorized, durable aggregate is retried.
             await currentPostObservationOperations()?.retryContributionAggregates();
             extensionRuntimeRef.current = runtime;
+            const postObservationDrainInterval = setInterval(() => {
+              schedulePostObservationDrain(extensionRuntimeRef.current);
+            }, 5_000);
+            postObservationDrainInterval.unref?.();
             // Run 99 R24 / addendum 06: publish the durable operator advisory so an activated
             // pack can influence routing instead of only the transient replay candidate.
             startDurableRouteAdvisoryRefresh({
