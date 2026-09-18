@@ -26907,6 +26907,7 @@ export async function createRuntimeBridgeBackend(
           executionInventory.endpointIds.length > 0 ? executionInventory : null,
           currentRolePolicy.taskDefinitions,
         );
+        markPhase("dispatch-start");
         const {
           execution,
           toolExecutionResult,
