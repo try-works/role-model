@@ -812,6 +812,10 @@ const DEFAULT_CONTRIBUTION_DELIVERY_TIMEOUT_MS = 30_000;
 // the routing bound is an order of magnitude above it while still preventing an
 // unbounded wait on the operations boundary.
 const DEFAULT_ROUTE_CAPTURE_TIMEOUT_MS = 10_000;
+// A capture larger than this cannot be absorbed by the operations boundary inside
+// the bound above, so the request pays the full timeout and still records no
+// capture. Skipping it keeps the same bounded degradation without the 10 s tax.
+const DEFAULT_ROUTE_CAPTURE_MAX_BYTES = 512 * 1024;
 
 /**
  * Run 99 R33 live finding (stage v146, with real coding-agent traffic flowing): the eight-second
@@ -1384,6 +1388,15 @@ export function createTrackBOperations({
     configuredRouteCaptureTimeoutMs <= 30_000
       ? configuredRouteCaptureTimeoutMs
       : DEFAULT_ROUTE_CAPTURE_TIMEOUT_MS;
+  const configuredRouteCaptureMaxBytes = Number(
+    process.env.ROLE_MODEL_ROUTE_CAPTURE_MAX_BYTES?.trim(),
+  );
+  const boundedRouteCaptureMaxBytes =
+    Number.isSafeInteger(configuredRouteCaptureMaxBytes) &&
+    configuredRouteCaptureMaxBytes >= 1_024 &&
+    configuredRouteCaptureMaxBytes <= 64 * 1024 * 1024
+      ? configuredRouteCaptureMaxBytes
+      : DEFAULT_ROUTE_CAPTURE_MAX_BYTES;
   const requestPrivate = (
     route: string,
     init?: {
@@ -2548,6 +2561,12 @@ export function createTrackBOperations({
       if (process.env.ROLE_MODEL_PHASE_TIMING === "1") {
         console.error(
           `[run98] phase route-capture-start ${String(input.requestId ?? "")}`,
+        );
+      }
+      const captureBytes = Buffer.byteLength(JSON.stringify(input) ?? "", "utf8");
+      if (captureBytes > boundedRouteCaptureMaxBytes) {
+        throw new Error(
+          `route capture skipped: ${captureBytes} bytes exceeds the ${boundedRouteCaptureMaxBytes}-byte boundary budget`,
         );
       }
       let result: unknown;
