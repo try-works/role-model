@@ -77,6 +77,51 @@ describe("run99 R33 replay lease retry", () => {
     expect(result.lastFailure).toBe("ECONNRESET");
   });
 
+  /**
+   * Run 98 addendum 34 S5 residual (live 2026-09-18, third measurement): jobs ran but never finished —
+   * `replay execution exceeded 720000ms (bounded per-capture budget)` — because the deadline constants
+   * assumed ~2-minute provider calls while real dsh prompts were taking 2-4 minutes each. The budget is
+   * execution policy, so the operator sizes it for the traffic being served; the defaults keep today's
+   * behaviour and the bounds refuse nonsense.
+   */
+  it("sizes the per-capture deadline from the operator's policy within bounded limits", async () => {
+    const {
+      resolveAutoReplayDeadlineMaxMs,
+      resolveAutoReplayDeadlineMs,
+      resolveAutoReplayDeadlinePerCandidateMs,
+    } = await import("../src/track-b-auto-replay.js");
+
+    expect(resolveAutoReplayDeadlinePerCandidateMs({})).toBe(120_000);
+    expect(
+      resolveAutoReplayDeadlinePerCandidateMs({
+        ROLE_MODEL_AUTO_REPLAY_DEADLINE_PER_CANDIDATE_MS: "300000",
+      }),
+    ).toBe(300_000);
+    expect(
+      resolveAutoReplayDeadlinePerCandidateMs({
+        ROLE_MODEL_AUTO_REPLAY_DEADLINE_PER_CANDIDATE_MS: "1",
+      }),
+    ).toBe(120_000);
+    expect(resolveAutoReplayDeadlineMaxMs({})).toBe(1_800_000);
+    expect(
+      resolveAutoReplayDeadlineMaxMs({ ROLE_MODEL_AUTO_REPLAY_DEADLINE_MAX_MS: "7200000" }),
+    ).toBe(7_200_000);
+    expect(
+      resolveAutoReplayDeadlineMaxMs({ ROLE_MODEL_AUTO_REPLAY_DEADLINE_MAX_MS: "99999999" }),
+    ).toBe(1_800_000);
+
+    // Three candidates at five minutes each, with the operator's ceiling: the budget covers the run.
+    expect(
+      resolveAutoReplayDeadlineMs(3, { perCandidateMs: 300_000, maxMs: 7_200_000 }),
+    ).toBe(900_000);
+    // …and the ceiling still binds when the arithmetic would exceed it.
+    expect(resolveAutoReplayDeadlineMs(12, { perCandidateMs: 900_000, maxMs: 1_800_000 })).toBe(
+      1_800_000,
+    );
+    // The defaults are unchanged for every existing caller.
+    expect(resolveAutoReplayDeadlineMs(3)).toBe(360_000);
+  });
+
   it("waits out a hold and returns the terminal receipt", async () => {
     const slept: number[] = [];
     let attempts = 0;

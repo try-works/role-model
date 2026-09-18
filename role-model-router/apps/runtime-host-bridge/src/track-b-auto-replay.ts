@@ -46,6 +46,35 @@ export const AUTO_REPLAY_DEADLINE_SIZE_STEP_BYTES = 1024 * 1024;
 export const AUTO_REPLAY_DEADLINE_SIZE_STEP_MS = 60_000;
 
 /**
+ * Run 98 addendum 34 S5 residual (live 2026-09-18, third measurement): the store showed jobs running but
+ * never finishing — `replay execution exceeded 720000ms (bounded per-capture budget)` — because the flat
+ * constants assumed provider calls of ~2 minutes while real dsh prompts were taking 2-4 minutes each, and a
+ * three-arm capture therefore could not finish inside its budget. The budget is execution policy, not
+ * contract identity, so the operator can size it for the traffic the runtime is actually serving instead of
+ * having to rebuild: the defaults keep today's behaviour and the bounds stop a typo from asking for an
+ * unbounded dispatch.
+ */
+export function resolveAutoReplayDeadlinePerCandidateMs(
+  environment: Readonly<Record<string, string | undefined>> = process.env,
+): number {
+  const parsed = Number(environment.ROLE_MODEL_AUTO_REPLAY_DEADLINE_PER_CANDIDATE_MS?.trim());
+  if (!Number.isSafeInteger(parsed) || parsed < 30_000 || parsed > 900_000) {
+    return AUTO_REPLAY_DEADLINE_PER_CANDIDATE_MS;
+  }
+  return parsed;
+}
+
+export function resolveAutoReplayDeadlineMaxMs(
+  environment: Readonly<Record<string, string | undefined>> = process.env,
+): number {
+  const parsed = Number(environment.ROLE_MODEL_AUTO_REPLAY_DEADLINE_MAX_MS?.trim());
+  if (!Number.isSafeInteger(parsed) || parsed < 120_000 || parsed > 7_200_000) {
+    return AUTO_REPLAY_DEADLINE_MAX_MS;
+  }
+  return parsed;
+}
+
+/**
  * Run 99 R33 live finding (stage v143/v144): the loop deferred captures whose durable replay job was
  * already held by another dispatcher —
  *
@@ -104,7 +133,12 @@ export async function retryLeasedReplayDispatch<TValue>(input: {
 
 export function resolveAutoReplayDeadlineMs(
   candidateCount: number,
-  options: { readonly captureBytes?: number } = {},
+  options: {
+    readonly captureBytes?: number;
+    /** Run 98 addendum 34 S5 residual: operator-sized budgets, resolved once per tick by the caller. */
+    readonly perCandidateMs?: number;
+    readonly maxMs?: number;
+  } = {},
 ): number {
   if (!Number.isSafeInteger(candidateCount) || candidateCount < 1) {
     throw new Error("auto replay deadline requires a positive candidate count");
@@ -116,10 +150,17 @@ export function resolveAutoReplayDeadlineMs(
   // Only whole megabytes of prompt add budget: a 64 KiB request keeps the plain per-candidate
   // deadline, while a 3 MiB coding-agent prompt gets three extra steps.
   const sizeSteps = Math.floor(captureBytes / AUTO_REPLAY_DEADLINE_SIZE_STEP_BYTES);
+  const perCandidateMs =
+    Number.isSafeInteger(options.perCandidateMs) && (options.perCandidateMs ?? 0) > 0
+      ? Number(options.perCandidateMs)
+      : AUTO_REPLAY_DEADLINE_PER_CANDIDATE_MS;
+  const maxMs =
+    Number.isSafeInteger(options.maxMs) && (options.maxMs ?? 0) > 0
+      ? Number(options.maxMs)
+      : AUTO_REPLAY_DEADLINE_MAX_MS;
   return Math.min(
-    (AUTO_REPLAY_DEADLINE_PER_CANDIDATE_MS + sizeSteps * AUTO_REPLAY_DEADLINE_SIZE_STEP_MS) *
-      candidateCount,
-    AUTO_REPLAY_DEADLINE_MAX_MS,
+    (perCandidateMs + sizeSteps * AUTO_REPLAY_DEADLINE_SIZE_STEP_MS) * candidateCount,
+    maxMs,
   );
 }
 

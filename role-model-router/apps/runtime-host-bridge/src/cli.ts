@@ -43,7 +43,9 @@ import {
 import {
   buildAutoReplayIdempotencyKey,
   isReplayJobLeasedFailure,
+  resolveAutoReplayDeadlineMaxMs,
   resolveAutoReplayDeadlineMs,
+  resolveAutoReplayDeadlinePerCandidateMs,
   resolveAutoReplayTickBudgetMs,
   retryLeasedReplayDispatch,
 } from "./track-b-auto-replay.js";
@@ -3969,6 +3971,11 @@ export async function main(): Promise<void> {
           }
           const replayDeadlineMs = resolveAutoReplayDeadlineMs(candidates.length, {
             captureBytes: Buffer.byteLength(JSON.stringify(sourceCapture)),
+            // Run 98 addendum 34 S5 residual: the per-capture budget is execution policy, so the operator
+            // sizes it for the traffic actually being served (the live failure was 720 s budgets against
+            // 2-4 minute provider calls).
+            perCandidateMs: resolveAutoReplayDeadlinePerCandidateMs(process.env),
+            maxMs: resolveAutoReplayDeadlineMaxMs(process.env),
           });
           const replayRequestBody = JSON.stringify({
               requestId: capture.captureRef,
