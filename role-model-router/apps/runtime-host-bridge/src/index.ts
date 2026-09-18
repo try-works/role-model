@@ -13498,6 +13498,9 @@ async function refreshOauthAccessToken(
   const variant = getOauthVariant(providerPresets, liteLLMProviders, target.providerId);
   const tokenResponse = await networkFetcher(variant.oauth.tokenEndpoint, {
     method: "POST",
+    // Run 98 addendum 39 S2: bound the refresh so a stalled token endpoint cannot
+    // hold the credentials stage open; the bootstrap already counts the attempt.
+    signal: AbortSignal.timeout(15_000),
     headers: createDeviceHeaders(
       resolveOauthHeaderDeviceId({
         runtimeStateRoot,
