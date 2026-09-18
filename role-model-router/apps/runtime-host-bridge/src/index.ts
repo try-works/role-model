@@ -27081,8 +27081,8 @@ export async function createRuntimeBridgeBackend(
           executionInventory.endpointIds.length > 0 ? executionInventory : null,
           currentRolePolicy.taskDefinitions,
         );
+        markPhase("dispatch-start");
         const { execution, toolExecutionResult, routingDecisionId, effortReceipt } =
-          markPhase("dispatch-start");
           await executeBridgePlan(plan, requestId, body.stream, streamWriter, {
             requestOptions,
             requestBody: body as unknown as Record<string, unknown>,
