@@ -31498,11 +31498,20 @@ export async function createRuntimeBridgeBackend(
         });
         const recovered = summary.results.filter((result) => result.reason === "healthy");
         if (recovered.length > 0) {
+          console.error(
+            `[run98] remote-health recovery: ${recovered
+              .map((result) => result.endpointId)
+              .join(", ")}`,
+          );
           applyRemoteHealthProbeResults(recovered);
           refreshRoutableInventoryState();
         }
         if (summary.degraded === 0) {
           stopRemoteHealthReprobe();
+        } else if (remoteHealthReprobeAttempts >= remoteHealthReprobeMaxAttempts) {
+          console.error(
+            `[run98] remote-health recovery gave up after ${remoteHealthReprobeAttempts} attempts; ${summary.degraded} endpoint(s) still degraded`,
+          );
         }
       } catch {
         // Bounded and silent: the next tick retries until the budget is spent.
