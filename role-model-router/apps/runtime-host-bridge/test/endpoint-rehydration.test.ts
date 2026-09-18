@@ -5,6 +5,13 @@ import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
 import { describe, expect, test } from "vitest";
 
+// Run 98 addendum 39 S3: these tests drive a real backend (sqlite, activation
+// batches, restart probes). Measured 5-8 s in isolation and past 20 s under
+// full-suite file parallelism, so the budget is 3x the worst measured duration:
+// enough to make the suite deterministic under load without masking a regression
+// that actually changes the work these tests do.
+const REHYDRATION_TEST_TIMEOUT_MS = 60_000;
+
 import {
   listRuntimeEndpoints,
   resolveSqliteMemoryLocation,
@@ -24,7 +31,7 @@ const testFixtureRoot = path.join(import.meta.dirname, "fixtures");
 describe("endpoint rehydration", () => {
   test(
     "commits a multi-effort activation as one durable batch and rehydrates every identity",
-    { timeout: 20_000 },
+    { timeout: REHYDRATION_TEST_TIMEOUT_MS },
     async () => {
       const runtimeStateRoot = path.join(os.tmpdir(), `runtime-host-batch-${Date.now()}`);
       const scopeId = "endpoint-batch-tests";
@@ -257,7 +264,7 @@ describe("endpoint rehydration", () => {
 
   test(
     "rehydrates explicit reasoning effort into the authoritative registry identity",
-    { timeout: 20_000 },
+    { timeout: REHYDRATION_TEST_TIMEOUT_MS },
     async () => {
       const runtimeStateRoot = path.join(
         os.tmpdir(),
@@ -345,7 +352,7 @@ describe("endpoint rehydration", () => {
 
   test(
     "migrates legacy opaque effort endpoints and their role ownership to readable identities",
-    { timeout: 20_000 },
+    { timeout: REHYDRATION_TEST_TIMEOUT_MS },
     async () => {
       const runtimeStateRoot = path.join(
         os.tmpdir(),
@@ -491,7 +498,7 @@ describe("endpoint rehydration", () => {
 
   test(
     "rehydrates sqlite runtime endpoints across backend restart without re-activation",
-    { timeout: 20_000 },
+    { timeout: REHYDRATION_TEST_TIMEOUT_MS },
     async () => {
       const runtimeStateRoot = path.join(
         os.tmpdir(),
@@ -600,7 +607,7 @@ describe("endpoint rehydration", () => {
 
   test(
     "reconciles missing persisted remote activations even when sqlite already has endpoint rows",
-    { timeout: 20_000 },
+    { timeout: REHYDRATION_TEST_TIMEOUT_MS },
     async () => {
       const runtimeStateRoot = path.join(
         os.tmpdir(),
