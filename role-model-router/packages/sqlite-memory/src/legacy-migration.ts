@@ -1709,6 +1709,39 @@ export function buildCompactRuntimeObservationStub(
     "finishReason",
     "costProvenance",
   ]);
+  /**
+   * Run 98 addendum 40 (audit follow-up): capability flags and stream counters are bounded facts, not
+   * rich content, and the telemetry projection derives `cacheReadTokensSupported`,
+   * `cacheWriteTokensSupported`, `promptCacheSupported` and the stream support flags from them. Dropping
+   * them did not fail loudly — it flipped every derived flag to `false`, which is how 434 live rows
+   * reported "cache hit tokens unsupported" while still recording an average of 129k cached tokens.
+   * Each nested object is projected field by field so the stub still cannot absorb arbitrary content.
+   */
+  const executionTelemetrySource = observation.executionTelemetry as
+    | Record<string, unknown>
+    | undefined;
+  const usageSupport = pickRecord(executionTelemetrySource?.usageSupport, [
+    "inputTokens",
+    "outputTokens",
+    "cacheReadTokens",
+    "cacheWriteTokens",
+  ]);
+  if (Object.keys(usageSupport).length) executionTelemetry.usageSupport = usageSupport;
+  const promptCaching = pickRecord(executionTelemetrySource?.promptCaching, ["supported"]);
+  if (Object.keys(promptCaching).length) executionTelemetry.promptCaching = promptCaching;
+  const streamSupport = pickRecord(executionTelemetrySource?.streamSupport, [
+    "text",
+    "toolCalls",
+    "toolArguments",
+  ]);
+  if (Object.keys(streamSupport).length) executionTelemetry.streamSupport = streamSupport;
+  const streamCounters = pickRecord(executionTelemetrySource?.stream, [
+    "requested",
+    "textDeltas",
+    "toolCallDeltas",
+    "toolArgumentDeltas",
+  ]);
+  if (Object.keys(streamCounters).length) executionTelemetry.stream = streamCounters;
   const executionSemantics = pickRecord(observation.executionSemantics, [
     "sourceClient",
     "executionFamily",
