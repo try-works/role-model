@@ -271,6 +271,7 @@ import {
   DEFAULT_REMOTE_PROBE_RETRY_DELAY_MS,
   type RemoteHealthProbeResult,
   type RemoteHealthProbeTarget,
+  isTransientTransportError,
   probeRemoteEndpointAdmission,
   probeRemoteEndpoints,
 } from "./remote-health-probe.js";
@@ -362,6 +363,30 @@ export function resolveAdapterGatedReasoningEfforts(input: {
 function markPhase(label: string): void {
   if (process.env.ROLE_MODEL_PHASE_TIMING === "1") {
     console.error(`[run98] phase ${label} ${Date.now()}`);
+  }
+}
+
+/**
+ * Run 98 addendum 39 S2: the OAuth refresh is a single network call, and a stalled
+ * token endpoint used to leave the credentials stage degraded with no way to tell a
+ * transport stall from a rejected grant. Retry only the transport class (the same
+ * classifier the health probes use) and let auth/provider errors surface as-is.
+ */
+async function fetchWithTransientRetry(
+  networkFetcher: typeof fetch,
+  url: string,
+  init: RequestInit,
+  attempts = 3,
+): Promise<Response> {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await networkFetcher(url, init);
+    } catch (error) {
+      if (attempt >= attempts || !isTransientTransportError(error)) {
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
+    }
   }
 }
 
@@ -13502,7 +13527,10 @@ async function refreshOauthAccessToken(
   }
 
   const variant = getOauthVariant(providerPresets, liteLLMProviders, target.providerId);
-  const tokenResponse = await networkFetcher(variant.oauth.tokenEndpoint, {
+  const tokenResponse = await fetchWithTransientRetry(
+    networkFetcher,
+    variant.oauth.tokenEndpoint,
+    {
     method: "POST",
     // Run 98 addendum 39 S2: bound the refresh so a stalled token endpoint cannot
     // hold the credentials stage open; the bootstrap already counts the attempt.
