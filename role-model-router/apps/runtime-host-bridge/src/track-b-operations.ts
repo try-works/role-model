@@ -2545,11 +2545,28 @@ export function createTrackBOperations({
       // A capture failure keeps its existing bounded degradation semantics upstream
       // (routing continues); the bound only stops an unbounded wait for the boundary.
       const captureStartedAtMs = Date.now();
-      const result = await requestPrivate(
-        "capture/route",
-        { method: "POST", body: input },
-        boundedRouteCaptureTimeoutMs,
-      );
+      if (process.env.ROLE_MODEL_PHASE_TIMING === "1") {
+        console.error(
+          `[run98] phase route-capture-start ${String(input.requestId ?? "")}`,
+        );
+      }
+      let result: unknown;
+      try {
+        result = await requestPrivate(
+          "capture/route",
+          { method: "POST", body: input },
+          boundedRouteCaptureTimeoutMs,
+        );
+      } catch (error) {
+        if (process.env.ROLE_MODEL_PHASE_TIMING === "1") {
+          console.error(
+            `[run98] phase route-capture-failed ${Date.now() - captureStartedAtMs}ms request=${String(
+              input.requestId ?? "",
+            )} ${String((error as { message?: unknown })?.message ?? error).slice(0, 160)}`,
+          );
+        }
+        throw error;
+      }
       if (process.env.ROLE_MODEL_PHASE_TIMING === "1") {
         console.error(
           `[run98] phase route-capture ${Date.now() - captureStartedAtMs}ms request=${String(
