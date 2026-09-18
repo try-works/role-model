@@ -2,6 +2,11 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
+import {
+  resolveRoutingLatencySelectionPolicy,
+  type ResolvedRoutingLatencySelectionPolicy,
+} from "./routing-latency-policy.js";
+
 /**
  * Run 98 R15/R17: the runtime host's read side of the versioned activation policy config.
  *
@@ -31,6 +36,11 @@ export interface LearningPolicySnapshot {
   readonly policyVersion: number;
   readonly digest: string;
   readonly source: string;
+  /**
+   * Run 98 addendum 40 (L5): the measured-latency selection parameters from the same versioned
+   * document, resolved with the same precedence and the same fail-closed behaviour.
+   */
+  readonly latencySelection: ResolvedRoutingLatencySelectionPolicy;
   readonly effective: {
     readonly stage: ActivationStage;
     readonly scoreBand: number;
@@ -372,6 +382,21 @@ export function readLearningPolicyFile(input: {
     policyVersion: resolved.policyVersion,
     digest: `sha256:${createHash("sha256").update(canonicalPolicyJson(parsed)).digest("hex")}`,
     source: resolved.source,
+    latencySelection: resolveRoutingLatencySelectionPolicy({
+      // A scope or channel section narrows the global one field by field, so an override that only
+      // lowers the delta cannot silently drop the authorization the global section granted.
+      raw: (() => {
+        const globalSelection = asRecord(global.latencySelection);
+        const channelSelection = asRecord(channelValues.latencySelection);
+        const scopeSelection = asRecord(scopeValues.latencySelection);
+        const mergedSelection = {
+          ...globalSelection,
+          ...channelSelection,
+          ...scopeSelection,
+        };
+        return Object.keys(mergedSelection).length > 0 ? mergedSelection : undefined;
+      })(),
+    }),
     effective,
   };
 }
