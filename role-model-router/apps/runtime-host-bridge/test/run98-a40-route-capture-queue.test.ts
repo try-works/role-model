@@ -89,3 +89,61 @@ test("a40 L2: a capture larger than the boundary budget fails closed at enqueue"
   ).rejects.toThrow(/exceeds/i);
   expect(await queue.readPending()).toHaveLength(0);
 });
+
+// v1.1 guidance 05 §"Track B maintenance job state machines": every job carries bounded attempts and a
+// deadline and ends in a typed state (queued -> running -> succeeded | partial | failed | expired),
+// never in an unbounded retry.
+test("a40 L2: a capture that keeps failing reaches a typed terminal disposition", async () => {
+  const queue = await makeQueue({ maxAttempts: 2 });
+  await queue.enqueue(capture("req-a40-exhausted"));
+
+  let nowMs = Date.now();
+  const attempt = () =>
+    queue.drain(
+      async () => {
+        throw new Error("boundary down");
+      },
+      { nowMs },
+    );
+
+  expect(await attempt()).toMatchObject({ delivered: 0, failed: 1 });
+  nowMs += 60_000;
+  expect(await attempt()).toMatchObject({ delivered: 0, failed: 1 });
+  expect(await queue.readPending()).toHaveLength(0);
+
+  const terminal = await queue.readReceipts();
+  expect(terminal[0]?.result).toMatchObject({ status: "failed", attempts: 2 });
+  expect(String((terminal[0]?.result as { lastError?: string }).lastError)).toContain(
+    "boundary down",
+  );
+
+  // A terminal disposition never consumes another attempt.
+  nowMs += 60_000;
+  expect(await attempt()).toMatchObject({ delivered: 0, failed: 0 });
+});
+
+test("a40 L2: a capture past its deadline is expired instead of retried", async () => {
+  const queue = await makeQueue({ maxAttempts: 8, deadlineMs: 1_000 });
+  await queue.enqueue(capture("req-a40-expired"));
+
+  const summary = await queue.drain(
+    async () => {
+      throw new Error("boundary down");
+    },
+    { nowMs: Date.now() + 5_000 },
+  );
+  expect(summary).toMatchObject({ delivered: 0, failed: 1 });
+  expect((await queue.readReceipts())[0]?.result).toMatchObject({ status: "expired" });
+  expect(await queue.readPending()).toHaveLength(0);
+});
+
+test("a40 L2: a delivered capture records a typed delivered receipt", async () => {
+  const queue = await makeQueue();
+  await queue.enqueue(capture("req-a40-delivered"));
+  await queue.drain(async () => ({ status: "captured", artifactId: "artifact-1" }));
+
+  expect((await queue.readReceipts())[0]?.result).toMatchObject({
+    status: "delivered",
+    result: { status: "captured", artifactId: "artifact-1" },
+  });
+});

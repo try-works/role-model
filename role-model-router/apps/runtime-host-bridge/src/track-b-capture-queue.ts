@@ -38,6 +38,7 @@ export interface TrackBRouteCaptureQueue {
       readonly lastError: string | null;
       readonly enqueuedAtMs: number;
       readonly nextAttemptAtMs: number;
+      readonly deadlineAtMs: number;
     }>
   >;
   readReceipts(): Promise<
@@ -56,6 +57,11 @@ export interface TrackBRouteCaptureQueue {
 const DEFAULT_MAX_PAYLOAD_BYTES = 512 * 1024;
 const DEFAULT_MAX_ITEMS = 4096;
 const MAX_RETRY_BACKOFF_MS = 5 * 60 * 1000;
+// v1.1 guidance 05 §"Track B maintenance job state machines": every job has bounded attempts and a
+// deadline, so a stuck capture reaches a typed `failed`/`expired` disposition instead of retrying
+// forever.
+const DEFAULT_MAX_ATTEMPTS = 8;
+const DEFAULT_DEADLINE_MS = 24 * 60 * 60 * 1000;
 
 function captureQueueSchema(database: DatabaseSync): void {
   database.exec(`
@@ -67,7 +73,8 @@ function captureQueueSchema(database: DatabaseSync): void {
       attempts INTEGER NOT NULL DEFAULT 0,
       last_error TEXT,
       next_attempt_at_ms INTEGER NOT NULL,
-      enqueued_at_ms INTEGER NOT NULL
+      enqueued_at_ms INTEGER NOT NULL,
+      deadline_at_ms INTEGER NOT NULL
     );
     CREATE INDEX IF NOT EXISTS track_b_route_capture_pending_order
       ON track_b_route_capture_pending(next_attempt_at_ms, enqueued_at_ms, request_id);
@@ -77,6 +84,15 @@ function captureQueueSchema(database: DatabaseSync): void {
       completed_at_ms INTEGER NOT NULL
     );
   `);
+  // Existing queues created before the deadline column was added.
+  const columns = database
+    .prepare("PRAGMA table_info(track_b_route_capture_pending)")
+    .all() as Array<{ name: string }>;
+  if (!columns.some((column) => column.name === "deadline_at_ms")) {
+    database.exec(
+      "ALTER TABLE track_b_route_capture_pending ADD COLUMN deadline_at_ms INTEGER NOT NULL DEFAULT 0",
+    );
+  }
 }
 
 function parsePayload(value: string): Readonly<Record<string, unknown>> {
@@ -94,10 +110,14 @@ export function createTrackBRouteCaptureQueue(options: {
   readonly filePath: string;
   readonly maxItems?: number;
   readonly maxPayloadBytes?: number;
+  readonly maxAttempts?: number;
+  readonly deadlineMs?: number;
 }): TrackBRouteCaptureQueue {
   const filePath = options.filePath;
   const maxItems = options.maxItems ?? DEFAULT_MAX_ITEMS;
   const maxPayloadBytes = options.maxPayloadBytes ?? DEFAULT_MAX_PAYLOAD_BYTES;
+  const maxAttempts = options.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
+  const deadlineMs = options.deadlineMs ?? DEFAULT_DEADLINE_MS;
   if (!filePath || !Number.isInteger(maxItems) || maxItems < 1) {
     throw new Error("valid Track B route capture queue configuration required");
   }
@@ -158,8 +178,8 @@ export function createTrackBRouteCaptureQueue(options: {
               .prepare(
                 `INSERT INTO track_b_route_capture_pending
                    (request_id, routing_decision_id, endpoint_id, payload_json, attempts, last_error,
-                    next_attempt_at_ms, enqueued_at_ms)
-                 VALUES (?, ?, ?, ?, 0, NULL, ?, ?)`,
+                    next_attempt_at_ms, enqueued_at_ms, deadline_at_ms)
+                 VALUES (?, ?, ?, ?, 0, NULL, ?, ?, ?)`,
               )
               .run(
                 item.requestId,
@@ -168,6 +188,7 @@ export function createTrackBRouteCaptureQueue(options: {
                 payloadJson,
                 enqueuedAtMs,
                 enqueuedAtMs,
+                enqueuedAtMs + deadlineMs,
               );
             database.exec("COMMIT");
             return { status: "enqueued", bytes } as const;
@@ -198,6 +219,7 @@ export function createTrackBRouteCaptureQueue(options: {
             last_error: string | null;
             enqueued_at_ms: number;
             next_attempt_at_ms: number;
+            deadline_at_ms: number;
           }>;
           return rows.map((row) => ({
             requestId: row.request_id,
@@ -208,6 +230,7 @@ export function createTrackBRouteCaptureQueue(options: {
             lastError: row.last_error,
             enqueuedAtMs: row.enqueued_at_ms,
             nextAttemptAtMs: row.next_attempt_at_ms,
+            deadlineAtMs: row.deadline_at_ms,
           }));
         }),
       );
@@ -245,7 +268,8 @@ export function createTrackBRouteCaptureQueue(options: {
           withDatabase((database) => {
             const row = database
               .prepare(
-                `SELECT request_id, routing_decision_id, endpoint_id, payload_json, attempts
+                `SELECT request_id, routing_decision_id, endpoint_id, payload_json, attempts,
+                        deadline_at_ms
                  FROM track_b_route_capture_pending
                  WHERE next_attempt_at_ms <= ?
                  ORDER BY enqueued_at_ms, request_id LIMIT 1`,
@@ -257,6 +281,7 @@ export function createTrackBRouteCaptureQueue(options: {
                   endpoint_id: string;
                   payload_json: string;
                   attempts: number;
+                  deadline_at_ms: number;
                 }
               | undefined;
             if (!row) return null;
@@ -268,6 +293,7 @@ export function createTrackBRouteCaptureQueue(options: {
                 payload: parsePayload(row.payload_json),
               } as TrackBRouteCaptureQueueItem,
               attempts: row.attempts,
+              deadlineAtMs: row.deadline_at_ms,
             };
           }),
         );
@@ -286,7 +312,11 @@ export function createTrackBRouteCaptureQueue(options: {
                   .prepare(
                     "INSERT OR REPLACE INTO track_b_route_capture_receipts (request_id, result_json, completed_at_ms) VALUES (?, ?, ?)",
                   )
-                  .run(claimed.item.requestId, JSON.stringify(result ?? null), Date.now());
+                  .run(
+                    claimed.item.requestId,
+                    JSON.stringify({ status: "delivered", result: result ?? null }),
+                    Date.now(),
+                  );
                 database.exec("COMMIT");
               } catch (error) {
                 database.exec("ROLLBACK");
@@ -297,23 +327,55 @@ export function createTrackBRouteCaptureQueue(options: {
           delivered += 1;
         } catch (error) {
           const attempts = claimed.attempts + 1;
-          const backoffMs = Math.min(1_000 * 2 ** Math.min(attempts, 8), MAX_RETRY_BACKOFF_MS);
-          await exclusive(async () =>
-            withDatabase((database) => {
-              database
-                .prepare(
-                  `UPDATE track_b_route_capture_pending
-                   SET attempts=?, last_error=?, next_attempt_at_ms=?
-                   WHERE request_id=?`,
-                )
-                .run(
-                  attempts,
-                  String((error as { message?: unknown })?.message ?? error).slice(0, 512),
-                  nowMs + backoffMs,
-                  claimed.item.requestId,
-                );
-            }),
+          const lastError = String((error as { message?: unknown })?.message ?? error).slice(
+            0,
+            512,
           );
+          const expired = claimed.deadlineAtMs > 0 && nowMs >= claimed.deadlineAtMs;
+          const exhausted = attempts >= maxAttempts;
+          if (expired || exhausted) {
+            // Terminal disposition: the capture stops consuming attempts and the operator can read why.
+            await exclusive(async () =>
+              withDatabase((database) => {
+                database.exec("BEGIN IMMEDIATE");
+                try {
+                  database
+                    .prepare("DELETE FROM track_b_route_capture_pending WHERE request_id=?")
+                    .run(claimed.item.requestId);
+                  database
+                    .prepare(
+                      "INSERT OR REPLACE INTO track_b_route_capture_receipts (request_id, result_json, completed_at_ms) VALUES (?, ?, ?)",
+                    )
+                    .run(
+                      claimed.item.requestId,
+                      JSON.stringify({
+                        status: expired ? "expired" : "failed",
+                        attempts,
+                        lastError,
+                      }),
+                      Date.now(),
+                    );
+                  database.exec("COMMIT");
+                } catch (error) {
+                  database.exec("ROLLBACK");
+                  throw error;
+                }
+              }),
+            );
+          } else {
+            const backoffMs = Math.min(1_000 * 2 ** Math.min(attempts, 8), MAX_RETRY_BACKOFF_MS);
+            await exclusive(async () =>
+              withDatabase((database) => {
+                database
+                  .prepare(
+                    `UPDATE track_b_route_capture_pending
+                     SET attempts=?, last_error=?, next_attempt_at_ms=?
+                     WHERE request_id=?`,
+                  )
+                  .run(attempts, lastError, nowMs + backoffMs, claimed.item.requestId);
+              }),
+            );
+          }
           failed += 1;
         }
       }
