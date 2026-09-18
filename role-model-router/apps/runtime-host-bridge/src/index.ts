@@ -372,7 +372,7 @@ function markPhase(label: string): void {
  * transport stall from a rejected grant. Retry only the transport class (the same
  * classifier the health probes use) and let auth/provider errors surface as-is.
  */
-async function fetchWithTransientRetry(
+export async function fetchWithTransientRetry(
   networkFetcher: typeof fetch,
   url: string,
   init: RequestInit,

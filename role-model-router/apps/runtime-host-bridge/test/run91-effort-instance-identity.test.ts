@@ -6,11 +6,50 @@ import { createDownstreamOpenAIDiscovery } from "../src/downstream-openai-discov
 import {
   createModelListResponse,
   createRuntimeModelRecords,
+  fetchWithTransientRetry,
   mapChatCompletionsRequest,
   mapResponsesRequest,
   resolveAdapterGatedReasoningEfforts,
   resolveEndpointExecutionEffort,
 } from "../src/index.js";
+
+describe("addendum 39 S2: the OAuth refresh retries transport failures only", () => {
+  test("retries a transient transport failure and returns the successful response", async () => {
+    let attempts = 0;
+    const response = await fetchWithTransientRetry(
+      async () => {
+        attempts += 1;
+        if (attempts < 2) {
+          const cause = Object.assign(new Error("connect timeout"), {
+            code: "UND_ERR_CONNECT_TIMEOUT",
+          });
+          throw new TypeError("fetch failed", { cause });
+        }
+        return new Response(JSON.stringify({ access_token: "token" }), { status: 200 });
+      },
+      "https://token.example/oauth",
+      { method: "POST" },
+    );
+
+    expect(attempts).toBe(2);
+    expect(response.status).toBe(200);
+  });
+
+  test("does not retry a rejected grant", async () => {
+    let attempts = 0;
+    await expect(
+      fetchWithTransientRetry(
+        async () => {
+          attempts += 1;
+          return new Response("invalid_grant", { status: 400 });
+        },
+        "https://token.example/oauth",
+        { method: "POST" },
+      ),
+    ).resolves.toMatchObject({ status: 400 });
+    expect(attempts).toBe(1);
+  });
+});
 
 const source = {
   vendor: "models.dev",
