@@ -4018,6 +4018,16 @@ export async function main(): Promise<void> {
                     method: "POST",
                     headers: { "content-type": "application/json" },
                     body: replayRequestBody,
+                    /**
+                     * Run 98 addendum 34 S5 residual (live 2026-09-18): the dispatch waits for the whole
+                     * replay to finish, which for a multi-megabyte prompt costs 74-164 s per candidate, while
+                     * undici's default headers timeout is 300 s. The live dispositions showed
+                     * `replay endpoint HTTP 0: UND_ERR_HEADERS_TIMEOUT` — a legitimate long replay cut off by
+                     * the client's own default, retried, and cut off again until the capture's deadline
+                     * expired. The request's own deadline is the authority here, plus a bounded grace for the
+                     * response to travel back.
+                     */
+                    signal: AbortSignal.timeout(Math.min(replayDeadlineMs + 60_000, 1_800_000)),
                   },
                 );
                 if (attempt.ok) return { ok: true as const, value: await attempt.json() };
