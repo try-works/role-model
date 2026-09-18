@@ -26428,7 +26428,20 @@ export async function createRuntimeBridgeBackend(
               evidenceBundle as unknown as Readonly<Record<string, unknown>>,
             ),
             statusFamily: "degraded-capture",
-            captureDegradation: { reason: "track-b-capture-unavailable" },
+            // v1.1 guidance 01/03: a rich-capture failure keeps compact telemetry and routing and
+            // writes a CaptureDegradationReceipt carrying the stage, the reason and the fallback.
+            captureDegradation: {
+              contract: "CaptureDegradationReceiptV1",
+              failureStage: "graph_write",
+              actionTaken: routeCaptureDegradationReason === "track-b-capture-deferred"
+                ? "queued_for_retry"
+                : "metadata_only",
+              reasonCode: routeCaptureDegradationReason === "track-b-capture-deferred"
+                ? "unknown"
+                : "artifact_store_unavailable",
+              routingContinued: true,
+              reason: routeCaptureDegradationReason ?? "track-b-capture-unavailable",
+            },
           } as never);
       try {
         markPhase("observation-persist-start");

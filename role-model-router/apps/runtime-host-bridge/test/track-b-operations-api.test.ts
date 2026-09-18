@@ -1364,13 +1364,28 @@ describe("Track B operations APIs", () => {
         "req-track-b-capture-failure-001",
       );
 
-      expect(result.persistenceDegradation).toMatchObject({
-        capability: "runtime-observation-persist",
-        reason: "track-b-capture-boundary-http-503",
+      // v1.1 guidance 01/03: a failed rich capture keeps compact telemetry and routing and reports the
+      // failure as a CaptureDegradationReceipt — it must not be masked as a graph-writer error, and it
+      // must not drop the request's observation and telemetry (run 98 addendum 40 L2).
+      expect(result.persistenceDegradation).toBeUndefined();
+      const failedCaptureObservation = readRuntimeObservationStorageRecord({
+        databasePath,
+        requestId: "req-track-b-capture-failure-001",
+      });
+      expect(failedCaptureObservation).toMatchObject({
+        statusFamily: "degraded-capture",
+        captureDegradation: {
+          contract: "CaptureDegradationReceiptV1",
+          failureStage: "graph_write",
+          actionTaken: "metadata_only",
+          routingContinued: true,
+          reason: "track-b-capture-boundary-http-503",
+        },
       });
       expect(
-        readRuntimeTelemetryRecord({ databasePath, requestId: "req-track-b-capture-failure-001" }),
-      ).toBeNull();
+        readRuntimeTelemetryRecord({ databasePath, requestId: "req-track-b-capture-failure-001" })
+          ?.latencyMs,
+      ).toEqual(expect.any(Number));
     } finally {
       await backend.shutdown();
       await new Promise<void>((resolve, reject) =>

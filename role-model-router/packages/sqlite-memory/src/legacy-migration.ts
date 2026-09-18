@@ -245,6 +245,21 @@ function stateRequiresGraphWrite(state: LegacyMigrationState): boolean {
   );
 }
 
+/**
+ * Run 98 addendum 40 (L2): an observation whose route capture was deferred, or whose operations
+ * boundary was unavailable, is deliberately artifact-free. Callers already reduced it to the bounded
+ * compact stub; the graph-migration guards must recognise it instead of refusing to store it.
+ */
+export function isDegradedCaptureObservation(
+  observation: Readonly<Record<string, unknown>>,
+): boolean {
+  const captureDegradation = observation.captureDegradation;
+  return (
+    observation.statusFamily === "degraded-capture" ||
+    (typeof captureDegradation === "object" && captureDegradation !== null)
+  );
+}
+
 /** Records a live production write in the migration target while shadow mirroring is active. */
 export function mirrorShadowRuntimeObservation(
   database: DatabaseSync,
@@ -267,6 +282,9 @@ export function recordRuntimeObservationGraphReference(
 ): boolean {
   if (!stateRequiresGraphWrite(currentState(database))) return false;
   const requestId = input.observation.requestId;
+  // A degraded-capture observation has no graph reference to record by design; the bounded stub is
+  // the record. Everything else still requires its artifact while the store is graph-authoritative.
+  if (isDegradedCaptureObservation(input.observation)) return false;
   if (typeof requestId !== "string" || requestId.length === 0 || !input.artifactRef) {
     throw new Error("graph storage requires an artifact reference for every live observation");
   }
@@ -1797,6 +1815,33 @@ export function buildCompactRuntimeObservationStub(
     "structuredInspectionAvailable",
   ]);
   if (Object.keys(capturePolicy).length) stub.capturePolicy = capturePolicy;
+  /**
+   * v1.1 guidance 03 §"Compact event envelopes remain bounded" and 01 §"TB02/TB03 ownership": when
+   * rich capture fails the runtime keeps compact telemetry and routing and writes a
+   * `CaptureDegradationReceipt` with the stage, the reason and the fallback
+   * (`metadata_only` / `queued_for_retry` / `dropped_rich_payload`) — the receipt is *evidence about
+   * the evidence*, not rich content. Dropping it while projecting the bundle made a degraded capture
+   * indistinguishable from a request that had nothing to capture.
+   */
+  const captureDegradation = pickRecord(observation.captureDegradation, [
+    "contract",
+    "receiptId",
+    "observationId",
+    "routeDecisionId",
+    "failureStage",
+    "actionTaken",
+    "reasonCode",
+    "routingContinues",
+    "routingContinued",
+    "createdAt",
+    "runtimeChannel",
+    "scopeId",
+    "reason",
+  ]);
+  if (Object.keys(captureDegradation).length) stub.captureDegradation = captureDegradation;
+  if (observation.statusFamily === "degraded-capture") {
+    stub.statusFamily = "degraded-capture";
+  }
   /**
    * Run 98 addendum 35 (live stage finding, 2026-09-18): the stub dropped `routingDiagnostics` with
    * the rich content, so every real request read back as having no routing diagnostics at all. Live

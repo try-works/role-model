@@ -37,6 +37,7 @@ import {
   readRuntimeObservationStorageState,
   recordRuntimeObservationGraphReference,
   resolveRuntimeObservationStoragePayload,
+  isDegradedCaptureObservation as isDegradedCaptureObservationRecord,
 } from "./legacy-migration.js";
 
 export * from "./legacy-migration.js";
@@ -4487,8 +4488,17 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
       }
     });
   }
+  // Run 98 addendum 40 (L2): a request whose route capture was deferred (or whose operations boundary
+  // was unavailable) has no graph artifact by design. The caller already reduced it to the bounded
+  // degraded stub, so the graph-migration guard must not refuse it — refusing dropped the observation
+  // row and its telemetry, which is how a deferred capture turned into a lost request. Observations
+  // that claim a full capture still require their artifact below.
+  const isDegradedCaptureObservation = isDegradedCaptureObservationRecord(
+    observation as unknown as Readonly<Record<string, unknown>>,
+  );
   if (
     !artifactRef &&
+    !isDegradedCaptureObservation &&
     [
       "shadow_mirror",
       "parity_verified",
