@@ -359,6 +359,7 @@ export function resolveAdapterGatedReasoningEfforts(input: {
 
 export function resolveEndpointExecutionEffort(input: {
   readonly fixedEffort?: string | null;
+  readonly declaredEffortLevels?: readonly string[] | null;
   readonly executionRequest: RuntimeExecutionRequest;
 }): {
   readonly executionRequest: RuntimeExecutionRequest;
@@ -370,6 +371,20 @@ export function resolveEndpointExecutionEffort(input: {
   const fixedEffort = input.fixedEffort?.trim() || null;
   const clientEffort = input.executionRequest.reasoning?.effort?.trim() || null;
   if (fixedEffort === null) {
+    const declaredEffortLevels = new Set(
+      (input.declaredEffortLevels ?? [])
+        .map((level) => level.trim())
+        .filter((level) => level.length > 0),
+    );
+    if (clientEffort !== null && declaredEffortLevels.has(clientEffort)) {
+      return {
+        executionRequest: input.executionRequest,
+        receipt: {
+          reasoningEffort: clientEffort,
+          effortSource: "client",
+        },
+      };
+    }
     const { reasoning: clientReasoning, ...executionRequestWithoutReasoning } =
       input.executionRequest;
     const { effort: _clientEffort, ...providerDefaultReasoning } = clientReasoning ?? {};
@@ -8511,6 +8526,57 @@ function throwNoEligibleCapabilityTarget(input: {
   });
 }
 
+function collectConfiguredReasoningEfforts(
+  registry: EndpointRegistryResult,
+  allowEndpoints: readonly string[],
+): readonly string[] {
+  const allowed = new Set(allowEndpoints);
+  const levels = new Set<string>();
+  for (const endpoint of registry.endpoints) {
+    if (!allowed.has(endpoint.identity.endpoint_id)) {
+      continue;
+    }
+    const fixedEffort = endpoint.identity.reasoning_effort?.trim();
+    if (fixedEffort) {
+      levels.add(fixedEffort);
+    }
+    for (const level of endpoint.declared.reasoning_effort_levels ?? []) {
+      const trimmed = level.trim();
+      if (trimmed) {
+        levels.add(trimmed);
+      }
+    }
+  }
+  return [...levels].sort(compareText);
+}
+
+function throwReasoningEffortUnavailable(input: {
+  readonly requestedModel: string;
+  readonly requestedEffort: string;
+  readonly availableEfforts: readonly string[];
+}): never {
+  throw new BridgeHttpError(400, {
+    error: {
+      type: "routing_eligibility_error",
+      code: "reasoning_effort_unavailable",
+      message: `no targets for model ${input.requestedModel} satisfy requested reasoning effort ${input.requestedEffort}.`,
+      requestedModel: input.requestedModel,
+      requestedEffort: input.requestedEffort,
+      availableEfforts: input.availableEfforts,
+    },
+  });
+}
+
+function readDeclaredEffortLevels(
+  registry: EndpointRegistryResult,
+  endpointId: string,
+): readonly string[] | null {
+  return (
+    registry.endpoints.find((endpoint) => endpoint.identity.endpoint_id === endpointId)?.declared
+      .reasoning_effort_levels ?? null
+  );
+}
+
 function throwAliasPoolEmpty(input: {
   readonly requestedModel: string;
   readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution">;
@@ -8822,9 +8888,27 @@ function filterRequestedModelPoolByReasoningEffort(input: {
     );
   }
 
-  // Provider-default is its own endpoint instance. A requested effort must
-  // resolve to an exact fixed sibling rather than changing the base endpoint's
-  // identity and semantics at execution time.
+  // Provider-declared levels are executable on the provider-default instance:
+  // the request keeps the client effort and the receipt records "client".
+  const providerDeclaredEffortEndpointIds = input.registry.endpoints
+    .filter(
+      (endpoint) =>
+        allowed.has(endpoint.identity.endpoint_id) &&
+        (endpoint.identity.reasoning_effort?.trim() || null) === null &&
+        (endpoint.declared.reasoning_effort_levels ?? []).some(
+          (level) => level.trim() === requestedEffort,
+        ),
+    )
+    .map((endpoint) => endpoint.identity.endpoint_id);
+  if (providerDeclaredEffortEndpointIds.length > 0) {
+    return input.allowEndpoints.filter((endpointId) =>
+      providerDeclaredEffortEndpointIds.includes(endpointId),
+    );
+  }
+
+  // Provider-default is its own endpoint instance. An unsupported requested
+  // effort must not silently change the base endpoint's identity and semantics
+  // at execution time.
   return [];
 }
 
@@ -9472,6 +9556,19 @@ export function mapChatCompletionsRequest(
           routingMode: configuredDefaultRoutingMode,
         }
       : routingDiagnostics;
+  const requestedReasoningEffort = reasoning?.effort?.trim() || null;
+  if (
+    requestedReasoningEffort !== null &&
+    modelAllowEndpoints.length > 0 &&
+    allowEndpoints.length === 0
+  ) {
+    throwReasoningEffortUnavailable({
+      requestedModel: body.model,
+      requestedEffort: requestedReasoningEffort,
+      availableEfforts: collectConfiguredReasoningEfforts(registry, modelAllowEndpoints),
+    });
+  }
+
   if (baseRoutingDiagnostics?.aliasResolution?.poolEmptyReason === "ALIAS_POOL_EMPTY") {
     throwAliasPoolEmpty({
       requestedModel: body.model,
@@ -9622,6 +9719,19 @@ export function mapResponsesRequest(
       requestOptions,
     }),
   });
+  const requestedReasoningEffort = reasoning?.effort?.trim() || null;
+  if (
+    requestedReasoningEffort !== null &&
+    modelAllowEndpoints.length > 0 &&
+    allowEndpoints.length === 0
+  ) {
+    throwReasoningEffortUnavailable({
+      requestedModel: body.model,
+      requestedEffort: requestedReasoningEffort,
+      availableEfforts: collectConfiguredReasoningEfforts(registry, modelAllowEndpoints),
+    });
+  }
+
   const toolExecutionPlan = resolveResponsesToolExecutionPlan({
     registry,
     allowEndpoints,
@@ -25456,6 +25566,10 @@ export async function createRuntimeBridgeBackend(
           );
           const effortResolution = resolveEndpointExecutionEffort({
             fixedEffort: selectedCandidate?.identity.reasoning_effort ?? null,
+            declaredEffortLevels: readDeclaredEffortLevels(
+              executionSnapshot.registry,
+              routed.decision.chosen_endpoint_id,
+            ),
             executionRequest,
           });
           const result = await executeLiveRoutedRequest({
@@ -25774,6 +25888,10 @@ export async function createRuntimeBridgeBackend(
         : "openai.chat.completions";
     const effectiveEffort = resolveEndpointExecutionEffort({
       fixedEffort: execution.target.candidate.identity.reasoning_effort ?? null,
+      declaredEffortLevels: readDeclaredEffortLevels(
+        executionSnapshot.registry,
+        execution.target.endpointId,
+      ),
       executionRequest: plan.executionRequest as RuntimeExecutionRequest,
     }).receipt;
     const cacheContinuityOutcome = persistCacheContinuityOutcome({

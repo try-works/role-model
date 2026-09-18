@@ -55,6 +55,12 @@ export interface EndpointCandidate {
     };
     readonly supports_embeddings: boolean;
     readonly platform_constraints?: string[];
+    /**
+     * Provider-declared reasoning effort levels for the default (non-fixed)
+     * endpoint instance. Fixed-effort sibling instances carry their level in
+     * `identity.reasoning_effort` instead.
+     */
+    readonly reasoning_effort_levels?: readonly string[];
   };
   readonly status: string;
   readonly deniedByPolicy?: boolean;
@@ -256,6 +262,9 @@ function createCloudEndpoint(
       },
       supports_embeddings: model.capabilities.includes("embeddings.text"),
       platform_constraints: [],
+      ...(Array.isArray(model.reasoningEffortLevels) && model.reasoningEffortLevels.length > 0
+        ? { reasoning_effort_levels: [...model.reasoningEffortLevels] }
+        : {}),
     },
     status: account.status === "revoked" ? "revoked" : source.lifecycleState,
     runtimeEligibility: toRuntimeEligibility(account, source),

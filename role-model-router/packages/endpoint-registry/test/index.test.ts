@@ -222,4 +222,58 @@ describe("buildEndpointRegistry", () => {
       ]),
     );
   });
+
+  test("projects catalog reasoning effort levels onto declared cloud endpoint capabilities", () => {
+    const effortModel = {
+      ...normalizedCatalog.models[0],
+      modelId: "openai/gpt-4.1-mini-fast-effort",
+      reasoningEffortLevels: ["low", "high"],
+      reasoningOptionKinds: ["effort"],
+    };
+    const result = buildEndpointRegistry({
+      catalog: {
+        ...normalizedCatalog,
+        models: [...normalizedCatalog.models, effortModel],
+      } as never,
+      accounts: [
+        {
+          providerAccountId: "openai.effort",
+          providerId: "openai",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "default",
+          credentialRef: { backend: "env", ref: "OPENAI_API_KEY" },
+          authMode: "api-key-static",
+          regionPolicy: { mode: "prefer", regions: ["us-east-1"] },
+          baseUrlOverride: null,
+          allowedModels: [],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        },
+      ] as never,
+      sources: {
+        cloud: [
+          {
+            endpointId: "openai.effort.us-east-1",
+            providerAccountId: "openai.effort",
+            modelId: "openai/gpt-4.1-mini-fast-effort",
+            region: "us-east-1",
+            endpointKind: "remote-openai-compatible",
+            servingSource: "remote-service",
+            lifecycleState: "active",
+            healthStatus: "healthy",
+          },
+        ],
+        local: [],
+      } as never,
+    } as never);
+
+    expect(result.endpoints).toHaveLength(1);
+    expect(result.endpoints[0]?.declared.reasoning_effort_levels).toEqual(["low", "high"]);
+  });
 });
