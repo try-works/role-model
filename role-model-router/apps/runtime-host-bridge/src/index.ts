@@ -99,6 +99,7 @@ import {
   readLatestObservedProfile,
   readLatestObservedProfilesByEndpointIds,
   readLiveTaskTelemetryScoresByEndpointIds,
+  readEndpointLatencyBuckets,
   readObservedPerformanceSamples,
   readObservedThroughputPenaltyState,
   readProviderDeviceAuthSession,
@@ -135,6 +136,7 @@ import {
   createRoutingPrepCache,
   resolveRoutingPrepCacheTtlMs,
 } from "./routing-prep-cache.js";
+import { selectEndpointByMeasuredLatency } from "./routing-latency-selection.js";
 import { createTrackBRouteCaptureQueue } from "./track-b-capture-queue.js";
 import {
   buildCompactControllerSystemPrompt,
@@ -24404,6 +24406,56 @@ export async function createRuntimeBridgeBackend(
     };
     // Bounded diagnostic for the run-99 R24 durable advisory wiring.
     let runtimeAdvisoryMissLogged = 0;
+    // Run 98 addendum 40 (L5): resolve the measured-latency selection input once per request. The
+    // policy comes from the same versioned document as the other activation parameters, and the bucket
+    // read is served through the L3 snapshot and skipped entirely unless the operator has enabled the
+    // input at or above its stage — a default runtime pays nothing and decides exactly as before.
+    const latencySelectionPolicySnapshot = readLearningPolicyFile({
+      repoRoot: options.repoRoot,
+      stateRoot: resolveLearningPolicyStateRoot({
+        runtimeStateRoot: options.runtimeStateRoot,
+        scopeId: options.scopeId,
+      }),
+      channel: runtimeChannel,
+      scopeId: options.scopeId,
+    });
+    const activationStageRank = (stage: string): number =>
+      ["S0", "S1", "S2", "S3", "S4"].indexOf(stage);
+    const latencySelectionStage =
+      process.env.ROLE_MODEL_LEARNING_STAGE?.trim() ??
+      latencySelectionPolicySnapshot?.effective.stage ??
+      "S1";
+    const latencySelectionPolicy = latencySelectionPolicySnapshot?.latencySelection;
+    const latencySelectionAuthorized =
+      latencySelectionPolicy?.policy.enabled === true &&
+      activationStageRank(latencySelectionStage) >=
+        activationStageRank(latencySelectionPolicy.policy.minStage);
+    const latencySelectionContext = latencySelectionAuthorized
+      ? {
+          ...latencySelectionPolicy!.policy,
+          estimatedInputTokens: plan.routingRequest.contextTokens ?? 0,
+          buckets: await routingPrepCache.read(
+            `latency-buckets:${routingPrepTickKey}:${latencySelectionPolicy!.policy.tokenBucketUpperBounds.join(",")}:${latencySelectionPolicy!.policy.minSamples}:${latencySelectionPolicy!.policy.windowHours}`,
+            () =>
+              readEndpointLatencyBuckets({
+                databasePath: initialization.databasePath,
+                endpointIds: executionSnapshot.registry.endpoints.map(
+                  (candidate) => candidate.identity.endpoint_id,
+                ),
+                windowStartMs: Math.max(
+                  0,
+                  routingTimeMs -
+                    latencySelectionPolicy!.policy.windowHours * 60 * 60 * 1_000,
+                ),
+                windowEndMs: routingTimeMs,
+                tokenBucketUpperBounds:
+                  latencySelectionPolicy!.policy.tokenBucketUpperBounds,
+                minimumSampleCount: latencySelectionPolicy!.policy.minSamples,
+              }),
+          ),
+        }
+      : undefined;
+    let latencySelectionOutcome: ReturnType<typeof selectEndpointByMeasuredLatency> | undefined;
     const routeExecutionRequest = (
       denyEndpoints: readonly string[],
     ): {
@@ -24524,10 +24576,11 @@ export async function createRuntimeBridgeBackend(
             };
           })()
         : undefined;
-      const routed = routeRuntimeRequest({
+      const computeRoute = (deny: readonly string[]) =>
+        routeRuntimeRequest({
           request: {
             ...plan.routingRequest,
-            ...(mergedDenyEndpoints.length > 0 ? { denyEndpoints: mergedDenyEndpoints } : {}),
+            ...(deny.length > 0 ? { denyEndpoints: deny } : {}),
           },
           registry: executionSnapshot.registry,
           catalog: executionSnapshot.executionCatalog,
@@ -24558,6 +24611,61 @@ export async function createRuntimeBridgeBackend(
               }
             : {}),
       });
+      let routed = computeRoute(mergedDenyEndpoints);
+      // Run 98 addendum 40 (L5): the measured-latency input may only move the *initial* decision; a
+      // retry's deny list is the router's own recovery path and is never reinterpreted here. When the
+      // selector prefers another eligible endpoint, the choice is applied by re-routing with the other
+      // eligible endpoints denied, so the router's eligibility, health and capability rules still
+      // decide whether that endpoint can serve the request at all.
+      if (denyEndpoints.length === 0 && latencySelectionContext) {
+        const eligibleEndpointIds = Array.isArray(routed.projected.routeInput.candidates)
+          ? routed.projected.routeInput.candidates.map(
+              (candidate) => candidate.identity.endpoint_id,
+            )
+          : [];
+        const selection = selectEndpointByMeasuredLatency({
+          enabled: true,
+          estimatedInputTokens: latencySelectionContext.estimatedInputTokens,
+          routerChosenEndpointId: String(routed.decision.chosen_endpoint_id),
+          eligibleEndpointIds,
+          buckets: latencySelectionContext.buckets,
+          tokenBucketUpperBounds: latencySelectionContext.tokenBucketUpperBounds,
+          maxDeltaMs: latencySelectionContext.maxDeltaMs,
+          maxCandidates: latencySelectionContext.maxCandidates,
+        });
+        if (selection.outcome === "selected_faster_candidate") {
+          const forcedDeny = eligibleEndpointIds.filter(
+            (endpointId) => endpointId !== selection.chosenEndpointId,
+          );
+          const forced = computeRoute(forcedDeny);
+          if (String(forced.decision.chosen_endpoint_id) === selection.chosenEndpointId) {
+            routed = forced;
+            latencySelectionOutcome = selection;
+          } else {
+            latencySelectionOutcome = {
+              ...selection,
+              outcome: "kept_router_choice",
+              chosenEndpointId: String(routed.decision.chosen_endpoint_id),
+              reason:
+                "the router could not select the measured-faster endpoint under its own eligibility rules",
+            };
+          }
+        } else {
+          latencySelectionOutcome = selection;
+        }
+      } else if (denyEndpoints.length === 0 && !latencySelectionContext) {
+        // Recorded so an operator reading a decision can tell "not authorized" from "no evidence".
+        latencySelectionOutcome = selectEndpointByMeasuredLatency({
+          enabled: false,
+          estimatedInputTokens: plan.routingRequest.contextTokens ?? 0,
+          routerChosenEndpointId: String(routed.decision.chosen_endpoint_id),
+          eligibleEndpointIds: [],
+          buckets: [],
+          tokenBucketUpperBounds: [],
+          maxDeltaMs: 0,
+          maxCandidates: 1,
+        });
+      }
       // Run 99 R33: the dispatch-side context guard. The router already excludes candidates whose
       // *declared* context is too small, but the selected candidate was never re-checked before the
       // provider call, so a prompt far beyond the model's window was forwarded and the overflow
@@ -26203,6 +26311,9 @@ export async function createRuntimeBridgeBackend(
         routingDiagnostics: {
           ...routed.routingDiagnostics,
           ...plan.routingDiagnostics,
+          // Run 98 addendum 40 (L5): the measured-latency input and its verdict are recorded beside the
+          // decision it did (or did not) move, so a decision is auditable without re-deriving it.
+          ...(latencySelectionOutcome ? { latencySelection: latencySelectionOutcome } : {}),
           ...(normalizedIntentObservation.diagnostics.length > 0
             ? {
                 roleModelIntent: {
