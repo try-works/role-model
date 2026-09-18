@@ -131,6 +131,10 @@ import {
   executeToolCalls,
 } from "@role-model-router/tool-registry";
 import { deriveRuntimeContributionOutcome } from "./contribution-outcome.js";
+import {
+  createRoutingPrepCache,
+  resolveRoutingPrepCacheTtlMs,
+} from "./routing-prep-cache.js";
 import { createTrackBRouteCaptureQueue } from "./track-b-capture-queue.js";
 import {
   buildCompactControllerSystemPrompt,
@@ -18490,6 +18494,11 @@ export async function createRuntimeBridgeBackend(
     const routeCaptureDrainTimer = setInterval(scheduleDeferredRouteCaptureDrain, 15_000);
     routeCaptureDrainTimer.unref?.();
   }
+  // Run 98 addendum 40 (L3): routing preparation is served from a short-TTL shared snapshot so the
+  // per-request store work leaves the client-visible path (v1.1 guidance 05: maintenance must never
+  // starve request handling). `ROLE_MODEL_ROUTING_PREP_CACHE_TTL_MS=0` disables the snapshot.
+  const routingPrepCacheTtlMs = resolveRoutingPrepCacheTtlMs(process.env);
+  const routingPrepCache = createRoutingPrepCache({ ttlMs: routingPrepCacheTtlMs });
   const recordDirectContribution = async (input: {
     readonly requestId: string;
     readonly routingDecisionId: string;
@@ -24301,22 +24310,50 @@ export async function createRuntimeBridgeBackend(
       executionOptions?.executionSnapshot ?? createExecutionRuntimeSnapshot(currentRegistry);
     const observedDataConfig = resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig);
     const routingTimeMs = Date.now();
-    const runtimeObservedProfiles = readObservedProfilesForRouting({
-      databasePath: initialization.databasePath,
-      registry: executionSnapshot.registry,
-      observedDataConfig,
-      difficultyBucket: resolveObservedDifficultyBucketForPlan(plan),
-      routingTimeMs,
-    });
-    const telemetryScoresByEndpointId = readLiveTaskTelemetryScoresByEndpointIds({
-      databasePath: initialization.databasePath,
-      endpointIds: executionSnapshot.registry.endpoints.map(
-        (candidate) => candidate.identity.endpoint_id,
-      ),
-      windowStartMs: Math.max(0, routingTimeMs - 7 * 24 * 60 * 60 * 1_000),
-      windowEndMs: routingTimeMs,
-      minimumSampleCount: observedDataConfig.aggregation.minSamples,
-    });
+    // Run 98 addendum 40 (L3): one shared snapshot per routing tick. The key carries the registry
+    // identity and the tick bucket, so a registry or tick change reads the store again while requests
+    // inside a tick reuse the same bounded inputs (identical inputs -> identical decisions).
+    const routingPrepRegistryIdentity = createHash("sha256")
+      .update(
+        executionSnapshot.registry.endpoints
+          .map(
+            (candidate) =>
+              `${candidate.identity.endpoint_id}@${candidate.identity.runtime_version ?? ""}`,
+          )
+          .join("|"),
+      )
+      .digest("hex")
+      .slice(0, 16);
+    const routingPrepTickKey = `${routingPrepRegistryIdentity}:${
+      routingPrepCacheTtlMs > 0
+        ? Math.floor(routingTimeMs / routingPrepCacheTtlMs)
+        : `t${routingTimeMs}`
+    }`;
+    const observedDifficultyBucket = resolveObservedDifficultyBucketForPlan(plan);
+    const runtimeObservedProfiles = await routingPrepCache.read(
+      `observed-profiles:${routingPrepTickKey}:${observedDifficultyBucket ?? "none"}`,
+      () =>
+        readObservedProfilesForRouting({
+          databasePath: initialization.databasePath,
+          registry: executionSnapshot.registry,
+          observedDataConfig,
+          difficultyBucket: observedDifficultyBucket,
+          routingTimeMs,
+        }),
+    );
+    const telemetryScoresByEndpointId = await routingPrepCache.read(
+      `live-telemetry:${routingPrepTickKey}:${observedDataConfig.aggregation.minSamples}`,
+      () =>
+        readLiveTaskTelemetryScoresByEndpointIds({
+          databasePath: initialization.databasePath,
+          endpointIds: executionSnapshot.registry.endpoints.map(
+            (candidate) => candidate.identity.endpoint_id,
+          ),
+          windowStartMs: Math.max(0, routingTimeMs - 7 * 24 * 60 * 60 * 1_000),
+          windowEndMs: routingTimeMs,
+          minimumSampleCount: observedDataConfig.aggregation.minSamples,
+        }),
+    );
     let streamedChunkCount = 0;
     let streamedReasoningDeltaCount = 0;
     // Run 98 addendum 40 (L1): the provider phase the client pays for. `latency_ms` on the usage
@@ -24333,8 +24370,9 @@ export async function createRuntimeBridgeBackend(
           await streamWriter(chunk, metadata);
         }
       : undefined;
-    const benchmarkCapabilitiesByEndpointId = await buildBenchmarkCapabilityByEndpointId(
-      readCandidateProfileDataByEndpointId(),
+    const benchmarkCapabilitiesByEndpointId = await routingPrepCache.read(
+      `benchmark-capabilities:${routingPrepTickKey}`,
+      () => buildBenchmarkCapabilityByEndpointId(readCandidateProfileDataByEndpointId()),
     );
     const roleBindings = buildRuntimeRoleBindings(
       [],
