@@ -5276,6 +5276,111 @@ export function readLiveTaskTelemetryScoresByEndpointIds(input: {
   return result;
 }
 
+/**
+ * Run 98 addendum 40 (L5): measured provider latency per endpoint and prompt-size bucket.
+ *
+ * Buckets are `(-inf, b0], (b0, b1], …` by input tokens; the final bucket is open-ended and is reported
+ * with the largest configured bound. Buckets with fewer than `minimumSampleCount` observations are
+ * withheld entirely rather than reported thin, so a selection input can never rest on one sample.
+ */
+export interface RuntimeEndpointLatencyBucket {
+  readonly endpointId: string;
+  readonly bucketUpperBoundTokens: number;
+  readonly sampleCount: number;
+  readonly p50LatencyMs: number;
+  readonly p95LatencyMs: number;
+}
+
+export function readEndpointLatencyBuckets(input: {
+  readonly databasePath: string;
+  readonly endpointIds: readonly string[];
+  readonly windowStartMs: number;
+  readonly windowEndMs: number;
+  readonly tokenBucketUpperBounds: readonly number[];
+  readonly minimumSampleCount: number;
+}): readonly RuntimeEndpointLatencyBucket[] {
+  if (input.endpointIds.length === 0 || input.tokenBucketUpperBounds.length === 0) return [];
+  if (
+    !Number.isSafeInteger(input.windowStartMs) ||
+    !Number.isSafeInteger(input.windowEndMs) ||
+    input.windowStartMs < 0 ||
+    input.windowEndMs < input.windowStartMs ||
+    input.windowEndMs - input.windowStartMs > 30 * 24 * 60 * 60 * 1_000
+  ) {
+    throw new Error("Endpoint latency buckets require a valid bounded window of at most 30 days.");
+  }
+  if (!Number.isSafeInteger(input.minimumSampleCount) || input.minimumSampleCount < 1) {
+    throw new Error("Endpoint latency buckets require a positive minimum sample count.");
+  }
+  const upperBounds = [...input.tokenBucketUpperBounds];
+  for (const bound of upperBounds) {
+    if (!Number.isSafeInteger(bound) || bound <= 0) {
+      throw new Error("Endpoint latency bucket bounds must be positive integers.");
+    }
+  }
+  upperBounds.sort((left, right) => left - right);
+
+  const endpointIds = [...new Set(input.endpointIds)];
+  const placeholders = endpointIds.map(() => "?").join(", ");
+  const database = openSqliteDatabase(input.databasePath);
+  const rows = database
+    .prepare(
+      `SELECT endpoint_id, latency_ms, input_tokens
+       FROM runtime_telemetry_records
+       WHERE endpoint_id IN (${placeholders})
+         AND request_class = 'live_request'
+         AND error_class IS NULL
+         AND status_code IS NOT NULL
+         AND status_code >= 200 AND status_code < 400
+         AND latency_ms IS NOT NULL
+         AND created_at_ms >= ?
+         AND created_at_ms <= ?`,
+    )
+    .all(...endpointIds, input.windowStartMs, input.windowEndMs) as Array<{
+    endpoint_id: string;
+    latency_ms: number;
+    input_tokens: number | null;
+  }>;
+  database.close();
+
+  const grouped = new Map<string, number[]>();
+  for (const row of rows) {
+    const tokens = typeof row.input_tokens === "number" ? Math.max(0, row.input_tokens) : 0;
+    const bucketIndex = upperBounds.findIndex((bound) => tokens <= bound);
+    // `upperBounds.length + 1` buckets: the final one is open-ended (tokens above the largest bound).
+    const resolvedIndex = bucketIndex === -1 ? upperBounds.length : bucketIndex;
+    const key = `${row.endpoint_id}\u0000${resolvedIndex}`;
+    const values = grouped.get(key);
+    if (values) values.push(row.latency_ms);
+    else grouped.set(key, [row.latency_ms]);
+  }
+
+  const result: RuntimeEndpointLatencyBucket[] = [];
+  for (const endpointId of endpointIds) {
+    for (let index = 0; index <= upperBounds.length; index += 1) {
+      const values = grouped.get(`${endpointId}\u0000${index}`);
+      if (!values || values.length < input.minimumSampleCount) continue;
+      values.sort((left, right) => left - right);
+      result.push({
+        endpointId,
+        bucketUpperBoundTokens: upperBounds[index] ?? upperBounds[upperBounds.length - 1]!,
+        sampleCount: values.length,
+        p50LatencyMs: telemetryPercentile(values, 0.5),
+        p95LatencyMs: telemetryPercentile(values, 0.95),
+      });
+    }
+  }
+  return result;
+}
+
+function telemetryPercentile(sortedValues: readonly number[], quantile: number): number {
+  if (sortedValues.length === 0) {
+    throw new Error("Percentile requires at least one value.");
+  }
+  const index = Math.max(0, Math.ceil(quantile * sortedValues.length) - 1);
+  return sortedValues[Math.min(index, sortedValues.length - 1)] ?? 0;
+}
+
 export function readLatestObservedProfile(
   input: ReadLatestObservedProfileInput,
 ): ObservedPerformanceProfile | null {
