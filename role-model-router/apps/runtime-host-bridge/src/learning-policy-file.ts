@@ -389,11 +389,43 @@ export function readLearningPolicyFile(input: {
         const globalSelection = asRecord(global.latencySelection);
         const channelSelection = asRecord(channelValues.latencySelection);
         const scopeSelection = asRecord(scopeValues.latencySelection);
-        const mergedSelection = {
+        const nestedSelection = {
           ...globalSelection,
           ...channelSelection,
           ...scopeSelection,
         };
+        // The Configuration page edits flat, typed fields (the private policy registry is flat-field
+        // based), so those names are folded into the same policy object — and they win over the nested
+        // section, because an explicit operator control beats a file-level default.
+        const flatSelection: Record<string, unknown> = {};
+        const setFlat = (key: string, value: unknown): void => {
+          if (value !== undefined) flatSelection[key] = value;
+        };
+        setFlat("enabled", merged.latencySelectionEnabled);
+        setFlat("minStage", merged.latencySelectionMinStage);
+        setFlat("windowHours", merged.latencySelectionWindowHours);
+        setFlat("minSamples", merged.latencySelectionMinSamples);
+        setFlat("maxDeltaMs", merged.latencySelectionMaxDeltaMs);
+        setFlat("maxCandidates", merged.latencySelectionMaxCandidates);
+        const rawBounds = merged.latencySelectionBucketBounds;
+        if (rawBounds !== undefined) {
+          if (typeof rawBounds === "string") {
+            const parsed = rawBounds
+              .split(",")
+              .map((part) => Number(part.trim()));
+            // A malformed list is passed through unchanged so the resolver records the violation and
+            // fails closed, instead of silently falling back to the default bucket layout.
+            setFlat(
+              "tokenBucketUpperBounds",
+              parsed.every((value) => Number.isSafeInteger(value) && value > 0)
+                ? parsed
+                : rawBounds,
+            );
+          } else {
+            setFlat("tokenBucketUpperBounds", rawBounds);
+          }
+        }
+        const mergedSelection = { ...nestedSelection, ...flatSelection };
         return Object.keys(mergedSelection).length > 0 ? mergedSelection : undefined;
       })(),
     }),

@@ -94,3 +94,64 @@ test("a40 L5: a document without the section resolves to the documented identity
     policy: { enabled: false },
   });
 });
+
+// The Configuration page edits flat, typed fields (the private policy registry is flat-field based), so
+// the host resolves those names into the same policy object the nested section produces.
+test("a40 L5: the flat Configuration fields resolve into the selection policy", () => {
+  const repoRoot = writePolicy({
+    global: {
+      stage: "S3",
+      latencySelectionEnabled: true,
+      latencySelectionMinStage: "S3",
+      latencySelectionMaxDeltaMs: 5_000,
+      latencySelectionMinSamples: 9,
+      latencySelectionWindowHours: 12,
+      latencySelectionBucketBounds: "30000,120000",
+      latencySelectionMaxCandidates: 6,
+    },
+  });
+  const snapshot = readLearningPolicyFile({ repoRoot, channel: "stage", scopeId: "scope-a" });
+  expect(snapshot?.latencySelection).toMatchObject({
+    source: "config",
+    violations: [],
+    policy: {
+      enabled: true,
+      minStage: "S3",
+      maxDeltaMs: 5_000,
+      minSamples: 9,
+      windowHours: 12,
+      tokenBucketUpperBounds: [30_000, 120_000],
+      maxCandidates: 6,
+    },
+  });
+});
+
+test("a40 L5: flat Configuration fields win over the nested section, and a bad bucket list fails closed", () => {
+  const repoRoot = writePolicy({
+    global: {
+      stage: "S3",
+      latencySelection: { enabled: false, maxDeltaMs: 1_000 },
+      latencySelectionEnabled: true,
+      latencySelectionMaxDeltaMs: 3_000,
+    },
+  });
+  const snapshot = readLearningPolicyFile({ repoRoot, channel: "stage", scopeId: "scope-a" });
+  expect(snapshot?.latencySelection).toMatchObject({
+    policy: { enabled: true, maxDeltaMs: 3_000 },
+    violations: [],
+  });
+
+  const badBounds = writePolicy({
+    global: { stage: "S3", latencySelectionEnabled: true, latencySelectionBucketBounds: "50000,notanumber" },
+  });
+  const badSnapshot = readLearningPolicyFile({
+    repoRoot: badBounds,
+    channel: "stage",
+    scopeId: "scope-a",
+  });
+  expect(badSnapshot?.latencySelection).toMatchObject({
+    source: "defaults",
+    violations: ["tokenBucketUpperBounds"],
+    policy: { enabled: false },
+  });
+});
