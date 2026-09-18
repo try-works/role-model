@@ -808,6 +808,10 @@ class TrackBPrivateOperationError extends Error {
 // the configured cloud boundary. It is not a dashboard read, so it needs a
 // bounded completion window that covers that acknowledged write path.
 const DEFAULT_CONTRIBUTION_DELIVERY_TIMEOUT_MS = 30_000;
+// Run 95 allows a local route capture to exceed the legacy five-second budget, so
+// the routing bound is an order of magnitude above it while still preventing an
+// unbounded wait on the operations boundary.
+const DEFAULT_ROUTE_CAPTURE_TIMEOUT_MS = 10_000;
 
 /**
  * Run 99 R33 live finding (stage v146, with real coding-agent traffic flowing): the eight-second
@@ -1367,6 +1371,19 @@ export function createTrackBOperations({
     contributionDeliveryTimeoutMs,
     DEFAULT_CONTRIBUTION_DELIVERY_TIMEOUT_MS,
   );
+  // Run 98 addendum 39 S1: routing must not depend on replays. The route capture
+  // is evidence, not a routing precondition, so it is bounded far below the
+  // operations timeout and degrades instead of holding the request while the
+  // operations boundary is busy with replay work.
+  const configuredRouteCaptureTimeoutMs = Number(
+    process.env.ROLE_MODEL_ROUTE_CAPTURE_TIMEOUT_MS?.trim(),
+  );
+  const boundedRouteCaptureTimeoutMs =
+    Number.isSafeInteger(configuredRouteCaptureTimeoutMs) &&
+    configuredRouteCaptureTimeoutMs >= 100 &&
+    configuredRouteCaptureTimeoutMs <= 30_000
+      ? configuredRouteCaptureTimeoutMs
+      : DEFAULT_ROUTE_CAPTURE_TIMEOUT_MS;
   const requestPrivate = (
     route: string,
     init?: {
@@ -2525,7 +2542,13 @@ export function createTrackBOperations({
       const url = new URL(operationsEndpoint);
       if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
         throw new Error("local route capture requires a loopback operations boundary");
-      const result = await requestPrivate("capture/route", { method: "POST", body: input });
+      // A capture failure keeps its existing bounded degradation semantics upstream
+      // (routing continues); the bound only stops an unbounded wait for the boundary.
+      const result = await requestPrivate(
+        "capture/route",
+        { method: "POST", body: input },
+        boundedRouteCaptureTimeoutMs,
+      );
       if (contractStateRoot && result && typeof result === "object" && !Array.isArray(result)) {
         const capture = result as Record<string, unknown>;
         const scopeId = String(capture.scope ?? scope ?? "");
