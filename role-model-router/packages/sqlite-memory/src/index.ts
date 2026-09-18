@@ -3004,7 +3004,16 @@ function toRuntimeTelemetryRecord(
     routingDiagnostics?.controllerRouting?.acceptedDirectives?.strategy ??
     routingDiagnostics?.difficultyRouting?.strategy ??
     (routingMode ? "balanced" : null);
-  const statusCode = observation.inspection?.request?.responseCapture?.statusCode ?? null;
+  // Run 98 addendum 39: a successful observation must carry its status. The
+  // inspection payload is absent whenever capture is degraded, which left
+  // `status_code` NULL and therefore excluded the row from the success metric
+  // (`error_class IS NULL AND status_code >= 200 AND status_code < 400`).
+  const inspectedStatusCode =
+    observation.inspection?.request?.responseCapture?.statusCode ?? null;
+  // This mapper only handles completed executions (the failure path uses
+  // `toFailureRuntimeTelemetryRecord`), so a missing inspection status still means
+  // the request itself succeeded.
+  const statusCode = inspectedStatusCode ?? 200;
   const errorClass =
     observation.usageEvent.error_class ??
     observation.observedPerformance.sample.error_class ??
