@@ -820,6 +820,7 @@ const DEFAULT_ROUTE_CAPTURE_MAX_BYTES = 512 * 1024;
 // subsequent request until this cooldown expires (the failure is recorded the same
 // way, just without the wait).
 const DEFAULT_ROUTE_CAPTURE_COOLDOWN_MS = 60_000;
+const DEFAULT_CONTRIBUTION_AGGREGATE_TIMEOUT_MS = 5_000;
 
 /**
  * Run 99 R33 live finding (stage v146, with real coding-agent traffic flowing): the eight-second
@@ -1411,6 +1412,13 @@ export function createTrackBOperations({
       ? configuredRouteCaptureCooldownMs
       : DEFAULT_ROUTE_CAPTURE_COOLDOWN_MS;
   let routeCaptureUnavailableUntilMs = 0;
+  // Run 98 S1 follow-up: the contribution aggregate is another sidecar call in the
+  // request path — bound it far below the 180 s operations default so a starved
+  // boundary cannot hold a request open for minutes.
+  const boundedContributionAggregateTimeoutMs = Math.min(
+    operationsTimeoutMs,
+    DEFAULT_CONTRIBUTION_AGGREGATE_TIMEOUT_MS,
+  );
   const requestPrivate = (
     route: string,
     init?: {
@@ -2551,7 +2559,7 @@ export function createTrackBOperations({
       const remote = await requestPrivate("contribution/aggregate", {
         method: "POST",
         body: sanitizeOperatorBody(input),
-      });
+      }, boundedContributionAggregateTimeoutMs);
       return remote === null
         ? { status: "operations_boundary_unconfigured" }
         : sanitizeOperatorProjection(remote);
