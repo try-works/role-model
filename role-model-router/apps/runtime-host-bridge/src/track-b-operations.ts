@@ -816,6 +816,10 @@ const DEFAULT_ROUTE_CAPTURE_TIMEOUT_MS = 10_000;
 // the bound above, so the request pays the full timeout and still records no
 // capture. Skipping it keeps the same bounded degradation without the 10 s tax.
 const DEFAULT_ROUTE_CAPTURE_MAX_BYTES = 512 * 1024;
+// Once the boundary fails a capture, stop paying the bounded timeout for every
+// subsequent request until this cooldown expires (the failure is recorded the same
+// way, just without the wait).
+const DEFAULT_ROUTE_CAPTURE_COOLDOWN_MS = 60_000;
 
 /**
  * Run 99 R33 live finding (stage v146, with real coding-agent traffic flowing): the eight-second
@@ -1397,6 +1401,16 @@ export function createTrackBOperations({
     configuredRouteCaptureMaxBytes <= 64 * 1024 * 1024
       ? configuredRouteCaptureMaxBytes
       : DEFAULT_ROUTE_CAPTURE_MAX_BYTES;
+  const configuredRouteCaptureCooldownMs = Number(
+    process.env.ROLE_MODEL_ROUTE_CAPTURE_COOLDOWN_MS?.trim(),
+  );
+  const boundedRouteCaptureCooldownMs =
+    Number.isSafeInteger(configuredRouteCaptureCooldownMs) &&
+    configuredRouteCaptureCooldownMs >= 0 &&
+    configuredRouteCaptureCooldownMs <= 600_000
+      ? configuredRouteCaptureCooldownMs
+      : DEFAULT_ROUTE_CAPTURE_COOLDOWN_MS;
+  let routeCaptureUnavailableUntilMs = 0;
   const requestPrivate = (
     route: string,
     init?: {
@@ -2569,6 +2583,13 @@ export function createTrackBOperations({
           `route capture skipped: ${captureBytes} bytes exceeds the ${boundedRouteCaptureMaxBytes}-byte boundary budget`,
         );
       }
+      if (Date.now() < routeCaptureUnavailableUntilMs) {
+        throw new Error(
+          `route capture skipped: boundary unavailable until ${new Date(
+            routeCaptureUnavailableUntilMs,
+          ).toISOString()}`,
+        );
+      }
       let result: unknown;
       try {
         result = await requestPrivate(
@@ -2577,6 +2598,7 @@ export function createTrackBOperations({
           boundedRouteCaptureTimeoutMs,
         );
       } catch (error) {
+        routeCaptureUnavailableUntilMs = Date.now() + boundedRouteCaptureCooldownMs;
         if (process.env.ROLE_MODEL_PHASE_TIMING === "1") {
           console.error(
             `[run98] phase route-capture-failed ${Date.now() - captureStartedAtMs}ms request=${String(
@@ -2586,6 +2608,7 @@ export function createTrackBOperations({
         }
         throw error;
       }
+      routeCaptureUnavailableUntilMs = 0;
       if (process.env.ROLE_MODEL_PHASE_TIMING === "1") {
         console.error(
           `[run98] phase route-capture ${Date.now() - captureStartedAtMs}ms request=${String(
