@@ -26319,6 +26319,7 @@ export async function createRuntimeBridgeBackend(
             captureDegradation: { reason: "track-b-capture-unavailable" },
           } as never);
       try {
+        markPhase("observation-persist-start");
         persistRuntimeObservationBundle({
           databasePath: initialization.databasePath,
           channel: runtimeChannel,
