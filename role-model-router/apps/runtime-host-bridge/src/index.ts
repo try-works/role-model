@@ -267,6 +267,8 @@ import {
   writeOperatorIntent,
 } from "./operator-intent.js";
 import {
+  DEFAULT_REMOTE_PROBE_ATTEMPTS,
+  DEFAULT_REMOTE_PROBE_RETRY_DELAY_MS,
   type RemoteHealthProbeResult,
   type RemoteHealthProbeTarget,
   probeRemoteEndpointAdmission,
@@ -20916,6 +20918,8 @@ export async function createRuntimeBridgeBackend(
       refreshAuthorization: refreshProbeAuthorization,
       resolveProbeHeaders,
       networkFetcher,
+      probeAttempts: readRemoteHealthProbeAttempts(),
+      probeRetryDelayMs: readRemoteHealthProbeRetryDelayMs(),
     });
   };
 
@@ -31357,6 +31361,8 @@ export async function createRuntimeBridgeBackend(
           refreshAuthorization: refreshProbeAuthorization,
           resolveProbeHeaders,
           networkFetcher,
+          probeAttempts: readRemoteHealthProbeAttempts(),
+          probeRetryDelayMs: readRemoteHealthProbeRetryDelayMs(),
         });
         applyRemoteHealthProbeResults(summary.results);
 
@@ -31428,6 +31434,61 @@ export async function createRuntimeBridgeBackend(
     };
   });
 
+  // A transient transport stall during bootstrap must not pin endpoints offline
+  // for the life of the process. Recoveries are the only thing this pass writes:
+  // a flaky background probe can never take a healthy endpoint away.
+  const remoteHealthReprobeIntervalMs = readRemoteHealthReprobeIntervalMs();
+  const remoteHealthReprobeMaxAttempts = readRemoteHealthReprobeMaxAttempts();
+  let remoteHealthReprobeAttempts = 0;
+  let remoteHealthReprobe: ReturnType<typeof setInterval> | null = null;
+  const stopRemoteHealthReprobe = (): void => {
+    if (remoteHealthReprobe !== null) {
+      clearInterval(remoteHealthReprobe);
+      remoteHealthReprobe = null;
+    }
+  };
+  if (remoteHealthReprobeIntervalMs > 0 && remoteHealthReprobeMaxAttempts > 0) {
+    remoteHealthReprobe = setInterval(async () => {
+      const executionMode = currentUnifiedRuntimeConfig?.executionMode ?? "decision_only";
+      if (executionMode === "decision_only") {
+        return;
+      }
+      if (remoteHealthReprobeAttempts >= remoteHealthReprobeMaxAttempts) {
+        stopRemoteHealthReprobe();
+        return;
+      }
+      remoteHealthReprobeAttempts += 1;
+      try {
+        const targets = collectRemoteHealthProbeTargets();
+        if (targets.length === 0) {
+          stopRemoteHealthReprobe();
+          return;
+        }
+        const summary = await probeRemoteEndpoints({
+          litellmHealthy: currentLiteLLMVendor?.readStatus().healthStatus === "healthy",
+          targets,
+          resolveAuthorization: resolveProbeAuthorization,
+          refreshAuthorization: refreshProbeAuthorization,
+          resolveProbeHeaders,
+          networkFetcher,
+          probeAttempts: readRemoteHealthProbeAttempts(),
+          probeRetryDelayMs: readRemoteHealthProbeRetryDelayMs(),
+        });
+        const recovered = summary.results.filter((result) => result.reason === "healthy");
+        if (recovered.length > 0) {
+          applyRemoteHealthProbeResults(recovered);
+          refreshRoutableInventoryState();
+        }
+        if (summary.degraded === 0) {
+          stopRemoteHealthReprobe();
+        }
+      } catch {
+        // Bounded and silent: the next tick retries until the budget is spent.
+      }
+    }, remoteHealthReprobeIntervalMs);
+    remoteHealthReprobe.unref?.();
+  }
+
   const autoSwapInterval = setInterval(async () => {
     try {
       const models = await backend.listLocalModels();
@@ -31453,6 +31514,52 @@ export async function createRuntimeBridgeBackend(
 function usesWindowsPathDialect(value: string | undefined): boolean {
   const normalized = value?.trim();
   return normalized ? /^[A-Za-z]:\\/u.test(normalized) || normalized.includes("\\") : false;
+}
+
+function readBoundedEnvironmentInteger(
+  rawValue: string | undefined,
+  fallback: number,
+  minimum: number,
+  maximum: number,
+): number {
+  const parsed = Number(rawValue?.trim());
+  return Number.isSafeInteger(parsed) && parsed >= minimum && parsed <= maximum ? parsed : fallback;
+}
+
+function readRemoteHealthProbeAttempts(): number {
+  return readBoundedEnvironmentInteger(
+    process.env.ROLE_MODEL_REMOTE_HEALTH_PROBE_ATTEMPTS,
+    DEFAULT_REMOTE_PROBE_ATTEMPTS,
+    1,
+    10,
+  );
+}
+
+function readRemoteHealthProbeRetryDelayMs(): number {
+  return readBoundedEnvironmentInteger(
+    process.env.ROLE_MODEL_REMOTE_HEALTH_PROBE_RETRY_DELAY_MS,
+    DEFAULT_REMOTE_PROBE_RETRY_DELAY_MS,
+    0,
+    30_000,
+  );
+}
+
+function readRemoteHealthReprobeIntervalMs(): number {
+  return readBoundedEnvironmentInteger(
+    process.env.ROLE_MODEL_REMOTE_HEALTH_REPROBE_INTERVAL_MS,
+    60_000,
+    0,
+    3_600_000,
+  );
+}
+
+function readRemoteHealthReprobeMaxAttempts(): number {
+  return readBoundedEnvironmentInteger(
+    process.env.ROLE_MODEL_REMOTE_HEALTH_REPROBE_MAX_ATTEMPTS,
+    10,
+    0,
+    1_000,
+  );
 }
 
 function usesPosixPathDialect(value: string | undefined): boolean {
