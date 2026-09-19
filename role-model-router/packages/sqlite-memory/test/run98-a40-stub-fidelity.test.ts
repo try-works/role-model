@@ -50,7 +50,54 @@ function buildObservation(requestId: string) {
         latency_ms: 2_592,
         success: true,
       },
-      profile: { measured_at_ms: nowMs },
+      // The real profile shape (`aggregateOperationalPerformanceSamples`): the model pool reads
+      // `latency_ms_p50` / `latency_ms_p95` / `sample_size` from here, so a stub that keeps
+      // `latency_ms` / `sample_count` / `success_rate` instead stores a metadata-only profile and the
+      // quality and speed axes render empty.
+      profile: {
+        endpoint_id: "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+        endpoint_version: "v1",
+        measured_at_ms: nowMs,
+        measurement_window: "7d",
+        sample_size: 18,
+        sources: { live_request_samples: 18, benchmark_samples: 0 },
+        latency_ms_p50: 2_100,
+        latency_ms_p95: 9_400,
+        failure_rate: 0.02,
+        freshness_score: 0.97,
+        confidence_score: 0.81,
+        tokens_per_sec: 42.5,
+        cost_per_1k_tokens_est: 0.004,
+        currency: "USD",
+      },
+    },
+    // The cost charts read these; the stub previously dropped the whole snapshot.
+    telemetrySnapshot: {
+      providerId: "deepseek",
+      providerAccountId: "deepseek.personal.deepseek-api-key",
+      sourceType: "remote",
+      endpointKind: "remote_api",
+      servingSource: "remote-service",
+      region: null,
+      lifecycleStateAtRequest: "active",
+      healthStatusAtRequest: "healthy",
+      requestedModelId: "deepseek/deepseek-flash",
+      selectedModelId: "deepseek/deepseek-flash",
+      requestOperation: "chat",
+      roleIds: ["coder"],
+      toolingUsed: true,
+      cacheState: "hit",
+      eligibleEndpointIds: ["deepseek.personal.deepseek-api-key.global.deepseek-flash-high"],
+      eligibleModelIds: ["deepseek/deepseek-flash"],
+      candidateCostSnapshot: { "deepseek/deepseek-flash": { inputPer1kUsd: 0.004 } },
+      selectedPricingSnapshot: { inputPer1kUsd: 0.004, outputPer1kUsd: 0.012 },
+      selectedUncachedCostUsd: 0.91,
+      baselineMaxEligibleCostUsd: 1.4,
+      routingCostSavingsUsd: 0.49,
+      cacheCostSavingsUsd: 0.32,
+      totalAvoidedCostUsd: 0.81,
+      costBaselineSource: "catalog-max-eligible",
+      costSavingsSupport: "full",
     },
     cacheObservability: {
       promptCacheRequested: true,
@@ -156,4 +203,32 @@ test("stub fidelity: a stubbed observation yields the same telemetry capabilitie
     chosenEndpointId: "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
     bucketUpperBoundTokens: 150_000,
   });
+
+  // The operational profile is what the model pool's quality and speed axes read.
+  const stubObserved = stubObservation.observedPerformance as {
+    profile: Record<string, unknown>;
+  };
+  expect(stubObserved?.profile).toMatchObject({
+    sample_size: 18,
+    latency_ms_p50: 2_100,
+    latency_ms_p95: 9_400,
+    failure_rate: 0.02,
+  });
+
+  // The telemetry snapshot carries the cost evidence the cost charts read.
+  const stubSnapshot = stubObservation.telemetrySnapshot as Record<string, unknown>;
+  expect(stubSnapshot).toMatchObject({
+    costSavingsSupport: "full",
+    routingCostSavingsUsd: 0.49,
+    totalAvoidedCostUsd: 0.81,
+    cacheState: "hit",
+    eligibleEndpointIds: ["deepseek.personal.deepseek-api-key.global.deepseek-flash-high"],
+  });
+
+  // End to end: the persisted telemetry row for the stubbed observation must expose the same cost
+  // evidence as the row built from the whole bundle.
+  expect(stub?.costSavingsSupport).toBe(rich?.costSavingsSupport);
+  expect(stub?.routingCostSavingsUsd).toBe(rich?.routingCostSavingsUsd);
+  expect(stub?.totalAvoidedCostUsd).toBe(rich?.totalAvoidedCostUsd);
+  expect(stub?.eligibleEndpointIds).toEqual(rich?.eligibleEndpointIds);
 });

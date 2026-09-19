@@ -1992,12 +1992,28 @@ export function buildCompactRuntimeObservationStub(
     "output_tokens",
   ]);
   const profile = pickRecord(observed?.profile, [
+    // Run 98 addendum 40 audit: these are the names the aggregator actually emits
+    // (`packages/profile-aggregator`). The previous list kept `latency_ms` / `sample_count` /
+    // `success_rate` / `throughput_tokens_per_sec`, none of which exist on a real profile, so the
+    // stored operational profile was metadata-only and the model pool's quality and speed axes — which
+    // read this record — rendered empty for every stubbed request.
+    "endpoint_id",
+    "endpoint_version",
     "measured_at_ms",
-    "sample_count",
-    "success_rate",
-    "latency_ms",
-    "throughput_tokens_per_sec",
+    "measurement_window",
+    "sample_size",
+    "sources",
+    "latency_ms_p50",
+    "latency_ms_p95",
+    "failure_rate",
+    "freshness_score",
+    "confidence_score",
+    "judge_score",
     "quality_score",
+    "tokens_per_sec",
+    "error_class_rates",
+    "cost_per_1k_tokens_est",
+    "currency",
   ]);
   const endpointVersion = observed?.endpointVersion;
   if (Object.keys(sample).length || Object.keys(profile).length || endpointVersion !== undefined) {
@@ -2007,6 +2023,56 @@ export function buildCompactRuntimeObservationStub(
     if (Object.keys(profile).length) compactObserved.profile = profile;
     stub.observedPerformance = compactObserved;
   }
+  /**
+   * Run 98 addendum 40 audit: the telemetry snapshot is bounded decision/cost evidence (ids, dollar
+   * amounts, the candidate cost rollup and the selected pricing), not rich content, and the ledger and
+   * the cost charts read it. Dropping it entirely made `cost_savings_support` NULL on 656 of 971 live
+   * rows, which is the "rows do not support routingCostSavingsUsd" note and the flat cost chart.
+   */
+  const telemetrySnapshot = observation.telemetrySnapshot as Record<string, unknown> | undefined;
+  const snapshot = pickRecord(telemetrySnapshot, [
+    "providerId",
+    "providerAccountId",
+    "sourceType",
+    "endpointKind",
+    "servingSource",
+    "region",
+    "lifecycleStateAtRequest",
+    "healthStatusAtRequest",
+    "requestedModelId",
+    "selectedModelId",
+    "requestOperation",
+    "toolingUsed",
+    "cacheState",
+    "reasoningEffort",
+    "effortSource",
+    "selectedUncachedCostUsd",
+    "baselineMaxEligibleCostUsd",
+    "routingCostSavingsUsd",
+    "cacheCostSavingsUsd",
+    "totalAvoidedCostUsd",
+    "costBaselineSource",
+    "costSavingsSupport",
+  ]);
+  const boundedStringList = (value: unknown): string[] =>
+    Array.isArray(value)
+      ? value.filter((entry): entry is string => typeof entry === "string").slice(0, 64)
+      : [];
+  const roleIds = boundedStringList(telemetrySnapshot?.roleIds);
+  if (roleIds.length) snapshot.roleIds = roleIds;
+  const eligibleEndpointIds = boundedStringList(telemetrySnapshot?.eligibleEndpointIds);
+  if (eligibleEndpointIds.length) snapshot.eligibleEndpointIds = eligibleEndpointIds;
+  const eligibleModelIds = boundedStringList(telemetrySnapshot?.eligibleModelIds);
+  if (eligibleModelIds.length) snapshot.eligibleModelIds = eligibleModelIds;
+  const candidateCostSnapshot = projectBoundedDiagnosticValue(
+    telemetrySnapshot?.candidateCostSnapshot,
+  );
+  if (candidateCostSnapshot !== undefined) snapshot.candidateCostSnapshot = candidateCostSnapshot;
+  const selectedPricingSnapshot = projectBoundedDiagnosticValue(
+    telemetrySnapshot?.selectedPricingSnapshot,
+  );
+  if (selectedPricingSnapshot !== undefined) snapshot.selectedPricingSnapshot = selectedPricingSnapshot;
+  if (Object.keys(snapshot).length) stub.telemetrySnapshot = snapshot;
   return stub;
 }
 
