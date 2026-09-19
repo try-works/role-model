@@ -24410,7 +24410,10 @@ export async function createRuntimeBridgeBackend(
     // policy comes from the same versioned document as the other activation parameters, and the bucket
     // read is served through the L3 snapshot and skipped entirely unless the operator has enabled the
     // input at or above its stage — a default runtime pays nothing and decides exactly as before.
-    const latencySelectionPolicySnapshot = readLearningPolicyFile({
+    // Read once per request and shared with the routing block below: the policy document is the same
+    // file for both consumers, and reading it twice put a second synchronous file read + JSON parse
+    // inside the pre-provider window (run 98 addendum 40 L6 window: bridge->provider p50 368 ms).
+    const planLearningPolicySnapshot = readLearningPolicyFile({
       repoRoot: options.repoRoot,
       stateRoot: resolveLearningPolicyStateRoot({
         runtimeStateRoot: options.runtimeStateRoot,
@@ -24423,9 +24426,9 @@ export async function createRuntimeBridgeBackend(
       ["S0", "S1", "S2", "S3", "S4"].indexOf(stage);
     const latencySelectionStage =
       process.env.ROLE_MODEL_LEARNING_STAGE?.trim() ??
-      latencySelectionPolicySnapshot?.effective.stage ??
+      planLearningPolicySnapshot?.effective.stage ??
       "S1";
-    const latencySelectionPolicy = latencySelectionPolicySnapshot?.latencySelection;
+    const latencySelectionPolicy = planLearningPolicySnapshot?.latencySelection;
     const latencySelectionAuthorized =
       latencySelectionPolicy?.policy.enabled === true &&
       activationStageRank(latencySelectionStage) >=
@@ -24471,18 +24474,11 @@ export async function createRuntimeBridgeBackend(
       // so the default S1 runtime produces exactly the decision it produced before. The
       // effective values come from the operator's versioned policy config (R15), with the
       // environment kept as an explicit override for local experiments.
-      const learningPolicySnapshot = readLearningPolicyFile({
-        repoRoot: options.repoRoot,
-        // Run 99 R23: the durable operator policy state is the control plane the Learning
-        // > Configuration page writes, so live routing must resolve the same Track B state
-        // root the sidecar uses.
-        stateRoot: resolveLearningPolicyStateRoot({
-          runtimeStateRoot: options.runtimeStateRoot,
-          scopeId: options.scopeId,
-        }),
-        channel: runtimeChannel,
-        scopeId: options.scopeId,
-      });
+      // Run 99 R23: the durable operator policy state is the control plane the Learning
+      // > Configuration page writes, so live routing must resolve the same Track B state root the
+      // sidecar uses. The snapshot is read once per request in the plan scope (identical inputs) and
+      // reused here instead of paying a second synchronous read on the pre-provider path.
+      const learningPolicySnapshot = planLearningPolicySnapshot;
       const learningStage = (process.env.ROLE_MODEL_LEARNING_STAGE?.trim() ??
         learningPolicySnapshot?.effective.stage ??
         "S1") as "S0" | "S1" | "S2" | "S3" | "S4";
