@@ -1580,6 +1580,10 @@ const ROUTING_DIAGNOSTIC_REQUIRED_KEYS = [
 ] as const;
 const ROUTING_DIAGNOSTIC_OPTIONAL_KEYS = [
   "selection",
+  // Run 98 addendum 40 L5 (live-window finding): the measured-latency verdict is decision evidence, so
+  // a stub must carry it. The projection is an allowlist, and omitting this key made the verdict
+  // invisible on every stubbed observation (which, with the capture deferred, is every live request).
+  "latencySelection",
   "aliasResolution",
   "rewrite",
   "cacheContinuity",

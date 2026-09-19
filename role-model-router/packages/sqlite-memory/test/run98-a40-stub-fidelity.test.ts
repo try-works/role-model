@@ -74,6 +74,25 @@ function buildObservation(requestId: string) {
       stream: { requested: false, textDeltas: 0, toolCallDeltas: 7, toolArgumentDeltas: 21 },
       streamSupport: { text: "supported", toolCalls: "supported", toolArguments: "supported" },
     },
+    // Run 98 addendum 40 L5: the measured-latency verdict is decision evidence, so it must survive the
+    // stub the same way the capability facts do — the live window found 0 of 31 stored observations
+    // carrying it because the routing-diagnostics projection is an allowlist.
+    routingDiagnostics: {
+      decisionTrace: { strategy: "baseline", candidates: 7 },
+      latencySelection: {
+        outcome: "kept_router_choice",
+        chosenEndpointId: "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+        bucketUpperBoundTokens: 150_000,
+        candidates: [
+          {
+            endpointId: "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+            p95LatencyMs: 12_000,
+            sampleCount: 18,
+          },
+        ],
+        reason: "the router's chosen endpoint already has the best measured p95 for this bucket",
+      },
+    },
   } as never;
 }
 
@@ -126,4 +145,15 @@ test("stub fidelity: a stubbed observation yields the same telemetry capabilitie
   expect(stub?.latencyMs).toBe(rich?.latencyMs);
   expect(stub?.inputTokens).toBe(rich?.inputTokens);
   expect(stub?.outputTokens).toBe(rich?.outputTokens);
+
+  // Decision evidence: the measured-latency verdict must survive the stub.
+  const stubObservation = buildCompactRuntimeObservationStub(
+    bundle as unknown as Readonly<Record<string, unknown>>,
+  );
+  const routingDiagnostics = stubObservation.routingDiagnostics as Record<string, unknown>;
+  expect(routingDiagnostics?.latencySelection).toMatchObject({
+    outcome: "kept_router_choice",
+    chosenEndpointId: "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+    bucketUpperBoundTokens: 150_000,
+  });
 });
