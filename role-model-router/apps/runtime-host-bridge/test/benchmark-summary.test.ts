@@ -681,7 +681,15 @@ describe("benchmark-summary", () => {
     });
   });
 
-  test("does not use an unfiltered latest-summary subject when no current portfolio entry exists", () => {
+  /**
+   * Run 98 addendum 42 B1 supersedes the rule this test used to encode ("never fall back to a summary
+   * subject"). The operator's instruction is explicit: quality comes from benchmark data until an
+   * alternative exists. What still must hold — and is asserted in the a42 test above — is that evidence is
+   * keyed per endpoint: a subject for a different endpoint is never used, so a run covering another pool
+   * cannot move this candidate. This fixture is a run that measured `deepseek.flash-max`, so under the new
+   * rule it supplies that endpoint's capability.
+   */
+  test("uses a latest-summary subject for the same endpoint when no current portfolio entry exists", () => {
     const capability = buildBenchmarkCapabilityForEndpoint({
       endpointId: "deepseek.flash-max",
       latestProfile: null,
@@ -715,7 +723,11 @@ describe("benchmark-summary", () => {
       portfolioEntry: null,
     });
 
-    expect(capability).toBeNull();
+    expect(capability).toMatchObject({
+      evidenceSource: "run-artifact",
+      overallScore: 0.93,
+      lastRunId: "historical-other-membership",
+    });
   });
 
   test("uses the exact endpoint portfolio entry instead of a newer sibling-only summary", () => {
@@ -1265,5 +1277,126 @@ describe("benchmark-summary", () => {
 
     expect(summary.subjects).toHaveLength(1);
     expect(summary.subjects[0]?.taxonomyScores).toBeUndefined();
+  });
+
+  // Run 98 addendum 42 B1: the model pool's quality axis reads
+  // `candidate.benchmarkCapability.overallScore`. The portfolio is the current-membership authority and
+  // it was empty while the completed run summary carried current-endpoint subjects, so every candidate
+  // got `null` and the composite route score collapsed to cost only. A summary subject whose endpointId
+  // matches the candidate is per-endpoint evidence for a currently configured endpoint, so it may supply
+  // the capability; a subject for another endpoint still may not.
+  test("run98 a42: a summary subject for the same endpoint supplies the capability when the portfolio has no entry", () => {
+    const summary = {
+      ...EMPTY_BENCHMARK_SUMMARY,
+      runId: "run-current",
+      completedAtMs: 1_700_000_000_000,
+      mode: "quick" as const,
+      suiteId: "routing-capability-v2",
+      judgeEndpointId: "judge.endpoint",
+      judgeModelId: "judge/model",
+      subjects: [
+        {
+          endpointId: "deepseek.flash-max",
+          modelId: "deepseek/deepseek-flash",
+          sourceType: "remote",
+          reasoningEffort: "max",
+          overallScore: 0.96,
+          scoresByBucket: {
+            easy: { score: 0, cases: 0 },
+            medium: { score: 0, cases: 0 },
+            hard: { score: 0.96, cases: 12 },
+          },
+          passingCaseIds: ["h01"],
+          caseCount: 12,
+        },
+      ],
+    };
+
+    const capability = buildBenchmarkCapabilityForEndpoint({
+      endpointId: "deepseek.flash-max",
+      latestProfile: null,
+      summary,
+      portfolioEntry: null,
+    });
+    expect(capability).toMatchObject({
+      evidenceSource: "run-artifact",
+      overallScore: 0.96,
+      lastRunId: "run-current",
+      lastRunCompletedAtMs: 1_700_000_000_000,
+      lastRunMode: "quick",
+      lastRunSuiteId: "routing-capability-v2",
+      judgeEndpointId: "judge.endpoint",
+      coverage: { overallCases: 12 },
+    });
+
+    // An endpoint the run never covered still gets no capability: quality is never synthesized.
+    expect(
+      buildBenchmarkCapabilityForEndpoint({
+        endpointId: "deepseek.not-benchmarked",
+        latestProfile: null,
+        summary,
+        portfolioEntry: null,
+      }),
+    ).toBeNull();
+  });
+
+  test("run98 a42: a portfolio entry still takes precedence over a summary subject", () => {
+    const summary = {
+      ...EMPTY_BENCHMARK_SUMMARY,
+      runId: "run-summary",
+      completedAtMs: 1_700_000_000_000,
+      mode: "quick" as const,
+      suiteId: "routing-capability-v2",
+      subjects: [
+        {
+          endpointId: "deepseek.flash-max",
+          modelId: "deepseek/deepseek-flash",
+          sourceType: "remote",
+          reasoningEffort: "max",
+          overallScore: 0.5,
+          scoresByBucket: {
+            easy: { score: 0, cases: 0 },
+            medium: { score: 0, cases: 0 },
+            hard: { score: 0.5, cases: 2 },
+          },
+          passingCaseIds: ["h01"],
+          caseCount: 2,
+        },
+      ],
+    };
+
+    const capability = buildBenchmarkCapabilityForEndpoint({
+      endpointId: "deepseek.flash-max",
+      latestProfile: null,
+      summary,
+      portfolioEntry: {
+        endpointId: "deepseek.flash-max",
+        modelId: "deepseek/deepseek-flash",
+        sourceType: "remote",
+        reasoningEffort: "max",
+        overallScore: 0.91,
+        scoresByBucket: {
+          easy: { score: 0, cases: 0 },
+          medium: { score: 0, cases: 0 },
+          hard: { score: 0.91, cases: 10 },
+        },
+        passingCaseIds: ["h01"],
+        caseCount: 10,
+        profileRevision: "profile-current",
+        runId: "run-portfolio",
+        completedAtMs: 1_700_000_100_000,
+        mode: "quick",
+        suiteId: "routing-capability-v2",
+        suiteVersion: "3.4",
+        judgeEndpointId: "judge.endpoint",
+        judgeModelId: "judge/model",
+      },
+    });
+    expect(capability).toMatchObject({
+      evidenceSource: "run-artifact",
+      overallScore: 0.91,
+      lastRunId: "run-portfolio",
+      profileRevision: "profile-current",
+    });
   });
 });

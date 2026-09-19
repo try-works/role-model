@@ -796,20 +796,44 @@ export function buildBenchmarkCapabilityForEndpoint(input: {
   });
   const portfolioEntry =
     input.portfolioEntry?.endpointId === input.endpointId ? input.portfolioEntry : null;
-  // The portfolio is the single current-membership authority. The latest summary is
-  // intentionally not a fallback: it can describe a completed run for a different
-  // configured pool and must never become routing evidence for the current pool.
-  if (portfolioEntry) {
-    const summarySubject = portfolioEntry;
+  /**
+   * Run 98 addendum 42 B1: the portfolio is still the current-membership authority and still wins, but a
+   * completed run's summary is per-endpoint evidence — each subject names the endpoint it measured. When
+   * the portfolio has no entry (for example a run that completed before the current membership revision,
+   * which is the live stage's situation), the subject whose `endpointId` matches this candidate supplies
+   * the capability, so the model pool's quality axis is backed by benchmark data instead of nothing.
+   *
+   * The guard the previous comment described is preserved in the match itself: a subject for any other
+   * endpoint is never consulted, so a run that covered a different pool cannot leak evidence into this
+   * candidate, and a run that covered no configured endpoint still yields no capability at all.
+   */
+  const summarySubject =
+    input.summary.subjects?.find((subject) => subject.endpointId === input.endpointId) ?? null;
+  /**
+   * Precedence, highest first: the portfolio entry (current membership), then a revisioned profile
+   * capability (the store's benchmark evidence, already filtered by the caller's membership revision),
+   * and only then the matching summary subject. The middle rule is why this is not `?? summarySubject`:
+   * an unbound quick run must never override evidence that is bound to the current revision, which the
+   * `benchmark-candidates-routing-quality` suite asserts.
+   */
+  const subject = portfolioEntry ?? (profileCapability ? null : summarySubject);
+  if (subject) {
+    const runId = portfolioEntry?.runId ?? input.summary.runId ?? null;
+    const completedAtMs = portfolioEntry?.completedAtMs ?? input.summary.completedAtMs ?? null;
+    const runMode = portfolioEntry?.mode ?? input.summary.mode ?? null;
+    const suiteId = portfolioEntry?.suiteId ?? input.summary.suiteId ?? null;
+    const judgeEndpointId = portfolioEntry?.judgeEndpointId ?? input.summary.judgeEndpointId ?? null;
+    const judgeModelId = portfolioEntry?.judgeModelId ?? input.summary.judgeModelId ?? null;
+    const profileRevision = portfolioEntry?.profileRevision ?? null;
     const capability =
       profileCapability ??
       ({
         evidenceSource: "run-artifact",
         overallScore: null,
         scoresByBucket: {},
-        benchmarkSamples: summarySubject.caseCount,
-        sampleCount: summarySubject.caseCount,
-        measuredAtMs: portfolioEntry.completedAtMs,
+        benchmarkSamples: subject.caseCount,
+        sampleCount: subject.caseCount,
+        measuredAtMs: completedAtMs,
         freshnessScore: null,
         lastRunId: null,
         lastRunCompletedAtMs: null,
@@ -819,16 +843,16 @@ export function buildBenchmarkCapabilityForEndpoint(input: {
         judgeModelId: null,
         profileRevision: null,
       } satisfies BenchmarkCapability);
-    const roleScores = summarySubject.taxonomyScores?.byRole;
+    const roleScores = subject.taxonomyScores?.byRole;
     const eligibleRoleScores = buildEligibleRoleScores({
       roleScores,
       availableRoleIds: input.availableRoleIds,
     });
     const { groupScores, groupCases } = buildGroupScores({
       eligibleRoleScores,
-      roleCases: summarySubject.taxonomyCoverage?.byRole,
+      roleCases: subject.taxonomyCoverage?.byRole,
     });
-    const lowCoverageRoleIds = Object.entries(summarySubject.taxonomyCoverage?.byRole ?? {})
+    const lowCoverageRoleIds = Object.entries(subject.taxonomyCoverage?.byRole ?? {})
       .filter(([, cases]) => cases < BENCHMARK_LOW_COVERAGE_CASE_COUNT)
       .map(([roleId]) => roleId);
     const lowCoverageGroupIds = Object.entries(groupCases ?? {})
@@ -838,26 +862,26 @@ export function buildBenchmarkCapabilityForEndpoint(input: {
     return {
       ...capability,
       evidenceSource: "run-artifact",
-      overallScore: summarySubject.overallScore,
-      scoresByBucket: summarySubject.scoresByBucket,
-      lastRunId: portfolioEntry.runId,
-      lastRunCompletedAtMs: portfolioEntry.completedAtMs,
-      lastRunMode: portfolioEntry.mode,
-      lastRunSuiteId: portfolioEntry.suiteId,
-      judgeEndpointId: portfolioEntry.judgeEndpointId,
-      judgeModelId: portfolioEntry.judgeModelId,
-      profileRevision: portfolioEntry.profileRevision,
-      ...(summarySubject.taxonomyScores?.byTask
-        ? { taskScores: summarySubject.taxonomyScores.byTask }
+      overallScore: subject.overallScore,
+      scoresByBucket: subject.scoresByBucket,
+      lastRunId: runId,
+      lastRunCompletedAtMs: completedAtMs,
+      lastRunMode: runMode,
+      lastRunSuiteId: suiteId,
+      judgeEndpointId,
+      judgeModelId,
+      profileRevision,
+      ...(subject.taxonomyScores?.byTask
+        ? { taskScores: subject.taxonomyScores.byTask }
         : {}),
-      ...(summarySubject.taxonomyScores ? { taxonomyScores: summarySubject.taxonomyScores } : {}),
+      ...(subject.taxonomyScores ? { taxonomyScores: subject.taxonomyScores } : {}),
       ...(roleScores ? { roleScores } : {}),
       ...(eligibleRoleScores ? { eligibleRoleScores } : {}),
       ...(groupScores ? { groupScores } : {}),
       coverage: {
-        overallCases: summarySubject.caseCount,
-        ...(summarySubject.taxonomyCoverage?.byRole
-          ? { roleCases: summarySubject.taxonomyCoverage.byRole }
+        overallCases: subject.caseCount,
+        ...(subject.taxonomyCoverage?.byRole
+          ? { roleCases: subject.taxonomyCoverage.byRole }
           : {}),
         ...(groupCases ? { groupCases } : {}),
         lowCoverageRoleIds,
