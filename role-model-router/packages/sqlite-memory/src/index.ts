@@ -4147,10 +4147,37 @@ function reconcileStubObservedProfiles(database: DatabaseSync, nowMs: number): v
 }
 
 /**
- * Run 98 addendum 43 S3: rebuild only when the endpoint's live samples can actually be aggregated.
- * Samples written before the operational-profile contract carried an `endpoint_version`, and the fixtures
- * that model that legacy shape cannot be aggregated at all — for those the endpoint's existing row is left
- * exactly as it was, rather than failing the write that triggered the repair.
+ * The identity fields the operational aggregator refuses to mix (`assertStructuredIdentityConsistency`).
+ * A stored sample that never carried a field at all is a different generation from one that carries it,
+ * which is why the live store holds both: 476 of `deepseek-flash-high`'s samples predate
+ * `reasoning_effort`, while the newest ones carry it.
+ */
+function observedSampleIdentity(sample: {
+  readonly endpoint_version?: unknown;
+  readonly model_id?: unknown;
+  readonly reasoning_effort?: unknown;
+  readonly effort_source?: unknown;
+}): string {
+  const present = (field: string, value: unknown) =>
+    Object.prototype.hasOwnProperty.call(sample, field) ? JSON.stringify(value ?? null) : "__absent__";
+  return [
+    JSON.stringify(sample.endpoint_version ?? null),
+    JSON.stringify(sample.model_id ?? null),
+    present("reasoning_effort", sample.reasoning_effort),
+    present("effort_source", sample.effort_source),
+  ].join("|");
+}
+
+/**
+ * Run 98 addendum 43 S3: rebuild an endpoint's snapshot from the samples that share its **current**
+ * identity, and never fail the caller doing it.
+ *
+ * Rebuilding from the endpoint's whole history is not possible: the aggregator rejects a sample set whose
+ * structured identity conflicts, and every long-lived endpoint here mixes an older generation (no
+ * `reasoning_effort` key) with the current one. The profile that describes the endpoint now is the profile
+ * of the samples the newest write belongs to, so the newest sample's identity selects the set. Anything
+ * that still cannot be aggregated (a sample without `endpoint_version`, unparseable JSON) leaves the
+ * endpoint's existing row exactly as it was — a repair pass must never break initialization or a write.
  */
 function rebuildObservedProfilesForEndpointIfAggregable(
   database: DatabaseSync,
@@ -4159,25 +4186,48 @@ function rebuildObservedProfilesForEndpointIfAggregable(
 ): boolean {
   const rows = database
     .prepare(
-      "SELECT sample_json FROM observed_performance_samples WHERE endpoint_id = ? AND source_type = 'live_request'",
+      "SELECT sample_json FROM observed_performance_samples WHERE endpoint_id = ? AND source_type = 'live_request' ORDER BY timestamp_ms ASC, sample_id ASC",
     )
     .all(endpointId) as Array<{ sample_json: string }>;
-  if (rows.length === 0) {
-    return false;
-  }
-  const aggregable = rows.every((row) => {
+  const samples: Array<Record<string, unknown>> = [];
+  for (const row of rows) {
     try {
-      const sample = JSON.parse(row.sample_json) as { readonly endpoint_version?: unknown };
-      return typeof sample.endpoint_version === "string" && sample.endpoint_version.length > 0;
+      samples.push(JSON.parse(row.sample_json) as Record<string, unknown>);
     } catch {
       return false;
     }
-  });
-  if (!aggregable) {
+  }
+  const newest = samples.at(-1);
+  if (!newest) {
     return false;
   }
-  rebuildObservedProfilesForEndpoint(database, endpointId, nowMs);
-  return true;
+  const identity = observedSampleIdentity(newest);
+  const scoped = samples.filter((sample) => observedSampleIdentity(sample) === identity);
+  try {
+    const profile = aggregateOperationalPerformanceSamples(
+      scoped as unknown as Parameters<typeof aggregateOperationalPerformanceSamples>[0],
+      { nowMs },
+    );
+    if (!profile) {
+      return false;
+    }
+    database
+      .prepare("DELETE FROM observed_profile_snapshots WHERE endpoint_id=?")
+      .run(endpointId);
+    database
+      .prepare(
+        "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
+      )
+      .run(
+        `${endpointId}:${profile.measured_at_ms}`,
+        endpointId,
+        profile.measured_at_ms,
+        JSON.stringify(profile),
+      );
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function rebuildObservedProfilesForEndpoint(
