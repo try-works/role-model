@@ -621,7 +621,10 @@ export function LearningPacksPage() {
                   <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                     <Metric label="Validation receipt" value={show(record.validationReceiptId ?? asRecord(row.identity).scorerSetVersion)} />
                     <Metric label="Rollback target" value={show(record.rollbackTargetPackId)} />
-                    <Metric label="Max tokens" value={show(record.maxTokens)} />
+                    {/* Run 98 addendum 40 audit: this is the pack's advisory-context budget
+                        (`ExperiencePackCandidateV1.maxTokens`, 1-8192, default 512), not a limit on the
+                        requests the router accepts. The old "Max tokens" label read as a request cap. */}
+                    <Metric label="Advisory token budget" value={show(record.maxTokens)} />
                     <Metric label="Scope" value={show(row.scopeId)} />
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
