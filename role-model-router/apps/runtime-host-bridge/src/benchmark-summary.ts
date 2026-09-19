@@ -770,6 +770,18 @@ export function buildBenchmarkCapability(input: {
     }
   }
 
+  /**
+   * Run 98 addendum 42 B2: the benchmark profile is aggregated from this endpoint's own
+   * current-membership benchmark samples, and that aggregation already emits the p50/p95 it measured
+   * (`latency_ms_p50` / `latency_ms_p95`). Carrying them here is what lets the model pool's speed axis
+   * score an endpoint that has benchmark evidence but no telemetry yet; a profile without them keeps the
+   * axis empty rather than borrowing a measurement from somewhere else.
+   */
+  const p50LatencyMs =
+    readNumber(profile, "latency_ms_p50") ?? readNumber(profile, "latencyMsP50");
+  const p95LatencyMs =
+    readNumber(profile, "latency_ms_p95") ?? readNumber(profile, "latencyMsP95");
+
   return {
     evidenceSource: "profile-derived",
     overallScore,
@@ -785,6 +797,8 @@ export function buildBenchmarkCapability(input: {
     judgeEndpointId: null,
     judgeModelId: null,
     profileRevision: null,
+    ...(p50LatencyMs !== null && p50LatencyMs > 0 ? { p50LatencyMs } : {}),
+    ...(p95LatencyMs !== null && p95LatencyMs > 0 ? { p95LatencyMs } : {}),
   };
 }
 

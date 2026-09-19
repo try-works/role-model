@@ -1550,4 +1550,51 @@ describe("benchmark-summary", () => {
     // convention the sibling test asserts for four audits (⌈0.5 × 4⌉ = 2nd smallest).
     expect(sameRun).toMatchObject({ p50LatencyMs: 1_000 });
   });
+
+  // Run 98 addendum 42 B2, live gap found on v265: the profile-derived path won the precedence for an
+  // endpoint with current-membership benchmark samples (kimi-k3, 1 completed sample) and the model pool's
+  // speed axis stayed empty even though the endpoint has no telemetry — the addendum's "no telemetry but a
+  // benchmark p50 gets a speed score" clause. The benchmark profile is aggregated from those same samples
+  // (`aggregateObservedPerformanceSamples` emits latency_ms_p50/p95), so the capability carries the p50
+  // from the evidence it was already scored from rather than borrowing another run's measurement.
+  test("run98 a42: a profile-derived capability carries the benchmark profile's own p50/p95", () => {
+    const summary = { ...EMPTY_BENCHMARK_SUMMARY, subjects: [], caseAudits: [] };
+    const benchmarkProfile = {
+      judge_score: 0.9583,
+      quality_score: 0.9583,
+      sample_size: 1,
+      measured_at_ms: 1_700_000_000_000,
+      sources: { live_request_samples: 0, benchmark_samples: 1 },
+      latency_ms_p50: 34_852,
+      latency_ms_p95: 34_852,
+    };
+
+    const capability = buildBenchmarkCapabilityForEndpoint({
+      endpointId: "moonshot.personal.kimi-code.global.kimi-k3",
+      latestProfile: benchmarkProfile,
+      summary,
+      portfolioEntry: null,
+    });
+    expect(capability).toMatchObject({
+      evidenceSource: "profile-derived",
+      overallScore: 0.9583,
+      benchmarkSamples: 1,
+      p50LatencyMs: 34_852,
+      p95LatencyMs: 34_852,
+    });
+
+    // A profile with no measured latency keeps the axis empty: the fallback is the endpoint's own
+    // benchmark latency or nothing, never another measurement.
+    const { latency_ms_p50, latency_ms_p95, ...withoutLatency } = benchmarkProfile;
+    void latency_ms_p50;
+    void latency_ms_p95;
+    const noLatency = buildBenchmarkCapabilityForEndpoint({
+      endpointId: "moonshot.personal.kimi-code.global.kimi-k3",
+      latestProfile: withoutLatency,
+      summary,
+      portfolioEntry: null,
+    });
+    expect(noLatency?.p50LatencyMs ?? null).toBeNull();
+    expect(noLatency?.p95LatencyMs ?? null).toBeNull();
+  });
 });
