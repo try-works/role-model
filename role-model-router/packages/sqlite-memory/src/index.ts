@@ -1992,6 +1992,8 @@ export function initializeSqliteMemory(
     }
   }
 
+  reconcileStubObservedProfiles(database, nowMs);
+
   database.close();
 
   return {
@@ -4083,6 +4085,101 @@ export interface ClearObservedBenchmarkDataForEndpointResult {
   readonly clearedSampleCount: number;
 }
 
+/**
+ * Run 98 addendum 43 S3: a profile that cannot answer "how many samples back this measurement, and how
+ * fast were they?" is a stub. The live stage carried `{"measured_at_ms": …}` snapshots for two endpoints
+ * whose samples sat beside them in `observed_performance_samples`, and every consumer read those rows as
+ * "no telemetry" — no sample size, no latency, no failure rate.
+ */
+function isStubShapedObservedProfile(profile: unknown): boolean {
+  if (typeof profile !== "object" || profile === null) {
+    return true;
+  }
+  const sampleSize = (profile as { readonly sample_size?: unknown }).sample_size;
+  return typeof sampleSize !== "number" || !Number.isFinite(sampleSize);
+}
+
+/**
+ * Run 98 addendum 43 S3: rebuild any endpoint whose latest snapshot is still stub-shaped.
+ *
+ * This runs on every initialization rather than as a one-shot migration because the rows it repairs were
+ * written by a build whose caller handed the store a stub profile. The write path now refuses that shape
+ * (see `persistRuntimeObservationBundle`), so this pass is a no-op on a clean store; it stays armed so a
+ * database that predates the guard is healed the first time the new build opens it. The scan reads the
+ * latest row per endpoint, so its cost is bounded by the number of configured endpoints.
+ */
+function reconcileStubObservedProfiles(database: DatabaseSync, nowMs: number): void {
+  const rows = database
+    .prepare(
+      `SELECT snapshot.endpoint_id AS endpoint_id, snapshot.profile_json AS profile_json
+         FROM observed_profile_snapshots AS snapshot
+         JOIN (
+           SELECT endpoint_id, MAX(measured_at_ms) AS newest
+             FROM observed_profile_snapshots
+            GROUP BY endpoint_id
+         ) AS latest
+           ON latest.endpoint_id = snapshot.endpoint_id
+          AND latest.newest = snapshot.measured_at_ms`,
+    )
+    .all() as Array<{ endpoint_id: string; profile_json: string }>;
+  const stubEndpointIds = rows
+    .filter((row) => {
+      try {
+        return isStubShapedObservedProfile(JSON.parse(row.profile_json) as unknown);
+      } catch {
+        return true;
+      }
+    })
+    .map((row) => row.endpoint_id);
+  if (stubEndpointIds.length === 0) {
+    return;
+  }
+  database.exec("BEGIN IMMEDIATE");
+  try {
+    for (const endpointId of stubEndpointIds) {
+      rebuildObservedProfilesForEndpointIfAggregable(database, endpointId, nowMs);
+    }
+    database.exec("COMMIT");
+  } catch (error) {
+    database.exec("ROLLBACK");
+    throw error;
+  }
+}
+
+/**
+ * Run 98 addendum 43 S3: rebuild only when the endpoint's live samples can actually be aggregated.
+ * Samples written before the operational-profile contract carried an `endpoint_version`, and the fixtures
+ * that model that legacy shape cannot be aggregated at all — for those the endpoint's existing row is left
+ * exactly as it was, rather than failing the write that triggered the repair.
+ */
+function rebuildObservedProfilesForEndpointIfAggregable(
+  database: DatabaseSync,
+  endpointId: string,
+  nowMs: number,
+): boolean {
+  const rows = database
+    .prepare(
+      "SELECT sample_json FROM observed_performance_samples WHERE endpoint_id = ? AND source_type = 'live_request'",
+    )
+    .all(endpointId) as Array<{ sample_json: string }>;
+  if (rows.length === 0) {
+    return false;
+  }
+  const aggregable = rows.every((row) => {
+    try {
+      const sample = JSON.parse(row.sample_json) as { readonly endpoint_version?: unknown };
+      return typeof sample.endpoint_version === "string" && sample.endpoint_version.length > 0;
+    } catch {
+      return false;
+    }
+  });
+  if (!aggregable) {
+    return false;
+  }
+  rebuildObservedProfilesForEndpoint(database, endpointId, nowMs);
+  return true;
+}
+
 function rebuildObservedProfilesForEndpoint(
   database: DatabaseSync,
   endpointId: string,
@@ -4655,19 +4752,33 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
           endpointId: observation.endpointId,
           nowMs: historyNowMs,
         });
-        database
-          .prepare("DELETE FROM observed_profile_snapshots WHERE endpoint_id=?")
-          .run(observation.endpointId);
-        database
-          .prepare(
-            "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
-          )
-          .run(
-            `${observation.endpointId}:${observation.observedPerformance.profile.measured_at_ms}`,
+        /**
+         * Run 98 addendum 43 S3: this is where the caller's profile is persisted, and a caller that reduced
+         * it to a stub used to overwrite the endpoint's real measurement — the live stage still carries two
+         * such rows. A stub shape is refused here and the snapshot is rebuilt from the samples this write
+         * just retained, so the store can never hold a profile that answers less than its own samples.
+         */
+        if (isStubShapedObservedProfile(observation.observedPerformance.profile)) {
+          rebuildObservedProfilesForEndpointIfAggregable(
+            database,
             observation.endpointId,
-            observation.observedPerformance.profile.measured_at_ms,
-            JSON.stringify(observation.observedPerformance.profile),
+            historyNowMs,
           );
+        } else {
+          database
+            .prepare("DELETE FROM observed_profile_snapshots WHERE endpoint_id=?")
+            .run(observation.endpointId);
+          database
+            .prepare(
+              "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
+            )
+            .run(
+              `${observation.endpointId}:${observation.observedPerformance.profile.measured_at_ms}`,
+              observation.endpointId,
+              observation.observedPerformance.profile.measured_at_ms,
+              JSON.stringify(observation.observedPerformance.profile),
+            );
+        }
         database
           .prepare(
             `INSERT OR REPLACE INTO runtime_telemetry_records (${RUNTIME_TELEMETRY_INSERT_COLUMNS.join(", ")}) VALUES (${RUNTIME_TELEMETRY_INSERT_COLUMNS.map(() => "?").join(", ")})`,
