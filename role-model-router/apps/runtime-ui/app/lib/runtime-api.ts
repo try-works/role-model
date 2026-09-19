@@ -1167,6 +1167,12 @@ export interface RouterConfig {
 export interface BenchmarkCapability {
   readonly evidenceSource?: "run-artifact" | "profile-derived";
   readonly overallScore: number | null;
+  /**
+   * Run 98 addendum 42 B2: the benchmark run's own latency for this endpoint, derived from its case
+   * audits. The model pool's speed axis uses it until telemetry exists for the endpoint.
+   */
+  readonly p50LatencyMs?: number | null;
+  readonly p95LatencyMs?: number | null;
   readonly scoresByBucket?: Partial<
     Record<"easy" | "medium" | "hard", { readonly score: number; readonly cases?: number }>
   >;

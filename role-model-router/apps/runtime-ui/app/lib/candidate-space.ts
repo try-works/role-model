@@ -221,16 +221,35 @@ function scoreQuality(candidate: RouterCandidate): number | null {
   return null;
 }
 
-function scoreSpeed(candidate: RouterCandidate, fastestLatencyMs: number): number | null {
+/**
+ * Run 98 addendum 42 B2: the speed axis prefers the endpoint's own observed p50 from the operational
+ * profile, and falls back to the p50 the benchmark run measured for that endpoint while requests are
+ * still scarce. The benchmark value comes from the run artifact's case audits, so it is real evidence
+ * rather than a synthesised score. Either way the value is a latency, which keeps the cohort ratio
+ * meaningful across a pool with mixed coverage.
+ */
+function readP50LatencyMs(candidate: RouterCandidate): number | null {
   const profile = asRecord(candidate.operationalProfile ?? candidate.latestProfile);
-  const latencyP50 = pickNumber(
+  const fromProfile = pickNumber(
     profile,
     "latency_ms_p50",
     "latencyMsP50",
     "latency_ms",
     "latencyMs",
   );
-  if (latencyP50 !== null && latencyP50 > 0) {
+  if (fromProfile !== null && fromProfile > 0) {
+    return fromProfile;
+  }
+  const fromBenchmark = candidate.benchmarkCapability?.p50LatencyMs;
+  if (typeof fromBenchmark === "number" && Number.isFinite(fromBenchmark) && fromBenchmark > 0) {
+    return fromBenchmark;
+  }
+  return null;
+}
+
+function scoreSpeed(candidate: RouterCandidate, fastestLatencyMs: number): number | null {
+  const latencyP50 = readP50LatencyMs(candidate);
+  if (latencyP50 !== null) {
     // Ratio to the cohort’s fastest p50 — higher = faster.
     // Avoids pinning the slowest model to S0 (reads as “no latency data”).
     // Zero/negative latency is treated as absent, not as "fastest".
@@ -433,16 +452,11 @@ export function buildCandidateSpacePoints(
   const pool = (eligible.length > 0 ? eligible : candidates).slice();
   const total = pool.length;
 
+  // Telemetry and benchmark p50s share one cohort, so an endpoint with only benchmark evidence still sets
+  // the fast end of the scale instead of every axis collapsing to a single-source subset.
   const latencies = pool
-    .map((candidate) =>
-      pickNumber(
-        asRecord(candidate.operationalProfile ?? candidate.latestProfile),
-        "latency_ms_p50",
-        "latencyMsP50",
-        "latency_ms",
-      ),
-    )
-    .filter((value): value is number => value !== null && value > 0);
+    .map((candidate) => readP50LatencyMs(candidate))
+    .filter((value): value is number => value !== null);
   const fastestLatencyMs =
     latencies.length > 0 ? Math.min(...latencies.map((value) => Math.max(value, 1))) : 1_000;
 

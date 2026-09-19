@@ -189,6 +189,13 @@ export interface BenchmarkCapability {
   readonly lastRunCompletedAtMs: number | null;
   readonly lastRunMode: "quick" | "full" | null;
   readonly lastRunSuiteId: string | null;
+  /**
+   * Run 98 addendum 42 B2: the run's per-endpoint latency, derived from the case audits exactly as the
+   * Benchmark scores page derives its P50/P95 columns. The model pool's speed axis falls back to these
+   * while an endpoint has no telemetry of its own.
+   */
+  readonly p50LatencyMs?: number | null;
+  readonly p95LatencyMs?: number | null;
   readonly judgeEndpointId: string | null;
   readonly judgeModelId: string | null;
   /** Immutable evidence revision for the selected endpoint's current benchmark profile. */
@@ -858,6 +865,38 @@ export function buildBenchmarkCapabilityForEndpoint(input: {
     const lowCoverageGroupIds = Object.entries(groupCases ?? {})
       .filter(([, cases]) => cases < BENCHMARK_LOW_COVERAGE_CASE_COUNT)
       .map(([groupId]) => groupId);
+    /**
+     * Run 98 addendum 42 B2: per-endpoint latency from the run's case audits, bounded and filtered to the
+     * endpoint being described so one endpoint's audits can never become another's evidence.
+     *
+     * The audits also have to belong to the run this capability describes. A portfolio entry can name an
+     * earlier run than the summary, and its quality score comes from that earlier run; borrowing the
+     * summary run's latency would put two different measurements on one capability, so it is refused
+     * rather than mixed (the speed axis then stays empty until telemetry exists).
+     */
+    const auditsDescribeThisRun = runId !== null && runId === input.summary.runId;
+    const benchmarkLatencies = (auditsDescribeThisRun ? (input.summary.caseAudits ?? []) : [])
+      .filter(
+        (audit) =>
+          audit.endpointId === input.endpointId &&
+          typeof audit.latencyMs === "number" &&
+          Number.isFinite(audit.latencyMs) &&
+          audit.latencyMs > 0,
+      )
+      .map((audit) => audit.latencyMs as number)
+      .sort((left, right) => left - right)
+      .slice(0, 512);
+    const latencyPercentile = (quantile: number): number | null =>
+      benchmarkLatencies.length === 0
+        ? null
+        : (benchmarkLatencies[
+            Math.min(
+              benchmarkLatencies.length - 1,
+              Math.max(0, Math.ceil(quantile * benchmarkLatencies.length) - 1),
+            )
+          ] ?? null);
+    const p50LatencyMs = latencyPercentile(0.5);
+    const p95LatencyMs = latencyPercentile(0.95);
 
     return {
       ...capability,
@@ -871,6 +910,8 @@ export function buildBenchmarkCapabilityForEndpoint(input: {
       judgeEndpointId,
       judgeModelId,
       profileRevision,
+      ...(p50LatencyMs !== null ? { p50LatencyMs } : {}),
+      ...(p95LatencyMs !== null ? { p95LatencyMs } : {}),
       ...(subject.taxonomyScores?.byTask
         ? { taskScores: subject.taxonomyScores.byTask }
         : {}),
