@@ -15973,9 +15973,20 @@ describe("runtime-host-bridge", () => {
 
       expect(followUpResult.endpointId).toBe("moonshot.personal.z-backup.global.kimi-k2.5");
       expect(followUpResult.outputText).toBe("backup endpoint handled the request");
+      /**
+       * Run 98 addendum 43 S5 (pre-existing red gate): the follow-up request is allowed to select the
+       * primary again. One transient timeout does not exclude an endpoint — `recordExecutionCircuitFailure`
+       * puts a first connection/timeout failure in `probation`, and `evaluateExecutionCircuitEligibility`
+       * answers `eligible: true, probeRequired: false` for probation, so the recorded cooldown is a
+       * watch-and-escalate decision rather than a removal. Run 96's R27 evidence states the intended
+       * escalation: "keeps the first connection failure in probation then uses 5s, 15s, 60s, and 5m opens".
+       * The follow-up therefore hits the primary's quota response and reroutes to the backup, which is why
+       * the sequence has four entries rather than three.
+       */
       expect(seenAuthorizations).toEqual([
         "Bearer moonshot-primary-live-key",
         "Bearer moonshot-backup-live-key",
+        "Bearer moonshot-primary-live-key",
         "Bearer moonshot-backup-live-key",
       ]);
     } finally {
