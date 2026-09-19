@@ -24662,6 +24662,10 @@ export async function createRuntimeBridgeBackend(
           maxCandidates: 1,
         });
       }
+      // Run 98 addendum 40 L3 follow-up: split the pre-provider window into "read the inputs and route"
+      // and "prepare the dispatch", so the residual the L6 window measured (about 320-350 ms) can be
+      // attributed to one side instead of being reported as one undifferentiated block.
+      markPhase("routing-ready");
       // Run 99 R33: the dispatch-side context guard. The router already excludes candidates whose
       // *declared* context is too small, but the selected candidate was never re-checked before the
       // provider call, so a prompt far beyond the model's window was forwarded and the overflow
