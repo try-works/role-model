@@ -1195,6 +1195,11 @@ export interface BenchmarkCapability {
     readonly lowCoverageRoleIds?: readonly string[];
     readonly lowCoverageGroupIds?: readonly string[];
   };
+  /**
+   * Run 98 addendum 43 S2: `benchmarkSamples` is the benchmark-only count behind the score and
+   * `sampleCount` the broader sample size; the model pool's quality axis requires the configured floor
+   * before it will score this capability.
+   */
   readonly benchmarkSamples: number;
   readonly sampleCount: number;
   readonly measuredAtMs: number | null;
