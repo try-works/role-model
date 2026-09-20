@@ -3706,6 +3706,56 @@ export async function runSupervisedReplay(input: {
           retryable: pendingFailure.retryable,
         });
       }
+      /**
+       * Run 98 addendum 48 (live v281/v282, reported by the operator's runtime events): Replay Core answers
+       * `append_recovery` when a previous attempt already persisted the provider receipt but not the branch
+       * append — exactly the state a restart mid-replay leaves behind. The receipt leg handled that status
+       * below; the prepare leg did not, so every retry threw
+       * `Replay Core did not prepare a bounded router dispatch` and the capture was eventually refused with
+       * `deferral budget exhausted`, producing no evaluation and no comparison. Drive the recovery here with
+       * the branch request Replay Core handed back, then continue with the next candidate.
+       */
+      if (prepared.status === "append_recovery") {
+        const recoveryRequest = prepared.branchRequest;
+        if (
+          !recoveryRequest ||
+          typeof recoveryRequest !== "object" ||
+          Array.isArray(recoveryRequest)
+        ) {
+          throw new Error("Replay Core did not persist a branch append recovery request");
+        }
+        const recoveredBranch = await input.appendBranch({
+          ...assertReplayBranchTraversalBinding(
+            recoveryRequest as Record<string, unknown>,
+            traversal,
+          ),
+        });
+        if (
+          typeof recoveredBranch?.branchRootRef !== "string" ||
+          !recoveredBranch.branchRootRef
+        ) {
+          throw new Error("replay branch append recovery was not persisted");
+        }
+        const recoveredReceipt = await invokeReplayCore("replay:record-branch-append", {
+          jobId,
+          candidateEndpointId,
+          leaseOwner: input.leaseOwner,
+          fenceToken: lease.fenceToken,
+          branch: recoveredBranch,
+        });
+        if (
+          recoveredReceipt.status !== "complete" &&
+          recoveredReceipt.status !== "awaiting_evaluation"
+        ) {
+          throw new Error("Replay Core did not accept the recovered branch append receipt");
+        }
+        resultTraceIds.push(recoveredBranch.branchRootRef);
+        resultBranches.push({
+          candidateEndpointId,
+          branchRootRef: recoveredBranch.branchRootRef,
+        });
+        continue;
+      }
       const preparedEnvelope = prepared.envelope;
       if (
         prepared.status !== "provider_dispatch" ||
