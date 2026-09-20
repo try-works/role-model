@@ -3,6 +3,8 @@ import { expect, test } from "vitest";
 import {
   RUN97_PAIRWISE_JUDGE_DEFINITION_VERSION,
   RUN97_PAIRWISE_JUDGE_SCORER_ID,
+  RUN96_ROUTING_SHADOW_SCORER_DEFINITION_VERSION,
+  createRun96RoutingShadowScorer,
   createRun97PairwiseJudgeScorer,
 } from "../src/track-b-runtime.js";
 
@@ -55,4 +57,24 @@ test("run98 R10 the judge scorer version is deterministic, bounded and identity-
   // never changed judge identity stay valid.
   const defaultIdentity = createRun97PairwiseJudgeScorer({ judgeEndpointId: "endpoint:judge-a" });
   expect(defaultIdentity.scorerSetVersion).toBe(first.scorerSetVersion.replace(".identity-blind", ""));
+});
+
+/**
+ * Run 98 addendum 49 (live v291): the *deterministic* scorer kept a hand-maintained `"3"` version, so the
+ * moment its definition body changed the same `id@version` key carried different bytes and Evaluation Core
+ * refused every registration with `duplicate scorer ID has incompatible version` — which is what the shadow
+ * pipeline sat on. Its version now follows the body, exactly like the judge scorer's.
+ */
+test("run98 a49 the deterministic scorer version follows its definition body", () => {
+  const base = createRun96RoutingShadowScorer();
+  const sameBody = createRun96RoutingShadowScorer();
+  const structured = createRun96RoutingShadowScorer({ algorithm: "structured_assertions" });
+
+  expect(base.version).toBe(sameBody.version);
+  expect(base.digest).toBe(sameBody.digest);
+  expect(base.version.startsWith(`${RUN96_ROUTING_SHADOW_SCORER_DEFINITION_VERSION}+`)).toBe(true);
+  expect(structured.version).not.toBe(base.version);
+  expect(structured.digest).not.toBe(base.digest);
+  // An explicit version still wins for callers that pin an identity.
+  expect(createRun96RoutingShadowScorer({ version: "3" }).version).toBe("3");
 });

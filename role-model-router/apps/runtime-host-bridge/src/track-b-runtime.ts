@@ -7624,6 +7624,14 @@ function normalizeTrackBVariantIdentity(
  * which a durable store must refuse as a conflicting version.
  */
 export const RUN96_ROUTING_SHADOW_SCORER_SET_VERSION = "run96-routing-shadow-v3";
+/**
+ * Run 98 addendum 32 S2 / addendum 49: the deterministic scorer's *shape* prefix. The version that reaches
+ * Evaluation Core is `<prefix>+<hash of the whole definition body>` (see
+ * `createRun96RoutingShadowScorer`), so a semantics change registers a new `id@version` instead of colliding
+ * with the previous definition — the failure mode that was observed live on v291 as
+ * `duplicate scorer ID has incompatible version`.
+ */
+export const RUN96_ROUTING_SHADOW_SCORER_DEFINITION_VERSION = 3;
 
 export function createRun96RoutingShadowScorer(
   overrides: Partial<{
@@ -7648,11 +7656,6 @@ export function createRun96RoutingShadowScorer(
   const definition = {
     manifestVersion: 2 as const,
     id: overrides.id ?? "run96-semantic-criteria",
-    // Run 98 addendum 32 S2: `required_terms` now grants proportional credit instead of all-or-nothing
-    // (the deterministic ruler's semantics changed), so the definition registers as a new scorer
-    // version. Evaluation Core keys on `id@version`; a semantics change under the old identity is
-    // refused as "duplicate scorer ID has incompatible version" and mixed-version means stay readable.
-    version: overrides.version ?? "3",
     scorerSetVersion: RUN96_ROUTING_SHADOW_SCORER_SET_VERSION,
     algorithm: overrides.algorithm ?? "required_terms",
     dimensions: [...(overrides.dimensions ?? ["correctness"])],
@@ -7660,10 +7663,27 @@ export function createRun96RoutingShadowScorer(
     direction: "higher_is_better",
     requiredInputs: [...(overrides.requiredInputs ?? ["outputRef", "evaluationCriteria"])],
   };
+  /**
+   * Run 98 addendum 49 (live v291: the phase marker `shadow-pipeline register-deterministic-scorer` and then
+   * silence — the invoke log showed `extension evaluation-core failed: duplicate scorer ID has incompatible
+   * version` returning in 14 ms). The judge scorer was already changed to derive its version from the whole
+   * definition body; this sibling kept the hand-maintained constant `"3"`, so the moment anything in the body
+   * moved, the same `id@version` key carried different bytes and Evaluation Core refused it by design.
+   *
+   * Deriving the version from the body makes a definition change a new key by construction. An explicit
+   * `overrides.version` still wins for callers that pin an identity, and the shape prefix stays readable.
+   */
+  const version =
+    overrides.version ??
+    `${RUN96_ROUTING_SHADOW_SCORER_DEFINITION_VERSION}+${createHash("sha256")
+      .update(JSON.stringify(canonicalExtensionValue(definition)))
+      .digest("hex")
+      .slice(0, 12)}`;
   return {
     ...definition,
+    version,
     digest: `sha256:${createHash("sha256")
-      .update(JSON.stringify(canonicalExtensionValue(definition)))
+      .update(JSON.stringify(canonicalExtensionValue({ ...definition, version })))
       .digest("hex")}`,
   };
 }
