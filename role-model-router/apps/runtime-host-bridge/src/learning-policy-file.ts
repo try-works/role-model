@@ -103,7 +103,9 @@ export interface LearningPolicySnapshot {
 }
 
 const DEFAULT_EFFECTIVE: LearningPolicySnapshot["effective"] = Object.freeze({
-  stage: "S1",
+  // Run 98 addendum 47 (operator decision 2026-09-20): the fallback policy is the active stage. The shipped
+  // channel block still pins production to S0, so "no policy at all" activates development and stage only.
+  stage: "S4",
   scoreBand: 0.05,
   minAdvisoryConfidence: 0.7,
   cohortPercent: 100,
