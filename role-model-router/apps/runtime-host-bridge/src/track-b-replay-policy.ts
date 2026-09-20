@@ -28,6 +28,12 @@ export const REPLAY_REFUSAL_CODES = [
    * capture is retired instead of being re-deferred on every tick forever.
    */
   "replay_window_elapsed",
+  /**
+   * Run 98 addendum 56 §6: the capture's own endpoint is the endpoint that judges comparisons, so a battle would
+   * have the judge score itself (the `judge_candidate_overlap` protection of addenda 30/33). Deferrable, because
+   * the operator can change the controller; named, so the class is countable instead of arriving as `replay_failed`.
+   */
+  "judge_candidate_overlap",
 ] as const;
 
 export type ReplayRefusalCode = (typeof REPLAY_REFUSAL_CODES)[number];

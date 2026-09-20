@@ -202,6 +202,11 @@ export function startAutoReplayLoop(input: {
    * treats it as orphaned and releases it (`ROLE_MODEL_REPLAY_RESERVATION_TTL_MS`).
    */
   readonly reservationTtlMs?: number;
+  /**
+   * Run 98 addendum 56 §6: resolves the endpoint that currently judges comparisons (the configured controller).
+   * Resolved per tick so a controller change takes effect without a restart, exactly like the judge itself.
+   */
+  readonly resolveJudgeEndpointId?: () => Promise<string | null>;
   readonly now?: () => number;
   readonly setIntervalFn?: (handler: () => void, timeout: number) => unknown;
   readonly clearIntervalFn?: (handle: unknown) => void;
@@ -398,6 +403,11 @@ export function startAutoReplayLoop(input: {
       const result = await runAutoReplayTick({
         captures,
         configuredEndpointIds,
+        // Run 98 addendum 56 §6: the judge is excluded from the planned arms, and a capture whose own endpoint
+        // is the judge is deferred with the named code rather than dispatched into a refusal.
+        ...(typeof input.resolveJudgeEndpointId === "function"
+          ? { judgeEndpointId: await input.resolveJudgeEndpointId().catch(() => null) }
+          : {}),
         ...(providedHealthyEndpointIds && providedHealthyEndpointIds.length > 0
           ? { healthyEndpointIds: [...providedHealthyEndpointIds] }
           : {}),

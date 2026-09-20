@@ -4020,6 +4020,22 @@ export async function main(): Promise<void> {
         ...(resolveAutoReplayReservationTtlMs(process.env) === null
           ? {}
           : { reservationTtlMs: resolveAutoReplayReservationTtlMs(process.env) as number }),
+        // Run 98 addendum 56 §6: the configured controller is the judge (addendum 45), so it must never be
+        // planned as a counterfactual arm; resolved per tick so a controller change takes effect immediately.
+        resolveJudgeEndpointId: async () => {
+          // The auto-replay starter is handed the narrow bridge options type, while the object it receives at
+          // runtime is the full server composition (which binds `readControllerAssignment`). Reading it
+          // defensively keeps a runtime without the binding on the previous behaviour instead of failing.
+          const readControllerAssignment = (
+            options as { readControllerAssignment?: () => Promise<unknown> }
+          ).readControllerAssignment;
+          const assignment = await Promise.resolve(readControllerAssignment?.()).catch(() => null);
+          const endpointId =
+            assignment && typeof assignment === "object" && !Array.isArray(assignment)
+              ? (assignment as Record<string, unknown>).endpointId
+              : null;
+          return typeof endpointId === "string" && endpointId.length > 0 ? endpointId : null;
+        },
         executor: async ({ capture, candidates, reservationId }) => {
           const sourceCapture = (await operations.readLocalRouteCapture({
             requestId: capture.captureRef,

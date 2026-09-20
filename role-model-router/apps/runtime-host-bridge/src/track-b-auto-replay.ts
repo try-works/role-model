@@ -217,6 +217,12 @@ const RETRYABLE_REPLAY_REFUSAL_CODES: ReadonlySet<string> = new Set([
   "budget_exhausted",
   "policy_unknown",
   "dependency_unavailable",
+  /**
+   * Run 98 addendum 56 §6: a capture whose own endpoint is the configured judge cannot be compared without the
+   * judge scoring itself (`judge_candidate_overlap`, addendum 30/33). The controller can change, so the capture
+   * stays deferrable — but it is named instead of being dispatched into a guaranteed refusal.
+   */
+  "judge_candidate_overlap",
 ]);
 
 export function retryableReplayRefusalCodes(): ReadonlySet<string> {
@@ -407,6 +413,13 @@ export async function runAutoReplayTick(input: {
    * underneath itself.
    */
   readonly reservationTtlMs?: number;
+  /**
+   * Run 98 addendum 56 §6: the endpoint that currently judges comparisons (the configured controller). It is
+   * never planned as a counterfactual arm — a battle must not contain the endpoint that judges it — and a capture
+   * whose own endpoint is the judge defers with `judge_candidate_overlap` instead of being dispatched into a
+   * refusal at job creation.
+   */
+  readonly judgeEndpointId?: string | null;
 }): Promise<AutoReplayTickResult> {
   const maxCapturesPerTick = input.maxCapturesPerTick ?? DEFAULT_MAX_CAPTURES_PER_TICK;
   const tickBudgetMs = input.tickBudgetMs ?? DEFAULT_TICK_BUDGET_MS;
@@ -454,10 +467,26 @@ export async function runAutoReplayTick(input: {
     processed += 1;
     cursor = capture.captureRef;
 
+    const judgeEndpointId =
+      typeof input.judgeEndpointId === "string" && input.judgeEndpointId.trim().length > 0
+        ? input.judgeEndpointId.trim()
+        : null;
+    if (judgeEndpointId && capture.sourceEndpointId === judgeEndpointId) {
+      deferred += 1;
+      emit({
+        captureRef: capture.captureRef,
+        outcome: "deferred",
+        code: "judge_candidate_overlap",
+        detail:
+          "the capture's own endpoint is the configured judge, so a comparison would have the judge score itself",
+      });
+      continue;
+    }
     const candidates = selectReplayCandidates({
       configuredEndpointIds: input.configuredEndpointIds,
       ...(input.healthyEndpointIds ? { healthyEndpointIds: input.healthyEndpointIds } : {}),
       sourceEndpointId: capture.sourceEndpointId,
+      ...(judgeEndpointId ? { excludedEndpointIds: [judgeEndpointId] } : {}),
       // Run 98 addendum 33 S3: rotate the counterfactual with the capture, so the comparison graph grows
       // edges instead of every capture comparing the same two candidates.
       rotationKey: capture.captureRef,
