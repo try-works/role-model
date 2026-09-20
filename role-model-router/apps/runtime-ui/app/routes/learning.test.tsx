@@ -3,7 +3,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { describe, expect, test } from "vitest";
 
-import { LearningOverviewPage, selectionNoteForStage } from "./learning";
+import { LearningOverviewPage, formatPolicyRange, selectionNoteForStage } from "./learning";
+import type { LearningPolicyField } from "../lib/learning-api";
 
 /**
  * Run 98 R17: the Learning route exists with its five pages, reads the operator surface
@@ -95,6 +96,35 @@ describe("LearningRoute", () => {
     const markup = renderToStaticMarkup(<LearningOverviewPage />);
     expect(markup).toContain("Learning overview");
     expect(markup).toContain("Operator token");
+  });
+
+  /**
+   * Run 98 addendum 47, found while verifying the S4 default: the runtime sends `min`/`max` as null for enum
+   * fields, and the old `=== undefined` test pushed every enum into the numeric branch, so the Range column
+   * read "— – —" for `stage` — the field the operator was looking at.
+   */
+  test("run98 a47: a policy field's range shows enum values, not an empty numeric span", () => {
+    const field = (overrides: Partial<LearningPolicyField>): LearningPolicyField =>
+      ({
+        name: "stage",
+        type: "enum",
+        values: ["S0", "S1", "S2", "S3", "S4"],
+        unit: "stage",
+        default: "S4",
+        uiEditable: true,
+        description: "",
+        value: "S4",
+        ...overrides,
+      }) as LearningPolicyField;
+
+    // The runtime's JSON carries nulls, not missing keys, for an enum's bounds.
+    expect(formatPolicyRange(field({ min: null as never, max: null as never }))).toBe(
+      "S0 | S1 | S2 | S3 | S4",
+    );
+    expect(formatPolicyRange(field({ min: 60_000, max: 86_400_000 }))).toBe("60000 – 86400000");
+    expect(
+      formatPolicyRange(field({ values: undefined, min: null as never, max: null as never })),
+    ).toBe("—");
   });
 
   /**

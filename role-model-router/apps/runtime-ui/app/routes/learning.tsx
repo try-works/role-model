@@ -64,6 +64,19 @@ const show = (value: unknown, fallback = "—"): string => {
   return text.length ? text : fallback;
 };
 
+/**
+ * Run 98 addendum 47 (found while verifying the S4 default): the runtime sends `min`/`max` as null for enum
+ * fields, so the old `=== undefined` test sent every enum to the numeric branch and the Range column read
+ * "— – —" instead of the allowed values — the stage row's range was unreadable precisely where the operator
+ * needed to see the ladder.
+ */
+export function formatPolicyRange(field: LearningPolicyField): string {
+  if (field.min == null && field.max == null) {
+    return field.values && field.values.length > 0 ? field.values.join(" | ") : "—";
+  }
+  return `${show(field.min)} – ${show(field.max)}`;
+}
+
 function useOperatorSurface<TValue>(loader: () => Promise<TValue>, deps: readonly unknown[]) {
   const [value, setValue] = useState<TValue | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -470,9 +483,7 @@ export function LearningConfigurationPage() {
                       <td className="py-2 pr-3">{field.unit}</td>
                       <td className="py-2 pr-3 font-mono">{show(field.default)}</td>
                       <td className="py-2 pr-3 font-mono">
-                        {field.min === undefined && field.max === undefined
-                          ? field.values?.join(" | ") ?? "—"
-                          : `${show(field.min)} – ${show(field.max)}`}
+                        {formatPolicyRange(field)}
                       </td>
                       <td className="py-2 pr-3">
                         <Badge tone={field.uiEditable ? "neutral" : "warning"}>
