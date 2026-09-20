@@ -1830,6 +1830,13 @@ export function createTrackBOperations({
         body,
       });
     },
+    /** Run 98 addendum 57 slice 1: the explicit undo for a scenario's own guardrail measurement. */
+    async restoreLearningScenarioActivation(body: Record<string, unknown>): Promise<unknown> {
+      return requestOperator("learning scenario restore", "operator/learning/scenario-restore", {
+        method: "POST",
+        body,
+      });
+    },
     async engageLearningKillSwitch(body: Record<string, unknown>): Promise<unknown> {
       return requestOperator("learning kill switch", "operator/learning/kill-switch", {
         method: "POST",

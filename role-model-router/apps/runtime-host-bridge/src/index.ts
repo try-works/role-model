@@ -3226,6 +3226,8 @@ export interface StartBridgeServerOptions {
    * live instead of only in the extension tests.
    */
   readonly recordLearningGuardrailBreach?: (body: Record<string, unknown>) => Promise<unknown>;
+  /** Run 98 addendum 57 slice 1: release a scenario's own breach rows and restore the activation it displaced. */
+  readonly restoreLearningScenarioActivation?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly engageLearningKillSwitch?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly measureNoRichCaptureBaseline?: (body: Record<string, unknown>) => Promise<unknown>;
@@ -3500,6 +3502,8 @@ export interface RuntimeBridgeBackend {
   rollbackLearningPack(body: Record<string, unknown>): Promise<unknown>;
   /** Run 98 addendum 54: the operator surface's guardrail-breach recorder (non-production channels only). */
   recordLearningGuardrailBreach(body: Record<string, unknown>): Promise<unknown>;
+  /** Run 98 addendum 57 slice 1: the operator surface's scenario restore (non-production channels only). */
+  restoreLearningScenarioActivation(body: Record<string, unknown>): Promise<unknown>;
   engageLearningKillSwitch(body: Record<string, unknown>): Promise<unknown>;
   measureNoRichCaptureBaseline(body: Record<string, unknown>): Promise<unknown>;
   readDevelopmentVerificationStatus(): Promise<unknown>;
@@ -3927,6 +3931,7 @@ export interface CreateRuntimeBridgeBackendOptions {
   readonly activateLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly recordLearningGuardrailBreach?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly restoreLearningScenarioActivation?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly engageLearningKillSwitch?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly codexAuthAdapter?: CodexAuthAdapter;
   readonly codexExecutionAdapter?: CodexExecutionAdapter;
@@ -16136,6 +16141,25 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           writeOperatorMutationResult(
             response,
             await options.recordLearningGuardrailBreach(operatorBody),
+          );
+          return;
+        }
+        /**
+         * Run 98 addendum 57 slice 1: the explicit undo for a scenario's own guardrail measurement — it releases
+         * the breach rows the caller names and restores the activation they displaced, so a phase-5 run leaves
+         * the live scope as it found it. Non-production only, like the breach route itself.
+         */
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/role-model/operator/learning/scenario-restore"
+        ) {
+          if (!options.restoreLearningScenarioActivation) {
+            writeOperatorUnavailable(response, "learning scenario restore");
+            return;
+          }
+          writeOperatorMutationResult(
+            response,
+            await options.restoreLearningScenarioActivation(operatorBody),
           );
           return;
         }
@@ -28439,6 +28463,12 @@ export async function createRuntimeBridgeBackend(
       return (
         options.recordLearningGuardrailBreach?.(body) ??
         unavailableOperatorPayload("learning guardrail breach")
+      );
+    },
+    async restoreLearningScenarioActivation(body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.restoreLearningScenarioActivation?.(body) ??
+        unavailableOperatorPayload("learning scenario restore")
       );
     },
     async engageLearningKillSwitch(body: Record<string, unknown>): Promise<unknown> {

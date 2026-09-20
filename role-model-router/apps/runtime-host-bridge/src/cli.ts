@@ -1592,6 +1592,7 @@ type RuntimeOperatorCallbacks = Pick<
   | "activateLearningPack"
   | "rollbackLearningPack"
   | "recordLearningGuardrailBreach"
+  | "restoreLearningScenarioActivation"
   | "engageLearningKillSwitch"
 >;
 
@@ -1682,6 +1683,8 @@ export function createRuntimeOperatorCallbacks(
       operations.rollbackLearningPack(body),
     recordLearningGuardrailBreach: (body: Record<string, unknown>) =>
       operations.recordLearningGuardrailBreach(body),
+    restoreLearningScenarioActivation: (body: Record<string, unknown>) =>
+      operations.restoreLearningScenarioActivation(body),
     engageLearningKillSwitch: (body: Record<string, unknown>) =>
       operations.engageLearningKillSwitch(body),
   };
@@ -1752,6 +1755,7 @@ type CliBackend = Pick<
   | "activateLearningPack"
   | "rollbackLearningPack"
   | "recordLearningGuardrailBreach"
+  | "restoreLearningScenarioActivation"
   | "engageLearningKillSwitch"
   | "measureNoRichCaptureBaseline"
   | "readDevelopmentVerificationStatus"
@@ -2890,6 +2894,9 @@ export function createCliServerOptions(
     recordLearningGuardrailBreach: bindBackendMethod(
       "recordLearningGuardrailBreach",
     ) as StartBridgeServerOptions["recordLearningGuardrailBreach"],
+    restoreLearningScenarioActivation: bindBackendMethod(
+      "restoreLearningScenarioActivation",
+    ) as StartBridgeServerOptions["restoreLearningScenarioActivation"],
     engageLearningKillSwitch: bindBackendMethod(
       "engageLearningKillSwitch",
     ) as StartBridgeServerOptions["engageLearningKillSwitch"],
