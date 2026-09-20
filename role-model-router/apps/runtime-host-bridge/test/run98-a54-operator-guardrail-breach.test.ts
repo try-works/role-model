@@ -57,7 +57,10 @@ describe("run98 a54 operator guardrail-breach route", () => {
         },
       );
       expect(response.status).toBe(200);
-      const payload = (await response.json()) as { readonly released?: number; readonly rollout?: unknown };
+      const payload = (await response.json()) as {
+        readonly released?: number;
+        readonly rollout?: unknown;
+      };
       expect(payload.released).toBe(2);
       expect(calls).toHaveLength(1);
       expect(calls[0]).toMatchObject({ breachIds: ["breach:a", "breach:b"] });
