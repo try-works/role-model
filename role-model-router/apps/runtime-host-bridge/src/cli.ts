@@ -1795,6 +1795,7 @@ type CliBackend = Pick<
   | "readBenchmarkSummary"
   | "readBenchmarkPortfolio"
   | "listBenchmarkRuns"
+  | "readBenchmarkSampleRunStates"
   | "readBenchmarkSummariesByMode"
   | "readBenchmarkPreferences"
   | "updateBenchmarkPreferences"
@@ -2989,6 +2990,11 @@ export function createCliServerOptions(
     listBenchmarkRuns: bindBackendMethod(
       "listBenchmarkRuns",
     ) as StartBridgeServerOptions["listBenchmarkRuns"],
+    // Run 98 addendum 43 S4: the packaged runtime builds its options from this table, so a route wired only
+    // into the backend reads as 404 on the live runtime (which is how the first v270 swap failed).
+    readBenchmarkSampleRunStates: bindBackendMethod(
+      "readBenchmarkSampleRunStates",
+    ) as StartBridgeServerOptions["readBenchmarkSampleRunStates"],
     readBenchmarkSummariesByMode: bindBackendMethod(
       "readBenchmarkSummariesByMode",
     ) as StartBridgeServerOptions["readBenchmarkSummariesByMode"],

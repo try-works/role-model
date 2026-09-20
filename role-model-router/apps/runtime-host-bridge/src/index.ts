@@ -3599,6 +3599,8 @@ export interface RuntimeBridgeBackend {
   readBenchmarkSummary(): Promise<unknown>;
   readBenchmarkPortfolio(): Promise<unknown>;
   listBenchmarkRuns(): Promise<unknown>;
+  /** Run 98 addendum 43 S4: sample-backed sweeps, including ones with no result artifact. */
+  readBenchmarkSampleRunStates(): Promise<unknown>;
   readBenchmarkSummariesByMode(): Promise<unknown>;
   readBenchmarkPreferences(): Promise<unknown>;
   updateBenchmarkPreferences(body: Record<string, unknown>): Promise<unknown>;
