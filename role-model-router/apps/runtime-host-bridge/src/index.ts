@@ -9718,7 +9718,17 @@ export function mapChatCompletionsRequest(
     routingRequest: {
       requestId,
       ...(roleModelIntent ? { roleModelIntent } : {}),
-      taskType: "text.chat",
+      /**
+       * Run 98 addendum 57 §3.2: a declared intent's task family is the request's family. The routing request
+       * used to carry the capability default `text.chat` even when the caller declared one, so the advisory's
+       * family gate compared an advisory validated for `coder.review` against `text.chat` and refused it with
+       * `advisory_task_mismatch` — while the same decision recorded `taxonomy_task_type: coder.review`. The
+       * declared family now travels with the request, and requests without an intent keep the old default.
+       */
+      taskType:
+        typeof roleModelIntent?.task?.id === "string" && roleModelIntent.task.id.length > 0
+          ? roleModelIntent.task.id
+          : "text.chat",
       requiredCapabilities: capabilityRequirements.requiredCapabilities,
       preferredCapabilities: [],
       requiredModalities: capabilityRequirements.requiredInputModalities,
@@ -9912,7 +9922,11 @@ export function mapResponsesRequest(
     routingRequest: {
       requestId,
       ...(roleModelIntent ? { roleModelIntent } : {}),
-      taskType: "text.chat",
+      /** Run 98 addendum 57 §3.2: the declared intent's task family is the request's family (see the chat path). */
+      taskType:
+        typeof roleModelIntent?.task?.id === "string" && roleModelIntent.task.id.length > 0
+          ? roleModelIntent.task.id
+          : "text.chat",
       requiredCapabilities: capabilityRequirements.requiredCapabilities,
       preferredCapabilities: [],
       requiredModalities: capabilityRequirements.requiredInputModalities,
