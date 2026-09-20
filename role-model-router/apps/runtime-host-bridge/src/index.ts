@@ -192,6 +192,7 @@ import {
   buildProviderEvidenceFromObservation,
   buildVerifiersLiveExport,
   createTrackBOperations as createTrackBOperationsFromState,
+  RouteCaptureBoundaryCoolingDownError,
 } from "./track-b-operations.js";
 import {
   createRun88RuntimeCorrelation,
@@ -18568,14 +18569,23 @@ export async function createRuntimeBridgeBackend(
     if (!routeCaptureQueue || routeCaptureDrainActive) return;
     routeCaptureDrainActive = true;
     void routeCaptureQueue
-      .drain(async (item) =>
-        runtimeTrackBOperations.recordLocalRouteCapture({
-          ...item.payload,
-          requestId: item.requestId,
-          routingDecisionId: item.routingDecisionId,
-          endpointId: item.endpointId,
-        } as Record<string, unknown>),
-      )
+      .drain(async (item) => {
+        try {
+          return await runtimeTrackBOperations.recordLocalRouteCapture({
+            ...item.payload,
+            requestId: item.requestId,
+            routingDecisionId: item.routingDecisionId,
+            endpointId: item.endpointId,
+          } as Record<string, unknown>);
+        } catch (error) {
+          // Run 98 addendum 48: a cooling-down boundary is not a delivery failure. Defer the item to the
+          // boundary's own retry time instead of spending one of its bounded attempts.
+          if (error instanceof RouteCaptureBoundaryCoolingDownError) {
+            return { deferredUntilMs: error.retryAtMs };
+          }
+          throw error;
+        }
+      })
       .catch((error: unknown) => {
         console.error("Track B deferred route capture drain failed", error);
       })

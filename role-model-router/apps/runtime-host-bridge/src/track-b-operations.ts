@@ -820,6 +820,26 @@ const DEFAULT_ROUTE_CAPTURE_MAX_BYTES = 512 * 1024;
 // subsequent request until this cooldown expires (the failure is recorded the same
 // way, just without the wait).
 const DEFAULT_ROUTE_CAPTURE_COOLDOWN_MS = 60_000;
+/**
+ * Run 98 addendum 48: the first boundary failure probes again after this window instead of disabling capture
+ * writes for the whole configured cooldown. The configured value stays the ceiling of the escalation.
+ */
+const ROUTE_CAPTURE_COOLDOWN_PROBE_MS = 15_000;
+
+/**
+ * Run 98 addendum 48: a cooling-down capture boundary. It carries the retry time so a caller (the deferred
+ * queue) can defer the capture instead of counting a spent attempt.
+ */
+export class RouteCaptureBoundaryCoolingDownError extends Error {
+  readonly code = "route_capture_boundary_cooling_down";
+
+  constructor(readonly retryAtMs: number) {
+    super(
+      `route capture skipped: boundary unavailable until ${new Date(retryAtMs).toISOString()}`,
+    );
+    this.name = "RouteCaptureBoundaryCoolingDownError";
+  }
+}
 const DEFAULT_CONTRIBUTION_AGGREGATE_TIMEOUT_MS = 5_000;
 
 /**
@@ -1412,6 +1432,9 @@ export function createTrackBOperations({
       ? configuredRouteCaptureCooldownMs
       : DEFAULT_ROUTE_CAPTURE_COOLDOWN_MS;
   let routeCaptureUnavailableUntilMs = 0;
+  // Run 98 addendum 48: the window escalates from a short probe to the configured ceiling, and a success
+  // resets it, so one transient failure no longer disables capture writes for minutes at a time.
+  let routeCaptureCooldownMs = 0;
   // Run 98 S1 follow-up: the contribution aggregate is another sidecar call in the
   // request path — bound it far below the 180 s operations default so a starved
   // boundary cannot hold a request open for minutes.
@@ -2592,11 +2615,8 @@ export function createTrackBOperations({
         );
       }
       if (Date.now() < routeCaptureUnavailableUntilMs) {
-        throw new Error(
-          `route capture skipped: boundary unavailable until ${new Date(
-            routeCaptureUnavailableUntilMs,
-          ).toISOString()}`,
-        );
+        // Run 98 addendum 48: typed and deferrable — a cooling-down boundary is not a delivery failure.
+        throw new RouteCaptureBoundaryCoolingDownError(routeCaptureUnavailableUntilMs);
       }
       let result: unknown;
       try {
@@ -2606,7 +2626,11 @@ export function createTrackBOperations({
           boundedRouteCaptureTimeoutMs,
         );
       } catch (error) {
-        routeCaptureUnavailableUntilMs = Date.now() + boundedRouteCaptureCooldownMs;
+        routeCaptureCooldownMs =
+          routeCaptureCooldownMs > 0
+            ? Math.min(boundedRouteCaptureCooldownMs, routeCaptureCooldownMs * 2)
+            : Math.min(ROUTE_CAPTURE_COOLDOWN_PROBE_MS, boundedRouteCaptureCooldownMs);
+        routeCaptureUnavailableUntilMs = Date.now() + routeCaptureCooldownMs;
         if (process.env.ROLE_MODEL_PHASE_TIMING === "1") {
           console.error(
             `[run98] phase route-capture-failed ${Date.now() - captureStartedAtMs}ms request=${String(
@@ -2617,6 +2641,7 @@ export function createTrackBOperations({
         throw error;
       }
       routeCaptureUnavailableUntilMs = 0;
+      routeCaptureCooldownMs = 0;
       if (process.env.ROLE_MODEL_PHASE_TIMING === "1") {
         console.error(
           `[run98] phase route-capture ${Date.now() - captureStartedAtMs}ms request=${String(

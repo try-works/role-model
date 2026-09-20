@@ -48,11 +48,26 @@ export interface TrackBRouteCaptureQueue {
       readonly completedAtMs: number;
     }>
   >;
+  /**
+   * Run 98 addendum 48: a handler may answer with `{ deferredUntilMs }` to say "the boundary is not available
+   * yet; try this item again at that time". A deferral is **not** an attempt — the item keeps its attempt
+   * count and its deadline — so a cooling-down boundary can no longer burn a captured backlog out.
+   */
   drain(
-    handler: (item: TrackBRouteCaptureQueueItem) => Promise<unknown>,
+    handler: (
+      item: TrackBRouteCaptureQueueItem,
+    ) => Promise<unknown | { readonly deferredUntilMs: number }>,
     options?: { readonly nowMs?: number },
   ): Promise<{ readonly delivered: number; readonly failed: number; readonly remaining: number }>;
 }
+
+export const readDeferredUntilMs = (
+  outcome: unknown,
+): number | null => {
+  if (!outcome || typeof outcome !== "object" || Array.isArray(outcome)) return null;
+  const value = (outcome as { readonly deferredUntilMs?: unknown }).deferredUntilMs;
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
+};
 
 const DEFAULT_MAX_PAYLOAD_BYTES = 512 * 1024;
 const DEFAULT_MAX_ITEMS = 4096;
@@ -301,6 +316,25 @@ export function createTrackBRouteCaptureQueue(options: {
 
         try {
           const result = await handler(claimed.item);
+          const deferredUntilMs = readDeferredUntilMs(result);
+          if (deferredUntilMs !== null) {
+            // Run 98 addendum 48: the boundary asked to wait. Leave the item pending — attempts, deadline and
+            // payload untouched — and stop this pass, because every remaining item would get the same answer.
+            await exclusive(async () =>
+              withDatabase((database) => {
+                database
+                  .prepare(
+                    "UPDATE track_b_route_capture_pending SET next_attempt_at_ms=?, last_error=? WHERE request_id=?",
+                  )
+                  .run(
+                    deferredUntilMs,
+                    `deferred: boundary unavailable until ${new Date(deferredUntilMs).toISOString()}`,
+                    claimed.item.requestId,
+                  );
+              }),
+            );
+            break;
+          }
           await exclusive(async () =>
             withDatabase((database) => {
               database.exec("BEGIN IMMEDIATE");
