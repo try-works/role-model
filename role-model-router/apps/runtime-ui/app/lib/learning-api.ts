@@ -327,7 +327,29 @@ export function validatePolicyDraft(
         continue;
       }
     }
-    if (JSON.stringify(value) !== JSON.stringify(field.value)) changes[name] = value;
+    /**
+     * Run 98 addendum 47, operator-reported ("bug, should accept true"): the Configuration page renders every
+     * field as a text input, so a boolean arrives as `"true"`/`"false"`. Normalise it here — a real boolean or
+     * the text form — and refuse anything else by name, so the draft comparison and the request body both
+     * carry a boolean instead of the string that the server rightly rejected.
+     */
+    const normalized =
+      field.type === "boolean" ? normalizeBooleanDraft(value) : value;
+    if (field.type === "boolean" && normalized === null) {
+      errors[name] = "must be true or false";
+      continue;
+    }
+    if (JSON.stringify(normalized) !== JSON.stringify(field.value)) changes[name] = normalized;
   }
   return { changes, errors };
+}
+
+/** `true`/`false`, or their trimmed case-insensitive text form; anything else is not a boolean. */
+function normalizeBooleanDraft(value: unknown): boolean | null {
+  if (typeof value === "boolean") return value;
+  if (typeof value !== "string") return null;
+  const text = value.trim().toLowerCase();
+  if (text === "true") return true;
+  if (text === "false") return false;
+  return null;
 }

@@ -58,6 +58,35 @@ const fields: readonly LearningPolicyField[] = [
 ];
 
 describe("learning policy draft validation", () => {
+  /**
+   * Run 98 addendum 47, operator-reported: "bug, should accept true". The Configuration page renders every
+   * field as a text input, so a boolean field's value arrives as `"true"` and the draft validation (and the
+   * server) refused it with `latencySelectionEnabled must be a boolean (saw true)`. The draft validation now
+   * normalises the boolean text to a real boolean before it is compared or sent.
+   */
+  test("run98 a47: a boolean field accepts the text its input produces", () => {
+    const booleanFields = [
+      field({ name: "latencySelectionEnabled", type: "boolean", value: false, default: false }),
+    ];
+
+    const enabled = validatePolicyDraft(booleanFields, { latencySelectionEnabled: "true" });
+    expect(enabled.errors).toEqual({});
+    expect(enabled.changes).toEqual({ latencySelectionEnabled: true });
+
+    const disabled = validatePolicyDraft(booleanFields, { latencySelectionEnabled: "false" });
+    expect(disabled.errors).toEqual({});
+    // Unchanged from the published value: no change to send.
+    expect(disabled.changes).toEqual({});
+
+    const realBoolean = validatePolicyDraft(booleanFields, { latencySelectionEnabled: true });
+    expect(realBoolean.errors).toEqual({});
+    expect(realBoolean.changes).toEqual({ latencySelectionEnabled: true });
+
+    const nonsense = validatePolicyDraft(booleanFields, { latencySelectionEnabled: "yes" });
+    expect(nonsense.errors.latencySelectionEnabled).toMatch(/true or false/i);
+    expect(nonsense.changes).toEqual({});
+  });
+
   test("accepts an in-bounds change and reports only the changed field", () => {
     const result = validatePolicyDraft(fields, { minAdvisoryConfidence: 0.75 });
     expect(result.errors).toEqual({});
