@@ -282,6 +282,13 @@ export interface AutoReplayTickResult {
 export const DEFAULT_TICK_BUDGET_MS = 5 * 60_000;
 
 /**
+ * Run 98 addendum 52 (addendum 48 §11.2): how long a replay-budget reservation may outlive the dispatch that
+ * created it before the next tick treats it as orphaned. Six times the tick's own budget, so only reservations
+ * whose process is gone can reach it.
+ */
+export const DEFAULT_REPLAY_RESERVATION_TTL_MS = 30 * 60_000;
+
+/**
  * Run 98 addendum 04 follow-on: the operator-tunable tick budget. `null` means "no explicit value",
  * so the loop keeps its default; a valid value (including `0`, which disables the bound) is returned
  * as-is. Malformed or out-of-range values fall back to the default rather than silently removing the
@@ -296,6 +303,23 @@ export function resolveAutoReplayTickBudgetMs(
   return Number.isSafeInteger(parsed) && parsed >= 0 && parsed <= 3_600_000
     ? parsed
     : DEFAULT_TICK_BUDGET_MS;
+}
+
+/**
+ * Run 98 addendum 52 (addendum 48 §11.2): the orphaned-reservation bound is operator-tunable, with the same
+ * shape as the tick budget — `null` means "keep the default", an out-of-range value is refused to the default
+ * rather than silently disabling the reconciliation, and the floor is the tick's own executor bound
+ * (12 minutes), because a reservation shorter than that could be pruned while its dispatch is still running.
+ */
+export function resolveAutoReplayReservationTtlMs(
+  env: Record<string, string | undefined> = process.env,
+): number | null {
+  const raw = env.ROLE_MODEL_REPLAY_RESERVATION_TTL_MS;
+  if (typeof raw !== "string" || raw.trim() === "") return null;
+  const parsed = Number(raw);
+  return Number.isSafeInteger(parsed) && parsed >= 12 * 60_000 && parsed <= 24 * 60 * 60_000
+    ? parsed
+    : DEFAULT_REPLAY_RESERVATION_TTL_MS;
 }
 
 /**
@@ -376,11 +400,22 @@ export async function runAutoReplayTick(input: {
   readonly tickBudgetMs?: number;
   /** Injectable clock so the budget is testable without waiting. */
   readonly now?: () => number;
+  /**
+   * Run 98 addendum 52 (addendum 48 §11.2): a reservation older than this belongs to a dispatch whose process is
+   * gone, so the tick reconciles it instead of carrying it forever. The default sits far beyond this tick's own
+   * executor bound (`ROLE_MODEL_TRACK_B_OPERATIONS_TIMEOUT_MS`, 180 s live), so a live dispatch is never pruned
+   * underneath itself.
+   */
+  readonly reservationTtlMs?: number;
 }): Promise<AutoReplayTickResult> {
   const maxCapturesPerTick = input.maxCapturesPerTick ?? DEFAULT_MAX_CAPTURES_PER_TICK;
   const tickBudgetMs = input.tickBudgetMs ?? DEFAULT_TICK_BUDGET_MS;
   const now = input.now ?? (() => Date.now());
   const tickStartedAtMs = now();
+  input.ledger.pruneStaleReservations?.({
+    atMs: tickStartedAtMs,
+    maxAgeMs: input.reservationTtlMs ?? DEFAULT_REPLAY_RESERVATION_TTL_MS,
+  });
   const dispositions: AutoReplayDisposition[] = [];
   const emit = (row: AutoReplayDisposition): void => {
     dispositions.push(row);

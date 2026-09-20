@@ -96,6 +96,11 @@ export function replayBudgetWindow(atMs: number): string {
   return new Date(atMs).toISOString().slice(0, 10);
 }
 
+/** Window keys are UTC `YYYY-MM-DD`, so a descending sort is newest-first. */
+function windowsNewestFirst(file: LedgerFile): readonly string[] {
+  return Object.keys(file.windows).sort().reverse();
+}
+
 function captureKey(captureRef: string, policySetDigest: string): string {
   return createHash("sha256").update(`${captureRef}\u0000${policySetDigest}`).digest("hex");
 }
@@ -148,6 +153,18 @@ export interface ReplayLedger {
   hasTerminalCounterfactual(captureRef: string, policySetDigest: string): boolean;
   status(): ReplayLedgerStatus;
   entries(): readonly DispatchRow[];
+  /**
+   * Run 98 addendum 52 (addendum 48 §11.2): a reservation is held for the duration of one dispatch, so a
+   * reservation older than the tick's bound belongs to a process that is gone — a killed runtime, a swapped
+   * package, or a tick interrupted mid-capture. Live v287/v294: `reservedCounterfactuals` did not fall back to
+   * zero on a fresh process (`7/13` then `9/18`) because nothing reconciled them, and the oldest rows in the
+   * file reach back through every previous window. Mirrors the same "release on terminal outcome" accounting the
+   * dispatch path uses, for the outcomes no process survived to report.
+   */
+  pruneStaleReservations(input: {
+    readonly atMs: number;
+    readonly maxAgeMs: number;
+  }): { readonly released: number; readonly reservationIds: readonly string[] };
 }
 
 export function createReplayLedger(options: {
@@ -257,11 +274,40 @@ export function createReplayLedger(options: {
     },
     release(reservationId) {
       const file = load();
-      const window = windowOf(file, now());
-      const index = window.reservations.findIndex((row) => row.reservationId === reservationId);
-      if (index === -1) return;
-      window.reservations.splice(index, 1);
-      persist(file);
+      /**
+       * Run 98 addendum 52: a dispatch that starts before midnight and finishes after it must still release its
+       * reservation. Looking only at the current window left the reservation in the previous day's window
+       * forever (measured live: every window in the file keeps its own stranded rows).
+       */
+      for (const key of windowsNewestFirst(file)) {
+        const window = file.windows[key];
+        if (!window) continue;
+        const index = window.reservations.findIndex((row) => row.reservationId === reservationId);
+        if (index === -1) continue;
+        window.reservations.splice(index, 1);
+        persist(file);
+        return;
+      }
+    },
+    pruneStaleReservations(input) {
+      const file = load();
+      const released: string[] = [];
+      for (const key of Object.keys(file.windows)) {
+        const window = file.windows[key];
+        if (!window) continue;
+        for (let index = window.reservations.length - 1; index >= 0; index -= 1) {
+          const row = window.reservations[index];
+          if (!row) continue;
+          const age = input.atMs - row.createdAtMs;
+          // A future-dated row (clock skew, a hand-edited ledger) is stale too: it can never be released by
+          // the dispatch that would own it, and holding it only spends the day's ceiling.
+          if (Number.isFinite(age) && age <= input.maxAgeMs && age >= 0) continue;
+          window.reservations.splice(index, 1);
+          released.push(row.reservationId);
+        }
+      }
+      if (released.length > 0) persist(file);
+      return { released: released.length, reservationIds: released };
     },
     record(input) {
       assertReplayReceiptMetadataOnly(input as unknown as Record<string, unknown>);

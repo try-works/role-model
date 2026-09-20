@@ -197,6 +197,11 @@ export function startAutoReplayLoop(input: {
    * minutes-long replays cannot hold the loop open for tens of minutes. `0` disables the bound.
    */
   readonly tickBudgetMs?: number;
+  /**
+   * Run 98 addendum 52: how long a replay-budget reservation may outlive its dispatch before the next tick
+   * treats it as orphaned and releases it (`ROLE_MODEL_REPLAY_RESERVATION_TTL_MS`).
+   */
+  readonly reservationTtlMs?: number;
   readonly now?: () => number;
   readonly setIntervalFn?: (handler: () => void, timeout: number) => unknown;
   readonly clearIntervalFn?: (handle: unknown) => void;
@@ -410,6 +415,9 @@ export function startAutoReplayLoop(input: {
         // minutes-long replays leaves the remaining captures for the next tick instead of holding the
         // loop open for tens of minutes. The injectable clock keeps it testable.
         ...(Number.isSafeInteger(input.tickBudgetMs) ? { tickBudgetMs: Number(input.tickBudgetMs) } : {}),
+        ...(Number.isSafeInteger(input.reservationTtlMs) && (input.reservationTtlMs ?? 0) > 0
+          ? { reservationTtlMs: Number(input.reservationTtlMs) }
+          : {}),
         now,
       });
       await Promise.all(dispositionWrites);

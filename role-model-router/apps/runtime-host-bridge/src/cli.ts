@@ -46,6 +46,7 @@ import {
   resolveAutoReplayDeadlineMaxMs,
   resolveAutoReplayDeadlineMs,
   resolveAutoReplayDeadlinePerCandidateMs,
+  resolveAutoReplayReservationTtlMs,
   resolveAutoReplayTickBudgetMs,
   retryLeasedReplayDispatch,
 } from "./track-b-auto-replay.js";
@@ -4007,6 +4008,11 @@ export async function main(): Promise<void> {
         ...(resolveAutoReplayTickBudgetMs(process.env) === null
           ? {}
           : { tickBudgetMs: resolveAutoReplayTickBudgetMs(process.env) as number }),
+        // Run 98 addendum 52 (addendum 48 §11.2): a reservation whose dispatch process is gone is released by
+        // the next tick instead of being carried against the day's ceiling forever.
+        ...(resolveAutoReplayReservationTtlMs(process.env) === null
+          ? {}
+          : { reservationTtlMs: resolveAutoReplayReservationTtlMs(process.env) as number }),
         executor: async ({ capture, candidates, reservationId }) => {
           const sourceCapture = (await operations.readLocalRouteCapture({
             requestId: capture.captureRef,
