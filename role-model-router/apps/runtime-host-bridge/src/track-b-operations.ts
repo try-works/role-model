@@ -812,6 +812,27 @@ const DEFAULT_CONTRIBUTION_DELIVERY_TIMEOUT_MS = 30_000;
 // the routing bound is an order of magnitude above it while still preventing an
 // unbounded wait on the operations boundary.
 const DEFAULT_ROUTE_CAPTURE_TIMEOUT_MS = 10_000;
+/**
+ * Run 98 addendum 48 (live v285 measurement): with the caller's own capture persisted first, branch captures
+ * completed at 22.6 s, 24.6 s and 26.0 s and only the *branch* writes crossed the old 30 s ceiling
+ * (`route-capture-failed 30017ms … -branch`). The capture write is asynchronous and now prioritised, so the
+ * ceiling only bounds how long the runtime keeps trying to record durable evidence — raise it, but keep it
+ * bounded so a wedged boundary still degrades.
+ */
+const MAX_ROUTE_CAPTURE_TIMEOUT_MS = 180_000;
+
+/** Exported for the bound's own contract test: an explicit configuration wins inside [100, 180000] ms. */
+export function resolveRouteCaptureTimeoutMs(
+  raw: string | undefined,
+  fallbackMs = DEFAULT_ROUTE_CAPTURE_TIMEOUT_MS,
+): number {
+  const configured = Number(raw?.trim());
+  return Number.isSafeInteger(configured) &&
+    configured >= 100 &&
+    configured <= MAX_ROUTE_CAPTURE_TIMEOUT_MS
+    ? configured
+    : fallbackMs;
+}
 // A capture larger than this cannot be absorbed by the operations boundary inside
 // the bound above, so the request pays the full timeout and still records no
 // capture. Skipping it keeps the same bounded degradation without the 10 s tax.
@@ -1404,15 +1425,9 @@ export function createTrackBOperations({
   // is evidence, not a routing precondition, so it is bounded far below the
   // operations timeout and degrades instead of holding the request while the
   // operations boundary is busy with replay work.
-  const configuredRouteCaptureTimeoutMs = Number(
-    process.env.ROLE_MODEL_ROUTE_CAPTURE_TIMEOUT_MS?.trim(),
+  const boundedRouteCaptureTimeoutMs = resolveRouteCaptureTimeoutMs(
+    process.env.ROLE_MODEL_ROUTE_CAPTURE_TIMEOUT_MS,
   );
-  const boundedRouteCaptureTimeoutMs =
-    Number.isSafeInteger(configuredRouteCaptureTimeoutMs) &&
-    configuredRouteCaptureTimeoutMs >= 100 &&
-    configuredRouteCaptureTimeoutMs <= 30_000
-      ? configuredRouteCaptureTimeoutMs
-      : DEFAULT_ROUTE_CAPTURE_TIMEOUT_MS;
   const configuredRouteCaptureMaxBytes = Number(
     process.env.ROLE_MODEL_ROUTE_CAPTURE_MAX_BYTES?.trim(),
   );

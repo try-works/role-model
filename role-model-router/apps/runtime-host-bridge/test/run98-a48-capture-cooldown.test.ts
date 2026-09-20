@@ -5,7 +5,11 @@ import path from "node:path";
 import { afterEach, expect, test } from "vitest";
 
 import { createTrackBRouteCaptureQueue } from "../src/track-b-capture-queue.js";
-import { RouteCaptureBoundaryCoolingDownError, createTrackBOperations } from "../src/track-b-operations.js";
+import {
+  RouteCaptureBoundaryCoolingDownError,
+  createTrackBOperations,
+  resolveRouteCaptureTimeoutMs,
+} from "../src/track-b-operations.js";
 
 /**
  * Run 98 addendum 48 — the capture boundary cooldown must not eat the queue.
@@ -124,4 +128,23 @@ test("run98 a48: a deferred queue item keeps its attempts and is retried after t
   const afterWindow = await queue.drain(async () => ({ status: "recorded" }), { nowMs: 61_000 });
   expect(afterWindow.delivered).toBe(1);
   expect(await queue.readPending()).toHaveLength(0);
+});
+
+/**
+ * Run 98 addendum 48 (live v285): the capture bound is the knob that decides whether durable evidence is
+ * recorded. Branch captures completed at 22.6 s / 24.6 s / 26.0 s while the ceiling was 30 s, and only the
+ * branch writes crossed it. The ceiling is therefore configurable up to a still-bounded maximum; anything
+ * outside the range falls back to the documented default rather than disabling the bound.
+ */
+test("run98 a48: the configured capture bound is honoured inside a bounded range", () => {
+  expect(resolveRouteCaptureTimeoutMs(undefined)).toBe(10_000);
+  expect(resolveRouteCaptureTimeoutMs("")).toBe(10_000);
+  expect(resolveRouteCaptureTimeoutMs("junk")).toBe(10_000);
+  expect(resolveRouteCaptureTimeoutMs("99")).toBe(10_000);
+  expect(resolveRouteCaptureTimeoutMs("100")).toBe(100);
+  expect(resolveRouteCaptureTimeoutMs("30000")).toBe(30_000);
+  expect(resolveRouteCaptureTimeoutMs("120000")).toBe(120_000);
+  expect(resolveRouteCaptureTimeoutMs("180000")).toBe(180_000);
+  expect(resolveRouteCaptureTimeoutMs("180001")).toBe(10_000);
+  expect(resolveRouteCaptureTimeoutMs("999999999")).toBe(10_000);
 });
