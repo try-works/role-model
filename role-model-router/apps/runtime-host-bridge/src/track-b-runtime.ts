@@ -6032,6 +6032,17 @@ const EXTENSION_TRANSPORT_FIELDS = [
   "durableLocator",
   "evidenceRef",
   "readCapability",
+  /**
+   * Run 98 addendum 51 (live v293): the packaged host's single executable answers every business invoke
+   * inside its own envelope, which also carries the transfer marker beside the payload. These three keys
+   * were missing here, so the envelope's keys were read as a payload of its own: the unwraps above
+   * returned the envelope (`status` undefined) and the attestation validator saw an object with no
+   * `schemaVersion`, refusing a completed comparison and a valid attestation with the two 409s the
+   * operator saw in the replay leg.
+   */
+  "transferState",
+  "resultHash",
+  "byteLength",
 ] as const;
 
 /**
@@ -6251,7 +6262,14 @@ async function resolveTrackBReferenceAttestation(
       context,
     }),
   );
-  return validateTrackBReferenceAttestation(result, refs, context, additionalReferences);
+  /**
+   * Run 98 addendum 51: the attestation is a business record, and the packaged host may hand it back
+   * inside its transport envelope (`{businessOutput: …}` beside the transfer marker). Validating the
+   * envelope directly reported `trusted evaluation reference attestation schema is invalid` for a valid
+   * attestation — the second of the two 409s the replay leg deferred with on v293.
+   */
+  const attested = unwrapExtensionBusinessValue(result) ?? result;
+  return validateTrackBReferenceAttestation(attested, refs, context, additionalReferences);
 }
 
 export interface TrackBSemanticEvaluationCriteria {

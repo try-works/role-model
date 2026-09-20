@@ -77,9 +77,25 @@ function createFakeRuntime(
   capturedFinalizers: Record<string, unknown>[] = [],
   /** Run 98 addendum 34 S5 residual: some hosts answer the readback wrapped (`{value}`). */
   wrapReadback = false,
+  /**
+   * Run 98 addendum 51 (live v293): the packaged host answers every business invoke inside its own
+   * transport envelope — `{transferState, resultHash, byteLength, businessOutput, durableLocator,
+   * evidenceRef, readCapability, workerPid}` — so the bridge has to unwrap that shape as well.
+   */
+  transportEnvelope = false,
 ) {
   let writeIndex = 0;
   let trialIndex = 0;
+  const inTransportEnvelope = (payload: Record<string, unknown>): Record<string, unknown> => ({
+    transferState: "inline",
+    resultHash: `sha256:${hash(JSON.stringify(payload))}`,
+    byteLength: JSON.stringify(payload).length,
+    businessOutput: payload,
+    durableLocator: { kind: "inline" },
+    evidenceRef: "evidence:run98:transport-envelope",
+    readCapability: "evaluation:read-comparison-group",
+    workerPid: 4321,
+  });
   const runtime: TrackBShadowPipelineRuntime = {
     async invoke(id, envelope) {
       const capability = String(envelope.capability ?? "");
@@ -116,7 +132,7 @@ function createFakeRuntime(
         const issuedAtMs = Date.now() - 1;
         const expiresAtMs = issuedAtMs + 60_000;
         const authority = "evaluation-reference-store";
-        return {
+        const attestation = {
           schemaVersion: "role-model.evaluation-reference-attestation.v1",
           authority,
           purpose: "evaluation",
@@ -143,6 +159,7 @@ function createFakeRuntime(
             ]),
           ),
         };
+        return transportEnvelope ? inTransportEnvelope(attestation) : attestation;
       }
       if (id === "evaluation-core" && capability === "evaluation:list-trials") {
         return { value: [{ trialId: `trial:run98:a34:${trialIndex++}` }] };
@@ -157,11 +174,13 @@ function createFakeRuntime(
       if (id === "evaluation-core" && capability === "evaluation:finalize-comparison-group") {
         const value = envelope.value as Record<string, unknown>;
         capturedFinalizers.push(structuredClone(value));
-        return { groupId: value.groupId, status: "finalized", outcome: "candidate" };
+        const finalized = { groupId: value.groupId, status: "finalized", outcome: "candidate" };
+        return transportEnvelope ? inTransportEnvelope(finalized) : finalized;
       }
       if (id === "evaluation-core" && capability === "evaluation:read-comparison-group") {
         const value = envelope.value as Record<string, unknown>;
         const readback = { groupId: value.groupId, status: "finalized", outcome: "candidate" };
+        if (transportEnvelope) return inTransportEnvelope(readback);
         return wrapReadback ? { value: readback } : readback;
       }
       if (id === "evaluation-core" && capability === "evaluation:register-scorer") return {};
@@ -223,7 +242,11 @@ interface Arm {
 function buildScenario(
   armMarks: readonly string[],
   ledgerPath?: string,
-  options: { readonly judgeEndpointId?: string; readonly wrapReadback?: boolean } = {},
+  options: {
+    readonly judgeEndpointId?: string;
+    readonly wrapReadback?: boolean;
+    readonly transportEnvelope?: boolean;
+  } = {},
 ) {
   const sourceCapture = capture("1");
   const arms: Arm[] = armMarks.map((mark) => ({
@@ -240,7 +263,13 @@ function buildScenario(
   const pipelineInputs: TrackBShadowPipelineInput[] = [];
   const pipelineCalls: string[] = [];
   const completer = createSupervisedReplayEvaluationCompleter({
-    runtime: createFakeRuntime(store, capturedJobs, capturedFinalizers, options.wrapReadback === true),
+    runtime: createFakeRuntime(
+      store,
+      capturedJobs,
+      capturedFinalizers,
+      options.wrapReadback === true,
+      options.transportEnvelope === true,
+    ),
     operations: {
       async readLocalRouteCapture(input) {
         const requestId = String(input?.requestId ?? "");
@@ -521,5 +550,42 @@ describe("run 98 addendum 34 S1 pair comparisons", () => {
       outcome: "candidate",
     });
     expect(String(result.comparisonGroupId)).toContain("comparison:");
+  });
+
+  /**
+   * Run 98 addendum 51 (live v293): the operator's replay leg deferred with
+   *
+   *   replay endpoint HTTP 409: {"error":"durable routing-shadow comparison finalization failed:
+   *   readback=transferState,resultHash,byteLength,businessOutput,durableLocator,evidenceRef,
+   *   readCapability,workerPid"}
+   *
+   * and, on the same capture shape,
+   *
+   *   replay endpoint HTTP 409: {"error":"trusted evaluation reference attestation schema is invalid"}
+   *
+   * The packaged host answers both invokes inside its transport envelope, whose keys the bridge did not
+   * recognise as transport fields — so every unwrap handed callers the envelope (`status` undefined, no
+   * `schemaVersion`) instead of the business record, and a completed comparison plus a valid attestation
+   * were both refused. The envelope must unwrap; the payload beneath it is authoritative.
+   */
+  test("a production transport envelope around the comparison readback still counts as finalized", async () => {
+    const scenario = buildScenario(["a", "b"], undefined, {
+      judgeEndpointId: "endpoint:judge-stub",
+      transportEnvelope: true,
+    });
+    const result = await scenario.invoke();
+    expect(result).toMatchObject({
+      evaluationJobId: "evaluation:run98:a34",
+      outcome: "candidate",
+    });
+    expect(String(result.comparisonGroupId)).toContain("comparison:");
+  });
+
+  test("an attestation answered inside the transport envelope is accepted", async () => {
+    const scenario = buildScenario(["a", "b"], undefined, {
+      judgeEndpointId: "endpoint:judge-stub",
+      transportEnvelope: true,
+    });
+    await expect(scenario.invoke()).resolves.toBeTruthy();
   });
 });
