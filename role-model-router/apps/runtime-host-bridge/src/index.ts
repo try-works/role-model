@@ -93,6 +93,7 @@ import {
   persistRuntimeObservationBundle,
   persistRuntimeTelemetryFailure,
   readAdvisoryMaxDifficultyRecommendation,
+  BENCHMARK_SAMPLE_RUN_STALLED_AFTER_MS,
   readConversationContinuity,
   readDifficultyClassificationCache,
   readLatestBenchmarkProfilesByEndpointIds,
@@ -100,6 +101,7 @@ import {
   readLatestObservedProfilesByEndpointIds,
   readLiveTaskTelemetryScoresByEndpointIds,
   readEndpointLatencyBuckets,
+  readBenchmarkSampleRuns,
   readObservedPerformanceSamples,
   readObservedThroughputPenaltyState,
   readProviderDeviceAuthSession,
@@ -3285,6 +3287,8 @@ export interface StartBridgeServerOptions {
   readonly readBenchmarkSummary?: () => Promise<unknown>;
   readonly readBenchmarkPortfolio?: () => Promise<unknown>;
   readonly listBenchmarkRuns?: () => Promise<unknown>;
+  /** Run 98 addendum 43 S4: sample-backed sweeps, including ones with no result artifact. */
+  readonly readBenchmarkSampleRunStates?: () => Promise<unknown>;
   readonly readBenchmarkSummariesByMode?: () => Promise<unknown>;
   readonly readBenchmarkPreferences?: () => Promise<unknown>;
   readonly updateBenchmarkPreferences?: (body: Record<string, unknown>) => Promise<unknown>;
@@ -17349,6 +17353,24 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    /**
+     * Run 98 addendum 43 S4: the runs list above is artifact-backed, so a sweep whose result artifact was
+     * never written disappears even though its samples are durable and are what the model pool's quality
+     * axis reads. This route answers what the samples say, with a state that cannot report a stopped sweep
+     * as finished.
+     */
+    if (
+      request.method === "GET" &&
+      url.pathname === "/api/role-model/benchmark/sample-runs"
+    ) {
+      if (!options.readBenchmarkSampleRunStates) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readBenchmarkSampleRunStates());
+      return;
+    }
+
     if (request.method === "DELETE" && url.pathname === "/api/role-model/benchmark/data") {
       if (!options.clearBenchmarkData) {
         writeJson(response, 404, { error: "not found" });
@@ -30179,6 +30201,20 @@ export async function createRuntimeBridgeBackend(
     },
     async listBenchmarkRuns(): Promise<unknown> {
       return listBenchmarkRuns(benchmarkArtifactRoot);
+    },
+    /**
+     * Run 98 addendum 43 S4: what the samples say about every benchmark run, with the artifact-backed runs
+     * marked `completed` and a sweep that has gone quiet for longer than the stall window marked `stalled`.
+     */
+    async readBenchmarkSampleRunStates(): Promise<unknown> {
+      const artifactRuns = await listBenchmarkRuns(benchmarkArtifactRoot);
+      return {
+        stalledAfterMs: BENCHMARK_SAMPLE_RUN_STALLED_AFTER_MS,
+        runs: readBenchmarkSampleRuns({
+          databasePath: initialization.databasePath,
+          completedRunIds: artifactRuns.map((run) => run.runId),
+        }),
+      };
     },
     async readBenchmarkSummariesByMode(): Promise<unknown> {
       return readBenchmarkSummariesByMode({

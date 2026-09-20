@@ -5542,6 +5542,135 @@ function telemetryPercentile(sortedValues: readonly number[], quantile: number):
   return sortedValues[Math.min(index, sortedValues.length - 1)] ?? 0;
 }
 
+/**
+ * Run 98 addendum 43 S4: how long a sample-backed sweep may go quiet before it is called stalled. The live
+ * stage's three sweeps stopped ~20 h ago, and the 12-case quick suite they run finishes in minutes.
+ */
+export const BENCHMARK_SAMPLE_RUN_STALLED_AFTER_MS = 6 * 60 * 60 * 1_000;
+
+export interface BenchmarkSampleRunEndpointCount {
+  readonly endpointId: string;
+  readonly sampleCount: number;
+  readonly lastSampleAtMs: number;
+}
+
+export interface BenchmarkSampleRunState {
+  readonly runId: string;
+  /** `benchmark_mode` as recorded on the samples, or null when they do not carry one. */
+  readonly mode: string | null;
+  readonly sampleCount: number;
+  readonly endpointCounts: readonly BenchmarkSampleRunEndpointCount[];
+  readonly firstSampleAtMs: number;
+  readonly lastSampleAtMs: number;
+  /**
+   * `completed` when an artifact-backed run of this id exists, `incomplete` while the newest sample is
+   * inside the stall window, `stalled` once it is not — so a sweep that stopped cannot read as finished.
+   */
+  readonly state: "completed" | "incomplete" | "stalled";
+  readonly stalledAfterMs: number;
+}
+
+/**
+ * Run 98 addendum 43 S4: what the *samples* say about each benchmark run.
+ *
+ * The benchmark runs API is artifact-backed, so a sweep whose result artifact was never written is invisible
+ * to it even though its samples are durable and are what the model pool's quality axis reads. This read
+ * groups `observed_performance_samples where source_type='benchmark'` by `benchmark_run_id` and reports the
+ * per-endpoint counts beside the run's window and derived state. The scan is scoped by `source_type` and the
+ * sample table is already bounded by the performance-history policy, so the work is proportional to the
+ * retained benchmark history rather than the whole store.
+ */
+export function readBenchmarkSampleRuns(input: {
+  readonly databasePath: string;
+  readonly completedRunIds?: readonly string[];
+  readonly nowMs?: number;
+  readonly stalledAfterMs?: number;
+}): readonly BenchmarkSampleRunState[] {
+  const database = openSqliteDatabase(input.databasePath);
+  let rows: Array<{
+    run_id: string;
+    endpoint_id: string;
+    mode: string | null;
+    timestamp_ms: number;
+  }>;
+  try {
+    rows = database
+      .prepare(
+        `SELECT json_extract(sample_json, '$.benchmark_run_id') AS run_id,
+                endpoint_id AS endpoint_id,
+                json_extract(sample_json, '$.benchmark_mode') AS mode,
+                timestamp_ms AS timestamp_ms
+           FROM observed_performance_samples
+          WHERE source_type = 'benchmark'
+            AND json_extract(sample_json, '$.benchmark_run_id') IS NOT NULL
+          ORDER BY run_id ASC, timestamp_ms ASC, sample_id ASC`,
+      )
+      .all() as Array<{
+      run_id: string;
+      endpoint_id: string;
+      mode: string | null;
+      timestamp_ms: number;
+    }>;
+  } finally {
+    database.close();
+  }
+
+  const completedRunIds = new Set(input.completedRunIds ?? []);
+  const nowMs = input.nowMs ?? Date.now();
+  const stalledAfterMs = input.stalledAfterMs ?? BENCHMARK_SAMPLE_RUN_STALLED_AFTER_MS;
+  const byRunId = new Map<
+    string,
+    {
+      mode: string | null;
+      sampleCount: number;
+      firstSampleAtMs: number;
+      lastSampleAtMs: number;
+      endpointCounts: Map<string, BenchmarkSampleRunEndpointCount>;
+    }
+  >();
+  for (const row of rows) {
+    const run = byRunId.get(row.run_id) ?? {
+      mode: row.mode ?? null,
+      sampleCount: 0,
+      firstSampleAtMs: row.timestamp_ms,
+      lastSampleAtMs: row.timestamp_ms,
+      endpointCounts: new Map<string, BenchmarkSampleRunEndpointCount>(),
+    };
+    run.sampleCount += 1;
+    run.firstSampleAtMs = Math.min(run.firstSampleAtMs, row.timestamp_ms);
+    run.lastSampleAtMs = Math.max(run.lastSampleAtMs, row.timestamp_ms);
+    if (run.mode === null && row.mode !== null) {
+      run.mode = row.mode;
+    }
+    const endpoint = run.endpointCounts.get(row.endpoint_id);
+    run.endpointCounts.set(row.endpoint_id, {
+      endpointId: row.endpoint_id,
+      sampleCount: (endpoint?.sampleCount ?? 0) + 1,
+      lastSampleAtMs: Math.max(endpoint?.lastSampleAtMs ?? row.timestamp_ms, row.timestamp_ms),
+    });
+    byRunId.set(row.run_id, run);
+  }
+
+  return [...byRunId]
+    .map(([runId, run]) => ({
+      runId,
+      mode: run.mode,
+      sampleCount: run.sampleCount,
+      endpointCounts: [...run.endpointCounts.values()].sort((left, right) =>
+        left.endpointId.localeCompare(right.endpointId, "en"),
+      ),
+      firstSampleAtMs: run.firstSampleAtMs,
+      lastSampleAtMs: run.lastSampleAtMs,
+      state: completedRunIds.has(runId)
+        ? ("completed" as const)
+        : nowMs - run.lastSampleAtMs > stalledAfterMs
+          ? ("stalled" as const)
+          : ("incomplete" as const),
+      stalledAfterMs,
+    }))
+    .sort((left, right) => right.lastSampleAtMs - left.lastSampleAtMs);
+}
+
 export function readLatestObservedProfile(
   input: ReadLatestObservedProfileInput,
 ): ObservedPerformanceProfile | null {
