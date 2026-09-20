@@ -30,6 +30,7 @@ import {
 } from "../lib/learning-api";
 import { fetchLearningProfileState, fetchLearningSummary } from "../lib/runtime-api";
 import { summarizePolicyResolution } from "../lib/learning-policy-resolution";
+import { describeOperatorWriteError } from "../lib/operator-write-error";
 import { fetchLearningActivity, fetchLearningHistory } from "../lib/learning-api";
 import { LearningLivePanelView } from "../components/learning-live-panel";
 import {
@@ -127,8 +128,9 @@ export function OperatorTokenField({
       />
       <span className="mt-1 block text-xs text-[var(--rm-fg-muted)]">
         This machine&apos;s owner is trusted: readbacks, policy changes, pack activation/rollback and the kill
-        switch all work here without a token. Set one only for clients that are not the device owner — a
-        runtime exposed beyond loopback still requires the operator bearer token.
+        switch all work here without a token. Set one only for clients that are not the device owner — the
+        value is the runtime&apos;s <span className="font-mono">--operator-auth-token</span>, and a runtime
+        exposed beyond loopback still requires it.
       </span>
     </label>
   );
@@ -441,7 +443,7 @@ export function LearningConfigurationPage() {
       setDraft({});
       await policy.reload();
     } catch (saveError) {
-      setError(message(saveError));
+      setError(describeOperatorWriteError(saveError));
     } finally {
       setBusy(false);
     }
@@ -469,7 +471,7 @@ export function LearningConfigurationPage() {
       setNotice(`Policy rolled back to version ${applied.policyVersion}.`);
       await policy.reload();
     } catch (rollbackError) {
-      setError(message(rollbackError));
+      setError(describeOperatorWriteError(rollbackError));
     } finally {
       setBusy(false);
     }
@@ -640,7 +642,7 @@ export function LearningPacksPage() {
       setNotice(`Activation receipt written for ${packId}.`);
       await rollout.reload();
     } catch (activationError) {
-      setError(message(activationError));
+      setError(describeOperatorWriteError(activationError));
     }
   };
   const rollback = async () => {
@@ -654,7 +656,7 @@ export function LearningPacksPage() {
       setNotice("Rollback receipt written; the prior package is restored.");
       await rollout.reload();
     } catch (rollbackError) {
-      setError(message(rollbackError));
+      setError(describeOperatorWriteError(rollbackError));
     }
   };
   const killSwitch = async () => {
@@ -668,7 +670,7 @@ export function LearningPacksPage() {
       setNotice("Kill switch engaged; the scope is back on the base route.");
       await rollout.reload();
     } catch (killError) {
-      setError(message(killError));
+      setError(describeOperatorWriteError(killError));
     }
   };
   // Run 99 R28: the switch is reversible; releasing clears the flag (receipted) and leaves the
@@ -684,7 +686,7 @@ export function LearningPacksPage() {
       setNotice("Kill switch released; activation is allowed again.");
       await rollout.reload();
     } catch (releaseError) {
-      setError(message(releaseError));
+      setError(describeOperatorWriteError(releaseError));
     }
   };
   return (

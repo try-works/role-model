@@ -91,6 +91,13 @@ export interface TrackBPairwiseJudgeDecision {
 
 export interface TrackBPairwiseJudge {
   readonly endpointId: string;
+  /**
+   * Run 98 addendum 45 J2: where the judge came from. `controller` means the endpoint was read from the
+   * operator's controller assignment at judge time, so a controller change moves the judge with no policy
+   * write; `judgeAssignmentUpdatedAtMs` records when that assignment last changed.
+   */
+  readonly judgeSource?: "controller" | "disabled";
+  readonly judgeAssignmentUpdatedAtMs?: number | null;
   /** Run 98 R10: the configured judge mode travels with the judge identity. */
   readonly mode?: PairwiseJudgeMode;
   /** Run 98 R10: the configured presentation-order policy. */

@@ -32,20 +32,23 @@ export class PairwiseJudgeOrderDisagreementError extends Error {
 }
 
 /**
- * Run 98 addendum 30 S1: the designated judge endpoint, resolved once per call site.
+ * Run 98 addendum 45 J2 — the pairwise judge is the configured controller.
  *
- * Precedence is environment override → policy value → unset, and an unset designation is a real
- * answer ("no judge"), never "pick a candidate". The policy value is the operator-editable record
- * (`judgeEndpointId`); the env override exists so a stage or a smoke test can point the judge at a
- * specific endpoint without a policy write.
+ * Operator instruction (2026-09-20): "the judge endpoint should simply be the controller. dont set an
+ * endpoint or model id, just route to the configured controller endpoint", and, after the Configuration page
+ * still showed a deepseek id: "i told you this should just use the controller. it seems to be hardcoded.
+ * changing controller to kimi k3 does not change this endpoint. hardcode it to just use the controller!"
+ *
+ * The policy carries only the selector (`judgeSource`); the endpoint comes from the controller assignment at
+ * judge time, and the `ROLE_MODEL_EVAL_JUDGE_ENDPOINT` out-of-band pin is gone. An unset controller — or the
+ * explicit `disabled` selector — is a real answer ("no judge"), never "pick a candidate".
  */
-export function resolveEvalJudgeEndpointId(input: {
-  readonly policyValue?: unknown;
-  readonly envValue?: unknown;
+export function resolveJudgeEndpointFromController(input: {
+  readonly judgeSource?: unknown;
+  readonly controllerEndpointId?: unknown;
 }): string {
-  const normalize = (value: unknown): string =>
-    typeof value === "string" && value.trim() ? value.trim() : "";
-  return normalize(input.envValue) || normalize(input.policyValue);
+  if (input.judgeSource === "disabled") return "";
+  return typeof input.controllerEndpointId === "string" ? input.controllerEndpointId.trim() : "";
 }
 
 /**
@@ -96,6 +99,13 @@ export interface CreateRouterPairwiseJudgeInput {
    * the legacy independence-first selection is kept for callers that have not adopted the policy.
    */
   readonly judgeEndpointId?: string;
+  /**
+   * Run 98 addendum 45 J2: provenance for a judge resolved from the controller assignment. Recorded on the
+   * judge object and on the comparison manifest, so an audit can tell where the judge came from and when the
+   * assignment it was read from last changed.
+   */
+  readonly judgeSource?: "controller" | "disabled";
+  readonly judgeAssignmentUpdatedAtMs?: number | null;
   readonly taskText: string;
   /** Run 98 R10: judge mode; defaults to the identified judge (previous behaviour). */
   readonly mode?: PairwiseJudgeMode;
@@ -148,10 +158,13 @@ export function createRouterPairwiseJudge(
       typeof endpoint.modelId === "string" &&
       endpoint.modelId.length > 0,
   );
+  const controlsJudgeSelection = input.judgeSource === "controller" || input.judgeSource === "disabled";
   const designated =
-    typeof input.judgeEndpointId === "string" && input.judgeEndpointId.trim()
-      ? input.judgeEndpointId.trim()
-      : null;
+    input.judgeSource === "disabled"
+      ? null
+      : typeof input.judgeEndpointId === "string" && input.judgeEndpointId.trim()
+        ? input.judgeEndpointId.trim()
+        : null;
   // Run 98 addendum 30 S1: a designated judge is the only judge. A pair that contains it is not
   // judged (self-evaluation is what corrupted 861 of 863 live battles), and a designation that is
   // not dispatchable fails closed rather than substituting a candidate.
@@ -159,10 +172,13 @@ export function createRouterPairwiseJudge(
     ? excluded.has(designated)
       ? undefined
       : candidateEndpoints.find((endpoint) => endpoint.endpointId === designated)
-    : // Legacy callers keep the independence-first rule: prefer an endpoint that is neither the source
-      // nor a counterfactual candidate, falling back to the remaining dispatchable set.
-      (candidateEndpoints.find((endpoint) => !excluded.has(endpoint.endpointId)) ??
-      candidateEndpoints[0]);
+    : // Run 98 addendum 45 J2: once the caller states where the judge comes from, there is **no** fallback —
+      // `disabled`, or a controller that did not resolve, means this pair is not judged. Only legacy callers
+      // that pass no `judgeSource` keep the independence-first rule.
+      controlsJudgeSelection
+      ? undefined
+      : (candidateEndpoints.find((endpoint) => !excluded.has(endpoint.endpointId)) ??
+        candidateEndpoints[0]);
   if (!judgeEndpoint) return undefined;
   const taskText = typeof input.taskText === "string" ? input.taskText : "";
 
@@ -170,6 +186,10 @@ export function createRouterPairwiseJudge(
     endpointId: judgeEndpoint.endpointId,
     mode: isPairwiseJudgeMode(input.mode) ? input.mode : PAIRWISE_JUDGE_MODE_IDENTIFIED,
     orderPolicy: input.orderPolicy === "dual_order" ? "dual_order" : "source_first",
+    ...(input.judgeSource ? { judgeSource: input.judgeSource } : {}),
+    ...(input.judgeAssignmentUpdatedAtMs === undefined
+      ? {}
+      : { judgeAssignmentUpdatedAtMs: input.judgeAssignmentUpdatedAtMs }),
     async dispatch(request: TrackBPairwiseJudgeRequest) {
       const digest = createHash("sha256")
         .update(

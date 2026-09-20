@@ -6,7 +6,7 @@ import {
   redactJudgeExcerpt,
 } from "../src/track-b-shadow-judge.js";
 import { createRouterPairwiseJudge } from "../src/track-b-shadow-judge-dispatch.js";
-import { resolveEvalJudgeEndpointId } from "../src/track-b-shadow-judge-dispatch.js";
+import { resolveJudgeEndpointFromController } from "../src/track-b-shadow-judge-dispatch.js";
 
 /**
  * Run 97 RC04 - the judge boundary: bounded, redacted excerpts in, a decisively
@@ -223,17 +223,24 @@ test("run98 a30 a designated judge missing from the registry fails closed", () =
   expect(judge).toBeUndefined();
 });
 
-test("run98 a30 the judge designation resolves env override then policy, and unset means no judge", () => {
-  // The policy value is the operator-editable record.
+test("run98 a45 the judge resolves from the controller assignment, and disabled/unset means no judge", () => {
+  // Run 98 addendum 45 J2 supersedes addendum 30 S1's env-then-policy designation: the policy carries only
+  // the selector, and the endpoint comes from the controller the operator configured.
   expect(
-    resolveEvalJudgeEndpointId({ policyValue: "endpoint:policy-judge", envValue: undefined }),
-  ).toBe("endpoint:policy-judge");
-  // The environment override wins (stage smoke tests, incident overrides) without a policy write.
+    resolveJudgeEndpointFromController({
+      judgeSource: "controller",
+      controllerEndpointId: "moonshot.personal.moonshot-oauth.global.kimi-k3",
+    }),
+  ).toBe("moonshot.personal.moonshot-oauth.global.kimi-k3");
+  // A selector of `disabled` means no judge even when a controller is configured.
   expect(
-    resolveEvalJudgeEndpointId({ policyValue: "endpoint:policy-judge", envValue: "endpoint:env-judge" }),
-  ).toBe("endpoint:env-judge");
-  // Blank/whitespace/junk values never become a designation.
-  expect(resolveEvalJudgeEndpointId({ policyValue: "   ", envValue: "" })).toBe("");
-  expect(resolveEvalJudgeEndpointId({ policyValue: 42, envValue: null })).toBe("");
-  expect(resolveEvalJudgeEndpointId({})).toBe("");
+    resolveJudgeEndpointFromController({
+      judgeSource: "disabled",
+      controllerEndpointId: "moonshot.personal.moonshot-oauth.global.kimi-k3",
+    }),
+  ).toBe("");
+  // A missing controller, or junk, is "no judge" — never a candidate standing in.
+  expect(resolveJudgeEndpointFromController({ judgeSource: "controller" })).toBe("");
+  expect(resolveJudgeEndpointFromController({ judgeSource: "controller", controllerEndpointId: 42 })).toBe("");
+  expect(resolveJudgeEndpointFromController({})).toBe("");
 });

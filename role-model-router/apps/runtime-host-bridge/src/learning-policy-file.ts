@@ -72,11 +72,13 @@ export interface LearningPolicySnapshot {
     readonly judgePositionConsistencyFloor: number;
     readonly judgeMeasureAgreement: boolean;
     /**
-     * Run 98 addendum 30 S1 (`guidance/11` `judgePolicy`): the **designated** judge endpoint. Empty
-     * means no judge is designated, so the runtime judges nothing rather than substituting a scored
-     * candidate for the judge.
+     * Run 98 addendum 45 J1/J2 (operator instruction 2026-09-20: "i told you this should just use the
+     * controller... hardcode it to just use the controller!"): where the pairwise judge comes from.
+     * `controller` resolves the endpoint the operator configured as the controller at judge time, so a
+     * controller change needs no policy write; `disabled` judges nothing rather than substituting a
+     * scored candidate for the judge.
      */
-    readonly judgeEndpointId: string;
+    readonly judgeSource: "controller" | "disabled";
     /**
      * Run 98 R19 / addendum 02: the predeclared statistical promotion protocol of
      * `guidance/07`. The learning pass sends these to the worker, and the worker's promotion
@@ -145,7 +147,7 @@ const DEFAULT_EFFECTIVE: LearningPolicySnapshot["effective"] = Object.freeze({
   judgeOrderAggregation: "balanced",
   judgePositionConsistencyFloor: 0.5,
   judgeMeasureAgreement: false,
-  judgeEndpointId: "",
+  judgeSource: "controller",
   minimumPracticalDelta: 0.05,
   promotionIntervalLevel: 0.95,
   promotionResamples: 10_000,
@@ -644,14 +646,10 @@ export function readLearningPolicyFile(input: {
         : DEFAULT_EFFECTIVE.judgePositionConsistencyFloor;
     })(),
     judgeMeasureAgreement: merged.judgeMeasureAgreement === true,
-    // Run 98 addendum 30 S1: a designated judge endpoint is a bounded, schema-validated identity; a
-    // malformed or absent value resolves to the empty string, which means "no judge" rather than
-    // "pick a candidate".
-    judgeEndpointId:
-      typeof merged.judgeEndpointId === "string" &&
-      /^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$/.test(merged.judgeEndpointId.trim())
-        ? merged.judgeEndpointId.trim()
-        : "",
+    // Run 98 addendum 45 J1: a malformed or absent selector resolves to `controller` (the shipped
+    // behaviour), and only the explicit `disabled` value turns judging off. No endpoint id is read from
+    // policy at all — the retired `judgeEndpointId` name is stripped by the schema before it reaches here.
+    judgeSource: merged.judgeSource === "disabled" ? "disabled" : "controller",
     // The legacy name `qualityClaimedImprovement` is the same value under its pre-R19 name, so an
     // older config that only carries the alias still resolves the enforced parameter.
     minimumPracticalDelta: Math.min(

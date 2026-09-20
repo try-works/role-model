@@ -51,7 +51,7 @@ import {
 } from "./track-b-auto-replay.js";
 import {
   createRouterPairwiseJudge,
-  resolveEvalJudgeEndpointId,
+  resolveJudgeEndpointFromController,
 } from "./track-b-shadow-judge-dispatch.js";
 import { isPairwiseJudgeMode, type TrackBPairwiseJudge } from "./track-b-shadow-judge.js";
 import {
@@ -1303,6 +1303,13 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       // `deepseek-flash-max` — and refused candidates that are not today's judge at all, so real
       // captures deferred to refusal (`judge_candidate_overlap`).
       ...(input.judge?.endpointId ? { judgeEndpointId: input.judge.endpointId } : {}),
+      // Run 98 addendum 45 J2: the comparison also records where that judge came from (the controller
+      // assignment, and when that assignment last changed), so a controller switch is visible on the job.
+      ...(input.judge?.judgeSource ? { judgeSource: input.judge.judgeSource } : {}),
+      ...(input.judge?.judgeAssignmentUpdatedAtMs === undefined ||
+      input.judge?.judgeAssignmentUpdatedAtMs === null
+        ? {}
+        : { judgeAssignmentUpdatedAtMs: input.judge.judgeAssignmentUpdatedAtMs }),
       // Run 98 addendum 33 S2: the judge's measured position consistency for the endpoint that judges this
       // comparison (resolved by the caller), so a below-floor judge cannot promote what it graded.
       ...(input.judgeConsistency ? { judgeConsistency: input.judgeConsistency } : {}),
@@ -2348,6 +2355,45 @@ const EMPTY_CATALOG: NormalizedCatalog = {
   providers: [],
   models: [],
 };
+
+/**
+ * Run 98 addendum 45 J2: the judge the runtime will use for the next comparison.
+ *
+ * The policy selector decides between `controller` and `disabled`; the endpoint itself comes from the
+ * controller assignment, read at judge time, so a controller change takes effect on the next judged
+ * comparison without a policy write. A missing or unreadable assignment is "no judge", never a candidate.
+ */
+async function resolveControllerJudge(
+  backend: { readonly readControllerAssignment?: () => Promise<unknown> },
+  snapshot: ReturnType<typeof readLearningPolicyFile>,
+): Promise<{
+  readonly endpointId: string;
+  readonly source: "controller" | "disabled";
+  readonly assignmentUpdatedAtMs: number | null;
+}> {
+  const source = snapshot?.effective.judgeSource === "disabled" ? "disabled" : "controller";
+  if (source === "disabled") return { endpointId: "", source, assignmentUpdatedAtMs: null };
+  try {
+    const assignment = await backend.readControllerAssignment?.();
+    const record =
+      assignment && typeof assignment === "object" && !Array.isArray(assignment)
+        ? (assignment as Record<string, unknown>)
+        : {};
+    return {
+      endpointId: resolveJudgeEndpointFromController({
+        judgeSource: source,
+        controllerEndpointId: record.endpointId,
+      }),
+      source,
+      assignmentUpdatedAtMs:
+        typeof record.updatedAtMs === "number" && Number.isFinite(record.updatedAtMs)
+          ? record.updatedAtMs
+          : null,
+    };
+  } catch {
+    return { endpointId: "", source, assignmentUpdatedAtMs: null };
+  }
+}
 
 export function resolveCliFixtureRoot(_repoRoot: string, fixtureRoot?: string): string | undefined {
   return fixtureRoot?.trim() || undefined;
@@ -4383,21 +4429,22 @@ export async function main(): Promise<void> {
           const sourceMessages = Array.isArray(sourceCapture.messages)
             ? sourceCapture.messages
             : [];
-          // Run 98 addendum 30 S1: resolve the designated judge once for this capture — policy first
-          // (operator-editable), environment override second, and an unset value means no judge at
-          // all rather than a candidate standing in for one.
-          const evalJudgeEndpointId = resolveEvalJudgeEndpointId({
-            policyValue: readLearningPolicyFile({
-              repoRoot: options.repoRoot,
-              stateRoot: resolveLearningPolicyStateRoot({
-                runtimeStateRoot: options.runtimeStateRoot,
+          // Run 98 addendum 45 J2: the judge is the configured controller, resolved here for this capture.
+          // No policy write and no environment pin are involved, so a controller change is enough.
+          const evalJudgeEndpointId = (
+            await resolveControllerJudge(
+              created,
+              readLearningPolicyFile({
+                repoRoot: options.repoRoot,
+                stateRoot: resolveLearningPolicyStateRoot({
+                  runtimeStateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                }),
+                channel: packagedProfile?.channel ?? "development",
                 scopeId: options.scopeId,
               }),
-              channel: packagedProfile?.channel ?? "development",
-              scopeId: options.scopeId,
-            })?.effective.judgeEndpointId,
-            envValue: process.env.ROLE_MODEL_EVAL_JUDGE_ENDPOINT,
-          });
+            )
+          ).endpointId;
           const distinctReplayCandidates = selectReplayCandidates({
             configuredEndpointIds: candidateEndpointIds,
             sourceEndpointId: capturedSourceEndpointId,
@@ -4849,6 +4896,11 @@ export async function main(): Promise<void> {
               return { evaluationJobId };
             },
             completeEvaluation: (() => {
+              // Run 98 addendum 45 J2: the judge is resolved from the controller assignment when the
+              // comparison is completed, so switching the controller changes the next comparison's judge
+              // without a policy write and without a restart.
+              return async (request: Readonly<Record<string, unknown>>) => {
+                const judge = await resolveControllerJudge(created, learningPolicySnapshot);
               const evaluationCompleter = buildSupervisedReplayEvaluationCompleter({
                 backend: created,
                 runtime,
@@ -4864,6 +4916,7 @@ export async function main(): Promise<void> {
                 evaluationCriteria: evaluationCriteria as unknown as Readonly<Record<string, unknown>>,
                 evaluationCriteriaDigest,
                 learningPolicySnapshot,
+                judge,
                 replayLedger,
                 replayPolicySet,
                 getDispatched: (endpointId: string) => {
@@ -4879,7 +4932,6 @@ export async function main(): Promise<void> {
               });
               // Run 99 R33: the handoff is recorded before the completion runs, so a restart in
               // between leaves a retryable resume entry for the sweep instead of a stranded job.
-              return async (request: Readonly<Record<string, unknown>>) => {
                 const replayJobId = String(request.replayJobId ?? "");
                 const evaluationJobId = String(request.evaluationJobId ?? "");
                 const sourceCaptureRequestId =
@@ -5138,6 +5190,15 @@ export async function main(): Promise<void> {
         readonly evaluationCriteria: Readonly<Record<string, unknown>>;
         readonly evaluationCriteriaDigest: string;
         readonly learningPolicySnapshot: ReturnType<typeof readLearningPolicyFile>;
+        /**
+         * Run 98 addendum 45 J2: the resolved judge for this comparison — the endpoint the operator has
+         * configured as the controller, or empty when the selector is `disabled`/no controller is set.
+         */
+        readonly judge: {
+          readonly endpointId: string;
+          readonly source: "controller" | "disabled";
+          readonly assignmentUpdatedAtMs: number | null;
+        };
         readonly replayLedger: ReturnType<typeof createReplayLedger>;
         readonly replayPolicySet: ReturnType<typeof buildReplayPolicySet>;
         readonly getDispatched: (endpointId: string) => unknown;
@@ -5149,10 +5210,7 @@ export async function main(): Promise<void> {
         // ledger, with the operator's floor applied. The completer passes it into the pipeline so the
         // promotion gate sees the measurement the ledger records.
         const judgeConsistency = (() => {
-          const judgeEndpointId = resolveEvalJudgeEndpointId({
-            policyValue: input.learningPolicySnapshot?.effective.judgeEndpointId,
-            envValue: process.env.ROLE_MODEL_EVAL_JUDGE_ENDPOINT,
-          });
+          const judgeEndpointId = input.judge.endpointId;
           if (!judgeEndpointId) return null;
           const row = judgeConsistencyLedger.summary(judgeEndpointId)[0] ?? null;
           if (!row) return null;
@@ -5184,14 +5242,15 @@ export async function main(): Promise<void> {
               endpointId: endpoint.identity.endpoint_id,
               modelId: endpoint.identity.model_id,
             })),
-            // Run 98 addendum 30 S1: the judge is the designated client. When the designation is
-            // unset there is no judge, and when it names an endpoint that is not dispatchable — or
-            // that is part of this pair — the factory returns undefined and the comparison records
-            // judge missingness instead of scoring a candidate with itself.
-            judgeEndpointId: resolveEvalJudgeEndpointId({
-              policyValue: input.learningPolicySnapshot?.effective.judgeEndpointId,
-              envValue: process.env.ROLE_MODEL_EVAL_JUDGE_ENDPOINT,
-            }),
+            // Run 98 addendum 45 J2: the judge is the configured controller. When no controller is set —
+            // or the selector is `disabled` — there is no judge, and when the resolved endpoint is not
+            // dispatchable, or is part of this pair, the factory returns undefined and the comparison
+            // records judge missingness instead of scoring a candidate with itself.
+            judgeEndpointId: input.judge.endpointId,
+            // Run 98 addendum 45 J2: the comparison records where the judge came from, so a controller
+            // change is auditable from the manifest rather than inferred from a policy version.
+            judgeSource: input.judge.source,
+            judgeAssignmentUpdatedAtMs: input.judge.assignmentUpdatedAtMs,
             excludedEndpointIds: [
               input.sourceEndpointId,
               ...input.counterfactualPackages.map((candidate) => candidate.endpointId),
@@ -5231,11 +5290,7 @@ export async function main(): Promise<void> {
               const presentation = (row as { presentation?: { first?: unknown } }).presentation;
               try {
                 judgeConsistencyLedger.record({
-                  judgeEndpointId:
-                    resolveEvalJudgeEndpointId({
-                      policyValue: input.learningPolicySnapshot?.effective.judgeEndpointId,
-                      envValue: process.env.ROLE_MODEL_EVAL_JUDGE_ENDPOINT,
-                    }) ?? "",
+                  judgeEndpointId: input.judge.endpointId,
                   judgeMode:
                     typeof (row as { judgeMode?: unknown }).judgeMode === "string"
                       ? String((row as { judgeMode: string }).judgeMode)
@@ -5532,6 +5587,8 @@ export async function main(): Promise<void> {
               evaluationCriteriaDigest:
                 digestTrackBSemanticEvaluationCriteria(effectiveCriteria),
               learningPolicySnapshot: readEvaluationLearningPolicySnapshot(),
+              // Run 98 addendum 45 J2: a resumed completion resolves the judge the same way a live one does.
+              judge: await resolveControllerJudge(created, readEvaluationLearningPolicySnapshot()),
               // A resumed completion performs no candidate dispatch, so its judge has no live
               // reservation to charge.
               replayLedger: createReplayLedger({
