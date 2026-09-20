@@ -3201,6 +3201,11 @@ export interface StartBridgeServerOptions {
   /** Run 99 (option 2): anonymous loopback Learning readbacks (`on`/`off`, default by bind host). */
   readonly anonymousLearningReads?: "on" | "off" | boolean;
   /**
+   * Run 98 addendum 46: whether a loopback client is the trusted device owner. Defaults to on for a
+   * loopback bind host; `"off"` restores the token requirement for every operator path.
+   */
+  readonly deviceOwnerTrust?: "on" | "off" | boolean;
+  /**
    * Run 98 addendum 34 S7 (addendum 33 S6's missing caller): re-score the newest completed supervised
    * replays under one pinned scorer version into `evaluation_trial_score_revisions`.
    */
@@ -15405,6 +15410,32 @@ export function resolveAnonymousLearningReads(
   return LOOPBACK_BIND_HOSTS.has(String(host ?? "").trim().toLowerCase()) ? "on" : "off";
 }
 
+/**
+ * Run 98 addendum 46 — the device owner is trusted.
+ *
+ * Operator instruction (2026-09-20): "i shouldnt need a token to change policy on my own machine. token
+ * should be automatically encoded when im on local device making changes and this should be true for every
+ * path. device owner should be trusted."
+ *
+ * Every `/api/role-model/operator/*` path passes one gate, so trust is decided here rather than per route: a
+ * runtime bound to a loopback address is the operator's own machine, and a request whose peer address is
+ * loopback is that machine. The token remains accepted (and is still required for non-loopback bind hosts,
+ * or when an operator explicitly turns this off).
+ */
+export function resolveDeviceOwnerTrust(
+  host: string | undefined,
+  explicit?: "on" | "off" | boolean,
+): "on" | "off" {
+  if (explicit === "on" || explicit === true) return "on";
+  if (explicit === "off" || explicit === false) return "off";
+  return LOOPBACK_BIND_HOSTS.has(String(host ?? "").trim().toLowerCase()) ? "on" : "off";
+}
+
+/** The request itself comes from the device: the peer address is loopback, whatever the bind host is. */
+function isLoopbackOperatorClient(request: IncomingMessage): boolean {
+  return LOOPBACK_OPERATOR_CLIENTS.has(String(request.socket?.remoteAddress ?? ""));
+}
+
 function isAnonymousLearningReadback(
   request: IncomingMessage,
   url: URL,
@@ -15591,7 +15622,11 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     if (url.pathname.startsWith("/api/role-model/operator/")) {
       const suppliedAuthorization = readOperatorHeader(request, "authorization");
       const presentsCredential = typeof suppliedAuthorization === "string" && suppliedAuthorization.length > 0;
-      const authorized = operatorTokenMatches(request, options.operatorAuthToken);
+      // Run 98 addendum 46: the device owner is trusted for every operator path — reads and mutations alike.
+      const deviceOwner =
+        resolveDeviceOwnerTrust(options.host, options.deviceOwnerTrust) === "on" &&
+        isLoopbackOperatorClient(request);
+      const authorized = deviceOwner || operatorTokenMatches(request, options.operatorAuthToken);
       const anonymousLearningRead =
         !presentsCredential &&
         !authorized &&

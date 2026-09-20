@@ -100,13 +100,14 @@ export function OperatorTokenField({
       <input
         className={`${fieldClassName} mt-1 font-mono`}
         onChange={(event) => onToken(event.target.value)}
-        placeholder="Optional on this machine — required for changes"
+        placeholder="Not needed on this machine — only for other clients"
         type="password"
         value={token}
       />
       <span className="mt-1 block text-xs text-[var(--rm-fg-muted)]">
-        Readbacks work from this machine without a token. Changing policy, activating or rolling back a pack
-        and the kill switch require the runtime&apos;s operator bearer token.
+        This machine&apos;s owner is trusted: readbacks, policy changes, pack activation/rollback and the kill
+        switch all work here without a token. Set one only for clients that are not the device owner — a
+        runtime exposed beyond loopback still requires the operator bearer token.
       </span>
     </label>
   );

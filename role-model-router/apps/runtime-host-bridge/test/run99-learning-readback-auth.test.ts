@@ -32,6 +32,9 @@ const start = (overrides: Readonly<Record<string, unknown>> = {}) =>
     host: "127.0.0.1",
     port: 0,
     operatorAuthToken: "operator-secret",
+    // Run 98 addendum 46: a loopback runtime now trusts its device owner for every operator path, so this
+    // suite pins the token rule explicitly to keep testing anonymous-read gating rather than device trust.
+    deviceOwnerTrust: "off",
     operatorContext,
     registry,
     executeChatCompletions: async () => {
