@@ -67,7 +67,7 @@ test("a reservation from a finished run is reconciled on the next tick", async (
 });
 
 test("a failed replay leaves the window's reserved counters unchanged", async () => {
-  let clock = base;
+  const clock = base;
   const { ledger, cleanup } = tempLedger(() => clock);
   try {
     const result = await runAutoReplayTick({
