@@ -101,7 +101,13 @@ describe("Run 96 operator controls", () => {
   });
 
   test("requires operator authentication and returns a truthful unavailable status", async () => {
-    const server = await startTestServer({ operatorAuthToken: "operator-secret" });
+    // Run 98 addendum 46 made the local device owner trusted on a loopback runtime, so a *wrong* bearer token
+    // is still the owner and this case (a client without the credential) has to pin the rule it is about —
+    // the same pin the operator-surfaces suite carries.
+    const server = await startTestServer({
+      operatorAuthToken: "operator-secret",
+      deviceOwnerTrust: "off",
+    });
 
     const unauthorized = await getJson(server, "/api/role-model/operator/status");
     const wrongToken = await getJson(server, "/api/role-model/operator/status", "wrong");

@@ -3220,6 +3220,12 @@ export interface StartBridgeServerOptions {
   readonly setLearningPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackLearningPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly activateLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
+  /**
+   * Run 98 addendum 54: record a measured guardrail breach through the runtime's own extension path. The
+   * sidecar refuses it on the production channel; it exists so the sustained-window rollback can be measured
+   * live instead of only in the extension tests.
+   */
+  readonly recordLearningGuardrailBreach?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly engageLearningKillSwitch?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly measureNoRichCaptureBaseline?: (body: Record<string, unknown>) => Promise<unknown>;
@@ -3492,6 +3498,8 @@ export interface RuntimeBridgeBackend {
   rollbackLearningPolicy(body: Record<string, unknown>): Promise<unknown>;
   activateLearningPack(body: Record<string, unknown>): Promise<unknown>;
   rollbackLearningPack(body: Record<string, unknown>): Promise<unknown>;
+  /** Run 98 addendum 54: the operator surface's guardrail-breach recorder (non-production channels only). */
+  recordLearningGuardrailBreach(body: Record<string, unknown>): Promise<unknown>;
   engageLearningKillSwitch(body: Record<string, unknown>): Promise<unknown>;
   measureNoRichCaptureBaseline(body: Record<string, unknown>): Promise<unknown>;
   readDevelopmentVerificationStatus(): Promise<unknown>;
@@ -3918,6 +3926,7 @@ export interface CreateRuntimeBridgeBackendOptions {
   readonly rollbackLearningPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly activateLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollbackLearningPack?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly recordLearningGuardrailBreach?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly engageLearningKillSwitch?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly codexAuthAdapter?: CodexAuthAdapter;
   readonly codexExecutionAdapter?: CodexExecutionAdapter;
@@ -16107,6 +16116,27 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             return;
           }
           writeOperatorMutationResult(response, await options.rollbackLearningPack(operatorBody));
+          return;
+        }
+        /**
+         * Run 98 addendum 54 (implementing addendum 53 §3): A44-S2's sustained-breach half needs a way to record
+         * a guardrail breach through the runtime's own extension path. The knowledge store implements the window
+         * and the rollback, but its only caller is the runtime's signal loop, which staged traffic never makes
+         * fire (0 breaches in both stores), so the live half could only be claimed, not measured. The route
+         * forwards to the sidecar, which refuses it on the production channel.
+         */
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/role-model/operator/learning/guardrail-breach"
+        ) {
+          if (!options.recordLearningGuardrailBreach) {
+            writeOperatorUnavailable(response, "learning guardrail breach");
+            return;
+          }
+          writeOperatorMutationResult(
+            response,
+            await options.recordLearningGuardrailBreach(operatorBody),
+          );
           return;
         }
         if (
@@ -28403,6 +28433,12 @@ export async function createRuntimeBridgeBackend(
       return (
         options.rollbackLearningPack?.(body) ??
         unavailableOperatorPayload("learning pack rollback")
+      );
+    },
+    async recordLearningGuardrailBreach(body: Record<string, unknown>): Promise<unknown> {
+      return (
+        options.recordLearningGuardrailBreach?.(body) ??
+        unavailableOperatorPayload("learning guardrail breach")
       );
     },
     async engageLearningKillSwitch(body: Record<string, unknown>): Promise<unknown> {

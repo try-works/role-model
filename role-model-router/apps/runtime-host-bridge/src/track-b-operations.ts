@@ -1818,6 +1818,18 @@ export function createTrackBOperations({
         body,
       });
     },
+    /**
+     * Run 98 addendum 54 (implementing addendum 53 §3): record a measured guardrail breach through the
+     * runtime's own extension path, so A44-S2's sustained-window rollback can be measured live. The sidecar
+     * decides the window from the operator policy when the caller omits one and refuses the route on the
+     * production channel.
+     */
+    async recordLearningGuardrailBreach(body: Record<string, unknown>): Promise<unknown> {
+      return requestOperator("learning guardrail breach", "operator/learning/guardrail-breach", {
+        method: "POST",
+        body,
+      });
+    },
     async engageLearningKillSwitch(body: Record<string, unknown>): Promise<unknown> {
       return requestOperator("learning kill switch", "operator/learning/kill-switch", {
         method: "POST",
