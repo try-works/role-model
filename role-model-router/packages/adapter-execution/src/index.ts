@@ -14,6 +14,8 @@ import type { ProviderAccountRecord } from "@role-model-router/provider-account"
 import type { TraceEventRecord, TraceSpanRecord } from "@role-model-router/trace";
 import type { UsageEventRecord } from "@role-model-router/usage";
 
+import { estimateRequestCostUsd } from "@role-model-router/catalog";
+
 export type RuntimeExecutionMessageContent =
   | string
   | null
@@ -639,6 +641,80 @@ function createTraceArtifacts(
   return { spans, events };
 }
 
+/**
+ * Run 98 addendum 50 (operator report 2026-09-20: "y axis is all 0 somehow cost data is being lost from
+ * requests").
+ *
+ * `usageEvent.cost_estimate` is the *request's* cost. It was filled from the candidate's
+ * `cost_per_1k_tokens_est` — a rate per 1,000 tokens — so every stored `estimated_cost_usd` was the rate, over-
+ * stating each request by `1000 / totalTokens` and inflating the spend tiles and cost charts that sum it.
+ *
+ * Order: the vendor's reported amount, else the measured tokens priced from the catalog, else the pre-flight
+ * request estimate. A rate is never returned as an amount.
+ */
+export interface UsageCostEstimateSignals {
+  readonly canonicalModelId: string;
+  readonly tokenEconomicsSource: "catalog" | "local-free" | "unknown";
+  readonly inputPer1M: number | null;
+  readonly outputPer1M: number | null;
+  readonly estimatedRequestUsd: number | null;
+  readonly cost_per_1k_tokens_est: number | null;
+}
+
+export interface UsageCostEstimate {
+  readonly costUsd: number;
+  readonly source: "vendor_actual" | "usage_estimate" | "preflight_estimate";
+}
+
+export function resolveUsageEventCostEstimate(input: {
+  readonly vendorCostUsd?: number | null;
+  readonly catalogCostEstimate?: UsageCostEstimateSignals | null;
+  readonly inputTokens?: number | null;
+  readonly outputTokens?: number | null;
+  readonly tokensAvailable?: boolean;
+}): UsageCostEstimate | null {
+  const vendorCostUsd = input.vendorCostUsd;
+  if (typeof vendorCostUsd === "number" && Number.isFinite(vendorCostUsd) && vendorCostUsd >= 0) {
+    return { costUsd: vendorCostUsd, source: "vendor_actual" };
+  }
+
+  const catalog = input.catalogCostEstimate ?? null;
+  if (!catalog) {
+    return null;
+  }
+
+  const inputTokens = Number.isSafeInteger(input.inputTokens) ? (input.inputTokens as number) : 0;
+  const outputTokens = Number.isSafeInteger(input.outputTokens)
+    ? (input.outputTokens as number)
+    : 0;
+  const hasMeasuredTokens =
+    input.tokensAvailable !== false && inputTokens >= 0 && outputTokens >= 0
+      ? inputTokens > 0 || outputTokens > 0
+      : false;
+  if (hasMeasuredTokens) {
+    const usageEstimate = estimateRequestCostUsd({
+      economics: {
+        canonicalModelId: catalog.canonicalModelId,
+        inputPer1M: catalog.inputPer1M,
+        outputPer1M: catalog.outputPer1M,
+        source: catalog.tokenEconomicsSource,
+      },
+      contextTokens: inputTokens,
+      maxOutputTokens: outputTokens,
+    });
+    if (typeof usageEstimate === "number" && Number.isFinite(usageEstimate)) {
+      return { costUsd: usageEstimate, source: "usage_estimate" };
+    }
+  }
+
+  const preflightUsd = catalog.estimatedRequestUsd;
+  if (typeof preflightUsd === "number" && Number.isFinite(preflightUsd) && preflightUsd >= 0) {
+    return { costUsd: preflightUsd, source: "preflight_estimate" };
+  }
+
+  return null;
+}
+
 function createUsageEvent(
   routeResult: RouteRuntimeRequestResult,
   target: ResolvedExecutionTarget,
@@ -652,6 +728,15 @@ function createUsageEvent(
     normalized.usage.inputTokensSource ?? normalized.usage.source ?? "unavailable";
   const outputTokensSource =
     normalized.usage.outputTokensSource ?? normalized.usage.source ?? "unavailable";
+  const usageCostEstimate = resolveUsageEventCostEstimate({
+    vendorCostUsd: normalized.vendorMetadata?.costUsd,
+    catalogCostEstimate: chosenProjectedCandidate?.routingSignals?.catalogCostEstimate ?? null,
+    inputTokens: normalized.usage.inputTokens,
+    outputTokens: normalized.usage.outputTokens,
+    tokensAvailable:
+      (normalized.usage.inputTokensAvailable ?? inputTokensSource !== "unavailable") &&
+      (normalized.usage.outputTokensAvailable ?? outputTokensSource !== "unavailable"),
+  });
 
   return {
     event_id: `usage-${routeResult.decision.request_id}`,
@@ -676,15 +761,8 @@ function createUsageEvent(
     ...(typeof normalized.vendorMetadata?.costUsd === "number"
       ? { cost_actual: normalized.vendorMetadata.costUsd }
       : {}),
-    ...(typeof normalized.vendorMetadata?.costUsd === "number"
-      ? { cost_estimate: normalized.vendorMetadata.costUsd }
-      : typeof chosenProjectedCandidate?.observed?.cost_per_1k_tokens_est === "number"
-        ? { cost_estimate: chosenProjectedCandidate.observed.cost_per_1k_tokens_est }
-        : {}),
-    ...(typeof normalized.vendorMetadata?.costUsd === "number" ||
-    chosenProjectedCandidate?.observed?.cost_per_1k_tokens_est
-      ? { currency: "USD" }
-      : {}),
+    ...(usageCostEstimate ? { cost_estimate: usageCostEstimate.costUsd } : {}),
+    ...(usageCostEstimate ? { currency: "USD" } : {}),
     ...(normalized.errorClass ? { error_class: normalized.errorClass } : {}),
     sample_source: "live_request",
   };

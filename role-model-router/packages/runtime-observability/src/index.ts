@@ -614,6 +614,38 @@ export interface RuntimeObservationBundle {
   };
 }
 
+/**
+ * Run 98 addendum 50 — the observed-cost signal is a rate per 1,000 tokens.
+ *
+ * The sample used to publish `usageEvent.cost_estimate` directly, which is the request's cost, not a rate. The
+ * router's cost metric reads `cost_per_1k_tokens_est`, so a request total of `0.000735` was scored as if 1,000
+ * tokens cost `$0.000735`. The rate is now derived from the request cost and its tokens, falling back to the
+ * catalog rate when usage is unavailable.
+ */
+export function resolveObservedCostPer1kTokens(input: {
+  readonly requestCostUsd?: number | null;
+  readonly inputTokens?: number | null;
+  readonly outputTokens?: number | null;
+  readonly catalogCostPer1k?: number | null;
+}): number | undefined {
+  const requestCostUsd = input.requestCostUsd;
+  const totalTokens =
+    (Number.isSafeInteger(input.inputTokens) ? (input.inputTokens as number) : 0) +
+    (Number.isSafeInteger(input.outputTokens) ? (input.outputTokens as number) : 0);
+  if (
+    typeof requestCostUsd === "number" &&
+    Number.isFinite(requestCostUsd) &&
+    requestCostUsd > 0 &&
+    totalTokens > 0
+  ) {
+    return (requestCostUsd / totalTokens) * 1000;
+  }
+  const catalogCostPer1k = input.catalogCostPer1k;
+  return typeof catalogCostPer1k === "number" && Number.isFinite(catalogCostPer1k)
+    ? catalogCostPer1k
+    : undefined;
+}
+
 function deriveEndpointVersion(execution: RoutedExecutionResult): string {
   const identity = execution.target.candidate.identity as {
     endpoint_version?: string;
@@ -652,7 +684,12 @@ function buildObservedPerformanceSample(
               1000,
           )
         : undefined,
-    cost_per_1k_tokens_est: input.execution.usageEvent.cost_estimate,
+    cost_per_1k_tokens_est: resolveObservedCostPer1kTokens({
+      requestCostUsd: input.execution.usageEvent.cost_estimate,
+      inputTokens: input.execution.normalized.usage.inputTokens,
+      outputTokens: input.execution.normalized.usage.outputTokens,
+      catalogCostPer1k: input.routingDiagnostics?.catalogEconomics?.cost_per_1k_tokens_est ?? null,
+    }),
     failure: Boolean(input.execution.normalized.errorClass),
     error_class: input.execution.normalized.errorClass ?? undefined,
     request_id: input.decision.request_id,
