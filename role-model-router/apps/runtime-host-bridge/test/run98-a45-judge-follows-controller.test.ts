@@ -89,6 +89,13 @@ test("run98 a45: the policy publishes judgeSource and the retired id is not read
   });
   expect(legacy?.effective.judgeSource).toBe("controller");
   expect(legacy?.effective).not.toHaveProperty("judgeEndpointId");
+  // The retired name is also out of the *hashed* document, so the digest the router reports is the same
+  // digest the policy store reports for the stored policy (both hash the migrated document).
+  const migrated = readLearningPolicyFile({
+    repoRoot: rootWithPolicy({}),
+    channel: "stage",
+  });
+  expect(legacy?.digest).toBe(migrated?.digest);
 });
 
 test("run98 a45: the same policy judges with whichever endpoint is the controller", () => {

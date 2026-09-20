@@ -32,6 +32,28 @@ export const LEARNING_POLICY_STATE_RELATIVE_PATH = "learning/activation-policy-s
 export type ActivationStage = "S0" | "S1" | "S2" | "S3" | "S4";
 const STAGES = new Set<ActivationStage>(["S0", "S1", "S2", "S3", "S4"]);
 
+/**
+ * Run 98 addendum 45 J1 (`A44-S1`'s rule applied at the second process boundary): names the schema retired.
+ *
+ * The policy store migrates a live state file by removing these and reporting them in `retiredFields`; the host
+ * read the raw document, so the two sides hashed *different* documents and the Configuration page showed a
+ * stored digest that could never equal the router's. Stripping here (the same list, the same places) makes both
+ * boundaries resolve and hash the migrated document.
+ */
+const RETIRED_POLICY_FIELDS = ["advisoryAuthorizationTtlMs", "judgeEndpointId"] as const;
+
+function stripRetiredPolicyFields(document: Record<string, unknown>): void {
+  const blocks = [
+    document.global,
+    ...Object.values(asRecord(document.channels)),
+    ...Object.values(asRecord(document.scopes)),
+  ];
+  for (const block of blocks) {
+    const record = asRecord(block);
+    for (const name of RETIRED_POLICY_FIELDS) delete record[name];
+  }
+}
+
 export interface LearningPolicySnapshot {
   readonly policyVersion: number;
   readonly digest: string;
@@ -546,6 +568,9 @@ export function readLearningPolicyFile(input: {
       }),
     );
   }
+  // Run 98 addendum 45 J1: hash and serve the *migrated* document, so the router's digest is the same digest
+  // the operator readback reports for the stored policy.
+  stripRetiredPolicyFields(resolved.document);
   // A durable state that exists but cannot be read is a degradation even when the staged seed saves the day.
   const inheritedDegradation =
     durable.ok === false && durable.optional !== true && resolved.source !== durable.degradation.source
