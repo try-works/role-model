@@ -312,6 +312,14 @@ export function createRouterPairwiseJudge(
             judgeEndpointId: judgeEndpoint.endpointId,
             judgeMode: options.mode,
             presentation: options.presentation,
+            // Run 98 addendum 48 (live v281: `duplicate scorer ID has incompatible version`): the
+            // assignment timestamp is *run-varying* provenance, so it belongs on the decision — which is
+            // immutable per dispatch — and never on the durable scorer manifest, whose `id@version` key
+            // Evaluation Core refuses to reuse with different bytes.
+            ...(input.judgeAssignmentUpdatedAtMs === undefined ||
+            input.judgeAssignmentUpdatedAtMs === null
+              ? {}
+              : { judgeAssignmentUpdatedAtMs: input.judgeAssignmentUpdatedAtMs }),
           },
         };
       };

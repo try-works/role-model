@@ -79,6 +79,11 @@ export interface TrackBPairwiseJudgeDecision {
   readonly judgeMode?: PairwiseJudgeMode;
   /** Run 98 R10: the presentation order the decision was produced under. */
   readonly presentation?: PairwiseJudgePresentation;
+  /**
+   * Run 98 addendum 48: when the controller assignment that named this judge last changed. Run-varying
+   * provenance — it travels on the decision, not on the durable scorer manifest.
+   */
+  readonly judgeAssignmentUpdatedAtMs?: number | null;
   /** Run 98 R10: measured agreement with the reference judge mode, when probed. */
   readonly judgeModeAgreement?: boolean;
   /**

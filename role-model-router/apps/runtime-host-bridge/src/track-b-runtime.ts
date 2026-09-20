@@ -7652,6 +7652,14 @@ export function createRun97PairwiseJudgeScorer(input: {
    * previous judge identity.
    */
   readonly judgeMode?: "identified" | "identity_blind";
+  /**
+   * Run 98 addendum 45 J1 / addendum 48: where the judge came from. It is part of the *definition body*, so a
+   * selector change registers a new `id@version` key instead of colliding with the previous manifest. The
+   * assignment *timestamp* is deliberately not here: it varies per comparison, and a run-varying field in a
+   * durable, immutable registry key is exactly what produced
+   * `duplicate scorer ID has incompatible version` on live v281.
+   */
+  readonly judgeSource?: "controller" | "disabled";
 }): {
   readonly manifestVersion: 2;
   readonly id: string;
@@ -7666,6 +7674,7 @@ export function createRun97PairwiseJudgeScorer(input: {
   readonly source: string;
   readonly judgeEndpointId: string;
   readonly judgeMode: "identified" | "identity_blind";
+  readonly judgeSource: "controller" | "disabled";
 } {
   if (typeof input?.judgeEndpointId !== "string" || !input.judgeEndpointId.trim()) {
     throw new Error("pairwise judge scorer requires a router judge endpoint");
@@ -7705,6 +7714,9 @@ export function createRun97PairwiseJudgeScorer(input: {
     source: "role_model_pairwise_judge",
     judgeEndpointId: input.judgeEndpointId.trim(),
     judgeMode,
+    judgeSource: (input.judgeSource === "disabled" ? "disabled" : "controller") as
+      | "controller"
+      | "disabled",
     /**
      * Run 98 addendum 34 S6: when this judge manifest has a different endpoint than the one already
      * registered for the same scorer set, Evaluation Core records the change; this is the reason it
@@ -7856,6 +7868,7 @@ export async function runTrackBShadowPipeline(
     ? createRun97PairwiseJudgeScorer({
         judgeEndpointId: input.judge.endpointId,
         ...(input.judge.mode ? { judgeMode: input.judge.mode } : {}),
+        ...(input.judge.judgeSource ? { judgeSource: input.judge.judgeSource } : {}),
       })
     : null;
   if (judgeScorer) {
