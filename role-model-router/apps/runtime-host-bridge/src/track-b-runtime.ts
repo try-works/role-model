@@ -7799,6 +7799,19 @@ export async function runTrackBShadowPipeline(
   if (!input.requestId || !input.scope || !input.routePackage) {
     throw new Error("complete shadow pipeline identity is required");
   }
+  /**
+   * Run 98 addendum 48 (live v287: `shadow pipeline start` and then silence for tens of minutes): the pipeline
+   * has no step log, so a stalled run cannot say *which* await it is sitting on. These markers follow the
+   * runtime's existing `ROLE_MODEL_PHASE_TIMING=1` convention, so the launcher already enables them and the
+   * next window names the step instead of the symptom.
+   */
+  const pipelinePhase = (step: string, detail = ""): void => {
+    if (process.env.ROLE_MODEL_PHASE_TIMING === "1") {
+      console.error(
+        `[run98] shadow-pipeline ${step} ${input.requestId}${detail ? ` ${detail}` : ""}`,
+      );
+    }
+  };
   const comparableEvidence = input.comparableEvidence;
   const sourceRollout = comparableEvidence?.source as Record<string, unknown> | undefined;
   const counterfactualRollouts = Array.isArray(comparableEvidence?.counterfactuals)
@@ -7905,9 +7918,11 @@ export async function runTrackBShadowPipeline(
     ),
   );
   if (deterministicCriteriaVerifiable) {
+    pipelinePhase("register-deterministic-scorer");
     await runtime.invoke("evaluation-core", {
       ...envelope("evaluation:register-scorer", scorer),
     });
+    pipelinePhase("register-deterministic-scorer-ok");
   }
   // RC04 (L4): the deterministic semantic-criteria scorer alone cannot decision a
   // real routing counterfactual - live traffic produced `tie` for every group because
@@ -7922,9 +7937,11 @@ export async function runTrackBShadowPipeline(
       })
     : null;
   if (judgeScorer) {
+    pipelinePhase("register-judge-scorer", judgeScorer.judgeSource ?? "");
     await runtime.invoke("evaluation-core", {
       ...envelope("evaluation:register-scorer", judgeScorer),
     });
+    pipelinePhase("register-judge-scorer-ok");
   }
   const rolloutRows = [sourceRollout, ...counterfactualRollouts];
   if (input.evaluationCases.length < 1) {
@@ -8013,6 +8030,7 @@ export async function runTrackBShadowPipeline(
       "durable routing-shadow comparability references do not bind the observed replay",
     );
   }
+  pipelinePhase("attest-references");
   const referenceAttestation = await resolveTrackBReferenceAttestation(
     runtime,
     envelope,
@@ -8023,6 +8041,7 @@ export async function runTrackBShadowPipeline(
       authorizationEpoch: input.authorizationEpoch,
     },
   );
+  pipelinePhase("attest-references-ok");
   // Run 99 R33 (D7 live finding): Evaluation Core refuses a re-created job whose contract-relevant
   // shape changed under the same id ("evaluation job idempotency conflict"), which stranded every
   // capture whose job had been created by the previous build and blocked the comparison. The durable
@@ -8166,7 +8185,9 @@ export async function runTrackBShadowPipeline(
     }),
   };
   try {
+    pipelinePhase("create-job");
     await runtime.invoke("evaluation-core", createJobEnvelope);
+    pipelinePhase("create-job-ok");
   } catch (error) {
     if (!isEvaluationJobIdempotencyConflict(error)) throw error;
   }
