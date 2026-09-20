@@ -40,9 +40,20 @@ test.describe("@recursive:98-shadow-to-active-routing-graduation @a44-s5", () =>
       await expect(page.getByRole("heading", { name: entry.heading }).first()).toBeVisible({
         timeout: 150_000,
       });
-      // Give the page's operator readbacks a moment to settle before the screenshot. `networkidle` never
-      // happens on a live runtime (the page polls its readbacks), so the settle is a bounded wait.
-      await page.waitForTimeout(3_000);
+      /**
+       * Run 98 addendum 44 A44-S5 (re-run on v295): the first capture pass recorded the pages while their
+       * operator readbacks were still resolving (`Loading learning state…`, `loading`, `Reading live replay and
+       * evaluation state`), so the evidence showed the shell instead of the values the requirement asks for. Wait
+       * for the readbacks to settle — bounded, because a live runtime never goes network-idle — and fail the
+       * page's check if it is still loading, so "empty because it never loaded" cannot pass as a rendered page.
+       */
+      const loadingMarker = /Loading learning state|Reading live replay and evaluation state|^\s*loading\s*$/m;
+      let bodyText = await page.locator("body").innerText();
+      for (let attempt = 0; attempt < 30 && loadingMarker.test(bodyText); attempt += 1) {
+        await page.waitForTimeout(2_000);
+        bodyText = await page.locator("body").innerText();
+      }
+      expect(loadingMarker.test(bodyText), `${entry.route} never left its loading state`).toBe(false);
       await page.screenshot({ path: path.join(evidenceDir, entry.shot), fullPage: true });
       const text = await page.locator("body").innerText();
       testInfo.annotations.push({
