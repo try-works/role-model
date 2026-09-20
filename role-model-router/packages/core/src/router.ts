@@ -515,6 +515,20 @@ function supportsCapabilityRequirement(
   if (supportedCapabilities.includes(requirement)) {
     return true;
   }
+  /**
+   * Run 98 addendum 57 §3.3: the catalogue describes code-capable models with `code.edit`, while the taxonomy's
+   * code tasks require `code.read` (and `code.write`). A model that can edit code can read and write it, so the
+   * catalogue declaration satisfies those narrower requirements — without this, a request that declared a code
+   * family was refused as `no_eligible_target` on every endpoint and the code advisory could never apply.
+   * Deliberately narrow: it satisfies nothing else.
+   */
+  const impliedBy: Readonly<Record<string, readonly string[]>> = {
+    "code.read": ["code.edit"],
+    "code.write": ["code.edit"],
+  };
+  if (impliedBy[requirement]?.some((capability) => supportedCapabilities.includes(capability))) {
+    return true;
+  }
   if (supportedCapabilities.some((capability) => capability.startsWith(`${requirement}.`))) {
     return true;
   }
