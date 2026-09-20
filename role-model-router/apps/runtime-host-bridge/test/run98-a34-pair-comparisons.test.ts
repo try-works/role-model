@@ -1,8 +1,9 @@
 import { createHash } from "node:crypto";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
+import { DatabaseSync } from "node:sqlite";
 import { afterEach, describe, expect, test } from "vitest";
 
 import { createSupervisedReplayEvaluationCompleter } from "../src/cli.js";
@@ -30,7 +31,11 @@ const artifactId = (pattern: string): string =>
 const hash = (value: string): string => createHash("sha256").update(value).digest("hex");
 
 const tempRoots: string[] = [];
+/** Run 98 addendum 56 §6.2: the durable payload the fake host answers an externalized attestation from. */
+const externalizedOutputs = new Map<string, { readonly resultHash: string; readonly payload: string }>();
+const ATTESTATION_OUTPUT_KEY = "attestation:run98:a34:externalized";
 afterEach(() => {
+  externalizedOutputs.clear();
   for (const root of tempRoots.splice(0)) rmSync(root, { recursive: true, force: true });
 });
 
@@ -83,6 +88,14 @@ function createFakeRuntime(
    * evidenceRef, readCapability, workerPid}` — so the bridge has to unwrap that shape as well.
    */
   transportEnvelope = false,
+  /**
+   * Run 98 addendum 56 §6.2: the packaged host may store a large business answer in its durable output store and
+   * answer with the transfer marker (`businessOutput.transferState === "externalized"` plus a `durableLocator`),
+   * which is the second shape the live `attestation schema is invalid` class can come from.
+   */
+  externalizedAttestation = false,
+  externalizedStateRoot: string | null = null,
+  externalizedScopeId = "tenant:run98",
 ) {
   let writeIndex = 0;
   let trialIndex = 0;
@@ -159,6 +172,44 @@ function createFakeRuntime(
             ]),
           ),
         };
+        if (externalizedAttestation) {
+          const payload = JSON.stringify(attestation);
+          const resultHash = `sha256:${hash(payload)}`;
+          externalizedOutputs.set(ATTESTATION_OUTPUT_KEY, { resultHash, payload });
+          if (externalizedStateRoot) {
+            // The host stores the payload and answers the marker; the fixture writes the store it will be read
+            // from, exactly as the packaged host's durable output store does.
+            const directory = path.join(
+              externalizedStateRoot,
+              externalizedScopeId,
+              "track-b",
+              "extensions",
+              "workers",
+              "evaluation-core",
+            );
+            mkdirSync(directory, { recursive: true });
+            const database = new DatabaseSync(path.join(directory, "durable-output.sqlite"));
+            try {
+              database.exec(
+                "CREATE TABLE IF NOT EXISTS durable_extension_outputs (output_key TEXT PRIMARY KEY, result_json TEXT, result_hash TEXT, byte_length INTEGER)",
+              );
+              database
+                .prepare("INSERT OR REPLACE INTO durable_extension_outputs VALUES (?,?,?,?)")
+                .run(ATTESTATION_OUTPUT_KEY, payload, resultHash, payload.length);
+            } finally {
+              database.close();
+            }
+          }
+          return {
+            businessOutput: {
+              transferState: "externalized",
+              resultHash,
+              byteLength: payload.length,
+            },
+            durableLocator: { outputKey: ATTESTATION_OUTPUT_KEY, resultHash },
+            workerPid: 4321,
+          };
+        }
         return transportEnvelope ? inTransportEnvelope(attestation) : attestation;
       }
       if (id === "evaluation-core" && capability === "evaluation:list-trials") {
@@ -246,6 +297,10 @@ function buildScenario(
     readonly judgeEndpointId?: string;
     readonly wrapReadback?: boolean;
     readonly transportEnvelope?: boolean;
+    readonly externalizedAttestation?: boolean;
+    readonly contractStateRoot?: string;
+    /** Windows cannot hold a `:` in a directory name, so a fixture that externalizes uses a plain scope id. */
+    readonly scope?: string;
   } = {},
 ) {
   const sourceCapture = capture("1");
@@ -269,6 +324,9 @@ function buildScenario(
       capturedFinalizers,
       options.wrapReadback === true,
       options.transportEnvelope === true,
+      options.externalizedAttestation === true,
+      options.contractStateRoot ?? null,
+      options.scope ?? "tenant:run98",
     ),
     operations: {
       async readLocalRouteCapture(input) {
@@ -280,7 +338,8 @@ function buildScenario(
     },
     requestId: "request:run98:a34",
     channel: "development",
-    scope: "tenant:run98",
+    scope: options.scope ?? "tenant:run98",
+    ...(options.contractStateRoot ? { contractStateRoot: options.contractStateRoot } : {}),
     sourceCapture: sourceCapture as unknown as Record<string, unknown>,
     sourceOutput: "output:1",
     sourceEndpointId: sourceCapture.endpointId,
@@ -351,6 +410,8 @@ function buildScenario(
     capturedJobs,
     capturedFinalizers,
     invoke,
+    /** Run 98 addendum 56 §6.2: the inputs the pipeline actually ran with (their scope locates the store). */
+    pipelineInputs,
   };
 }
 
@@ -587,5 +648,25 @@ describe("run 98 addendum 34 S1 pair comparisons", () => {
       transportEnvelope: true,
     });
     await expect(scenario.invoke()).resolves.toBeTruthy();
+  });
+
+  /**
+   * Run 98 addendum 56 §6.2 (the residual `attestation schema is invalid` class): the packaged host may store a
+   * large business answer in its durable output store and answer with the transfer marker
+   * (`businessOutput.transferState === "externalized"` plus a `durableLocator`). Unwrapping that answer yields the
+   * marker, whose `schemaVersion` is absent — the same refusal the live ledger records. The attestation path must
+   * resolve the externalized payload from the artifact store the way the comparison readback already does.
+   */
+  test("an externalized attestation is resolved from the durable output store before validation", async () => {
+    const scenario = buildScenario(["a", "b"], undefined, {
+      judgeEndpointId: "endpoint:judge-stub",
+      externalizedAttestation: true,
+    });
+    // Without a resolvable durable output store the pipeline must still refuse — but the refusal now names the
+    // shape it saw (keys, never values) instead of the opaque `schema is invalid` the ledger recorded three times.
+    await expect(scenario.invoke()).rejects.toThrow(
+      /attestation schema is invalid \(answer keys: transferState,resultHash,byteLength\)/,
+    );
+    expect(externalizedOutputs.has(ATTESTATION_OUTPUT_KEY)).toBe(true);
   });
 });

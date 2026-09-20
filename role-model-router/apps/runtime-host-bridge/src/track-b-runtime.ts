@@ -5786,7 +5786,16 @@ function trackBReferenceEntries(refs: TrackBEvaluationReferences): Record<string
 function validateTrackBReferenceAttestation(
   value: unknown,
   refs: TrackBEvaluationReferences,
-  context: Readonly<{ channel: string; scope: string; authorizationEpoch: number }>,
+  context: Readonly<{
+    channel: string;
+    scope: string;
+    authorizationEpoch: number;
+    /**
+     * Run 98 addendum 56 §6.2: needed to resolve an *externalized* attestation (the durable output store lives
+     * under the contract state root), exactly as the comparison readback already does.
+     */
+    contractStateRoot?: string;
+  }>,
   additionalReferences: Readonly<Record<string, string>> = {},
   nowMs = Date.now(),
 ): TrackBReferenceAttestation {
@@ -5795,7 +5804,15 @@ function validateTrackBReferenceAttestation(
   }
   const attestation = value as TrackBReferenceAttestation;
   if (attestation.schemaVersion !== "role-model.evaluation-reference-attestation.v1") {
-    throw new Error("trusted evaluation reference attestation schema is invalid");
+    /**
+     * Run 98 addendum 56 §6.2: this error name was opaque — three live dispositions were refused by it without
+     * naming the shape that arrived. The keys are business-record field names (never values), so the next
+     * occurrence diagnoses itself.
+     */
+    const observedKeys = Object.keys(attestation as Record<string, unknown>).slice(0, 8).join(",");
+    throw new Error(
+      `trusted evaluation reference attestation schema is invalid (answer keys: ${observedKeys || "none"})`,
+    );
   }
   const authority = attestation.authority;
   if (
@@ -6247,11 +6264,43 @@ export async function readTrackBAdvisoryMeasurement(input: {
   };
 }
 
+/**
+ * Run 98 addendum 56 §6.2 — resolve the *business* answer of an extension invoke.
+ *
+ * The packaged host answers a business record in one of three shapes: bare, wrapped in its transport envelope
+ * (`{value|result|businessOutput: …}` beside the transfer fields), or **externalized** — a marker
+ * (`businessOutput.transferState === "externalized"`) plus a `durableLocator` whose payload lives in the
+ * extension's durable output store. Only the first two were handled, so an externalized attestation reached the
+ * schema check as the marker and was refused with `trusted evaluation reference attestation schema is invalid` —
+ * the residual class in the live ledger. Returns null when the answer carries no business record at all.
+ */
+export function resolveExtensionBusinessAnswer(input: {
+  readonly result: unknown;
+  readonly extensionId: string;
+  readonly scopeId: string;
+  readonly stateRoot?: string;
+}): Record<string, unknown> | null {
+  return (
+    decodeExtensionBusinessResult({
+      result: input.result,
+      extensionId: input.extensionId,
+      ...(input.stateRoot ? { stateRoot: input.stateRoot } : {}),
+      scopeId: input.scopeId,
+    }) ?? unwrapExtensionBusinessValue(input.result)
+  );
+}
+
 async function resolveTrackBReferenceAttestation(
   runtime: TrackBShadowPipelineRuntime,
   envelope: (capability: string, value: unknown) => Record<string, unknown>,
   refs: TrackBEvaluationReferences,
-  context: Readonly<{ channel: string; scope: string; authorizationEpoch: number }>,
+  context: Readonly<{
+    channel: string;
+    scope: string;
+    authorizationEpoch: number;
+    /** Run 98 addendum 56 §6.2: the externalized attestation payload is resolved under this state root. */
+    contractStateRoot?: string;
+  }>,
   additionalReferences: Readonly<Record<string, string>> = {},
 ): Promise<TrackBReferenceAttestation> {
   const result = await runtime.invoke(
@@ -6267,8 +6316,20 @@ async function resolveTrackBReferenceAttestation(
    * inside its transport envelope (`{businessOutput: …}` beside the transfer marker). Validating the
    * envelope directly reported `trusted evaluation reference attestation schema is invalid` for a valid
    * attestation — the second of the two 409s the replay leg deferred with on v293.
+   *
+   * Run 98 addendum 56 §6.2: the same class still fired occasionally after that fix. The host may also answer a
+   * *large* business record with the transfer marker (`businessOutput.transferState === "externalized"`) and a
+   * `durableLocator`, in which case unwrapping yields the marker and the schema check sees no `schemaVersion`.
+   * The answer therefore goes through `decodeExtensionBusinessResult` first, which resolves the externalized
+   * payload from the extension's durable output store, and only then through the envelope unwrap.
    */
-  const attested = unwrapExtensionBusinessValue(result) ?? result;
+  const attested =
+    resolveExtensionBusinessAnswer({
+      result,
+      extensionId: "evaluation-core",
+      scopeId: context.scope,
+      ...(context.contractStateRoot ? { stateRoot: context.contractStateRoot } : {}),
+    }) ?? result;
   return validateTrackBReferenceAttestation(attested, refs, context, additionalReferences);
 }
 
@@ -8077,6 +8138,7 @@ export async function runTrackBShadowPipeline(
       channel: input.channel,
       scope: input.scope,
       authorizationEpoch: input.authorizationEpoch,
+      ...(input.contractStateRoot ? { contractStateRoot: input.contractStateRoot } : {}),
     },
   );
   pipelinePhase("attest-references-ok");
@@ -8388,6 +8450,7 @@ export async function runTrackBShadowPipeline(
         channel: input.channel,
         scope: input.scope,
         authorizationEpoch: input.authorizationEpoch,
+        ...(input.contractStateRoot ? { contractStateRoot: input.contractStateRoot } : {}),
       },
       {
         trialOutputRef: execution.outputRef,
