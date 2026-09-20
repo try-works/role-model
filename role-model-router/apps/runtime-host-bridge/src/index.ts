@@ -3198,6 +3198,12 @@ export interface StartBridgeServerOptions {
   readonly readLearningActivity?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
   readonly readLearningHistory?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
   readonly readLearningPolicy?: (query?: Readonly<Record<string, string>>) => Promise<unknown>;
+  /**
+   * Run 98 addendum 44 `A44-S4`: what the *router* resolved for the live scope (source, version, digest and
+   * any bounded degradation). The policy readback attaches it, so the Configuration page can say which
+   * document is actually governing instead of presenting a stored policy the router is not using.
+   */
+  readonly resolveLearningPolicySource?: () => unknown;
   /** Run 99 (option 2): anonymous loopback Learning readbacks (`on`/`off`, default by bind host). */
   readonly anonymousLearningReads?: "on" | "off" | boolean;
   /**
@@ -15472,6 +15478,29 @@ function writeOperatorResult(response: ServerResponse, result: unknown): void {
 }
 
 /**
+ * Run 98 addendum 44 `A44-S4`: attach the router's own policy resolution to a policy readback.
+ *
+ * Best-effort by construction: a resolution probe that throws or answers nothing leaves the readback exactly
+ * as the sidecar sent it, because a diagnostic must never be able to break the operator surface it explains.
+ */
+export function attachRouterPolicyResolution(
+  payload: unknown,
+  resolve: (() => unknown) | undefined,
+): unknown {
+  if (!resolve || payload === null || typeof payload !== "object" || Array.isArray(payload)) {
+    return payload;
+  }
+  let resolution: unknown;
+  try {
+    resolution = resolve();
+  } catch {
+    return payload;
+  }
+  if (!resolution || typeof resolution !== "object" || Array.isArray(resolution)) return payload;
+  return { ...(payload as Record<string, unknown>), routerResolution: resolution };
+}
+
+/**
  * Run 99 R28: a refused *mutation* must not be reported as success.
  *
  * Observed live: activating an unknown pack answered HTTP 200 with
@@ -15922,7 +15951,10 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           }
           writeOperatorResult(
             response,
-            await options.readLearningPolicy(Object.fromEntries(url.searchParams)),
+            attachRouterPolicyResolution(
+              await options.readLearningPolicy(Object.fromEntries(url.searchParams)),
+              options.resolveLearningPolicySource,
+            ),
           );
           return;
         }

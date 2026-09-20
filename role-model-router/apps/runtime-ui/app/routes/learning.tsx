@@ -29,6 +29,7 @@ import {
   type LearningPolicyView,
 } from "../lib/learning-api";
 import { fetchLearningProfileState, fetchLearningSummary } from "../lib/runtime-api";
+import { summarizePolicyResolution } from "../lib/learning-policy-resolution";
 import { fetchLearningActivity, fetchLearningHistory } from "../lib/learning-api";
 import { LearningLivePanelView } from "../components/learning-live-panel";
 import {
@@ -389,6 +390,11 @@ export function LearningConfigurationPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const view = policy.value;
+  // Run 98 addendum 44 `A44-S4`: the page renders the stored document *and* the router's own resolution, so a
+  // damaged policy source reads as a degraded state instead of a policy the router is not using.
+  const resolution = summarizePolicyResolution(view);
+  const routerReported = Boolean(view?.routerResolution);
+  const storedDegraded = Boolean(view?.degraded);
   const validation = useMemo(
     () => validatePolicyDraft(view?.fields ?? [], draft),
     [view?.fields, draft],
@@ -489,6 +495,33 @@ export function LearningConfigurationPage() {
       {degraded(policy.loading, policy.error) ??
         (view ? (
           <>
+            <div className="mt-4 rounded border border-[var(--rm-border)] p-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={monoEyebrowClassName}>Router resolution</span>
+                <Badge tone={resolution.authoritative ? "neutral" : "warning"}>
+                  {resolution.authoritative
+                    ? "policy authoritative"
+                    : routerReported
+                      ? "router degraded"
+                      : "readback degraded"}
+                </Badge>
+              </div>
+              <div className="mt-2 grid gap-3 sm:grid-cols-3">
+                <Metric label="Router stage" value={resolution.routerStage ?? "not reported"} />
+                <Metric label="Router policy source" value={resolution.routerSource ?? "not reported"} />
+                <Metric label="Router policy digest" value={resolution.routerDigest ?? "not reported"} />
+                <Metric
+                  label="Stored policy version"
+                  value={resolution.storedPolicyVersion === null ? "not reported" : String(resolution.storedPolicyVersion)}
+                />
+                <Metric label="Stored policy digest" value={resolution.storedDigest ?? "not reported"} />
+              </div>
+              {resolution.warning ? (
+                <div className="mt-2">
+                  <ErrorState label={resolution.warning} />
+                </div>
+              ) : null}
+            </div>
             <div className="mt-4 overflow-x-auto">
               <table className="min-w-full text-left text-sm">
                 <thead>
@@ -546,7 +579,7 @@ export function LearningConfigurationPage() {
             <div className="mt-4 flex flex-wrap gap-2">
               <button
                 className={primaryButtonClassName}
-                disabled={busy || Object.keys(validation.changes).length === 0}
+                disabled={busy || storedDegraded || Object.keys(validation.changes).length === 0}
                 onClick={() => void save()}
                 type="button"
               >
@@ -563,7 +596,10 @@ export function LearningConfigurationPage() {
             </div>
             <p className={`mt-2 ${supportingTextClassName}`}>
               Saving writes a new policy version with a receipt (previous/new digest, operator,
-              effective time) and is rejected if another client changed the policy first.
+              effective time) and is rejected if another client changed the policy first
+              {storedDegraded
+                ? "; it is refused while the stored policy state is degraded, so a damaged file is repaired rather than overwritten."
+                : "."}
             </p>
           </>
         ) : null)}

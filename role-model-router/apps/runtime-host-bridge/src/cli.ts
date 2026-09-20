@@ -86,6 +86,7 @@ import {
   planPairComparisons,
 } from "./track-b-pair-coverage.js";
 import {
+  describeRouterPolicyResolution,
   readLearningPolicyFile,
   resolveLearningPolicyStateRoot,
 } from "./learning-policy-file.js";
@@ -2556,6 +2557,8 @@ export function createCliServerOptions(
     anonymousLearningReads?: "on" | "off";
     /** Run 98 addendum 34 S7: the operator re-score action. */
     rescoreLearningScores?: StartBridgeServerOptions["rescoreLearningScores"];
+    /** Run 98 addendum 44 `A44-S4`: the router's own policy resolution for the readback. */
+    resolveLearningPolicySource?: StartBridgeServerOptions["resolveLearningPolicySource"];
   },
   backendOrResolver: CliBackend | CliBackendResolver,
   shutdown?: () => Promise<void>,
@@ -2593,6 +2596,9 @@ export function createCliServerOptions(
     operatorContext: options.operatorContext,
     ...(options.rescoreLearningScores
       ? { rescoreLearningScores: options.rescoreLearningScores }
+      : {}),
+    ...(options.resolveLearningPolicySource
+      ? { resolveLearningPolicySource: options.resolveLearningPolicySource }
       : {}),
     shutdown,
     registry: resolveBackend()?.effectiveRegistry ?? EMPTY_REGISTRY,
@@ -3732,6 +3738,20 @@ export async function main(): Promise<void> {
         runtimeStateRoot: options.runtimeStateRoot,
         runtimeChannel: packagedProfile?.channel ?? "development",
         ...(anonymousLearningReads ? { anonymousLearningReads } : {}),
+        // Run 98 addendum 44 `A44-S4`: the Configuration page shows what the router resolved, so a damaged
+        // policy source reads as a degraded readback instead of a stored document that is not in effect.
+        resolveLearningPolicySource: () =>
+          describeRouterPolicyResolution(
+            readLearningPolicyFile({
+              repoRoot: options.repoRoot,
+              stateRoot: resolveLearningPolicyStateRoot({
+                runtimeStateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+              }),
+              channel: packagedProfile?.channel ?? "development",
+              scopeId: options.scopeId,
+            }),
+          ),
         // Run 98 addendum 34 S7: the operator re-score route reads the handler through the holder above.
         rescoreLearningScores: async (body: Readonly<Record<string, unknown>> = {}) => {
           const handler = rescoreLearningScoresRef.current;

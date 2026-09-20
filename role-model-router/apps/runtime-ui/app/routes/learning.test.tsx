@@ -103,6 +103,25 @@ describe("LearningRoute", () => {
    * fields, and the old `=== undefined` test pushed every enum into the numeric branch, so the Range column
    * read "— – —" for `stage` — the field the operator was looking at.
    */
+  /**
+   * Run 98 addendum 44 `A44-S4`: the Configuration page renders the router's own policy resolution next to the
+   * stored document, and a degraded resolution is a visible warning naming the failing field or version — not
+   * a stored policy presented as if it were in effect.
+   */
+  test("run98 a44 s4: the configuration page renders the router policy resolution and its degraded state", () => {
+    const routeSource = readFileSync(new URL("./learning.tsx", import.meta.url), "utf8");
+    for (const token of [
+      "summarizePolicyResolution",
+      "routerResolution",
+      "Router resolution",
+      "resolution.warning",
+      "resolution.routerStage",
+      "resolution.storedDigest",
+    ]) {
+      expect(routeSource).toContain(token);
+    }
+  });
+
   test("run98 a47: a policy field's range shows enum values, not an empty numeric span", () => {
     const field = (overrides: Partial<LearningPolicyField>): LearningPolicyField =>
       ({

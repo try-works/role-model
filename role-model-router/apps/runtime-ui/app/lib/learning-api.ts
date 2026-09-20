@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { type RuntimeFetcher, fetchJson, postJson, withRuntimeStartupRetry } from "./runtime-api";
+import type {
+  PolicyDegradationView,
+  RouterPolicyResolutionView,
+} from "./learning-policy-resolution";
 
 /**
  * Run 98 R17: the Learning surface's operator client.
@@ -32,6 +36,14 @@ export interface LearningPolicyView {
   readonly effective: Record<string, unknown>;
   readonly fields: readonly LearningPolicyField[];
   readonly receipts?: readonly Record<string, unknown>[];
+  /**
+   * Run 98 addendum 44 `A44-S4`: false when the durable readback itself is degraded (damaged or
+   * unknown-version state file), and the bounded receipt that says why.
+   */
+  readonly authoritative?: boolean;
+  readonly degraded?: PolicyDegradationView;
+  /** Run 98 addendum 44 `A44-S4`: what the router resolved for the live scope. */
+  readonly routerResolution?: RouterPolicyResolutionView;
 }
 
 export interface LearningPolicyChangeResult {
