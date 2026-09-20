@@ -28,7 +28,7 @@ import {
   type LearningPolicyField,
   type LearningPolicyView,
 } from "../lib/learning-api";
-import { fetchLearningSummary } from "../lib/runtime-api";
+import { fetchLearningProfileState, fetchLearningSummary } from "../lib/runtime-api";
 import { fetchLearningActivity, fetchLearningHistory } from "../lib/learning-api";
 import { LearningLivePanelView } from "../components/learning-live-panel";
 import {
@@ -37,7 +37,14 @@ import {
   LearningComparisonMixView,
   LearningGuardrailListView,
 } from "../components/learning-history-panels";
-import { normalizeLearningActivity, normalizeLearningHistory } from "../lib/learning-visuals";
+import {
+  appliedShareOf,
+  fallbackReasonRows,
+  formatPercentShare,
+  normalizeLearningActivity,
+  normalizeLearningHistory,
+  profileInspectionView,
+} from "../lib/learning-visuals";
 
 /**
  * Run 98 R17: the Learning route.
@@ -183,8 +190,23 @@ export function LearningOverviewPage() {
     () => fetchLearningActivity(fetch, token || undefined, { windowMinutes: 60, limit: 24 }),
     [token],
   );
+  /**
+   * Run 98 addendum 44 `A44-S3` (`AC-R12-01`): the guardrail status and rollback count live in the history
+   * readback, and the profile-inspection capability is reported as a bounded state rather than an error.
+   */
+  const history = useOperatorSurface<Record<string, unknown>>(
+    () => fetchLearningHistory(fetch, token || undefined, { hours: 24 }),
+    [token],
+  );
+  const profile = useOperatorSurface<Awaited<ReturnType<typeof fetchLearningProfileState>>>(
+    () => fetchLearningProfileState(fetch, token || undefined),
+    [token],
+  );
   const activityView = normalizeLearningActivity(activity.value);
+  const historyView = normalizeLearningHistory(history.value);
+  const profileView = profile.value ?? profileInspectionView(null);
   const advisory = asRecord(asRecord(summary.value).advisory);
+  const fallbackReasons = fallbackReasonRows(advisory, 3);
   // Run 98 addendum 31 S5: how much of the scored evidence is actually checkable.
   const auditability = asRecord(asRecord(summary.value).auditability);
   const rolloutValue = asRecord(rollout.value);
@@ -226,7 +248,33 @@ export function LearningOverviewPage() {
               value={`${show(advisory.observed)} · fresh ${show(advisory.fresh)} · stale ${show(advisory.stale)} · unavailable ${show(advisory.unavailable)}`}
             />
             <Metric label="Influence rate" value={show(advisory.influenceRate)} />
+            {/* Run 98 addendum 44 A44-S3: the R12 numbers the Overview was missing. */}
+            <Metric label="Applied share" value={formatPercentShare(appliedShareOf(advisory))} />
+            <Metric
+              label="Fallback reasons"
+              value={
+                fallbackReasons.length > 0
+                  ? fallbackReasons.map((row) => `${row.reason} ×${row.count}`).join(" · ")
+                  : "none recorded"
+              }
+            />
             <Metric label="Would have changed" value={show(advisory.wouldHaveChanged)} />
+            <Metric
+              label="Guardrails"
+              value={`${show(historyView.guardrailsFiring)} firing · window ${show(asRecord(history.value).guardrailWindowMinutes)} min`}
+            />
+            <Metric
+              label="Rollbacks"
+              value={`${show(historyView.totals.rollbacks)} · ${show(historyView.totals.guardrailBreaches)} breaches`}
+            />
+            <Metric
+              label="Profile inspection"
+              value={
+                profileView.state === "available"
+                  ? "available"
+                  : `unavailable${profileView.reason ? ` · ${profileView.reason}` : ""}`
+              }
+            />
             <Metric
               label="Input auditability"
               value={`${show(auditability.resolvedInputs)} resolved · ${show(auditability.unresolvedInputs)} unresolved · ${show(auditability.missingInputProof)} no proof`}

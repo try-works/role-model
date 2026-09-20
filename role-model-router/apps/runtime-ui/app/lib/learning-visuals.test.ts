@@ -4,10 +4,14 @@ import {
   EMPTY_LEARNING_ACTIVITY,
   EMPTY_LEARNING_HISTORY,
   formatCompact,
+  formatPercentShare,
   formatRelativeAge,
+  appliedShareOf,
+  fallbackReasonRows,
   historyHeatmap,
   normalizeLearningActivity,
   normalizeLearningHistory,
+  profileInspectionView,
 } from "./learning-visuals";
 
 /**
@@ -159,6 +163,53 @@ describe("historyHeatmap", () => {
 });
 
 describe("formatters", () => {
+  /**
+   * Run 98 addendum 44 `A44-S3` (`AC-R12-01`): the Learning Overview must report the applied share, the
+   * fallback counts by reason, the rollback count, the guardrail status and — when the packaged runtime has
+   * no profile-inspection capability — that absence as a bounded `unavailable` with its reason rather than
+   * an error or a blank.
+   */
+  test("run98 a44 s3: the overview helpers compute the readback's missing numbers", () => {
+    expect(appliedShareOf({ applied: 55, observed: 11_778 })).toBeCloseTo(0.00467, 5);
+    expect(appliedShareOf({ applied: 0, observed: 0 })).toBeNull();
+    expect(appliedShareOf(null)).toBeNull();
+
+    const reasons = fallbackReasonRows({
+      fallbackReasons: {
+        advisory_candidate_not_eligible: 4_708,
+        outside_score_band: 12,
+        advisory_stale: 2,
+      },
+    });
+    expect(reasons.map((row) => row.reason)).toEqual([
+      "advisory_candidate_not_eligible",
+      "outside_score_band",
+      "advisory_stale",
+    ]);
+    expect(fallbackReasonRows({ fallbackReasons: {} })).toEqual([]);
+    expect(fallbackReasonRows(null)).toEqual([]);
+
+    expect(profileInspectionView({ capability: "profile", state: "ready" })).toEqual({
+      state: "available",
+      reason: null,
+    });
+    expect(
+      profileInspectionView({
+        error: "operator_capability_unavailable",
+        reason: "learning profile inspection operator control is unavailable.",
+        capability: "learning profile inspection",
+      }),
+    ).toEqual({
+      state: "unavailable",
+      reason: "learning profile inspection operator control is unavailable.",
+    });
+    expect(profileInspectionView(null)).toEqual({ state: "unavailable", reason: null });
+
+    expect(formatPercentShare(0)).toBe("0.0%");
+    expect(formatPercentShare(0.25)).toBe("25.0%");
+    expect(formatPercentShare(null)).toBe("—");
+  });
+
   test("formatRelativeAge buckets seconds, minutes, hours and days", () => {
     const now = 10 * HOUR;
     expect(formatRelativeAge(now - 30_000, now)).toBe("30s ago");

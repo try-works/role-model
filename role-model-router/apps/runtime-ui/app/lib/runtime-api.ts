@@ -2019,6 +2019,43 @@ export async function fetchLearningProfile(
   );
 }
 
+/**
+ * Run 98 addendum 44 `A44-S3`: the profile-inspection capability is not wired into the packaged stage, and the
+ * host answers a bounded `503 operator_capability_unavailable` with its reason. The Overview must show that as
+ * a first-class state rather than an error, so this read never throws: it reports what the runtime said.
+ */
+export async function fetchLearningProfileState(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<{
+  readonly state: "available" | "unavailable";
+  readonly reason: string | null;
+  readonly value: Readonly<Record<string, unknown>> | null;
+}> {
+  const response = await fetcher(
+    "/api/role-model/operator/learning/profile",
+    withOperatorToken(undefined, operatorToken),
+  );
+  let payload: Record<string, unknown> | null = null;
+  try {
+    const parsed = await response.json();
+    payload =
+      typeof parsed === "object" && parsed !== null ? (parsed as Record<string, unknown>) : null;
+  } catch {
+    payload = null;
+  }
+  if (!response.ok) {
+    const reason =
+      typeof payload?.reason === "string" && payload.reason.trim()
+        ? payload.reason.trim()
+        : typeof payload?.message === "string" && payload.message.trim()
+          ? payload.message.trim()
+          : null;
+    return { state: "unavailable", reason, value: null };
+  }
+  return { state: "available", reason: null, value: payload };
+}
+
 export async function fetchLearningAdvisory(
   fetcher: RuntimeFetcher = fetch,
   operatorToken?: string,

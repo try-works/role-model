@@ -430,3 +430,64 @@ export function formatBucketLabel(startMs: number, bucketHours: number): string 
   const hour = `${date.getHours()}`.padStart(2, "0");
   return bucketHours >= 24 ? `${month}-${day}` : `${month}-${day} ${hour}:00`;
 }
+
+/**
+ * Run 98 addendum 44 `A44-S3` (`AC-R12-01`): the numbers the Learning Overview owes the operator that were
+ * missing from it — the applied share, the fallback counts by reason, and the profile-inspection state. Each
+ * helper answers `null`/empty rather than inventing a value, so a surface can say "not reported" honestly.
+ */
+
+/** The share of observed decisions the advisory was actually applied to; null when nothing was observed. */
+export function appliedShareOf(advisory: unknown): number | null {
+  const record = asRecordValue(advisory);
+  const applied = numberOrNull(record?.applied);
+  const observed = numberOrNull(record?.observed);
+  if (applied === null || observed === null || observed <= 0) return null;
+  return applied / observed;
+}
+
+/** Fallback reasons, most frequent first, bounded so one long tail cannot grow the panel without limit. */
+export function fallbackReasonRows(
+  advisory: unknown,
+  limit = 4,
+): readonly { readonly reason: string; readonly count: number }[] {
+  const reasons = asRecordValue(asRecordValue(advisory)?.fallbackReasons);
+  if (!reasons) return [];
+  return Object.entries(reasons)
+    .flatMap(([reason, count]) => {
+      const numeric = numberOrNull(count);
+      return numeric !== null && numeric > 0 ? [{ reason, count: numeric }] : [];
+    })
+    .sort((left, right) => right.count - left.count || left.reason.localeCompare(right.reason, "en"))
+    .slice(0, Math.max(0, limit));
+}
+
+/**
+ * The profile-inspection readback is unavailable in the packaged stage (the host answers a bounded 503), so
+ * the Overview reports that as a first-class state with its reason instead of an error or a blank.
+ */
+export function profileInspectionView(payload: unknown): {
+  readonly state: "available" | "unavailable";
+  readonly reason: string | null;
+} {
+  const record = asRecordValue(payload);
+  const reason =
+    typeof record?.reason === "string" && record.reason.trim() ? record.reason.trim() : null;
+  if (!record || record.error === "operator_capability_unavailable") {
+    return { state: "unavailable", reason };
+  }
+  return { state: "available", reason };
+}
+
+export function formatPercentShare(value: number | null): string {
+  if (value === null || !Number.isFinite(value)) return "—";
+  return `${(value * 100).toFixed(1)}%`;
+}
+
+function asRecordValue(value: unknown): Record<string, unknown> | null {
+  return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : null;
+}
+
+function numberOrNull(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
