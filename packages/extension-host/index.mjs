@@ -369,6 +369,13 @@ export class ExtensionHost {
     compatibleProtocolVersions = [],
     authorizationEpoch = 0,
     timeoutMs = 1_000,
+    /**
+     * Run 98 addendum 48 (live v288: `shadow-pipeline register-deterministic-scorer` and then silence):
+     * the per-invoke timeout used to be armed *inside* `execute()`, so a caller waiting for a concurrency slot
+     * could wait forever — `maxConcurrent` saturated invokes simply queued with no bound and no error. This is
+     * the bound on that queue wait; it defaults to the invoke timeout.
+     */
+    queueTimeoutMs = null,
     startupTimeoutMs = 2_000,
     maxConcurrent = 8,
     maxQueued = 64,
@@ -391,6 +398,8 @@ export class ExtensionHost {
     this.protocolVersion = protocolVersion;
     this.protocolVersions = new Set([protocolVersion, ...compatibleProtocolVersions]);
     this.timeoutMs = timeoutMs;
+    this.queueTimeoutMs =
+      Number.isSafeInteger(queueTimeoutMs) && queueTimeoutMs > 0 ? queueTimeoutMs : timeoutMs;
     this.startupTimeoutMs = startupTimeoutMs;
     this.authorizationEpoch = authorizationEpoch;
     this.maxConcurrent = maxConcurrent;
@@ -772,7 +781,22 @@ export class ExtensionHost {
       return Promise.reject(new Error("extension queue capacity exceeded"));
     }
     return new Promise((resolve, reject) => {
+      /**
+       * Run 98 addendum 48: bound the wait for a concurrency slot. Without this a saturated extension (or one
+       * whose in-flight calls never answer) left every later caller pending forever with no timeout armed.
+       */
+      let queueTimer = setTimeout(() => {
+        const index = this.#queue.indexOf(execute);
+        if (index >= 0) this.#queue.splice(index, 1);
+        this.#record(id, "queue_timeout", envelope);
+        reject(
+          new Error(
+            `extension ${id} failed: queue timeout after ${this.queueTimeoutMs}ms (${envelope.capability})`,
+          ),
+        );
+      }, this.queueTimeoutMs);
       const execute = async () => {
+        clearTimeout(queueTimer);
         this.#active += 1;
         let timer;
         let abort;
