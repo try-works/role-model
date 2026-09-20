@@ -10987,8 +10987,38 @@ export async function createExtensionRuntime(options: {
     return result;
   };
   return {
-    invoke(id: string, envelope: Record<string, unknown>) {
-      return host.invoke(id, envelope);
+    /**
+     * Run 98 addendum 49 §5: the host's own production extension runtime is where the shadow pipeline's
+     * `register-deterministic-scorer` invoke stalls (the sidecar's shadow-pipeline script logs nothing, so the
+     * caller is the host process). One marker on each side of the delegation turns "it never returns" into a
+     * named boundary: entered (with the capability and the extension's lifecycle) and returned or threw.
+     */
+    async invoke(id: string, envelope: Record<string, unknown>) {
+      const phaseTiming = process.env.ROLE_MODEL_PHASE_TIMING === "1";
+      const capability = String(envelope?.capability ?? "");
+      const startedAtMs = Date.now();
+      if (phaseTiming) {
+        const lifecycle = host.listExtensionStates().find((state) => state.id === id)?.lifecycle ?? "unknown";
+        console.error(`[run98] host-runtime invoke-start ${id} ${capability} lifecycle=${lifecycle}`);
+      }
+      try {
+        const result = await host.invoke(id, envelope);
+        if (phaseTiming) {
+          console.error(
+            `[run98] host-runtime invoke-ok ${id} ${capability} ms=${Date.now() - startedAtMs}`,
+          );
+        }
+        return result;
+      } catch (error) {
+        if (phaseTiming) {
+          console.error(
+            `[run98] host-runtime invoke-failed ${id} ${capability} ms=${Date.now() - startedAtMs} reason=${(
+              error instanceof Error ? error.message : String(error)
+            ).slice(0, 160)}`,
+          );
+        }
+        throw error;
+      }
     },
     health() {
       const rows = ids.map((id) => refresh(id));
