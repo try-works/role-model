@@ -8396,6 +8396,15 @@ export async function runTrackBShadowPipeline(
       continue;
     }
     const alreadySubmitted = trial.status === "result_submitted";
+    /**
+     * Addendum 58 §20: a resumed comparison whose trial is not yet `scored` walks the completion branch below,
+     * and any of its refusals used to be silent. The branch entry reports the durable status and whether the
+     * independently observed evidence exists, so the next refusal names its own precondition.
+     */
+    pipelinePhase(
+      "trials-nonscored",
+      `status=${String(trial.status ?? "unknown")} case=${String(caseId)} candidate=${String(rollout.endpointId)} rolloutActual=${typeof rollout.evaluationActual === "string" && rollout.evaluationActual ? "yes" : "no"} caseActual=${typeof evaluationCase.actual === "string" && evaluationCase.actual ? "yes" : "no"}`,
+    );
     if (trial.status !== undefined && trial.status !== "queued" && !alreadySubmitted) {
       throw new Error("durable routing-shadow trial is not recoverable without an expired lease");
     }
