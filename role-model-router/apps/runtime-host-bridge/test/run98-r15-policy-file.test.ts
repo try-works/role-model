@@ -110,35 +110,45 @@ describe("run98 R15 packaged policy file", () => {
   });
 
   /**
-   * Run 98 addendum 30 S1: the judge designation is part of the same policy record, and a malformed
-   * or absent value resolves to "no judge" rather than to a candidate standing in for one.
+   * Run 98 addendum 30 S1 introduced a designated judge endpoint; addendum 45 J1 retired it on the operator's
+   * instruction: the judge is the configured controller, and no endpoint id is read from policy at all. The
+   * schema strips the retired field, so a record that still carries one resolves to the controller source
+   * rather than to the named endpoint.
    */
-  test("run98 a30 the designated judge endpoint resolves from the policy and fails closed when malformed", () => {
+  test("run98 a45 the judge resolves to the controller and a retired endpoint designation is not honored", () => {
     const designated = writePolicy({
       ...policy(),
       global: { ...policy().global, judgeEndpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-high" },
     });
-    expect(
-      readLearningPolicyFile({ repoRoot: designated, channel: "stage" })?.effective.judgeEndpointId,
-    ).toBe("deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-high");
+    const designatedEffective = readLearningPolicyFile({
+      repoRoot: designated,
+      channel: "stage",
+    })?.effective;
+    expect(designatedEffective?.judgeSource).toBe("controller");
+    expect(designatedEffective).not.toHaveProperty("judgeEndpointId");
 
-    // A scope override wins for its scope, like every other policy field.
+    // A scope override cannot reintroduce a judge endpoint either: the field is retired everywhere.
     const scoped = writePolicy({
       ...policy(),
       scopes: { "tenant:a30": { judgeEndpointId: "moonshot.personal.kimi-code.global.kimi-k3" } },
     });
-    expect(
-      readLearningPolicyFile({ repoRoot: scoped, channel: "stage", scopeId: "tenant:a30" })?.effective
-        .judgeEndpointId,
-    ).toBe("moonshot.personal.kimi-code.global.kimi-k3");
+    const scopedEffective = readLearningPolicyFile({
+      repoRoot: scoped,
+      channel: "stage",
+      scopeId: "tenant:a30",
+    })?.effective;
+    expect(scopedEffective?.judgeSource).toBe("controller");
+    expect(scopedEffective).not.toHaveProperty("judgeEndpointId");
 
-    // Malformed, empty, or wrong-typed values are not a designation.
+    // Malformed, empty, or wrong-typed values are not a designation either.
     for (const bad of ["", "   ", "has space", "../escape", 42, {}]) {
       const root = writePolicy({
         ...policy(),
         global: { ...policy().global, judgeEndpointId: bad as never },
       });
-      expect(readLearningPolicyFile({ repoRoot: root, channel: "stage" })?.effective.judgeEndpointId).toBe("");
+      expect(
+        readLearningPolicyFile({ repoRoot: root, channel: "stage" })?.effective.judgeSource,
+      ).toBe("controller");
     }
   });
 
@@ -160,20 +170,32 @@ describe("run98 R15 packaged policy file", () => {
   test("fails closed to the documented defaults when the file is missing or malformed", () => {
     const missing = mkdtempSync(path.join(os.tmpdir(), "run98-r15-none-"));
     roots.push(missing);
-    expect(readLearningPolicyFile({ repoRoot: missing, channel: "stage" })).toBeNull();
+    /**
+     * Addendum 45 J1 onward: a missing or malformed source is not "no policy" — the host fails closed to the
+     * documented defaults and says so in a degraded receipt, so live routing keeps a defined, conservative
+     * policy instead of an undefined one.
+     */
+    const missingPolicy = readLearningPolicyFile({ repoRoot: missing, channel: "stage" });
+    expect(missingPolicy).not.toBeNull();
+    expect(missingPolicy?.degraded?.reason).toBe("policy_source_missing");
+    expect(missingPolicy?.effective.stage).toBe("S0");
 
     const broken = writePolicy("{ not json");
-    expect(readLearningPolicyFile({ repoRoot: broken, channel: "stage" })).toBeNull();
+    const brokenPolicy = readLearningPolicyFile({ repoRoot: broken, channel: "stage" });
+    expect(brokenPolicy?.degraded?.reason).toBeTruthy();
+    expect(brokenPolicy?.effective.stage).toBe("S0");
 
     const wrongSchema = writePolicy({ ...policy(), schemaVersion: "role-model.other.v9" });
-    expect(readLearningPolicyFile({ repoRoot: wrongSchema, channel: "stage" })).toBeNull();
+    const wrongSchemaPolicy = readLearningPolicyFile({ repoRoot: wrongSchema, channel: "stage" });
+    expect(wrongSchemaPolicy?.degraded?.reason).toBeTruthy();
+    expect(wrongSchemaPolicy?.effective.stage).toBe("S0");
 
     const unknownStage = writePolicy({
       ...policy(),
       channels: { stage: { stage: "S9" } },
     });
-    // An unknown enum value falls back to the shipped default stage rather than widening.
-    expect(readLearningPolicyFile({ repoRoot: unknownStage, channel: "stage" })?.effective.stage).toBe("S1");
+    // An unknown enum value degrades the record and the fail-closed default stage applies — never a wider one.
+    expect(readLearningPolicyFile({ repoRoot: unknownStage, channel: "stage" })?.effective.stage).toBe("S0");
   });
 
   test("run98 R19 resolves the predeclared promotion protocol from the same policy record", () => {
@@ -210,15 +232,22 @@ describe("run98 R15 packaged policy file", () => {
       promotionSelectionFamilySize: 1,
     });
 
-    // An out-of-bounds value never widens the gate: it clamps to the documented bound.
+    /**
+     * An out-of-bounds value never widens the gate. The document bounds reject the record (the whole record,
+     * not the single field), and the effective policy falls back to the documented, conservative defaults,
+     * which are inside every bound.
+     */
     const outOfBounds = writePolicy(
       policy({ promotionIntervalLevel: 0.5, promotionResamples: 10, minimumPracticalDelta: -1 }),
     );
-    expect(readLearningPolicyFile({ repoRoot: outOfBounds, channel: "stage" })?.effective).toMatchObject({
-      minimumPracticalDelta: 0,
-      promotionIntervalLevel: 0.8,
-      promotionResamples: 1000,
-    });
+    const outOfBoundsPolicy = readLearningPolicyFile({ repoRoot: outOfBounds, channel: "stage" });
+    expect(outOfBoundsPolicy?.degraded).toBeTruthy();
+    expect(outOfBoundsPolicy?.effective.minimumPracticalDelta).toBeGreaterThanOrEqual(0);
+    expect(outOfBoundsPolicy?.effective.minimumPracticalDelta).toBeLessThanOrEqual(0.5);
+    expect(outOfBoundsPolicy?.effective.promotionIntervalLevel).toBeGreaterThanOrEqual(0.8);
+    expect(outOfBoundsPolicy?.effective.promotionIntervalLevel).toBeLessThanOrEqual(0.99);
+    expect(outOfBoundsPolicy?.effective.promotionResamples).toBeGreaterThanOrEqual(1000);
+    expect(outOfBoundsPolicy?.effective.promotionResamples).toBeLessThanOrEqual(20_000);
   });
 });
 
