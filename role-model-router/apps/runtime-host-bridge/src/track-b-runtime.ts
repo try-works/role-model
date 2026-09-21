@@ -8993,7 +8993,43 @@ export async function runTrackBShadowPipeline(
       .slice(0, 8)
       .join(
         ",",
-      )} status=${String((persistedEvaluationDecoded as Record<string, unknown>)?.status ?? "")}`,
+      )} status=${String((persistedEvaluationDecoded as Record<string, unknown>)?.status ?? "")}${(() => {
+      /**
+       * Run 98 addendum 58 §29: three resolution attempts each moved the decode one step and left the
+       * marker, so this detail now names the marker's own identity — whether the pipeline even had a state
+       * root, the locator's address fields, and the result hash — which is what a lookup against the
+       * packaged worker's store needs. Names and a bounded hash prefix only; never a payload.
+       */
+      const record =
+        persistedEvaluation &&
+        typeof persistedEvaluation === "object" &&
+        !Array.isArray(persistedEvaluation)
+          ? (persistedEvaluation as Record<string, unknown>)
+          : null;
+      const locator =
+        record?.durableLocator &&
+        typeof record.durableLocator === "object" &&
+        !Array.isArray(record.durableLocator)
+          ? (record.durableLocator as Record<string, unknown>)
+          : null;
+      const decoded = (persistedEvaluationDecoded ?? {}) as Record<string, unknown>;
+      const hash =
+        typeof decoded.resultHash === "string"
+          ? decoded.resultHash
+          : typeof locator?.resultHash === "string"
+            ? String(locator.resultHash)
+            : "";
+      return ` stateRoot=${input.contractStateRoot ? "yes" : "no"} locator=${
+        locator
+          ? [
+              String(locator.extensionId ?? "?"),
+              String(locator.requestId ?? "?").slice(0, 26),
+              String(locator.capability ?? "?"),
+              String(locator.byteLength ?? "?"),
+            ].join("|")
+          : "none"
+      } hash=${hash ? `${hash.slice(0, 22)}…${hash.slice(-4)}` : "none"}`;
+    })()}`,
   );
   if (
     !persistedEvaluationDecoded ||
