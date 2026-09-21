@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   REPLAY_LEASE_RETRY_DELAYS_MS,
+  isReplayAwaitingEvaluationFailure,
+  isReplayInFlightFailure,
   isReplayJobLeasedFailure,
   retryLeasedReplayDispatch,
 } from "../src/track-b-auto-replay.js";
@@ -32,6 +34,43 @@ describe("run99 R33 replay lease retry", () => {
       ),
     ).toBe(false);
     expect(isReplayJobLeasedFailure(500, "already leased")).toBe(false);
+  });
+
+  /**
+   * Run 98 addendum 58 §19 (live v306): the same loop deferred captures whose durable job had already handed
+   * its branches to Evaluation Core —
+   *
+   *   `replay endpoint HTTP 409: {"error":"extension replay-core failed: replay job is awaiting evaluation and
+   *   cannot be re-leased"}`
+   *
+   * — which is the evaluation leg being in flight, not a replay failure. It is classified with the lease hold
+   * so the capture waits inside its own deadline for the resume sweep to finalize the comparison.
+   */
+  it("classifies an awaiting-evaluation job as in flight", () => {
+    expect(
+      isReplayAwaitingEvaluationFailure(
+        409,
+        '{"error":"extension replay-core failed: replay job is awaiting evaluation and cannot be re-leased"}',
+      ),
+    ).toBe(true);
+    expect(
+      isReplayInFlightFailure(
+        409,
+        '{"error":"extension replay-core failed: replay job is awaiting evaluation and cannot be re-leased"}',
+      ),
+    ).toBe(true);
+    expect(
+      isReplayInFlightFailure(
+        409,
+        '{"error":"extension replay-core failed: replay job is already leased"}',
+      ),
+    ).toBe(true);
+    expect(
+      isReplayAwaitingEvaluationFailure(
+        409,
+        '{"error":"extension replay-core failed: replay job is not awaiting evaluation completion"}',
+      ),
+    ).toBe(false);
   });
 
   /**

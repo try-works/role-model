@@ -51,6 +51,7 @@ import {
 } from "./track-b-auto-replay-runtime.js";
 import {
   buildAutoReplayIdempotencyKey,
+  isReplayInFlightFailure,
   isReplayJobLeasedFailure,
   resolveAutoReplayDeadlineMaxMs,
   resolveAutoReplayDeadlineMs,
@@ -4123,7 +4124,7 @@ export async function main(): Promise<void> {
           const leasedDispatch = await retryLeasedReplayDispatch({
             deadlineAtMs: Date.now() + replayDeadlineMs,
             retryable: (failure) =>
-              failure.status === 0 || isReplayJobLeasedFailure(failure.status, failure.body),
+              failure.status === 0 || isReplayInFlightFailure(failure.status, failure.body),
             dispatch: async () => {
               try {
                 const attempt = await fetch(

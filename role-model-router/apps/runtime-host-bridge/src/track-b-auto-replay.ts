@@ -91,6 +91,29 @@ export function isReplayJobLeasedFailure(status: number, body: string): boolean 
   return status === 409 && typeof body === "string" && /already leased/i.test(body);
 }
 
+/**
+ * Run 98 addendum 58 §19 (live v306): a durable job that has already handed its branches to Evaluation Core
+ * answers a lease with
+ *
+ *   `replay endpoint HTTP 409: {"error":"extension replay-core failed: replay job is awaiting evaluation and cannot be re-leased"}`
+ *
+ * That is the same kind of answer as a lease hold: the job is in flight — its evaluation is pending and the
+ * auto-replay tick's resume sweep is what finalizes it — so the capture must wait inside its own deadline
+ * rather than be recorded as a replay failure and spend its deferral budget.
+ */
+export function isReplayAwaitingEvaluationFailure(status: number, body: string): boolean {
+  return (
+    status === 409 &&
+    typeof body === "string" &&
+    /awaiting evaluation and cannot be re-leased/i.test(body)
+  );
+}
+
+/** A failure that means "the durable job is in flight", not "the replay failed". */
+export function isReplayInFlightFailure(status: number, body: string): boolean {
+  return isReplayJobLeasedFailure(status, body) || isReplayAwaitingEvaluationFailure(status, body);
+}
+
 export async function retryLeasedReplayDispatch<TValue>(input: {
   readonly dispatch: () => Promise<
     | { readonly ok: true; readonly value: TValue }
