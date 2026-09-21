@@ -681,7 +681,15 @@ describe("benchmark-summary", () => {
     });
   });
 
-  test("does not use an unfiltered latest-summary subject when no current portfolio entry exists", () => {
+  /**
+   * Run 98 addendum 42 B1 supersedes the rule this test used to encode ("never fall back to a summary
+   * subject"). The operator's instruction is explicit: quality comes from benchmark data until an
+   * alternative exists. What still must hold — and is asserted in the a42 test above — is that evidence is
+   * keyed per endpoint: a subject for a different endpoint is never used, so a run covering another pool
+   * cannot move this candidate. This fixture is a run that measured `deepseek.flash-max`, so under the new
+   * rule it supplies that endpoint's capability.
+   */
+  test("uses a latest-summary subject for the same endpoint when no current portfolio entry exists", () => {
     const capability = buildBenchmarkCapabilityForEndpoint({
       endpointId: "deepseek.flash-max",
       latestProfile: null,
@@ -715,7 +723,11 @@ describe("benchmark-summary", () => {
       portfolioEntry: null,
     });
 
-    expect(capability).toBeNull();
+    expect(capability).toMatchObject({
+      evidenceSource: "run-artifact",
+      overallScore: 0.93,
+      lastRunId: "historical-other-membership",
+    });
   });
 
   test("uses the exact endpoint portfolio entry instead of a newer sibling-only summary", () => {
@@ -1265,5 +1277,324 @@ describe("benchmark-summary", () => {
 
     expect(summary.subjects).toHaveLength(1);
     expect(summary.subjects[0]?.taxonomyScores).toBeUndefined();
+  });
+
+  // Run 98 addendum 42 B1: the model pool's quality axis reads
+  // `candidate.benchmarkCapability.overallScore`. The portfolio is the current-membership authority and
+  // it was empty while the completed run summary carried current-endpoint subjects, so every candidate
+  // got `null` and the composite route score collapsed to cost only. A summary subject whose endpointId
+  // matches the candidate is per-endpoint evidence for a currently configured endpoint, so it may supply
+  // the capability; a subject for another endpoint still may not.
+  test("run98 a42: a summary subject for the same endpoint supplies the capability when the portfolio has no entry", () => {
+    const summary = {
+      ...EMPTY_BENCHMARK_SUMMARY,
+      runId: "run-current",
+      completedAtMs: 1_700_000_000_000,
+      mode: "quick" as const,
+      suiteId: "routing-capability-v2",
+      judgeEndpointId: "judge.endpoint",
+      judgeModelId: "judge/model",
+      subjects: [
+        {
+          endpointId: "deepseek.flash-max",
+          modelId: "deepseek/deepseek-flash",
+          sourceType: "remote",
+          reasoningEffort: "max",
+          overallScore: 0.96,
+          scoresByBucket: {
+            easy: { score: 0, cases: 0 },
+            medium: { score: 0, cases: 0 },
+            hard: { score: 0.96, cases: 12 },
+          },
+          passingCaseIds: ["h01"],
+          caseCount: 12,
+        },
+      ],
+    };
+
+    const capability = buildBenchmarkCapabilityForEndpoint({
+      endpointId: "deepseek.flash-max",
+      latestProfile: null,
+      summary,
+      portfolioEntry: null,
+    });
+    expect(capability).toMatchObject({
+      evidenceSource: "run-artifact",
+      overallScore: 0.96,
+      lastRunId: "run-current",
+      lastRunCompletedAtMs: 1_700_000_000_000,
+      lastRunMode: "quick",
+      lastRunSuiteId: "routing-capability-v2",
+      judgeEndpointId: "judge.endpoint",
+      coverage: { overallCases: 12 },
+    });
+
+    // An endpoint the run never covered still gets no capability: quality is never synthesized.
+    expect(
+      buildBenchmarkCapabilityForEndpoint({
+        endpointId: "deepseek.not-benchmarked",
+        latestProfile: null,
+        summary,
+        portfolioEntry: null,
+      }),
+    ).toBeNull();
+  });
+
+  test("run98 a42: a portfolio entry still takes precedence over a summary subject", () => {
+    const summary = {
+      ...EMPTY_BENCHMARK_SUMMARY,
+      runId: "run-summary",
+      completedAtMs: 1_700_000_000_000,
+      mode: "quick" as const,
+      suiteId: "routing-capability-v2",
+      subjects: [
+        {
+          endpointId: "deepseek.flash-max",
+          modelId: "deepseek/deepseek-flash",
+          sourceType: "remote",
+          reasoningEffort: "max",
+          overallScore: 0.5,
+          scoresByBucket: {
+            easy: { score: 0, cases: 0 },
+            medium: { score: 0, cases: 0 },
+            hard: { score: 0.5, cases: 2 },
+          },
+          passingCaseIds: ["h01"],
+          caseCount: 2,
+        },
+      ],
+    };
+
+    const capability = buildBenchmarkCapabilityForEndpoint({
+      endpointId: "deepseek.flash-max",
+      latestProfile: null,
+      summary,
+      portfolioEntry: {
+        endpointId: "deepseek.flash-max",
+        modelId: "deepseek/deepseek-flash",
+        sourceType: "remote",
+        reasoningEffort: "max",
+        overallScore: 0.91,
+        scoresByBucket: {
+          easy: { score: 0, cases: 0 },
+          medium: { score: 0, cases: 0 },
+          hard: { score: 0.91, cases: 10 },
+        },
+        passingCaseIds: ["h01"],
+        caseCount: 10,
+        profileRevision: "profile-current",
+        runId: "run-portfolio",
+        completedAtMs: 1_700_000_100_000,
+        mode: "quick",
+        suiteId: "routing-capability-v2",
+        suiteVersion: "3.4",
+        judgeEndpointId: "judge.endpoint",
+        judgeModelId: "judge/model",
+      },
+    });
+    expect(capability).toMatchObject({
+      evidenceSource: "run-artifact",
+      overallScore: 0.91,
+      lastRunId: "run-portfolio",
+      profileRevision: "profile-current",
+    });
+  });
+
+  // Run 98 addendum 42 B2: the model pool's speed axis needs a benchmark latency to fall back to while an
+  // endpoint has no telemetry. The run's per-case audits carry `latencyMs` per endpoint, which is the same
+  // evidence the Benchmark scores page turns into its P50/P95 columns, so the capability carries it.
+  test("run98 a42: the capability carries the endpoint's benchmark p50/p95 from the case audits", () => {
+    const summary = {
+      ...EMPTY_BENCHMARK_SUMMARY,
+      runId: "run-current",
+      completedAtMs: 1_700_000_000_000,
+      mode: "quick" as const,
+      suiteId: "routing-capability-v2",
+      subjects: [
+        {
+          endpointId: "deepseek.flash-max",
+          modelId: "deepseek/deepseek-flash",
+          sourceType: "remote",
+          reasoningEffort: "max",
+          overallScore: 0.9583,
+          scoresByBucket: {
+            easy: { score: 0, cases: 0 },
+            medium: { score: 0, cases: 0 },
+            hard: { score: 0.9583, cases: 12 },
+          },
+          passingCaseIds: ["h01"],
+          caseCount: 12,
+        },
+      ],
+      caseAudits: [
+        { caseId: "c1", endpointId: "deepseek.flash-max", latencyMs: 1_000 },
+        { caseId: "c2", endpointId: "deepseek.flash-max", latencyMs: 2_000 },
+        { caseId: "c3", endpointId: "deepseek.flash-max", latencyMs: 3_000 },
+        { caseId: "c4", endpointId: "deepseek.flash-max", latencyMs: 60_000 },
+        // Another endpoint's audit must never be folded into this endpoint's latency evidence.
+        { caseId: "c5", endpointId: "moonshot.kimi-k3", latencyMs: 5 },
+      ],
+    };
+
+    const capability = buildBenchmarkCapabilityForEndpoint({
+      endpointId: "deepseek.flash-max",
+      latestProfile: null,
+      summary,
+      portfolioEntry: null,
+    });
+    expect(capability).toMatchObject({
+      overallScore: 0.9583,
+      p50LatencyMs: 2_000,
+      p95LatencyMs: 60_000,
+    });
+
+    // No audits for an endpoint means no benchmark latency: the axis stays empty rather than guessing.
+    const noAudits = buildBenchmarkCapabilityForEndpoint({
+      endpointId: "deepseek.other",
+      latestProfile: null,
+      summary: {
+        ...summary,
+        subjects: [
+          {
+            endpointId: "deepseek.other",
+            modelId: "deepseek/deepseek-flash",
+            overallScore: 0.5,
+            scoresByBucket: {
+              easy: { score: 0, cases: 0 },
+              medium: { score: 0, cases: 0 },
+              hard: { score: 0.5, cases: 1 },
+            },
+            passingCaseIds: [],
+            caseCount: 1,
+          },
+        ],
+      },
+      portfolioEntry: null,
+    });
+    expect(noAudits?.p50LatencyMs ?? null).toBeNull();
+  });
+
+  // Run 98 addendum 42 B2, attribution: the audits belong to the summary's run, so they may only describe
+  // this endpoint's capability when the capability is actually that run. A portfolio entry for an earlier
+  // run must not borrow the summary run's latency, or the speed axis would show a different measurement
+  // than the quality axis beside it.
+  test("run98 a42: a portfolio entry from another run does not inherit the summary's latency", () => {
+    const summary = {
+      ...EMPTY_BENCHMARK_SUMMARY,
+      runId: "run-current",
+      completedAtMs: 1_700_000_000_000,
+      mode: "quick" as const,
+      suiteId: "routing-capability-v2",
+      subjects: [
+        {
+          endpointId: "deepseek.flash-max",
+          modelId: "deepseek/deepseek-flash",
+          sourceType: "remote",
+          reasoningEffort: "max",
+          overallScore: 0.9583,
+          scoresByBucket: {
+            easy: { score: 0, cases: 0 },
+            medium: { score: 0, cases: 0 },
+            hard: { score: 0.9583, cases: 12 },
+          },
+          passingCaseIds: ["h01"],
+          caseCount: 12,
+        },
+      ],
+      caseAudits: [
+        { caseId: "c1", endpointId: "deepseek.flash-max", latencyMs: 1_000 },
+        { caseId: "c2", endpointId: "deepseek.flash-max", latencyMs: 2_000 },
+      ],
+    };
+    const portfolioEntryFor = (runId: string) => ({
+      endpointId: "deepseek.flash-max",
+      modelId: "deepseek/deepseek-flash",
+      sourceType: "remote",
+      reasoningEffort: "max",
+      overallScore: 0.91,
+      scoresByBucket: {
+        easy: { score: 0, cases: 0 },
+        medium: { score: 0, cases: 0 },
+        hard: { score: 0.91, cases: 10 },
+      },
+      passingCaseIds: ["h01"],
+      caseCount: 10,
+      profileRevision: "profile-current",
+      runId,
+      completedAtMs: 1_700_000_100_000,
+      mode: "quick" as const,
+      suiteId: "routing-capability-v2",
+      suiteVersion: "3.4",
+      judgeEndpointId: "judge.endpoint",
+      judgeModelId: "judge/model",
+    });
+
+    const earlierRun = buildBenchmarkCapabilityForEndpoint({
+      endpointId: "deepseek.flash-max",
+      latestProfile: null,
+      summary,
+      portfolioEntry: portfolioEntryFor("run-portfolio-earlier"),
+    });
+    expect(earlierRun).toMatchObject({ lastRunId: "run-portfolio-earlier", overallScore: 0.91 });
+    expect(earlierRun?.p50LatencyMs ?? null).toBeNull();
+    expect(earlierRun?.p95LatencyMs ?? null).toBeNull();
+
+    // Same run as the summary: the audits describe the same measurement, so the latency belongs.
+    const sameRun = buildBenchmarkCapabilityForEndpoint({
+      endpointId: "deepseek.flash-max",
+      latestProfile: null,
+      summary,
+      portfolioEntry: portfolioEntryFor("run-current"),
+    });
+    // Two audits, so the nearest-rank p50 is the first of the pair (⌈0.5 × 2⌉ = 1st smallest) — the same
+    // convention the sibling test asserts for four audits (⌈0.5 × 4⌉ = 2nd smallest).
+    expect(sameRun).toMatchObject({ p50LatencyMs: 1_000 });
+  });
+
+  // Run 98 addendum 42 B2, live gap found on v265: the profile-derived path won the precedence for an
+  // endpoint with current-membership benchmark samples (kimi-k3, 1 completed sample) and the model pool's
+  // speed axis stayed empty even though the endpoint has no telemetry — the addendum's "no telemetry but a
+  // benchmark p50 gets a speed score" clause. The benchmark profile is aggregated from those same samples
+  // (`aggregateObservedPerformanceSamples` emits latency_ms_p50/p95), so the capability carries the p50
+  // from the evidence it was already scored from rather than borrowing another run's measurement.
+  test("run98 a42: a profile-derived capability carries the benchmark profile's own p50/p95", () => {
+    const summary = { ...EMPTY_BENCHMARK_SUMMARY, subjects: [], caseAudits: [] };
+    const benchmarkProfile = {
+      judge_score: 0.9583,
+      quality_score: 0.9583,
+      sample_size: 1,
+      measured_at_ms: 1_700_000_000_000,
+      sources: { live_request_samples: 0, benchmark_samples: 1 },
+      latency_ms_p50: 34_852,
+      latency_ms_p95: 34_852,
+    };
+
+    const capability = buildBenchmarkCapabilityForEndpoint({
+      endpointId: "moonshot.personal.kimi-code.global.kimi-k3",
+      latestProfile: benchmarkProfile,
+      summary,
+      portfolioEntry: null,
+    });
+    expect(capability).toMatchObject({
+      evidenceSource: "profile-derived",
+      overallScore: 0.9583,
+      benchmarkSamples: 1,
+      p50LatencyMs: 34_852,
+      p95LatencyMs: 34_852,
+    });
+
+    // A profile with no measured latency keeps the axis empty: the fallback is the endpoint's own
+    // benchmark latency or nothing, never another measurement.
+    const { latency_ms_p50, latency_ms_p95, ...withoutLatency } = benchmarkProfile;
+    void latency_ms_p50;
+    void latency_ms_p95;
+    const noLatency = buildBenchmarkCapabilityForEndpoint({
+      endpointId: "moonshot.personal.kimi-code.global.kimi-k3",
+      latestProfile: withoutLatency,
+      summary,
+      portfolioEntry: null,
+    });
+    expect(noLatency?.p50LatencyMs ?? null).toBeNull();
+    expect(noLatency?.p95LatencyMs ?? null).toBeNull();
   });
 });

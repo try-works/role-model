@@ -35,11 +35,12 @@ describe("ExtensionsRoute", () => {
     expect(routeSource).toContain("Health probe");
     expect(routeSource).toContain("LIFECYCLE_COPY");
     expect(routeSource).toContain("operatorBoundaryNote");
-    expect(routeSource).toContain("shadow-only");
-    expect(routeSource).toContain("Direct Track B v1.1");
-    expect(routeSource).toContain(
-      "cannot change production prompts, routes, weights, or active profiles",
-    );
+    expect(routeSource).toContain("activationBoundary");
+    expect(routeSource).toContain("allowedModes");
+    expect(routeSource).toContain("policy-gated");
+    expect(routeSource).toContain("Evidence-only package");
+    expect(routeSource).not.toContain("Shadow-ready by default");
+    expect(routeSource).not.toContain("shadow-only evaluation boundary");
     expect(routeSource).not.toContain("ceremony-bound ON");
     expect(routeSource).not.toContain("production prompt injection");
     expect(routeSource).not.toContain("do not expose a public enable/disable mutation API");

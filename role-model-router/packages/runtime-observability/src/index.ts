@@ -421,6 +421,13 @@ export interface RuntimeObservationBundleInput {
     readonly executions: readonly ToolRegistryExecution[];
   };
   readonly telemetrySnapshot?: RuntimeTelemetrySnapshot;
+  // Run 98 addendum 40 (L1): `execution.usageEvent.latency_ms` is the provider's response-header
+  // time. This carries the rest of the turn the client waited for so telemetry can report both.
+  readonly latencyBreakdown?: {
+    readonly providerHeaderMs?: number | null;
+    readonly providerCompletionMs?: number | null;
+    readonly timeToFirstTokenMs?: number | null;
+  };
   readonly telemetryConfig?: {
     readonly samplingRate?: number;
     readonly retentionTtlHours?: number;
@@ -481,6 +488,8 @@ export interface RuntimeObservationBundle {
   readonly contextEnvelope: RuntimeContextEnvelopeSummary;
   readonly trace: RoutedExecutionResult["trace"];
   readonly usageEvent: RoutedExecutionResult["usageEvent"];
+  /** Run 98 addendum 40 (L1): provider header/completion/first-token breakdown for this request. */
+  readonly latencyBreakdown?: RuntimeObservationBundleInput["latencyBreakdown"];
   readonly observedPerformance: {
     readonly endpointVersion: string;
     readonly sample: ObservedPerformanceSample;
@@ -605,6 +614,38 @@ export interface RuntimeObservationBundle {
   };
 }
 
+/**
+ * Run 98 addendum 50 — the observed-cost signal is a rate per 1,000 tokens.
+ *
+ * The sample used to publish `usageEvent.cost_estimate` directly, which is the request's cost, not a rate. The
+ * router's cost metric reads `cost_per_1k_tokens_est`, so a request total of `0.000735` was scored as if 1,000
+ * tokens cost `$0.000735`. The rate is now derived from the request cost and its tokens, falling back to the
+ * catalog rate when usage is unavailable.
+ */
+export function resolveObservedCostPer1kTokens(input: {
+  readonly requestCostUsd?: number | null;
+  readonly inputTokens?: number | null;
+  readonly outputTokens?: number | null;
+  readonly catalogCostPer1k?: number | null;
+}): number | undefined {
+  const requestCostUsd = input.requestCostUsd;
+  const totalTokens =
+    (Number.isSafeInteger(input.inputTokens) ? (input.inputTokens as number) : 0) +
+    (Number.isSafeInteger(input.outputTokens) ? (input.outputTokens as number) : 0);
+  if (
+    typeof requestCostUsd === "number" &&
+    Number.isFinite(requestCostUsd) &&
+    requestCostUsd > 0 &&
+    totalTokens > 0
+  ) {
+    return (requestCostUsd / totalTokens) * 1000;
+  }
+  const catalogCostPer1k = input.catalogCostPer1k;
+  return typeof catalogCostPer1k === "number" && Number.isFinite(catalogCostPer1k)
+    ? catalogCostPer1k
+    : undefined;
+}
+
 function deriveEndpointVersion(execution: RoutedExecutionResult): string {
   const identity = execution.target.candidate.identity as {
     endpoint_version?: string;
@@ -643,7 +684,12 @@ function buildObservedPerformanceSample(
               1000,
           )
         : undefined,
-    cost_per_1k_tokens_est: input.execution.usageEvent.cost_estimate,
+    cost_per_1k_tokens_est: resolveObservedCostPer1kTokens({
+      requestCostUsd: input.execution.usageEvent.cost_estimate,
+      inputTokens: input.execution.normalized.usage.inputTokens,
+      outputTokens: input.execution.normalized.usage.outputTokens,
+      catalogCostPer1k: input.routingDiagnostics?.catalogEconomics?.cost_per_1k_tokens_est ?? null,
+    }),
     failure: Boolean(input.execution.normalized.errorClass),
     error_class: input.execution.normalized.errorClass ?? undefined,
     request_id: input.decision.request_id,
@@ -1108,6 +1154,7 @@ export function createRuntimeObservationBundle(
       reasoning_effort: effort.reasoningEffort,
       effort_source: effort.effortSource,
     },
+    ...(input.latencyBreakdown ? { latencyBreakdown: input.latencyBreakdown } : {}),
     observedPerformance: {
       endpointVersion,
       sample: currentSample,

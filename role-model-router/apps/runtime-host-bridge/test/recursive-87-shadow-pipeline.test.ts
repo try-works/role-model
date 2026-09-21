@@ -369,7 +369,7 @@ test("SP1 operations API rejects production Knowledge Worker activation controls
       operatorAttestation: "activate-production",
       receipt: { payload: {}, signature: "0".repeat(64) },
     }),
-  ).rejects.toThrow(/shadow-only|prohibited by Direct Track B v1\.1/i);
+  ).rejects.toThrow(/prohibited for knowledge-worker by Direct Track B v1\.1/i);
 });
 
 test("SP1 operations API cannot label Knowledge Worker active or bounded", async () => {
@@ -385,7 +385,16 @@ test("SP1 operations API cannot label Knowledge Worker active or bounded", async
       action: "set_mode",
       mode: "active",
     }),
-  ).rejects.toThrow(/shadow-only|prohibited by Direct Track B v1\.1/i);
+  ).rejects.toThrow(/not permitted|ceiling/i);
+  // Run 98 R18 raises the ceiling to `advisory` (evidence-only boundary) and still refuses
+  // every direct-routing label.
+  await expect(
+    operations.mutateExtension({
+      id: "knowledge-worker",
+      action: "set_mode",
+      mode: "bounded",
+    }),
+  ).rejects.toThrow(/boundary ceiling is advisory/i);
 });
 
 test("SP1 prompt insertion stays prohibited even when a legacy runner offers content", async () => {

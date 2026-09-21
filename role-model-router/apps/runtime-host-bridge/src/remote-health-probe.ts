@@ -37,6 +37,8 @@ export interface RemoteHealthProbeContext {
   ) => Promise<Readonly<Record<string, string>>>;
   readonly networkFetcher: typeof fetch;
   readonly probeTimeoutMs?: number;
+  readonly probeAttempts?: number;
+  readonly probeRetryDelayMs?: number;
 }
 
 /**
@@ -59,9 +61,90 @@ export interface RemoteEndpointAdmissionProbeContext {
   ) => Promise<Readonly<Record<string, string>>>;
   readonly networkFetcher: typeof fetch;
   readonly probeTimeoutMs?: number;
+  readonly probeAttempts?: number;
+  readonly probeRetryDelayMs?: number;
 }
 
 export const DEFAULT_REMOTE_PROBE_TIMEOUT_MS = 15_000;
+export const DEFAULT_REMOTE_PROBE_ATTEMPTS = 3;
+export const DEFAULT_REMOTE_PROBE_RETRY_DELAY_MS = 1_000;
+
+const TRANSIENT_TRANSPORT_CODES: ReadonlySet<string> = new Set([
+  "UND_ERR_CONNECT_TIMEOUT",
+  "UND_ERR_HEADERS_TIMEOUT",
+  "UND_ERR_BODY_TIMEOUT",
+  "UND_ERR_SOCKET",
+  "UND_ERR_CONNECT_ERROR",
+  "ECONNRESET",
+  "ECONNREFUSED",
+  "ETIMEDOUT",
+  "EPIPE",
+  "EHOSTUNREACH",
+  "ENETUNREACH",
+  "EAI_AGAIN",
+]);
+
+/**
+ * Transport-level failures say nothing about the provider: a stalled TCP or TLS
+ * handshake raises `TypeError: fetch failed` with the real code on `cause`
+ * (`UND_ERR_CONNECT_TIMEOUT`, `ECONNRESET`, ...). Those are retryable and must
+ * not be reported as a vendor outage.
+ */
+export function isTransientTransportError(error: unknown): boolean {
+  let current: unknown = error;
+  for (let depth = 0; depth < 3 && current !== null && current !== undefined; depth += 1) {
+    const record = current as {
+      readonly code?: unknown;
+      readonly message?: unknown;
+      readonly cause?: unknown;
+    };
+    const code = typeof record.code === "string" ? record.code : "";
+    if (TRANSIENT_TRANSPORT_CODES.has(code)) {
+      return true;
+    }
+    const message = typeof record.message === "string" ? record.message.toLowerCase() : "";
+    if (
+      message.includes("socket hang up") ||
+      message.includes("econnreset") ||
+      message.includes("connect timeout")
+    ) {
+      return true;
+    }
+    current = record.cause;
+  }
+  return false;
+}
+
+async function executeWithTransientRetry<Result>(
+  execute: () => Promise<Result>,
+  attempts: number,
+  retryDelayMs: number,
+): Promise<Result> {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await execute();
+    } catch (error) {
+      if (attempt >= attempts || !isTransientTransportError(error)) {
+        throw error;
+      }
+      if (retryDelayMs > 0) {
+        await new Promise((resolve) => setTimeout(resolve, retryDelayMs * attempt));
+      }
+    }
+  }
+}
+
+function resolveProbeAttempts(configured: number | undefined): number {
+  return Number.isSafeInteger(configured) && (configured ?? 0) >= 1
+    ? (configured as number)
+    : DEFAULT_REMOTE_PROBE_ATTEMPTS;
+}
+
+function resolveProbeRetryDelayMs(configured: number | undefined): number {
+  return Number.isSafeInteger(configured) && (configured ?? -1) >= 0
+    ? (configured as number)
+    : DEFAULT_REMOTE_PROBE_RETRY_DELAY_MS;
+}
 
 const COMPARABLE_MODEL_ID_ALIASES: Readonly<Record<string, readonly string[]>> = {
   "moonshot/kimi-k2.7-code": ["kimi-for-coding"],
@@ -205,12 +288,20 @@ async function probeTarget(
       };
     };
 
-    let { response, latencyMs } = await executeProbe(authorization);
+    let { response, latencyMs } = await executeWithTransientRetry(
+      () => executeProbe(authorization),
+      resolveProbeAttempts(context.probeAttempts),
+      resolveProbeRetryDelayMs(context.probeRetryDelayMs),
+    );
     if ((response.status === 401 || response.status === 403) && context.refreshAuthorization) {
       try {
         const refreshedAuthorization = await context.refreshAuthorization(target.providerAccountId);
         if (refreshedAuthorization && refreshedAuthorization.trim().length > 0) {
-          ({ response, latencyMs } = await executeProbe(refreshedAuthorization));
+          ({ response, latencyMs } = await executeWithTransientRetry(
+            () => executeProbe(refreshedAuthorization),
+            resolveProbeAttempts(context.probeAttempts),
+            resolveProbeRetryDelayMs(context.probeRetryDelayMs),
+          ));
         }
       } catch {
         // Preserve the original auth failure classification if refresh also fails.
@@ -280,7 +371,7 @@ async function probeTarget(
     };
   } catch (error) {
     const latencyMs = Date.now() - startedAt;
-    if (isTimeoutError(error)) {
+    if (isTimeoutError(error) || isTransientTransportError(error)) {
       return {
         endpointId: target.endpointId,
         modelId: target.modelId,
@@ -328,7 +419,16 @@ export async function probeRemoteEndpoints(
 
     let responsePromise = modelListRequests.get(requestKey);
     if (!responsePromise) {
-      responsePromise = context.networkFetcher(input, init);
+      responsePromise = context.networkFetcher(input, init).then(
+        (response) => response,
+        (error: unknown) => {
+          // A failed probe must not be cached: transient transport failures are
+          // retried, and a cached rejection would replay the failure instead of
+          // reconnecting.
+          modelListRequests.delete(requestKey);
+          throw error;
+        },
+      );
       modelListRequests.set(requestKey, responsePromise);
     }
     return (await responsePromise).clone();
@@ -405,11 +505,19 @@ export async function probeRemoteEndpointAdmission(
     });
 
   try {
-    let response = await executeProbe(authorization);
+    let response = await executeWithTransientRetry(
+      () => executeProbe(authorization),
+      resolveProbeAttempts(context.probeAttempts),
+      resolveProbeRetryDelayMs(context.probeRetryDelayMs),
+    );
     if ((response.status === 401 || response.status === 403) && context.refreshAuthorization) {
       const refreshed = await context.refreshAuthorization(context.providerAccountId);
       if (refreshed?.trim()) {
-        response = await executeProbe(refreshed);
+        response = await executeWithTransientRetry(
+          () => executeProbe(refreshed),
+          resolveProbeAttempts(context.probeAttempts),
+          resolveProbeRetryDelayMs(context.probeRetryDelayMs),
+        );
       }
     }
     const latencyMs = Date.now() - startedAt;
@@ -437,7 +545,8 @@ export async function probeRemoteEndpointAdmission(
       message: `Remote admission probe returned HTTP ${response.status}.`,
     };
   } catch (error) {
-    const reason: RemoteHealthProbeReason = isTimeoutError(error) ? "timeout" : "vendor-down";
+    const reason: RemoteHealthProbeReason =
+      isTimeoutError(error) || isTransientTransportError(error) ? "timeout" : "vendor-down";
     return {
       endpointId: context.endpointId,
       modelId: context.modelId,

@@ -166,6 +166,47 @@ describe("run 96 F160 contribution outcome", () => {
     ).toEqual({ success: false, failureClass: "execution_failed" });
   });
 
+  /**
+   * Run 98 addendum 04 §7 (`L2`), measured on real dsh traffic: the post-observation rejected the
+   * observation whenever the *contribution upload* failed at the transport layer
+   * (`read ECONNRESET` → `fetch failed`). The pipeline had already completed, so the whole
+   * observation was retried forever and the outbox never drained.
+   */
+  test("a transport failure on the contribution upload does not discard the completed post-observation", async () => {
+    const runtime = createFixtureTrackBRuntime();
+    const input = {
+      scope: "tenant:run96",
+      channel: "development" as const,
+      authorizationEpoch: 96,
+    };
+    const reset = Object.assign(new Error("fetch failed"), {
+      cause: Object.assign(new Error("read ECONNRESET"), { code: "ECONNRESET" }),
+    });
+    const result = (await runTrackBPostObservationWithContribution(
+      runtime,
+      createFixtureObservation("contribution-reset", {
+        responseStatusCode: 200,
+        usageEvent: { tokens_in: 1, tokens_out: 2 },
+      }),
+      input,
+      async () => {
+        throw reset;
+      },
+    )) as unknown as {
+      readonly extensionClosure?: {
+        readonly schemaVersion?: unknown;
+        readonly requestId?: unknown;
+      };
+      readonly contribution?: unknown;
+      readonly contributionFailure?: { readonly message?: string };
+    };
+    // The pipeline's own result survives: the observation can be marked delivered.
+    expect(result.extensionClosure?.schemaVersion).toBe("role-model.track-b-extension-closure.v1");
+    expect(result.extensionClosure?.requestId).toBe("contribution-reset");
+    expect(result.contribution).toBeNull();
+    expect(String(result.contributionFailure?.message ?? "")).toContain("fetch failed");
+  });
+
   test("integration: post-observation contribution follows the observed outcome exactly once", async () => {
     const contributionInputs: Record<string, unknown>[] = [];
     const runtime = createFixtureTrackBRuntime();

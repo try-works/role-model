@@ -525,6 +525,14 @@ export interface RuntimeTelemetrySourceSummary {
   readonly totalEstimatedCostUsd: number;
   readonly averageLatencyMs: number | null;
   readonly p95LatencyMs: number | null;
+  /**
+   * Run 98 addendum 40 (L1): the provider response-header percentiles above are not the latency a
+   * caller experienced. These describe the flushed request duration; they are absent on responses
+   * from a runtime older than addendum 40 and null for windows whose rows predate it.
+   */
+  readonly averageRequestLatencyMs?: number | null;
+  readonly p95RequestLatencyMs?: number | null;
+  readonly requestLatencySampleCount?: number;
   readonly lastSeenAtMs: number | null;
 }
 
@@ -1159,6 +1167,12 @@ export interface RouterConfig {
 export interface BenchmarkCapability {
   readonly evidenceSource?: "run-artifact" | "profile-derived";
   readonly overallScore: number | null;
+  /**
+   * Run 98 addendum 42 B2: the benchmark run's own latency for this endpoint, derived from its case
+   * audits. The model pool's speed axis uses it until telemetry exists for the endpoint.
+   */
+  readonly p50LatencyMs?: number | null;
+  readonly p95LatencyMs?: number | null;
   readonly scoresByBucket?: Partial<
     Record<"easy" | "medium" | "hard", { readonly score: number; readonly cases?: number }>
   >;
@@ -1181,6 +1195,11 @@ export interface BenchmarkCapability {
     readonly lowCoverageRoleIds?: readonly string[];
     readonly lowCoverageGroupIds?: readonly string[];
   };
+  /**
+   * Run 98 addendum 43 S2: `benchmarkSamples` is the benchmark-only count behind the score and
+   * `sampleCount` the broader sample size; the model pool's quality axis requires the configured floor
+   * before it will score this capability.
+   */
   readonly benchmarkSamples: number;
   readonly sampleCount: number;
   readonly measuredAtMs: number | null;
@@ -1540,7 +1559,7 @@ async function extractErrorMessage(response: Response, path: string): Promise<st
   }
 }
 
-async function fetchJson<TValue>(
+export async function fetchJson<TValue>(
   path: string,
   fetcher: RuntimeFetcher,
   init?: RequestInit,
@@ -1571,6 +1590,44 @@ async function sleep(delayMs: number): Promise<void> {
 
 function isRuntimeInitializingError(error: unknown): boolean {
   return error instanceof Error && error.message.includes("runtime_initializing");
+}
+
+/**
+ * Run 99 R33 (Learning surface, observed live on stage v138/v139): the operator sidecar answers two
+ * different start-up 503s — `runtime_initializing` while the runtime boots, and
+ * `operator_capability_unavailable` while its learning domain is still warming. Both are transient
+ * and both used to reach the page as "surface unavailable" even though the same readback succeeded
+ * seconds later, so the readbacks retry either shape.
+ */
+function isRuntimeStartupError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    (error.message.includes("runtime_initializing") ||
+      error.message.includes("operator_capability_unavailable"))
+  );
+}
+
+/**
+ * Bounded retry for operator readbacks that can arrive while the runtime is still starting.
+ */
+export async function withRuntimeStartupRetry<TValue>(
+  operation: () => Promise<TValue>,
+): Promise<TValue> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= RUNTIME_INITIALIZING_RETRY_DELAYS_MS.length; attempt += 1) {
+    if (attempt > 0) {
+      await sleep(RUNTIME_INITIALIZING_RETRY_DELAYS_MS[attempt - 1]);
+    }
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (!isRuntimeStartupError(error)) {
+        throw error;
+      }
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("Runtime API is still starting.");
 }
 
 async function withRuntimeInitializingRetry<TValue>(
@@ -1630,7 +1687,7 @@ async function fetchBlob(path: string, fetcher: RuntimeFetcher, init?: RequestIn
   return response.blob();
 }
 
-async function postJson<TValue>(
+export async function postJson<TValue>(
   path: string,
   payload: unknown,
   fetcher: RuntimeFetcher,
@@ -1709,6 +1766,51 @@ export async function fetchOperatorStatus(
 ): Promise<RuntimeOperatorStatus> {
   return operatorGet<RuntimeOperatorStatus>(
     "/api/role-model/operator/status",
+    fetcher,
+    operatorToken,
+  );
+}
+
+/**
+ * Run 97 automatic replay automation surface: bounded loop status and pause/resume.
+ * Both routes return 404 when the loop is not configured for the channel.
+ */
+export async function fetchReplayAutomationStatus(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<Record<string, unknown>> {
+  return operatorGet<Record<string, unknown>>(
+    "/api/role-model/track-b/replay/status",
+    fetcher,
+    operatorToken,
+  );
+}
+
+export async function controlReplayAutomation(
+  action: "pause" | "resume",
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<Record<string, unknown>> {
+  return operatorPost<Record<string, unknown>>(
+    "/api/role-model/track-b/replay/control",
+    { action },
+    fetcher,
+    operatorToken,
+  );
+}
+
+/**
+ * Bounded Evaluation Core and learner counters from the durable stores, used by the
+ * operator surface to answer whether replay is producing comparisons and candidates.
+ */
+export async function fetchLearningSummary(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<Record<string, unknown>> {
+  // Run 99: the runtime serves this readback as a GET (the POST form 404s), which left the
+  // Learning overview's advisory counters rendering as "—" on every page load.
+  return operatorGet<Record<string, unknown>>(
+    "/api/role-model/track-b/learning/summary",
     fetcher,
     operatorToken,
   );
@@ -1917,6 +2019,43 @@ export async function fetchLearningProfile(
   );
 }
 
+/**
+ * Run 98 addendum 44 `A44-S3`: the profile-inspection capability is not wired into the packaged stage, and the
+ * host answers a bounded `503 operator_capability_unavailable` with its reason. The Overview must show that as
+ * a first-class state rather than an error, so this read never throws: it reports what the runtime said.
+ */
+export async function fetchLearningProfileState(
+  fetcher: RuntimeFetcher = fetch,
+  operatorToken?: string,
+): Promise<{
+  readonly state: "available" | "unavailable";
+  readonly reason: string | null;
+  readonly value: Readonly<Record<string, unknown>> | null;
+}> {
+  const response = await fetcher(
+    "/api/role-model/operator/learning/profile",
+    withOperatorToken(undefined, operatorToken),
+  );
+  let payload: Record<string, unknown> | null = null;
+  try {
+    const parsed = await response.json();
+    payload =
+      typeof parsed === "object" && parsed !== null ? (parsed as Record<string, unknown>) : null;
+  } catch {
+    payload = null;
+  }
+  if (!response.ok) {
+    const reason =
+      typeof payload?.reason === "string" && payload.reason.trim()
+        ? payload.reason.trim()
+        : typeof payload?.message === "string" && payload.message.trim()
+          ? payload.message.trim()
+          : null;
+    return { state: "unavailable", reason, value: null };
+  }
+  return { state: "available", reason: null, value: payload };
+}
+
 export async function fetchLearningAdvisory(
   fetcher: RuntimeFetcher = fetch,
   operatorToken?: string,
@@ -2045,6 +2184,18 @@ export interface RuntimeExtensionStatus {
   readonly installed: boolean;
   readonly enabled: boolean;
   readonly enabledMode?: "disabled" | "shadow" | "advisory" | "bounded" | "active";
+  /**
+   * Declared activation boundary for this package (run 98 R18). The mode selector, the
+   * default label and the prohibited actions are rendered from this record instead of
+   * per-extension UI branching.
+   */
+  readonly activationBoundary?: {
+    readonly policyGated: boolean;
+    readonly defaultMode: "disabled" | "shadow" | "advisory" | "bounded" | "active";
+    readonly allowedModes: readonly ("disabled" | "shadow" | "advisory" | "bounded" | "active")[];
+    readonly prohibitedActions: readonly string[];
+    readonly prohibitedCapabilities: readonly string[];
+  };
   readonly channel: string;
   readonly scope: string;
   readonly authorizationEpoch: number;

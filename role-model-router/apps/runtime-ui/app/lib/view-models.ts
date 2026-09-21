@@ -1003,16 +1003,33 @@ export function summarizeTelemetryStats(
       detail: `${summary.successCount} successful requests`,
     },
     {
-      label: "Latency",
-      value: summary.averageLatencyMs !== null ? `${summary.averageLatencyMs} ms avg` : "n/a",
+      // Run 98 addendum 40 (L1): `latency_ms` is the provider's response-header time. It is labelled
+      // as such and the duration the caller actually waited for is reported beside it.
+      label: "Provider latency",
+      value:
+        typeof summary.averageLatencyMs === "number"
+          ? `${formatLatencyMs(summary.averageLatencyMs)} avg`
+          : "n/a",
       detail:
-        summary.p95LatencyMs !== null && summary.averageLatencyMs !== null
-          ? `${summary.p95LatencyMs} ms p95 · ${summary.averageLatencyMs} ms avg`
-          : summary.p95LatencyMs !== null
-            ? `${summary.p95LatencyMs} ms p95 — average not available`
-            : summary.averageLatencyMs !== null
-              ? `${summary.averageLatencyMs} ms avg — p95 not available`
+        typeof summary.p95LatencyMs === "number" && typeof summary.averageLatencyMs === "number"
+          ? `${formatLatencyMs(summary.p95LatencyMs)} p95 · ${formatLatencyMs(summary.averageLatencyMs)} avg · provider response headers`
+          : typeof summary.p95LatencyMs === "number"
+            ? `${formatLatencyMs(summary.p95LatencyMs)} p95 — average not available`
+            : typeof summary.averageLatencyMs === "number"
+              ? `${formatLatencyMs(summary.averageLatencyMs)} avg — p95 not available`
               : "Latency data not available yet",
+    },
+    {
+      label: "Client latency",
+      value:
+        typeof summary.p95RequestLatencyMs === "number"
+          ? `${formatLatencyMs(summary.p95RequestLatencyMs)} p95`
+          : "n/a",
+      detail:
+        typeof summary.averageRequestLatencyMs === "number" ||
+        typeof summary.requestLatencySampleCount === "number"
+          ? `${formatLatencyMs(summary.averageRequestLatencyMs ?? null)} avg · ${summary.requestLatencySampleCount ?? 0} measured requests`
+          : "Not measured for this window — rows written before the client-latency update",
     },
     {
       label: "Tokens",

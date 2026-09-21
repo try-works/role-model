@@ -14,6 +14,56 @@ import {
 } from "../extension-sdk/index.mjs";
 import { ExtensionHost } from "./index.mjs";
 
+test("Run 97 extension workers inherit the host runtime channel", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "run97-extension-channel-"));
+  const fixture = path.join(root, "channel-extension.mjs");
+  await writeFile(
+    fixture,
+    `export async function run(envelope) {
+      return {
+        capability: envelope.capability,
+        workerChannel: process.env.ROLE_MODEL_EXTENSION_CHANNEL ?? null,
+        workerStateRootPresent: Boolean(process.env.ROLE_MODEL_EXTENSION_STATE_ROOT),
+      };
+    }
+`,
+    "utf8",
+  );
+  const host = new ExtensionHost({
+    protocolVersion: "1.1.0",
+    authorizationEpoch: 9,
+    journalPath: path.join(root, "channel-host.jsonl"),
+    timeoutMs: 10_000,
+    startupTimeoutMs: 10_000,
+    channel: "stage",
+  });
+  try {
+    await host.registerProcess(
+      {
+        id: "run97-channel-extension",
+        protocolVersion: "1.1.0",
+        capabilities: ["fixture:channel"],
+      },
+      pathToFileURL(fixture).href,
+    );
+    const result = await host.invoke("run97-channel-extension", {
+      requestId: "run97-channel-extension:probe",
+      protocolVersion: "1.1.0",
+      authorizationEpoch: 9,
+      channel: "stage",
+      scope: "standalone-runtime-stage",
+      capability: "fixture:channel",
+    });
+    // Without the inherited channel the Artifact Store business store defaults to
+    // development and every stage write is rejected as a scope channel mismatch.
+    assert.equal(result.workerChannel, "stage");
+    assert.equal(result.workerStateRootPresent, true);
+  } finally {
+    await host.shutdown().catch(() => {});
+    await rm(root, { recursive: true, force: true, maxRetries: 3 }).catch(() => {});
+  }
+});
+
 const protocolVersion = "1.1.0";
 const authorizationEpoch = 7;
 const envelopeFor = (body, overrides = {}) => ({

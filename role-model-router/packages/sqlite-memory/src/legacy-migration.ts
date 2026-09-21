@@ -245,6 +245,21 @@ function stateRequiresGraphWrite(state: LegacyMigrationState): boolean {
   );
 }
 
+/**
+ * Run 98 addendum 40 (L2): an observation whose route capture was deferred, or whose operations
+ * boundary was unavailable, is deliberately artifact-free. Callers already reduced it to the bounded
+ * compact stub; the graph-migration guards must recognise it instead of refusing to store it.
+ */
+export function isDegradedCaptureObservation(
+  observation: Readonly<Record<string, unknown>>,
+): boolean {
+  const captureDegradation = observation.captureDegradation;
+  return (
+    observation.statusFamily === "degraded-capture" ||
+    (typeof captureDegradation === "object" && captureDegradation !== null)
+  );
+}
+
 /** Records a live production write in the migration target while shadow mirroring is active. */
 export function mirrorShadowRuntimeObservation(
   database: DatabaseSync,
@@ -267,6 +282,9 @@ export function recordRuntimeObservationGraphReference(
 ): boolean {
   if (!stateRequiresGraphWrite(currentState(database))) return false;
   const requestId = input.observation.requestId;
+  // A degraded-capture observation has no graph reference to record by design; the bounded stub is
+  // the record. Everything else still requires its artifact while the store is graph-authoritative.
+  if (isDegradedCaptureObservation(input.observation)) return false;
   if (typeof requestId !== "string" || requestId.length === 0 || !input.artifactRef) {
     throw new Error("graph storage requires an artifact reference for every live observation");
   }
@@ -1543,6 +1561,114 @@ export function readLegacyMigrationJournal(databasePath: string): LegacyMigratio
  * Rich content (messages, response bodies, tool payloads, captures, cumulative
  * history/recentSamples) is NEVER included: it is graph-external by contract.
  */
+/**
+ * Run 98 addendum 35: the diagnostics sub-trees the decision evidence needs, in the order they are
+ * worth spending the stub's byte budget on. The first group *is* the decision (which difficulty
+ * band, which effective mode, which strategy, which role, what the endpoint's live profile and
+ * metrics were, whether throughput was penalised); the second group is optional detail that may be
+ * dropped when the tree is oversized.
+ */
+const ROUTING_DIAGNOSTIC_REQUIRED_KEYS = [
+  "difficultyRouting",
+  "routingMode",
+  "hybridArbitration",
+  "controllerRouting",
+  "rolePolicy",
+  "observedProfile",
+  "effectiveMetrics",
+  "throughputPenalty",
+] as const;
+const ROUTING_DIAGNOSTIC_OPTIONAL_KEYS = [
+  "selection",
+  // Run 98 addendum 40 L5 (live-window finding): the measured-latency verdict is decision evidence, so
+  // a stub must carry it. The projection is an allowlist, and omitting this key made the verdict
+  // invisible on every stubbed observation (which, with the capture deferred, is every live request).
+  "latencySelection",
+  "aliasResolution",
+  "rewrite",
+  "cacheContinuity",
+  "routingCacheAffinity",
+  "roleModelIntent",
+  "catalogEconomics",
+] as const;
+const ROUTING_DIAGNOSTIC_BUDGET_BYTES = 8 * 1024;
+
+/**
+ * Copy a diagnostics value without ever carrying rich content: scalars, small records, bounded
+ * arrays of scalars, bounded strings, bounded depth. Anything else is dropped rather than truncated
+ * mid-value, so the projection can never smuggle a prompt, a response body or a tool payload into
+ * the inline row.
+ */
+function projectBoundedDiagnosticValue(value: unknown, depth = 0): unknown {
+  if (value === null || typeof value === "number" || typeof value === "boolean") return value;
+  if (typeof value === "string") return value.length > 512 ? `${value.slice(0, 512)}…` : value;
+  if (Array.isArray(value)) {
+    if (depth >= 3) return undefined;
+    const entries = value
+      .slice(0, 32)
+      .map((entry) => projectBoundedDiagnosticValue(entry, depth + 1))
+      .filter((entry) => entry !== undefined);
+    return entries.length > 0 ? entries : undefined;
+  }
+  if (value && typeof value === "object") {
+    if (depth >= 3) return undefined;
+    const record = value as Record<string, unknown>;
+    const projected: Record<string, unknown> = {};
+    for (const key of Object.keys(record).slice(0, 64)) {
+      const entry = projectBoundedDiagnosticValue(record[key], depth + 1);
+      if (entry !== undefined) projected[key] = entry;
+    }
+    return Object.keys(projected).length > 0 ? projected : undefined;
+  }
+  return undefined;
+}
+
+function projectBoundedRoutingDiagnostics(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const source = value as Record<string, unknown>;
+  const projected: Record<string, unknown> = {};
+  for (const key of ROUTING_DIAGNOSTIC_REQUIRED_KEYS) {
+    const entry = projectBoundedDiagnosticValue(source[key]);
+    if (entry !== undefined) projected[key] = entry;
+  }
+  for (const key of ROUTING_DIAGNOSTIC_OPTIONAL_KEYS) {
+    const entry = projectBoundedDiagnosticValue(source[key]);
+    if (entry !== undefined) projected[key] = entry;
+  }
+  // Bound the projection inside the stub's own 16 KiB cap: drop optional detail first, then the
+  // optional-everything case, so the decision evidence is what survives an oversized tree.
+  if (Buffer.byteLength(JSON.stringify(projected), "utf8") > ROUTING_DIAGNOSTIC_BUDGET_BYTES) {
+    for (const key of ROUTING_DIAGNOSTIC_OPTIONAL_KEYS) delete projected[key];
+  }
+  for (const key of ["selection", "roleModelIntent", "catalogEconomics"] as const) {
+    if (Buffer.byteLength(JSON.stringify(projected), "utf8") <= ROUTING_DIAGNOSTIC_BUDGET_BYTES) {
+      break;
+    }
+    delete projected[key];
+  }
+  if (Buffer.byteLength(JSON.stringify(projected), "utf8") > ROUTING_DIAGNOSTIC_BUDGET_BYTES) {
+    // Still oversized: keep the scalar decision fields only.
+    for (const key of ["observedProfile", "effectiveMetrics", "throughputPenalty"] as const) {
+      const entry = projected[key];
+      if (entry && typeof entry === "object" && !Array.isArray(entry)) {
+        const shrunk: Record<string, unknown> = {};
+        for (const [field, fieldValue] of Object.entries(entry as Record<string, unknown>)) {
+          if (
+            fieldValue === null ||
+            typeof fieldValue === "number" ||
+            typeof fieldValue === "boolean" ||
+            (typeof fieldValue === "string" && fieldValue.length <= 512)
+          ) {
+            shrunk[field] = fieldValue;
+          }
+        }
+        projected[key] = shrunk;
+      }
+    }
+  }
+  return projected;
+}
+
 export function buildCompactRuntimeObservationStub(
   observation: Readonly<Record<string, unknown>>,
 ): Record<string, unknown> {
@@ -1587,6 +1713,39 @@ export function buildCompactRuntimeObservationStub(
     "finishReason",
     "costProvenance",
   ]);
+  /**
+   * Run 98 addendum 40 (audit follow-up): capability flags and stream counters are bounded facts, not
+   * rich content, and the telemetry projection derives `cacheReadTokensSupported`,
+   * `cacheWriteTokensSupported`, `promptCacheSupported` and the stream support flags from them. Dropping
+   * them did not fail loudly — it flipped every derived flag to `false`, which is how 434 live rows
+   * reported "cache hit tokens unsupported" while still recording an average of 129k cached tokens.
+   * Each nested object is projected field by field so the stub still cannot absorb arbitrary content.
+   */
+  const executionTelemetrySource = observation.executionTelemetry as
+    | Record<string, unknown>
+    | undefined;
+  const usageSupport = pickRecord(executionTelemetrySource?.usageSupport, [
+    "inputTokens",
+    "outputTokens",
+    "cacheReadTokens",
+    "cacheWriteTokens",
+  ]);
+  if (Object.keys(usageSupport).length) executionTelemetry.usageSupport = usageSupport;
+  const promptCaching = pickRecord(executionTelemetrySource?.promptCaching, ["supported"]);
+  if (Object.keys(promptCaching).length) executionTelemetry.promptCaching = promptCaching;
+  const streamSupport = pickRecord(executionTelemetrySource?.streamSupport, [
+    "text",
+    "toolCalls",
+    "toolArguments",
+  ]);
+  if (Object.keys(streamSupport).length) executionTelemetry.streamSupport = streamSupport;
+  const streamCounters = pickRecord(executionTelemetrySource?.stream, [
+    "requested",
+    "textDeltas",
+    "toolCallDeltas",
+    "toolArgumentDeltas",
+  ]);
+  if (Object.keys(streamCounters).length) executionTelemetry.stream = streamCounters;
   const executionSemantics = pickRecord(observation.executionSemantics, [
     "sourceClient",
     "executionFamily",
@@ -1693,6 +1852,49 @@ export function buildCompactRuntimeObservationStub(
     "structuredInspectionAvailable",
   ]);
   if (Object.keys(capturePolicy).length) stub.capturePolicy = capturePolicy;
+  /**
+   * v1.1 guidance 03 §"Compact event envelopes remain bounded" and 01 §"TB02/TB03 ownership": when
+   * rich capture fails the runtime keeps compact telemetry and routing and writes a
+   * `CaptureDegradationReceipt` with the stage, the reason and the fallback
+   * (`metadata_only` / `queued_for_retry` / `dropped_rich_payload`) — the receipt is *evidence about
+   * the evidence*, not rich content. Dropping it while projecting the bundle made a degraded capture
+   * indistinguishable from a request that had nothing to capture.
+   */
+  const captureDegradation = pickRecord(observation.captureDegradation, [
+    "contract",
+    "receiptId",
+    "observationId",
+    "routeDecisionId",
+    "failureStage",
+    "actionTaken",
+    "reasonCode",
+    "routingContinues",
+    "routingContinued",
+    "createdAt",
+    "runtimeChannel",
+    "scopeId",
+    "reason",
+  ]);
+  if (Object.keys(captureDegradation).length) stub.captureDegradation = captureDegradation;
+  if (observation.statusFamily === "degraded-capture") {
+    stub.statusFamily = "degraded-capture";
+  }
+  /**
+   * Run 98 addendum 35 (live stage finding, 2026-09-18): the stub dropped `routingDiagnostics` with
+   * the rich content, so every real request read back as having no routing diagnostics at all. Live
+   * telemetry wrote `difficulty_bucket = NULL`, `routing_mode = NULL` and `selected_strategy = NULL`
+   * for traffic whose decision had all three, and ten runtime-host-bridge acceptance tests failed on
+   * the same readback (the observed profile, the effective metric summary and the throughput penalty
+   * are what make a routing decision auditable, and the replay comparability, the telemetry
+   * projection and the Learning readbacks all consume them).
+   *
+   * Routing diagnostics are routing *evidence*, not rich content, so a bounded projection survives:
+   * scalars and small records only, bounded depth, bounded arrays, bounded strings, and a byte budget
+   * that drops the optional detail before the decision evidence. Messages, responses, tool payloads
+   * and capture bodies remain graph-external exactly as before.
+   */
+  const routingDiagnostics = projectBoundedRoutingDiagnostics(observation.routingDiagnostics);
+  if (Object.keys(routingDiagnostics).length) stub.routingDiagnostics = routingDiagnostics;
   const privacyReceipt = pickRecord(observation.privacyReceipt, [
     "samplingRate",
     "retentionTtlHours",
@@ -1790,12 +1992,28 @@ export function buildCompactRuntimeObservationStub(
     "output_tokens",
   ]);
   const profile = pickRecord(observed?.profile, [
+    // Run 98 addendum 40 audit: these are the names the aggregator actually emits
+    // (`packages/profile-aggregator`). The previous list kept `latency_ms` / `sample_count` /
+    // `success_rate` / `throughput_tokens_per_sec`, none of which exist on a real profile, so the
+    // stored operational profile was metadata-only and the model pool's quality and speed axes — which
+    // read this record — rendered empty for every stubbed request.
+    "endpoint_id",
+    "endpoint_version",
     "measured_at_ms",
-    "sample_count",
-    "success_rate",
-    "latency_ms",
-    "throughput_tokens_per_sec",
+    "measurement_window",
+    "sample_size",
+    "sources",
+    "latency_ms_p50",
+    "latency_ms_p95",
+    "failure_rate",
+    "freshness_score",
+    "confidence_score",
+    "judge_score",
     "quality_score",
+    "tokens_per_sec",
+    "error_class_rates",
+    "cost_per_1k_tokens_est",
+    "currency",
   ]);
   const endpointVersion = observed?.endpointVersion;
   if (Object.keys(sample).length || Object.keys(profile).length || endpointVersion !== undefined) {
@@ -1805,6 +2023,57 @@ export function buildCompactRuntimeObservationStub(
     if (Object.keys(profile).length) compactObserved.profile = profile;
     stub.observedPerformance = compactObserved;
   }
+  /**
+   * Run 98 addendum 40 audit: the telemetry snapshot is bounded decision/cost evidence (ids, dollar
+   * amounts, the candidate cost rollup and the selected pricing), not rich content, and the ledger and
+   * the cost charts read it. Dropping it entirely made `cost_savings_support` NULL on 656 of 971 live
+   * rows, which is the "rows do not support routingCostSavingsUsd" note and the flat cost chart.
+   */
+  const telemetrySnapshot = observation.telemetrySnapshot as Record<string, unknown> | undefined;
+  const snapshot = pickRecord(telemetrySnapshot, [
+    "providerId",
+    "providerAccountId",
+    "sourceType",
+    "endpointKind",
+    "servingSource",
+    "region",
+    "lifecycleStateAtRequest",
+    "healthStatusAtRequest",
+    "requestedModelId",
+    "selectedModelId",
+    "requestOperation",
+    "toolingUsed",
+    "cacheState",
+    "reasoningEffort",
+    "effortSource",
+    "selectedUncachedCostUsd",
+    "baselineMaxEligibleCostUsd",
+    "routingCostSavingsUsd",
+    "cacheCostSavingsUsd",
+    "totalAvoidedCostUsd",
+    "costBaselineSource",
+    "costSavingsSupport",
+  ]);
+  const boundedStringList = (value: unknown): string[] =>
+    Array.isArray(value)
+      ? value.filter((entry): entry is string => typeof entry === "string").slice(0, 64)
+      : [];
+  const roleIds = boundedStringList(telemetrySnapshot?.roleIds);
+  if (roleIds.length) snapshot.roleIds = roleIds;
+  const eligibleEndpointIds = boundedStringList(telemetrySnapshot?.eligibleEndpointIds);
+  if (eligibleEndpointIds.length) snapshot.eligibleEndpointIds = eligibleEndpointIds;
+  const eligibleModelIds = boundedStringList(telemetrySnapshot?.eligibleModelIds);
+  if (eligibleModelIds.length) snapshot.eligibleModelIds = eligibleModelIds;
+  const candidateCostSnapshot = projectBoundedDiagnosticValue(
+    telemetrySnapshot?.candidateCostSnapshot,
+  );
+  if (candidateCostSnapshot !== undefined) snapshot.candidateCostSnapshot = candidateCostSnapshot;
+  const selectedPricingSnapshot = projectBoundedDiagnosticValue(
+    telemetrySnapshot?.selectedPricingSnapshot,
+  );
+  if (selectedPricingSnapshot !== undefined)
+    snapshot.selectedPricingSnapshot = selectedPricingSnapshot;
+  if (Object.keys(snapshot).length) stub.telemetrySnapshot = snapshot;
   return stub;
 }
 

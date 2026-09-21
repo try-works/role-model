@@ -8,6 +8,7 @@ import {
   deriveSupervisedReplayTrajectoryEvents,
   persistSupervisedReplayEvaluationCaseReferences,
   persistSupervisedReplayEvaluationReferenceFacts,
+  readCaptureTaxonomyVersion as readCaptureTaxonomyVersionForTest,
 } from "../src/cli.js";
 import {
   type TrackBShadowPipelineInput,
@@ -45,6 +46,18 @@ function durableCapture(seed: string) {
     routingDecisionId: `decision:${seed}`,
     endpointId: `endpoint:${seed}`,
     modelId: `model:${seed}`,
+    // Run 99 R33 S33: a recovered capture carries the family the request was routed for.
+    taskTypeId: "coder.review",
+    /**
+     * Run 98 addendum 58 §22.2.3: the capture also carries the classification the request was routed
+     * under, taxonomy revision included. The comparison's comparability key and the pack scope both
+     * read the revision from the pipeline input, so a capture that records it must hand it over.
+     */
+    classification: {
+      taskTypeId: "coder.review",
+      roleId: "coder",
+      taxonomyVersion: "1.0.0-alpha.1",
+    },
     responseArtifactId,
     routeDecisionArtifactId,
     providerArtifactIds: [providerArtifactId],
@@ -108,15 +121,92 @@ test("Run96 CLI completeEvaluation binds fresh and recovery evaluation refs to d
   expect(result.rolloutReferences).toEqual([
     {
       evidenceRef: `artifact:${sourceCapture.rootArtifactId}`,
-      artifactRef: `artifact:${sourceCapture.routeDecisionArtifactId}`,
+      // Run 98 addendum 31 S4: the trial's output reference is the branch *response* artifact (the
+      // text the runner scores), not the capture's route-decision document.
+      artifactRef: `artifact:${sourceCapture.responseArtifactId}`,
       outcomeRef: `artifact:${sourceCapture.providerArtifactIds[0]}`,
     },
     {
       evidenceRef: `artifact:${counterfactualCapture.rootArtifactId}`,
-      artifactRef: `artifact:${counterfactualCapture.routeDecisionArtifactId}`,
+      artifactRef: `artifact:${counterfactualCapture.responseArtifactId}`,
       outcomeRef: `artifact:${counterfactualCapture.providerArtifactIds[0]}`,
     },
   ]);
+});
+
+/**
+ * Run 98 addendum 34 S5 (live stage v199, request `replay-req-de6cf9bb-…`): a real replay whose two
+ * arms produced byte-identical answers shared one content-addressed response artifact, and the
+ * reference builder refused the whole capture with `rollout evidence, artifact, and outcome
+ * references must contain distinct persisted artifact references`. The capture then deferred four
+ * times and was refused, so real traffic was never evaluated.
+ *
+ * `guidance/11` line 117 settles what should happen instead: a "single-outcome" group is *ineligible
+ * for promotion evidence* — recorded and excluded, never refused. The arms keep their own evidence,
+ * route decision and provider execution; only the scored text may coincide, and when it does the
+ * build must say so rather than throw.
+ */
+test("Run98 A34 S5 two arms with identical answers build references and report a single outcome", () => {
+  const sourceCapture = durableCapture("1");
+  const counterfactualCapture = {
+    ...durableCapture("8"),
+    // Same scored text as the source: the artifact store addresses content, so both arms resolve to
+    // the same response artifact while every other reference stays per-arm.
+    responseArtifactId: sourceCapture.responseArtifactId,
+  };
+  const result = buildSupervisedReplayEvaluationReferences({
+    sourceCapture,
+    counterfactualCaptures: [counterfactualCapture],
+    caseIds: ["case:run98:source", "case:run98:counterfactual"],
+    referenceFacts: {
+      taskRef: `artifact:${artifactId("f")}`,
+      inputRef: `artifact:${artifactId("0")}`,
+      toolPolicyDigest: `artifact:${artifactId("f0")}`,
+      environmentDigest: `artifact:${artifactId("0f")}`,
+    },
+  });
+
+  expect(result.singleOutcome).toBe(true);
+  expect(result.rolloutReferences[0]?.artifactRef).toBe(result.rolloutReferences[1]?.artifactRef);
+  // The evidence and provider references remain distinct, so the comparison is still complete.
+  expect(result.rolloutReferences[0]?.evidenceRef).not.toBe(
+    result.rolloutReferences[1]?.evidenceRef,
+  );
+  expect(result.rolloutReferences[0]?.outcomeRef).not.toBe(result.rolloutReferences[1]?.outcomeRef);
+  expect(result.evaluationReferences.sourceOutcomeRef).not.toBe(
+    result.evaluationReferences.counterfactualOutcomeRef,
+  );
+});
+
+test("Run98 A34 S5 a rollout that reuses its own reference is still refused", () => {
+  const sourceCapture = durableCapture("1");
+  const collapsed = {
+    ...durableCapture("8"),
+    // A branch whose provider result *is* its response is not a comparison: its own three references
+    // collapse onto one artifact.
+    providerArtifactIds: [durableCapture("8").responseArtifactId],
+    responseArtifactId: durableCapture("8").responseArtifactId,
+  };
+  const collapsedProvider = durableCapture("8").responseArtifactId;
+  expect(() =>
+    buildSupervisedReplayEvaluationReferences({
+      sourceCapture,
+      counterfactualCaptures: [
+        {
+          ...collapsed,
+          providerArtifactIds: [collapsedProvider],
+          responseArtifactId: collapsedProvider,
+        },
+      ],
+      caseIds: ["case:run98:source", "case:run98:counterfactual"],
+      referenceFacts: {
+        taskRef: `artifact:${artifactId("f")}`,
+        inputRef: `artifact:${artifactId("0")}`,
+        toolPolicyDigest: `artifact:${artifactId("f0")}`,
+        environmentDigest: `artifact:${artifactId("0f")}`,
+      },
+    }),
+  ).toThrow(/distinct persisted artifact references/);
 });
 
 test("Run96 CLI case references are materialized by artifact-store", async () => {
@@ -154,6 +244,82 @@ test("Run96 CLI case references are materialized by artifact-store", async () =>
   expect((firstPayload.record as Record<string, unknown>).schema).toBe(
     "role-model.evaluation-case-reference.v1",
   );
+});
+
+/**
+ * Run 98 addendum 31 S2 (`guidance/11`: a score binds its *input projection*): the case reference is
+ * the one artifact a score's input can be recovered from. It used to carry pointers only, so a reader
+ * had to follow the capture to see what was asked. It now carries the bounded evaluation subject -
+ * the task instruction, the criteria and the branch output - inline.
+ */
+test("run98 A31 S2 the case reference carries the bounded evaluation subject", async () => {
+  const sourceCapture = durableCapture("1");
+  const counterfactualCapture = durableCapture("8");
+  const written: string[] = [];
+  const runtime = {
+    async invoke(_id: string, envelope: Record<string, unknown>) {
+      const payload = envelope.payload as Record<string, unknown>;
+      const record = payload.record as Record<string, unknown>;
+      written.push(String(record.content));
+      return { id: artifactId("f") };
+    },
+  };
+  const criteria = {
+    schemaVersion: "role-model.semantic-criteria.v1",
+    requiredTerms: ["ok"],
+  };
+  await persistSupervisedReplayEvaluationCaseReferences({
+    runtime,
+    requestId: "supervised-replay:source:subject",
+    channel: "development",
+    scope: "tenant:run96",
+    authorizationEpoch: 96,
+    caseIds: ["case:run96:source", "case:run96:counterfactual"],
+    captures: [sourceCapture, counterfactualCapture],
+    subjects: [
+      { taskText: "Reply with the single word: ok", criteria, outputText: "ok" },
+      { taskText: "Reply with the single word: ok", criteria, outputText: "okay" },
+    ],
+  });
+  const first = JSON.parse(written[0]) as Record<string, unknown>;
+  const second = JSON.parse(written[1]) as Record<string, unknown>;
+  expect(first.subject).toMatchObject({
+    taskText: "Reply with the single word: ok",
+    outputText: "ok",
+  });
+  expect((first.subject as Record<string, unknown>).criteria).toMatchObject({
+    requiredTerms: ["ok"],
+  });
+  expect(second.subject).toMatchObject({ outputText: "okay" });
+
+  // The subject is bounded: an oversized instruction is truncated with an explicit marker instead of
+  // being written out in full.
+  const huge = "x".repeat(200_000);
+  const bounded: string[] = [];
+  await persistSupervisedReplayEvaluationCaseReferences({
+    runtime: {
+      async invoke(_id: string, envelope: Record<string, unknown>) {
+        const payload = envelope.payload as Record<string, unknown>;
+        bounded.push(String((payload.record as Record<string, unknown>).content));
+        return { id: artifactId("0") };
+      },
+    },
+    requestId: "supervised-replay:source:bounded",
+    channel: "development",
+    scope: "tenant:run96",
+    authorizationEpoch: 96,
+    caseIds: ["case:run96:bounded"],
+    captures: [sourceCapture],
+    subjects: [{ taskText: huge, criteria, outputText: huge }],
+  });
+  const boundedSubject = (JSON.parse(bounded[0]) as Record<string, unknown>).subject as Record<
+    string,
+    unknown
+  >;
+  expect(String(boundedSubject.taskText).length).toBeGreaterThan(0);
+  expect(String(boundedSubject.taskText).length).toBeLessThan(huge.length);
+  expect(String(boundedSubject.taskText)).toMatch(/truncated/i);
+  expect(String(boundedSubject.outputText).length).toBeLessThan(huge.length);
 });
 
 test("Run96 CLI persists and reads back independent evaluation reference facts", async () => {
@@ -302,6 +468,8 @@ test("Run96 CLI forwards only durable captured trajectory events in stable order
 test("Run96 CLI production completion uses the same durable join for fresh and recovery", async () => {
   const sourceCapture = {
     ...durableCapture("1"),
+    // Run 99 R33 S33: the capture records the family the request was routed for.
+    taskTypeId: "coder.review",
     response: { content: "source output" },
   };
   const counterfactualCapture = {
@@ -635,6 +803,22 @@ test("Run96 CLI production completion reaches trusted Evaluation Core and declin
     outcome: "candidate",
   });
   const firstReferences = pipelineInputs[0]?.evaluationReferences as Record<string, unknown>;
+  // Run 99 R33 (S34 live finding): the capture's task family must travel with the supervised
+  // replay, otherwise the comparison — and the learner's family-scoped floor — never sees it.
+  expect(pipelineInputs[0]?.taskTypeId).toBe("coder.review");
+  // Run 98 addendum 58 §22.2.3: the taxonomy revision travels with the family, so the comparability
+  // key (and the pack scope derived from it) is version-stamped rather than version-less.
+  expect(pipelineInputs[0]?.taxonomyVersion).toBe("1.0.0-alpha.1");
+  // Run 98 addendum 58 §22.2.3: the capture read emits the revision in two shapes — on the record
+  // itself (the sidecar's own readback) and inside the classification — so a capture that carries only
+  // the top-level value must still hand it over.
+  expect(readCaptureTaxonomyVersionForTest({ taxonomyVersion: " 1.0.0-alpha.2 " })).toBe(
+    "1.0.0-alpha.2",
+  );
+  expect(
+    readCaptureTaxonomyVersionForTest({ classification: { taxonomyVersion: " 1.0.0-alpha.3" } }),
+  ).toBe("1.0.0-alpha.3");
+  expect(readCaptureTaxonomyVersionForTest({})).toBeUndefined();
   const restartReadbackRuntime: TrackBShadowPipelineRuntime = {
     async invoke(id, envelope) {
       expect(id).toBe("artifact-store");

@@ -67,17 +67,37 @@ function formatK(value: number): string {
   return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value);
 }
 
-function formatUsd(value: number): string {
+/**
+ * Run 98 addendum 49 (operator report 2026-09-20: "y axis is all 0 somehow cost data is being lost from
+ * requests" — the "Cost avoided over time" chart drew its area but every tick read `$0.00`).
+ *
+ * The chart is drawn from real values, so nothing was lost from the requests: the axis formatter hardcoded two
+ * fraction digits, and avoided-cost ticks are fractions of a cent (a busy day peaks well under `$0.01`), so every
+ * label rounded to zero. The precision now follows the magnitude, with two decimals kept as the floor.
+ */
+export function formatUsdAxisTick(value: number): string {
   if (!Number.isFinite(value)) {
     return "";
   }
+  const magnitude = Math.abs(value);
+  if (magnitude === 0) {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(0);
+  }
+  const digits = magnitude >= 1 ? 2 : Math.min(6, Math.ceil(-Math.log10(magnitude)) + 1);
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    maximumFractionDigits: Math.max(2, digits),
   }).format(value);
 }
+
+const formatUsd = formatUsdAxisTick;
 
 function formatMs(value: number): string {
   if (!Number.isFinite(value)) {

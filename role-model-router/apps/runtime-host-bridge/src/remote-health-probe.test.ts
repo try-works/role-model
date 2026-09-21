@@ -433,4 +433,100 @@ describe("remote-health-probe", () => {
       }),
     ).toEqual(["moonshot/kimi-k2.5", "gpt-4.1"]);
   });
+
+  it("retries a transient connect timeout and reports the endpoint healthy", async () => {
+    let attempts = 0;
+    const result = await probeRemoteEndpoints({
+      litellmHealthy: true,
+      probeAttempts: 3,
+      probeRetryDelayMs: 1,
+      targets: [
+        {
+          endpointId: "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+          providerAccountId: "deepseek.personal.deepseek-api-key",
+          modelId: "deepseek/deepseek-flash",
+          apiBase: "https://api.deepseek.com/v1",
+          servingSource: "remote-service",
+        },
+      ],
+      resolveAuthorization: async () => "deepseek-key",
+      networkFetcher: async () => {
+        attempts += 1;
+        if (attempts < 3) {
+          const cause = Object.assign(new Error("connect timeout"), {
+            code: "UND_ERR_CONNECT_TIMEOUT",
+          });
+          throw new TypeError("fetch failed", { cause });
+        }
+        return new Response(JSON.stringify({ data: [{ id: "deepseek-flash" }] }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      },
+    });
+
+    expect(attempts).toBe(3);
+    expect(result.results[0]).toMatchObject({
+      reason: "healthy",
+      healthStatus: "healthy",
+    });
+  });
+
+  it("classifies a persistent connect timeout as transport, not a vendor outage", async () => {
+    let attempts = 0;
+    const result = await probeRemoteEndpoints({
+      litellmHealthy: true,
+      probeAttempts: 2,
+      probeRetryDelayMs: 1,
+      targets: [
+        {
+          endpointId: "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+          providerAccountId: "deepseek.personal.deepseek-api-key",
+          modelId: "deepseek/deepseek-flash",
+          apiBase: "https://api.deepseek.com/v1",
+          servingSource: "remote-service",
+        },
+      ],
+      resolveAuthorization: async () => "deepseek-key",
+      networkFetcher: async () => {
+        attempts += 1;
+        const cause = Object.assign(new Error("connect timeout"), {
+          code: "UND_ERR_CONNECT_TIMEOUT",
+        });
+        throw new TypeError("fetch failed", { cause });
+      },
+    });
+
+    expect(attempts).toBe(2);
+    expect(result.results[0]).toMatchObject({
+      reason: "timeout",
+      healthStatus: "offline",
+    });
+  });
+
+  it("does not retry a hard authorization failure", async () => {
+    let attempts = 0;
+    const result = await probeRemoteEndpoints({
+      litellmHealthy: true,
+      probeAttempts: 3,
+      probeRetryDelayMs: 1,
+      targets: [
+        {
+          endpointId: "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+          providerAccountId: "deepseek.personal.deepseek-api-key",
+          modelId: "deepseek/deepseek-flash",
+          apiBase: "https://api.deepseek.com/v1",
+          servingSource: "remote-service",
+        },
+      ],
+      resolveAuthorization: async () => "deepseek-key",
+      networkFetcher: async () => {
+        attempts += 1;
+        return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401 });
+      },
+    });
+
+    expect(attempts).toBe(1);
+    expect(result.results[0]).toMatchObject({ reason: "auth", healthStatus: "degraded" });
+  });
 });

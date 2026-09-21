@@ -456,4 +456,34 @@ describe("alias capability routing", () => {
       },
     });
   });
+
+  /**
+   * Run 98 addendum 57 §3.2: the advisory's family gate compares the request's declared task family, but the
+   * routing request carried the capability default `text.chat` even when the caller declared an intent — the
+   * decision recorded `taxonomyDimensions.taxonomy_task_type = coder.review` while the advisory consideration
+   * saw `text.chat`, so an advisory validated for that family was refused with `advisory_task_mismatch`.
+   */
+  test("run98 a57: a declared intent task family reaches the routing request", () => {
+    const plan = mapChatCompletionsRequest(
+      registry,
+      {
+        model: "hybrid.hybrid",
+        messages: [{ role: "user", content: "Review this code for bugs." }],
+        role_model: {
+          contract_version: 1,
+          intent: {
+            taxonomy_version: "1.0.0-alpha.1",
+            classification_contract_version: "role-model.classification.v1",
+            content_revision: "taxonomy-v1-alpha.1",
+            task_type: "coder.review",
+            requested_role_id: "coder",
+          },
+        },
+      } as never,
+      "req-intent-family",
+      hybridAlias,
+    );
+
+    expect(plan.routingRequest.taskType).toBe("coder.review");
+  });
 });

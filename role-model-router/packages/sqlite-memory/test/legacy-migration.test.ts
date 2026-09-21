@@ -553,4 +553,90 @@ describe("TB04 real SQLite legacy migration", () => {
     });
     expect(compactObservation.executionSemantics).toMatchObject({ providerAttemptIds });
   });
+
+  /**
+   * Run 98 addendum 35 (live stage finding, 2026-09-18): the compact stub dropped
+   * `routingDiagnostics` with the rich content, so every real request read back as having no routing
+   * diagnostics at all — live telemetry wrote `difficulty_bucket = NULL`, `routing_mode = NULL` and
+   * `selected_strategy = NULL` for traffic whose decision had all three, and ten runtime-host-bridge
+   * acceptance tests failed on the same readback. Routing diagnostics are routing *evidence*
+   * (difficulty bucket, effective mode, selected strategy, the per-request observed profile, the
+   * effective metric summary and the throughput penalty), not rich content, so the stub keeps a
+   * bounded projection of them while still refusing messages, responses and tool payloads.
+   */
+  test("Run 98 addendum 35 RED: the compact stub retains the bounded routing diagnostics", () => {
+    const compactObservation = buildCompactRuntimeObservationStub({
+      requestId: "request-routing-diagnostics",
+      routingDiagnostics: {
+        difficultyRouting: { difficulty: "hard", strategy: "quality" },
+        routingMode: { effectiveMode: "difficulty" },
+        hybridArbitration: { finalStrategy: "quality" },
+        rolePolicy: { requestedRoleId: "role:coder" },
+        observedProfile: {
+          endpointId: "endpoint:capture-v1",
+          source: "runtime-state",
+          readMode: "per-request",
+          measuredAtMs: 1_700_000_000_000,
+        },
+        effectiveMetrics: {
+          quality: { value: 0.5, source: "default" },
+          latency: {
+            value: 120,
+            source: "measured",
+            measuredAtMs: 1_700_000_000_000,
+            freshnessWeight: 0.9,
+          },
+        },
+        throughputPenalty: { endpointId: "endpoint:capture-v1", active: false },
+        selection: { reason: "score", score: 0.75 },
+      },
+      // Rich content stays graph-external even when the diagnostics survive.
+      messages: [{ role: "user", content: "SECRET-PROMPT" }],
+      responseBody: { output: "SECRET-RESPONSE" },
+    });
+
+    expect(compactObservation.routingDiagnostics).toMatchObject({
+      difficultyRouting: { difficulty: "hard", strategy: "quality" },
+      routingMode: { effectiveMode: "difficulty" },
+      hybridArbitration: { finalStrategy: "quality" },
+      rolePolicy: { requestedRoleId: "role:coder" },
+      observedProfile: {
+        endpointId: "endpoint:capture-v1",
+        source: "runtime-state",
+        readMode: "per-request",
+      },
+      effectiveMetrics: {
+        quality: { value: 0.5, source: "default" },
+        latency: { value: 120, source: "measured", freshnessWeight: 0.9 },
+      },
+      throughputPenalty: { endpointId: "endpoint:capture-v1", active: false },
+    });
+    const serialized = JSON.stringify(compactObservation);
+    expect(serialized).not.toContain("SECRET-PROMPT");
+    expect(serialized).not.toContain("SECRET-RESPONSE");
+    expect(Buffer.byteLength(serialized, "utf8")).toBeLessThanOrEqual(16 * 1024);
+  });
+
+  test("Run 98 addendum 35 RED: an oversized diagnostics tree is bounded, never unbounded", () => {
+    const compactObservation = buildCompactRuntimeObservationStub({
+      requestId: "request-routing-diagnostics-oversized",
+      routingDiagnostics: {
+        difficultyRouting: { difficulty: "hard", strategy: "quality" },
+        observedProfile: { endpointId: "endpoint:capture-v1", source: "runtime-state" },
+        selection: {
+          candidates: Array.from({ length: 400 }, (_value, index) => ({
+            endpointId: `endpoint:${index}`,
+            narrative: "x".repeat(2_000),
+          })),
+        },
+      },
+    });
+    const serialized = JSON.stringify(compactObservation);
+    expect(Buffer.byteLength(serialized, "utf8")).toBeLessThanOrEqual(16 * 1024);
+    // The decision evidence survives the bound even when the optional detail does not.
+    expect(compactObservation.routingDiagnostics).toMatchObject({
+      difficultyRouting: { difficulty: "hard", strategy: "quality" },
+      observedProfile: { endpointId: "endpoint:capture-v1", source: "runtime-state" },
+    });
+  });
 });

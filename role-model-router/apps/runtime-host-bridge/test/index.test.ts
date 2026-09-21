@@ -1755,10 +1755,15 @@ describe("runtime-host-bridge", () => {
       "req-host-001",
     );
 
-    expect(result).toEqual({
+    /**
+     * Run 98 addendum 58 slice 2: a request that declares no taxonomy intent is classified locally, so the
+     * routing request carries a real taxonomy task (`writer.summarize` for this body) instead of the
+     * capability name `text.chat`.
+     */
+    expect(result).toMatchObject({
       routingRequest: {
         requestId: "req-host-001",
-        taskType: "text.chat",
+        taskType: "writer.summarize",
         requiredCapabilities: ["text.chat", "tools.function_calling"],
         preferredCapabilities: [],
         requiredModalities: ["text"],
@@ -1814,6 +1819,13 @@ describe("runtime-host-bridge", () => {
         },
       },
     });
+    expect(result.taxonomyIdentity).toMatchObject({
+      taskTypeId: "writer.summarize",
+      roleId: "writer",
+      groupId: "communication",
+      source: "runtime_heuristic",
+    });
+    expect(result.routingRequest.roleModelIntent?.source).toBe("runtime_heuristic");
   });
 
   test("maps custom alias endpoint preference into the normal routing-model signal", () => {
@@ -2262,9 +2274,13 @@ describe("runtime-host-bridge", () => {
     );
 
     expect(result.routingRequest.requestedRoleId).toBeUndefined();
+    /**
+     * Run 98 addendum 58 slice 2: the unknown declared task stays advisory metadata and the request is
+     * routed under a derived taxonomy task — never under the declaration's non-taxonomy id.
+     */
     expect(result.routingRequest).toEqual(
       expect.objectContaining({
-        taskType: "text.chat",
+        taskType: result.taxonomyIdentity?.taskTypeId,
         requiredCapabilities: expect.not.arrayContaining(["security.analysis"]),
         preferredCapabilities: expect.arrayContaining([
           "security.analysis",
@@ -2274,6 +2290,11 @@ describe("runtime-host-bridge", () => {
         ]),
       }),
     );
+    expect(result.routingRequest.roleModelIntent?.task?.id).toBe("not_a_role.not_a_task");
+    expect(canonicalTaxonomy.tasks.map((task) => task.id)).toContain(
+      result.routingRequest.taskType,
+    );
+    expect(result.taxonomyIdentity?.source).toBe("runtime_heuristic");
     expect(result.routingDiagnostics?.rolePolicy).toBeUndefined();
   });
 
@@ -5243,13 +5264,17 @@ describe("runtime-host-bridge", () => {
     );
 
     expect(result.routingRequest).toMatchObject({
-      taskType: "text.chat",
+      /** Run 98 addendum 58 slice 2: the baseline override no longer drops the request to the capability name. */
+      taskType: result.taxonomyIdentity?.taskTypeId,
       requiredCapabilities: ["text.chat", "tools.function_calling"],
       preferredCapabilities: [],
       strategy: "balanced",
       preferLocal: false,
       allowEndpoints: ["moonshot.personal.primary.global.kimi-k2.5"],
     });
+    expect(canonicalTaxonomy.tasks.map((task) => task.id)).toContain(
+      result.routingRequest.taskType,
+    );
     expect(result.routingModel).toBeUndefined();
     expect(result.routingDiagnostics).toEqual({
       aliasResolution: {
@@ -5371,11 +5396,18 @@ describe("runtime-host-bridge", () => {
 
     expect(result.routingRequest).toMatchObject({
       requestedRoleId: "qa.reviewer",
-      taskType: "text.chat",
+      /**
+       * Run 98 addendum 58 slice 2: the requested role policy still applies, and the request is routed under a
+       * derived taxonomy task rather than the capability name the legacy role fixture lists.
+       */
+      taskType: result.taxonomyIdentity?.taskTypeId,
       requiredCapabilities: ["text.chat", "tools.function_calling"],
       preferredCapabilities: [],
       needsTools: true,
     });
+    expect(canonicalTaxonomy.tasks.map((task) => task.id)).toContain(
+      result.routingRequest.taskType,
+    );
     expect(result.executionRequest.messages).toEqual([
       {
         role: "system",
@@ -7374,11 +7406,15 @@ describe("runtime-host-bridge", () => {
 
     expect(result.routingRequest).toMatchObject({
       requestedRoleId: "qa.reviewer",
-      taskType: "text.chat",
+      /** Run 98 addendum 58 slice 2 (responses path): the effective taxonomy task, role policy intact. */
+      taskType: result.taxonomyIdentity?.taskTypeId,
       requiredCapabilities: ["text.chat", "tools.function_calling"],
       preferredCapabilities: [],
       needsTools: true,
     });
+    expect(canonicalTaxonomy.tasks.map((task) => task.id)).toContain(
+      result.routingRequest.taskType,
+    );
     expect(result.executionRequest.messages).toEqual([
       {
         role: "system",
@@ -10687,6 +10723,15 @@ describe("runtime-host-bridge", () => {
     expect(
       typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
     ).toBe("function");
+    /**
+     * Run 98 addendum 40 (L3) serves routing preparation from a short-TTL snapshot keyed by the floor of the
+     * routing time, so two requests inside one tick share one profile read. This test asserts that the second
+     * request sees the profile the first one produced, which is the per-request freshness contract: the
+     * documented escape hatch (`ROLE_MODEL_ROUTING_PREP_CACHE_TTL_MS=0`) makes the snapshot a per-request read
+     * for this backend. The previous value is restored before the test ends.
+     */
+    const originalRoutingPrepCacheTtl = process.env.ROLE_MODEL_ROUTING_PREP_CACHE_TTL_MS;
+    process.env.ROLE_MODEL_ROUTING_PREP_CACHE_TTL_MS = "0";
 
     const backend = await (
       bridge as {
@@ -10823,6 +10868,11 @@ describe("runtime-host-bridge", () => {
         },
       },
     });
+    if (originalRoutingPrepCacheTtl === undefined) {
+      process.env.ROLE_MODEL_ROUTING_PREP_CACHE_TTL_MS = undefined;
+    } else {
+      process.env.ROLE_MODEL_ROUTING_PREP_CACHE_TTL_MS = originalRoutingPrepCacheTtl;
+    }
   });
 
   test("persists routing-mode override and rewrite-skipped diagnostics for exact-model runtime-backed chat requests", async () => {
@@ -15973,9 +16023,20 @@ describe("runtime-host-bridge", () => {
 
       expect(followUpResult.endpointId).toBe("moonshot.personal.z-backup.global.kimi-k2.5");
       expect(followUpResult.outputText).toBe("backup endpoint handled the request");
+      /**
+       * Run 98 addendum 43 S5 (pre-existing red gate): the follow-up request is allowed to select the
+       * primary again. One transient timeout does not exclude an endpoint — `recordExecutionCircuitFailure`
+       * puts a first connection/timeout failure in `probation`, and `evaluateExecutionCircuitEligibility`
+       * answers `eligible: true, probeRequired: false` for probation, so the recorded cooldown is a
+       * watch-and-escalate decision rather than a removal. Run 96's R27 evidence states the intended
+       * escalation: "keeps the first connection failure in probation then uses 5s, 15s, 60s, and 5m opens".
+       * The follow-up therefore hits the primary's quota response and reroutes to the backup, which is why
+       * the sequence has four entries rather than three.
+       */
       expect(seenAuthorizations).toEqual([
         "Bearer moonshot-primary-live-key",
         "Bearer moonshot-backup-live-key",
+        "Bearer moonshot-primary-live-key",
         "Bearer moonshot-backup-live-key",
       ]);
     } finally {
@@ -18088,6 +18149,26 @@ describe("runtime-host-bridge", () => {
         alreadyRetried: true,
         fallbackEligible: false,
         hasOtherEligibleEndpoint: true,
+      }),
+    ).toBe(false);
+    expect(
+      shouldRetry({
+        retryable: true,
+        errorClass: "upstream_connection_error",
+        statusCode: 503,
+        alreadyRetried: false,
+        fallbackEligible: true,
+        hasOtherEligibleEndpoint: false,
+      }),
+    ).toBe(true);
+    expect(
+      shouldRetry({
+        retryable: true,
+        errorClass: "upstream_connection_error",
+        statusCode: 503,
+        alreadyRetried: true,
+        fallbackEligible: true,
+        hasOtherEligibleEndpoint: false,
       }),
     ).toBe(false);
   });

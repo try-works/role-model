@@ -105,3 +105,99 @@ test("Run 96 R12-R23 observation-only production path refuses learning without a
     ),
   ).toBe(false);
 });
+
+test("Run 97 observations with distinct configured candidates enqueue replay instead of refusing", async () => {
+  const invoked: Array<{ id: string; envelope: Record<string, unknown> }> = [];
+  const runtime = {
+    async invoke(id: string, envelope: Record<string, unknown>) {
+      invoked.push({ id, envelope });
+      const base = {
+        workerPid: 2000 + invoked.length,
+        durableLocator: {
+          extensionId: id,
+          requestId: envelope.requestId,
+          invocation: invoked.length,
+        },
+        evidenceRef: `evidence:${id}:${String(envelope.requestId)}`,
+        businessOutput: {
+          extensionId: id,
+          capability: envelope.capability,
+          invocation: invoked.length,
+        },
+        readCapability: "artifact:read",
+      };
+      if (id === "artifact-store") return { ...base, id: "artifact:run97" };
+      if (id === "repository-context") {
+        return {
+          ...base,
+          available: true,
+          context: {
+            scopeId: "tenant:run97",
+            repoFingerprint: "b".repeat(64),
+            packageId: null,
+            fallbackLevel: "repo_task",
+            branchCompatibility: "unknown",
+            fingerprintEpoch: 1,
+          },
+          diagnostics: [],
+        };
+      }
+      if (id === "knowledge-store" && envelope.capability === "knowledge:write") {
+        return { ...base, id: "knowledge:run97" };
+      }
+      if (id === "background-evidence-scheduler") {
+        return {
+          ...base,
+          accepted: true,
+          jobId: "replay-intent:run97-live",
+          leaseId: "lease-1",
+          fence: 1,
+        };
+      }
+      return base;
+    },
+  };
+
+  const result = await trackBRuntime.runTrackBPostObservation(
+    runtime,
+    {
+      requestId: "run97-live-request",
+      routingDecisionId: "decision:run97",
+      endpointId: "endpoint:flash",
+      modelId: "model:flash",
+      reasoningEffort: null,
+      effortSource: "none",
+      usageEvent: { endpoint_id: "endpoint:flash", model_id: "model:flash" },
+    },
+    {
+      scope: "tenant:run97",
+      channel: "development",
+      authorizationEpoch: 97,
+      configuredCandidateEndpointIds: ["endpoint:flash", "endpoint:pro", "endpoint:kimi"],
+    },
+  );
+
+  const receipt = result.pipeline as Record<string, unknown>;
+  expect(receipt).toMatchObject({
+    status: "replay_enqueued",
+    providerCalls: 0,
+    productionMutation: false,
+    candidateId: null,
+    candidateEndpointIds: ["endpoint:kimi", "endpoint:pro"],
+  });
+  expect(receipt.refusalCode).toBeUndefined();
+  // The canonical observation closure still runs, so the post-observation stays
+  // durable instead of failing with an incomplete extension closure.
+  for (const extensionId of ["replay-core", "evaluation-runner-local", "trajectory-signals"]) {
+    expect(invoked.some(({ id }) => id === extensionId)).toBe(true);
+  }
+  expect(
+    invoked.some(
+      ({ id, envelope }) =>
+        id === "background-evidence-scheduler" &&
+        envelope.capability === "scheduler:enqueue-replay-intent",
+    ),
+  ).toBe(false);
+  expect(receipt.replayIntentJobId).toBe("replay-intent:run97-live-request");
+  expect(receipt.replayIntentAccepted).toBe(true);
+});

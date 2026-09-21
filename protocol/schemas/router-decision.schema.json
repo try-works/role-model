@@ -151,7 +151,48 @@
     },
     "used_measured": { "type": "boolean" },
     "used_declared": { "type": "boolean" },
-    "scoring_version": { "type": "string" }
+    "scoring_version": { "type": "string" },
+    "advisory_consideration": {
+      "description": "Run 98 R5 (addenda 19-21 R33): present only when the caller supplied an advisory consideration (stage S2+). Records whether the bounded advisory tie-break applied, the exploration mode, the selection propensity, the advisory identity/threshold set, the typed fallback reason when it did not, and the taxonomy scope that decided the family gate.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "applied",
+        "explorationMode",
+        "selectionProbability",
+        "advisoryCandidateId",
+        "advisoryPackageId",
+        "advisoryConfidence",
+        "thresholdSetVersion",
+        "policyVersion",
+        "fallbackReason",
+        "scoreBand",
+        "scoreGapBefore",
+        "cohortBucket",
+        "advisoryTaskTypeId",
+        "requestTaskTypeId",
+        "advisoryTaxonomyVersion"
+      ],
+      "properties": {
+        "applied": { "type": "boolean" },
+        "explorationMode": {
+          "enum": ["baseline", "advisory_considered", "advisory_exploration"]
+        },
+        "selectionProbability": { "type": ["number", "null"] },
+        "advisoryCandidateId": { "type": ["string", "null"] },
+        "advisoryPackageId": { "type": ["string", "null"] },
+        "advisoryConfidence": { "type": "number" },
+        "thresholdSetVersion": { "type": ["string", "null"] },
+        "policyVersion": { "type": ["string", "null"] },
+        "fallbackReason": { "type": ["string", "null"] },
+        "scoreBand": { "type": "number" },
+        "scoreGapBefore": { "type": ["number", "null"] },
+        "cohortBucket": { "type": ["integer", "null"] },
+        "advisoryTaskTypeId": { "type": ["string", "null"] },
+        "requestTaskTypeId": { "type": ["string", "null"] },
+        "advisoryTaxonomyVersion": { "type": ["string", "null"] }
+      }
+    }
   },
   "$defs": {
     "metricEntry": {

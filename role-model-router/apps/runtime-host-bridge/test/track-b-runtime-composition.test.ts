@@ -37,7 +37,10 @@ describe("production Track B composition", () => {
   const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
 
   test("allows the documented bounded recovery window before a persisted sidecar is rejected", () => {
-    expect(TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS).toBe(90_000);
+    // Run 99 R33: a mature stage root reconciling durable state (with the private operations bound
+    // covering slow commits instead of aborting them) needs more than the previous 90 s window; the
+    // budget stays finite and operator-tunable via ROLE_MODEL_TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS.
+    expect(TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS).toBeGreaterThanOrEqual(180_000);
   });
 
   test("provisions production Message Graph keys once and reuses them across package updates", async () => {
@@ -611,6 +614,25 @@ describe("production Track B composition", () => {
       "dismissRecommendation",
       "readActivePack",
       "runTrackBSupervisedReplay",
+      // Run 98 R17: the packaged projection must reach every Learning UI surface.
+      "readLearningState",
+      "readLearningProfile",
+      "readLearningAdvisory",
+      "updateLearningMode",
+      "rollbackLearning",
+      "readLearningRollout",
+      "readLearningRecords",
+      "readLearningDecisions",
+      "readLearningMeasurement",
+      // Run 99: the Learning activity and history readbacks are part of the packaged surface.
+      "readLearningActivity",
+      "readLearningHistory",
+      "readLearningPolicy",
+      "setLearningPolicy",
+      "rollbackLearningPolicy",
+      "activateLearningPack",
+      "rollbackLearningPack",
+      "engageLearningKillSwitch",
     ] as const;
     const backend = Object.fromEntries(names.map((name) => [name, async () => name]));
     const serverOptions = createTrackBBridgeServerOptions(backend);
@@ -633,6 +655,19 @@ describe("production Track B composition", () => {
     await writeFile(
       path.join(sourceRoot, "public-router", "migrations", "0001_test.sql"),
       migrationSql,
+    );
+    // Run 99 R23: the release staging requires the private distribution's activation policy
+    // config, because the packaged host resolves the effective stage from it.
+    await mkdir(path.join(sourceRoot, "shared", "route-learning"), { recursive: true });
+    await writeFile(
+      path.join(sourceRoot, "shared", "route-learning-activation-policy.json"),
+      JSON.stringify({
+        schemaVersion: "role-model.route-learning-activation-policy.v1",
+        policyVersion: 1,
+        global: { stage: "S1" },
+        channels: {},
+        scopes: {},
+      }),
     );
     const extensions = await Promise.all(
       Array.from({ length: 13 }, async (_, index) => {

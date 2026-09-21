@@ -1,0 +1,754 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://role-model.dev/schemas/route-learning-contracts.v1.json",
+  "title": "role-model routing-only evaluation and experience learning contracts",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/executionContext"
+    },
+    {
+      "$ref": "#/$defs/rolloutGroup"
+    },
+    {
+      "$ref": "#/$defs/experienceCandidate"
+    },
+    {
+      "$ref": "#/$defs/packCandidate"
+    },
+    {
+      "$ref": "#/$defs/validationReceipt"
+    },
+    {
+      "$ref": "#/$defs/attribution"
+    },
+    {
+      "$ref": "#/$defs/activationReceipt"
+    }
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "idSet": {
+      "type": "array",
+      "maxItems": 256,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/id"
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "repoArchetype": {
+          "$ref": "#/$defs/id"
+        },
+        "roleId": {
+          "$ref": "#/$defs/id"
+        },
+        "taskTypeId": {
+          "$ref": "#/$defs/id"
+        },
+        "language": {
+          "$ref": "#/$defs/id"
+        },
+        "clientId": {
+          "$ref": "#/$defs/id"
+        },
+        "toolClassIds": {
+          "$ref": "#/$defs/idSet"
+        },
+        "modelFamily": {
+          "$ref": "#/$defs/id"
+        },
+        "endpointId": {
+          "$ref": "#/$defs/id"
+        },
+        "promptAdapterId": {
+          "$ref": "#/$defs/id"
+        }
+      }
+    },
+    "routePackage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["packageId", "endpointId", "modelId", "modelRevision", "samplingProfileId"],
+      "properties": {
+        "packageId": {
+          "$ref": "#/$defs/id"
+        },
+        "endpointId": {
+          "$ref": "#/$defs/id"
+        },
+        "modelId": {
+          "$ref": "#/$defs/id"
+        },
+        "modelRevision": {
+          "$ref": "#/$defs/id"
+        },
+        "promptAdapterId": {
+          "$ref": "#/$defs/id"
+        },
+        "toolPolicyId": {
+          "$ref": "#/$defs/id"
+        },
+        "experiencePackId": {
+          "$ref": "#/$defs/id"
+        },
+        "samplingProfileId": {
+          "$ref": "#/$defs/id"
+        }
+      }
+    },
+    "executionContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "executionId",
+        "purpose",
+        "tasksetRef",
+        "harnessRef",
+        "runtimeRef",
+        "routerPolicyVersion",
+        "contractVersion",
+        "splitAlgorithm",
+        "splitSeed",
+        "adapterDependency",
+        "createdAt",
+        "runtimeChannel",
+        "scopeId",
+        "boundaryProtocolVersion"
+      ],
+      "properties": {
+        "contract": {
+          "const": "RoutingEvaluationExecutionContextV1"
+        },
+        "executionId": {
+          "$ref": "#/$defs/id"
+        },
+        "purpose": {
+          "enum": ["routing_evaluation", "routing_replay", "route_package_attribution"]
+        },
+        "tasksetRef": {
+          "$ref": "#/$defs/id"
+        },
+        "harnessRef": {
+          "$ref": "#/$defs/id"
+        },
+        "runtimeRef": {
+          "$ref": "#/$defs/id"
+        },
+        "routerPolicyVersion": {
+          "$ref": "#/$defs/id"
+        },
+        "contractVersion": {
+          "const": "1.1.0"
+        },
+        "splitAlgorithm": {
+          "enum": ["hash_partition_v1", "stratified_hash_partition_v1"]
+        },
+        "splitSeed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "adapterDependency": {
+          "const": "none"
+        },
+        "sourceProjectionIds": {
+          "$ref": "#/$defs/idSet"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runtimeChannel": {
+          "enum": ["production", "stage", "development"]
+        },
+        "scopeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "boundaryProtocolVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+$"
+        }
+      }
+    },
+    "rolloutGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "groupId",
+        "executionContextId",
+        "state",
+        "comparabilityKey",
+        "rolloutRefs",
+        "scoreRefs",
+        "scorerSetVersion",
+        "createdAt",
+        "updatedAt",
+        "runtimeChannel",
+        "scopeId",
+        "boundaryProtocolVersion"
+      ],
+      "properties": {
+        "contract": {
+          "const": "RoutingRolloutGroupLifecycleV1"
+        },
+        "groupId": {
+          "$ref": "#/$defs/id"
+        },
+        "executionContextId": {
+          "$ref": "#/$defs/id"
+        },
+        "state": {
+          "enum": ["collecting", "finalizing", "finalized", "partial", "failed", "expired"]
+        },
+        "comparabilityKey": {
+          "$ref": "#/$defs/id"
+        },
+        "rolloutRefs": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "scoreRefs": {
+          "$ref": "#/$defs/idSet"
+        },
+        "positiveRolloutRefs": {
+          "$ref": "#/$defs/idSet"
+        },
+        "negativeRolloutRefs": {
+          "$ref": "#/$defs/idSet"
+        },
+        "scorerSetVersion": {
+          "$ref": "#/$defs/id"
+        },
+        "policySnapshotRef": {
+          "$ref": "#/$defs/id"
+        },
+        "failureManifestRef": {
+          "$ref": "#/$defs/id"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runtimeChannel": {
+          "enum": ["production", "stage", "development"]
+        },
+        "scopeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "boundaryProtocolVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+$"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "finalized"
+              }
+            },
+            "required": ["state"]
+          },
+          "then": {
+            "properties": {
+              "scoreRefs": {
+                "minItems": 2
+              },
+              "positiveRolloutRefs": {
+                "minItems": 1
+              },
+              "negativeRolloutRefs": {
+                "minItems": 1
+              }
+            },
+            "required": ["positiveRolloutRefs", "negativeRolloutRefs"]
+          }
+        }
+      ]
+    },
+    "experienceCandidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "experienceId",
+        "version",
+        "scope",
+        "experienceTextRef",
+        "sourceGroupIds",
+        "positiveRolloutRefs",
+        "negativeRolloutRefs",
+        "status",
+        "redactionStatus",
+        "instructionHierarchyChecked",
+        "promptInjectionReviewed",
+        "createdAt",
+        "runtimeChannel",
+        "scopeId",
+        "boundaryProtocolVersion"
+      ],
+      "properties": {
+        "contract": {
+          "const": "LearnedExperienceCandidateV1"
+        },
+        "experienceId": {
+          "$ref": "#/$defs/id"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "experienceTextRef": {
+          "$ref": "#/$defs/id"
+        },
+        "sourceGroupIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "positiveRolloutRefs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "negativeRolloutRefs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "status": {
+          "enum": [
+            "candidate",
+            "shadow_validating",
+            "validated",
+            "promoted",
+            "deprecated",
+            "rejected",
+            "superseded"
+          ]
+        },
+        "redactionStatus": {
+          "enum": ["raw", "redacted", "safe_for_prompt", "blocked"]
+        },
+        "instructionHierarchyChecked": {
+          "type": "boolean"
+        },
+        "promptInjectionReviewed": {
+          "type": "boolean"
+        },
+        "validationReceiptId": {
+          "$ref": "#/$defs/id"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runtimeChannel": {
+          "enum": ["production", "stage", "development"]
+        },
+        "scopeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "boundaryProtocolVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+$"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": ["promoted", "deprecated", "superseded"]
+              }
+            },
+            "required": ["status"]
+          },
+          "then": {
+            "required": ["validationReceiptId"],
+            "properties": {
+              "redactionStatus": {
+                "const": "safe_for_prompt"
+              },
+              "instructionHierarchyChecked": {
+                "const": true
+              },
+              "promptInjectionReviewed": {
+                "const": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    "packCandidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "packId",
+        "version",
+        "scope",
+        "experienceIds",
+        "maxTokens",
+        "placement",
+        "priority",
+        "status",
+        "createdAt",
+        "runtimeChannel",
+        "scopeId",
+        "boundaryProtocolVersion"
+      ],
+      "properties": {
+        "contract": {
+          "const": "ExperiencePackCandidateV1"
+        },
+        "packId": {
+          "$ref": "#/$defs/id"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "experienceIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "maxTokens": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8192
+        },
+        "placement": {
+          "enum": ["context_block", "developer_extension"]
+        },
+        "priority": {
+          "const": "advisory_only"
+        },
+        "status": {
+          "enum": ["candidate", "shadow", "validated", "promoted", "rejected", "rolled_back"]
+        },
+        "validationReceiptId": {
+          "$ref": "#/$defs/id"
+        },
+        "rollbackTargetPackId": {
+          "$ref": "#/$defs/id"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runtimeChannel": {
+          "enum": ["production", "stage", "development"]
+        },
+        "scopeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "boundaryProtocolVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+$"
+        }
+      }
+    },
+    "validationReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "receiptId",
+        "candidateType",
+        "candidateId",
+        "baselineId",
+        "splitHash",
+        "caseManifestRef",
+        "estimatorVersion",
+        "bootstrapSeed",
+        "qualityDelta",
+        "confidenceLower",
+        "confidenceUpper",
+        "holdoutSampleCount",
+        "guardrailsPassed",
+        "decision",
+        "createdAt",
+        "runtimeChannel",
+        "scopeId",
+        "boundaryProtocolVersion"
+      ],
+      "properties": {
+        "contract": {
+          "const": "RouteLearningValidationReceiptV1"
+        },
+        "receiptId": {
+          "$ref": "#/$defs/id"
+        },
+        "candidateType": {
+          "enum": ["experience", "pack", "route_package"]
+        },
+        "candidateId": {
+          "$ref": "#/$defs/id"
+        },
+        "baselineId": {
+          "$ref": "#/$defs/id"
+        },
+        "splitHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "caseManifestRef": {
+          "$ref": "#/$defs/id"
+        },
+        "estimatorVersion": {
+          "$ref": "#/$defs/id"
+        },
+        "bootstrapSeed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "qualityDelta": {
+          "type": "number"
+        },
+        "confidenceLower": {
+          "type": "number"
+        },
+        "confidenceUpper": {
+          "type": "number"
+        },
+        "holdoutSampleCount": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "guardrailsPassed": {
+          "type": "boolean"
+        },
+        "decision": {
+          "enum": ["validate", "reject", "insufficient_evidence"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runtimeChannel": {
+          "enum": ["production", "stage", "development"]
+        },
+        "scopeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "boundaryProtocolVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+$"
+        }
+      }
+    },
+    "attribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "attributionId",
+        "routePackage",
+        "scope",
+        "baselinePackageId",
+        "qualityDelta",
+        "costDelta",
+        "latencyDelta",
+        "sampleCount",
+        "confidence",
+        "evidenceManifestRef",
+        "createdAt",
+        "runtimeChannel",
+        "scopeId",
+        "boundaryProtocolVersion"
+      ],
+      "properties": {
+        "contract": {
+          "const": "RoutePackageAttributionV1"
+        },
+        "attributionId": {
+          "$ref": "#/$defs/id"
+        },
+        "routePackage": {
+          "$ref": "#/$defs/routePackage"
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "baselinePackageId": {
+          "$ref": "#/$defs/id"
+        },
+        "qualityDelta": {
+          "type": "number"
+        },
+        "costDelta": {
+          "type": "number"
+        },
+        "latencyDelta": {
+          "type": "number"
+        },
+        "sampleCount": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "evidenceManifestRef": {
+          "$ref": "#/$defs/id"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runtimeChannel": {
+          "enum": ["production", "stage", "development"]
+        },
+        "scopeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "boundaryProtocolVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+$"
+        }
+      }
+    },
+    "activationReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "receiptId",
+        "packageId",
+        "scope",
+        "policyGateId",
+        "priorPackageId",
+        "state",
+        "activatedAt",
+        "runtimeChannel",
+        "scopeId",
+        "boundaryProtocolVersion"
+      ],
+      "properties": {
+        "contract": {
+          "const": "RoutePackageActivationReceiptV1"
+        },
+        "receiptId": {
+          "$ref": "#/$defs/id"
+        },
+        "packageId": {
+          "$ref": "#/$defs/id"
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "policyGateId": {
+          "$ref": "#/$defs/id"
+        },
+        "priorPackageId": {
+          "$ref": "#/$defs/id"
+        },
+        "validationReceiptId": {
+          "$ref": "#/$defs/id"
+        },
+        "state": {
+          "enum": ["active", "rolled_back", "disabled"]
+        },
+        "activatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "rolledBackAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runtimeChannel": {
+          "enum": ["production", "stage", "development"]
+        },
+        "scopeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "boundaryProtocolVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+$"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "active"
+              }
+            },
+            "required": ["state"]
+          },
+          "then": {
+            "required": ["validationReceiptId"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "rolled_back"
+              }
+            },
+            "required": ["state"]
+          },
+          "then": {
+            "required": ["rolledBackAt"]
+          }
+        }
+      ]
+    }
+  }
+}

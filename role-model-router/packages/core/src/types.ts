@@ -206,4 +206,68 @@ export interface RouteRequestInput {
   observedDataConfig?: ObservedDataConfigRecord;
   throughputPenaltyStateByEndpointId?: Record<string, ThroughputPenaltyStateRecord>;
   routingTimeMs?: number;
+  /**
+   * Run 98 R5 (stage S2, advisory-considered): the operator-policy-gated advisory input.
+   * Hard eligibility and scoring run first; the advisory can only re-rank candidates that
+   * are already eligible and only within the configured score band. The host passes this
+   * only when the effective learning stage is S2 or above, so an S1 runtime produces the
+   * exact same decision it produced before.
+   */
+  advisoryConsideration?: RouteAdvisoryConsiderationInput;
+}
+
+export interface RouteAdvisoryConsiderationInput {
+  /** The learned candidate the advisory was derived from. */
+  readonly candidateId: string | null;
+  /** The route package/endpoint the advisory prefers. */
+  readonly preferredEndpointId: string | null;
+  readonly advisoryState: "fresh" | "stale" | "unavailable";
+  readonly confidence: number;
+  readonly advisoryId?: string | null;
+  readonly policyVersion?: string | null;
+  readonly stage: "S0" | "S1" | "S2" | "S3" | "S4";
+  /** Largest score shift the advisory may apply, in the router's normalized score units. */
+  readonly scoreBand: number;
+  readonly minAdvisoryConfidence: number;
+  /** Percentage of decisions the advisory may influence (S3+); 100 for S2. */
+  readonly cohortPercent: number;
+  /** Randomized exploration share within the band; 0 keeps the tie-break deterministic. */
+  readonly explorationPercent?: number;
+  readonly killSwitch?: boolean;
+  readonly thresholdSetVersion?: string | null;
+  /**
+   * Run 99 R33 (addendum 19 S35, addendum 20 D1-D3): the task family this advisory may
+   * influence, and the taxonomy identity it was learned under. Canonical
+   * `EndpointPreferenceRecordV1` applicability travels as `preferredFor`/`avoidFor`
+   * (`guidance/19`), so a preference learned from one family cannot move another family's
+   * traffic. A mismatch is refused before the confidence floor.
+   */
+  readonly taskTypeId?: string | null;
+  readonly taxonomyVersion?: string | null;
+  readonly preferredFor?: readonly string[];
+  readonly avoidFor?: readonly string[];
+  /**
+   * Run 99 R33: the taxonomy identity the host resolved the *request* against, so the router can
+   * fail closed when the advisory was learned under a different taxonomy revision.
+   */
+  readonly requestTaxonomyVersion?: string | null;
+}
+
+export interface RouteAdvisoryConsiderationOutcome {
+  readonly applied: boolean;
+  readonly explorationMode: "baseline" | "advisory_considered" | "advisory_exploration";
+  readonly selectionProbability: number | null;
+  readonly advisoryCandidateId: string | null;
+  readonly advisoryPackageId: string | null;
+  readonly advisoryConfidence: number;
+  readonly thresholdSetVersion: string | null;
+  readonly policyVersion: string | null;
+  readonly fallbackReason: string | null;
+  readonly scoreBand: number;
+  readonly scoreGapBefore: number | null;
+  readonly cohortBucket: number | null;
+  /** Run 99 R33: the scope that actually decided the family gate. */
+  readonly advisoryTaskTypeId: string | null;
+  readonly requestTaskTypeId: string | null;
+  readonly advisoryTaxonomyVersion: string | null;
 }

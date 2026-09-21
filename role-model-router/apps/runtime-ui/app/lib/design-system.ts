@@ -3,8 +3,11 @@ import {
   Boxes,
   Cable,
   Cpu,
+  FlaskConical,
   Gauge,
   GitBranch,
+  GitCompareArrows,
+  GraduationCap,
   Image,
   LayoutDashboard,
   LayoutGrid,
@@ -13,6 +16,7 @@ import {
   type LucideIcon,
   Mic,
   Network,
+  PackageCheck,
   PanelsTopLeft,
   SlidersHorizontal,
   Speech,
@@ -516,6 +520,79 @@ const systemExtensionsRoute = createRoute({
     "Installed package lifecycle, scoped permissions, compatibility, retention, and bounded degradation without making routing depend on private workers.",
 });
 
+// Run 98 R17: the Learning route and its five pages.
+const learningOverviewRoute = createRoute({
+  id: "learning-overview",
+  to: "/app/learning",
+  label: "Overview",
+  section: "Learning",
+  icon: GraduationCap,
+  template: "summary-board",
+  title: "Learning overview",
+  description:
+    "Activation stage, policy identity, cohort progress, advisory influence, guardrail status and the most recent decisions.",
+});
+
+const learningConfigurationRoute = createRoute({
+  id: "learning-configuration",
+  to: "/app/learning/configuration",
+  label: "Configuration",
+  section: "Learning",
+  icon: SlidersHorizontal,
+  template: "contract-reference",
+  title: "Learning configuration",
+  description:
+    "Every activation parameter with its current value, unit, default and allowed range, editable inside enforced bounds.",
+});
+
+const learningPacksRoute = createRoute({
+  id: "learning-packs",
+  to: "/app/learning/packs",
+  label: "Packs",
+  section: "Learning",
+  icon: PackageCheck,
+  template: "summary-board",
+  title: "Learned packs",
+  description:
+    "Candidate and pack records with validation receipts, holdout evidence, activation state and rollback actions.",
+});
+
+const learningDecisionsRoute = createRoute({
+  id: "learning-decisions",
+  to: "/app/learning/decisions",
+  label: "Decisions",
+  section: "Learning",
+  icon: GitCompareArrows,
+  template: "summary-board",
+  title: "Decision receipts",
+  description:
+    "Filterable decision history with advisory state, counterfactual preference and the receipt chain behind each decision.",
+});
+
+const learningEvidenceRoute = createRoute({
+  id: "learning-evidence",
+  to: "/app/learning/evidence",
+  label: "Evidence",
+  section: "Learning",
+  icon: FlaskConical,
+  template: "summary-board",
+  title: "Cohort evidence",
+  description:
+    "Baseline-versus-advisory comparison on the paired holdout distribution with confidence bounds and guardrail verdicts.",
+});
+
+const learningHistoryRoute = createRoute({
+  id: "learning-history",
+  to: "/app/learning/history",
+  label: "History",
+  section: "Learning",
+  icon: Activity,
+  template: "summary-board",
+  title: "Learning history",
+  description:
+    "Windowed activity, decisive comparison mix with per-comparison deltas, the activation timeline and the guardrail verdicts.",
+});
+
 const systemStorageRetentionRoute = createRoute({
   id: "system-storage-retention",
   to: "/app/system/storage-retention",
@@ -567,6 +644,14 @@ const runtimeRouteDefinitions = [
   systemPeersRoute,
   systemExtensionsRoute,
   systemStorageRetentionRoute,
+  // Run 98/99: the Learning section pages resolve through the same lookup as every other page,
+  // so the shell shows the page title and marks the Learning section active.
+  learningOverviewRoute,
+  learningConfigurationRoute,
+  learningPacksRoute,
+  learningDecisionsRoute,
+  learningEvidenceRoute,
+  learningHistoryRoute,
 ] as const;
 
 export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
@@ -641,6 +726,19 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
       systemPeersRoute,
       systemExtensionsRoute,
       systemStorageRetentionRoute,
+    ],
+  },
+  {
+    title: "Learning",
+    icon: GraduationCap,
+    hubTo: "/app/learning",
+    items: [
+      learningOverviewRoute,
+      learningConfigurationRoute,
+      learningPacksRoute,
+      learningDecisionsRoute,
+      learningEvidenceRoute,
+      learningHistoryRoute,
     ],
   },
 ] as const;

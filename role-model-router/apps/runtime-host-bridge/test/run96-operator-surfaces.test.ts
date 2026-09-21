@@ -30,6 +30,9 @@ describe("Run 96 operator evidence routes", () => {
       host: "127.0.0.1",
       port: 0,
       operatorAuthToken: "operator-secret",
+      // Run 98 addendum 46: the device owner is trusted on a loopback runtime, so this suite pins the
+      // token rule explicitly to keep testing what it is about — a client without the credential.
+      deviceOwnerTrust: "off",
       operatorContext,
       registry,
       executeChatCompletions: async () => {

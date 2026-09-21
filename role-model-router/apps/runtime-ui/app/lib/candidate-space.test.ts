@@ -7,7 +7,8 @@ import {
   formatRouteScore,
   projectCandidateSpacePoint,
 } from "./candidate-space";
-import type { RouterCandidate } from "./runtime-api";
+import { CANDIDATE_SPACE_SCORING_CONFIG } from "./candidate-space-config";
+import type { BenchmarkCapability, RouterCandidate } from "./runtime-api";
 
 function candidate(
   partial: Partial<RouterCandidate> & Pick<RouterCandidate, "endpointId" | "modelId">,
@@ -20,7 +21,98 @@ function candidate(
   };
 }
 
+function benchmarkCapability(
+  partial: Partial<BenchmarkCapability> & Pick<BenchmarkCapability, "overallScore">,
+): BenchmarkCapability {
+  return {
+    evidenceSource: "profile-derived",
+    benchmarkSamples: 12,
+    sampleCount: 12,
+    measuredAtMs: 1_700_000_000_000,
+    freshnessScore: 1,
+    lastRunId: null,
+    lastRunCompletedAtMs: null,
+    judgeEndpointId: "judge.endpoint",
+    ...partial,
+  };
+}
+
 describe("buildCandidateSpacePoints", () => {
+  // Run 98 addendum 42 B2: speed is weighted to telemetry p50 once requests exist, and falls back to the
+  // benchmark run's p50 until then. The cohort ratio is computed across whichever source each candidate
+  // has, so a pool with mixed coverage still ranks sensibly.
+  test("run98 a42: speed falls back to the benchmark p50 and the cohort mixes sources", () => {
+    const points = buildCandidateSpacePoints([
+      candidate({
+        endpointId: "benchmarked-only",
+        modelId: "vendor/benchmarked",
+        benchmarkCapability: {
+          evidenceSource: "run-artifact",
+          overallScore: 0.9,
+          benchmarkSamples: 12,
+          sampleCount: 12,
+          measuredAtMs: 100,
+          freshnessScore: 1,
+          lastRunId: "run-1",
+          lastRunCompletedAtMs: 100,
+          judgeEndpointId: "judge",
+          p50LatencyMs: 5_000,
+        },
+      }),
+      candidate({
+        endpointId: "telemetry-only",
+        modelId: "vendor/telemetry",
+        operationalProfile: { latency_ms_p50: 10_000 },
+      }),
+      candidate({
+        endpointId: "no-latency-evidence",
+        modelId: "vendor/silent",
+      }),
+    ]);
+    const byId = new Map(points.map((point) => [point.endpointId, point]));
+
+    // The benchmarked endpoint is the cohort's fastest p50 (5 s vs 10 s), so it scores 1 and telemetry
+    // takes the ratio — a mixed-source cohort, not two separate ones.
+    expect(byId.get("benchmarked-only")?.speed).toBe(1);
+    expect(byId.get("telemetry-only")?.speed).toBe(0.5);
+    // Neither telemetry nor benchmark latency: no synthesised speed.
+    expect(byId.get("no-latency-evidence")?.speed).toBeNull();
+  });
+
+  test("run98 a42: telemetry p50 wins over the benchmark p50 when both exist", () => {
+    const points = buildCandidateSpacePoints([
+      candidate({
+        endpointId: "both-sources",
+        modelId: "vendor/both",
+        operationalProfile: { latency_ms_p50: 2_000 },
+        benchmarkCapability: {
+          evidenceSource: "run-artifact",
+          overallScore: 0.9,
+          benchmarkSamples: 12,
+          sampleCount: 12,
+          measuredAtMs: 100,
+          freshnessScore: 1,
+          lastRunId: "run-1",
+          lastRunCompletedAtMs: 100,
+          judgeEndpointId: "judge",
+          p50LatencyMs: 60_000,
+        },
+      }),
+      candidate({
+        endpointId: "peer",
+        modelId: "vendor/peer",
+        operationalProfile: { latency_ms_p50: 4_000 },
+      }),
+    ]);
+    const byId = new Map(points.map((point) => [point.endpointId, point]));
+
+    // The cohort's fastest effective p50 is the 2 s telemetry value. If the 60 s benchmark p50 leaked into
+    // this endpoint's own ratio, its speed would be 2 s / 60 s ≈ 0.033 instead of 1 — so this guards the
+    // precedence, not just the presence of a fallback.
+    expect(byId.get("both-sources")?.speed).toBe(1);
+    expect(byId.get("peer")?.speed).toBe(0.5);
+  });
+
   test("uses exact benchmark capability before a generic routing profile score", () => {
     const points = buildCandidateSpacePoints([
       candidate({
@@ -204,6 +296,48 @@ describe("buildCandidateSpacePoints", () => {
     expect(formatRouteScore(null)).toBe("—");
   });
 
+  /**
+   * Run 98 addendum 43 S2: the operator set the floor at 3 benchmark samples. A capability below it is
+   * insufficient evidence rather than a score, and the count stays visible so the operator can see why
+   * (kimi-k3 printed Q100 from a single sample on the live stage).
+   */
+  test("run98 a43 S2: a benchmark score below the sample floor is not scored and the count is shown", () => {
+    const floor = CANDIDATE_SPACE_SCORING_CONFIG.minimumQualityBenchmarkSamples;
+    const points = buildCandidateSpacePoints([
+      candidate({
+        endpointId: "below-floor",
+        modelId: "vendor/below-floor",
+        benchmarkCapability: benchmarkCapability({
+          overallScore: 1,
+          benchmarkSamples: floor - 1,
+          sampleCount: floor - 1,
+        }),
+      }),
+      candidate({
+        endpointId: "at-floor",
+        modelId: "vendor/at-floor",
+        benchmarkCapability: benchmarkCapability({
+          overallScore: 0.8,
+          benchmarkSamples: floor,
+          sampleCount: floor,
+        }),
+      }),
+    ]);
+    const byId = new Map(points.map((point) => [point.endpointId, point]));
+    const belowFloor = byId.get("below-floor");
+    const atFloor = byId.get("at-floor");
+
+    expect(belowFloor?.quality).toBeNull();
+    expect(atFloor?.quality).toBeCloseTo(0.8, 5);
+    if (!belowFloor) {
+      throw new Error("expected a below-floor point");
+    }
+    expect(formatCandidateMetricTriplet(belowFloor)).toContain(
+      `Insufficient quality samples (${floor - 1} of ${floor})`,
+    );
+    expect(formatCandidateMetricTriplet(belowFloor)).toContain("Q—");
+  });
+
   test("computes route score only from present metrics (partial evidence)", () => {
     const points = buildCandidateSpacePoints([
       candidate({
@@ -217,8 +351,43 @@ describe("buildCandidateSpacePoints", () => {
     expect(partial?.quality).toBeCloseTo(0.9, 5);
     expect(partial?.speed).toBeNull();
     expect(partial?.cost).toBeNull();
-    expect(partial?.routeScore).toBeCloseTo(0.9, 5);
+    // Run 98 addendum 43 S1: the composite is capped by the share of axes that carry evidence, so a
+    // single present axis can never read as a top-ranked candidate. Quality is the only measured axis
+    // (weight 0.34 of 1.00), so the best this candidate can reach is 0.9 × 0.34 = 0.306.
+    expect(partial?.routeScore).toBeCloseTo(0.306, 5);
     expect(partial?.evidence).toBe("partial");
+  });
+
+  // Run 98 addendum 43 S1, operator rule: "if a candidate only has one out of three axes with values,
+  // its maximum possible route score should be 1/3 or 0.33. in this case it would be 0.33*(100/100)=0.33".
+  test("run98 a43 S1: the composite is capped by how many of the three axes carry evidence", () => {
+    const points = buildCandidateSpacePoints([
+      candidate({
+        endpointId: "cost-only",
+        modelId: "vendor/cost-only",
+        pricing: { inputPer1M: 1 },
+      }),
+      candidate({
+        endpointId: "cost-and-quality",
+        modelId: "vendor/cost-and-quality",
+        pricing: { inputPer1M: 1 },
+        routingQualityScore: 1,
+      }),
+      candidate({
+        endpointId: "all-three",
+        modelId: "vendor/all-three",
+        pricing: { inputPer1M: 1 },
+        routingQualityScore: 1,
+        operationalProfile: { latency_ms_p50: 1_000 },
+      }),
+    ]);
+    const byId = new Map(points.map((point) => [point.endpointId, point]));
+
+    // Every axis below is best-in-cohort (cheapest input price, top quality, fastest p50), so each
+    // candidate's score is exactly the share of the three axes it can evidence.
+    expect(byId.get("cost-only")?.routeScore).toBeCloseTo(0.33, 5);
+    expect(byId.get("cost-and-quality")?.routeScore).toBeCloseTo(0.67, 5);
+    expect(byId.get("all-three")?.routeScore).toBeCloseTo(1, 5);
   });
 });
 

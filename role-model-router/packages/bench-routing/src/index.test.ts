@@ -14,6 +14,43 @@ import {
 } from "./index.ts";
 
 describe("bench-routing", () => {
+  /**
+   * Run 98 addendum 32 S4: a case whose judge never answered is missing evidence. It must not be
+   * averaged as if its heuristic stand-in were a judge score, and the row has to say so.
+   */
+  test("a judge-unavailable case is excluded from the aggregate instead of averaged as low", () => {
+    const grade = summarizeEndpointGrade("endpoint.high", "model.flash", "remote", [
+      {
+        caseId: "judged-1",
+        difficultyBucket: "hard",
+        score: 1,
+        rationale: "pass",
+        gradingMethod: "judge",
+        latencyMs: 10,
+        actualPreview: "ok",
+      },
+      {
+        caseId: "unjudged-1",
+        difficultyBucket: "hard",
+        score: 0.25,
+        rationale: "[judge_unavailable] Heuristic fallback",
+        gradingMethod: "heuristic",
+        latencyMs: 12,
+        actualPreview: "partial",
+        judgeUnavailable: true,
+        missing: true,
+        missingReason: "judge_unavailable",
+      },
+    ]);
+    expect(grade.overallScore).toBe(1);
+    expect(grade.byDifficulty.hard).toEqual({ score: 1, cases: 1 });
+    expect(grade.caseResults[1]).toMatchObject({
+      missing: true,
+      missingReason: "judge_unavailable",
+      judgeUnavailable: true,
+    });
+  });
+
   test("defines overall as the equal-weight arithmetic mean of executed case scores", () => {
     const grade = summarizeEndpointGrade("endpoint.high", "model.flash", "remote", [
       {
@@ -147,6 +184,11 @@ describe("bench-routing", () => {
     expect(grade.method).toBe("heuristic");
     expect(grade.score).toBe(0.25);
     expect(grade.rationale).toContain("[judge_unavailable]");
+    // Run 98 addendum 32 S4: the stand-in is flagged as missing evidence, so persistence records a
+    // missing case with its reason rather than banking the cap as a judge score.
+    expect(grade.missing).toBe(true);
+    expect(grade.missingReason).toBe("judge_unavailable");
+    expect(grade.gradingMethod).toBe("heuristic");
   });
 
   test("falls back to heuristic when judge is unavailable", () => {

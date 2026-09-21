@@ -2,11 +2,18 @@ import { createHash, createHmac, createPublicKey, timingSafeEqual, verify } from
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
+  EXTENSION_MODE_VALUES,
+  type ExtensionMode,
+  extensionActivationBoundaryFor,
+  extensionModeCeilingError,
+} from "./extension-activation-boundaries.js";
+import {
   type KwSessionWorker,
   clearKwPromptInjectSessionsForTests,
   registerKwPromptInjectSession,
   syncPrivateKnowledgeActivation,
 } from "./kw-prompt-inject.js";
+import { emitCaptureGraphContracts } from "./track-b-capture-contracts.js";
 
 let kwJoinWorkerFactory: ((sessionId: string) => Promise<KwSessionWorker | undefined>) | undefined;
 
@@ -57,7 +64,6 @@ type KnowledgeWorkerBootstrap = {
   readonly receipt: KnowledgeValidationReceipt;
   readonly groupDigest: string;
 };
-type ExtensionMode = "disabled" | "shadow" | "advisory" | "bounded" | "active";
 type ExtensionMutationReceipt = {
   readonly id: string;
   readonly at: string;
@@ -73,13 +79,7 @@ type ExtensionMutationReceipt = {
   readonly mode: ExtensionMode;
   readonly result: "applied";
 };
-const EXTENSION_MODES = new Set<ExtensionMode>([
-  "disabled",
-  "shadow",
-  "advisory",
-  "bounded",
-  "active",
-]);
+const EXTENSION_MODES = new Set<ExtensionMode>(EXTENSION_MODE_VALUES);
 const asExtensionMode = (value: unknown, fallback: ExtensionMode = "active"): ExtensionMode =>
   typeof value === "string" && EXTENSION_MODES.has(value as ExtensionMode)
     ? (value as ExtensionMode)
@@ -454,6 +454,158 @@ const writeState = async (statePath: string, state: BridgeState) => {
   await rename(temporary, statePath);
 };
 
+/**
+ * Normalize lifecycle/health consistency for the bridge state validator: a disabled row is
+ * stopped and unavailable; an enabled row that is not degraded is ready and available.
+ */
+const normalizeExtensionRows = (rows: readonly LifecycleRecord[]): LifecycleRecord[] =>
+  rows.map((row) => {
+    if (!row.enabled) {
+      return {
+        ...row,
+        enabledMode: "disabled" as const,
+        lifecycle: "stopped" as const,
+        health: {
+          ...row.health,
+          available: false,
+          reason: row.health.reason ?? "operator_disabled",
+        },
+      };
+    }
+    const lifecycle = row.lifecycle === "stopped" ? ("ready" as const) : row.lifecycle;
+    return {
+      ...row,
+      enabledMode: row.enabledMode ?? "active",
+      lifecycle,
+      health: {
+        ...row.health,
+        available: lifecycle === "ready",
+        reason:
+          row.health.reason === "operator_disabled"
+            ? "operator_enabled"
+            : (row.health.reason ?? "operator_enabled"),
+      },
+    };
+  });
+
+const extensionMutationReceiptFor = (input: {
+  readonly id: string;
+  readonly action: string;
+  readonly mode: ExtensionMode;
+  readonly revision: number;
+}): ExtensionMutationReceipt => ({
+  id: `ext-mut-${createHash("sha256")
+    .update(JSON.stringify([input.id, input.action, input.mode, input.revision]))
+    .digest("hex")
+    .slice(0, 16)}`,
+  at: new Date().toISOString(),
+  who: "local-operator",
+  extensionId: input.id,
+  action: input.action as ExtensionMutationReceipt["action"],
+  mode: input.mode,
+  result: "applied",
+});
+
+/**
+ * Durable boundary-mode readback. The supervised extension runtime owns process lifecycle
+ * but has no mode concept, so the bridge state is the durable authority for the operator's
+ * activation-boundary selection (`R18`).
+ */
+const readStoredExtensionModes = async (
+  statePath: string,
+): Promise<ReadonlyMap<string, ExtensionMode>> => {
+  const state = await readState(statePath);
+  const modes = new Map<string, ExtensionMode>();
+  for (const row of state.extensions) if (row.enabledMode) modes.set(row.id, row.enabledMode);
+  return modes;
+};
+
+const persistExtensionBoundaryMode = async (input: {
+  readonly statePath: string;
+  readonly catalog: readonly Record<string, unknown>[];
+  readonly id: string;
+  readonly mode: ExtensionMode;
+  readonly action: "enable" | "set_mode";
+  readonly channel?: string;
+  readonly scope?: string;
+  readonly authorizationEpoch?: number;
+}): Promise<{
+  readonly extensions: readonly LifecycleRecord[];
+  readonly receipts: readonly ExtensionMutationReceipt[];
+}> => {
+  const state = await readState(input.statePath);
+  const catalogEntry = input.catalog.find((entry) => String(entry.id ?? "") === input.id);
+  if (!catalogEntry) throw new Error(`extension not found: ${input.id}`);
+  const enabled = input.mode !== "disabled";
+  let index = state.extensions.findIndex((row) => row.id === input.id);
+  let extensions = [...state.extensions];
+  if (index < 0) {
+    const seeded: LifecycleRecord = {
+      id: input.id,
+      lifecycle: "stopped",
+      enabled: false,
+      enabledMode: "disabled",
+      channel: String(catalogEntry.channel ?? input.channel ?? "production"),
+      scope: String(catalogEntry.scope ?? input.scope ?? "global"),
+      authorizationEpoch:
+        Number(catalogEntry.authorizationEpoch ?? input.authorizationEpoch ?? 0) || 0,
+      ...(input.id === "knowledge-worker" ? { productionActivation: false } : {}),
+      health: {
+        available: false,
+        routingDependency: Boolean(catalogEntry.routingDependency),
+        reason: "operator_unregistered_pending_mutation",
+        ...(input.id === "knowledge-worker" ? { productionActivation: false } : {}),
+      },
+    };
+    extensions = [...extensions, seeded];
+    index = extensions.length - 1;
+  }
+  const current = extensions[index];
+  if (!current) throw new Error(`extension state missing for ${input.id}`);
+  const nextRow: LifecycleRecord = {
+    ...current,
+    enabled,
+    enabledMode: input.mode,
+    lifecycle: enabled
+      ? current.lifecycle === "stopped"
+        ? "ready"
+        : current.lifecycle
+      : "stopped",
+    ...(input.id === "knowledge-worker" ? { productionActivation: false } : {}),
+    health: {
+      ...current.health,
+      available: enabled,
+      reason: enabled
+        ? current.health.reason === "operator_disabled"
+          ? "operator_enabled"
+          : (current.health.reason ?? "operator_enabled")
+        : "operator_disabled",
+      ...(input.id === "knowledge-worker" ? { productionActivation: false } : {}),
+    },
+  };
+  const normalized = normalizeExtensionRows(
+    extensions.map((row, rowIndex) => (rowIndex === index ? nextRow : row)),
+  );
+  const receipt = extensionMutationReceiptFor({
+    id: input.id,
+    action: input.action,
+    mode: input.mode,
+    revision: state.revision + 1,
+  });
+  const receipts = [...(state.extensionMutationReceipts ?? []), receipt].slice(-100);
+  await writeState(
+    input.statePath,
+    validate({
+      ...state,
+      revision: state.revision + 1,
+      generatedAt: new Date().toISOString(),
+      extensions: normalized,
+      extensionMutationReceipts: receipts,
+    }),
+  );
+  return { extensions: normalized, receipts };
+};
+
 /** Seed local Track B bridge state so Extension boundary reflects registered packages. */
 export async function seedTrackBExtensionBridgeState(options: {
   readonly statePath: string;
@@ -660,6 +812,117 @@ class TrackBPrivateOperationError extends Error {
 // the configured cloud boundary. It is not a dashboard read, so it needs a
 // bounded completion window that covers that acknowledged write path.
 const DEFAULT_CONTRIBUTION_DELIVERY_TIMEOUT_MS = 30_000;
+// Run 95 allows a local route capture to exceed the legacy five-second budget, so
+// the routing bound is an order of magnitude above it while still preventing an
+// unbounded wait on the operations boundary.
+const DEFAULT_ROUTE_CAPTURE_TIMEOUT_MS = 10_000;
+/**
+ * Run 98 addendum 48 (live v285 measurement): with the caller's own capture persisted first, branch captures
+ * completed at 22.6 s, 24.6 s and 26.0 s and only the *branch* writes crossed the old 30 s ceiling
+ * (`route-capture-failed 30017ms … -branch`). The capture write is asynchronous and now prioritised, so the
+ * ceiling only bounds how long the runtime keeps trying to record durable evidence — raise it, but keep it
+ * bounded so a wedged boundary still degrades.
+ */
+const MAX_ROUTE_CAPTURE_TIMEOUT_MS = 180_000;
+
+/** Exported for the bound's own contract test: an explicit configuration wins inside [100, 180000] ms. */
+export function resolveRouteCaptureTimeoutMs(
+  raw: string | undefined,
+  fallbackMs = DEFAULT_ROUTE_CAPTURE_TIMEOUT_MS,
+): number {
+  const configured = Number(raw?.trim());
+  return Number.isSafeInteger(configured) &&
+    configured >= 100 &&
+    configured <= MAX_ROUTE_CAPTURE_TIMEOUT_MS
+    ? configured
+    : fallbackMs;
+}
+// A capture larger than this cannot be absorbed by the operations boundary inside
+// the bound above, so the request pays the full timeout and still records no
+// capture. Skipping it keeps the same bounded degradation without the 10 s tax.
+const DEFAULT_ROUTE_CAPTURE_MAX_BYTES = 512 * 1024;
+// Once the boundary fails a capture, stop paying the bounded timeout for every
+// subsequent request until this cooldown expires (the failure is recorded the same
+// way, just without the wait).
+const DEFAULT_ROUTE_CAPTURE_COOLDOWN_MS = 60_000;
+/**
+ * Run 98 addendum 48: the first boundary failure probes again after this window instead of disabling capture
+ * writes for the whole configured cooldown. The configured value stays the ceiling of the escalation.
+ */
+const ROUTE_CAPTURE_COOLDOWN_PROBE_MS = 15_000;
+
+/**
+ * Run 98 addendum 48: a cooling-down capture boundary. It carries the retry time so a caller (the deferred
+ * queue) can defer the capture instead of counting a spent attempt.
+ */
+export class RouteCaptureBoundaryCoolingDownError extends Error {
+  readonly code = "route_capture_boundary_cooling_down";
+
+  constructor(readonly retryAtMs: number) {
+    super(`route capture skipped: boundary unavailable until ${new Date(retryAtMs).toISOString()}`);
+    this.name = "RouteCaptureBoundaryCoolingDownError";
+  }
+}
+const DEFAULT_CONTRIBUTION_AGGREGATE_TIMEOUT_MS = 5_000;
+
+/**
+ * Run 99 R33 live finding (stage v146, with real coding-agent traffic flowing): the eight-second
+ * private-operations bound was aborting healthy calls on a mature stage root —
+ *
+ *   `Track B route capture failed track-b-capture-boundary-http-504 reason=private Track B operation
+ *    timed out after 8000ms`
+ *
+ *   `{"running":true,"lastOutcome":"degraded","lastError":"private Track B operation timed out after
+ *     8000ms"}` on `/api/role-model/track-b/replay/status`
+ *
+ * — and the second one starved the auto-replay producer, so freshly captured requests were never
+ * replayed. Five seconds was already raised to eight for the same reason; the bound now covers the
+ * durable commit path under load and stays operator-tunable without a rebuild.
+ */
+export const DEFAULT_TRACK_B_OPERATIONS_TIMEOUT_MS = 30_000;
+
+export function resolveTrackBOperationsTimeoutMs(
+  configured: number | null | undefined = Number.parseInt(
+    process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TIMEOUT_MS ?? "",
+    10,
+  ),
+): number {
+  return Number.isSafeInteger(configured) && Number(configured) > 0
+    ? Number(configured)
+    : DEFAULT_TRACK_B_OPERATIONS_TIMEOUT_MS;
+}
+
+/**
+ * Run 98 addendum 04 §7 (`L1`): how many extra attempts a connection-level failure gets, and how long
+ * to wait before each. Kept small and bounded so a genuinely down boundary still fails promptly.
+ */
+const PRIVATE_OPERATIONS_TRANSPORT_RETRIES = 2;
+const PRIVATE_OPERATIONS_TRANSPORT_RETRY_DELAYS_MS = [250, 1_000];
+
+const RETRYABLE_PRIVATE_OPERATION_TRANSPORT_CODES = new Set([
+  "ECONNRESET",
+  "ECONNREFUSED",
+  "ECONNABORTED",
+  "EPIPE",
+  "ETIMEDOUT",
+  "UND_ERR_SOCKET",
+  "UND_ERR_CONNECT_TIMEOUT",
+]);
+
+/**
+ * A *connection-level* failure is retryable; a protocol error, a stated status, or a timeout is not.
+ * A timeout is excluded deliberately: the far side may still be doing the work, and retrying it would
+ * duplicate it rather than recover a lost connection.
+ */
+const isRetryablePrivateOperationTransportFailure = (error: unknown): boolean => {
+  const cause = (error as { cause?: { code?: unknown } } | undefined)?.cause;
+  const ownCode = (error as { code?: unknown } | undefined)?.code;
+  const code =
+    typeof cause?.code === "string" ? cause.code : typeof ownCode === "string" ? ownCode : "";
+  if (RETRYABLE_PRIVATE_OPERATION_TRANSPORT_CODES.has(code)) return true;
+  const message = String((error as { message?: unknown } | undefined)?.message ?? "");
+  return message === "fetch failed" || /socket hang up|other side closed/i.test(message);
+};
 
 const privateRetentionRequest = async (
   endpoint: string | undefined,
@@ -671,9 +934,9 @@ const privateRetentionRequest = async (
     readonly headers?: Readonly<Record<string, string>>;
   } = {},
   // Route captures may perform bounded durable CAS and SQLite commits after the
-  // provider response. Five seconds aborts healthy local captures on mature
-  // runtimes; retain a finite budget while allowing that proven completion path.
-  timeoutMs = 8_000,
+  // provider response. A shorter bound aborts healthy local captures (and the replay producer's
+  // pending read) on mature runtimes; retain a finite budget while allowing that proven path.
+  timeoutMs = DEFAULT_TRACK_B_OPERATIONS_TIMEOUT_MS,
 ): Promise<unknown | null> => {
   if (!endpoint) return null;
   if (!token || token.trim().length < 24) {
@@ -681,27 +944,54 @@ const privateRetentionRequest = async (
       "Track B private operations boundary requires a launcher-issued authentication token",
     );
   }
-  let response: Response;
-  try {
-    response = await fetch(new URL(route, endpoint.endsWith("/") ? endpoint : `${endpoint}/`), {
-      method: init.method ?? "GET",
-      headers: {
-        ...init.headers,
-        ...(init.body ? { "content-type": "application/json" } : {}),
-        authorization: `Bearer ${token}`,
-      },
-      ...(init.body ? { body: JSON.stringify(init.body) } : {}),
-      signal: AbortSignal.timeout(timeoutMs),
-    });
-  } catch (error) {
-    if (error instanceof Error && error.name === "TimeoutError") {
-      throw new TrackBPrivateOperationError(
-        504,
-        `private Track B operation timed out after ${timeoutMs}ms`,
+  const url = new URL(route, endpoint.endsWith("/") ? endpoint : `${endpoint}/`);
+  const requestInit = {
+    method: init.method ?? "GET",
+    headers: {
+      ...init.headers,
+      ...(init.body ? { "content-type": "application/json" } : {}),
+      authorization: `Bearer ${token}`,
+    },
+    ...(init.body ? { body: JSON.stringify(init.body) } : {}),
+  } as const;
+  /**
+   * Run 98 addendum 04 §7 (`L1`), measured on real dsh traffic: this boundary did a single `fetch`
+   * with no retry, so one transient connection reset surfaced as `fetch failed` / `read ECONNRESET`
+   * and the caller recorded a terminal `refused replay_failed` for a capture that was perfectly
+   * replayable. Every operation here is idempotency-keyed (capture ids, replay/job ids, request
+   * correlation ids), so retrying a *connection-level* failure is safe; a timeout is not retried
+   * because the work may still be running on the far side.
+   */
+  let response: Response | null = null;
+  let lastTransportError: unknown = null;
+  for (let attempt = 0; attempt <= PRIVATE_OPERATIONS_TRANSPORT_RETRIES; attempt += 1) {
+    try {
+      response = await fetch(url, {
+        ...requestInit,
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+      lastTransportError = null;
+      break;
+    } catch (error) {
+      if (error instanceof Error && error.name === "TimeoutError") {
+        throw new TrackBPrivateOperationError(
+          504,
+          `private Track B operation timed out after ${timeoutMs}ms`,
+        );
+      }
+      lastTransportError = error;
+      if (
+        attempt >= PRIVATE_OPERATIONS_TRANSPORT_RETRIES ||
+        !isRetryablePrivateOperationTransportFailure(error)
+      ) {
+        throw error;
+      }
+      await new Promise((resolve) =>
+        setTimeout(resolve, PRIVATE_OPERATIONS_TRANSPORT_RETRY_DELAYS_MS[attempt] ?? 1_000),
       );
     }
-    throw error;
   }
+  if (!response) throw lastTransportError ?? new Error("private Track B operation failed");
   const result = (await response.json().catch(() => ({}))) as { readonly error?: unknown };
   if (!response.ok)
     throw new TrackBPrivateOperationError(
@@ -1080,6 +1370,16 @@ export function buildVerifiersLiveExport(input: {
   });
 }
 
+/**
+ * Run 99: the value-level operator redaction rule, exported so the contract is testable on its own.
+ * It redacts credentials only; identifiers that merely contain a label word stay readable.
+ */
+export function redactOperatorSensitiveValue(value: string): string {
+  return /(?:sk-[a-z0-9_-]{8,}|api[_-]?key\s*[:=]\s*\S{6,}|bearer\s+[a-z0-9._-]{12,})/i.test(value)
+    ? "[redacted]"
+    : value;
+}
+
 export function createTrackBOperations({
   statePath,
   catalog,
@@ -1088,9 +1388,13 @@ export function createTrackBOperations({
   authorizationEpoch,
   operationsEndpoint = process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL?.trim(),
   operationsToken = process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TOKEN,
-  operationsTimeoutMs = 8_000,
+  // Run 99 R33: the bound resolves through the operator override
+  // (`ROLE_MODEL_TRACK_B_OPERATIONS_TIMEOUT_MS`) so a mature stage root can be given more room
+  // without a rebuild — the constant alone left the documented override inert.
+  operationsTimeoutMs = resolveTrackBOperationsTimeoutMs(),
   contributionDeliveryTimeoutMs = DEFAULT_CONTRIBUTION_DELIVERY_TIMEOUT_MS,
   extensionRuntime,
+  contractStateRoot,
 }: {
   readonly statePath: string;
   readonly catalog: readonly Record<string, unknown>[];
@@ -1109,11 +1413,52 @@ export function createTrackBOperations({
     listExtensions(): readonly unknown[] | Promise<readonly unknown[]>;
     mutateExtension(input: Record<string, unknown>): unknown | Promise<unknown>;
   };
+  /**
+   * Runtime state root. When present, each recorded capture also persists the
+   * documented v1.1 graph contracts (nodes and edges) for its recorded artifacts.
+   */
+  readonly contractStateRoot?: string;
 }) {
   const boundedContributionDeliveryTimeoutMs = Math.max(
     operationsTimeoutMs,
     contributionDeliveryTimeoutMs,
     DEFAULT_CONTRIBUTION_DELIVERY_TIMEOUT_MS,
+  );
+  // Run 98 addendum 39 S1: routing must not depend on replays. The route capture
+  // is evidence, not a routing precondition, so it is bounded far below the
+  // operations timeout and degrades instead of holding the request while the
+  // operations boundary is busy with replay work.
+  const boundedRouteCaptureTimeoutMs = resolveRouteCaptureTimeoutMs(
+    process.env.ROLE_MODEL_ROUTE_CAPTURE_TIMEOUT_MS,
+  );
+  const configuredRouteCaptureMaxBytes = Number(
+    process.env.ROLE_MODEL_ROUTE_CAPTURE_MAX_BYTES?.trim(),
+  );
+  const boundedRouteCaptureMaxBytes =
+    Number.isSafeInteger(configuredRouteCaptureMaxBytes) &&
+    configuredRouteCaptureMaxBytes >= 1_024 &&
+    configuredRouteCaptureMaxBytes <= 64 * 1024 * 1024
+      ? configuredRouteCaptureMaxBytes
+      : DEFAULT_ROUTE_CAPTURE_MAX_BYTES;
+  const configuredRouteCaptureCooldownMs = Number(
+    process.env.ROLE_MODEL_ROUTE_CAPTURE_COOLDOWN_MS?.trim(),
+  );
+  const boundedRouteCaptureCooldownMs =
+    Number.isSafeInteger(configuredRouteCaptureCooldownMs) &&
+    configuredRouteCaptureCooldownMs >= 0 &&
+    configuredRouteCaptureCooldownMs <= 600_000
+      ? configuredRouteCaptureCooldownMs
+      : DEFAULT_ROUTE_CAPTURE_COOLDOWN_MS;
+  let routeCaptureUnavailableUntilMs = 0;
+  // Run 98 addendum 48: the window escalates from a short probe to the configured ceiling, and a success
+  // resets it, so one transient failure no longer disables capture writes for minutes at a time.
+  let routeCaptureCooldownMs = 0;
+  // Run 98 S1 follow-up: the contribution aggregate is another sidecar call in the
+  // request path — bound it far below the 180 s operations default so a starved
+  // boundary cannot hold a request open for minutes.
+  const boundedContributionAggregateTimeoutMs = Math.min(
+    operationsTimeoutMs,
+    DEFAULT_CONTRIBUTION_AGGREGATE_TIMEOUT_MS,
   );
   const requestPrivate = (
     route: string,
@@ -1143,12 +1488,18 @@ export function createTrackBOperations({
   };
   const operatorSensitiveKey =
     /(?:secret|token|password|credential|api[-_]?key|authorization|cookie|header|prompt|transcript|content|body|input|output|message|response)/i;
-  const operatorSensitiveValue = /(?:sk-[a-z0-9_-]{8,}|api[_-]?key|bearer\s+[a-z0-9._-]{12,})/i;
+  // Run 99: redact credentials, not identifiers that merely contain a label word. The previous
+  // rule matched the bare substring `api-key`, so endpoint ids such as
+  // `deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-high` reached the Learning UI as
+  // `[redacted]`. A credential carries a separator plus a value (`api_key=...`, `api-key: ...`).
+  const operatorSensitiveValue =
+    /(?:sk-[a-z0-9_-]{8,}|api[_-]?key\s*[:=]\s*\S{6,}|bearer\s+[a-z0-9._-]{12,})/i;
   const operatorAggregateMetricKey = /^(?:inputTokens|outputTokens)$/i;
   const sanitizeOperatorProjection = (value: unknown, key?: string): unknown => {
     if (key && operatorAggregateMetricKey.test(key) && typeof value === "number") return value;
     if (key && operatorSensitiveKey.test(key)) return "[redacted]";
-    if (typeof value === "string" && operatorSensitiveValue.test(value)) return "[redacted]";
+    if (typeof value === "string" && redactOperatorSensitiveValue(value) === "[redacted]")
+      return "[redacted]";
     if (Array.isArray(value)) return value.map((item) => sanitizeOperatorProjection(item));
     if (value && typeof value === "object") {
       return Object.fromEntries(
@@ -1242,7 +1593,7 @@ export function createTrackBOperations({
     const encoded = params.toString();
     return encoded ? `?${encoded}` : "";
   };
-  return {
+  const operations = {
     async readDevelopmentVerificationStatus(): Promise<unknown> {
       const remote = await requestPrivate("development-verification");
       if (remote) return remote;
@@ -1301,6 +1652,20 @@ export function createTrackBOperations({
           body,
         },
       );
+    },
+    /**
+     * Run 97 RC07 (L2): bounded sweep that moves abandoned replay jobs to a typed
+     * terminal state once their deadline has elapsed. The producer calls it once per
+     * auto-replay tick so a job whose branch append failed and whose capture already
+     * reached terminal ledger evidence cannot live on forever.
+     *
+     * The sweep crosses the launcher-token boundary the producer already uses for
+     * captures and dispositions: it is producer inventory, not an operator session, and
+     * the operator header boundary rejects a producer-owned body with
+     * `operator_context_mismatch` (observed live on stage v42).
+     */
+    async expireStaleReplayJobs(body: Record<string, unknown> = {}): Promise<unknown> {
+      return requestPrivate("replay/expire-stale", { method: "POST", body });
     },
     async readReplayJob(jobId: string): Promise<unknown> {
       return requestOperator(
@@ -1385,7 +1750,106 @@ export function createTrackBOperations({
         body,
       });
     },
+    // Run 98 R17: the Learning UI surfaces (rollout state, records, decisions, measurement)
+    // and the activation/rollback/kill-switch actions all cross the operator boundary to
+    // the supervised sidecar, so a UI action is the same durable operation as a CLI one.
+    async readLearningRollout(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return requestOperator(
+        "learning rollout readback",
+        `operator/learning/rollout${operatorQuery(query)}`,
+      );
+    },
+    async readLearningRecords(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return requestOperator(
+        "learning records readback",
+        `operator/learning/records${operatorQuery(query)}`,
+      );
+    },
+    async readLearningDecisions(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return requestOperator(
+        "learning decisions readback",
+        `operator/learning/decisions${operatorQuery(query)}`,
+      );
+    },
+    async readLearningMeasurement(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return requestOperator(
+        "learning measurement readback",
+        `operator/learning/measurement${operatorQuery(query)}`,
+      );
+    },
+    // Run 99: the Learning UI live panel and history page read the reconciled projections
+    // from the same supervised sidecar, so the UI never invents a value.
+    async readLearningActivity(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return requestOperator(
+        "learning activity readback",
+        `operator/learning/activity${operatorQuery(query)}`,
+      );
+    },
+    async readLearningHistory(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return requestOperator(
+        "learning history readback",
+        `operator/learning/history${operatorQuery(query)}`,
+      );
+    },
+    // Run 98 R6/R15/R17: the operator policy readback, change and rollback routes were
+    // served by the sidecar from S4 on; the host now exposes them for the Learning UI.
+    async readLearningPolicy(query: Readonly<Record<string, string>> = {}): Promise<unknown> {
+      return requestOperator(
+        "learning policy readback",
+        `operator/learning/policy${operatorQuery(query)}`,
+      );
+    },
+    async setLearningPolicy(body: Record<string, unknown>): Promise<unknown> {
+      return requestOperator("learning policy change", "operator/learning/policy", {
+        method: "POST",
+        body,
+      });
+    },
+    async rollbackLearningPolicy(body: Record<string, unknown>): Promise<unknown> {
+      return requestOperator("learning policy rollback", "operator/learning/policy/rollback", {
+        method: "POST",
+        body,
+      });
+    },
+    async activateLearningPack(body: Record<string, unknown>): Promise<unknown> {
+      return requestOperator("learning pack activation", "operator/learning/activate-pack", {
+        method: "POST",
+        body,
+      });
+    },
+    async rollbackLearningPack(body: Record<string, unknown>): Promise<unknown> {
+      return requestOperator("learning pack rollback", "operator/learning/rollback-pack", {
+        method: "POST",
+        body,
+      });
+    },
+    /**
+     * Run 98 addendum 54 (implementing addendum 53 §3): record a measured guardrail breach through the
+     * runtime's own extension path, so A44-S2's sustained-window rollback can be measured live. The sidecar
+     * decides the window from the operator policy when the caller omits one and refuses the route on the
+     * production channel.
+     */
+    async recordLearningGuardrailBreach(body: Record<string, unknown>): Promise<unknown> {
+      return requestOperator("learning guardrail breach", "operator/learning/guardrail-breach", {
+        method: "POST",
+        body,
+      });
+    },
+    /** Run 98 addendum 57 slice 1: the explicit undo for a scenario's own guardrail measurement. */
+    async restoreLearningScenarioActivation(body: Record<string, unknown>): Promise<unknown> {
+      return requestOperator("learning scenario restore", "operator/learning/scenario-restore", {
+        method: "POST",
+        body,
+      });
+    },
+    async engageLearningKillSwitch(body: Record<string, unknown>): Promise<unknown> {
+      return requestOperator("learning kill switch", "operator/learning/kill-switch", {
+        method: "POST",
+        body,
+      });
+    },
     async listExtensions(): Promise<readonly unknown[]> {
+      const storedModes = await readStoredExtensionModes(statePath);
       if (extensionRuntime) {
         const runtimeRows = (await extensionRuntime.listExtensions()) as Array<{
           readonly id: string;
@@ -1397,6 +1861,7 @@ export function createTrackBOperations({
         const runtimeById = new Map(runtimeRows.map((row) => [row.id, row]));
         return catalog.map((entry) => {
           const id = String(entry.id ?? "");
+          const activationBoundary = extensionActivationBoundaryFor(id);
           const actual = runtimeById.get(id);
           if (!actual) {
             return {
@@ -1406,6 +1871,7 @@ export function createTrackBOperations({
               enabledMode: "disabled",
               lifecycle: "unavailable",
               revision: 0,
+              activationBoundary,
               health: {
                 available: false,
                 routingDependency: Boolean(entry.routingDependency),
@@ -1414,12 +1880,18 @@ export function createTrackBOperations({
             };
           }
           const enabled = actual.desiredState === "enabled";
+          const storedMode = storedModes.get(id);
           return {
             ...entry,
             ...actual,
             installed: true,
             enabled,
-            enabledMode: enabled ? (id === "knowledge-worker" ? "shadow" : "active") : "disabled",
+            enabledMode: !enabled
+              ? "disabled"
+              : storedMode && activationBoundary.allowedModes.includes(storedMode)
+                ? storedMode
+                : activationBoundary.defaultMode,
+            activationBoundary,
             channel: runtimeChannel,
             scope: "global",
             authorizationEpoch: 1,
@@ -1437,13 +1909,17 @@ export function createTrackBOperations({
       const byId = new Map(state.extensions.map((row) => [row.id, row]));
       return catalog.map((entry) => {
         const id = String(entry.id ?? "");
+        const activationBoundary = extensionActivationBoundaryFor(id);
         const actual = byId.get(id);
         return actual
           ? {
               ...entry,
               ...actual,
               installed: true,
-              enabledMode: actual.enabledMode ?? (actual.enabled ? "active" : "disabled"),
+              enabledMode:
+                actual.enabledMode ??
+                (actual.enabled ? activationBoundary.defaultMode : "disabled"),
+              activationBoundary,
               ...(id === "knowledge-worker"
                 ? {
                     productionActivation: actual.productionActivation ?? false,
@@ -1461,6 +1937,7 @@ export function createTrackBOperations({
               enabled: false,
               enabledMode: "disabled",
               lifecycle: "unavailable",
+              activationBoundary,
               channel: "production",
               scope: "global",
               authorizationEpoch: 0,
@@ -1475,28 +1952,63 @@ export function createTrackBOperations({
       });
     },
     async mutateExtension(input: Record<string, unknown>): Promise<unknown> {
-      if (extensionRuntime) return extensionRuntime.mutateExtension(input);
       const id = String(input.id ?? "");
       const action = String(input.action ?? "");
       if (!id) throw new Error("extension id is required");
-      if (
-        id === "knowledge-worker" &&
-        ["activate_production", "deactivate_production"].includes(action)
-      ) {
+      const activationBoundary = extensionActivationBoundaryFor(id);
+      if (activationBoundary.prohibitedActions.includes(action)) {
         throw new Error(
-          "production Knowledge Worker controls are prohibited by Direct Track B v1.1; shadow-only execution required",
+          `${action} is prohibited for ${id} by Direct Track B v1.1: the package is ` +
+            `evidence-only and its boundary ceiling is ${activationBoundary.allowedModes.at(-1)}`,
         );
       }
-      if (
-        id === "knowledge-worker" &&
-        ["enable", "set_mode"].includes(action) &&
-        !["shadow", "disabled"].includes(
-          String(input.mode ?? (action === "enable" ? "active" : "")),
-        )
-      ) {
-        throw new Error(
-          "Knowledge Worker is shadow-only under Direct Track B v1.1; active, advisory, and bounded modes are prohibited",
-        );
+      let requestedMode: ExtensionMode | undefined;
+      if (action === "enable" || action === "set_mode") {
+        const raw =
+          input.mode ?? (action === "enable" ? activationBoundary.defaultMode : undefined);
+        if (raw !== undefined) {
+          if (typeof raw !== "string" || !EXTENSION_MODES.has(raw as ExtensionMode))
+            throw new Error(`illegal extension mode: ${String(raw)}`);
+          requestedMode = raw as ExtensionMode;
+          if (!activationBoundary.allowedModes.includes(requestedMode))
+            throw new Error(extensionModeCeilingError(id, requestedMode));
+        }
+      }
+      if (extensionRuntime) {
+        if (action === "set_mode" || (action === "enable" && requestedMode !== undefined)) {
+          const applied = await persistExtensionBoundaryMode({
+            statePath,
+            catalog,
+            id,
+            mode: requestedMode as ExtensionMode,
+            action,
+            channel: runtimeChannel,
+            scope,
+            authorizationEpoch,
+          });
+          if (action === "enable") {
+            const runtimeRows = (await extensionRuntime.listExtensions()) as readonly {
+              readonly id: string;
+              readonly desiredState?: string;
+              readonly revision?: number;
+            }[];
+            const current = runtimeRows.find((row) => String(row.id ?? "") === id);
+            const expectedRevision = Number(current?.revision ?? 0);
+            if (current && current.desiredState !== "enabled" && expectedRevision >= 1) {
+              await extensionRuntime.mutateExtension({
+                id,
+                action: "prepare",
+                mutationId: `ext-boundary-${id}-${expectedRevision}-enable`,
+                expectedRevision,
+              });
+            }
+          }
+          return {
+            extensions: await operations.listExtensions(),
+            receipts: applied.receipts,
+          };
+        }
+        return extensionRuntime.mutateExtension(input);
       }
       if (
         ![
@@ -1559,7 +2071,10 @@ export function createTrackBOperations({
         enabled = false;
         enabledMode = "disabled";
       } else if (action === "enable" || action === "set_mode") {
-        const requested = asExtensionMode(input.mode, action === "enable" ? "active" : enabledMode);
+        const requested = asExtensionMode(
+          input.mode,
+          action === "enable" ? activationBoundary.defaultMode : enabledMode,
+        );
         if (typeof input.mode === "string" && !EXTENSION_MODES.has(input.mode as ExtensionMode))
           throw new Error(`illegal extension mode: ${String(input.mode)}`);
         if (action === "set_mode" && input.mode == null)
@@ -1764,13 +2279,16 @@ export function createTrackBOperations({
       const byId = new Map(normalized.map((row) => [row.id, row]));
       const listed = catalog.map((entry) => {
         const entryId = String(entry.id ?? "");
+        const entryBoundary = extensionActivationBoundaryFor(entryId);
         const actual = byId.get(entryId);
         return actual
           ? {
               ...entry,
               ...actual,
               installed: true,
-              enabledMode: actual.enabledMode ?? (actual.enabled ? "active" : "disabled"),
+              enabledMode:
+                actual.enabledMode ?? (actual.enabled ? entryBoundary.defaultMode : "disabled"),
+              activationBoundary: entryBoundary,
               ...(entryId === "knowledge-worker"
                 ? {
                     productionActivation: actual.productionActivation ?? false,
@@ -1788,6 +2306,7 @@ export function createTrackBOperations({
               enabled: false,
               enabledMode: "disabled",
               lifecycle: "unavailable",
+              activationBoundary: entryBoundary,
               channel: "production",
               scope: "global",
               authorizationEpoch: 0,
@@ -2099,10 +2618,14 @@ export function createTrackBOperations({
       return next;
     },
     async recordContributionAggregate(input: Record<string, unknown>): Promise<unknown> {
-      const remote = await requestPrivate("contribution/aggregate", {
-        method: "POST",
-        body: sanitizeOperatorBody(input),
-      });
+      const remote = await requestPrivate(
+        "contribution/aggregate",
+        {
+          method: "POST",
+          body: sanitizeOperatorBody(input),
+        },
+        boundedContributionAggregateTimeoutMs,
+      );
       return remote === null
         ? { status: "operations_boundary_unconfigured" }
         : sanitizeOperatorProjection(remote);
@@ -2120,7 +2643,91 @@ export function createTrackBOperations({
       const url = new URL(operationsEndpoint);
       if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
         throw new Error("local route capture requires a loopback operations boundary");
-      return requestPrivate("capture/route", { method: "POST", body: input });
+      // A capture failure keeps its existing bounded degradation semantics upstream
+      // (routing continues); the bound only stops an unbounded wait for the boundary.
+      const captureStartedAtMs = Date.now();
+      if (process.env.ROLE_MODEL_PHASE_TIMING === "1") {
+        console.error(`[run98] phase route-capture-start ${String(input.requestId ?? "")}`);
+      }
+      const captureBytes = Buffer.byteLength(JSON.stringify(input) ?? "", "utf8");
+      if (captureBytes > boundedRouteCaptureMaxBytes) {
+        throw new Error(
+          `route capture skipped: ${captureBytes} bytes exceeds the ${boundedRouteCaptureMaxBytes}-byte boundary budget`,
+        );
+      }
+      if (Date.now() < routeCaptureUnavailableUntilMs) {
+        // Run 98 addendum 48: typed and deferrable — a cooling-down boundary is not a delivery failure.
+        throw new RouteCaptureBoundaryCoolingDownError(routeCaptureUnavailableUntilMs);
+      }
+      let result: unknown;
+      try {
+        result = await requestPrivate(
+          "capture/route",
+          { method: "POST", body: input },
+          boundedRouteCaptureTimeoutMs,
+        );
+      } catch (error) {
+        routeCaptureCooldownMs =
+          routeCaptureCooldownMs > 0
+            ? Math.min(boundedRouteCaptureCooldownMs, routeCaptureCooldownMs * 2)
+            : Math.min(ROUTE_CAPTURE_COOLDOWN_PROBE_MS, boundedRouteCaptureCooldownMs);
+        routeCaptureUnavailableUntilMs = Date.now() + routeCaptureCooldownMs;
+        if (process.env.ROLE_MODEL_PHASE_TIMING === "1") {
+          console.error(
+            `[run98] phase route-capture-failed ${Date.now() - captureStartedAtMs}ms request=${String(
+              input.requestId ?? "",
+            )} ${String((error as { message?: unknown })?.message ?? error).slice(0, 160)}`,
+          );
+        }
+        throw error;
+      }
+      routeCaptureUnavailableUntilMs = 0;
+      routeCaptureCooldownMs = 0;
+      if (process.env.ROLE_MODEL_PHASE_TIMING === "1") {
+        console.error(
+          `[run98] phase route-capture ${Date.now() - captureStartedAtMs}ms request=${String(
+            input.requestId ?? "",
+          )}`,
+        );
+      }
+      if (contractStateRoot && result && typeof result === "object" && !Array.isArray(result)) {
+        const capture = result as Record<string, unknown>;
+        const scopeId = String(capture.scope ?? scope ?? "");
+        if (scopeId) {
+          try {
+            emitCaptureGraphContracts({
+              stateRoot: contractStateRoot,
+              graph: {
+                capture,
+                request: input,
+                channel: runtimeChannel,
+                scopeId,
+                ...(typeof capture.branchRootRef === "string" &&
+                typeof capture.branchId === "string"
+                  ? {
+                      branch: {
+                        kind:
+                          String(capture.branchKind ?? "") === "counterfactual"
+                            ? ("counterfactual" as const)
+                            : ("replay" as const),
+                        branchId: capture.branchId,
+                        sourceNodeId: capture.branchRootRef,
+                      },
+                    }
+                  : {}),
+              },
+            });
+          } catch (error) {
+            // Capture graph contracts are evidence, never routing-critical.
+            console.error(
+              `[run97] capture contract emission degraded:${String(input.requestId ?? "")} ${String(
+                (error as { message?: unknown })?.message ?? error,
+              ).slice(0, 200)}`,
+            );
+          }
+        }
+      }
+      return result;
     },
     async measureNoRichCaptureBaseline(input: Record<string, unknown>): Promise<unknown> {
       if (!operationsEndpoint)
@@ -2150,6 +2757,57 @@ export function createTrackBOperations({
           return null;
         throw error;
       }
+    },
+    async listPendingReplayCaptures(input: Record<string, unknown>): Promise<unknown> {
+      if (!operationsEndpoint) {
+        return {
+          policySetDigest: String(input.policySetDigest ?? ""),
+          captureCount: 0,
+          pendingCount: 0,
+          pending: [],
+        };
+      }
+      const url = new URL(operationsEndpoint);
+      if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
+        throw new Error("pending replay captures require a loopback operations boundary");
+      return requestPrivate("capture/replay-pending", {
+        method: "POST",
+        body: sanitizeOperatorBody(input),
+      });
+    },
+    async recordReplayDisposition(input: Record<string, unknown>): Promise<unknown> {
+      if (!operationsEndpoint) return { recorded: false };
+      const url = new URL(operationsEndpoint);
+      if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
+        throw new Error("replay disposition requires a loopback operations boundary");
+      return requestPrivate("capture/replay-disposition", {
+        method: "POST",
+        body: sanitizeOperatorBody(input),
+      });
+    },
+    async listReplayDispositions(input: Record<string, unknown>): Promise<unknown> {
+      if (!operationsEndpoint) return { rows: [], cursor: null };
+      const url = new URL(operationsEndpoint);
+      if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
+        throw new Error("replay disposition listing requires a loopback operations boundary");
+      return requestPrivate("capture/replay-dispositions", {
+        method: "POST",
+        body: sanitizeOperatorBody(input),
+      });
+    },
+    async readLearningSummary(): Promise<unknown> {
+      if (!operationsEndpoint) {
+        return {
+          schemaVersion: "run97.learning-summary.v1",
+          evaluation: { jobs: 0, trials: 0, trialScores: 0, comparisonGroups: 0 },
+          learning: { trajectorySignalReports: 0, knowledgeCandidates: 0 },
+          scannedStores: 0,
+        };
+      }
+      const url = new URL(operationsEndpoint);
+      if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
+        throw new Error("learning summary requires a loopback operations boundary");
+      return requestPrivate("learning/summary", { method: "POST", body: {} });
     },
     async listRecommendations(): Promise<readonly RecommendationRecord[]> {
       return (await readState(statePath)).recommendations ?? [];
@@ -2295,4 +2953,5 @@ export function createTrackBOperations({
       return (await readState(statePath)).activePack ?? null;
     },
   };
+  return operations;
 }

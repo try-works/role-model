@@ -23,7 +23,10 @@ export interface ObservedPerformanceSample {
   latency_ms: number;
   latency_ms_p95?: number;
   tokens_per_sec?: number;
-  judge_score?: number;
+  judge_score?: number | null;
+  /** Run 98 addendum 32 S4: why a sample carries no judge score (e.g. `judge_unavailable`). */
+  missing_reason?: string;
+  grading_method?: string;
   cost_per_1k_tokens_est?: number;
   failure?: boolean;
   error_class?: string;

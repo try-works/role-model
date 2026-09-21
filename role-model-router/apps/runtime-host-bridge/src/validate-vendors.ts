@@ -143,6 +143,36 @@ async function waitForRuntimeModelEndpointsReady(
   throw new Error(`Timed out waiting for runtime endpoints for models: ${modelIds.join(", ")}.`);
 }
 
+/**
+ * The validation harness asserts that a direct request's observation carries the runtime-state observed profile
+ * and its measured metrics. A profile is written from the usage event of the requests that ran before it, so
+ * the harness waits until that profile is visible: without the wait the third request can be routed before the
+ * first two requests' samples are readable and the observation legitimately reports `source: "none"`.
+ *
+ * The wait is bounded — a profile that never lands leaves the assertion to report what was actually seen.
+ */
+async function waitForRuntimeEndpointProfile(
+  backend: Pick<RuntimeBridgeBackend, "readEndpointProfile">,
+  endpointId: string,
+  timeoutMs = 15_000,
+): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const profile = (await backend.readEndpointProfile(endpointId)) as
+      | { readonly sample_size?: unknown }
+      | null
+      | undefined;
+    if (
+      typeof profile?.sample_size === "number" &&
+      Number.isFinite(profile.sample_size) &&
+      profile.sample_size > 0
+    ) {
+      return;
+    }
+    await delay(250);
+  }
+}
+
 function readSelectedModelId(observation: RuntimeVendorObservation): string | null {
   const telemetrySnapshot = observation?.telemetrySnapshot as
     | { selectedModelId?: unknown }
@@ -1837,6 +1867,10 @@ export async function runRuntimeVendorValidation(options: {
           plan.localModelId,
           "req-runtime-vendor-local-stream",
         );
+        await waitForRuntimeEndpointProfile(
+          localRuntime.backend,
+          deriveLocalEndpointId(plan.localModelId),
+        );
         const localDirect = await localRuntime.backend.executeResponses(
           {
             model: plan.localModelId,
@@ -1863,6 +1897,10 @@ export async function runRuntimeVendorValidation(options: {
             remoteRuntime.backend,
             plan.remoteModelId,
             "req-runtime-vendor-remote-stream",
+          );
+          await waitForRuntimeEndpointProfile(
+            remoteRuntime.backend,
+            deriveRemoteEndpointId(plan.remoteModelId),
           );
           const remoteDirect = await remoteRuntime.backend.executeResponses(
             {

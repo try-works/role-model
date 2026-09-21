@@ -1,0 +1,1792 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://role-model.dev/schemas/track-b-storage-contracts.v2.json",
+  "title": "role-model Direct Track B storage contracts",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/contentArtifact"
+    },
+    {
+      "$ref": "#/$defs/contentReference"
+    },
+    {
+      "$ref": "#/$defs/graphNode"
+    },
+    {
+      "$ref": "#/$defs/graphEdge"
+    },
+    {
+      "$ref": "#/$defs/graphLease"
+    },
+    {
+      "$ref": "#/$defs/reachabilitySnapshot"
+    },
+    {
+      "$ref": "#/$defs/deletionTombstone"
+    },
+    {
+      "$ref": "#/$defs/garbageCollectionReceipt"
+    },
+    {
+      "$ref": "#/$defs/performanceSample"
+    },
+    {
+      "$ref": "#/$defs/performanceRollup"
+    },
+    {
+      "$ref": "#/$defs/captureDegradationReceipt"
+    },
+    {
+      "$ref": "#/$defs/migrationJournal"
+    },
+    {
+      "$ref": "#/$defs/pruningReceipt"
+    },
+    {
+      "$ref": "#/$defs/externalArchiveManifest"
+    },
+    {
+      "$ref": "#/$defs/archiveRestoreReceipt"
+    }
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "idSet": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 10000,
+      "items": {
+        "$ref": "#/$defs/id"
+      }
+    },
+    "boundedLabels": {
+      "type": "object",
+      "maxProperties": 16,
+      "propertyNames": {
+        "pattern": "^[a-z][a-zA-Z0-9_.-]{0,63}$"
+      },
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "string",
+            "maxLength": 512
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "contentDigest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["digest", "algorithm", "scope", "scopeId"],
+      "properties": {
+        "digest": {
+          "type": "string",
+          "minLength": 32,
+          "maxLength": 256
+        },
+        "algorithm": {
+          "enum": ["sha256", "blake3", "hmac-sha256", "hmac-blake3"]
+        },
+        "scope": {
+          "enum": [
+            "global_public",
+            "user_local",
+            "workspace",
+            "repo",
+            "provider",
+            "managed_policy_scope"
+          ]
+        },
+        "scopeId": {
+          "$ref": "#/$defs/id"
+        },
+        "keyRef": {
+          "$ref": "#/$defs/id"
+        },
+        "portableExportDigest": {
+          "type": "string",
+          "minLength": 32,
+          "maxLength": 256
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "scope": {
+                "const": "global_public"
+              }
+            },
+            "required": ["scope"]
+          },
+          "then": {
+            "properties": {
+              "algorithm": {
+                "enum": ["sha256", "blake3"]
+              }
+            },
+            "not": {
+              "required": ["keyRef"]
+            }
+          },
+          "else": {
+            "required": ["keyRef"],
+            "properties": {
+              "algorithm": {
+                "enum": ["hmac-sha256", "hmac-blake3"]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "encryption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "dedupeAllowedUnderEncryption"],
+      "properties": {
+        "mode": {
+          "enum": ["none", "per_artifact", "per_scope"]
+        },
+        "keyRef": {
+          "$ref": "#/$defs/id"
+        },
+        "dedupeAllowedUnderEncryption": {
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "none"
+              }
+            },
+            "required": ["mode"]
+          },
+          "then": {
+            "properties": {
+              "dedupeAllowedUnderEncryption": {
+                "const": false
+              }
+            },
+            "not": {
+              "required": ["keyRef"]
+            }
+          },
+          "else": {
+            "required": ["keyRef"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "per_artifact"
+              }
+            },
+            "required": ["mode"]
+          },
+          "then": {
+            "properties": {
+              "dedupeAllowedUnderEncryption": {
+                "const": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "storageLocator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["backendId", "trustedRootId", "objectKey", "scopeId", "generation", "immutable"],
+      "properties": {
+        "backendId": {
+          "enum": [
+            "local_artifact_fs",
+            "external_archive_r2",
+            "external_archive_s3",
+            "custom_registered"
+          ]
+        },
+        "trustedRootId": {
+          "$ref": "#/$defs/id"
+        },
+        "objectKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^(?![A-Za-z][A-Za-z0-9+.-]*:)(?![\\\\/])(?!.*(?:^|[\\\\/])\\.\\.(?:[\\\\/]|$))[A-Za-z0-9._/=-]+$"
+        },
+        "scopeId": {
+          "$ref": "#/$defs/id"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "immutable": {
+          "const": true
+        }
+      }
+    },
+    "contentArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "artifactId",
+        "digest",
+        "mimeType",
+        "byteSize",
+        "compression",
+        "encryption",
+        "storageLocator",
+        "createdAt",
+        "runtimeChannel",
+        "scopeId",
+        "boundaryProtocolVersion"
+      ],
+      "properties": {
+        "contract": {
+          "const": "ContentArtifactV2"
+        },
+        "artifactId": {
+          "$ref": "#/$defs/id"
+        },
+        "digest": {
+          "$ref": "#/$defs/contentDigest"
+        },
+        "mimeType": {
+          "type": "string",
+          "pattern": "^[a-z0-9.+-]+/[a-zA-Z0-9.+-]+$",
+          "maxLength": 128
+        },
+        "byteSize": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1099511627776
+        },
+        "compression": {
+          "enum": ["none", "zstd"]
+        },
+        "encryption": {
+          "$ref": "#/$defs/encryption"
+        },
+        "storageLocator": {
+          "$ref": "#/$defs/storageLocator"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runtimeChannel": {
+          "enum": ["production", "stage", "development"]
+        },
+        "scopeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "boundaryProtocolVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+$"
+        }
+      }
+    },
+    "contentReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "referenceId",
+        "artifactId",
+        "ownerNodeId",
+        "scopeId",
+        "retentionPolicyId",
+        "redactionStatus",
+        "state",
+        "createdAt"
+      ],
+      "properties": {
+        "contract": {
+          "const": "ContentReferenceV1"
+        },
+        "referenceId": {
+          "$ref": "#/$defs/id"
+        },
+        "artifactId": {
+          "$ref": "#/$defs/id"
+        },
+        "ownerNodeId": {
+          "$ref": "#/$defs/id"
+        },
+        "scopeId": {
+          "$ref": "#/$defs/id"
+        },
+        "retentionPolicyId": {
+          "$ref": "#/$defs/id"
+        },
+        "privacyReceiptId": {
+          "$ref": "#/$defs/id"
+        },
+        "redactionReceiptId": {
+          "$ref": "#/$defs/id"
+        },
+        "redactionStatus": {
+          "enum": ["raw", "redacted", "safe_for_prompt", "blocked"]
+        },
+        "state": {
+          "enum": ["active", "externalized", "released", "tombstoned"]
+        },
+        "legalHold": {
+          "type": "boolean"
+        },
+        "managedPolicyLock": {
+          "type": "boolean"
+        },
+        "leaseIds": {
+          "$ref": "#/$defs/idSet"
+        },
+        "retainUntil": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "releasedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "messagePayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "contentPartReferenceIds", "providerGenerated", "sampled"],
+      "properties": {
+        "role": {
+          "enum": ["system", "developer", "user", "assistant", "tool", "observer"]
+        },
+        "contentPartReferenceIds": {
+          "$ref": "#/$defs/idSet"
+        },
+        "toolCallNodeIds": {
+          "$ref": "#/$defs/idSet"
+        },
+        "providerGenerated": {
+          "type": "boolean"
+        },
+        "sampled": {
+          "type": "boolean"
+        },
+        "finishReason": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "usageRef": {
+          "$ref": "#/$defs/id"
+        }
+      }
+    },
+    "toolCallPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["callId", "toolName", "argumentsReferenceId"],
+      "properties": {
+        "callId": {
+          "$ref": "#/$defs/id"
+        },
+        "toolName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "argumentsReferenceId": {
+          "$ref": "#/$defs/id"
+        },
+        "toolClassId": {
+          "$ref": "#/$defs/id"
+        }
+      }
+    },
+    "toolResultPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["callId", "resultReferenceIds", "status"],
+      "properties": {
+        "callId": {
+          "$ref": "#/$defs/id"
+        },
+        "resultReferenceIds": {
+          "$ref": "#/$defs/idSet"
+        },
+        "status": {
+          "enum": ["ok", "error", "cancelled", "timeout"]
+        },
+        "errorClass": {
+          "type": "string",
+          "maxLength": 128
+        }
+      }
+    },
+    "providerEventPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["providerId", "endpointId", "modelId", "direction", "bodyCaptured"],
+      "properties": {
+        "providerId": {
+          "$ref": "#/$defs/id"
+        },
+        "endpointId": {
+          "$ref": "#/$defs/id"
+        },
+        "modelId": {
+          "$ref": "#/$defs/id"
+        },
+        "modelRevision": {
+          "$ref": "#/$defs/id"
+        },
+        "direction": {
+          "enum": ["request", "response"]
+        },
+        "bodyCaptured": {
+          "type": "boolean"
+        },
+        "bodyReferenceId": {
+          "$ref": "#/$defs/id"
+        },
+        "status": {
+          "enum": ["ok", "error", "timeout", "cancelled"]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "bodyCaptured": {
+                "const": true
+              }
+            },
+            "required": ["bodyCaptured"]
+          },
+          "then": {
+            "required": ["bodyReferenceId"]
+          },
+          "else": {
+            "not": {
+              "required": ["bodyReferenceId"]
+            }
+          }
+        }
+      ]
+    },
+    "artifactPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["referenceIds", "artifactClass"],
+      "properties": {
+        "referenceIds": {
+          "$ref": "#/$defs/idSet"
+        },
+        "artifactClass": {
+          "enum": [
+            "file",
+            "token_array",
+            "logprobs",
+            "screenshot",
+            "summary",
+            "experience",
+            "eval_output",
+            "export_manifest"
+          ]
+        },
+        "labels": {
+          "$ref": "#/$defs/boundedLabels"
+        }
+      }
+    },
+    "graphNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "nodeId",
+        "schemaVersion",
+        "scopeId",
+        "kind",
+        "payload",
+        "retentionState",
+        "createdAt",
+        "runtimeChannel",
+        "boundaryProtocolVersion"
+      ],
+      "properties": {
+        "contract": {
+          "const": "ArtifactGraphNodeV2"
+        },
+        "nodeId": {
+          "$ref": "#/$defs/id"
+        },
+        "schemaVersion": {
+          "const": "2.0.0"
+        },
+        "scopeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "message",
+            "tool_call",
+            "tool_result",
+            "provider_request",
+            "provider_response",
+            "file",
+            "token_array",
+            "logprobs",
+            "screenshot",
+            "summary",
+            "experience",
+            "eval_output",
+            "export_manifest"
+          ]
+        },
+        "payload": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/messagePayload"
+            },
+            {
+              "$ref": "#/$defs/toolCallPayload"
+            },
+            {
+              "$ref": "#/$defs/toolResultPayload"
+            },
+            {
+              "$ref": "#/$defs/providerEventPayload"
+            },
+            {
+              "$ref": "#/$defs/artifactPayload"
+            }
+          ]
+        },
+        "labels": {
+          "$ref": "#/$defs/boundedLabels"
+        },
+        "retentionState": {
+          "enum": [
+            "full_content_available",
+            "redacted_content_available",
+            "summary_only",
+            "metadata_only",
+            "deleted_with_receipt",
+            "externalized"
+          ]
+        },
+        "sourceObservationId": {
+          "$ref": "#/$defs/id"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runtimeChannel": {
+          "enum": ["production", "stage", "development"]
+        },
+        "boundaryProtocolVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+$"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "message"
+              }
+            },
+            "required": ["kind"]
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "$ref": "#/$defs/messagePayload"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "tool_call"
+              }
+            },
+            "required": ["kind"]
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "$ref": "#/$defs/toolCallPayload"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "tool_result"
+              }
+            },
+            "required": ["kind"]
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "$ref": "#/$defs/toolResultPayload"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": ["provider_request", "provider_response"]
+              }
+            },
+            "required": ["kind"]
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "$ref": "#/$defs/providerEventPayload"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "file",
+                  "token_array",
+                  "logprobs",
+                  "screenshot",
+                  "summary",
+                  "experience",
+                  "eval_output",
+                  "export_manifest"
+                ]
+              }
+            },
+            "required": ["kind"]
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "$ref": "#/$defs/artifactPayload"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "graphEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "edgeId",
+        "scopeId",
+        "sourceNodeId",
+        "targetNodeId",
+        "edgeType",
+        "orderingIndex",
+        "createdAt",
+        "runtimeChannel",
+        "boundaryProtocolVersion"
+      ],
+      "properties": {
+        "contract": {
+          "const": "ArtifactGraphEdgeV2"
+        },
+        "edgeId": {
+          "$ref": "#/$defs/id"
+        },
+        "scopeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceNodeId": {
+          "$ref": "#/$defs/id"
+        },
+        "targetNodeId": {
+          "$ref": "#/$defs/id"
+        },
+        "edgeType": {
+          "enum": [
+            "next_message",
+            "tool_call",
+            "tool_result",
+            "provider_request",
+            "provider_response",
+            "replay_branch",
+            "counterfactual_branch",
+            "compaction",
+            "subagent_spawn",
+            "subagent_return",
+            "derived_from",
+            "summarizes",
+            "supports_experience",
+            "redacted_as",
+            "exported_as"
+          ]
+        },
+        "orderingIndex": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "branchId": {
+          "$ref": "#/$defs/id"
+        },
+        "replayId": {
+          "$ref": "#/$defs/id"
+        },
+        "sourceObservationId": {
+          "$ref": "#/$defs/id"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runtimeChannel": {
+          "enum": ["production", "stage", "development"]
+        },
+        "boundaryProtocolVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+$"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "edgeType": {
+                "enum": [
+                  "replay_branch",
+                  "counterfactual_branch",
+                  "subagent_spawn",
+                  "subagent_return"
+                ]
+              }
+            },
+            "required": ["edgeType"]
+          },
+          "then": {
+            "required": ["branchId"]
+          }
+        }
+      ]
+    },
+    "graphLease": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "leaseId",
+        "scopeId",
+        "holder",
+        "resourceType",
+        "resourceId",
+        "purpose",
+        "state",
+        "issuedAt",
+        "expiresAt"
+      ],
+      "properties": {
+        "contract": {
+          "const": "GraphLeaseV1"
+        },
+        "leaseId": {
+          "$ref": "#/$defs/id"
+        },
+        "scopeId": {
+          "$ref": "#/$defs/id"
+        },
+        "holder": {
+          "$ref": "#/$defs/id"
+        },
+        "resourceType": {
+          "enum": ["artifact", "reference", "node", "projection", "archive"]
+        },
+        "resourceId": {
+          "$ref": "#/$defs/id"
+        },
+        "purpose": {
+          "enum": [
+            "write",
+            "projection",
+            "replay",
+            "evaluation",
+            "profile_consume",
+            "export",
+            "prune",
+            "archive",
+            "restore"
+          ]
+        },
+        "state": {
+          "enum": ["active", "released", "expired", "revoked"]
+        },
+        "issuedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "releasedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "reachabilitySnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "snapshotId",
+        "scopeId",
+        "rootManifestRef",
+        "reachableManifestRef",
+        "activeLeaseManifestRef",
+        "cursor",
+        "createdAt"
+      ],
+      "properties": {
+        "contract": {
+          "const": "ReachabilitySnapshotV1"
+        },
+        "snapshotId": {
+          "$ref": "#/$defs/id"
+        },
+        "scopeId": {
+          "$ref": "#/$defs/id"
+        },
+        "rootManifestRef": {
+          "$ref": "#/$defs/id"
+        },
+        "reachableManifestRef": {
+          "$ref": "#/$defs/id"
+        },
+        "activeLeaseManifestRef": {
+          "$ref": "#/$defs/id"
+        },
+        "cursor": {
+          "$ref": "#/$defs/id"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "deletionTombstone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "tombstoneId",
+        "scopeId",
+        "resourceType",
+        "resourceId",
+        "reason",
+        "policyId",
+        "deletedAt"
+      ],
+      "properties": {
+        "contract": {
+          "const": "DeletionTombstoneV1"
+        },
+        "tombstoneId": {
+          "$ref": "#/$defs/id"
+        },
+        "scopeId": {
+          "$ref": "#/$defs/id"
+        },
+        "resourceType": {
+          "enum": ["artifact", "reference", "node", "edge", "projection", "archive"]
+        },
+        "resourceId": {
+          "$ref": "#/$defs/id"
+        },
+        "reason": {
+          "enum": [
+            "retention_expired",
+            "user_delete",
+            "policy_delete",
+            "redaction_replaced",
+            "corrupt",
+            "migration_cleanup"
+          ]
+        },
+        "policyId": {
+          "$ref": "#/$defs/id"
+        },
+        "replacementResourceId": {
+          "$ref": "#/$defs/id"
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "garbageCollectionReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "receiptId",
+        "scopeId",
+        "reachabilitySnapshotId",
+        "status",
+        "scannedCount",
+        "deletedCount",
+        "retainedCount",
+        "tombstoneManifestRef",
+        "startedAt",
+        "completedAt"
+      ],
+      "properties": {
+        "contract": {
+          "const": "GarbageCollectionReceiptV1"
+        },
+        "receiptId": {
+          "$ref": "#/$defs/id"
+        },
+        "scopeId": {
+          "$ref": "#/$defs/id"
+        },
+        "reachabilitySnapshotId": {
+          "$ref": "#/$defs/id"
+        },
+        "status": {
+          "enum": ["succeeded", "partial", "failed"]
+        },
+        "scannedCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "deletedCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "retainedCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blockedManifestRef": {
+          "$ref": "#/$defs/id"
+        },
+        "tombstoneManifestRef": {
+          "$ref": "#/$defs/id"
+        },
+        "errorManifestRef": {
+          "$ref": "#/$defs/id"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "routePackage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["packageId", "endpointId", "modelId", "samplingProfileId"],
+      "properties": {
+        "packageId": {
+          "$ref": "#/$defs/id"
+        },
+        "endpointId": {
+          "$ref": "#/$defs/id"
+        },
+        "modelId": {
+          "$ref": "#/$defs/id"
+        },
+        "modelRevision": {
+          "$ref": "#/$defs/id"
+        },
+        "promptAdapterId": {
+          "$ref": "#/$defs/id"
+        },
+        "toolPolicyId": {
+          "$ref": "#/$defs/id"
+        },
+        "experiencePackId": {
+          "$ref": "#/$defs/id"
+        },
+        "samplingProfileId": {
+          "$ref": "#/$defs/id"
+        }
+      }
+    },
+    "performanceSample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "sampleId",
+        "observedAt",
+        "observationId",
+        "routeDecisionId",
+        "routerPolicyVersion",
+        "routePackage",
+        "selectionProbability",
+        "selectionMode",
+        "outcome",
+        "latencyMs",
+        "evidenceStrength"
+      ],
+      "properties": {
+        "contract": {
+          "const": "PerformanceSampleV2"
+        },
+        "sampleId": {
+          "$ref": "#/$defs/id"
+        },
+        "observedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "observationId": {
+          "$ref": "#/$defs/id"
+        },
+        "routeDecisionId": {
+          "$ref": "#/$defs/id"
+        },
+        "routerPolicyVersion": {
+          "$ref": "#/$defs/id"
+        },
+        "candidateSnapshotRef": {
+          "$ref": "#/$defs/id"
+        },
+        "routePackage": {
+          "$ref": "#/$defs/routePackage"
+        },
+        "selectionProbability": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "selectionMode": {
+          "enum": [
+            "policy_deterministic",
+            "policy_randomized",
+            "controlled_exploration",
+            "manual",
+            "replay_counterfactual"
+          ]
+        },
+        "taskBucket": {
+          "$ref": "#/$defs/id"
+        },
+        "taxonomyVersion": {
+          "$ref": "#/$defs/id"
+        },
+        "outcome": {
+          "enum": ["success", "failure", "timeout", "cancelled", "unknown"]
+        },
+        "qualityScore": {
+          "type": "number"
+        },
+        "qualityVariance": {
+          "type": "number",
+          "minimum": 0
+        },
+        "evidenceStrength": {
+          "enum": [
+            "passive_signal",
+            "explicit_feedback",
+            "deterministic_outcome",
+            "benchmark",
+            "scorer",
+            "pairwise_comparison",
+            "counterfactual_replay"
+          ]
+        },
+        "scorerSetVersion": {
+          "$ref": "#/$defs/id"
+        },
+        "evidenceRef": {
+          "$ref": "#/$defs/id"
+        },
+        "latencyMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "costUsd": {
+          "type": "number",
+          "minimum": 0
+        },
+        "inputTokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "outputTokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cacheHit": {
+          "type": "boolean"
+        },
+        "errorClass": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "traceProjectionId": {
+          "$ref": "#/$defs/id"
+        },
+        "tombstoneId": {
+          "$ref": "#/$defs/id"
+        }
+      }
+    },
+    "histogram": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "unit", "binEdges", "counts"],
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "unit": {
+          "enum": ["milliseconds", "micro_usd", "tokens", "ratio", "count"]
+        },
+        "binEdges": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "type": "number"
+          }
+        },
+        "counts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 257,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "performanceRollup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "rollupId",
+        "window",
+        "bucketStart",
+        "bucketEnd",
+        "dimensions",
+        "sampleCount",
+        "effectiveSampleCount",
+        "selectionWeightSum",
+        "quality",
+        "latencyHistogram",
+        "sourceCursor",
+        "schemaVersion",
+        "provenanceManifestRef"
+      ],
+      "properties": {
+        "contract": {
+          "const": "PerformanceRollupV2"
+        },
+        "rollupId": {
+          "$ref": "#/$defs/id"
+        },
+        "window": {
+          "enum": ["hour", "day", "month"]
+        },
+        "bucketStart": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "bucketEnd": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "dimensions": {
+          "$ref": "#/$defs/boundedLabels"
+        },
+        "sampleCount": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "effectiveSampleCount": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "selectionWeightSum": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "quality": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mean", "variance", "confidenceLower", "confidenceUpper"],
+          "properties": {
+            "mean": {
+              "type": "number"
+            },
+            "variance": {
+              "type": "number",
+              "minimum": 0
+            },
+            "confidenceLower": {
+              "type": "number"
+            },
+            "confidenceUpper": {
+              "type": "number"
+            }
+          }
+        },
+        "latencyHistogram": {
+          "$ref": "#/$defs/histogram"
+        },
+        "costHistogram": {
+          "$ref": "#/$defs/histogram"
+        },
+        "sourceCursor": {
+          "$ref": "#/$defs/id"
+        },
+        "schemaVersion": {
+          "const": "2.0.0"
+        },
+        "provenanceManifestRef": {
+          "$ref": "#/$defs/id"
+        },
+        "tombstoneCount": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "captureDegradationReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "receiptId",
+        "failureStage",
+        "actionTaken",
+        "reasonCode",
+        "routingContinued",
+        "createdAt",
+        "runtimeChannel",
+        "scopeId",
+        "boundaryProtocolVersion"
+      ],
+      "properties": {
+        "contract": {
+          "const": "CaptureDegradationReceiptV1"
+        },
+        "receiptId": {
+          "$ref": "#/$defs/id"
+        },
+        "observationId": {
+          "$ref": "#/$defs/id"
+        },
+        "routeDecisionId": {
+          "$ref": "#/$defs/id"
+        },
+        "failureStage": {
+          "enum": [
+            "runtime_ingress",
+            "artifact_write",
+            "graph_write",
+            "provider_egress",
+            "projection_materialization",
+            "redaction",
+            "retention"
+          ]
+        },
+        "actionTaken": {
+          "enum": [
+            "metadata_only",
+            "queued_for_retry",
+            "dropped_rich_payload",
+            "paused_rich_capture",
+            "disabled_until_user_action"
+          ]
+        },
+        "reasonCode": {
+          "enum": [
+            "disk_full",
+            "queue_full",
+            "sqlite_busy",
+            "artifact_store_unavailable",
+            "encryption_key_unavailable",
+            "redaction_failed",
+            "policy_denied",
+            "unknown"
+          ]
+        },
+        "routingContinued": {
+          "const": true
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runtimeChannel": {
+          "enum": ["production", "stage", "development"]
+        },
+        "scopeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "boundaryProtocolVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+$"
+        }
+      }
+    },
+    "migrationJournal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "migrationId",
+        "state",
+        "authorityState",
+        "activeWriter",
+        "mirrorDeadline",
+        "legacyRemovalTrigger",
+        "sourceCursor",
+        "sourceHoldUntil",
+        "parity",
+        "rollbackTarget",
+        "receiptIds",
+        "updatedAt",
+        "runtimeChannel",
+        "scopeId",
+        "boundaryProtocolVersion"
+      ],
+      "properties": {
+        "contract": {
+          "const": "LegacyMigrationJournalV1"
+        },
+        "migrationId": {
+          "$ref": "#/$defs/id"
+        },
+        "state": {
+          "enum": [
+            "audit",
+            "schema_ready",
+            "shadow_write",
+            "backfill",
+            "dual_read",
+            "parity_check",
+            "cutover_ready",
+            "cutover",
+            "source_hold",
+            "source_delete_ready",
+            "source_deleted",
+            "rolled_back",
+            "failed"
+          ]
+        },
+        "authorityState": {
+          "enum": [
+            "legacy_authoritative",
+            "graph_shadow_mirror",
+            "parity_verified",
+            "graph_authoritative",
+            "legacy_read_hold",
+            "legacy_removed"
+          ]
+        },
+        "activeWriter": {
+          "enum": ["legacy_sqlite", "artifact_graph"]
+        },
+        "mirrorDeadline": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "legacyRemovalTrigger": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "sourceCursor": {
+          "$ref": "#/$defs/id"
+        },
+        "sourceHoldUntil": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "parity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sourceRows", "targetRows", "sourceHash", "targetHash", "passed"],
+          "properties": {
+            "sourceRows": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "targetRows": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "sourceHash": {
+              "type": "string",
+              "minLength": 32
+            },
+            "targetHash": {
+              "type": "string",
+              "minLength": 32
+            },
+            "passed": {
+              "type": "boolean"
+            }
+          }
+        },
+        "rollbackTarget": {
+          "$ref": "#/$defs/id"
+        },
+        "receiptIds": {
+          "$ref": "#/$defs/idSet"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runtimeChannel": {
+          "enum": ["production", "stage", "development"]
+        },
+        "scopeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "boundaryProtocolVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+$"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "authorityState": {
+                "enum": ["legacy_authoritative", "graph_shadow_mirror", "parity_verified"]
+              }
+            },
+            "required": ["authorityState"]
+          },
+          "then": {
+            "properties": {
+              "activeWriter": { "const": "legacy_sqlite" }
+            }
+          },
+          "else": {
+            "properties": {
+              "activeWriter": { "const": "artifact_graph" }
+            }
+          }
+        }
+      ]
+    },
+    "pruningReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "receiptId",
+        "jobId",
+        "mode",
+        "status",
+        "triggeredBy",
+        "policyId",
+        "policyHash",
+        "beforeBytes",
+        "afterBytes",
+        "affectedCounts",
+        "affectedManifestRef",
+        "capabilityChangeManifestRef",
+        "startedAt",
+        "completedAt",
+        "runtimeChannel",
+        "scopeId",
+        "boundaryProtocolVersion"
+      ],
+      "properties": {
+        "contract": {
+          "const": "PruningReceiptV2"
+        },
+        "receiptId": {
+          "$ref": "#/$defs/id"
+        },
+        "jobId": {
+          "$ref": "#/$defs/id"
+        },
+        "mode": {
+          "enum": ["estimate", "execute"]
+        },
+        "status": {
+          "enum": ["succeeded", "partial", "failed", "cancelled"]
+        },
+        "triggeredBy": {
+          "enum": ["user", "scheduled_policy", "storage_budget", "migration"]
+        },
+        "policyId": {
+          "$ref": "#/$defs/id"
+        },
+        "policyHash": {
+          "type": "string",
+          "minLength": 32
+        },
+        "beforeBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "afterBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "affectedCounts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["artifacts", "references", "nodes", "edges", "projections"],
+          "properties": {
+            "artifacts": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "references": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "nodes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "edges": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "projections": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "affectedManifestRef": {
+          "$ref": "#/$defs/id"
+        },
+        "capabilityChangeManifestRef": {
+          "$ref": "#/$defs/id"
+        },
+        "conflictManifestRef": {
+          "$ref": "#/$defs/id"
+        },
+        "tombstoneManifestRef": {
+          "$ref": "#/$defs/id"
+        },
+        "errorManifestRef": {
+          "$ref": "#/$defs/id"
+        },
+        "resumeCursor": {
+          "$ref": "#/$defs/id"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runtimeChannel": {
+          "enum": ["production", "stage", "development"]
+        },
+        "scopeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "boundaryProtocolVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+$"
+        }
+      }
+    },
+    "externalArchiveManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "archiveId",
+        "backend",
+        "encryptionKeyRef",
+        "manifestDigest",
+        "artifactManifestRef",
+        "artifactCount",
+        "archivedBytes",
+        "retentionPolicyId",
+        "deleteLocalAfterVerifiedRestore",
+        "createdAt",
+        "runtimeChannel",
+        "scopeId",
+        "boundaryProtocolVersion"
+      ],
+      "properties": {
+        "contract": {
+          "const": "ExternalArchiveManifestV1"
+        },
+        "archiveId": {
+          "$ref": "#/$defs/id"
+        },
+        "backend": {
+          "enum": ["local_disk", "r2", "s3_compatible", "custom"]
+        },
+        "encryptionKeyRef": {
+          "$ref": "#/$defs/id"
+        },
+        "manifestDigest": {
+          "$ref": "#/$defs/contentDigest"
+        },
+        "artifactManifestRef": {
+          "$ref": "#/$defs/id"
+        },
+        "artifactCount": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "archivedBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "retentionPolicyId": {
+          "$ref": "#/$defs/id"
+        },
+        "deleteLocalAfterVerifiedRestore": {
+          "type": "boolean"
+        },
+        "remoteDeleteOnLocalDelete": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runtimeChannel": {
+          "enum": ["production", "stage", "development"]
+        },
+        "scopeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "boundaryProtocolVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+$"
+        }
+      }
+    },
+    "archiveRestoreReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "receiptId",
+        "archiveId",
+        "status",
+        "sampleCount",
+        "verifiedManifestDigest",
+        "startedAt",
+        "completedAt",
+        "runtimeChannel",
+        "scopeId",
+        "boundaryProtocolVersion"
+      ],
+      "properties": {
+        "contract": {
+          "const": "ArchiveRestoreReceiptV1"
+        },
+        "receiptId": {
+          "$ref": "#/$defs/id"
+        },
+        "archiveId": {
+          "$ref": "#/$defs/id"
+        },
+        "status": {
+          "enum": ["passed", "failed"]
+        },
+        "sampleCount": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "verifiedManifestDigest": {
+          "type": "string",
+          "minLength": 32
+        },
+        "errorManifestRef": {
+          "$ref": "#/$defs/id"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runtimeChannel": {
+          "enum": ["production", "stage", "development"]
+        },
+        "scopeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "boundaryProtocolVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+$"
+        }
+      }
+    }
+  }
+}

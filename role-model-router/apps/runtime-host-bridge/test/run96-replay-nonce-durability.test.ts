@@ -100,9 +100,14 @@ test("Run96 replay adapter nonce consumption survives a public-host restart", as
       ),
     ).toBe(true);
 
+    // Run 98 addendum 58 §21: the nonce stays single-use per *dispatch identity*; a restart that
+    // re-presents the same prepared envelope is answered by the durable ledger with the stored
+    // receipt, so the provider dispatch happens exactly once across both hosts.
     const restarted = adapter(root, dispatches);
-    await expect(restarted.authorize({ envelope: firstEnvelope })).rejects.toThrow(/nonce/i);
-    await expect(restarted.dispatch(firstEnvelope, { authorization })).rejects.toThrow(/nonce/i);
+    const resumed = await restarted.authorize({ envelope: firstEnvelope });
+    await expect(
+      restarted.dispatch(firstEnvelope, { authorization: resumed }),
+    ).resolves.toMatchObject({ dispatchReceiptId: "dispatch:nonce-durability" });
     expect(dispatches.count).toBe(1);
   } finally {
     rmSync(root, { recursive: true, force: true });

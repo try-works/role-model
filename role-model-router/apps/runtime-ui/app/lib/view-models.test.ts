@@ -2299,9 +2299,14 @@ describe("telemetry view models", () => {
       },
       { label: "Failures", value: "1", detail: "2 successful requests" },
       {
-        label: "Latency",
+        label: "Provider latency",
         value: "420 ms avg",
-        detail: "880 ms p95 · 420 ms avg",
+        detail: "880 ms p95 · 420 ms avg · provider response headers",
+      },
+      {
+        label: "Client latency",
+        value: "n/a",
+        detail: "Not measured for this window — rows written before the client-latency update",
       },
       {
         label: "Tokens",
