@@ -9305,7 +9305,14 @@ export async function runTrackBShadowPipeline(
       replayRef: replayDigest,
       routePackage: input.routePackage,
       events: input.trajectoryEvents,
-      finalizedEvaluation: persistedEvaluation,
+      /**
+       * Run 98 addendum 58 §30 (live v324): the signals extension refused with `finalized evaluation provenance
+       * required for route-learning signals` because this invoke carried the **raw** readback — the transfer
+       * marker the packaged host answers with — instead of the decoded comparison record. The same raw/decoded
+       * confusion that hid the decoder (§29) also starved the signals step of provenance, so the pipeline took
+       * the R16 non-learning branch on every capture. Pass the record that was actually resolved.
+       */
+      finalizedEvaluation: persistedEvaluationDecoded,
       // R6: the trajectory analyzer requires every reference it consumes to be
       // demonstrably resolved. The host has already resolved all three: the source
       // graph ref comes from the durable capture, the replay digest from the replay
@@ -9315,7 +9322,7 @@ export async function runTrackBShadowPipeline(
       resolvedReferences: {
         graph: [input.sourceGraphRef],
         replay: [replayDigest],
-        evaluation: [String(persistedEvaluation.groupId ?? "")].filter(Boolean),
+        evaluation: [String(durableComparison.groupId ?? "")].filter(Boolean),
       },
     }),
   );
