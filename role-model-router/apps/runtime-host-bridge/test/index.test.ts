@@ -10723,6 +10723,15 @@ describe("runtime-host-bridge", () => {
     expect(
       typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
     ).toBe("function");
+    /**
+     * Run 98 addendum 40 (L3) serves routing preparation from a short-TTL snapshot keyed by the floor of the
+     * routing time, so two requests inside one tick share one profile read. This test asserts that the second
+     * request sees the profile the first one produced, which is the per-request freshness contract: the
+     * documented escape hatch (`ROLE_MODEL_ROUTING_PREP_CACHE_TTL_MS=0`) makes the snapshot a per-request read
+     * for this backend. The previous value is restored before the test ends.
+     */
+    const originalRoutingPrepCacheTtl = process.env.ROLE_MODEL_ROUTING_PREP_CACHE_TTL_MS;
+    process.env.ROLE_MODEL_ROUTING_PREP_CACHE_TTL_MS = "0";
 
     const backend = await (
       bridge as {
@@ -10859,6 +10868,11 @@ describe("runtime-host-bridge", () => {
         },
       },
     });
+    if (originalRoutingPrepCacheTtl === undefined) {
+      process.env.ROLE_MODEL_ROUTING_PREP_CACHE_TTL_MS = undefined;
+    } else {
+      process.env.ROLE_MODEL_ROUTING_PREP_CACHE_TTL_MS = originalRoutingPrepCacheTtl;
+    }
   });
 
   test("persists routing-mode override and rewrite-skipped diagnostics for exact-model runtime-backed chat requests", async () => {
