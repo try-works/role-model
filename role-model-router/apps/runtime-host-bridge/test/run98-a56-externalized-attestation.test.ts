@@ -124,6 +124,33 @@ test("a marker without a resolvable store surfaces the marker, which the refusal
   });
 });
 
+/**
+ * Run 98 addendum 58 §23 (live v317, 09:00Z): the pipeline's own readback of a finalized comparison group
+ * answered the bare marker `{transferState, resultHash, byteLength}` — **no `durableLocator`** — and
+ * `decodeExtensionBusinessResult` required a locator, so the payload that sits in the worker's durable output
+ * store was never read and the group was refused:
+ *
+ *   `durable routing-shadow comparison finalization failed: readback=transferState,resultHash,byteLength`
+ *
+ * The operator readback decoder already resolves a locator-less marker from the same store by hash; the
+ * pipeline readback must resolve it the same way, because the worker wrote the payload and the hash names it.
+ */
+test("a marker without a locator still resolves from the durable output store", async () => {
+  await withStore((stateRoot) => {
+    const payload = JSON.stringify(attestation);
+    const resultHash = `sha256:${createHash("sha256").update(payload).digest("hex")}`;
+    writeOutput(stateRoot, payload, resultHash);
+
+    const resolved = resolveExtensionBusinessAnswer({
+      result: { transferState: "externalized", resultHash, byteLength: payload.length },
+      extensionId: "evaluation-core",
+      scopeId,
+      stateRoot,
+    });
+    expect(resolved).toMatchObject({ schemaVersion: attestation.schemaVersion });
+  });
+});
+
 test("a transport-enveloped answer still unwraps to its payload", async () => {
   const resolved = resolveExtensionBusinessAnswer({
     result: {

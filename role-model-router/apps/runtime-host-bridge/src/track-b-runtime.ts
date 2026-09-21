@@ -6132,17 +6132,42 @@ function decodeExtensionBusinessResult(input: {
       !Array.isArray(record.durableLocator)
         ? (record.durableLocator as Record<string, unknown>)
         : null;
-    if (!locator) return null;
-    try {
-      return readExternalizedExtensionOutput({
-        stateRoot: input.stateRoot,
-        scopeId: input.scopeId,
-        extensionId: input.extensionId,
-        locator,
-      });
-    } catch {
-      return null;
+    if (locator) {
+      try {
+        return readExternalizedExtensionOutput({
+          stateRoot: input.stateRoot,
+          scopeId: input.scopeId,
+          extensionId: input.extensionId,
+          locator,
+        });
+      } catch {
+        return null;
+      }
     }
+    /**
+     * Run 98 addendum 58 §23 (live v317, 09:00Z): the packaged host also answers the *bare* marker —
+     * `{transferState, resultHash, byteLength}` with no `durableLocator` — and requiring a locator made the
+     * pipeline validate the marker as the business record, so a finalized comparison group read back as
+     * `readback=transferState,resultHash,byteLength` and the capture was refused
+     * (`durable routing-shadow comparison finalization failed`). The worker's durable output store is the
+     * authority for the payload either way, and the hash names it, so the same bounded resolution the
+     * operator readback uses is applied here.
+     */
+    const resolvedByHash = decodeExternalizedOperatorReadback({
+      stateRoot: input.stateRoot,
+      scopeId: input.scopeId,
+      value: input.result,
+    });
+    if (
+      resolvedByHash &&
+      typeof resolvedByHash === "object" &&
+      !Array.isArray(resolvedByHash) &&
+      resolvedByHash !== input.result &&
+      (resolvedByHash as Record<string, unknown>).transferState !== "externalized"
+    ) {
+      return resolvedByHash as Record<string, unknown>;
+    }
+    return null;
   }
   // A record that carries its own named payload is authoritative; `businessOutput` is only the
   // payload when the record has nothing else to offer (`{businessOutput, durableLocator}` and the
