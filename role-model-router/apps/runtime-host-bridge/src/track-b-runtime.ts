@@ -8338,6 +8338,20 @@ export async function runTrackBShadowPipeline(
       ) as Record<string, unknown> | undefined) ??
       (trialRows.length === 1 ? (trialRows[0] as Record<string, unknown>) : undefined);
     if (!trial || typeof trial.trialId !== "string" || !trial.trialId) {
+      /**
+       * Addendum 58 §20: this was the segment's silent throw — the pipeline restarted from scratch and neither
+       * the log nor the disposition named it. The bounded shape of what was looked for and what the durable job
+       * holds travels with the error.
+       */
+      pipelinePhase(
+        "materialize-trials-error",
+        `case=${String(caseId)} candidate=${rollout.endpointId} durableTrials=${JSON.stringify(
+          trialRows.map((entry) => ({
+            caseId: (entry as Record<string, unknown>).caseId ?? null,
+            candidateRef: (entry as Record<string, unknown>).candidateRef ?? null,
+          })),
+        ).slice(0, 240)}`,
+      );
       throw new Error("durable routing-shadow trial materialization failed");
     }
     if (trial.status === "scored") {
