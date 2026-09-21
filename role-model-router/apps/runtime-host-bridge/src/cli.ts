@@ -4939,6 +4939,8 @@ export async function main(): Promise<void> {
               return async (request: Readonly<Record<string, unknown>>) => {
                 const judge = await resolveControllerJudge(created, learningPolicySnapshot);
                 const evaluationCompleter = buildSupervisedReplayEvaluationCompleter({
+                  // Addendum 58 §19: the live completion resolves externalized answers under this root too.
+                  contractStateRoot: options.runtimeStateRoot,
                   backend: created,
                   runtime,
                   operations,
@@ -5253,6 +5255,13 @@ export async function main(): Promise<void> {
         readonly currentLedgerReservationId: () => string | null;
         /** Run 98 addendum 33 S2: the judge's measured position consistency, resolved by the caller. */
         readonly judgeConsistency?: Readonly<Record<string, unknown>> | null;
+        /**
+         * Addendum 58 §19: the host runtime state root. The completer's pipeline resolves externalized
+         * extension answers (the comparison readback and the reference attestation) from the worker's
+         * durable-output store, which needs this root; without it a completed comparison came back as the
+         * transfer marker and every resume reported `readback=transferState,resultHash,byteLength`.
+         */
+        readonly contractStateRoot?: string;
       }) => {
         // Run 98 addendum 33 S2: the judge's measured position consistency, straight from the durable
         // ledger, with the operator's floor applied. The completer passes it into the pipeline so the
@@ -5269,6 +5278,7 @@ export async function main(): Promise<void> {
         })();
         return createSupervisedReplayEvaluationCompleter({
           ...(judgeConsistency ? { judgeConsistency } : {}),
+          ...(input.contractStateRoot ? { contractStateRoot: input.contractStateRoot } : {}),
           runtime: input.runtime,
           operations: input.operations,
           requestId: input.requestId,
@@ -5627,6 +5637,9 @@ export async function main(): Promise<void> {
               ? normalizeTrackBSemanticEvaluationCriteria(derivedCriteria.criteria)
               : evaluationCriteria;
             const completer = buildSupervisedReplayEvaluationCompleter({
+              // Addendum 58 §19: the resume sweep finalizes a comparison, so it needs the same durable-output
+              // resolution the live completer does.
+              contractStateRoot: options.runtimeStateRoot,
               backend: created,
               runtime,
               operations,
