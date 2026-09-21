@@ -5938,29 +5938,85 @@ function readExternalizedExtensionOutputByHash(input: {
   readonly scopeId: string;
   readonly extensionId: string;
   readonly resultHash: string;
+  readonly durableLocator?: Readonly<Record<string, unknown>>;
 }): Record<string, unknown> | null {
-  const roots = [
-    path.join(
-      input.stateRoot,
-      input.scopeId,
-      "track-b",
-      "extensions",
-      "workers",
-      input.extensionId,
-    ),
-    path.join(input.stateRoot, input.scopeId, "track-b", "workers", input.extensionId),
+  /**
+   * The packaged worker keys its store by its own formula
+   * (`worker-runtime.mjs`: `outputKey = sha256(extensionId \0 requestId \0 capability \0 resultHash)`), so the
+   * row is addressable from the locator alone even when the answer's `result_hash` column does not equal the
+   * hash the marker carries. The byte length is the integrity check that survives that lookup.
+   */
+  const locator = input.durableLocator ?? null;
+  const locatorKey = (() => {
+    if (!locator) return null;
+    const requestId = typeof locator.requestId === "string" ? locator.requestId : "";
+    const capability = typeof locator.capability === "string" ? locator.capability : "";
+    const extensionId =
+      typeof locator.extensionId === "string" && locator.extensionId
+        ? locator.extensionId
+        : input.extensionId;
+    if (!requestId || !capability) return null;
+    return `sha256:${createHash("sha256")
+      .update(`${extensionId}\u0000${requestId}\u0000${capability}\u0000${input.resultHash}`)
+      .digest("hex")}`;
+  })();
+  const expectedByteLength =
+    typeof locator?.byteLength === "number" && Number.isSafeInteger(locator.byteLength)
+      ? locator.byteLength
+      : null;
+  /**
+   * The packaged host roots each worker under `<journalDir>/workers/<id>`, and the journal dir is the scope's
+   * `track-b/workers` (measured on disk for evaluation-core, knowledge-store, knowledge-worker,
+   * profile-learner, replay-core and trajectory-signals). The extension runtime keeps its own layout beside
+   * it. Both are enumerated — bounded, declared scope first — because a readback that only knew the
+   * extension's own directory is what kept the live comparison readback unresolved.
+   */
+  const workerRoots = [
+    path.join(input.stateRoot, input.scopeId, "track-b", "extensions", "workers"),
+    path.join(input.stateRoot, input.scopeId, "track-b", "workers"),
   ];
-  for (const root of roots) {
-    const databasePath = path.join(root, "durable-output.sqlite");
+  const storePaths: string[] = [];
+  for (const workersRoot of workerRoots) {
+    // The extension's own directory first: it is the common case and keeps the lookup deterministic.
+    storePaths.push(path.join(workersRoot, input.extensionId, "durable-output.sqlite"));
+    let workerIds: string[] = [];
+    try {
+      workerIds = readdirSync(workersRoot);
+    } catch {
+      workerIds = [];
+    }
+    for (const workerId of workerIds.slice(0, 32)) {
+      const candidate = path.join(workersRoot, workerId, "durable-output.sqlite");
+      if (!storePaths.includes(candidate)) storePaths.push(candidate);
+    }
+  }
+  for (const databasePath of storePaths) {
     if (!existsSync(databasePath)) continue;
     let database: DatabaseSync | null = null;
     try {
       database = new DatabaseSync(databasePath, { readOnly: true });
-      const row = database
-        .prepare(
-          "SELECT result_json FROM durable_extension_outputs WHERE result_hash = ? ORDER BY rowid DESC LIMIT 1",
-        )
-        .get(input.resultHash) as { result_json?: string } | undefined;
+      const row =
+        (database
+          .prepare(
+            "SELECT result_json, byte_length FROM durable_extension_outputs WHERE result_hash = ? ORDER BY rowid DESC LIMIT 1",
+          )
+          .get(input.resultHash) as { result_json?: string; byte_length?: number } | undefined) ??
+        (locatorKey
+          ? (database
+              .prepare(
+                "SELECT result_json, byte_length FROM durable_extension_outputs WHERE output_key = ?",
+              )
+              .get(locatorKey) as { result_json?: string; byte_length?: number } | undefined)
+          : undefined);
+      if (
+        row?.result_json &&
+        expectedByteLength !== null &&
+        typeof row.byte_length === "number" &&
+        row.byte_length !== expectedByteLength
+      ) {
+        // A keyed row that disagrees with the marker's own byte length is not this payload.
+        continue;
+      }
       if (row?.result_json) return JSON.parse(row.result_json) as Record<string, unknown>;
     } catch {
       // Keep looking; never invent a value.
@@ -6225,6 +6281,7 @@ function decodeExtensionBusinessResult(input: {
         scopeId: input.scopeId,
         extensionId: input.extensionId,
         resultHash: markerHash,
+        ...(locator ? { durableLocator: locator } : {}),
       });
       if (resolvedByName) return resolvedByName;
     }

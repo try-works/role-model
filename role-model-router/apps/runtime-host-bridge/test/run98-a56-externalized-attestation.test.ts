@@ -52,6 +52,31 @@ const writeOutput = (stateRoot: string, payload: string, resultHash: string) => 
   }
 };
 
+/**
+ * The packaged host's own layout: `<journalDir>/workers/<id>/durable-output.sqlite`, where the journal lives
+ * under the scope's `track-b/workers` root (see `worker-runtime.mjs`'s store bootstrap).
+ */
+const writePackagedHostOutput = (
+  stateRoot: string,
+  outputKey: string,
+  payload: string,
+  resultHash: string,
+) => {
+  const directory = path.join(stateRoot, scopeId, "track-b", "workers", "packaged-extension-host");
+  mkdirSync(directory, { recursive: true });
+  const database = new DatabaseSync(path.join(directory, "durable-output.sqlite"));
+  try {
+    database.exec(
+      "CREATE TABLE IF NOT EXISTS durable_extension_outputs (output_key TEXT PRIMARY KEY, result_json TEXT, result_hash TEXT, byte_length INTEGER)",
+    );
+    database
+      .prepare("INSERT OR REPLACE INTO durable_extension_outputs VALUES (?,?,?,?)")
+      .run(outputKey, payload, resultHash, payload.length);
+  } finally {
+    database.close();
+  }
+};
+
 const attestation = {
   schemaVersion: "role-model.evaluation-reference-attestation.v1",
   authority: "evaluation-reference-store",
@@ -174,6 +199,81 @@ test("a marker whose locator no longer resolves is still resolved by the hash it
         resultHash,
         byteLength: payload.length,
         durableLocator: { outputKey: "locator:stale-key", resultHash },
+      },
+      extensionId: "evaluation-core",
+      scopeId,
+      stateRoot,
+    });
+    expect(resolved).toMatchObject({ schemaVersion: attestation.schemaVersion });
+  });
+});
+
+/**
+ * Run 98 addendum 58 §27 (live v321): the packaged host always answers with a `durableLocator`
+ * (`worker-runtime.mjs`: `return {...inlineBusinessOutput, businessOutput, durableLocator, evidenceRef,
+ * readCapability}`), and it writes the payload into **its own** worker store — `ProcessWorker` roots itself
+ * under `<journalDir>/workers/<id>/durable-output.sqlite`, not under the extension runtime's
+ * `track-b/extensions/workers/<id>/` path. The host's readback therefore has to look in both layouts before
+ * it may give up; resolving only the extension-runtime layout left the live comparison readback as the bare
+ * marker (`comparison-readback keys=transferState,resultHash,byteLength`).
+ */
+test("a locator resolves from the packaged host's worker store as well as the extension layout", async () => {
+  await withStore((stateRoot) => {
+    const payload = JSON.stringify(attestation);
+    const resultHash = `sha256:${createHash("sha256").update(payload).digest("hex")}`;
+    const publishedKey = "sha256:packaged-host-output-key";
+    writePackagedHostOutput(stateRoot, publishedKey, payload, resultHash);
+
+    const resolved = resolveExtensionBusinessAnswer({
+      result: {
+        transferState: "externalized",
+        resultHash,
+        byteLength: payload.length,
+        durableLocator: { outputKey: publishedKey, resultHash },
+      },
+      extensionId: "evaluation-core",
+      scopeId,
+      stateRoot,
+    });
+    expect(resolved).toMatchObject({ schemaVersion: attestation.schemaVersion });
+  });
+});
+
+/**
+ * Run 98 addendum 58 §28: the packaged worker addresses its store by its **own** key formula
+ * (`outputKey = sha256(extensionId \0 requestId \0 capability \0 resultHash)`), and the answer's locator
+ * carries every input to it. When the stored `result_hash` column disagrees with the hash the marker
+ * carries, the key is still the address — and the marker's byte length is the integrity check that has to
+ * agree. Without this the readback can only ever match on an exact hash column, which is what left the live
+ * comparison readback as the bare marker.
+ */
+test("a marker resolves by the packaged host's own output key when the hash column disagrees", async () => {
+  await withStore((stateRoot) => {
+    const payload = JSON.stringify(attestation);
+    const markerHash = `sha256:${createHash("sha256").update(payload).digest("hex")}`;
+    const locator = {
+      extensionId: "evaluation-core",
+      requestId: "request:run98:a56:keyed",
+      capability: "evaluation:read-comparison-group",
+      channel: "stage",
+      scope: scopeId,
+      resultHash: markerHash,
+      byteLength: payload.length,
+    };
+    const outputKey = `sha256:${createHash("sha256")
+      .update(
+        `${locator.extensionId}\u0000${locator.requestId}\u0000${locator.capability}\u0000${markerHash}`,
+      )
+      .digest("hex")}`;
+    // The stored hash column disagrees with the marker's hash; the key and the length are right.
+    writePackagedHostOutput(stateRoot, outputKey, payload, `sha256:${"b".repeat(64)}`);
+
+    const resolved = resolveExtensionBusinessAnswer({
+      result: {
+        transferState: "externalized",
+        resultHash: markerHash,
+        byteLength: payload.length,
+        durableLocator: locator,
       },
       extensionId: "evaluation-core",
       scopeId,
