@@ -39,9 +39,10 @@ export interface DerivedTaxonomyClassification {
     readonly taxonomyVersion: string;
     readonly contentRevision: string;
     readonly classificationContractVersion: string;
-    readonly source: "runtime_heuristic";
-    readonly confidence: number;
-    readonly role: { readonly id: string; readonly hard: false };
+  readonly source: "runtime_heuristic";
+  readonly confidence: number;
+  readonly groupId: string;
+  readonly role: { readonly id: string; readonly hard: false };
     readonly task: { readonly id: string; readonly hard: false };
     readonly capabilities: {
       readonly required: readonly string[];
@@ -478,6 +479,7 @@ export function deriveTaxonomyClassification(
       classificationContractVersion: canonicalTaxonomy.manifest.classificationContractVersion,
       source: "runtime_heuristic",
       confidence,
+      groupId,
       role: { id: resolvedRoleId, hard: false },
       task: { id: taskId, hard: false },
       capabilities: {

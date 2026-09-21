@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 import { canonicalTaxonomy } from "@role-model-router/core";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 
-import { mapChatCompletionsRequest, mapResponsesRequest } from "../src/index.js";
+import { createRoleModelNormalizedIntentObservation, mapChatCompletionsRequest, mapResponsesRequest } from "../src/index.js";
 import { deriveTaxonomyClassification } from "../src/taxonomy-derivation.js";
 
 /**
@@ -113,6 +113,11 @@ describe("run98 addendum 58 — runtime taxonomy derivation", () => {
     expect(taskIds.has(derived.taskTypeId)).toBe(true);
     expect(derived.normalizedIntent.task?.id).toBe(derived.taskTypeId);
     expect(derived.normalizedIntent.role?.id).toBe(derived.roleId);
+    /**
+     * The group dimension is part of the taxonomy identity: `extractTaxonomyDimensions` reads it from
+     * `normalizedIntent.groupId`, so a derivation that omits it leaves `taxonomy_group_id` null on the ledger.
+     */
+    expect(derived.normalizedIntent.groupId).toBe(roleById.get(derived.roleId)?.primaryGroupId);
     expect(derived.normalizedIntent.capabilities?.required).toEqual(
       taskById.get(derived.taskTypeId)?.requiredCapabilities,
     );
@@ -246,6 +251,61 @@ describe("run98 addendum 58 — runtime taxonomy derivation", () => {
     );
     expect(plan.routingRequest.roleModelIntent?.task?.id).toBe("translator.translate");
     expect(plan.routingRequest.taskType).toBe("translator.translate");
+    expect(plan.taxonomyIdentity?.groupId).toBe("communication");
+  });
+
+  test("the normalized-intent observation carries the group dimension for declared and derived identities", () => {
+    const derivedPlan = mapChatCompletionsRequest(
+      registry,
+      {
+        model: "deepseek/deepseek-flash",
+        messages: [{ role: "user", content: "Review this diff for regressions." }],
+      } as never,
+      "req-a58-group-derived",
+    );
+    const derivedObservation = createRoleModelNormalizedIntentObservation(
+      derivedPlan.routingRequest.roleModelIntent,
+      [],
+      canonicalTaxonomy.tasks.map((task) => ({ task_type: task.id })),
+      {
+        effectiveTaskTypeId: derivedPlan.taxonomyIdentity?.taskTypeId ?? null,
+        effectiveRoleId: derivedPlan.taxonomyIdentity?.roleId ?? null,
+      },
+    );
+    expect(derivedObservation.normalizedIntent?.groupId).toBe(
+      canonicalTaxonomy.roles.find((role) => role.id === derivedPlan.taxonomyIdentity?.roleId)
+        ?.primaryGroupId,
+    );
+
+    const declaredPlan = mapChatCompletionsRequest(
+      registry,
+      {
+        model: "deepseek/deepseek-flash",
+        messages: [{ role: "user", content: "Translate this." }],
+        role_model: {
+          contract_version: 1,
+          intent: {
+            taxonomy_version: canonicalTaxonomy.manifest.taxonomyVersion,
+            classification_contract_version:
+              canonicalTaxonomy.manifest.classificationContractVersion,
+            requested_role_id: "translator",
+            task_type: "translator.translate",
+            confidence: 0.9,
+          },
+        },
+      } as never,
+      "req-a58-group-declared",
+    );
+    const declaredObservation = createRoleModelNormalizedIntentObservation(
+      declaredPlan.routingRequest.roleModelIntent,
+      canonicalTaxonomy.roles.map((role) => ({ role_id: role.id })),
+      canonicalTaxonomy.tasks.map((task) => ({ task_type: task.id })),
+      {
+        effectiveTaskTypeId: declaredPlan.taxonomyIdentity?.taskTypeId ?? null,
+        effectiveRoleId: declaredPlan.taxonomyIdentity?.roleId ?? null,
+      },
+    );
+    expect(declaredObservation.normalizedIntent?.groupId).toBe("communication");
   });
 
   test("an image-bearing chat request derives an image modality", () => {

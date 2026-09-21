@@ -7619,6 +7619,7 @@ export function createRoleModelNormalizedIntentObservation(
   }
 
   const knownRoleIds = new Set(roleDefinitions.map((role) => role.role_id));
+  const knownGroupIds = new Set(canonicalTaxonomy.groups.map((group) => group.id));
   const knownTaskTypes = new Set(taskDefinitions.map((task) => task.task_type));
   const knownCapabilities = new Set(
     canonicalTaxonomy.capabilities.map((capability) => capability.id),
@@ -7731,6 +7732,21 @@ export function createRoleModelNormalizedIntentObservation(
     const effectiveRoleId = normalizeRuntimeRoleId(effective.effectiveRoleId.trim());
     if (knownRoleIds.has(effectiveRoleId)) {
       normalizedIntent.role = { id: effectiveRoleId, hard: false };
+    }
+  }
+  /**
+   * Run 98 addendum 58 slice 2: the group dimension travels beside the role so
+   * `extractTaxonomyDimensions` records `taxonomy_group_id` (its source is `normalizedIntent.groupId`)
+   * for declared classifications as well as derived ones. A role id always has a shipped group.
+   */
+  const resolvedRoleId = (normalizedIntent.role as { readonly id?: unknown } | undefined)?.id;
+  const declaredGroupId = (roleModelIntent as { readonly groupId?: unknown }).groupId;
+  if (typeof declaredGroupId === "string" && knownGroupIds.has(declaredGroupId)) {
+    normalizedIntent.groupId = declaredGroupId;
+  } else if (typeof resolvedRoleId === "string") {
+    const resolvedRole = canonicalTaxonomy.roles.find((role) => role.id === resolvedRoleId);
+    if (resolvedRole) {
+      normalizedIntent.groupId = resolvedRole.primaryGroupId;
     }
   }
 
