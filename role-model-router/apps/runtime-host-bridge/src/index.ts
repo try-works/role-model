@@ -135,6 +135,10 @@ import {
 } from "@role-model-router/tool-registry";
 import { deriveRuntimeContributionOutcome } from "./contribution-outcome.js";
 import {
+  type DerivedTaxonomyClassification,
+  deriveTaxonomyClassification,
+} from "./taxonomy-derivation.js";
+import {
   createRoutingPrepCache,
   resolveRoutingPrepCacheTtlMs,
 } from "./routing-prep-cache.js";
@@ -1100,6 +1104,18 @@ export interface BridgeExecutionPlan {
     | "rolePolicy"
     | "capabilityEligibility"
   >;
+  /**
+   * Run 98 addendum 58 slice 2: the taxonomy identity the request was routed under — the declaration when it
+   * named a taxonomy task, the local derivation otherwise. Recorded so the observation, the capture and the
+   * advisory gate all key on the same identity instead of re-deriving or defaulting to `text.chat`.
+   */
+  readonly taxonomyIdentity?: {
+    readonly taskTypeId: string;
+    readonly roleId: string;
+    readonly groupId: string;
+    readonly confidence: number;
+    readonly source: "declared" | "runtime_heuristic";
+  };
 }
 
 interface BridgeDifficultyRoutingContext {
@@ -7578,6 +7594,16 @@ export function createRoleModelNormalizedIntentObservation(
   roleModelIntent: BridgeExecutionPlan["routingRequest"]["roleModelIntent"] | undefined,
   roleDefinitions: readonly Pick<RuntimeRoleDefinitionRecord, "role_id">[],
   taskDefinitions: readonly Pick<RuntimeTaskDefinitionRecord, "task_type">[],
+  /**
+   * Run 98 addendum 58 slice 2: the identity the request was actually routed under when the declaration
+   * itself named something the taxonomy does not have (or named nothing). The declaration stays in
+   * `originalRoleHintId`/`originalTaskType`; these are recorded as the effective taxonomy dimensions so
+   * telemetry, replay and the advisory gate key on a taxonomy entry rather than on a null.
+   */
+  effective?: {
+    readonly effectiveTaskTypeId?: string | null;
+    readonly effectiveRoleId?: string | null;
+  },
 ): {
   readonly normalizedIntent?: Readonly<Record<string, unknown>>;
   readonly diagnostics: readonly {
@@ -7695,6 +7721,18 @@ export function createRoleModelNormalizedIntentObservation(
       ignored("task", roleModelIntent.task.id, Boolean(roleModelIntent.task.hard));
     }
   }
+  if (!normalizedIntent.task && effective?.effectiveTaskTypeId) {
+    const effectiveTaskTypeId = effective.effectiveTaskTypeId.trim();
+    if (knownTaskTypes.has(effectiveTaskTypeId)) {
+      normalizedIntent.task = { id: effectiveTaskTypeId, hard: false };
+    }
+  }
+  if (!normalizedIntent.role && effective?.effectiveRoleId) {
+    const effectiveRoleId = normalizeRuntimeRoleId(effective.effectiveRoleId.trim());
+    if (knownRoleIds.has(effectiveRoleId)) {
+      normalizedIntent.role = { id: effectiveRoleId, hard: false };
+    }
+  }
 
   if (acceptedCapabilities.required.length > 0 || acceptedCapabilities.preferred.length > 0) {
     normalizedIntent.capabilities = {
@@ -7767,6 +7805,7 @@ function buildRequestClassification(input: {
   readonly toolClasses?: readonly string[] | null;
 }): TrackBRouteAdvisoryClassification | null {
   const knownToolClasses = new Set(canonicalTaxonomy.toolClasses.map((toolClass) => toolClass.id));
+  const knownRoleIds = new Set(canonicalTaxonomy.roles.map((role) => role.id));
   const toolClassIds = [
     ...new Set(
       (input.toolClasses ?? []).filter(
@@ -7775,8 +7814,12 @@ function buildRequestClassification(input: {
       ),
     ),
   ];
-  const taskTypeId = boundedRequestClassificationId(input.taskTypeId);
-  const roleId = boundedRequestClassificationId(input.roleId);
+  const declaredTaskTypeId = boundedRequestClassificationId(input.taskTypeId);
+  const knownTaskTypes = new Set(canonicalTaxonomy.tasks.map((task) => task.id));
+  const taskTypeId =
+    declaredTaskTypeId && knownTaskTypes.has(declaredTaskTypeId) ? declaredTaskTypeId : null;
+  const declaredRoleId = boundedRequestClassificationId(input.roleId);
+  const roleId = declaredRoleId && knownRoleIds.has(declaredRoleId) ? declaredRoleId : null;
   const taxonomyVersion = boundedRequestClassificationId(taxonomyManifest.taxonomyVersion);
   const contentRevision = boundedRequestClassificationId(taxonomyManifest.contentRevision);
   const taskTypesHash = boundedRequestClassificationId(taxonomyManifest.contentHashes?.taskTypes);
@@ -9594,6 +9637,195 @@ function readRoleModelIntentFromRequestBody(
   };
 }
 
+/**
+ * Run 98 addendum 58 slice 2: the taxonomy text a request is classified from. The newest messages carry the
+ * intent, so they are read last-first and the result is bounded; no message content leaves the process.
+ */
+function readClassificationText(value: unknown, limit = 8_000): string {
+  const parts: string[] = [];
+  const readContent = (content: unknown): void => {
+    if (typeof content === "string") {
+      parts.push(content);
+      return;
+    }
+    if (!Array.isArray(content)) {
+      return;
+    }
+    for (const part of content) {
+      if (typeof part === "string") {
+        parts.push(part);
+        continue;
+      }
+      if (part && typeof part === "object") {
+        const record = part as Record<string, unknown>;
+        if (typeof record.text === "string") {
+          parts.push(record.text);
+        }
+      }
+    }
+  };
+  if (typeof value === "string") {
+    parts.push(value);
+  } else if (Array.isArray(value)) {
+    for (const entry of value.slice(-6)) {
+      if (entry && typeof entry === "object") {
+        readContent((entry as Record<string, unknown>).content);
+      }
+    }
+  }
+  return parts.join("\n").slice(-limit);
+}
+
+/**
+ * Run 98 addendum 58 slice 2: OpenAI-compatible tool declarations mapped onto the taxonomy's 15 tool
+ * classes. The mapping is conservative — a declaration that names no known tool shape contributes no
+ * tool class rather than a guessed one.
+ */
+export function inferTaxonomyToolClasses(toolNames: readonly string[]): string[] {
+  const toolClasses = new Set<string>();
+  for (const rawName of toolNames) {
+    const name = rawName.toLowerCase();
+    if (/(^|[_\s.-])(shell|bash|zsh|pwsh|powershell|terminal|exec|execute|command|subprocess)([_\s.-]|$)/.test(name)) {
+      toolClasses.add("shell.execute");
+    }
+    if (/(write|edit|patch|apply|create|save|mkdir|rename|delete|remove|move)/.test(name)) {
+      toolClasses.add("filesystem.write");
+    }
+    if (/(read|cat|view|open|list|glob|grep|stat|search_file)/.test(name)) {
+      toolClasses.add("filesystem.read");
+    }
+    if (/(browser|navigate|playwright|puppeteer|screenshot|click)/.test(name)) {
+      toolClasses.add("browser.control");
+    }
+    if (/(web[_\s-]?search|search_web|google|bing|internet)/.test(name)) {
+      toolClasses.add("web.search");
+    }
+    if (/(http|fetch|curl|request|api_call)/.test(name)) {
+      toolClasses.add("http.fetch");
+    }
+    if (/(sql|database|db_query|query_db)/.test(name)) {
+      toolClasses.add("database.query");
+    }
+    if (/(install|npm|pnpm|yarn|pip|apt|brew|package)/.test(name)) {
+      toolClasses.add("package.install");
+    }
+    if (/calendar/.test(name)) {
+      toolClasses.add(/(write|create|update|delete)/.test(name) ? "calendar.write" : "calendar.read");
+    }
+    if (/(email|mail|gmail|outlook)/.test(name)) {
+      toolClasses.add(/(send|write|create)/.test(name) ? "email.write" : "email.read");
+    }
+    if (/memory/.test(name)) {
+      toolClasses.add(/(write|remember|store|save)/.test(name) ? "memory.write" : "memory.read");
+    }
+    if (/(vector|embedding|semantic)/.test(name)) {
+      toolClasses.add("vector.search");
+    }
+  }
+  return [...toolClasses].sort();
+}
+
+function readToolNames(tools: unknown): string[] {
+  if (!Array.isArray(tools)) {
+    return [];
+  }
+  const names: string[] = [];
+  for (const tool of tools) {
+    if (!tool || typeof tool !== "object") {
+      continue;
+    }
+    const record = tool as Record<string, unknown>;
+    if (typeof record.name === "string") {
+      names.push(record.name);
+      continue;
+    }
+    const fn = record.function;
+    if (fn && typeof fn === "object" && typeof (fn as Record<string, unknown>).name === "string") {
+      names.push((fn as Record<string, unknown>).name as string);
+    }
+  }
+  return names;
+}
+
+/** The taxonomy's modality identifiers are a subset of the inference vocabulary; `pdf` is the taxonomy's `document`. */
+const TAXONOMY_MODALITY_ALIASES: Readonly<Record<string, string>> = {
+  pdf: "document",
+  json: "structured_json",
+  audio: "audio",
+  video: "video",
+  image: "image",
+  file: "file",
+  text: "text",
+};
+
+function mapInferredModalitiesToTaxonomy(modalities: readonly string[]): string[] {
+  const mapped = new Set<string>();
+  for (const modality of modalities) {
+    const value = TAXONOMY_MODALITY_ALIASES[modality] ?? modality;
+    mapped.add(value);
+  }
+  if (mapped.size === 0) {
+    mapped.add("text");
+  }
+  return [...mapped].sort();
+}
+
+/**
+ * Run 98 addendum 58 slice 2: the single taxonomy identity a request is routed, captured and evaluated
+ * under. A declaration that names a taxonomy task is authoritative; anything else (no declaration, a
+ * capability name like `text.chat`, an unknown id) falls back to the local derivation. The role follows the
+ * declaration when it names a taxonomy role, otherwise the derivation's role, otherwise the task's own
+ * primary role — never an invented identifier.
+ */
+function buildBridgeTaxonomyIdentity(input: {
+  readonly declaredRoleModelIntent?: BridgeExecutionPlan["routingRequest"]["roleModelIntent"];
+  readonly declaredTaskTypeId?: string;
+  readonly declaredTaskIsTaxonomyTask: boolean;
+  readonly derived?: DerivedTaxonomyClassification;
+}): NonNullable<BridgeExecutionPlan["taxonomyIdentity"]> {
+  const declaredTaskTypeId =
+    input.declaredTaskIsTaxonomyTask && input.declaredTaskTypeId
+      ? input.declaredTaskTypeId
+      : undefined;
+  const derivedTaskTypeId =
+    input.derived?.taskTypeId && canonicalTaxonomy.tasks.some((task) => task.id === input.derived?.taskTypeId)
+      ? input.derived.taskTypeId
+      : undefined;
+  const taskTypeId = declaredTaskTypeId ?? derivedTaskTypeId ?? input.declaredTaskTypeId ?? "text.chat";
+  const task = canonicalTaxonomy.tasks.find((entry) => entry.id === taskTypeId);
+  const declaredRoleId = input.declaredRoleModelIntent?.role?.id;
+  const declaredRoleIsTaxonomyRole =
+    typeof declaredRoleId === "string" &&
+    canonicalTaxonomy.roles.some((role) => role.id === declaredRoleId);
+  const derivedRoleId = input.derived?.roleId;
+  const roleId =
+    (declaredRoleIsTaxonomyRole && declaredRoleId ? declaredRoleId : undefined) ??
+    (derivedRoleId && canonicalTaxonomy.roles.some((role) => role.id === derivedRoleId)
+      ? derivedRoleId
+      : undefined) ??
+    task?.primaryRole ??
+    "writer";
+  const role = canonicalTaxonomy.roles.find((entry) => entry.id === roleId);
+  const confidence = input.declaredTaskIsTaxonomyTask
+    ? Math.min(
+        1,
+        Math.max(
+          0,
+          typeof input.declaredRoleModelIntent?.confidence === "number"
+            ? input.declaredRoleModelIntent.confidence
+            : 1,
+        ),
+      )
+    : (input.derived?.confidence ?? 0.2);
+  return {
+    taskTypeId,
+    roleId,
+    groupId: role?.primaryGroupId ?? input.derived?.groupId ?? "communication",
+    confidence,
+    source: input.declaredTaskIsTaxonomyTask ? "declared" : "runtime_heuristic",
+  };
+}
+
 export function mapChatCompletionsRequest(
   registry: EndpointRegistryResult,
   body: OpenAIChatCompletionsBody,
@@ -9609,9 +9841,38 @@ export function mapChatCompletionsRequest(
 ): BridgeExecutionPlan {
   const contextTokens = estimateContextTokens(body.messages, body.tools?.length ?? 0);
   const reasoning = readChatCompletionsReasoningRequest(body);
-  const roleModelIntent = readRoleModelIntentFromRequestBody(
-    body as unknown as Record<string, unknown>,
-  );
+  const bodyRecord = body as unknown as Record<string, unknown>;
+  const declaredRoleModelIntent = readRoleModelIntentFromRequestBody(bodyRecord);
+  const declaredTaskTypeId = declaredRoleModelIntent?.task?.id;
+  const declaredTaskIsTaxonomyTask =
+    typeof declaredTaskTypeId === "string" &&
+    canonicalTaxonomy.tasks.some((task) => task.id === declaredTaskTypeId);
+  /**
+   * Run 98 addendum 58 slice 2: a request that declares no intent is classified against the shipped
+   * taxonomy here, locally and deterministically, so replay, evaluation, packs and the advisory gate all
+   * see a taxonomy identity instead of `text.chat`/null. A declared intent whose task is not a taxonomy
+   * task type keeps its declaration as metadata but does not become the routing task type; the derivation
+   * supplies the effective identity instead.
+   */
+  const derivedTaxonomyClassification = declaredTaskIsTaxonomyTask
+    ? undefined
+    : (() => {
+        const inference = inferChatCompletionsCapabilityRequirements(bodyRecord);
+        return deriveTaxonomyClassification({
+          text: readClassificationText(bodyRecord.messages),
+          toolClassIds: inferTaxonomyToolClasses(readToolNames(bodyRecord.tools)),
+          modalityIds: mapInferredModalitiesToTaxonomy(inference.requiredInputModalities),
+          outputModalityIds: mapInferredModalitiesToTaxonomy(inference.requiredOutputModalities),
+        });
+      })();
+  const roleModelIntent = declaredRoleModelIntent ?? derivedTaxonomyClassification?.normalizedIntent;
+  const taxonomyIdentity = buildBridgeTaxonomyIdentity({
+    ...(declaredRoleModelIntent ? { declaredRoleModelIntent } : {}),
+    ...(declaredTaskTypeId ? { declaredTaskTypeId } : {}),
+    declaredTaskIsTaxonomyTask,
+    ...(derivedTaxonomyClassification ? { derived: derivedTaxonomyClassification } : {}),
+  });
+  const effectiveTaxonomyTaskTypeId = taxonomyIdentity.taskTypeId;
   const {
     allowEndpoints: modelAllowEndpoints,
     preferredEndpointIds: aliasPreferredEndpointIds,
@@ -9722,13 +9983,13 @@ export function mapChatCompletionsRequest(
        * Run 98 addendum 57 §3.2: a declared intent's task family is the request's family. The routing request
        * used to carry the capability default `text.chat` even when the caller declared one, so the advisory's
        * family gate compared an advisory validated for `coder.review` against `text.chat` and refused it with
-       * `advisory_task_mismatch` — while the same decision recorded `taxonomy_task_type: coder.review`. The
-       * declared family now travels with the request, and requests without an intent keep the old default.
+       * `advisory_task_mismatch` — while the same decision recorded `taxonomy_task_type: coder.review`.
+       *
+       * Run 98 addendum 58 slice 2: a declaration that is not a taxonomy task type is metadata, not the
+       * request's family, and a request that declares nothing is classified against the taxonomy instead of
+       * falling back to the capability name — so every routed request carries a real taxonomy task.
        */
-      taskType:
-        typeof roleModelIntent?.task?.id === "string" && roleModelIntent.task.id.length > 0
-          ? roleModelIntent.task.id
-          : "text.chat",
+      taskType: effectiveTaxonomyTaskTypeId,
       requiredCapabilities: capabilityRequirements.requiredCapabilities,
       preferredCapabilities: [],
       requiredModalities: capabilityRequirements.requiredInputModalities,
@@ -9790,6 +10051,7 @@ export function mapChatCompletionsRequest(
     ...(rolePolicyExecution.routingDiagnostics
       ? { routingDiagnostics: rolePolicyExecution.routingDiagnostics }
       : {}),
+    taxonomyIdentity,
   };
 }
 
@@ -9809,12 +10071,32 @@ export function mapResponsesRequest(
   const messages = toResponsesInputMessages(body.input);
   const contextTokens = estimateContextTokens(messages, body.tools?.length ?? 0);
   const reasoning = readResponsesReasoningRequest(body);
-  const roleModelIntent = readRoleModelIntentFromRequestBody(
-    body as unknown as Record<string, unknown>,
-  );
-  const capabilityRequirements = inferResponsesCapabilityRequirements(
-    body as unknown as Record<string, unknown>,
-  );
+  const responsesBodyRecord = body as unknown as Record<string, unknown>;
+  const declaredRoleModelIntent = readRoleModelIntentFromRequestBody(responsesBodyRecord);
+  const declaredTaskTypeId = declaredRoleModelIntent?.task?.id;
+  const declaredTaskIsTaxonomyTask =
+    typeof declaredTaskTypeId === "string" &&
+    canonicalTaxonomy.tasks.some((task) => task.id === declaredTaskTypeId);
+  const capabilityRequirements = inferResponsesCapabilityRequirements(responsesBodyRecord);
+  /** Run 98 addendum 58 slice 2: the responses path classifies a request that declares no intent (see the chat path). */
+  const derivedTaxonomyClassification = declaredTaskIsTaxonomyTask
+    ? undefined
+    : deriveTaxonomyClassification({
+        text: readClassificationText(responsesBodyRecord.input),
+        toolClassIds: inferTaxonomyToolClasses(readToolNames(responsesBodyRecord.tools)),
+        modalityIds: mapInferredModalitiesToTaxonomy(capabilityRequirements.requiredInputModalities),
+        outputModalityIds: mapInferredModalitiesToTaxonomy(
+          capabilityRequirements.requiredOutputModalities,
+        ),
+      });
+  const roleModelIntent = declaredRoleModelIntent ?? derivedTaxonomyClassification?.normalizedIntent;
+  const taxonomyIdentity = buildBridgeTaxonomyIdentity({
+    ...(declaredRoleModelIntent ? { declaredRoleModelIntent } : {}),
+    ...(declaredTaskTypeId ? { declaredTaskTypeId } : {}),
+    declaredTaskIsTaxonomyTask,
+    ...(derivedTaxonomyClassification ? { derived: derivedTaxonomyClassification } : {}),
+  });
+  const effectiveTaxonomyTaskTypeId = taxonomyIdentity.taskTypeId;
   const {
     allowEndpoints: modelAllowEndpoints,
     preferredEndpointIds: aliasPreferredEndpointIds,
@@ -9922,11 +10204,8 @@ export function mapResponsesRequest(
     routingRequest: {
       requestId,
       ...(roleModelIntent ? { roleModelIntent } : {}),
-      /** Run 98 addendum 57 §3.2: the declared intent's task family is the request's family (see the chat path). */
-      taskType:
-        typeof roleModelIntent?.task?.id === "string" && roleModelIntent.task.id.length > 0
-          ? roleModelIntent.task.id
-          : "text.chat",
+      /** Run 98 addendum 57 §3.2 with addendum 58 slice 2: the effective taxonomy task family (see the chat path). */
+      taskType: effectiveTaxonomyTaskTypeId,
       requiredCapabilities: capabilityRequirements.requiredCapabilities,
       preferredCapabilities: [],
       requiredModalities: capabilityRequirements.requiredInputModalities,
@@ -9993,6 +10272,7 @@ export function mapResponsesRequest(
     ...(rolePolicyExecution.routingDiagnostics
       ? { routingDiagnostics: rolePolicyExecution.routingDiagnostics }
       : {}),
+    taxonomyIdentity,
   };
 }
 
@@ -24932,7 +25212,11 @@ export async function createRuntimeBridgeBackend(
             // classified against rather than by a bare family string.
             classification: buildRequestClassification({
               taskTypeId: plan.routingRequest.taskType ?? null,
-              roleId: plan.routingRequest.requestedRoleId ?? null,
+              roleId:
+                plan.routingRequest.requestedRoleId ??
+                plan.taxonomyIdentity?.roleId ??
+                plan.routingRequest.roleModelIntent?.role?.id ??
+                null,
               toolClasses: plan.routingRequest.roleModelIntent?.toolClasses ?? null,
             }),
             // Run 99 close-out (D6): a live routed answer is the policy's own deterministic choice.
@@ -25877,7 +26161,11 @@ export async function createRuntimeBridgeBackend(
           // capture records the same classification the routed path would have.
           classification: buildRequestClassification({
             taskTypeId: plan.routingRequest.taskType ?? null,
-            roleId: plan.routingRequest.requestedRoleId ?? null,
+            roleId:
+              plan.routingRequest.requestedRoleId ??
+              plan.taxonomyIdentity?.roleId ??
+              plan.routingRequest.roleModelIntent?.role?.id ??
+              null,
             toolClasses: plan.routingRequest.roleModelIntent?.toolClasses ?? null,
           }),
           comparability: { scorerSetVersion: RUN96_ROUTING_SHADOW_SCORER_SET_VERSION },
@@ -26422,6 +26710,11 @@ export async function createRuntimeBridgeBackend(
         plan.routingRequest.roleModelIntent,
         executionSnapshot.roleDefinitions,
         executionSnapshot.taskDefinitions,
+        {
+          effectiveTaskTypeId: plan.taxonomyIdentity?.taskTypeId ?? plan.routingRequest.taskType,
+          effectiveRoleId:
+            plan.taxonomyIdentity?.roleId ?? plan.routingRequest.roleModelIntent?.role?.id ?? null,
+        },
       );
       const reasoningRequested = Boolean(plan.executionRequest.reasoning);
       const syntheticReasoningDeltaCount =
@@ -26696,7 +26989,11 @@ export async function createRuntimeBridgeBackend(
             // family string, so the evidence is keyed by the taxonomy it was classified against.
             classification: buildRequestClassification({
               taskTypeId: plan.routingRequest.taskType ?? null,
-              roleId: plan.routingRequest.requestedRoleId ?? null,
+              roleId:
+                plan.routingRequest.requestedRoleId ??
+                plan.taxonomyIdentity?.roleId ??
+                plan.routingRequest.roleModelIntent?.role?.id ??
+                null,
               toolClasses: plan.routingRequest.roleModelIntent?.toolClasses ?? null,
             }),
             // Run 99 close-out (addendum 21 §4 S33): the comparability key's scorer-set identity is

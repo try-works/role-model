@@ -1755,10 +1755,15 @@ describe("runtime-host-bridge", () => {
       "req-host-001",
     );
 
-    expect(result).toEqual({
+    /**
+     * Run 98 addendum 58 slice 2: a request that declares no taxonomy intent is classified locally, so the
+     * routing request carries a real taxonomy task (`writer.summarize` for this body) instead of the
+     * capability name `text.chat`.
+     */
+    expect(result).toMatchObject({
       routingRequest: {
         requestId: "req-host-001",
-        taskType: "text.chat",
+        taskType: "writer.summarize",
         requiredCapabilities: ["text.chat", "tools.function_calling"],
         preferredCapabilities: [],
         requiredModalities: ["text"],
@@ -1814,6 +1819,13 @@ describe("runtime-host-bridge", () => {
         },
       },
     });
+    expect(result.taxonomyIdentity).toMatchObject({
+      taskTypeId: "writer.summarize",
+      roleId: "writer",
+      groupId: "communication",
+      source: "runtime_heuristic",
+    });
+    expect(result.routingRequest.roleModelIntent?.source).toBe("runtime_heuristic");
   });
 
   test("maps custom alias endpoint preference into the normal routing-model signal", () => {
@@ -2262,9 +2274,13 @@ describe("runtime-host-bridge", () => {
     );
 
     expect(result.routingRequest.requestedRoleId).toBeUndefined();
+    /**
+     * Run 98 addendum 58 slice 2: the unknown declared task stays advisory metadata and the request is
+     * routed under a derived taxonomy task — never under the declaration's non-taxonomy id.
+     */
     expect(result.routingRequest).toEqual(
       expect.objectContaining({
-        taskType: "text.chat",
+        taskType: result.taxonomyIdentity?.taskTypeId,
         requiredCapabilities: expect.not.arrayContaining(["security.analysis"]),
         preferredCapabilities: expect.arrayContaining([
           "security.analysis",
@@ -2274,6 +2290,11 @@ describe("runtime-host-bridge", () => {
         ]),
       }),
     );
+    expect(result.routingRequest.roleModelIntent?.task?.id).toBe("not_a_role.not_a_task");
+    expect(canonicalTaxonomy.tasks.map((task) => task.id)).toContain(
+      result.routingRequest.taskType,
+    );
+    expect(result.taxonomyIdentity?.source).toBe("runtime_heuristic");
     expect(result.routingDiagnostics?.rolePolicy).toBeUndefined();
   });
 
@@ -5243,13 +5264,17 @@ describe("runtime-host-bridge", () => {
     );
 
     expect(result.routingRequest).toMatchObject({
-      taskType: "text.chat",
+      /** Run 98 addendum 58 slice 2: the baseline override no longer drops the request to the capability name. */
+      taskType: result.taxonomyIdentity?.taskTypeId,
       requiredCapabilities: ["text.chat", "tools.function_calling"],
       preferredCapabilities: [],
       strategy: "balanced",
       preferLocal: false,
       allowEndpoints: ["moonshot.personal.primary.global.kimi-k2.5"],
     });
+    expect(canonicalTaxonomy.tasks.map((task) => task.id)).toContain(
+      result.routingRequest.taskType,
+    );
     expect(result.routingModel).toBeUndefined();
     expect(result.routingDiagnostics).toEqual({
       aliasResolution: {
@@ -5371,11 +5396,18 @@ describe("runtime-host-bridge", () => {
 
     expect(result.routingRequest).toMatchObject({
       requestedRoleId: "qa.reviewer",
-      taskType: "text.chat",
+      /**
+       * Run 98 addendum 58 slice 2: the requested role policy still applies, and the request is routed under a
+       * derived taxonomy task rather than the capability name the legacy role fixture lists.
+       */
+      taskType: result.taxonomyIdentity?.taskTypeId,
       requiredCapabilities: ["text.chat", "tools.function_calling"],
       preferredCapabilities: [],
       needsTools: true,
     });
+    expect(canonicalTaxonomy.tasks.map((task) => task.id)).toContain(
+      result.routingRequest.taskType,
+    );
     expect(result.executionRequest.messages).toEqual([
       {
         role: "system",
@@ -7374,11 +7406,15 @@ describe("runtime-host-bridge", () => {
 
     expect(result.routingRequest).toMatchObject({
       requestedRoleId: "qa.reviewer",
-      taskType: "text.chat",
+      /** Run 98 addendum 58 slice 2 (responses path): the effective taxonomy task, role policy intact. */
+      taskType: result.taxonomyIdentity?.taskTypeId,
       requiredCapabilities: ["text.chat", "tools.function_calling"],
       preferredCapabilities: [],
       needsTools: true,
     });
+    expect(canonicalTaxonomy.tasks.map((task) => task.id)).toContain(
+      result.routingRequest.taskType,
+    );
     expect(result.executionRequest.messages).toEqual([
       {
         role: "system",

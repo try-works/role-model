@@ -321,8 +321,8 @@ function getEffectiveRequiredCapabilities(input: RouteRequestInput): string[] {
   const { requestedRole, requestedTask } = getRequestedRoleAndTask(input);
   return unique([
     ...input.request.requiredCapabilities,
-    ...(requestedRole?.required_capabilities ?? []),
-    ...(requestedTask?.required_capabilities ?? []),
+    ...(taxonomyRoleRequirementsAreHard(input) ? (requestedRole?.required_capabilities ?? []) : []),
+    ...(taxonomyTaskRequirementsAreHard(input) ? (requestedTask?.required_capabilities ?? []) : []),
   ]);
 }
 
@@ -330,9 +330,31 @@ function getEffectivePreferredCapabilities(input: RouteRequestInput): string[] {
   const { requestedRole, requestedTask } = getRequestedRoleAndTask(input);
   return unique([
     ...input.request.preferredCapabilities,
+    ...(taxonomyRoleRequirementsAreHard(input) ? [] : (requestedRole?.required_capabilities ?? [])),
+    ...(taxonomyTaskRequirementsAreHard(input) ? [] : (requestedTask?.required_capabilities ?? [])),
     ...(requestedRole?.preferred_capabilities ?? []),
     ...(requestedTask?.preferred_capabilities ?? []),
   ]);
+}
+
+/**
+ * Run 98 addendum 58 slice 1: a taxonomy *definition's* capability expectations are hard requirements only
+ * when the role/task selection that named them is hard — the documented trusted-internal shape
+ * (`role: { hard: true }` / `task: { hard: true }`) or the internal routing API that calls the router with no
+ * intent at all. The stable Pi contract (`contract_version: 1`) and every advisory classification are hints:
+ * the canonical taxonomy contract says advisory values "influence diagnostics and scoring without excluding
+ * otherwise eligible candidates", while hard role, task, capability, modality and tool requirements narrow
+ * candidates. Transport truth (request-level required capabilities, modalities, tools, context, health and
+ * policy) is untouched by this split.
+ */
+function taxonomyTaskRequirementsAreHard(input: RouteRequestInput): boolean {
+  const intent = input.request.roleModelIntent;
+  return !intent || intent.task?.hard === true;
+}
+
+function taxonomyRoleRequirementsAreHard(input: RouteRequestInput): boolean {
+  const intent = input.request.roleModelIntent;
+  return !intent || intent.role?.hard === true;
 }
 
 function resolveBenchmarkGroupIdsForRequest(input: RouteRequestInput): string[] {
@@ -1407,12 +1429,17 @@ function evaluateEligibility(
       reasons.push("TOOLS_UNSUPPORTED");
     }
 
-    if (requestedRole && !requestedRole.task_types_supported.includes(input.request.taskType)) {
+    if (
+      requestedRole &&
+      taxonomyTaskRequirementsAreHard(input) &&
+      !requestedRole.task_types_supported.includes(input.request.taskType)
+    ) {
       reasons.push("TASK_NOT_SUPPORTED_BY_ROLE");
     }
     if (
       requestedRoleId &&
       requestedTask &&
+      taxonomyTaskRequirementsAreHard(input) &&
       !requestedTask.allowed_roles.includes(requestedRoleId)
     ) {
       reasons.push("ROLE_NOT_ALLOWED");
