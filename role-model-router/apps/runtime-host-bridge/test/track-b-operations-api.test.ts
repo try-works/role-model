@@ -1156,12 +1156,20 @@ describe("Track B operations APIs", () => {
         "req-track-b-upload-001",
       );
       expect(result.outputText.length).toBeGreaterThan(0);
-      expect(received).toHaveLength(2);
-      const aggregate = received.find((entry) => entry.path === "/contribution/aggregate");
+      /**
+       * Both deliveries are background work (the aggregate report and the rich route capture), so the test
+       * waits for each instead of assuming the drain finished inside the response — the capture wait was
+       * already here, and the aggregate arrives by the same drain.
+       */
+      const aggregate = await waitForCaptureDelivery(
+        () => received.find((entry) => entry.path === "/contribution/aggregate"),
+        (value) => Boolean(value),
+      );
       const capture = await waitForCaptureDelivery(
         () => received.find((entry) => entry.path === "/capture/route"),
         (value) => Boolean(value),
       );
+      expect(received).toHaveLength(2);
       expect(aggregate).toMatchObject({
         path: "/contribution/aggregate",
         authorization: `Bearer ${"a".repeat(64)}`,
@@ -1607,12 +1615,16 @@ describe("Track B operations APIs", () => {
         "req-track-b-responses-upload-001",
       );
       expect(result.outputText.length).toBeGreaterThan(0);
-      expect(received).toHaveLength(2);
-      const aggregate = received.find((entry) => entry.path === "/contribution/aggregate");
+      /** See the chat-completions case: the aggregate report and the capture both arrive by the drain. */
+      const aggregate = await waitForCaptureDelivery(
+        () => received.find((entry) => entry.path === "/contribution/aggregate"),
+        (value) => Boolean(value),
+      );
       const capture = await waitForCaptureDelivery(
         () => received.find((entry) => entry.path === "/capture/route"),
         (value) => Boolean(value),
       );
+      expect(received).toHaveLength(2);
       expect(aggregate).toMatchObject({
         path: "/contribution/aggregate",
         authorization: `Bearer ${"b".repeat(64)}`,
