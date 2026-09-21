@@ -262,6 +262,77 @@ export function readCaptureTaxonomyVersion(capture: DurableReplayCapture): strin
   return typeof version === "string" && version.trim() ? version.trim() : undefined;
 }
 
+/**
+ * Run 98 addendum 58 §23 (live v316, 08:33Z): Replay Core re-presents an `append_recovery` request when a
+ * previous attempt already burned the nonce and persisted the provider receipt but never appended the
+ * branch. The receipt's `providerResultRef` names the replay's own route capture, which is the durable
+ * evidence of the provider execution — the append recovers from it instead of demanding an in-process
+ * dispatch that the resumed attempt can never have.
+ */
+export function replayRequestIdFromProviderResultRef(
+  providerResultRef: unknown,
+): string | undefined {
+  if (typeof providerResultRef !== "string") return undefined;
+  const prefix = "route-capture:";
+  if (!providerResultRef.startsWith(prefix)) return undefined;
+  const requestId = providerResultRef.slice(prefix.length).trim();
+  return requestId ? requestId : undefined;
+}
+
+/**
+ * Rebuild the execution identity a branch append needs from the durable replay capture: the routing
+ * decision the provider answered under, the model that produced it, and the bounded output text the
+ * capture records. A capture without recorded provider output is not a recovery source.
+ */
+export function buildReplayAppendExecution(input: {
+  readonly capture: unknown;
+  readonly routerDecisionId?: unknown;
+}):
+  | {
+      readonly routingDecisionId: string;
+      readonly model: string;
+      readonly outputText: string;
+      readonly vendorId?: string;
+      readonly adapterFamily?: string;
+    }
+  | undefined {
+  const capture =
+    input.capture && typeof input.capture === "object" && !Array.isArray(input.capture)
+      ? (input.capture as Record<string, unknown>)
+      : null;
+  if (!capture) return undefined;
+  const outputText = typeof capture.outputText === "string" ? capture.outputText : "";
+  if (!outputText.trim()) return undefined;
+  const routingDecisionId =
+    typeof input.routerDecisionId === "string" && input.routerDecisionId.trim()
+      ? input.routerDecisionId.trim()
+      : typeof capture.routingDecisionId === "string"
+        ? capture.routingDecisionId.trim()
+        : "";
+  const model = typeof capture.modelId === "string" ? capture.modelId.trim() : "";
+  if (!routingDecisionId || !model) return undefined;
+  const providers = Array.isArray(capture.providers) ? capture.providers : [];
+  const firstProvider =
+    providers.length > 0 && providers[0] && typeof providers[0] === "object"
+      ? (providers[0] as Record<string, unknown>)
+      : null;
+  const vendorId =
+    firstProvider && typeof firstProvider.providerId === "string"
+      ? firstProvider.providerId
+      : undefined;
+  const adapterFamily =
+    firstProvider && typeof firstProvider.adapterFamily === "string"
+      ? firstProvider.adapterFamily
+      : undefined;
+  return {
+    routingDecisionId,
+    model,
+    outputText,
+    ...(vendorId ? { vendorId } : {}),
+    ...(adapterFamily ? { adapterFamily } : {}),
+  };
+}
+
 function assertDistinctDurableReferences(references: readonly string[], label: string): void {
   if (new Set(references).size !== references.length) {
     throw new Error(`${label} must contain distinct persisted artifact references`);
@@ -4916,7 +4987,39 @@ export async function main(): Promise<void> {
                 }
                 return { branchRootRef: failureBranch.rootArtifactId };
               }
-              const dispatch = dispatched.get(candidateEndpointId);
+              let dispatch = dispatched.get(candidateEndpointId);
+              if (!dispatch) {
+                /**
+                 * Run 98 addendum 58 §23 (live v316, 08:33Z): a resumed attempt re-presents Replay Core's
+                 * `append_recovery` request, whose carrier is the receipt of a provider dispatch that
+                 * already ran — so this process holds no in-process dispatch for it and the append used to
+                 * refuse (`durable replay branch append has no host dispatch receipt`), stranding the
+                 * capture with the provider work already paid for. The recovery request names the dispatch
+                 * receipt (`providerResultRef` = the replay's own route capture), and that capture is the
+                 * durable record of the provider execution, so the branch is rebuilt from it.
+                 */
+                const recoveredReplayRequestId = replayRequestIdFromProviderResultRef(
+                  (branchRequest as Record<string, unknown>).providerResultRef,
+                );
+                if (recoveredReplayRequestId) {
+                  const recoveredCapture = (await operations.readLocalRouteCapture({
+                    requestId: recoveredReplayRequestId,
+                  })) as Record<string, unknown> | null;
+                  const recoveredExecution = buildReplayAppendExecution({
+                    capture: recoveredCapture,
+                    routerDecisionId: (branchRequest as Record<string, unknown>).routerDecisionId,
+                  });
+                  if (recoveredExecution) {
+                    dispatch = {
+                      execution: recoveredExecution as unknown as Awaited<
+                        ReturnType<typeof created.executeChatCompletions>
+                      >,
+                      replayRequestId: recoveredReplayRequestId,
+                    };
+                    dispatched.set(candidateEndpointId, dispatch);
+                  }
+                }
+              }
               if (!dispatch)
                 throw new Error("durable replay branch append has no host dispatch receipt");
               const preparedBranchRootRef = String(branchRequest.preparedBranchRootRef ?? "");
