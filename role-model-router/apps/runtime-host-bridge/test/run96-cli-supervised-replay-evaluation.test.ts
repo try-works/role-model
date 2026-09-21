@@ -47,6 +47,16 @@ function durableCapture(seed: string) {
     modelId: `model:${seed}`,
     // Run 99 R33 S33: a recovered capture carries the family the request was routed for.
     taskTypeId: "coder.review",
+    /**
+     * Run 98 addendum 58 §22.2.3: the capture also carries the classification the request was routed
+     * under, taxonomy revision included. The comparison's comparability key and the pack scope both
+     * read the revision from the pipeline input, so a capture that records it must hand it over.
+     */
+    classification: {
+      taskTypeId: "coder.review",
+      roleId: "coder",
+      taxonomyVersion: "1.0.0-alpha.1",
+    },
     responseArtifactId,
     routeDecisionArtifactId,
     providerArtifactIds: [providerArtifactId],
@@ -795,6 +805,9 @@ test("Run96 CLI production completion reaches trusted Evaluation Core and declin
   // Run 99 R33 (S34 live finding): the capture's task family must travel with the supervised
   // replay, otherwise the comparison — and the learner's family-scoped floor — never sees it.
   expect(pipelineInputs[0]?.taskTypeId).toBe("coder.review");
+  // Run 98 addendum 58 §22.2.3: the taxonomy revision travels with the family, so the comparability
+  // key (and the pack scope derived from it) is version-stamped rather than version-less.
+  expect(pipelineInputs[0]?.taxonomyVersion).toBe("1.0.0-alpha.1");
   const restartReadbackRuntime: TrackBShadowPipelineRuntime = {
     async invoke(id, envelope) {
       expect(id).toBe("artifact-store");

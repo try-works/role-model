@@ -244,6 +244,22 @@ function durableReplaySource(capture: DurableReplayCapture, label: string): Dura
   return replaySource as DurableReplayCapture;
 }
 
+/**
+ * Run 98 addendum 58 §22.2.3 (live v314 finding): the capture records the classification the request
+ * was routed under — taxonomy revision included — but no host call site handed the revision to the
+ * shadow pipeline, so the comparison's comparability key and the derived pack scope were version-less.
+ * The advisory's taxonomy gate fails closed on a version mismatch, so a version-less pack can never be
+ * applied. This reads the recorded revision back without inventing one.
+ */
+function readCaptureTaxonomyVersion(capture: DurableReplayCapture): string | undefined {
+  const classification = capture.classification;
+  if (!classification || typeof classification !== "object" || Array.isArray(classification)) {
+    return undefined;
+  }
+  const version = (classification as Readonly<Record<string, unknown>>).taxonomyVersion;
+  return typeof version === "string" && version.trim() ? version.trim() : undefined;
+}
+
 function assertDistinctDurableReferences(references: readonly string[], label: string): void {
   if (new Set(references).size !== references.length) {
     throw new Error(`${label} must contain distinct persisted artifact references`);
@@ -1288,6 +1304,13 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       input.sourceCapture.taskTypeId.trim()
         ? { taskTypeId: input.sourceCapture.taskTypeId.trim() }
         : {}),
+      // Run 98 addendum 58 §22.2.3: the revision the capture was classified under travels with the
+      // family, so the comparability key — and the pack scope the learner derives from it — is
+      // version-stamped and the advisory's version gate can match it instead of failing closed.
+      ...(() => {
+        const taxonomyVersion = readCaptureTaxonomyVersion(input.sourceCapture);
+        return taxonomyVersion ? { taxonomyVersion } : {};
+      })(),
       // Run 98 addendum 30 S4 (live finding, stage v190): the pipeline has recorded the judge
       // presentation-order policy in the comparability key since run 99 close-out, but this
       // supervised-replay path never passed it — so `0 of 473` durable evaluation jobs (and the
