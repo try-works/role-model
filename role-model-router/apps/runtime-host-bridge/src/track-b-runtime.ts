@@ -6196,6 +6196,41 @@ function unwrapExtensionBusinessValue(raw: unknown): Record<string, unknown> | n
   return null;
 }
 
+/**
+ * Run 98 addendum 58 §29 (measured live on v323): the shadow pipeline's readback unwrapped the host's answer
+ * **before** decoding it, and the packaged host's externalized answer is entirely transport keys
+ * (`{transferState, resultHash, byteLength, businessOutput, durableLocator, evidenceRef, readCapability}`), so
+ * the unwrap returned the inner marker — a non-null value that short-circuited the `??` chain and meant
+ * `decodeExtensionBusinessResult` was never called. That is why three decoder repairs (§20.2, §23.2, §26) each
+ * moved the decode one step without changing the live readback: the decoder was unreachable on this path.
+ *
+ * The ordering is now explicit and testable: a transport marker is always resolved through the decoder (which
+ * knows the locator, the hash and the worker stores); anything else keeps the previous preference for the
+ * unwrapped payload.
+ */
+export function decodeShadowPipelineReadback(input: {
+  readonly raw: unknown;
+  readonly extensionId: string;
+  readonly scopeId: string;
+  readonly stateRoot?: string;
+}): unknown {
+  const decoded =
+    decodeExtensionBusinessResult({
+      result: input.raw,
+      extensionId: input.extensionId,
+      ...(input.stateRoot ? { stateRoot: input.stateRoot } : {}),
+      scopeId: input.scopeId,
+    }) ?? null;
+  const unwrapped = unwrapExtensionBusinessValue(input.raw);
+  const unwrappedIsMarker =
+    unwrapped !== null &&
+    typeof unwrapped === "object" &&
+    !Array.isArray(unwrapped) &&
+    (unwrapped as Record<string, unknown>).transferState === "externalized";
+  if (unwrappedIsMarker) return decoded ?? unwrapped;
+  return unwrapped ?? decoded ?? input.raw;
+}
+
 function decodeExtensionBusinessResult(input: {
   readonly result: unknown;
   readonly extensionId: string;
@@ -8968,15 +9003,12 @@ export async function runTrackBShadowPipeline(
    * `status` was undefined and a completed comparison was reported as a failure. Decode first, exactly as
    * the neighbouring call sites do.
    */
-  const persistedEvaluationDecoded =
-    unwrapExtensionBusinessValue(persistedEvaluation) ??
-    decodeExtensionBusinessResult({
-      result: persistedEvaluation,
-      extensionId: "evaluation-core",
-      ...(input.contractStateRoot ? { stateRoot: input.contractStateRoot } : {}),
-      scopeId: input.scope,
-    }) ??
-    persistedEvaluation;
+  const persistedEvaluationDecoded = decodeShadowPipelineReadback({
+    raw: persistedEvaluation,
+    extensionId: "evaluation-core",
+    scopeId: input.scope,
+    ...(input.contractStateRoot ? { stateRoot: input.contractStateRoot } : {}),
+  }) as Record<string, unknown>;
   /**
    * Run 98 addendum 58 §24: the trail reached the judge and then went silent, so the segment between the
    * comparison readback and the learner had no marker at all — a retried pipeline could not say which of

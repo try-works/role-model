@@ -6,7 +6,10 @@ import { DatabaseSync } from "node:sqlite";
 
 import { expect, test } from "vitest";
 
-import { resolveExtensionBusinessAnswer } from "../src/track-b-runtime.js";
+import {
+  decodeShadowPipelineReadback,
+  resolveExtensionBusinessAnswer,
+} from "../src/track-b-runtime.js";
 
 /**
  * Run 98 addendum 56 §6.2 — the residual `trusted evaluation reference attestation schema is invalid` class.
@@ -280,6 +283,37 @@ test("a marker resolves by the packaged host's own output key when the hash colu
       stateRoot,
     });
     expect(resolved).toMatchObject({ schemaVersion: attestation.schemaVersion });
+  });
+});
+
+/**
+ * Run 98 addendum 58 §29 (measured live on v323): the marker survived three decoder repairs because the
+ * pipeline's readback unwrapped the host answer *before* decoding it — and every key of that answer is a
+ * transport key, so the unwrap handed back the inner marker, a non-null value that short-circuited the `??`
+ * chain and made the decoder unreachable. The live store, meanwhile, held the payload with exactly the
+ * marker's hash and byte length.
+ */
+test("the pipeline readback decodes a transport marker instead of short-circuiting on the unwrap", async () => {
+  await withStore((stateRoot) => {
+    const payload = JSON.stringify(attestation);
+    const resultHash = `sha256:${createHash("sha256").update(payload).digest("hex")}`;
+    writeOutput(stateRoot, payload, resultHash);
+
+    const resolved = decodeShadowPipelineReadback({
+      raw: {
+        transferState: "externalized",
+        resultHash,
+        byteLength: payload.length,
+        businessOutput: { transferState: "externalized", resultHash, byteLength: payload.length },
+        durableLocator: { outputKey, resultHash },
+        evidenceRef: `extension-output:${outputKey}`,
+        readCapability: "extension-output:read",
+      },
+      extensionId: "evaluation-core",
+      scopeId,
+      stateRoot,
+    }) as Record<string, unknown>;
+    expect(resolved.schemaVersion).toBe(attestation.schemaVersion);
   });
 });
 
