@@ -263,6 +263,22 @@ export function readCaptureTaxonomyVersion(capture: DurableReplayCapture): strin
 }
 
 /**
+ * Run 98 addendum 58 §38: the taxonomy role the capture was classified under, read from the same two places as
+ * the revision (the record's own field, then its classification). `roleId` is a scope dimension in the
+ * route-learning contract, so the learner's pack can only name its role if the pipeline is told it.
+ */
+export function readCaptureRoleId(capture: DurableReplayCapture): string | undefined {
+  const direct = capture.roleId;
+  if (typeof direct === "string" && direct.trim()) return direct.trim();
+  const classification = capture.classification;
+  if (!classification || typeof classification !== "object" || Array.isArray(classification)) {
+    return undefined;
+  }
+  const roleId = (classification as Readonly<Record<string, unknown>>).roleId;
+  return typeof roleId === "string" && roleId.trim() ? roleId.trim() : undefined;
+}
+
+/**
  * Run 98 addendum 58 §23 (live v316, 08:33Z): Replay Core re-presents an `append_recovery` request when a
  * previous attempt already burned the nonce and persisted the provider receipt but never appended the
  * branch. The receipt's `providerResultRef` names the replay's own route capture, which is the durable
@@ -1383,6 +1399,12 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       ...(() => {
         const taxonomyVersion = readCaptureTaxonomyVersion(input.sourceCapture);
         return taxonomyVersion ? { taxonomyVersion } : {};
+      })(),
+      // Run 98 addendum 58 §38: the role travels with the family and the revision, so the learner's candidate
+      // (and the pack it promotes) carries a role scope the advisory gate can match.
+      ...(() => {
+        const roleId = readCaptureRoleId(input.sourceCapture);
+        return roleId ? { roleId } : {};
       })(),
       // Run 98 addendum 30 S4 (live finding, stage v190): the pipeline has recorded the judge
       // presentation-order policy in the comparability key since run 99 close-out, but this

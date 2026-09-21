@@ -5562,6 +5562,12 @@ export interface TrackBShadowPipelineInput {
   readonly taskTypeId?: string | null;
   readonly taxonomyVersion?: string | null;
   /**
+   * Run 98 addendum 58 §38: the taxonomy role the captured request was classified under. `roleId` is a
+   * first-class scope dimension in the route-learning contract, so it travels with the family and the revision
+   * into the learned candidate and from there into the pack's scope.
+   */
+  readonly roleId?: string | null;
+  /**
    * Run 99 close-out (addendas 19-21 `S33`): the classification the captured request was routed
    * with. The shadow pipeline's advisory observation is what the post-observation appends to the
    * durable ledger, so the classification has to travel through this path too.
@@ -9809,6 +9815,11 @@ export async function runTrackBShadowPipeline(
           ...(typeof input.taxonomyVersion === "string" && input.taxonomyVersion.trim()
             ? { taxonomyVersion: input.taxonomyVersion.trim() }
             : {}),
+          // Run 98 addendum 58 §38: the role the evidence was classified under travels with the family and the
+          // revision, so the learner's candidate (and the pack it promotes) can be scoped to its role.
+          ...(typeof input.roleId === "string" && input.roleId.trim()
+            ? { roleId: input.roleId.trim() }
+            : {}),
           ...(learningCapability.learningCapable &&
           learningCapability.finalizedEvaluation &&
           learningCapability.learningEvidence
@@ -10018,6 +10029,10 @@ export async function runTrackBShadowPipeline(
             : {}),
           ...(typeof input.taxonomyVersion === "string" && input.taxonomyVersion.trim()
             ? { taxonomyVersion: input.taxonomyVersion.trim() }
+            : {}),
+          // Run 98 addendum 58 §38: the learning pass carries the same scope dimensions as the consumer.
+          ...(typeof input.roleId === "string" && input.roleId.trim()
+            ? { roleId: input.roleId.trim() }
             : {}),
           candidateId,
           routePackage: learningRoutePackage,
