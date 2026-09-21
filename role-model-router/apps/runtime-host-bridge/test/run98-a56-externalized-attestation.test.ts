@@ -151,6 +151,38 @@ test("a marker without a locator still resolves from the durable output store", 
   });
 });
 
+/**
+ * Run 98 addendum 58 §26 (live v320 marker `comparison-readback keys=transferState,resultHash,byteLength
+ * status=`): the pipeline still read the bare marker even after the locator-less resolution landed, because
+ * the answer carried a `durableLocator` whose `outputKey` no longer resolves — and that branch returned null
+ * instead of falling through to the hash the marker names.
+ *
+ * `guidance/09_evaluation_core.md` is explicit that Evaluation Core owns the comparison and consumers receive
+ * it by reference: the reference (here, the hash) must be resolved, and a stale locator key is not a reason to
+ * hand the transport marker to a validator as if it were the record.
+ */
+test("a marker whose locator no longer resolves is still resolved by the hash it names", async () => {
+  await withStore((stateRoot) => {
+    const payload = JSON.stringify(attestation);
+    const resultHash = `sha256:${createHash("sha256").update(payload).digest("hex")}`;
+    // The payload is durable under the store's own key; the answer's locator names a key that is gone.
+    writeOutput(stateRoot, payload, resultHash);
+
+    const resolved = resolveExtensionBusinessAnswer({
+      result: {
+        transferState: "externalized",
+        resultHash,
+        byteLength: payload.length,
+        durableLocator: { outputKey: "locator:stale-key", resultHash },
+      },
+      extensionId: "evaluation-core",
+      scopeId,
+      stateRoot,
+    });
+    expect(resolved).toMatchObject({ schemaVersion: attestation.schemaVersion });
+  });
+});
+
 test("a transport-enveloped answer still unwraps to its payload", async () => {
   const resolved = resolveExtensionBusinessAnswer({
     result: {

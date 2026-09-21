@@ -5926,6 +5926,52 @@ function readExternalizedExtensionOutput(input: {
 }
 
 /**
+ * Run 98 addendum 58 §26 (live v320 marker `comparison-readback keys=transferState,resultHash,byteLength`): a
+ * transfer marker names its payload by hash, and the locator that travelled with it can be stale — a key that
+ * no longer resolves in the worker's durable output store. Resolution by hash alone is therefore the
+ * authority the marker itself states, and this is the bounded lookup for it: the extension's own store first,
+ * then the packaged host's worker roots under the declared scope. Callers never invent a payload; a miss
+ * returns null.
+ */
+function readExternalizedExtensionOutputByHash(input: {
+  readonly stateRoot: string;
+  readonly scopeId: string;
+  readonly extensionId: string;
+  readonly resultHash: string;
+}): Record<string, unknown> | null {
+  const roots = [
+    path.join(
+      input.stateRoot,
+      input.scopeId,
+      "track-b",
+      "extensions",
+      "workers",
+      input.extensionId,
+    ),
+    path.join(input.stateRoot, input.scopeId, "track-b", "workers", input.extensionId),
+  ];
+  for (const root of roots) {
+    const databasePath = path.join(root, "durable-output.sqlite");
+    if (!existsSync(databasePath)) continue;
+    let database: DatabaseSync | null = null;
+    try {
+      database = new DatabaseSync(databasePath, { readOnly: true });
+      const row = database
+        .prepare(
+          "SELECT result_json FROM durable_extension_outputs WHERE result_hash = ? ORDER BY rowid DESC LIMIT 1",
+        )
+        .get(input.resultHash) as { result_json?: string } | undefined;
+      if (row?.result_json) return JSON.parse(row.result_json) as Record<string, unknown>;
+    } catch {
+      // Keep looking; never invent a value.
+    } finally {
+      database?.close();
+    }
+  }
+  return null;
+}
+
+/**
  * Run 99 R28: an operator readback that outgrew the inline transfer limit crosses the packaged
  * boundary as an externalized marker (`{transferState, resultHash, byteLength}`), sometimes with
  * and sometimes without the `businessOutput`/`durableLocator` wrapper. Observed live: the
@@ -6134,13 +6180,15 @@ function decodeExtensionBusinessResult(input: {
         : null;
     if (locator) {
       try {
-        return readExternalizedExtensionOutput({
+        const resolvedByLocator = readExternalizedExtensionOutput({
           stateRoot: input.stateRoot,
           scopeId: input.scopeId,
           extensionId: input.extensionId,
           locator,
         });
+        if (resolvedByLocator) return resolvedByLocator;
       } catch {
+        // A locator that contradicts the stored payload is an integrity failure, not a lookup miss.
         return null;
       }
     }
@@ -6166,6 +6214,19 @@ function decodeExtensionBusinessResult(input: {
       (resolvedByHash as Record<string, unknown>).transferState !== "externalized"
     ) {
       return resolvedByHash as Record<string, unknown>;
+    }
+    // A locator whose key no longer resolves still leaves the marker's own hash as the authoritative name
+    // for the payload; try it before giving up on the record.
+    const markerHash =
+      typeof transferMarker.resultHash === "string" ? transferMarker.resultHash : null;
+    if (markerHash) {
+      const resolvedByName = readExternalizedExtensionOutputByHash({
+        stateRoot: input.stateRoot,
+        scopeId: input.scopeId,
+        extensionId: input.extensionId,
+        resultHash: markerHash,
+      });
+      if (resolvedByName) return resolvedByName;
     }
     return null;
   }
