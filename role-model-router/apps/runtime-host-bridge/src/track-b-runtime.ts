@@ -10244,6 +10244,14 @@ export async function runTrackBPostObservation(
     readonly advisoryObservationLedgerPath?: string;
     /** Run 99 close-out (addendum 21 §4 S33): the judge order policy in force for this scope. */
     readonly judgeOrderPolicy?: "source_first" | "dual_order" | null;
+    /**
+     * Run 98 addendum 58 §18: the runtime state root the extension host keeps its durable-output stores under.
+     * A business answer that outgrew the inline frame limit comes back as the transfer marker
+     * (`{transferState, resultHash, byteLength}`); resolving it needs this root, and without it the comparison
+     * readback was validated as the marker itself (`durable routing-shadow comparison finalization failed:
+     * readback=transferState,resultHash,byteLength`) and the attestation resolution saw no `schemaVersion`.
+     */
+    readonly contractStateRoot?: string;
   },
 ) {
   const requestId = String(observation.requestId ?? "");
@@ -10592,6 +10600,10 @@ export async function runTrackBPostObservation(
               }
             : {}),
           ...(input.judgeOrderPolicy ? { judgeOrderPolicy: input.judgeOrderPolicy } : {}),
+          // Addendum 58 §18: the state root travels so an externalized answer (the comparison readback and the
+          // reference attestation) is resolved from the worker's durable-output store instead of being
+          // validated as its transfer marker.
+          ...(input.contractStateRoot ? { contractStateRoot: input.contractStateRoot } : {}),
           productionState,
           routePackage,
           sourceDecisionId,
@@ -10753,6 +10765,8 @@ export async function runTrackBPostObservationWithContribution(
     readonly authorizationEpoch: number;
     readonly expectedReleaseId?: string;
     readonly run88Correlation?: Record<string, unknown>;
+    /** Addendum 58 §18: see `runTrackBPostObservation` — required to resolve externalized business answers. */
+    readonly contractStateRoot?: string;
   },
   recordContribution: (input: Record<string, unknown>) => Promise<unknown>,
 ) {

@@ -4216,6 +4216,12 @@ export async function main(): Promise<void> {
             "track-b",
             "advisory-observations.json",
           ),
+          /**
+           * Addendum 58 §18: the post-observation pipeline resolves externalized extension answers (the
+           * comparison readback, the reference attestation) from the worker's durable-output store, and that
+           * needs the state root the runtime was launched with.
+           */
+          contractStateRoot: options.runtimeStateRoot,
           ...(packagedReleaseId
             ? {
                 expectedReleaseId: resolvePostObservationReleaseId({
