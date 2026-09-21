@@ -3542,7 +3542,17 @@ export function createProductionReplayAdapter(
       has: (nonce: string) => authorizationNonceStore.has(nonce),
       consume: (nonce: string, dispatchIdentity?: string) =>
         authorizationNonceStore.consume(nonce, dispatchIdentity, {
-          mayReauthorize: (identity: string) => !dispatchLedger.hasCompleted(identity),
+          /**
+           * Run 98 addendum 58 §21 (live stage 2026-09-21, replay-core job 220): the nonce store owns
+           * the nonce→dispatch-identity binding — a re-presentation is only ever honored for the very
+           * identity the nonce was burned for. The dispatch ledger owns *execution* identity, and it
+           * answers a re-presentation without repeating provider work: a completed record returns its
+           * stored receipt, a failed record owned by another instance is refused as indeterminate, and
+           * a live hold is joined. Refusing here instead wedged every resume of a dispatch whose
+           * provider response outlived the job deadline but whose branch append never recorded, so the
+           * capture could not reach evaluation or the learner. Let the ledger decide.
+           */
+          mayReauthorize: (_identity: string) => true,
         }),
     },
     dispatch: dispatchWithIdempotency,

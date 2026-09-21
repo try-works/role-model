@@ -128,17 +128,40 @@ describe("run99 R33 replay authorization nonce re-authorization", () => {
     });
   });
 
-  it("still refuses a re-authorization for a dispatch that already completed", async () => {
+  /**
+   * Run 98 addendum 58 §21 (live stage 2026-09-21): replay-core job 220 held a third candidate whose
+   * provider dispatch had already completed (the dispatch ledger carried the receipt) while the job
+   * itself read `timed_out`/`dispatching`, because the branch append never recorded. Every resume
+   * re-presented the same prepared envelope and was refused at authorization, so the capture burned
+   * its deferral budget and the pipeline never reached the judge, signals or learner.
+   *
+   * A completed dispatch is resumable *without repeating provider work*: the ledger answers with the
+   * stored receipt, so the re-presentation returns that receipt and the dispatch implementation is
+   * never called a second time.
+   */
+  it("re-presents the stored receipt for a dispatch that already completed", async () => {
     await withRoot(async (root) => {
-      const completed = adapter(root, async () => receipt());
+      let dispatches = 0;
+      const completed = adapter(root, async () => {
+        dispatches += 1;
+        return receipt();
+      });
       const attempt = envelope("run99-nonce-completed");
       const authorization = await completed.authorize({ envelope: attempt });
       await expect(completed.dispatch(attempt, { authorization })).resolves.toMatchObject({
         dispatchReceiptId: "dispatch:nonce-reauthorization",
       });
+      expect(dispatches).toBe(1);
 
-      const restarted = adapter(root, async () => receipt());
-      await expect(restarted.authorize({ envelope: attempt })).rejects.toThrow(/nonce/i);
+      const restarted = adapter(root, async () => {
+        dispatches += 1;
+        return receipt();
+      });
+      const resumed = await restarted.authorize({ envelope: attempt });
+      await expect(restarted.dispatch(attempt, { authorization: resumed })).resolves.toMatchObject({
+        dispatchReceiptId: "dispatch:nonce-reauthorization",
+      });
+      expect(dispatches).toBe(1);
     });
   });
 
