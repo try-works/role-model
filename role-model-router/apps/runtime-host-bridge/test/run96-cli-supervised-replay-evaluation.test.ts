@@ -8,6 +8,7 @@ import {
   deriveSupervisedReplayTrajectoryEvents,
   persistSupervisedReplayEvaluationCaseReferences,
   persistSupervisedReplayEvaluationReferenceFacts,
+  readCaptureTaxonomyVersion as readCaptureTaxonomyVersionForTest,
 } from "../src/cli.js";
 import {
   type TrackBShadowPipelineInput,
@@ -808,6 +809,16 @@ test("Run96 CLI production completion reaches trusted Evaluation Core and declin
   // Run 98 addendum 58 §22.2.3: the taxonomy revision travels with the family, so the comparability
   // key (and the pack scope derived from it) is version-stamped rather than version-less.
   expect(pipelineInputs[0]?.taxonomyVersion).toBe("1.0.0-alpha.1");
+  // Run 98 addendum 58 §22.2.3: the capture read emits the revision in two shapes — on the record
+  // itself (the sidecar's own readback) and inside the classification — so a capture that carries only
+  // the top-level value must still hand it over.
+  expect(readCaptureTaxonomyVersionForTest({ taxonomyVersion: " 1.0.0-alpha.2 " })).toBe(
+    "1.0.0-alpha.2",
+  );
+  expect(
+    readCaptureTaxonomyVersionForTest({ classification: { taxonomyVersion: " 1.0.0-alpha.3" } }),
+  ).toBe("1.0.0-alpha.3");
+  expect(readCaptureTaxonomyVersionForTest({})).toBeUndefined();
   const restartReadbackRuntime: TrackBShadowPipelineRuntime = {
     async invoke(id, envelope) {
       expect(id).toBe("artifact-store");

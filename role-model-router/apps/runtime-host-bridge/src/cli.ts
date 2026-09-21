@@ -251,7 +251,9 @@ function durableReplaySource(capture: DurableReplayCapture, label: string): Dura
  * The advisory's taxonomy gate fails closed on a version mismatch, so a version-less pack can never be
  * applied. This reads the recorded revision back without inventing one.
  */
-function readCaptureTaxonomyVersion(capture: DurableReplayCapture): string | undefined {
+export function readCaptureTaxonomyVersion(capture: DurableReplayCapture): string | undefined {
+  const direct = capture.taxonomyVersion;
+  if (typeof direct === "string" && direct.trim()) return direct.trim();
   const classification = capture.classification;
   if (!classification || typeof classification !== "object" || Array.isArray(classification)) {
     return undefined;
