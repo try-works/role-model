@@ -8520,6 +8520,7 @@ export async function runTrackBShadowPipeline(
     // alone (or reported `insufficient` when no judge exists) instead of by a check
     // that measures nothing.
     let correctness: Record<string, unknown> | undefined;
+    pipelinePhase("judge", `case=${String(caseId)}`);
     if (deterministicCriteriaVerifiable) {
       await runtime.invoke("evaluation-core", {
         ...envelope("evaluation:record-trial-score-batch", {
@@ -9301,6 +9302,8 @@ export async function runTrackBShadowPipeline(
     evaluationProvenance: evaluationSignalProvenance,
     learningEvidence: learningSignalEvidence,
   };
+  // Addendum 58 §20: reached only when the trajectory-signal block above completed.
+  pipelinePhase("signals-done");
   const signalsForKnowledge = {
     routeDecisionId: signalRecord.routeDecisionId,
     graphRef: signalRecord.graphRef,
@@ -9443,6 +9446,9 @@ export async function runTrackBShadowPipeline(
   // with "authoritative trusted resolver-backed reference proof is required
   // (reference=artifact:2ff7abe0...)" and those ids were absent from the artifact store.
   const perCaseEvidenceRefByTrialId = new Map<string, string>();
+  // Addendum 58 §20: the trial loop completed; the remaining pre-learner segment is the judge and the
+  // trajectory-signal block, so the trail names which of them a silent throw comes from.
+  pipelinePhase("trials-done", `completedRollouts=${completedRollouts.length}`);
   // The per-case references are built in rollout order (source first, then the evaluated
   // counterfactuals), so the join is by rollout index - a member-order join paired the
   // winner with the loser's case artifact.
