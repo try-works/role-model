@@ -6111,7 +6111,20 @@ function decodeExtensionBusinessResult(input: {
     !Array.isArray(record.businessOutput)
       ? (record.businessOutput as Record<string, unknown>)
       : null;
-  if (business && business.transferState === "externalized") {
+  /**
+   * Run 98 addendum 58 §20.1 (live v312): the packaged host answers a large business record with the transfer
+   * marker either wrapped (`businessOutput.transferState`) or at the record's **top level**
+   * (`{transferState, resultHash, byteLength}`). Only the wrapped shape was recognized, so the unwrapped marker
+   * decoded to itself and the pipeline validated the marker as the comparison group
+   * (`durable routing-shadow comparison finalization failed readback=transferState,resultHash,byteLength`).
+   */
+  const transferMarker =
+    business && business.transferState === "externalized"
+      ? business
+      : record.transferState === "externalized"
+        ? record
+        : null;
+  if (transferMarker) {
     if (!input.stateRoot) return null;
     const locator =
       record.durableLocator &&

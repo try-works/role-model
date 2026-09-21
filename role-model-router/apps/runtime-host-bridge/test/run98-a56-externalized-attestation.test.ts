@@ -78,6 +78,34 @@ test("an externalized answer is resolved from the durable output store", async (
   });
 });
 
+/**
+ * Run 98 addendum 58 §20.1 (live v312): the packaged host also answers with the transfer marker at the
+ * record's **top level** — `{transferState, resultHash, byteLength}` with no `businessOutput` wrapper — and
+ * that shape decoded to the marker itself, which the pipeline then validated as the comparison group
+ * (`durable routing-shadow comparison finalization failed readback=transferState,resultHash,byteLength`).
+ * The unwrapped marker must resolve exactly like the wrapped one.
+ */
+test("an unwrapped top-level transfer marker is resolved too", async () => {
+  await withStore((stateRoot) => {
+    const payload = JSON.stringify(attestation);
+    const resultHash = `sha256:${createHash("sha256").update(payload).digest("hex")}`;
+    writeOutput(stateRoot, payload, resultHash);
+
+    const resolved = resolveExtensionBusinessAnswer({
+      result: {
+        transferState: "externalized",
+        resultHash,
+        byteLength: payload.length,
+        durableLocator: { outputKey, resultHash },
+      },
+      extensionId: "evaluation-core",
+      scopeId,
+      stateRoot,
+    });
+    expect(resolved).toMatchObject({ schemaVersion: attestation.schemaVersion });
+  });
+});
+
 test("a marker without a resolvable store surfaces the marker, which the refusal names", async () => {
   await withStore((stateRoot) => {
     const resolved = resolveExtensionBusinessAnswer({
