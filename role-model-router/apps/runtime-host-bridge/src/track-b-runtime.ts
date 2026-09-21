@@ -8859,6 +8859,24 @@ export async function runTrackBShadowPipeline(
       scopeId: input.scope,
     }) ??
     persistedEvaluation;
+  /**
+   * Run 98 addendum 58 §24: the trail reached the judge and then went silent, so the segment between the
+   * comparison readback and the learner had no marker at all — a retried pipeline could not say which of
+   * its awaits returned something unusable. These bounded markers name the step, and the readback marker
+   * carries the shape it actually answered with (keys + status), never a payload.
+   */
+  pipelinePhase(
+    "comparison-readback",
+    `keys=${Object.keys(
+      persistedEvaluationDecoded && typeof persistedEvaluationDecoded === "object"
+        ? (persistedEvaluationDecoded as Record<string, unknown>)
+        : {},
+    )
+      .slice(0, 8)
+      .join(
+        ",",
+      )} status=${String((persistedEvaluationDecoded as Record<string, unknown>)?.status ?? "")}`,
+  );
   if (
     !persistedEvaluationDecoded ||
     (persistedEvaluationDecoded as Record<string, unknown>).status !== "finalized" ||
@@ -9122,6 +9140,16 @@ export async function runTrackBShadowPipeline(
       ...(input.contractStateRoot ? { stateRoot: input.contractStateRoot } : {}),
       scopeId: input.scope,
     }) ?? (signals as Record<string, unknown>);
+  pipelinePhase(
+    "signals-readback",
+    `keys=${Object.keys(signalRecord ?? {})
+      .slice(0, 8)
+      .join(
+        ",",
+      )} state=${String((signalRecord as Record<string, unknown>)?.state ?? "")} schema=${String(
+      (signalRecord as Record<string, unknown>)?.schemaVersion ?? "",
+    )}`,
+  );
   // R16 forbids us from inventing a trajectory merely to complete an otherwise
   // finalized replay/evaluation join.  The extension's bounded degradation
   // receipt is therefore a non-learning outcome, not missing provenance or a
@@ -9141,6 +9169,10 @@ export async function runTrackBShadowPipeline(
       `[run97] learning degraded signals:${input.requestId} ${String(
         signalRecord.reasonCode ?? signalRecord.code ?? "omit_signals",
       ).slice(0, 80)} ${String(signalRecord.reason ?? "").slice(0, 160)}`,
+    );
+    pipelinePhase(
+      "r16-omit-signals",
+      `${String(signalRecord.reasonCode ?? signalRecord.code ?? "omit_signals").slice(0, 60)}`,
     );
     const advisoryNowMs = Date.now();
     const advisoryAuthorization = createTrackBRouteAdvisoryAuthorization({
@@ -9223,6 +9255,12 @@ export async function runTrackBShadowPipeline(
     signalRecord.graphRef !== replayForKnowledge.sourceGraphRef ||
     !Array.isArray(signalRecord.signals)
   ) {
+    pipelinePhase(
+      "signals-provenance-refused",
+      `route=${String(signalRecord.routeDecisionId ?? "") === String(replayForKnowledge.sourceDecisionId ?? "")} graph=${
+        String(signalRecord.graphRef ?? "") === String(replayForKnowledge.sourceGraphRef ?? "")
+      } signals=${Array.isArray(signalRecord.signals)}`,
+    );
     throw new Error("finalized trajectory signals must retain replay provenance");
   }
   // The durable comparison is authoritative for which trial/score pairs the
