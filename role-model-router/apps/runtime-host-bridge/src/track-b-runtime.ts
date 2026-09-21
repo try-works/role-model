@@ -9616,7 +9616,13 @@ export async function runTrackBShadowPipeline(
   const profileRequest = () =>
     runtime.invoke("profile-learner", {
       ...envelope("profile:estimate-finalized-evaluation", {
-        finalizedEvaluation: persistedEvaluation,
+        /**
+         * Run 98 addendum 58 §31 (live v325): the learner reached its profile step and refused with
+         * `finalized decisive evaluation provenance required for profile learning` — the same raw/decoded leak
+         * as the signals invoke (§29), one step further down the chain. The profile learner is given the
+         * comparison the pipeline actually resolved, not the packaged host's transport marker.
+         */
+        finalizedEvaluation: persistedEvaluationDecoded,
         signals: signalsWithProvenance,
         rows: completedRollouts.map(({ rollout, score, trialId, scoreId }) => ({
           model: rollout.modelId,
