@@ -445,10 +445,7 @@ export interface RouterDecision {
   used_declared: boolean;
   scoring_version: string;
   /**
-   * Run 98 R5: present only when the caller supplied an advisory consideration (stage S2+).
-   * Records whether the bounded advisory tie-break applied, the exploration mode, the
-   * selection propensity, the advisory identity/threshold set, and the typed fallback
-   * reason when it did not.
+   * Run 98 R5 (addenda 19-21 R33): present only when the caller supplied an advisory consideration (stage S2+). Records whether the bounded advisory tie-break applied, the exploration mode, the selection propensity, the advisory identity/threshold set, the typed fallback reason when it did not, and the taxonomy scope that decided the family gate.
    */
   advisory_consideration?: {
     applied: boolean;
@@ -463,6 +460,9 @@ export interface RouterDecision {
     scoreBand: number;
     scoreGapBefore: number | null;
     cohortBucket: number | null;
+    advisoryTaskTypeId: string | null;
+    requestTaskTypeId: string | null;
+    advisoryTaxonomyVersion: string | null;
   };
 }
 
