@@ -8304,6 +8304,9 @@ export async function runTrackBShadowPipeline(
     if (!isEvaluationJobIdempotencyConflict(error)) throw error;
   }
   const trialIds: string[] = [];
+  // Addendum 58 §20: the phase trail stopped at `create-job`, so an error in the trial/evidence segment was
+  // invisible. These two markers bracket exactly that segment.
+  pipelinePhase("materialize-trials");
   const completedRollouts: Array<{
     rollout: Record<string, unknown>;
     score: number;
@@ -9449,6 +9452,7 @@ export async function runTrackBShadowPipeline(
     };
   };
   let candidate: Record<string, unknown>;
+  pipelinePhase("learner");
   if (!profileForKnowledge) {
     console.error(
       `[run97] learning degraded profile:${input.requestId} keys=${Object.keys(profileRecord).join(",")} ${String(
