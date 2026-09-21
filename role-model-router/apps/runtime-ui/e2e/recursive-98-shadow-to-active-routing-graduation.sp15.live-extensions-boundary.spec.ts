@@ -41,9 +41,7 @@ test.describe("@recursive:98-shadow-to-active-routing-graduation @p98-15", () =>
     const titleCase = (value: string) => `${value.charAt(0).toUpperCase()}${value.slice(1)}`;
     const effectiveLabel = titleCase(knowledgeWorker?.enabledMode ?? "");
     const defaultLabel = titleCase(knowledgeWorker?.activationBoundary.defaultMode ?? "");
-    const ceilingLabel = titleCase(
-      knowledgeWorker?.activationBoundary.allowedModes.at(-1) ?? "",
-    );
+    const ceilingLabel = titleCase(knowledgeWorker?.activationBoundary.allowedModes.at(-1) ?? "");
 
     const row = page.locator("tr").filter({ hasText: "knowledge-worker" }).first();
     await expect(row).toBeVisible();

@@ -28,8 +28,7 @@ export interface PlannedPair<T> {
   readonly priorCount: number;
 }
 
-export const pairKey = (left: string, right: string): string =>
-  [left, right].sort().join("\u0000");
+export const pairKey = (left: string, right: string): string => [left, right].sort().join("\u0000");
 
 export interface PairCoverageLedger {
   /** The current snapshot the planner reads. */
@@ -49,9 +48,10 @@ export function createPairCoverageLedger(input: {
   readonly filePath: string;
   readonly maxPairs?: number;
 }): PairCoverageLedger {
-  const maxPairs = Number.isSafeInteger(input.maxPairs) && (input.maxPairs ?? 0) > 0
-    ? Number(input.maxPairs)
-    : 512;
+  const maxPairs =
+    Number.isSafeInteger(input.maxPairs) && (input.maxPairs ?? 0) > 0
+      ? Number(input.maxPairs)
+      : 512;
   let counts: Record<string, number> = {};
   try {
     const parsed = JSON.parse(readFileSync(input.filePath, "utf8")) as {
@@ -149,15 +149,18 @@ export function planPairComparisons<T>(input: {
       });
     }
   }
-  return candidates
-    .filter((candidate) => !excluded.has(candidate.key))
-    // Least-covered first, and **arm-vs-arm before an extra source pair at equal coverage**: the graph's
-    // gaps are the pairs that exclude the served model, so those are the ones worth spending on.
-    .sort((left, right) =>
-      left.planned.priorCount - right.planned.priorCount ||
-      Number(left.sourcePair) - Number(right.sourcePair) ||
-      left.key.localeCompare(right.key),
-    )
-    .slice(0, maxPairs)
-    .map((candidate) => candidate.planned);
+  return (
+    candidates
+      .filter((candidate) => !excluded.has(candidate.key))
+      // Least-covered first, and **arm-vs-arm before an extra source pair at equal coverage**: the graph's
+      // gaps are the pairs that exclude the served model, so those are the ones worth spending on.
+      .sort(
+        (left, right) =>
+          left.planned.priorCount - right.planned.priorCount ||
+          Number(left.sourcePair) - Number(right.sourcePair) ||
+          left.key.localeCompare(right.key),
+      )
+      .slice(0, maxPairs)
+      .map((candidate) => candidate.planned)
+  );
 }

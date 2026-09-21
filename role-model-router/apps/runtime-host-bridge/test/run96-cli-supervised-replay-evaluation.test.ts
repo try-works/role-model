@@ -158,7 +158,9 @@ test("Run98 A34 S5 two arms with identical answers build references and report a
   expect(result.singleOutcome).toBe(true);
   expect(result.rolloutReferences[0]?.artifactRef).toBe(result.rolloutReferences[1]?.artifactRef);
   // The evidence and provider references remain distinct, so the comparison is still complete.
-  expect(result.rolloutReferences[0]?.evidenceRef).not.toBe(result.rolloutReferences[1]?.evidenceRef);
+  expect(result.rolloutReferences[0]?.evidenceRef).not.toBe(
+    result.rolloutReferences[1]?.evidenceRef,
+  );
   expect(result.rolloutReferences[0]?.outcomeRef).not.toBe(result.rolloutReferences[1]?.outcomeRef);
   expect(result.evaluationReferences.sourceOutcomeRef).not.toBe(
     result.evaluationReferences.counterfactualOutcomeRef,
@@ -179,7 +181,11 @@ test("Run98 A34 S5 a rollout that reuses its own reference is still refused", ()
     buildSupervisedReplayEvaluationReferences({
       sourceCapture,
       counterfactualCaptures: [
-        { ...collapsed, providerArtifactIds: [collapsedProvider], responseArtifactId: collapsedProvider },
+        {
+          ...collapsed,
+          providerArtifactIds: [collapsedProvider],
+          responseArtifactId: collapsedProvider,
+        },
       ],
       caseIds: ["case:run98:source", "case:run98:counterfactual"],
       referenceFacts: {
@@ -270,7 +276,9 @@ test("run98 A31 S2 the case reference carries the bounded evaluation subject", a
     taskText: "Reply with the single word: ok",
     outputText: "ok",
   });
-  expect((first.subject as Record<string, unknown>).criteria).toMatchObject({ requiredTerms: ["ok"] });
+  expect((first.subject as Record<string, unknown>).criteria).toMatchObject({
+    requiredTerms: ["ok"],
+  });
   expect(second.subject).toMatchObject({ outputText: "okay" });
 
   // The subject is bounded: an oversized instruction is truncated with an explicit marker instead of

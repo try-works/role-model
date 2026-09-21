@@ -655,7 +655,9 @@ test("Run96 S4 RED: shadow learning uses durable Evaluation Core trials rather t
     },
   });
   expect(
-    (durableJobs[0].cases as Array<{ readonly partition?: string }>).map((entry) => entry.partition).sort(),
+    (durableJobs[0].cases as Array<{ readonly partition?: string }>)
+      .map((entry) => entry.partition)
+      .sort(),
   ).toEqual(["holdout", "holdout"]);
   // R14: a source/candidate output hash comparison is useful integrity evidence,
   // but cannot be the evaluation gate by itself.  The supervised pipeline must

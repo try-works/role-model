@@ -7,8 +7,8 @@
  * vocabulary instead of a parallel one.
  */
 import type { ErrorObject, ValidateFunction } from "ajv";
-import * as ajvNamespace from "ajv/dist/2020.js";
 import * as ajvFormatsNamespace from "ajv-formats";
+import * as ajvNamespace from "ajv/dist/2020.js";
 
 import {
   routeLearningSchema,
@@ -33,13 +33,14 @@ interface AjvLike {
 // ajv and ajv-formats ship CommonJS; the namespace imports keep ESM and CJS builds
 // working without depending on the compiler's default-interop mode.
 const Ajv2020 = ((ajvNamespace as unknown as { default?: unknown }).default ??
-  ajvNamespace) as new (options?: Record<string, unknown>) => AjvLike;
+  ajvNamespace) as new (
+  options?: Record<string, unknown>,
+) => AjvLike;
 
 const ajv = new Ajv2020({ allErrors: true, strict: false, allowUnionTypes: true });
 // ajv-formats ships CommonJS; the namespace import keeps ESM and CJS builds working.
 const addFormats = ((ajvFormatsNamespace as unknown as { default?: (instance: unknown) => void })
-  .default ??
-  (ajvFormatsNamespace as unknown as (instance: unknown) => void)) as (
+  .default ?? (ajvFormatsNamespace as unknown as (instance: unknown) => void)) as (
   instance: unknown,
 ) => void;
 addFormats(ajv);

@@ -76,13 +76,7 @@
     "routePackage": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "packageId",
-        "endpointId",
-        "modelId",
-        "modelRevision",
-        "samplingProfileId"
-      ],
+      "required": ["packageId", "endpointId", "modelId", "modelRevision", "samplingProfileId"],
       "properties": {
         "packageId": {
           "$ref": "#/$defs/id"
@@ -138,11 +132,7 @@
           "$ref": "#/$defs/id"
         },
         "purpose": {
-          "enum": [
-            "routing_evaluation",
-            "routing_replay",
-            "route_package_attribution"
-          ]
+          "enum": ["routing_evaluation", "routing_replay", "route_package_attribution"]
         },
         "tasksetRef": {
           "$ref": "#/$defs/id"
@@ -160,10 +150,7 @@
           "const": "1.1.0"
         },
         "splitAlgorithm": {
-          "enum": [
-            "hash_partition_v1",
-            "stratified_hash_partition_v1"
-          ]
+          "enum": ["hash_partition_v1", "stratified_hash_partition_v1"]
         },
         "splitSeed": {
           "type": "integer",
@@ -180,11 +167,7 @@
           "format": "date-time"
         },
         "runtimeChannel": {
-          "enum": [
-            "production",
-            "stage",
-            "development"
-          ]
+          "enum": ["production", "stage", "development"]
         },
         "scopeId": {
           "type": "string",
@@ -225,14 +208,7 @@
           "$ref": "#/$defs/id"
         },
         "state": {
-          "enum": [
-            "collecting",
-            "finalizing",
-            "finalized",
-            "partial",
-            "failed",
-            "expired"
-          ]
+          "enum": ["collecting", "finalizing", "finalized", "partial", "failed", "expired"]
         },
         "comparabilityKey": {
           "$ref": "#/$defs/id"
@@ -273,11 +249,7 @@
           "format": "date-time"
         },
         "runtimeChannel": {
-          "enum": [
-            "production",
-            "stage",
-            "development"
-          ]
+          "enum": ["production", "stage", "development"]
         },
         "scopeId": {
           "type": "string",
@@ -296,9 +268,7 @@
                 "const": "finalized"
               }
             },
-            "required": [
-              "state"
-            ]
+            "required": ["state"]
           },
           "then": {
             "properties": {
@@ -312,10 +282,7 @@
                 "minItems": 1
               }
             },
-            "required": [
-              "positiveRolloutRefs",
-              "negativeRolloutRefs"
-            ]
+            "required": ["positiveRolloutRefs", "negativeRolloutRefs"]
           }
         }
       ]
@@ -397,12 +364,7 @@
           ]
         },
         "redactionStatus": {
-          "enum": [
-            "raw",
-            "redacted",
-            "safe_for_prompt",
-            "blocked"
-          ]
+          "enum": ["raw", "redacted", "safe_for_prompt", "blocked"]
         },
         "instructionHierarchyChecked": {
           "type": "boolean"
@@ -418,11 +380,7 @@
           "format": "date-time"
         },
         "runtimeChannel": {
-          "enum": [
-            "production",
-            "stage",
-            "development"
-          ]
+          "enum": ["production", "stage", "development"]
         },
         "scopeId": {
           "type": "string",
@@ -438,21 +396,13 @@
           "if": {
             "properties": {
               "status": {
-                "enum": [
-                  "promoted",
-                  "deprecated",
-                  "superseded"
-                ]
+                "enum": ["promoted", "deprecated", "superseded"]
               }
             },
-            "required": [
-              "status"
-            ]
+            "required": ["status"]
           },
           "then": {
-            "required": [
-              "validationReceiptId"
-            ],
+            "required": ["validationReceiptId"],
             "properties": {
               "redactionStatus": {
                 "const": "safe_for_prompt"
@@ -515,23 +465,13 @@
           "maximum": 8192
         },
         "placement": {
-          "enum": [
-            "context_block",
-            "developer_extension"
-          ]
+          "enum": ["context_block", "developer_extension"]
         },
         "priority": {
           "const": "advisory_only"
         },
         "status": {
-          "enum": [
-            "candidate",
-            "shadow",
-            "validated",
-            "promoted",
-            "rejected",
-            "rolled_back"
-          ]
+          "enum": ["candidate", "shadow", "validated", "promoted", "rejected", "rolled_back"]
         },
         "validationReceiptId": {
           "$ref": "#/$defs/id"
@@ -544,11 +484,7 @@
           "format": "date-time"
         },
         "runtimeChannel": {
-          "enum": [
-            "production",
-            "stage",
-            "development"
-          ]
+          "enum": ["production", "stage", "development"]
         },
         "scopeId": {
           "type": "string",
@@ -592,11 +528,7 @@
           "$ref": "#/$defs/id"
         },
         "candidateType": {
-          "enum": [
-            "experience",
-            "pack",
-            "route_package"
-          ]
+          "enum": ["experience", "pack", "route_package"]
         },
         "candidateId": {
           "$ref": "#/$defs/id"
@@ -635,22 +567,14 @@
           "type": "boolean"
         },
         "decision": {
-          "enum": [
-            "validate",
-            "reject",
-            "insufficient_evidence"
-          ]
+          "enum": ["validate", "reject", "insufficient_evidence"]
         },
         "createdAt": {
           "type": "string",
           "format": "date-time"
         },
         "runtimeChannel": {
-          "enum": [
-            "production",
-            "stage",
-            "development"
-          ]
+          "enum": ["production", "stage", "development"]
         },
         "scopeId": {
           "type": "string",
@@ -724,11 +648,7 @@
           "format": "date-time"
         },
         "runtimeChannel": {
-          "enum": [
-            "production",
-            "stage",
-            "development"
-          ]
+          "enum": ["production", "stage", "development"]
         },
         "scopeId": {
           "type": "string",
@@ -779,11 +699,7 @@
           "$ref": "#/$defs/id"
         },
         "state": {
-          "enum": [
-            "active",
-            "rolled_back",
-            "disabled"
-          ]
+          "enum": ["active", "rolled_back", "disabled"]
         },
         "activatedAt": {
           "type": "string",
@@ -794,11 +710,7 @@
           "format": "date-time"
         },
         "runtimeChannel": {
-          "enum": [
-            "production",
-            "stage",
-            "development"
-          ]
+          "enum": ["production", "stage", "development"]
         },
         "scopeId": {
           "type": "string",
@@ -817,14 +729,10 @@
                 "const": "active"
               }
             },
-            "required": [
-              "state"
-            ]
+            "required": ["state"]
           },
           "then": {
-            "required": [
-              "validationReceiptId"
-            ]
+            "required": ["validationReceiptId"]
           }
         },
         {
@@ -834,14 +742,10 @@
                 "const": "rolled_back"
               }
             },
-            "required": [
-              "state"
-            ]
+            "required": ["state"]
           },
           "then": {
-            "required": [
-              "rolledBackAt"
-            ]
+            "required": ["rolledBackAt"]
           }
         }
       ]

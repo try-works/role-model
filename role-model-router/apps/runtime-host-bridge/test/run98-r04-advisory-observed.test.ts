@@ -21,7 +21,11 @@ import {
 
 const tempDir = async (label: string) => {
   const root = await mkdtemp(path.join(os.tmpdir(), `run98-r04-${label}-`));
-  return { root, filePath: path.join(root, "track-b", "advisory-observations.json"), cleanup: () => rm(root, { recursive: true, force: true }) };
+  return {
+    root,
+    filePath: path.join(root, "track-b", "advisory-observations.json"),
+    cleanup: () => rm(root, { recursive: true, force: true }),
+  };
 };
 
 describe("run98 R4 advisory observation", () => {
@@ -163,10 +167,7 @@ describe("run98 R4 advisory observation", () => {
       };
       expect(ledger.totals.observed).toBe(5);
       expect(ledger.entries).toHaveLength(2);
-      expect(ledger.entries.map((entry) => entry.decisionId)).toEqual([
-        "decision-3",
-        "decision-4",
-      ]);
+      expect(ledger.entries.map((entry) => entry.decisionId)).toEqual(["decision-3", "decision-4"]);
     } finally {
       await space.cleanup();
     }
@@ -201,7 +202,11 @@ describe("run98 R4 advisory observation", () => {
       nowMs: 2,
     });
     expect(
-      recallTrackBRouteAdvisory({ channel: "stage", scope: "scope:live", routePackage: "endpoint:incumbent" }),
+      recallTrackBRouteAdvisory({
+        channel: "stage",
+        scope: "scope:live",
+        routePackage: "endpoint:incumbent",
+      }),
     ).toMatchObject({ preferredRoutePackage: "endpoint:candidate", advisoryState: "fresh" });
 
     const observed = observeTrackBRouteAdvisoryForDecision({

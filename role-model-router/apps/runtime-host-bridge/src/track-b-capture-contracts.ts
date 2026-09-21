@@ -6,7 +6,7 @@
  * `ArtifactGraphEdgeV2` (and `CaptureDegradationReceiptV1` when capture failed), so
  * the graph the runtime actually persists is the documented storage vocabulary.
  */
-import { emitTrackBContract, type TrackBContractEmission } from "./track-b-contract-emission.js";
+import { type TrackBContractEmission, emitTrackBContract } from "./track-b-contract-emission.js";
 
 const BOUNDARY_PROTOCOL_VERSION = "1.1";
 
@@ -21,14 +21,7 @@ const asRecord = (value: unknown): Record<string, unknown> | null =>
 const asStringArray = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 
-const MESSAGE_ROLES = new Set([
-  "system",
-  "developer",
-  "user",
-  "assistant",
-  "tool",
-  "observer",
-]);
+const MESSAGE_ROLES = new Set(["system", "developer", "user", "assistant", "tool", "observer"]);
 
 const messageRole = (value: unknown): string => {
   const role = typeof value === "string" ? value.toLowerCase() : "";
@@ -51,7 +44,9 @@ const nodeEnvelope = (input: {
   boundaryProtocolVersion: BOUNDARY_PROTOCOL_VERSION,
 });
 
-const toolResultStatus = (tool: Record<string, unknown>): "ok" | "error" | "cancelled" | "timeout" => {
+const toolResultStatus = (
+  tool: Record<string, unknown>,
+): "ok" | "error" | "cancelled" | "timeout" => {
   const status = typeof tool.status === "string" ? tool.status.toLowerCase() : "";
   if (status === "failed" || status === "error" || status === "failure" || tool.isError === true) {
     return "error";
@@ -120,7 +115,8 @@ export function buildCaptureGraphNodes(
     if (!tool) continue;
     const artifactId = String(tool.artifactId ?? tool.nodeId ?? "");
     if (!artifactId) continue;
-    const toolKind = String(tool.kind ?? "tool_call") === "tool_result" ? "tool_result" : "tool_call";
+    const toolKind =
+      String(tool.kind ?? "tool_call") === "tool_result" ? "tool_result" : "tool_call";
     const callId = String(tool.callId ?? tool.toolCallId ?? `call:${index + 1}`);
     nodes.push({
       ...nodeEnvelope({ ...envelope, nodeId: artifactId }),
@@ -183,8 +179,12 @@ export function buildCaptureGraphEdges(
   const createdAt = new Date(input.createdAtMs ?? Date.now()).toISOString();
   const envelope = { scopeId: input.scopeId, channel: input.channel, createdAt };
   const nodes = buildCaptureGraphNodes(input);
-  const messageNodeIds = nodes.filter((node) => node.kind === "message").map((node) => String(node.nodeId));
-  const toolCallNodeIds = nodes.filter((node) => node.kind === "tool_call").map((node) => String(node.nodeId));
+  const messageNodeIds = nodes
+    .filter((node) => node.kind === "message")
+    .map((node) => String(node.nodeId));
+  const toolCallNodeIds = nodes
+    .filter((node) => node.kind === "tool_call")
+    .map((node) => String(node.nodeId));
   const toolResultNodeIds = nodes
     .filter((node) => node.kind === "tool_result")
     .map((node) => String(node.nodeId));

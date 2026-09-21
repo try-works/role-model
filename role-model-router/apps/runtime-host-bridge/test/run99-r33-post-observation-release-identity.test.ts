@@ -79,9 +79,11 @@ describe("run99 R33 post-observation release identity", () => {
       packagedReleaseId: packagedRelease,
       correlationReleaseId: backlogCorrelation.releaseId,
     });
-    expect(() => normalizeRun88RuntimeCorrelation(backlogCorrelation, resolved as string)).not.toThrow();
     expect(() =>
-      normalizeRun88RuntimeCorrelation(backlogCorrelation, packagedRelease),
-    ).toThrow(/release identity mismatch/i);
+      normalizeRun88RuntimeCorrelation(backlogCorrelation, resolved as string),
+    ).not.toThrow();
+    expect(() => normalizeRun88RuntimeCorrelation(backlogCorrelation, packagedRelease)).toThrow(
+      /release identity mismatch/i,
+    );
   });
 });

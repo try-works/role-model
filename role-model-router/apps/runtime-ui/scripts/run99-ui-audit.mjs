@@ -72,7 +72,10 @@ const ERROR_MARKERS = [
 
 mkdirSync(outDir, { recursive: true });
 const browser = await chromium.launch();
-const context = await browser.newContext({ viewport: { width: 1600, height: 1200 }, colorScheme: "dark" });
+const context = await browser.newContext({
+  viewport: { width: 1600, height: 1200 },
+  colorScheme: "dark",
+});
 if (operatorToken) {
   await context.addInitScript(
     ([key, value]) => window.localStorage.setItem(key, value),
@@ -102,7 +105,11 @@ for (const [route, markers] of routes) {
     await page.screenshot({ path: path.join(outDir, `${slug}.png`), fullPage: true });
     report.push({
       route,
-      ok: missing.length === 0 && errorHits.length === 0 && consoleErrors.length === 0 && failedRequests.length === 0,
+      ok:
+        missing.length === 0 &&
+        errorHits.length === 0 &&
+        consoleErrors.length === 0 &&
+        failedRequests.length === 0,
       missingMarkers: missing,
       errorMarkers: errorHits,
       placeholders,
@@ -118,7 +125,11 @@ for (const [route, markers] of routes) {
 }
 
 await browser.close();
-writeFileSync(path.join(outDir, "audit-report.json"), `${JSON.stringify(report, null, 1)}\n`, "utf8");
+writeFileSync(
+  path.join(outDir, "audit-report.json"),
+  `${JSON.stringify(report, null, 1)}\n`,
+  "utf8",
+);
 const failing = report.filter((entry) => !entry.ok);
 console.log(
   JSON.stringify(

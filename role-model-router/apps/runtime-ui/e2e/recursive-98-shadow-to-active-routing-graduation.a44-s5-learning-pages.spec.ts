@@ -47,13 +47,16 @@ test.describe("@recursive:98-shadow-to-active-routing-graduation @a44-s5", () =>
        * for the readbacks to settle — bounded, because a live runtime never goes network-idle — and fail the
        * page's check if it is still loading, so "empty because it never loaded" cannot pass as a rendered page.
        */
-      const loadingMarker = /Loading learning state|Reading live replay and evaluation state|^\s*loading\s*$/m;
+      const loadingMarker =
+        /Loading learning state|Reading live replay and evaluation state|^\s*loading\s*$/m;
       let bodyText = await page.locator("body").innerText();
       for (let attempt = 0; attempt < 30 && loadingMarker.test(bodyText); attempt += 1) {
         await page.waitForTimeout(2_000);
         bodyText = await page.locator("body").innerText();
       }
-      expect(loadingMarker.test(bodyText), `${entry.route} never left its loading state`).toBe(false);
+      expect(loadingMarker.test(bodyText), `${entry.route} never left its loading state`).toBe(
+        false,
+      );
       await page.screenshot({ path: path.join(evidenceDir, entry.shot), fullPage: true });
       const text = await page.locator("body").innerText();
       testInfo.annotations.push({
@@ -94,7 +97,9 @@ test.describe("@recursive:98-shadow-to-active-routing-graduation @a44-s5", () =>
     // The router-resolution block is the addendum 44 A44-S4 addition; it must name the stage the router uses.
     await expect(page.getByText("Router resolution").first()).toBeVisible();
     if (policy.routerResolution?.stage) {
-      await expect(page.getByText(policy.routerResolution.stage, { exact: false }).first()).toBeVisible();
+      await expect(
+        page.getByText(policy.routerResolution.stage, { exact: false }).first(),
+      ).toBeVisible();
     }
   });
 });

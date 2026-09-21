@@ -3,8 +3,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { describe, expect, test } from "vitest";
 
-import { LearningOverviewPage, formatPolicyRange, selectionNoteForStage } from "./learning";
 import type { LearningPolicyField } from "../lib/learning-api";
+import { LearningOverviewPage, formatPolicyRange, selectionNoteForStage } from "./learning";
 
 /**
  * Run 98 R17: the Learning route exists with its five pages, reads the operator surface
@@ -27,7 +27,13 @@ describe("LearningRoute", () => {
       expect(routeConfig).toContain(path);
     }
     expect(navigation).toContain('title: "Learning"');
-    for (const label of ['label: "Overview"', 'label: "Configuration"', 'label: "Packs"', 'label: "Decisions"', 'label: "Evidence"']) {
+    for (const label of [
+      'label: "Overview"',
+      'label: "Configuration"',
+      'label: "Packs"',
+      'label: "Decisions"',
+      'label: "Evidence"',
+    ]) {
       expect(navigation).toContain(label);
     }
     for (const page of [

@@ -1,9 +1,14 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 
-import { LearningActivationTimelineView, LearningActivityHeatmapView, LearningComparisonMixView, LearningGuardrailListView } from "./learning-history-panels";
-import { LearningLivePanelView } from "./learning-live-panel";
 import { normalizeLearningActivity, normalizeLearningHistory } from "../lib/learning-visuals";
+import {
+  LearningActivationTimelineView,
+  LearningActivityHeatmapView,
+  LearningComparisonMixView,
+  LearningGuardrailListView,
+} from "./learning-history-panels";
+import { LearningLivePanelView } from "./learning-live-panel";
 
 /**
  * Run 99 - the live/history panels render the durable numbers, and every degraded state says so
@@ -32,9 +37,27 @@ const activity = normalizeLearningActivity({
     ],
   },
   recent: [
-    { atMs: NOW - 30_000, kind: "replay", id: "req-6ad0cb92", outcome: "replayed", detail: "3 branch(es)" },
-    { atMs: NOW - 120_000, kind: "evaluation", id: "evaluation-replay-3f2e", outcome: "completed", detail: null },
-    { atMs: NOW - 300_000, kind: "learner", id: "validation-1073ba74", outcome: "insufficient_evidence", detail: "validation_receipt" },
+    {
+      atMs: NOW - 30_000,
+      kind: "replay",
+      id: "req-6ad0cb92",
+      outcome: "replayed",
+      detail: "3 branch(es)",
+    },
+    {
+      atMs: NOW - 120_000,
+      kind: "evaluation",
+      id: "evaluation-replay-3f2e",
+      outcome: "completed",
+      detail: null,
+    },
+    {
+      atMs: NOW - 300_000,
+      kind: "learner",
+      id: "validation-1073ba74",
+      outcome: "insufficient_evidence",
+      detail: "validation_receipt",
+    },
   ],
 });
 
@@ -43,9 +66,39 @@ const history = normalizeLearningHistory({
   window: { hours: 6, bucketHours: 2 },
   policyVersion: 21,
   buckets: [
-    { startMs: NOW - 6 * 3_600_000, endMs: NOW - 4 * 3_600_000, replays: 2, refusals: 40, deferred: 3, branches: 5, evaluations: 2, validations: 1, activations: 0 },
-    { startMs: NOW - 4 * 3_600_000, endMs: NOW - 2 * 3_600_000, replays: 6, refusals: 12, deferred: 1, branches: 14, evaluations: 4, validations: 0, activations: 1 },
-    { startMs: NOW - 2 * 3_600_000, endMs: NOW, replays: 1, refusals: 3, deferred: 0, branches: 3, evaluations: 1, validations: 2, activations: 0 },
+    {
+      startMs: NOW - 6 * 3_600_000,
+      endMs: NOW - 4 * 3_600_000,
+      replays: 2,
+      refusals: 40,
+      deferred: 3,
+      branches: 5,
+      evaluations: 2,
+      validations: 1,
+      activations: 0,
+    },
+    {
+      startMs: NOW - 4 * 3_600_000,
+      endMs: NOW - 2 * 3_600_000,
+      replays: 6,
+      refusals: 12,
+      deferred: 1,
+      branches: 14,
+      evaluations: 4,
+      validations: 0,
+      activations: 1,
+    },
+    {
+      startMs: NOW - 2 * 3_600_000,
+      endMs: NOW,
+      replays: 1,
+      refusals: 3,
+      deferred: 0,
+      branches: 3,
+      evaluations: 1,
+      validations: 2,
+      activations: 0,
+    },
   ],
   totals: {
     replays: 9,
@@ -67,14 +120,47 @@ const history = normalizeLearningHistory({
     tie: 44,
     insufficient: 15,
     deltas: [
-      { comparisonId: "validation-1073ba74", delta: 0.08, lower: 0.06, upper: 0.16, decisive: true },
-      { comparisonId: "validation-7894febd", delta: -0.04, lower: -0.09, upper: 0.02, decisive: false },
+      {
+        comparisonId: "validation-1073ba74",
+        delta: 0.08,
+        lower: 0.06,
+        upper: 0.16,
+        decisive: true,
+      },
+      {
+        comparisonId: "validation-7894febd",
+        delta: -0.04,
+        lower: -0.09,
+        upper: 0.02,
+        decisive: false,
+      },
     ],
   },
   activationTimeline: [
-    { atMs: NOW - 20 * 60_000, kind: "rollback", packageId: "pack-6aed0fe3", state: "rolled_back", cohortPercent: 0, detail: null },
-    { atMs: NOW - 25 * 60_000, kind: "breach", packageId: "", state: "breach", cohortPercent: null, detail: "quality" },
-    { atMs: NOW - 60 * 60_000, kind: "activate", packageId: "pack-6aed0fe3", state: "active", cohortPercent: 10, detail: null },
+    {
+      atMs: NOW - 20 * 60_000,
+      kind: "rollback",
+      packageId: "pack-6aed0fe3",
+      state: "rolled_back",
+      cohortPercent: 0,
+      detail: null,
+    },
+    {
+      atMs: NOW - 25 * 60_000,
+      kind: "breach",
+      packageId: "",
+      state: "breach",
+      cohortPercent: null,
+      detail: "quality",
+    },
+    {
+      atMs: NOW - 60 * 60_000,
+      kind: "activate",
+      packageId: "pack-6aed0fe3",
+      state: "active",
+      cohortPercent: 10,
+      detail: null,
+    },
   ],
   guardrails: [
     { metric: "qualityMinDelta", limit: -0.02, observed: 0.08, status: "ok" },
@@ -95,19 +181,31 @@ describe("run99 learning live panel", () => {
       observedAtMs: NOW,
       window: { minutes: 60 },
       pipeline: [{ stage: "replay", pending: 0, recent: 1, active: false, lastEventAtMs: NOW }],
-      budget: { day: "2026-09-15", counterfactuals: { used: 0, limit: 100 }, dispatches: { used: 0, limit: 300 }, byKind: [] },
+      budget: {
+        day: "2026-09-15",
+        counterfactuals: { used: 0, limit: 100 },
+        dispatches: { used: 0, limit: 300 },
+        byKind: [],
+      },
       recent: [
         {
           atMs: NOW,
           kind: "replay",
           id: "req-handoff",
           outcome: "refused",
-          detail: '{"reason":"replay_handoff_evaluation_pending","evaluationJobId":"evaluation-replay-1"}',
+          detail:
+            '{"reason":"replay_handoff_evaluation_pending","evaluationJobId":"evaluation-replay-1"}',
         },
       ],
     });
     const html = renderToStaticMarkup(
-      <LearningLivePanelView view={handedOff} loading={false} error={null} nowMs={NOW} scopeLabel="standalone-runtime-stage" />,
+      <LearningLivePanelView
+        view={handedOff}
+        loading={false}
+        error={null}
+        nowMs={NOW}
+        scopeLabel="standalone-runtime-stage"
+      />,
     );
     expect(html).toContain("Handed off");
     expect(html).toContain("not a failed replay");
@@ -118,7 +216,13 @@ describe("run99 learning live panel", () => {
 
   test("renders pipeline rows, the budget gauge and the newest events", () => {
     const html = renderToStaticMarkup(
-      <LearningLivePanelView view={activity} loading={false} error={null} nowMs={NOW} scopeLabel="standalone-runtime-stage" />,
+      <LearningLivePanelView
+        view={activity}
+        loading={false}
+        error={null}
+        nowMs={NOW}
+        scopeLabel="standalone-runtime-stage"
+      />,
     );
     expect(html).toContain("Live replay &amp; evaluation");
     expect(html).toContain("standalone-runtime-stage");
@@ -145,7 +249,12 @@ describe("run99 learning live panel", () => {
     expect(loading).toContain("Reading live replay and evaluation state");
     expect(loading).toContain("loading");
     const failed = renderToStaticMarkup(
-      <LearningLivePanelView view={activity} loading={false} error="operator_authentication_required" nowMs={NOW} />,
+      <LearningLivePanelView
+        view={activity}
+        loading={false}
+        error="operator_authentication_required"
+        nowMs={NOW}
+      />,
     );
     expect(failed).toContain("No value is fabricated");
     // An unreadable panel must never claim to be idle or running.
@@ -153,7 +262,12 @@ describe("run99 learning live panel", () => {
     expect(failed).toContain("awaiting operator token");
     expect(failed).not.toContain(">idle<");
     const empty = renderToStaticMarkup(
-      <LearningLivePanelView view={normalizeLearningActivity(null)} loading={false} error={null} nowMs={NOW} />,
+      <LearningLivePanelView
+        view={normalizeLearningActivity(null)}
+        loading={false}
+        error={null}
+        nowMs={NOW}
+      />,
     );
     expect(empty).toContain("No live activity readback has been recorded");
     expect(empty).not.toContain("of 300 dispatches");
@@ -163,7 +277,9 @@ describe("run99 learning live panel", () => {
 
 describe("run99 learning history panels", () => {
   test("renders the activity heat grid with the peak bucket", () => {
-    const html = renderToStaticMarkup(<LearningActivityHeatmapView history={history} nowMs={NOW} />);
+    const html = renderToStaticMarkup(
+      <LearningActivityHeatmapView history={history} nowMs={NOW} />,
+    );
     expect(html).toContain("Activity by bucket");
     expect(html).toContain("peak");
     expect(html).toContain("replayed");
@@ -183,7 +299,9 @@ describe("run99 learning history panels", () => {
   });
 
   test("renders the activation timeline with the rollback annotation and cohort", () => {
-    const html = renderToStaticMarkup(<LearningActivationTimelineView history={history} nowMs={NOW} />);
+    const html = renderToStaticMarkup(
+      <LearningActivationTimelineView history={history} nowMs={NOW} />,
+    );
     expect(html).toContain("Activation timeline");
     expect(html).toContain("1 rollback(s)");
     expect(html).toContain("rolled back");

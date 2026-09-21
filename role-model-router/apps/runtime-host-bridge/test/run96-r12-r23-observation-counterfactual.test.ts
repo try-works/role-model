@@ -146,7 +146,13 @@ test("Run 97 observations with distinct configured candidates enqueue replay ins
         return { ...base, id: "knowledge:run97" };
       }
       if (id === "background-evidence-scheduler") {
-        return { ...base, accepted: true, jobId: "replay-intent:run97-live", leaseId: "lease-1", fence: 1 };
+        return {
+          ...base,
+          accepted: true,
+          jobId: "replay-intent:run97-live",
+          leaseId: "lease-1",
+          fence: 1,
+        };
       }
       return base;
     },

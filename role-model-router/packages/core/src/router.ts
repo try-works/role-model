@@ -143,7 +143,8 @@ export function evaluateRouteAdvisoryConsideration(input: {
   const advised = input.scored.find((candidate) => candidate.endpoint_id === preferred);
   if (!leader || !advised) return fallback("advisory_candidate_not_eligible");
   const gap = leader.total_score - advised.total_score;
-  if (gap > band) return { ...fallback("outside_score_band"), scoreGapBefore: gap, cohortBucket: bucket };
+  if (gap > band)
+    return { ...fallback("outside_score_band"), scoreGapBefore: gap, cohortBucket: bucket };
   const explorationPercent = Number.isFinite(advisory.explorationPercent)
     ? Math.min(100, Math.max(0, Number(advisory.explorationPercent)))
     : 0;
@@ -158,7 +159,11 @@ export function evaluateRouteAdvisoryConsideration(input: {
   return {
     ...base,
     applied,
-    explorationMode: explore ? "advisory_exploration" : applied ? "advisory_considered" : "baseline",
+    explorationMode: explore
+      ? "advisory_exploration"
+      : applied
+        ? "advisory_considered"
+        : "baseline",
     selectionProbability: applied ? selectionProbability : 1,
     fallbackReason: applied ? null : "advisory_matches_baseline",
     scoreGapBefore: gap,
@@ -1769,10 +1774,7 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
     advisoryOutcome.applied && advisoryOutcome.advisoryPackageId
       ? scored.findIndex((candidate) => candidate.endpoint_id === advisoryOutcome.advisoryPackageId)
       : -1;
-  const chosen =
-    advisoryPreferredIndex > 0
-      ? scored[advisoryPreferredIndex]
-      : scored[0];
+  const chosen = advisoryPreferredIndex > 0 ? scored[advisoryPreferredIndex] : scored[0];
   const runnerUp = scored[1];
   const orderedFallbacks = chosen
     ? [chosen, ...scored.filter((candidate) => candidate !== chosen)]

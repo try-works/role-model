@@ -79,7 +79,9 @@ test("run99 R33 a failing evaluation sweep degrades the tick without discarding 
   try {
     const operations = fakeOperations(["req-1"]);
     operations.resumePendingEvaluations = async () => {
-      throw new Error("durable replay evaluation is missing branch capture for endpoint:endpoint-a");
+      throw new Error(
+        "durable replay evaluation is missing branch capture for endpoint:endpoint-a",
+      );
     };
     const loop = startAutoReplayLoop({
       operations,

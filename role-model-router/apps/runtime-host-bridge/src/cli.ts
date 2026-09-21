@@ -25,6 +25,11 @@ import {
 } from "./index.js";
 import { validateRun88PrivateDistributionIdentity } from "./kw-private-loader.js";
 import {
+  describeRouterPolicyResolution,
+  readLearningPolicyFile,
+  resolveLearningPolicyStateRoot,
+} from "./learning-policy-file.js";
+import {
   CURRENT_RUNTIME_CHANNEL_VERSION,
   PREVIOUS_RUNTIME_CHANNEL_VERSION,
   type RuntimeChannel,
@@ -41,6 +46,10 @@ import {
   resumePendingSupervisedReplayEvaluations,
 } from "./supervised-replay-evaluation-resume.js";
 import {
+  autoReplayExecutionFromCommandReceipt,
+  startAutoReplayLoop,
+} from "./track-b-auto-replay-runtime.js";
+import {
   buildAutoReplayIdempotencyKey,
   isReplayJobLeasedFailure,
   resolveAutoReplayDeadlineMaxMs,
@@ -50,27 +59,20 @@ import {
   resolveAutoReplayTickBudgetMs,
   retryLeasedReplayDispatch,
 } from "./track-b-auto-replay.js";
+import { createJudgeConsistencyLedger } from "./track-b-judge-consistency.js";
 import {
-  createRouterPairwiseJudge,
-  resolveJudgeEndpointFromController,
-} from "./track-b-shadow-judge-dispatch.js";
-import { isPairwiseJudgeMode, type TrackBPairwiseJudge } from "./track-b-shadow-judge.js";
-import {
-  autoReplayExecutionFromCommandReceipt,
-  startAutoReplayLoop,
-} from "./track-b-auto-replay-runtime.js";
+  DEFAULT_POSITION_CONSISTENCY_FLOOR,
+  evaluateJudgePositionConsistency,
+} from "./track-b-judge-consistency.js";
 import { createTrackBOperations } from "./track-b-operations.js";
+// Run 98 addendum 34 S1: coverage-driven pair planning for the comparison graph.
+import { createPairCoverageLedger, pairKey, planPairComparisons } from "./track-b-pair-coverage.js";
 import {
   deriveAutomaticReplayCriteria,
   extractSourceOutputText,
   extractTaskInstructionText,
 } from "./track-b-replay-evaluation-criteria.js";
 import { createReplayLedger, resolveReplayLedgerLimits } from "./track-b-replay-ledger.js";
-import { createJudgeConsistencyLedger } from "./track-b-judge-consistency.js";
-import {
-  DEFAULT_POSITION_CONSISTENCY_FLOOR,
-  evaluateJudgePositionConsistency,
-} from "./track-b-judge-consistency.js";
 import {
   buildReplayPolicySet,
   decideReplayAdmission,
@@ -80,46 +82,35 @@ import {
   resolveReplayToolPolicy,
   selectReplayCandidates,
 } from "./track-b-replay-policy.js";
-// Run 98 addendum 34 S1: coverage-driven pair planning for the comparison graph.
-import {
-  createPairCoverageLedger,
-  pairKey,
-  planPairComparisons,
-} from "./track-b-pair-coverage.js";
-import {
-  describeRouterPolicyResolution,
-  readLearningPolicyFile,
-  resolveLearningPolicyStateRoot,
-} from "./learning-policy-file.js";
 import {
   TRACK_B_CANONICAL_EXTENSION_IDS,
   type TrackBExtensionClosure,
   assertProductionExtensionRuntimeReady,
+  buildReplayDispatchMessages,
+  classifyReplayTerminalizationFailure,
   createOwnedTrackBSidecarSpec,
   createPackagedProductionRuntime,
   createProductionExtensionRuntime,
+  createReplayAuthorizationNonceStore,
   createReplayIntentScheduler,
   createReplaySourceAttestation,
-  createReplayAuthorizationNonceStore,
   createRouterReplayAdapter,
   createRun88RuntimeCorrelation,
   createRuntimeRequestCorrelationId,
-  classifyReplayTerminalizationFailure,
   createSingleFlightBackgroundDrain,
   createSupervisedReplayEvaluationRequestId,
-  buildReplayDispatchMessages,
   createTrackBPostObservationOutbox,
+  decodeExternalizedOperatorReadback,
   digestTrackBSemanticEvaluationCriteria,
   evaluateProductionExtensionRuntimeReadiness,
   normalizeTrackBSemanticEvaluationCriteria,
   readTrackBAdvisoryMeasurement,
   readTrackBRouteAdvisorySourceFromRuntime,
   rememberTrackBDurableRouteAdvisory,
-  decodeExternalizedOperatorReadback,
-requireReplayRouterDecisionId,
-resolveManagedArtifactKeyFiles,
-resolveMaxCounterfactualArms,
-runSupervisedReplay,
+  requireReplayRouterDecisionId,
+  resolveManagedArtifactKeyFiles,
+  resolveMaxCounterfactualArms,
+  runSupervisedReplay,
   runTrackBPostObservation,
   runTrackBPostObservationWithContribution,
   runTrackBShadowPipeline,
@@ -129,6 +120,11 @@ runSupervisedReplay,
   validateRun88ProviderResponseObservation,
   verifyTrackBExtensionClosureAfterRestart,
 } from "./track-b-runtime.js";
+import {
+  createRouterPairwiseJudge,
+  resolveJudgeEndpointFromController,
+} from "./track-b-shadow-judge-dispatch.js";
+import { type TrackBPairwiseJudge, isPairwiseJudgeMode } from "./track-b-shadow-judge.js";
 
 const DURABLE_ARTIFACT_ID = /^[a-f0-9]{64}$/u;
 
@@ -387,9 +383,10 @@ export function deriveSupervisedReplayTrajectoryEvents(input: {
           );
     const seenToolNames = new Set<string>();
     toolArtifactIds.forEach((artifactId, index) => {
-      const tool = tools[index] && typeof tools[index] === "object" && !Array.isArray(tools[index])
-        ? (tools[index] as Record<string, unknown>)
-        : {};
+      const tool =
+        tools[index] && typeof tools[index] === "object" && !Array.isArray(tools[index])
+          ? (tools[index] as Record<string, unknown>)
+          : {};
       const failure = tool.failure && typeof tool.failure === "object";
       const status = typeof tool.status === "string" ? tool.status.toLowerCase() : "";
       // A recorded tool failure can arrive three ways: a runtime execution status, a
@@ -477,22 +474,24 @@ export function deriveSupervisedReplayTrajectoryEvents(input: {
     });
   });
   const seen = new Set<string>();
-  return events
-    .filter((event) => {
-      const id = String(event.id);
-      if (seen.has(id)) return false;
-      seen.add(id);
-      return true;
-    })
-    // Order by recorded time: the analyzer requires non-decreasing timestamps, and a
-    // counterfactual capture is written after its source, so ordering purely by
-    // per-capture sequence numbers would interleave the two timelines.
-    .sort(
-      (left, right) =>
-        Number(left.timestampMs) - Number(right.timestampMs) ||
-        Number(left.sequence) - Number(right.sequence),
-    )
-    .slice(0, 128);
+  return (
+    events
+      .filter((event) => {
+        const id = String(event.id);
+        if (seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      })
+      // Order by recorded time: the analyzer requires non-decreasing timestamps, and a
+      // counterfactual capture is written after its source, so ordering purely by
+      // per-capture sequence numbers would interleave the two timelines.
+      .sort(
+        (left, right) =>
+          Number(left.timestampMs) - Number(right.timestampMs) ||
+          Number(left.sequence) - Number(right.sequence),
+      )
+      .slice(0, 128)
+  );
 }
 
 /**
@@ -672,7 +671,10 @@ function boundCaseSubjectText(value: unknown): string {
   const text = typeof value === "string" ? value : "";
   if (Buffer.byteLength(text, "utf8") <= MAX_EVALUATION_CASE_SUBJECT_BYTES) return text;
   let bounded = text;
-  while (bounded.length > 0 && Buffer.byteLength(bounded, "utf8") > MAX_EVALUATION_CASE_SUBJECT_BYTES) {
+  while (
+    bounded.length > 0 &&
+    Buffer.byteLength(bounded, "utf8") > MAX_EVALUATION_CASE_SUBJECT_BYTES
+  ) {
     bounded = bounded.slice(0, Math.floor(bounded.length * 0.9));
   }
   return `${bounded}\n[truncated ${text.length - bounded.length} chars]`;
@@ -1167,9 +1169,7 @@ export function createSupervisedReplayEvaluationCompleter(input: {
         taskText: extractTaskInstructionText(input.sourceCapture) ?? "",
         criteria: input.evaluationCriteria,
         outputText:
-          index === 0
-            ? input.sourceOutput
-            : evaluatedCounterfactuals[index - 1]?.output ?? "",
+          index === 0 ? input.sourceOutput : (evaluatedCounterfactuals[index - 1]?.output ?? ""),
       })),
     });
     const sourceReplaySource = durableReplaySource(input.sourceCapture, "source replay capture");
@@ -1211,10 +1211,7 @@ export function createSupervisedReplayEvaluationCompleter(input: {
     // so the fact now binds the exact reference set by digest and carries a bounded
     // prefix of the refs; the digest is what the attestation depends on.
     const MAX_REFERENCE_FACT_REFS = 64;
-    const boundedMessageArtifactRefs = sourceMessageArtifactRefs.slice(
-      0,
-      MAX_REFERENCE_FACT_REFS,
-    );
+    const boundedMessageArtifactRefs = sourceMessageArtifactRefs.slice(0, MAX_REFERENCE_FACT_REFS);
     const messageArtifactRefsDigest = createHash("sha256")
       .update(JSON.stringify(sourceMessageArtifactRefs))
       .digest("hex");
@@ -1271,9 +1268,7 @@ export function createSupervisedReplayEvaluationCompleter(input: {
     });
     const trajectoryEvents = deriveSupervisedReplayTrajectoryEvents({
       sourceCapture: input.sourceCapture,
-      counterfactualCaptures: evaluatedCounterfactuals.map(
-        ({ branchCapture }) => branchCapture,
-      ),
+      counterfactualCaptures: evaluatedCounterfactuals.map(({ branchCapture }) => branchCapture),
     });
     const sourceRolloutReferences = replayReferenceBuild.rolloutReferences[0];
     if (!sourceRolloutReferences) {
@@ -1288,7 +1283,8 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       // because this supervised-replay path never passed the capture's family, so the learner's
       // family-scoped floor could never be met from real traffic. The capture records the family
       // (`addendum 19 S33`), so it travels with the replay.
-      ...(typeof input.sourceCapture.taskTypeId === "string" && input.sourceCapture.taskTypeId.trim()
+      ...(typeof input.sourceCapture.taskTypeId === "string" &&
+      input.sourceCapture.taskTypeId.trim()
         ? { taskTypeId: input.sourceCapture.taskTypeId.trim() }
         : {}),
       // Run 98 addendum 30 S4 (live finding, stage v190): the pipeline has recorded the judge
@@ -1677,10 +1673,8 @@ export function createRuntimeOperatorCallbacks(
     setLearningPolicy: (body: Record<string, unknown>) => operations.setLearningPolicy(body),
     rollbackLearningPolicy: (body: Record<string, unknown>) =>
       operations.rollbackLearningPolicy(body),
-    activateLearningPack: (body: Record<string, unknown>) =>
-      operations.activateLearningPack(body),
-    rollbackLearningPack: (body: Record<string, unknown>) =>
-      operations.rollbackLearningPack(body),
+    activateLearningPack: (body: Record<string, unknown>) => operations.activateLearningPack(body),
+    rollbackLearningPack: (body: Record<string, unknown>) => operations.rollbackLearningPack(body),
     recordLearningGuardrailBreach: (body: Record<string, unknown>) =>
       operations.recordLearningGuardrailBreach(body),
     restoreLearningScenarioActivation: (body: Record<string, unknown>) =>
@@ -2485,8 +2479,7 @@ export function startDurableRouteAdvisoryRefresh(options: {
     // S0/S1 never consult an advisory, so there is nothing to publish.
     if (stage !== "S2" && stage !== "S3" && stage !== "S4") return;
     const nowMs = Date.now();
-    const evidenceMaxAgeMs =
-      (snapshot?.effective.evidenceMaxAgeDays ?? 30) * 24 * 60 * 60 * 1_000;
+    const evidenceMaxAgeMs = (snapshot?.effective.evidenceMaxAgeDays ?? 30) * 24 * 60 * 60 * 1_000;
     const advisory = await readTrackBRouteAdvisorySourceFromRuntime({
       runtime: runtime as unknown as Parameters<
         typeof readTrackBRouteAdvisorySourceFromRuntime
@@ -2869,7 +2862,9 @@ export function createCliServerOptions(
     readLearningMeasurement: bindBackendMethod(
       "readLearningMeasurement",
     ) as StartBridgeServerOptions["readLearningMeasurement"],
-    ...(options.anonymousLearningReads ? { anonymousLearningReads: options.anonymousLearningReads } : {}),
+    ...(options.anonymousLearningReads
+      ? { anonymousLearningReads: options.anonymousLearningReads }
+      : {}),
     readLearningActivity: bindBackendMethod(
       "readLearningActivity",
     ) as StartBridgeServerOptions["readLearningActivity"],
@@ -3493,9 +3488,7 @@ export function createProductionReplayAdapter(
   options: ProductionReplayAdapterOptions,
 ): ReturnType<typeof createRouterReplayAdapter> {
   const authorizationNonceStorePath = resolveProductionReplayAuthorizationNonceStorePath(options);
-  const authorizationNonceStore = createReplayAuthorizationNonceStore(
-    authorizationNonceStorePath,
-  );
+  const authorizationNonceStore = createReplayAuthorizationNonceStore(authorizationNonceStorePath);
   const dispatchLedger = createProductionReplayDispatchLedger(
     resolveProductionReplayDispatchLedgerPath(options),
   );
@@ -4092,32 +4085,32 @@ export async function main(): Promise<void> {
             maxMs: resolveAutoReplayDeadlineMaxMs(process.env),
           });
           const replayRequestBody = JSON.stringify({
-              requestId: capture.captureRef,
-              // RC04 L3: retry identity is the capture plus the frozen policy and
-              // candidate contract, never the per-attempt ledger reservation. A
-              // reservation-scoped key created a new durable replay job (and a new
-              // set of provider dispatches) on every retry while the previous job
-              // was orphaned mid-dispatch.
-              idempotencyKey: buildAutoReplayIdempotencyKey({
-                captureRef: capture.captureRef,
-                policySetDigest: policySet.policySetDigest,
-                candidateEndpointIds: candidates,
-              }),
+            requestId: capture.captureRef,
+            // RC04 L3: retry identity is the capture plus the frozen policy and
+            // candidate contract, never the per-attempt ledger reservation. A
+            // reservation-scoped key created a new durable replay job (and a new
+            // set of provider dispatches) on every retry while the previous job
+            // was orphaned mid-dispatch.
+            idempotencyKey: buildAutoReplayIdempotencyKey({
+              captureRef: capture.captureRef,
+              policySetDigest: policySet.policySetDigest,
               candidateEndpointIds: candidates,
-              evaluationCriteria: derivedCriteria.criteria,
-              budget: {
-                maxCandidates: candidates.length,
-                maxProviderCalls: candidates.length,
-                maxCostMicros: 1_000_000,
-                maxBytes: 8_388_608,
-                // RC16 (W3): the dispatches are serialized, so the deadline scales with
-                // the candidate count instead of racing a flat two-minute clock.
-                // Run 99 R33: multi-megabyte coding-agent prompts need a larger replay budget,
-                // otherwise the durable job expires mid-dispatch (observed live: 74-164 s per
-                // provider call for a 2.5 MiB prompt with a flat 120 s per-candidate deadline).
-                deadlineMs: replayDeadlineMs,
-              },
-            });
+            }),
+            candidateEndpointIds: candidates,
+            evaluationCriteria: derivedCriteria.criteria,
+            budget: {
+              maxCandidates: candidates.length,
+              maxProviderCalls: candidates.length,
+              maxCostMicros: 1_000_000,
+              maxBytes: 8_388_608,
+              // RC16 (W3): the dispatches are serialized, so the deadline scales with
+              // the candidate count instead of racing a flat two-minute clock.
+              // Run 99 R33: multi-megabyte coding-agent prompts need a larger replay budget,
+              // otherwise the durable job expires mid-dispatch (observed live: 74-164 s per
+              // provider call for a 2.5 MiB prompt with a flat 120 s per-candidate deadline).
+              deadlineMs: replayDeadlineMs,
+            },
+          });
           // Run 99 R33: a durable replay job that another dispatcher already holds is not a
           // failure — the 409 `replay job is already leased` means the very idempotency this loop
           // depends on is working. Wait the hold out inside the capture's own deadline and take the
@@ -4208,14 +4201,14 @@ export async function main(): Promise<void> {
           authorizationEpoch: 1,
           // R3: counterfactual candidates come from the running registry, not from
           // the capture's frozen decision snapshot.
-        // Run 98 addendum 34 S1: the arm bound is resolved *here*, in the process that reads the operator's
-        // environment, and travels with the work item. The sidecar that consumes it is a child process with
-        // its own environment, so a bound resolved only there ignored the override (measured on v216: three
-        // arms with the bound set to four).
-        configuredCandidateEndpointIds: configuredEndpointIdsRef.current.slice(
-          0,
-          resolveMaxCounterfactualArms(),
-        ),
+          // Run 98 addendum 34 S1: the arm bound is resolved *here*, in the process that reads the operator's
+          // environment, and travels with the work item. The sidecar that consumes it is a child process with
+          // its own environment, so a bound resolved only there ignored the override (measured on v216: three
+          // arms with the bound set to four).
+          configuredCandidateEndpointIds: configuredEndpointIdsRef.current.slice(
+            0,
+            resolveMaxCounterfactualArms(),
+          ),
           // Run 98 R4: durable advisory observations (state distribution + influence rate).
           advisoryObservationLedgerPath: path.join(
             options.runtimeStateRoot,
@@ -4228,8 +4221,7 @@ export async function main(): Promise<void> {
                 expectedReleaseId: resolvePostObservationReleaseId({
                   packagedReleaseId,
                   correlationReleaseId:
-                    observation.run88Correlation &&
-                    typeof observation.run88Correlation === "object"
+                    observation.run88Correlation && typeof observation.run88Correlation === "object"
                       ? (observation.run88Correlation as Record<string, unknown>).releaseId
                       : undefined,
                 }),
@@ -4851,7 +4843,10 @@ export async function main(): Promise<void> {
                   .slice(0, 16)}-failure`;
                 const failureEffort =
                   typeof candidate.reasoningEffort === "string" && candidate.reasoningEffort
-                    ? { reasoningEffort: candidate.reasoningEffort, effortSource: "variant" as const }
+                    ? {
+                        reasoningEffort: candidate.reasoningEffort,
+                        effortSource: "variant" as const,
+                      }
                     : { reasoningEffort: null, effortSource: "none" as const };
                 const failureBranch = (await operations.recordLocalRouteCapture({
                   requestId: failureRequestId,
@@ -4890,8 +4885,7 @@ export async function main(): Promise<void> {
                 candidatePackages.find((item) => item.endpointId === candidateEndpointId)
                   ?.reasoningEffort ?? null;
               const resultEffort =
-                typeof resultCandidateReasoningEffort === "string" &&
-                resultCandidateReasoningEffort
+                typeof resultCandidateReasoningEffort === "string" && resultCandidateReasoningEffort
                   ? {
                       reasoningEffort: resultCandidateReasoningEffort,
                       effortSource: "variant" as const,
@@ -4937,37 +4931,41 @@ export async function main(): Promise<void> {
               // without a policy write and without a restart.
               return async (request: Readonly<Record<string, unknown>>) => {
                 const judge = await resolveControllerJudge(created, learningPolicySnapshot);
-              const evaluationCompleter = buildSupervisedReplayEvaluationCompleter({
-                backend: created,
-                runtime,
-                operations,
-                requestId,
-                channel,
-                captureScope,
-                sourceCapture,
-                sourceOutput,
-                sourceEndpointId,
-                sourceModelId,
-                counterfactualPackages,
-                evaluationCriteria: evaluationCriteria as unknown as Readonly<Record<string, unknown>>,
-                evaluationCriteriaDigest,
-                learningPolicySnapshot,
-                judge,
-                replayLedger,
-                replayPolicySet,
-                getDispatched: (endpointId: string) => {
-                  const dispatch = dispatched.get(endpointId);
-                  return dispatch
-                    ? {
-                        execution: dispatch.execution as unknown as Readonly<Record<string, unknown>>,
-                        replayRequestId: dispatch.replayRequestId,
-                      }
-                    : undefined;
-                },
-                currentLedgerReservationId: () => ledgerReservationId,
-              });
-              // Run 99 R33: the handoff is recorded before the completion runs, so a restart in
-              // between leaves a retryable resume entry for the sweep instead of a stranded job.
+                const evaluationCompleter = buildSupervisedReplayEvaluationCompleter({
+                  backend: created,
+                  runtime,
+                  operations,
+                  requestId,
+                  channel,
+                  captureScope,
+                  sourceCapture,
+                  sourceOutput,
+                  sourceEndpointId,
+                  sourceModelId,
+                  counterfactualPackages,
+                  evaluationCriteria: evaluationCriteria as unknown as Readonly<
+                    Record<string, unknown>
+                  >,
+                  evaluationCriteriaDigest,
+                  learningPolicySnapshot,
+                  judge,
+                  replayLedger,
+                  replayPolicySet,
+                  getDispatched: (endpointId: string) => {
+                    const dispatch = dispatched.get(endpointId);
+                    return dispatch
+                      ? {
+                          execution: dispatch.execution as unknown as Readonly<
+                            Record<string, unknown>
+                          >,
+                          replayRequestId: dispatch.replayRequestId,
+                        }
+                      : undefined;
+                  },
+                  currentLedgerReservationId: () => ledgerReservationId,
+                });
+                // Run 99 R33: the handoff is recorded before the completion runs, so a restart in
+                // between leaves a retryable resume entry for the sweep instead of a stranded job.
                 const replayJobId = String(request.replayJobId ?? "");
                 const evaluationJobId = String(request.evaluationJobId ?? "");
                 const sourceCaptureRequestId =
@@ -5044,7 +5042,9 @@ export async function main(): Promise<void> {
           // reconcile the daily ledger, and re-attempts a capture that already
           // produced branches.
           const durableDispatches =
-            result.dispatches && typeof result.dispatches === "object" && !Array.isArray(result.dispatches)
+            result.dispatches &&
+            typeof result.dispatches === "object" &&
+            !Array.isArray(result.dispatches)
               ? (result.dispatches as Record<string, Record<string, unknown>>)
               : {};
           const durableEvaluation =
@@ -5057,7 +5057,10 @@ export async function main(): Promise<void> {
             const candidateEndpointId = String(branch.candidateEndpointId ?? "");
             const dispatch = durableDispatches[candidateEndpointId] ?? null;
             const dispatchResult =
-              dispatch && typeof dispatch.result === "object" && dispatch.result && !Array.isArray(dispatch.result)
+              dispatch &&
+              typeof dispatch.result === "object" &&
+              dispatch.result &&
+              !Array.isArray(dispatch.result)
                 ? (dispatch.result as Record<string, unknown>)
                 : null;
             return {
@@ -5072,7 +5075,9 @@ export async function main(): Promise<void> {
           const receiptDispatches = Object.entries(durableDispatches).map(
             ([endpointId, dispatch]) => {
               const receipt =
-                dispatch.receipt && typeof dispatch.receipt === "object" && !Array.isArray(dispatch.receipt)
+                dispatch.receipt &&
+                typeof dispatch.receipt === "object" &&
+                !Array.isArray(dispatch.receipt)
                   ? (dispatch.receipt as Record<string, unknown>)
                   : null;
               return {
@@ -5307,7 +5312,11 @@ export async function main(): Promise<void> {
             // Run 98 addendum 33 S2: what a flipped pair means (env override → policy → balanced).
             orderAggregation: (() => {
               const envValue = process.env.ROLE_MODEL_JUDGE_ORDER_AGGREGATION?.trim();
-              if (envValue === "balanced" || envValue === "strict_consistency" || envValue === "fails_closed") {
+              if (
+                envValue === "balanced" ||
+                envValue === "strict_consistency" ||
+                envValue === "fails_closed"
+              ) {
                 return envValue;
               }
               return input.learningPolicySnapshot?.effective.judgeOrderAggregation ?? "balanced";
@@ -5417,11 +5426,15 @@ export async function main(): Promise<void> {
                       input.learningPolicySnapshot.effective.multiplicityAdjustment,
                   },
                   evidenceMaxAgeMs:
-                    input.learningPolicySnapshot.effective.evidenceMaxAgeDays * 24 * 60 * 60 * 1_000,
+                    input.learningPolicySnapshot.effective.evidenceMaxAgeDays *
+                    24 *
+                    60 *
+                    60 *
+                    1_000,
                 },
               }
             : {}),
-          });
+        });
       };
       /**
        * Re-runs one interrupted supervised-replay evaluation. The branch captures are deterministic
@@ -5618,10 +5631,8 @@ export async function main(): Promise<void> {
               sourceEndpointId,
               sourceModelId,
               counterfactualPackages,
-              evaluationCriteria:
-                effectiveCriteria as unknown as Readonly<Record<string, unknown>>,
-              evaluationCriteriaDigest:
-                digestTrackBSemanticEvaluationCriteria(effectiveCriteria),
+              evaluationCriteria: effectiveCriteria as unknown as Readonly<Record<string, unknown>>,
+              evaluationCriteriaDigest: digestTrackBSemanticEvaluationCriteria(effectiveCriteria),
               learningPolicySnapshot: readEvaluationLearningPolicySnapshot(),
               // Run 98 addendum 45 J2: a resumed completion resolves the judge the same way a live one does.
               judge: await resolveControllerJudge(created, readEvaluationLearningPolicySnapshot()),
@@ -5663,7 +5674,9 @@ export async function main(): Promise<void> {
           onAbandoned: async (entry, error) => {
             const activeRuntime = extensionRuntimeRef.current;
             if (!activeRuntime) return;
-            const reason = String((error as { message?: unknown })?.message ?? error ?? "unknown").slice(0, 360);
+            const reason = String(
+              (error as { message?: unknown })?.message ?? error ?? "unknown",
+            ).slice(0, 360);
             // Durable replay jobs are scoped to the *capture's* scope, and `replay:fail-job` is bound to
             // the persisted job, so the scope has to come from the capture — the same authority the
             // completion path reads. Guessing the operator scope is refused with a binding mismatch.
@@ -5711,7 +5724,11 @@ export async function main(): Promise<void> {
                   lastError = scopeError;
                   // Only a scope mismatch is worth retrying with the next candidate; anything else is a
                   // real failure (already terminal, unknown job) and is reported as-is.
-                  if (!/scope binding mismatch/u.test(String((scopeError as { message?: unknown })?.message ?? scopeError))) {
+                  if (
+                    !/scope binding mismatch/u.test(
+                      String((scopeError as { message?: unknown })?.message ?? scopeError),
+                    )
+                  ) {
                     break;
                   }
                 }
@@ -5951,7 +5968,11 @@ export async function main(): Promise<void> {
              * spans more than one ruler version — a mean across rulers is not a measurement.
              */
             const byPriorVersion = result?.byPriorVersion;
-            if (byPriorVersion && typeof byPriorVersion === "object" && !Array.isArray(byPriorVersion)) {
+            if (
+              byPriorVersion &&
+              typeof byPriorVersion === "object" &&
+              !Array.isArray(byPriorVersion)
+            ) {
               for (const [key, bucket] of Object.entries(
                 byPriorVersion as Record<string, Record<string, unknown>>,
               )) {
@@ -5999,13 +6020,12 @@ export async function main(): Promise<void> {
               key,
               {
                 revisions: bucket.revisions,
-                meanBefore:
-                  bucket.beforeCount > 0 ? bucket.beforeSum / bucket.beforeCount : null,
+                meanBefore: bucket.beforeCount > 0 ? bucket.beforeSum / bucket.beforeCount : null,
                 meanAfter: bucket.afterCount > 0 ? bucket.afterSum / bucket.afterCount : null,
               },
             ]),
           ),
-          ...((() => {
+          ...(() => {
             const versions = new Set(
               Object.keys(priorVersionBuckets).map((key) => key.slice(key.lastIndexOf("@") + 1)),
             );
@@ -6016,7 +6036,7 @@ export async function main(): Promise<void> {
               refusalDetail:
                 "a mean across rows produced by different ruler versions is not a measurement; re-score under one pinned version first",
             };
-          })()),
+          })(),
           skipped,
         };
       };

@@ -3,7 +3,11 @@ import { describe, expect, test } from "vitest";
 import { canonicalTaxonomy } from "@role-model-router/core";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 
-import { createRoleModelNormalizedIntentObservation, mapChatCompletionsRequest, mapResponsesRequest } from "../src/index.js";
+import {
+  createRoleModelNormalizedIntentObservation,
+  mapChatCompletionsRequest,
+  mapResponsesRequest,
+} from "../src/index.js";
 import { deriveTaxonomyClassification } from "../src/taxonomy-derivation.js";
 
 /**
@@ -72,8 +76,14 @@ describe("run98 addendum 58 — runtime taxonomy derivation", () => {
     console.log(
       `[a58] derivation over declared signals: exact ${exact}/${canonicalTaxonomy.tasks.length} (${(exactRate * 100).toFixed(1)}%), same-group ${sameGroup}/${canonicalTaxonomy.tasks.length} (${(groupRate * 100).toFixed(1)}%)`,
     );
-    expect(exactRate, `exact ${exact}/${canonicalTaxonomy.tasks.length}; misses ${JSON.stringify(misses.slice(0, 20))}`).toBeGreaterThanOrEqual(0.95);
-    expect(groupRate, `group ${sameGroup}/${canonicalTaxonomy.tasks.length}`).toBeGreaterThanOrEqual(0.9);
+    expect(
+      exactRate,
+      `exact ${exact}/${canonicalTaxonomy.tasks.length}; misses ${JSON.stringify(misses.slice(0, 20))}`,
+    ).toBeGreaterThanOrEqual(0.95);
+    expect(
+      groupRate,
+      `group ${sameGroup}/${canonicalTaxonomy.tasks.length}`,
+    ).toBeGreaterThanOrEqual(0.9);
   });
 
   test("a review-shaped request derives a coder-family classification", () => {
@@ -240,7 +250,8 @@ describe("run98 addendum 58 — runtime taxonomy derivation", () => {
           contract_version: 1,
           intent: {
             taxonomy_version: canonicalTaxonomy.manifest.taxonomyVersion,
-            classification_contract_version: canonicalTaxonomy.manifest.classificationContractVersion,
+            classification_contract_version:
+              canonicalTaxonomy.manifest.classificationContractVersion,
             requested_role_id: "translator",
             task_type: "translator.translate",
             confidence: 0.93,

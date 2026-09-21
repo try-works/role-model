@@ -3,11 +3,11 @@ import { describe, expect, test } from "vitest";
 import {
   EMPTY_LEARNING_ACTIVITY,
   EMPTY_LEARNING_HISTORY,
+  appliedShareOf,
+  fallbackReasonRows,
   formatCompact,
   formatPercentShare,
   formatRelativeAge,
-  appliedShareOf,
-  fallbackReasonRows,
   historyHeatmap,
   normalizeLearningActivity,
   normalizeLearningHistory,
@@ -56,7 +56,12 @@ describe("normalizeLearningActivity", () => {
     });
 
     expect(view.available).toBe(true);
-    expect(view.pipeline.map((stage) => stage.label)).toEqual(["Capture", "Replay", "Evaluation", "Learner"]);
+    expect(view.pipeline.map((stage) => stage.label)).toEqual([
+      "Capture",
+      "Replay",
+      "Evaluation",
+      "Learner",
+    ]);
     expect(view.pipeline[0]).toMatchObject({ pending: 2, recent: 3, active: true });
     expect(view.budget.counterfactuals.percent).toBe(25);
     expect(view.budget.dispatches.percent).toBe(50);
@@ -66,9 +71,17 @@ describe("normalizeLearningActivity", () => {
   });
 
   test("survives partial payloads without fabricating counts", () => {
-    const view = normalizeLearningActivity({ pipeline: [{ stage: "replay" }, null], recent: [null] });
+    const view = normalizeLearningActivity({
+      pipeline: [{ stage: "replay" }, null],
+      recent: [null],
+    });
     expect(view.available).toBe(true);
-    expect(view.pipeline[0]).toMatchObject({ stage: "replay", pending: 0, recent: 0, active: false });
+    expect(view.pipeline[0]).toMatchObject({
+      stage: "replay",
+      pending: 0,
+      recent: 0,
+      active: false,
+    });
     expect(view.pipeline[1]).toMatchObject({ stage: "unknown", label: "unknown" });
     expect(view.recent).toEqual([]);
     expect(view.budget.counterfactuals).toEqual({ used: 0, limit: 0, percent: 0 });
@@ -81,8 +94,28 @@ describe("normalizeLearningHistory", () => {
     window: { hours: 6, bucketHours: 2 },
     policyVersion: 21,
     buckets: [
-      { startMs: 4 * HOUR, endMs: 6 * HOUR, replays: 1, refusals: 2, deferred: 1, branches: 3, evaluations: 2, validations: 1, activations: 0 },
-      { startMs: 6 * HOUR, endMs: 8 * HOUR, replays: 0, refusals: 5, deferred: 0, branches: 0, evaluations: 0, validations: 0, activations: 1 },
+      {
+        startMs: 4 * HOUR,
+        endMs: 6 * HOUR,
+        replays: 1,
+        refusals: 2,
+        deferred: 1,
+        branches: 3,
+        evaluations: 2,
+        validations: 1,
+        activations: 0,
+      },
+      {
+        startMs: 6 * HOUR,
+        endMs: 8 * HOUR,
+        replays: 0,
+        refusals: 5,
+        deferred: 0,
+        branches: 0,
+        evaluations: 0,
+        validations: 0,
+        activations: 1,
+      },
     ],
     totals: {
       replays: 1,
@@ -109,8 +142,22 @@ describe("normalizeLearningHistory", () => {
       ],
     },
     activationTimeline: [
-      { atMs: 9 * HOUR, kind: "rollback", packageId: "pack-1", state: "rolled_back", cohortPercent: 0, detail: null },
-      { atMs: 8 * HOUR, kind: "activate", packageId: "pack-1", state: "active", cohortPercent: 10, detail: null },
+      {
+        atMs: 9 * HOUR,
+        kind: "rollback",
+        packageId: "pack-1",
+        state: "rolled_back",
+        cohortPercent: 0,
+        detail: null,
+      },
+      {
+        atMs: 8 * HOUR,
+        kind: "activate",
+        packageId: "pack-1",
+        state: "active",
+        cohortPercent: 10,
+        detail: null,
+      },
     ],
     guardrails: [
       { metric: "qualityMinDelta", limit: -0.02, observed: 0.08, status: "ok" },
@@ -124,8 +171,18 @@ describe("normalizeLearningHistory", () => {
     expect(view.windowHours).toBe(6);
     expect(view.bucketHours).toBe(2);
     expect(view.policyVersion).toBe(21);
-    expect(view.buckets[0]).toMatchObject({ replays: 1, refusals: 2, deferred: 1, total: 1 + 2 + 1 + 2 + 1 });
-    expect(view.totals).toMatchObject({ replays: 1, refusals: 7, evaluations: 2, advisoryWouldHaveChanged: 4 });
+    expect(view.buckets[0]).toMatchObject({
+      replays: 1,
+      refusals: 2,
+      deferred: 1,
+      total: 1 + 2 + 1 + 2 + 1,
+    });
+    expect(view.totals).toMatchObject({
+      replays: 1,
+      refusals: 7,
+      evaluations: 2,
+      advisoryWouldHaveChanged: 4,
+    });
     expect(view.mix.decisiveShare).toBeCloseTo(3 / 10, 5);
     expect(view.mix.worst?.comparisonId).toBe("v2");
     expect(view.timeline.map((entry) => entry.kind)).toEqual(["rollback", "activate"]);
@@ -147,8 +204,30 @@ describe("normalizeLearningHistory", () => {
 describe("historyHeatmap", () => {
   test("scales intensity, keeps a weekday grid and marks the busiest bucket", () => {
     const buckets = [
-      { startMs: Date.UTC(2026, 8, 14, 0), endMs: 0, replays: 0, refusals: 0, deferred: 0, branches: 0, evaluations: 0, validations: 0, activations: 0, total: 0 },
-      { startMs: Date.UTC(2026, 8, 15, 0), endMs: 0, replays: 4, refusals: 0, deferred: 0, branches: 0, evaluations: 0, validations: 0, activations: 0, total: 4 },
+      {
+        startMs: Date.UTC(2026, 8, 14, 0),
+        endMs: 0,
+        replays: 0,
+        refusals: 0,
+        deferred: 0,
+        branches: 0,
+        evaluations: 0,
+        validations: 0,
+        activations: 0,
+        total: 0,
+      },
+      {
+        startMs: Date.UTC(2026, 8, 15, 0),
+        endMs: 0,
+        replays: 4,
+        refusals: 0,
+        deferred: 0,
+        branches: 0,
+        evaluations: 0,
+        validations: 0,
+        activations: 0,
+        total: 4,
+      },
     ];
     const heatmap = historyHeatmap(buckets);
     expect(heatmap.max).toBe(4);

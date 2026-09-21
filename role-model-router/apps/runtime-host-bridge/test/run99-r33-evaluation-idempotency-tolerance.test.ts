@@ -11,9 +11,9 @@ import { isEvaluationJobIdempotencyConflict } from "../src/track-b-runtime.js";
  */
 describe("run99 R33 evaluation job idempotency tolerance", () => {
   it("recognizes the durable-job conflict and nothing else", () => {
-    expect(isEvaluationJobIdempotencyConflict(new Error("evaluation job idempotency conflict"))).toBe(
-      true,
-    );
+    expect(
+      isEvaluationJobIdempotencyConflict(new Error("evaluation job idempotency conflict")),
+    ).toBe(true);
     expect(
       isEvaluationJobIdempotencyConflict(
         new Error("extension evaluation-core failed: evaluation job idempotency conflict"),

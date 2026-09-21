@@ -1,14 +1,14 @@
-import { expect, test } from "vitest";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { expect, test } from "vitest";
 
+import { resolveMaxExtraPairComparisons } from "../src/cli.js";
 import {
   createPairCoverageLedger,
   pairKey,
   planPairComparisons,
 } from "../src/track-b-pair-coverage.js";
-import { resolveMaxExtraPairComparisons } from "../src/cli.js";
 import { resolveMaxCounterfactualArms } from "../src/track-b-runtime.js";
 
 test("run98 A34 S1 the arm bound is policy-driven and bounded", () => {

@@ -65,7 +65,9 @@ const degradationText = (
   }`;
 };
 
-export function summarizePolicyResolution(view: PolicyReadbackView | null | undefined): PolicyResolutionSummary {
+export function summarizePolicyResolution(
+  view: PolicyReadbackView | null | undefined,
+): PolicyResolutionSummary {
   const router = view?.routerResolution ?? null;
   const routerDegradation = router?.degraded ?? null;
   const readbackDegradation = view?.degraded ?? null;

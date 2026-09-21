@@ -7,13 +7,13 @@ import {
   extensionActivationBoundaryFor,
   extensionModeCeilingError,
 } from "./extension-activation-boundaries.js";
-import { emitCaptureGraphContracts } from "./track-b-capture-contracts.js";
 import {
   type KwSessionWorker,
   clearKwPromptInjectSessionsForTests,
   registerKwPromptInjectSession,
   syncPrivateKnowledgeActivation,
 } from "./kw-prompt-inject.js";
+import { emitCaptureGraphContracts } from "./track-b-capture-contracts.js";
 
 let kwJoinWorkerFactory: ((sessionId: string) => Promise<KwSessionWorker | undefined>) | undefined;
 
@@ -566,7 +566,11 @@ const persistExtensionBoundaryMode = async (input: {
     ...current,
     enabled,
     enabledMode: input.mode,
-    lifecycle: enabled ? (current.lifecycle === "stopped" ? "ready" : current.lifecycle) : "stopped",
+    lifecycle: enabled
+      ? current.lifecycle === "stopped"
+        ? "ready"
+        : current.lifecycle
+      : "stopped",
     ...(input.id === "knowledge-worker" ? { productionActivation: false } : {}),
     health: {
       ...current.health,
@@ -855,9 +859,7 @@ export class RouteCaptureBoundaryCoolingDownError extends Error {
   readonly code = "route_capture_boundary_cooling_down";
 
   constructor(readonly retryAtMs: number) {
-    super(
-      `route capture skipped: boundary unavailable until ${new Date(retryAtMs).toISOString()}`,
-    );
+    super(`route capture skipped: boundary unavailable until ${new Date(retryAtMs).toISOString()}`);
     this.name = "RouteCaptureBoundaryCoolingDownError";
   }
 }
@@ -915,7 +917,8 @@ const RETRYABLE_PRIVATE_OPERATION_TRANSPORT_CODES = new Set([
 const isRetryablePrivateOperationTransportFailure = (error: unknown): boolean => {
   const cause = (error as { cause?: { code?: unknown } } | undefined)?.cause;
   const ownCode = (error as { code?: unknown } | undefined)?.code;
-  const code = typeof cause?.code === "string" ? cause.code : typeof ownCode === "string" ? ownCode : "";
+  const code =
+    typeof cause?.code === "string" ? cause.code : typeof ownCode === "string" ? ownCode : "";
   if (RETRYABLE_PRIVATE_OPERATION_TRANSPORT_CODES.has(code)) return true;
   const message = String((error as { message?: unknown } | undefined)?.message ?? "");
   return message === "fetch failed" || /socket hang up|other side closed/i.test(message);
@@ -1489,12 +1492,14 @@ export function createTrackBOperations({
   // rule matched the bare substring `api-key`, so endpoint ids such as
   // `deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-high` reached the Learning UI as
   // `[redacted]`. A credential carries a separator plus a value (`api_key=...`, `api-key: ...`).
-  const operatorSensitiveValue = /(?:sk-[a-z0-9_-]{8,}|api[_-]?key\s*[:=]\s*\S{6,}|bearer\s+[a-z0-9._-]{12,})/i;
+  const operatorSensitiveValue =
+    /(?:sk-[a-z0-9_-]{8,}|api[_-]?key\s*[:=]\s*\S{6,}|bearer\s+[a-z0-9._-]{12,})/i;
   const operatorAggregateMetricKey = /^(?:inputTokens|outputTokens)$/i;
   const sanitizeOperatorProjection = (value: unknown, key?: string): unknown => {
     if (key && operatorAggregateMetricKey.test(key) && typeof value === "number") return value;
     if (key && operatorSensitiveKey.test(key)) return "[redacted]";
-    if (typeof value === "string" && redactOperatorSensitiveValue(value) === "[redacted]") return "[redacted]";
+    if (typeof value === "string" && redactOperatorSensitiveValue(value) === "[redacted]")
+      return "[redacted]";
     if (Array.isArray(value)) return value.map((item) => sanitizeOperatorProjection(item));
     if (value && typeof value === "object") {
       return Object.fromEntries(
@@ -1959,7 +1964,8 @@ export function createTrackBOperations({
       }
       let requestedMode: ExtensionMode | undefined;
       if (action === "enable" || action === "set_mode") {
-        const raw = input.mode ?? (action === "enable" ? activationBoundary.defaultMode : undefined);
+        const raw =
+          input.mode ?? (action === "enable" ? activationBoundary.defaultMode : undefined);
         if (raw !== undefined) {
           if (typeof raw !== "string" || !EXTENSION_MODES.has(raw as ExtensionMode))
             throw new Error(`illegal extension mode: ${String(raw)}`);
@@ -2281,8 +2287,7 @@ export function createTrackBOperations({
               ...actual,
               installed: true,
               enabledMode:
-                actual.enabledMode ??
-                (actual.enabled ? entryBoundary.defaultMode : "disabled"),
+                actual.enabledMode ?? (actual.enabled ? entryBoundary.defaultMode : "disabled"),
               activationBoundary: entryBoundary,
               ...(entryId === "knowledge-worker"
                 ? {
@@ -2613,10 +2618,14 @@ export function createTrackBOperations({
       return next;
     },
     async recordContributionAggregate(input: Record<string, unknown>): Promise<unknown> {
-      const remote = await requestPrivate("contribution/aggregate", {
-        method: "POST",
-        body: sanitizeOperatorBody(input),
-      }, boundedContributionAggregateTimeoutMs);
+      const remote = await requestPrivate(
+        "contribution/aggregate",
+        {
+          method: "POST",
+          body: sanitizeOperatorBody(input),
+        },
+        boundedContributionAggregateTimeoutMs,
+      );
       return remote === null
         ? { status: "operations_boundary_unconfigured" }
         : sanitizeOperatorProjection(remote);
@@ -2638,9 +2647,7 @@ export function createTrackBOperations({
       // (routing continues); the bound only stops an unbounded wait for the boundary.
       const captureStartedAtMs = Date.now();
       if (process.env.ROLE_MODEL_PHASE_TIMING === "1") {
-        console.error(
-          `[run98] phase route-capture-start ${String(input.requestId ?? "")}`,
-        );
+        console.error(`[run98] phase route-capture-start ${String(input.requestId ?? "")}`);
       }
       const captureBytes = Buffer.byteLength(JSON.stringify(input) ?? "", "utf8");
       if (captureBytes > boundedRouteCaptureMaxBytes) {

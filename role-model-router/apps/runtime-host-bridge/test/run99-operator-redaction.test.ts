@@ -35,7 +35,12 @@ describe("run99 operator value redaction", () => {
   });
 
   test("leaves ordinary prose and ids alone", () => {
-    for (const value of ["validation-1073ba74ff550d56", "candidate-local", "holdout:98", "rollback"]) {
+    for (const value of [
+      "validation-1073ba74ff550d56",
+      "candidate-local",
+      "holdout:98",
+      "rollback",
+    ]) {
       expect(redactOperatorSensitiveValue(value)).toBe(value);
     }
   });

@@ -32,7 +32,10 @@ const hash = (value: string): string => createHash("sha256").update(value).diges
 
 const tempRoots: string[] = [];
 /** Run 98 addendum 56 §6.2: the durable payload the fake host answers an externalized attestation from. */
-const externalizedOutputs = new Map<string, { readonly resultHash: string; readonly payload: string }>();
+const externalizedOutputs = new Map<
+  string,
+  { readonly resultHash: string; readonly payload: string }
+>();
 const ATTESTATION_OUTPUT_KEY = "attestation:run98:a34:externalized";
 afterEach(() => {
   externalizedOutputs.clear();
@@ -405,7 +408,6 @@ function buildScenario(
   return {
     sourceCapture,
     arms,
-    pipelineInputs,
     pipelineCalls,
     capturedJobs,
     capturedFinalizers,
@@ -502,11 +504,9 @@ describe("run 98 addendum 34 S1 pair comparisons", () => {
     // already-covered arm pairs can only fill what remains of the bounded budget.
     const uncovered = ["endpoint:1|endpoint:b", "endpoint:1|endpoint:c"];
     expect(uncovered).toContain(secondExtras[0]);
-    expect(
-      secondExtras
-        .slice(0, uncovered.length)
-        .every((pair) => uncovered.includes(pair)),
-    ).toBe(true);
+    expect(secondExtras.slice(0, uncovered.length).every((pair) => uncovered.includes(pair))).toBe(
+      true,
+    );
     for (const coveredPair of ["endpoint:a|endpoint:b", "endpoint:a|endpoint:c"]) {
       const index = secondExtras.indexOf(coveredPair);
       if (index >= 0) expect(index).toBeGreaterThanOrEqual(uncovered.length);
@@ -584,7 +584,9 @@ describe("run 98 addendum 34 S1 pair comparisons", () => {
     expect(holdoutCandidates.has(primarySourceId)).toBe(true);
     expect(holdoutCandidates.has(primaryArmId)).toBe(true);
     const durableHoldout = job?.holdout as Record<string, unknown> | undefined;
-    expect((durableHoldout?.caseIds as readonly string[] | undefined)?.length).toBeGreaterThanOrEqual(2);
+    expect(
+      (durableHoldout?.caseIds as readonly string[] | undefined)?.length,
+    ).toBeGreaterThanOrEqual(2);
     // The development case is durable evidence on the same job, but it is not part of the decision:
     // the finalized comparison submits exactly the two holdout sides it judged.
     const finalizer = scenario.capturedFinalizers[0];

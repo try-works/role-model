@@ -89,9 +89,7 @@ const contractEnvelope = (input: {
   readonly boundaryProtocolVersion: string;
 } => ({
   runtimeChannel:
-    input.channel === "production" || input.channel === "development"
-      ? input.channel
-      : "stage",
+    input.channel === "production" || input.channel === "development" ? input.channel : "stage",
   scopeId: input.scopeId,
   boundaryProtocolVersion: "1.1",
 });
@@ -151,9 +149,7 @@ export interface RoutingRolloutGroupLifecycleInput {
   readonly updatedAtMs: number;
 }
 
-export function buildRoutingRolloutGroupLifecycle(
-  input: RoutingRolloutGroupLifecycleInput,
-) {
+export function buildRoutingRolloutGroupLifecycle(input: RoutingRolloutGroupLifecycleInput) {
   return {
     contract: "RoutingRolloutGroupLifecycleV1" as const,
     groupId: input.groupId,
@@ -278,9 +274,7 @@ export interface RoutePackageActivationReceiptInput {
   readonly scopeId: string;
 }
 
-export function buildRoutePackageActivationReceipt(
-  input: RoutePackageActivationReceiptInput,
-) {
+export function buildRoutePackageActivationReceipt(input: RoutePackageActivationReceiptInput) {
   return {
     contract: "RoutePackageActivationReceiptV1" as const,
     receiptId: input.receiptId,
@@ -291,9 +285,7 @@ export function buildRoutePackageActivationReceipt(
     ...(input.validationReceiptId ? { validationReceiptId: input.validationReceiptId } : {}),
     state: input.state,
     activatedAt: iso(input.activatedAtMs),
-    ...(input.rolledBackAtMs === undefined
-      ? {}
-      : { rolledBackAt: iso(input.rolledBackAtMs) }),
+    ...(input.rolledBackAtMs === undefined ? {} : { rolledBackAt: iso(input.rolledBackAtMs) }),
     ...contractEnvelope(input),
   };
 }

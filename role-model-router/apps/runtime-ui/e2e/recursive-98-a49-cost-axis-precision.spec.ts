@@ -42,7 +42,10 @@ test.describe("@recursive:98-a49 @runtime-telemetry", () => {
       `every cost-avoided label was zero: ${tickLabels.join(", ")}`,
     ).toBe(true);
 
-    await page.screenshot({ path: path.join(evidenceDir, "a49-cost-avoided-axis.png"), fullPage: true });
+    await page.screenshot({
+      path: path.join(evidenceDir, "a49-cost-avoided-axis.png"),
+      fullPage: true,
+    });
     // A viewport capture with the chart in view, so the axis labels are legible in the evidence.
     await page.getByText("Cost avoided over time").first().scrollIntoViewIfNeeded();
     await page.waitForTimeout(600);

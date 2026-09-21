@@ -10,7 +10,11 @@ test("run97 automatic producer treats a handoff-only replay as non-terminal", ()
     state: "awaiting_evaluation",
     evaluationJobId: "evaluation-replay-1",
     branches: [
-      { candidateEndpointId: "endpoint-b", outcome: "append_recovery", branchRootRef: "a".repeat(64) },
+      {
+        candidateEndpointId: "endpoint-b",
+        outcome: "append_recovery",
+        branchRootRef: "a".repeat(64),
+      },
     ],
     dispatches: [
       {
@@ -44,10 +48,26 @@ test("run97 automatic producer treats a durably evaluated replay as terminal", (
     evaluationJobId: "evaluation-replay-1",
     evaluationOutcome: "candidate",
     comparisonGroupId: "comparison-1",
-    branches: [{ candidateEndpointId: "endpoint-b", outcome: "complete", branchRootRef: "b".repeat(64) }],
+    branches: [
+      { candidateEndpointId: "endpoint-b", outcome: "complete", branchRootRef: "b".repeat(64) },
+    ],
     dispatches: [
-      { kind: "candidate", endpointId: "endpoint-b", attempt: 1, costMicros: 640, bytes: 1536, outcome: "complete" },
-      { kind: "retry", endpointId: "endpoint-b", attempt: 2, costMicros: 128, bytes: 256, outcome: "failed" },
+      {
+        kind: "candidate",
+        endpointId: "endpoint-b",
+        attempt: 1,
+        costMicros: 640,
+        bytes: 1536,
+        outcome: "complete",
+      },
+      {
+        kind: "retry",
+        endpointId: "endpoint-b",
+        attempt: 2,
+        costMicros: 128,
+        bytes: 256,
+        outcome: "failed",
+      },
     ],
   });
   expect(execution.terminal).toBe(true);

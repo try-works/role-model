@@ -128,8 +128,8 @@ export function resolveRoutingLatencySelectionPolicy(input: {
     else tokenBucketUpperBounds = resolved;
   }
 
-  let windowHours = resolveBounded("windowHours");
-  let minSamples = resolveBounded("minSamples");
+  const windowHours = resolveBounded("windowHours");
+  const minSamples = resolveBounded("minSamples");
   let maxDeltaMs = resolveBounded("maxDeltaMs");
   const maxCandidates = resolveBounded("maxCandidates");
 

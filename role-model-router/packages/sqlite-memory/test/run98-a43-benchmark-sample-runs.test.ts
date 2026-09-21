@@ -1,7 +1,7 @@
 import { mkdtemp } from "node:fs/promises";
-import { DatabaseSync } from "node:sqlite";
 import os from "node:os";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 
 import { expect, test } from "vitest";
 

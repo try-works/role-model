@@ -25,7 +25,12 @@ describe("run99 R33 replay lease retry", () => {
         '{"error":"extension replay-core failed: replay job is already leased"}',
       ),
     ).toBe(true);
-    expect(isReplayJobLeasedFailure(409, '{"error":"extension replay-core failed: replay job is not awaiting evaluation completion"}')).toBe(false);
+    expect(
+      isReplayJobLeasedFailure(
+        409,
+        '{"error":"extension replay-core failed: replay job is not awaiting evaluation completion"}',
+      ),
+    ).toBe(false);
     expect(isReplayJobLeasedFailure(500, "already leased")).toBe(false);
   });
 
@@ -53,7 +58,8 @@ describe("run99 R33 replay lease retry", () => {
       sleep: async (ms) => {
         slept.push(ms);
       },
-      retryable: (failure) => failure.status === 0 || isReplayJobLeasedFailure(failure.status, failure.body),
+      retryable: (failure) =>
+        failure.status === 0 || isReplayJobLeasedFailure(failure.status, failure.body),
     });
 
     expect(result.value).toEqual({ state: "complete" });
@@ -111,9 +117,9 @@ describe("run99 R33 replay lease retry", () => {
     ).toBe(1_800_000);
 
     // Three candidates at five minutes each, with the operator's ceiling: the budget covers the run.
-    expect(
-      resolveAutoReplayDeadlineMs(3, { perCandidateMs: 300_000, maxMs: 7_200_000 }),
-    ).toBe(900_000);
+    expect(resolveAutoReplayDeadlineMs(3, { perCandidateMs: 300_000, maxMs: 7_200_000 })).toBe(
+      900_000,
+    );
     // …and the ceiling still binds when the arithmetic would exceed it.
     expect(resolveAutoReplayDeadlineMs(12, { perCandidateMs: 900_000, maxMs: 1_800_000 })).toBe(
       1_800_000,

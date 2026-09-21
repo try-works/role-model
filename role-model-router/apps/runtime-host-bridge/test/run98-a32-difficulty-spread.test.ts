@@ -56,7 +56,12 @@ describe("run98 A32 S3 difficulty rubric spreads across the observed range", () 
       signals({ contextTokens: 2_000, toolCount: 1, historyTurnCount: 2 }),
       signals({ contextTokens: 12_000, toolCount: 2, historyTurnCount: 6 }),
       signals({ contextTokens: 60_000, toolCount: 5, historyTurnCount: 16 }),
-      signals({ contextTokens: 562_507, toolCount: 6, historyTurnCount: 24, codeOrSchemaBurden: true }),
+      signals({
+        contextTokens: 562_507,
+        toolCount: 6,
+        historyTurnCount: 24,
+        codeOrSchemaBurden: true,
+      }),
     ].map((value) => classifyDifficultyFromSignals({ signals: value }).difficulty);
     expect(new Set(buckets)).toEqual(new Set(["easy", "medium", "hard"]));
   });

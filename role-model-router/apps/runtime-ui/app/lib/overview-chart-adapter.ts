@@ -88,8 +88,7 @@ export function formatUsdAxisTick(value: number): string {
       maximumFractionDigits: 2,
     }).format(0);
   }
-  const digits =
-    magnitude >= 1 ? 2 : Math.min(6, Math.ceil(-Math.log10(magnitude)) + 1);
+  const digits = magnitude >= 1 ? 2 : Math.min(6, Math.ceil(-Math.log10(magnitude)) + 1);
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",

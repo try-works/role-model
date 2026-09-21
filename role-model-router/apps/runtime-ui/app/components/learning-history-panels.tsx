@@ -1,7 +1,6 @@
 import { AlertTriangle, CheckCircle2, GitBranch, Sparkles } from "lucide-react";
 import type { ReactElement } from "react";
 
-import { EmptyState, StatusPill } from "./page-primitives";
 import {
   type LearningComparisonDelta,
   type LearningGuardrailRow,
@@ -12,6 +11,7 @@ import {
   formatRelativeAge,
   historyHeatmap,
 } from "../lib/learning-visuals";
+import { EmptyState, StatusPill } from "./page-primitives";
 
 /**
  * Run 99 - the Learning history panels, modelled on three reference cards:
@@ -84,7 +84,10 @@ export function LearningActivityHeatmapView({
         <div className="space-y-3">
           <div className="grid grid-cols-[36px_1fr] gap-x-2 gap-y-1">
             <span />
-            <div className="grid gap-[3px]" style={{ gridTemplateColumns: `repeat(${heatmap.columns}, minmax(0, 1fr))` }}>
+            <div
+              className="grid gap-[3px]"
+              style={{ gridTemplateColumns: `repeat(${heatmap.columns}, minmax(0, 1fr))` }}
+            >
               {heatmap.cells.map((cell) => (
                 <span
                   key={`head-${cell.startMs}`}
@@ -98,17 +101,30 @@ export function LearningActivityHeatmapView({
             </div>
             {WEEKDAYS.map((label, weekday) => (
               <div key={label} className="contents">
-                <span className="font-mono text-[10px] leading-4 text-[var(--rm-fg-muted)]">{label}</span>
-                <div className="grid gap-[3px]" style={{ gridTemplateColumns: `repeat(${heatmap.columns}, minmax(0, 1fr))` }}>
+                <span className="font-mono text-[10px] leading-4 text-[var(--rm-fg-muted)]">
+                  {label}
+                </span>
+                <div
+                  className="grid gap-[3px]"
+                  style={{ gridTemplateColumns: `repeat(${heatmap.columns}, minmax(0, 1fr))` }}
+                >
                   {Array.from({ length: heatmap.columns }, (_, column) => {
-                    const cell = heatmap.cells.find((entry) => entry.weekday === weekday && entry.column === column);
+                    const cell = heatmap.cells.find(
+                      (entry) => entry.weekday === weekday && entry.column === column,
+                    );
                     const value = cell?.value ?? 0;
                     const intensity = cell?.intensity ?? 0;
-                    const isWorst = cell ? heatmap.worstStartMs === cell.startMs && value > 0 : false;
+                    const isWorst = cell
+                      ? heatmap.worstStartMs === cell.startMs && value > 0
+                      : false;
                     return (
                       <span
                         key={`${weekday}-${column}`}
-                        title={cell ? `${formatBucketLabel(cell.startMs, history.bucketHours)} · ${value} events` : "no bucket"}
+                        title={
+                          cell
+                            ? `${formatBucketLabel(cell.startMs, history.bucketHours)} · ${value} events`
+                            : "no bucket"
+                        }
                         className="h-3 rounded-[3px]"
                         style={{
                           background:
@@ -132,29 +148,41 @@ export function LearningActivityHeatmapView({
                   <span
                     key={step}
                     className="h-2.5 w-4 rounded-[2px]"
-                    style={{ background: `color-mix(in srgb, var(--rm-success) ${step}%, transparent)` }}
+                    style={{
+                      background: `color-mix(in srgb, var(--rm-success) ${step}%, transparent)`,
+                    }}
                   />
                 ))}
               </span>
               <span>{formatCompact(heatmap.max)}</span>
-              {heatmap.worstStartMs ? <span>· peak {formatBucketLabel(heatmap.worstStartMs, history.bucketHours)}</span> : null}
+              {heatmap.worstStartMs ? (
+                <span>· peak {formatBucketLabel(heatmap.worstStartMs, history.bucketHours)}</span>
+              ) : null}
             </div>
             <dl className="flex flex-wrap gap-x-4 gap-y-1">
               <div className="flex items-baseline gap-2">
                 <dt className="text-xs text-[var(--rm-fg-muted)]">replayed</dt>
-                <dd className="font-mono text-xs text-[var(--rm-fg)]">{formatCompact(history.totals.replays)}</dd>
+                <dd className="font-mono text-xs text-[var(--rm-fg)]">
+                  {formatCompact(history.totals.replays)}
+                </dd>
               </div>
               <div className="flex items-baseline gap-2">
                 <dt className="text-xs text-[var(--rm-fg-muted)]">refused</dt>
-                <dd className="font-mono text-xs text-[var(--rm-fg)]">{formatCompact(history.totals.refusals)}</dd>
+                <dd className="font-mono text-xs text-[var(--rm-fg)]">
+                  {formatCompact(history.totals.refusals)}
+                </dd>
               </div>
               <div className="flex items-baseline gap-2">
                 <dt className="text-xs text-[var(--rm-fg-muted)]">deferred</dt>
-                <dd className="font-mono text-xs text-[var(--rm-fg)]">{formatCompact(history.totals.deferred)}</dd>
+                <dd className="font-mono text-xs text-[var(--rm-fg)]">
+                  {formatCompact(history.totals.deferred)}
+                </dd>
               </div>
               <div className="flex items-baseline gap-2">
                 <dt className="text-xs text-[var(--rm-fg-muted)]">evaluations</dt>
-                <dd className="font-mono text-xs text-[var(--rm-fg)]">{formatCompact(history.totals.evaluations)}</dd>
+                <dd className="font-mono text-xs text-[var(--rm-fg)]">
+                  {formatCompact(history.totals.evaluations)}
+                </dd>
               </div>
             </dl>
           </div>
@@ -176,7 +204,8 @@ function DeltaStrip({
   readonly deltas: readonly LearningComparisonDelta[];
   readonly worst: LearningComparisonDelta | null;
 }): ReactElement {
-  if (deltas.length === 0) return <EmptyState label="No validation deltas recorded in the window." />;
+  if (deltas.length === 0)
+    return <EmptyState label="No validation deltas recorded in the window." />;
   const bound = Math.max(0.1, ...deltas.map((entry) => Math.abs(entry.delta)));
   const scale = (value: number) => 50 + (value / bound) * 46;
   return (
@@ -212,8 +241,13 @@ function DeltaStrip({
       </div>
       {worst ? (
         <div className="flex items-center gap-2">
-          <StatusPill tone="error">worst {worst.delta >= 0 ? "+" : ""}{worst.delta.toFixed(3)}</StatusPill>
-          <span className="truncate font-mono text-xs text-[var(--rm-fg-muted)]">{worst.comparisonId}</span>
+          <StatusPill tone="error">
+            worst {worst.delta >= 0 ? "+" : ""}
+            {worst.delta.toFixed(3)}
+          </StatusPill>
+          <span className="truncate font-mono text-xs text-[var(--rm-fg-muted)]">
+            {worst.comparisonId}
+          </span>
         </div>
       ) : null}
     </div>
@@ -229,16 +263,30 @@ export function LearningComparisonMixView({
   const mixTotal = mix.candidate + mix.source + mix.tie + mix.insufficient;
   const segments = [
     { key: "candidate", label: "candidate", count: mix.candidate, color: "var(--rm-success)" },
-    { key: "source", label: "source", count: mix.source, color: "color-mix(in srgb, var(--rm-success) 60%, var(--rm-border-strong))" },
+    {
+      key: "source",
+      label: "source",
+      count: mix.source,
+      color: "color-mix(in srgb, var(--rm-success) 60%, var(--rm-border-strong))",
+    },
     { key: "tie", label: "tie", count: mix.tie, color: "var(--rm-border-strong)" },
-    { key: "insufficient", label: "insufficient", count: mix.insufficient, color: "color-mix(in srgb, var(--rm-danger) 45%, var(--rm-border-strong))" },
+    {
+      key: "insufficient",
+      label: "insufficient",
+      count: mix.insufficient,
+      color: "color-mix(in srgb, var(--rm-danger) 45%, var(--rm-border-strong))",
+    },
   ];
   return (
     <PanelShell
       title="Decisive comparison mix"
       subtitle={`${formatCompact(totals.comparisons)} comparisons · ${formatCompact(totals.decisive)} decisive · ${formatCompact(totals.validations)} validations`}
       icon={<GitBranch size={16} aria-hidden />}
-      actions={<StatusPill tone={mix.decisiveShare >= 0.5 ? "success" : "neutral"}>{Math.round(mix.decisiveShare * 100)}% decisive</StatusPill>}
+      actions={
+        <StatusPill tone={mix.decisiveShare >= 0.5 ? "success" : "neutral"}>
+          {Math.round(mix.decisiveShare * 100)}% decisive
+        </StatusPill>
+      }
     >
       {mixTotal === 0 ? (
         <EmptyState label="No finalized comparison groups recorded for this scope yet." />
@@ -250,7 +298,10 @@ export function LearningComparisonMixView({
                 <span
                   key={segment.key}
                   className="h-full"
-                  style={{ width: `${(segment.count / mixTotal) * 100}%`, background: segment.color }}
+                  style={{
+                    width: `${(segment.count / mixTotal) * 100}%`,
+                    background: segment.color,
+                  }}
                   title={`${segment.label} ${segment.count}`}
                 />
               ) : null,
@@ -260,18 +311,29 @@ export function LearningComparisonMixView({
             {segments.map((segment) => (
               <div key={segment.key} className="flex items-baseline gap-2">
                 <dt className="flex items-center gap-2 text-xs text-[var(--rm-fg-muted)]">
-                  <span aria-hidden className="h-2 w-2 rounded-sm" style={{ background: segment.color }} />
+                  <span
+                    aria-hidden
+                    className="h-2 w-2 rounded-sm"
+                    style={{ background: segment.color }}
+                  />
                   {segment.label}
                 </dt>
-                <dd className="font-mono text-xs text-[var(--rm-fg)]">{formatCompact(segment.count)}</dd>
+                <dd className="font-mono text-xs text-[var(--rm-fg)]">
+                  {formatCompact(segment.count)}
+                </dd>
               </div>
             ))}
           </dl>
           <div>
             <div className="mb-1 flex items-center justify-between">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--rm-fg-muted)]">Per-comparison delta</h3>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--rm-fg-muted)]">
+                Per-comparison delta
+              </h3>
               <span className="font-mono text-xs text-[var(--rm-fg-muted)]">
-                worst {mix.worst ? `${mix.worst.delta >= 0 ? "+" : ""}${mix.worst.delta.toFixed(3)}` : "—"}
+                worst{" "}
+                {mix.worst
+                  ? `${mix.worst.delta >= 0 ? "+" : ""}${mix.worst.delta.toFixed(3)}`
+                  : "—"}
               </span>
             </div>
             <DeltaStrip deltas={mix.deltas} worst={mix.worst} />
@@ -296,14 +358,19 @@ export function LearningActivationTimelineView({
   readonly nowMs: number;
 }): ReactElement {
   const { timeline, totals } = history;
-  const annotation = timeline.find((entry) => entry.kind === "rollback" || entry.kind === "breach") ?? null;
+  const annotation =
+    timeline.find((entry) => entry.kind === "rollback" || entry.kind === "breach") ?? null;
   return (
     <PanelShell
       title="Activation timeline"
       subtitle={`${formatCompact(totals.activations)} activation(s) · ${formatCompact(totals.rollbacks)} rollback(s) · ${formatCompact(totals.guardrailBreaches)} breach(es)`}
       icon={<CheckCircle2 size={16} aria-hidden />}
       actions={
-        totals.rollbacks > 0 ? <StatusPill tone="error">rolled back</StatusPill> : <StatusPill tone="success">stable</StatusPill>
+        totals.rollbacks > 0 ? (
+          <StatusPill tone="error">rolled back</StatusPill>
+        ) : (
+          <StatusPill tone="success">stable</StatusPill>
+        )
       }
     >
       {timeline.length === 0 ? (
@@ -311,7 +378,10 @@ export function LearningActivationTimelineView({
       ) : (
         <div className="space-y-4">
           <div className="relative h-10">
-            <span aria-hidden className="absolute inset-x-0 top-5 border-t border-[var(--rm-border-strong)]" />
+            <span
+              aria-hidden
+              className="absolute inset-x-0 top-5 border-t border-[var(--rm-border-strong)]"
+            />
             {timeline.map((entry) => {
               const oldest = timeline[timeline.length - 1].atMs;
               const span = Math.max(1, nowMs - oldest);
@@ -321,10 +391,15 @@ export function LearningActivationTimelineView({
                 <span
                   key={`${entry.kind}-${entry.atMs}-${entry.packageId}`}
                   title={`${entry.kind} · ${entry.packageId || "—"} · ${formatRelativeAge(entry.atMs, nowMs)}${entry.cohortPercent !== null ? ` · ${entry.cohortPercent}%` : ""}`}
-                  className={isDiamond ? "absolute top-3 h-4 w-4 rotate-45 rounded-[3px]" : "absolute top-4 h-3 w-3 rounded-full"}
+                  className={
+                    isDiamond
+                      ? "absolute top-3 h-4 w-4 rotate-45 rounded-[3px]"
+                      : "absolute top-4 h-3 w-3 rounded-full"
+                  }
                   style={{
                     left: `${left}%`,
-                    background: entry.kind === "activate" ? "var(--rm-success)" : "var(--rm-warning)",
+                    background:
+                      entry.kind === "activate" ? "var(--rm-success)" : "var(--rm-warning)",
                     outline: entry.kind === "breach" ? "1px solid var(--rm-danger)" : "none",
                   }}
                 />
@@ -335,7 +410,8 @@ export function LearningActivationTimelineView({
             <div className="rounded-md border border-[var(--rm-border-strong)] bg-[var(--rm-surface-strong)] px-3 py-2">
               <span className="font-mono text-xs text-[var(--rm-fg)]">
                 {annotation.kind === "breach" ? "guardrail breach" : "rolled back"}
-                {annotation.detail ? ` · ${annotation.detail}` : ""} · {formatRelativeAge(annotation.atMs, nowMs)}
+                {annotation.detail ? ` · ${annotation.detail}` : ""} ·{" "}
+                {formatRelativeAge(annotation.atMs, nowMs)}
               </span>
             </div>
           ) : null}
@@ -346,10 +422,16 @@ export function LearningActivationTimelineView({
                 className="flex items-center gap-3 border-b border-[var(--rm-border)] py-1.5 last:border-b-0"
               >
                 <span className="w-20 shrink-0 font-mono text-xs text-[var(--rm-fg-muted)]">
-                  {new Date(entry.atMs).toLocaleDateString([], { month: "2-digit", day: "2-digit" })}
+                  {new Date(entry.atMs).toLocaleDateString([], {
+                    month: "2-digit",
+                    day: "2-digit",
+                  })}
                 </span>
                 <StatusPill tone={TIMELINE_TONE[entry.kind]}>{entry.kind}</StatusPill>
-                <span className="min-w-0 flex-1 truncate font-mono text-xs text-[var(--rm-fg)]" title={entry.packageId}>
+                <span
+                  className="min-w-0 flex-1 truncate font-mono text-xs text-[var(--rm-fg)]"
+                  title={entry.packageId}
+                >
                   {entry.packageId || "—"}
                 </span>
                 <span className="shrink-0 font-mono text-xs text-[var(--rm-fg-muted)]">
@@ -399,7 +481,10 @@ function GuardrailRow({ row }: { readonly row: LearningGuardrailRow }): ReactEle
   const tone = row.status === "firing" ? "error" : row.status === "ok" ? "success" : "neutral";
   return (
     <li className="flex items-center gap-3 border-b border-[var(--rm-border)] py-2 last:border-b-0">
-      <span className="min-w-0 flex-1 truncate font-mono text-xs text-[var(--rm-fg)]" title={row.metric}>
+      <span
+        className="min-w-0 flex-1 truncate font-mono text-xs text-[var(--rm-fg)]"
+        title={row.metric}
+      >
         {row.label}
       </span>
       <span className="shrink-0 font-mono text-xs text-[var(--rm-fg-muted)]">

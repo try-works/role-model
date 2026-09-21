@@ -46,7 +46,9 @@ describe("run99 R25 advisory ledger concurrency", () => {
       );
       const ledger = JSON.parse(await readFile(filePath, "utf8"));
       expect(ledger.entries).toHaveLength(8);
-      expect(new Set(ledger.entries.map((entry: { decisionId: string }) => entry.decisionId)).size).toBe(8);
+      expect(
+        new Set(ledger.entries.map((entry: { decisionId: string }) => entry.decisionId)).size,
+      ).toBe(8);
       expect(ledger.totals).toMatchObject({ observed: 8, considered: 8, applied: 0 });
     } finally {
       await rm(root, { recursive: true, force: true });

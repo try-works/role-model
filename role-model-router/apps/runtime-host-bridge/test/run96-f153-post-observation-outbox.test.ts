@@ -9,8 +9,8 @@ import { afterEach, expect, test } from "vitest";
 import {
   type TrackBShadowPipelineRuntime,
   classifyReplayTerminalizationFailure,
-  createSingleFlightBackgroundDrain,
   createRun96RoutingShadowScorer,
+  createSingleFlightBackgroundDrain,
   createTrackBPostObservationOutbox,
   runTrackBPostObservationWithContribution,
 } from "../src/track-b-runtime.js";
@@ -22,7 +22,9 @@ test("addendum 39 S5: a legacy scope failure is classified separately from a dec
     ),
   ).toBe("legacy_scope_unresolved");
   expect(
-    classifyReplayTerminalizationFailure("extension replay-core failed: replay job is already terminal"),
+    classifyReplayTerminalizationFailure(
+      "extension replay-core failed: replay job is already terminal",
+    ),
   ).toBe("declined");
 });
 

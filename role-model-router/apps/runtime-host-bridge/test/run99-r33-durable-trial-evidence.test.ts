@@ -77,9 +77,7 @@ describe("run99 R33 durable scored trial evidence", () => {
 
   it("accepts a durable trial scored by the judge alone, with a real score reference", () => {
     const evidence = selectDurableScoredTrialEvidence({
-      scores: [
-        { scoreId: "score:judge", dimension: "preference", scorerId: "judge", score: 1 },
-      ],
+      scores: [{ scoreId: "score:judge", dimension: "preference", scorerId: "judge", score: 1 }],
       scorerId: "run96-shadow-exact",
       scorerVersion: "1",
     });

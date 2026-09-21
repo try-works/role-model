@@ -777,10 +777,8 @@ export function buildBenchmarkCapability(input: {
    * score an endpoint that has benchmark evidence but no telemetry yet; a profile without them keeps the
    * axis empty rather than borrowing a measurement from somewhere else.
    */
-  const p50LatencyMs =
-    readNumber(profile, "latency_ms_p50") ?? readNumber(profile, "latencyMsP50");
-  const p95LatencyMs =
-    readNumber(profile, "latency_ms_p95") ?? readNumber(profile, "latencyMsP95");
+  const p50LatencyMs = readNumber(profile, "latency_ms_p50") ?? readNumber(profile, "latencyMsP50");
+  const p95LatencyMs = readNumber(profile, "latency_ms_p95") ?? readNumber(profile, "latencyMsP95");
 
   return {
     evidenceSource: "profile-derived",
@@ -843,7 +841,8 @@ export function buildBenchmarkCapabilityForEndpoint(input: {
     const completedAtMs = portfolioEntry?.completedAtMs ?? input.summary.completedAtMs ?? null;
     const runMode = portfolioEntry?.mode ?? input.summary.mode ?? null;
     const suiteId = portfolioEntry?.suiteId ?? input.summary.suiteId ?? null;
-    const judgeEndpointId = portfolioEntry?.judgeEndpointId ?? input.summary.judgeEndpointId ?? null;
+    const judgeEndpointId =
+      portfolioEntry?.judgeEndpointId ?? input.summary.judgeEndpointId ?? null;
     const judgeModelId = portfolioEntry?.judgeModelId ?? input.summary.judgeModelId ?? null;
     const profileRevision = portfolioEntry?.profileRevision ?? null;
     const capability =
@@ -926,18 +925,14 @@ export function buildBenchmarkCapabilityForEndpoint(input: {
       profileRevision,
       ...(p50LatencyMs !== null ? { p50LatencyMs } : {}),
       ...(p95LatencyMs !== null ? { p95LatencyMs } : {}),
-      ...(subject.taxonomyScores?.byTask
-        ? { taskScores: subject.taxonomyScores.byTask }
-        : {}),
+      ...(subject.taxonomyScores?.byTask ? { taskScores: subject.taxonomyScores.byTask } : {}),
       ...(subject.taxonomyScores ? { taxonomyScores: subject.taxonomyScores } : {}),
       ...(roleScores ? { roleScores } : {}),
       ...(eligibleRoleScores ? { eligibleRoleScores } : {}),
       ...(groupScores ? { groupScores } : {}),
       coverage: {
         overallCases: subject.caseCount,
-        ...(subject.taxonomyCoverage?.byRole
-          ? { roleCases: subject.taxonomyCoverage.byRole }
-          : {}),
+        ...(subject.taxonomyCoverage?.byRole ? { roleCases: subject.taxonomyCoverage.byRole } : {}),
         ...(groupCases ? { groupCases } : {}),
         lowCoverageRoleIds,
         lowCoverageGroupIds,

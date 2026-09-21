@@ -1412,12 +1412,7 @@ describe("Track B operations APIs", () => {
           ?.latencyMs,
       ).toEqual(expect.any(Number));
       const deferredCaptures = createTrackBRouteCaptureQueue({
-        filePath: path.join(
-          runtimeStateRoot,
-          scopeId,
-          "track-b",
-          "deferred-route-captures.sqlite",
-        ),
+        filePath: path.join(runtimeStateRoot, scopeId, "track-b", "deferred-route-captures.sqlite"),
       });
       const pending = await waitForCaptureDelivery(
         () => deferredCaptures.readPending(),

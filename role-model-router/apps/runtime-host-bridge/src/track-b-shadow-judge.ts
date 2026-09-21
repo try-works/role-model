@@ -107,9 +107,7 @@ export interface TrackBPairwiseJudge {
   readonly mode?: PairwiseJudgeMode;
   /** Run 98 R10: the configured presentation-order policy. */
   readonly orderPolicy?: "source_first" | "dual_order";
-  readonly dispatch: (
-    request: TrackBPairwiseJudgeRequest,
-  ) => Promise<TrackBPairwiseJudgeDecision>;
+  readonly dispatch: (request: TrackBPairwiseJudgeRequest) => Promise<TrackBPairwiseJudgeDecision>;
 }
 
 /**
@@ -134,14 +132,27 @@ export const PAIRWISE_JUDGE_MAX_TASK_CHARS = 2_000;
  * and the two branch answers only - never the capture's credentials, headers, or
  * tool transport, which stay in the durable capture (`guidance/23` privacy scope).
  */
-export function redactJudgeExcerpt(value: string, maxChars = PAIRWISE_JUDGE_MAX_EXCERPT_CHARS): string {
+export function redactJudgeExcerpt(
+  value: string,
+  maxChars = PAIRWISE_JUDGE_MAX_EXCERPT_CHARS,
+): string {
   if (typeof value !== "string") return "";
   const redacted = value
-    .replace(/-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g, "[redacted-private-key]")
-    .replace(/\b(?:sk|rk|pk|ghp|github_pat|xox[baprs])[-_][A-Za-z0-9._-]{12,}\b/g, "[redacted-token]")
+    .replace(
+      /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g,
+      "[redacted-private-key]",
+    )
+    .replace(
+      /\b(?:sk|rk|pk|ghp|github_pat|xox[baprs])[-_][A-Za-z0-9._-]{12,}\b/g,
+      "[redacted-token]",
+    )
     .replace(/\bBearer\s+[A-Za-z0-9._-]{12,}/gi, "Bearer [redacted-token]")
-    .replace(/\b(?:api[_-]?key|access[_-]?token|refresh[_-]?token|client[_-]?secret|password)\b\s*[:=]\s*["']?[^\s"',}]{8,}/gi, "[redacted-secret]");
-  const limit = Number.isSafeInteger(maxChars) && maxChars > 0 ? maxChars : PAIRWISE_JUDGE_MAX_EXCERPT_CHARS;
+    .replace(
+      /\b(?:api[_-]?key|access[_-]?token|refresh[_-]?token|client[_-]?secret|password)\b\s*[:=]\s*["']?[^\s"',}]{8,}/gi,
+      "[redacted-secret]",
+    );
+  const limit =
+    Number.isSafeInteger(maxChars) && maxChars > 0 ? maxChars : PAIRWISE_JUDGE_MAX_EXCERPT_CHARS;
   if (redacted.length <= limit) return redacted;
   return `${redacted.slice(0, limit)}\n[truncated ${redacted.length - limit} chars]`;
 }
@@ -178,10 +189,11 @@ export function buildPairwiseJudgeMessages(input: {
     text: firstIsSource ? counterfactual : source,
     ref: firstIsSource ? input.counterfactualCandidateRef : input.sourceCandidateRef,
   };
-  const answer = (label: "A" | "B", branch: { readonly text: string; readonly ref: string }): string =>
-    identityBlind
-      ? `<answer label="${label}">`
-      : `<answer label="${label}" model="${branch.ref}">`;
+  const answer = (
+    label: "A" | "B",
+    branch: { readonly text: string; readonly ref: string },
+  ): string =>
+    identityBlind ? `<answer label="${label}">` : `<answer label="${label}" model="${branch.ref}">`;
   return [
     { role: "system", content: PAIRWISE_JUDGE_SYSTEM_PROMPT },
     {
@@ -248,7 +260,8 @@ export function parsePairwiseJudgeResponse(
           ? TRACK_B_PAIRWISE_JUDGE_WINNER_TIE
           : null;
   if (!winner) return null;
-  const confidence = typeof record.confidence === "number" ? record.confidence : Number(record.confidence);
+  const confidence =
+    typeof record.confidence === "number" ? record.confidence : Number(record.confidence);
   if (!Number.isFinite(confidence) || confidence < 0 || confidence > 1) return null;
   const rationale =
     typeof record.rationale === "string" ? record.rationale.trim().slice(0, 400) : "";

@@ -64,7 +64,7 @@ describe("run98 A33 S2 position-order calibration", () => {
       recordJudgeObservation: (row) => observations.push(row as Record<string, unknown>),
     });
     expect(judge).toBeDefined();
-    const decision = await judge!.dispatch(request as never);
+    const decision = await judge?.dispatch(request as never);
     expect(decision.winner).toBe("tie");
     expect(decision.orderDisagreement).toBe(true);
     expect(decision.confidence).toBeLessThanOrEqual(0.5);
@@ -80,7 +80,7 @@ describe("run98 A33 S2 position-order calibration", () => {
       orderPolicy: "dual_order",
       orderAggregation: "strict_consistency",
     });
-    await expect(judge!.dispatch(request as never)).rejects.toBeInstanceOf(
+    await expect(judge?.dispatch(request as never)).rejects.toBeInstanceOf(
       PairwiseJudgeOrderDisagreementError,
     );
   });
@@ -94,7 +94,7 @@ describe("run98 A33 S2 position-order calibration", () => {
       orderPolicy: "dual_order",
       orderAggregation: "fails_closed",
     });
-    await expect(judge!.dispatch(request as never)).rejects.toBeInstanceOf(
+    await expect(judge?.dispatch(request as never)).rejects.toBeInstanceOf(
       PairwiseJudgeOrderDisagreementError,
     );
   });

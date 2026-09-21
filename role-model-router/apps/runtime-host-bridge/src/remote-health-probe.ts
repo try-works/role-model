@@ -93,7 +93,11 @@ const TRANSIENT_TRANSPORT_CODES: ReadonlySet<string> = new Set([
 export function isTransientTransportError(error: unknown): boolean {
   let current: unknown = error;
   for (let depth = 0; depth < 3 && current !== null && current !== undefined; depth += 1) {
-    const record = current as { readonly code?: unknown; readonly message?: unknown; readonly cause?: unknown };
+    const record = current as {
+      readonly code?: unknown;
+      readonly message?: unknown;
+      readonly cause?: unknown;
+    };
     const code = typeof record.code === "string" ? record.code : "";
     if (TRANSIENT_TRANSPORT_CODES.has(code)) {
       return true;

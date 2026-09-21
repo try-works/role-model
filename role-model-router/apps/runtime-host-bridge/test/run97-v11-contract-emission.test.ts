@@ -83,9 +83,9 @@ test("run97 refuses to persist a lifecycle-incomplete contract before writing it
       createdAtMs: nowMs,
       updatedAtMs: nowMs,
     });
-    expect(() =>
-      emitTrackBContract({ stateRoot: root, scopeId, contract: incomplete }),
-    ).toThrow(/v1\.1 contract validation failed/);
+    expect(() => emitTrackBContract({ stateRoot: root, scopeId, contract: incomplete })).toThrow(
+      /v1\.1 contract validation failed/,
+    );
   } finally {
     cleanup();
   }

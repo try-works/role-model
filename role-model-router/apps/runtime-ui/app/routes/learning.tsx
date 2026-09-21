@@ -1,7 +1,20 @@
-import { type ReactElement, useCallback, useEffect, useMemo, useState } from "react";
+import { type ReactElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router";
 
-import { Badge, EmptyState, ErrorState, LoadingState, SectionCard } from "../components/page-primitives";
+import {
+  LearningActivationTimelineView,
+  LearningActivityHeatmapView,
+  LearningComparisonMixView,
+  LearningGuardrailListView,
+} from "../components/learning-history-panels";
+import { LearningLivePanelView } from "../components/learning-live-panel";
+import {
+  Badge,
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  SectionCard,
+} from "../components/page-primitives";
 import {
   compactTitleClassName,
   fieldClassName,
@@ -13,6 +26,8 @@ import {
   supportingTextClassName,
 } from "../lib/design-system";
 import {
+  type LearningPolicyField,
+  type LearningPolicyView,
   activateLearningPack,
   engageLearningKillSwitch,
   fetchLearningDecisions,
@@ -25,20 +40,9 @@ import {
   saveLearningPolicy,
   useOperatorToken,
   validatePolicyDraft,
-  type LearningPolicyField,
-  type LearningPolicyView,
 } from "../lib/learning-api";
-import { fetchLearningProfileState, fetchLearningSummary } from "../lib/runtime-api";
-import { summarizePolicyResolution } from "../lib/learning-policy-resolution";
-import { describeOperatorWriteError } from "../lib/operator-write-error";
 import { fetchLearningActivity, fetchLearningHistory } from "../lib/learning-api";
-import { LearningLivePanelView } from "../components/learning-live-panel";
-import {
-  LearningActivationTimelineView,
-  LearningActivityHeatmapView,
-  LearningComparisonMixView,
-  LearningGuardrailListView,
-} from "../components/learning-history-panels";
+import { summarizePolicyResolution } from "../lib/learning-policy-resolution";
 import {
   appliedShareOf,
   fallbackReasonRows,
@@ -47,6 +51,8 @@ import {
   normalizeLearningHistory,
   profileInspectionView,
 } from "../lib/learning-visuals";
+import { describeOperatorWriteError } from "../lib/operator-write-error";
+import { fetchLearningProfileState, fetchLearningSummary } from "../lib/runtime-api";
 
 /**
  * Run 98 R17: the Learning route.
@@ -61,7 +67,9 @@ const message = (value: unknown) =>
   value instanceof Error ? value.message : "The learning surface could not be loaded.";
 
 const asRecord = (value: unknown): Record<string, unknown> =>
-  value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+  value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
 
 const show = (value: unknown, fallback = "—"): string => {
   if (value === null || value === undefined) return fallback;
@@ -90,10 +98,18 @@ function useOperatorSurface<TValue>(loader: () => Promise<TValue>, deps: readonl
   const [value, setValue] = useState<TValue | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  /**
+   * The loader is read through a ref so the callback's dependency list stays the caller's (`deps`) without
+   * hiding a dependency from the hook rules: the ref always points at the loader of the latest render.
+   */
+  const loaderRef = useRef(loader);
+  useEffect(() => {
+    loaderRef.current = loader;
+  }, [loader]);
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      setValue(await loader());
+      setValue(await loaderRef.current());
       setError(null);
     } catch (loadError) {
       setError(message(loadError));
@@ -101,7 +117,6 @@ function useOperatorSurface<TValue>(loader: () => Promise<TValue>, deps: readonl
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
   useEffect(() => {
     void load();
@@ -127,10 +142,11 @@ export function OperatorTokenField({
         value={token}
       />
       <span className="mt-1 block text-xs text-[var(--rm-fg-muted)]">
-        This machine&apos;s owner is trusted: readbacks, policy changes, pack activation/rollback and the kill
-        switch all work here without a token. Set one only for clients that are not the device owner — the
-        value is the runtime&apos;s <span className="font-mono">--operator-auth-token</span>, and a runtime
-        exposed beyond loopback still requires it.
+        This machine&apos;s owner is trusted: readbacks, policy changes, pack activation/rollback
+        and the kill switch all work here without a token. Set one only for clients that are not the
+        device owner — the value is the runtime&apos;s{" "}
+        <span className="font-mono">--operator-auth-token</span>, and a runtime exposed beyond
+        loopback still requires it.
       </span>
     </label>
   );
@@ -148,9 +164,7 @@ function Metric({ label, value }: { label: string; value: string }) {
 function degraded(loading: boolean, error: string | null): ReactElement | null {
   if (loading) return <LoadingState label="Loading learning state…" />;
   if (error)
-    return (
-      <ErrorState label={`Learning surface unavailable: ${error}. No value is fabricated.`} />
-    );
+    return <ErrorState label={`Learning surface unavailable: ${error}. No value is fabricated.`} />;
   return null;
 }
 
@@ -224,7 +238,8 @@ export function LearningOverviewPage() {
   // stage readback, and the panel says what a row is: one decision with its observation count (§2).
   const effectiveStage = String(asRecord(asRecord(policy.value).effective).stage ?? "");
   const selectionNote = selectionNoteForStage(effectiveStage);
-  const fallback = degraded(policy.loading, policy.error) ?? degraded(rollout.loading, rollout.error);
+  const fallback =
+    degraded(policy.loading, policy.error) ?? degraded(rollout.loading, rollout.error);
   return (
     <div className="grid gap-4">
       <SectionCard
@@ -236,7 +251,10 @@ export function LearningOverviewPage() {
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Metric
               label="Stage"
-              value={show(asRecord(asRecord(policy.value).effective).stage ?? policy.value?.fields?.find((f) => f.name === "stage")?.value)}
+              value={show(
+                asRecord(asRecord(policy.value).effective).stage ??
+                  policy.value?.fields?.find((f) => f.name === "stage")?.value,
+              )}
             />
             <Metric label="Policy version" value={show(asRecord(policy.value).policyVersion)} />
             <Metric label="Policy digest" value={show(asRecord(policy.value).digest)} />
@@ -284,7 +302,11 @@ export function LearningOverviewPage() {
             />
             <Metric
               label="Last rollback"
-              value={lastRollback ? `${show(asRecord(lastRollback).receiptId)} · ${show(asRecord(lastRollback).rolledBackAt)}` : "none"}
+              value={
+                lastRollback
+                  ? `${show(asRecord(lastRollback).receiptId)} · ${show(asRecord(lastRollback).rolledBackAt)}`
+                  : "none"
+              }
             />
           </div>
         )}
@@ -327,7 +349,10 @@ export function LearningOverviewPage() {
                 </thead>
                 <tbody>
                   {decisionRows.map((row, index) => (
-                    <tr className="border-t border-[var(--rm-border)]" key={`${show(row.decisionId)}-${index}`}>
+                    <tr
+                      className="border-t border-[var(--rm-border)]"
+                      key={`${show(row.decisionId)}-${index}`}
+                    >
                       <td className="py-2 pr-3 font-mono">
                         {show(row.decisionId)}
                         {/* Run 98 addendum 25 §2: a collapsed row states how many observations it
@@ -363,7 +388,9 @@ export function LearningOverviewPage() {
                       </td>
                       {/* Run 99 close-out (addendas 19-21 S33): the family alone does not say which
                           role or which taxonomy version the decision was classified against. */}
-                      <td className="py-2 pr-3">{row.roleId ? show(row.roleId) : "not reported"}</td>
+                      <td className="py-2 pr-3">
+                        {row.roleId ? show(row.roleId) : "not reported"}
+                      </td>
                       <td className="py-2 pr-3">
                         {row.taxonomyVersion ? show(row.taxonomyVersion) : "not reported"}
                       </td>
@@ -415,13 +442,18 @@ export function LearningConfigurationPage() {
       setNotice("No changes to save.");
       return;
     }
-    const confirmRequired = ["stage", "cohortLadder", "minDecisionsPerStep", "minHoursPerStep"].some(
-      (name) => name in validation.changes,
-    );
+    const confirmRequired = [
+      "stage",
+      "cohortLadder",
+      "minDecisionsPerStep",
+      "minHoursPerStep",
+    ].some((name) => name in validation.changes);
     if (
       confirmRequired &&
       typeof window !== "undefined" &&
-      !window.confirm("Apply this learning policy change? Stage and cohort changes affect live routing.")
+      !window.confirm(
+        "Apply this learning policy change? Stage and cohort changes affect live routing.",
+      )
     ) {
       return;
     }
@@ -493,7 +525,11 @@ export function LearningConfigurationPage() {
         </label>
       </div>
       {notice ? <p className={`mt-3 ${supportingTextClassName}`}>{notice}</p> : null}
-      {error ? <div className="mt-3"><ErrorState label={error} /></div> : null}
+      {error ? (
+        <div className="mt-3">
+          <ErrorState label={error} />
+        </div>
+      ) : null}
       {degraded(policy.loading, policy.error) ??
         (view ? (
           <>
@@ -510,13 +546,26 @@ export function LearningConfigurationPage() {
               </div>
               <div className="mt-2 grid gap-3 sm:grid-cols-3">
                 <Metric label="Router stage" value={resolution.routerStage ?? "not reported"} />
-                <Metric label="Router policy source" value={resolution.routerSource ?? "not reported"} />
-                <Metric label="Router policy digest" value={resolution.routerDigest ?? "not reported"} />
+                <Metric
+                  label="Router policy source"
+                  value={resolution.routerSource ?? "not reported"}
+                />
+                <Metric
+                  label="Router policy digest"
+                  value={resolution.routerDigest ?? "not reported"}
+                />
                 <Metric
                   label="Stored policy version"
-                  value={resolution.storedPolicyVersion === null ? "not reported" : String(resolution.storedPolicyVersion)}
+                  value={
+                    resolution.storedPolicyVersion === null
+                      ? "not reported"
+                      : String(resolution.storedPolicyVersion)
+                  }
                 />
-                <Metric label="Stored policy digest" value={resolution.storedDigest ?? "not reported"} />
+                <Metric
+                  label="Stored policy digest"
+                  value={resolution.storedDigest ?? "not reported"}
+                />
               </div>
               {resolution.warning ? (
                 <div className="mt-2">
@@ -560,14 +609,14 @@ export function LearningConfigurationPage() {
                           <span className="font-mono">{show(field.value)}</span>
                         )}
                         {validation.errors[field.name] ? (
-                          <p className={`mt-1 ${supportingTextClassName}`}>{validation.errors[field.name]}</p>
+                          <p className={`mt-1 ${supportingTextClassName}`}>
+                            {validation.errors[field.name]}
+                          </p>
                         ) : null}
                       </td>
                       <td className="py-2 pr-3">{field.unit}</td>
                       <td className="py-2 pr-3 font-mono">{show(field.default)}</td>
-                      <td className="py-2 pr-3 font-mono">
-                        {formatPolicyRange(field)}
-                      </td>
+                      <td className="py-2 pr-3 font-mono">{formatPolicyRange(field)}</td>
                       <td className="py-2 pr-3">
                         <Badge tone={field.uiEditable ? "neutral" : "warning"}>
                           {field.uiEditable ? "editable" : "read-only"}
@@ -627,14 +676,21 @@ export function LearningPacksPage() {
     : [];
   const rolloutValue = asRecord(rollout.value);
   const act = async (packId: string) => {
-    if (typeof window !== "undefined" && !window.confirm(`Activate ${packId}? Cohort rollout starts at the first ladder step.`)) return;
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm(`Activate ${packId}? Cohort rollout starts at the first ladder step.`)
+    )
+      return;
     try {
       await activateLearningPack(
         {
           scopeId: asRecord(records.value).scopeId ?? "standalone-runtime-stage",
           packId,
           policyGateId: "operator:ui",
-          validationReceiptId: String(asRecord(asRecord(rows.find((row) => row.recordId === packId)).record).validationReceiptId ?? ""),
+          validationReceiptId: String(
+            asRecord(asRecord(rows.find((row) => row.recordId === packId)).record)
+              .validationReceiptId ?? "",
+          ),
         },
         fetch,
         token || undefined,
@@ -646,10 +702,17 @@ export function LearningPacksPage() {
     }
   };
   const rollback = async () => {
-    if (typeof window !== "undefined" && !window.confirm("Roll the active pack back to the prior package?")) return;
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm("Roll the active pack back to the prior package?")
+    )
+      return;
     try {
       await rollbackLearningPack(
-        { scopeId: rolloutValue.scopeId ?? "standalone-runtime-stage", reason: "operator_ui_rollback" },
+        {
+          scopeId: rolloutValue.scopeId ?? "standalone-runtime-stage",
+          reason: "operator_ui_rollback",
+        },
         fetch,
         token || undefined,
       );
@@ -660,7 +723,11 @@ export function LearningPacksPage() {
     }
   };
   const killSwitch = async () => {
-    if (typeof window !== "undefined" && !window.confirm("Engage the kill switch? Every activation returns to the base route.")) return;
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm("Engage the kill switch? Every activation returns to the base route.")
+    )
+      return;
     try {
       await engageLearningKillSwitch(
         { scopeId: rolloutValue.scopeId ?? "standalone-runtime-stage" },
@@ -676,7 +743,13 @@ export function LearningPacksPage() {
   // Run 99 R28: the switch is reversible; releasing clears the flag (receipted) and leaves the
   // scope on the base route until a pack is activated again.
   const releaseKillSwitch = async () => {
-    if (typeof window !== "undefined" && !window.confirm("Release the kill switch? The scope stays on the base route until a pack is activated.")) return;
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm(
+        "Release the kill switch? The scope stays on the base route until a pack is activated.",
+      )
+    )
+      return;
     try {
       await engageLearningKillSwitch(
         { scopeId: rolloutValue.scopeId ?? "standalone-runtime-stage", engaged: false },
@@ -696,7 +769,11 @@ export function LearningPacksPage() {
     >
       <OperatorTokenField onToken={setToken} token={token} />
       {notice ? <p className={`mt-3 ${supportingTextClassName}`}>{notice}</p> : null}
-      {error ? <div className="mt-3"><ErrorState label={error} /></div> : null}
+      {error ? (
+        <div className="mt-3">
+          <ErrorState label={error} />
+        </div>
+      ) : null}
       {degraded(records.loading, records.error) ??
         (rows.length === 0 ? (
           <EmptyState label="No pack records have been derived for this scope yet." />
@@ -717,7 +794,12 @@ export function LearningPacksPage() {
                     </div>
                   </div>
                   <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                    <Metric label="Validation receipt" value={show(record.validationReceiptId ?? asRecord(row.identity).scorerSetVersion)} />
+                    <Metric
+                      label="Validation receipt"
+                      value={show(
+                        record.validationReceiptId ?? asRecord(row.identity).scorerSetVersion,
+                      )}
+                    />
                     <Metric label="Rollback target" value={show(record.rollbackTargetPackId)} />
                     {/* Run 98 addendum 40 audit: this is the pack's advisory-context budget
                         (`ExperiencePackCandidateV1.maxTokens`, 1-8192, default 512), not a limit on the
@@ -741,10 +823,20 @@ export function LearningPacksPage() {
           </div>
         ))}
       <div className="mt-4 flex flex-wrap gap-2">
-        <button className={secondaryButtonClassName} disabled={rolloutValue.state !== "active"} onClick={() => void rollback()} type="button">
+        <button
+          className={secondaryButtonClassName}
+          disabled={rolloutValue.state !== "active"}
+          onClick={() => void rollback()}
+          type="button"
+        >
           Roll back active pack
         </button>
-        <button className={secondaryButtonClassName} disabled={rolloutValue.state === "disabled"} onClick={() => void killSwitch()} type="button">
+        <button
+          className={secondaryButtonClassName}
+          disabled={rolloutValue.state === "disabled"}
+          onClick={() => void killSwitch()}
+          type="button"
+        >
           Engage kill switch
         </button>
         <button
@@ -771,7 +863,8 @@ export function LearningDecisionsPage() {
   const rows = Array.isArray(asRecord(decisions.value).decisions)
     ? (asRecord(decisions.value).decisions as readonly Record<string, unknown>[])
     : [];
-  const filtered = stateFilter === "all" ? rows : rows.filter((row) => row.advisoryState === stateFilter);
+  const filtered =
+    stateFilter === "all" ? rows : rows.filter((row) => row.advisoryState === stateFilter);
   return (
     <SectionCard
       title="Decision receipts"
@@ -781,7 +874,11 @@ export function LearningDecisionsPage() {
         <OperatorTokenField onToken={setToken} token={token} />
         <label className={fieldLabelClassName}>
           Advisory state
-          <select className={`${fieldClassName} mt-1`} onChange={(event) => setStateFilter(event.target.value)} value={stateFilter}>
+          <select
+            className={`${fieldClassName} mt-1`}
+            onChange={(event) => setStateFilter(event.target.value)}
+            value={stateFilter}
+          >
             {["all", "fresh", "stale", "unavailable"].map((option) => (
               <option key={option} value={option}>
                 {option}
@@ -796,7 +893,10 @@ export function LearningDecisionsPage() {
         ) : (
           <div className="mt-4 grid gap-2">
             {filtered.slice(0, 50).map((row, index) => (
-              <details className={`${mutedPanelClassName} p-3`} key={`${show(row.decisionId)}-${index}`}>
+              <details
+                className={`${mutedPanelClassName} p-3`}
+                key={`${show(row.decisionId)}-${index}`}
+              >
                 <summary className={compactTitleClassName}>
                   {show(row.decisionId)} · {show(row.routePackage)} · {show(row.advisoryState)}
                   {" · "}
@@ -834,10 +934,7 @@ export function LearningDecisionsPage() {
                   />
                   {/* Run 99 close-out (addendas 19-21 S33): the role and the taxonomy identity the
                       request was classified against, published by the decisions readback. */}
-                  <Metric
-                    label="Role"
-                    value={row.roleId ? show(row.roleId) : "not reported"}
-                  />
+                  <Metric label="Role" value={row.roleId ? show(row.roleId) : "not reported"} />
                   <Metric
                     label="Taxonomy version"
                     value={row.taxonomyVersion ? show(row.taxonomyVersion) : "not reported"}
@@ -862,7 +959,9 @@ export function LearningDecisionsPage() {
               </details>
             ))}
             {asRecord(decisions.value).truncated ? (
-              <p className={supportingTextClassName}>Showing the newest 50 decisions; the readback is truncated.</p>
+              <p className={supportingTextClassName}>
+                Showing the newest 50 decisions; the readback is truncated.
+              </p>
             ) : null}
           </div>
         ))}
@@ -889,7 +988,9 @@ export function LearningEvidencePage() {
   const cohorts = asRecord(value.cohorts);
   const deltas = asRecord(value.deltas);
   const confidence = asRecord(value.confidence);
-  const guardrails = Array.isArray(value.guardrails) ? (value.guardrails as readonly Record<string, unknown>[]) : [];
+  const guardrails = Array.isArray(value.guardrails)
+    ? (value.guardrails as readonly Record<string, unknown>[])
+    : [];
   // Run 99: cost and latency are inputs this composition does not measure per arm, so the page says
   // so rather than presenting the placeholder inputs as measured zeros.
   const costLatencyMeasured = asRecord(raw.measurementInputs).costLatencyAvailable !== false;
@@ -904,12 +1005,21 @@ export function LearningEvidencePage() {
           <ErrorState
             label={`Cohort measurement unavailable: ${show(raw.reason)}. No value is fabricated.`}
           />
-        ) : noMeasurement || (value.schemaVersion === undefined && Object.keys(value).length === 0) ? (
+        ) : noMeasurement ||
+          (value.schemaVersion === undefined && Object.keys(value).length === 0) ? (
           <EmptyState label="No cohort measurement has been recorded yet." />
         ) : (
           <>
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <Badge tone={value.verdict === "pass" ? "success" : value.verdict === "fail" ? "error" : "warning"}>
+              <Badge
+                tone={
+                  value.verdict === "pass"
+                    ? "success"
+                    : value.verdict === "fail"
+                      ? "error"
+                      : "warning"
+                }
+              >
                 {show(value.verdict)}
               </Badge>
               <p className={supportingTextClassName}>{show(value.statement)}</p>
@@ -947,7 +1057,10 @@ export function LearningEvidencePage() {
                 </thead>
                 <tbody>
                   {guardrails.map((guardrail) => (
-                    <tr className="border-t border-[var(--rm-border)]" key={String(guardrail.metric)}>
+                    <tr
+                      className="border-t border-[var(--rm-border)]"
+                      key={String(guardrail.metric)}
+                    >
                       <td className="py-2 pr-3">{show(guardrail.metric)}</td>
                       <td className="py-2 pr-3 font-mono">{show(guardrail.bound)}</td>
                       <td className="py-2 pr-3 font-mono">{show(guardrail.observed)}</td>
@@ -966,7 +1079,6 @@ export function LearningEvidencePage() {
     </SectionCard>
   );
 }
-
 
 /**
  * Run 99 history page: a windowed summary of the live loop - activity heat grid, the decisive

@@ -6,10 +6,10 @@ import { describe, expect, it } from "vitest";
 
 import {
   SUPERVISED_REPLAY_EVALUATION_MAX_ATTEMPTS,
+  type SupervisedReplayEvaluationResumeEntry,
   createSupervisedReplayEvaluationResumeStore,
   resumePendingSupervisedReplayEvaluations,
   selectResumableSupervisedReplayEvaluations,
-  type SupervisedReplayEvaluationResumeEntry,
 } from "../src/supervised-replay-evaluation-resume.js";
 
 /**
@@ -91,9 +91,11 @@ describe("run99 R33 supervised replay evaluation resume", () => {
     ];
     const selected = selectResumableSupervisedReplayEvaluations({ entries, limit: 10 });
     expect(selected.map((row) => row.replayJobId)).toEqual(["job-old", "job-new"]);
-    expect(selectResumableSupervisedReplayEvaluations({ entries, limit: 1 }).map((row) => row.replayJobId)).toEqual([
-      "job-old",
-    ]);
+    expect(
+      selectResumableSupervisedReplayEvaluations({ entries, limit: 1 }).map(
+        (row) => row.replayJobId,
+      ),
+    ).toEqual(["job-old"]);
   });
 
   it("self-heals an entry whose evaluation job already completed", async () => {
@@ -149,7 +151,9 @@ describe("run99 R33 supervised replay evaluation resume", () => {
       let calls = 0;
       const complete = async () => {
         calls += 1;
-        throw new Error(`durable replay evaluation is missing branch capture for endpoint:candidate`);
+        throw new Error(
+          "durable replay evaluation is missing branch capture for endpoint:candidate",
+        );
       };
 
       const first = await resumePendingSupervisedReplayEvaluations({
@@ -241,10 +245,15 @@ describe("run99 R33 supervised replay evaluation resume", () => {
       const store = createSupervisedReplayEvaluationResumeStore({
         filePath: path.join(root, "resume.json"),
       });
-      store.record({ ...entry("job-pre-abandoned", 1), attempts: SUPERVISED_REPLAY_EVALUATION_MAX_ATTEMPTS });
+      store.record({
+        ...entry("job-pre-abandoned", 1),
+        attempts: SUPERVISED_REPLAY_EVALUATION_MAX_ATTEMPTS,
+      });
       store.recordFailure(
         "job-pre-abandoned",
-        new Error("durable evaluation job evaluation-replay-67cc04911acd656424cf is unavailable for resume"),
+        new Error(
+          "durable evaluation job evaluation-replay-67cc04911acd656424cf is unavailable for resume",
+        ),
       );
       const reconciled: string[] = [];
       const sweep = () =>

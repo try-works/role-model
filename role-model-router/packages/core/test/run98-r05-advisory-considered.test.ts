@@ -182,7 +182,9 @@ describe("run98 R5 advisory-considered selection", () => {
         advisory: advisory({ explorationPercent: 25 }),
       }),
     );
-    const explored = outcomes.filter((outcome) => outcome.explorationMode === "advisory_exploration");
+    const explored = outcomes.filter(
+      (outcome) => outcome.explorationMode === "advisory_exploration",
+    );
     expect(explored.length).toBeGreaterThan(0);
     expect(explored.length).toBeLessThan(outcomes.length);
     for (const outcome of outcomes) {

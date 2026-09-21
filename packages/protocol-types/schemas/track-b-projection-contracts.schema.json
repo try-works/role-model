@@ -27,12 +27,7 @@
       }
     },
     "structuralCompleteness": {
-      "enum": [
-        "metadata_only",
-        "summary_only",
-        "transcript_partial",
-        "transcript_full"
-      ]
+      "enum": ["metadata_only", "summary_only", "transcript_partial", "transcript_full"]
     },
     "evaluationEvidence": {
       "enum": [
@@ -44,12 +39,7 @@
       ]
     },
     "tokenFidelity": {
-      "enum": [
-        "none",
-        "estimated",
-        "provider_reported",
-        "exact"
-      ]
+      "enum": ["none", "estimated", "provider_reported", "exact"]
     },
     "permittedUses": {
       "type": "object",
@@ -118,18 +108,10 @@
     "materialization": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "mode",
-        "evictable",
-        "reconstructableFrom"
-      ],
+      "required": ["mode", "evictable", "reconstructableFrom"],
       "properties": {
         "mode": {
-          "enum": [
-            "manifest_only",
-            "materialized",
-            "ephemeral"
-          ]
+          "enum": ["manifest_only", "materialized", "ephemeral"]
         },
         "evictable": {
           "type": "boolean"
@@ -249,11 +231,7 @@
           "format": "date-time"
         },
         "runtimeChannel": {
-          "enum": [
-            "production",
-            "stage",
-            "development"
-          ]
+          "enum": ["production", "stage", "development"]
         },
         "scopeId": {
           "type": "string",
@@ -269,15 +247,10 @@
           "if": {
             "properties": {
               "structuralCompleteness": {
-                "enum": [
-                  "transcript_partial",
-                  "transcript_full"
-                ]
+                "enum": ["transcript_partial", "transcript_full"]
               }
             },
-            "required": [
-              "structuralCompleteness"
-            ]
+            "required": ["structuralCompleteness"]
           },
           "then": {
             "properties": {
@@ -291,21 +264,13 @@
           "if": {
             "properties": {
               "evaluationEvidence": {
-                "enum": [
-                  "reward_scored",
-                  "pairwise_scored",
-                  "deterministic_verified"
-                ]
+                "enum": ["reward_scored", "pairwise_scored", "deterministic_verified"]
               }
             },
-            "required": [
-              "evaluationEvidence"
-            ]
+            "required": ["evaluationEvidence"]
           },
           "then": {
-            "required": [
-              "scoreEvidenceIds"
-            ],
+            "required": ["scoreEvidenceIds"],
             "properties": {
               "scoreEvidenceIds": {
                 "minItems": 1
@@ -320,14 +285,10 @@
                 "const": "exact"
               }
             },
-            "required": [
-              "tokenFidelity"
-            ]
+            "required": ["tokenFidelity"]
           },
           "then": {
-            "required": [
-              "tokenTransitionEvidenceIds"
-            ],
+            "required": ["tokenTransitionEvidenceIds"],
             "properties": {
               "tokenTransitionEvidenceIds": {
                 "minItems": 1
@@ -349,9 +310,7 @@
                         "const": true
                       }
                     },
-                    "required": [
-                      "externalSftExport"
-                    ]
+                    "required": ["externalSftExport"]
                   }
                 }
               },
@@ -363,9 +322,7 @@
                         "const": true
                       }
                     },
-                    "required": [
-                      "externalRewardExport"
-                    ]
+                    "required": ["externalRewardExport"]
                   }
                 }
               },
@@ -377,20 +334,14 @@
                         "const": true
                       }
                     },
-                    "required": [
-                      "externalRlExport"
-                    ]
+                    "required": ["externalRlExport"]
                   }
                 }
               }
             ]
           },
           "then": {
-            "required": [
-              "policyClearance",
-              "redactionReceiptId",
-              "destinationAuthorizationIds"
-            ],
+            "required": ["policyClearance", "redactionReceiptId", "destinationAuthorizationIds"],
             "properties": {
               "destinationAuthorizationIds": {
                 "minItems": 1
@@ -429,9 +380,7 @@
                     "const": true
                   }
                 },
-                "required": [
-                  "externalRlExport"
-                ]
+                "required": ["externalRlExport"]
               }
             }
           },
@@ -441,11 +390,7 @@
                 "const": "exact"
               },
               "evaluationEvidence": {
-                "enum": [
-                  "reward_scored",
-                  "pairwise_scored",
-                  "deterministic_verified"
-                ]
+                "enum": ["reward_scored", "pairwise_scored", "deterministic_verified"]
               }
             }
           }
@@ -486,12 +431,7 @@
           "type": "boolean"
         },
         "eligibilityStatus": {
-          "enum": [
-            "eligible",
-            "denied",
-            "degraded",
-            "unknown"
-          ]
+          "enum": ["eligible", "denied", "degraded", "unknown"]
         },
         "hardDenyCodes": {
           "$ref": "#/$defs/idSet"
@@ -553,11 +493,7 @@
         "source": {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "observationBundleId",
-            "routeDecisionId",
-            "privacyReceiptId"
-          ],
+          "required": ["observationBundleId", "routeDecisionId", "privacyReceiptId"],
           "properties": {
             "observationBundleId": {
               "$ref": "#/$defs/id"
@@ -657,12 +593,7 @@
         "chosen": {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "endpointId",
-            "modelId",
-            "modelRevision",
-            "selectionProbability"
-          ],
+          "required": ["endpointId", "modelId", "modelRevision", "selectionProbability"],
           "properties": {
             "endpointId": {
               "$ref": "#/$defs/id"
@@ -762,11 +693,7 @@
           "$ref": "#/$defs/id"
         },
         "runtimeChannel": {
-          "enum": [
-            "production",
-            "stage",
-            "development"
-          ]
+          "enum": ["production", "stage", "development"]
         },
         "scopeId": {
           "type": "string",
@@ -805,10 +732,7 @@
           "$ref": "#/$defs/id"
         },
         "format": {
-          "enum": [
-            "verifiers_v1",
-            "role_model_training_sample_v1"
-          ]
+          "enum": ["verifiers_v1", "role_model_training_sample_v1"]
         },
         "sourceProjectionId": {
           "$ref": "#/$defs/id"
@@ -842,11 +766,7 @@
           "format": "date-time"
         },
         "runtimeChannel": {
-          "enum": [
-            "production",
-            "stage",
-            "development"
-          ]
+          "enum": ["production", "stage", "development"]
         },
         "scopeId": {
           "type": "string",
@@ -865,14 +785,10 @@
                 "const": "verifiers_v1"
               }
             },
-            "required": [
-              "format"
-            ]
+            "required": ["format"]
           },
           "then": {
-            "required": [
-              "adapterVersion"
-            ]
+            "required": ["adapterVersion"]
           }
         }
       ]

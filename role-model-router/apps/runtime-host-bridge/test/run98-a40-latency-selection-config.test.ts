@@ -142,7 +142,11 @@ test("a40 L5: flat Configuration fields win over the nested section, and a bad b
   });
 
   const badBounds = writePolicy({
-    global: { stage: "S3", latencySelectionEnabled: true, latencySelectionBucketBounds: "50000,notanumber" },
+    global: {
+      stage: "S3",
+      latencySelectionEnabled: true,
+      latencySelectionBucketBounds: "50000,notanumber",
+    },
   });
   const badSnapshot = readLearningPolicyFile({
     repoRoot: badBounds,

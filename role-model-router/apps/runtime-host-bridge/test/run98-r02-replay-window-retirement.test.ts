@@ -4,7 +4,10 @@ import path from "node:path";
 
 import { expect, test } from "vitest";
 
-import { autoReplayExecutionFromCommandReceipt, startAutoReplayLoop } from "../src/track-b-auto-replay-runtime.js";
+import {
+  autoReplayExecutionFromCommandReceipt,
+  startAutoReplayLoop,
+} from "../src/track-b-auto-replay-runtime.js";
 import { createReplayLedger } from "../src/track-b-replay-ledger.js";
 import { buildReplayPolicySet } from "../src/track-b-replay-policy.js";
 import {
@@ -49,7 +52,11 @@ test("run98 R2 an undispatchable replay window is retired instead of re-deferred
         async listPendingReplayCaptures() {
           return {
             pending: [
-              { captureRef: "req-stale", sourceEndpointId: "endpoint-a", hasRecordedToolResults: true },
+              {
+                captureRef: "req-stale",
+                sourceEndpointId: "endpoint-a",
+                hasRecordedToolResults: true,
+              },
             ],
             pendingCount: 1,
           };
@@ -186,7 +193,9 @@ function terminalJobWithEvaluation() {
     scope: "tenant:retirement",
     candidateEndpointIds: ["endpoint:counterfactual"],
     budget: { deadlineMs: 10_000 },
-    branches: [{ candidateEndpointId: "endpoint:counterfactual", branchRootRef: "artifact:branch:recovery" }],
+    branches: [
+      { candidateEndpointId: "endpoint:counterfactual", branchRootRef: "artifact:branch:recovery" },
+    ],
     dispatches: {
       "endpoint:counterfactual": {
         status: "complete",
@@ -231,7 +240,10 @@ function replaySourceAttestation() {
   });
 }
 
-function supervisedReplayInput(runtime: { invoke: (id: string, envelope: never) => Promise<unknown> }, overrides: Record<string, unknown> = {}) {
+function supervisedReplayInput(
+  runtime: { invoke: (id: string, envelope: never) => Promise<unknown> },
+  overrides: Record<string, unknown> = {},
+) {
   return {
     runtime,
     adapter: createRouterReplayAdapter({
@@ -281,35 +293,43 @@ function supervisedReplayInput(runtime: { invoke: (id: string, envelope: never) 
 test("run98 R2 a timed-out replay whose evaluation is already scored is finalized before retirement", async () => {
   const invocations: string[] = [];
   const result = await runSupervisedReplay(
-    supervisedReplayInput({
-      async invoke(_id: string, envelope: Record<string, unknown>) {
-        const capability = String(envelope.capability);
-        invocations.push(capability);
-        if (capability === "replay:create-job") return terminalJobWithEvaluation();
-        if (capability === "replay:claim-job") {
-          return { jobId: "job-recoverable", leaseOwner: "scheduler:recovery", attempt: 2, fenceToken: 7 };
-        }
-        if (capability === "replay:record-evaluation-result") {
-          return {
-            ...terminalJobWithEvaluation(),
-            state: "complete",
-            evaluationResult: {
-              evaluationJobId: "evaluation:recovery",
-              comparisonGroupId: "comparison:recovery",
-              outcome: "candidate",
-            },
-          };
-        }
-        throw new Error(`unexpected capability ${capability}`);
+    supervisedReplayInput(
+      {
+        async invoke(_id: string, envelope: Record<string, unknown>) {
+          const capability = String(envelope.capability);
+          invocations.push(capability);
+          if (capability === "replay:create-job") return terminalJobWithEvaluation();
+          if (capability === "replay:claim-job") {
+            return {
+              jobId: "job-recoverable",
+              leaseOwner: "scheduler:recovery",
+              attempt: 2,
+              fenceToken: 7,
+            };
+          }
+          if (capability === "replay:record-evaluation-result") {
+            return {
+              ...terminalJobWithEvaluation(),
+              state: "complete",
+              evaluationResult: {
+                evaluationJobId: "evaluation:recovery",
+                comparisonGroupId: "comparison:recovery",
+                outcome: "candidate",
+              },
+            };
+          }
+          throw new Error(`unexpected capability ${capability}`);
+        },
+      } as never,
+      {
+        completeEvaluation: async () => ({
+          evaluationJobId: "evaluation:recovery",
+          comparisonGroupId: "comparison:recovery",
+          comparisonDigest: `sha256:${"c".repeat(64)}`,
+          outcome: "candidate",
+        }),
       },
-    } as never, {
-      completeEvaluation: async () => ({
-        evaluationJobId: "evaluation:recovery",
-        comparisonGroupId: "comparison:recovery",
-        comparisonDigest: `sha256:${"c".repeat(64)}`,
-        outcome: "candidate",
-      }),
-    }),
+    ),
   );
   expect(result).toMatchObject({ jobId: "job-recoverable", state: "complete" });
   expect(invocations).toEqual([
@@ -322,21 +342,29 @@ test("run98 R2 a timed-out replay whose evaluation is already scored is finalize
 test("run98 R2 an unrecoverable terminal replay still retires", async () => {
   const invocations: string[] = [];
   const result = await runSupervisedReplay(
-    supervisedReplayInput({
-      async invoke(_id: string, envelope: Record<string, unknown>) {
-        const capability = String(envelope.capability);
-        invocations.push(capability);
-        if (capability === "replay:create-job") return terminalJobWithEvaluation();
-        if (capability === "replay:claim-job") {
-          return { jobId: "job-recoverable", leaseOwner: "scheduler:recovery", attempt: 2, fenceToken: 7 };
-        }
-        throw new Error(`unexpected capability ${capability}`);
+    supervisedReplayInput(
+      {
+        async invoke(_id: string, envelope: Record<string, unknown>) {
+          const capability = String(envelope.capability);
+          invocations.push(capability);
+          if (capability === "replay:create-job") return terminalJobWithEvaluation();
+          if (capability === "replay:claim-job") {
+            return {
+              jobId: "job-recoverable",
+              leaseOwner: "scheduler:recovery",
+              attempt: 2,
+              fenceToken: 7,
+            };
+          }
+          throw new Error(`unexpected capability ${capability}`);
+        },
+      } as never,
+      {
+        completeEvaluation: async () => {
+          throw new Error("evaluation evidence cannot be recovered");
+        },
       },
-    } as never, {
-      completeEvaluation: async () => {
-        throw new Error("evaluation evidence cannot be recovered");
-      },
-    }),
+    ),
   );
   expect(result).toMatchObject({ jobId: "job-recoverable", state: "timed_out" });
   expect(invocations).toEqual(["replay:create-job", "replay:claim-job"]);
@@ -358,7 +386,11 @@ function loopHarness(executor: () => Promise<unknown>) {
         async listPendingReplayCaptures() {
           return {
             pending: [
-              { captureRef: "req-evaluating", sourceEndpointId: "endpoint-a", hasRecordedToolResults: true },
+              {
+                captureRef: "req-evaluating",
+                sourceEndpointId: "endpoint-a",
+                hasRecordedToolResults: true,
+              },
             ],
             pendingCount: 1,
           };
@@ -420,7 +452,10 @@ test("run98 R2 a durably evaluated replay is the only terminal counterfactual", 
     harness.loop.stop();
     expect(result.replayed).toBe(1);
     expect(result.deferred).toBe(0);
-    expect(harness.recorded[0]).toMatchObject({ captureRef: "req-evaluating", outcome: "replayed" });
+    expect(harness.recorded[0]).toMatchObject({
+      captureRef: "req-evaluating",
+      outcome: "replayed",
+    });
   } finally {
     harness.cleanup();
   }

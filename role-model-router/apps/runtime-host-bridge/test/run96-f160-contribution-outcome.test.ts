@@ -193,14 +193,15 @@ describe("run 96 F160 contribution outcome", () => {
         throw reset;
       },
     )) as unknown as {
-      readonly extensionClosure?: { readonly schemaVersion?: unknown; readonly requestId?: unknown };
+      readonly extensionClosure?: {
+        readonly schemaVersion?: unknown;
+        readonly requestId?: unknown;
+      };
       readonly contribution?: unknown;
       readonly contributionFailure?: { readonly message?: string };
     };
     // The pipeline's own result survives: the observation can be marked delivered.
-    expect(result.extensionClosure?.schemaVersion).toBe(
-      "role-model.track-b-extension-closure.v1",
-    );
+    expect(result.extensionClosure?.schemaVersion).toBe("role-model.track-b-extension-closure.v1");
     expect(result.extensionClosure?.requestId).toBe("contribution-reset");
     expect(result.contribution).toBeNull();
     expect(String(result.contributionFailure?.message ?? "")).toContain("fetch failed");

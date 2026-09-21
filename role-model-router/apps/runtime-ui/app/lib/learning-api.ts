@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { type RuntimeFetcher, fetchJson, postJson, withRuntimeStartupRetry } from "./runtime-api";
 import type {
   PolicyDegradationView,
   RouterPolicyResolutionView,
 } from "./learning-policy-resolution";
+import { type RuntimeFetcher, fetchJson, postJson, withRuntimeStartupRetry } from "./runtime-api";
 
 /**
  * Run 98 R17: the Learning surface's operator client.
@@ -345,8 +345,7 @@ export function validatePolicyDraft(
      * the text form — and refuse anything else by name, so the draft comparison and the request body both
      * carry a boolean instead of the string that the server rightly rejected.
      */
-    const normalized =
-      field.type === "boolean" ? normalizeBooleanDraft(value) : value;
+    const normalized = field.type === "boolean" ? normalizeBooleanDraft(value) : value;
     if (field.type === "boolean" && normalized === null) {
       errors[name] = "must be true or false";
       continue;

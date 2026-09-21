@@ -72,15 +72,64 @@ test("a40 L5: latency percentiles are reported per endpoint and prompt-size buck
   const slow = "endpoint.slow";
 
   // Small prompts (< 50k tokens): the fast endpoint has 3 samples, the slow one 2.
-  await seedRow({ databasePath: initialized.databasePath, endpointId: fast, requestId: "r-fast-1", inputTokens: 10_000, latencyMs: 1_000, createdAtMs });
-  await seedRow({ databasePath: initialized.databasePath, endpointId: fast, requestId: "r-fast-2", inputTokens: 20_000, latencyMs: 1_200, createdAtMs });
-  await seedRow({ databasePath: initialized.databasePath, endpointId: fast, requestId: "r-fast-3", inputTokens: 30_000, latencyMs: 1_400, createdAtMs });
-  await seedRow({ databasePath: initialized.databasePath, endpointId: slow, requestId: "r-slow-1", inputTokens: 15_000, latencyMs: 9_000, createdAtMs });
-  await seedRow({ databasePath: initialized.databasePath, endpointId: slow, requestId: "r-slow-2", inputTokens: 25_000, latencyMs: 11_000, createdAtMs });
+  await seedRow({
+    databasePath: initialized.databasePath,
+    endpointId: fast,
+    requestId: "r-fast-1",
+    inputTokens: 10_000,
+    latencyMs: 1_000,
+    createdAtMs,
+  });
+  await seedRow({
+    databasePath: initialized.databasePath,
+    endpointId: fast,
+    requestId: "r-fast-2",
+    inputTokens: 20_000,
+    latencyMs: 1_200,
+    createdAtMs,
+  });
+  await seedRow({
+    databasePath: initialized.databasePath,
+    endpointId: fast,
+    requestId: "r-fast-3",
+    inputTokens: 30_000,
+    latencyMs: 1_400,
+    createdAtMs,
+  });
+  await seedRow({
+    databasePath: initialized.databasePath,
+    endpointId: slow,
+    requestId: "r-slow-1",
+    inputTokens: 15_000,
+    latencyMs: 9_000,
+    createdAtMs,
+  });
+  await seedRow({
+    databasePath: initialized.databasePath,
+    endpointId: slow,
+    requestId: "r-slow-2",
+    inputTokens: 25_000,
+    latencyMs: 11_000,
+    createdAtMs,
+  });
   // Large prompts (>= 50k tokens): the fast endpoint is only present once.
-  await seedRow({ databasePath: initialized.databasePath, endpointId: fast, requestId: "r-fast-large", inputTokens: 200_000, latencyMs: 20_000, createdAtMs });
+  await seedRow({
+    databasePath: initialized.databasePath,
+    endpointId: fast,
+    requestId: "r-fast-large",
+    inputTokens: 200_000,
+    latencyMs: 20_000,
+    createdAtMs,
+  });
   // Outside the window: must not contribute.
-  await seedRow({ databasePath: initialized.databasePath, endpointId: slow, requestId: "r-slow-old", inputTokens: 20_000, latencyMs: 120_000, createdAtMs: createdAtMs - 7 * 24 * 60 * 60 * 1_000 });
+  await seedRow({
+    databasePath: initialized.databasePath,
+    endpointId: slow,
+    requestId: "r-slow-old",
+    inputTokens: 20_000,
+    latencyMs: 120_000,
+    createdAtMs: createdAtMs - 7 * 24 * 60 * 60 * 1_000,
+  });
 
   const buckets = readEndpointLatencyBuckets({
     databasePath: initialized.databasePath,

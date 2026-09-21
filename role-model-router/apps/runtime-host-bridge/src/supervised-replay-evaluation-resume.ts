@@ -68,9 +68,17 @@ export interface SupervisedReplayEvaluationResumeStore {
   get(replayJobId: string): SupervisedReplayEvaluationResumeEntry | null;
   resolve(
     replayJobId: string,
-    resolution: { readonly outcome: string; readonly comparisonGroupId?: string | null; readonly now?: number },
+    resolution: {
+      readonly outcome: string;
+      readonly comparisonGroupId?: string | null;
+      readonly now?: number;
+    },
   ): SupervisedReplayEvaluationResumeEntry | null;
-  recordFailure(replayJobId: string, error: unknown, now?: number): SupervisedReplayEvaluationResumeEntry | null;
+  recordFailure(
+    replayJobId: string,
+    error: unknown,
+    now?: number,
+  ): SupervisedReplayEvaluationResumeEntry | null;
 }
 
 export function resolveSupervisedReplayEvaluationResumePath(input: {
@@ -83,12 +91,25 @@ export function resolveSupervisedReplayEvaluationResumePath(input: {
     throw new Error("supervised replay evaluation resume path requires a state root and scope");
   }
   const scopeSegment = `sha256-${createHash("sha256").update(scopeId, "utf8").digest("hex")}`;
-  return path.join(runtimeStateRoot, "scopes", scopeSegment, "track-b", "supervised-replay-evaluations.json");
+  return path.join(
+    runtimeStateRoot,
+    "scopes",
+    scopeSegment,
+    "track-b",
+    "supervised-replay-evaluations.json",
+  );
 }
 
 function boundedText(value: unknown, field: string): string {
-  if (typeof value !== "string" || !value.trim() || value.length > MAX_TEXT || /[\r\n]/.test(value)) {
-    throw new Error(`supervised replay evaluation resume ${field} must be a bounded non-empty string`);
+  if (
+    typeof value !== "string" ||
+    !value.trim() ||
+    value.length > MAX_TEXT ||
+    /[\r\n]/.test(value)
+  ) {
+    throw new Error(
+      `supervised replay evaluation resume ${field} must be a bounded non-empty string`,
+    );
   }
   return value.trim();
 }
@@ -110,9 +131,13 @@ function boundedCriteria(value: unknown): Readonly<Record<string, unknown>> {
   return structuredClone(value) as Readonly<Record<string, unknown>>;
 }
 
-function boundedCounterfactuals(value: unknown): readonly SupervisedReplayEvaluationCounterfactual[] {
+function boundedCounterfactuals(
+  value: unknown,
+): readonly SupervisedReplayEvaluationCounterfactual[] {
   if (!Array.isArray(value) || value.length === 0 || value.length > 8) {
-    throw new Error("supervised replay evaluation resume counterfactuals must be a bounded non-empty list");
+    throw new Error(
+      "supervised replay evaluation resume counterfactuals must be a bounded non-empty list",
+    );
   }
   return value.map((candidate) => {
     if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) {
@@ -120,8 +145,14 @@ function boundedCounterfactuals(value: unknown): readonly SupervisedReplayEvalua
     }
     const record = candidate as Record<string, unknown>;
     const reasoningEffort = record.reasoningEffort;
-    if (reasoningEffort !== null && reasoningEffort !== undefined && typeof reasoningEffort !== "string") {
-      throw new Error("supervised replay evaluation resume counterfactual effort must be a string or null");
+    if (
+      reasoningEffort !== null &&
+      reasoningEffort !== undefined &&
+      typeof reasoningEffort !== "string"
+    ) {
+      throw new Error(
+        "supervised replay evaluation resume counterfactual effort must be a string or null",
+      );
     }
     return {
       endpointId: boundedText(record.endpointId, "counterfactual endpoint"),
@@ -140,7 +171,9 @@ function boundedCounterfactuals(value: unknown): readonly SupervisedReplayEvalua
  */
 const reconciledAbandonedEntries = new WeakMap<object, Set<string>>();
 
-function normalizeEntry(entry: SupervisedReplayEvaluationResumeEntry): SupervisedReplayEvaluationResumeEntry {
+function normalizeEntry(
+  entry: SupervisedReplayEvaluationResumeEntry,
+): SupervisedReplayEvaluationResumeEntry {
   if (!entry || typeof entry !== "object" || entry.schemaVersion !== SCHEMA_VERSION) {
     throw new Error("supervised replay evaluation resume entry schema is unsupported");
   }
@@ -154,7 +187,9 @@ function normalizeEntry(entry: SupervisedReplayEvaluationResumeEntry): Supervise
   }
   const resolvedAtMs = entry.resolvedAtMs ?? null;
   if (resolvedAtMs !== null && (!Number.isSafeInteger(resolvedAtMs) || resolvedAtMs < 0)) {
-    throw new Error("supervised replay evaluation resume resolvedAtMs must be null or a safe integer");
+    throw new Error(
+      "supervised replay evaluation resume resolvedAtMs must be null or a safe integer",
+    );
   }
   const outcome = entry.outcome ?? null;
   if (outcome !== null && (typeof outcome !== "string" || !outcome || outcome.length > MAX_TEXT)) {
@@ -162,13 +197,16 @@ function normalizeEntry(entry: SupervisedReplayEvaluationResumeEntry): Supervise
   }
   const lastError = entry.lastError ?? null;
   if (lastError !== null && (typeof lastError !== "string" || lastError.length > MAX_ERROR_TEXT)) {
-    throw new Error("supervised replay evaluation resume lastError must be null or a bounded string");
+    throw new Error(
+      "supervised replay evaluation resume lastError must be null or a bounded string",
+    );
   }
   // Run 98 addendum 34 S5: older entries were written before the job's scope was recorded, so an
   // absent value normalises to null rather than failing the whole store.
-  const scope = entry.scope === undefined || entry.scope === null || entry.scope === ""
-    ? null
-    : boundedText(entry.scope, "scope");
+  const scope =
+    entry.scope === undefined || entry.scope === null || entry.scope === ""
+      ? null
+      : boundedText(entry.scope, "scope");
   return Object.freeze({
     schemaVersion: SCHEMA_VERSION,
     replayJobId: boundedText(entry.replayJobId, "replayJobId"),
@@ -179,7 +217,10 @@ function normalizeEntry(entry: SupervisedReplayEvaluationResumeEntry): Supervise
     sourceModelId: boundedText(entry.sourceModelId, "sourceModelId"),
     counterfactualPackages: boundedCounterfactuals(entry.counterfactualPackages),
     evaluationCriteria: boundedCriteria(entry.evaluationCriteria),
-    evaluationCriteriaDigest: boundedDigest(entry.evaluationCriteriaDigest, "evaluationCriteriaDigest"),
+    evaluationCriteriaDigest: boundedDigest(
+      entry.evaluationCriteriaDigest,
+      "evaluationCriteriaDigest",
+    ),
     scope,
     recordedAtMs,
     attempts,
@@ -188,7 +229,12 @@ function normalizeEntry(entry: SupervisedReplayEvaluationResumeEntry): Supervise
     lastError,
     ...(entry.comparisonGroupId === undefined
       ? {}
-      : { comparisonGroupId: entry.comparisonGroupId === null ? null : boundedText(entry.comparisonGroupId, "comparisonGroupId") }),
+      : {
+          comparisonGroupId:
+            entry.comparisonGroupId === null
+              ? null
+              : boundedText(entry.comparisonGroupId, "comparisonGroupId"),
+        }),
   });
 }
 
@@ -200,7 +246,11 @@ export function createSupervisedReplayEvaluationResumeStore(input: {
   const filePath = String(input.filePath ?? "").trim();
   if (!filePath) throw new Error("supervised replay evaluation resume store path is required");
   const requestedMax = input.maxEntries ?? DEFAULT_MAX_ENTRIES;
-  if (!Number.isSafeInteger(requestedMax) || requestedMax < 1 || requestedMax > MAX_ENTRIES_CEILING) {
+  if (
+    !Number.isSafeInteger(requestedMax) ||
+    requestedMax < 1 ||
+    requestedMax > MAX_ENTRIES_CEILING
+  ) {
     throw new Error("supervised replay evaluation resume store capacity must be bounded");
   }
   const maxEntries = requestedMax;
@@ -251,7 +301,8 @@ export function createSupervisedReplayEvaluationResumeStore(input: {
       .map((key) => entries[key] as SupervisedReplayEvaluationResumeEntry)
       .sort((left, right) =>
         left.resolvedAtMs !== null || right.resolvedAtMs !== null
-          ? Number(right.resolvedAtMs ?? Number.MAX_SAFE_INTEGER) - Number(left.resolvedAtMs ?? Number.MAX_SAFE_INTEGER)
+          ? Number(right.resolvedAtMs ?? Number.MAX_SAFE_INTEGER) -
+            Number(left.resolvedAtMs ?? Number.MAX_SAFE_INTEGER)
           : right.recordedAtMs - left.recordedAtMs,
       );
     for (const entry of ordered.slice(maxEntries)) delete entries[entry.replayJobId];
@@ -259,7 +310,9 @@ export function createSupervisedReplayEvaluationResumeStore(input: {
 
   const update = (
     replayJobId: string,
-    patch: (current: SupervisedReplayEvaluationResumeEntry) => SupervisedReplayEvaluationResumeEntry,
+    patch: (
+      current: SupervisedReplayEvaluationResumeEntry,
+    ) => SupervisedReplayEvaluationResumeEntry,
   ): SupervisedReplayEvaluationResumeEntry | null => {
     const current = entries[replayJobId];
     if (!current) return null;
@@ -291,7 +344,11 @@ export function createSupervisedReplayEvaluationResumeStore(input: {
     },
     resolve(
       replayJobId: string,
-      resolution: { readonly outcome: string; readonly comparisonGroupId?: string | null; readonly now?: number },
+      resolution: {
+        readonly outcome: string;
+        readonly comparisonGroupId?: string | null;
+        readonly now?: number;
+      },
     ): SupervisedReplayEvaluationResumeEntry | null {
       const now = resolution.now ?? clock();
       if (!Number.isSafeInteger(now) || now < 0) {
@@ -308,14 +365,17 @@ export function createSupervisedReplayEvaluationResumeStore(input: {
             : resolution.comparisonGroupId,
       }));
     },
-    recordFailure(replayJobId: string, error: unknown, now = clock()): SupervisedReplayEvaluationResumeEntry | null {
+    recordFailure(
+      replayJobId: string,
+      error: unknown,
+      now = clock(),
+    ): SupervisedReplayEvaluationResumeEntry | null {
       if (!Number.isSafeInteger(now) || now < 0) {
         throw new Error("supervised replay evaluation resume clock must return a safe integer");
       }
-      const message = String((error as { message?: unknown })?.message ?? error ?? "unknown resume failure").slice(
-        0,
-        MAX_ERROR_TEXT,
-      );
+      const message = String(
+        (error as { message?: unknown })?.message ?? error ?? "unknown resume failure",
+      ).slice(0, MAX_ERROR_TEXT);
       return update(boundedText(replayJobId, "replayJobId"), (current) => {
         const attempts = current.attempts + 1;
         return {
@@ -342,10 +402,14 @@ export function selectResumableSupervisedReplayEvaluations(input: {
   return input.entries
     .filter(
       (entry) =>
-        (entry.resolvedAtMs ?? null) === null && entry.attempts < SUPERVISED_REPLAY_EVALUATION_MAX_ATTEMPTS,
+        (entry.resolvedAtMs ?? null) === null &&
+        entry.attempts < SUPERVISED_REPLAY_EVALUATION_MAX_ATTEMPTS,
     )
     .slice()
-    .sort((left, right) => left.recordedAtMs - right.recordedAtMs || left.replayJobId.localeCompare(right.replayJobId))
+    .sort(
+      (left, right) =>
+        left.recordedAtMs - right.recordedAtMs || left.replayJobId.localeCompare(right.replayJobId),
+    )
     .slice(0, limit);
 }
 

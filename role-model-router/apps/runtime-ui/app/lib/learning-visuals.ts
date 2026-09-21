@@ -17,9 +17,17 @@ export interface LearningPipelineStage {
 
 export interface LearningBudgetView {
   readonly day: string;
-  readonly counterfactuals: { readonly used: number; readonly limit: number; readonly percent: number };
+  readonly counterfactuals: {
+    readonly used: number;
+    readonly limit: number;
+    readonly percent: number;
+  };
   readonly dispatches: { readonly used: number; readonly limit: number; readonly percent: number };
-  readonly byKind: readonly { readonly kind: string; readonly count: number; readonly share: number }[];
+  readonly byKind: readonly {
+    readonly kind: string;
+    readonly count: number;
+    readonly share: number;
+  }[];
 }
 
 export interface LearningActivityEvent {
@@ -130,7 +138,9 @@ const GUARDRAIL_META: Record<string, { label: string; unit: string }> = {
 };
 
 const asRecord = (value: unknown): Record<string, unknown> =>
-  value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+  value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
 
 const asArray = (value: unknown): readonly unknown[] => (Array.isArray(value) ? value : []);
 
@@ -183,7 +193,15 @@ export const EMPTY_LEARNING_HISTORY: LearningHistoryView = Object.freeze({
     advisoryObserved: 0,
     advisoryWouldHaveChanged: 0,
   },
-  mix: { candidate: 0, source: 0, tie: 0, insufficient: 0, decisiveShare: 0, deltas: [], worst: null },
+  mix: {
+    candidate: 0,
+    source: 0,
+    tie: 0,
+    insufficient: 0,
+    decisiveShare: 0,
+    deltas: [],
+    worst: null,
+  },
   timeline: [],
   guardrails: [],
   guardrailsFiring: 0,
@@ -253,7 +271,10 @@ export function normalizeLearningActivity(value: unknown): LearningActivityView 
     pipeline,
     budget: {
       day: asText(budgetRecord.day),
-      counterfactuals: { ...counterfactuals, percent: percentOf(counterfactuals.used, counterfactuals.limit) },
+      counterfactuals: {
+        ...counterfactuals,
+        percent: percentOf(counterfactuals.used, counterfactuals.limit),
+      },
       dispatches: { ...dispatches, percent: percentOf(dispatches.used, dispatches.limit) },
       byKind,
     },
@@ -316,7 +337,9 @@ export function normalizeLearningHistory(value: unknown): LearningHistoryView {
       const kind = asText(row.kind, "activate");
       return {
         atMs: asNumber(row.atMs),
-        kind: (kind === "rollback" || kind === "breach" ? kind : "activate") as LearningTimelineEntry["kind"],
+        kind: (kind === "rollback" || kind === "breach"
+          ? kind
+          : "activate") as LearningTimelineEntry["kind"],
         packageId: asText(row.packageId),
         state: asText(row.state, "unknown"),
         cohortPercent: asNullableNumber(row.cohortPercent),
@@ -337,7 +360,9 @@ export function normalizeLearningHistory(value: unknown): LearningHistoryView {
       unit: meta.unit,
       limit: asNumber(row.limit),
       observed: asNullableNumber(row.observed),
-      status: (status === "ok" || status === "firing" ? status : "no-data") as LearningGuardrailRow["status"],
+      status: (status === "ok" || status === "firing"
+        ? status
+        : "no-data") as LearningGuardrailRow["status"],
     };
   });
 
@@ -361,7 +386,10 @@ export function normalizeLearningHistory(value: unknown): LearningHistoryView {
       rollbacks: Math.max(0, Math.round(asNumber(totalsRecord.rollbacks))),
       guardrailBreaches: Math.max(0, Math.round(asNumber(totalsRecord.guardrailBreaches))),
       advisoryObserved: Math.max(0, Math.round(asNumber(totalsRecord.advisoryObserved))),
-      advisoryWouldHaveChanged: Math.max(0, Math.round(asNumber(totalsRecord.advisoryWouldHaveChanged))),
+      advisoryWouldHaveChanged: Math.max(
+        0,
+        Math.round(asNumber(totalsRecord.advisoryWouldHaveChanged)),
+      ),
     },
     mix: {
       candidate,
@@ -379,9 +407,18 @@ export function normalizeLearningHistory(value: unknown): LearningHistoryView {
 }
 
 /** 7 rows (weekday) x columns (bucket) intensity grid, one cell per bucket. */
-export function historyHeatmap(
-  buckets: readonly LearningHistoryBucket[],
-): { readonly cells: readonly { readonly startMs: number; readonly weekday: number; readonly column: number; readonly value: number; readonly intensity: number }[]; readonly max: number; readonly columns: number; readonly worstStartMs: number | null } {
+export function historyHeatmap(buckets: readonly LearningHistoryBucket[]): {
+  readonly cells: readonly {
+    readonly startMs: number;
+    readonly weekday: number;
+    readonly column: number;
+    readonly value: number;
+    readonly intensity: number;
+  }[];
+  readonly max: number;
+  readonly columns: number;
+  readonly worstStartMs: number | null;
+} {
   if (buckets.length === 0) return { cells: [], max: 0, columns: 0, worstStartMs: null };
   const max = buckets.reduce((highest, bucket) => Math.max(highest, bucket.total), 0);
   const columns = buckets.length;
@@ -458,7 +495,9 @@ export function fallbackReasonRows(
       const numeric = numberOrNull(count);
       return numeric !== null && numeric > 0 ? [{ reason, count: numeric }] : [];
     })
-    .sort((left, right) => right.count - left.count || left.reason.localeCompare(right.reason, "en"))
+    .sort(
+      (left, right) => right.count - left.count || left.reason.localeCompare(right.reason, "en"),
+    )
     .slice(0, Math.max(0, limit));
 }
 

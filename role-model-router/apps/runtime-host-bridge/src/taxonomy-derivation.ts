@@ -39,10 +39,10 @@ export interface DerivedTaxonomyClassification {
     readonly taxonomyVersion: string;
     readonly contentRevision: string;
     readonly classificationContractVersion: string;
-  readonly source: "runtime_heuristic";
-  readonly confidence: number;
-  readonly groupId: string;
-  readonly role: { readonly id: string; readonly hard: false };
+    readonly source: "runtime_heuristic";
+    readonly confidence: number;
+    readonly groupId: string;
+    readonly role: { readonly id: string; readonly hard: false };
     readonly task: { readonly id: string; readonly hard: false };
     readonly capabilities: {
       readonly required: readonly string[];
@@ -179,7 +179,9 @@ function requestTokenIndex(tokens: Iterable<string>): RequestTokenIndex {
 const tokenWeights = (() => {
   const documentFrequency = new Map<string, number>();
   for (const task of canonicalTaxonomy.tasks) {
-    const tokens = new Set(tokenize(`${task.classifier.useWhen} ${task.label} ${task.description}`));
+    const tokens = new Set(
+      tokenize(`${task.classifier.useWhen} ${task.label} ${task.description}`),
+    );
     for (const token of tokens) {
       documentFrequency.set(token, (documentFrequency.get(token) ?? 0) + 1);
     }
@@ -196,10 +198,7 @@ function tokenWeight(token: string): number {
   return tokenWeights.get(token) ?? Math.log(1 + canonicalTaxonomy.tasks.length);
 }
 
-function tokenMatchesRequestToken(
-  token: string,
-  request: RequestTokenIndex,
-): boolean {
+function tokenMatchesRequestToken(token: string, request: RequestTokenIndex): boolean {
   if (request.exact.has(token)) {
     return true;
   }
@@ -309,7 +308,10 @@ function scoreTask(input: {
     }
   }
   // A request that contains the task's own declared signal verbatim is strong evidence for that task.
-  const useWhenPhrase = task.classifier.useWhen.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+  const useWhenPhrase = task.classifier.useWhen
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
   if (useWhenPhrase.length >= 12 && input.normalizedPhrase.includes(useWhenPhrase)) {
     lexical += 8;
   }
@@ -356,7 +358,10 @@ export function deriveTaxonomyClassification(
     tokens.set(token, (tokens.get(token) ?? 0) + 1);
   }
   const requestTokens = requestTokenIndex(tokens.keys());
-  const normalizedPhrase = input.text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+  const normalizedPhrase = input.text
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
   const transportCapabilities = resolveTransportCapabilities(
     toolClassIds,
     modalityIds,

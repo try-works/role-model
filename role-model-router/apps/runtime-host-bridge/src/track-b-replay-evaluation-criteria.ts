@@ -241,7 +241,10 @@ export function extractSourceOutputText(capture: Record<string, unknown>): strin
  * used here because they are the graded artifact, not the task.
  */
 export function extractTaskInstructionText(capture: Record<string, unknown>): string | null {
-  const messageLists = [capture.messages, (capture.request as Record<string, unknown> | undefined)?.messages];
+  const messageLists = [
+    capture.messages,
+    (capture.request as Record<string, unknown> | undefined)?.messages,
+  ];
   for (const list of messageLists) {
     if (!Array.isArray(list)) continue;
     for (let index = list.length - 1; index >= 0; index -= 1) {

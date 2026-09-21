@@ -1,9 +1,9 @@
 import { expect, test } from "vitest";
 
 import {
+  RUN96_ROUTING_SHADOW_SCORER_DEFINITION_VERSION,
   RUN97_PAIRWISE_JUDGE_DEFINITION_VERSION,
   RUN97_PAIRWISE_JUDGE_SCORER_ID,
-  RUN96_ROUTING_SHADOW_SCORER_DEFINITION_VERSION,
   createRun96RoutingShadowScorer,
   createRun97PairwiseJudgeScorer,
 } from "../src/track-b-runtime.js";
@@ -56,7 +56,9 @@ test("run98 R10 the judge scorer version is deterministic, bounded and identity-
   // The default identity keeps the canonical scorer-set version, so existing bindings that
   // never changed judge identity stay valid.
   const defaultIdentity = createRun97PairwiseJudgeScorer({ judgeEndpointId: "endpoint:judge-a" });
-  expect(defaultIdentity.scorerSetVersion).toBe(first.scorerSetVersion.replace(".identity-blind", ""));
+  expect(defaultIdentity.scorerSetVersion).toBe(
+    first.scorerSetVersion.replace(".identity-blind", ""),
+  );
 });
 
 /**

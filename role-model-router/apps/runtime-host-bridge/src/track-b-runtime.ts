@@ -18,16 +18,16 @@ import {
 import { copyFile, lstat, mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-// Run 99 R33 D7: the declared, family-stratified holdout split.
-import {
-  buildFamilyStratifiedHoldout,
-  computeHoldoutMembershipDigest,
-  RUN99_HOLDOUT_SPLIT_SEED,
-} from "./track-b-holdout-split.js";
 import { createInterface } from "node:readline";
 import { DatabaseSync } from "node:sqlite";
 import { pathToFileURL } from "node:url";
 import { gunzipSync, gzipSync } from "node:zlib";
+// Run 99 R33 D7: the declared, family-stratified holdout split.
+import {
+  RUN99_HOLDOUT_SPLIT_SEED,
+  buildFamilyStratifiedHoldout,
+  computeHoldoutMembershipDigest,
+} from "./track-b-holdout-split.js";
 
 /**
  * Run 98 addendum 34 S1: how many counterfactual arms one capture dispatches.
@@ -44,7 +44,8 @@ export function resolveMaxCounterfactualArms(
   const raw = environment.ROLE_MODEL_MAX_COUNTERFACTUAL_ARMS?.trim();
   if (!raw) return DEFAULT_REPLAY_CANDIDATE_CAP;
   const parsed = Number(raw);
-  if (!Number.isSafeInteger(parsed) || parsed < 1 || parsed > 6) return DEFAULT_REPLAY_CANDIDATE_CAP;
+  if (!Number.isSafeInteger(parsed) || parsed < 1 || parsed > 6)
+    return DEFAULT_REPLAY_CANDIDATE_CAP;
   return parsed;
 }
 
@@ -65,9 +66,13 @@ export function extensionHostTiming(env: Record<string, string | undefined> = pr
   readonly restartBackoffMs: number;
   readonly restartCooldownMs: number;
 } {
-  const bounded = (value: string | undefined, fallback: number, min: number, max: number): number => {
-    const numeric =
-      typeof value === "string" && value.trim() !== "" ? Number(value) : Number.NaN;
+  const bounded = (
+    value: string | undefined,
+    fallback: number,
+    min: number,
+    max: number,
+  ): number => {
+    const numeric = typeof value === "string" && value.trim() !== "" ? Number(value) : Number.NaN;
     return Number.isSafeInteger(numeric) && numeric >= min && numeric <= max ? numeric : fallback;
   };
   return {
@@ -75,12 +80,7 @@ export function extensionHostTiming(env: Record<string, string | undefined> = pr
     startupTimeoutMs: bounded(env.ROLE_MODEL_EXTENSION_STARTUP_TIMEOUT_MS, 30_000, 100, 600_000),
     maxRestarts: bounded(env.ROLE_MODEL_EXTENSION_MAX_RESTARTS, 3, 0, 20),
     restartBackoffMs: bounded(env.ROLE_MODEL_EXTENSION_RESTART_BACKOFF_MS, 10, 0, 10_000),
-    restartCooldownMs: bounded(
-      env.ROLE_MODEL_EXTENSION_RESTART_COOLDOWN_MS,
-      60_000,
-      0,
-      3_600_000,
-    ),
+    restartCooldownMs: bounded(env.ROLE_MODEL_EXTENSION_RESTART_COOLDOWN_MS, 60_000, 0, 3_600_000),
   };
 }
 
@@ -99,20 +99,10 @@ import {
 } from "@role-model-router/sqlite-memory";
 import { createProjectionV2 } from "@role-model-router/trace";
 
-import { DEFAULT_REPLAY_CANDIDATE_CAP } from "./track-b-replay-policy.js";
 import {
   type TrackBRouteAdvisorySourceResult,
   readTrackBRouteAdvisoryFromRollout,
 } from "./route-advisory-source.js";
-import {
-  type TrackBLearningPassRuntime,
-  runTrackBLearningPass,
-} from "./track-b-learning-pass.js";
-import {
-  TRACK_B_PAIRWISE_JUDGE_WINNER_COUNTERFACTUAL,
-  type TrackBPairwiseJudge,
-  pairwiseJudgeScores,
-} from "./track-b-shadow-judge.js";
 import {
   buildLearnedExperienceCandidate,
   buildRoutePackageActivationReceipt,
@@ -123,9 +113,16 @@ import {
 import {
   boundedTrackBLearningRefusal,
   deriveTrackBLearningCapability,
-  selectTrackBLearningTarget,
   selectTrackBLearningEvidence,
+  selectTrackBLearningTarget,
 } from "./track-b-learning-evidence.js";
+import { type TrackBLearningPassRuntime, runTrackBLearningPass } from "./track-b-learning-pass.js";
+import { DEFAULT_REPLAY_CANDIDATE_CAP } from "./track-b-replay-policy.js";
+import {
+  TRACK_B_PAIRWISE_JUDGE_WINNER_COUNTERFACTUAL,
+  type TrackBPairwiseJudge,
+  pairwiseJudgeScores,
+} from "./track-b-shadow-judge.js";
 
 import { deriveRuntimeContributionOutcomeFromObservation } from "./contribution-outcome.js";
 import { consumeTrackBProjection } from "./track-b-projections.js";
@@ -743,9 +740,7 @@ export function selectDurableJudgeScores(input: {
     // The stored row is the authority: the judge's version embeds the endpoint and mode, which a
     // resumed run re-derives, so the identity that matters is the scorer id plus the dimension.
     const match = rows.find(
-      (row) =>
-        row.scorerId === input.scorerId &&
-        row.dimension === input.dimension,
+      (row) => row.scorerId === input.scorerId && row.dimension === input.dimension,
     );
     if (!match) return null;
     selected.push(match);
@@ -788,16 +783,15 @@ export function selectDurableScoredTrialEvidence(input: {
   readonly scorerVersion: string;
 }): { readonly score: number; readonly scoreId: string; readonly hasCorrectness: boolean } {
   const rows = (Array.isArray(input.scores) ? input.scores : []).filter(
-    (row): row is Record<string, unknown> => Boolean(row) && typeof row === "object" && !Array.isArray(row),
+    (row): row is Record<string, unknown> =>
+      Boolean(row) && typeof row === "object" && !Array.isArray(row),
   );
   if (rows.length === 0) throw new Error("durable scored trial has no recorded scores");
   // The durable row is the authority: a resumed run re-derives the scorer definition (the judge's
   // version embeds the endpoint and mode), so matching on the exact version alone rejected a trial
   // that had in fact been graded. The dimension plus the scorer identity is what the comparison needs.
   const correctness = rows.find(
-    (score) =>
-      score.dimension === "correctness" &&
-      score.scorerId === input.scorerId,
+    (score) => score.dimension === "correctness" && score.scorerId === input.scorerId,
   );
   const hasCorrectness = Boolean(correctness && Number.isFinite(correctness.score));
   const referenced = rows.find((row) => typeof row.scoreId === "string" && row.scoreId) ?? rows[0];
@@ -1626,9 +1620,10 @@ export async function claimReplayIntentWithRecovery(input: {
   readonly deadlineAtMs: number;
   readonly maxAttempts?: number;
 }): Promise<ReplayIntentClaimOutcome> {
-  const maxAttempts = Number.isSafeInteger(input.maxAttempts) && (input.maxAttempts ?? 0) > 0
-    ? Number(input.maxAttempts)
-    : 2;
+  const maxAttempts =
+    Number.isSafeInteger(input.maxAttempts) && (input.maxAttempts ?? 0) > 0
+      ? Number(input.maxAttempts)
+      : 2;
   const baseIntentId = `replay-intent:${input.replayJobId}`;
   let lastIntentId = baseIntentId;
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
@@ -1646,16 +1641,18 @@ export async function claimReplayIntentWithRecovery(input: {
     const invalid: string[] = [];
     if (typeof claim.jobId !== "string" || !claim.jobId) invalid.push("jobId");
     if (typeof claim.leaseId !== "string" || !claim.leaseId) invalid.push("leaseId");
-    if (typeof claim.fence !== "number" || !Number.isSafeInteger(claim.fence)) invalid.push("fence");
-    if (typeof claim.attempt !== "number" || !Number.isSafeInteger(claim.attempt)) invalid.push("attempt");
+    if (typeof claim.fence !== "number" || !Number.isSafeInteger(claim.fence))
+      invalid.push("fence");
+    if (typeof claim.attempt !== "number" || !Number.isSafeInteger(claim.attempt))
+      invalid.push("attempt");
     if (!claim.payload || typeof claim.payload !== "object") invalid.push("payload");
     else {
       if (claim.payload.replayJobId !== input.replayJobId) invalid.push("payload.replayJobId");
       if (claim.payload.scope !== input.scope) invalid.push("payload.scope");
     }
     if (
-      claim.deadlineAtMs !== null
-      && (typeof claim.deadlineAtMs !== "number" || !Number.isSafeInteger(claim.deadlineAtMs))
+      claim.deadlineAtMs !== null &&
+      (typeof claim.deadlineAtMs !== "number" || !Number.isSafeInteger(claim.deadlineAtMs))
     ) {
       invalid.push("deadlineAtMs");
     }
@@ -1683,7 +1680,9 @@ export interface ReplayIntentScheduler {
   enqueue(
     input: Readonly<{ jobId: string; replayJobId: string; deadlineAtMs: number }>,
   ): Promise<{ accepted: boolean }>;
-  claim(input?: Readonly<{ jobId: string }>): Promise<ReplayIntentClaim | ReplayIntentExpired | null>;
+  claim(
+    input?: Readonly<{ jobId: string }>,
+  ): Promise<ReplayIntentClaim | ReplayIntentExpired | null>;
   complete(
     input: Readonly<{
       jobId: string;
@@ -1719,12 +1718,7 @@ function decodeSchedulerBusinessOutput(value: unknown): unknown {
     return inner;
   }
   // A bare `{ value: <result> }` wrapper is also accepted when it carries no claim fields.
-  if (
-    "value" in record
-    && !("jobId" in record)
-    && !("leaseId" in record)
-    && !("fence" in record)
-  ) {
+  if ("value" in record && !("jobId" in record) && !("leaseId" in record) && !("fence" in record)) {
     return record.value;
   }
   return value;
@@ -1809,10 +1803,13 @@ export function createReplayIntentScheduler(options: {
       if (!result.jobId) invalidFields.push("jobId");
       if (!result.leaseId) invalidFields.push("leaseId");
       if (typeof fence !== "number" || !Number.isSafeInteger(fence)) invalidFields.push("fence");
-      if (typeof attempt !== "number" || !Number.isSafeInteger(attempt)) invalidFields.push("attempt");
-      if (!payload || typeof payload !== "object" || Array.isArray(payload)) invalidFields.push("payload");
+      if (typeof attempt !== "number" || !Number.isSafeInteger(attempt))
+        invalidFields.push("attempt");
+      if (!payload || typeof payload !== "object" || Array.isArray(payload))
+        invalidFields.push("payload");
       else {
-        if ((payload as Record<string, unknown>).scope !== options.scope) invalidFields.push("payload.scope");
+        if ((payload as Record<string, unknown>).scope !== options.scope)
+          invalidFields.push("payload.scope");
         if (typeof (payload as Record<string, unknown>).replayJobId !== "string") {
           invalidFields.push("payload.replayJobId");
         }
@@ -1824,9 +1821,7 @@ export function createReplayIntentScheduler(options: {
         invalidFields.push("deadlineAtMs");
       }
       if (invalidFields.length > 0) {
-        const received = Object.keys(result)
-          .sort()
-          .join("|");
+        const received = Object.keys(result).sort().join("|");
         throw new Error(
           `replay scheduler claim receipt is invalid: ${invalidFields.join(", ")} (received: ${received || "none"})`,
         );
@@ -2006,7 +2001,7 @@ export function createReplayAuthorizationNonceStore(
   // A nonce is bound to exactly one dispatch identity. The binding is what lets a resumed
   // *prepared* envelope be re-authorized without ever letting a captured nonce authorize
   // different work.
-  let bindings: Record<string, string> = {};
+  const bindings: Record<string, string> = {};
   if (!existsSync(filePath)) {
     nonces = new Set<string>();
   } else {
@@ -2037,7 +2032,9 @@ export function createReplayAuthorizationNonceStore(
     const persistedBindings = (parsed as Record<string, unknown>).bindings;
     if (
       persistedBindings !== undefined &&
-      (!persistedBindings || typeof persistedBindings !== "object" || Array.isArray(persistedBindings))
+      (!persistedBindings ||
+        typeof persistedBindings !== "object" ||
+        Array.isArray(persistedBindings))
     ) {
       throw new Error("replay authorization nonce store is invalid");
     }
@@ -2085,9 +2082,7 @@ export function createReplayAuthorizationNonceStore(
       }
       if (
         dispatchIdentity !== undefined &&
-        (typeof dispatchIdentity !== "string" ||
-          !dispatchIdentity ||
-          dispatchIdentity.length > 256)
+        (typeof dispatchIdentity !== "string" || !dispatchIdentity || dispatchIdentity.length > 256)
       ) {
         throw new Error("replay dispatch identity is invalid");
       }
@@ -3405,7 +3400,9 @@ export async function runSupervisedReplay(input: {
             resultTraceIds: Array.isArray(created.resultTraceIds)
               ? structuredClone(created.resultTraceIds)
               : [],
-            resultBranches: Array.isArray(created.branches) ? structuredClone(created.branches) : [],
+            resultBranches: Array.isArray(created.branches)
+              ? structuredClone(created.branches)
+              : [],
             candidates: structuredClone(input.candidatePackages),
             replayJob: structuredClone(created),
             recovery: true,
@@ -3420,7 +3417,10 @@ export async function runSupervisedReplay(input: {
             }),
           );
           if (finalized && typeof finalized === "object") {
-            return { ...(finalized as Record<string, unknown>), schedulerState: "terminal_recovery" };
+            return {
+              ...(finalized as Record<string, unknown>),
+              schedulerState: "terminal_recovery",
+            };
           }
         }
       } catch (error) {
@@ -3493,10 +3493,10 @@ export async function runSupervisedReplay(input: {
         replayJobId: jobId,
         scope: input.scope,
         deadlineAtMs:
-          Date.now()
-          + (typeof input.budget.deadlineMs === "number"
-            && Number.isSafeInteger(input.budget.deadlineMs)
-            && input.budget.deadlineMs > 0
+          Date.now() +
+          (typeof input.budget.deadlineMs === "number" &&
+          Number.isSafeInteger(input.budget.deadlineMs) &&
+          input.budget.deadlineMs > 0
             ? input.budget.deadlineMs
             : 120_000),
       });
@@ -3730,10 +3730,7 @@ export async function runSupervisedReplay(input: {
             traversal,
           ),
         });
-        if (
-          typeof recoveredBranch?.branchRootRef !== "string" ||
-          !recoveredBranch.branchRootRef
-        ) {
+        if (typeof recoveredBranch?.branchRootRef !== "string" || !recoveredBranch.branchRootRef) {
           throw new Error("replay branch append recovery was not persisted");
         }
         const recoveredReceipt = await invokeReplayCore("replay:record-branch-append", {
@@ -5410,47 +5407,47 @@ export function createTrackBPostObservationOutbox({
         for (;;) {
           const item = await exclusive(() =>
             withDatabase((database) => {
-            const row = database
-              .prepare(
-                `SELECT request_id, routing_decision_id, endpoint_id, model_id, reasoning_effort,
+              const row = database
+                .prepare(
+                  `SELECT request_id, routing_decision_id, endpoint_id, model_id, reasoning_effort,
                         effort_source, run88_correlation_json, observation_json, legacy_identity_missing
                  FROM track_b_post_observation_pending ORDER BY enqueued_at_ms, request_id LIMIT 1`,
-              )
-              .get() as
-              | {
-                  request_id: string;
-                  routing_decision_id: string;
-                  endpoint_id: string;
-                  model_id: string | null;
-                  reasoning_effort: string | null;
-                  effort_source: RuntimeEffortSource | null;
-                  run88_correlation_json: string | null;
-                  observation_json: string | null;
-                  legacy_identity_missing: number;
-                }
-              | undefined;
-            if (!row) return null;
-            const payload = row.observation_json ? parseBoundedJson(row.observation_json) : {};
-            const payloadRecord =
-              payload && typeof payload === "object" && !Array.isArray(payload)
-                ? (payload as Record<string, unknown>)
-                : {};
-            return {
-              ...payloadRecord,
-              requestId: row.request_id,
-              routingDecisionId: row.routing_decision_id,
-              endpointId: row.endpoint_id,
-              ...(row.model_id !== null ? { modelId: row.model_id } : {}),
-              // `null` is the explicit provider-default effort identity. Preserve it
-              // through the SQLite round trip so the strict variant validator can
-              // distinguish a valid default from an N-1 record with no identity.
-              reasoningEffort: row.reasoning_effort,
-              ...(row.effort_source !== null ? { effortSource: row.effort_source } : {}),
-              ...(row.run88_correlation_json
-                ? { run88Correlation: parseBoundedJson(row.run88_correlation_json) }
-                : {}),
-              ...(row.legacy_identity_missing ? { legacyIdentityMissing: true as const } : {}),
-            } as TrackBPostObservationWorkItem;
+                )
+                .get() as
+                | {
+                    request_id: string;
+                    routing_decision_id: string;
+                    endpoint_id: string;
+                    model_id: string | null;
+                    reasoning_effort: string | null;
+                    effort_source: RuntimeEffortSource | null;
+                    run88_correlation_json: string | null;
+                    observation_json: string | null;
+                    legacy_identity_missing: number;
+                  }
+                | undefined;
+              if (!row) return null;
+              const payload = row.observation_json ? parseBoundedJson(row.observation_json) : {};
+              const payloadRecord =
+                payload && typeof payload === "object" && !Array.isArray(payload)
+                  ? (payload as Record<string, unknown>)
+                  : {};
+              return {
+                ...payloadRecord,
+                requestId: row.request_id,
+                routingDecisionId: row.routing_decision_id,
+                endpointId: row.endpoint_id,
+                ...(row.model_id !== null ? { modelId: row.model_id } : {}),
+                // `null` is the explicit provider-default effort identity. Preserve it
+                // through the SQLite round trip so the strict variant validator can
+                // distinguish a valid default from an N-1 record with no identity.
+                reasoningEffort: row.reasoning_effort,
+                ...(row.effort_source !== null ? { effortSource: row.effort_source } : {}),
+                ...(row.run88_correlation_json
+                  ? { run88Correlation: parseBoundedJson(row.run88_correlation_json) }
+                  : {}),
+                ...(row.legacy_identity_missing ? { legacyIdentityMissing: true as const } : {}),
+              } as TrackBPostObservationWorkItem;
             }),
           );
           if (!item) break;
@@ -5460,28 +5457,28 @@ export function createTrackBPostObservationOutbox({
           await exclusive(() =>
             withDatabase((database) => {
               database.exec("BEGIN IMMEDIATE");
-            try {
-              database
-                .prepare("DELETE FROM track_b_post_observation_pending WHERE request_id=?")
-                .run(item.requestId);
-              database
-                .prepare(
-                  `INSERT OR REPLACE INTO track_b_post_observation_receipts
+              try {
+                database
+                  .prepare("DELETE FROM track_b_post_observation_pending WHERE request_id=?")
+                  .run(item.requestId);
+                database
+                  .prepare(
+                    `INSERT OR REPLACE INTO track_b_post_observation_receipts
                    (request_id, completed_at, result_json, completed_at_ms) VALUES (?, ?, ?, ?)`,
-                )
-                .run(item.requestId, new Date().toISOString(), boundedJson(result), Date.now());
-              database
-                .prepare(
-                  `DELETE FROM track_b_post_observation_receipts
+                  )
+                  .run(item.requestId, new Date().toISOString(), boundedJson(result), Date.now());
+                database
+                  .prepare(
+                    `DELETE FROM track_b_post_observation_receipts
                    WHERE request_id NOT IN
                      (SELECT request_id FROM track_b_post_observation_receipts ORDER BY completed_at_ms DESC, request_id DESC LIMIT ?)`,
-                )
-                .run(maxItems);
-              database.exec("COMMIT");
-            } catch (error) {
-              database.exec("ROLLBACK");
-              throw error;
-            }
+                  )
+                  .run(maxItems);
+                database.exec("COMMIT");
+              } catch (error) {
+                database.exec("ROLLBACK");
+                throw error;
+              }
             }),
           );
         }
@@ -5809,7 +5806,9 @@ function validateTrackBReferenceAttestation(
      * naming the shape that arrived. The keys are business-record field names (never values), so the next
      * occurrence diagnoses itself.
      */
-    const observedKeys = Object.keys(attestation as Record<string, unknown>).slice(0, 8).join(",");
+    const observedKeys = Object.keys(attestation as Record<string, unknown>)
+      .slice(0, 8)
+      .join(",");
     throw new Error(
       `trusted evaluation reference attestation schema is invalid (answer keys: ${observedKeys || "none"})`,
     );
@@ -6007,9 +6006,7 @@ export function decodeExternalizedOperatorReadback(input: {
         const row = (
           outputKey
             ? database
-                .prepare(
-                  "SELECT result_json FROM durable_extension_outputs WHERE output_key = ?",
-                )
+                .prepare("SELECT result_json FROM durable_extension_outputs WHERE output_key = ?")
                 .get(outputKey)
             : database
                 .prepare(
@@ -6109,13 +6106,17 @@ function decodeExtensionBusinessResult(input: {
       : null;
   if (!record) return null;
   const business =
-    record.businessOutput && typeof record.businessOutput === "object" && !Array.isArray(record.businessOutput)
+    record.businessOutput &&
+    typeof record.businessOutput === "object" &&
+    !Array.isArray(record.businessOutput)
       ? (record.businessOutput as Record<string, unknown>)
       : null;
   if (business && business.transferState === "externalized") {
     if (!input.stateRoot) return null;
     const locator =
-      record.durableLocator && typeof record.durableLocator === "object" && !Array.isArray(record.durableLocator)
+      record.durableLocator &&
+      typeof record.durableLocator === "object" &&
+      !Array.isArray(record.durableLocator)
         ? (record.durableLocator as Record<string, unknown>)
         : null;
     if (!locator) return null;
@@ -6169,7 +6170,11 @@ export async function readTrackBAdvisoryMeasurement(input: {
       reason: "extension runtime unavailable",
     };
   }
-  const invoke = async (extensionId: string, capability: string, value: Record<string, unknown>) => {
+  const invoke = async (
+    extensionId: string,
+    capability: string,
+    value: Record<string, unknown>,
+  ) => {
     const result = await runtime.invoke(extensionId, {
       requestId: `learning-measurement:${capability}:${Date.now()}`,
       sessionId: `learning-measurement:${input.scopeId}`,
@@ -6181,15 +6186,20 @@ export async function readTrackBAdvisoryMeasurement(input: {
       value,
       payload: value,
     });
-    return decodeExtensionBusinessResult({
-      result,
-      extensionId,
-      ...(input.stateRoot ? { stateRoot: input.stateRoot } : {}),
-      scopeId: input.scopeId,
-    }) ?? result;
+    return (
+      decodeExtensionBusinessResult({
+        result,
+        extensionId,
+        ...(input.stateRoot ? { stateRoot: input.stateRoot } : {}),
+        scopeId: input.scopeId,
+      }) ?? result
+    );
   };
   const decodedGroups = await invoke("evaluation-core", "evaluation:list-groups", {});
-  const record = decodedGroups && typeof decodedGroups === "object" ? (decodedGroups as Record<string, unknown>) : {};
+  const record =
+    decodedGroups && typeof decodedGroups === "object"
+      ? (decodedGroups as Record<string, unknown>)
+      : {};
   const groups = Array.isArray(decodedGroups)
     ? (decodedGroups as readonly Record<string, unknown>[])
     : Array.isArray(record.value)
@@ -6199,7 +6209,10 @@ export async function readTrackBAdvisoryMeasurement(input: {
         : [];
   const rows: Record<string, unknown>[] = [];
   for (const group of groups) {
-    const result = group?.result && typeof group.result === "object" ? (group.result as Record<string, unknown>) : {};
+    const result =
+      group?.result && typeof group.result === "object"
+        ? (group.result as Record<string, unknown>)
+        : {};
     const members = Array.isArray(result.members)
       ? (result.members as readonly Record<string, unknown>[])
       : Array.isArray(group?.members)
@@ -6210,11 +6223,17 @@ export async function readTrackBAdvisoryMeasurement(input: {
     const outcome = String(result.outcome ?? group?.outcome ?? "unknown");
     const decisive = outcome === "source" || outcome === "candidate";
     const quality = scored.reduce((sum, member) => sum + Number(member.score), 0) / scored.length;
-    const groupId = String(result.groupId ?? group?.groupId ?? group?.group_id ?? "comparison:unknown");
-    const holdout = result.holdout && typeof result.holdout === "object" ? (result.holdout as Record<string, unknown>) : {};
-    const comparability = group?.comparability && typeof group.comparability === "object"
-      ? (group.comparability as Record<string, unknown>)
-      : {};
+    const groupId = String(
+      result.groupId ?? group?.groupId ?? group?.group_id ?? "comparison:unknown",
+    );
+    const holdout =
+      result.holdout && typeof result.holdout === "object"
+        ? (result.holdout as Record<string, unknown>)
+        : {};
+    const comparability =
+      group?.comparability && typeof group.comparability === "object"
+        ? (group.comparability as Record<string, unknown>)
+        : {};
     rows.push({
       decisionId: groupId,
       cohort: decisive && outcome === "source" ? "baseline" : "advisory",
@@ -6908,8 +6927,7 @@ export function resolveTrackBRouteAdvisory(input: {
   };
 }
 
-export const TRACK_B_ROUTE_ADVISORY_OBSERVATION_SCHEMA =
-  "role-model.route-advisory-observation.v1";
+export const TRACK_B_ROUTE_ADVISORY_OBSERVATION_SCHEMA = "role-model.route-advisory-observation.v1";
 export const TRACK_B_ROUTE_ADVISORY_OBSERVATION_LEDGER_SCHEMA =
   "role-model.route-advisory-observation-ledger.v1";
 const TRACK_B_ROUTE_ADVISORY_LEDGER_MAX_ENTRIES = 5000;
@@ -7002,9 +7020,9 @@ export function recallNewestTrackBRouteAdvisory(input: {
   /** Run 99 R33: when given, only an exact family match (or an unscoped entry) is returned. */
   readonly taskTypeId?: string | null;
 }) {
-  let newest: (typeof trackBRouteAdvisoryCache extends Map<string, infer TValue>
-    ? TValue
-    : never) | null = null;
+  let newest:
+    | (typeof trackBRouteAdvisoryCache extends Map<string, infer TValue> ? TValue : never)
+    | null = null;
   const requestedFamily =
     typeof input.taskTypeId === "string" && input.taskTypeId.trim()
       ? input.taskTypeId.trim()
@@ -7051,8 +7069,7 @@ export interface TrackBDurableRouteAdvisoryEntry {
 const trackBDurableRouteAdvisoryCache = new Map<string, TrackBDurableRouteAdvisoryEntry>();
 const TRACK_B_DURABLE_ADVISORY_CACHE_MAX_ENTRIES = 128;
 
-const durableAdvisoryKey = (channel: string, scope: string): string =>
-  `${channel}\u0000${scope}`;
+const durableAdvisoryKey = (channel: string, scope: string): string => `${channel}\u0000${scope}`;
 
 export function rememberTrackBDurableRouteAdvisory(input: {
   readonly channel: string;
@@ -7066,9 +7083,7 @@ export function rememberTrackBDurableRouteAdvisory(input: {
     confidence: Number.isFinite(input.advisory.confidence) ? input.advisory.confidence : 0,
     candidateId: input.advisory.candidateId,
     advisoryId: input.advisory.advisoryId,
-    cohortPercent: Number.isFinite(input.advisory.cohortPercent)
-      ? input.advisory.cohortPercent
-      : 0,
+    cohortPercent: Number.isFinite(input.advisory.cohortPercent) ? input.advisory.cohortPercent : 0,
     reason: input.advisory.reason,
     taskTypeId: input.advisory.taskTypeId ?? null,
     taxonomyVersion: input.advisory.taxonomyVersion ?? null,
@@ -7280,8 +7295,7 @@ export function buildTrackBRouteAdvisoryObservation(input: {
     routePackage: input.routePackage,
     preferredRoutePackage: preferred,
     preferredEligible,
-    eligibleRoutePackageCount:
-      input.eligibleRoutePackageCountOverride ?? eligible.length,
+    eligibleRoutePackageCount: input.eligibleRoutePackageCountOverride ?? eligible.length,
     wouldHaveChanged:
       input.wouldHaveChangedOverride ?? (preferredEligible && preferred !== input.routePackage),
     advisoryState: input.advisoryState,
@@ -7297,9 +7311,7 @@ export function buildTrackBRouteAdvisoryObservation(input: {
       ? {}
       : {
           fallbackReason:
-            input.fallbackReason === null
-              ? null
-              : String(input.fallbackReason).slice(0, 128),
+            input.fallbackReason === null ? null : String(input.fallbackReason).slice(0, 128),
         }),
     ...(Number.isSafeInteger(input.cohortBucket) ? { cohortBucket: input.cohortBucket } : {}),
     ...(Number.isFinite(input.scoreBand) ? { scoreBand: input.scoreBand } : {}),
@@ -8570,91 +8582,95 @@ export async function runTrackBShadowPipeline(
     if (durableJudgeScores) {
       judgeScores = [...durableJudgeScores];
     } else {
-    try {
-      const decision = await input.judge.dispatch({
-        requestId: input.requestId,
-        channel: input.channel,
-        scope: input.scope,
-        authorizationEpoch: input.authorizationEpoch,
-        evaluationJobId: jobId,
-        judgeEndpointId: input.judge.endpointId,
-        source: {
-          trialId: sourceBranch.trialId,
-          candidateRef: sourceBranch.candidateRef,
-          outputRef: sourceBranch.outputRef,
-          outputDigest: sourceBranch.outputDigest,
-          outputText: sourceBranch.outputText,
-        },
-        counterfactual: {
-          trialId: counterfactualBranch.trialId,
-          candidateRef: counterfactualBranch.candidateRef,
-          outputRef: counterfactualBranch.outputRef,
-          outputDigest: counterfactualBranch.outputDigest,
-          outputText: counterfactualBranch.outputText,
-        },
-      });
-      const winner = decision?.winner;
-      if (
-        winner !== "source" &&
-        winner !== TRACK_B_PAIRWISE_JUDGE_WINNER_COUNTERFACTUAL &&
-        winner !== "tie"
-      ) {
-        throw new Error("router judge returned an unknown pairwise winner");
+      try {
+        const decision = await input.judge.dispatch({
+          requestId: input.requestId,
+          channel: input.channel,
+          scope: input.scope,
+          authorizationEpoch: input.authorizationEpoch,
+          evaluationJobId: jobId,
+          judgeEndpointId: input.judge.endpointId,
+          source: {
+            trialId: sourceBranch.trialId,
+            candidateRef: sourceBranch.candidateRef,
+            outputRef: sourceBranch.outputRef,
+            outputDigest: sourceBranch.outputDigest,
+            outputText: sourceBranch.outputText,
+          },
+          counterfactual: {
+            trialId: counterfactualBranch.trialId,
+            candidateRef: counterfactualBranch.candidateRef,
+            outputRef: counterfactualBranch.outputRef,
+            outputDigest: counterfactualBranch.outputDigest,
+            outputText: counterfactualBranch.outputText,
+          },
+        });
+        const winner = decision?.winner;
+        if (
+          winner !== "source" &&
+          winner !== TRACK_B_PAIRWISE_JUDGE_WINNER_COUNTERFACTUAL &&
+          winner !== "tie"
+        ) {
+          throw new Error("router judge returned an unknown pairwise winner");
+        }
+        if (
+          !Number.isFinite(decision.confidence) ||
+          decision.confidence < 0 ||
+          decision.confidence > 1
+        ) {
+          throw new Error("router judge returned unbounded confidence");
+        }
+        const judgeReceipt = {
+          dispatchReceiptId: decision.dispatchReceiptId,
+          routerDecisionId: decision.routerDecisionId,
+          judgeResultRef: decision.judgeResultRef,
+          judgeEndpointId: decision.judgeEndpointId,
+          ...(decision.judgeMode ? { judgeMode: decision.judgeMode } : {}),
+          ...(decision.presentation ? { presentation: decision.presentation } : {}),
+          ...(decision.judgeModeAgreement === undefined
+            ? {}
+            : { judgeModeAgreement: decision.judgeModeAgreement }),
+          // Run 98 addendum 33 S2: a pair the judge flipped under the swapped presentation was calibrated
+          // to an explicit tie; the flip travels with the receipt so the comparison can report it.
+          ...(decision.orderDisagreement === true ? { orderDisagreement: true } : {}),
+        };
+        judgeScores = [sourceBranch, counterfactualBranch].map((branch) => ({
+          scorerId: judgeScorer.id,
+          scorerVersion: judgeScorer.version,
+          scorerDigest: judgeScorer.digest,
+          scorerDefinition: judgeScorer,
+          dimension: judgeScorer.dimensions[0],
+          score: pairwiseJudgeScores({ winner, role: branch.role }),
+          confidence: decision.confidence,
+          source: judgeScorer.source,
+          judgeReceipt,
+        }));
+      } catch (error) {
+        // guidance/09: a judge failure is persisted as a scorer failure, never as a
+        // valid zero score. The comparison then stays honestly undecided instead of
+        // manufacturing a tie from an unrun judge.
+        // Run 99 R33 (addendum 21 D10): the canonical code travels with the failure, so the
+        // learner's exclusion counter can name the incomparability instead of a generic string.
+        const failureCode =
+          typeof (error as { code?: unknown })?.code === "string"
+            ? String((error as { code: string }).code).slice(0, 48)
+            : null;
+        const reason = `${failureCode ? `${failureCode}: ` : ""}router judge failed: ${
+          error instanceof Error ? error.message.slice(0, 160) : "unknown judge error"
+        }`;
+        judgeScores = [sourceBranch, counterfactualBranch].map((branch) => ({
+          scorerId: judgeScorer.id,
+          scorerVersion: judgeScorer.version,
+          scorerDigest: judgeScorer.digest,
+          scorerDefinition: judgeScorer,
+          dimension: judgeScorer.dimensions[0],
+          score: null,
+          confidence: 0,
+          source: judgeScorer.source,
+          missingness: "invalid",
+          missingReason: reason.slice(0, 200),
+        }));
       }
-      if (!Number.isFinite(decision.confidence) || decision.confidence < 0 || decision.confidence > 1) {
-        throw new Error("router judge returned unbounded confidence");
-      }
-      const judgeReceipt = {
-        dispatchReceiptId: decision.dispatchReceiptId,
-        routerDecisionId: decision.routerDecisionId,
-        judgeResultRef: decision.judgeResultRef,
-        judgeEndpointId: decision.judgeEndpointId,
-        ...(decision.judgeMode ? { judgeMode: decision.judgeMode } : {}),
-        ...(decision.presentation ? { presentation: decision.presentation } : {}),
-        ...(decision.judgeModeAgreement === undefined
-          ? {}
-          : { judgeModeAgreement: decision.judgeModeAgreement }),
-        // Run 98 addendum 33 S2: a pair the judge flipped under the swapped presentation was calibrated
-        // to an explicit tie; the flip travels with the receipt so the comparison can report it.
-        ...(decision.orderDisagreement === true ? { orderDisagreement: true } : {}),
-      };
-      judgeScores = [sourceBranch, counterfactualBranch].map((branch) => ({
-        scorerId: judgeScorer.id,
-        scorerVersion: judgeScorer.version,
-        scorerDigest: judgeScorer.digest,
-        scorerDefinition: judgeScorer,
-        dimension: judgeScorer.dimensions[0],
-        score: pairwiseJudgeScores({ winner, role: branch.role }),
-        confidence: decision.confidence,
-        source: judgeScorer.source,
-        judgeReceipt,
-      }));
-    } catch (error) {
-      // guidance/09: a judge failure is persisted as a scorer failure, never as a
-      // valid zero score. The comparison then stays honestly undecided instead of
-      // manufacturing a tie from an unrun judge.
-      // Run 99 R33 (addendum 21 D10): the canonical code travels with the failure, so the
-      // learner's exclusion counter can name the incomparability instead of a generic string.
-      const failureCode =
-        typeof (error as { code?: unknown })?.code === "string"
-          ? String((error as { code: string }).code).slice(0, 48)
-          : null;
-      const reason = `${failureCode ? `${failureCode}: ` : ""}router judge failed: ${
-        error instanceof Error ? error.message.slice(0, 160) : "unknown judge error"
-      }`;
-      judgeScores = [sourceBranch, counterfactualBranch].map((branch) => ({
-        scorerId: judgeScorer.id,
-        scorerVersion: judgeScorer.version,
-        scorerDigest: judgeScorer.digest,
-        scorerDefinition: judgeScorer,
-        dimension: judgeScorer.dimensions[0],
-        score: null,
-        confidence: 0,
-        source: judgeScorer.source,
-        missingness: "invalid",
-        missingReason: reason.slice(0, 200),
-      }));
-    }
     }
     for (const [index, branch] of [sourceBranch, counterfactualBranch].entries()) {
       // A reused durable judgement is already recorded; re-recording it is what the extension refuses.
@@ -8707,10 +8723,7 @@ export async function runTrackBShadowPipeline(
    * exactly what makes the group's `developmentPartition` non-empty — but they are not part of the
    * decision.
    */
-  const comparisonCandidateRefs = new Set([
-    sourceCandidateRef,
-    firstCounterfactualCandidateRef,
-  ]);
+  const comparisonCandidateRefs = new Set([sourceCandidateRef, firstCounterfactualCandidateRef]);
   const comparisonTrialIds = completedRollouts
     .filter(({ rollout }) =>
       comparisonCandidateRefs.has(requireTrackBReference(rollout.endpointId, "candidate")),
@@ -8750,7 +8763,12 @@ export async function runTrackBShadowPipeline(
     const status = typeof record.status === "string" ? record.status : "";
     const outcome = typeof record.outcome === "string" ? record.outcome : "";
     const groupId = typeof record.groupId === "string" ? record.groupId : "";
-    return [error, status ? `status=${status}` : "", outcome ? `outcome=${outcome}` : "", groupId ? `group=${groupId.slice(0, 48)}` : ""]
+    return [
+      error,
+      status ? `status=${status}` : "",
+      outcome ? `outcome=${outcome}` : "",
+      groupId ? `group=${groupId.slice(0, 48)}` : "",
+    ]
       .filter(Boolean)
       .join(" ")
       .slice(0, 200);
@@ -8791,7 +8809,9 @@ export async function runTrackBShadowPipeline(
   ) {
     const readbackShape =
       persistedEvaluationDecoded && typeof persistedEvaluationDecoded === "object"
-        ? Object.keys(persistedEvaluationDecoded as Record<string, unknown>).slice(0, 8).join(",")
+        ? Object.keys(persistedEvaluationDecoded as Record<string, unknown>)
+            .slice(0, 8)
+            .join(",")
         : String(persistedEvaluationDecoded);
     throw new Error(
       `durable routing-shadow comparison finalization failed: ${finalizeOutcomeSummary}${
@@ -9143,9 +9163,10 @@ export async function runTrackBShadowPipeline(
   // The durable comparison is authoritative for which trial/score pairs the
   // boundary will validate; a re-scored in-memory set can carry different ids after
   // a restart. Signal lineage therefore cites the durable members.
-  const durableTrialScoreRefs = (Array.isArray(durableComparison.members)
-    ? (durableComparison.members as Record<string, unknown>[])
-    : []
+  const durableTrialScoreRefs = (
+    Array.isArray(durableComparison.members)
+      ? (durableComparison.members as Record<string, unknown>[])
+      : []
   ).map((member) => ({
     trialId: String(member.trialId ?? ""),
     scoreId: String(member.scoreId ?? ""),
@@ -9320,9 +9341,7 @@ export async function runTrackBShadowPipeline(
       ...(input.contractStateRoot ? { stateRoot: input.contractStateRoot } : {}),
       scopeId: input.scope,
     }) ??
-    (raw && typeof raw === "object" && !Array.isArray(raw)
-      ? (raw as Record<string, unknown>)
-      : {});
+    (raw && typeof raw === "object" && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {});
   let profileRecord = decodeProfileResult(await profileRequest());
   // A worker that restarts mid-invoke can answer once with a bounded degradation even
   // though the same request succeeds on a fresh attempt. Retry the estimate once
@@ -9341,9 +9360,7 @@ export async function runTrackBShadowPipeline(
   // A degraded profile estimate is a learning refusal with a receipt, not a replay
   // failure: the comparison is already durable and the replay already completed.
   const profileForKnowledge =
-    typeof profileRecord.digest === "string" &&
-    profileRecord.digest &&
-    profileRecord.effects
+    typeof profileRecord.digest === "string" && profileRecord.digest && profileRecord.effects
       ? {
           digest: profileRecord.digest,
           effects: profileRecord.effects,
@@ -9471,56 +9488,56 @@ export async function runTrackBShadowPipeline(
         negative,
       });
       const knowledgeRaw = await runtime.invoke("knowledge-worker", {
-          ...envelope("knowledge:eval-consumer", {
-            replay: replayForKnowledge,
-            evaluation: knowledgeEvaluation,
-            signals: signalsForKnowledge,
-            profile: profileForKnowledge,
-            // Run 99 R33: the derived candidate records the family it was learned for, so the
-            // promoted pack can carry it to the durable advisory.
-            ...(typeof input.taskTypeId === "string" && input.taskTypeId.trim()
-              ? { taskTypeId: input.taskTypeId.trim() }
-              : {}),
-            ...(typeof input.taxonomyVersion === "string" && input.taxonomyVersion.trim()
-              ? { taxonomyVersion: input.taxonomyVersion.trim() }
-              : {}),
-            ...(learningCapability.learningCapable &&
-            learningCapability.finalizedEvaluation &&
-            learningCapability.learningEvidence
-              ? {
-                  learningCapable: true as const,
-                  finalizedEvaluation: learningCapability.finalizedEvaluation,
-                  learningEvidence: learningCapability.learningEvidence,
-                }
-              : {}),
-            comparableGroup: {
-              policy: "routing-shadow",
-              task: "route-selection",
-              scorer: `${scorer.id}@${scorer.version}`,
-              split: "holdout",
-              seed: 87,
-              comparabilityKey: `${input.sourceDecisionId}:holdout`,
-              positive: positive.map(knowledgeEvidenceRow),
-              negative: negative.map(knowledgeEvidenceRow),
-              candidateSet: candidateSet.map((candidate) => ({
-                routePackage: candidate.routePackage,
-                endpointId: candidate.endpointId,
-                propensity: candidate.propensity,
-              })),
-            },
-            holdout: {
-              ...effectiveHoldout,
-              evidenceRef: evaluationReferences.inputRef,
-              passed: learningTarget.decisive,
-            },
-            scope: {
-              routePackage: learningRoutePackage,
-              channel: input.channel,
-              scopeId: input.scope,
-            },
-          }),
-          evaluationAuthoritySecret,
-        });
+        ...envelope("knowledge:eval-consumer", {
+          replay: replayForKnowledge,
+          evaluation: knowledgeEvaluation,
+          signals: signalsForKnowledge,
+          profile: profileForKnowledge,
+          // Run 99 R33: the derived candidate records the family it was learned for, so the
+          // promoted pack can carry it to the durable advisory.
+          ...(typeof input.taskTypeId === "string" && input.taskTypeId.trim()
+            ? { taskTypeId: input.taskTypeId.trim() }
+            : {}),
+          ...(typeof input.taxonomyVersion === "string" && input.taxonomyVersion.trim()
+            ? { taxonomyVersion: input.taxonomyVersion.trim() }
+            : {}),
+          ...(learningCapability.learningCapable &&
+          learningCapability.finalizedEvaluation &&
+          learningCapability.learningEvidence
+            ? {
+                learningCapable: true as const,
+                finalizedEvaluation: learningCapability.finalizedEvaluation,
+                learningEvidence: learningCapability.learningEvidence,
+              }
+            : {}),
+          comparableGroup: {
+            policy: "routing-shadow",
+            task: "route-selection",
+            scorer: `${scorer.id}@${scorer.version}`,
+            split: "holdout",
+            seed: 87,
+            comparabilityKey: `${input.sourceDecisionId}:holdout`,
+            positive: positive.map(knowledgeEvidenceRow),
+            negative: negative.map(knowledgeEvidenceRow),
+            candidateSet: candidateSet.map((candidate) => ({
+              routePackage: candidate.routePackage,
+              endpointId: candidate.endpointId,
+              propensity: candidate.propensity,
+            })),
+          },
+          holdout: {
+            ...effectiveHoldout,
+            evidenceRef: evaluationReferences.inputRef,
+            passed: learningTarget.decisive,
+          },
+          scope: {
+            routePackage: learningRoutePackage,
+            channel: input.channel,
+            scopeId: input.scope,
+          },
+        }),
+        evaluationAuthoritySecret,
+      });
       candidate =
         decodeExtensionBusinessResult({
           result: knowledgeRaw,
@@ -9569,7 +9586,8 @@ export async function runTrackBShadowPipeline(
     runtimeExtensionIds === null
       ? false
       : runtimeExtensionIds.some(
-          (row) => row && typeof row === "object" && (row as { id?: unknown }).id === "knowledge-store",
+          (row) =>
+            row && typeof row === "object" && (row as { id?: unknown }).id === "knowledge-store",
         );
   if (candidateId && knowledgeStoreAvailable) {
     const learned = (candidate as Record<string, unknown>).learnedExperienceCandidate;
@@ -9828,9 +9846,7 @@ export async function runTrackBShadowPipeline(
       authorizationValidator: advisoryValidator,
     });
   } catch (error) {
-    advisoryStaleReason = String(
-      (error as { message?: unknown })?.message ?? error,
-    ).slice(0, 256);
+    advisoryStaleReason = String((error as { message?: unknown })?.message ?? error).slice(0, 256);
     const staleNowMs = Date.now();
     advisory = resolveTrackBRouteAdvisory({
       baselineDecisionId: input.sourceDecisionId,
@@ -9885,10 +9901,12 @@ export async function runTrackBShadowPipeline(
       typeof (candidate as Record<string, unknown>).routePackageAttribution === "object" &&
       (candidate as Record<string, unknown>).routePackageAttribution !== null
         ? String(
-            ((candidate as Record<string, unknown>).routePackageAttribution as Record<
-              string,
-              unknown
-            >).routePackage ?? "",
+            (
+              (candidate as Record<string, unknown>).routePackageAttribution as Record<
+                string,
+                unknown
+              >
+            ).routePackage ?? "",
           ) || null
         : null,
     eligibleRoutePackages,
@@ -10540,9 +10558,9 @@ export async function runTrackBPostObservation(
     ...new Set(
       (input.configuredCandidateEndpointIds ?? []).filter(
         (endpointId): endpointId is string =>
-          typeof endpointId === "string"
-          && endpointId.trim().length > 0
-          && endpointId.trim() !== routePackage,
+          typeof endpointId === "string" &&
+          endpointId.trim().length > 0 &&
+          endpointId.trim() !== routePackage,
       ),
     ),
   ]
@@ -10570,8 +10588,7 @@ export async function runTrackBPostObservation(
           // bounds it again on the way in.
           ...(observation.classification && typeof observation.classification === "object"
             ? {
-                classification:
-                  observation.classification as TrackBRouteAdvisoryClassification,
+                classification: observation.classification as TrackBRouteAdvisoryClassification,
               }
             : {}),
           ...(input.judgeOrderPolicy ? { judgeOrderPolicy: input.judgeOrderPolicy } : {}),
@@ -10614,18 +10631,18 @@ export async function runTrackBPostObservation(
             occurrence,
           })
         : await runTrackBObservationPipeline(observedRuntime, {
-          requestId,
-          channel: input.channel,
-          scope: input.scope,
-          authorizationEpoch: input.authorizationEpoch,
-          productionState,
-          routePackage,
-          sourceDecisionId,
-          sourceGraphRef,
-          trajectoryEvents,
-          identity,
-          occurrence,
-        });
+            requestId,
+            channel: input.channel,
+            scope: input.scope,
+            authorizationEpoch: input.authorizationEpoch,
+            productionState,
+            routePackage,
+            sourceDecisionId,
+            sourceGraphRef,
+            trajectoryEvents,
+            identity,
+            occurrence,
+          });
   const pipelineReceipt = pipeline.receipt as Record<string, unknown>;
   const pipelineCandidateId =
     "candidate" in pipeline && pipeline.candidate && typeof pipeline.candidate.id === "string"
@@ -11099,8 +11116,11 @@ export async function createExtensionRuntime(options: {
       const capability = String(envelope?.capability ?? "");
       const startedAtMs = Date.now();
       if (phaseTiming) {
-        const lifecycle = host.listExtensionStates().find((state) => state.id === id)?.lifecycle ?? "unknown";
-        console.error(`[run98] host-runtime invoke-start ${id} ${capability} lifecycle=${lifecycle}`);
+        const lifecycle =
+          host.listExtensionStates().find((state) => state.id === id)?.lifecycle ?? "unknown";
+        console.error(
+          `[run98] host-runtime invoke-start ${id} ${capability} lifecycle=${lifecycle}`,
+        );
       }
       try {
         const result = await host.invoke(id, envelope);
@@ -11330,9 +11350,7 @@ export function createOwnedTrackBSidecarSpec(options: {
             ? ["--public-runtime-adapter", options.publicRuntimeAdapterPath]
             : []),
           ...(options.publicRouterRoot ? ["--public-router-root", options.publicRouterRoot] : []),
-          ...(options.manifestPath
-            ? ["--track-b-runtime-manifest", options.manifestPath]
-            : []),
+          ...(options.manifestPath ? ["--track-b-runtime-manifest", options.manifestPath] : []),
           ...(options.migrationScope ? ["--migration-scope", options.migrationScope] : []),
           ...(options.runtimeScope ? ["--runtime-scope", options.runtimeScope] : []),
         ],

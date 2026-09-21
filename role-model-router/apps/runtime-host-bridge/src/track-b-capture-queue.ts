@@ -61,9 +61,7 @@ export interface TrackBRouteCaptureQueue {
   ): Promise<{ readonly delivered: number; readonly failed: number; readonly remaining: number }>;
 }
 
-export const readDeferredUntilMs = (
-  outcome: unknown,
-): number | null => {
+export const readDeferredUntilMs = (outcome: unknown): number | null => {
   if (!outcome || typeof outcome !== "object" || Array.isArray(outcome)) return null;
   const value = (outcome as { readonly deferredUntilMs?: unknown }).deferredUntilMs;
   return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;

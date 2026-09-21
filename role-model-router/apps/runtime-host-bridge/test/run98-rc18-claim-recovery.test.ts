@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  claimReplayIntentWithRecovery,
-  createReplayIntentScheduler,
   type ReplayIntentClaim,
   type ReplayIntentScheduler,
+  claimReplayIntentWithRecovery,
+  createReplayIntentScheduler,
 } from "../src/track-b-runtime.js";
 
 /**
@@ -76,7 +76,11 @@ describe("run98 rc18 replay intent claim recovery", () => {
       ownerId: "runtime-host:test",
     });
     const decoded = await scheduler.claim({ jobId: "replay-intent:replay-job:1" });
-    expect(decoded).toMatchObject({ jobId: claim.jobId, leaseId: claim.leaseId, fence: claim.fence });
+    expect(decoded).toMatchObject({
+      jobId: claim.jobId,
+      leaseId: claim.leaseId,
+      fence: claim.fence,
+    });
   });
 
   it("decodes a claim nested one level deeper under businessOutput.value", async () => {
@@ -102,7 +106,11 @@ describe("run98 rc18 replay intent claim recovery", () => {
       ownerId: "runtime-host:test",
     });
     const decoded = await scheduler.claim({ jobId: "replay-intent:replay-job:2" });
-    expect(decoded).toMatchObject({ jobId: claim.jobId, leaseId: claim.leaseId, fence: claim.fence });
+    expect(decoded).toMatchObject({
+      jobId: claim.jobId,
+      leaseId: claim.leaseId,
+      fence: claim.fence,
+    });
   });
 
   it("recovers an expired intent with a fresh intent for the same durable replay job", async () => {
@@ -119,10 +127,7 @@ describe("run98 rc18 replay intent claim recovery", () => {
     expect(outcome.state).toBe("claimed");
     if (outcome.state !== "claimed") throw new Error("expected a claimed outcome");
     expect(outcome.claim.attempt).toBe(2);
-    expect(enqueued).toEqual([
-      "replay-intent:replay-job:1",
-      "replay-intent:replay-job:1:retry-1",
-    ]);
+    expect(enqueued).toEqual(["replay-intent:replay-job:1", "replay-intent:replay-job:1:retry-1"]);
     expect(claimed.at(-1)).toBe("replay-intent:replay-job:1:retry-1");
   });
 

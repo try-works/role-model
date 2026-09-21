@@ -64,7 +64,13 @@ describe("run98 a44 s4 policy resolution summary", () => {
         detail: "activation policy state is not readable JSON",
         source: "learning/activation-policy-state.json",
       },
-      routerResolution: { stage: "S4", policyVersion: 12, digest: "sha256:seed", source: "shared/route-learning-activation-policy.json", degraded: null },
+      routerResolution: {
+        stage: "S4",
+        policyVersion: 12,
+        digest: "sha256:seed",
+        source: "shared/route-learning-activation-policy.json",
+        degraded: null,
+      },
     });
     expect(summary.authoritative).toBe(false);
     expect(summary.warning).toContain("Stored policy degraded");

@@ -53,10 +53,7 @@ test("a40 L2: the drain delivers queued captures in order and records a receipt 
   expect(summary).toMatchObject({ delivered: 2, failed: 0 });
   expect(await queue.readPending()).toHaveLength(0);
   const receipts = await queue.readReceipts();
-  expect(receipts.map((receipt) => receipt.requestId).sort()).toEqual([
-    "req-a40-a",
-    "req-a40-b",
-  ]);
+  expect(receipts.map((receipt) => receipt.requestId).sort()).toEqual(["req-a40-a", "req-a40-b"]);
 });
 
 test("a40 L2: a boundary failure keeps the capture for retry instead of losing it", async () => {
@@ -74,10 +71,9 @@ test("a40 L2: a boundary failure keeps the capture for retry instead of losing i
   expect(pending[0]?.lastError).toContain("timed out");
 
   // A later drain after the backoff window delivers it.
-  const delivered = await queue.drain(
-    async () => ({ status: "captured" }),
-    { nowMs: Date.now() + 60 * 60 * 1000 },
-  );
+  const delivered = await queue.drain(async () => ({ status: "captured" }), {
+    nowMs: Date.now() + 60 * 60 * 1000,
+  });
   expect(delivered).toMatchObject({ delivered: 1, failed: 0 });
   expect(await queue.readPending()).toHaveLength(0);
 });

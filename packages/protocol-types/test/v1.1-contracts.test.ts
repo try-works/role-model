@@ -304,18 +304,9 @@ test("v1.1 contracts fail closed on missing lifecycle evidence", () => {
 
 test("v1.1 embedded schemas stay identical to the vendored proposal schemas", () => {
   const read = (file: string) =>
-    JSON.parse(
-      readFileSync(
-        fileURLToPath(new URL(`../schemas/${file}`, import.meta.url)),
-        "utf8",
-      ),
-    );
-  expect(V11_CONTRACT_SCHEMAS.routeLearning).toEqual(
-    read("route-learning-contracts.schema.json"),
-  );
-  expect(V11_CONTRACT_SCHEMAS.trackBStorage).toEqual(
-    read("track-b-storage-contracts.schema.json"),
-  );
+    JSON.parse(readFileSync(fileURLToPath(new URL(`../schemas/${file}`, import.meta.url)), "utf8"));
+  expect(V11_CONTRACT_SCHEMAS.routeLearning).toEqual(read("route-learning-contracts.schema.json"));
+  expect(V11_CONTRACT_SCHEMAS.trackBStorage).toEqual(read("track-b-storage-contracts.schema.json"));
   expect(V11_CONTRACT_SCHEMAS.trackBProjection).toEqual(
     read("track-b-projection-contracts.schema.json"),
   );

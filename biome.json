@@ -36,10 +36,24 @@
       "**/vendor/**",
       "**/target/**",
       "**/runtime-output/**",
-      "**/test-results/**"
+      "**/test-results/**",
+      "**/*.generated.ts"
     ]
   },
   "overrides": [
+    {
+      "include": [
+        "role-model-router/apps/runtime-ui/app/components/learning-live-panel.tsx",
+        "role-model-router/apps/runtime-ui/app/components/learning-history-panels.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noArrayIndexKey": "off"
+          }
+        }
+      }
+    },
     {
       "include": [
         "role-model-router/apps/runtime-ui/app/components/page-primitives.tsx",

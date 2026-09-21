@@ -10,7 +10,11 @@ test("run97 replay dispatch preserves tool linkage from a durable capture", () =
       role: "assistant",
       content: null,
       toolCalls: [
-        { id: "call-1", type: "function", function: { name: "bash", arguments: "{\"cmd\":\"node -e 1\"}" } },
+        {
+          id: "call-1",
+          type: "function",
+          function: { name: "bash", arguments: '{"cmd":"node -e 1"}' },
+        },
       ],
     },
     { role: "tool", content: "41", toolCallId: "call-1", name: "bash" },
@@ -18,7 +22,11 @@ test("run97 replay dispatch preserves tool linkage from a durable capture", () =
   expect(messages[2]).toMatchObject({
     role: "assistant",
     tool_calls: [
-      { id: "call-1", type: "function", function: { name: "bash", arguments: "{\"cmd\":\"node -e 1\"}" } },
+      {
+        id: "call-1",
+        type: "function",
+        function: { name: "bash", arguments: '{"cmd":"node -e 1"}' },
+      },
     ],
   });
   expect(messages[3]).toMatchObject({ role: "tool", tool_call_id: "call-1", name: "bash" });

@@ -1,8 +1,8 @@
 import { expect, test } from "vitest";
 
 import {
-  resolveRoutingLatencySelectionPolicy,
   ROUTING_LATENCY_SELECTION_POLICY_SCHEMA_VERSION,
+  resolveRoutingLatencySelectionPolicy,
 } from "../src/routing-latency-policy.js";
 
 // Run 98 addendum 40 (L5): the measured-latency selection input is configuration, not a code constant,
@@ -64,7 +64,14 @@ test("a40 L5: out-of-bounds values fail closed with recorded violations", () => 
   expect(resolved.policy.enabled).toBe(false);
   // The order of the recorded violations is not part of the contract; the set is.
   expect([...resolved.violations].sort()).toEqual(
-    ["maxCandidates", "maxDeltaMs", "minSamples", "minStage", "tokenBucketUpperBounds", "windowHours"].sort(),
+    [
+      "maxCandidates",
+      "maxDeltaMs",
+      "minSamples",
+      "minStage",
+      "tokenBucketUpperBounds",
+      "windowHours",
+    ].sort(),
   );
 });
 

@@ -3,8 +3,8 @@ import { expect, test } from "vitest";
 import {
   deriveAutomaticReplayCriteria,
   deriveSemanticEvaluationCriteria,
-  extractTaskInstructionText,
   extractSourceOutputText,
+  extractTaskInstructionText,
 } from "../src/track-b-replay-evaluation-criteria.js";
 import { normalizeTrackBSemanticEvaluationCriteria } from "../src/track-b-runtime.js";
 
@@ -226,14 +226,8 @@ test("run97 keeps the recorded-output derivation only when no task evidence exis
     sourceOutput: "counterfactual branch evaluation",
   });
   expect(derived?.evidenceSource).toBe("recorded_output");
-  expect(derived?.criteria.requiredTerms).toEqual([
-    "counterfactual",
-    "branch",
-    "evaluation",
-  ]);
-  expect(
-    deriveAutomaticReplayCriteria({ taskText: "yes no", sourceOutput: "   " }),
-  ).toBeNull();
+  expect(derived?.criteria.requiredTerms).toEqual(["counterfactual", "branch", "evaluation"]);
+  expect(deriveAutomaticReplayCriteria({ taskText: "yes no", sourceOutput: "   " })).toBeNull();
 });
 
 test("run97 reads the task instruction from the last user message only", () => {

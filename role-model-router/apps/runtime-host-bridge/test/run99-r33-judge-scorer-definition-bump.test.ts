@@ -1,11 +1,11 @@
 import { expect, test } from "vitest";
 
+import { createHash } from "node:crypto";
 import {
   RUN97_PAIRWISE_JUDGE_DEFINITION_VERSION,
   RUN97_PAIRWISE_JUDGE_SCORER_ID,
   createRun97PairwiseJudgeScorer,
 } from "../src/track-b-runtime.js";
-import { createHash } from "node:crypto";
 
 /**
  * Run 98 addendum 34 S5 (live stage v213, 2026-09-17T12:30Z): the class came back.
@@ -33,7 +33,9 @@ test("run98 A34 S5 the judge scorer key is derived from the whole definition bod
     if (value && typeof value === "object") {
       return `{${Object.keys(value as Record<string, unknown>)
         .sort()
-        .map((key) => `${JSON.stringify(key)}:${canonical((value as Record<string, unknown>)[key])}`)
+        .map(
+          (key) => `${JSON.stringify(key)}:${canonical((value as Record<string, unknown>)[key])}`,
+        )
         .join(",")}}`;
     }
     return JSON.stringify(value);

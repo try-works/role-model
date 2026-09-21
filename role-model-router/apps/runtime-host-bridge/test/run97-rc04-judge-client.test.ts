@@ -1,12 +1,12 @@
 import { expect, test } from "vitest";
 
+import { createRouterPairwiseJudge } from "../src/track-b-shadow-judge-dispatch.js";
+import { resolveJudgeEndpointFromController } from "../src/track-b-shadow-judge-dispatch.js";
 import {
   buildPairwiseJudgeMessages,
   parsePairwiseJudgeResponse,
   redactJudgeExcerpt,
 } from "../src/track-b-shadow-judge.js";
-import { createRouterPairwiseJudge } from "../src/track-b-shadow-judge-dispatch.js";
-import { resolveJudgeEndpointFromController } from "../src/track-b-shadow-judge-dispatch.js";
 
 /**
  * Run 97 RC04 - the judge boundary: bounded, redacted excerpts in, a decisively
@@ -43,7 +43,9 @@ test("run97 rc04 judge excerpts are bounded and redacted", () => {
 });
 
 test("run97 rc04 judge responses parse into a bounded preference", () => {
-  expect(parsePairwiseJudgeResponse('{"winner":"B","confidence":0.7,"rationale":"better"}')).toEqual({
+  expect(
+    parsePairwiseJudgeResponse('{"winner":"B","confidence":0.7,"rationale":"better"}'),
+  ).toEqual({
     winner: "counterfactual",
     confidence: 0.7,
     rationale: "better",
@@ -167,7 +169,10 @@ test("run98 a30 the designated judge endpoint is used even when it is not first 
   const judge = createRouterPairwiseJudge({
     executeChatCompletions: async (_body, _requestId, _stream, options) => {
       used.push(String(options?.endpointId ?? ""));
-      return { contentText: '{"winner":"B","confidence":0.9}', routingDecisionId: "decision:judge" };
+      return {
+        contentText: '{"winner":"B","confidence":0.9}',
+        routingDecisionId: "decision:judge",
+      };
     },
     // The designated judge is deliberately NOT the first endpoint: the old selection rule would have
     // taken `endpoint:first`, the new rule takes the designation.
@@ -241,6 +246,8 @@ test("run98 a45 the judge resolves from the controller assignment, and disabled/
   ).toBe("");
   // A missing controller, or junk, is "no judge" — never a candidate standing in.
   expect(resolveJudgeEndpointFromController({ judgeSource: "controller" })).toBe("");
-  expect(resolveJudgeEndpointFromController({ judgeSource: "controller", controllerEndpointId: 42 })).toBe("");
+  expect(
+    resolveJudgeEndpointFromController({ judgeSource: "controller", controllerEndpointId: 42 }),
+  ).toBe("");
   expect(resolveJudgeEndpointFromController({})).toBe("");
 });

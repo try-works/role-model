@@ -59,7 +59,7 @@ test("a40 L3: keys are isolated and a failed load is never cached", async () => 
       throw new Error("store unavailable");
     }),
   ).rejects.toThrow("store unavailable");
-  expect(await cache.read("observed:hard", () => ({ ok: true }), )).toEqual({ ok: true });
+  expect(await cache.read("observed:hard", () => ({ ok: true }))).toEqual({ ok: true });
   expect(attempts).toBe(1);
 
   expect(await cache.read("observed:easy", () => "easy")).toBe("easy");

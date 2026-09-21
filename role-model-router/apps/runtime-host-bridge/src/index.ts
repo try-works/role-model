@@ -1,6 +1,5 @@
 import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 
-import { evaluateDispatchContextGuard } from "./dispatch-context-guard.js";
 import {
   appendFileSync,
   existsSync,
@@ -18,6 +17,7 @@ import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
 import { parse } from "yaml";
+import { evaluateDispatchContextGuard } from "./dispatch-context-guard.js";
 
 import {
   type NormalizedCatalog,
@@ -72,6 +72,7 @@ import {
   createRuntimeObservationBundle,
 } from "@role-model-router/runtime-observability";
 import {
+  BENCHMARK_SAMPLE_RUN_STALLED_AFTER_MS,
   buildAdvisoryMaxDifficultyRecommendation,
   buildCompactRuntimeObservationStub,
   clearAllObservedBenchmarkData,
@@ -93,15 +94,14 @@ import {
   persistRuntimeObservationBundle,
   persistRuntimeTelemetryFailure,
   readAdvisoryMaxDifficultyRecommendation,
-  BENCHMARK_SAMPLE_RUN_STALLED_AFTER_MS,
+  readBenchmarkSampleRuns,
   readConversationContinuity,
   readDifficultyClassificationCache,
+  readEndpointLatencyBuckets,
   readLatestBenchmarkProfilesByEndpointIds,
   readLatestObservedProfile,
   readLatestObservedProfilesByEndpointIds,
   readLiveTaskTelemetryScoresByEndpointIds,
-  readEndpointLatencyBuckets,
-  readBenchmarkSampleRuns,
   readObservedPerformanceSamples,
   readObservedThroughputPenaltyState,
   readProviderDeviceAuthSession,
@@ -112,6 +112,7 @@ import {
   readRuntimeTelemetryRecord,
   readRuntimeTelemetrySourceSummaries,
   readRuntimeTelemetrySummary,
+  updateRuntimeTelemetryClientLatency,
   upsertDifficultyClassificationCache,
   upsertObservedThroughputPenaltyState,
   upsertProviderDeviceAuthSession,
@@ -120,7 +121,6 @@ import {
   upsertProviderAccount as upsertSqliteProviderAccount,
   upsertRuntimeEndpoint as upsertSqliteRuntimeEndpoint,
   upsertRuntimeEndpointsAtomically as upsertSqliteRuntimeEndpointsAtomically,
-  updateRuntimeTelemetryClientLatency,
 } from "@role-model-router/sqlite-memory";
 import {
   type ConversationContinuitySnapshot,
@@ -134,16 +134,6 @@ import {
   executeToolCalls,
 } from "@role-model-router/tool-registry";
 import { deriveRuntimeContributionOutcome } from "./contribution-outcome.js";
-import {
-  type DerivedTaxonomyClassification,
-  deriveTaxonomyClassification,
-} from "./taxonomy-derivation.js";
-import {
-  createRoutingPrepCache,
-  resolveRoutingPrepCacheTtlMs,
-} from "./routing-prep-cache.js";
-import { selectEndpointByMeasuredLatency } from "./routing-latency-selection.js";
-import { createTrackBRouteCaptureQueue } from "./track-b-capture-queue.js";
 import {
   buildCompactControllerSystemPrompt,
   buildControllerSystemPrompt,
@@ -173,44 +163,48 @@ import {
 import { resolveEndpointHealthState } from "./health-policy.js";
 import { reconcileLegacyExecutionAdmissionRows } from "./legacy-execution-admission-reconciliation.js";
 import { resolveModelCapabilityProfile } from "./model-capability-resolver.js";
+import { selectEndpointByMeasuredLatency } from "./routing-latency-selection.js";
+import { createRoutingPrepCache, resolveRoutingPrepCacheTtlMs } from "./routing-prep-cache.js";
+import {
+  type DerivedTaxonomyClassification,
+  deriveTaxonomyClassification,
+} from "./taxonomy-derivation.js";
+import { createTrackBRouteCaptureQueue } from "./track-b-capture-queue.js";
 export type {
   RuntimeContributionOutcome,
   RuntimeContributionObservation,
   RuntimeContributionOutcomeInput,
 } from "./contribution-outcome.js";
 export { deriveRuntimeContributionOutcome } from "./contribution-outcome.js";
+import { readLearningPolicyFile, resolveLearningPolicyStateRoot } from "./learning-policy-file.js";
 import {
   filterEndpointsByCapabilityRequirements,
   inferChatCompletionsCapabilityRequirements,
   inferResponsesCapabilityRequirements,
 } from "./request-capability-inference.js";
+import { resolveAdvisoryCohortPercent } from "./route-advisory-source.js";
 import { readPackagedRuntimeProfile, resolveRuntimeChannelProfile } from "./runtime-channel.js";
-import {
-  readLearningPolicyFile,
-  resolveLearningPolicyStateRoot,
-} from "./learning-policy-file.js";
 import { type RuntimeVersionInfoRecord, resolveRuntimeVersionInfo } from "./runtime-version.js";
 import {
+  RouteCaptureBoundaryCoolingDownError,
   buildGraphEvidenceFromCapture,
   buildLegacyTerminalFailureRecoveryCapture,
   buildProviderEvidenceFromObservation,
   buildVerifiersLiveExport,
   createTrackBOperations as createTrackBOperationsFromState,
-  RouteCaptureBoundaryCoolingDownError,
 } from "./track-b-operations.js";
 import {
+  RUN96_ROUTING_SHADOW_SCORER_SET_VERSION,
+  type TrackBRouteAdvisoryClassification,
+  appendTrackBRouteAdvisoryObservation,
+  buildLiveRouteAdvisoryObservation,
   createRun88RuntimeCorrelation,
   createRuntimeRequestCorrelationId,
   createTrackBFileGraphStore,
+  decodeExternalizedOperatorReadback,
   recallNewestTrackBRouteAdvisory,
   recallTrackBDurableRouteAdvisory,
-  appendTrackBRouteAdvisoryObservation,
-  buildLiveRouteAdvisoryObservation,
-  decodeExternalizedOperatorReadback,
-  RUN96_ROUTING_SHADOW_SCORER_SET_VERSION,
-  type TrackBRouteAdvisoryClassification,
 } from "./track-b-runtime.js";
-import { resolveAdvisoryCohortPercent } from "./route-advisory-source.js";
 
 import {
   type ProviderRequestCapture,
@@ -1521,7 +1515,10 @@ export function buildDifficultyClassifierMessages(input: {
       : {}),
   };
   let serialized = JSON.stringify(payload, null, 2);
-  while (Buffer.byteLength(serialized) > DIFFICULTY_CLASSIFIER_MAX_JSON_BYTES && excerpt.length > 1) {
+  while (
+    Buffer.byteLength(serialized) > DIFFICULTY_CLASSIFIER_MAX_JSON_BYTES &&
+    excerpt.length > 1
+  ) {
     excerpt.shift();
     serialized = JSON.stringify(
       {
@@ -9701,7 +9698,11 @@ export function inferTaxonomyToolClasses(toolNames: readonly string[]): string[]
   const toolClasses = new Set<string>();
   for (const rawName of toolNames) {
     const name = rawName.toLowerCase();
-    if (/(^|[_\s.-])(shell|bash|zsh|pwsh|powershell|terminal|exec|execute|command|subprocess)([_\s.-]|$)/.test(name)) {
+    if (
+      /(^|[_\s.-])(shell|bash|zsh|pwsh|powershell|terminal|exec|execute|command|subprocess)([_\s.-]|$)/.test(
+        name,
+      )
+    ) {
       toolClasses.add("shell.execute");
     }
     if (/(write|edit|patch|apply|create|save|mkdir|rename|delete|remove|move)/.test(name)) {
@@ -9726,7 +9727,9 @@ export function inferTaxonomyToolClasses(toolNames: readonly string[]): string[]
       toolClasses.add("package.install");
     }
     if (/calendar/.test(name)) {
-      toolClasses.add(/(write|create|update|delete)/.test(name) ? "calendar.write" : "calendar.read");
+      toolClasses.add(
+        /(write|create|update|delete)/.test(name) ? "calendar.write" : "calendar.read",
+      );
     }
     if (/(email|mail|gmail|outlook)/.test(name)) {
       toolClasses.add(/(send|write|create)/.test(name) ? "email.write" : "email.read");
@@ -9804,10 +9807,12 @@ function buildBridgeTaxonomyIdentity(input: {
       ? input.declaredTaskTypeId
       : undefined;
   const derivedTaskTypeId =
-    input.derived?.taskTypeId && canonicalTaxonomy.tasks.some((task) => task.id === input.derived?.taskTypeId)
+    input.derived?.taskTypeId &&
+    canonicalTaxonomy.tasks.some((task) => task.id === input.derived?.taskTypeId)
       ? input.derived.taskTypeId
       : undefined;
-  const taskTypeId = declaredTaskTypeId ?? derivedTaskTypeId ?? input.declaredTaskTypeId ?? "text.chat";
+  const taskTypeId =
+    declaredTaskTypeId ?? derivedTaskTypeId ?? input.declaredTaskTypeId ?? "text.chat";
   const task = canonicalTaxonomy.tasks.find((entry) => entry.id === taskTypeId);
   const declaredRoleId = input.declaredRoleModelIntent?.role?.id;
   const declaredRoleIsTaxonomyRole =
@@ -9881,7 +9886,8 @@ export function mapChatCompletionsRequest(
           outputModalityIds: mapInferredModalitiesToTaxonomy(inference.requiredOutputModalities),
         });
       })();
-  const roleModelIntent = declaredRoleModelIntent ?? derivedTaxonomyClassification?.normalizedIntent;
+  const roleModelIntent =
+    declaredRoleModelIntent ?? derivedTaxonomyClassification?.normalizedIntent;
   const taxonomyIdentity = buildBridgeTaxonomyIdentity({
     ...(declaredRoleModelIntent ? { declaredRoleModelIntent } : {}),
     ...(declaredTaskTypeId ? { declaredTaskTypeId } : {}),
@@ -10100,12 +10106,15 @@ export function mapResponsesRequest(
     : deriveTaxonomyClassification({
         text: readClassificationText(responsesBodyRecord.input),
         toolClassIds: inferTaxonomyToolClasses(readToolNames(responsesBodyRecord.tools)),
-        modalityIds: mapInferredModalitiesToTaxonomy(capabilityRequirements.requiredInputModalities),
+        modalityIds: mapInferredModalitiesToTaxonomy(
+          capabilityRequirements.requiredInputModalities,
+        ),
         outputModalityIds: mapInferredModalitiesToTaxonomy(
           capabilityRequirements.requiredOutputModalities,
         ),
       });
-  const roleModelIntent = declaredRoleModelIntent ?? derivedTaxonomyClassification?.normalizedIntent;
+  const roleModelIntent =
+    declaredRoleModelIntent ?? derivedTaxonomyClassification?.normalizedIntent;
   const taxonomyIdentity = buildBridgeTaxonomyIdentity({
     ...(declaredRoleModelIntent ? { declaredRoleModelIntent } : {}),
     ...(declaredTaskTypeId ? { declaredTaskTypeId } : {}),
@@ -13896,10 +13905,7 @@ async function refreshOauthAccessToken(
   }
 
   const variant = getOauthVariant(providerPresets, liteLLMProviders, target.providerId);
-  const tokenResponse = await fetchWithTransientRetry(
-    networkFetcher,
-    variant.oauth.tokenEndpoint,
-    {
+  const tokenResponse = await fetchWithTransientRetry(networkFetcher, variant.oauth.tokenEndpoint, {
     method: "POST",
     // Run 98 addendum 39 S2: bound the refresh so a stalled token endpoint cannot
     // hold the credentials stage open; the bootstrap already counts the attempt.
@@ -15738,7 +15744,13 @@ export function resolveAnonymousLearningReads(
 ): "on" | "off" {
   if (explicit === "on" || explicit === true) return "on";
   if (explicit === "off" || explicit === false) return "off";
-  return LOOPBACK_BIND_HOSTS.has(String(host ?? "").trim().toLowerCase()) ? "on" : "off";
+  return LOOPBACK_BIND_HOSTS.has(
+    String(host ?? "")
+      .trim()
+      .toLowerCase(),
+  )
+    ? "on"
+    : "off";
 }
 
 /**
@@ -15759,7 +15771,13 @@ export function resolveDeviceOwnerTrust(
 ): "on" | "off" {
   if (explicit === "on" || explicit === true) return "on";
   if (explicit === "off" || explicit === false) return "off";
-  return LOOPBACK_BIND_HOSTS.has(String(host ?? "").trim().toLowerCase()) ? "on" : "off";
+  return LOOPBACK_BIND_HOSTS.has(
+    String(host ?? "")
+      .trim()
+      .toLowerCase(),
+  )
+    ? "on"
+    : "off";
 }
 
 /** The request itself comes from the device: the peer address is loopback, whatever the bind host is. */
@@ -15975,7 +15993,8 @@ function createRequestHandler(options: StartBridgeServerOptions) {
 
     if (url.pathname.startsWith("/api/role-model/operator/")) {
       const suppliedAuthorization = readOperatorHeader(request, "authorization");
-      const presentsCredential = typeof suppliedAuthorization === "string" && suppliedAuthorization.length > 0;
+      const presentsCredential =
+        typeof suppliedAuthorization === "string" && suppliedAuthorization.length > 0;
       // Run 98 addendum 46: the device owner is trusted for every operator path — reads and mutations alike.
       const deviceOwner =
         resolveDeviceOwnerTrust(options.host, options.deviceOwnerTrust) === "on" &&
@@ -16302,10 +16321,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             writeOperatorUnavailable(response, "learning policy rollback");
             return;
           }
-          writeOperatorMutationResult(
-            response,
-            await options.rollbackLearningPolicy(operatorBody),
-          );
+          writeOperatorMutationResult(response, await options.rollbackLearningPolicy(operatorBody));
           return;
         }
         // Run 98 addendum 34 S7 (addendum 33 S6's missing caller): re-score stored trials under one
@@ -16331,9 +16347,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           }
           writeOperatorResult(
             response,
-            decodeReadback(
-              await options.readLearningRollout(Object.fromEntries(url.searchParams)),
-            ),
+            decodeReadback(await options.readLearningRollout(Object.fromEntries(url.searchParams))),
           );
           return;
         }
@@ -16347,9 +16361,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           }
           writeOperatorResult(
             response,
-            decodeReadback(
-              await options.readLearningRecords(Object.fromEntries(url.searchParams)),
-            ),
+            decodeReadback(await options.readLearningRecords(Object.fromEntries(url.searchParams))),
           );
           return;
         }
@@ -17793,10 +17805,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
      * axis reads. This route answers what the samples say, with a state that cannot report a stopped sweep
      * as finished.
      */
-    if (
-      request.method === "GET" &&
-      url.pathname === "/api/role-model/benchmark/sample-runs"
-    ) {
+    if (request.method === "GET" && url.pathname === "/api/role-model/benchmark/sample-runs") {
       if (!options.readBenchmarkSampleRunStates) {
         writeJson(response, 404, { error: "not found" });
         return;
@@ -23372,9 +23381,7 @@ export async function createRuntimeBridgeBackend(
       .sort((left, right) => left - right);
     const totalRequestLatency = requestLatencies.reduce((sum, value) => sum + value, 0);
     const requestP95Index =
-      requestLatencies.length > 0
-        ? Math.max(0, Math.ceil(requestLatencies.length * 0.95) - 1)
-        : -1;
+      requestLatencies.length > 0 ? Math.max(0, Math.ceil(requestLatencies.length * 0.95) - 1) : -1;
     return {
       requestCount: records.length,
       successCount: records.filter((record) => record.errorClass === null).length,
@@ -24900,10 +24907,10 @@ export async function createRuntimeBridgeBackend(
         activationStageRank(latencySelectionPolicy.policy.minStage);
     const latencySelectionContext = latencySelectionAuthorized
       ? {
-          ...latencySelectionPolicy!.policy,
+          ...latencySelectionPolicy?.policy,
           estimatedInputTokens: plan.routingRequest.contextTokens ?? 0,
           buckets: await routingPrepCache.read(
-            `latency-buckets:${routingPrepTickKey}:${latencySelectionPolicy!.policy.tokenBucketUpperBounds.join(",")}:${latencySelectionPolicy!.policy.minSamples}:${latencySelectionPolicy!.policy.windowHours}`,
+            `latency-buckets:${routingPrepTickKey}:${latencySelectionPolicy?.policy.tokenBucketUpperBounds.join(",")}:${latencySelectionPolicy?.policy.minSamples}:${latencySelectionPolicy?.policy.windowHours}`,
             () =>
               readEndpointLatencyBuckets({
                 databasePath: initialization.databasePath,
@@ -24912,13 +24919,11 @@ export async function createRuntimeBridgeBackend(
                 ),
                 windowStartMs: Math.max(
                   0,
-                  routingTimeMs -
-                    latencySelectionPolicy!.policy.windowHours * 60 * 60 * 1_000,
+                  routingTimeMs - latencySelectionPolicy?.policy.windowHours * 60 * 60 * 1_000,
                 ),
                 windowEndMs: routingTimeMs,
-                tokenBucketUpperBounds:
-                  latencySelectionPolicy!.policy.tokenBucketUpperBounds,
-                minimumSampleCount: latencySelectionPolicy!.policy.minSamples,
+                tokenBucketUpperBounds: latencySelectionPolicy?.policy.tokenBucketUpperBounds,
+                minimumSampleCount: latencySelectionPolicy?.policy.minSamples,
               }),
           ),
         }
@@ -25023,10 +25028,7 @@ export async function createRuntimeBridgeBackend(
                 learningPolicySnapshot?.effective.minAdvisoryConfidence ?? 0.7,
               ),
               cohortPercent,
-              explorationPercent: numeric(
-                process.env.ROLE_MODEL_LEARNING_EXPLORATION_PERCENT,
-                0,
-              ),
+              explorationPercent: numeric(process.env.ROLE_MODEL_LEARNING_EXPLORATION_PERCENT, 0),
               killSwitch: process.env.ROLE_MODEL_LEARNING_KILL_SWITCH?.trim() === "true",
               thresholdSetVersion: process.env.ROLE_MODEL_SCORER_SET_VERSION?.trim() ?? null,
               // Run 99 R33: the activated pack's scope travels with the advisory so the router
@@ -25071,7 +25073,7 @@ export async function createRuntimeBridgeBackend(
                 },
               }
             : {}),
-      });
+        });
       let routed = computeRoute(mergedDenyEndpoints);
       // Run 98 addendum 40 (L5): the measured-latency input may only move the *initial* decision; a
       // retry's deny list is the router's own recovery path and is never reinterpreted here. When the
@@ -25188,18 +25190,18 @@ export async function createRuntimeBridgeBackend(
       // reason) from "applied" instead of reporting every decision as an S1 shadow.
       if (advisoryConsideration) {
         try {
-              const outcome = (
-                routed.decision as unknown as {
-                  readonly advisory_consideration?: {
-                    readonly applied?: boolean;
-                    readonly fallbackReason?: string | null;
-                    readonly cohortBucket?: number | null;
-                    readonly scoreGapBefore?: number | null;
-                    readonly advisoryPackageEligible?: boolean;
-                    readonly eligibleEndpointCount?: number;
-                  };
-                }
-              ).advisory_consideration;
+          const outcome = (
+            routed.decision as unknown as {
+              readonly advisory_consideration?: {
+                readonly applied?: boolean;
+                readonly fallbackReason?: string | null;
+                readonly cohortBucket?: number | null;
+                readonly scoreGapBefore?: number | null;
+                readonly advisoryPackageEligible?: boolean;
+                readonly eligibleEndpointCount?: number;
+              };
+            }
+          ).advisory_consideration;
           const observation = buildLiveRouteAdvisoryObservation({
             decisionId: routed.decision.routing_decision_id,
             routePackage: routed.decision.chosen_endpoint_id,
@@ -26937,9 +26939,9 @@ export async function createRuntimeBridgeBackend(
                 // unobservable for exactly the traffic this block was added to make observable. The
                 // plan's difficulty evidence layers on top of the bundle's diagnostics; it never
                 // replaces them.
-                ...((baseBundle as unknown as Record<string, unknown>).routingDiagnostics as
+                ...(((baseBundle as unknown as Record<string, unknown>).routingDiagnostics as
                   | Record<string, unknown>
-                  | undefined) ?? {},
+                  | undefined) ?? {}),
                 ...(plan.routingDiagnostics.difficultyRouting
                   ? { difficultyRouting: plan.routingDiagnostics.difficultyRouting }
                   : {}),
@@ -27119,12 +27121,14 @@ export async function createRuntimeBridgeBackend(
             captureDegradation: {
               contract: "CaptureDegradationReceiptV1",
               failureStage: "graph_write",
-              actionTaken: routeCaptureDegradationReason === "track-b-capture-deferred"
-                ? "queued_for_retry"
-                : "metadata_only",
-              reasonCode: routeCaptureDegradationReason === "track-b-capture-deferred"
-                ? "unknown"
-                : "artifact_store_unavailable",
+              actionTaken:
+                routeCaptureDegradationReason === "track-b-capture-deferred"
+                  ? "queued_for_retry"
+                  : "metadata_only",
+              reasonCode:
+                routeCaptureDegradationReason === "track-b-capture-deferred"
+                  ? "unknown"
+                  : "artifact_store_unavailable",
               routingContinued: true,
               reason: routeCaptureDegradationReason ?? "track-b-capture-unavailable",
             },
@@ -28782,8 +28786,7 @@ export async function createRuntimeBridgeBackend(
     },
     async rollbackLearningPack(body: Record<string, unknown>): Promise<unknown> {
       return (
-        options.rollbackLearningPack?.(body) ??
-        unavailableOperatorPayload("learning pack rollback")
+        options.rollbackLearningPack?.(body) ?? unavailableOperatorPayload("learning pack rollback")
       );
     },
     async recordLearningGuardrailBreach(body: Record<string, unknown>): Promise<unknown> {

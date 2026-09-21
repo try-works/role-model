@@ -308,10 +308,7 @@ test("run97 ledger keeps a completed counterfactual terminal across instances, r
     // the producer cannot burn the day's budget re-replaying it.
     const restarted = createReplayLedger({ filePath: file, now: at });
     expect(
-      restarted.hasTerminalCounterfactual(
-        "req-26922286-b7ab-4584-98e0-7cf9c06671c6",
-        "policy-a",
-      ),
+      restarted.hasTerminalCounterfactual("req-26922286-b7ab-4584-98e0-7cf9c06671c6", "policy-a"),
     ).toBe(true);
     const duplicate = restarted.reserve({
       captureRef: "req-26922286-b7ab-4584-98e0-7cf9c06671c6",
@@ -334,10 +331,7 @@ test("run97 ledger keeps a completed counterfactual terminal across instances, r
     });
     const afterWrites = createReplayLedger({ filePath: file, now: at });
     expect(
-      afterWrites.hasTerminalCounterfactual(
-        "req-26922286-b7ab-4584-98e0-7cf9c06671c6",
-        "policy-a",
-      ),
+      afterWrites.hasTerminalCounterfactual("req-26922286-b7ab-4584-98e0-7cf9c06671c6", "policy-a"),
     ).toBe(true);
     expect(afterWrites.status()).toMatchObject({ counterfactuals: 1, dispatches: 2 });
   } finally {

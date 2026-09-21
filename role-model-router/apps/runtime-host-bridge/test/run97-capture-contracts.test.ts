@@ -98,9 +98,7 @@ test("run97 replay branch capture edges carry the branch identity", () => {
   const branchEdge = edges.find((edge) => edge.edgeType === "counterfactual_branch");
   expect(branchEdge).toBeDefined();
   expect(branchEdge?.branchId).toBe("branch:run97:1");
-  expect(
-    validateV11ContractDefinition("trackBStorage", "graphEdge", branchEdge).valid,
-  ).toBe(true);
+  expect(validateV11ContractDefinition("trackBStorage", "graphEdge", branchEdge).valid).toBe(true);
 });
 
 test("run97 emits validated graph contracts durably", () => {
@@ -118,8 +116,10 @@ test("run97 emits validated graph contracts durably", () => {
     expect(emissions.length).toBeGreaterThanOrEqual(6);
     for (const emission of emissions) {
       const written = JSON.parse(readFileSync(emission.filePath, "utf8"));
-      expect(validateV11ContractDefinition("trackBStorage", "graphNode", written).valid ||
-        validateV11ContractDefinition("trackBStorage", "graphEdge", written).valid).toBe(true);
+      expect(
+        validateV11ContractDefinition("trackBStorage", "graphNode", written).valid ||
+          validateV11ContractDefinition("trackBStorage", "graphEdge", written).valid,
+      ).toBe(true);
     }
   } finally {
     rmSync(root, { recursive: true, force: true });

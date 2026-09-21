@@ -13,9 +13,7 @@ import { selectTrackBLearningTarget } from "../src/track-b-learning-evidence.js"
  * `guidance/13` (route-package attribution is the package a comparison measured).
  */
 
-const member = (
-  overrides: Record<string, unknown>,
-): Record<string, unknown> => ({
+const member = (overrides: Record<string, unknown>): Record<string, unknown> => ({
   trialId: "trial:source",
   scoreId: "trial-score:source",
   score: 1,
@@ -30,7 +28,16 @@ describe("run97 rc06 learning target selection", () => {
   test("an incumbent win learns about the incumbent package", () => {
     const target = selectTrackBLearningTarget({
       comparisonOutcome: "source",
-      members: [member({}), member({ trialId: "trial:counterfactual", disposition: "negative", role: "counterfactual", score: 0, candidateRef: "endpoint:counterfactual" })],
+      members: [
+        member({}),
+        member({
+          trialId: "trial:counterfactual",
+          disposition: "negative",
+          role: "counterfactual",
+          score: 0,
+          candidateRef: "endpoint:counterfactual",
+        }),
+      ],
       sourceRoutePackage: "endpoint:source",
     });
     expect(target).toEqual({
@@ -66,7 +73,14 @@ describe("run97 rc06 learning target selection", () => {
   });
 
   test("non-decisive comparisons have no learning target", () => {
-    for (const comparisonOutcome of ["tie", "disagreement", "insufficient", "incomplete", "rejected", null]) {
+    for (const comparisonOutcome of [
+      "tie",
+      "disagreement",
+      "insufficient",
+      "incomplete",
+      "rejected",
+      null,
+    ]) {
       expect(
         selectTrackBLearningTarget({
           comparisonOutcome,

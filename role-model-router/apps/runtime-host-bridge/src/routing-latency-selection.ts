@@ -66,13 +66,18 @@ export function selectEndpointByMeasuredLatency(input: {
   }
   const tokens = Math.max(0, Math.floor(input.estimatedInputTokens));
   const matchedIndex = bounds.findIndex((bound) => tokens <= bound);
-  const bucketUpperBoundTokens = bounds[matchedIndex === -1 ? bounds.length - 1 : matchedIndex]!;
+  // `bounds` is non-empty here (guarded above), so the last entry is always defined; the explicit fallback
+  // keeps the assertion out of the code without inventing a bound.
+  const bucketUpperBoundTokens =
+    bounds[matchedIndex === -1 ? bounds.length - 1 : matchedIndex] ?? bounds[bounds.length - 1];
+  if (typeof bucketUpperBoundTokens !== "number") {
+    return keep("no_candidates", "no prompt-size buckets are configured");
+  }
   const eligible = new Set(input.eligibleEndpointIds);
   const ranked = input.buckets
     .filter(
       (bucket) =>
-        bucket.bucketUpperBoundTokens === bucketUpperBoundTokens &&
-        eligible.has(bucket.endpointId),
+        bucket.bucketUpperBoundTokens === bucketUpperBoundTokens && eligible.has(bucket.endpointId),
     )
     .map((bucket) => ({
       endpointId: bucket.endpointId,
@@ -92,7 +97,10 @@ export function selectEndpointByMeasuredLatency(input: {
   );
   const candidates = (
     routerCandidateInRanked && !ranked.slice(0, limit).includes(routerCandidateInRanked)
-      ? [routerCandidateInRanked, ...ranked.filter((candidate) => candidate !== routerCandidateInRanked)]
+      ? [
+          routerCandidateInRanked,
+          ...ranked.filter((candidate) => candidate !== routerCandidateInRanked),
+        ]
       : ranked
   )
     .slice(0, limit)
@@ -116,7 +124,15 @@ export function selectEndpointByMeasuredLatency(input: {
       candidates,
     );
   }
-  const best = candidates[0]!;
+  const best = candidates[0];
+  if (!best) {
+    return keep(
+      "insufficient_evidence",
+      "no candidate carries measured latency for this bucket",
+      bucketUpperBoundTokens,
+      candidates,
+    );
+  }
   if (best.endpointId === routerCandidate.endpointId) {
     return keep(
       "kept_router_choice",

@@ -124,7 +124,9 @@ export function createRoutingPrepCache(options: {
  * 5 s window, which is short enough that routing sees registry/store changes within a tick and long
  * enough to remove the per-request store work.
  */
-export function resolveRoutingPrepCacheTtlMs(environment: Record<string, string | undefined>): number {
+export function resolveRoutingPrepCacheTtlMs(
+  environment: Record<string, string | undefined>,
+): number {
   const raw = environment.ROLE_MODEL_ROUTING_PREP_CACHE_TTL_MS?.trim();
   if (!raw) return 5_000;
   const parsed = Number(raw);

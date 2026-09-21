@@ -60,8 +60,7 @@ const validationRecord = (overrides: Record<string, unknown> = {}) => ({
   scopeId: SCOPE,
   record: {
     contract: "RouteLearningValidationReceiptV1",
-    receiptId:
-      "validation-0a461682ae96dd6c4bafcaa5fbdf3ff01b7c2bca11ef63f15f883f4966bd547b",
+    receiptId: "validation-0a461682ae96dd6c4bafcaa5fbdf3ff01b7c2bca11ef63f15f883f4966bd547b",
     decision: "validate",
     createdAt: "2026-09-15T01:30:42.816Z",
     qualityDelta: 0.5,
@@ -80,8 +79,7 @@ function createInvoke(input: {
 }) {
   return async (capability: string, value: Record<string, unknown>) => {
     input.calls?.push({ capability, value });
-    if (capability === "knowledge:rollout-state")
-      return input.rollout ?? rolloutState();
+    if (capability === "knowledge:rollout-state") return input.rollout ?? rolloutState();
     if (capability === "knowledge:list-learning") {
       const kind = String(value.kind ?? "");
       if (kind === "pack") return input.packs ?? { records: [packRecord()] };
@@ -213,8 +211,7 @@ describe("run99 R24 durable route advisory source", () => {
       evidenceMaxAgeMs: 30 * 24 * 60 * 60 * 1_000,
     });
     expect(advisory).toMatchObject({
-      preferredRoutePackage:
-        "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+      preferredRoutePackage: "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
       advisoryState: "fresh",
       confidence: 0.82,
     });

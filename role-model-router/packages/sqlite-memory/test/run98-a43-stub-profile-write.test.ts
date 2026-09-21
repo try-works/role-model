@@ -1,7 +1,7 @@
 import { mkdtemp } from "node:fs/promises";
-import { DatabaseSync } from "node:sqlite";
 import os from "node:os";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 
 import { expect, test } from "vitest";
 
@@ -104,7 +104,15 @@ test("run98 a43 S3: a legacy stub snapshot is rebuilt from samples on the next i
     .prepare(
       "INSERT OR REPLACE INTO observed_performance_samples (sample_id, endpoint_id, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
     )
-    .run("sample-run98-a43", ENDPOINT, "req-run98-a43-legacy", null, "live_request", nowMs, sampleJson);
+    .run(
+      "sample-run98-a43",
+      ENDPOINT,
+      "req-run98-a43-legacy",
+      null,
+      "live_request",
+      nowMs,
+      sampleJson,
+    );
   database
     .prepare(
       "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",

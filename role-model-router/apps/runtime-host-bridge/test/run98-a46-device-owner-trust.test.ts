@@ -1,9 +1,6 @@
 import { expect, test } from "vitest";
 
-import {
-  resolveDeviceOwnerTrust,
-  startBridgeServer,
-} from "../src/index.js";
+import { resolveDeviceOwnerTrust, startBridgeServer } from "../src/index.js";
 
 /**
  * Run 98 addendum 46 — the device owner is trusted.
@@ -44,7 +41,9 @@ const startServer = async (options: Record<string, unknown>) => {
 test("run98 a46: the loopback device owner reaches an operator path with no credential", async () => {
   const server = await startServer({});
   try {
-    const response = await fetch(`http://127.0.0.1:${server.port}/api/role-model/operator/learning`);
+    const response = await fetch(
+      `http://127.0.0.1:${server.port}/api/role-model/operator/learning`,
+    );
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ schemaVersion: "probe", state: "read" });
   } finally {
@@ -61,9 +60,12 @@ test("run98 a46: device-owner trust can be turned off so the token is required a
     const refused = await fetch(`http://127.0.0.1:${server.port}/api/role-model/operator/learning`);
     expect(refused.status).toBe(401);
 
-    const authorized = await fetch(`http://127.0.0.1:${server.port}/api/role-model/operator/learning`, {
-      headers: { authorization: "Bearer expected-token" },
-    });
+    const authorized = await fetch(
+      `http://127.0.0.1:${server.port}/api/role-model/operator/learning`,
+      {
+        headers: { authorization: "Bearer expected-token" },
+      },
+    );
     expect(authorized.status).toBe(200);
   } finally {
     await server.close();

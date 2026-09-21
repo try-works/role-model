@@ -25,7 +25,8 @@
 import { POSITION_ORDER_DISAGREEMENT } from "./track-b-shadow-judge-dispatch.js";
 
 export const RUN98_LEARNING_PASS_SCHEMA = "role-model.route-learning-pass.v1";
-export const RUN98_LEARNING_PASS_DEGRADATION_SCHEMA = "role-model.route-learning-pass-degradation.v1";
+export const RUN98_LEARNING_PASS_DEGRADATION_SCHEMA =
+  "role-model.route-learning-pass-degradation.v1";
 export const RUN98_LEARNING_ESTIMATOR_VERSION = "paired-cluster-bootstrap@1";
 export const RUN98_LEARNING_DEFAULT_BOOTSTRAP_RESAMPLES = 2_000;
 
@@ -267,7 +268,9 @@ export function buildTrackBLearningEvidenceSummary(input: {
       : [];
     if (
       result.orderDisagreement === true ||
-      String(result.outcome ?? "").trim().toLowerCase() === "order_disagreement"
+      String(result.outcome ?? "")
+        .trim()
+        .toLowerCase() === "order_disagreement"
     ) {
       validityIssues.push(POSITION_ORDER_DISAGREEMENT);
     }
@@ -283,7 +286,8 @@ export function buildTrackBLearningEvidenceSummary(input: {
       boundedText(comparability.evidenceStrength) ??
       boundedText(result.evidenceStrength) ??
       DEFAULT_EVIDENCE_CLASS;
-    const classWeight = EVIDENCE_CLASS_WEIGHTS[evidenceClass] ?? EVIDENCE_CLASS_WEIGHTS[DEFAULT_EVIDENCE_CLASS];
+    const classWeight =
+      EVIDENCE_CLASS_WEIGHTS[evidenceClass] ?? EVIDENCE_CLASS_WEIGHTS[DEFAULT_EVIDENCE_CLASS];
     if (!(classWeight > 0)) {
       exclude(`non_semantic_evidence:${evidenceClass.slice(0, 48)}`);
       continue;
@@ -292,7 +296,8 @@ export function buildTrackBLearningEvidenceSummary(input: {
     // probability for a randomized mode; everything else counts as observational.
     const selectionMode =
       boundedText(comparability.selectionMode) ?? boundedText(result.selectionMode) ?? null;
-    const selectionProbabilityRaw = comparability.selectionProbability ?? result.selectionProbability;
+    const selectionProbabilityRaw =
+      comparability.selectionProbability ?? result.selectionProbability;
     const selectionProbability = Number(selectionProbabilityRaw);
     const hasPropensity =
       (selectionMode === "controlled_exploration" || selectionMode === "policy_randomized") &&
@@ -350,7 +355,7 @@ export function buildTrackBLearningEvidenceSummary(input: {
       : [];
     if (developmentCaseIds.length > 0) developmentComparisons += 1;
     // Run 99 R33 D12: the decay weight uses the same age the freshness window used.
-    const decay = ageMs === null ? 1 : Math.pow(0.5, ageMs / 86_400_000 / halfLifeDays);
+    const decay = ageMs === null ? 1 : 0.5 ** (ageMs / 86_400_000 / halfLifeDays);
     const weight = decay * classWeight;
     effectiveDecisiveComparisons += weight;
     if (caseIds.length > 0) effectiveHoldoutComparisons += weight;
@@ -436,7 +441,9 @@ export function buildTrackBLearningEvidenceSummary(input: {
       const half = Math.floor(observations.length / 2);
       const mean = (rows: { delta: number }[]) =>
         rows.reduce((sum, row) => sum + row.delta, 0) / rows.length;
-      return roundWeight(Math.abs(mean(observations.slice(0, half)) - mean(observations.slice(half))));
+      return roundWeight(
+        Math.abs(mean(observations.slice(0, half)) - mean(observations.slice(half))),
+      );
     })();
     // Run 99 R33 D4: shrink the family estimate toward the route-package prior, calibrated from the
     // *other* families only (a disjoint set), and record which level the estimate actually leans on.
@@ -498,10 +505,9 @@ export function buildTrackBLearningEvidenceSummary(input: {
     holdoutComparisons,
     developmentComparisons,
     distinctCaptures: captures.size,
-    caseManifestRef: `manifest:learning-pass:${decisiveGroupIds.length}:${[...captures]
-      .sort()
-      .join(",")
-      .length}`,
+    caseManifestRef: `manifest:learning-pass:${decisiveGroupIds.length}:${
+      [...captures].sort().join(",").length
+    }`,
     byFamily,
     excludedByReason,
     effectiveDecisiveComparisons: roundWeight(effectiveDecisiveComparisons),
@@ -521,9 +527,7 @@ export function buildTrackBLearningEvidenceSummary(input: {
       missingPairs: (() => {
         const candidates = [...comparableCandidates].sort();
         const covered = new Set(
-          [...comparablePairs.keys()].map((key) =>
-            key.split("\u0000").sort().join("\u0000"),
-          ),
+          [...comparablePairs.keys()].map((key) => key.split("\u0000").sort().join("\u0000")),
         );
         const missing: [string, string][] = [];
         for (let index = 0; index < candidates.length; index += 1) {
@@ -538,10 +542,7 @@ export function buildTrackBLearningEvidenceSummary(input: {
   };
 }
 
-function evidenceAgeMs(
-  comparability: Record<string, unknown>,
-  nowMs: number,
-): number | null {
+function evidenceAgeMs(comparability: Record<string, unknown>, nowMs: number): number | null {
   const observedAt = boundedText(comparability.observedAt) ?? boundedText(comparability.recordedAt);
   if (observedAt) {
     const parsed = Date.parse(observedAt);
@@ -646,7 +647,10 @@ export interface TrackBLearningPassInput {
   /** Promotion stays opt-in so a caller can record validation evidence without a pack. */
   readonly allowPromotion?: boolean;
   /** Compose the envelope the sidecar host expects (`{value, filePath, ...}`). */
-  readonly envelope?: (capability: string, value: Record<string, unknown>) => Record<string, unknown>;
+  readonly envelope?: (
+    capability: string,
+    value: Record<string, unknown>,
+  ) => Record<string, unknown>;
   /**
    * Run 98 R3: the packaged extension host externalizes a business result that exceeds the
    * inline cap (`evaluation:list-groups` on a live stage root answers with a durable-output
@@ -654,11 +658,7 @@ export interface TrackBLearningPassInput {
    * pipeline does; without it the pass silently counted zero decisive comparisons and refused
    * every candidate with `insufficient_evidence` (observed live on stage v86).
    */
-  readonly decodeResult?: (
-    extensionId: string,
-    capability: string,
-    raw: unknown,
-  ) => unknown;
+  readonly decodeResult?: (extensionId: string, capability: string, raw: unknown) => unknown;
   /**
    * Run 98 R3: the same evidence-authority secret the derive call used. Without it the worker has
    * no authority to verify the durable comparison readback and safety receipts, and validation
@@ -722,7 +722,8 @@ export async function runTrackBLearningPass(
   if (!evaluationAuthoritySecret) {
     throw new Error("learning pass requires the evidence authority secret");
   }
-  const envelope = input.envelope ?? ((capability, value) => defaultEnvelope(input, capability, value));
+  const envelope =
+    input.envelope ?? ((capability, value) => defaultEnvelope(input, capability, value));
   const workerEnvelope = (capability: string, value: Record<string, unknown>) => ({
     ...envelope(capability, value),
     evaluationAuthoritySecret,
@@ -750,7 +751,8 @@ export async function runTrackBLearningPass(
   const groups: TrackBLearningEvidenceGroup[] = Array.isArray(decodedGroups)
     ? (decodedGroups as TrackBLearningEvidenceGroup[])
     : Array.isArray(asRecord(decodedGroups)?.groups)
-      ? ((asRecord(decodedGroups) as Record<string, unknown>).groups as TrackBLearningEvidenceGroup[])
+      ? ((asRecord(decodedGroups) as Record<string, unknown>)
+          .groups as TrackBLearningEvidenceGroup[])
       : [];
   const evidenceSummary = buildTrackBLearningEvidenceSummary({
     groups,
@@ -762,7 +764,9 @@ export async function runTrackBLearningPass(
   });
   const holdout = asRecord(input.finalizedComparison.holdout);
   const holdoutCaseIds = Array.isArray(holdout?.caseIds)
-    ? holdout.caseIds.filter((caseId): caseId is string => typeof caseId === "string" && caseId.length > 0)
+    ? holdout.caseIds.filter(
+        (caseId): caseId is string => typeof caseId === "string" && caseId.length > 0,
+      )
     : [];
 
   const validation = decodeBusinessResult(
@@ -824,9 +828,7 @@ export async function runTrackBLearningPass(
   // record family-free, so the operator readback could not attribute a validation to the family the
   // whole chain had just propagated (addendum 21 D11: the per-family receipt carries the canonical
   // gate dimensions). The evidence travels with the recorded receipt.
-  const recordedFamilyEvidence = asRecord(
-    (validation as Record<string, unknown>).familyEvidence,
-  );
+  const recordedFamilyEvidence = asRecord((validation as Record<string, unknown>).familyEvidence);
 
   // The validation receipt is durable learning evidence even when the decision is
   // `insufficient_evidence` or `reject`; recording it is how the operator sees why learning

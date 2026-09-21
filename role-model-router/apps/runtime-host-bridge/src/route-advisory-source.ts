@@ -68,8 +68,7 @@ export function resolveAdvisoryCohortPercent(input: {
   const clamp = (value: number): number =>
     Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : 0;
   const policy = clamp(input.policyCohortPercent);
-  const rollout =
-    input.rolloutCohortPercent === null ? null : clamp(input.rolloutCohortPercent);
+  const rollout = input.rolloutCohortPercent === null ? null : clamp(input.rolloutCohortPercent);
   const cohortBoundStage = input.stage === "S3" || input.stage === "S4";
   if (!cohortBoundStage) return policy;
   if (rollout === null || rollout <= 0) return policy;
@@ -111,10 +110,7 @@ function isDegradationReceipt(value: Record<string, unknown> | null): boolean {
   return Boolean(schemaVersion?.includes("degradation"));
 }
 
-function findRecord(
-  answer: unknown,
-  recordId: string,
-): Record<string, unknown> | null {
+function findRecord(answer: unknown, recordId: string): Record<string, unknown> | null {
   const payload = asRecord(answer);
   if (!payload || isDegradationReceipt(payload)) return null;
   const records = Array.isArray(payload.records) ? payload.records : [];

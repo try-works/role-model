@@ -3,16 +3,16 @@ import { createHash } from "node:crypto";
 import {
   PAIRWISE_JUDGE_MODE_IDENTIFIED,
   PAIRWISE_JUDGE_MODE_IDENTITY_BLIND,
+  type PairwiseJudgeMode,
+  type PairwiseJudgePresentation,
   TRACK_B_PAIRWISE_JUDGE_WINNER_TIE,
+  type TrackBPairwiseJudge,
+  type TrackBPairwiseJudgeDecision,
+  type TrackBPairwiseJudgeRequest,
   buildPairwiseJudgeMessages,
   isPairwiseJudgeMode,
   pairwiseJudgePresentation,
   parsePairwiseJudgeResponse,
-  type PairwiseJudgeMode,
-  type PairwiseJudgePresentation,
-  type TrackBPairwiseJudge,
-  type TrackBPairwiseJudgeDecision,
-  type TrackBPairwiseJudgeRequest,
 } from "./track-b-shadow-judge.js";
 
 /**
@@ -158,7 +158,8 @@ export function createRouterPairwiseJudge(
       typeof endpoint.modelId === "string" &&
       endpoint.modelId.length > 0,
   );
-  const controlsJudgeSelection = input.judgeSource === "controller" || input.judgeSource === "disabled";
+  const controlsJudgeSelection =
+    input.judgeSource === "controller" || input.judgeSource === "disabled";
   const designated =
     input.judgeSource === "disabled"
       ? null
@@ -212,7 +213,10 @@ export function createRouterPairwiseJudge(
         readonly mode: PairwiseJudgeMode;
         readonly presentation: PairwiseJudgePresentation;
         readonly attempt: number;
-      }): Promise<{ readonly decision: TrackBPairwiseJudgeDecision; readonly routerDecisionId: string }> => {
+      }): Promise<{
+        readonly decision: TrackBPairwiseJudgeDecision;
+        readonly routerDecisionId: string;
+      }> => {
         // The judge capture must stay inside the boundary's `replay-judge-<16 hex>` family
         // (run 97 RC04/L5), so the mode, presentation and attempt are folded into the
         // digest rather than appended to the id.
@@ -265,7 +269,9 @@ export function createRouterPairwiseJudge(
         const parsed = parsePairwiseJudgeResponse(text, options.presentation);
         const observedCostUsd = execution?.replayCost?.usd;
         const costMicros =
-          typeof observedCostUsd === "number" && Number.isFinite(observedCostUsd) && observedCostUsd >= 0
+          typeof observedCostUsd === "number" &&
+          Number.isFinite(observedCostUsd) &&
+          observedCostUsd >= 0
             ? Math.ceil(observedCostUsd * 1_000_000)
             : 0;
         const bytes =
@@ -329,7 +335,10 @@ export function createRouterPairwiseJudge(
 
       // AC-R10-02: bound position-order effects with a swapped dispatch instead of
       // accepting a single-order preference as decisive.
-      let calibrated: { readonly winner: typeof TRACK_B_PAIRWISE_JUDGE_WINNER_TIE; readonly confidence: number } | null = null;
+      let calibrated: {
+        readonly winner: typeof TRACK_B_PAIRWISE_JUDGE_WINNER_TIE;
+        readonly confidence: number;
+      } | null = null;
       if (orderPolicy === "dual_order") {
         const swappedPresentation = pairwiseJudgePresentation(true);
         const swapped = await runJudge({ mode, presentation: swappedPresentation, attempt: 2 });
@@ -404,6 +413,5 @@ export function createRouterPairwiseJudge(
         ...(judgeModeAgreement === undefined ? {} : { judgeModeAgreement }),
       };
     },
-
   };
 }

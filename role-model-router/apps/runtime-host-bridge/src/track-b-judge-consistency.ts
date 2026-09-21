@@ -49,7 +49,9 @@ export interface JudgeConsistencyLedger {
 const MAX_JUDGES = 32;
 
 const consistencyOf = (row: JudgeConsistencyRow): number | null =>
-  row.orderChecks > 0 ? Math.round((1 - row.orderDisagreements / row.orderChecks) * 10_000) / 10_000 : null;
+  row.orderChecks > 0
+    ? Math.round((1 - row.orderDisagreements / row.orderChecks) * 10_000) / 10_000
+    : null;
 
 export function createJudgeConsistencyLedger(options: {
   readonly filePath: string;
@@ -71,7 +73,10 @@ export function createJudgeConsistencyLedger(options: {
     return { schemaVersion: JUDGE_CONSISTENCY_SCHEMA_VERSION, judges: {} };
   };
 
-  const persist = (file: { schemaVersion: string; judges: Record<string, JudgeConsistencyRow> }): void => {
+  const persist = (file: {
+    schemaVersion: string;
+    judges: Record<string, JudgeConsistencyRow>;
+  }): void => {
     mkdirSync(path.dirname(options.filePath), { recursive: true });
     const temporary = `${options.filePath}.${process.pid}.tmp`;
     writeFileSync(temporary, `${JSON.stringify(file, null, 2)}\n`, "utf8");
@@ -80,7 +85,8 @@ export function createJudgeConsistencyLedger(options: {
 
   return {
     record(input) {
-      const judgeEndpointId = typeof input?.judgeEndpointId === "string" ? input.judgeEndpointId.trim() : "";
+      const judgeEndpointId =
+        typeof input?.judgeEndpointId === "string" ? input.judgeEndpointId.trim() : "";
       if (!judgeEndpointId || judgeEndpointId.length > 200) return null;
       const file = load();
       const existing = file.judges[judgeEndpointId];
@@ -133,7 +139,10 @@ export function createJudgeConsistencyLedger(options: {
  * and the caller decides — so a fresh deployment does not silently fail closed on an empty ledger.
  */
 export function evaluateJudgePositionConsistency(input: {
-  readonly row: { readonly orderChecks: number; readonly orderDisagreements: number } | null | undefined;
+  readonly row:
+    | { readonly orderChecks: number; readonly orderDisagreements: number }
+    | null
+    | undefined;
   readonly floor: number;
   readonly minChecks?: number;
 }): {
@@ -146,7 +155,8 @@ export function evaluateJudgePositionConsistency(input: {
   const disagreements = Number.isInteger(input.row?.orderDisagreements)
     ? Number(input.row?.orderDisagreements)
     : 0;
-  const consistency = checks > 0 ? Math.round((1 - disagreements / checks) * 10_000) / 10_000 : null;
+  const consistency =
+    checks > 0 ? Math.round((1 - disagreements / checks) * 10_000) / 10_000 : null;
   const minChecks = input.minChecks ?? MIN_POSITION_CONSISTENCY_CHECKS;
   const sufficientSample = checks >= minChecks;
   const floor = Number.isFinite(input.floor) ? input.floor : DEFAULT_POSITION_CONSISTENCY_FLOOR;

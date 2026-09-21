@@ -66,8 +66,12 @@ export function autoReplayExecutionFromCommandReceipt(receipt: unknown): AutoRep
         {
           kind,
           endpointId,
-          attempt: Number.isSafeInteger(row.attempt) && Number(row.attempt) > 0 ? Number(row.attempt) : 1,
-          costMicros: Number.isSafeInteger(row.costMicros) && Number(row.costMicros) >= 0 ? Number(row.costMicros) : 0,
+          attempt:
+            Number.isSafeInteger(row.attempt) && Number(row.attempt) > 0 ? Number(row.attempt) : 1,
+          costMicros:
+            Number.isSafeInteger(row.costMicros) && Number(row.costMicros) >= 0
+              ? Number(row.costMicros)
+              : 0,
           bytes: Number.isSafeInteger(row.bytes) && Number(row.bytes) >= 0 ? Number(row.bytes) : 0,
           outcome,
         } as const,
@@ -80,9 +84,7 @@ export function autoReplayExecutionFromCommandReceipt(receipt: unknown): AutoRep
       terminal,
       branches,
       dispatches,
-      failureDetail: terminal
-        ? `durable replay job ${state}`
-        : `durable replay state is ${state}`,
+      failureDetail: terminal ? `durable replay job ${state}` : `durable replay state is ${state}`,
     };
   }
   return { terminal: true, branches, dispatches };
@@ -298,7 +300,11 @@ export function startAutoReplayLoop(input: {
             window,
             policySetDigest: input.policySet.policySetDigest,
           })) as { readonly expiredCount?: unknown } | null;
-          if (sweep && Number.isSafeInteger(sweep.expiredCount) && Number(sweep.expiredCount) >= 0) {
+          if (
+            sweep &&
+            Number.isSafeInteger(sweep.expiredCount) &&
+            Number(sweep.expiredCount) >= 0
+          ) {
             expired = Number(sweep.expiredCount);
           }
         } catch (cause) {
@@ -424,7 +430,9 @@ export function startAutoReplayLoop(input: {
         // Run 98 addendum 04 follow-on: the tick's own wall-clock budget, so a tick made of several
         // minutes-long replays leaves the remaining captures for the next tick instead of holding the
         // loop open for tens of minutes. The injectable clock keeps it testable.
-        ...(Number.isSafeInteger(input.tickBudgetMs) ? { tickBudgetMs: Number(input.tickBudgetMs) } : {}),
+        ...(Number.isSafeInteger(input.tickBudgetMs)
+          ? { tickBudgetMs: Number(input.tickBudgetMs) }
+          : {}),
         ...(Number.isSafeInteger(input.reservationTtlMs) && (input.reservationTtlMs ?? 0) > 0
           ? { reservationTtlMs: Number(input.reservationTtlMs) }
           : {}),

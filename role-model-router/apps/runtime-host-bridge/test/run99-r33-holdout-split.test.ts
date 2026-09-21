@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 
 import { expect, test } from "vitest";
 
-import { buildFamilyStratifiedHoldout, SPLIT_ALGORITHM } from "../src/track-b-holdout-split.js";
+import { SPLIT_ALGORITHM, buildFamilyStratifiedHoldout } from "../src/track-b-holdout-split.js";
 
 /**
  * Run 99 R33 (addendum 20 D7): the holdout is a declared, deterministic, family-stratified split —
@@ -28,7 +28,11 @@ test("run99 R33 D7 the split is reproducible from its declaration", () => {
   expect(first.splitSeed).toBe(87);
   expect(first.partition).toBe("holdout");
   // Case order never changes the identity: every supplied case is accounted for in the declaration.
-  expect([...first.partitions.map((row) => row.caseId)].sort()).toEqual(["case:a", "case:b", "case:c"]);
+  expect([...first.partitions.map((row) => row.caseId)].sort()).toEqual([
+    "case:a",
+    "case:b",
+    "case:c",
+  ]);
 });
 
 test("run99 R33 D7 two task families never share a holdout identity", () => {
@@ -89,8 +93,12 @@ test("run99 R33 D7 cases inside a family are split into disjoint train and holdo
 
   expect(holdout.splitAlgorithm).toBe(SPLIT_ALGORITHM);
   expect(holdout.partitions).toHaveLength(caseIds.length);
-  const train = holdout.partitions.filter((row) => row.partition === "train").map((row) => row.caseId);
-  const held = holdout.partitions.filter((row) => row.partition === "holdout").map((row) => row.caseId);
+  const train = holdout.partitions
+    .filter((row) => row.partition === "train")
+    .map((row) => row.caseId);
+  const held = holdout.partitions
+    .filter((row) => row.partition === "holdout")
+    .map((row) => row.caseId);
 
   // Both sets are non-empty and disjoint, and together they are exactly the family's cases.
   expect(held.length).toBeGreaterThan(0);

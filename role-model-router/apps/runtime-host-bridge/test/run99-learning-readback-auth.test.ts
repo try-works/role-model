@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
-import { resolveAnonymousLearningReads, startBridgeServer } from "../src/index.js";
 import { parseAnonymousLearningReadsFlag } from "../src/cli.js";
+import { resolveAnonymousLearningReads, startBridgeServer } from "../src/index.js";
 
 /**
  * Run 99 - the Learning page is served by the runtime itself, so its readbacks must work on the
@@ -25,7 +25,11 @@ const registry = {
   ],
 } as never;
 
-const operatorContext = { channel: "stage", scope: "standalone-runtime-stage", authorizationEpoch: 1 };
+const operatorContext = {
+  channel: "stage",
+  scope: "standalone-runtime-stage",
+  authorizationEpoch: 1,
+};
 
 const start = (overrides: Readonly<Record<string, unknown>> = {}) =>
   startBridgeServer({
@@ -43,8 +47,14 @@ const start = (overrides: Readonly<Record<string, unknown>> = {}) =>
     executeResponses: async () => {
       throw new Error("not used");
     },
-    readLearningActivity: async () => ({ schemaVersion: "role-model.learning-activity.v1", scannedStores: 4 }),
-    readLearningHistory: async () => ({ schemaVersion: "role-model.learning-history.v1", scannedStores: 4 }),
+    readLearningActivity: async () => ({
+      schemaVersion: "role-model.learning-activity.v1",
+      scannedStores: 4,
+    }),
+    readLearningHistory: async () => ({
+      schemaVersion: "role-model.learning-history.v1",
+      scannedStores: 4,
+    }),
     readLearningPolicy: async () => ({ policyVersion: 21 }),
     ...overrides,
   });
@@ -54,13 +64,21 @@ describe("run99 anonymous loopback Learning readbacks", () => {
     const server = await start();
     const baseUrl = `http://127.0.0.1:${server.port}`;
     try {
-      const activity = await fetch(`${baseUrl}/api/role-model/operator/learning/activity?windowMinutes=60`);
+      const activity = await fetch(
+        `${baseUrl}/api/role-model/operator/learning/activity?windowMinutes=60`,
+      );
       expect(activity.status).toBe(200);
-      expect(await activity.json()).toMatchObject({ schemaVersion: "role-model.learning-activity.v1" });
+      expect(await activity.json()).toMatchObject({
+        schemaVersion: "role-model.learning-activity.v1",
+      });
 
-      const history = await fetch(`${baseUrl}/api/role-model/operator/learning/history?hours=168&bucketHours=6`);
+      const history = await fetch(
+        `${baseUrl}/api/role-model/operator/learning/history?hours=168&bucketHours=6`,
+      );
       expect(history.status).toBe(200);
-      expect(await history.json()).toMatchObject({ schemaVersion: "role-model.learning-history.v1" });
+      expect(await history.json()).toMatchObject({
+        schemaVersion: "role-model.learning-history.v1",
+      });
 
       const policy = await fetch(`${baseUrl}/api/role-model/operator/learning/policy`);
       expect(policy.status).toBe(200);
@@ -68,12 +86,18 @@ describe("run99 anonymous loopback Learning readbacks", () => {
       // Still gated: other operator surfaces and every mutation.
       const otherSurface = await fetch(`${baseUrl}/api/role-model/operator/trace-roots`);
       expect(otherSurface.status).toBe(401);
-      expect(await otherSurface.json()).toMatchObject({ error: "operator_authentication_required" });
+      expect(await otherSurface.json()).toMatchObject({
+        error: "operator_authentication_required",
+      });
 
       const mutation = await fetch(`${baseUrl}/api/role-model/operator/learning/policy`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ changes: { stage: "S2" }, expectedPolicyVersion: 21, operator: "test" }),
+        body: JSON.stringify({
+          changes: { stage: "S2" },
+          expectedPolicyVersion: 21,
+          operator: "test",
+        }),
       });
       expect(mutation.status).toBe(401);
 

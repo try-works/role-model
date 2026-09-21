@@ -52,7 +52,10 @@ const startServer = async (handler: (url: URL) => Promise<{ status: number; body
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();
   const port = typeof address === "object" && address ? address.port : 0;
-  return { endpoint: `http://127.0.0.1:${port}`, close: () => new Promise<void>((r) => server.close(() => r())) };
+  return {
+    endpoint: `http://127.0.0.1:${port}`,
+    close: () => new Promise<void>((r) => server.close(() => r())),
+  };
 };
 
 test("run98 a48: a cooling-down boundary is a deferrable outcome, not a spent attempt", async () => {
@@ -74,14 +77,22 @@ test("run98 a48: a cooling-down boundary is a deferrable outcome, not a spent at
       scope: "scope:a48",
     });
     await expect(
-      operations.recordLocalRouteCapture({ requestId: "req-first", routingDecisionId: "d1", endpointId: "e1" }),
+      operations.recordLocalRouteCapture({
+        requestId: "req-first",
+        routingDecisionId: "d1",
+        endpointId: "e1",
+      }),
     ).rejects.toBeInstanceOf(Error);
 
     // Immediately afterwards the boundary is cooling down; the refusal must say *when* it may be retried and
     // must be recognisable by type, so a caller can defer instead of counting a failure.
     const callsBeforeRefusal = calls;
     const coolingDown = await operations
-      .recordLocalRouteCapture({ requestId: "req-second", routingDecisionId: "d2", endpointId: "e2" })
+      .recordLocalRouteCapture({
+        requestId: "req-second",
+        routingDecisionId: "d2",
+        endpointId: "e2",
+      })
       .then(
         () => null,
         (error: unknown) => error,

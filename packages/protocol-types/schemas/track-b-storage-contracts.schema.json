@@ -93,12 +93,7 @@
     "contentDigest": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "digest",
-        "algorithm",
-        "scope",
-        "scopeId"
-      ],
+      "required": ["digest", "algorithm", "scope", "scopeId"],
       "properties": {
         "digest": {
           "type": "string",
@@ -106,12 +101,7 @@
           "maxLength": 256
         },
         "algorithm": {
-          "enum": [
-            "sha256",
-            "blake3",
-            "hmac-sha256",
-            "hmac-blake3"
-          ]
+          "enum": ["sha256", "blake3", "hmac-sha256", "hmac-blake3"]
         },
         "scope": {
           "enum": [
@@ -143,35 +133,23 @@
                 "const": "global_public"
               }
             },
-            "required": [
-              "scope"
-            ]
+            "required": ["scope"]
           },
           "then": {
             "properties": {
               "algorithm": {
-                "enum": [
-                  "sha256",
-                  "blake3"
-                ]
+                "enum": ["sha256", "blake3"]
               }
             },
             "not": {
-              "required": [
-                "keyRef"
-              ]
+              "required": ["keyRef"]
             }
           },
           "else": {
-            "required": [
-              "keyRef"
-            ],
+            "required": ["keyRef"],
             "properties": {
               "algorithm": {
-                "enum": [
-                  "hmac-sha256",
-                  "hmac-blake3"
-                ]
+                "enum": ["hmac-sha256", "hmac-blake3"]
               }
             }
           }
@@ -181,17 +159,10 @@
     "encryption": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "mode",
-        "dedupeAllowedUnderEncryption"
-      ],
+      "required": ["mode", "dedupeAllowedUnderEncryption"],
       "properties": {
         "mode": {
-          "enum": [
-            "none",
-            "per_artifact",
-            "per_scope"
-          ]
+          "enum": ["none", "per_artifact", "per_scope"]
         },
         "keyRef": {
           "$ref": "#/$defs/id"
@@ -208,9 +179,7 @@
                 "const": "none"
               }
             },
-            "required": [
-              "mode"
-            ]
+            "required": ["mode"]
           },
           "then": {
             "properties": {
@@ -219,15 +188,11 @@
               }
             },
             "not": {
-              "required": [
-                "keyRef"
-              ]
+              "required": ["keyRef"]
             }
           },
           "else": {
-            "required": [
-              "keyRef"
-            ]
+            "required": ["keyRef"]
           }
         },
         {
@@ -237,9 +202,7 @@
                 "const": "per_artifact"
               }
             },
-            "required": [
-              "mode"
-            ]
+            "required": ["mode"]
           },
           "then": {
             "properties": {
@@ -254,14 +217,7 @@
     "storageLocator": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "backendId",
-        "trustedRootId",
-        "objectKey",
-        "scopeId",
-        "generation",
-        "immutable"
-      ],
+      "required": ["backendId", "trustedRootId", "objectKey", "scopeId", "generation", "immutable"],
       "properties": {
         "backendId": {
           "enum": [
@@ -330,10 +286,7 @@
           "maximum": 1099511627776
         },
         "compression": {
-          "enum": [
-            "none",
-            "zstd"
-          ]
+          "enum": ["none", "zstd"]
         },
         "encryption": {
           "$ref": "#/$defs/encryption"
@@ -346,11 +299,7 @@
           "format": "date-time"
         },
         "runtimeChannel": {
-          "enum": [
-            "production",
-            "stage",
-            "development"
-          ]
+          "enum": ["production", "stage", "development"]
         },
         "scopeId": {
           "type": "string",
@@ -402,20 +351,10 @@
           "$ref": "#/$defs/id"
         },
         "redactionStatus": {
-          "enum": [
-            "raw",
-            "redacted",
-            "safe_for_prompt",
-            "blocked"
-          ]
+          "enum": ["raw", "redacted", "safe_for_prompt", "blocked"]
         },
         "state": {
-          "enum": [
-            "active",
-            "externalized",
-            "released",
-            "tombstoned"
-          ]
+          "enum": ["active", "externalized", "released", "tombstoned"]
         },
         "legalHold": {
           "type": "boolean"
@@ -443,22 +382,10 @@
     "messagePayload": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "role",
-        "contentPartReferenceIds",
-        "providerGenerated",
-        "sampled"
-      ],
+      "required": ["role", "contentPartReferenceIds", "providerGenerated", "sampled"],
       "properties": {
         "role": {
-          "enum": [
-            "system",
-            "developer",
-            "user",
-            "assistant",
-            "tool",
-            "observer"
-          ]
+          "enum": ["system", "developer", "user", "assistant", "tool", "observer"]
         },
         "contentPartReferenceIds": {
           "$ref": "#/$defs/idSet"
@@ -484,11 +411,7 @@
     "toolCallPayload": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "callId",
-        "toolName",
-        "argumentsReferenceId"
-      ],
+      "required": ["callId", "toolName", "argumentsReferenceId"],
       "properties": {
         "callId": {
           "$ref": "#/$defs/id"
@@ -509,11 +432,7 @@
     "toolResultPayload": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "callId",
-        "resultReferenceIds",
-        "status"
-      ],
+      "required": ["callId", "resultReferenceIds", "status"],
       "properties": {
         "callId": {
           "$ref": "#/$defs/id"
@@ -522,12 +441,7 @@
           "$ref": "#/$defs/idSet"
         },
         "status": {
-          "enum": [
-            "ok",
-            "error",
-            "cancelled",
-            "timeout"
-          ]
+          "enum": ["ok", "error", "cancelled", "timeout"]
         },
         "errorClass": {
           "type": "string",
@@ -538,13 +452,7 @@
     "providerEventPayload": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "providerId",
-        "endpointId",
-        "modelId",
-        "direction",
-        "bodyCaptured"
-      ],
+      "required": ["providerId", "endpointId", "modelId", "direction", "bodyCaptured"],
       "properties": {
         "providerId": {
           "$ref": "#/$defs/id"
@@ -559,10 +467,7 @@
           "$ref": "#/$defs/id"
         },
         "direction": {
-          "enum": [
-            "request",
-            "response"
-          ]
+          "enum": ["request", "response"]
         },
         "bodyCaptured": {
           "type": "boolean"
@@ -571,12 +476,7 @@
           "$ref": "#/$defs/id"
         },
         "status": {
-          "enum": [
-            "ok",
-            "error",
-            "timeout",
-            "cancelled"
-          ]
+          "enum": ["ok", "error", "timeout", "cancelled"]
         }
       },
       "allOf": [
@@ -587,20 +487,14 @@
                 "const": true
               }
             },
-            "required": [
-              "bodyCaptured"
-            ]
+            "required": ["bodyCaptured"]
           },
           "then": {
-            "required": [
-              "bodyReferenceId"
-            ]
+            "required": ["bodyReferenceId"]
           },
           "else": {
             "not": {
-              "required": [
-                "bodyReferenceId"
-              ]
+              "required": ["bodyReferenceId"]
             }
           }
         }
@@ -609,10 +503,7 @@
     "artifactPayload": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "referenceIds",
-        "artifactClass"
-      ],
+      "required": ["referenceIds", "artifactClass"],
       "properties": {
         "referenceIds": {
           "$ref": "#/$defs/idSet"
@@ -720,11 +611,7 @@
           "format": "date-time"
         },
         "runtimeChannel": {
-          "enum": [
-            "production",
-            "stage",
-            "development"
-          ]
+          "enum": ["production", "stage", "development"]
         },
         "boundaryProtocolVersion": {
           "type": "string",
@@ -739,9 +626,7 @@
                 "const": "message"
               }
             },
-            "required": [
-              "kind"
-            ]
+            "required": ["kind"]
           },
           "then": {
             "properties": {
@@ -758,9 +643,7 @@
                 "const": "tool_call"
               }
             },
-            "required": [
-              "kind"
-            ]
+            "required": ["kind"]
           },
           "then": {
             "properties": {
@@ -777,9 +660,7 @@
                 "const": "tool_result"
               }
             },
-            "required": [
-              "kind"
-            ]
+            "required": ["kind"]
           },
           "then": {
             "properties": {
@@ -793,15 +674,10 @@
           "if": {
             "properties": {
               "kind": {
-                "enum": [
-                  "provider_request",
-                  "provider_response"
-                ]
+                "enum": ["provider_request", "provider_response"]
               }
             },
-            "required": [
-              "kind"
-            ]
+            "required": ["kind"]
           },
           "then": {
             "properties": {
@@ -827,9 +703,7 @@
                 ]
               }
             },
-            "required": [
-              "kind"
-            ]
+            "required": ["kind"]
           },
           "then": {
             "properties": {
@@ -910,11 +784,7 @@
           "format": "date-time"
         },
         "runtimeChannel": {
-          "enum": [
-            "production",
-            "stage",
-            "development"
-          ]
+          "enum": ["production", "stage", "development"]
         },
         "boundaryProtocolVersion": {
           "type": "string",
@@ -934,14 +804,10 @@
                 ]
               }
             },
-            "required": [
-              "edgeType"
-            ]
+            "required": ["edgeType"]
           },
           "then": {
-            "required": [
-              "branchId"
-            ]
+            "required": ["branchId"]
           }
         }
       ]
@@ -975,13 +841,7 @@
           "$ref": "#/$defs/id"
         },
         "resourceType": {
-          "enum": [
-            "artifact",
-            "reference",
-            "node",
-            "projection",
-            "archive"
-          ]
+          "enum": ["artifact", "reference", "node", "projection", "archive"]
         },
         "resourceId": {
           "$ref": "#/$defs/id"
@@ -1000,12 +860,7 @@
           ]
         },
         "state": {
-          "enum": [
-            "active",
-            "released",
-            "expired",
-            "revoked"
-          ]
+          "enum": ["active", "released", "expired", "revoked"]
         },
         "issuedAt": {
           "type": "string",
@@ -1086,14 +941,7 @@
           "$ref": "#/$defs/id"
         },
         "resourceType": {
-          "enum": [
-            "artifact",
-            "reference",
-            "node",
-            "edge",
-            "projection",
-            "archive"
-          ]
+          "enum": ["artifact", "reference", "node", "edge", "projection", "archive"]
         },
         "resourceId": {
           "$ref": "#/$defs/id"
@@ -1150,11 +998,7 @@
           "$ref": "#/$defs/id"
         },
         "status": {
-          "enum": [
-            "succeeded",
-            "partial",
-            "failed"
-          ]
+          "enum": ["succeeded", "partial", "failed"]
         },
         "scannedCount": {
           "type": "integer",
@@ -1190,12 +1034,7 @@
     "routePackage": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "packageId",
-        "endpointId",
-        "modelId",
-        "samplingProfileId"
-      ],
+      "required": ["packageId", "endpointId", "modelId", "samplingProfileId"],
       "properties": {
         "packageId": {
           "$ref": "#/$defs/id"
@@ -1287,13 +1126,7 @@
           "$ref": "#/$defs/id"
         },
         "outcome": {
-          "enum": [
-            "success",
-            "failure",
-            "timeout",
-            "cancelled",
-            "unknown"
-          ]
+          "enum": ["success", "failure", "timeout", "cancelled", "unknown"]
         },
         "qualityScore": {
           "type": "number"
@@ -1353,25 +1186,14 @@
     "histogram": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "schemaVersion",
-        "unit",
-        "binEdges",
-        "counts"
-      ],
+      "required": ["schemaVersion", "unit", "binEdges", "counts"],
       "properties": {
         "schemaVersion": {
           "type": "string",
           "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
         },
         "unit": {
-          "enum": [
-            "milliseconds",
-            "micro_usd",
-            "tokens",
-            "ratio",
-            "count"
-          ]
+          "enum": ["milliseconds", "micro_usd", "tokens", "ratio", "count"]
         },
         "binEdges": {
           "type": "array",
@@ -1419,11 +1241,7 @@
           "$ref": "#/$defs/id"
         },
         "window": {
-          "enum": [
-            "hour",
-            "day",
-            "month"
-          ]
+          "enum": ["hour", "day", "month"]
         },
         "bucketStart": {
           "type": "string",
@@ -1451,12 +1269,7 @@
         "quality": {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "mean",
-            "variance",
-            "confidenceLower",
-            "confidenceUpper"
-          ],
+          "required": ["mean", "variance", "confidenceLower", "confidenceUpper"],
           "properties": {
             "mean": {
               "type": "number"
@@ -1562,11 +1375,7 @@
           "format": "date-time"
         },
         "runtimeChannel": {
-          "enum": [
-            "production",
-            "stage",
-            "development"
-          ]
+          "enum": ["production", "stage", "development"]
         },
         "scopeId": {
           "type": "string",
@@ -1655,13 +1464,7 @@
         "parity": {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "sourceRows",
-            "targetRows",
-            "sourceHash",
-            "targetHash",
-            "passed"
-          ],
+          "required": ["sourceRows", "targetRows", "sourceHash", "targetHash", "passed"],
           "properties": {
             "sourceRows": {
               "type": "integer",
@@ -1695,11 +1498,7 @@
           "format": "date-time"
         },
         "runtimeChannel": {
-          "enum": [
-            "production",
-            "stage",
-            "development"
-          ]
+          "enum": ["production", "stage", "development"]
         },
         "scopeId": {
           "type": "string",
@@ -1767,26 +1566,13 @@
           "$ref": "#/$defs/id"
         },
         "mode": {
-          "enum": [
-            "estimate",
-            "execute"
-          ]
+          "enum": ["estimate", "execute"]
         },
         "status": {
-          "enum": [
-            "succeeded",
-            "partial",
-            "failed",
-            "cancelled"
-          ]
+          "enum": ["succeeded", "partial", "failed", "cancelled"]
         },
         "triggeredBy": {
-          "enum": [
-            "user",
-            "scheduled_policy",
-            "storage_budget",
-            "migration"
-          ]
+          "enum": ["user", "scheduled_policy", "storage_budget", "migration"]
         },
         "policyId": {
           "$ref": "#/$defs/id"
@@ -1806,13 +1592,7 @@
         "affectedCounts": {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "artifacts",
-            "references",
-            "nodes",
-            "edges",
-            "projections"
-          ],
+          "required": ["artifacts", "references", "nodes", "edges", "projections"],
           "properties": {
             "artifacts": {
               "type": "integer",
@@ -1863,11 +1643,7 @@
           "format": "date-time"
         },
         "runtimeChannel": {
-          "enum": [
-            "production",
-            "stage",
-            "development"
-          ]
+          "enum": ["production", "stage", "development"]
         },
         "scopeId": {
           "type": "string",
@@ -1906,12 +1682,7 @@
           "$ref": "#/$defs/id"
         },
         "backend": {
-          "enum": [
-            "local_disk",
-            "r2",
-            "s3_compatible",
-            "custom"
-          ]
+          "enum": ["local_disk", "r2", "s3_compatible", "custom"]
         },
         "encryptionKeyRef": {
           "$ref": "#/$defs/id"
@@ -1944,11 +1715,7 @@
           "format": "date-time"
         },
         "runtimeChannel": {
-          "enum": [
-            "production",
-            "stage",
-            "development"
-          ]
+          "enum": ["production", "stage", "development"]
         },
         "scopeId": {
           "type": "string",
@@ -1987,10 +1754,7 @@
           "$ref": "#/$defs/id"
         },
         "status": {
-          "enum": [
-            "passed",
-            "failed"
-          ]
+          "enum": ["passed", "failed"]
         },
         "sampleCount": {
           "type": "integer",
@@ -2012,11 +1776,7 @@
           "format": "date-time"
         },
         "runtimeChannel": {
-          "enum": [
-            "production",
-            "stage",
-            "development"
-          ]
+          "enum": ["production", "stage", "development"]
         },
         "scopeId": {
           "type": "string",

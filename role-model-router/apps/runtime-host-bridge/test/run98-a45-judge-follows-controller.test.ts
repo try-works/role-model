@@ -8,8 +8,8 @@ import {
   ACTIVATION_POLICY_RELATIVE_PATH,
   readLearningPolicyFile,
 } from "../src/learning-policy-file.js";
-import { createRouterPairwiseJudge } from "../src/track-b-shadow-judge-dispatch.js";
 import { createRun97PairwiseJudgeScorer } from "../src/track-b-runtime.js";
+import { createRouterPairwiseJudge } from "../src/track-b-shadow-judge-dispatch.js";
 
 /**
  * Run 98 addendum 45 J1/J2 — the pairwise judge is the configured controller.
@@ -60,8 +60,7 @@ const judgeFor = (input: {
       { endpointId: "endpoint:counterfactual", modelId: "model:counterfactual" },
     ],
     excludedEndpointIds: ["endpoint:source", "endpoint:counterfactual"],
-    judgeEndpointId:
-      input.judgeSource === "disabled" ? "" : input.controllerEndpointId,
+    judgeEndpointId: input.judgeSource === "disabled" ? "" : input.controllerEndpointId,
     judgeSource: input.judgeSource,
     judgeAssignmentUpdatedAtMs: 1234,
     taskText: "Review the diff.",
@@ -183,7 +182,7 @@ test("run98 a48: the judge assignment timestamp travels on the decision, not the
     taskText: "Review the diff.",
   });
   expect(judge).toBeDefined();
-  const decision = await judge!.dispatch({
+  const decision = await judge?.dispatch({
     requestId: "req-a48",
     channel: "stage",
     scope: "scope:a48",

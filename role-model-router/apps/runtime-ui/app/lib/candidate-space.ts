@@ -1,5 +1,5 @@
-import { formatCompactEndpointDisplayName } from "./effort-identity";
 import { CANDIDATE_SPACE_SCORING_CONFIG } from "./candidate-space-config";
+import { formatCompactEndpointDisplayName } from "./effort-identity";
 import type { RouterCandidate } from "./runtime-api";
 
 export type CandidateSpacePoint = {
@@ -206,7 +206,9 @@ function benchmarkSampleCount(candidate: RouterCandidate): number {
 }
 
 function hasEnoughBenchmarkSamples(candidate: RouterCandidate): boolean {
-  return benchmarkSampleCount(candidate) >= CANDIDATE_SPACE_SCORING_CONFIG.minimumQualityBenchmarkSamples;
+  return (
+    benchmarkSampleCount(candidate) >= CANDIDATE_SPACE_SCORING_CONFIG.minimumQualityBenchmarkSamples
+  );
 }
 
 function scoreQuality(candidate: RouterCandidate): number | null {
@@ -216,7 +218,11 @@ function scoreQuality(candidate: RouterCandidate): number | null {
    * floor the axis falls through to the other quality evidence instead of printing a score built from one
    * sample, and the count is surfaced as a tag rather than silently dropped.
    */
-  if (typeof overall === "number" && Number.isFinite(overall) && hasEnoughBenchmarkSamples(candidate)) {
+  if (
+    typeof overall === "number" &&
+    Number.isFinite(overall) &&
+    hasEnoughBenchmarkSamples(candidate)
+  ) {
     return clamp01(overall);
   }
   const fromRouting = candidate.routingQualityScore;

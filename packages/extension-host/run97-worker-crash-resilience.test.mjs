@@ -208,25 +208,18 @@ export async function run() {
     while (Date.now() < deadline && host.extensionState(extensionId).lifecycle !== "degraded") {
       await new Promise((resolve) => setTimeout(resolve, 20));
     }
-    await assert.rejects(
-      host.invoke(extensionId, envelope()),
-      (error) => {
-        const message = String(error?.message ?? "");
-        assert.match(message, /restart budget exhausted/);
-        assert.match(message, /exit code 3/, "the report must name the exit code");
-        assert.match(
-          message,
-          /sqlite open failed/,
-          "the report must carry the substantive stderr line",
-        );
-        assert.doesNotMatch(
-          message,
-          /ExperimentalWarning/,
-          "a Node warning is not a failure cause",
-        );
-        return true;
-      },
-    );
+    await assert.rejects(host.invoke(extensionId, envelope()), (error) => {
+      const message = String(error?.message ?? "");
+      assert.match(message, /restart budget exhausted/);
+      assert.match(message, /exit code 3/, "the report must name the exit code");
+      assert.match(
+        message,
+        /sqlite open failed/,
+        "the report must carry the substantive stderr line",
+      );
+      assert.doesNotMatch(message, /ExperimentalWarning/, "a Node warning is not a failure cause");
+      return true;
+    });
   } finally {
     await host.shutdown();
   }

@@ -25,7 +25,11 @@ describe("run98 a54 operator guardrail-breach route", () => {
       host: "127.0.0.1",
       port: 0,
       deviceOwnerTrust: "on",
-      operatorContext: { channel: "stage", scope: "standalone-runtime-stage", authorizationEpoch: 98 },
+      operatorContext: {
+        channel: "stage",
+        scope: "standalone-runtime-stage",
+        authorizationEpoch: 98,
+      },
       registry,
       executeChatCompletions: async () => {
         throw new Error("not used");
@@ -52,7 +56,11 @@ describe("run98 a54 operator guardrail-breach route", () => {
           body: JSON.stringify({
             scopeId: "standalone-runtime-stage",
             breachIds: ["breach:a", "breach:b"],
-            restore: { packId: "pack:x", validationReceiptId: "validation:x", policyGateId: "policy:x" },
+            restore: {
+              packId: "pack:x",
+              validationReceiptId: "validation:x",
+              policyGateId: "policy:x",
+            },
           }),
         },
       );
@@ -145,7 +153,9 @@ describe("run98 a54 operator guardrail-breach route", () => {
         },
       );
       expect(response.status).toBe(200);
-      const payload = (await response.json()) as { readonly pending?: { readonly remainingMs?: number } };
+      const payload = (await response.json()) as {
+        readonly pending?: { readonly remainingMs?: number };
+      };
       expect(payload.pending?.remainingMs).toBe(60_000);
       expect(calls).toHaveLength(1);
       expect(calls[0]).toMatchObject({ metric: "quality", windowMs: 60_000 });

@@ -254,7 +254,9 @@ test("run97 auto producer refuses replay-produced captures instead of replaying 
     expect(dispatches).toBe(1);
     expect(result.replayed).toBe(1);
     expect(result.refused).toBe(2);
-    expect(result.dispositions.map((row) => `${row.captureRef}:${row.outcome}:${row.code}`)).toEqual([
+    expect(
+      result.dispositions.map((row) => `${row.captureRef}:${row.outcome}:${row.code}`),
+    ).toEqual([
       "req-live:replayed:undefined",
       "replay-req-live-1e03652ce6770a82:refused:amplification_depth_exceeded",
       "replay-req-live-1e03652ce6770a82-branch:refused:amplification_depth_exceeded",

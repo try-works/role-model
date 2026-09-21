@@ -136,7 +136,9 @@ export function selectReplayCandidates(input: {
       ? null
       : new Set(input.healthyEndpointIds.filter((value) => value.trim().length > 0));
   const excluded = new Set(
-    (input.excludedEndpointIds ?? []).map((value) => value.trim()).filter((value) => value.length > 0),
+    (input.excludedEndpointIds ?? [])
+      .map((value) => value.trim())
+      .filter((value) => value.length > 0),
   );
   const selected: string[] = [];
   const seen = new Set<string>();
@@ -157,7 +159,9 @@ export function selectReplayCandidates(input: {
     ? [...eligible].sort((left, right) => {
         const leftDigest = createHash("sha256").update(`${rotationKey}\n${left}`).digest("hex");
         const rightDigest = createHash("sha256").update(`${rotationKey}\n${right}`).digest("hex");
-        return leftDigest === rightDigest ? left.localeCompare(right) : leftDigest.localeCompare(rightDigest);
+        return leftDigest === rightDigest
+          ? left.localeCompare(right)
+          : leftDigest.localeCompare(rightDigest);
       })
     : eligible;
   for (const endpointId of ordered) {

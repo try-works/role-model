@@ -351,7 +351,10 @@ test("run97 auto loop refuses replay-produced captures reported by the private b
       configuredEndpointIds: ["endpoint-a", "endpoint-b"],
       executor: async ({ capture }) => {
         executed.push(capture.captureRef);
-        return { terminal: true, branches: [{ endpointId: "endpoint-b", outcome: "complete" as const }] };
+        return {
+          terminal: true,
+          branches: [{ endpointId: "endpoint-b", outcome: "complete" as const }],
+        };
       },
       intervalMs: 0,
       now: () => Date.parse("2026-09-12T06:00:00Z"),
@@ -508,7 +511,7 @@ test("run98 addendum 04 a hung replay execution is bounded instead of stalling t
   }
 });
 
-  test("run97 auto loop re-reads endpoint health and never dispatches a degraded candidate", async () => {
+test("run97 auto loop re-reads endpoint health and never dispatches a degraded candidate", async () => {
   const { ledger, cleanup } = harness();
   try {
     const operations = fakeOperations(["req-health-1"]);
@@ -609,15 +612,15 @@ test("run98 addendum 04 the tick stops starting captures once its wall-clock bud
 test("run98 addendum 04 the tick budget is operator-tunable and bounded", () => {
   // No explicit value: the loop keeps its documented default.
   expect(resolveAutoReplayTickBudgetMs({})).toBeNull();
-  expect(
-    resolveAutoReplayTickBudgetMs({ ROLE_MODEL_AUTO_REPLAY_TICK_BUDGET_MS: "600000" }),
-  ).toBe(600_000);
+  expect(resolveAutoReplayTickBudgetMs({ ROLE_MODEL_AUTO_REPLAY_TICK_BUDGET_MS: "600000" })).toBe(
+    600_000,
+  );
   // Zero is meaningful: it disables the wall-clock bound.
   expect(resolveAutoReplayTickBudgetMs({ ROLE_MODEL_AUTO_REPLAY_TICK_BUDGET_MS: "0" })).toBe(0);
   // Malformed or out-of-range values fall back to the default rather than removing the bound.
   for (const raw of ["nope", "-5", "99999999", "1.5"]) {
-    expect(
-      resolveAutoReplayTickBudgetMs({ ROLE_MODEL_AUTO_REPLAY_TICK_BUDGET_MS: raw }),
-    ).toBe(DEFAULT_TICK_BUDGET_MS);
+    expect(resolveAutoReplayTickBudgetMs({ ROLE_MODEL_AUTO_REPLAY_TICK_BUDGET_MS: raw })).toBe(
+      DEFAULT_TICK_BUDGET_MS,
+    );
   }
 });

@@ -34,10 +34,10 @@ import {
   LEGACY_INLINE_CAP_BYTES,
   buildCompactRuntimeObservationStub,
   hydrateRuntimeObservationGraphPointer,
+  isDegradedCaptureObservation as isDegradedCaptureObservationRecord,
   readRuntimeObservationStorageState,
   recordRuntimeObservationGraphReference,
   resolveRuntimeObservationStoragePayload,
-  isDegradedCaptureObservation as isDegradedCaptureObservationRecord,
 } from "./legacy-migration.js";
 
 export * from "./legacy-migration.js";
@@ -3048,8 +3048,7 @@ function toRuntimeTelemetryRecord(
   // inspection payload is absent whenever capture is degraded, which left
   // `status_code` NULL and therefore excluded the row from the success metric
   // (`error_class IS NULL AND status_code >= 200 AND status_code < 400`).
-  const inspectedStatusCode =
-    observation.inspection?.request?.responseCapture?.statusCode ?? null;
+  const inspectedStatusCode = observation.inspection?.request?.responseCapture?.statusCode ?? null;
   // This mapper only handles completed executions (the failure path uses
   // `toFailureRuntimeTelemetryRecord`), so a missing inspection status still means
   // the request itself succeeded.
@@ -4159,7 +4158,9 @@ function observedSampleIdentity(sample: {
   readonly effort_source?: unknown;
 }): string {
   const present = (field: string, value: unknown) =>
-    Object.prototype.hasOwnProperty.call(sample, field) ? JSON.stringify(value ?? null) : "__absent__";
+    Object.prototype.hasOwnProperty.call(sample, field)
+      ? JSON.stringify(value ?? null)
+      : "__absent__";
   return [
     JSON.stringify(sample.endpoint_version ?? null),
     JSON.stringify(sample.model_id ?? null),
@@ -4211,9 +4212,7 @@ function rebuildObservedProfilesForEndpointIfAggregable(
     if (!profile) {
       return false;
     }
-    database
-      .prepare("DELETE FROM observed_profile_snapshots WHERE endpoint_id=?")
-      .run(endpointId);
+    database.prepare("DELETE FROM observed_profile_snapshots WHERE endpoint_id=?").run(endpointId);
     database
       .prepare(
         "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
@@ -5522,9 +5521,13 @@ export function readEndpointLatencyBuckets(input: {
       const values = grouped.get(`${endpointId}\u0000${index}`);
       if (!values || values.length < input.minimumSampleCount) continue;
       values.sort((left, right) => left - right);
+      // The last bucket is open-ended (tokens above the largest configured bound), so it has no finite upper
+      // bound; an empty bound list leaves every bucket open-ended.
+      const lastUpperBound =
+        upperBounds.length > 0 ? upperBounds[upperBounds.length - 1] : Number.POSITIVE_INFINITY;
       result.push({
         endpointId,
-        bucketUpperBoundTokens: upperBounds[index] ?? upperBounds[upperBounds.length - 1]!,
+        bucketUpperBoundTokens: upperBounds[index] ?? lastUpperBound,
         sampleCount: values.length,
         p50LatencyMs: telemetryPercentile(values, 0.5),
         p95LatencyMs: telemetryPercentile(values, 0.95),

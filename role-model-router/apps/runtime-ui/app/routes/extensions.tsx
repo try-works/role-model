@@ -126,12 +126,7 @@ const activationBoundaryNote = (extension: RuntimeExtensionStatus): string | nul
     boundary.prohibitedActions.length > 0
       ? ` ${boundary.prohibitedActions.join(" and ")} remain prohibited, so production prompts, weights, and privacy classification are unchanged.`
       : "";
-  return (
-    "Evidence-only package: it derives candidates and bounded references, and any routing " +
-    "influence is carried by promoted packs under the Learning activation policy (stage, " +
-    "cohorts, guardrails, rollback)." +
-    prohibited
-  );
+  return `Evidence-only package: it derives candidates and bounded references, and any routing influence is carried by promoted packs under the Learning activation policy (stage, cohorts, guardrails, rollback).${prohibited}`;
 };
 
 const boundaryCaption = (extension: RuntimeExtensionStatus): string | null => {

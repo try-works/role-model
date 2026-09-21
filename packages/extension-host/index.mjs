@@ -50,7 +50,15 @@ const resolveNodeWorkerExecutable = (configured = process.env.ROLE_MODEL_EXTENSI
 };
 
 class ProcessWorker {
-  constructor(moduleUrl, onExit, startupTimeoutMs, workerExecPath, extensionId, stateRoot, channel = null) {
+  constructor(
+    moduleUrl,
+    onExit,
+    startupTimeoutMs,
+    workerExecPath,
+    extensionId,
+    stateRoot,
+    channel = null,
+  ) {
     this.moduleUrl = normalizeModuleUrl(moduleUrl);
     this.onExit = onExit;
     this.startupTimeoutMs = startupTimeoutMs;
@@ -733,15 +741,17 @@ export class ExtensionHost {
       );
     }
   }
-  invoke(id, envelope) {
+  invoke(id, incomingEnvelope) {
     if (!this.#enabled) return Promise.reject(new Error("extension discovery disabled"));
     const registered = this.#workers.get(id);
     if (!registered) return Promise.reject(new Error(`unknown extension ${id}`));
     if (registered.lifecycle === "stopped" || registered.lifecycle === "stopping")
       return Promise.reject(new Error(`extension ${id} is disabled or stopped`));
-    if (this.channel && envelope && !envelope.channel) {
-      envelope = { ...envelope, channel: this.channel };
-    }
+    // The channel is stamped onto a copy rather than onto the caller's parameter object.
+    const envelope =
+      this.channel && incomingEnvelope && !incomingEnvelope.channel
+        ? { ...incomingEnvelope, channel: this.channel }
+        : incomingEnvelope;
     if (
       !envelope?.requestId ||
       !this.protocolVersions.has(envelope.protocolVersion) ||
@@ -785,7 +795,7 @@ export class ExtensionHost {
        * Run 98 addendum 48: bound the wait for a concurrency slot. Without this a saturated extension (or one
        * whose in-flight calls never answer) left every later caller pending forever with no timeout armed.
        */
-      let queueTimer = setTimeout(() => {
+      const queueTimer = setTimeout(() => {
         const index = this.#queue.indexOf(execute);
         if (index >= 0) this.#queue.splice(index, 1);
         this.#record(id, "queue_timeout", envelope);

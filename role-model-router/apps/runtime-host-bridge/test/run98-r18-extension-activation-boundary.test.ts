@@ -191,7 +191,9 @@ describe("run98 R18 extension activation boundary", () => {
       catalog: catalog as never,
       extensionRuntime: runtime,
     });
-    expect(rowFor((await reopened.listExtensions()) as readonly Row[], "knowledge-worker")).toMatchObject({
+    expect(
+      rowFor((await reopened.listExtensions()) as readonly Row[], "knowledge-worker"),
+    ).toMatchObject({
       enabledMode: "advisory",
     });
 

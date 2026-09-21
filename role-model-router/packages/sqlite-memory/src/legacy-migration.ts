@@ -2071,7 +2071,8 @@ export function buildCompactRuntimeObservationStub(
   const selectedPricingSnapshot = projectBoundedDiagnosticValue(
     telemetrySnapshot?.selectedPricingSnapshot,
   );
-  if (selectedPricingSnapshot !== undefined) snapshot.selectedPricingSnapshot = selectedPricingSnapshot;
+  if (selectedPricingSnapshot !== undefined)
+    snapshot.selectedPricingSnapshot = selectedPricingSnapshot;
   if (Object.keys(snapshot).length) stub.telemetrySnapshot = snapshot;
   return stub;
 }

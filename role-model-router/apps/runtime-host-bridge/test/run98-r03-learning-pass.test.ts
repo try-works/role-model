@@ -35,7 +35,8 @@ function group(input: {
     status: "finalized",
     comparability: {
       counterfactualCandidateRef: input.counterfactualRef ?? routePackage,
-      sourceCandidateRef: input.sourceRef ?? "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+      sourceCandidateRef:
+        input.sourceRef ?? "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
       inputRef: input.inputRef ?? `artifact:${"a".repeat(64)}`,
       policyId: "run96-routing-shadow",
       scorerSetVersion: "run96-routing-shadow-v3",
@@ -61,7 +62,8 @@ function group(input: {
       outcome: input.outcome,
       comparability: {
         counterfactualCandidateRef: input.counterfactualRef ?? routePackage,
-        sourceCandidateRef: input.sourceRef ?? "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+        sourceCandidateRef:
+          input.sourceRef ?? "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
         inputRef: input.inputRef ?? `artifact:${"a".repeat(64)}`,
         ...(input.taskTypeId ? { taskTypeId: input.taskTypeId } : {}),
       },
@@ -118,7 +120,10 @@ function passInput(overrides: Record<string, unknown> = {}) {
     },
     identity: { scorerSetVersion: "run96-routing-shadow-v3", judgeEndpointId: "endpoint:judge" },
     finalizedComparison: decisiveGroups[0].result,
-    finalizedComparisonReceipt: { payload: { kind: "evaluation_core_comparison_readback" }, signature: "sig" },
+    finalizedComparisonReceipt: {
+      payload: { kind: "evaluation_core_comparison_readback" },
+      signature: "sig",
+    },
     safetyReceipt: { payload: { kind: "knowledge_safety" }, signature: "sig" },
     evaluationAuthoritySecret: "run98-learning-pass-secret",
     nowMs: Date.parse("2026-09-14T10:00:00Z"),
@@ -142,9 +147,11 @@ function fakeRuntime(options: {
     async invoke(extensionId: string, envelope: Record<string, unknown>) {
       const capability = String(envelope.capability);
       // The Knowledge Store reads `payload`; the worker reads `value`.
-      const value = (envelope.capability === "knowledge:record-learning"
-        ? envelope.payload
-        : envelope.value ?? {}) as Record<string, unknown>;
+      const value = (
+        envelope.capability === "knowledge:record-learning"
+          ? envelope.payload
+          : (envelope.value ?? {})
+      ) as Record<string, unknown>;
       invocations.push({ extensionId, capability, value, envelope });
       if (capability === "evaluation:list-groups") return options.groups;
       if (capability === "knowledge:validate-candidate") {
@@ -323,8 +330,18 @@ test("run98 A33 S3 the summary reports its comparison graph and the pairs it nev
   const gamma = "endpoint:gamma";
   const summary = buildTrackBLearningEvidenceSummary({
     groups: [
-      group({ groupId: "edge:ab", outcome: "candidate", sourceRef: alpha, counterfactualRef: beta }),
-      group({ groupId: "edge:ab-2", outcome: "candidate", sourceRef: alpha, counterfactualRef: beta }),
+      group({
+        groupId: "edge:ab",
+        outcome: "candidate",
+        sourceRef: alpha,
+        counterfactualRef: beta,
+      }),
+      group({
+        groupId: "edge:ab-2",
+        outcome: "candidate",
+        sourceRef: alpha,
+        counterfactualRef: beta,
+      }),
       group({ groupId: "edge:ac", outcome: "source", sourceRef: alpha, counterfactualRef: gamma }),
     ],
     routePackage: alpha,
@@ -551,10 +568,12 @@ test("run98 R3 a validated candidate is promoted and both receipts are recorded"
   );
   // The Knowledge Store reads `payload`, and a bounded degradation receipt must not be
   // mistaken for a recorded receipt.
-  expect((runtime.invocations[2].envelope.payload as Record<string, unknown>).record).toMatchObject({
-    kind: "validation_receipt",
-    recordId: "validation:1",
-  });
+  expect((runtime.invocations[2].envelope.payload as Record<string, unknown>).record).toMatchObject(
+    {
+      kind: "validation_receipt",
+      recordId: "validation:1",
+    },
+  );
   const validationInput = runtime.invocations[1].value;
   expect(validationInput).toMatchObject({
     candidateId: "shadow-candidate-1",
@@ -585,7 +604,11 @@ test("run98 R3 a validated candidate is promoted and both receipts are recorded"
     .filter((entry) => entry.capability === "knowledge:record-learning")
     .map((entry) => (entry.value.record ?? {}) as Record<string, unknown>);
   expect(records.map((record) => record.kind)).toEqual(["validation_receipt", "pack"]);
-  expect(records[0]).toMatchObject({ recordId: "validation:1", state: "validate", scopeId: "standalone-runtime-stage" });
+  expect(records[0]).toMatchObject({
+    recordId: "validation:1",
+    state: "validate",
+    scopeId: "standalone-runtime-stage",
+  });
   expect(records[1]).toMatchObject({ recordId: "pack:1", state: "validated" });
 });
 
@@ -600,7 +623,11 @@ test("run99 R33 the recorded validation receipt keeps the family evidence", asyn
   const runtime = fakeRuntime({
     groups: decisiveGroups,
     validation: {
-      receipt: { receiptId: "validation:family", decision: "validate", baselineId: "baseline:family" },
+      receipt: {
+        receiptId: "validation:family",
+        decision: "validate",
+        baselineId: "baseline:family",
+      },
       promotionEligible: true,
       familyEvidence: {
         taskTypeId: "coder.review",
@@ -652,7 +679,10 @@ test("run98 R3 an insufficient-evidence decision is recorded without promoting",
 test("run98 R3 the pass fails closed without a scoring identity or durable receipt", async () => {
   const runtime = fakeRuntime({ groups: decisiveGroups });
   await expect(
-    runTrackBLearningPass(runtime, passInput({ identity: { scorerSetVersion: "", judgeEndpointId: null } })),
+    runTrackBLearningPass(
+      runtime,
+      passInput({ identity: { scorerSetVersion: "", judgeEndpointId: null } }),
+    ),
   ).rejects.toThrow(/scoring identity/);
   await expect(
     runTrackBLearningPass(fakeRuntime({ groups: decisiveGroups, validation: {} }), passInput()),
@@ -696,7 +726,10 @@ test("run98 R3 an externalized comparison-group list is decoded before the evide
     decodeResult: (_extensionId, _capability, raw) =>
       (raw as { businessOutput?: unknown }).businessOutput,
   });
-  expect(receipt).toMatchObject({ decision: "validate", validationReceiptId: "validation:externalized" });
+  expect(receipt).toMatchObject({
+    decision: "validate",
+    validationReceiptId: "validation:externalized",
+  });
   expect(seen).toEqual([
     "evaluation:list-groups",
     "knowledge:validate-candidate",
@@ -784,7 +817,11 @@ test("run99 R33 D6 the family states its propensity coverage and qualifies the c
   });
 
   const mixed = buildTrackBLearningEvidenceSummary({
-    groups: [traced("t1", "controlled_exploration", 0.25), traced("t2", "policy_randomized", 0.5), untraced],
+    groups: [
+      traced("t1", "controlled_exploration", 0.25),
+      traced("t2", "policy_randomized", 0.5),
+      untraced,
+    ],
     routePackage,
     nowMs,
     evidenceMaxAgeMs: 30 * 24 * 60 * 60 * 1_000,

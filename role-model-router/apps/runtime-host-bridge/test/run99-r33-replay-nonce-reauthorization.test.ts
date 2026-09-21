@@ -119,7 +119,9 @@ describe("run99 R33 replay authorization nonce re-authorization", () => {
       // The producer resumes the same prepared envelope; the nonce is the same, the dispatch identity
       // is the same, and no receipt was ever recorded, so the retry must be authorized.
       const retryAuthorization = await live.authorize({ envelope: attempt });
-      await expect(live.dispatch(attempt, { authorization: retryAuthorization })).resolves.toMatchObject({
+      await expect(
+        live.dispatch(attempt, { authorization: retryAuthorization }),
+      ).resolves.toMatchObject({
         dispatchReceiptId: "dispatch:nonce-reauthorization",
       });
       expect(dispatches).toBe(2);

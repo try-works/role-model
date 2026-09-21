@@ -43,7 +43,11 @@ describe("run98 A33 S2 judge position consistency", () => {
           modeAgreement: index !== 0,
         });
       }
-      ledger.record({ judgeEndpointId: "endpoint:judge-b", orderCheck: true, orderDisagreement: true });
+      ledger.record({
+        judgeEndpointId: "endpoint:judge-b",
+        orderCheck: true,
+        orderDisagreement: true,
+      });
       const summary = ledger.summary();
       expect(summary.find((row) => row.judgeEndpointId === "endpoint:judge-a")).toMatchObject({
         orderChecks: 9,
@@ -64,7 +68,11 @@ describe("run98 A33 S2 judge position consistency", () => {
     withLedger((ledgerPath) => {
       const first = createJudgeConsistencyLedger({ filePath: ledgerPath });
       first.record({ judgeEndpointId: "endpoint:judge-a", orderCheck: true });
-      first.record({ judgeEndpointId: "endpoint:judge-a", orderCheck: true, orderDisagreement: true });
+      first.record({
+        judgeEndpointId: "endpoint:judge-a",
+        orderCheck: true,
+        orderDisagreement: true,
+      });
       const reopened = createJudgeConsistencyLedger({ filePath: ledgerPath });
       expect(reopened.summary("endpoint:judge-a")).toMatchObject([
         { orderChecks: 2, orderDisagreements: 1, consistency: 0.5 },
@@ -97,7 +105,10 @@ describe("run98 A33 S2 judge position consistency", () => {
     expect(thin.sufficientSample).toBe(false);
     expect(thin.belowFloor).toBe(false);
 
-    const empty = evaluateJudgePositionConsistency({ row: null, floor: DEFAULT_POSITION_CONSISTENCY_FLOOR });
+    const empty = evaluateJudgePositionConsistency({
+      row: null,
+      floor: DEFAULT_POSITION_CONSISTENCY_FLOOR,
+    });
     expect(empty).toEqual({
       consistency: null,
       checks: 0,

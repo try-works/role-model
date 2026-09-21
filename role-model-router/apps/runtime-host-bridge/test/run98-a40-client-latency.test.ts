@@ -40,7 +40,9 @@ function stubChatResult() {
 
 test("a40 L1: the handler reports the client-visible duration after the response is delivered", async () => {
   const calls: Array<{ readonly requestId: string; readonly requestLatencyMs: number }> = [];
-  const server = await (bridge as unknown as { startBridgeServer: StartBridgeServer }).startBridgeServer({
+  const server = await (
+    bridge as unknown as { startBridgeServer: StartBridgeServer }
+  ).startBridgeServer({
     host: "127.0.0.1",
     port: 0,
     registry: emptyRegistry,
@@ -76,7 +78,9 @@ test("a40 L1: the handler reports the client-visible duration after the response
 
 test("a40 L1: a request whose execution fails still reports the duration the client waited", async () => {
   const calls: Array<{ readonly requestId: string; readonly requestLatencyMs: number }> = [];
-  const server = await (bridge as unknown as { startBridgeServer: StartBridgeServer }).startBridgeServer({
+  const server = await (
+    bridge as unknown as { startBridgeServer: StartBridgeServer }
+  ).startBridgeServer({
     host: "127.0.0.1",
     port: 0,
     registry: emptyRegistry,

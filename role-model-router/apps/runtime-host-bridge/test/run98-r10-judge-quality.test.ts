@@ -1,14 +1,14 @@
 import { expect, test } from "vitest";
 
 import {
+  PairwiseJudgeOrderDisagreementError,
+  createRouterPairwiseJudge,
+} from "../src/track-b-shadow-judge-dispatch.js";
+import {
   buildPairwiseJudgeMessages,
   pairwiseJudgePresentation,
   parsePairwiseJudgeResponse,
 } from "../src/track-b-shadow-judge.js";
-import {
-  PairwiseJudgeOrderDisagreementError,
-  createRouterPairwiseJudge,
-} from "../src/track-b-shadow-judge-dispatch.js";
 
 /**
  * Run 98 R10 - judge quality: identity-blind mode, agreement measurement, and bounded
@@ -127,7 +127,7 @@ test("AC-R10-01 agreement with the identified judge is measured and recorded", a
     recordJudgeObservation: (row) => observations.push(row as unknown as Record<string, unknown>),
   });
   expect(judge?.mode).toBe("identity_blind");
-  const decision = await judge!.dispatch(request);
+  const decision = await judge?.dispatch(request);
   expect(decision).toMatchObject({
     winner: "source",
     judgeMode: "identity_blind",
@@ -139,15 +139,12 @@ test("AC-R10-01 agreement with the identified judge is measured and recorded", a
   expect(observations.some((row) => row.agreement === true)).toBe(true);
 
   const disagreeing = createRouterPairwiseJudge({
-    ...judgeRouter(
-      ['{"winner":"A","confidence":0.8}', '{"winner":"B","confidence":0.7}'],
-      [],
-    ),
+    ...judgeRouter(['{"winner":"A","confidence":0.8}', '{"winner":"B","confidence":0.7}'], []),
     mode: "identity_blind",
     measureAgreement: true,
     recordJudgeObservation: (row) => observations.push(row as unknown as Record<string, unknown>),
   });
-  const disagreeingDecision = await disagreeing!.dispatch(request);
+  const disagreeingDecision = await disagreeing?.dispatch(request);
   expect(disagreeingDecision?.judgeModeAgreement).toBe(false);
   expect(observations.some((row) => row.agreement === false)).toBe(true);
 });
@@ -170,10 +167,10 @@ test("AC-R10-02 dual-order disagreement fails closed with a typed reason when st
     orderAggregation: "fails_closed",
     recordJudgeObservation: (row) => observations.push(row as unknown as Record<string, unknown>),
   });
-  await expect(judge!.dispatch(request)).rejects.toBeInstanceOf(
+  await expect(judge?.dispatch(request)).rejects.toBeInstanceOf(
     PairwiseJudgeOrderDisagreementError,
   );
-  await expect(judge!.dispatch(request)).rejects.toMatchObject({
+  await expect(judge?.dispatch(request)).rejects.toMatchObject({
     code: "position_order_disagreement",
   });
   expect(observations.some((row) => row.outcome === "order_disagreement")).toBe(true);
@@ -189,7 +186,7 @@ test("AC-R10-02 dual-order agreement yields the decided winner with both orders 
     ),
     orderPolicy: "dual_order",
   });
-  const decision = await judge!.dispatch(request);
+  const decision = await judge?.dispatch(request);
   expect(decision?.winner).toBe("source");
   expect(calls).toHaveLength(2);
   expect(calls[0]?.requestId).not.toBe(calls[1]?.requestId);
@@ -197,5 +194,5 @@ test("AC-R10-02 dual-order agreement yields the decided winner with both orders 
 
 test("AC-R10-02 an unparseable judge response still fails closed", async () => {
   const judge = createRouterPairwiseJudge({ ...judgeRouter(["I cannot decide"], []) });
-  await expect(judge!.dispatch(request)).rejects.toThrow(/unparseable/i);
+  await expect(judge?.dispatch(request)).rejects.toThrow(/unparseable/i);
 });

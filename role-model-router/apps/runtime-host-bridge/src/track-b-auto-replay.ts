@@ -93,7 +93,8 @@ export function isReplayJobLeasedFailure(status: number, body: string): boolean 
 
 export async function retryLeasedReplayDispatch<TValue>(input: {
   readonly dispatch: () => Promise<
-    { readonly ok: true; readonly value: TValue } | { readonly ok: false; readonly status: number; readonly body: string }
+    | { readonly ok: true; readonly value: TValue }
+    | { readonly ok: false; readonly status: number; readonly body: string }
   >;
   readonly deadlineAtMs: number;
   readonly now?: () => number;
@@ -105,9 +106,13 @@ export async function retryLeasedReplayDispatch<TValue>(input: {
    * has a durable job to drive.
    */
   readonly retryable?: (failure: { readonly status: number; readonly body: string }) => boolean;
-}): Promise<{ readonly value: TValue | null; readonly attempts: number; readonly lastFailure: string | null }> {
+}): Promise<{
+  readonly value: TValue | null;
+  readonly attempts: number;
+  readonly lastFailure: string | null;
+}> {
   const now = input.now ?? (() => Date.now());
-  const sleep = input.sleep ?? ((ms: number) => new Promise(resolve => setTimeout(resolve, ms)));
+  const sleep = input.sleep ?? ((ms: number) => new Promise((resolve) => setTimeout(resolve, ms)));
   let attempts = 0;
   let lastFailure: string | null = null;
   for (;;) {
@@ -121,9 +126,8 @@ export async function retryLeasedReplayDispatch<TValue>(input: {
     if (!retryable) {
       return { value: null, attempts, lastFailure };
     }
-    const delay = REPLAY_LEASE_RETRY_DELAYS_MS[
-      Math.min(attempts - 1, REPLAY_LEASE_RETRY_DELAYS_MS.length - 1)
-    ];
+    const delay =
+      REPLAY_LEASE_RETRY_DELAYS_MS[Math.min(attempts - 1, REPLAY_LEASE_RETRY_DELAYS_MS.length - 1)];
     if (now() + delay >= input.deadlineAtMs) {
       return { value: null, attempts, lastFailure };
     }

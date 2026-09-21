@@ -42,7 +42,11 @@ function stateRootWithPayload(
 
 describe("run99 R28 externalized operator readback", () => {
   test("reads the payload back from the worker store when only the transfer marker survived", () => {
-    const payload = { schemaVersion: "role-model.route-package-rollout-state.v1", activePackageId: "pack-r28", cohortPercent: 10 };
+    const payload = {
+      schemaVersion: "role-model.route-package-rollout-state.v1",
+      activePackageId: "pack-r28",
+      cohortPercent: 10,
+    };
     const space = stateRootWithPayload(payload);
     try {
       const decoded = decodeExternalizedOperatorReadback({

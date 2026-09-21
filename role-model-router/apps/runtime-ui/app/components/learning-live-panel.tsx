@@ -1,7 +1,6 @@
 import { Activity, Gauge } from "lucide-react";
 import type { ReactElement } from "react";
 
-import { EmptyState, ErrorState, LoadingState, StatusPill } from "./page-primitives";
 import {
   type LearningActivityView,
   formatCompact,
@@ -11,6 +10,7 @@ import {
 // (`replay_handoff_evaluation_pending`). This maps a disposition into operator copy and keeps the
 // raw vocabulary available, so a handed-off capture never reads as a failed replay.
 import { describeReplayDisposition } from "../lib/replay-disposition-copy";
+import { EmptyState, ErrorState, LoadingState, StatusPill } from "./page-primitives";
 
 /**
  * Run 99 - the Learning live panel, modelled on the reference "Context window" gauge plus the
@@ -47,14 +47,23 @@ function toneFor(outcome: string): "success" | "warning" | "error" | "neutral" {
 /**
  * Segmented radial gauge: 44 ticks across a 200 degree arc, filled to `percent`.
  */
-function BudgetArc({ percent, used, limit }: { readonly percent: number; readonly used: number; readonly limit: number }): ReactElement {
+function BudgetArc({
+  percent,
+  used,
+  limit,
+}: { readonly percent: number; readonly used: number; readonly limit: number }): ReactElement {
   const ticks = 44;
   const startAngle = 160;
   const sweep = 220;
   const filled = Math.round((Math.min(100, Math.max(0, percent)) / 100) * ticks);
   return (
     <div className="relative flex h-[168px] items-center justify-center">
-      <svg viewBox="0 0 220 150" className="h-full w-full" role="img" aria-label={`${used} of ${limit} dispatches used`}>
+      <svg
+        viewBox="0 0 220 150"
+        className="h-full w-full"
+        role="img"
+        aria-label={`${used} of ${limit} dispatches used`}
+      >
         {Array.from({ length: ticks }, (_, index) => {
           const angle = ((startAngle + (sweep / (ticks - 1)) * index) * Math.PI) / 180;
           const outer = 96;
@@ -80,8 +89,12 @@ function BudgetArc({ percent, used, limit }: { readonly percent: number; readonl
         })}
       </svg>
       <div className="pointer-events-none absolute inset-x-0 bottom-[18px] text-center">
-        <div className="font-mono text-3xl font-semibold text-[var(--rm-fg)]">{formatCompact(used)}</div>
-        <div className="text-xs text-[var(--rm-fg-muted)]">of {formatCompact(limit)} dispatches · {Math.round(percent)}% used</div>
+        <div className="font-mono text-3xl font-semibold text-[var(--rm-fg)]">
+          {formatCompact(used)}
+        </div>
+        <div className="text-xs text-[var(--rm-fg-muted)]">
+          of {formatCompact(limit)} dispatches · {Math.round(percent)}% used
+        </div>
       </div>
     </div>
   );
@@ -102,12 +115,20 @@ export function LearningLivePanelView({
 }): ReactElement {
   const anyActive = view.pipeline.some((stage) => stage.active);
   const observed = formatRelativeAge(view.observedAtMs, nowMs);
-  const unauthorized = Boolean(error && /401|operator_authentication_required|unauthorized/i.test(error));
+  const unauthorized = Boolean(
+    error && /401|operator_authentication_required|unauthorized/i.test(error),
+  );
   // An unreadable state is never "idle": say what is actually true.
-  const status: { readonly tone: "success" | "neutral" | "error" | "warning"; readonly label: string } = loading
+  const status: {
+    readonly tone: "success" | "neutral" | "error" | "warning";
+    readonly label: string;
+  } = loading
     ? { tone: "neutral", label: "loading" }
     : error
-      ? { tone: unauthorized ? "warning" : "error", label: unauthorized ? "token required" : "unavailable" }
+      ? {
+          tone: unauthorized ? "warning" : "error",
+          label: unauthorized ? "token required" : "unavailable",
+        }
       : view.available
         ? { tone: anyActive ? "success" : "neutral", label: anyActive ? "running" : "idle" }
         : { tone: "neutral", label: "no readback" };
@@ -136,7 +157,9 @@ export function LearningLivePanelView({
             <Activity size={16} aria-hidden />
           </span>
           <div className="space-y-1">
-            <h2 className="text-sm font-semibold text-[var(--rm-fg)]">Live replay &amp; evaluation</h2>
+            <h2 className="text-sm font-semibold text-[var(--rm-fg)]">
+              Live replay &amp; evaluation
+            </h2>
             <p className="font-mono text-xs text-[var(--rm-fg-muted)]">{metadata}</p>
           </div>
         </div>
@@ -168,7 +191,9 @@ export function LearningLivePanelView({
                     <span
                       aria-hidden
                       className="h-2 w-2 rounded-full"
-                      style={{ background: stage.active ? "var(--rm-success)" : "var(--rm-border-strong)" }}
+                      style={{
+                        background: stage.active ? "var(--rm-success)" : "var(--rm-border-strong)",
+                      }}
                     />
                     <span className="font-mono text-xs text-[var(--rm-fg)]">{stage.label}</span>
                   </div>
@@ -196,7 +221,8 @@ export function LearningLivePanelView({
                     counterfactuals
                   </dt>
                   <dd className="font-mono text-xs text-[var(--rm-fg)]">
-                    {formatCompact(view.budget.counterfactuals.used)} / {formatCompact(view.budget.counterfactuals.limit)}
+                    {formatCompact(view.budget.counterfactuals.used)} /{" "}
+                    {formatCompact(view.budget.counterfactuals.limit)}
                   </dd>
                 </div>
                 {view.budget.byKind.map((kind) => (
@@ -212,7 +238,9 @@ export function LearningLivePanelView({
           </div>
 
           <div>
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--rm-fg-muted)]">Recent events</h3>
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--rm-fg-muted)]">
+              Recent events
+            </h3>
             {view.recent.length === 0 ? (
               <EmptyState label="No replay, evaluation or learning event in the window." />
             ) : (
@@ -223,28 +251,37 @@ export function LearningLivePanelView({
                     detail: event.detail,
                   });
                   return (
-                  <li
-                    key={`${event.kind}:${event.id}:${event.atMs}`}
-                    className="flex items-center gap-3 border-b border-[var(--rm-border)] py-1.5 last:border-b-0"
-                    title={disposition.explanation}
-                    // Run 98 addendum 24: the raw disposition vocabulary stays in the DOM (and the
-                    // detail line below keeps it visible) while the pill renders operator copy.
-                    data-outcome={event.outcome}
-                  >
-                    <span className="w-16 shrink-0 font-mono text-xs text-[var(--rm-fg-muted)]">
-                      {new Date(event.atMs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-                    </span>
-                    <span className="w-16 shrink-0 font-mono text-xs text-[var(--rm-fg-muted)]">
-                      {KIND_LABEL[event.kind] ?? event.kind}
-                    </span>
-                    <span className="min-w-0 flex-1 truncate font-mono text-xs text-[var(--rm-fg)]" title={event.id}>
-                      {event.id}
-                    </span>
-                    {event.detail ? (
-                      <span className="hidden shrink-0 font-mono text-xs text-[var(--rm-fg-muted)] sm:block">{event.detail}</span>
-                    ) : null}
-                    <StatusPill tone={disposition.tone}>{disposition.label}</StatusPill>
-                  </li>
+                    <li
+                      key={`${event.kind}:${event.id}:${event.atMs}`}
+                      className="flex items-center gap-3 border-b border-[var(--rm-border)] py-1.5 last:border-b-0"
+                      title={disposition.explanation}
+                      // Run 98 addendum 24: the raw disposition vocabulary stays in the DOM (and the
+                      // detail line below keeps it visible) while the pill renders operator copy.
+                      data-outcome={event.outcome}
+                    >
+                      <span className="w-16 shrink-0 font-mono text-xs text-[var(--rm-fg-muted)]">
+                        {new Date(event.atMs).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                        })}
+                      </span>
+                      <span className="w-16 shrink-0 font-mono text-xs text-[var(--rm-fg-muted)]">
+                        {KIND_LABEL[event.kind] ?? event.kind}
+                      </span>
+                      <span
+                        className="min-w-0 flex-1 truncate font-mono text-xs text-[var(--rm-fg)]"
+                        title={event.id}
+                      >
+                        {event.id}
+                      </span>
+                      {event.detail ? (
+                        <span className="hidden shrink-0 font-mono text-xs text-[var(--rm-fg-muted)] sm:block">
+                          {event.detail}
+                        </span>
+                      ) : null}
+                      <StatusPill tone={disposition.tone}>{disposition.label}</StatusPill>
+                    </li>
                   );
                 })}
               </ul>

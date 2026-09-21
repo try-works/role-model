@@ -114,13 +114,21 @@ test("run98 a44 s4: the policy readback carries the router resolution without mu
   expect(merged.policyVersion).toBe(33);
   expect(merged.digest).toBe("sha256:stored");
   expect(merged.routerResolution).toEqual(resolution);
-  expect(payload).toEqual({ policyVersion: 33, digest: "sha256:stored", effective: { stage: "S4" } });
+  expect(payload).toEqual({
+    policyVersion: 33,
+    digest: "sha256:stored",
+    effective: { stage: "S4" },
+  });
 
   // A resolver that throws, or answers nothing, must never break the readback.
-  expect(attachRouterPolicyResolution(payload, () => {
-    throw new Error("resolver exploded");
-  })).toMatchObject({ policyVersion: 33 });
-  expect(attachRouterPolicyResolution(payload, () => undefined)).toMatchObject({ policyVersion: 33 });
+  expect(
+    attachRouterPolicyResolution(payload, () => {
+      throw new Error("resolver exploded");
+    }),
+  ).toMatchObject({ policyVersion: 33 });
+  expect(attachRouterPolicyResolution(payload, () => undefined)).toMatchObject({
+    policyVersion: 33,
+  });
   expect(attachRouterPolicyResolution(null, () => resolution)).toBeNull();
 });
 
@@ -144,7 +152,9 @@ test("run98 a44 s4: the operator readback route serves the merged resolution", a
     resolveLearningPolicySource: () => resolution,
   });
   try {
-    const response = await fetch(`http://127.0.0.1:${server.port}/api/role-model/operator/learning/policy`);
+    const response = await fetch(
+      `http://127.0.0.1:${server.port}/api/role-model/operator/learning/policy`,
+    );
     expect(response.status).toBe(200);
     const body = (await response.json()) as Record<string, unknown>;
     expect(body.policyVersion).toBe(33);

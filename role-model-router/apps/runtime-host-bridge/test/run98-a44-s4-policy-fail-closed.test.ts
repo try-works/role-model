@@ -69,12 +69,16 @@ describe("run98 a44 s4 policy file fail-closed", () => {
     expect(truncated?.degraded?.reason).toBe("policy_source_unreadable");
 
     const unknownVersion = readLearningPolicyFile({
-      repoRoot: withPolicy(policyDocument({ schemaVersion: "role-model.route-learning-activation-policy.v9" })),
+      repoRoot: withPolicy(
+        policyDocument({ schemaVersion: "role-model.route-learning-activation-policy.v9" }),
+      ),
       channel: "stage",
     });
     expect(unknownVersion?.effective.stage).toBe("S0");
     expect(unknownVersion?.degraded?.reason).toBe("policy_source_unknown_version");
-    expect(unknownVersion?.degraded?.version).toBe("role-model.route-learning-activation-policy.v9");
+    expect(unknownVersion?.degraded?.version).toBe(
+      "role-model.route-learning-activation-policy.v9",
+    );
   });
 
   test("a bound-violating or unknown-valued file resolves to the base route and names the field", () => {

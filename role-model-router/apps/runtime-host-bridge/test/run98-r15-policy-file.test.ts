@@ -100,7 +100,9 @@ describe("run98 R15 packaged policy file", () => {
       effective: { stage: "S2", cohortPercent: 100, scoreBand: 0.05, minAdvisoryConfidence: 0.7 },
     });
     expect(stageChannel?.digest).toMatch(/^sha256:[a-f0-9]{64}$/);
-    expect(readLearningPolicyFile({ repoRoot: root, channel: "production" })?.effective.stage).toBe("S0");
+    expect(readLearningPolicyFile({ repoRoot: root, channel: "production" })?.effective.stage).toBe(
+      "S0",
+    );
     // Run 98 R10: the judge configuration resolves from the same versioned policy record.
     expect(readLearningPolicyFile({ repoRoot: root, channel: "stage" })?.effective).toMatchObject({
       judgeMode: "identified",
@@ -118,7 +120,10 @@ describe("run98 R15 packaged policy file", () => {
   test("run98 a45 the judge resolves to the controller and a retired endpoint designation is not honored", () => {
     const designated = writePolicy({
       ...policy(),
-      global: { ...policy().global, judgeEndpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-high" },
+      global: {
+        ...policy().global,
+        judgeEndpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-high",
+      },
     });
     const designatedEffective = readLearningPolicyFile({
       repoRoot: designated,
@@ -195,7 +200,9 @@ describe("run98 R15 packaged policy file", () => {
       channels: { stage: { stage: "S9" } },
     });
     // An unknown enum value degrades the record and the fail-closed default stage applies — never a wider one.
-    expect(readLearningPolicyFile({ repoRoot: unknownStage, channel: "stage" })?.effective.stage).toBe("S0");
+    expect(
+      readLearningPolicyFile({ repoRoot: unknownStage, channel: "stage" })?.effective.stage,
+    ).toBe("S0");
   });
 
   test("run98 R19 resolves the predeclared promotion protocol from the same policy record", () => {
@@ -223,14 +230,16 @@ describe("run98 R15 packaged policy file", () => {
     // The legacy name of the same value still resolves, and the documented defaults apply when
     // the config predates the promotion protocol.
     const legacy = writePolicy(policy({ qualityClaimedImprovement: 0.07 }));
-    expect(readLearningPolicyFile({ repoRoot: legacy, channel: "stage" })?.effective).toMatchObject({
-      minimumPracticalDelta: 0.07,
-      promotionIntervalLevel: 0.95,
-      promotionResamples: 10000,
-      promotionBootstrapSeed: 0,
-      multiplicityAdjustment: "holm_bonferroni",
-      promotionSelectionFamilySize: 1,
-    });
+    expect(readLearningPolicyFile({ repoRoot: legacy, channel: "stage" })?.effective).toMatchObject(
+      {
+        minimumPracticalDelta: 0.07,
+        promotionIntervalLevel: 0.95,
+        promotionResamples: 10000,
+        promotionBootstrapSeed: 0,
+        multiplicityAdjustment: "holm_bonferroni",
+        promotionSelectionFamilySize: 1,
+      },
+    );
 
     /**
      * An out-of-bounds value never widens the gate. The document bounds reject the record (the whole record,
@@ -264,7 +273,11 @@ describe("run99 R23 durable operator policy state", () => {
   test("the durable state governs live routing over the staged file", () => {
     const repoRoot = writePolicy({
       ...policy(),
-      channels: { development: { stage: "S1" }, stage: { stage: "S1" }, production: { stage: "S0" } },
+      channels: {
+        development: { stage: "S1" },
+        stage: { stage: "S1" },
+        production: { stage: "S0" },
+      },
     });
     const stateRoot = writePolicyState(
       makeRoot("run99-r23-state-"),
@@ -304,10 +317,7 @@ describe("run99 R23 durable operator policy state", () => {
         .stage,
     ).toBe("S2");
 
-    const brokenStateRoot = writePolicyState(
-      makeRoot("run99-r23-broken-state-"),
-      "{ not json",
-    );
+    const brokenStateRoot = writePolicyState(makeRoot("run99-r23-broken-state-"), "{ not json");
     expect(
       readLearningPolicyFile({ repoRoot, stateRoot: brokenStateRoot, channel: "stage" })?.effective
         .stage,
@@ -328,8 +338,8 @@ describe("run99 R23 durable operator policy state", () => {
       policyState({ ...policyDocument(), schemaVersion: "role-model.other.v9" }),
     );
     expect(
-      readLearningPolicyFile({ repoRoot, stateRoot: wrongDocumentRoot, channel: "stage" })?.effective
-        .stage,
+      readLearningPolicyFile({ repoRoot, stateRoot: wrongDocumentRoot, channel: "stage" })
+        ?.effective.stage,
     ).toBe("S2");
   });
 
@@ -344,7 +354,11 @@ describe("run99 R23 durable operator policy state", () => {
     );
     const repoRoot = writePolicy({
       ...policy(),
-      channels: { development: { stage: "S1" }, stage: { stage: "S1" }, production: { stage: "S0" } },
+      channels: {
+        development: { stage: "S1" },
+        stage: { stage: "S1" },
+        production: { stage: "S0" },
+      },
     });
 
     expect(

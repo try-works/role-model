@@ -5,7 +5,10 @@ const outDir = process.argv[3] ?? "E:\\tmp\\p99";
 const base = process.argv[4] ?? "http://127.0.0.1:3457";
 
 const browser = await chromium.launch();
-const context = await browser.newContext({ viewport: { width: 1560, height: 1200 }, colorScheme: "dark" });
+const context = await browser.newContext({
+  viewport: { width: 1560, height: 1200 },
+  colorScheme: "dark",
+});
 await context.addInitScript(
   ([storageKey, value]) => {
     window.localStorage.setItem(storageKey, value);
@@ -31,17 +34,26 @@ await page.screenshot({ path: `${outDir}\\run99-learning-live.png`, fullPage: tr
 const overviewText = await page.locator("body").innerText();
 
 // Without an operator token the readbacks still work on the loopback origin (run 99).
-const anonymous = await browser.newContext({ viewport: { width: 1560, height: 1200 }, colorScheme: "dark" });
+const anonymous = await browser.newContext({
+  viewport: { width: 1560, height: 1200 },
+  colorScheme: "dark",
+});
 const anonymousPage = await anonymous.newPage();
 await anonymousPage.goto(`${base}/app/learning`, { waitUntil: "domcontentloaded" });
 await anonymousPage.getByText("Live replay & evaluation").waitFor({ timeout: 45000 });
 await anonymousPage.waitForTimeout(1500);
-await anonymousPage.screenshot({ path: `${outDir}\\run99-learning-live-no-token.png`, fullPage: true });
+await anonymousPage.screenshot({
+  path: `${outDir}\\run99-learning-live-no-token.png`,
+  fullPage: true,
+});
 const anonymousText = await anonymousPage.locator("body").innerText();
 await anonymousPage.goto(`${base}/app/learning/history`, { waitUntil: "domcontentloaded" });
 await anonymousPage.getByText("Activity by bucket").waitFor({ timeout: 45000 });
 await anonymousPage.waitForTimeout(1500);
-await anonymousPage.screenshot({ path: `${outDir}\\run99-learning-history-no-token.png`, fullPage: true });
+await anonymousPage.screenshot({
+  path: `${outDir}\\run99-learning-history-no-token.png`,
+  fullPage: true,
+});
 const anonymousHistoryText = await anonymousPage.locator("body").innerText();
 
 await browser.close();
@@ -55,8 +67,12 @@ console.log(
       historyNumbers: historyText.match(/\b(156|1970|344)\b/g) ?? [],
       liveHasPanel: overviewText.includes("Live replay & evaluation"),
       liveHasPipeline: overviewText.includes("Learner"),
-      noTokenLiveReadsWork: !anonymousText.includes("No value is fabricated") && /\b(idle|running)\b/.test(anonymousText),
-      noTokenHistoryReadsWork: !anonymousHistoryText.includes("No value is fabricated") && anonymousHistoryText.includes("Decisive comparison mix"),
+      noTokenLiveReadsWork:
+        !anonymousText.includes("No value is fabricated") &&
+        /\b(idle|running)\b/.test(anonymousText),
+      noTokenHistoryReadsWork:
+        !anonymousHistoryText.includes("No value is fabricated") &&
+        anonymousHistoryText.includes("Decisive comparison mix"),
       noTokenHistoryNumbers: anonymousHistoryText.match(/\b(156|1970|344)\b/g) ?? [],
       consoleErrors: errors.slice(0, 5),
     },

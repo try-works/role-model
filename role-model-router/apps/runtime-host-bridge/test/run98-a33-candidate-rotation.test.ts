@@ -18,13 +18,15 @@ const configured = ["endpoint:alpha", "endpoint:beta", "endpoint:gamma", "endpoi
 describe("run98 A33 S3 replay candidate rotation", () => {
   test("different captures select different counterfactuals", () => {
     const selected = new Set(
-      Array.from({ length: 12 }, (_, index) =>
-        selectReplayCandidates({
-          configuredEndpointIds: configured,
-          sourceEndpointId: "endpoint:source",
-          rotationKey: `capture:${index}`,
-          cap: 1,
-        })[0],
+      Array.from(
+        { length: 12 },
+        (_, index) =>
+          selectReplayCandidates({
+            configuredEndpointIds: configured,
+            sourceEndpointId: "endpoint:source",
+            rotationKey: `capture:${index}`,
+            cap: 1,
+          })[0],
       ),
     );
     expect(selected.size).toBeGreaterThan(1);

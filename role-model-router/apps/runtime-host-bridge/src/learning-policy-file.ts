@@ -3,8 +3,8 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 
 import {
-  resolveRoutingLatencySelectionPolicy,
   type ResolvedRoutingLatencySelectionPolicy,
+  resolveRoutingLatencySelectionPolicy,
 } from "./routing-latency-policy.js";
 
 /**
@@ -25,8 +25,7 @@ export const ACTIVATION_POLICY_RELATIVE_PATH = "shared/route-learning-activation
  * page. The packaged host resolves it first, so a UI policy change actually reaches live
  * routing instead of only updating a record that no router reads.
  */
-export const LEARNING_POLICY_STATE_SCHEMA_VERSION =
-  "role-model.route-learning-policy-state.v1";
+export const LEARNING_POLICY_STATE_SCHEMA_VERSION = "role-model.route-learning-policy-state.v1";
 export const LEARNING_POLICY_STATE_RELATIVE_PATH = "learning/activation-policy-state.json";
 
 export type ActivationStage = "S0" | "S1" | "S2" | "S3" | "S4";
@@ -222,7 +221,9 @@ function baseRouteSnapshot(receipt: LearningPolicyDegradation): LearningPolicySn
 }
 
 const asRecord = (value: unknown): Record<string, unknown> =>
-  value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+  value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
 
 const finiteOr = (value: unknown, fallback: number): number =>
   typeof value === "number" && Number.isFinite(value) ? value : fallback;
@@ -251,7 +252,11 @@ type PolicySourceResolution =
 const degradation = (
   reason: LearningPolicyDegradationReason,
   detail: string,
-  extra: { readonly field?: string | null; readonly version?: string | null; readonly source?: string | null } = {},
+  extra: {
+    readonly field?: string | null;
+    readonly version?: string | null;
+    readonly source?: string | null;
+  } = {},
 ): LearningPolicyDegradation => ({
   reason,
   detail,
@@ -296,11 +301,13 @@ export function resolveLearningPolicyStateRoot(input: {
 }
 
 /** The durable operator state is the control plane; a foreign or damaged file is ignored. */
-function resolveDurablePolicyState(
-  stateRoot: string | null | undefined,
-): PolicySourceResolution {
+function resolveDurablePolicyState(stateRoot: string | null | undefined): PolicySourceResolution {
   if (typeof stateRoot !== "string" || !stateRoot.trim()) {
-    return { ok: false, optional: true, degradation: degradation("policy_source_missing", "no policy state root is configured") };
+    return {
+      ok: false,
+      optional: true,
+      degradation: degradation("policy_source_missing", "no policy state root is configured"),
+    };
   }
   const statePath = path.join(stateRoot, LEARNING_POLICY_STATE_RELATIVE_PATH);
   let text: string;
@@ -324,7 +331,10 @@ function resolveDurablePolicyState(
         degradation: degradation(
           "policy_source_unknown_version",
           `durable policy state declares an unknown schema version ${String(state.schemaVersion)}`,
-          { version: String(state.schemaVersion ?? ""), source: LEARNING_POLICY_STATE_RELATIVE_PATH },
+          {
+            version: String(state.schemaVersion ?? ""),
+            source: LEARNING_POLICY_STATE_RELATIVE_PATH,
+          },
         ),
       };
     }
@@ -335,7 +345,10 @@ function resolveDurablePolicyState(
         degradation: degradation(
           "policy_source_unknown_version",
           `durable policy document declares an unknown schema version ${String(document.schemaVersion)}`,
-          { version: String(document.schemaVersion ?? ""), source: LEARNING_POLICY_STATE_RELATIVE_PATH },
+          {
+            version: String(document.schemaVersion ?? ""),
+            source: LEARNING_POLICY_STATE_RELATIVE_PATH,
+          },
         ),
       };
     }
@@ -378,7 +391,10 @@ function resolveStagedPolicyFile(repoRoot: string): PolicySourceResolution {
         degradation: degradation(
           "policy_source_unknown_version",
           `the staged policy declares an unknown schema version ${String(document.schemaVersion)}`,
-          { version: String(document.schemaVersion ?? ""), source: ACTIVATION_POLICY_RELATIVE_PATH },
+          {
+            version: String(document.schemaVersion ?? ""),
+            source: ACTIVATION_POLICY_RELATIVE_PATH,
+          },
         ),
       };
     }
@@ -407,7 +423,10 @@ function resolveStagedPolicyFile(repoRoot: string): PolicySourceResolution {
  * packaged host (only the JSON seed ships), so the host validates the fields it actually consumes against the
  * same documented bounds before trusting a document. A violation names the first failing field.
  */
-const POLICY_NUMERIC_BOUNDS: Record<string, { readonly min: number; readonly max?: number; readonly integer?: boolean }> = {
+const POLICY_NUMERIC_BOUNDS: Record<
+  string,
+  { readonly min: number; readonly max?: number; readonly integer?: boolean }
+> = {
   scoreBand: { min: 0, max: 0.25 },
   minAdvisoryConfidence: { min: 0.5, max: 1 },
   qualityMinDelta: { min: -0.5, max: 0.5 },
@@ -467,7 +486,10 @@ function validatePolicyBlock(
     return { field: "judgeMode", detail: `${label}.judgeMode is not a known judge mode` };
   }
   if ("judgeOrderPolicy" in block && !JUDGE_ORDER_POLICIES.has(String(block.judgeOrderPolicy))) {
-    return { field: "judgeOrderPolicy", detail: `${label}.judgeOrderPolicy is not a known order policy` };
+    return {
+      field: "judgeOrderPolicy",
+      detail: `${label}.judgeOrderPolicy is not a known order policy`,
+    };
   }
   if ("cohortLadder" in block) {
     const ladder = block.cohortLadder;
@@ -511,7 +533,10 @@ function validateResolvedPolicyDocument(
     if (failure) return { ok: false, ...failure };
   }
   const global = asRecord(document.global);
-  const decisive = finiteOr(global.minDecisiveComparisons, DEFAULT_EFFECTIVE.minDecisiveComparisons);
+  const decisive = finiteOr(
+    global.minDecisiveComparisons,
+    DEFAULT_EFFECTIVE.minDecisiveComparisons,
+  );
   const holdout = finiteOr(global.minHoldoutComparisons, DEFAULT_EFFECTIVE.minHoldoutComparisons);
   if (holdout > decisive) {
     return {
@@ -549,7 +574,8 @@ export function readLearningPolicyFile(input: {
      * why — the failing field or the version it saw — so the decision is fail-closed and explicable, and the
      * Configuration readback can report a degraded state instead of an unexplained S0.
      */
-    const durableFailure = durable.ok === false && durable.optional !== true ? durable.degradation : null;
+    const durableFailure =
+      durable.ok === false && durable.optional !== true ? durable.degradation : null;
     const stagedFailure = staged && staged.ok === false ? staged.degradation : null;
     return baseRouteSnapshot(
       stagedFailure ??
@@ -573,7 +599,9 @@ export function readLearningPolicyFile(input: {
   stripRetiredPolicyFields(resolved.document);
   // A durable state that exists but cannot be read is a degradation even when the staged seed saves the day.
   const inheritedDegradation =
-    durable.ok === false && durable.optional !== true && resolved.source !== durable.degradation.source
+    durable.ok === false &&
+    durable.optional !== true &&
+    resolved.source !== durable.degradation.source
       ? durable.degradation
       : null;
   const parsed = resolved.document;
@@ -602,7 +630,11 @@ export function readLearningPolicyFile(input: {
   // Stage S2 applies to every eligible decision; stages S3+ are cohort-gated, and the
   // active cohort step is durable rollout state rather than a config value.
   const cohortPercent =
-    stage === "S2" ? 100 : ladder.length > 0 ? Math.min(100, Math.max(0, ladder[0] as number)) : 100;
+    stage === "S2"
+      ? 100
+      : ladder.length > 0
+        ? Math.min(100, Math.max(0, ladder[0] as number))
+        : 100;
   const effective: LearningPolicySnapshot["effective"] = {
     stage,
     scoreBand: finiteOr(merged.scoreBand, DEFAULT_EFFECTIVE.scoreBand),
@@ -617,12 +649,13 @@ export function readLearningPolicyFile(input: {
       merged.latencyP95MaxDeltaMs,
       DEFAULT_EFFECTIVE.latencyP95MaxDeltaMs,
     ),
-    errorRateMaxDeltaPp: finiteOr(merged.errorRateMaxDeltaPp, DEFAULT_EFFECTIVE.errorRateMaxDeltaPp),
+    errorRateMaxDeltaPp: finiteOr(
+      merged.errorRateMaxDeltaPp,
+      DEFAULT_EFFECTIVE.errorRateMaxDeltaPp,
+    ),
     minDecisiveComparisons: Math.max(
       1,
-      Math.round(
-        finiteOr(merged.minDecisiveComparisons, DEFAULT_EFFECTIVE.minDecisiveComparisons),
-      ),
+      Math.round(finiteOr(merged.minDecisiveComparisons, DEFAULT_EFFECTIVE.minDecisiveComparisons)),
     ),
     minHoldoutComparisons: Math.max(
       0,
@@ -653,7 +686,10 @@ export function readLearningPolicyFile(input: {
     ),
     revalidationIntervalDays: Math.min(
       90,
-      Math.max(1, finiteOr(merged.revalidationIntervalDays, DEFAULT_EFFECTIVE.revalidationIntervalDays)),
+      Math.max(
+        1,
+        finiteOr(merged.revalidationIntervalDays, DEFAULT_EFFECTIVE.revalidationIntervalDays),
+      ),
     ),
     judgeMode: merged.judgeMode === "identity_blind" ? "identity_blind" : "identified",
     judgeOrderPolicy: merged.judgeOrderPolicy === "dual_order" ? "dual_order" : "source_first",
@@ -705,7 +741,9 @@ export function readLearningPolicyFile(input: {
       2_147_483_647,
       Math.max(
         0,
-        Math.round(finiteOr(merged.promotionBootstrapSeed, DEFAULT_EFFECTIVE.promotionBootstrapSeed)),
+        Math.round(
+          finiteOr(merged.promotionBootstrapSeed, DEFAULT_EFFECTIVE.promotionBootstrapSeed),
+        ),
       ),
     ),
     promotionAnalysisMethod: "paired_cluster_bootstrap",
@@ -756,9 +794,7 @@ export function readLearningPolicyFile(input: {
         const rawBounds = merged.latencySelectionBucketBounds;
         if (rawBounds !== undefined) {
           if (typeof rawBounds === "string") {
-            const parsed = rawBounds
-              .split(",")
-              .map((part) => Number(part.trim()));
+            const parsed = rawBounds.split(",").map((part) => Number(part.trim()));
             // A malformed list is passed through unchanged so the resolver records the violation and
             // fails closed, instead of silently falling back to the default bucket layout.
             setFlat(

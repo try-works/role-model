@@ -111,7 +111,11 @@ describe("run99 R25 live advisory outcome observation", () => {
         outcome: { applied: true, fallbackReason: null },
       }) as never,
     );
-    expect(shadow).toMatchObject({ mode: "shadow", selection: "baseline_retained", applied: false });
+    expect(shadow).toMatchObject({
+      mode: "shadow",
+      selection: "baseline_retained",
+      applied: false,
+    });
   });
 
   test("records the score gap and band so a refusal can be read without guessing", () => {

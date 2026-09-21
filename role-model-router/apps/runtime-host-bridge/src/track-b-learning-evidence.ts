@@ -154,11 +154,8 @@ const DECISIVE_LEARNING_OUTCOMES: readonly TrackBDecisiveLearningOutcome[] = [
   "source",
 ];
 
-const isDecisiveLearningOutcome = (
-  value: unknown,
-): value is TrackBDecisiveLearningOutcome =>
-  typeof value === "string" &&
-  (DECISIVE_LEARNING_OUTCOMES as readonly string[]).includes(value);
+const isDecisiveLearningOutcome = (value: unknown): value is TrackBDecisiveLearningOutcome =>
+  typeof value === "string" && (DECISIVE_LEARNING_OUTCOMES as readonly string[]).includes(value);
 
 /**
  * Which role wins a decisive outcome. `candidate` is the counterfactual package
@@ -211,9 +208,7 @@ export function selectTrackBLearningTarget(input: {
   const winner = input.members.find((member) => member?.disposition === "positive");
   const recordedRole = boundedString(winner?.role);
   const winnerRole: "source" | "counterfactual" =
-    recordedRole === "source" || recordedRole === "counterfactual"
-      ? recordedRole
-      : impliedRole;
+    recordedRole === "source" || recordedRole === "counterfactual" ? recordedRole : impliedRole;
   if (winnerRole === "source") {
     return { decisive: true, winnerRole, routePackage: boundedString(input.sourceRoutePackage) };
   }
@@ -221,7 +216,9 @@ export function selectTrackBLearningTarget(input: {
   if (!winnerRef) {
     const candidates = [
       ...new Set(
-        (input.counterfactualRoutePackages ?? []).map((value) => boundedString(value)).filter(Boolean),
+        (input.counterfactualRoutePackages ?? [])
+          .map((value) => boundedString(value))
+          .filter(Boolean),
       ),
     ];
     return {
@@ -278,9 +275,7 @@ export function deriveTrackBLearningCapability(input: {
     if (!winners.length || !losers.length) return withheldLearningCapability;
     const roleContradicts = winners.some(
       (member) =>
-        typeof member?.role === "string" &&
-        member.role &&
-        member.role !== expectedWinnerRole,
+        typeof member?.role === "string" && member.role && member.role !== expectedWinnerRole,
     );
     if (roleContradicts) return withheldLearningCapability;
   }
@@ -319,7 +314,8 @@ export function deriveTrackBLearningCapability(input: {
   const lineageKeys = new Set(lineage.map((row) => `${row.trialId}\u0000${row.scoreId}`));
   if (
     selected.some(
-      (row) => !lineageKeys.has(`${boundedString(row?.trialId)}\u0000${boundedString(row?.scoreId)}`),
+      (row) =>
+        !lineageKeys.has(`${boundedString(row?.trialId)}\u0000${boundedString(row?.scoreId)}`),
     )
   ) {
     return withheldLearningCapability;
