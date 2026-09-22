@@ -76,6 +76,7 @@ import {
 import {
   type ReplayLedgerLimits,
   createReplayLedger,
+  replayBudgetAvailable,
   resolveReplayLedgerLimits,
 } from "./track-b-replay-ledger.js";
 import {
@@ -4864,9 +4865,7 @@ export async function main(): Promise<void> {
             retentionReplayable: true,
             privacyReplayable: true,
             distinctCandidateCount: distinctReplayCandidates.length,
-            budgetAvailable:
-              replayLedgerStatus.dispatches + replayLedgerStatus.reservedDispatches <
-              replayLedgerStatus.dispatchLimit,
+            budgetAvailable: replayBudgetAvailable(replayLedgerStatus),
             alreadyProcessed: replayLedger.hasTerminalCounterfactual(
               requestId,
               replayPolicySet.policySetDigest,

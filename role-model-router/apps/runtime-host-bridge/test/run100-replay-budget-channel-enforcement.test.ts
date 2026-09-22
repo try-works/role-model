@@ -6,6 +6,7 @@ import { expect, test } from "vitest";
 
 import {
   createReplayLedger,
+  replayBudgetAvailable,
   resolveReplayLedgerLimits,
 } from "../src/track-b-replay-ledger.js";
 import { replayBudgetEnforcedForChannel } from "../src/track-b-replay-policy.js";
@@ -153,4 +154,42 @@ test("run100 the shipped policy scopes the ceiling to production", () => {
   expect(replayBudgetEnforcedForChannel("production_only", "development")).toBe(false);
   expect(replayBudgetEnforcedForChannel("always", "stage")).toBe(true);
   expect(replayBudgetEnforcedForChannel("never", "production")).toBe(false);
+});
+
+/**
+ * The reservation path is not the only place the ceiling decides anything: both admission callers
+ * (`cli.ts` on-demand replay and `track-b-auto-replay.ts`'s tick) compute `budgetAvailable` from the
+ * ledger status before asking `decideReplayAdmission`. A fix that only changed the reservation path
+ * would still have refused every capture one layer up, so the shared expression is asserted directly.
+ */
+test("run100 a non-enforced ceiling always reports budget available to admission", () => {
+  const { file, cleanup } = tempFile();
+  try {
+    const enforced = createReplayLedger({
+      filePath: file,
+      now: () => Date.parse("2026-09-22T06:00:00Z"),
+      limits: { dispatchesPerDay: 1, counterfactualsPerDay: 1, enforced: true },
+    });
+    expect(
+      enforced.reserve({ captureRef: "req-a", policySetDigest: "p", candidateDispatches: 1 }).accepted,
+    ).toBe(true);
+    expect(replayBudgetAvailable(enforced.status())).toBe(false);
+
+    const measured = createReplayLedger({
+      filePath: file,
+      now: () => Date.parse("2026-09-22T06:00:00Z"),
+      limits: { dispatchesPerDay: 1, counterfactualsPerDay: 1, enforced: false },
+    });
+    const reservation = measured.reserve({
+      captureRef: "req-b",
+      policySetDigest: "p",
+      candidateDispatches: 1,
+    });
+    expect(reservation.accepted).toBe(true);
+    const status = measured.status();
+    expect(status.dispatches + status.reservedDispatches >= status.dispatchLimit).toBe(true);
+    expect(replayBudgetAvailable(status)).toBe(true);
+  } finally {
+    cleanup();
+  }
 });

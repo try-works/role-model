@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import type { ReplayLedger } from "./track-b-replay-ledger.js";
+import { type ReplayLedger, replayBudgetAvailable } from "./track-b-replay-ledger.js";
 import {
   type ReplayPolicySet,
   type ReplayRefusalCode,
@@ -527,7 +527,7 @@ export async function runAutoReplayTick(input: {
       retentionReplayable: true,
       privacyReplayable: true,
       distinctCandidateCount: candidates.length,
-      budgetAvailable: status.dispatches + status.reservedDispatches < status.dispatchLimit,
+      budgetAvailable: replayBudgetAvailable(status),
       alreadyProcessed: input.ledger.hasTerminalCounterfactual(
         capture.captureRef,
         input.policySet.policySetDigest,

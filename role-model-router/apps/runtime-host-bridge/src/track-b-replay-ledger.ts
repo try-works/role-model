@@ -190,6 +190,21 @@ export interface ReplayLedger {
   }): { readonly released: number; readonly reservationIds: readonly string[] };
 }
 
+/**
+ * Run 100 phase-5 repair: the admission-facing view of the ledger's budget gate.
+ *
+ * The reservation path is not the only place the ceiling decides anything - both admission callers
+ * (`cli.ts`'s on-demand replay and `track-b-auto-replay.ts`'s tick) compute `budgetAvailable` from the
+ * ledger status before asking `decideReplayAdmission`, so a non-enforced ceiling that only changed the
+ * reservation path would still refuse every capture one layer up. This is the single expression both
+ * callers use: with `enforced: false` the ceilings are measured but may not refuse, so admission always
+ * finds capacity.
+ */
+export function replayBudgetAvailable(status: ReplayLedgerStatus): boolean {
+  if (!status.enforced) return true;
+  return status.dispatches + status.reservedDispatches < status.dispatchLimit;
+}
+
 export function createReplayLedger(options: {
   readonly filePath: string;
   readonly now?: () => number;
