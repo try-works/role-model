@@ -50,6 +50,62 @@ export function resolveMaxCounterfactualArms(
 }
 
 /**
+ * Run 100 R1 (live finding, clean verification window 2026-09-22): the routing-shadow path planned its
+ * arms straight from `configuredCandidateEndpointIds`, so when the controller endpoint - which
+ * `evaluation-core` treats as the comparison's judge (`judgeSource: controller`) - was among the
+ * configured candidates, the durable job was created with the judge as one of its cases and create-job
+ * refused it: `judge_candidate_overlap … is the judge declared by scorer set run96-routing-shadow-v3`
+ * (capture `req-26a7d08a-034e-424a`, no job row written). The replay path already resolved the judge per
+ * tick "so it must never be planned as a counterfactual arm"; this helper is the one place both paths
+ * share.
+ *
+ * The judge never becomes an arm, the exclusion is reported by name, and a pool the judge consumes
+ * refuses once with a bounded reason instead of producing evidence the learner must discard.
+ */
+export function selectTrackBCounterfactualArms(input: {
+  readonly candidateEndpointIds: readonly string[];
+  readonly routePackage: string;
+  readonly judgeEndpointId?: string | null;
+  readonly armBound: number;
+}): {
+  readonly arms: string[];
+  readonly excluded: ReadonlyArray<{ readonly endpointId: string; readonly reason: string }>;
+  readonly refusal: Readonly<{ code: string; detail: string }> | null;
+} {
+  const judge =
+    typeof input.judgeEndpointId === "string" ? input.judgeEndpointId.trim() : "";
+  const candidates = [
+    ...new Set(
+      (input.candidateEndpointIds ?? []).filter(
+        (endpointId): endpointId is string =>
+          typeof endpointId === "string" && endpointId.trim().length > 0,
+      ),
+    ),
+  ];
+  const withoutServedRoute = candidates.filter(
+    (endpointId) => endpointId.trim() !== input.routePackage,
+  );
+  const arms = withoutServedRoute
+    .filter((endpointId) => !judge || endpointId.trim() !== judge)
+    .sort()
+    .slice(0, Math.max(0, Number.isSafeInteger(input.armBound) ? input.armBound : 0));
+  const excluded = withoutServedRoute
+    .filter((endpointId) => Boolean(judge) && endpointId.trim() === judge)
+    .map((endpointId) => ({ endpointId, reason: "judge_arm_excluded" }));
+  const refusal =
+    judge && withoutServedRoute.length > 0 && arms.length === 0
+      ? {
+          code: "R14_ALL_CANDIDATES_ARE_JUDGE",
+          detail: `the configured counterfactual pool only contains the comparison's judge ${judge}`.slice(
+            0,
+            320,
+          ),
+        }
+      : null;
+  return { arms, excluded, refusal };
+}
+
+/**
  * Run 98 addendum 04 (live finding, stage v180, 2026-09-16).
  *
  * This process builds its own extension host for the replay/evaluation path and never passed
@@ -10658,6 +10714,13 @@ export async function runTrackBPostObservation(
      */
     readonly maxCounterfactualArms?: number | null;
     /**
+     * Run 100 R1: the endpoint the controller assignment resolves to, i.e. the comparison's judge. It is
+     * resolved per observation so a controller change takes effect immediately, and it is excluded from
+     * the planned arms (`selectTrackBCounterfactualArms`).
+     */
+    readonly resolveJudgeEndpointId?: () => Promise<string | null> | string | null;
+    readonly judgeEndpointId?: string | null;
+    /**
      * Run 98 addendum 58 §18: the runtime state root the extension host keeps its durable-output stores under.
      * A business answer that outgrew the inline frame limit comes back as the transfer marker
      * (`{transferState, resultHash, byteLength}`); resolving it needs this root, and without it the comparison
@@ -10975,27 +11038,35 @@ export async function runTrackBPostObservation(
   // R3: the frozen decision snapshot is provenance, never a candidate filter. A
   // live request with at least one distinct configured endpoint is replay work, so
   // it must not fall through to the observation-only refusal.
-  const configuredCounterfactualCandidates = [
-    ...new Set(
-      (input.configuredCandidateEndpointIds ?? []).filter(
-        (endpointId): endpointId is string =>
-          typeof endpointId === "string" &&
-          endpointId.trim().length > 0 &&
-          endpointId.trim() !== routePackage,
-      ),
-    ),
-  ]
-    .sort()
-    // Run 98 addendum 34 S1: the arm list is the input to coverage-driven pair planning, so its bound is
-    // the policy value (default = the release cap) instead of a bare constant.
-    .slice(
-      0,
-      typeof input.maxCounterfactualArms === "number" &&
-        Number.isSafeInteger(input.maxCounterfactualArms) &&
-        input.maxCounterfactualArms > 0
-        ? Math.min(input.maxCounterfactualArms, 8)
-        : resolveMaxCounterfactualArms(),
+  /**
+   * Run 100 R1: the judge is excluded here, where the arms are planned, so neither this path nor the
+   * supervised completer can create a durable job whose cases contain the endpoint that judges it.
+   * The judge is resolved per call (controller assignment) so a controller change takes effect
+   * immediately, exactly as the replay path's `resolveJudgeEndpointId` does.
+   */
+  const judgeEndpointId = input.resolveJudgeEndpointId
+    ? await Promise.resolve(input.resolveJudgeEndpointId()).catch(() => null)
+    : (input.judgeEndpointId ?? null);
+  const armBound =
+    typeof input.maxCounterfactualArms === "number" &&
+    Number.isSafeInteger(input.maxCounterfactualArms) &&
+    input.maxCounterfactualArms > 0
+      ? Math.min(input.maxCounterfactualArms, 8)
+      : resolveMaxCounterfactualArms();
+  // Run 98 addendum 34 S1: the arm list is the input to coverage-driven pair planning, so its bound is
+  // the policy value (default = the release cap) instead of a bare constant.
+  const armSelection = selectTrackBCounterfactualArms({
+    candidateEndpointIds: input.configuredCandidateEndpointIds ?? [],
+    routePackage,
+    judgeEndpointId,
+    armBound,
+  });
+  if (armSelection.refusal) {
+    throw new Error(
+      `${armSelection.refusal.code}: ${armSelection.refusal.detail}`.slice(0, 512),
     );
+  }
+  const configuredCounterfactualCandidates = armSelection.arms;
   const pipeline =
     routingShadowEvidence && routingShadowCases.length > 0
       ? await runTrackBShadowPipeline(observedRuntime, {

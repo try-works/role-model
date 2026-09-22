@@ -4485,6 +4485,25 @@ export async function main(): Promise<void> {
               channel: packagedProfile?.channel ?? "development",
               scopeId: options.scopeId,
             })?.effective.judgeOrderPolicy ?? null,
+          /**
+           * Run 100 R1 (live finding, clean verification window): the routing-shadow path planned its
+           * arms without consulting the judge, so a capture whose configured candidates include the
+           * controller endpoint created a durable job with the judge among its cases and
+           * `evaluation-core` refused it (`judge_candidate_overlap`, capture `req-26a7d08a-034e-424a`,
+           * no job row). The replay path already resolves the judge per tick for exactly this reason;
+           * the post-observation path now resolves it per observation and excludes it from the arms.
+           */
+          resolveJudgeEndpointId: async () => {
+            const readControllerAssignment = (
+              options as { readControllerAssignment?: () => Promise<unknown> }
+            ).readControllerAssignment;
+            const assignment = await Promise.resolve(readControllerAssignment?.()).catch(() => null);
+            const endpointId =
+              assignment && typeof assignment === "object" && !Array.isArray(assignment)
+                ? (assignment as Record<string, unknown>).endpointId
+                : null;
+            return typeof endpointId === "string" && endpointId.length > 0 ? endpointId : null;
+          },
         } as const;
         const operations = postObservationOperations;
         return operations
