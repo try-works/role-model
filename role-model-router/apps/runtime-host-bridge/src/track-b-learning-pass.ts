@@ -855,8 +855,38 @@ export async function runTrackBLearningPass(
     );
     const decoded = decodeBusinessResult(answer, "knowledge-store", input.scope);
     if (decoded.schemaVersion === "role-model.degradation-receipt.v1") {
+      /**
+       * Run 100 R4 idempotency (live finding, clean verification window 2026-09-22): the supervised
+       * replay retried a request, the learner produced a validation receipt with the same durable
+       * record id and richer evidence, and the store's immutability guard refused the write -
+       * `learning pass declined:… knowledge store refused the validation receipt: immutable learning
+       * record conflict: the record id already exists with different content`. The durable record is
+       * the authority for that attempt, so the pass reads it back and continues instead of declining;
+       * a store refusal for any other reason still fails the pass.
+       */
+      const refusalReason = String(decoded.reason ?? decoded.code ?? "unknown");
+      if (/immutable learning record conflict/u.test(refusalReason)) {
+        const existing = await runtime
+          .invoke(
+            "knowledge-store",
+            storeEnvelope("knowledge:list-learning", {
+              payload: { scopeId: input.scope, kind: "validation_receipt", limit: 200 },
+            }),
+          )
+          .then((listed) => decodeBusinessResult(listed, "knowledge-store", input.scope))
+          .catch(() => null);
+        const rows = Array.isArray((existing as Record<string, unknown> | null)?.records)
+          ? ((existing as Record<string, unknown>).records as Record<string, unknown>[])
+          : Array.isArray(existing)
+            ? (existing as unknown as Record<string, unknown>[])
+            : [];
+        const durable = rows.find((row) => String(row?.recordId ?? "") === receiptId);
+        if (durable) {
+          return { recorded: true, idempotent: true, recordId: receiptId, state: decision };
+        }
+      }
       throw new Error(
-        `knowledge store refused the validation receipt: ${String(decoded.reason ?? decoded.code ?? "unknown")}`,
+        `knowledge store refused the validation receipt: ${refusalReason}`,
       );
     }
     return decoded;
