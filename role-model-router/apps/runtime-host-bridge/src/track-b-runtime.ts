@@ -10417,6 +10417,16 @@ export async function runTrackBShadowPipeline(
   return {
     replay,
     evaluation: persistedEvaluation,
+    /**
+     * Run 100 R3 (live finding, clean verification window 2026-09-22): this return shadows the field the
+     * completion path reads - `evaluation` here is the observation's own value, while the comparison the
+     * pipeline validated (and returned at the earlier return) is `persistedEvaluationDecoded`. The
+     * completer therefore read a record with no `groupId`/`outcome` and reported
+     * `durable replay evaluation did not finalize a valid comparison: outcome=absent group=absent`.
+     * The comparison now travels under its own key so every existing consumer of `evaluation` is
+     * unchanged and the completion path has the object it validated.
+     */
+    ...(persistedEvaluationDecoded ? { comparison: persistedEvaluationDecoded } : {}),
     signals,
     profile: profileRecord,
     candidate,

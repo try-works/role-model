@@ -1659,7 +1659,19 @@ export function createSupervisedReplayEvaluationCompleter(input: {
         );
       }
     }
-    const comparison = evaluated.evaluation as Record<string, unknown>;
+    /**
+     * Run 100 R3 (live finding, clean verification window 2026-09-22): the pipeline's normal return
+     * carries the observation's own `evaluation` beside the comparison it validated, so the completion
+     * path reads the comparison from its own key when it is present and keeps the previous field as the
+     * fallback for every other producer of this record.
+     */
+    const evaluatedRecordForComparison =
+      evaluated && typeof evaluated === "object" && !Array.isArray(evaluated)
+        ? (evaluated as Record<string, unknown>)
+        : {};
+    const comparison = (evaluatedRecordForComparison.comparison ??
+      evaluatedRecordForComparison.evaluation ??
+      {}) as Record<string, unknown>;
     const outcome = comparison.outcome;
     const comparisonGroupId = comparison.groupId;
     if (
