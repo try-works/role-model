@@ -1280,7 +1280,34 @@ export function createSupervisedReplayEvaluationCompleter(input: {
           .join("; ")}`.slice(0, 512),
       );
     }
-    const counterfactuals = resolvedCounterfactuals;
+    /**
+     * Run 100 R1 (live stage, released candidate `d19dcff3`): the comparison's judge must not be one of
+     * its arms. Evaluation Core derives `judge_self_evaluation` from the comparison's scored trial set,
+     * and the learner then discards the comparison - the largest exclusion bucket in the newest
+     * receipts (`incomparable:judge_self_evaluation` 152-154). The exclusion happens *here*, where the
+     * arms, their per-case reference proofs and the comparison are built together, so every downstream
+     * artefact (cases, references, comparability, the finalize pair) describes the same arm set.
+     */
+    const judgeEndpointId =
+      typeof input.judge?.endpointId === "string" ? input.judge.endpointId.trim() : "";
+    const counterfactuals = judgeEndpointId
+      ? resolvedCounterfactuals.filter((entry) => {
+          if (entry.candidate.endpointId !== judgeEndpointId) return true;
+          counterfactualExclusions.push({
+            endpointId: entry.candidate.endpointId,
+            reason: "judge_arm_excluded: the comparison's judge cannot be one of its arms",
+          });
+          return false;
+        })
+      : resolvedCounterfactuals;
+    if (counterfactuals.length === 0) {
+      throw new Error(
+        `R14_ALL_CANDIDATES_ARE_JUDGE: the configured counterfactual pool only contains the comparison's judge ${judgeEndpointId}`.slice(
+          0,
+          320,
+        ),
+      );
+    }
     if (counterfactuals.some(({ replayRequestId }) => !replayRequestId)) {
       throw new Error("durable replay evaluation cannot recover counterfactual request provenance");
     }

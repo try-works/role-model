@@ -8122,9 +8122,46 @@ export async function runTrackBShadowPipeline(
   };
   const comparableEvidence = input.comparableEvidence;
   const sourceRollout = comparableEvidence?.source as Record<string, unknown> | undefined;
+  /**
+   * Run 100 R1 (live stage, released candidate `d19dcff3`): the endpoint that judges a comparison must
+   * never be one of its arms. Evaluation Core derives `judge_self_evaluation` from the comparison's
+   * *scored trial set* (`extensions/evaluation-core/index.mjs` ~3250-3361), and the learner then
+   * excludes the comparison - measured live as the largest exclusion bucket
+   * (`incomparable:judge_self_evaluation` 152-154 against `non_decisive_outcome` 32 and
+   * `package_not_involved` 62). Zero of the 171 judge-carrying finalized groups names the judge among
+   * its two compared candidates, so the poisoning comes from the judge appearing as an *extra arm*.
+   * The judge is known here, before the job's cases are created, so it is excluded from the arm list;
+   * a pool whose only candidate is the judge refuses once with a named, bounded reason instead of
+   * producing evidence the learner must throw away.
+   */
+  const declaredJudgeEndpointId =
+    typeof input.judge?.endpointId === "string" && input.judge.endpointId.trim()
+      ? input.judge.endpointId.trim()
+      : typeof input.judgeEndpointId === "string" && input.judgeEndpointId.trim()
+        ? input.judgeEndpointId.trim()
+        : "";
   const counterfactualRollouts = Array.isArray(comparableEvidence?.counterfactuals)
     ? (comparableEvidence.counterfactuals as Record<string, unknown>[])
     : [];
+  const counterfactualPackages = input.counterfactuals;
+  /**
+   * The exclusion itself happens where the arms, their per-case references and the comparison are built
+   * together (the supervised-replay completer, `cli.ts`): filtering here would leave the per-case
+   * reference proofs describing arms the job no longer carries. This guard is the backstop for a direct
+   * caller that hands the pipeline a pool the judge has consumed.
+   */
+  if (
+    declaredJudgeEndpointId &&
+    input.counterfactuals.length > 0 &&
+    input.counterfactuals.every((counterfactual) => counterfactual.id === declaredJudgeEndpointId)
+  ) {
+    throw new Error(
+      `R14_ALL_CANDIDATES_ARE_JUDGE: the configured counterfactual pool only contains the comparison's judge ${declaredJudgeEndpointId}`.slice(
+        0,
+        320,
+      ),
+    );
+  }
   const candidateSet = Array.isArray(comparableEvidence?.candidateSet)
     ? (comparableEvidence.candidateSet as Record<string, unknown>[])
     : [];
@@ -8132,8 +8169,8 @@ export async function runTrackBShadowPipeline(
     !sourceRollout ||
     counterfactualRollouts.length < 1 ||
     candidateSet.length < 2 ||
-    input.counterfactuals.length < 1 ||
-    input.counterfactuals.every((counterfactual) => counterfactual.id === input.routePackage) ||
+    counterfactualPackages.length < 1 ||
+    counterfactualPackages.every((counterfactual) => counterfactual.id === input.routePackage) ||
     counterfactualRollouts.some(
       (rollout) =>
         rollout.rolloutId === sourceRollout.rolloutId ||
@@ -8165,7 +8202,7 @@ export async function runTrackBShadowPipeline(
       sourceGraphRef: input.sourceGraphRef,
       prefix: input.prefix,
       ...(input.sourcePrefixRef ? { sourcePrefixRef: input.sourcePrefixRef } : {}),
-      counterfactuals: input.counterfactuals,
+        counterfactuals: counterfactualPackages,
     }),
   );
   console.error(`[run97] shadow pipeline start ${input.requestId}`);
