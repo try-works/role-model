@@ -73,16 +73,62 @@ import {
   extractSourceOutputText,
   extractTaskInstructionText,
 } from "./track-b-replay-evaluation-criteria.js";
-import { createReplayLedger, resolveReplayLedgerLimits } from "./track-b-replay-ledger.js";
+import {
+  type ReplayLedgerLimits,
+  createReplayLedger,
+  resolveReplayLedgerLimits,
+} from "./track-b-replay-ledger.js";
 import {
   buildReplayPolicySet,
   decideReplayAdmission,
   hasRecordedToolResults,
   hasToolCalls,
+  replayBudgetEnforcedForChannel,
   resolveReplayPolicySet,
   resolveReplayToolPolicy,
   selectReplayCandidates,
 } from "./track-b-replay-policy.js";
+
+/**
+ * Run 100 phase-5 repair (operator instruction 2026-09-21: "the daily dispatch ceiling is only for the
+ * production release, not for dev or stage, disregard it").
+ *
+ * Live stage evidence 2026-09-22T06:26Z: the verification window reached `dispatches 296 /
+ * dispatchLimit 300` and deferred eight captures as `budget_exhausted`, so the learning loop starved
+ * itself on a delivery guard. The ledger keeps its accounting on every channel; only the refusal is
+ * scoped, by the versioned `replayBudgetEnforcement` policy (`production_only` by default).
+ *
+ * Precedence: an explicit `ROLE_MODEL_REPLAY_BUDGET_ENFORCEMENT` env value is an operator act at the
+ * process boundary and wins; otherwise the versioned policy plus the runtime channel decides. A policy
+ * source that cannot be read resolves through `readLearningPolicyFile` to the base route, whose
+ * `production_only` default keeps production guarded.
+ */
+function resolveChannelScopedReplayLedgerLimits(input: {
+  readonly repoRoot: string;
+  readonly runtimeStateRoot: string;
+  readonly scopeId: string;
+  readonly channel: string;
+}): Partial<ReplayLedgerLimits> {
+  const resolved = resolveReplayLedgerLimits();
+  if (resolved.enforced !== undefined) return resolved;
+  const snapshot = readLearningPolicyFile({
+    repoRoot: input.repoRoot,
+    stateRoot: resolveLearningPolicyStateRoot({
+      runtimeStateRoot: input.runtimeStateRoot,
+      scopeId: input.scopeId,
+    }),
+    channel: input.channel,
+    scopeId: input.scopeId,
+  });
+  return {
+    ...resolved,
+    enforced: replayBudgetEnforcedForChannel(
+      // A missing policy source falls through to the documented default scoping (production only).
+      snapshot?.effective.replayBudgetEnforcement,
+      input.channel,
+    ),
+  };
+}
 import {
   TRACK_B_CANONICAL_EXTENSION_IDS,
   type TrackBExtensionClosure,
@@ -4229,7 +4275,12 @@ export async function main(): Promise<void> {
           options.scopeId,
           "track-b-replay-ledger.json",
         ),
-        limits: resolveReplayLedgerLimits(),
+        limits: resolveChannelScopedReplayLedgerLimits({
+          repoRoot: options.repoRoot,
+          runtimeStateRoot: options.runtimeStateRoot,
+          scopeId: options.scopeId,
+          channel,
+        }),
       });
       const policySet = buildReplayPolicySet();
       const intervalMs = Number(process.env.ROLE_MODEL_AUTO_REPLAY_INTERVAL_MS ?? 30_000);
@@ -4797,7 +4848,12 @@ export async function main(): Promise<void> {
               options.scopeId,
               "track-b-replay-ledger.json",
             ),
-            limits: resolveReplayLedgerLimits(),
+            limits: resolveChannelScopedReplayLedgerLimits({
+              repoRoot: options.repoRoot,
+              runtimeStateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+              channel: packagedProfile?.channel ?? "development",
+            }),
           });
           const replayLedgerStatus = replayLedger.status();
           const admission = decideReplayAdmission({
@@ -5995,7 +6051,12 @@ export async function main(): Promise<void> {
                   options.scopeId,
                   "track-b-replay-ledger.json",
                 ),
-                limits: resolveReplayLedgerLimits(),
+                limits: resolveChannelScopedReplayLedgerLimits({
+                  repoRoot: options.repoRoot,
+                  runtimeStateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  channel,
+                }),
               }),
               replayPolicySet: buildReplayPolicySet(),
               getDispatched: (endpointId: string) => dispatched.get(endpointId),

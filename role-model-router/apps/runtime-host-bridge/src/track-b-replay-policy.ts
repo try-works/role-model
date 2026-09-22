@@ -109,6 +109,34 @@ export function decideReplayAdmission(input: ReplayAdmissionInput): ReplayAdmiss
 
 export const DEFAULT_REPLAY_CANDIDATE_CAP = 3;
 
+/**
+ * Run 100 phase-5 repair (operator instruction 2026-09-21: "the daily dispatch ceiling is only for the
+ * production release, not for dev or stage, disregard it").
+ *
+ * The daily counterfactual/dispatch ceiling is a production delivery guard. On dev and stage the loop
+ * must keep gathering evidence, so the ceiling is measured and receipted but must not refuse work.
+ * The value is versioned configuration (`replayBudgetEnforcement`), resolved by the host and handed to
+ * the ledger; this helper is the single place that turns it plus the runtime channel into a boolean.
+ */
+export type ReplayBudgetEnforcement = "production_only" | "always" | "never";
+
+export const REPLAY_BUDGET_ENFORCEMENT_VALUES: readonly ReplayBudgetEnforcement[] = Object.freeze([
+  "production_only",
+  "always",
+  "never",
+]);
+
+export function replayBudgetEnforcedForChannel(
+  value: ReplayBudgetEnforcement | string | undefined,
+  channel: string | undefined,
+): boolean {
+  if (value === "always") return true;
+  if (value === "never") return false;
+  // `production_only` is the shipped default: every other channel (stage, development, an unknown
+  // channel) keeps gathering evidence.
+  return (channel ?? "").trim().toLowerCase() === "production";
+}
+
 export function selectReplayCandidates(input: {
   readonly configuredEndpointIds: readonly string[];
   readonly healthyEndpointIds?: readonly string[];

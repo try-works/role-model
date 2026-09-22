@@ -19,11 +19,18 @@ export const REPLAY_LEDGER_SCHEMA_VERSION = "role-model.replay-ledger.v1";
 export interface ReplayLedgerLimits {
   readonly counterfactualsPerDay: number;
   readonly dispatchesPerDay: number;
+  /**
+   * Run 100 phase-5 repair (operator instruction 2026-09-21): whether the ceilings may *refuse* work.
+   * The accounting is unconditional - every dispatch is still recorded and reported - but the daily
+   * ceiling is a production delivery guard, so on dev/stage the loop must not starve itself on it.
+   */
+  readonly enforced: boolean;
 }
 
 export const DEFAULT_REPLAY_LEDGER_LIMITS: ReplayLedgerLimits = Object.freeze({
   counterfactualsPerDay: 100,
   dispatchesPerDay: 300,
+  enforced: true,
 });
 
 export type ReplayDispatchKind = "candidate" | "retry" | "derived";
@@ -67,6 +74,8 @@ export interface ReplayLedgerStatus {
   readonly dispatches: number;
   readonly counterfactualLimit: number;
   readonly dispatchLimit: number;
+  /** False when the ceilings are measured but not enforced on this channel. */
+  readonly enforced: boolean;
 }
 
 interface ReservationRow {
@@ -130,9 +139,23 @@ export function resolveReplayLedgerLimits(
   };
   const counterfactualsPerDay = read("ROLE_MODEL_REPLAY_DAILY_COUNTERFACTUALS");
   const dispatchesPerDay = read("ROLE_MODEL_REPLAY_DAILY_DISPATCHES");
+  /**
+   * Run 100 phase-5 repair: the operator escape hatch, and the seam the host uses to apply the versioned
+   * `replayBudgetEnforcement` policy. Absent means "no override", so the documented default (enforced)
+   * holds and an unconfigured process behaves exactly as before.
+   */
+  const enforcement = env.ROLE_MODEL_REPLAY_BUDGET_ENFORCEMENT?.trim().toLowerCase();
+  let enforced: boolean | undefined;
+  if (enforcement) {
+    if (enforcement !== "on" && enforcement !== "off") {
+      throw new Error("ROLE_MODEL_REPLAY_BUDGET_ENFORCEMENT must be 'on' or 'off'");
+    }
+    enforced = enforcement === "on";
+  }
   return {
     ...(counterfactualsPerDay === undefined ? {} : { counterfactualsPerDay }),
     ...(dispatchesPerDay === undefined ? {} : { dispatchesPerDay }),
+    ...(enforced === undefined ? {} : { enforced }),
   };
 }
 
@@ -178,6 +201,7 @@ export function createReplayLedger(options: {
       options.limits?.counterfactualsPerDay ?? DEFAULT_REPLAY_LEDGER_LIMITS.counterfactualsPerDay,
     dispatchesPerDay:
       options.limits?.dispatchesPerDay ?? DEFAULT_REPLAY_LEDGER_LIMITS.dispatchesPerDay,
+    enforced: options.limits?.enforced ?? DEFAULT_REPLAY_LEDGER_LIMITS.enforced,
   };
 
   const load = (): LedgerFile => {
@@ -221,6 +245,7 @@ export function createReplayLedger(options: {
       dispatches: row.dispatches.length,
       counterfactualLimit: limits.counterfactualsPerDay,
       dispatchLimit: limits.dispatchesPerDay,
+      enforced: limits.enforced,
     };
   };
 
@@ -239,6 +264,7 @@ export function createReplayLedger(options: {
         };
       }
       if (
+        limits.enforced &&
         window.counterfactuals.length + window.reservations.length >=
         limits.counterfactualsPerDay
       ) {
@@ -249,6 +275,7 @@ export function createReplayLedger(options: {
         };
       }
       if (
+        limits.enforced &&
         window.dispatches.length + reservedDispatches(window) + input.candidateDispatches >
         limits.dispatchesPerDay
       ) {
@@ -320,7 +347,7 @@ export function createReplayLedger(options: {
       // A retry or derived dispatch may arrive after its planned candidates were
       // consumed; the daily ceiling is the real guard, so the dispatch is still
       // recorded (the reservation row is optional attribution).
-      if (window.dispatches.length + 1 > limits.dispatchesPerDay) {
+      if (limits.enforced && window.dispatches.length + 1 > limits.dispatchesPerDay) {
         return {
           accepted: false,
           code: "budget_exhausted",
