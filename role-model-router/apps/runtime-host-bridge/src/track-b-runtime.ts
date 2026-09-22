@@ -9075,11 +9075,26 @@ export async function runTrackBShadowPipeline(
    */
   const declaredCandidateRef = (value: unknown): string | null =>
     typeof value === "string" && value.trim() ? value.trim() : null;
-  const declaredSourceCandidateRef =
-    declaredCandidateRef(finalizeBinding.comparability.sourceCandidateRef) ?? sourceCandidateRef;
-  const declaredCounterfactualCandidateRef =
-    declaredCandidateRef(finalizeBinding.comparability.counterfactualCandidateRef) ??
-    firstCounterfactualCandidateRef;
+  /**
+   * Run 100 R3 (live finding, clean verification window 2026-09-22): the durable-pair binding above is
+   * right for a *resumed* primary comparison, but it must not override the pair a different comparison
+   * intends to decide. The coverage-driven extra-pair calls re-read the same durable job (created for
+   * the primary pair) and then submitted their own pair, so the binding refused them:
+   *
+   *   `extra pair comparison declined: … durable routing-shadow comparison pair unresolved:
+   *    declared kimi-k3 and v4-pro-max; completed rollouts …`
+   *
+   * The stored pair is therefore adopted only when it agrees with the call's own pair; otherwise the
+   * call's pair is authoritative.
+   */
+  const isExtraPairCall = /:pair\d+$/u.test(String(input.requestId ?? ""));
+  const declaredSourceCandidateRef = !isExtraPairCall
+    ? (declaredCandidateRef(finalizeBinding.comparability.sourceCandidateRef) ?? sourceCandidateRef)
+    : sourceCandidateRef;
+  const declaredCounterfactualCandidateRef = !isExtraPairCall
+    ? (declaredCandidateRef(finalizeBinding.comparability.counterfactualCandidateRef) ??
+      firstCounterfactualCandidateRef)
+    : firstCounterfactualCandidateRef;
   const comparisonCandidateRefs = new Set([
     declaredSourceCandidateRef,
     declaredCounterfactualCandidateRef,
