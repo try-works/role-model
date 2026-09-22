@@ -1146,8 +1146,55 @@ export function createSupervisedReplayEvaluationCompleter(input: {
     if (!evaluationJobId || !replayJobId) {
       throw new Error("durable replay evaluation is missing its evaluation job identity");
     }
-    const counterfactuals = await Promise.all(
-      input.counterfactualPackages.map(async (candidate) => {
+    /**
+     * Run 100 R2 (live stage, released candidate `d19dcff3`): an arm's comparable output comes from its
+     * durable branch capture. Two live classes discarded the whole capture instead:
+     *
+     *  - `durable replay evaluation is missing counterfactual output evidence` (23:04:00Z) - the arm's
+     *    durable answer was tool-call shaped (no assistant text), so the text-only projection found
+     *    nothing even though the capture carried the calls.
+     *  - `durable replay evaluation is missing branch capture for <endpoint>` (HTTP 409, 23:09:55Z and
+     *    23:30:33Z) - the arm's capture was skipped by the deferred-capture budget (the same window logs
+     *    `route capture skipped: 4000446 bytes exceeds the 524288-byte deferred capture budget`).
+     *
+     * The requirement is explicit: a tool-call-shaped answer is comparable evidence, and an arm whose
+     * capture genuinely cannot be produced is a **named per-arm exclusion** that must not cost the other
+     * arms' evidence. Only those two availability classes are excludable; provenance failures still fail
+     * the capture.
+     */
+    const counterfactualExclusions: Array<{ endpointId: string; reason: string }> = [];
+    const excludableArmReason = /missing branch capture for |missing counterfactual output evidence/u;
+    const projectArmOutput = (
+      capture: Record<string, unknown>,
+      dispatched: string | null,
+      recovered: Record<string, unknown> | null,
+    ): string | null => {
+      const text =
+        dispatched ??
+        (typeof capture.responseText === "string" && capture.responseText.trim()
+          ? capture.responseText
+          : null) ??
+        (typeof recovered?.content === "string" && recovered.content.trim()
+          ? recovered.content
+          : null) ??
+        (typeof capture.outputText === "string" && capture.outputText.trim()
+          ? capture.outputText
+          : null);
+      if (text) return text;
+      // A tool-call-shaped answer is the arm's answer: serialise the captured calls, bounded.
+      const tools = Array.isArray(capture.tools) ? (capture.tools as unknown[]) : [];
+      if (tools.length === 0) return null;
+      return `tool-calls:${JSON.stringify(tools.slice(0, 16)).slice(0, 4_096)}`;
+    };
+    const resolvedCounterfactuals: Array<{
+      candidate: (typeof input.counterfactualPackages)[number];
+      replayRequestId: string;
+      output: string;
+      outputSha256: string;
+      branchCapture: Record<string, unknown>;
+    }> = [];
+    for (const candidate of input.counterfactualPackages) {
+      try {
         const dispatchedCandidate = input.getDispatched(candidate.endpointId);
         const durableDispatch = replayDispatches[candidate.endpointId] as
           | Record<string, unknown>
@@ -1200,24 +1247,40 @@ export function createSupervisedReplayEvaluationCompleter(input: {
           branchCapture.response && typeof branchCapture.response === "object"
             ? (branchCapture.response as Record<string, unknown>)
             : null;
-        const output =
-          (typeof dispatchedExecution?.outputText === "string"
+        const output = projectArmOutput(
+          branchCapture,
+          typeof dispatchedExecution?.outputText === "string" && dispatchedExecution.outputText
             ? dispatchedExecution.outputText
-            : null) ??
-          (typeof recoveredResponse?.content === "string" ? recoveredResponse.content : null) ??
-          (typeof branchCapture.outputText === "string" ? branchCapture.outputText : null);
+            : null,
+          recoveredResponse,
+        );
         if (!output) {
           throw new Error("durable replay evaluation is missing counterfactual output evidence");
         }
-        return {
+        resolvedCounterfactuals.push({
           candidate,
-          replayRequestId,
+          // The later provenance gate refuses an empty id; the array's type is the non-null shape.
+          replayRequestId: replayRequestId ?? "",
           output,
           outputSha256: createHash("sha256").update(output, "utf8").digest("hex"),
           branchCapture,
-        };
-      }),
-    );
+        });
+      } catch (armError) {
+        const reason = String(
+          (armError as { message?: unknown })?.message ?? armError ?? "unknown",
+        ).slice(0, 200);
+        if (!excludableArmReason.test(reason)) throw armError;
+        counterfactualExclusions.push({ endpointId: candidate.endpointId, reason });
+      }
+    }
+    if (resolvedCounterfactuals.length === 0) {
+      throw new Error(
+        `durable replay evaluation has no comparable counterfactual arm: excluded ${counterfactualExclusions
+          .map((entry) => `${entry.endpointId} (${entry.reason})`)
+          .join("; ")}`.slice(0, 512),
+      );
+    }
+    const counterfactuals = resolvedCounterfactuals;
     if (counterfactuals.some(({ replayRequestId }) => !replayRequestId)) {
       throw new Error("durable replay evaluation cannot recover counterfactual request provenance");
     }
@@ -1667,6 +1730,11 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       comparisonGroupId,
       outcome,
       comparisonDigest: `sha256:${createHash("sha256").update(JSON.stringify(comparison)).digest("hex")}`,
+      /**
+       * Run 100 R2: the arms this capture could not compare travel with the result so the disposition
+       * and the Learning evidence view can show *why* evidence was lost instead of a generic deferral.
+       */
+      counterfactualExclusions,
       ...(extraComparisons.length > 0 ? { extraComparisons } : {}),
     };
   };
