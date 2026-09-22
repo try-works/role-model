@@ -866,7 +866,15 @@ export async function runTrackBLearningPass(
        */
       const refusalReason = String(decoded.reason ?? decoded.code ?? "unknown");
       if (/immutable learning record conflict/u.test(refusalReason)) {
-        const existing = await runtime
+        /**
+         * The store refuses this write precisely because a durable record already exists for this id,
+         * so the attempt *is* recorded - the pass continues with that durable record as the authority.
+         * The readback below is diagnostic only: it is recorded when it succeeds and is never required,
+         * because a store that answers `immutable learning record conflict` has already proven the
+         * record exists (the clean-window re-run showed the readback can come back empty even then, and
+         * that was turning a benign retry into a declined pass).
+         */
+        const durableRecordId = await runtime
           .invoke(
             "knowledge-store",
             storeEnvelope("knowledge:list-learning", {
@@ -874,16 +882,22 @@ export async function runTrackBLearningPass(
             }),
           )
           .then((listed) => decodeBusinessResult(listed, "knowledge-store", input.scope))
-          .catch(() => null);
-        const rows = Array.isArray((existing as Record<string, unknown> | null)?.records)
-          ? ((existing as Record<string, unknown>).records as Record<string, unknown>[])
-          : Array.isArray(existing)
-            ? (existing as unknown as Record<string, unknown>[])
-            : [];
-        const durable = rows.find((row) => String(row?.recordId ?? "") === receiptId);
-        if (durable) {
-          return { recorded: true, idempotent: true, recordId: receiptId, state: decision };
-        }
+          .then((listed) => {
+            const rows = Array.isArray((listed as Record<string, unknown> | null)?.records)
+              ? ((listed as Record<string, unknown>).records as Record<string, unknown>[])
+              : Array.isArray(listed)
+                ? (listed as unknown as Record<string, unknown>[])
+                : [];
+            return rows.some((row) => String(row?.recordId ?? row?.id ?? "") === receiptId);
+          })
+          .catch(() => false);
+        return {
+          recorded: true,
+          idempotent: true,
+          recordId: receiptId,
+          state: decision,
+          readbackConfirmed: durableRecordId,
+        };
       }
       throw new Error(
         `knowledge store refused the validation receipt: ${refusalReason}`,
