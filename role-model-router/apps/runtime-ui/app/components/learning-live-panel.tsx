@@ -62,13 +62,16 @@ function BudgetArc({
      * column, and its content was anchored to the bottom of a 168px box - the arc's viewBox carried 22
      * units of empty space above the apex and the readout sat at `bottom-[18px]`. Measured live, the
      * column's first row started at y=520 while the gauge's visible content began at y=618, so the
-     * right-hand column read as vertically centred against the table on the left. The viewBox is now
-     * cropped to the arc and the readout is anchored from the top, so the gauge starts level with the
-     * table's first row and the column stays balanced.
+     * right-hand column read as vertically centred against the table on the left.
+     *
+     * The ticks are generated around (cx 110, cy 118) with a 96-unit radius, so the arc occupies
+     * x 14-206 and y 22-214: a 192x192 square. The viewBox now crops to exactly that box (and the
+     * box height is the gauge's size), so the arc's first tick sits on the block's top edge and the
+     * readout is the dial's centre label rather than a bottom-anchored caption.
      */
     <div className="relative flex h-[150px] items-start justify-center">
       <svg
-        viewBox="0 22 220 128"
+        viewBox="14 22 192 192"
         className="h-full w-full"
         role="img"
         aria-label={`${used} of ${limit} dispatches used`}
@@ -97,7 +100,7 @@ function BudgetArc({
           );
         })}
       </svg>
-      <div className="pointer-events-none absolute inset-x-0 top-[84px] text-center">
+      <div className="pointer-events-none absolute inset-x-0 top-[46px] text-center">
         <div className="font-mono text-3xl font-semibold text-[var(--rm-fg)]">
           {formatCompact(used)}
         </div>

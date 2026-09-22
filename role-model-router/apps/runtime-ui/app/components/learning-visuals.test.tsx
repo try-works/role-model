@@ -261,10 +261,11 @@ describe("run99 learning live panel", () => {
     );
     // The two-column grid is explicitly top-aligned rather than stretching its items.
     expect(html).toContain("lg:grid-cols-2 lg:items-start");
-    // The gauge box hugs its arc and anchors the readout from the top.
+    // The gauge box hugs its arc (viewBox cropped to the 192x192 tick bounding box) and the readout
+    // is the dial's centre label rather than a bottom-anchored caption.
     expect(html).toContain("h-[150px] items-start");
-    expect(html).toContain('viewBox="0 22 220 128"');
-    expect(html).toContain("absolute inset-x-0 top-[84px]");
+    expect(html).toContain('viewBox="14 22 192 192"');
+    expect(html).toContain("absolute inset-x-0 top-[46px]");
     expect(html).not.toContain("bottom-[18px]");
   });
 
