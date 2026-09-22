@@ -64,14 +64,16 @@ function BudgetArc({
      * column's first row started at y=520 while the gauge's visible content began at y=618, so the
      * right-hand column read as vertically centred against the table on the left.
      *
-     * The ticks are generated around (cx 110, cy 118) with a 96-unit radius, so the arc occupies
-     * x 14-206 and y 22-214: a 192x192 square. The viewBox now crops to exactly that box (and the
-     * box height is the gauge's size), so the arc's first tick sits on the block's top edge and the
-     * readout is the dial's centre label rather than a bottom-anchored caption.
+     * The ticks run from 160 deg to 380 deg around (cx 110, cy 118) at a 96-unit radius, which is a
+     * bowl: its two tips are the highest points (y = 118 - 96*sin(20 deg) = 85.2) and its dip is the
+     * lowest (y = 214). The viewBox therefore crops to x 14-206, y 85-214, so the tips sit on the
+     * block's top edge and the readout is the bowl's centre label rather than a bottom-anchored
+     * caption. (Measured live on the packaged runtime after this crop: the topmost tick lands on the
+     * block's top edge, level with the pipeline table's first row.)
      */
     <div className="relative flex h-[150px] items-start justify-center">
       <svg
-        viewBox="14 22 192 192"
+        viewBox="14 85 192 129"
         className="h-full w-full"
         role="img"
         aria-label={`${used} of ${limit} dispatches used`}

@@ -264,7 +264,7 @@ describe("run99 learning live panel", () => {
     // The gauge box hugs its arc (viewBox cropped to the 192x192 tick bounding box) and the readout
     // is the dial's centre label rather than a bottom-anchored caption.
     expect(html).toContain("h-[150px] items-start");
-    expect(html).toContain('viewBox="14 22 192 192"');
+    expect(html).toContain('viewBox="14 85 192 129"');
     expect(html).toContain("absolute inset-x-0 top-[46px]");
     expect(html).not.toContain("bottom-[18px]");
   });
