@@ -4,6 +4,7 @@ import {
   controlActionFor,
   formatLearningSummary,
   formatReplayBudget,
+  formatReplayLiveness,
   normalizeLearningSummary,
   normalizeReplayAutomationStatus,
 } from "./replay-status";
@@ -75,6 +76,38 @@ describe("run97 replay automation view model", () => {
     expect(formatReplayBudget(normalizeReplayAutomationStatus(null))).toBe(
       "replay automation unavailable",
     );
+  });
+
+  /**
+   * Run 100 addendum `00-requirements.evaluation-lease-wedge-repair.addendum-02` S1: the liveness sweeps
+   * (expire stale replay jobs, resume interrupted evaluations, reconcile non-terminal evaluation jobs) run
+   * every tick and their counts belong on the operator surface — a reconcile that strands work must be
+   * visible, not discovered by eye days later.
+   */
+  test("run100h surfaces the liveness sweep counters", () => {
+    const view = normalizeReplayAutomationStatus({
+      ticks: 3,
+      lastOutcome: "ok",
+      lastExpiredJobs: 1,
+      lastResumedEvaluations: 2,
+      lastReconciledEvaluations: 3,
+      lastStrandedEvaluations: 4,
+      lastReclaimedEvaluations: 5,
+    });
+    expect(view.liveness).toMatchObject({
+      expiredJobs: 1,
+      resumedEvaluations: 2,
+      reconciledEvaluations: 3,
+      strandedEvaluations: 4,
+      reclaimedEvaluations: 5,
+    });
+    expect(formatReplayLiveness(view)).toBe(
+      "sweeps: 1 expired · 2 resumed · 3 reconciled · 4 stranded · 5 reclaimed",
+    );
+    // A payload from a build without the counters must read as zeros, and an unavailable loop has no line.
+    const older = normalizeReplayAutomationStatus({ ticks: 1, lastOutcome: "ok" });
+    expect(older.liveness).toMatchObject({ reconciledEvaluations: 0, strandedEvaluations: 0 });
+    expect(formatReplayLiveness(normalizeReplayAutomationStatus(null))).toBeNull();
   });
 });
 

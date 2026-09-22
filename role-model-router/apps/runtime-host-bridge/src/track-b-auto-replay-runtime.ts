@@ -121,6 +121,15 @@ export interface AutoReplayOperations {
    * sweep keeps working; the tick simply reports zero resumed evaluations.
    */
   resumePendingEvaluations?(input: Record<string, unknown>): Promise<unknown>;
+  /**
+   * Run 100 addendum `evaluation-lease-wedge-repair.addendum-02` S1: optional bounded sweep over
+   * *evaluation* jobs that never reached a terminal state. It completes a job whose comparison is
+   * finalized, marks a lease-free job with no non-terminal trial as stranded, and reclaims it after the
+   * grace. The extension exposes `evaluation:reconcile-jobs` for exactly this and, until now, nothing in
+   * production called it — which is how 18 jobs stayed "in flight" for two days. A runtime whose boundary
+   * does not expose the sweep keeps working; the tick simply reports zero reconciled jobs.
+   */
+  reconcileEvaluationJobs?(input: Record<string, unknown>): Promise<unknown>;
 }
 
 export interface AutoReplayLoopHealth {
@@ -132,6 +141,12 @@ export interface AutoReplayLoopHealth {
   readonly lastProcessedAtMs: number | null;
   readonly lastExpiredJobs: number;
   readonly lastResumedEvaluations: number;
+  /** Jobs the reconcile pass completed because their comparison group is finalized. */
+  readonly lastReconciledEvaluations: number;
+  /** Jobs the reconcile pass observed as stranded (no live lease, no non-terminal trial). */
+  readonly lastStrandedEvaluations: number;
+  /** Stranded jobs the reconcile pass terminalized after the grace. */
+  readonly lastReclaimedEvaluations: number;
 }
 
 export interface AutoReplayLoopStatus extends AutoReplayLoopHealth {
@@ -231,6 +246,9 @@ export function startAutoReplayLoop(input: {
   let lastDispositions = 0;
   let lastExpiredJobs = 0;
   let lastResumedEvaluations = 0;
+  let lastReconciledEvaluations = 0;
+  let lastStrandedEvaluations = 0;
+  let lastReclaimedEvaluations = 0;
   let timer: unknown = null;
 
   const pendingCaptures = (value: unknown): readonly AutoReplayCapture[] => {
@@ -285,13 +303,34 @@ export function startAutoReplayLoop(input: {
    * to replay throughput, so it is now runnable on its own with a re-entrancy guard.
    */
   let sweeping = false;
+  /**
+   * The reconcile pass answers with three job-id lists (`completed`, `stranded`, `reclaimed`) plus the
+   * scanned total. Counts are derived from the lists so a boundary that returns only the arrays - the
+   * shipped extension shape - is read correctly, and a boundary that returns numbers keeps working.
+   */
+  const countOf = (value: unknown): number => {
+    if (Array.isArray(value)) return value.length;
+    return Number.isSafeInteger(value) && (value as number) >= 0 ? Number(value) : 0;
+  };
   const runLivenessSweeps = async (
     window: Record<string, unknown>,
-  ): Promise<{ expired: number; resumed: number; error: string | null }> => {
-    if (sweeping) return { expired: 0, resumed: 0, error: null };
+  ): Promise<{
+    expired: number;
+    resumed: number;
+    reconciled: number;
+    stranded: number;
+    reclaimed: number;
+    error: string | null;
+  }> => {
+    if (sweeping) {
+      return { expired: 0, resumed: 0, reconciled: 0, stranded: 0, reclaimed: 0, error: null };
+    }
     sweeping = true;
     let expired = 0;
     let resumed = 0;
+    let reconciled = 0;
+    let stranded = 0;
+    let reclaimed = 0;
     let error: string | null = null;
     try {
       if (typeof input.operations.expireStaleReplayJobs === "function") {
@@ -336,10 +375,36 @@ export function startAutoReplayLoop(input: {
           error = error ? `${error}; ${detail}` : detail;
         }
       }
+      // Run 100 addendum 02 S1: the reconcile pass is what completes a job whose comparison finalized and
+      // reclaims one that is stranded beyond the grace. It had no production caller, so a job that lost its
+      // lease without a terminal trial stayed non-terminal indefinitely and was reported "in flight".
+      if (typeof input.operations.reconcileEvaluationJobs === "function") {
+        try {
+          const sweep = (await input.operations.reconcileEvaluationJobs({
+            window,
+            policySetDigest: input.policySet.policySetDigest,
+          })) as {
+            readonly completed?: unknown;
+            readonly stranded?: unknown;
+            readonly reclaimed?: unknown;
+          } | null;
+          if (sweep) {
+            reconciled = countOf(sweep.completed);
+            stranded = countOf(sweep.stranded);
+            reclaimed = countOf(sweep.reclaimed);
+          }
+        } catch (cause) {
+          const detail =
+            cause instanceof Error
+              ? `evaluation job reconciliation failed: ${cause.message.slice(0, 200)}`
+              : "evaluation job reconciliation failed";
+          error = error ? `${error}; ${detail}` : detail;
+        }
+      }
     } finally {
       sweeping = false;
     }
-    return { expired, resumed, error };
+    return { expired, resumed, reconciled, stranded, reclaimed, error };
   };
 
   const tick = async (): Promise<AutoReplayTickResult & { readonly skipped?: boolean }> => {
@@ -351,6 +416,9 @@ export function startAutoReplayLoop(input: {
       );
       if (sweep.expired > 0) lastExpiredJobs = sweep.expired;
       if (sweep.resumed > 0) lastResumedEvaluations = sweep.resumed;
+      if (sweep.reconciled > 0) lastReconciledEvaluations = sweep.reconciled;
+      if (sweep.stranded > 0) lastStrandedEvaluations = sweep.stranded;
+      if (sweep.reclaimed > 0) lastReclaimedEvaluations = sweep.reclaimed;
       if (sweep.error) {
         lastOutcome = "degraded";
         lastError = sweep.error;
@@ -446,6 +514,9 @@ export function startAutoReplayLoop(input: {
       const sweep = await runLivenessSweeps(window as unknown as Record<string, unknown>);
       lastExpiredJobs = sweep.expired;
       lastResumedEvaluations = sweep.resumed;
+      lastReconciledEvaluations = sweep.reconciled;
+      lastStrandedEvaluations = sweep.stranded;
+      lastReclaimedEvaluations = sweep.reclaimed;
       const sweepError = sweep.error;
       lastOutcome = sweepError ? "degraded" : "ok";
       lastError = sweepError;
@@ -502,6 +573,9 @@ export function startAutoReplayLoop(input: {
         lastProcessedAtMs,
         lastExpiredJobs,
         lastResumedEvaluations,
+        lastReconciledEvaluations,
+        lastStrandedEvaluations,
+        lastReclaimedEvaluations,
       };
     },
     status() {
@@ -511,6 +585,9 @@ export function startAutoReplayLoop(input: {
         lastDispositions,
         lastExpiredJobs,
         lastResumedEvaluations,
+        lastReconciledEvaluations,
+        lastStrandedEvaluations,
+        lastReclaimedEvaluations,
       };
     },
   };

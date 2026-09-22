@@ -14,6 +14,9 @@ import {
   negotiateDevelopmentVerificationCapability,
   parseDevelopmentVerificationTrustMaterial,
 } from "./development-verification.js";
+// Run 100 addendum `evaluation-lease-wedge-repair.addendum-02` S3: a give-up must terminalize the
+// evaluation half of the handoff too, or the row stays "in flight" with no lease forever.
+import { terminalizeAbandonedEvaluation } from "./evaluation-orphan-terminalization.js";
 import {
   type CreateRuntimeBridgeBackendOptions,
   type RuntimeBridgeBackend,
@@ -4335,6 +4338,34 @@ export async function main(): Promise<void> {
           }
           return resumeEvaluationsRef.current();
         },
+        /**
+         * Run 100 addendum `evaluation-lease-wedge-repair.addendum-02` S1: one bounded reconciliation of
+         * *evaluation* jobs per auto-replay tick.
+         *
+         * `evaluation:reconcile-jobs` is the only pass that completes a job whose comparison group is
+         * finalized, marks a job with no live lease and no non-terminal trial as stranded, and reclaims it
+         * once the grace has elapsed. It shipped with unit coverage and **no production caller** (the same
+         * shape as the run 98 addendum 34 rescue calls), so 18 rows stayed non-terminal on the live stage
+         * store for two days while the operator surface reported them "in flight". Evaluation jobs live in
+         * the operator scope's evaluation store - the resume sweep above reads them with the same scope.
+         */
+        async reconcileEvaluationJobs() {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) return { scanned: 0, completed: [], stranded: [], reclaimed: [] };
+          const record = (await runtime.invoke("evaluation-core", {
+            requestId: `evaluation-reconcile-jobs:${Date.now()}`,
+            sessionId: `evaluation-reconcile-jobs:${options.scopeId}`,
+            protocolVersion: "1.1.0",
+            channel,
+            scope: options.scopeId,
+            authorizationEpoch: 1,
+            capability: "evaluation:reconcile-jobs",
+            value: { limit: 200 },
+          })) as Record<string, unknown> | null;
+          return record && typeof record === "object" && !Array.isArray(record)
+            ? record
+            : { scanned: 0, completed: [], stranded: [], reclaimed: [] };
+        },
       };
       return startAutoReplayLoop({
         operations: sweepOperations,
@@ -6166,6 +6197,55 @@ export async function main(): Promise<void> {
                   `[run98] replay job terminalization declined:${entry.replayJobId} ${message.slice(0, 200)}`,
                 );
               }
+            }
+            /**
+             * Run 100 addendum `evaluation-lease-wedge-repair.addendum-02` S3 (operator report
+             * 2026-09-23: "18 evals have been stuck in flight for hours").
+             *
+             * `replay:fail-job` closes the replay half of the handoff. The *evaluation* job behind the
+             * same handoff was left non-terminal with no lease at all: `evaluation:claim-job` accepts
+             * only `queued` or an expired `leased` row, and a NULL expiry never satisfies it, so the row
+             * could never be claimed again. The operator surface then reported it "in flight" for days.
+             * The give-up therefore terminalizes both halves with the same recorded reason. This is
+             * independent of the replay half: a refused or already-terminal replay job must not stop the
+             * evaluation row from being closed.
+             */
+            try {
+              const terminalization = await terminalizeAbandonedEvaluation({
+                entry: {
+                  replayJobId: entry.replayJobId,
+                  evaluationJobId: entry.evaluationJobId,
+                  scope: entry.scope,
+                },
+                channel,
+                operatorScope: options.scopeId,
+                reason,
+                invoke: (capability, value, invokeScope) =>
+                  activeRuntime.invoke("evaluation-core", {
+                    requestId: `${capability}:${entry.evaluationJobId}`,
+                    sessionId: `${capability}:${options.scopeId}`,
+                    protocolVersion: "1.1.0",
+                    channel,
+                    scope: invokeScope,
+                    authorizationEpoch: 1,
+                    capability,
+                    value,
+                  }),
+              });
+              if (!terminalization.cancelled) {
+                // A job that is already terminal is the expected second visit; anything else is worth a
+                // line in the log rather than silence, because silence is what hid this defect.
+                console.error(
+                  `[run100h] evaluation job terminalization not applied:${entry.evaluationJobId} scope=${terminalization.scope ?? "unresolved"} ${String(terminalization.detail ?? "job is already terminal").slice(0, 160)}`,
+                );
+              }
+            } catch (terminalizationError) {
+              const message = String(
+                (terminalizationError as { message?: unknown })?.message ?? terminalizationError,
+              );
+              console.error(
+                `[run100h] evaluation job terminalization failed:${entry.evaluationJobId} ${message.slice(0, 200)}`,
+              );
             }
           },
         });

@@ -10,6 +10,12 @@ export interface LearningPipelineStage {
   readonly stage: "capture" | "replay" | "evaluation" | "learner";
   readonly label: string;
   readonly pending: number;
+  /**
+   * Run 100 addendum `evaluation-lease-wedge-repair.addendum-02` S4: non-terminal work with no live lease.
+   * `pending` counts work something can still pick up; this counts work nothing can, which is what the
+   * operator needs to see when the panel would otherwise report it "in flight".
+   */
+  readonly wedged: number;
   readonly recent: number;
   readonly active: boolean;
   readonly lastEventAtMs: number | null;
@@ -218,6 +224,7 @@ export function normalizeLearningActivity(value: unknown): LearningActivityView 
       stage: id as LearningPipelineStage["stage"],
       label: STAGE_LABELS[id] ?? id,
       pending: Math.max(0, Math.round(asNumber(stage.pending))),
+      wedged: Math.max(0, Math.round(asNumber(stage.wedged))),
       recent: Math.max(0, Math.round(asNumber(stage.recent))),
       active: stage.active === true,
       lastEventAtMs: asNullableNumber(stage.lastEventAtMs),

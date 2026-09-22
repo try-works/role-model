@@ -222,6 +222,16 @@ export function LearningLivePanelView({
                   </div>
                   <span className="font-mono text-xs text-[var(--rm-fg-muted)]">
                     {stage.pending > 0 ? `${stage.pending} in flight · ` : ""}
+                    {/*
+                      Run 100 addendum `evaluation-lease-wedge-repair.addendum-02` S4: work nothing can pick
+                      up must not read as progress. The operator saw "18 in flight for hours"; this line
+                      says "18 wedged" instead.
+                    */}
+                    {stage.wedged > 0 ? (
+                      <span className="text-[var(--rm-danger)]">{`${stage.wedged} wedged · `}</span>
+                    ) : (
+                      ""
+                    )}
                     {stage.recent} in window
                   </span>
                   <span className="font-mono text-xs text-[var(--rm-fg-muted)]">
