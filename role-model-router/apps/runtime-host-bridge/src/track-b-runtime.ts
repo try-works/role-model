@@ -3482,11 +3482,13 @@ export async function runSupervisedReplay(input: {
       } catch (error) {
         // Recovery is best-effort: the durable replay state stays the authority and the
         // capture is retired below when its evidence cannot be finalized.
-        console.error(
-          `[run98] terminal replay evaluation recovery declined:${jobId} ${String(
-            (error as { message?: unknown })?.message ?? error,
-          ).slice(0, 200)}`,
-        );
+        const recoveryMessage = String(
+          (error as { message?: unknown })?.message ?? error,
+        ).slice(0, 200);
+        // Run 100 R3: a job that is already terminal needs no recovery attempt, so it is not a decline.
+        if (classifyReplayTerminalizationFailure(recoveryMessage) !== "already_terminal") {
+          console.error(`[run98] terminal replay evaluation recovery declined:${jobId} ${recoveryMessage}`);
+        }
       }
     }
     return { ...structuredClone(created), schedulerState: "terminal_job" };
@@ -5327,8 +5329,17 @@ async function initializeTrackBPostObservationOutbox(
  */
 export function classifyReplayTerminalizationFailure(
   message: string,
-): "legacy_scope_unresolved" | "declined" {
-  return /scope binding mismatch/u.test(message) ? "legacy_scope_unresolved" : "declined";
+): "legacy_scope_unresolved" | "already_terminal" | "declined" {
+  if (/scope binding mismatch/u.test(message)) return "legacy_scope_unresolved";
+  /**
+   * Run 100 R3 (live finding, clean verification window 2026-09-22): the terminal-evaluation recovery
+   * sweep re-entered jobs that had already reached a terminal state, and every attempt was logged as
+   * `terminal replay evaluation recovery declined:… replay job is terminal or cancelling`. The durable
+   * state is the authority and it is already terminal, so this is a benign no-op rather than a decline
+   * - classifying it separately stops the sweep from reporting a failure it cannot make progress on.
+   */
+  if (/replay job is terminal or cancelling/u.test(message)) return "already_terminal";
+  return "declined";
 }
 
 export function createSingleFlightBackgroundDrain<Runtime>(input: {

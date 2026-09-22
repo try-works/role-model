@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
 
-import { selectTrackBCounterfactualArms } from "../src/track-b-runtime.js";
+import {
+  classifyReplayTerminalizationFailure,
+  selectTrackBCounterfactualArms,
+} from "../src/track-b-runtime.js";
 
 /**
  * Run 100 R1 (live finding, clean verification window 2026-09-22): the routing-shadow path created its
@@ -62,5 +65,31 @@ describe("run 100 R1 judge arm exclusion", () => {
     expect(selection.arms).toEqual(["endpoint:arm-b", "endpoint:arm-c"]);
     expect(selection.excluded).toEqual([]);
     expect(selection.refusal).toBeNull();
+  });
+});
+
+/**
+ * Run 100 R3 (live finding, clean verification window): the terminal-evaluation recovery sweep
+ * re-entered jobs that were already terminal and logged every attempt as a decline
+ * (`replay job is terminal or cancelling`). The classification separates that benign no-op from the
+ * legacy scope case and from a genuine decline, so the sweep stops reporting progress it cannot make.
+ */
+describe("run 100 R3 terminal recovery classification", () => {
+  test("an already-terminal replay job is classified as a benign no-op", () => {
+    expect(classifyReplayTerminalizationFailure("replay job is terminal or cancelling")).toBe(
+      "already_terminal",
+    );
+  });
+
+  test("a scope binding mismatch keeps its legacy classification", () => {
+    expect(classifyReplayTerminalizationFailure("replay persisted job scope binding mismatch")).toBe(
+      "legacy_scope_unresolved",
+    );
+  });
+
+  test("anything else is still a decline", () => {
+    expect(classifyReplayTerminalizationFailure("extension replay-core failed: unknown job")).toBe(
+      "declined",
+    );
   });
 });
