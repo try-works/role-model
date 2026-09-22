@@ -34,8 +34,21 @@ export const DEFAULT_MAX_CAPTURES_PER_TICK = 8;
  * a job whose dispatches all completed alive through a bounded finalization grace so the
  * branch append and evaluation handoff can finish.
  */
-export const AUTO_REPLAY_DEADLINE_PER_CANDIDATE_MS = 120_000;
-export const AUTO_REPLAY_DEADLINE_MAX_MS = 1_800_000;
+/**
+ * Run 100 addendum `runtime-replay-timeout-bounds.addendum-01` (operator instruction: "raise the bounds to
+ * 600 s for both"). The decision was first applied to the two running stage processes through environment
+ * variables, which left the *packaged* runtime on the old 120 s default — and the operator starts the stage
+ * release by hand from the downloaded package. The default is therefore the operator's value now; the
+ * resolver band is unchanged, so a deployment can still tune it.
+ */
+export const AUTO_REPLAY_DEADLINE_PER_CANDIDATE_MS = 600_000;
+/**
+ * The cap must keep headroom above a three-candidate job at the new per-candidate bound (3 x 600 s =
+ * 1800 s), otherwise every capture-size step is clipped away and a heavy three-arm replay is expired
+ * mid-dispatch — the exact failure the per-candidate bound was raised to stop. One hour leaves room for a
+ * three-arm job whose prompts add size steps while still bounding the job's wall clock.
+ */
+export const AUTO_REPLAY_DEADLINE_MAX_MS = 3_600_000;
 /**
  * Run 99 R33 live finding (stage v143): real coding-agent requests arrive with multi-megabyte
  * prompts. Once the capture admission bound stopped refusing them, the *replay* became the next

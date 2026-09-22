@@ -878,8 +878,16 @@ const DEFAULT_CONTRIBUTION_AGGREGATE_TIMEOUT_MS = 5_000;
  * — and the second one starved the auto-replay producer, so freshly captured requests were never
  * replayed. Five seconds was already raised to eight for the same reason; the bound now covers the
  * durable commit path under load and stays operator-tunable without a rebuild.
+ *
+ * Run 100 addendum `runtime-replay-timeout-bounds.addendum-01` (operator instruction: "raise the bounds
+ * to 600 s for both"): real dsh replays of multi-megabyte coding-agent prompts take minutes per provider
+ * call, and a boundary that gives up at 30 s turns each one into `private Track B operation timed out
+ * after 10000ms` and then into a retired capture. The decision was first applied to the running stage
+ * processes through `ROLE_MODEL_TRACK_B_OPERATIONS_TIMEOUT_MS`; it is now the packaged default as well, so
+ * a release started by hand from the downloaded package carries it. The resolver stays injectable, so a
+ * deployment can still size it for its own traffic.
  */
-export const DEFAULT_TRACK_B_OPERATIONS_TIMEOUT_MS = 30_000;
+export const DEFAULT_TRACK_B_OPERATIONS_TIMEOUT_MS = 600_000;
 
 export function resolveTrackBOperationsTimeoutMs(
   configured: number | null | undefined = Number.parseInt(
