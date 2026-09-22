@@ -29,6 +29,14 @@ export const REPLAY_REFUSAL_CODES = [
    */
   "replay_window_elapsed",
   /**
+   * Run 100 addendum `00-requirements.benchmark-traffic-exclusion.addendum-01` (operator instruction
+   * 2026-09-22: "benchmark traffic should never become considered for replay and evaluation, it must
+   * always be excluded from replay and evals"). A benchmark run measures routing and answer quality
+   * with its own pinned candidates and its own store; it is never a source of counterfactual replay
+   * evidence. Terminal by design, so it is refused once and never re-queued.
+   */
+  "benchmark_source_not_replayable",
+  /**
    * Run 98 addendum 56 §6: the capture's own endpoint is the endpoint that judges comparisons, so a battle would
    * have the judge score itself (the `judge_candidate_overlap` protection of addenda 30/33). Deferrable, because
    * the operator can change the controller; named, so the class is countable instead of arriving as `replay_failed`.
@@ -49,6 +57,11 @@ export interface ReplayAdmissionInput {
   readonly budgetAvailable: boolean;
   readonly alreadyProcessed: boolean;
   readonly sourceIsReplayProduced: boolean;
+  /**
+   * Run 100 addendum `00-requirements.benchmark-traffic-exclusion.addendum-01`: the capture's request is
+   * benchmark-originated, so it may never become replay or evaluation input.
+   */
+  readonly sourceIsBenchmark: boolean;
   readonly policyIdsResolvable: boolean;
   readonly dependenciesAvailable: boolean;
 }
@@ -80,6 +93,16 @@ export function decideReplayAdmission(input: ReplayAdmissionInput): ReplayAdmiss
   if (!input.privacyReplayable) {
     return refuse("privacy_denied", "the capture classification does not permit replay");
   }
+  /**
+   * Checked before candidate selection and budget, because it is a property of the source rather than
+   * of the work: a benchmark capture must not even reserve capacity.
+   */
+  if (input.sourceIsBenchmark) {
+    return refuse(
+      "benchmark_source_not_replayable",
+      "benchmark traffic is never a replay or evaluation source",
+    );
+  }
   if (!Number.isSafeInteger(input.distinctCandidateCount) || input.distinctCandidateCount < 1) {
     return refuse(
       "no_distinct_candidate_configured",
@@ -108,6 +131,18 @@ export function decideReplayAdmission(input: ReplayAdmissionInput): ReplayAdmiss
 }
 
 export const DEFAULT_REPLAY_CANDIDATE_CAP = 3;
+
+/**
+ * Run 100 addendum `00-requirements.benchmark-traffic-exclusion.addendum-01`: the benchmark harness is
+ * the only writer of these request-id shapes (`bench-<case>-<endpoint>-turnN-<uuid>`,
+ * `bench-judge-…`, `bench-judge-compare-…`, `bench-<runId>-…`), and the runtime prefixes its own
+ * synthetic ids with `req-`, `replay-` or `replay-judge-`. The predicate is deliberately a prefix test
+ * on the capture ref the queue already carries, so the rule is enforced at the boundary rather than
+ * inferred from a payload field a future caller could omit.
+ */
+export function isBenchmarkReplaySourceRef(requestRef: unknown): boolean {
+  return typeof requestRef === "string" && /^bench[-_]/u.test(requestRef.trim());
+}
 
 /**
  * Run 100 phase-5 repair (operator instruction 2026-09-21: "the daily dispatch ceiling is only for the

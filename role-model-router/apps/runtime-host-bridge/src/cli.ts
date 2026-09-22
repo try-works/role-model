@@ -84,6 +84,7 @@ import {
   decideReplayAdmission,
   hasRecordedToolResults,
   hasToolCalls,
+  isBenchmarkReplaySourceRef,
   replayBudgetEnforcedForChannel,
   resolveReplayPolicySet,
   resolveReplayToolPolicy,
@@ -4865,6 +4866,11 @@ export async function main(): Promise<void> {
             retentionReplayable: true,
             privacyReplayable: true,
             distinctCandidateCount: distinctReplayCandidates.length,
+            /**
+             * Run 100 addendum `00-requirements.benchmark-traffic-exclusion.addendum-01`: the on-demand
+             * replay path refuses benchmark captures by name for the same reason the producer does.
+             */
+            sourceIsBenchmark: isBenchmarkReplaySourceRef(requestId),
             budgetAvailable: replayBudgetAvailable(replayLedgerStatus),
             alreadyProcessed: replayLedger.hasTerminalCounterfactual(
               requestId,

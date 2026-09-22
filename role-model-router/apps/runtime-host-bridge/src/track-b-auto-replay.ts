@@ -6,6 +6,7 @@ import {
   type ReplayRefusalCode,
   type ReplayToolPolicy,
   decideReplayAdmission,
+  isBenchmarkReplaySourceRef,
   resolveReplayToolPolicy,
   selectReplayCandidates,
 } from "./track-b-replay-policy.js";
@@ -526,6 +527,11 @@ export async function runAutoReplayTick(input: {
       authorizationEpochValid: true,
       retentionReplayable: true,
       privacyReplayable: true,
+      /**
+       * Run 100 addendum `00-requirements.benchmark-traffic-exclusion.addendum-01`: benchmark captures are
+       * refused terminally here, so they never reserve budget, never dispatch and never reach evaluation.
+       */
+      sourceIsBenchmark: isBenchmarkReplaySourceRef(capture.captureRef),
       distinctCandidateCount: candidates.length,
       budgetAvailable: replayBudgetAvailable(status),
       alreadyProcessed: input.ledger.hasTerminalCounterfactual(

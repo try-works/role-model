@@ -173,7 +173,10 @@ import {
   selectTrackBLearningTarget,
 } from "./track-b-learning-evidence.js";
 import { type TrackBLearningPassRuntime, runTrackBLearningPass } from "./track-b-learning-pass.js";
-import { DEFAULT_REPLAY_CANDIDATE_CAP } from "./track-b-replay-policy.js";
+import {
+  DEFAULT_REPLAY_CANDIDATE_CAP,
+  isBenchmarkReplaySourceRef,
+} from "./track-b-replay-policy.js";
 import {
   TRACK_B_PAIRWISE_JUDGE_WINNER_COUNTERFACTUAL,
   type TrackBPairwiseJudge,
@@ -7803,6 +7806,20 @@ export async function appendTrackBRouteAdvisoryObservation(input: {
   readonly observation: Readonly<Record<string, unknown>>;
   readonly maxEntries?: number;
 }) {
+  /**
+   * Run 100 addendum `00-requirements.benchmark-traffic-exclusion.addendum-01` (operator instruction
+   * 2026-09-22: "benchmark traffic should never become considered for replay and evaluation, it must
+   * always be excluded from replay and evals"). Measured live: 144 of the newest 500 ledger rows were
+   * `decision-bench-*` recorded as `mode: active, origin: live`, so a benchmark run was indistinguishable
+   * from real traffic in the operator's learning evidence and dominated the Decisions surface. Benchmark
+   * traffic is still routed and still measured by its own benchmark store; it is not learning evidence.
+   */
+  const benchmarkRef = [input.observation.decisionId, input.observation.requestId].find(
+    (value) => typeof value === "string" && isBenchmarkReplaySourceRef(value.replace(/^decision-/u, "")),
+  );
+  if (benchmarkRef !== undefined) {
+    return { appended: false, skipped: "benchmark_source" } as const;
+  }
   // Run 99 R25: the live routing path and the shadow pipeline append to this ledger from the
   // same process, and the pid-suffixed temp file made one rename consume the other's temp
   // (`ENOENT ... advisory-observations.json.<pid>.tmp`). Serialize per file so a
@@ -7810,7 +7827,7 @@ export async function appendTrackBRouteAdvisoryObservation(input: {
   const previous = trackBAdvisoryLedgerLocks.get(input.filePath) ?? Promise.resolve();
   const append = previous
     .catch(() => undefined)
-    .then(() => appendTrackBRouteAdvisoryObservationExclusive(input));
+    .then(async () => ({ ...(await appendTrackBRouteAdvisoryObservationExclusive(input)), appended: true }));
   trackBAdvisoryLedgerLocks.set(
     input.filePath,
     append.then(
