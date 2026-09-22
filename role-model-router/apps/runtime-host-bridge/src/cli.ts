@@ -1675,7 +1675,33 @@ export function createSupervisedReplayEvaluationCompleter(input: {
         "disagreement",
       ].includes(String(outcome))
     ) {
-      throw new Error("durable replay evaluation did not finalize a valid comparison");
+      /**
+       * Run 100 R3 legibility (live finding, clean verification window 2026-09-22): three captures
+       * carried only this sentence, while the pipeline had returned a *decline record* whose own reason
+       * was bounded and available (`state`, `reason`, `refusal.code`, the comparison's `outcome`). The
+       * refusal now names what arrived, so the disposition says which branch declined instead of
+       * collapsing every shape into one sentence.
+       */
+      const evaluatedRecord =
+        evaluated && typeof evaluated === "object" && !Array.isArray(evaluated)
+          ? (evaluated as Record<string, unknown>)
+          : {};
+      const refusal =
+        evaluatedRecord.refusal && typeof evaluatedRecord.refusal === "object"
+          ? (evaluatedRecord.refusal as Record<string, unknown>)
+          : {};
+      const detail = [
+        typeof evaluatedRecord.state === "string" ? `state=${evaluatedRecord.state}` : "",
+        typeof evaluatedRecord.reason === "string" ? `reason=${evaluatedRecord.reason}` : "",
+        typeof refusal.code === "string" ? `refusal=${refusal.code}` : "",
+        outcome === undefined || outcome === null ? "outcome=absent" : `outcome=${String(outcome)}`,
+        comparisonGroupId ? `group=${String(comparisonGroupId).slice(0, 48)}` : "group=absent",
+      ]
+        .filter(Boolean)
+        .join(" ");
+      throw new Error(
+        `durable replay evaluation did not finalize a valid comparison: ${detail}`.slice(0, 512),
+      );
     }
     /**
      * Run 98 addendum 34 S1 (live stage v211-v218: 503 groups, every one of them two members,
