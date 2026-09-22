@@ -8338,6 +8338,16 @@ export async function runTrackBShadowPipeline(
     ...(typeof input.taxonomyVersion === "string" && input.taxonomyVersion.trim()
       ? { taxonomyVersion: input.taxonomyVersion.trim() }
       : {}),
+    /**
+     * Run 100 R5: the role the request was classified under travels with the family and the revision.
+     * The completer already passes it (`cli.ts` -> `readCaptureRoleId`), but the comparability this
+     * pipeline builds dropped it, so the learner's candidate and pack scope could never be role-scoped
+     * from a capture's declared intent - the travel test
+     * `apps/runtime-host-bridge/test/run100-declared-intent-travel.test.ts` measures exactly that.
+     */
+    ...(typeof input.roleId === "string" && input.roleId.trim()
+      ? { roleId: input.roleId.trim() }
+      : {}),
     inputRef: evaluationReferences.inputRef,
     forkRef: evaluationReferences.forkRef,
     policyId: "run96-routing-shadow",
