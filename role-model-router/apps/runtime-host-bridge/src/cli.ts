@@ -1696,6 +1696,10 @@ export function createSupervisedReplayEvaluationCompleter(input: {
         typeof refusal.code === "string" ? `refusal=${refusal.code}` : "",
         outcome === undefined || outcome === null ? "outcome=absent" : `outcome=${String(outcome)}`,
         comparisonGroupId ? `group=${String(comparisonGroupId).slice(0, 48)}` : "group=absent",
+        // Run 100 R3 (second live read): with none of the fields above present, the record itself is the
+        // only remaining evidence - its own keys name the shape the pipeline returned (a wrapper, a
+        // transport envelope, or a record with the comparison nested elsewhere).
+        `keys=${Object.keys(evaluatedRecord).slice(0, 12).join(",") || "none"}`,
       ]
         .filter(Boolean)
         .join(" ");
