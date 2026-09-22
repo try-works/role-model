@@ -10642,6 +10642,12 @@ export async function runTrackBPostObservation(
     /** Run 99 close-out (addendum 21 §4 S33): the judge order policy in force for this scope. */
     readonly judgeOrderPolicy?: "source_first" | "dual_order" | null;
     /**
+     * Run 100 R7: the arm bound lives in the versioned activation policy (`maxCounterfactualArms`) and
+     * travels with the work item, so the operator can change it without a rebuild. The environment
+     * variable remains an explicit override for scripts.
+     */
+    readonly maxCounterfactualArms?: number | null;
+    /**
      * Run 98 addendum 58 §18: the runtime state root the extension host keeps its durable-output stores under.
      * A business answer that outgrew the inline frame limit comes back as the transfer marker
      * (`{transferState, resultHash, byteLength}`); resolving it needs this root, and without it the comparison
@@ -10972,7 +10978,14 @@ export async function runTrackBPostObservation(
     .sort()
     // Run 98 addendum 34 S1: the arm list is the input to coverage-driven pair planning, so its bound is
     // the policy value (default = the release cap) instead of a bare constant.
-    .slice(0, resolveMaxCounterfactualArms());
+    .slice(
+      0,
+      typeof input.maxCounterfactualArms === "number" &&
+        Number.isSafeInteger(input.maxCounterfactualArms) &&
+        input.maxCounterfactualArms > 0
+        ? Math.min(input.maxCounterfactualArms, 8)
+        : resolveMaxCounterfactualArms(),
+    );
   const pipeline =
     routingShadowEvidence && routingShadowCases.length > 0
       ? await runTrackBShadowPipeline(observedRuntime, {

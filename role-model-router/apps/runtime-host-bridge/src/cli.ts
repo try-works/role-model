@@ -1087,6 +1087,14 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       multiplicityAdjustment: "none" | "holm_bonferroni";
     }>;
     evidenceMaxAgeMs?: number;
+    /**
+     * Run 100 R1/R7: the operator policy behind judge-independent arms. `exclude` (default) drops the
+     * comparison's judge from its arms, `warn` does the same and records the exclusion, `off` leaves the
+     * arm set as configured.
+     */
+    judgeArmExclusion?: "exclude" | "warn" | "off";
+    /** Run 100 R7: the policy arm bound (falls back to the resolved environment value when absent). */
+    maxCounterfactualArms?: number;
   }>;
   readonly runPipeline?: typeof runTrackBShadowPipeline;
   /**
@@ -1290,17 +1298,24 @@ export function createSupervisedReplayEvaluationCompleter(input: {
      */
     const judgeEndpointId =
       typeof input.judge?.endpointId === "string" ? input.judge.endpointId.trim() : "";
-    const counterfactuals = judgeEndpointId
+    /**
+     * Run 100 R7: whether the judge is excluded from the arm set is operator policy
+     * (`judgeArmExclusion`, default `exclude`). `off` keeps the arm set as configured and leaves the
+     * resulting self-judged evidence to the learner's exclusion, which is the pre-run-100 behaviour.
+     */
+    const judgeArmExclusion = input.learningPolicy?.judgeArmExclusion ?? "exclude";
+    const counterfactuals =
+      judgeEndpointId && judgeArmExclusion !== "off"
       ? resolvedCounterfactuals.filter((entry) => {
           if (entry.candidate.endpointId !== judgeEndpointId) return true;
           counterfactualExclusions.push({
             endpointId: entry.candidate.endpointId,
-            reason: "judge_arm_excluded: the comparison's judge cannot be one of its arms",
+            reason: `judge_arm_excluded: the comparison's judge cannot be one of its arms (policy ${judgeArmExclusion})`,
           });
           return false;
         })
       : resolvedCounterfactuals;
-    if (counterfactuals.length === 0) {
+    if (judgeEndpointId && judgeArmExclusion !== "off" && counterfactuals.length === 0) {
       throw new Error(
         `R14_ALL_CANDIDATES_ARE_JUDGE: the configured counterfactual pool only contains the comparison's judge ${judgeEndpointId}`.slice(
           0,
