@@ -71,44 +71,53 @@ function BudgetArc({
      * caption. (Measured live on the packaged runtime after this crop: the topmost tick lands on the
      * block's top edge, level with the pipeline table's first row.)
      */
-    <div className="relative flex h-[150px] items-start justify-center">
-      <svg
-        viewBox="14 85 192 129"
-        className="h-full w-full"
-        role="img"
-        aria-label={`${used} of ${limit} dispatches used`}
-      >
-        {Array.from({ length: ticks }, (_, index) => {
-          const angle = ((startAngle + (sweep / (ticks - 1)) * index) * Math.PI) / 180;
-          const outer = 96;
-          const inner = index < filled ? 78 : 84;
-          const cx = 110;
-          const cy = 118;
-          const x1 = cx + Math.cos(angle) * inner;
-          const y1 = cy - Math.sin(angle) * inner;
-          const x2 = cx + Math.cos(angle) * outer;
-          const y2 = cy - Math.sin(angle) * outer;
-          return (
-            <line
-              key={index}
-              x1={x1}
-              y1={y1}
-              x2={x2}
-              y2={y2}
-              stroke={index < filled ? "var(--rm-success)" : "var(--rm-border-strong)"}
-              strokeWidth={index < filled ? 3 : 2}
-              strokeLinecap="round"
-            />
-          );
-        })}
-      </svg>
-      <div className="pointer-events-none absolute inset-x-0 top-[46px] text-center">
-        <div className="font-mono text-3xl font-semibold text-[var(--rm-fg)]">
-          {formatCompact(used)}
+    /**
+     * Operator-reported overlap (2026-09-23): the readout used to live inside this absolutely-positioned
+     * block as number + caption, so the caption line ran across the bowl's arms (measured: 570px^2 of
+     * tick overlap, caption top above the SVG's bottom edge). The number stays centred in the dial - it
+     * sits clear of the arms - while the caption moves below the gauge, which removes the overlap by
+     * construction instead of tuning offsets against the tick geometry.
+     */
+    <div className="flex flex-col items-center">
+      <div className="relative h-[150px] w-full">
+        <svg
+          viewBox="14 85 192 129"
+          className="h-full w-full"
+          role="img"
+          aria-label={`${used} of ${limit} dispatches used`}
+        >
+          {Array.from({ length: ticks }, (_, index) => {
+            const angle = ((startAngle + (sweep / (ticks - 1)) * index) * Math.PI) / 180;
+            const outer = 96;
+            const inner = index < filled ? 78 : 84;
+            const cx = 110;
+            const cy = 118;
+            const x1 = cx + Math.cos(angle) * inner;
+            const y1 = cy - Math.sin(angle) * inner;
+            const x2 = cx + Math.cos(angle) * outer;
+            const y2 = cy - Math.sin(angle) * outer;
+            return (
+              <line
+                key={index}
+                x1={x1}
+                y1={y1}
+                x2={x2}
+                y2={y2}
+                stroke={index < filled ? "var(--rm-success)" : "var(--rm-border-strong)"}
+                strokeWidth={index < filled ? 3 : 2}
+                strokeLinecap="round"
+              />
+            );
+          })}
+        </svg>
+        <div className="pointer-events-none absolute inset-x-0 top-[46px] flex justify-center">
+          <span className="font-mono text-3xl font-semibold text-[var(--rm-fg)]">
+            {formatCompact(used)}
+          </span>
         </div>
-        <div className="text-xs text-[var(--rm-fg-muted)]">
-          of {formatCompact(limit)} dispatches · {Math.round(percent)}% used
-        </div>
+      </div>
+      <div className="mt-1.5 text-center text-xs text-[var(--rm-fg-muted)]">
+        of {formatCompact(limit)} dispatches · {Math.round(percent)}% used
       </div>
     </div>
   );
@@ -194,7 +203,7 @@ export function LearningLivePanelView({
         </div>
       ) : (
         <div className="space-y-4 p-4">
-          <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+          <div className="grid gap-6 lg:grid-cols-2 lg:items-start lg:gap-10">
             <div className="space-y-1">
               {view.pipeline.map((stage) => (
                 <div
@@ -228,7 +237,12 @@ export function LearningLivePanelView({
                 used={view.budget.dispatches.used}
                 limit={view.budget.dispatches.limit}
               />
-              <dl className="space-y-1">
+              {/**
+               * Operator-reported spacing (2026-09-23): the counters list spanned the full column width
+               * (measured insets 0px on both sides), so it crowded the pipeline table in the left column.
+               * It is now a bounded, centred block with clear margins inside its own column.
+               */}
+              <dl className="mx-auto w-full max-w-[340px] space-y-1">
                 <div className="flex items-center justify-between">
                   <dt className="flex items-center gap-2 text-xs text-[var(--rm-fg-muted)]">
                     <Gauge size={12} aria-hidden />

@@ -259,14 +259,18 @@ describe("run99 learning live panel", () => {
         scopeLabel="standalone-runtime-stage"
       />,
     );
-    // The two-column grid is explicitly top-aligned rather than stretching its items.
-    expect(html).toContain("lg:grid-cols-2 lg:items-start");
-    // The gauge box hugs its arc (viewBox cropped to the 192x192 tick bounding box) and the readout
-    // is the dial's centre label rather than a bottom-anchored caption.
-    expect(html).toContain("h-[150px] items-start");
+    // The two-column grid is explicitly top-aligned rather than stretching its items, with a wider gap
+    // so the right column keeps a margin against the pipeline table.
+    expect(html).toContain("lg:grid-cols-2 lg:items-start lg:gap-10");
+    // The gauge box hugs its arc (viewBox cropped to the arc's bowl) and the number stays centred in it.
+    expect(html).toContain("relative h-[150px] w-full");
     expect(html).toContain('viewBox="14 85 192 129"');
-    expect(html).toContain("absolute inset-x-0 top-[46px]");
+    expect(html).toContain("absolute inset-x-0 top-[46px] flex justify-center");
+    // The caption is outside the gauge block, so it cannot run across the arc's arms.
+    expect(html).toContain("mt-1.5 text-center text-xs");
     expect(html).not.toContain("bottom-[18px]");
+    // The counters list is bounded and centred inside its column instead of spanning it.
+    expect(html).toContain("mx-auto w-full max-w-[340px] space-y-1");
   });
 
   test("renders loading, error and empty states without fabricating numbers", () => {
