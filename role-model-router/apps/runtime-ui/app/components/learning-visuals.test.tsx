@@ -242,6 +242,32 @@ describe("run99 learning live panel", () => {
     expect(html).toContain("3 branch(es)");
   });
 
+  /**
+   * Operator-reported alignment defect (2026-09-23): the right-hand column of the live panel read as
+   * vertically centred against the pipeline table on the left. Measured live before the fix, the
+   * column's first row started at y=520 while the gauge's visible content began at y=618 - the arc's
+   * viewBox carried 22 units of empty space above the apex and the readout was anchored to the bottom
+   * of a 168px box. This is the contract that keeps both columns starting at the same top edge.
+   */
+  test("keeps the live panel's columns top-aligned and the gauge anchored to the top", () => {
+    const html = renderToStaticMarkup(
+      <LearningLivePanelView
+        view={activity}
+        loading={false}
+        error={null}
+        nowMs={NOW}
+        scopeLabel="standalone-runtime-stage"
+      />,
+    );
+    // The two-column grid is explicitly top-aligned rather than stretching its items.
+    expect(html).toContain("lg:grid-cols-2 lg:items-start");
+    // The gauge box hugs its arc and anchors the readout from the top.
+    expect(html).toContain("h-[150px] items-start");
+    expect(html).toContain('viewBox="0 22 220 128"');
+    expect(html).toContain("absolute inset-x-0 top-[84px]");
+    expect(html).not.toContain("bottom-[18px]");
+  });
+
   test("renders loading, error and empty states without fabricating numbers", () => {
     const loading = renderToStaticMarkup(
       <LearningLivePanelView view={activity} loading error={null} nowMs={NOW} scopeLabel="scope" />,

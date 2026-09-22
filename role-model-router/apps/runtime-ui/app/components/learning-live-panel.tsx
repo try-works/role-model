@@ -57,9 +57,18 @@ function BudgetArc({
   const sweep = 220;
   const filled = Math.round((Math.min(100, Math.max(0, percent)) / 100) * ticks);
   return (
-    <div className="relative flex h-[168px] items-center justify-center">
+    /**
+     * Operator-reported alignment defect (2026-09-23): this block is the first child of the right-hand
+     * column, and its content was anchored to the bottom of a 168px box - the arc's viewBox carried 22
+     * units of empty space above the apex and the readout sat at `bottom-[18px]`. Measured live, the
+     * column's first row started at y=520 while the gauge's visible content began at y=618, so the
+     * right-hand column read as vertically centred against the table on the left. The viewBox is now
+     * cropped to the arc and the readout is anchored from the top, so the gauge starts level with the
+     * table's first row and the column stays balanced.
+     */
+    <div className="relative flex h-[150px] items-start justify-center">
       <svg
-        viewBox="0 0 220 150"
+        viewBox="0 22 220 128"
         className="h-full w-full"
         role="img"
         aria-label={`${used} of ${limit} dispatches used`}
@@ -88,7 +97,7 @@ function BudgetArc({
           );
         })}
       </svg>
-      <div className="pointer-events-none absolute inset-x-0 bottom-[18px] text-center">
+      <div className="pointer-events-none absolute inset-x-0 top-[84px] text-center">
         <div className="font-mono text-3xl font-semibold text-[var(--rm-fg)]">
           {formatCompact(used)}
         </div>
@@ -180,7 +189,7 @@ export function LearningLivePanelView({
         </div>
       ) : (
         <div className="space-y-4 p-4">
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
             <div className="space-y-1">
               {view.pipeline.map((stage) => (
                 <div
