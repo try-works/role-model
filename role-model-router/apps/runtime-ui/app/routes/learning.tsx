@@ -976,6 +976,26 @@ export function LearningEvidencePage() {
     () => fetchLearningMeasurement(fetch, token || undefined),
     [token],
   );
+  /**
+   * Run 100 R6.1: the learner's own evidence - per family, against the floor, and the exclusions by
+   * reason - comes from the learning summary, so this page can answer "why is evidence missing?"
+   * without the operator opening a store.
+   */
+  const learnerSummary = useOperatorSurface<Record<string, unknown>>(
+    () => fetchLearningSummary(fetch, token || undefined),
+    [token],
+  );
+  const learnerEvidence = asRecord(asRecord(learnerSummary.value).learnerEvidence);
+  const exclusionReasons = Object.entries(asRecord(learnerEvidence.excludedByReason))
+    .map(([reason, count]) => ({ reason, count: Number(count) }))
+    .filter((entry) => Number.isFinite(entry.count) && entry.count > 0)
+    .sort((left, right) => right.count - left.count);
+  const evidenceFamilies = Object.entries(asRecord(learnerEvidence.byFamily)).map(
+    ([family, counts]) => ({ family, counts: asRecord(counts) }),
+  );
+  const evidenceFloor = asRecord(learnerEvidence.floor);
+  const newestReceipt = asRecord(learnerEvidence.newest);
+  const newestEvidence = asRecord(newestReceipt.familyEvidence);
   const report = Array.isArray(asRecord(measurement.value).report)
     ? (asRecord(measurement.value).report as readonly Record<string, unknown>[])[0]
     : undefined;
@@ -995,6 +1015,7 @@ export function LearningEvidencePage() {
   // so rather than presenting the placeholder inputs as measured zeros.
   const costLatencyMeasured = asRecord(raw.measurementInputs).costLatencyAvailable !== false;
   return (
+    <div className="grid gap-4">
     <SectionCard
       title="Evidence"
       description="Baseline-versus-advisory comparison on the paired holdout distribution with the guardrail verdicts."
@@ -1077,6 +1098,123 @@ export function LearningEvidencePage() {
           </>
         ))}
     </SectionCard>
+    <SectionCard
+      title="Evidence loss by reason"
+      description="Per-family evidence against the operator's floor and the learner's exclusions, read from the validation receipts the runtime recorded."
+    >
+      <OperatorTokenField onToken={setToken} token={token} />
+      {degraded(learnerSummary.loading, learnerSummary.error) ??
+        (Number(learnerEvidence.receipts ?? 0) === 0 ? (
+          <EmptyState label="No learner validation receipt has been recorded yet." />
+        ) : (
+          <>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <Metric label="Receipts read" value={show(learnerEvidence.receipts)} />
+              <Metric
+                label="Newest decision"
+                value={show(newestReceipt.decision)}
+              />
+              <Metric
+                label="Newest decisive comparisons"
+                value={show(newestEvidence.decisiveComparisons)}
+              />
+              <Metric
+                label="Floor met"
+                value={
+                  newestEvidence.floorMet === true
+                    ? "yes"
+                    : newestEvidence.floorMet === false
+                      ? "no"
+                      : show(newestEvidence.floorMet)
+                }
+              />
+            </div>
+            <div className="mt-4 overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead>
+                  <tr>
+                    {["Exclusion reason", "Count"].map((header) => (
+                      <th className={`pb-3 pr-3 font-normal ${monoEyebrowClassName}`} key={header}>
+                        {header}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {exclusionReasons.map((entry) => (
+                    <tr className="border-t border-[var(--rm-border)]" key={entry.reason}>
+                      <td className="py-2 pr-3 font-mono">{entry.reason}</td>
+                      <td className="py-2 pr-3 font-mono">{show(entry.count)}</td>
+                    </tr>
+                  ))}
+                  {exclusionReasons.length === 0 ? (
+                    <tr className="border-t border-[var(--rm-border)]">
+                      <td className={`py-2 pr-3 ${supportingTextClassName}`} colSpan={2}>
+                        No exclusion was recorded in the receipts read.
+                      </td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+            {evidenceFamilies.length > 0 ? (
+              <div className="mt-4 overflow-x-auto">
+                <table className="min-w-full text-left text-sm">
+                  <thead>
+                    <tr>
+                      {[
+                        "Family",
+                        "Decisive",
+                        "Holdout",
+                        "Development",
+                        "Distinct captures",
+                        "Floor",
+                      ].map((header) => (
+                        <th className={`pb-3 pr-3 font-normal ${monoEyebrowClassName}`} key={header}>
+                          {header}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {evidenceFamilies.map((entry) => {
+                      const floorMet =
+                        Number(evidenceFloor.minDecisiveComparisons ?? 0) > 0 &&
+                        Number(entry.counts.decisiveComparisons ?? 0) >=
+                          Number(evidenceFloor.minDecisiveComparisons ?? 0) &&
+                        Number(entry.counts.distinctCaptures ?? 0) >=
+                          Number(evidenceFloor.minDistinctCaptures ?? 0);
+                      return (
+                        <tr className="border-t border-[var(--rm-border)]" key={entry.family}>
+                          <td className="py-2 pr-3 font-mono">{entry.family}</td>
+                          <td className="py-2 pr-3 font-mono">
+                            {show(entry.counts.decisiveComparisons)}
+                          </td>
+                          <td className="py-2 pr-3 font-mono">
+                            {show(entry.counts.holdoutComparisons)}
+                          </td>
+                          <td className="py-2 pr-3 font-mono">
+                            {show(entry.counts.developmentComparisons)}
+                          </td>
+                          <td className="py-2 pr-3 font-mono">
+                            {show(entry.counts.distinctCaptures)}
+                          </td>
+                          <td className="py-2 pr-3">
+                            <Badge tone={floorMet ? "success" : "warning"}>
+                              {floorMet ? "met" : "below"}
+                            </Badge>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
+          </>
+        ))}
+    </SectionCard>
+    </div>
   );
 }
 
