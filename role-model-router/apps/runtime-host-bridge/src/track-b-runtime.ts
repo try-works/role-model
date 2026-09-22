@@ -8947,12 +8947,49 @@ export async function runTrackBShadowPipeline(
    * exactly what makes the group's `developmentPartition` non-empty — but they are not part of the
    * decision.
    */
-  const comparisonCandidateRefs = new Set([sourceCandidateRef, firstCounterfactualCandidateRef]);
+  /**
+   * Run 100 R3 (live stage, released candidate `d19dcff3`): 146 of 711 durable evaluation jobs were
+   * released as `evaluation_job_stranded_without_finalized_comparison` with every trial scored and no
+   * comparison group, while all 547 completed jobs held exactly two trials. The job declares the pair
+   * the comparison decides between, but this selection re-derived it from the *current* run's arm order
+   * (`firstCounterfactualCandidateRef`), so a resumed completion whose recorded arm order differed from
+   * the job's submitted an arm outside the declared pair and Evaluation Core refused it with
+   * `comparable evaluation trials must resolve to the declared source and counterfactual candidates`.
+   * The durable job is the contract: when it exists, its declared pair decides which trials are
+   * submitted. A declared side without a completed rollout is a bounded, named refusal rather than a
+   * silent mismatch.
+   */
+  const declaredCandidateRef = (value: unknown): string | null =>
+    typeof value === "string" && value.trim() ? value.trim() : null;
+  const declaredSourceCandidateRef =
+    declaredCandidateRef(finalizeBinding.comparability.sourceCandidateRef) ?? sourceCandidateRef;
+  const declaredCounterfactualCandidateRef =
+    declaredCandidateRef(finalizeBinding.comparability.counterfactualCandidateRef) ??
+    firstCounterfactualCandidateRef;
+  const comparisonCandidateRefs = new Set([
+    declaredSourceCandidateRef,
+    declaredCounterfactualCandidateRef,
+  ]);
   const comparisonTrialIds = completedRollouts
     .filter(({ rollout }) =>
       comparisonCandidateRefs.has(requireTrackBReference(rollout.endpointId, "candidate")),
     )
     .map(({ trialId }) => trialId);
+  if (comparisonTrialIds.length < 2) {
+    const completedCandidates = [
+      ...new Set(
+        completedRollouts.map(({ rollout }) =>
+          String(rollout.endpointId ?? "").slice(0, 120),
+        ),
+      ),
+    ].sort();
+    throw new Error(
+      `durable routing-shadow comparison pair unresolved: declared ${declaredSourceCandidateRef.slice(0, 120)} and ${declaredCounterfactualCandidateRef.slice(0, 120)}; completed rollouts ${completedCandidates.join(", ")}`.slice(
+        0,
+        512,
+      ),
+    );
+  }
   const evaluation = await runtime.invoke("evaluation-core", {
     ...envelope("evaluation:finalize-comparison-group", {
       groupId: `comparison:${input.requestId}`,
