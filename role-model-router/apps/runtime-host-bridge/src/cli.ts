@@ -4363,6 +4363,8 @@ export async function main(): Promise<void> {
       let emptyRecoveryPageReported = false;
       /** S29 diagnostics: report a page payload that is not the page itself, once per process. */
       let examinedShapeUnreported = true;
+      /** S33 diagnostics: report the answer to a lookup of an evaluation that does not exist, once. */
+      let existingLookupShapeReported = false;
       /**
        * Run 100 addendum `handoff-evidence-durability.addendum-06` S27: the scope the durable replay jobs were
        * created under. The producer learns it from the captures it dispatches, and a runtime that has just
@@ -4694,13 +4696,33 @@ export async function main(): Promise<void> {
                 !Array.isArray(decodedExisting)
                   ? (decodedExisting as Record<string, unknown>)
                   : null;
-              const existingId =
-                typeof existingRecord?.id === "string"
-                  ? existingRecord.id
-                  : typeof existingRecord?.jobId === "string"
-                    ? existingRecord.jobId
-                    : null;
-              if (existingId) {
+              /**
+               * S33 (measured live: the sweep reported "every candidate already has its evaluation" while the
+               * store says the third job in `jobId` order has none): an answer that names a job that does not
+               * exist still carries an identity, so *existence* - not identity - is what has to be read. A
+               * durable evaluation job is a record with a state-machine status; anything else is the missing
+               * case this pass exists for.
+               */
+              const existingStatus =
+                typeof existingRecord?.status === "string" ? existingRecord.status.trim() : "";
+              const evaluationExists = [
+                "queued",
+                "leased",
+                "scoring",
+                "retry_wait",
+                "completed",
+                "failed",
+                "cancelled",
+              ].includes(existingStatus);
+              if (!evaluationExists && !existingLookupShapeReported) {
+                existingLookupShapeReported = true;
+                console.error(
+                  `[run101] evaluation lookup answer for a missing job: ${JSON.stringify(
+                    existingRecord ?? decodedExisting ?? existingEvaluation,
+                  ).slice(0, 220)}`,
+                );
+              }
+              if (evaluationExists) {
                 // The evaluation exists (terminal or not): nothing to recover for this job.
                 skipped += 1;
               } else if (fullJob) {
