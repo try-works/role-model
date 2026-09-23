@@ -475,13 +475,20 @@ export interface TrackBProductionRuntimeOptions {
  * private operations bound now allows a slow durable commit to run to completion instead of being
  * aborted at eight seconds. The startup budget is a bound, not a latency claim, and it stays
  * operator-tunable (`ROLE_MODEL_TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS`) without a rebuild.
+ *
+ * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S6 (measured 2026-09-23 while verifying the
+ * backlog repair): the mature real-traffic root (thousands of captures, 1 627 replay jobs, 680 comparison
+ * groups) needed longer than 240 s, and the host refused a boot with `Track B sidecar readiness timeout`
+ * while the sidecar was demonstrably working (506 s of CPU in six minutes). The packaged default is the
+ * operator's own bound (10 minutes) so a real root is not refused at boot; the environment override still
+ * wins for a root that needs more.
  */
 export const TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS = (() => {
   const configured = Number.parseInt(
     process.env.ROLE_MODEL_TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS ?? "",
     10,
   );
-  return Number.isSafeInteger(configured) && configured > 0 ? configured : 240_000;
+  return Number.isSafeInteger(configured) && configured > 0 ? configured : 600_000;
 })();
 
 /**
