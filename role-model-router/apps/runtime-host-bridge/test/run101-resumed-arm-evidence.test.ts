@@ -11,7 +11,11 @@ import {
   createSupervisedReplayEvaluationResumeStore,
   resumePendingSupervisedReplayEvaluations,
 } from "../src/supervised-replay-evaluation-resume.js";
-import { resolveResumedArmEvidence } from "../src/supervised-replay-handoff-recovery.js";
+import {
+  describeUnresolvedArms,
+  resolveResumedArmEvidence,
+  unresolvedArmsArePermanent,
+} from "../src/supervised-replay-handoff-recovery.js";
 
 /**
  * Run 100 addendum `handoff-evidence-durability.addendum-06` S21/S23, measured on the real-traffic root
@@ -113,6 +117,31 @@ test("run101 S21 an arm whose capture is gone is named as a missing capture", as
     "capture_missing",
     "capture_missing",
   ]);
+  expect(
+    unresolvedArmsArePermanent(resolved.unreadable),
+    "a pointer that is gone is terminal",
+  ).toBe(true);
+});
+
+test("run101 S21 a boundary that cannot answer is unreadable, not missing", async () => {
+  const resolved = await resolveResumedArmEvidence({
+    counterfactualPackages: CANDIDATES,
+    branchCaptureRequestIds: BRANCH_IDS,
+    readCapture: async () => {
+      throw new Error("private Track B operation timed out after 5000ms");
+    },
+  });
+  expect(resolved.arms).toHaveLength(0);
+  expect(resolved.unreadable.map((arm) => arm.reason)).toEqual([
+    "capture_unreadable",
+    "capture_unreadable",
+  ]);
+  expect(resolved.unreadable[0]?.detail).toContain("timed out");
+  expect(describeUnresolvedArms(resolved.unreadable)).toContain("capture_unreadable(");
+  expect(
+    unresolvedArmsArePermanent(resolved.unreadable),
+    "a failed read is retryable - retiring the handoff would throw away work that can still complete",
+  ).toBe(false);
 });
 
 test("run101 S23 evidence that is gone terminates under its own name without spending attempts", async () => {

@@ -65,6 +65,7 @@ import {
   selectRecoverableHandoffs,
   selectUnevaluatedHandoffs,
   terminalRecoveryListingValue,
+  unresolvedArmsArePermanent,
 } from "./supervised-replay-handoff-recovery.js";
 /**
  * How many handed-off replays one liveness sweep may recover. Each recovery is one extension listing plus a
@@ -6400,9 +6401,17 @@ export async function main(): Promise<void> {
               );
             }
             if (dispatched.size === 0) {
-              throw new HandoffEvidenceUnavailableError(
-                describeUnresolvedArms(armEvidence.unreadable),
-              );
+              const detail = describeUnresolvedArms(armEvidence.unreadable);
+              /**
+               * S21/S23: only evidence that is *gone* is a terminal disposition. A boundary that failed to
+               * answer is an ordinary retryable failure - the attempt budget and the bounded renewal exist
+               * for exactly that - and reporting it as a dead end would retire work that can still complete
+               * (measured live: the first version collapsed both into `capture_missing`).
+               */
+              if (unresolvedArmsArePermanent(armEvidence.unreadable)) {
+                throw new HandoffEvidenceUnavailableError(detail);
+              }
+              throw new Error(`resumed handoff evidence is unreadable: ${detail}`);
             }
             const evaluationCriteria = storedCriteria
               ? normalizeTrackBSemanticEvaluationCriteria(storedCriteria)

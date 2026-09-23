@@ -337,7 +337,16 @@ export function recoveredHandoffEntry(
  * `extractCaptureOutputText` (the same canonical reader the source half uses) and returns a *named* reason for
  * every arm it could not resolve, so "unreadable" can never again be reported as "absent".
  */
-export type ResumedArmEvidenceReason = "capture_missing" | "capture_has_no_output";
+export type ResumedArmEvidenceReason =
+  | "capture_missing"
+  | "capture_has_no_output"
+  /**
+   * The boundary could not answer for this capture: the pointer may still exist and the failure may be
+   * transient. Measured live in addendum 06: the first version of this resolver reported every failure as
+   * `capture_missing`, which hid the difference between a gone pointer (permanent) and a failed read
+   * (retryable) - the same "one state, two meanings" defect this addendum exists to remove.
+   */
+  | "capture_unreadable";
 
 export interface ResumedArmEvidence {
   readonly endpointId: string;
@@ -351,6 +360,7 @@ export interface ResumedArmEvidence {
 export interface UnresolvedArmEvidence {
   readonly endpointId: string;
   readonly reason: ResumedArmEvidenceReason;
+  readonly detail?: string;
 }
 
 export async function resolveResumedArmEvidence(input: {
@@ -374,12 +384,22 @@ export async function resolveResumedArmEvidence(input: {
       continue;
     }
     let capture: Record<string, unknown> | null = null;
+    let readFailure: string | null = null;
     try {
       capture = await input.readCapture(requestId);
-    } catch {
-      // A boundary failure is reported through the caller's own error path; for this arm it means the
-      // evidence could not be read, which is exactly what has to be named rather than swallowed.
-      capture = null;
+    } catch (error) {
+      readFailure = String((error as { message?: unknown })?.message ?? error ?? "unknown").slice(
+        0,
+        160,
+      );
+    }
+    if (readFailure !== null) {
+      unreadable.push({
+        endpointId: candidate.endpointId,
+        reason: "capture_unreadable",
+        detail: readFailure,
+      });
+      continue;
     }
     if (!capture || typeof capture !== "object" || Array.isArray(capture)) {
       unreadable.push({ endpointId: candidate.endpointId, reason: "capture_missing" });
@@ -415,7 +435,20 @@ const MAX_UNRESOLVED_ARM_SUMMARY = 384;
 export function describeUnresolvedArms(unreadable: readonly UnresolvedArmEvidence[]): string {
   return [...unreadable]
     .sort((left, right) => left.endpointId.localeCompare(right.endpointId))
-    .map((arm) => `${arm.endpointId}=${arm.reason}`)
+    .map((arm) =>
+      arm.detail
+        ? `${arm.endpointId}=${arm.reason}(${arm.detail})`
+        : `${arm.endpointId}=${arm.reason}`,
+    )
     .join(", ")
     .slice(0, MAX_UNRESOLVED_ARM_SUMMARY);
+}
+
+/**
+ * Whether a set of unresolved arms is *permanently* unreadable (the capture is gone from the store, so no
+ * retry can ever complete the handoff) or merely unreadable *now* (the boundary failed to answer, which the
+ * attempt budget and the bounded renewal exist to ride out).
+ */
+export function unresolvedArmsArePermanent(unreadable: readonly UnresolvedArmEvidence[]): boolean {
+  return unreadable.length > 0 && unreadable.every((arm) => arm.reason === "capture_missing");
 }
