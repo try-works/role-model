@@ -173,6 +173,7 @@ import {
   DEFAULT_EVIDENCE_HALF_LIFE_DAYS,
   assembleDurableLearnerValidationValue,
   buildTrackBLearningEvidenceSummary,
+  selectDurableComparisonGroupId,
 } from "./track-b-learning-pass.js";
 import {
   TRACK_B_CANONICAL_EXTENSION_IDS,
@@ -4675,7 +4676,18 @@ export async function main(): Promise<void> {
           );
           const recordedCandidateIds = new Set(
             (() => {
-              const decoded = unwrapCapabilityPayload(records);
+              /**
+               * P6, third pass: the listing is read through the same externalization decoder as every other
+               * operator readback. Without it a page whose records are externalized parses to markers, no
+               * candidate id matches, and the sweep reports the whole page as "without a validation receipt"
+               * (measured live on `stage-run105`: "32 candidate(s) without a validation receipt" while 149 of
+               * the 164 candidates carried one). A readback that cannot be read is reported, never assumed.
+               */
+              const decoded = decodeExternalizedOperatorReadback({
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+                value: unwrapCapabilityPayload(records),
+              });
               const rows = Array.isArray(decoded)
                 ? decoded
                 : Array.isArray((decoded as { records?: unknown[] })?.records)
@@ -4687,16 +4699,32 @@ export async function main(): Promise<void> {
                     row && typeof row === "object" && !Array.isArray(row)
                       ? (row as Record<string, unknown>)
                       : {};
-                  const inner =
-                    record.record && typeof record.record === "object"
-                      ? (record.record as Record<string, unknown>)
-                      : {};
-                  const candidateId = inner.candidateId ?? record.candidateId;
+                  const parsed = (() => {
+                    if (record.record && typeof record.record === "object") {
+                      return record.record as Record<string, unknown>;
+                    }
+                    // The store answers parsed records; a page that has been through an inline frame may
+                    // still carry the raw JSON, and a receipt that cannot be attributed is not a receipt.
+                    if (typeof record.record_json === "string") {
+                      try {
+                        return JSON.parse(record.record_json) as Record<string, unknown>;
+                      } catch {
+                        return {};
+                      }
+                    }
+                    return record;
+                  })();
+                  const candidateId = parsed.candidateId ?? record.candidateId;
                   return typeof candidateId === "string" ? candidateId : null;
                 })
                 .filter((value): value is string => value !== null);
             })(),
           );
+          if (recordedCandidateIds.size === 0 && candidates.length > 0) {
+            console.error(
+              "[run101] learner sweep: the validation-receipt listing named no candidate - every candidate would look unvalidated",
+            );
+          }
           /**
            * P2/P6: the retrieval index has no driver of its own - the retrieval plane is wired (durable index +
            * durable receipts) but nothing calls `knowledge:rebuild-index`, so the live store reads 0 FTS rows,
@@ -4785,34 +4813,64 @@ export async function main(): Promise<void> {
                   : typeof candidate.routePackage === "string"
                     ? candidate.routePackage
                     : null;
-              const groupId = Array.isArray(candidate.groupIds)
-                ? candidate.groupIds.find(
-                    (value): value is string => typeof value === "string" && value.length > 0,
-                  )
-                : undefined;
-              if (!routePackage || !groupId) {
+              /**
+               * P6, third pass (measured live on `stage-run105`): the candidate carries the comparability
+               * key first and the durable comparison group second, so reading `groupIds[0]` refused every
+               * candidate with "durable evaluation comparison group not found" while the group it needed
+               * was finalized in the store. `selectDurableComparisonGroupId` picks the id Evaluation Core
+               * can actually read back, and every candidate id is still tried in order as a fallback.
+               */
+              const comparisonIds = [
+                selectDurableComparisonGroupId(candidate),
+                ...(Array.isArray(candidate.groupIds) ? candidate.groupIds : []),
+              ].filter(
+                (value, index, all): value is string =>
+                  typeof value === "string" &&
+                  value.length > 0 &&
+                  all.indexOf(value) === index,
+              );
+              if (!routePackage || comparisonIds.length === 0) {
                 console.error(
                   `[run101] learner sweep: candidate ${candidateId.slice(0, 16)} carries no comparison group`,
                 );
                 continue;
               }
-              const comparison = decodeExternalizedOperatorReadback({
-                stateRoot: options.runtimeStateRoot,
-                scopeId: options.scopeId,
-                value: unwrapCapabilityPayload(
-                  await runtime.invoke(
-                    "evaluation-core",
-                    envelopeFor("evaluation-core", "evaluation:read-comparison-group", { groupId }),
+              let groupId = comparisonIds[0];
+              let group: Record<string, unknown> = {};
+              // A candidate may carry more than one group-shaped id (a comparability key and the durable
+              // comparison group); read each in order and keep the one Evaluation Core resolves to a
+              // finalized comparison, so a foreign hash cannot mask a group that is present.
+              for (const candidateGroupId of comparisonIds.slice(0, 3)) {
+                const readback = decodeExternalizedOperatorReadback({
+                  stateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  value: unwrapCapabilityPayload(
+                    await runtime
+                      .invoke(
+                        "evaluation-core",
+                        envelopeFor("evaluation-core", "evaluation:read-comparison-group", {
+                          groupId: candidateGroupId,
+                        }),
+                      )
+                      .catch(() => null),
                   ),
-                ),
-              });
-              const group =
-                comparison && typeof comparison === "object" && !Array.isArray(comparison)
-                  ? (comparison as Record<string, unknown>)
-                  : {};
+                });
+                const candidateGroup =
+                  readback && typeof readback === "object" && !Array.isArray(readback)
+                    ? (readback as Record<string, unknown>)
+                    : {};
+                if (candidateGroup.status === "finalized" && Array.isArray(candidateGroup.members)) {
+                  group = candidateGroup;
+                  groupId = candidateGroupId;
+                  break;
+                }
+              }
               if (group.status !== "finalized" || !Array.isArray(group.members)) {
                 console.error(
-                  `[run101] learner sweep: candidate ${candidateId.slice(0, 16)} has no finalized comparison readback`,
+                  `[run101] learner sweep: candidate ${candidateId.slice(0, 16)} has no finalized comparison readback for ${comparisonIds
+                    .slice(0, 3)
+                    .map((value) => value.slice(0, 24))
+                    .join(", ")}`,
                 );
                 continue;
               }
