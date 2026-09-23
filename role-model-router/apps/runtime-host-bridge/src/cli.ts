@@ -61,6 +61,7 @@ import {
   describeUnresolvedArms,
   nextHandoffRecoveryCursor,
   recoveredHandoffEntry,
+  replayJobScopeFromProbe,
   resolveResumedArmEvidence,
   selectRecoverableHandoffs,
   selectUnevaluatedHandoffs,
@@ -4305,6 +4306,13 @@ export async function main(): Promise<void> {
         | null;
     } = { current: null };
     /**
+     * Run 100 addendum `handoff-evidence-durability.addendum-06` S27: the durable replay jobs' scope is
+     * resolved in the liveness-sweep scope (which sees the captures) and is needed by the resume sweep's
+     * terminalization (which runs in the replay command handler's scope), so it travels through a ref the same
+     * way the resume sweep does.
+     */
+    const replayJobScopeRef: { current: (() => Promise<string | null>) | null } = { current: null };
+    /**
      * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S7: the handed-off-replay recovery pass in
      * the liveness sweep records the resume entries it discovers, and the store itself lives with the replay
      * command handler (created later), so it is reached through this ref the same way `resumeEvaluationsRef`
@@ -4350,6 +4358,39 @@ export async function main(): Promise<void> {
        * a restart re-scans from the beginning, which is cheap now that the listing only projects summaries.
        */
       let handoffRecoveryCursor: string | null = null;
+      /**
+       * Run 100 addendum `handoff-evidence-durability.addendum-06` S27: the scope the durable replay jobs were
+       * created under. The producer learns it from the captures it dispatches, and a runtime that has just
+       * restarted has none - in that window its listings bound the operator scope, `assertJobSummaryBinding`
+       * skipped every job, and the recovery page came back empty (measured live: the log filled with
+       * `replay persisted job scope binding mismatch` while the terminal set stayed invisible). When the scope
+       * is unknown it is discovered from the store itself, with a listing that does not bind the scope it is
+       * trying to find.
+       */
+      const resolveReplayJobScope = async (): Promise<string | null> => {
+        if (lastReplayCaptureScope) return lastReplayCaptureScope;
+        const runtime = extensionRuntimeRef.current;
+        if (!runtime) return null;
+        try {
+          const probe = await runtime.invoke("replay-core", {
+            requestId: `replay-scope-probe:${Date.now()}`,
+            sessionId: `replay-scope-probe:${options.scopeId}`,
+            protocolVersion: "1.1.0",
+            channel,
+            // Deliberately no scope: the binding check compares only the fields the envelope provides, so this
+            // reads the persisted jobs' own scope instead of being refused for guessing wrong.
+            capability: "replay:list-jobs",
+            value: { summary: true, limit: 1 },
+          });
+          const scope = replayJobScopeFromProbe(probe);
+          if (scope) lastReplayCaptureScope = scope;
+          return scope;
+        } catch {
+          // A failed probe is not fatal: the caller keeps the operator scope and its own error handling.
+          return null;
+        }
+      };
+      replayJobScopeRef.current = resolveReplayJobScope;
       // RC07 (L2): the bounded expiration sweep goes straight through the extension
       // host the producer already uses for replay-core, because the operator boundary's
       // replay domain does not expose the sweep in the packaged composition
@@ -4472,7 +4513,7 @@ export async function main(): Promise<void> {
             return { scanned: 0, recovered: 0, skipped: 0 };
           }
           lastHandoffRecoveryAtMs = nowMs;
-          const scope = lastReplayCaptureScope ?? options.scopeId;
+          const scope = (await resolveReplayJobScope()) ?? options.scopeId;
           const listing = (await runtime.invoke("replay-core", {
             requestId: `replay-list-jobs:${Date.now()}`,
             sessionId: `replay-list-jobs:${options.scopeId}`,
@@ -6547,6 +6588,9 @@ export async function main(): Promise<void> {
             } catch {
               // The capture may be gone (retention); the remaining candidates still apply.
             }
+            // S27: the store knows the scope the job was created under even when the entry predates the field
+            // and its capture is gone - which is exactly the `legacy_scope_unresolved` class in the live log.
+            if (replayJobScopeRef.current) pushScope(await replayJobScopeRef.current());
             pushScope(options.scopeId);
             try {
               const invokeFailJob = async (invokeScope: string) =>

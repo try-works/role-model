@@ -102,6 +102,38 @@ export function terminalRecoveryListingValue(input: {
   };
 }
 
+/** The longest scope id a durable job may carry (`runtime:<hash>` is 72 characters on the live root). */
+const MAX_REPLAY_JOB_SCOPE = 256;
+
+/**
+ * Run 100 addendum `handoff-evidence-durability.addendum-06` S27 - the scope a durable replay job was created
+ * under, read from the store itself.
+ *
+ * Measured live: durable jobs carry the *capture* scope (`runtime:<hash>`), not the operator scope the runtime
+ * is configured with, and the producer only learns the capture scope from a capture it dispatches. A runtime
+ * that has just restarted has no capture to learn from, so its recovery listing and its terminalization both
+ * bound the operator scope, `assertJobSummaryBinding` skipped every job, and the page came back empty while
+ * the log filled with `replay persisted job scope binding mismatch`.
+ *
+ * The probe that finds it must not bind the scope it is trying to discover: the binding check only compares
+ * the fields the envelope provides, so a channel-only listing returns the stored jobs with their real scope.
+ */
+export function replayJobScopeFromProbe(probe: unknown): string | null {
+  const page = Array.isArray(probe)
+    ? probe
+    : probe && typeof probe === "object" && Array.isArray((probe as { value?: unknown }).value)
+      ? ((probe as { value: readonly unknown[] }).value as readonly unknown[])
+      : [];
+  for (const entry of page) {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) continue;
+    const scope = (entry as { scope?: unknown }).scope;
+    if (typeof scope !== "string") continue;
+    const trimmed = scope.trim();
+    if (trimmed.length > 0 && trimmed.length <= MAX_REPLAY_JOB_SCOPE) return trimmed;
+  }
+  return null;
+}
+
 /** The evaluation job id the live handoff derives from a replay job id (kept identical on purpose). */
 export function evaluationJobIdForReplayJob(replayJobId: string): string {
   return `evaluation-replay-${createHash("sha256")

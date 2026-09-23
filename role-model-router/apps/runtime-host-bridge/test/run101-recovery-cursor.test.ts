@@ -4,8 +4,38 @@ import {
   MAX_HANDOFF_RECOVERY_CHECKS_PER_SWEEP,
   MAX_HANDOFF_RECOVERY_LIST_PAGE,
   nextHandoffRecoveryCursor,
+  replayJobScopeFromProbe,
   terminalRecoveryListingValue,
 } from "../src/supervised-replay-handoff-recovery.js";
+
+/**
+ * Run 100 addendum `handoff-evidence-durability.addendum-06` S27 (measured live: the terminalization log
+ * filled with `replay persisted job scope binding mismatch` while the recovery listing returned nothing).
+ *
+ * Durable replay jobs are scoped to the *capture* scope they were created under - on the real-traffic root
+ * `runtime:714f4a87…`, not the operator scope the runtime is configured with - and the producer only learns
+ * that scope from a capture it dispatches. A freshly restarted runtime therefore had no scope at all, bound
+ * its listings to the operator scope, and `assertJobSummaryBinding` skipped every job: the page came back
+ * empty, so 512 terminal jobs (262 of them missing their evaluation) were invisible. The scope is
+ * recoverable from the store itself, and the probe must read it without binding to a scope it is trying to
+ * discover.
+ */
+test("run101 S27 the job scope is discovered from the store when the producer has not seen a capture", () => {
+  expect(
+    replayJobScopeFromProbe({
+      value: [{ jobId: "job-a", scope: "runtime:714f4a87dd3c44d1bc93ed741841c722" }],
+    }),
+  ).toBe("runtime:714f4a87dd3c44d1bc93ed741841c722");
+  expect(replayJobScopeFromProbe([{ jobId: "job-a", scope: "tenant:alpha" }])).toBe("tenant:alpha");
+  expect(replayJobScopeFromProbe({ value: [] })).toBeNull();
+  expect(replayJobScopeFromProbe({ value: [{ jobId: "job-a" }] })).toBeNull();
+  expect(replayJobScopeFromProbe(null)).toBeNull();
+  expect(replayJobScopeFromProbe({ value: [{ scope: 42 }] })).toBeNull();
+  expect(
+    replayJobScopeFromProbe({ value: [{ scope: "x".repeat(600) }] }),
+    "a scope that cannot be a durable identity is not adopted",
+  ).toBeNull();
+});
 
 /**
  * Run 100 addendum `handoff-evidence-durability.addendum-06` S24 (measured on the real-traffic root).
