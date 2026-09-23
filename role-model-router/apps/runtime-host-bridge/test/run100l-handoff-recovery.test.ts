@@ -166,13 +166,19 @@ test("run100l branch captures are resolved from the durable dispatch receipt", (
     dispatches: {
       "endpoint:b": {
         status: "complete",
-        result: { providerResultRef: "route-capture:replay-req-s18-abc123-branch-source" },
+        result: {
+          providerResultRef: "route-capture:replay-req-s18-abc123-branch-source",
+          // S18b: the append records the capture it wrote, which is the link that survives a retried arm.
+          branchRequestId: "replay-req-s18-abc123-branch",
+        },
       },
       "endpoint:c": { status: "failed" },
     },
   };
   const resolved = branchCaptureRequestIdsFromJob(job);
-  expect(resolved.get("endpoint:b")).toBe("replay-req-s18-abc123-branch-source-branch");
+  // The recorded capture wins over the receipt-derived name (they agree here; the recorded one also exists
+  // when the arm was retried and left no receipt).
+  expect(resolved.get("endpoint:b")).toBe("replay-req-s18-abc123-branch");
   // A candidate with no receipt keeps the pre-S9 derivation so older jobs still resume.
   const fallback = resolved.get("endpoint:c") ?? "";
   expect(fallback.startsWith("replay-req-s18-")).toBe(true);

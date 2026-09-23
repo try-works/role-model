@@ -146,6 +146,16 @@ export function branchCaptureRequestIdsFromJob(input: {
       dispatch?.result && typeof dispatch.result === "object" && !Array.isArray(dispatch.result)
         ? (dispatch.result as Record<string, unknown>)
         : null;
+    /**
+     * S18b: the append records the capture it wrote, so this is the first source - it is the link that
+     * survives a retried arm (whose dispatch receipt may be absent) and the attempt-scoped naming of S9.
+     */
+    const recordedBranchRequestId =
+      typeof result?.branchRequestId === "string" ? result.branchRequestId.trim() : "";
+    if (recordedBranchRequestId) {
+      resolved.set(candidateEndpointId, recordedBranchRequestId);
+      continue;
+    }
     const providerResultRef =
       typeof result?.providerResultRef === "string" ? result.providerResultRef.trim() : "";
     const replayRequestId = providerResultRef.startsWith("route-capture:")

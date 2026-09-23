@@ -5431,7 +5431,7 @@ export async function main(): Promise<void> {
                 branchRootRef: branch.rootArtifactId,
                 branchRequestId,
               });
-              return { branchRootRef: branch.rootArtifactId };
+              return { branchRootRef: branch.rootArtifactId, branchRequestId };
             },
             appendBranch: async (branchRequest) => {
               const candidateEndpointId = String(branchRequest.candidateEndpointId ?? "");
@@ -5489,7 +5489,7 @@ export async function main(): Promise<void> {
                     "operations boundary did not return a durable replay failure branch root",
                   );
                 }
-                return { branchRootRef: failureBranch.rootArtifactId };
+                return { branchRootRef: failureBranch.rootArtifactId, branchRequestId: failureRequestId };
               }
               let dispatch = dispatched.get(candidateEndpointId);
               if (!dispatch) {
@@ -5568,7 +5568,7 @@ export async function main(): Promise<void> {
               if (typeof branch.rootArtifactId !== "string" || !branch.rootArtifactId) {
                 throw new Error("operations boundary did not return a durable replay branch root");
               }
-              return { branchRootRef: branch.rootArtifactId };
+              return { branchRootRef: branch.rootArtifactId, branchRequestId };
             },
             handoffEvaluation: async ({ replayJobId }) => {
               const evaluationJobId = `evaluation-replay-${createHash("sha256").update(String(replayJobId)).digest("hex").slice(0, 20)}`;
