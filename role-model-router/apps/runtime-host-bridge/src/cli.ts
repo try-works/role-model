@@ -61,7 +61,7 @@ import {
   describeUnresolvedArms,
   nextHandoffRecoveryCursor,
   recoveredHandoffEntry,
-  replayJobScopeFromProbe,
+  resolveDurableReplayJobScope,
   resolveResumedArmEvidence,
   selectRecoverableHandoffs,
   selectUnevaluatedHandoffs,
@@ -4378,40 +4378,23 @@ export async function main(): Promise<void> {
           }
           return lastReplayCaptureScope;
         }
-        const runtime = extensionRuntimeRef.current;
-        if (!runtime) return null;
-        try {
-          const probe = await runtime.invoke("replay-core", {
-            requestId: `replay-scope-probe:${Date.now()}`,
-            sessionId: `replay-scope-probe:${options.scopeId}`,
-            protocolVersion: "1.1.0",
-            channel,
-            // Deliberately no scope: the binding check compares only the fields the envelope provides, so this
-            // reads the persisted jobs' own scope instead of being refused for guessing wrong.
-            capability: "replay:list-jobs",
-            value: { summary: true, limit: 1 },
-          });
-          const scope = replayJobScopeFromProbe(probe);
-          if (scope) lastReplayCaptureScope = scope;
-          if (!replayJobScopeReported) {
-            replayJobScopeReported = true;
-            console.error(
-              `[run101] replay job scope: ${scope ? `discovered ${scope}` : "not resolvable from the store"}`,
-            );
-          }
-          return scope;
-        } catch (error) {
-          // A failed probe is not fatal: the caller keeps the operator scope and its own error handling.
-          if (!replayJobScopeReported) {
-            replayJobScopeReported = true;
-            console.error(
-              `[run101] replay job scope: probe failed ${String(
-                (error as { message?: unknown })?.message ?? error,
-              ).slice(0, 160)}`,
-            );
-          }
-          return null;
+        /**
+         * S28: the scope is *computable*, not discoverable. Measured live: a scope-less listing is refused by
+         * the runtime host before the extension's binding check runs
+         * (`envelope identity or capability is incomplete or incompatible`), so the pass bound the operator
+         * scope and the page came back empty. The derivation below is the one the private boundary uses to
+         * stamp the captures these jobs were built from.
+         */
+        const derived = resolveDurableReplayJobScope({
+          channel,
+          runtimeStateRoot: options.runtimeStateRoot,
+          scopeId: options.scopeId,
+        });
+        if (!replayJobScopeReported) {
+          replayJobScopeReported = true;
+          console.error(`[run101] replay job scope: derived ${derived}`);
         }
+        return derived;
       };
       replayJobScopeRef.current = resolveReplayJobScope;
       // RC07 (L2): the bounded expiration sweep goes straight through the extension

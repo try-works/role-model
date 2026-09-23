@@ -5,8 +5,39 @@ import {
   MAX_HANDOFF_RECOVERY_LIST_PAGE,
   nextHandoffRecoveryCursor,
   replayJobScopeFromProbe,
+  resolveDurableReplayJobScope,
   terminalRecoveryListingValue,
 } from "../src/supervised-replay-handoff-recovery.js";
+
+/**
+ * Run 100 addendum `handoff-evidence-durability.addendum-06` S28 (measured live, build `0.0.14-…-gd97a6862`):
+ *
+ *   `[run101] replay job scope: probe failed envelope identity or capability is incomplete or incompatible`
+ *   `[run101] recovery page came back empty: scope=standalone-runtime-stage channel=stage cursor=start`
+ *
+ * The runtime host validates a capability envelope before the extension's binding check ever runs, so a
+ * scope-less discovery listing cannot be sent at all. The scope is nonetheless deterministic: the private
+ * boundary stamps captures (and the replay jobs built from them) with
+ * `runtime:${sha256(JSON.stringify({channel, stateRoot: resolvedSidecarStateRoot})).slice(0,32)}`, and the host
+ * knows both inputs. The value below is the scope the live root's 1 700 jobs actually carry, so this test fails
+ * the moment the derivation drifts from the boundary that stamps the work.
+ */
+test("run101 S28 the durable job scope is derived the way the boundary stamps it", () => {
+  const scope = resolveDurableReplayJobScope({
+    channel: "stage",
+    runtimeStateRoot: "E:\\role-model-temp\\rc-run\\state",
+    scopeId: "standalone-runtime-stage",
+  });
+  expect(scope).toBe("runtime:714f4a87dd3c44d1bc93ed741841c722");
+  expect(
+    resolveDurableReplayJobScope({
+      channel: "development",
+      runtimeStateRoot: "E:\\role-model-temp\\rc-run\\state",
+      scopeId: "standalone-runtime-stage",
+    }),
+    "the channel is part of the identity",
+  ).not.toBe(scope);
+});
 
 /**
  * Run 100 addendum `handoff-evidence-durability.addendum-06` S27 (measured live: the terminalization log

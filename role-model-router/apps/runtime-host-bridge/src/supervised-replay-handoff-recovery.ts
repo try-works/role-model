@@ -1,4 +1,6 @@
 import { createHash } from "node:crypto";
+import path from "node:path";
+
 import { replayDispatchCaptureToken } from "./track-b-auto-replay.js";
 import { extractCaptureOutputText } from "./track-b-replay-evaluation-criteria.js";
 
@@ -132,6 +134,33 @@ export function replayJobScopeFromProbe(probe: unknown): string | null {
     if (trimmed.length > 0 && trimmed.length <= MAX_REPLAY_JOB_SCOPE) return trimmed;
   }
   return null;
+}
+
+/**
+ * Run 100 addendum `handoff-evidence-durability.addendum-06` S28 - the durable replay job scope, derived
+ * exactly the way the private boundary stamps it.
+ *
+ * The boundary scopes every capture it records (and therefore every replay job built from one) to
+ * `runtime:${sha256(JSON.stringify({channel, stateRoot: <its own state root>})).slice(0,32)}`, where its state
+ * root is the runtime's `<runtime-state-root>/<scope-id>/track-b`. Measured on the real-traffic root:
+ * `channel=stage`, `stateRoot=E:\role-model-temp\rc-run\state\standalone-runtime-stage\track-b` ->
+ * `runtime:714f4a87dd3c44d1bc93ed741841c722`, which is the scope all 1 700 persisted jobs carry.
+ *
+ * Asking the store instead does not work: the runtime host validates a capability envelope before the
+ * extension's binding check runs, so a scope-less discovery listing is refused with
+ * `envelope identity or capability is incomplete or incompatible` (measured live). The scope is not
+ * discoverable - it is computable, and this is the computation.
+ */
+export function resolveDurableReplayJobScope(input: {
+  readonly channel: string;
+  readonly runtimeStateRoot: string;
+  readonly scopeId: string;
+}): string {
+  const stateRoot = path.resolve(path.join(input.runtimeStateRoot, input.scopeId, "track-b"));
+  const digest = createHash("sha256")
+    .update(JSON.stringify({ channel: input.channel, stateRoot }))
+    .digest("hex");
+  return `runtime:${digest.slice(0, 32)}`;
 }
 
 /** The evaluation job id the live handoff derives from a replay job id (kept identical on purpose). */
