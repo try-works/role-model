@@ -4541,6 +4541,7 @@ export async function main(): Promise<void> {
               : [];
           const recoveredJobs: DurableReplayJobSummary[] = [];
           let examined = 0;
+          let candidates = 0;
           for (const job of terminalJobs as readonly DurableReplayJobSummary[]) {
             /**
              * S24: each examination costs a cross-boundary `evaluation:get-job`, so the sweep pays for a
@@ -4551,6 +4552,7 @@ export async function main(): Promise<void> {
             if (recoveredJobs.length >= MAX_HANDOFF_RECOVERIES_PER_SWEEP) break;
             examined += 1;
             if (selectUnevaluatedHandoffs([job], 1).length === 0) continue;
+            candidates += 1;
             const carriedId = carriedEvaluationJobId(job);
             if (!carriedId) continue;
             let fullJob: DurableReplayJobSummary | null = null;
@@ -4594,6 +4596,16 @@ export async function main(): Promise<void> {
               if (fullJob) recoveredJobs.push(fullJob);
               else skipped += 1;
             }
+          }
+          /**
+           * Run 100 addendum `handoff-evidence-durability.addendum-06` S26: a page the filter cannot read is a
+           * silent no-op - measured live, the pass stopped producing anything at all when its listing became a
+           * summary page and the projection no longer carried the field the filter reads. The pass now says so.
+           */
+          if (examined > 0 && candidates === 0) {
+            console.error(
+              `[run101] recovery page carried no entry the filter could read: ${examined} examined, 0 candidates`,
+            );
           }
           handoffRecoveryCursor = nextHandoffRecoveryCursor({
             currentCursor: handoffRecoveryCursor,
