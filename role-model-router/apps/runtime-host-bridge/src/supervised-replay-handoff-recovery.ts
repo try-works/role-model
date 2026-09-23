@@ -169,7 +169,22 @@ export function coerceDurableReplayJobRecord(
   for (let depth = 0; depth < maxDepth; depth += 1) {
     if (!current || typeof current !== "object" || Array.isArray(current)) return null;
     const record = current as Record<string, unknown>;
-    if (typeof record.jobId === "string" && record.jobId.length > 0) return record;
+    /**
+     * S43 (measured live with the S42 operator readback: the boundary returns both the source capture and the
+     * branch capture of a handoff the completion reports as `capture_missing`): stopping at the first object
+     * carrying a `jobId` can stop at a locator that merely *names* the job, and a record without `dispatches`
+     * makes the completion fall back to the pre-S9 branch naming - which resolves to nothing, which is the
+     * uniform miss. The record has to look like the durable job: identity *and* the work it carries.
+     */
+    const looksLikeJob =
+      typeof record.jobId === "string" &&
+      record.jobId.length > 0 &&
+      (Array.isArray(record.candidatePackages) ||
+        (record.dispatches !== null &&
+          typeof record.dispatches === "object" &&
+          !Array.isArray(record.dispatches)) ||
+        typeof record.state === "string");
+    if (looksLikeJob) return record;
     const next = unwrapCapabilityPayload(current);
     if (next === current) return null;
     current = next;

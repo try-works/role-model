@@ -45,7 +45,11 @@ test("run101 S35 a capability answer is read as its payload", () => {
  * still reads as absent - which is the missing case the pass exists for.
  */
 test("run101 S36 the job record is coerced out of whatever envelope answered", () => {
-  const job = { jobId: "job-a", state: "failed", candidatePackages: [] };
+  const job = {
+    jobId: "job-a",
+    state: "failed",
+    candidatePackages: [{ endpointId: "endpoint:a" }],
+  };
   expect(coerceDurableReplayJobRecord({ value: job })).toEqual(job);
   expect(coerceDurableReplayJobRecord({ value: { businessOutput: { value: job } } })).toEqual(job);
   expect(coerceDurableReplayJobRecord({ value: null, businessOutput: { value: null } })).toBeNull();
@@ -53,6 +57,17 @@ test("run101 S36 the job record is coerced out of whatever envelope answered", (
   expect(
     coerceDurableReplayJobRecord({ value: { value: { value: { value: { value: job } } } } }),
   ).toBeNull();
+  /**
+   * S43 (measured live): an outer locator that merely *names* the job must not be mistaken for the record - a
+   * record without `dispatches` sends the completion back to the pre-S9 branch naming, which resolves to
+   * nothing and is reported as `capture_missing` for every arm of a handoff whose captures are all readable.
+   */
+  expect(
+    coerceDurableReplayJobRecord({
+      durableLocator: { jobId: "job-a" },
+      businessOutput: { value: job },
+    }),
+  ).toEqual(job);
 });
 
 /**
