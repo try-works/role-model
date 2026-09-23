@@ -32,6 +32,13 @@ const MAX_TEXT = 256;
 const MAX_ERROR_TEXT = 512;
 
 export const SUPERVISED_REPLAY_EVALUATION_MAX_ATTEMPTS = 8;
+/**
+ * Run 100 addendum 05 S17: how many times a given handoff may have its attempt budget renewed after a
+ * give-up. The live root had 301 entries at the cap whose failure reason (`durable evaluation job … is
+ * unavailable for resume`) is exactly what the recovery work now makes completable, so a renewal is the
+ * right answer - but it must terminate: after this many renewals the give-up is final.
+ */
+export const MAX_RESUME_RENEWALS = 2;
 
 export interface SupervisedReplayEvaluationCounterfactual {
   readonly endpointId: string;
@@ -63,6 +70,12 @@ export interface SupervisedReplayEvaluationResumeEntry {
   readonly attempts: number;
   readonly resolvedAtMs: number | null;
   readonly outcome: string | null;
+  /**
+   * Run 100 addendum `replay-evaluation-spine-repair.addendum-05` S17: how many times this handoff's attempt
+   * budget has been renewed after a give-up. `record()` deliberately never resets an entry's attempts, so a
+   * renewal has to be explicit and bounded; this is that bound.
+   */
+  readonly renewals?: number;
   readonly lastError: string | null;
   readonly comparisonGroupId?: string | null;
 }
@@ -70,6 +83,15 @@ export interface SupervisedReplayEvaluationResumeEntry {
 export interface SupervisedReplayEvaluationResumeStore {
   readonly filePath: string;
   record(entry: SupervisedReplayEvaluationResumeEntry): SupervisedReplayEvaluationResumeEntry;
+  /**
+   * Run 100 addendum `replay-evaluation-spine-repair.addendum-05` S17: give an abandoned handoff a fresh
+   * attempt budget, bounded by `MAX_RESUME_RENEWALS`. Returns the renewed entry, or null when the entry does
+   * not exist or its renewals are spent (in which case the give-up stands).
+   */
+  renew(
+    replayJobId: string,
+    options?: { readonly now?: number; readonly reason?: string | null },
+  ): SupervisedReplayEvaluationResumeEntry | null;
   list(): readonly SupervisedReplayEvaluationResumeEntry[];
   get(replayJobId: string): SupervisedReplayEvaluationResumeEntry | null;
   resolve(
@@ -233,6 +255,16 @@ function normalizeEntry(
     resolvedAtMs,
     outcome,
     lastError,
+    ...(entry.renewals === undefined
+      ? {}
+      : {
+          renewals:
+            Number.isSafeInteger(entry.renewals) &&
+            (entry.renewals as number) >= 0 &&
+            (entry.renewals as number) <= MAX_RESUME_RENEWALS
+              ? (entry.renewals as number)
+              : 0,
+        }),
     ...(entry.comparisonGroupId === undefined
       ? {}
       : {
@@ -393,6 +425,37 @@ export function createSupervisedReplayEvaluationResumeStore(input: {
             : {}),
         };
       });
+    },
+    /**
+     * Run 100 addendum `replay-evaluation-spine-repair.addendum-05` S17: the host's recovery pass renews a
+     * handoff whose give-up reason no longer applies (its evaluation job is missing and the completion can
+     * now create it). `record()` deliberately preserves attempts, so the renewal is explicit here and bounded
+     * by `MAX_RESUME_RENEWALS`; past that the give-up stands and the entry is not selected again.
+     */
+    renew(
+      replayJobId: string,
+      options: { readonly now?: number; readonly reason?: string | null } = {},
+    ): SupervisedReplayEvaluationResumeEntry | null {
+      const now = options.now ?? clock();
+      if (!Number.isSafeInteger(now) || now < 0) {
+        throw new Error("supervised replay evaluation resume clock must return a safe integer");
+      }
+      const existing = entries[boundedText(replayJobId, "replayJobId")];
+      if (!existing) return null;
+      const renewals = Number.isSafeInteger(existing.renewals) ? Number(existing.renewals) : 0;
+      if (renewals >= MAX_RESUME_RENEWALS) return null;
+      const reason =
+        typeof options.reason === "string" && options.reason
+          ? options.reason.slice(0, MAX_ERROR_TEXT)
+          : existing.lastError;
+      return update(existing.replayJobId, (current) => ({
+        ...current,
+        attempts: 0,
+        resolvedAtMs: null,
+        outcome: null,
+        lastError: reason,
+        renewals: renewals + 1,
+      }));
     },
   });
 }

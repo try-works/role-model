@@ -4524,8 +4524,23 @@ export async function main(): Promise<void> {
                 skipped += 1;
                 continue;
               }
-              if (resumeStore.get(entry.replayJobId)) {
-                skipped += 1;
+              const existingEntry = resumeStore.get(entry.replayJobId);
+              if (existingEntry) {
+                /**
+                 * Run 100 addendum `replay-evaluation-spine-repair.addendum-05` S17: an entry that already
+                 * gave up was abandoned while the completion could not create a missing evaluation - the
+                 * capability this recovery pass exists to use. `record()` deliberately never resets attempts,
+                 * so the renewal is explicit and bounded; past its bound the give-up stands.
+                 */
+                const renewed =
+                  existingEntry.outcome === "abandoned"
+                    ? resumeStore.renew(entry.replayJobId, {
+                        reason:
+                          "recovery: the handoff can now be completed from durable evidence",
+                      })
+                    : null;
+                if (renewed) recovered += 1;
+                else skipped += 1;
                 continue;
               }
               resumeStore.record({
