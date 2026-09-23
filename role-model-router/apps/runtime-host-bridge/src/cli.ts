@@ -61,6 +61,8 @@ import {
  * abandoned-entry drain (addendum 04 S5).
  */
 const MAX_HANDOFF_RECOVERIES_PER_SWEEP = 3;
+/** How often the handed-off-replay recovery pass may list the durable jobs (measured on the live root). */
+const HANDOFF_RECOVERY_INTERVAL_MS = 120_000;
 import {
   autoReplayExecutionFromCommandReceipt,
   startAutoReplayLoop,
@@ -4316,6 +4318,8 @@ export async function main(): Promise<void> {
       // produce). It is learned from the capture the executor reads each tick so the
       // expiration sweep targets the same authority the jobs were created under.
       let lastReplayCaptureScope: string | null = null;
+      // Run 100 addendum 04 S7: when the handed-off-replay recovery pass last listed the durable jobs.
+      let lastHandoffRecoveryAtMs = 0;
       // RC07 (L2): the bounded expiration sweep goes straight through the extension
       // host the producer already uses for replay-core, because the operator boundary's
       // replay domain does not expose the sweep in the packaged composition
@@ -4405,6 +4409,14 @@ export async function main(): Promise<void> {
         async recoverHandedOffEvaluations() {
           const runtime = extensionRuntimeRef.current;
           if (!runtime) return { scanned: 0, recovered: 0, skipped: 0 };
+          // Cadence guard (measured need): the listing used to clone every durable job of the scope on every
+          // sweep, which starved the loop it was meant to unblock. The filtered listing below is cheap; the
+          // guard keeps even that off the hot path when nothing can have changed.
+          const nowMs = Date.now();
+          if (nowMs - lastHandoffRecoveryAtMs < HANDOFF_RECOVERY_INTERVAL_MS) {
+            return { scanned: 0, recovered: 0, skipped: 0 };
+          }
+          lastHandoffRecoveryAtMs = nowMs;
           const scope = lastReplayCaptureScope ?? options.scopeId;
           const listing = (await runtime.invoke("replay-core", {
             requestId: `replay-list-jobs:${Date.now()}`,
@@ -4414,7 +4426,9 @@ export async function main(): Promise<void> {
             scope,
             authorizationEpoch: 1,
             capability: "replay:list-jobs",
-            value: {},
+            // Only the handoff states, and only a page: the filter runs inside the extension before it clones
+            // a job, so a 1 600-job store costs the same as an empty one.
+            value: { state: ["awaiting_evaluation", "evaluating"], limit: 25 },
           })) as { readonly jobs?: unknown } | readonly unknown[] | null;
           const jobs = Array.isArray(listing)
             ? listing
