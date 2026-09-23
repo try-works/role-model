@@ -4369,6 +4369,8 @@ export async function main(): Promise<void> {
       let existingLookupShapeReported = false;
       /** S36 diagnostics: report a job read that yields no record, once per process. */
       let jobReadShapeReported = false;
+      /** S37 diagnostics: report a candidate that could not become a resume entry, once per process. */
+      let entrySynthesisReported = false;
       /**
        * Run 100 addendum `handoff-evidence-durability.addendum-06` S27: the scope the durable replay jobs were
        * created under. The producer learns it from the captures it dispatches, and a runtime that has just
@@ -4804,6 +4806,22 @@ export async function main(): Promise<void> {
           for (const job of [...recoverable, ...recoveredJobs]) {
             const entry = recoveredHandoffEntry(job, { scopeFallback: scope });
             if (!entry) {
+              /**
+               * S37 diagnostics: synthesis has four guards (a handoff state, the capture ref the source decision
+               * names, and a non-empty candidate package list) and a failure only incremented `skipped`, so a
+               * candidate with a genuinely missing evaluation could vanish here without a trace.
+               */
+              if (!entrySynthesisReported) {
+                entrySynthesisReported = true;
+                const record = job as unknown as Record<string, unknown>;
+                console.error(
+                  `[run101] handoff entry synthesis failed: state=${String(record.state)} sourceDecisionId=${String(record.sourceDecisionId)} packages=${
+                    Array.isArray(record.candidatePackages)
+                      ? record.candidatePackages.length
+                      : "none"
+                  } keys=${Object.keys(record).slice(0, 16).join(",")}`,
+                );
+              }
               skipped += 1;
               continue;
             }
