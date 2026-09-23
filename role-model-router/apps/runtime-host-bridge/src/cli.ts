@@ -4615,6 +4615,8 @@ export async function main(): Promise<void> {
           let candidates = 0;
           /** S31 diagnostics: the first reason a candidate could not become a resume entry. */
           let firstSkipReason: string | null = null;
+          /** S32 diagnostics: the first job whose evaluation is genuinely missing on this page. */
+          let firstMissingEvaluation: string | null = null;
           for (const job of terminalJobs as readonly DurableReplayJobSummary[]) {
             /**
              * S24: each examination costs a cross-boundary `evaluation:get-job`, so the sweep pays for a
@@ -4664,7 +4666,7 @@ export async function main(): Promise<void> {
                 firstSkipReason ??= "job record unavailable";
                 continue;
               }
-              await runtime.invoke("evaluation-core", {
+              const existingEvaluation = await runtime.invoke("evaluation-core", {
                 requestId: `evaluation-get-job:${carriedId}`,
                 sessionId: `evaluation-get-job:${options.scopeId}`,
                 protocolVersion: "1.1.0",
@@ -4674,12 +4676,45 @@ export async function main(): Promise<void> {
                 capability: "evaluation:get-job",
                 value: { jobId: carriedId },
               });
-              // The evaluation exists (terminal or not): nothing to recover for this job.
-              skipped += 1;
+              /**
+               * S32 (measured live: a page of candidates produced zero recoveries with no named reason): the
+               * existence check treated *any* answer as "the evaluation exists", so a job whose evaluation was
+               * never created - answered with an error envelope the host turns into a value instead of a
+               * throw - was counted `skipped` and the pass never recovered it. Existence is now read from the
+               * record's identity, and a non-record answer is the missing case this pass exists for.
+               */
+              const decodedExisting = decodeExternalizedOperatorReadback({
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+                value: existingEvaluation,
+              });
+              const existingRecord =
+                decodedExisting &&
+                typeof decodedExisting === "object" &&
+                !Array.isArray(decodedExisting)
+                  ? (decodedExisting as Record<string, unknown>)
+                  : null;
+              const existingId =
+                typeof existingRecord?.id === "string"
+                  ? existingRecord.id
+                  : typeof existingRecord?.jobId === "string"
+                    ? existingRecord.jobId
+                    : null;
+              if (existingId) {
+                // The evaluation exists (terminal or not): nothing to recover for this job.
+                skipped += 1;
+              } else if (fullJob) {
+                recoveredJobs.push(fullJob);
+              } else {
+                skipped += 1;
+                firstSkipReason ??= `missing evaluation for ${carriedId} without a full job record`;
+              }
             } catch {
               // The entry is synthesized from the full record (candidate packages), not the summary.
-              if (fullJob) recoveredJobs.push(fullJob);
-              else {
+              if (fullJob) {
+                recoveredJobs.push(fullJob);
+                firstMissingEvaluation ??= carriedId;
+              } else {
                 skipped += 1;
                 firstSkipReason ??= `evaluation lookup failed for ${carriedId}`;
               }
@@ -4698,6 +4733,16 @@ export async function main(): Promise<void> {
           if (examined > 0 && recoveredJobs.length === 0 && recovered === 0 && firstSkipReason) {
             console.error(
               `[run101] recovery sweep: examined=${examined} candidates=${candidates} recovered=0 firstSkip=${firstSkipReason.slice(0, 160)}`,
+            );
+          }
+          if (
+            examined > 0 &&
+            recovered === 0 &&
+            candidates > 0 &&
+            firstMissingEvaluation === null
+          ) {
+            console.error(
+              `[run101] recovery sweep: examined=${examined} candidates=${candidates} recovered=0 - every candidate already has its evaluation`,
             );
           }
           if (examined === 0 && !emptyRecoveryPageReported) {
