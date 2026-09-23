@@ -4358,6 +4358,9 @@ export async function main(): Promise<void> {
        * a restart re-scans from the beginning, which is cheap now that the listing only projects summaries.
        */
       let handoffRecoveryCursor: string | null = null;
+      /** S27 diagnostics: report the resolved job scope and an empty recovery page once per process. */
+      let replayJobScopeReported = false;
+      let emptyRecoveryPageReported = false;
       /**
        * Run 100 addendum `handoff-evidence-durability.addendum-06` S27: the scope the durable replay jobs were
        * created under. The producer learns it from the captures it dispatches, and a runtime that has just
@@ -4368,7 +4371,13 @@ export async function main(): Promise<void> {
        * trying to find.
        */
       const resolveReplayJobScope = async (): Promise<string | null> => {
-        if (lastReplayCaptureScope) return lastReplayCaptureScope;
+        if (lastReplayCaptureScope) {
+          if (!replayJobScopeReported) {
+            replayJobScopeReported = true;
+            console.error(`[run101] replay job scope: learned ${lastReplayCaptureScope}`);
+          }
+          return lastReplayCaptureScope;
+        }
         const runtime = extensionRuntimeRef.current;
         if (!runtime) return null;
         try {
@@ -4384,9 +4393,23 @@ export async function main(): Promise<void> {
           });
           const scope = replayJobScopeFromProbe(probe);
           if (scope) lastReplayCaptureScope = scope;
+          if (!replayJobScopeReported) {
+            replayJobScopeReported = true;
+            console.error(
+              `[run101] replay job scope: ${scope ? `discovered ${scope}` : "not resolvable from the store"}`,
+            );
+          }
           return scope;
-        } catch {
+        } catch (error) {
           // A failed probe is not fatal: the caller keeps the operator scope and its own error handling.
+          if (!replayJobScopeReported) {
+            replayJobScopeReported = true;
+            console.error(
+              `[run101] replay job scope: probe failed ${String(
+                (error as { message?: unknown })?.message ?? error,
+              ).slice(0, 160)}`,
+            );
+          }
           return null;
         }
       };
@@ -4646,6 +4669,12 @@ export async function main(): Promise<void> {
           if (examined > 0 && candidates === 0) {
             console.error(
               `[run101] recovery page carried no entry the filter could read: ${examined} examined, 0 candidates`,
+            );
+          }
+          if (examined === 0 && !emptyRecoveryPageReported) {
+            emptyRecoveryPageReported = true;
+            console.error(
+              `[run101] recovery page came back empty: scope=${scope} channel=${channel} cursor=${handoffRecoveryCursor ?? "start"}`,
             );
           }
           handoffRecoveryCursor = nextHandoffRecoveryCursor({
