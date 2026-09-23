@@ -4,6 +4,7 @@ import {
   MAX_HANDOFF_RECOVERY_CHECKS_PER_SWEEP,
   MAX_HANDOFF_RECOVERY_LIST_PAGE,
   nextHandoffRecoveryCursor,
+  terminalRecoveryListingValue,
 } from "../src/supervised-replay-handoff-recovery.js";
 
 /**
@@ -64,17 +65,41 @@ test("run101 S24 a sweep that examines nothing keeps its position", () => {
 test("run101 S24 the page stays inside the extension protocol's inline frame", () => {
   /**
    * Measured on the live store (addendum 06 census): the `jobSummaries()` projection (identity, state,
-   * channel, scope, epoch, evaluation id, branch count, timestamps) is 319 bytes per job. The protocol
-   * inlines up to 16 KiB and refuses anything larger (`frame exceeds inline limit`), and the envelope itself
-   * needs room, so the page must stay well inside the bound - the S10 measurement that set the page to three
-   * was taken when the listing cloned whole jobs (candidate packages, branch references, dispatch results and
-   * per-endpoint metric maps), which is exactly what the summary projection removed.
+   * channel, scope, epoch, evaluation id, branch count, timestamps) is 319 bytes per job, while the store file
+   * is 12.4 MB for 1 692 jobs - a *full* job record averages 7.3 KB (candidate packages, branch references,
+   * dispatch results and per-endpoint metric maps). The protocol inlines up to 16 KiB and refuses anything
+   * larger (`frame exceeds inline limit`), so a page of full jobs overruns the frame at two entries while a
+   * page of projections fits twenty-four: the listing has to be asked for the projection, and asking for full
+   * jobs is the defect this bound makes visible on the first live sweep.
    */
   const measuredSummaryBytes = 319;
+  const measuredFullJobBytes = 7_300;
   const envelopeAllowance = 4 * 1024;
   expect(MAX_HANDOFF_RECOVERY_LIST_PAGE).toBeGreaterThan(3);
   expect(MAX_HANDOFF_RECOVERY_LIST_PAGE * measuredSummaryBytes + envelopeAllowance).toBeLessThan(
     16 * 1024,
   );
+  expect(
+    MAX_HANDOFF_RECOVERY_LIST_PAGE * measuredFullJobBytes + envelopeAllowance,
+    "a page of full job records could never travel inline - the projection is what makes the page possible",
+  ).toBeGreaterThan(16 * 1024);
   expect(MAX_HANDOFF_RECOVERY_CHECKS_PER_SWEEP).toBeLessThanOrEqual(MAX_HANDOFF_RECOVERY_LIST_PAGE);
+});
+
+test("run101 S24 the terminal page asks for the summary projection and carries the cursor", () => {
+  const first = terminalRecoveryListingValue({ cursor: null });
+  expect(first).toMatchObject({
+    state: ["failed", "timed_out"],
+    hasEvaluationJobId: true,
+    summary: true,
+    limit: MAX_HANDOFF_RECOVERY_LIST_PAGE,
+  });
+  expect(
+    Object.hasOwn(first, "afterJobId"),
+    "the first sweep of a pass starts at the beginning of the set",
+  ).toBe(false);
+  expect(terminalRecoveryListingValue({ cursor: "job-0004" })).toMatchObject({
+    afterJobId: "job-0004",
+    summary: true,
+  });
 });

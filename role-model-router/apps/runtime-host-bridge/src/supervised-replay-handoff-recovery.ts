@@ -79,6 +79,29 @@ export function nextHandoffRecoveryCursor(input: {
   return input.pageJobIds[input.examinedCount - 1] ?? input.currentCursor;
 }
 
+/**
+ * Run 100 addendum `handoff-evidence-durability.addendum-06` S24: the terminal recovery page is asked for as a
+ * *summary* page.
+ *
+ * `replay:list-jobs` returns whole durable jobs unless the caller asks otherwise, and a whole job averages
+ * 7.3 KB on the live store (12.4 MB for 1 692 jobs: candidate packages, branch references, dispatch results
+ * and per-endpoint metric maps). The extension protocol inlines up to 16 KiB, so a page of full jobs overruns
+ * the frame at two entries - and the pass needs twenty-four to make any progress at all. The scan only reads
+ * identity, state, evaluation id and branch count from the page; the full record is fetched for the jobs it
+ * actually recovers, which is bounded by the per-sweep recovery bound.
+ */
+export function terminalRecoveryListingValue(input: {
+  readonly cursor: string | null;
+}): Record<string, unknown> {
+  return {
+    state: ["failed", "timed_out"],
+    hasEvaluationJobId: true,
+    summary: true,
+    ...(input.cursor === null ? {} : { afterJobId: input.cursor }),
+    limit: MAX_HANDOFF_RECOVERY_LIST_PAGE,
+  };
+}
+
 /** The evaluation job id the live handoff derives from a replay job id (kept identical on purpose). */
 export function evaluationJobIdForReplayJob(replayJobId: string): string {
   return `evaluation-replay-${createHash("sha256")

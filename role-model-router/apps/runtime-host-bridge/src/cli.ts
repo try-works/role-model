@@ -64,6 +64,7 @@ import {
   resolveResumedArmEvidence,
   selectRecoverableHandoffs,
   selectUnevaluatedHandoffs,
+  terminalRecoveryListingValue,
 } from "./supervised-replay-handoff-recovery.js";
 /**
  * How many handed-off replays one liveness sweep may recover. Each recovery is one extension listing plus a
@@ -4514,18 +4515,13 @@ export async function main(): Promise<void> {
             scope,
             authorizationEpoch: 1,
             capability: "replay:list-jobs",
-            value: {
-              state: ["failed", "timed_out"],
-              // S14: only jobs that already carry the evaluation job id their handoff recorded.
-              hasEvaluationJobId: true,
-              /**
-               * S24: the cursor. Without it this page was a fixed window - the same three jobs, every sweep,
-               * all of them already evaluated, for ever - so the pass never reached the handoffs that need
-               * it. `jobId` order is stable, so the last examined job is a valid place to resume.
-               */
-              ...(handoffRecoveryCursor === null ? {} : { afterJobId: handoffRecoveryCursor }),
-              limit: MAX_HANDOFF_RECOVERY_LIST_PAGE,
-            },
+            /**
+             * S24: the page carries the cursor (without it this was a fixed window - the same three jobs every
+             * sweep, all already evaluated, for ever) and asks for the summary projection, because a page of
+             * whole jobs overruns the extension protocol's 16 KiB inline frame at two entries. The full record
+             * is read for the jobs this sweep actually recovers.
+             */
+            value: terminalRecoveryListingValue({ cursor: handoffRecoveryCursor }),
           })) as { readonly jobs?: unknown } | readonly unknown[] | null;
           const terminalJobs = Array.isArray(terminalListing)
             ? terminalListing
