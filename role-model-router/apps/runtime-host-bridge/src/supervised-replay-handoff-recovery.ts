@@ -28,6 +28,11 @@ export interface DurableReplayJobSummary {
   readonly scope?: unknown;
   readonly candidatePackages?: unknown;
   readonly branches?: unknown;
+  /**
+   * S18c: the summary projection carries the branch *count* rather than the branch records, so a pass that
+   * pages with `replay:list-jobs` can still tell whether the job holds evidence to compare.
+   */
+  readonly branchCount?: unknown;
 }
 
 const DECISION_PREFIX = "decision-";
@@ -90,7 +95,13 @@ export function isUnevaluatedHandoff(job: DurableReplayJobSummary): boolean {
   if (!["awaiting_evaluation", "evaluating", "failed", "timed_out"].includes(state)) return false;
   if (typeof job.jobId !== "string" || job.jobId.length === 0) return false;
   if (typeof job.evaluationJobId !== "string" || job.evaluationJobId.length === 0) return false;
-  if (!Array.isArray(job.branches) || job.branches.length === 0) return false;
+  const branchCount =
+    Number.isSafeInteger(job.branchCount) && (job.branchCount as number) >= 0
+      ? Number(job.branchCount)
+      : Array.isArray(job.branches)
+        ? job.branches.length
+        : 0;
+  if (branchCount === 0) return false;
   return captureRefFromReplayJob(job) !== null;
 }
 

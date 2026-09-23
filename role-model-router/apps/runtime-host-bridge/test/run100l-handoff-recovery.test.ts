@@ -138,6 +138,26 @@ test("run100l a handoff whose evaluation was never created is recovered through 
 
   // A handoff that paid for no branch has nothing to compare and is skipped.
   expect(isUnevaluatedHandoff({ ...unevaluated, branches: [] })).toBe(false);
+  /**
+   * S18c: the host pages with `replay:list-jobs`, which returns the *summary* projection (identity, state,
+   * binding, evaluation id, branch count) - not the branch records. A filter that required `branches` made
+   * every listed job look unrecoverable, which is how the discovery pass stayed inert on the live root.
+   */
+  const summaryShape = {
+    jobId: "replay-job-9",
+    state: "failed",
+    evaluationJobId: "evaluation-replay-carried0000000001",
+    sourceDecisionId: "decision-req-carried",
+    authorizationEpoch: 1,
+    channel: "stage",
+    scope: "runtime:scope-1",
+    branchCount: 3,
+    createdAtMs: 1,
+    updatedAtMs: 2,
+    evaluationJobId2: undefined,
+  };
+  expect(isUnevaluatedHandoff(summaryShape)).toBe(true);
+  expect(isUnevaluatedHandoff({ ...summaryShape, branchCount: 0 })).toBe(false);
   // A job with no carried id belongs to the S7 pass instead.
   expect(isUnevaluatedHandoff({ ...unevaluated, evaluationJobId: null })).toBe(false);
   // Discovery keeps the caller's order and its bound.
