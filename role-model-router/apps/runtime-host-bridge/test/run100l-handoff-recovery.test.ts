@@ -3,10 +3,10 @@ import { createHash } from "node:crypto";
 import { expect, test } from "vitest";
 
 import {
-  branchCaptureRequestIdsFromJob,
-  carriedEvaluationJobId,
   MAX_HANDOFF_RECOVERY_LIST_PAGE,
+  branchCaptureRequestIdsFromJob,
   captureRefFromReplayJob,
+  carriedEvaluationJobId,
   evaluationJobIdForReplayJob,
   isRecoverableHandoff,
   isUnevaluatedHandoff,
@@ -82,10 +82,7 @@ test("run100l discovery is bounded per sweep and keeps the caller's order", () =
     "replay-job-2",
   ]);
   // Mixed input: only recoverable rows count against the bound.
-  const mixed = [
-    job({ jobId: "done", evaluationJobId: "evaluation-replay-x" }),
-    ...jobs,
-  ];
+  const mixed = [job({ jobId: "done", evaluationJobId: "evaluation-replay-x" }), ...jobs];
   expect(selectRecoverableHandoffs(mixed, 2).map((row) => String(row.jobId))).toEqual([
     "replay-job-0",
     "replay-job-1",
@@ -96,12 +93,21 @@ test("run100l discovery is bounded per sweep and keeps the caller's order", () =
  * S10 of the same addendum, measured live: the extension protocol inlines an envelope of at most 16 KiB and
  * refuses anything larger (`frame exceeds inline limit; use a channel-local transfer artifact`). The recovery
  * pass asked replay-core for a 25-job page - each job carrying candidate packages, branch references, dispatch
- * results and per-endpoint metric maps - and the frame layer refused the answer. The page the host asks for is
- * now a bounded constant, and this test keeps it small enough to travel inline.
+ * results and per-endpoint metric maps - and the frame layer refused the answer.
+ *
+ * Addendum `handoff-evidence-durability.addendum-06` S24 re-derived the page from what the listing actually
+ * returns now: the `jobSummaries()` projection (identity, state, channel, scope, epoch, evaluation id, branch
+ * count, timestamps) measures 319 bytes per job on the live store, against the 16 KiB frame and a 4 KiB
+ * envelope allowance. The invariant this test keeps is the one that matters - the page travels inline - rather
+ * than the constant S10 chose while the listing still cloned whole jobs.
  */
 test("run100l the recovery listing page fits the extension protocol's inline envelope", () => {
-  expect(MAX_HANDOFF_RECOVERY_LIST_PAGE).toBe(3);
-  expect(MAX_HANDOFF_RECOVERY_LIST_PAGE).toBeLessThanOrEqual(3);
+  const measuredSummaryBytes = 319;
+  const envelopeAllowance = 4 * 1024;
+  expect(MAX_HANDOFF_RECOVERY_LIST_PAGE).toBeGreaterThan(0);
+  expect(MAX_HANDOFF_RECOVERY_LIST_PAGE * measuredSummaryBytes + envelopeAllowance).toBeLessThan(
+    16 * 1024,
+  );
 });
 
 /**
@@ -120,9 +126,7 @@ test("run100l a handoff whose evaluation was never created is recovered through 
     baselineEndpointId: "endpoint:source",
     scope: "runtime:scope-1",
     branches: [{ branchRootRef: "artifact:branch-1" }],
-    candidatePackages: [
-      { endpointId: "endpoint:c1", modelId: "model:1", reasoningEffort: "high" },
-    ],
+    candidatePackages: [{ endpointId: "endpoint:c1", modelId: "model:1", reasoningEffort: "high" }],
   };
   expect(isUnevaluatedHandoff(unevaluated)).toBe(true);
   // It is not the S7 shape (that one has no evaluation job id yet).

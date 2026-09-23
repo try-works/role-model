@@ -44,9 +44,40 @@ const DECISION_PREFIX = "decision-";
  * (`frame exceeds inline limit; use a channel-local transfer artifact`) - measured when the recovery pass
  * asked replay-core for a 25-job page, each job carrying its candidate packages, branch references, dispatch
  * results and per-endpoint metric maps. The caller's page size is what has to respect that bound; this is the
- * page it asks for, and it matches the per-sweep recovery bound in the host.
+ * page it asks for. Run 100 addendum `handoff-evidence-durability.addendum-06` S24 re-derived the page from
+ * the *summary* projection the listing returns now (measured at 319 bytes per job on the live store, against
+ * the 16 KiB inline frame plus a 4 KiB envelope allowance), and decoupled it from the per-sweep recovery
+ * bound so the scan can advance without paying for more recoveries per tick.
  */
-export const MAX_HANDOFF_RECOVERY_LIST_PAGE = 3;
+export const MAX_HANDOFF_RECOVERY_LIST_PAGE = 24;
+
+/**
+ * Run 100 addendum `handoff-evidence-durability.addendum-06` S24: how many durable jobs of a recovery page one
+ * sweep may check against Evaluation Core. The page decides how far the scan can advance; this bound decides
+ * how much cross-boundary work a single tick pays for, so neither is derived from the other.
+ */
+export const MAX_HANDOFF_RECOVERY_CHECKS_PER_SWEEP = 12;
+
+/**
+ * Run 100 addendum `handoff-evidence-durability.addendum-06` S24: where the next recovery sweep resumes.
+ *
+ * The terminal recovery page used to be a fixed window: every sweep asked for the same three jobs, found that
+ * all three already had their evaluation, and counted three `skipped` for ever, so the pass could never reach
+ * the handoffs that genuinely need it (512 terminal jobs carry an evaluation id on the live root, 262 of them
+ * have no evaluation at all). Jobs are listed in `jobId` order, which is stable, so the id of the last job a
+ * sweep examined is a valid cursor. A short page means the end of the set: the next pass starts over, which is
+ * how work that appeared behind the cursor is picked up.
+ */
+export function nextHandoffRecoveryCursor(input: {
+  readonly currentCursor: string | null;
+  readonly pageJobIds: readonly string[];
+  readonly examinedCount: number;
+  readonly pageSize: number;
+}): string | null {
+  if (input.examinedCount <= 0) return input.currentCursor;
+  if (input.pageJobIds.length < input.pageSize) return null;
+  return input.pageJobIds[input.examinedCount - 1] ?? input.currentCursor;
+}
 
 /** The evaluation job id the live handoff derives from a replay job id (kept identical on purpose). */
 export function evaluationJobIdForReplayJob(replayJobId: string): string {

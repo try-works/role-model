@@ -54,10 +54,12 @@ import {
 // interrupted before its evaluation job existed is recovered from the durable job itself.
 import {
   type DurableReplayJobSummary,
+  MAX_HANDOFF_RECOVERY_CHECKS_PER_SWEEP,
   MAX_HANDOFF_RECOVERY_LIST_PAGE,
   branchCaptureRequestIdsFromJob,
   carriedEvaluationJobId,
   describeUnresolvedArms,
+  nextHandoffRecoveryCursor,
   recoveredHandoffEntry,
   resolveResumedArmEvidence,
   selectRecoverableHandoffs,
@@ -4338,6 +4340,12 @@ export async function main(): Promise<void> {
       let lastReplayCaptureScope: string | null = null;
       // Run 100 addendum 04 S7: when the handed-off-replay recovery pass last listed the durable jobs.
       let lastHandoffRecoveryAtMs = 0;
+      /**
+       * Run 100 addendum `handoff-evidence-durability.addendum-06` S24: where the terminal recovery page
+       * resumes. Process-lifetime by design: the durable stores are the record of what still needs doing, and
+       * a restart re-scans from the beginning, which is cheap now that the listing only projects summaries.
+       */
+      let handoffRecoveryCursor: string | null = null;
       // RC07 (L2): the bounded expiration sweep goes straight through the extension
       // host the producer already uses for replay-core, because the operator boundary's
       // replay domain does not expose the sweep in the packaged composition
@@ -4508,9 +4516,14 @@ export async function main(): Promise<void> {
             capability: "replay:list-jobs",
             value: {
               state: ["failed", "timed_out"],
-              // S14: only jobs that already carry the evaluation job id their handoff recorded, so a bounded
-              // page advances instead of repeating the same irrelevant jobs.
+              // S14: only jobs that already carry the evaluation job id their handoff recorded.
               hasEvaluationJobId: true,
+              /**
+               * S24: the cursor. Without it this page was a fixed window - the same three jobs, every sweep,
+               * all of them already evaluated, for ever - so the pass never reached the handoffs that need
+               * it. `jobId` order is stable, so the last examined job is a valid place to resume.
+               */
+              ...(handoffRecoveryCursor === null ? {} : { afterJobId: handoffRecoveryCursor }),
               limit: MAX_HANDOFF_RECOVERY_LIST_PAGE,
             },
           })) as { readonly jobs?: unknown } | readonly unknown[] | null;
@@ -4521,21 +4534,27 @@ export async function main(): Promise<void> {
                 Array.isArray((terminalListing as { jobs?: unknown }).jobs)
               ? ((terminalListing as { jobs?: readonly unknown[] }).jobs as readonly unknown[])
               : [];
-          const unevaluated = selectUnevaluatedHandoffs(
-            terminalJobs as readonly DurableReplayJobSummary[],
-            MAX_HANDOFF_RECOVERIES_PER_SWEEP,
-          );
           const recoveredJobs: DurableReplayJobSummary[] = [];
-          for (const job of unevaluated) {
+          let examined = 0;
+          for (const job of terminalJobs as readonly DurableReplayJobSummary[]) {
+            /**
+             * S24: each examination costs a cross-boundary `evaluation:get-job`, so the sweep pays for a
+             * bounded number of them per tick; the cursor advances past exactly the jobs it examined, which
+             * is what makes the pass converge instead of repeating its first page.
+             */
+            if (examined >= MAX_HANDOFF_RECOVERY_CHECKS_PER_SWEEP) break;
+            if (recoveredJobs.length >= MAX_HANDOFF_RECOVERIES_PER_SWEEP) break;
+            examined += 1;
+            if (selectUnevaluatedHandoffs([job], 1).length === 0) continue;
             const carriedId = carriedEvaluationJobId(job);
             if (!carriedId) continue;
             let fullJob: DurableReplayJobSummary | null = null;
             try {
               /**
                * S18c: the listing returns the summary projection (identity, state, binding, evaluation id,
-               * branch count) while the resume entry needs the job's candidate packages. The page is bounded
-               * to three, so reading the full record for just those is the same bounded cost the completion
-               * itself pays - and it keeps the projection lean for every other caller.
+               * branch count) while the resume entry needs the job's candidate packages. Only the jobs that
+               * reach this point are read in full, so the cost is bounded by the per-sweep recovery bound and
+               * the projection stays lean for every other caller.
                */
               fullJob = (await runtime
                 .invoke("replay-core", {
@@ -4571,6 +4590,14 @@ export async function main(): Promise<void> {
               else skipped += 1;
             }
           }
+          handoffRecoveryCursor = nextHandoffRecoveryCursor({
+            currentCursor: handoffRecoveryCursor,
+            pageJobIds: (terminalJobs as readonly DurableReplayJobSummary[])
+              .map((job) => (typeof job.jobId === "string" ? job.jobId : ""))
+              .filter((jobId) => jobId.length > 0),
+            examinedCount: examined,
+            pageSize: MAX_HANDOFF_RECOVERY_LIST_PAGE,
+          });
           for (const job of [...recoverable, ...recoveredJobs]) {
             const entry = recoveredHandoffEntry(job, { scopeFallback: scope });
             if (!entry) {
