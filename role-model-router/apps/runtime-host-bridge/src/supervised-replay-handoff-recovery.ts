@@ -30,6 +30,16 @@ export interface DurableReplayJobSummary {
 
 const DECISION_PREFIX = "decision-";
 
+/**
+ * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S10 (live on `:3457`): the extension protocol
+ * inlines an envelope of at most 16 KiB and refuses anything larger
+ * (`frame exceeds inline limit; use a channel-local transfer artifact`) - measured when the recovery pass
+ * asked replay-core for a 25-job page, each job carrying its candidate packages, branch references, dispatch
+ * results and per-endpoint metric maps. The caller's page size is what has to respect that bound; this is the
+ * page it asks for, and it matches the per-sweep recovery bound in the host.
+ */
+export const MAX_HANDOFF_RECOVERY_LIST_PAGE = 3;
+
 /** The evaluation job id the live handoff derives from a replay job id (kept identical on purpose). */
 export function evaluationJobIdForReplayJob(replayJobId: string): string {
   return `evaluation-replay-${createHash("sha256")

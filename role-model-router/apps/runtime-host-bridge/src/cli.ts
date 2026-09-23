@@ -52,6 +52,7 @@ import {
 // interrupted before its evaluation job existed is recovered from the durable job itself.
 import {
   type DurableReplayJobSummary,
+  MAX_HANDOFF_RECOVERY_LIST_PAGE,
   recoveredHandoffEntry,
   selectRecoverableHandoffs,
 } from "./supervised-replay-handoff-recovery.js";
@@ -72,6 +73,7 @@ import {
   isReplayInFlightFailure,
   isReplayJobLeasedFailure,
   replayDispatchCaptureToken,
+  resolveReplayProviderCallBudget,
   resolveAutoReplayDeadlineMaxMs,
   resolveAutoReplayDeadlineMs,
   resolveAutoReplayDeadlinePerCandidateMs,
@@ -4427,9 +4429,18 @@ export async function main(): Promise<void> {
             scope,
             authorizationEpoch: 1,
             capability: "replay:list-jobs",
-            // Only the handoff states, and only a page: the filter runs inside the extension before it clones
-            // a job, so a 1 600-job store costs the same as an empty one.
-            value: { state: ["awaiting_evaluation", "evaluating"], limit: 25 },
+            /**
+             * Only the handoff states, and only a small page. Run 100 addendum 04 S10: the extension
+             * protocol inlines an envelope of at most 16 KiB and refuses anything larger
+             * (`frame exceeds inline limit; use a channel-local transfer artifact` - measured live when this
+             * pass asked for 25 jobs, each carrying candidate packages, branch references, dispatch results
+             * and per-endpoint metric maps). The caller's page size is what has to respect that bound; three
+             * entries fit comfortably and match the per-sweep recovery bound below.
+             */
+            value: {
+              state: ["awaiting_evaluation", "evaluating"],
+              limit: MAX_HANDOFF_RECOVERY_LIST_PAGE,
+            },
           })) as { readonly jobs?: unknown } | readonly unknown[] | null;
           const jobs = Array.isArray(listing)
             ? listing
@@ -4587,7 +4598,11 @@ export async function main(): Promise<void> {
             evaluationCriteria: derivedCriteria.criteria,
             budget: {
               maxCandidates: candidates.length,
-              maxProviderCalls: candidates.length,
+              // Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S11: one call per candidate left no
+              // room for an interrupted arm to be re-driven, so a re-claimed job answered `replay provider
+              // call budget is exhausted` and the capture was refused. The bounded allowance below covers one
+              // retry per candidate and still fails closed on a job that keeps retrying.
+              maxProviderCalls: resolveReplayProviderCallBudget(candidates.length),
               maxCostMicros: 1_000_000,
               maxBytes: 8_388_608,
               // RC16 (W3): the dispatches are serialized, so the deadline scales with

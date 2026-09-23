@@ -179,6 +179,25 @@ export function replayDispatchCaptureToken(input: {
     .slice(0, 16);
 }
 
+/**
+ * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S11 (live on `:3457`): the automatic producer
+ * sized a job's provider-call budget as exactly one call per candidate, so an arm whose dispatch was
+ * interrupted had to be dispatched again under a fresh attempt - and that second call spent a budget that was
+ * already consumed. The job then answered `replay provider call budget is exhausted` and the capture was
+ * terminally refused even though its work had merely been interrupted.
+ *
+ * The budget keeps a bounded retry allowance per candidate: enough for one interrupted attempt to be re-driven
+ * (the recovery path that re-presents an existing dispatch receipt does not spend a call at all), still
+ * fail-closed against a job that keeps retrying, and still a plain multiple of the candidate count so a
+ * reader can reason about it.
+ */
+export const REPLAY_PROVIDER_CALL_ATTEMPTS_PER_CANDIDATE = 2;
+
+export function resolveReplayProviderCallBudget(candidateCount: number): number {
+  const count = Number.isSafeInteger(candidateCount) && candidateCount > 0 ? candidateCount : 1;
+  return count * REPLAY_PROVIDER_CALL_ATTEMPTS_PER_CANDIDATE;
+}
+
 export async function retryLeasedReplayDispatch<TValue>(input: {
   readonly dispatch: () => Promise<
     | { readonly ok: true; readonly value: TValue }

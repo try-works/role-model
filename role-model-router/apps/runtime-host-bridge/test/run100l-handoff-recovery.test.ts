@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { expect, test } from "vitest";
 
 import {
+  MAX_HANDOFF_RECOVERY_LIST_PAGE,
   captureRefFromReplayJob,
   evaluationJobIdForReplayJob,
   isRecoverableHandoff,
@@ -85,4 +86,16 @@ test("run100l discovery is bounded per sweep and keeps the caller's order", () =
     "replay-job-0",
     "replay-job-1",
   ]);
+});
+
+/**
+ * S10 of the same addendum, measured live: the extension protocol inlines an envelope of at most 16 KiB and
+ * refuses anything larger (`frame exceeds inline limit; use a channel-local transfer artifact`). The recovery
+ * pass asked replay-core for a 25-job page - each job carrying candidate packages, branch references, dispatch
+ * results and per-endpoint metric maps - and the frame layer refused the answer. The page the host asks for is
+ * now a bounded constant, and this test keeps it small enough to travel inline.
+ */
+test("run100l the recovery listing page fits the extension protocol's inline envelope", () => {
+  expect(MAX_HANDOFF_RECOVERY_LIST_PAGE).toBe(3);
+  expect(MAX_HANDOFF_RECOVERY_LIST_PAGE).toBeLessThanOrEqual(3);
 });
