@@ -582,7 +582,17 @@ export async function resumePendingSupervisedReplayEvaluations(input: {
   const reconcileSeen = reconciledAbandonedEntries.get(input.store) ?? new Set<string>();
   reconciledAbandonedEntries.set(input.store, reconcileSeen);
   for (const entry of input.store.list()) {
-    if (entry.resolvedAtMs === null || entry.outcome !== "abandoned") continue;
+    /**
+     * Run 100 addendum `handoff-evidence-durability.addendum-06` S39: the named disposition is a claim about
+     * evidence - and the first claims were made by builds whose boundary reads could not see a capture that was
+     * present (a page read as empty, an answer read as an envelope, a scope bound to the wrong authority).
+     * A recent claim is therefore re-verified once, with the same bounds every other renewal has: within the
+     * evidence window, at most `MAX_RESUME_RENEWALS` times, and with no attempt budget spent on a dead end.
+     * Evidence that really is gone re-disposes on the first sweep; evidence that is present completes.
+     */
+    const renewableOutcome =
+      entry.outcome === "abandoned" || entry.outcome === HANDOFF_EVIDENCE_OUTSIDE_RETENTION_WINDOW;
+    if (entry.resolvedAtMs === null || !renewableOutcome) continue;
     const key = `${entry.replayJobId}:${entry.resolvedAtMs}`;
     if (reconcileSeen.has(key)) continue;
     /**

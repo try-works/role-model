@@ -38,6 +38,8 @@ export interface DurableReplayJobSummary {
   readonly branchCount?: unknown;
   /** S38: the recency cursor needs the record's last update, which the summary projection carries. */
   readonly updatedAtMs?: unknown;
+  /** S38 follow-on: creation time is the ordering key the cursor uses. */
+  readonly createdAtMs?: unknown;
 }
 
 const DECISION_PREFIX = "decision-";
@@ -91,7 +93,8 @@ export function nextHandoffRecoveryCursor(input: {
  */
 export interface RecoveryPageCursor {
   readonly jobId: string;
-  readonly updatedAtMs: number;
+  /** S38 follow-on: the ordering key is the job's creation time - `updatedAtMs` is touched by terminalization. */
+  readonly createdAtMs: number;
 }
 
 /**
@@ -116,7 +119,7 @@ export function terminalRecoveryListingValue(input: {
     order: "recent",
     ...(input.cursor === null
       ? {}
-      : { afterJobId: input.cursor.jobId, afterUpdatedAtMs: input.cursor.updatedAtMs }),
+      : { afterJobId: input.cursor.jobId, afterCreatedAtMs: input.cursor.createdAtMs }),
     limit: MAX_HANDOFF_RECOVERY_LIST_PAGE,
   };
 }

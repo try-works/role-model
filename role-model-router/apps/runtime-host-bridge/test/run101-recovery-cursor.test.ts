@@ -132,7 +132,7 @@ test("run101 S27 the job scope is discovered from the store when the producer ha
 test("run101 S24 a full page advances the cursor to the last job the sweep examined", () => {
   const page = Array.from({ length: MAX_HANDOFF_RECOVERY_LIST_PAGE }, (_, index) => ({
     jobId: `job-${String(index).padStart(4, "0")}`,
-    updatedAtMs: 1_000 - index,
+    createdAtMs: 1_000 - index,
   }));
   expect(
     nextHandoffRecoveryCursor({
@@ -142,16 +142,16 @@ test("run101 S24 a full page advances the cursor to the last job the sweep exami
       pageSize: MAX_HANDOFF_RECOVERY_LIST_PAGE,
     }),
     "the next sweep resumes at the job after the last one examined",
-  ).toEqual({ jobId: "job-0004", updatedAtMs: 996 });
+  ).toEqual({ jobId: "job-0004", createdAtMs: 996 });
 });
 
 test("run101 S24 reaching the end of the set wraps so the next pass re-checks new work", () => {
   expect(
     nextHandoffRecoveryCursor({
-      currentCursor: { jobId: "job-0002", updatedAtMs: 998 },
+      currentCursor: { jobId: "job-0002", createdAtMs: 998 },
       pageEntries: [
-        { jobId: "job-a", updatedAtMs: 100 },
-        { jobId: "job-b", updatedAtMs: 99 },
+        { jobId: "job-a", createdAtMs: 100 },
+        { jobId: "job-b", createdAtMs: 99 },
       ],
       examinedCount: 2,
       pageSize: MAX_HANDOFF_RECOVERY_LIST_PAGE,
@@ -163,16 +163,16 @@ test("run101 S24 reaching the end of the set wraps so the next pass re-checks ne
 test("run101 S24 a sweep that examines nothing keeps its position", () => {
   const page = Array.from({ length: MAX_HANDOFF_RECOVERY_LIST_PAGE }, (_, index) => ({
     jobId: `job-${index}`,
-    updatedAtMs: 500 - index,
+    createdAtMs: 500 - index,
   }));
   expect(
     nextHandoffRecoveryCursor({
-      currentCursor: { jobId: "job-0009", updatedAtMs: 491 },
+      currentCursor: { jobId: "job-0009", createdAtMs: 491 },
       pageEntries: page,
       examinedCount: 0,
       pageSize: MAX_HANDOFF_RECOVERY_LIST_PAGE,
     }),
-  ).toEqual({ jobId: "job-0009", updatedAtMs: 491 });
+  ).toEqual({ jobId: "job-0009", createdAtMs: 491 });
 });
 
 test("run101 S24 the page stays inside the extension protocol's inline frame", () => {
@@ -214,11 +214,11 @@ test("run101 S24 the terminal page asks for the summary projection and carries t
   ).toBe(false);
   expect(
     terminalRecoveryListingValue({
-      cursor: { jobId: "job-0004", updatedAtMs: 1_700_000_000_000 },
+      cursor: { jobId: "job-0004", createdAtMs: 1_700_000_000_000 },
     }),
   ).toMatchObject({
     afterJobId: "job-0004",
-    afterUpdatedAtMs: 1_700_000_000_000,
+    afterCreatedAtMs: 1_700_000_000_000,
     order: "recent",
     summary: true,
   });

@@ -4796,7 +4796,7 @@ export async function main(): Promise<void> {
               `[run101] recovery page came back empty: scope=${scope} channel=${channel} cursor=${
                 handoffRecoveryCursor === null
                   ? "start"
-                  : `${handoffRecoveryCursor.jobId.slice(0, 8)}@${handoffRecoveryCursor.updatedAtMs}`
+                  : `${handoffRecoveryCursor.jobId.slice(0, 8)}@${handoffRecoveryCursor.createdAtMs}`
               }`,
             );
           }
@@ -4810,7 +4810,7 @@ export async function main(): Promise<void> {
             pageEntries: (terminalJobs as readonly DurableReplayJobSummary[])
               .map((job) => ({
                 jobId: typeof job.jobId === "string" ? job.jobId : "",
-                updatedAtMs: Number.isSafeInteger(job.updatedAtMs) ? Number(job.updatedAtMs) : 0,
+                createdAtMs: Number.isSafeInteger(job.createdAtMs) ? Number(job.createdAtMs) : 0,
               }))
               .filter((entry) => entry.jobId.length > 0),
             examinedCount: examined,
