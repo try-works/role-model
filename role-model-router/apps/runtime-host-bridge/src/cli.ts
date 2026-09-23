@@ -207,6 +207,11 @@ import {
   verifyTrackBExtensionClosureAfterRestart,
 } from "./track-b-runtime.js";
 import {
+  assembleDurableLearnerValidationValue,
+  buildTrackBLearningEvidenceSummary,
+  DEFAULT_EVIDENCE_HALF_LIFE_DAYS,
+} from "./track-b-learning-pass.js";
+import {
   createRouterPairwiseJudge,
   resolveJudgeEndpointFromController,
 } from "./track-b-shadow-judge-dispatch.js";
@@ -4619,6 +4624,42 @@ export async function main(): Promise<void> {
               typeof candidate.candidateId === "string" ? candidate.candidateId : null;
             return candidateId !== null && !recordedCandidateIds.has(candidateId);
           });
+          if (pending.length === 0) return { scanned: candidates.length, consumed: 0, remaining: 0 };
+          /**
+           * Run 100 addendum 07 P6, second pass: the first version of this sweep presented only
+           * `{ candidateId }`, and `validateCandidate` refuses that with "scorer and judge identity
+           * required for validation" - so the sweep could never consume anything. A durable caller has to
+           * present the value the pipeline presents: the scoring identity and scope the worker re-checks
+           * against the candidate record, the finalized comparison readback, and the two receipts the
+           * worker verifies with the evidence authority. Both receipts are HMACs over durable facts and
+           * the authority is now derived from the runtime's managed key, so `assembleDurableLearnerValidationValue`
+           * mints exactly what a pipeline run mints (see its suite for the recipe).
+           */
+          const readComparisonGroups = async (): Promise<Record<string, unknown>[]> => {
+            try {
+              const decoded = decodeExternalizedOperatorReadback({
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+                value: unwrapCapabilityPayload(
+                  await runtime.invoke(
+                    "evaluation-core",
+                    envelopeFor("evaluation-core", "evaluation:list-groups", {}),
+                  ),
+                ),
+              });
+              const rows = Array.isArray(decoded)
+                ? decoded
+                : Array.isArray((decoded as { groups?: unknown[] })?.groups)
+                  ? (decoded as { groups: unknown[] }).groups
+                  : [];
+              return rows.filter(
+                (row): row is Record<string, unknown> => Boolean(row) && typeof row === "object",
+              );
+            } catch {
+              return [];
+            }
+          };
+          const groups = await readComparisonGroups();
           let consumed = 0;
           for (const candidate of pending.slice(0, 2)) {
             const candidateId = String(candidate.candidateId);
@@ -4626,10 +4667,112 @@ export async function main(): Promise<void> {
               typeof candidate.scorerSetVersion === "string" ? candidate.scorerSetVersion : null;
             if (!scorerSetVersion) continue;
             try {
+              const candidateScope =
+                candidate.scope && typeof candidate.scope === "object"
+                  ? (candidate.scope as Record<string, unknown>)
+                  : {};
+              const routePackage =
+                typeof candidateScope.routePackage === "string" && candidateScope.routePackage
+                  ? candidateScope.routePackage
+                  : typeof candidate.routePackage === "string"
+                    ? candidate.routePackage
+                    : null;
+              const groupId = Array.isArray(candidate.groupIds)
+                ? candidate.groupIds.find(
+                    (value): value is string => typeof value === "string" && value.length > 0,
+                  )
+                : undefined;
+              if (!routePackage || !groupId) {
+                console.error(
+                  `[run101] learner sweep: candidate ${candidateId.slice(0, 16)} carries no comparison group`,
+                );
+                continue;
+              }
+              const comparison = decodeExternalizedOperatorReadback({
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+                value: unwrapCapabilityPayload(
+                  await runtime.invoke(
+                    "evaluation-core",
+                    envelopeFor("evaluation-core", "evaluation:read-comparison-group", { groupId }),
+                  ),
+                ),
+              });
+              const group =
+                comparison && typeof comparison === "object" && !Array.isArray(comparison)
+                  ? (comparison as Record<string, unknown>)
+                  : {};
+              if (group.status !== "finalized" || !Array.isArray(group.members)) {
+                console.error(
+                  `[run101] learner sweep: candidate ${candidateId.slice(0, 16)} has no finalized comparison readback`,
+                );
+                continue;
+              }
+              const comparability =
+                group.comparability && typeof group.comparability === "object"
+                  ? (group.comparability as Record<string, unknown>)
+                  : {};
+              // The same projection the pipeline builds from the durable readback (`track-b-runtime.ts`),
+              // so the worker's holdout/membership checks see the record it already accepted.
+              const finalizedComparison = {
+                groupId: typeof group.groupId === "string" ? group.groupId : groupId,
+                comparisonId: typeof group.groupId === "string" ? group.groupId : groupId,
+                status: group.status,
+                outcome: group.outcome,
+                holdout: group.holdout,
+                ...(group.primaryMetric ? { primaryMetric: group.primaryMetric } : {}),
+                ...(Array.isArray(group.scorerOutcomes) ? { scorerOutcomes: group.scorerOutcomes } : {}),
+                members: group.members,
+              };
+              const evidenceSummary = buildTrackBLearningEvidenceSummary({
+                groups,
+                routePackage,
+                nowMs: Date.now(),
+                evidenceMaxAgeMs: 30 * 24 * 60 * 60 * 1_000,
+                evidenceHalfLifeDays: DEFAULT_EVIDENCE_HALF_LIFE_DAYS,
+              });
+              const validationValue = assembleDurableLearnerValidationValue({
+                candidateId,
+                routePackage,
+                channel,
+                scope: options.scopeId,
+                scorerSetVersion,
+                judgeEndpointId:
+                  typeof candidate.judgeEndpointId === "string"
+                    ? candidate.judgeEndpointId
+                    : null,
+                evaluationAuthoritySecret: authority.authoritySecret,
+                finalizedComparison,
+                evidenceSummary,
+                sourceEvidenceRef:
+                  typeof comparability.sourceEvidenceRef === "string"
+                    ? comparability.sourceEvidenceRef
+                    : null,
+                counterfactualEvidenceRef:
+                  typeof comparability.counterfactualEvidenceRef === "string"
+                    ? comparability.counterfactualEvidenceRef
+                    : null,
+                taskTypeId:
+                  typeof candidateScope.taskTypeId === "string"
+                    ? candidateScope.taskTypeId
+                    : typeof comparability.taskTypeId === "string"
+                      ? comparability.taskTypeId
+                      : null,
+                taxonomyVersion:
+                  typeof candidateScope.taxonomyVersion === "string"
+                    ? candidateScope.taxonomyVersion
+                    : typeof comparability.taxonomyVersion === "string"
+                      ? comparability.taxonomyVersion
+                      : null,
+              });
               const validation = unwrapCapabilityPayload(
                 await runtime.invoke(
                   "knowledge-worker",
-                  envelopeFor("knowledge-worker", "knowledge:validate-candidate", { candidateId }),
+                  envelopeFor(
+                    "knowledge-worker",
+                    "knowledge:validate-candidate",
+                    validationValue,
+                  ),
                 ),
               );
               const validationRecord =

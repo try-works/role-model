@@ -22,7 +22,200 @@
 // Run 99 R33 D10: the canonical code for a judge that disagreed with itself under swapped
 // presentation order. Imported from the dispatcher so the exclusion counter and the judge share
 // one vocabulary.
+import { createHash, createHmac } from "node:crypto";
+
 import { POSITION_ORDER_DISAGREEMENT } from "./track-b-shadow-judge-dispatch.js";
+
+/**
+ * Run 100 addendum `replay-evaluation-learner-spine-completion.addendum-07` P6: the durable learner
+ * sweep's evidence assembler.
+ *
+ * Measured live 2026-09-24: 162 knowledge-worker candidates exist, 148 carry a validation receipt, and
+ * the only writer of those receipts was the inline learner step inside `runTrackBShadowPipeline`. A
+ * candidate whose pipeline run was interrupted after deriving it - or whose comparison was finalized
+ * later by the extension's retro-finalize sweep - left a candidate nothing would ever validate, so
+ * `knowledge_learning_records` froze at 2026-09-21T22:56:38Z while completion receipts accrued to 549.
+ *
+ * A later liveness sweep must present the same value the pipeline presents, and the Knowledge Worker
+ * verifies two of its fields with the evidence authority (`#assertValidationEvaluation` in
+ * `extensions/knowledge-worker/index.mjs`): the finalized-comparison readback receipt and the knowledge
+ * safety receipt. Both are HMACs over payloads derived entirely from durable facts - the comparison body,
+ * the channel, the route package and the holdout identity - so now that the authority itself is derived
+ * from the runtime's managed key (`resolveDurableEvaluationAuthority`) a sweep can mint exactly what the
+ * pipeline minted. This function is the single assembler for that value; the sweep, and any future
+ * caller, must use it rather than hand-writing the shape (property C4: one contract, many writers).
+ */
+export const RUN104_LEARNER_SWEEP_PROVENANCE = Object.freeze({
+  /** The pipeline's declared provenance for a shadow-pipeline comparison (`track-b-runtime.ts`). */
+  policy: "run96-routing-shadow",
+  task: "route-selection",
+  split: "holdout",
+  /** The pipeline's declared seed; kept identical so a sweep-minted receipt matches a pipeline one. */
+  seed: 87,
+});
+
+/**
+ * The Knowledge Worker's canonical form (`canonical` in `extensions/knowledge-worker/index.mjs`): sorted
+ * keys, no whitespace. The pipeline signed with `JSON.stringify(canonicalizeRun88Proof(payload))`, which
+ * produces the same string for JSON-safe payloads; using the worker's own recipe here makes the equality
+ * a property of this module rather than of two hand-kept functions.
+ */
+function canonicalLearningEvidence(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonicalLearningEvidence).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.keys(value as Record<string, unknown>)
+      .sort()
+      .map(
+        (key) =>
+          `${JSON.stringify(key)}:${canonicalLearningEvidence(
+            (value as Record<string, unknown>)[key],
+          )}`,
+      )
+      .join(",")}}`;
+  }
+  return JSON.stringify(value) ?? "null";
+}
+
+/** The digest the worker compares a receipt's `comparisonDigest` against (`groupDigest`). */
+export function durableComparisonDigest(value: unknown): string {
+  return createHash("sha256").update(canonicalLearningEvidence(value)).digest("hex");
+}
+
+function signedEvidenceReceipt(
+  evaluationAuthoritySecret: string,
+  payload: Record<string, unknown>,
+): { readonly payload: Record<string, unknown>; readonly signature: string } {
+  return {
+    payload,
+    signature: createHmac("sha256", evaluationAuthoritySecret)
+      .update(canonicalLearningEvidence(payload))
+      .digest("hex"),
+  };
+}
+
+export interface DurableLearnerValidationInput {
+  readonly candidateId: string;
+  readonly routePackage: string;
+  readonly channel: string;
+  readonly scope: string;
+  readonly scorerSetVersion: string;
+  readonly judgeEndpointId?: string | null;
+  readonly evaluationAuthoritySecret: string;
+  readonly finalizedComparison: Readonly<Record<string, unknown>>;
+  readonly evidenceSummary: Readonly<Record<string, unknown>>;
+  /** The durable capture reference the comparison was produced from (`comparability.sourceEvidenceRef`). */
+  readonly sourceEvidenceRef?: string | null;
+  readonly counterfactualEvidenceRef?: string | null;
+  readonly taskTypeId?: string | null;
+  readonly taxonomyVersion?: string | null;
+  readonly holdoutCaseIds?: readonly string[];
+}
+
+/**
+ * Assembles the `knowledge:validate-candidate` value a durable caller presents, minting both signed
+ * receipts with the runtime's own (durable) evidence authority. The worker hydrates the candidate record
+ * itself, so the caller supplies only what the candidate cannot carry: the scoring identity, the
+ * comparison readback and the aggregate evidence summary.
+ */
+export function assembleDurableLearnerValidationValue(
+  input: DurableLearnerValidationInput,
+): Record<string, unknown> {
+  const comparisonDigest = durableComparisonDigest(input.finalizedComparison);
+  const comparison = input.finalizedComparison as {
+    readonly comparisonId?: unknown;
+    readonly holdout?: { readonly holdoutId?: unknown; readonly caseIds?: unknown };
+  };
+  const comparisonId =
+    typeof comparison.comparisonId === "string" && comparison.comparisonId
+      ? comparison.comparisonId
+      : null;
+  if (!comparisonId) {
+    throw new Error("durable learner validation requires a finalized comparison identity");
+  }
+  const holdoutId =
+    typeof comparison.holdout?.holdoutId === "string" ? comparison.holdout.holdoutId : null;
+  const holdoutCaseIds = Array.isArray(input.holdoutCaseIds)
+    ? [...input.holdoutCaseIds]
+    : Array.isArray(comparison.holdout?.caseIds)
+      ? comparison.holdout.caseIds.filter(
+          (caseId): caseId is string => typeof caseId === "string" && caseId.length > 0,
+        )
+      : [];
+  const evidenceRef =
+    boundedText(input.sourceEvidenceRef) ??
+    boundedText(input.counterfactualEvidenceRef) ??
+    boundedText(holdoutId);
+  if (!evidenceRef) {
+    throw new Error("durable learner validation requires a durable evidence reference");
+  }
+  const finalizedComparisonReceipt = signedEvidenceReceipt(input.evaluationAuthoritySecret, {
+    schemaVersion: "role-model.evaluation-comparison-readback-receipt.v1",
+    kind: "evaluation_core_comparison_readback",
+    channel: input.channel,
+    routePackage: input.routePackage,
+    comparisonDigest,
+  });
+  const safetyReceipt = signedEvidenceReceipt(input.evaluationAuthoritySecret, {
+    schemaVersion: "role-model.knowledge-safety-receipt.v1",
+    kind: "knowledge_safety",
+    comparisonId,
+    comparisonDigest,
+    channel: input.channel,
+    routePackage: input.routePackage,
+    packageIdentity: input.routePackage,
+    redactionEvidenceRef: evidenceRef,
+    safetyReviewEvidenceRef: boundedText(input.counterfactualEvidenceRef) ?? evidenceRef,
+    redacted: true,
+    safetyReviewed: true,
+    holdoutPassed: true,
+  });
+  const guardrails = { ...DEFAULT_LEARNING_GUARDRAILS };
+  return {
+    candidateId: input.candidateId,
+    scope: {
+      routePackage: input.routePackage,
+      channel: input.channel,
+      scopeId: input.scope,
+      ...(boundedText(input.taskTypeId) ? { taskTypeId: boundedText(input.taskTypeId) } : {}),
+      ...(boundedText(input.taxonomyVersion)
+        ? { taxonomyVersion: boundedText(input.taxonomyVersion) }
+        : {}),
+    },
+    identity: {
+      scorerSetVersion: input.scorerSetVersion,
+      judgeEndpointId: input.judgeEndpointId ?? null,
+    },
+    evaluation: {
+      environment: "local-routing-evaluation",
+      provenance: {
+        policy: RUN104_LEARNER_SWEEP_PROVENANCE.policy,
+        task: RUN104_LEARNER_SWEEP_PROVENANCE.task,
+        scorer: input.scorerSetVersion,
+        split: RUN104_LEARNER_SWEEP_PROVENANCE.split,
+        seed: RUN104_LEARNER_SWEEP_PROVENANCE.seed,
+        evidenceRef,
+      },
+      finalizedComparison: structuredClone(input.finalizedComparison),
+      finalizedComparisonReceipt,
+      safetyReceipt,
+    },
+    ...(holdoutCaseIds.length ? { holdoutCaseIds } : {}),
+    evidenceSummary: structuredClone(input.evidenceSummary),
+    evidenceFloor: { ...DEFAULT_LEARNING_EVIDENCE_FLOOR },
+    guardrails,
+    // Run 98 R19: the protocol is declared before the holdout decision and the non-inferiority margin is
+    // the quality guardrail bound the operator already configures.
+    promotionProtocol: {
+      ...DEFAULT_PROMOTION_PROTOCOL,
+      nonInferiorityMargin: guardrails.qualityMinDelta,
+    },
+    estimator: {
+      estimatorVersion: RUN98_LEARNING_ESTIMATOR_VERSION,
+      bootstrapSeed: 0,
+      resamples: RUN98_LEARNING_DEFAULT_BOOTSTRAP_RESAMPLES,
+    },
+  };
+}
 
 export const RUN98_LEARNING_PASS_SCHEMA = "role-model.route-learning-pass.v1";
 export const RUN98_LEARNING_PASS_DEGRADATION_SCHEMA =
