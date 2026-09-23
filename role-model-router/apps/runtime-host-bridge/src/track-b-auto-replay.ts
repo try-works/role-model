@@ -295,6 +295,14 @@ export function buildAutoReplayIdempotencyKey(input: {
   readonly captureRef: string;
   readonly policySetDigest: string;
   readonly candidateEndpointIds: readonly string[];
+  /**
+   * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S12: the job contract the key mints, when the
+   * caller knows it. The key covered the comparison's identity but not the budget, so a runtime that changed
+   * the budget (S11: one bounded retry per candidate) re-presented the same key with different immutable
+   * bytes and Replay Core refused it with `replay idempotency key contract conflict`. Including it means a
+   * contract revision mints a new job instead of colliding, and the previous job retires on its deadline.
+   */
+  readonly providerCallBudget?: number;
 }): string {
   const captureRef = input.captureRef.trim();
   if (!captureRef) throw new Error("auto replay idempotency requires a capture reference");
@@ -310,8 +318,12 @@ export function buildAutoReplayIdempotencyKey(input: {
   if (candidateEndpointIds.length === 0) {
     throw new Error("auto replay idempotency requires at least one candidate endpoint");
   }
+  const providerCallBudget =
+    Number.isSafeInteger(input.providerCallBudget) && (input.providerCallBudget ?? 0) > 0
+      ? Number(input.providerCallBudget)
+      : null;
   const contractDigest = createHash("sha256")
-    .update(JSON.stringify({ policySetDigest, candidateEndpointIds }))
+    .update(JSON.stringify({ policySetDigest, candidateEndpointIds, providerCallBudget }))
     .digest("hex");
   return `auto:${captureRef}:${contractDigest}`;
 }

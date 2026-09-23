@@ -4593,6 +4593,9 @@ export async function main(): Promise<void> {
               captureRef: capture.captureRef,
               policySetDigest: policySet.policySetDigest,
               candidateEndpointIds: candidates,
+              // S12: the key covers the job contract its budget mints, so a contract revision cannot collide
+              // with a job created under the previous one.
+              providerCallBudget: resolveReplayProviderCallBudget(candidates.length),
             }),
             candidateEndpointIds: candidates,
             evaluationCriteria: derivedCriteria.criteria,
