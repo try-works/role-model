@@ -28,6 +28,16 @@ const MAX_RESUME_BATCH = 32;
  * (the once-per-process cursor continues on the next sweep) instead of holding the first tick open.
  */
 const MAX_ABANDONED_RECONCILIATIONS_PER_SWEEP = 25;
+/**
+ * Run 100 addendum `handoff-evidence-durability.addendum-06` S25: how long a handoff may have been abandoned
+ * and still be worth one bounded retry.
+ *
+ * Measured on the real-traffic root: the capture ring keeps the last 1 000 pointers, which is ~36 h of traffic
+ * at that root's rate, so a handoff recorded within the last day may still have its evidence while an older one
+ * is certainly past it. The renewal is bounded by `MAX_RESUME_RENEWALS` and a handoff whose evidence turns out
+ * to be gone now lands on its own named disposition instead of another unqualified give-up.
+ */
+const ABANDONED_RENEWAL_EVIDENCE_WINDOW_MS = 24 * 60 * 60 * 1_000;
 const MAX_TEXT = 256;
 const MAX_ERROR_TEXT = 512;
 
@@ -554,46 +564,73 @@ export async function resumePendingSupervisedReplayEvaluations(input: {
    * are not a defect to retry - the operator readback reports them as a named backlog.
    */
   readonly outsideRetentionWindow: number;
+  /**
+   * Run 100 addendum `handoff-evidence-durability.addendum-06` S25: abandoned handoffs whose evidence may
+   * still exist and that the drain renewed instead of terminalizing.
+   */
+  readonly renewedFromDrain: number;
   readonly reconciled: number;
   readonly remaining: number;
 }> {
   const now = input.now ?? (() => Date.now());
-  const selected = selectResumableSupervisedReplayEvaluations({
-    entries: input.store.list(),
-    ...(input.limit === undefined ? {} : { limit: input.limit }),
-  });
   // Run 98 addendum 34 S5: an entry abandoned *before* this repair is no longer selected by the sweep,
   // so its replay job would stay `awaiting_evaluation` for ever and the capture would keep deferring on
   // the "cannot be re-leased" 409. Reconcile those once per process, keyed by the resolution stamp so a
   // resolved entry is never re-terminalized.
   let reconciled = 0;
+  let renewedFromDrain = 0;
   const reconcileSeen = reconciledAbandonedEntries.get(input.store) ?? new Set<string>();
   reconciledAbandonedEntries.set(input.store, reconcileSeen);
-  if (typeof input.onAbandoned === "function") {
-    for (const entry of input.store.list()) {
-      if (entry.resolvedAtMs === null || entry.outcome !== "abandoned") continue;
-      const key = `${entry.replayJobId}:${entry.resolvedAtMs}`;
-      if (reconcileSeen.has(key)) continue;
-      /**
-       * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S5 (measured while verifying the backlog
-       * repair): this pass is once per process but was unbounded, and each entry costs two cross-boundary
-       * invocations (fail the replay job, terminalize its evaluation job). A mature stage root holds 478
-       * abandoned entries, so the first auto-replay tick spent minutes here - `:3457` reported `ticks 0,
-       * running true` for nine minutes with the operations-server child at ~77% of a core and no capture
-       * replayed. It is a bounded background drain now: at most
-       * `MAX_ABANDONED_RECONCILIATIONS_PER_SWEEP` entries per sweep, with `reconcileSeen` carrying the
-       * cursor so the next tick continues exactly where this one stopped.
-       */
-      if (reconciled >= MAX_ABANDONED_RECONCILIATIONS_PER_SWEEP) break;
-      reconcileSeen.add(key);
-      try {
-        await input.onAbandoned(entry, new Error(entry.lastError ?? "evaluation abandoned"));
-        reconciled += 1;
-      } catch {
-        // The caller reports its own failure; the entry stays resolved either way.
+  for (const entry of input.store.list()) {
+    if (entry.resolvedAtMs === null || entry.outcome !== "abandoned") continue;
+    const key = `${entry.replayJobId}:${entry.resolvedAtMs}`;
+    if (reconcileSeen.has(key)) continue;
+    /**
+     * Run 100 addendum `handoff-evidence-durability.addendum-06` S25: this drain is the only pass that walks
+     * the abandoned handoffs themselves (315 of them on the live root) rather than scanning the job store for
+     * them, so it is where a handoff whose evidence may still exist gets its one bounded retry. The renewal is
+     * bounded by `MAX_RESUME_RENEWALS`; a handoff past its bound, or old enough that its capture is certainly
+     * outside the retention ring, falls through to the terminalization below exactly as before.
+     */
+    const renewals = Number.isSafeInteger(entry.renewals) ? Number(entry.renewals) : 0;
+    if (
+      renewals < MAX_RESUME_RENEWALS &&
+      entry.recordedAtMs >= now() - ABANDONED_RENEWAL_EVIDENCE_WINDOW_MS
+    ) {
+      const renewed = input.store.renew(entry.replayJobId, {
+        now: now(),
+        reason: "abandoned while its evidence may still exist: bounded retry",
+      });
+      if (renewed) {
+        reconcileSeen.add(key);
+        renewedFromDrain += 1;
+        continue;
       }
     }
+    if (typeof input.onAbandoned !== "function") continue;
+    /**
+     * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S5 (measured while verifying the backlog
+     * repair): this pass is once per process but was unbounded, and each entry costs two cross-boundary
+     * invocations (fail the replay job, terminalize its evaluation job). A mature stage root holds 478
+     * abandoned entries, so the first auto-replay tick spent minutes here - `:3457` reported `ticks 0,
+     * running true` for nine minutes with the operations-server child at ~77% of a core and no capture
+     * replayed. It is a bounded background drain now: at most
+     * `MAX_ABANDONED_RECONCILIATIONS_PER_SWEEP` entries per sweep, with `reconcileSeen` carrying the
+     * cursor so the next tick continues exactly where this one stopped.
+     */
+    if (reconciled >= MAX_ABANDONED_RECONCILIATIONS_PER_SWEEP) break;
+    reconcileSeen.add(key);
+    try {
+      await input.onAbandoned(entry, new Error(entry.lastError ?? "evaluation abandoned"));
+      reconciled += 1;
+    } catch {
+      // The caller reports its own failure; the entry stays resolved either way.
+    }
   }
+  const selected = selectResumableSupervisedReplayEvaluations({
+    entries: input.store.list(),
+    ...(input.limit === undefined ? {} : { limit: input.limit }),
+  });
   let completed = 0;
   let failed = 0;
   let outsideRetentionWindow = 0;
@@ -665,6 +702,7 @@ export async function resumePendingSupervisedReplayEvaluations(input: {
     completed,
     failed,
     outsideRetentionWindow,
+    renewedFromDrain,
     reconciled,
     remaining: input.store.list().filter((entry) => (entry.resolvedAtMs ?? null) === null).length,
   };

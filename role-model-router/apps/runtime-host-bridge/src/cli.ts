@@ -4297,6 +4297,8 @@ export async function main(): Promise<void> {
             failed: number;
             /** S23: handoffs terminated because their evidence is outside the capture retention window. */
             outsideRetentionWindow: number;
+            /** S25: abandoned handoffs the drain renewed because their evidence may still exist. */
+            renewedFromDrain: number;
             remaining: number;
           }>)
         | null;
@@ -4392,6 +4394,7 @@ export async function main(): Promise<void> {
               completed: 0,
               failed: 0,
               outsideRetentionWindow: 0,
+              renewedFromDrain: 0,
               remaining: 0,
             };
           }
@@ -4406,6 +4409,11 @@ export async function main(): Promise<void> {
           if (result.outsideRetentionWindow > 0) {
             console.error(
               `[run101] ${result.outsideRetentionWindow} handoff(s) disposed as ${HANDOFF_EVIDENCE_OUTSIDE_RETENTION_WINDOW}`,
+            );
+          }
+          if (result.renewedFromDrain > 0) {
+            console.error(
+              `[run101] ${result.renewedFromDrain} abandoned handoff(s) renewed while their evidence may still exist`,
             );
           }
           return result;
@@ -6198,6 +6206,7 @@ export async function main(): Promise<void> {
             completed: 0,
             failed: 0,
             outsideRetentionWindow: 0,
+            renewedFromDrain: 0,
             reconciled: 0,
             remaining: 0,
           };

@@ -7,6 +7,7 @@ import { expect, test } from "vitest";
 import {
   HANDOFF_EVIDENCE_OUTSIDE_RETENTION_WINDOW,
   HandoffEvidenceUnavailableError,
+  SUPERVISED_REPLAY_EVALUATION_MAX_ATTEMPTS,
   createSupervisedReplayEvaluationResumeStore,
   resumePendingSupervisedReplayEvaluations,
 } from "../src/supervised-replay-evaluation-resume.js";
@@ -209,6 +210,82 @@ test("run101 S23 a retryable completion failure still spends an attempt and reco
     expect(entry?.attempts).toBe(1);
     expect(entry?.outcome).toBeNull();
     expect(entry?.lastError).toContain("judge candidate overlap");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+/**
+ * Run 100 addendum `handoff-evidence-durability.addendum-06` S25, measured on the real-traffic root after the
+ * first sweeps of the repaired build: two handoffs reached the new named disposition, but none of the thirteen
+ * that still have their evidence were reached, because the terminal *scan* advances a few jobs per sweep
+ * through a 512-job set while the handoffs that need it are the newest ones in it.
+ *
+ * The abandoned entries are the set that actually needs the decision, they are only 315, and the sweep already
+ * walks them once per process to terminalize them. A handoff abandoned while its evidence may still exist (the
+ * capture ring measures ~36 h of real traffic, so a day is the conservative half) now gets its bounded renewal
+ * there instead of only being terminalized: the normal sweep then completes it, or lands it on the named
+ * disposition. Only entries old enough that their evidence is certainly gone are terminalized as before.
+ */
+test("run101 S25 the abandoned drain renews a recent handoff and terminalizes an old one", async () => {
+  const root = mkdtempSync(path.join(tmpdir(), "run101-abandoned-renewal-"));
+  const now = Date.parse("2026-09-23T14:00:00Z");
+  try {
+    const store = createSupervisedReplayEvaluationResumeStore({
+      filePath: path.join(root, "resume.json"),
+      maxEntries: 8,
+    });
+    const abandoned = (replayJobId: string, recordedAtMs: number) => ({
+      schemaVersion: "role-model.supervised-replay-evaluation-resume.v1" as const,
+      replayJobId,
+      evaluationJobId: `evaluation-replay-${replayJobId}`,
+      requestId: `req-${replayJobId}`,
+      sourceCaptureRequestId: `req-${replayJobId}`,
+      sourceEndpointId: "endpoint:source",
+      sourceModelId: "model:source",
+      counterfactualPackages: [
+        { endpointId: "endpoint:alpha", modelId: "model:alpha", reasoningEffort: null },
+      ],
+      evaluationCriteria: {
+        schemaVersion: "role-model.semantic-criteria.v1",
+        requiredTerms: ["ok"],
+      },
+      evaluationCriteriaDigest: `sha256:${"c".repeat(64)}`,
+      recordedAtMs,
+      attempts: SUPERVISED_REPLAY_EVALUATION_MAX_ATTEMPTS,
+      resolvedAtMs: recordedAtMs + 1_000,
+      outcome: "abandoned",
+      lastError: "durable evaluation job … is unavailable for resume",
+    });
+    store.record(abandoned("replay-job-fresh", now - 60 * 60 * 1_000));
+    store.record(abandoned("replay-job-stale", now - 10 * 24 * 60 * 60 * 1_000));
+
+    const terminalized: string[] = [];
+    const completed: string[] = [];
+    const result = await resumePendingSupervisedReplayEvaluations({
+      store,
+      isEvaluationComplete: async () => false,
+      complete: async (entry) => {
+        completed.push(entry.replayJobId);
+        return { outcome: "resolved" };
+      },
+      onAbandoned: (entry) => {
+        terminalized.push(entry.replayJobId);
+      },
+      now: () => now,
+    });
+
+    expect(result.renewedFromDrain).toBe(1);
+    expect(completed, "the renewed handoff is completed by the same sweep").toEqual([
+      "replay-job-fresh",
+    ]);
+    expect(terminalized, "evidence that is certainly gone is still terminalized").toEqual([
+      "replay-job-stale",
+    ]);
+    const fresh = store.get("replay-job-fresh");
+    expect(fresh?.renewals).toBe(1);
+    expect(fresh?.outcome).toBe("resolved");
+    expect(store.get("replay-job-stale")?.outcome).toBe("abandoned");
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
