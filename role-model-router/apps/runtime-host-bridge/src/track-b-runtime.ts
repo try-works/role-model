@@ -378,6 +378,46 @@ async function assertManagedArtifactKeyFile(filePath: string): Promise<void> {
  * The owned pair lives under the stable runtime state root, never the versioned package,
  * so manual binary updates keep existing Message Graph ciphertext readable.
  */
+/** Run 100 addendum 07 P6: the version label of the durable evidence authority. */
+export const DURABLE_EVALUATION_AUTHORITY_VERSION = "role-model.evaluation-authority.v1";
+
+/**
+ * Run 100 addendum `replay-evaluation-learner-spine-completion.addendum-07` P6 - the *durable* evidence
+ * authority the learner's entry points sign their evidence references with.
+ *
+ * Measured: `evaluationAuthoritySecret` was minted per pipeline run (`randomBytes(32)`), so a learner liveness
+ * sweep that reconstructs inputs from durable state could never re-enter `runTrackBLearningPass` - the store
+ * would refuse evidence it cannot attribute, and rightly so. The authority's purpose is to authenticate *this
+ * runtime's own* evidence references to the Knowledge Store and Knowledge Worker; deriving it from the runtime's
+ * managed key keeps that meaning while making it reproducible across restarts and across sweeps.
+ *
+ * The label includes the channel and scope, so two runtimes (or two channels on one root) never share an
+ * authority, and the version travels with the receipts that name it so a future rotation is visible rather than
+ * silent.
+ */
+export async function resolveDurableEvaluationAuthority(input: {
+  readonly channel: string;
+  readonly stateRoot: string;
+  readonly scopeId: string;
+  readonly artifactDigestKeyFile?: string;
+}): Promise<{ readonly authoritySecret: string; readonly authorityVersion: string }> {
+  const channel = String(input.channel ?? "").trim();
+  const scopeId = String(input.scopeId ?? "").trim();
+  const stateRoot = String(input.stateRoot ?? "").trim();
+  if (!channel || !scopeId || !stateRoot) {
+    throw new Error("durable evaluation authority requires a channel, a state root and a scope");
+  }
+  const keyFile = input.artifactDigestKeyFile?.trim()
+    ? path.resolve(input.artifactDigestKeyFile.trim())
+    : path.join(path.resolve(stateRoot), "managed-keys", "artifact-digest.key");
+  await assertManagedArtifactKeyFile(keyFile);
+  const keyBytes = await readFile(keyFile);
+  const authoritySecret = createHmac("sha256", keyBytes)
+    .update(`${DURABLE_EVALUATION_AUTHORITY_VERSION}:${channel}:${scopeId}`)
+    .digest("hex");
+  return { authoritySecret, authorityVersion: DURABLE_EVALUATION_AUTHORITY_VERSION };
+}
+
 export async function resolveManagedArtifactKeyFiles(options: {
   readonly channel: "development" | "stage" | "production";
   readonly stateRoot: string;
@@ -9354,7 +9394,28 @@ export async function runTrackBShadowPipeline(
       : {}),
     members: durableComparison.members,
   };
-  const evaluationAuthoritySecret = randomBytes(32).toString("hex");
+  /**
+   * Run 100 addendum `replay-evaluation-learner-spine-completion.addendum-07` P6: on a managed root the
+   * evidence authority is *derived* from the runtime's managed key, so the same authority signs today's run and
+   * any later liveness sweep (a learner sweep that reconstructs its inputs from durable state has nothing
+   * ephemeral to sign with). Environments without a managed key keep the per-run secret they have today.
+   */
+  const evaluationAuthoritySecret = await (async () => {
+    const stateRoot =
+      typeof input.contractStateRoot === "string" ? input.contractStateRoot.trim() : "";
+    if (!stateRoot) return randomBytes(32).toString("hex");
+    try {
+      const authority = await resolveDurableEvaluationAuthority({
+        channel: input.channel,
+        stateRoot,
+        scopeId: input.scope,
+      });
+      return authority.authoritySecret;
+    } catch {
+      // A root without a provisioned managed key keeps the previous behaviour rather than failing the pipeline.
+      return randomBytes(32).toString("hex");
+    }
+  })();
   const finalizedComparisonReceiptPayload = {
     schemaVersion: "role-model.evaluation-comparison-readback-receipt.v1",
     kind: "evaluation_core_comparison_readback",
