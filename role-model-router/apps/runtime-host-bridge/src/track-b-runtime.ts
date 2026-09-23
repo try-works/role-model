@@ -72,8 +72,7 @@ export function selectTrackBCounterfactualArms(input: {
   readonly excluded: ReadonlyArray<{ readonly endpointId: string; readonly reason: string }>;
   readonly refusal: Readonly<{ code: string; detail: string }> | null;
 } {
-  const judge =
-    typeof input.judgeEndpointId === "string" ? input.judgeEndpointId.trim() : "";
+  const judge = typeof input.judgeEndpointId === "string" ? input.judgeEndpointId.trim() : "";
   const candidates = [
     ...new Set(
       (input.candidateEndpointIds ?? []).filter(
@@ -96,10 +95,11 @@ export function selectTrackBCounterfactualArms(input: {
     judge && withoutServedRoute.length > 0 && arms.length === 0
       ? {
           code: "R14_ALL_CANDIDATES_ARE_JUDGE",
-          detail: `the configured counterfactual pool only contains the comparison's judge ${judge}`.slice(
-            0,
-            320,
-          ),
+          detail:
+            `the configured counterfactual pool only contains the comparison's judge ${judge}`.slice(
+              0,
+              320,
+            ),
         }
       : null;
   return { arms, excluded, refusal };
@@ -3492,12 +3492,15 @@ export async function runSupervisedReplay(input: {
       } catch (error) {
         // Recovery is best-effort: the durable replay state stays the authority and the
         // capture is retired below when its evidence cannot be finalized.
-        const recoveryMessage = String(
-          (error as { message?: unknown })?.message ?? error,
-        ).slice(0, 200);
+        const recoveryMessage = String((error as { message?: unknown })?.message ?? error).slice(
+          0,
+          200,
+        );
         // Run 100 R3: a job that is already terminal needs no recovery attempt, so it is not a decline.
         if (classifyReplayTerminalizationFailure(recoveryMessage) !== "already_terminal") {
-          console.error(`[run98] terminal replay evaluation recovery declined:${jobId} ${recoveryMessage}`);
+          console.error(
+            `[run98] terminal replay evaluation recovery declined:${jobId} ${recoveryMessage}`,
+          );
         }
       }
     }
@@ -5680,6 +5683,19 @@ export interface TrackBShadowPipelineInput {
    * the spread at the call site hid it from the type checker and it was dropped.
    */
   readonly judgeEndpointId?: string;
+  /**
+   * Run 100 addendum `handoff-evidence-durability.addendum-06` S44 (measured live: a recovered handoff that
+   * had finally resolved its evidence was refused with `judge_candidate_overlap: candidate deepseek…flash-high
+   * is the judge declared by scorer set run96-routing-shadow-v3`).
+   *
+   * The operator's judge rule is "the judge is the configured controller, resolved at judge time" - no
+   * endpoint or model id is pinned. Evaluation Core's write-time independence guard checks the judge the job
+   * *declares*: with a designated endpoint it checks that endpoint, with `judgeSource: "controller"` it checks
+   * nothing (the arm planner has already excluded the judge), and with neither it falls back to scanning every
+   * historical judge manifest sharing the scorer-set version - which refuses candidates that are not today's
+   * judge at all. This field is the declaration the guard needs, and it belongs in the comparison's identity.
+   */
+  readonly judgeSource?: "controller" | "disabled";
   readonly prefix: readonly unknown[];
   /**
    * Authoritative durable reference for the source prefix the caller observed.
@@ -7822,7 +7838,8 @@ export async function appendTrackBRouteAdvisoryObservation(input: {
    * traffic is still routed and still measured by its own benchmark store; it is not learning evidence.
    */
   const benchmarkRef = [input.observation.decisionId, input.observation.requestId].find(
-    (value) => typeof value === "string" && isBenchmarkReplaySourceRef(value.replace(/^decision-/u, "")),
+    (value) =>
+      typeof value === "string" && isBenchmarkReplaySourceRef(value.replace(/^decision-/u, "")),
   );
   if (benchmarkRef !== undefined) {
     return { appended: false, skipped: "benchmark_source" } as const;
@@ -7834,7 +7851,10 @@ export async function appendTrackBRouteAdvisoryObservation(input: {
   const previous = trackBAdvisoryLedgerLocks.get(input.filePath) ?? Promise.resolve();
   const append = previous
     .catch(() => undefined)
-    .then(async () => ({ ...(await appendTrackBRouteAdvisoryObservationExclusive(input)), appended: true }));
+    .then(async () => ({
+      ...(await appendTrackBRouteAdvisoryObservationExclusive(input)),
+      appended: true,
+    }));
   trackBAdvisoryLedgerLocks.set(
     input.filePath,
     append.then(
@@ -8293,7 +8313,7 @@ export async function runTrackBShadowPipeline(
       sourceGraphRef: input.sourceGraphRef,
       prefix: input.prefix,
       ...(input.sourcePrefixRef ? { sourcePrefixRef: input.sourcePrefixRef } : {}),
-        counterfactuals: counterfactualPackages,
+      counterfactuals: counterfactualPackages,
     }),
   );
   console.error(`[run97] shadow pipeline start ${input.requestId}`);
@@ -8453,6 +8473,13 @@ export async function runTrackBShadowPipeline(
     ...((input.judge?.endpointId ?? input.judgeEndpointId)?.trim()
       ? { judgeEndpointId: String(input.judge?.endpointId ?? input.judgeEndpointId).trim() }
       : {}),
+    /**
+     * S44: the judge's *source* travels with the comparison, so Evaluation Core's write-time independence
+     * guard checks the judge that actually judges instead of scanning historical manifests. The harness always
+     * judges with the controller unless the policy disables it, so the declaration is deterministic and
+     * belongs in the identity.
+     */
+    judgeSource: input.judgeSource ?? "controller",
     toolPolicyDigest: evaluationReferences.toolPolicyDigest,
     environmentDigest: evaluationReferences.environmentDigest,
     sourceEvidenceRef: evaluationReferences.sourceEvidenceRef,
@@ -9131,9 +9158,7 @@ export async function runTrackBShadowPipeline(
   if (comparisonTrialIds.length < 2) {
     const completedCandidates = [
       ...new Set(
-        completedRollouts.map(({ rollout }) =>
-          String(rollout.endpointId ?? "").slice(0, 120),
-        ),
+        completedRollouts.map(({ rollout }) => String(rollout.endpointId ?? "").slice(0, 120)),
       ),
     ].sort();
     throw new Error(
@@ -11122,9 +11147,7 @@ export async function runTrackBPostObservation(
     armBound,
   });
   if (armSelection.refusal) {
-    throw new Error(
-      `${armSelection.refusal.code}: ${armSelection.refusal.detail}`.slice(0, 512),
-    );
+    throw new Error(`${armSelection.refusal.code}: ${armSelection.refusal.detail}`.slice(0, 512));
   }
   const configuredCounterfactualCandidates = armSelection.arms;
   const pipeline =

@@ -1609,6 +1609,15 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       // `deepseek-flash-max` — and refused candidates that are not today's judge at all, so real
       // captures deferred to refusal (`judge_candidate_overlap`).
       ...(input.judge?.endpointId ? { judgeEndpointId: input.judge.endpointId } : {}),
+      /**
+       * S44 (measured live: a recovered handoff with resolvable evidence was refused with
+       * `judge_candidate_overlap … is the judge declared by scorer set run96-routing-shadow-v3`): the judge's
+       * source has to be declared, because Evaluation Core only skips the historical-manifest scan when the
+       * job says where its judge comes from. The rule is the operator's: the judge is the controller.
+       */
+      judgeSource:
+        (input.judge as { judgeSource?: "controller" | "disabled" } | undefined)?.judgeSource ??
+        "controller",
       // Run 98 addendum 45 J2: the comparison also records where that judge came from (the controller
       // assignment, and when that assignment last changed), so a controller switch is visible on the job.
       /**
