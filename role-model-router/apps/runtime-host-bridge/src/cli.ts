@@ -44,6 +44,8 @@ import {
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
 import {
+  HANDOFF_EVIDENCE_OUTSIDE_RETENTION_WINDOW,
+  HandoffEvidenceUnavailableError,
   createSupervisedReplayEvaluationResumeStore,
   resolveSupervisedReplayEvaluationResumePath,
   resumePendingSupervisedReplayEvaluations,
@@ -55,7 +57,9 @@ import {
   MAX_HANDOFF_RECOVERY_LIST_PAGE,
   branchCaptureRequestIdsFromJob,
   carriedEvaluationJobId,
+  describeUnresolvedArms,
   recoveredHandoffEntry,
+  resolveResumedArmEvidence,
   selectRecoverableHandoffs,
   selectUnevaluatedHandoffs,
 } from "./supervised-replay-handoff-recovery.js";
@@ -76,12 +80,12 @@ import {
   isReplayInFlightFailure,
   isReplayJobLeasedFailure,
   replayDispatchCaptureToken,
-  resolveReplayProviderCallBudget,
   resolveAutoReplayDeadlineMaxMs,
   resolveAutoReplayDeadlineMs,
   resolveAutoReplayDeadlinePerCandidateMs,
   resolveAutoReplayReservationTtlMs,
   resolveAutoReplayTickBudgetMs,
+  resolveReplayProviderCallBudget,
   retryLeasedReplayDispatch,
 } from "./track-b-auto-replay.js";
 import { createJudgeConsistencyLedger } from "./track-b-judge-consistency.js";
@@ -1243,7 +1247,8 @@ export function createSupervisedReplayEvaluationCompleter(input: {
      * the capture.
      */
     const counterfactualExclusions: Array<{ endpointId: string; reason: string }> = [];
-    const excludableArmReason = /missing branch capture for |missing counterfactual output evidence/u;
+    const excludableArmReason =
+      /missing branch capture for |missing counterfactual output evidence/u;
     const projectArmOutput = (
       capture: Record<string, unknown>,
       dispatched: string | null,
@@ -1378,15 +1383,15 @@ export function createSupervisedReplayEvaluationCompleter(input: {
     const judgeArmExclusion = input.learningPolicy?.judgeArmExclusion ?? "exclude";
     const counterfactuals =
       judgeEndpointId && judgeArmExclusion !== "off"
-      ? resolvedCounterfactuals.filter((entry) => {
-          if (entry.candidate.endpointId !== judgeEndpointId) return true;
-          counterfactualExclusions.push({
-            endpointId: entry.candidate.endpointId,
-            reason: `judge_arm_excluded: the comparison's judge cannot be one of its arms (policy ${judgeArmExclusion})`,
-          });
-          return false;
-        })
-      : resolvedCounterfactuals;
+        ? resolvedCounterfactuals.filter((entry) => {
+            if (entry.candidate.endpointId !== judgeEndpointId) return true;
+            counterfactualExclusions.push({
+              endpointId: entry.candidate.endpointId,
+              reason: `judge_arm_excluded: the comparison's judge cannot be one of its arms (policy ${judgeArmExclusion})`,
+            });
+            return false;
+          })
+        : resolvedCounterfactuals;
     if (judgeEndpointId && judgeArmExclusion !== "off" && counterfactuals.length === 0) {
       throw new Error(
         `R14_ALL_CANDIDATES_ARE_JUDGE: the configured counterfactual pool only contains the comparison's judge ${judgeEndpointId}`.slice(
@@ -4283,7 +4288,14 @@ export async function main(): Promise<void> {
      */
     const resumeEvaluationsRef: {
       current:
-        | (() => Promise<{ resumed: number; completed: number; failed: number; remaining: number }>)
+        | (() => Promise<{
+            resumed: number;
+            completed: number;
+            failed: number;
+            /** S23: handoffs terminated because their evidence is outside the capture retention window. */
+            outsideRetentionWindow: number;
+            remaining: number;
+          }>)
         | null;
     } = { current: null };
     /**
@@ -4366,9 +4378,28 @@ export async function main(): Promise<void> {
          */
         async resumePendingEvaluations() {
           if (!resumeEvaluationsRef.current) {
-            return { resumed: 0, completed: 0, failed: 0, remaining: 0 };
+            return {
+              resumed: 0,
+              completed: 0,
+              failed: 0,
+              outsideRetentionWindow: 0,
+              remaining: 0,
+            };
           }
-          return resumeEvaluationsRef.current();
+          const result = await resumeEvaluationsRef.current();
+          /**
+           * Run 100 addendum `handoff-evidence-durability.addendum-06` S23: this is the operator readback for
+           * the named disposition. Measured on `:3457`: 252 of 265 lost handoffs cannot be completed by any
+           * retry (their branch captures are outside the capture retention ring), and before this counter
+           * they were indistinguishable from a defect - they simply appeared as `abandoned` after eight
+           * attempts. The count is the signal; the disposition is on the entry and on the replay job.
+           */
+          if (result.outsideRetentionWindow > 0) {
+            console.error(
+              `[run101] ${result.outsideRetentionWindow} handoff(s) disposed as ${HANDOFF_EVIDENCE_OUTSIDE_RETENTION_WINDOW}`,
+            );
+          }
+          return result;
         },
         /**
          * Run 100 addendum `evaluation-lease-wedge-repair.addendum-02` S1: one bounded reconciliation of
@@ -4447,7 +4478,9 @@ export async function main(): Promise<void> {
           })) as { readonly jobs?: unknown } | readonly unknown[] | null;
           const jobs = Array.isArray(listing)
             ? listing
-            : listing && typeof listing === "object" && Array.isArray((listing as { jobs?: unknown }).jobs)
+            : listing &&
+                typeof listing === "object" &&
+                Array.isArray((listing as { jobs?: unknown }).jobs)
               ? ((listing as { jobs?: readonly unknown[] }).jobs as readonly unknown[])
               : [];
           const recoverable = selectRecoverableHandoffs(
@@ -4561,8 +4594,7 @@ export async function main(): Promise<void> {
                 const renewed =
                   existingEntry.outcome === "abandoned"
                     ? resumeStore.renew(entry.replayJobId, {
-                        reason:
-                          "recovery: the handoff can now be completed from durable evidence",
+                        reason: "recovery: the handoff can now be completed from durable evidence",
                       })
                     : null;
                 if (renewed) recovered += 1;
@@ -4863,7 +4895,9 @@ export async function main(): Promise<void> {
             const readControllerAssignment = (
               options as { readControllerAssignment?: () => Promise<unknown> }
             ).readControllerAssignment;
-            const assignment = await Promise.resolve(readControllerAssignment?.()).catch(() => null);
+            const assignment = await Promise.resolve(readControllerAssignment?.()).catch(
+              () => null,
+            );
             const endpointId =
               assignment && typeof assignment === "object" && !Array.isArray(assignment)
                 ? (assignment as Record<string, unknown>).endpointId
@@ -5514,7 +5548,10 @@ export async function main(): Promise<void> {
                     "operations boundary did not return a durable replay failure branch root",
                   );
                 }
-                return { branchRootRef: failureBranch.rootArtifactId, branchRequestId: failureRequestId };
+                return {
+                  branchRootRef: failureBranch.rootArtifactId,
+                  branchRequestId: failureRequestId,
+                };
               }
               let dispatch = dispatched.get(candidateEndpointId);
               if (!dispatch) {
@@ -6133,7 +6170,14 @@ export async function main(): Promise<void> {
         const runtime = extensionRuntimeRef.current;
         const operations = currentPostObservationOperations();
         if (!runtime || !operations) {
-          return { resumed: 0, completed: 0, failed: 0, remaining: 0 };
+          return {
+            resumed: 0,
+            completed: 0,
+            failed: 0,
+            outsideRetentionWindow: 0,
+            reconciled: 0,
+            remaining: 0,
+          };
         }
         const channel = packagedProfile?.channel ?? "development";
         return resumePendingSupervisedReplayEvaluations({
@@ -6286,48 +6330,46 @@ export async function main(): Promise<void> {
                 (candidate) => candidate.endpointId,
               ),
             });
-            for (const candidate of entry.counterfactualPackages) {
-              const branchCaptureRequestId =
-                branchCaptureRequestIds.get(candidate.endpointId) ??
-                `replay-${entry.requestId}-${createHash("sha256")
-                  .update(`${entry.replayJobId}\u0000${candidate.endpointId}`)
-                  .digest("hex")
-                  .slice(0, 16)}-branch`;
-              const replayRequestId = branchCaptureRequestId.replace(/-branch$/, "");
-              const branchCapture = (await operations.readLocalRouteCapture({
-                requestId: branchCaptureRequestId,
-              })) as Record<string, unknown> | null;
-              if (!branchCapture || typeof branchCapture !== "object") continue;
-              const response =
-                branchCapture.response && typeof branchCapture.response === "object"
-                  ? (branchCapture.response as Record<string, unknown>)
-                  : null;
-              const outputText =
-                (typeof response?.content === "string" ? response.content : null) ??
-                (typeof branchCapture.outputText === "string" ? branchCapture.outputText : null);
-              if (!outputText) continue;
+            /**
+             * Run 100 addendum `handoff-evidence-durability.addendum-06` S21/S23: the arm evidence resolves
+             * through the same canonical reader the source half uses, and every arm it cannot resolve is
+             * *named*. Measured on `:3457`: the inline reader here accepted only a string `response.content`
+             * or a string `outputText`, so thirteen handoffs whose captures were present, named and readable
+             * were refused as `durable replay evaluation has no recorded counterfactual branch to evaluate`
+             * - a claim about durable state the stores disprove - and each burned eight attempts before an
+             * unqualified `abandoned`. Silence was the defect; the reasons are now part of the record.
+             */
+            const armEvidence = await resolveResumedArmEvidence({
+              counterfactualPackages: entry.counterfactualPackages,
+              branchCaptureRequestIds,
+              readCapture: async (requestId) =>
+                (await operations.readLocalRouteCapture({ requestId })) as Record<
+                  string,
+                  unknown
+                > | null,
+            });
+            for (const arm of armEvidence.arms) {
               counterfactualPackages.push({
-                endpointId: candidate.endpointId,
-                modelId:
-                  typeof branchCapture.modelId === "string" && branchCapture.modelId.trim()
-                    ? branchCapture.modelId.trim()
-                    : candidate.modelId,
-                reasoningEffort:
-                  typeof branchCapture.reasoningEffort === "string"
-                    ? branchCapture.reasoningEffort
-                    : candidate.reasoningEffort,
+                endpointId: arm.endpointId,
+                modelId: arm.modelId,
+                reasoningEffort: arm.reasoningEffort,
               });
-              dispatched.set(candidate.endpointId, {
-                replayRequestId,
+              dispatched.set(arm.endpointId, {
+                replayRequestId: arm.replayRequestId,
                 execution: {
-                  routingDecisionId: String(branchCapture.routingDecisionId ?? ""),
-                  outputText,
+                  routingDecisionId: arm.routingDecisionId,
+                  outputText: arm.outputText,
                 },
               });
             }
+            if (armEvidence.unreadable.length > 0) {
+              console.error(
+                `[run101] resumed handoff ${entry.replayJobId} could not read ${armEvidence.unreadable.length} arm(s): ${describeUnresolvedArms(armEvidence.unreadable)}`,
+              );
+            }
             if (dispatched.size === 0) {
-              throw new Error(
-                "durable replay evaluation has no recorded counterfactual branch to evaluate",
+              throw new HandoffEvidenceUnavailableError(
+                describeUnresolvedArms(armEvidence.unreadable),
               );
             }
             const evaluationCriteria = storedCriteria

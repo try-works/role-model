@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { replayDispatchCaptureToken } from "./track-b-auto-replay.js";
+import { extractCaptureOutputText } from "./track-b-replay-evaluation-criteria.js";
 
 /**
  * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S7 (operator goal: replays, evals and the learner
@@ -259,11 +260,108 @@ export function recoveredHandoffEntry(
     // The replay command's request id is the capture ref; the branch captures are named from it.
     requestId: captureRef,
     sourceCaptureRequestId: captureRef,
-    sourceEndpointId:
-      typeof job.baselineEndpointId === "string" ? job.baselineEndpointId : "",
+    sourceEndpointId: typeof job.baselineEndpointId === "string" ? job.baselineEndpointId : "",
     // The durable source capture carries the model id; the completion reads it from there.
     sourceModelId: "",
     counterfactualPackages,
     scope,
   };
+}
+
+/**
+ * Run 100 addendum `handoff-evidence-durability.addendum-06` S21.
+ *
+ * The resumed completion turned each arm's branch capture into evidence with an inline test that accepted
+ * only a *string* `response.content` or a string `outputText`, and `continue`d on everything else. Measured
+ * on the real-traffic root: 13 handoffs whose arm captures are all present, named, and readable through the
+ * boundary's documented readback still produced
+ * `durable replay evaluation has no recorded counterfactual branch to evaluate` - the arms were dropped, and
+ * the job then claimed durable state that does not exist. The same function read the *source* capture with the
+ * canonical extractor, so the two halves of one readback disagreed about its shape.
+ *
+ * This resolver is the single reader for arm evidence: it resolves each arm through
+ * `extractCaptureOutputText` (the same canonical reader the source half uses) and returns a *named* reason for
+ * every arm it could not resolve, so "unreadable" can never again be reported as "absent".
+ */
+export type ResumedArmEvidenceReason = "capture_missing" | "capture_has_no_output";
+
+export interface ResumedArmEvidence {
+  readonly endpointId: string;
+  readonly modelId: string;
+  readonly reasoningEffort: string | null;
+  readonly replayRequestId: string;
+  readonly routingDecisionId: string;
+  readonly outputText: string;
+}
+
+export interface UnresolvedArmEvidence {
+  readonly endpointId: string;
+  readonly reason: ResumedArmEvidenceReason;
+}
+
+export async function resolveResumedArmEvidence(input: {
+  readonly counterfactualPackages: readonly {
+    readonly endpointId: string;
+    readonly modelId: string;
+    readonly reasoningEffort: string | null;
+  }[];
+  readonly branchCaptureRequestIds: ReadonlyMap<string, string>;
+  readonly readCapture: (requestId: string) => Promise<Record<string, unknown> | null>;
+}): Promise<{
+  readonly arms: readonly ResumedArmEvidence[];
+  readonly unreadable: readonly UnresolvedArmEvidence[];
+}> {
+  const arms: ResumedArmEvidence[] = [];
+  const unreadable: UnresolvedArmEvidence[] = [];
+  for (const candidate of input.counterfactualPackages) {
+    const requestId = input.branchCaptureRequestIds.get(candidate.endpointId);
+    if (!requestId) {
+      unreadable.push({ endpointId: candidate.endpointId, reason: "capture_missing" });
+      continue;
+    }
+    let capture: Record<string, unknown> | null = null;
+    try {
+      capture = await input.readCapture(requestId);
+    } catch {
+      // A boundary failure is reported through the caller's own error path; for this arm it means the
+      // evidence could not be read, which is exactly what has to be named rather than swallowed.
+      capture = null;
+    }
+    if (!capture || typeof capture !== "object" || Array.isArray(capture)) {
+      unreadable.push({ endpointId: candidate.endpointId, reason: "capture_missing" });
+      continue;
+    }
+    const outputText = extractCaptureOutputText(capture);
+    if (!outputText) {
+      unreadable.push({ endpointId: candidate.endpointId, reason: "capture_has_no_output" });
+      continue;
+    }
+    arms.push({
+      endpointId: candidate.endpointId,
+      modelId:
+        typeof capture.modelId === "string" && capture.modelId.trim()
+          ? capture.modelId.trim()
+          : candidate.modelId,
+      reasoningEffort:
+        typeof capture.reasoningEffort === "string"
+          ? capture.reasoningEffort
+          : candidate.reasoningEffort,
+      replayRequestId: requestId.replace(/-branch$/, ""),
+      routingDecisionId: String(capture.routingDecisionId ?? ""),
+      outputText,
+    });
+  }
+  return { arms, unreadable };
+}
+
+/** The summary travels inside an error message that is persisted on the resume entry (bounded at 512). */
+const MAX_UNRESOLVED_ARM_SUMMARY = 384;
+
+/** A bounded, deterministic summary of the arms a resumed completion could not read. */
+export function describeUnresolvedArms(unreadable: readonly UnresolvedArmEvidence[]): string {
+  return [...unreadable]
+    .sort((left, right) => left.endpointId.localeCompare(right.endpointId))
+    .map((arm) => `${arm.endpointId}=${arm.reason}`)
+    .join(", ")
+    .slice(0, MAX_UNRESOLVED_ARM_SUMMARY);
 }

@@ -40,6 +40,33 @@ export const SUPERVISED_REPLAY_EVALUATION_MAX_ATTEMPTS = 8;
  */
 export const MAX_RESUME_RENEWALS = 2;
 
+/**
+ * Run 100 addendum `handoff-evidence-durability.addendum-06` S23.
+ *
+ * Addendum 05 S17 made a give-up renewable, and its policy is explicit: completion is the default when the
+ * evidence exists, and a give-up is reserved for *named* unrecoverable evidence. Nothing named that evidence.
+ * Measured on `:3457`: 309 entries sit at the attempt cap as `abandoned`, and 252 of the 265 lost handoffs
+ * cannot be completed by any retry because their branch captures are outside the capture retention ring (the
+ * ring is the last 1 000 pointers, ~36 h of real traffic). Eight identical attempts were spent on each such
+ * handoff before the unqualified give-up, and the operator could not tell that class apart from a defect.
+ *
+ * This is the name. A completion that resolves *no* arm evidence terminates the handoff under it, without
+ * spending the attempt budget, and the caller terminalizes the replay job behind it with the same reason.
+ */
+export const HANDOFF_EVIDENCE_OUTSIDE_RETENTION_WINDOW =
+  "evidence_outside_retention_window" as const;
+
+export class HandoffEvidenceUnavailableError extends Error {
+  readonly code = HANDOFF_EVIDENCE_OUTSIDE_RETENTION_WINDOW;
+  /** The per-arm reasons, bounded and deterministic (`endpoint=reason, …`). */
+  readonly detail: string;
+  constructor(detail: string) {
+    super(`handoff evidence is outside the capture retention window: ${detail}`);
+    this.name = "HandoffEvidenceUnavailableError";
+    this.detail = detail;
+  }
+}
+
 export interface SupervisedReplayEvaluationCounterfactual {
   readonly endpointId: string;
   readonly modelId: string;
@@ -99,6 +126,13 @@ export interface SupervisedReplayEvaluationResumeStore {
     resolution: {
       readonly outcome: string;
       readonly comparisonGroupId?: string | null;
+      /**
+       * Run 100 addendum `handoff-evidence-durability.addendum-06` S23: a terminal disposition records the
+       * reason it was reached. `recordFailure` cannot be used for that - it spends the attempt budget, and a
+       * disposition reached because the evidence is *gone* must not consume budget that a retryable failure
+       * needs.
+       */
+      readonly reason?: string | null;
       readonly now?: number;
     },
   ): SupervisedReplayEvaluationResumeEntry | null;
@@ -385,6 +419,8 @@ export function createSupervisedReplayEvaluationResumeStore(input: {
       resolution: {
         readonly outcome: string;
         readonly comparisonGroupId?: string | null;
+        /** S23: the reason a terminal disposition was reached, recorded without spending the attempt budget. */
+        readonly reason?: string | null;
         readonly now?: number;
       },
     ): SupervisedReplayEvaluationResumeEntry | null {
@@ -397,6 +433,12 @@ export function createSupervisedReplayEvaluationResumeStore(input: {
         ...current,
         resolvedAtMs: now,
         outcome,
+        lastError:
+          resolution.reason === undefined
+            ? current.lastError
+            : resolution.reason === null
+              ? null
+              : String(resolution.reason).slice(0, MAX_ERROR_TEXT),
         comparisonGroupId:
           resolution.comparisonGroupId === undefined
             ? (current.comparisonGroupId ?? null)
@@ -506,6 +548,12 @@ export async function resumePendingSupervisedReplayEvaluations(input: {
   readonly resumed: number;
   readonly completed: number;
   readonly failed: number;
+  /**
+   * Run 100 addendum `handoff-evidence-durability.addendum-06` S23: handoffs that terminated because their
+   * evidence is outside the capture retention window. They are counted separately from `failed` because they
+   * are not a defect to retry - the operator readback reports them as a named backlog.
+   */
+  readonly outsideRetentionWindow: number;
   readonly reconciled: number;
   readonly remaining: number;
 }> {
@@ -548,6 +596,7 @@ export async function resumePendingSupervisedReplayEvaluations(input: {
   }
   let completed = 0;
   let failed = 0;
+  let outsideRetentionWindow = 0;
   for (const entry of selected) {
     try {
       if (await input.isEvaluationComplete(entry)) {
@@ -568,6 +617,31 @@ export async function resumePendingSupervisedReplayEvaluations(input: {
       });
       completed += 1;
     } catch (error) {
+      /**
+       * Run 100 addendum `handoff-evidence-durability.addendum-06` S23: evidence that is *gone* is not a
+       * retryable defect. The completion names that state (`HandoffEvidenceUnavailableError`, carrying the
+       * per-arm reason), and the handoff terminates under that name: the attempt budget is not spent on a
+       * dead end, and the operator sees the disposition instead of a wall of unqualified `abandoned`.
+       * The replay job behind it is still terminalized, once, so the scheduler stops re-claiming it.
+       */
+      if (error instanceof HandoffEvidenceUnavailableError) {
+        const resolved = input.store.resolve(entry.replayJobId, {
+          outcome: HANDOFF_EVIDENCE_OUTSIDE_RETENTION_WINDOW,
+          // The reason travels with the disposition; the attempt budget is deliberately untouched.
+          reason: error.detail,
+          now: now(),
+        });
+        outsideRetentionWindow += 1;
+        if (resolved && typeof input.onAbandoned === "function") {
+          reconcileSeen.add(`${resolved.replayJobId}:${resolved.resolvedAtMs}`);
+          try {
+            await input.onAbandoned(resolved, error);
+          } catch {
+            // Terminalizing is best-effort; the entry is already resolved under its own name.
+          }
+        }
+        continue;
+      }
       failed += 1;
       const updated = input.store.recordFailure(entry.replayJobId, error, now());
       // The entry has just been recorded `abandoned`: the evaluation is proven unavailable, so the
@@ -590,6 +664,7 @@ export async function resumePendingSupervisedReplayEvaluations(input: {
     resumed: selected.length,
     completed,
     failed,
+    outsideRetentionWindow,
     reconciled,
     remaining: input.store.list().filter((entry) => (entry.resolvedAtMs ?? null) === null).length,
   };
