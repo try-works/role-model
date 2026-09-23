@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { expect, test } from "vitest";
 
 import {
+  branchCaptureRequestIdsFromJob,
   carriedEvaluationJobId,
   MAX_HANDOFF_RECOVERY_LIST_PAGE,
   captureRefFromReplayJob,
@@ -149,4 +150,32 @@ test("run100l a handoff whose evaluation was never created is recovered through 
     "replay-job-0",
     "replay-job-1",
   ]);
+});
+
+/**
+ * S18, measured live right after the renewal started re-driving handoffs: the completion re-derived each
+ * arm's branch-capture request id (`replay-<requestId>-<hash(job,candidate)>-branch`) while the dispatch
+ * capture had become attempt-scoped in S9, so every renewed handoff failed with "no recorded counterfactual
+ * branch to evaluate". The durable job names the capture each arm wrote; the completion must read it.
+ */
+test("run100l branch captures are resolved from the durable dispatch receipt", () => {
+  const job = {
+    replayJobId: "replay-job-s18",
+    requestId: "req-s18",
+    candidateEndpointIds: ["endpoint:b", "endpoint:c"],
+    dispatches: {
+      "endpoint:b": {
+        status: "complete",
+        result: { providerResultRef: "route-capture:replay-req-s18-abc123-branch-source" },
+      },
+      "endpoint:c": { status: "failed" },
+    },
+  };
+  const resolved = branchCaptureRequestIdsFromJob(job);
+  expect(resolved.get("endpoint:b")).toBe("replay-req-s18-abc123-branch-source-branch");
+  // A candidate with no receipt keeps the pre-S9 derivation so older jobs still resume.
+  const fallback = resolved.get("endpoint:c") ?? "";
+  expect(fallback.startsWith("replay-req-s18-")).toBe(true);
+  expect(fallback.endsWith("-branch")).toBe(true);
+  expect(fallback).not.toBe(resolved.get("endpoint:b"));
 });

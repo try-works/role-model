@@ -53,6 +53,7 @@ import {
 import {
   type DurableReplayJobSummary,
   MAX_HANDOFF_RECOVERY_LIST_PAGE,
+  branchCaptureRequestIdsFromJob,
   carriedEvaluationJobId,
   recoveredHandoffEntry,
   selectRecoverableHandoffs,
@@ -6232,13 +6233,44 @@ export async function main(): Promise<void> {
               modelId: string;
               reasoningEffort: string | null;
             }[] = [];
+            /**
+             * Run 100 addendum `replay-evaluation-spine-repair.addendum-05` S18 (live on `:3457`, immediately
+             * after renewals started re-driving handoffs): the completion re-derived each arm's branch-capture
+             * id, but the dispatch capture became attempt-scoped (addendum 04 S9), so the derived name no
+             * longer existed and every renewed handoff failed with `durable replay evaluation has no recorded
+             * counterfactual branch to evaluate`. The durable job names the capture each arm wrote, so the
+             * completion reads that first and keeps the old derivation only as the legacy fallback.
+             */
+            const durableReplayJob = (await runtime
+              .invoke("replay-core", {
+                requestId: `replay-job-read:${entry.replayJobId}`,
+                sessionId: `replay-job-read:${options.scopeId}`,
+                protocolVersion: "1.1.0",
+                channel,
+                scope: captureScope,
+                authorizationEpoch: 1,
+                capability: "replay:job",
+                value: { jobId: entry.replayJobId },
+              })
+              .catch(() => null)) as Record<string, unknown> | null;
+            const branchCaptureRequestIds = branchCaptureRequestIdsFromJob({
+              replayJobId: entry.replayJobId,
+              requestId: entry.requestId,
+              dispatches: durableReplayJob?.dispatches,
+              candidateEndpointIds: entry.counterfactualPackages.map(
+                (candidate) => candidate.endpointId,
+              ),
+            });
             for (const candidate of entry.counterfactualPackages) {
-              const replayRequestId = `replay-${entry.requestId}-${createHash("sha256")
-                .update(`${entry.replayJobId}\u0000${candidate.endpointId}`)
-                .digest("hex")
-                .slice(0, 16)}`;
+              const branchCaptureRequestId =
+                branchCaptureRequestIds.get(candidate.endpointId) ??
+                `replay-${entry.requestId}-${createHash("sha256")
+                  .update(`${entry.replayJobId}\u0000${candidate.endpointId}`)
+                  .digest("hex")
+                  .slice(0, 16)}-branch`;
+              const replayRequestId = branchCaptureRequestId.replace(/-branch$/, "");
               const branchCapture = (await operations.readLocalRouteCapture({
-                requestId: `${replayRequestId}-branch`,
+                requestId: branchCaptureRequestId,
               })) as Record<string, unknown> | null;
               if (!branchCapture || typeof branchCapture !== "object") continue;
               const response =

@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { replayDispatchCaptureToken } from "./track-b-auto-replay.js";
 
 /**
  * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S7 (operator goal: replays, evals and the learner
@@ -107,6 +108,64 @@ export function selectUnevaluatedHandoffs(
 ): readonly DurableReplayJobSummary[] {
   const bound = Number.isSafeInteger(limit) && limit > 0 ? limit : 3;
   return jobs.filter(isUnevaluatedHandoff).slice(0, bound);
+}
+
+/**
+ * Run 100 addendum `replay-evaluation-spine-repair.addendum-05` S18 (live on `:3457`, immediately after the
+ * renewal started re-driving handoffs):
+ *
+ *   `durable replay evaluation has no recorded counterfactual branch to evaluate`
+ *
+ * The resume completion re-derived each arm's branch-capture request id from the replay job and the candidate
+ * (`replay-<requestId>-<hash(job, candidate)>-branch`). Addendum 04 S9 made the dispatch capture
+ * attempt-scoped - its id now includes the dispatch nonce - so the derived name no longer exists and every
+ * renewed handoff failed with "no recorded counterfactual branch". The durable job itself names the capture
+ * each arm wrote: its dispatch receipt carries `providerResultRef` (`route-capture:<replayRequestId>`), and
+ * the branch capture is `<replayRequestId>-branch`. The completion must read that, with the old derivation
+ * kept only as the fallback for jobs written before the receipt existed.
+ */
+export function branchCaptureRequestIdsFromJob(input: {
+  readonly replayJobId: string;
+  readonly requestId: string;
+  readonly dispatches?: unknown;
+  readonly candidateEndpointIds: readonly string[];
+}): Map<string, string> {
+  const dispatches =
+    input.dispatches && typeof input.dispatches === "object" && !Array.isArray(input.dispatches)
+      ? (input.dispatches as Record<string, unknown>)
+      : {};
+  const resolved = new Map<string, string>();
+  for (const candidateEndpointId of input.candidateEndpointIds) {
+    const dispatch =
+      dispatches[candidateEndpointId] &&
+      typeof dispatches[candidateEndpointId] === "object" &&
+      !Array.isArray(dispatches[candidateEndpointId])
+        ? (dispatches[candidateEndpointId] as Record<string, unknown>)
+        : null;
+    const result =
+      dispatch?.result && typeof dispatch.result === "object" && !Array.isArray(dispatch.result)
+        ? (dispatch.result as Record<string, unknown>)
+        : null;
+    const providerResultRef =
+      typeof result?.providerResultRef === "string" ? result.providerResultRef.trim() : "";
+    const replayRequestId = providerResultRef.startsWith("route-capture:")
+      ? providerResultRef.slice("route-capture:".length).trim()
+      : "";
+    if (replayRequestId) {
+      resolved.set(candidateEndpointId, `${replayRequestId}-branch`);
+      continue;
+    }
+    // Legacy shape: the id the producer derived before the dispatch capture became attempt-scoped.
+    resolved.set(
+      candidateEndpointId,
+      `replay-${input.requestId}-${replayDispatchCaptureToken({
+        replayJobId: input.replayJobId,
+        candidateEndpointId,
+        dispatchNonce: null,
+      })}-branch`,
+    );
+  }
+  return resolved;
 }
 
 /** Bounded discovery: a sweep recovers at most `limit` handoffs, oldest work first is the caller's order. */
