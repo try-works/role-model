@@ -36,6 +36,8 @@ export interface DurableReplayJobSummary {
    * pages with `replay:list-jobs` can still tell whether the job holds evidence to compare.
    */
   readonly branchCount?: unknown;
+  /** S38: the recency cursor needs the record's last update, which the summary projection carries. */
+  readonly updatedAtMs?: unknown;
 }
 
 const DECISION_PREFIX = "decision-";
@@ -71,14 +73,25 @@ export const MAX_HANDOFF_RECOVERY_CHECKS_PER_SWEEP = 12;
  * how work that appeared behind the cursor is picked up.
  */
 export function nextHandoffRecoveryCursor(input: {
-  readonly currentCursor: string | null;
-  readonly pageJobIds: readonly string[];
+  readonly currentCursor: RecoveryPageCursor | null;
+  readonly pageEntries: readonly RecoveryPageCursor[];
   readonly examinedCount: number;
   readonly pageSize: number;
-}): string | null {
+}): RecoveryPageCursor | null {
   if (input.examinedCount <= 0) return input.currentCursor;
-  if (input.pageJobIds.length < input.pageSize) return null;
-  return input.pageJobIds[input.examinedCount - 1] ?? input.currentCursor;
+  if (input.pageEntries.length < input.pageSize) return null;
+  return input.pageEntries[input.examinedCount - 1] ?? input.currentCursor;
+}
+
+/**
+ * Run 100 addendum `handoff-evidence-durability.addendum-06` S38: a place in the *recency* order. The pass
+ * walks the terminal set newest-first because the evidence a handoff needs is only retained for ~36 h, and the
+ * `jobId` order it used before is a hash - so it could spend an hour walking old, unfixable work before it
+ * reached the handoffs from the last few hours that can actually be completed.
+ */
+export interface RecoveryPageCursor {
+  readonly jobId: string;
+  readonly updatedAtMs: number;
 }
 
 /**
@@ -93,13 +106,17 @@ export function nextHandoffRecoveryCursor(input: {
  * actually recovers, which is bounded by the per-sweep recovery bound.
  */
 export function terminalRecoveryListingValue(input: {
-  readonly cursor: string | null;
+  readonly cursor: RecoveryPageCursor | null;
 }): Record<string, unknown> {
   return {
     state: ["failed", "timed_out"],
     hasEvaluationJobId: true,
     summary: true,
-    ...(input.cursor === null ? {} : { afterJobId: input.cursor }),
+    // S38: newest first, so the work whose evidence still exists is met first.
+    order: "recent",
+    ...(input.cursor === null
+      ? {}
+      : { afterJobId: input.cursor.jobId, afterUpdatedAtMs: input.cursor.updatedAtMs }),
     limit: MAX_HANDOFF_RECOVERY_LIST_PAGE,
   };
 }

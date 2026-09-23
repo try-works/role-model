@@ -56,6 +56,7 @@ import {
   type DurableReplayJobSummary,
   MAX_HANDOFF_RECOVERY_CHECKS_PER_SWEEP,
   MAX_HANDOFF_RECOVERY_LIST_PAGE,
+  type RecoveryPageCursor,
   branchCaptureRequestIdsFromJob,
   carriedEvaluationJobId,
   coerceDurableReplayJobRecord,
@@ -4359,7 +4360,7 @@ export async function main(): Promise<void> {
        * resumes. Process-lifetime by design: the durable stores are the record of what still needs doing, and
        * a restart re-scans from the beginning, which is cheap now that the listing only projects summaries.
        */
-      let handoffRecoveryCursor: string | null = null;
+      let handoffRecoveryCursor: RecoveryPageCursor | null = null;
       /** S27 diagnostics: report the resolved job scope and an empty recovery page once per process. */
       let replayJobScopeReported = false;
       let emptyRecoveryPageReported = false;
@@ -4792,14 +4793,26 @@ export async function main(): Promise<void> {
           if (examined === 0 && !emptyRecoveryPageReported) {
             emptyRecoveryPageReported = true;
             console.error(
-              `[run101] recovery page came back empty: scope=${scope} channel=${channel} cursor=${handoffRecoveryCursor ?? "start"}`,
+              `[run101] recovery page came back empty: scope=${scope} channel=${channel} cursor=${
+                handoffRecoveryCursor === null
+                  ? "start"
+                  : `${handoffRecoveryCursor.jobId.slice(0, 8)}@${handoffRecoveryCursor.updatedAtMs}`
+              }`,
             );
           }
           handoffRecoveryCursor = nextHandoffRecoveryCursor({
             currentCursor: handoffRecoveryCursor,
-            pageJobIds: (terminalJobs as readonly DurableReplayJobSummary[])
-              .map((job) => (typeof job.jobId === "string" ? job.jobId : ""))
-              .filter((jobId) => jobId.length > 0),
+            /**
+             * S38: the cursor is a place in the recency order, so it carries the timestamp as well as the id -
+             * a pass that walked the set in `jobId` order spent its time on old, unfixable work before reaching
+             * the handoffs whose evidence is still retained.
+             */
+            pageEntries: (terminalJobs as readonly DurableReplayJobSummary[])
+              .map((job) => ({
+                jobId: typeof job.jobId === "string" ? job.jobId : "",
+                updatedAtMs: Number.isSafeInteger(job.updatedAtMs) ? Number(job.updatedAtMs) : 0,
+              }))
+              .filter((entry) => entry.jobId.length > 0),
             examinedCount: examined,
             pageSize: MAX_HANDOFF_RECOVERY_LIST_PAGE,
           });

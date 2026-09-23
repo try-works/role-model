@@ -130,26 +130,29 @@ test("run101 S27 the job scope is discovered from the store when the producer ha
  */
 
 test("run101 S24 a full page advances the cursor to the last job the sweep examined", () => {
-  const page = Array.from(
-    { length: MAX_HANDOFF_RECOVERY_LIST_PAGE },
-    (_, index) => `job-${String(index).padStart(4, "0")}`,
-  );
+  const page = Array.from({ length: MAX_HANDOFF_RECOVERY_LIST_PAGE }, (_, index) => ({
+    jobId: `job-${String(index).padStart(4, "0")}`,
+    updatedAtMs: 1_000 - index,
+  }));
   expect(
     nextHandoffRecoveryCursor({
       currentCursor: null,
-      pageJobIds: page,
+      pageEntries: page,
       examinedCount: 5,
       pageSize: MAX_HANDOFF_RECOVERY_LIST_PAGE,
     }),
     "the next sweep resumes at the job after the last one examined",
-  ).toBe("job-0004");
+  ).toEqual({ jobId: "job-0004", updatedAtMs: 996 });
 });
 
 test("run101 S24 reaching the end of the set wraps so the next pass re-checks new work", () => {
   expect(
     nextHandoffRecoveryCursor({
-      currentCursor: "job-0002",
-      pageJobIds: ["job-a", "job-b"],
+      currentCursor: { jobId: "job-0002", updatedAtMs: 998 },
+      pageEntries: [
+        { jobId: "job-a", updatedAtMs: 100 },
+        { jobId: "job-b", updatedAtMs: 99 },
+      ],
       examinedCount: 2,
       pageSize: MAX_HANDOFF_RECOVERY_LIST_PAGE,
     }),
@@ -158,15 +161,18 @@ test("run101 S24 reaching the end of the set wraps so the next pass re-checks ne
 });
 
 test("run101 S24 a sweep that examines nothing keeps its position", () => {
-  const page = Array.from({ length: MAX_HANDOFF_RECOVERY_LIST_PAGE }, (_, index) => `job-${index}`);
+  const page = Array.from({ length: MAX_HANDOFF_RECOVERY_LIST_PAGE }, (_, index) => ({
+    jobId: `job-${index}`,
+    updatedAtMs: 500 - index,
+  }));
   expect(
     nextHandoffRecoveryCursor({
-      currentCursor: "job-0009",
-      pageJobIds: page,
+      currentCursor: { jobId: "job-0009", updatedAtMs: 491 },
+      pageEntries: page,
       examinedCount: 0,
       pageSize: MAX_HANDOFF_RECOVERY_LIST_PAGE,
     }),
-  ).toBe("job-0009");
+  ).toEqual({ jobId: "job-0009", updatedAtMs: 491 });
 });
 
 test("run101 S24 the page stays inside the extension protocol's inline frame", () => {
@@ -199,14 +205,21 @@ test("run101 S24 the terminal page asks for the summary projection and carries t
     state: ["failed", "timed_out"],
     hasEvaluationJobId: true,
     summary: true,
+    order: "recent",
     limit: MAX_HANDOFF_RECOVERY_LIST_PAGE,
   });
   expect(
     Object.hasOwn(first, "afterJobId"),
     "the first sweep of a pass starts at the beginning of the set",
   ).toBe(false);
-  expect(terminalRecoveryListingValue({ cursor: "job-0004" })).toMatchObject({
+  expect(
+    terminalRecoveryListingValue({
+      cursor: { jobId: "job-0004", updatedAtMs: 1_700_000_000_000 },
+    }),
+  ).toMatchObject({
     afterJobId: "job-0004",
+    afterUpdatedAtMs: 1_700_000_000_000,
+    order: "recent",
     summary: true,
   });
 });
