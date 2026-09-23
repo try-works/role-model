@@ -4513,6 +4513,41 @@ export async function main(): Promise<void> {
          * store for two days while the operator surface reported them "in flight". Evaluation jobs live in
          * the operator scope's evaluation store - the resume sweep above reads them with the same scope.
          */
+        /**
+         * Run 100 addendum `handoff-evidence-durability.addendum-06` S46: the production caller for
+         * `evaluation:retro-finalize-comparisons`.
+         *
+         * Measured live: the newest durable evaluation jobs hold 2-4 **scored** trials with their declared
+         * source/counterfactual pair satisfied and **no** comparison group, and were released as
+         * `evaluation_job_stranded_without_finalized_comparison` (148 failed / 19 cancelled, all after
+         * 2026-09-21). The capability exists, the core method exists (`retroFinalizeComparisons`, bounded to
+         * 32), and nothing called it - so paid-for, fully scored evidence never became a comparison and the
+         * learner had nothing to consume. This sweep is bounded to a few groups per tick, exactly like the
+         * other liveness sweeps.
+         */
+        async retroFinalizeEvaluations() {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) return { finalized: 0 };
+          const result = await runtime.invoke("evaluation-core", {
+            requestId: `evaluation-retro-finalize:${Date.now()}`,
+            sessionId: `evaluation-retro-finalize:${options.scopeId}`,
+            protocolVersion: "1.1.0",
+            channel,
+            scope: options.scopeId,
+            authorizationEpoch: 1,
+            capability: "evaluation:retro-finalize-comparisons",
+            value: { limit: 4 },
+          });
+          const record =
+            result && typeof result === "object" && !Array.isArray(result)
+              ? (result as Record<string, unknown>)
+              : {};
+          const finalized = Array.isArray(record.finalized) ? record.finalized.length : 0;
+          if (finalized > 0) {
+            console.error(`[run101] retro-finalized ${finalized} comparison group(s)`);
+          }
+          return record;
+        },
         async reconcileEvaluationJobs() {
           const runtime = extensionRuntimeRef.current;
           if (!runtime) return { scanned: 0, completed: [], stranded: [], reclaimed: [] };

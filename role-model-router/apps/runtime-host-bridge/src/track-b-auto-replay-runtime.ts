@@ -131,6 +131,14 @@ export interface AutoReplayOperations {
    */
   reconcileEvaluationJobs?(input: Record<string, unknown>): Promise<unknown>;
   /**
+   * Run 100 addendum `handoff-evidence-durability.addendum-06` S46: finalize a comparison whose trials are all
+   * scored and which has no group. Measured live: the newest durable evaluation jobs hold 2-4 **scored** trials
+   * with their declared pair satisfied and no comparison group, and were released as
+   * `evaluation_job_stranded_without_finalized_comparison` - `evaluation:retro-finalize-comparisons` has a core
+   * method and a capability and, until this sweep, no production caller.
+   */
+  retroFinalizeEvaluations?(input: Record<string, unknown>): Promise<unknown>;
+  /**
    * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S7: optional bounded pass that finds durable
    * replay jobs which handed their branches to evaluation but never got an evaluation job (an attempt
    * interrupted between the handoff and the host's resume-entry write) and records the resume entries the
@@ -348,6 +356,7 @@ export function startAutoReplayLoop(input: {
     let expired = 0;
     let resumed = 0;
     let reconciled = 0;
+    let retroFinalized = 0;
     let stranded = 0;
     let reclaimed = 0;
     let recovered = 0;
@@ -418,6 +427,29 @@ export function startAutoReplayLoop(input: {
             cause instanceof Error
               ? `evaluation job reconciliation failed: ${cause.message.slice(0, 200)}`
               : "evaluation job reconciliation failed";
+          error = error ? `${error}; ${detail}` : detail;
+        }
+      }
+      /**
+       * Run 100 addendum `handoff-evidence-durability.addendum-06` S46 (measured live): the newest durable
+       * evaluation jobs hold 2-4 **scored** trials, satisfy their declared pair, and have **no** comparison
+       * group - they were released as `evaluation_job_stranded_without_finalized_comparison`, and nothing
+       * finalized them because `evaluation:retro-finalize-comparisons` had a core method, a capability and no
+       * production caller. Finalizing them needs no provider work: the trials are already scored, so this sweep
+       * converts paid-for evidence into comparisons the learner can consume.
+       */
+      if (typeof input.operations.retroFinalizeEvaluations === "function") {
+        try {
+          const sweep = (await input.operations.retroFinalizeEvaluations({
+            window,
+            policySetDigest: input.policySet.policySetDigest,
+          })) as { readonly finalized?: unknown } | null;
+          if (sweep) retroFinalized = countOf(sweep.finalized);
+        } catch (cause) {
+          const detail =
+            cause instanceof Error
+              ? `comparison retro-finalization failed: ${cause.message.slice(0, 200)}`
+              : "comparison retro-finalization failed";
           error = error ? `${error}; ${detail}` : detail;
         }
       }
