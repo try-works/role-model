@@ -6343,8 +6343,18 @@ export async function main(): Promise<void> {
              * counterfactual branch to evaluate`. The durable job names the capture each arm wrote, so the
              * completion reads that first and keeps the old derivation only as the legacy fallback.
              */
-            const durableReplayJob = (await runtime
-              .invoke("replay-core", {
+            /**
+             * Run 100 addendum `handoff-evidence-durability.addendum-06` S21c (measured live): the durable job
+             * read was swallowed (`.catch(() => null)`) and the completion then fell back to the pre-S9 branch
+             * capture naming, which no longer exists. Every arm therefore resolved to nothing and the handoff
+             * was disposed as if its evidence had been evicted - while the store held the pointers and the
+             * artifacts. A failed read of the record that *names* the captures is not "no evidence": it is
+             * "cannot tell", which is retryable and must say so.
+             */
+            let durableReplayJob: Record<string, unknown> | null = null;
+            let jobReadFailure: string | null = null;
+            try {
+              durableReplayJob = (await runtime.invoke("replay-core", {
                 requestId: `replay-job-read:${entry.replayJobId}`,
                 sessionId: `replay-job-read:${options.scopeId}`,
                 protocolVersion: "1.1.0",
@@ -6353,8 +6363,19 @@ export async function main(): Promise<void> {
                 authorizationEpoch: 1,
                 capability: "replay:job",
                 value: { jobId: entry.replayJobId },
-              })
-              .catch(() => null)) as Record<string, unknown> | null;
+              })) as Record<string, unknown> | null;
+            } catch (error) {
+              jobReadFailure = String(
+                (error as { message?: unknown })?.message ?? error ?? "unknown",
+              ).slice(0, 200);
+            }
+            if (jobReadFailure !== null || !durableReplayJob) {
+              throw new Error(
+                `resumed handoff job record is unreadable: ${
+                  jobReadFailure ?? "the durable job returned no record"
+                }`,
+              );
+            }
             const branchCaptureRequestIds = branchCaptureRequestIdsFromJob({
               replayJobId: entry.replayJobId,
               requestId: entry.requestId,
