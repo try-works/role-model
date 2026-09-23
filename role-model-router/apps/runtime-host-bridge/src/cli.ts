@@ -4647,8 +4647,16 @@ export async function main(): Promise<void> {
                * reach this point are read in full, so the cost is bounded by the per-sweep recovery bound and
                * the projection stays lean for every other caller.
                */
-              fullJob = (await runtime
-                .invoke("replay-core", {
+              /**
+               * S40 (measured live on ade5b26f: `[run101] job read answer shape: null`): the full-record read
+               * was wrapped in `.catch(() => null)`, so a *refused* read and an *absent* record looked
+               * identical - and a candidate whose evaluation is missing, whose record the listing had just
+               * returned, was dropped without a reason. The failure is now named.
+               */
+              let jobReadFailure: string | null = null;
+              let rawFullJob: unknown = null;
+              try {
+                rawFullJob = await runtime.invoke("replay-core", {
                   requestId: `replay-job-read:${carriedId}`,
                   sessionId: `replay-job-read:${options.scopeId}`,
                   protocolVersion: "1.1.0",
@@ -4657,8 +4665,13 @@ export async function main(): Promise<void> {
                   authorizationEpoch: 1,
                   capability: "replay:job",
                   value: { jobId: job.jobId },
-                })
-                .catch(() => null)) as DurableReplayJobSummary | null;
+                });
+              } catch (error) {
+                jobReadFailure = String(
+                  (error as { message?: unknown })?.message ?? error ?? "unknown",
+                ).slice(0, 160);
+              }
+              fullJob = rawFullJob as DurableReplayJobSummary | null;
               /**
                * S31: the full record crosses the same boundary as every other readback, so it may arrive as an
                * externalized transfer marker (the class that made the Learning packs page render empty). The
@@ -4680,7 +4693,9 @@ export async function main(): Promise<void> {
               if (!coercedJob && !jobReadShapeReported) {
                 jobReadShapeReported = true;
                 console.error(
-                  `[run101] job read answer shape: ${JSON.stringify(fullJob).slice(0, 220)}`,
+                  `[run101] job read answer shape: ${JSON.stringify(fullJob).slice(0, 220)}${
+                    jobReadFailure === null ? "" : ` failed=${jobReadFailure}`
+                  }`,
                 );
               }
               fullJob = coercedJob as DurableReplayJobSummary | null;
