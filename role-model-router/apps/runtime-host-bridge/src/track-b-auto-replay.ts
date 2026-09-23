@@ -152,6 +152,33 @@ export function isReplayInFlightFailure(status: number, body: string): boolean {
   );
 }
 
+/**
+ * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S9 (live on `:3457`): the counterfactual arm's
+ * dispatch capture is named `replay-<requestId>-<token>`, and the token was derived from the replay job and
+ * the candidate only. That identity is stable across a job's *attempts*, so when a job is re-claimed and its
+ * arm is dispatched again the provider returns fresh bytes under the same capture id - and the capture
+ * boundary refuses them by design:
+ *
+ *   `route capture idempotency key was reused with different immutable bytes`
+ *
+ * The dispatch envelope carries the per-attempt identity: replay-core rehydrates the same `nonce` for a
+ * dispatch that is still in flight and mints a new one for a fresh attempt (the stale-dispatch repair is
+ * what makes a second attempt possible at all). Scoping the capture id by that nonce keeps a retry inside
+ * one attempt idempotent while a new attempt writes new bytes under a new id.
+ */
+export function replayDispatchCaptureToken(input: {
+  readonly replayJobId: string;
+  readonly candidateEndpointId: string;
+  readonly dispatchNonce: string | null;
+}): string {
+  return createHash("sha256")
+    .update(
+      `${String(input.replayJobId)}\u0000${String(input.candidateEndpointId)}\u0000${input.dispatchNonce ?? ""}`,
+    )
+    .digest("hex")
+    .slice(0, 16);
+}
+
 export async function retryLeasedReplayDispatch<TValue>(input: {
   readonly dispatch: () => Promise<
     | { readonly ok: true; readonly value: TValue }

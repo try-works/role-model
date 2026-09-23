@@ -71,6 +71,7 @@ import {
   buildAutoReplayIdempotencyKey,
   isReplayInFlightFailure,
   isReplayJobLeasedFailure,
+  replayDispatchCaptureToken,
   resolveAutoReplayDeadlineMaxMs,
   resolveAutoReplayDeadlineMs,
   resolveAutoReplayDeadlinePerCandidateMs,
@@ -5169,17 +5170,21 @@ export async function main(): Promise<void> {
               );
               if (!candidate)
                 throw new Error("replay dispatch candidate package is not host-authorized");
-              // R13/R7: every capture this attempt writes must be attempt-scoped. The
-              // durable replay job identity (not the per-tick idempotency key) makes a
-              // retry inside one attempt idempotent while a later attempt of the same
-              // source capture appends new bytes instead of colliding with the previous
-              // attempt's immutable capture under the same request id.
+              // R13/R7: every capture this attempt writes must be attempt-scoped. Run 100 addendum
+              // `replay-dispatch-lifecycle.addendum-04` S9: the identity is scoped by the dispatch envelope's
+              // per-attempt nonce, not just by the job and candidate - a retry inside one attempt stays
+              // idempotent, while a re-claimed job's fresh attempt (which replay-core mints a new nonce for)
+              // writes new bytes under a new capture id instead of colliding with the previous attempt's
+              // immutable capture (`route capture idempotency key was reused with different immutable bytes`,
+              // measured live on `:3457`).
               const replayJobId =
                 typeof envelope.replayJobId === "string" ? envelope.replayJobId : "";
-              const replayAttemptToken = createHash("sha256")
-                .update(`${replayJobId}\u0000${candidateEndpointId}`)
-                .digest("hex")
-                .slice(0, 16);
+              const replayAttemptToken = replayDispatchCaptureToken({
+                replayJobId,
+                candidateEndpointId,
+                dispatchNonce:
+                  typeof envelope.nonce === "string" && envelope.nonce ? envelope.nonce : null,
+              });
               const replayRequestId = `replay-${requestId}-${replayAttemptToken}`;
               const execution = await created.executeChatCompletions(
                 {
