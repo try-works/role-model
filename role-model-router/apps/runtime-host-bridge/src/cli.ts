@@ -168,6 +168,11 @@ function resolveChannelScopedReplayLedgerLimits(input: {
   };
 }
 import {
+  DEFAULT_EVIDENCE_HALF_LIFE_DAYS,
+  assembleDurableLearnerValidationValue,
+  buildTrackBLearningEvidenceSummary,
+} from "./track-b-learning-pass.js";
+import {
   TRACK_B_CANONICAL_EXTENSION_IDS,
   type TrackBExtensionClosure,
   assertProductionExtensionRuntimeReady,
@@ -206,11 +211,6 @@ import {
   validateRun88ProviderResponseObservation,
   verifyTrackBExtensionClosureAfterRestart,
 } from "./track-b-runtime.js";
-import {
-  assembleDurableLearnerValidationValue,
-  buildTrackBLearningEvidenceSummary,
-  DEFAULT_EVIDENCE_HALF_LIFE_DAYS,
-} from "./track-b-learning-pass.js";
 import {
   createRouterPairwiseJudge,
   resolveJudgeEndpointFromController,
@@ -4392,6 +4392,8 @@ export async function main(): Promise<void> {
        * a restart re-scans from the beginning, which is cheap now that the listing only projects summaries.
        */
       let handoffRecoveryCursor: RecoveryPageCursor | null = null;
+      /** P6: where the learner sweep resumes in the candidate listing (creation-time order). */
+      let learnerCandidateCursor: { createdAtMs: number; candidateId: string } | null = null;
       /** S27 diagnostics: report the resolved job scope and an empty recovery page once per process. */
       let replayJobScopeReported = false;
       let emptyRecoveryPageReported = false;
@@ -4569,7 +4571,20 @@ export async function main(): Promise<void> {
           });
           const listing = await runtime.invoke(
             "knowledge-worker",
-            envelopeFor("knowledge-worker", "knowledge:list-candidates", { limit: 8 }),
+            envelopeFor("knowledge-worker", "knowledge:list-candidates", {
+              /**
+               * P6: the sweep walks the candidate set with a cursor instead of re-reading its newest page (the
+               * fixed-window class this run keeps meeting) - the consumed set lives in the knowledge store, so
+               * only a page that advances can reach a candidate nothing ever validated.
+               */
+              limit: 32,
+              ...(learnerCandidateCursor === null
+                ? {}
+                : {
+                    afterCreatedAtMs: learnerCandidateCursor.createdAtMs,
+                    afterCandidateId: learnerCandidateCursor.candidateId,
+                  }),
+            }),
           );
           const candidates = (() => {
             const decoded = decodeExternalizedOperatorReadback({
@@ -4587,6 +4602,19 @@ export async function main(): Promise<void> {
             );
           })();
           if (candidates.length === 0) return { scanned: 0, consumed: 0, remaining: 0 };
+          const lastListed = candidates[candidates.length - 1];
+          learnerCandidateCursor =
+            candidates.length < 32 &&
+            typeof lastListed?.candidateId === "string" &&
+            Number.isSafeInteger(lastListed?.createdAtMs)
+              ? null
+              : typeof lastListed?.candidateId === "string" &&
+                  Number.isSafeInteger(lastListed?.createdAtMs)
+                ? {
+                    createdAtMs: Number(lastListed.createdAtMs),
+                    candidateId: lastListed.candidateId,
+                  }
+                : null;
           const records = await runtime.invoke(
             "knowledge-store",
             envelopeFor("knowledge-store", "knowledge:list-learning", {
@@ -4624,7 +4652,8 @@ export async function main(): Promise<void> {
               typeof candidate.candidateId === "string" ? candidate.candidateId : null;
             return candidateId !== null && !recordedCandidateIds.has(candidateId);
           });
-          if (pending.length === 0) return { scanned: candidates.length, consumed: 0, remaining: 0 };
+          if (pending.length === 0)
+            return { scanned: candidates.length, consumed: 0, remaining: 0 };
           /**
            * Run 100 addendum 07 P6, second pass: the first version of this sweep presented only
            * `{ candidateId }`, and `validateCandidate` refuses that with "scorer and judge identity
@@ -4721,7 +4750,9 @@ export async function main(): Promise<void> {
                 outcome: group.outcome,
                 holdout: group.holdout,
                 ...(group.primaryMetric ? { primaryMetric: group.primaryMetric } : {}),
-                ...(Array.isArray(group.scorerOutcomes) ? { scorerOutcomes: group.scorerOutcomes } : {}),
+                ...(Array.isArray(group.scorerOutcomes)
+                  ? { scorerOutcomes: group.scorerOutcomes }
+                  : {}),
                 members: group.members,
               };
               const evidenceSummary = buildTrackBLearningEvidenceSummary({
@@ -4738,9 +4769,7 @@ export async function main(): Promise<void> {
                 scope: options.scopeId,
                 scorerSetVersion,
                 judgeEndpointId:
-                  typeof candidate.judgeEndpointId === "string"
-                    ? candidate.judgeEndpointId
-                    : null,
+                  typeof candidate.judgeEndpointId === "string" ? candidate.judgeEndpointId : null,
                 evaluationAuthoritySecret: authority.authoritySecret,
                 finalizedComparison,
                 evidenceSummary,
@@ -4768,11 +4797,7 @@ export async function main(): Promise<void> {
               const validation = unwrapCapabilityPayload(
                 await runtime.invoke(
                   "knowledge-worker",
-                  envelopeFor(
-                    "knowledge-worker",
-                    "knowledge:validate-candidate",
-                    validationValue,
-                  ),
+                  envelopeFor("knowledge-worker", "knowledge:validate-candidate", validationValue),
                 ),
               );
               const validationRecord =

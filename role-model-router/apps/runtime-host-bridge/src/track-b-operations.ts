@@ -2767,6 +2767,33 @@ export function createTrackBOperations({
         throw new Error("no-rich capture baseline requires a loopback operations boundary");
       return requestPrivate("capture/performance-baseline", { method: "POST", body: input });
     },
+    /**
+     * Run 100 addendum `handoff-evidence-durability.addendum-06` S22 (RC-6): a handoff pins the evidence it
+     * still owes. Measured on `:3457`, the route-capture ring keeps only the newest pointers, so a handoff
+     * that outlives the ring can only be disposed as `evidence_outside_retention_window` - the intent was
+     * durable and the evidence was not. The hold is addressed by the *holder* (the replay job that owes the
+     * evidence) so a resolution, a renewal and a second hold are all one idempotent operation.
+     */
+    async holdLocalRouteCaptures(input: {
+      readonly holderId: string;
+      readonly requestIds: readonly string[];
+      readonly ttlMs?: number;
+    }): Promise<unknown> {
+      if (!operationsEndpoint)
+        throw new Error("private operations endpoint is required for handoff evidence holds");
+      const url = new URL(operationsEndpoint);
+      if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
+        throw new Error("handoff evidence holds require a loopback operations boundary");
+      return requestPrivate("capture/hold", { method: "POST", body: { ...input } });
+    },
+    async releaseLocalRouteCaptures(input: { readonly holderId: string }): Promise<unknown> {
+      if (!operationsEndpoint)
+        throw new Error("private operations endpoint is required for handoff evidence release");
+      const url = new URL(operationsEndpoint);
+      if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
+        throw new Error("handoff evidence release requires a loopback operations boundary");
+      return requestPrivate("capture/release", { method: "POST", body: { ...input } });
+    },
     async readLocalRouteCapture(input: Record<string, unknown>): Promise<unknown> {
       if (!operationsEndpoint)
         throw new Error("private operations endpoint is required for exact route capture readback");
