@@ -4601,13 +4601,15 @@ export async function main(): Promise<void> {
               }`,
             );
           }
-          const terminalJobs = Array.isArray(terminalPayload)
-            ? terminalPayload
-            : terminalPayload &&
-                typeof terminalPayload === "object" &&
-                Array.isArray((terminalPayload as { jobs?: unknown }).jobs)
-              ? ((terminalPayload as { jobs?: readonly unknown[] }).jobs as readonly unknown[])
-              : [];
+          const pageRows = (payload: unknown): readonly unknown[] => {
+            if (Array.isArray(payload)) return payload;
+            if (!payload || typeof payload !== "object") return [];
+            const record = payload as { value?: unknown; jobs?: unknown };
+            if (Array.isArray(record.value)) return record.value;
+            if (Array.isArray(record.jobs)) return record.jobs;
+            return [];
+          };
+          const terminalJobs = pageRows(terminalPayload) as readonly DurableReplayJobSummary[];
           const recoveredJobs: DurableReplayJobSummary[] = [];
           let examined = 0;
           let candidates = 0;
