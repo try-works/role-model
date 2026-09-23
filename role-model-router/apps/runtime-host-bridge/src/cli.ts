@@ -4613,6 +4613,8 @@ export async function main(): Promise<void> {
           const recoveredJobs: DurableReplayJobSummary[] = [];
           let examined = 0;
           let candidates = 0;
+          /** S31 diagnostics: the first reason a candidate could not become a resume entry. */
+          let firstSkipReason: string | null = null;
           for (const job of terminalJobs as readonly DurableReplayJobSummary[]) {
             /**
              * S24: each examination costs a cross-boundary `evaluation:get-job`, so the sweep pays for a
@@ -4646,8 +4648,20 @@ export async function main(): Promise<void> {
                   value: { jobId: job.jobId },
                 })
                 .catch(() => null)) as DurableReplayJobSummary | null;
+              /**
+               * S31: the full record crosses the same boundary as every other readback, so it may arrive as an
+               * externalized transfer marker (the class that made the Learning packs page render empty). The
+               * pass decoded nothing here, and a marker silently became "no full job" - one of the two silent
+               * paths that made a page of candidates produce zero recoveries.
+               */
+              fullJob = decodeExternalizedOperatorReadback({
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+                value: fullJob,
+              }) as DurableReplayJobSummary | null;
               if (!fullJob) {
                 skipped += 1;
+                firstSkipReason ??= "job record unavailable";
                 continue;
               }
               await runtime.invoke("evaluation-core", {
@@ -4665,7 +4679,10 @@ export async function main(): Promise<void> {
             } catch {
               // The entry is synthesized from the full record (candidate packages), not the summary.
               if (fullJob) recoveredJobs.push(fullJob);
-              else skipped += 1;
+              else {
+                skipped += 1;
+                firstSkipReason ??= `evaluation lookup failed for ${carriedId}`;
+              }
             }
           }
           /**
@@ -4676,6 +4693,11 @@ export async function main(): Promise<void> {
           if (examined > 0 && candidates === 0) {
             console.error(
               `[run101] recovery page carried no entry the filter could read: ${examined} examined, 0 candidates`,
+            );
+          }
+          if (examined > 0 && recoveredJobs.length === 0 && recovered === 0 && firstSkipReason) {
+            console.error(
+              `[run101] recovery sweep: examined=${examined} candidates=${candidates} recovered=0 firstSkip=${firstSkipReason.slice(0, 160)}`,
             );
           }
           if (examined === 0 && !emptyRecoveryPageReported) {
