@@ -1611,6 +1611,18 @@ export function createSupervisedReplayEvaluationCompleter(input: {
       ...(input.judge?.endpointId ? { judgeEndpointId: input.judge.endpointId } : {}),
       // Run 98 addendum 45 J2: the comparison also records where that judge came from (the controller
       // assignment, and when that assignment last changed), so a controller switch is visible on the job.
+      /**
+       * Run 100 addendum `handoff-evidence-durability.addendum-06` S44 (measured live: a recovered handoff
+       * that had finally resolved its evidence was refused with `judge_candidate_overlap: candidate
+       * deepseek…flash-high is the judge declared by scorer set run96-routing-shadow-v3`).
+       *
+       * The operator's judge rule is "the judge is the configured controller, resolved at judge time" - no
+       * endpoint or model id is pinned - but this comparability only carried `judgeSource` when a judge object
+       * happened to be resolved, so a job created without one fell through to Evaluation Core's legacy scan of
+       * *historical* manifests sharing the scorer-set version and refused a candidate that is not today's
+       * judge at all. The repair belongs here: the comparability must declare the source even when no judge
+       * object was resolved (`judgeSource: "controller"`), because that is the rule the harness applies.
+       */
       ...(input.judge?.judgeSource ? { judgeSource: input.judge.judgeSource } : {}),
       ...(input.judge?.judgeAssignmentUpdatedAtMs === undefined ||
       input.judge?.judgeAssignmentUpdatedAtMs === null
