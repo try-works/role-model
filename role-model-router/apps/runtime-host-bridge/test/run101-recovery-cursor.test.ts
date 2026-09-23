@@ -3,6 +3,7 @@ import { expect, test } from "vitest";
 import {
   MAX_HANDOFF_RECOVERY_CHECKS_PER_SWEEP,
   MAX_HANDOFF_RECOVERY_LIST_PAGE,
+  coerceDurableReplayJobRecord,
   nextHandoffRecoveryCursor,
   replayJobScopeFromProbe,
   resolveDurableReplayJobScope,
@@ -35,6 +36,23 @@ test("run101 S35 a capability answer is read as its payload", () => {
   ).toBeNull();
   expect(unwrapCapabilityPayload({ value: [1, 2] })).toEqual([1, 2]);
   expect(unwrapCapabilityPayload(job)).toEqual(job);
+});
+
+/**
+ * Run 100 addendum `handoff-evidence-durability.addendum-06` S36: the same live root answered every candidate
+ * correctly and the sweep still recovered nothing, because the record it needs sits inside envelope layers.
+ * The coercion is bounded and only ever returns a record with a job identity, so an answer that is *not* a job
+ * still reads as absent - which is the missing case the pass exists for.
+ */
+test("run101 S36 the job record is coerced out of whatever envelope answered", () => {
+  const job = { jobId: "job-a", state: "failed", candidatePackages: [] };
+  expect(coerceDurableReplayJobRecord({ value: job })).toEqual(job);
+  expect(coerceDurableReplayJobRecord({ value: { businessOutput: { value: job } } })).toEqual(job);
+  expect(coerceDurableReplayJobRecord({ value: null, businessOutput: { value: null } })).toBeNull();
+  expect(coerceDurableReplayJobRecord(null)).toBeNull();
+  expect(
+    coerceDurableReplayJobRecord({ value: { value: { value: { value: { value: job } } } } }),
+  ).toBeNull();
 });
 
 /**

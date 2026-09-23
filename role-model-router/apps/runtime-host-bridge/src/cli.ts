@@ -58,6 +58,7 @@ import {
   MAX_HANDOFF_RECOVERY_LIST_PAGE,
   branchCaptureRequestIdsFromJob,
   carriedEvaluationJobId,
+  coerceDurableReplayJobRecord,
   describeUnresolvedArms,
   nextHandoffRecoveryCursor,
   recoveredHandoffEntry,
@@ -4366,6 +4367,8 @@ export async function main(): Promise<void> {
       let examinedShapeUnreported = true;
       /** S33 diagnostics: report the answer to a lookup of an evaluation that does not exist, once. */
       let existingLookupShapeReported = false;
+      /** S36 diagnostics: report a job read that yields no record, once per process. */
+      let jobReadShapeReported = false;
       /**
        * Run 100 addendum `handoff-evidence-durability.addendum-06` S27: the scope the durable replay jobs were
        * created under. The producer learns it from the captures it dispatches, and a runtime that has just
@@ -4659,13 +4662,25 @@ export async function main(): Promise<void> {
                * pass decoded nothing here, and a marker silently became "no full job" - one of the two silent
                * paths that made a page of candidates produce zero recoveries.
                */
-              fullJob = unwrapCapabilityPayload(
+              /**
+               * S36: the record sits inside one or more envelope layers, so it is coerced (bounded, until the
+               * record itself appears) rather than trusted after a single unwrap; a read that still yields no
+               * record reports its shape once.
+               */
+              const coercedJob = coerceDurableReplayJobRecord(
                 decodeExternalizedOperatorReadback({
                   stateRoot: options.runtimeStateRoot,
                   scopeId: options.scopeId,
                   value: fullJob,
                 }),
-              ) as DurableReplayJobSummary | null;
+              );
+              if (!coercedJob && !jobReadShapeReported) {
+                jobReadShapeReported = true;
+                console.error(
+                  `[run101] job read answer shape: ${JSON.stringify(fullJob).slice(0, 220)}`,
+                );
+              }
+              fullJob = coercedJob as DurableReplayJobSummary | null;
               if (!fullJob) {
                 skipped += 1;
                 firstSkipReason ??= "job record unavailable";

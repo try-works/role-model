@@ -132,6 +132,32 @@ export function unwrapCapabilityPayload(value: unknown): unknown {
 }
 
 /**
+ * Run 100 addendum `handoff-evidence-durability.addendum-06` S36 - the durable job record inside whatever
+ * envelope the capability boundary answered with.
+ *
+ * Measured live on `:3457`: the recovery sweep received a correct answer for every candidate and still
+ * recovered nothing, because the record it needs sits inside one or more envelope layers
+ * (`value`, `businessOutput.value`, and - for an externalized answer - a locator that has to be resolved
+ * first). Reading a fixed depth made a present record look absent, so the resume entry was never synthesized
+ * and the handoff stayed invisible. This unwraps bounded layers until it finds the record itself.
+ */
+export function coerceDurableReplayJobRecord(
+  value: unknown,
+  maxDepth = 4,
+): Record<string, unknown> | null {
+  let current = unwrapCapabilityPayload(value);
+  for (let depth = 0; depth < maxDepth; depth += 1) {
+    if (!current || typeof current !== "object" || Array.isArray(current)) return null;
+    const record = current as Record<string, unknown>;
+    if (typeof record.jobId === "string" && record.jobId.length > 0) return record;
+    const next = unwrapCapabilityPayload(current);
+    if (next === current) return null;
+    current = next;
+  }
+  return null;
+}
+
+/**
  * Run 100 addendum `handoff-evidence-durability.addendum-06` S27 - the scope a durable replay job was created
  * under, read from the store itself.
  *
