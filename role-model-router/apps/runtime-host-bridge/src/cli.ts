@@ -193,6 +193,7 @@ import {
   readTrackBRouteAdvisorySourceFromRuntime,
   rememberTrackBDurableRouteAdvisory,
   requireReplayRouterDecisionId,
+  resolveDurableEvaluationAuthority,
   resolveManagedArtifactKeyFiles,
   resolveMaxCounterfactualArms,
   runSupervisedReplay,
@@ -4513,6 +4514,221 @@ export async function main(): Promise<void> {
          * store for two days while the operator surface reported them "in flight". Evaluation jobs live in
          * the operator scope's evaluation store - the resume sweep above reads them with the same scope.
          */
+        /**
+         * Run 100 addendum `replay-evaluation-learner-spine-completion.addendum-07` P6 - the learner's own
+         * liveness.
+         *
+         * Measured live: 162 knowledge-worker candidates, only 148 with a `validation_receipt` in the knowledge
+         * store, and the only thing that ever wrote one was the inline learner step inside
+         * `runTrackBShadowPipeline`. A comparison finalized by the extension's sweep (or a pipeline run interrupted
+         * after it derived its candidate) therefore left a candidate that no later process would ever validate -
+         * `knowledge_learning_records` stopped at 2026-09-21T22:56:38Z while 549 completion receipts accrued.
+         *
+         * The sweep drives the worker's own steps with durable evidence only (exactly the records the pass writes,
+         * in the same shapes and with the same identity), bounded to a couple of candidates per tick:
+         *   `knowledge:list-candidates` -> candidates the store has no receipt for ->
+         *   `knowledge:validate-candidate` -> `knowledge:record-learning` (validation_receipt) ->
+         *   `knowledge:promote-candidate` when the receipt says `validate` -> `knowledge:record-learning` (pack).
+         * It never dispatches a provider call and never mutates a route.
+         */
+        async learnFromUnconsumedCandidates() {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) return { scanned: 0, consumed: 0, remaining: 0 };
+          const authority = await (async () => {
+            try {
+              return await resolveDurableEvaluationAuthority({
+                channel,
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+              });
+            } catch {
+              return null;
+            }
+          })();
+          if (!authority) return { scanned: 0, consumed: 0, remaining: 0 };
+          const envelopeFor = (
+            extensionId: string,
+            capability: string,
+            value: Record<string, unknown>,
+          ) => ({
+            requestId: `learner-sweep:${capability}:${Date.now()}`,
+            sessionId: `learner-sweep:${options.scopeId}`,
+            protocolVersion: "1.1.0",
+            channel,
+            scope: options.scopeId,
+            authorizationEpoch: 1,
+            capability,
+            value,
+            ...(extensionId === "knowledge-store" ? { payload: value } : {}),
+            evaluationAuthoritySecret: authority.authoritySecret,
+          });
+          const listing = await runtime.invoke(
+            "knowledge-worker",
+            envelopeFor("knowledge-worker", "knowledge:list-candidates", { limit: 8 }),
+          );
+          const candidates = (() => {
+            const decoded = decodeExternalizedOperatorReadback({
+              stateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+              value: unwrapCapabilityPayload(listing),
+            });
+            const rows = Array.isArray(decoded)
+              ? decoded
+              : Array.isArray((decoded as { candidates?: unknown[] })?.candidates)
+                ? (decoded as { candidates: unknown[] }).candidates
+                : [];
+            return rows.filter(
+              (row): row is Record<string, unknown> => Boolean(row) && typeof row === "object",
+            );
+          })();
+          if (candidates.length === 0) return { scanned: 0, consumed: 0, remaining: 0 };
+          const records = await runtime.invoke(
+            "knowledge-store",
+            envelopeFor("knowledge-store", "knowledge:list-learning", {
+              scopeId: options.scopeId,
+              kind: "validation_receipt",
+              limit: 512,
+            }),
+          );
+          const recordedCandidateIds = new Set(
+            (() => {
+              const decoded = unwrapCapabilityPayload(records);
+              const rows = Array.isArray(decoded)
+                ? decoded
+                : Array.isArray((decoded as { records?: unknown[] })?.records)
+                  ? (decoded as { records: unknown[] }).records
+                  : [];
+              return rows
+                .map((row) => {
+                  const record =
+                    row && typeof row === "object" && !Array.isArray(row)
+                      ? (row as Record<string, unknown>)
+                      : {};
+                  const inner =
+                    record.record && typeof record.record === "object"
+                      ? (record.record as Record<string, unknown>)
+                      : {};
+                  const candidateId = inner.candidateId ?? record.candidateId;
+                  return typeof candidateId === "string" ? candidateId : null;
+                })
+                .filter((value): value is string => value !== null);
+            })(),
+          );
+          const pending = candidates.filter((candidate) => {
+            const candidateId =
+              typeof candidate.candidateId === "string" ? candidate.candidateId : null;
+            return candidateId !== null && !recordedCandidateIds.has(candidateId);
+          });
+          let consumed = 0;
+          for (const candidate of pending.slice(0, 2)) {
+            const candidateId = String(candidate.candidateId);
+            const scorerSetVersion =
+              typeof candidate.scorerSetVersion === "string" ? candidate.scorerSetVersion : null;
+            if (!scorerSetVersion) continue;
+            try {
+              const validation = unwrapCapabilityPayload(
+                await runtime.invoke(
+                  "knowledge-worker",
+                  envelopeFor("knowledge-worker", "knowledge:validate-candidate", { candidateId }),
+                ),
+              );
+              const validationRecord =
+                validation && typeof validation === "object" && !Array.isArray(validation)
+                  ? (validation as Record<string, unknown>)
+                  : {};
+              const receipt =
+                validationRecord.receipt && typeof validationRecord.receipt === "object"
+                  ? (validationRecord.receipt as Record<string, unknown>)
+                  : null;
+              const receiptId = typeof receipt?.receiptId === "string" ? receipt.receiptId : null;
+              if (!receipt || !receiptId) {
+                console.error(
+                  `[run101] learner sweep: candidate ${candidateId.slice(0, 16)} produced no validation receipt`,
+                );
+                continue;
+              }
+              await runtime.invoke(
+                "knowledge-store",
+                envelopeFor("knowledge-store", "knowledge:record-learning", {
+                  record: {
+                    recordId: receiptId,
+                    kind: "validation_receipt",
+                    state:
+                      typeof receipt.decision === "string"
+                        ? receipt.decision
+                        : "insufficient_evidence",
+                    scopeId: options.scopeId,
+                    identity: { scorerSetVersion, judgeEndpointId: null },
+                    record: {
+                      ...receipt,
+                      ...(validationRecord.familyEvidence &&
+                      typeof validationRecord.familyEvidence === "object"
+                        ? { familyEvidence: validationRecord.familyEvidence }
+                        : {}),
+                    },
+                  },
+                }),
+              );
+              consumed += 1;
+              if (receipt.decision === "validate") {
+                const promotion = unwrapCapabilityPayload(
+                  await runtime.invoke(
+                    "knowledge-worker",
+                    envelopeFor("knowledge-worker", "knowledge:promote-candidate", {
+                      candidateId,
+                      validationReceiptId: receiptId,
+                      ...(typeof receipt.baselineId === "string"
+                        ? { baselinePackId: receipt.baselineId }
+                        : {}),
+                    }),
+                  ),
+                );
+                const packCandidate =
+                  promotion && typeof promotion === "object" && !Array.isArray(promotion)
+                    ? ((promotion as Record<string, unknown>).packCandidate as
+                        | Record<string, unknown>
+                        | undefined)
+                    : undefined;
+                const packId =
+                  typeof packCandidate?.packId === "string" ? packCandidate.packId : null;
+                if (packCandidate && packId) {
+                  await runtime.invoke(
+                    "knowledge-store",
+                    envelopeFor("knowledge-store", "knowledge:record-learning", {
+                      record: {
+                        recordId: packId,
+                        kind: "pack",
+                        state:
+                          typeof packCandidate.status === "string"
+                            ? packCandidate.status
+                            : "validated",
+                        scopeId: options.scopeId,
+                        identity: { scorerSetVersion, judgeEndpointId: null },
+                        record: { ...packCandidate },
+                      },
+                    }),
+                  );
+                }
+              }
+            } catch (error) {
+              console.error(
+                `[run101] learner sweep: candidate ${candidateId.slice(0, 16)} refused ${String(
+                  (error as { message?: unknown })?.message ?? error,
+                ).slice(0, 160)}`,
+              );
+            }
+          }
+          if (pending.length > 0 || consumed > 0) {
+            console.error(
+              `[run101] learner sweep: ${pending.length} candidate(s) without a validation receipt, consumed ${consumed}`,
+            );
+          }
+          return {
+            scanned: candidates.length,
+            consumed,
+            remaining: Math.max(0, pending.length - consumed),
+          };
+        },
         /**
          * Run 100 addendum `handoff-evidence-durability.addendum-06` S46: the production caller for
          * `evaluation:retro-finalize-comparisons`.

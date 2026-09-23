@@ -139,6 +139,12 @@ export interface AutoReplayOperations {
    */
   retroFinalizeEvaluations?(input: Record<string, unknown>): Promise<unknown>;
   /**
+   * Run 100 addendum 07 P6: the learner's own liveness. A candidate the store never validated is driven through
+   * the worker's validate/promote steps from durable evidence, so learning no longer depends on the pipeline run
+   * that happened to derive it. Returns the number consumed and how many remain.
+   */
+  learnFromUnconsumedCandidates?(input: Record<string, unknown>): Promise<unknown>;
+  /**
    * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S7: optional bounded pass that finds durable
    * replay jobs which handed their branches to evaluation but never got an evaluation job (an attempt
    * interrupted between the handoff and the host's resume-entry write) and records the resume entries the
@@ -357,6 +363,8 @@ export function startAutoReplayLoop(input: {
     let resumed = 0;
     let reconciled = 0;
     let retroFinalized = 0;
+    let learned = 0;
+    let learnersPending = 0;
     let stranded = 0;
     let reclaimed = 0;
     let recovered = 0;
@@ -450,6 +458,29 @@ export function startAutoReplayLoop(input: {
             cause instanceof Error
               ? `comparison retro-finalization failed: ${cause.message.slice(0, 200)}`
               : "comparison retro-finalization failed";
+          error = error ? `${error}; ${detail}` : detail;
+        }
+      }
+      /**
+       * P6: consume candidates the knowledge store never validated. Runs after the evaluation sweeps so a
+       * comparison finalized this tick is available as evidence on the next one, and stays bounded (two
+       * candidates per tick) like every other liveness step.
+       */
+      if (typeof input.operations.learnFromUnconsumedCandidates === "function") {
+        try {
+          const sweep = (await input.operations.learnFromUnconsumedCandidates({
+            window,
+            policySetDigest: input.policySet.policySetDigest,
+          })) as { readonly consumed?: unknown; readonly remaining?: unknown } | null;
+          if (sweep) {
+            learned = countOf(sweep.consumed);
+            learnersPending = countOf(sweep.remaining);
+          }
+        } catch (cause) {
+          const detail =
+            cause instanceof Error
+              ? `learner sweep failed: ${cause.message.slice(0, 200)}`
+              : "learner sweep failed";
           error = error ? `${error}; ${detail}` : detail;
         }
       }
