@@ -40,6 +40,8 @@ export interface ReplayAutomationLiveness {
   readonly reconciledEvaluations: number;
   readonly strandedEvaluations: number;
   readonly reclaimedEvaluations: number;
+  /** Replays that handed their branches to evaluation and were recovered into the resume sweep (run100l). */
+  readonly recoveredHandoffs: number;
 }
 
 const asRecord = (value: unknown): Record<string, unknown> | null =>
@@ -72,6 +74,7 @@ export function normalizeReplayAutomationStatus(value: unknown): ReplayAutomatio
         reconciledEvaluations: 0,
         strandedEvaluations: 0,
         reclaimedEvaluations: 0,
+        recoveredHandoffs: 0,
       },
     };
   }
@@ -106,6 +109,7 @@ export function normalizeReplayAutomationStatus(value: unknown): ReplayAutomatio
       reconciledEvaluations: asCount(record.lastReconciledEvaluations),
       strandedEvaluations: asCount(record.lastStrandedEvaluations),
       reclaimedEvaluations: asCount(record.lastReclaimedEvaluations),
+      recoveredHandoffs: asCount(record.lastRecoveredHandoffs),
     },
   };
 }
@@ -119,6 +123,7 @@ export function formatReplayLiveness(view: ReplayAutomationView): string | null 
     `${liveness.reconciledEvaluations} reconciled`,
     `${liveness.strandedEvaluations} stranded`,
     `${liveness.reclaimedEvaluations} reclaimed`,
+    `${liveness.recoveredHandoffs} recovered`,
   ].join(" · ");
 }
 

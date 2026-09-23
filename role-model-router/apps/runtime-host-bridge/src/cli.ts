@@ -48,6 +48,19 @@ import {
   resolveSupervisedReplayEvaluationResumePath,
   resumePendingSupervisedReplayEvaluations,
 } from "./supervised-replay-evaluation-resume.js";
+// Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S7: a replay that handed its branches off and was
+// interrupted before its evaluation job existed is recovered from the durable job itself.
+import {
+  type DurableReplayJobSummary,
+  recoveredHandoffEntry,
+  selectRecoverableHandoffs,
+} from "./supervised-replay-handoff-recovery.js";
+/**
+ * How many handed-off replays one liveness sweep may recover. Each recovery is one extension listing plus a
+ * durable store write, and the completion they feed is the expensive part, so the pass stays bounded like the
+ * abandoned-entry drain (addendum 04 S5).
+ */
+const MAX_HANDOFF_RECOVERIES_PER_SWEEP = 3;
 import {
   autoReplayExecutionFromCommandReceipt,
   startAutoReplayLoop,
@@ -4265,6 +4278,15 @@ export async function main(): Promise<void> {
         | (() => Promise<{ resumed: number; completed: number; failed: number; remaining: number }>)
         | null;
     } = { current: null };
+    /**
+     * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S7: the handed-off-replay recovery pass in
+     * the liveness sweep records the resume entries it discovers, and the store itself lives with the replay
+     * command handler (created later), so it is reached through this ref the same way `resumeEvaluationsRef`
+     * reaches the sweep.
+     */
+    const evaluationResumeStoreRef: {
+      current: ReturnType<typeof createSupervisedReplayEvaluationResumeStore> | null;
+    } = { current: null };
     const startHostAutoReplayLoop = (
       endpoints: () => readonly string[],
       healthyEndpoints: () => Promise<readonly string[] | null>,
@@ -4365,6 +4387,91 @@ export async function main(): Promise<void> {
           return record && typeof record === "object" && !Array.isArray(record)
             ? record
             : { scanned: 0, completed: [], stranded: [], reclaimed: [] };
+        },
+        /**
+         * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S7 (live on `:3457`: 13 replay jobs
+         * reached `awaiting_evaluation` with all their branches appended, and not one of them ever produced
+         * an evaluation job, so the Evaluation stage stayed empty for eleven hours).
+         *
+         * `recordBranchAppend` moves the durable job to `evaluating`/`awaiting_evaluation` *before* the host
+         * records its resume entry and runs the completer, and `claimJob` refuses a job in that state. An
+         * attempt interrupted in that window therefore wedges the replay and its capture for good.
+         *
+         * This pass closes the window from the other side: it lists the durable jobs of the capture scope the
+         * producer is working, and for every job that handed off without an evaluation job id it records the
+         * resume entry the existing sweep already knows how to complete (the entry's criteria, capture and
+         * branch captures are all re-derived from durable state by that completion).
+         */
+        async recoverHandedOffEvaluations() {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) return { scanned: 0, recovered: 0, skipped: 0 };
+          const scope = lastReplayCaptureScope ?? options.scopeId;
+          const listing = (await runtime.invoke("replay-core", {
+            requestId: `replay-list-jobs:${Date.now()}`,
+            sessionId: `replay-list-jobs:${options.scopeId}`,
+            protocolVersion: "1.1.0",
+            channel,
+            scope,
+            authorizationEpoch: 1,
+            capability: "replay:list-jobs",
+            value: {},
+          })) as { readonly jobs?: unknown } | readonly unknown[] | null;
+          const jobs = Array.isArray(listing)
+            ? listing
+            : listing && typeof listing === "object" && Array.isArray((listing as { jobs?: unknown }).jobs)
+              ? ((listing as { jobs?: readonly unknown[] }).jobs as readonly unknown[])
+              : [];
+          const recoverable = selectRecoverableHandoffs(
+            jobs as readonly DurableReplayJobSummary[],
+            MAX_HANDOFF_RECOVERIES_PER_SWEEP,
+          );
+          let recovered = 0;
+          let skipped = 0;
+          for (const job of recoverable) {
+            const entry = recoveredHandoffEntry(job, { scopeFallback: scope });
+            if (!entry) {
+              skipped += 1;
+              continue;
+            }
+            try {
+              const resumeStore = evaluationResumeStoreRef.current;
+              if (!resumeStore) {
+                skipped += 1;
+                continue;
+              }
+              if (resumeStore.get(entry.replayJobId)) {
+                skipped += 1;
+                continue;
+              }
+              resumeStore.record({
+                schemaVersion: "role-model.supervised-replay-evaluation-resume.v1",
+                replayJobId: entry.replayJobId,
+                evaluationJobId: entry.evaluationJobId,
+                requestId: entry.requestId,
+                sourceCaptureRequestId: entry.sourceCaptureRequestId,
+                sourceEndpointId: entry.sourceEndpointId,
+                sourceModelId: entry.sourceModelId,
+                counterfactualPackages: entry.counterfactualPackages,
+                evaluationCriteria: {},
+                evaluationCriteriaDigest: "",
+                scope: entry.scope,
+                recordedAtMs: Date.now(),
+                attempts: 0,
+                resolvedAtMs: null,
+                outcome: null,
+                lastError: null,
+              });
+              recovered += 1;
+            } catch (error) {
+              skipped += 1;
+              console.error(
+                `[run100l] handed-off replay recovery declined:${entry.replayJobId} ${String(
+                  (error as { message?: unknown })?.message ?? error,
+                ).slice(0, 160)}`,
+              );
+            }
+          }
+          return { scanned: jobs.length, recovered, skipped };
         },
       };
       return startAutoReplayLoop({
@@ -5615,6 +5722,9 @@ export async function main(): Promise<void> {
           scopeId: options.scopeId,
         }),
       });
+      // Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S7: the auto-replay liveness sweep records
+      // the resume entries it recovers for handed-off replays through this ref.
+      evaluationResumeStoreRef.current = evaluationResumeStore;
       /**
        * Run 98 addendum 33 S2: the durable per-judge position-consistency ledger. The pairwise dispatch
        * already measures a flip per pair (dual_order) and reports it through `recordJudgeObservation`;
@@ -5964,11 +6074,18 @@ export async function main(): Promise<void> {
             } catch {
               storedCriteria = null;
             }
+            /**
+             * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S7: a replay that handed its branches
+             * off and was interrupted *before* the evaluation job was created has no durable evaluation job
+             * to read back - that is exactly the state the recovery pass discovers. The completion below
+             * creates the job from the durable source capture and branch captures (idempotent by request id
+             * and criteria digest), so a missing readback is no longer a dead end: the stored criteria, when
+             * they exist, still win over the re-derived ones so an existing job's immutable bytes are
+             * re-presented unchanged.
+             */
             if (!storedJobId) {
-              // Nothing durable to finalize: the evaluation job never reached its create step, so the
-              // sweep reports it instead of manufacturing a comparison from thin air.
-              throw new Error(
-                `durable evaluation job ${entry.evaluationJobId} is unavailable for resume`,
+              console.error(
+                `[run100l] durable evaluation job ${entry.evaluationJobId} is absent; completion will create it from durable evidence`,
               );
             }
             const sourceCapture = (await operations.readLocalRouteCapture({

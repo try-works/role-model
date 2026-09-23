@@ -93,6 +93,7 @@ describe("run97 replay automation view model", () => {
       lastReconciledEvaluations: 3,
       lastStrandedEvaluations: 4,
       lastReclaimedEvaluations: 5,
+      lastRecoveredHandoffs: 6,
     });
     expect(view.liveness).toMatchObject({
       expiredJobs: 1,
@@ -100,9 +101,10 @@ describe("run97 replay automation view model", () => {
       reconciledEvaluations: 3,
       strandedEvaluations: 4,
       reclaimedEvaluations: 5,
+      recoveredHandoffs: 6,
     });
     expect(formatReplayLiveness(view)).toBe(
-      "sweeps: 1 expired · 2 resumed · 3 reconciled · 4 stranded · 5 reclaimed",
+      "sweeps: 1 expired · 2 resumed · 3 reconciled · 4 stranded · 5 reclaimed · 6 recovered",
     );
     // A payload from a build without the counters must read as zeros, and an unavailable loop has no line.
     const older = normalizeReplayAutomationStatus({ ticks: 1, lastOutcome: "ok" });

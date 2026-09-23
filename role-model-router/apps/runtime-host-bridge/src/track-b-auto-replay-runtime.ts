@@ -130,6 +130,13 @@ export interface AutoReplayOperations {
    * does not expose the sweep keeps working; the tick simply reports zero reconciled jobs.
    */
   reconcileEvaluationJobs?(input: Record<string, unknown>): Promise<unknown>;
+  /**
+   * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S7: optional bounded pass that finds durable
+   * replay jobs which handed their branches to evaluation but never got an evaluation job (an attempt
+   * interrupted between the handoff and the host's resume-entry write) and records the resume entries the
+   * evaluation sweep completes. Without it those jobs are unclaimable and their captures are lost.
+   */
+  recoverHandedOffEvaluations?(input: Record<string, unknown>): Promise<unknown>;
 }
 
 export interface AutoReplayLoopHealth {
@@ -147,6 +154,8 @@ export interface AutoReplayLoopHealth {
   readonly lastStrandedEvaluations: number;
   /** Stranded jobs the reconcile pass terminalized after the grace. */
   readonly lastReclaimedEvaluations: number;
+  /** Handed-off replays the recovery pass turned back into completable evaluation work. */
+  readonly lastRecoveredHandoffs: number;
 }
 
 export interface AutoReplayLoopStatus extends AutoReplayLoopHealth {
@@ -249,6 +258,7 @@ export function startAutoReplayLoop(input: {
   let lastReconciledEvaluations = 0;
   let lastStrandedEvaluations = 0;
   let lastReclaimedEvaluations = 0;
+  let lastRecoveredHandoffs = 0;
   let timer: unknown = null;
 
   const pendingCaptures = (value: unknown): readonly AutoReplayCapture[] => {
@@ -320,10 +330,19 @@ export function startAutoReplayLoop(input: {
     reconciled: number;
     stranded: number;
     reclaimed: number;
+    recovered: number;
     error: string | null;
   }> => {
     if (sweeping) {
-      return { expired: 0, resumed: 0, reconciled: 0, stranded: 0, reclaimed: 0, error: null };
+      return {
+        expired: 0,
+        resumed: 0,
+        reconciled: 0,
+        stranded: 0,
+        reclaimed: 0,
+        recovered: 0,
+        error: null,
+      };
     }
     sweeping = true;
     let expired = 0;
@@ -331,6 +350,7 @@ export function startAutoReplayLoop(input: {
     let reconciled = 0;
     let stranded = 0;
     let reclaimed = 0;
+    let recovered = 0;
     let error: string | null = null;
     try {
       if (typeof input.operations.expireStaleReplayJobs === "function") {
@@ -401,10 +421,30 @@ export function startAutoReplayLoop(input: {
           error = error ? `${error}; ${detail}` : detail;
         }
       }
+      // Run 100 addendum 04 S7: a replay that handed its branches off but was interrupted before its
+      // evaluation job existed is unclaimable and would otherwise be lost; recover it into the resume store
+      // the evaluation sweep above completes.
+      if (typeof input.operations.recoverHandedOffEvaluations === "function") {
+        try {
+          const sweep = (await input.operations.recoverHandedOffEvaluations({
+            window,
+            policySetDigest: input.policySet.policySetDigest,
+          })) as { readonly recovered?: unknown } | null;
+          if (sweep && Number.isSafeInteger(sweep.recovered) && Number(sweep.recovered) >= 0) {
+            recovered = Number(sweep.recovered);
+          }
+        } catch (cause) {
+          const detail =
+            cause instanceof Error
+              ? `handed-off replay recovery failed: ${cause.message.slice(0, 200)}`
+              : "handed-off replay recovery failed";
+          error = error ? `${error}; ${detail}` : detail;
+        }
+      }
     } finally {
       sweeping = false;
     }
-    return { expired, resumed, reconciled, stranded, reclaimed, error };
+    return { expired, resumed, reconciled, stranded, reclaimed, recovered, error };
   };
 
   const tick = async (): Promise<AutoReplayTickResult & { readonly skipped?: boolean }> => {
@@ -419,6 +459,7 @@ export function startAutoReplayLoop(input: {
       if (sweep.reconciled > 0) lastReconciledEvaluations = sweep.reconciled;
       if (sweep.stranded > 0) lastStrandedEvaluations = sweep.stranded;
       if (sweep.reclaimed > 0) lastReclaimedEvaluations = sweep.reclaimed;
+      if (sweep.recovered > 0) lastRecoveredHandoffs = sweep.recovered;
       if (sweep.error) {
         lastOutcome = "degraded";
         lastError = sweep.error;
@@ -517,6 +558,7 @@ export function startAutoReplayLoop(input: {
       lastReconciledEvaluations = sweep.reconciled;
       lastStrandedEvaluations = sweep.stranded;
       lastReclaimedEvaluations = sweep.reclaimed;
+      lastRecoveredHandoffs = sweep.recovered;
       const sweepError = sweep.error;
       lastOutcome = sweepError ? "degraded" : "ok";
       lastError = sweepError;
@@ -576,6 +618,7 @@ export function startAutoReplayLoop(input: {
         lastReconciledEvaluations,
         lastStrandedEvaluations,
         lastReclaimedEvaluations,
+        lastRecoveredHandoffs,
       };
     },
     status() {
@@ -588,6 +631,7 @@ export function startAutoReplayLoop(input: {
         lastReconciledEvaluations,
         lastStrandedEvaluations,
         lastReclaimedEvaluations,
+        lastRecoveredHandoffs,
       };
     },
   };
