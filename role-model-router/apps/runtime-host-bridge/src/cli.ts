@@ -53,8 +53,10 @@ import {
 import {
   type DurableReplayJobSummary,
   MAX_HANDOFF_RECOVERY_LIST_PAGE,
+  carriedEvaluationJobId,
   recoveredHandoffEntry,
   selectRecoverableHandoffs,
+  selectUnevaluatedHandoffs,
 } from "./supervised-replay-handoff-recovery.js";
 /**
  * How many handed-off replays one liveness sweep may recover. Each recovery is one extension listing plus a
@@ -4453,7 +4455,64 @@ export async function main(): Promise<void> {
           );
           let recovered = 0;
           let skipped = 0;
-          for (const job of recoverable) {
+          /**
+           * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S14 (measured on the real-traffic root:
+           * 254 replay jobs carried an evaluation job id that Evaluation Core has never seen). The S7 pass
+           * above only looks at handoffs *without* an id, so these were invisible: the completing attempt was
+           * interrupted after the handoff recorded the id but before the evaluation was created. The terminal
+           * states are listed here (a small page, same inline-frame bound) and each candidate is checked
+           * against Evaluation Core; only the ones whose evaluation is genuinely missing are recorded, so the
+           * ordinary evaluation sweep creates them from the branches the capture already paid for.
+           */
+          const terminalListing = (await runtime.invoke("replay-core", {
+            requestId: `replay-list-terminal-jobs:${Date.now()}`,
+            sessionId: `replay-list-terminal-jobs:${options.scopeId}`,
+            protocolVersion: "1.1.0",
+            channel,
+            scope,
+            authorizationEpoch: 1,
+            capability: "replay:list-jobs",
+            value: {
+              state: ["failed", "timed_out"],
+              // S14: only jobs that already carry the evaluation job id their handoff recorded, so a bounded
+              // page advances instead of repeating the same irrelevant jobs.
+              hasEvaluationJobId: true,
+              limit: MAX_HANDOFF_RECOVERY_LIST_PAGE,
+            },
+          })) as { readonly jobs?: unknown } | readonly unknown[] | null;
+          const terminalJobs = Array.isArray(terminalListing)
+            ? terminalListing
+            : terminalListing &&
+                typeof terminalListing === "object" &&
+                Array.isArray((terminalListing as { jobs?: unknown }).jobs)
+              ? ((terminalListing as { jobs?: readonly unknown[] }).jobs as readonly unknown[])
+              : [];
+          const unevaluated = selectUnevaluatedHandoffs(
+            terminalJobs as readonly DurableReplayJobSummary[],
+            MAX_HANDOFF_RECOVERIES_PER_SWEEP,
+          );
+          const recoveredJobs: DurableReplayJobSummary[] = [];
+          for (const job of unevaluated) {
+            const carriedId = carriedEvaluationJobId(job);
+            if (!carriedId) continue;
+            try {
+              await runtime.invoke("evaluation-core", {
+                requestId: `evaluation-get-job:${carriedId}`,
+                sessionId: `evaluation-get-job:${options.scopeId}`,
+                protocolVersion: "1.1.0",
+                channel,
+                scope: options.scopeId,
+                authorizationEpoch: 1,
+                capability: "evaluation:get-job",
+                value: { jobId: carriedId },
+              });
+              // The evaluation exists (terminal or not): nothing to recover for this job.
+              skipped += 1;
+            } catch {
+              recoveredJobs.push(job);
+            }
+          }
+          for (const job of [...recoverable, ...recoveredJobs]) {
             const entry = recoveredHandoffEntry(job, { scopeFallback: scope });
             if (!entry) {
               skipped += 1;

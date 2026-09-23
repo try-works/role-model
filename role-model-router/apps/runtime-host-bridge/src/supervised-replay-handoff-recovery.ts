@@ -26,6 +26,7 @@ export interface DurableReplayJobSummary {
   readonly baselineEndpointId?: unknown;
   readonly scope?: unknown;
   readonly candidatePackages?: unknown;
+  readonly branches?: unknown;
 }
 
 const DECISION_PREFIX = "decision-";
@@ -73,6 +74,41 @@ export function isRecoverableHandoff(job: DurableReplayJobSummary): boolean {
   return captureRefFromReplayJob(job) !== null;
 }
 
+/**
+ * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S14 (measured on the real-traffic root: **254**
+ * replay jobs carried an `evaluationJobId` whose evaluation job does not exist in Evaluation Core at all).
+ *
+ * A handoff records the evaluation job id it intends to create and then the completing attempt is
+ * interrupted, so the replay job keeps the id while Evaluation Core never sees the job. `claimJob` refuses a
+ * job in that state ("awaiting evaluation and cannot be re-leased") and the S7 discovery, which looks for
+ * handoffs *without* an id, skips exactly these. The completion now creates a missing evaluation from durable
+ * evidence, so these are recoverable whenever the job still carries the branches that paid for it.
+ */
+export function isUnevaluatedHandoff(job: DurableReplayJobSummary): boolean {
+  const state = typeof job.state === "string" ? job.state : "";
+  if (!["awaiting_evaluation", "evaluating", "failed", "timed_out"].includes(state)) return false;
+  if (typeof job.jobId !== "string" || job.jobId.length === 0) return false;
+  if (typeof job.evaluationJobId !== "string" || job.evaluationJobId.length === 0) return false;
+  if (!Array.isArray(job.branches) || job.branches.length === 0) return false;
+  return captureRefFromReplayJob(job) !== null;
+}
+
+/** The evaluation job id a durable replay job already carries, when it has one. */
+export function carriedEvaluationJobId(job: DurableReplayJobSummary): string | null {
+  return typeof job.evaluationJobId === "string" && job.evaluationJobId.trim()
+    ? job.evaluationJobId.trim()
+    : null;
+}
+
+/** Bounded discovery for the unevaluated-handoff pass, in the caller's order. */
+export function selectUnevaluatedHandoffs(
+  jobs: readonly DurableReplayJobSummary[],
+  limit: number,
+): readonly DurableReplayJobSummary[] {
+  const bound = Number.isSafeInteger(limit) && limit > 0 ? limit : 3;
+  return jobs.filter(isUnevaluatedHandoff).slice(0, bound);
+}
+
 /** Bounded discovery: a sweep recovers at most `limit` handoffs, oldest work first is the caller's order. */
 export function selectRecoverableHandoffs(
   jobs: readonly DurableReplayJobSummary[],
@@ -105,7 +141,9 @@ export function recoveredHandoffEntry(
   job: DurableReplayJobSummary,
   options: { readonly scopeFallback?: string | null } = {},
 ): RecoveredHandoffEntry | null {
-  if (!isRecoverableHandoff(job)) return null;
+  // Run 100 addendum 04 S14: an unevaluated handoff (the job already carries the evaluation job id its
+  // interrupted attempt never created) is recovered through the same entry shape.
+  if (!isRecoverableHandoff(job) && !isUnevaluatedHandoff(job)) return null;
   const replayJobId = String(job.jobId);
   const captureRef = captureRefFromReplayJob(job);
   if (!captureRef) return null;
@@ -137,7 +175,7 @@ export function recoveredHandoffEntry(
         : null;
   return {
     replayJobId,
-    evaluationJobId: evaluationJobIdForReplayJob(replayJobId),
+    evaluationJobId: carriedEvaluationJobId(job) ?? evaluationJobIdForReplayJob(replayJobId),
     // The replay command's request id is the capture ref; the branch captures are named from it.
     requestId: captureRef,
     sourceCaptureRequestId: captureRef,

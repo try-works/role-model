@@ -3,12 +3,15 @@ import { createHash } from "node:crypto";
 import { expect, test } from "vitest";
 
 import {
+  carriedEvaluationJobId,
   MAX_HANDOFF_RECOVERY_LIST_PAGE,
   captureRefFromReplayJob,
   evaluationJobIdForReplayJob,
   isRecoverableHandoff,
+  isUnevaluatedHandoff,
   recoveredHandoffEntry,
   selectRecoverableHandoffs,
+  selectUnevaluatedHandoffs,
 } from "../src/supervised-replay-handoff-recovery.js";
 
 /**
@@ -98,4 +101,52 @@ test("run100l discovery is bounded per sweep and keeps the caller's order", () =
 test("run100l the recovery listing page fits the extension protocol's inline envelope", () => {
   expect(MAX_HANDOFF_RECOVERY_LIST_PAGE).toBe(3);
   expect(MAX_HANDOFF_RECOVERY_LIST_PAGE).toBeLessThanOrEqual(3);
+});
+
+/**
+ * S14 of the same addendum, measured on the real-traffic root: **254** replay jobs carried an
+ * `evaluationJobId` whose evaluation job does not exist in Evaluation Core. The completing attempt was
+ * interrupted after the handoff recorded the id but before the evaluation was created, and the S7 discovery
+ * (which looks for handoffs *without* an id) skipped exactly those, so their paid-for branches never became a
+ * comparison. The completion creates a missing evaluation from durable evidence, so these are recoverable.
+ */
+test("run100l a handoff whose evaluation was never created is recovered through its carried id", () => {
+  const unevaluated = {
+    jobId: "replay-job-9",
+    state: "failed",
+    evaluationJobId: "evaluation-replay-carried0000000001",
+    sourceDecisionId: "decision-req-carried",
+    baselineEndpointId: "endpoint:source",
+    scope: "runtime:scope-1",
+    branches: [{ branchRootRef: "artifact:branch-1" }],
+    candidatePackages: [
+      { endpointId: "endpoint:c1", modelId: "model:1", reasoningEffort: "high" },
+    ],
+  };
+  expect(isUnevaluatedHandoff(unevaluated)).toBe(true);
+  // It is not the S7 shape (that one has no evaluation job id yet).
+  expect(isRecoverableHandoff(unevaluated)).toBe(false);
+  expect(carriedEvaluationJobId(unevaluated)).toBe("evaluation-replay-carried0000000001");
+
+  const entry = recoveredHandoffEntry(unevaluated);
+  expect(entry).toMatchObject({
+    replayJobId: "replay-job-9",
+    evaluationJobId: "evaluation-replay-carried0000000001",
+    requestId: "req-carried",
+  });
+
+  // A handoff that paid for no branch has nothing to compare and is skipped.
+  expect(isUnevaluatedHandoff({ ...unevaluated, branches: [] })).toBe(false);
+  // A job with no carried id belongs to the S7 pass instead.
+  expect(isUnevaluatedHandoff({ ...unevaluated, evaluationJobId: null })).toBe(false);
+  // Discovery keeps the caller's order and its bound.
+  const many = Array.from({ length: 5 }, (_, index) => ({
+    ...unevaluated,
+    jobId: `replay-job-${index}`,
+    sourceDecisionId: `decision-req-${index}`,
+  }));
+  expect(selectUnevaluatedHandoffs(many, 2).map((row) => String(row.jobId))).toEqual([
+    "replay-job-0",
+    "replay-job-1",
+  ]);
 });
