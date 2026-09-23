@@ -4361,6 +4361,8 @@ export async function main(): Promise<void> {
       /** S27 diagnostics: report the resolved job scope and an empty recovery page once per process. */
       let replayJobScopeReported = false;
       let emptyRecoveryPageReported = false;
+      /** S29 diagnostics: report a page payload that is not the page itself, once per process. */
+      let examinedShapeUnreported = true;
       /**
        * Run 100 addendum `handoff-evidence-durability.addendum-06` S27: the scope the durable replay jobs were
        * created under. The producer learns it from the captures it dispatches, and a runtime that has just
@@ -4579,12 +4581,32 @@ export async function main(): Promise<void> {
              */
             value: terminalRecoveryListingValue({ cursor: handoffRecoveryCursor }),
           })) as { readonly jobs?: unknown } | readonly unknown[] | null;
-          const terminalJobs = Array.isArray(terminalListing)
-            ? terminalListing
-            : terminalListing &&
-                typeof terminalListing === "object" &&
-                Array.isArray((terminalListing as { jobs?: unknown }).jobs)
-              ? ((terminalListing as { jobs?: readonly unknown[] }).jobs as readonly unknown[])
+          /**
+           * S29: a large capability answer crosses the boundary as an externalized transfer marker instead of
+           * the payload itself (the same class that made the Learning packs page render empty in R28), and this
+           * page parses `jobs` directly - so an externalized answer looked like an empty page and the recovery
+           * pass silently did nothing. Decode it the way every other readback in this file does.
+           */
+          const terminalPayload = decodeExternalizedOperatorReadback({
+            stateRoot: options.runtimeStateRoot,
+            scopeId: options.scopeId,
+            value: terminalListing,
+          });
+          if (examinedShapeUnreported && !Array.isArray(terminalPayload)) {
+            examinedShapeUnreported = false;
+            console.error(
+              `[run101] recovery page payload shape: ${
+                Object.keys((terminalPayload as Record<string, unknown>) ?? {}).join(",") ||
+                typeof terminalPayload
+              }`,
+            );
+          }
+          const terminalJobs = Array.isArray(terminalPayload)
+            ? terminalPayload
+            : terminalPayload &&
+                typeof terminalPayload === "object" &&
+                Array.isArray((terminalPayload as { jobs?: unknown }).jobs)
+              ? ((terminalPayload as { jobs?: readonly unknown[] }).jobs as readonly unknown[])
               : [];
           const recoveredJobs: DurableReplayJobSummary[] = [];
           let examined = 0;
