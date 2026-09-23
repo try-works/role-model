@@ -7,7 +7,35 @@ import {
   replayJobScopeFromProbe,
   resolveDurableReplayJobScope,
   terminalRecoveryListingValue,
+  unwrapCapabilityPayload,
 } from "../src/supervised-replay-handoff-recovery.js";
+
+/**
+ * Run 100 addendum `handoff-evidence-durability.addendum-06` S35 (measured live on `:3457`): a capability
+ * answer is an envelope, and reading it directly made a *missing* evaluation look present (an envelope is
+ * truthy) and a *present* job record look absent (an envelope has no `jobId`). Both directions are pinned
+ * here against the shape the live root actually returns.
+ */
+test("run101 S35 a capability answer is read as its payload", () => {
+  const job = { jobId: "job-a", state: "failed" };
+  expect(
+    unwrapCapabilityPayload({
+      value: job,
+      businessOutput: { value: job },
+      durableLocator: { extensionId: "evaluation-core", requestId: "evaluation-get-job:x" },
+    }),
+  ).toEqual(job);
+  expect(
+    unwrapCapabilityPayload({
+      value: null,
+      businessOutput: { value: null },
+      durableLocator: { extensionId: "evaluation-core" },
+    }),
+    "a lookup of a job that does not exist answers null, not an envelope",
+  ).toBeNull();
+  expect(unwrapCapabilityPayload({ value: [1, 2] })).toEqual([1, 2]);
+  expect(unwrapCapabilityPayload(job)).toEqual(job);
+});
 
 /**
  * Run 100 addendum `handoff-evidence-durability.addendum-06` S28 (measured live, build `0.0.14-…-gd97a6862`):

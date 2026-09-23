@@ -67,6 +67,7 @@ import {
   selectUnevaluatedHandoffs,
   terminalRecoveryListingValue,
   unresolvedArmsArePermanent,
+  unwrapCapabilityPayload,
 } from "./supervised-replay-handoff-recovery.js";
 /**
  * How many handed-off replays one liveness sweep may recover. Each recovery is one extension listing plus a
@@ -4658,11 +4659,13 @@ export async function main(): Promise<void> {
                * pass decoded nothing here, and a marker silently became "no full job" - one of the two silent
                * paths that made a page of candidates produce zero recoveries.
                */
-              fullJob = decodeExternalizedOperatorReadback({
-                stateRoot: options.runtimeStateRoot,
-                scopeId: options.scopeId,
-                value: fullJob,
-              }) as DurableReplayJobSummary | null;
+              fullJob = unwrapCapabilityPayload(
+                decodeExternalizedOperatorReadback({
+                  stateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  value: fullJob,
+                }),
+              ) as DurableReplayJobSummary | null;
               if (!fullJob) {
                 skipped += 1;
                 firstSkipReason ??= "job record unavailable";
@@ -4685,11 +4688,13 @@ export async function main(): Promise<void> {
                * throw - was counted `skipped` and the pass never recovered it. Existence is now read from the
                * record's identity, and a non-record answer is the missing case this pass exists for.
                */
-              const decodedExisting = decodeExternalizedOperatorReadback({
-                stateRoot: options.runtimeStateRoot,
-                scopeId: options.scopeId,
-                value: existingEvaluation,
-              });
+              const decodedExisting = unwrapCapabilityPayload(
+                decodeExternalizedOperatorReadback({
+                  stateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  value: existingEvaluation,
+                }),
+              );
               const existingRecord =
                 decodedExisting &&
                 typeof decodedExisting === "object" &&
@@ -4718,7 +4723,7 @@ export async function main(): Promise<void> {
                 existingLookupShapeReported = true;
                 console.error(
                   `[run101] evaluation lookup answer for a missing job: ${JSON.stringify(
-                    existingRecord ?? decodedExisting ?? existingEvaluation,
+                    decodedExisting ?? existingEvaluation,
                   ).slice(0, 220)}`,
                 );
               }

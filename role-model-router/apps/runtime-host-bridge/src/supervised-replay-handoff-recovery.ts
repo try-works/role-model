@@ -108,6 +108,30 @@ export function terminalRecoveryListingValue(input: {
 const MAX_REPLAY_JOB_SCOPE = 256;
 
 /**
+ * Run 100 addendum `handoff-evidence-durability.addendum-06` S35 - the payload of a capability answer.
+ *
+ * Measured live on `:3457`: a capability answer is an envelope
+ * `{ value, businessOutput: { value }, durableLocator: { extensionId, requestId, capability, channel, … } }`,
+ * and for a job that does not exist both `value` and `businessOutput.value` are `null`. Code that read the
+ * answer directly therefore saw an object where it expected a record: the recovery sweep treated a missing
+ * evaluation as present (an envelope is truthy) and a full job record as absent (an envelope has no `jobId`),
+ * which is why a page of candidates produced zero recoveries while every answer was in fact correct.
+ */
+export function unwrapCapabilityPayload(value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const record = value as { businessOutput?: unknown; value?: unknown };
+  const business =
+    record.businessOutput &&
+    typeof record.businessOutput === "object" &&
+    !Array.isArray(record.businessOutput)
+      ? (record.businessOutput as { value?: unknown }).value
+      : undefined;
+  if (business !== undefined && business !== null) return business;
+  if (record.value !== undefined) return record.value;
+  return value;
+}
+
+/**
  * Run 100 addendum `handoff-evidence-durability.addendum-06` S27 - the scope a durable replay job was created
  * under, read from the store itself.
  *
