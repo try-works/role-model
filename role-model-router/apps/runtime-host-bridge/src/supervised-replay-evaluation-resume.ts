@@ -38,6 +38,13 @@ const MAX_ABANDONED_RECONCILIATIONS_PER_SWEEP = 25;
  * to be gone now lands on its own named disposition instead of another unqualified give-up.
  */
 const ABANDONED_RENEWAL_EVIDENCE_WINDOW_MS = 24 * 60 * 60 * 1_000;
+/**
+ * Run 100 addendum `handoff-evidence-durability.addendum-06` S22 (RC-6): how long one handoff pins the
+ * captures it still owes. The pin's lifetime is the same evidence window the abandoned-renewal drain uses -
+ * a hold that outlived the window a handoff can still be renewed in would protect evidence nothing can
+ * consume - and every renewal or recovered completion extends it, so a live handoff never loses its pin.
+ */
+export const HANDOFF_EVIDENCE_HOLD_TTL_MS = ABANDONED_RENEWAL_EVIDENCE_WINDOW_MS;
 const MAX_TEXT = 256;
 const MAX_ERROR_TEXT = 512;
 
@@ -151,6 +158,32 @@ export interface SupervisedReplayEvaluationResumeStore {
     error: unknown,
     now?: number,
   ): SupervisedReplayEvaluationResumeEntry | null;
+}
+
+/**
+ * Run 100 addendum `handoff-evidence-durability.addendum-06` S22 (RC-6): the captures one unresolved
+ * handoff pins. The source capture is what the replay was replayed from; the branch captures are the arms
+ * the comparison has to read. Both are named by the durable job, so the pin set is derivable at any point
+ * in a handoff's life - when the recovery pass records it, when the drain renews it, and when the resumed
+ * completion finally reads its arms - which is what makes the pin survive a restart instead of living in
+ * one build's memory.
+ */
+export function handoffEvidenceHoldRequestIds(input: {
+  readonly requestId?: string | null;
+  readonly sourceCaptureRequestId?: string | null;
+  readonly branchCaptureRequestIds?: readonly string[] | null;
+}): readonly string[] {
+  const held: string[] = [];
+  const push = (value: unknown) => {
+    if (typeof value !== "string") return;
+    const trimmed = value.trim();
+    if (!trimmed || trimmed.length > 512) return;
+    if (!held.includes(trimmed)) held.push(trimmed);
+  };
+  push(input.requestId);
+  push(input.sourceCaptureRequestId);
+  for (const value of input.branchCaptureRequestIds ?? []) push(value);
+  return held;
 }
 
 export function resolveSupervisedReplayEvaluationResumePath(input: {
@@ -324,6 +357,13 @@ export function createSupervisedReplayEvaluationResumeStore(input: {
   readonly filePath: string;
   readonly maxEntries?: number;
   readonly clock?: () => number;
+  /**
+   * S22 (RC-6): called when an entry reaches a terminal outcome, so the evidence pin the handoff created is
+   * released with the work it protected. The store's mutators are synchronous, so the hook is *notified*
+   * rather than awaited - the release is idempotent and the hold's own TTL is the backstop when the private
+   * boundary happens to be unreachable at that moment.
+   */
+  readonly onReleased?: (entry: SupervisedReplayEvaluationResumeEntry) => Promise<void> | void;
 }): SupervisedReplayEvaluationResumeStore {
   const filePath = String(input.filePath ?? "").trim();
   if (!filePath) throw new Error("supervised replay evaluation resume store path is required");
@@ -337,6 +377,17 @@ export function createSupervisedReplayEvaluationResumeStore(input: {
   }
   const maxEntries = requestedMax;
   const clock = input.clock ?? (() => Date.now());
+  const notifyReleased = (entry: SupervisedReplayEvaluationResumeEntry) => {
+    if (typeof input.onReleased !== "function") return;
+    try {
+      void Promise.resolve(input.onReleased(structuredClone(entry))).catch(() => {
+        // The caller's hook logs its own failures; a rejected release must not fail the resolution that
+        // already succeeded durably.
+      });
+    } catch {
+      // Same contract as the asynchronous case: the entry is resolved, the pin expires by TTL.
+    }
+  };
   mkdirSync(path.dirname(filePath), { recursive: true });
 
   let entries: Record<string, SupervisedReplayEvaluationResumeEntry> = {};
@@ -439,7 +490,7 @@ export function createSupervisedReplayEvaluationResumeStore(input: {
         throw new Error("supervised replay evaluation resume clock must return a safe integer");
       }
       const outcome = boundedText(resolution.outcome, "outcome");
-      return update(boundedText(replayJobId, "replayJobId"), (current) => ({
+      const resolved = update(boundedText(replayJobId, "replayJobId"), (current) => ({
         ...current,
         resolvedAtMs: now,
         outcome,
@@ -454,6 +505,8 @@ export function createSupervisedReplayEvaluationResumeStore(input: {
             ? (current.comparisonGroupId ?? null)
             : resolution.comparisonGroupId,
       }));
+      if (resolved && resolved.resolvedAtMs !== null) notifyReleased(resolved);
+      return resolved;
     },
     recordFailure(
       replayJobId: string,
@@ -466,7 +519,7 @@ export function createSupervisedReplayEvaluationResumeStore(input: {
       const message = String(
         (error as { message?: unknown })?.message ?? error ?? "unknown resume failure",
       ).slice(0, MAX_ERROR_TEXT);
-      return update(boundedText(replayJobId, "replayJobId"), (current) => {
+      const updated = update(boundedText(replayJobId, "replayJobId"), (current) => {
         const attempts = current.attempts + 1;
         return {
           ...current,
@@ -477,6 +530,10 @@ export function createSupervisedReplayEvaluationResumeStore(input: {
             : {}),
         };
       });
+      if (updated && updated.outcome === "abandoned" && updated.resolvedAtMs !== null) {
+        notifyReleased(updated);
+      }
+      return updated;
     },
     /**
      * Run 100 addendum `replay-evaluation-spine-repair.addendum-05` S17: the host's recovery pass renews a

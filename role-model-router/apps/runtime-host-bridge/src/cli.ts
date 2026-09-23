@@ -44,9 +44,11 @@ import {
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
 import {
+  HANDOFF_EVIDENCE_HOLD_TTL_MS,
   HANDOFF_EVIDENCE_OUTSIDE_RETENTION_WINDOW,
   HandoffEvidenceUnavailableError,
   createSupervisedReplayEvaluationResumeStore,
+  handoffEvidenceHoldRequestIds,
   resolveSupervisedReplayEvaluationResumePath,
   resumePendingSupervisedReplayEvaluations,
 } from "./supervised-replay-evaluation-resume.js";
@@ -4313,6 +4315,54 @@ export async function main(): Promise<void> {
     // available at runtime.
     const currentPostObservationOperations = (): ReturnType<typeof createTrackBOperations> | null =>
       postObservationOperations;
+    /**
+     * Run 100 addendum `handoff-evidence-durability.addendum-06` S22 (RC-6).
+     *
+     * Measured on `:3457`: a handoff's intent is durable (the replay job, the dispatch receipt, the resume
+     * entry) and its evidence is not - the route-capture ring keeps only the newest pointers, so a handoff
+     * that outlives the ring takes the terminal disposition `evidence_outside_retention_window` (36 of them
+     * and counting, 252 more already lost before the class was measured). The pin is addressed by the replay
+     * job, so recording, renewing and re-reading a handoff all extend the *same* hold instead of racing to
+     * create different ones.
+     *
+     * Both calls are best-effort and always logged: a runtime whose private boundary refuses the pin still
+     * runs, but the operator sees that evidence is unprotected instead of assuming it is held.
+     */
+    const holdHandoffEvidence = async (
+      replayJobId: string,
+      input: Parameters<typeof handoffEvidenceHoldRequestIds>[0],
+    ) => {
+      const operations = currentPostObservationOperations();
+      if (!operations) return;
+      const requestIds = handoffEvidenceHoldRequestIds(input);
+      if (requestIds.length === 0) return;
+      try {
+        await operations.holdLocalRouteCaptures({
+          holderId: replayJobId,
+          requestIds,
+          ttlMs: HANDOFF_EVIDENCE_HOLD_TTL_MS,
+        });
+      } catch (error) {
+        console.error(
+          `[run101] handoff evidence hold declined:${replayJobId} ${String(
+            (error as { message?: unknown })?.message ?? error,
+          ).slice(0, 200)}`,
+        );
+      }
+    };
+    const releaseHandoffEvidence = async (replayJobId: string) => {
+      const operations = currentPostObservationOperations();
+      if (!operations) return;
+      try {
+        await operations.releaseLocalRouteCaptures({ holderId: replayJobId });
+      } catch (error) {
+        console.error(
+          `[run101] handoff evidence release declined:${replayJobId} ${String(
+            (error as { message?: unknown })?.message ?? error,
+          ).slice(0, 200)}`,
+        );
+      }
+    };
     // Automatic replay: read pending captures from the private boundary, replay them
     // through the public replay endpoint, and persist every disposition. Production
     // stays disabled; failures degrade the loop instead of affecting routing.
@@ -5317,8 +5367,15 @@ export async function main(): Promise<void> {
                         reason: "recovery: the handoff can now be completed from durable evidence",
                       })
                     : null;
-                if (renewed) recovered += 1;
-                else skipped += 1;
+                if (renewed) {
+                  recovered += 1;
+                  // S22: a renewal is a *live* handoff again, so its evidence is pinned again (the pin is
+                  // idempotent per holder, so a re-hold only extends the TTL).
+                  await holdHandoffEvidence(entry.replayJobId, {
+                    requestId: entry.requestId,
+                    sourceCaptureRequestId: entry.sourceCaptureRequestId,
+                  });
+                } else skipped += 1;
                 continue;
               }
               resumeStore.record({
@@ -5338,6 +5395,12 @@ export async function main(): Promise<void> {
                 resolvedAtMs: null,
                 outcome: null,
                 lastError: null,
+              });
+              // S22: the recovered handoff now owes the source capture it will read again; pin it before
+              // anything else can evict it.
+              await holdHandoffEvidence(entry.replayJobId, {
+                requestId: entry.requestId,
+                sourceCaptureRequestId: entry.sourceCaptureRequestId,
               });
               recovered += 1;
             } catch (error) {
@@ -6442,6 +6505,11 @@ export async function main(): Promise<void> {
                     );
                   }
                 }
+                // S22: the entry just recorded is a live handoff; pin the source capture it will read again.
+                await holdHandoffEvidence(replayJobId, {
+                  requestId,
+                  sourceCaptureRequestId,
+                });
                 const completed = await evaluationCompleter(request);
                 try {
                   const record = completed as Record<string, unknown>;
@@ -6615,6 +6683,10 @@ export async function main(): Promise<void> {
           runtimeStateRoot: options.runtimeStateRoot,
           scopeId: options.scopeId,
         }),
+        // S22: every terminal transition releases the evidence pin that entry created - completion, the
+        // named disposition, or the attempt cap. The store owns that moment, so the release cannot be
+        // forgotten by a caller that resolves an entry somewhere else.
+        onReleased: (entry) => releaseHandoffEvidence(entry.replayJobId),
       });
       // Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S7: the auto-replay liveness sweep records
       // the resume entries it recovers for handed-off replays through this ref.
@@ -7080,6 +7152,17 @@ export async function main(): Promise<void> {
               candidateEndpointIds: entry.counterfactualPackages.map(
                 (candidate) => candidate.endpointId,
               ),
+            });
+            /**
+             * S22: this is the one place the durable job names *every* capture the handoff owes - the source
+             * it replays and the arms it compares - so the pin is extended here before any reader touches
+             * them. A resumed handoff reads its arms minutes or hours after the record was written, which is
+             * exactly the window in which the ring would have evicted them.
+             */
+            await holdHandoffEvidence(entry.replayJobId, {
+              requestId: entry.requestId,
+              sourceCaptureRequestId: entry.sourceCaptureRequestId,
+              branchCaptureRequestIds: [...branchCaptureRequestIds.values()],
             });
             /**
              * Run 100 addendum `handoff-evidence-durability.addendum-06` S21/S23: the arm evidence resolves
