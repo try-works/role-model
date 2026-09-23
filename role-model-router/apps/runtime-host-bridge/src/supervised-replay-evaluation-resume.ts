@@ -22,6 +22,12 @@ const SCHEMA_VERSION = "role-model.supervised-replay-evaluation-resume.v1" as co
 const DEFAULT_MAX_ENTRIES = 512;
 const MAX_ENTRIES_CEILING = 4096;
 const MAX_RESUME_BATCH = 32;
+/**
+ * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S5: how many pre-repair abandoned entries one
+ * liveness sweep may reconcile. Each costs two cross-boundary invocations, so the drain is bounded per tick
+ * (the once-per-process cursor continues on the next sweep) instead of holding the first tick open.
+ */
+const MAX_ABANDONED_RECONCILIATIONS_PER_SWEEP = 25;
 const MAX_TEXT = 256;
 const MAX_ERROR_TEXT = 512;
 
@@ -457,6 +463,17 @@ export async function resumePendingSupervisedReplayEvaluations(input: {
       if (entry.resolvedAtMs === null || entry.outcome !== "abandoned") continue;
       const key = `${entry.replayJobId}:${entry.resolvedAtMs}`;
       if (reconcileSeen.has(key)) continue;
+      /**
+       * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S5 (measured while verifying the backlog
+       * repair): this pass is once per process but was unbounded, and each entry costs two cross-boundary
+       * invocations (fail the replay job, terminalize its evaluation job). A mature stage root holds 478
+       * abandoned entries, so the first auto-replay tick spent minutes here - `:3457` reported `ticks 0,
+       * running true` for nine minutes with the operations-server child at ~77% of a core and no capture
+       * replayed. It is a bounded background drain now: at most
+       * `MAX_ABANDONED_RECONCILIATIONS_PER_SWEEP` entries per sweep, with `reconcileSeen` carrying the
+       * cursor so the next tick continues exactly where this one stopped.
+       */
+      if (reconciled >= MAX_ABANDONED_RECONCILIATIONS_PER_SWEEP) break;
       reconcileSeen.add(key);
       try {
         await input.onAbandoned(entry, new Error(entry.lastError ?? "evaluation abandoned"));
