@@ -91,3 +91,36 @@ test("run103 the durable evidence authority refuses a missing managed key", asyn
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+/**
+ * Measured live: the runtime publishes the key under its Track B root (`<runtimeRoot>/<scopeId>/track-b/…`), and
+ * the first version of this helper only looked at `<runtimeRoot>/managed-keys/…` - so on the stage root it found
+ * nothing and silently fell back to a per-run secret. The scoped layout is now a tested candidate.
+ */
+test("run103 the durable evidence authority finds the key under the scoped Track B root", async () => {
+  const root = mkdtempSync(path.join(tmpdir(), "run103-authority-scoped-"));
+  try {
+    const scopedRoot = path.join(root, "standalone-runtime-stage", "track-b");
+    const keyFile = keyFileWith(
+      scopedRoot,
+      Buffer.from("fedcba9876543210fedcba9876543210", "utf8"),
+    );
+    const authority = await resolveDurableEvaluationAuthority({
+      channel: "stage",
+      stateRoot: root,
+      scopeId: "standalone-runtime-stage",
+    });
+    expect(authority.authorityVersion).toBe(DURABLE_EVALUATION_AUTHORITY_VERSION);
+    expect(authority.authoritySecret).toMatch(/^[a-f0-9]{64}$/);
+    // The same key read through the explicit path yields the same authority.
+    const explicit = await resolveDurableEvaluationAuthority({
+      channel: "stage",
+      stateRoot: root,
+      scopeId: "standalone-runtime-stage",
+      artifactDigestKeyFile: keyFile,
+    });
+    expect(explicit.authoritySecret).toBe(authority.authoritySecret);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

@@ -407,9 +407,40 @@ export async function resolveDurableEvaluationAuthority(input: {
   if (!channel || !scopeId || !stateRoot) {
     throw new Error("durable evaluation authority requires a channel, a state root and a scope");
   }
-  const keyFile = input.artifactDigestKeyFile?.trim()
-    ? path.resolve(input.artifactDigestKeyFile.trim())
-    : path.join(path.resolve(stateRoot), "managed-keys", "artifact-digest.key");
+  /**
+   * The runtime publishes the managed key under its Track B root, which is `<runtimeStateRoot>/<scopeId>/track-b`
+   * on a scoped root (the sidecar is launched with `--state-root` set to exactly that path) and
+   * `<stateRoot>/managed-keys` on an unscoped one. Measured live: the first version of this helper looked only at
+   * the unscoped location, found nothing on the stage root, and silently fell back to a per-run secret - which is
+   * the behaviour P6 exists to remove. Every published layout is now a candidate, and the first present one wins.
+   */
+  const candidates = input.artifactDigestKeyFile?.trim()
+    ? [path.resolve(input.artifactDigestKeyFile.trim())]
+    : [
+        path.join(path.resolve(stateRoot), "managed-keys", "artifact-digest.key"),
+        path.join(
+          path.resolve(stateRoot),
+          scopeId,
+          "track-b",
+          "managed-keys",
+          "artifact-digest.key",
+        ),
+        path.join(path.resolve(stateRoot), "track-b", "managed-keys", "artifact-digest.key"),
+      ];
+  let keyFile: string | null = null;
+  for (const candidate of candidates) {
+    if (await pathExists(candidate)) {
+      keyFile = candidate;
+      break;
+    }
+  }
+  if (!keyFile) {
+    throw new Error(
+      `managed artifact digest key not found for the durable evaluation authority (looked in ${candidates
+        .map((candidate) => path.basename(path.dirname(path.dirname(candidate))))
+        .join(", ")})`,
+    );
+  }
   await assertManagedArtifactKeyFile(keyFile);
   const keyBytes = await readFile(keyFile);
   const authoritySecret = createHmac("sha256", keyBytes)
