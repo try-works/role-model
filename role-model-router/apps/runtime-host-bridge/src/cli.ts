@@ -4496,7 +4496,30 @@ export async function main(): Promise<void> {
           for (const job of unevaluated) {
             const carriedId = carriedEvaluationJobId(job);
             if (!carriedId) continue;
+            let fullJob: DurableReplayJobSummary | null = null;
             try {
+              /**
+               * S18c: the listing returns the summary projection (identity, state, binding, evaluation id,
+               * branch count) while the resume entry needs the job's candidate packages. The page is bounded
+               * to three, so reading the full record for just those is the same bounded cost the completion
+               * itself pays - and it keeps the projection lean for every other caller.
+               */
+              fullJob = (await runtime
+                .invoke("replay-core", {
+                  requestId: `replay-job-read:${carriedId}`,
+                  sessionId: `replay-job-read:${options.scopeId}`,
+                  protocolVersion: "1.1.0",
+                  channel,
+                  scope,
+                  authorizationEpoch: 1,
+                  capability: "replay:job",
+                  value: { jobId: job.jobId },
+                })
+                .catch(() => null)) as DurableReplayJobSummary | null;
+              if (!fullJob) {
+                skipped += 1;
+                continue;
+              }
               await runtime.invoke("evaluation-core", {
                 requestId: `evaluation-get-job:${carriedId}`,
                 sessionId: `evaluation-get-job:${options.scopeId}`,
@@ -4510,7 +4533,9 @@ export async function main(): Promise<void> {
               // The evaluation exists (terminal or not): nothing to recover for this job.
               skipped += 1;
             } catch {
-              recoveredJobs.push(job);
+              // The entry is synthesized from the full record (candidate packages), not the summary.
+              if (fullJob) recoveredJobs.push(fullJob);
+              else skipped += 1;
             }
           }
           for (const job of [...recoverable, ...recoveredJobs]) {
