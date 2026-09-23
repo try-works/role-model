@@ -6484,13 +6484,22 @@ export async function main(): Promise<void> {
               requestId: entry.sourceCaptureRequestId,
             })) as Record<string, unknown> | null;
             if (!sourceCapture || typeof sourceCapture !== "object") {
-              throw new Error(
-                `durable replay evaluation is missing its source capture ${entry.sourceCaptureRequestId}`,
+              /**
+               * S34 (measured live on f1db34b8: four renewed handoffs all reported
+               * `durable replay evaluation is missing its source capture …` and spent attempts on it): a source
+               * capture that is no longer in the store is the *same* permanent class as an arm capture that is
+               * gone - the evidence is outside the retention window - so it takes the named disposition instead
+               * of burning the attempt budget and ending as an unqualified `abandoned`.
+               */
+              throw new HandoffEvidenceUnavailableError(
+                `source_capture_missing:${entry.sourceCaptureRequestId}`,
               );
             }
             const sourceOutput = extractSourceOutputText(sourceCapture);
             if (!sourceOutput) {
-              throw new Error("durable replay evaluation is missing its source output evidence");
+              throw new HandoffEvidenceUnavailableError(
+                `source_output_unreadable:${entry.sourceCaptureRequestId}`,
+              );
             }
             const captureScope =
               typeof sourceCapture.scope === "string" && sourceCapture.scope.trim()
