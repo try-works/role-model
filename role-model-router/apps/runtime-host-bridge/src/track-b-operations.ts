@@ -915,8 +915,17 @@ export function resolveTrackBOperationsTimeoutMs(
  * Run 98 addendum 04 §7 (`L1`): how many extra attempts a connection-level failure gets, and how long
  * to wait before each. Kept small and bounded so a genuinely down boundary still fails promptly.
  */
-const PRIVATE_OPERATIONS_TRANSPORT_RETRIES = 2;
-const PRIVATE_OPERATIONS_TRANSPORT_RETRY_DELAYS_MS = [250, 1_000];
+/**
+ * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S8 follow-on (measured on the real-traffic root):
+ * the auto-replay endpoint answered `409 {"error":"fetch failed"}` while the sidecar was serving the same
+ * traffic at ~40% of a core - a connection-level failure, not a refusal, and exactly the class this retry
+ * loop exists for. Two attempts 250 ms and 1 000 ms apart were shorter than a saturated-but-alive sidecar
+ * needs, so a legitimately busy runtime looked like a failed replay and the capture was deferred (and
+ * eventually retired). The budget stays bounded and far below the operations timeout, and a timeout is still
+ * never retried because the work may still be running on the far side.
+ */
+const PRIVATE_OPERATIONS_TRANSPORT_RETRIES = 4;
+export const PRIVATE_OPERATIONS_TRANSPORT_RETRY_DELAYS_MS = [250, 1_000, 2_500, 5_000];
 
 const RETRYABLE_PRIVATE_OPERATION_TRANSPORT_CODES = new Set([
   "ECONNRESET",
