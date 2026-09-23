@@ -4,6 +4,7 @@ import { expect, test } from "vitest";
 
 import {
   assembleDurableLearnerValidationValue,
+  selectDurableComparisonGroupId,
 } from "../src/track-b-learning-pass.js";
 
 /**
@@ -234,4 +235,36 @@ test("run104 the assembled value keeps the promotion protocol and floors the pas
     channel: CHANNEL,
     scopeId: SCOPE,
   });
+});
+
+test("run104 the sweep reads the durable comparison group, not the comparability key", () => {
+  /**
+   * Measured live on `stage-run105` (first learner-sweep ticks): the candidate listing returns the
+   * comparability key first (`group:<hash>`, from `evidence.sourceGroupIds` / `applicability.groupId`) and
+   * the durable comparison group second (`comparison:supervised-replay:<hash>`, from
+   * `validationOutcome.evaluationId` / `evidence.evaluationResultIds`). Reading the first id refuses every
+   * candidate with "durable evaluation comparison group not found" - the group it needed was present and
+   * finalized. This pins which id is the durable one.
+   */
+  expect(
+    selectDurableComparisonGroupId({
+      groupIds: [
+        "group:a05ec133a2c666ea04aa4b0379fdb95c0bfae1169b694bb02fdac28f6f099a0a",
+        "comparison:supervised-replay:5c841e50f9c4d5b618cc7d2e49b6606ed3d8a1e191bce50401576c2b9bdfb10f",
+      ],
+    }),
+  ).toBe(
+    "comparison:supervised-replay:5c841e50f9c4d5b618cc7d2e49b6606ed3d8a1e191bce50401576c2b9bdfb10f",
+  );
+
+  // An explicitly named comparison id always wins, and a candidate with no durable comparison returns null
+  // rather than a hash that only looks like a group.
+  expect(
+    selectDurableComparisonGroupId({
+      comparisonId: "comparison:supervised-replay:aaaa",
+      groupIds: ["group:bbbb"],
+    }),
+  ).toBe("comparison:supervised-replay:aaaa");
+  expect(selectDurableComparisonGroupId({ groupIds: ["group:cccc"] })).toBe("group:cccc");
+  expect(selectDurableComparisonGroupId({})).toBeNull();
 });

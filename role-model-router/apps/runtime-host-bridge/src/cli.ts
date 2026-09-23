@@ -4697,6 +4697,35 @@ export async function main(): Promise<void> {
                 .filter((value): value is string => value !== null);
             })(),
           );
+          /**
+           * P2/P6: the retrieval index has no driver of its own - the retrieval plane is wired (durable index +
+           * durable receipts) but nothing calls `knowledge:rebuild-index`, so the live store reads 0 FTS rows,
+           * no index-state row and 0 retrieval receipts. One call per sweep keeps it current: it is idempotent
+           * and answers a readback (`rebuilt:false`) when the candidate backlog has not changed.
+           */
+          try {
+            const rebuilt = unwrapCapabilityPayload(
+              await runtime.invoke(
+                "knowledge-worker",
+                envelopeFor("knowledge-worker", "knowledge:rebuild-index", {}),
+              ),
+            );
+            const record =
+              rebuilt && typeof rebuilt === "object" && !Array.isArray(rebuilt)
+                ? (rebuilt as Record<string, unknown>)
+                : {};
+            if (record.rebuilt === true) {
+              console.error(
+                `[run101] retrieval index rebuilt: ${String(record.indexedDocuments ?? "?")} document(s)`,
+              );
+            }
+          } catch (error) {
+            console.error(
+              `[run101] retrieval index rebuild refused: ${String(
+                (error as { message?: unknown })?.message ?? error,
+              ).slice(0, 160)}`,
+            );
+          }
           const pending = candidates.filter((candidate) => {
             const candidateId =
               typeof candidate.candidateId === "string" ? candidate.candidateId : null;

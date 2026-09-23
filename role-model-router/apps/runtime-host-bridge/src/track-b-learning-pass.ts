@@ -112,6 +112,33 @@ export interface DurableLearnerValidationInput {
 }
 
 /**
+ * Picks the identity a durable caller must read the comparison back with.
+ *
+ * Measured live 2026-09-24 (`stage-run105`, first learner-sweep ticks): every pending candidate carries
+ * three group-shaped ids - `evidence.sourceGroupIds[0]` and `applicability.groupId` are the
+ * **comparability key** (`group:<hash>`), and only `validationOutcome.evaluationId` /
+ * `evidence.evaluationResultIds[0]` is the **durable comparison group** (`comparison:supervised-replay:<hash>`)
+ * that `evaluation:read-comparison-group` can resolve. The sweep read the first id, so every candidate was
+ * refused with "durable evaluation comparison group not found" while the group it needed was present and
+ * finalized. Two identities for one thing is property C4, one hop over; this function is the single place
+ * that decides which id is the durable one, so no caller has to guess an ordering again.
+ */
+export function selectDurableComparisonGroupId(
+  candidate: Readonly<Record<string, unknown>>,
+): string | null {
+  const ids: string[] = [];
+  const push = (value: unknown): void => {
+    if (typeof value === "string" && value.length > 0 && !ids.includes(value)) ids.push(value);
+  };
+  push(candidate.comparisonId);
+  const listed = Array.isArray(candidate.groupIds) ? candidate.groupIds : [];
+  for (const value of listed) push(value);
+  // The durable comparison group is the one Evaluation Core names with its own prefix; the comparability
+  // key is a hash of the comparison's inputs and was never a durable row.
+  return ids.find((id) => id.startsWith("comparison:")) ?? ids[0] ?? null;
+}
+
+/**
  * Assembles the `knowledge:validate-candidate` value a durable caller presents, minting both signed
  * receipts with the runtime's own (durable) evidence authority. The worker hydrates the candidate record
  * itself, so the caller supplies only what the candidate cannot carry: the scoring identity, the
