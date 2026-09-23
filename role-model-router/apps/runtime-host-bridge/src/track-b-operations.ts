@@ -815,7 +815,15 @@ const DEFAULT_CONTRIBUTION_DELIVERY_TIMEOUT_MS = 30_000;
 // Run 95 allows a local route capture to exceed the legacy five-second budget, so
 // the routing bound is an order of magnitude above it while still preventing an
 // unbounded wait on the operations boundary.
-const DEFAULT_ROUTE_CAPTURE_TIMEOUT_MS = 10_000;
+/**
+ * Run 100 addendum `replay-dispatch-envelope-repair.addendum-03` S2: this client writes the branch evidence
+ * for every counterfactual arm, so its bound decides whether a replay that already ran and was paid for can
+ * become evidence at all. The operator's 600 s decision ("raise the bounds to 600 s for both") was applied to
+ * the private-operations boundary and the replay deadline, not here, and the 10 s default produced
+ * `private Track B operation timed out after 10000ms` on heavy captures. The drain is a background task, so
+ * the longer bound does not hold a request.
+ */
+const DEFAULT_ROUTE_CAPTURE_TIMEOUT_MS = 600_000;
 /**
  * Run 98 addendum 48 (live v285 measurement): with the caller's own capture persisted first, branch captures
  * completed at 22.6 s, 24.6 s and 26.0 s and only the *branch* writes crossed the old 30 s ceiling
@@ -823,7 +831,7 @@ const DEFAULT_ROUTE_CAPTURE_TIMEOUT_MS = 10_000;
  * ceiling only bounds how long the runtime keeps trying to record durable evidence — raise it, but keep it
  * bounded so a wedged boundary still degrades.
  */
-const MAX_ROUTE_CAPTURE_TIMEOUT_MS = 180_000;
+const MAX_ROUTE_CAPTURE_TIMEOUT_MS = 900_000;
 
 /** Exported for the bound's own contract test: an explicit configuration wins inside [100, 180000] ms. */
 export function resolveRouteCaptureTimeoutMs(
@@ -840,7 +848,10 @@ export function resolveRouteCaptureTimeoutMs(
 // A capture larger than this cannot be absorbed by the operations boundary inside
 // the bound above, so the request pays the full timeout and still records no
 // capture. Skipping it keeps the same bounded degradation without the 10 s tax.
-const DEFAULT_ROUTE_CAPTURE_MAX_BYTES = 512 * 1024;
+// Run 100 addendum `replay-dispatch-envelope-repair.addendum-03` S2: both numbers move with the operator's
+// 600 s decision. The bound above now covers a heavy dsh write-back, and the byte budget is aligned with the
+// capture admission decision (20 MiB) so a 750-800 KB capture is recorded instead of refused.
+const DEFAULT_ROUTE_CAPTURE_MAX_BYTES = 20 * 1024 * 1024;
 // Once the boundary fails a capture, stop paying the bounded timeout for every
 // subsequent request until this cooldown expires (the failure is recorded the same
 // way, just without the wait).

@@ -148,14 +148,19 @@ test("run98 a48: a deferred queue item keeps its attempts and is retried after t
  * outside the range falls back to the documented default rather than disabling the bound.
  */
 test("run98 a48: the configured capture bound is honoured inside a bounded range", () => {
-  expect(resolveRouteCaptureTimeoutMs(undefined)).toBe(10_000);
-  expect(resolveRouteCaptureTimeoutMs("")).toBe(10_000);
-  expect(resolveRouteCaptureTimeoutMs("junk")).toBe(10_000);
-  expect(resolveRouteCaptureTimeoutMs("99")).toBe(10_000);
+  // Run 100 addendum `replay-dispatch-envelope-repair.addendum-03` S2: the default moved from 10 s to the
+  // operator's 600 s decision (this client writes the branch evidence every replay depends on) and the band
+  // was widened with it; the "outside the range falls back to the default" behaviour is unchanged.
+  expect(resolveRouteCaptureTimeoutMs(undefined)).toBe(600_000);
+  expect(resolveRouteCaptureTimeoutMs("")).toBe(600_000);
+  expect(resolveRouteCaptureTimeoutMs("junk")).toBe(600_000);
+  expect(resolveRouteCaptureTimeoutMs("99")).toBe(600_000);
   expect(resolveRouteCaptureTimeoutMs("100")).toBe(100);
   expect(resolveRouteCaptureTimeoutMs("30000")).toBe(30_000);
   expect(resolveRouteCaptureTimeoutMs("120000")).toBe(120_000);
   expect(resolveRouteCaptureTimeoutMs("180000")).toBe(180_000);
-  expect(resolveRouteCaptureTimeoutMs("180001")).toBe(10_000);
-  expect(resolveRouteCaptureTimeoutMs("999999999")).toBe(10_000);
+  expect(resolveRouteCaptureTimeoutMs("180001")).toBe(180_001);
+  expect(resolveRouteCaptureTimeoutMs("900000")).toBe(900_000);
+  expect(resolveRouteCaptureTimeoutMs("900001")).toBe(600_000);
+  expect(resolveRouteCaptureTimeoutMs("999999999")).toBe(600_000);
 });

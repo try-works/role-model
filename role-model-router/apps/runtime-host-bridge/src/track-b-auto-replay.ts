@@ -378,6 +378,47 @@ export function resolveAutoReplayReservationTtlMs(
  */
 const DEFAULT_EXECUTOR_TIMEOUT_MS = 12 * 60 * 1000;
 
+/**
+ * Run 100 addendum `replay-dispatch-envelope-repair.addendum-03` S1 (operator report 2026-09-23: "replays
+ * are stuck and not reaching eval or learner stage").
+ *
+ * The `L4` bound above is only safe while it stays *larger than the durable job's own deadline*; that is
+ * what its own comment promises. Addendum 01 raised the per-candidate bound to 600 s, so a three-candidate
+ * job's deadline became 30-60 minutes while the executor still abandoned its capture at 12: the loop then
+ * re-claimed and restarted the job on the next tick, and the job only ended when its deadline expired
+ * (`timed_out`, measured live on 27 frozen jobs). The bound is therefore derived from the same arithmetic
+ * that sizes the job, plus the finalization grace, with the old 12 minutes as a floor.
+ */
+export const DEFAULT_EXECUTOR_FINALIZATION_GRACE_MS = 5 * 60_000;
+
+export function resolveAutoReplayExecutorTimeoutMs(input: {
+  readonly candidateCount: number;
+  readonly captureBytes?: number;
+  readonly perCandidateMs?: number;
+  readonly maxMs?: number;
+  /** An explicit operator/configuration bound wins, exactly as it did before this change. */
+  readonly explicitMs?: number;
+}): number {
+  const explicit = Number(input.explicitMs);
+  if (Number.isSafeInteger(explicit) && explicit > 0) return explicit;
+  const candidates =
+    Number.isSafeInteger(input.candidateCount) && input.candidateCount > 0
+      ? input.candidateCount
+      : 1;
+  const jobDeadlineMs = resolveAutoReplayDeadlineMs(candidates, {
+    ...(Number.isSafeInteger(input.captureBytes) && (input.captureBytes ?? 0) > 0
+      ? { captureBytes: Number(input.captureBytes) }
+      : {}),
+    ...(Number.isSafeInteger(input.perCandidateMs) && (input.perCandidateMs ?? 0) > 0
+      ? { perCandidateMs: Number(input.perCandidateMs) }
+      : {}),
+    ...(Number.isSafeInteger(input.maxMs) && (input.maxMs ?? 0) > 0
+      ? { maxMs: Number(input.maxMs) }
+      : {}),
+  });
+  return Math.max(DEFAULT_EXECUTOR_TIMEOUT_MS, jobDeadlineMs + DEFAULT_EXECUTOR_FINALIZATION_GRACE_MS);
+}
+
 type AutoReplayExecutorRequest = {
   readonly capture: AutoReplayCapture;
   readonly candidates: readonly string[];
@@ -393,9 +434,12 @@ async function runBoundedExecutor(
   },
   request: AutoReplayExecutorRequest,
 ): Promise<AutoReplayExecution> {
-  const configured = Number(input.executorTimeoutMs);
-  const timeoutMs =
-    Number.isSafeInteger(configured) && configured > 0 ? configured : DEFAULT_EXECUTOR_TIMEOUT_MS;
+  const timeoutMs = resolveAutoReplayExecutorTimeoutMs({
+    candidateCount: request.candidates.length,
+    ...(Number.isSafeInteger(input.executorTimeoutMs) && (input.executorTimeoutMs ?? 0) > 0
+      ? { explicitMs: Number(input.executorTimeoutMs) }
+      : {}),
+  });
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([

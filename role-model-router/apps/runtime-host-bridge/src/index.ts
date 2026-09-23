@@ -169,7 +169,10 @@ import {
   type DerivedTaxonomyClassification,
   deriveTaxonomyClassification,
 } from "./taxonomy-derivation.js";
-import { createTrackBRouteCaptureQueue } from "./track-b-capture-queue.js";
+import {
+  createTrackBRouteCaptureQueue,
+  resolveDeferredCaptureMaxBytes,
+} from "./track-b-capture-queue.js";
 export type {
   RuntimeContributionOutcome,
   RuntimeContributionObservation,
@@ -18934,6 +18937,12 @@ export async function createRuntimeBridgeBackend(
           options.scopeId,
           "track-b",
           "deferred-route-captures.sqlite",
+        ),
+        // Run 100 addendum `replay-dispatch-envelope-repair.addendum-03` S2: aligned with the admission
+        // decision (20 MiB default, operator-tunable) so a real 750-800 KB dsh capture is queued rather
+        // than refused before it can ever be replayed.
+        maxPayloadBytes: resolveDeferredCaptureMaxBytes(
+          process.env.ROLE_MODEL_DEFERRED_CAPTURE_MAX_BYTES,
         ),
       })
     : null;
