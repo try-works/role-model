@@ -469,6 +469,13 @@ export function recoveredHandoffEntry(
  * every arm it could not resolve, so "unreadable" can never again be reported as "absent".
  */
 export type ResumedArmEvidenceReason =
+  /**
+   * S41: the durable job names no capture for this arm at all (the pre-S9 naming, or an arm whose dispatch
+   * never produced a receipt). Distinct from a capture the job *names* and the boundary cannot return - the
+   * two have different repairs, and reporting both as `capture_missing` is the same collapse this addendum
+   * keeps removing.
+   */
+  | "capture_not_named"
   | "capture_missing"
   | "capture_has_no_output"
   /**
@@ -511,7 +518,7 @@ export async function resolveResumedArmEvidence(input: {
   for (const candidate of input.counterfactualPackages) {
     const requestId = input.branchCaptureRequestIds.get(candidate.endpointId);
     if (!requestId) {
-      unreadable.push({ endpointId: candidate.endpointId, reason: "capture_missing" });
+      unreadable.push({ endpointId: candidate.endpointId, reason: "capture_not_named" });
       continue;
     }
     let capture: Record<string, unknown> | null = null;
@@ -533,7 +540,12 @@ export async function resolveResumedArmEvidence(input: {
       continue;
     }
     if (!capture || typeof capture !== "object" || Array.isArray(capture)) {
-      unreadable.push({ endpointId: candidate.endpointId, reason: "capture_missing" });
+      unreadable.push({
+        endpointId: candidate.endpointId,
+        reason: "capture_missing",
+        // The id travels with the reason: a read that misses a capture the job named is only diagnosable with it.
+        detail: requestId,
+      });
       continue;
     }
     const outputText = extractCaptureOutputText(capture);
@@ -581,5 +593,10 @@ export function describeUnresolvedArms(unreadable: readonly UnresolvedArmEvidenc
  * attempt budget and the bounded renewal exist to ride out).
  */
 export function unresolvedArmsArePermanent(unreadable: readonly UnresolvedArmEvidence[]): boolean {
-  return unreadable.length > 0 && unreadable.every((arm) => arm.reason === "capture_missing");
+  return (
+    unreadable.length > 0 &&
+    unreadable.every(
+      (arm) => arm.reason === "capture_missing" || arm.reason === "capture_not_named",
+    )
+  );
 }

@@ -64,7 +64,13 @@ test("run101 S21 an arm whose readback carries the bounded response excerpt reso
       },
     }),
   });
-  expect(resolved.unreadable).toEqual([{ endpointId: "endpoint:beta", reason: "capture_missing" }]);
+  expect(resolved.unreadable).toEqual([
+    {
+      endpointId: "endpoint:beta",
+      reason: "capture_missing",
+      detail: "replay-req-beta-bbbb-branch",
+    },
+  ]);
   expect(resolved.arms).toHaveLength(1);
   expect(resolved.arms[0]?.endpointId).toBe("endpoint:alpha");
   expect(resolved.arms[0]?.outputText).toBe("the alpha answer");
@@ -117,10 +123,26 @@ test("run101 S21 an arm whose capture is gone is named as a missing capture", as
     "capture_missing",
     "capture_missing",
   ]);
+  expect(resolved.unreadable[0]?.detail, "the id that missed travels with the reason").toBe(
+    "replay-req-alpha-aaaa-branch",
+  );
   expect(
     unresolvedArmsArePermanent(resolved.unreadable),
     "a pointer that is gone is terminal",
   ).toBe(true);
+});
+
+test("run101 S41 an arm the job does not name is not the same as a capture that is gone", async () => {
+  const resolved = await resolveResumedArmEvidence({
+    counterfactualPackages: CANDIDATES,
+    branchCaptureRequestIds: new Map(),
+    readCapture: async () => null,
+  });
+  expect(resolved.unreadable.map((arm) => arm.reason)).toEqual([
+    "capture_not_named",
+    "capture_not_named",
+  ]);
+  expect(unresolvedArmsArePermanent(resolved.unreadable)).toBe(true);
 });
 
 test("run101 S21 a boundary that cannot answer is unreadable, not missing", async () => {

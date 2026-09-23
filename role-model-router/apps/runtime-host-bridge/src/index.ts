@@ -3181,6 +3181,8 @@ export interface StartBridgeServerOptions {
   readonly runTrackBSupervisedReplay?: (body: Record<string, unknown>) => Promise<unknown>;
   /** Automatic replay operator surface: bounded loop status and pause/resume control. */
   readonly readTrackBReplayStatus?: () => Promise<unknown> | unknown;
+  /** S42: can the boundary read this capture back, and if not, why. */
+  readonly readCaptureEvidence?: (requestId: string) => Promise<unknown> | unknown;
   readonly controlTrackBReplay?: (body: Record<string, unknown>) => Promise<unknown>;
   /** Bounded Evaluation Core and learner counters for the operator surface. */
   readonly readTrackBLearningSummary?: () => Promise<unknown> | unknown;
@@ -3906,6 +3908,8 @@ export interface CreateRuntimeBridgeBackendOptions {
   readonly runTrackBSupervisedReplay?: (body: Record<string, unknown>) => Promise<unknown>;
   /** Automatic replay operator surface: bounded loop status and pause/resume control. */
   readonly readTrackBReplayStatus?: () => Promise<unknown> | unknown;
+  /** S42: can the boundary read this capture back, and if not, why. */
+  readonly readCaptureEvidence?: (requestId: string) => Promise<unknown> | unknown;
   readonly controlTrackBReplay?: (body: Record<string, unknown>) => Promise<unknown>;
   /** Bounded Evaluation Core and learner counters for the operator surface. */
   readonly readTrackBLearningSummary?: () => Promise<unknown> | unknown;
@@ -16036,6 +16040,29 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           context: options.operatorContext,
         });
 
+        /**
+         * Run 100 addendum `handoff-evidence-durability.addendum-06` S42: the operator readback for capture
+         * evidence.
+         *
+         * The spine's completions depend on reading a durable capture back from the private boundary, and when
+         * that read fails the only trace was a reason string on a resume entry (`capture_missing`, then a
+         * disposition). The runtime can answer the question directly - does *this* request id resolve, and if
+         * not, why - which is what an operator needs to tell "the evidence is gone" from "the boundary cannot
+         * read it".
+         */
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/role-model/operator/capture-evidence"
+        ) {
+          if (!options.readCaptureEvidence) {
+            writeOperatorUnavailable(response, "capture evidence readback");
+            return;
+          }
+          const requestId = url.searchParams.get("requestId") ?? "";
+          writeOperatorResult(response, await options.readCaptureEvidence(requestId));
+          return;
+        }
+
         if (request.method === "GET" && url.pathname === "/api/role-model/operator/status") {
           if (!options.readOperatorStatus) {
             writeOperatorUnavailable(response, "operator status");
@@ -27636,6 +27663,41 @@ export async function createRuntimeBridgeBackend(
         items: entries.map((entry) => entry.metric),
         returned: entries.length,
       };
+    },
+    /**
+     * Run 100 addendum `handoff-evidence-durability.addendum-06` S42: the operator readback for capture
+     * evidence - the runtime asks its own boundary the question the spine depends on, and answers with the
+     * outcome instead of leaving a reason string on a resume entry.
+     */
+    async readCaptureEvidence(requestId: string): Promise<unknown> {
+      const id = String(requestId ?? "").trim();
+      if (!id) return { status: "invalid", reason: "requestId is required" };
+      if (!configuredTrackBOperationsEndpoint) {
+        return { status: "unconfigured", reason: "the operations boundary is not configured" };
+      }
+      try {
+        const capture = (await readExactRouteCapture(id)) as Record<string, unknown> | null;
+        if (!capture) return { status: "missing", requestId: id };
+        return {
+          status: "ok",
+          requestId: id,
+          scope: typeof capture.scope === "string" ? capture.scope : null,
+          endpointId: typeof capture.endpointId === "string" ? capture.endpointId : null,
+          modelId: typeof capture.modelId === "string" ? capture.modelId : null,
+          rootArtifactId:
+            typeof capture.rootArtifactId === "string" ? capture.rootArtifactId : null,
+          branchKind: typeof capture.branchKind === "string" ? capture.branchKind : null,
+          hasResponseText:
+            typeof capture.responseText === "string" && capture.responseText.length > 0,
+          messageCount: Array.isArray(capture.messages) ? capture.messages.length : null,
+        };
+      } catch (error) {
+        return {
+          status: "unreadable",
+          requestId: id,
+          reason: String((error as { message?: unknown })?.message ?? error).slice(0, 300),
+        };
+      }
     },
     async readActivityCapture(captureId: number | string): Promise<unknown | null> {
       if (typeof captureId === "string") {

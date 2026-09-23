@@ -3026,6 +3026,10 @@ export function createCliServerOptions(
     listActivityMetricsPage: bindBackendMethod(
       "listActivityMetricsPage",
     ) as StartBridgeServerOptions["listActivityMetricsPage"],
+    /** S42: the operator readback for whether the boundary can return a capture's evidence, and why not. */
+    readCaptureEvidence: (bindBackendMethod as unknown as (method: string) => unknown)(
+      "readCaptureEvidence",
+    ) as StartBridgeServerOptions["readCaptureEvidence"],
     readActivityCapture: bindBackendMethod(
       "readActivityCapture",
     ) as StartBridgeServerOptions["readActivityCapture"],
