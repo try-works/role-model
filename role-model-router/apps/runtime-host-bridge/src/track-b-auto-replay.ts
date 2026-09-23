@@ -123,9 +123,33 @@ export function isReplayAwaitingEvaluationFailure(status: number, body: string):
   );
 }
 
+/**
+ * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S3 (live refusal measured on `:3457`):
+ *
+ *   `replay endpoint HTTP 409: {"error":"extension replay-core failed: replay concurrency budget is exhausted"}`
+ *
+ * A job's `maxConcurrency` (1 when unset) forbids preparing a second candidate while one of its dispatches
+ * is still in flight, so this answer means "the work is already running", exactly like a lease hold. The
+ * loop must wait it out inside the capture's own deadline instead of recording a replay failure and
+ * spending the capture's deferral budget - the pre-repair behaviour ended in `refused replay_failed` while
+ * the provider work had already been paid for. A *resource* refusal (`provider call`, cost, bytes) is not
+ * this class and stays a real refusal.
+ */
+export function isReplayDispatchHoldFailure(status: number, body: string): boolean {
+  return (
+    status === 409 &&
+    typeof body === "string" &&
+    /replay concurrency budget is exhausted/i.test(body)
+  );
+}
+
 /** A failure that means "the durable job is in flight", not "the replay failed". */
 export function isReplayInFlightFailure(status: number, body: string): boolean {
-  return isReplayJobLeasedFailure(status, body) || isReplayAwaitingEvaluationFailure(status, body);
+  return (
+    isReplayJobLeasedFailure(status, body) ||
+    isReplayAwaitingEvaluationFailure(status, body) ||
+    isReplayDispatchHoldFailure(status, body)
+  );
 }
 
 export async function retryLeasedReplayDispatch<TValue>(input: {
