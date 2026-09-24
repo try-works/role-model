@@ -186,6 +186,7 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
       }
       return { kind: "evidence", job, report, profile: null };
     };
+    let profileDiagnostic = "profile keys=- digest=no";
     try {
       const durable = await readDurableEvidence();
       if (durable.kind !== "evidence") {
@@ -304,6 +305,13 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
           rows,
         }),
       );
+      // A refusal has to name what the step actually answered: the attribution guard can only say that the estimate
+      // did not attribute the package, and the difference between "degraded receipt", "wrapped envelope" and "no
+      // estimate at all" is exactly what the next reader needs.
+      const profileRecord = asRecord(profile);
+      profileDiagnostic = `profile keys=${Object.keys(profileRecord ?? {})
+        .slice(0, 10)
+        .join("|")} digest=${typeof profileRecord?.digest === "string" ? "yes" : "no"}`;
       const value = assembleDurableLearnerDerivationValue({
         channel: input.channel,
         scope: input.scope,
@@ -343,7 +351,7 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
       input.log?.(
         `learner derivation refused ${groupId}: ${String(
           (error as { message?: unknown })?.message ?? error,
-        ).slice(0, 200)}`,
+        ).slice(0, 200)} [${profileDiagnostic}]`,
       );
     }
   }
