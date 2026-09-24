@@ -25291,6 +25291,22 @@ export async function createRuntimeBridgeBackend(
             ...plan.routingRequest,
             ...(deny.length > 0 ? { denyEndpoints: deny } : {}),
           },
+          /**
+           * Run 100 addendum 10, E1: name the request, the alias, the requested effort and the pass on the verdict
+           * line, so an eligibility count can be attributed without a store query. The live pass and its reroutes
+           * share this call; the counterfactual/replay passes take their own path, which is exactly why the pass name
+           * has to be recorded rather than assumed.
+           */
+          attribution: {
+            requestId: plan.routingRequest.requestId,
+            aliasId: plan.routingDiagnostics?.aliasResolution?.aliasId ?? null,
+            requestedModel: plan.routingDiagnostics?.aliasResolution?.requestedModel ?? null,
+            requestedEffort:
+              typeof plan.executionRequest.reasoning?.effort === "string"
+                ? plan.executionRequest.reasoning.effort.trim()
+                : null,
+            pass: deny.length > 0 ? "live:reroute" : "live",
+          },
           registry: executionSnapshot.registry,
           catalog: executionSnapshot.executionCatalog,
           observedProfilesByEndpointId: runtimeObservedProfiles.observedProfilesByEndpointId,
