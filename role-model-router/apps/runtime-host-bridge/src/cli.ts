@@ -180,6 +180,11 @@ import {
   selectDurableComparisonGroupId,
 } from "./track-b-learning-pass.js";
 import {
+  buildExperiencePackCandidate,
+  buildRouteLearningValidationReceipt,
+  emitTrackBContract,
+} from "./track-b-contract-emission.js";
+import {
   TRACK_B_CANONICAL_EXTENSION_IDS,
   type TrackBExtensionClosure,
   assertProductionExtensionRuntimeReady,
@@ -4988,6 +4993,30 @@ export async function main(): Promise<void> {
                 }),
               );
               consumed += 1;
+              /**
+               * Run 107 P13: the durable record is the runtime's own shape and keeps the family evidence; the
+               * *contract* artifact is the documented vocabulary, and until this slice nothing emitted one -
+               * `contracts\` held zero `RouteLearningValidationReceiptV1` files while 149 receipts accrued.
+               * The projection is validated by `emitTrackBContract` before it writes, so a record that cannot
+               * be expressed in the contract is a named degradation here instead of a silent absence.
+               */
+              try {
+                emitTrackBContract({
+                  stateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  contract: buildRouteLearningValidationReceipt({
+                    receipt,
+                    channel,
+                    scopeId: options.scopeId,
+                  }),
+                });
+              } catch (error) {
+                console.error(
+                  `[run107] learner sweep: validation receipt ${receiptId.slice(0, 24)} was not emitted as a contract: ${String(
+                    (error as { message?: unknown })?.message ?? error,
+                  ).slice(0, 200)}`,
+                );
+              }
               if (receipt.decision === "validate") {
                 const promotion = unwrapCapabilityPayload(
                   await runtime.invoke(
@@ -5026,6 +5055,26 @@ export async function main(): Promise<void> {
                       },
                     }),
                   );
+                  // Run 107 P13: the promoted pack is emitted in the documented vocabulary too, so the
+                  // learner's output is readable as the contract the proposal names (and not only as the
+                  // knowledge store's own record).
+                  try {
+                    emitTrackBContract({
+                      stateRoot: options.runtimeStateRoot,
+                      scopeId: options.scopeId,
+                      contract: buildExperiencePackCandidate({
+                        pack: packCandidate,
+                        channel,
+                        scopeId: options.scopeId,
+                      }),
+                    });
+                  } catch (error) {
+                    console.error(
+                      `[run107] learner sweep: pack ${packId.slice(0, 24)} was not emitted as a contract: ${String(
+                        (error as { message?: unknown })?.message ?? error,
+                      ).slice(0, 200)}`,
+                    );
+                  }
                   /**
                    * Run 107 P6: the promotion has a second half - the pack has to reach the *rollout*.
                    *

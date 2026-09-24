@@ -94,6 +94,130 @@ const contractEnvelope = (input: {
   boundaryProtocolVersion: "1.1",
 });
 
+/**
+ * The taxonomy/route identity a v1.1 `$defs.scope` accepts. The runtime's learned records carry more than
+ * this (for example a `taxonomyVersion`), and the closed scope has no member for it - measured live: 24 of 98
+ * pack records failed `packCandidate` on exactly `/scope must NOT have additional properties`, which is also
+ * why no `ExperiencePackCandidateV1` artifact had ever been emitted.
+ */
+const ROUTE_LEARNING_SCOPE_KEYS = [
+  "repoArchetype",
+  "roleId",
+  "taskTypeId",
+  "language",
+  "clientId",
+  "toolClassIds",
+  "modelFamily",
+  "endpointId",
+  "promptAdapterId",
+] as const;
+
+const asRecord = (value: unknown): Record<string, unknown> | null =>
+  value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+
+/**
+ * Run 107 P13: project a promoted pack onto the documented `ExperiencePackCandidateV1`.
+ *
+ * The projection is deliberate rather than additive: the contract is closed, so the builder keeps only the
+ * members it documents and drops the runtime's own extras (`scope.taxonomyVersion`). The richer record stays
+ * in the knowledge store's durable learning record; the artifact is the contract.
+ */
+export function buildExperiencePackCandidate(input: {
+  readonly pack: Record<string, unknown>;
+  readonly channel: string;
+  readonly scopeId: string;
+}) {
+  const pack = input.pack;
+  const rawScope = asRecord(pack.scope) ?? {};
+  const scope: Record<string, unknown> = {};
+  for (const key of ROUTE_LEARNING_SCOPE_KEYS) {
+    if (rawScope[key] !== undefined && rawScope[key] !== null) scope[key] = rawScope[key];
+  }
+  // `$defs.scope` requires at least one member; a pack whose scope carried only runtime extras still names
+  // the route package it was learned for.
+  if (Object.keys(scope).length === 0) {
+    const fallback = String(pack.endpointId ?? pack.routePackage ?? input.scopeId);
+    scope.endpointId = fallback;
+  }
+  const status = String(pack.status ?? "validated");
+  return {
+    contract: "ExperiencePackCandidateV1",
+    packId: String(pack.packId),
+    version: Number.isInteger(pack.version) && Number(pack.version) > 0 ? Number(pack.version) : 1,
+    scope,
+    experienceIds: (Array.isArray(pack.experienceIds) ? pack.experienceIds : []).map(String),
+    maxTokens:
+      Number.isInteger(pack.maxTokens) && Number(pack.maxTokens) > 0 ? Number(pack.maxTokens) : 512,
+    placement: pack.placement === "developer_extension" ? "developer_extension" : "context_block",
+    priority: "advisory_only",
+    status:
+      status === "candidate" ||
+      status === "shadow" ||
+      status === "validated" ||
+      status === "promoted" ||
+      status === "rejected" ||
+      status === "rolled_back"
+        ? status
+        : "validated",
+    createdAt: String(pack.createdAt ?? new Date().toISOString()),
+    ...contractEnvelope({ channel: input.channel, scopeId: input.scopeId }),
+  };
+}
+
+/**
+ * Run 107 P13: project the worker's validation receipt onto the documented
+ * `RouteLearningValidationReceiptV1`, for the same reason as the pack above - measured live, 100 of 149
+ * validation receipts failed on the additive `familyEvidence`, which the closed contract has no member for.
+ * The family evidence stays in the durable learning record (the Learning UI reads it there); the artifact is
+ * the contract.
+ */
+export function buildRouteLearningValidationReceipt(input: {
+  readonly receipt: Record<string, unknown>;
+  readonly channel: string;
+  readonly scopeId: string;
+}) {
+  const receipt = input.receipt;
+  const envelope = contractEnvelope({ channel: input.channel, scopeId: input.scopeId });
+  return {
+    contract: "RouteLearningValidationReceiptV1",
+    receiptId: String(receipt.receiptId),
+    candidateType:
+      receipt.candidateType === "pack" || receipt.candidateType === "route_package"
+        ? receipt.candidateType
+        : "experience",
+    candidateId: String(receipt.candidateId),
+    baselineId: String(receipt.baselineId ?? input.scopeId),
+    splitHash: String(receipt.splitHash ?? ""),
+    caseManifestRef: String(receipt.caseManifestRef ?? ""),
+    estimatorVersion: String(receipt.estimatorVersion ?? ""),
+    bootstrapSeed: Number.isInteger(receipt.bootstrapSeed) ? Number(receipt.bootstrapSeed) : 0,
+    qualityDelta: Number(receipt.qualityDelta ?? 0),
+    confidenceLower: Number(receipt.confidenceLower ?? 0),
+    confidenceUpper: Number(receipt.confidenceUpper ?? 0),
+    holdoutSampleCount:
+      Number.isInteger(receipt.holdoutSampleCount) && Number(receipt.holdoutSampleCount) > 0
+        ? Number(receipt.holdoutSampleCount)
+        : 1,
+    guardrailsPassed: receipt.guardrailsPassed === true,
+    decision:
+      receipt.decision === "validate" || receipt.decision === "reject"
+        ? receipt.decision
+        : "insufficient_evidence",
+    createdAt: String(receipt.createdAt ?? new Date().toISOString()),
+    runtimeChannel:
+      receipt.runtimeChannel === "production" || receipt.runtimeChannel === "development"
+        ? receipt.runtimeChannel
+        : envelope.runtimeChannel,
+    scopeId: typeof receipt.scopeId === "string" && receipt.scopeId ? receipt.scopeId : input.scopeId,
+    boundaryProtocolVersion:
+      typeof receipt.boundaryProtocolVersion === "string" && receipt.boundaryProtocolVersion
+        ? receipt.boundaryProtocolVersion
+        : envelope.boundaryProtocolVersion,
+  };
+}
+
 export interface RoutingEvaluationExecutionContextInput {
   readonly executionId: string;
   readonly purpose: "routing_evaluation" | "routing_replay" | "route_package_attribution";
