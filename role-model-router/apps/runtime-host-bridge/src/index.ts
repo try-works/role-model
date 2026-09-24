@@ -9094,6 +9094,25 @@ function filterRequestedModelPoolByReasoningEffort(input: {
   });
 }
 
+/**
+ * Run 100 addendum 10, E1 follow-on: which pass produced a routing verdict.
+ *
+ * The live pass and the replay executor's counterfactual passes share this call site, so the pass cannot be assumed
+ * from the call stack. Measured live on `run118-d26c8343`: a counterfactual pass (`requestId` `replay-req-...`)
+ * reported `pass=live` because the host labelled every call the same way. The replay executor is the only producer
+ * that names its requests with the `replay-` prefix; an unattributed request is reported as `-` rather than guessed to
+ * be live.
+ */
+export function classifyBridgeRoutePass(input: {
+  readonly requestId?: string | null;
+  readonly denyCount: number;
+}): string {
+  const requestId = typeof input.requestId === "string" ? input.requestId.trim() : "";
+  if (requestId.length === 0) return "-";
+  if (requestId.startsWith("replay-")) return "replay";
+  return input.denyCount > 0 ? "live:reroute" : "live";
+}
+
 export interface ReasoningEffortPoolApplication {
   readonly allowEndpoints: readonly string[];
   readonly preferredEndpointIds: readonly string[];
@@ -25305,7 +25324,10 @@ export async function createRuntimeBridgeBackend(
               typeof plan.executionRequest.reasoning?.effort === "string"
                 ? plan.executionRequest.reasoning.effort.trim()
                 : null,
-            pass: deny.length > 0 ? "live:reroute" : "live",
+            pass: classifyBridgeRoutePass({
+              requestId: plan.routingRequest.requestId,
+              denyCount: deny.length,
+            }),
           },
           registry: executionSnapshot.registry,
           catalog: executionSnapshot.executionCatalog,
