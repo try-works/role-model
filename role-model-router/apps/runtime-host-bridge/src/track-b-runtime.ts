@@ -6356,7 +6356,19 @@ function unwrapExtensionBusinessValue(raw: unknown): Record<string, unknown> | n
   for (let depth = 0; depth < 8; depth += 1) {
     if (!current || typeof current !== "object" || Array.isArray(current)) return null;
     const record = current as Record<string, unknown>;
-    const keys = Object.keys(record);
+    /**
+     * Run 107: the packaged host's envelope carries `schemaVersion` beside `businessOutput`, and a bare
+     * `schemaVersion` therefore made the record look like a payload - so the envelope was handed to the
+     * worker instead of the comparison, and every supervised replay's profile step degraded with
+     * `finalized decisive evaluation provenance required for profile learning`. When a record carries a
+     * `businessOutput`, its own `schemaVersion` is envelope metadata, not payload; a record with a real
+     * business field beside `businessOutput` (a degradation receipt's `degraded`/`reason`) is still returned
+     * untouched, because that field is not a wrapper key.
+     */
+    const hasBusinessOutput = record.businessOutput !== undefined;
+    const keys = hasBusinessOutput
+      ? Object.keys(record).filter((key) => key !== "schemaVersion")
+      : Object.keys(record);
     const isWrapper = keys.length > 0 && keys.every((key) => wrapperKeys.has(key));
     if (!isWrapper) return record;
     const inner =
@@ -6497,10 +6509,27 @@ function decodeExtensionBusinessResult(input: {
     }
     return null;
   }
-  // A record that carries its own named payload is authoritative; `businessOutput` is only the
-  // payload when the record has nothing else to offer (`{businessOutput, durableLocator}` and the
-  // `{value, businessOutput, durableLocator}` array form decode the same either way).
-  const carriesOwnPayload = Object.keys(record).some(
+  /**
+   * A record that carries its own named payload is authoritative; `businessOutput` is only the payload when
+   * the record has nothing else to offer (`{businessOutput, durableLocator}` and the
+   * `{value, businessOutput, durableLocator}` array form decode the same either way).
+   *
+   * Run 107 (measured live on `0.0.14-…-geb21e369`): the packaged host's envelope also carries
+   * `schemaVersion` beside `businessOutput`, and `schemaVersion` is not a transport field - so the *envelope*
+   * was returned as the payload and the profile learner refused every supervised replay with
+   * `finalized decisive evaluation provenance required for profile learning`. The extension had answered a
+   * perfectly good `{groupId, status: "finalized", outcome: "candidate", members, comparability}`; the
+   * boundary lost it.
+   *
+   * The rule is therefore: when a `businessOutput` is present, the envelope's own `schemaVersion` does not by
+   * itself make the record a payload. Any *business* field still does - a degradation receipt carries
+   * `degraded`/`reason` and is returned untouched, and so is any record whose `schemaVersion` belongs to its
+   * own contract rather than to the transport envelope.
+   */
+  const payloadKeys = business
+    ? Object.keys(record).filter((key) => key !== "schemaVersion")
+    : Object.keys(record);
+  const carriesOwnPayload = payloadKeys.some(
     (key) => !(EXTENSION_TRANSPORT_FIELDS as readonly string[]).includes(key),
   );
   if (carriesOwnPayload) return record;
