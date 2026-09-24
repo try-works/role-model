@@ -53,3 +53,66 @@ test("run110 with no estimate anywhere the answer is the bounded state, never th
 test("run110 a thrown readback (no options at all) still answers a state", () => {
   expect(resolveLearningProfileRouteResult({})).toMatchObject({ state: "unavailable" });
 });
+
+/**
+ * Run 113 (addendum 09 R7). Measured live: the profile learner held an *active* estimate with route-package
+ * attribution, and every readback answered "no current estimate for this scope yet" - because the usable check
+ * accepted only `state` in {available, unavailable} or an array-valued `effects`, while the learner answers
+ * `state: "active"` with an object. The learner's document is the authority; the route projects it into the
+ * bounded inspection document instead of discarding it.
+ */
+const liveEstimateGeneration = {
+  schemaVersion: "role-model.profile-estimate-generation.v1",
+  generationId: "estimate:default:d92cceb6",
+  generationKey: "default",
+  generation: 1,
+  state: "active",
+  estimateDigest: "d461a6b05057cb2244e7429cfc12b7ca918b44188835fedd9083b0e82d4ea61b",
+  effects: {
+    routePackage: {
+      valueCount: 1,
+      groups: [
+        {
+          valueDigest: "a948d32256467cd013855d8479b3fd6849d39ccdd544358ae8c3f854056c2639",
+          sampleCount: 3,
+          estimate: 0.67,
+          confidence: "insufficient_sample",
+          evidenceRefs: ["artifact:70166bc7d75d1188a9da514304dc95111e52d0b918358b06a1776f92c4e7971e"],
+        },
+      ],
+    },
+  },
+};
+
+test("run113 an active estimate generation is projected, not reported as absent", () => {
+  const result = resolveLearningProfileRouteResult({ profileReadback: liveEstimateGeneration });
+  expect(result).toMatchObject({
+    schemaVersion: "role-model.learning-profile-inspection.v1",
+    state: "available",
+    reason: null,
+    generationKey: "default",
+    generation: 1,
+    estimateState: "active",
+    sampleCount: 3,
+  });
+  expect(result.effects).toEqual(liveEstimateGeneration.effects);
+});
+
+test("run113 the state readback's estimate is projected the same way the direct readback is", () => {
+  const result = resolveLearningProfileRouteResult({
+    profileReadback: unavailableProjection,
+    stateReadback: { profile: liveEstimateGeneration },
+  });
+  expect(result).toMatchObject({ state: "available", sampleCount: 3 });
+});
+
+test("run113 an estimate without the documented members is still reported as absent, not invented", () => {
+  const result = resolveLearningProfileRouteResult({
+    profileReadback: { schemaVersion: "role-model.profile-store.v1", estimateGenerations: [] },
+  });
+  expect(result).toEqual({
+    schemaVersion: "role-model.learning-profile-inspection.v1",
+    state: "unavailable",
+    reason: "no current estimate for this scope yet",
+  });
+});

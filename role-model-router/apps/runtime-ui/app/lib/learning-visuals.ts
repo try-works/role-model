@@ -522,6 +522,13 @@ export function profileInspectionView(payload: unknown): {
   if (!record || record.error === "operator_capability_unavailable") {
     return { state: "unavailable", reason };
   }
+  // Run 113: the route answers the bounded inspection document, and its own `state` is the authority. A
+  // document that says `unavailable` (with its reason) must not render as "available" merely because it
+  // arrived without an error field - measured live, the projection's "no current estimate for this scope
+  // yet" document was being shown as an available profile inspection.
+  if (record.state === "unavailable") {
+    return { state: "unavailable", reason };
+  }
   return { state: "available", reason };
 }
 

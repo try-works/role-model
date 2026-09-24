@@ -311,6 +311,23 @@ describe("formatters", () => {
       reason: "learning profile inspection operator control is unavailable.",
     });
     expect(profileInspectionView(null)).toEqual({ state: "unavailable", reason: null });
+    // Run 113: the route's bounded document carries its own state, and an absence must not render as an
+    // available inspection just because it arrived without an error field.
+    expect(
+      profileInspectionView({
+        schemaVersion: "role-model.learning-profile-inspection.v1",
+        state: "unavailable",
+        reason: "no current estimate for this scope yet",
+      }),
+    ).toEqual({ state: "unavailable", reason: "no current estimate for this scope yet" });
+    expect(
+      profileInspectionView({
+        schemaVersion: "role-model.learning-profile-inspection.v1",
+        state: "available",
+        reason: null,
+        generationKey: "default",
+      }),
+    ).toEqual({ state: "available", reason: null });
 
     expect(formatPercentShare(0)).toBe("0.0%");
     expect(formatPercentShare(0.25)).toBe("25.0%");

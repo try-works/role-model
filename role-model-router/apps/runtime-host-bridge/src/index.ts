@@ -15819,6 +15819,50 @@ function writeOperatorUnavailable(response: ServerResponse, capability: string):
 }
 
 /**
+ * Run 113 (addendum 09 R7): the profile learner's own generation document is the authority, and this route
+ * used to discard it. Measured live 2026-09-24: the store held an active estimate with route-package
+ * attribution (`state: "active"`, `effects` as an object) while every profile readback answered "no current
+ * estimate for this scope yet", because the usable-document check accepted only `state` in {available,
+ * unavailable} or an array-valued `effects`. The projection keeps the learner's own document (digest,
+ * generation, effects) in the bounded shape the Learning overview renders, and invents nothing.
+ */
+export function projectLearningProfileEstimate(value: unknown): Record<string, unknown> | null {
+  const record =
+    value && typeof value === "object" && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : null;
+  if (!record) return null;
+  const effects =
+    record.effects && typeof record.effects === "object" && !Array.isArray(record.effects)
+      ? (record.effects as Record<string, unknown>)
+      : null;
+  const generationDocument =
+    String(record.schemaVersion ?? "") === "role-model.profile-estimate-generation.v1";
+  if (!generationDocument && !(record.state === "active" && effects)) return null;
+  let sampleCount = 0;
+  for (const dimension of Object.values(effects ?? {})) {
+    const groups = Array.isArray((dimension as { groups?: unknown })?.groups)
+      ? ((dimension as { groups: unknown[] }).groups as Record<string, unknown>[])
+      : [];
+    for (const group of groups) {
+      const value = Number(group?.sampleCount);
+      if (Number.isFinite(value) && value > 0) sampleCount += value;
+    }
+  }
+  return {
+    schemaVersion: "role-model.learning-profile-inspection.v1",
+    state: "available",
+    reason: null,
+    generationKey: typeof record.generationKey === "string" ? record.generationKey : "default",
+    generation: Number.isSafeInteger(record.generation) ? record.generation : null,
+    estimateDigest: typeof record.estimateDigest === "string" ? record.estimateDigest : null,
+    estimateState: typeof record.state === "string" ? record.state : null,
+    sampleCount,
+    effects: effects ?? {},
+  };
+}
+
+/**
  * Run 110: the profile readback is the one Learning route whose packaged composition resolves through the
  * private-endpoint client (measured live: 503 `operator_capability_unavailable` with `detail: private transport
  * answered null for operator/learning/profile`, while `records`, `decisions`, `policy` and `rollout` answer 200
@@ -15846,7 +15890,7 @@ export function resolveLearningProfileRouteResult(input: {
     ) {
       return record;
     }
-    return null;
+    return projectLearningProfileEstimate(record);
   };
   const direct = usable(input.profileReadback);
   if (direct) return direct;
