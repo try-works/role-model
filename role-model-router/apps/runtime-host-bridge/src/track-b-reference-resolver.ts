@@ -37,6 +37,17 @@ export type ReferenceResolver = (
   context: { readonly row?: Record<string, unknown>; readonly field?: string; readonly attestation?: unknown },
 ) => Record<string, unknown> | undefined;
 
+/**
+ * The worker names the resolver it could not use in its refusal (`resolver=<authority>`), and it requires the
+ * attestation's authority to match the resolver's own when the resolver declares one. Declaring it here is therefore
+ * both a contract requirement and the only way a live refusal can distinguish "no resolver arrived" from "the
+ * resolver could not prove the reference".
+ */
+export interface AuthoritativeReferenceResolver {
+  (scope: string, reference: string, kind: string, context: Record<string, unknown>): Record<string, unknown> | undefined;
+  readonly authority: string;
+}
+
 const ATTESTATION_SCHEMA = "role-model.evaluation-reference-attestation.v1";
 const ATTESTATION_AUTHORITY = "evaluation-reference-store";
 const ATTESTATION_PURPOSE = "evaluation";
@@ -52,7 +63,7 @@ export function parseArtifactReferenceId(reference: unknown): string | null {
 
 export function createCaptureScopeReferenceResolver(
   input: CaptureScopeReferenceResolverInput,
-): ReferenceResolver {
+): AuthoritativeReferenceResolver {
   const now = input.now ?? (() => Date.now());
   const ttlMs = Math.min(Math.max(input.ttlMs ?? DEFAULT_TTL_MS, 1), 60_000);
   const stores = new Map<string, DatabaseSync | null>();
@@ -81,7 +92,7 @@ export function createCaptureScopeReferenceResolver(
     return false;
   };
 
-  return (scope, reference, _kind, _context) => {
+  const resolve = (scope: string, reference: string, _kind: string, _context: unknown) => {
     if (scope !== input.scope) return undefined;
     const artifactId = parseArtifactReferenceId(reference);
     if (!artifactId) return undefined;
@@ -101,4 +112,5 @@ export function createCaptureScopeReferenceResolver(
       expiresAtMs: issuedAtMs + ttlMs,
     };
   };
+  return Object.assign(resolve, { authority: ATTESTATION_AUTHORITY });
 }

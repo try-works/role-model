@@ -5272,6 +5272,34 @@ export async function main(): Promise<void> {
               ),
             ],
           });
+          /**
+           * The resolver only helps if the caller-supplied function actually reaches the extension: the packaged
+           * worker falls back to its own operator-scope resolver when the field is absent, and the two failures look
+           * identical from the refusal alone. One bounded line names which of them happened.
+           */
+          let referenceResolverReported = false;
+          const reportingReferenceResolver = (
+            scope: string,
+            reference: string,
+            kind: string,
+            context: unknown,
+          ) => {
+            if (!referenceResolverReported) {
+              referenceResolverReported = true;
+              console.error(
+                `[run132] derivation reference resolver invoked (scope=${scope} reference=${reference.slice(0, 40)})`,
+              );
+            }
+            return referenceResolver(
+              scope,
+              reference,
+              kind,
+              context as Record<string, unknown>,
+            );
+          };
+          const resolverForEnvelope = Object.assign(reportingReferenceResolver, {
+            authority: referenceResolver.authority,
+          });
           const envelopeFor = (
             extensionId: string,
             capability: string,
@@ -5291,7 +5319,7 @@ export async function main(): Promise<void> {
             ...(extensionId === "knowledge-store" ? { payload: value } : {}),
             ...(extensionId === "knowledge-worker" && capability === "knowledge:eval-consumer"
               ? {
-                  referenceResolver,
+                  referenceResolver: resolverForEnvelope,
                   trustedReferenceAuthorities: ["evaluation-reference-store"],
                 }
               : {}),

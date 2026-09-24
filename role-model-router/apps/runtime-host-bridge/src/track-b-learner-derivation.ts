@@ -363,7 +363,7 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
       input.log?.(
         `learner derivation refused ${groupId}: ${String(
           (error as { message?: unknown })?.message ?? error,
-        ).slice(0, 200)} [${profileDiagnostic}]`,
+        ).slice(0, 320)} [${profileDiagnostic}]`,
       );
     }
   }
