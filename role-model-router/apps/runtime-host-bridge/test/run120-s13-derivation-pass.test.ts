@@ -183,6 +183,46 @@ describe("run120 S13: the derivation pass presents only durable, complete eviden
     expect(capabilities).toEqual([]);
   });
 
+  /**
+   * Measured live on `run120-d4b95514`: the first derivation tick examined all 812 groups and derived none, because
+   * `evaluation:list-groups` returns `{...group_json, status, result: {...result_json}}` - the members and the outcome
+   * live under `result`, while the rejection/selection code read them from the top level. The page shape is the
+   * authoritative readback, so the pass has to read it as it is.
+   */
+  test("accepts the evaluator's page shape, where members and outcome live under result", async () => {
+    const pageEntry = {
+      groupId: comparison.groupId,
+      status: "finalized",
+      holdout: comparison.holdout,
+      comparability: comparison.comparability,
+      referenceProofs: comparison.referenceProofs,
+      result: {
+        members: comparison.members,
+        outcome: comparison.outcome,
+        referenceProofs: comparison.referenceProofs,
+      },
+    };
+    expect(learnableComparisonMembers(pageEntry)?.positive).toHaveLength(1);
+    expect(durableReplayIdForComparison(pageEntry)).toBe(REPLAY_ID);
+
+    const summary = await deriveLearnerCandidatesFromDurableEvidence({
+      groups: [pageEntry],
+      attemptedGroupIds: new Set<string>(),
+      limit: 2,
+      channel: "stage",
+      scope: "standalone-runtime-stage",
+      evaluationAuthoritySecret: "secret",
+      invoke: async (_extensionId, capability) => {
+        if (capability === "replay:job") return job;
+        if (capability === "signals:read") return report;
+        if (capability === "profile:estimate-finalized-evaluation") return profile;
+        if (capability === "knowledge:eval-consumer") return { id: "shadow-page-shape" };
+        return null;
+      },
+    });
+    expect(summary).toEqual({ examined: 1, attempted: 1, derived: 1, skipped: 0, refused: 0 });
+  });
+
   test("does not re-attempt a group the process already presented", async () => {
     const attempts: string[] = [];
     const attempted = new Set<string>();

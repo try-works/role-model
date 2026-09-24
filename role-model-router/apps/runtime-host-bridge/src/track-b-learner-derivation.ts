@@ -57,12 +57,28 @@ function text(value: unknown): string | null {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
 }
 
+/**
+ * `evaluation:list-groups` answers `{...group_json, status, result: {...result_json}}`, so the members, the outcome
+ * and the judge provenance live under `result`. Measured live on `run120-d4b95514`: the first derivation tick
+ * examined all 812 groups, read `members` from the top level, found none and derived nothing. Everything downstream
+ * (learnability, the replay id, the assembled finalized comparison) reads this normalized view.
+ */
+export function normalizedComparisonGroup(
+  group: Readonly<Record<string, unknown>>,
+): Record<string, unknown> {
+  const result = asRecord(group.result);
+  return result ? { ...group, ...result } : { ...group };
+}
+
 /** A group is learnable only when it carries at least one positive and one negative member (the consumer's own rule). */
 export function learnableComparisonMembers(
   group: Readonly<Record<string, unknown>>,
 ): { readonly positive: readonly Record<string, unknown>[]; readonly negative: readonly Record<string, unknown>[] } | null {
-  const members = Array.isArray(group.members)
-    ? (group.members as unknown[]).map(asRecord).filter((member): member is Record<string, unknown> => member !== null)
+  const normalized = normalizedComparisonGroup(group);
+  const members = Array.isArray(normalized.members)
+    ? (normalized.members as unknown[])
+        .map(asRecord)
+        .filter((member): member is Record<string, unknown> => member !== null)
     : [];
   if (members.length === 0) return null;
   const positive = members.filter((member) => member.disposition === "positive");
@@ -75,7 +91,7 @@ export function learnableComparisonMembers(
 export function durableReplayIdForComparison(
   group: Readonly<Record<string, unknown>>,
 ): string | null {
-  const holdout = asRecord(group.holdout);
+  const holdout = asRecord(normalizedComparisonGroup(group).holdout);
   const caseIds = Array.isArray(holdout?.caseIds) ? holdout?.caseIds : [];
   for (const caseId of caseIds) {
     const value = text(caseId);
@@ -99,12 +115,13 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
     const groupId = text(group.groupId) ?? text(group.comparisonId);
     if (!groupId || input.attemptedGroupIds.has(groupId)) continue;
     examined += 1;
-    if (text(group.status) !== "finalized" || !learnableComparisonMembers(group)) {
+    const normalized = normalizedComparisonGroup(group);
+    if (text(normalized.status) !== "finalized" || !learnableComparisonMembers(normalized)) {
       skipped += 1;
       input.attemptedGroupIds.add(groupId);
       continue;
     }
-    const replayId = durableReplayIdForComparison(group);
+    const replayId = durableReplayIdForComparison(normalized);
     if (!replayId) {
       skipped += 1;
       input.attemptedGroupIds.add(groupId);
@@ -158,7 +175,7 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
         input.log?.(`learner derivation skipped ${groupId}: replay ${replayId.slice(0, 12)} has no graph provenance`);
         continue;
       }
-      const members = learnableComparisonMembers(group);
+      const members = learnableComparisonMembers(normalized);
       const rows = members
         ? [...members.positive, ...members.negative].map((member) => ({
             endpoint: text(member.candidateRef),
@@ -166,14 +183,16 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
             outcome: Number(member.score),
             trialId: text(member.trialId),
             scoreId: text(member.scoreId),
-            evidenceRef: text(member.candidateRef) === text(asRecord(group.comparability)?.counterfactualCandidateRef)
-              ? text(asRecord(group.comparability)?.counterfactualEvidenceRef)
-              : text(asRecord(group.comparability)?.sourceEvidenceRef),
+            evidenceRef:
+              text(member.candidateRef) ===
+              text(asRecord(normalized.comparability)?.counterfactualCandidateRef)
+                ? text(asRecord(normalized.comparability)?.counterfactualEvidenceRef)
+                : text(asRecord(normalized.comparability)?.sourceEvidenceRef),
           }))
         : [];
       const profile = unwrap(
         await input.invoke("profile-learner", "profile:estimate-finalized-evaluation", {
-          finalizedEvaluation: group,
+          finalizedEvaluation: normalized,
           signals: report,
           rows,
         }),
@@ -182,7 +201,7 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
         channel: input.channel,
         scope: input.scope,
         evaluationAuthoritySecret: input.evaluationAuthoritySecret,
-        finalizedComparison: group,
+        finalizedComparison: normalized,
         replayProvenance: {
           sourceDecisionId,
           sourceGraphRef,
