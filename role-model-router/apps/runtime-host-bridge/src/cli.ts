@@ -5229,16 +5229,29 @@ export async function main(): Promise<void> {
             }
           })();
           if (!authority) return { examined: 0, derived: 0, pending: 0 };
+          /**
+           * S13 follow-on (measured live on `run121-0bda121a`): every derivation tick was refused with `replay
+           * persisted job scope binding mismatch`, because durable replay jobs carry the *capture* scope
+           * (`runtime:<hash>`) and the operator scope the runtime is configured with is not it - the same binding
+           * addendum 06 S27/S28 documented for the handoff recovery pass. The scope is computable, not discoverable,
+           * so the replay readback is bound to it while the evaluator/worker reads stay on the operator scope.
+           */
+          const replayJobScope = resolveDurableReplayJobScope({
+            channel,
+            runtimeStateRoot: options.runtimeStateRoot,
+            scopeId: options.scopeId,
+          });
           const envelopeFor = (
             extensionId: string,
             capability: string,
             value: Record<string, unknown>,
+            scopeOverride?: string,
           ) => ({
             requestId: `learner-derivation:${capability}:${Date.now()}`,
             sessionId: `learner-derivation:${options.scopeId}`,
             protocolVersion: "1.1.0",
             channel,
-            scope: options.scopeId,
+            scope: scopeOverride ?? options.scopeId,
             authorizationEpoch: 1,
             capability,
             value,
@@ -5270,7 +5283,15 @@ export async function main(): Promise<void> {
           });
           const summary = await deriveLearnerCandidatesFromDurableEvidence({
             invoke: async (extensionId, capability, value) =>
-              runtime.invoke(extensionId, envelopeFor(extensionId, capability, value)),
+              runtime.invoke(
+                extensionId,
+                envelopeFor(
+                  extensionId,
+                  capability,
+                  value,
+                  extensionId === "replay-core" ? replayJobScope : undefined,
+                ),
+              ),
             groups,
             attemptedGroupIds: learnerDerivationAttempts,
             limit: 2,
