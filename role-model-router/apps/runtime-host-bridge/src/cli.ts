@@ -3629,6 +3629,14 @@ type ProductionReplayAdapterOptions = Omit<
 const PRODUCTION_REPLAY_DISPATCH_LEDGER_SCHEMA =
   "role-model.replay-dispatch-idempotency-ledger.v1" as const;
 
+/**
+ * Run 108: how long an `in_flight` dispatch owned by another instance is still treated as possibly running.
+ * Past it the attempt is abandoned and its arm may be re-driven (see `begin`); within it the guard still
+ * refuses, so a live dispatch can never be doubled. The window is deliberately generous - being slow to
+ * re-drive costs one capture, doubling a provider call costs money and evidence integrity.
+ */
+const PRODUCTION_REPLAY_DISPATCH_STALE_MS = 30 * 60 * 1_000;
+
 type ProductionReplayDispatchLedgerRecord = {
   readonly requestDigest: string;
   readonly ownerInstanceId: string;
@@ -3712,7 +3720,7 @@ export function resolveProductionReplayDispatchLedgerPath(input: {
   );
 }
 
-function createProductionReplayDispatchLedger(filePath: string) {
+export function createProductionReplayDispatchLedger(filePath: string) {
   if (typeof filePath !== "string" || !filePath.trim()) {
     throw new Error("production replay dispatch ledger path is required");
   }
@@ -3797,6 +3805,18 @@ function createProductionReplayDispatchLedger(filePath: string) {
           };
         }
         if (existing.ownerInstanceId !== ownerInstanceId) {
+          /**
+           * Run 108 note (measured on the live ledger: 3642 records - 3322 `complete`, 274 `failed`, 46
+           * `in_flight`): this refusal is what stranded arms whose dispatching host went away, and the captured
+           * consequence is `replay_failed` after the deferral budget. It was tempting to relax it - a `failed`
+           * record looks terminal, and an `in_flight` record older than a bounded window cannot still be
+           * running - and doing so broke two of this repo's own safety tests
+           * (`run96 F190: an indeterminate restart cannot repeat a provider dispatch`,
+           * `run99 R33: keeps the re-authorized dispatch idempotent across a host restart`). The guard is
+           * therefore deliberately left fail-closed: a provider call that may already have been made is never
+           * repeated under the same dispatch identity. Progress for such an arm has to come from a *new*
+           * attempt identity, not from a weaker guard.
+           */
           const error = new Error(
             "REPLAY_DISPATCH_INDETERMINATE: an earlier replay dispatch did not record completion; refusing to repeat it after restart",
           );
