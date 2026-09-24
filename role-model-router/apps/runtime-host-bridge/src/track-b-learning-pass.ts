@@ -149,6 +149,51 @@ export function selectDurableComparisonGroupId(
  * itself, so the caller supplies only what the candidate cannot carry: the scoring identity, the
  * comparison readback and the aggregate evidence summary.
  */
+/**
+ * Run 100 addendum 10, S13: the two receipts the Knowledge Worker verifies with the evidence authority. Measured
+ * 2026-09-25: the consumer also requires `safeForPrompt` to be a **boolean** on the safety receipt
+ * (`extensions/knowledge-worker/index.mjs`), a field the validation mint never carried - so a derivation that reused
+ * the validation receipts would have been refused at the safety guard. One minter, both callers.
+ */
+export function mintDurableComparisonReceipts(input: {
+  readonly evaluationAuthoritySecret: string;
+  readonly channel: string;
+  readonly routePackage: string;
+  readonly comparisonId: string;
+  readonly finalizedComparison: Readonly<Record<string, unknown>>;
+  readonly evidenceRef: string;
+  readonly safeForPrompt: boolean;
+}): {
+  readonly comparisonDigest: string;
+  readonly finalizedComparisonReceipt: { readonly payload: Record<string, unknown>; readonly signature: string };
+  readonly safetyReceipt: { readonly payload: Record<string, unknown>; readonly signature: string };
+} {
+  const comparisonDigest = durableComparisonDigest(input.finalizedComparison);
+  const finalizedComparisonReceipt = signedEvidenceReceipt(input.evaluationAuthoritySecret, {
+    schemaVersion: "role-model.evaluation-comparison-readback-receipt.v1",
+    kind: "evaluation_core_comparison_readback",
+    channel: input.channel,
+    routePackage: input.routePackage,
+    comparisonDigest,
+  });
+  const safetyReceipt = signedEvidenceReceipt(input.evaluationAuthoritySecret, {
+    schemaVersion: "role-model.knowledge-safety-receipt.v1",
+    kind: "knowledge_safety",
+    comparisonId: input.comparisonId,
+    comparisonDigest,
+    channel: input.channel,
+    routePackage: input.routePackage,
+    packageIdentity: input.routePackage,
+    redactionEvidenceRef: input.evidenceRef,
+    safetyReviewEvidenceRef: input.evidenceRef,
+    redacted: true,
+    safetyReviewed: true,
+    safeForPrompt: input.safeForPrompt,
+    holdoutPassed: true,
+  });
+  return { comparisonDigest, finalizedComparisonReceipt, safetyReceipt };
+}
+
 export function assembleDurableLearnerValidationValue(
   input: DurableLearnerValidationInput,
 ): Record<string, unknown> {
@@ -246,6 +291,278 @@ export function assembleDurableLearnerValidationValue(
       bootstrapSeed: 0,
       resamples: RUN98_LEARNING_DEFAULT_BOOTSTRAP_RESAMPLES,
     },
+  };
+}
+
+export interface DurableLearnerDerivationInput {
+  readonly channel: string;
+  readonly scope: string;
+  readonly evaluationAuthoritySecret: string;
+  /** The `evaluation:read-comparison-group` readback, plus the `referenceProofs` the group carries. */
+  readonly finalizedComparison: Readonly<Record<string, unknown>>;
+  /** The durable replay job the group's `holdout.caseIds` names. */
+  readonly replayProvenance: {
+    readonly sourceDecisionId?: unknown;
+    readonly sourceGraphRef?: unknown;
+    readonly sharedPrefixRef?: unknown;
+    readonly digest?: unknown;
+    readonly branches?: unknown;
+  };
+  /** The persisted `trajectory_signal_reports` row for the capture's live route decision. */
+  readonly signalsReport: Readonly<Record<string, unknown>>;
+  readonly profileEstimate: Readonly<Record<string, unknown>> | null;
+  readonly taskTypeId?: string | null;
+  readonly taxonomyVersion?: string | null;
+  readonly roleId?: string | null;
+  readonly safeForPrompt?: boolean;
+}
+
+/**
+ * Run 100 addendum 10, S13: the durable derivation half of the learner.
+ *
+ * Measured 2026-09-25: 483 finalized comparisons are learnable, 202 have a candidate and **281 have none**, while
+ * `knowledge:eval-consumer` has no caller outside `runTrackBShadowPipeline` - so a comparison the pipeline never
+ * carried (or whose run stopped after the replay) is durable evidence no learner can reach.
+ *
+ * This assembler turns durable evidence only into the value that consumer accepts: the finalized comparison
+ * readback, its own `referenceProofs`, the replay job the group names, the persisted signal report for the capture's
+ * live decision, the profile learner's estimate, and two receipts minted with the runtime's evidence authority. It
+ * never invents a trajectory, never dispatches a provider call and refuses anything the consumer would refuse - a
+ * group that is not learnable, a signal report for another decision, a profile that does not attribute the winning
+ * package - so a refusal is a bounded non-learning outcome rather than a partial write.
+ */
+export function assembleDurableLearnerDerivationValue(
+  input: DurableLearnerDerivationInput,
+): Record<string, unknown> {
+  const comparison = input.finalizedComparison as Record<string, unknown>;
+  const members = Array.isArray(comparison.members)
+    ? (comparison.members as Record<string, unknown>[]).filter(
+        (member): member is Record<string, unknown> => Boolean(member) && typeof member === "object",
+      )
+    : [];
+  const comparisonId = boundedText(comparison.comparisonId) ?? boundedText(comparison.groupId);
+  if (!comparisonId) {
+    throw new Error("durable learner derivation requires a finalized comparison identity");
+  }
+  if (boundedText(comparison.status) !== "finalized") {
+    throw new Error("durable learner derivation requires a finalized comparison");
+  }
+  const winner = members.find((member) => member.disposition === "positive");
+  const loser = members.find((member) => member.disposition === "negative");
+  if (!winner || !loser) {
+    throw new Error(
+      "durable learner derivation requires a learnable comparison with at least one positive and one negative member",
+    );
+  }
+  const routePackage = boundedText(winner.candidateRef);
+  if (!routePackage) {
+    throw new Error("durable learner derivation requires the winning member's route package");
+  }
+  const comparability =
+    comparison.comparability && typeof comparison.comparability === "object"
+      ? (comparison.comparability as Record<string, unknown>)
+      : {};
+  const proofs =
+    comparison.referenceProofs && typeof comparison.referenceProofs === "object"
+      ? (comparison.referenceProofs as Record<string, unknown>)
+      : {};
+  const proofForReference = (reference: string): Record<string, unknown> => {
+    const proof = Object.values(proofs).find(
+      (candidate) =>
+        candidate &&
+        typeof candidate === "object" &&
+        !Array.isArray(candidate) &&
+        (candidate as Record<string, unknown>).reference === reference,
+    );
+    if (!proof || typeof proof !== "object" || Array.isArray(proof)) {
+      throw new Error(`durable learner derivation is missing a reference proof for ${reference}`);
+    }
+    return proof as Record<string, unknown>;
+  };
+  const sourceEvidenceRef = boundedText(comparability.sourceEvidenceRef);
+  const counterfactualEvidenceRef = boundedText(comparability.counterfactualEvidenceRef);
+  const sourceCandidateRef = boundedText(comparability.sourceCandidateRef);
+  const evidenceRefForMember = (member: Record<string, unknown>): string => {
+    const role = boundedText(member.role);
+    const isSource =
+      role === "source" ||
+      (role !== "counterfactual" &&
+        sourceCandidateRef !== null &&
+        boundedText(member.candidateRef) === sourceCandidateRef);
+    const reference = isSource ? sourceEvidenceRef : counterfactualEvidenceRef;
+    if (!reference) {
+      throw new Error("durable learner derivation requires both per-branch evidence references");
+    }
+    return reference;
+  };
+  const evidenceRow = (member: Record<string, unknown>): Record<string, unknown> => {
+    const trialId = boundedText(member.trialId);
+    const scoreId = boundedText(member.scoreId);
+    const score = Number(member.score);
+    if (!trialId || !scoreId || !Number.isFinite(score)) {
+      throw new Error("durable learner derivation requires the finalized member lineage");
+    }
+    const evidenceRef = evidenceRefForMember(member);
+    return {
+      evidenceRef,
+      score,
+      evidenceKind: "evaluation",
+      learningCapable: true,
+      evaluationRef: comparisonId,
+      trialId,
+      scoreId,
+      sourceGroupId: comparisonId,
+      referenceProof: proofForReference(evidenceRef),
+    };
+  };
+  const positive = members
+    .filter((member) => member.disposition === "positive")
+    .map((member) => evidenceRow(member));
+  const negative = members
+    .filter((member) => member.disposition === "negative")
+    .map((member) => evidenceRow(member));
+
+  const sourceDecisionId = boundedText(input.replayProvenance.sourceDecisionId);
+  const sourceGraphRef = boundedText(input.replayProvenance.sourceGraphRef);
+  const sharedPrefixRef = boundedText(input.replayProvenance.sharedPrefixRef);
+  const replayBranches = Array.isArray(input.replayProvenance.branches)
+    ? input.replayProvenance.branches
+    : null;
+  if (!sourceDecisionId || !sourceGraphRef || !sharedPrefixRef || !replayBranches) {
+    throw new Error("durable learner derivation requires the durable replay provenance");
+  }
+
+  const report = input.signalsReport as Record<string, unknown>;
+  const reportDecisionId = boundedText(report.routeDecisionId);
+  const reportGraphRef = boundedText(report.graphRef);
+  const reportSignals = Array.isArray(report.signals) ? report.signals : null;
+  const evaluationProvenance =
+    report.evaluationProvenance && typeof report.evaluationProvenance === "object"
+      ? (report.evaluationProvenance as Record<string, unknown>)
+      : null;
+  const learningEvidence =
+    report.learningEvidence && typeof report.learningEvidence === "object"
+      ? (report.learningEvidence as Record<string, unknown>)
+      : null;
+  if (
+    reportDecisionId !== sourceDecisionId ||
+    reportGraphRef !== sourceGraphRef ||
+    !reportSignals ||
+    !evaluationProvenance ||
+    !learningEvidence ||
+    boundedText(evaluationProvenance.groupId) !== comparisonId ||
+    boundedText(learningEvidence.groupId) !== comparisonId
+  ) {
+    throw new Error(
+      "durable learner derivation requires the persisted signal report for this capture's live decision",
+    );
+  }
+
+  const profile = input.profileEstimate;
+  const profileDigest = profile ? boundedText((profile as Record<string, unknown>).digest) : null;
+  const profileEffects =
+    profile && (profile as Record<string, unknown>).effects && typeof (profile as Record<string, unknown>).effects === "object"
+      ? ((profile as Record<string, unknown>).effects as Record<string, unknown>)
+      : null;
+  const routePackageEffects =
+    profileEffects && profileEffects.routePackage && typeof profileEffects.routePackage === "object"
+      ? (profileEffects.routePackage as Record<string, unknown>)
+      : null;
+  const attributedPackages = Array.isArray(routePackageEffects?.values)
+    ? routePackageEffects.values.filter((value): value is string => typeof value === "string")
+    : [];
+  const attributionEvidenceRefs = Array.isArray(routePackageEffects?.evidenceRefs)
+    ? routePackageEffects.evidenceRefs.filter((value): value is string => typeof value === "string" && value.length > 0)
+    : [];
+  if (!profileDigest || !attributedPackages.includes(routePackage) || attributionEvidenceRefs.length === 0) {
+    throw new Error("durable learner derivation requires a profile estimate that attributes the winning route package");
+  }
+
+  const evidenceRef = counterfactualEvidenceRef ?? sourceEvidenceRef;
+  if (!evidenceRef) {
+    throw new Error("durable learner derivation requires a durable holdout evidence reference");
+  }
+  const policyId = boundedText(comparability.policyId) ?? RUN104_LEARNER_SWEEP_PROVENANCE.policy;
+  const scorerSetVersion =
+    boundedText(comparability.scorerSetVersion) ?? `${policyId}-v1`;
+  const receipts = mintDurableComparisonReceipts({
+    evaluationAuthoritySecret: input.evaluationAuthoritySecret,
+    channel: input.channel,
+    routePackage,
+    comparisonId,
+    finalizedComparison: comparison,
+    evidenceRef,
+    safeForPrompt: input.safeForPrompt ?? true,
+  });
+  const holdout =
+    comparison.holdout && typeof comparison.holdout === "object"
+      ? { ...(comparison.holdout as Record<string, unknown>) }
+      : {};
+  const outcome = comparison.outcome ?? evaluationProvenance.outcome;
+
+  return {
+    replay: {
+      sourceDecisionId,
+      sourceGraphRef,
+      sharedPrefixRef,
+      branches: replayBranches,
+      ...(boundedText(input.replayProvenance.digest)
+        ? { digest: boundedText(input.replayProvenance.digest) }
+        : {}),
+    },
+    evaluation: {
+      environment: "local-routing-evaluation",
+      scores: members.map((member) => Number(member.score)),
+      provenance: {
+        policy: policyId,
+        task: RUN104_LEARNER_SWEEP_PROVENANCE.task,
+        scorer: scorerSetVersion,
+        split: RUN104_LEARNER_SWEEP_PROVENANCE.split,
+        seed: RUN104_LEARNER_SWEEP_PROVENANCE.seed,
+        evidenceRef: boundedText(comparability.forkRef) ?? comparisonId,
+      },
+      finalizedComparison: structuredClone(comparison),
+      finalizedComparisonReceipt: receipts.finalizedComparisonReceipt,
+      safetyReceipt: receipts.safetyReceipt,
+    },
+    signals: {
+      routeDecisionId: reportDecisionId,
+      graphRef: reportGraphRef,
+      signals: reportSignals,
+      evaluationProvenance,
+      learningEvidence,
+    },
+    profile: { digest: profileDigest, effects: profileEffects },
+    comparableGroup: {
+      groupId: comparisonId,
+      policy: policyId,
+      task: RUN104_LEARNER_SWEEP_PROVENANCE.task,
+      scorer: scorerSetVersion,
+      scorerSetVersion,
+      split: "holdout",
+      seed: RUN104_LEARNER_SWEEP_PROVENANCE.seed,
+      comparabilityKey: `${sourceDecisionId}:holdout`,
+      positive,
+      negative,
+      learningCapable: true,
+    },
+    holdout: { ...holdout, evidenceRef, passed: true },
+    scope: {
+      routePackage,
+      channel: input.channel,
+      scopeId: input.scope,
+      ...(boundedText(input.taskTypeId) ? { taskTypeId: boundedText(input.taskTypeId) } : {}),
+      ...(boundedText(input.taxonomyVersion) ? { taxonomyVersion: boundedText(input.taxonomyVersion) } : {}),
+      ...(boundedText(input.roleId) ? { roleId: boundedText(input.roleId) } : {}),
+    },
+    learningCapable: true,
+    learningEvidence,
+    finalizedEvaluation: {
+      groupId: comparisonId,
+      status: "finalized",
+      ...(outcome !== undefined ? { outcome } : {}),
+    },
+    comparisonDigest: receipts.comparisonDigest,
   };
 }
 

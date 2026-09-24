@@ -145,6 +145,13 @@ export interface AutoReplayOperations {
    */
   learnFromUnconsumedCandidates?(input: Record<string, unknown>): Promise<unknown>;
   /**
+   * Run 100 addendum 10 S13: the learner's durable derivation half. The sweep above consumes candidates that exist;
+   * nothing in the runtime *creates* one outside `runTrackBShadowPipeline`, so a finalized comparison the pipeline
+   * never carried is evidence no learner can reach (measured 2026-09-25: 281 learnable groups with no candidate,
+   * 136 of them naming a persisted signal report). Bounded per tick, idempotent, durable readbacks only.
+   */
+  deriveLearnerCandidates?(input: Record<string, unknown>): Promise<unknown>;
+  /**
    * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S7: optional bounded pass that finds durable
    * replay jobs which handed their branches to evaluation but never got an evaluation job (an attempt
    * interrupted between the handoff and the host's resume-entry write) and records the resume entries the
@@ -345,6 +352,8 @@ export function startAutoReplayLoop(input: {
     stranded: number;
     reclaimed: number;
     recovered: number;
+    derived: number;
+    derivationBacklog: number;
     error: string | null;
   }> => {
     if (sweeping) {
@@ -355,6 +364,8 @@ export function startAutoReplayLoop(input: {
         stranded: 0,
         reclaimed: 0,
         recovered: 0,
+        derived: 0,
+        derivationBacklog: 0,
         error: null,
       };
     }
@@ -368,6 +379,8 @@ export function startAutoReplayLoop(input: {
     let stranded = 0;
     let reclaimed = 0;
     let recovered = 0;
+    let derivedCandidates = 0;
+    let derivationBacklog = 0;
     let error: string | null = null;
     try {
       if (typeof input.operations.expireStaleReplayJobs === "function") {
@@ -484,6 +497,28 @@ export function startAutoReplayLoop(input: {
           error = error ? `${error}; ${detail}` : detail;
         }
       }
+      /**
+       * S13: derive a candidate for a learnable finalized comparison that has none. Runs after the consume sweep so a
+       * candidate created this tick can be validated on the next one, and stays bounded (two groups per tick).
+       */
+      if (typeof input.operations.deriveLearnerCandidates === "function") {
+        try {
+          const sweep = (await input.operations.deriveLearnerCandidates({
+            window,
+            policySetDigest: input.policySet.policySetDigest,
+          })) as { readonly derived?: unknown; readonly pending?: unknown } | null;
+          if (sweep) {
+            derivedCandidates = countOf(sweep.derived);
+            derivationBacklog = countOf(sweep.pending);
+          }
+        } catch (cause) {
+          const detail =
+            cause instanceof Error
+              ? `learner derivation failed: ${cause.message.slice(0, 200)}`
+              : "learner derivation failed";
+          error = error ? `${error}; ${detail}` : detail;
+        }
+      }
       // Run 100 addendum 04 S7: a replay that handed its branches off but was interrupted before its
       // evaluation job existed is unclaimable and would otherwise be lost; recover it into the resume store
       // the evaluation sweep above completes.
@@ -507,7 +542,17 @@ export function startAutoReplayLoop(input: {
     } finally {
       sweeping = false;
     }
-    return { expired, resumed, reconciled, stranded, reclaimed, recovered, error };
+    return {
+      expired,
+      resumed,
+      reconciled,
+      stranded,
+      reclaimed,
+      recovered,
+      derived: derivedCandidates,
+      derivationBacklog,
+      error,
+    };
   };
 
   const tick = async (): Promise<AutoReplayTickResult & { readonly skipped?: boolean }> => {

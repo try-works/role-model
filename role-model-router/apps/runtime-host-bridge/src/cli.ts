@@ -180,6 +180,10 @@ import {
   selectDurableComparisonGroupId,
 } from "./track-b-learning-pass.js";
 import {
+  deriveLearnerCandidatesFromDurableEvidence,
+  learnableComparisonMembers,
+} from "./track-b-learner-derivation.js";
+import {
   buildExperiencePackCandidate,
   buildRouteLearningValidationReceipt,
   emitTrackBContract,
@@ -4474,6 +4478,12 @@ export async function main(): Promise<void> {
       let handoffRecoveryCursor: RecoveryPageCursor | null = null;
       /** P6: where the learner sweep resumes in the candidate listing (creation-time order). */
       let learnerCandidateCursor: { createdAtMs: number; candidateId: string } | null = null;
+      /**
+       * S13: groups this process already presented to the consumer. A group whose evidence is not complete yet stays
+       * in the durable backlog; the set only stops one process re-deriving the same group on every tick, and a
+       * restart re-scans from the beginning (the worker dedupes a repeated presentation).
+       */
+      const learnerDerivationAttempts = new Set<string>();
       /** S27 diagnostics: report the resolved job scope and an empty recovery page once per process. */
       let replayJobScopeReported = false;
       let emptyRecoveryPageReported = false;
@@ -5191,6 +5201,99 @@ export async function main(): Promise<void> {
             activated,
             remaining: Math.max(0, pending.length - consumed),
           };
+        },
+        /**
+         * Run 100 addendum 10, S13: the learner's durable derivation half.
+         *
+         * Measured 2026-09-25 on the live root: 483 learnable finalized comparisons, 202 candidates and **281
+         * learnable groups with no candidate**, because `knowledge:eval-consumer` has no caller outside
+         * `runTrackBShadowPipeline` - a comparison the pipeline never carried is durable evidence no learner can
+         * reach. All 281 resolve a replay job through `holdout.caseIds` and 136 already carry a persisted
+         * `trajectory_signal_reports` row for the capture's live decision, so those can be derived from evidence that
+         * already exists: replay provenance from `replay:job`, the signal report from `signals:read`, the profile
+         * estimate over the comparison's own rows, and the two receipts minted with the durable authority. Bounded to
+         * two groups per tick, idempotent, and it never dispatches a provider call or invents a trajectory.
+         */
+        async deriveLearnerCandidates() {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) return { examined: 0, derived: 0, pending: 0 };
+          const authority = await (async () => {
+            try {
+              return await resolveDurableEvaluationAuthority({
+                channel,
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+              });
+            } catch {
+              return null;
+            }
+          })();
+          if (!authority) return { examined: 0, derived: 0, pending: 0 };
+          const envelopeFor = (
+            extensionId: string,
+            capability: string,
+            value: Record<string, unknown>,
+          ) => ({
+            requestId: `learner-derivation:${capability}:${Date.now()}`,
+            sessionId: `learner-derivation:${options.scopeId}`,
+            protocolVersion: "1.1.0",
+            channel,
+            scope: options.scopeId,
+            authorizationEpoch: 1,
+            capability,
+            value,
+            ...(extensionId === "knowledge-store" ? { payload: value } : {}),
+            evaluationAuthoritySecret: authority.authoritySecret,
+          });
+          const groups = (
+            await collectPagedComparisonGroups({
+              readPage: async (cursor) => {
+                const decoded = decodeExternalizedOperatorReadback({
+                  stateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  value: unwrapCapabilityPayload(
+                    await runtime.invoke(
+                      "evaluation-core",
+                      envelopeFor("evaluation-core", "evaluation:list-groups", {
+                        page: true,
+                        limit: LEARNING_GROUP_PAGE_LIMIT,
+                        ...(cursor ? { cursor } : {}),
+                      }),
+                    ),
+                  ),
+                });
+                return decoded;
+              },
+            }).catch(() => [])
+          ).filter((group): group is Record<string, unknown> => {
+            return Boolean(group) && typeof group === "object" && !Array.isArray(group);
+          });
+          const summary = await deriveLearnerCandidatesFromDurableEvidence({
+            invoke: async (extensionId, capability, value) =>
+              runtime.invoke(extensionId, envelopeFor(extensionId, capability, value)),
+            groups,
+            attemptedGroupIds: learnerDerivationAttempts,
+            limit: 2,
+            channel,
+            scope: options.scopeId,
+            evaluationAuthoritySecret: authority.authoritySecret,
+            log: (message) => console.error(`[run120] ${message}`),
+          });
+          const pending = groups.filter((group) => {
+            const groupId = typeof group.groupId === "string" ? group.groupId : null;
+            return (
+              groupId !== null &&
+              group.status === "finalized" &&
+              learnableComparisonMembers(group) !== null &&
+              !learnerDerivationAttempts.has(groupId)
+            );
+          }).length;
+          if (summary.examined > 0) {
+            console.error(
+              `[run120] learner derivation: examined ${summary.examined}, derived ${summary.derived}, skipped ${summary.skipped}, refused ${summary.refused}, backlog ${pending}`,
+            );
+          }
+          return { ...summary, pending };
         },
         /**
          * Run 100 addendum `handoff-evidence-durability.addendum-06` S46: the production caller for
