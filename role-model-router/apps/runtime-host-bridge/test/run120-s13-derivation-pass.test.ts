@@ -81,6 +81,7 @@ const job = {
   sourceDecisionId: DECISION_ID,
   traceRootId: GRAPH_REF,
   sharedPrefixRef: comparison.comparability.forkRef,
+  baselineEndpointId: SOURCE,
   branches: [{ id: WINNER }],
   candidatePackages: [
     {

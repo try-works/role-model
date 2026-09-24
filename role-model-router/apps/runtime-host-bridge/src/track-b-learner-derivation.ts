@@ -242,6 +242,15 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
       const propensityFor = (
         endpointId: string | null,
       ): { readonly propensity: number; readonly model: string | null; readonly effort: string | null } | null => {
+        /**
+         * The incumbent arm is the job's baseline and is never part of `candidatePackages` (measured: exactly one of
+         * each group's two members is absent, and it is the source). It is not sampled - the replay dispatches it once
+         * as the comparison's baseline - so its inclusion probability is 1 for the same reason a deterministic
+         * candidate's is.
+         */
+        if (endpointId !== null && text(job?.baselineEndpointId) === endpointId) {
+          return { propensity: 1, model: null, effort: null };
+        }
         const entry =
           endpointId === null
             ? undefined
