@@ -1545,11 +1545,32 @@ export function createTrackBOperations({
       ? (sanitized as Record<string, unknown>)
       : {};
   };
-  const unavailableOperatorPayload = (capability: string): Record<string, unknown> => ({
+  /**
+   * Run 109: the projection named the capability but not the cause, so a route that failed in the private
+   * transport was indistinguishable from one the sidecar refused, and every investigation started by guessing
+   * which layer answered. The bounded cause travels with it now (no payloads, no credentials - just the error's
+   * own message and status), which is what the Learning overview's profile panel needed to explain itself.
+   */
+  const operatorUnavailableCause = (error: unknown): string | null => {
+    if (!error) return null;
+    const status =
+      error instanceof TrackBPrivateOperationError && Number.isInteger(error.status)
+        ? `status ${error.status}`
+        : null;
+    const message =
+      error instanceof Error && error.message ? error.message.replace(/\s+/g, " ").trim() : null;
+    const cause = [status, message].filter(Boolean).join(": ");
+    return cause ? cause.slice(0, 240) : null;
+  };
+  const unavailableOperatorPayload = (
+    capability: string,
+    cause: string | null = null,
+  ): Record<string, unknown> => ({
     schemaVersion: "role-model.operator-status.v1",
     overall: "unavailable",
     observedAtMs: Date.now(),
     reason: `${capability} operator control is unavailable.`,
+    ...(cause ? { detail: cause } : {}),
     capabilities: { [capability]: "unavailable" },
     error: "operator_capability_unavailable",
     capability,
@@ -1599,7 +1620,7 @@ export function createTrackBOperations({
         error instanceof TrackBPrivateOperationError &&
         (error.status === 404 || error.status === 503 || error.status === 504)
       ) {
-        return unavailableOperatorPayload(capability);
+        return unavailableOperatorPayload(capability, operatorUnavailableCause(error));
       }
       // Operator reads are dependent features. A loopback sidecar that is
       // unreachable or still starting must not take ordinary routing down
@@ -1608,7 +1629,7 @@ export function createTrackBOperations({
         error instanceof TypeError ||
         (error instanceof Error && /fetch|network|socket|connect/i.test(error.message))
       ) {
-        return unavailableOperatorPayload(capability);
+        return unavailableOperatorPayload(capability, operatorUnavailableCause(error));
       }
       throw error;
     }
