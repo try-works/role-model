@@ -172,6 +172,7 @@ function resolveChannelScopedReplayLedgerLimits(input: {
 import {
   DEFAULT_EVIDENCE_HALF_LIFE_DAYS,
   LEARNING_GROUP_PAGE_LIMIT,
+  activationStageAllowsPackActivation,
   assembleDurableLearnerValidationValue,
   buildTrackBLearningEvidenceSummary,
   collectPagedComparisonGroups,
@@ -4806,6 +4807,8 @@ export async function main(): Promise<void> {
           };
           const groups = await readComparisonGroups();
           let consumed = 0;
+          /** Run 107 P6: validated packs this sweep put into the rollout (see the activation step below). */
+          let activated = 0;
           for (const candidate of pending.slice(0, 2)) {
             const candidateId = String(candidate.candidateId);
             const scorerSetVersion =
@@ -5022,6 +5025,61 @@ export async function main(): Promise<void> {
                       },
                     }),
                   );
+                  /**
+                   * Run 107 P6: the promotion has a second half - the pack has to reach the *rollout*.
+                   *
+                   * Measured live before this slice: the learner could write a validated pack (it did, at
+                   * 2026-09-24T01:03:56Z, the first since 2026-09-21) and the router never saw it, because
+                   * `route-advisory-source.ts` reads `rollout.activePackageId` and no writer ever set it
+                   * from this path - the newest activation receipt was 2026-09-22T07:40Z. A pack that
+                   * nothing activates is a receipt, not a learned route.
+                   *
+                   * Activation is the operator's stage, not the sweep's opinion: the sweep activates only
+                   * when the effective policy stage for this channel/scope is one that already applies
+                   * learned evidence (S2 advisory-considered and above), and it names the stage in the
+                   * policy gate id so the receipt says which setting allowed it. `knowledge:activate-pack`
+                   * keeps the cohort ladder, refuses a re-activation of a rolled-back pack without a new
+                   * validation receipt, and keys its receipt by the pack, scope, gate and receipt id, so a
+                   * repeated sweep is idempotent rather than a second activation.
+                   */
+                  const activationStage = (() => {
+                    try {
+                      // A damaged durable policy degrades to no stage, and no stage means no
+                      // activation - the sweep never invents an operator setting.
+                      return readLearningPolicyFile({
+                        repoRoot: options.repoRoot,
+                        stateRoot: resolveLearningPolicyStateRoot({
+                          runtimeStateRoot: options.runtimeStateRoot,
+                          scopeId: options.scopeId,
+                        }),
+                        channel,
+                        scopeId: options.scopeId,
+                      })?.effective?.stage ?? null;
+                    } catch {
+                      return null;
+                    }
+                  })();
+                  if (activationStageAllowsPackActivation(activationStage)) {
+                    try {
+                      await runtime.invoke(
+                        "knowledge-store",
+                        envelopeFor("knowledge-store", "knowledge:activate-pack", {
+                          scopeId: options.scopeId,
+                          packId,
+                          validationReceiptId: receiptId,
+                          channel,
+                          policyGateId: `gate:route-package-activation@${activationStage}`,
+                        }),
+                      );
+                      activated += 1;
+                    } catch (error) {
+                      console.error(
+                        `[run107] learner sweep: pack ${packId.slice(0, 24)} recorded but not activated: ${String(
+                          (error as { message?: unknown })?.message ?? error,
+                        ).slice(0, 160)}`,
+                      );
+                    }
+                  }
                 }
               }
             } catch (error) {
@@ -5034,12 +5092,14 @@ export async function main(): Promise<void> {
           }
           if (pending.length > 0 || consumed > 0) {
             console.error(
-              `[run101] learner sweep: ${pending.length} candidate(s) without a validation receipt, consumed ${consumed}`,
+              `[run101] learner sweep: ${pending.length} candidate(s) without a validation receipt, consumed ${consumed}` +
+                (activated > 0 ? `, activated ${activated} pack(s)` : ""),
             );
           }
           return {
             scanned: candidates.length,
             consumed,
+            activated,
             remaining: Math.max(0, pending.length - consumed),
           };
         },

@@ -333,6 +333,23 @@ export const LEARNING_GROUP_PAGE_LIMIT = 256;
  */
 export const LEARNING_GROUP_MAX_PAGES = 64;
 
+/**
+ * Run 107 P6: when a validated pack may be put into the rollout.
+ *
+ * The learner writes a pack; the router only ever reads the pack the *rollout* names
+ * (`route-advisory-source.ts`: "no active pack" when `rollout.activePackageId` is unset). Nothing on
+ * the sweep path used to write it, so a validated pack could not influence a route. Activation is a
+ * policy decision, so the sweep asks the operator's stage rather than assuming:
+ *
+ *  - `S0`/`S1` observe only - a pack is recorded and left alone;
+ *  - `S2`, `S3`, `S4` already apply learned evidence to routing (S2 is the documented
+ *    "advisory considered" stage), so a validated pack may be activated;
+ *  - an unreadable or damaged policy degrades to a null stage, which is *not* an activation.
+ */
+export function activationStageAllowsPackActivation(stage: unknown): boolean {
+  return stage === "S2" || stage === "S3" || stage === "S4";
+}
+
 export interface TrackBLearningPassRuntime {
   invoke(extensionId: string, envelope: Record<string, unknown>): Promise<unknown>;
 }

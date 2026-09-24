@@ -3,6 +3,7 @@ import { expect, test } from "vitest";
 import {
   LEARNING_GROUP_MAX_PAGES,
   LEARNING_GROUP_PAGE_LIMIT,
+  activationStageAllowsPackActivation,
   collectPagedComparisonGroups,
   runTrackBLearningPass,
 } from "../src/track-b-learning-pass.js";
@@ -193,6 +194,20 @@ test("run107 P1 a runtime that answers the legacy plain array still yields one p
   };
   const receipt = await runTrackBLearningPass(runtime, passInput());
   expect(receipt).toMatchObject({ decision: "insufficient_evidence", promoted: false });
+});
+
+test("run107 P6 a validated pack is activated only at a stage that applies learned evidence", async () => {
+  // The learner writes the pack; the router only reads the pack the rollout names, so the sweep has to
+  // activate it. That is the operator's stage, never the sweep's assumption.
+  expect(activationStageAllowsPackActivation("S4")).toBe(true);
+  expect(activationStageAllowsPackActivation("S3")).toBe(true);
+  expect(activationStageAllowsPackActivation("S2")).toBe(true);
+  expect(activationStageAllowsPackActivation("S1")).toBe(false);
+  expect(activationStageAllowsPackActivation("S0")).toBe(false);
+  // A damaged or unreadable durable policy degrades to no stage, and no stage is not an activation.
+  expect(activationStageAllowsPackActivation(null)).toBe(false);
+  expect(activationStageAllowsPackActivation(undefined)).toBe(false);
+  expect(activationStageAllowsPackActivation("s4")).toBe(false);
 });
 
 test("run107 P1 the page walk is bounded even when a runtime never stops offering a cursor", async () => {
