@@ -395,7 +395,10 @@ export function assembleDurableLearnerDerivationValue(
     }
     return reference;
   };
-  const evidenceRow = (member: Record<string, unknown>): Record<string, unknown> => {
+  const evidenceRow = (
+    member: Record<string, unknown>,
+    disposition: "positive" | "negative",
+  ): Record<string, unknown> => {
     const trialId = boundedText(member.trialId);
     const scoreId = boundedText(member.scoreId);
     const score = Number(member.score);
@@ -403,10 +406,21 @@ export function assembleDurableLearnerDerivationValue(
       throw new Error("durable learner derivation requires the finalized member lineage");
     }
     const evidenceRef = evidenceRefForMember(member);
+    /**
+     * The worker requires explicit graph/evaluation/trial/score lineage on grouped holdout learning (`grouped
+     * holdout learning explicit graph/evaluation/trial/score lineage required`, measured live on
+     * `run130-fca037e1`). A winning row's own branch artifact *is* the graph for its trial - the pipeline files the
+     * winner as `evidenceKind: "graph"` with `graphRef`/`rolloutRef` - so the derived row carries the same lineage
+     * instead of presenting the winner as an evaluation-only row.
+     */
+    const graphLineage =
+      disposition === "positive"
+        ? { evidenceKind: "graph", graphRef: evidenceRef, rolloutRef: evidenceRef }
+        : { evidenceKind: "evaluation" };
     return {
       evidenceRef,
       score,
-      evidenceKind: "evaluation",
+      ...graphLineage,
       learningCapable: true,
       evaluationRef: comparisonId,
       trialId,
@@ -417,10 +431,10 @@ export function assembleDurableLearnerDerivationValue(
   };
   const positive = members
     .filter((member) => member.disposition === "positive")
-    .map((member) => evidenceRow(member));
+    .map((member) => evidenceRow(member, "positive"));
   const negative = members
     .filter((member) => member.disposition === "negative")
-    .map((member) => evidenceRow(member));
+    .map((member) => evidenceRow(member, "negative"));
 
   const sourceDecisionId = boundedText(input.replayProvenance.sourceDecisionId);
   const sourceGraphRef = boundedText(input.replayProvenance.sourceGraphRef);

@@ -265,6 +265,12 @@ describe("run120 S13: the durable derivation value satisfies the knowledge consu
       reference: referenceProofs.counterfactualEvidenceRef.reference,
       resolved: true,
     });
+    // The winner's branch artifact is the graph lineage for its trial (the worker requires it on grouped holdout
+    // learning: "explicit graph/evaluation/trial/score lineage required", measured live on run130-fca037e1).
+    expect(positive.evidenceKind).toBe("graph");
+    expect(positive.graphRef).toBe(referenceProofs.counterfactualEvidenceRef.reference);
+    expect(positive.rolloutRef).toBe(referenceProofs.counterfactualEvidenceRef.reference);
+    expect(negative.evidenceKind).toBe("evaluation");
     expect(negative.trialId).toBe(finalizedComparison.members[0].trialId);
     expect(negative.evidenceRef).toBe(referenceProofs.sourceEvidenceRef.reference);
     expect(negative.referenceProof).toMatchObject({
