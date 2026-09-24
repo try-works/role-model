@@ -485,12 +485,25 @@ export function assembleDurableLearnerDerivationValue(
   const policyId = boundedText(comparability.policyId) ?? RUN104_LEARNER_SWEEP_PROVENANCE.policy;
   const scorerSetVersion =
     boundedText(comparability.scorerSetVersion) ?? `${policyId}-v1`;
+  /**
+   * The consumer reads `finalizedComparison.comparisonId` (`extensions/knowledge-worker`: "finalized durable
+   * comparison evidence required"), and the evaluator's own page entry names the same row only as `groupId`. Measured
+   * live on `run128-c73a2131`: every derivation that reached the worker was refused for the missing identity. The
+   * projection is therefore stated once, before the receipts are minted - the consumer recomputes the comparison
+   * digest from the object it receives, so the receipts have to be signed over exactly that object.
+   */
+  const finalizedComparisonForConsumer = {
+    ...structuredClone(comparison),
+    groupId: boundedText(comparison.groupId) ?? comparisonId,
+    comparisonId,
+    status: "finalized",
+  };
   const receipts = mintDurableComparisonReceipts({
     evaluationAuthoritySecret: input.evaluationAuthoritySecret,
     channel: input.channel,
     routePackage,
     comparisonId,
-    finalizedComparison: comparison,
+    finalizedComparison: finalizedComparisonForConsumer,
     evidenceRef,
     safeForPrompt: input.safeForPrompt ?? true,
   });
@@ -499,7 +512,6 @@ export function assembleDurableLearnerDerivationValue(
       ? { ...(comparison.holdout as Record<string, unknown>) }
       : {};
   const outcome = comparison.outcome ?? evaluationProvenance.outcome;
-
   return {
     replay: {
       sourceDecisionId,
@@ -521,7 +533,7 @@ export function assembleDurableLearnerDerivationValue(
         seed: RUN104_LEARNER_SWEEP_PROVENANCE.seed,
         evidenceRef: boundedText(comparability.forkRef) ?? comparisonId,
       },
-      finalizedComparison: structuredClone(comparison),
+      finalizedComparison: finalizedComparisonForConsumer,
       finalizedComparisonReceipt: receipts.finalizedComparisonReceipt,
       safetyReceipt: receipts.safetyReceipt,
     },

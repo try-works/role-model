@@ -53,7 +53,6 @@ const referenceProofs = {
 
 const finalizedComparison = {
   groupId: GROUP_ID,
-  comparisonId: GROUP_ID,
   status: "finalized",
   outcome: "candidate",
   holdout: {
@@ -181,7 +180,10 @@ describe("run120 S13: the durable derivation value satisfies the knowledge consu
 
     const comparison = evaluation.finalizedComparison;
     expect(comparison.status).toBe("finalized");
-    expect(typeof comparison.comparisonId).toBe("string");
+    // The evaluator's page entry names the row as `groupId`; the consumer reads `comparisonId`, so the projection has
+    // to state both (measured live on run128-c73a2131: the worker refused every derivation without it).
+    expect(comparison.comparisonId).toBe(GROUP_ID);
+    expect(comparison.groupId).toBe(GROUP_ID);
     expect(comparison.holdout.holdoutId).toBe(finalizedComparison.holdout.holdoutId);
     expect(comparison.holdout.membershipDigest).toBe(finalizedComparison.holdout.membershipDigest);
     expect(comparison.members.some((m: any) => m.disposition === "positive")).toBe(true);
