@@ -5284,8 +5284,8 @@ export async function main(): Promise<void> {
             return Boolean(group) && typeof group === "object" && !Array.isArray(group);
           });
           const summary = await deriveLearnerCandidatesFromDurableEvidence({
-            invoke: async (extensionId, capability, value, query) =>
-              runtime.invoke(
+            invoke: async (extensionId, capability, value, query) => {
+              const answer = await runtime.invoke(
                 extensionId,
                 envelopeFor(
                   extensionId,
@@ -5294,7 +5294,19 @@ export async function main(): Promise<void> {
                   extensionId === "replay-core" ? replayJobScope : undefined,
                   query,
                 ),
-              ),
+              );
+              /**
+               * A capability answer larger than the inline frame arrives as a transfer marker
+               * (`transferState`/`resultHash`/`byteLength`) - measured live on `run127-f8f5b967`, where the profile
+               * estimate came back that way and the derivation read the marker as the estimate, refusing all 24
+               * reachable groups. Every operator readback in this sweep is decoded through the same helper.
+               */
+              return decodeExternalizedOperatorReadback({
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+                value: unwrapCapabilityPayload(answer),
+              });
+            },
             groups,
             attemptedGroupIds: learnerDerivationAttempts,
             limit: 2,
