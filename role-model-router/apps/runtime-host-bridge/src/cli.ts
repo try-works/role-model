@@ -183,6 +183,7 @@ import {
   deriveLearnerCandidatesFromDurableEvidence,
   learnableComparisonMembers,
 } from "./track-b-learner-derivation.js";
+import { createCaptureScopeReferenceResolver } from "./track-b-reference-resolver.js";
 import {
   buildExperiencePackCandidate,
   buildRouteLearningValidationReceipt,
@@ -5241,6 +5242,36 @@ export async function main(): Promise<void> {
             runtimeStateRoot: options.runtimeStateRoot,
             scopeId: options.scopeId,
           });
+          /**
+           * Addendum 11: the worker refuses a learning row whose evidence reference it cannot resolve through a
+           * trusted resolver, and its packaged resolver is bound to the operator scope while every group's evidence
+           * lives in the capture-scope artifact store. This resolver confirms existence in the durable stores (both
+           * roots are listed, so a future layout change does not silently starve it) and mints the fresh attestation
+           * the worker's trust rules require.
+           */
+          const referenceResolver = createCaptureScopeReferenceResolver({
+            channel,
+            scope: options.scopeId,
+            authorizationEpoch: 1,
+            databasePaths: [
+              path.join(
+                options.runtimeStateRoot,
+                options.scopeId,
+                "track-b",
+                "artifact-store",
+                "metadata.sqlite",
+              ),
+              path.join(
+                options.runtimeStateRoot,
+                options.scopeId,
+                "track-b",
+                "extensions",
+                "workers",
+                "artifact-store",
+                "artifact-store.sqlite",
+              ),
+            ],
+          });
           const envelopeFor = (
             extensionId: string,
             capability: string,
@@ -5258,6 +5289,12 @@ export async function main(): Promise<void> {
             value,
             ...(query ? { query } : {}),
             ...(extensionId === "knowledge-store" ? { payload: value } : {}),
+            ...(extensionId === "knowledge-worker" && capability === "knowledge:eval-consumer"
+              ? {
+                  referenceResolver,
+                  trustedReferenceAuthorities: ["evaluation-reference-store"],
+                }
+              : {}),
             evaluationAuthoritySecret: authority.authoritySecret,
           });
           const groups = (
