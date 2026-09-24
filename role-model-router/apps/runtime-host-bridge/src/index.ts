@@ -15818,6 +15818,51 @@ function writeOperatorUnavailable(response: ServerResponse, capability: string):
   writeJson(response, 503, unavailableOperatorPayload(capability));
 }
 
+/**
+ * Run 110: the profile readback is the one Learning route whose packaged composition resolves through the
+ * private-endpoint client (measured live: 503 `operator_capability_unavailable` with `detail: private transport
+ * answered null for operator/learning/profile`, while `records`, `decisions`, `policy` and `rollout` answer 200
+ * on the same build). The state readback carries the *same* profile projection and does answer in-process, so
+ * the route projects it from there instead of failing - and when neither source has an estimate, the answer is
+ * the bounded state the Learning overview already renders, not a transport error.
+ */
+export function resolveLearningProfileRouteResult(input: {
+  readonly profileReadback?: unknown;
+  readonly stateReadback?: unknown;
+}): Record<string, unknown> {
+  const usable = (value: unknown): Record<string, unknown> | null => {
+    const record =
+      value && typeof value === "object" && !Array.isArray(value)
+        ? (value as Record<string, unknown>)
+        : null;
+    if (!record) return null;
+    if (record.error === "operator_capability_unavailable") return null;
+    if (
+      record.state === "available" ||
+      record.state === "unavailable" ||
+      typeof record.confidence === "number" ||
+      Array.isArray(record.effects) ||
+      Array.isArray(record.generations)
+    ) {
+      return record;
+    }
+    return null;
+  };
+  const direct = usable(input.profileReadback);
+  if (direct) return direct;
+  const state =
+    input.stateReadback && typeof input.stateReadback === "object" && !Array.isArray(input.stateReadback)
+      ? (input.stateReadback as Record<string, unknown>)
+      : null;
+  const projected = usable(state?.profile);
+  if (projected) return projected;
+  return {
+    schemaVersion: "role-model.learning-profile-inspection.v1",
+    state: "unavailable",
+    reason: "no current estimate for this scope yet",
+  };
+}
+
 function writeOperatorResult(response: ServerResponse, result: unknown): void {
   const isUnavailable =
     result &&
@@ -16274,11 +16319,23 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           request.method === "GET" &&
           url.pathname === "/api/role-model/operator/learning/profile"
         ) {
-          if (!options.readLearningProfile) {
-            writeOperatorUnavailable(response, "learning profile inspection");
-            return;
-          }
-          writeOperatorResult(response, await options.readLearningProfile());
+          /**
+           * Run 110: this is the one Learning route whose packaged composition resolves through the
+           * private-endpoint client, which the packaged runtime is not given (measured live: 503 with
+           * `detail: private transport answered null for operator/learning/profile`, while its siblings answer
+           * 200). The state readback carries the same profile projection in-process, so the route projects it
+           * from there; with no estimate in either source it answers the bounded state the UI renders.
+           */
+          const [profileReadback, stateReadback] = await Promise.all([
+            options.readLearningProfile
+              ? options.readLearningProfile().catch(() => null)
+              : Promise.resolve(null),
+            options.readLearningState ? options.readLearningState().catch(() => null) : Promise.resolve(null),
+          ]);
+          writeOperatorResult(
+            response,
+            resolveLearningProfileRouteResult({ profileReadback, stateReadback }),
+          );
           return;
         }
         if (
