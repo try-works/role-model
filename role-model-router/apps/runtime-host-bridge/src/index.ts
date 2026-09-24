@@ -9016,6 +9016,55 @@ function resolveAliasRoutingModel(
     : undefined;
 }
 
+/**
+ * The endpoints in the pool that can execute the requested effort: the instances whose fixed effort equals it, or -
+ * when the pool has no such instance - the provider-default instances that declare the level. `[]` means the
+ * requested effort is not executable on this pool. Shared by the strict filter and the alias bias, so the two can
+ * never disagree about which instances an effort names.
+ */
+function selectReasoningEffortInstanceIds(input: {
+  readonly registry: EndpointRegistryResult;
+  readonly allowEndpoints: readonly string[];
+  readonly requestedEffort: string;
+}): readonly string[] {
+  const allowed = new Set(input.allowEndpoints);
+  const matchingFixedEndpointIds = input.registry.endpoints
+    .filter(
+      (endpoint) =>
+        allowed.has(endpoint.identity.endpoint_id) &&
+        (endpoint.identity.reasoning_effort?.trim() || null) === input.requestedEffort,
+    )
+    .map((endpoint) => endpoint.identity.endpoint_id);
+  if (matchingFixedEndpointIds.length > 0) {
+    return input.allowEndpoints.filter((endpointId) =>
+      matchingFixedEndpointIds.includes(endpointId),
+    );
+  }
+
+  // Provider-declared levels are executable on the provider-default instance:
+  // the request keeps the client effort and the receipt records "client".
+  const providerDeclaredEffortEndpointIds = input.registry.endpoints
+    .filter(
+      (endpoint) =>
+        allowed.has(endpoint.identity.endpoint_id) &&
+        (endpoint.identity.reasoning_effort?.trim() || null) === null &&
+        (endpoint.declared.reasoning_effort_levels ?? []).some(
+          (level) => level.trim() === input.requestedEffort,
+        ),
+    )
+    .map((endpoint) => endpoint.identity.endpoint_id);
+  if (providerDeclaredEffortEndpointIds.length > 0) {
+    return input.allowEndpoints.filter((endpointId) =>
+      providerDeclaredEffortEndpointIds.includes(endpointId),
+    );
+  }
+
+  // Provider-default is its own endpoint instance. An unsupported requested
+  // effort must not silently change the base endpoint's identity and semantics
+  // at execution time.
+  return [];
+}
+
 function filterRequestedModelPoolByReasoningEffort(input: {
   readonly registry: EndpointRegistryResult;
   readonly requestedModel: string;
@@ -9038,42 +9087,80 @@ function filterRequestedModelPoolByReasoningEffort(input: {
     return input.allowEndpoints;
   }
 
-  const allowed = new Set(input.allowEndpoints);
-  const matchingFixedEndpointIds = input.registry.endpoints
-    .filter(
-      (endpoint) =>
-        allowed.has(endpoint.identity.endpoint_id) &&
-        (endpoint.identity.reasoning_effort?.trim() || null) === requestedEffort,
-    )
-    .map((endpoint) => endpoint.identity.endpoint_id);
-  if (matchingFixedEndpointIds.length > 0) {
-    return input.allowEndpoints.filter((endpointId) =>
-      matchingFixedEndpointIds.includes(endpointId),
-    );
-  }
+  return selectReasoningEffortInstanceIds({
+    registry: input.registry,
+    allowEndpoints: input.allowEndpoints,
+    requestedEffort,
+  });
+}
 
-  // Provider-declared levels are executable on the provider-default instance:
-  // the request keeps the client effort and the receipt records "client".
-  const providerDeclaredEffortEndpointIds = input.registry.endpoints
-    .filter(
-      (endpoint) =>
-        allowed.has(endpoint.identity.endpoint_id) &&
-        (endpoint.identity.reasoning_effort?.trim() || null) === null &&
-        (endpoint.declared.reasoning_effort_levels ?? []).some(
-          (level) => level.trim() === requestedEffort,
-        ),
-    )
-    .map((endpoint) => endpoint.identity.endpoint_id);
-  if (providerDeclaredEffortEndpointIds.length > 0) {
-    return input.allowEndpoints.filter((endpointId) =>
-      providerDeclaredEffortEndpointIds.includes(endpointId),
-    );
-  }
+export interface ReasoningEffortPoolApplication {
+  readonly allowEndpoints: readonly string[];
+  readonly preferredEndpointIds: readonly string[];
+}
 
-  // Provider-default is its own endpoint instance. An unsupported requested
-  // effort must not silently change the base endpoint's identity and semantics
-  // at execution time.
-  return [];
+/**
+ * Run 100 addendum 10, E3: how a requested reasoning effort applies to an already-resolved model pool.
+ *
+ * Measured live (`:3457`, 2026-09-24/25) through the E0 eligibility line: an alias request resolves to all seven
+ * endpoints, and then `filterRequestedModelPoolByReasoningEffort` replaces that pool with the endpoints whose fixed
+ * effort equals the requested one - `baseline.remote-only` + `high` reported `eligible=2`,
+ * `codes=POLICY_DENY_ENDPOINT=5`, and `low` reported `eligible=1` with six denials. The alias's pool is a property
+ * of the alias, not of the effort: the effort belongs in the router's preference channel
+ * (`routingModelRank`), where a preferred instance that is unhealthy, cooling down or over budget is a reason to
+ * pick the next candidate rather than a reason for the pool to have one member.
+ *
+ * An explicit model id or endpoint row is different: there the client named the instance, so exact
+ * effort-instance selection (run 91) stays authoritative, including the documented refusal when the requested
+ * effort is not executable on that pool.
+ */
+export function applyReasoningEffortToModelPool(input: {
+  readonly registry: EndpointRegistryResult;
+  readonly requestedModel: string;
+  readonly requestedEffort?: string | null;
+  readonly allowEndpoints: readonly string[];
+  readonly preferredEndpointIds: readonly string[];
+  readonly aliasRequest: boolean;
+}): ReasoningEffortPoolApplication {
+  const requestedEffort = input.requestedEffort?.trim() || null;
+  if (!input.aliasRequest) {
+    return {
+      allowEndpoints: filterRequestedModelPoolByReasoningEffort({
+        registry: input.registry,
+        requestedModel: input.requestedModel,
+        requestedEffort,
+        allowEndpoints: input.allowEndpoints,
+      }),
+      preferredEndpointIds: input.preferredEndpointIds,
+    };
+  }
+  if (requestedEffort === null) {
+    return {
+      allowEndpoints: input.allowEndpoints,
+      preferredEndpointIds: input.preferredEndpointIds,
+    };
+  }
+  const effortInstanceIds = selectReasoningEffortInstanceIds({
+    registry: input.registry,
+    allowEndpoints: input.allowEndpoints,
+    requestedEffort,
+  });
+  if (effortInstanceIds.length === 0) {
+    // An effort that names no instance in this pool is not executable at all, and it keeps the bounded
+    // `reasoning_effort_unavailable` refusal the callers already raise on an empty pool (run 98). The alias rule is
+    // about the pool's *membership*: an effort that does name instances may order them, never trim them.
+    return {
+      allowEndpoints: [],
+      preferredEndpointIds: [],
+    };
+  }
+  return {
+    allowEndpoints: input.allowEndpoints,
+    preferredEndpointIds: [
+      ...effortInstanceIds,
+      ...input.preferredEndpointIds.filter((endpointId) => !effortInstanceIds.includes(endpointId)),
+    ],
+  };
 }
 
 function applyRequestedEndpointOverride(input: {
@@ -9904,10 +9991,15 @@ export function mapChatCompletionsRequest(
   const effectiveTaxonomyTaskTypeId = taxonomyIdentity.taskTypeId;
   const {
     allowEndpoints: modelAllowEndpoints,
-    preferredEndpointIds: aliasPreferredEndpointIds,
+    preferredEndpointIds: modelPreferredEndpointIds,
     routingDiagnostics,
   } = resolveRequestedModelPool(registry, body.model, modelAliases, inventory);
-  const allowEndpoints = filterRequestedModelPoolByReasoningEffort({
+  /**
+   * E3: an alias is a pool plus a bias. The requested effort orders the pool it already had
+   * (`applyReasoningEffortToModelPool`); only an explicit model id or endpoint row narrows it, so a client that always
+   * sends `reasoning_effort` still sees every candidate the alias offers.
+   */
+  const effortAppliedToModelPool = applyReasoningEffortToModelPool({
     registry,
     requestedModel: body.model,
     requestedEffort: reasoning?.effort,
@@ -9916,7 +10008,11 @@ export function mapChatCompletionsRequest(
       allowEndpoints: modelAllowEndpoints,
       requestOptions,
     }),
+    preferredEndpointIds: modelPreferredEndpointIds,
+    aliasRequest: routingDiagnostics?.aliasResolution !== undefined,
   });
+  const allowEndpoints = effortAppliedToModelPool.allowEndpoints;
+  const aliasPreferredEndpointIds = effortAppliedToModelPool.preferredEndpointIds;
   const effectiveRoutingMode = resolveEffectiveRoutingMode({
     requestedModel: body.model,
     modelAliases,
@@ -10131,10 +10227,12 @@ export function mapResponsesRequest(
   const effectiveTaxonomyTaskTypeId = taxonomyIdentity.taskTypeId;
   const {
     allowEndpoints: modelAllowEndpoints,
-    preferredEndpointIds: aliasPreferredEndpointIds,
+    preferredEndpointIds: modelPreferredEndpointIds,
     routingDiagnostics,
   } = resolveRequestedModelPool(registry, body.model, modelAliases, inventory);
-  const allowEndpoints = filterRequestedModelPoolByReasoningEffort({
+  // E3: the responses path resolves the pool the same way the chat path does - effort biases an alias pool and
+  // narrows only an explicitly named model or endpoint.
+  const effortAppliedToModelPool = applyReasoningEffortToModelPool({
     registry,
     requestedModel: body.model,
     requestedEffort: reasoning?.effort,
@@ -10143,7 +10241,11 @@ export function mapResponsesRequest(
       allowEndpoints: modelAllowEndpoints,
       requestOptions,
     }),
+    preferredEndpointIds: modelPreferredEndpointIds,
+    aliasRequest: routingDiagnostics?.aliasResolution !== undefined,
   });
+  const allowEndpoints = effortAppliedToModelPool.allowEndpoints;
+  const aliasPreferredEndpointIds = effortAppliedToModelPool.preferredEndpointIds;
   const requestedReasoningEffort = reasoning?.effort?.trim() || null;
   if (
     requestedReasoningEffort !== null &&

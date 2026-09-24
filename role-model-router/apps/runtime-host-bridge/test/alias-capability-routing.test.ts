@@ -356,7 +356,15 @@ describe("alias capability routing", () => {
     expect(highPlan.routingRequest.requiredCapabilities).toEqual(
       expect.arrayContaining(["text.chat", "tools.function_calling"]),
     );
-    expect(highPlan.routingRequest.allowEndpoints).toEqual([highEndpointId]);
+    // Run 100 addendum 10 E3: the effort orders the alias pool instead of replacing it, so the fixed-effort sibling
+    // is the router's preference and the default/max siblings stay available when it is unhealthy - the circuit
+    // recovery exercised below is exactly the case a one-member pool could not recover from.
+    expect(highPlan.routingRequest.allowEndpoints).toEqual([
+      defaultEndpointId,
+      highEndpointId,
+      maxEndpointId,
+    ]);
+    expect(highPlan.routingModel?.preferredEndpointIds).toEqual([highEndpointId]);
 
     const startedAtMs = 10_000;
     let circuit = createEmptyExecutionCircuitState();
