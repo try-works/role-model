@@ -5246,6 +5246,7 @@ export async function main(): Promise<void> {
             capability: string,
             value: Record<string, unknown>,
             scopeOverride?: string,
+            query?: Record<string, unknown>,
           ) => ({
             requestId: `learner-derivation:${capability}:${Date.now()}`,
             sessionId: `learner-derivation:${options.scopeId}`,
@@ -5255,6 +5256,7 @@ export async function main(): Promise<void> {
             authorizationEpoch: 1,
             capability,
             value,
+            ...(query ? { query } : {}),
             ...(extensionId === "knowledge-store" ? { payload: value } : {}),
             evaluationAuthoritySecret: authority.authoritySecret,
           });
@@ -5282,7 +5284,7 @@ export async function main(): Promise<void> {
             return Boolean(group) && typeof group === "object" && !Array.isArray(group);
           });
           const summary = await deriveLearnerCandidatesFromDurableEvidence({
-            invoke: async (extensionId, capability, value) =>
+            invoke: async (extensionId, capability, value, query) =>
               runtime.invoke(
                 extensionId,
                 envelopeFor(
@@ -5290,6 +5292,7 @@ export async function main(): Promise<void> {
                   capability,
                   value,
                   extensionId === "replay-core" ? replayJobScope : undefined,
+                  query,
                 ),
               ),
             groups,

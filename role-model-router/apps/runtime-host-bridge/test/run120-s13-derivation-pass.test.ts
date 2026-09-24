@@ -114,10 +114,14 @@ describe("run120 S13: the derivation pass presents only durable, complete eviden
       channel: "stage",
       scope: "standalone-runtime-stage",
       evaluationAuthoritySecret: "secret",
-      invoke: async (extensionId, capability, value) => {
+      invoke: async (extensionId, capability, value, query) => {
         calls.push({ extensionId, capability, value });
         if (capability === "replay:job") return job;
-        if (capability === "signals:read") return report;
+        // `signals:read` is query-shaped and answers the newest reports for a decision as an array.
+        if (capability === "signals:read") {
+          expect(query).toEqual({ routeDecisionId: DECISION_ID });
+          return [report];
+        }
         if (capability === "profile:estimate-finalized-evaluation") return profile;
         if (capability === "knowledge:eval-consumer") return { id: `shadow-${"d".repeat(64)}` };
         return null;

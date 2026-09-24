@@ -28,6 +28,7 @@ export interface LearnerDerivationInput {
     extensionId: string,
     capability: string,
     value: Record<string, unknown>,
+    query?: Record<string, unknown>,
   ) => Promise<unknown>;
   /** Finalized comparison readbacks (`evaluation:list-groups`, already paged by the sweep). */
   readonly groups: readonly Record<string, unknown>[];
@@ -47,10 +48,32 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 }
 
 function unwrap(value: unknown): unknown {
-  const record = asRecord(value);
-  if (!record) return value;
-  if (record.payload !== undefined && record.capability !== undefined) return record.payload;
-  return record;
+  /**
+   * A capability answer travels inside zero or more envelopes (`{value}`, `{payload}`, `{businessOutput:{value}}`).
+   * Measured live on `run123-f3651b11`: the pass read the envelope as if it were the report, so every report looked
+   * like it "covers no comparison". Descend until the payload is not a wrapper, bounded so a cyclic answer cannot
+   * spin.
+   */
+  let current = value;
+  for (let depth = 0; depth < 4; depth += 1) {
+    const record = asRecord(current);
+    if (!record) return current;
+    const businessOutput = asRecord(record.businessOutput);
+    if (businessOutput && businessOutput.value !== undefined) {
+      current = businessOutput.value;
+      continue;
+    }
+    if (record.value !== undefined && (record.capability !== undefined || record.extensionId !== undefined)) {
+      current = record.value;
+      continue;
+    }
+    if (record.payload !== undefined && record.capability !== undefined) {
+      current = record.payload;
+      continue;
+    }
+    return current;
+  }
+  return current;
 }
 
 function text(value: unknown): string | null {
@@ -141,9 +164,15 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
         if (!job || !sourceDecisionId) {
           return { kind: "unavailable", reason: `replay ${replayId.slice(0, 12)} carries no provenance yet` };
         }
-        report = asRecord(
-          unwrap(await input.invoke("trajectory-signals", "signals:read", { routeDecisionId: sourceDecisionId })),
+        /**
+         * `signals:read` is query-shaped (`extensions/trajectory-signals`: `envelope.query` is required and the read
+         * answers the newest reports for a decision as an array). Measured live: passing the decision inside `value`
+         * made every readback look absent.
+         */
+        const reports = unwrap(
+          await input.invoke("trajectory-signals", "signals:read", {}, { routeDecisionId: sourceDecisionId }),
         );
+        report = asRecord(Array.isArray(reports) ? reports[0] : reports);
         if (!report) {
           return { kind: "unavailable", reason: `no persisted signal report for ${sourceDecisionId}` };
         }
