@@ -350,6 +350,44 @@ export function activationStageAllowsPackActivation(stage: unknown): boolean {
   return stage === "S2" || stage === "S3" || stage === "S4";
 }
 
+/**
+ * Run 107 P11: did the store actually activate the pack?
+ *
+ * Measured live on `run107e-94cdd4f6`: the sweep logged `activated 2 pack(s)` on every tick while
+ * `knowledge_route_rollouts[standalone-runtime-stage]` stayed at its 01:38:36Z value and no new activation
+ * receipt appeared. Replaying the same invoke against a copy of the live store shows why - the store answers a
+ * **bounded degradation receipt** (`{"degraded":true,"capability":"knowledge:activate-pack","reason":
+ * "activation requires a recorded pack"}`) instead of throwing, and the sweep counted any non-throwing answer
+ * as an activation. A hop that reports success without reading its own answer is exactly the class this run
+ * keeps finding, so the answer is now classified: only a receipt that names the pack and reports `active`
+ * counts, and anything else is reported with the store's own reason.
+ */
+export function classifyPackActivationAnswer(
+  answer: unknown,
+  packId: string,
+): { readonly activated: boolean; readonly reason: string | null } {
+  const record = asRecord(answer);
+  if (!record) return { activated: false, reason: "activation answer was not a record" };
+  const receipt = asRecord(record.receipt) ?? record;
+  const receiptPackId = boundedText(receipt.packageId);
+  if (record.degraded === true || receipt.state === undefined) {
+    return {
+      activated: false,
+      reason: boundedText(record.reason) ?? boundedText(receipt.reason) ?? "activation degraded",
+    };
+  }
+  if (receipt.state !== "active") {
+    return { activated: false, reason: `activation state is ${String(receipt.state)}` };
+  }
+  if (receiptPackId !== packId) {
+    return {
+      activated: false,
+      reason: `activation receipt names ${receiptPackId ?? "no pack"}`,
+    };
+  }
+  return { activated: true, reason: null };
+}
+
 export interface TrackBLearningPassRuntime {
   invoke(extensionId: string, envelope: Record<string, unknown>): Promise<unknown>;
 }

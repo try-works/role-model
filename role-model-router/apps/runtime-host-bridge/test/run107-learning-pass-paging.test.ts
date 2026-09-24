@@ -4,6 +4,7 @@ import {
   LEARNING_GROUP_MAX_PAGES,
   LEARNING_GROUP_PAGE_LIMIT,
   activationStageAllowsPackActivation,
+  classifyPackActivationAnswer,
   collectPagedComparisonGroups,
   runTrackBLearningPass,
 } from "../src/track-b-learning-pass.js";
@@ -208,6 +209,42 @@ test("run107 P6 a validated pack is activated only at a stage that applies learn
   expect(activationStageAllowsPackActivation(null)).toBe(false);
   expect(activationStageAllowsPackActivation(undefined)).toBe(false);
   expect(activationStageAllowsPackActivation("s4")).toBe(false);
+});
+
+test("run107 P11 an activation that the store refused is never counted as an activation", async () => {
+  const packId = "pack-d624986613c938c1c9c62a2f1f6b8b5d0d1b5a8a1f5b3e5c7a9d1f3b5c7a9d1";
+  // The live store's answer when it cannot see a recorded pack: a bounded degradation receipt, not a throw.
+  expect(
+    classifyPackActivationAnswer(
+      {
+        schemaVersion: "role-model.degradation-receipt.v1",
+        degraded: true,
+        capability: "knowledge:activate-pack",
+        reason: "activation requires a recorded pack",
+        routingContinues: true,
+      },
+      packId,
+    ),
+  ).toEqual({ activated: false, reason: "activation requires a recorded pack" });
+
+  // A real activation receipt names the pack and reports it active.
+  expect(
+    classifyPackActivationAnswer(
+      { receipt: { contract: "RoutePackageActivationReceiptV1", packageId: packId, state: "active" } },
+      packId,
+    ),
+  ).toEqual({ activated: true, reason: null });
+
+  // A receipt for a different pack, an unexpected state, and a non-record answer are all refusals.
+  expect(
+    classifyPackActivationAnswer({ receipt: { packageId: "pack-other", state: "active" } }, packId)
+      .activated,
+  ).toBe(false);
+  expect(
+    classifyPackActivationAnswer({ receipt: { packageId: packId, state: "rolled_back" } }, packId),
+  ).toEqual({ activated: false, reason: "activation state is rolled_back" });
+  expect(classifyPackActivationAnswer(null, packId).activated).toBe(false);
+  expect(classifyPackActivationAnswer("ok", packId).activated).toBe(false);
 });
 
 test("run107 P1 the page walk is bounded even when a runtime never stops offering a cursor", async () => {

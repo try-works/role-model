@@ -175,6 +175,7 @@ import {
   activationStageAllowsPackActivation,
   assembleDurableLearnerValidationValue,
   buildTrackBLearningEvidenceSummary,
+  classifyPackActivationAnswer,
   collectPagedComparisonGroups,
   selectDurableComparisonGroupId,
 } from "./track-b-learning-pass.js";
@@ -5061,17 +5062,36 @@ export async function main(): Promise<void> {
                   })();
                   if (activationStageAllowsPackActivation(activationStage)) {
                     try {
-                      await runtime.invoke(
-                        "knowledge-store",
-                        envelopeFor("knowledge-store", "knowledge:activate-pack", {
-                          scopeId: options.scopeId,
-                          packId,
-                          validationReceiptId: receiptId,
-                          channel,
-                          policyGateId: `gate:route-package-activation@${activationStage}`,
-                        }),
+                      const activationAnswer = unwrapCapabilityPayload(
+                        await runtime.invoke(
+                          "knowledge-store",
+                          envelopeFor("knowledge-store", "knowledge:activate-pack", {
+                            scopeId: options.scopeId,
+                            packId,
+                            validationReceiptId: receiptId,
+                            channel,
+                            policyGateId: `gate:route-package-activation@${activationStage}`,
+                          }),
+                        ),
                       );
-                      activated += 1;
+                      /**
+                       * P11: the store answers a bounded degradation receipt instead of throwing, so a
+                       * counter that only watched for exceptions reported activations that never reached
+                       * the rollout. The answer is read back and classified.
+                       */
+                      const activationVerdict = classifyPackActivationAnswer(
+                        activationAnswer,
+                        packId,
+                      );
+                      if (activationVerdict.activated) {
+                        activated += 1;
+                      } else {
+                        console.error(
+                          `[run107] learner sweep: pack ${packId.slice(0, 24)} was not activated: ${String(
+                            activationVerdict.reason ?? "no activation receipt",
+                          ).slice(0, 160)}`,
+                        );
+                      }
                     } catch (error) {
                       console.error(
                         `[run107] learner sweep: pack ${packId.slice(0, 24)} recorded but not activated: ${String(
