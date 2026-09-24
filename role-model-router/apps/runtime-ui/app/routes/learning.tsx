@@ -856,9 +856,16 @@ export function LearningPacksPage() {
 export function LearningDecisionsPage() {
   const { token, setToken } = useOperatorToken();
   const [stateFilter, setStateFilter] = useState("all");
+  /**
+   * Run 113 (addendum 09 R11/S18): the ledger holds live routing decisions and shadow judge/replay calls. The
+   * shadow rows carry no taxonomy and are `unavailable` by construction, and because they are the most recent
+   * they dominated the default view - the operator saw "everything is task mismatch or not eligible". The page
+   * now asks the readback for live routing decisions by default, with the shadow ledger one selection away.
+   */
+  const [originFilter, setOriginFilter] = useState("live");
   const decisions = useOperatorSurface<Record<string, unknown>>(
-    () => fetchLearningDecisions(fetch, token || undefined, { limit: 100 }),
-    [token],
+    () => fetchLearningDecisions(fetch, token || undefined, { limit: 100, origin: originFilter }),
+    [token, originFilter],
   );
   const rows = Array.isArray(asRecord(decisions.value).decisions)
     ? (asRecord(decisions.value).decisions as readonly Record<string, unknown>[])
@@ -880,6 +887,20 @@ export function LearningDecisionsPage() {
             value={stateFilter}
           >
             {["all", "fresh", "stale", "unavailable"].map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className={fieldLabelClassName}>
+          Observation origin
+          <select
+            className={`${fieldClassName} mt-1`}
+            onChange={(event) => setOriginFilter(event.target.value)}
+            value={originFilter}
+          >
+            {["live", "shadow", "all"].map((option) => (
               <option key={option} value={option}>
                 {option}
               </option>
