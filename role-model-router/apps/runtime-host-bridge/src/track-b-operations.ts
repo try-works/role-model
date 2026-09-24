@@ -1613,7 +1613,16 @@ export function createTrackBOperations({
           : { ...boundInit, body: sanitizeOperatorBody(boundInit.body) },
       );
       return result === null
-        ? unavailableOperatorPayload(capability)
+        ? /**
+           * Run 109: `requestPrivate` answers `null` (rather than throwing) when the private transport has no
+           * answer for the route - a 404 from the operator sidecar, or no endpoint at all. That branch produced
+           * the same cause-less projection as the catch blocks, which is why a route the host serves but the
+           * sidecar does not was indistinguishable from a transport failure. The route travels with it now.
+           */
+          unavailableOperatorPayload(
+            capability,
+            `private transport answered null for ${route}`.slice(0, 240),
+          )
         : sanitizeOperatorProjection(result);
     } catch (error) {
       if (
