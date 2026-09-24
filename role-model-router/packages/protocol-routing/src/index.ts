@@ -277,6 +277,40 @@ export function routeRuntimeRequest(
 ): RouteRuntimeRequestResult {
   const projected = projectRuntimeRouteInput(input);
   const decision = routeRequest(projected.routeInput);
+  /**
+   * Run 115 (addendum 10, E0). The eligibility verdict - which candidates were excluded and by which code - lived
+   * only in memory: `RouterDecisionRecord.eligibility` is consumed by nothing but the gateway-smoke app, so a live
+   * request that kept 1 of 7 candidates left no evidence of *why*. Measured 2026-09-24: every recent live request
+   * recorded `eligible_endpoint_ids_json` with a single member while all 7 registry endpoints reached
+   * `routeRequest`, and the alias's own mode/bias was absent from telemetry entirely. This bounded line makes the
+   * verdict observable on the next request, which is what turns the current hypothesis (policy allow-list vs hard
+   * taxonomy/role binding) into a named filter.
+   */
+  {
+    const excluded = decision.eligibility.filter((entry) => entry.eligible !== true);
+    const codes = new Map<string, number>();
+    for (const entry of excluded) {
+      const entryCodes =
+        (entry as { readonly codes?: readonly string[] }).codes ??
+        (entry as { readonly reasons?: readonly string[] }).reasons ??
+        (entry as { readonly exclusionCodes?: readonly string[] }).exclusionCodes ??
+        [];
+      for (const code of entryCodes) {
+        const key = String(code);
+        codes.set(key, (codes.get(key) ?? 0) + 1);
+      }
+    }
+    const histogram = [...codes.entries()]
+      .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
+      .slice(0, 8)
+      .map(([code, count]) => `${code}=${count}`)
+      .join(",");
+    console.log(
+      `[run115] eligibility candidates=${projected.routeInput.candidates.length} eligible=${
+        decision.eligibility.filter((entry) => entry.eligible === true).length
+      } codes=${histogram || "none"}`,
+    );
+  }
   const catalogEconomicsByEndpointId = Object.fromEntries(
     projected.routeInput.candidates.map((candidate) => [
       candidate.identity.endpoint_id,
