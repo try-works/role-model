@@ -290,11 +290,14 @@ export function routeRuntimeRequest(
     const excluded = decision.eligibility.filter((entry) => entry.eligible !== true);
     const codes = new Map<string, number>();
     for (const entry of excluded) {
-      const entryCodes =
-        (entry as { readonly codes?: readonly string[] }).codes ??
-        (entry as { readonly reasons?: readonly string[] }).reasons ??
-        (entry as { readonly exclusionCodes?: readonly string[] }).exclusionCodes ??
-        [];
+      // `CandidateEligibility` carries its verdict as `exclusions: CandidateExclusion[]`, each with a `code`
+      // (`packages/core/src/router.ts:1489`); the first version of this probe looked for `codes`/`reasons`/
+      // `exclusionCodes` and printed `none` for six excluded candidates, which is how the field name was found.
+      const entryCodes = (
+        (entry as { readonly exclusions?: readonly { readonly code?: unknown }[] }).exclusions ?? []
+      )
+        .map((exclusion) => exclusion?.code)
+        .filter((code): code is string => typeof code === "string" && code.length > 0);
       for (const code of entryCodes) {
         const key = String(code);
         codes.set(key, (codes.get(key) ?? 0) + 1);
