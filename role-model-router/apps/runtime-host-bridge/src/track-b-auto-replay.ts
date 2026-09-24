@@ -594,6 +594,17 @@ export async function runAutoReplayTick(input: {
    * refusal at job creation.
    */
   readonly judgeEndpointId?: string | null;
+  /**
+   * Run 111: opt in to the `judge_unresolved` refusal.
+   *
+   * The guard was added unconditionally and immediately refused **every** capture on the real-traffic runtime:
+   * measured live minutes after traffic resumed, the newest four dispositions were all `refused` /
+   * `judge_unresolved`, because this composition's tick-time judge resolution answers `null` even though the
+   * controller assignment exists (the router reports `deepseek…flash-high`). Refusing all replay work is a far
+   * worse failure than possibly planning an arm the judge is also scored in, so the guard is opt-in and stays
+   * dormant until the hook genuinely resolves a judge here.
+   */
+  readonly requireResolvedJudge?: boolean;
 }): Promise<AutoReplayTickResult> {
   const maxCapturesPerTick = input.maxCapturesPerTick ?? DEFAULT_MAX_CAPTURES_PER_TICK;
   const tickBudgetMs = input.tickBudgetMs ?? DEFAULT_TICK_BUDGET_MS;
@@ -651,7 +662,7 @@ export async function runAutoReplayTick(input: {
      * could not: the exclusion is then unavailable, and dispatching the capture would plan arms that may
      * contain the judge - which the completion then uses to score its own comparison. Defer by name instead.
      */
-    const judgeExpected = input.judgeEndpointId !== undefined;
+    const judgeExpected = input.requireResolvedJudge === true;
     if (judgeExpected && judgeEndpointId === null) {
       deferred += 1;
       emit({

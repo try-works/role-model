@@ -35,7 +35,7 @@ const tempLedger = () => {
   };
 };
 
-test("run108 an unresolvable judge defers the capture by name and never dispatches it", async () => {
+test("run111 an unresolvable judge defers by name only when the caller opts in", async () => {
   const { ledger, cleanup } = tempLedger();
   try {
     const executed: string[] = [];
@@ -47,8 +47,10 @@ test("run108 an unresolvable judge defers the capture by name and never dispatch
       configuredEndpointIds: configured,
       ledger,
       policySet: buildReplayPolicySet(),
-      // The caller resolved a judge for this tick and could not name it.
+      // The caller resolved a judge for this tick, could not name it, and asks to be refused rather than plan
+      // arms that may contain it.
       judgeEndpointId: null,
+      requireResolvedJudge: true,
       executor: async ({ capture }) => {
         executed.push(capture.captureRef);
         return { terminal: true, branches: [] };
@@ -90,6 +92,40 @@ test("run108 a tick that does not resolve a judge keeps its behaviour", async ()
     });
     expect(executed).toEqual(["req-1"]);
     expect(result.replayed).toBe(1);
+  } finally {
+    cleanup();
+  }
+});
+
+test("run111 an unresolved judge without the opt-in proceeds (the live regression guard)", async () => {
+  const { ledger, cleanup } = tempLedger();
+  try {
+    const executed: string[] = [];
+    const result = await runAutoReplayTick({
+      captures: [
+        { captureRef: "req-1", sourceEndpointId: "endpoint-a", hasRecordedToolResults: false },
+      ],
+      configuredEndpointIds: configured,
+      ledger,
+      policySet: buildReplayPolicySet(),
+      /**
+       * The state the real-traffic runtime is in: the caller's judge hook answers `null` although the
+       * controller assignment exists, so an unconditional guard refused **every** capture (measured live: the
+       * four newest dispositions were all `refused` / `judge_unresolved`). Without the opt-in the capture is
+       * planned as it was before the guard existed - a worse comparison is better than no replay at all.
+       */
+      judgeEndpointId: null,
+      executor: async ({ capture, candidates }) => {
+        executed.push(capture.captureRef);
+        return {
+          terminal: true,
+          branches: candidates.map((endpointId) => ({ endpointId, outcome: "complete" as const })),
+        };
+      },
+    });
+    expect(executed).toEqual(["req-1"]);
+    expect(result.replayed).toBe(1);
+    expect(result.deferred).toBe(0);
   } finally {
     cleanup();
   }
