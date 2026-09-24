@@ -167,12 +167,33 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
       }
       const { job, report } = durable;
       const sourceDecisionId = text(job?.sourceDecisionId);
-      const sourceGraphRef = text(job?.traceRootId) ?? text(job?.sourceTraceId);
       const sharedPrefixRef = text(job?.sharedPrefixRef) ?? text(job?.normalizedRequestRef);
-      if (!sourceDecisionId || !sourceGraphRef || !sharedPrefixRef) {
+      // Measured live on `run122-985cd234`: the job's `traceRootId` is the raw trace id while the signal report (and
+      // the pipeline) name the graph as an artifact reference, so taking the graph ref from the job refused every
+      // report with "requires the persisted signal report for this capture". The report is the durable authority for
+      // that decision's graph reference; the comparison group is what decides whether the report belongs to *this*
+      // comparison.
+      const sourceGraphRef = text(report?.graphRef);
+      const reportGroupId = text(asRecord(report?.evaluationProvenance)?.groupId);
+      const reportLearningGroupId = text(asRecord(report?.learningEvidence)?.groupId);
+      if (!sourceDecisionId || !sharedPrefixRef) {
         skipped += 1;
         input.attemptedGroupIds.add(groupId);
         input.log?.(`learner derivation skipped ${groupId}: replay ${replayId.slice(0, 12)} has no graph provenance`);
+        continue;
+      }
+      if (
+        !sourceGraphRef ||
+        reportGroupId !== groupId ||
+        reportLearningGroupId !== groupId
+      ) {
+        skipped += 1;
+        input.attemptedGroupIds.add(groupId);
+        input.log?.(
+          `learner derivation skipped ${groupId}: the persisted report covers ${
+            reportGroupId ?? "no comparison"
+          }`,
+        );
         continue;
       }
       const members = learnableComparisonMembers(normalized);
