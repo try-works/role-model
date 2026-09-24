@@ -16326,11 +16326,18 @@ function createRequestHandler(options: StartBridgeServerOptions) {
            * 200). The state readback carries the same profile projection in-process, so the route projects it
            * from there; with no estimate in either source it answers the bounded state the UI renders.
            */
+          /**
+           * `Promise.resolve` around each call: the packaged callbacks are typed as async, but a composition
+           * that answers synchronously must not turn a readback into a 409 - measured by the route-parity suite,
+           * which drives this route with plain-object callbacks.
+           */
           const [profileReadback, stateReadback] = await Promise.all([
             options.readLearningProfile
-              ? options.readLearningProfile().catch(() => null)
+              ? Promise.resolve(options.readLearningProfile()).catch(() => null)
               : Promise.resolve(null),
-            options.readLearningState ? options.readLearningState().catch(() => null) : Promise.resolve(null),
+            options.readLearningState
+              ? Promise.resolve(options.readLearningState()).catch(() => null)
+              : Promise.resolve(null),
           ]);
           writeOperatorResult(
             response,
