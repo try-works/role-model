@@ -14,6 +14,8 @@ const DECISION_ID = "decision-req-aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 const GRAPH_REF = `artifact:${"c".repeat(64)}`;
 const SOURCE_EVIDENCE = `artifact:${"1".repeat(64)}`;
 const COUNTERFACTUAL_EVIDENCE = `artifact:${"2".repeat(64)}`;
+/** The replay reference the signal report itself resolved (the job's shared prefix is a different durable fact). */
+const REPLAY_REF = "4".repeat(64);
 
 function proof(reference: string) {
   return {
@@ -109,6 +111,8 @@ const report = {
     schemaVersion: "role-model.finalized-evaluation-signal.v1",
     groupId: GROUP_ID,
     outcome: "candidate",
+    traceRef: GRAPH_REF,
+    replayRef: REPLAY_REF,
     sourceGeneration: `sha256:${"b".repeat(64)}`,
     trialScoreRefs: [],
   },
@@ -154,6 +158,11 @@ describe("run120 S13: the derivation pass presents only durable, complete eviden
     expect(consumed.scope.routePackage).toBe(WINNER);
     expect(consumed.learningCapable).toBe(true);
     expect(consumed.evaluation.finalizedComparison.comparisonId).toBe(GROUP_ID);
+    // The consumer's own predicate: the signal report's refs must be the refs the value presents.
+    expect(consumed.signals.learningEvidence.traceRef).toBe(consumed.replay.sourceGraphRef);
+    expect([consumed.replay.sourceGraphRef, consumed.replay.sharedPrefixRef]).toContain(
+      consumed.signals.learningEvidence.replayRef,
+    );
   });
 
   test("skips a group when the replay records no propensity and is not deterministic", async () => {

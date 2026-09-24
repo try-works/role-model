@@ -197,7 +197,7 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
       }
       const { job, report } = durable;
       const sourceDecisionId = text(job?.sourceDecisionId);
-      const sharedPrefixRef = text(job?.sharedPrefixRef) ?? text(job?.normalizedRequestRef);
+      const jobSharedPrefixRef = text(job?.sharedPrefixRef) ?? text(job?.normalizedRequestRef);
       // Measured live on `run122-985cd234`: the job's `traceRootId` is the raw trace id while the signal report (and
       // the pipeline) name the graph as an artifact reference, so taking the graph ref from the job refused every
       // report with "requires the persisted signal report for this capture". The report is the durable authority for
@@ -206,7 +206,19 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
       const sourceGraphRef = text(report?.graphRef);
       const reportGroupId = text(asRecord(report?.evaluationProvenance)?.groupId);
       const reportLearningGroupId = text(asRecord(report?.learningEvidence)?.groupId);
-      if (!sourceDecisionId || !sharedPrefixRef) {
+      /**
+       * The consumer's own consistency check is
+       * `learningEvidence.traceRef === replay.sourceGraphRef && (learningEvidence.replayRef === replay.sourceGraphRef
+       * || learningEvidence.replayRef === replay.sharedPrefixRef)`. Measured live on `run129-6513e676`: the durable
+       * job's `sharedPrefixRef` is the normalized-request reference while the signal plane's `replayRef` is the replay
+       * it resolved, so presenting the job's ref had every derivation refused with "finalized trajectory signal
+       * references must match replay provenance". The persisted report is the durable authority for the references it
+       * was computed against, so both travel from it; the job's own normalized-request reference stays on `digest`.
+       */
+      const sharedPrefixRef =
+        text(asRecord(report?.learningEvidence)?.replayRef) ?? jobSharedPrefixRef;
+      const reportTraceRef = text(asRecord(report?.learningEvidence)?.traceRef);
+      if (!sourceDecisionId || !sharedPrefixRef || (reportTraceRef !== undefined && reportTraceRef !== sourceGraphRef)) {
         skipped += 1;
         input.attemptedGroupIds.add(groupId);
         input.log?.(`learner derivation skipped ${groupId}: replay ${replayId.slice(0, 12)} has no graph provenance`);
