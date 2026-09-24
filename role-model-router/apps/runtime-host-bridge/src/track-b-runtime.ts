@@ -10416,6 +10416,11 @@ export async function runTrackBShadowPipeline(
           envelope: (capability, value) => envelope(capability, value),
           // The packaged host externalizes oversized business results, so the pass decodes the
           // comparison-group list exactly like the pipeline decodes its own extension answers.
+          // Run 113: the pass is also the writer that persists the documented contract artifacts
+          // (`RouteLearningValidationReceiptV1`, `ExperiencePackCandidateV1`) for the receipts and packs it
+          // records, so it needs the same state root the host routes use - omitted means a caller that does
+          // not persist contracts (a unit test, a fixture).
+          ...(input.contractStateRoot ? { contractStateRoot: input.contractStateRoot } : {}),
           decodeResult: (extensionId, _capability, raw) =>
             decodeExtensionBusinessResult({
               result: raw,

@@ -25,6 +25,11 @@
 import { createHash, createHmac } from "node:crypto";
 
 import { POSITION_ORDER_DISAGREEMENT } from "./track-b-shadow-judge-dispatch.js";
+import {
+  buildExperiencePackCandidate,
+  buildRouteLearningValidationReceipt,
+  emitTrackBContract,
+} from "./track-b-contract-emission.js";
 
 /**
  * Run 100 addendum `replay-evaluation-learner-spine-completion.addendum-07` P6: the durable learner
@@ -991,6 +996,16 @@ export interface TrackBLearningPassInput {
    */
   readonly decodeResult?: (extensionId: string, capability: string, raw: unknown) => unknown;
   /**
+   * Run 113: where the documented contract artifacts for this learner's output belong.
+   *
+   * The emission used to live in the liveness sweep, but the pipeline (which runs on every supervised replay)
+   * is the writer that actually produces receipts and packs on a live runtime - measured: three new receipts and
+   * a new pack appeared at 07:55Z from the pipeline while `contracts\` still held zero
+   * `ExperiencePackCandidateV1` / `RouteLearningValidationReceiptV1` files. Emitting here covers both callers
+   * with one implementation. Omitted means "this caller does not persist contracts" (a unit test, a fixture).
+   */
+  readonly contractStateRoot?: string;
+  /**
    * Run 98 R3: the same evidence-authority secret the derive call used. Without it the worker has
    * no authority to verify the durable comparison readback and safety receipts, and validation
    * fails closed with `verified durable comparison readback receipt required for validation`
@@ -1247,6 +1262,31 @@ export async function runTrackBLearningPass(
     return decoded;
   };
   const validationRecord = await recordValidationReceipt();
+  /**
+   * Run 113: the durable record is the runtime's own shape; the *contract* artifact is the documented
+   * vocabulary, and this pass is the writer that actually produces receipts on a live runtime (the liveness
+   * sweep only consumes what nobody else consumed). Emitting here is what makes the acceptance item "a
+   * validationReceipt that passes its validator, with the artifact present" true on real traffic.
+   */
+  if (input.contractStateRoot) {
+    try {
+      emitTrackBContract({
+        stateRoot: input.contractStateRoot,
+        scopeId: input.scope,
+        contract: buildRouteLearningValidationReceipt({
+          receipt,
+          channel: input.channel,
+          scopeId: input.scope,
+        }),
+      });
+    } catch (error) {
+      console.error(
+        `[run113] learning pass: validation receipt ${receiptId.slice(0, 24)} was not emitted as a contract: ${String(
+          (error as { message?: unknown })?.message ?? error,
+        ).slice(0, 200)}`,
+      );
+    }
+  }
 
   let packId: string | null = null;
   let promoted = false;
@@ -1294,6 +1334,33 @@ export async function runTrackBLearningPass(
       throw new Error(
         `knowledge store refused the pack record: ${String(decodedPack.reason ?? decodedPack.code ?? "unknown")}`,
       );
+    }
+    /**
+     * Run 113: the pack's durable record is the runtime's own shape (`scope.taxonomyVersion`, `familyEvidence`
+     * and friends), and the documented `ExperiencePackCandidateV1` is closed - measured live, 24 of 98 pack
+     * records failed their own validator on `/scope must NOT have additional properties`. The builder projects
+     * the record onto the contract's members; the richer record stays in the store. Emitting here, on the pass
+     * that actually promotes packs on live traffic, is what makes the artifact exist for real work rather
+     * than only for the sweep that consumes a leftover backlog.
+     */
+    if (input.contractStateRoot) {
+      try {
+        emitTrackBContract({
+          stateRoot: input.contractStateRoot,
+          scopeId: input.scope,
+          contract: buildExperiencePackCandidate({
+            pack: packCandidate,
+            channel: input.channel,
+            scopeId: input.scope,
+          }),
+        });
+      } catch (error) {
+        console.error(
+          `[run113] learning pass: pack ${packId.slice(0, 24)} was not emitted as a contract: ${String(
+            (error as { message?: unknown })?.message ?? error,
+          ).slice(0, 200)}`,
+        );
+      }
     }
   }
 
