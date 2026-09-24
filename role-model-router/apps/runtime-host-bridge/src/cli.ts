@@ -183,7 +183,6 @@ import {
   deriveLearnerCandidatesFromDurableEvidence,
   learnableComparisonMembers,
 } from "./track-b-learner-derivation.js";
-import { createCaptureScopeReferenceResolver } from "./track-b-reference-resolver.js";
 import {
   buildExperiencePackCandidate,
   buildRouteLearningValidationReceipt,
@@ -5243,63 +5242,15 @@ export async function main(): Promise<void> {
             scopeId: options.scopeId,
           });
           /**
-           * Addendum 11: the worker refuses a learning row whose evidence reference it cannot resolve through a
-           * trusted resolver, and its packaged resolver is bound to the operator scope while every group's evidence
-           * lives in the capture-scope artifact store. This resolver confirms existence in the durable stores (both
-           * roots are listed, so a future layout change does not silently starve it) and mints the fresh attestation
-           * the worker's trust rules require.
+           * Addendum 11: the consumer's evidence references are resolved by the worker's *own* artifact-store
+           * resolver, and that resolver queries `artifacts WHERE scope_id = <invocation scope>`. Every group's
+           * evidence lives in the capture scope (`runtime:714f4a87...`; 38/38 pipeline-processed and 82/82 gap
+           * groups, none in the operator store), so the consumer call is bound to that scope exactly like the replay
+           * readback. A caller-supplied resolver function cannot help here: measured live on `run133-100474c9`, the
+           * packaged runtime drops it and the refusal names the packaged resolver
+           * (`resolver=evaluation-reference-store`) without ever invoking the function.
            */
-          const referenceResolver = createCaptureScopeReferenceResolver({
-            channel,
-            scope: options.scopeId,
-            authorizationEpoch: 1,
-            databasePaths: [
-              path.join(
-                options.runtimeStateRoot,
-                options.scopeId,
-                "track-b",
-                "artifact-store",
-                "metadata.sqlite",
-              ),
-              path.join(
-                options.runtimeStateRoot,
-                options.scopeId,
-                "track-b",
-                "extensions",
-                "workers",
-                "artifact-store",
-                "artifact-store.sqlite",
-              ),
-            ],
-          });
-          /**
-           * The resolver only helps if the caller-supplied function actually reaches the extension: the packaged
-           * worker falls back to its own operator-scope resolver when the field is absent, and the two failures look
-           * identical from the refusal alone. One bounded line names which of them happened.
-           */
-          let referenceResolverReported = false;
-          const reportingReferenceResolver = (
-            scope: string,
-            reference: string,
-            kind: string,
-            context: unknown,
-          ) => {
-            if (!referenceResolverReported) {
-              referenceResolverReported = true;
-              console.error(
-                `[run132] derivation reference resolver invoked (scope=${scope} reference=${reference.slice(0, 40)})`,
-              );
-            }
-            return referenceResolver(
-              scope,
-              reference,
-              kind,
-              context as Record<string, unknown>,
-            );
-          };
-          const resolverForEnvelope = Object.assign(reportingReferenceResolver, {
-            authority: referenceResolver.authority,
-          });
+          const captureScopeForEvidence = replayJobScope;
           const envelopeFor = (
             extensionId: string,
             capability: string,
@@ -5317,12 +5268,6 @@ export async function main(): Promise<void> {
             value,
             ...(query ? { query } : {}),
             ...(extensionId === "knowledge-store" ? { payload: value } : {}),
-            ...(extensionId === "knowledge-worker" && capability === "knowledge:eval-consumer"
-              ? {
-                  referenceResolver: resolverForEnvelope,
-                  trustedReferenceAuthorities: ["evaluation-reference-store"],
-                }
-              : {}),
             evaluationAuthoritySecret: authority.authoritySecret,
           });
           const groups = (
@@ -5356,7 +5301,11 @@ export async function main(): Promise<void> {
                   extensionId,
                   capability,
                   value,
-                  extensionId === "replay-core" ? replayJobScope : undefined,
+                  extensionId === "replay-core"
+                    ? replayJobScope
+                    : extensionId === "knowledge-worker" && capability === "knowledge:eval-consumer"
+                      ? captureScopeForEvidence
+                      : undefined,
                   query,
                 ),
               );
@@ -5376,7 +5325,12 @@ export async function main(): Promise<void> {
             attemptedGroupIds: learnerDerivationAttempts,
             limit: 2,
             channel,
-            scope: options.scopeId,
+            /**
+             * The consumer's value must declare the same scope as its envelope (the worker rejects a proof from
+             * another context), and its evidence is only resolvable under the capture scope - so the derived
+             * candidate carries that scope, while the sweep's own readbacks stay on the operator scope.
+             */
+            scope: captureScopeForEvidence,
             evaluationAuthoritySecret: authority.authoritySecret,
             log: (message) => console.error(`[run120] ${message}`),
           });
