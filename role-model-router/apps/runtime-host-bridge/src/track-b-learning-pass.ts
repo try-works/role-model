@@ -316,6 +316,23 @@ export const DEFAULT_PROMOTION_PROTOCOL = Object.freeze({
 
 const DECISIVE_OUTCOMES = new Set(["candidate", "source"]);
 
+/**
+ * Run 107 P1: how much of the durable comparison-group set a learner asks for at a time.
+ *
+ * `evaluation:list-groups` used to answer a fixed 256-row page (ignoring its request value), so the
+ * learner counted an arbitrary window of the evidence: on 2026-09-24 the live root held 699
+ * finalized groups and 443 of them could never be counted, which left every promotion short of its
+ * floor. The reader now walks cursors, and the page size stays bounded by the caller and the
+ * capability (`LIST_GROUPS_MAX_LIMIT` in the extension).
+ */
+export const LEARNING_GROUP_PAGE_LIMIT = 256;
+/**
+ * The bound on one evidence read: 64 pages of 256 groups is 16 384 comparisons, an order of
+ * magnitude past the live set. A store larger than this is a capacity question, not a page walk, and
+ * the caller should see a bounded answer rather than an unbounded loop.
+ */
+export const LEARNING_GROUP_MAX_PAGES = 64;
+
 export interface TrackBLearningPassRuntime {
   invoke(extensionId: string, envelope: Record<string, unknown>): Promise<unknown>;
 }
@@ -336,6 +353,45 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 
 function boundedText(value: unknown): string | null {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+}
+
+/**
+ * Run 107 P1: read the whole comparison-group set through the capability's keyset cursor.
+ *
+ * The shape accepted from a page is deliberately generous, because three callers decode the same
+ * capability through three different transports (the host bridge decodes business results, the
+ * operator sidecar externalizes large frames, and an older runtime answers the legacy plain array).
+ * A plain array means "one legacy page, nothing follows" - that is what the pre-107 runtime returns,
+ * so a caller pointed at an older build degrades to the old behaviour instead of looping.
+ */
+export async function collectPagedComparisonGroups(input: {
+  readonly readPage: (cursor: string | null) => Promise<unknown>;
+  readonly maxPages?: number;
+}): Promise<Record<string, unknown>[]> {
+  const collected: Record<string, unknown>[] = [];
+  const maxPages = input.maxPages ?? LEARNING_GROUP_MAX_PAGES;
+  let cursor: string | null = null;
+  for (let page = 0; page < maxPages; page += 1) {
+    const decoded = await input.readPage(cursor);
+    const record = asRecord(decoded);
+    const rows = Array.isArray(decoded)
+      ? decoded
+      : Array.isArray(record?.groups)
+        ? (record.groups as unknown[])
+        : Array.isArray(record?.value)
+          ? (record.value as unknown[])
+          : [];
+    for (const row of rows) {
+      if (row && typeof row === "object" && !Array.isArray(row)) {
+        collected.push(row as Record<string, unknown>);
+      }
+    }
+    // A legacy array carries no cursor, so the walk ends after one page exactly as it did before.
+    const nextCursor = Array.isArray(decoded) ? null : boundedText(record?.nextCursor);
+    if (!nextCursor || nextCursor === cursor) break;
+    cursor = nextCursor;
+  }
+  return collected;
 }
 
 export function buildTrackBLearningEvidenceSummary(input: {
@@ -962,18 +1018,28 @@ export async function runTrackBLearningPass(
   const guardrails = input.guardrails ?? DEFAULT_LEARNING_GUARDRAILS;
   const promotionProtocol = { ...DEFAULT_PROMOTION_PROTOCOL, ...(input.promotionProtocol ?? {}) };
 
-  const rawGroups = await runtime.invoke("evaluation-core", envelope("evaluation:list-groups", {}));
-  const decodedGroups = input.decodeResult
-    ? input.decodeResult("evaluation-core", "evaluation:list-groups", rawGroups)
-    : Array.isArray(rawGroups)
-      ? rawGroups
-      : decodeBusinessResult(rawGroups, "evaluation-core", input.scope);
-  const groups: TrackBLearningEvidenceGroup[] = Array.isArray(decodedGroups)
-    ? (decodedGroups as TrackBLearningEvidenceGroup[])
-    : Array.isArray(asRecord(decodedGroups)?.groups)
-      ? ((asRecord(decodedGroups) as Record<string, unknown>)
-          .groups as TrackBLearningEvidenceGroup[])
-      : [];
+  /**
+   * Run 107 P1: the evidence this gate counts is the whole durable comparison-group set, not the
+   * first page of it. Reading one page silently truncated 443 of the 699 live groups, so a pack
+   * could never reach `minDecisiveComparisons`; the reader now walks the capability's cursor.
+   */
+  const groups = (await collectPagedComparisonGroups({
+    readPage: async cursor => {
+      const rawGroups = await runtime.invoke(
+        "evaluation-core",
+        envelope("evaluation:list-groups", {
+          page: true,
+          limit: LEARNING_GROUP_PAGE_LIMIT,
+          ...(cursor ? { cursor } : {}),
+        }),
+      );
+      return input.decodeResult
+        ? input.decodeResult("evaluation-core", "evaluation:list-groups", rawGroups)
+        : Array.isArray(rawGroups)
+          ? rawGroups
+          : decodeBusinessResult(rawGroups, "evaluation-core", input.scope);
+    },
+  })) as TrackBLearningEvidenceGroup[];
   const evidenceSummary = buildTrackBLearningEvidenceSummary({
     groups,
     routePackage,

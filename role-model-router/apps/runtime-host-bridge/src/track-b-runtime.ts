@@ -172,7 +172,12 @@ import {
   selectTrackBLearningEvidence,
   selectTrackBLearningTarget,
 } from "./track-b-learning-evidence.js";
-import { type TrackBLearningPassRuntime, runTrackBLearningPass } from "./track-b-learning-pass.js";
+import {
+  LEARNING_GROUP_PAGE_LIMIT,
+  type TrackBLearningPassRuntime,
+  collectPagedComparisonGroups,
+  runTrackBLearningPass,
+} from "./track-b-learning-pass.js";
 import {
   DEFAULT_REPLAY_CANDIDATE_CAP,
   isBenchmarkReplaySourceRef,
@@ -6556,18 +6561,18 @@ export async function readTrackBAdvisoryMeasurement(input: {
       }) ?? result
     );
   };
-  const decodedGroups = await invoke("evaluation-core", "evaluation:list-groups", {});
-  const record =
-    decodedGroups && typeof decodedGroups === "object"
-      ? (decodedGroups as Record<string, unknown>)
-      : {};
-  const groups = Array.isArray(decodedGroups)
-    ? (decodedGroups as readonly Record<string, unknown>[])
-    : Array.isArray(record.value)
-      ? (record.value as readonly Record<string, unknown>[])
-      : Array.isArray(record.groups)
-        ? (record.groups as readonly Record<string, unknown>[])
-        : [];
+  /**
+   * Run 107 P1: this measurement reads the group set to report the comparison graph, so a single
+   * fixed page of it reported a truncated graph. The readback now walks the capability's cursor.
+   */
+  const groups = (await collectPagedComparisonGroups({
+    readPage: async cursor =>
+      invoke("evaluation-core", "evaluation:list-groups", {
+        page: true,
+        limit: LEARNING_GROUP_PAGE_LIMIT,
+        ...(cursor ? { cursor } : {}),
+      }),
+  })) as readonly Record<string, unknown>[];
   const rows: Record<string, unknown>[] = [];
   for (const group of groups) {
     const result =

@@ -171,8 +171,10 @@ function resolveChannelScopedReplayLedgerLimits(input: {
 }
 import {
   DEFAULT_EVIDENCE_HALF_LIFE_DAYS,
+  LEARNING_GROUP_PAGE_LIMIT,
   assembleDurableLearnerValidationValue,
   buildTrackBLearningEvidenceSummary,
+  collectPagedComparisonGroups,
   selectDurableComparisonGroupId,
 } from "./track-b-learning-pass.js";
 import {
@@ -4773,24 +4775,31 @@ export async function main(): Promise<void> {
            */
           const readComparisonGroups = async (): Promise<Record<string, unknown>[]> => {
             try {
-              const decoded = decodeExternalizedOperatorReadback({
-                stateRoot: options.runtimeStateRoot,
-                scopeId: options.scopeId,
-                value: unwrapCapabilityPayload(
-                  await runtime.invoke(
-                    "evaluation-core",
-                    envelopeFor("evaluation-core", "evaluation:list-groups", {}),
-                  ),
-                ),
+              /**
+               * Run 107 P1: the learner's evidence is the whole durable group set. A single
+               * argument-less call answered one fixed 256-row page, so with 699 live groups the
+               * summary could never see the 443 that sat outside the window and the promotion gate
+               * had nothing to count. The readback now walks the capability's cursor.
+               */
+              return await collectPagedComparisonGroups({
+                readPage: async cursor => {
+                  const decoded = decodeExternalizedOperatorReadback({
+                    stateRoot: options.runtimeStateRoot,
+                    scopeId: options.scopeId,
+                    value: unwrapCapabilityPayload(
+                      await runtime.invoke(
+                        "evaluation-core",
+                        envelopeFor("evaluation-core", "evaluation:list-groups", {
+                          page: true,
+                          limit: LEARNING_GROUP_PAGE_LIMIT,
+                          ...(cursor ? { cursor } : {}),
+                        }),
+                      ),
+                    ),
+                  });
+                  return decoded;
+                },
               });
-              const rows = Array.isArray(decoded)
-                ? decoded
-                : Array.isArray((decoded as { groups?: unknown[] })?.groups)
-                  ? (decoded as { groups: unknown[] }).groups
-                  : [];
-              return rows.filter(
-                (row): row is Record<string, unknown> => Boolean(row) && typeof row === "object",
-              );
             } catch {
               return [];
             }
