@@ -346,6 +346,13 @@ const RETRYABLE_REPLAY_REFUSAL_CODES: ReadonlySet<string> = new Set([
    * stays deferrable — but it is named instead of being dispatched into a guaranteed refusal.
    */
   "judge_candidate_overlap",
+  /**
+   * Run 108: the caller resolves the judge per tick and could not name it. Without the judge the arms cannot
+   * exclude it, and the controller is the strongest alternative - so a capture dispatched in this state is
+   * planned *with* the judge as an arm and then judged by it (`judge_self_evaluation`, ineligible evidence).
+   * Deferrable: the assignment read usually succeeds on the next tick.
+   */
+  "judge_unresolved",
 ]);
 
 export function retryableReplayRefusalCodes(): ReadonlySet<string> {
@@ -638,6 +645,24 @@ export async function runAutoReplayTick(input: {
       typeof input.judgeEndpointId === "string" && input.judgeEndpointId.trim().length > 0
         ? input.judgeEndpointId.trim()
         : null;
+    /**
+     * Run 108: `undefined` means "this caller does not resolve a judge", so nothing needs excluding and the
+     * capture proceeds exactly as before. A present-but-empty value means the caller *does* resolve one and
+     * could not: the exclusion is then unavailable, and dispatching the capture would plan arms that may
+     * contain the judge - which the completion then uses to score its own comparison. Defer by name instead.
+     */
+    const judgeExpected = input.judgeEndpointId !== undefined;
+    if (judgeExpected && judgeEndpointId === null) {
+      deferred += 1;
+      emit({
+        captureRef: capture.captureRef,
+        outcome: "deferred",
+        code: "judge_unresolved",
+        detail:
+          "the configured judge could not be resolved, so a planned comparison could have the judge as an arm",
+      });
+      continue;
+    }
     if (judgeEndpointId && capture.sourceEndpointId === judgeEndpointId) {
       deferred += 1;
       emit({
@@ -680,6 +705,11 @@ export async function runAutoReplayTick(input: {
       sourceIsReplayProduced: capture.replayProduced === true,
       policyIdsResolvable: true,
       dependenciesAvailable: input.dependenciesAvailable ?? true,
+      /**
+       * Run 108: this caller plans arms, so it states whether the judge it excludes is known. Omitted means
+       * "no judge to exclude" (the guard above already refused the unresolvable case).
+       */
+      ...(judgeExpected ? { judgeResolved: judgeEndpointId !== null } : {}),
     });
     if (!admission.admitted) {
       const outcome = RETRYABLE_REPLAY_REFUSAL_CODES.has(admission.code) ? "deferred" : "refused";

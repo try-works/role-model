@@ -6213,6 +6213,13 @@ export async function main(): Promise<void> {
               sourceReplay !== null && sourceReplay.parentTraceId !== undefined,
             policyIdsResolvable: resolveReplayPolicySet(replayPolicySet).ok,
             dependenciesAvailable: true,
+            /**
+             * Run 108: this caller is the one that plans arms, so it must say whether the judge it will exclude
+             * is known. `evalJudgeEndpointId` is resolved for this capture above and is `""` when the
+             * controller-assignment read fails; admitting the capture then plans arms that may contain the
+             * judge, and the judge (resolved again at completion) then scores its own comparison.
+             */
+            judgeResolved: Boolean(evalJudgeEndpointId),
           });
           if (!admission.admitted) {
             throw new Error(`${admission.code}: ${admission.detail}`);

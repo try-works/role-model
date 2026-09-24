@@ -42,6 +42,16 @@ export const REPLAY_REFUSAL_CODES = [
    * the operator can change the controller; named, so the class is countable instead of arriving as `replay_failed`.
    */
   "judge_candidate_overlap",
+  /**
+   * Run 108: the configured judge could not be resolved for this capture (the controller-assignment read is
+   * per capture, and its failure is silent: `resolveControllerJudge` answers `""`). Without the judge the arm
+   * planner cannot exclude it, and the strongest alternative arm is planned - then judged by the controller
+   * itself. Measured live: 45 of the newest 300 comparison groups carry `judge_self_evaluation`, and in the
+   * newest 400 measured cases 142 of 144 have the judge as the counterfactual arm, interleaved with clean ones.
+   * Deferrable: the assignment read usually succeeds on the next tick, and a capture is cheaper than a
+   * comparison whose judge is one of its own arms.
+   */
+  "judge_unresolved",
 ] as const;
 
 export type ReplayRefusalCode = (typeof REPLAY_REFUSAL_CODES)[number];
@@ -64,6 +74,12 @@ export interface ReplayAdmissionInput {
   readonly sourceIsBenchmark: boolean;
   readonly policyIdsResolvable: boolean;
   readonly dependenciesAvailable: boolean;
+  /**
+   * Run 108: `false` when the caller plans arms and could not resolve the configured judge, so the exclusion
+   * that keeps the judge out of its own comparison is unavailable. Omit it where the caller does not plan arms
+   * (the automatic tick's pre-filter), which is why it is optional and defaults to "resolved".
+   */
+  readonly judgeResolved?: boolean;
 }
 
 export type ReplayAdmissionDecision =
@@ -101,6 +117,17 @@ export function decideReplayAdmission(input: ReplayAdmissionInput): ReplayAdmiss
     return refuse(
       "benchmark_source_not_replayable",
       "benchmark traffic is never a replay or evaluation source",
+    );
+  }
+  /**
+   * Run 108: checked before the arms are planned, because an unresolvable judge means the exclusion that keeps
+   * the judge out of its own comparison is missing - and a comparison the judge is an arm of is ineligible
+   * promotion evidence (`guidance/11`), so it would be paid for and then discarded.
+   */
+  if (input.judgeResolved === false) {
+    return refuse(
+      "judge_unresolved",
+      "the configured judge could not be resolved, so the arms cannot exclude it",
     );
   }
   if (!Number.isSafeInteger(input.distinctCandidateCount) || input.distinctCandidateCount < 1) {
