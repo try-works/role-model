@@ -82,6 +82,20 @@ const job = {
   traceRootId: GRAPH_REF,
   sharedPrefixRef: comparison.comparability.forkRef,
   branches: [{ id: WINNER }],
+  candidatePackages: [
+    {
+      endpointId: SOURCE,
+      modelId: "deepseek/deepseek-flash",
+      reasoningEffort: "max",
+      samplingProfileId: "deterministic-v1",
+    },
+    {
+      endpointId: WINNER,
+      modelId: "deepseek/deepseek-v4-pro",
+      reasoningEffort: "high",
+      samplingProfileId: "deterministic-v1",
+    },
+  ],
 };
 
 const report = {
@@ -139,6 +153,36 @@ describe("run120 S13: the derivation pass presents only durable, complete eviden
     expect(consumed.scope.routePackage).toBe(WINNER);
     expect(consumed.learningCapable).toBe(true);
     expect(consumed.evaluation.finalizedComparison.comparisonId).toBe(GROUP_ID);
+  });
+
+  test("skips a group when the replay records no propensity and is not deterministic", async () => {
+    const probabilistic = {
+      ...job,
+      candidatePackages: job.candidatePackages.map((entry) => ({
+        ...entry,
+        samplingProfileId: "exploration-v1",
+      })),
+    };
+    const capabilities: string[] = [];
+    const summary = await deriveLearnerCandidatesFromDurableEvidence({
+      groups: [comparison],
+      attemptedGroupIds: new Set<string>(),
+      limit: 2,
+      channel: "stage",
+      scope: "standalone-runtime-stage",
+      evaluationAuthoritySecret: "secret",
+      invoke: async (_extensionId, capability) => {
+        capabilities.push(capability);
+        if (capability === "replay:job") return probabilistic;
+        if (capability === "signals:read") return [report];
+        return null;
+      },
+    });
+
+    expect(summary.skipped).toBe(1);
+    expect(summary.derived).toBe(0);
+    expect(capabilities).not.toContain("profile:estimate-finalized-evaluation");
+    expect(capabilities).not.toContain("knowledge:eval-consumer");
   });
 
   test("skips a group whose capture has no persisted signal report", async () => {

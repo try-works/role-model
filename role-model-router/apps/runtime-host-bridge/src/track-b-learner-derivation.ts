@@ -226,20 +226,68 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
         continue;
       }
       const members = learnableComparisonMembers(normalized);
-      const rows = members
-        ? [...members.positive, ...members.negative].map((member) => ({
-            endpoint: text(member.candidateRef),
-            routePackage: text(member.candidateRef),
-            outcome: Number(member.score),
-            trialId: text(member.trialId),
-            scoreId: text(member.scoreId),
-            evidenceRef:
-              text(member.candidateRef) ===
-              text(asRecord(normalized.comparability)?.counterfactualCandidateRef)
-                ? text(asRecord(normalized.comparability)?.counterfactualEvidenceRef)
-                : text(asRecord(normalized.comparability)?.sourceEvidenceRef),
-          }))
+      /**
+       * Measured 2026-09-25 against the real learner (`extensions/profile-learner`: `estimate` requires a finite
+       * propensity per row): the profile step refused all 132 otherwise-complete derivations with
+       * "evidence and valid propensity required", because the durable replay job records no per-branch propensity.
+       * What it does record is the branch's sampling profile: under `deterministic-v1` the replay dispatches exactly
+       * one counterfactual per candidate, so the arm's inclusion probability is 1. Any other profile without a
+       * recorded propensity is not derivable and the group is skipped rather than given an invented weight.
+       */
+      const candidatePackages = Array.isArray(job?.candidatePackages)
+        ? (job?.candidatePackages as unknown[])
+            .map(asRecord)
+            .filter((entry): entry is Record<string, unknown> => entry !== null)
         : [];
+      const propensityFor = (
+        endpointId: string | null,
+      ): { readonly propensity: number; readonly model: string | null; readonly effort: string | null } | null => {
+        const entry =
+          endpointId === null
+            ? undefined
+            : candidatePackages.find((candidate) => text(candidate.endpointId) === endpointId);
+        const recorded = Number(entry?.propensity);
+        const model = text(entry?.modelId);
+        const effort = text(entry?.reasoningEffort);
+        if (Number.isFinite(recorded) && recorded > 0 && recorded <= 1) {
+          return { propensity: recorded, model, effort };
+        }
+        return text(entry?.samplingProfileId) === "deterministic-v1"
+          ? { propensity: 1, model, effort }
+          : null;
+      };
+      const rows = members
+        ? [...members.positive, ...members.negative].map((member) => {
+            const endpointId = text(member.candidateRef);
+            const propensity = propensityFor(endpointId);
+            return {
+              endpoint: endpointId,
+              routePackage: endpointId,
+              outcome: Number(member.score),
+              ...(propensity
+                ? {
+                    propensity: propensity.propensity,
+                    ...(propensity.model ? { model: propensity.model } : {}),
+                    ...(propensity.effort ? { effort: propensity.effort } : {}),
+                  }
+                : {}),
+              trialId: text(member.trialId),
+              scoreId: text(member.scoreId),
+              evidenceRef:
+                endpointId === text(asRecord(normalized.comparability)?.counterfactualCandidateRef)
+                  ? text(asRecord(normalized.comparability)?.counterfactualEvidenceRef)
+                  : text(asRecord(normalized.comparability)?.sourceEvidenceRef),
+            };
+          })
+        : [];
+      if (rows.some((row) => !Number.isFinite(row.propensity))) {
+        skipped += 1;
+        input.attemptedGroupIds.add(groupId);
+        input.log?.(
+          `learner derivation skipped ${groupId}: the replay records no propensity and its sampling profile is not deterministic`,
+        );
+        continue;
+      }
       const profile = unwrap(
         await input.invoke("profile-learner", "profile:estimate-finalized-evaluation", {
           finalizedEvaluation: normalized,
