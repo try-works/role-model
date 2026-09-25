@@ -80,3 +80,25 @@ test("run157 item 8d a genuinely terminal job stays a benign no-op", async () =>
   expect(result.cancelled).toBe(false);
   expect(result.detail).toContain("completed evaluation job cannot be cancelled");
 });
+
+test("run157 item 8d a job absent from every candidate scope is a benign no-op, not a refusal", async () => {
+  const seen: string[] = [];
+  const result = await terminalizeAbandonedEvaluation({
+    entry: ENTRY,
+    channel: "stage",
+    operatorScope: "standalone-runtime-stage",
+    reason: "give up",
+    invoke: async (_capability, _value, scope) => {
+      seen.push(scope);
+      throw new Error("evaluation job not found");
+    },
+  });
+  /**
+   * Every candidate scope was tried (the fallback must not stop at the first), and the id exists nowhere:
+   * there is nothing to terminalize. The delegated census measured 305 of 321 target ids absent from the live
+   * evaluation DB, so treating this as a refusal produced hundreds of self-defeating log lines per window.
+   */
+  expect(seen).toEqual([ENTRY.scope, "standalone-runtime-stage"]);
+  expect(result).toMatchObject({ cancelled: false, benign: true });
+  expect(result.scope).toBeNull();
+});

@@ -37,6 +37,13 @@ export interface AbandonedEvaluationTerminalizationResult {
   readonly cancelled: boolean;
   readonly scope: string | null;
   readonly detail: string | null;
+  /**
+   * Run 100 addendum 16 item 8d: the job id exists in none of the candidate scopes, so there is nothing to
+   * terminalize. The delegated census measured 305 of 321 target ids absent from the live evaluation store;
+   * treating that as a refusal produced hundreds of self-defeating log lines per window. Callers should not
+   * report a benign result as a failure.
+   */
+  readonly benign?: boolean;
 }
 
 /**
@@ -92,6 +99,14 @@ export async function terminalizeAbandonedEvaluation(
       if (JOB_NOT_FOUND.test(detail)) continue;
       if (!SCOPE_MISMATCH.test(detail)) return { cancelled: false, scope, detail };
     }
+  }
+  /**
+   * Every candidate scope was tried and each answered "evaluation job not found": the id is stale (never
+   * handed off, or aged out of the store), so there is nothing to cancel. Benign, and deliberately distinct
+   * from a scope mismatch (which is retried) and from a real failure (which is reported).
+   */
+  if (detail !== null && JOB_NOT_FOUND.test(detail)) {
+    return { cancelled: false, scope: null, detail, benign: true };
   }
   return { cancelled: false, scope: null, detail };
 }

@@ -339,6 +339,8 @@ const DURABLE_ARTIFACT_ID = /^[a-f0-9]{64}$/u;
 let activeAutoReplayLoop: ReturnType<typeof startAutoReplayLoop> | null = null;
 /** Run 100 addendum 19: the durable controller fallback is reported once, not on every tick. */
 let persistedControllerFallbackLogged = false;
+/** Run 100 addendum 16 item 8d: benign terminalization no-ops are named once, then counted. */
+let terminalizationBenignCount = 0;
 let activeLearningSummaryReader: (() => Promise<unknown>) | null = null;
 
 type DurableReplayCapture = Readonly<Record<string, unknown>>;
@@ -8089,9 +8091,25 @@ export async function main(): Promise<void> {
               if (!terminalization.cancelled) {
                 // A job that is already terminal is the expected second visit; anything else is worth a
                 // line in the log rather than silence, because silence is what hid this defect.
-                console.error(
-                  `[run100h] evaluation job terminalization not applied:${entry.evaluationJobId} scope=${terminalization.scope ?? "unresolved"} ${String(terminalization.detail ?? "job is already terminal").slice(0, 160)}`,
-                );
+                /**
+                 * Run 100 addendum 16 item 8d: a job id that exists in none of the candidate scopes has nothing
+                 * to terminalize — the delegated census measured 305 of 321 target ids absent from the live
+                 * evaluation store, and reporting each one produced hundreds of self-defeating lines per window.
+                 * The first occurrence per process is still named (so the class stays visible), the rest are
+                 * counted, not printed.
+                 */
+                if (terminalization.benign === true) {
+                  terminalizationBenignCount += 1;
+                  if (terminalizationBenignCount === 1) {
+                    console.error(
+                      `[run100h] evaluation job terminalization no-op:${entry.evaluationJobId} the id exists in none of the candidate scopes (counted, not per-job)`,
+                    );
+                  }
+                } else {
+                  console.error(
+                    `[run100h] evaluation job terminalization not applied:${entry.evaluationJobId} scope=${terminalization.scope ?? "unresolved"} ${String(terminalization.detail ?? "job is already terminal").slice(0, 160)}`,
+                  );
+                }
               }
             } catch (terminalizationError) {
               const message = String(
