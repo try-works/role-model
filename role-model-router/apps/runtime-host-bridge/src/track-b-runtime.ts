@@ -50,6 +50,62 @@ export function resolveMaxCounterfactualArms(
 }
 
 /**
+ * Run 100 R1 (live finding, clean verification window 2026-09-22): the routing-shadow path planned its
+ * arms straight from `configuredCandidateEndpointIds`, so when the controller endpoint - which
+ * `evaluation-core` treats as the comparison's judge (`judgeSource: controller`) - was among the
+ * configured candidates, the durable job was created with the judge as one of its cases and create-job
+ * refused it: `judge_candidate_overlap … is the judge declared by scorer set run96-routing-shadow-v3`
+ * (capture `req-26a7d08a-034e-424a`, no job row written). The replay path already resolved the judge per
+ * tick "so it must never be planned as a counterfactual arm"; this helper is the one place both paths
+ * share.
+ *
+ * The judge never becomes an arm, the exclusion is reported by name, and a pool the judge consumes
+ * refuses once with a bounded reason instead of producing evidence the learner must discard.
+ */
+export function selectTrackBCounterfactualArms(input: {
+  readonly candidateEndpointIds: readonly string[];
+  readonly routePackage: string;
+  readonly judgeEndpointId?: string | null;
+  readonly armBound: number;
+}): {
+  readonly arms: string[];
+  readonly excluded: ReadonlyArray<{ readonly endpointId: string; readonly reason: string }>;
+  readonly refusal: Readonly<{ code: string; detail: string }> | null;
+} {
+  const judge = typeof input.judgeEndpointId === "string" ? input.judgeEndpointId.trim() : "";
+  const candidates = [
+    ...new Set(
+      (input.candidateEndpointIds ?? []).filter(
+        (endpointId): endpointId is string =>
+          typeof endpointId === "string" && endpointId.trim().length > 0,
+      ),
+    ),
+  ];
+  const withoutServedRoute = candidates.filter(
+    (endpointId) => endpointId.trim() !== input.routePackage,
+  );
+  const arms = withoutServedRoute
+    .filter((endpointId) => !judge || endpointId.trim() !== judge)
+    .sort()
+    .slice(0, Math.max(0, Number.isSafeInteger(input.armBound) ? input.armBound : 0));
+  const excluded = withoutServedRoute
+    .filter((endpointId) => Boolean(judge) && endpointId.trim() === judge)
+    .map((endpointId) => ({ endpointId, reason: "judge_arm_excluded" }));
+  const refusal =
+    judge && withoutServedRoute.length > 0 && arms.length === 0
+      ? {
+          code: "R14_ALL_CANDIDATES_ARE_JUDGE",
+          detail:
+            `the configured counterfactual pool only contains the comparison's judge ${judge}`.slice(
+              0,
+              320,
+            ),
+        }
+      : null;
+  return { arms, excluded, refusal };
+}
+
+/**
  * Run 98 addendum 04 (live finding, stage v180, 2026-09-16).
  *
  * This process builds its own extension host for the replay/evaluation path and never passed
@@ -105,7 +161,6 @@ import {
 } from "./route-advisory-source.js";
 import {
   buildLearnedExperienceCandidate,
-  buildRoutePackageActivationReceipt,
   buildRoutingEvaluationExecutionContext,
   buildRoutingRolloutGroupLifecycle,
   emitTrackBContract,
@@ -116,8 +171,16 @@ import {
   selectTrackBLearningEvidence,
   selectTrackBLearningTarget,
 } from "./track-b-learning-evidence.js";
-import { type TrackBLearningPassRuntime, runTrackBLearningPass } from "./track-b-learning-pass.js";
-import { DEFAULT_REPLAY_CANDIDATE_CAP } from "./track-b-replay-policy.js";
+import {
+  LEARNING_GROUP_PAGE_LIMIT,
+  type TrackBLearningPassRuntime,
+  collectPagedComparisonGroups,
+  runTrackBLearningPass,
+} from "./track-b-learning-pass.js";
+import {
+  DEFAULT_REPLAY_CANDIDATE_CAP,
+  isBenchmarkReplaySourceRef,
+} from "./track-b-replay-policy.js";
 import {
   TRACK_B_PAIRWISE_JUDGE_WINNER_COUNTERFACTUAL,
   type TrackBPairwiseJudge,
@@ -319,6 +382,77 @@ async function assertManagedArtifactKeyFile(filePath: string): Promise<void> {
  * The owned pair lives under the stable runtime state root, never the versioned package,
  * so manual binary updates keep existing Message Graph ciphertext readable.
  */
+/** Run 100 addendum 07 P6: the version label of the durable evidence authority. */
+export const DURABLE_EVALUATION_AUTHORITY_VERSION = "role-model.evaluation-authority.v1";
+
+/**
+ * Run 100 addendum `replay-evaluation-learner-spine-completion.addendum-07` P6 - the *durable* evidence
+ * authority the learner's entry points sign their evidence references with.
+ *
+ * Measured: `evaluationAuthoritySecret` was minted per pipeline run (`randomBytes(32)`), so a learner liveness
+ * sweep that reconstructs inputs from durable state could never re-enter `runTrackBLearningPass` - the store
+ * would refuse evidence it cannot attribute, and rightly so. The authority's purpose is to authenticate *this
+ * runtime's own* evidence references to the Knowledge Store and Knowledge Worker; deriving it from the runtime's
+ * managed key keeps that meaning while making it reproducible across restarts and across sweeps.
+ *
+ * The label includes the channel and scope, so two runtimes (or two channels on one root) never share an
+ * authority, and the version travels with the receipts that name it so a future rotation is visible rather than
+ * silent.
+ */
+export async function resolveDurableEvaluationAuthority(input: {
+  readonly channel: string;
+  readonly stateRoot: string;
+  readonly scopeId: string;
+  readonly artifactDigestKeyFile?: string;
+}): Promise<{ readonly authoritySecret: string; readonly authorityVersion: string }> {
+  const channel = String(input.channel ?? "").trim();
+  const scopeId = String(input.scopeId ?? "").trim();
+  const stateRoot = String(input.stateRoot ?? "").trim();
+  if (!channel || !scopeId || !stateRoot) {
+    throw new Error("durable evaluation authority requires a channel, a state root and a scope");
+  }
+  /**
+   * The runtime publishes the managed key under its Track B root, which is `<runtimeStateRoot>/<scopeId>/track-b`
+   * on a scoped root (the sidecar is launched with `--state-root` set to exactly that path) and
+   * `<stateRoot>/managed-keys` on an unscoped one. Measured live: the first version of this helper looked only at
+   * the unscoped location, found nothing on the stage root, and silently fell back to a per-run secret - which is
+   * the behaviour P6 exists to remove. Every published layout is now a candidate, and the first present one wins.
+   */
+  const candidates = input.artifactDigestKeyFile?.trim()
+    ? [path.resolve(input.artifactDigestKeyFile.trim())]
+    : [
+        path.join(path.resolve(stateRoot), "managed-keys", "artifact-digest.key"),
+        path.join(
+          path.resolve(stateRoot),
+          scopeId,
+          "track-b",
+          "managed-keys",
+          "artifact-digest.key",
+        ),
+        path.join(path.resolve(stateRoot), "track-b", "managed-keys", "artifact-digest.key"),
+      ];
+  let keyFile: string | null = null;
+  for (const candidate of candidates) {
+    if (await pathExists(candidate)) {
+      keyFile = candidate;
+      break;
+    }
+  }
+  if (!keyFile) {
+    throw new Error(
+      `managed artifact digest key not found for the durable evaluation authority (looked in ${candidates
+        .map((candidate) => path.basename(path.dirname(path.dirname(candidate))))
+        .join(", ")})`,
+    );
+  }
+  await assertManagedArtifactKeyFile(keyFile);
+  const keyBytes = await readFile(keyFile);
+  const authoritySecret = createHmac("sha256", keyBytes)
+    .update(`${DURABLE_EVALUATION_AUTHORITY_VERSION}:${channel}:${scopeId}`)
+    .digest("hex");
+  return { authoritySecret, authorityVersion: DURABLE_EVALUATION_AUTHORITY_VERSION };
+}
+
 export async function resolveManagedArtifactKeyFiles(options: {
   readonly channel: "development" | "stage" | "production";
   readonly stateRoot: string;
@@ -416,13 +550,20 @@ export interface TrackBProductionRuntimeOptions {
  * private operations bound now allows a slow durable commit to run to completion instead of being
  * aborted at eight seconds. The startup budget is a bound, not a latency claim, and it stays
  * operator-tunable (`ROLE_MODEL_TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS`) without a rebuild.
+ *
+ * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S6 (measured 2026-09-23 while verifying the
+ * backlog repair): the mature real-traffic root (thousands of captures, 1 627 replay jobs, 680 comparison
+ * groups) needed longer than 240 s, and the host refused a boot with `Track B sidecar readiness timeout`
+ * while the sidecar was demonstrably working (506 s of CPU in six minutes). The packaged default is the
+ * operator's own bound (10 minutes) so a real root is not refused at boot; the environment override still
+ * wins for a root that needs more.
  */
 export const TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS = (() => {
   const configured = Number.parseInt(
     process.env.ROLE_MODEL_TRACK_B_SIDECAR_STARTUP_TIMEOUT_MS ?? "",
     10,
   );
-  return Number.isSafeInteger(configured) && configured > 0 ? configured : 240_000;
+  return Number.isSafeInteger(configured) && configured > 0 ? configured : 600_000;
 })();
 
 /**
@@ -3426,11 +3567,16 @@ export async function runSupervisedReplay(input: {
       } catch (error) {
         // Recovery is best-effort: the durable replay state stays the authority and the
         // capture is retired below when its evidence cannot be finalized.
-        console.error(
-          `[run98] terminal replay evaluation recovery declined:${jobId} ${String(
-            (error as { message?: unknown })?.message ?? error,
-          ).slice(0, 200)}`,
+        const recoveryMessage = String((error as { message?: unknown })?.message ?? error).slice(
+          0,
+          200,
         );
+        // Run 100 R3: a job that is already terminal needs no recovery attempt, so it is not a decline.
+        if (classifyReplayTerminalizationFailure(recoveryMessage) !== "already_terminal") {
+          console.error(
+            `[run98] terminal replay evaluation recovery declined:${jobId} ${recoveryMessage}`,
+          );
+        }
       }
     }
     return { ...structuredClone(created), schedulerState: "terminal_job" };
@@ -5271,8 +5417,17 @@ async function initializeTrackBPostObservationOutbox(
  */
 export function classifyReplayTerminalizationFailure(
   message: string,
-): "legacy_scope_unresolved" | "declined" {
-  return /scope binding mismatch/u.test(message) ? "legacy_scope_unresolved" : "declined";
+): "legacy_scope_unresolved" | "already_terminal" | "declined" {
+  if (/scope binding mismatch/u.test(message)) return "legacy_scope_unresolved";
+  /**
+   * Run 100 R3 (live finding, clean verification window 2026-09-22): the terminal-evaluation recovery
+   * sweep re-entered jobs that had already reached a terminal state, and every attempt was logged as
+   * `terminal replay evaluation recovery declined:… replay job is terminal or cancelling`. The durable
+   * state is the authority and it is already terminal, so this is a benign no-op rather than a decline
+   * - classifying it separately stops the sweep from reporting a failure it cannot make progress on.
+   */
+  if (/replay job is terminal or cancelling/u.test(message)) return "already_terminal";
+  return "declined";
 }
 
 export function createSingleFlightBackgroundDrain<Runtime>(input: {
@@ -5603,6 +5758,19 @@ export interface TrackBShadowPipelineInput {
    * the spread at the call site hid it from the type checker and it was dropped.
    */
   readonly judgeEndpointId?: string;
+  /**
+   * Run 100 addendum `handoff-evidence-durability.addendum-06` S44 (measured live: a recovered handoff that
+   * had finally resolved its evidence was refused with `judge_candidate_overlap: candidate deepseek…flash-high
+   * is the judge declared by scorer set run96-routing-shadow-v3`).
+   *
+   * The operator's judge rule is "the judge is the configured controller, resolved at judge time" - no
+   * endpoint or model id is pinned. Evaluation Core's write-time independence guard checks the judge the job
+   * *declares*: with a designated endpoint it checks that endpoint, with `judgeSource: "controller"` it checks
+   * nothing (the arm planner has already excluded the judge), and with neither it falls back to scanning every
+   * historical judge manifest sharing the scorer-set version - which refuses candidates that are not today's
+   * judge at all. This field is the declaration the guard needs, and it belongs in the comparison's identity.
+   */
+  readonly judgeSource?: "controller" | "disabled";
   readonly prefix: readonly unknown[];
   /**
    * Authoritative durable reference for the source prefix the caller observed.
@@ -6187,7 +6355,19 @@ function unwrapExtensionBusinessValue(raw: unknown): Record<string, unknown> | n
   for (let depth = 0; depth < 8; depth += 1) {
     if (!current || typeof current !== "object" || Array.isArray(current)) return null;
     const record = current as Record<string, unknown>;
-    const keys = Object.keys(record);
+    /**
+     * Run 107: the packaged host's envelope carries `schemaVersion` beside `businessOutput`, and a bare
+     * `schemaVersion` therefore made the record look like a payload - so the envelope was handed to the
+     * worker instead of the comparison, and every supervised replay's profile step degraded with
+     * `finalized decisive evaluation provenance required for profile learning`. When a record carries a
+     * `businessOutput`, its own `schemaVersion` is envelope metadata, not payload; a record with a real
+     * business field beside `businessOutput` (a degradation receipt's `degraded`/`reason`) is still returned
+     * untouched, because that field is not a wrapper key.
+     */
+    const hasBusinessOutput = record.businessOutput !== undefined;
+    const keys = hasBusinessOutput
+      ? Object.keys(record).filter((key) => key !== "schemaVersion")
+      : Object.keys(record);
     const isWrapper = keys.length > 0 && keys.every((key) => wrapperKeys.has(key));
     if (!isWrapper) return record;
     const inner =
@@ -6328,10 +6508,27 @@ function decodeExtensionBusinessResult(input: {
     }
     return null;
   }
-  // A record that carries its own named payload is authoritative; `businessOutput` is only the
-  // payload when the record has nothing else to offer (`{businessOutput, durableLocator}` and the
-  // `{value, businessOutput, durableLocator}` array form decode the same either way).
-  const carriesOwnPayload = Object.keys(record).some(
+  /**
+   * A record that carries its own named payload is authoritative; `businessOutput` is only the payload when
+   * the record has nothing else to offer (`{businessOutput, durableLocator}` and the
+   * `{value, businessOutput, durableLocator}` array form decode the same either way).
+   *
+   * Run 107 (measured live on `0.0.14-…-geb21e369`): the packaged host's envelope also carries
+   * `schemaVersion` beside `businessOutput`, and `schemaVersion` is not a transport field - so the *envelope*
+   * was returned as the payload and the profile learner refused every supervised replay with
+   * `finalized decisive evaluation provenance required for profile learning`. The extension had answered a
+   * perfectly good `{groupId, status: "finalized", outcome: "candidate", members, comparability}`; the
+   * boundary lost it.
+   *
+   * The rule is therefore: when a `businessOutput` is present, the envelope's own `schemaVersion` does not by
+   * itself make the record a payload. Any *business* field still does - a degradation receipt carries
+   * `degraded`/`reason` and is returned untouched, and so is any record whose `schemaVersion` belongs to its
+   * own contract rather than to the transport envelope.
+   */
+  const payloadKeys = business
+    ? Object.keys(record).filter((key) => key !== "schemaVersion")
+    : Object.keys(record);
+  const carriesOwnPayload = payloadKeys.some(
     (key) => !(EXTENSION_TRANSPORT_FIELDS as readonly string[]).includes(key),
   );
   if (carriesOwnPayload) return record;
@@ -6392,18 +6589,18 @@ export async function readTrackBAdvisoryMeasurement(input: {
       }) ?? result
     );
   };
-  const decodedGroups = await invoke("evaluation-core", "evaluation:list-groups", {});
-  const record =
-    decodedGroups && typeof decodedGroups === "object"
-      ? (decodedGroups as Record<string, unknown>)
-      : {};
-  const groups = Array.isArray(decodedGroups)
-    ? (decodedGroups as readonly Record<string, unknown>[])
-    : Array.isArray(record.value)
-      ? (record.value as readonly Record<string, unknown>[])
-      : Array.isArray(record.groups)
-        ? (record.groups as readonly Record<string, unknown>[])
-        : [];
+  /**
+   * Run 107 P1: this measurement reads the group set to report the comparison graph, so a single
+   * fixed page of it reported a truncated graph. The readback now walks the capability's cursor.
+   */
+  const groups = (await collectPagedComparisonGroups({
+    readPage: async (cursor) =>
+      invoke("evaluation-core", "evaluation:list-groups", {
+        page: true,
+        limit: LEARNING_GROUP_PAGE_LIMIT,
+        ...(cursor ? { cursor } : {}),
+      }),
+  })) as readonly Record<string, unknown>[];
   const rows: Record<string, unknown>[] = [];
   for (const group of groups) {
     const result =
@@ -7736,6 +7933,21 @@ export async function appendTrackBRouteAdvisoryObservation(input: {
   readonly observation: Readonly<Record<string, unknown>>;
   readonly maxEntries?: number;
 }) {
+  /**
+   * Run 100 addendum `00-requirements.benchmark-traffic-exclusion.addendum-01` (operator instruction
+   * 2026-09-22: "benchmark traffic should never become considered for replay and evaluation, it must
+   * always be excluded from replay and evals"). Measured live: 144 of the newest 500 ledger rows were
+   * `decision-bench-*` recorded as `mode: active, origin: live`, so a benchmark run was indistinguishable
+   * from real traffic in the operator's learning evidence and dominated the Decisions surface. Benchmark
+   * traffic is still routed and still measured by its own benchmark store; it is not learning evidence.
+   */
+  const benchmarkRef = [input.observation.decisionId, input.observation.requestId].find(
+    (value) =>
+      typeof value === "string" && isBenchmarkReplaySourceRef(value.replace(/^decision-/u, "")),
+  );
+  if (benchmarkRef !== undefined) {
+    return { appended: false, skipped: "benchmark_source" } as const;
+  }
   // Run 99 R25: the live routing path and the shadow pipeline append to this ledger from the
   // same process, and the pid-suffixed temp file made one rename consume the other's temp
   // (`ENOENT ... advisory-observations.json.<pid>.tmp`). Serialize per file so a
@@ -7743,7 +7955,10 @@ export async function appendTrackBRouteAdvisoryObservation(input: {
   const previous = trackBAdvisoryLedgerLocks.get(input.filePath) ?? Promise.resolve();
   const append = previous
     .catch(() => undefined)
-    .then(() => appendTrackBRouteAdvisoryObservationExclusive(input));
+    .then(async () => ({
+      ...(await appendTrackBRouteAdvisoryObservationExclusive(input)),
+      appended: true,
+    }));
   trackBAdvisoryLedgerLocks.set(
     input.filePath,
     append.then(
@@ -8001,6 +8216,63 @@ export const RUN97_PAIRWISE_JUDGE_DIMENSION = "task_specific_quality";
  */
 export const RUN97_PAIRWISE_JUDGE_DEFINITION_VERSION = 2;
 
+/**
+ * Run 177 (addendum 46 §5.1, measured live on the `run176-63b9961c` stage store): of the newest 100
+ * finalized comparisons, 5 carried a one-shot judge failure (`terminated` x8 / `fetch failed` x2 in the
+ * newest window) that permanently cost the comparison its only decisive dimension, because the dispatch
+ * failure was recorded once with no retry. Transport and provider failures are retried up to this many
+ * *extra* attempts (so at most `1 + bound` dispatches per comparison) with a bounded linear backoff;
+ * semantic failures — `position_order_disagreement`, an unknown winner, unbounded confidence — are not
+ * retried, because a second identical dispatch cannot repair them.
+ */
+export const RUN177_TRANSIENT_JUDGE_RETRY_BOUND = 2;
+/** Short and bounded: the retry exists to absorb a blip, not to hold the comparison open. */
+export const RUN177_TRANSIENT_JUDGE_RETRY_BACKOFF_MS = 250;
+
+/**
+ * Run 177 (addendum 46 §5.1): the transient classes named by the measured diagnostic. Only transport and
+ * provider failures are retried; everything else — most importantly the semantic judge failures — lands
+ * in the existing bounded scorer-failure row after a single attempt.
+ */
+const RUN177_TRANSIENT_JUDGE_FAILURE_MESSAGE_PATTERNS: readonly RegExp[] = [
+  /\bterminated\b/iu,
+  /fetch failed/iu,
+  /timed out|timeout|ETIMEDOUT/iu,
+  /\babort(?:ed)?\b|AbortError/iu,
+  /No execution target is currently eligible/iu,
+  /socket hang up|ECONNRESET|ECONNREFUSED|EPIPE|EAI_AGAIN/iu,
+];
+const RUN177_TRANSIENT_JUDGE_FAILURE_CODES: ReadonlySet<string> = new Set([
+  "ETIMEDOUT",
+  "ESOCKETTIMEDOUT",
+  "ECONNRESET",
+  "ECONNREFUSED",
+  "ECONNABORTED",
+  "EPIPE",
+  "EAI_AGAIN",
+  "UND_ERR_SOCKET",
+  "UND_ERR_CONNECT_TIMEOUT",
+]);
+
+export function isTransientJudgeFailure(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as {
+    readonly name?: unknown;
+    readonly code?: unknown;
+    readonly message?: unknown;
+  };
+  if (
+    typeof candidate.code === "string" &&
+    RUN177_TRANSIENT_JUDGE_FAILURE_CODES.has(candidate.code.toUpperCase())
+  ) {
+    return true;
+  }
+  const name = typeof candidate.name === "string" ? candidate.name : "";
+  const message = typeof candidate.message === "string" ? candidate.message : "";
+  const text = `${name} ${message}`;
+  return RUN177_TRANSIENT_JUDGE_FAILURE_MESSAGE_PATTERNS.some((pattern) => pattern.test(text));
+}
+
 export function createRun97PairwiseJudgeScorer(input: {
   readonly judgeEndpointId: string;
   /**
@@ -8097,6 +8369,49 @@ export function createRun97PairwiseJudgeScorer(input: {
   };
 }
 
+/**
+ * Run 100 addendum 15 item 6, second half: the promoted package's attribution has to name the route
+ * package the evidence was gathered for - its endpoint and its model. The compared rollouts are the only
+ * place the runtime holds that identity (the route-package id is the endpoint id, the model id travels on
+ * the rollout, and the sampling profile/adapter/experience pack travel with the candidate when the caller
+ * knows them). A rollout that cannot name its model yields no descriptor at all: an attribution to a model
+ * the runtime never ran is worse than a missing artifact, and the learning pass logs the refusal by name.
+ */
+export function resolveRoutePackageDescriptorFromRollouts(
+  routePackage: string,
+  rollouts: readonly Record<string, unknown>[],
+): {
+  readonly endpointId: string;
+  readonly modelId: string;
+  readonly modelRevision: string | null;
+  readonly samplingProfileId: string | null;
+  readonly promptAdapterId: string | null;
+  readonly toolPolicyId: string | null;
+  readonly experiencePackId: string | null;
+} | null {
+  const wanted = typeof routePackage === "string" ? routePackage.trim() : "";
+  if (!wanted) return null;
+  const text = (value: unknown): string | null =>
+    typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+  const row =
+    rollouts.find((rollout) => text(rollout.routePackage) === wanted) ??
+    rollouts.find((rollout) => text(rollout.endpointId) === wanted) ??
+    null;
+  if (!row) return null;
+  const endpointId = text(row.endpointId) ?? wanted;
+  const modelId = text(row.modelId);
+  if (!endpointId || !modelId) return null;
+  return {
+    endpointId,
+    modelId,
+    modelRevision: text(row.modelRevision),
+    samplingProfileId: text(row.samplingProfileId),
+    promptAdapterId: text(row.promptAdapterId),
+    toolPolicyId: text(row.toolPolicy) ?? text(row.toolPolicyId),
+    experiencePackId: text(row.experiencePackId),
+  };
+}
+
 export async function runTrackBShadowPipeline(
   runtime: TrackBShadowPipelineRuntime,
   input: TrackBShadowPipelineInput,
@@ -8122,9 +8437,46 @@ export async function runTrackBShadowPipeline(
   };
   const comparableEvidence = input.comparableEvidence;
   const sourceRollout = comparableEvidence?.source as Record<string, unknown> | undefined;
+  /**
+   * Run 100 R1 (live stage, released candidate `d19dcff3`): the endpoint that judges a comparison must
+   * never be one of its arms. Evaluation Core derives `judge_self_evaluation` from the comparison's
+   * *scored trial set* (`extensions/evaluation-core/index.mjs` ~3250-3361), and the learner then
+   * excludes the comparison - measured live as the largest exclusion bucket
+   * (`incomparable:judge_self_evaluation` 152-154 against `non_decisive_outcome` 32 and
+   * `package_not_involved` 62). Zero of the 171 judge-carrying finalized groups names the judge among
+   * its two compared candidates, so the poisoning comes from the judge appearing as an *extra arm*.
+   * The judge is known here, before the job's cases are created, so it is excluded from the arm list;
+   * a pool whose only candidate is the judge refuses once with a named, bounded reason instead of
+   * producing evidence the learner must throw away.
+   */
+  const declaredJudgeEndpointId =
+    typeof input.judge?.endpointId === "string" && input.judge.endpointId.trim()
+      ? input.judge.endpointId.trim()
+      : typeof input.judgeEndpointId === "string" && input.judgeEndpointId.trim()
+        ? input.judgeEndpointId.trim()
+        : "";
   const counterfactualRollouts = Array.isArray(comparableEvidence?.counterfactuals)
     ? (comparableEvidence.counterfactuals as Record<string, unknown>[])
     : [];
+  const counterfactualPackages = input.counterfactuals;
+  /**
+   * The exclusion itself happens where the arms, their per-case references and the comparison are built
+   * together (the supervised-replay completer, `cli.ts`): filtering here would leave the per-case
+   * reference proofs describing arms the job no longer carries. This guard is the backstop for a direct
+   * caller that hands the pipeline a pool the judge has consumed.
+   */
+  if (
+    declaredJudgeEndpointId &&
+    input.counterfactuals.length > 0 &&
+    input.counterfactuals.every((counterfactual) => counterfactual.id === declaredJudgeEndpointId)
+  ) {
+    throw new Error(
+      `R14_ALL_CANDIDATES_ARE_JUDGE: the configured counterfactual pool only contains the comparison's judge ${declaredJudgeEndpointId}`.slice(
+        0,
+        320,
+      ),
+    );
+  }
   const candidateSet = Array.isArray(comparableEvidence?.candidateSet)
     ? (comparableEvidence.candidateSet as Record<string, unknown>[])
     : [];
@@ -8132,8 +8484,8 @@ export async function runTrackBShadowPipeline(
     !sourceRollout ||
     counterfactualRollouts.length < 1 ||
     candidateSet.length < 2 ||
-    input.counterfactuals.length < 1 ||
-    input.counterfactuals.every((counterfactual) => counterfactual.id === input.routePackage) ||
+    counterfactualPackages.length < 1 ||
+    counterfactualPackages.every((counterfactual) => counterfactual.id === input.routePackage) ||
     counterfactualRollouts.some(
       (rollout) =>
         rollout.rolloutId === sourceRollout.rolloutId ||
@@ -8165,7 +8517,7 @@ export async function runTrackBShadowPipeline(
       sourceGraphRef: input.sourceGraphRef,
       prefix: input.prefix,
       ...(input.sourcePrefixRef ? { sourcePrefixRef: input.sourcePrefixRef } : {}),
-      counterfactuals: input.counterfactuals,
+      counterfactuals: counterfactualPackages,
     }),
   );
   console.error(`[run97] shadow pipeline start ${input.requestId}`);
@@ -8301,6 +8653,16 @@ export async function runTrackBShadowPipeline(
     ...(typeof input.taxonomyVersion === "string" && input.taxonomyVersion.trim()
       ? { taxonomyVersion: input.taxonomyVersion.trim() }
       : {}),
+    /**
+     * Run 100 R5: the role the request was classified under travels with the family and the revision.
+     * The completer already passes it (`cli.ts` -> `readCaptureRoleId`), but the comparability this
+     * pipeline builds dropped it, so the learner's candidate and pack scope could never be role-scoped
+     * from a capture's declared intent - the travel test
+     * `apps/runtime-host-bridge/test/run100-declared-intent-travel.test.ts` measures exactly that.
+     */
+    ...(typeof input.roleId === "string" && input.roleId.trim()
+      ? { roleId: input.roleId.trim() }
+      : {}),
     inputRef: evaluationReferences.inputRef,
     forkRef: evaluationReferences.forkRef,
     policyId: "run96-routing-shadow",
@@ -8315,6 +8677,13 @@ export async function runTrackBShadowPipeline(
     ...((input.judge?.endpointId ?? input.judgeEndpointId)?.trim()
       ? { judgeEndpointId: String(input.judge?.endpointId ?? input.judgeEndpointId).trim() }
       : {}),
+    /**
+     * S44: the judge's *source* travels with the comparison, so Evaluation Core's write-time independence
+     * guard checks the judge that actually judges instead of scanning historical manifests. The harness always
+     * judges with the controller unless the policy disables it, so the declaration is deterministic and
+     * belongs in the identity.
+     */
+    judgeSource: input.judgeSource ?? "controller",
     toolPolicyDigest: evaluationReferences.toolPolicyDigest,
     environmentDigest: evaluationReferences.environmentDigest,
     sourceEvidenceRef: evaluationReferences.sourceEvidenceRef,
@@ -8749,6 +9118,8 @@ export async function runTrackBShadowPipeline(
     trialIds.push(trial.trialId);
   }
   if (judgeScorer && input.judge) {
+    // Bound to a local so the retried attempt below keeps the narrowed judge type inside its closure.
+    const judge = input.judge;
     // One bounded judgement per comparison, after both branches produced durable
     // output, so the judge sees the same evidence the comparison will bind. The
     // dispatch itself is the host's (provider execution + ledger accounting).
@@ -8806,14 +9177,24 @@ export async function runTrackBShadowPipeline(
     if (durableJudgeScores) {
       judgeScores = [...durableJudgeScores];
     } else {
-      try {
-        const decision = await input.judge.dispatch({
+      /**
+       * Run 177 (addendum 46 §2/§5.1): of the newest 100 finalized comparisons, 5 carried a one-shot
+       * judge failure (`terminated` x8 / `fetch failed` x2 in the newest window) recorded once, which
+       * permanently cost the comparison its only decisive dimension. One dispatch attempt is the
+       * success path below, byte-identical to the previous behaviour; a *transient* failure is retried
+       * up to `RUN177_TRANSIENT_JUDGE_RETRY_BOUND` extra times with a short bounded backoff, because a
+       * second identical dispatch can repair a transport/provider blip. A semantic failure (order
+       * disagreement, unknown winner, unbounded confidence) is never retried: it falls straight through
+       * to the bounded scorer-failure row below.
+       */
+      const dispatchJudgeOnce = async (): Promise<Array<Record<string, unknown>>> => {
+        const decision = await judge.dispatch({
           requestId: input.requestId,
           channel: input.channel,
           scope: input.scope,
           authorizationEpoch: input.authorizationEpoch,
           evaluationJobId: jobId,
-          judgeEndpointId: input.judge.endpointId,
+          judgeEndpointId: judge.endpointId,
           source: {
             trialId: sourceBranch.trialId,
             candidateRef: sourceBranch.candidateRef,
@@ -8858,7 +9239,7 @@ export async function runTrackBShadowPipeline(
           // to an explicit tie; the flip travels with the receipt so the comparison can report it.
           ...(decision.orderDisagreement === true ? { orderDisagreement: true } : {}),
         };
-        judgeScores = [sourceBranch, counterfactualBranch].map((branch) => ({
+        return [sourceBranch, counterfactualBranch].map((branch) => ({
           scorerId: judgeScorer.id,
           scorerVersion: judgeScorer.version,
           scorerDigest: judgeScorer.digest,
@@ -8869,7 +9250,26 @@ export async function runTrackBShadowPipeline(
           source: judgeScorer.source,
           judgeReceipt,
         }));
-      } catch (error) {
+      };
+      let judgeScoresFromDispatch: Array<Record<string, unknown>> | null = null;
+      let judgeFailure: unknown = null;
+      for (let attempt = 1; attempt <= 1 + RUN177_TRANSIENT_JUDGE_RETRY_BOUND; attempt += 1) {
+        try {
+          judgeScoresFromDispatch = await dispatchJudgeOnce();
+          break;
+        } catch (error) {
+          judgeFailure = error;
+          if (!isTransientJudgeFailure(error)) break;
+          if (attempt > RUN177_TRANSIENT_JUDGE_RETRY_BOUND) break;
+          await new Promise((resolve) =>
+            setTimeout(resolve, RUN177_TRANSIENT_JUDGE_RETRY_BACKOFF_MS * attempt),
+          );
+        }
+      }
+      if (judgeScoresFromDispatch) {
+        judgeScores = judgeScoresFromDispatch;
+      } else {
+        const error = judgeFailure;
         // guidance/09: a judge failure is persisted as a scorer failure, never as a
         // valid zero score. The comparison then stays honestly undecided instead of
         // manufacturing a tie from an unrun judge.
@@ -8947,12 +9347,62 @@ export async function runTrackBShadowPipeline(
    * exactly what makes the group's `developmentPartition` non-empty — but they are not part of the
    * decision.
    */
-  const comparisonCandidateRefs = new Set([sourceCandidateRef, firstCounterfactualCandidateRef]);
+  /**
+   * Run 100 R3 (live stage, released candidate `d19dcff3`): 146 of 711 durable evaluation jobs were
+   * released as `evaluation_job_stranded_without_finalized_comparison` with every trial scored and no
+   * comparison group, while all 547 completed jobs held exactly two trials. The job declares the pair
+   * the comparison decides between, but this selection re-derived it from the *current* run's arm order
+   * (`firstCounterfactualCandidateRef`), so a resumed completion whose recorded arm order differed from
+   * the job's submitted an arm outside the declared pair and Evaluation Core refused it with
+   * `comparable evaluation trials must resolve to the declared source and counterfactual candidates`.
+   * The durable job is the contract: when it exists, its declared pair decides which trials are
+   * submitted. A declared side without a completed rollout is a bounded, named refusal rather than a
+   * silent mismatch.
+   */
+  const declaredCandidateRef = (value: unknown): string | null =>
+    typeof value === "string" && value.trim() ? value.trim() : null;
+  /**
+   * Run 100 R3 (live finding, clean verification window 2026-09-22): the durable-pair binding above is
+   * right for a *resumed* primary comparison, but it must not override the pair a different comparison
+   * intends to decide. The coverage-driven extra-pair calls re-read the same durable job (created for
+   * the primary pair) and then submitted their own pair, so the binding refused them:
+   *
+   *   `extra pair comparison declined: … durable routing-shadow comparison pair unresolved:
+   *    declared kimi-k3 and v4-pro-max; completed rollouts …`
+   *
+   * The stored pair is therefore adopted only when it agrees with the call's own pair; otherwise the
+   * call's pair is authoritative.
+   */
+  const isExtraPairCall = /:pair\d+$/u.test(String(input.requestId ?? ""));
+  const declaredSourceCandidateRef = !isExtraPairCall
+    ? (declaredCandidateRef(finalizeBinding.comparability.sourceCandidateRef) ?? sourceCandidateRef)
+    : sourceCandidateRef;
+  const declaredCounterfactualCandidateRef = !isExtraPairCall
+    ? (declaredCandidateRef(finalizeBinding.comparability.counterfactualCandidateRef) ??
+      firstCounterfactualCandidateRef)
+    : firstCounterfactualCandidateRef;
+  const comparisonCandidateRefs = new Set([
+    declaredSourceCandidateRef,
+    declaredCounterfactualCandidateRef,
+  ]);
   const comparisonTrialIds = completedRollouts
     .filter(({ rollout }) =>
       comparisonCandidateRefs.has(requireTrackBReference(rollout.endpointId, "candidate")),
     )
     .map(({ trialId }) => trialId);
+  if (comparisonTrialIds.length < 2) {
+    const completedCandidates = [
+      ...new Set(
+        completedRollouts.map(({ rollout }) => String(rollout.endpointId ?? "").slice(0, 120)),
+      ),
+    ].sort();
+    throw new Error(
+      `durable routing-shadow comparison pair unresolved: declared ${declaredSourceCandidateRef.slice(0, 120)} and ${declaredCounterfactualCandidateRef.slice(0, 120)}; completed rollouts ${completedCandidates.join(", ")}`.slice(
+        0,
+        512,
+      ),
+    );
+  }
   const evaluation = await runtime.invoke("evaluation-core", {
     ...envelope("evaluation:finalize-comparison-group", {
       groupId: `comparison:${input.requestId}`,
@@ -9139,7 +9589,28 @@ export async function runTrackBShadowPipeline(
       : {}),
     members: durableComparison.members,
   };
-  const evaluationAuthoritySecret = randomBytes(32).toString("hex");
+  /**
+   * Run 100 addendum `replay-evaluation-learner-spine-completion.addendum-07` P6: on a managed root the
+   * evidence authority is *derived* from the runtime's managed key, so the same authority signs today's run and
+   * any later liveness sweep (a learner sweep that reconstructs its inputs from durable state has nothing
+   * ephemeral to sign with). Environments without a managed key keep the per-run secret they have today.
+   */
+  const evaluationAuthoritySecret = await (async () => {
+    const stateRoot =
+      typeof input.contractStateRoot === "string" ? input.contractStateRoot.trim() : "";
+    if (!stateRoot) return randomBytes(32).toString("hex");
+    try {
+      const authority = await resolveDurableEvaluationAuthority({
+        channel: input.channel,
+        stateRoot,
+        scopeId: input.scope,
+      });
+      return authority.authoritySecret;
+    } catch {
+      // A root without a provisioned managed key keeps the previous behaviour rather than failing the pipeline.
+      return randomBytes(32).toString("hex");
+    }
+  })();
   const finalizedComparisonReceiptPayload = {
     schemaVersion: "role-model.evaluation-comparison-readback-receipt.v1",
     kind: "evaluation_core_comparison_readback",
@@ -9261,23 +9732,15 @@ export async function runTrackBShadowPipeline(
           }),
         }),
       );
-      contractEmissions.push(
-        emitTrackBContract({
-          stateRoot: input.contractStateRoot,
-          scopeId: input.scope,
-          contract: buildRoutePackageActivationReceipt({
-            receiptId: `activation:${input.requestId}`,
-            packageId: input.routePackage,
-            scope: { taskTypeId: "task:route-selection" },
-            policyGateId: "gate:route-package-activation",
-            priorPackageId: input.routePackage,
-            state: "disabled",
-            channel: input.channel,
-            scopeId: input.scope,
-            activatedAtMs: Date.now(),
-          }),
-        }),
-      );
+      /**
+       * Run 100 addendum 16: this emitted a `RoutePackageActivationReceiptV1` on **every** pipeline run with
+       * `state: "disabled"` and `packageId === priorPackageId` - a non-event recorded in the contract's promotion
+       * vocabulary. Measured 2026-09-25: 658 of 658 activation artifacts were exactly that (identical ids, state
+       * `disabled`), while the knowledge store held the real 18 active / 24 rolled-back transitions. The pipeline
+       * does not activate anything; the promotion step in the learning pass does, and it emits the receipt for the
+       * transition it actually makes. Emitting nothing here is the honest record: the readback then says there was
+       * no activation rather than a disabled one.
+       */
     } catch (error) {
       console.error(
         `[run97] contract emission degraded:${input.requestId} ${String(
@@ -10018,6 +10481,15 @@ export async function runTrackBShadowPipeline(
         ? candidateScorerIdentity.scorerSetVersion
         : null;
     if (scorerSetVersion) {
+      /**
+       * Run 100 addendum 15 item 6: the promoted pack's attribution names the route package the evidence
+       * belongs to, so the pass needs that arm's own identity. It is resolved from the rollouts the
+       * comparison was built from - the pipeline's own record of which endpoint and model each arm was.
+       */
+      const learningRoutePackageDescriptor = resolveRoutePackageDescriptorFromRollouts(
+        learningRoutePackage,
+        [...(sourceRollout ? [sourceRollout] : []), ...counterfactualRollouts],
+      );
       try {
         learningPass = await runTrackBLearningPass(runtime, {
           requestId: input.requestId,
@@ -10072,9 +10544,21 @@ export async function runTrackBShadowPipeline(
             : {}),
           // Run 98 addendum 33 S2: the judge's measured consistency, resolved by the caller.
           ...(input.judgeConsistency ? { judgeConsistency: input.judgeConsistency } : {}),
+          // Run 98 addendum 58 §38: the attribution carries the same role dimension as the consumer.
+          ...(typeof input.roleId === "string" && input.roleId.trim()
+            ? { roleId: input.roleId.trim() }
+            : {}),
+          ...(learningRoutePackageDescriptor
+            ? { routePackageDescriptor: learningRoutePackageDescriptor }
+            : {}),
           envelope: (capability, value) => envelope(capability, value),
           // The packaged host externalizes oversized business results, so the pass decodes the
           // comparison-group list exactly like the pipeline decodes its own extension answers.
+          // Run 113: the pass is also the writer that persists the documented contract artifacts
+          // (`RouteLearningValidationReceiptV1`, `ExperiencePackCandidateV1`) for the receipts and packs it
+          // records, so it needs the same state root the host routes use - omitted means a caller that does
+          // not persist contracts (a unit test, a fixture).
+          ...(input.contractStateRoot ? { contractStateRoot: input.contractStateRoot } : {}),
           decodeResult: (extensionId, _capability, raw) =>
             decodeExtensionBusinessResult({
               result: raw,
@@ -10266,6 +10750,16 @@ export async function runTrackBShadowPipeline(
   return {
     replay,
     evaluation: persistedEvaluation,
+    /**
+     * Run 100 R3 (live finding, clean verification window 2026-09-22): this return shadows the field the
+     * completion path reads - `evaluation` here is the observation's own value, while the comparison the
+     * pipeline validated (and returned at the earlier return) is `persistedEvaluationDecoded`. The
+     * completer therefore read a record with no `groupId`/`outcome` and reported
+     * `durable replay evaluation did not finalize a valid comparison: outcome=absent group=absent`.
+     * The comparison now travels under its own key so every existing consumer of `evaluation` is
+     * unchanged and the completion path has the object it validated.
+     */
+    ...(persistedEvaluationDecoded ? { comparison: persistedEvaluationDecoded } : {}),
     signals,
     profile: profileRecord,
     candidate,
@@ -10567,6 +11061,19 @@ export async function runTrackBPostObservation(
     readonly advisoryObservationLedgerPath?: string;
     /** Run 99 close-out (addendum 21 §4 S33): the judge order policy in force for this scope. */
     readonly judgeOrderPolicy?: "source_first" | "dual_order" | null;
+    /**
+     * Run 100 R7: the arm bound lives in the versioned activation policy (`maxCounterfactualArms`) and
+     * travels with the work item, so the operator can change it without a rebuild. The environment
+     * variable remains an explicit override for scripts.
+     */
+    readonly maxCounterfactualArms?: number | null;
+    /**
+     * Run 100 R1: the endpoint the controller assignment resolves to, i.e. the comparison's judge. It is
+     * resolved per observation so a controller change takes effect immediately, and it is excluded from
+     * the planned arms (`selectTrackBCounterfactualArms`).
+     */
+    readonly resolveJudgeEndpointId?: () => Promise<string | null> | string | null;
+    readonly judgeEndpointId?: string | null;
     /**
      * Run 98 addendum 58 §18: the runtime state root the extension host keeps its durable-output stores under.
      * A business answer that outgrew the inline frame limit comes back as the transfer marker
@@ -10885,20 +11392,33 @@ export async function runTrackBPostObservation(
   // R3: the frozen decision snapshot is provenance, never a candidate filter. A
   // live request with at least one distinct configured endpoint is replay work, so
   // it must not fall through to the observation-only refusal.
-  const configuredCounterfactualCandidates = [
-    ...new Set(
-      (input.configuredCandidateEndpointIds ?? []).filter(
-        (endpointId): endpointId is string =>
-          typeof endpointId === "string" &&
-          endpointId.trim().length > 0 &&
-          endpointId.trim() !== routePackage,
-      ),
-    ),
-  ]
-    .sort()
-    // Run 98 addendum 34 S1: the arm list is the input to coverage-driven pair planning, so its bound is
-    // the policy value (default = the release cap) instead of a bare constant.
-    .slice(0, resolveMaxCounterfactualArms());
+  /**
+   * Run 100 R1: the judge is excluded here, where the arms are planned, so neither this path nor the
+   * supervised completer can create a durable job whose cases contain the endpoint that judges it.
+   * The judge is resolved per call (controller assignment) so a controller change takes effect
+   * immediately, exactly as the replay path's `resolveJudgeEndpointId` does.
+   */
+  const judgeEndpointId = input.resolveJudgeEndpointId
+    ? await Promise.resolve(input.resolveJudgeEndpointId()).catch(() => null)
+    : (input.judgeEndpointId ?? null);
+  const armBound =
+    typeof input.maxCounterfactualArms === "number" &&
+    Number.isSafeInteger(input.maxCounterfactualArms) &&
+    input.maxCounterfactualArms > 0
+      ? Math.min(input.maxCounterfactualArms, 8)
+      : resolveMaxCounterfactualArms();
+  // Run 98 addendum 34 S1: the arm list is the input to coverage-driven pair planning, so its bound is
+  // the policy value (default = the release cap) instead of a bare constant.
+  const armSelection = selectTrackBCounterfactualArms({
+    candidateEndpointIds: input.configuredCandidateEndpointIds ?? [],
+    routePackage,
+    judgeEndpointId,
+    armBound,
+  });
+  if (armSelection.refusal) {
+    throw new Error(`${armSelection.refusal.code}: ${armSelection.refusal.detail}`.slice(0, 512));
+  }
+  const configuredCounterfactualCandidates = armSelection.arms;
   const pipeline =
     routingShadowEvidence && routingShadowCases.length > 0
       ? await runTrackBShadowPipeline(observedRuntime, {
@@ -11704,8 +12224,30 @@ export function createOwnedTrackBSidecarSpec(options: {
       let ready = false;
       let stderr = "";
       child.stderr.setEncoding("utf8");
+      /**
+       * Run 100 addendum 15: the sidecar's stderr was accumulated into a 16 KB string used only for readiness-failure
+       * messages and never forwarded, so every diagnostic written inside `runtime-operations-server.mjs` was
+       * invisible in the stage logs - measured across `run137` and `run138`, where instrumented profile-readback lines
+       * never appeared in either log while the sidecar demonstrably ran that code. The rolling buffer stays (it makes
+       * a startup refusal readable), and each line is now also forwarded to the host's stderr, where the stage logs
+       * capture it. Lines are bounded so a chatty sidecar cannot flood the log.
+       */
+      let stderrCarry = "";
+      const forwardStderrLine = (line: string): void => {
+        const trimmed = line.trim();
+        if (!trimmed) return;
+        console.error(`[track-b-sidecar] ${trimmed.slice(0, 400)}`);
+      };
       child.stderr.on("data", (chunk: string) => {
         stderr = `${stderr}${chunk}`.slice(-16_384);
+        stderrCarry += chunk;
+        const parts = stderrCarry.split("\n");
+        stderrCarry = parts.pop() ?? "";
+        for (const line of parts) forwardStderrLine(line);
+      });
+      child.stderr.on("end", () => {
+        if (stderrCarry) forwardStderrLine(stderrCarry);
+        stderrCarry = "";
       });
       child.once("exit", () => {
         exited = true;

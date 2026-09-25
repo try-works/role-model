@@ -70,6 +70,41 @@ describe("normalizeLearningActivity", () => {
     expect(view.recent.map((event) => event.id)).toEqual(["req-1", "job-1"]);
   });
 
+  /**
+   * Run 100 addendum `00-requirements.evaluation-lease-wedge-repair.addendum-02` S4 (operator report
+   * 2026-09-23: "18 evals have been stuck in flight for hours"). The overview said "18 in flight" for
+   * two days because a non-terminal job with no live lease was counted as in-flight work. The readback
+   * now carries `wedged` separately, so the panel can flag it instead of reporting it as progress.
+   */
+  test("run100h keeps a wedged count separate from in-flight work", () => {
+    const view = normalizeLearningActivity({
+      observedAtMs: 1_000,
+      window: { minutes: 60 },
+      pipeline: [
+        {
+          stage: "evaluation",
+          pending: 1,
+          wedged: 4,
+          recent: 2,
+          active: false,
+          lastEventAtMs: 900,
+        },
+        { stage: "replay", pending: 0, recent: 1, active: false, lastEventAtMs: 800 },
+      ],
+      budget: {
+        day: "2026-09-23",
+        counterfactuals: { used: 0, limit: 100 },
+        dispatches: { used: 0, limit: 300 },
+        byKind: [],
+      },
+      recent: [],
+    });
+
+    expect(view.pipeline[0]).toMatchObject({ pending: 1, wedged: 4 });
+    // A payload written before the field existed must read as zero, never as a missing number.
+    expect(view.pipeline[1]).toMatchObject({ pending: 0, wedged: 0 });
+  });
+
   test("survives partial payloads without fabricating counts", () => {
     const view = normalizeLearningActivity({
       pipeline: [{ stage: "replay" }, null],
@@ -283,6 +318,23 @@ describe("formatters", () => {
       reason: "learning profile inspection operator control is unavailable.",
     });
     expect(profileInspectionView(null)).toEqual({ state: "unavailable", reason: null });
+    // Run 113: the route's bounded document carries its own state, and an absence must not render as an
+    // available inspection just because it arrived without an error field.
+    expect(
+      profileInspectionView({
+        schemaVersion: "role-model.learning-profile-inspection.v1",
+        state: "unavailable",
+        reason: "no current estimate for this scope yet",
+      }),
+    ).toEqual({ state: "unavailable", reason: "no current estimate for this scope yet" });
+    expect(
+      profileInspectionView({
+        schemaVersion: "role-model.learning-profile-inspection.v1",
+        state: "available",
+        reason: null,
+        generationKey: "default",
+      }),
+    ).toEqual({ state: "available", reason: null });
 
     expect(formatPercentShare(0)).toBe("0.0%");
     expect(formatPercentShare(0.25)).toBe("25.0%");

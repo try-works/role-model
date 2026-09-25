@@ -2,6 +2,7 @@ import {
   type AutoReplayCapture,
   type AutoReplayExecution,
   type AutoReplayTickResult,
+  resolveReplayJudgeFallbackEndpointIds,
   runAutoReplayTick,
 } from "./track-b-auto-replay.js";
 
@@ -121,6 +122,52 @@ export interface AutoReplayOperations {
    * sweep keeps working; the tick simply reports zero resumed evaluations.
    */
   resumePendingEvaluations?(input: Record<string, unknown>): Promise<unknown>;
+  /**
+   * Run 100 addendum `evaluation-lease-wedge-repair.addendum-02` S1: optional bounded sweep over
+   * *evaluation* jobs that never reached a terminal state. It completes a job whose comparison is
+   * finalized, marks a lease-free job with no non-terminal trial as stranded, and reclaims it after the
+   * grace. The extension exposes `evaluation:reconcile-jobs` for exactly this and, until now, nothing in
+   * production called it — which is how 18 jobs stayed "in flight" for two days. A runtime whose boundary
+   * does not expose the sweep keeps working; the tick simply reports zero reconciled jobs.
+   */
+  reconcileEvaluationJobs?(input: Record<string, unknown>): Promise<unknown>;
+  /**
+   * Run 100 addendum `handoff-evidence-durability.addendum-06` S46: finalize a comparison whose trials are all
+   * scored and which has no group. Measured live: the newest durable evaluation jobs hold 2-4 **scored** trials
+   * with their declared pair satisfied and no comparison group, and were released as
+   * `evaluation_job_stranded_without_finalized_comparison` - `evaluation:retro-finalize-comparisons` has a core
+   * method and a capability and, until this sweep, no production caller.
+   */
+  retroFinalizeEvaluations?(input: Record<string, unknown>): Promise<unknown>;
+  /**
+   * Run 100 addendum 39 (2026-09-26): the post-finalization signals producer. Live on run175c/`b7f04039` the
+   * learner's derivation pass computed the report it was missing, but it walks oldest-first and met 79
+   * `capture … is outside the retention window` skips for 9 analyses - a comparison whose report is written only
+   * when the learner reaches it has already outlived its captures. This sweep runs directly after the
+   * retro-finalization pass and produces the report while the evidence is fresh: bounded page, bounded computes,
+   * wall-clock budget, idempotent, and it never re-analyzes a group whose own report exists.
+   */
+  sweepFinalizationSignals?(input: Record<string, unknown>): Promise<unknown>;
+  /**
+   * Run 100 addendum 07 P6: the learner's own liveness. A candidate the store never validated is driven through
+   * the worker's validate/promote steps from durable evidence, so learning no longer depends on the pipeline run
+   * that happened to derive it. Returns the number consumed and how many remain.
+   */
+  learnFromUnconsumedCandidates?(input: Record<string, unknown>): Promise<unknown>;
+  /**
+   * Run 100 addendum 10 S13: the learner's durable derivation half. The sweep above consumes candidates that exist;
+   * nothing in the runtime *creates* one outside `runTrackBShadowPipeline`, so a finalized comparison the pipeline
+   * never carried is evidence no learner can reach (measured 2026-09-25: 281 learnable groups with no candidate,
+   * 136 of them naming a persisted signal report). Bounded per tick, idempotent, durable readbacks only.
+   */
+  deriveLearnerCandidates?(input: Record<string, unknown>): Promise<unknown>;
+  /**
+   * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S7: optional bounded pass that finds durable
+   * replay jobs which handed their branches to evaluation but never got an evaluation job (an attempt
+   * interrupted between the handoff and the host's resume-entry write) and records the resume entries the
+   * evaluation sweep completes. Without it those jobs are unclaimable and their captures are lost.
+   */
+  recoverHandedOffEvaluations?(input: Record<string, unknown>): Promise<unknown>;
 }
 
 export interface AutoReplayLoopHealth {
@@ -132,6 +179,14 @@ export interface AutoReplayLoopHealth {
   readonly lastProcessedAtMs: number | null;
   readonly lastExpiredJobs: number;
   readonly lastResumedEvaluations: number;
+  /** Jobs the reconcile pass completed because their comparison group is finalized. */
+  readonly lastReconciledEvaluations: number;
+  /** Jobs the reconcile pass observed as stranded (no live lease, no non-terminal trial). */
+  readonly lastStrandedEvaluations: number;
+  /** Stranded jobs the reconcile pass terminalized after the grace. */
+  readonly lastReclaimedEvaluations: number;
+  /** Handed-off replays the recovery pass turned back into completable evaluation work. */
+  readonly lastRecoveredHandoffs: number;
 }
 
 export interface AutoReplayLoopStatus extends AutoReplayLoopHealth {
@@ -231,6 +286,10 @@ export function startAutoReplayLoop(input: {
   let lastDispositions = 0;
   let lastExpiredJobs = 0;
   let lastResumedEvaluations = 0;
+  let lastReconciledEvaluations = 0;
+  let lastStrandedEvaluations = 0;
+  let lastReclaimedEvaluations = 0;
+  let lastRecoveredHandoffs = 0;
   let timer: unknown = null;
 
   const pendingCaptures = (value: unknown): readonly AutoReplayCapture[] => {
@@ -267,6 +326,15 @@ export function startAutoReplayLoop(input: {
             ? row.sourceEndpointId.trim()
             : null,
         hasRecordedToolResults: row.hasRecordedToolResults !== false,
+        /**
+         * Run 100 addendum 16 item 3 / 8a: the class the projection read off the capture's durable root
+         * travels with the capture, so the admission decision refuses a non-discriminating probe by
+         * name instead of inferring anything from the request itself.
+         */
+        sourceClass:
+          typeof row.sourceClass === "string" && row.sourceClass.trim()
+            ? row.sourceClass.trim()
+            : null,
         // Replay output is never a replay source: the private boundary classifies
         // captures it produced while replaying, and the producer refuses them with
         // `amplification_depth_exceeded` instead of dispatching again.
@@ -285,13 +353,61 @@ export function startAutoReplayLoop(input: {
    * to replay throughput, so it is now runnable on its own with a re-entrancy guard.
    */
   let sweeping = false;
+  /**
+   * The reconcile pass answers with three job-id lists (`completed`, `stranded`, `reclaimed`) plus the
+   * scanned total. Counts are derived from the lists so a boundary that returns only the arrays - the
+   * shipped extension shape - is read correctly, and a boundary that returns numbers keeps working.
+   */
+  const countOf = (value: unknown): number => {
+    if (Array.isArray(value)) return value.length;
+    return Number.isSafeInteger(value) && (value as number) >= 0 ? Number(value) : 0;
+  };
   const runLivenessSweeps = async (
     window: Record<string, unknown>,
-  ): Promise<{ expired: number; resumed: number; error: string | null }> => {
-    if (sweeping) return { expired: 0, resumed: 0, error: null };
+  ): Promise<{
+    expired: number;
+    resumed: number;
+    reconciled: number;
+    stranded: number;
+    reclaimed: number;
+    recovered: number;
+    derived: number;
+    derivationBacklog: number;
+    /** Addendum 39: reports the post-finalization signals sweep produced this tick. */
+    finalizationSignals: number;
+    /** Addendum 39: candidates that sweep left for the next tick (bound or wall-clock budget). */
+    finalizationSignalsDeferred: number;
+    error: string | null;
+  }> => {
+    if (sweeping) {
+      return {
+        expired: 0,
+        resumed: 0,
+        reconciled: 0,
+        stranded: 0,
+        reclaimed: 0,
+        recovered: 0,
+        derived: 0,
+        derivationBacklog: 0,
+        finalizationSignals: 0,
+        finalizationSignalsDeferred: 0,
+        error: null,
+      };
+    }
     sweeping = true;
     let expired = 0;
     let resumed = 0;
+    let reconciled = 0;
+    let retroFinalized = 0;
+    let learned = 0;
+    let learnersPending = 0;
+    let stranded = 0;
+    let reclaimed = 0;
+    let recovered = 0;
+    let derivedCandidates = 0;
+    let derivationBacklog = 0;
+    let finalizationSignals = 0;
+    let finalizationSignalsDeferred = 0;
     let error: string | null = null;
     try {
       if (typeof input.operations.expireStaleReplayJobs === "function") {
@@ -336,10 +452,159 @@ export function startAutoReplayLoop(input: {
           error = error ? `${error}; ${detail}` : detail;
         }
       }
+      // Run 100 addendum 02 S1: the reconcile pass is what completes a job whose comparison finalized and
+      // reclaims one that is stranded beyond the grace. It had no production caller, so a job that lost its
+      // lease without a terminal trial stayed non-terminal indefinitely and was reported "in flight".
+      if (typeof input.operations.reconcileEvaluationJobs === "function") {
+        try {
+          const sweep = (await input.operations.reconcileEvaluationJobs({
+            window,
+            policySetDigest: input.policySet.policySetDigest,
+          })) as {
+            readonly completed?: unknown;
+            readonly stranded?: unknown;
+            readonly reclaimed?: unknown;
+          } | null;
+          if (sweep) {
+            reconciled = countOf(sweep.completed);
+            stranded = countOf(sweep.stranded);
+            reclaimed = countOf(sweep.reclaimed);
+          }
+        } catch (cause) {
+          const detail =
+            cause instanceof Error
+              ? `evaluation job reconciliation failed: ${cause.message.slice(0, 200)}`
+              : "evaluation job reconciliation failed";
+          error = error ? `${error}; ${detail}` : detail;
+        }
+      }
+      /**
+       * Run 100 addendum `handoff-evidence-durability.addendum-06` S46 (measured live): the newest durable
+       * evaluation jobs hold 2-4 **scored** trials, satisfy their declared pair, and have **no** comparison
+       * group - they were released as `evaluation_job_stranded_without_finalized_comparison`, and nothing
+       * finalized them because `evaluation:retro-finalize-comparisons` had a core method, a capability and no
+       * production caller. Finalizing them needs no provider work: the trials are already scored, so this sweep
+       * converts paid-for evidence into comparisons the learner can consume.
+       */
+      if (typeof input.operations.retroFinalizeEvaluations === "function") {
+        try {
+          const sweep = (await input.operations.retroFinalizeEvaluations({
+            window,
+            policySetDigest: input.policySet.policySetDigest,
+          })) as { readonly finalized?: unknown } | null;
+          if (sweep) retroFinalized = countOf(sweep.finalized);
+        } catch (cause) {
+          const detail =
+            cause instanceof Error
+              ? `comparison retro-finalization failed: ${cause.message.slice(0, 200)}`
+              : "comparison retro-finalization failed";
+          error = error ? `${error}; ${detail}` : detail;
+        }
+      }
+      /**
+       * Addendum 39: the comparison that just finalized has captures that are still hot, and the report its
+       * learning evidence needs is written by this sweep - not later, when the learner's derivation pass reaches
+       * the group and the retention ring has moved past it (live: 79 retention skips for 9 analyses).
+       */
+      if (typeof input.operations.sweepFinalizationSignals === "function") {
+        try {
+          const sweep = (await input.operations.sweepFinalizationSignals({
+            window,
+            policySetDigest: input.policySet.policySetDigest,
+          })) as { readonly analyzed?: unknown; readonly deferred?: unknown } | null;
+          if (sweep) {
+            finalizationSignals = countOf(sweep.analyzed);
+            finalizationSignalsDeferred = countOf(sweep.deferred);
+          }
+        } catch (cause) {
+          const detail =
+            cause instanceof Error
+              ? `finalization signals sweep failed: ${cause.message.slice(0, 200)}`
+              : "finalization signals sweep failed";
+          error = error ? `${error}; ${detail}` : detail;
+        }
+      }
+      /**
+       * P6: consume candidates the knowledge store never validated. Runs after the evaluation sweeps so a
+       * comparison finalized this tick is available as evidence on the next one, and stays bounded (two
+       * candidates per tick) like every other liveness step.
+       */
+      if (typeof input.operations.learnFromUnconsumedCandidates === "function") {
+        try {
+          const sweep = (await input.operations.learnFromUnconsumedCandidates({
+            window,
+            policySetDigest: input.policySet.policySetDigest,
+          })) as { readonly consumed?: unknown; readonly remaining?: unknown } | null;
+          if (sweep) {
+            learned = countOf(sweep.consumed);
+            learnersPending = countOf(sweep.remaining);
+          }
+        } catch (cause) {
+          const detail =
+            cause instanceof Error
+              ? `learner sweep failed: ${cause.message.slice(0, 200)}`
+              : "learner sweep failed";
+          error = error ? `${error}; ${detail}` : detail;
+        }
+      }
+      /**
+       * S13: derive a candidate for a learnable finalized comparison that has none. Runs after the consume sweep so a
+       * candidate created this tick can be validated on the next one, and stays bounded (two groups per tick).
+       */
+      if (typeof input.operations.deriveLearnerCandidates === "function") {
+        try {
+          const sweep = (await input.operations.deriveLearnerCandidates({
+            window,
+            policySetDigest: input.policySet.policySetDigest,
+          })) as { readonly derived?: unknown; readonly pending?: unknown } | null;
+          if (sweep) {
+            derivedCandidates = countOf(sweep.derived);
+            derivationBacklog = countOf(sweep.pending);
+          }
+        } catch (cause) {
+          const detail =
+            cause instanceof Error
+              ? `learner derivation failed: ${cause.message.slice(0, 200)}`
+              : "learner derivation failed";
+          error = error ? `${error}; ${detail}` : detail;
+        }
+      }
+      // Run 100 addendum 04 S7: a replay that handed its branches off but was interrupted before its
+      // evaluation job existed is unclaimable and would otherwise be lost; recover it into the resume store
+      // the evaluation sweep above completes.
+      if (typeof input.operations.recoverHandedOffEvaluations === "function") {
+        try {
+          const sweep = (await input.operations.recoverHandedOffEvaluations({
+            window,
+            policySetDigest: input.policySet.policySetDigest,
+          })) as { readonly recovered?: unknown } | null;
+          if (sweep && Number.isSafeInteger(sweep.recovered) && Number(sweep.recovered) >= 0) {
+            recovered = Number(sweep.recovered);
+          }
+        } catch (cause) {
+          const detail =
+            cause instanceof Error
+              ? `handed-off replay recovery failed: ${cause.message.slice(0, 200)}`
+              : "handed-off replay recovery failed";
+          error = error ? `${error}; ${detail}` : detail;
+        }
+      }
     } finally {
       sweeping = false;
     }
-    return { expired, resumed, error };
+    return {
+      expired,
+      resumed,
+      reconciled,
+      stranded,
+      reclaimed,
+      recovered,
+      derived: derivedCandidates,
+      derivationBacklog,
+      finalizationSignals,
+      finalizationSignalsDeferred,
+      error,
+    };
   };
 
   const tick = async (): Promise<AutoReplayTickResult & { readonly skipped?: boolean }> => {
@@ -351,6 +616,10 @@ export function startAutoReplayLoop(input: {
       );
       if (sweep.expired > 0) lastExpiredJobs = sweep.expired;
       if (sweep.resumed > 0) lastResumedEvaluations = sweep.resumed;
+      if (sweep.reconciled > 0) lastReconciledEvaluations = sweep.reconciled;
+      if (sweep.stranded > 0) lastStrandedEvaluations = sweep.stranded;
+      if (sweep.reclaimed > 0) lastReclaimedEvaluations = sweep.reclaimed;
+      if (sweep.recovered > 0) lastRecoveredHandoffs = sweep.recovered;
       if (sweep.error) {
         lastOutcome = "degraded";
         lastError = sweep.error;
@@ -414,6 +683,15 @@ export function startAutoReplayLoop(input: {
         ...(typeof input.resolveJudgeEndpointId === "function"
           ? { judgeEndpointId: await input.resolveJudgeEndpointId().catch(() => null) }
           : {}),
+        /**
+         * Run 100 addendum 22: the operator can name the endpoints the tick may judge with when the configured
+         * judge is itself an arm of the comparison. Unset keeps the tick's own default (the configured endpoint
+         * pool), and an empty effective list keeps the named `judge_candidate_overlap` refusal.
+         */
+        ...(() => {
+          const fallbackEndpointIds = resolveReplayJudgeFallbackEndpointIds(process.env);
+          return fallbackEndpointIds ? { judgeFallbackEndpointIds: fallbackEndpointIds } : {};
+        })(),
         ...(providedHealthyEndpointIds && providedHealthyEndpointIds.length > 0
           ? { healthyEndpointIds: [...providedHealthyEndpointIds] }
           : {}),
@@ -446,6 +724,10 @@ export function startAutoReplayLoop(input: {
       const sweep = await runLivenessSweeps(window as unknown as Record<string, unknown>);
       lastExpiredJobs = sweep.expired;
       lastResumedEvaluations = sweep.resumed;
+      lastReconciledEvaluations = sweep.reconciled;
+      lastStrandedEvaluations = sweep.stranded;
+      lastReclaimedEvaluations = sweep.reclaimed;
+      lastRecoveredHandoffs = sweep.recovered;
       const sweepError = sweep.error;
       lastOutcome = sweepError ? "degraded" : "ok";
       lastError = sweepError;
@@ -502,6 +784,10 @@ export function startAutoReplayLoop(input: {
         lastProcessedAtMs,
         lastExpiredJobs,
         lastResumedEvaluations,
+        lastReconciledEvaluations,
+        lastStrandedEvaluations,
+        lastReclaimedEvaluations,
+        lastRecoveredHandoffs,
       };
     },
     status() {
@@ -511,6 +797,10 @@ export function startAutoReplayLoop(input: {
         lastDispositions,
         lastExpiredJobs,
         lastResumedEvaluations,
+        lastReconciledEvaluations,
+        lastStrandedEvaluations,
+        lastReclaimedEvaluations,
+        lastRecoveredHandoffs,
       };
     },
   };

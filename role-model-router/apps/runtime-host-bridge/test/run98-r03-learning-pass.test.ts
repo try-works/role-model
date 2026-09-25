@@ -1,3 +1,6 @@
+import { existsSync, mkdtempSync, readFileSync, readdirSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { expect, test } from "vitest";
 
 import {
@@ -838,4 +841,103 @@ test("run99 R33 D6 the family states its propensity coverage and qualifies the c
   });
   expect(fullyTraced.byFamily["coder.review"].propensityCoverage).toBe(1);
   expect(fullyTraced.byFamily["coder.review"].causalClaim).toBe("randomized");
+});
+
+/**
+ * Run 113 (addendum 08 R3/S4, live measurement): 169 learned-experience candidates and a growing
+ * stack of pack records existed on the live runtime, and `contracts\` still held **zero**
+ * `ExperiencePackCandidateV1` / `RouteLearningValidationReceiptV1` files. The builders were
+ * unit-tested and had no production caller on the path that writes on real traffic - this pass is
+ * that path. The artifacts are the documented vocabulary; the richer durable record stays in the
+ * Knowledge Store (`emitTrackBContract` validates before it writes, so a shape that only satisfies
+ * the runtime's own record would throw rather than publish a lie).
+ */
+test("run113 the pass emits the documented pack and validation-receipt artifacts when the caller names a contract state root", async () => {
+  const stateRoot = mkdtempSync(path.join(tmpdir(), "run113-contracts-"));
+  /**
+   * Both artifacts are closed contracts with required members the runtime's own record does not
+   * always carry (`splitHash` must be a 64-hex digest, `experienceIds` must be non-empty). The
+   * emission is honest about that: `emitTrackBContract` validates first and the pass logs a
+   * bounded refusal instead of publishing an artifact that only satisfies the runtime's shape.
+   * This fixture is the documented shape, so the happy path writes both files.
+   */
+  const runtime = fakeRuntime({
+    groups: decisiveGroups,
+    validation: {
+      receipt: {
+        receiptId: "validation:1",
+        candidateId: "shadow-candidate-1",
+        candidateType: "experience",
+        decision: "validate",
+        baselineId: "baseline:1",
+        splitHash: "a".repeat(64),
+        caseManifestRef: "manifest:learning-pass:1",
+        estimatorVersion: "paired-cluster-bootstrap-v1",
+        bootstrapSeed: 87,
+        qualityDelta: 0.2,
+        confidenceLower: 0.05,
+        confidenceUpper: 0.3,
+        holdoutSampleCount: 3,
+        guardrailsPassed: true,
+        createdAt: "2026-09-24T08:00:00.000Z",
+        runtimeChannel: "stage",
+        scopeId: "standalone-runtime-stage",
+        boundaryProtocolVersion: "1.1",
+      },
+      promotionEligible: true,
+    },
+    promotion: {
+      packCandidate: {
+        packId: "pack:1",
+        status: "validated",
+        priority: "advisory_only",
+        experienceIds: ["experience:1"],
+        maxTokens: 512,
+        placement: "context_block",
+        createdAt: "2026-09-24T08:00:00.000Z",
+      },
+    },
+  });
+  const receipt = await runTrackBLearningPass(runtime, passInput({ contractStateRoot: stateRoot }));
+
+  expect(receipt).toMatchObject({ decision: "validate", packId: "pack:1", promoted: true });
+  const directory = path.join(stateRoot, "standalone-runtime-stage", "track-b", "contracts");
+  const files = readdirSync(directory);
+  expect(files.filter((name) => name.startsWith("RouteLearningValidationReceiptV1-"))).toHaveLength(
+    1,
+  );
+  expect(files.filter((name) => name.startsWith("ExperiencePackCandidateV1-"))).toHaveLength(1);
+  /**
+   * Run 100 addendum 16: the promotion is the transition, so the activation receipt is emitted here - and only
+   * here. Measured 2026-09-25: the only activation artifacts on disk were 658 synthetic `disabled` non-events
+   * (identical package ids) emitted by the pipeline on every run; the promoted pack's transition was nowhere in the
+   * contract vocabulary. The receipt must name the promoted pack, its validation baseline, the receipt that
+   * authorised the promotion, and it must validate against the closed contract (a non-empty scope plus a
+   * `validationReceiptId` are what the schema - not the TypeScript interface - requires).
+   */
+  const activationFiles = files.filter((name) =>
+    name.startsWith("RoutePackageActivationReceiptV1-"),
+  );
+  expect(activationFiles).toHaveLength(1);
+  const activation = JSON.parse(readFileSync(path.join(directory, activationFiles[0]), "utf8"));
+  expect(activation).toMatchObject({
+    contract: "RoutePackageActivationReceiptV1",
+    packageId: "pack:1",
+    priorPackageId: "baseline:1",
+    state: "active",
+    validationReceiptId: "validation:1",
+    policyGateId: "gate:route-package-activation",
+    scopeId: "standalone-runtime-stage",
+  });
+  expect(activation.packageId).not.toBe(activation.priorPackageId);
+});
+
+test("run113 a caller that does not name a contract state root emits nothing (a unit test or a fixture)", async () => {
+  const stateRoot = mkdtempSync(path.join(tmpdir(), "run113-contracts-"));
+  const runtime = fakeRuntime({ groups: decisiveGroups });
+  await runTrackBLearningPass(runtime, passInput());
+
+  expect(existsSync(path.join(stateRoot, "standalone-runtime-stage", "track-b", "contracts"))).toBe(
+    false,
+  );
 });

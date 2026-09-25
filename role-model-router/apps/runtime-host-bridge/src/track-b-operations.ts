@@ -815,7 +815,15 @@ const DEFAULT_CONTRIBUTION_DELIVERY_TIMEOUT_MS = 30_000;
 // Run 95 allows a local route capture to exceed the legacy five-second budget, so
 // the routing bound is an order of magnitude above it while still preventing an
 // unbounded wait on the operations boundary.
-const DEFAULT_ROUTE_CAPTURE_TIMEOUT_MS = 10_000;
+/**
+ * Run 100 addendum `replay-dispatch-envelope-repair.addendum-03` S2: this client writes the branch evidence
+ * for every counterfactual arm, so its bound decides whether a replay that already ran and was paid for can
+ * become evidence at all. The operator's 600 s decision ("raise the bounds to 600 s for both") was applied to
+ * the private-operations boundary and the replay deadline, not here, and the 10 s default produced
+ * `private Track B operation timed out after 10000ms` on heavy captures. The drain is a background task, so
+ * the longer bound does not hold a request.
+ */
+const DEFAULT_ROUTE_CAPTURE_TIMEOUT_MS = 600_000;
 /**
  * Run 98 addendum 48 (live v285 measurement): with the caller's own capture persisted first, branch captures
  * completed at 22.6 s, 24.6 s and 26.0 s and only the *branch* writes crossed the old 30 s ceiling
@@ -823,7 +831,7 @@ const DEFAULT_ROUTE_CAPTURE_TIMEOUT_MS = 10_000;
  * ceiling only bounds how long the runtime keeps trying to record durable evidence — raise it, but keep it
  * bounded so a wedged boundary still degrades.
  */
-const MAX_ROUTE_CAPTURE_TIMEOUT_MS = 180_000;
+const MAX_ROUTE_CAPTURE_TIMEOUT_MS = 900_000;
 
 /** Exported for the bound's own contract test: an explicit configuration wins inside [100, 180000] ms. */
 export function resolveRouteCaptureTimeoutMs(
@@ -840,7 +848,10 @@ export function resolveRouteCaptureTimeoutMs(
 // A capture larger than this cannot be absorbed by the operations boundary inside
 // the bound above, so the request pays the full timeout and still records no
 // capture. Skipping it keeps the same bounded degradation without the 10 s tax.
-const DEFAULT_ROUTE_CAPTURE_MAX_BYTES = 512 * 1024;
+// Run 100 addendum `replay-dispatch-envelope-repair.addendum-03` S2: both numbers move with the operator's
+// 600 s decision. The bound above now covers a heavy dsh write-back, and the byte budget is aligned with the
+// capture admission decision (20 MiB) so a 750-800 KB capture is recorded instead of refused.
+const DEFAULT_ROUTE_CAPTURE_MAX_BYTES = 20 * 1024 * 1024;
 // Once the boundary fails a capture, stop paying the bounded timeout for every
 // subsequent request until this cooldown expires (the failure is recorded the same
 // way, just without the wait).
@@ -878,8 +889,16 @@ const DEFAULT_CONTRIBUTION_AGGREGATE_TIMEOUT_MS = 5_000;
  * — and the second one starved the auto-replay producer, so freshly captured requests were never
  * replayed. Five seconds was already raised to eight for the same reason; the bound now covers the
  * durable commit path under load and stays operator-tunable without a rebuild.
+ *
+ * Run 100 addendum `runtime-replay-timeout-bounds.addendum-01` (operator instruction: "raise the bounds
+ * to 600 s for both"): real dsh replays of multi-megabyte coding-agent prompts take minutes per provider
+ * call, and a boundary that gives up at 30 s turns each one into `private Track B operation timed out
+ * after 10000ms` and then into a retired capture. The decision was first applied to the running stage
+ * processes through `ROLE_MODEL_TRACK_B_OPERATIONS_TIMEOUT_MS`; it is now the packaged default as well, so
+ * a release started by hand from the downloaded package carries it. The resolver stays injectable, so a
+ * deployment can still size it for its own traffic.
  */
-export const DEFAULT_TRACK_B_OPERATIONS_TIMEOUT_MS = 30_000;
+export const DEFAULT_TRACK_B_OPERATIONS_TIMEOUT_MS = 600_000;
 
 export function resolveTrackBOperationsTimeoutMs(
   configured: number | null | undefined = Number.parseInt(
@@ -896,8 +915,17 @@ export function resolveTrackBOperationsTimeoutMs(
  * Run 98 addendum 04 §7 (`L1`): how many extra attempts a connection-level failure gets, and how long
  * to wait before each. Kept small and bounded so a genuinely down boundary still fails promptly.
  */
-const PRIVATE_OPERATIONS_TRANSPORT_RETRIES = 2;
-const PRIVATE_OPERATIONS_TRANSPORT_RETRY_DELAYS_MS = [250, 1_000];
+/**
+ * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S8 follow-on (measured on the real-traffic root):
+ * the auto-replay endpoint answered `409 {"error":"fetch failed"}` while the sidecar was serving the same
+ * traffic at ~40% of a core - a connection-level failure, not a refusal, and exactly the class this retry
+ * loop exists for. Two attempts 250 ms and 1 000 ms apart were shorter than a saturated-but-alive sidecar
+ * needs, so a legitimately busy runtime looked like a failed replay and the capture was deferred (and
+ * eventually retired). The budget stays bounded and far below the operations timeout, and a timeout is still
+ * never retried because the work may still be running on the far side.
+ */
+const PRIVATE_OPERATIONS_TRANSPORT_RETRIES = 4;
+export const PRIVATE_OPERATIONS_TRANSPORT_RETRY_DELAYS_MS = [250, 1_000, 2_500, 5_000];
 
 const RETRYABLE_PRIVATE_OPERATION_TRANSPORT_CODES = new Set([
   "ECONNRESET",
@@ -1517,11 +1545,32 @@ export function createTrackBOperations({
       ? (sanitized as Record<string, unknown>)
       : {};
   };
-  const unavailableOperatorPayload = (capability: string): Record<string, unknown> => ({
+  /**
+   * Run 109: the projection named the capability but not the cause, so a route that failed in the private
+   * transport was indistinguishable from one the sidecar refused, and every investigation started by guessing
+   * which layer answered. The bounded cause travels with it now (no payloads, no credentials - just the error's
+   * own message and status), which is what the Learning overview's profile panel needed to explain itself.
+   */
+  const operatorUnavailableCause = (error: unknown): string | null => {
+    if (!error) return null;
+    const status =
+      error instanceof TrackBPrivateOperationError && Number.isInteger(error.status)
+        ? `status ${error.status}`
+        : null;
+    const message =
+      error instanceof Error && error.message ? error.message.replace(/\s+/g, " ").trim() : null;
+    const cause = [status, message].filter(Boolean).join(": ");
+    return cause ? cause.slice(0, 240) : null;
+  };
+  const unavailableOperatorPayload = (
+    capability: string,
+    cause: string | null = null,
+  ): Record<string, unknown> => ({
     schemaVersion: "role-model.operator-status.v1",
     overall: "unavailable",
     observedAtMs: Date.now(),
     reason: `${capability} operator control is unavailable.`,
+    ...(cause ? { detail: cause } : {}),
     capabilities: { [capability]: "unavailable" },
     error: "operator_capability_unavailable",
     capability,
@@ -1564,14 +1613,23 @@ export function createTrackBOperations({
           : { ...boundInit, body: sanitizeOperatorBody(boundInit.body) },
       );
       return result === null
-        ? unavailableOperatorPayload(capability)
+        ? /**
+           * Run 109: `requestPrivate` answers `null` (rather than throwing) when the private transport has no
+           * answer for the route - a 404 from the operator sidecar, or no endpoint at all. That branch produced
+           * the same cause-less projection as the catch blocks, which is why a route the host serves but the
+           * sidecar does not was indistinguishable from a transport failure. The route travels with it now.
+           */
+          unavailableOperatorPayload(
+            capability,
+            `private transport answered null for ${route}`.slice(0, 240),
+          )
         : sanitizeOperatorProjection(result);
     } catch (error) {
       if (
         error instanceof TrackBPrivateOperationError &&
         (error.status === 404 || error.status === 503 || error.status === 504)
       ) {
-        return unavailableOperatorPayload(capability);
+        return unavailableOperatorPayload(capability, operatorUnavailableCause(error));
       }
       // Operator reads are dependent features. A loopback sidecar that is
       // unreachable or still starting must not take ordinary routing down
@@ -1580,7 +1638,7 @@ export function createTrackBOperations({
         error instanceof TypeError ||
         (error instanceof Error && /fetch|network|socket|connect/i.test(error.message))
       ) {
-        return unavailableOperatorPayload(capability);
+        return unavailableOperatorPayload(capability, operatorUnavailableCause(error));
       }
       throw error;
     }
@@ -2738,6 +2796,33 @@ export function createTrackBOperations({
       if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
         throw new Error("no-rich capture baseline requires a loopback operations boundary");
       return requestPrivate("capture/performance-baseline", { method: "POST", body: input });
+    },
+    /**
+     * Run 100 addendum `handoff-evidence-durability.addendum-06` S22 (RC-6): a handoff pins the evidence it
+     * still owes. Measured on `:3457`, the route-capture ring keeps only the newest pointers, so a handoff
+     * that outlives the ring can only be disposed as `evidence_outside_retention_window` - the intent was
+     * durable and the evidence was not. The hold is addressed by the *holder* (the replay job that owes the
+     * evidence) so a resolution, a renewal and a second hold are all one idempotent operation.
+     */
+    async holdLocalRouteCaptures(input: {
+      readonly holderId: string;
+      readonly requestIds: readonly string[];
+      readonly ttlMs?: number;
+    }): Promise<unknown> {
+      if (!operationsEndpoint)
+        throw new Error("private operations endpoint is required for handoff evidence holds");
+      const url = new URL(operationsEndpoint);
+      if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
+        throw new Error("handoff evidence holds require a loopback operations boundary");
+      return requestPrivate("capture/hold", { method: "POST", body: { ...input } });
+    },
+    async releaseLocalRouteCaptures(input: { readonly holderId: string }): Promise<unknown> {
+      if (!operationsEndpoint)
+        throw new Error("private operations endpoint is required for handoff evidence release");
+      const url = new URL(operationsEndpoint);
+      if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
+        throw new Error("handoff evidence release requires a loopback operations boundary");
+      return requestPrivate("capture/release", { method: "POST", body: { ...input } });
     },
     async readLocalRouteCapture(input: Record<string, unknown>): Promise<unknown> {
       if (!operationsEndpoint)

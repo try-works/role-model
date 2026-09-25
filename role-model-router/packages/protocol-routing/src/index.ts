@@ -60,6 +60,65 @@ export interface ProjectRuntimeRouteInputInput {
    * effective learning stage is S2 or above; hard eligibility and scoring still run first.
    */
   advisoryConsideration?: RouteRequestInput["advisoryConsideration"];
+  /**
+   * Run 100 addendum 10, E1: who is being routed. The verdict line is the only place a live eligibility collapse
+   * leaves a trace that does not require a store query, and without this the line named neither the request nor the
+   * pass that produced it - the E3 investigation had to read the request record to prove the alias pool was intact.
+   */
+  attribution?: RouteEligibilityAttribution;
+}
+
+export interface RouteEligibilityAttribution {
+  /** The `RoutingRequest.requestId` the verdict belongs to. */
+  readonly requestId?: string | null;
+  /** The alias the caller asked for, when the requested model was an alias. */
+  readonly aliasId?: string | null;
+  readonly requestedModel?: string | null;
+  /** The client's requested reasoning effort, when the request carried one. */
+  readonly requestedEffort?: string | null;
+  /**
+   * Which pass produced the verdict. An alias request is routed more than once (the live pass, then the
+   * counterfactual/replay passes of the same capture, which narrow deliberately because a branch is one endpoint), so
+   * a count without a pass name cannot be attributed.
+   */
+  readonly pass?: string | null;
+}
+
+/** Bounded so one verdict line cannot become a payload of its own on a wide pool. */
+const RUNTIME_ELIGIBILITY_VERDICT_LIST_LIMIT = 8;
+
+function formatRuntimeEligibilityVerdictIds(ids: readonly string[]): string {
+  const shown = ids.slice(0, RUNTIME_ELIGIBILITY_VERDICT_LIST_LIMIT);
+  const overflow = ids.length - shown.length;
+  return `[${shown.join(",")}${overflow > 0 ? `,+${overflow}` : ""}]`;
+}
+
+function formatRuntimeEligibilityVerdictText(value: string | null | undefined): string {
+  const trimmed = typeof value === "string" ? value.trim() : "";
+  return trimmed.length > 0 ? trimmed : "-";
+}
+
+export function formatRuntimeEligibilityVerdictLine(input: {
+  readonly candidates: number;
+  readonly eligible: number;
+  readonly codes: string;
+  readonly requestId?: string | null;
+  readonly allowEndpoints: readonly string[];
+  readonly deniedEndpointIds: readonly string[];
+  readonly attribution?: RouteEligibilityAttribution;
+}): string {
+  return [
+    `[run115] eligibility candidates=${input.candidates}`,
+    `eligible=${input.eligible}`,
+    `codes=${input.codes}`,
+    `request=${formatRuntimeEligibilityVerdictText(input.requestId)}`,
+    `alias=${formatRuntimeEligibilityVerdictText(input.attribution?.aliasId)}`,
+    `model=${formatRuntimeEligibilityVerdictText(input.attribution?.requestedModel)}`,
+    `effort=${formatRuntimeEligibilityVerdictText(input.attribution?.requestedEffort)}`,
+    `pass=${formatRuntimeEligibilityVerdictText(input.attribution?.pass)}`,
+    `allow=${formatRuntimeEligibilityVerdictIds(input.allowEndpoints)}`,
+    `denied=${formatRuntimeEligibilityVerdictIds(input.deniedEndpointIds)}`,
+  ].join(" ");
 }
 
 export interface ProjectRuntimeRouteInputResult {
@@ -277,6 +336,55 @@ export function routeRuntimeRequest(
 ): RouteRuntimeRequestResult {
   const projected = projectRuntimeRouteInput(input);
   const decision = routeRequest(projected.routeInput);
+  /**
+   * Run 115 (addendum 10, E0). The eligibility verdict - which candidates were excluded and by which code - lived
+   * only in memory: `RouterDecisionRecord.eligibility` is consumed by nothing but the gateway-smoke app, so a live
+   * request that kept 1 of 7 candidates left no evidence of *why*. Measured 2026-09-24: every recent live request
+   * recorded `eligible_endpoint_ids_json` with a single member while all 7 registry endpoints reached
+   * `routeRequest`, and the alias's own mode/bias was absent from telemetry entirely. This bounded line makes the
+   * verdict observable on the next request, which is what turns the current hypothesis (policy allow-list vs hard
+   * taxonomy/role binding) into a named filter.
+   */
+  {
+    const excluded = decision.eligibility.filter((entry) => entry.eligible !== true);
+    const codes = new Map<string, number>();
+    const deniedEndpointIds: string[] = [];
+    for (const entry of excluded) {
+      // `CandidateEligibility` carries its verdict as `exclusions: CandidateExclusion[]`, each with a `code`
+      // (`packages/core/src/router.ts:1489`); the first version of this probe looked for `codes`/`reasons`/
+      // `exclusionCodes` and printed `none` for six excluded candidates, which is how the field name was found.
+      const entryCodes = (
+        (entry as { readonly exclusions?: readonly { readonly code?: unknown }[] }).exclusions ?? []
+      )
+        .map((exclusion) => exclusion?.code)
+        .filter((code): code is string => typeof code === "string" && code.length > 0);
+      if (entryCodes.length > 0) {
+        deniedEndpointIds.push(
+          String((entry as { readonly endpoint_id?: unknown }).endpoint_id ?? ""),
+        );
+      }
+      for (const code of entryCodes) {
+        const key = String(code);
+        codes.set(key, (codes.get(key) ?? 0) + 1);
+      }
+    }
+    const histogram = [...codes.entries()]
+      .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
+      .slice(0, 8)
+      .map(([code, count]) => `${code}=${count}`)
+      .join(",");
+    console.log(
+      formatRuntimeEligibilityVerdictLine({
+        candidates: projected.routeInput.candidates.length,
+        eligible: decision.eligibility.filter((entry) => entry.eligible === true).length,
+        codes: histogram || "none",
+        requestId: projected.routeInput.request.requestId ?? input.attribution?.requestId ?? null,
+        allowEndpoints: projected.routeInput.request.allowEndpoints ?? [],
+        deniedEndpointIds: deniedEndpointIds.filter((endpointId) => endpointId.length > 0),
+        ...(input.attribution ? { attribution: input.attribution } : {}),
+      }),
+    );
+  }
   const catalogEconomicsByEndpointId = Object.fromEntries(
     projected.routeInput.candidates.map((candidate) => [
       candidate.identity.endpoint_id,

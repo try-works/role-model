@@ -195,14 +195,29 @@ function collectStrings(value: unknown, depth = 0, collected: string[] = []): st
 }
 
 /**
- * Read the recorded output text a capture can support. Durable captures store the
- * response either inline (`response.content`, legacy `outputText`) or as an ordered
- * message list whose assistant turn carries the output; text-only fallbacks keep the
- * automatic path deterministic without inventing content.
+ * Run 100 addendum `handoff-evidence-durability.addendum-06` S21 - the canonical reader for the output text
+ * a captured turn can support, *without* the request-text fallback that `extractSourceOutputText` needs when
+ * it derives a rubric.
+ *
+ * The operations boundary documents exactly one readback shape for a durable capture
+ * (`role-model.route-capture-read.v1/v2`): the bounded `responseText` excerpt, the `response` turn (whose
+ * `content` may be a string, a structured part list, or a nested object), the legacy inline `outputText`, the
+ * provider executions (which carry the text when the assistant turn is empty and the answer streamed into the
+ * execution artifact), and the ordered message list.
+ *
+ * The resumed completion read only a *string* `response.content` or a string `outputText`, so every other
+ * documented shape dropped the arm silently; when it dropped all of them the job was reported as
+ * `durable replay evaluation has no recorded counterfactual branch to evaluate`, which is a claim about
+ * durable state that the stores disprove. That is the class measured on `:3457` in addendum 06: thirteen
+ * handoffs with every arm's capture present and named, refused as evidence-less, eight attempts each, then
+ * `abandoned`. Both readers share this function now so the contract cannot drift a third time.
  */
-export function extractSourceOutputText(capture: Record<string, unknown>): string | null {
-  // A bounded excerpt supplied by the operations boundary takes precedence: it is the
-  // only form available when the capture stores its response as a sealed artifact.
+export function extractCaptureOutputText(
+  capture: Record<string, unknown> | null | undefined,
+): string | null {
+  if (!capture || typeof capture !== "object" || Array.isArray(capture)) return null;
+  // A bounded excerpt supplied by the operations boundary takes precedence: it is the only form
+  // available when the capture stores its response as a sealed artifact.
   const responseText = typeof capture.responseText === "string" ? capture.responseText : null;
   if (responseText?.trim()) return responseText;
   const response =
@@ -213,6 +228,15 @@ export function extractSourceOutputText(capture: Record<string, unknown>): strin
   if (responseContent) return responseContent;
   const outputText = typeof capture.outputText === "string" ? capture.outputText : null;
   if (outputText?.trim()) return outputText;
+  const providers = Array.isArray(capture.providers) ? capture.providers : [];
+  for (const provider of providers) {
+    if (!provider || typeof provider !== "object" || Array.isArray(provider)) continue;
+    const record = provider as Record<string, unknown>;
+    for (const key of ["outputText", "contentText", "reasoningText"]) {
+      const value = typeof record[key] === "string" ? record[key] : null;
+      if (value?.trim()) return value;
+    }
+  }
   const messages = Array.isArray(capture.messages) ? capture.messages : [];
   for (let index = messages.length - 1; index >= 0; index -= 1) {
     const message = messages[index];
@@ -222,6 +246,19 @@ export function extractSourceOutputText(capture: Record<string, unknown>): strin
     const content = textFromContent(record.content);
     if (content) return content;
   }
+  return null;
+}
+
+/**
+ * Read the recorded output text a capture can support. Durable captures store the
+ * response either inline (`response.content`, legacy `outputText`) or as an ordered
+ * message list whose assistant turn carries the output; text-only fallbacks keep the
+ * automatic path deterministic without inventing content.
+ */
+export function extractSourceOutputText(capture: Record<string, unknown>): string | null {
+  const output = extractCaptureOutputText(capture);
+  if (output) return output;
+  const messages = Array.isArray(capture.messages) ? capture.messages : [];
   // Last resort: the recorded request text. It is branch-shared evidence, so the
   // derived criterion never depends on the branch being scored.
   for (let index = messages.length - 1; index >= 0; index -= 1) {

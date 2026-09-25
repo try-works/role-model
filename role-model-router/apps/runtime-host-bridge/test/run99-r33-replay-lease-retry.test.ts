@@ -136,7 +136,10 @@ describe("run99 R33 replay lease retry", () => {
       resolveAutoReplayDeadlinePerCandidateMs,
     } = await import("../src/track-b-auto-replay.js");
 
-    expect(resolveAutoReplayDeadlinePerCandidateMs({})).toBe(120_000);
+    // Run 100 addendum `runtime-replay-timeout-bounds.addendum-01`: the operator raised the packaged
+    // default from 120 s to 600 s ("raise the bounds to 600 s for both"), so these pinned literals move
+    // with it; the band (30 s - 900 s) and the fallback behaviour they guard are unchanged.
+    expect(resolveAutoReplayDeadlinePerCandidateMs({})).toBe(600_000);
     expect(
       resolveAutoReplayDeadlinePerCandidateMs({
         ROLE_MODEL_AUTO_REPLAY_DEADLINE_PER_CANDIDATE_MS: "300000",
@@ -146,14 +149,14 @@ describe("run99 R33 replay lease retry", () => {
       resolveAutoReplayDeadlinePerCandidateMs({
         ROLE_MODEL_AUTO_REPLAY_DEADLINE_PER_CANDIDATE_MS: "1",
       }),
-    ).toBe(120_000);
-    expect(resolveAutoReplayDeadlineMaxMs({})).toBe(1_800_000);
+    ).toBe(600_000);
+    expect(resolveAutoReplayDeadlineMaxMs({})).toBe(3_600_000);
     expect(
       resolveAutoReplayDeadlineMaxMs({ ROLE_MODEL_AUTO_REPLAY_DEADLINE_MAX_MS: "7200000" }),
     ).toBe(7_200_000);
     expect(
       resolveAutoReplayDeadlineMaxMs({ ROLE_MODEL_AUTO_REPLAY_DEADLINE_MAX_MS: "99999999" }),
-    ).toBe(1_800_000);
+    ).toBe(3_600_000);
 
     // Three candidates at five minutes each, with the operator's ceiling: the budget covers the run.
     expect(resolveAutoReplayDeadlineMs(3, { perCandidateMs: 300_000, maxMs: 7_200_000 })).toBe(
@@ -163,8 +166,9 @@ describe("run99 R33 replay lease retry", () => {
     expect(resolveAutoReplayDeadlineMs(12, { perCandidateMs: 900_000, maxMs: 1_800_000 })).toBe(
       1_800_000,
     );
-    // The defaults are unchanged for every existing caller.
-    expect(resolveAutoReplayDeadlineMs(3)).toBe(360_000);
+    // A caller that passes no policy gets the packaged default: three candidates at the 600 s
+    // per-candidate bound the operator asked for (run 100 addendum `runtime-replay-timeout-bounds`).
+    expect(resolveAutoReplayDeadlineMs(3)).toBe(1_800_000);
   });
 
   it("waits out a hold and returns the terminal receipt", async () => {

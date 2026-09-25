@@ -856,9 +856,16 @@ export function LearningPacksPage() {
 export function LearningDecisionsPage() {
   const { token, setToken } = useOperatorToken();
   const [stateFilter, setStateFilter] = useState("all");
+  /**
+   * Run 113 (addendum 09 R11/S18): the ledger holds live routing decisions and shadow judge/replay calls. The
+   * shadow rows carry no taxonomy and are `unavailable` by construction, and because they are the most recent
+   * they dominated the default view - the operator saw "everything is task mismatch or not eligible". The page
+   * now asks the readback for live routing decisions by default, with the shadow ledger one selection away.
+   */
+  const [originFilter, setOriginFilter] = useState("live");
   const decisions = useOperatorSurface<Record<string, unknown>>(
-    () => fetchLearningDecisions(fetch, token || undefined, { limit: 100 }),
-    [token],
+    () => fetchLearningDecisions(fetch, token || undefined, { limit: 100, origin: originFilter }),
+    [token, originFilter],
   );
   const rows = Array.isArray(asRecord(decisions.value).decisions)
     ? (asRecord(decisions.value).decisions as readonly Record<string, unknown>[])
@@ -880,6 +887,20 @@ export function LearningDecisionsPage() {
             value={stateFilter}
           >
             {["all", "fresh", "stale", "unavailable"].map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className={fieldLabelClassName}>
+          Observation origin
+          <select
+            className={`${fieldClassName} mt-1`}
+            onChange={(event) => setOriginFilter(event.target.value)}
+            value={originFilter}
+          >
+            {["live", "shadow", "all"].map((option) => (
               <option key={option} value={option}>
                 {option}
               </option>
@@ -976,6 +997,26 @@ export function LearningEvidencePage() {
     () => fetchLearningMeasurement(fetch, token || undefined),
     [token],
   );
+  /**
+   * Run 100 R6.1: the learner's own evidence - per family, against the floor, and the exclusions by
+   * reason - comes from the learning summary, so this page can answer "why is evidence missing?"
+   * without the operator opening a store.
+   */
+  const learnerSummary = useOperatorSurface<Record<string, unknown>>(
+    () => fetchLearningSummary(fetch, token || undefined),
+    [token],
+  );
+  const learnerEvidence = asRecord(asRecord(learnerSummary.value).learnerEvidence);
+  const exclusionReasons = Object.entries(asRecord(learnerEvidence.excludedByReason))
+    .map(([reason, count]) => ({ reason, count: Number(count) }))
+    .filter((entry) => Number.isFinite(entry.count) && entry.count > 0)
+    .sort((left, right) => right.count - left.count);
+  const evidenceFamilies = Object.entries(asRecord(learnerEvidence.byFamily)).map(
+    ([family, counts]) => ({ family, counts: asRecord(counts) }),
+  );
+  const evidenceFloor = asRecord(learnerEvidence.floor);
+  const newestReceipt = asRecord(learnerEvidence.newest);
+  const newestEvidence = asRecord(newestReceipt.familyEvidence);
   const report = Array.isArray(asRecord(measurement.value).report)
     ? (asRecord(measurement.value).report as readonly Record<string, unknown>[])[0]
     : undefined;
@@ -995,88 +1036,215 @@ export function LearningEvidencePage() {
   // so rather than presenting the placeholder inputs as measured zeros.
   const costLatencyMeasured = asRecord(raw.measurementInputs).costLatencyAvailable !== false;
   return (
-    <SectionCard
-      title="Evidence"
-      description="Baseline-versus-advisory comparison on the paired holdout distribution with the guardrail verdicts."
-    >
-      <OperatorTokenField onToken={setToken} token={token} />
-      {degraded(measurement.loading, measurement.error) ??
-        (degradedReceipt ? (
-          <ErrorState
-            label={`Cohort measurement unavailable: ${show(raw.reason)}. No value is fabricated.`}
-          />
-        ) : noMeasurement ||
-          (value.schemaVersion === undefined && Object.keys(value).length === 0) ? (
-          <EmptyState label="No cohort measurement has been recorded yet." />
-        ) : (
-          <>
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <Badge
-                tone={
-                  value.verdict === "pass"
-                    ? "success"
-                    : value.verdict === "fail"
-                      ? "error"
-                      : "warning"
-                }
-              >
-                {show(value.verdict)}
-              </Badge>
-              <p className={supportingTextClassName}>{show(value.statement)}</p>
-            </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Metric label="Paired holdout tasks" value={show(value.pairedHoldoutTasks)} />
-              <Metric label="Baseline samples" value={show(asRecord(cohorts.baseline).samples)} />
-              <Metric label="Advisory samples" value={show(asRecord(cohorts.advisory).samples)} />
-              <Metric label="Applied share" value={show(asRecord(cohorts.advisory).appliedShare)} />
-              <Metric label="Quality delta" value={show(deltas.quality)} />
-              <Metric
-                label="Cost multiplier"
-                value={costLatencyMeasured ? show(deltas.costMultiplier) : "not measured here"}
-              />
-              <Metric
-                label="Latency p95 delta (ms)"
-                value={costLatencyMeasured ? show(deltas.latencyP95DeltaMs) : "not measured here"}
-              />
-              <Metric label="Error-rate delta (pp)" value={show(deltas.errorRateDeltaPp)} />
-              <Metric
-                label="Quality CI"
-                value={`${show(confidence.lower)} – ${show(confidence.upper)}`}
-              />
-            </div>
-            <div className="mt-4 overflow-x-auto">
-              <table className="min-w-full text-left text-sm">
-                <thead>
-                  <tr>
-                    {["Guardrail", "Bound", "Observed", "Verdict"].map((header) => (
-                      <th className={`pb-3 pr-3 font-normal ${monoEyebrowClassName}`} key={header}>
-                        {header}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {guardrails.map((guardrail) => (
-                    <tr
-                      className="border-t border-[var(--rm-border)]"
-                      key={String(guardrail.metric)}
-                    >
-                      <td className="py-2 pr-3">{show(guardrail.metric)}</td>
-                      <td className="py-2 pr-3 font-mono">{show(guardrail.bound)}</td>
-                      <td className="py-2 pr-3 font-mono">{show(guardrail.observed)}</td>
-                      <td className="py-2 pr-3">
-                        <Badge tone={guardrail.passed ? "success" : "error"}>
-                          {guardrail.passed ? "passed" : "breached"}
-                        </Badge>
-                      </td>
+    <div className="grid gap-4">
+      <SectionCard
+        title="Evidence"
+        description="Baseline-versus-advisory comparison on the paired holdout distribution with the guardrail verdicts."
+      >
+        <OperatorTokenField onToken={setToken} token={token} />
+        {degraded(measurement.loading, measurement.error) ??
+          (degradedReceipt ? (
+            <ErrorState
+              label={`Cohort measurement unavailable: ${show(raw.reason)}. No value is fabricated.`}
+            />
+          ) : noMeasurement ||
+            (value.schemaVersion === undefined && Object.keys(value).length === 0) ? (
+            <EmptyState label="No cohort measurement has been recorded yet." />
+          ) : (
+            <>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <Badge
+                  tone={
+                    value.verdict === "pass"
+                      ? "success"
+                      : value.verdict === "fail"
+                        ? "error"
+                        : "warning"
+                  }
+                >
+                  {show(value.verdict)}
+                </Badge>
+                <p className={supportingTextClassName}>{show(value.statement)}</p>
+              </div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <Metric label="Paired holdout tasks" value={show(value.pairedHoldoutTasks)} />
+                <Metric label="Baseline samples" value={show(asRecord(cohorts.baseline).samples)} />
+                <Metric label="Advisory samples" value={show(asRecord(cohorts.advisory).samples)} />
+                <Metric
+                  label="Applied share"
+                  value={show(asRecord(cohorts.advisory).appliedShare)}
+                />
+                <Metric label="Quality delta" value={show(deltas.quality)} />
+                <Metric
+                  label="Cost multiplier"
+                  value={costLatencyMeasured ? show(deltas.costMultiplier) : "not measured here"}
+                />
+                <Metric
+                  label="Latency p95 delta (ms)"
+                  value={costLatencyMeasured ? show(deltas.latencyP95DeltaMs) : "not measured here"}
+                />
+                <Metric label="Error-rate delta (pp)" value={show(deltas.errorRateDeltaPp)} />
+                <Metric
+                  label="Quality CI"
+                  value={`${show(confidence.lower)} – ${show(confidence.upper)}`}
+                />
+              </div>
+              <div className="mt-4 overflow-x-auto">
+                <table className="min-w-full text-left text-sm">
+                  <thead>
+                    <tr>
+                      {["Guardrail", "Bound", "Observed", "Verdict"].map((header) => (
+                        <th
+                          className={`pb-3 pr-3 font-normal ${monoEyebrowClassName}`}
+                          key={header}
+                        >
+                          {header}
+                        </th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        ))}
-    </SectionCard>
+                  </thead>
+                  <tbody>
+                    {guardrails.map((guardrail) => (
+                      <tr
+                        className="border-t border-[var(--rm-border)]"
+                        key={String(guardrail.metric)}
+                      >
+                        <td className="py-2 pr-3">{show(guardrail.metric)}</td>
+                        <td className="py-2 pr-3 font-mono">{show(guardrail.bound)}</td>
+                        <td className="py-2 pr-3 font-mono">{show(guardrail.observed)}</td>
+                        <td className="py-2 pr-3">
+                          <Badge tone={guardrail.passed ? "success" : "error"}>
+                            {guardrail.passed ? "passed" : "breached"}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ))}
+      </SectionCard>
+      <SectionCard
+        title="Evidence loss by reason"
+        description="Per-family evidence against the operator's floor and the learner's exclusions, read from the validation receipts the runtime recorded."
+      >
+        <OperatorTokenField onToken={setToken} token={token} />
+        {degraded(learnerSummary.loading, learnerSummary.error) ??
+          (Number(learnerEvidence.receipts ?? 0) === 0 ? (
+            <EmptyState label="No learner validation receipt has been recorded yet." />
+          ) : (
+            <>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <Metric label="Receipts read" value={show(learnerEvidence.receipts)} />
+                <Metric label="Newest decision" value={show(newestReceipt.decision)} />
+                <Metric
+                  label="Newest decisive comparisons"
+                  value={show(newestEvidence.decisiveComparisons)}
+                />
+                <Metric
+                  label="Floor met"
+                  value={
+                    newestEvidence.floorMet === true
+                      ? "yes"
+                      : newestEvidence.floorMet === false
+                        ? "no"
+                        : show(newestEvidence.floorMet)
+                  }
+                />
+              </div>
+              <div className="mt-4 overflow-x-auto">
+                <table className="min-w-full text-left text-sm">
+                  <thead>
+                    <tr>
+                      {["Exclusion reason", "Count"].map((header) => (
+                        <th
+                          className={`pb-3 pr-3 font-normal ${monoEyebrowClassName}`}
+                          key={header}
+                        >
+                          {header}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {exclusionReasons.map((entry) => (
+                      <tr className="border-t border-[var(--rm-border)]" key={entry.reason}>
+                        <td className="py-2 pr-3 font-mono">{entry.reason}</td>
+                        <td className="py-2 pr-3 font-mono">{show(entry.count)}</td>
+                      </tr>
+                    ))}
+                    {exclusionReasons.length === 0 ? (
+                      <tr className="border-t border-[var(--rm-border)]">
+                        <td className={`py-2 pr-3 ${supportingTextClassName}`} colSpan={2}>
+                          No exclusion was recorded in the receipts read.
+                        </td>
+                      </tr>
+                    ) : null}
+                  </tbody>
+                </table>
+              </div>
+              {evidenceFamilies.length > 0 ? (
+                <div className="mt-4 overflow-x-auto">
+                  <table className="min-w-full text-left text-sm">
+                    <thead>
+                      <tr>
+                        {[
+                          "Family",
+                          "Decisive",
+                          "Holdout",
+                          "Development",
+                          "Distinct captures",
+                          "Floor",
+                        ].map((header) => (
+                          <th
+                            className={`pb-3 pr-3 font-normal ${monoEyebrowClassName}`}
+                            key={header}
+                          >
+                            {header}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {evidenceFamilies.map((entry) => {
+                        const floorMet =
+                          Number(evidenceFloor.minDecisiveComparisons ?? 0) > 0 &&
+                          Number(entry.counts.decisiveComparisons ?? 0) >=
+                            Number(evidenceFloor.minDecisiveComparisons ?? 0) &&
+                          Number(entry.counts.distinctCaptures ?? 0) >=
+                            Number(evidenceFloor.minDistinctCaptures ?? 0);
+                        return (
+                          <tr className="border-t border-[var(--rm-border)]" key={entry.family}>
+                            <td className="py-2 pr-3 font-mono">{entry.family}</td>
+                            <td className="py-2 pr-3 font-mono">
+                              {show(entry.counts.decisiveComparisons)}
+                            </td>
+                            <td className="py-2 pr-3 font-mono">
+                              {show(entry.counts.holdoutComparisons)}
+                            </td>
+                            <td className="py-2 pr-3 font-mono">
+                              {show(entry.counts.developmentComparisons)}
+                            </td>
+                            <td className="py-2 pr-3 font-mono">
+                              {show(entry.counts.distinctCaptures)}
+                            </td>
+                            <td className="py-2 pr-3">
+                              <Badge tone={floorMet ? "success" : "warning"}>
+                                {floorMet ? "met" : "below"}
+                              </Badge>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : null}
+            </>
+          ))}
+      </SectionCard>
+    </div>
   );
 }
 

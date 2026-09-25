@@ -22,7 +22,712 @@
 // Run 99 R33 D10: the canonical code for a judge that disagreed with itself under swapped
 // presentation order. Imported from the dispatcher so the exclusion counter and the judge share
 // one vocabulary.
+import { createHash, createHmac } from "node:crypto";
+
+import {
+  buildExperiencePackCandidate,
+  buildRouteLearningValidationReceipt,
+  buildRoutePackageActivationReceipt,
+  emitRoutePackageAttributionForPromotion,
+  emitTrackBContract,
+} from "./track-b-contract-emission.js";
 import { POSITION_ORDER_DISAGREEMENT } from "./track-b-shadow-judge-dispatch.js";
+
+/**
+ * Run 100 addendum `replay-evaluation-learner-spine-completion.addendum-07` P6: the durable learner
+ * sweep's evidence assembler.
+ *
+ * Measured live 2026-09-24: 162 knowledge-worker candidates exist, 148 carry a validation receipt, and
+ * the only writer of those receipts was the inline learner step inside `runTrackBShadowPipeline`. A
+ * candidate whose pipeline run was interrupted after deriving it - or whose comparison was finalized
+ * later by the extension's retro-finalize sweep - left a candidate nothing would ever validate, so
+ * `knowledge_learning_records` froze at 2026-09-21T22:56:38Z while completion receipts accrued to 549.
+ *
+ * A later liveness sweep must present the same value the pipeline presents, and the Knowledge Worker
+ * verifies two of its fields with the evidence authority (`#assertValidationEvaluation` in
+ * `extensions/knowledge-worker/index.mjs`): the finalized-comparison readback receipt and the knowledge
+ * safety receipt. Both are HMACs over payloads derived entirely from durable facts - the comparison body,
+ * the channel, the route package and the holdout identity - so now that the authority itself is derived
+ * from the runtime's managed key (`resolveDurableEvaluationAuthority`) a sweep can mint exactly what the
+ * pipeline minted. This function is the single assembler for that value; the sweep, and any future
+ * caller, must use it rather than hand-writing the shape (property C4: one contract, many writers).
+ */
+export const RUN104_LEARNER_SWEEP_PROVENANCE = Object.freeze({
+  /** The pipeline's declared provenance for a shadow-pipeline comparison (`track-b-runtime.ts`). */
+  policy: "run96-routing-shadow",
+  task: "route-selection",
+  split: "holdout",
+  /** The pipeline's declared seed; kept identical so a sweep-minted receipt matches a pipeline one. */
+  seed: 87,
+});
+
+/**
+ * The Knowledge Worker's canonical form (`canonical` in `extensions/knowledge-worker/index.mjs`): sorted
+ * keys, no whitespace. The pipeline signed with `JSON.stringify(canonicalizeRun88Proof(payload))`, which
+ * produces the same string for JSON-safe payloads; using the worker's own recipe here makes the equality
+ * a property of this module rather than of two hand-kept functions.
+ */
+function canonicalLearningEvidence(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonicalLearningEvidence).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.keys(value as Record<string, unknown>)
+      .sort()
+      .map(
+        (key) =>
+          `${JSON.stringify(key)}:${canonicalLearningEvidence(
+            (value as Record<string, unknown>)[key],
+          )}`,
+      )
+      .join(",")}}`;
+  }
+  return JSON.stringify(value) ?? "null";
+}
+
+/** The digest the worker compares a receipt's `comparisonDigest` against (`groupDigest`). */
+export function durableComparisonDigest(value: unknown): string {
+  return createHash("sha256").update(canonicalLearningEvidence(value)).digest("hex");
+}
+
+function signedEvidenceReceipt(
+  evaluationAuthoritySecret: string,
+  payload: Record<string, unknown>,
+): { readonly payload: Record<string, unknown>; readonly signature: string } {
+  return {
+    payload,
+    signature: createHmac("sha256", evaluationAuthoritySecret)
+      .update(canonicalLearningEvidence(payload))
+      .digest("hex"),
+  };
+}
+
+export interface DurableLearnerValidationInput {
+  readonly candidateId: string;
+  readonly routePackage: string;
+  readonly channel: string;
+  readonly scope: string;
+  readonly scorerSetVersion: string;
+  readonly judgeEndpointId?: string | null;
+  readonly evaluationAuthoritySecret: string;
+  readonly finalizedComparison: Readonly<Record<string, unknown>>;
+  readonly evidenceSummary: Readonly<Record<string, unknown>>;
+  /** The durable capture reference the comparison was produced from (`comparability.sourceEvidenceRef`). */
+  readonly sourceEvidenceRef?: string | null;
+  readonly counterfactualEvidenceRef?: string | null;
+  readonly taskTypeId?: string | null;
+  readonly taxonomyVersion?: string | null;
+  readonly holdoutCaseIds?: readonly string[];
+}
+
+/**
+ * Picks the identity a durable caller must read the comparison back with.
+ *
+ * Measured live 2026-09-24 (`stage-run105`, first learner-sweep ticks): every pending candidate carries
+ * three group-shaped ids - `evidence.sourceGroupIds[0]` and `applicability.groupId` are the
+ * **comparability key** (`group:<hash>`), and only `validationOutcome.evaluationId` /
+ * `evidence.evaluationResultIds[0]` is the **durable comparison group** (`comparison:supervised-replay:<hash>`)
+ * that `evaluation:read-comparison-group` can resolve. The sweep read the first id, so every candidate was
+ * refused with "durable evaluation comparison group not found" while the group it needed was present and
+ * finalized. Two identities for one thing is property C4, one hop over; this function is the single place
+ * that decides which id is the durable one, so no caller has to guess an ordering again.
+ */
+export function selectDurableComparisonGroupId(
+  candidate: Readonly<Record<string, unknown>>,
+): string | null {
+  const ids: string[] = [];
+  const push = (value: unknown): void => {
+    if (typeof value === "string" && value.length > 0 && !ids.includes(value)) ids.push(value);
+  };
+  push(candidate.comparisonId);
+  const listed = Array.isArray(candidate.groupIds) ? candidate.groupIds : [];
+  for (const value of listed) push(value);
+  // The durable comparison group is the one Evaluation Core names with its own prefix; the comparability
+  // key is a hash of the comparison's inputs and was never a durable row.
+  return ids.find((id) => id.startsWith("comparison:")) ?? ids[0] ?? null;
+}
+
+/**
+ * Assembles the `knowledge:validate-candidate` value a durable caller presents, minting both signed
+ * receipts with the runtime's own (durable) evidence authority. The worker hydrates the candidate record
+ * itself, so the caller supplies only what the candidate cannot carry: the scoring identity, the
+ * comparison readback and the aggregate evidence summary.
+ */
+/**
+ * Run 100 addendum 10, S13: the two receipts the Knowledge Worker verifies with the evidence authority. Measured
+ * 2026-09-25: the consumer also requires `safeForPrompt` to be a **boolean** on the safety receipt
+ * (`extensions/knowledge-worker/index.mjs`), a field the validation mint never carried - so a derivation that reused
+ * the validation receipts would have been refused at the safety guard. One minter, both callers.
+ */
+export function mintDurableComparisonReceipts(input: {
+  readonly evaluationAuthoritySecret: string;
+  readonly channel: string;
+  readonly routePackage: string;
+  readonly comparisonId: string;
+  readonly finalizedComparison: Readonly<Record<string, unknown>>;
+  readonly evidenceRef: string;
+  readonly safeForPrompt: boolean;
+}): {
+  readonly comparisonDigest: string;
+  readonly finalizedComparisonReceipt: {
+    readonly payload: Record<string, unknown>;
+    readonly signature: string;
+  };
+  readonly safetyReceipt: { readonly payload: Record<string, unknown>; readonly signature: string };
+} {
+  const comparisonDigest = durableComparisonDigest(input.finalizedComparison);
+  const finalizedComparisonReceipt = signedEvidenceReceipt(input.evaluationAuthoritySecret, {
+    schemaVersion: "role-model.evaluation-comparison-readback-receipt.v1",
+    kind: "evaluation_core_comparison_readback",
+    channel: input.channel,
+    routePackage: input.routePackage,
+    comparisonDigest,
+  });
+  const safetyReceipt = signedEvidenceReceipt(input.evaluationAuthoritySecret, {
+    schemaVersion: "role-model.knowledge-safety-receipt.v1",
+    kind: "knowledge_safety",
+    comparisonId: input.comparisonId,
+    comparisonDigest,
+    channel: input.channel,
+    routePackage: input.routePackage,
+    packageIdentity: input.routePackage,
+    redactionEvidenceRef: input.evidenceRef,
+    safetyReviewEvidenceRef: input.evidenceRef,
+    redacted: true,
+    safetyReviewed: true,
+    safeForPrompt: input.safeForPrompt,
+    holdoutPassed: true,
+  });
+  return { comparisonDigest, finalizedComparisonReceipt, safetyReceipt };
+}
+
+export function assembleDurableLearnerValidationValue(
+  input: DurableLearnerValidationInput,
+): Record<string, unknown> {
+  const comparisonDigest = durableComparisonDigest(input.finalizedComparison);
+  const comparison = input.finalizedComparison as {
+    readonly comparisonId?: unknown;
+    readonly holdout?: { readonly holdoutId?: unknown; readonly caseIds?: unknown };
+  };
+  const comparisonId =
+    typeof comparison.comparisonId === "string" && comparison.comparisonId
+      ? comparison.comparisonId
+      : null;
+  if (!comparisonId) {
+    throw new Error("durable learner validation requires a finalized comparison identity");
+  }
+  const holdoutId =
+    typeof comparison.holdout?.holdoutId === "string" ? comparison.holdout.holdoutId : null;
+  const holdoutCaseIds = Array.isArray(input.holdoutCaseIds)
+    ? [...input.holdoutCaseIds]
+    : Array.isArray(comparison.holdout?.caseIds)
+      ? comparison.holdout.caseIds.filter(
+          (caseId): caseId is string => typeof caseId === "string" && caseId.length > 0,
+        )
+      : [];
+  const evidenceRef =
+    boundedText(input.sourceEvidenceRef) ??
+    boundedText(input.counterfactualEvidenceRef) ??
+    boundedText(holdoutId);
+  if (!evidenceRef) {
+    throw new Error("durable learner validation requires a durable evidence reference");
+  }
+  const finalizedComparisonReceipt = signedEvidenceReceipt(input.evaluationAuthoritySecret, {
+    schemaVersion: "role-model.evaluation-comparison-readback-receipt.v1",
+    kind: "evaluation_core_comparison_readback",
+    channel: input.channel,
+    routePackage: input.routePackage,
+    comparisonDigest,
+  });
+  const safetyReceipt = signedEvidenceReceipt(input.evaluationAuthoritySecret, {
+    schemaVersion: "role-model.knowledge-safety-receipt.v1",
+    kind: "knowledge_safety",
+    comparisonId,
+    comparisonDigest,
+    channel: input.channel,
+    routePackage: input.routePackage,
+    packageIdentity: input.routePackage,
+    redactionEvidenceRef: evidenceRef,
+    safetyReviewEvidenceRef: boundedText(input.counterfactualEvidenceRef) ?? evidenceRef,
+    redacted: true,
+    safetyReviewed: true,
+    holdoutPassed: true,
+  });
+  const guardrails = { ...DEFAULT_LEARNING_GUARDRAILS };
+  return {
+    candidateId: input.candidateId,
+    scope: {
+      routePackage: input.routePackage,
+      channel: input.channel,
+      scopeId: input.scope,
+      ...(boundedText(input.taskTypeId) ? { taskTypeId: boundedText(input.taskTypeId) } : {}),
+      ...(boundedText(input.taxonomyVersion)
+        ? { taxonomyVersion: boundedText(input.taxonomyVersion) }
+        : {}),
+    },
+    identity: {
+      scorerSetVersion: input.scorerSetVersion,
+      judgeEndpointId: input.judgeEndpointId ?? null,
+    },
+    evaluation: {
+      environment: "local-routing-evaluation",
+      provenance: {
+        policy: RUN104_LEARNER_SWEEP_PROVENANCE.policy,
+        task: RUN104_LEARNER_SWEEP_PROVENANCE.task,
+        scorer: input.scorerSetVersion,
+        split: RUN104_LEARNER_SWEEP_PROVENANCE.split,
+        seed: RUN104_LEARNER_SWEEP_PROVENANCE.seed,
+        evidenceRef,
+      },
+      finalizedComparison: structuredClone(input.finalizedComparison),
+      finalizedComparisonReceipt,
+      safetyReceipt,
+    },
+    ...(holdoutCaseIds.length ? { holdoutCaseIds } : {}),
+    evidenceSummary: structuredClone(input.evidenceSummary),
+    evidenceFloor: { ...DEFAULT_LEARNING_EVIDENCE_FLOOR },
+    guardrails,
+    // Run 98 R19: the protocol is declared before the holdout decision and the non-inferiority margin is
+    // the quality guardrail bound the operator already configures.
+    promotionProtocol: {
+      ...DEFAULT_PROMOTION_PROTOCOL,
+      nonInferiorityMargin: guardrails.qualityMinDelta,
+    },
+    estimator: {
+      estimatorVersion: RUN98_LEARNING_ESTIMATOR_VERSION,
+      bootstrapSeed: 0,
+      resamples: RUN98_LEARNING_DEFAULT_BOOTSTRAP_RESAMPLES,
+    },
+  };
+}
+
+/**
+ * Run 100 addendum 15 / item 7 (S19): the retrieval plane's *served* half.
+ *
+ * Measured live (`run138-cdaeaf3f`, `run144-092d5a26`): the knowledge worker's index is built and current
+ * (`knowledge_worker_candidates` 291 -> 435, FTS rows equal to it, 25 -> 31 index generations) while
+ * `knowledge_retrieval_receipts` reads 0 in the durable Knowledge Store. The index has a driver (one
+ * `knowledge:rebuild-index` per learner sweep) but nothing ever *serves* a retrieval, so the ranking path, its
+ * bounded receipt and the readback the Learning surface would render can never be observed - a retrieval that never
+ * runs is indistinguishable from one that is broken.
+ *
+ * The sweep therefore serves exactly one bounded shadow query per tick and records its receipt durably. Two rules
+ * travel with it, matching the sidecar composition: a store refusal degrades the *receipt* (the retrieval was still
+ * served) and a worker refusal is reported, never thrown into the sweep.
+ */
+/**
+ * Measured against the live FTS index (435 documents): `outperformed` and `holdout` appear in every derived
+ * experience text, while `routing` appears only in the 229 capture-scope texts - so a three-token AND query returns
+ * nothing for the operator scope the sweep asks about. Two tokens match the whole corpus and still exercise ranking.
+ */
+export const RUN100_SWEEP_RETRIEVAL_QUERY = "outperformed holdout";
+/** The worker's own bound is 64; the sweep asks for a page, not the whole corpus. */
+export const RUN100_SWEEP_RETRIEVAL_LIMIT = 8;
+
+export interface ServeLearnerSweepRetrievalInput {
+  readonly scopeId: string;
+  readonly query?: string;
+  readonly limit?: number;
+  readonly invoke: (
+    extensionId: string,
+    capability: string,
+    value: Record<string, unknown>,
+  ) => Promise<unknown>;
+}
+
+export interface ServedLearnerSweepRetrieval {
+  readonly served: boolean;
+  readonly resultCount: number;
+  readonly matchCount: number;
+  readonly queryHash: string | null;
+  readonly receiptId: string | null;
+  readonly durableReceipt: { readonly recorded: boolean; readonly reason?: string };
+  readonly reason?: string;
+}
+
+function asBoundedRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+export async function serveLearnerSweepRetrieval(
+  input: ServeLearnerSweepRetrievalInput,
+): Promise<ServedLearnerSweepRetrieval> {
+  const query =
+    typeof input.query === "string" && input.query.trim().length > 0
+      ? input.query.trim().slice(0, 128)
+      : RUN100_SWEEP_RETRIEVAL_QUERY;
+  const requestedLimit = Number.isSafeInteger(input.limit)
+    ? Number(input.limit)
+    : RUN100_SWEEP_RETRIEVAL_LIMIT;
+  const limit = Math.min(Math.max(requestedLimit, 1), 64);
+  let receipt: Record<string, unknown>;
+  try {
+    receipt = asBoundedRecord(
+      await input.invoke("knowledge-worker", "knowledge:retrieve", {
+        plane: "shadow",
+        scopeId: input.scopeId,
+        query,
+        filters: { activeOnly: true },
+        limit,
+      }),
+    );
+  } catch (error) {
+    return {
+      served: false,
+      resultCount: 0,
+      matchCount: 0,
+      queryHash: null,
+      receiptId: null,
+      durableReceipt: { recorded: false },
+      reason: String((error as { message?: unknown })?.message ?? error).slice(0, 200),
+    };
+  }
+  const resultCount = Number.isFinite(Number(receipt.resultCount))
+    ? Number(receipt.resultCount)
+    : 0;
+  const matchCount = Number.isFinite(Number(receipt.matchCount)) ? Number(receipt.matchCount) : 0;
+  const queryHash =
+    typeof receipt.queryHash === "string" && receipt.queryHash ? receipt.queryHash : null;
+  try {
+    const recorded = asBoundedRecord(
+      await input.invoke("knowledge-store", "knowledge:record-retrieval", { receipt }),
+    );
+    const receiptId =
+      typeof recorded.receiptId === "string" && recorded.receiptId ? recorded.receiptId : null;
+    return {
+      served: true,
+      resultCount,
+      matchCount,
+      queryHash,
+      receiptId,
+      durableReceipt: receiptId
+        ? { recorded: true }
+        : { recorded: false, reason: "the store answered no receipt id" },
+    };
+  } catch (error) {
+    return {
+      served: true,
+      resultCount,
+      matchCount,
+      queryHash,
+      receiptId: null,
+      durableReceipt: {
+        recorded: false,
+        reason: String((error as { message?: unknown })?.message ?? error).slice(0, 200),
+      },
+    };
+  }
+}
+
+export interface DurableLearnerDerivationInput {
+  readonly channel: string;
+  readonly scope: string;
+  readonly evaluationAuthoritySecret: string;
+  /** The `evaluation:read-comparison-group` readback, plus the `referenceProofs` the group carries. */
+  readonly finalizedComparison: Readonly<Record<string, unknown>>;
+  /** The durable replay job the group's `holdout.caseIds` names. */
+  readonly replayProvenance: {
+    readonly sourceDecisionId?: unknown;
+    readonly sourceGraphRef?: unknown;
+    readonly sharedPrefixRef?: unknown;
+    readonly digest?: unknown;
+    readonly branches?: unknown;
+  };
+  /** The persisted `trajectory_signal_reports` row for the capture's live route decision. */
+  readonly signalsReport: Readonly<Record<string, unknown>>;
+  readonly profileEstimate: Readonly<Record<string, unknown>> | null;
+  readonly taskTypeId?: string | null;
+  readonly taxonomyVersion?: string | null;
+  readonly roleId?: string | null;
+  readonly safeForPrompt?: boolean;
+}
+
+/**
+ * Run 100 addendum 10, S13: the durable derivation half of the learner.
+ *
+ * Measured 2026-09-25: 483 finalized comparisons are learnable, 202 have a candidate and **281 have none**, while
+ * `knowledge:eval-consumer` has no caller outside `runTrackBShadowPipeline` - so a comparison the pipeline never
+ * carried (or whose run stopped after the replay) is durable evidence no learner can reach.
+ *
+ * This assembler turns durable evidence only into the value that consumer accepts: the finalized comparison
+ * readback, its own `referenceProofs`, the replay job the group names, the persisted signal report for the capture's
+ * live decision, the profile learner's estimate, and two receipts minted with the runtime's evidence authority. It
+ * never invents a trajectory, never dispatches a provider call and refuses anything the consumer would refuse - a
+ * group that is not learnable, a signal report for another decision, a profile that does not attribute the winning
+ * package - so a refusal is a bounded non-learning outcome rather than a partial write.
+ */
+export function assembleDurableLearnerDerivationValue(
+  input: DurableLearnerDerivationInput,
+): Record<string, unknown> {
+  const comparison = input.finalizedComparison as Record<string, unknown>;
+  const members = Array.isArray(comparison.members)
+    ? (comparison.members as Record<string, unknown>[]).filter(
+        (member): member is Record<string, unknown> =>
+          Boolean(member) && typeof member === "object",
+      )
+    : [];
+  const comparisonId = boundedText(comparison.comparisonId) ?? boundedText(comparison.groupId);
+  if (!comparisonId) {
+    throw new Error("durable learner derivation requires a finalized comparison identity");
+  }
+  if (boundedText(comparison.status) !== "finalized") {
+    throw new Error("durable learner derivation requires a finalized comparison");
+  }
+  const winner = members.find((member) => member.disposition === "positive");
+  const loser = members.find((member) => member.disposition === "negative");
+  if (!winner || !loser) {
+    throw new Error(
+      "durable learner derivation requires a learnable comparison with at least one positive and one negative member",
+    );
+  }
+  const routePackage = boundedText(winner.candidateRef);
+  if (!routePackage) {
+    throw new Error("durable learner derivation requires the winning member's route package");
+  }
+  const comparability =
+    comparison.comparability && typeof comparison.comparability === "object"
+      ? (comparison.comparability as Record<string, unknown>)
+      : {};
+  const proofs =
+    comparison.referenceProofs && typeof comparison.referenceProofs === "object"
+      ? (comparison.referenceProofs as Record<string, unknown>)
+      : {};
+  const proofForReference = (reference: string): Record<string, unknown> => {
+    const proof = Object.values(proofs).find(
+      (candidate) =>
+        candidate &&
+        typeof candidate === "object" &&
+        !Array.isArray(candidate) &&
+        (candidate as Record<string, unknown>).reference === reference,
+    );
+    if (!proof || typeof proof !== "object" || Array.isArray(proof)) {
+      throw new Error(`durable learner derivation is missing a reference proof for ${reference}`);
+    }
+    return proof as Record<string, unknown>;
+  };
+  const sourceEvidenceRef = boundedText(comparability.sourceEvidenceRef);
+  const counterfactualEvidenceRef = boundedText(comparability.counterfactualEvidenceRef);
+  const sourceCandidateRef = boundedText(comparability.sourceCandidateRef);
+  const evidenceRefForMember = (member: Record<string, unknown>): string => {
+    const role = boundedText(member.role);
+    const isSource =
+      role === "source" ||
+      (role !== "counterfactual" &&
+        sourceCandidateRef !== null &&
+        boundedText(member.candidateRef) === sourceCandidateRef);
+    const reference = isSource ? sourceEvidenceRef : counterfactualEvidenceRef;
+    if (!reference) {
+      throw new Error("durable learner derivation requires both per-branch evidence references");
+    }
+    return reference;
+  };
+  const evidenceRow = (
+    member: Record<string, unknown>,
+    disposition: "positive" | "negative",
+  ): Record<string, unknown> => {
+    const trialId = boundedText(member.trialId);
+    const scoreId = boundedText(member.scoreId);
+    const score = Number(member.score);
+    if (!trialId || !scoreId || !Number.isFinite(score)) {
+      throw new Error("durable learner derivation requires the finalized member lineage");
+    }
+    const evidenceRef = evidenceRefForMember(member);
+    /**
+     * The worker requires explicit graph/evaluation/trial/score lineage on grouped holdout learning (`grouped
+     * holdout learning explicit graph/evaluation/trial/score lineage required`, measured live on
+     * `run130-fca037e1`). A winning row's own branch artifact *is* the graph for its trial - the pipeline files the
+     * winner as `evidenceKind: "graph"` with `graphRef`/`rolloutRef` - so the derived row carries the same lineage
+     * instead of presenting the winner as an evaluation-only row.
+     */
+    const graphLineage =
+      disposition === "positive"
+        ? { evidenceKind: "graph", graphRef: evidenceRef, rolloutRef: evidenceRef }
+        : { evidenceKind: "evaluation" };
+    return {
+      evidenceRef,
+      score,
+      ...graphLineage,
+      learningCapable: true,
+      evaluationRef: comparisonId,
+      trialId,
+      scoreId,
+      sourceGroupId: comparisonId,
+      referenceProof: proofForReference(evidenceRef),
+    };
+  };
+  const positive = members
+    .filter((member) => member.disposition === "positive")
+    .map((member) => evidenceRow(member, "positive"));
+  const negative = members
+    .filter((member) => member.disposition === "negative")
+    .map((member) => evidenceRow(member, "negative"));
+
+  const sourceDecisionId = boundedText(input.replayProvenance.sourceDecisionId);
+  const sourceGraphRef = boundedText(input.replayProvenance.sourceGraphRef);
+  const sharedPrefixRef = boundedText(input.replayProvenance.sharedPrefixRef);
+  const replayBranches = Array.isArray(input.replayProvenance.branches)
+    ? input.replayProvenance.branches
+    : null;
+  if (!sourceDecisionId || !sourceGraphRef || !sharedPrefixRef || !replayBranches) {
+    throw new Error("durable learner derivation requires the durable replay provenance");
+  }
+
+  const report = input.signalsReport as Record<string, unknown>;
+  const reportDecisionId = boundedText(report.routeDecisionId);
+  const reportGraphRef = boundedText(report.graphRef);
+  const reportSignals = Array.isArray(report.signals) ? report.signals : null;
+  const evaluationProvenance =
+    report.evaluationProvenance && typeof report.evaluationProvenance === "object"
+      ? (report.evaluationProvenance as Record<string, unknown>)
+      : null;
+  const learningEvidence =
+    report.learningEvidence && typeof report.learningEvidence === "object"
+      ? (report.learningEvidence as Record<string, unknown>)
+      : null;
+  if (
+    reportDecisionId !== sourceDecisionId ||
+    reportGraphRef !== sourceGraphRef ||
+    !reportSignals ||
+    !evaluationProvenance ||
+    !learningEvidence ||
+    boundedText(evaluationProvenance.groupId) !== comparisonId ||
+    boundedText(learningEvidence.groupId) !== comparisonId
+  ) {
+    throw new Error(
+      "durable learner derivation requires the persisted signal report for this capture's live decision",
+    );
+  }
+
+  const profile = input.profileEstimate;
+  const profileDigest = profile ? boundedText((profile as Record<string, unknown>).digest) : null;
+  const profileEffects =
+    profile &&
+    (profile as Record<string, unknown>).effects &&
+    typeof (profile as Record<string, unknown>).effects === "object"
+      ? ((profile as Record<string, unknown>).effects as Record<string, unknown>)
+      : null;
+  const routePackageEffects =
+    profileEffects?.routePackage && typeof profileEffects.routePackage === "object"
+      ? (profileEffects.routePackage as Record<string, unknown>)
+      : null;
+  const attributedPackages = Array.isArray(routePackageEffects?.values)
+    ? routePackageEffects.values.filter((value): value is string => typeof value === "string")
+    : [];
+  const attributionEvidenceRefs = Array.isArray(routePackageEffects?.evidenceRefs)
+    ? routePackageEffects.evidenceRefs.filter(
+        (value): value is string => typeof value === "string" && value.length > 0,
+      )
+    : [];
+  if (
+    !profileDigest ||
+    !attributedPackages.includes(routePackage) ||
+    attributionEvidenceRefs.length === 0
+  ) {
+    throw new Error(
+      "durable learner derivation requires a profile estimate that attributes the winning route package",
+    );
+  }
+
+  const evidenceRef = counterfactualEvidenceRef ?? sourceEvidenceRef;
+  if (!evidenceRef) {
+    throw new Error("durable learner derivation requires a durable holdout evidence reference");
+  }
+  const policyId = boundedText(comparability.policyId) ?? RUN104_LEARNER_SWEEP_PROVENANCE.policy;
+  const scorerSetVersion = boundedText(comparability.scorerSetVersion) ?? `${policyId}-v1`;
+  /**
+   * The consumer reads `finalizedComparison.comparisonId` (`extensions/knowledge-worker`: "finalized durable
+   * comparison evidence required"), and the evaluator's own page entry names the same row only as `groupId`. Measured
+   * live on `run128-c73a2131`: every derivation that reached the worker was refused for the missing identity. The
+   * projection is therefore stated once, before the receipts are minted - the consumer recomputes the comparison
+   * digest from the object it receives, so the receipts have to be signed over exactly that object.
+   */
+  const finalizedComparisonForConsumer = {
+    ...structuredClone(comparison),
+    groupId: boundedText(comparison.groupId) ?? comparisonId,
+    comparisonId,
+    status: "finalized",
+  };
+  const receipts = mintDurableComparisonReceipts({
+    evaluationAuthoritySecret: input.evaluationAuthoritySecret,
+    channel: input.channel,
+    routePackage,
+    comparisonId,
+    finalizedComparison: finalizedComparisonForConsumer,
+    evidenceRef,
+    safeForPrompt: input.safeForPrompt ?? true,
+  });
+  const holdout =
+    comparison.holdout && typeof comparison.holdout === "object"
+      ? { ...(comparison.holdout as Record<string, unknown>) }
+      : {};
+  const outcome = comparison.outcome ?? evaluationProvenance.outcome;
+  return {
+    replay: {
+      sourceDecisionId,
+      sourceGraphRef,
+      sharedPrefixRef,
+      branches: replayBranches,
+      ...(boundedText(input.replayProvenance.digest)
+        ? { digest: boundedText(input.replayProvenance.digest) }
+        : {}),
+    },
+    evaluation: {
+      environment: "local-routing-evaluation",
+      scores: members.map((member) => Number(member.score)),
+      provenance: {
+        policy: policyId,
+        task: RUN104_LEARNER_SWEEP_PROVENANCE.task,
+        scorer: scorerSetVersion,
+        split: RUN104_LEARNER_SWEEP_PROVENANCE.split,
+        seed: RUN104_LEARNER_SWEEP_PROVENANCE.seed,
+        evidenceRef: boundedText(comparability.forkRef) ?? comparisonId,
+      },
+      finalizedComparison: finalizedComparisonForConsumer,
+      finalizedComparisonReceipt: receipts.finalizedComparisonReceipt,
+      safetyReceipt: receipts.safetyReceipt,
+    },
+    signals: {
+      routeDecisionId: reportDecisionId,
+      graphRef: reportGraphRef,
+      signals: reportSignals,
+      evaluationProvenance,
+      learningEvidence,
+    },
+    profile: { digest: profileDigest, effects: profileEffects },
+    comparableGroup: {
+      groupId: comparisonId,
+      policy: policyId,
+      task: RUN104_LEARNER_SWEEP_PROVENANCE.task,
+      scorer: scorerSetVersion,
+      scorerSetVersion,
+      split: "holdout",
+      seed: RUN104_LEARNER_SWEEP_PROVENANCE.seed,
+      comparabilityKey: `${sourceDecisionId}:holdout`,
+      positive,
+      negative,
+      learningCapable: true,
+    },
+    holdout: { ...holdout, evidenceRef, passed: true },
+    scope: {
+      routePackage,
+      channel: input.channel,
+      scopeId: input.scope,
+      ...(boundedText(input.taskTypeId) ? { taskTypeId: boundedText(input.taskTypeId) } : {}),
+      ...(boundedText(input.taxonomyVersion)
+        ? { taxonomyVersion: boundedText(input.taxonomyVersion) }
+        : {}),
+      ...(boundedText(input.roleId) ? { roleId: boundedText(input.roleId) } : {}),
+    },
+    learningCapable: true,
+    learningEvidence,
+    finalizedEvaluation: {
+      groupId: comparisonId,
+      status: "finalized",
+      ...(outcome !== undefined ? { outcome } : {}),
+    },
+    comparisonDigest: receipts.comparisonDigest,
+  };
+}
 
 export const RUN98_LEARNING_PASS_SCHEMA = "role-model.route-learning-pass.v1";
 export const RUN98_LEARNING_PASS_DEGRADATION_SCHEMA =
@@ -96,6 +801,78 @@ export const DEFAULT_PROMOTION_PROTOCOL = Object.freeze({
 
 const DECISIVE_OUTCOMES = new Set(["candidate", "source"]);
 
+/**
+ * Run 107 P1: how much of the durable comparison-group set a learner asks for at a time.
+ *
+ * `evaluation:list-groups` used to answer a fixed 256-row page (ignoring its request value), so the
+ * learner counted an arbitrary window of the evidence: on 2026-09-24 the live root held 699
+ * finalized groups and 443 of them could never be counted, which left every promotion short of its
+ * floor. The reader now walks cursors, and the page size stays bounded by the caller and the
+ * capability (`LIST_GROUPS_MAX_LIMIT` in the extension).
+ */
+export const LEARNING_GROUP_PAGE_LIMIT = 256;
+/**
+ * The bound on one evidence read: 64 pages of 256 groups is 16 384 comparisons, an order of
+ * magnitude past the live set. A store larger than this is a capacity question, not a page walk, and
+ * the caller should see a bounded answer rather than an unbounded loop.
+ */
+export const LEARNING_GROUP_MAX_PAGES = 64;
+
+/**
+ * Run 107 P6: when a validated pack may be put into the rollout.
+ *
+ * The learner writes a pack; the router only ever reads the pack the *rollout* names
+ * (`route-advisory-source.ts`: "no active pack" when `rollout.activePackageId` is unset). Nothing on
+ * the sweep path used to write it, so a validated pack could not influence a route. Activation is a
+ * policy decision, so the sweep asks the operator's stage rather than assuming:
+ *
+ *  - `S0`/`S1` observe only - a pack is recorded and left alone;
+ *  - `S2`, `S3`, `S4` already apply learned evidence to routing (S2 is the documented
+ *    "advisory considered" stage), so a validated pack may be activated;
+ *  - an unreadable or damaged policy degrades to a null stage, which is *not* an activation.
+ */
+export function activationStageAllowsPackActivation(stage: unknown): boolean {
+  return stage === "S2" || stage === "S3" || stage === "S4";
+}
+
+/**
+ * Run 107 P11: did the store actually activate the pack?
+ *
+ * Measured live on `run107e-94cdd4f6`: the sweep logged `activated 2 pack(s)` on every tick while
+ * `knowledge_route_rollouts[standalone-runtime-stage]` stayed at its 01:38:36Z value and no new activation
+ * receipt appeared. Replaying the same invoke against a copy of the live store shows why - the store answers a
+ * **bounded degradation receipt** (`{"degraded":true,"capability":"knowledge:activate-pack","reason":
+ * "activation requires a recorded pack"}`) instead of throwing, and the sweep counted any non-throwing answer
+ * as an activation. A hop that reports success without reading its own answer is exactly the class this run
+ * keeps finding, so the answer is now classified: only a receipt that names the pack and reports `active`
+ * counts, and anything else is reported with the store's own reason.
+ */
+export function classifyPackActivationAnswer(
+  answer: unknown,
+  packId: string,
+): { readonly activated: boolean; readonly reason: string | null } {
+  const record = asRecord(answer);
+  if (!record) return { activated: false, reason: "activation answer was not a record" };
+  const receipt = asRecord(record.receipt) ?? record;
+  const receiptPackId = boundedText(receipt.packageId);
+  if (record.degraded === true || receipt.state === undefined) {
+    return {
+      activated: false,
+      reason: boundedText(record.reason) ?? boundedText(receipt.reason) ?? "activation degraded",
+    };
+  }
+  if (receipt.state !== "active") {
+    return { activated: false, reason: `activation state is ${String(receipt.state)}` };
+  }
+  if (receiptPackId !== packId) {
+    return {
+      activated: false,
+      reason: `activation receipt names ${receiptPackId ?? "no pack"}`,
+    };
+  }
+  return { activated: true, reason: null };
+}
+
 export interface TrackBLearningPassRuntime {
   invoke(extensionId: string, envelope: Record<string, unknown>): Promise<unknown>;
 }
@@ -116,6 +893,54 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 
 function boundedText(value: unknown): string | null {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+}
+
+/**
+ * Run 100 addendum 15 item 6: the attribution carries the numbers the promotion gate decided on, so a
+ * value that is not a finite number is absent rather than zero - a fabricated `0` would read as "this
+ * package measured no improvement", which is a claim the receipt never made.
+ */
+function boundedNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+/**
+ * Run 107 P1: read the whole comparison-group set through the capability's keyset cursor.
+ *
+ * The shape accepted from a page is deliberately generous, because three callers decode the same
+ * capability through three different transports (the host bridge decodes business results, the
+ * operator sidecar externalizes large frames, and an older runtime answers the legacy plain array).
+ * A plain array means "one legacy page, nothing follows" - that is what the pre-107 runtime returns,
+ * so a caller pointed at an older build degrades to the old behaviour instead of looping.
+ */
+export async function collectPagedComparisonGroups(input: {
+  readonly readPage: (cursor: string | null) => Promise<unknown>;
+  readonly maxPages?: number;
+}): Promise<Record<string, unknown>[]> {
+  const collected: Record<string, unknown>[] = [];
+  const maxPages = input.maxPages ?? LEARNING_GROUP_MAX_PAGES;
+  let cursor: string | null = null;
+  for (let page = 0; page < maxPages; page += 1) {
+    const decoded = await input.readPage(cursor);
+    const record = asRecord(decoded);
+    const rows = Array.isArray(decoded)
+      ? decoded
+      : Array.isArray(record?.groups)
+        ? (record.groups as unknown[])
+        : Array.isArray(record?.value)
+          ? (record.value as unknown[])
+          : [];
+    for (const row of rows) {
+      if (row && typeof row === "object" && !Array.isArray(row)) {
+        collected.push(row as Record<string, unknown>);
+      }
+    }
+    // A legacy array carries no cursor, so the walk ends after one page exactly as it did before.
+    const nextCursor = Array.isArray(decoded) ? null : boundedText(record?.nextCursor);
+    if (!nextCursor || nextCursor === cursor) break;
+    cursor = nextCursor;
+  }
+  return collected;
 }
 
 export function buildTrackBLearningEvidenceSummary(input: {
@@ -594,8 +1419,33 @@ export interface TrackBLearningPassInput {
   /** Run 99 R33: the task family of the capture this candidate was derived from. */
   readonly taskTypeId?: string | null;
   readonly taxonomyVersion?: string | null;
+  /**
+   * Run 98 addendum 58 §38: the taxonomy role the capture was classified under, so the receipt, the pack and
+   * the attribution all carry the same scope dimensions the consumer resolved.
+   */
+  readonly roleId?: string | null;
   readonly candidateId: string;
   readonly routePackage: string;
+  /**
+   * Run 100 addendum 15 item 6, second half. Measured live on :3457 (2026-09-25): the scope's
+   * `track-b\contracts\` directory held 2271 artifacts - 72 `RouteLearningValidationReceiptV1` and 23
+   * `ExperiencePackCandidateV1` among them - and **zero** `RoutePackageAttributionV1`. The builder was
+   * unit-tested with no caller on the path that promotes packs on real traffic, so the documented
+   * attribution of a promoted package to the evidence behind it did not exist as an artifact.
+   *
+   * The descriptor is the caller's own rollout identity for the package the evidence is about (the
+   * compared arm's endpoint and model). The pass never invents an endpoint or a model: a caller that
+   * cannot name them gets no artifact and a bounded refusal line instead.
+   */
+  readonly routePackageDescriptor?: Readonly<{
+    readonly endpointId: string;
+    readonly modelId: string;
+    readonly modelRevision?: string | null;
+    readonly samplingProfileId?: string | null;
+    readonly promptAdapterId?: string | null;
+    readonly toolPolicyId?: string | null;
+    readonly experiencePackId?: string | null;
+  }> | null;
   /** The finalized comparison the candidate was derived from, as Evaluation Core returned it. */
   readonly finalizedComparison: Readonly<Record<string, unknown>>;
   readonly finalizedComparisonReceipt: Readonly<Record<string, unknown>>;
@@ -659,6 +1509,16 @@ export interface TrackBLearningPassInput {
    * every candidate with `insufficient_evidence` (observed live on stage v86).
    */
   readonly decodeResult?: (extensionId: string, capability: string, raw: unknown) => unknown;
+  /**
+   * Run 113: where the documented contract artifacts for this learner's output belong.
+   *
+   * The emission used to live in the liveness sweep, but the pipeline (which runs on every supervised replay)
+   * is the writer that actually produces receipts and packs on a live runtime - measured: three new receipts and
+   * a new pack appeared at 07:55Z from the pipeline while `contracts\` still held zero
+   * `ExperiencePackCandidateV1` / `RouteLearningValidationReceiptV1` files. Emitting here covers both callers
+   * with one implementation. Omitted means "this caller does not persist contracts" (a unit test, a fixture).
+   */
+  readonly contractStateRoot?: string;
   /**
    * Run 98 R3: the same evidence-authority secret the derive call used. Without it the worker has
    * no authority to verify the durable comparison readback and safety receipts, and validation
@@ -742,18 +1602,28 @@ export async function runTrackBLearningPass(
   const guardrails = input.guardrails ?? DEFAULT_LEARNING_GUARDRAILS;
   const promotionProtocol = { ...DEFAULT_PROMOTION_PROTOCOL, ...(input.promotionProtocol ?? {}) };
 
-  const rawGroups = await runtime.invoke("evaluation-core", envelope("evaluation:list-groups", {}));
-  const decodedGroups = input.decodeResult
-    ? input.decodeResult("evaluation-core", "evaluation:list-groups", rawGroups)
-    : Array.isArray(rawGroups)
-      ? rawGroups
-      : decodeBusinessResult(rawGroups, "evaluation-core", input.scope);
-  const groups: TrackBLearningEvidenceGroup[] = Array.isArray(decodedGroups)
-    ? (decodedGroups as TrackBLearningEvidenceGroup[])
-    : Array.isArray(asRecord(decodedGroups)?.groups)
-      ? ((asRecord(decodedGroups) as Record<string, unknown>)
-          .groups as TrackBLearningEvidenceGroup[])
-      : [];
+  /**
+   * Run 107 P1: the evidence this gate counts is the whole durable comparison-group set, not the
+   * first page of it. Reading one page silently truncated 443 of the 699 live groups, so a pack
+   * could never reach `minDecisiveComparisons`; the reader now walks the capability's cursor.
+   */
+  const groups = (await collectPagedComparisonGroups({
+    readPage: async (cursor) => {
+      const rawGroups = await runtime.invoke(
+        "evaluation-core",
+        envelope("evaluation:list-groups", {
+          page: true,
+          limit: LEARNING_GROUP_PAGE_LIMIT,
+          ...(cursor ? { cursor } : {}),
+        }),
+      );
+      return input.decodeResult
+        ? input.decodeResult("evaluation-core", "evaluation:list-groups", rawGroups)
+        : Array.isArray(rawGroups)
+          ? rawGroups
+          : decodeBusinessResult(rawGroups, "evaluation-core", input.scope);
+    },
+  })) as TrackBLearningEvidenceGroup[];
   const evidenceSummary = buildTrackBLearningEvidenceSummary({
     groups,
     routePackage,
@@ -855,13 +1725,80 @@ export async function runTrackBLearningPass(
     );
     const decoded = decodeBusinessResult(answer, "knowledge-store", input.scope);
     if (decoded.schemaVersion === "role-model.degradation-receipt.v1") {
-      throw new Error(
-        `knowledge store refused the validation receipt: ${String(decoded.reason ?? decoded.code ?? "unknown")}`,
-      );
+      /**
+       * Run 100 R4 idempotency (live finding, clean verification window 2026-09-22): the supervised
+       * replay retried a request, the learner produced a validation receipt with the same durable
+       * record id and richer evidence, and the store's immutability guard refused the write -
+       * `learning pass declined:… knowledge store refused the validation receipt: immutable learning
+       * record conflict: the record id already exists with different content`. The durable record is
+       * the authority for that attempt, so the pass reads it back and continues instead of declining;
+       * a store refusal for any other reason still fails the pass.
+       */
+      const refusalReason = String(decoded.reason ?? decoded.code ?? "unknown");
+      if (/immutable learning record conflict/u.test(refusalReason)) {
+        /**
+         * The store refuses this write precisely because a durable record already exists for this id,
+         * so the attempt *is* recorded - the pass continues with that durable record as the authority.
+         * The readback below is diagnostic only: it is recorded when it succeeds and is never required,
+         * because a store that answers `immutable learning record conflict` has already proven the
+         * record exists (the clean-window re-run showed the readback can come back empty even then, and
+         * that was turning a benign retry into a declined pass).
+         */
+        const durableRecordId = await runtime
+          .invoke(
+            "knowledge-store",
+            storeEnvelope("knowledge:list-learning", {
+              payload: { scopeId: input.scope, kind: "validation_receipt", limit: 200 },
+            }),
+          )
+          .then((listed) => decodeBusinessResult(listed, "knowledge-store", input.scope))
+          .then((listed) => {
+            const rows = Array.isArray((listed as Record<string, unknown> | null)?.records)
+              ? ((listed as Record<string, unknown>).records as Record<string, unknown>[])
+              : Array.isArray(listed)
+                ? (listed as unknown as Record<string, unknown>[])
+                : [];
+            return rows.some((row) => String(row?.recordId ?? row?.id ?? "") === receiptId);
+          })
+          .catch(() => false);
+        return {
+          recorded: true,
+          idempotent: true,
+          recordId: receiptId,
+          state: decision,
+          readbackConfirmed: durableRecordId,
+        };
+      }
+      throw new Error(`knowledge store refused the validation receipt: ${refusalReason}`);
     }
     return decoded;
   };
   const validationRecord = await recordValidationReceipt();
+  /**
+   * Run 113: the durable record is the runtime's own shape; the *contract* artifact is the documented
+   * vocabulary, and this pass is the writer that actually produces receipts on a live runtime (the liveness
+   * sweep only consumes what nobody else consumed). Emitting here is what makes the acceptance item "a
+   * validationReceipt that passes its validator, with the artifact present" true on real traffic.
+   */
+  if (input.contractStateRoot) {
+    try {
+      emitTrackBContract({
+        stateRoot: input.contractStateRoot,
+        scopeId: input.scope,
+        contract: buildRouteLearningValidationReceipt({
+          receipt,
+          channel: input.channel,
+          scopeId: input.scope,
+        }),
+      });
+    } catch (error) {
+      console.error(
+        `[run113] learning pass: validation receipt ${receiptId.slice(0, 24)} was not emitted as a contract: ${String(
+          (error as { message?: unknown })?.message ?? error,
+        ).slice(0, 200)}`,
+      );
+    }
+  }
 
   let packId: string | null = null;
   let promoted = false;
@@ -909,6 +1846,127 @@ export async function runTrackBLearningPass(
       throw new Error(
         `knowledge store refused the pack record: ${String(decodedPack.reason ?? decodedPack.code ?? "unknown")}`,
       );
+    }
+    /**
+     * Run 113: the pack's durable record is the runtime's own shape (`scope.taxonomyVersion`, `familyEvidence`
+     * and friends), and the documented `ExperiencePackCandidateV1` is closed - measured live, 24 of 98 pack
+     * records failed their own validator on `/scope must NOT have additional properties`. The builder projects
+     * the record onto the contract's members; the richer record stays in the store. Emitting here, on the pass
+     * that actually promotes packs on live traffic, is what makes the artifact exist for real work rather
+     * than only for the sweep that consumes a leftover backlog.
+     */
+    if (input.contractStateRoot) {
+      try {
+        emitTrackBContract({
+          stateRoot: input.contractStateRoot,
+          scopeId: input.scope,
+          contract: buildExperiencePackCandidate({
+            pack: packCandidate,
+            channel: input.channel,
+            scopeId: input.scope,
+          }),
+        });
+      } catch (error) {
+        console.error(
+          `[run113] learning pass: pack ${packId.slice(0, 24)} was not emitted as a contract: ${String(
+            (error as { message?: unknown })?.message ?? error,
+          ).slice(0, 200)}`,
+        );
+      }
+      /**
+       * Run 100 addendum 16: the activation receipt belongs to the transition, and this is where the transition
+       * happens - the pack was just promoted from its validation baseline. Measured 2026-09-25: the only activation
+       * artifacts on disk were 658 synthetic `disabled` non-events emitted by the pipeline on every run
+       * (`packageId === priorPackageId`), while the knowledge store held the real 18 active / 24 rolled-back
+       * transitions. A receipt is emitted here only when the promotion actually moved the package: `state: "active"`,
+       * the promoted pack as `packageId`, and the validation receipt's baseline as `priorPackageId`.
+       */
+      const priorPackageId = boundedText(receipt.baselineId) ?? "";
+      if (priorPackageId && priorPackageId !== packId) {
+        try {
+          emitTrackBContract({
+            stateRoot: input.contractStateRoot,
+            scopeId: input.scope,
+            contract: buildRoutePackageActivationReceipt({
+              receiptId: `activation:${packId}`,
+              packageId: packId,
+              /**
+               * Measured while landing this (addendum 16): the closed contract's union validator accepts an
+               * activation receipt only when the scope carries at least one member *and* a `validationReceiptId` is
+               * present - the TypeScript interface marks both optional, so the schema is the stricter authority. An
+               * empty scope is what the synthetic pipeline receipts would have produced; the fallback keeps the
+               * artifact in the vocabulary the contract defines.
+               */
+              scope: {
+                taskTypeId: boundedText(input.taskTypeId) ?? "task:route-selection",
+                ...(boundedText(input.taxonomyVersion)
+                  ? { taxonomyVersion: boundedText(input.taxonomyVersion) }
+                  : {}),
+              },
+              policyGateId: "gate:route-package-activation",
+              priorPackageId,
+              state: "active",
+              validationReceiptId: receiptId,
+              channel: input.channel,
+              scopeId: input.scope,
+              activatedAtMs: Date.now(),
+            }),
+          });
+        } catch (error) {
+          console.error(
+            `[run139] learning pass: activation receipt for ${packId.slice(0, 24)} was not emitted as a contract: ${String(
+              (error as { message?: unknown })?.message ?? error,
+            ).slice(0, 600)}`,
+          );
+        }
+      }
+      /**
+       * Run 100 addendum 15 item 6, second half: the attribution is the artifact that binds a promoted
+       * package to the route package the evidence was gathered for and to the numbers the gate decided on.
+       * Every member is durable evidence - the validation receipt the promotion consumed (`caseManifestRef`,
+       * `qualityDelta`, `confidenceLower`, `holdoutSampleCount`, `baselineId`) plus the caller's own rollout
+       * identity - and a missing member refuses the artifact by name instead of publishing a claim nobody
+       * can check. The refusal is logged, never thrown: a contract write must not fail a promotion.
+       */
+      const attributionDescriptor = input.routePackageDescriptor ?? null;
+      try {
+        /**
+         * The closed `$defs.scope` accepts taxonomy/route identity members only - measured live while landing
+         * the pack emission, a record carrying `taxonomyVersion` in its scope failed
+         * `/scope must NOT have additional properties`. The attribution therefore carries the family, the
+         * endpoint and the role the evidence belongs to, and nothing the scope cannot hold.
+         */
+        const attributionScope = {
+          taskTypeId: boundedText(input.taskTypeId) ?? "task:route-selection",
+          ...(boundedText(attributionDescriptor?.endpointId)
+            ? { endpointId: boundedText(attributionDescriptor?.endpointId) as string }
+            : {}),
+          ...(boundedText(input.roleId) ? { roleId: boundedText(input.roleId) as string } : {}),
+          ...(boundedText(attributionDescriptor?.promptAdapterId)
+            ? { promptAdapterId: boundedText(attributionDescriptor?.promptAdapterId) as string }
+            : {}),
+        };
+        const attribution = emitRoutePackageAttributionForPromotion({
+          stateRoot: input.contractStateRoot,
+          scopeId: input.scope,
+          channel: input.channel,
+          packId,
+          receipt,
+          descriptor: attributionDescriptor,
+          scope: attributionScope,
+        });
+        if (!attribution.emitted) {
+          console.error(
+            `[run150] learning pass: attribution for ${packId.slice(0, 24)} was not emitted: ${attribution.reason}`,
+          );
+        }
+      } catch (error) {
+        console.error(
+          `[run150] learning pass: attribution for ${packId.slice(0, 24)} was not emitted as a contract: ${String(
+            (error as { message?: unknown })?.message ?? error,
+          ).slice(0, 600)}`,
+        );
+      }
     }
   }
 

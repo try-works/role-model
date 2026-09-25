@@ -1,11 +1,13 @@
 import { createHash } from "node:crypto";
 
-import type { ReplayLedger } from "./track-b-replay-ledger.js";
+import { type ReplayLedger, replayBudgetAvailable } from "./track-b-replay-ledger.js";
 import {
   type ReplayPolicySet,
   type ReplayRefusalCode,
   type ReplayToolPolicy,
   decideReplayAdmission,
+  isBenchmarkReplaySourceRef,
+  isSyntheticProbeSourceClass,
   resolveReplayToolPolicy,
   selectReplayCandidates,
 } from "./track-b-replay-policy.js";
@@ -33,8 +35,21 @@ export const DEFAULT_MAX_CAPTURES_PER_TICK = 8;
  * a job whose dispatches all completed alive through a bounded finalization grace so the
  * branch append and evaluation handoff can finish.
  */
-export const AUTO_REPLAY_DEADLINE_PER_CANDIDATE_MS = 120_000;
-export const AUTO_REPLAY_DEADLINE_MAX_MS = 1_800_000;
+/**
+ * Run 100 addendum `runtime-replay-timeout-bounds.addendum-01` (operator instruction: "raise the bounds to
+ * 600 s for both"). The decision was first applied to the two running stage processes through environment
+ * variables, which left the *packaged* runtime on the old 120 s default — and the operator starts the stage
+ * release by hand from the downloaded package. The default is therefore the operator's value now; the
+ * resolver band is unchanged, so a deployment can still tune it.
+ */
+export const AUTO_REPLAY_DEADLINE_PER_CANDIDATE_MS = 600_000;
+/**
+ * The cap must keep headroom above a three-candidate job at the new per-candidate bound (3 x 600 s =
+ * 1800 s), otherwise every capture-size step is clipped away and a heavy three-arm replay is expired
+ * mid-dispatch — the exact failure the per-candidate bound was raised to stop. One hour leaves room for a
+ * three-arm job whose prompts add size steps while still bounding the job's wall clock.
+ */
+export const AUTO_REPLAY_DEADLINE_MAX_MS = 3_600_000;
 /**
  * Run 99 R33 live finding (stage v143): real coding-agent requests arrive with multi-megabyte
  * prompts. Once the capture admission bound stopped refusing them, the *replay* became the next
@@ -109,9 +124,79 @@ export function isReplayAwaitingEvaluationFailure(status: number, body: string):
   );
 }
 
+/**
+ * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S3 (live refusal measured on `:3457`):
+ *
+ *   `replay endpoint HTTP 409: {"error":"extension replay-core failed: replay concurrency budget is exhausted"}`
+ *
+ * A job's `maxConcurrency` (1 when unset) forbids preparing a second candidate while one of its dispatches
+ * is still in flight, so this answer means "the work is already running", exactly like a lease hold. The
+ * loop must wait it out inside the capture's own deadline instead of recording a replay failure and
+ * spending the capture's deferral budget - the pre-repair behaviour ended in `refused replay_failed` while
+ * the provider work had already been paid for. A *resource* refusal (`provider call`, cost, bytes) is not
+ * this class and stays a real refusal.
+ */
+export function isReplayDispatchHoldFailure(status: number, body: string): boolean {
+  return (
+    status === 409 &&
+    typeof body === "string" &&
+    /replay concurrency budget is exhausted/i.test(body)
+  );
+}
+
 /** A failure that means "the durable job is in flight", not "the replay failed". */
 export function isReplayInFlightFailure(status: number, body: string): boolean {
-  return isReplayJobLeasedFailure(status, body) || isReplayAwaitingEvaluationFailure(status, body);
+  return (
+    isReplayJobLeasedFailure(status, body) ||
+    isReplayAwaitingEvaluationFailure(status, body) ||
+    isReplayDispatchHoldFailure(status, body)
+  );
+}
+
+/**
+ * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S9 (live on `:3457`): the counterfactual arm's
+ * dispatch capture is named `replay-<requestId>-<token>`, and the token was derived from the replay job and
+ * the candidate only. That identity is stable across a job's *attempts*, so when a job is re-claimed and its
+ * arm is dispatched again the provider returns fresh bytes under the same capture id - and the capture
+ * boundary refuses them by design:
+ *
+ *   `route capture idempotency key was reused with different immutable bytes`
+ *
+ * The dispatch envelope carries the per-attempt identity: replay-core rehydrates the same `nonce` for a
+ * dispatch that is still in flight and mints a new one for a fresh attempt (the stale-dispatch repair is
+ * what makes a second attempt possible at all). Scoping the capture id by that nonce keeps a retry inside
+ * one attempt idempotent while a new attempt writes new bytes under a new id.
+ */
+export function replayDispatchCaptureToken(input: {
+  readonly replayJobId: string;
+  readonly candidateEndpointId: string;
+  readonly dispatchNonce: string | null;
+}): string {
+  return createHash("sha256")
+    .update(
+      `${String(input.replayJobId)}\u0000${String(input.candidateEndpointId)}\u0000${input.dispatchNonce ?? ""}`,
+    )
+    .digest("hex")
+    .slice(0, 16);
+}
+
+/**
+ * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S11 (live on `:3457`): the automatic producer
+ * sized a job's provider-call budget as exactly one call per candidate, so an arm whose dispatch was
+ * interrupted had to be dispatched again under a fresh attempt - and that second call spent a budget that was
+ * already consumed. The job then answered `replay provider call budget is exhausted` and the capture was
+ * terminally refused even though its work had merely been interrupted.
+ *
+ * The budget keeps a bounded retry allowance per candidate: enough for one interrupted attempt to be re-driven
+ * (the recovery path that re-presents an existing dispatch receipt does not spend a call at all), still
+ * fail-closed against a job that keeps retrying, and still a plain multiple of the candidate count so a
+ * reader can reason about it.
+ */
+export const REPLAY_PROVIDER_CALL_ATTEMPTS_PER_CANDIDATE = 2;
+
+export function resolveReplayProviderCallBudget(candidateCount: number): number {
+  const count = Number.isSafeInteger(candidateCount) && candidateCount > 0 ? candidateCount : 1;
+  return count * REPLAY_PROVIDER_CALL_ATTEMPTS_PER_CANDIDATE;
 }
 
 export async function retryLeasedReplayDispatch<TValue>(input: {
@@ -211,6 +296,14 @@ export function buildAutoReplayIdempotencyKey(input: {
   readonly captureRef: string;
   readonly policySetDigest: string;
   readonly candidateEndpointIds: readonly string[];
+  /**
+   * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S12: the job contract the key mints, when the
+   * caller knows it. The key covered the comparison's identity but not the budget, so a runtime that changed
+   * the budget (S11: one bounded retry per candidate) re-presented the same key with different immutable
+   * bytes and Replay Core refused it with `replay idempotency key contract conflict`. Including it means a
+   * contract revision mints a new job instead of colliding, and the previous job retires on its deadline.
+   */
+  readonly providerCallBudget?: number;
 }): string {
   const captureRef = input.captureRef.trim();
   if (!captureRef) throw new Error("auto replay idempotency requires a capture reference");
@@ -226,8 +319,12 @@ export function buildAutoReplayIdempotencyKey(input: {
   if (candidateEndpointIds.length === 0) {
     throw new Error("auto replay idempotency requires at least one candidate endpoint");
   }
+  const providerCallBudget =
+    Number.isSafeInteger(input.providerCallBudget) && (input.providerCallBudget ?? 0) > 0
+      ? Number(input.providerCallBudget)
+      : null;
   const contractDigest = createHash("sha256")
-    .update(JSON.stringify({ policySetDigest, candidateEndpointIds }))
+    .update(JSON.stringify({ policySetDigest, candidateEndpointIds, providerCallBudget }))
     .digest("hex");
   return `auto:${captureRef}:${contractDigest}`;
 }
@@ -250,6 +347,27 @@ const RETRYABLE_REPLAY_REFUSAL_CODES: ReadonlySet<string> = new Set([
    * stays deferrable — but it is named instead of being dispatched into a guaranteed refusal.
    */
   "judge_candidate_overlap",
+  /**
+   * Run 100 addendum 16 item 8a: the private boundary is between restarts — the capture is retryable, and
+   * the wait is named instead of arriving as `replay_failed`.
+   */
+  "replay_boundary_unavailable",
+  /**
+   * Run 100 addendum 24 §3: two recoverable shapes the census left unnamed. `awaiting replay is missing its
+   * durable evaluation receipt` is the shape `isRecoverableHandoff` exists for (the recovery pass rebuilds the
+   * evaluation from durable evidence), and `durable replay branch append has no host dispatch receipt` is a
+   * paid-for branch whose append can be rebuilt from the dispatch's persisted `providerResultRef`. Both are
+   * deferrable; see `classifyReplayExecutorFailure`.
+   */
+  "replay_evaluation_receipt_missing",
+  "replay_branch_append_unavailable",
+  /**
+   * Run 108: the caller resolves the judge per tick and could not name it. Without the judge the arms cannot
+   * exclude it, and the controller is the strongest alternative - so a capture dispatched in this state is
+   * planned *with* the judge as an arm and then judged by it (`judge_self_evaluation`, ineligible evidence).
+   * Deferrable: the assignment read usually succeeds on the next tick.
+   */
+  "judge_unresolved",
 ]);
 
 export function retryableReplayRefusalCodes(): ReadonlySet<string> {
@@ -261,6 +379,12 @@ export interface AutoReplayCapture {
   readonly sourceEndpointId: string | null;
   readonly hasRecordedToolResults: boolean;
   readonly replayProduced?: boolean;
+  /**
+   * Run 100 addendum 16 item 3 / 8a: the class the pending projection read off the capture's durable
+   * root. `marker_echo_probe` means the recorded reply is the marker the instruction demanded, so the
+   * capture cannot discriminate two candidates and is refused terminally at admission.
+   */
+  readonly sourceClass?: string | null;
 }
 
 export interface AutoReplayBranch {
@@ -356,6 +480,108 @@ export function resolveAutoReplayReservationTtlMs(
 }
 
 /**
+ * Run 100 addendum 22: the operator-tunable list of endpoints the tick may judge a comparison with when the
+ * configured judge is itself an arm of that comparison. `null` means "no explicit list", and the tick then uses
+ * the runtime's own configured endpoint pool - the sane default, because those are exactly the endpoints this
+ * runtime may use and one of them is always available unless the pool is degenerate. An empty effective list
+ * reproduces the previous behaviour exactly: the capture defers with the named `judge_candidate_overlap`.
+ */
+export function resolveReplayJudgeFallbackEndpointIds(
+  env: Record<string, string | undefined> = process.env,
+): readonly string[] | null {
+  const raw = env.ROLE_MODEL_REPLAY_JUDGE_FALLBACK_ENDPOINT_IDS;
+  if (typeof raw !== "string" || raw.trim() === "") return null;
+  const parsed = Array.from(
+    new Set(
+      raw
+        .split(",")
+        .map((entry) => entry.trim())
+        .filter((entry) => entry.length > 0),
+    ),
+  );
+  return parsed.length > 0 ? parsed : null;
+}
+
+/**
+ * Run 100 addendum 22: pick the substitute judge for a capture whose configured judge is one of the
+ * comparison's own arms. Deterministic (first usable entry in the caller's stable list order, no rotation and no
+ * randomness) and never an arm of the pair: the colliding judge and the capture's own source endpoint are both
+ * skipped. The chosen endpoint is then excluded from the planned counterfactual arms by the caller, which is
+ * what makes "never an arm of the pair" hold for the candidate side too.
+ */
+export function selectAlternativeJudgeEndpoint(input: {
+  readonly collidingJudgeEndpointId: string;
+  readonly sourceEndpointId: string | null;
+  readonly fallbackEndpointIds: readonly string[];
+}): string | null {
+  const seen = new Set<string>();
+  for (const entry of input.fallbackEndpointIds) {
+    if (typeof entry !== "string") continue;
+    const endpointId = entry.trim();
+    if (endpointId.length === 0 || seen.has(endpointId)) continue;
+    seen.add(endpointId);
+    if (endpointId === input.collidingJudgeEndpointId) continue;
+    if (input.sourceEndpointId !== null && endpointId === input.sourceEndpointId) continue;
+    return endpointId;
+  }
+  return null;
+}
+
+/**
+ * Run 100 addendum 22 follow-up (requirement 3): the same de-confliction, applied where a *comparison's* judge is
+ * resolved rather than where the arms are planned.
+ *
+ * `selectAlternativeJudgeEndpoint` protects the tick, but the judge identity that ends up on the job's
+ * comparability, on the evaluator's manifest and on the runner's judge receipt is resolved later, from the
+ * controller alone (`cli.ts` `resolveControllerJudge`). For a pair whose arms contain that controller the later
+ * resolution re-introduces the judge as an arm of its own comparison, so the comparison is scored without a judge
+ * and the provenance names an endpoint that never scored anything.
+ *
+ * This wrapper takes the judge object the caller already resolved plus the pair it is about to judge, and returns
+ * the same object with a substitute endpoint when one exists - deterministic, drawn from the configured fallback
+ * list (or the runtime's own endpoint pool) and never an arm of the pair - and the object unchanged when it does
+ * not (today's fail-closed behaviour: the evaluator records judge missingness rather than scoring with an arm).
+ * Every other field travels untouched, so the recording sites need no new plumbing.
+ */
+export function dedupeJudgeAgainstPair<T extends { readonly endpointId: string }>(
+  judge: T,
+  input: {
+    readonly sourceEndpointId: string | null;
+    readonly counterfactualEndpointIds: readonly string[];
+    readonly fallbackEndpointIds?: readonly string[] | null;
+    readonly configuredEndpointIds?: readonly string[] | null;
+  },
+): T {
+  const judgeEndpointId = typeof judge.endpointId === "string" ? judge.endpointId.trim() : "";
+  if (judgeEndpointId.length === 0) return judge;
+  const arms = new Set<string>();
+  if (typeof input.sourceEndpointId === "string" && input.sourceEndpointId.length > 0) {
+    arms.add(input.sourceEndpointId);
+  }
+  for (const endpointId of input.counterfactualEndpointIds) {
+    if (typeof endpointId === "string" && endpointId.length > 0) arms.add(endpointId);
+  }
+  if (!arms.has(judgeEndpointId)) return judge;
+  /**
+   * The pair's arms are exactly what the substitute must avoid, so they are removed from the pool before the
+   * selector runs; the selector itself also rejects the colliding judge and the source arm, which keeps the rule
+   * identical to the one the tick applies when it plans the arms.
+   */
+  const usableEndpointIds = (input.fallbackEndpointIds ?? input.configuredEndpointIds ?? []).filter(
+    (endpointId) =>
+      typeof endpointId === "string" &&
+      endpointId.trim().length > 0 &&
+      !arms.has(endpointId.trim()),
+  );
+  const substitute = selectAlternativeJudgeEndpoint({
+    collidingJudgeEndpointId: judgeEndpointId,
+    sourceEndpointId: input.sourceEndpointId,
+    fallbackEndpointIds: usableEndpointIds,
+  });
+  return substitute === null ? judge : { ...judge, endpointId: substitute };
+}
+
+/**
  * Run 98 addendum 04 §7 (`L4`), measured live on v170: one capture whose replay never returned held
  * the whole producer tick open, so no disposition was recorded and the expiry sweep never ran. The
  * bound is deliberately larger than a replay job's own deadline plus finalization grace (6 min +
@@ -364,12 +590,62 @@ export function resolveAutoReplayReservationTtlMs(
  */
 const DEFAULT_EXECUTOR_TIMEOUT_MS = 12 * 60 * 1000;
 
+/**
+ * Run 100 addendum `replay-dispatch-envelope-repair.addendum-03` S1 (operator report 2026-09-23: "replays
+ * are stuck and not reaching eval or learner stage").
+ *
+ * The `L4` bound above is only safe while it stays *larger than the durable job's own deadline*; that is
+ * what its own comment promises. Addendum 01 raised the per-candidate bound to 600 s, so a three-candidate
+ * job's deadline became 30-60 minutes while the executor still abandoned its capture at 12: the loop then
+ * re-claimed and restarted the job on the next tick, and the job only ended when its deadline expired
+ * (`timed_out`, measured live on 27 frozen jobs). The bound is therefore derived from the same arithmetic
+ * that sizes the job, plus the finalization grace, with the old 12 minutes as a floor.
+ */
+export const DEFAULT_EXECUTOR_FINALIZATION_GRACE_MS = 5 * 60_000;
+
+export function resolveAutoReplayExecutorTimeoutMs(input: {
+  readonly candidateCount: number;
+  readonly captureBytes?: number;
+  readonly perCandidateMs?: number;
+  readonly maxMs?: number;
+  /** An explicit operator/configuration bound wins, exactly as it did before this change. */
+  readonly explicitMs?: number;
+}): number {
+  const explicit = Number(input.explicitMs);
+  if (Number.isSafeInteger(explicit) && explicit > 0) return explicit;
+  const candidates =
+    Number.isSafeInteger(input.candidateCount) && input.candidateCount > 0
+      ? input.candidateCount
+      : 1;
+  const jobDeadlineMs = resolveAutoReplayDeadlineMs(candidates, {
+    ...(Number.isSafeInteger(input.captureBytes) && (input.captureBytes ?? 0) > 0
+      ? { captureBytes: Number(input.captureBytes) }
+      : {}),
+    ...(Number.isSafeInteger(input.perCandidateMs) && (input.perCandidateMs ?? 0) > 0
+      ? { perCandidateMs: Number(input.perCandidateMs) }
+      : {}),
+    ...(Number.isSafeInteger(input.maxMs) && (input.maxMs ?? 0) > 0
+      ? { maxMs: Number(input.maxMs) }
+      : {}),
+  });
+  return Math.max(
+    DEFAULT_EXECUTOR_TIMEOUT_MS,
+    jobDeadlineMs + DEFAULT_EXECUTOR_FINALIZATION_GRACE_MS,
+  );
+}
+
 type AutoReplayExecutorRequest = {
   readonly capture: AutoReplayCapture;
   readonly candidates: readonly string[];
   readonly toolPolicy: ReplayToolPolicy;
   readonly policySet: ReplayPolicySet;
   readonly reservationId: string;
+  /**
+   * Run 100 addendum 22: the judge this capture will actually be judged by. When the configured judge was an arm
+   * of the pair the tick substitutes a deterministic alternative and names it here, so the dispatch and the job
+   * that follows it can record the judge that really scored the comparison instead of assuming the controller.
+   */
+  readonly judgeEndpointId?: string | null;
 };
 
 async function runBoundedExecutor(
@@ -379,9 +655,12 @@ async function runBoundedExecutor(
   },
   request: AutoReplayExecutorRequest,
 ): Promise<AutoReplayExecution> {
-  const configured = Number(input.executorTimeoutMs);
-  const timeoutMs =
-    Number.isSafeInteger(configured) && configured > 0 ? configured : DEFAULT_EXECUTOR_TIMEOUT_MS;
+  const timeoutMs = resolveAutoReplayExecutorTimeoutMs({
+    candidateCount: request.candidates.length,
+    ...(Number.isSafeInteger(input.executorTimeoutMs) && (input.executorTimeoutMs ?? 0) > 0
+      ? { explicitMs: Number(input.executorTimeoutMs) }
+      : {}),
+  });
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([
@@ -400,6 +679,56 @@ async function runBoundedExecutor(
   } finally {
     if (timer !== undefined) clearTimeout(timer);
   }
+}
+
+/**
+ * Run 100 addendum 16 item 8a, measured on the live store 2026-09-25: two of the 409s the executor
+ * surfaces are not "the replay failed" and both were reported as the generic `replay_failed`:
+ *
+ * - `route capture skipped: boundary unavailable until <ts>` — the private Track B boundary is between
+ *   restarts, and the capture is retryable exactly as the code intended (9 rows in flight, newest
+ *   06:46:11Z). Named `replay_boundary_unavailable`, still deferred: the class is now countable and the
+ *   wait is visible, without changing what the tick does.
+ * - `route capture idempotency key was reused with different immutable bytes` — the boundary refuses the
+ *   same idempotency key carrying different bytes, which is deterministic by construction (24 refused /
+ *   3 deferred lifetime). Naming it terminal (`replay_capture_idempotency_conflict`) stops it spending
+ *   the deferral budget and landing in `replay_failed` wearing a code that says nothing.
+ *
+ * Everything else keeps the previous behaviour exactly, including the generic code.
+ */
+export function classifyReplayExecutorFailure(message: string): Readonly<{
+  code:
+    | "replay_failed"
+    | "replay_boundary_unavailable"
+    | "replay_capture_idempotency_conflict"
+    | "replay_evaluation_receipt_missing"
+    | "replay_branch_append_unavailable";
+  terminal: boolean;
+}> {
+  if (/route capture skipped:\s*boundary unavailable/i.test(message)) {
+    return { code: "replay_boundary_unavailable", terminal: false };
+  }
+  if (/idempotency key was reused with different immutable bytes/i.test(message)) {
+    return { code: "replay_capture_idempotency_conflict", terminal: true };
+  }
+  /**
+   * Run 100 addendum 24 §3: a job sitting in `awaiting_evaluation` with no evaluation id is recoverable —
+   * `isRecoverableHandoff` covers exactly that shape and the handoff-recovery pass rebuilds the evaluation from
+   * durable evidence. Deferrable and named, so the class is countable instead of spending its deferral budget
+   * anonymously.
+   */
+  if (/awaiting replay is missing its durable evaluation receipt/i.test(message)) {
+    return { code: "replay_evaluation_receipt_missing", terminal: false };
+  }
+  /**
+   * Run 100 addendum 24 §3: the append-recovery leg rebuilds the branch from the dispatch's persisted
+   * `providerResultRef`, and it fails when that capture cannot be read yet (a restart mid-append is the usual
+   * cause). The work is already paid for, so the capture stays retryable under a name.
+   */
+  if (/durable replay branch append has no host dispatch receipt/i.test(message)) {
+    return { code: "replay_branch_append_unavailable", terminal: false };
+  }
+  return { code: "replay_failed", terminal: false };
 }
 
 export async function runAutoReplayTick(input: {
@@ -447,6 +776,24 @@ export async function runAutoReplayTick(input: {
    * refusal at job creation.
    */
   readonly judgeEndpointId?: string | null;
+  /**
+   * Run 100 addendum 22: the endpoints the tick may judge a comparison with when the configured judge
+   * (`judgeEndpointId`) is one of that comparison's own arms. Omitted means "use `configuredEndpointIds`", the
+   * runtime's own pool; an entry list that yields no usable alternative keeps the named `judge_candidate_overlap`
+   * deferral, exactly as before this change.
+   */
+  readonly judgeFallbackEndpointIds?: readonly string[] | null;
+  /**
+   * Run 111: opt in to the `judge_unresolved` refusal.
+   *
+   * The guard was added unconditionally and immediately refused **every** capture on the real-traffic runtime:
+   * measured live minutes after traffic resumed, the newest four dispositions were all `refused` /
+   * `judge_unresolved`, because this composition's tick-time judge resolution answers `null` even though the
+   * controller assignment exists (the router reports `deepseek…flash-high`). Refusing all replay work is a far
+   * worse failure than possibly planning an arm the judge is also scored in, so the guard is opt-in and stays
+   * dormant until the hook genuinely resolves a judge here.
+   */
+  readonly requireResolvedJudge?: boolean;
 }): Promise<AutoReplayTickResult> {
   const maxCapturesPerTick = input.maxCapturesPerTick ?? DEFAULT_MAX_CAPTURES_PER_TICK;
   const tickBudgetMs = input.tickBudgetMs ?? DEFAULT_TICK_BUDGET_MS;
@@ -498,14 +845,48 @@ export async function runAutoReplayTick(input: {
       typeof input.judgeEndpointId === "string" && input.judgeEndpointId.trim().length > 0
         ? input.judgeEndpointId.trim()
         : null;
-    if (judgeEndpointId && capture.sourceEndpointId === judgeEndpointId) {
+    /**
+     * Run 108: `undefined` means "this caller does not resolve a judge", so nothing needs excluding and the
+     * capture proceeds exactly as before. A present-but-empty value means the caller *does* resolve one and
+     * could not: the exclusion is then unavailable, and dispatching the capture would plan arms that may
+     * contain the judge - which the completion then uses to score its own comparison. Defer by name instead.
+     */
+    const judgeExpected = input.requireResolvedJudge === true;
+    if (judgeExpected && judgeEndpointId === null) {
+      deferred += 1;
+      emit({
+        captureRef: capture.captureRef,
+        outcome: "deferred",
+        code: "judge_unresolved",
+        detail:
+          "the configured judge could not be resolved, so a planned comparison could have the judge as an arm",
+      });
+      continue;
+    }
+    /**
+     * Run 100 addendum 22: when the configured judge is one of this comparison's own arms the capture used to be
+     * refused (`judge_candidate_overlap`) after spending its deferral budget - measured live as ~47% of recent
+     * replay volume. Refusing half the traffic is not what the operator asked for, so the tick now judges the
+     * comparison with a deterministic alternative instead. The named refusal survives as the last resort: it is
+     * emitted only when the fallback list yields no endpoint that is not already an arm of the pair.
+     */
+    const judgeCollidesWithSource =
+      judgeEndpointId !== null && capture.sourceEndpointId === judgeEndpointId;
+    const effectiveJudgeEndpointId = judgeCollidesWithSource
+      ? selectAlternativeJudgeEndpoint({
+          collidingJudgeEndpointId: judgeEndpointId as string,
+          sourceEndpointId: capture.sourceEndpointId,
+          fallbackEndpointIds: input.judgeFallbackEndpointIds ?? input.configuredEndpointIds,
+        })
+      : judgeEndpointId;
+    if (judgeCollidesWithSource && effectiveJudgeEndpointId === null) {
       deferred += 1;
       emit({
         captureRef: capture.captureRef,
         outcome: "deferred",
         code: "judge_candidate_overlap",
         detail:
-          "the capture's own endpoint is the configured judge, so a comparison would have the judge score itself",
+          "the capture's own endpoint is the configured judge and no alternative judge endpoint is available, so a comparison would have the judge score itself",
       });
       continue;
     }
@@ -513,7 +894,7 @@ export async function runAutoReplayTick(input: {
       configuredEndpointIds: input.configuredEndpointIds,
       ...(input.healthyEndpointIds ? { healthyEndpointIds: input.healthyEndpointIds } : {}),
       sourceEndpointId: capture.sourceEndpointId,
-      ...(judgeEndpointId ? { excludedEndpointIds: [judgeEndpointId] } : {}),
+      ...(effectiveJudgeEndpointId ? { excludedEndpointIds: [effectiveJudgeEndpointId] } : {}),
       // Run 98 addendum 33 S3: rotate the counterfactual with the capture, so the comparison graph grows
       // edges instead of every capture comparing the same two candidates.
       rotationKey: capture.captureRef,
@@ -526,8 +907,19 @@ export async function runAutoReplayTick(input: {
       authorizationEpochValid: true,
       retentionReplayable: true,
       privacyReplayable: true,
+      /**
+       * Run 100 addendum `00-requirements.benchmark-traffic-exclusion.addendum-01`: benchmark captures are
+       * refused terminally here, so they never reserve budget, never dispatch and never reach evaluation.
+       */
+      sourceIsBenchmark: isBenchmarkReplaySourceRef(capture.captureRef),
+      /**
+       * Run 100 addendum 16 item 3 / 8a: the producer's own class, taken from the capture's durable
+       * root by the projection. Defence in depth: the projection already keeps the class out of the
+       * queue, and this refusal makes the rule hold for any caller that lists a capture directly.
+       */
+      sourceIsSyntheticProbe: isSyntheticProbeSourceClass(capture.sourceClass),
       distinctCandidateCount: candidates.length,
-      budgetAvailable: status.dispatches + status.reservedDispatches < status.dispatchLimit,
+      budgetAvailable: replayBudgetAvailable(status),
       alreadyProcessed: input.ledger.hasTerminalCounterfactual(
         capture.captureRef,
         input.policySet.policySetDigest,
@@ -535,6 +927,11 @@ export async function runAutoReplayTick(input: {
       sourceIsReplayProduced: capture.replayProduced === true,
       policyIdsResolvable: true,
       dependenciesAvailable: input.dependenciesAvailable ?? true,
+      /**
+       * Run 108: this caller plans arms, so it states whether the judge it excludes is known. Omitted means
+       * "no judge to exclude" (the guard above already refused the unresolvable case).
+       */
+      ...(judgeExpected ? { judgeResolved: judgeEndpointId !== null } : {}),
     });
     if (!admission.admitted) {
       const outcome = RETRYABLE_REPLAY_REFUSAL_CODES.has(admission.code) ? "deferred" : "refused";
@@ -578,15 +975,20 @@ export async function runAutoReplayTick(input: {
         toolPolicy,
         policySet: input.policySet,
         reservationId: reservation.reservationId,
+        judgeEndpointId: effectiveJudgeEndpointId,
       });
     } catch (error) {
       input.ledger.release(reservation.reservationId);
-      deferred += 1;
+      const detail =
+        error instanceof Error ? error.message.slice(0, 200) : "replay execution failed";
+      const classification = classifyReplayExecutorFailure(detail);
+      if (classification.terminal) refused += 1;
+      else deferred += 1;
       emit({
         captureRef: capture.captureRef,
-        outcome: "deferred",
-        code: "replay_failed",
-        detail: error instanceof Error ? error.message.slice(0, 200) : "replay execution failed",
+        outcome: classification.terminal ? "refused" : "deferred",
+        code: classification.code,
+        detail,
       });
       continue;
     }
@@ -634,16 +1036,30 @@ export async function runAutoReplayTick(input: {
         continue;
       }
       deferred += 1;
-      emit({
-        captureRef: capture.captureRef,
-        outcome: "deferred",
-        code: "replay_failed",
-        detail:
+      {
+        const detail =
           execution.failureDetail ??
           (execution.terminal
             ? "no candidate branch completed"
-            : "replay did not reach a terminal state"),
-      });
+            : "replay did not reach a terminal state");
+        /**
+         * Run 100 addendum 16 item 8a (live rows on the stage store): the boundary reports its 409s by
+         * *returning* a non-terminal execution with the error text, so this is the path the store's
+         * `replay_failed` rows came from — the catch below only sees thrown errors. Classify the detail
+         * the same way, so the two named classes reach the disposition instead of the generic code.
+         */
+        const classification = classifyReplayExecutorFailure(detail);
+        if (classification.terminal) {
+          refused += 1;
+          deferred -= 1;
+        }
+        emit({
+          captureRef: capture.captureRef,
+          outcome: classification.terminal ? "refused" : "deferred",
+          code: classification.code,
+          detail,
+        });
+      }
       continue;
     }
     // Run 98 R2: a dispatched branch is not a completed counterfactual. Evaluation Core owns
@@ -655,12 +1071,20 @@ export async function runAutoReplayTick(input: {
     if (!execution.terminal) {
       input.ledger.release(reservation.reservationId);
       deferred += 1;
-      emit({
-        captureRef: capture.captureRef,
-        outcome: "deferred",
-        code: "replay_failed",
-        detail: execution.failureDetail ?? "replay evaluation is not complete",
-      });
+      {
+        const detail = execution.failureDetail ?? "replay evaluation is not complete";
+        const classification = classifyReplayExecutorFailure(detail);
+        if (classification.terminal) {
+          refused += 1;
+          deferred -= 1;
+        }
+        emit({
+          captureRef: capture.captureRef,
+          outcome: classification.terminal ? "refused" : "deferred",
+          code: classification.code,
+          detail,
+        });
+      }
       continue;
     }
     // Terminal only after the replay job completed with appended branches; a dispatch

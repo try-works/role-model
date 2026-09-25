@@ -67,8 +67,28 @@ export const readDeferredUntilMs = (outcome: unknown): number | null => {
   return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
 };
 
-const DEFAULT_MAX_PAYLOAD_BYTES = 512 * 1024;
+/**
+ * Run 100 addendum `replay-dispatch-envelope-repair.addendum-03` S2 (operator report 2026-09-23: "replays
+ * are stuck and not reaching eval or learner stage"). The queue's byte budget was 512 KiB while real dsh
+ * captures measure 750-800 KB (`route capture skipped: 751411 bytes exceeds the 524288-byte deferred capture
+ * budget`), so those requests could never become replayable evidence. It is aligned with the admission
+ * decision (20 MiB) and the dispatch-side context guard remains the protection against an oversized prompt
+ * reaching a model that cannot hold it.
+ */
+export const DEFAULT_DEFERRED_CAPTURE_MAX_BYTES = 20 * 1024 * 1024;
+const MIN_DEFERRED_CAPTURE_MAX_BYTES = 1_024;
+const MAX_DEFERRED_CAPTURE_MAX_BYTES = 64 * 1024 * 1024;
+const DEFAULT_MAX_PAYLOAD_BYTES = DEFAULT_DEFERRED_CAPTURE_MAX_BYTES;
 const DEFAULT_MAX_ITEMS = 4096;
+
+export function resolveDeferredCaptureMaxBytes(raw: string | undefined): number {
+  const configured = Number(raw?.trim());
+  return Number.isSafeInteger(configured) &&
+    configured >= MIN_DEFERRED_CAPTURE_MAX_BYTES &&
+    configured <= MAX_DEFERRED_CAPTURE_MAX_BYTES
+    ? configured
+    : DEFAULT_DEFERRED_CAPTURE_MAX_BYTES;
+}
 const MAX_RETRY_BACKOFF_MS = 5 * 60 * 1000;
 // v1.1 guidance 05 §"Track B maintenance job state machines": every job has bounded attempts and a
 // deadline, so a stuck capture reaches a typed `failed`/`expired` disposition instead of retrying

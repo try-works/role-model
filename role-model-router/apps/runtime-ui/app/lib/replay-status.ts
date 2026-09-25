@@ -26,6 +26,22 @@ export interface ReplayAutomationView {
   readonly lastProcessedAtMs: number | null;
   readonly lastDispositions: number;
   readonly budget: ReplayAutomationBudget | null;
+  /**
+   * Run 100 addendum `evaluation-lease-wedge-repair.addendum-02` S1: what the loop's liveness sweeps did on
+   * the last tick. `reconciled` completes a job whose comparison finalized; `stranded` is work nothing can
+   * pick up any more; `reclaimed` is a stranded job the sweep terminalized after the grace.
+   */
+  readonly liveness: ReplayAutomationLiveness;
+}
+
+export interface ReplayAutomationLiveness {
+  readonly expiredJobs: number;
+  readonly resumedEvaluations: number;
+  readonly reconciledEvaluations: number;
+  readonly strandedEvaluations: number;
+  readonly reclaimedEvaluations: number;
+  /** Replays that handed their branches to evaluation and were recovered into the resume sweep (run100l). */
+  readonly recoveredHandoffs: number;
 }
 
 const asRecord = (value: unknown): Record<string, unknown> | null =>
@@ -52,6 +68,14 @@ export function normalizeReplayAutomationStatus(value: unknown): ReplayAutomatio
       lastProcessedAtMs: null,
       lastDispositions: 0,
       budget: null,
+      liveness: {
+        expiredJobs: 0,
+        resumedEvaluations: 0,
+        reconciledEvaluations: 0,
+        strandedEvaluations: 0,
+        reclaimedEvaluations: 0,
+        recoveredHandoffs: 0,
+      },
     };
   }
   const budgetRecord = asRecord(record.budget);
@@ -79,7 +103,28 @@ export function normalizeReplayAutomationStatus(value: unknown): ReplayAutomatio
         : null,
     lastDispositions: asCount(record.lastDispositions),
     budget,
+    liveness: {
+      expiredJobs: asCount(record.lastExpiredJobs),
+      resumedEvaluations: asCount(record.lastResumedEvaluations),
+      reconciledEvaluations: asCount(record.lastReconciledEvaluations),
+      strandedEvaluations: asCount(record.lastStrandedEvaluations),
+      reclaimedEvaluations: asCount(record.lastReclaimedEvaluations),
+      recoveredHandoffs: asCount(record.lastRecoveredHandoffs),
+    },
   };
+}
+
+export function formatReplayLiveness(view: ReplayAutomationView): string | null {
+  if (!view.available) return null;
+  const { liveness } = view;
+  return [
+    `sweeps: ${liveness.expiredJobs} expired`,
+    `${liveness.resumedEvaluations} resumed`,
+    `${liveness.reconciledEvaluations} reconciled`,
+    `${liveness.strandedEvaluations} stranded`,
+    `${liveness.reclaimedEvaluations} reclaimed`,
+    `${liveness.recoveredHandoffs} recovered`,
+  ].join(" · ");
 }
 
 export function controlActionFor(view: ReplayAutomationView): "pause" | "resume" | null {

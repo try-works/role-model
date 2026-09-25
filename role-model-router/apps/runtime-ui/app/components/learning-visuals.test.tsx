@@ -242,6 +242,37 @@ describe("run99 learning live panel", () => {
     expect(html).toContain("3 branch(es)");
   });
 
+  /**
+   * Operator-reported alignment defect (2026-09-23): the right-hand column of the live panel read as
+   * vertically centred against the pipeline table on the left. Measured live before the fix, the
+   * column's first row started at y=520 while the gauge's visible content began at y=618 - the arc's
+   * viewBox carried 22 units of empty space above the apex and the readout was anchored to the bottom
+   * of a 168px box. This is the contract that keeps both columns starting at the same top edge.
+   */
+  test("keeps the live panel's columns top-aligned and the gauge anchored to the top", () => {
+    const html = renderToStaticMarkup(
+      <LearningLivePanelView
+        view={activity}
+        loading={false}
+        error={null}
+        nowMs={NOW}
+        scopeLabel="standalone-runtime-stage"
+      />,
+    );
+    // The two-column grid is explicitly top-aligned rather than stretching its items, with a wider gap
+    // so the right column keeps a margin against the pipeline table.
+    expect(html).toContain("lg:grid-cols-2 lg:items-start lg:gap-10");
+    // The gauge box hugs its arc (viewBox cropped to the arc's bowl) and the number stays centred in it.
+    expect(html).toContain("relative h-[150px] w-full");
+    expect(html).toContain('viewBox="14 85 192 129"');
+    expect(html).toContain("absolute inset-x-0 top-[46px] flex justify-center");
+    // The caption is outside the gauge block, so it cannot run across the arc's arms.
+    expect(html).toContain("mt-1.5 text-center text-xs");
+    expect(html).not.toContain("bottom-[18px]");
+    // The counters list is bounded and centred inside its column instead of spanning it.
+    expect(html).toContain("mx-auto w-full max-w-[340px] space-y-1");
+  });
+
   test("renders loading, error and empty states without fabricating numbers", () => {
     const loading = renderToStaticMarkup(
       <LearningLivePanelView view={activity} loading error={null} nowMs={NOW} scopeLabel="scope" />,
