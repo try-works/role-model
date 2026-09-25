@@ -471,6 +471,54 @@ export function resolveAutoReplayReservationTtlMs(
 }
 
 /**
+ * Run 100 addendum 22: the operator-tunable list of endpoints the tick may judge a comparison with when the
+ * configured judge is itself an arm of that comparison. `null` means "no explicit list", and the tick then uses
+ * the runtime's own configured endpoint pool - the sane default, because those are exactly the endpoints this
+ * runtime may use and one of them is always available unless the pool is degenerate. An empty effective list
+ * reproduces the previous behaviour exactly: the capture defers with the named `judge_candidate_overlap`.
+ */
+export function resolveReplayJudgeFallbackEndpointIds(
+  env: Record<string, string | undefined> = process.env,
+): readonly string[] | null {
+  const raw = env.ROLE_MODEL_REPLAY_JUDGE_FALLBACK_ENDPOINT_IDS;
+  if (typeof raw !== "string" || raw.trim() === "") return null;
+  const parsed = Array.from(
+    new Set(
+      raw
+        .split(",")
+        .map((entry) => entry.trim())
+        .filter((entry) => entry.length > 0),
+    ),
+  );
+  return parsed.length > 0 ? parsed : null;
+}
+
+/**
+ * Run 100 addendum 22: pick the substitute judge for a capture whose configured judge is one of the
+ * comparison's own arms. Deterministic (first usable entry in the caller's stable list order, no rotation and no
+ * randomness) and never an arm of the pair: the colliding judge and the capture's own source endpoint are both
+ * skipped. The chosen endpoint is then excluded from the planned counterfactual arms by the caller, which is
+ * what makes "never an arm of the pair" hold for the candidate side too.
+ */
+export function selectAlternativeJudgeEndpoint(input: {
+  readonly collidingJudgeEndpointId: string;
+  readonly sourceEndpointId: string | null;
+  readonly fallbackEndpointIds: readonly string[];
+}): string | null {
+  const seen = new Set<string>();
+  for (const entry of input.fallbackEndpointIds) {
+    if (typeof entry !== "string") continue;
+    const endpointId = entry.trim();
+    if (endpointId.length === 0 || seen.has(endpointId)) continue;
+    seen.add(endpointId);
+    if (endpointId === input.collidingJudgeEndpointId) continue;
+    if (input.sourceEndpointId !== null && endpointId === input.sourceEndpointId) continue;
+    return endpointId;
+  }
+  return null;
+}
+
+/**
  * Run 98 addendum 04 §7 (`L4`), measured live on v170: one capture whose replay never returned held
  * the whole producer tick open, so no disposition was recorded and the expiry sweep never ran. The
  * bound is deliberately larger than a replay job's own deadline plus finalization grace (6 min +
@@ -526,6 +574,12 @@ type AutoReplayExecutorRequest = {
   readonly toolPolicy: ReplayToolPolicy;
   readonly policySet: ReplayPolicySet;
   readonly reservationId: string;
+  /**
+   * Run 100 addendum 22: the judge this capture will actually be judged by. When the configured judge was an arm
+   * of the pair the tick substitutes a deterministic alternative and names it here, so the dispatch and the job
+   * that follows it can record the judge that really scored the comparison instead of assuming the controller.
+   */
+  readonly judgeEndpointId?: string | null;
 };
 
 async function runBoundedExecutor(
@@ -635,6 +689,13 @@ export async function runAutoReplayTick(input: {
    */
   readonly judgeEndpointId?: string | null;
   /**
+   * Run 100 addendum 22: the endpoints the tick may judge a comparison with when the configured judge
+   * (`judgeEndpointId`) is one of that comparison's own arms. Omitted means "use `configuredEndpointIds`", the
+   * runtime's own pool; an entry list that yields no usable alternative keeps the named `judge_candidate_overlap`
+   * deferral, exactly as before this change.
+   */
+  readonly judgeFallbackEndpointIds?: readonly string[] | null;
+  /**
    * Run 111: opt in to the `judge_unresolved` refusal.
    *
    * The guard was added unconditionally and immediately refused **every** capture on the real-traffic runtime:
@@ -714,14 +775,30 @@ export async function runAutoReplayTick(input: {
       });
       continue;
     }
-    if (judgeEndpointId && capture.sourceEndpointId === judgeEndpointId) {
+    /**
+     * Run 100 addendum 22: when the configured judge is one of this comparison's own arms the capture used to be
+     * refused (`judge_candidate_overlap`) after spending its deferral budget - measured live as ~47% of recent
+     * replay volume. Refusing half the traffic is not what the operator asked for, so the tick now judges the
+     * comparison with a deterministic alternative instead. The named refusal survives as the last resort: it is
+     * emitted only when the fallback list yields no endpoint that is not already an arm of the pair.
+     */
+    const judgeCollidesWithSource =
+      judgeEndpointId !== null && capture.sourceEndpointId === judgeEndpointId;
+    const effectiveJudgeEndpointId = judgeCollidesWithSource
+      ? selectAlternativeJudgeEndpoint({
+          collidingJudgeEndpointId: judgeEndpointId as string,
+          sourceEndpointId: capture.sourceEndpointId,
+          fallbackEndpointIds: input.judgeFallbackEndpointIds ?? input.configuredEndpointIds,
+        })
+      : judgeEndpointId;
+    if (judgeCollidesWithSource && effectiveJudgeEndpointId === null) {
       deferred += 1;
       emit({
         captureRef: capture.captureRef,
         outcome: "deferred",
         code: "judge_candidate_overlap",
         detail:
-          "the capture's own endpoint is the configured judge, so a comparison would have the judge score itself",
+          "the capture's own endpoint is the configured judge and no alternative judge endpoint is available, so a comparison would have the judge score itself",
       });
       continue;
     }
@@ -729,7 +806,7 @@ export async function runAutoReplayTick(input: {
       configuredEndpointIds: input.configuredEndpointIds,
       ...(input.healthyEndpointIds ? { healthyEndpointIds: input.healthyEndpointIds } : {}),
       sourceEndpointId: capture.sourceEndpointId,
-      ...(judgeEndpointId ? { excludedEndpointIds: [judgeEndpointId] } : {}),
+      ...(effectiveJudgeEndpointId ? { excludedEndpointIds: [effectiveJudgeEndpointId] } : {}),
       // Run 98 addendum 33 S3: rotate the counterfactual with the capture, so the comparison graph grows
       // edges instead of every capture comparing the same two candidates.
       rotationKey: capture.captureRef,
@@ -810,6 +887,7 @@ export async function runAutoReplayTick(input: {
         toolPolicy,
         policySet: input.policySet,
         reservationId: reservation.reservationId,
+        judgeEndpointId: effectiveJudgeEndpointId,
       });
     } catch (error) {
       input.ledger.release(reservation.reservationId);
