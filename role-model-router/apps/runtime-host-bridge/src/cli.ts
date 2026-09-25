@@ -88,6 +88,7 @@ import {
 } from "./track-b-auto-replay-runtime.js";
 import {
   buildAutoReplayIdempotencyKey,
+  dedupeJudgeAgainstPair,
   isReplayInFlightFailure,
   isReplayJobLeasedFailure,
   replayDispatchCaptureToken,
@@ -96,6 +97,7 @@ import {
   resolveAutoReplayDeadlinePerCandidateMs,
   resolveAutoReplayReservationTtlMs,
   resolveAutoReplayTickBudgetMs,
+  resolveReplayJudgeFallbackEndpointIds,
   resolveReplayProviderCallBudget,
   retryLeasedReplayDispatch,
 } from "./track-b-auto-replay.js";
@@ -7037,7 +7039,28 @@ export async function main(): Promise<void> {
               // comparison is completed, so switching the controller changes the next comparison's judge
               // without a policy write and without a restart.
               return async (request: Readonly<Record<string, unknown>>) => {
-                const judge = await resolveControllerJudge(created, learningPolicySnapshot);
+                /**
+                 * Run 100 addendum 22 follow-up (requirement 3): the comparison's judge has to be the endpoint that
+                 * actually scores it. Resolved from the controller alone, this is the very endpoint the tick
+                 * substituted away from when it was an arm of this pair - so the job's comparability, the registered
+                 * manifest and the runner's judge receipt would all name a judge that scored nothing. De-conflict
+                 * here with the same deterministic rule the tick uses, against the pair this completer is about to
+                 * score; with no usable alternative the judge is left untouched and the evaluator's own factory
+                 * records judge missingness exactly as before.
+                 */
+                const judge = dedupeJudgeAgainstPair(
+                  await resolveControllerJudge(created, learningPolicySnapshot),
+                  {
+                    sourceEndpointId,
+                    counterfactualEndpointIds: counterfactualPackages.map(
+                      (candidate) => candidate.endpointId,
+                    ),
+                    fallbackEndpointIds: resolveReplayJudgeFallbackEndpointIds(process.env),
+                    configuredEndpointIds: created.effectiveRegistry.endpoints.map(
+                      (endpoint) => endpoint.identity.endpoint_id,
+                    ),
+                  },
+                );
                 const evaluationCompleter = buildSupervisedReplayEvaluationCompleter({
                   // Addendum 58 §19: the live completion resolves externalized answers under this root too.
                   contractStateRoot: options.runtimeStateRoot,
@@ -7859,8 +7882,25 @@ export async function main(): Promise<void> {
               evaluationCriteria: effectiveCriteria as unknown as Readonly<Record<string, unknown>>,
               evaluationCriteriaDigest: digestTrackBSemanticEvaluationCriteria(effectiveCriteria),
               learningPolicySnapshot: readEvaluationLearningPolicySnapshot(),
-              // Run 98 addendum 45 J2: a resumed completion resolves the judge the same way a live one does.
-              judge: await resolveControllerJudge(created, readEvaluationLearningPolicySnapshot()),
+              /**
+               * Run 98 addendum 45 J2: a resumed completion resolves the judge the same way a live one does.
+               * Run 100 addendum 22 follow-up: and it de-conflicts it the same way too, against the pair this
+               * resumed completion is about to score, so a capture the tick substituted a judge for is not
+               * recorded as judged by an arm of its own comparison.
+               */
+              judge: dedupeJudgeAgainstPair(
+                await resolveControllerJudge(created, readEvaluationLearningPolicySnapshot()),
+                {
+                  sourceEndpointId,
+                  counterfactualEndpointIds: counterfactualPackages.map(
+                    (candidate) => candidate.endpointId,
+                  ),
+                  fallbackEndpointIds: resolveReplayJudgeFallbackEndpointIds(process.env),
+                  configuredEndpointIds: created.effectiveRegistry.endpoints.map(
+                    (endpoint) => endpoint.identity.endpoint_id,
+                  ),
+                },
+              ),
               // A resumed completion performs no candidate dispatch, so its judge has no live
               // reservation to charge.
               replayLedger: createReplayLedger({

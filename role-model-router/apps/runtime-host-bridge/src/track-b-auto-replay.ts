@@ -519,6 +519,58 @@ export function selectAlternativeJudgeEndpoint(input: {
 }
 
 /**
+ * Run 100 addendum 22 follow-up (requirement 3): the same de-confliction, applied where a *comparison's* judge is
+ * resolved rather than where the arms are planned.
+ *
+ * `selectAlternativeJudgeEndpoint` protects the tick, but the judge identity that ends up on the job's
+ * comparability, on the evaluator's manifest and on the runner's judge receipt is resolved later, from the
+ * controller alone (`cli.ts` `resolveControllerJudge`). For a pair whose arms contain that controller the later
+ * resolution re-introduces the judge as an arm of its own comparison, so the comparison is scored without a judge
+ * and the provenance names an endpoint that never scored anything.
+ *
+ * This wrapper takes the judge object the caller already resolved plus the pair it is about to judge, and returns
+ * the same object with a substitute endpoint when one exists - deterministic, drawn from the configured fallback
+ * list (or the runtime's own endpoint pool) and never an arm of the pair - and the object unchanged when it does
+ * not (today's fail-closed behaviour: the evaluator records judge missingness rather than scoring with an arm).
+ * Every other field travels untouched, so the recording sites need no new plumbing.
+ */
+export function dedupeJudgeAgainstPair<T extends { readonly endpointId: string }>(
+  judge: T,
+  input: {
+    readonly sourceEndpointId: string | null;
+    readonly counterfactualEndpointIds: readonly string[];
+    readonly fallbackEndpointIds?: readonly string[] | null;
+    readonly configuredEndpointIds?: readonly string[] | null;
+  },
+): T {
+  const judgeEndpointId = typeof judge.endpointId === "string" ? judge.endpointId.trim() : "";
+  if (judgeEndpointId.length === 0) return judge;
+  const arms = new Set<string>();
+  if (typeof input.sourceEndpointId === "string" && input.sourceEndpointId.length > 0) {
+    arms.add(input.sourceEndpointId);
+  }
+  for (const endpointId of input.counterfactualEndpointIds) {
+    if (typeof endpointId === "string" && endpointId.length > 0) arms.add(endpointId);
+  }
+  if (!arms.has(judgeEndpointId)) return judge;
+  /**
+   * The pair's arms are exactly what the substitute must avoid, so they are removed from the pool before the
+   * selector runs; the selector itself also rejects the colliding judge and the source arm, which keeps the rule
+   * identical to the one the tick applies when it plans the arms.
+   */
+  const usableEndpointIds = (input.fallbackEndpointIds ?? input.configuredEndpointIds ?? []).filter(
+    (endpointId) =>
+      typeof endpointId === "string" && endpointId.trim().length > 0 && !arms.has(endpointId.trim()),
+  );
+  const substitute = selectAlternativeJudgeEndpoint({
+    collidingJudgeEndpointId: judgeEndpointId,
+    sourceEndpointId: input.sourceEndpointId,
+    fallbackEndpointIds: usableEndpointIds,
+  });
+  return substitute === null ? judge : { ...judge, endpointId: substitute };
+}
+
+/**
  * Run 98 addendum 04 §7 (`L4`), measured live on v170: one capture whose replay never returned held
  * the whole producer tick open, so no disposition was recorded and the expiry sweep never ran. The
  * bound is deliberately larger than a replay job's own deadline plus finalization grace (6 min +
