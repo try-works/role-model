@@ -1,10 +1,10 @@
 import { expect, test } from "vitest";
 
-import { terminalizeAbandonedEvaluation } from "../src/evaluation-orphan-terminalization.js";
 import {
   evaluationJobExistsFromGetJobAnswer,
   evaluationJobStatusFromGetJobAnswer,
 } from "../src/cli.js";
+import { terminalizeAbandonedEvaluation } from "../src/evaluation-orphan-terminalization.js";
 
 /**
  * Run 100 addendum 16 item 8d — delegated census, 2026-09-25 (`E:\tmp\run100-item8d-report.md`).
@@ -284,7 +284,10 @@ test("run157 item 8d the status reader handles the record, the marker and the de
    * inside it, and reading either is what turns the no-op into a suppressed cancel.
    */
   expect(
-    evaluationJobStatusFromGetJobAnswer({ transferState: "externalized", businessOutput: { status: "failed" } }),
+    evaluationJobStatusFromGetJobAnswer({
+      transferState: "externalized",
+      businessOutput: { status: "failed" },
+    }),
   ).toBe("failed");
   expect(
     evaluationJobStatusFromGetJobAnswer({
@@ -294,7 +297,10 @@ test("run157 item 8d the status reader handles the record, the marker and the de
   ).toBe("cancelled");
   // A read that failed says nothing about the row: unknown, so the caller keeps the previous behaviour.
   expect(
-    evaluationJobStatusFromGetJobAnswer({ schemaVersion: "role-model.degradation-receipt.v1", code: "timeout" }),
+    evaluationJobStatusFromGetJobAnswer({
+      schemaVersion: "role-model.degradation-receipt.v1",
+      code: "timeout",
+    }),
   ).toBeUndefined();
   expect(evaluationJobStatusFromGetJobAnswer({ transferState: "externalized" })).toBeUndefined();
 });
@@ -306,9 +312,11 @@ test("run157 item 8d the status reader handles the record, the marker and the de
  * same shape: a string result, or `{value: string}`). The reader must look through the serialized payload.
  */
 test("run157 item 8d the status reader sees a serialized business output", () => {
-  expect(evaluationJobStatusFromGetJobAnswer(JSON.stringify({ jobId: "evaluation:1", status: "failed" }))).toBe(
-    "failed",
-  );
+  expect(
+    evaluationJobStatusFromGetJobAnswer(
+      JSON.stringify({ jobId: "evaluation:1", status: "failed" }),
+    ),
+  ).toBe("failed");
   expect(
     evaluationJobStatusFromGetJobAnswer({
       transferState: "externalized",
@@ -322,7 +330,9 @@ test("run157 item 8d the status reader sees a serialized business output", () =>
   ).toBe("cancelled");
   // A non-JSON string is not a record, so the answer stays unknown rather than being read as a status.
   expect(evaluationJobStatusFromGetJobAnswer("not json")).toBeUndefined();
-  expect(evaluationJobStatusFromGetJobAnswer(JSON.stringify({ jobId: "evaluation:1" }))).toBeUndefined();
+  expect(
+    evaluationJobStatusFromGetJobAnswer(JSON.stringify({ jobId: "evaluation:1" })),
+  ).toBeUndefined();
 });
 
 /**
@@ -377,16 +387,18 @@ test("run157 item 8d the status reader unwraps nested markers", () => {
 test("run157 item 8d only a real job answer proves existence", () => {
   expect(evaluationJobExistsFromGetJobAnswer(null)).toBe(false);
   expect(evaluationJobExistsFromGetJobAnswer(undefined)).toBe(false);
-  expect(evaluationJobExistsFromGetJobAnswer({ jobId: "evaluation-replay-1", status: "scored" })).toBe(
-    true,
-  );
+  expect(
+    evaluationJobExistsFromGetJobAnswer({ jobId: "evaluation-replay-1", status: "scored" }),
+  ).toBe(true);
   /**
    * Measured on run163: a run where get-job "found" rows that cancel then reported missing. A job *record*
    * always carries a status, while a failure or degradation envelope can echo the requested `jobId` back
    * without any row behind it — so a bare `jobId` is not proof and must stay unknown.
    */
   expect(evaluationJobExistsFromGetJobAnswer({ jobId: "evaluation-replay-1" })).toBeNull();
-  expect(evaluationJobExistsFromGetJobAnswer({ jobId: "evaluation-replay-1", status: "" })).toBeNull();
+  expect(
+    evaluationJobExistsFromGetJobAnswer({ jobId: "evaluation-replay-1", status: "" }),
+  ).toBeNull();
   // A large job arrives as a transfer marker; it still proves the row is there.
   expect(
     evaluationJobExistsFromGetJobAnswer({

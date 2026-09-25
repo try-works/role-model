@@ -46,7 +46,11 @@ test("run155 a capture whose own endpoint is the judge is judged by a determinis
     const rows: Array<Record<string, unknown>> = [];
     const result = await runAutoReplayTick({
       captures: [
-        { captureRef: "req-dedup-1", sourceEndpointId: "endpoint-a", hasRecordedToolResults: false },
+        {
+          captureRef: "req-dedup-1",
+          sourceEndpointId: "endpoint-a",
+          hasRecordedToolResults: false,
+        },
       ],
       configuredEndpointIds: configured,
       ledger,
@@ -111,7 +115,11 @@ test("run155 a fallback list with no usable alternative keeps the named refusal"
     const rows: Array<Record<string, unknown>> = [];
     const result = await runAutoReplayTick({
       captures: [
-        { captureRef: "req-dedup-2", sourceEndpointId: "endpoint-a", hasRecordedToolResults: false },
+        {
+          captureRef: "req-dedup-2",
+          sourceEndpointId: "endpoint-a",
+          hasRecordedToolResults: false,
+        },
       ],
       configuredEndpointIds: configured,
       ledger,
@@ -134,8 +142,12 @@ test("run155 a fallback list with no usable alternative keeps the named refusal"
 
 test("run155 the fallback list is configured by name and an empty list means today's behaviour", () => {
   expect(resolveReplayJudgeFallbackEndpointIds({})).toBeNull();
-  expect(resolveReplayJudgeFallbackEndpointIds({ ROLE_MODEL_REPLAY_JUDGE_FALLBACK_ENDPOINT_IDS: "  " })).toBeNull();
-  expect(resolveReplayJudgeFallbackEndpointIds({ ROLE_MODEL_REPLAY_JUDGE_FALLBACK_ENDPOINT_IDS: "," })).toBeNull();
+  expect(
+    resolveReplayJudgeFallbackEndpointIds({ ROLE_MODEL_REPLAY_JUDGE_FALLBACK_ENDPOINT_IDS: "  " }),
+  ).toBeNull();
+  expect(
+    resolveReplayJudgeFallbackEndpointIds({ ROLE_MODEL_REPLAY_JUDGE_FALLBACK_ENDPOINT_IDS: "," }),
+  ).toBeNull();
   expect(
     resolveReplayJudgeFallbackEndpointIds({
       ROLE_MODEL_REPLAY_JUDGE_FALLBACK_ENDPOINT_IDS: "endpoint-b, endpoint-c ,endpoint-b,",
@@ -149,7 +161,11 @@ test("run155 a capture whose own endpoint is not the judge keeps the arm exclusi
     const requests: Array<Record<string, unknown>> = [];
     await runAutoReplayTick({
       captures: [
-        { captureRef: "req-dedup-3", sourceEndpointId: "endpoint-d", hasRecordedToolResults: false },
+        {
+          captureRef: "req-dedup-3",
+          sourceEndpointId: "endpoint-d",
+          hasRecordedToolResults: false,
+        },
       ],
       configuredEndpointIds: configured,
       ledger,

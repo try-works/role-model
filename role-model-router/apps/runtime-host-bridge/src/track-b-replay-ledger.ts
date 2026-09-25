@@ -280,8 +280,7 @@ export function createReplayLedger(options: {
       }
       if (
         limits.enforced &&
-        window.counterfactuals.length + window.reservations.length >=
-        limits.counterfactualsPerDay
+        window.counterfactuals.length + window.reservations.length >= limits.counterfactualsPerDay
       ) {
         return {
           accepted: false,
@@ -292,7 +291,7 @@ export function createReplayLedger(options: {
       if (
         limits.enforced &&
         window.dispatches.length + reservedDispatches(window) + input.candidateDispatches >
-        limits.dispatchesPerDay
+          limits.dispatchesPerDay
       ) {
         return {
           accepted: false,

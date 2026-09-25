@@ -59,7 +59,9 @@ test("run100v re-recording an abandoned entry renews its attempt budget", () => 
 
     // `record()` intentionally preserves the counter (that is why the renewal exists), so the recovery pass
     // renews the entry explicitly.
-    expect(store.record({ ...abandoned, attempts: 0, resolvedAtMs: null, outcome: null })).toMatchObject({
+    expect(
+      store.record({ ...abandoned, attempts: 0, resolvedAtMs: null, outcome: null }),
+    ).toMatchObject({
       attempts: SUPERVISED_REPLAY_EVALUATION_MAX_ATTEMPTS,
     });
     const renewedOnce = store.renew("replay-job-renew", { now: 3_000 });
@@ -71,7 +73,8 @@ test("run100v re-recording an abandoned entry renews its attempt budget", () => 
     expect(selectResumableSupervisedReplayEvaluations({ entries: store.list() })).toHaveLength(1);
 
     // The renewal is bounded: after MAX_RESUME_RENEWALS the give-up stands.
-    for (let attempt = 0; attempt < MAX_RESUME_RENEWALS; attempt += 1) store.renew("replay-job-renew", { now: 4_000 });
+    for (let attempt = 0; attempt < MAX_RESUME_RENEWALS; attempt += 1)
+      store.renew("replay-job-renew", { now: 4_000 });
     expect(store.get("replay-job-renew")?.renewals).toBe(MAX_RESUME_RENEWALS);
     expect(store.renew("replay-job-renew", { now: 5_000 })).toBeNull();
   } finally {

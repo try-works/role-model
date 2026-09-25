@@ -30,9 +30,7 @@ const liveShapedPack = {
     taskTypeId: "coder.review",
     taxonomyVersion: "1.0.0-alpha.1",
   },
-  experienceIds: [
-    "shadow-0ca38219cfc91190a9c8c94f8aca4697b0a5f4799784ba57e676dbc2cbd3931b",
-  ],
+  experienceIds: ["shadow-0ca38219cfc91190a9c8c94f8aca4697b0a5f4799784ba57e676dbc2cbd3931b"],
   maxTokens: 512,
   placement: "context_block",
   priority: "advisory_only",
@@ -103,9 +101,9 @@ test("run107 P13 the built validation receipt passes the repo's own validator", 
     channel: "stage",
     scopeId: "standalone-runtime-stage",
   });
-  expect(
-    validateV11ContractDefinition("routeLearning", "validationReceipt", built),
-  ).toMatchObject({ valid: true });
+  expect(validateV11ContractDefinition("routeLearning", "validationReceipt", built)).toMatchObject({
+    valid: true,
+  });
   expect(built.contract).toBe("RouteLearningValidationReceiptV1");
   expect(built.decision).toBe("validate");
   expect("familyEvidence" in built).toBe(false);
@@ -135,7 +133,10 @@ test("run107 P13 both artifacts emit through emitTrackBContract, which asserts b
     expect(packEmission.contract).toBe("ExperiencePackCandidateV1");
     expect(receiptEmission.contract).toBe("RouteLearningValidationReceiptV1");
     // The written artifact is the validated contract, byte for byte.
-    const written = JSON.parse(readFileSync(packEmission.filePath, "utf8")) as Record<string, unknown>;
+    const written = JSON.parse(readFileSync(packEmission.filePath, "utf8")) as Record<
+      string,
+      unknown
+    >;
     expect(written.packId).toBe(liveShapedPack.packId);
     expect(written.scope).toEqual({
       endpointId: "moonshot.personal.kimi-code.global.kimi-k3",

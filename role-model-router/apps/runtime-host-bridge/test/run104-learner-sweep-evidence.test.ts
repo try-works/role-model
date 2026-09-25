@@ -138,7 +138,9 @@ test("run104 the durable learner sweep mints the receipts the knowledge worker v
 
   // The worker recomputes both signatures from the secret it is handed in the envelope, and compares
   // the readback's comparisonDigest with `digest(finalizedComparison)`; both must hold here.
-  expect(readback.payload.schemaVersion).toBe("role-model.evaluation-comparison-readback-receipt.v1");
+  expect(readback.payload.schemaVersion).toBe(
+    "role-model.evaluation-comparison-readback-receipt.v1",
+  );
   expect(readback.payload.kind).toBe("evaluation_core_comparison_readback");
   expect(readback.payload.channel).toBe(CHANNEL);
   expect(readback.payload.routePackage).toBe(ROUTE_PACKAGE);
@@ -220,7 +222,10 @@ test("run104 the assembled value keeps the promotion protocol and floors the pas
   // The non-inferiority margin is the operator's quality guardrail, exactly as the pass declares it.
   expect((value.guardrails as Record<string, unknown>).qualityMinDelta).toBe(-0.02);
   expect(protocol.nonInferiorityMargin).toBe(-0.02);
-  expect(value.evidenceFloor).toMatchObject({ minDecisiveComparisons: 3, minHoldoutComparisons: 1 });
+  expect(value.evidenceFloor).toMatchObject({
+    minDecisiveComparisons: 3,
+    minHoldoutComparisons: 1,
+  });
   expect(value.estimator).toMatchObject({
     estimatorVersion: "paired-cluster-bootstrap@1",
     bootstrapSeed: 0,

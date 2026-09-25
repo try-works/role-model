@@ -1,7 +1,7 @@
-import { expect, test } from "vitest";
 import { existsSync, mkdtempSync, readFileSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { expect, test } from "vitest";
 
 import {
   DEFAULT_LEARNING_EVIDENCE_FLOOR,
@@ -903,7 +903,9 @@ test("run113 the pass emits the documented pack and validation-receipt artifacts
   expect(receipt).toMatchObject({ decision: "validate", packId: "pack:1", promoted: true });
   const directory = path.join(stateRoot, "standalone-runtime-stage", "track-b", "contracts");
   const files = readdirSync(directory);
-  expect(files.filter((name) => name.startsWith("RouteLearningValidationReceiptV1-"))).toHaveLength(1);
+  expect(files.filter((name) => name.startsWith("RouteLearningValidationReceiptV1-"))).toHaveLength(
+    1,
+  );
   expect(files.filter((name) => name.startsWith("ExperiencePackCandidateV1-"))).toHaveLength(1);
   /**
    * Run 100 addendum 16: the promotion is the transition, so the activation receipt is emitted here - and only
@@ -913,7 +915,9 @@ test("run113 the pass emits the documented pack and validation-receipt artifacts
    * authorised the promotion, and it must validate against the closed contract (a non-empty scope plus a
    * `validationReceiptId` are what the schema - not the TypeScript interface - requires).
    */
-  const activationFiles = files.filter((name) => name.startsWith("RoutePackageActivationReceiptV1-"));
+  const activationFiles = files.filter((name) =>
+    name.startsWith("RoutePackageActivationReceiptV1-"),
+  );
   expect(activationFiles).toHaveLength(1);
   const activation = JSON.parse(readFileSync(path.join(directory, activationFiles[0]), "utf8"));
   expect(activation).toMatchObject({

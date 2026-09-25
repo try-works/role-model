@@ -20,13 +20,19 @@ describe("run118 E1: the pass label names the pass that produced the verdict", (
 
   test("a live request that carries a deny list is a reroute of the live pass", () => {
     expect(
-      classifyBridgeRoutePass({ requestId: "req-daca923f-ccd3-44b8-9265-ce591199f8ae", denyCount: 1 }),
+      classifyBridgeRoutePass({
+        requestId: "req-daca923f-ccd3-44b8-9265-ce591199f8ae",
+        denyCount: 1,
+      }),
     ).toBe("live:reroute");
   });
 
   test("a live request without a deny list is the live pass", () => {
     expect(
-      classifyBridgeRoutePass({ requestId: "req-daca923f-ccd3-44b8-9265-ce591199f8ae", denyCount: 0 }),
+      classifyBridgeRoutePass({
+        requestId: "req-daca923f-ccd3-44b8-9265-ce591199f8ae",
+        denyCount: 0,
+      }),
     ).toBe("live");
   });
 

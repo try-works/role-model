@@ -1,9 +1,6 @@
 import { expect, test } from "vitest";
 
-import {
-  REPLAY_REFUSAL_CODES,
-  decideReplayAdmission,
-} from "../src/track-b-replay-policy.js";
+import { REPLAY_REFUSAL_CODES, decideReplayAdmission } from "../src/track-b-replay-policy.js";
 
 /**
  * Run 108: an unresolvable judge must stop the arms from being planned, not be ignored.

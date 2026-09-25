@@ -15,7 +15,8 @@ import { decodeShadowPipelineReadback } from "../src/track-b-runtime.js";
  */
 
 const comparison = {
-  groupId: "comparison:supervised-replay:ff5c3f191a09ab50c59286a3991a3b11f605338c522fa2990f2b7bd6e1b69b1c",
+  groupId:
+    "comparison:supervised-replay:ff5c3f191a09ab50c59286a3991a3b11f605338c522fa2990f2b7bd6e1b69b1c",
   status: "finalized",
   outcome: "candidate",
   members: [{ trialId: "trial:candidate", score: 0.7 }],
@@ -62,7 +63,10 @@ test("run107 a degradation receipt stays the payload, even though it carries sch
 });
 
 test("run107 a business record with its own schemaVersion is not mistaken for an envelope", () => {
-  const record = { schemaVersion: "role-model.route-advisory-observation.v1", decisionId: "decision:1" };
+  const record = {
+    schemaVersion: "role-model.route-advisory-observation.v1",
+    decisionId: "decision:1",
+  };
   expect(decode(record)).toMatchObject({ decisionId: "decision:1" });
 });
 

@@ -141,9 +141,11 @@ function pagedRuntime() {
     },
     async invoke(_extensionId: string, envelope: Record<string, unknown>) {
       const capability = String(envelope.capability);
-      const value = (envelope.capability === "knowledge:record-learning"
-        ? envelope.payload
-        : (envelope.value ?? {})) as Record<string, unknown>;
+      const value = (
+        envelope.capability === "knowledge:record-learning"
+          ? envelope.payload
+          : (envelope.value ?? {})
+      ) as Record<string, unknown>;
       if (capability === "evaluation:list-groups") {
         const cursor = typeof value.cursor === "string" ? value.cursor : null;
         pages.push({ cursor, value });
@@ -169,7 +171,7 @@ test("run107 P1 the evidence the pass presents counts comparisons beyond the fir
   const runtime = pagedRuntime();
   await runTrackBLearningPass(runtime, passInput());
 
-  expect(runtime.pages.map(page => page.cursor)).toEqual([null, "comparison:other:0255"]);
+  expect(runtime.pages.map((page) => page.cursor)).toEqual([null, "comparison:other:0255"]);
   expect(runtime.pages[0].value).toMatchObject({ page: true, limit: LEARNING_GROUP_PAGE_LIMIT });
   expect(runtime.summary).toMatchObject({
     decisiveComparisons: 3,
@@ -230,7 +232,13 @@ test("run107 P11 an activation that the store refused is never counted as an act
   // A real activation receipt names the pack and reports it active.
   expect(
     classifyPackActivationAnswer(
-      { receipt: { contract: "RoutePackageActivationReceiptV1", packageId: packId, state: "active" } },
+      {
+        receipt: {
+          contract: "RoutePackageActivationReceiptV1",
+          packageId: packId,
+          state: "active",
+        },
+      },
       packId,
     ),
   ).toEqual({ activated: true, reason: null });

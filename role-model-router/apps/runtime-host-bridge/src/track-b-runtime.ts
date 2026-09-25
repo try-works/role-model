@@ -6594,7 +6594,7 @@ export async function readTrackBAdvisoryMeasurement(input: {
    * fixed page of it reported a truncated graph. The readback now walks the capability's cursor.
    */
   const groups = (await collectPagedComparisonGroups({
-    readPage: async cursor =>
+    readPage: async (cursor) =>
       invoke("evaluation-core", "evaluation:list-groups", {
         page: true,
         limit: LEARNING_GROUP_PAGE_LIMIT,

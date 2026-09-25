@@ -569,7 +569,9 @@ export function dedupeJudgeAgainstPair<T extends { readonly endpointId: string }
    */
   const usableEndpointIds = (input.fallbackEndpointIds ?? input.configuredEndpointIds ?? []).filter(
     (endpointId) =>
-      typeof endpointId === "string" && endpointId.trim().length > 0 && !arms.has(endpointId.trim()),
+      typeof endpointId === "string" &&
+      endpointId.trim().length > 0 &&
+      !arms.has(endpointId.trim()),
   );
   const substitute = selectAlternativeJudgeEndpoint({
     collidingJudgeEndpointId: judgeEndpointId,
@@ -626,7 +628,10 @@ export function resolveAutoReplayExecutorTimeoutMs(input: {
       ? { maxMs: Number(input.maxMs) }
       : {}),
   });
-  return Math.max(DEFAULT_EXECUTOR_TIMEOUT_MS, jobDeadlineMs + DEFAULT_EXECUTOR_FINALIZATION_GRACE_MS);
+  return Math.max(
+    DEFAULT_EXECUTOR_TIMEOUT_MS,
+    jobDeadlineMs + DEFAULT_EXECUTOR_FINALIZATION_GRACE_MS,
+  );
 }
 
 type AutoReplayExecutorRequest = {

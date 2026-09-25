@@ -45,7 +45,9 @@ test("run154 item 8a a reused capture idempotency key is named terminal", () => 
 });
 
 test("run154 item 8a every other executor failure keeps the generic retryable code", () => {
-  expect(classifyReplayExecutorFailure("private Track B operation timed out after 10000ms")).toEqual({
+  expect(
+    classifyReplayExecutorFailure("private Track B operation timed out after 10000ms"),
+  ).toEqual({
     code: "replay_failed",
     terminal: false,
   });

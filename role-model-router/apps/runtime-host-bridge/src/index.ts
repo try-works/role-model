@@ -16016,7 +16016,9 @@ export function resolveLearningProfileRouteResult(input: {
   const direct = usable(input.profileReadback);
   if (direct) return direct;
   const state =
-    input.stateReadback && typeof input.stateReadback === "object" && !Array.isArray(input.stateReadback)
+    input.stateReadback &&
+    typeof input.stateReadback === "object" &&
+    !Array.isArray(input.stateReadback)
       ? (input.stateReadback as Record<string, unknown>)
       : null;
   const projected = usable(state?.profile);

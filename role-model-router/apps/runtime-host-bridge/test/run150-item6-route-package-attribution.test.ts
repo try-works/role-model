@@ -1,12 +1,10 @@
-import { expect, test } from "vitest";
-import { mkdtempSync, readFileSync, readdirSync, existsSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { expect, test } from "vitest";
 
-import {
-  runTrackBLearningPass,
-} from "../src/track-b-learning-pass.js";
 import { emitRoutePackageAttributionForPromotion } from "../src/track-b-contract-emission.js";
+import { runTrackBLearningPass } from "../src/track-b-learning-pass.js";
 import { resolveRoutePackageDescriptorFromRollouts } from "../src/track-b-runtime.js";
 
 /**
@@ -65,8 +63,20 @@ function group() {
       },
       holdout: { caseIds: ["case:1"] },
       members: [
-        { trialId: "trial:source", scoreId: "trial-score:source", score: 0.4, confidence: 1, disposition: "negative" },
-        { trialId: "trial:candidate", scoreId: "trial-score:candidate", score: 0.7, confidence: 0.9, disposition: "positive" },
+        {
+          trialId: "trial:source",
+          scoreId: "trial-score:source",
+          score: 0.4,
+          confidence: 1,
+          disposition: "negative",
+        },
+        {
+          trialId: "trial:candidate",
+          scoreId: "trial-score:candidate",
+          score: 0.7,
+          confidence: 0.9,
+          disposition: "positive",
+        },
       ],
     },
   };
@@ -154,15 +164,16 @@ function passInput(overrides: Record<string, unknown> = {}) {
   } as Parameters<typeof runTrackBLearningPass>[1];
 }
 
-function fakeRuntime(options: { validation?: Record<string, unknown>; promotion?: Record<string, unknown> }) {
+function fakeRuntime(options: {
+  validation?: Record<string, unknown>;
+  promotion?: Record<string, unknown>;
+}) {
   return {
     async invoke(extensionId: string, envelope: Record<string, unknown>) {
       const capability = String(envelope.capability);
       if (capability === "evaluation:list-groups") return decisiveGroups;
       if (capability === "knowledge:validate-candidate") {
-        return (
-          options.validation ?? { receipt: { ...validationReceipt }, promotionEligible: true }
-        );
+        return options.validation ?? { receipt: { ...validationReceipt }, promotionEligible: true };
       }
       if (capability === "knowledge:promote-candidate") {
         return (
@@ -299,10 +310,7 @@ test("run150 item 6 the caller resolves the descriptor from the compared rollout
 test("run150 item 6 a caller that names no contract state root still writes nothing", async () => {
   const stateRoot = mkdtempSync(path.join(tmpdir(), "run150-attribution-"));
   const runtime = fakeRuntime({});
-  await runTrackBLearningPass(
-    runtime,
-    passInput({ routePackageDescriptor: { ...descriptor } }),
-  );
+  await runTrackBLearningPass(runtime, passInput({ routePackageDescriptor: { ...descriptor } }));
   expect(existsSync(contractsDirectory(stateRoot))).toBe(false);
 });
 

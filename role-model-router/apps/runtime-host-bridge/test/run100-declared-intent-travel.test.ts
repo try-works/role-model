@@ -575,17 +575,13 @@ describe("run 100 R5 declared-intent travel", () => {
     const result = (await scenario.invoke()) as Record<string, unknown>;
     expect(result).toMatchObject({ outcome: "candidate" });
 
-    const job = scenario.capturedJobs[0] as
-      | { comparability?: Record<string, unknown> }
-      | undefined;
+    const job = scenario.capturedJobs[0] as { comparability?: Record<string, unknown> } | undefined;
     expect(job?.comparability?.taskTypeId).toBe("coder.edit");
     expect(job?.comparability?.taxonomyVersion).toBe("taxonomy-v1-alpha.1");
     expect(job?.comparability?.roleId).toBe("coder");
 
     const finalizer = scenario.capturedFinalizers[0];
-    const finalizerComparability = finalizer?.comparability as
-      | Record<string, unknown>
-      | undefined;
+    const finalizerComparability = finalizer?.comparability as Record<string, unknown> | undefined;
     expect(finalizerComparability?.taskTypeId).toBe("coder.edit");
     expect(finalizerComparability?.taxonomyVersion).toBe("taxonomy-v1-alpha.1");
     expect(finalizerComparability?.roleId).toBe("coder");

@@ -5,8 +5,8 @@ import path from "node:path";
 import { expect, test } from "vitest";
 
 import {
-  resolveDeferredCaptureMaxBytes,
   createTrackBRouteCaptureQueue,
+  resolveDeferredCaptureMaxBytes,
 } from "../src/track-b-capture-queue.js";
 import { resolveRouteCaptureTimeoutMs } from "../src/track-b-operations.js";
 

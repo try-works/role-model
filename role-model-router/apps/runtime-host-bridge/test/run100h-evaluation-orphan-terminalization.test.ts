@@ -45,7 +45,8 @@ test("run100h a scope binding mismatch retries with the next candidate scope", a
     reason: "resume attempt cap exhausted",
     invoke: async (capability, value, scope) => {
       seen.push(scope);
-      if (scope === "capture-scope") throw new Error("evaluation persisted job scope binding mismatch");
+      if (scope === "capture-scope")
+        throw new Error("evaluation persisted job scope binding mismatch");
       return { ok: true };
     },
   });

@@ -26,7 +26,9 @@ import { readPersistedControllerEndpointId } from "../src/cli.js";
  * can always name the judge the operator configured.
  */
 
-const createMemoryDatabase = (rows: ReadonlyArray<{ scope: string; endpointId: string; updatedAtMs: number }>) => {
+const createMemoryDatabase = (
+  rows: ReadonlyArray<{ scope: string; endpointId: string; updatedAtMs: number }>,
+) => {
   const stateRoot = mkdtempSync(path.join(tmpdir(), "run153-controller-"));
   const scopeId = "standalone-runtime-stage";
   const directory = path.join(stateRoot, scopeId, "memory");

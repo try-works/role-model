@@ -101,7 +101,10 @@ function unwrap(value: unknown): unknown {
       current = businessOutput.value;
       continue;
     }
-    if (record.value !== undefined && (record.capability !== undefined || record.extensionId !== undefined)) {
+    if (
+      record.value !== undefined &&
+      (record.capability !== undefined || record.extensionId !== undefined)
+    ) {
       current = record.value;
       continue;
     }
@@ -132,9 +135,10 @@ export function normalizedComparisonGroup(
 }
 
 /** A group is learnable only when it carries at least one positive and one negative member (the consumer's own rule). */
-export function learnableComparisonMembers(
-  group: Readonly<Record<string, unknown>>,
-): { readonly positive: readonly Record<string, unknown>[]; readonly negative: readonly Record<string, unknown>[] } | null {
+export function learnableComparisonMembers(group: Readonly<Record<string, unknown>>): {
+  readonly positive: readonly Record<string, unknown>[];
+  readonly negative: readonly Record<string, unknown>[];
+} | null {
   const normalized = normalizedComparisonGroup(group);
   const members = Array.isArray(normalized.members)
     ? (normalized.members as unknown[])
@@ -383,17 +387,27 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
       continue;
     }
     const readDurableEvidence = async (): Promise<
-      | { readonly kind: "evidence"; readonly job: Record<string, unknown>; readonly report: Record<string, unknown>; readonly profile: unknown }
+      | {
+          readonly kind: "evidence";
+          readonly job: Record<string, unknown>;
+          readonly report: Record<string, unknown>;
+          readonly profile: unknown;
+        }
       | { readonly kind: "unavailable"; readonly reason: string; readonly transient?: boolean }
       | { readonly kind: "refused"; readonly reason: string }
     > => {
       let job: Record<string, unknown> | null = null;
       let report: Record<string, unknown> | null = null;
       try {
-        job = asRecord(unwrap(await input.invoke("replay-core", "replay:job", { jobId: replayId })));
+        job = asRecord(
+          unwrap(await input.invoke("replay-core", "replay:job", { jobId: replayId })),
+        );
         const sourceDecisionId = text(job?.sourceDecisionId);
         if (!job || !sourceDecisionId) {
-          return { kind: "unavailable", reason: `replay ${replayId.slice(0, 12)} carries no provenance yet` };
+          return {
+            kind: "unavailable",
+            reason: `replay ${replayId.slice(0, 12)} carries no provenance yet`,
+          };
         }
         const persisted = await readPersistedSignalReportForGroup({
           invoke: input.invoke,
@@ -450,7 +464,10 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
           report = analysis.report;
         }
         if (!report) {
-          return { kind: "unavailable", reason: `no persisted signal report for ${sourceDecisionId}` };
+          return {
+            kind: "unavailable",
+            reason: `no persisted signal report for ${sourceDecisionId}`,
+          };
         }
       } catch (error) {
         // A replay job or signal report that is not there yet is missing evidence, not a refusal: the group stays in
@@ -500,17 +517,19 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
       const sharedPrefixRef =
         text(asRecord(report?.learningEvidence)?.replayRef) ?? jobSharedPrefixRef;
       const reportTraceRef = text(asRecord(report?.learningEvidence)?.traceRef);
-      if (!sourceDecisionId || !sharedPrefixRef || (reportTraceRef !== undefined && reportTraceRef !== sourceGraphRef)) {
+      if (
+        !sourceDecisionId ||
+        !sharedPrefixRef ||
+        (reportTraceRef !== undefined && reportTraceRef !== sourceGraphRef)
+      ) {
         skipped += 1;
         input.attemptedGroupIds.add(groupId);
-        input.log?.(`learner derivation skipped ${groupId}: replay ${replayId.slice(0, 12)} has no graph provenance`);
+        input.log?.(
+          `learner derivation skipped ${groupId}: replay ${replayId.slice(0, 12)} has no graph provenance`,
+        );
         continue;
       }
-      if (
-        !sourceGraphRef ||
-        reportGroupId !== groupId ||
-        reportLearningGroupId !== groupId
-      ) {
+      if (!sourceGraphRef || reportGroupId !== groupId || reportLearningGroupId !== groupId) {
         skipped += 1;
         input.attemptedGroupIds.add(groupId);
         input.log?.(
@@ -536,7 +555,11 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
         : [];
       const propensityFor = (
         endpointId: string | null,
-      ): { readonly propensity: number; readonly model: string | null; readonly effort: string | null } | null => {
+      ): {
+        readonly propensity: number;
+        readonly model: string | null;
+        readonly effort: string | null;
+      } | null => {
         /**
          * The incumbent arm is the job's baseline and is never part of `candidatePackages` (measured: exactly one of
          * each group's two members is absent, and it is the source). It is not sampled - the replay dispatches it once

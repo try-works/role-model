@@ -125,7 +125,11 @@ const profile = {
 
 describe("run120 S13: the derivation pass presents only durable, complete evidence", () => {
   test("reads the replay job and the persisted report, then consumes the assembled value", async () => {
-    const calls: Array<{ extensionId: string; capability: string; value: Record<string, unknown> }> = [];
+    const calls: Array<{
+      extensionId: string;
+      capability: string;
+      value: Record<string, unknown>;
+    }> = [];
     const summary = await deriveLearnerCandidatesFromDurableEvidence({
       groups: [comparison],
       attemptedGroupIds: new Set<string>(),
@@ -155,7 +159,19 @@ describe("run120 S13: the derivation pass presents only durable, complete eviden
       "profile:estimate-finalized-evaluation",
       "knowledge:eval-consumer",
     ]);
-    const consumed = calls[3].value as Record<string, any>;
+    /**
+     * The consumer value is a dynamic JSON document; the fields asserted here are stated as a structural view so the
+     * assertions stay typed (the linter refuses `any`).
+     */
+    const consumed = calls[3].value as unknown as {
+      scope: { routePackage: string };
+      learningCapable: boolean;
+      evaluation: { finalizedComparison: { comparisonId: string } };
+      signals: {
+        learningEvidence: { traceRef: string; replayRef: string };
+      };
+      replay: { sourceGraphRef: string; sharedPrefixRef: string };
+    };
     expect(consumed.scope.routePackage).toBe(WINNER);
     expect(consumed.learningCapable).toBe(true);
     expect(consumed.evaluation.finalizedComparison.comparisonId).toBe(GROUP_ID);
@@ -304,7 +320,9 @@ describe("run120 S13: the derivation pass presents only durable, complete eviden
 
     await run();
     const second = await run();
-    expect(attempts.filter((capability) => capability === "knowledge:eval-consumer")).toHaveLength(1);
+    expect(attempts.filter((capability) => capability === "knowledge:eval-consumer")).toHaveLength(
+      1,
+    );
     expect(second.examined).toBe(0);
   });
 

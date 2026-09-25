@@ -60,10 +60,10 @@ import {
   MAX_HANDOFF_RECOVERY_CHECKS_PER_SWEEP,
   MAX_HANDOFF_RECOVERY_LIST_PAGE,
   type RecoveryPageCursor,
-  branchCaptureRequestIdsFromJob,
   branchCaptureRequestIdCandidatesFromJob,
-  carriedEvaluationJobId,
+  branchCaptureRequestIdsFromJob,
   captureRefFromReplayJob,
+  carriedEvaluationJobId,
   coerceDurableReplayJobRecord,
   describeUnresolvedArms,
   nextHandoffRecoveryCursor,
@@ -451,16 +451,11 @@ function resolveChannelScopedReplayLedgerLimits(input: {
   };
 }
 import {
-  DEFAULT_EVIDENCE_HALF_LIFE_DAYS,
-  LEARNING_GROUP_PAGE_LIMIT,
-  activationStageAllowsPackActivation,
-  assembleDurableLearnerValidationValue,
-  serveLearnerSweepRetrieval,
-  buildTrackBLearningEvidenceSummary,
-  classifyPackActivationAnswer,
-  collectPagedComparisonGroups,
-  selectDurableComparisonGroupId,
-} from "./track-b-learning-pass.js";
+  buildExperiencePackCandidate,
+  buildRouteLearningValidationReceipt,
+  emitRoutePackageAttributionForPromotion,
+  emitTrackBContract,
+} from "./track-b-contract-emission.js";
 import {
   type LearnerDerivationEvidenceRead,
   type LearnerDerivationInvoke,
@@ -473,11 +468,16 @@ import {
   readPersistedSignalReportForGroup,
 } from "./track-b-learner-derivation.js";
 import {
-  buildExperiencePackCandidate,
-  buildRouteLearningValidationReceipt,
-  emitTrackBContract,
-  emitRoutePackageAttributionForPromotion,
-} from "./track-b-contract-emission.js";
+  DEFAULT_EVIDENCE_HALF_LIFE_DAYS,
+  LEARNING_GROUP_PAGE_LIMIT,
+  activationStageAllowsPackActivation,
+  assembleDurableLearnerValidationValue,
+  buildTrackBLearningEvidenceSummary,
+  classifyPackActivationAnswer,
+  collectPagedComparisonGroups,
+  selectDurableComparisonGroupId,
+  serveLearnerSweepRetrieval,
+} from "./track-b-learning-pass.js";
 import {
   TRACK_B_CANONICAL_EXTENSION_IDS,
   type TrackBExtensionClosure,
@@ -1049,13 +1049,18 @@ export async function deriveLearnerTrajectoryEvidenceForReplay(input: {
       return {
         kind: "unavailable",
         reason: `the replay job names no source capture (${
-          typeof input.job.sourceDecisionId === "string" ? input.job.sourceDecisionId : "no decision"
+          typeof input.job.sourceDecisionId === "string"
+            ? input.job.sourceDecisionId
+            : "no decision"
         })`,
       };
     }
     const sourceCapture = await input.readCapture(captureRef);
     if (!sourceCapture) {
-      return { kind: "unavailable", reason: `capture ${captureRef} is outside the retention window` };
+      return {
+        kind: "unavailable",
+        reason: `capture ${captureRef} is outside the retention window`,
+      };
     }
     const counterfactualCaptures: Record<string, unknown>[] = [];
     const dispatches = recordOf(input.job.dispatches);
@@ -1251,7 +1256,9 @@ export async function sweepFinalizationSignalsForGroups(input: {
     if (!replayId) {
       skipped += 1;
       input.settledGroupIds?.add(groupId);
-      input.log?.(`finalization signals skipped ${groupId}: the comparison names no durable replay`);
+      input.log?.(
+        `finalization signals skipped ${groupId}: the comparison names no durable replay`,
+      );
       continue;
     }
     try {
@@ -5515,7 +5522,7 @@ export async function main(): Promise<void> {
                * had nothing to count. The readback now walks the capability's cursor.
                */
               return await collectPagedComparisonGroups({
-                readPage: async cursor => {
+                readPage: async (cursor) => {
                   const decoded = decodeExternalizedOperatorReadback({
                     stateRoot: options.runtimeStateRoot,
                     scopeId: options.scopeId,
@@ -5569,9 +5576,7 @@ export async function main(): Promise<void> {
                 ...(Array.isArray(candidate.groupIds) ? candidate.groupIds : []),
               ].filter(
                 (value, index, all): value is string =>
-                  typeof value === "string" &&
-                  value.length > 0 &&
-                  all.indexOf(value) === index,
+                  typeof value === "string" && value.length > 0 && all.indexOf(value) === index,
               );
               if (!routePackage || comparisonIds.length === 0) {
                 console.error(
@@ -5603,7 +5608,10 @@ export async function main(): Promise<void> {
                   readback && typeof readback === "object" && !Array.isArray(readback)
                     ? (readback as Record<string, unknown>)
                     : {};
-                if (candidateGroup.status === "finalized" && Array.isArray(candidateGroup.members)) {
+                if (
+                  candidateGroup.status === "finalized" &&
+                  Array.isArray(candidateGroup.members)
+                ) {
                   group = candidateGroup;
                   groupId = candidateGroupId;
                   break;
@@ -5822,7 +5830,8 @@ export async function main(): Promise<void> {
                         ? packScope.endpointId.trim()
                         : routePackage;
                     const taskTypeId =
-                      typeof candidateScope.taskTypeId === "string" && candidateScope.taskTypeId.trim()
+                      typeof candidateScope.taskTypeId === "string" &&
+                      candidateScope.taskTypeId.trim()
                         ? candidateScope.taskTypeId.trim()
                         : typeof comparability.taskTypeId === "string" &&
                             comparability.taskTypeId.trim()
@@ -5886,15 +5895,17 @@ export async function main(): Promise<void> {
                     try {
                       // A damaged durable policy degrades to no stage, and no stage means no
                       // activation - the sweep never invents an operator setting.
-                      return readLearningPolicyFile({
-                        repoRoot: options.repoRoot,
-                        stateRoot: resolveLearningPolicyStateRoot({
-                          runtimeStateRoot: options.runtimeStateRoot,
+                      return (
+                        readLearningPolicyFile({
+                          repoRoot: options.repoRoot,
+                          stateRoot: resolveLearningPolicyStateRoot({
+                            runtimeStateRoot: options.runtimeStateRoot,
+                            scopeId: options.scopeId,
+                          }),
+                          channel,
                           scopeId: options.scopeId,
-                        }),
-                        channel,
-                        scopeId: options.scopeId,
-                      })?.effective?.stage ?? null;
+                        })?.effective?.stage ?? null
+                      );
                     } catch {
                       return null;
                     }
@@ -5951,8 +5962,9 @@ export async function main(): Promise<void> {
           }
           if (pending.length > 0 || consumed > 0) {
             console.error(
-              `[run101] learner sweep: ${pending.length} candidate(s) without a validation receipt, consumed ${consumed}` +
-                (activated > 0 ? `, activated ${activated} pack(s)` : ""),
+              `[run101] learner sweep: ${pending.length} candidate(s) without a validation receipt, consumed ${consumed}${
+                activated > 0 ? `, activated ${activated} pack(s)` : ""
+              }`,
             );
           }
           return {
@@ -8923,7 +8935,8 @@ export async function main(): Promise<void> {
                    * suppress the stream, so the answer shape has to be named rather than inferred.
                    */
                   if (
-                    (status === undefined || (typeof status === "string" && !TERMINAL_STATUS_HINT.has(status))) &&
+                    (status === undefined ||
+                      (typeof status === "string" && !TERMINAL_STATUS_HINT.has(status))) &&
                     evaluationJobStatusShapeLogged < 3
                   ) {
                     evaluationJobStatusShapeLogged += 1;
@@ -8939,7 +8952,9 @@ export async function main(): Promise<void> {
                         .slice(0, 6)
                         .join(",")} businessType=${typeof business} businessKeys=${
                         business && typeof business === "object"
-                          ? Object.keys(business as Record<string, unknown>).slice(0, 6).join(",")
+                          ? Object.keys(business as Record<string, unknown>)
+                              .slice(0, 6)
+                              .join(",")
                           : "-"
                       } status=${String(status)} head=${typeof decoded === "string" ? decoded.slice(0, 80) : "-"}`,
                     );

@@ -24,7 +24,10 @@ const unavailableProjection = {
 test("run110 the state readback's profile projection answers when the profile client is unavailable", () => {
   const result = resolveLearningProfileRouteResult({
     profileReadback: unavailableProjection,
-    stateReadback: { knowledge: { available: true }, profile: { state: "available", confidence: 0.5 } },
+    stateReadback: {
+      knowledge: { available: true },
+      profile: { state: "available", confidence: 0.5 },
+    },
   });
   expect(result).toEqual({ state: "available", confidence: 0.5 });
 });
@@ -34,7 +37,10 @@ test("run110 a usable profile readback still wins over the state projection", ()
     profileReadback: { state: "unavailable", reason: "no current estimate for this scope yet" },
     stateReadback: { profile: { state: "available", confidence: 0.5 } },
   });
-  expect(result).toEqual({ state: "unavailable", reason: "no current estimate for this scope yet" });
+  expect(result).toEqual({
+    state: "unavailable",
+    reason: "no current estimate for this scope yet",
+  });
 });
 
 test("run110 with no estimate anywhere the answer is the bounded state, never the transport error", () => {
@@ -77,7 +83,9 @@ const liveEstimateGeneration = {
           sampleCount: 3,
           estimate: 0.67,
           confidence: "insufficient_sample",
-          evidenceRefs: ["artifact:70166bc7d75d1188a9da514304dc95111e52d0b918358b06a1776f92c4e7971e"],
+          evidenceRefs: [
+            "artifact:70166bc7d75d1188a9da514304dc95111e52d0b918358b06a1776f92c4e7971e",
+          ],
         },
       ],
     },

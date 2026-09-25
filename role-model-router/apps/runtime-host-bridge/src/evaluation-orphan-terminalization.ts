@@ -92,7 +92,8 @@ const MAX_DETAIL_CHARS = 360;
  * targeted the operator scope). It is handled as scope-scoped below and is benign only once every candidate
  * scope has answered it.
  */
-const BENIGN_TERMINAL = /(completed evaluation job cannot be cancelled|cannot be cancelled in its current state)/iu;
+const BENIGN_TERMINAL =
+  /(completed evaluation job cannot be cancelled|cannot be cancelled in its current state)/iu;
 const JOB_NOT_FOUND = /evaluation job not found/iu;
 const SCOPE_MISMATCH = /scope binding mismatch/iu;
 
@@ -178,7 +179,10 @@ export async function terminalizeAbandonedEvaluation(
       );
       return { cancelled: true, scope, detail: null };
     } catch (error) {
-      detail = String((error as { message?: unknown })?.message ?? error).slice(0, MAX_DETAIL_CHARS);
+      detail = String((error as { message?: unknown })?.message ?? error).slice(
+        0,
+        MAX_DETAIL_CHARS,
+      );
       if (BENIGN_TERMINAL.test(detail)) return { cancelled: false, scope, detail };
       if (JOB_NOT_FOUND.test(detail)) continue;
       if (!SCOPE_MISMATCH.test(detail)) return { cancelled: false, scope, detail };

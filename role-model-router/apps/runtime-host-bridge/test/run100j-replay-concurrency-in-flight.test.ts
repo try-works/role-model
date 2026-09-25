@@ -1,9 +1,6 @@
 import { expect, test } from "vitest";
 
-import {
-  isReplayInFlightFailure,
-  retryLeasedReplayDispatch,
-} from "../src/track-b-auto-replay.js";
+import { isReplayInFlightFailure, retryLeasedReplayDispatch } from "../src/track-b-auto-replay.js";
 
 /**
  * Run 100 addendum `replay-dispatch-lifecycle.addendum-04` S3 (operator report 2026-09-23: "replays are
@@ -44,7 +41,8 @@ test("run100j a concurrency hold is waited out inside the capture's own deadline
   const result = await retryLeasedReplayDispatch({
     deadlineAtMs: Date.now() + 60_000,
     sleep: async () => {},
-    retryable: (failure) => failure.status === 0 || isReplayInFlightFailure(failure.status, failure.body),
+    retryable: (failure) =>
+      failure.status === 0 || isReplayInFlightFailure(failure.status, failure.body),
     dispatch: async () => {
       attempts += 1;
       if (attempts < 3) {

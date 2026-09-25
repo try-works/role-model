@@ -82,9 +82,9 @@ describe("run 100 R3 terminal recovery classification", () => {
   });
 
   test("a scope binding mismatch keeps its legacy classification", () => {
-    expect(classifyReplayTerminalizationFailure("replay persisted job scope binding mismatch")).toBe(
-      "legacy_scope_unresolved",
-    );
+    expect(
+      classifyReplayTerminalizationFailure("replay persisted job scope binding mismatch"),
+    ).toBe("legacy_scope_unresolved");
   });
 
   test("anything else is still a decline", () => {

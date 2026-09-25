@@ -68,7 +68,9 @@ test("run112 every Learning readback answers without a private operations endpoi
   try {
     const failures: string[] = [];
     for (const route of READ_ROUTES) {
-      const response = await fetch(`http://127.0.0.1:${server.port}${route}?scopeId=standalone-runtime-stage`);
+      const response = await fetch(
+        `http://127.0.0.1:${server.port}${route}?scopeId=standalone-runtime-stage`,
+      );
       const body = (await response.json().catch(() => ({}))) as Record<string, unknown>;
       if (response.status !== 200 || body.error === "operator_capability_unavailable") {
         failures.push(`${route} -> ${response.status} ${JSON.stringify(body).slice(0, 160)}`);

@@ -538,9 +538,7 @@ describe("run 100 R1 judge-independent arms", () => {
     expect(result).toMatchObject({ outcome: "candidate" });
 
     // The durable job the pipeline created may not carry the judge as an arm.
-    const job = scenario.capturedJobs[0] as
-      | { cases?: Array<Record<string, unknown>> }
-      | undefined;
+    const job = scenario.capturedJobs[0] as { cases?: Array<Record<string, unknown>> } | undefined;
     const caseCandidates = (job?.cases ?? []).map((entry) => String(entry.candidateRef ?? ""));
     expect(caseCandidates).not.toContain("endpoint:b");
     expect(caseCandidates).toContain("endpoint:c");
@@ -564,9 +562,6 @@ describe("run 100 R1 judge-independent arms", () => {
       judgeEndpointId: "endpoint:b",
     });
 
-    await expect(scenario.invoke()).rejects.toThrow(
-      /R14_ALL_CANDIDATES_ARE_JUDGE.*endpoint:b/u,
-    );
+    await expect(scenario.invoke()).rejects.toThrow(/R14_ALL_CANDIDATES_ARE_JUDGE.*endpoint:b/u);
   });
 });
-

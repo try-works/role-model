@@ -4,8 +4,8 @@ import path from "node:path";
 
 import { expect, test } from "vitest";
 
-import { runAutoReplayTick } from "../src/track-b-auto-replay.js";
 import { startAutoReplayLoop } from "../src/track-b-auto-replay-runtime.js";
+import { runAutoReplayTick } from "../src/track-b-auto-replay.js";
 import { createReplayLedger } from "../src/track-b-replay-ledger.js";
 import {
   buildReplayPolicySet,
@@ -54,7 +54,9 @@ test("run150 item 3 admission refuses a probe capture by name and admits everyth
   }
   // Additive: the same input without the class is admitted, and omitting the field entirely is not a
   // refusal either - older callers keep their behaviour.
-  expect(decideReplayAdmission({ ...VALID_ADMISSION, sourceIsSyntheticProbe: false }).admitted).toBe(true);
+  expect(
+    decideReplayAdmission({ ...VALID_ADMISSION, sourceIsSyntheticProbe: false }).admitted,
+  ).toBe(true);
   expect(decideReplayAdmission({ ...VALID_ADMISSION }).admitted).toBe(true);
 });
 
@@ -119,7 +121,11 @@ test("run150 item 3 the loop carries the projected class from the listing to the
                 hasRecordedToolResults: true,
                 sourceClass: "marker_echo_probe",
               },
-              { captureRef: "req-real-2", sourceEndpointId: "endpoint-b", hasRecordedToolResults: true },
+              {
+                captureRef: "req-real-2",
+                sourceEndpointId: "endpoint-b",
+                hasRecordedToolResults: true,
+              },
             ],
             pendingCount: 2,
           };

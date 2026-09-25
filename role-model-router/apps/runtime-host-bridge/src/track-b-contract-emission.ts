@@ -210,7 +210,8 @@ export function buildRouteLearningValidationReceipt(input: {
       receipt.runtimeChannel === "production" || receipt.runtimeChannel === "development"
         ? receipt.runtimeChannel
         : envelope.runtimeChannel,
-    scopeId: typeof receipt.scopeId === "string" && receipt.scopeId ? receipt.scopeId : input.scopeId,
+    scopeId:
+      typeof receipt.scopeId === "string" && receipt.scopeId ? receipt.scopeId : input.scopeId,
     boundaryProtocolVersion:
       typeof receipt.boundaryProtocolVersion === "string" && receipt.boundaryProtocolVersion
         ? receipt.boundaryProtocolVersion

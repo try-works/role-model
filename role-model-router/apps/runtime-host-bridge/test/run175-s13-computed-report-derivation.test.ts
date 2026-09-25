@@ -342,8 +342,12 @@ describe("run175 S13: the derivation pass computes the report it is missing", ()
     });
 
     expect(summary.derived).toBe(1);
-    expect(capabilities.filter((capability) => capability === "signals:analyze-finalized-evaluation")).toHaveLength(1);
-    expect(capabilities.filter((capability) => capability === "knowledge:eval-consumer")).toHaveLength(1);
+    expect(
+      capabilities.filter((capability) => capability === "signals:analyze-finalized-evaluation"),
+    ).toHaveLength(1);
+    expect(
+      capabilities.filter((capability) => capability === "knowledge:eval-consumer"),
+    ).toHaveLength(1);
     /**
      * The groups the bound deferred are not burned: the next tick can reach them. Run 100 addendum 39 §4 makes the
      * walk newest-first, so the one group the bound spent is the page's last element - and every other group stays

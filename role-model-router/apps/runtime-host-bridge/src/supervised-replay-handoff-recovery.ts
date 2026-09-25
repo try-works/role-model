@@ -604,8 +604,7 @@ export async function resolveResumedArmEvidence(input: {
   const unreadable: UnresolvedArmEvidence[] = [];
   for (const candidate of input.counterfactualPackages) {
     const named = input.branchCaptureRequestIds.get(candidate.endpointId);
-    const requestIds =
-      typeof named === "string" ? [named] : Array.isArray(named) ? [...named] : [];
+    const requestIds = typeof named === "string" ? [named] : Array.isArray(named) ? [...named] : [];
     if (requestIds.length === 0) {
       unreadable.push({ endpointId: candidate.endpointId, reason: "capture_not_named" });
       continue;

@@ -62,7 +62,9 @@ test("run100a admission refuses a benchmark capture by name and admits everythin
     expect(refused.detail).toMatch(/benchmark/u);
   }
   // The rule is additive: the same input without the benchmark marker is admitted.
-  expect(decideReplayAdmission({ ...VALID_ADMISSION, sourceIsBenchmark: false }).admitted).toBe(true);
+  expect(decideReplayAdmission({ ...VALID_ADMISSION, sourceIsBenchmark: false }).admitted).toBe(
+    true,
+  );
 });
 
 function tempLedger() {

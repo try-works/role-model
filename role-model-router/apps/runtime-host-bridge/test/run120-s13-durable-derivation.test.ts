@@ -153,7 +153,7 @@ function assemble() {
 
 describe("run120 S13: the durable derivation value satisfies the knowledge consumer's guards", () => {
   test("carries complete replay provenance keyed to the group's own replay", () => {
-    const value = assemble() as Record<string, any>;
+    const value = assemble();
 
     expect(value.replay.sourceDecisionId).toBe(SOURCE_DECISION_ID);
     expect(value.replay.sourceGraphRef).toBe(SOURCE_GRAPH_REF);
@@ -163,7 +163,7 @@ describe("run120 S13: the durable derivation value satisfies the knowledge consu
   });
 
   test("carries a finalized comparison, local holdout provenance and both signed receipts", () => {
-    const value = assemble() as Record<string, any>;
+    const value = assemble();
     const evaluation = value.evaluation;
 
     expect(evaluation.environment).toBe("local-routing-evaluation");
@@ -186,8 +186,8 @@ describe("run120 S13: the durable derivation value satisfies the knowledge consu
     expect(comparison.groupId).toBe(GROUP_ID);
     expect(comparison.holdout.holdoutId).toBe(finalizedComparison.holdout.holdoutId);
     expect(comparison.holdout.membershipDigest).toBe(finalizedComparison.holdout.membershipDigest);
-    expect(comparison.members.some((m: any) => m.disposition === "positive")).toBe(true);
-    expect(comparison.members.some((m: any) => m.disposition === "negative")).toBe(true);
+    expect(comparison.members.some((m) => m.disposition === "positive")).toBe(true);
+    expect(comparison.members.some((m) => m.disposition === "negative")).toBe(true);
     for (const member of comparison.members) {
       expect(typeof member.trialId).toBe("string");
       expect(typeof member.scoreId).toBe("string");
@@ -224,7 +224,7 @@ describe("run120 S13: the durable derivation value satisfies the knowledge consu
   });
 
   test("carries the persisted signal provenance, the profile attribution and the winning package", () => {
-    const value = assemble() as Record<string, any>;
+    const value = assemble();
 
     expect(value.signals.routeDecisionId).toBe(value.replay.sourceDecisionId);
     expect(value.signals.graphRef).toBe(value.replay.sourceGraphRef);
@@ -246,7 +246,7 @@ describe("run120 S13: the durable derivation value satisfies the knowledge consu
   });
 
   test("files the winning member positive and the losing member negative, with member lineage and proofs", () => {
-    const value = assemble() as Record<string, any>;
+    const value = assemble();
     const group = value.comparableGroup;
 
     expect(group.policy).toBe("run96-routing-shadow");

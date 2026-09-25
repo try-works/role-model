@@ -81,7 +81,14 @@ describe("normalizeLearningActivity", () => {
       observedAtMs: 1_000,
       window: { minutes: 60 },
       pipeline: [
-        { stage: "evaluation", pending: 1, wedged: 4, recent: 2, active: false, lastEventAtMs: 900 },
+        {
+          stage: "evaluation",
+          pending: 1,
+          wedged: 4,
+          recent: 2,
+          active: false,
+          lastEventAtMs: 900,
+        },
         { stage: "replay", pending: 0, recent: 1, active: false, lastEventAtMs: 800 },
       ],
       budget: {

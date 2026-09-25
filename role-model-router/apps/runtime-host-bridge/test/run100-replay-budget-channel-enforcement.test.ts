@@ -43,7 +43,8 @@ test("run100 the default ceiling is enforced, so production keeps the delivery g
     });
     expect(ledger.status().enforced).toBe(true);
     expect(
-      ledger.reserve({ captureRef: "req-a", policySetDigest: "p", candidateDispatches: 2 }).accepted,
+      ledger.reserve({ captureRef: "req-a", policySetDigest: "p", candidateDispatches: 2 })
+        .accepted,
     ).toBe(true);
     const refused = ledger.reserve({
       captureRef: "req-b",
@@ -73,7 +74,8 @@ test("run100 an unenforced ceiling records dispatches without refusing them", ()
     });
     expect(ledger.status().enforced).toBe(false);
     expect(
-      ledger.reserve({ captureRef: "req-a", policySetDigest: "p", candidateDispatches: 2 }).accepted,
+      ledger.reserve({ captureRef: "req-a", policySetDigest: "p", candidateDispatches: 2 })
+        .accepted,
     ).toBe(true);
     const second = ledger.reserve({
       captureRef: "req-b",
@@ -171,7 +173,8 @@ test("run100 a non-enforced ceiling always reports budget available to admission
       limits: { dispatchesPerDay: 1, counterfactualsPerDay: 1, enforced: true },
     });
     expect(
-      enforced.reserve({ captureRef: "req-a", policySetDigest: "p", candidateDispatches: 1 }).accepted,
+      enforced.reserve({ captureRef: "req-a", policySetDigest: "p", candidateDispatches: 1 })
+        .accepted,
     ).toBe(true);
     expect(replayBudgetAvailable(enforced.status())).toBe(false);
 

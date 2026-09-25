@@ -24,14 +24,14 @@
 // one vocabulary.
 import { createHash, createHmac } from "node:crypto";
 
-import { POSITION_ORDER_DISAGREEMENT } from "./track-b-shadow-judge-dispatch.js";
 import {
   buildExperiencePackCandidate,
-  buildRoutePackageActivationReceipt,
   buildRouteLearningValidationReceipt,
-  emitTrackBContract,
+  buildRoutePackageActivationReceipt,
   emitRoutePackageAttributionForPromotion,
+  emitTrackBContract,
 } from "./track-b-contract-emission.js";
+import { POSITION_ORDER_DISAGREEMENT } from "./track-b-shadow-judge-dispatch.js";
 
 /**
  * Run 100 addendum `replay-evaluation-learner-spine-completion.addendum-07` P6: the durable learner
@@ -167,7 +167,10 @@ export function mintDurableComparisonReceipts(input: {
   readonly safeForPrompt: boolean;
 }): {
   readonly comparisonDigest: string;
-  readonly finalizedComparisonReceipt: { readonly payload: Record<string, unknown>; readonly signature: string };
+  readonly finalizedComparisonReceipt: {
+    readonly payload: Record<string, unknown>;
+    readonly signature: string;
+  };
   readonly safetyReceipt: { readonly payload: Record<string, unknown>; readonly signature: string };
 } {
   const comparisonDigest = durableComparisonDigest(input.finalizedComparison);
@@ -353,7 +356,9 @@ export async function serveLearnerSweepRetrieval(
     typeof input.query === "string" && input.query.trim().length > 0
       ? input.query.trim().slice(0, 128)
       : RUN100_SWEEP_RETRIEVAL_QUERY;
-  const requestedLimit = Number.isSafeInteger(input.limit) ? Number(input.limit) : RUN100_SWEEP_RETRIEVAL_LIMIT;
+  const requestedLimit = Number.isSafeInteger(input.limit)
+    ? Number(input.limit)
+    : RUN100_SWEEP_RETRIEVAL_LIMIT;
   const limit = Math.min(Math.max(requestedLimit, 1), 64);
   let receipt: Record<string, unknown>;
   try {
@@ -377,14 +382,18 @@ export async function serveLearnerSweepRetrieval(
       reason: String((error as { message?: unknown })?.message ?? error).slice(0, 200),
     };
   }
-  const resultCount = Number.isFinite(Number(receipt.resultCount)) ? Number(receipt.resultCount) : 0;
+  const resultCount = Number.isFinite(Number(receipt.resultCount))
+    ? Number(receipt.resultCount)
+    : 0;
   const matchCount = Number.isFinite(Number(receipt.matchCount)) ? Number(receipt.matchCount) : 0;
-  const queryHash = typeof receipt.queryHash === "string" && receipt.queryHash ? receipt.queryHash : null;
+  const queryHash =
+    typeof receipt.queryHash === "string" && receipt.queryHash ? receipt.queryHash : null;
   try {
     const recorded = asBoundedRecord(
       await input.invoke("knowledge-store", "knowledge:record-retrieval", { receipt }),
     );
-    const receiptId = typeof recorded.receiptId === "string" && recorded.receiptId ? recorded.receiptId : null;
+    const receiptId =
+      typeof recorded.receiptId === "string" && recorded.receiptId ? recorded.receiptId : null;
     return {
       served: true,
       resultCount,
@@ -453,7 +462,8 @@ export function assembleDurableLearnerDerivationValue(
   const comparison = input.finalizedComparison as Record<string, unknown>;
   const members = Array.isArray(comparison.members)
     ? (comparison.members as Record<string, unknown>[]).filter(
-        (member): member is Record<string, unknown> => Boolean(member) && typeof member === "object",
+        (member): member is Record<string, unknown> =>
+          Boolean(member) && typeof member === "object",
       )
     : [];
   const comparisonId = boundedText(comparison.comparisonId) ?? boundedText(comparison.groupId);
@@ -591,21 +601,31 @@ export function assembleDurableLearnerDerivationValue(
   const profile = input.profileEstimate;
   const profileDigest = profile ? boundedText((profile as Record<string, unknown>).digest) : null;
   const profileEffects =
-    profile && (profile as Record<string, unknown>).effects && typeof (profile as Record<string, unknown>).effects === "object"
+    profile &&
+    (profile as Record<string, unknown>).effects &&
+    typeof (profile as Record<string, unknown>).effects === "object"
       ? ((profile as Record<string, unknown>).effects as Record<string, unknown>)
       : null;
   const routePackageEffects =
-    profileEffects && profileEffects.routePackage && typeof profileEffects.routePackage === "object"
+    profileEffects?.routePackage && typeof profileEffects.routePackage === "object"
       ? (profileEffects.routePackage as Record<string, unknown>)
       : null;
   const attributedPackages = Array.isArray(routePackageEffects?.values)
     ? routePackageEffects.values.filter((value): value is string => typeof value === "string")
     : [];
   const attributionEvidenceRefs = Array.isArray(routePackageEffects?.evidenceRefs)
-    ? routePackageEffects.evidenceRefs.filter((value): value is string => typeof value === "string" && value.length > 0)
+    ? routePackageEffects.evidenceRefs.filter(
+        (value): value is string => typeof value === "string" && value.length > 0,
+      )
     : [];
-  if (!profileDigest || !attributedPackages.includes(routePackage) || attributionEvidenceRefs.length === 0) {
-    throw new Error("durable learner derivation requires a profile estimate that attributes the winning route package");
+  if (
+    !profileDigest ||
+    !attributedPackages.includes(routePackage) ||
+    attributionEvidenceRefs.length === 0
+  ) {
+    throw new Error(
+      "durable learner derivation requires a profile estimate that attributes the winning route package",
+    );
   }
 
   const evidenceRef = counterfactualEvidenceRef ?? sourceEvidenceRef;
@@ -613,8 +633,7 @@ export function assembleDurableLearnerDerivationValue(
     throw new Error("durable learner derivation requires a durable holdout evidence reference");
   }
   const policyId = boundedText(comparability.policyId) ?? RUN104_LEARNER_SWEEP_PROVENANCE.policy;
-  const scorerSetVersion =
-    boundedText(comparability.scorerSetVersion) ?? `${policyId}-v1`;
+  const scorerSetVersion = boundedText(comparability.scorerSetVersion) ?? `${policyId}-v1`;
   /**
    * The consumer reads `finalizedComparison.comparisonId` (`extensions/knowledge-worker`: "finalized durable
    * comparison evidence required"), and the evaluator's own page entry names the same row only as `groupId`. Measured
@@ -694,7 +713,9 @@ export function assembleDurableLearnerDerivationValue(
       channel: input.channel,
       scopeId: input.scope,
       ...(boundedText(input.taskTypeId) ? { taskTypeId: boundedText(input.taskTypeId) } : {}),
-      ...(boundedText(input.taxonomyVersion) ? { taxonomyVersion: boundedText(input.taxonomyVersion) } : {}),
+      ...(boundedText(input.taxonomyVersion)
+        ? { taxonomyVersion: boundedText(input.taxonomyVersion) }
+        : {}),
       ...(boundedText(input.roleId) ? { roleId: boundedText(input.roleId) } : {}),
     },
     learningCapable: true,
@@ -1587,7 +1608,7 @@ export async function runTrackBLearningPass(
    * could never reach `minDecisiveComparisons`; the reader now walks the capability's cursor.
    */
   const groups = (await collectPagedComparisonGroups({
-    readPage: async cursor => {
+    readPage: async (cursor) => {
       const rawGroups = await runtime.invoke(
         "evaluation-core",
         envelope("evaluation:list-groups", {
@@ -1748,9 +1769,7 @@ export async function runTrackBLearningPass(
           readbackConfirmed: durableRecordId,
         };
       }
-      throw new Error(
-        `knowledge store refused the validation receipt: ${refusalReason}`,
-      );
+      throw new Error(`knowledge store refused the validation receipt: ${refusalReason}`);
     }
     return decoded;
   };

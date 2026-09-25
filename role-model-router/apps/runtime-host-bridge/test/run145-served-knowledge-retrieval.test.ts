@@ -93,7 +93,8 @@ test("run145 a store refusal degrades the answer: the retrieval was still served
   const served = await serveLearnerSweepRetrieval({
     scopeId: SCOPE,
     invoke: async (_extensionId, capability) => {
-      if (capability === "knowledge:retrieve") return retrievalReceipt({ hits: [], resultCount: 0, matchCount: 0 });
+      if (capability === "knowledge:retrieve")
+        return retrievalReceipt({ hits: [], resultCount: 0, matchCount: 0 });
       throw new Error("knowledge store is unavailable");
     },
   });
@@ -121,7 +122,11 @@ test("run145 a refused retrieval is reported with its reason and never thrown in
     },
   });
 
-  expect(served).toMatchObject({ served: false, receiptId: null, durableReceipt: { recorded: false } });
+  expect(served).toMatchObject({
+    served: false,
+    receiptId: null,
+    durableReceipt: { recorded: false },
+  });
   expect(String(served.reason)).toContain("bounded active knowledge query required");
   expect(storeCalls).toBe(0);
 });

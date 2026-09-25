@@ -359,7 +359,9 @@ export function routeRuntimeRequest(
         .map((exclusion) => exclusion?.code)
         .filter((code): code is string => typeof code === "string" && code.length > 0);
       if (entryCodes.length > 0) {
-        deniedEndpointIds.push(String((entry as { readonly endpoint_id?: unknown }).endpoint_id ?? ""));
+        deniedEndpointIds.push(
+          String((entry as { readonly endpoint_id?: unknown }).endpoint_id ?? ""),
+        );
       }
       for (const code of entryCodes) {
         const key = String(code);
