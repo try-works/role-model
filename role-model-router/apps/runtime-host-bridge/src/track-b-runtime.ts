@@ -8216,6 +8216,63 @@ export const RUN97_PAIRWISE_JUDGE_DIMENSION = "task_specific_quality";
  */
 export const RUN97_PAIRWISE_JUDGE_DEFINITION_VERSION = 2;
 
+/**
+ * Run 177 (addendum 46 §5.1, measured live on the `run176-63b9961c` stage store): of the newest 100
+ * finalized comparisons, 5 carried a one-shot judge failure (`terminated` x8 / `fetch failed` x2 in the
+ * newest window) that permanently cost the comparison its only decisive dimension, because the dispatch
+ * failure was recorded once with no retry. Transport and provider failures are retried up to this many
+ * *extra* attempts (so at most `1 + bound` dispatches per comparison) with a bounded linear backoff;
+ * semantic failures — `position_order_disagreement`, an unknown winner, unbounded confidence — are not
+ * retried, because a second identical dispatch cannot repair them.
+ */
+export const RUN177_TRANSIENT_JUDGE_RETRY_BOUND = 2;
+/** Short and bounded: the retry exists to absorb a blip, not to hold the comparison open. */
+export const RUN177_TRANSIENT_JUDGE_RETRY_BACKOFF_MS = 250;
+
+/**
+ * Run 177 (addendum 46 §5.1): the transient classes named by the measured diagnostic. Only transport and
+ * provider failures are retried; everything else — most importantly the semantic judge failures — lands
+ * in the existing bounded scorer-failure row after a single attempt.
+ */
+const RUN177_TRANSIENT_JUDGE_FAILURE_MESSAGE_PATTERNS: readonly RegExp[] = [
+  /\bterminated\b/iu,
+  /fetch failed/iu,
+  /timed out|timeout|ETIMEDOUT/iu,
+  /\babort(?:ed)?\b|AbortError/iu,
+  /No execution target is currently eligible/iu,
+  /socket hang up|ECONNRESET|ECONNREFUSED|EPIPE|EAI_AGAIN/iu,
+];
+const RUN177_TRANSIENT_JUDGE_FAILURE_CODES: ReadonlySet<string> = new Set([
+  "ETIMEDOUT",
+  "ESOCKETTIMEDOUT",
+  "ECONNRESET",
+  "ECONNREFUSED",
+  "ECONNABORTED",
+  "EPIPE",
+  "EAI_AGAIN",
+  "UND_ERR_SOCKET",
+  "UND_ERR_CONNECT_TIMEOUT",
+]);
+
+export function isTransientJudgeFailure(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as {
+    readonly name?: unknown;
+    readonly code?: unknown;
+    readonly message?: unknown;
+  };
+  if (
+    typeof candidate.code === "string" &&
+    RUN177_TRANSIENT_JUDGE_FAILURE_CODES.has(candidate.code.toUpperCase())
+  ) {
+    return true;
+  }
+  const name = typeof candidate.name === "string" ? candidate.name : "";
+  const message = typeof candidate.message === "string" ? candidate.message : "";
+  const text = `${name} ${message}`;
+  return RUN177_TRANSIENT_JUDGE_FAILURE_MESSAGE_PATTERNS.some((pattern) => pattern.test(text));
+}
+
 export function createRun97PairwiseJudgeScorer(input: {
   readonly judgeEndpointId: string;
   /**
@@ -9061,6 +9118,8 @@ export async function runTrackBShadowPipeline(
     trialIds.push(trial.trialId);
   }
   if (judgeScorer && input.judge) {
+    // Bound to a local so the retried attempt below keeps the narrowed judge type inside its closure.
+    const judge = input.judge;
     // One bounded judgement per comparison, after both branches produced durable
     // output, so the judge sees the same evidence the comparison will bind. The
     // dispatch itself is the host's (provider execution + ledger accounting).
@@ -9118,14 +9177,24 @@ export async function runTrackBShadowPipeline(
     if (durableJudgeScores) {
       judgeScores = [...durableJudgeScores];
     } else {
-      try {
-        const decision = await input.judge.dispatch({
+      /**
+       * Run 177 (addendum 46 §2/§5.1): of the newest 100 finalized comparisons, 5 carried a one-shot
+       * judge failure (`terminated` x8 / `fetch failed` x2 in the newest window) recorded once, which
+       * permanently cost the comparison its only decisive dimension. One dispatch attempt is the
+       * success path below, byte-identical to the previous behaviour; a *transient* failure is retried
+       * up to `RUN177_TRANSIENT_JUDGE_RETRY_BOUND` extra times with a short bounded backoff, because a
+       * second identical dispatch can repair a transport/provider blip. A semantic failure (order
+       * disagreement, unknown winner, unbounded confidence) is never retried: it falls straight through
+       * to the bounded scorer-failure row below.
+       */
+      const dispatchJudgeOnce = async (): Promise<Array<Record<string, unknown>>> => {
+        const decision = await judge.dispatch({
           requestId: input.requestId,
           channel: input.channel,
           scope: input.scope,
           authorizationEpoch: input.authorizationEpoch,
           evaluationJobId: jobId,
-          judgeEndpointId: input.judge.endpointId,
+          judgeEndpointId: judge.endpointId,
           source: {
             trialId: sourceBranch.trialId,
             candidateRef: sourceBranch.candidateRef,
@@ -9170,7 +9239,7 @@ export async function runTrackBShadowPipeline(
           // to an explicit tie; the flip travels with the receipt so the comparison can report it.
           ...(decision.orderDisagreement === true ? { orderDisagreement: true } : {}),
         };
-        judgeScores = [sourceBranch, counterfactualBranch].map((branch) => ({
+        return [sourceBranch, counterfactualBranch].map((branch) => ({
           scorerId: judgeScorer.id,
           scorerVersion: judgeScorer.version,
           scorerDigest: judgeScorer.digest,
@@ -9181,7 +9250,26 @@ export async function runTrackBShadowPipeline(
           source: judgeScorer.source,
           judgeReceipt,
         }));
-      } catch (error) {
+      };
+      let judgeScoresFromDispatch: Array<Record<string, unknown>> | null = null;
+      let judgeFailure: unknown = null;
+      for (let attempt = 1; attempt <= 1 + RUN177_TRANSIENT_JUDGE_RETRY_BOUND; attempt += 1) {
+        try {
+          judgeScoresFromDispatch = await dispatchJudgeOnce();
+          break;
+        } catch (error) {
+          judgeFailure = error;
+          if (!isTransientJudgeFailure(error)) break;
+          if (attempt > RUN177_TRANSIENT_JUDGE_RETRY_BOUND) break;
+          await new Promise((resolve) =>
+            setTimeout(resolve, RUN177_TRANSIENT_JUDGE_RETRY_BACKOFF_MS * attempt),
+          );
+        }
+      }
+      if (judgeScoresFromDispatch) {
+        judgeScores = judgeScoresFromDispatch;
+      } else {
+        const error = judgeFailure;
         // guidance/09: a judge failure is persisted as a scorer failure, never as a
         // valid zero score. The comparison then stays honestly undecided instead of
         // manufacturing a tie from an unrun judge.
