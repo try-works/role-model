@@ -27,6 +27,7 @@ import { createHash, createHmac } from "node:crypto";
 import { POSITION_ORDER_DISAGREEMENT } from "./track-b-shadow-judge-dispatch.js";
 import {
   buildExperiencePackCandidate,
+  buildRoutePackageActivationReceipt,
   buildRouteLearningValidationReceipt,
   emitTrackBContract,
 } from "./track-b-contract-emission.js";
@@ -1703,6 +1704,53 @@ export async function runTrackBLearningPass(
             (error as { message?: unknown })?.message ?? error,
           ).slice(0, 200)}`,
         );
+      }
+      /**
+       * Run 100 addendum 16: the activation receipt belongs to the transition, and this is where the transition
+       * happens - the pack was just promoted from its validation baseline. Measured 2026-09-25: the only activation
+       * artifacts on disk were 658 synthetic `disabled` non-events emitted by the pipeline on every run
+       * (`packageId === priorPackageId`), while the knowledge store held the real 18 active / 24 rolled-back
+       * transitions. A receipt is emitted here only when the promotion actually moved the package: `state: "active"`,
+       * the promoted pack as `packageId`, and the validation receipt's baseline as `priorPackageId`.
+       */
+      const priorPackageId = boundedText(receipt.baselineId) ?? "";
+      if (priorPackageId && priorPackageId !== packId) {
+        try {
+          emitTrackBContract({
+            stateRoot: input.contractStateRoot,
+            scopeId: input.scope,
+            contract: buildRoutePackageActivationReceipt({
+              receiptId: `activation:${packId}`,
+              packageId: packId,
+              /**
+               * Measured while landing this (addendum 16): the closed contract's union validator accepts an
+               * activation receipt only when the scope carries at least one member *and* a `validationReceiptId` is
+               * present - the TypeScript interface marks both optional, so the schema is the stricter authority. An
+               * empty scope is what the synthetic pipeline receipts would have produced; the fallback keeps the
+               * artifact in the vocabulary the contract defines.
+               */
+              scope: {
+                taskTypeId: boundedText(input.taskTypeId) ?? "task:route-selection",
+                ...(boundedText(input.taxonomyVersion)
+                  ? { taxonomyVersion: boundedText(input.taxonomyVersion) }
+                  : {}),
+              },
+              policyGateId: "gate:route-package-activation",
+              priorPackageId,
+              state: "active",
+              validationReceiptId: receiptId,
+              channel: input.channel,
+              scopeId: input.scope,
+              activatedAtMs: Date.now(),
+            }),
+          });
+        } catch (error) {
+          console.error(
+            `[run139] learning pass: activation receipt for ${packId.slice(0, 24)} was not emitted as a contract: ${String(
+              (error as { message?: unknown })?.message ?? error,
+            ).slice(0, 600)}`,
+          );
+        }
       }
     }
   }

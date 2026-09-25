@@ -161,7 +161,6 @@ import {
 } from "./route-advisory-source.js";
 import {
   buildLearnedExperienceCandidate,
-  buildRoutePackageActivationReceipt,
   buildRoutingEvaluationExecutionContext,
   buildRoutingRolloutGroupLifecycle,
   emitTrackBContract,
@@ -9602,23 +9601,15 @@ export async function runTrackBShadowPipeline(
           }),
         }),
       );
-      contractEmissions.push(
-        emitTrackBContract({
-          stateRoot: input.contractStateRoot,
-          scopeId: input.scope,
-          contract: buildRoutePackageActivationReceipt({
-            receiptId: `activation:${input.requestId}`,
-            packageId: input.routePackage,
-            scope: { taskTypeId: "task:route-selection" },
-            policyGateId: "gate:route-package-activation",
-            priorPackageId: input.routePackage,
-            state: "disabled",
-            channel: input.channel,
-            scopeId: input.scope,
-            activatedAtMs: Date.now(),
-          }),
-        }),
-      );
+      /**
+       * Run 100 addendum 16: this emitted a `RoutePackageActivationReceiptV1` on **every** pipeline run with
+       * `state: "disabled"` and `packageId === priorPackageId` - a non-event recorded in the contract's promotion
+       * vocabulary. Measured 2026-09-25: 658 of 658 activation artifacts were exactly that (identical ids, state
+       * `disabled`), while the knowledge store held the real 18 active / 24 rolled-back transitions. The pipeline
+       * does not activate anything; the promotion step in the learning pass does, and it emits the receipt for the
+       * transition it actually makes. Emitting nothing here is the honest record: the readback then says there was
+       * no activation rather than a disabled one.
+       */
     } catch (error) {
       console.error(
         `[run97] contract emission degraded:${input.requestId} ${String(

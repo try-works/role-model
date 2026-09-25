@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { existsSync, mkdtempSync, readdirSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -905,6 +905,27 @@ test("run113 the pass emits the documented pack and validation-receipt artifacts
   const files = readdirSync(directory);
   expect(files.filter((name) => name.startsWith("RouteLearningValidationReceiptV1-"))).toHaveLength(1);
   expect(files.filter((name) => name.startsWith("ExperiencePackCandidateV1-"))).toHaveLength(1);
+  /**
+   * Run 100 addendum 16: the promotion is the transition, so the activation receipt is emitted here - and only
+   * here. Measured 2026-09-25: the only activation artifacts on disk were 658 synthetic `disabled` non-events
+   * (identical package ids) emitted by the pipeline on every run; the promoted pack's transition was nowhere in the
+   * contract vocabulary. The receipt must name the promoted pack, its validation baseline, the receipt that
+   * authorised the promotion, and it must validate against the closed contract (a non-empty scope plus a
+   * `validationReceiptId` are what the schema - not the TypeScript interface - requires).
+   */
+  const activationFiles = files.filter((name) => name.startsWith("RoutePackageActivationReceiptV1-"));
+  expect(activationFiles).toHaveLength(1);
+  const activation = JSON.parse(readFileSync(path.join(directory, activationFiles[0]), "utf8"));
+  expect(activation).toMatchObject({
+    contract: "RoutePackageActivationReceiptV1",
+    packageId: "pack:1",
+    priorPackageId: "baseline:1",
+    state: "active",
+    validationReceiptId: "validation:1",
+    policyGateId: "gate:route-package-activation",
+    scopeId: "standalone-runtime-stage",
+  });
+  expect(activation.packageId).not.toBe(activation.priorPackageId);
 });
 
 test("run113 a caller that does not name a contract state root emits nothing (a unit test or a fixture)", async () => {
