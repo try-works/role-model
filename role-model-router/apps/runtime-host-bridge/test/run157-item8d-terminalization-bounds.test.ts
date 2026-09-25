@@ -220,6 +220,13 @@ test("run157 item 8d only a real job answer proves existence", () => {
   expect(evaluationJobExistsFromGetJobAnswer({ jobId: "evaluation-replay-1", status: "scored" })).toBe(
     true,
   );
+  /**
+   * Measured on run163: a run where get-job "found" rows that cancel then reported missing. A job *record*
+   * always carries a status, while a failure or degradation envelope can echo the requested `jobId` back
+   * without any row behind it — so a bare `jobId` is not proof and must stay unknown.
+   */
+  expect(evaluationJobExistsFromGetJobAnswer({ jobId: "evaluation-replay-1" })).toBeNull();
+  expect(evaluationJobExistsFromGetJobAnswer({ jobId: "evaluation-replay-1", status: "" })).toBeNull();
   // A large job arrives as a transfer marker; it still proves the row is there.
   expect(
     evaluationJobExistsFromGetJobAnswer({

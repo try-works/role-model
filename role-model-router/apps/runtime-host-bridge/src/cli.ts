@@ -238,7 +238,19 @@ export function evaluationJobExistsFromGetJobAnswer(answer: unknown): boolean | 
   const record = answer as Record<string, unknown>;
   const schemaVersion = typeof record.schemaVersion === "string" ? record.schemaVersion : "";
   if (schemaVersion.startsWith("role-model.degradation-receipt")) return null;
-  if (typeof record.jobId === "string" && record.jobId.trim().length > 0) return true;
+  /**
+   * A *record* proves the row exists: it carries an identity **and** a status. Measured on run163, a bare
+   * `jobId` is not proof — a failure or degradation envelope can echo the requested id back with no row behind
+   * it, which is exactly how the pass came to cancel rows the store then reported missing.
+   */
+  if (
+    typeof record.jobId === "string" &&
+    record.jobId.trim().length > 0 &&
+    typeof record.status === "string" &&
+    record.status.trim().length > 0
+  ) {
+    return true;
+  }
   if (
     typeof record.outputKey === "string" ||
     typeof record.resultHash === "string" ||
@@ -377,6 +389,8 @@ let activeAutoReplayLoop: ReturnType<typeof startAutoReplayLoop> | null = null;
 let persistedControllerFallbackLogged = false;
 /** Run 100 addendum 16 item 8d: benign terminalization no-ops are named once, then counted. */
 let terminalizationBenignCount = 0;
+/** Run 100 addendum 28 §2: the first few existence-check answers are named, so their shape is measurable. */
+let evaluationJobExistsAnswerLogged = 0;
 let activeLearningSummaryReader: (() => Promise<unknown>) | null = null;
 
 type DurableReplayCapture = Readonly<Record<string, unknown>>;
@@ -8159,7 +8173,18 @@ export async function main(): Promise<void> {
                    * (or any unexpected shape) is *unknown*, which keeps the previous behaviour rather than
                    * skipping a row that may exist.
                    */
-                  return evaluationJobExistsFromGetJobAnswer(decoded);
+                  const verdict = evaluationJobExistsFromGetJobAnswer(decoded);
+                  if (verdict !== false && evaluationJobExistsAnswerLogged < 3) {
+                    evaluationJobExistsAnswerLogged += 1;
+                    console.error(
+                      `[run163] evaluation existence check answer keys=${Object.keys(
+                        (decoded ?? {}) as Record<string, unknown>,
+                      )
+                        .slice(0, 8)
+                        .join(",")} verdict=${String(verdict)}`,
+                    );
+                  }
+                  return verdict;
                 },
                 invoke: (capability, value, invokeScope) =>
                   activeRuntime.invoke("evaluation-core", {
