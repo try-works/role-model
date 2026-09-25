@@ -61,6 +61,7 @@ import {
   MAX_HANDOFF_RECOVERY_LIST_PAGE,
   type RecoveryPageCursor,
   branchCaptureRequestIdsFromJob,
+  branchCaptureRequestIdCandidatesFromJob,
   carriedEvaluationJobId,
   coerceDurableReplayJobRecord,
   describeUnresolvedArms,
@@ -7948,7 +7949,12 @@ export async function main(): Promise<void> {
                 }`,
               );
             }
-            const branchCaptureRequestIds = branchCaptureRequestIdsFromJob({
+            /**
+             * Run 100 item 8 (`capture_missing`): the audit measured that the derived `…-branch` name has no
+             * producer while the arm's capture sits under the provider-result id, so the reader gets every id
+             * the job can support, in order, instead of the single derived name.
+             */
+            const branchCaptureRequestIds = branchCaptureRequestIdCandidatesFromJob({
               replayJobId: entry.replayJobId,
               requestId: entry.requestId,
               dispatches: durableReplayJob?.dispatches,
@@ -7965,7 +7971,8 @@ export async function main(): Promise<void> {
             await holdHandoffEvidence(entry.replayJobId, {
               requestId: entry.requestId,
               sourceCaptureRequestId: entry.sourceCaptureRequestId,
-              branchCaptureRequestIds: [...branchCaptureRequestIds.values()],
+              // Run 100 item 8: each arm now names ordered candidates, so the pin covers all of them.
+              branchCaptureRequestIds: [...branchCaptureRequestIds.values()].flat(),
             });
             /**
              * Run 100 addendum `handoff-evidence-durability.addendum-06` S21/S23: the arm evidence resolves

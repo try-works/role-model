@@ -336,6 +336,74 @@ export function selectUnevaluatedHandoffs(
  * the branch capture is `<replayRequestId>-branch`. The completion must read that, with the old derivation
  * kept only as the fallback for jobs written before the receipt existed.
  */
+/**
+ * Run 100 — item 8's `capture_missing` class, root-caused by two independent audit subagents on the live
+ * store 2026-09-25: 67 distinct `capture_missing(<id>)` ids across 39 failed jobs, **all** `…-<hash16>-branch`,
+ * while **0 of 2 965** queue receipts carry those ids and **0 receipts end in `-branch`**. The receipts for the
+ * same request are `replay-<uuid>-<candidateHash16>` — the *dispatch* captures the arms actually wrote, with
+ * the arm's response text — because dispatch captures became attempt-scoped (run-100 addendum 04 S9).
+ *
+ * So the resolution must name every id the job can support, in order of confidence, and the reader must try
+ * them before declaring the arm unreadable: the recorded `branchRequestId`, the provider result's `-branch`
+ * sibling, the provider result capture itself (the name the store measured as present), and finally the legacy
+ * pre-S9 derivation for jobs written before receipts existed.
+ */
+export function branchCaptureRequestIdCandidatesFromJob(input: {
+  readonly replayJobId: string;
+  readonly requestId: string;
+  readonly dispatches?: unknown;
+  readonly candidateEndpointIds: readonly string[];
+}): Map<string, readonly string[]> {
+  const dispatches =
+    input.dispatches && typeof input.dispatches === "object" && !Array.isArray(input.dispatches)
+      ? (input.dispatches as Record<string, unknown>)
+      : {};
+  const resolved = new Map<string, readonly string[]>();
+  for (const candidateEndpointId of input.candidateEndpointIds) {
+    const dispatch =
+      dispatches[candidateEndpointId] &&
+      typeof dispatches[candidateEndpointId] === "object" &&
+      !Array.isArray(dispatches[candidateEndpointId])
+        ? (dispatches[candidateEndpointId] as Record<string, unknown>)
+        : null;
+    const result =
+      dispatch?.result && typeof dispatch.result === "object" && !Array.isArray(dispatch.result)
+        ? (dispatch.result as Record<string, unknown>)
+        : null;
+    const candidates: string[] = [];
+    const push = (value: string): void => {
+      const trimmed = value.trim();
+      if (trimmed && !candidates.includes(trimmed)) candidates.push(trimmed);
+    };
+    const recordedBranchRequestId =
+      typeof result?.branchRequestId === "string" ? result.branchRequestId : "";
+    if (recordedBranchRequestId) push(recordedBranchRequestId);
+    const providerResultRef =
+      typeof result?.providerResultRef === "string" ? result.providerResultRef : "";
+    const replayRequestId = providerResultRef.startsWith("route-capture:")
+      ? providerResultRef.slice("route-capture:".length)
+      : "";
+    if (replayRequestId) {
+      /**
+       * The audit measured which name exists: the dispatch capture (`replay-<uuid>-<hash16>`) is present in the
+       * queue receipt store, while its `-branch` sibling is written by nothing since S9. Try the existing shape
+       * first and keep the sibling for jobs written before the rename.
+       */
+      push(replayRequestId);
+      push(`${replayRequestId}-branch`);
+    }
+    push(
+      `replay-${input.requestId}-${replayDispatchCaptureToken({
+        replayJobId: input.replayJobId,
+        candidateEndpointId,
+        dispatchNonce: null,
+      })}-branch`,
+    );
+    resolved.set(candidateEndpointId, candidates);
+  }
+  return resolved;
+}
+
 export function branchCaptureRequestIdsFromJob(input: {
   readonly replayJobId: string;
   readonly requestId: string;
@@ -522,7 +590,11 @@ export async function resolveResumedArmEvidence(input: {
     readonly modelId: string;
     readonly reasoningEffort: string | null;
   }[];
-  readonly branchCaptureRequestIds: ReadonlyMap<string, string>;
+  /**
+   * Run 100 item 8: one id per arm (the pre-audit shape) or the ordered candidates the job can support.
+   * Candidates are tried in order and the first that resolves is used.
+   */
+  readonly branchCaptureRequestIds: ReadonlyMap<string, string | readonly string[]>;
   readonly readCapture: (requestId: string) => Promise<Record<string, unknown> | null>;
 }): Promise<{
   readonly arms: readonly ResumedArmEvidence[];
@@ -531,22 +603,37 @@ export async function resolveResumedArmEvidence(input: {
   const arms: ResumedArmEvidence[] = [];
   const unreadable: UnresolvedArmEvidence[] = [];
   for (const candidate of input.counterfactualPackages) {
-    const requestId = input.branchCaptureRequestIds.get(candidate.endpointId);
-    if (!requestId) {
+    const named = input.branchCaptureRequestIds.get(candidate.endpointId);
+    const requestIds =
+      typeof named === "string" ? [named] : Array.isArray(named) ? [...named] : [];
+    if (requestIds.length === 0) {
       unreadable.push({ endpointId: candidate.endpointId, reason: "capture_not_named" });
       continue;
     }
     let capture: Record<string, unknown> | null = null;
     let readFailure: string | null = null;
-    try {
-      capture = await input.readCapture(requestId);
-    } catch (error) {
-      readFailure = String((error as { message?: unknown })?.message ?? error ?? "unknown").slice(
-        0,
-        160,
-      );
+    let resolvedRequestId: string | null = null;
+    /**
+     * The audit measured the failure mode precisely: the derived `…-branch` name has no producer, while the
+     * arm's capture is present under the provider-result id. Try every candidate before giving up, and keep the
+     * first failure text so an unreadable boundary is still reported as such rather than as a missing row.
+     */
+    for (const requestId of requestIds) {
+      try {
+        capture = await input.readCapture(requestId);
+      } catch (error) {
+        readFailure = String((error as { message?: unknown })?.message ?? error ?? "unknown").slice(
+          0,
+          160,
+        );
+        continue;
+      }
+      if (capture) {
+        resolvedRequestId = requestId;
+        break;
+      }
     }
-    if (readFailure !== null) {
+    if (!capture && readFailure !== null) {
       unreadable.push({
         endpointId: candidate.endpointId,
         reason: "capture_unreadable",
@@ -558,8 +645,11 @@ export async function resolveResumedArmEvidence(input: {
       unreadable.push({
         endpointId: candidate.endpointId,
         reason: "capture_missing",
-        // The id travels with the reason: a read that misses a capture the job named is only diagnosable with it.
-        detail: requestId,
+        /**
+         * The id travels with the reason: a read that misses a capture the job named is only diagnosable with
+         * it. The last candidate is the least-derived name the job could offer, so it is the most informative.
+         */
+        detail: requestIds[requestIds.length - 1],
       });
       continue;
     }
@@ -578,7 +668,11 @@ export async function resolveResumedArmEvidence(input: {
         typeof capture.reasoningEffort === "string"
           ? capture.reasoningEffort
           : candidate.reasoningEffort,
-      replayRequestId: requestId.replace(/-branch$/, ""),
+      /**
+       * Run 100 item 8: the arm's replay request id is derived from the candidate that actually resolved, not
+       * from the first name the job offered (the derived `-branch` sibling resolves for no live job).
+       */
+      replayRequestId: (resolvedRequestId ?? requestIds[0]).replace(/-branch$/, ""),
       routingDecisionId: String(capture.routingDecisionId ?? ""),
       outputText,
     });
