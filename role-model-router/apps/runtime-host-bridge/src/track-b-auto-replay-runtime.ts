@@ -2,6 +2,7 @@ import {
   type AutoReplayCapture,
   type AutoReplayExecution,
   type AutoReplayTickResult,
+  resolveReplayJudgeFallbackEndpointIds,
   runAutoReplayTick,
 } from "./track-b-auto-replay.js";
 
@@ -637,6 +638,15 @@ export function startAutoReplayLoop(input: {
         ...(typeof input.resolveJudgeEndpointId === "function"
           ? { judgeEndpointId: await input.resolveJudgeEndpointId().catch(() => null) }
           : {}),
+        /**
+         * Run 100 addendum 22: the operator can name the endpoints the tick may judge with when the configured
+         * judge is itself an arm of the comparison. Unset keeps the tick's own default (the configured endpoint
+         * pool), and an empty effective list keeps the named `judge_candidate_overlap` refusal.
+         */
+        ...(() => {
+          const fallbackEndpointIds = resolveReplayJudgeFallbackEndpointIds(process.env);
+          return fallbackEndpointIds ? { judgeFallbackEndpointIds: fallbackEndpointIds } : {};
+        })(),
         ...(providedHealthyEndpointIds && providedHealthyEndpointIds.length > 0
           ? { healthyEndpointIds: [...providedHealthyEndpointIds] }
           : {}),
