@@ -1,3 +1,6 @@
+import { createHash } from "node:crypto";
+import path from "node:path";
+
 import { expect, test } from "vitest";
 
 import {
@@ -84,12 +87,29 @@ test("run101 S36 the job record is coerced out of whatever envelope answered", (
  * the moment the derivation drifts from the boundary that stamps the work.
  */
 test("run101 S28 the durable job scope is derived the way the boundary stamps it", () => {
+  /**
+   * The boundary stamps `runtime:${sha256({channel, stateRoot: path.resolve(...)})}`. `path.resolve` renders the
+   * separator for the host platform, so the digest of the *same* configured root differs between the Windows
+   * runtime that stamped the live jobs and a Linux CI runner. The portable assertion therefore derives the
+   * expected value with the same platform rules, and the exact live digest is pinned only where it was measured.
+   */
+  const expectedStateRoot = path.resolve(
+    path.join("E:\\role-model-temp\\rc-run\\state", "standalone-runtime-stage", "track-b"),
+  );
+  const expectedScope = `runtime:${createHash("sha256")
+    .update(JSON.stringify({ channel: "stage", stateRoot: expectedStateRoot }))
+    .digest("hex")
+    .slice(0, 32)}`;
   const scope = resolveDurableReplayJobScope({
     channel: "stage",
     runtimeStateRoot: "E:\\role-model-temp\\rc-run\\state",
     scopeId: "standalone-runtime-stage",
   });
-  expect(scope).toBe("runtime:714f4a87dd3c44d1bc93ed741841c722");
+  expect(scope).toBe(expectedScope);
+  if (process.platform === "win32") {
+    // The scope the live Windows root's ~1 700 jobs actually carry.
+    expect(scope).toBe("runtime:714f4a87dd3c44d1bc93ed741841c722");
+  }
   expect(
     resolveDurableReplayJobScope({
       channel: "development",
