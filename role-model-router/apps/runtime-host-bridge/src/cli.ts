@@ -391,6 +391,13 @@ let persistedControllerFallbackLogged = false;
 let terminalizationBenignCount = 0;
 /** Run 100 addendum 28 §2: the first few existence-check answers are named, so their shape is measurable. */
 let evaluationJobExistsAnswerLogged = 0;
+/**
+ * Run 100 addendum 29 follow-up: the answer the tick receives carries a `durableLocator`, so a *repeated*
+ * request id can be served the externalized answer of an earlier call. The pass revisits the same resume
+ * entries every cycle, so its existence check must ask a fresh question each time — otherwise a job that has
+ * since aged out is still reported present, and the cancel that follows is correctly refused as not found.
+ */
+let evaluationJobExistsProbeCounter = 0;
 let activeLearningSummaryReader: (() => Promise<unknown>) | null = null;
 
 type DurableReplayCapture = Readonly<Record<string, unknown>>;
@@ -8156,8 +8163,14 @@ export async function main(): Promise<void> {
                  * ~11 lines/min for the 305-of-321 ids the census found absent).
                  */
                 jobExists: async (invokeScope) => {
+                  evaluationJobExistsProbeCounter += 1;
                   const answer = await activeRuntime.invoke("evaluation-core", {
-                    requestId: `evaluation:get-job:${entry.evaluationJobId}`,
+                    /**
+                     * A fresh request id per check: the answer is externalized behind a `durableLocator`, and a
+                     * repeated id can be served an earlier call's answer, which would report a row that has
+                     * since aged out as present.
+                     */
+                    requestId: `evaluation:get-job:${entry.evaluationJobId}:${evaluationJobExistsProbeCounter}`,
                     sessionId: `evaluation:get-job:${options.scopeId}`,
                     protocolVersion: "1.1.0",
                     channel,
@@ -8176,12 +8189,21 @@ export async function main(): Promise<void> {
                   const verdict = evaluationJobExistsFromGetJobAnswer(decoded);
                   if (verdict !== false && evaluationJobExistsAnswerLogged < 3) {
                     evaluationJobExistsAnswerLogged += 1;
+                    const marker = (decoded ?? {}) as Record<string, unknown>;
+                    const locator =
+                      marker.durableLocator && typeof marker.durableLocator === "object"
+                        ? (marker.durableLocator as Record<string, unknown>)
+                        : null;
+                    const business =
+                      marker.businessOutput && typeof marker.businessOutput === "object"
+                        ? (marker.businessOutput as Record<string, unknown>)
+                        : null;
                     console.error(
-                      `[run163] evaluation existence check answer keys=${Object.keys(
-                        (decoded ?? {}) as Record<string, unknown>,
-                      )
-                        .slice(0, 8)
-                        .join(",")} verdict=${String(verdict)}`,
+                      `[run164] evaluation existence check id=${entry.evaluationJobId.slice(0, 24)} verdict=${String(
+                        verdict,
+                      )} locatorRequest=${String(locator?.requestId ?? "-").slice(-24)} businessStatus=${String(
+                        business?.status ?? "-",
+                      )}`,
                     );
                   }
                   return verdict;
