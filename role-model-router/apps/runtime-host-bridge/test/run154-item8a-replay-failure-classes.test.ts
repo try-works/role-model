@@ -1,9 +1,16 @@
+import { mkdtempSync, rmSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+
 import { expect, test } from "vitest";
 
 import {
   classifyReplayExecutorFailure,
   retryableReplayRefusalCodes,
+  runAutoReplayTick,
 } from "../src/track-b-auto-replay.js";
+import { createReplayLedger } from "../src/track-b-replay-ledger.js";
+import { buildReplayPolicySet } from "../src/track-b-replay-policy.js";
 import { REPLAY_REFUSAL_CODES } from "../src/track-b-replay-policy.js";
 
 /**
@@ -45,4 +52,65 @@ test("run154 item 8a every other executor failure keeps the generic retryable co
   expect(
     classifyReplayExecutorFailure("durable replay branch append has no host dispatch receipt"),
   ).toEqual({ code: "replay_failed", terminal: false });
+});
+
+/**
+ * The live rows were emitted by the tick's *result* path, not by its catch: the boundary answers the
+ * executor with a non-terminal execution carrying the 409 text in `failureDetail`. These two tests are
+ * therefore the ones that mirror the store — before the change both rows said `replay_failed`.
+ */
+const tempLedger = () => {
+  const dir = mkdtempSync(path.join(os.tmpdir(), "run154-item8a-"));
+  return {
+    ledger: createReplayLedger({ filePath: path.join(dir, "ledger.json") }),
+    cleanup: () => rmSync(dir, { recursive: true, force: true }),
+  };
+};
+
+const tickWithFailureDetail = async (failureDetail: string) => {
+  const { ledger, cleanup } = tempLedger();
+  try {
+    const rows: Array<Record<string, unknown>> = [];
+    const result = await runAutoReplayTick({
+      captures: [
+        { captureRef: "req-1", sourceEndpointId: "endpoint-a", hasRecordedToolResults: false },
+      ],
+      configuredEndpointIds: ["endpoint-a", "endpoint-b", "endpoint-c"],
+      ledger,
+      policySet: buildReplayPolicySet(),
+      executor: async () => ({ terminal: false, branches: [], failureDetail }),
+      dispositionSink: (row) => rows.push(row as unknown as Record<string, unknown>),
+    });
+    return { rows, result };
+  } finally {
+    cleanup();
+  }
+};
+
+test("run154 item 8a a boundary-unavailable execution result is named, still deferred", async () => {
+  const { rows, result } = await tickWithFailureDetail(
+    'replay endpoint HTTP 409: {"error":"route capture skipped: boundary unavailable until 2026-09-25T07:20:00.000Z"}',
+  );
+  expect(rows).toHaveLength(1);
+  expect(rows[0]).toMatchObject({
+    captureRef: "req-1",
+    outcome: "deferred",
+    code: "replay_boundary_unavailable",
+  });
+  expect(result.deferred).toBe(1);
+  expect(result.refused).toBe(0);
+});
+
+test("run154 item 8a a reused-idempotency execution result is named terminal", async () => {
+  const { rows, result } = await tickWithFailureDetail(
+    'replay endpoint HTTP 409: {"error":"route capture idempotency key was reused with different immutable bytes"}',
+  );
+  expect(rows).toHaveLength(1);
+  expect(rows[0]).toMatchObject({
+    captureRef: "req-1",
+    outcome: "refused",
+    code: "replay_capture_idempotency_conflict",
+  });
+  expect(result.refused).toBe(1);
+  expect(result.deferred).toBe(0);
 });

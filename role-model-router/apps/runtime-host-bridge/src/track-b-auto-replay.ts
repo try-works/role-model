@@ -870,16 +870,30 @@ export async function runAutoReplayTick(input: {
         continue;
       }
       deferred += 1;
-      emit({
-        captureRef: capture.captureRef,
-        outcome: "deferred",
-        code: "replay_failed",
-        detail:
+      {
+        const detail =
           execution.failureDetail ??
           (execution.terminal
             ? "no candidate branch completed"
-            : "replay did not reach a terminal state"),
-      });
+            : "replay did not reach a terminal state");
+        /**
+         * Run 100 addendum 16 item 8a (live rows on the stage store): the boundary reports its 409s by
+         * *returning* a non-terminal execution with the error text, so this is the path the store's
+         * `replay_failed` rows came from — the catch below only sees thrown errors. Classify the detail
+         * the same way, so the two named classes reach the disposition instead of the generic code.
+         */
+        const classification = classifyReplayExecutorFailure(detail);
+        if (classification.terminal) {
+          refused += 1;
+          deferred -= 1;
+        }
+        emit({
+          captureRef: capture.captureRef,
+          outcome: classification.terminal ? "refused" : "deferred",
+          code: classification.code,
+          detail,
+        });
+      }
       continue;
     }
     // Run 98 R2: a dispatched branch is not a completed counterfactual. Evaluation Core owns
@@ -891,12 +905,20 @@ export async function runAutoReplayTick(input: {
     if (!execution.terminal) {
       input.ledger.release(reservation.reservationId);
       deferred += 1;
-      emit({
-        captureRef: capture.captureRef,
-        outcome: "deferred",
-        code: "replay_failed",
-        detail: execution.failureDetail ?? "replay evaluation is not complete",
-      });
+      {
+        const detail = execution.failureDetail ?? "replay evaluation is not complete";
+        const classification = classifyReplayExecutorFailure(detail);
+        if (classification.terminal) {
+          refused += 1;
+          deferred -= 1;
+        }
+        emit({
+          captureRef: capture.captureRef,
+          outcome: classification.terminal ? "refused" : "deferred",
+          code: classification.code,
+          detail,
+        });
+      }
       continue;
     }
     // Terminal only after the replay job completed with appended branches; a dispatch
