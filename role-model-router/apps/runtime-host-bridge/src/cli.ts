@@ -232,6 +232,62 @@ export function supervisedReplayBranchCaptureRequestId(input: {
  * large-but-present job arrives behind the extension's externalization marker; anything else is *unknown*
  * (`null`), which keeps the previous behaviour instead of skipping a row that may exist.
  */
+/**
+ * Run 100 addendum 31 — item 8's `capture_missing` class, measured on the live store 2026-09-25.
+ *
+ * The handoff-recovery pass reads each arm's branch capture through the operations boundary and reports
+ * `capture_missing(<requestId>)` when that read answers nothing (1-2 lines per build window, e.g.
+ * `[run101] resumed handoff … could not read 3 arm(s): …=capture_missing(replay-req-0673e0e4-…)`). Measured
+ * against the same request id, the capture queue's own durable receipt store holds **three** receipts with
+ * `status: "captured"` and a ~6 KB record naming the arm's endpoint, model, effort and classification.
+ *
+ * The evidence is therefore not gone; the boundary read cannot see it. This reader returns the capture the
+ * queue already wrote, so an arm whose capture is durably recorded is no longer reported missing — and it
+ * answers `null` (never throws) for an unknown id, a malformed receipt or an absent store, so a caller can use
+ * it as a fallback without changing the previous behaviour.
+ */
+export function readRouteCaptureFromQueueReceipt(input: {
+  readonly runtimeStateRoot: string;
+  readonly scopeId: string;
+  readonly requestId: string;
+}): Record<string, unknown> | null {
+  const requestId = typeof input.requestId === "string" ? input.requestId.trim() : "";
+  if (!requestId) return null;
+  const databasePath = path.join(
+    input.runtimeStateRoot,
+    input.scopeId,
+    "track-b",
+    "deferred-route-captures.sqlite",
+  );
+  if (!existsSync(databasePath)) return null;
+  let database: DatabaseSync | null = null;
+  try {
+    database = new DatabaseSync(databasePath, { readOnly: true });
+    const row = database
+      .prepare("SELECT result_json FROM track_b_route_capture_receipts WHERE request_id = ?")
+      .get(requestId) as { result_json?: unknown } | undefined;
+    const text = typeof row?.result_json === "string" ? row.result_json : "";
+    if (!text) return null;
+    const parsed = JSON.parse(text) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+    const record = parsed as Record<string, unknown>;
+    /**
+     * Two shapes live in that column: the queue's own `{status: "delivered", result: {…}}` envelope, and a
+     * bare capture record written by an older producer. Both are accepted; anything without a request id is
+     * not a capture and answers null.
+     */
+    const inner =
+      record.result && typeof record.result === "object" && !Array.isArray(record.result)
+        ? (record.result as Record<string, unknown>)
+        : record;
+    return typeof inner.requestId === "string" && inner.requestId.trim().length > 0 ? inner : null;
+  } catch {
+    return null;
+  } finally {
+    database?.close();
+  }
+}
+
 export function evaluationJobExistsFromGetJobAnswer(answer: unknown): boolean | null {
   if (answer === null || answer === undefined) return false;
   if (typeof answer !== "object" || Array.isArray(answer)) return null;
@@ -7923,11 +7979,23 @@ export async function main(): Promise<void> {
             const armEvidence = await resolveResumedArmEvidence({
               counterfactualPackages: entry.counterfactualPackages,
               branchCaptureRequestIds,
-              readCapture: async (requestId) =>
-                (await operations.readLocalRouteCapture({ requestId })) as Record<
+              readCapture: async (requestId) => {
+                const answer = (await operations.readLocalRouteCapture({ requestId })) as Record<
                   string,
                   unknown
-                > | null,
+                > | null;
+                if (answer) return answer;
+                /**
+                 * Run 100 addendum 31: the boundary answered nothing for an arm whose capture the queue
+                 * durably recorded (`status: "captured"`), which is the measured `capture_missing` class. Fall
+                 * back to that receipt before reporting the evidence gone.
+                 */
+                return readRouteCaptureFromQueueReceipt({
+                  runtimeStateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  requestId,
+                });
+              },
             });
             for (const arm of armEvidence.arms) {
               counterfactualPackages.push({
