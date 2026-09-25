@@ -528,6 +528,9 @@ let evaluationJobExistsAnswerLogged = 0;
  * since aged out is still reported present, and the cancel that follows is correctly refused as not found.
  */
 let evaluationJobExistsProbeCounter = 0;
+/** Run 100: the status probe's answer shape is named a few times, then counted. */
+let evaluationJobStatusShapeLogged = 0;
+const TERMINAL_STATUS_HINT: ReadonlySet<string> = new Set(["cancelled", "completed", "failed"]);
 let activeLearningSummaryReader: (() => Promise<unknown>) | null = null;
 
 type DurableReplayCapture = Readonly<Record<string, unknown>>;
@@ -8374,7 +8377,34 @@ export async function main(): Promise<void> {
                     value: { jobId: entry.evaluationJobId },
                   });
                   const decoded = unwrapCapabilityPayload(answer);
-                  return evaluationJobStatusFromGetJobAnswer(decoded);
+                  const status = evaluationJobStatusFromGetJobAnswer(decoded);
+                  /**
+                   * Bounded diagnostic (three per process): three deployed attempts at this short-circuit did not
+                   * suppress the stream, so the answer shape has to be named rather than inferred.
+                   */
+                  if (
+                    (status === undefined || (typeof status === "string" && !TERMINAL_STATUS_HINT.has(status))) &&
+                    evaluationJobStatusShapeLogged < 3
+                  ) {
+                    evaluationJobStatusShapeLogged += 1;
+                    const record =
+                      decoded && typeof decoded === "object" && !Array.isArray(decoded)
+                        ? (decoded as Record<string, unknown>)
+                        : null;
+                    const business = record?.businessOutput;
+                    console.error(
+                      `[run171] evaluation status probe: typeof=${typeof decoded} decodedKeys=${Object.keys(
+                        record ?? {},
+                      )
+                        .slice(0, 6)
+                        .join(",")} businessType=${typeof business} businessKeys=${
+                        business && typeof business === "object"
+                          ? Object.keys(business as Record<string, unknown>).slice(0, 6).join(",")
+                          : "-"
+                      } status=${String(status)} head=${typeof decoded === "string" ? decoded.slice(0, 80) : "-"}`,
+                    );
+                  }
+                  return status;
                 },
                 invoke: (capability, value, invokeScope) =>
                   activeRuntime.invoke("evaluation-core", {
