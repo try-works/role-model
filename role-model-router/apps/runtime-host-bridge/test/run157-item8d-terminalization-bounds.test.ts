@@ -102,3 +102,49 @@ test("run157 item 8d a job absent from every candidate scope is a benign no-op, 
   expect(result).toMatchObject({ cancelled: false, benign: true });
   expect(result.scope).toBeNull();
 });
+
+/**
+ * Run 100 addendum 27 §2 residual: the terminalization pass revisits the same resume entries on every cycle,
+ * so an id that exists in no scope was re-invoked (and re-logged by the host bridge as
+ * `invoke-failed … evaluation job not found`) tens of times a minute. Once every candidate scope has answered
+ * not-found, the answer cannot change within a process lifetime: the id is stale, so remember it and stop
+ * paying for the invoke — while a *different* id is still checked normally.
+ */
+test("run157 item 8d an id already found in no scope is not invoked again", async () => {
+  const seen: string[] = [];
+  const entry = { ...ENTRY, evaluationJobId: `evaluation-replay-absent-${Date.now()}` };
+  const invoke = async (_capability: string, _value: Record<string, unknown>, scope: string) => {
+    seen.push(scope);
+    throw new Error("evaluation job not found");
+  };
+
+  const first = await terminalizeAbandonedEvaluation({
+    entry,
+    channel: "stage",
+    operatorScope: "standalone-runtime-stage",
+    reason: "give up",
+    invoke,
+  });
+  expect(first).toMatchObject({ cancelled: false, benign: true });
+  expect(seen).toHaveLength(2);
+
+  const second = await terminalizeAbandonedEvaluation({
+    entry,
+    channel: "stage",
+    operatorScope: "standalone-runtime-stage",
+    reason: "give up",
+    invoke,
+  });
+  expect(second).toMatchObject({ cancelled: false, benign: true });
+  expect(seen).toHaveLength(2);
+
+  const other = await terminalizeAbandonedEvaluation({
+    entry: { ...entry, evaluationJobId: `${entry.evaluationJobId}-other` },
+    channel: "stage",
+    operatorScope: "standalone-runtime-stage",
+    reason: "give up",
+    invoke,
+  });
+  expect(other).toMatchObject({ cancelled: false, benign: true });
+  expect(seen).toHaveLength(4);
+});

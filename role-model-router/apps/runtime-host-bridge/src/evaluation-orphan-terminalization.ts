@@ -72,9 +72,37 @@ const BENIGN_TERMINAL = /(completed evaluation job cannot be cancelled|cannot be
 const JOB_NOT_FOUND = /evaluation job not found/iu;
 const SCOPE_MISMATCH = /scope binding mismatch/iu;
 
+/**
+ * Run 100 addendum 27 §2 residual: the terminalization pass revisits the same resume entries on every cycle,
+ * so an id that exists in no candidate scope was re-invoked — and re-logged by the host bridge as
+ * `invoke-failed … evaluation job not found` — tens of times a minute. Within one process the answer cannot
+ * change, so the ids found absent are remembered and the invoke is skipped. Bounded, oldest-first, so a
+ * long-lived process cannot grow without limit.
+ */
+const ABSENT_EVALUATION_JOB_ID_LIMIT = 4_096;
+const absentEvaluationJobIds = new Set<string>();
+
+function rememberAbsentEvaluationJobId(evaluationJobId: string): void {
+  if (absentEvaluationJobIds.size >= ABSENT_EVALUATION_JOB_ID_LIMIT) {
+    const oldest = absentEvaluationJobIds.values().next().value;
+    if (oldest !== undefined) absentEvaluationJobIds.delete(oldest);
+  }
+  absentEvaluationJobIds.add(evaluationJobId);
+}
+
 export async function terminalizeAbandonedEvaluation(
   input: AbandonedEvaluationTerminalizationInput,
 ): Promise<AbandonedEvaluationTerminalizationResult> {
+  const evaluationJobId =
+    typeof input.entry.evaluationJobId === "string" ? input.entry.evaluationJobId.trim() : "";
+  if (evaluationJobId && absentEvaluationJobIds.has(evaluationJobId)) {
+    return {
+      cancelled: false,
+      scope: null,
+      detail: "evaluation job not found in any candidate scope (remembered)",
+      benign: true,
+    };
+  }
   const scopes: string[] = [];
   const push = (value: unknown): void => {
     const text = typeof value === "string" ? value.trim() : "";
@@ -106,6 +134,7 @@ export async function terminalizeAbandonedEvaluation(
    * from a scope mismatch (which is retried) and from a real failure (which is reported).
    */
   if (detail !== null && JOB_NOT_FOUND.test(detail)) {
+    if (evaluationJobId) rememberAbsentEvaluationJobId(evaluationJobId);
     return { cancelled: false, scope: null, detail, benign: true };
   }
   return { cancelled: false, scope: null, detail };
