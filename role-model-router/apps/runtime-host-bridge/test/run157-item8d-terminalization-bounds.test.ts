@@ -300,6 +300,32 @@ test("run157 item 8d the status reader handles the record, the marker and the de
 });
 
 /**
+ * Measured on run170: the terminal-status short-circuit did not suppress the stream, because a business result
+ * crossing the packaged extension host arrives as `businessOutput` — and for this capability that is a JSON
+ * **string**, which an object-only reader cannot see (`decodeExtensionTextOutput` in `cli.ts` documents the
+ * same shape: a string result, or `{value: string}`). The reader must look through the serialized payload.
+ */
+test("run157 item 8d the status reader sees a serialized business output", () => {
+  expect(evaluationJobStatusFromGetJobAnswer(JSON.stringify({ jobId: "evaluation:1", status: "failed" }))).toBe(
+    "failed",
+  );
+  expect(
+    evaluationJobStatusFromGetJobAnswer({
+      transferState: "externalized",
+      businessOutput: JSON.stringify({ jobId: "evaluation:1", status: "completed" }),
+    }),
+  ).toBe("completed");
+  expect(
+    evaluationJobStatusFromGetJobAnswer({
+      businessOutput: { value: JSON.stringify({ jobId: "evaluation:1", status: "cancelled" }) },
+    }),
+  ).toBe("cancelled");
+  // A non-JSON string is not a record, so the answer stays unknown rather than being read as a status.
+  expect(evaluationJobStatusFromGetJobAnswer("not json")).toBeUndefined();
+  expect(evaluationJobStatusFromGetJobAnswer(JSON.stringify({ jobId: "evaluation:1" }))).toBeUndefined();
+});
+
+/**
  * Run 100 addendum 28 §2 follow-up, measured on run162: with the pre-check wired, `evaluation:get-job` was
  * called but the cancel still failed for part of the stream. The check was reading *any* object answer as
  * "the job exists", and the host answers a failed or degraded read with a degradation receipt — so the pass

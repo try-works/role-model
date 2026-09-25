@@ -291,6 +291,22 @@ export function readRouteCaptureFromQueueReceipt(input: {
 
 export function evaluationJobExistsFromGetJobAnswer(answer: unknown): boolean | null {
   if (answer === null || answer === undefined) return false;
+  /**
+   * A serialized job record (the host's business-output shape for this capability) proves the row is there just
+   * as an object one does.
+   */
+  if (typeof answer === "string") {
+    const text = answer.trim();
+    if (!text.startsWith("{")) return null;
+    try {
+      const parsed = JSON.parse(text) as unknown;
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+      const record = parsed as Record<string, unknown>;
+      return typeof record.status === "string" && record.status.trim() ? true : null;
+    } catch {
+      return null;
+    }
+  }
   if (typeof answer !== "object" || Array.isArray(answer)) return null;
   const record = answer as Record<string, unknown>;
   const schemaVersion = typeof record.schemaVersion === "string" ? record.schemaVersion : "";
@@ -327,24 +343,51 @@ export function evaluationJobExistsFromGetJobAnswer(answer: unknown): boolean | 
  * the previous behaviour rather than suppressing a cancel that may be needed.
  */
 export function evaluationJobStatusFromGetJobAnswer(answer: unknown): string | null | undefined {
+  /**
+   * Run 170 follow-up (measured: the short-circuit did not suppress the stream): a business result crossing the
+   * packaged extension host arrives as `businessOutput`, and for this capability that is a **JSON string** — the
+   * same shape `decodeExtensionTextOutput` documents. Look through the serialization before reading fields.
+   */
+  const parseSerialized = (value: unknown): Record<string, unknown> | undefined => {
+    if (typeof value !== "string") return undefined;
+    const text = value.trim();
+    if (!text.startsWith("{")) return undefined;
+    try {
+      const parsed = JSON.parse(text) as unknown;
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+        ? (parsed as Record<string, unknown>)
+        : undefined;
+    } catch {
+      return undefined;
+    }
+  };
+  const resolveRecord = (value: unknown): Record<string, unknown> | undefined => {
+    const serialized = parseSerialized(value);
+    if (serialized) return serialized;
+    return value && typeof value === "object" && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : undefined;
+  };
   if (answer === null || answer === undefined) return null;
-  if (typeof answer !== "object" || Array.isArray(answer)) return undefined;
-  const record = answer as Record<string, unknown>;
+  const record = resolveRecord(answer);
+  if (!record) return undefined;
   const schemaVersion = typeof record.schemaVersion === "string" ? record.schemaVersion : "";
   if (schemaVersion.startsWith("role-model.degradation-receipt")) return undefined;
   const statusOf = (value: unknown): string | undefined => {
-    if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
-    const status = (value as Record<string, unknown>).status;
+    const candidate = resolveRecord(value);
+    if (!candidate) return undefined;
+    const status = candidate.status;
     return typeof status === "string" && status.trim() ? status.trim() : undefined;
   };
   const direct = statusOf(record);
   if (direct) return direct;
   const businessOutput = statusOf(record.businessOutput);
   if (businessOutput) return businessOutput;
-  const nested = record.businessOutput && typeof record.businessOutput === "object"
-    ? statusOf((record.businessOutput as Record<string, unknown>).value)
-    : undefined;
+  const businessRecord = resolveRecord(record.businessOutput);
+  const nested = businessRecord ? statusOf(businessRecord.value) : undefined;
   if (nested) return nested;
+  const directValue = statusOf(record.value);
+  if (directValue) return directValue;
   return undefined;
 }
 
