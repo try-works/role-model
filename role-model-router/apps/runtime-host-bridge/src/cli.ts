@@ -379,15 +379,23 @@ export function evaluationJobStatusFromGetJobAnswer(answer: unknown): string | n
     const status = candidate.status;
     return typeof status === "string" && status.trim() ? status.trim() : undefined;
   };
-  const direct = statusOf(record);
-  if (direct) return direct;
-  const businessOutput = statusOf(record.businessOutput);
-  if (businessOutput) return businessOutput;
-  const businessRecord = resolveRecord(record.businessOutput);
-  const nested = businessRecord ? statusOf(businessRecord.value) : undefined;
-  if (nested) return nested;
-  const directValue = statusOf(record.value);
-  if (directValue) return directValue;
+  /**
+   * Measured on run172: the live answer is a **pair of nested externalization markers** — the outer record's
+   * `businessOutput` is itself a marker — so the status sits one or more envelope layers down. Walk
+   * `businessOutput`/`value` up to a bounded depth and read the status at any layer; a locator that never
+   * reaches a record stays unknown rather than guessed.
+   */
+  const MAX_ENVELOPE_DEPTH = 6;
+  let current: Record<string, unknown> | undefined = record;
+  for (let depth = 0; depth < MAX_ENVELOPE_DEPTH && current; depth += 1) {
+    const status = statusOf(current);
+    if (status) return status;
+    const next: Record<string, unknown> | undefined =
+      resolveRecord(current.businessOutput) ??
+      resolveRecord((current.businessOutput as Record<string, unknown> | undefined)?.value) ??
+      resolveRecord(current.value);
+    current = next && next !== current ? next : undefined;
+  }
   return undefined;
 }
 

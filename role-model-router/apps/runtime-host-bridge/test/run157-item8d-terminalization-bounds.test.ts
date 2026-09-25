@@ -326,6 +326,48 @@ test("run157 item 8d the status reader sees a serialized business output", () =>
 });
 
 /**
+ * Measured on run172 with a bounded shape probe — the live answer is a **pair of nested externalization
+ * markers**, not one:
+ *
+ * ```
+ * decodedKeys=transferState,resultHash,byteLength,businessOutput,durableLocator,evidenceRef
+ * businessKeys=transferState,resultHash,byteLength   ← the businessOutput is itself a marker
+ * status=undefined
+ * ```
+ *
+ * That is the same lesson `supervised-replay-handoff-recovery.ts` records for the resume path: the record sits
+ * inside one or more envelope layers, and reading a fixed depth makes a present row look absent. The reader must
+ * unwrap `businessOutput`/`value` layers (bounded) before concluding the status is unknown — which is why three
+ * earlier attempts at this short-circuit shipped without suppressing anything.
+ */
+test("run157 item 8d the status reader unwraps nested markers", () => {
+  const job = { jobId: "evaluation:1", status: "failed" };
+  expect(
+    evaluationJobStatusFromGetJobAnswer({
+      transferState: "externalized",
+      businessOutput: { transferState: "externalized", businessOutput: job },
+    }),
+  ).toBe("failed");
+  expect(
+    evaluationJobStatusFromGetJobAnswer({
+      businessOutput: { businessOutput: { businessOutput: { value: job } } },
+    }),
+  ).toBe("failed");
+  // Serialized at the inner layer.
+  expect(
+    evaluationJobStatusFromGetJobAnswer({
+      businessOutput: { businessOutput: JSON.stringify(job) },
+    }),
+  ).toBe("failed");
+  // A locator that never reaches a record stays unknown rather than being guessed.
+  expect(
+    evaluationJobStatusFromGetJobAnswer({
+      businessOutput: { transferState: "externalized", outputKey: "sha256:abc" },
+    }),
+  ).toBeUndefined();
+});
+
+/**
  * Run 100 addendum 28 §2 follow-up, measured on run162: with the pre-check wired, `evaluation:get-job` was
  * called but the cancel still failed for part of the stream. The check was reading *any* object answer as
  * "the job exists", and the host answers a failed or degraded read with a degradation receipt — so the pass
