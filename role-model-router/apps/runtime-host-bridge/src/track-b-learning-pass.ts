@@ -309,7 +309,12 @@ export function assembleDurableLearnerValidationValue(
  * travel with it, matching the sidecar composition: a store refusal degrades the *receipt* (the retrieval was still
  * served) and a worker refusal is reported, never thrown into the sweep.
  */
-export const RUN100_SWEEP_RETRIEVAL_QUERY = "outperformed holdout routing";
+/**
+ * Measured against the live FTS index (435 documents): `outperformed` and `holdout` appear in every derived
+ * experience text, while `routing` appears only in the 229 capture-scope texts - so a three-token AND query returns
+ * nothing for the operator scope the sweep asks about. Two tokens match the whole corpus and still exercise ranking.
+ */
+export const RUN100_SWEEP_RETRIEVAL_QUERY = "outperformed holdout";
 /** The worker's own bound is 64; the sweep asks for a page, not the whole corpus. */
 export const RUN100_SWEEP_RETRIEVAL_LIMIT = 8;
 
