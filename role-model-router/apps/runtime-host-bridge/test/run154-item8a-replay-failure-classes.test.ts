@@ -49,9 +49,34 @@ test("run154 item 8a every other executor failure keeps the generic retryable co
     code: "replay_failed",
     terminal: false,
   });
-  expect(
-    classifyReplayExecutorFailure("durable replay branch append has no host dispatch receipt"),
-  ).toEqual({ code: "replay_failed", terminal: false });
+  expect(classifyReplayExecutorFailure("some unmapped boundary error")).toEqual({
+    code: "replay_failed",
+    terminal: false,
+  });
+});
+
+/**
+ * Run 100 addendum 24 §3: the census left two more classes live and unnamed — `awaiting replay is missing
+ * its durable evaluation receipt` (five of the last six hours) and `durable replay branch append has no host
+ * dispatch receipt` (08:13:28Z). Both are *recoverable* shapes rather than terminal ones: the handoff-recovery
+ * pass rebuilds a missing evaluation from durable evidence for exactly a job in `awaiting_evaluation` with no
+ * evaluation id (`isRecoverableHandoff`), and the append-recovery leg rebuilds the branch from the dispatch's
+ * persisted `providerResultRef`. They were spending the deferral budget under a code that named neither.
+ */
+test("run154 item 8a the recoverable handoff shapes are named and stay deferrable", () => {
+  const missingReceipt = classifyReplayExecutorFailure(
+    "awaiting replay is missing its durable evaluation receipt",
+  );
+  expect(missingReceipt).toEqual({ code: "replay_evaluation_receipt_missing", terminal: false });
+  expect(retryableReplayRefusalCodes().has("replay_evaluation_receipt_missing")).toBe(true);
+  expect(REPLAY_REFUSAL_CODES).toContain("replay_evaluation_receipt_missing");
+
+  const missingAppend = classifyReplayExecutorFailure(
+    "durable replay branch append has no host dispatch receipt",
+  );
+  expect(missingAppend).toEqual({ code: "replay_branch_append_unavailable", terminal: false });
+  expect(retryableReplayRefusalCodes().has("replay_branch_append_unavailable")).toBe(true);
+  expect(REPLAY_REFUSAL_CODES).toContain("replay_branch_append_unavailable");
 });
 
 /**

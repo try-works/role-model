@@ -205,12 +205,23 @@ export function supervisedReplayBranchCaptureRequestId(input: {
   readonly candidateEndpointId: string;
   readonly phase: "prepared" | "failure";
   readonly attemptToken: string;
+  /**
+   * Run 100 addendum 24 §1 residual (measured 08:58:17Z on run159): a per-attempt id was not enough —
+   * `req-0071aa21…` presented `…-failure-26a1d43a7a29` twice with different bytes during one attempt (the
+   * job sits in `failure_append_pending`, so a recovery re-append changed the payload). The tag recognises
+   * the payload, so identical retries stay idempotent under one key and changed bytes get their own.
+   */
+  readonly contentTag?: string | null;
 }): string {
   const candidateHash = createHash("sha256")
     .update(input.candidateEndpointId)
     .digest("hex")
     .slice(0, 16);
-  return `replay-${input.requestId}-${candidateHash}-${input.phase}-${input.attemptToken}`;
+  const contentTag =
+    typeof input.contentTag === "string" && input.contentTag.trim().length > 0
+      ? `-${input.contentTag.trim().slice(0, 16)}`
+      : "";
+  return `replay-${input.requestId}-${candidateHash}-${input.phase}-${input.attemptToken}${contentTag}`;
 }
 
 export function readPersistedControllerEndpointId(input: {
@@ -6940,11 +6951,34 @@ export async function main(): Promise<void> {
                   throw new Error(
                     "durable replay failure branch append requires its prepared branch root",
                   );
+                /**
+                 * Run 100 addendum 24 §1 residual: the failure bytes are not stable across a recovery
+                 * re-append (the message can carry a fresh diagnostic), so the id also carries a digest of
+                 * exactly the fields that go into the capture. Identical retries keep one key; changed bytes
+                 * get their own instead of being refused as a reuse.
+                 */
+                const failureContentTag = createHash("sha256")
+                  .update(
+                    JSON.stringify({
+                      errorClass: String(failure.code ?? "router_dispatch_error"),
+                      message: String(failure.message ?? "replay provider dispatch failed").slice(
+                        0,
+                        512,
+                      ),
+                      preparedBranchRootRef,
+                      endpointId: candidateEndpointId,
+                      modelId: candidate.modelId ?? null,
+                      reasoningEffort: candidate.reasoningEffort ?? null,
+                    }),
+                  )
+                  .digest("hex")
+                  .slice(0, 16);
                 const failureRequestId = supervisedReplayBranchCaptureRequestId({
                   requestId,
                   candidateEndpointId,
                   phase: "failure",
                   attemptToken: replayAttemptToken,
+                  contentTag: failureContentTag,
                 });
                 const failureEffort =
                   typeof candidate.reasoningEffort === "string" && candidate.reasoningEffort

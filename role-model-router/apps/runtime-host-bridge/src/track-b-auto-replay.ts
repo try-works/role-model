@@ -353,6 +353,15 @@ const RETRYABLE_REPLAY_REFUSAL_CODES: ReadonlySet<string> = new Set([
    */
   "replay_boundary_unavailable",
   /**
+   * Run 100 addendum 24 §3: two recoverable shapes the census left unnamed. `awaiting replay is missing its
+   * durable evaluation receipt` is the shape `isRecoverableHandoff` exists for (the recovery pass rebuilds the
+   * evaluation from durable evidence), and `durable replay branch append has no host dispatch receipt` is a
+   * paid-for branch whose append can be rebuilt from the dispatch's persisted `providerResultRef`. Both are
+   * deferrable; see `classifyReplayExecutorFailure`.
+   */
+  "replay_evaluation_receipt_missing",
+  "replay_branch_append_unavailable",
+  /**
    * Run 108: the caller resolves the judge per tick and could not name it. Without the judge the arms cannot
    * exclude it, and the controller is the strongest alternative - so a capture dispatched in this state is
    * planned *with* the judge as an arm and then judged by it (`judge_self_evaluation`, ineligible evidence).
@@ -683,7 +692,12 @@ async function runBoundedExecutor(
  * Everything else keeps the previous behaviour exactly, including the generic code.
  */
 export function classifyReplayExecutorFailure(message: string): Readonly<{
-  code: "replay_failed" | "replay_boundary_unavailable" | "replay_capture_idempotency_conflict";
+  code:
+    | "replay_failed"
+    | "replay_boundary_unavailable"
+    | "replay_capture_idempotency_conflict"
+    | "replay_evaluation_receipt_missing"
+    | "replay_branch_append_unavailable";
   terminal: boolean;
 }> {
   if (/route capture skipped:\s*boundary unavailable/i.test(message)) {
@@ -691,6 +705,23 @@ export function classifyReplayExecutorFailure(message: string): Readonly<{
   }
   if (/idempotency key was reused with different immutable bytes/i.test(message)) {
     return { code: "replay_capture_idempotency_conflict", terminal: true };
+  }
+  /**
+   * Run 100 addendum 24 §3: a job sitting in `awaiting_evaluation` with no evaluation id is recoverable —
+   * `isRecoverableHandoff` covers exactly that shape and the handoff-recovery pass rebuilds the evaluation from
+   * durable evidence. Deferrable and named, so the class is countable instead of spending its deferral budget
+   * anonymously.
+   */
+  if (/awaiting replay is missing its durable evaluation receipt/i.test(message)) {
+    return { code: "replay_evaluation_receipt_missing", terminal: false };
+  }
+  /**
+   * Run 100 addendum 24 §3: the append-recovery leg rebuilds the branch from the dispatch's persisted
+   * `providerResultRef`, and it fails when that capture cannot be read yet (a restart mid-append is the usual
+   * cause). The work is already paid for, so the capture stays retryable under a name.
+   */
+  if (/durable replay branch append has no host dispatch receipt/i.test(message)) {
+    return { code: "replay_branch_append_unavailable", terminal: false };
   }
   return { code: "replay_failed", terminal: false };
 }

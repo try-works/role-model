@@ -63,3 +63,34 @@ test("run157 item 8d the prepared and failure branches of one attempt stay disti
   expect(prepared.startsWith(`replay-${base.requestId}-`)).toBe(true);
   expect(failure.startsWith(`replay-${base.requestId}-`)).toBe(true);
 });
+
+/**
+ * Measured on the running build after the attempt token landed (run159, 08:58:17Z): one conflict still
+ * occurred on `req-0071aa21…` whose failure id *did* carry a fresh token
+ * (`…-failure-26a1d43a7a29`), so the same attempt presented its failure branch twice with different bytes —
+ * the job around it sits in `failure_append_pending`, i.e. a recovery re-append. A per-attempt id is
+ * therefore not sufficient; the id must also recognise the payload, so identical retries stay idempotent and
+ * changed bytes get their own key.
+ */
+test("run157 item 8d identical failure payloads reuse their key, changed bytes get a new one", () => {
+  const first = supervisedReplayBranchCaptureRequestId({
+    ...base,
+    phase: "failure",
+    attemptToken: "attempt-one",
+    contentTag: "aaaaaaaaaaaaaaaa",
+  });
+  const samePayload = supervisedReplayBranchCaptureRequestId({
+    ...base,
+    phase: "failure",
+    attemptToken: "attempt-one",
+    contentTag: "aaaaaaaaaaaaaaaa",
+  });
+  const changedBytes = supervisedReplayBranchCaptureRequestId({
+    ...base,
+    phase: "failure",
+    attemptToken: "attempt-one",
+    contentTag: "bbbbbbbbbbbbbbbb",
+  });
+  expect(samePayload).toBe(first);
+  expect(changedBytes).not.toBe(first);
+});

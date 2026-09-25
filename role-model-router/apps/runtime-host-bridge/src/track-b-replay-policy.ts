@@ -76,6 +76,14 @@ export const REPLAY_REFUSAL_CODES = [
    * `replay_failed` wearing a code that says nothing.
    */
   "replay_capture_idempotency_conflict",
+  /**
+   * Run 100 addendum 24 §3 (census): two more live classes, named so they stop arriving as `replay_failed`.
+   * Both are recoverable rather than terminal — a job in `awaiting_evaluation` with no evaluation id is exactly
+   * what `isRecoverableHandoff` rebuilds from durable evidence, and a paid-for branch with no host dispatch
+   * receipt is rebuilt from the dispatch's persisted `providerResultRef` — so both stay deferrable.
+   */
+  "replay_evaluation_receipt_missing",
+  "replay_branch_append_unavailable",
 ] as const;
 
 export type ReplayRefusalCode = (typeof REPLAY_REFUSAL_CODES)[number];
