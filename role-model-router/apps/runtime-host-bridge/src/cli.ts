@@ -191,6 +191,28 @@ function readEndpointModelIdForRoutePackage(input: {
  * per-tick read"): a scope-specific row wins over the global one, and an absent database, table or row
  * answers null so the tick behaves exactly as before.
  */
+/**
+ * Run 100 addendum 16 item 8d (delegated census, 2026-09-25): a supervised-replay branch capture id must be
+ * unique per attempt, because the capture boundary keys idempotency on the capture request id and refuses the
+ * same key carrying different bytes. Measured live on `req-f8020a96…`: the *prepared* branch id carries the
+ * attempt token and was re-presented idempotently (8 572 ms), while the **failure** branch id — the only
+ * sibling without a token — was refused 6 ms later with "route capture idempotency key was reused with
+ * different immutable bytes". All five live hits that day were `-failure` ids while no two jobs shared a key
+ * (1860 jobs, 0 duplicates), so the conflict was re-attempt bytes under a stable id.
+ */
+export function supervisedReplayBranchCaptureRequestId(input: {
+  readonly requestId: string;
+  readonly candidateEndpointId: string;
+  readonly phase: "prepared" | "failure";
+  readonly attemptToken: string;
+}): string {
+  const candidateHash = createHash("sha256")
+    .update(input.candidateEndpointId)
+    .digest("hex")
+    .slice(0, 16);
+  return `replay-${input.requestId}-${candidateHash}-${input.phase}-${input.attemptToken}`;
+}
+
 export function readPersistedControllerEndpointId(input: {
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
@@ -6859,7 +6881,12 @@ export async function main(): Promise<void> {
                 throw new Error("replay branch preparation candidate is not host-authorized");
               const existing = preparedBranches.get(candidateEndpointId);
               if (existing) return { branchRootRef: existing.branchRootRef };
-              const branchRequestId = `replay-${requestId}-${createHash("sha256").update(candidateEndpointId).digest("hex").slice(0, 16)}-prepared-${replayAttemptToken}`;
+              const branchRequestId = supervisedReplayBranchCaptureRequestId({
+                requestId,
+                candidateEndpointId,
+                phase: "prepared",
+                attemptToken: replayAttemptToken,
+              });
               // A candidate without a reasoning effort is captured with `none`, not
               // `variant`: the durable capture contract couples a null effort to the
               // `none` source, and a mixed pair is rejected at the capture boundary.
@@ -6911,10 +6938,12 @@ export async function main(): Promise<void> {
                   throw new Error(
                     "durable replay failure branch append requires its prepared branch root",
                   );
-                const failureRequestId = `replay-${requestId}-${createHash("sha256")
-                  .update(candidateEndpointId)
-                  .digest("hex")
-                  .slice(0, 16)}-failure`;
+                const failureRequestId = supervisedReplayBranchCaptureRequestId({
+                  requestId,
+                  candidateEndpointId,
+                  phase: "failure",
+                  attemptToken: replayAttemptToken,
+                });
                 const failureEffort =
                   typeof candidate.reasoningEffort === "string" && candidate.reasoningEffort
                     ? {

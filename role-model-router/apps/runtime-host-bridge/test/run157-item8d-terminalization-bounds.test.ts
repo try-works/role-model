@@ -1,0 +1,82 @@
+import { expect, test } from "vitest";
+
+import { terminalizeAbandonedEvaluation } from "../src/evaluation-orphan-terminalization.js";
+
+/**
+ * Run 100 addendum 16 item 8d — delegated census, 2026-09-25 (`E:\tmp\run100-item8d-report.md`).
+ *
+ * Two defects in the give-up path, both measured against the live stores:
+ *
+ * 1. **An unsatisfiable bound.** The caller truncated its reason to 512 characters while Evaluation Core's
+ *    `evaluation:cancel-job` bound is 256 (`extensions/evaluation-core/index.mjs:670`), so a give-up carrying a
+ *    long reason could never succeed: the extension answered "bounded cancellation reason required" — 59 live
+ *    refusals across the observed build windows.
+ * 2. **A benign classification that suppressed the scope fallback.** "evaluation job not found" was treated as
+ *    a benign terminal no-op at the *first* candidate scope. The capture-scope evidence lives under
+ *    `runtime:714f4a87…` while the terminalization pass is handed the operator scope, and "not found" is
+ *    exactly what the wrong scope answers — so the pass never reached the scope that holds the row (78 log
+ *    lines targeted the operator scope). Only a genuine terminal state is benign; "not found" must try the
+ *    next scope and is benign only once every scope has answered it.
+ */
+
+const ENTRY = {
+  replayJobId: "replay-job-1",
+  evaluationJobId: "evaluation-replay-1",
+  scope: "runtime:714f4a87dd3c44d1bc93ed741841c722",
+};
+
+test("run157 item 8d the give-up reason respects Evaluation Core's 256-character bound", async () => {
+  const calls: Array<{ value: Record<string, unknown>; scope: string }> = [];
+  await terminalizeAbandonedEvaluation({
+    entry: ENTRY,
+    channel: "stage",
+    operatorScope: "standalone-runtime-stage",
+    reason: "x".repeat(800),
+    invoke: async (_capability, value, scope) => {
+      calls.push({ value, scope });
+      return { capability: "evaluation:cancel-job", scope };
+    },
+  });
+  expect(calls).toHaveLength(1);
+  const reason = String(calls[0].value.reason);
+  expect(reason.startsWith("evaluation_unavailable: ")).toBe(true);
+  /**
+   * 256 is the extension's own bound; a reason one character longer is refused outright with
+   * "bounded cancellation reason required", so the caller must never present one.
+   */
+  expect(reason.length).toBeLessThanOrEqual(256);
+});
+
+test("run157 item 8d not-found at the first scope retries the scope that holds the row", async () => {
+  const seen: string[] = [];
+  const result = await terminalizeAbandonedEvaluation({
+    entry: ENTRY,
+    channel: "stage",
+    operatorScope: "standalone-runtime-stage",
+    reason: "give up",
+    invoke: async (_capability, _value, scope) => {
+      seen.push(scope);
+      if (seen.length === 1) throw new Error("evaluation job not found");
+      return { capability: "evaluation:cancel-job", scope };
+    },
+  });
+  expect(seen).toHaveLength(2);
+  expect(result).toMatchObject({ cancelled: true, scope: "standalone-runtime-stage" });
+});
+
+test("run157 item 8d a genuinely terminal job stays a benign no-op", async () => {
+  const seen: string[] = [];
+  const result = await terminalizeAbandonedEvaluation({
+    entry: ENTRY,
+    channel: "stage",
+    operatorScope: "standalone-runtime-stage",
+    reason: "give up",
+    invoke: async (_capability, _value, scope) => {
+      seen.push(scope);
+      throw new Error("completed evaluation job cannot be cancelled");
+    },
+  });
+  expect(seen).toHaveLength(1);
+  expect(result.cancelled).toBe(false);
+  expect(result.detail).toContain("completed evaluation job cannot be cancelled");
+});

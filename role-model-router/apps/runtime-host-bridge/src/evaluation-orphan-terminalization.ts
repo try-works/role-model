@@ -39,15 +39,30 @@ export interface AbandonedEvaluationTerminalizationResult {
   readonly detail: string | null;
 }
 
-const MAX_REASON_CHARS = 512;
+/**
+ * Run 100 addendum 16 item 8d (delegated census, 2026-09-25): Evaluation Core's `evaluation:cancel-job`
+ * validates its reason against its own bound of 256 characters
+ * (`extensions/evaluation-core/index.mjs` `MAX_REASON_CHARS = 256`). This caller truncated to 512, so any
+ * give-up carrying a longer reason was refused outright with "bounded cancellation reason required" — 59
+ * such refusals in the observed build windows — and the abandoned evaluation job was never terminalized.
+ * The caller now respects the extension's bound instead of its own.
+ */
+const MAX_REASON_CHARS = 256;
 const MAX_DETAIL_CHARS = 360;
 
 /**
  * Terminal statuses (or an unknown job) are a benign no-op: the give-up has already been recorded, and
  * re-reporting it as a failure would only add noise. Any other error that is not a scope mismatch is a real
  * failure and stops the attempt instead of being retried against every candidate scope.
+ *
+ * "evaluation job not found" is deliberately NOT in this set: it is what the *wrong scope* answers, and the
+ * capture-scope rows live under `runtime:714f4a87…` while this pass is handed the operator scope. Treating it
+ * as benign stopped the fallback at the first candidate and left the row untouched (78 live log lines
+ * targeted the operator scope). It is handled as scope-scoped below and is benign only once every candidate
+ * scope has answered it.
  */
-const BENIGN_TERMINAL = /(completed evaluation job cannot be cancelled|cannot be cancelled in its current state|evaluation job not found)/iu;
+const BENIGN_TERMINAL = /(completed evaluation job cannot be cancelled|cannot be cancelled in its current state)/iu;
+const JOB_NOT_FOUND = /evaluation job not found/iu;
 const SCOPE_MISMATCH = /scope binding mismatch/iu;
 
 export async function terminalizeAbandonedEvaluation(
@@ -74,6 +89,7 @@ export async function terminalizeAbandonedEvaluation(
     } catch (error) {
       detail = String((error as { message?: unknown })?.message ?? error).slice(0, MAX_DETAIL_CHARS);
       if (BENIGN_TERMINAL.test(detail)) return { cancelled: false, scope, detail };
+      if (JOB_NOT_FOUND.test(detail)) continue;
       if (!SCOPE_MISMATCH.test(detail)) return { cancelled: false, scope, detail };
     }
   }
