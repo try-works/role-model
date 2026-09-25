@@ -138,7 +138,8 @@ describe("run120 S13: the derivation pass presents only durable, complete eviden
         if (capability === "replay:job") return job;
         // `signals:read` is query-shaped and answers the newest reports for a decision as an array.
         if (capability === "signals:read") {
-          expect(query).toEqual({ routeDecisionId: DECISION_ID });
+          // Run 175: the read is bounded because the answer travels inline (the host refuses frames over 16 KiB).
+          expect(query).toEqual({ routeDecisionId: DECISION_ID, limit: 2 });
           return [report];
         }
         if (capability === "profile:estimate-finalized-evaluation") return profile;

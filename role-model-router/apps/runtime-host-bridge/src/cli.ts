@@ -63,6 +63,7 @@ import {
   branchCaptureRequestIdsFromJob,
   branchCaptureRequestIdCandidatesFromJob,
   carriedEvaluationJobId,
+  captureRefFromReplayJob,
   coerceDurableReplayJobRecord,
   describeUnresolvedArms,
   nextHandoffRecoveryCursor,
@@ -1002,6 +1003,113 @@ export function deriveSupervisedReplayTrajectoryEvents(input: {
       )
       .slice(0, 128)
   );
+}
+
+/**
+ * Run 100 item S13 follow-up (2026-09-25): the derivation sweep's capture wiring, kept as a pure function so the
+ * call site is testable without standing up the sweep.
+ *
+ * The replay job names its source capture through the durable locator the host stamped on the decision
+ * (`decision-<captureRef>`), and each counterfactual arm through its dispatch's `providerResultRef`
+ * (`route-capture:<replayRequestId>`, whose branch capture is written as `<replayRequestId>-branch`). Both are
+ * durable facts, so the events are derived from recorded captures - never invented. A capture the retention ring no
+ * longer serves is a named unavailability.
+ */
+export async function deriveLearnerTrajectoryEvidenceForReplay(input: {
+  readonly job: Readonly<Record<string, unknown>>;
+  readonly readCapture: (requestId: string) => Promise<Record<string, unknown> | null>;
+  readonly deriveEvents?: (input: {
+    readonly sourceCapture: DurableReplayCapture;
+    readonly counterfactualCaptures: readonly DurableReplayCapture[];
+  }) => readonly Record<string, unknown>[];
+}): Promise<
+  | {
+      readonly kind: "evidence";
+      readonly events: readonly Record<string, unknown>[];
+      readonly graphRef: string;
+      readonly replayRef: string;
+    }
+  | { readonly kind: "unavailable"; readonly reason: string }
+  | { readonly kind: "refused"; readonly reason: string }
+> {
+  const recordOf = (value: unknown): Record<string, unknown> | null =>
+    value && typeof value === "object" && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : null;
+  try {
+    const captureRef = captureRefFromReplayJob(input.job as unknown as DurableReplayJobSummary);
+    if (!captureRef) {
+      return {
+        kind: "unavailable",
+        reason: `the replay job names no source capture (${
+          typeof input.job.sourceDecisionId === "string" ? input.job.sourceDecisionId : "no decision"
+        })`,
+      };
+    }
+    const sourceCapture = await input.readCapture(captureRef);
+    if (!sourceCapture) {
+      return { kind: "unavailable", reason: `capture ${captureRef} is outside the retention window` };
+    }
+    const counterfactualCaptures: Record<string, unknown>[] = [];
+    const dispatches = recordOf(input.job.dispatches);
+    /**
+     * The run's own derivation of each arm's branch-capture request id (attempt-scoped appends first, then the
+     * `providerResultRef` naming, then the legacy token), so the sweep asks for exactly the captures the executor
+     * wrote rather than re-deriving a name of its own.
+     */
+    const branchRequestIds = branchCaptureRequestIdsFromJob({
+      replayJobId: typeof input.job.jobId === "string" ? input.job.jobId : captureRef,
+      requestId: captureRef,
+      dispatches: input.job.dispatches,
+      candidateEndpointIds: dispatches ? Object.keys(dispatches) : [],
+    });
+    for (const branchRequestId of branchRequestIds.values()) {
+      const branchCapture = await input.readCapture(branchRequestId);
+      if (!branchCapture) {
+        return {
+          kind: "unavailable",
+          reason: `branch capture ${branchRequestId} is outside the retention window`,
+        };
+      }
+      counterfactualCaptures.push(branchCapture);
+    }
+    const replayRef =
+      typeof input.job.sharedPrefixRef === "string" && input.job.sharedPrefixRef.trim().length > 0
+        ? input.job.sharedPrefixRef.trim()
+        : null;
+    if (!replayRef) {
+      return {
+        kind: "unavailable",
+        reason: `replay ${captureRef} records no shared prefix reference`,
+      };
+    }
+    const deriveEvents = input.deriveEvents ?? deriveSupervisedReplayTrajectoryEvents;
+    const events = deriveEvents({
+      sourceCapture: sourceCapture as DurableReplayCapture,
+      counterfactualCaptures: counterfactualCaptures as readonly DurableReplayCapture[],
+    });
+    if (events.length === 0) {
+      return {
+        kind: "unavailable",
+        reason: `capture ${captureRef} records no derivable trajectory events`,
+      };
+    }
+    return {
+      kind: "evidence",
+      events,
+      graphRef: durableCaptureArtifactReference(
+        sourceCapture as DurableReplayCapture,
+        "rootArtifactId",
+        `capture ${captureRef} root`,
+      ),
+      replayRef,
+    };
+  } catch (error) {
+    return {
+      kind: "refused",
+      reason: String((error as { message?: unknown })?.message ?? error).slice(0, 200),
+    };
+  }
 }
 
 /**
@@ -5715,6 +5823,26 @@ export async function main(): Promise<void> {
             groups,
             attemptedGroupIds: learnerDerivationAttempts,
             limit: 2,
+            /**
+             * S13 follow-up: the group's report may never have been written (its live pipeline never ran), so the
+             * sweep computes it through the capability that persists reports - bounded to two per tick, from durable
+             * capture evidence only, and never for a group whose report already exists.
+             */
+            derivedReportLimit: 2,
+            readDurableTrajectoryEvidence: async ({ job: durableJob }) => {
+              const operations = currentPostObservationOperations();
+              if (!operations) {
+                return { kind: "unavailable", reason: "the operations boundary is unavailable" };
+              }
+              return deriveLearnerTrajectoryEvidenceForReplay({
+                job: durableJob,
+                readCapture: async (requestId) =>
+                  (await operations.readLocalRouteCapture({ requestId })) as Record<
+                    string,
+                    unknown
+                  > | null,
+              });
+            },
             channel,
             /**
              * The consumer's value must declare the same scope as its envelope (the worker rejects a proof from
