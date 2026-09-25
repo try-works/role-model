@@ -176,6 +176,43 @@ function readEndpointModelIdForRoutePackage(input: {
   }
 }
 
+/**
+ * Run 100 addendum 19 (item 8c, measured live 2026-09-25). The auto-replay tick's judge goes through the
+ * in-process `readControllerAssignment` binding, and the narrow options object the loop is started with
+ * does not always carry that binding - so the tick's judge resolved to nothing while the durable row was
+ * present and correct. The measured cost: 30 of the 64 replay jobs created in 24 h were planned with
+ * `deepseek…flash-high` (the configured controller, therefore the judge) as their **source** arm, and the
+ * tick's named deferral for exactly that shape, `judge_candidate_overlap`, has never appeared in 5804
+ * dispositions. Those comparisons are the ones Evaluation Core later excludes as `judge_self_evaluation`.
+ *
+ * The durable assignment is the fallback the run's addendum names ("last known assignment rather than a
+ * per-tick read"): a scope-specific row wins over the global one, and an absent database, table or row
+ * answers null so the tick behaves exactly as before.
+ */
+export function readPersistedControllerEndpointId(input: {
+  readonly runtimeStateRoot: string;
+  readonly scopeId: string;
+}): string | null {
+  const databasePath = path.join(input.runtimeStateRoot, input.scopeId, "memory", "memory.sqlite");
+  if (!existsSync(databasePath)) return null;
+  let database: DatabaseSync | null = null;
+  try {
+    database = new DatabaseSync(databasePath, { readOnly: true });
+    const row = database
+      .prepare(
+        "SELECT endpoint_id FROM runtime_controller_assignments WHERE scope = ? OR scope = 'global' ORDER BY CASE WHEN scope = ? THEN 0 ELSE 1 END, updated_at_ms DESC LIMIT 1",
+      )
+      .get(input.scopeId, input.scopeId) as { endpoint_id?: unknown } | undefined;
+    return typeof row?.endpoint_id === "string" && row.endpoint_id.trim()
+      ? row.endpoint_id.trim()
+      : null;
+  } catch {
+    return null;
+  } finally {
+    database?.close();
+  }
+}
+
 function resolveChannelScopedReplayLedgerLimits(input: {
   readonly repoRoot: string;
   readonly runtimeStateRoot: string;
@@ -276,6 +313,8 @@ const DURABLE_ARTIFACT_ID = /^[a-f0-9]{64}$/u;
  * holder is the single shared reference for status and pause/resume control.
  */
 let activeAutoReplayLoop: ReturnType<typeof startAutoReplayLoop> | null = null;
+/** Run 100 addendum 19: the durable controller fallback is reported once, not on every tick. */
+let persistedControllerFallbackLogged = false;
 let activeLearningSummaryReader: (() => Promise<unknown>) | null = null;
 
 type DurableReplayCapture = Readonly<Record<string, unknown>>;
@@ -5978,7 +6017,26 @@ export async function main(): Promise<void> {
             assignment && typeof assignment === "object" && !Array.isArray(assignment)
               ? (assignment as Record<string, unknown>).endpointId
               : null;
-          return typeof endpointId === "string" && endpointId.length > 0 ? endpointId : null;
+          if (typeof endpointId === "string" && endpointId.length > 0) return endpointId;
+          /**
+           * Run 100 addendum 19 (item 8c): the in-process binding answered nothing, so fall back to the
+           * durable assignment the operator configured. Logged once per process - the fallback is a
+           * repaired dependency, and a silent one would hide the next regression in this wiring.
+           */
+          const persisted = readPersistedControllerEndpointId({
+            runtimeStateRoot: options.runtimeStateRoot,
+            scopeId: options.scopeId,
+          });
+          if (persisted) {
+            if (!persistedControllerFallbackLogged) {
+              persistedControllerFallbackLogged = true;
+              console.error(
+                `[run153] auto-replay judge resolved from the durable controller assignment:${persisted}`,
+              );
+            }
+            return persisted;
+          }
+          return null;
         },
         executor: async ({ capture, candidates, reservationId }) => {
           const sourceCapture = (await operations.readLocalRouteCapture({
@@ -6216,7 +6274,16 @@ export async function main(): Promise<void> {
               assignment && typeof assignment === "object" && !Array.isArray(assignment)
                 ? (assignment as Record<string, unknown>).endpointId
                 : null;
-            return typeof endpointId === "string" && endpointId.length > 0 ? endpointId : null;
+            if (typeof endpointId === "string" && endpointId.length > 0) return endpointId;
+            /**
+             * Run 100 addendum 19 (item 8c): the same durable fallback the auto-replay tick uses. A judge
+             * that resolves to nothing here is the measured cause of the judge being planned as an arm and
+             * of the tick's `judge_candidate_overlap` guard never firing.
+             */
+            return readPersistedControllerEndpointId({
+              runtimeStateRoot: options.runtimeStateRoot,
+              scopeId: options.scopeId,
+            });
           },
         } as const;
         const operations = postObservationOperations;
