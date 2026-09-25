@@ -148,3 +148,60 @@ test("run157 item 8d an id already found in no scope is not invoked again", asyn
   expect(other).toMatchObject({ cancelled: false, benign: true });
   expect(seen).toHaveLength(4);
 });
+
+/**
+ * Run 100 addendum 28 §2: the negative cache removes repeats, but the measured stream was many *distinct*
+ * stale ids, so the pass kept paying for a cancel that could only ever fail. `evaluation:get-job` answers
+ * `null` for a missing id **without throwing**, so it is a sound, quiet existence check — unlike
+ * `evaluation:list-jobs`, which returns a lexicographic 256-row page and would wrongly report a job whose id
+ * sorts late as absent.
+ */
+test("run157 item 8d a job absent from every candidate scope is never cancelled", async () => {
+  const seen: string[] = [];
+  const result = await terminalizeAbandonedEvaluation({
+    entry: { ...ENTRY, evaluationJobId: `evaluation-replay-unlisted-${Date.now()}` },
+    channel: "stage",
+    operatorScope: "standalone-runtime-stage",
+    reason: "give up",
+    jobExists: async () => false,
+    invoke: async (_capability, _value, scope) => {
+      seen.push(scope);
+      return { capability: "evaluation:cancel-job", scope };
+    },
+  });
+  expect(seen).toEqual([]);
+  expect(result).toMatchObject({ cancelled: false, benign: true, scope: null });
+});
+
+test("run157 item 8d a job that exists only in the capture scope is cancelled there", async () => {
+  const seen: string[] = [];
+  const result = await terminalizeAbandonedEvaluation({
+    entry: { ...ENTRY, evaluationJobId: `evaluation-replay-scoped-${Date.now()}` },
+    channel: "stage",
+    operatorScope: "standalone-runtime-stage",
+    reason: "give up",
+    jobExists: async (scope: string) => scope === ENTRY.scope,
+    invoke: async (_capability, _value, scope) => {
+      seen.push(scope);
+      return { capability: "evaluation:cancel-job", scope };
+    },
+  });
+  expect(seen).toEqual([ENTRY.scope]);
+  expect(result).toMatchObject({ cancelled: true, scope: ENTRY.scope });
+});
+
+test("run157 item 8d an unknown existence answer still attempts the cancel", async () => {
+  const seen: string[] = [];
+  await terminalizeAbandonedEvaluation({
+    entry: { ...ENTRY, evaluationJobId: `evaluation-replay-unknown-${Date.now()}` },
+    channel: "stage",
+    operatorScope: "standalone-runtime-stage",
+    reason: "give up",
+    jobExists: async () => null,
+    invoke: async (_capability, _value, scope) => {
+      seen.push(scope);
+      return { capability: "evaluation:cancel-job", scope };
+    },
+  });
+  expect(seen).toEqual([ENTRY.scope]);
+});

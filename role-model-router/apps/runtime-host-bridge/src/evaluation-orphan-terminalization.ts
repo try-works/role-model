@@ -31,6 +31,14 @@ export interface AbandonedEvaluationTerminalizationInput {
     value: Readonly<Record<string, unknown>>,
     scope: string,
   ) => Promise<unknown>;
+  /**
+   * Run 100 addendum 28 §2: a sound, quiet existence check per candidate scope. `evaluation:get-job` answers
+   * `null` for a missing id without throwing, so a stale id can be recognised without paying for a cancel that
+   * can only fail — and without the host bridge logging `invoke-failed` for it. `false` skips the scope, `true`
+   * cancels there, and `null` means "unknown": the previous behaviour, so a caller that cannot answer keeps
+   * the old path exactly.
+   */
+  readonly jobExists?: (scope: string) => Promise<boolean | null>;
 }
 
 export interface AbandonedEvaluationTerminalizationResult {
@@ -113,7 +121,18 @@ export async function terminalizeAbandonedEvaluation(
 
   const reason = `evaluation_unavailable: ${input.reason}`.slice(0, MAX_REASON_CHARS);
   let detail: string | null = null;
+  let attempted = 0;
   for (const scope of scopes) {
+    /**
+     * Run 100 addendum 28 §2: skip a scope the caller can prove does not hold the row. This is what removes the
+     * measured `invoke-failed … evaluation job not found` stream (~11 lines/min) for the 305-of-321 stale ids,
+     * because a *successful* `evaluation:get-job` answering `null` costs nothing to log.
+     */
+    if (input.jobExists) {
+      const exists = await input.jobExists(scope).catch(() => null);
+      if (exists === false) continue;
+    }
+    attempted += 1;
     try {
       await input.invoke(
         "evaluation:cancel-job",
@@ -136,6 +155,19 @@ export async function terminalizeAbandonedEvaluation(
   if (detail !== null && JOB_NOT_FOUND.test(detail)) {
     if (evaluationJobId) rememberAbsentEvaluationJobId(evaluationJobId);
     return { cancelled: false, scope: null, detail, benign: true };
+  }
+  /**
+   * Every candidate scope reported the row absent before any invoke: the id is stale and nothing was paid for.
+   * Same benign class as the not-found branch, with a detail that says the check (not the cancel) decided it.
+   */
+  if (attempted === 0) {
+    if (evaluationJobId) rememberAbsentEvaluationJobId(evaluationJobId);
+    return {
+      cancelled: false,
+      scope: null,
+      detail: "evaluation job not found in any candidate scope (existence check)",
+      benign: true,
+    };
   }
   return { cancelled: false, scope: null, detail };
 }

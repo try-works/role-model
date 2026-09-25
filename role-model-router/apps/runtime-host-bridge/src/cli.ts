@@ -8110,6 +8110,28 @@ export async function main(): Promise<void> {
                 channel,
                 operatorScope: options.scopeId,
                 reason,
+                /**
+                 * Run 100 addendum 28 §2: ask whether the row is in this scope before cancelling there.
+                 * `evaluation:get-job` answers `null` for a missing id without throwing, so a stale id costs one
+                 * cheap read instead of a failed cancel that the host bridge logs as `invoke-failed` (measured:
+                 * ~11 lines/min for the 305-of-321 ids the census found absent).
+                 */
+                jobExists: async (invokeScope) => {
+                  const answer = await activeRuntime.invoke("evaluation-core", {
+                    requestId: `evaluation:get-job:${entry.evaluationJobId}`,
+                    sessionId: `evaluation:get-job:${options.scopeId}`,
+                    protocolVersion: "1.1.0",
+                    channel,
+                    scope: invokeScope,
+                    authorizationEpoch: 1,
+                    capability: "evaluation:get-job",
+                    value: { jobId: entry.evaluationJobId },
+                  });
+                  const decoded = unwrapCapabilityPayload(answer);
+                  if (decoded === null || decoded === undefined) return false;
+                  // A live job may be externalized behind a transfer marker, which still proves existence.
+                  return true;
+                },
                 invoke: (capability, value, invokeScope) =>
                   activeRuntime.invoke("evaluation-core", {
                     requestId: `${capability}:${entry.evaluationJobId}`,
