@@ -462,8 +462,15 @@ import {
   selectDurableComparisonGroupId,
 } from "./track-b-learning-pass.js";
 import {
+  type LearnerDerivationEvidenceRead,
+  type LearnerDerivationInvoke,
+  analyzeFinalizedEvaluationSignal,
   deriveLearnerCandidatesFromDurableEvidence,
+  durableReplayIdForComparison,
   learnableComparisonMembers,
+  normalizedComparisonGroup,
+  orderComparisonGroupsNewestFirst,
+  readPersistedSignalReportForGroup,
 } from "./track-b-learner-derivation.js";
 import {
   buildExperiencePackCandidate,
@@ -1110,6 +1117,227 @@ export async function deriveLearnerTrajectoryEvidenceForReplay(input: {
       reason: String((error as { message?: unknown })?.message ?? error).slice(0, 200),
     };
   }
+}
+
+/**
+ * Run 100 addendum 39 (2026-09-26): the post-finalization signals sweep.
+ *
+ * Measured live on run175c/`b7f04039` (`:3457`, 00:15-01:05): the learner's derivation pass computes the report it
+ * is missing, but it walks the `evaluation:list-groups` page (`group_id ASC`) oldest-first and meets an aged
+ * prefix - 9 `signals:analyze-finalized-evaluation` invocations against 79 `capture … is outside the retention
+ * window` skips. The proposal's chain (`normal usage episode -> trajectory-signals computes model-free signal
+ * report -> …`) puts the model-free report *before* replay/evaluation, and the retention ladder keeps raw captures
+ * for hours, not weeks - so the producer has to run while the evidence is still durable, not when the learner
+ * finally reaches the comparison.
+ *
+ * This sweep is that producer: each tick it walks a bounded page of finalized, learnable comparison groups
+ * newest-first, skips the ones whose own report already exists, resolves the durable capture evidence exactly as
+ * the derivation pass does (`deriveLearnerTrajectoryEvidenceForReplay`: operations-boundary capture readback) and
+ * invokes the analyze capability through the *same* helper, so the envelope it builds and the degradation receipt
+ * it classifies cannot drift from the fallback producer.
+ */
+export interface FinalizationSignalsSweepSummary {
+  /** Candidate groups the walk inspected this tick. */
+  readonly examined: number;
+  /** Reports produced through `signals:analyze-finalized-evaluation`. */
+  readonly analyzed: number;
+  /** Named skips: an already-persisted report, missing evidence, a degraded analysis, no durable replay. */
+  readonly skipped: number;
+  /** Candidates whose resolution threw. The group stays for the next tick. */
+  readonly refused: number;
+  /** Candidates the per-tick compute bound or the wall-clock budget left for the next tick. */
+  readonly deferred: number;
+}
+
+/** How many candidates one tick may inspect. Evidence resolution costs one capture readback per candidate. */
+export const FINALIZATION_SIGNALS_EXAMINED_LIMIT = 64;
+
+/**
+ * How many reports the post-finalization sweep may compute per tick. Measured live: one tick lands every ~1.8
+ * minutes, `signals:analyze-finalized-evaluation` is model-free and persists its answer, and the derivation pass
+ * proves 24 computes per tick are affordable - the sweep stays deliberately below that so the tick's replay work is
+ * never displaced by its own producer.
+ */
+export const FINALIZATION_SIGNALS_COMPUTE_LIMIT = 16;
+
+/** How long one tick's post-finalization walk may spend before it leaves the rest for the next tick. */
+export const FINALIZATION_SIGNALS_BUDGET_MS = 30_000;
+
+/** A capability answer the sweep's caller has already decoded; anything else is not a record. */
+function finalizationSignalRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function finalizationSignalText(value: unknown): string | null {
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+}
+
+export async function sweepFinalizationSignalsForGroups(input: {
+  readonly invoke: LearnerDerivationInvoke;
+  /** The `evaluation:list-groups` page, in the extension's own order (`group_id ASC`). */
+  readonly groups: readonly Record<string, unknown>[];
+  readonly readDurableTrajectoryEvidence: LearnerDerivationEvidenceRead;
+  /**
+   * Groups this process has already settled: a report is persisted for them, their evidence has aged out of the
+   * retention ring, or the analyzer returned a degradation receipt. Settlement is monotonic (a pruned capture never
+   * comes back), so the walk does not re-read them on every tick - without it the newest end of the store would
+   * starve the candidates behind it.
+   */
+  readonly settledGroupIds?: Set<string>;
+  /** Bounded computes per tick: the report-writing invocations this sweep may start. */
+  readonly computeLimit: number;
+  readonly examinedLimit?: number;
+  readonly wallClockBudgetMs: number;
+  readonly now?: () => number;
+  readonly log?: (message: string) => void;
+}): Promise<FinalizationSignalsSweepSummary> {
+  const now = input.now ?? Date.now;
+  const examinedLimit = input.examinedLimit ?? FINALIZATION_SIGNALS_EXAMINED_LIMIT;
+  const startedAtMs = now();
+  /**
+   * The walk order is the shared newest-first order (`orderComparisonGroupsNewestFirst`): the page arrives
+   * `group_id ASC`, so its newest end is consumed first, and the filtered-out groups below keep that order.
+   */
+  const candidates = orderComparisonGroupsNewestFirst(input.groups)
+    .map((group) => {
+      const normalized = normalizedComparisonGroup(group);
+      const groupId =
+        typeof normalized.groupId === "string" && normalized.groupId.trim()
+          ? normalized.groupId.trim()
+          : typeof normalized.comparisonId === "string" && normalized.comparisonId.trim()
+            ? normalized.comparisonId.trim()
+            : null;
+      return { group, normalized, groupId };
+    })
+    .filter(
+      (candidate) =>
+        candidate.groupId !== null &&
+        input.settledGroupIds?.has(candidate.groupId) !== true &&
+        candidate.normalized.status === "finalized" &&
+        learnableComparisonMembers(candidate.normalized) !== null,
+    );
+  const ordered = candidates;
+  let examined = 0;
+  let analyzed = 0;
+  let skipped = 0;
+  let refused = 0;
+  let deferred = 0;
+  /** Analyze invocations started: a degradation receipt consumed a compute even though it wrote nothing. */
+  let computed = 0;
+  for (let index = 0; index < ordered.length; index += 1) {
+    const candidate = ordered[index];
+    const groupId = candidate.groupId as string;
+    if (examined >= examinedLimit) {
+      deferred += ordered.length - index;
+      break;
+    }
+    if (now() - startedAtMs > input.wallClockBudgetMs) {
+      deferred += ordered.length - index;
+      input.log?.(
+        `finalization signals deferred ${ordered.length - index} group(s): the tick's wall-clock budget (${input.wallClockBudgetMs}ms) is spent`,
+      );
+      break;
+    }
+    if (computed >= input.computeLimit) {
+      // Newest-first: the remaining candidates are older than the ones already analyzed, so the bound defers them
+      // as a class instead of spending one evidence readback per candidate to count them.
+      deferred += ordered.length - index;
+      break;
+    }
+    examined += 1;
+    const replayId = durableReplayIdForComparison(candidate.normalized);
+    if (!replayId) {
+      skipped += 1;
+      input.settledGroupIds?.add(groupId);
+      input.log?.(`finalization signals skipped ${groupId}: the comparison names no durable replay`);
+      continue;
+    }
+    try {
+      const job = finalizationSignalRecord(
+        await input.invoke("replay-core", "replay:job", { jobId: replayId }),
+      );
+      const sourceDecisionId = finalizationSignalText(job?.sourceDecisionId);
+      if (!job || !sourceDecisionId) {
+        skipped += 1;
+        input.log?.(
+          `finalization signals skipped ${groupId}: replay ${replayId.slice(0, 12)} carries no provenance yet`,
+        );
+        continue;
+      }
+      const persisted = await readPersistedSignalReportForGroup({
+        invoke: input.invoke,
+        sourceDecisionId,
+        groupId,
+      });
+      if (persisted.kind === "unavailable") {
+        // A transport failure is not evidence that the report is missing; the group stays reachable next tick.
+        skipped += 1;
+        input.log?.(`finalization signals skipped ${groupId}: ${persisted.reason}`);
+        continue;
+      }
+      if (persisted.kind === "report") {
+        skipped += 1;
+        input.settledGroupIds?.add(groupId);
+        input.log?.(`finalization signals skipped ${groupId}: its report is already persisted`);
+        continue;
+      }
+      const evidence = await input.readDurableTrajectoryEvidence({
+        job,
+        sourceDecisionId,
+        replayId,
+      });
+      if (evidence.kind !== "evidence") {
+        /**
+         * Missing or pruned evidence stays unknown: the group is a named skip and the compute bound is untouched,
+         * because nothing was computed (guidance/12: "Unknown or pruned source spans must be reported rather than
+         * reconstructed from signal snippets").
+         */
+        skipped += 1;
+        input.settledGroupIds?.add(groupId);
+        input.log?.(`finalization signals skipped ${groupId}: ${evidence.reason.slice(0, 200)}`);
+        continue;
+      }
+      const winnerRef =
+        finalizationSignalText(
+          finalizationSignalRecord(candidate.normalized.comparability)?.counterfactualCandidateRef,
+        ) ??
+        finalizationSignalText(
+          learnableComparisonMembers(candidate.normalized)?.positive[0]?.candidateRef,
+        );
+      computed += 1;
+      const analysis = await analyzeFinalizedEvaluationSignal({
+        invoke: input.invoke,
+        groupId,
+        sourceDecisionId,
+        finalizedEvaluation: candidate.normalized,
+        evidence,
+        routePackage: winnerRef,
+      });
+      if (analysis.kind === "degraded") {
+        skipped += 1;
+        input.settledGroupIds?.add(groupId);
+        input.log?.(`finalization signals skipped ${groupId}: ${analysis.reason}`);
+        continue;
+      }
+      analyzed += 1;
+      input.settledGroupIds?.add(groupId);
+      input.log?.(
+        `finalization signals analyzed ${groupId} (decision ${sourceDecisionId.slice(0, 12)}, ${
+          evidence.events.length
+        } event(s))`,
+      );
+    } catch (error) {
+      refused += 1;
+      input.log?.(
+        `finalization signals refused ${groupId}: ${String(
+          (error as { message?: unknown })?.message ?? error,
+        ).slice(0, 200)}`,
+      );
+    }
+  }
+  return { examined, analyzed, skipped, refused, deferred };
 }
 
 /**
@@ -4890,6 +5118,13 @@ export async function main(): Promise<void> {
        * restart re-scans from the beginning (the worker dedupes a repeated presentation).
        */
       const learnerDerivationAttempts = new Set<string>();
+      /**
+       * Addendum 39: groups the post-finalization signals sweep has settled for this process - its report is
+       * persisted, its captures have aged out of the retention ring, or the analyzer answered a degradation receipt.
+       * Settlement is monotonic, so the sweep does not spend its bounded page re-reading the newest end of the store
+       * on every tick; a restart re-scans from the newest end (the reads are idempotent).
+       */
+      const finalizationSignalsSettled = new Set<string>();
       /** S27 diagnostics: report the resolved job scope and an empty recovery page once per process. */
       let replayJobScopeReported = false;
       let emptyRecoveryPageReported = false;
@@ -4937,6 +5172,32 @@ export async function main(): Promise<void> {
         return derived;
       };
       replayJobScopeRef.current = resolveReplayJobScope;
+      /**
+       * Run 100 addendum 39: the learner-facing sweeps reach the extensions through the same envelope shape (protocol
+       * version, channel, authorization epoch and the durable evaluation authority), so it is built once and only the
+       * request prefix differs between the consume/derive sweeps and the post-finalization signals sweep.
+       */
+      const learnerSweepEnvelope = (input: {
+        readonly requestPrefix: string;
+        readonly extensionId: string;
+        readonly capability: string;
+        readonly value: Record<string, unknown>;
+        readonly evaluationAuthoritySecret: string;
+        readonly scopeOverride?: string;
+        readonly query?: Record<string, unknown>;
+      }) => ({
+        requestId: `${input.requestPrefix}:${input.capability}:${Date.now()}`,
+        sessionId: `${input.requestPrefix}:${options.scopeId}`,
+        protocolVersion: "1.1.0",
+        channel,
+        scope: input.scopeOverride ?? options.scopeId,
+        authorizationEpoch: 1,
+        capability: input.capability,
+        value: input.value,
+        ...(input.query ? { query: input.query } : {}),
+        ...(input.extensionId === "knowledge-store" ? { payload: input.value } : {}),
+        evaluationAuthoritySecret: input.evaluationAuthoritySecret,
+      });
       // RC07 (L2): the bounded expiration sweep goes straight through the extension
       // host the producer already uses for replay-core, because the operator boundary's
       // replay domain does not expose the sweep in the packaged composition
@@ -5756,19 +6017,16 @@ export async function main(): Promise<void> {
             value: Record<string, unknown>,
             scopeOverride?: string,
             query?: Record<string, unknown>,
-          ) => ({
-            requestId: `learner-derivation:${capability}:${Date.now()}`,
-            sessionId: `learner-derivation:${options.scopeId}`,
-            protocolVersion: "1.1.0",
-            channel,
-            scope: scopeOverride ?? options.scopeId,
-            authorizationEpoch: 1,
-            capability,
-            value,
-            ...(query ? { query } : {}),
-            ...(extensionId === "knowledge-store" ? { payload: value } : {}),
-            evaluationAuthoritySecret: authority.authoritySecret,
-          });
+          ) =>
+            learnerSweepEnvelope({
+              requestPrefix: "learner-derivation",
+              extensionId,
+              capability,
+              value,
+              scopeOverride,
+              query,
+              evaluationAuthoritySecret: authority.authoritySecret,
+            });
           const groups = (
             await collectPagedComparisonGroups({
               readPage: async (cursor) => {
@@ -5909,6 +6167,133 @@ export async function main(): Promise<void> {
             console.error(`[run101] retro-finalized ${finalized} comparison group(s)`);
           }
           return record;
+        },
+        /**
+         * Run 100 addendum 39 (2026-09-26): the production caller for the post-finalization signals sweep.
+         *
+         * Measured live on run175c/`b7f04039` (`:3457`, 00:15-01:05): the learner's derivation pass *can* compute the
+         * missing report, but it walks oldest-first and met 79 `capture … is outside the retention window` skips for
+         * 9 analyses - by the time it reached a comparison, the captures that report needed were gone. The proposal
+         * chain puts the model-free signal report before replay/evaluation, so this sweep runs directly after
+         * `retroFinalizeEvaluations` (which is what makes a comparison exist at all) and produces the report while
+         * its captures are still in the retention ring. Bounded page, bounded computes, wall-clock budget, and
+         * idempotent: a group whose own report already exists is settled and never re-analyzed.
+         */
+        async sweepFinalizationSignals() {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) return { examined: 0, analyzed: 0, skipped: 0, refused: 0, deferred: 0 };
+          const authority = await (async () => {
+            try {
+              return await resolveDurableEvaluationAuthority({
+                channel,
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+              });
+            } catch {
+              return null;
+            }
+          })();
+          if (!authority) return { examined: 0, analyzed: 0, skipped: 0, refused: 0, deferred: 0 };
+          /**
+           * The replay jobs (and the captures the evidence resolver reads back) live in the *capture* scope, exactly
+           * as the derivation pass documents; the signals reads stay on the operator scope.
+           */
+          const replayJobScope = resolveDurableReplayJobScope({
+            channel,
+            runtimeStateRoot: options.runtimeStateRoot,
+            scopeId: options.scopeId,
+          });
+          const envelopeFor = (
+            extensionId: string,
+            capability: string,
+            value: Record<string, unknown>,
+            scopeOverride?: string,
+            query?: Record<string, unknown>,
+          ) =>
+            learnerSweepEnvelope({
+              requestPrefix: "finalization-signals",
+              extensionId,
+              capability,
+              value,
+              scopeOverride,
+              query,
+              evaluationAuthoritySecret: authority.authoritySecret,
+            });
+          /**
+           * One bounded listing of the *finalized* groups (the extension filters on `status` before its keyset cursor
+           * advances, so the page carries comparisons that can actually have a report). The listing is the only
+           * ordering the readback offers - a comparison group carries no timestamp - so the sweep consumes its
+           * newest end first.
+           */
+          const groups = (
+            await collectPagedComparisonGroups({
+              readPage: async (cursor) => {
+                const decoded = decodeExternalizedOperatorReadback({
+                  stateRoot: options.runtimeStateRoot,
+                  scopeId: options.scopeId,
+                  value: unwrapCapabilityPayload(
+                    await runtime.invoke(
+                      "evaluation-core",
+                      envelopeFor("evaluation-core", "evaluation:list-groups", {
+                        page: true,
+                        status: "finalized",
+                        limit: LEARNING_GROUP_PAGE_LIMIT,
+                        ...(cursor ? { cursor } : {}),
+                      }),
+                    ),
+                  ),
+                });
+                return decoded;
+              },
+            }).catch(() => [])
+          ).filter((group): group is Record<string, unknown> => {
+            return Boolean(group) && typeof group === "object" && !Array.isArray(group);
+          });
+          const summary = await sweepFinalizationSignalsForGroups({
+            invoke: async (extensionId, capability, value, query) => {
+              const answer = await runtime.invoke(
+                extensionId,
+                envelopeFor(
+                  extensionId,
+                  capability,
+                  value,
+                  extensionId === "replay-core" ? replayJobScope : undefined,
+                  query,
+                ),
+              );
+              return decodeExternalizedOperatorReadback({
+                stateRoot: options.runtimeStateRoot,
+                scopeId: options.scopeId,
+                value: unwrapCapabilityPayload(answer),
+              });
+            },
+            groups,
+            settledGroupIds: finalizationSignalsSettled,
+            computeLimit: FINALIZATION_SIGNALS_COMPUTE_LIMIT,
+            examinedLimit: FINALIZATION_SIGNALS_EXAMINED_LIMIT,
+            wallClockBudgetMs: FINALIZATION_SIGNALS_BUDGET_MS,
+            readDurableTrajectoryEvidence: async ({ job: durableJob }) => {
+              const operations = currentPostObservationOperations();
+              if (!operations) {
+                return { kind: "unavailable", reason: "the operations boundary is unavailable" };
+              }
+              return deriveLearnerTrajectoryEvidenceForReplay({
+                job: durableJob,
+                readCapture: async (requestId) =>
+                  (await operations.readLocalRouteCapture({ requestId })) as Record<
+                    string,
+                    unknown
+                  > | null,
+              });
+            },
+            log: (message) => console.error(`[run176] ${message}`),
+          });
+          if (summary.examined > 0) {
+            console.error(
+              `[run176] finalization signals: examined ${summary.examined}, analyzed ${summary.analyzed}, skipped ${summary.skipped}, refused ${summary.refused}, deferred ${summary.deferred}`,
+            );
+          }
+          return summary;
         },
         async reconcileEvaluationJobs() {
           const runtime = extensionRuntimeRef.current;

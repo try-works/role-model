@@ -140,6 +140,15 @@ export interface AutoReplayOperations {
    */
   retroFinalizeEvaluations?(input: Record<string, unknown>): Promise<unknown>;
   /**
+   * Run 100 addendum 39 (2026-09-26): the post-finalization signals producer. Live on run175c/`b7f04039` the
+   * learner's derivation pass computed the report it was missing, but it walks oldest-first and met 79
+   * `capture … is outside the retention window` skips for 9 analyses - a comparison whose report is written only
+   * when the learner reaches it has already outlived its captures. This sweep runs directly after the
+   * retro-finalization pass and produces the report while the evidence is fresh: bounded page, bounded computes,
+   * wall-clock budget, idempotent, and it never re-analyzes a group whose own report exists.
+   */
+  sweepFinalizationSignals?(input: Record<string, unknown>): Promise<unknown>;
+  /**
    * Run 100 addendum 07 P6: the learner's own liveness. A candidate the store never validated is driven through
    * the worker's validate/promote steps from durable evidence, so learning no longer depends on the pipeline run
    * that happened to derive it. Returns the number consumed and how many remain.
@@ -361,6 +370,10 @@ export function startAutoReplayLoop(input: {
     recovered: number;
     derived: number;
     derivationBacklog: number;
+    /** Addendum 39: reports the post-finalization signals sweep produced this tick. */
+    finalizationSignals: number;
+    /** Addendum 39: candidates that sweep left for the next tick (bound or wall-clock budget). */
+    finalizationSignalsDeferred: number;
     error: string | null;
   }> => {
     if (sweeping) {
@@ -373,6 +386,8 @@ export function startAutoReplayLoop(input: {
         recovered: 0,
         derived: 0,
         derivationBacklog: 0,
+        finalizationSignals: 0,
+        finalizationSignalsDeferred: 0,
         error: null,
       };
     }
@@ -388,6 +403,8 @@ export function startAutoReplayLoop(input: {
     let recovered = 0;
     let derivedCandidates = 0;
     let derivationBacklog = 0;
+    let finalizationSignals = 0;
+    let finalizationSignalsDeferred = 0;
     let error: string | null = null;
     try {
       if (typeof input.operations.expireStaleReplayJobs === "function") {
@@ -482,6 +499,29 @@ export function startAutoReplayLoop(input: {
         }
       }
       /**
+       * Addendum 39: the comparison that just finalized has captures that are still hot, and the report its
+       * learning evidence needs is written by this sweep - not later, when the learner's derivation pass reaches
+       * the group and the retention ring has moved past it (live: 79 retention skips for 9 analyses).
+       */
+      if (typeof input.operations.sweepFinalizationSignals === "function") {
+        try {
+          const sweep = (await input.operations.sweepFinalizationSignals({
+            window,
+            policySetDigest: input.policySet.policySetDigest,
+          })) as { readonly analyzed?: unknown; readonly deferred?: unknown } | null;
+          if (sweep) {
+            finalizationSignals = countOf(sweep.analyzed);
+            finalizationSignalsDeferred = countOf(sweep.deferred);
+          }
+        } catch (cause) {
+          const detail =
+            cause instanceof Error
+              ? `finalization signals sweep failed: ${cause.message.slice(0, 200)}`
+              : "finalization signals sweep failed";
+          error = error ? `${error}; ${detail}` : detail;
+        }
+      }
+      /**
        * P6: consume candidates the knowledge store never validated. Runs after the evaluation sweeps so a
        * comparison finalized this tick is available as evidence on the next one, and stays bounded (two
        * candidates per tick) like every other liveness step.
@@ -558,6 +598,8 @@ export function startAutoReplayLoop(input: {
       recovered,
       derived: derivedCandidates,
       derivationBacklog,
+      finalizationSignals,
+      finalizationSignalsDeferred,
       error,
     };
   };

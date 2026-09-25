@@ -33,13 +33,35 @@ export interface LearnerDerivationTrajectoryEvidence {
   readonly replayRef: string;
 }
 
+/** The capability caller both the derivation pass and the post-finalization sweep bind their envelopes to. */
+export type LearnerDerivationInvoke = (
+  extensionId: string,
+  capability: string,
+  value: Record<string, unknown>,
+  query?: Record<string, unknown>,
+) => Promise<unknown>;
+
+/**
+ * Reads the durable capture evidence a computed report needs (the source capture the replay job names, plus its
+ * counterfactual branch captures). Absent ⇒ a caller only consumes persisted reports, exactly as before.
+ *
+ * Measured live on `run174-fe49bac7` (`E:\tmp\audit3\gap_quantify.md`): 145 of 500 learnable finalized groups have
+ * no persisted report at all - their live pipeline never ran - so a consume-only sweep burns the backlog without
+ * yielding a candidate. The extension that writes the report already exists (`signals:analyze-finalized-evaluation`
+ * persists), it simply has no caller outside the live request's shadow pipeline.
+ */
+export type LearnerDerivationEvidenceRead = (input: {
+  readonly job: Record<string, unknown>;
+  readonly sourceDecisionId: string;
+  readonly replayId: string;
+}) => Promise<
+  | ({ readonly kind: "evidence" } & LearnerDerivationTrajectoryEvidence)
+  | { readonly kind: "unavailable"; readonly reason: string }
+  | { readonly kind: "refused"; readonly reason: string }
+>;
+
 export interface LearnerDerivationInput {
-  readonly invoke: (
-    extensionId: string,
-    capability: string,
-    value: Record<string, unknown>,
-    query?: Record<string, unknown>,
-  ) => Promise<unknown>;
+  readonly invoke: LearnerDerivationInvoke;
   /** Finalized comparison readbacks (`evaluation:list-groups`, already paged by the sweep). */
   readonly groups: readonly Record<string, unknown>[];
   /** Groups this process already presented, so one tick cannot re-attempt the same group. */
@@ -54,24 +76,7 @@ export interface LearnerDerivationInput {
    * presentation bound. A group the bound defers is *not* marked attempted: the next tick reaches it again.
    */
   readonly derivedReportLimit?: number;
-  /**
-   * Reads the durable capture evidence a computed report needs (the source capture the replay job names, plus its
-   * counterfactual branch captures). Absent ⇒ the pass only consumes persisted reports, exactly as before.
-   *
-   * Measured live on `run174-fe49bac7` (`E:\tmp\audit3\gap_quantify.md`): 145 of 500 learnable finalized groups have
-   * no persisted report at all - their live pipeline never ran - so a consume-only sweep burns the backlog without
-   * yielding a candidate. The extension that writes the report already exists (`signals:analyze-finalized-evaluation`
-   * persists), it simply has no caller outside the live request's shadow pipeline.
-   */
-  readonly readDurableTrajectoryEvidence?: (input: {
-    readonly job: Record<string, unknown>;
-    readonly sourceDecisionId: string;
-    readonly replayId: string;
-  }) => Promise<
-    | ({ readonly kind: "evidence" } & LearnerDerivationTrajectoryEvidence)
-    | { readonly kind: "unavailable"; readonly reason: string }
-    | { readonly kind: "refused"; readonly reason: string }
-  >;
+  readonly readDurableTrajectoryEvidence?: LearnerDerivationEvidenceRead;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -171,6 +176,181 @@ function reportCoversGroup(report: Readonly<Record<string, unknown>>, groupId: s
   );
 }
 
+/** A group's own finalization time, when the readback carries one. */
+function comparisonGroupFinalizationKey(group: Readonly<Record<string, unknown>>): number | null {
+  const normalized = normalizedComparisonGroup(group);
+  for (const field of [
+    "finalizedAtMs",
+    "finalizedAt",
+    "completedAtMs",
+    "completedAt",
+    "createdAtMs",
+    "createdAt",
+    "updatedAtMs",
+    "updatedAt",
+  ]) {
+    const value = normalized[field];
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string") {
+      const parsed = Date.parse(value);
+      if (Number.isFinite(parsed)) return parsed;
+    }
+  }
+  return null;
+}
+
+/**
+ * Run 100 addendum 39 §4: the order both producers walk a comparison listing in - newest-first.
+ *
+ * `evaluation:list-groups` answers `group_id ASC`, and a comparison group carries no timestamp (measured against the
+ * live `evaluation-core` store: `group_json`/`result_json` hold `groupId`, `trialIds`, `comparability`, `holdout`,
+ * `referenceProofs`, `members`, `outcome`, … and `evaluation_comparison_groups` has no time column), so the listing's
+ * own order is all the readback offers: newest-first means consuming it from its last element. A record that ever
+ * carries a finalization timestamp is ordered by it instead - a durable timestamp beats a convention.
+ *
+ * Measured live on run175c/`b7f04039`: walking the listing front-first spent the tick's compute bound on an aged
+ * prefix - 79 `capture … is outside the retention window` skips against 9 computed reports.
+ */
+export function orderComparisonGroupsNewestFirst(
+  groups: readonly Record<string, unknown>[],
+): readonly Record<string, unknown>[] {
+  return groups
+    .map((group, position) => ({
+      group,
+      position,
+      recency: comparisonGroupFinalizationKey(group),
+    }))
+    .sort((left, right) => {
+      if (left.recency !== right.recency) {
+        if (left.recency === null) return 1;
+        if (right.recency === null) return -1;
+        return right.recency - left.recency;
+      }
+      return right.position - left.position;
+    })
+    .map((entry) => entry.group);
+}
+
+/**
+ * `signals:analyze-finalized-evaluation` both persists the report and answers a bounded degradation receipt instead
+ * of throwing, so every caller has to classify the answer rather than assume a report. Shared by the learner's
+ * derivation pass (the fallback producer, addendum 37/38) and the post-finalization sweep (addendum 39), so the two
+ * producers cannot drift in the envelope they build or the receipt they recognize.
+ *
+ * Measured live on `run174-fe49bac7`: a receipt read as a report is how a group looks analyzed while nothing was
+ * written, so the non-report classes are named rather than coerced.
+ */
+export type FinalizedEvaluationSignalAnalysis =
+  | { readonly kind: "report"; readonly report: Record<string, unknown> }
+  | { readonly kind: "degraded"; readonly reason: string };
+
+export async function analyzeFinalizedEvaluationSignal(input: {
+  readonly invoke: LearnerDerivationInvoke;
+  readonly groupId: string;
+  readonly sourceDecisionId: string;
+  /** The decoded comparison record - the extension refuses the raw transfer marker. */
+  readonly finalizedEvaluation: Readonly<Record<string, unknown>>;
+  readonly evidence: LearnerDerivationTrajectoryEvidence;
+  /** The winning member's candidate reference, when the comparison carries one. */
+  readonly routePackage?: string | null;
+}): Promise<FinalizedEvaluationSignalAnalysis> {
+  const answer = asRecord(
+    unwrap(
+      await input.invoke("trajectory-signals", "signals:analyze-finalized-evaluation", {
+        routeDecisionId: input.sourceDecisionId,
+        graphRef: input.evidence.graphRef,
+        replayRef: input.evidence.replayRef,
+        ...(input.routePackage ? { routePackage: input.routePackage } : {}),
+        events: input.evidence.events,
+        finalizedEvaluation: input.finalizedEvaluation,
+        // A resolver function cannot cross the extension IPC boundary, so resolution is stated as data.
+        resolvedReferences: {
+          graph: [input.evidence.graphRef],
+          replay: [input.evidence.replayRef],
+          evaluation: [input.groupId],
+        },
+      }),
+    ),
+  );
+  if (
+    !answer ||
+    answer.degraded === true ||
+    text(answer.schemaVersion) === "role-model.degradation-receipt.v1"
+  ) {
+    return {
+      kind: "degraded",
+      reason: `the signals analyzer degraded for ${input.groupId}: ${String(
+        text(answer?.reasonCode) ?? text(answer?.reason) ?? "no report returned",
+      ).slice(0, 160)}`,
+    };
+  }
+  return { kind: "report", report: answer };
+}
+
+/**
+ * Reads the persisted reports of one decision and selects the one that covers *this* comparison, bounded because the
+ * answer travels inline: the live host embeds it twice and refuses any frame over 16 KiB, and the guard measures the
+ * pre-frame size (+57 B), so a large answer dies in the dead band (measured: 12 learner-derivation skips on
+ * `run174-fe49bac7`, each of them with the group's row already in the store). `limit` is honoured by the reader and a
+ * refusal is retried once at the smallest bound.
+ *
+ * A transport failure is not evidence that the report does not exist: it is reported as transient so the caller can
+ * leave the group reachable instead of burning it for the rest of the process.
+ */
+export type PersistedSignalReportRead =
+  | { readonly kind: "report"; readonly report: Record<string, unknown> }
+  | { readonly kind: "absent" }
+  | { readonly kind: "unavailable"; readonly reason: string; readonly transient: boolean };
+
+export async function readPersistedSignalReportForGroup(input: {
+  readonly invoke: LearnerDerivationInvoke;
+  readonly sourceDecisionId: string;
+  readonly groupId: string;
+}): Promise<PersistedSignalReportRead> {
+  /**
+   * `signals:read` is query-shaped (`extensions/trajectory-signals`: `envelope.query` is required and the read
+   * answers the newest reports for a decision as an array). Measured live: passing the decision inside `value` made
+   * every readback look absent.
+   */
+  const readReports = async (limit: number): Promise<readonly Record<string, unknown>[]> => {
+    const answer = unwrap(
+      await input.invoke(
+        "trajectory-signals",
+        "signals:read",
+        {},
+        { routeDecisionId: input.sourceDecisionId, limit },
+      ),
+    );
+    const rows = Array.isArray(answer) ? answer : [answer];
+    return rows.map(asRecord).filter((entry): entry is Record<string, unknown> => entry !== null);
+  };
+  let reports: readonly Record<string, unknown>[] = [];
+  try {
+    reports = await readReports(2);
+  } catch (error) {
+    const message = String((error as { message?: unknown })?.message ?? error);
+    if (/frame exceeds inline limit/u.test(message)) {
+      try {
+        reports = await readReports(1);
+      } catch {
+        return {
+          kind: "unavailable",
+          reason: `signals:read is unavailable for ${input.sourceDecisionId}: ${message.slice(0, 120)}`,
+          transient: true,
+        };
+      }
+    } else {
+      return {
+        kind: "unavailable",
+        reason: `signals:read is unavailable for ${input.sourceDecisionId}: ${message.slice(0, 120)}`,
+        transient: true,
+      };
+    }
+  }
+  const report = reports.find((entry) => reportCoversGroup(entry, input.groupId)) ?? null;
+  return report ? { kind: "report", report } : { kind: "absent" };
+}
+
 export async function deriveLearnerCandidatesFromDurableEvidence(
   input: LearnerDerivationInput,
 ): Promise<LearnerDerivationSummary> {
@@ -180,7 +360,11 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
   let skipped = 0;
   let refused = 0;
   let computedReports = 0;
-  for (const group of input.groups) {
+  /**
+   * Addendum 39 §4: the page arrives `group_id ASC`, and the aged prefix is exactly what this pass has to stop
+   * spending its compute bound on while the fresh comparisons behind it age out.
+   */
+  for (const group of orderComparisonGroupsNewestFirst(input.groups)) {
     if (attempted >= input.limit) break;
     const groupId = text(group.groupId) ?? text(group.comparisonId);
     if (!groupId || input.attemptedGroupIds.has(groupId)) continue;
@@ -211,58 +395,15 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
         if (!job || !sourceDecisionId) {
           return { kind: "unavailable", reason: `replay ${replayId.slice(0, 12)} carries no provenance yet` };
         }
-        /**
-         * `signals:read` is query-shaped (`extensions/trajectory-signals`: `envelope.query` is required and the read
-         * answers the newest reports for a decision as an array). Measured live: passing the decision inside `value`
-         * made every readback look absent.
-         *
-         * The read is bounded because the answer travels inline: the live host embeds it twice and refuses any frame
-         * over 16 KiB, and the guard measures the pre-frame size (+57 B), so a large answer dies in the dead band
-         * (measured: 12 learner-derivation skips on `run174-fe49bac7`, each of them with the group's row already in
-         * the store). `limit` is honoured by the reader, and a refusal is retried once at the smallest bound.
-         */
-        const readReports = async (limit: number): Promise<readonly Record<string, unknown>[]> => {
-          const answer = unwrap(
-            await input.invoke(
-              "trajectory-signals",
-              "signals:read",
-              {},
-              { routeDecisionId: sourceDecisionId, limit },
-            ),
-          );
-          const rows = Array.isArray(answer) ? answer : [answer];
-          return rows
-            .map(asRecord)
-            .filter((entry): entry is Record<string, unknown> => entry !== null);
-        };
-        let reports: readonly Record<string, unknown>[] = [];
-        try {
-          reports = await readReports(2);
-        } catch (error) {
-          const message = String((error as { message?: unknown })?.message ?? error);
-          if (/frame exceeds inline limit/u.test(message)) {
-            try {
-              reports = await readReports(1);
-            } catch {
-              return {
-                kind: "unavailable",
-                reason: `signals:read is unavailable for ${sourceDecisionId}: ${message.slice(0, 120)}`,
-                transient: true,
-              };
-            }
-          } else {
-            /**
-             * A transport or extension failure is not evidence that the report does not exist. The group must stay
-             * reachable, so this is reported as transient and the caller leaves it out of `attemptedGroupIds`.
-             */
-            return {
-              kind: "unavailable",
-              reason: `signals:read is unavailable for ${sourceDecisionId}: ${message.slice(0, 120)}`,
-              transient: true,
-            };
-          }
+        const persisted = await readPersistedSignalReportForGroup({
+          invoke: input.invoke,
+          sourceDecisionId,
+          groupId,
+        });
+        if (persisted.kind === "unavailable") {
+          return { kind: "unavailable", reason: persisted.reason, transient: persisted.transient };
         }
-        report = reports.find((entry) => reportCoversGroup(entry, groupId)) ?? null;
+        report = persisted.kind === "report" ? persisted.report : null;
         if (!report && typeof input.readDurableTrajectoryEvidence === "function") {
           /**
            * The report this comparison needs was never written (its live pipeline never ran), so the pass computes it
@@ -289,46 +430,24 @@ export async function deriveLearnerCandidatesFromDurableEvidence(
             text(asRecord(normalized.comparability)?.counterfactualCandidateRef) ??
             text(learnableComparisonMembers(normalized)?.positive[0]?.candidateRef);
           computedReports += 1;
-          const answer = asRecord(
-            unwrap(
-              await input.invoke("trajectory-signals", "signals:analyze-finalized-evaluation", {
-                routeDecisionId: sourceDecisionId,
-                graphRef: evidence.graphRef,
-                replayRef: evidence.replayRef,
-                ...(winnerRef ? { routePackage: winnerRef } : {}),
-                events: evidence.events,
-                /**
-                 * The extension refuses the raw transfer marker ("finalized evaluation provenance required for
-                 * route-learning signals"), so the decoded comparison record travels - the same shape the pipeline
-                 * passes.
-                 */
-                finalizedEvaluation: normalized,
-                // A resolver function cannot cross the extension IPC boundary, so resolution is stated as data.
-                resolvedReferences: {
-                  graph: [evidence.graphRef],
-                  replay: [evidence.replayRef],
-                  evaluation: [groupId],
-                },
-              }),
-            ),
-          );
           /**
            * A refused analysis is a bounded degradation receipt rather than a throw (the extension converts every
            * failure that way), so it has to be classified, not assumed to be a report.
            */
-          if (
-            !answer ||
-            answer.degraded === true ||
-            text(answer.schemaVersion) === "role-model.degradation-receipt.v1"
-          ) {
-            return {
-              kind: "unavailable",
-              reason: `the signals analyzer degraded for ${groupId}: ${String(
-                text(answer?.reasonCode) ?? text(answer?.reason) ?? "no report returned",
-              ).slice(0, 160)}`,
-            };
+          const analysis = await analyzeFinalizedEvaluationSignal({
+            invoke: input.invoke,
+            groupId,
+            sourceDecisionId,
+            // The extension refuses the raw transfer marker ("finalized evaluation provenance required for
+            // route-learning signals"), so the decoded comparison record travels - the same shape the pipeline passes.
+            finalizedEvaluation: normalized,
+            evidence,
+            routePackage: winnerRef,
+          });
+          if (analysis.kind === "degraded") {
+            return { kind: "unavailable", reason: analysis.reason };
           }
-          report = answer;
+          report = analysis.report;
         }
         if (!report) {
           return { kind: "unavailable", reason: `no persisted signal report for ${sourceDecisionId}` };
