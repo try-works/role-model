@@ -316,6 +316,12 @@ export function startAutoReplayLoop(input: {
             ? row.sourceEndpointId.trim()
             : null,
         hasRecordedToolResults: row.hasRecordedToolResults !== false,
+        /**
+         * Run 100 addendum 16 item 3 / 8a: the class the projection read off the capture's durable root
+         * travels with the capture, so the admission decision refuses a non-discriminating probe by
+         * name instead of inferring anything from the request itself.
+         */
+        sourceClass: typeof row.sourceClass === "string" && row.sourceClass.trim() ? row.sourceClass.trim() : null,
         // Replay output is never a replay source: the private boundary classifies
         // captures it produced while replaying, and the producer refuses them with
         // `amplification_depth_exceeded` instead of dispatching again.

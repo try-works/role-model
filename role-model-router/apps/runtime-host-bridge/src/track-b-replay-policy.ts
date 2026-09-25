@@ -37,6 +37,17 @@ export const REPLAY_REFUSAL_CODES = [
    */
   "benchmark_source_not_replayable",
   /**
+   * Run 100 addendum 16 item 3 / 8a: the capture's own durable evidence says its recorded reply is the
+   * marker its instruction demanded ("Reply with exactly: ok", the alias and agent-path smoke probes).
+   * Every arm that follows the instruction answers the same token, so a battle over it can only end as
+   * a `single_outcome` tie - measured live: 31 of the newest 60 admissions (52%) were that class and 11
+   * of the newest 16 finalized comparisons were the ties they produce. Terminal by design: the capture
+   * cannot become discriminating evidence, so it is refused once and never re-queued or re-paid for.
+   * The class travels on the capture (`replayEvidenceClass`, written with the root artifact) rather
+   * than being inferred here from prompt size.
+   */
+  "synthetic_probe_not_replayable",
+  /**
    * Run 98 addendum 56 §6: the capture's own endpoint is the endpoint that judges comparisons, so a battle would
    * have the judge score itself (the `judge_candidate_overlap` protection of addenda 30/33). Deferrable, because
    * the operator can change the controller; named, so the class is countable instead of arriving as `replay_failed`.
@@ -72,6 +83,12 @@ export interface ReplayAdmissionInput {
    * benchmark-originated, so it may never become replay or evaluation input.
    */
   readonly sourceIsBenchmark: boolean;
+  /**
+   * Run 100 addendum 16 item 3 / 8a: the capture carries the non-discriminating class its own durable
+   * evidence proved (see `synthetic_probe_not_replayable`). Optional, so a caller that has no capture
+   * class to state keeps its behaviour.
+   */
+  readonly sourceIsSyntheticProbe?: boolean;
   readonly policyIdsResolvable: boolean;
   readonly dependenciesAvailable: boolean;
   /**
@@ -117,6 +134,18 @@ export function decideReplayAdmission(input: ReplayAdmissionInput): ReplayAdmiss
     return refuse(
       "benchmark_source_not_replayable",
       "benchmark traffic is never a replay or evaluation source",
+    );
+  }
+  /**
+   * Run 100 addendum 16 item 3 / 8a: checked with the benchmark rule and before candidate selection or
+   * budget, because it is a property of the capture rather than of the work: a comparison over a reply
+   * that is the marker the instruction demanded cannot discriminate two candidates, so it must not
+   * reserve capacity, dispatch arms or reach evaluation at all.
+   */
+  if (input.sourceIsSyntheticProbe === true) {
+    return refuse(
+      "synthetic_probe_not_replayable",
+      "the recorded reply is the marker the instruction demanded, so no battle over it can discriminate two candidates",
     );
   }
   /**
@@ -169,6 +198,20 @@ export const DEFAULT_REPLAY_CANDIDATE_CAP = 3;
  */
 export function isBenchmarkReplaySourceRef(requestRef: unknown): boolean {
   return typeof requestRef === "string" && /^bench[-_]/u.test(requestRef.trim());
+}
+
+/**
+ * Run 100 addendum 16 item 3 / 8a: the class a capture carries when its own durable evidence says the
+ * recorded reply is the marker its instruction demanded. The private producer writes it with the
+ * capture root (`replayEvidenceClass.class`), the pending projection forwards it as `sourceClass`, and
+ * the admission decision reads it here - one name, three boundaries, no re-derivation.
+ */
+export const SYNTHETIC_PROBE_SOURCE_CLASS = "marker_echo_probe";
+
+export function isSyntheticProbeSourceClass(value: unknown): boolean {
+  // Exact: the class is a name this runtime writes, not free text. A caller that carries the name with
+  // padding is not stating the class, and the boundary that reads the projection trims before asking.
+  return value === SYNTHETIC_PROBE_SOURCE_CLASS;
 }
 
 /**

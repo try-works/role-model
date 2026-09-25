@@ -7,6 +7,7 @@ import {
   type ReplayToolPolicy,
   decideReplayAdmission,
   isBenchmarkReplaySourceRef,
+  isSyntheticProbeSourceClass,
   resolveReplayToolPolicy,
   selectReplayCandidates,
 } from "./track-b-replay-policy.js";
@@ -364,6 +365,12 @@ export interface AutoReplayCapture {
   readonly sourceEndpointId: string | null;
   readonly hasRecordedToolResults: boolean;
   readonly replayProduced?: boolean;
+  /**
+   * Run 100 addendum 16 item 3 / 8a: the class the pending projection read off the capture's durable
+   * root. `marker_echo_probe` means the recorded reply is the marker the instruction demanded, so the
+   * capture cannot discriminate two candidates and is refused terminally at admission.
+   */
+  readonly sourceClass?: string | null;
 }
 
 export interface AutoReplayBranch {
@@ -707,6 +714,12 @@ export async function runAutoReplayTick(input: {
        * refused terminally here, so they never reserve budget, never dispatch and never reach evaluation.
        */
       sourceIsBenchmark: isBenchmarkReplaySourceRef(capture.captureRef),
+      /**
+       * Run 100 addendum 16 item 3 / 8a: the producer's own class, taken from the capture's durable
+       * root by the projection. Defence in depth: the projection already keeps the class out of the
+       * queue, and this refusal makes the rule hold for any caller that lists a capture directly.
+       */
+      sourceIsSyntheticProbe: isSyntheticProbeSourceClass(capture.sourceClass),
       distinctCandidateCount: candidates.length,
       budgetAvailable: replayBudgetAvailable(status),
       alreadyProcessed: input.ledger.hasTerminalCounterfactual(

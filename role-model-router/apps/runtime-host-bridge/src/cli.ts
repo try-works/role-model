@@ -123,6 +123,7 @@ import {
   hasRecordedToolResults,
   hasToolCalls,
   isBenchmarkReplaySourceRef,
+  isSyntheticProbeSourceClass,
   replayBudgetEnforcedForChannel,
   resolveReplayPolicySet,
   resolveReplayToolPolicy,
@@ -6392,6 +6393,14 @@ export async function main(): Promise<void> {
              * replay path refuses benchmark captures by name for the same reason the producer does.
              */
             sourceIsBenchmark: isBenchmarkReplaySourceRef(requestId),
+            /**
+             * Run 100 addendum 16 item 3 / 8a: the recovered capture carries the class its own durable
+             * evidence proved, so the on-demand path refuses a marker-echo probe for the same reason the
+             * automatic producer does rather than re-deriving it from the transcript.
+             */
+            sourceIsSyntheticProbe: isSyntheticProbeSourceClass(
+              (sourceCapture.replayEvidenceClass as Record<string, unknown> | undefined)?.class,
+            ),
             budgetAvailable: replayBudgetAvailable(replayLedgerStatus),
             alreadyProcessed: replayLedger.hasTerminalCounterfactual(
               requestId,
