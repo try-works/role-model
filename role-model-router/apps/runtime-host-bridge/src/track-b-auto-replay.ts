@@ -348,6 +348,11 @@ const RETRYABLE_REPLAY_REFUSAL_CODES: ReadonlySet<string> = new Set([
    */
   "judge_candidate_overlap",
   /**
+   * Run 100 addendum 16 item 8a: the private boundary is between restarts — the capture is retryable, and
+   * the wait is named instead of arriving as `replay_failed`.
+   */
+  "replay_boundary_unavailable",
+  /**
    * Run 108: the caller resolves the judge per tick and could not name it. Without the judge the arms cannot
    * exclude it, and the controller is the strongest alternative - so a capture dispatched in this state is
    * planned *with* the judge as an arm and then judged by it (`judge_self_evaluation`, ineligible evidence).
@@ -554,6 +559,34 @@ async function runBoundedExecutor(
   } finally {
     if (timer !== undefined) clearTimeout(timer);
   }
+}
+
+/**
+ * Run 100 addendum 16 item 8a, measured on the live store 2026-09-25: two of the 409s the executor
+ * surfaces are not "the replay failed" and both were reported as the generic `replay_failed`:
+ *
+ * - `route capture skipped: boundary unavailable until <ts>` — the private Track B boundary is between
+ *   restarts, and the capture is retryable exactly as the code intended (9 rows in flight, newest
+ *   06:46:11Z). Named `replay_boundary_unavailable`, still deferred: the class is now countable and the
+ *   wait is visible, without changing what the tick does.
+ * - `route capture idempotency key was reused with different immutable bytes` — the boundary refuses the
+ *   same idempotency key carrying different bytes, which is deterministic by construction (24 refused /
+ *   3 deferred lifetime). Naming it terminal (`replay_capture_idempotency_conflict`) stops it spending
+ *   the deferral budget and landing in `replay_failed` wearing a code that says nothing.
+ *
+ * Everything else keeps the previous behaviour exactly, including the generic code.
+ */
+export function classifyReplayExecutorFailure(message: string): Readonly<{
+  code: "replay_failed" | "replay_boundary_unavailable" | "replay_capture_idempotency_conflict";
+  terminal: boolean;
+}> {
+  if (/route capture skipped:\s*boundary unavailable/i.test(message)) {
+    return { code: "replay_boundary_unavailable", terminal: false };
+  }
+  if (/idempotency key was reused with different immutable bytes/i.test(message)) {
+    return { code: "replay_capture_idempotency_conflict", terminal: true };
+  }
+  return { code: "replay_failed", terminal: false };
 }
 
 export async function runAutoReplayTick(input: {
@@ -780,12 +813,16 @@ export async function runAutoReplayTick(input: {
       });
     } catch (error) {
       input.ledger.release(reservation.reservationId);
-      deferred += 1;
+      const detail =
+        error instanceof Error ? error.message.slice(0, 200) : "replay execution failed";
+      const classification = classifyReplayExecutorFailure(detail);
+      if (classification.terminal) refused += 1;
+      else deferred += 1;
       emit({
         captureRef: capture.captureRef,
-        outcome: "deferred",
-        code: "replay_failed",
-        detail: error instanceof Error ? error.message.slice(0, 200) : "replay execution failed",
+        outcome: classification.terminal ? "refused" : "deferred",
+        code: classification.code,
+        detail,
       });
       continue;
     }

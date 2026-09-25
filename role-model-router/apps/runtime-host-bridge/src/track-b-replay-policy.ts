@@ -63,6 +63,19 @@ export const REPLAY_REFUSAL_CODES = [
    * comparison whose judge is one of its own arms.
    */
   "judge_unresolved",
+  /**
+   * Run 100 addendum 16 item 8a (live census 2026-09-25): the private Track B boundary was between
+   * restarts, so the capture was skipped and is retryable — but the class arrived as `replay_failed`,
+   * which names nothing and cannot be counted. Deferrable by design; the wait is now visible.
+   */
+  "replay_boundary_unavailable",
+  /**
+   * Run 100 addendum 16 item 8a: the boundary refuses the same capture idempotency key carrying different
+   * immutable bytes. That is deterministic by construction (24 refused / 3 deferred lifetime), so it is
+   * terminal on the first observation instead of spending the deferral budget and landing in
+   * `replay_failed` wearing a code that says nothing.
+   */
+  "replay_capture_idempotency_conflict",
 ] as const;
 
 export type ReplayRefusalCode = (typeof REPLAY_REFUSAL_CODES)[number];
